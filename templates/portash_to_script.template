@@ -1,0 +1,3 @@
+#!/bin/bash
+
+{{function.command}} {{#function.parameters}}--{{name}} {{value}} {{/function.parameters}}

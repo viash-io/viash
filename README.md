@@ -58,7 +58,52 @@ docker run -it -v $PWD:$PWD -w $PWD r-container \
   Rscript code.R --input train.csv --output filtered.csv --gender male
 ```
 
-## Implementation
+## Implementation Ideas
+
+### Templating
+
+Much of what needs to be done, especially for the more complicated execution environments, is basically templating. Let's consider [mustache](http://mustache.github.io/) for a second. There are command-line implementations of it. That means, a template like the following can already convert a Portash spec 
+
+```yaml
+command: Rscript script.R
+parameters:
+  - name: input
+    value: inputfile
+  - name: output
+    value: outputfile
+  - name: gender
+    value: male
+```
+
+and a simple template:
+
+```
+#!/bin/bash
+
+{{function.command}} {{#function.parameters}}--{{name}} {{value}} {{/function.parameters}}
+```
+
+into a runnable script:
+
+```sh
+#!/bin/bash
+
+Rscript script.R --input inputfile --output outputfile --gender male
+```
+
+This is a fairly easy example, but it does get the idea across. The template can be found under `templates/portash_to_script.template`.
+
+__Please note__: We format the parameters a bit differently in order to make the Mustache processing a bit more standard.
+
+Now, part of what Portash (the script) does is exactly this: running a Portash declaration. But it does not have to be Portash and this shows we can generalize it.
+
+Please note that for this kind of transformation, no additional runtime information is required. Let us now handle a case where Docker is involved using the same ideas, but extending them a bit.
+
+A typical Mustache workflow takes one YAML for the variables and one template. In order for the Portash and Viash declarations to both be read in one go, we merge them. Let's see...
+
+TODO
+
+### Ideas for a Scala implementation
 
 - Argument Parsing: <https://github.com/scallop/scallop>
 - Templating: <https://github.com/eikek/yamusca>
