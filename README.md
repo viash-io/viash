@@ -101,7 +101,63 @@ Please note that for this kind of transformation, no additional runtime informat
 
 A typical Mustache workflow takes one YAML for the variables and one template. In order for the Portash and Viash declarations to both be read in one go, we merge them. Let's see...
 
-TODO
+Take the following combined spec:
+
+```yaml
+function:
+  command: Rscript code.R
+  parameters:
+    - name: input
+      value: train.csv
+    - name: output
+      value: filtered.csv
+    - name: gender
+      value: male
+env:
+  contexts:
+    docker:
+      image: r-container
+      volumes:
+        - from: $PWD
+          to: $PWD
+      workdir: $PWD
+
+```
+
+Running this with the following template:
+
+```
+#!/bin/bash
+
+docker run -i \
+  {{#env.contexts.docker.volumes}}-v "{{from}}:{{to}}" {{/env.contexts.docker.volumes}} \
+  -w "{{env.contexts.docker.workdir}}" \
+  {{env.contexts.docker.image}} \
+  {{function.command}} {{#function.parameters}}--{{name}} {{value}} {{/function.parameters}}
+
+```
+
+yields this script:
+
+```sh
+#!/bin/bash
+
+docker run -i \
+  -v "$PWD:$PWD"  \
+  -w "$PWD" \
+  r-container \
+  Rscript script.R --input inputfile --output outputfile --gender male
+```
+
+Running this script is easy:
+
+```sh
+~/go/bin/mustache-cli test.yaml portash_docker_script.template
+```
+
+`mustache-cli` is the CLI tool we use for templating, `test.yaml` is the YAML file presented above.
+
+
 
 ### Ideas for a Scala implementation
 
