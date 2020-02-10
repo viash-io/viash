@@ -1,0 +1,14 @@
+contexts:
+  type:
+    environment: r
+    packages: [ devtools, remotes, optparse, tidyverse, magrittr ]
+  standalone:
+    data:
+      train.csv: https://raw.githubusercontent.com/datacamp/datacamp_facebook_live_intro_to_tidyverse/master/data/train.csv
+  docker:
+    image: r-container
+    dockerfile: true
+    volumes:
+      $PWD: $PWD
+    workdir:
+      $PWD

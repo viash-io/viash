@@ -57,3 +57,10 @@ in order to create a `run.sh` script as follows:
 docker run -it -v $PWD:$PWD -w $PWD r-container \
   Rscript code.R --input train.csv --output filtered.csv --gender male
 ```
+
+## Implementation
+
+- Argument Parsing: <https://github.com/scallop/scallop>
+- Templating: <https://github.com/eikek/yamusca>
+- YAML Parsing: <https://github.com/circe/circe-yaml>
+
