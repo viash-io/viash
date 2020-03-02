@@ -1,3 +1,5 @@
+package com.dataintuitive.viash
+
 import org.rogach.scallop._
 
 class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
