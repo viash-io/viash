@@ -1,3 +1,5 @@
+package com.dataintuitive.viash
+
 import org.rogach.scallop._
 
 import scala.io.Source
