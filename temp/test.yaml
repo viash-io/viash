@@ -1,0 +1,23 @@
+function:
+  command: Rscript code.R
+  parameters:
+    - name: input
+      value: train.csv
+    - name: output
+      value: filtered.csv
+    - name: gender
+      value: male
+env:
+  data:
+    - file: train.csv
+      uri: https://raw.githubusercontent.com/datacamp/datacamp_facebook_live_intro_to_tidyverse/master/data/train.csv
+  code:
+    - file: code.R
+      uri: ./code.R
+  contexts:
+    docker:
+      image: r-container
+      volumes:
+        - from: $PWD
+          to: $PWD
+      workdir: $PWD
