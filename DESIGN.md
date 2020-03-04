@@ -45,7 +45,12 @@ resources:
     path: ./report.Rmd
 ```
 
-He rewrites his `code.R` file making clear what are the variables:
+Please note:
+
+1. This YAML description contains all relevant information on _what_ to run and what are the parameters to do so.
+2. In the `command`, we specify a pointer to the `resources` section.
+
+John rewrites his `code.R` file making clear what are the variables:
 
 ```r
 library(magrittr)
@@ -85,5 +90,69 @@ write_fun <- switch(
 )
 write_fun(filtered_table, par$output)
 ```
+
+This code runs as-is, changing the parameters is a matter of updating them in the block where they are defined.
+
+Note that we consistently use the `par$...` notation for later convenience.
+
+## Argument Parsing Code
+
+In order to improve the code, John uses `helpme` to convert `code.R` to `code_parsed.R` using `portash.yaml` as a config file:
+
+```sh
+helpme portash.yaml code.R > code_parsed.R
+```
+
+That results in the following file:
+
+```r
+ibrary(magrittr)
+library(readr)
+library(dplyr)
+
+# PORTASH ARGPARSE
+library(optparse)
+
+arguments = commandArgs(trailingOnly=TRUE)
+
+parser <- OptionParser(usage = "")  %>%
+  add_option("--input", default = "train.csv", help = "The path to a table to be filtered.")  %>%
+  add_option("--format", default = "csv", help = "The format of the input and output files.")  %>%
+  add_option("--output", default = "filtered.csv", help = "The path to the output file.")  %>%
+  add_option("--column_name", default = "Sex", help = "The name of the column by which to filter.")  %>%
+  add_option("--value", default = "male", help = "Only rows for which the column contains this value will pass the filter.")
+
+par <- parse_args(parser, args = arguments)
+# END
+
+# Import data
+read_fun <- switch(
+  par$format,
+  "csv" = readr::read_csv,
+  "tsv" = readr::read_tsv,
+  "rds" = readr::read_rds,
+  "h5" = stop("h5 files are currently not supported.")
+)
+table <- read_fun(par$input)
+
+# Filter data
+filtered_table <-
+  table %>%
+  filter(.data[[par$column_name]] == par$value)
+
+# Write data to file
+write_fun <- switch(
+  par$format,
+  "csv" = readr::write_csv,
+  "tsv" = readr::write_tsv,
+  "rds" = readr::write_rds,
+  "h5" = stop("h5 files are currently not supported.")
+)
+write_fun(filtered_table, par$output)
+```
+
+So, this is a nice, standalone R file that takes command-line arguments but has defaults in case those are not specified.
+
+## Running the Code
 
 
