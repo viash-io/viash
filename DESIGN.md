@@ -243,12 +243,15 @@ Note that we consistently use the `par$...` notation for later convenience.
 In order to allow one to run this code a as a component, we convert `portash.yaml` + code to one `portash.yaml` file:
 
 ```sh
-porta.sh gather portash.yaml
+porta.sh pack portash.yaml packed.yaml
 ```
 
-That results in the following file:
+That results in the following `packed.yaml` file:
 
 ```yaml
+version: 0.01
+form: packed
+type: r_script
 function:
   name: generate_report
   description: |
@@ -324,4 +327,3 @@ resources:
 ```
 
 Please note that the argparse code is automatically added.
-
