@@ -14,6 +14,7 @@ import io.circe.syntax._
 
 import yamusca.imports._
 import yamusca.implicits._
+import com.dataintuitive.viash.parameters._
 
 class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
   val mode = trailArg[String](default = Some("test"))
