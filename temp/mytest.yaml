@@ -1,0 +1,26 @@
+name: test_function
+description: A description
+command: Rscript code.R
+parameters:
+- name: filearg
+  type: file
+  description: A file
+  mustExist: true
+  default: file.csv
+- name: stringarg
+  type: string
+  description: A string
+  default: "string value"
+- name: boolarg
+  type: boolean
+  description: A boolean
+  default: true
+- name: doublearg
+  type: double
+  description: A double
+  default: 0.0
+- name: intarg
+  type: integer
+  description: An integer
+  default: 10
+resources: []

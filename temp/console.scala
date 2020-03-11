@@ -1,8 +1,35 @@
 // :load src/main/scala/com/dataintuitive/viash/Parameters.scala
 
-import com.dataintuitive.viash._
-import implicits._
+import com.dataintuitive.viash.functionality._
 
+import scala.io.Source
+
+import io.circe.yaml.parser
+import io.circe.yaml.syntax._
+
+import cats.syntax.either._
+import io.circe._
+import io.circe.generic.auto._
+import io.circe.syntax._
+
+
+//val pSpecStr = Source.fromFile("atoms/filter/portash.yaml").mkString
+val pSpecStr = Source.fromFile("temp/mytest.yaml").mkString
+
+val Right(json) = io.circe.yaml.parser.parse(pSpecStr)
+    
+val Right(fun) = json.as[Functionality]
+
+val js = Map(
+  "type" → "file",
+  "name" → "help",
+  "description" → "my help",
+  "default" → "help.pdf",
+  "mustExist" → "true"
+).asJson
+js.as[FileParameter]
+
+/*
 import io.circe.parser.decode
 import io.circe.syntax._
 
@@ -32,3 +59,4 @@ x match {
 }
 
 y.asInstanceOf[StringParameter].asJson
+*/
