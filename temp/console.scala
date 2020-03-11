@@ -1,36 +1,19 @@
-:load src/main/scala/com/dataintuitive/viash/Parameters.scala
+// :load src/main/scala/com/dataintuitive/viash/Parameters.scala
+
+import com.dataintuitive.viash._
 import implicits._
 
 import io.circe.parser.decode
 import io.circe.syntax._
 
+val obj = List(
+  StringParameter("name", description = Some("help")),
+  DoubleParameter("name2", default = Some(0.2))
+)
 
-val js = Map(
-  "type" → "string",
-  "name" → "help"
-).asJson
+obj(0).asJson
 
-
-val x = js.as[Parameter[_]]
-
-x match { case Right(x) => x; case Left(x) => throw x }
-
-
-
-
-
-val js = Map(
-  "type" → "string",
-  "name" → "help",
-  "description" → "my help"
-).asJson
-
-
-val x = js.as[Parameter[_]]
-
-x match { case Right(x) => x; case Left(x) => throw x }
-
-
+val js = obj.asJson
 
 val js = Map(
   "type" → "string",
@@ -40,9 +23,12 @@ val js = Map(
 ).asJson
 
 
-val x = js.as[Parameter[_]]
+val Right(x) = js.as[Parameter[_]]
 
-val y = x match { case Right(x) => x; case Left(x) => throw x }
+x.asJson
 
+x match {
+  case sp: StringParameter => sp.asJson
+}
 
-
+y.asInstanceOf[StringParameter].asJson
