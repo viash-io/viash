@@ -4,11 +4,11 @@ import java.io.File
 import io.circe.{ Decoder, Encoder, HCursor, Json }
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 
-package object parameters {
+package object functionality {
+  // encoders
   implicit val encodeFile: Encoder[File] = new Encoder[File] {
-    final def apply(file: File): Json = Json.obj(
-      "path" → Json.fromString(file.getPath)
-    )
+    final def apply(file: File): Json = 
+      Json.fromString(file.getPath)
   }
   
   implicit def encodeParameter[A <: Parameter[_]]: Encoder[A] = new Encoder[A] {
@@ -31,10 +31,14 @@ package object parameters {
     }
   }
   
+  implicit val encodeResource: Encoder[Resource] = deriveEncoder[Resource]
+  implicit val encodeFunctionality: Encoder[Functionality] = deriveEncoder[Functionality]
+  
+  // decoders
   implicit val decodeFile: Decoder[File] = new Decoder[File] {
     final def apply(c: HCursor): Decoder.Result[File] =
       for {
-        path <- c.downField("path").as[String]
+        path <- c.value.as[String]
       } yield {
         new File(path)
       }
@@ -47,16 +51,27 @@ package object parameters {
   
   implicit def decodeParameter: Decoder[Parameter[_]] = new Decoder[Parameter[_]] {
     final def apply(c: HCursor): Decoder.Result[Parameter[_]] = {
-      c.downField("type").as[String] match {
+      val res = c.downField("type").as[String] match {
         case Right("string") =>
-          decodeStringParameter(c).map(_.asInstanceOf[Parameter[_]])
+          decodeStringParameter(c)
         case Right("integer") => 
-          decodeIntegerParameter(c).map(_.asInstanceOf[Parameter[_]])
+          decodeIntegerParameter(c)
+        case Right("double") => 
+          decodeDoubleParameter(c)
+        case Right("boolean") => 
+          decodeBooleanParameter(c)
+        case Right("file") => 
+          decodeFileParameter(c)
         case Right(typ) =>
           throw new RuntimeException("Type " + typ + " is not recognised.")
         case Left(exception) =>
           throw exception
       }
+      
+      res.map(_.asInstanceOf[Parameter[_]])
     }
   }
+  
+  implicit val decodeResource: Decoder[Resource] = deriveDecoder[Resource]
+  implicit val decodeFunctionality: Decoder[Functionality] = deriveDecoder[Functionality]
 }

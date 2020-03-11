@@ -1,4 +1,4 @@
-package com.dataintuitive.viash.parameters
+package com.dataintuitive.viash.functionality
 
 import java.io.File
 
@@ -49,12 +49,12 @@ case class FileParameter(
     name: String,
     description: Option[String] = None,
     default: Option[File] = None,
-    must_exist: Boolean = false
+    mustExist: Boolean = false
 ) extends Parameter[File] {
   override val `type` = "file"
   
   override def validate(value: File) = {
-    !must_exist || value.exists
+    !mustExist || value.exists
   }
 }
 
