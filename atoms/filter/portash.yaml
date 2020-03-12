@@ -25,6 +25,6 @@ parameters:
   description: Only rows for which the column contains this value will pass the filter.
   default: male
 resources:
-- name: main
+- name: main.R
   path: ./code.R
 
