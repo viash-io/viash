@@ -70,11 +70,19 @@ object Main {
     val conf = new Conf(args)
     
     println(s"functionality = ${conf.functionality()}, platform = ${conf.platform()}")
-    println(conf.subcommand)
-    println(conf.export.verified)
-    println(conf.run.verified)
-    println(s"export.output = ${conf.export.output()}")
-    println(s"run.test = ${conf.run.test}")
+    
+    conf.subcommand match {
+      case Some(conf.run) => println(s"Subcommand 'run'. output: ${conf.run.test()}")
+      case Some(conf.export) => println(s"Subcommand 'export'. output: ${conf.export.output()}")
+      case Some(_) => println("??")
+      case None => println("No subcommand was specified")
+    }
+    
+//    println(conf.subcommand.get)
+//    println(conf.export.verified)
+//    println(conf.run.verified)
+//    println(s"export.output = ${conf.export.output()}")
+//    println(s"run.test = ${conf.run.test}")
 
     val functionality = parseFunctionality(conf.functionality())
     val platform = parsePlatform(conf.platform())
