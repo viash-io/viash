@@ -25,9 +25,17 @@ val js = Map(
   "name" → "help",
   "description" → "my help",
   "default" → "help.pdf",
-  "mustExist" → "true"
+  "mustExist" → "false"
 ).asJson
-js.as[FileParameter]
+val x = js.as[FileParameter]
+
+val js = Map(
+  "type" → "file",
+  "name" → "help",
+  "description" → "my help",
+  "default" → "help.pdf"
+).asJson
+val x = js.as[FileParameter]
 
 /*
 import io.circe.parser.decode

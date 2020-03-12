@@ -1,7 +1,30 @@
-function:
-  name: filter_gender
-  command: Rscript code.R
-  parameters:
-    input: train.csv
-    output: filtered.csv
-    gender: male
+name: filter_table
+description: |
+  Filtering a table by a particular string column.
+platform: R
+parameters:
+- name: input
+  type: file
+  description: The path to a table to be filtered.
+  mustExist: true
+  default: train.csv
+- name: format
+  type: string
+  description: The format of the input and output files.
+  default: csv
+- name: output
+  type: file
+  description: The path to the output file.
+  default: filtered.csv
+- name: column_name
+  type: string
+  description: The name of the column by which to filter.
+  default: Sex
+- name: value
+  type: string
+  description: Only rows for which the column contains this value will pass the filter.
+  default: male
+resources:
+- name: main
+  path: ./code.R
+
