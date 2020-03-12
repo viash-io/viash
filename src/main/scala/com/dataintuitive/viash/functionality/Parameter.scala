@@ -49,12 +49,12 @@ case class FileParameter(
     name: String,
     description: Option[String] = None,
     default: Option[File] = None,
-    mustExist: Boolean = false
+    mustExist: Option[Boolean] = None
 ) extends Parameter[File] {
   override val `type` = "file"
   
   override def validate(value: File) = {
-    !mustExist || value.exists
+    mustExist == None || !mustExist.get || value.exists
   }
 }
 

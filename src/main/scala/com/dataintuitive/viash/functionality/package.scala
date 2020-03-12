@@ -3,22 +3,30 @@ package com.dataintuitive.viash
 import java.io.File
 import io.circe.{ Decoder, Encoder, HCursor, Json }
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import io.circe.generic.auto._
+import io.circe.syntax._
+import cats.syntax.functor._ // for .widen
 
 package object functionality {
-  // encoders
-  implicit val encodeFile: Encoder[File] = new Encoder[File] {
-    final def apply(file: File): Json = 
+  // encoder and decoder for java.io.File
+  implicit val encodeFile: Encoder[File] = Encoder.instance {
+    file =>
       Json.fromString(file.getPath)
   }
+  implicit val decodeFile: Decoder[File] = Decoder.instance {
+    cursor =>
+      cursor.value.as[String].map(new File(_))
+  }
   
-  implicit def encodeParameter[A <: Parameter[_]]: Encoder[A] = new Encoder[A] {
-    val encodeStringParameter: Encoder[StringParameter] = deriveEncoder[StringParameter]
-    val encodeIntegerParameter: Encoder[IntegerParameter] = deriveEncoder[IntegerParameter]
-    val encodeDoubleParameter: Encoder[DoubleParameter] = deriveEncoder[DoubleParameter]
-    val encodeBooleanParameter: Encoder[BooleanParameter] = deriveEncoder[BooleanParameter]
-    val encodeFileParameter: Encoder[FileParameter] = deriveEncoder[FileParameter]
+  // encoders and decoders for Parameter
+  implicit val encodeStringParameter: Encoder[StringParameter] = deriveEncoder
+  implicit val encodeIntegerParameter: Encoder[IntegerParameter] = deriveEncoder
+  implicit val encodeDoubleParameter: Encoder[DoubleParameter] = deriveEncoder
+  implicit val encodeBooleanParameter: Encoder[BooleanParameter] = deriveEncoder
+  implicit val encodeFileParameter: Encoder[FileParameter] = deriveEncoder
     
-    final def apply(par: A): Json = {
+  implicit def encodeParameter[A <: Parameter[_]]: Encoder[A] = Encoder.instance {
+    par => 
       val typeJson = Json.obj("type" → Json.fromString(par.`type`))
       val objJson = par match {
         case s: StringParameter => encodeStringParameter(s) 
@@ -28,50 +36,35 @@ package object functionality {
         case s: FileParameter => encodeFileParameter(s)
       }
       objJson deepMerge typeJson
-    }
   }
   
-  implicit val encodeResource: Encoder[Resource] = deriveEncoder[Resource]
-  implicit val encodeFunctionality: Encoder[Functionality] = deriveEncoder[Functionality]
+  implicit val decodeStringParameter: Decoder[StringParameter] = deriveDecoder
+  implicit val decodeIntegerParameter: Decoder[IntegerParameter] = deriveDecoder
+  implicit val decodeDoubleParameter: Decoder[DoubleParameter] = deriveDecoder
+  implicit val decodeBooleanParameter: Decoder[BooleanParameter] = deriveDecoder
+  implicit val decodeFileParameter: Decoder[FileParameter] = deriveDecoder
   
-  // decoders
-  implicit val decodeFile: Decoder[File] = new Decoder[File] {
-    final def apply(c: HCursor): Decoder.Result[File] =
-      for {
-        path <- c.value.as[String]
-      } yield {
-        new File(path)
-      }
-  }
-  implicit val decodeStringParameter: Decoder[StringParameter] = deriveDecoder[StringParameter]
-  implicit val decodeIntegerParameter: Decoder[IntegerParameter] = deriveDecoder[IntegerParameter]
-  implicit val decodeDoubleParameter: Decoder[DoubleParameter] = deriveDecoder[DoubleParameter]
-  implicit val decodeBooleanParameter: Decoder[BooleanParameter] = deriveDecoder[BooleanParameter]
-  implicit val decodeFileParameter: Decoder[FileParameter] = deriveDecoder[FileParameter]
-  
-  implicit def decodeParameter: Decoder[Parameter[_]] = new Decoder[Parameter[_]] {
-    final def apply(c: HCursor): Decoder.Result[Parameter[_]] = {
-      val res = c.downField("type").as[String] match {
-        case Right("string") =>
-          decodeStringParameter(c)
-        case Right("integer") => 
-          decodeIntegerParameter(c)
-        case Right("double") => 
-          decodeDoubleParameter(c)
-        case Right("boolean") => 
-          decodeBooleanParameter(c)
-        case Right("file") => 
-          decodeFileParameter(c)
-        case Right(typ) =>
-          throw new RuntimeException("Type " + typ + " is not recognised.")
-        case Left(exception) =>
-          throw exception
-      }
+  implicit def decodeParameter: Decoder[Parameter[_]] = Decoder.instance {
+    cursor => 
+      val decoder: Decoder[Parameter[_]] = 
+        cursor.downField("type").as[String] match {
+          case Right("string") => decodeStringParameter.widen
+          case Right("integer") => decodeIntegerParameter.widen
+          case Right("double") => decodeDoubleParameter.widen
+          case Right("boolean") => decodeBooleanParameter.widen
+          case Right("file") => decodeFileParameter.widen
+          case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised.")
+          case Left(exception) => throw exception
+        }
       
-      res.map(_.asInstanceOf[Parameter[_]])
-    }
+      decoder(cursor)
   }
   
-  implicit val decodeResource: Decoder[Resource] = deriveDecoder[Resource]
-  implicit val decodeFunctionality: Decoder[Functionality] = deriveDecoder[Functionality]
+  // encoder and decoder for Resource  
+  implicit val encodeResource: Encoder[Resource] = deriveEncoder
+  implicit val decodeResource: Decoder[Resource] = deriveDecoder
+  
+  // encoder and decoder for Functionality
+  implicit val encodeFunctionality: Encoder[Functionality] = deriveEncoder
+  implicit val decodeFunctionality: Decoder[Functionality] = deriveDecoder
 }
