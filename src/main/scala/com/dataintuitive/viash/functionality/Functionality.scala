@@ -4,7 +4,8 @@ case class Functionality(
   name: String,
   description: Some[String],
   platform: String, 
-  parameters: Seq[Parameter[_]], 
+  inputs: Seq[DataObject[_]],
+  outputs: Seq[DataObject[_]],
   resources: Seq[Resource]
 ) {
   val supportedPlatforms = List("R", "Python")

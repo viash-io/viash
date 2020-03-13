@@ -2,7 +2,7 @@ package com.dataintuitive.viash.functionality
 
 import java.io.File
 
-trait Parameter[Type] {
+trait DataObject[Type] {
   val `type`: String
   val name: String
   val description: Option[String]
@@ -13,44 +13,44 @@ trait Parameter[Type] {
   }
 }
 
-case class StringParameter(
+case class StringObject(
     name: String,
     description: Option[String] = None,
     default: Option[String] = None
-) extends Parameter[String] {
+) extends DataObject[String] {
   override val `type` = "string"
 }
 
-case class IntegerParameter(
+case class IntegerObject(
     name: String,
     description: Option[String] = None,
     default: Option[Int] = None
-) extends Parameter[Int] {
+) extends DataObject[Int] {
   override val `type` = "integer"
 }
 
-case class DoubleParameter(
+case class DoubleObject(
     name: String,
     description: Option[String] = None,
     default: Option[Double] = None
-) extends Parameter[Double] {
+) extends DataObject[Double] {
   override val `type` = "double"
 }
 
-case class BooleanParameter(
+case class BooleanObject(
     name: String,
     description: Option[String] = None,
     default: Option[Boolean] = None
-) extends Parameter[Boolean] {
+) extends DataObject[Boolean] {
   override val `type` = "boolean"
 }
 
-case class FileParameter(
+case class FileObject(
     name: String,
     description: Option[String] = None,
     default: Option[File] = None,
     mustExist: Option[Boolean] = None
-) extends Parameter[File] {
+) extends DataObject[File] {
   override val `type` = "file"
   
   override def validate(value: File) = {

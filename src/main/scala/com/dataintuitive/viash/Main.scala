@@ -2,6 +2,7 @@ package com.dataintuitive.viash
 
 import org.rogach.scallop.{ScallopConf, Subcommand}
 import scala.io.Source
+import java.io.File
 import io.circe.yaml.parser
 import functionality._
 
@@ -24,8 +25,7 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
   }
   val export = new Subcommand("export") {
     val output = opt[String](
-      default = Some("executable.sh"), 
-      descr = "Path to output executable.",
+      descr = "Path to directory.",
       required = true
     )
   }
@@ -71,21 +71,34 @@ object Main {
     
     println(s"functionality = ${conf.functionality()}, platform = ${conf.platform()}")
     
+    val functionality = parseFunctionality(conf.functionality())
+    val platform = parsePlatform(conf.platform())
+    
     conf.subcommand match {
-      case Some(conf.run) => println(s"Subcommand 'run'. output: ${conf.run.test()}")
-      case Some(conf.export) => println(s"Subcommand 'export'. output: ${conf.export.output()}")
+      case Some(conf.run) => {
+        println(s"Subcommand 'run'. output: ${conf.run.test()}")
+        val dir = java.nio.file.Files.createTempDirectory("viash_" + functionality.name)
+      }
+      case Some(conf.export) => {
+        println(s"Subcommand 'export'. output: ${conf.export.output()}")
+        val dir = new File(conf.export.output())
+        dir.mkdirs()
+        
+//        val command = functionality.platform match {
+//          case "R" => "Rscript main.R"
+//          case "Python" => "python main.py"
+//        }
+//        
+//        import sys.process._
+//        
+//        command !
+      }
       case Some(_) => println("??")
       case None => println("No subcommand was specified")
     }
-    
-//    println(conf.subcommand.get)
-//    println(conf.export.verified)
-//    println(conf.run.verified)
-//    println(s"export.output = ${conf.export.output()}")
-//    println(s"run.test = ${conf.run.test}")
-
-    val functionality = parseFunctionality(conf.functionality())
-    val platform = parsePlatform(conf.platform())
+  }
+  
+  def export(functionality: Functionality, platform: Unit, dir: File) = {
     
     
   }

@@ -18,41 +18,41 @@ package object functionality {
       cursor.value.as[String].map(new File(_))
   }
   
-  // encoders and decoders for Parameter
-  implicit val encodeStringParameter: Encoder[StringParameter] = deriveEncoder
-  implicit val encodeIntegerParameter: Encoder[IntegerParameter] = deriveEncoder
-  implicit val encodeDoubleParameter: Encoder[DoubleParameter] = deriveEncoder
-  implicit val encodeBooleanParameter: Encoder[BooleanParameter] = deriveEncoder
-  implicit val encodeFileParameter: Encoder[FileParameter] = deriveEncoder
+  // encoders and decoders for Object
+  implicit val encodeStringObject: Encoder[StringObject] = deriveEncoder
+  implicit val encodeIntegerObject: Encoder[IntegerObject] = deriveEncoder
+  implicit val encodeDoubleObject: Encoder[DoubleObject] = deriveEncoder
+  implicit val encodeBooleanObject: Encoder[BooleanObject] = deriveEncoder
+  implicit val encodeFileObject: Encoder[FileObject] = deriveEncoder
     
-  implicit def encodeParameter[A <: Parameter[_]]: Encoder[A] = Encoder.instance {
+  implicit def encodeObject[A <: DataObject[_]]: Encoder[A] = Encoder.instance {
     par => 
       val typeJson = Json.obj("type" → Json.fromString(par.`type`))
       val objJson = par match {
-        case s: StringParameter => encodeStringParameter(s) 
-        case s: IntegerParameter => encodeIntegerParameter(s)
-        case s: DoubleParameter => encodeDoubleParameter(s)
-        case s: BooleanParameter => encodeBooleanParameter(s)
-        case s: FileParameter => encodeFileParameter(s)
+        case s: StringObject => encodeStringObject(s) 
+        case s: IntegerObject => encodeIntegerObject(s)
+        case s: DoubleObject => encodeDoubleObject(s)
+        case s: BooleanObject => encodeBooleanObject(s)
+        case s: FileObject => encodeFileObject(s)
       }
       objJson deepMerge typeJson
   }
   
-  implicit val decodeStringParameter: Decoder[StringParameter] = deriveDecoder
-  implicit val decodeIntegerParameter: Decoder[IntegerParameter] = deriveDecoder
-  implicit val decodeDoubleParameter: Decoder[DoubleParameter] = deriveDecoder
-  implicit val decodeBooleanParameter: Decoder[BooleanParameter] = deriveDecoder
-  implicit val decodeFileParameter: Decoder[FileParameter] = deriveDecoder
+  implicit val decodeStringObject: Decoder[StringObject] = deriveDecoder
+  implicit val decodeIntegerObject: Decoder[IntegerObject] = deriveDecoder
+  implicit val decodeDoubleObject: Decoder[DoubleObject] = deriveDecoder
+  implicit val decodeBooleanObject: Decoder[BooleanObject] = deriveDecoder
+  implicit val decodeFileObject: Decoder[FileObject] = deriveDecoder
   
-  implicit def decodeParameter: Decoder[Parameter[_]] = Decoder.instance {
+  implicit def decodeObject: Decoder[DataObject[_]] = Decoder.instance {
     cursor => 
-      val decoder: Decoder[Parameter[_]] = 
+      val decoder: Decoder[DataObject[_]] = 
         cursor.downField("type").as[String] match {
-          case Right("string") => decodeStringParameter.widen
-          case Right("integer") => decodeIntegerParameter.widen
-          case Right("double") => decodeDoubleParameter.widen
-          case Right("boolean") => decodeBooleanParameter.widen
-          case Right("file") => decodeFileParameter.widen
+          case Right("string") => decodeStringObject.widen
+          case Right("integer") => decodeIntegerObject.widen
+          case Right("double") => decodeDoubleObject.widen
+          case Right("boolean") => decodeBooleanObject.widen
+          case Right("file") => decodeFileObject.widen
           case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised.")
           case Left(exception) => throw exception
         }

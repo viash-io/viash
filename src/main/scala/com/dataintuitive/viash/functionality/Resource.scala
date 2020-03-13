@@ -4,8 +4,8 @@ import java.io.File
 
 case class Resource(
   name: String,
-  path: Option[File],
-  code: Option[String]
+  path: Option[File] = None,
+  code: Option[String] = None
 ) {
   require(
     (path == None) != (code == None), 
