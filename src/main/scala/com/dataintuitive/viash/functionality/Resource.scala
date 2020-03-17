@@ -1,10 +1,8 @@
 package com.dataintuitive.viash.functionality
 
-import java.io.File
-
 case class Resource(
   name: String,
-  path: Option[File] = None,
+  path: Option[String] = None,
   code: Option[String] = None
 ) {
   require(

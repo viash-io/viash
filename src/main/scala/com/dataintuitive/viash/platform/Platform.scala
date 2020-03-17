@@ -14,8 +14,8 @@ import scala.io.Source
 import io.circe.yaml.parser
 
 object Platform {
-  def parse(filename: String): Platform = {
-    val str = Source.fromFile(filename).mkString
+  def parse(file: java.io.File): Platform = {
+    val str = Source.fromFile(file).mkString
     val json = parser.parse(str)
     val plat = json match {
       case Right(js) => js.as[Platform]
