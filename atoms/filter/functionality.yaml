@@ -2,7 +2,7 @@ name: filter_table
 description: |
   Filtering a table by a particular string column.
 platform: R
-parameters:
+inputs:
 - name: input
   type: file
   description: The path to a table to be filtered.
@@ -12,10 +12,6 @@ parameters:
   type: string
   description: The format of the input and output files.
   default: csv
-- name: output
-  type: file
-  description: The path to the output file.
-  default: filtered.csv
 - name: column_name
   type: string
   description: The name of the column by which to filter.
@@ -24,6 +20,11 @@ parameters:
   type: string
   description: Only rows for which the column contains this value will pass the filter.
   default: male
+outputs:
+- name: output
+  type: file
+  description: The path to the output file.
+  default: filtered.csv
 resources:
 - name: main.R
   path: ./code.R

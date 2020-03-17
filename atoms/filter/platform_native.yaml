@@ -1,0 +1,3 @@
+native:
+  r:
+    packages: [dplyr, magrittr, readr]

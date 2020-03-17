@@ -1,9 +1,0 @@
-name: filter_gender
-command: Rscript code.R
-parameters:
-  - name: input
-    value: train.csv
-  - name: output
-    value: filtered.csv
-  - name: gender
-    value: male

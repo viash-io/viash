@@ -1,0 +1,7 @@
+native:
+  r:
+    packages: [dplyr, magrittr, readr]
+    github: dynverse/dynutils
+  python:
+    packages: ["numpy", "pandas>=0.20.1"]
+    github: aertslab/pySCENIC
