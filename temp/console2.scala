@@ -1,4 +1,5 @@
 import com.dataintuitive.viash.functionality._
+import com.dataintuitive.viash.platform._
 
 import io.circe.yaml.parser
 import io.circe.yaml.syntax._
@@ -49,4 +50,12 @@ val x = decode[List[Parameter[_]]]("""
     "description": "help"
   }
 ]
+""")
+
+
+val x = decode[REnvironment]("""
+{
+  "packages": ["help"],
+  "github": ["nope"]
+}
 """)
