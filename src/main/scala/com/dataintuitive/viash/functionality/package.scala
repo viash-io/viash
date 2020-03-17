@@ -1,21 +1,16 @@
 package com.dataintuitive.viash
 
-import java.io.File
-import io.circe.{ Decoder, Encoder, HCursor, Json }
+import io.circe.{ Decoder, Encoder, Json }
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import io.circe.generic.auto._
-import io.circe.syntax._
 import cats.syntax.functor._ // for .widen
 
 package object functionality {
   // encoder and decoder for java.io.File
-  implicit val encodeFile: Encoder[File] = Encoder.instance {
-    file =>
-      Json.fromString(file.getPath)
+  implicit val encodeFile: Encoder[java.io.File] = Encoder.instance {
+    file => Json.fromString(file.getPath)
   }
-  implicit val decodeFile: Decoder[File] = Decoder.instance {
-    cursor =>
-      cursor.value.as[String].map(new File(_))
+  implicit val decodeFile: Decoder[java.io.File] = Decoder.instance {
+    cursor => cursor.value.as[String].map(new java.io.File(_))
   }
   
   // encoders and decoders for Object
