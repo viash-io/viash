@@ -1,4 +1,4 @@
-package com.dataintuitive.viash.target
+package com.dataintuitive.viash.targets
 
 case class PythonEnvironment(
   packages: Option[List[String]] = None,

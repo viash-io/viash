@@ -1,7 +1,7 @@
 package com.dataintuitive.viash
 
 import functionality._
-import platform._
+import targets._
 
 import java.nio.file.{Paths, Files}
 import scala.io.Source
@@ -18,55 +18,62 @@ object Main {
     
     
     val functionality = Functionality.parse(funcPath)
-    val platform = Platform.parse(platPath)
+    val platform = Target.parse(platPath)
+    
+    val resources = 
+      functionality.resources.toList ::: 
+      platform.setupResources(functionality).toList
     
     conf.subcommand match {
       case Some(conf.run) => {
         val dir = Files.createTempDirectory("viash_" + functionality.name).toFile()
-        export(functionality, platform, funcPath, dir)
+        writeResources(resources, funcPath, dir)
       }
       case Some(conf.export) => {
         val dir = new java.io.File(conf.export.output())
         dir.mkdirs()
-        export(functionality, platform, funcPath, dir)
+        writeResources(resources, funcPath, dir)
       }
       case Some(_) => println("??")
       case None => println("No subcommand was specified")
     }
   }
   
-  def export(
-    functionality: Functionality,
-    platform: Platform, 
+  def writeResources(
+    resources: Seq[Resource],
     inputDir: java.io.File,
     outputDir: java.io.File
-  ) = {
-    
-    functionality.resources.foreach(
+  ) {
+    // copy all files
+    resources.foreach(
       resource => {
-        val sour = Paths.get(inputDir.getParent(), resource.path.get)
         val dest = Paths.get(outputDir.getAbsolutePath, resource.name)
          
-          if (resource.path.isDefined) {
-            val code = Source.fromFile(sour.toFile()).mkString
-            Files.write(dest, code.getBytes(StandardCharsets.UTF_8))
-          } else {
-            Files.copy(sour, dest)
-          }
-        
-        // do something with code if name starts with 'main'
-        
-        
+        if (resource.path.isDefined) {
+          val sour = Paths.get(inputDir.getParent(), resource.path.get)
+          Files.copy(sour, dest)
+        } else {
+          val code = resource.code.get
+          Files.write(dest, code.getBytes(StandardCharsets.UTF_8))
+        }
+      
       }
     )
-//    dir.getPath()
-//        val command = functionality.platform match {
-//          case "R" => "Rscript main.R"
-//          case "Python" => "python main.py"
-//        }
-//        
-//        import sys.process._
-//        
-//        command !
+  }
+  
+  def processMain(
+    functionality: Functionality,
+    platform: Target, 
+    dir: java.io.File,
+  ) = {
+    
+  }
+  
+  def run(
+      
+  ) = {
+//      import sys.process._
+//      
+//      command !
   }
 }

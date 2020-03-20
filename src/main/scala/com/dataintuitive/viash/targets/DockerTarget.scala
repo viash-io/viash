@@ -1,4 +1,6 @@
-package com.dataintuitive.viash.target
+package com.dataintuitive.viash.targets
+
+import com.dataintuitive.viash.functionality.{Functionality, Resource}
 
 case class DockerTarget(
   image: String,
@@ -9,6 +11,10 @@ case class DockerTarget(
   python: Option[PythonEnvironment] = None
 ) extends Target {
   val `type` = "docker"
+  
+  def setupResources(functionality: Functionality) = {
+    List()
+  }
 }
 
 case class Volume(

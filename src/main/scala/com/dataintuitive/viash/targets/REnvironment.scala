@@ -1,4 +1,4 @@
-package com.dataintuitive.viash.target
+package com.dataintuitive.viash.targets
 
 case class REnvironment(
   packages: Option[List[String]] = None,
