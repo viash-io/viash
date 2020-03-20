@@ -1,8 +1,8 @@
-package com.dataintuitive.viash.platform
+package com.dataintuitive.viash.target
 
-case class NativePlatform(
+case class NativeTarget(
   r: Option[REnvironment] = None,
   python: Option[PythonEnvironment] = None
-) extends Platform {
+) extends Target {
   val `type` = "native"
 }

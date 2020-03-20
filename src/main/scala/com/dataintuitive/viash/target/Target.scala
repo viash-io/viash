@@ -1,20 +1,20 @@
-package com.dataintuitive.viash.platform
+package com.dataintuitive.viash.target
 
 import scala.io.Source
 import io.circe.yaml.parser
 
-trait Platform{
+trait Target {
   val `type`: String
   val r: Option[REnvironment]
   val python: Option[PythonEnvironment]
 }
 
-object Platform {
-  def parse(file: java.io.File): Platform = {
+object Target {
+  def parse(file: java.io.File): Target = {
     val str = Source.fromFile(file).mkString
     val json = parser.parse(str)
     val plat = json match {
-      case Right(js) => js.as[Platform]
+      case Right(js) => js.as[Target]
       case Left(e) => throw e
     }
     plat match {

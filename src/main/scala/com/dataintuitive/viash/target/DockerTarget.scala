@@ -1,13 +1,13 @@
-package com.dataintuitive.viash.platform
+package com.dataintuitive.viash.target
 
-case class DockerPlatform(
+case class DockerTarget(
   image: String,
   volumes: Option[Seq[Volume]] = None,
   port: Option[String] = None,
   workdir: Option[String] = None,
   r: Option[REnvironment] = None,
   python: Option[PythonEnvironment] = None
-) extends Platform {
+) extends Target {
   val `type` = "docker"
 }
 
