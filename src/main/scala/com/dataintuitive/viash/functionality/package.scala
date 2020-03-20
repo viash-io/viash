@@ -20,7 +20,7 @@ package object functionality {
   implicit val encodeBooleanObject: Encoder[BooleanObject] = deriveEncoder
   implicit val encodeFileObject: Encoder[FileObject] = deriveEncoder
     
-  implicit def encodeObject[A <: DataObject[_]]: Encoder[A] = Encoder.instance {
+  implicit def encodeDataObject[A <: DataObject[_]]: Encoder[A] = Encoder.instance {
     par => 
       val typeJson = Json.obj("type" → Json.fromString(par.`type`))
       val objJson = par match {
@@ -39,7 +39,7 @@ package object functionality {
   implicit val decodeBooleanObject: Decoder[BooleanObject] = deriveDecoder
   implicit val decodeFileObject: Decoder[FileObject] = deriveDecoder
   
-  implicit def decodeObject: Decoder[DataObject[_]] = Decoder.instance {
+  implicit def decodeDataObject: Decoder[DataObject[_]] = Decoder.instance {
     cursor => 
       val decoder: Decoder[DataObject[_]] = 
         cursor.downField("type").as[String] match {

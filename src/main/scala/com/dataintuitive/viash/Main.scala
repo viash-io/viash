@@ -38,26 +38,25 @@ object Main {
   def export(
     functionality: Functionality,
     platform: Platform, 
-    funcPath: java.io.File,
-    dir: java.io.File
+    inputDir: java.io.File,
+    outputDir: java.io.File
   ) = {
     
     functionality.resources.foreach(
       resource => {
-        // todo: copy file instead of reading it if it is not the main code file
-        
-        val code = 
+        val sour = Paths.get(inputDir.getParent(), resource.path.get)
+        val dest = Paths.get(outputDir.getAbsolutePath, resource.name)
+         
           if (resource.path.isDefined) {
-            val path = Paths.get(funcPath.getParent(), resource.path.get).toFile()
-            Source.fromFile(path).mkString
+            val code = Source.fromFile(sour.toFile()).mkString
+            Files.write(dest, code.getBytes(StandardCharsets.UTF_8))
           } else {
-            resource.code.get
+            Files.copy(sour, dest)
           }
         
         // do something with code if name starts with 'main'
         
-        val pathOut = Paths.get(dir.getAbsolutePath, resource.name)     
-        Files.write(pathOut, code.getBytes(StandardCharsets.UTF_8))
+        
       }
     )
 //    dir.getPath()

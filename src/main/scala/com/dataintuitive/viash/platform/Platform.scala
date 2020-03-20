@@ -1,17 +1,13 @@
 package com.dataintuitive.viash.platform
 
-case class Platform(
-  native: Option[NativePlatform] = None,
-  docker: Option[DockerPlatform] = None
-) {
-  require(
-    (native == None) != (docker == None), 
-    message = "Define either native or docker, not both or neither."
-  )
-}
-
 import scala.io.Source
 import io.circe.yaml.parser
+
+trait Platform{
+  val `type`: String
+  val r: Option[REnvironment]
+  val python: Option[PythonEnvironment]
+}
 
 object Platform {
   def parse(file: java.io.File): Platform = {
