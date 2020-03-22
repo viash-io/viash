@@ -7,18 +7,18 @@ scalaVersion := "2.12.10"
 libraryDependencies ++= Seq(
   "org.scalactic"      %% "scalactic"       % "3.0.7"      % "test",
   "org.scalatest"      %% "scalatest"       % "3.0.7"      % "test",
-  "org.rogach"         %% "scallop"         % "3.3.2"  ,
-  "io.circe"           %% "circe-yaml"      % "0.10.0" ,
-  "com.github.eikek"   %% "yamusca-core"    % "0.5.1"
-
+  "org.rogach"         %% "scallop"         % "3.3.2",
+  "com.github.eikek"   %% "yamusca-core"    % "0.5.1",
+  "io.circe"           %% "circe-yaml"      % "0.12.0"
 )
 
-val circeVersion = "0.12.3"
+val circeVersion = "0.12.0"
 
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-core",
   "io.circe" %% "circe-generic",
-  "io.circe" %% "circe-parser"
+  "io.circe" %% "circe-parser",
+  "io.circe" %% "circe-generic-extras"
 ).map(_ % circeVersion)
 
 scalacOptions ++= Seq("-unchecked", "-deprecation")
