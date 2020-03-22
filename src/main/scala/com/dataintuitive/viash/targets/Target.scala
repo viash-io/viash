@@ -15,14 +15,17 @@ trait Target {
 
 object Target {
   def parse(file: File): Target = {
+    import io.circe.generic.extras.Configuration
+    implicit val customConfig: Configuration = Configuration.default.withDefaults
+    
     val str = Source.fromFile(file).mkString
     val json = parser.parse(str)
-    val plat = json match {
+    val value = json match {
       case Right(js) => js.as[Target]
       case Left(e) => throw e
     }
-    plat match {
-      case Right(f) => f
+    value match {
+      case Right(value) => value
       case Left(e) => throw e
     }
   }

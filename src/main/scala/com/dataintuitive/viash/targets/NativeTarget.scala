@@ -26,14 +26,27 @@ case class NativeTarget(
       code = Some(s"$command %*")
     )
     
+    val rInstallCommands = r.map(_.getInstallCommands()).getOrElse(Nil)
+    val pythonInstallCommands = python.map(_.getInstallCommands()).getOrElse(Nil)
+    
     val setup_bash = Resource(
       name = "setup.sh",
-      code = Some("")
+      code = Some(s"""#!/bin/bash
+      |
+      |# install R requirements
+      |${rInstallCommands.mkString(" && \\\n  ")}
+      |
+      |# install R requirements
+      |${pythonInstallCommands.mkString(" && \\\n  ")}
+      """.stripMargin)
     )
     
     val setup_batch = Resource(
       name = "setup.bat",
-      code = Some("")
+      code = Some(s"""${rInstallCommands.mkString(" && \\\n  ")}
+      |
+      |${pythonInstallCommands.mkString(" && \\\n  ")}
+      """.stripMargin)
     )
     
     List(execute_bash, execute_batch, setup_bash, setup_batch)

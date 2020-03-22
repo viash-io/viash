@@ -4,7 +4,7 @@ import io.circe.{ Decoder, Encoder, Json }
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import cats.syntax.functor._ // for .widen
 
-package object targets {
+package object targets {  
   implicit val encodeVolume: Encoder[Volume] = deriveEncoder
   implicit val decodeVolume: Decoder[Volume] = deriveDecoder
   
