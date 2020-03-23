@@ -4,9 +4,9 @@ case class Functionality(
   name: String,
   description: Some[String],
   platform: Platform, 
-  inputs: Seq[DataObject[_]],
-  outputs: Seq[DataObject[_]],
-  resources: Seq[Resource]
+  inputs: List[DataObject[_]],
+  outputs: List[DataObject[_]],
+  resources: List[Resource]
 ) {
   require(
     resources.count(_.name.startsWith("main")) == 1,

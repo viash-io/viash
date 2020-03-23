@@ -4,13 +4,11 @@ import com.dataintuitive.viash.functionality.{Functionality, Resource}
 import scala.io.Source
 import java.io.File
 import io.circe.yaml.parser
+import com.dataintuitive.viash.targets.environments._
 
 trait Target {
   val `type`: String
-  val r: Option[REnvironment]
-  val python: Option[PythonEnvironment]
-  
-  def setupResources(functionality: Functionality): Seq[Resource]
+  def modifyFunctionality(functionality: Functionality): Functionality
 }
 
 object Target {

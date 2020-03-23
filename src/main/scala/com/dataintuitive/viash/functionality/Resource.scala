@@ -3,7 +3,8 @@ package com.dataintuitive.viash.functionality
 case class Resource(
   name: String,
   path: Option[String] = None,
-  code: Option[String] = None
+  code: Option[String] = None,
+  executable: Option[Boolean] = None
 ) {
   require(
     (path == None) != (code == None), 

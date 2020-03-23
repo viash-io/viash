@@ -13,26 +13,29 @@ object Main {
     val conf = new CLIConf(args)
     
     val funcPath = new java.io.File(conf.functionality())
-    val platPath = new java.io.File(conf.platform())
+    val targPath = new java.io.File(conf.platform())
     
-    
-    
+    println("Parsing functionality")
     val functionality = Functionality.parse(funcPath)
-    val platform = Target.parse(platPath)
+    println("Parsing target")
+    val target = Target.parse(targPath)
     
-    val resources = 
-      functionality.resources.toList ::: 
-      platform.setupResources(functionality).toList
+    println("Processing resources")
+    val modifiedFunctionality = target.modifyFunctionality(functionality)
+//    val resources = 
+//      functionality.resources.toList ::: 
+//      target.setupResources(functionality).toList
     
+    println("Writing resources")
     conf.subcommand match {
       case Some(conf.run) => {
-        val dir = Files.createTempDirectory("viash_" + functionality.name).toFile()
-        writeResources(resources, funcPath, dir)
+        val dir = Files.createTempDirectory("viash_" + modifiedFunctionality.name).toFile()
+        writeResources(modifiedFunctionality.resources, funcPath, dir)
       }
       case Some(conf.export) => {
         val dir = new java.io.File(conf.export.output())
         dir.mkdirs()
-        writeResources(resources, funcPath, dir)
+        writeResources(modifiedFunctionality.resources, funcPath, dir)
       }
       case Some(_) => println("??")
       case None => println("No subcommand was specified")
@@ -42,13 +45,19 @@ object Main {
   def writeResources(
     resources: Seq[Resource],
     inputDir: java.io.File,
-    outputDir: java.io.File
+    outputDir: java.io.File, 
+    overwrite: Boolean = true
   ) {
     // copy all files
     resources.foreach(
       resource => {
         val dest = Paths.get(outputDir.getAbsolutePath, resource.name)
-         
+        
+        val destFile = dest.toFile()
+        if (overwrite && destFile.exists()) {
+          destFile.delete()
+        }
+        
         if (resource.path.isDefined) {
           val sour = Paths.get(inputDir.getParent(), resource.path.get)
           Files.copy(sour, dest)
@@ -56,17 +65,12 @@ object Main {
           val code = resource.code.get
           Files.write(dest, code.getBytes(StandardCharsets.UTF_8))
         }
-      
+        
+        if (resource.executable.isDefined) {
+          destFile.setExecutable(resource.executable.get)
+        }
       }
     )
-  }
-  
-  def processMain(
-    functionality: Functionality,
-    platform: Target, 
-    dir: java.io.File,
-  ) = {
-    
   }
   
   def run(

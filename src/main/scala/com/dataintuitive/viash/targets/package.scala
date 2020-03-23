@@ -2,18 +2,9 @@ package com.dataintuitive.viash
 
 import io.circe.{ Decoder, Encoder, Json }
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import cats.syntax.functor._ // for .widen
+import com.dataintuitive.viash.targets.environments._
 
-package object targets {  
-  implicit val encodeVolume: Encoder[Volume] = deriveEncoder
-  implicit val decodeVolume: Decoder[Volume] = deriveDecoder
-  
-  implicit val encodeREnvironment: Encoder[REnvironment] = deriveEncoder
-  implicit val decodeREnvironment: Decoder[REnvironment] = deriveDecoder
-  
-  implicit val encodePythonEnvironment: Encoder[PythonEnvironment] = deriveEncoder
-  implicit val decodePythonEnvironment: Decoder[PythonEnvironment] = deriveDecoder
-  
+package object targets {
   implicit val encodeDockerTarget: Encoder[DockerTarget] = deriveEncoder
   implicit val decodeDockerTarget: Decoder[DockerTarget] = deriveDecoder
   
@@ -30,6 +21,8 @@ package object targets {
       objJson deepMerge typeJson
   }
   
+  
+  import cats.syntax.functor._ // for .widen
   implicit def decodeTarget: Decoder[Target] = Decoder.instance {
     cursor => 
       val decoder: Decoder[Target] = 
