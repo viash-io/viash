@@ -12,9 +12,12 @@ case class NativeTarget(
   
   def modifyFunctionality(functionality: Functionality, inputDir: File) = {
     // create run scripts
-    val mainRes = functionality.resources.find(_.name.startsWith("main")).get
+    val mainResource = functionality.mainResource
     
-    val command = functionality.platform.command(mainRes.name)
+    val command = functionality.platform match {
+      case None => mainResource.name
+      case Some(pl) => pl.command(mainResource.name)
+    }
     
     val execute_bash = Resource(
       name = "execute.sh",
@@ -22,7 +25,7 @@ case class NativeTarget(
         |
         |$command "$$@"
       """.stripMargin),
-      executable = Some(true)
+      isExecutable = Some(true)
     )
     
     val execute_batch = Resource(
@@ -42,7 +45,7 @@ case class NativeTarget(
         |${if (!pythonInstallCommands.isEmpty) "\n# install Python requirements" else ""}
         |${pythonInstallCommands.mkString(" && \\\n  ")}
       """.stripMargin),
-      executable = Some(true)
+      isExecutable = Some(true)
     )
     
     val setup_batch = Resource(

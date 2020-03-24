@@ -17,17 +17,16 @@ object Main {
     
     println("Parsing functionality")
     val functionality = Functionality.parse(funcPath)
-    
-    println(functionality.platform.generateArgparse(functionality))
+    functionality.rootDir = funcPath
     
     println("Parsing target")
     val target = Target.parse(targPath)
     
+    println("Update main script on-the-fly")
+    // TODO: ....
+    
     println("Processing resources")
     val modifiedFunctionality = target.modifyFunctionality(functionality, funcPath)
-//    val resources = 
-//      functionality.resources.toList ::: 
-//      target.setupResources(functionality).toList
     
     println("Writing resources")
     conf.subcommand match {
@@ -69,8 +68,8 @@ object Main {
           Files.write(dest, code.getBytes(StandardCharsets.UTF_8))
         }
         
-        if (resource.executable.isDefined) {
-          destFile.setExecutable(resource.executable.get)
+        if (resource.isExecutable.isDefined) {
+          destFile.setExecutable(resource.isExecutable.get)
         }
       }
     )

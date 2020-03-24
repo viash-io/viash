@@ -3,6 +3,7 @@ package com.dataintuitive.viash.targets
 import com.dataintuitive.viash.functionality.{Functionality, Resource, StringObject}
 import com.dataintuitive.viash.targets.environments._
 import java.io.File
+import java.nio.file.Paths
 
 case class DockerTarget(
   image: String,
@@ -19,11 +20,23 @@ case class DockerTarget(
     val resourcesPath = "/app"
       
     // get main script
-    val mainScript = resourcesPath + "/" + functionality.resources.find(_.name.startsWith("main")).get.name
-    val mainFilename = functionality.resources.find(_.name.startsWith("main")).get.name
-    val mainDockerPath = resourcesPath + "/" + mainFilename
+    val mainResource = functionality.mainResource
+    val mainPath = Paths.get(resourcesPath, mainResource.name).toFile().getPath()
     
-    val command = functionality.platform.command(resourcesPath)
+    val executionCode = functionality.platform match {
+      case None => mainPath
+      case Some(pl) => {
+        val code = functionality.mainCode.get
+        
+        s"""
+        |if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
+        |cat > "$mainPath" << "VIASHMAIN"
+        |$code
+        |VIASHMAIN
+        |${pl.command(mainPath)}
+        """.stripMargin
+      }
+    }
     
     // construct dockerfile, if needed
     val dockerFile = makeDockerFile(functionality, resourcesPath)
@@ -90,13 +103,11 @@ case class DockerTarget(
         °
         °$volParse
         °
-        °cat << "VIASHEOF" | docker run $volStr$portStr$runImageName "$$@"
-        °if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
-        °cat > "$mainScript" << "VIASHMAIN"
-        °VIASHMAIN
+        °cat << "VIASHEOF" | docker run -i $volStr$portStr$runImageName "$$@"
+        °$executionCode
         °VIASHEOF
       """.stripMargin('°')),
-      executable = Some(true)
+      isExecutable = Some(true)
     )
     
     val execute_batch = Resource(
@@ -118,7 +129,7 @@ case class DockerTarget(
             """.stripMargin)
         }
       },
-      executable = Some(true)
+      isExecutable = Some(true)
     )
       
     val setup_batch = Resource(
@@ -185,14 +196,16 @@ case class DockerTarget(
             } + 
             {
               if (!resourceNames.isEmpty) {
-                "\n" +
-                "# copy resources\n" +
-                resourceNames.mkString("COPY ", " ", " $resourcesPath/\n")
+                s"""
+                  |# copy resources
+                  |COPY ${resourceNames.mkString(" ")} $resourcesPath/
+                  |WORKDIR $resourcesPath
+                  """.stripMargin
               } else {
                 ""
               }
             } +
-            s"ENTRYPOINT sh\n"
+            s"\nENTRYPOINT sh\n"
         )
       ))
     }

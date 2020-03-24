@@ -13,18 +13,6 @@ package object functionality {
     cursor => cursor.value.as[String].map(new java.io.File(_))
   }
   
-  // encoder and decoder for Platform
-  implicit val encodePlatform: Encoder[Platform] = Encoder.instance {
-    platform => 
-      Json.fromString(platform.toString)
-  }
-  implicit val decodePlatform: Decoder[Platform] = Decoder.instance {
-    cursor =>
-      cursor.value.as[String].map(
-        Platform.fromString(_)
-      )
-  }
-  
   // encoders and decoders for Object
   implicit val encodeStringObject: Encoder[StringObject] = deriveEncoder
   implicit val encodeIntegerObject: Encoder[IntegerObject] = deriveEncoder

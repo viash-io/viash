@@ -14,6 +14,7 @@ inputs:
   description: The format of the input and output files.
   default: csv
   required: true
+  values: [csv, tsv, rds, h5]
 - name: column_name
   type: string
   description: The name of the column by which to filter.

@@ -18,7 +18,8 @@ case class StringObject(
     name: String,
     description: Option[String] = None,
     default: Option[String] = None,
-    required: Option[Boolean] = None
+    required: Option[Boolean] = None,
+    values: Option[List[String]] = None
 ) extends DataObject[String] {
   override val `type` = "string"
 }

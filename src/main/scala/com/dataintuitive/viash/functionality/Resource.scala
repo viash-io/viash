@@ -1,13 +1,20 @@
 package com.dataintuitive.viash.functionality
 
-case class Resource(
-  name: String,
-  path: Option[String] = None,
-  code: Option[String] = None,
-  executable: Option[Boolean] = None
-) {
+trait ResourceTrait {
+  val name: String
+  val path: Option[String]
+  val code: Option[String]
+  val isExecutable: Option[Boolean]
+  
   require(
     (path == None) != (code == None), 
     message = "Exactly one of path and code must be defined, the other undefined."
   )
 }
+
+case class Resource(
+  name: String,
+  path: Option[String] = None,
+  code: Option[String] = None,
+  isExecutable: Option[Boolean] = None
+) extends ResourceTrait
