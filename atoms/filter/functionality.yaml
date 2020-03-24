@@ -7,24 +7,29 @@ inputs:
   type: file
   description: The path to a table to be filtered.
   mustExist: true
+  required: true
   default: train.csv
 - name: format
   type: string
   description: The format of the input and output files.
   default: csv
+  required: true
 - name: column_name
   type: string
   description: The name of the column by which to filter.
   default: Sex
+  required: true
 - name: value
   type: string
   description: Only rows for which the column contains this value will pass the filter.
   default: male
+  required: true
 outputs:
 - name: output
   type: file
   description: The path to the output file.
   default: filtered.csv
+  required: true
 resources:
 - name: main.R
   path: ./code.R

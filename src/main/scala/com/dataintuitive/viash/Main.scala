@@ -17,11 +17,14 @@ object Main {
     
     println("Parsing functionality")
     val functionality = Functionality.parse(funcPath)
+    
+    println(functionality.platform.generateArgparse(functionality))
+    
     println("Parsing target")
     val target = Target.parse(targPath)
     
     println("Processing resources")
-    val modifiedFunctionality = target.modifyFunctionality(functionality)
+    val modifiedFunctionality = target.modifyFunctionality(functionality, funcPath)
 //    val resources = 
 //      functionality.resources.toList ::: 
 //      target.setupResources(functionality).toList

@@ -1,8 +1,8 @@
 package com.dataintuitive.viash.targets
 
 import com.dataintuitive.viash.functionality.{Functionality, Resource}
-import com.dataintuitive.viash.targets.environments.PythonEnvironment
-import com.dataintuitive.viash.targets.environments.REnvironment
+import com.dataintuitive.viash.targets.environments._
+import java.io.File
 
 case class NativeTarget(
   r: Option[REnvironment] = None,
@@ -10,7 +10,7 @@ case class NativeTarget(
 ) extends Target {
   val `type` = "native"
   
-  def modifyFunctionality(functionality: Functionality) = {
+  def modifyFunctionality(functionality: Functionality, inputDir: File) = {
     // create run scripts
     val mainRes = functionality.resources.find(_.name.startsWith("main")).get
     

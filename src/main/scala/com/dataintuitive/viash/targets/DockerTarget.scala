@@ -2,6 +2,7 @@ package com.dataintuitive.viash.targets
 
 import com.dataintuitive.viash.functionality.{Functionality, Resource, StringObject}
 import com.dataintuitive.viash.targets.environments._
+import java.io.File
 
 case class DockerTarget(
   image: String,
@@ -14,14 +15,18 @@ case class DockerTarget(
 ) extends Target {
   val `type` = "docker"
   
-  def modifyFunctionality(functionality: Functionality) = {
+  def modifyFunctionality(functionality: Functionality, inputDir: File) = {
+    val resourcesPath = "/app"
+      
     // get main script
-    val mainRes = functionality.resources.find(_.name.startsWith("main")).get
+    val mainScript = resourcesPath + "/" + functionality.resources.find(_.name.startsWith("main")).get.name
+    val mainFilename = functionality.resources.find(_.name.startsWith("main")).get.name
+    val mainDockerPath = resourcesPath + "/" + mainFilename
     
-    val command = functionality.platform.command(mainRes.name)
+    val command = functionality.platform.command(resourcesPath)
     
     // construct dockerfile, if needed
-    val dockerFile = makeDockerFile(functionality, command)
+    val dockerFile = makeDockerFile(functionality, resourcesPath)
     
     // construct execute resources
     val runImageName = if (dockerFile.isEmpty) image else "somename"
@@ -77,15 +82,20 @@ case class DockerTarget(
         required = Some(true)
       )
     )
-      
+    
+    // todo: allow passing script without it being a resource
     val execute_bash = Resource(
       name = "execute.sh",
       code = Some(s"""#!/bin/bash
-        |
-        |$volParse
-        |
-        |docker run $volStr$portStr$runImageName "$$@"
-      """.stripMargin),
+        °
+        °$volParse
+        °
+        °cat << "VIASHEOF" | docker run $volStr$portStr$runImageName "$$@"
+        °if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
+        °cat > "$mainScript" << "VIASHMAIN"
+        °VIASHMAIN
+        °VIASHEOF
+      """.stripMargin('°')),
       executable = Some(true)
     )
     
@@ -128,12 +138,12 @@ case class DockerTarget(
     )
   }
   
-  def makeDockerFile(functionality: Functionality, command: String) = {
+  def makeDockerFile(functionality: Functionality, resourcesPath: String) = {
     // get dependencies
     val aptInstallCommands = apt.map(_.getInstallCommands()).getOrElse(Nil)
     val rInstallCommands = r.map(_.getInstallCommands()).getOrElse(Nil)
     val pythonInstallCommands = python.map(_.getInstallCommands()).getOrElse(Nil)
-    val resourceNames = functionality.resources.map(_.name)
+    val resourceNames = functionality.resources.map(_.name).filterNot(_.startsWith("main"))
     
     val deps = List(aptInstallCommands, rInstallCommands, pythonInstallCommands, resourceNames).flatten
     
@@ -141,7 +151,7 @@ case class DockerTarget(
     // otherwise need to construct a separate docker container
     if (deps.isEmpty) {
       Nil
-    } else {
+    } else {      
       List(Resource(
         name = "Dockerfile",
         code = Some(
@@ -177,12 +187,12 @@ case class DockerTarget(
               if (!resourceNames.isEmpty) {
                 "\n" +
                 "# copy resources\n" +
-                resourceNames.mkString("COPY ", " ", " /app/\n")
+                resourceNames.mkString("COPY ", " ", " $resourcesPath/\n")
               } else {
                 ""
               }
             } +
-            s"ENTRYPOINT $command\n"
+            s"ENTRYPOINT sh\n"
         )
       ))
     }
