@@ -1,8 +1,0 @@
-command: Rscript script.R
-parameters:
-  - name: input
-    value: inputfile
-  - name: output
-    value: outputfile
-  - name: gender
-    value: male

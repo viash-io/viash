@@ -1,7 +1,0 @@
-#!/bin/bash
-
-docker run -i \
-  {{#env.contexts.docker.volumes}}-v "{{from}}:{{to}}" {{/env.contexts.docker.volumes}} \
-  -w "{{env.contexts.docker.workdir}}" \
-  {{env.contexts.docker.image}} \
-  {{function.command}} {{#function.parameters}}--{{name}} {{value}} {{/function.parameters}}
