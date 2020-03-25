@@ -1,4 +1,4 @@
-name: print_parmas
+name: print_params
 description: Prints out the parameter values.
 platform: Python
 inputs:
