@@ -43,7 +43,7 @@ case object RPlatform extends Platform {
     }
     
     // gather description 
-    val descrStr = functionality.description.map("\ndescription = \"" + _ + "\",").getOrElse("")
+    val descrStr = functionality.description.map("\n  description = \"" + _ + "\",").getOrElse("")
     
     // construct required arg checks
     val reqParams = params.filter(_.required.getOrElse(false))
