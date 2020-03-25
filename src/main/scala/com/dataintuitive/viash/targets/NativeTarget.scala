@@ -13,6 +13,16 @@ case class NativeTarget(
     // create run scripts
     val mainResource = functionality.mainResource.get
     
+    val newMainResource = functionality.platform match {
+      case None =>
+        mainResource
+      case Some(pl) => 
+        mainResource.copy(
+          code = functionality.mainCodeWithArgParse,
+          path = None
+        )
+    }
+    
     val command = functionality.platform match {
       case None => mainResource.name
       case Some(pl) => pl.command(mainResource.name)
@@ -56,7 +66,9 @@ case class NativeTarget(
     )
     
     functionality.copy(
-      resources = functionality.resources ::: List(execute_bash, execute_batch, setup_bash, setup_batch)
+      resources = 
+        functionality.resources.filterNot(_.name.startsWith("main")) ::: 
+          List(newMainResource, execute_bash, execute_batch, setup_bash, setup_batch)
     )
   }
 }
