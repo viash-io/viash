@@ -2,7 +2,6 @@ package com.dataintuitive.viash.targets
 
 import com.dataintuitive.viash.functionality.{Functionality, Resource, StringObject}
 import com.dataintuitive.viash.targets.environments._
-import java.io.File
 import java.nio.file.Paths
 
 case class DockerTarget(
@@ -16,28 +15,9 @@ case class DockerTarget(
 ) extends Target {
   val `type` = "docker"
   
-  def modifyFunctionality(functionality: Functionality, inputDir: File) = {
+  def modifyFunctionality(functionality: Functionality) = {
     val resourcesPath = "/app"
-      
-    // get main script
-    val mainResource = functionality.mainResource
-    val mainPath = Paths.get(resourcesPath, mainResource.name).toFile().getPath()
-    
-    val executionCode = functionality.platform match {
-      case None => mainPath
-      case Some(pl) => {
-        val code = functionality.mainCode.get
-        
-        s"""
-        |if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
-        |cat > "$mainPath" << "VIASHMAIN"
-        |$code
-        |VIASHMAIN
-        |${pl.command(mainPath)}
-        """.stripMargin
-      }
-    }
-    
+       
     // construct dockerfile, if needed
     val dockerFile = makeDockerFile(functionality, resourcesPath)
     
@@ -84,6 +64,8 @@ case class DockerTarget(
           |esac
           |done
           |
+          |set -- "$${POSITIONAL[@]}" # restore positional parameters
+          |
           |# provide temporary defaults for Docker$fillIns
           |""".stripMargin
       }
@@ -96,14 +78,37 @@ case class DockerTarget(
       )
     )
     
-    // todo: allow passing script without it being a resource
+    // create new fun with extra params
+    val fun2 = functionality.copy(
+      inputs = functionality.inputs ::: volInputs
+    )
+    
+    // get main script
+    val mainResource = fun2.mainResource.get
+    val mainPath = Paths.get(resourcesPath, mainResource.name).toFile().getPath()
+    
+    val executionCode = fun2.platform match {
+      case None => mainPath
+      case Some(pl) => {
+        val code = fun2.mainCodeWithArgParse.get
+        
+        s"""
+        |if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
+        |cat > "$mainPath" << 'VIASHMAIN'
+        |$code
+        |VIASHMAIN
+        |${pl.command(mainPath)} "$$@"
+        """.stripMargin
+      }
+    }
+    
     val execute_bash = Resource(
       name = "execute.sh",
       code = Some(s"""#!/bin/bash
         °
         °$volParse
         °
-        °cat << "VIASHEOF" | docker run -i $volStr$portStr$runImageName "$$@"
+        °cat << VIASHEOF | docker run -i $volStr$portStr$runImageName
         °$executionCode
         °VIASHEOF
       """.stripMargin('°')),
@@ -143,9 +148,11 @@ case class DockerTarget(
       }
     )
     
-    functionality.copy(
-      resources = functionality.resources ::: dockerFile ::: List(execute_bash, execute_batch, setup_bash, setup_batch),
-      inputs = functionality.inputs ::: volInputs
+    fun2.copy(
+      resources =
+        fun2.resources.filterNot(_.name.startsWith("main")) ::: 
+        dockerFile :::
+        List(execute_bash, execute_batch, setup_bash, setup_batch)
     )
   }
   

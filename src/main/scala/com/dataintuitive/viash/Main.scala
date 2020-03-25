@@ -22,22 +22,18 @@ object Main {
     println("Parsing target")
     val target = Target.parse(targPath)
     
-    println("Update main script on-the-fly")
-    // TODO: ....
-    
     println("Processing resources")
-    val modifiedFunctionality = target.modifyFunctionality(functionality, funcPath)
+    val fun2 = target.modifyFunctionality(functionality)
     
-    println("Writing resources")
     conf.subcommand match {
       case Some(conf.run) => {
-        val dir = Files.createTempDirectory("viash_" + modifiedFunctionality.name).toFile()
-        writeResources(modifiedFunctionality.resources, funcPath, dir)
+        val dir = Files.createTempDirectory("viash_" + fun2.name).toFile()
+        writeResources(fun2.resources, funcPath, dir)
       }
       case Some(conf.export) => {
         val dir = new java.io.File(conf.export.output())
         dir.mkdirs()
-        writeResources(modifiedFunctionality.resources, funcPath, dir)
+        writeResources(fun2.resources, funcPath, dir)
       }
       case Some(_) => println("??")
       case None => println("No subcommand was specified")

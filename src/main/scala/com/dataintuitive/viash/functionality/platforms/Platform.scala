@@ -1,6 +1,6 @@
 package com.dataintuitive.viash.functionality.platforms
 
-import com.dataintuitive.viash.functionality.Functionality
+import com.dataintuitive.viash.functionality.{Functionality, Resource}
 
 trait Platform {
   val `type`: String
@@ -8,6 +8,8 @@ trait Platform {
   def command(script: String): String
   
   def generateArgparse(functionality: Functionality): String
+  
+  val commentStr: String
 }
 
 object Platform {
