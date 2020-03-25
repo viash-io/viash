@@ -1,0 +1,31 @@
+name: print_parmas
+description: Prints out the parameter values.
+platform: Python
+inputs:
+- name: whole_number
+  type: integer
+  description: A whole number.
+  default: 10
+  required: false
+- name: real_number
+  type: double
+  description: A real number.
+  required: false
+- name: sentence
+  type: string
+  description: A sentence.
+  default: "The slow pink seal slided under the eager sandwich."
+  required: true
+- name: truth
+  type: boolean
+  description: A logical value.
+outputs: 
+- name: output
+  type: file
+  description: The path to the output file.
+  default: output.txt
+  required: true
+resources:
+- name: main.py
+  path: ./code.py
+

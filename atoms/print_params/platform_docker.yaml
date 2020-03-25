@@ -1,0 +1,9 @@
+type: docker
+image: python
+python:
+  packages: 
+  - argparse
+volumes:
+- name: data
+  mount: /mnt/data
+workdir: /app
