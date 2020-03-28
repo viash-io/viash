@@ -1,0 +1,17 @@
+name: binary-test
+description: empty
+platform: Native
+inputs:
+- name: allornot
+  type: file
+  required: true
+  default:
+outputs:
+- name: output
+  type: file
+  description: The path to the output file.
+  default: filtered.csv
+  required: true
+resources:
+- name: main
+  path: /usr/bin/uname

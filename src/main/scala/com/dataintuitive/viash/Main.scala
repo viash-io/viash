@@ -11,20 +11,20 @@ import java.nio.charset.StandardCharsets
 object Main {
   def main(args: Array[String]) {
     val conf = new CLIConf(args)
-    
+
     val funcPath = new java.io.File(conf.functionality())
     val targPath = new java.io.File(conf.platform())
-    
+
     println("Parsing functionality")
     val functionality = Functionality.parse(funcPath)
     functionality.rootDir = funcPath
-    
+
     println("Parsing target")
     val target = Target.parse(targPath)
-    
+
     println("Processing resources")
     val fun2 = target.modifyFunctionality(functionality)
-    
+
     conf.subcommand match {
       case Some(conf.run) => {
         val dir = Files.createTempDirectory("viash_" + fun2.name).toFile()
@@ -39,7 +39,7 @@ object Main {
       case None => println("No subcommand was specified")
     }
   }
-  
+
   def writeResources(
     resources: Seq[Resource],
     inputDir: java.io.File,
@@ -50,12 +50,12 @@ object Main {
     resources.foreach(
       resource => {
         val dest = Paths.get(outputDir.getAbsolutePath, resource.name)
-        
+
         val destFile = dest.toFile()
         if (overwrite && destFile.exists()) {
           destFile.delete()
         }
-        
+
         if (resource.path.isDefined) {
           val sour = Paths.get(inputDir.getParent(), resource.path.get)
           Files.copy(sour, dest)
@@ -63,16 +63,16 @@ object Main {
           val code = resource.code.get
           Files.write(dest, code.getBytes(StandardCharsets.UTF_8))
         }
-        
+
         if (resource.isExecutable.isDefined) {
           destFile.setExecutable(resource.isExecutable.get)
         }
       }
     )
   }
-  
+
   def run(
-      
+
   ) = {
 //      import sys.process._
 //      

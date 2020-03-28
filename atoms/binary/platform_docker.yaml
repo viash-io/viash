@@ -1,0 +1,6 @@
+type: docker
+image: centos:8
+volumes:
+- name: data
+  mount: /mnt/data
+workdir: /app

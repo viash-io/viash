@@ -14,18 +14,18 @@ case class DockerTarget(
   python: Option[PythonEnvironment] = None
 ) extends Target {
   val `type` = "docker"
-  
+
   def modifyFunctionality(functionality: Functionality) = {
     val resourcesPath = "/app"
-       
+
     // construct dockerfile, if needed
     val dockerFile = makeDockerFile(functionality, resourcesPath)
-    
+
     // construct execute resources
     val runImageName = if (dockerFile.isEmpty) image else "somename"
-    
+
     val portStr = port.getOrElse(Nil).map("-p " + _ + " ").mkString("")
-    
+
     val volumesGet = volumes.getOrElse(Nil)
     val volParse = 
       if (volumesGet.isEmpty) {
@@ -49,7 +49,7 @@ case class DockerTarget(
               |  ${vol.name.toUpperCase()}=`pwd`; 
               |fi""".stripMargin
           ).mkString("")
-        
+
         s"""
           |POSITIONAL=()
           |while [[ $$# -gt 0 ]]
@@ -77,21 +77,22 @@ case class DockerTarget(
         required = Some(true)
       )
     )
-    
+
     // create new fun with extra params
     val fun2 = functionality.copy(
       inputs = functionality.inputs ::: volInputs
     )
-    
+
     // get main script
     val mainResource = fun2.mainResource.get
     val mainPath = Paths.get(resourcesPath, mainResource.name).toFile().getPath()
-    
+
     val executionCode = fun2.platform match {
       case None => mainPath
+      case Some(pl) if (pl.`type` == "Native") => mainResource.path.getOrElse("No command provided")
       case Some(pl) => {
         val code = fun2.mainCodeWithArgParse.get
-        
+
         s"""
         |if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
         |cat > "$mainPath" << 'VIASHMAIN'
@@ -101,7 +102,7 @@ case class DockerTarget(
         """.stripMargin
       }
     }
-    
+
     val execute_bash = Resource(
       name = "execute.sh",
       code = Some(s"""#!/bin/bash
@@ -114,13 +115,13 @@ case class DockerTarget(
       """.stripMargin('°')),
       isExecutable = Some(true)
     )
-    
+
     val execute_batch = Resource(
       name = "execute.bat",
       code = Some(s"TODO")
     )
-    
-    
+
+
     // construct setup resources
     val setup_bash = Resource(
       name = "setup.sh",
@@ -136,7 +137,7 @@ case class DockerTarget(
       },
       isExecutable = Some(true)
     )
-      
+
     val setup_batch = Resource(
       name = "setup.bat",
       code = {
@@ -147,7 +148,7 @@ case class DockerTarget(
         }
       }
     )
-    
+
     fun2.copy(
       resources =
         fun2.resources.filterNot(_.name.startsWith("main")) ::: 
@@ -155,16 +156,16 @@ case class DockerTarget(
         List(execute_bash, execute_batch, setup_bash, setup_batch)
     )
   }
-  
+
   def makeDockerFile(functionality: Functionality, resourcesPath: String) = {
     // get dependencies
     val aptInstallCommands = apt.map(_.getInstallCommands()).getOrElse(Nil)
     val rInstallCommands = r.map(_.getInstallCommands()).getOrElse(Nil)
     val pythonInstallCommands = python.map(_.getInstallCommands()).getOrElse(Nil)
     val resourceNames = functionality.resources.map(_.name).filterNot(_.startsWith("main"))
-    
+
     val deps = List(aptInstallCommands, rInstallCommands, pythonInstallCommands, resourceNames).flatten
-    
+
     // if no extra dependencies are needed, the provided image can just be used, 
     // otherwise need to construct a separate docker container
     if (deps.isEmpty) {

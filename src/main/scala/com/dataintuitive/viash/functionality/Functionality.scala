@@ -32,9 +32,9 @@ case class Functionality(
         Some(newValue)
       }
   }
-    
+
   def mainCode: Option[String] = {
-    if (platform.isEmpty || mainResource.isEmpty) {
+    if (platform.isEmpty || platform.exists(_.`type` == "Native") || mainResource.isEmpty) {
       None
     } else if (mainResource.get.code.isDefined) {
       mainResource.get.code
@@ -43,7 +43,7 @@ case class Functionality(
       Some(Source.fromFile(mainPath).mkString(""))
     }
   }
-  
+
   def mainCodeWithArgParse = {
     mainCode.map(code =>
       platform match {
@@ -58,7 +58,7 @@ case class Functionality(
             |${pl.generateArgparse(this)}
             |${pl.commentStr} PORTASH END
             |""".stripMargin
-            
+
           import java.util.regex.Pattern
           Pattern.compile(regex, Pattern.DOTALL)
             .matcher(code)
@@ -67,7 +67,7 @@ case class Functionality(
         case None => code
       }
     )
-  
+
   }
 }
 
@@ -77,21 +77,21 @@ object Functionality {
     val fun = parser.parse(str)
       .fold(throw _, _.as[Functionality])
       .fold(throw _, identity)
-    
+
     // save root directory of Functionality object
     fun.rootDir = file
-      
+
     require(
       fun.resources.count(_.name.startsWith("main")) == 1,
       message = "Define exactly one resource whose name begins with 'main'."
     )
-    
+
     val mr = fun.mainResource.get
     require(
       fun.platform.isDefined || (mr.path.isDefined && mr.isExecutable.getOrElse(true)),
       message = "If the platform is not specified, the main resource should be a standalone executable."
     )
-    
+
     fun
   }
 }
