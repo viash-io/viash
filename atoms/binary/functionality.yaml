@@ -14,4 +14,4 @@ outputs:
   required: true
 resources:
 - name: main
-  path: /usr/bin/uname
+  path: uname

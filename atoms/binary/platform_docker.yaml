@@ -2,5 +2,7 @@ type: docker
 image: centos:8
 volumes:
 - name: data
-  mount: /mnt/data
+  mount: /Users/toni/data
+- name: refdata
+  mount: /Users/toni/refdata
 workdir: /app

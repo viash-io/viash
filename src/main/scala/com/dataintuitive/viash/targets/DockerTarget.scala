@@ -27,11 +27,11 @@ case class DockerTarget(
     val portStr = port.getOrElse(Nil).map("-p " + _ + " ").mkString("")
 
     val volumesGet = volumes.getOrElse(Nil)
-    val volParse = 
+    val volParse =
       if (volumesGet.isEmpty) {
         ""
       } else {
-        val volStrs = 
+        val volStrs =
           volumesGet.map(vol =>
             s"""
               |    ---${vol.name})
@@ -52,6 +52,7 @@ case class DockerTarget(
 
         s"""
           |POSITIONAL=()
+          |ADDITIONAL=()
           |while [[ $$# -gt 0 ]]
           |do
           |key="$$1"
@@ -59,6 +60,7 @@ case class DockerTarget(
           |case $$key in$volStrs
           |    *)    # unknown option
           |    POSITIONAL+=("$$1") # save it in an array for later
+          |    ADDITIONAL+=("$$1") # save it in an array for later
           |    shift # past argument
           |    ;;
           |esac
@@ -89,14 +91,14 @@ case class DockerTarget(
 
     val executionCode = fun2.platform match {
       case None => mainPath
-      case Some(pl) if (pl.`type` == "Native") => mainResource.path.getOrElse("No command provided")
+      case Some(pl) if (pl.`type` == "Native") =>
+        mainResource.path.getOrElse("echo No command provided")
       case Some(pl) => {
         val code = fun2.mainCodeWithArgParse.get
 
         s"""
         |if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
-        |cat > "$mainPath" << 'VIASHMAIN'
-        |$code
+        |cat > "$mainPath" << 'VIASHMAIN' $code
         |VIASHMAIN
         |${pl.command(mainPath)} "$$@"
         """.stripMargin
@@ -109,8 +111,7 @@ case class DockerTarget(
         °
         °$volParse
         °
-        °cat << VIASHEOF | docker run -i $volStr$portStr$runImageName
-        °$executionCode
+        °cat << VIASHEOF | docker run -i $volStr$portStr$runImageName $executionCode "$${ADDITIONAL[@]}"
         °VIASHEOF
       """.stripMargin('°')),
       isExecutable = Some(true)

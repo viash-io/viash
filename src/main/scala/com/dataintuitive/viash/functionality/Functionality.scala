@@ -47,6 +47,8 @@ case class Functionality(
   def mainCodeWithArgParse = {
     mainCode.map(code =>
       platform match {
+        case Some(pl) if (pl.`type` == "Native") => code
+        case None => code
         case Some(pl) => {
           val regex = s"""
             |${pl.commentStr}[^\n]*PORTASH START.*
@@ -64,7 +66,6 @@ case class Functionality(
             .matcher(code)
             .replaceAll(replace)
         }
-        case None => code
       }
     )
 
