@@ -1,17 +1,21 @@
-name: binary-test
+name: pandoc
 description: empty
 platform: Native
 inputs:
-- name: allornot
+- name: input
   type: file
   required: true
-  default:
+  default: test.md
+- name: output
+  type: file
+  required: true
+  default: test.html
 outputs:
 - name: output
   type: file
   description: The path to the output file.
-  default: filtered.csv
+  default: test.html
   required: true
 resources:
 - name: main
-  path: uname
+  path: pandoc

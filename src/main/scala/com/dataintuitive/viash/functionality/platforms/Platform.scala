@@ -18,6 +18,7 @@ object Platform {
       case "R" => RPlatform
       case "Python" => PythonPlatform
       case "Native" => NativePlatform
+      case "NextFlow" => NativePlatform
       case s => throw new RuntimeException(s"Unrecognised platform '${s}'.") 
     }
   }

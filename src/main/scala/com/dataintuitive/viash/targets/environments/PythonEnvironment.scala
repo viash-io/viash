@@ -7,7 +7,7 @@ case class PythonEnvironment(
   def getInstallCommands() = {
     val installPip = 
       """pip install --upgrade pip"""
-      
+
     val installCranPackages = 
       packages.getOrElse(Nil) match {
         case Nil => Nil
@@ -18,7 +18,7 @@ case class PythonEnvironment(
             ""
           ))
       }
-    
+
     val installGithubPackages = 
       github.getOrElse(Nil) match {
         case Nil => Nil
@@ -29,7 +29,7 @@ case class PythonEnvironment(
             ""
           ))
       }
-      
+
     installPip :: installCranPackages ::: installGithubPackages
   }
 }
