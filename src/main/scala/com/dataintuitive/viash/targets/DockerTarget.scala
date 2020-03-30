@@ -105,23 +105,37 @@ case class DockerTarget(
       }
     }
 
-    val execute_bash = Resource(
-      name = "execute.sh",
-      code = Some(s"""#!/bin/bash
-        °
-        °$volParse
-        °
-        °cat << VIASHEOF | docker run -i $volStr$portStr$runImageName $executionCode "$${ADDITIONAL[@]}"
-        °VIASHEOF
-      """.stripMargin('°')),
-      isExecutable = Some(true)
-    )
+    val execute_bash = fun2.platform match {
+      case Some(pl) if (pl.`type` == "Native") =>
+        Resource(
+        name = "execute.sh",
+        code = Some(s"""#!/bin/bash
+          °
+          °$volParse
+          °
+          °cat << VIASHEOF | docker run -i $volStr$portStr$runImageName $executionCode "$${ADDITIONAL[@]}"
+          °VIASHEOF
+        """.stripMargin('°')),
+        isExecutable = Some(true)
+        )
+      case _ =>
+        Resource(
+        name = "execute.sh",
+        code = Some(s"""#!/bin/bash
+          °
+          °$volParse
+          °
+          °cat << VIASHEOF | docker run -i $volStr$portStr$runImageName $executionCode
+          °VIASHEOF
+        """.stripMargin('°')),
+        isExecutable = Some(true)
+      )
+    }
 
     val execute_batch = Resource(
       name = "execute.bat",
       code = Some(s"TODO")
     )
-
 
     // construct setup resources
     val setup_bash = Resource(
