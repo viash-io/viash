@@ -98,13 +98,17 @@ case class DockerTarget(
 
         s"""
         |if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
-        |cat > "$mainPath" << 'VIASHMAIN' $code
+        |cat > "$mainPath" << 'VIASHMAIN'
+        |$code
         |VIASHMAIN
         |${pl.command(mainPath)} "$$@"
         """.stripMargin
       }
     }
 
+    /**
+     * Note: This is not a good place to checck for platform types, separation of concern-wise.
+     */
     val execute_bash = fun2.platform match {
       case Some(pl) if (pl.`type` == "Native") =>
         Resource(
