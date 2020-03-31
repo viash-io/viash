@@ -1,6 +1,7 @@
 package com.dataintuitive.viash.targets
 
 import com.dataintuitive.viash.functionality.{Functionality, Resource, StringObject}
+import com.dataintuitive.viash.functionality.platforms.NativePlatform
 import com.dataintuitive.viash.targets.environments._
 import java.nio.file.Paths
 
@@ -41,7 +42,7 @@ case class NextFlowTarget(
     val mainResource = functionality.mainResource.get
     val mainPath = Paths.get(resourcesPath, mainResource.name).toFile().getPath()
     val executionCode = functionality.platform match {
-      case Some(pl) if (pl.`type` == "Native") => mainResource.path.getOrElse("echo No command provided")
+      case Some(NativePlatform) => mainResource.path.getOrElse("echo No command provided")
       case _    => { println("Not implemented yet"); mainPath}
     }
 

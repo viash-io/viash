@@ -4,7 +4,7 @@ import scala.io.Source
 import io.circe.yaml.parser
 import java.nio.file.Paths
 import java.io.File
-import platforms.Platform
+import platforms._
 
 case class Functionality(
   name: String,
@@ -34,7 +34,7 @@ case class Functionality(
   }
 
   def mainCode: Option[String] = {
-    if (platform.isEmpty || platform.exists(_.`type` == "Native") || mainResource.isEmpty) {
+    if (platform.isEmpty || platform.exists(_ == NativePlatform) || mainResource.isEmpty) {
       None
     } else if (mainResource.get.code.isDefined) {
       mainResource.get.code
@@ -47,7 +47,7 @@ case class Functionality(
   def mainCodeWithArgParse = {
     mainCode.map(code =>
       platform match {
-        case Some(pl) if (pl.`type` == "Native") => code
+        case Some(NativePlatform) => code
         case None => code
         case Some(pl) => {
           val regex = s"""

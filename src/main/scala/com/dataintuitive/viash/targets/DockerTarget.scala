@@ -1,6 +1,7 @@
 package com.dataintuitive.viash.targets
 
 import com.dataintuitive.viash.functionality.{Functionality, Resource, StringObject}
+import com.dataintuitive.viash.functionality.platforms.NativePlatform
 import com.dataintuitive.viash.targets.environments._
 import java.nio.file.Paths
 
@@ -91,7 +92,7 @@ case class DockerTarget(
 
     val executionCode = fun2.platform match {
       case None => mainPath
-      case Some(pl) if (pl.`type` == "Native") =>
+      case Some(NativePlatform) =>
         mainResource.path.getOrElse("echo No command provided")
       case Some(pl) => {
         val code = fun2.mainCodeWithArgParse.get
@@ -110,7 +111,7 @@ case class DockerTarget(
      * Note: This is not a good place to checck for platform types, separation of concern-wise.
      */
     val execute_bash = fun2.platform match {
-      case Some(pl) if (pl.`type` == "Native") =>
+      case Some(NativePlatform) =>
         Resource(
           name = "execute.sh",
           code = Some(s"""#!/bin/bash
