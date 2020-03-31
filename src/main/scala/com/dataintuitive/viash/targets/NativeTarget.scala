@@ -37,10 +37,10 @@ case class NativeTarget(
       isExecutable = Some(true)
     )
 
-    val execute_batch = Resource(
-      name = "execute.bat",
-      code = Some(s"$command %*")
-    )
+//    val execute_batch = Resource(
+//      name = "execute.bat",
+//      code = Some(s"$command %*")
+//    )
 
     // create setup scripts
     val rInstallCommands = r.map(_.getInstallCommands()).getOrElse(Nil)
@@ -57,18 +57,19 @@ case class NativeTarget(
       isExecutable = Some(true)
     )
 
-    val setup_batch = Resource(
-      name = "setup.bat",
-      code = Some(s"""${rInstallCommands.mkString(" && \\\n  ")}
-        |
-        |${pythonInstallCommands.mkString(" && \\\n  ")}
-      """.stripMargin)
-    )
+//    val setup_batch = Resource(
+//      name = "setup.bat",
+//      code = Some(s"""${rInstallCommands.mkString(" && \\\n  ")}
+//        |
+//        |${pythonInstallCommands.mkString(" && \\\n  ")}
+//      """.stripMargin)
+//    )
 
     functionality.copy(
       resources = 
         functionality.resources.filterNot(_.name.startsWith("main")) ::: 
-          List(newMainResource, execute_bash, execute_batch, setup_bash, setup_batch)
+//          List(newMainResource, execute_bash, execute_batch, setup_bash, setup_batch)
+        List(newMainResource, execute_bash, setup_bash)
     )
   }
 }

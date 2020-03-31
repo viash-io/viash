@@ -137,10 +137,10 @@ case class DockerTarget(
       )
     }
 
-    val execute_batch = Resource(
-      name = "execute.bat",
-      code = Some(s"TODO")
-    )
+//    val execute_batch = Resource(
+//      name = "execute.bat",
+//      code = Some(s"TODO")
+//    )
 
     // construct setup resources
     val setup_bash = Resource(
@@ -158,22 +158,23 @@ case class DockerTarget(
       isExecutable = Some(true)
     )
 
-    val setup_batch = Resource(
-      name = "setup.bat",
-      code = {
-        if (dockerFile.isEmpty) {
-          Some(s"docker pull $runImageName")
-        } else {
-          Some(s"""docker build -t $runImageName .""")
-        }
-      }
-    )
+//    val setup_batch = Resource(
+//      name = "setup.bat",
+//      code = {
+//        if (dockerFile.isEmpty) {
+//          Some(s"docker pull $runImageName")
+//        } else {
+//          Some(s"""docker build -t $runImageName .""")
+//        }
+//      }
+//    )
 
     fun2.copy(
       resources =
         fun2.resources.filterNot(_.name.startsWith("main")) ::: 
         dockerFile :::
-        List(execute_bash, execute_batch, setup_bash, setup_batch)
+//        List(execute_bash, execute_batch, setup_bash, setup_batch)
+        List(execute_bash, setup_bash)
     )
   }
 
