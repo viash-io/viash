@@ -2,12 +2,18 @@ package com.dataintuitive.viash.functionality
 
 import java.io.File
 
-trait DataObject[Type] {
+abstract class DataObject[Type] {
   val `type`: String
-  val name: String
+  val name: Option[String]
+  val short: Option[Char]
   val description: Option[String]
   val default: Option[Type]
   val required: Option[Boolean]
+  
+  require(
+    name.isDefined || short.isDefined,
+    message = "At least either 'name' or 'short' must be defined."
+  )
   
   def validate(value: Type): Boolean = {
     true
@@ -15,7 +21,8 @@ trait DataObject[Type] {
 }
 
 case class StringObject(
-    name: String,
+    name: Option[String] = None,
+    short: Option[Char] = None,
     description: Option[String] = None,
     default: Option[String] = None,
     required: Option[Boolean] = None,
@@ -25,7 +32,8 @@ case class StringObject(
 }
 
 case class IntegerObject(
-    name: String,
+    name: Option[String] = None,
+    short: Option[Char] = None,
     description: Option[String] = None,
     default: Option[Int] = None,
     required: Option[Boolean] = None
@@ -34,7 +42,8 @@ case class IntegerObject(
 }
 
 case class DoubleObject(
-    name: String,
+    name: Option[String] = None,
+    short: Option[Char] = None,
     description: Option[String] = None,
     default: Option[Double] = None,
     required: Option[Boolean] = None
@@ -43,16 +52,19 @@ case class DoubleObject(
 }
 
 case class BooleanObject(
-    name: String,
+    name: Option[String] = None,
+    short: Option[Char] = None,
     description: Option[String] = None,
     default: Option[Boolean] = None,
-    required: Option[Boolean] = None
+    required: Option[Boolean] = None,
+    flagValue: Option[Boolean] = None
 ) extends DataObject[Boolean] {
   override val `type` = "boolean"
 }
 
 case class FileObject(
-    name: String,
+    name: Option[String] = None,
+    short: Option[Char] = None,
     description: Option[String] = None,
     default: Option[File] = None,
     mustExist: Option[Boolean] = None,

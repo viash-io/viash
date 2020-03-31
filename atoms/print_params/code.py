@@ -10,5 +10,5 @@ par = {
 ### PORTASH END
 
 for key in par.keys():
-	print(key, par[key])
+	print(key + ": " + str(par[key]))
 

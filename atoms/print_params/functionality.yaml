@@ -2,7 +2,8 @@ name: print_params
 description: Prints out the parameter values.
 platform: Python
 inputs:
-- name: whole_number
+- short: w
+  name: whole_number
   type: integer
   description: A whole number.
   default: 10
@@ -11,14 +12,15 @@ inputs:
   type: double
   description: A real number.
   required: false
-- name: sentence
+- short: s
   type: string
   description: A sentence.
   default: "The slow pink seal slided under the eager sandwich."
   required: true
 - name: truth
   type: boolean
-  description: A logical value.
+  description: A switch flag.
+  flagValue: true
 outputs: 
 - name: output
   type: file

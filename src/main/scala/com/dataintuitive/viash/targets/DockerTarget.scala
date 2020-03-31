@@ -75,7 +75,7 @@ case class DockerTarget(
     val volStr = volumesGet.map(vol => s"-v $$${vol.name.toUpperCase()}:${vol.mount} ").mkString("")
     val volInputs = volumesGet.map(vol => 
       StringObject(
-        name = vol.name, 
+        name = Some(vol.name), 
         description = Some(s"Local path to mount directory for volume '${vol.name}'."),
         required = Some(true)
       )

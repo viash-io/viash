@@ -14,33 +14,37 @@ case object RPlatform extends Platform {
     val params = functionality.inputs ::: functionality.outputs.filter(_.isInstanceOf[FileObject])
     
     // gather params for optlist
-    val paramOptions = params.map {
-      case o: BooleanObject => {
-        val helpStr = o.description.map(", help = \"" + _ + "\"").getOrElse("")
-        val defaultStr = o.default.map(d => ", default = " + { if (d) "TRUE" else "FALSE" }).getOrElse("")
-        s"""make_option("--${o.name}", type = "logical"$helpStr$defaultStr)"""
+    val paramOptions = params.map(param => {
+      val start = (
+          param.name.map("\"--" + _ + "\"").toList ::: 
+          param.short.map("\"-" + _ + "\"").toList
+        ).mkString("c(", ", ", ")")
+      val helpStr = param.description.map(", help = \"" + _ + "\"").getOrElse("")
+      
+      param match {
+        case o: BooleanObject => {
+          val storeStr = o.flagValue.map(fv => ", action=\"store_" + { if (fv) "true" else "false" } + "\"").getOrElse("")
+          val defaultStr = o.default.map(d => ", default = " + { if (d) "TRUE" else "FALSE" }).getOrElse("")
+          s"""make_option($start, type = "logical"$defaultStr$storeStr$helpStr)"""
+        }
+        case o: DoubleObject => {
+          val defaultStr = o.default.map(d => ", default = " + d).getOrElse("")
+          s"""make_option($start, type = "double"$defaultStr$helpStr)"""
+        }
+        case o: IntegerObject => {
+          val defaultStr = o.default.map(d => ", default = " + d).getOrElse("")
+          s"""make_option($start, type = "integer"$defaultStr$helpStr)"""
+        }
+        case o: StringObject => {
+          val defaultStr = o.default.map(d => ", default = \"" + d + "\"").getOrElse("")
+          s"""make_option($start, type = "character"$defaultStr$helpStr)"""
+        }
+        case o: FileObject => {
+          val defaultStr = o.default.map(d => ", default = \"" + d + "\"").getOrElse("")
+          s"""make_option($start, type = "character"$defaultStr$helpStr)"""
+        }
       }
-      case o: DoubleObject => {
-        val helpStr = o.description.map(", help = \"" + _ + "\"").getOrElse("")
-        val defaultStr = o.default.map(d => ", default = " + d).getOrElse("")
-        s"""make_option("--${o.name}", type = "double"$helpStr$defaultStr)"""
-      }
-      case o: IntegerObject => {
-        val helpStr = o.description.map(", help = \"" + _ + "\"").getOrElse("")
-        val defaultStr = o.default.map(d => ", default = " + d).getOrElse("")
-        s"""make_option("--${o.name}", type = "integer"$helpStr$defaultStr)"""
-      }
-      case o: StringObject => {
-        val helpStr = o.description.map(", help = \"" + _ + "\"").getOrElse("")
-        val defaultStr = o.default.map(d => ", default = \"" + d + "\"").getOrElse("")
-        s"""make_option("--${o.name}", type = "character"$helpStr$defaultStr)"""
-      }
-      case o: FileObject => {
-        val helpStr = o.description.map(", help = \"" + _ + "\"").getOrElse("")
-        val defaultStr = o.default.map(d => ", default = \"" + d + "\"").getOrElse("")
-        s"""make_option("--${o.name}", type = "character"$helpStr$defaultStr)"""
-      }
-    }
+    })
     
     // gather description 
     val descrStr = functionality.description.map("\n  description = \"" + _ + "\",").getOrElse("")
