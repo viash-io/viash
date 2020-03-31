@@ -32,7 +32,7 @@ case class NativeTarget(
       name = "execute.sh",
       code = Some(s"""#!/bin/bash
         |
-        |$command "$$@"
+        |$command $$@
       """.stripMargin),
       isExecutable = Some(true)
     )

@@ -102,7 +102,7 @@ case class DockerTarget(
         |cat > "$mainPath" << 'VIASHMAIN'
         |$code
         |VIASHMAIN
-        |${pl.command(mainPath)} "$$@"
+        |${pl.command(mainPath)} $$@
         """.stripMargin
       }
     }
