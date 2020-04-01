@@ -12,6 +12,7 @@ case class Functionality(
   platform: Option[Platform], 
   inputs: List[DataObject[_]],
   outputs: List[DataObject[_]],
+  arguments: Option[List[DataObject[_]]],
   resources: List[Resource],
   private var _rootDir: Option[File] = None // :/
 ) {

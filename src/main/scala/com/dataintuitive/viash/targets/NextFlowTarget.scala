@@ -46,31 +46,50 @@ case class NextFlowTarget(
       case _    => { println("Not implemented yet"); mainPath}
     }
 
+    val paramsAsTuple:(String, List[(String, String)]) =
+      ("parameters", functionality.inputs.map(x => (x.name.getOrElse("nokey"), x.default.map(_.toString).getOrElse("default"))))
 
-    val asNestedTuples = ("params",
-      List(
-        (functionality.name,
-          List(
-            ("name", functionality.name),
-            ("container", image),
-            ("command", executionCode),
-            ("arguments", functionality.inputs.map(x => (x.name, x.default.map(_.toString).getOrElse(quote("default")))))
+    val argumentsAsTuple = functionality.arguments.map(_args =>
+      ("arguments", _args.map(x => (x.name.getOrElse("nokey"), x.default.map(_.toString).getOrElse("default"))))
+    ).getOrElse(List())
+
+    val asNestedTuples:List[(String, Any)] = List(
+      ("docker.enabled", true),
+      ("process.container", "dataintuitive/portash"),
+      ("params",
+        List(
+          (functionality.name,
+            List(
+              ("name", functionality.name),
+              ("container", image),
+              ("command", executionCode),
+              paramsAsTuple,
+              argumentsAsTuple
+            )
+            )
           )
         )
       )
-    )
+
+    // println(functionality)
+   // println(asNestedTuples)
+
+    def convertBool(b: Boolean):String = if (b) "true" else "false"
 
     def mapToConfig(m:(String, Any), indent:String = ""):String = m match {
         case (k:String, v: List[(String, Any)]) =>
           indent + k + " {\n" + v.map(x => mapToConfig(x, indent + "  ")).mkString("\n") + "\n" + indent + "}"
         case (k:String, v: String) => indent + k + " = " + quote(v)
+        case (k:String, v: Boolean) => indent + k + " = " + convertBool(v)
         case _ => indent + "Parsing ERROR - Not implemented yet " + m
     }
+
+    def listMapToConfig(m:List[(String, Any)]) = m.map(x => mapToConfig(x)).mkString("\n")
 
     val setup_nextflowconfig = Resource(
       name = "nextflow.config",
       code = Some(
-        mapToConfig(asNestedTuples)
+        listMapToConfig(asNestedTuples)
       )
     )
 
