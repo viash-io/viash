@@ -14,6 +14,7 @@ case class Functionality(
   outputs: List[DataObject[_]],
   arguments: Option[List[DataObject[_]]],
   resources: List[Resource],
+  ftype: Option[String],
   private var _rootDir: Option[File] = None // :/
 ) {
   def mainResource =
