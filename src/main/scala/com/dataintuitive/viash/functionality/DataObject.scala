@@ -9,6 +9,7 @@ abstract class DataObject[Type] {
   val description: Option[String]
   val default: Option[Type]
   val required: Option[Boolean]
+  val tag: Option[String]
   
   require(
     name.isDefined || short.isDefined,
@@ -26,7 +27,8 @@ case class StringObject(
     description: Option[String] = None,
     default: Option[String] = None,
     required: Option[Boolean] = None,
-    values: Option[List[String]] = None
+    values: Option[List[String]] = None,
+    tag: Option[String] = None
 ) extends DataObject[String] {
   override val `type` = "string"
 }
@@ -36,7 +38,8 @@ case class IntegerObject(
     short: Option[Char] = None,
     description: Option[String] = None,
     default: Option[Int] = None,
-    required: Option[Boolean] = None
+    required: Option[Boolean] = None,
+    tag: Option[String] = None
 ) extends DataObject[Int] {
   override val `type` = "integer"
 }
@@ -46,7 +49,8 @@ case class DoubleObject(
     short: Option[Char] = None,
     description: Option[String] = None,
     default: Option[Double] = None,
-    required: Option[Boolean] = None
+    required: Option[Boolean] = None,
+    tag: Option[String] = None
 ) extends DataObject[Double] {
   override val `type` = "double"
 }
@@ -57,7 +61,8 @@ case class BooleanObject(
     description: Option[String] = None,
     default: Option[Boolean] = None,
     required: Option[Boolean] = None,
-    flagValue: Option[Boolean] = None
+    flagValue: Option[Boolean] = None,
+    tag: Option[String] = None
 ) extends DataObject[Boolean] {
   override val `type` = "boolean"
 }
@@ -68,7 +73,8 @@ case class FileObject(
     description: Option[String] = None,
     default: Option[File] = None,
     mustExist: Option[Boolean] = None,
-    required: Option[Boolean] = None
+    required: Option[Boolean] = None,
+    tag: Option[String] = None
 ) extends DataObject[File] {
   override val `type` = "file"
   
