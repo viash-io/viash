@@ -11,7 +11,7 @@ case object PythonPlatform extends Platform {
   }
 
   def generateArgparse(functionality: Functionality): String = {
-    val params = functionality.dataObjects.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+    val params = functionality.dataObjects.filter(d => d.direction.getOrElse(Input) == Input || d.isInstanceOf[FileObject])
 
     // gather params for optlist
     val paramOptions = params.map(param => {

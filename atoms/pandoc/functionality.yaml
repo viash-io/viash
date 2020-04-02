@@ -6,13 +6,15 @@ arguments:
   type: file
   required: true
   default: test.md
+  tag: input
 options:
 - name: o
   type: file
   description: The path to the output file.
   default: test.html
   required: true
-  direction: output
+  tag: output
 resources:
 - name: main
   path: pandoc
+
