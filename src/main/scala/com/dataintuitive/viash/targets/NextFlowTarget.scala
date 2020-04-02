@@ -48,20 +48,20 @@ case class NextFlowTarget(
     }
 
     // In the scope of a pipeline, we do not take the outputs into account
-    val allArgs = functionality.inputs ::: functionality.arguments.getOrElse(List())
+    val allArgs = functionality.dataObjects
 
     // Use DataObject.tag to know if there is an input file because it should be handled differently
     val inputFileObject:Option[FileObject] = allArgs.collect{ case x:FileObject => x }.headOption
 
     val paramsAsTuple:(String, List[(String, String)]) =
       ("options",
-        functionality.inputs.map(x => (x.name.getOrElse("nokey"), x.default.map(_.toString).getOrElse("default"))) :::
-        functionality.outputs.map(x => (x.name.getOrElse("nokey"), x.default.map(_.toString).getOrElse("default")))
+        functionality.options.map(x => (x.name.getOrElse("nokey"), x.default.map(_.toString).getOrElse("default")))
         )
 
-    val argumentsAsTuple = functionality.arguments.map(_args =>
-      ("arguments", _args.map(x => (x.name.getOrElse("nokey"), x.default.map(_.toString).getOrElse("default"))))
-    ).getOrElse(List())
+    val argumentsAsTuple = 
+      ("arguments", 
+        functionality.arguments.map(x => (x.name.getOrElse("nokey"), x.default.map(_.toString).getOrElse("default")))
+        )
 
     /**
      * Some (implicit) conventions:

@@ -1,6 +1,6 @@
 package com.dataintuitive.viash.targets
 
-import com.dataintuitive.viash.functionality.{Functionality, Resource, StringObject}
+import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.platforms.NativePlatform
 import com.dataintuitive.viash.targets.environments._
 import java.nio.file.Paths
@@ -77,13 +77,14 @@ case class DockerTarget(
       StringObject(
         name = Some(vol.name), 
         description = Some(s"Local path to mount directory for volume '${vol.name}'."),
-        required = Some(true)
+        required = Some(true),
+        direction = Some(Input)
       )
     )
 
     // create new fun with extra params
     val fun2 = functionality.copy(
-      inputs = functionality.inputs ::: volInputs
+      options = functionality.options ::: volInputs
     )
 
     // get main script
