@@ -55,7 +55,7 @@ case object RPlatform extends Platform {
       if (reqParams.isEmpty) {
         ""
       } else {
-        s"""for (required_arg in c("${reqParams.map(_.name).mkString("\", \"")}")) {
+        s"""for (required_arg in c("${reqParams.map(p => p.name.getOrElse(p.short.get)).mkString("\", \"")}")) {
           |  if (is.null(par[[required_arg]])) {
           |    stop('"--', required_arg, '" is a required argument. Use "--help" to get more information on the parameters.')
           |  }
@@ -71,7 +71,7 @@ case object RPlatform extends Platform {
       if (reqFiles.isEmpty) {
         ""
       } else {
-        s"""for (required_file in c("${reqFiles.map(_.name).mkString("\", \"")}")) {
+        s"""for (required_file in c("${reqFiles.map(p => p.name.getOrElse(p.short.get)).mkString("\", \"")}")) {
           |  if (!file.exists(par[[required_file]])) {
           |    stop('file "', required_file, '" must exist.')
           |  }
