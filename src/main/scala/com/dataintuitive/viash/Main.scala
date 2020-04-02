@@ -64,9 +64,7 @@ object Main {
           Files.write(dest, code.getBytes(StandardCharsets.UTF_8))
         }
 
-        if (resource.isExecutable.isDefined) {
-          destFile.setExecutable(resource.isExecutable.get)
-        }
+        destFile.setExecutable(resource.isExecutable)
       }
     )
   }

@@ -10,10 +10,10 @@ case class Functionality(
   name: String,
   description: Option[String],
   platform: Option[Platform], 
-  arguments: List[DataObject[_]], // bar
-  options: List[DataObject[_]], // --foo bar
   resources: List[Resource],
   ftype: Option[String],
+  arguments: List[DataObject[_]] = Nil, // bar
+  options: List[DataObject[_]] = Nil, // --foo bar
   private var _rootDir: Option[File] = None // :/
 ) {
   def dataObjects = arguments ::: options
@@ -92,7 +92,7 @@ object Functionality {
 
     val mr = fun.mainResource.get
     require(
-      fun.platform.isDefined || (mr.path.isDefined && mr.isExecutable.getOrElse(true)),
+      fun.platform.isDefined || (mr.path.isDefined && mr.isExecutable),
       message = "If the platform is not specified, the main resource should be a standalone executable."
     )
 

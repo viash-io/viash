@@ -51,7 +51,7 @@ case class NativeTarget(
         |
         |$command $$@
       """.stripMargin),
-      isExecutable = Some(true)
+      isExecutable = true
     )
 
     functionality.copy(

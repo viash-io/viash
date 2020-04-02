@@ -4,7 +4,7 @@ trait ResourceTrait {
   val name: String
   val path: Option[String]
   val code: Option[String]
-  val isExecutable: Option[Boolean]
+  val isExecutable: Boolean
   
   require(
     (path == None) != (code == None), 
@@ -16,5 +16,5 @@ case class Resource(
   name: String,
   path: Option[String] = None,
   code: Option[String] = None,
-  isExecutable: Option[Boolean] = None
+  isExecutable: Boolean = false
 ) extends ResourceTrait

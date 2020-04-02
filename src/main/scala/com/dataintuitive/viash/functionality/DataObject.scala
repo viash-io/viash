@@ -9,7 +9,7 @@ abstract class DataObject[Type] {
   val description: Option[String]
   val default: Option[Type]
   val required: Option[Boolean]
-  val direction: Option[Direction]
+  val direction: Direction
   val tag: Option[String]
   
   require(
@@ -30,7 +30,7 @@ case class StringObject(
     required: Option[Boolean] = None,
     values: Option[List[String]] = None,
     tag: Option[String] = None,
-    direction: Option[Direction] = None
+    direction: Direction = Input
 ) extends DataObject[String] {
   override val `type` = "string"
 }
@@ -42,7 +42,7 @@ case class IntegerObject(
     default: Option[Int] = None,
     required: Option[Boolean] = None,
     tag: Option[String] = None,
-    direction: Option[Direction] = None
+    direction: Direction = Input
 ) extends DataObject[Int] {
   override val `type` = "integer"
 }
@@ -54,7 +54,7 @@ case class DoubleObject(
     default: Option[Double] = None,
     required: Option[Boolean] = None,
     tag: Option[String] = None,
-    direction: Option[Direction] = None
+    direction: Direction = Input
 ) extends DataObject[Double] {
   override val `type` = "double"
 }
@@ -67,7 +67,7 @@ case class BooleanObject(
     required: Option[Boolean] = None,
     flagValue: Option[Boolean] = None,
     tag: Option[String] = None,
-    direction: Option[Direction] = None
+    direction: Direction = Input
 ) extends DataObject[Boolean] {
   override val `type` = "boolean"
 }
@@ -80,7 +80,7 @@ case class FileObject(
     mustExist: Option[Boolean] = None,
     required: Option[Boolean] = None,
     tag: Option[String] = None,
-    direction: Option[Direction] = None
+    direction: Direction = Input
 ) extends DataObject[File] {
   override val `type` = "file"
   
