@@ -1,7 +1,8 @@
 name: print_params
 description: Prints out the parameter values.
 platform: Python
-inputs:
+arguments: []
+options:
 - short: w
   name: whole_number
   type: integer
@@ -15,18 +16,18 @@ inputs:
 - short: s
   type: string
   description: A sentence.
-  default: "The slow pink seal slided under the eager sandwich."
+  default: "The slow pink seal slid under the eager sandwich."
   required: true
 - name: truth
   type: boolean
   description: A switch flag.
   flagValue: true
-outputs: 
 - name: output
   type: file
   description: The path to the output file.
   default: output.txt
   required: true
+  direction: output
 resources:
 - name: main.py
   path: ./code.py

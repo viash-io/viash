@@ -10,13 +10,14 @@ case class Functionality(
   name: String,
   description: Option[String],
   platform: Option[Platform], 
-  inputs: List[DataObject[_]],
-  outputs: List[DataObject[_]],
-  arguments: Option[List[DataObject[_]]],
+  arguments: List[DataObject[_]], // bar
+  options: List[DataObject[_]], // --foo bar
   resources: List[Resource],
   ftype: Option[String],
   private var _rootDir: Option[File] = None // :/
 ) {
+  def dataObjects = arguments ::: options
+  
   def mainResource =
     resources.find(_.name.startsWith("main"))
 

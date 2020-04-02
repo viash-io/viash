@@ -1,14 +1,13 @@
 name: pandoc
 description: empty
 platform: Native
-inputs: []
 arguments:
 - name: inputfile
   type: file
   required: true
   default: test.md
   tag: input
-outputs:
+options:
 - name: o
   type: file
   description: The path to the output file.

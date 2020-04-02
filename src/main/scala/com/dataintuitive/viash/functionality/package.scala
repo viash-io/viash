@@ -13,6 +13,20 @@ package object functionality {
     cursor => cursor.value.as[String].map(new java.io.File(_))
   }
   
+  // encoder and decoder for direction
+  implicit val encodeDirection: Encoder[Direction] = Encoder.instance {
+    dir => Json.fromString(dir.toString)
+  }
+  implicit val decodeDirection: Decoder[Direction] = Decoder.instance {
+    cursor => cursor.value.as[String].map(s =>
+      s.toLowerCase() match { 
+        case "input" => Input
+        case "output" => Output
+        case "log" => Log
+      }
+    )
+  }
+  
   // encoders and decoders for Object
   implicit val encodeStringObject: Encoder[StringObject] = deriveEncoder
   implicit val encodeIntegerObject: Encoder[IntegerObject] = deriveEncoder
