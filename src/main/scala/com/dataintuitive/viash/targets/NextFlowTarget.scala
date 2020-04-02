@@ -3,7 +3,8 @@ package com.dataintuitive.viash.targets
 import com.dataintuitive.viash.functionality.{Functionality, Resource, StringObject}
 import com.dataintuitive.viash.functionality.platforms.NativePlatform
 import com.dataintuitive.viash.targets.environments._
-import com.dataintuitive.viash.functionality.{DataObject, FileObject}
+import com.dataintuitive.viash.functionality.{DataObject, FileObject, Direction}
+import com.dataintuitive.viash.functionality.{Input, Output}
 import java.nio.file.Paths
 
 import scala.reflect.ClassTag
@@ -47,18 +48,16 @@ case class NextFlowTarget(
       case _    => { println("Not implemented yet"); mainPath}
     }
 
-    // In the scope of a pipeline, we do not take the outputs into account
-    val allArgs = functionality.dataObjects // only the inputs?
-
     // Use DataObject.tag to know if there is an input file because it should be handled differently
-    val inputFileObject:Option[FileObject] = allArgs.collect{ case x:FileObject => x }.headOption
+    // val inputFileObject:Option[FileObject] = allArgs.collect{ case x:FileObject => x }.headOption
 
     def dataObjectToTuples[T](dataObject:DataObject[T]):List[(String, Any)] = List(
       dataObject.name.map(x => ("name", x.toString)),
       dataObject.short.map(x => ("short", x.toString)),
       dataObject.description.map(x => ("description", x.toString)),
       dataObject.default.map(x => ("value", x.toString)),
-      dataObject.required.map(x => ("required", x))
+      dataObject.required.map(x => ("required", x)),
+      dataObject.direction.map(x => ("direction", x))
     ).flatMap(x => x)
 
     def nameOrShort[T](dataObject:DataObject[T]):String =
@@ -70,13 +69,13 @@ case class NextFlowTarget(
 
     val paramsAsTuple =
       ("options",
-        functionality.inputs.map(x => (nameOrShort(x), dataObjectToTuples(x))) :::
-        functionality.outputs.map(x => (nameOrShort(x), dataObjectToTuples(x)))
+        functionality.options.map(x => (nameOrShort(x), dataObjectToTuples(x)))
         )
 
-    val argumentsAsTuple = functionality.arguments.map(_args =>
-      ("arguments", _args.map(x => (nameOrShort(x), dataObjectToTuples(x))))
-    ).getOrElse(List())
+    val argumentsAsTuple =
+      ("arguments",
+        functionality.arguments.map(x => (nameOrShort(x), dataObjectToTuples(x)))
+        )
 
     /**
      * Some (implicit) conventions:
@@ -90,6 +89,7 @@ case class NextFlowTarget(
         List(
           ("id", ""),
           ("outDir", "out"),
+          ("input", "test.md"),
           (functionality.name,
             List(
               ("name", functionality.name),
@@ -113,6 +113,7 @@ case class NextFlowTarget(
           indent + k + " {\n" + v.map(x => mapToConfig(x, indent + "  ")).mkString("\n") + "\n" + indent + "}"
         case (k:String, v: String) => indent + k + " = " + quote(v)
         case (k:String, v: Boolean) => indent + k + " = " + convertBool(v)
+        case (k:String, v: Direction) => indent + k + " = " + quote(v.toString)
         case _ => indent + "Parsing ERROR - Not implemented yet " + m
     }
 
@@ -134,18 +135,19 @@ case class NextFlowTarget(
 
     val setup_main_utils = s"""
         |
+        |// TODO: Support for short options
         |def renderCLI(command, arguments, options) {
         |
-        |  def argumentsList = []
-        |  def optionsList = []
-        |  def argumentsMap = arguments
+        |    def argumentsList = []
+        |    def optionsList = []
+        |    def argumentsMap = arguments
         |    argumentsMap.each{ it -> argumentsList << it.value }
-        |  def optionsMap = options
-        |    optionsMap.each{ it -> optionsList << "--" + it.key + " " + it.value }
-        |  def command_line = command + argumentsList + optionsList
+        |    def optionsMap = options
+        |    optionsMap.each{ it -> optionsList << "--" + it.name + " " + it.value }
         |
-        |  return command_line.join(" ")
+        |    def command_line = command + argumentsList + optionsList
         |
+        |    return command_line.join(" ")
         |}
         """.stripMargin('|')
 
@@ -159,18 +161,60 @@ case class NextFlowTarget(
         |
         |    def pattern = ~/^(\w+)\.(\w+)$/
         |    def newFileName = inputStr.replaceFirst(pattern) { _, prefix, ext -> "${prefix}.html" }
-        |    println("New filename: " + newFileName)
         |    return newFileName
         |
         |}
         |
     """.stripMargin('|')
+    val setup_main_overrideInput = """
+        |// In: Hashmap key -> DataqObjects
+        |// Out: Arrays of DataObjects
+        |def overrideInput(params, str) {
+        |
+        |    def overrideOptions = []
+        |    def overrideArgs = []
+        |
+        |    def update = [ "value" : str ]
+        |
+        |    params.arguments.each{
+        |        it -> (it.value.direction == "Input") ? overrideArgs << it.value + update  : overrideArgs << it.value
+        |        }
+        |    params.options.each{
+        |        it -> (it.value.direction == "Input") ? overrideOptions << it.value + update : overrideOptions << it.value
+        |        }
+        |
+        |    def newParams = params + [ "options" : overrideOptions] + [ "arguments" : overrideArgs ]
+        |
+        |    return newParams
+        |
+        |}
+        """.stripMargin('|')
 
+    val setup_main_overrideOutput = """
+        |def overrideOutput(params, str) {
+        |
+        |    def overrideOptions = []
+        |    def overrideArgs = []
+        |
+        |    def update = [ "value" : str ]
+        |
+        |    params.arguments.each{
+        |        it -> (it.direction == "Output") ? overrideArgs << it + update  : overrideArgs << it
+        |        }
+        |    params.options.each{
+        |        it -> (it.direction == "Output") ? overrideOptions << it + update : overrideOptions << it
+        |        }
+        |
+        |    def newParams = params + [ "options" : overrideOptions] + [ "arguments" : overrideArgs ]
+        |
+        |    return newParams
+        |
+        |}
+        """.stripMargin('|')
 
     val setup_main_process = s"""
         |
         |process simpleBashExecutor {
-        |  echo true
         |  container "$${container}"
         |  publishDir "$${params.outDir}/$${id}", mode: 'copy', overwrite: true
         |  input:
@@ -199,15 +243,17 @@ case class NextFlowTarget(
         |    def id_input_output_function_cli_ =
         |        id_input_params_.map{ id, input, _params ->
         |            def defaultParams = params[key] ? params[key] : [:]
-        |            def overrideParams = _params[key] ? _params[key] : [:]
+        |            def overrideParams = _params ? _params : [:]
         |            def updtParams = defaultParams + overrideParams
-        |            println(updtParams)
+        |            // now, switch to arrays instead of hashes...
+        |            def updtParams1 = overrideInput(updtParams, input.toString())
+        |            def updtParams2 = overrideOutput(updtParams1, outFromIn(input.toString()))
         |            new Tuple5(
         |                id,
         |                input,
         |                outFromIn(input.toString()),
-        |                updtParams.container,
-        |                renderCLI([updtParams.command], updtParams.arguments, updtParams.options)
+        |                updtParams2.container,
+        |                renderCLI([updtParams2.command], updtParams2.arguments, updtParams2.options)
         |            )
         |        }
         |
@@ -220,8 +266,8 @@ case class NextFlowTarget(
         |workflow {
         |
         |   id = params.id
-        |   inputPath = Paths.get(params.$fname.arguments.inputfile)
-        |   ch_ = Channel.from(inputPath).map{ s -> new Tuple3(id, s, params.$fname)}
+        |   inputPath = Paths.get(params.input)
+        |   ch_ = Channel.from(inputPath).map{ s -> new Tuple3(id, s, params.pandoc)}
         |
         |   $fname(ch_)
         |}
@@ -229,7 +275,14 @@ case class NextFlowTarget(
 
     val setup_main = Resource(
       name = "main.nf",
-      code = Some(setup_main_header + setup_main_utils + setup_main_outFromInF + setup_main_process + setup_main_workflow + setup_main_entrypoint)
+      code = Some(setup_main_header +
+                  setup_main_utils +
+                  setup_main_outFromInF +
+                  setup_main_overrideInput +
+                  setup_main_overrideOutput +
+                  setup_main_process +
+                  setup_main_workflow +
+                  setup_main_entrypoint)
     )
 
     dockerFunctionality.copy(

@@ -7,6 +7,7 @@ arguments:
   required: true
   default: test.md
   tag: input
+  direction: input
 options:
 - name: o
   type: file
@@ -14,6 +15,7 @@ options:
   default: test.html
   required: true
   tag: output
+  direction: output
 resources:
 - name: main
   path: pandoc

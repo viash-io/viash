@@ -11,15 +11,16 @@ abstract class DataObject[Type] {
   val required: Option[Boolean]
   val direction: Option[Direction]
   val tag: Option[String]
-  
+
   require(
     name.isDefined || short.isDefined,
     message = "At least either 'name' or 'short' must be defined."
   )
-  
+
   def validate(value: Type): Boolean = {
     true
   }
+
 }
 
 case class StringObject(
