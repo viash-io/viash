@@ -3,6 +3,7 @@ package com.dataintuitive.viash.targets
 import com.dataintuitive.viash.functionality.{Functionality, Resource, StringObject}
 import com.dataintuitive.viash.functionality.platforms.NativePlatform
 import com.dataintuitive.viash.targets.environments._
+import com.dataintuitive.viash.functionality.FileObject
 import java.nio.file.Paths
 
 import scala.reflect.ClassTag
@@ -45,6 +46,12 @@ case class NextFlowTarget(
       case Some(NativePlatform) => mainResource.path.getOrElse("echo No command provided")
       case _    => { println("Not implemented yet"); mainPath}
     }
+
+    // In the scope of a pipeline, we do not take the outputs into account
+    val allArgs = functionality.inputs ::: functionality.arguments.getOrElse(List())
+
+    // Use DataObject.tag to know if there is an input file because it should be handled differently
+    val inputFileObject:Option[FileObject] = allArgs.collect{ case x:FileObject => x }.headOption
 
     val paramsAsTuple:(String, List[(String, String)]) =
       ("options",
