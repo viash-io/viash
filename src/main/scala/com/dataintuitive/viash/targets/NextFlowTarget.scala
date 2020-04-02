@@ -48,10 +48,13 @@ case class NextFlowTarget(
     }
 
     // In the scope of a pipeline, we do not take the outputs into account
-    val allArgs = functionality.inputs ::: functionality.arguments.getOrElse(List())
+    val allArgs = functionality.arguments.getOrElse(List()) ::: functionality.inputs
 
     // Use DataObject.tag to know if there is an input file because it should be handled differently
     val inputFileObject:Option[FileObject] = allArgs.collect{ case x:FileObject => x }.headOption
+
+    val parsed
+
 
     val paramsAsTuple:(String, List[(String, String)]) =
       ("options",
