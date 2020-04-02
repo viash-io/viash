@@ -56,6 +56,11 @@ case class NextFlowTarget(
       ("arguments", _args.map(x => (x.name.getOrElse("nokey"), x.default.map(_.toString).getOrElse("default"))))
     ).getOrElse(List())
 
+    /**
+     * Some (implicit) conventions:
+     * - `out/` is where the output data is published
+     * - For multiple samples, an additional subdir `id` can be created, but its blank by default
+     */
     val asNestedTuples:List[(String, Any)] = List(
       ("docker.enabled", true),
       ("process.container", "dataintuitive/portash"),
@@ -122,6 +127,24 @@ case class NextFlowTarget(
         |}
         """.stripMargin('|')
 
+    /**
+     * What should the output filename be, in terms of the input?
+     * This is irrelevant for simple one-step function calling, but it is crucial a in a pipeline.
+     * This uses the function type, but there is no check on it yet!
+     */
+    val setup_main_outFromInF = """
+        |def outFromIn(inputStr) {
+        |
+        |    def pattern = ~/^(\w+)\.(\w+)$/
+        |    def newFileName = inputStr.replaceFirst(pattern) { _, prefix, ext -> "${prefix}.html" }
+        |    println("New filename: " + newFileName)
+        |    return newFileName
+        |
+        |}
+        |
+    """.stripMargin('|')
+
+
     val setup_main_process = s"""
         |
         |process simpleBashExecutor {
@@ -160,7 +183,7 @@ case class NextFlowTarget(
         |            new Tuple5(
         |                id,
         |                input,
-        |                Paths.get(updtParams.options.o),
+        |                outFromIn(input.toString()),
         |                updtParams.container,
         |                renderCLI([updtParams.command], updtParams.arguments, updtParams.options)
         |            )
@@ -184,7 +207,7 @@ case class NextFlowTarget(
 
     val setup_main = Resource(
       name = "main.nf",
-      code = Some(setup_main_header + setup_main_utils + setup_main_process + setup_main_workflow + setup_main_entrypoint)
+      code = Some(setup_main_header + setup_main_utils + setup_main_outFromInF + setup_main_process + setup_main_workflow + setup_main_entrypoint)
     )
 
     dockerFunctionality.copy(
