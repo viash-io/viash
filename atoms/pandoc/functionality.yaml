@@ -1,18 +1,18 @@
 name: pandoc
 description: empty
 platform: Native
-inputs: []
 arguments:
 - name: inputfile
   type: file
   required: true
   default: test.md
-outputs:
+options:
 - name: o
   type: file
   description: The path to the output file.
   default: test.html
   required: true
+  direction: output
 resources:
 - name: main
   path: pandoc

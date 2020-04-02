@@ -2,7 +2,8 @@ name: filter_table
 description: |
   Filtering a table by a particular string column.
 platform: R
-inputs:
+arguments: []
+options:
 - short: i
   name: input
   type: file
@@ -29,13 +30,13 @@ inputs:
   description: Only rows for which the column contains this value will pass the filter.
   default: male
   required: true
-outputs:
 - short: o
   name: output
   type: file
   description: The path to the output file.
   default: filtered.csv
   required: true
+  direction: output
 resources:
 - name: main.R
   path: ./code.R
