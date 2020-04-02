@@ -23,7 +23,7 @@ case class DockerTarget(
     val dockerFile = makeDockerFile(functionality, resourcesPath)
 
     // construct execute resources
-    val runImageName = if (dockerFile.isEmpty) image else "somename"
+    val runImageName = if (dockerFile.isEmpty) image else "viash_autogen/" + functionality.name
 
     val portStr = port.getOrElse(Nil).map("-p " + _ + " ").mkString("")
 
@@ -112,10 +112,15 @@ case class DockerTarget(
 
     val heredocStart = if (executionCode.contains("\n")) { "cat << VIASHEOF | " } else { "" }
     val heredocEnd = if (executionCode.contains("\n")) { "\nVIASHEOF" } else { "" }
-    val execute_bash = 
+    val bash = 
       Resource(
-        name = "execute.sh",
+        name = functionality.name,
         code = Some(s"""#!/bin/bash
+          |
+          |if [ "$$1" = "---setup" ]; then
+          |  docker build -t $runImageName .
+          |  exit 0
+          |fi
           |
           |$volParse
           |
@@ -124,44 +129,11 @@ case class DockerTarget(
         isExecutable = Some(true)
       )
 
-//    val execute_batch = Resource(
-//      name = "execute.bat",
-//      code = Some(s"TODO")
-//    )
-
-    // construct setup resources
-    val setup_bash = Resource(
-      name = "setup.sh",
-      code = {
-        if (dockerFile.isEmpty) {
-          Some(s"""#!/bin/bash\n\ndocker pull $runImageName""")
-        } else {
-          Some(s"""#!/bin/bash
-            |
-            |docker build -t $runImageName .
-            """.stripMargin)
-        }
-      },
-      isExecutable = Some(true)
-    )
-
-//    val setup_batch = Resource(
-//      name = "setup.bat",
-//      code = {
-//        if (dockerFile.isEmpty) {
-//          Some(s"docker pull $runImageName")
-//        } else {
-//          Some(s"""docker build -t $runImageName .""")
-//        }
-//      }
-//    )
-
     fun2.copy(
       resources =
         fun2.resources.filterNot(_.name.startsWith("main")) ::: 
         dockerFile :::
-//        List(execute_bash, execute_batch, setup_bash, setup_batch)
-        List(execute_bash, setup_bash)
+        List(bash)
     )
   }
 
