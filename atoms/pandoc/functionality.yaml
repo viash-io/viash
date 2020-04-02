@@ -7,12 +7,17 @@ arguments:
   type: file
   required: true
   default: test.md
+  tag: input
+- short: s
+  type: string
+  require: false
 outputs:
 - name: o
   type: file
   description: The path to the output file.
   default: test.html
   required: true
+  tag: output
 resources:
 - name: main
   path: pandoc
