@@ -8,9 +8,6 @@ arguments:
   required: true
   default: test.md
   tag: input
-- short: s
-  type: string
-  require: false
 outputs:
 - name: o
   type: file

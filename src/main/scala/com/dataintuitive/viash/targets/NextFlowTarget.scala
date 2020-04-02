@@ -3,7 +3,7 @@ package com.dataintuitive.viash.targets
 import com.dataintuitive.viash.functionality.{Functionality, Resource, StringObject}
 import com.dataintuitive.viash.functionality.platforms.NativePlatform
 import com.dataintuitive.viash.targets.environments._
-import com.dataintuitive.viash.functionality.FileObject
+import com.dataintuitive.viash.functionality.{DataObject, FileObject}
 import java.nio.file.Paths
 
 import scala.reflect.ClassTag
@@ -53,17 +53,29 @@ case class NextFlowTarget(
     // Use DataObject.tag to know if there is an input file because it should be handled differently
     val inputFileObject:Option[FileObject] = allArgs.collect{ case x:FileObject => x }.headOption
 
-    val parsed
+    def dataObjectToTuples[T](dataObject:DataObject[T]):List[(String, Any)] = List(
+      dataObject.name.map(x => ("name", x.toString)),
+      dataObject.short.map(x => ("short", x.toString)),
+      dataObject.description.map(x => ("description", x.toString)),
+      dataObject.default.map(x => ("value", x.toString)),
+      dataObject.required.map(x => ("required", x))
+    ).flatMap(x => x)
 
+    def nameOrShort[T](dataObject:DataObject[T]):String =
+      (dataObject.name, dataObject.short) match {
+        case (Some(n), None) => n
+        case (None, Some(c)) => c.toString
+        case _ => "HELP"
+      }
 
-    val paramsAsTuple:(String, List[(String, String)]) =
+    val paramsAsTuple =
       ("options",
-        functionality.inputs.map(x => (x.name.getOrElse("nokey"), x.default.map(_.toString).getOrElse("default"))) :::
-        functionality.outputs.map(x => (x.name.getOrElse("nokey"), x.default.map(_.toString).getOrElse("default")))
+        functionality.inputs.map(x => (nameOrShort(x), dataObjectToTuples(x))) :::
+        functionality.outputs.map(x => (nameOrShort(x), dataObjectToTuples(x)))
         )
 
     val argumentsAsTuple = functionality.arguments.map(_args =>
-      ("arguments", _args.map(x => (x.name.getOrElse("nokey"), x.default.map(_.toString).getOrElse("default"))))
+      ("arguments", _args.map(x => (nameOrShort(x), dataObjectToTuples(x))))
     ).getOrElse(List())
 
     /**
