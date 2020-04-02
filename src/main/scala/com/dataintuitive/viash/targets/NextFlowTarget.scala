@@ -47,7 +47,10 @@ case class NextFlowTarget(
     }
 
     val paramsAsTuple:(String, List[(String, String)]) =
-      ("parameters", functionality.inputs.map(x => (x.name.getOrElse("nokey"), x.default.map(_.toString).getOrElse("default"))))
+      ("options",
+        functionality.inputs.map(x => (x.name.getOrElse("nokey"), x.default.map(_.toString).getOrElse("default"))) :::
+        functionality.outputs.map(x => (x.name.getOrElse("nokey"), x.default.map(_.toString).getOrElse("default")))
+        )
 
     val argumentsAsTuple = functionality.arguments.map(_args =>
       ("arguments", _args.map(x => (x.name.getOrElse("nokey"), x.default.map(_.toString).getOrElse("default"))))
@@ -58,6 +61,8 @@ case class NextFlowTarget(
       ("process.container", "dataintuitive/portash"),
       ("params",
         List(
+          ("id", ""),
+          ("outDir", "out"),
           (functionality.name,
             List(
               ("name", functionality.name),
@@ -72,7 +77,7 @@ case class NextFlowTarget(
       )
 
     // println(functionality)
-   // println(asNestedTuples)
+    // println(asNestedTuples)
 
     def convertBool(b: Boolean):String = if (b) "true" else "false"
 
@@ -102,12 +107,15 @@ case class NextFlowTarget(
 
     val setup_main_utils = s"""
         |
-        |def renderCLI(command, arguments) {
+        |def renderCLI(command, arguments, options) {
         |
         |  def argumentsList = []
+        |  def optionsList = []
         |  def argumentsMap = arguments
-        |  argumentsMap.each{ it -> argumentsList << "--" + it.key + " " + it.value }
-        |  def command_line = command + argumentsList
+        |    argumentsMap.each{ it -> argumentsList << it.value }
+        |  def optionsMap = options
+        |    optionsMap.each{ it -> optionsList << "--" + it.key + " " + it.value }
+        |  def command_line = command + argumentsList + optionsList
         |
         |  return command_line.join(" ")
         |
@@ -117,15 +125,16 @@ case class NextFlowTarget(
     val setup_main_process = s"""
         |
         |process simpleBashExecutor {
-        |
+        |  echo true
         |  container "$${container}"
-        |  publishDir "$${params.outDir}/$${sample}", mode: 'copy', overwrite: true
+        |  publishDir "$${params.outDir}/$${id}", mode: 'copy', overwrite: true
         |  input:
-        |    tuple val(sample), path(input), val(output), val(container), val(cli)
+        |    tuple val(id), path(input), val(output), val(container), val(cli)
         |  output:
-        |    tuple val("$${sample}"), path("$${output}")
+        |    tuple val("$${id}"), path("$${output}")
         |  script:
         |    \"\"\"
+        |    echo Running: $$cli
         |    $$cli
         |    \"\"\"
         |
@@ -136,28 +145,28 @@ case class NextFlowTarget(
         |workflow $fname {
         |
         |    take:
-        |    sample_input_params_
+        |    id_input_params_
         |
         |    main:
         |
         |    key = "$fname"
         |
-        |    def sample_input_output_function_cli_ =
-        |        sample_input_params_.map{ sample, input, _params ->
+        |    def id_input_output_function_cli_ =
+        |        id_input_params_.map{ id, input, _params ->
         |            def defaultParams = params[key] ? params[key] : [:]
         |            def overrideParams = _params[key] ? _params[key] : [:]
         |            def updtParams = defaultParams + overrideParams
         |            println(updtParams)
         |            new Tuple5(
-        |                sample,
+        |                id,
         |                input,
-        |                Paths.get(updtParams.arguments.output),
+        |                Paths.get(updtParams.options.o),
         |                updtParams.container,
-        |                renderCLI([updtParams.command], updtParams.arguments)
+        |                renderCLI([updtParams.command], updtParams.arguments, updtParams.options)
         |            )
         |        }
         |
-        |    simpleBashExecutor(sample_input_output_function_cli_)
+        |    simpleBashExecutor(id_input_output_function_cli_)
         |
         |}
         """.stripMargin('|')
@@ -165,9 +174,9 @@ case class NextFlowTarget(
     val setup_main_entrypoint = s"""
         |workflow {
         |
-        |   sample = "testSample"
-        |   inputPath = Paths.get(params.$fname.arguments.input)
-        |   ch_ = Channel.from(inputPath).map{ s -> new Tuple3(s, inputPath, params.$fname)}
+        |   id = params.id
+        |   inputPath = Paths.get(params.$fname.arguments.inputfile)
+        |   ch_ = Channel.from(inputPath).map{ s -> new Tuple3(id, s, params.$fname)}
         |
         |   $fname(ch_)
         |}
