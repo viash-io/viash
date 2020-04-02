@@ -90,10 +90,13 @@ case class DockerTarget(
     val mainResource = fun2.mainResource.get
     val mainPath = Paths.get(resourcesPath, mainResource.name).toFile().getPath()
 
+    /**
+     * Note: This is not a good place to check for platform types, separation of concern-wise.
+     */
     val executionCode = fun2.platform match {
       case None => mainPath
       case Some(NativePlatform) =>
-        mainResource.path.getOrElse("echo No command provided")
+        mainResource.path.map(_ + " \"${ADDITIONAL[@]}\"").getOrElse("echo No command provided")
       case Some(pl) => {
         val code = fun2.mainCodeWithArgParse.get
 
@@ -103,39 +106,23 @@ case class DockerTarget(
         |$code
         |VIASHMAIN
         |${pl.command(mainPath)} $$@
-        """.stripMargin
+        |""".stripMargin
       }
     }
 
-    /**
-     * Note: This is not a good place to checck for platform types, separation of concern-wise.
-     */
-    val execute_bash = fun2.platform match {
-      case Some(NativePlatform) =>
-        Resource(
-          name = "execute.sh",
-          code = Some(s"""#!/bin/bash
-            °
-            °$volParse
-            °
-            °cat << VIASHEOF | docker run -i $volStr$portStr$runImageName $executionCode "$${ADDITIONAL[@]}"
-            °VIASHEOF
-          """.stripMargin('°')),
-          isExecutable = Some(true)
-        )
-      case _ =>
-        Resource(
-          name = "execute.sh",
-          code = Some(s"""#!/bin/bash
-            °
-            °$volParse
-            °
-            °cat << VIASHEOF | docker run -i $volStr$portStr$runImageName $executionCode
-            °VIASHEOF
-          """.stripMargin('°')),
-          isExecutable = Some(true)
+    val heredocStart = if (executionCode.contains("\n")) { "cat << VIASHEOF | " } else { "" }
+    val heredocEnd = if (executionCode.contains("\n")) { "\nVIASHEOF" } else { "" }
+    val execute_bash = 
+      Resource(
+        name = "execute.sh",
+        code = Some(s"""#!/bin/bash
+          |
+          |$volParse
+          |
+          |${heredocStart}docker run -i $volStr$portStr$runImageName $executionCode$heredocEnd
+        """.stripMargin),
+        isExecutable = Some(true)
       )
-    }
 
 //    val execute_batch = Resource(
 //      name = "execute.bat",
