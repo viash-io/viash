@@ -57,7 +57,7 @@ case class NextFlowTarget(
       dataObject.description.map(x => ("description", x.toString)),
       dataObject.default.map(x => ("value", x.toString)),
       dataObject.required.map(x => ("required", x)),
-      dataObject.direction.map(x => ("direction", x))
+      Some(("direction", dataObject.direction))
     ).flatMap(x => x)
 
     def nameOrShort[T](dataObject:DataObject[T]):String =
