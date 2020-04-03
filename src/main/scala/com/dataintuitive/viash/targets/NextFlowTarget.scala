@@ -57,6 +57,7 @@ case class NextFlowTarget(
       dataObject.description.map(x => ("description", x.toString)),
       dataObject.default.map(x => ("value", x.toString)),
       dataObject.required.map(x => ("required", x)),
+      Some(("type", dataObject.`type`)),
       Some(("direction", dataObject.direction))
     ).flatMap(x => x)
 
@@ -143,7 +144,10 @@ case class NextFlowTarget(
         |    def argumentsMap = arguments
         |    argumentsMap.each{ it -> argumentsList << it.value }
         |    def optionsMap = options
-        |    optionsMap.each{ it -> optionsList << "--" + it.name + " " + it.value }
+        |    optionsMap.each{ it ->
+        |        (it.type == "boolean")
+        |        ? optionsList << "--" + it.name
+        |        : optionsList << "--" + it.name + " " + it.value }
         |
         |    def command_line = command + argumentsList + optionsList
         |
@@ -156,16 +160,29 @@ case class NextFlowTarget(
      * This is irrelevant for simple one-step function calling, but it is crucial a in a pipeline.
      * This uses the function type, but there is no check on it yet!
      */
-    val setup_main_outFromInF = """
-        |def outFromIn(inputStr) {
-        |
-        |    def pattern = ~/^(\w+)\.(\w+)$/
-        |    def newFileName = inputStr.replaceFirst(pattern) { _, prefix, ext -> "${prefix}.html" }
-        |    return newFileName
-        |
-        |}
-        |
-    """.stripMargin('|')
+    val setup_main_outFromInF = functionality.ftype match {
+      case Some(ft) => """
+                  |def outFromIn(inputStr) {
+                  |
+                  |    def pattern = ~/^(.*)(\w+)\.(\w+)$/
+                  |    def newFileName = inputStr.replaceFirst(pattern) { _, prefix, prev, ext -> "${prefix}.__f__.__e__" }
+                  |    return newFileName
+                  |
+                  |}
+                  |
+             """.stripMargin('|').replace("__e__", ft).replace("__f__", fname)
+      case _ => """
+                    |def outFromIn(inputStr) {
+                    |
+                    |    def pattern = ~/^(.*)\.(\w+)$/
+                    |    def newFileName = inputStr.replaceFirst(pattern) { _, prefix, ext -> "${prefix}.${ext}" }
+                    |    return newFileName
+                    |
+                    |}
+                    |
+                """.stripMargin('|')
+    }
+
     val setup_main_overrideInput = """
         |// In: Hashmap key -> DataqObjects
         |// Out: Arrays of DataObjects
@@ -177,10 +194,10 @@ case class NextFlowTarget(
         |    def update = [ "value" : str ]
         |
         |    params.arguments.each{
-        |        it -> (it.value.direction == "Input") ? overrideArgs << it.value + update  : overrideArgs << it.value
+        |        it -> (it.value.direction == "Input" && it.value.type == "file") ? overrideArgs << it.value + update  : overrideArgs << it.value
         |        }
         |    params.options.each{
-        |        it -> (it.value.direction == "Input") ? overrideOptions << it.value + update : overrideOptions << it.value
+        |        it -> (it.value.direction == "Input" && it.value.type == "file") ? overrideOptions << it.value + update : overrideOptions << it.value
         |        }
         |
         |    def newParams = params + [ "options" : overrideOptions] + [ "arguments" : overrideArgs ]
@@ -199,10 +216,10 @@ case class NextFlowTarget(
         |    def update = [ "value" : str ]
         |
         |    params.arguments.each{
-        |        it -> (it.direction == "Output") ? overrideArgs << it + update  : overrideArgs << it
+        |        it -> (it.direction == "Output" && it.type == "file") ? overrideArgs << it + update  : overrideArgs << it
         |        }
         |    params.options.each{
-        |        it -> (it.direction == "Output") ? overrideOptions << it + update : overrideOptions << it
+        |        it -> (it.direction == "Output" && it.type == "file") ? overrideOptions << it + update : overrideOptions << it
         |        }
         |
         |    def newParams = params + [ "options" : overrideOptions] + [ "arguments" : overrideArgs ]
@@ -215,8 +232,10 @@ case class NextFlowTarget(
     val setup_main_process = s"""
         |
         |process simpleBashExecutor {
+        |  echo { (params.debug == true) ? true : false }
         |  container "$${container}"
-        |  publishDir "$${params.outDir}/$${id}", mode: 'copy', overwrite: true
+        |  // If id is the empty string, the subdirectory is not created
+        |  publishDir "$${params.outDir}/$${id}/$fname", mode: 'copy', overwrite: true
         |  input:
         |    tuple val(id), path(input), val(output), val(container), val(cli)
         |  output:
@@ -242,22 +261,30 @@ case class NextFlowTarget(
         |
         |    def id_input_output_function_cli_ =
         |        id_input_params_.map{ id, input, _params ->
+        |            def filename = input.name
         |            def defaultParams = params[key] ? params[key] : [:]
-        |            def overrideParams = _params ? _params : [:]
+        |            def overrideParams = _params[key] ? _params[key] : [:]
         |            def updtParams = defaultParams + overrideParams
         |            // now, switch to arrays instead of hashes...
-        |            def updtParams1 = overrideInput(updtParams, input.toString())
-        |            def updtParams2 = overrideOutput(updtParams1, outFromIn(input.toString()))
+        |            def updtParams1 = overrideInput(updtParams, filename)
+        |            def updtParams2 = overrideOutput(updtParams1, outFromIn(filename))
         |            new Tuple5(
         |                id,
         |                input,
-        |                outFromIn(input.toString()),
+        |                outFromIn(filename),
         |                updtParams2.container,
         |                renderCLI([updtParams2.command], updtParams2.arguments, updtParams2.options)
         |            )
         |        }
         |
-        |    simpleBashExecutor(id_input_output_function_cli_)
+        |    result_ = simpleBashExecutor(id_input_output_function_cli_) \\
+        |        | join(id_input_params_) \\
+        |        | map{ id, output, input, original_params ->
+        |            new Tuple3(id, output, original_params)
+        |        }
+        |
+        |    emit:
+        |    result_
         |
         |}
         """.stripMargin('|')
@@ -265,9 +292,9 @@ case class NextFlowTarget(
     val setup_main_entrypoint = s"""
         |workflow {
         |
-        |   id = params.id
-        |   inputPath = Paths.get(params.input)
-        |   ch_ = Channel.from(inputPath).map{ s -> new Tuple3(id, s, params.pandoc)}
+        |   def id = params.id
+        |   def inputPath = Paths.get(params.input)
+        |   def ch_ = Channel.from(inputPath).map{ s -> new Tuple3(id, s, params)}
         |
         |   $fname(ch_)
         |}

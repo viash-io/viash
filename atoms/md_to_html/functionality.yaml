@@ -1,0 +1,20 @@
+name: md_to_html
+description: empty
+platform: Native
+ftype: html
+arguments:
+- name: inputfile
+  type: file
+  required: true
+  default: test.md
+  direction: input
+options:
+- name: o
+  type: file
+  description: The path to the output file.
+  default: test.html
+  required: true
+  direction: output
+resources:
+- name: main
+  path: pandoc
