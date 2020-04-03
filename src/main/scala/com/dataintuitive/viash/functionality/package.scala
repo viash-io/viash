@@ -1,10 +1,14 @@
 package com.dataintuitive.viash
 
 import io.circe.{ Decoder, Encoder, Json }
+import io.circe.generic.extras.Configuration
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import cats.syntax.functor._ // for .widen
 
 package object functionality {
+  implicit val customConfig: Configuration = Configuration.default.withDefaults
+    
   // encoder and decoder for java.io.File
   implicit val encodeFile: Encoder[java.io.File] = Encoder.instance {
     file => Json.fromString(file.getPath)
@@ -28,11 +32,11 @@ package object functionality {
   }
   
   // encoders and decoders for Object
-  implicit val encodeStringObject: Encoder[StringObject] = deriveEncoder
-  implicit val encodeIntegerObject: Encoder[IntegerObject] = deriveEncoder
-  implicit val encodeDoubleObject: Encoder[DoubleObject] = deriveEncoder
-  implicit val encodeBooleanObject: Encoder[BooleanObject] = deriveEncoder
-  implicit val encodeFileObject: Encoder[FileObject] = deriveEncoder
+  implicit val encodeStringObject: Encoder.AsObject[StringObject] = deriveConfiguredEncoder
+  implicit val encodeIntegerObject: Encoder.AsObject[IntegerObject] = deriveConfiguredEncoder
+  implicit val encodeDoubleObject: Encoder.AsObject[DoubleObject] = deriveConfiguredEncoder
+  implicit val encodeBooleanObject: Encoder.AsObject[BooleanObject] = deriveConfiguredEncoder
+  implicit val encodeFileObject: Encoder.AsObject[FileObject] = deriveConfiguredEncoder
     
   implicit def encodeDataObject[A <: DataObject[_]]: Encoder[A] = Encoder.instance {
     par => 
@@ -47,11 +51,11 @@ package object functionality {
       objJson deepMerge typeJson
   }
   
-  implicit val decodeStringObject: Decoder[StringObject] = deriveDecoder
-  implicit val decodeIntegerObject: Decoder[IntegerObject] = deriveDecoder
-  implicit val decodeDoubleObject: Decoder[DoubleObject] = deriveDecoder
-  implicit val decodeBooleanObject: Decoder[BooleanObject] = deriveDecoder
-  implicit val decodeFileObject: Decoder[FileObject] = deriveDecoder
+  implicit val decodeStringObject: Decoder[StringObject] = deriveConfiguredDecoder
+  implicit val decodeIntegerObject: Decoder[IntegerObject] = deriveConfiguredDecoder
+  implicit val decodeDoubleObject: Decoder[DoubleObject] = deriveConfiguredDecoder
+  implicit val decodeBooleanObject: Decoder[BooleanObject] = deriveConfiguredDecoder
+  implicit val decodeFileObject: Decoder[FileObject] = deriveConfiguredDecoder
   
   implicit def decodeDataObject: Decoder[DataObject[_]] = Decoder.instance {
     cursor => 
@@ -70,8 +74,8 @@ package object functionality {
   }
   
   // encoder and decoder for Resource  
-  implicit val encodeResource: Encoder[Resource] = deriveEncoder
-  implicit val decodeResource: Decoder[Resource] = deriveDecoder
+  implicit val encodeResource: Encoder.AsObject[Resource] = deriveConfiguredEncoder
+  implicit val decodeResource: Decoder[Resource] = deriveConfiguredDecoder
   
   // encoder and decoder for Functionality
   implicit val encodeFunctionality: Encoder[Functionality] = deriveEncoder

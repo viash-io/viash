@@ -78,7 +78,7 @@ case class DockerTarget(
         name = Some(vol.name), 
         description = Some(s"Local path to mount directory for volume '${vol.name}'."),
         required = Some(true),
-        direction = Some(Input)
+        direction = Input
       )
     )
 
@@ -127,7 +127,7 @@ case class DockerTarget(
           |
           |${heredocStart}docker run -i $volStr$portStr$runImageName $executionCode$heredocEnd
         """.stripMargin),
-        isExecutable = Some(true)
+        isExecutable = true
       )
 
     fun2.copy(
