@@ -1,6 +1,7 @@
 name: pandoc
 description: empty
 platform: Native
+ftype: join
 arguments:
 - name: inputfile
   type: file

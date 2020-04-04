@@ -25,7 +25,8 @@ case class NextFlowTarget(
   apt: Option[AptEnvironment] = None,
   r: Option[REnvironment] = None,
   python: Option[PythonEnvironment] = None,
-  executor: Option[String]
+  executor: Option[String],
+  publishSubDir: Option[Boolean]
 ) extends Target {
   val `type` = "nextflow"
 
@@ -48,8 +49,19 @@ case class NextFlowTarget(
       case _    => { println("Not implemented yet"); mainPath}
     }
 
-    // Use DataObject.tag to know if there is an input file because it should be handled differently
-    // val inputFileObject:Option[FileObject] = allArgs.collect{ case x:FileObject => x }.headOption
+    val allPars = functionality.options ::: functionality.arguments
+
+    def inputFileExtO = allPars
+            .filter(_.`type` == "file")
+            .filter(_.direction == Input)
+            .headOption
+            .flatMap(_.default.map(_.toString.split('.').last))
+
+    def outputFileExtO = allPars
+            .filter(_.`type` == "file")
+            .filter(_.direction == Output)
+            .headOption
+            .flatMap(_.default.map(_.toString.split('.').last))
 
     def dataObjectToTuples[T](dataObject:DataObject[T]):List[(String, Any)] = List(
       dataObject.name.map(x => ("name", x.toString)),
@@ -68,7 +80,7 @@ case class NextFlowTarget(
         case _ => "HELP"
       }
 
-    val paramsAsTuple =
+    val paramsAsTuple = 
       ("options",
         functionality.options.map(x => (nameOrShort(x), dataObjectToTuples(x)))
         )
@@ -78,11 +90,10 @@ case class NextFlowTarget(
         functionality.arguments.map(x => (nameOrShort(x), dataObjectToTuples(x)))
         )
 
-    /**
-     * Some (implicit) conventions:
-     * - `out/` is where the output data is published
-     * - For multiple samples, an additional subdir `id` can be created, but its blank by default
-     */
+    val extensionsAsTuple = ("extensions", List(
+      outputFileExtO.map(ext => ("out", ext)).getOrElse(Nil)
+      ))
+
     val asNestedTuples:List[(String, Any)] = List(
       ("docker.enabled", true),
       ("process.container", "dataintuitive/portash"),
@@ -96,6 +107,7 @@ case class NextFlowTarget(
               ("name", functionality.name),
               ("container", image),
               ("command", executionCode),
+              extensionsAsTuple,
               paramsAsTuple,
               argumentsAsTuple
             )
@@ -103,9 +115,6 @@ case class NextFlowTarget(
           )
         )
       )
-
-    // println(functionality)
-    // println(asNestedTuples)
 
     def convertBool(b: Boolean):String = if (b) "true" else "false"
 
@@ -131,11 +140,9 @@ case class NextFlowTarget(
 
     val setup_main_header = s"""nextflow.preview.dsl=2
         |import java.nio.file.Paths
-        |
-        """.stripMargin('|')
+        |""".stripMargin('|')
 
     val setup_main_utils = s"""
-        |
         |// TODO: Support for short options
         |def renderCLI(command, arguments, options) {
         |
@@ -153,34 +160,58 @@ case class NextFlowTarget(
         |
         |    return command_line.join(" ")
         |}
-        """.stripMargin('|')
+        |""".stripMargin('|')
 
     /**
      * What should the output filename be, in terms of the input?
      * This is irrelevant for simple one-step function calling, but it is crucial a in a pipeline.
      * This uses the function type, but there is no check on it yet!
+     * TODO: Check for conditions
      */
-    val setup_main_outFromInF = functionality.ftype match {
-      case Some(ft) => """
-                  |def outFromIn(inputStr) {
-                  |
-                  |    def pattern = ~/^(.*)(\w+)\.(\w+)$/
-                  |    def newFileName = inputStr.replaceFirst(pattern) { _, prefix, prev, ext -> "${prefix}.__f__.__e__" }
-                  |    return newFileName
-                  |
-                  |}
-                  |
-             """.stripMargin('|').replace("__e__", ft).replace("__f__", fname)
+    val setup_main_outFromIn = functionality.ftype match {
+      // in and out file format are the same
+      case Some("transform") => """
+          |def outFromIn(inputstr) {
+          |
+          |    def splitstring = inputstr.split(/\./)
+          |    def prefix = splitstring.head()
+          |    def extension = splitstring.last()
+          |
+          |    return prefix + "." + "__f__" + "." + "__e__"
+          |}
+          |""".stripMargin('|').replace("__e__", inputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
+      // Out format is different from in format
+      case Some("convert") => """
+          |def outFromIn(inputstr) {
+          |
+          |    def splitstring = inputstr.split(/\./)
+          |    def prefix = splitstring.head()
+          |    def extension = splitstring.last()
+          |
+          |    return prefix + "." + "__f__" + "." + "__e__"
+          |}
+          |""".stripMargin('|').replace("__e__", outputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
+      // Out format is different from in format
+      case Some("join") => """
+          |def outFromIn(input) {
+          |    if (input.getClass() == sun.nio.fs.UnixPath) {
+          |        def splitString = input.name.split(/\./)
+          |        def prefix = splitString.head()
+          |        def extension = splitString.last()
+          |
+          |        return prefix + "." + "__f__" + "." + "__e__"
+          |    } else {
+          |        // We're in join mode
+          |        return "__f__" + "." + "__e__"
+          |    }
+          |}
+          |""".stripMargin('|').replace("__e__", outputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
       case _ => """
-                    |def outFromIn(inputStr) {
-                    |
-                    |    def pattern = ~/^(.*)\.(\w+)$/
-                    |    def newFileName = inputStr.replaceFirst(pattern) { _, prefix, ext -> "${prefix}.${ext}" }
-                    |    return newFileName
-                    |
-                    |}
-                    |
-                """.stripMargin('|')
+          |def outFromIn(inputStr) {
+          |
+          |    return "I-have-no-idea-what-this-file-should-be"
+          |}
+          |""".stripMargin('|')
     }
 
     val setup_main_overrideInput = """
@@ -193,19 +224,22 @@ case class NextFlowTarget(
         |
         |    def update = [ "value" : str ]
         |
-        |    params.arguments.each{
-        |        it -> (it.value.direction == "Input" && it.value.type == "file") ? overrideArgs << it.value + update  : overrideArgs << it.value
-        |        }
-        |    params.options.each{
-        |        it -> (it.value.direction == "Input" && it.value.type == "file") ? overrideOptions << it.value + update : overrideOptions << it.value
-        |        }
+        |    params.arguments.each{ it ->
+        |      (it.value.direction == "Input" && it.value.type == "file")
+        |        ? overrideArgs << it.value + update
+        |        : overrideArgs << it.value
+        |    }
+        |    params.options.each{ it ->
+        |      (it.value.direction == "Input" && it.value.type == "file")
+        |        ? overrideOptions << it.value + update
+        |        : overrideOptions << it.value
+        |    }
         |
         |    def newParams = params + [ "options" : overrideOptions] + [ "arguments" : overrideArgs ]
         |
         |    return newParams
-        |
         |}
-        """.stripMargin('|')
+        |""".stripMargin('|')
 
     val setup_main_overrideOutput = """
         |def overrideOutput(params, str) {
@@ -215,27 +249,43 @@ case class NextFlowTarget(
         |
         |    def update = [ "value" : str ]
         |
-        |    params.arguments.each{
-        |        it -> (it.direction == "Output" && it.type == "file") ? overrideArgs << it + update  : overrideArgs << it
-        |        }
-        |    params.options.each{
-        |        it -> (it.direction == "Output" && it.type == "file") ? overrideOptions << it + update : overrideOptions << it
-        |        }
+        |    params.arguments.each{it ->
+        |      (it.direction == "Output" && it.type == "file")
+        |        ? overrideArgs << it + update
+        |        : overrideArgs << it
+        |    }
+        |    params.options.each{ it ->
+        |     (it.direction == "Output" && it.type == "file")
+        |        ? overrideOptions << it + update
+        |        : overrideOptions << it
+        |    }
         |
         |    def newParams = params + [ "options" : overrideOptions] + [ "arguments" : overrideArgs ]
         |
         |    return newParams
-        |
         |}
-        """.stripMargin('|')
+        |""".stripMargin('|')
 
-    val setup_main_process = s"""
+    /**
+     * Some (implicit) conventions:
+     * - `out/` is where the output data is published
+     * - For multiple samples, an additional subdir `id` can be created, but blank by default
+     * - A boolean option `publishSubdir` is available to store processing steps in subdirs
+     */
+    val setup_main_process = {
+
+      val publishDirString = publishSubDir match {
+        case Some(true) => "${params.outDir}/${id}/" + fname
+        case _ => "${params.outDir}/${id}"
+      }
+
+      s"""
         |
         |process simpleBashExecutor {
         |  echo { (params.debug == true) ? true : false }
         |  container "$${container}"
         |  // If id is the empty string, the subdirectory is not created
-        |  publishDir "$${params.outDir}/$${id}/$fname", mode: 'copy', overwrite: true
+        |  publishDir "$publishDirString", mode: 'copy', overwrite: true
         |  input:
         |    tuple val(id), path(input), val(output), val(container), val(cli)
         |  output:
@@ -247,9 +297,11 @@ case class NextFlowTarget(
         |    \"\"\"
         |
         |}
-        """.stripMargin('|')
+        |""".stripMargin('|')
+    }
 
-    val setup_main_workflow = s"""
+    val setup_main_workflow = functionality.ftype match {
+      case Some("join") => s"""
         |workflow $fname {
         |
         |    take:
@@ -257,7 +309,54 @@ case class NextFlowTarget(
         |
         |    main:
         |
-        |    key = "$fname"
+        |    def key = "$fname"
+        |
+        |    def id_input_output_function_cli_ =
+        |        id_input_params_.map{ id, input, _params ->
+        |            // If the input is not a path name, it's probably an array
+        |            // that needs to be concatenated.
+        |            def filename = (input.getClass() == sun.nio.fs.UnixPath)
+        |                            ? input.name
+        |                            : input.join(' ')
+        |            def inputPath = (input.getClass() == sun.nio.fs.UnixPath)
+        |                              ? input
+        |                              : Paths.get(input.join(' '))
+        |            def outputFilename = outFromIn(input)
+        |            def defaultParams = params[key] ? params[key] : [:]
+        |            def overrideParams = _params[key] ? _params[key] : [:]
+        |            def updtParams = defaultParams + overrideParams
+        |            // now, switch to arrays instead of hashes...
+        |            def updtParams1 = overrideInput(updtParams, filename)
+        |            def updtParams2 = overrideOutput(updtParams1, outputFilename)
+        |            new Tuple5(
+        |                id,
+        |                inputPath,
+        |                outputFilename,
+        |                updtParams2.container,
+        |                renderCLI([updtParams2.command], updtParams2.arguments, updtParams2.options)
+        |            )
+        |        }
+        |
+        |    result_ = simpleBashExecutor(id_input_output_function_cli_) \\
+        |        | join(id_input_params_) \\
+        |        | map{ id, output, input, original_params ->
+        |            new Tuple3(id, output, original_params)
+        |        }
+        |
+        |    emit:
+        |    result_
+        |
+        |}
+        |""".stripMargin('|')
+      case _ => s"""
+        |workflow $fname {
+        |
+        |    take:
+        |    id_input_params_
+        |
+        |    main:
+        |
+        |    def key = "$fname"
         |
         |    def id_input_output_function_cli_ =
         |        id_input_params_.map{ id, input, _params ->
@@ -287,9 +386,26 @@ case class NextFlowTarget(
         |    result_
         |
         |}
-        """.stripMargin('|')
+        |""".stripMargin('|')
+    }
 
-    val setup_main_entrypoint = s"""
+    val setup_main_entrypoint = functionality.ftype match {
+      case Some("join") => """
+        |workflow {
+        |
+        |   def id = params.id
+        |
+        |   def ch_ = (params.input.contains("*"))
+        |           ? Channel.fromPath(params.input)
+        |                .collect()
+        |                .map{ s -> new Tuple3(id, s, params)}
+        |           : Channel.from(Paths.get(params.input))
+        |                .map{ s -> new Tuple3(id, s, params)}
+        |
+        |   md_concat(ch_)
+        |}
+        |""".stripMargin('|')
+      case _ => s"""
         |workflow {
         |
         |   def id = params.id
@@ -298,13 +414,14 @@ case class NextFlowTarget(
         |
         |   $fname(ch_)
         |}
-        """.stripMargin('|')
+        |""".stripMargin('|')
+    }
 
     val setup_main = Resource(
       name = "main.nf",
       code = Some(setup_main_header +
                   setup_main_utils +
-                  setup_main_outFromInF +
+                  setup_main_outFromIn +
                   setup_main_overrideInput +
                   setup_main_overrideOutput +
                   setup_main_process +

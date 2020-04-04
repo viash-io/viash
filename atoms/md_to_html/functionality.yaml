@@ -1,7 +1,7 @@
 name: md_to_html
 description: empty
 platform: Native
-ftype: html
+ftype: convert
 arguments:
 - name: inputfile
   type: file
@@ -9,12 +9,29 @@ arguments:
   default: test.md
   direction: input
 options:
-- name: o
+- name: output
   type: file
   description: The path to the output file.
   default: test.html
   required: true
   direction: output
+- name: template
+  type: string
+  description: The path to the html template
+  default: /Users/toni/Dropbox/_Tools/Stylesheets/Pandoc/bootstrap-html/template.html
+  required: true
+  direction: input
+- name: css
+  type: string
+  description: the path to the css template
+  default: /users/toni/dropbox/_tools/stylesheets/pandoc/bootstrap-html/template.css
+  required: true
+  direction: input
+- name: standalone
+  type: boolean
+  description: Create standalone html file
+  required: true
+  direction: input
 resources:
 - name: main
   path: pandoc
