@@ -5,3 +5,4 @@ volumes:
   mount: /data
 workdir: /app
 executor: mytestfieldexecutor
+publishSubDir: true

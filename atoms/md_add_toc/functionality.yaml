@@ -1,7 +1,7 @@
 name: md_add_toc
 description: empty
 platform: Native
-ftype: md
+ftype: transform
 arguments:
 - name: inputfile
   type: file
