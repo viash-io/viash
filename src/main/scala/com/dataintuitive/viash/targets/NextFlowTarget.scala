@@ -80,19 +80,27 @@ case class NextFlowTarget(
         case _ => "HELP"
       }
 
-    val paramsAsTuple = 
-      ("options",
-        functionality.options.map(x => (nameOrShort(x), dataObjectToTuples(x)))
-        )
+    val paramsAsTuple = if (functionality.options.length > 0) {
+      List(
+        ("options", functionality.options.map(x => (nameOrShort(x), dataObjectToTuples(x))))
+      )
+    } else Nil
 
-    val argumentsAsTuple =
-      ("arguments",
-        functionality.arguments.map(x => (nameOrShort(x), dataObjectToTuples(x)))
-        )
+    val argumentsAsTuple = if (functionality.arguments.length > 0) {
+      List(
+        ("arguments", functionality.arguments.map(x => (nameOrShort(x), dataObjectToTuples(x))))
+      )
+    } else Nil
 
-    val extensionsAsTuple = ("extensions", List(
-      outputFileExtO.map(ext => ("out", ext)).getOrElse(Nil)
-      ))
+    val argsAndOptions = paramsAsTuple ::: argumentsAsTuple
+    println(argsAndOptions)
+
+    val extensionsAsTuple = outputFileExtO match {
+      case Some(ext) => List(
+        ("extensions", List(("out", ext)))
+      )
+      case None => Nil
+    }
 
     val asNestedTuples:List[(String, Any)] = List(
       ("docker.enabled", true),
@@ -106,11 +114,10 @@ case class NextFlowTarget(
             List(
               ("name", functionality.name),
               ("container", image),
-              ("command", executionCode),
-              extensionsAsTuple,
-              paramsAsTuple,
-              argumentsAsTuple
+              ("command", executionCode)
             )
+            ::: extensionsAsTuple
+            ::: argsAndOptions
             )
           )
         )
@@ -170,6 +177,12 @@ case class NextFlowTarget(
      */
     val setup_main_outFromIn = functionality.ftype match {
       // in and out file format are the same
+      case Some("asis") => """
+          |def outFromIn(inputstr) {
+          |
+          |    return "${inputstr}"
+          |}
+          |""".stripMargin('|').replace("__e__", inputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
       case Some("transform") => """
           |def outFromIn(inputstr) {
           |
@@ -191,6 +204,24 @@ case class NextFlowTarget(
           |    return prefix + "." + "__f__" + "." + "__e__"
           |}
           |""".stripMargin('|').replace("__e__", outputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
+      // Out format is different from in format
+      case Some("unzip") => """
+          |def outFromIn(inputstr) {
+          |
+          |    def splitstring = inputstr.split(/\./)
+          |    def newStr = splitstring.dropRight(1)
+          |
+          |    return newStr.join(".")
+          |}
+          |""".stripMargin('|')
+      // Out format is different from in format
+      case Some("todir") => """
+          |def outFromIn(inputstr) {
+          |
+          |    return "__f__"
+          |
+          |}
+          |""".stripMargin('|').replace("__f__", fname)
       // Out format is different from in format
       case Some("join") => """
           |def outFromIn(input) {
@@ -279,10 +310,21 @@ case class NextFlowTarget(
         case _ => "${params.outDir}/${id}"
       }
 
+      val stageInMode = functionality.ftype match {
+        case Some("unzip") => "copy"
+        case _ => "symlink"
+      }
+
+      val preHook = functionality.ftype match {
+        case Some("todir") => "mkdir " + fname
+        case _ => "echo Nothing before"
+      }
+
       s"""
         |
         |process simpleBashExecutor {
         |  echo { (params.debug == true) ? true : false }
+        |  stageInMode "$stageInMode"
         |  container "$${container}"
         |  // If id is the empty string, the subdirectory is not created
         |  publishDir "$publishDirString", mode: 'copy', overwrite: true
@@ -292,6 +334,7 @@ case class NextFlowTarget(
         |    tuple val("$${id}"), path("$${output}")
         |  script:
         |    \"\"\"
+        |    $preHook
         |    echo Running: $$cli
         |    $$cli
         |    \"\"\"
