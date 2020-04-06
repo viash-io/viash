@@ -77,15 +77,35 @@ case class NextFlowTarget(
     def valuePointer(key: String, value: String):String = s"$${params.${fname}__${key}}"
 
 
-    def dataObjectToTuples[T](dataObject:DataObject[T]):List[(String, Any)] = List(
-      dataObject.name.map(x => ("name", x.toString)),
-      dataObject.short.map(x => ("short", x.toString)),
-      dataObject.description.map(x => ("description", x.toString)),
-      dataObject.default.map(x => ("value", valuePointer(dataObject.name.getOrElse("name_not_found"), x.toString))),
-      dataObject.required.map(x => ("required", x)),
-      Some(("type", dataObject.`type`)),
-      Some(("direction", dataObject.direction))
-    ).flatMap(x => x)
+    def dataObjectToTuples[T](dataObject:DataObject[T]):List[(String, Any)] = {
+
+      val otype = if (dataObject.name.isDefined) "--" else "-"
+      val name = if (dataObject.name.isDefined)
+                   dataObject.name.map(_.toString).getOrElse("name_not_found")
+                 else
+                   dataObject.short.map(_.toString).getOrElse("short_not_found")
+
+      def valueOrPointer(str:String):String =
+        if (! name.contains("-"))
+          valuePointer(name, str)
+        else
+          // We currently have no solution for keys that contain `-`
+          str
+
+      List(
+        Some(("name", name)),
+        Some(("otype", otype)),
+        dataObject.description.map(x =>
+            ("description", x.toString)),
+        dataObject.default.map(x =>
+            ("value", valueOrPointer(x.toString))),
+        dataObject.required.map(x =>
+            ("required", x)),
+        Some(("type", dataObject.`type`)),
+        Some(("direction", dataObject.direction))
+      ).flatMap(x => x)
+
+    }
 
     def nameOrShort[T](dataObject:DataObject[T]):String =
       (dataObject.name, dataObject.short) match {
@@ -95,7 +115,29 @@ case class NextFlowTarget(
       }
 
     val namespacedParameters = (functionality.options ::: functionality.arguments)
-      .map(dataObject => namespacedValueTuple(dataObject.name.getOrElse("name_not_found"), dataObject.default.map(_.toString).getOrElse("value_not_found")))
+      .map(dataObject => {
+
+          val name = if (dataObject.name.isDefined)
+                       dataObject.name.map(_.toString).getOrElse("name_not_found")
+                     else
+                       dataObject.short.map(_.toString).getOrElse("short_not_found")
+
+          println("name here: " + name)
+
+          if (! name.contains("-")) {
+            Some(
+              namespacedValueTuple(
+                name,
+                dataObject.default.map(_.toString).getOrElse("value_not_found")
+              ))
+          } else {
+            // We currently have no solution for keys that contain `-`
+            println(s"The variable $name contains a -, removing this from the global namespace...")
+            None
+          }
+      }).flatMap(x => x)
+
+    println(namespacedParameters)
 
     val paramsAsTuple = if (functionality.options.length > 0) {
       List(
@@ -176,8 +218,8 @@ case class NextFlowTarget(
         |    def optionsMap = options
         |    optionsMap.each{ it ->
         |        (it.type == "boolean")
-        |        ? optionsList << "--" + it.name
-        |        : optionsList << "--" + it.name + " " + it.value }
+        |        ? optionsList << it.otype + it.name
+        |        : optionsList << it.otype + it.name + " " + it.value }
         |
         |    def command_line = command + optionsList + argumentsList
         |
@@ -340,6 +382,7 @@ case class NextFlowTarget(
         |
         |process simpleBashExecutor {
         |  echo { (params.debug == true) ? true : false }
+        |  cache 'deep'
         |  stageInMode "$stageInMode"
         |  container "$${container}"
         |  // If id is the empty string, the subdirectory is not created
