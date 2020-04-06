@@ -38,7 +38,10 @@ case class NextFlowTarget(
 
     val resourcesPath = "/app"
 
+    val fname = functionality.name
+
     def quote(str:String) = '"' + str + '"'
+    def quoteLong(str:String):String = if (str.contains("-")) '"' + str + '"' else str
 
     // get main script/binary
     // Only the Native platform case is covered for the moment
@@ -63,11 +66,22 @@ case class NextFlowTarget(
             .headOption
             .flatMap(_.default.map(_.toString.split('.').last))
 
+    /**
+     * All values for arguments/parameters are defined in the root of
+     * the params structure. the function name is prefixed as a namespace
+     * identifier. A "__" is used to seperate namespace and arg/option.
+     */
+    def namespacedValueTuple(key: String, value: String):(String, String) =
+      (s"${fname}__${key}", value)
+
+    def valuePointer(key: String, value: String):String = s"$${params.${fname}__${key}}"
+
+
     def dataObjectToTuples[T](dataObject:DataObject[T]):List[(String, Any)] = List(
       dataObject.name.map(x => ("name", x.toString)),
       dataObject.short.map(x => ("short", x.toString)),
       dataObject.description.map(x => ("description", x.toString)),
-      dataObject.default.map(x => ("value", x.toString)),
+      dataObject.default.map(x => ("value", valuePointer(dataObject.name.getOrElse("name_not_found"), x.toString))),
       dataObject.required.map(x => ("required", x)),
       Some(("type", dataObject.`type`)),
       Some(("direction", dataObject.direction))
@@ -80,20 +94,22 @@ case class NextFlowTarget(
         case _ => "HELP"
       }
 
+    val namespacedParameters = (functionality.options ::: functionality.arguments)
+      .map(dataObject => namespacedValueTuple(dataObject.name.getOrElse("name_not_found"), dataObject.default.map(_.toString).getOrElse("value_not_found")))
+
     val paramsAsTuple = if (functionality.options.length > 0) {
       List(
-        ("options", functionality.options.map(x => (nameOrShort(x), dataObjectToTuples(x))))
+        ("options", functionality.options.map(x => (quoteLong(nameOrShort(x)), dataObjectToTuples(x))))
       )
     } else Nil
 
     val argumentsAsTuple = if (functionality.arguments.length > 0) {
       List(
-        ("arguments", functionality.arguments.map(x => (nameOrShort(x), dataObjectToTuples(x))))
+        ("arguments", functionality.arguments.map(x => (quoteLong(nameOrShort(x)), dataObjectToTuples(x))))
       )
     } else Nil
 
     val argsAndOptions = paramsAsTuple ::: argumentsAsTuple
-    println(argsAndOptions)
 
     val extensionsAsTuple = outputFileExtO match {
       case Some(ext) => List(
@@ -106,6 +122,7 @@ case class NextFlowTarget(
       ("docker.enabled", true),
       ("process.container", "dataintuitive/portash"),
       ("params",
+        namespacedParameters :::
         List(
           ("id", ""),
           ("outDir", "out"),
@@ -143,7 +160,6 @@ case class NextFlowTarget(
       )
     )
 
-    val fname = functionality.name
 
     val setup_main_header = s"""nextflow.preview.dsl=2
         |import java.nio.file.Paths
@@ -163,7 +179,7 @@ case class NextFlowTarget(
         |        ? optionsList << "--" + it.name
         |        : optionsList << "--" + it.name + " " + it.value }
         |
-        |    def command_line = command + argumentsList + optionsList
+        |    def command_line = command + optionsList + argumentsList
         |
         |    return command_line.join(" ")
         |}
@@ -299,7 +315,7 @@ case class NextFlowTarget(
 
     /**
      * Some (implicit) conventions:
-     * - `out/` is where the output data is published
+     * - `outDir/` is where the output data is published
      * - For multiple samples, an additional subdir `id` can be created, but blank by default
      * - A boolean option `publishSubdir` is available to store processing steps in subdirs
      */
@@ -403,17 +419,31 @@ case class NextFlowTarget(
         |
         |    def id_input_output_function_cli_ =
         |        id_input_params_.map{ id, input, _params ->
-        |            def filename = input.name
+        |            def filename = ""
+        |            def outputFilename = ""
+        |            if (input.getClass() == sun.nio.fs.UnixPath) {
+        |                // Just a file path as input
+        |                filename = input.name
+        |                outputFilename = outFromIn(input.name)
+        |            } else if (input.getClass() == java.lang.String) {
+        |                // Expect this to be a path, so convert to one
+        |                filename = Paths.get(input)
+        |                outputFilename = outFromIn(input)
+        |            } else {
+        |                // Probably join mode, act accordingly
+        |                filename = input.map{it.toString()}.join(' ')
+        |                ouputFilename = outFromInt(input)
+        |            }
         |            def defaultParams = params[key] ? params[key] : [:]
         |            def overrideParams = _params[key] ? _params[key] : [:]
         |            def updtParams = defaultParams + overrideParams
         |            // now, switch to arrays instead of hashes...
         |            def updtParams1 = overrideInput(updtParams, filename)
-        |            def updtParams2 = overrideOutput(updtParams1, outFromIn(filename))
+        |            def updtParams2 = overrideOutput(updtParams1, outputFilename)
         |            new Tuple5(
         |                id,
         |                input,
-        |                outFromIn(filename),
+        |                outputFilename,
         |                updtParams2.container,
         |                renderCLI([updtParams2.command], updtParams2.arguments, updtParams2.options)
         |            )
