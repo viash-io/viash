@@ -5,7 +5,7 @@ import java.io.File
 abstract class DataObject[Type] {
   val `type`: String
   val name: Option[String]
-  val short: Option[Char]
+  val short: Option[String]
   val description: Option[String]
   val default: Option[Type]
   val required: Option[Boolean]
@@ -25,7 +25,7 @@ abstract class DataObject[Type] {
 
 case class StringObject(
     name: Option[String] = None,
-    short: Option[Char] = None,
+    short: Option[String] = None,
     description: Option[String] = None,
     default: Option[String] = None,
     required: Option[Boolean] = None,
@@ -38,7 +38,7 @@ case class StringObject(
 
 case class IntegerObject(
     name: Option[String] = None,
-    short: Option[Char] = None,
+    short: Option[String] = None,
     description: Option[String] = None,
     default: Option[Int] = None,
     required: Option[Boolean] = None,
@@ -50,7 +50,7 @@ case class IntegerObject(
 
 case class DoubleObject(
     name: Option[String] = None,
-    short: Option[Char] = None,
+    short: Option[String] = None,
     description: Option[String] = None,
     default: Option[Double] = None,
     required: Option[Boolean] = None,
@@ -62,7 +62,7 @@ case class DoubleObject(
 
 case class BooleanObject(
     name: Option[String] = None,
-    short: Option[Char] = None,
+    short: Option[String] = None,
     description: Option[String] = None,
     default: Option[Boolean] = None,
     required: Option[Boolean] = None,
@@ -75,7 +75,7 @@ case class BooleanObject(
 
 case class FileObject(
     name: Option[String] = None,
-    short: Option[Char] = None,
+    short: Option[String] = None,
     description: Option[String] = None,
     default: Option[File] = None,
     mustExist: Option[Boolean] = None,

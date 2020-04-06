@@ -18,16 +18,16 @@ options:
 - name: template
   type: string
   description: The path to the html template
-  default: /Users/toni/Dropbox/_Tools/Stylesheets/Pandoc/bootstrap-html/template.html
+  default: template.html
   required: true
   direction: input
 - name: css
   type: string
   description: the path to the css template
-  default: /users/toni/dropbox/_tools/stylesheets/pandoc/bootstrap-html/template.css
+  default: template.css
   required: true
   direction: input
-- name: standalone
+- short: s
   type: boolean
   description: Create standalone html file
   required: true
