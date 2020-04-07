@@ -1,16 +1,18 @@
 name: print_params
-description: Prints out the parameter values.
+description: | 
+  Prints out the parameter values.
+  Checking whether multiline descriptions work.
 platform: Python
 arguments: 
+- name: "real_number"
+  type: double
+  description: A real number.
+  required: true
 - name: "--whole_number"
   alternatives: ["-w"]
   type: integer
   description: A whole number.
   default: 10
-  required: false
-- name: "--real_number"
-  type: double
-  description: A real number.
   required: false
 - name: "-s"
   type: string
