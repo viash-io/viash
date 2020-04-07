@@ -79,8 +79,8 @@ case class NextFlowTarget(
 
     def dataObjectToTuples[T](dataObject:DataObject[T]):List[(String, Any)] = {
       def valueOrPointer(str:String):String =
-        if (! dataObject.name.contains("-"))
-          valuePointer(dataObject.name, str)
+        if (! dataObject.plainName.contains("-"))
+          valuePointer(dataObject.plainName, str)
         else
           // We currently have no solution for keys that contain `-`
           str
@@ -183,20 +183,21 @@ case class NextFlowTarget(
         |""".stripMargin('|')
 
     val setup_main_utils = s"""
-        |// TODO: Support for short options
-        |def renderCLI(command, arguments, options) {
+        |def renderCLI(command, arguments) {
         |
         |    def argumentsList = []
-        |    def optionsList = []
         |    def argumentsMap = arguments
-        |    argumentsMap.each{ it -> argumentsList << it.value }
-        |    def optionsMap = options
-        |    optionsMap.each{ it ->
-        |        (it.type == "boolean")
-        |        ? optionsList << it.otype + it.name
-        |        : optionsList << it.otype + it.name + " " + it.value }
+        |    argumentsMap.each{ it ->
         |
-        |    def command_line = command + optionsList + argumentsList
+        |        if (it.otype == "")
+        |            argumentsList << it.value
+        |        if (it.otype.contains("-"))
+        |            (it.type == "boolean")
+        |            ? argumentsList << it.otype + it.name
+        |            : argumentsList << it.otype + it.name + " " + it.value
+        |    }
+        |
+        |    def command_line = command + argumentsList
         |
         |    return command_line.join(" ")
         |}
@@ -410,7 +411,7 @@ case class NextFlowTarget(
         |                inputPath,
         |                outputFilename,
         |                updtParams2.container,
-        |                renderCLI([updtParams2.command], updtParams2.arguments, updtParams2.options)
+        |                renderCLI([updtParams2.command], updtParams2.arguments)
         |            )
         |        }
         |
@@ -463,7 +464,7 @@ case class NextFlowTarget(
         |                input,
         |                outputFilename,
         |                updtParams2.container,
-        |                renderCLI([updtParams2.command], updtParams2.arguments, updtParams2.options)
+        |                renderCLI([updtParams2.command], updtParams2.arguments)
         |            )
         |        }
         |
