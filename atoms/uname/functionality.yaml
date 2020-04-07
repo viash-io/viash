@@ -1,16 +1,14 @@
 name: pandoc
 description: empty
 platform: Native
-inputs:
-- short: a
+arguments:
+- name: "-a"
   type: boolean
   default: true
-arguments:
-- name: allOrNot
+- name: "--allOrNot"
   type: string
   default: -a
-outputs:
-- short: t
+- name: "-t"
   type: string
   required: true
   default: none

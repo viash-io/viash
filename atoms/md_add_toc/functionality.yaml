@@ -8,18 +8,17 @@ arguments:
   required: true
   default: test.md
   direction: input
-options:
-- name: output
+- name: "--output"
   type: file
   description: The path to the output file.
   default: test.toc.md
   required: true
   direction: output
-- name: toc
+- name: "--toc"
   type: boolean
   description: generatie TOC
   required: true
-- name: standalone
+- name: "--standalone"
   type: boolean
   description: standalone file
   required: true

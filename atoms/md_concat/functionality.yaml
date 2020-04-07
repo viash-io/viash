@@ -8,8 +8,7 @@ arguments:
   required: true
   default: '*'
   direction: input
-options:
-- name: output
+- name: "--output"
   type: file
   description: The path to the output file.
   default: joined.md
