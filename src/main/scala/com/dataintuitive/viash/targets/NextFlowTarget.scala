@@ -124,7 +124,7 @@ case class NextFlowTarget(
 
     val argumentsAsTuple = if (functionality.arguments.length > 0) {
       List(
-        ("arguments", functionality.arguments.map(x => (quoteLong(x.name), dataObjectToTuples(x))))
+        ("arguments", functionality.arguments.map(x => (quoteLong(x.strname), dataObjectToTuples(x))))
       )
     } else Nil
 
