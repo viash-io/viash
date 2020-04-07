@@ -4,18 +4,16 @@ import java.io.File
 
 abstract class DataObject[Type] {
   val `type`: String
-  val name: Option[String]
-  val short: Option[String]
+  val name: String
+  val alternatives: Option[List[String]]
   val description: Option[String]
   val default: Option[Type]
   val required: Option[Boolean]
   val direction: Direction
   val tag: Option[String]
-
-  require(
-    name.isDefined || short.isDefined,
-    message = "At least either 'name' or 'short' must be defined."
-  )
+  
+  private val pattern = "^(-*)([^-]*)$".r
+  val pattern(otype, strname) = name
 
   def validate(value: Type): Boolean = {
     true
@@ -24,8 +22,8 @@ abstract class DataObject[Type] {
 }
 
 case class StringObject(
-    name: Option[String] = None,
-    short: Option[String] = None,
+    name: String,
+    alternatives: Option[List[String]] = None,
     description: Option[String] = None,
     default: Option[String] = None,
     required: Option[Boolean] = None,
@@ -37,8 +35,8 @@ case class StringObject(
 }
 
 case class IntegerObject(
-    name: Option[String] = None,
-    short: Option[String] = None,
+    name: String,
+    alternatives: Option[List[String]] = None,
     description: Option[String] = None,
     default: Option[Int] = None,
     required: Option[Boolean] = None,
@@ -49,8 +47,8 @@ case class IntegerObject(
 }
 
 case class DoubleObject(
-    name: Option[String] = None,
-    short: Option[String] = None,
+    name: String,
+    alternatives: Option[List[String]] = None,
     description: Option[String] = None,
     default: Option[Double] = None,
     required: Option[Boolean] = None,
@@ -61,8 +59,8 @@ case class DoubleObject(
 }
 
 case class BooleanObject(
-    name: Option[String] = None,
-    short: Option[String] = None,
+    name: String,
+    alternatives: Option[List[String]] = None,
     description: Option[String] = None,
     default: Option[Boolean] = None,
     required: Option[Boolean] = None,
@@ -74,8 +72,8 @@ case class BooleanObject(
 }
 
 case class FileObject(
-    name: Option[String] = None,
-    short: Option[String] = None,
+    name: String,
+    alternatives: Option[List[String]] = None,
     description: Option[String] = None,
     default: Option[File] = None,
     mustExist: Option[Boolean] = None,
