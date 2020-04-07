@@ -12,7 +12,7 @@ abstract class DataObject[Type] {
   val direction: Direction
   val tag: Option[String]
   
-  private val pattern = "^(-*)([^-]*)$".r
+  private val pattern = "^(-*)(.*)$".r
   val pattern(otype, plainName) = name
 
   def validate(value: Type): Boolean = {
