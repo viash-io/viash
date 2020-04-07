@@ -86,7 +86,7 @@ case class NextFlowTarget(
           str
 
       List(
-        Some(("name", dataObject.strname)),
+        Some(("name", dataObject.plainName)),
         Some(("otype", dataObject.otype)),
         dataObject.description.map(x =>
             ("description", x.toString)),
@@ -103,7 +103,7 @@ case class NextFlowTarget(
     val namespacedParameters = functionality.arguments
       .map(dataObject => {
 
-          val name = dataObject.strname
+          val name = dataObject.plainName
 
           println("name here: " + name)
 
@@ -124,7 +124,7 @@ case class NextFlowTarget(
 
     val argumentsAsTuple = if (functionality.arguments.length > 0) {
       List(
-        ("arguments", functionality.arguments.map(x => (quoteLong(x.strname), dataObjectToTuples(x))))
+        ("arguments", functionality.arguments.map(x => (quoteLong(x.plainName), dataObjectToTuples(x))))
       )
     } else Nil
 
