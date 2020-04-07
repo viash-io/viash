@@ -39,6 +39,11 @@ case class DockerTarget(
               |    ${vol.name.toUpperCase()}="$$2"
               |    POSITIONAL+=("$$1" "$$2") # save it in an array for later
               |    shift 2 # past argument and value
+              |    ;;
+              |    --${vol.name}=*)
+              |    ${vol.name.toUpperCase()}=`echo $$1 | sed 's/^--${vol.name}=//'`
+              |    POSITIONAL+=("$$1") # save it in an array for later
+              |    shift # past argument
               |    ;;""".stripMargin
           ).mkString("")
         val fillIns = 
