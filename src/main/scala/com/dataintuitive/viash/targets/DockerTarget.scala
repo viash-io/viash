@@ -78,7 +78,7 @@ case class DockerTarget(
     val volStr = volumesGet.map(vol => s"-v $$${vol.name.toUpperCase()}:${vol.mount} ").mkString("")
     val volInputs = volumesGet.map(vol => 
       StringObject(
-        name = Some(vol.name), 
+        name = "--" + vol.name, 
         description = Some(s"Local path to mount directory for volume '${vol.name}'."),
         required = Some(true),
         direction = Input
@@ -87,7 +87,7 @@ case class DockerTarget(
 
     // create new fun with extra params
     val fun2 = functionality.copy(
-      options = functionality.options ::: volInputs
+      arguments = functionality.arguments ::: volInputs
     )
 
     // get main script

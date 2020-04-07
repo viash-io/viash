@@ -11,13 +11,13 @@ case object PythonPlatform extends Platform {
   }
 
   def generateArgparse(functionality: Functionality): String = {
-    val params = functionality.dataObjects.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+    val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
     // gather params for optlist
     val paramOptions = params.map(param => {
       val start = (
-          param.name.map("\"--" + _ + "\"").toList :::
-          param.short.map("\"-" + _ + "\"").toList
+          param.name ::
+          param.alternatives.getOrElse(Nil)
         ).mkString(", ")
       val helpStr = param.description.map(", help = \"" + _ + "\"").getOrElse("")
       val requiredStr = param.required.map(r => ", required = " + { if (r) "True" else "False" }).getOrElse("")

@@ -52,7 +52,7 @@ case class NextFlowTarget(
       case _    => { println("Not implemented yet"); mainPath}
     }
 
-    val allPars = functionality.options ::: functionality.arguments
+    val allPars = functionality.arguments
 
     def inputFileExtO = allPars
             .filter(_.`type` == "file")
@@ -78,23 +78,16 @@ case class NextFlowTarget(
 
 
     def dataObjectToTuples[T](dataObject:DataObject[T]):List[(String, Any)] = {
-
-      val otype = if (dataObject.name.isDefined) "--" else "-"
-      val name = if (dataObject.name.isDefined)
-                   dataObject.name.map(_.toString).getOrElse("name_not_found")
-                 else
-                   dataObject.short.map(_.toString).getOrElse("short_not_found")
-
       def valueOrPointer(str:String):String =
-        if (! name.contains("-"))
-          valuePointer(name, str)
+        if (! dataObject.name.contains("-"))
+          valuePointer(dataObject.name, str)
         else
           // We currently have no solution for keys that contain `-`
           str
 
       List(
-        Some(("name", name)),
-        Some(("otype", otype)),
+        Some(("name", dataObject.strname)),
+        Some(("otype", dataObject.otype)),
         dataObject.description.map(x =>
             ("description", x.toString)),
         dataObject.default.map(x =>
@@ -107,20 +100,10 @@ case class NextFlowTarget(
 
     }
 
-    def nameOrShort[T](dataObject:DataObject[T]):String =
-      (dataObject.name, dataObject.short) match {
-        case (Some(n), None) => n
-        case (None, Some(c)) => c.toString
-        case _ => "HELP"
-      }
-
-    val namespacedParameters = (functionality.options ::: functionality.arguments)
+    val namespacedParameters = functionality.arguments
       .map(dataObject => {
 
-          val name = if (dataObject.name.isDefined)
-                       dataObject.name.map(_.toString).getOrElse("name_not_found")
-                     else
-                       dataObject.short.map(_.toString).getOrElse("short_not_found")
+          val name = dataObject.strname
 
           println("name here: " + name)
 
@@ -139,19 +122,11 @@ case class NextFlowTarget(
 
     println(namespacedParameters)
 
-    val paramsAsTuple = if (functionality.options.length > 0) {
-      List(
-        ("options", functionality.options.map(x => (quoteLong(nameOrShort(x)), dataObjectToTuples(x))))
-      )
-    } else Nil
-
     val argumentsAsTuple = if (functionality.arguments.length > 0) {
       List(
-        ("arguments", functionality.arguments.map(x => (quoteLong(nameOrShort(x)), dataObjectToTuples(x))))
+        ("arguments", functionality.arguments.map(x => (quoteLong(x.name), dataObjectToTuples(x))))
       )
     } else Nil
-
-    val argsAndOptions = paramsAsTuple ::: argumentsAsTuple
 
     val extensionsAsTuple = outputFileExtO match {
       case Some(ext) => List(
@@ -176,7 +151,7 @@ case class NextFlowTarget(
               ("command", executionCode)
             )
             ::: extensionsAsTuple
-            ::: argsAndOptions
+            ::: argumentsAsTuple
             )
           )
         )

@@ -12,12 +12,9 @@ case class Functionality(
   platform: Option[Platform], 
   resources: List[Resource],
   ftype: Option[String],
-  arguments: List[DataObject[_]] = Nil, // bar
-  options: List[DataObject[_]] = Nil, // --foo bar
+  arguments: List[DataObject[_]] = Nil,
   private var _rootDir: Option[File] = None // :/
 ) {
-  def dataObjects = arguments ::: options
-  
   def mainResource =
     resources.find(_.name.startsWith("main"))
 

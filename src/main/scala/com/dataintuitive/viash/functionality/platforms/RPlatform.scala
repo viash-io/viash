@@ -11,13 +11,13 @@ case object RPlatform extends Platform {
   }
   
   def generateArgparse(functionality: Functionality): String = {
-    val params = functionality.dataObjects.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+    val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
     
     // gather params for optlist
     val paramOptions = params.map(param => {
       val start = (
-          param.name.map("\"--" + _ + "\"").toList ::: 
-          param.short.map("\"-" + _ + "\"").toList
+          param.name :: 
+          param.alternatives.getOrElse(Nil)
         ).mkString("c(", ", ", ")")
       val helpStr = param.description.map(", help = \"" + _ + "\"").getOrElse("")
       
@@ -55,7 +55,7 @@ case object RPlatform extends Platform {
       if (reqParams.isEmpty) {
         ""
       } else {
-        s"""for (required_arg in c("${reqParams.map(p => p.name.getOrElse(p.short.get)).mkString("\", \"")}")) {
+        s"""for (required_arg in c("${reqParams.map(_.strname).mkString("\", \"")}")) {
           |  if (is.null(par[[required_arg]])) {
           |    stop('"--', required_arg, '" is a required argument. Use "--help" to get more information on the parameters.')
           |  }
@@ -71,7 +71,7 @@ case object RPlatform extends Platform {
       if (reqFiles.isEmpty) {
         ""
       } else {
-        s"""for (required_file in c("${reqFiles.map(p => p.name.getOrElse(p.short.get)).mkString("\", \"")}")) {
+        s"""for (required_file in c("${reqFiles.map(_.strname).mkString("\", \"")}")) {
           |  if (!file.exists(par[[required_file]])) {
           |    stop('file "', required_file, '" must exist.')
           |  }
@@ -89,7 +89,7 @@ case object RPlatform extends Platform {
       } else {
         allinPars.map{
           par =>
-            s"""if (!par[[${par.name}]] %in% c("${par.values.get.mkString("\", \"")}")) {
+            s"""if (!par[[${par.strname}]] %in% c("${par.values.get.mkString("\", \"")}")) {
               |  stop('"${par.name}" must be one of "${par.values.get.mkString("\", \"")}".')
               |}""".stripMargin
         }.mkString("")
