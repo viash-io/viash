@@ -18,9 +18,14 @@ case object PythonPlatform extends Platform {
       val start = (
           param.name ::
           param.alternatives.getOrElse(Nil)
-        ).mkString(", ")
-      val helpStr = param.description.map(", help = \"" + _ + "\"").getOrElse("")
-      val requiredStr = param.required.map(r => ", required = " + { if (r) "True" else "False" }).getOrElse("")
+        ).mkString("\"", "\", \"", "\"")
+      val helpStr = param.description.map(", help = \"\"\"" + _ + "\"\"\"").getOrElse("")
+      val requiredStr = 
+        if (param.otype == "" || param.required.isEmpty) {
+          ""
+        } else {
+          ", required = " + { if (param.required.get) "True" else "False" }
+        }
 
       param match {
         case o: BooleanObject => {
@@ -50,7 +55,7 @@ case object PythonPlatform extends Platform {
     })
 
     // gather description
-    val descrStr = functionality.description.map(",\n  description = \"" + _ + "\"").getOrElse("")
+    val descrStr = functionality.description.map(",\n  description = \"\"\"" + _ + "\"\"\"").getOrElse("")
 
     // TODO: implement these checks
     //    // construct file exist checks

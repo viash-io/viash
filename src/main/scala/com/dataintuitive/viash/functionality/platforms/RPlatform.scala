@@ -18,7 +18,7 @@ case object RPlatform extends Platform {
       val start = (
           param.name :: 
           param.alternatives.getOrElse(Nil)
-        ).mkString("c(", ", ", ")")
+        ).mkString("c(\"", "\", \"", "\")")
       val helpStr = param.description.map(", help = \"" + _ + "\"").getOrElse("")
       
       param match {
@@ -57,7 +57,7 @@ case object RPlatform extends Platform {
       } else {
         s"""for (required_arg in c("${reqParams.map(_.plainName).mkString("\", \"")}")) {
           |  if (is.null(par[[required_arg]])) {
-          |    stop('"--', required_arg, '" is a required argument. Use "--help" to get more information on the parameters.')
+          |    stop('"', required_arg, '" is a required argument. Use "--help" to get more information on the parameters.')
           |  }
           |}""".stripMargin
       }
@@ -89,8 +89,8 @@ case object RPlatform extends Platform {
       } else {
         allinPars.map{
           par =>
-            s"""if (!par[[${par.plainName}]] %in% c("${par.values.get.mkString("\", \"")}")) {
-              |  stop('"${par.name}" must be one of "${par.values.get.mkString("\", \"")}".')
+            s"""if (!par[["${par.plainName}"]] %in% c("${par.values.get.mkString("\", \"")}")) {
+              |  stop('"${par.plainName}" must be one of "${par.values.get.mkString("\", \"")}".')
               |}""".stripMargin
         }.mkString("")
       }
