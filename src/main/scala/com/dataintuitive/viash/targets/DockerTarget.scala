@@ -102,7 +102,7 @@ case class DockerTarget(
       case Some(NativePlatform) =>
         mainResource.path.map(_ + " \"${ADDITIONAL[@]}\"").getOrElse("echo No command provided")
       case Some(pl) => {
-        val code = fun2.mainCodeWithArgParse.get
+        val code = fun2.mainCodeWithArgParse.get.replaceAll("\\$", "\\\\\\$")
 
         s"""
         |if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
