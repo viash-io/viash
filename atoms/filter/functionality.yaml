@@ -2,36 +2,35 @@ name: filter_table
 description: |
   Filtering a table by a particular string column.
 platform: R
-arguments: []
-options:
-- short: i
-  name: input
+arguments:
+- name: "--input"
+  alternatives: ["-i"]
   type: file
   description: The path to a table to be filtered.
   mustExist: true
   required: true
   default: train.csv
-- short: f
-  name: format
+- name: "--format"
+  alternatives: ["-f"]
   type: string
   description: The format of the input and output files.
   default: csv
   required: true
   values: [csv, tsv, rds, h5]
-- short: c
-  name: column_name
+- name: "--column_name"
+  alternatives: ["-c"]
   type: string
   description: The name of the column by which to filter.
   default: Sex
   required: true
-- short: v
-  name: value
+- name: "--value"
+  alternatives: ["-v"]
   type: string
   description: Only rows for which the column contains this value will pass the filter.
   default: male
   required: true
-- short: o
-  name: output
+- name: "--output"
+  alternatives: ["-o"]
   type: file
   description: The path to the output file.
   default: filtered.csv

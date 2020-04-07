@@ -8,26 +8,25 @@ arguments:
   required: true
   default: test.md
   direction: input
-options:
-- name: output
+- name: "--output"
   type: file
   description: The path to the output file.
   default: test.html
   required: true
   direction: output
-- name: template
+- name: "--template"
   type: string
   description: The path to the html template
   default: template.html
   required: true
   direction: input
-- name: css
+- name: "--css"
   type: string
   description: the path to the css template
   default: template.css
   required: true
   direction: input
-- short: s
+- name: "-s"
   type: boolean
   description: Create standalone html file
   required: true

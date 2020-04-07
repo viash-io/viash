@@ -9,8 +9,7 @@ arguments:
   default: test.md
   tag: input
   direction: input
-options:
-- name: o
+- name: "-o"
   type: file
   description: The path to the output file.
   default: test.html

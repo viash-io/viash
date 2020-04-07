@@ -1,28 +1,27 @@
 name: print_params
 description: Prints out the parameter values.
 platform: Python
-arguments: []
-options:
-- short: w
-  name: whole_number
+arguments: 
+- name: "--whole_number"
+  alternatives: ["-w"]
   type: integer
   description: A whole number.
   default: 10
   required: false
-- name: real_number
+- name: "--real_number"
   type: double
   description: A real number.
   required: false
-- short: s
+- name: "-s"
   type: string
   description: A sentence.
   default: "The slow pink seal slid under the eager sandwich."
   required: true
-- name: truth
+- name: "--truth"
   type: boolean
   description: A switch flag.
   flagValue: true
-- name: output
+- name: "--output"
   type: file
   description: The path to the output file.
   default: output.txt
