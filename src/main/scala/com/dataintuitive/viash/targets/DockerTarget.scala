@@ -35,7 +35,7 @@ case class DockerTarget(
         val volStrs =
           volumesGet.map(vol =>
             s"""
-              |    ---${vol.name})
+              |    --${vol.name})
               |    ${vol.name.toUpperCase()}="$$2"
               |    POSITIONAL+=("$$1") # save it in an array for later
               |    shift # past argument
