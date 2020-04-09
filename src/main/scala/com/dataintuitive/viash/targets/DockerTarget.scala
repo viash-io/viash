@@ -57,17 +57,14 @@ case class DockerTarget(
         s"""
           |POSITIONAL=()
           |ADDITIONAL=()
-          |while [[ $$# -gt 0 ]]
-          |do
-          |key="$$1"
-          |
-          |case $$key in$volStrs
-          |    *)    # unknown option
-          |    POSITIONAL+=("$$1") # save it in an array for later
-          |    ADDITIONAL+=("$$1") # save it in an array for later
-          |    shift # past argument
-          |    ;;
-          |esac
+          |while [[ $$# -gt 0 ]]; do
+          |    case "$$1" in$volStrs
+          |        *)    # unknown option
+          |        POSITIONAL+=("$$1") # save it in an array for later
+          |        ADDITIONAL+=("$$1") # save it in an array for later
+          |        shift # past argument
+          |        ;;
+          |    esac
           |done
           |
           |set -- "$${POSITIONAL[@]}" # restore positional parameters
