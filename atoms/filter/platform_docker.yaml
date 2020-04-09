@@ -2,7 +2,10 @@ type: docker
 image: rocker/tidyverse
 r:
   packages: 
-  - optparse
+  - argparse
+python:
+  packages:
+  - argparse
 volumes:
 - name: data
   mount: /data

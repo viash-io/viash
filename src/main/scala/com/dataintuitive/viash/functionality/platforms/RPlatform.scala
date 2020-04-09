@@ -10,58 +10,56 @@ case object RPlatform extends Platform {
     "Rscript " + script
   }
   
+  private def removeNewlines(s: String) = 
+      s.filter(_ >= ' ') // remove all control characters
+      
   def generateArgparse(functionality: Functionality): String = {
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
     
     // gather params for optlist
     val paramOptions = params.map(param => {
       val start = (
-          param.name :: 
+          param.name ::
           param.alternatives.getOrElse(Nil)
-        ).mkString("c(\"", "\", \"", "\")")
-      val helpStr = param.description.map(", help = \"" + _ + "\"").getOrElse("")
-      
+        ).mkString("\"", "\", \"", "\"")
+      val helpStr = param.description.map(", help = \"" + removeNewlines(_) + "\"").getOrElse("")
+      val requiredStr = 
+        if (param.otype == "" || param.required.isEmpty) {
+          ""
+        } else {
+          ", required = " + { if (param.required.get) "TRUE" else "FALSE" }
+        }
+
       param match {
         case o: BooleanObject => {
-          val storeStr = o.flagValue.map(fv => ", action=\"store_" + { if (fv) "true" else "false" } + "\"").getOrElse("")
+          val storeStr = o.flagValue
+            .map(fv => "action=\"store_" + { if (fv) "true" else "false" } + "\"")
+            .getOrElse("type = \"logical\"")
           val defaultStr = o.default.map(d => ", default = " + { if (d) "TRUE" else "FALSE" }).getOrElse("")
-          s"""make_option($start, type = "logical"$defaultStr$storeStr$helpStr)"""
+          s"""parser$$add_argument($start, $storeStr$defaultStr$requiredStr$helpStr)\n"""
         }
         case o: DoubleObject => {
           val defaultStr = o.default.map(d => ", default = " + d).getOrElse("")
-          s"""make_option($start, type = "double"$defaultStr$helpStr)"""
+          s"""parser$$add_argument($start, type = "double"$defaultStr$requiredStr$helpStr)\n"""
         }
         case o: IntegerObject => {
           val defaultStr = o.default.map(d => ", default = " + d).getOrElse("")
-          s"""make_option($start, type = "integer"$defaultStr$helpStr)"""
+          s"""parser$$add_argument($start, type = "integer"$defaultStr$requiredStr$helpStr)\n"""
         }
         case o: StringObject => {
           val defaultStr = o.default.map(d => ", default = \"" + d + "\"").getOrElse("")
-          s"""make_option($start, type = "character"$defaultStr$helpStr)"""
+          s"""parser$$add_argument($start, type = "character"$defaultStr$requiredStr$helpStr)\n"""
         }
         case o: FileObject => {
           val defaultStr = o.default.map(d => ", default = \"" + d + "\"").getOrElse("")
-          s"""make_option($start, type = "character"$defaultStr$helpStr)"""
+          s"""parser$$add_argument($start, type = "character", metavar="FILE"$defaultStr$requiredStr$helpStr)\n"""
         }
       }
     })
-    
-    // gather description 
-    val descrStr = functionality.description.map("\n  description = \"" + _ + "\",").getOrElse("")
-    
-    // construct required arg checks
-    val reqParams = params.filter(_.required.getOrElse(false))
-    val reqParamStr = 
-      if (reqParams.isEmpty) {
-        ""
-      } else {
-        s"""for (required_arg in c("${reqParams.map(_.plainName).mkString("\", \"")}")) {
-          |  if (is.null(par[[required_arg]])) {
-          |    stop('"', required_arg, '" is a required argument. Use "--help" to get more information on the parameters.')
-          |  }
-          |}""".stripMargin
-      }
-    
+
+    // gather description
+    val descrStr = functionality.description.map(",\n  description = \"" + removeNewlines(_) + "\"").getOrElse("")
+
     // construct file exist checks
     val reqFiles = params
         .filter(_.isInstanceOf[FileObject])
@@ -94,22 +92,17 @@ case object RPlatform extends Platform {
               |}""".stripMargin
         }.mkString("")
       }
-    
-    s"""library(optparse, warn.conflicts = FALSE)
+
+    s"""library(argparse, warn.conflicts = FALSE)
       |
-      |optlist <- list(
-      |${paramOptions.mkString("  ", ",\n  ", "")}
+      |parser <- ArgumentParser(
+      |  usage = ""$descrStr
       |)
-      |
-      |parser <- OptionParser(
-      |  usage = "",$descrStr
-      |  option_list = optlist
-      |)
-      |par <- parse_args(parser, args = commandArgs(trailingOnly = TRUE))
+      |${paramOptions.mkString("")}
+      |par <- parser$$parse_args()
       |
       |# checking inputs
-      |$reqParamStr
       |$reqFileStr
       |$allinParCheck""".stripMargin
   }
-}
+}  

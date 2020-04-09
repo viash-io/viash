@@ -9,7 +9,7 @@ case class REnvironment(
       """Rscript -e 'if (!requireNamespace("remotes")) install.packages("remotes")'"""
       
     val installCranPackages = 
-      ("optparse" :: packages.getOrElse(Nil)) match {
+      packages.getOrElse(Nil) match {
         case Nil => Nil
         case packs => 
           List(packs.mkString(
