@@ -10,8 +10,9 @@ case object BashPlatform extends Platform {
     "bash " + script
   }
   
-  private def removeNewlines(s: String) = 
+  private def removeNewlines(s: String) = { 
       s.filter(_ >= ' ') // remove all control characters
+  }
       
   def generateArgparse(functionality: Functionality): String = {
     // check whether functionality contains positional arguments
@@ -26,40 +27,36 @@ case object BashPlatform extends Platform {
     
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
     
-    // gather params for optlist
-    val caseStrs = params.map(param => {
-      val part1 = s"""        ${param.name})
-        |        PAR[${param.plainName}]="$$2"
-        |        shift 2 # past argument and value
-        |        ;;
-        |""".stripMargin
-      val part2 = param.otype match {
-          case "--" => 
-            List(s"""        ${param.name}=*)
-              |        PAR[${param.plainName}]=`echo $$1 | sed 's/^${param.name}=//'`
-              |        shift 2 # past argument and value
-              |        ;;
-              |""".stripMargin)
-          case "" => Nil
-        }
-      val moreParts = param.alternatives.getOrElse(Nil).map(alt => {
-        val pattern = "^(-*)(.*)$".r
-        val pattern(otype, plainName) = alt
-        s"""        ${alt})
-          |        PAR[${param.plainName}]="$$2"
-          |        shift 2 # past argument and value
-          |        ;;
-          |""".stripMargin
-      })
+    // TODO: postparse checks:
+    //  * does file exist?
+    //  * is value in list of possible values?
     
-      (part1 :: part2 ::: moreParts).mkString
-    })
-    
+    s"""${generateHelp(functionality, params)}
+      |
+      |${generateParser(functionality, params)}
+      |
+      |""".stripMargin
+  }
+  
+  def generateHelp(functionality: Functionality, params: List[DataObject[_]]): String = {
     // TODO: allow description to have newlines
-    // TODO: generate options documentation
     
-    // construct required arg checks
-    val defaultsStr = ""
+    // gather parse code for params
+    val usageStrs = params.map(param => {
+      val names = param.alternatives.getOrElse(Nil) ::: List(param.name)
+      val exampleStrs = 
+        if (param.isInstanceOf[BooleanObject] && param.asInstanceOf[BooleanObject].flagValue.isDefined) {
+          names
+        } else {
+          names.map(name => {
+            name + {if (name.startsWith("--")) "=" else " "} + param.plainName.toUpperCase() 
+          })
+        }
+      val exampleStr = exampleStrs.mkString(", ")
+      s"""   echo "    ${exampleStrs.mkString(", ")}"
+        |   echo "        ${param.description.getOrElse("")}"
+        |   echo""".stripMargin
+    })
     
     s"""Help()
       |{
@@ -68,34 +65,67 @@ case object BashPlatform extends Platform {
       |   echo "${functionality.description.map(removeNewlines).getOrElse("")}"
       |   echo
       |   echo "Options:"
-      |   echo "    -i INPUT, --input=INPUT"
-      |   echo "        The path to a table to be filtered."
-      |   echo
-      |   echo "    -h, --help"
-      |   echo "        Show this help message and exit"
-      |   echo
-      |}
+      |${usageStrs.mkString("\n")}
+      |}""".stripMargin
+  }
+  
+  def generateParser(functionality: Functionality, params: List[DataObject[_]]): String = {
+    // gather parse code for params
+    val parseStrs = params.map(param => {
+      val part1 = s"""        ${param.name})
+        |            PAR[${param.plainName}]="$$2"
+        |            shift 2 # past argument and value
+        |            ;;""".stripMargin
+      val part2 = param.otype match {
+          case "--" => 
+            List(s"""        ${param.name}=*)
+              |            PAR[${param.plainName}]=`echo $$1 | sed 's/^${param.name}=//'`
+              |            shift 2 # past argument and value
+              |            ;;""".stripMargin)
+          case "" => Nil
+        }
+      val moreParts = param.alternatives.getOrElse(Nil).map(alt => {
+        val pattern = "^(-*)(.*)$".r
+        val pattern(otype, plainName) = alt
+        s"""        ${alt})
+          |            PAR[${param.plainName}]="$$2"
+          |            shift 2 # past argument and value
+          |            ;;""".stripMargin
+      })
+    
+      (part1 :: part2 ::: moreParts).mkString("\n")
+    })
+    
+    // construct required arg checks
+    val defaultsStrs = params.flatMap(param => {
+      param.default.map("PAR[" + param.plainName + "]=\"" + _ + "\"")
+    })
+    
+    s"""# initialise arrays
       |declare -A PAR
       |POSITIONAL=()
       |
+      |# initialise defaults
+      |${defaultsStrs.mkString("\n")}
+      |
+      |# parse arguments
       |while [[ $$# -gt 0 ]]; do
       |    case "$$1" in
       |        -h)
-      |        Help
-      |        exit;;
+      |            Help
+      |            exit;;
       |        --help)
-      |        Help
-      |        exit;;
-      |${caseStrs.mkString}        *)    # unknown option
-      |        POSITIONAL+=("$$1") # save it in an array for later
-      |        shift # past argument
-      |        ;;
+      |            Help
+      |            exit;;
+      |${parseStrs.mkString("\n")}
+      |        *)    # unknown option
+      |            POSITIONAL+=("$$1") # save it in an array for later
+      |            shift # past argument
+      |            ;;
       |    esac
       |done
       |
-      |set -- "$${POSITIONAL[@]}" # restore positional parameters
-      |
-      |# provide defaults
-      |$defaultsStr""".stripMargin
+      |# restore positional parameters
+      |set -- "$${POSITIONAL[@]}"""".stripMargin
   }
 }  

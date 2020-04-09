@@ -1,7 +1,7 @@
 package com.dataintuitive.viash.targets
 
 import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.platforms.NativePlatform
+import com.dataintuitive.viash.functionality.platforms.{NativePlatform, BashPlatform}
 import com.dataintuitive.viash.targets.environments._
 import java.nio.file.Paths
 
@@ -35,16 +35,16 @@ case class DockerTarget(
         val volStrs =
           volumesGet.map(vol =>
             s"""
-              |    --${vol.name})
-              |    ${vol.name.toUpperCase()}="$$2"
-              |    POSITIONAL+=("$$1" "$$2") # save it in an array for later
-              |    shift 2 # past argument and value
-              |    ;;
-              |    --${vol.name}=*)
-              |    ${vol.name.toUpperCase()}=`echo $$1 | sed 's/^--${vol.name}=//'`
-              |    POSITIONAL+=("$$1") # save it in an array for later
-              |    shift # past argument
-              |    ;;""".stripMargin
+              |        --${vol.name})
+              |            ${vol.name.toUpperCase()}="$$2"
+              |            POSITIONAL+=("$$1" "$$2") # save it in an array for later
+              |            shift 2 # past argument and value
+              |            ;;
+              |        --${vol.name}=*)
+              |            ${vol.name.toUpperCase()}=`echo $$1 | sed 's/^--${vol.name}=//'`
+              |            POSITIONAL+=("$$1") # save it in an array for later
+              |            shift # past argument
+              |            ;;""".stripMargin
           ).mkString("")
         val fillIns = 
           volumesGet.map(vol =>
@@ -60,10 +60,10 @@ case class DockerTarget(
           |while [[ $$# -gt 0 ]]; do
           |    case "$$1" in$volStrs
           |        *)    # unknown option
-          |        POSITIONAL+=("$$1") # save it in an array for later
-          |        ADDITIONAL+=("$$1") # save it in an array for later
-          |        shift # past argument
-          |        ;;
+          |            POSITIONAL+=("$$1") # save it in an array for later
+          |            ADDITIONAL+=("$$1") # save it in an array for later
+          |            shift # past argument
+          |            ;;
           |    esac
           |done
           |
@@ -98,6 +98,8 @@ case class DockerTarget(
       case None => mainPath
       case Some(NativePlatform) =>
         mainResource.path.map(_ + " \"${ADDITIONAL[@]}\"").getOrElse("echo No command provided")
+      case Some(BashPlatform) => 
+        "\n" + fun2.mainCodeWithArgParse.get.replaceAll("\\$", "\\\\\\$")
       case Some(pl) => {
         val code = fun2.mainCodeWithArgParse.get.replaceAll("\\$", "\\\\\\$")
 
@@ -111,6 +113,7 @@ case class DockerTarget(
       }
     }
 
+    // TODO: Fix dockertarget with bashplatform
     val heredocStart = if (executionCode.contains("\n")) { "cat << VIASHEOF | " } else { "" }
     val heredocEnd = if (executionCode.contains("\n")) { "\nVIASHEOF" } else { "" }
     val bash = 
