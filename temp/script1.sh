@@ -11,3 +11,4 @@ $JAVA -f atoms/filter/functionality.yaml -p atoms/filter/platform_native.yaml ex
 $JAVA -f atoms/pandoc/functionality.yaml -p atoms/pandoc/platform_docker.yaml export -o output/pandoc_docker
 $JAVA -f atoms/pandoc/functionality.yaml -p atoms/pandoc/platform_nextflow.yaml export -o output/pandoc
 $JAVA -f atoms/testbash/functionality.yaml -p atoms/testbash/platform_native.yaml export -o output/testbash_native
+$JAVA -f atoms/testbash/functionality.yaml -p atoms/testbash/platform_docker.yaml export -o output/testbash_docker

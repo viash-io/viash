@@ -21,6 +21,45 @@ case object RPlatform extends Platform {
     
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
     
+    
+    
+    
+    
+    
+    
+    // construct file exist checks
+    
+    // construct value all in set checks
+    val allinPars = params
+        .filter(_.isInstanceOf[StringObject])
+        .map(_.asInstanceOf[StringObject])
+        .filter(_.values.isDefined)
+    val allinParCheck = 
+      if (allinPars.isEmpty) {
+        ""
+      } else {
+        allinPars.map{
+          par =>
+            s"""if (!par[["${par.plainName}"]] %in% c("${par.values.get.mkString("\", \"")}")) {
+              |  stop('"${par.plainName}" must be one of "${par.values.get.mkString("\", \"")}".')
+              |}""".stripMargin
+        }.mkString("")
+      }
+    
+    s"""library(optparse, warn.conflicts = FALSE)
+      |
+      |# construct parameter list
+      |${makeOptList(functionality, params)}
+      |
+      |# construct parser
+      |${makeParser(functionality)}
+      |
+      |${makeRequiredArgCheck(functionality, params)}
+      |${makeRequiredFileCheck(functionality, params)}
+      |${makeSubsetFileCheck(functionality, params)}""".stripMargin
+  }
+  
+  def makeOptList(functionality: Functionality, params: List[DataObject[_]]): String = {
     // gather params for optlist
     val paramOptions = params.map(param => {
       val start = (
@@ -54,70 +93,69 @@ case object RPlatform extends Platform {
       }
     })
     
+    s"""optlist <- list(
+      |${paramOptions.mkString("  ", ",\n  ", "")}
+      |)""".stripMargin
+  }
+  
+  def makeParser(functionality: Functionality): String = {
     // gather description 
     val descrStr = functionality.description.map("\n  description = \"" + removeNewlines(_) + "\",").getOrElse("")
     
+    s"""parser <- OptionParser(
+      |  usage = "",$descrStr
+      |  option_list = optlist
+      |)
+      |par <- parse_args(parser, args = commandArgs(trailingOnly = TRUE))"""
+  }
+  
+  def makeRequiredArgCheck(functionality: Functionality, params: List[DataObject[_]]): String = {
     // construct required arg checks
     val reqParams = params.filter(_.required.getOrElse(false))
-    val reqParamStr = 
-      if (reqParams.isEmpty) {
-        ""
-      } else {
-        s"""for (required_arg in c("${reqParams.map(_.plainName).mkString("\", \"")}")) {
-          |  if (is.null(par[[required_arg]])) {
-          |    stop('"', required_arg, '" is a required argument. Use "--help" to get more information on the parameters.')
-          |  }
-          |}""".stripMargin
-      }
-    
-    // construct file exist checks
+    if (reqParams.isEmpty) {
+      ""
+    } else {
+      s"""# check whether required parameters exist
+        |for (required_arg in c("${reqParams.map(_.plainName).mkString("\", \"")}")) {
+        |  if (is.null(par[[required_arg]])) {
+        |    stop('"', required_arg, '" is a required argument. Use "--help" to get more information on the parameters.')
+        |  }
+        |}""".stripMargin
+    }
+  }
+  
+  def makeRequiredFileCheck(functionality: Functionality, params: List[DataObject[_]]): String = {
     val reqFiles = params
         .filter(_.isInstanceOf[FileObject])
         .map(_.asInstanceOf[FileObject])
         .filter(_.mustExist.getOrElse(false))
-    val reqFileStr = 
-      if (reqFiles.isEmpty) {
-        ""
-      } else {
-        s"""for (required_file in c("${reqFiles.map(_.plainName).mkString("\", \"")}")) {
-          |  if (!file.exists(par[[required_file]])) {
-          |    stop('file "', required_file, '" must exist.')
-          |  }
-          |}""".stripMargin
-      }
-    
-    // construct value all in set checks
-    val allinPars = params
+    if (reqFiles.isEmpty) {
+      ""
+    } else {
+      s"""# check whether required files exist
+        |for (required_file in c("${reqFiles.map(_.plainName).mkString("\", \"")}")) {
+        |  if (!file.exists(par[[required_file]])) {
+        |    stop('file "', required_file, '" must exist.')
+        |  }
+        |}""".stripMargin
+    }
+  }
+  
+  def makeSubsetFileCheck(functionality: Functionality, params: List[DataObject[_]]): String = {
+    val subsetPars = params
         .filter(_.isInstanceOf[StringObject])
         .map(_.asInstanceOf[StringObject])
         .filter(_.values.isDefined)
-    val allinParCheck = 
-      if (allinPars.isEmpty) {
-        ""
-      } else {
-        allinPars.map{
-          par =>
-            s"""if (!par[["${par.plainName}"]] %in% c("${par.values.get.mkString("\", \"")}")) {
-              |  stop('"${par.plainName}" must be one of "${par.values.get.mkString("\", \"")}".')
-              |}""".stripMargin
-        }.mkString("")
-      }
-    
-    s"""library(optparse, warn.conflicts = FALSE)
-      |
-      |optlist <- list(
-      |${paramOptions.mkString("  ", ",\n  ", "")}
-      |)
-      |
-      |parser <- OptionParser(
-      |  usage = "",$descrStr
-      |  option_list = optlist
-      |)
-      |par <- parse_args(parser, args = commandArgs(trailingOnly = TRUE))
-      |
-      |# checking inputs
-      |$reqParamStr
-      |$reqFileStr
-      |$allinParCheck""".stripMargin
+    if (subsetPars.isEmpty) {
+      ""
+    } else {
+      "# check whether arguments contain expected values\n" + 
+      subsetPars.map{
+        par =>
+          s"""if (!par[["${par.plainName}"]] %in% c("${par.values.get.mkString("\", \"")}")) {
+            |  stop('"${par.plainName}" must be one of "${par.values.get.mkString("\", \"")}".')
+            |}""".stripMargin
+      }.mkString
+    }
   }
 }  
