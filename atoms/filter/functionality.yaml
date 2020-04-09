@@ -15,7 +15,7 @@ arguments:
   type: string
   description: The format of the input and output files.
   default: csv
-  required: true
+  required: false
   values: [csv, tsv, rds, h5]
 - name: "--column_name"
   alternatives: ["-c"]
