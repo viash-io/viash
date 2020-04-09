@@ -14,12 +14,13 @@ trait Platform {
 
 object Platform {
   def get(str: String) = {
-    str match {
-      case "R" => RPlatform
-      case "Python" => PythonPlatform
-      case "Native" => NativePlatform
-      case "NextFlow" => NativePlatform
-      case s => throw new RuntimeException(s"Unrecognised platform '${s}'.") 
+    str.toLowerCase() match {
+      case "r" => RPlatform
+      case "python" => PythonPlatform
+      case "bash" => BashPlatform
+      case "native" => NativePlatform
+      case "nextFlow" => NativePlatform
+      case _ => throw new RuntimeException(s"Unrecognised platform '${str}'.") 
     }
   }
 }
