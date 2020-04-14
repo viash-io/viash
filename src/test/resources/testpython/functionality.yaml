@@ -1,0 +1,44 @@
+name: testpython
+description: | 
+  Prints out the parameter values.
+  Checking what happens with multiline descriptions.
+platform: Python
+arguments: 
+- name: "input"
+  type: file
+  description: An input file with positional arguments.
+  direction: input
+- name: "--real_number"
+  type: double
+  description: A real number with positional arguments.
+- name: "--whole_number"
+  type: integer
+  description: A whole number with a standard flag.
+- name: "-s"
+  type: string
+  description: A sentence or word with a short flag.
+- name: "--truth"
+  type: boolean
+  description: A switch flag.
+  flagValue: true
+- name: "--output"
+  alternatives: ["-o"]
+  type: file
+  description: An output file.
+  direction: output
+- name: "--log"
+  type: file
+  description: An optional log file.
+  direction: log
+- name: "--optional"
+  type: string
+  description: An optional string.
+  required: false
+- name: "--optional_with_default"
+  type: string
+  required: false
+  default: "The default value."
+resources:
+- name: main.py
+  path: ./code.py
+

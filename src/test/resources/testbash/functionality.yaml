@@ -1,0 +1,22 @@
+name: testbash
+description: |
+  Testing bash
+platform: bash
+arguments:
+- name: "--in"
+  alternatives: ["-i"]
+  type: file
+  description: The path to a table to be printed.
+  mustExist: true
+  required: true
+  default: train.csv
+- name: "--abc"
+  alternatives: ["-a"]
+  type: integer
+  description: A number to display.
+  default: 10
+  required: false
+resources:
+- name: main.sh
+  path: ./code.sh
+
