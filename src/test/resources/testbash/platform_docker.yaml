@@ -1,0 +1,6 @@
+type: docker
+image: rocker/tidyverse
+volumes:
+- name: data
+  mount: /data
+workdir: /app

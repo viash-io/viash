@@ -1,0 +1,9 @@
+type: docker
+image: rocker/tidyverse
+r:
+  packages: 
+  - optparse
+volumes:
+- name: data
+  mount: /data
+workdir: /app
