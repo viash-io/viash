@@ -1,0 +1,17 @@
+language: java
+env:
+  - SCALA_VERSION=2.11.7
+os:
+  - osx
+before_script: 
+  - curl -Ls https://git.io/sbt > sbtx && chmod 0755 sbtx
+script:
+  - ./sbtx "++$SCALA_VERSION" test
+matrix:
+  include:
+    - env: SCALA_VERSION=2.11.7
+      os: linux
+      jdk: oraclejdk7
+    - env: SCALA_VERSION=2.10.5
+      os: linux
+      jdk: oraclejdk8
