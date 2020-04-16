@@ -3,12 +3,13 @@ package com.dataintuitive.viash
 import org.scalatest.FunSuite
 import java.nio.file.{Path, Paths, Files}
 import java.io.File
-import sys.process.Process
 import com.dataintuitive.viash.functionality.Functionality
 import scala.io.Source
 import scala.reflect.io.Directory
 
 class TestMainWithPythonDocker extends FunSuite {
+  assume(Exec.dockerAvailable)
+  
   // which platform to test
   val testName = "testpython"
   val funcFile = getClass.getResource(s"/$testName/functionality.yaml").getPath
@@ -38,28 +39,17 @@ class TestMainWithPythonDocker extends FunSuite {
     assert(executable.canExecute())
   }
   
-  def run(commands: Seq[String], path: File) = {
-    try {
-      Process(commands, path).!!
-    } catch {
-      case e: Throwable => {
-        println(e.getMessage)
-        throw e
-      }
-    }
-  }
-  
-  test("Check whether the executable can build the image") {
-    val stdout = run(
+  test("Check whether the executable can build the image", DockerTest) {
+    val stdout = Exec.run(
       Seq(executable.toString(), "---setup"), 
       temporaryFolder
     )
     assert(stdout.contains("Successfully built "))
   }
   
-  test("Check whether particular keywords can be found in the usage") {
+  test("Check whether particular keywords can be found in the usage", DockerTest) {
     val stdout = 
-      run(
+      Exec.run(
         Seq(executable.toString(), "--help"), 
         temporaryFolder
       )
@@ -74,12 +64,12 @@ class TestMainWithPythonDocker extends FunSuite {
     
   }
   
-  test("Check whether output is correctly created") {
+  test("Check whether output is correctly created", DockerTest) {
     val output = Paths.get(tempFolStr, "output.txt").toFile()
     val log = Paths.get(tempFolStr, "log.txt").toFile()
     
     val stdout = 
-      run(
+      Exec.run(
         Seq(
           executable.toString(), 
           executable.toString(),
