@@ -21,10 +21,10 @@ case object PythonPlatform extends Platform {
         ).mkString("\"", "\", \"", "\"")
       val helpStr = param.description.map(", help = \"\"\"" + _ + "\"\"\"").getOrElse("")
       val requiredStr = 
-        if (param.otype == "" || param.required.isEmpty) {
+        if (param.otype == "") {
           ""
         } else {
-          ", required = " + { if (param.required.get) "True" else "False" }
+          ", required = " + { if (param.required.getOrElse(false)) "True" else "False" }
         }
 
       param match {
@@ -49,7 +49,7 @@ case object PythonPlatform extends Platform {
         }
         case o: FileObject => {
           val defaultStr = o.default.map(d => ", default = \"" + d + "\"").getOrElse("")
-          s"""parser.add_argument($start, type = str, metavar="FILE"$defaultStr$requiredStr$helpStr)\n"""
+          s"""parser.add_argument($start, type = str$defaultStr$requiredStr$helpStr)\n"""
         }
       }
     })
