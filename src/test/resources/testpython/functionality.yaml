@@ -11,12 +11,15 @@ arguments:
 - name: "--real_number"
   type: double
   description: A real number with positional arguments.
+  required: true
 - name: "--whole_number"
   type: integer
   description: A whole number with a standard flag.
+  required: true
 - name: "-s"
   type: string
   description: A sentence or word with a short flag.
+  required: true
 - name: "--truth"
   type: boolean
   description: A switch flag.
@@ -24,7 +27,7 @@ arguments:
 - name: "--output"
   alternatives: ["-o"]
   type: file
-  description: An output file.
+  description: Write the parameters to a json file.
   direction: output
 - name: "--log"
   type: file
@@ -33,10 +36,8 @@ arguments:
 - name: "--optional"
   type: string
   description: An optional string.
-  required: false
 - name: "--optional_with_default"
   type: string
-  required: false
   default: "The default value."
 resources:
 - name: main.py
