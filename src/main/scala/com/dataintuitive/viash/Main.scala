@@ -15,14 +15,11 @@ object Main {
     val funcPath = new java.io.File(conf.functionality())
     val targPath = new java.io.File(conf.platform())
 
-    println("Parsing functionality")
     val functionality = Functionality.parse(funcPath)
     functionality.rootDir = funcPath
 
-    println("Parsing target")
     val target = Target.parse(targPath)
 
-    println("Processing resources")
     val fun2 = target.modifyFunctionality(functionality)
 
     conf.subcommand match {

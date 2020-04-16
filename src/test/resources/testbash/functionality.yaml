@@ -1,21 +1,44 @@
 name: testbash
-description: |
-  Testing bash
-platform: bash
-arguments:
-- name: "--in"
-  alternatives: ["-i"]
+description: | 
+  Prints out the parameter values.
+  Checking what happens with multiline descriptions.
+platform: Bash
+arguments: 
+- name: "input"
   type: file
-  description: The path to a table to be printed.
-  mustExist: true
+  description: An input file with positional arguments.
+  direction: input
+- name: "--real_number"
+  type: double
+  description: A real number with positional arguments.
   required: true
-  default: train.csv
-- name: "--abc"
-  alternatives: ["-a"]
+- name: "--whole_number"
   type: integer
-  description: A number to display.
-  default: 10
-  required: false
+  description: A whole number with a standard flag.
+  required: true
+- name: "-s"
+  type: string
+  description: A sentence or word with a short flag.
+  required: true
+- name: "--truth"
+  type: boolean
+  description: A switch flag.
+  flagValue: true
+- name: "--output"
+  alternatives: ["-o"]
+  type: file
+  description: Write the parameters to a json file.
+  direction: output
+- name: "--log"
+  type: file
+  description: An optional log file.
+  direction: log
+- name: "--optional"
+  type: string
+  description: An optional string.
+- name: "--optional_with_default"
+  type: string
+  default: "The default value."
 resources:
 - name: main.sh
   path: ./code.sh

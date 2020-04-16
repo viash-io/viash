@@ -50,7 +50,7 @@ case class DockerTarget(
       case Some(NativePlatform) =>
         mainResource.path.map(_ + " $VIASHARGS").getOrElse("echo No command provided")
       case Some(BashPlatform) => 
-        "\n" + fun2.mainCodeWithArgParse.get.replaceAll("\\$", "\\\\\\$")
+        "\nset -- $VIASHARGS\n" + fun2.mainCodeWithArgParse.get.replaceAll("\\$", "\\\\\\$")
       case Some(pl) => {
         val code = fun2.mainCodeWithArgParse.get.replaceAll("\\$", "\\\\\\$")
 
@@ -149,8 +149,7 @@ case class DockerTarget(
               } else {
                 ""
               }
-            } +
-            s"\nENTRYPOINT sh\n"
+            }
         )
       ))
     }
@@ -164,7 +163,7 @@ case class DockerTarget(
     val volumesGet = volumes.getOrElse(Nil)
     val volStr = volumesGet.map(vol => s"-v $$${vol.name.toUpperCase()}:${vol.mount} ").mkString("")
     
-    portStr + volStr + "-i"
+    portStr + volStr + "-i --entrypoint bash"
   }
   
   def generateBashParsers(functionality: Functionality, runImageName: String) = {

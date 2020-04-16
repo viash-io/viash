@@ -16,14 +16,14 @@ case object BashPlatform extends Platform {
       
   def generateArgparse(functionality: Functionality): String = {
     // check whether functionality contains positional arguments
-    functionality.arguments.foreach(arg =>
+    /*functionality.arguments.foreach(arg =>
       require(arg.otype != "", message = "Positional arguments are not yet supported in bash.")
     )
     functionality.arguments.foreach{
       case o: BooleanObject =>
         require(o.flagValue.isEmpty, message = "boolean with flagvalues are not yet supported in bash.")
       case _ => {}
-    }
+    }*/
     
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
     
@@ -73,22 +73,23 @@ case object BashPlatform extends Platform {
     // gather parse code for params
     val parseStrs = params.map(param => {
       val part1 = s"""        ${param.name})
-        |            PAR[${param.plainName}]="$$2"
+        |            par_${param.plainName}="$$2"
         |            shift 2 # past argument and value
         |            ;;""".stripMargin
       val part2 = param.otype match {
           case "--" => 
             List(s"""        ${param.name}=*)
-              |            PAR[${param.plainName}]=`echo $$1 | sed 's/^${param.name}=//'`
+              |            par_${param.plainName}=`echo $$1 | sed 's/^${param.name}=//'`
               |            shift 2 # past argument and value
               |            ;;""".stripMargin)
+          case "-" => Nil
           case "" => Nil
         }
       val moreParts = param.alternatives.getOrElse(Nil).map(alt => {
         val pattern = "^(-*)(.*)$".r
         val pattern(otype, plainName) = alt
         s"""        ${alt})
-          |            PAR[${param.plainName}]="$$2"
+          |            par_${param.plainName}="$$2"
           |            shift 2 # past argument and value
           |            ;;""".stripMargin
       })
@@ -98,11 +99,10 @@ case object BashPlatform extends Platform {
     
     // construct required arg checks
     val defaultsStrs = params.flatMap(param => {
-      param.default.map("PAR[" + param.plainName + "]=\"" + _ + "\"")
+      param.default.map("par_" + param.plainName + "=\"" + _ + "\"")
     })
     
-    s"""# initialise arrays
-      |declare -A PAR
+    s"""# initialise array
       |POSITIONAL=()
       |
       |# initialise defaults
