@@ -13,6 +13,19 @@ par = {
 }
 ### PORTASH END
 
-for key in par.keys():
-	print(key + ": " + str(par[key]))
+import logging
 
+if par['log'] is not None:
+	logging.basicConfig(filename=par['log'], level=logging.INFO)
+
+logging.info('Parsed input arguments.')
+
+if par['output'] is not None: 
+	logging.info('Writing output to file')
+	import json
+	with open(par['output'], 'w') as f:
+		json.dump(par, f)
+else:
+	logging.info('Printing output to console')
+	for key in par.keys():
+		print(key + ": " + str(par[key]))
