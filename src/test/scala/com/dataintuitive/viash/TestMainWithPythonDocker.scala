@@ -8,8 +8,6 @@ import scala.io.Source
 import scala.reflect.io.Directory
 
 class TestMainWithPythonDocker extends FunSuite {
-  assume(Exec.dockerAvailable)
-  
   // which platform to test
   val testName = "testpython"
   val funcFile = getClass.getResource(s"/$testName/functionality.yaml").getPath
