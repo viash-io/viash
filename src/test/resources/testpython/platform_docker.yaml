@@ -3,4 +3,7 @@ image: python
 python:
   packages: 
   - argparse
+volumes:
+- name: data
+  mount: /data
 workdir: /app

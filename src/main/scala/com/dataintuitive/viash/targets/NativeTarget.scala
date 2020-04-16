@@ -68,7 +68,7 @@ case class NativeTarget(
             |
             |${setupCommands()}
             |
-            |$command $$@
+            |$command "$$@"
           """.stripMargin),
           isExecutable = true
         )
