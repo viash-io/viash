@@ -39,18 +39,18 @@ class TestMainWithPythonNative extends FunSuite {
   }
   
   test("Check whether the executable can run") {
-    Process(
+    Exec.run(
       Seq(executable.toString(), "--help"), 
       temporaryFolder
-    ).!!
+    )
   }
   
   test("Check whether particular keywords can be found in the usage") {
     val stdout = 
-      Process(
+      Exec.run(
         Seq(executable.toString(), "--help"), 
         temporaryFolder
-      ).!!
+      )
     
     functionality.arguments.foreach(arg => {
       assert(stdout.contains(arg.name))
@@ -67,7 +67,7 @@ class TestMainWithPythonNative extends FunSuite {
     val log = Paths.get(tempFolStr, "log.txt").toFile()
     
     val stdout = 
-      Process(
+      Exec.run(
         Seq(
           executable.toString(), 
           executable.toString(),
@@ -80,7 +80,7 @@ class TestMainWithPythonNative extends FunSuite {
           "--optional", "foo"
         ), 
         temporaryFolder
-      ).!!
+      )
     
     assert(output.exists())
     assert(log.exists())
