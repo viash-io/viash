@@ -14,17 +14,6 @@ object Exec {
       }
     }
   }
-  
-  def dockerAvailable = {
-    try {
-      Process(Array("docker", "--help")).!!
-      true
-    } catch {
-      case e: Throwable => {
-        false
-      }
-    }
-  }
 }
 
 import org.scalatest.Tag
