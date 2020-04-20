@@ -12,11 +12,13 @@ class TestMainWithPythonDocker extends FunSuite {
   val testName = "testpython"
   val funcFile = getClass.getResource(s"/$testName/functionality.yaml").getPath
   val platFile = getClass.getResource(s"/$testName/platform_docker.yaml").getPath
-  
-  val temporaryFolder = Files.createTempDirectory("viash_tester").toFile()
-  
+
+  val temporaryFolder = Files.createTempDirectory(Paths.get("/tmp"), "viash_tester").toFile()
+
   val tempFolStr = temporaryFolder.toString()
-  
+
+  println(tempFolStr)
+
   // parse functionality from file
   val functionality = Functionality.parse(new File(funcFile))
 
@@ -28,7 +30,7 @@ class TestMainWithPythonDocker extends FunSuite {
     "-o", tempFolStr
    )
   Main.main(params)
-  
+
   // check whether executable was created
   val executable = Paths.get(tempFolStr, functionality.name).toFile()
 
@@ -36,7 +38,7 @@ class TestMainWithPythonDocker extends FunSuite {
     assert(executable.exists())
     assert(executable.canExecute())
   }
-  
+
   test("Check whether the executable can build the image", DockerTest) {
     val stdout = Exec.run(
       Seq(executable.toString(), "---setup"), 
@@ -44,14 +46,14 @@ class TestMainWithPythonDocker extends FunSuite {
     )
     assert(stdout.contains("Successfully built "))
   }
-  
+
   test("Check whether particular keywords can be found in the usage", DockerTest) {
     val stdout = 
       Exec.run(
         Seq(executable.toString(), "--help"), 
         temporaryFolder
       )
-    
+
     functionality.arguments.foreach(arg => {
       assert(stdout.contains(arg.name))
       for (opt <- arg.alternatives; value <- opt) 
@@ -59,13 +61,13 @@ class TestMainWithPythonDocker extends FunSuite {
       for (opt <- arg.description; value <- opt) 
         assert(stdout.contains(value))
     })
-    
+
   }
-  
+
   test("Check whether output is correctly created", DockerTest) {
     val output = Paths.get(tempFolStr, "output.txt").toFile()
     val log = Paths.get(tempFolStr, "log.txt").toFile()
-    
+
     val stdout = 
       Exec.run(
         Seq(
@@ -82,10 +84,10 @@ class TestMainWithPythonDocker extends FunSuite {
         ), 
         temporaryFolder
       )
-    
+
     assert(output.exists())
     assert(log.exists())
-    
+
     val outputLines = Source.fromFile(output).mkString
     assert(outputLines.contains(s""""input": "${executable.toString()}""""))
     assert(outputLines.contains(""""real_number": 10.5"""))
@@ -94,7 +96,7 @@ class TestMainWithPythonDocker extends FunSuite {
     assert(outputLines.contains(""""truth": true"""))
     assert(outputLines.contains(s""""output": "/data/output.txt""""))
     assert(outputLines.contains(s""""log": "/data/log.txt""""))
-    
+
     val logLines = Source.fromFile(log).mkString
     assert(logLines.contains("INFO:root:Parsed input arguments"))
   }
