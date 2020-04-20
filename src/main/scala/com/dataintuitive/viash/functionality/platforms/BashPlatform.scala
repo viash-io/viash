@@ -119,6 +119,7 @@ case object BashPlatform extends Platform {
       |            exit;;
       |${parseStrs.mkString("\n")}
       |        *)    # unknown option
+      |            CMDARGS="$$CMDARGS $$1"
       |            POSITIONAL+=("$$1") # save it in an array for later
       |            shift # past argument
       |            ;;
