@@ -1,12 +1,11 @@
 #!/bin/bash
 
 # PORTASH START
-declare -A PAR
-PAR["abc"]=1
-PAR["in"]="testbash"
+par_abc=1
+par_in="testbash"
 # PORTASH END
 
-echo "## This is your abc parameter: ${PAR["abc"]}"
-echo "## Now reading from file '${PAR["in"]}'"
+echo "## This is your abc parameter: $par_abc"
+echo "## Now reading from file '$par_in'"
 
-cat "${PAR["in"]}"
+cat "$par_in"
