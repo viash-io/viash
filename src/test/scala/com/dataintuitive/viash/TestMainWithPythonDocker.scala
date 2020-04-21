@@ -22,10 +22,10 @@ class TestMainWithPythonDocker extends FunSuite {
   // parse functionality from file
   val functionality = Functionality.parse(new File(funcFile))
 
-  // convert testpython 
+  // convert testpython
   val params = Array(
-    "-f", funcFile, 
-    "-p", platFile, 
+    "-f", funcFile,
+    "-p", platFile,
     "export",
     "-o", tempFolStr
    )
@@ -41,24 +41,24 @@ class TestMainWithPythonDocker extends FunSuite {
 
   test("Check whether the executable can build the image", DockerTest) {
     val stdout = Exec.run(
-      Seq(executable.toString(), "---setup"), 
+      Seq(executable.toString(), "---setup"),
       temporaryFolder
     )
     assert(stdout.contains("Successfully built "))
   }
 
   test("Check whether particular keywords can be found in the usage", DockerTest) {
-    val stdout = 
+    val stdout =
       Exec.run(
-        Seq(executable.toString(), "--help"), 
+        Seq(executable.toString(), "--help"),
         temporaryFolder
       )
 
     functionality.arguments.foreach(arg => {
       assert(stdout.contains(arg.name))
-      for (opt <- arg.alternatives; value <- opt) 
+      for (opt <- arg.alternatives; value <- opt)
         assert(stdout.contains(value))
-      for (opt <- arg.description; value <- opt) 
+      for (opt <- arg.description; value <- opt)
         assert(stdout.contains(value))
     })
 
@@ -68,10 +68,10 @@ class TestMainWithPythonDocker extends FunSuite {
     val output = Paths.get(tempFolStr, "output.txt").toFile()
     val log = Paths.get(tempFolStr, "log.txt").toFile()
 
-    val stdout = 
+    val stdout =
       Exec.run(
         Seq(
-          executable.toString(), 
+          executable.toString(),
           executable.toString(),
           "--real_number", "10.5",
           "--whole_number", "10",
@@ -81,7 +81,7 @@ class TestMainWithPythonDocker extends FunSuite {
           "--log", "/data/log.txt",
           "--optional", "foo",
           "--data", tempFolStr
-        ), 
+        ),
         temporaryFolder
       )
 

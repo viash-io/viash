@@ -40,7 +40,7 @@ object Main {
   def writeResources(
     resources: Seq[Resource],
     inputDir: java.io.File,
-    outputDir: java.io.File, 
+    outputDir: java.io.File,
     overwrite: Boolean = true
   ) {
     // copy all files
@@ -70,7 +70,7 @@ object Main {
 
   ) = {
 //      import sys.process._
-//      
+//
 //      command !
   }
 }

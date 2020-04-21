@@ -5,31 +5,31 @@ case class REnvironment(
   github: Option[List[String]] = None
 ) {
   def getInstallCommands() = {
-    val installRemotes = 
+    val installRemotes =
       """Rscript -e 'if (!requireNamespace("remotes")) install.packages("remotes")'"""
-      
-    val installCranPackages = 
+
+    val installCranPackages =
       packages.getOrElse(Nil) match {
         case Nil => Nil
-        case packs => 
+        case packs =>
           List(packs.mkString(
-            "Rscript -e 'remotes::install_cran(c(\"", 
-            "\", \"", 
+            "Rscript -e 'remotes::install_cran(c(\"",
+            "\", \"",
             "\"), repos = \"https://cran.rstudio.com\")'"
           ))
       }
-    
-    val installGithubPackages = 
+
+    val installGithubPackages =
       github.getOrElse(Nil) match {
         case Nil => Nil
-        case packs => 
+        case packs =>
           List(packs.mkString(
-            "Rscript -e 'remotes::install_github(c(\"", 
-            "\", \"", 
+            "Rscript -e 'remotes::install_github(c(\"",
+            "\", \"",
             "\"))'"
           ))
       }
-      
+
     installRemotes :: installCranPackages ::: installGithubPackages
   }
 }

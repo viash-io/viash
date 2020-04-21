@@ -11,7 +11,7 @@ abstract class DataObject[Type] {
   val required: Option[Boolean]
   val direction: Direction
   val tag: Option[String]
-  
+
   private val pattern = "^(-*)(.*)$".r
   val pattern(otype, plainName) = name
 
@@ -82,9 +82,8 @@ case class FileObject(
     direction: Direction = Input
 ) extends DataObject[File] {
   override val `type` = "file"
-  
+
   override def validate(value: File) = {
     mustExist == None || !mustExist.get || value.exists
   }
 }
-

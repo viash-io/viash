@@ -5,27 +5,27 @@ case class PythonEnvironment(
   github: Option[List[String]] = None
 ) {
   def getInstallCommands() = {
-    val installPip = 
+    val installPip =
       """pip install --upgrade pip"""
 
-    val installCranPackages = 
+    val installCranPackages =
       packages.getOrElse(Nil) match {
         case Nil => Nil
-        case packs => 
+        case packs =>
           List(packs.mkString(
-            "pip install --user --no-cache-dir ", 
-            " ", 
+            "pip install --user --no-cache-dir ",
+            " ",
             ""
           ))
       }
 
-    val installGithubPackages = 
+    val installGithubPackages =
       github.getOrElse(Nil) match {
         case Nil => Nil
-        case packs => 
+        case packs =>
           List(packs.mkString(
-            "pip install --user --no-cache-dir git+https://github.com/", 
-            " git+https://github.com/", 
+            "pip install --user --no-cache-dir git+https://github.com/",
+            " git+https://github.com/",
             ""
           ))
       }

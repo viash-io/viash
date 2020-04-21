@@ -5,36 +5,30 @@ import com.dataintuitive.viash.functionality._
 case object RPlatform extends Platform {
   val `type` = "R"
   val commentStr = "#"
-  
+
   def command(script: String) = {
     "Rscript " + script
   }
-  
-  private def removeNewlines(s: String) = 
+
+  private def removeNewlines(s: String) =
       s.filter(_ >= ' ') // remove all control characters
-      
+
   def generateArgparse(functionality: Functionality): String = {
     // check whether functionality contains positional arguments
     functionality.arguments.foreach(arg =>
       require(arg.otype != "", message = "Positional arguments are not yet supported in R.")
     )
-    
+
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
-    
-    
-    
-    
-    
-    
-    
+
     // construct file exist checks
-    
+
     // construct value all in set checks
     val allinPars = params
         .filter(_.isInstanceOf[StringObject])
         .map(_.asInstanceOf[StringObject])
         .filter(_.values.isDefined)
-    val allinParCheck = 
+    val allinParCheck =
       if (allinPars.isEmpty) {
         ""
       } else {
@@ -45,7 +39,7 @@ case object RPlatform extends Platform {
               |}""".stripMargin
         }.mkString("")
       }
-    
+
     s"""library(optparse, warn.conflicts = FALSE)
       |
       |# construct parameter list
@@ -58,16 +52,16 @@ case object RPlatform extends Platform {
       |${makeRequiredFileCheck(functionality, params)}
       |${makeSubsetFileCheck(functionality, params)}""".stripMargin
   }
-  
+
   def makeOptList(functionality: Functionality, params: List[DataObject[_]]): String = {
     // gather params for optlist
     val paramOptions = params.map(param => {
       val start = (
-          param.name :: 
+          param.name ::
           param.alternatives.getOrElse(Nil)
         ).mkString("c(\"", "\", \"", "\")")
       val helpStr = param.description.map(", help = \"" + removeNewlines(_) + "\"").getOrElse("")
-      
+
       param match {
         case o: BooleanObject => {
           val storeStr = o.flagValue.map(fv => ", action=\"store_" + { if (fv) "true" else "false" } + "\"").getOrElse("")
@@ -92,23 +86,23 @@ case object RPlatform extends Platform {
         }
       }
     })
-    
+
     s"""optlist <- list(
       |${paramOptions.mkString("  ", ",\n  ", "")}
       |)""".stripMargin
   }
-  
+
   def makeParser(functionality: Functionality): String = {
-    // gather description 
+    // gather description
     val descrStr = functionality.description.map("\n  description = \"" + removeNewlines(_) + "\",").getOrElse("")
-    
+
     s"""parser <- OptionParser(
       |  usage = "",$descrStr
       |  option_list = optlist
       |)
       |par <- parse_args(parser, args = commandArgs(trailingOnly = TRUE))"""
   }
-  
+
   def makeRequiredArgCheck(functionality: Functionality, params: List[DataObject[_]]): String = {
     // construct required arg checks
     val reqParams = params.filter(_.required.getOrElse(false))
@@ -123,7 +117,7 @@ case object RPlatform extends Platform {
         |}""".stripMargin
     }
   }
-  
+
   def makeRequiredFileCheck(functionality: Functionality, params: List[DataObject[_]]): String = {
     val reqFiles = params
         .filter(_.isInstanceOf[FileObject])
@@ -140,7 +134,7 @@ case object RPlatform extends Platform {
         |}""".stripMargin
     }
   }
-  
+
   def makeSubsetFileCheck(functionality: Functionality, params: List[DataObject[_]]): String = {
     val subsetPars = params
         .filter(_.isInstanceOf[StringObject])
@@ -149,7 +143,7 @@ case object RPlatform extends Platform {
     if (subsetPars.isEmpty) {
       ""
     } else {
-      "# check whether arguments contain expected values\n" + 
+      "# check whether arguments contain expected values\n" +
       subsetPars.map{
         par =>
           s"""if (!par[["${par.plainName}"]] %in% c("${par.values.get.mkString("\", \"")}")) {
@@ -158,4 +152,4 @@ case object RPlatform extends Platform {
       }.mkString
     }
   }
-}  
+}

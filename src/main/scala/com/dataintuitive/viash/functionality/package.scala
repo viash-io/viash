@@ -8,7 +8,7 @@ import cats.syntax.functor._ // for .widen
 
 package object functionality {
   implicit val customConfig: Configuration = Configuration.default.withDefaults
-    
+
   // encoder and decoder for java.io.File
   implicit val encodeFile: Encoder[java.io.File] = Encoder.instance {
     file => Json.fromString(file.getPath)
@@ -16,33 +16,33 @@ package object functionality {
   implicit val decodeFile: Decoder[java.io.File] = Decoder.instance {
     cursor => cursor.value.as[String].map(new java.io.File(_))
   }
-  
+
   // encoder and decoder for direction
   implicit val encodeDirection: Encoder[Direction] = Encoder.instance {
     dir => Json.fromString(dir.toString)
   }
   implicit val decodeDirection: Decoder[Direction] = Decoder.instance {
     cursor => cursor.value.as[String].map(s =>
-      s.toLowerCase() match { 
+      s.toLowerCase() match {
         case "input" => Input
         case "output" => Output
         case "log" => Log
       }
     )
   }
-  
+
   // encoders and decoders for Object
   implicit val encodeStringObject: Encoder.AsObject[StringObject] = deriveConfiguredEncoder
   implicit val encodeIntegerObject: Encoder.AsObject[IntegerObject] = deriveConfiguredEncoder
   implicit val encodeDoubleObject: Encoder.AsObject[DoubleObject] = deriveConfiguredEncoder
   implicit val encodeBooleanObject: Encoder.AsObject[BooleanObject] = deriveConfiguredEncoder
   implicit val encodeFileObject: Encoder.AsObject[FileObject] = deriveConfiguredEncoder
-    
+
   implicit def encodeDataObject[A <: DataObject[_]]: Encoder[A] = Encoder.instance {
-    par => 
+    par =>
       val typeJson = Json.obj("type" → Json.fromString(par.`type`))
       val objJson = par match {
-        case s: StringObject => encodeStringObject(s) 
+        case s: StringObject => encodeStringObject(s)
         case s: IntegerObject => encodeIntegerObject(s)
         case s: DoubleObject => encodeDoubleObject(s)
         case s: BooleanObject => encodeBooleanObject(s)
@@ -50,16 +50,16 @@ package object functionality {
       }
       objJson deepMerge typeJson
   }
-  
+
   implicit val decodeStringObject: Decoder[StringObject] = deriveConfiguredDecoder
   implicit val decodeIntegerObject: Decoder[IntegerObject] = deriveConfiguredDecoder
   implicit val decodeDoubleObject: Decoder[DoubleObject] = deriveConfiguredDecoder
   implicit val decodeBooleanObject: Decoder[BooleanObject] = deriveConfiguredDecoder
   implicit val decodeFileObject: Decoder[FileObject] = deriveConfiguredDecoder
-  
+
   implicit def decodeDataObject: Decoder[DataObject[_]] = Decoder.instance {
-    cursor => 
-      val decoder: Decoder[DataObject[_]] = 
+    cursor =>
+      val decoder: Decoder[DataObject[_]] =
         cursor.downField("type").as[String] match {
           case Right("string") => decodeStringObject.widen
           case Right("integer") => decodeIntegerObject.widen
@@ -69,14 +69,14 @@ package object functionality {
           case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised.")
           case Left(exception) => throw exception
         }
-      
+
       decoder(cursor)
   }
-  
-  // encoder and decoder for Resource  
+
+  // encoder and decoder for Resource
   implicit val encodeResource: Encoder.AsObject[Resource] = deriveConfiguredEncoder
   implicit val decodeResource: Decoder[Resource] = deriveConfiguredDecoder
-  
+
   // encoder and decoder for Functionality
   implicit val encodeFunctionality: Encoder[Functionality] = deriveEncoder
   implicit val decodeFunctionality: Decoder[Functionality] = deriveDecoder

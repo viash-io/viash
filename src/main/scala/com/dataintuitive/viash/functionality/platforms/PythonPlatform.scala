@@ -20,7 +20,7 @@ case object PythonPlatform extends Platform {
           param.alternatives.getOrElse(Nil)
         ).mkString("\"", "\", \"", "\"")
       val helpStr = param.description.map(", help = \"\"\"" + _ + "\"\"\"").getOrElse("")
-      val requiredStr = 
+      val requiredStr =
         if (param.otype == "") {
           ""
         } else {

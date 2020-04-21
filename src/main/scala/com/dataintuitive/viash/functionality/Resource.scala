@@ -5,9 +5,9 @@ trait ResourceTrait {
   val path: Option[String]
   val code: Option[String]
   val isExecutable: Boolean
-  
+
   require(
-    (path == None) != (code == None), 
+    (path == None) != (code == None),
     message = "Exactly one of path and code must be defined, the other undefined."
   )
 }

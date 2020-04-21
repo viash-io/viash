@@ -20,7 +20,7 @@ object Platform {
       case "bash" => BashPlatform
       case "native" => NativePlatform
       case "nextFlow" => NativePlatform
-      case _ => throw new RuntimeException(s"Unrecognised platform '${str}'.") 
+      case _ => throw new RuntimeException(s"Unrecognised platform '${str}'.")
     }
   }
 }
