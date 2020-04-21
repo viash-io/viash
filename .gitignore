@@ -8,3 +8,5 @@ target/
 .settings
 output
 .cache-tests
+project/metals
+out/*
