@@ -9,22 +9,22 @@ case class NativeTarget(
   python: Option[PythonEnvironment] = None
 ) extends Target {
   val `type` = "native"
-  
+
   def setupCommands() = {
     // create setup scripts
     val rInstallCommands = r.map(_.getInstallCommands()).getOrElse(Nil)
     val rInstallStr = if (!rInstallCommands.isEmpty) {
-      "\n  # install R requirements\n  " + rInstallCommands.mkString(" && \\\n    ") 
+      "\n  # install R requirements\n  " + rInstallCommands.mkString(" && \\\n    ")
     } else {
       ""
     }
     val pythonInstallCommands = python.map(_.getInstallCommands()).getOrElse(Nil)
     val pythonInstallStr = if (!pythonInstallCommands.isEmpty) {
-      "\n  # install Python requirements\n  " + pythonInstallCommands.mkString(" && \\\n    ") 
+      "\n  # install Python requirements\n  " + pythonInstallCommands.mkString(" && \\\n    ")
     } else {
       ""
     }
-    
+
     s"""if [ "$$1" = "---setup" ]; then$rInstallStr$pythonInstallStr
         |  exit 0
         |fi""".stripMargin
@@ -38,12 +38,12 @@ case class NativeTarget(
       case None => List(mainResource)
       case Some(BashPlatform) => {
         val code = functionality.mainCodeWithArgParse.get.split("\n")
-        
-        val newCode = 
+
+        val newCode =
           code.takeWhile(_.startsWith("#!")).mkString("\n") +
           "\n\n" + setupCommands() + "\n" +
           code.dropWhile(_.startsWith("#!")).mkString("\n")
-        
+
         List(Resource(
           name = functionality.name,
           code = Some(newCode),
@@ -56,12 +56,12 @@ case class NativeTarget(
           code = functionality.mainCodeWithArgParse,
           path = None
         )
-        
+
         val command = functionality.platform match {
           case None => mainResource.name
           case Some(pl) => pl.command(mainResource.name)
         }
-        
+
         val res2 = Resource(
           name = functionality.name,
           code = Some(s"""#!/bin/bash
@@ -72,16 +72,14 @@ case class NativeTarget(
           """.stripMargin),
           isExecutable = true
         )
-        
+
         List(res1, res2)
       }
     }
 
-    
-
     functionality.copy(
-      resources = 
-        functionality.resources.filterNot(_.name.startsWith("main")) ::: 
+      resources =
+        functionality.resources.filterNot(_.name.startsWith("main")) :::
         newResources
     )
   }
