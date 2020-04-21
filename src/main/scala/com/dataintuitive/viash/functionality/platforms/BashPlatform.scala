@@ -62,7 +62,7 @@ case object BashPlatform extends Platform {
   private def argStore(param: DataObject[_], name: String, store: String, argsConsumed: Int) = {
     val passStr =
       if (param.passthrough) {
-      "\n            PASSTHROUGH=\"$PASSTHROUGH" + (1 to argsConsumed).map(" '$" + _ + "'").mkString + "\""
+      "\n            PASSTHROUGH=\"$PASSTHROUGH" + (1 to argsConsumed).map(" $" + _ + "").mkString + "\""
     } else {
       ""
     }
