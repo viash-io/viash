@@ -22,10 +22,11 @@ for a in `ls atoms`; do
     if [ -f $platform_file ]; then
       # echo "      $func_file"
       # echo "      $platform_file"
+      # echo "$JAVA -f $func_file -p $platform_file export -o output/${a}_${p}"
       $JAVA -f $func_file \
             -p $platform_file \
             export \
-            -o "output/$a_$p"
+            -o "output/${a}_${p}"
     fi
   done
 done
