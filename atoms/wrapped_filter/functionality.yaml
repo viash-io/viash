@@ -1,13 +1,14 @@
 name: wrapped_filter
 description: cat a file with arguments and optionally apply a filter
 platform: bash
-ftype: convert
+ftype: transform
 arguments:
 - name: "--input"
   type: file
   description: "Input file"
   mustExist: true
   required: true
+  default: input.txt
   direction: input
 - name: "--filter"
   type: string
@@ -21,6 +22,7 @@ arguments:
   type: file
   description: "Output file"
   required: true
+  default: output.txt
   direction: output
 resources:
 - name: main
