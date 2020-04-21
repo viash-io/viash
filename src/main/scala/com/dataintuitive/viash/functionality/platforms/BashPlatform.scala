@@ -15,16 +15,6 @@ case object BashPlatform extends Platform {
   }
 
   def generateArgparse(functionality: Functionality): String = {
-    // check whether functionality contains positional arguments
-    /*functionality.arguments.foreach(arg =>
-      require(arg.otype != "", message = "Positional arguments are not yet supported in bash.")
-    )
-    functionality.arguments.foreach{
-      case o: BooleanObject =>
-        require(o.flagValue.isEmpty, message = "boolean with flagvalues are not yet supported in bash.")
-      case _ => {}
-    }*/
-
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
     // TODO: postparse checks:
@@ -69,66 +59,83 @@ case object BashPlatform extends Platform {
       |}""".stripMargin
   }
 
+  private def argStore(param: DataObject[_], name: String, store: String, argsConsumed: Int) = {
+    val passStr =
+      if (param.passthrough) {
+      "\n            PASSTHROUGH=\"$PASSTHROUGH" + (1 to argsConsumed).map(" '$" + _ + "'").mkString + "\""
+    } else {
+      ""
+    }
+    s"""        $name)
+      |            par_${param.plainName}=$store$passStr
+      |            shift $argsConsumed
+      |            ;;""".stripMargin
+  }
+  private def argStoreSed(param: DataObject[_], name: String) = {
+    argStore(param, name, "`echo $1 | sed 's/^" + name + "=//'`", 1)
+  }
+
   def generateParser(functionality: Functionality, params: List[DataObject[_]]): String = {
-    val wrapperParams = params
-    // gather parse code for params
-    val parseStrs = wrapperParams.map(param => {
-      // params of the form --param ...
-      val part1 = (param.otype, param.`type`) match {
-          case ("---", _) =>
-            s"""        ${param.name})
-            |            par_${param.plainName}="$$2"
-            |            shift 2 # past argument and value
-            |            ;;""".stripMargin
-          case ("--", _) =>
-            s"""        ${param.name})
-            |            par_${param.plainName}="$$2"
-            |            shift 2 # past argument and value
-            |            ;;""".stripMargin
-          case ("-", "boolean" ) =>
-            s"""        ${param.name})
-            |            par_${param.plainName}="$$1"
-            |            shift 1 # past argument
-            |            ;;""".stripMargin
-          case ("-", _ ) =>
-            s"""        ${param.name})
-            |            par_${param.plainName}="$$2"
-            |            shift 2 # past argument and value
-            |            ;;""".stripMargin
-          case _ => Nil
-        }
-      // params of the form --param=...
-      val part2 = param.otype match {
-          case "---" =>
-            List(s"""        ${param.name}=*)
-              |            par_${param.plainName}=`echo $$1 | sed 's/^${param.name}=//'`
-              |            shift 2 # past argument and value
-              |            ;;""".stripMargin)
-          case "--" =>
-            List(s"""        ${param.name}=*)
-              |            par_${param.plainName}=`echo $$1 | sed 's/^${param.name}=//'`
-              |            shift 2 # past argument and value
-              |            ;;""".stripMargin)
-          case "-" => Nil
-          case "" => Nil
-        }
-      // Alternatives
-      val moreParts = param.alternatives.getOrElse(Nil).map(alt => {
-        val pattern = "^(-*)(.*)$".r
-        val pattern(otype, plainName) = alt
-        s"""        ${alt})
-          |            par_${param.plainName}="$$2"
-          |            shift 2 # past argument and value
-          |            ;;""".stripMargin
-      })
-
-      (part1 :: part2 ::: moreParts).mkString("\n")
-    })
-
-    // construct required arg checks
+    // construct default values
     val defaultsStrs = params.flatMap(param => {
       param.default.map("par_" + param.plainName + "=\"" + _ + "\"")
     })
+
+    // gather parse code for params
+    val wrapperParams = params.filterNot(_.otype == "")
+    val parseStrs = wrapperParams.map(param => {
+      if (param.isInstanceOf[BooleanObject] && param.asInstanceOf[BooleanObject].flagValue.isDefined) {
+        val bo = param.asInstanceOf[BooleanObject]
+        val fv = bo.flagValue.get
+
+        // params of the form --param ...
+        val part1 = argStore(param, param.name, fv.toString(), 1)
+        // Alternatives
+        val moreParts = param.alternatives.getOrElse(Nil).map(alt => {
+          argStore(param, alt, fv.toString(), 1)
+        })
+
+        (part1 :: moreParts).mkString("\n")
+      } else {
+        // params of the form --param ...
+        val part1 = param.otype match {
+          case "---" | "--" | "-" => argStore(param, param.name, "\"$2\"", 2)
+          case "" => Nil
+        }
+        // params of the form --param=..., except -param=... is not allowed
+        val part2 = param.otype match {
+            case "---" | "--" => List(argStoreSed(param, param.name + "=*"))
+            case "-" | "" => Nil
+          }
+        // Alternatives
+        val moreParts = param.alternatives.getOrElse(Nil).map(alt => {
+          argStore(param, alt, "\"$2\"", 2)
+        })
+
+        (part1 :: part2 ::: moreParts).mkString("\n")
+      }
+    })
+
+    // parse positionals
+    val positionals = params.filter(_.otype == "")
+    val positionalStr = positionals.zipWithIndex.map{ case (param, index) =>
+      "par_" + param.plainName + "=\"$" + (index+1) + "\""
+    }.mkString("\n")
+
+    // construct required checks
+    val reqParams = params.filter(p => p.required.getOrElse(false))
+    val reqCheckStr =
+      if (reqParams.isEmpty) {
+        ""
+      } else {
+        "\n# check whether required parameters exist\n" +
+          reqParams.map{ param =>
+            s"""if [ -z "$$par_${param.plainName}" ]; then
+              |  echo '${param.name}' is a required argument. Use "--help" to get more information on the parameters.
+              |  exit 1
+              |fi""".stripMargin
+          }.mkString("\n")
+      }
 
     s"""# initialise array
       |POSITIONAL=()
@@ -147,14 +154,16 @@ case object BashPlatform extends Platform {
       |            exit;;
       |${parseStrs.mkString("\n")}
       |        *)    # unknown option
-      |            CMDARGS="$$CMDARGS $$1"
+      |            PASSTHROUGH="PASSTHROUGH '$$1'"
       |            POSITIONAL+=("$$1") # save it in an array for later
       |            shift # past argument
       |            ;;
       |    esac
       |done
       |
-      |# restore positional parameters
-      |set -- "$${POSITIONAL[@]}"""".stripMargin
+      |# parse positional parameters
+      |set -- "$${POSITIONAL[@]}"
+      |$positionalStr
+      |$reqCheckStr""".stripMargin
   }
 }
