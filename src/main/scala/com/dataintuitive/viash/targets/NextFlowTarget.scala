@@ -36,7 +36,7 @@ case class NextFlowTarget(
   def modifyFunctionality(functionality: Functionality) = {
 
     val dockerFunctionality = dockerTarget.modifyFunctionality(functionality)
-    val nativeFunctionality = nativeTarget.modifyFunctionality(functionality)
+    // val nativeFunctionality = nativeTarget.modifyFunctionality(functionality)
 
     val resourcesPath = "/app"
 
@@ -207,13 +207,14 @@ case class NextFlowTarget(
      * TODO: Check for conditions
      */
     val setup_main_outFromIn = functionality.ftype match {
-      // in and out file format are the same
+      // in and out file format are the same, but also the filenames!
       case Some("asis") => """
           |def outFromIn(inputstr) {
           |
           |    return "${inputstr}"
           |}
           |""".stripMargin('|').replace("__e__", inputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
+      // in and out file format are the same
       case Some("transform") => """
           |def outFromIn(inputstr) {
           |
@@ -525,7 +526,7 @@ case class NextFlowTarget(
 
     dockerFunctionality.copy(
         resources =
-          nativeFunctionality.resources ::: List(setup_nextflowconfig, setup_main)
+          List(setup_nextflowconfig, setup_main)
     )
   }
 
