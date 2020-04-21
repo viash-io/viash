@@ -1,31 +1,25 @@
 name: wrapped_filter
-description: 
+description: cat a file with arguments and optionally apply a filter
 platform: bash
 ftype: convert
 arguments:
-- name: "---input"
+- name: "--input"
   type: file
-  description: The path to a table to be printed.
+  description: "Input file"
   mustExist: true
   required: true
-  default: input.txt
   direction: input
-- name: "---filter"
+- name: "--filter"
   type: string
-  description: ""
-  default: "123456"
-  required: true
-  direction: input
+  description: "Filter to apply (i.e. regex)"
+  default: ".*"
 - name: "-b"
   type: boolean
-  description: ""
-  required: false
+  description: "Add line numbers (before filtering)"
   flagValue: true
-  direction: input
-- name: "---output"
+- name: "--output"
   type: file
-  description: ""
-  default: output.txt
+  description: "Output file"
   required: true
   direction: output
 resources:
