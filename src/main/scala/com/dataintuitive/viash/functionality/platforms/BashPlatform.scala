@@ -70,24 +70,49 @@ case object BashPlatform extends Platform {
   }
 
   def generateParser(functionality: Functionality, params: List[DataObject[_]]): String = {
-    val wrapperParams =
-      params
-        .filter(_.name.contains("---"))
+    val wrapperParams = params
     // gather parse code for params
     val parseStrs = wrapperParams.map(param => {
-      val part1 = s"""        ${param.name.drop(1)})
-        |            par_${param.plainName}="$$2"
-        |            shift 2 # past argument and value
-        |            ;;""".stripMargin
+      // params of the form --param ...
+      val part1 = (param.otype, param.`type`) match {
+          case ("---", _) =>
+            s"""        ${param.name})
+            |            par_${param.plainName}="$$2"
+            |            shift 2 # past argument and value
+            |            ;;""".stripMargin
+          case ("--", _) =>
+            s"""        ${param.name})
+            |            par_${param.plainName}="$$2"
+            |            shift 2 # past argument and value
+            |            ;;""".stripMargin
+          case ("-", "boolean" ) =>
+            s"""        ${param.name})
+            |            par_${param.plainName}="$$1"
+            |            shift 1 # past argument
+            |            ;;""".stripMargin
+          case ("-", _ ) =>
+            s"""        ${param.name})
+            |            par_${param.plainName}="$$2"
+            |            shift 2 # past argument and value
+            |            ;;""".stripMargin
+          case _ => Nil
+        }
+      // params of the form --param=...
       val part2 = param.otype match {
           case "---" =>
-            List(s"""        ${param.name.drop(1)}=*)
+            List(s"""        ${param.name}=*)
+              |            par_${param.plainName}=`echo $$1 | sed 's/^${param.name}=//'`
+              |            shift 2 # past argument and value
+              |            ;;""".stripMargin)
+          case "--" =>
+            List(s"""        ${param.name}=*)
               |            par_${param.plainName}=`echo $$1 | sed 's/^${param.name}=//'`
               |            shift 2 # past argument and value
               |            ;;""".stripMargin)
           case "-" => Nil
           case "" => Nil
         }
+      // Alternatives
       val moreParts = param.alternatives.getOrElse(Nil).map(alt => {
         val pattern = "^(-*)(.*)$".r
         val pattern(otype, plainName) = alt
