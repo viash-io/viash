@@ -17,6 +17,7 @@ arguments:
   type: boolean
   description: "Add line numbers (before filtering)"
   flagValue: true
+  passthrough: true
 - name: "--output"
   type: file
   description: "Output file"
