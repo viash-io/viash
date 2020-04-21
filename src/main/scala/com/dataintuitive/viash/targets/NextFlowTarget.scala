@@ -175,7 +175,6 @@ case class NextFlowTarget(
       )
     )
 
-
     val setup_main_header = s"""nextflow.preview.dsl=2
         |import java.nio.file.Paths
         |""".stripMargin('|')

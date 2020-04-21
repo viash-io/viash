@@ -26,9 +26,9 @@ case class DockerTarget(
     val runImageName = if (dockerFile.isEmpty) image else "viash_autogen/" + functionality.name
 
     // add extra arguments to the functionality file for each of the volumes
-    val volInputs = volumes.getOrElse(Nil).map(vol => 
+    val volInputs = volumes.getOrElse(Nil).map(vol =>
       StringObject(
-        name = "--" + vol.name, 
+        name = "--" + vol.name,
         description = Some(s"Local path to mount directory for volume '${vol.name}'."),
         required = Some(true),
         direction = Input
@@ -49,7 +49,7 @@ case class DockerTarget(
       case None => mainPath
       case Some(NativePlatform) =>
         mainResource.path.map(_ + " $VIASHARGS").getOrElse("echo No command provided")
-      case Some(BashPlatform) => 
+      case Some(BashPlatform) =>
         "\nset -- $VIASHARGS\n" + fun2.mainCodeWithArgParse.get.replaceAll("\\$", "\\\\\\$")
       case Some(pl) => {
         val code = fun2.mainCodeWithArgParse.get.replaceAll("\\$", "\\\\\\$")
@@ -63,13 +63,13 @@ case class DockerTarget(
         |""".stripMargin
       }
     }
-    
+
     // generate bash document
     // TODO: Maybe BashPlatform oneliners will fail here?
     val heredocStart = if (executionCode.contains("\n")) { "cat << VIASHEOF | " } else { "" }
     val heredocEnd = if (executionCode.contains("\n")) { "\nVIASHEOF" } else { "" }
-    
-    val bash = 
+
+    val bash =
       Resource(
         name = functionality.name,
         code = Some(s"""#!/bin/bash
@@ -88,7 +88,7 @@ case class DockerTarget(
 
     fun2.copy(
       resources =
-        fun2.resources.filterNot(_.name.startsWith("main")) ::: 
+        fun2.resources.filterNot(_.name.startsWith("main")) :::
         dockerFile :::
         List(bash)
     )
@@ -103,15 +103,15 @@ case class DockerTarget(
 
     val deps = List(aptInstallCommands, rInstallCommands, pythonInstallCommands, resourceNames).flatten
 
-    // if no extra dependencies are needed, the provided image can just be used, 
+    // if no extra dependencies are needed, the provided image can just be used,
     // otherwise need to construct a separate docker container
     if (deps.isEmpty) {
       Nil
-    } else {      
+    } else {
       List(Resource(
         name = "Dockerfile",
         code = Some(
-          s"FROM $image\n" + 
+          s"FROM $image\n" +
             {
               if (!aptInstallCommands.isEmpty) {
                 "\n" +
@@ -138,7 +138,7 @@ case class DockerTarget(
               } else {
                 ""
               }
-            } + 
+            } +
             {
               if (!resourceNames.isEmpty) {
                 s"""
@@ -154,7 +154,7 @@ case class DockerTarget(
       ))
     }
   }
-  
+
   def generateDockerRunArgs() = {
     // process port parameter
     val portStr = port.getOrElse(Nil).map("-p " + _ + " ").mkString("")
@@ -162,16 +162,16 @@ case class DockerTarget(
     // process volume parameter
     val volumesGet = volumes.getOrElse(Nil)
     val volStr = volumesGet.map(vol => s"-v $$${vol.name.toUpperCase()}:${vol.mount} ").mkString("")
-    
+
     portStr + volStr + "-i --entrypoint bash"
   }
-  
+
   def generateBashParsers(functionality: Functionality, runImageName: String) = {
     // helper function for quoting arguments before passing again
     def saveArgument(arg: String) = {
       s"""VIASHARGS="$$VIASHARGS '`echo $arg | sed \\\"s/'/'\\\\\\\"'\\\\\\\"'/g\\\"`'""""
     }
-    
+
     // remove extra volume args if extra parameters are not desired
     // -> when the executable's cli does not accept the volume arguments
     val volumeArgFix = functionality.platform match {
@@ -179,7 +179,7 @@ case class DockerTarget(
       case Some(NativePlatform) => "# "
       case _ => ""
     }
-    
+
     // generate volume checks
     val volumeDefaults =
       if (volumes.getOrElse(Nil).isEmpty) {
@@ -187,13 +187,13 @@ case class DockerTarget(
       } else {
         volumes.getOrElse(Nil)
           .map(vol =>
-            s"""if [ -z $${${vol.name.toUpperCase()}+x} ]; then 
+            s"""if [ -z $${${vol.name.toUpperCase()}+x} ]; then
               |  ${vol.name.toUpperCase()}=`pwd`; # todo: produce error here
               |fi""".stripMargin
           )
           .mkString("\n\n# provide temporary defaults for Docker\n", "\n", "")
       }
-    
+
     // generate extra parsers for volumes
     val volumeParsers =
       if (volumes.getOrElse(Nil).isEmpty) {
@@ -214,11 +214,11 @@ case class DockerTarget(
             |            ;;""".stripMargin
         ).mkString("")
       }
-    
+
     s"""VIASHARGS=''
       |while [[ $$# -gt 0 ]]; do
       |    case "$$1" in
-      |        ---setup) 
+      |        ---setup)
       |            docker build -t $runImageName .
       |            exit 0
       |            ;;$volumeParsers
