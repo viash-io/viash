@@ -1,7 +1,7 @@
 package com.dataintuitive.viash.targets
 
 import com.dataintuitive.viash.functionality.{Functionality, Resource, StringObject}
-import com.dataintuitive.viash.functionality.platforms.NativePlatform
+import com.dataintuitive.viash.functionality.platforms.{BashPlatform, NativePlatform}
 import com.dataintuitive.viash.targets.environments._
 import com.dataintuitive.viash.functionality.{DataObject, FileObject, Direction}
 import com.dataintuitive.viash.functionality.{Input, Output}
@@ -31,10 +31,12 @@ case class NextFlowTarget(
   val `type` = "nextflow"
 
   val dockerTarget = DockerTarget(image, volumes, port, workdir, apt, r, python)
+  val nativeTarget = NativeTarget(r, python)
 
   def modifyFunctionality(functionality: Functionality) = {
 
     val dockerFunctionality = dockerTarget.modifyFunctionality(functionality)
+    val nativeFunctionality = nativeTarget.modifyFunctionality(functionality)
 
     val resourcesPath = "/app"
 
@@ -49,6 +51,7 @@ case class NextFlowTarget(
     val mainPath = Paths.get(resourcesPath, mainResource.name).toFile().getPath()
     val executionCode = functionality.platform match {
       case Some(NativePlatform) => mainResource.path.getOrElse("echo No command provided")
+      case Some(BashPlatform) => fname //mainResource.path.getOrElse("echo No command provided")
       case _    => { println("Not implemented yet"); mainPath}
     }
 
@@ -75,7 +78,6 @@ case class NextFlowTarget(
       (s"${fname}__${key}", value)
 
     def valuePointer(key: String, value: String):String = s"$${params.${fname}__${key}}"
-
 
     def dataObjectToTuples[T](dataObject:DataObject[T]):List[(String, Any)] = {
       def valueOrPointer(str:String):String =
@@ -105,8 +107,6 @@ case class NextFlowTarget(
 
           val name = dataObject.plainName
 
-          println("name here: " + name)
-
           if (! name.contains("-")) {
             Some(
               namespacedValueTuple(
@@ -119,8 +119,6 @@ case class NextFlowTarget(
             None
           }
       }).flatMap(x => x)
-
-    println(namespacedParameters)
 
     val argumentsAsTuple = if (functionality.arguments.length > 0) {
       List(
@@ -521,9 +519,14 @@ case class NextFlowTarget(
                   setup_main_entrypoint)
     )
 
+    // println(nativeFunctionality.resources)
+    // val nativeResources = nativeFunctionality.resources
+    // val resourcesInBin = nativeResources.map(r => r.copy(path = "bin/" + r.path))
+    // println(resourcesInBin)
+
     dockerFunctionality.copy(
         resources =
-          dockerFunctionality.resources ::: List(setup_nextflowconfig, setup_main)
+          nativeFunctionality.resources ::: List(setup_nextflowconfig, setup_main)
     )
   }
 
