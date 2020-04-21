@@ -4,7 +4,7 @@
 par_in="input.txt"
 par_out="output.txt"
 par_filter="AString"
-CMDARGS="-b"
+PASSTHROUGH="-b"
 # PORTASH END
 
 echo "## Reading from $par_in"
@@ -12,4 +12,4 @@ echo "## Filtering for $par_filter"
 echo "## Writing to $par_out"
 echo "## Additional parameters? $REST"
 
-cat $CMDARGS "$par_in" | grep "$par_filter" > "$par_out"
+cat $PASSTHROUGH "$par_in" | grep "$par_filter" > "$par_out"

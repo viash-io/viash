@@ -11,6 +11,7 @@ abstract class DataObject[Type] {
   val required: Option[Boolean]
   val direction: Direction
   val tag: Option[String]
+  val passthrough: Boolean
 
   private val pattern = "^(-*)(.*)$".r
   val pattern(otype, plainName) = name
@@ -29,7 +30,8 @@ case class StringObject(
     required: Option[Boolean] = None,
     values: Option[List[String]] = None,
     tag: Option[String] = None,
-    direction: Direction = Input
+    direction: Direction = Input,
+    passthrough: Boolean = false
 ) extends DataObject[String] {
   override val `type` = "string"
 }
@@ -41,7 +43,8 @@ case class IntegerObject(
     default: Option[Int] = None,
     required: Option[Boolean] = None,
     tag: Option[String] = None,
-    direction: Direction = Input
+    direction: Direction = Input,
+    passthrough: Boolean = false
 ) extends DataObject[Int] {
   override val `type` = "integer"
 }
@@ -53,7 +56,8 @@ case class DoubleObject(
     default: Option[Double] = None,
     required: Option[Boolean] = None,
     tag: Option[String] = None,
-    direction: Direction = Input
+    direction: Direction = Input,
+    passthrough: Boolean = false
 ) extends DataObject[Double] {
   override val `type` = "double"
 }
@@ -66,7 +70,8 @@ case class BooleanObject(
     required: Option[Boolean] = None,
     flagValue: Option[Boolean] = None,
     tag: Option[String] = None,
-    direction: Direction = Input
+    direction: Direction = Input,
+    passthrough: Boolean = false
 ) extends DataObject[Boolean] {
   override val `type` = "boolean"
 }
@@ -79,7 +84,8 @@ case class FileObject(
     mustExist: Option[Boolean] = None,
     required: Option[Boolean] = None,
     tag: Option[String] = None,
-    direction: Direction = Input
+    direction: Direction = Input,
+    passthrough: Boolean = false
 ) extends DataObject[File] {
   override val `type` = "file"
 
