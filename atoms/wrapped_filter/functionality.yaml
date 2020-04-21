@@ -1,0 +1,36 @@
+name: wrapped_filter
+description: 
+platform: bash
+ftype: convert
+arguments:
+- name: "---input"
+  alternatives: ["-i"]
+  type: file
+  description: The path to a table to be printed.
+  mustExist: true
+  required: true
+  default: input.txt
+  direction: input
+- name: "---filter"
+  alternatives: ["-f"]
+  type: string
+  description: ""
+  default: "123456"
+  required: true
+  direction: input
+- name: "-b"
+  type: boolean
+  description: ""
+  default: true
+  required: true
+  direction: input
+- name: "---output"
+  alternatives: ["-o"]
+  type: file
+  description: ""
+  default: output.txt
+  required: true
+  direction: output
+resources:
+- name: main
+  path: ./code.sh
