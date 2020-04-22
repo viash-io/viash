@@ -62,10 +62,12 @@ case object BashPlatform extends Platform {
   private def argStore(param: DataObject[_], name: String, store: String, argsConsumed: Int) = {
     val passStr =
       if (param.passthrough) {
-      "\n            PASSTHROUGH=\"$PASSTHROUGH" + (1 to argsConsumed).map(" $" + _ + "").mkString + "\""
-    } else {
-      ""
-    }
+        // add quotes only after first arg
+        val xxx = (1 to argsConsumed).map{ i => if (i == 1) " $" + i else " '$" + i + "'" }
+        "\n            PASSTHROUGH=\"$PASSTHROUGH" + xxx.mkString + "\""
+      } else {
+        ""
+      }
     s"""        $name)
       |            par_${param.plainName}=$store$passStr
       |            shift $argsConsumed
@@ -162,7 +164,7 @@ case object BashPlatform extends Platform {
       |            exit;;
       |${parseStrs.mkString("\n")}
       |        *)    # unknown option
-      |            PASSTHROUGH="PASSTHROUGH '$$1'"
+      |${"" /*DO NOT INCLUDE PASSTHROUGH FOR * FOR NOW            PASSTHROUGH="PASSTHROUGH '$$1'"*/}
       |            POSITIONAL+=("$$1") # save it in an array for later
       |            shift # past argument
       |            ;;
