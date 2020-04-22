@@ -66,8 +66,11 @@ case class DockerTarget(
 
     // generate bash document
     // TODO: Maybe BashPlatform oneliners will fail here?
-    val heredocStart = if (executionCode.contains("\n")) { "cat << VIASHEOF | " } else { "" }
-    val heredocEnd = if (executionCode.contains("\n")) { "\nVIASHEOF" } else { "" }
+    val (heredocStart, heredocEnd) = if (executionCode.contains("\n")) {
+      ("cat << VIASHEOF | ", "\nVIASHEOF")
+    } else {
+      ("", "")
+    }
 
     val bash =
       Resource(
