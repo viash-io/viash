@@ -78,7 +78,15 @@ case object BashPlatform extends Platform {
   def generateParser(functionality: Functionality, params: List[DataObject[_]]): String = {
     // construct default values
     val defaultsStrs = params.flatMap(param => {
-      param.default.map("par_" + param.plainName + "=\"" + _ + "\"")
+      // if boolean object has a flagvalue, add the inverse of it as a default value
+      val default =
+        if (param.isInstanceOf[BooleanObject] && param.asInstanceOf[BooleanObject].flagValue.isDefined) {
+          param.asInstanceOf[BooleanObject].flagValue.map(!_)
+        } else {
+          param.default
+        }
+
+      default.map("par_" + param.plainName + "=\"" + _ + "\"")
     })
 
     // gather parse code for params
