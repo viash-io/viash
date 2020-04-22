@@ -172,7 +172,7 @@ case class DockerTarget(
   def generateBashParsers(functionality: Functionality, runImageName: String) = {
     // helper function for quoting arguments before passing again
     def saveArgument(arg: String) = {
-      s"""VIASHARGS="$$VIASHARGS '`echo $arg | sed \\\"s/'/'\\\\\\\"'\\\\\\\"'/g\\\"`'""""
+      s"""VIASHARGS="$$VIASHARGS `quote "$arg"`""""
     }
 
     // remove extra volume args if extra parameters are not desired
@@ -218,11 +218,20 @@ case class DockerTarget(
         ).mkString("")
       }
 
-    s"""VIASHARGS=''
+    val setup =
+      if (image == runImageName) { // if these are the same, then no dockerfile needs to be built
+        s"docker pull $runImageName"
+      } else {
+        s"docker build -t $runImageName ."
+      }
+    s"""function quote {
+      |  echo $$1 | sed "s/'/'\\"'\\"'/g" | sed "s#^[^-].*#'&'#"
+      |}
+      |VIASHARGS=''
       |while [[ $$# -gt 0 ]]; do
       |    case "$$1" in
       |        ---setup)
-      |            docker build -t $runImageName .
+      |            $setup
       |            exit 0
       |            ;;$volumeParsers
       |        *)    # unknown option

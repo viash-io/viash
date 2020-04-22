@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sbt 'set test in assembly := {}' clean assembly
+sbt 'set test in assembly := {}' assembly
 
 JAVA="java -jar target/scala-2.12/viash-assembly-0.0.1.jar"
 TEST=src/test/resources

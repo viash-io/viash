@@ -8,11 +8,11 @@ import com.dataintuitive.viash.functionality.Functionality
 import scala.io.Source
 import scala.reflect.io.Directory
 
-class E2EBashNative extends FunSuite {
+class E2EBashDocker extends FunSuite {
   // which platform to test
   val testName = "testbash"
   val funcFile = getClass.getResource(s"/$testName/functionality.yaml").getPath
-  val platFile = getClass.getResource(s"/$testName/platform_native.yaml").getPath
+  val platFile = getClass.getResource(s"/$testName/platform_docker.yaml").getPath
 
   val temporaryFolder = Files.createTempDirectory(Paths.get("/tmp"), "viash_tester").toFile()
 
@@ -36,6 +36,14 @@ class E2EBashNative extends FunSuite {
   test("Viash should have created an executable") {
     assert(executable.exists())
     assert(executable.canExecute())
+  }
+
+  test("Check whether the executable can build the image", DockerTest) {
+    val stdout = Exec.run(
+      Seq(executable.toString(), "---setup"),
+      temporaryFolder
+    )
+    assert(stdout.contains("latest: Pulling from "))
   }
 
   test("Check whether the executable can run") {
@@ -66,20 +74,22 @@ class E2EBashNative extends FunSuite {
     val output = Paths.get(tempFolStr, "output.txt").toFile()
     val log = Paths.get(tempFolStr, "log.txt").toFile()
 
+    // TODO: Fix --foo=bar :/
     val stdout =
       Exec.run(
         Seq(
           executable.toString(),
           executable.toString(),
           "--real_number", "10.5",
-          "--whole_number=10",
+          "--whole_number", "10",
           "-s", "a string with a few spaces",
           "--truth",
-          "--output", output.toString(),
-          "--log", log.toString(),
+          "--output", "/data/output.txt",
+          "--log", "/data/log.txt",
           "--optional", "foo",
           "--optional_with_default", "bar",
-          "--passthrough=\"you shall$not#pass\""
+          "--passthrough", "\"you shall$not#pass\"",
+          "--data", tempFolStr
         ),
         temporaryFolder
       )
@@ -93,12 +103,13 @@ class E2EBashNative extends FunSuite {
     assert(outputLines.contains("""whole_number: "10""""))
     assert(outputLines.contains("""s: "a string with a few spaces""""))
     assert(outputLines.contains("""truth: "true""""))
-    assert(outputLines.contains(s"""output: "${output.toString()}""""))
-    assert(outputLines.contains(s"""log: "${log.toString()}""""))
+    assert(outputLines.contains("""output: "/data/output.txt""""))
+    assert(outputLines.contains("""log: "/data/log.txt""""))
     assert(outputLines.contains("""optional: "foo""""))
     assert(outputLines.contains("""optional_with_default: "bar""""))
     assert(outputLines.contains("""passthrough: ""you shall$not#pass""""")) // TODO: one set of quotes should be removed
-    assert(outputLines.contains("""PASSTHROUGH: " --passthrough="you shall$not#pass"""""))
+    assert(outputLines.contains("""PASSTHROUGH: " --passthrough '"you shall$not#pass"'""""))
+    assert(outputLines.contains(s"""data: "${tempFolStr}""""))
 
     val logLines = Source.fromFile(log).mkString
     assert(logLines.contains("INFO: Parsed input arguments"))
@@ -112,7 +123,8 @@ class E2EBashNative extends FunSuite {
           "testinput",
           "--real_number", "123.456",
           "--whole_number", "789",
-          "-s", "my$weird#string"
+          "-s", "my$weird#string",
+          "--data", "/tmp/"
         ),
         temporaryFolder
       )
@@ -126,6 +138,7 @@ class E2EBashNative extends FunSuite {
     assert(stdout.contains("""optional_with_default: "The default value.""""))
     assert(stdout.contains("""passthrough: """""))
     assert(stdout.contains(s"""PASSTHROUGH: """""))
+    assert(stdout.contains("""data: "/tmp/""""))
 
     assert(stdout.contains("INFO: Parsed input arguments"))
   }

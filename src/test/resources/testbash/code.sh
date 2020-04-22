@@ -47,4 +47,7 @@ output "log: \"$par_log\""
 output "optional: \"$par_optional\""
 output "optional_with_default: \"$par_optional_with_default\""
 output "passthrough: \"$par_passthrough\""
+if [ ! -z "$par_data" ]; then
+  output "data: \"$par_data\""
+fi
 output "PASSTHROUGH: \"$PASSTHROUGH\""
