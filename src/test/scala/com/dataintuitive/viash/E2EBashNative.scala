@@ -14,7 +14,7 @@ class E2EBashNative extends FunSuite {
   val funcFile = getClass.getResource(s"/$testName/functionality.yaml").getPath
   val platFile = getClass.getResource(s"/$testName/platform_native.yaml").getPath
 
-  val temporaryFolder = Files.createTempDirectory("viash_tester").toFile()
+  val temporaryFolder = Files.createTempDirectory(Paths.get("/tmp"), "viash_tester").toFile()
 
   val tempFolStr = temporaryFolder.toString()
 
