@@ -8,7 +8,7 @@ import com.dataintuitive.viash.functionality.Functionality
 import scala.io.Source
 import scala.reflect.io.Directory
 
-class TestMainWithPythonNative extends FunSuite {
+class E2EPythonNative extends FunSuite {
   // which platform to test
   val testName = "testpython"
   val funcFile = getClass.getResource(s"/$testName/functionality.yaml").getPath
