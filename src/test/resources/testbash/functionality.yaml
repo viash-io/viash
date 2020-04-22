@@ -8,6 +8,7 @@ arguments:
   type: file
   description: An input file with positional arguments.
   direction: input
+  required: true
 - name: "--real_number"
   type: double
   description: A real number with positional arguments.
@@ -39,6 +40,10 @@ arguments:
 - name: "--optional_with_default"
   type: string
   default: "The default value."
+- name: "--passthrough"
+  type: string
+  description: A passthrough parameter
+  passthrough: true
 resources:
 - name: main.sh
   path: ./code.sh
