@@ -14,18 +14,21 @@ par = {
 ### PORTASH END
 
 import logging
+import sys
 
 if par['log'] is not None:
-	logging.basicConfig(filename=par['log'], level=logging.INFO)
+	logging.basicConfig(filename=par['log'],level=logging.INFO)
+else:
+	logging.basicConfig(stream=sys.stdout,level=logging.INFO)
 
 logging.info('Parsed input arguments.')
 
 if par['output'] is not None: 
 	logging.info('Writing output to file')
-	import json
 	with open(par['output'], 'w') as f:
-		json.dump(par, f)
+		for key in par.keys():
+			f.write(key + ": \"" + str(par[key]) + "\"\n")
 else:
 	logging.info('Printing output to console')
 	for key in par.keys():
-		print(key + ": " + str(par[key]))
+		print(key + ": \"" + str(par[key]) + "\"")

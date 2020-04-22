@@ -17,8 +17,6 @@ class E2EPythonDocker extends FunSuite {
 
   val tempFolStr = temporaryFolder.toString()
 
-  println(tempFolStr)
-
   // parse functionality from file
   val functionality = Functionality.parse(new File(funcFile))
 
@@ -80,6 +78,7 @@ class E2EPythonDocker extends FunSuite {
           "--output", "/data/output.txt",
           "--log", "/data/log.txt",
           "--optional", "foo",
+          "--optional_with_default", "bar",
           "--data", tempFolStr
         ),
         temporaryFolder
@@ -89,15 +88,46 @@ class E2EPythonDocker extends FunSuite {
     assert(log.exists())
 
     val outputLines = Source.fromFile(output).mkString
-    assert(outputLines.contains(s""""input": "${executable.toString()}""""))
-    assert(outputLines.contains(""""real_number": 10.5"""))
-    assert(outputLines.contains(""""whole_number": 10"""))
-    assert(outputLines.contains(""""s": "a string with a few spaces""""))
-    assert(outputLines.contains(""""truth": true"""))
-    assert(outputLines.contains(s""""output": "/data/output.txt""""))
-    assert(outputLines.contains(s""""log": "/data/log.txt""""))
+    assert(outputLines.contains(s"""input: "${executable.toString()}""""))
+    assert(outputLines.contains("""real_number: "10.5""""))
+    assert(outputLines.contains("""whole_number: "10""""))
+    assert(outputLines.contains("""s: "a string with a few spaces""""))
+    assert(outputLines.contains("""truth: "True""""))
+    assert(outputLines.contains("""output: "/data/output.txt""""))
+    assert(outputLines.contains("""log: "/data/log.txt""""))
+    assert(outputLines.contains("""optional: "foo""""))
+    assert(outputLines.contains("""optional_with_default: "bar""""))
+    assert(outputLines.contains(s"""data: "${tempFolStr}""""))
 
     val logLines = Source.fromFile(log).mkString
     assert(logLines.contains("INFO:root:Parsed input arguments"))
+  }
+
+  test("Alternative params") {
+    val stdout =
+      Exec.run(
+        Seq(
+          executable.toString(),
+          "testinput",
+          "--real_number", "123.456",
+          "--whole_number", "789",
+          "-s", "my$weird#string",
+          "--data", "/tmp/"
+        ),
+        temporaryFolder
+      )
+
+    assert(stdout.contains("""input: "testinput""""))
+    assert(stdout.contains("""real_number: "123.456""""))
+    assert(stdout.contains("""whole_number: "789""""))
+    assert(stdout.contains("""s: "my$weird#string""""))
+    assert(stdout.contains("""truth: "False""""))
+    assert(stdout.contains("""log: "None""""))
+    assert(stdout.contains("""output: "None""""))
+    assert(stdout.contains("""optional: "None""""))
+    assert(stdout.contains("""optional_with_default: "The default value.""""))
+    assert(stdout.contains("""data: "/tmp/""""))
+
+    assert(stdout.contains("INFO:root:Parsed input arguments"))
   }
 }

@@ -77,7 +77,8 @@ class E2EPythonNative extends FunSuite {
           "--truth",
           "--output", output.toString(),
           "--log", log.toString(),
-          "--optional", "foo"
+          "--optional", "foo",
+          "--optional_with_default", "bar"
         ),
         temporaryFolder
       )
@@ -86,15 +87,43 @@ class E2EPythonNative extends FunSuite {
     assert(log.exists())
 
     val outputLines = Source.fromFile(output).mkString
-    assert(outputLines.contains(s""""input": "${executable.toString()}""""))
-    assert(outputLines.contains(""""real_number": 10.5"""))
-    assert(outputLines.contains(""""whole_number": 10"""))
-    assert(outputLines.contains(""""s": "a string with a few spaces""""))
-    assert(outputLines.contains(""""truth": true"""))
-    assert(outputLines.contains(s""""output": "${output.toString()}""""))
-    assert(outputLines.contains(s""""log": "${log.toString()}""""))
+    assert(outputLines.contains(s"""input: "${executable.toString()}""""))
+    assert(outputLines.contains("""real_number: "10.5""""))
+    assert(outputLines.contains("""whole_number: "10""""))
+    assert(outputLines.contains("""s: "a string with a few spaces""""))
+    assert(outputLines.contains("""truth: "True""""))
+    assert(outputLines.contains(s"""output: "${output.toString()}""""))
+    assert(outputLines.contains(s"""log: "${log.toString()}""""))
+    assert(outputLines.contains("""optional: "foo""""))
+    assert(outputLines.contains("""optional_with_default: "bar""""))
 
     val logLines = Source.fromFile(log).mkString
     assert(logLines.contains("INFO:root:Parsed input arguments"))
+  }
+
+  test("Alternative params") {
+    val stdout =
+      Exec.run(
+        Seq(
+          executable.toString(),
+          "test",
+          "--real_number", "123.456",
+          "--whole_number", "789",
+          "-s", "my$weird#string"
+        ),
+        temporaryFolder
+      )
+
+    assert(stdout.contains("""input: "test""""))
+    assert(stdout.contains("""real_number: "123.456""""))
+    assert(stdout.contains("""whole_number: "789""""))
+    assert(stdout.contains("""s: "my$weird#string""""))
+    assert(stdout.contains("""truth: "False""""))
+    assert(stdout.contains("""output: "None""""))
+    assert(stdout.contains("""log: "None""""))
+    assert(stdout.contains("""optional: "None""""))
+    assert(stdout.contains("""optional_with_default: "The default value.""""))
+
+    assert(stdout.contains("INFO:root:Parsed input arguments"))
   }
 }
