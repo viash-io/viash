@@ -78,7 +78,8 @@ class E2EBashNative extends FunSuite {
           "--output", output.toString(),
           "--log", log.toString(),
           "--optional", "foo",
-          "--passthrough", "bar"
+          "--optional_with_default", "bar",
+          "--passthrough", "you shall not"
         ),
         temporaryFolder
       )
@@ -94,9 +95,11 @@ class E2EBashNative extends FunSuite {
     assert(outputLines.contains("""truth: "true""""))
     assert(outputLines.contains(s"""output: "${output.toString()}""""))
     assert(outputLines.contains(s"""log: "${log.toString()}""""))
-    assert(outputLines.contains(s"""passthrough: "bar""""))
-    assert(outputLines.contains(s"""PASSTHROUGH:""")) // TODO: merge when positional args are not shoved into the passthrough
-    assert(outputLines.contains(s"""--passthrough bar""""))
+    assert(outputLines.contains("""optional: "foo""""))
+    assert(outputLines.contains("""optional_with_default: "bar""""))
+    assert(outputLines.contains("""passthrough: "you shall not""""))
+    assert(outputLines.contains("""PASSTHROUGH:""")) // TODO: merge when positional args are not shoved into the passthrough
+    assert(outputLines.contains("""--passthrough 'you shall not'""""))
 
     val logLines = Source.fromFile(log).mkString
     assert(logLines.contains("INFO: Parsed input arguments"))
@@ -120,6 +123,10 @@ class E2EBashNative extends FunSuite {
     assert(stdout.contains("""whole_number: "789""""))
     assert(stdout.contains("""s: "my$weird#string""""))
     assert(stdout.contains("""truth: "false""""))
+    assert(stdout.contains("""optional: """""))
+    assert(stdout.contains("""optional_with_default: "The default value.""""))
+    assert(stdout.contains("""passthrough: """""))
+
     assert(stdout.contains(s"""PASSTHROUGH:""")) // TODO: merge when positional args are not shoved into the passthrough
 
     assert(stdout.contains("INFO: Parsed input arguments"))
