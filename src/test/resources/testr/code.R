@@ -12,23 +12,22 @@ par <- list(
 )
 ### PORTASH END
 
-log_fun <- function(..., .newline = "\n") {
-  str <- paste0(..., .newline, sep = "")
-  if (length(par$log) > 0) {
-    write(str, file = par$log, append = TRUE)
+write_fun <- function(file, ...) {
+  str <- paste0(..., sep = "")
+  if (length(file) > 0) {
+    write(sub("\n$", "", str), file = file, append = TRUE)
   } else {
     cat(str)
   }
 }
 
-log_fun("Parsed input arguments.")
+write_fun(par$log, "INFO:Parsed input arguments.\n")
 
-str <- paste0(names(par), ": ", par, "\n", collapse = "")
+str <- paste0(names(par), ": \"", par, "\"\n", collapse = "")
 
 if (length(par$output) > 0) {
-  log_fun('Writing output to file')
-  write(str, par$output)
+  write_fun(par$log, 'INFO:Writing output to file\n')
 } else {
-  log_fun('Printing output to console')
-  cat(str)
+  write_fun(par$log, 'INFO:Printing output to console\n')
 }
+write_fun(par$output, str)
