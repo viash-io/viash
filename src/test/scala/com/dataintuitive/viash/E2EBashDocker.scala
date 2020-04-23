@@ -81,7 +81,7 @@ class E2EBashDocker extends FunSuite {
           executable.toString(),
           executable.toString(),
           "--real_number", "10.5",
-          "--whole_number", "10",
+          "--whole_number=10",
           "-s", "a string with a few spaces",
           "--truth",
           "--output", "/data/output.txt",
