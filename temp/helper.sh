@@ -5,7 +5,7 @@ reset=`tput sgr0`
 
 function run_tests {
   if [ -f build.sbt ]; then
-    echo "${green}Running tests"
+    echo ">> ${green}Running tests"
     sbt test
   else
     echo "${red}build.sbt not found. Are you in the right directory?${reset}"
@@ -14,7 +14,7 @@ function run_tests {
 
 function assembly_without_testing {
   if [ -f build.sbt ]; then
-    echo "${green}Building jar"
+    echo ">> ${green}Building jar"
     sbt 'set test in assembly := {}' assembly
   else
     echo "build.sbt not found. Are you in the right directory?"
@@ -23,7 +23,7 @@ function assembly_without_testing {
 
 function assembly {
   if [ -f build.sbt ]; then
-    echo "${green}Running tests and building jar"
+    echo ">> ${green}Running tests and building jar"
     sbt assembly
   else
     echo "${red}build.sbt not found. Are you in the right directory?${reset}"
