@@ -1,41 +1,44 @@
-name: filter_table
-description: |
-  Filtering a table by a particular string column.
+name: testr
+description: | 
+  Prints out the parameter values.
+  Checking what happens with multiline descriptions.
 platform: R
-arguments:
-- name: "--input"
-  alternatives: ["-i"]
+arguments: 
+- name: "input"
   type: file
-  description: The path to a table to be filtered.
-  mustExist: true
+  description: An input file with positional arguments.
+  direction: input
+- name: "--real_number"
+  type: double
+  description: A real number with positional arguments.
   required: true
-  default: train.csv
-- name: "--format"
-  alternatives: ["-f"]
-  type: string
-  description: The format of the input and output files.
-  default: csv
-  required: false
-  values: [csv, tsv, rds, h5]
-- name: "--column_name"
-  alternatives: ["-c"]
-  type: string
-  description: The name of the column by which to filter.
-  default: Sex
+- name: "--whole_number"
+  type: integer
+  description: A whole number with a standard flag.
   required: true
-- name: "--value"
-  alternatives: ["-v"]
+- name: "-s"
   type: string
-  description: Only rows for which the column contains this value will pass the filter.
-  default: male
+  description: A sentence or word with a short flag.
   required: true
+- name: "--truth"
+  type: boolean
+  description: A switch flag.
+  flagValue: true
 - name: "--output"
   alternatives: ["-o"]
   type: file
-  description: The path to the output file.
-  default: filtered.csv
-  required: true
+  description: Write the parameters to a json file.
   direction: output
+- name: "--log"
+  type: file
+  description: An optional log file.
+  direction: log
+- name: "--optional"
+  type: string
+  description: An optional string.
+- name: "--optional_with_default"
+  type: string
+  default: "The default value."
 resources:
 - name: main.R
   path: ./code.R
