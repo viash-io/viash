@@ -4,6 +4,7 @@ import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.platforms.{NativePlatform, BashPlatform}
 import com.dataintuitive.viash.targets.environments._
 import java.nio.file.Paths
+import com.dataintuitive.viash.helpers.BashHelper
 
 case class DockerTarget(
   image: String,
@@ -45,31 +46,33 @@ case class DockerTarget(
     /**
      * Note: This is not a good place to check for platform types, separation of concern-wise.
      */
+    def escape(str: String) = {
+      str.replaceAll("([\\$`])", "\\\\$1")
+    }
     val executionCode = fun2.platform match {
       case None => mainPath
       case Some(NativePlatform) =>
         mainResource.path.map(_ + " $VIASHARGS").getOrElse("echo No command provided")
       case Some(BashPlatform) =>
-        "\nset -- $VIASHARGS\n" + fun2.mainCodeWithArgParse.get.replaceAll("\\$", "\\\\\\$")
-      case Some(pl) => {
-        val code = fun2.mainCodeWithArgParse.get.replaceAll("\\$", "\\\\\\$")
-
         s"""
-        |if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
-        |cat > "$mainPath" << 'VIASHMAIN'
-        |$code
-        |VIASHMAIN
-        |${pl.command(mainPath)} $$VIASHARGS
-        |""".stripMargin
+          |set -- $$VIASHARGS
+          |${escape(fun2.mainCodeWithArgParse.get)}
+          |""".stripMargin
+      case Some(pl) => {
+        s"""
+          |if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
+          |cat > "$mainPath" << 'VIASHMAIN'
+          |${escape(fun2.mainCodeWithArgParse.get)}
+          |VIASHMAIN
+          |${pl.command(mainPath)} $$VIASHARGS
+          |""".stripMargin
       }
     }
 
     // generate bash document
-    // TODO: Maybe BashPlatform oneliners will fail here?
-    val (heredocStart, heredocEnd) = if (executionCode.contains("\n")) {
-      ("cat << VIASHEOF | ", "\nVIASHEOF")
-    } else {
-      ("", "")
+    val (heredocStart, heredocEnd) = fun2.platform match {
+      case None | Some(NativePlatform) => ("", "")
+      case Some(_) => ("cat << VIASHEOF | ", "\nVIASHEOF")
     }
 
     val bash =
@@ -170,11 +173,6 @@ case class DockerTarget(
   }
 
   def generateBashParsers(functionality: Functionality, runImageName: String) = {
-    // helper function for quoting arguments before passing again
-    def saveArgument(arg: String) = {
-      s"""VIASHARGS="$$VIASHARGS `quote "$arg"`""""
-    }
-
     // remove extra volume args if extra parameters are not desired
     // -> when the executable's cli does not accept the volume arguments
     val volumeArgFix = functionality.platform match {
@@ -206,13 +204,12 @@ case class DockerTarget(
           s"""
             |        --${vol.name})
             |            ${vol.name.toUpperCase()}="$$2"
-            |            ${volumeArgFix}${saveArgument("$1")}
-            |            ${volumeArgFix}${saveArgument("$2")}
+            |            ${volumeArgFix}${BashHelper.quoteSaves("VIASHARGS", "$1", "$2")}
             |            shift 2 # past argument and value
             |            ;;
             |        --${vol.name}=*)
             |            ${vol.name.toUpperCase()}=`echo $$1 | sed 's/^--${vol.name}=//'`
-            |            ${volumeArgFix}${saveArgument("$1")}
+            |            ${volumeArgFix}${BashHelper.quoteSaves("VIASHARGS", "$1")}
             |            shift # past argument
             |            ;;""".stripMargin
         ).mkString("")
@@ -224,9 +221,8 @@ case class DockerTarget(
       } else {
         s"docker build -t $runImageName ."
       }
-    s"""function quote {
-      |  echo $$1 | sed "s/'/'\\"'\\"'/g" | sed "s#^[^-].*#'&'#"
-      |}
+    s"""${BashHelper.quoteFunction}
+      |
       |VIASHARGS=''
       |while [[ $$# -gt 0 ]]; do
       |    case "$$1" in
@@ -235,7 +231,7 @@ case class DockerTarget(
       |            exit 0
       |            ;;$volumeParsers
       |        *)    # unknown option
-      |            ${saveArgument("$1")}
+      |            ${BashHelper.quoteSaves("VIASHARGS", "$1")}
       |            shift # past argument
       |            ;;
       |    esac

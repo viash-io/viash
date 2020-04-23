@@ -1,6 +1,7 @@
 package com.dataintuitive.viash.functionality.platforms
 
 import com.dataintuitive.viash.functionality._
+import com.dataintuitive.viash.helpers.BashHelper
 
 case object BashPlatform extends Platform {
   val `type` = "bash"
@@ -21,7 +22,9 @@ case object BashPlatform extends Platform {
     //  * does file exist?
     //  * is value in list of possible values?
 
-    s"""${generateHelp(functionality, params)}
+    s"""${BashHelper.quoteFunction}
+      |
+      |${generateHelp(functionality, params)}
       |
       |${generateParser(functionality, params)}
       |
@@ -48,8 +51,7 @@ case object BashPlatform extends Platform {
         |   echo""".stripMargin
     })
 
-    s"""Help()
-      |{
+    s"""function Help {
       |   # Display Help
       |   echo "Usage:" # ... TODO fillin
       |   echo "${functionality.description.map(removeNewlines).getOrElse("")}"
@@ -62,9 +64,7 @@ case object BashPlatform extends Platform {
   private def argStore(param: DataObject[_], name: String, store: String, argsConsumed: Int) = {
     val passStr =
       if (param.passthrough) {
-        // add quotes only after first arg
-        val xxx = (1 to argsConsumed).map{ i => if (i == 1) " $" + i else " '$" + i + "'" }
-        "\n            PASSTHROUGH=\"$PASSTHROUGH" + xxx.mkString + "\""
+        "\n            " + BashHelper.quoteSave("PASSTHROUGH", (1 to argsConsumed).map("$" + _))
       } else {
         ""
       }
@@ -78,7 +78,8 @@ case object BashPlatform extends Platform {
   }
 
   def generateParser(functionality: Functionality, params: List[DataObject[_]]): String = {
-    // construct default values
+    // construct default values, e.g.
+    // par_foo="defaultvalue"
     val defaultsStrs = params.flatMap(param => {
       // if boolean object has a flagvalue, add the inverse of it as a default value
       val default =
