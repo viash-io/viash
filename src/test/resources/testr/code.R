@@ -1,39 +1,34 @@
-library(magrittr, warn.conflicts = FALSE)
-library(readr, warn.conflicts = FALSE)
-library(dplyr, warn.conflicts = FALSE)
-
 ### PORTASH START
 par <- list(
-  input = "input.csv",
-  format = "csv",
-  output = "output.csv",
-  column_name = "Sex",
-  value = "male"
+  input = "input.txt",
+  real_number = 123.456,
+  whole_number = 789,
+  s = "...",
+  truth = TRUE,
+  output = "output.txt",
+  log = "log.txt",
+  optional = "help",
+  optional_with_default = "me"
 )
 ### PORTASH END
 
-# Import data
-read_fun <- switch(
-  par$format,
-  "csv" = readr::read_csv,
-  "tsv" = readr::read_tsv,
-  "rds" = readr::read_rds,
-  "h5" = stop("h5 files are currently not supported.")
-)
-table <- read_fun(par$input)
+log_fun <- function(..., .newline = "\n") {
+  str <- paste0(..., .newline, sep = "")
+  if (length(par$log) > 0) {
+    write(str, file = par$log, append = TRUE)
+  } else {
+    cat(str)
+  }
+}
 
-# Filter data.
-filtered_table <-
-  table %>%
-  filter(.data[[par$column_name]] == par$value)
+log_fun("Parsed input arguments.")
 
-# Write data to file
-write_fun <- switch(
-  par$format,
-  "csv" = readr::write_csv,
-  "tsv" = readr::write_tsv,
-  "rds" = readr::write_rds,
-  "h5" = stop("h5 files are currently not supported.")
-)
-write_fun(filtered_table, par$output)
+str <- paste0(names(par), ": ", par, "\n", collapse = "")
 
+if (length(par$output) > 0) {
+  log_fun('Writing output to file')
+  write(str, par$output)
+} else {
+  log_fun('Printing output to console')
+  cat(str)
+}
