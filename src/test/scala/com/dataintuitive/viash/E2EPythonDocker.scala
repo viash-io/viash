@@ -103,7 +103,7 @@ class E2EPythonDocker extends FunSuite {
     assert(logLines.contains("INFO:root:Parsed input arguments"))
   }
 
-  test("Alternative params") {
+  test("Alternative params", DockerTest) {
     val stdout =
       Exec.run(
         Seq(

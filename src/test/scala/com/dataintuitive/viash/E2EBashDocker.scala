@@ -46,14 +46,14 @@ class E2EBashDocker extends FunSuite {
     assert(stdout.contains("latest: Pulling from "))
   }
 
-  test("Check whether the executable can run") {
+  test("Check whether the executable can run", DockerTest) {
     Exec.run(
       Seq(executable.toString(), "--help"),
       temporaryFolder
     )
   }
 
-  test("Check whether particular keywords can be found in the usage") {
+  test("Check whether particular keywords can be found in the usage", DockerTest) {
     val stdout =
       Exec.run(
         Seq(executable.toString(), "--help"),
@@ -70,7 +70,7 @@ class E2EBashDocker extends FunSuite {
 
   }
 
-  test("Check whether output is correctly created") {
+  test("Check whether output is correctly created", DockerTest) {
     val output = Paths.get(tempFolStr, "output.txt").toFile()
     val log = Paths.get(tempFolStr, "log.txt").toFile()
 
@@ -115,7 +115,7 @@ class E2EBashDocker extends FunSuite {
     assert(logLines.contains("INFO: Parsed input arguments"))
   }
 
-  test("Alternative params") {
+  test("Alternative params", DockerTest) {
     val stdout =
       Exec.run(
         Seq(
