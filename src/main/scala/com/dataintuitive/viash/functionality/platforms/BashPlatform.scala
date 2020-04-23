@@ -61,22 +61,6 @@ case object BashPlatform extends Platform {
       |}""".stripMargin
   }
 
-  private def argStore(param: DataObject[_], name: String, store: String, argsConsumed: Int) = {
-    val passStr =
-      if (param.passthrough) {
-        "\n            " + BashHelper.quoteSave("PASSTHROUGH", (1 to argsConsumed).map("$" + _))
-      } else {
-        ""
-      }
-    s"""        $name)
-      |            par_${param.plainName}=$store$passStr
-      |            shift $argsConsumed
-      |            ;;""".stripMargin
-  }
-  private def argStoreSed(param: DataObject[_], name: String) = {
-    argStore(param, name, "`echo $1 | sed 's/^" + name + "=//'`", 1)
-  }
-
   def generateParser(functionality: Functionality, params: List[DataObject[_]]): String = {
     // construct default values, e.g.
     // par_foo="defaultvalue"
@@ -95,32 +79,35 @@ case object BashPlatform extends Platform {
     // gather parse code for params
     val wrapperParams = params.filterNot(_.otype == "")
     val parseStrs = wrapperParams.map(param => {
+      val passthroughVariable = if (param.passthrough) Some("PASSTHROUGH") else None
+      val storeVariable = "par_" + param.plainName
+
       if (param.isInstanceOf[BooleanObject] && param.asInstanceOf[BooleanObject].flagValue.isDefined) {
         val bo = param.asInstanceOf[BooleanObject]
         val fv = bo.flagValue.get
 
         // params of the form --param ...
-        val part1 = argStore(param, param.name, fv.toString(), 1)
+        val part1 = BashHelper.argStore(param.name, storeVariable, fv.toString(), 1, passthroughVariable)
         // Alternatives
         val moreParts = param.alternatives.getOrElse(Nil).map(alt => {
-          argStore(param, alt, fv.toString(), 1)
+          BashHelper.argStore(alt, storeVariable, fv.toString(), 1, passthroughVariable)
         })
 
         (part1 :: moreParts).mkString("\n")
       } else {
         // params of the form --param ...
         val part1 = param.otype match {
-          case "---" | "--" | "-" => argStore(param, param.name, "\"$2\"", 2)
+          case "---" | "--" | "-" => BashHelper.argStore(param.name, storeVariable, "\"$2\"", 2, passthroughVariable)
           case "" => Nil
         }
         // params of the form --param=..., except -param=... is not allowed
         val part2 = param.otype match {
-            case "---" | "--" => List(argStoreSed(param, param.name + "=*"))
+            case "---" | "--" => List(BashHelper.argStoreSed(param.name, storeVariable, passthroughVariable))
             case "-" | "" => Nil
           }
         // Alternatives
         val moreParts = param.alternatives.getOrElse(Nil).map(alt => {
-          argStore(param, alt, "\"$2\"", 2)
+          BashHelper.argStore(alt, storeVariable, "\"$2\"", 2, passthroughVariable)
         })
 
         (part1 :: part2 ::: moreParts).mkString("\n")
