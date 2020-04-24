@@ -74,6 +74,11 @@ case class BooleanObject(
     passthrough: Boolean = false
 ) extends DataObject[Boolean] {
   override val `type` = "boolean"
+
+  require(
+    (default == None) != (flagValue == None),
+    message = s"Parameter $name: exactly one of default and flagValue must be defined, the other undefined."
+  )
 }
 
 case class FileObject(

@@ -8,7 +8,7 @@ trait ResourceTrait {
 
   require(
     (path == None) != (code == None),
-    message = "Exactly one of path and code must be defined, the other undefined."
+    message = s"Resource $name: exactly one of path and code must be defined, the other undefined."
   )
 }
 

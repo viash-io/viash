@@ -3,21 +3,20 @@ package com.dataintuitive.viash
 import org.scalatest.FunSuite
 import java.nio.file.{Path, Paths, Files}
 import java.io.File
+import sys.process.Process
 import com.dataintuitive.viash.functionality.Functionality
 import scala.io.Source
 import scala.reflect.io.Directory
 
-class TestMainWithPythonDocker extends FunSuite {
+class E2EPythonNative extends FunSuite {
   // which platform to test
   val testName = "testpython"
   val funcFile = getClass.getResource(s"/$testName/functionality.yaml").getPath
-  val platFile = getClass.getResource(s"/$testName/platform_docker.yaml").getPath
+  val platFile = getClass.getResource(s"/$testName/platform_native.yaml").getPath
 
   val temporaryFolder = Files.createTempDirectory(Paths.get("/tmp"), "viash_tester").toFile()
 
   val tempFolStr = temporaryFolder.toString()
-
-  println(tempFolStr)
 
   // parse functionality from file
   val functionality = Functionality.parse(new File(funcFile))
@@ -39,15 +38,14 @@ class TestMainWithPythonDocker extends FunSuite {
     assert(executable.canExecute())
   }
 
-  test("Check whether the executable can build the image", DockerTest) {
-    val stdout = Exec.run(
-      Seq(executable.toString(), "---setup"),
+  test("Check whether the executable can run") {
+    Exec.run(
+      Seq(executable.toString(), "--help"),
       temporaryFolder
     )
-    assert(stdout.contains("Successfully built "))
   }
 
-  test("Check whether particular keywords can be found in the usage", DockerTest) {
+  test("Check whether particular keywords can be found in the usage") {
     val stdout =
       Exec.run(
         Seq(executable.toString(), "--help"),
@@ -64,7 +62,7 @@ class TestMainWithPythonDocker extends FunSuite {
 
   }
 
-  test("Check whether output is correctly created", DockerTest) {
+  test("Check whether output is correctly created") {
     val output = Paths.get(tempFolStr, "output.txt").toFile()
     val log = Paths.get(tempFolStr, "log.txt").toFile()
 
@@ -74,13 +72,13 @@ class TestMainWithPythonDocker extends FunSuite {
           executable.toString(),
           executable.toString(),
           "--real_number", "10.5",
-          "--whole_number", "10",
+          "--whole_number=10",
           "-s", "a string with a few spaces",
           "--truth",
-          "--output", "/data/output.txt",
-          "--log", "/data/log.txt",
+          "--output", output.toString(),
+          "--log", log.toString(),
           "--optional", "foo",
-          "--data", tempFolStr
+          "--optional_with_default", "bar"
         ),
         temporaryFolder
       )
@@ -89,15 +87,43 @@ class TestMainWithPythonDocker extends FunSuite {
     assert(log.exists())
 
     val outputLines = Source.fromFile(output).mkString
-    assert(outputLines.contains(s""""input": "${executable.toString()}""""))
-    assert(outputLines.contains(""""real_number": 10.5"""))
-    assert(outputLines.contains(""""whole_number": 10"""))
-    assert(outputLines.contains(""""s": "a string with a few spaces""""))
-    assert(outputLines.contains(""""truth": true"""))
-    assert(outputLines.contains(s""""output": "/data/output.txt""""))
-    assert(outputLines.contains(s""""log": "/data/log.txt""""))
+    assert(outputLines.contains(s"""input: "${executable.toString()}""""))
+    assert(outputLines.contains("""real_number: "10.5""""))
+    assert(outputLines.contains("""whole_number: "10""""))
+    assert(outputLines.contains("""s: "a string with a few spaces""""))
+    assert(outputLines.contains("""truth: "True""""))
+    assert(outputLines.contains(s"""output: "${output.toString()}""""))
+    assert(outputLines.contains(s"""log: "${log.toString()}""""))
+    assert(outputLines.contains("""optional: "foo""""))
+    assert(outputLines.contains("""optional_with_default: "bar""""))
 
     val logLines = Source.fromFile(log).mkString
     assert(logLines.contains("INFO:root:Parsed input arguments"))
+  }
+
+  test("Alternative params") {
+    val stdout =
+      Exec.run(
+        Seq(
+          executable.toString(),
+          "test",
+          "--real_number", "123.456",
+          "--whole_number", "789",
+          "-s", "my$weird#string"
+        ),
+        temporaryFolder
+      )
+
+    assert(stdout.contains("""input: "test""""))
+    assert(stdout.contains("""real_number: "123.456""""))
+    assert(stdout.contains("""whole_number: "789""""))
+    assert(stdout.contains("""s: "my$weird#string""""))
+    assert(stdout.contains("""truth: "False""""))
+    assert(stdout.contains("""output: "None""""))
+    assert(stdout.contains("""log: "None""""))
+    assert(stdout.contains("""optional: "None""""))
+    assert(stdout.contains("""optional_with_default: "The default value.""""))
+
+    assert(stdout.contains("INFO:root:Parsed input arguments"))
   }
 }

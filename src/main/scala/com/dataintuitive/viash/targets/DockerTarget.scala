@@ -4,6 +4,7 @@ import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.platforms.{NativePlatform, BashPlatform}
 import com.dataintuitive.viash.targets.environments._
 import java.nio.file.Paths
+import com.dataintuitive.viash.helpers.BashHelper
 
 case class DockerTarget(
   image: String,
@@ -45,29 +46,32 @@ case class DockerTarget(
     /**
      * Note: This is not a good place to check for platform types, separation of concern-wise.
      */
+
     val executionCode = fun2.platform match {
       case None => mainPath
       case Some(NativePlatform) =>
         mainResource.path.map(_ + " $VIASHARGS").getOrElse("echo No command provided")
       case Some(BashPlatform) =>
-        "\nset -- $VIASHARGS\n" + fun2.mainCodeWithArgParse.get.replaceAll("\\$", "\\\\\\$")
-      case Some(pl) => {
-        val code = fun2.mainCodeWithArgParse.get.replaceAll("\\$", "\\\\\\$")
-
         s"""
-        |if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
-        |cat > "$mainPath" << 'VIASHMAIN'
-        |$code
-        |VIASHMAIN
-        |${pl.command(mainPath)} $$VIASHARGS
-        |""".stripMargin
+          |set -- $$VIASHARGS
+          |${BashHelper.escape(fun2.mainCodeWithArgParse.get)}
+          |""".stripMargin
+      case Some(pl) => {
+        s"""
+          |if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
+          |cat > "$mainPath" << 'VIASHMAIN'
+          |${BashHelper.escape(fun2.mainCodeWithArgParse.get)}
+          |VIASHMAIN
+          |${pl.command(mainPath)} $$VIASHARGS
+          |""".stripMargin
       }
     }
 
     // generate bash document
-    // TODO: Maybe BashPlatform oneliners will fail here?
-    val heredocStart = if (executionCode.contains("\n")) { "cat << VIASHEOF | " } else { "" }
-    val heredocEnd = if (executionCode.contains("\n")) { "\nVIASHEOF" } else { "" }
+    val (heredocStart, heredocEnd) = fun2.platform match {
+      case None | Some(NativePlatform) => ("", "")
+      case Some(_) => ("cat << VIASHEOF | ", "\nVIASHEOF")
+    }
 
     val bash =
       Resource(
@@ -161,23 +165,16 @@ case class DockerTarget(
 
     // process volume parameter
     val volumesGet = volumes.getOrElse(Nil)
-    val volStr = volumesGet.map(vol => s"-v $$${vol.name.toUpperCase()}:${vol.mount} ").mkString("")
+    val volStr = volumesGet.map(vol => s"-v $$${vol.variable}:${vol.mount} ").mkString("")
 
     portStr + volStr + "-i --entrypoint bash"
   }
 
   def generateBashParsers(functionality: Functionality, runImageName: String) = {
-    // helper function for quoting arguments before passing again
-    def saveArgument(arg: String) = {
-      s"""VIASHARGS="$$VIASHARGS '`echo $arg | sed \\\"s/'/'\\\\\\\"'\\\\\\\"'/g\\\"`'""""
-    }
-
     // remove extra volume args if extra parameters are not desired
-    // -> when the executable's cli does not accept the volume arguments
-    val volumeArgFix = functionality.platform match {
-      case None => "# "
-      case Some(NativePlatform) => "# "
-      case _ => ""
+    val storeVariable = functionality.platform match {
+      case None | Some(NativePlatform) => None
+      case _ => Some("VIASHARGS")
     }
 
     // generate volume checks
@@ -187,8 +184,8 @@ case class DockerTarget(
       } else {
         volumes.getOrElse(Nil)
           .map(vol =>
-            s"""if [ -z $${${vol.name.toUpperCase()}+x} ]; then
-              |  ${vol.name.toUpperCase()}=`pwd`; # todo: produce error here
+            s"""if [ -z $${${vol.variable}+x} ]; then
+              |  ${vol.variable}=`pwd`; # todo: produce error here
               |fi""".stripMargin
           )
           .mkString("\n\n# provide temporary defaults for Docker\n", "\n", "")
@@ -201,29 +198,28 @@ case class DockerTarget(
       } else {
         volumes.getOrElse(Nil).map(vol =>
           s"""
-            |        --${vol.name})
-            |            ${vol.name.toUpperCase()}="$$2"
-            |            ${volumeArgFix}${saveArgument("$1")}
-            |            ${volumeArgFix}${saveArgument("$2")}
-            |            shift 2 # past argument and value
-            |            ;;
-            |        --${vol.name}=*)
-            |            ${vol.name.toUpperCase()}=`echo $$1 | sed 's/^--${vol.name}=//'`
-            |            ${volumeArgFix}${saveArgument("$1")}
-            |            shift # past argument
-            |            ;;""".stripMargin
-        ).mkString("")
+            |${BashHelper.argStore("--" + vol.name, vol.variable, "\"$2\"", 2, storeVariable)}
+            |${BashHelper.argStoreSed("--" + vol.name, vol.variable, storeVariable)}"""
+        ).mkString
       }
 
-    s"""VIASHARGS=''
+    val setup =
+      if (image == runImageName) { // if these are the same, then no dockerfile needs to be built
+        s"docker pull $runImageName"
+      } else {
+        s"docker build -t $runImageName ."
+      }
+    s"""${BashHelper.quoteFunction}
+      |
+      |VIASHARGS=''
       |while [[ $$# -gt 0 ]]; do
       |    case "$$1" in
       |        ---setup)
-      |            docker build -t $runImageName .
+      |            $setup
       |            exit 0
       |            ;;$volumeParsers
       |        *)    # unknown option
-      |            ${saveArgument("$1")}
+      |            ${BashHelper.quoteSaves("VIASHARGS", "$1")}
       |            shift # past argument
       |            ;;
       |    esac
@@ -234,4 +230,6 @@ case class DockerTarget(
 case class Volume(
   name: String,
   mount: String
-)
+) {
+  val variable = "VOLUME_" + name.toUpperCase()
+}
