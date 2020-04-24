@@ -7,7 +7,7 @@ case object RPlatform extends Platform {
   val commentStr = "#"
 
   def command(script: String) = {
-    "Rscript " + script
+    "Rscript $DIR/" + script
   }
 
   private def removeNewlines(s: String) = {

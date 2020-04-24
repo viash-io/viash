@@ -49,7 +49,7 @@ case class NextFlowTarget(
     val executionCode = functionality.platform match {
       case Some(NativePlatform) => mainResource.path.getOrElse("echo No command provided")
       case Some(BashPlatform) => fname
-      case Some(RPlatform) => "Rscript ${moduleDir}/main.R"
+      case Some(RPlatform) => fname
       case _    => { println("Not implemented yet"); mainPath}
     }
 

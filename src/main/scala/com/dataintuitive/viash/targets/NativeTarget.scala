@@ -68,6 +68,8 @@ case class NativeTarget(
             |
             |${setupCommands()}
             |
+            |DIR=$$(dirname "$$0")
+            |
             |$command "$$@"
           """.stripMargin),
           isExecutable = true
