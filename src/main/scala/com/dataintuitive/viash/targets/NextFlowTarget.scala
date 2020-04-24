@@ -26,7 +26,8 @@ case class NextFlowTarget(
   r: Option[REnvironment] = None,
   python: Option[PythonEnvironment] = None,
   executor: Option[String],
-  publishSubDir: Option[Boolean]
+  publishSubDir: Option[Boolean],
+  label: Option[String]
 ) extends Target {
   val `type` = "nextflow"
 
@@ -341,6 +342,11 @@ case class NextFlowTarget(
         case _ => "${params.outDir}/${id}"
       }
 
+      val labelString = label match {
+        case Some(str) => s"label '$str'"
+        case _ => ""
+      }
+
       val stageInMode = functionality.ftype match {
         case Some("unzip") => "copy"
         case _ => "symlink"
@@ -359,6 +365,8 @@ case class NextFlowTarget(
       s"""
         |
         |process simpleBashExecutor {
+        |  $labelString
+        |  tag "$${id}"
         |  echo { (params.debug == true) ? true : false }
         |  cache 'deep'
         |  stageInMode "$stageInMode"
