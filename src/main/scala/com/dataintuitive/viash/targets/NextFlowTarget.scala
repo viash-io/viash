@@ -1,7 +1,7 @@
 package com.dataintuitive.viash.targets
 
 import com.dataintuitive.viash.functionality.{Functionality, Resource, StringObject}
-import com.dataintuitive.viash.functionality.platforms.{BashPlatform, NativePlatform}
+import com.dataintuitive.viash.functionality.platforms.{BashPlatform, NativePlatform, RPlatform}
 import com.dataintuitive.viash.targets.environments._
 import com.dataintuitive.viash.functionality.{DataObject, FileObject, Direction}
 import com.dataintuitive.viash.functionality.{Input, Output}
@@ -13,9 +13,6 @@ import scala.reflect.ClassTag
  * Target class for generating NextFlow (DSL2) modules.
  * Most of the functionality is derived from the DockerTarget and we fall back to it.
  * That also means the syntax needs to be compatible.
- *
- * Extra fields:
- * - executor: the type of 'process' to use, explicitly added to the source files for consistency
  */
 case class NextFlowTarget(
   image: String,
@@ -51,7 +48,8 @@ case class NextFlowTarget(
     val mainPath = Paths.get(resourcesPath, mainResource.name).toFile().getPath()
     val executionCode = functionality.platform match {
       case Some(NativePlatform) => mainResource.path.getOrElse("echo No command provided")
-      case Some(BashPlatform) => fname //mainResource.path.getOrElse("echo No command provided")
+      case Some(BashPlatform) => fname
+      case Some(RPlatform) => "Rscript ${moduleDir}/main.R"
       case _    => { println("Not implemented yet"); mainPath}
     }
 
@@ -364,7 +362,7 @@ case class NextFlowTarget(
 
       s"""
         |
-        |process simpleBashExecutor {
+        |process executor {
         |  $labelString
         |  tag "$${id}"
         |  echo { (params.debug == true) ? true : false }
@@ -429,7 +427,7 @@ case class NextFlowTarget(
         |            )
         |        }
         |
-        |    result_ = simpleBashExecutor(id_input_output_function_cli_) \\
+        |    result_ = executor(id_input_output_function_cli_) \\
         |        | join(id_input_params_) \\
         |        | map{ id, output, input, original_params ->
         |            new Tuple3(id, output, original_params)
@@ -482,7 +480,7 @@ case class NextFlowTarget(
         |            )
         |        }
         |
-        |    result_ = simpleBashExecutor(id_input_output_function_cli_) \\
+        |    result_ = executor(id_input_output_function_cli_) \\
         |        | join(id_input_params_) \\
         |        | map{ id, output, input, original_params ->
         |            new Tuple3(id, output, original_params)
@@ -542,6 +540,10 @@ case class NextFlowTarget(
       }
       case Some(BashPlatform) => {
         println("Add BashPlatform resources")
+        nativeTarget.modifyFunctionality(functionality).resources
+      }
+      case Some(RPlatform) => {
+        println("Add RPlatform resources")
         nativeTarget.modifyFunctionality(functionality).resources
       }
       case _    => {
