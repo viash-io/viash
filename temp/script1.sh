@@ -31,9 +31,3 @@ for a in `ls atoms`; do
   done
 done
 
-# Some custom runs (NXF related)
-
-$JAVA -f atoms/wrapped_filter/functionality.yaml \
-      -p atoms/wrapped_filter/platform_native.yaml \
-      export \
-      -o output/wrapped_filter_nextflow/bin

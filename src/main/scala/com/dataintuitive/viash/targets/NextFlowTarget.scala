@@ -35,8 +35,7 @@ case class NextFlowTarget(
 
   def modifyFunctionality(functionality: Functionality) = {
 
-    val dockerFunctionality = dockerTarget.modifyFunctionality(functionality)
-    // val nativeFunctionality = nativeTarget.modifyFunctionality(functionality)
+    // val dockerFunctionality = dockerTarget.modifyFunctionality(functionality)
 
     val resourcesPath = "/app"
 
@@ -46,8 +45,8 @@ case class NextFlowTarget(
     def quoteLong(str:String):String = if (str.contains("-")) '"' + str + '"' else str
 
     // get main script/binary
-    // Only the Native platform case is covered for the moment
     val mainResource = functionality.mainResource.get
+    println("mainResource: " + mainResource)
     val mainPath = Paths.get(resourcesPath, mainResource.name).toFile().getPath()
     val executionCode = functionality.platform match {
       case Some(NativePlatform) => mainResource.path.getOrElse("echo No command provided")
@@ -352,6 +351,11 @@ case class NextFlowTarget(
         case _ => "echo Nothing before"
       }
 
+      val outputStr = functionality.ftype match {
+        case Some("todir") => "${output}/*"
+        case _ => "${output}"
+      }
+
       s"""
         |
         |process simpleBashExecutor {
@@ -364,11 +368,15 @@ case class NextFlowTarget(
         |  input:
         |    tuple val(id), path(input), val(output), val(container), val(cli)
         |  output:
-        |    tuple val("$${id}"), path("$${output}")
+        |    tuple val("$${id}"), path("${outputStr}")
         |  script:
         |    \"\"\"
         |    $preHook
+        |    # Adding NXF's `$$moduleDir` to the path in order to resolve our own wrappers
+        |    export PATH="$${moduleDir}:$$PATH"
+        |    # Echo what will be run
         |    echo Running: $$cli
+        |    # Actually run the command
         |    $$cli
         |    \"\"\"
         |
@@ -519,14 +527,24 @@ case class NextFlowTarget(
                   setup_main_entrypoint)
     )
 
-    // println(nativeFunctionality.resources)
-    // val nativeResources = nativeFunctionality.resources
-    // val resourcesInBin = nativeResources.map(r => r.copy(path = "bin/" + r.path))
-    // println(resourcesInBin)
+    val additionalResources = functionality.platform match {
+      case Some(NativePlatform) => {
+        println("No additional resources required")
+        Nil
+      }
+      case Some(BashPlatform) => {
+        println("Add BashPlatform resources")
+        nativeTarget.modifyFunctionality(functionality).resources
+      }
+      case _    => {
+        println("Not implemented yet")
+        Nil
+      }
+    }
 
-    dockerFunctionality.copy(
+    functionality.copy(
         resources =
-          List(setup_nextflowconfig, setup_main)
+          additionalResources ::: List(setup_nextflowconfig, setup_main)
     )
   }
 
