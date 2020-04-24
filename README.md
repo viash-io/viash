@@ -13,6 +13,42 @@ We can look at this from a myriad of angles, but let's cover a few ones:
 
 And the list indeed goes on. We thought it time to revisit the whole dependency management thing. Not just by stating that docker is the solution (it may be part of the solution) but to rethink the whole challenge from scratch.
 
+## `NextFlowTarget` specific info
+
+This target look at the `ftype` attribute. Let us take a look at the different possibilities with an example of each:
+
+### `todir`
+
+One command generates a number of files, irrespective of the fact if all these files are relevant/necessary or not.
+
+For instance: I have a `tgz` bundle that needs to be untarred, but I only need the contents of a subdirectory. I'm aware there is an option for `tar` to extract subdirs, but let us assume for a moment this option does not exist.
+
+We let `tar` extract the archive to a directory. The output of the module is a Channel containing and array as such:
+
+```
+[ sampleID, [ file1, file2, dir1, ...], configMap ]
+```
+
+In other words, the path element of the output triplet is an array of paths. We can flatten this nested array using something like this:
+
+```groovy
+output_ \
+  | flatMap{ it ->
+      it.collect{ p -> [ it[0], p, it[2] ] } }
+```
+
+### `transform`
+
+Modify a file, the output is of the same format as the input.
+
+For instance: add additional annotations in a `.h5ad` file.
+
+### `convert`
+
+Convert from one format to an other.
+
+An example is: unzip a file.
+
 ## The _what_ and _how_?
 
 ... tbc ...
