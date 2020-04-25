@@ -269,7 +269,10 @@ case class NextFlowTarget(
       case _ => """
           |def outFromIn(inputStr) {
           |
-          |    return "I-have-no-idea-what-this-file-should-be"
+          |    println(">>> Having a hard time generating an output file name.")
+          |    println(">>> Is the ftype attribute filled out?")
+          |
+          |    return "output"
           |}
           |""".stripMargin('|')
     }
