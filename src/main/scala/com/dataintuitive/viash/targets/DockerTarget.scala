@@ -62,7 +62,7 @@ case class DockerTarget(
     val rInstallCommands = r.map(_.getInstallCommands()).getOrElse(Nil)
     val pythonInstallCommands = python.map(_.getInstallCommands()).getOrElse(Nil)
 
-    val deps = List(aptInstallCommands, rInstallCommands, pythonInstallCommands, resourceNames).flatten
+    val deps = List(aptInstallCommands, rInstallCommands, pythonInstallCommands).flatten
 
     // if no extra dependencies are needed, the provided image can just be used,
     // otherwise need to construct a separate docker container
