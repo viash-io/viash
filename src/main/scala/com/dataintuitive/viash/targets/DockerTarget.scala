@@ -61,7 +61,6 @@ case class DockerTarget(
     val aptInstallCommands = apt.map(_.getInstallCommands()).getOrElse(Nil)
     val rInstallCommands = r.map(_.getInstallCommands()).getOrElse(Nil)
     val pythonInstallCommands = python.map(_.getInstallCommands()).getOrElse(Nil)
-    val resourceNames = functionality.resources.map(_.name).filterNot(_.startsWith("main"))
 
     val deps = List(aptInstallCommands, rInstallCommands, pythonInstallCommands, resourceNames).flatten
 
@@ -76,16 +75,8 @@ case class DockerTarget(
 
       val dockerFile =
         s"FROM $image\n" +
-          runCommands.map(li => if (li.isEmpty) "" else li.mkString("RUN ", " && \\\n  ", "\n")).mkString("\n") +
-          {
-            if (!resourceNames.isEmpty) {
-              s"""COPY ${resourceNames.mkString(" ")} $resourcesPath/
-                |WORKDIR $resourcesPath
-                """.stripMargin
-            } else {
-              ""
-            }
-          }
+          runCommands.map(li => if (li.isEmpty) "" else li.mkString("RUN ", " && \\\n  ", "\n")).mkString("\n")
+
       val setupCommands =
         s"""# create temporary directory to store temporary dockerfile in
           |tmpdir=$$(mktemp -d /tmp/viashdocker-${functionality.name}-XXXXXX)
