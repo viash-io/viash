@@ -20,86 +20,42 @@ case class DockerTarget(
   def modifyFunctionality(functionality: Functionality) = {
     val resourcesPath = "/app"
 
-    // construct dockerfile, if needed
-    val dockerFile = makeDockerFile(functionality, resourcesPath)
+    // process docker mounts
+    val (volPreParse, volParsers, volPostParse, volInputs) = processDockerVolumes(functionality)
 
-    // get image name
-    val runImageName = if (dockerFile.isEmpty) image else "viash_autogen/" + functionality.name
+    // create setup
+    val (imageName, setupCommands) = processDockerSetup(functionality, resourcesPath)
 
     // add extra arguments to the functionality file for each of the volumes
-    val volInputs = volumes.getOrElse(Nil).map(vol =>
-      StringObject(
-        name = "--" + vol.name,
-        description = Some(s"Local path to mount directory for volume '${vol.name}'."),
-        required = Some(true),
-        direction = Input
-      )
-    )
     val fun2 = functionality.copy(
       arguments = functionality.arguments ::: volInputs
     )
 
-    // get main script
-    val mainResource = fun2.mainResource.get
-    val mainPath = Paths.get(resourcesPath, mainResource.name).toFile().getPath()
-
-    /**
-     * Note: This is not a good place to check for platform types, separation of concern-wise.
-     */
-
-    val executionCode = fun2.platform match {
-      case NativePlatform =>
-        mainResource.path.map(_ + " $VIASHARGS").getOrElse("echo No command provided")
-      case BashPlatform =>
-        s"""
-          |set -- $$VIASHARGS
-          |${BashHelper.escape(fun2.mainCodeWithArgParse.get)}
-          |""".stripMargin
-      case pl => {
-        s"""
-          |if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
-          |cat > "$mainPath" << 'VIASHMAIN'
-          |${BashHelper.escape(fun2.mainCodeWithArgParse.get)}
-          |VIASHMAIN
-          |${pl.command(mainPath)} $$VIASHARGS
-          |""".stripMargin
-      }
-    }
-
-    // generate bash document
-    val (heredocStart, heredocEnd) = fun2.platform match {
-      case NativePlatform => ("", "")
-      case _ => ("cat << VIASHEOF | ", "\nVIASHEOF")
-    }
-
+    // collect variables
     val dockerArgs = generateDockerRunArgs(functionality)
 
-    val bash =
-      Resource(
+    // create new bash script
+    val bashScript = Resource(
         name = functionality.name,
-        code = Some(s"""#!/bin/bash
-          |
-          |${generateBashParsers(fun2, runImageName)}
-          |
-          |if [ ! "$$(docker images -q $runImageName)" ]; then
-          |  echo "The Docker container for this application does not seem to have been built yet."
-          |  echo "Try running '${functionality.name} ---setup' first."
-          |  exit 1
-          |fi
-          |
-          |${heredocStart}docker run $dockerArgs $runImageName $executionCode$heredocEnd""".stripMargin),
+        code = Some(BashHelper.wrapScript(
+          executor = s"docker run $dockerArgs $imageName",
+          functionality = fun2,
+          resourcesPath = resourcesPath,
+          setupCommands = setupCommands,
+          preParse = volPreParse,
+          parsers = volParsers,
+          postParse = volPostParse
+        )),
         isExecutable = true
       )
 
     fun2.copy(
-      resources =
-        fun2.resources.filterNot(_.name.startsWith("main")) :::
-        dockerFile :::
-        List(bash)
+      resources = fun2.resources.filterNot(_.name.startsWith("main")) :::
+        List(bashScript)
     )
   }
 
-  def makeDockerFile(functionality: Functionality, resourcesPath: String) = {
+  def processDockerSetup(functionality: Functionality, resourcesPath: String) = {
     // get dependencies
     val aptInstallCommands = apt.map(_.getInstallCommands()).getOrElse(Nil)
     val rInstallCommands = r.map(_.getInstallCommands()).getOrElse(Nil)
@@ -111,52 +67,33 @@ case class DockerTarget(
     // if no extra dependencies are needed, the provided image can just be used,
     // otherwise need to construct a separate docker container
     if (deps.isEmpty) {
-      Nil
+      (image, s"docker pull $image")
     } else {
-      List(Resource(
-        name = "Dockerfile",
-        code = Some(
-          s"FROM $image\n" +
-            {
-              if (!aptInstallCommands.isEmpty) {
-                "\n" +
-                "# install apt requirements\n" +
-                aptInstallCommands.mkString("RUN ", " && \\\n  ", "\n")
-              } else {
-                ""
-              }
-            } +
-            {
-              if (!rInstallCommands.isEmpty) {
-                "\n" +
-                "# install R requirements\n" +
-                rInstallCommands.mkString("RUN ", " && \\\n  ", "\n")
-              } else {
-                ""
-              }
-            } +
-            {
-              if (!pythonInstallCommands.isEmpty) {
-                "\n" +
-                "# install Python requirements\n" +
-                pythonInstallCommands.mkString("RUN ", " && \\\n  ", "\n")
-              } else {
-                ""
-              }
-            } +
-            {
-              if (!resourceNames.isEmpty) {
-                s"""
-                  |# copy resources
-                  |COPY ${resourceNames.mkString(" ")} $resourcesPath/
-                  |WORKDIR $resourcesPath
-                  """.stripMargin
-              } else {
-                ""
-              }
+      val imageName = "viash_autogen/" + functionality.name
+
+      val runCommands = List(aptInstallCommands, rInstallCommands, pythonInstallCommands)
+
+      val dockerFile =
+        s"FROM $image\n" +
+          runCommands.map(li => if (li.isEmpty) "" else li.mkString("RUN ", " && \\\n  ", "\n")).mkString("\n") +
+          {
+            if (!resourceNames.isEmpty) {
+              s"""COPY ${resourceNames.mkString(" ")} $resourcesPath/
+                |WORKDIR $resourcesPath
+                """.stripMargin
+            } else {
+              ""
             }
-        )
-      ))
+          }
+      val setupCommands =
+        s"""# create temporary directory to store temporary dockerfile in
+          |tmpdir=$$(mktemp -d /tmp/viashdocker-${functionality.name}-XXXXXX)
+          |cat > $$tmpdir/Dockerfile << 'VIASHDOCKER'
+          |$dockerFile
+          |VIASHDOCKER
+          |docker build -t $imageName $$tmpdir
+          |rm -r $$tmpdir""".stripMargin
+      (imageName, setupCommands)
     }
   }
 
@@ -177,15 +114,25 @@ case class DockerTarget(
     portStr + volStr + entrypointStr + "-i"
   }
 
-  def generateBashParsers(functionality: Functionality, runImageName: String) = {
-    // remove extra volume args if extra parameters are not desired
+  def processDockerVolumes(functionality: Functionality) = {
     val storeVariable = functionality.platform match {
       case NativePlatform => None
       case _ => Some("VIASHARGS")
     }
 
-    // generate volume checks
-    val volumeDefaults =
+    val parsers =
+      if (volumes.getOrElse(Nil).isEmpty) {
+        ""
+      } else {
+        volumes.getOrElse(Nil).map(vol =>
+          s"""
+            |${BashHelper.argStore("--" + vol.name, vol.variable, "\"$2\"", 2, storeVariable)}
+            |${BashHelper.argStoreSed("--" + vol.name, vol.variable, storeVariable)}"""
+        ).mkString
+      }
+
+    val preParse = ""
+    val postParse =
       if (volumes.getOrElse(Nil).isEmpty) {
         ""
       } else {
@@ -198,40 +145,16 @@ case class DockerTarget(
           .mkString("\n\n# provide temporary defaults for Docker\n", "\n", "")
       }
 
-    // generate extra parsers for volumes
-    val volumeParsers =
-      if (volumes.getOrElse(Nil).isEmpty) {
-        ""
-      } else {
-        volumes.getOrElse(Nil).map(vol =>
-          s"""
-            |${BashHelper.argStore("--" + vol.name, vol.variable, "\"$2\"", 2, storeVariable)}
-            |${BashHelper.argStoreSed("--" + vol.name, vol.variable, storeVariable)}"""
-        ).mkString
-      }
+    val inputs = volumes.getOrElse(Nil).map(vol =>
+      StringObject(
+        name = "--" + vol.name,
+        description = Some(s"Local path to mount directory for volume '${vol.name}'."),
+        required = Some(true),
+        direction = Input
+      )
+    )
 
-    val setup =
-      if (image == runImageName) { // if these are the same, then no dockerfile needs to be built
-        s"docker pull $runImageName"
-      } else {
-        s"docker build -t $runImageName ."
-      }
-    s"""${BashHelper.quoteFunction}
-      |${BashHelper.removeFlagFunction}
-      |
-      |VIASHARGS=''
-      |while [[ $$# -gt 0 ]]; do
-      |    case "$$1" in
-      |        ---setup)
-      |            $setup
-      |            exit 0
-      |            ;;$volumeParsers
-      |        *)    # unknown option
-      |            ${BashHelper.quoteSaves("VIASHARGS", "$1")}
-      |            shift # past argument
-      |            ;;
-      |    esac
-      |done$volumeDefaults""".stripMargin
+    (preParse, parsers, postParse, inputs)
   }
 }
 

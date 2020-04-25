@@ -2,6 +2,7 @@ package com.dataintuitive.viash.helpers
 
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.platforms._
+import java.nio.file.Paths
 
 object BashHelper {
   val quoteFunction = {
@@ -47,55 +48,63 @@ object BashHelper {
     argStore(name + "=*", plainName, "`ViashRemoveFlags \"$1\"`", 1, storeUnparsed)
   }
 
-  def wrapScript(mainResource: Resource) = {
+  def wrapScript(
+      executor: String,
+      functionality: Functionality,
+      resourcesPath: String,
+      setupCommands: String,
+      preParse: String,
+      parsers: String,
+      postParse: String
+    ) = {
+    val mainResource = functionality.mainResource.get
 
     val extraImports =
-      s"""$quoteFunction
+      s"""# define helper functions
+        |$quoteFunction
         |$removeFlagFunction""".stripMargin
-    val setup =
+    val setupFunction =
       s"""function ViashSetup {
-        |  # do setup here
+        |$setupCommands
         |}""".stripMargin
-    val extraParsers = ""
-    val extraChecks = ""
 
     // DETERMINE HOW TO RUN THE CODE
     val code = ""
 
      // get main script
-//    val mainPath = Paths.get(resourcesPath, mainResource.name).toFile().getPath()
+    val mainPath = Paths.get(resourcesPath, mainResource.name).toFile().getPath()
 
-//    val executionCode = fun2.platform match {
-//      case Some(NativePlatform) =>
-//        mainResource.path.map(_ + " $VIASHARGS").getOrElse("echo No command provided")
-//      /*case Some(BashPlatform) =>
-//        s"""
-//          |set -- $$VIASHARGS
-//          |${BashHelper.escape(fun2.mainCodeWithArgParse.get)}
-//          |""".stripMargin*/
-//      case Some(pl) => {
-//        s"""
-//          |if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
-//          |cat > "$mainPath" << 'VIASHMAIN'
-//          |${BashHelper.escape(fun2.mainCodeWithArgParse.get)}
-//          |VIASHMAIN
-//          |${pl.command(mainPath)} $$VIASHARGS
-//          |""".stripMargin
-//      }
-//    }
-//
-//    // generate bash document
-//    val (heredocStart, heredocEnd) = fun2.platform match {
-//      case None | Some(NativePlatform) => ("", "")
-//      case Some(_) => ("cat << VIASHEOF | ", "\nVIASHEOF")
-//    }
+    val executionCode = functionality.platform match {
+      case NativePlatform =>
+        mainResource.path.map(_ + " $VIASHARGS").getOrElse("echo No command provided")
+      /*case BashPlatform =>
+        s"""
+          |set -- $$VIASHARGS
+          |${BashHelper.escape(fun2.mainCodeWithArgParse.get)}
+          |""".stripMargin*/
+      case pl => {
+        s"""
+          |if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
+          |cat > "$mainPath" << 'VIASHMAIN'
+          |${BashHelper.escape(functionality.mainCodeWithArgParse.get)}
+          |VIASHMAIN
+          |${pl.command(mainPath)} $$VIASHARGS
+          |""".stripMargin
+      }
+    }
+
+    // generate bash document
+    val (heredocStart, heredocEnd) = functionality.platform match {
+      case NativePlatform => ("", "")
+      case _ => ("cat << VIASHEOF | ", "\nVIASHEOF")
+    }
 
     /* GENERATE BASH SCRIPT */
     s"""#!/bin/bash
       |
       |$extraImports
-      |
-      |$setup
+      |$setupFunction
+      |$preParse
       |
       |VIASHARGS=''
       |while [[ $$# -gt 0 ]]; do
@@ -104,7 +113,7 @@ object BashHelper {
       |            ViashSetup
       |            exit 0
       |            ;;
-      |        $extraParsers
+      |$parsers
       |        *)    # unknown option
       |            ${quoteSaves("VIASHARGS", "$1")}
       |            shift # past argument
@@ -112,8 +121,8 @@ object BashHelper {
       |    esac
       |done
       |
-      |$extraChecks
+      |$postParse
       |
-      |$code""".stripMargin
+      |$heredocStart$executor $executionCode$heredocEnd""".stripMargin
   }
 }
