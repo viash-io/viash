@@ -3,6 +3,9 @@ green=`tput setaf 2`
 blue=`tput setaf 4`
 reset=`tput sgr0`
 
+SCRIPT_DIR=$( cd ${0%/*} && pwd -P )
+VIASH_DIR="$SCRIPT_DIR/../"
+
 function run_tests {
   if [ -f build.sbt ]; then
     echo ">> ${green}Running tests"
@@ -31,7 +34,7 @@ function assembly {
 }
 
 function viash {
-  java -jar target/scala-2.12/viash-assembly-0.0.1.jar $@
+  java -jar "$VIASH_DIR/target/scala-2.12/viash-assembly-0.0.1.jar" $@
 }
 
 function viash_export_all {
