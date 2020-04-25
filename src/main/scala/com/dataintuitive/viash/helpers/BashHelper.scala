@@ -29,7 +29,7 @@ object BashHelper {
   }
 
   def escape(str: String) = {
-    str.replaceAll("([\\$`])", "\\\\$1")
+    str.replaceAll("([\\$`])", "\\\\$1").replaceAll("\\\\\\$VIASHDIR", "\\$VIASHDIR")
   }
 
   def argStore(name: String, plainName: String, store: String, argsConsumed: Int, storeUnparsed: Option[String]) = {
@@ -102,6 +102,14 @@ object BashHelper {
 
     /* GENERATE BASH SCRIPT */
     s"""#!/bin/bash
+      |
+      |SOURCE="$${BASH_SOURCE[0]}"
+      |while [ -h "$$SOURCE" ]; do
+      |  DIR="$$( cd -P "$$( dirname "$$SOURCE" )" >/dev/null 2>&1 && pwd )"
+      |  SOURCE="$$(readlink "$$SOURCE")"
+      |  [[ $$SOURCE != /* ]] && SOURCE="$$DIR/$$SOURCE"
+      |done
+      |VIASHDIR="$$( cd -P "$$( dirname "$$SOURCE" )" >/dev/null 2>&1 && pwd )"
       |
       |$extraImports
       |$setupFunction
