@@ -98,6 +98,7 @@ class E2EPythonDocker extends FunSuite {
     assert(outputLines.contains("""optional: "foo""""))
     assert(outputLines.contains("""optional_with_default: "bar""""))
     assert(outputLines.contains(s"""data: "${tempFolStr}""""))
+    assert(outputLines.contains("""resources_dir: "/resources""""))
 
     val logLines = Source.fromFile(log).mkString
     assert(logLines.contains("INFO:root:Parsed input arguments"))
@@ -127,6 +128,7 @@ class E2EPythonDocker extends FunSuite {
     assert(stdout.contains("""optional: "None""""))
     assert(stdout.contains("""optional_with_default: "The default value.""""))
     assert(stdout.contains("""data: "/tmp/""""))
+    assert(stdout.contains("""resources_dir: "/resources""""))
 
     assert(stdout.contains("INFO:root:Parsed input arguments"))
   }

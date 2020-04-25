@@ -6,7 +6,8 @@ import sys.process.Process
 object Exec {
   def run(commands: Seq[String], path: File) = {
     try {
-      Process(commands, path).!!
+      Process(commands).!!
+      //Process(commands, path).!!
     } catch {
       case e: Throwable => {
         println(e.getMessage)

@@ -11,6 +11,7 @@ par <- list(
   optional_with_default = "me"
 )
 ### PORTASH END
+par$resources_dir <- resources_dir
 
 write_fun <- function(file, ...) {
   str <- paste0(..., sep = "")
