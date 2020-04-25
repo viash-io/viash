@@ -88,7 +88,7 @@ case class DockerTarget(
           |  exit 1
           |fi
           |
-          |${heredocStart}docker run ${dockerArgs} $runImageName $executionCode$heredocEnd""".stripMargin),
+          |${heredocStart}docker run $dockerArgs $runImageName $executionCode$heredocEnd""".stripMargin),
         isExecutable = true
       )
 
