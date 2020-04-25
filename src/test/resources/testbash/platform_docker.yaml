@@ -1,5 +1,5 @@
 type: docker
-image: rocker/tidyverse
+image: "bash:3.2"
 volumes:
 - name: data
   mount: /data
