@@ -2,6 +2,7 @@ package com.dataintuitive.viash.targets
 
 import com.dataintuitive.viash.functionality.{Functionality, Resource}
 import com.dataintuitive.viash.functionality.platforms.BashPlatform
+import com.dataintuitive.viash.helpers.BashHelper
 import com.dataintuitive.viash.targets.environments._
 
 case class NativeTarget(
@@ -10,75 +11,45 @@ case class NativeTarget(
 ) extends Target {
   val `type` = "native"
 
-  def setupCommands() = {
-    // create setup scripts
-    val rInstallCommands = r.map(_.getInstallCommands()).getOrElse(Nil)
-    val rInstallStr = if (!rInstallCommands.isEmpty) {
-      "\n  # install R requirements\n  " + rInstallCommands.mkString(" && \\\n    ")
-    } else {
-      ""
-    }
-    val pythonInstallCommands = python.map(_.getInstallCommands()).getOrElse(Nil)
-    val pythonInstallStr = if (!pythonInstallCommands.isEmpty) {
-      "\n  # install Python requirements\n  " + pythonInstallCommands.mkString(" && \\\n    ")
-    } else {
-      ""
-    }
-
-    s"""if [ "$$1" = "---setup" ]; then$rInstallStr$pythonInstallStr
-        |  exit 0
-        |fi""".stripMargin
-  }
-
   def modifyFunctionality(functionality: Functionality) = {
-    // create run scripts
-    val mainResource = functionality.mainResource.get
+    val resourcesPath = "$tempdir"
 
-    val newResources = functionality.platform match {
-      case BashPlatform => {
-        val code = functionality.mainCodeWithArgParse.get.split("\n")
-
-        val newCode =
-          code.takeWhile(_.startsWith("#!")).mkString("\n") +
-          "\n\n" + setupCommands() + "\n" +
-          code.dropWhile(_.startsWith("#!")).mkString("\n")
-
-        List(Resource(
-          name = functionality.name,
-          code = Some(newCode),
-          path = None,
-          isExecutable = true
-        ))
-      }
-      case pl => {
-        val res1 = mainResource.copy(
-          code = functionality.mainCodeWithArgParse,
-          path = None
-        )
-
-        val command = functionality.platform.command(mainResource.name)
-
-        val res2 = Resource(
-          name = functionality.name,
-          code = Some(s"""#!/bin/bash
-            |
-            |${setupCommands()}
-            |
-            |DIR=$$(dirname "$$0")
-            |
-            |$command "$$@"
-          """.stripMargin),
-          isExecutable = true
-        )
-
-        List(res1, res2)
-      }
-    }
+    // create new bash script
+    val bashScript = Resource(
+        name = functionality.name,
+        code = Some(BashHelper.wrapScript(
+          executor = "bash",
+          functionality = functionality,
+          resourcesPath = resourcesPath,
+          setupCommands = setupCommands,
+          preParse = "",
+          parsers = "",
+          postParse = s"tempdir=$$(mktemp -d /tmp/viashrun-${functionality.name}-XXXXXX",
+          postRun = "rm -r $tempdir"
+        )),
+        isExecutable = true
+      )
 
     functionality.copy(
-      resources =
-        functionality.resources.filterNot(_.name.startsWith("main")) :::
-        newResources
+      resources = functionality.resources.filterNot(_.name.startsWith("main")) :::
+        List(bashScript)
     )
+  }
+
+  def setupCommands = {
+    val rInstallCommands = r.map(_.getInstallCommands()).getOrElse(Nil)
+    val pythonInstallCommands = python.map(_.getInstallCommands()).getOrElse(Nil)
+
+    val runCommands = List(rInstallCommands, pythonInstallCommands)
+    val commands =
+      runCommands.map(li =>
+        if (li.isEmpty) {
+          ""
+        } else {
+          li.mkString("", " && \\\n  ", "\n")
+        }
+      ).mkString
+
+    if (commands == "") "echo Done\n" else commands
   }
 }
