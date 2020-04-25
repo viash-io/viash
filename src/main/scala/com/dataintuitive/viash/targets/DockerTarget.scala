@@ -38,9 +38,9 @@ case class DockerTarget(
     val bashScript = Resource(
         name = functionality.name,
         code = Some(BashHelper.wrapScript(
-          executor = s"docker run $dockerArgs $imageName",
+          executor = s"docker run $dockerArgs -v $$RESOURCES_DIR:/resources $imageName",
           functionality = fun2,
-          resourcesPath = resourcesPath,
+          resourcesPath = "/resources",
           setupCommands = setupCommands,
           preParse = volPreParse,
           parsers = volParsers,

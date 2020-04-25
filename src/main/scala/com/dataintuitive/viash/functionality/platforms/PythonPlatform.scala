@@ -7,7 +7,7 @@ case object PythonPlatform extends Platform {
   val commentStr = "#"
 
   def command(script: String) = {
-    "python " + script
+    "python \"" + script + "\""
   }
 
   def generateArgparse(functionality: Functionality): String = {
@@ -106,7 +106,7 @@ case object PythonPlatform extends Platform {
       |$reqFileStr
       |$allinParCheck
       |
-      |resources_dir = "$$VIASHDIR"
+      |resources_dir = "$$RESOURCES_DIR"
       |""".stripMargin
   }
 }

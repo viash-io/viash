@@ -8,7 +8,7 @@ case object BashPlatform extends Platform {
   val commentStr = "#"
 
   def command(script: String) = {
-    "bash " + script
+    "bash \"" + script + "\""
   }
 
   private def removeNewlines(s: String) = {
@@ -29,7 +29,7 @@ case object BashPlatform extends Platform {
       |
       |${generateParser(functionality, params)}
       |
-      |resources_dir="$$VIASHDIR"
+      |resources_dir="$$RESOURCES_DIR"
       |""".stripMargin
   }
 
