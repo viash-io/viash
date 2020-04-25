@@ -1,0 +1,7 @@
+type: nextflow
+image: rocker/tidyverse
+volumes:
+- name: data
+  mount: /data
+workdir: /app
+executor: mytestfieldexecutor
