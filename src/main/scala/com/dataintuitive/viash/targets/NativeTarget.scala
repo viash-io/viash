@@ -12,20 +12,17 @@ case class NativeTarget(
   val `type` = "native"
 
   def modifyFunctionality(functionality: Functionality) = {
-    val resourcesPath = "$tempdir"
-
     // create new bash script
     val bashScript = Resource(
         name = functionality.name,
         code = Some(BashHelper.wrapScript(
           executor = "bash",
           functionality = functionality,
-          resourcesPath = resourcesPath,
           setupCommands = setupCommands,
           preParse = "",
           parsers = "",
-          postParse = s"tempdir=$$(mktemp -d /tmp/viashrun-${functionality.name}-XXXXXX)",
-          postRun = "rm -r $tempdir"
+          postParse = "",
+          postRun = ""
         )),
         isExecutable = true
       )

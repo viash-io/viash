@@ -29,7 +29,7 @@ object BashHelper {
   }
 
   def escape(str: String) = {
-    str.replaceAll("([\\$`])", "\\\\$1").replaceAll("\\\\\\$VIASHDIR", "\\$VIASHDIR")
+    str.replaceAll("([\\$`])", "\\\\$1")
   }
 
   def argStore(name: String, plainName: String, store: String, argsConsumed: Int, storeUnparsed: Option[String]) = {
@@ -51,7 +51,7 @@ object BashHelper {
   def wrapScript(
       executor: String,
       functionality: Functionality,
-      resourcesPath: String,
+      resourcesPath: String = "\\$RESOURCES_DIR",
       setupCommands: String,
       preParse: String,
       parsers: String,
@@ -72,9 +72,6 @@ object BashHelper {
     // DETERMINE HOW TO RUN THE CODE
     val code = ""
 
-     // get main script
-    val mainPath = Paths.get(resourcesPath, mainResource.name).toFile().getPath()
-
     val executionCode = functionality.platform match {
       case NativePlatform =>
         mainResource.path.map(_ + " $VIASHARGS").getOrElse("echo No command provided")
@@ -85,11 +82,12 @@ object BashHelper {
 //          |""".stripMargin
       case pl => {
         s"""
-          |if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
-          |cat > "$mainPath" << 'VIASHMAIN'
-          |${BashHelper.escape(functionality.mainCodeWithArgParse.get)}
+          |tempscript=$$(mktemp /tmp/viashrun-${functionality.name}-XXXXXX)
+          |cat > "\\$$tempscript" << 'VIASHMAIN'
+          |${escape(functionality.mainCodeWithArgParse.get).replaceAll("\\\\\\$RESOURCES_DIR", resourcesPath)}
           |VIASHMAIN
-          |${pl.command(mainPath)} $$VIASHARGS
+          |${pl.command("\\$tempscript")} $$VIASHARGS
+          |rm "\\$$tempscript"
           |""".stripMargin
       }
     }
@@ -103,13 +101,14 @@ object BashHelper {
     /* GENERATE BASH SCRIPT */
     s"""#!/bin/bash
       |
+      |# figure out the directory the viash executable is in, follow symlinks
       |SOURCE="$${BASH_SOURCE[0]}"
       |while [ -h "$$SOURCE" ]; do
       |  DIR="$$( cd -P "$$( dirname "$$SOURCE" )" >/dev/null 2>&1 && pwd )"
       |  SOURCE="$$(readlink "$$SOURCE")"
       |  [[ $$SOURCE != /* ]] && SOURCE="$$DIR/$$SOURCE"
       |done
-      |VIASHDIR="$$( cd -P "$$( dirname "$$SOURCE" )" >/dev/null 2>&1 && pwd )"
+      |RESOURCES_DIR="$$( cd -P "$$( dirname "$$SOURCE" )" >/dev/null 2>&1 && pwd )"
       |
       |$extraImports
       |$setupFunction

@@ -7,7 +7,7 @@ case object RPlatform extends Platform {
   val commentStr = "#"
 
   def command(script: String) = {
-    "Rscript " + script
+    "Rscript \"" + script + "\""
   }
 
   private def removeNewlines(s: String) = {
@@ -30,7 +30,7 @@ case object RPlatform extends Platform {
       |${makeRequiredFileCheck(functionality, params)}
       |${makeSubsetCheck(functionality, params)}
       |
-      |resources_dir <- "$$VIASHDIR"
+      |resources_dir <- "$$RESOURCES_DIR"
       |""".stripMargin
   }
 
