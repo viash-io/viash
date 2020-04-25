@@ -79,7 +79,7 @@ class E2EBashNative extends FunSuite {
           "--log", log.toString(),
           "--optional", "foo",
           "--optional_with_default", "bar",
-          "--passthrough=\"you shall$not#pass\""
+          "--passthrough=you shall$not#pass"
         ),
         temporaryFolder
       )
@@ -97,8 +97,8 @@ class E2EBashNative extends FunSuite {
     assert(outputLines.contains(s"""log: "${log.toString()}""""))
     assert(outputLines.contains("""optional: "foo""""))
     assert(outputLines.contains("""optional_with_default: "bar""""))
-    assert(outputLines.contains("""passthrough: ""you shall$not#pass""""")) // TODO: one set of quotes should be removed
-    assert(outputLines.contains("""PASSTHROUGH: " --passthrough="you shall$not#pass"""""))
+    assert(outputLines.contains("""passthrough: "you shall$not#pass"""")) // TODO: one set of quotes should be removed
+    assert(outputLines.contains("""PASSTHROUGH: " --passthrough='you shall$not#pass'""""))
     assert(outputLines.contains(s"""resources_dir: "$tempFolStr""""))
 
     val logLines = Source.fromFile(log).mkString
