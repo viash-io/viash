@@ -43,7 +43,7 @@ class E2EBashDocker extends FunSuite {
       Seq(executable.toString(), "---setup"),
       temporaryFolder
     )
-    assert(stdout.contains("latest: Pulling from "))
+    assert(stdout.contains(": Pulling from "))
   }
 
   test("Check whether the executable can run", DockerTest) {
