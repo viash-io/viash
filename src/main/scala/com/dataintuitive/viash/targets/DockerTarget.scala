@@ -44,7 +44,8 @@ case class DockerTarget(
           setupCommands = setupCommands,
           preParse = volPreParse,
           parsers = volParsers,
-          postParse = volPostParse
+          postParse = volPostParse,
+          postRun = ""
         )),
         isExecutable = true
       )

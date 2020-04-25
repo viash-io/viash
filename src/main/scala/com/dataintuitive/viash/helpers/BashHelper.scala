@@ -55,7 +55,8 @@ object BashHelper {
       setupCommands: String,
       preParse: String,
       parsers: String,
-      postParse: String
+      postParse: String,
+      postRun: String
     ) = {
     val mainResource = functionality.mainResource.get
 
@@ -77,11 +78,11 @@ object BashHelper {
     val executionCode = functionality.platform match {
       case NativePlatform =>
         mainResource.path.map(_ + " $VIASHARGS").getOrElse("echo No command provided")
-      /*case BashPlatform =>
-        s"""
-          |set -- $$VIASHARGS
-          |${BashHelper.escape(fun2.mainCodeWithArgParse.get)}
-          |""".stripMargin*/
+//      case BashPlatform =>
+//        s"""
+//          |set -- $$VIASHARGS
+//          |${BashHelper.escape(functionality.mainCodeWithArgParse.get)}
+//          |""".stripMargin
       case pl => {
         s"""
           |if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
@@ -123,6 +124,8 @@ object BashHelper {
       |
       |$postParse
       |
-      |$heredocStart$executor $executionCode$heredocEnd""".stripMargin
+      |$heredocStart$executor $executionCode$heredocEnd
+      |
+      |$postRun""".stripMargin
   }
 }
