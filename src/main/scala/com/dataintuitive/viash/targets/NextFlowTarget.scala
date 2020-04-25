@@ -47,10 +47,9 @@ case class NextFlowTarget(
     println("mainResource: " + mainResource)
     val mainPath = Paths.get(resourcesPath, mainResource.name).toFile().getPath()
     val executionCode = functionality.platform match {
-      case Some(NativePlatform) => mainResource.path.getOrElse("echo No command provided")
-      case Some(BashPlatform) => fname
-      case Some(RPlatform) => fname
-      case _    => { println("Not implemented yet"); mainPath}
+      case NativePlatform => mainResource.path.getOrElse("echo No command provided")
+      case BashPlatform => fname
+      case RPlatform => fname
     }
 
     val allPars = functionality.arguments
@@ -534,21 +533,17 @@ case class NextFlowTarget(
     )
 
     val additionalResources = functionality.platform match {
-      case Some(NativePlatform) => {
+      case NativePlatform => {
         println("No additional resources required")
         Nil
       }
-      case Some(BashPlatform) => {
+      case BashPlatform => {
         println("Add BashPlatform resources")
         nativeTarget.modifyFunctionality(functionality).resources
       }
-      case Some(RPlatform) => {
+      case RPlatform => {
         println("Add RPlatform resources")
         nativeTarget.modifyFunctionality(functionality).resources
-      }
-      case _    => {
-        println("Not implemented yet")
-        Nil
       }
     }
 

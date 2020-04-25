@@ -48,15 +48,14 @@ case class DockerTarget(
      */
 
     val executionCode = fun2.platform match {
-      case None => mainPath
-      case Some(NativePlatform) =>
+      case NativePlatform =>
         mainResource.path.map(_ + " $VIASHARGS").getOrElse("echo No command provided")
-      case Some(BashPlatform) =>
+      case BashPlatform =>
         s"""
           |set -- $$VIASHARGS
           |${BashHelper.escape(fun2.mainCodeWithArgParse.get)}
           |""".stripMargin
-      case Some(pl) => {
+      case pl => {
         s"""
           |if [ ! -d "$resourcesPath" ]; then mkdir "$resourcesPath"; fi
           |cat > "$mainPath" << 'VIASHMAIN'
@@ -69,8 +68,8 @@ case class DockerTarget(
 
     // generate bash document
     val (heredocStart, heredocEnd) = fun2.platform match {
-      case None | Some(NativePlatform) => ("", "")
-      case Some(_) => ("cat << VIASHEOF | ", "\nVIASHEOF")
+      case NativePlatform => ("", "")
+      case _ => ("cat << VIASHEOF | ", "\nVIASHEOF")
     }
 
     val dockerArgs = generateDockerRunArgs(functionality)
@@ -171,7 +170,7 @@ case class DockerTarget(
 
     // check whether entrypoint should be set to bash
     val entrypointStr = functionality.platform match {
-      case None | Some(NativePlatform) => ""
+      case NativePlatform => ""
       case _ => "--entrypoint bash "
     }
 
@@ -181,7 +180,7 @@ case class DockerTarget(
   def generateBashParsers(functionality: Functionality, runImageName: String) = {
     // remove extra volume args if extra parameters are not desired
     val storeVariable = functionality.platform match {
-      case None | Some(NativePlatform) => None
+      case NativePlatform => None
       case _ => Some("VIASHARGS")
     }
 
@@ -218,6 +217,7 @@ case class DockerTarget(
         s"docker build -t $runImageName ."
       }
     s"""${BashHelper.quoteFunction}
+      |${BashHelper.removeFlagFunction}
       |
       |VIASHARGS=''
       |while [[ $$# -gt 0 ]]; do
