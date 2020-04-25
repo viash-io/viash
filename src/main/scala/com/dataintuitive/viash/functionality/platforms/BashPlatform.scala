@@ -23,6 +23,7 @@ case object BashPlatform extends Platform {
     //  * is value in list of possible values?
 
     s"""${BashHelper.quoteFunction}
+      |${BashHelper.removeFlagFunction}
       |
       |${generateHelp(functionality, params)}
       |

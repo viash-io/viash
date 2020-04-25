@@ -35,8 +35,7 @@ case class NativeTarget(
     val mainResource = functionality.mainResource.get
 
     val newResources = functionality.platform match {
-      case None => List(mainResource)
-      case Some(BashPlatform) => {
+      case BashPlatform => {
         val code = functionality.mainCodeWithArgParse.get.split("\n")
 
         val newCode =
@@ -51,16 +50,13 @@ case class NativeTarget(
           isExecutable = true
         ))
       }
-      case Some(pl) => {
+      case pl => {
         val res1 = mainResource.copy(
           code = functionality.mainCodeWithArgParse,
           path = None
         )
 
-        val command = functionality.platform match {
-          case None => mainResource.name
-          case Some(pl) => pl.command(mainResource.name)
-        }
+        val command = functionality.platform.command(mainResource.name)
 
         val res2 = Resource(
           name = functionality.name,

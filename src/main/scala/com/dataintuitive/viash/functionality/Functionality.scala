@@ -9,7 +9,7 @@ import platforms._
 case class Functionality(
   name: String,
   description: Option[String],
-  platform: Option[Platform],
+  platform: Platform,
   resources: List[Resource],
   ftype: Option[String],
   arguments: List[DataObject[_]] = Nil,
@@ -34,7 +34,7 @@ case class Functionality(
   }
 
   def mainCode: Option[String] = {
-    if (platform.isEmpty || platform.exists(_ == NativePlatform) || mainResource.isEmpty) {
+    if (platform == NativePlatform || mainResource.isEmpty) {
       None
     } else if (mainResource.get.code.isDefined) {
       mainResource.get.code
@@ -47,9 +47,8 @@ case class Functionality(
   def mainCodeWithArgParse = {
     mainCode.map(code =>
       platform match {
-        case Some(NativePlatform) => code
-        case None => code
-        case Some(pl) => {
+        case NativePlatform => code
+        case pl => {
           val lines = code.split("\n")
 
           val startIndex = lines.indexWhere(_.contains("PORTASH START"))
@@ -103,12 +102,6 @@ object Functionality {
     require(
       fun.resources.count(_.name.startsWith("main")) == 1,
       message = "Define exactly one resource whose name begins with 'main'."
-    )
-
-    val mr = fun.mainResource.get
-    require(
-      fun.platform.isDefined || (mr.path.isDefined && mr.isExecutable),
-      message = "If the platform is not specified, the main resource should be a standalone executable."
     )
 
     fun
