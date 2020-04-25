@@ -104,6 +104,9 @@ case object PythonPlatform extends Platform {
       |
       |# checking inputs
       |$reqFileStr
-      |$allinParCheck""".stripMargin
+      |$allinParCheck
+      |
+      |resources_dir = "$$VIASHDIR"
+      |""".stripMargin
   }
 }

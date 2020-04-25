@@ -24,7 +24,7 @@ case class NativeTarget(
           setupCommands = setupCommands,
           preParse = "",
           parsers = "",
-          postParse = s"tempdir=$$(mktemp -d /tmp/viashrun-${functionality.name}-XXXXXX",
+          postParse = s"tempdir=$$(mktemp -d /tmp/viashrun-${functionality.name}-XXXXXX)",
           postRun = "rm -r $tempdir"
         )),
         isExecutable = true

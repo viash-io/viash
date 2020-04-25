@@ -13,7 +13,6 @@ case object RPlatform extends Platform {
   private def removeNewlines(s: String) = {
     s.replaceAll("\n", "\\\\n")
   }
-      //s.filter(_ >= ' ') // remove all control characters
 
   def generateArgparse(functionality: Functionality): String = {
     // check whether functionality contains positional arguments
@@ -29,7 +28,10 @@ case object RPlatform extends Platform {
       |
       |${makeRequiredArgCheck(functionality, params)}
       |${makeRequiredFileCheck(functionality, params)}
-      |${makeSubsetCheck(functionality, params)}""".stripMargin
+      |${makeSubsetCheck(functionality, params)}
+      |
+      |resources_dir <- "$$VIASHDIR"
+      |""".stripMargin
   }
 
   def makeOptList(functionality: Functionality, params: List[DataObject[_]]): String = {

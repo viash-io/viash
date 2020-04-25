@@ -29,6 +29,7 @@ case object BashPlatform extends Platform {
       |
       |${generateParser(functionality, params)}
       |
+      |resources_dir="$$VIASHDIR"
       |""".stripMargin
   }
 
