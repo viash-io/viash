@@ -73,6 +73,8 @@ case class DockerTarget(
       case Some(_) => ("cat << VIASHEOF | ", "\nVIASHEOF")
     }
 
+    val dockerArgs = generateDockerRunArgs(functionality)
+
     val bash =
       Resource(
         name = functionality.name,
@@ -86,7 +88,7 @@ case class DockerTarget(
           |  exit 1
           |fi
           |
-          |${heredocStart}docker run ${generateDockerRunArgs()} $runImageName $executionCode$heredocEnd""".stripMargin),
+          |${heredocStart}docker run ${dockerArgs} $runImageName $executionCode$heredocEnd""".stripMargin),
         isExecutable = true
       )
 
@@ -159,7 +161,7 @@ case class DockerTarget(
     }
   }
 
-  def generateDockerRunArgs() = {
+  def generateDockerRunArgs(functionality: Functionality) = {
     // process port parameter
     val portStr = port.getOrElse(Nil).map("-p " + _ + " ").mkString("")
 
@@ -167,7 +169,13 @@ case class DockerTarget(
     val volumesGet = volumes.getOrElse(Nil)
     val volStr = volumesGet.map(vol => s"-v $$${vol.variable}:${vol.mount} ").mkString("")
 
-    portStr + volStr + "-i --entrypoint bash"
+    // check whether entrypoint should be set to bash
+    val entrypointStr = functionality.platform match {
+      case None | Some(NativePlatform) => ""
+      case _ => "--entrypoint bash "
+    }
+
+    portStr + volStr + entrypointStr + "-i"
   }
 
   def generateBashParsers(functionality: Functionality, runImageName: String) = {
