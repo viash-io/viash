@@ -11,7 +11,9 @@ par = {
   'optional': 'help',
   'optional_with_default': 'me'
 }
+resources_dir = "."
 ### PORTASH END
+par['resources_dir'] = resources_dir
 
 import logging
 import sys

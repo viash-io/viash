@@ -96,6 +96,7 @@ class E2EPythonNative extends FunSuite {
     assert(outputLines.contains(s"""log: "${log.toString()}""""))
     assert(outputLines.contains("""optional: "foo""""))
     assert(outputLines.contains("""optional_with_default: "bar""""))
+    assert(outputLines.contains(s"""resources_dir: "$tempFolStr""""))
 
     val logLines = Source.fromFile(log).mkString
     assert(logLines.contains("INFO:root:Parsed input arguments"))
@@ -123,6 +124,7 @@ class E2EPythonNative extends FunSuite {
     assert(stdout.contains("""log: "None""""))
     assert(stdout.contains("""optional: "None""""))
     assert(stdout.contains("""optional_with_default: "The default value.""""))
+    assert(stdout.contains(s"""resources_dir: "$tempFolStr""""))
 
     assert(stdout.contains("INFO:root:Parsed input arguments"))
   }

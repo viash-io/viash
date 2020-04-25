@@ -110,6 +110,7 @@ class E2EBashDocker extends FunSuite {
     assert(outputLines.contains("""passthrough: ""you shall$not#pass""""")) // TODO: one set of quotes should be removed
     assert(outputLines.contains("""PASSTHROUGH: " --passthrough '"you shall$not#pass"'""""))
     assert(outputLines.contains(s"""data: "${tempFolStr}""""))
+    assert(outputLines.contains("""resources_dir: "/resources""""))
 
     val logLines = Source.fromFile(log).mkString
     assert(logLines.contains("INFO: Parsed input arguments"))
@@ -139,6 +140,7 @@ class E2EBashDocker extends FunSuite {
     assert(stdout.contains("""passthrough: """""))
     assert(stdout.contains(s"""PASSTHROUGH: """""))
     assert(stdout.contains("""data: "/tmp/""""))
+    assert(stdout.contains("""resources_dir: "/resources""""))
 
     assert(stdout.contains("INFO: Parsed input arguments"))
   }
