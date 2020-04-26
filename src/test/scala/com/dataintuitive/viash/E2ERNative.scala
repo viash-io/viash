@@ -96,7 +96,6 @@ class E2ERNative extends FunSuite {
     assert(outputLines.contains(s"""log: "${log.toString()}""""))
     assert(outputLines.contains("""optional: "foo""""))
     assert(outputLines.contains("""optional_with_default: "bar""""))
-    assert(outputLines.contains(s"""resources_dir: "$tempFolStr""""))
     val regex = s"""resources_dir: ".*$tempFolStr"""".r
     assert(regex.findFirstIn(outputLines).isDefined)
 
@@ -123,7 +122,6 @@ class E2ERNative extends FunSuite {
     assert(stdout.contains("""s: "my$weird#string""""))
     assert(stdout.contains("""truth: "FALSE""""))
     assert(stdout.contains("""optional_with_default: "The default value.""""))
-    assert(stdout.contains(s"""resources_dir: "$tempFolStr""""))
     val regex = s"""resources_dir: ".*$tempFolStr"""".r
     assert(regex.findFirstIn(stdout).isDefined)
 
