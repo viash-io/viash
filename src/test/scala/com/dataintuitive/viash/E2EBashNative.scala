@@ -100,6 +100,8 @@ class E2EBashNative extends FunSuite {
     assert(outputLines.contains("""passthrough: "you shall$not#pass"""")) // TODO: one set of quotes should be removed
     assert(outputLines.contains("""PASSTHROUGH: " --passthrough='you shall$not#pass'""""))
     assert(outputLines.contains(s"""resources_dir: "$tempFolStr""""))
+    val regex = s"""resources_dir: ".*$tempFolStr"""".r
+    assert(regex.findFirstIn(outputLines).isDefined)
 
     val logLines = Source.fromFile(log).mkString
     assert(logLines.contains("INFO: Parsed input arguments"))
@@ -128,6 +130,8 @@ class E2EBashNative extends FunSuite {
     assert(stdout.contains("""passthrough: """""))
     assert(stdout.contains(s"""PASSTHROUGH: """""))
     assert(stdout.contains(s"""resources_dir: "$tempFolStr""""))
+    val regex = s"""resources_dir: ".*$tempFolStr"""".r
+    assert(regex.findFirstIn(stdout).isDefined)
 
     assert(stdout.contains("INFO: Parsed input arguments"))
   }
