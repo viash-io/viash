@@ -7,6 +7,7 @@ import sys.process.Process
 import com.dataintuitive.viash.functionality.Functionality
 import scala.io.Source
 import scala.reflect.io.Directory
+import com.dataintuitive.viash.helpers.Exec
 
 class E2EPythonNative extends FunSuite {
   // which platform to test
@@ -23,9 +24,9 @@ class E2EPythonNative extends FunSuite {
 
   // convert testpython
   val params = Array(
+    "export",
     "-f", funcFile,
     "-p", platFile,
-    "export",
     "-o", tempFolStr
    )
   Main.main(params)
@@ -40,16 +41,14 @@ class E2EPythonNative extends FunSuite {
 
   test("Check whether the executable can run") {
     Exec.run(
-      Seq(executable.toString(), "--help"),
-      temporaryFolder
+      Seq(executable.toString(), "--help")
     )
   }
 
   test("Check whether particular keywords can be found in the usage") {
     val stdout =
       Exec.run(
-        Seq(executable.toString(), "--help"),
-        temporaryFolder
+        Seq(executable.toString(), "--help")
       )
 
     functionality.arguments.foreach(arg => {
@@ -79,8 +78,7 @@ class E2EPythonNative extends FunSuite {
           "--log", log.toString(),
           "--optional", "foo",
           "--optional_with_default", "bar"
-        ),
-        temporaryFolder
+        )
       )
 
     assert(output.exists())
@@ -112,8 +110,7 @@ class E2EPythonNative extends FunSuite {
           "--real_number", "123.456",
           "--whole_number", "789",
           "-s", "my$weird#string"
-        ),
-        temporaryFolder
+        )
       )
 
     assert(stdout.contains("""input: "test""""))

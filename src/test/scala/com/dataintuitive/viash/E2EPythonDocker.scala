@@ -6,6 +6,7 @@ import java.io.File
 import com.dataintuitive.viash.functionality.Functionality
 import scala.io.Source
 import scala.reflect.io.Directory
+import com.dataintuitive.viash.helpers.Exec
 
 class E2EPythonDocker extends FunSuite {
   // which platform to test
@@ -22,9 +23,9 @@ class E2EPythonDocker extends FunSuite {
 
   // convert testpython
   val params = Array(
+    "export",
     "-f", funcFile,
     "-p", platFile,
-    "export",
     "-o", tempFolStr
    )
   Main.main(params)
@@ -39,8 +40,7 @@ class E2EPythonDocker extends FunSuite {
 
   test("Check whether the executable can build the image", DockerTest) {
     val stdout = Exec.run(
-      Seq(executable.toString(), "---setup"),
-      temporaryFolder
+      Seq(executable.toString(), "---setup")
     )
     assert(stdout.contains("Successfully built "))
   }
@@ -48,8 +48,7 @@ class E2EPythonDocker extends FunSuite {
   test("Check whether particular keywords can be found in the usage", DockerTest) {
     val stdout =
       Exec.run(
-        Seq(executable.toString(), "--help"),
-        temporaryFolder
+        Seq(executable.toString(), "--help")
       )
 
     functionality.arguments.foreach(arg => {
@@ -80,8 +79,7 @@ class E2EPythonDocker extends FunSuite {
           "--optional", "foo",
           "--optional_with_default", "bar",
           "--data", tempFolStr
-        ),
-        temporaryFolder
+        )
       )
 
     assert(output.exists())
@@ -114,8 +112,7 @@ class E2EPythonDocker extends FunSuite {
           "--whole_number", "789",
           "-s", "my$weird#string",
           "--data", "/tmp/"
-        ),
-        temporaryFolder
+        )
       )
 
     assert(stdout.contains("""input: "testinput""""))
