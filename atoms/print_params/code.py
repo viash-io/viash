@@ -1,5 +1,5 @@
 
-### PORTASH START
+### VIASH START
 par = {
   'whole_number': 1001,
   'real_number': 123.987654,
@@ -7,7 +7,7 @@ par = {
   'truth': True,
   'output': 'output.txt'
 }
-### PORTASH END
+### VIASH END
 
 for key in par.keys():
 	print(key + ": " + str(par[key]))

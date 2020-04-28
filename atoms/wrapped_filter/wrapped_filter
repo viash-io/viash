@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# PORTASH START
+# VIASH START
 par_in="input.txt"
 par_out="output.txt"
 par_filter="AString"
 PASSTHROUGH="-b"
-# PORTASH END
+# VIASH END
 
 echo "## Reading from $par_in"
 echo "## Filtering for $par_filter"
