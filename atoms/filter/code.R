@@ -2,7 +2,7 @@ library(magrittr, warn.conflicts = FALSE)
 library(readr, warn.conflicts = FALSE)
 library(dplyr, warn.conflicts = FALSE)
 
-### PORTASH START
+### VIASH START
 par <- list(
   input = "input.csv",
   format = "csv",
@@ -10,7 +10,7 @@ par <- list(
   column_name = "Sex",
   value = "male"
 )
-### PORTASH END
+### VIASH END
 
 # Import data
 read_fun <- switch(
