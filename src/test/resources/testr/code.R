@@ -1,4 +1,4 @@
-### PORTASH START
+### VIASH START
 par <- list(
   input = "input.txt",
   real_number = 123.456,
@@ -10,7 +10,7 @@ par <- list(
   optional = "help",
   optional_with_default = "me"
 )
-### PORTASH END
+### VIASH END
 par$resources_dir <- resources_dir
 
 write_fun <- function(file, ...) {

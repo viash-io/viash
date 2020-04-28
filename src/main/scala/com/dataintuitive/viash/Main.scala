@@ -12,8 +12,8 @@ object Main {
   def main(args: Array[String]) {
     val conf = new CLIConf(args)
 
-    val funcPath = new java.io.File(conf.functionality())
-    val targPath = new java.io.File(conf.platform())
+    val funcPath = new java.io.File(conf.functionality()).getAbsoluteFile()
+    val targPath = new java.io.File(conf.platform()).getAbsoluteFile()
 
     val functionality = Functionality.parse(funcPath)
     functionality.rootDir = funcPath
