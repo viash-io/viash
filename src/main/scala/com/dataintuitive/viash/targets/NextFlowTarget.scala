@@ -1,7 +1,7 @@
 package com.dataintuitive.viash.targets
 
 import com.dataintuitive.viash.functionality.{Functionality, Resource, StringObject}
-import com.dataintuitive.viash.functionality.platforms.{BashPlatform, NativePlatform, RPlatform}
+import com.dataintuitive.viash.functionality.platforms.{BashPlatform, NativePlatform, RPlatform, PythonPlatform}
 import com.dataintuitive.viash.targets.environments._
 import com.dataintuitive.viash.functionality.{DataObject, FileObject, Direction}
 import com.dataintuitive.viash.functionality.{Input, Output}
@@ -50,6 +50,7 @@ case class NextFlowTarget(
       case NativePlatform => mainResource.path.getOrElse("echo No command provided")
       case BashPlatform => fname
       case RPlatform => fname
+      case PythonPlatform => fname
     }
 
     val allPars = functionality.arguments
@@ -546,6 +547,10 @@ case class NextFlowTarget(
       }
       case RPlatform => {
         println("Add RPlatform resources")
+        nativeTarget.modifyFunctionality(functionality).resources
+      }
+      case PythonPlatform => {
+        println("Add PythonPlatform resources")
         nativeTarget.modifyFunctionality(functionality).resources
       }
     }
