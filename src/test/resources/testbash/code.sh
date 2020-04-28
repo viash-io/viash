@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# PORTASH START
+# VIASH START
 par_input="input.sh"
 par_real_number="123.987654"
 par_whole_number="17"
@@ -13,7 +13,7 @@ par_optional_with_default="me"
 par_passthrough=test
 PASSTHROUGH="--passthrough test"
 resources_dir="."
-# PORTASH END
+# VIASH END
 
 function log {
   if [ -z "$par_log" ]; then

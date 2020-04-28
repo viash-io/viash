@@ -1,5 +1,5 @@
 
-### PORTASH START
+### VIASH START
 par = {
   'input': 'input.txt',
   'real_number': 123.987654,
@@ -12,7 +12,7 @@ par = {
   'optional_with_default': 'me'
 }
 resources_dir = "."
-### PORTASH END
+### VIASH END
 par['resources_dir'] = resources_dir
 
 import logging
