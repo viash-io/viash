@@ -2,24 +2,21 @@ package com.dataintuitive.viash
 
 import org.rogach.scallop.{ScallopConf, Subcommand}
 
-class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
+trait CommonParams { _: ScallopConf =>
   val functionality = opt[String](
-    default = Some("functionality.yaml"),
-    descr = "Path to the functionality specifications (default functionality.yaml)",
+    descr = "Path to the functionality specifications YAML file",
     required = true
   )
   val platform = opt[String](
-    default = Some("platform.yaml"),
-    descr = "Path to the platform specifications (default platform.yaml)",
-    required = true
+    default = None,
+    descr = "Path to the platform specifications YAML file",
+    required = false
   )
+}
 
-  val run = new Subcommand("run") {
-    val test = opt[String](
-      descr = "Test argument"
-    )
-  }
-  val export = new Subcommand("export") {
+class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
+  val run = new Subcommand("run") with CommonParams
+  val export = new Subcommand("export") with CommonParams {
     val output = opt[String](
       descr = "Path to directory.",
       default = Some("output/"),
