@@ -3,6 +3,9 @@ image: rocker/tidyverse
 r:
   packages: 
   - optparse
+apt:
+  packages:
+  - libhdf5-serial-dev
 volumes:
 - name: data
   mount: /data
