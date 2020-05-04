@@ -163,7 +163,7 @@ case class DockerTarget(
       s"""
         |
         |# if desired, enter a debug session
-        |if [ -n $${VIASHDEBUG} ]; then
+        |if [ $${VIASHDEBUG} ]; then
         |  $debugCommand
         |  exit 0
         |fi"""
