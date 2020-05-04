@@ -75,11 +75,6 @@ object BashHelper {
     val executionCode = functionality.platform match {
       case NativePlatform =>
         mainResource.path.map(_ + " $VIASHARGS").getOrElse("echo No command provided")
-//      case BashPlatform =>
-//        s"""
-//          |set -- $$VIASHARGS
-//          |${BashHelper.escape(functionality.mainCodeWithArgParse.get)}
-//          |""".stripMargin
       case pl => {
         s"""
           |tempscript=$$(mktemp /tmp/viashrun-${functionality.name}-XXXXXX)
