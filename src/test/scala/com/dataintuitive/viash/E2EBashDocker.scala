@@ -72,7 +72,6 @@ class E2EBashDocker extends FunSuite {
     val output = Paths.get(tempFolStr, "output.txt").toFile()
     val log = Paths.get(tempFolStr, "log.txt").toFile()
 
-    // TODO: Fix --foo=bar :/
     val stdout =
       Exec.run(
         Seq(
