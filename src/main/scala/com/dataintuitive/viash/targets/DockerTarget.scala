@@ -20,31 +20,38 @@ case class DockerTarget(
   def modifyFunctionality(functionality: Functionality) = {
     val resourcesPath = "/app"
 
-    // process docker mounts
-    val (volPreParse, volParsers, volPostParse, volInputs) = processDockerVolumes(functionality)
+    // collect variables
+    val dockerArgs = generateDockerRunArgs(functionality)
 
     // create setup
     val (imageName, setupCommands) = processDockerSetup(functionality, resourcesPath)
 
+    // make commands
+    val executor = s"docker run $dockerArgs -v $$RESOURCES_DIR:/resources $imageName"
+    val debuggor = s"docker run $dockerArgs -v $$RESOURCES_DIR:/resources -v `pwd`:/pwd --workdir /pwd -t --rm $imageName"
+
+    // process docker mounts
+    val (volPreParse, volParsers, volPostParse, volInputs) = processDockerVolumes(functionality)
+
+    // add docker debug flag
+    val (debPreParse, debParsers, debPostParse, debInputs) = addDockerDebug(debuggor)
+
     // add extra arguments to the functionality file for each of the volumes
     val fun2 = functionality.copy(
-      arguments = functionality.arguments ::: volInputs
+      arguments = functionality.arguments ::: volInputs ::: debInputs
     )
-
-    // collect variables
-    val dockerArgs = generateDockerRunArgs(functionality)
 
     // create new bash script
     val bashScript = Resource(
         name = functionality.name,
         code = Some(BashHelper.wrapScript(
-          executor = s"docker run $dockerArgs -v $$RESOURCES_DIR:/resources $imageName",
+          executor = executor,
           functionality = fun2,
           resourcesPath = "/resources",
           setupCommands = setupCommands,
-          preParse = volPreParse,
-          parsers = volParsers,
-          postParse = volPostParse,
+          preParse = volPreParse + debPreParse,
+          parsers = volParsers + debParsers,
+          postParse = volPostParse + debPostParse,
           postRun = ""
         )),
         isExecutable = true
@@ -145,6 +152,23 @@ case class DockerTarget(
         direction = Input
       )
     )
+
+    (preParse, parsers, postParse, inputs)
+  }
+
+  def addDockerDebug(debugCommand: String) = {
+    val preParse = ""
+    val parsers = "\n" + BashHelper.argStore("---debug", "VIASHDEBUG", "yes", 1, None)
+    val postParse =
+      s"""
+        |
+        |# if desired, enter a debug session
+        |if [ $${VIASHDEBUG} ]; then
+        |  $debugCommand
+        |  exit 0
+        |fi"""
+
+    val inputs = Nil
 
     (preParse, parsers, postParse, inputs)
   }

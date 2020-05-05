@@ -55,7 +55,7 @@ function viash_export_all {
         # echo "      $func_file"
         # echo "      $platform_file"
         # echo "$JAVA -f $func_file -p $platform_file export -o output/${a}_${p}"
-        viash -f $func_file -p $platform_file export -o "$output_dir/${a}_${p}"
+        viash export -f $func_file -p $platform_file -o "$output_dir/${a}_${p}"
       fi
     done
   done
