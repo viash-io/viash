@@ -36,17 +36,34 @@ object Main {
         dir.mkdirs()
         writeResources(fun.resources, fun.rootDir, dir)
       }
+      case Some(conf.pimp) => {
+        val functionality = readFunctionality(conf.pimp)
+
+        val mainCode = functionality.mainCodeWithArgParse.get
+        if (conf.pimp.output.isDefined) {
+          val file = new java.io.File(conf.pimp.output())
+          Files.write(file.toPath(), mainCode.getBytes(StandardCharsets.UTF_8))
+          file.setExecutable(true)
+        } else {
+          println(mainCode)
+        }
+      }
       case _ => println("No subcommand was specified. See `viash --help` for more information.")
     }
   }
 
-  def viashLogic(subcommand: CommonParams) = {
-    // get the functionality yaml
-    // let the functionality object know the path in which it resided,
-    // so it can find back its resources
+  def readFunctionality(subcommand: WithFunctionality) = {
     val funcPath = new java.io.File(subcommand.functionality()).getAbsoluteFile()
     val functionality = Functionality.parse(funcPath)
     functionality.rootDir = funcPath
+    functionality
+  }
+
+  def viashLogic(subcommand: WithFunctionality with WithPlatform) = {
+    // get the functionality yaml
+    // let the functionality object know the path in which it resided,
+    // so it can find back its resources
+    val functionality = readFunctionality(subcommand)
 
     // get the platform
     // if no platform is provided, assume the platform
