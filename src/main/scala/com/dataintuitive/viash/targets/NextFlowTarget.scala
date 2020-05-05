@@ -189,7 +189,7 @@ case class NextFlowTarget(
         |        if (it.otype.contains("-"))
         |            (it.type == "boolean")
         |            ? argumentsList << it.otype + it.name
-        |            : argumentsList << it.otype + it.name + " " + it.value
+        |            : argumentsList << it.otype + it.name + " '" + it.value + "'"
         |    }
         |
         |    def command_line = command + argumentsList
