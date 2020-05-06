@@ -5,7 +5,7 @@ case class StringObject(
     alternatives: Option[List[String]] = None,
     description: Option[String] = None,
     default: Option[String] = None,
-    required: Option[Boolean] = None,
+    required: Boolean = false,
     values: Option[List[String]] = None,
     tag: Option[String] = None,
     direction: Direction = Input,

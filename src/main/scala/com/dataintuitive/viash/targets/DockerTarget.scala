@@ -149,7 +149,7 @@ case class DockerTarget(
       StringObject(
         name = "--" + vol.name,
         description = Some(s"Local path to mount directory for volume '${vol.name}'."),
-        required = Some(true),
+        required = true,
         direction = Input
       )
     )

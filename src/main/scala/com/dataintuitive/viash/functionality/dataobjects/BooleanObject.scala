@@ -9,7 +9,7 @@ case class BooleanObjectRegular(
     alternatives: Option[List[String]] = None,
     description: Option[String] = None,
     default: Option[Boolean] = None,
-    required: Option[Boolean] = None,
+    required: Boolean = false,
     tag: Option[String] = None,
     direction: Direction = Input,
     passthrough: Boolean = false
@@ -29,7 +29,7 @@ case class BooleanObjectTrue(
 ) extends BooleanObject {
   override val `type` = "boolean_true"
 
-  val required = Some(false)
+  val required = false
   val flagValue = Some(true)
   val default = None
 }
@@ -43,7 +43,7 @@ case class BooleanObjectFalse(
 ) extends BooleanObject {
   override val `type` = "boolean_false"
 
-  val required = Some(false)
+  val required = false
   val flagValue = Some(false)
   val default = None
 }
