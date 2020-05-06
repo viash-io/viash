@@ -13,8 +13,9 @@ trait ResourceTrait {
 }
 
 case class Resource(
+  `type`: ResourceType,
   name: String,
   path: Option[String] = None,
   code: Option[String] = None,
-  isExecutable: Boolean = false
+  is_executable: Boolean = false
 ) extends ResourceTrait
