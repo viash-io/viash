@@ -202,14 +202,14 @@ case class NextFlowTarget(
      */
     val setup_main_outFromIn = functionality.function_type match {
       // in and out file format are the same, but also the filenames!
-      case Some("asis") => """
+      case Some(AsIs) => """
           |def outFromIn(inputstr) {
           |
           |    return "${inputstr}"
           |}
           |""".stripMargin('|').replace("__e__", inputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
       // in and out file format are the same
-      case Some("transform") => """
+      case Some(Transform) => """
           |def outFromIn(inputstr) {
           |
           |    def splitstring = inputstr.split(/\./)
@@ -220,7 +220,7 @@ case class NextFlowTarget(
           |}
           |""".stripMargin('|').replace("__e__", inputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
       // Out format is different from in format
-      case Some("convert") => """
+      case Some(Convert) => """
           |def outFromIn(inputstr) {
           |
           |    def splitstring = inputstr.split(/\./)
@@ -231,7 +231,7 @@ case class NextFlowTarget(
           |}
           |""".stripMargin('|').replace("__e__", outputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
       // Out format is different from in format
-      case Some("unzip") => """
+      case Some(Unzip) => """
           |def outFromIn(inputstr) {
           |
           |    def splitstring = inputstr.split(/\./)
@@ -241,7 +241,7 @@ case class NextFlowTarget(
           |}
           |""".stripMargin('|')
       // Out format is different from in format
-      case Some("todir") => """
+      case Some(ToDir) => """
           |def outFromIn(inputstr) {
           |
           |    return "__f__"
@@ -249,7 +249,7 @@ case class NextFlowTarget(
           |}
           |""".stripMargin('|').replace("__f__", fname)
       // Out format is different from in format
-      case Some("join") => """
+      case Some(Join) => """
           |def outFromIn(input) {
           |    if (input.getClass() == sun.nio.fs.UnixPath) {
           |        def splitString = input.name.split(/\./)
@@ -345,17 +345,17 @@ case class NextFlowTarget(
       }
 
       val stageInMode = functionality.function_type match {
-        case Some("unzip") => "copy"
+        case Some(Unzip) => "copy"
         case _ => "symlink"
       }
 
       val preHook = functionality.function_type match {
-        case Some("todir") => "mkdir " + fname
+        case Some(ToDir) => "mkdir " + fname
         case _ => "echo Nothing before"
       }
 
       val outputStr = functionality.function_type match {
-        case Some("todir") => "${output}/*"
+        case Some(ToDir) => "${output}/*"
         case _ => "${output}"
       }
 
@@ -390,7 +390,7 @@ case class NextFlowTarget(
     }
 
     val setup_main_workflow = functionality.function_type match {
-      case Some("join") => s"""
+      case Some(Join) => s"""
         |workflow $fname {
         |
         |    take:
@@ -493,7 +493,7 @@ case class NextFlowTarget(
     }
 
     val setup_main_entrypoint = functionality.function_type match {
-      case Some("join") => """
+      case Some(Join) => """
         |workflow {
         |
         |   def id = params.id

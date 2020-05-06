@@ -9,9 +9,9 @@ import resources._
 
 case class Functionality(
   name: String,
-  description: Option[String],
   resources: List[Resource],
-  function_type: Option[String],
+  description: Option[String] = None,
+  function_type: Option[FunctionType] = None,
   arguments: List[DataObject[_]] = Nil,
   private var _rootDir: Option[File] = None // :/
 ) {
@@ -85,3 +85,11 @@ object Functionality {
     fun
   }
 }
+
+sealed trait FunctionType
+case object AsIs extends FunctionType
+case object Transform extends FunctionType
+case object Convert extends FunctionType
+case object ToDir extends FunctionType
+case object Join extends FunctionType
+case object Unzip extends FunctionType
