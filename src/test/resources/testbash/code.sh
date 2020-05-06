@@ -11,6 +11,7 @@ par_log="log.txt"
 par_optional="help"
 par_optional_with_default="me"
 par_passthrough=test
+par_passthroughbool=true
 PASSTHROUGH="--passthrough test"
 resources_dir="."
 # VIASH END
@@ -48,6 +49,7 @@ output "log: \"$par_log\""
 output "optional: \"$par_optional\""
 output "optional_with_default: \"$par_optional_with_default\""
 output "passthrough: \"$par_passthrough\""
+output "passthroughbool: \"$par_passthroughbool\""
 output "resources_dir: \"$resources_dir\""
 if [ ! -z "$par_data" ]; then
   output "data: \"$par_data\""
