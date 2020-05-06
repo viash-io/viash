@@ -1,10 +1,16 @@
-package com.dataintuitive.viash.functionality.platforms
+package com.dataintuitive.viash.functionality.resources
 
 import com.dataintuitive.viash.functionality._
+import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.helpers.BashHelper
 
-case object BashPlatform extends Platform {
-  val `type` = "bash"
+case class BashScript(
+  name: Option[String] = None,
+  path: Option[String] = None,
+  text: Option[String] = None,
+  is_executable: Boolean = true
+) extends Script {
+  val `type` = "bash_script"
   val commentStr = "#"
 
   def command(script: String) = {

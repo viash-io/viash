@@ -1,10 +1,12 @@
 package com.dataintuitive.viash.targets
 
 import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.platforms.{NativePlatform, BashPlatform}
+import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.targets.environments._
 import java.nio.file.Paths
 import com.dataintuitive.viash.helpers.BashHelper
+import com.dataintuitive.viash.functionality.resources.Resource
 
 case class DockerTarget(
   image: String,
@@ -42,9 +44,9 @@ case class DockerTarget(
     )
 
     // create new bash script
-    val bashScript = Resource(
-        name = functionality.name,
-        code = Some(BashHelper.wrapScript(
+    val bashScript = BashScript(
+        name = Some(functionality.name),
+        text = Some(BashHelper.wrapScript(
           executor = executor,
           functionality = fun2,
           resourcesPath = "/resources",
@@ -54,12 +56,11 @@ case class DockerTarget(
           postParse = volPostParse + debPostParse,
           postRun = ""
         )),
-        isExecutable = true
+        is_executable = true
       )
 
     fun2.copy(
-      resources = fun2.resources.filterNot(_.name.startsWith("main")) :::
-        List(bashScript)
+      resources = bashScript :: fun2.resources.tail
     )
   }
 
@@ -105,8 +106,8 @@ case class DockerTarget(
     val volStr = volumesGet.map(vol => s"-v $$${vol.variable}:${vol.mount} ").mkString("")
 
     // check whether entrypoint should be set to bash
-    val entrypointStr = functionality.platform match {
-      case NativePlatform => ""
+    val entrypointStr = functionality.mainScript match {
+      case e: Executable => ""
       case _ => "--entrypoint bash "
     }
 
@@ -114,8 +115,8 @@ case class DockerTarget(
   }
 
   def processDockerVolumes(functionality: Functionality) = {
-    val storeVariable = functionality.platform match {
-      case NativePlatform => None
+    val storeVariable = functionality.mainScript match {
+      case e: Executable => None
       case _ => Some("VIASHARGS")
     }
 

@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets
 
 import sys.process._
 import com.dataintuitive.viash.helpers.Exec
+import com.dataintuitive.viash.functionality.resources.Resource
 
 object Main {
   def main(args: Array[String]) {
@@ -88,7 +89,7 @@ object Main {
     // copy all files
     resources.foreach(
       resource => {
-        val dest = Paths.get(outputDir.getAbsolutePath, resource.name)
+        val dest = Paths.get(outputDir.getAbsolutePath, resource.filename)
 
         val destFile = dest.toFile()
         if (overwrite && destFile.exists()) {
@@ -99,20 +100,12 @@ object Main {
           val sour = Paths.get(inputDir.getPath(), resource.path.get)
           Files.copy(sour, dest)
         } else {
-          val code = resource.code.get
-          Files.write(dest, code.getBytes(StandardCharsets.UTF_8))
+          val text = resource.text.get
+          Files.write(dest, text.getBytes(StandardCharsets.UTF_8))
         }
 
-        destFile.setExecutable(resource.isExecutable)
+        destFile.setExecutable(resource.is_executable)
       }
     )
-  }
-
-  def run(
-
-  ) = {
-//      import sys.process._
-//
-//      command !
   }
 }

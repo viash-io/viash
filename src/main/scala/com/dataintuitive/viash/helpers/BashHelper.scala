@@ -1,7 +1,7 @@
 package com.dataintuitive.viash.helpers
 
 import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.platforms._
+import com.dataintuitive.viash.functionality.resources._
 import java.nio.file.Paths
 
 object BashHelper {
@@ -58,7 +58,7 @@ object BashHelper {
       postParse: String,
       postRun: String
     ) = {
-    val mainResource = functionality.mainResource.get
+    val mainResource = functionality.mainScript
 
     val extraImports =
       s"""# define helper functions
@@ -72,24 +72,23 @@ object BashHelper {
     // DETERMINE HOW TO RUN THE CODE
     val code = ""
 
-    val executionCode = functionality.platform match {
-      case NativePlatform =>
-        mainResource.path.map(_ + " $VIASHARGS").getOrElse("echo No command provided")
-      case pl => {
+    val executionCode = mainResource match {
+      case e: Executable => mainResource.path.get + " $VIASHARGS"
+      case _ => {
         s"""
           |tempscript=$$(mktemp /tmp/viashrun-${functionality.name}-XXXXXX)
           |cat > "\\$$tempscript" << 'VIASHMAIN'
           |${escape(functionality.mainCodeWithArgParse.get).replaceAll("\\\\\\$RESOURCES_DIR", resourcesPath)}
           |VIASHMAIN
-          |${pl.command("\\$tempscript")} $$VIASHARGS
+          |${mainResource.command("\\$tempscript")} $$VIASHARGS
           |rm "\\$$tempscript"
           |""".stripMargin
       }
     }
 
     // generate bash document
-    val (heredocStart, heredocEnd) = functionality.platform match {
-      case NativePlatform => ("", "")
+    val (heredocStart, heredocEnd) = mainResource match {
+      case e: Executable => ("", "")
       case _ => ("cat << VIASHEOF | ", "\nVIASHEOF")
     }
 

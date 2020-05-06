@@ -1,12 +1,10 @@
 package com.dataintuitive.viash.targets
 
-import com.dataintuitive.viash.functionality.{Functionality, Resource, StringObject}
-import com.dataintuitive.viash.functionality.platforms.{BashPlatform, NativePlatform, RPlatform, PythonPlatform}
+import com.dataintuitive.viash.functionality._
+import com.dataintuitive.viash.functionality.resources._
+import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.targets.environments._
-import com.dataintuitive.viash.functionality.{DataObject, FileObject, Direction}
-import com.dataintuitive.viash.functionality.{Input, Output}
 import java.nio.file.Paths
-
 import scala.reflect.ClassTag
 
 /**
@@ -43,14 +41,12 @@ case class NextFlowTarget(
     def quoteLong(str:String):String = if (str.contains("-")) '"' + str + '"' else str
 
     // get main script/binary
-    val mainResource = functionality.mainResource.get
+    val mainResource = functionality.mainScript
     println("mainResource: " + mainResource)
-    val mainPath = Paths.get(resourcesPath, mainResource.name).toFile().getPath()
-    val executionCode = functionality.platform match {
-      case NativePlatform => mainResource.path.getOrElse("echo No command provided")
-      case BashPlatform => fname
-      case RPlatform => fname
-      case PythonPlatform => fname
+    val mainPath = Paths.get(resourcesPath, mainResource.filename).toFile().getPath()
+    val executionCode = mainResource match {
+      case e: Executable => mainResource.path.get
+      case _ => fname
     }
 
     val allPars = functionality.arguments
@@ -166,9 +162,9 @@ case class NextFlowTarget(
 
     def listMapToConfig(m:List[(String, Any)]) = m.map(x => mapToConfig(x)).mkString("\n")
 
-    val setup_nextflowconfig = Resource(
-      name = "nextflow.config",
-      code = Some(
+    val setup_nextflowconfig = PlainFile(
+      name = Some("nextflow.config"),
+      text = Some(
         listMapToConfig(asNestedTuples)
       )
     )
@@ -204,7 +200,7 @@ case class NextFlowTarget(
      * This uses the function type, but there is no check on it yet!
      * TODO: Check for conditions
      */
-    val setup_main_outFromIn = functionality.ftype match {
+    val setup_main_outFromIn = functionality.function_type match {
       // in and out file format are the same, but also the filenames!
       case Some("asis") => """
           |def outFromIn(inputstr) {
@@ -348,17 +344,17 @@ case class NextFlowTarget(
         case _ => ""
       }
 
-      val stageInMode = functionality.ftype match {
+      val stageInMode = functionality.function_type match {
         case Some("unzip") => "copy"
         case _ => "symlink"
       }
 
-      val preHook = functionality.ftype match {
+      val preHook = functionality.function_type match {
         case Some("todir") => "mkdir " + fname
         case _ => "echo Nothing before"
       }
 
-      val outputStr = functionality.ftype match {
+      val outputStr = functionality.function_type match {
         case Some("todir") => "${output}/*"
         case _ => "${output}"
       }
@@ -393,7 +389,7 @@ case class NextFlowTarget(
         |""".stripMargin('|')
     }
 
-    val setup_main_workflow = functionality.ftype match {
+    val setup_main_workflow = functionality.function_type match {
       case Some("join") => s"""
         |workflow $fname {
         |
@@ -496,7 +492,7 @@ case class NextFlowTarget(
         |""".stripMargin('|')
     }
 
-    val setup_main_entrypoint = functionality.ftype match {
+    val setup_main_entrypoint = functionality.function_type match {
       case Some("join") => """
         |workflow {
         |
@@ -524,9 +520,9 @@ case class NextFlowTarget(
         |""".stripMargin('|')
     }
 
-    val setup_main = Resource(
-      name = "main.nf",
-      code = Some(setup_main_header +
+    val setup_main = PlainFile(
+      name = Some("main.nf"),
+      text = Some(setup_main_header +
                   setup_main_utils +
                   setup_main_outFromIn +
                   setup_main_overrideInput +
@@ -536,21 +532,13 @@ case class NextFlowTarget(
                   setup_main_entrypoint)
     )
 
-    val additionalResources = functionality.platform match {
-      case NativePlatform => {
+    val additionalResources = mainResource match {
+      case e: Executable => {
         println("No additional resources required")
         Nil
       }
-      case BashPlatform => {
-        println("Add BashPlatform resources")
-        nativeTarget.modifyFunctionality(functionality).resources
-      }
-      case RPlatform => {
-        println("Add RPlatform resources")
-        nativeTarget.modifyFunctionality(functionality).resources
-      }
-      case PythonPlatform => {
-        println("Add PythonPlatform resources")
+      case e: Script => {
+        println(s"Add ${e.`type`} resources")
         nativeTarget.modifyFunctionality(functionality).resources
       }
     }
