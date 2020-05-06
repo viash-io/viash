@@ -1,8 +1,14 @@
-package com.dataintuitive.viash.functionality.platforms
+package com.dataintuitive.viash.functionality.resources
 
 import com.dataintuitive.viash.functionality._
+import com.dataintuitive.viash.functionality.dataobjects._
 
-case object RPlatform extends Platform {
+case class RScript(
+  name: Option[String] = None,
+  path: Option[String] = None,
+  text: Option[String] = None,
+  is_executable: Boolean = true
+) extends Script {
   val `type` = "R"
   val commentStr = "#"
 

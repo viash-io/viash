@@ -1,4 +1,4 @@
-package com.dataintuitive.viash.functionality
+package com.dataintuitive.viash.functionality.dataobjects
 
 sealed trait Direction
 case object Input extends Direction
