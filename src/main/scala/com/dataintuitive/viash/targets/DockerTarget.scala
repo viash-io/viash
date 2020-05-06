@@ -178,5 +178,12 @@ case class Volume(
   name: String,
   mount: String
 ) {
+  private val VolumePattern = "^[A-Za-z_]*$".r
+
+  require(
+    VolumePattern.findFirstIn(name).isDefined,
+    message = s"Volume $name: Should only consist of characters [A-Za-z_]."
+  )
+
   val variable = "VOLUME_" + name.toUpperCase()
 }
