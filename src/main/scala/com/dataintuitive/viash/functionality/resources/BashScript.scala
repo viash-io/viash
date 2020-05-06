@@ -129,7 +129,7 @@ case class BashScript(
     }.mkString("\n")
 
     // construct required checks
-    val reqParams = params.filter(p => p.required.getOrElse(false))
+    val reqParams = params.filter(p => p.required)
     val reqCheckStr =
       if (reqParams.isEmpty) {
         ""

@@ -31,7 +31,7 @@ case class PythonScript(
         if (param.otype == "") {
           ""
         } else {
-          ", required = " + { if (param.required.getOrElse(false)) "True" else "False" }
+          ", required = " + { if (param.required) "True" else "False" }
         }
 
       param match {

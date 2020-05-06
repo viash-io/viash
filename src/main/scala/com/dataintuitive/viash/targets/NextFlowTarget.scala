@@ -88,8 +88,7 @@ case class NextFlowTarget(
             ("description", x.toString)),
         dataObject.default.map(x =>
             ("value", valueOrPointer(x.toString))),
-        dataObject.required.map(x =>
-            ("required", x)),
+        Some(("required", dataObject.required)),
         Some(("type", dataObject.`type`)),
         Some(("direction", dataObject.direction))
       ).flatMap(x => x)

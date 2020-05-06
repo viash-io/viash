@@ -120,7 +120,7 @@ case class RScript(
 
   def makeRequiredArgCheck(functionality: Functionality, params: List[DataObject[_]]): String = {
     // construct required arg checks
-    val reqParams = params.filter(_.required.getOrElse(false))
+    val reqParams = params.filter(_.required)
     if (reqParams.isEmpty) {
       ""
     } else {

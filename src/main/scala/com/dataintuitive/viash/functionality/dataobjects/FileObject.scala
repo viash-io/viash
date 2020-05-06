@@ -8,7 +8,7 @@ case class FileObject(
     description: Option[String] = None,
     default: Option[File] = None,
     mustExist: Option[Boolean] = None,
-    required: Option[Boolean] = None,
+    required: Boolean = false,
     tag: Option[String] = None,
     direction: Direction = Input,
     passthrough: Boolean = false

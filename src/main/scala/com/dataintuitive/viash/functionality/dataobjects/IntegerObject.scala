@@ -5,7 +5,7 @@ case class IntegerObject(
     alternatives: Option[List[String]] = None,
     description: Option[String] = None,
     default: Option[Int] = None,
-    required: Option[Boolean] = None,
+    required: Boolean = false,
     tag: Option[String] = None,
     direction: Direction = Input,
     passthrough: Boolean = false
