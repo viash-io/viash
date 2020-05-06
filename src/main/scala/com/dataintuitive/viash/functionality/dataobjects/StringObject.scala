@@ -2,7 +2,7 @@ package com.dataintuitive.viash.functionality.dataobjects
 
 case class StringObject(
     name: String,
-    alternatives: Option[List[String]] = None,
+    alternatives: List[String] = Nil,
     description: Option[String] = None,
     default: Option[String] = None,
     required: Boolean = false,

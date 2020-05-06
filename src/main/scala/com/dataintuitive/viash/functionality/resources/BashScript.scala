@@ -44,7 +44,7 @@ case class BashScript(
 
     // gather parse code for params
     val usageStrs = params.map(param => {
-      val names = param.alternatives.getOrElse(Nil) ::: List(param.name)
+      val names = param.alternatives ::: List(param.name)
       val exampleStrs =
         if (param.isInstanceOf[BooleanObject] && param.asInstanceOf[BooleanObject].flagValue.isDefined) {
           names
@@ -97,7 +97,7 @@ case class BashScript(
         // params of the form --param ...
         val part1 = BashHelper.argStore(param.name, storeVariable, fv.toString(), 1, passthroughVariable)
         // Alternatives
-        val moreParts = param.alternatives.getOrElse(Nil).map(alt => {
+        val moreParts = param.alternatives.map(alt => {
           BashHelper.argStore(alt, storeVariable, fv.toString(), 1, passthroughVariable)
         })
 
@@ -114,7 +114,7 @@ case class BashScript(
             case "-" | "" => Nil
           }
         // Alternatives
-        val moreParts = param.alternatives.getOrElse(Nil).map(alt => {
+        val moreParts = param.alternatives.map(alt => {
           BashHelper.argStore(alt, storeVariable, "\"$2\"", 2, passthroughVariable)
         })
 

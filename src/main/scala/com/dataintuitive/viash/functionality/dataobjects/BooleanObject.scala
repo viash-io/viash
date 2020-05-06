@@ -6,7 +6,7 @@ abstract class BooleanObject extends DataObject[Boolean] {
 
 case class BooleanObjectRegular(
     name: String,
-    alternatives: Option[List[String]] = None,
+    alternatives: List[String] = Nil,
     description: Option[String] = None,
     default: Option[Boolean] = None,
     required: Boolean = false,
@@ -21,7 +21,7 @@ case class BooleanObjectRegular(
 
 case class BooleanObjectTrue(
     name: String,
-    alternatives: Option[List[String]] = None,
+    alternatives: List[String] = Nil,
     description: Option[String] = None,
     tag: Option[String] = None,
     direction: Direction = Input,
@@ -35,7 +35,7 @@ case class BooleanObjectTrue(
 }
 case class BooleanObjectFalse(
     name: String,
-    alternatives: Option[List[String]] = None,
+    alternatives: List[String] = Nil,
     description: Option[String] = None,
     tag: Option[String] = None,
     direction: Direction = Input,

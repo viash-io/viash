@@ -24,7 +24,7 @@ case class PythonScript(
     val paramOptions = params.map(param => {
       val start = (
           param.name ::
-          param.alternatives.getOrElse(Nil)
+          param.alternatives
         ).mkString("\"", "\", \"", "\"")
       val helpStr = param.description.map(", help = \"\"\"" + _ + "\"\"\"").getOrElse("")
       val requiredStr =
