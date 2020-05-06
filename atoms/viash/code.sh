@@ -8,4 +8,4 @@ par_output="test/"
 PASSTHROUGH="-b" # passthrough
 # PORTASH END
 
-java -jar $RESOURCES_DIR/viash.jar --functionality $par_functionality --platform $par_platform $par_mode --output $par_output
+java -jar $RESOURCES_DIR/viash-assembly-0.0.1.jar --functionality $par_functionality --platform $par_platform $par_mode --output $par_output

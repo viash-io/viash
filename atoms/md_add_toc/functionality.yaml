@@ -1,7 +1,6 @@
 name: md_add_toc
 description: empty
-platform: Native
-ftype: transform
+function_type: transform
 arguments:
 - name: inputfile
   type: file
@@ -23,5 +22,5 @@ arguments:
   description: standalone file
   required: true
 resources:
-- name: main
+- type: executable
   path: pandoc

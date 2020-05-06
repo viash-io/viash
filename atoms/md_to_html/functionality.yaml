@@ -1,13 +1,11 @@
 name: md_to_html
 description: empty
-platform: Native
-ftype: convert
+function_type: convert
 arguments:
 - name: inputfile
   type: file
   required: true
   default: test.md
-  direction: input
 - name: "--output"
   type: file
   description: The path to the output file.
@@ -19,18 +17,15 @@ arguments:
   description: The path to the html template
   default: template.html
   required: true
-  direction: input
 - name: "--css"
   type: string
   description: the path to the css template
   default: template.css
   required: true
-  direction: input
 - name: "-s"
   type: boolean
   description: Create standalone html file
   required: true
-  direction: input
 resources:
-- name: main
+- type: executable
   path: pandoc

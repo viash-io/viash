@@ -1,7 +1,6 @@
 name: wrapped_filter
 description: cat a file with arguments and optionally apply a filter
-platform: bash
-ftype: transform
+function_type: transform
 arguments:
 - name: "--input"
   type: file
@@ -15,9 +14,8 @@ arguments:
   description: "Filter to apply (i.e. regex)"
   default: ".*"
 - name: "-b"
-  type: boolean
+  type: boolean_true
   description: "Add line numbers (before filtering)"
-  flagValue: true
   passthrough: true
 - name: "--output"
   type: file
@@ -26,5 +24,5 @@ arguments:
   default: output.txt
   direction: output
 resources:
-- name: main
+- type: bash_script
   path: ./code.sh
