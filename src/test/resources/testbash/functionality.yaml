@@ -21,9 +21,8 @@ arguments:
   description: A sentence or word with a short flag.
   required: true
 - name: "--truth"
-  type: boolean
+  type: boolean_true
   description: A switch flag.
-  flagValue: true
 - name: "--output"
   alternatives: ["-o"]
   type: file
@@ -43,7 +42,11 @@ arguments:
   type: string
   description: A passthrough parameter
   passthrough: true
+- name: "--passthroughbool"
+  type: boolean_true
+  description: A passthrough parameter 2
+  passthrough: true
 resources:
-- name: main.sh
+- type: bash_script
   path: ./code.sh
 

@@ -35,7 +35,9 @@ package object dataobjects {
   implicit val encodeStringObject: Encoder.AsObject[StringObject] = deriveConfiguredEncoder
   implicit val encodeIntegerObject: Encoder.AsObject[IntegerObject] = deriveConfiguredEncoder
   implicit val encodeDoubleObject: Encoder.AsObject[DoubleObject] = deriveConfiguredEncoder
-  implicit val encodeBooleanObject: Encoder.AsObject[BooleanObject] = deriveConfiguredEncoder
+  implicit val encodeBooleanObjectR: Encoder.AsObject[BooleanObjectRegular] = deriveConfiguredEncoder
+  implicit val encodeBooleanObjectT: Encoder.AsObject[BooleanObjectTrue] = deriveConfiguredEncoder
+  implicit val encodeBooleanObjectF: Encoder.AsObject[BooleanObjectFalse] = deriveConfiguredEncoder
   implicit val encodeFileObject: Encoder.AsObject[FileObject] = deriveConfiguredEncoder
 
   implicit def encodeDataObject[A <: DataObject[_]]: Encoder[A] = Encoder.instance {
@@ -45,7 +47,9 @@ package object dataobjects {
         case s: StringObject => encodeStringObject(s)
         case s: IntegerObject => encodeIntegerObject(s)
         case s: DoubleObject => encodeDoubleObject(s)
-        case s: BooleanObject => encodeBooleanObject(s)
+        case s: BooleanObjectRegular => encodeBooleanObjectR(s)
+        case s: BooleanObjectTrue => encodeBooleanObjectT(s)
+        case s: BooleanObjectFalse => encodeBooleanObjectF(s)
         case s: FileObject => encodeFileObject(s)
       }
       objJson deepMerge typeJson
@@ -54,7 +58,9 @@ package object dataobjects {
   implicit val decodeStringObject: Decoder[StringObject] = deriveConfiguredDecoder
   implicit val decodeIntegerObject: Decoder[IntegerObject] = deriveConfiguredDecoder
   implicit val decodeDoubleObject: Decoder[DoubleObject] = deriveConfiguredDecoder
-  implicit val decodeBooleanObject: Decoder[BooleanObject] = deriveConfiguredDecoder
+  implicit val decodeBooleanObjectR: Decoder[BooleanObjectRegular] = deriveConfiguredDecoder
+  implicit val decodeBooleanObjectT: Decoder[BooleanObjectTrue] = deriveConfiguredDecoder
+  implicit val decodeBooleanObjectF: Decoder[BooleanObjectFalse] = deriveConfiguredDecoder
   implicit val decodeFileObject: Decoder[FileObject] = deriveConfiguredDecoder
 
   implicit def decodeDataObject: Decoder[DataObject[_]] = Decoder.instance {
@@ -64,7 +70,9 @@ package object dataobjects {
           case Right("string") => decodeStringObject.widen
           case Right("integer") => decodeIntegerObject.widen
           case Right("double") => decodeDoubleObject.widen
-          case Right("boolean") => decodeBooleanObject.widen
+          case Right("boolean") => decodeBooleanObjectR.widen
+          case Right("boolean_true") => decodeBooleanObjectT.widen
+          case Right("boolean_false") => decodeBooleanObjectF.widen
           case Right("file") => decodeFileObject.widen
           case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised.")
           case Left(exception) => throw exception
