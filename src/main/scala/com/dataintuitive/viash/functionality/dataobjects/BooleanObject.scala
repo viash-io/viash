@@ -23,13 +23,13 @@ case class BooleanObjectTrue(
     name: String,
     alternatives: Option[List[String]] = None,
     description: Option[String] = None,
-    required: Option[Boolean] = None,
     tag: Option[String] = None,
     direction: Direction = Input,
     passthrough: Boolean = false
 ) extends BooleanObject {
   override val `type` = "boolean_true"
 
+  val required = Some(false)
   val flagValue = Some(true)
   val default = None
 }
@@ -37,13 +37,13 @@ case class BooleanObjectFalse(
     name: String,
     alternatives: Option[List[String]] = None,
     description: Option[String] = None,
-    required: Option[Boolean] = None,
     tag: Option[String] = None,
     direction: Direction = Input,
     passthrough: Boolean = false
 ) extends BooleanObject {
   override val `type` = "boolean_false"
 
+  val required = Some(false)
   val flagValue = Some(false)
   val default = None
 }
