@@ -2,7 +2,7 @@ package com.dataintuitive.viash.functionality.dataobjects
 
 case class DoubleObject(
     name: String,
-    alternatives: Option[List[String]] = None,
+    alternatives: List[String] = Nil,
     description: Option[String] = None,
     default: Option[Double] = None,
     required: Boolean = false,

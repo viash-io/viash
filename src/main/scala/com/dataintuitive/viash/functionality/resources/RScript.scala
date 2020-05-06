@@ -46,7 +46,7 @@ case class RScript(
       val start = (
           { if (param.otype == "-") List("-" + param.name) else Nil } ::: // R optparse does not support short flag only
           param.name ::
-          param.alternatives.getOrElse(Nil)
+          param.alternatives
         ).mkString("c(\"", "\", \"", "\")")
       val defStr = param.default.map(s => " [default %default]").getOrElse("")
       val helpStr = param.description.map(", help = \"" + removeNewlines(_) + defStr + "\"").getOrElse("")

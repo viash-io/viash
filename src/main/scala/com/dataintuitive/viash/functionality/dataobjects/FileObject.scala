@@ -4,7 +4,7 @@ import java.io.File
 
 case class FileObject(
     name: String,
-    alternatives: Option[List[String]] = None,
+    alternatives: List[String] = Nil,
     description: Option[String] = None,
     default: Option[File] = None,
     mustExist: Option[Boolean] = None,
