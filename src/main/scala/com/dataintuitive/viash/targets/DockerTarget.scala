@@ -107,7 +107,7 @@ case class DockerTarget(
 
     // check whether entrypoint should be set to bash
     val entrypointStr = functionality.mainScript match {
-      case e: Executable => ""
+      case Some(e: Executable) => ""
       case _ => "--entrypoint bash "
     }
 
@@ -116,7 +116,7 @@ case class DockerTarget(
 
   def processDockerVolumes(functionality: Functionality) = {
     val storeVariable = functionality.mainScript match {
-      case e: Executable => None
+      case Some(e: Executable) => None
       case _ => Some("VIASHARGS")
     }
 

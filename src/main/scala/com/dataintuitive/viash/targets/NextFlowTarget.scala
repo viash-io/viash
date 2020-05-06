@@ -43,9 +43,9 @@ case class NextFlowTarget(
     // get main script/binary
     val mainResource = functionality.mainScript
     println("mainResource: " + mainResource)
-    val mainPath = Paths.get(resourcesPath, mainResource.filename).toFile().getPath()
+    val mainPath = Paths.get(resourcesPath, mainResource.get.filename).toFile().getPath()
     val executionCode = mainResource match {
-      case e: Executable => mainResource.path.get
+      case Some(e: Executable) => e.path.get
       case _ => fname
     }
 
@@ -532,11 +532,15 @@ case class NextFlowTarget(
     )
 
     val additionalResources = mainResource match {
-      case e: Executable => {
+      case None => {
         println("No additional resources required")
         Nil
       }
-      case e: Script => {
+      case Some(e: Executable) => {
+        println("No additional resources required")
+        Nil
+      }
+      case Some(e: Script) => {
         println(s"Add ${e.`type`} resources")
         nativeTarget.modifyFunctionality(functionality).resources
       }

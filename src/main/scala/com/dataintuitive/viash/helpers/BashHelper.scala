@@ -76,14 +76,15 @@ object BashHelper {
     val code = ""
 
     val executionCode = mainResource match {
-      case e: Executable => mainResource.path.get + " $VIASHARGS"
-      case _ => {
+      case None => ""
+      case Some(e: Executable) => e.path.get + " $VIASHARGS"
+      case Some(res) => {
         s"""
           |tempscript=\\$$(mktemp /tmp/viashrun-${functionality.name}-XXXXXX)
           |cat > "\\$$tempscript" << 'VIASHMAIN'
           |${escape(functionality.mainCodeWithArgParse.get).replaceAll("\\\\\\$RESOURCES_DIR", resourcesPath)}
           |VIASHMAIN
-          |${mainResource.command("\\$tempscript")} $$VIASHARGS
+          |${res.command("\\$tempscript")} $$VIASHARGS
           |rm "\\$$tempscript"
           |""".stripMargin
       }
@@ -91,7 +92,8 @@ object BashHelper {
 
     // generate bash document
     val (heredocStart, heredocEnd) = mainResource match {
-      case e: Executable => ("", "")
+      case None => ("", "")
+      case Some(e: Executable) => ("", "")
       case _ => ("cat << VIASHEOF | ", "\nVIASHEOF")
     }
 
