@@ -6,8 +6,11 @@ import java.nio.file.Paths
 
 object BashHelper {
   val quoteFunction = {
+//    """function ViashQuote {
+//      |  echo $1 | sed "s/'/'\"'\"'/g" | sed "s/.*/\'&\'/" | sed "s#^'\(--*[^=][^=]*=\)#\1'#"
+//      |}""".stripMargin
     """function ViashQuote {
-      |  echo $1 | sed "s/'/'\"'\"'/g" | sed "s/.*/\'&\'/" | sed "s#^'\(--*[^=][^=]*=\)#\1'#"
+      |  echo $1 | sed "s#'#MYUNLIKELYVIASHESCAPEPHRASE#g" | sed "s#^\(-[^=]*=\)\(.*\)\$#\1\'\2\'#" | sed "s#^[^\-].*\$#\'&\'#" | sed "s#MYUNLIKELYVIASHESCAPEPHRASE#'\"'\"'#g"
       |}""".stripMargin
   }
   val removeFlagFunction = {
@@ -29,7 +32,7 @@ object BashHelper {
   }
 
   def escape(str: String) = {
-    str.replaceAll("([\\$`])", "\\\\$1")
+    str.replaceAll("([\\\\$`])", "\\\\$1")
   }
 
   def argStore(name: String, plainName: String, store: String, argsConsumed: Int, storeUnparsed: Option[String]) = {
@@ -76,7 +79,7 @@ object BashHelper {
       case e: Executable => mainResource.path.get + " $VIASHARGS"
       case _ => {
         s"""
-          |tempscript=$$(mktemp /tmp/viashrun-${functionality.name}-XXXXXX)
+          |tempscript=\\$$(mktemp /tmp/viashrun-${functionality.name}-XXXXXX)
           |cat > "\\$$tempscript" << 'VIASHMAIN'
           |${escape(functionality.mainCodeWithArgParse.get).replaceAll("\\\\\\$RESOURCES_DIR", resourcesPath)}
           |VIASHMAIN
