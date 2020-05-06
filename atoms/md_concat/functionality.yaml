@@ -1,7 +1,6 @@
 name: md_concat
 description: empty
-platform: Native
-ftype: join
+function_type: join
 arguments:
 - name: inputfile
   type: file
@@ -15,5 +14,5 @@ arguments:
   required: true
   direction: output
 resources:
-- name: main
+- type: executable
   path: pandoc

@@ -6,7 +6,7 @@ arguments:
   type: string
   description: "Run mode"
   required: true
-  passhtrough: true
+  passthrough: true
 - name: "--functionality"
   alternatives: ["-f"]
   type: file
@@ -14,7 +14,7 @@ arguments:
   mustExist: true
   required: true
   direction: input
-  passhthrough: true
+  passthrough: true
 - name: "--platform"
   alternatives: ["-p"]
   type: file
@@ -30,9 +30,8 @@ arguments:
   required: true
   default: output.txt
   direction: output
-  passthroug: true
+  passthrough: true
 resources:
-- name: main
+- type: bash_script
   path: ./code.sh
-- name: viash.jar
-  path: ./viash-assembly-0.0.1.jar
+- path: ./viash-assembly-0.0.1.jar

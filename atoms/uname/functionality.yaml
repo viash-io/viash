@@ -1,6 +1,5 @@
 name: pandoc
 description: empty
-platform: Native
 arguments:
 - name: "-a"
   type: boolean
@@ -13,5 +12,5 @@ arguments:
   required: true
   default: none
 resources:
-- name: main
+- type: executable
   path: uname
