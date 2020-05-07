@@ -1,0 +1,34 @@
+---
+title: Report
+output: pdf_document
+params:
+  title: "My title"
+  mean: 0
+  sd: 1
+---
+
+```{r setup, include = FALSE}
+library(tidyverse)
+```
+
+This is an example report.
+
+## Input parameters 
+
+```{r params, results='asis', echo=FALSE}
+cat(paste0(" * ", names(params), ": ", params, "\n", collapse = ""))
+```
+
+## Results
+```{r codeblock1}
+df <- tibble(
+  x = rnorm(100, mean = params$mean, sd = params$sd),
+  y = rnorm(100, mean = params$mean, sd = params$sd),
+  l = sample(letters, 100, replace = TRUE)
+)
+
+ggplot(df) + 
+  geom_text(aes(x, y, label = l)) +
+  labs(title = params$title) +
+  theme_bw()
+```

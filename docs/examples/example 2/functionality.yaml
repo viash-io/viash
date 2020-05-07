@@ -1,0 +1,38 @@
+name: extended_example
+description: | 
+  Writes the given input parameters to an output file.
+arguments: 
+- name: "--string"
+  alternatives: ["-s"]
+  type: string
+  description: A sentence.
+  direction: input
+  required: false
+  default: "A default string"
+- name: "--real_number"
+  alternatives: ["-r"]
+  type: double
+  description: A real number with positional arguments.
+  direction: input
+  default: 123.456
+  required: false
+- name: "--whole_number"
+  alternatives: ["-w"]
+  type: integer
+  description: A whole number with a standard flag.
+  default: 789
+  required: false
+- name: "--truth"
+  alternatives: ["-t"]
+  type: boolean_true
+  description: A switch flag.
+- name: "--output"
+  alternatives: ["-o"]
+  type: file
+  description: Write the parameters to a json file.
+  direction: output
+  required: true
+resources:
+- type: bash_script
+  path: ./code.sh
+

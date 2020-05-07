@@ -1,0 +1,40 @@
+name: make_vignette
+description: An example for generating an RMarkdown output.
+arguments: 
+- name: "--title"
+  alternatives: ["-t"]
+  type: string
+  description: A title for the plot
+  direction: input
+  required: false
+  default: My plot
+- name: "--mean"
+  alternatives: ["-m"]
+  type: double
+  description: The mean of the distribution
+  required: false
+  default: 0
+- name: "--sd"
+  alternatives: ["-s"]
+  type: double
+  description: The standard deviation of the distribution
+  required: false
+  default: 1
+- name: "--output"
+  alternatives: ["-o"]
+  type: file
+  description: Write the parameters to a json file.
+  direction: output
+- name: "--format"
+  alternatives: ["-f"]
+  type: string
+  description: The format of the output file.
+  direction: input
+  required: false
+  default: pdf_document
+  values: [pdf_document, html_document]
+resources:
+- type: r_script
+  path: report.R
+- path: report.Rmd
+
