@@ -103,7 +103,7 @@ case class DockerTarget(
 
     // process volume parameter
     val volumesGet = volumes.getOrElse(Nil)
-    val volStr = volumesGet.map(vol => s"""-v "$$${vol.variable}":${vol.mount} """).mkString("")
+    val volStr = volumesGet.map(vol => s"""-v "$$${vol.variable}":"${vol.mount}" """).mkString("")
 
     // check whether entrypoint should be set to bash
     val entrypointStr = functionality.mainScript match {
