@@ -1,3 +1,4 @@
 type: native
 r:
-  packages: [optparse]
+  cran: 
+  - optparse

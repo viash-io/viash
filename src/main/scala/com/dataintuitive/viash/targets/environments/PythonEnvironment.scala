@@ -1,15 +1,15 @@
 package com.dataintuitive.viash.targets.environments
 
 case class PythonEnvironment(
-  packages: Option[List[String]] = None,
-  github: Option[List[String]] = None
+  packages: List[String] = Nil,
+  github: List[String] = Nil
 ) {
   def getInstallCommands() = {
     val installPip =
       """pip install --upgrade pip"""
 
     val installCranPackages =
-      packages.getOrElse(Nil) match {
+      packages match {
         case Nil => Nil
         case packs =>
           List(packs.mkString(
@@ -20,7 +20,7 @@ case class PythonEnvironment(
       }
 
     val installGithubPackages =
-      github.getOrElse(Nil) match {
+      github match {
         case Nil => Nil
         case packs =>
           List(packs.mkString(

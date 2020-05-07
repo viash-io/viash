@@ -1,8 +1,12 @@
 type: docker
 image: rocker/tidyverse
 r:
-  packages: 
+  cran: 
   - optparse
+  github:
+  - dynverse/dynutils@devel
+  bioc:
+  - limma
 apt:
   packages:
   - libhdf5-serial-dev

@@ -1,14 +1,14 @@
 package com.dataintuitive.viash.targets.environments
 
 case class AptEnvironment(
-  packages: Option[List[String]] = None
+  packages: List[String] = Nil
 ) {
   def getInstallCommands() = {
     val aptUpdate =
       """apt-get update"""
 
     val installPackages =
-      packages.getOrElse(Nil) match {
+      packages match {
         case Nil => Nil
         case packs =>
           List(packs.mkString(
