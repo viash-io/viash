@@ -18,6 +18,10 @@ And the list indeed goes on. We thought it time to revisit the whole dependency 
 - **Pimp my script**: Given a script and some meta-information of its parameters, Viash will generate a complete CLI for you. Currently supported scripting languages are R, Python and Bash.
 - **(W)rap it up**: In addition, given more meta-information on the platform on which to run it, Viash will wrap the script in an executable which uses the provided platform as backend. Currently supported platforms are Native, Docker and Nextflow.
 
+## Install
+
+
+
 ## Examples
 
 This README provides three examples on how to use Viash:
@@ -254,7 +258,7 @@ By providing a yaml detailing the requirements of your functionality, Viash can 
 ```yaml
 type: native
 r:
-  packages: 
+  cran: 
   - optparse
   - rmarkdown
   - tidyverse
@@ -278,9 +282,9 @@ It is likely that some systems will encounter some errors when installing packag
 Here, you will have to specify a Docker image to start from (in this case `rocker/tidyverse`). If there are still additional dependencies that are not installed in the container, you can still specify them as before.
 ```yaml
 type: docker
-image: rocker/tidyverse
+image: rocker/verse
 r:
-  packages: 
+  cran: 
   - optparse
   - rmarkdown
   - tidyverse
@@ -299,10 +303,8 @@ docker: Error response from daemon: pull access denied for viash_autogen/make_vi
 See 'docker run --help'.
 
 $ bin/make_vignette ---setup
-Step 1/2 : FROM rocker/tidyverse
+Step 1/2 : FROM rocker/verse
  ---> 27c035ef200a
-Step 2/2 : RUN Rscript -e 'if (!requireNamespace("remotes")) install.packages("remotes")' &&   Rscript -e 'remotes::install_cran(c("optparse", "rmarkdown", "tidyverse"), repos = "https://cran.rstudio.com")'
- ---> Running in 01a387541b6a
 ...
 Removing intermediate container 01a387541b6a
  ---> 1128ae752ae7
@@ -313,42 +315,4 @@ $ $ bin/make_vignette -t "viash is cool" -m 10 -s 2.5 -o /data/report.html -f ht
 ```
 
 Note that in the last command, a `data` volume needs to be specified, and that the path of the output file should be using the pathname specified in the `platform_docker.yaml`.
-
-## `NextFlowTarget` specific info
-
-This target look at the `ftype` attribute. Let us take a look at the different possibilities with an example of each:
-
-### `todir`
-
-One command generates a number of files, irrespective of the fact if all these files are relevant/necessary or not.
-
-For instance: I have a `tgz` bundle that needs to be untarred, but I only need the contents of a subdirectory. I'm aware there is an option for `tar` to extract subdirs, but let us assume for a moment this option does not exist.
-
-We let `tar` extract the archive to a directory. The output of the module is a Channel containing and array as such:
-
-```
-[ sampleID, [ file1, file2, dir1, ...], configMap ]
-```
-
-In other words, the path element of the output triplet is an array of paths. We can flatten this nested array using something like this:
-
-```groovy
-output_ \
-  | flatMap{ it ->
-      it.collect{ p -> [ it[0], p, it[2] ] } }
-```
-
-### `transform`
-
-Modify a file, the output is of the same format as the input.
-
-For instance: add additional annotations in a `.h5ad` file.
-
-### `convert`
-
-Convert from one format to an other.
-
-An example is: unzip a file.
-
-
 

@@ -1,6 +1,6 @@
 type: native
 r:
-  packages: 
+  cran: 
   - optparse
   - rmarkdown
   - tidyverse
