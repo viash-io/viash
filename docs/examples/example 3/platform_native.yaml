@@ -1,0 +1,6 @@
+type: native
+r:
+  packages: 
+  - optparse
+  - rmarkdown
+  - tidyverse
