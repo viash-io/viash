@@ -1,7 +1,7 @@
 type: docker
 image: rocker/verse
 r:
-  packages: 
+  cran: 
   - optparse
   - rmarkdown
   - tidyverse
