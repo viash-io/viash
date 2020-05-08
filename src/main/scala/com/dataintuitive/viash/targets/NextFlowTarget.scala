@@ -461,7 +461,7 @@ case class NextFlowTarget(
         |        id_input_params_.map{ id, input, _params ->
         |            def filename = ""
         |            def outputFilename = ""
-        |            if (input.getClass() == sun.nio.fs.UnixPath) {
+        |            if (input.getClass() == sun.nio.fs.UnixPath || input.getClass() == com.upplication.s3fs.S3Path) {
         |                // Just a file path as input
         |                filename = input.name
         |                outputFilename = outFromIn(input.name)
