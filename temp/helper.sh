@@ -3,8 +3,9 @@ green=`tput setaf 2`
 blue=`tput setaf 4`
 reset=`tput sgr0`
 
-SCRIPT_DIR=$( cd ${0%/*} && pwd -P )
-VIASH_DIR="$SCRIPT_DIR/../"
+SCRIPT_DIR=$(dirname "$0")
+VIASH_DIR=$(dirname "$SCRIPT_DIR")
+VERSION=$(cat "$VIASH_DIR/build.sbt" | grep "version" | sed 's/.*"\(.*\)"$/\1/')
 
 function run_tests {
   if [ -f build.sbt ]; then
@@ -34,7 +35,7 @@ function assembly {
 }
 
 function viash {
-  java -jar "$VIASH_DIR/target/scala-2.12/viash-assembly-0.0.1.jar" $@
+  java -jar "$VIASH_DIR/target/scala-2.12/viash-assembly-$VERSION.jar" $@
 }
 
 function viash_export_all {
