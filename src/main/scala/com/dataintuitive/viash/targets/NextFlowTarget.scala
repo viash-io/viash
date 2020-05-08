@@ -177,6 +177,12 @@ case class NextFlowTarget(
         |import java.nio.file.Paths
         |""".stripMargin('|')
 
+    /**
+     * Groovy code to parse the params structure and turn it into a CLI instruction.
+     * Please note that NO quotes are added, so make sure to add those yourself if needed!
+     *
+     * TODO: turn this into a functional approach
+     */
     val setup_main_utils = s"""
         |def renderCLI(command, arguments) {
         |
@@ -189,7 +195,7 @@ case class NextFlowTarget(
         |        if (it.otype.contains("-"))
         |            (it.type == "boolean")
         |            ? argumentsList << it.otype + it.name
-        |            : argumentsList << it.otype + it.name + " '" + it.value + "'"
+        |            : argumentsList << it.otype + it.name + " " + it.value
         |    }
         |
         |    def command_line = command + argumentsList
