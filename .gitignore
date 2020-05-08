@@ -1,6 +1,6 @@
 target/
-.bloop
-.metals
+.bloop*
+.metals*
 /bin/
 .cache-main
 .classpath
