@@ -1,6 +1,6 @@
 target/
-.bloop
-.metals
+.bloop*
+.metals*
 /bin/
 .cache-main
 .classpath
@@ -8,5 +8,5 @@ target/
 .settings
 output
 .cache-tests
-project/metals
+project/metals.sbt
 out/*
