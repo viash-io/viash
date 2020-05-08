@@ -1,4 +1,4 @@
-name: Viash
+name: viash
 description: 
 platform: bash
 arguments:
@@ -6,7 +6,6 @@ arguments:
   type: string
   description: "Run mode"
   required: true
-  passthrough: true
 - name: "--functionality"
   alternatives: ["-f"]
   type: file
@@ -14,7 +13,6 @@ arguments:
   mustExist: true
   required: true
   direction: input
-  passthrough: true
 - name: "--platform"
   alternatives: ["-p"]
   type: file
@@ -22,7 +20,6 @@ arguments:
   mustExist: true
   required: true
   direction: input
-  passthrough: true
 - name: "--output"
   alternatives: ["-o"]
   type: file
@@ -30,8 +27,7 @@ arguments:
   required: true
   default: output.txt
   direction: output
-  passthrough: true
 resources:
 - type: bash_script
   path: ./code.sh
-- path: ./viash-assembly-0.0.1.jar
+- path: ./viash-assembly-0.1.0.jar
