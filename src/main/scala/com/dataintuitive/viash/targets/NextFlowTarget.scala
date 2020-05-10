@@ -182,7 +182,7 @@ case class NextFlowTarget(
         |        if (it.otype == "")
         |            argumentsList << it.value
         |        if (it.otype.contains("-"))
-        |            (it.type == "boolean")
+        |            (it.type == "boolean_true")
         |            ? argumentsList << it.otype + it.name
         |            : argumentsList << it.otype + it.name + " " + it.value
         |    }
@@ -230,6 +230,7 @@ case class NextFlowTarget(
           |}
           |""".stripMargin('|').replace("__e__", outputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
       // Out format is different from in format
+      // Deprecate! Use convert instead, eventually allowing to define the output filename via regex
       case Some(Unzip) => """
           |def outFromIn(inputstr) {
           |
