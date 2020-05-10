@@ -22,7 +22,8 @@ case class NextFlowTarget(
   python: Option[PythonEnvironment] = None,
   executor: Option[String],
   publishSubDir: Option[Boolean],
-  label: Option[String]
+  label: Option[String],
+  stageInMode: Option[String]
 ) extends Target {
   val `type` = "nextflow"
 
@@ -230,17 +231,6 @@ case class NextFlowTarget(
           |}
           |""".stripMargin('|').replace("__e__", outputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
       // Out format is different from in format
-      // Deprecate! Use convert instead, eventually allowing to define the output filename via regex
-      case Some(Unzip) => """
-          |def outFromIn(inputstr) {
-          |
-          |    def splitstring = inputstr.split(/\./)
-          |    def newStr = splitstring.dropRight(1)
-          |
-          |    return newStr.join(".")
-          |}
-          |""".stripMargin('|')
-      // Out format is different from in format
       case Some(ToDir) => """
           |def outFromIn(inputstr) {
           |
@@ -344,8 +334,8 @@ case class NextFlowTarget(
         case _ => ""
       }
 
-      val stageInMode = functionality.function_type match {
-        case Some(Unzip) => "copy"
+      val stageInModeStr = stageInMode match {
+        case Some("copy") => "copy"
         case _ => "symlink"
       }
 
@@ -366,7 +356,7 @@ case class NextFlowTarget(
         |  tag "$${id}"
         |  echo { (params.debug == true) ? true : false }
         |  cache 'deep'
-        |  stageInMode "$stageInMode"
+        |  stageInMode "$stageInModeStr"
         |  container "$${container}"
         |  // If id is the empty string, the subdirectory is not created
         |  publishDir "$publishDirString", mode: 'copy', overwrite: true
