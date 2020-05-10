@@ -14,9 +14,6 @@ import scala.reflect.ClassTag
  */
 case class NextFlowTarget(
   image: String,
-  volumes: Option[List[Volume]] = None,
-  port: Option[List[String]] = None,
-  workdir: Option[String] = None,
   apt: Option[AptEnvironment] = None,
   r: Option[REnvironment] = None,
   python: Option[PythonEnvironment] = None,
@@ -27,12 +24,9 @@ case class NextFlowTarget(
 ) extends Target {
   val `type` = "nextflow"
 
-  val dockerTarget = DockerTarget(image, volumes, port, workdir, apt, r, python)
   val nativeTarget = NativeTarget(r, python)
 
   def modifyFunctionality(functionality: Functionality) = {
-
-    // val dockerFunctionality = dockerTarget.modifyFunctionality(functionality)
 
     val resourcesPath = "/app"
 
