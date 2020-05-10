@@ -1,8 +1,3 @@
 type: nextflow
 image: rocker/tidyverse
-volumes:
-- name: data
-  mount: /data
-workdir: /app
 label: bigmem
-executor: mytestfieldexecutor
