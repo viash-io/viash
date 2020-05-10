@@ -9,8 +9,6 @@ import scala.reflect.ClassTag
 
 /**
  * Target class for generating NextFlow (DSL2) modules.
- * Most of the functionality is derived from the DockerTarget and we fall back to it.
- * That also means the syntax needs to be compatible.
  */
 case class NextFlowTarget(
   image: String,
@@ -18,6 +16,7 @@ case class NextFlowTarget(
   r: Option[REnvironment] = None,
   python: Option[PythonEnvironment] = None,
   executor: Option[String],
+  publish: Option[Boolean],
   publishSubDir: Option[Boolean],
   label: Option[String],
   stageInMode: Option[String]
@@ -37,7 +36,6 @@ case class NextFlowTarget(
 
     // get main script/binary
     val mainResource = functionality.mainScript
-    println("mainResource: " + mainResource)
     val mainPath = Paths.get(resourcesPath, mainResource.get.filename).toFile().getPath()
     val executionCode = mainResource match {
       case Some(e: Executable) => e.path.get
@@ -190,7 +188,7 @@ case class NextFlowTarget(
 
     /**
      * What should the output filename be, in terms of the input?
-     * This is irrelevant for simple one-step function calling, but it is crucial a in a pipeline.
+     * This is irrelevant for simple one-step function calling, but it is crucial in a pipeline.
      * This uses the function type, but there is no check on it yet!
      * TODO: Check for conditions
      */
@@ -200,17 +198,6 @@ case class NextFlowTarget(
           |def outFromIn(inputstr) {
           |
           |    return "${inputstr}"
-          |}
-          |""".stripMargin('|').replace("__e__", inputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
-      // in and out file format are the same
-      case Some(Transform) => """
-          |def outFromIn(inputstr) {
-          |
-          |    def splitstring = inputstr.split(/\./)
-          |    def prefix = splitstring.head()
-          |    def extension = splitstring.last()
-          |
-          |    return prefix + "." + "__f__" + "." + "__e__"
           |}
           |""".stripMargin('|').replace("__e__", inputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
       // Out format is different from in format
@@ -251,7 +238,7 @@ case class NextFlowTarget(
           |def outFromIn(inputStr) {
           |
           |    println(">>> Having a hard time generating an output file name.")
-          |    println(">>> Is the ftype attribute filled out?")
+          |    println(">>> Is the function_type attribute filled out?")
           |
           |    return "output"
           |}
@@ -318,9 +305,15 @@ case class NextFlowTarget(
      */
     val setup_main_process = {
 
+      // If id is the empty string, the subdirectory is not created
       val publishDirString = publishSubDir match {
         case Some(true) => "${params.outDir}/${id}/" + fname
         case _ => "${params.outDir}/${id}"
+      }
+
+      val publishDirStr = publish match {
+        case Some(false) => ""
+        case _ => s"""publishDir "$publishDirString", mode: 'copy', overwrite: true"""
       }
 
       val labelString = label match {
@@ -352,8 +345,7 @@ case class NextFlowTarget(
         |  cache 'deep'
         |  stageInMode "$stageInModeStr"
         |  container "$${container}"
-        |  // If id is the empty string, the subdirectory is not created
-        |  publishDir "$publishDirString", mode: 'copy', overwrite: true
+        |  $publishDirStr
         |  input:
         |    tuple val(id), path(input), val(output), val(container), val(cli)
         |  output:

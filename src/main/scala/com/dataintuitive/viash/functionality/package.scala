@@ -18,7 +18,7 @@ package object functionality {
     cursor => cursor.value.as[String].map(s =>
       s.toLowerCase() match {
         case "asis" => AsIs
-        case "transform" => Transform
+        case "transform" => Convert
         case "convert" => Convert
         case "todir" => ToDir
         case "join" => Join
