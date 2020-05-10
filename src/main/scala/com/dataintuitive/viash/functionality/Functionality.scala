@@ -104,4 +104,3 @@ case object Transform extends FunctionType
 case object Convert extends FunctionType
 case object ToDir extends FunctionType
 case object Join extends FunctionType
-case object Unzip extends FunctionType

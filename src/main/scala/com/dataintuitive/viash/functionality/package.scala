@@ -22,7 +22,6 @@ package object functionality {
         case "convert" => Convert
         case "todir" => ToDir
         case "join" => Join
-        case "unzip" => Unzip
       }
     )
   }
