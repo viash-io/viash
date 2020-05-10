@@ -1,33 +1,8 @@
 name: viash
-description: 
+description: Wrapper for Viash itself, wow this feels meta...
 platform: bash
-arguments:
-- name: "mode"
-  type: string
-  description: "Run mode"
-  required: true
-- name: "--functionality"
-  alternatives: ["-f"]
-  type: file
-  description: "Functionality"
-  mustExist: true
-  required: true
-  direction: input
-- name: "--platform"
-  alternatives: ["-p"]
-  type: file
-  description: "Platform"
-  mustExist: true
-  required: true
-  direction: input
-- name: "--output"
-  alternatives: ["-o"]
-  type: file
-  description: "Output file"
-  required: true
-  default: output.txt
-  direction: output
+arguments: []
 resources:
 - type: bash_script
   path: ./code.sh
-- path: ./viash-assembly-0.1.0.jar
+- path: ./../../target/scala-2.12/viash-assembly-0.1.0.jar
