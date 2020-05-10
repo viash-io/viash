@@ -100,7 +100,6 @@ object Functionality {
 
 sealed trait FunctionType
 case object AsIs extends FunctionType
-case object Transform extends FunctionType
 case object Convert extends FunctionType
 case object ToDir extends FunctionType
 case object Join extends FunctionType
