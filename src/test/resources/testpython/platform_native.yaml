@@ -1,3 +1,5 @@
 type: native
 python:
-  packages: [argparse]
+  packages: 
+  - argparse
+  - "anndata<0.7"
