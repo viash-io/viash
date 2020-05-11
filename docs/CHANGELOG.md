@@ -1,3 +1,7 @@
+# Viash unreleased
+
+... nothing yet ...
+
 # Viash 0.1.0 (2020-05-07)
 * MAJOR CHANGES: This PR refactors the Functionality class as discussed in VIP1 (#1). This has resulted in a lot of internal changes, but the changes with regard to the yaml definitions are relatively minor. See the section below for more info.
 * MINOR CHANGES: Updated the functionality.yamls under `atoms/` and `src/test/` to reflect these aforementioned changes.
@@ -5,7 +9,8 @@
 * BUG FIX: Allow for spaces inside of Docker volume paths.
 * DOCUMENTATION: Updated the README.md.
 * DOCUMENTATION: Provide some small examples at `doc/examples`.
-* MINOR CHANGE: Allow for bioconductor and other repositories in the R environment.
+* MINOR CHANGES: Allow for bioconductor and other repositories in the R environment.
+* MINOR CHANGES: Add support for pip versioning syntax.
 
 ## Changes to functionality.yaml
 * ftype has been renamed to function_type. The value for this field is also being checked.
