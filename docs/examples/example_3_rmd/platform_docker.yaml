@@ -1,0 +1,11 @@
+type: docker
+image: rocker/verse
+r:
+  cran: 
+  - optparse
+  - rmarkdown
+  - tidyverse
+volumes:
+- name: data
+  mount: /data
+workdir: /app

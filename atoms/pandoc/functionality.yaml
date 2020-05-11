@@ -1,13 +1,11 @@
 name: pandoc
 description: empty
-platform: Native
-ftype: join
+function_type: join
 arguments:
 - name: inputfile
   type: file
   required: true
   default: test.md
-  tag: input
   direction: input
 - name: "-o"
   type: file
@@ -17,5 +15,5 @@ arguments:
   tag: output
   direction: output
 resources:
-- name: main
+- type: executable
   path: pandoc

@@ -2,7 +2,6 @@ name: print_params
 description: | 
   Prints out the parameter values.
   Checking whether multiline descriptions work.
-platform: Python
 arguments: 
 - name: "real_number"
   type: double
@@ -13,16 +12,14 @@ arguments:
   type: integer
   description: A whole number.
   default: 10
-  required: false
 - name: "-s"
   type: string
   description: A sentence.
   default: "The slow pink seal slid under the eager sandwich."
   required: true
 - name: "--truth"
-  type: boolean
+  type: boolean_true
   description: A switch flag.
-  flagValue: true
 - name: "--output"
   type: file
   description: The path to the output file.
@@ -30,6 +27,6 @@ arguments:
   required: true
   direction: output
 resources:
-- name: main.py
+- type: python_script
   path: ./code.py
 

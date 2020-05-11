@@ -1,7 +1,7 @@
 package com.dataintuitive.viash.targets
 
-import com.dataintuitive.viash.functionality.{Functionality, Resource}
-import com.dataintuitive.viash.functionality.platforms.BashPlatform
+import com.dataintuitive.viash.functionality.{Functionality}
+import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.helpers.BashHelper
 import com.dataintuitive.viash.targets.environments._
 
@@ -13,9 +13,9 @@ case class NativeTarget(
 
   def modifyFunctionality(functionality: Functionality) = {
     // create new bash script
-    val bashScript = Resource(
-        name = functionality.name,
-        code = Some(BashHelper.wrapScript(
+    val bashScript = BashScript(
+        name = Some(functionality.name),
+        text = Some(BashHelper.wrapScript(
           executor = "bash",
           functionality = functionality,
           setupCommands = setupCommands,
@@ -24,12 +24,11 @@ case class NativeTarget(
           postParse = "",
           postRun = ""
         )),
-        isExecutable = true
+        is_executable = true
       )
 
     functionality.copy(
-      resources = functionality.resources.filterNot(_.name.startsWith("main")) :::
-        List(bashScript)
+      resources = bashScript :: functionality.resources.tail
     )
   }
 

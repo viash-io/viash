@@ -1,0 +1,6 @@
+type: native
+r:
+  cran: 
+  - optparse
+  - rmarkdown
+  - tidyverse

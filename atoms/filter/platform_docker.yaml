@@ -1,7 +1,7 @@
 type: docker
 image: rocker/tidyverse
 r:
-  packages: 
+  cran: 
   - optparse
 volumes:
 - name: data

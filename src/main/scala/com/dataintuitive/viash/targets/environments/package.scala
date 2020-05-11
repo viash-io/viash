@@ -1,21 +1,18 @@
 package com.dataintuitive.viash.targets
 
-import io.circe.{ Decoder, Encoder, Json }
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import cats.syntax.functor._ // for .widen
-import com.dataintuitive.viash.targets.environments.PythonEnvironment
-import com.dataintuitive.viash.targets.environments.REnvironment
+import io.circe.{ Decoder, Encoder }
+import io.circe.generic.extras.Configuration
+import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 
 package object environments {
-  implicit val encodeVolume: Encoder[Volume] = deriveEncoder
-  implicit val decodeVolume: Decoder[Volume] = deriveDecoder
+  implicit val customConfig: Configuration = Configuration.default.withDefaults
 
-  implicit val encodeREnvironment: Encoder[REnvironment] = deriveEncoder
-  implicit val decodeREnvironment: Decoder[REnvironment] = deriveDecoder
+  implicit val encodeREnvironment: Encoder.AsObject[REnvironment] = deriveConfiguredEncoder
+  implicit val decodeREnvironment: Decoder[REnvironment] = deriveConfiguredDecoder
 
-  implicit val encodePythonEnvironment: Encoder[PythonEnvironment] = deriveEncoder
-  implicit val decodePythonEnvironment: Decoder[PythonEnvironment] = deriveDecoder
+  implicit val encodePythonEnvironment: Encoder.AsObject[PythonEnvironment] = deriveConfiguredEncoder
+  implicit val decodePythonEnvironment: Decoder[PythonEnvironment] = deriveConfiguredDecoder
 
-  implicit val encodeAptEnvironment: Encoder[AptEnvironment] = deriveEncoder
-  implicit val decodeAptEnvironment: Decoder[AptEnvironment] = deriveDecoder
+  implicit val encodeAptEnvironment: Encoder.AsObject[AptEnvironment] = deriveConfiguredEncoder
+  implicit val decodeAptEnvironment: Decoder[AptEnvironment] = deriveConfiguredDecoder
 }

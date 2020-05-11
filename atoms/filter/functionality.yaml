@@ -1,7 +1,6 @@
 name: filter_table
 description: |
   Filtering a table by a particular string column.
-platform: R
 arguments:
 - name: "--input"
   alternatives: ["-i"]
@@ -37,6 +36,6 @@ arguments:
   required: true
   direction: output
 resources:
-- name: main.R
+- type: r_script
   path: ./code.R
 

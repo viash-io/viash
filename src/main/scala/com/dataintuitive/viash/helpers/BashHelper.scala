@@ -1,13 +1,16 @@
 package com.dataintuitive.viash.helpers
 
 import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.platforms._
+import com.dataintuitive.viash.functionality.resources._
 import java.nio.file.Paths
 
 object BashHelper {
   val quoteFunction = {
+//    """function ViashQuote {
+//      |  echo $1 | sed "s/'/'\"'\"'/g" | sed "s/.*/\'&\'/" | sed "s#^'\(--*[^=][^=]*=\)#\1'#"
+//      |}""".stripMargin
     """function ViashQuote {
-      |  echo $1 | sed "s/'/'\"'\"'/g" | sed "s/.*/\'&\'/" | sed "s#^'\(--*[^=][^=]*=\)#\1'#"
+      |  echo $1 | sed "s#'#MYUNLIKELYVIASHESCAPEPHRASE#g" | sed "s#^\(-[^=]*=\)\(.*\)\$#\1\'\2\'#" | sed "s#^[^\-].*\$#\'&\'#" | sed "s#MYUNLIKELYVIASHESCAPEPHRASE#'\"'\"'#g"
       |}""".stripMargin
   }
   val removeFlagFunction = {
@@ -29,7 +32,7 @@ object BashHelper {
   }
 
   def escape(str: String) = {
-    str.replaceAll("([\\$`])", "\\\\$1")
+    str.replaceAll("([\\\\$`])", "\\\\$1")
   }
 
   def argStore(name: String, plainName: String, store: String, argsConsumed: Int, storeUnparsed: Option[String]) = {
@@ -58,7 +61,7 @@ object BashHelper {
       postParse: String,
       postRun: String
     ) = {
-    val mainResource = functionality.mainResource.get
+    val mainResource = functionality.mainScript
 
     val extraImports =
       s"""# define helper functions
@@ -72,24 +75,25 @@ object BashHelper {
     // DETERMINE HOW TO RUN THE CODE
     val code = ""
 
-    val executionCode = functionality.platform match {
-      case NativePlatform =>
-        mainResource.path.map(_ + " $VIASHARGS").getOrElse("echo No command provided")
-      case pl => {
+    val executionCode = mainResource match {
+      case None => ""
+      case Some(e: Executable) => e.path.get + " $VIASHARGS"
+      case Some(res) => {
         s"""
-          |tempscript=$$(mktemp /tmp/viashrun-${functionality.name}-XXXXXX)
+          |tempscript=\\$$(mktemp /tmp/viashrun-${functionality.name}-XXXXXX)
           |cat > "\\$$tempscript" << 'VIASHMAIN'
           |${escape(functionality.mainCodeWithArgParse.get).replaceAll("\\\\\\$RESOURCES_DIR", resourcesPath)}
           |VIASHMAIN
-          |${pl.command("\\$tempscript")} $$VIASHARGS
+          |${res.command("\\$tempscript")} $$VIASHARGS
           |rm "\\$$tempscript"
           |""".stripMargin
       }
     }
 
     // generate bash document
-    val (heredocStart, heredocEnd) = functionality.platform match {
-      case NativePlatform => ("", "")
+    val (heredocStart, heredocEnd) = mainResource match {
+      case None => ("", "")
+      case Some(e: Executable) => ("", "")
       case _ => ("cat << VIASHEOF | ", "\nVIASHEOF")
     }
 
