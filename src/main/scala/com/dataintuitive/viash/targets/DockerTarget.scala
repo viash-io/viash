@@ -1,10 +1,12 @@
 package com.dataintuitive.viash.targets
 
 import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.platforms.{NativePlatform, BashPlatform}
+import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.targets.environments._
 import java.nio.file.Paths
 import com.dataintuitive.viash.helpers.BashHelper
+import com.dataintuitive.viash.functionality.resources.Resource
 
 case class DockerTarget(
   image: String,
@@ -27,8 +29,8 @@ case class DockerTarget(
     val (imageName, setupCommands) = processDockerSetup(functionality, resourcesPath)
 
     // make commands
-    val executor = s"docker run $dockerArgs -v $$RESOURCES_DIR:/resources $imageName"
-    val debuggor = s"docker run $dockerArgs -v $$RESOURCES_DIR:/resources -v `pwd`:/pwd --workdir /pwd -t --rm $imageName"
+    val executor = s"""docker run $dockerArgs -v "$$RESOURCES_DIR":/resources $imageName"""
+    val debuggor = s"""docker run $dockerArgs -v "$$RESOURCES_DIR":/resources -v `pwd`:/pwd --workdir /pwd -t --rm $imageName"""
 
     // process docker mounts
     val (volPreParse, volParsers, volPostParse, volInputs) = processDockerVolumes(functionality)
@@ -42,9 +44,9 @@ case class DockerTarget(
     )
 
     // create new bash script
-    val bashScript = Resource(
-        name = functionality.name,
-        code = Some(BashHelper.wrapScript(
+    val bashScript = BashScript(
+        name = Some(functionality.name),
+        text = Some(BashHelper.wrapScript(
           executor = executor,
           functionality = fun2,
           resourcesPath = "/resources",
@@ -54,12 +56,11 @@ case class DockerTarget(
           postParse = volPostParse + debPostParse,
           postRun = ""
         )),
-        isExecutable = true
+        is_executable = true
       )
 
     fun2.copy(
-      resources = fun2.resources.filterNot(_.name.startsWith("main")) :::
-        List(bashScript)
+      resources = bashScript :: fun2.resources.tail
     )
   }
 
@@ -102,11 +103,11 @@ case class DockerTarget(
 
     // process volume parameter
     val volumesGet = volumes.getOrElse(Nil)
-    val volStr = volumesGet.map(vol => s"-v $$${vol.variable}:${vol.mount} ").mkString("")
+    val volStr = volumesGet.map(vol => s"""-v "$$${vol.variable}":"${vol.mount}" """).mkString("")
 
     // check whether entrypoint should be set to bash
-    val entrypointStr = functionality.platform match {
-      case NativePlatform => ""
+    val entrypointStr = functionality.mainScript match {
+      case Some(e: Executable) => ""
       case _ => "--entrypoint bash "
     }
 
@@ -114,8 +115,8 @@ case class DockerTarget(
   }
 
   def processDockerVolumes(functionality: Functionality) = {
-    val storeVariable = functionality.platform match {
-      case NativePlatform => None
+    val storeVariable = functionality.mainScript match {
+      case Some(e: Executable) => None
       case _ => Some("VIASHARGS")
     }
 
@@ -148,7 +149,7 @@ case class DockerTarget(
       StringObject(
         name = "--" + vol.name,
         description = Some(s"Local path to mount directory for volume '${vol.name}'."),
-        required = Some(true),
+        required = true,
         direction = Input
       )
     )

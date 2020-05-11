@@ -1,35 +1,52 @@
 package com.dataintuitive.viash.targets.environments
 
 case class REnvironment(
-  packages: Option[List[String]] = None,
-  github: Option[List[String]] = None
+  cran: List[String] = Nil,
+  bioc: List[String] = Nil,
+  git: List[String] = Nil,
+  github: List[String] = Nil,
+  gitlab: List[String] = Nil,
+  bitbucket: List[String] = Nil,
+  svn: List[String] = Nil,
+  url: List[String] = Nil
 ) {
   def getInstallCommands() = {
     val installRemotes =
-      """Rscript -e 'if (!requireNamespace("remotes")) install.packages("remotes")'"""
-
-    val installCranPackages =
-      packages.getOrElse(Nil) match {
-        case Nil => Nil
-        case packs =>
-          List(packs.mkString(
-            "Rscript -e 'remotes::install_cran(c(\"",
-            "\", \"",
-            "\"), repos = \"https://cran.rstudio.com\")'"
-          ))
+      if ((cran ::: git ::: github ::: gitlab ::: bitbucket ::: svn ::: url).length > 0) {
+        List("""Rscript -e 'if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")'""")
+      } else {
+        Nil
       }
 
-    val installGithubPackages =
-      github.getOrElse(Nil) match {
-        case Nil => Nil
-        case packs =>
-          List(packs.mkString(
-            "Rscript -e 'remotes::install_github(c(\"",
-            "\", \"",
-            "\"))'"
-          ))
+    val remotePairs = List(
+      ("cran", cran),
+      ("git", git),
+      ("github", github),
+      ("gitlab", gitlab),
+      ("bitbucket", bitbucket),
+      ("svn", svn),
+      ("url", url)
+    )
+
+    val installBiocManager =
+      if (bioc.length > 0) {
+        List("""Rscript -e 'if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")'""")
+      } else {
+        Nil
+      }
+    val installBioc =
+      if (bioc.length > 0) {
+        List(s"""Rscript -e 'BiocManager::install(c("${bioc.mkString("\", \"")}"))'""")
+      } else {
+        Nil
       }
 
-    installRemotes :: installCranPackages ::: installGithubPackages
+    val installers = remotePairs.flatMap{
+      case (str, Nil) => None
+      case (str, list) =>
+        Some(s"""Rscript -e 'remotes::install_$str(c("${list.mkString("\", \"")}"), repos = "https://cran.rstudio.com")'""")
+    }
+
+    installRemotes ::: installBiocManager ::: installBioc ::: installers
   }
 }

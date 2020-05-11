@@ -86,6 +86,7 @@ class E2EBashDocker extends FunSuite {
           "--optional", "foo",
           "--optional_with_default", "bar",
           "--passthrough=you shall$not#pass",
+          "--passthroughbool",
           "--data", tempFolStr
         )
       )
@@ -103,8 +104,9 @@ class E2EBashDocker extends FunSuite {
     assert(outputLines.contains("""log: "/data/log.txt""""))
     assert(outputLines.contains("""optional: "foo""""))
     assert(outputLines.contains("""optional_with_default: "bar""""))
-    assert(outputLines.contains("""passthrough: "you shall$not#pass"""")) // TODO: one set of quotes should be removed
-    assert(outputLines.contains("""PASSTHROUGH: " --passthrough='you shall$not#pass'""""))
+    assert(outputLines.contains("""passthrough: "you shall$not#pass""""))
+    assert(outputLines.contains("""passthroughbool: "true""""))
+    assert(outputLines.contains("""PASSTHROUGH: " --passthrough='you shall$not#pass' --passthroughbool""""))
     assert(outputLines.contains(s"""data: "${tempFolStr}""""))
     assert(outputLines.contains("""resources_dir: "/resources""""))
 

@@ -2,9 +2,11 @@ package com.dataintuitive.viash
 
 import io.circe.{ Decoder, Encoder, Json }
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import com.dataintuitive.viash.targets.environments._
 
 package object targets {
+  implicit val encodeVolume: Encoder.AsObject[Volume] = deriveEncoder
+  implicit val decodeVolume: Decoder[Volume] = deriveDecoder
+
   implicit val encodeDockerTarget: Encoder[DockerTarget] = deriveEncoder
   implicit val decodeDockerTarget: Decoder[DockerTarget] = deriveDecoder
 

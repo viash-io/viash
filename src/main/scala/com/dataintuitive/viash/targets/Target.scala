@@ -1,6 +1,7 @@
 package com.dataintuitive.viash.targets
 
-import com.dataintuitive.viash.functionality.{Functionality, Resource}
+import com.dataintuitive.viash.functionality.{Functionality}
+import com.dataintuitive.viash.functionality.resources.Resource
 import scala.io.Source
 import java.io.File
 import java.nio.file.Paths

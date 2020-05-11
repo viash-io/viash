@@ -3,6 +3,7 @@ image: python
 python:
   packages: 
   - argparse
+  - "anndata<0.7"
 volumes:
 - name: data
   mount: /data
