@@ -5,4 +5,4 @@ arguments: []
 resources:
 - type: bash_script
   path: ./code.sh
-- path: ./../../target/scala-2.12/viash-assembly-0.1.0.jar
+- path: ./viash-assembly-0.1.0.jar

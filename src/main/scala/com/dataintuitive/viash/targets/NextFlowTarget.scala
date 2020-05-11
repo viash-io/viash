@@ -88,6 +88,7 @@ case class NextFlowTarget(
 
     }
 
+    // TODO: find a solution of the options containg a `-`
     val namespacedParameters = functionality.arguments
       .map(dataObject => {
 
@@ -143,6 +144,7 @@ case class NextFlowTarget(
 
     def convertBool(b: Boolean):String = if (b) "true" else "false"
 
+    // TODO: get the type inference right
     def mapToConfig(m:(String, Any), indent:String = ""):String = m match {
         case (k:String, v: List[(String, Any)]) =>
           indent + k + " {\n" + v.map(x => mapToConfig(x, indent + "  ")).mkString("\n") + "\n" + indent + "}"
@@ -165,12 +167,7 @@ case class NextFlowTarget(
         |import java.nio.file.Paths
         |""".stripMargin('|')
 
-    /**
-     * Groovy code to parse the params structure and turn it into a CLI instruction.
-     * Please note that NO quotes are added, so make sure to add those yourself if needed!
-     *
-     * TODO: turn this into a functional approach
-     */
+    // TODO: rewrite this in a functional way
     val setup_main_utils = s"""
         |def renderCLI(command, arguments) {
         |
@@ -475,7 +472,7 @@ case class NextFlowTarget(
     }
 
     val setup_main_entrypoint = functionality.function_type match {
-      case Some(Join) => """
+      case Some(Join) => s"""
         |workflow {
         |
         |   def id = params.id
@@ -487,7 +484,7 @@ case class NextFlowTarget(
         |           : Channel.from(Paths.get(params.input))
         |                .map{ s -> new Tuple3(id, s, params)}
         |
-        |   md_concat(ch_)
+        |   $fname(ch_)
         |}
         |""".stripMargin('|')
       case _ => s"""
