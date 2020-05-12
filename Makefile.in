@@ -2,6 +2,7 @@ obj = bin/viash
 
 viash:
 	sbt 'set test in assembly := {}' 'set assemblyOutputPath in assembly := new File("target/viash.jar")' assembly
+	mkdir -p bin
 	cat src/stub.sh target/viash.jar > $(obj)
 	chmod +x $(obj)
 	
