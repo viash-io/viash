@@ -1,0 +1,24 @@
+obj = bin/viash
+
+viash:
+	sbt 'set test in assembly := {}' 'set assemblyOutputPath in assembly := new File("target/viash.jar")' assembly
+	cat src/stub.sh target/viash.jar > $(obj)
+	chmod +x $(obj)
+	
+.PHONY: test
+test:
+	sbt test
+
+.PHONY: clean
+clean:
+	sbt clean
+	rm $(obj)
+
+.PHONY: install
+install: $(obj)
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	cp $< $(DESTDIR)$(PREFIX)/bin/viash
+
+.PHONY: uninstall
+uninstall:
+	rm -f $(DESTDIR)$(PREFIX)/bin/viash
