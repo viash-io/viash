@@ -10,3 +10,5 @@ output
 .cache-tests
 project/metals.sbt
 out/*
+Makefile
+
