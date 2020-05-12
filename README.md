@@ -20,6 +20,8 @@ And the list indeed goes on. We thought it time to revisit the whole dependency 
 
 ## Install
 
+To install viash, download the [latest release](https://github.com/data-intuitive/Viash/releases) and save it to the `~/bin` folder.
+
 To build and install viash, run the following commands.
 ```bash
 ./configure --prefix=~
@@ -28,8 +30,13 @@ make install
 viash --help
 ```
 
-If you wish to install viash for all users, use `./configure` instead.
-
+If you wish to install viash for all users and not just yourself, run the following commands instead.
+```bash
+./configure
+make
+sudo make install
+viash --help
+```
 ## Examples
 
 This README provides three examples on how to use Viash:
