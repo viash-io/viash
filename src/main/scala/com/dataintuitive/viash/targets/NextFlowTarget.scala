@@ -253,7 +253,6 @@ case class NextFlowTarget(
         |// Out: Arrays of DataObjects
         |def overrideInput(params, str) {
         |
-        |    def overrideOptions = []
         |    def overrideArgs = []
         |
         |    def update = [ "value" : str ]
@@ -263,13 +262,8 @@ case class NextFlowTarget(
         |        ? overrideArgs << it.value + update
         |        : overrideArgs << it.value
         |    }
-        |    params.options.each{ it ->
-        |      (it.value.direction == "Input" && it.value.type == "file")
-        |        ? overrideOptions << it.value + update
-        |        : overrideOptions << it.value
-        |    }
         |
-        |    def newParams = params + [ "options" : overrideOptions] + [ "arguments" : overrideArgs ]
+        |    def newParams = params + [ "arguments" : overrideArgs ]
         |
         |    return newParams
         |}
@@ -278,7 +272,6 @@ case class NextFlowTarget(
     val setup_main_overrideOutput = """
         |def overrideOutput(params, str) {
         |
-        |    def overrideOptions = []
         |    def overrideArgs = []
         |
         |    def update = [ "value" : str ]
@@ -288,13 +281,8 @@ case class NextFlowTarget(
         |        ? overrideArgs << it + update
         |        : overrideArgs << it
         |    }
-        |    params.options.each{ it ->
-        |     (it.direction == "Output" && it.type == "file")
-        |        ? overrideOptions << it + update
-        |        : overrideOptions << it
-        |    }
         |
-        |    def newParams = params + [ "options" : overrideOptions] + [ "arguments" : overrideArgs ]
+        |    def newParams = params + [ "arguments" : overrideArgs ]
         |
         |    return newParams
         |}
@@ -440,7 +428,7 @@ case class NextFlowTarget(
         |                outputFilename = outFromIn(input)
         |            } else {
         |                // Probably join mode, act accordingly
-        |                filename = input.map{it.toString()}.join(' ')
+        |                filename = input.collect{it.toString()}.join(' ')
         |                ouputFilename = outFromInt(input)
         |            }
         |            def defaultParams = params[key] ? params[key] : [:]
