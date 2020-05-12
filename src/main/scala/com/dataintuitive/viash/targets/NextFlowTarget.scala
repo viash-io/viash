@@ -167,20 +167,15 @@ case class NextFlowTarget(
         |import java.nio.file.Paths
         |""".stripMargin('|')
 
-    // TODO: rewrite this in a functional way
     val setup_main_utils = s"""
         |def renderCLI(command, arguments) {
         |
-        |    def argumentsList = []
-        |    def argumentsMap = arguments
-        |    argumentsMap.each{ it ->
-        |
-        |        if (it.otype == "")
-        |            argumentsList << it.value
-        |        if (it.otype.contains("-"))
-        |            (it.type == "boolean_true")
-        |            ? argumentsList << it.otype + it.name
-        |            : argumentsList << it.otype + it.name + " " + it.value
+        |    def argumentsList = arguments.collect{ it ->
+        |        (it.otype == "")
+        |            ? it.value
+        |            : (it.type == "boolean_true")
+        |                ? it.otype + it.name
+        |                : it.otype + it.name + " " + it.value
         |    }
         |
         |    def command_line = command + argumentsList
@@ -224,16 +219,17 @@ case class NextFlowTarget(
           |""".stripMargin('|').replace("__f__", fname)
       // Out format is different from in format
       case Some(Join) => """
-          |def outFromIn(input) {
-          |    if (input.getClass() == sun.nio.fs.UnixPath) {
-          |        def splitString = input.name.split(/\./)
+          |// files is either String or List[String]
+          |def outFromIn(files) {
+          |    if (files in List) {
+          |        // We're in join mode, files is List[String]
+          |        return "concat" + "." + "md"
+          |    } else {
+          |        // files filename is just a String
+          |        def splitString = files.split(/\./)
           |        def prefix = splitString.head()
           |        def extension = splitString.last()
-          |
-          |        return prefix + "." + "__f__" + "." + "__e__"
-          |    } else {
-          |        // We're in join mode
-          |        return "__f__" + "." + "__e__"
+          |        return prefix + "." + "concat" + "." + "md"
           |    }
           |}
           |""".stripMargin('|').replace("__e__", outputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
@@ -249,18 +245,19 @@ case class NextFlowTarget(
     }
 
     val setup_main_overrideInput = """
-        |// In: Hashmap key -> DataqObjects
+        |// In: Hashmap key -> DataObjects
         |// Out: Arrays of DataObjects
         |def overrideInput(params, str) {
         |
-        |    def overrideArgs = []
+        |    // In 'join' mode, concatenate the strings and add double quotes around the values
+        |    def update = (str in List)
+        |        ? [ "value" : str.join(" ") ]
+        |        : [ "value" : str ]
         |
-        |    def update = [ "value" : str ]
-        |
-        |    params.arguments.each{ it ->
+        |    def overrideArgs = params.arguments.collect{ it ->
         |      (it.value.direction == "Input" && it.value.type == "file")
-        |        ? overrideArgs << it.value + update
-        |        : overrideArgs << it.value
+        |        ? it.value + update
+        |        : it.value
         |    }
         |
         |    def newParams = params + [ "arguments" : overrideArgs ]
@@ -272,14 +269,12 @@ case class NextFlowTarget(
     val setup_main_overrideOutput = """
         |def overrideOutput(params, str) {
         |
-        |    def overrideArgs = []
-        |
         |    def update = [ "value" : str ]
         |
-        |    params.arguments.each{it ->
+        |    def overrideArgs = params.arguments.collect{it ->
         |      (it.direction == "Output" && it.type == "file")
-        |        ? overrideArgs << it + update
-        |        : overrideArgs << it
+        |        ? it + update
+        |        : it
         |    }
         |
         |    def newParams = params + [ "arguments" : overrideArgs ]
@@ -343,10 +338,11 @@ case class NextFlowTarget(
         |    tuple val("$${id}"), path("${outputStr}")
         |  script:
         |    \"\"\"
+        |    # Running the pre-hook when necessary
         |    $preHook
         |    # Adding NXF's `$$moduleDir` to the path in order to resolve our own wrappers
         |    export PATH="$${moduleDir}:$$PATH"
-        |    # Echo what will be run
+        |    # Echo what will be run, handy when looking at the .command.log file
         |    echo Running: $$cli
         |    # Actually run the command
         |    $$cli
@@ -356,8 +352,7 @@ case class NextFlowTarget(
         |""".stripMargin('|')
     }
 
-    val setup_main_workflow = functionality.function_type match {
-      case Some(Join) => s"""
+    val setup_main_workflow = s"""
         |workflow $fname {
         |
         |    take:
@@ -369,15 +364,15 @@ case class NextFlowTarget(
         |
         |    def id_input_output_function_cli_ =
         |        id_input_params_.map{ id, input, _params ->
-        |            // If the input is not a path name, it's probably an array
-        |            // that needs to be concatenated.
-        |            def filename = (input.getClass() == sun.nio.fs.UnixPath)
-        |                            ? input.name
-        |                            : input.join(' ')
-        |            def inputPath = (input.getClass() == sun.nio.fs.UnixPath)
-        |                              ? input
-        |                              : Paths.get(input.join(' '))
-        |            def outputFilename = outFromIn(input)
+        |            // TODO: make sure input is List[Path] or Path, otherwise convert
+        |            def checkedInput = input
+        |            // filename is either String or List[String]
+        |            def filename =
+        |                (checkedInput in List)
+        |                    ? checkedInput.collect{ it.name }
+        |                    : checkedInput.name
+        |            // NXF knows how to deal with an List[Path]
+        |            def outputFilename = outFromIn(filename)
         |            def defaultParams = params[key] ? params[key] : [:]
         |            def overrideParams = _params[key] ? _params[key] : [:]
         |            def updtParams = defaultParams + overrideParams
@@ -386,7 +381,7 @@ case class NextFlowTarget(
         |            def updtParams2 = overrideOutput(updtParams1, outputFilename)
         |            new Tuple5(
         |                id,
-        |                inputPath,
+        |                checkedInput,
         |                outputFilename,
         |                updtParams2.container,
         |                renderCLI([updtParams2.command], updtParams2.arguments)
@@ -404,60 +399,6 @@ case class NextFlowTarget(
         |
         |}
         |""".stripMargin('|')
-      case _ => s"""
-        |workflow $fname {
-        |
-        |    take:
-        |    id_input_params_
-        |
-        |    main:
-        |
-        |    def key = "$fname"
-        |
-        |    def id_input_output_function_cli_ =
-        |        id_input_params_.map{ id, input, _params ->
-        |            def filename = ""
-        |            def outputFilename = ""
-        |            if (input.getClass() == sun.nio.fs.UnixPath || input.getClass() == com.upplication.s3fs.S3Path) {
-        |                // Just a file path as input
-        |                filename = input.name
-        |                outputFilename = outFromIn(input.name)
-        |            } else if (input.getClass() == java.lang.String) {
-        |                // Expect this to be a path, so convert to one
-        |                filename = Paths.get(input)
-        |                outputFilename = outFromIn(input)
-        |            } else {
-        |                // Probably join mode, act accordingly
-        |                filename = input.collect{it.toString()}.join(' ')
-        |                ouputFilename = outFromInt(input)
-        |            }
-        |            def defaultParams = params[key] ? params[key] : [:]
-        |            def overrideParams = _params[key] ? _params[key] : [:]
-        |            def updtParams = defaultParams + overrideParams
-        |            // now, switch to arrays instead of hashes...
-        |            def updtParams1 = overrideInput(updtParams, filename)
-        |            def updtParams2 = overrideOutput(updtParams1, outputFilename)
-        |            new Tuple5(
-        |                id,
-        |                input,
-        |                outputFilename,
-        |                updtParams2.container,
-        |                renderCLI([updtParams2.command], updtParams2.arguments)
-        |            )
-        |        }
-        |
-        |    result_ = executor(id_input_output_function_cli_) \\
-        |        | join(id_input_params_) \\
-        |        | map{ id, output, input, original_params ->
-        |            new Tuple3(id, output, original_params)
-        |        }
-        |
-        |    emit:
-        |    result_
-        |
-        |}
-        |""".stripMargin('|')
-    }
 
     val setup_main_entrypoint = functionality.function_type match {
       case Some(Join) => s"""
