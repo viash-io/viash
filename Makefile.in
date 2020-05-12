@@ -6,6 +6,15 @@ viash:
 	cat src/stub.sh target/viash.jar > $(obj)
 	chmod +x $(obj)
 	
+docker:
+	mkdir -p bin
+	docker build -t viash .
+	docker create -it --name viash-cp viash bash
+	docker cp viash-cp:"/app/viash/target/viash.jar" /tmp/viash.jar
+	docker rm -f viash-cp
+	cat src/stub.sh /tmp/viash.jar > $(obj)
+	chmod +x $(obj)
+
 .PHONY: test
 test:
 	sbt test
