@@ -20,6 +20,12 @@ And the list indeed goes on. We thought it time to revisit the whole dependency 
 
 ## Install
 
+The following needs to be installed on your system in order to install Viash:
+
+- Java 1.8
+- `sbt`
+
+
 To install viash, download the [latest release](https://github.com/data-intuitive/Viash/releases) and save it to the `~/bin` folder.
 
 To build and install viash, run the following commands.
@@ -37,6 +43,9 @@ make
 sudo make install
 viash --help
 ```
+
+If you have Java and Docker installed, but not `sbt`, substitute `make docker` for `make` in the steps above.
+
 ## Examples
 
 This README provides three examples on how to use Viash:

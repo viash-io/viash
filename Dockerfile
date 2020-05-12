@@ -30,6 +30,4 @@ COPY . /app/viash/
 WORKDIR /app/viash
 
 # Build and package
-RUN sbt 'set test in assembly := {}' assembly
-# universal:packageBin stage
-
+RUN sbt 'set test in assembly := {}' 'set assemblyOutputPath in assembly := new File("target/viash.jar")' assembly
