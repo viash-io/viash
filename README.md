@@ -20,7 +20,15 @@ And the list indeed goes on. We thought it time to revisit the whole dependency 
 
 ## Install
 
+To build and install viash, run the following commands.
+```bash
+./configure --prefix=~
+make
+make install
+viash --help
+```
 
+If you wish to install viash for all users, use `./configure` instead.
 
 ## Examples
 
