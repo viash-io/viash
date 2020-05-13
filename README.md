@@ -18,15 +18,29 @@ And the list indeed goes on. We thought it time to revisit the whole dependency 
 - **Pimp my script**: Given a script and some meta-information of its parameters, Viash will generate a complete CLI for you. Currently supported scripting languages are R, Python and Bash.
 - **(W)rap it up**: In addition, given more meta-information on the platform on which to run it, Viash will wrap the script in an executable which uses the provided platform as backend. Currently supported platforms are Native, Docker and Nextflow.
 
+## Use
+
+Viash is developed in Scala (2.12). You'll need a working Java installation (tested with version 1.8) in order to use it. Viash is tested and used on MacOS and Linux systems. Windows is currently not tested, although there is no reason is shouldn't run on [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
+
+Make sure Viash (`viash`) is available in your `$PATH` and run:
+
+```bash
+viash --help
+```
+
 ## Install
+
+### Packaged Release
+
+To install viash, download the [latest release](https://github.com/data-intuitive/Viash/releases) and save it to the `~/bin` folder or any other directory that is on your `$PATH`.
+
+### Build from Source
 
 The following needs to be installed on your system in order to install Viash:
 
+- GNU [Autotools](https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html#Autotools-Introduction)
 - Java 1.8
 - `sbt`
-
-
-To install viash, download the [latest release](https://github.com/data-intuitive/Viash/releases) and save it to the `~/bin` folder.
 
 To build and install viash, run the following commands.
 ```bash
@@ -44,7 +58,16 @@ sudo make install
 viash --help
 ```
 
-If you have Java and Docker installed, but not `sbt`, substitute `make docker` for `make` in the steps above.
+### Build from Source using Docker
+
+If you have Java and Docker installed, but not `sbt`, run this instead:
+
+```bash
+./configure --prefix=~
+make docker
+make install
+viash --help
+```
 
 ## Examples
 
@@ -79,7 +102,7 @@ In order for Viash to function, a minimal amount of information regarding the co
 ```yaml
 name: minimal_example
 description: Prints out the parameter values.
-arguments: 
+arguments:
 - name: "--string"
   type: string
 - name: "--real_number"
