@@ -1,9 +1,9 @@
-# Viash unreleased
+# viash 0.2.0
 
 ... nothing yet ...
 
-# Viash 0.1.0 (2020-05-07)
-* MAJOR CHANGES: This PR refactors the Functionality class as discussed in VIP1 (#1). This has resulted in a lot of internal changes, but the changes with regard to the yaml definitions are relatively minor. See the section below for more info.
+# viash 0.1.0 (2020-05-14)
+* MAJOR CHANGES: Refactoring of the Functionality class as discussed in VIP1 (#1). This has resulted in a lot of internal changes, but the changes with regard to the yaml definitions are relatively minor. See the section below for more info.
 * MINOR CHANGES: Updated the functionality.yamls under `atoms/` and `src/test/` to reflect these aforementioned changes.
 * BUG FIX: Do not quote passthrough flags.
 * BUG FIX: Allow for spaces inside of Docker volume paths.
@@ -21,5 +21,5 @@
 ## Changes to platform_(docker/native).yaml
 * The `r: packages:` field has been renamed to `r: cran:`.
 
-# Viash 0.0.1 (2020-05-05)
+# viash 0.0.1 (2020-05-05)
 * Initial proof of concept.
