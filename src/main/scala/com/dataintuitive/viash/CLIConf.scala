@@ -31,10 +31,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       required = false
     )
   }
+  val test = new Subcommand("test") with WithFunctionality with WithPlatform
 
   addSubcommand(run)
   addSubcommand(export)
   addSubcommand(pimp)
+  addSubcommand(test)
 
   verify()
 }

@@ -34,10 +34,6 @@ function assembly {
   fi
 }
 
-function viash {
-  java -jar "$VIASH_DIR/target/scala-2.12/viash-assembly-$VERSION.jar" $@
-}
-
 function viash_export_all {
   atom_dir="$1"
   output_dir="$2"
