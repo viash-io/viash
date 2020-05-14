@@ -45,7 +45,7 @@ jobs:
       run: sbt test
     - name: Save docker images cache
       if: startsWith(matrix.os, 'ubuntu')
-      run: docker save -o ~/docker_images/images.tar $(docker images -a -q)
+      run: mkdir -p ~/docker_images && docker save -o ~/docker_images/images.tar $(docker images -a -q)
     - name: Run tests on macOS
       if: startsWith(matrix.os, 'macOS')
       run: sbt 'testOnly -- -l com.dataintuitive.viash.DockerTest'
