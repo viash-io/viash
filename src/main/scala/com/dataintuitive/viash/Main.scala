@@ -2,6 +2,7 @@ package com.dataintuitive.viash
 
 import functionality._
 import targets._
+import resources.Script
 
 import java.nio.file.{Paths, Files}
 import scala.io.Source
@@ -21,10 +22,14 @@ object Main {
 
     conf.subcommand match {
       case Some(conf.run) => {
+        // create new functionality with argparsed executable
         val (fun, tar) = viashLogic(conf.run)
+
+        // write executable and resources to temporary directory
         val dir = Files.createTempDirectory("viash_" + fun.name).toFile()
         writeResources(fun.resources, fun.rootDir, dir)
 
+        // execute with parameters
         val executable = Paths.get(dir.toString(), fun.name).toString()
         println(Exec.run(
           Array(executable) ++
@@ -32,21 +37,56 @@ object Main {
         ))
       }
       case Some(conf.export) => {
+        // create new functionality with argparsed executable
         val (fun, tar) = viashLogic(conf.export)
+
+        // write files to given output directory
         val dir = new java.io.File(conf.export.output())
         dir.mkdirs()
         writeResources(fun.resources, fun.rootDir, dir)
       }
       case Some(conf.pimp) => {
+        // read functionality
         val functionality = readFunctionality(conf.pimp)
 
+        // fetch argparsed code
         val mainCode = functionality.mainCodeWithArgParse.get
+
+        // write to file or stdout
         if (conf.pimp.output.isDefined) {
           val file = new java.io.File(conf.pimp.output())
           Files.write(file.toPath(), mainCode.getBytes(StandardCharsets.UTF_8))
           file.setExecutable(true)
         } else {
           println(mainCode)
+        }
+      }
+      case Some(conf.test) => {
+        // create new functionality with argparsed executable
+        val (fun, tar) = viashLogic(conf.test)
+
+        val tests = fun.tests.getOrElse(Nil)
+        val executableTests = tests.filter(_.isInstanceOf[Script]).map(_.asInstanceOf[Script])
+
+        if (executableTests.length == 0) {
+          println("No tests found!")
+        } else {
+          // write executable and resources to temporary directory
+          val dir = Files.createTempDirectory("viash_" + fun.name).toFile()
+          writeResources(fun.resources, fun.rootDir, dir)
+
+          // write test resources to same directory
+          writeResources(tests, fun.rootDir, dir)
+
+          // execute with parameters
+          val executable = Paths.get(dir.toString(), fun.name).toString()
+
+          println(Exec.run(
+            //executableTests.map(test => test.command(test.filename)),
+            executableTests.map(test => "./" + test.filename),
+            cwd = Some(dir)//,
+//            Seq("PATH" → Exec.appendToEnv("PATH", dir.toString()))
+          ))
         }
       }
       case _ => println("No subcommand was specified. See `viash --help` for more information.")

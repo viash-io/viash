@@ -49,4 +49,6 @@ arguments:
 resources:
 - type: bash_script
   path: ./code.sh
-
+tests:
+- type: bash_script
+  path: ./test_testbash.sh

@@ -13,6 +13,7 @@ case class Functionality(
   description: Option[String] = None,
   function_type: Option[FunctionType] = None,
   arguments: List[DataObject[_]] = Nil,
+  tests: Option[List[Resource]] = None,
   private var _rootDir: Option[File] = None // :/
 ) {
 
