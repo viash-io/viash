@@ -25,5 +25,7 @@ jobs:
       uses: r-lib/actions/setup-r@master
       with:
           r-version: '3.6.1'
+    - name: Install renv 0.9.2
+      run: Rscript -e "install.packages('optparse', repos = 'http://cran.rstudio.com', type = 'source')"
     - name: Run tests
       run: sbt clean 'testOnly -- -l com.dataintuitive.viash.DockerTest' # exclude docker tests for now
