@@ -17,5 +17,11 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with: 
+        python-version: 3.8
+    - name: Set up R
+      run: apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y r-base
     - name: Run tests
       run: sbt clean 'testOnly -- -l com.dataintuitive.viash.DockerTest' # exclude docker tests for now
