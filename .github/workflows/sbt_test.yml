@@ -15,18 +15,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Cache docker images
-      uses: actions/cache@v1
-      env:
-        cache-name: cache-docker-images
-      with:
-        path: ~/docker_images
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/images.tar') }}
-        restore-keys: |
-          ${{ runner.os }}-build-${{ env.cache-name }}-
-          ${{ runner.os }}-build-
-          ${{ runner.os }}-
-    - uses: olafurpg/setup-scala@v5
+    - name: Set up Scala
+      uses: olafurpg/setup-scala@v5
     - name: Set up Python
       uses: actions/setup-python@v2
       with: 
@@ -37,15 +27,9 @@ jobs:
           r-version: '3.6.1'
     - name: Install optparse
       run: Rscript -e "install.packages('optparse', repos = 'http://cran.rstudio.com', type = 'source')"
-    - name: Read docker images cache
-      if: startsWith(matrix.os, 'ubuntu')
-      run: docker load -i ~/docker_images/images.tar || true
     - name: Run tests on Ubuntu
       if: startsWith(matrix.os, 'ubuntu')
       run: sbt test
-    - name: Save docker images cache
-      if: startsWith(matrix.os, 'ubuntu')
-      run: mkdir -p ~/docker_images && docker save -o ~/docker_images/images.tar $(docker images -a -q)
     - name: Run tests on macOS
       if: startsWith(matrix.os, 'macOS')
       run: sbt 'testOnly -- -l com.dataintuitive.viash.DockerTest'
