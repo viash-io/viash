@@ -16,6 +16,9 @@ case class BashScript(
   def command(script: String) = {
     "bash \"" + script + "\""
   }
+  def commandSeq(script: String) = {
+    Seq("bash", script)
+  }
 
   private def removeNewlines(s: String) = {
       s.filter(_ >= ' ') // remove all control characters

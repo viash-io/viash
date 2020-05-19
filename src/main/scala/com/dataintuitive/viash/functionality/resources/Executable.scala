@@ -14,6 +14,7 @@ case class Executable(
   val commentStr = "#"
 
   def command(script: String) = script
+  def commandSeq(script: String) = Seq(script)
 
   def generateArgparse(functionality: Functionality): String = ""
 

@@ -16,6 +16,9 @@ case class PythonScript(
   def command(script: String) = {
     "python \"" + script + "\""
   }
+  def commandSeq(script: String) = {
+    Seq("python", script)
+  }
 
   def generateArgparse(functionality: Functionality): String = {
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
