@@ -51,4 +51,4 @@ resources:
   path: ./code.sh
 tests:
 - type: bash_script
-  path: ./test_testbash.sh
+  path: tests/check_outputs.sh
