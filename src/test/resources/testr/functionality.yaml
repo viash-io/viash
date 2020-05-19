@@ -40,4 +40,7 @@ arguments:
 resources:
 - type: r_script
   path: ./code.R
+tests:
+- type: r_script
+  path: tests/check_outputs.R
 
