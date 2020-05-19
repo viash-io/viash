@@ -3,6 +3,7 @@ options(tidyverse.quiet = TRUE)
 library(tidyverse)
 library(testthat, warn.conflicts = FALSE)
 
+# check whether platform is docker
 if (identical(Sys.getenv("VIASH_PLATFORM"), "docker")) {
   docker_args <- c("--data", getwd())
   data_dir <- "/data"

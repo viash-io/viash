@@ -40,4 +40,7 @@ arguments:
 resources:
 - type: python_script
   path: ./code.py
+tests:
+- type: python_script
+  path: tests/check_outputs.py
 
