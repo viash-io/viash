@@ -81,12 +81,16 @@ object Main {
           // execute with parameters
           val executable = Paths.get(dir.toString(), fun.name).toString()
 
-          println(Exec.run(
-            //executableTests.map(test => test.command(test.filename)),
-            executableTests.map(test => "./" + test.filename),
-            cwd = Some(dir)//,
-//            Seq("PATH" → Exec.appendToEnv("PATH", dir.toString()))
-          ))
+          for (test ← executableTests) {
+            println(Exec.run(
+              test.commandSeq(test.filename),
+              cwd = Some(dir),
+              Seq(
+                "PATH" → Exec.appendToEnv("PATH", dir.toString()),
+                "VIASH_PLATFORM" → tar.`type`
+              )
+            ))
+          }
         }
       }
       case _ => println("No subcommand was specified. See `viash --help` for more information.")

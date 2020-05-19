@@ -15,6 +15,9 @@ case class RScript(
   def command(script: String) = {
     "Rscript \"" + script + "\""
   }
+  def commandSeq(script: String) = {
+    Seq("Rscript", script)
+  }
 
   private def removeNewlines(s: String) = {
     s.replaceAll("\n", "\\\\n")
