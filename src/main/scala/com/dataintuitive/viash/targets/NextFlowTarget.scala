@@ -25,12 +25,11 @@ case class NextFlowTarget(
   val nativeTarget = NativeTarget(r, python)
 
   def modifyFunctionality(functionality: Functionality) = {
+    import NextFlowUtils._
+    implicit val fun = functionality
+
     val resourcesPath = "/app"
-
     val fname = functionality.name
-
-    def quote(str: String) = '"' + str + '"'
-    def quoteLong(str: String): String = if (str.contains("-")) '"' + str + '"' else str
 
     // get main script/binary
     val mainResource = functionality.mainScript
@@ -59,42 +58,12 @@ case class NextFlowTarget(
      * the params structure. the function name is prefixed as a namespace
      * identifier. A "__" is used to seperate namespace and arg/option.
      */
-    def namespacedValueTuple(key: String, value: String): (String, String) =
-      (s"${fname}__${key}", value)
-
-    def valuePointer(key: String, value: String): String =
-      s"$${params.${fname}__${key}}"
-
-    def dataObjectToTuples[T](dataObject: DataObject[T]): List[(String, Any)] = {
-      def valueOrPointer(str: String): String = {
-        if (!dataObject.plainName.contains("-")) {
-          valuePointer(dataObject.plainName, str)
-        } else {
-          // We currently have no solution for keys that contain `-`
-          str
-        }
-      }
-
-      List(
-        "name" → dataObject.plainName,
-        "otype" → dataObject.otype
-      ) :::
-        dataObject.description.map("description" → _).toList :::
-        dataObject.default.map(x => "value" → valueOrPointer(x.toString)).toList :::
-        List(
-          "required" → dataObject.required,
-          "type" → dataObject.`type`,
-          "direction" → dataObject.direction
-        )
-
-    }
-
     // TODO: find a solution of the options containg a `-`
     val namespacedParameters =
       functionality.arguments.flatMap(dataObject => {
         val name = dataObject.plainName
 
-        if (! name.contains("-")) {
+        if (!name.contains("-")) {
           Some(
             namespacedValueTuple(
               name,
@@ -111,9 +80,7 @@ case class NextFlowTarget(
     val argumentsAsTuple =
       if (functionality.arguments.length > 0) {
         List(
-          "arguments" → functionality.arguments.map{x =>
-            quoteLong(x.plainName) → dataObjectToTuples(x)
-          }
+          "arguments" → functionality.arguments.map(_.toTuple)
         )
       } else {
         Nil
@@ -148,30 +115,9 @@ case class NextFlowTarget(
       }
     )
 
-    def mapToConfig(m: (String, Any), indent: String = ""): String = m match {
-      case (k: String, v: List[_]) => {
-        val content = v.map { pair =>
-          // cast pair because type is removed due to type erasure
-          mapToConfig(pair.asInstanceOf[(String, Any)], indent + "  ")
-        }.mkString("\n")
-
-        s"""$indent$k {
-          |$content
-          |$indent}""".stripMargin
-      }
-      case (k: String, v: String) => s"""$indent$k = ${quote(v)}"""
-      case (k: String, v: Boolean) => s"""$indent$k = ${v.toString}"""
-      case (k: String, v: Direction) => s"""$indent$k = ${quote(v.toString)}"""
-      case _ => indent + "Parsing ERROR - Not implemented yet " + m
-    }
-
-    def listMapToConfig(m: List[(String, Any)]) = m.map(x => mapToConfig(x)).mkString("\n")
-
     val setup_nextflowconfig = PlainFile(
       name = Some("nextflow.config"),
-      text = Some(
-        listMapToConfig(asNestedTuples)
-      )
+      text = Some(listMapToConfig(asNestedTuples))
     )
 
     val setup_main_header = s"""nextflow.preview.dsl=2
@@ -471,5 +417,64 @@ case class NextFlowTarget(
           additionalResources ::: List(setup_nextflowconfig, setup_main)
     )
   }
+}
 
+object NextFlowUtils {
+  def quote(str: String) = '"' + str + '"'
+
+  def quoteLong(str: String) = if (str.contains("-")) '"' + str + '"' else str
+
+  def mapToConfig(m: (String, Any), indent: String = ""): String = m match {
+    case (k: String, v: List[_]) => {
+      val content = v.map { pair =>
+        // cast pair because type is removed due to type erasure
+        mapToConfig(pair.asInstanceOf[(String, Any)], indent + "  ")
+      }.mkString("\n")
+
+      s"""$indent$k {
+        |$content
+        |$indent}""".stripMargin
+    }
+    case (k: String, v: String) => s"""$indent$k = ${quote(v)}"""
+    case (k: String, v: Boolean) => s"""$indent$k = ${v.toString}"""
+    case (k: String, v: Direction) => s"""$indent$k = ${quote(v.toString)}"""
+    case _ => indent + "Parsing ERROR - Not implemented yet " + m
+  }
+
+  def listMapToConfig(m: List[(String, Any)]) = {
+    m.map(mapToConfig(_)).mkString("\n")
+  }
+
+  def namespacedValueTuple(key: String, value: String)(implicit fun: Functionality): (String, String) =
+    (s"${fun.name}__${key}", value)
+
+  implicit class RichDataObject[T](val dataObject: DataObject[T])(implicit fun: Functionality) {
+    def valuePointer(key: String, value: String): String =
+      s"$${params.${fun.name}__${key}}"
+
+    def valueOrPointer(str: String): String = {
+      if (!dataObject.plainName.contains("-")) {
+        valuePointer(dataObject.plainName, str)
+      } else {
+        // We currently have no solution for keys that contain `-`
+        str
+      }
+    }
+
+    def toTuple: (String, List[(String, Any)]) = {
+      quoteLong(dataObject.plainName) → {
+        List(
+          "name" → dataObject.plainName,
+          "otype" → dataObject.otype
+        ) :::
+        dataObject.description.map("description" → _).toList :::
+        dataObject.default.map(x => "value" → valueOrPointer(x.toString)).toList :::
+        List(
+          "required" → dataObject.required,
+          "type" → dataObject.`type`,
+          "direction" → dataObject.direction
+        )
+      }
+    }
+  }
 }
