@@ -5,7 +5,6 @@ import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.targets.environments._
 import java.nio.file.Paths
-import scala.reflect.ClassTag
 
 /**
  * Target class for generating NextFlow (DSL2) modules.
@@ -26,13 +25,12 @@ case class NextFlowTarget(
   val nativeTarget = NativeTarget(r, python)
 
   def modifyFunctionality(functionality: Functionality) = {
-
     val resourcesPath = "/app"
 
     val fname = functionality.name
 
-    def quote(str:String) = '"' + str + '"'
-    def quoteLong(str:String):String = if (str.contains("-")) '"' + str + '"' else str
+    def quote(str: String) = '"' + str + '"'
+    def quoteLong(str: String): String = if (str.contains("-")) '"' + str + '"' else str
 
     // get main script/binary
     val mainResource = functionality.mainScript
@@ -61,100 +59,113 @@ case class NextFlowTarget(
      * the params structure. the function name is prefixed as a namespace
      * identifier. A "__" is used to seperate namespace and arg/option.
      */
-    def namespacedValueTuple(key: String, value: String):(String, String) =
+    def namespacedValueTuple(key: String, value: String): (String, String) =
       (s"${fname}__${key}", value)
 
-    def valuePointer(key: String, value: String):String = s"$${params.${fname}__${key}}"
+    def valuePointer(key: String, value: String): String =
+      s"$${params.${fname}__${key}}"
 
-    def dataObjectToTuples[T](dataObject:DataObject[T]):List[(String, Any)] = {
-      def valueOrPointer(str:String):String =
-        if (! dataObject.plainName.contains("-"))
+    def dataObjectToTuples[T](dataObject: DataObject[T]): List[(String, Any)] = {
+      def valueOrPointer(str: String): String = {
+        if (!dataObject.plainName.contains("-")) {
           valuePointer(dataObject.plainName, str)
-        else
+        } else {
           // We currently have no solution for keys that contain `-`
           str
+        }
+      }
 
       List(
-        Some(("name", dataObject.plainName)),
-        Some(("otype", dataObject.otype)),
-        dataObject.description.map(x =>
-            ("description", x.toString)),
-        dataObject.default.map(x =>
-            ("value", valueOrPointer(x.toString))),
-        Some(("required", dataObject.required)),
-        Some(("type", dataObject.`type`)),
-        Some(("direction", dataObject.direction))
-      ).flatMap(x => x)
+        "name" → dataObject.plainName,
+        "otype" → dataObject.otype
+      ) :::
+        dataObject.description.map("description" → _).toList :::
+        dataObject.default.map(x => "value" → valueOrPointer(x.toString)).toList :::
+        List(
+          "required" → dataObject.required,
+          "type" → dataObject.`type`,
+          "direction" → dataObject.direction
+        )
 
     }
 
     // TODO: find a solution of the options containg a `-`
-    val namespacedParameters = functionality.arguments
-      .map(dataObject => {
+    val namespacedParameters =
+      functionality.arguments.flatMap(dataObject => {
+        val name = dataObject.plainName
 
-          val name = dataObject.plainName
+        if (! name.contains("-")) {
+          Some(
+            namespacedValueTuple(
+              name,
+              dataObject.default.map(_.toString).getOrElse("value_not_found")
+            )
+          )
+        } else {
+          // We currently have no solution for keys that contain `-`
+          println(s"The variable $name contains a -, removing this from the global namespace...")
+          None
+        }
+      })
 
-          if (! name.contains("-")) {
-            Some(
-              namespacedValueTuple(
-                name,
-                dataObject.default.map(_.toString).getOrElse("value_not_found")
-              ))
-          } else {
-            // We currently have no solution for keys that contain `-`
-            println(s"The variable $name contains a -, removing this from the global namespace...")
-            None
+    val argumentsAsTuple =
+      if (functionality.arguments.length > 0) {
+        List(
+          "arguments" → functionality.arguments.map{x =>
+            quoteLong(x.plainName) → dataObjectToTuples(x)
           }
-      }).flatMap(x => x)
-
-    val argumentsAsTuple = if (functionality.arguments.length > 0) {
-      List(
-        ("arguments", functionality.arguments.map(x => (quoteLong(x.plainName), dataObjectToTuples(x))))
-      )
-    } else Nil
+        )
+      } else {
+        Nil
+      }
 
     val extensionsAsTuple = outputFileExtO match {
       case Some(ext) => List(
-        ("extensions", List(("out", ext)))
+        "extensions" → List(("out", ext))
       )
       case None => Nil
     }
 
-    val asNestedTuples:List[(String, Any)] = List(
-      ("docker.enabled", true),
-      ("process.container", "dataintuitive/portash"),
-      ("params",
+    val asNestedTuples: List[(String, Any)] = List(
+      "docker.enabled" → true,
+      "process.container" → "dataintuitive/portash",
+      "params" → {
         namespacedParameters :::
         List(
-          ("id", ""),
-          ("outDir", "out"),
-          ("input", "test.md"),
-          (functionality.name,
+          "id" → "",
+          "outDir" → "out",
+          "input" → "test.md",
+          functionality.name → {
             List(
-              ("name", functionality.name),
-              ("container", image),
-              ("command", executionCode)
-            )
-            ::: extensionsAsTuple
-            ::: argumentsAsTuple
-            )
-          )
+              "name" → functionality.name,
+              "container" → image,
+              "command" → executionCode
+            ) :::
+            extensionsAsTuple :::
+            argumentsAsTuple
+          }
         )
-      )
+      }
+    )
 
-    def convertBool(b: Boolean):String = if (b) "true" else "false"
+    def mapToConfig(m: (String, Any), indent: String = ""): String = m match {
+      case (k: String, v: List[_]) => {
+        val content = v.map { pair =>
+          // cast pair because type is removed due to type erasure
+          mapToConfig(pair.asInstanceOf[(String, Any)], indent + "  ")
+        }.mkString("\n")
 
-    // TODO: get the type inference right
-    def mapToConfig(m:(String, Any), indent:String = ""):String = m match {
-        case (k:String, v: List[(String, Any)]) =>
-          indent + k + " {\n" + v.map(x => mapToConfig(x, indent + "  ")).mkString("\n") + "\n" + indent + "}"
-        case (k:String, v: String) => indent + k + " = " + quote(v)
-        case (k:String, v: Boolean) => indent + k + " = " + convertBool(v)
-        case (k:String, v: Direction) => indent + k + " = " + quote(v.toString)
-        case _ => indent + "Parsing ERROR - Not implemented yet " + m
+        s"""$indent$k {
+          |$content
+          |$indent}""".stripMargin
+      }
+      case (k: String, v: String) => s"""$indent$k = ${quote(v)}"""
+      case (k: String, v: Boolean) => s"""$indent$k = ${v.toString}"""
+      case (k: String, v: Direction) => s"""$indent$k = ${quote(v.toString)}"""
+      case _ => indent + "Parsing ERROR - Not implemented yet " + m
     }
 
-    def listMapToConfig(m:List[(String, Any)]) = m.map(x => mapToConfig(x)).mkString("\n")
+    def listMapToConfig(m: List[(String, Any)]) = m.map(x => mapToConfig(x)).mkString("\n")
 
     val setup_nextflowconfig = PlainFile(
       name = Some("nextflow.config"),
@@ -165,7 +176,7 @@ case class NextFlowTarget(
 
     val setup_main_header = s"""nextflow.preview.dsl=2
         |import java.nio.file.Paths
-        |""".stripMargin('|')
+        |""".stripMargin
 
     val setup_main_utils = s"""
         |def renderCLI(command, arguments) {
@@ -182,7 +193,7 @@ case class NextFlowTarget(
         |
         |    return command_line.join(" ")
         |}
-        |""".stripMargin('|')
+        |""".stripMargin
 
     /**
      * What should the output filename be, in terms of the input?
@@ -197,7 +208,7 @@ case class NextFlowTarget(
           |
           |    return "${inputstr}"
           |}
-          |""".stripMargin('|').replace("__e__", inputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
+          |""".stripMargin.replace("__e__", inputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
       // Out format is different from in format
       case Some(Convert) => """
           |def outFromIn(inputstr) {
@@ -208,7 +219,7 @@ case class NextFlowTarget(
           |
           |    return prefix + "." + "__f__" + "." + "__e__"
           |}
-          |""".stripMargin('|').replace("__e__", outputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
+          |""".stripMargin.replace("__e__", outputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
       // Out format is different from in format
       case Some(ToDir) => """
           |def outFromIn(inputstr) {
@@ -216,7 +227,7 @@ case class NextFlowTarget(
           |    return "__f__"
           |
           |}
-          |""".stripMargin('|').replace("__f__", fname)
+          |""".stripMargin.replace("__f__", fname)
       // Out format is different from in format
       case Some(Join) => """
           |// files is either String or List[String]
@@ -232,7 +243,7 @@ case class NextFlowTarget(
           |        return prefix + "." + "concat" + "." + "md"
           |    }
           |}
-          |""".stripMargin('|').replace("__e__", outputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
+          |""".stripMargin.replace("__e__", outputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
       case _ => """
           |def outFromIn(inputStr) {
           |
@@ -241,7 +252,7 @@ case class NextFlowTarget(
           |
           |    return "output"
           |}
-          |""".stripMargin('|')
+          |""".stripMargin
     }
 
     val setup_main_overrideInput = """
@@ -264,7 +275,7 @@ case class NextFlowTarget(
         |
         |    return newParams
         |}
-        |""".stripMargin('|')
+        |""".stripMargin
 
     val setup_main_overrideOutput = """
         |def overrideOutput(params, str) {
@@ -281,7 +292,7 @@ case class NextFlowTarget(
         |
         |    return newParams
         |}
-        |""".stripMargin('|')
+        |""".stripMargin
 
     /**
      * Some (implicit) conventions:
@@ -349,7 +360,7 @@ case class NextFlowTarget(
         |    \"\"\"
         |
         |}
-        |""".stripMargin('|')
+        |""".stripMargin
     }
 
     val setup_main_workflow = s"""
@@ -398,7 +409,7 @@ case class NextFlowTarget(
         |    result_
         |
         |}
-        |""".stripMargin('|')
+        |""".stripMargin
 
     val setup_main_entrypoint = functionality.function_type match {
       case Some(Join) => s"""
@@ -415,7 +426,7 @@ case class NextFlowTarget(
         |
         |   $fname(ch_)
         |}
-        |""".stripMargin('|')
+        |""".stripMargin
       case _ => s"""
         |workflow {
         |
@@ -425,7 +436,7 @@ case class NextFlowTarget(
         |
         |   $fname(ch_)
         |}
-        |""".stripMargin('|')
+        |""".stripMargin
     }
 
     val setup_main = PlainFile(
