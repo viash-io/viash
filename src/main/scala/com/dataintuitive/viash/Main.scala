@@ -23,7 +23,7 @@ object Main {
     conf.subcommand match {
       case Some(conf.run) => {
         // create new functionality with argparsed executable
-        val (fun, tar) = viashLogic(conf.run)
+        val (fun, tar) = viashLogic(conf.run, None)
 
         // write executable and resources to temporary directory
         val dir = Files.createTempDirectory("viash_" + fun.name).toFile()
@@ -38,7 +38,7 @@ object Main {
       }
       case Some(conf.export) => {
         // create new functionality with argparsed executable
-        val (fun, tar) = viashLogic(conf.export)
+        val (fun, tar) = viashLogic(conf.export, None)
 
         // write files to given output directory
         val dir = new java.io.File(conf.export.output())
@@ -62,8 +62,11 @@ object Main {
         }
       }
       case Some(conf.test) => {
-        // create new functionality with argparsed executable
-        val (fun, tar) = viashLogic(conf.test)
+        val fun = readFunctionality(conf.test)
+        val platform = conf.test.platform.map{ path =>
+          val targPath = new java.io.File(path)
+          Target.parse(targPath)
+        }.getOrElse(NativeTarget())
 
         val tests = fun.tests.getOrElse(Nil)
         val executableTests = tests.filter(_.isInstanceOf[Script]).map(_.asInstanceOf[Script])
@@ -71,25 +74,45 @@ object Main {
         if (executableTests.length == 0) {
           println("No tests found!")
         } else {
-          // write executable and resources to temporary directory
-          val dir = Files.createTempDirectory("viash_" + fun.name).toFile()
-          writeResources(fun.resources, fun.rootDir, dir)
+          val results = executableTests.map{ test =>
+            print(">> Running test " + test.filename + " ... ")
+            val funwithtest = platform.modifyFunctionality(fun, Some(test))
 
-          // write test resources to same directory
-          writeResources(tests, fun.rootDir, dir)
+            val dir = Files.createTempDirectory("viash_" + funwithtest.name).toFile()
+            writeResources(funwithtest.resources, funwithtest.rootDir, dir)
 
-          // execute with parameters
-          val executable = Paths.get(dir.toString(), fun.name).toString()
+            // write test resources to same directory
+            writeResources(tests, funwithtest.rootDir, dir)
 
-          for (test ← executableTests) {
-            println(Exec.run(
-              test.commandSeq(test.filename),
-              cwd = Some(dir),
-              Seq(
-                "PATH" → Exec.appendToEnv("PATH", dir.toString()),
-                "VIASH_PLATFORM" → tar.`type`
-              )
-            ))
+            // execute with parameters
+            val executable = Paths.get(dir.toString(), funwithtest.name).toString()
+
+            // run command, collect output
+            import sys.process._
+            import java.io._
+            val stream = new ByteArrayOutputStream
+            val writer = new PrintWriter(stream)
+            val exitValue = Seq(executable).!(ProcessLogger(writer.println, writer.println))
+            writer.close()
+            val s = stream.toString
+            if (exitValue == 0) {
+              println("OK")
+            } else {
+              println("Failed!!!")
+              println(s)
+            }
+
+            (exitValue, s)
+          }
+
+          if (results.exists(_._1 != 0)) {
+            val count = results.count(_._1 != 0)
+            println()
+            println(s"$count out of ${results.length} test scripts failed!")
+            println("Check the output above for more information.")
+            System.exit(1)
+          } else {
+            println("All test scripts succeeded!")
           }
         }
       }
@@ -104,7 +127,7 @@ object Main {
     functionality
   }
 
-  def viashLogic(subcommand: WithFunctionality with WithPlatform) = {
+  def viashLogic(subcommand: WithFunctionality with WithPlatform, test: Option[Script]) = {
     // get the functionality yaml
     // let the functionality object know the path in which it resided,
     // so it can find back its resources
@@ -119,7 +142,7 @@ object Main {
     }.getOrElse(NativeTarget())
 
     // modify the functionality using the target
-    val fun2 = platform.modifyFunctionality(functionality)
+    val fun2 = platform.modifyFunctionality(functionality, test)
 
     (fun2, platform)
   }

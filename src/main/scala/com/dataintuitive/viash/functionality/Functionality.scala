@@ -41,8 +41,8 @@ case class Functionality(
       }
   }
 
-  def mainCode: Option[String] = {
-    mainScript match {
+  def readCode(script: Option[Script]): Option[String] = {
+    script match {
       case None => None
       case Some(_: Executable) => None
       case Some(s) if s.text.isDefined => s.text
@@ -51,18 +51,10 @@ case class Functionality(
         Some(Source.fromFile(mainPath).mkString(""))
       }
     }
-    if (mainScript.isEmpty || mainScript.get.isInstanceOf[Executable]) {
-      None
-    } else if (mainScript.get.text.isDefined) {
-      mainScript.get.text
-    } else {
-      val mainPath = Paths.get(rootDir.getPath(), mainScript.get.path.get).toFile()
-      Some(Source.fromFile(mainPath).mkString(""))
-    }
   }
 
-  def mainCodeWithArgParse = {
-    mainCode.map(code => {
+  def readCodeWithArgParse(script: Option[Script]): Option[String] = {
+    readCode(script).map(code => {
       val lines = code.split("\n")
 
       val startIndex = lines.indexWhere(_.contains("VIASH START"))
@@ -82,8 +74,10 @@ case class Functionality(
         code
       }
     })
-
   }
+
+  def mainCode = readCode(mainScript)
+  def mainCodeWithArgParse = readCodeWithArgParse(mainScript)
 }
 
 object Functionality {

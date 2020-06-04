@@ -1,7 +1,7 @@
 package com.dataintuitive.viash.targets
 
 import com.dataintuitive.viash.functionality.{Functionality}
-import com.dataintuitive.viash.functionality.resources.Resource
+import com.dataintuitive.viash.functionality.resources.{Resource, Script}
 import scala.io.Source
 import java.io.File
 import java.nio.file.Paths
@@ -10,7 +10,7 @@ import com.dataintuitive.viash.targets.environments._
 
 trait Target {
   val `type`: String
-  def modifyFunctionality(functionality: Functionality): Functionality
+  def modifyFunctionality(functionality: Functionality, test: Option[Script]): Functionality
 }
 
 object Target {

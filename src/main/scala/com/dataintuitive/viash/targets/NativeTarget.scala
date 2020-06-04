@@ -11,11 +11,10 @@ case class NativeTarget(
 ) extends Target {
   val `type` = "native"
 
-  def modifyFunctionality(functionality: Functionality) = {
+  def modifyFunctionality(functionality: Functionality, test: Option[Script]) = {
     // create new bash script
-    val bashScript = BashScript(
-        name = Some(functionality.name),
-        text = Some(BashHelper.wrapScript(
+    val text = test match {
+      case None => BashHelper.wrapScript(
           executor = "bash",
           functionality = functionality,
           setupCommands = setupCommands,
@@ -23,7 +22,17 @@ case class NativeTarget(
           parsers = "",
           postParse = "",
           postRun = ""
-        )),
+        )
+      case Some(t) => BashHelper.wrapTest(
+          executor = "bash",
+          functionality = functionality,
+          setupCommands = setupCommands,
+          test = t
+        )
+    }
+    val bashScript = BashScript(
+        name = Some(functionality.name),
+        text = Some(text),
         is_executable = true
       )
 
@@ -46,6 +55,6 @@ case class NativeTarget(
         }
       ).mkString
 
-    if (commands == "") "echo Done\n" else commands
+    if (commands == "") ":\n" else commands
   }
 }

@@ -19,7 +19,7 @@ case class DockerTarget(
 ) extends Target {
   val `type` = "docker"
 
-  def modifyFunctionality(functionality: Functionality) = {
+  def modifyFunctionality(functionality: Functionality, test: Option[Script]) = {
     val resourcesPath = "/app"
 
     // collect variables
@@ -30,38 +30,58 @@ case class DockerTarget(
 
     // make commands
     val executor = s"""docker run $dockerArgs -v "$$RESOURCES_DIR":/resources $imageName"""
-    val debuggor = s"""docker run $dockerArgs -v "$$RESOURCES_DIR":/resources -v `pwd`:/pwd --workdir /pwd -t --rm $imageName"""
+    val debuggor = s"""docker run $dockerArgs -v "$$RESOURCES_DIR":/resources -v `pwd`:/pwd --workdir /pwd -t $imageName"""
 
-    // process docker mounts
-    val (volPreParse, volParsers, volPostParse, volInputs) = processDockerVolumes(functionality)
+    // construct extra parameters, unless component is being unit tested
+    if (test.isEmpty) {
+      // process docker mounts
+      val (volPreParse, volParsers, volPostParse, volInputs) = processDockerVolumes(functionality)
 
-    // add docker debug flag
-    val (debPreParse, debParsers, debPostParse, debInputs) = addDockerDebug(debuggor)
+      // add docker debug flag
+      val (debPreParse, debParsers, debPostParse, debInputs) = addDockerDebug(debuggor)
 
-    // add extra arguments to the functionality file for each of the volumes
-    val fun2 = functionality.copy(
-      arguments = functionality.arguments ::: volInputs ::: debInputs
-    )
-
-    // create new bash script
-    val bashScript = BashScript(
-        name = Some(functionality.name),
-        text = Some(BashHelper.wrapScript(
-          executor = executor,
-          functionality = fun2,
-          resourcesPath = "/resources",
-          setupCommands = setupCommands,
-          preParse = volPreParse + debPreParse,
-          parsers = volParsers + debParsers,
-          postParse = volPostParse + debPostParse,
-          postRun = ""
-        )),
-        is_executable = true
+      // add extra arguments to the functionality file for each of the volumes
+      val fun2 = functionality.copy(
+        arguments = functionality.arguments ::: volInputs ::: debInputs
       )
 
-    fun2.copy(
-      resources = bashScript :: fun2.resources.tail
-    )
+      // create new bash script
+      val bashScript = BashScript(
+          name = Some(functionality.name),
+          text = Some(BashHelper.wrapScript(
+            executor = executor,
+            functionality = fun2,
+            resourcesPath = "/resources",
+            setupCommands = setupCommands,
+            preParse = volPreParse + debPreParse,
+            parsers = volParsers + debParsers,
+            postParse = volPostParse + debPostParse,
+            postRun = ""
+          )),
+          is_executable = true
+        )
+
+      fun2.copy(
+        resources = bashScript :: fun2.resources.tail
+      )
+    } else {
+      val bashScript = BashScript(
+          name = Some(functionality.name),
+          text = Some(BashHelper.wrapTest(
+            executor = executor,
+            functionality = functionality,
+            resourcesPath = "/resources",
+            setupCommands = setupCommands,
+            test = test.get
+          )),
+          is_executable = true
+        )
+
+      functionality.copy(
+        resources = bashScript :: functionality.resources.tail
+      )
+    }
+
   }
 
   def processDockerSetup(functionality: Functionality, resourcesPath: String) = {
@@ -111,7 +131,7 @@ case class DockerTarget(
       case _ => "--entrypoint bash "
     }
 
-    portStr + volStr + entrypointStr + "-i"
+    portStr + volStr + entrypointStr + "-i --rm"
   }
 
   def processDockerVolumes(functionality: Functionality) = {

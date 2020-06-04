@@ -1,22 +1,9 @@
 #!/bin/bash
-# print all commands and exit when one of the commands produces an error
 set -ex
 
-if [ "$VIASH_PLATFORM" == "docker" ]; then
-  # Docker platform detected, have to specify a few variables
-  docker_args="--data `pwd`"
-  data_dir="/data"
-else
-  data_dir=`pwd`
-fi
-
-echo ">>> Building component"
-testbash ---setup > /dev/null
-
 echo ">>> Checking whether output is correct"
-testbash $docker_args \
-  help --real_number 10.5 --whole_number=10 -s "a string with spaces" --truth \
-  --output $data_dir/output.txt --log $data_dir/log.txt \
+testbash help --real_number 10.5 --whole_number=10 -s "a string with spaces" --truth \
+  --output ./output.txt --log ./log.txt \
   --optional foo --optional_with_default bar --passthrough='you shall#not$pass' --passthroughbool
 
 [[ ! -f output.txt ]] && echo "Output file could not be found!" && exit 1
