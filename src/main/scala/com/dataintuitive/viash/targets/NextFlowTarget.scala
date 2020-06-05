@@ -24,7 +24,7 @@ case class NextFlowTarget(
 
   val nativeTarget = NativeTarget(r, python)
 
-  def modifyFunctionality(functionality: Functionality, test: Option[Script]) = {
+  def modifyFunctionality(functionality: Functionality) = {
     import NextFlowUtils._
     implicit val fun = functionality
 
@@ -408,7 +408,7 @@ case class NextFlowTarget(
       }
       case Some(e: Script) => {
         println(s"Add ${e.`type`} resources")
-        nativeTarget.modifyFunctionality(functionality, None).resources
+        nativeTarget.modifyFunctionality(functionality).resources
       }
     }
 
