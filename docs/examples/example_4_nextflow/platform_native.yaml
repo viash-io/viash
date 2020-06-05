@@ -1,0 +1,3 @@
+type: native
+r:
+  cran: [dplyr, magrittr, readr, optparse]
