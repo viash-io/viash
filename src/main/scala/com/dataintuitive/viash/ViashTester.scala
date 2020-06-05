@@ -28,7 +28,6 @@ object ViashTester {
         resources = pimpedTest :: exe :: fun.resources.tail ::: tests.filter(_.filename != test.filename)
       )
 
-
       val dir = Files.createTempDirectory("viash_" + funfinal.name).toFile()
       Main.writeResources(funfinal.resources, funfinal.rootDir, dir)
 
@@ -38,13 +37,16 @@ object ViashTester {
       // run command, collect output
       import sys.process._
       import java.io._
+      // TODO: should only run setup once, not once per test
+      Process(Seq(executable, "---setup"), cwd = dir).!
+
+      // run command, collect output
       val stream = new ByteArrayOutputStream
       val writer = new PrintWriter(stream)
-      val exitValue = Seq(executable).!(ProcessLogger(writer.println, writer.println))
+      val exitValue = Process(Seq(executable), cwd = dir).!(ProcessLogger(writer.println, writer.println))
       writer.close()
-      val s = stream.toString
 
-      (test.filename, exitValue, s)
+      (test.filename, exitValue, stream.toString)
     }
   }
 }

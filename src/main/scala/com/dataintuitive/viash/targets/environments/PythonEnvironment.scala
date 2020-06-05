@@ -5,7 +5,7 @@ case class PythonEnvironment(
   github:   List[String] = Nil) {
   def getInstallCommands() = {
     val installPip =
-      """pip install --upgrade pip"""
+      """pip install --user --upgrade pip"""
 
     val installPipPackages =
       packages match {
