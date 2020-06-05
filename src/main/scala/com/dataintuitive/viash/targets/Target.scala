@@ -10,7 +10,7 @@ import com.dataintuitive.viash.targets.environments._
 
 trait Target {
   val `type`: String
-  def modifyFunctionality(functionality: Functionality, test: Option[Script]): Functionality
+  def modifyFunctionality(functionality: Functionality): Functionality
 }
 
 object Target {

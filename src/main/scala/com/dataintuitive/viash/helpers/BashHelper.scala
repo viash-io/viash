@@ -78,6 +78,7 @@ object BashHelper {
       case Some(e: Executable) => e.path.get + " $VIASHARGS"
       case Some(res) => {
         s"""
+          |set -e
           |tempscript=\\$$(mktemp /tmp/viashrun-${functionality.name}-XXXXXX)
           |cat > "\\$$tempscript" << 'VIASHMAIN'
           |${escape(functionality.mainCodeWithArgParse.get).replaceAll("\\\\\\$RESOURCES_DIR", resourcesPath)}
@@ -96,7 +97,9 @@ object BashHelper {
     }
 
     /* GENERATE BASH SCRIPT */
-    s"""#!/bin/bash
+    s"""#!/usr/bin/env bash
+      |
+      |set -e
       |
       |# figure out the directory the viash executable is in, follow symlinks
       |SOURCE="$${BASH_SOURCE[0]}"
@@ -133,76 +136,4 @@ object BashHelper {
       |$postRun""".stripMargin
   }
 
-  def wrapTest(
-      executor: String,
-      functionality: Functionality,
-      resourcesPath: String = "\\$RESOURCES_DIR",
-      setupCommands: String,
-      test: Script
-    ) = {
-    val mainResource = functionality.mainScript
-
-    val extraImports =
-      s"""# define helper functions
-        |$quoteFunction
-        |$removeFlagFunction""".stripMargin
-    val setupFunction =
-      s"""function ViashSetup {
-        |$setupCommands
-        |}""".stripMargin
-
-    // DETERMINE HOW TO RUN THE CODE
-    val executableCode = mainResource match {
-      case None => ""
-      case Some(e: Executable) => ""
-      case Some(res) => {
-        s"""
-          |cat > "\\$$tempdir/${functionality.name}" << 'VIASHMAIN'
-          |${escape(functionality.mainCodeWithArgParse.get).replaceAll("\\\\\\$RESOURCES_DIR", resourcesPath)}
-          |VIASHMAIN
-          |chmod +x "\\$$tempdir/${functionality.name}"
-          |export PATH="\\$$PATH:\\$$tempdir"""".stripMargin
-      }
-    }
-
-    val executionCode =
-      s"""
-        |tempdir=\\$$(mktemp -d /tmp/viashrun-${functionality.name}-XXXXXX)$executableCode
-        |cat > "\\$$tempdir/${test.filename}" << 'VIASHMAIN'
-        |${functionality.readCode(Some(test)).get.replaceAll("\\\\\\$RESOURCES_DIR", resourcesPath)}
-        |VIASHMAIN
-        |${test.command("\\$tempdir/" + test.filename)} 2>&1
-        |CODE=\\$$?
-        |rm -r "\\$$tempdir"
-        |exit \\$$CODE
-        |""".stripMargin
-
-    // generate bash document
-    val (heredocStart, heredocEnd) = mainResource match {
-      case None => ("", "")
-      case Some(e: Executable) => ("", "")
-      case _ => ("cat << VIASHEOF | ", "\nVIASHEOF")
-    }
-
-    /* GENERATE BASH SCRIPT */
-    s"""#!/bin/bash
-      |
-      |set -e
-      |
-      |# figure out the directory the viash executable is in, follow symlinks
-      |SOURCE="$${BASH_SOURCE[0]}"
-      |while [ -h "$$SOURCE" ]; do
-      |  DIR="$$( cd -P "$$( dirname "$$SOURCE" )" >/dev/null 2>&1 && pwd )"
-      |  SOURCE="$$(readlink "$$SOURCE")"
-      |  [[ $$SOURCE != /* ]] && SOURCE="$$DIR/$$SOURCE"
-      |done
-      |RESOURCES_DIR="$$( cd -P "$$( dirname "$$SOURCE" )" >/dev/null 2>&1 && pwd )"
-      |
-      |$extraImports
-      |$setupFunction
-      |
-      |ViashSetup
-      |
-      |$heredocStart$executor $executionCode$heredocEnd""".stripMargin
-  }
 }
