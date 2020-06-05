@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # VIASH START
-par_input="input.sh"
+par_input="code.sh"
 par_real_number="123.987654"
 par_whole_number="17"
 par_s="test string"
@@ -51,6 +51,8 @@ output "optional_with_default: \"$par_optional_with_default\""
 output "passthrough: \"$par_passthrough\""
 output "passthroughbool: \"$par_passthroughbool\""
 output "resources_dir: \"$resources_dir\""
+output "head of input: \"`head -1 $par_input`\""
+output "head of resource1: \"`head -1 $resources_dir/resource1.txt`\""
 if [ ! -z "$par_data" ]; then
   output "data: \"$par_data\""
 fi

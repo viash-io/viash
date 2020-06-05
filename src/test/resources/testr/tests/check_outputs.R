@@ -3,31 +3,17 @@ options(tidyverse.quiet = TRUE)
 library(tidyverse)
 library(testthat, warn.conflicts = FALSE)
 
-# check whether platform is docker
-if (identical(Sys.getenv("VIASH_PLATFORM"), "docker")) {
-  docker_args <- c("--data", getwd())
-  data_dir <- "/data"
-} else {
-  docker_args <- NULL
-  data_dir <- getwd()
-}
-
-test_that("Building component", {
-  out <- processx::run("testr", "---setup")
-})
-
 
 test_that("Checking whether output is correct", {
-  out <- processx::run("testr", c(
+  out <- processx::run("$RESOURCES_DIR/testr", c(
     "help", "--real_number", "10.5", "--whole_number=10", "-s", "you shall#not$pass",
     "--truth", "--optional", "foo", "--optional_with_default", "bar",
-    "--output", paste0(data_dir, "/output.txt"), "--log", paste0(data_dir, "/log.txt"), docker_args
+    "--output", "./output.txt", "--log", "./log.txt"
   ))
   
   expect_true(file.exists("output.txt"))
   
   output <- readr::read_file("output.txt")
-  expect_match(output, 'input: "help"')
   expect_match(output, 'input: "help"')
   expect_match(output, 'real_number: "10.5"')
   expect_match(output, 'whole_number: "10"')
@@ -45,8 +31,8 @@ test_that("Checking whether output is correct", {
 
 
 test_that("Checking whether output is correct with minimal parameters", {
-  out <- processx::run("testr", c(
-    "test", "--real_number", "123.456", "--whole_number=789", "-s", "my weird string", docker_args
+  out <- processx::run("$RESOURCES_DIR/testr", c(
+    "test", "--real_number", "123.456", "--whole_number=789", "-s", "my weird string"
   ))
   
   output <- out$stdout
