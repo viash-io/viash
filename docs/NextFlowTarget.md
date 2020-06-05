@@ -129,17 +129,23 @@ viash export -f atoms/filter/functionality.yaml -p atoms/filter/platform_docker.
 output/filter/setup/filter_table ---setup
 ```
 
-The third instruction above builds the Docker image and tags it as `viash_autogen/filer_table`, which can now be picked up by our pipeline.
+In the scope of a pipeline, when multiple _atoms_ are converted, it may make sense to alter the two last statements as such:
+
+```sh
+viash export -f atoms/filter/functionality.yaml -p atoms/filter/platform_docker.yaml -o setup/
+setup/filter_table ---setup
+```
+
+The last instruction above builds the Docker image and tags it as `viash_autogen/filer_table`, which can now be picked up by our pipeline.
 
 Remarks:
 
 - This procedure works locally on an instance, if will not work when running this in a clustered environment
-- We are working on functionality to automate and improve this procedure
+- We are working on functionality to automate and improve this procedure, for instance by being able to explicitly name the tag for the resulting Docker container
 
 ## TODO
 
 ### Packages
 
 The NXF target inherits the R and Python platforms. This should _in principle_ allow a user to specify additional packages to be installed prior to running the function/module. This functionality is not yet available, though.
-
 
