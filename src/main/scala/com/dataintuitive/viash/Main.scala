@@ -47,7 +47,7 @@ object Main {
       }
       case Some(conf.pimp) => {
         // read functionality
-        val functionality = readFunctionality(conf.pimp)
+        val functionality = readFunctionality(conf.pimp.functionality())
 
         // fetch argparsed code
         val mainCode = functionality.mainCodeWithArgParse.get
@@ -62,66 +62,32 @@ object Main {
         }
       }
       case Some(conf.test) => {
-        val fun = readFunctionality(conf.test)
+        val fun = readFunctionality(conf.test.functionality())
         val platform = conf.test.platform.map{ path =>
           val targPath = new java.io.File(path)
           Target.parse(targPath)
         }.getOrElse(NativeTarget())
 
-        val tests = fun.tests.getOrElse(Nil)
-        val executableTests = tests.filter(_.isInstanceOf[Script]).map(_.asInstanceOf[Script])
+        val results = ViashTester.testFunctionality(fun, platform)
 
-        if (executableTests.length == 0) {
+        if (results.length == 0) {
           println("No tests found!")
+        } else if (results.exists(_._2 != 0)) {
+          val count = results.count(_._2 != 0)
+          println()
+          println(s"$count out of ${results.length} test scripts failed!")
+          println("Check the output above for more information.")
+          System.exit(1)
         } else {
-          val results = executableTests.map{ test =>
-            print(">> Running test " + test.filename + " ... ")
-            val funwithtest = platform.modifyFunctionality(fun, Some(test))
-
-            val dir = Files.createTempDirectory("viash_" + funwithtest.name).toFile()
-            writeResources(funwithtest.resources, funwithtest.rootDir, dir)
-
-            // write test resources to same directory
-            writeResources(tests, funwithtest.rootDir, dir)
-
-            // execute with parameters
-            val executable = Paths.get(dir.toString(), funwithtest.name).toString()
-
-            // run command, collect output
-            import sys.process._
-            import java.io._
-            val stream = new ByteArrayOutputStream
-            val writer = new PrintWriter(stream)
-            val exitValue = Seq(executable).!(ProcessLogger(writer.println, writer.println))
-            writer.close()
-            val s = stream.toString
-            if (exitValue == 0) {
-              println("OK")
-            } else {
-              println("Failed!!!")
-              println(s)
-            }
-
-            (exitValue, s)
-          }
-
-          if (results.exists(_._1 != 0)) {
-            val count = results.count(_._1 != 0)
-            println()
-            println(s"$count out of ${results.length} test scripts failed!")
-            println("Check the output above for more information.")
-            System.exit(1)
-          } else {
-            println("All test scripts succeeded!")
-          }
+          println("All test scripts succeeded!")
         }
       }
       case _ => println("No subcommand was specified. See `viash --help` for more information.")
     }
   }
 
-  def readFunctionality(subcommand: WithFunctionality) = {
-    val funcPath = new java.io.File(subcommand.functionality()).getAbsoluteFile()
+  def readFunctionality(funStr: String) = {
+    val funcPath = new java.io.File(funStr).getAbsoluteFile()
     val functionality = Functionality.parse(funcPath)
     functionality.rootDir = funcPath
     functionality
@@ -131,7 +97,7 @@ object Main {
     // get the functionality yaml
     // let the functionality object know the path in which it resided,
     // so it can find back its resources
-    val functionality = readFunctionality(subcommand)
+    val functionality = readFunctionality(subcommand.functionality())
 
     // get the platform
     // if no platform is provided, assume the platform
@@ -142,7 +108,7 @@ object Main {
     }.getOrElse(NativeTarget())
 
     // modify the functionality using the target
-    val fun2 = platform.modifyFunctionality(functionality, test)
+    val fun2 = platform.modifyFunctionality(functionality)
 
     (fun2, platform)
   }

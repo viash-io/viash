@@ -49,6 +49,8 @@ arguments:
 resources:
 - type: bash_script
   path: ./code.sh
+- path: resource1.txt
 tests:
 - type: bash_script
   path: tests/check_outputs.sh
+- path: resource2.txt
