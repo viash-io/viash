@@ -16,6 +16,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Install dependencies
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        sudo apt-get install -y libcurl4-openssl-dev
     - name: Set up Scala
       uses: olafurpg/setup-scala@v5
     - name: Set up Python
@@ -26,7 +30,7 @@ jobs:
       uses: r-lib/actions/setup-r@master
       with:
         r-version: '3.6.1'
-    - name: Install optparse
+    - name: Install tidyverse and optparse
       run: Rscript -e "install.packages(c('optparse', 'tidyverse'), repos = 'http://cran.rstudio.com', type = 'source')"
     - name: Run tests on Ubuntu
       if: startsWith(matrix.os, 'ubuntu')
