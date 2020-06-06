@@ -1,0 +1,10 @@
+type: docker
+image: rocker/tidyverse
+r:
+  cran:
+  - optparse
+  - magrittr
+volumes:
+- name: data
+  mount: /data
+workdir: /app
