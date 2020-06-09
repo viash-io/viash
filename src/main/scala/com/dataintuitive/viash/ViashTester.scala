@@ -42,6 +42,7 @@ object ViashTester {
 
       // run setup
       // todo: should only do this once...
+      writer.println(s"+ $executable ---setup")
       Process(Seq(executable, "---setup"), cwd = dir).!(ProcessLogger(writer.println, writer.println))
 
       // run command, collect output
