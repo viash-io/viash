@@ -67,15 +67,16 @@ object Main {
           val targPath = new java.io.File(path)
           Target.parse(targPath)
         }.getOrElse(NativeTarget())
+        val verbose = conf.test.verbose()
 
-        val results = ViashTester.testFunctionality(fun, platform)
+        val results = ViashTester.testFunctionality(fun, platform, verbose = verbose)
 
         if (results.length == 0) {
           println("No tests found!")
         } else {
           println()
 
-          for ((filename, code, stdout) ← results if code > 0 || conf.test.verbose()) {
+          for ((filename, code, stdout) ← results if code > 0 && !verbose) {
             println(s">> $filename finished with code $code:")
             println(stdout)
             println()
