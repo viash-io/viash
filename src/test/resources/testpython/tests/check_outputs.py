@@ -52,5 +52,13 @@ class TestCheckOutputs(unittest.TestCase):
     self.assertRegex(output, 'optional: "None"')
     self.assertRegex(output, 'optional_with_default: "The default value."')
     self.assertRegex(output, 'Parsed input arguments.')
-
+  
+  def test_check_error(self):
+    output = subprocess.run(
+      ["$RESOURCES_DIR/testpython", "test", "--real_number", "abc",
+      "--whole_number", "789", "-s", "my weird string"], 
+      capture_output=True
+    )
+    self.assertTrue(output.returncode > 0)
+    
 unittest.main()

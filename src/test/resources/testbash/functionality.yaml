@@ -53,4 +53,6 @@ resources:
 tests:
 - type: bash_script
   path: tests/check_outputs.sh
+- type: bash_script
+  path: tests/fail.sh
 - path: resource2.txt

@@ -16,6 +16,8 @@ PASSTHROUGH="--passthrough test"
 resources_dir="."
 # VIASH END
 
+set -e
+
 function log {
   if [ -z "$par_log" ]; then
     echo $@
@@ -51,8 +53,10 @@ output "optional_with_default: \"$par_optional_with_default\""
 output "passthrough: \"$par_passthrough\""
 output "passthroughbool: \"$par_passthroughbool\""
 output "resources_dir: \"$resources_dir\""
-output "head of input: \"`head -1 $par_input`\""
-output "head of resource1: \"`head -1 $resources_dir/resource1.txt`\""
+INPUT=`head -1 $par_input`
+output "head of input: \"$INPUT\""
+RESOURCE=`head -1 $resources_dir/resource1.txt`
+output "head of resource1: \"$RESOURCE\""
 if [ ! -z "$par_data" ]; then
   output "data: \"$par_data\""
 fi

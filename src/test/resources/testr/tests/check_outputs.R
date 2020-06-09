@@ -45,4 +45,12 @@ test_that("Checking whether output is correct with minimal parameters", {
   expect_match(output, 'Parsed input arguments')
 })
 
+test_that("Checking whether executable fails when wrong parameters are given", {
+  out <- processx::run("$RESOURCES_DIR/testr", error_on_status = FALSE, c(
+    "test", "--real_number", "abc", "--whole_number=abc", "-s", "my weird string", "--derp"
+  ))
+  
+  expect_gt(out$status, 0)
+})
+
 
