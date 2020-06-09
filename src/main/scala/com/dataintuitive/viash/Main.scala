@@ -73,8 +73,16 @@ object Main {
         if (results.length == 0) {
           println("No tests found!")
         } else if (results.exists(_._2 != 0)) {
-          val count = results.count(_._2 != 0)
+
           println()
+
+          for ((filename, code, stdout) ← results) {
+            println(s">> $filename finished with code $code:")
+            println(stdout)
+            println()
+          }
+
+          val count = results.count(_._2 != 0)
           println(s"$count out of ${results.length} test scripts failed!")
           println("Check the output above for more information.")
           System.exit(1)
