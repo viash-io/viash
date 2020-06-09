@@ -1,5 +1,6 @@
 type: docker
 image: rocker/tidyverse
+target_image: "viash_test/r"
 r:
   cran: 
   - optparse

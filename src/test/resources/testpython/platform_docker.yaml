@@ -1,5 +1,6 @@
 type: docker
 image: python
+target_image: "viash_test/python"
 python:
   packages: 
   - argparse

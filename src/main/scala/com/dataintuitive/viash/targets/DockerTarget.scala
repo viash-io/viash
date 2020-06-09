@@ -10,6 +10,7 @@ import com.dataintuitive.viash.functionality.resources.Resource
 
 case class DockerTarget(
   image: String,
+  target_image: Option[String] = None,
   volumes: Option[List[Volume]] = None,
   port: Option[List[String]] = None,
   workdir: Option[String] = None,
@@ -77,7 +78,7 @@ case class DockerTarget(
     if (deps.isEmpty) {
       (image, s"docker pull $image")
     } else {
-      val imageName = "viash_autogen/" + functionality.name
+      val imageName = target_image.getOrElse("viash_autogen/" + functionality.name)
 
       val runCommands = List(aptInstallCommands, rInstallCommands, pythonInstallCommands)
 
