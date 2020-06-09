@@ -37,12 +37,14 @@ object ViashTester {
       // run command, collect output
       import sys.process._
       import java.io._
-      // TODO: should only run setup once, not once per test
-      Process(Seq(executable, "---setup"), cwd = dir).!
-
-      // run command, collect output
       val stream = new ByteArrayOutputStream
       val writer = new PrintWriter(stream)
+
+      // run setup
+      // todo: should only do this once...
+      Process(Seq(executable, "---setup"), cwd = dir).!(ProcessLogger(writer.println, writer.println))
+
+      // run command, collect output
       val exitValue = Process(Seq(executable), cwd = dir).!(ProcessLogger(writer.println, writer.println))
       writer.close()
 
