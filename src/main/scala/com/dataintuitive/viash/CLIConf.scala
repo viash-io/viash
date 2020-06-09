@@ -31,7 +31,14 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       required = false
     )
   }
-  val test = new Subcommand("test") with WithFunctionality with WithPlatform
+  val test = new Subcommand("test") with WithFunctionality with WithPlatform {
+    val verbose = toggle(
+      name = "verbose",
+      short = 'v',
+      default = Some(false),
+      descrYes = "Print out all output from the tests"
+    )
+  }
 
   addSubcommand(run)
   addSubcommand(export)

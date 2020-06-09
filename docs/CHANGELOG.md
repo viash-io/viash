@@ -1,6 +1,6 @@
-# viash 0.2.0
+# viash 0.1.1
 
-... nothing yet ...
+* TESTING: Implement `viash test` functionality.
 
 # viash 0.1.0 (2020-05-14)
 * MAJOR CHANGES: Refactoring of the Functionality class as discussed in VIP1 (#1). This has resulted in a lot of internal changes, but the changes with regard to the yaml definitions are relatively minor. See the section below for more info.
