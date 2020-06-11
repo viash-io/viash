@@ -14,6 +14,7 @@ case class Functionality(
   function_type: Option[FunctionType] = None,
   arguments: List[DataObject[_]] = Nil,
   tests: Option[List[Resource]] = None,
+  set_wd_to_resources_dir: Option[Boolean] = None,
   private var _rootDir: Option[File] = None // :/
 ) {
 

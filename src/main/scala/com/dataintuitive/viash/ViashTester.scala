@@ -16,7 +16,10 @@ object ViashTester {
     val executableTests = tests.filter(_.isInstanceOf[Script]).map(_.asInstanceOf[Script])
 
     executableTests.map{ test =>
-      val funonlytest = platform.modifyFunctionality(fun.copy(resources = List(test)))
+      val funonlytest = platform.modifyFunctionality(fun.copy(
+        resources = List(test),
+        set_wd_to_resources_dir = Some(true)
+      ))
 
       import com.dataintuitive.viash.functionality.resources.BashScript
       val pimpedTest = BashScript(
