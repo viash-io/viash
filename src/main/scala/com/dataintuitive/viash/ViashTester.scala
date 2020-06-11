@@ -59,6 +59,7 @@ object ViashTester {
 
       // run setup
       // todo: should only do this once...
+      logger(s"# Temporary test directory: $dir")
       logger(s"+ $executable ---setup")
       Process(Seq(executable, "---setup"), cwd = dir).!(ProcessLogger(logger, logger))
 
