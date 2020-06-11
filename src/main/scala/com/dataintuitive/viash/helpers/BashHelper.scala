@@ -72,6 +72,14 @@ object BashHelper {
         |$setupCommands
         |}""".stripMargin
 
+    // check whether the wd needs to be set to the resources dir
+    val cdToResources =
+      if (functionality.set_wd_to_resources_dir.getOrElse(false)) {
+        "\ncd \"" + resourcesPath + "\""
+      } else {
+        ""
+      }
+
     // DETERMINE HOW TO RUN THE CODE
     val executionCode = mainResource match {
       case None => ""
@@ -82,7 +90,7 @@ object BashHelper {
           |tempscript=\\$$(mktemp /tmp/viashrun-${functionality.name}-XXXXXX)
           |cat > "\\$$tempscript" << 'VIASHMAIN'
           |${escape(functionality.mainCodeWithArgParse.get).replaceAll("\\\\\\$RESOURCES_DIR", resourcesPath)}
-          |VIASHMAIN
+          |VIASHMAIN$cdToResources
           |${res.command("\\$tempscript")} $$VIASHARGS
           |rm "\\$$tempscript"
           |""".stripMargin
