@@ -1,0 +1,12 @@
+type: docker
+image: rocker/tidyverse
+r:
+  cran:
+  - optparse
+  - EpiEstim
+  - openxlsx
+  - lubridate
+volumes:
+- name: data
+  mount: /data
+workdir: /app

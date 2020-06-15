@@ -1,0 +1,14 @@
+name: corona
+function_type: transform
+description: na
+arguments:
+- name: "--output"
+  alternatives: ["-o"]
+  type: file
+  description: The path to the output plot file.
+  default: output.png
+  required: true
+  direction: output
+resources:
+- type: r_script
+  path: ./code.R
