@@ -1,6 +1,6 @@
 ### VIASH START
 par <- list(
-  output = "plot.png",
+  output = "plot.png"
 )
 ### VIASH END
 
@@ -8,6 +8,7 @@ library(tidyverse)
 library(EpiEstim)
 library(openxlsx)
 library(lubridate)
+library(patchwork)
 
 # collect incidence data
 covid <- read_csv("https://epistat.sciensano.be/Data/COVID19BE_HOSP.csv")
@@ -44,6 +45,16 @@ res <- estimate_R(
   config = make_config()
 )
 
-png(filename=par$output) #, width=1000, height=700)
-plot(res, "R", legend = FALSE)
-# dev.off()
+# make nicer plots than the ones proposed by EpiEstim
+plots <- map(c("incid", "R", "SI"), function(what) {
+  g <- plot(res, what = what) + theme_bw()
+  if (what %in% c("incid", "R")) {
+    g <- g + 
+      scale_x_date(breaks = "1 week") +
+      theme(axis.text.x = element_text(angle = 35, hjust = 1))
+  }
+  g
+})
+
+g <- wrap_plots(plots, ncol = 1)
+ggsave(par$output, g, height = 8, width = 8)

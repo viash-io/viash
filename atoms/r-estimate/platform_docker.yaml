@@ -6,6 +6,7 @@ r:
   - EpiEstim
   - openxlsx
   - lubridate
+  - patchwork
 volumes:
 - name: data
   mount: /data
