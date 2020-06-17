@@ -6,7 +6,7 @@ import subprocess
 class TestCheckOutputs(unittest.TestCase):
   def test_check_output(self):
     out = subprocess.check_output([
-      "$RESOURCES_DIR/testpython", "help", "--real_number", "10.5", "--whole_number=10", 
+      "./testpython", "help", "--real_number", "10.5", "--whole_number=10", 
       "-s", "you shall#not$pass", "--truth",
       "--output", "./output.txt", "--log", "./log.txt",
       "--optional", "foo", "--optional_with_default", "bar"
@@ -38,7 +38,7 @@ class TestCheckOutputs(unittest.TestCase):
     
   def test_check_output_with_minimal_args(self):
     output = subprocess.check_output(
-      ["$RESOURCES_DIR/testpython", "test", "--real_number", "123.456",
+      ["./testpython", "test", "--real_number", "123.456",
       "--whole_number", "789", "-s", "my weird string"]
     ).decode("utf-8")
     
@@ -55,7 +55,7 @@ class TestCheckOutputs(unittest.TestCase):
   
   def test_check_error(self):
     output = subprocess.run(
-      ["$RESOURCES_DIR/testpython", "test", "--real_number", "abc",
+      ["./testpython", "test", "--real_number", "abc",
       "--whole_number", "789", "-s", "my weird string"], 
       capture_output=True
     )
