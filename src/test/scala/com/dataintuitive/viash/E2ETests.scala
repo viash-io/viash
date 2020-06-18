@@ -25,11 +25,11 @@ class E2ETests extends FunSuite {
       val platform = Target.parse(new File(platFile))
 
       // run tests
-      val results = ViashTester.testFunctionality(functionality, platform)
+      val results = ViashTester.runTests(functionality, platform)
 
-      for ((file, outcode, output) <- results) {
-        test(s"Testing $testName platform $platName with test $file") {
-          assert(outcode == 0, output)
+      for (res <- results) {
+        test(s"Testing $testName platform $platName with test ${res.name}") {
+          assert(res.exitValue == 0, res.output)
         }
       }
     }
