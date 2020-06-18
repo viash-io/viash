@@ -1,6 +1,6 @@
 package com.dataintuitive.viash
 
-import org.scalatest.FunSuite
+import org.scalatest.{FunSuite, BeforeAndAfterAll}
 import java.nio.file.{Path, Paths, Files}
 import java.io.File
 import sys.process.Process
@@ -9,14 +9,13 @@ import scala.io.Source
 import scala.reflect.io.Directory
 import com.dataintuitive.viash.helpers.Exec
 
-class E2EBashNative extends FunSuite {
+class E2EBashNative extends FunSuite with BeforeAndAfterAll {
   // which platform to test
   val testName = "testbash"
   val funcFile = getClass.getResource(s"/$testName/functionality.yaml").getPath
   val platFile = getClass.getResource(s"/$testName/platform_native.yaml").getPath
 
-  val temporaryFolder = Files.createTempDirectory(Paths.get("/tmp"), "viash_tester").toFile()
-
+  val temporaryFolder = Exec.makeTemp("viash_tester")
   val tempFolStr = temporaryFolder.toString()
 
   // parse functionality from file
@@ -129,5 +128,9 @@ class E2EBashNative extends FunSuite {
     assert(regex.findFirstIn(stdout).isDefined)
 
     assert(stdout.contains("INFO: Parsed input arguments"))
+  }
+
+  override def afterAll() {
+    Exec.deleteRecursively(temporaryFolder)
   }
 }

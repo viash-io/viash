@@ -16,16 +16,18 @@ class E2ETests extends FunSuite {
       val funcFile = getClass.getResource(s"/$testName/functionality.yaml").getPath
       val platFile = getClass.getResource(s"/$testName/platform_$platName.yaml").getPath
 
-      val temporaryFolder = Files.createTempDirectory(Paths.get("/tmp"), "viash_tester").toFile()
-
-      val tempFolStr = temporaryFolder.toString()
-
       // parse functionality from file
       val functionality = Functionality.parse(new File(funcFile))
       val platform = Target.parse(new File(platFile))
 
       // run tests
-      val results = ViashTester.runTests(functionality, platform)
+      val dir = Exec.makeTemp("viash_test_" + functionality.name)
+
+      val results = try {
+        ViashTester.runTests(functionality, platform, dir, verbose = false)
+      } finally {
+        Exec.deleteRecursively(dir)
+      }
 
       for (res <- results) {
         test(s"Testing $testName platform $platName with test ${res.name}") {
