@@ -6,7 +6,7 @@ import resources.Script
 
 import java.nio.file.{Paths, Files}
 import scala.io.Source
-import org.rogach.scallop.Subcommand
+import org.rogach.scallop.{Subcommand, ScallopOption}
 
 import java.nio.charset.StandardCharsets
 
@@ -23,22 +23,31 @@ object Main {
     conf.subcommand match {
       case Some(conf.run) => {
         // create new functionality with argparsed executable
-        val (fun, tar) = viashLogic(conf.run, None)
+        val (fun, tar) = viashLogic(conf.run)
 
-        // write executable and resources to temporary directory
-        val dir = Files.createTempDirectory("viash_" + fun.name).toFile()
-        writeResources(fun.resources, fun.rootDir, dir)
+        // make temporary directory
+        val dir = Exec.makeTemp("viash_" + fun.name)
 
-        // execute with parameters
-        val executable = Paths.get(dir.toString(), fun.name).toString()
-        println(Exec.run(
-          Array(executable) ++
-          runArgs.dropWhile(_ == "--")
-        ))
+        try {
+          // write executable and resources to temporary directory
+          writeResources(fun.resources, fun.rootDir, dir)
+
+          // determine command
+          val cmd =
+            Paths.get(dir.toString(), fun.name).toString() +
+            runArgs.dropWhile(_ == "--")
+
+          // execute command, print everything to console
+          Process(cmd).!(ProcessLogger(println, println))
+        } finally {
+          // always remove tempdir afterwards
+          import scala.reflect.io.Directory
+          new Directory(dir).deleteRecursively()
+        }
       }
       case Some(conf.export) => {
         // create new functionality with argparsed executable
-        val (fun, tar) = viashLogic(conf.export, None)
+        val (fun, tar) = viashLogic(conf.export)
 
         // write files to given output directory
         val dir = new java.io.File(conf.export.output())
@@ -47,7 +56,7 @@ object Main {
       }
       case Some(conf.pimp) => {
         // read functionality
-        val functionality = readFunctionality(conf.pimp.functionality())
+        val functionality = readFunctionality(conf.pimp.functionality)
 
         // fetch argparsed code
         val mainCode = functionality.mainCodeWithArgParse.get
@@ -62,61 +71,52 @@ object Main {
         }
       }
       case Some(conf.test) => {
-        val fun = readFunctionality(conf.test.functionality())
-        val platform = conf.test.platform.map{ path =>
-          val targPath = new java.io.File(path)
-          Target.parse(targPath)
-        }.getOrElse(NativeTarget())
+        val fun = readFunctionality(conf.test.functionality)
+        val platform = readPlatform(conf.test.platform)
         val verbose = conf.test.verbose()
 
-        val results = ViashTester.testFunctionality(fun, platform, verbose = verbose)
+        // create temporary directory
+        val dir = Exec.makeTemp("viash_test_" + fun.name)
 
-        if (results.length == 0) {
-          println("No tests found!")
+        val results = ViashTester.runTests(fun, platform, dir, verbose = verbose)
+
+        ViashTester.reportTests(results, dir, verbose = verbose)
+
+        if (!conf.test.keep() && !results.exists(_.exitValue > 0)) {
+          println("Cleaning up temporary files")
+          Exec.deleteRecursively(dir)
         } else {
-          println()
-
-          for ((filename, code, stdout) ← results if code > 0 && !verbose) {
-            println(s">> $filename finished with code $code:")
-            println(stdout)
-            println()
-          }
-
-          val count = results.count(_._2 != 0)
-
-          if (count > 0) {
-            println(s"$count out of ${results.length} test scripts failed!")
-            println("Check the output above for more information.")
-            System.exit(1)
-          } else {
-            println("All test scripts succeeded!")
-          }
+          println(s"Test files and logs are stored at '$dir'")
         }
       }
       case _ => println("No subcommand was specified. See `viash --help` for more information.")
     }
   }
 
-  def readFunctionality(funStr: String) = {
-    val funcPath = new java.io.File(funStr).getAbsoluteFile()
+  def readFunctionality(opt: ScallopOption[String]) = {
+    val funcPath = new java.io.File(opt()).getAbsoluteFile()
     val functionality = Functionality.parse(funcPath)
     functionality.rootDir = funcPath
     functionality
   }
 
-  def viashLogic(subcommand: WithFunctionality with WithPlatform, test: Option[Script]) = {
+  def readPlatform(opt: ScallopOption[String]) = {
+    opt.map{ path =>
+      val targPath = new java.io.File(path)
+      Target.parse(targPath)
+    }.getOrElse(NativeTarget())
+  }
+
+  def viashLogic(subcommand: WithFunctionality with WithPlatform) = {
     // get the functionality yaml
     // let the functionality object know the path in which it resided,
     // so it can find back its resources
-    val functionality = readFunctionality(subcommand.functionality())
+    val functionality = readFunctionality(subcommand.functionality)
 
     // get the platform
     // if no platform is provided, assume the platform
     // should be native and all dependencies are taken care of
-    val platform = subcommand.platform.map{ path =>
-      val targPath = new java.io.File(path)
-      Target.parse(targPath)
-    }.getOrElse(NativeTarget())
+    val platform = readPlatform(subcommand.platform)
 
     // modify the functionality using the target
     val fun2 = platform.modifyFunctionality(functionality)
@@ -142,6 +142,7 @@ object Main {
 
         if (resource.path.isDefined) {
           val sour = Paths.get(inputDir.getPath(), resource.path.get)
+
           Files.copy(sour, dest)
         } else {
           val text = resource.text.get
@@ -152,4 +153,6 @@ object Main {
       }
     )
   }
+
+
 }

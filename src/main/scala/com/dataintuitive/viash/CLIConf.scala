@@ -38,6 +38,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       default = Some(false),
       descrYes = "Print out all output from the tests"
     )
+    val keep = toggle(
+      name = "keep",
+      short = 'k',
+      default = Some(false),
+      descrYes = "Do not remove temporary files"
+    )
   }
 
   addSubcommand(run)

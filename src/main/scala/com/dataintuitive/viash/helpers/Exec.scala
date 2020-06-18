@@ -2,6 +2,8 @@ package com.dataintuitive.viash.helpers
 
 import sys.process.Process
 import java.io.File
+import java.nio.file.{Paths, Files}
+import scala.reflect.io.Directory
 
 object Exec {
   def run(commands: Seq[String], cwd: Option[File] = None, extraEnv: Seq[(String, String)] = Nil) = {
@@ -18,5 +20,15 @@ object Exec {
   def appendToEnv(key: String, value: String) = util.Properties.envOrNone(key) match {
     case Some(v) if v.nonEmpty => s"$v${System getProperty "path.separator"}$value"
     case _ => value
+  }
+
+  def makeTemp(name: String) = {
+    val temp = Files.createTempDirectory(Paths.get("/tmp"), name).toFile()
+    temp.mkdirs()
+    temp
+  }
+
+  def deleteRecursively(dir: File) {
+    new Directory(dir).deleteRecursively()
   }
 }

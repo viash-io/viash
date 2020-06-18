@@ -87,12 +87,15 @@ object BashHelper {
       case Some(res) => {
         s"""
           |set -e
-          |tempscript=\\$$(mktemp /tmp/viashrun-${functionality.name}-XXXXXX)
+          |tempscript=\\$$(mktemp /tmp/viash-run-${functionality.name}-XXXXXX)
+          |function clean_up {
+          |  rm "\\$$tempscript"
+          |}
+          |trap clean_up EXIT
           |cat > "\\$$tempscript" << 'VIASHMAIN'
           |${escape(functionality.mainCodeWithArgParse.get).replaceAll("\\\\\\$RESOURCES_DIR", resourcesPath)}
           |VIASHMAIN$cdToResources
           |${res.command("\\$tempscript")} $$VIASHARGS
-          |rm "\\$$tempscript"
           |""".stripMargin
       }
     }
