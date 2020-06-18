@@ -76,7 +76,7 @@ case class DockerTarget(
     // if no extra dependencies are needed, the provided image can just be used,
     // otherwise need to construct a separate docker container
     if (deps.isEmpty) {
-      (image, s"docker pull $image")
+      (image, s"docker image inspect $image >/dev/null 2>&1 || docker pull $image")
     } else {
       val imageName = target_image.getOrElse("viash_autogen/" + functionality.name)
 
