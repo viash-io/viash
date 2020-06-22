@@ -156,7 +156,7 @@ case class NextFlowTarget(
           |}
           |""".stripMargin.replace("__e__", inputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
       // Out format is different from in format
-      case Some(Convert) => """
+      case Some(Convert) | None => """
           |def outFromIn(inputstr) {
           |
           |    def splitstring = inputstr.split(/\./)
