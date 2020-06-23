@@ -109,7 +109,7 @@ case class DockerTarget(
     // check whether entrypoint should be set to bash
     val entrypointStr = functionality.mainScript match {
       case Some(e: Executable) => "--entrypoint='' "
-      case _ => "--entrypoint=sh "
+      case _ => "--entrypoint=bash "
     }
 
     portStr + volStr + entrypointStr + "-i --rm -v \"$RESOURCES_DIR\":/resources"
