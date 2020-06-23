@@ -1,0 +1,2 @@
+if you can read this,
+the resource was read correctly

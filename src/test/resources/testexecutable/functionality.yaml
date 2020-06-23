@@ -1,0 +1,19 @@
+name: testexecutable
+description: | 
+  Read the input file.
+arguments: 
+- name: "command"
+  type: file
+  description: A command to run
+  required: true
+- name: "arg"
+  type: string
+  description: An extra parameter
+  required: true
+resources:
+- type: executable
+  path: mc
+- path: resource1.txt
+tests:
+- type: bash_script
+  path: tests/check_outputs.sh
