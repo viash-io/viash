@@ -34,7 +34,7 @@ object Main {
 
           // determine command
           val cmd =
-            Paths.get(dir.toString(), fun.name).toString() +
+            Array(Paths.get(dir.toString(), fun.name).toString()) ++
             runArgs.dropWhile(_ == "--")
 
           // execute command, print everything to console
