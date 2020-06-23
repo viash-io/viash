@@ -2,7 +2,7 @@
 set -ex
 
 echo ">>> Checking whether output is correct"
-$RESOURCES_DIR/testbash "$RESOURCES_DIR/resource1.txt" --real_number 10.5 --whole_number=10 -s "a string with spaces" --truth \
+./testbash "resource1.txt" --real_number 10.5 --whole_number=10 -s "a string with spaces" --truth \
   --output ./output.txt --log ./log.txt \
   --optional foo --optional_with_default bar --passthrough='you shall#not$pass' --passthroughbool
 
@@ -27,7 +27,7 @@ grep -q 'head of resource1: "if you can read this,"' output.txt
 grep -q 'Parsed input arguments.' log.txt
 
 echo ">>> Checking whether output is correct with minimal parameters"
-$RESOURCES_DIR/testbash "$RESOURCES_DIR/resource2.txt" --real_number 123.456 --whole_number=789 -s 'my$weird#string' \
+./testbash "resource2.txt" --real_number 123.456 --whole_number=789 -s 'my$weird#string' \
   > output2.txt
 
 [[ ! -f output2.txt ]] && echo "Output file could not be found!" && exit 1

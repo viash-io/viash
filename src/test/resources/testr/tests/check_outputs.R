@@ -5,7 +5,7 @@ library(testthat, warn.conflicts = FALSE)
 
 
 test_that("Checking whether output is correct", {
-  out <- processx::run("$RESOURCES_DIR/testr", c(
+  out <- processx::run("./testr", c(
     "help", "--real_number", "10.5", "--whole_number=10", "-s", "you shall#not$pass",
     "--truth", "--optional", "foo", "--optional_with_default", "bar",
     "--output", "./output.txt", "--log", "./log.txt"
@@ -31,7 +31,7 @@ test_that("Checking whether output is correct", {
 
 
 test_that("Checking whether output is correct with minimal parameters", {
-  out <- processx::run("$RESOURCES_DIR/testr", c(
+  out <- processx::run("./testr", c(
     "test", "--real_number", "123.456", "--whole_number=789", "-s", "my weird string"
   ))
   
@@ -46,7 +46,7 @@ test_that("Checking whether output is correct with minimal parameters", {
 })
 
 test_that("Checking whether executable fails when wrong parameters are given", {
-  out <- processx::run("$RESOURCES_DIR/testr", error_on_status = FALSE, c(
+  out <- processx::run("./testr", error_on_status = FALSE, c(
     "test", "--real_number", "abc", "--whole_number=abc", "-s", "my weird string", "--derp"
   ))
   
