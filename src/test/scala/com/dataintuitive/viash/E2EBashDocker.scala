@@ -41,10 +41,10 @@ class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check whether the executable can build the image", DockerTest) {
-    val stdout = Exec.run(
+    val out = Exec.run2(
       Seq(executable.toString(), "---setup")
     )
-    assert(stdout.contains(": Pulling from "))
+    assert(out.exitValue == 0)
   }
 
   test("Check whether the executable can run", DockerTest) {
