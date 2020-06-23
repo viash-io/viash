@@ -31,6 +31,9 @@ class E2ETests extends FunSuite {
 
       for (res <- results) {
         test(s"Testing $testName platform $platName with test ${res.name}") {
+          if (res.exitValue != 0) {
+            println(res.output)
+          }
           assert(res.exitValue == 0, res.output)
         }
       }
