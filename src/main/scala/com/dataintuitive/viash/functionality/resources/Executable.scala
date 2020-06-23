@@ -9,7 +9,6 @@ case class Executable(
   is_executable: Boolean = true
 ) extends Script {
   val `type` = "executable"
-//  val text = None
 
   val commentStr = "#"
 
