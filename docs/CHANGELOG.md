@@ -3,6 +3,8 @@
 * TESTING: Implement `viash test` functionality.
 * MINOR CHANGES `viash test`: Tests are now executed in the resources directory.
 * MINOR CHANGES `viash test`: The path of the resources directory is printed if verbose.
+* MINOR CHANGES `viash test`: Clean up temporary directories after successful test.
+* MINOR CHANGES `viash run`: Clean up temporary directories after run (whether successful or not).
 
 # viash 0.1.0 (2020-05-14)
 * MAJOR CHANGES: Refactoring of the Functionality class as discussed in VIP1 (#1). This has resulted in a lot of internal changes, but the changes with regard to the yaml definitions are relatively minor. See the section below for more info.
