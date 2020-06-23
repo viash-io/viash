@@ -2,7 +2,7 @@
 set -x
 
 echo ">>> This test should always fail"
-$RESOURCES_DIR/testbash "$RESOURCES_DIR/missingresource" --real_number abc --whole_number abc -s "a string with spaces" --truth \
+./testbash "missingresource" --real_number abc --whole_number abc -s "a string with spaces" --truth \
   --output ./output.txt --log ./log.txt \
   --optional foo --optional_with_default bar --passthrough='you shall#not$pass' --passthroughbool
 
