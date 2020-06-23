@@ -30,8 +30,8 @@ case class DockerTarget(
     val (imageName, setupCommands) = processDockerSetup(functionality, resourcesPath)
 
     // make commands
-    val executor = s"""docker run $dockerArgs --entrypoint= $imageName"""
-    val debuggor = s"""docker run $dockerArgs -v `pwd`:/pwd --workdir /pwd -t --entrypoint= $imageName sh"""
+    val executor = s"""docker run $dockerArgs $imageName"""
+    val debuggor = s"""docker run $dockerArgs -v `pwd`:/pwd --workdir /pwd -t $imageName sh"""
 
     // process docker mounts
     val (volPreParse, volParsers, volPostParse, volInputs) = processDockerVolumes(functionality)
@@ -108,8 +108,8 @@ case class DockerTarget(
 
     // check whether entrypoint should be set to bash
     val entrypointStr = functionality.mainScript match {
-      case Some(e: Executable) => ""
-      case _ => "--entrypoint bash "
+      case Some(e: Executable) => "--entrypoint='' "
+      case _ => "--entrypoint=sh "
     }
 
     portStr + volStr + entrypointStr + "-i --rm -v \"$RESOURCES_DIR\":/resources"
