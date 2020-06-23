@@ -7,7 +7,7 @@ echo ">>> Checking whether output is correct"
   --optional foo --optional_with_default bar --passthrough='you shall#not$pass' --passthroughbool
 
 [[ ! -f output.txt ]] && echo "Output file could not be found!" && exit 1
-grep -q 'input: "..*/resource1.txt"' output.txt
+grep -q 'input: "resource1.txt"' output.txt
 grep -q 'real_number: "10.5"' output.txt
 grep -q 'whole_number: "10"' output.txt
 grep -q 's: "a string with spaces"' output.txt
@@ -31,7 +31,7 @@ echo ">>> Checking whether output is correct with minimal parameters"
   > output2.txt
 
 [[ ! -f output2.txt ]] && echo "Output file could not be found!" && exit 1
-grep -q 'input: "..*/resource2.txt"' output2.txt
+grep -q 'input: "resource2.txt"' output2.txt
 grep -q 'real_number: "123.456"' output2.txt
 grep -q 'whole_number: "789"' output2.txt
 grep -q 's: "my$weird#string"' output2.txt
