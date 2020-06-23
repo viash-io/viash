@@ -6,6 +6,6 @@ echo ">>> Checking whether output is correct"
 
 [[ ! -f output.txt ]] && echo "Output file could not be found!" && exit 1
 grep -q 'testexecutable' output.txt
-grep -q 'resource1.xt' output.txt
+grep -q 'resource1.txt' output.txt
 
 echo ">>> Test finished successfully"

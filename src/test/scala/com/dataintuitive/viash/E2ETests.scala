@@ -11,11 +11,15 @@ import scala.reflect.io.Directory
 import com.dataintuitive.viash.helpers.Exec
 
 class E2ETests extends FunSuite {
-  for (testName <- List("testbash", "testpython", "testr")) {
-    for (platName <- List("docker", "native")) {
-      val funcFile = getClass.getResource(s"/$testName/functionality.yaml").getPath
-      val platFile = getClass.getResource(s"/$testName/platform_$platName.yaml").getPath
+  for (
+    testName <- List("testbash", "testpython", "testr", "testexecutable");
+    platName <- List("docker", "native")
+  ) {
+    val funcFile = getClass.getResource(s"/$testName/functionality.yaml").getPath()
+    val platRes = getClass.getResource(s"/$testName/platform_$platName.yaml")
 
+    if (platRes != null) {
+      val platFile = platRes.getPath()
       // parse functionality from file
       val functionality = Functionality.parse(new File(funcFile))
       val platform = Target.parse(new File(platFile))

@@ -1,7 +1,9 @@
 type: docker
 image: "minio/mc"
 target_image: "viash_test/executable"
-apt: [bash]
+apk: 
+  packages: 
+  - bash
 volumes:
 - name: data
   mount: /data

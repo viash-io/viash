@@ -15,4 +15,7 @@ package object environments {
 
   implicit val encodeAptEnvironment: Encoder.AsObject[AptEnvironment] = deriveConfiguredEncoder
   implicit val decodeAptEnvironment: Decoder[AptEnvironment] = deriveConfiguredDecoder
+
+  implicit val encodeApkEnvironment: Encoder.AsObject[ApkEnvironment] = deriveConfiguredEncoder
+  implicit val decodeApkEnvironment: Decoder[ApkEnvironment] = deriveConfiguredDecoder
 }

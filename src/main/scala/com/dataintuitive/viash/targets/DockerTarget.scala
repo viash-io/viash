@@ -14,6 +14,7 @@ case class DockerTarget(
   volumes: Option[List[Volume]] = None,
   port: Option[List[String]] = None,
   workdir: Option[String] = None,
+  apk: Option[ApkEnvironment] = None,
   apt: Option[AptEnvironment] = None,
   r: Option[REnvironment] = None,
   python: Option[PythonEnvironment] = None
@@ -31,7 +32,7 @@ case class DockerTarget(
 
     // make commands
     val executor = s"""docker run $dockerArgs $imageName"""
-    val debuggor = s"""docker run $dockerArgs -v `pwd`:/pwd --workdir /pwd -t $imageName sh"""
+    val debuggor = s"""docker run $dockerArgs -v `pwd`:/pwd --workdir /pwd -t $imageName"""
 
     // process docker mounts
     val (volPreParse, volParsers, volPostParse, volInputs) = processDockerVolumes(functionality)
@@ -68,19 +69,18 @@ case class DockerTarget(
   def processDockerSetup(functionality: Functionality, resourcesPath: String) = {
     // get dependencies
     val aptInstallCommands = apt.map(_.getInstallCommands()).getOrElse(Nil)
+    val apkInstallCommands = apk.map(_.getInstallCommands()).getOrElse(Nil)
     val rInstallCommands = r.map(_.getInstallCommands()).getOrElse(Nil)
     val pythonInstallCommands = python.map(_.getInstallCommands()).getOrElse(Nil)
 
-    val deps = List(aptInstallCommands, rInstallCommands, pythonInstallCommands).flatten
+    val runCommands = List(aptInstallCommands, apkInstallCommands, rInstallCommands, pythonInstallCommands)
 
     // if no extra dependencies are needed, the provided image can just be used,
     // otherwise need to construct a separate docker container
-    if (deps.isEmpty) {
+    if (runCommands.flatten.isEmpty) {
       (image, s"docker image inspect $image >/dev/null 2>&1 || docker pull $image")
     } else {
       val imageName = target_image.getOrElse("viash_autogen/" + functionality.name)
-
-      val runCommands = List(aptInstallCommands, rInstallCommands, pythonInstallCommands)
 
       val dockerFile =
         s"FROM $image\n" +
@@ -88,12 +88,15 @@ case class DockerTarget(
 
       val setupCommands =
         s"""# create temporary directory to store temporary dockerfile in
-          |tmpdir=$$(mktemp -d /tmp/viashdocker-${functionality.name}-XXXXXX)
+          |tmpdir=$$(mktemp -d /tmp/viash_setupdocker-${functionality.name}-XXXXXX)
+          |function clean_up {
+          |  rm -rf "\\$$tmpdir"
+          |}
+          |trap clean_up EXIT
           |cat > $$tmpdir/Dockerfile << 'VIASHDOCKER'
           |$dockerFile
           |VIASHDOCKER
-          |docker build -t $imageName $$tmpdir
-          |rm -r $$tmpdir""".stripMargin
+          |docker build -t $imageName $$tmpdir""".stripMargin
       (imageName, setupCommands)
     }
   }
