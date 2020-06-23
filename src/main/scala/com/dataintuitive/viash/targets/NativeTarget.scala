@@ -12,11 +12,17 @@ case class NativeTarget(
   val `type` = "native"
 
   def modifyFunctionality(functionality: Functionality) = {
+    val executor = functionality.mainScript match {
+      case None => "eval"
+      case Some(e: Executable) => "eval"
+      case Some(_) => "bash"
+    }
+
     // create new bash script
     val bashScript = BashScript(
       name = Some(functionality.name),
       text = Some(BashHelper.wrapScript(
-        executor = "bash",
+        executor = executor,
         functionality = functionality,
         setupCommands = setupCommands,
         preParse = "",

@@ -103,7 +103,7 @@ object BashHelper {
     // generate bash document
     val (heredocStart, heredocEnd) = mainResource match {
       case None => ("", "")
-      case Some(e: Executable) => ("eval ", "")
+      case Some(e: Executable) => ("", "")
       case _ => ("cat << VIASHEOF | ", "\nVIASHEOF")
     }
 
