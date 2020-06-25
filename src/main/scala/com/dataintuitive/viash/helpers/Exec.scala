@@ -48,7 +48,8 @@ object Exec {
   }
 
   def makeTemp(name: String) = {
-    val temp = Files.createTempDirectory(Paths.get("/tmp"), name).toFile()
+    val tempdir = scala.util.Properties.envOrElse("VIASH_TEMP", "/tmp")
+    val temp = Files.createTempDirectory(Paths.get(tempdir), name).toFile()
     temp.mkdirs()
     temp
   }
