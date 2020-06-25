@@ -19,6 +19,12 @@ trait WithPlatform { _: ScallopConf =>
 class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   val run = new Subcommand("run") with WithFunctionality with WithPlatform
   val export = new Subcommand("export") with WithFunctionality with WithPlatform {
+    val meta = toggle(
+        name = "meta",
+        short = 'm',
+        default = Some(false),
+        descrYes = "Print out some meta information at the end"
+      )
     val output = opt[String](
       descr = "Path to directory.",
       default = Some("output/"),

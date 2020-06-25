@@ -54,6 +54,14 @@ object Main {
         val dir = new java.io.File(conf.export.output())
         dir.mkdirs()
         writeResources(fun.resources, fun.rootDir, dir)
+
+        if (conf.export.meta()) {
+          val execPath = Paths.get(dir.toString(), fun.mainScript.get.filename).toString()
+          println(s"""functionalityPath: ${conf.export.functionality()}
+            |platformPath: ${conf.export.platform.getOrElse("")}
+            |outputPath: ${conf.export.output()}
+            |executablePath: $execPath""".stripMargin)
+        }
       }
       case Some(conf.pimp) => {
         // read functionality
