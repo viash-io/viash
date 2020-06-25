@@ -38,7 +38,8 @@ object Main {
             runArgs.dropWhile(_ == "--")
 
           // execute command, print everything to console
-          Process(cmd).!(ProcessLogger(println, println))
+          val code = Process(cmd).!(ProcessLogger(println, println))
+          System.exit(code)
         } finally {
           // always remove tempdir afterwards
           import scala.reflect.io.Directory
@@ -80,7 +81,7 @@ object Main {
 
         val results = ViashTester.runTests(fun, platform, dir, verbose = verbose)
 
-        ViashTester.reportTests(results, dir, verbose = verbose)
+        val code = ViashTester.reportTests(results, dir, verbose = verbose)
 
         if (!conf.test.keep() && !results.exists(_.exitValue > 0)) {
           println("Cleaning up temporary files")
@@ -88,6 +89,8 @@ object Main {
         } else {
           println(s"Test files and logs are stored at '$dir'")
         }
+
+        System.exit(code)
       }
       case _ => println("No subcommand was specified. See `viash --help` for more information.")
     }
