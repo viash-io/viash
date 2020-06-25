@@ -5,6 +5,9 @@
 * MINOR CHANGES `viash test`: The path of the resources directory is printed if verbose.
 * MINOR CHANGES `viash test`: Clean up temporary directories after successful test.
 * MINOR CHANGES `viash run`: Clean up temporary directories after run (whether successful or not).
+* MINOR CHANGES `viash run` and `viash test`: Exit(1) when execution or test fails.
+* MINOR CHANGES `viash export`: Add -m flag for outputting metadata after export.
+* MINOR CHANGES: Allow changing the temporary directory by defining `VIASH_TEMP` as a environment variable.
 
 # viash 0.1.0 (2020-05-14)
 * MAJOR CHANGES: Refactoring of the Functionality class as discussed in VIP1 (#1). This has resulted in a lot of internal changes, but the changes with regard to the yaml definitions are relatively minor. See the section below for more info.
