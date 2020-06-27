@@ -22,11 +22,9 @@ The `function_type` attempts to capture some high-level functionality of the _fu
 - What is the input/output signature of the function? In other words, is the input one or more files? Is the output one or more files?
 - How should the output files be named (based on the input)
 
-For instance, a tool that creates a full directory structure as output has a different _signature_ than one that unzips are file.
+For instance, a tool that creates a full directory structure as output has a different _signature_ than one that unzips one file.
 
-### `asis`
-
-__TODO__
+__Note__: If no function type is declared, by default the `transform`/`convert` type is used.
 
 ### `transform`
 
@@ -53,9 +51,11 @@ In a future version of the NXF Target, we plan on allowing users to specify the 
 
 In this case, a tool writes multiple files and we ideally store those in a dedicated (sub) directory. This could correspond to a _fork_ in the pipeline DAG, but not necessarily so.
 
+It should be noted that the downstream transformations or processes should take this forking into account.
+
 ### `join`
 
-A pipeline DAG usually contains forks and joins. This function type combines things. Tools like, e.g. Pandoc, allow the user to combine several files into one output file.
+A pipeline DAG usually contains forks as well as joins. This function type combines things. Tools like, e.g. Pandoc, allow the user to combine several files into one output file.
 
 ## Specific Functionality
 
@@ -138,10 +138,31 @@ setup/filter_table ---setup
 
 The last instruction above builds the Docker image and tags it as `viash_autogen/filer_table`, which can now be picked up by our pipeline.
 
+Alternatively, with a recent version of `viash`, it is also possible to _name_ the docker image that should be used after setup. The example above becomes:
+
+```yaml
+type: nextflow
+image: viash/filter_table
+```
+
+The image used is defined in this way:
+
+```yaml
+type: docker
+image: rocker/tidyverse
+target_image: viash/filter_table
+r:
+  cran:
+  - optparse
+...
+```
+
+The `viash/` prefix can be omitted, or in some cases aligned to the private repository running at your site.
+
 Remarks:
 
 - This procedure works locally on an instance, if will not work when running this in a clustered environment
-- We are working on functionality to automate and improve this procedure, for instance by being able to explicitly name the tag for the resulting Docker container
+- We are working on functionality to automate and improve this procedure
 
 ## TODO
 
