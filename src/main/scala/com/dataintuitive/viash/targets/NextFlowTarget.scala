@@ -132,7 +132,9 @@ case class NextFlowTarget(
         |            ? it.value
         |            : (it.type == "boolean_true")
         |                ? it.otype + it.name
-        |                : it.otype + it.name + " " + it.value
+        |                : (it.value == "")
+        |                    ? ""
+        |                    : it.otype + it.name + " " + it.value
         |    }
         |
         |    def command_line = command + argumentsList
