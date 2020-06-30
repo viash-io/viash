@@ -59,11 +59,11 @@ jobs:
         python-version: ${{ matrix.config.python }}
 
     - name: Run tests on Ubuntu
-      if: startsWith(matrix.os, 'ubuntu')
+      if: !startsWith(matrix.config.os, 'mac')
       run: sbt test
       
     - name: Run tests on macOS
-      if: startsWith(matrix.os, 'macOS')
+      if: startsWith(matrix.config.os, 'mac')
       run: sbt 'testOnly -- -l com.dataintuitive.viash.DockerTest'
       
     - name: Upload check results on fail
