@@ -1,5 +1,5 @@
 name: Scala CI
-  
+
 on:
   push:
     branches: [ master, develop ]
