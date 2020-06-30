@@ -7,7 +7,7 @@ import com.dataintuitive.viash.targets.environments._
 import java.nio.file.Paths
 
 /**
- * Target class for generating NextFlow (DSL2) modules.
+/ * Target class for generating NextFlow (DSL2) modules.
  */
 case class NextFlowTarget(
   image: String,
@@ -132,7 +132,9 @@ case class NextFlowTarget(
         |            ? it.value
         |            : (it.type == "boolean_true")
         |                ? it.otype + it.name
-        |                : it.otype + it.name + " " + it.value
+        |                : (it.value == "")
+        |                    ? ""
+        |                    : it.otype + it.name + " " + it.value
         |    }
         |
         |    def command_line = command + argumentsList
@@ -163,9 +165,9 @@ case class NextFlowTarget(
           |    def prefix = splitstring.head()
           |    def extension = splitstring.last()
           |
-          |    return prefix + "." + "__f__" + "." + "__e__"
+          |    return prefix + "." + "__f__" + "." + __e__
           |}
-          |""".stripMargin.replace("__e__", outputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
+          |""".stripMargin.replace("__e__", outputFileExtO.map(ext => s""""$ext"""").getOrElse("extension")).replace("__f__", fname)
       // Out format is different from in format
       case Some(ToDir) => """
           |def outFromIn(inputstr) {
