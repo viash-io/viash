@@ -20,6 +20,14 @@ object Main {
 
     val conf = new CLIConf(viashArgs)
 
+    if (conf.version.getOrElse(false)) {
+      val p = getClass.getPackage
+      val name = p.getImplementationTitle
+      val version = p.getImplementationVersion
+      println(name + " v" + version)
+      System.exit(0)
+    }
+
     conf.subcommand match {
       case Some(conf.run) => {
         // create new functionality with argparsed executable
@@ -42,8 +50,11 @@ object Main {
           System.exit(code)
         } finally {
           // always remove tempdir afterwards
-          import scala.reflect.io.Directory
-          new Directory(dir).deleteRecursively()
+          if (!conf.run.keep()) {
+            Exec.deleteRecursively(dir)
+          } else {
+            println(s"Files and logs are stored at '$dir'")
+          }
         }
       }
       case Some(conf.export) => {

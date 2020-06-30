@@ -17,13 +17,31 @@ trait WithPlatform { _: ScallopConf =>
 }
 
 class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
-  val run = new Subcommand("run") with WithFunctionality with WithPlatform
+    banner("""viash: write once, deploy anywhere
+      |
+      |Example: viash run -f functionality.yaml
+      |
+      |USAGE:""".stripMargin)
+
+  val version = opt[Boolean](
+    short = 'v',
+    descr = "Print version"
+  )
+
+  val run = new Subcommand("run") with WithFunctionality with WithPlatform {
+    val keep = opt[Boolean](
+      name = "keep",
+      short = 'k',
+      default = Some(false),
+      descr = "Do not remove temporary files"
+    )
+  }
   val export = new Subcommand("export") with WithFunctionality with WithPlatform {
-    val meta = toggle(
+    val meta = opt[Boolean](
         name = "meta",
         short = 'm',
         default = Some(false),
-        descrYes = "Print out some meta information at the end"
+        descr = "Print out some meta information at the end"
       )
     val output = opt[String](
       descr = "Path to directory.",
@@ -38,17 +56,17 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     )
   }
   val test = new Subcommand("test") with WithFunctionality with WithPlatform {
-    val verbose = toggle(
+    val verbose = opt[Boolean](
       name = "verbose",
       short = 'v',
       default = Some(false),
-      descrYes = "Print out all output from the tests"
+      descr = "Print out all output from the tests"
     )
-    val keep = toggle(
+    val keep = opt[Boolean](
       name = "keep",
       short = 'k',
       default = Some(false),
-      descrYes = "Do not remove temporary files"
+      descr = "Do not remove temporary files"
     )
   }
 
