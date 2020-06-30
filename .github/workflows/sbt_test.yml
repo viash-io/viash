@@ -7,34 +7,66 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  scala-ci:
     runs-on: ${{ matrix.os }}
     if: "!contains(github.event.head_commit.message, 'ci skip')"
     strategy:
       matrix:
-        os: [ ubuntu-latest ] # os: [macos-latest, ubuntu-latest]
+        config: 
+        - {name: 'ubuntu_r3.6.1_py3.8', os: ubuntu-latest, r: '3.6.1', python: '3.8' }
+        # - {name: 'ubuntu_rrelease_py3.x', os: ubuntu-latest, r: 'release', python: '3.x' }
+        # - {name: 'mac_r3.6.1_py3.8', os: macos-latest, r: '3.6.1', python: '3.8' }
 
     steps:
     - uses: actions/checkout@v2
-    - name: Install dependencies
-      if: startsWith(matrix.os, 'ubuntu')
-      run: |
-        sudo apt-get install -y libcurl4-openssl-dev
-    - name: Set up Scala
-      uses: olafurpg/setup-scala@v5
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with: 
-        python-version: 3.8
+    
+    - name: Cache R packages
+      if: runner.os != 'Windows'
+      uses: actions/cache@v1
+      with:
+        path: ${{ env.R_LIBS_USER }}
+        key: ${{ matrix.config.name }}
+        restore-keys: ${{ matrix.config.name }}
+    
     - name: Set up R
       uses: r-lib/actions/setup-r@master
       with:
-        r-version: '3.6.1'
+        r-version: ${{ matrix.config.r }}
+        
+    - name: Install system dependencies
+      if: runner.os == 'Linux'
+      env:
+        RHUB_PLATFORM: linux-x86_64-ubuntu-gcc
+      run: |
+        Rscript -e "install.packages('remotes'); remotes::install_github('rcannood/sysreqs')"
+        sysreqs=$(Rscript -e "pkgs <- sysreqs:::get_cran_sysreqs(sysreqs:::get_cran_deps('tidyverse')); cat(sysreqs:::sysreq_commands_pkgs(pkgs))")
+        sudo -s eval "$sysreqs"
+
     - name: Install tidyverse and optparse
-      run: Rscript -e "install.packages(c('optparse', 'tidyverse'), repos = 'http://cran.rstudio.com', type = 'source')"
+      run: |
+        install.packages('remotes')
+        remotes::install_cran(c("rcmdcheck", "tidyverse"))
+      shell: Rscript {0}
+      
+    - name: Set up Scala
+      uses: olafurpg/setup-scala@v5
+      
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with: 
+        python-version: ${{ matrix.config.python }}
+
     - name: Run tests on Ubuntu
       if: startsWith(matrix.os, 'ubuntu')
       run: sbt test
+      
     - name: Run tests on macOS
       if: startsWith(matrix.os, 'macOS')
       run: sbt 'testOnly -- -l com.dataintuitive.viash.DockerTest'
+      
+    - name: Upload check results on fail
+      if: failure()
+      uses: actions/upload-artifact@master
+      with:
+        name: ${{ matrix.config.name }}_results
+        path: check
