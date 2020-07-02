@@ -1,6 +1,7 @@
 package com.dataintuitive.viash.functionality.resources
 
 import com.dataintuitive.viash.functionality._
+import java.nio.file.Path
 
 case class Executable(
   text: Option[String] = None,
@@ -17,4 +18,6 @@ case class Executable(
 
   def generateArgparse(functionality: Functionality): String = ""
 
+  override def read: Option[String] = None
+  override def write(path: Path, overwrite: Boolean) { }
 }

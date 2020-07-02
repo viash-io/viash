@@ -8,7 +8,7 @@ import com.dataintuitive.viash.functionality.Functionality
 import com.dataintuitive.viash.targets.Target
 import scala.io.Source
 import scala.reflect.io.Directory
-import com.dataintuitive.viash.helpers.Exec
+import com.dataintuitive.viash.helpers._
 
 class E2ETests extends FunSuite {
   for (
@@ -25,12 +25,12 @@ class E2ETests extends FunSuite {
       val platform = Target.parse(new File(platFile))
 
       // run tests
-      val dir = Exec.makeTemp("viash_test_" + functionality.name)
+      val dir = IOHelper.makeTemp("viash_test_" + functionality.name)
 
       val results = try {
         ViashTester.runTests(functionality, platform, dir, verbose = false)
       } finally {
-        Exec.deleteRecursively(dir)
+        IOHelper.deleteRecursively(dir)
       }
 
       for (res <- results) {

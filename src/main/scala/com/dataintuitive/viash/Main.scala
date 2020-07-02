@@ -8,10 +8,8 @@ import java.nio.file.{Paths, Files}
 import scala.io.Source
 import org.rogach.scallop.{Subcommand, ScallopOption}
 
-import java.nio.charset.StandardCharsets
-
 import sys.process._
-import com.dataintuitive.viash.helpers.Exec
+import com.dataintuitive.viash.helpers.{Exec, IOHelper}
 import com.dataintuitive.viash.functionality.resources.Resource
 
 object Main {
@@ -34,11 +32,11 @@ object Main {
         val (fun, tar) = viashLogic(conf.run)
 
         // make temporary directory
-        val dir = Exec.makeTemp("viash_" + fun.name)
+        val dir = IOHelper.makeTemp("viash_" + fun.name)
 
         try {
           // write executable and resources to temporary directory
-          writeResources(fun.resources, fun.rootDir, dir)
+          writeResources(fun.resources, dir)
 
           // determine command
           val cmd =
@@ -51,7 +49,7 @@ object Main {
         } finally {
           // always remove tempdir afterwards
           if (!conf.run.keep()) {
-            Exec.deleteRecursively(dir)
+            IOHelper.deleteRecursively(dir)
           } else {
             println(s"Files and logs are stored at '$dir'")
           }
@@ -64,7 +62,7 @@ object Main {
         // write files to given output directory
         val dir = new java.io.File(conf.export.output())
         dir.mkdirs()
-        writeResources(fun.resources, fun.rootDir, dir)
+        writeResources(fun.resources, dir)
 
         if (conf.export.meta()) {
           val execPath = Paths.get(dir.toString(), fun.mainScript.get.filename).toString()
@@ -76,18 +74,17 @@ object Main {
       }
       case Some(conf.pimp) => {
         // read functionality
-        val functionality = readFunctionality(conf.pimp.functionality)
+        implicit val functionality = readFunctionality(conf.pimp.functionality)
 
         // fetch argparsed code
-        val mainCode = functionality.mainCodeWithArgParse.get
+        val mainScript = functionality.mainScript.get
 
         // write to file or stdout
         if (conf.pimp.output.isDefined) {
-          val file = new java.io.File(conf.pimp.output())
-          Files.write(file.toPath(), mainCode.getBytes(StandardCharsets.UTF_8))
-          file.setExecutable(true)
+          val path = Paths.get(conf.pimp.output())
+          mainScript.writeWithArgparse(path, true)
         } else {
-          println(mainCode)
+          println(mainScript.readWithArgparse)
         }
       }
       case Some(conf.test) => {
@@ -96,7 +93,7 @@ object Main {
         val verbose = conf.test.verbose()
 
         // create temporary directory
-        val dir = Exec.makeTemp("viash_test_" + fun.name)
+        val dir = IOHelper.makeTemp("viash_test_" + fun.name)
 
         val results = ViashTester.runTests(fun, platform, dir, verbose = verbose)
 
@@ -104,7 +101,7 @@ object Main {
 
         if (!conf.test.keep() && !results.exists(_.exitValue > 0)) {
           println("Cleaning up temporary files")
-          Exec.deleteRecursively(dir)
+          IOHelper.deleteRecursively(dir)
         } else {
           println(s"Test files and logs are stored at '$dir'")
         }
@@ -118,7 +115,6 @@ object Main {
   def readFunctionality(opt: ScallopOption[String]) = {
     val funcPath = new java.io.File(opt()).getAbsoluteFile()
     val functionality = Functionality.parse(funcPath)
-    functionality.rootDir = funcPath
     functionality
   }
 
@@ -148,32 +144,14 @@ object Main {
 
   def writeResources(
     resources: Seq[Resource],
-    inputDir: java.io.File,
     outputDir: java.io.File,
     overwrite: Boolean = true
   ) {
     // copy all files
-    resources.foreach(
-      resource => {
-        val dest = Paths.get(outputDir.getAbsolutePath, resource.filename)
-
-        val destFile = dest.toFile()
-        if (overwrite && destFile.exists()) {
-          destFile.delete()
-        }
-
-        if (resource.path.isDefined) {
-          val sour = Paths.get(inputDir.getPath(), resource.path.get)
-
-          Files.copy(sour, dest)
-        } else {
-          val text = resource.text.get
-          Files.write(dest, text.getBytes(StandardCharsets.UTF_8))
-        }
-
-        destFile.setExecutable(resource.is_executable)
-      }
-    )
+    resources.foreach{ resource =>
+      val dest = Paths.get(outputDir.getAbsolutePath, resource.filename)
+      resource.write(dest, overwrite)
+    }
   }
 
 
