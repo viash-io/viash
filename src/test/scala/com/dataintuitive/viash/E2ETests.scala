@@ -21,7 +21,7 @@ class E2ETests extends FunSuite {
     if (platRes != null) {
       val platFile = platRes.getPath()
       // parse functionality from file
-      val functionality = Functionality.parse(new File(funcFile))
+      val functionality = Functionality.parse(IOHelper.uri(funcFile))
       val platform = Target.parse(new File(platFile))
 
       // run tests

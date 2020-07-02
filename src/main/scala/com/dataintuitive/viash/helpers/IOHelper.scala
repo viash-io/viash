@@ -23,12 +23,18 @@ object IOHelper {
     new Directory(dir).deleteRecursively()
   }
 
+  val uriRegex = "^[a-zA-Z0-9]*:".r
   def uri(path: String) = {
-    new URI(if (path.contains("://")) path else "file://" + path)
+    val newURI = if (uriRegex.findFirstIn(path).isDefined) path else "file://" + new File(path).getAbsolutePath
+    new URI(newURI)
   }
 
   def read(uri: URI): String = {
-    Source.fromURI(uri).getLines.mkString("\n")
+    if (uri.getScheme == "file") {
+      Source.fromURI(uri).getLines().mkString("\n")
+    } else {
+      Source.fromURL(uri.toURL).getLines().mkString("\n")
+    }
   }
 
   def write(uri: URI, path: Path, overwrite: Boolean): File = {

@@ -4,6 +4,7 @@
 * Allow testing a component with the `viash test` functionality. Tests are executed in a temporary directory on the specified platform. The temporary directory contains all the resource and test files. 
 * `viash --version`: Add flag for printing the version of viash.
 * Allow fetching resources from URL (http:// and https://)
+* Allow retrieving functionality and platform YAMLs from URL
 
 ## MINOR CHANGES
 * `viash run` and `viash test`: Allow changing the temporary directory by defining `VIASH_TEMP` as a environment variable. Temporary directories are cleaned up after successful executions.
