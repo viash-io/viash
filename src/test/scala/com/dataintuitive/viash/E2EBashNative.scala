@@ -7,7 +7,7 @@ import sys.process.Process
 import com.dataintuitive.viash.functionality.Functionality
 import scala.io.Source
 import scala.reflect.io.Directory
-import com.dataintuitive.viash.helpers.Exec
+import com.dataintuitive.viash.helpers._
 
 class E2EBashNative extends FunSuite with BeforeAndAfterAll {
   // which platform to test
@@ -15,7 +15,7 @@ class E2EBashNative extends FunSuite with BeforeAndAfterAll {
   val funcFile = getClass.getResource(s"/$testName/functionality.yaml").getPath
   val platFile = getClass.getResource(s"/$testName/platform_native.yaml").getPath
 
-  val temporaryFolder = Exec.makeTemp("viash_tester")
+  val temporaryFolder = IOHelper.makeTemp("viash_tester")
   val tempFolStr = temporaryFolder.toString()
 
   // parse functionality from file
@@ -131,6 +131,6 @@ class E2EBashNative extends FunSuite with BeforeAndAfterAll {
   }
 
   override def afterAll() {
-    Exec.deleteRecursively(temporaryFolder)
+    IOHelper.deleteRecursively(temporaryFolder)
   }
 }

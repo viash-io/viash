@@ -40,7 +40,7 @@ object ViashTester {
     val buildfun = platform.modifyFunctionality(fun)
     val builddir = Paths.get(dir.toString(), "build_executable").toFile()
     builddir.mkdir()
-    Main.writeResources(buildfun.resources, buildfun.rootDir, builddir)
+    Main.writeResources(buildfun.resources, builddir)
 
     // run command, collect output
     val stream = new ByteArrayOutputStream
@@ -99,7 +99,7 @@ object ViashTester {
       // write resources to dir
       val newdir = Paths.get(dir.toString(), "test_" + test.filename).toFile()
       newdir.mkdir()
-      Main.writeResources(funfinal.resources, funfinal.rootDir, newdir)
+      Main.writeResources(funfinal.resources, newdir)
 
       // run command, collect output
       val stream = new ByteArrayOutputStream
