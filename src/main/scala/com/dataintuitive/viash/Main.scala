@@ -113,15 +113,12 @@ object Main {
   }
 
   def readFunctionality(opt: ScallopOption[String]) = {
-    val funcPath = new java.io.File(opt()).getAbsoluteFile()
-    val functionality = Functionality.parse(funcPath)
-    functionality
+    Functionality.parse(IOHelper.uri(opt()))
   }
 
   def readPlatform(opt: ScallopOption[String]) = {
     opt.map{ path =>
-      val targPath = new java.io.File(path)
-      Target.parse(targPath)
+      Target.parse(IOHelper.uri(path))
     }.getOrElse(NativeTarget())
   }
 

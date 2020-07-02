@@ -6,6 +6,8 @@ import java.nio.file.Paths
 import java.io.File
 import dataobjects._
 import resources._
+import com.dataintuitive.viash.helpers.IOHelper
+import java.net.URI
 
 case class Functionality(
   name: String,
@@ -31,15 +33,14 @@ case class Functionality(
 }
 
 object Functionality {
-  def parse(file: java.io.File): Functionality = {
-    val str = Source.fromFile(file).mkString
+  def parse(uri: URI): Functionality = {
+    val str = IOHelper.read(uri)
     val fun = parser.parse(str)
       .fold(throw _, _.as[Functionality])
       .fold(throw _, identity)
 
-    val dir = file.getParentFile()
-    val resources = fun.resources.map(makeResourcePathAbsolute(_, dir))
-    val tests = fun.tests.getOrElse(Nil).map(makeResourcePathAbsolute(_, dir))
+    val resources = fun.resources.map(makeResourcePathAbsolute(_, uri))
+    val tests = fun.tests.getOrElse(Nil).map(makeResourcePathAbsolute(_, uri))
 
     fun.copy(
       resources = resources,
@@ -47,7 +48,7 @@ object Functionality {
     )
   }
 
-  private def makeResourcePathAbsolute(res: Resource, dir: File) = {
+  private def makeResourcePathAbsolute(res: Resource, parent: URI) = {
     if (res.isInstanceOf[Executable] || res.path.isEmpty || res.path.get.contains("://")) {
         res
       } else {
@@ -55,7 +56,7 @@ object Functionality {
         if (p.isAbsolute) {
           res
         } else {
-          val newPath = Some(Paths.get(dir.getPath, res.path.get).toFile().getAbsolutePath)
+          val newPath = Some(parent.resolve(res.path.get).toString())
           res match {
             case s: BashScript => s.copy(path = newPath)
             case s: PythonScript => s.copy(path = newPath)

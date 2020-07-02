@@ -19,7 +19,7 @@ class E2EBashNative extends FunSuite with BeforeAndAfterAll {
   val tempFolStr = temporaryFolder.toString()
 
   // parse functionality from file
-  val functionality = Functionality.parse(new File(funcFile))
+  val functionality = Functionality.parse(IOHelper.uri(funcFile))
 
   // convert testpython
   val params = Array(

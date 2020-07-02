@@ -1,12 +1,10 @@
 package com.dataintuitive.viash.targets
 
 import com.dataintuitive.viash.functionality.{Functionality}
-import com.dataintuitive.viash.functionality.resources.{Resource, Script}
-import scala.io.Source
-import java.io.File
-import java.nio.file.Paths
+import com.dataintuitive.viash.helpers.IOHelper
 import io.circe.yaml.parser
 import com.dataintuitive.viash.targets.environments._
+import java.net.URI
 
 trait Target {
   val `type`: String
@@ -14,8 +12,8 @@ trait Target {
 }
 
 object Target {
-  def parse(file: File): Target = {
-    val str = Source.fromFile(file).mkString
+  def parse(uri: URI): Target = {
+    val str = IOHelper.read(uri)
     parser.parse(str)
       .fold(throw _, _.as[Target])
       .fold(throw _, identity)
