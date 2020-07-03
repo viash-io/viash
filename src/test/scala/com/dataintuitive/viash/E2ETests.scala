@@ -22,7 +22,7 @@ class E2ETests extends FunSuite {
       val platFile = platRes.getPath()
       // parse functionality from file
       val functionality = Functionality.parse(IOHelper.uri(funcFile))
-      val platform = Target.parse(new File(platFile))
+      val platform = Target.parse(IOHelper.uri(platFile))
 
       // run tests
       val dir = IOHelper.makeTemp("viash_test_" + functionality.name)

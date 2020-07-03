@@ -23,7 +23,7 @@ object IOHelper {
     new Directory(dir).deleteRecursively()
   }
 
-  val uriRegex = "^[a-zA-Z0-9]*:".r
+  private val uriRegex = "^[a-zA-Z0-9]*:".r
   def uri(path: String) = {
     val newURI = if (uriRegex.findFirstIn(path).isDefined) path else "file://" + new File(path).getAbsolutePath
     new URI(newURI)
