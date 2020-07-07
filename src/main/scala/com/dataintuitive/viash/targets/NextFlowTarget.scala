@@ -129,12 +129,12 @@ case class NextFlowTarget(
         |
         |    def argumentsList = arguments.collect{ it ->
         |        (it.otype == "")
-        |            ? "'" + it.value + "'"
+        |            ? "\\'" + it.value + "\\'"
         |            : (it.type == "boolean_true")
         |                ? it.otype + it.name
         |                : (it.value == "")
         |                    ? ""
-        |                    : it.otype + it.name + " '" + it.value + "'"
+        |                    : it.otype + it.name + " \\'" + it.value + "\\'"
         |    }
         |
         |    def command_line = command + argumentsList
