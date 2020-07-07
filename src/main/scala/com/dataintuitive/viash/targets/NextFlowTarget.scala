@@ -300,7 +300,7 @@ case class NextFlowTarget(
         |    # Running the pre-hook when necessary
         |    $preHook
         |    # Adding NXF's `$$moduleDir` to the path in order to resolve our own wrappers
-        |    export PATH="$${moduleDir}:$$PATH"
+        |    export PATH="$${moduleDir}:\\$$PATH"
         |    # Echo what will be run, handy when looking at the .command.log file
         |    echo Running: $$cli
         |    # Actually run the command
