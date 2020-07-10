@@ -97,7 +97,7 @@ case class BashScript(
         val bo = param.asInstanceOf[BooleanObject]
         val fv = bo.flagValue.get
 
-        // params of the form --param ...
+        // params of the form --param
         val part1 = BashHelper.argStore(param.name, storeVariable, fv.toString(), 1, passthroughVariable)
         // Alternatives
         val moreParts = param.alternatives.map(alt => {
