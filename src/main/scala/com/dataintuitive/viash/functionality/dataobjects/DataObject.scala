@@ -10,6 +10,8 @@ abstract class DataObject[Type] {
   val direction: Direction
   val tag: Option[String]
   val passthrough: Boolean
+  val multiple: Boolean
+  val multiple_sep: String
 
   private val pattern = "^(-*)(.*)$".r
   val pattern(otype, plainName) = name

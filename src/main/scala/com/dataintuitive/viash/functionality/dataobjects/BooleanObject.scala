@@ -12,7 +12,9 @@ case class BooleanObjectRegular(
     required: Boolean = false,
     tag: Option[String] = None,
     direction: Direction = Input,
-    passthrough: Boolean = false
+    passthrough: Boolean = false,
+    multiple: Boolean = false,
+    multiple_sep: String = ":"
 ) extends BooleanObject {
   override val `type` = "boolean"
 
@@ -32,6 +34,8 @@ case class BooleanObjectTrue(
   val required = false
   val flagValue = Some(true)
   val default = None
+  val multiple = false
+  val multiple_sep = ":"
 }
 case class BooleanObjectFalse(
     name: String,
@@ -46,4 +50,6 @@ case class BooleanObjectFalse(
   val required = false
   val flagValue = Some(false)
   val default = None
+  val multiple = false
+  val multiple_sep = ":"
 }
