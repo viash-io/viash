@@ -47,6 +47,7 @@ jobs:
     - name: Install tidyverse and optparse
       run: |
         install.packages('remotes')
+        remotes::install_cran("pillar")
         remotes::install_cran(c("rcmdcheck", "tidyverse"))
       shell: Rscript {0}
       
