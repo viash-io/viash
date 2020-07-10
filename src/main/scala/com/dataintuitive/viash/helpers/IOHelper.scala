@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets
 object IOHelper {
   def makeTemp(name: String) = {
     val tempdir = Paths.get(scala.util.Properties.envOrElse("VIASH_TEMP", "/tmp"))
-    Files.createDirectories(tempdir)
+    if (!tempdir.toFile.exists()) Files.createDirectories(tempdir)
     val temp = Files.createTempDirectory(tempdir, name).toFile()
     temp.mkdirs()
     temp
