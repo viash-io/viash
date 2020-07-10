@@ -28,7 +28,6 @@ class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
     "-p", platFile,
     "-o", tempFolStr
    )
-  println(params.mkString(" "))
   Main.main(params)
 
   // check whether executable was created

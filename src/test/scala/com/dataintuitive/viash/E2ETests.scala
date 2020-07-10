@@ -1,13 +1,8 @@
 package com.dataintuitive.viash
 
-import org.scalatest.FunSuite
-import java.nio.file.{Path, Paths, Files}
-import java.io.File
-import sys.process.Process
+import org.scalatest.{FunSuite, Tag}
 import com.dataintuitive.viash.functionality.Functionality
 import com.dataintuitive.viash.targets.Target
-import scala.io.Source
-import scala.reflect.io.Directory
 import com.dataintuitive.viash.helpers._
 
 class E2ETests extends FunSuite {
@@ -27,18 +22,21 @@ class E2ETests extends FunSuite {
       // run tests
       val dir = IOHelper.makeTemp("viash_test_" + functionality.name)
 
-      val results = try {
-        ViashTester.runTests(functionality, platform, dir, verbose = false)
-      } finally {
-        IOHelper.deleteRecursively(dir)
-      }
+      val tags: List[Tag] = if (platName == "docker") List(DockerTest) else Nil
 
-      for (res <- results) {
-        test(s"Testing $testName platform $platName with test ${res.name}") {
+      test(s"Testing $testName platform $platName", tags: _*) {
+        val results = try {
+          ViashTester.runTests(functionality, platform, dir, verbose = false)
+        } finally {
+          IOHelper.deleteRecursively(dir)
+        }
+
+        for (res <- results) {
+          val out = "!!!! TEST FAILED '" + res.name + "' !!!!\n" + res.output
           if (res.exitValue != 0) {
-            println(res.output)
+            println(out)
           }
-          assert(res.exitValue == 0, res.output)
+          assert(res.exitValue == 0, out)
         }
       }
     }
