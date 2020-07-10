@@ -31,8 +31,8 @@ case class BashScript(
     //  * does file exist?
     //  * is value in list of possible values?
 
-    s"""${BashHelper.quoteFunction}
-      |${BashHelper.removeFlagFunction}
+    s"""${BashHelper.ViashQuote}
+      |${BashHelper.ViashRemoveFlags}
       |
       |${generateHelp(functionality, params)}
       |

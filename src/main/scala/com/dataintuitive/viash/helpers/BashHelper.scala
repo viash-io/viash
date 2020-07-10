@@ -3,102 +3,19 @@ package com.dataintuitive.viash.helpers
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.resources._
 import java.nio.file.Paths
+import scala.io.Source
 
 object BashHelper {
-  val quoteFunction = {
-    """# ViashQuote: put quotes around non flag values
-      |# $1     : unquoted string
-      |# return : possibly quoted string
-      |# examples:
-      |#   ViashQuote --foo      # returns --foo
-      |#   ViashQuote bar        # returns 'bar'
-      |#   Viashquote --foo=bar  # returns --foo='bar'
-      |function ViashQuote {
-      |  if [[ $1 =~ ^-+[a-zA-Z0-9_\-]+=.+$ ]]; then
-      |    echo $1 | sed "s#=\(.*\)#='\1'#"
-      |  elif [[ $1 =~ ^-+[a-zA-Z0-9_\-]+$ ]]; then
-      |    echo $1
-      |  else
-      |    echo "'$1'"
-      |  fi
-      |}""".stripMargin
+  private def readUtils(s: String) = {
+    val file = getClass.getResource(s"/bash_utils/$s.sh").getPath
+    Source.fromFile(file).getLines.mkString("\n")
   }
-  val removeFlagFunction = {
-    """# ViashRemoveFlags: Remove leading flag
-      |# $1     : string with a possible leading flag
-      |# return : string without possible leading flag
-      |# examples:
-      |#   ViashRemoveFlags --foo=bar  # returns bar
-      |function ViashRemoveFlags {
-      |  echo $1 | sed 's/^--*[a-zA-Z0-9_\-]*=//'
-      |}""".stripMargin
-  }
-  val absolutePathFunction = {
-    """# ViashAbsolutePath: generate absolute path from relative path
-      |# borrowed from https://stackoverflow.com/a/21951256
-      |# $1     : relative filename
-      |# return : absolute path
-      |# examples:
-      |#   ViashAbsolutePath some_file.txt   # returns /path/to/some_file.txt
-      |#   ViashAbsolutePath /foo/bar/..     # returns /foo
-      |function ViashAbsolutePath {
-      |  local thePath
-      |  if [[ ! "$1" =~ ^/ ]]; then
-      |    thePath="$PWD/$1"
-      |  else
-      |    thePath="$1"
-      |  fi
-      |  echo "$thePath" | (
-      |    IFS=/
-      |    read -a parr
-      |    declare -a outp
-      |    for i in "${parr[@]}"; do
-      |      case "$i" in
-      |      ''|.) continue ;;
-      |      ..)
-      |        len=${#outp[@]}
-      |        if ((len==0)); then
-      |          continue
-      |        else
-      |          unset outp[$((len-1))]
-      |        fi
-      |        ;;
-      |      *)
-      |        len=${#outp[@]}
-      |        outp[$len]="$i"
-      |      ;;
-      |      esac
-      |    done
-      |    echo /"${outp[*]}"
-      |  )
-      |}""".stripMargin
-  }
-  val detectMountFunction = {
-    """# ViashDetectMount: auto configuring docker mounts from parameters
-      |# $1                  : The parameter name
-      |# $2                  : The parameter value
-      |# returns             : New parameter
-      |# $VIASH_EXTRA_MOUNTS : Added another parameter to be passed to docker
-      |# examples:
-      |#   ViashDetectMount --foo /path/to/bar
-      |#   -> sets VIASH_EXTRA_MOUNTS to "-v /path/to:/viash_automount/foo"
-      |#   -> returns /viash_automount/foo/bar
-      |function ViashDetectMount {
-      |  local PARNAME=`echo $1 | sed 's#^-*##'`
-      |  local ABSPATH=`ViashAbsolutePath $2`
-      |  local NEWMOUNT
-      |  local NEWNAME
-      |  if [ -d $ABSPATH ]; then
-      |    NEWMOUNT=$ABSPATH
-      |    NEWNAME=""
-      |  else
-      |    NEWMOUNT=`dirname $ABSPATH`
-      |    NEWNAME=`basename $ABSPATH`
-      |  fi
-      |  VIASH_EXTRA_MOUNTS="-v \"$NEWMOUNT:/viash_automount/$PARNAME\" $VIASH_EXTRA_MOUNTS"
-      |  echo "\"/viash_automount/$PARNAME/$NEWNAME\""
-      |}""".stripMargin
-    }
+
+  val ViashQuote = readUtils("ViashQuote")
+  val ViashRemoveFlags = readUtils("ViashRemoveFlags")
+  val ViashAbsolutePath = readUtils("ViashAbsolutePath")
+  val ViashAutodetectMount = readUtils("ViashAutodetectMount")
+  val ViashSourceDir = readUtils("ViashSourceDir")
 
   // generate strings in the form of:
   // SAVEVARIABLE="$SAVEVARIABLE `Quote $arg1` `Quote $arg2`"
@@ -146,8 +63,8 @@ object BashHelper {
 
     val extraImports =
       s"""# define helper functions
-        |$quoteFunction
-        |$removeFlagFunction""".stripMargin
+        |$ViashQuote
+        |$ViashRemoveFlags""".stripMargin
     val setupFunction =
       s"""function ViashSetup {
         |$setupCommands
