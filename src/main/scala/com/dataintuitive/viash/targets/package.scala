@@ -1,14 +1,35 @@
 package com.dataintuitive.viash
 
+//import io.circe.{ Decoder, Encoder, Json }
+//import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+
 import io.circe.{ Decoder, Encoder, Json }
+import io.circe.generic.extras.Configuration
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
+import cats.syntax.functor._ // for .widen
 
 package object targets {
+  implicit val customConfig: Configuration = Configuration.default.withDefaults
+
+    // encoder and decoder for direction
+  implicit val encodeResolveVolume: Encoder[ResolveVolume] = Encoder.instance {
+    v => Json.fromString(v.toString)
+  }
+  implicit val decodeResolveVolume: Decoder[ResolveVolume] = Decoder.instance {
+    cursor => cursor.value.as[String].map(s =>
+      s.toLowerCase() match {
+        case "manual" => Manual
+        case "auto" | "automatic" => Automatic
+      }
+    )
+  }
+
   implicit val encodeVolume: Encoder.AsObject[Volume] = deriveEncoder
   implicit val decodeVolume: Decoder[Volume] = deriveDecoder
 
-  implicit val encodeDockerTarget: Encoder[DockerTarget] = deriveEncoder
-  implicit val decodeDockerTarget: Decoder[DockerTarget] = deriveDecoder
+  implicit val encodeDockerTarget: Encoder.AsObject[DockerTarget] = deriveConfiguredEncoder
+  implicit val decodeDockerTarget: Decoder[DockerTarget] = deriveConfiguredDecoder
 
   implicit val encodeNextFlowTarget: Encoder[NextFlowTarget] = deriveEncoder
   implicit val decodeNextFlowTarget: Decoder[NextFlowTarget] = deriveDecoder

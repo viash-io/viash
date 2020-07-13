@@ -7,21 +7,28 @@ import scala.io.Source
 
 object BashHelper {
   private def readUtils(s: String) = {
-    val file = getClass.getResource(s"/bash_utils/$s.sh").getPath
-    Source.fromFile(file).getLines.mkString("\n")
+    val path = s"com/dataintuitive/viash/helpers/bashutils/$s.sh"
+    Source.fromResource(path).getLines().mkString("\n")
   }
 
-  val ViashQuote = readUtils("ViashQuote")
-  val ViashRemoveFlags = readUtils("ViashRemoveFlags")
-  val ViashAbsolutePath = readUtils("ViashAbsolutePath")
-  val ViashAutodetectMount = readUtils("ViashAutodetectMount")
-  val ViashSourceDir = readUtils("ViashSourceDir")
+  lazy val ViashQuote = readUtils("ViashQuote")
+  lazy val ViashExtractFlags = readUtils("ViashExtractFlags")
+  lazy val ViashRemoveFlags = readUtils("ViashRemoveFlags")
+  lazy val ViashAbsolutePath = readUtils("ViashAbsolutePath")
+  lazy val ViashAutodetectMount = readUtils("ViashAutodetectMount")
+
+  // usage: `ViashSourceDir ${BASH_SOURCE[0]}`
+  lazy val ViashSourceDir = readUtils("ViashSourceDir")
+
+  def save(saveVariable: String, args: Seq[String]) = {
+    saveVariable + "=\"$" + saveVariable + " " + args.mkString(" ") + "\""
+  }
 
   // generate strings in the form of:
   // SAVEVARIABLE="$SAVEVARIABLE `Quote $arg1` `Quote $arg2`"
   def quoteSave(saveVariable: String, args: Seq[String]) = {
     saveVariable + "=\"$" + saveVariable +
-      args.map(" `ViashQuote \"" + _ + "\"`").mkString +
+      args.map(" $(ViashQuote \"" + _ + "\")").mkString +
       "\""
   }
 
@@ -46,7 +53,7 @@ object BashHelper {
       |            ;;""".stripMargin
   }
   def argStoreSed(name: String, plainName: String, storeUnparsed: Option[String]) = {
-    argStore(name + "=*", plainName, "`ViashRemoveFlags \"$1\"`", 1, storeUnparsed)
+    argStore(name + "=*", plainName, "$(ViashRemoveFlags \"$1\")", 1, storeUnparsed)
   }
 
   def wrapScript(
@@ -60,15 +67,6 @@ object BashHelper {
       postRun: String
     ) = {
     val mainResource = functionality.mainScript
-
-    val extraImports =
-      s"""# define helper functions
-        |$ViashQuote
-        |$ViashRemoveFlags""".stripMargin
-    val setupFunction =
-      s"""function ViashSetup {
-        |$setupCommands
-        |}""".stripMargin
 
     // check whether the wd needs to be set to the resources dir
     val cdToResources =
@@ -110,19 +108,19 @@ object BashHelper {
       |
       |set -e
       |
-      |# figure out the directory the viash executable is in, follow symlinks
-      |SOURCE="$${BASH_SOURCE[0]}"
-      |while [ -h "$$SOURCE" ]; do
-      |  DIR="$$( cd -P "$$( dirname "$$SOURCE" )" >/dev/null 2>&1 && pwd )"
-      |  SOURCE="$$(readlink "$$SOURCE")"
-      |  [[ $$SOURCE != /* ]] && SOURCE="$$DIR/$$SOURCE"
-      |done
-      |RESOURCES_DIR="$$( cd -P "$$( dirname "$$SOURCE" )" >/dev/null 2>&1 && pwd )"
+      |# define helper functions
+      |$ViashQuote
+      |$ViashRemoveFlags
+      |$ViashSourceDir
       |
-      |$extraImports
-      |$setupFunction
-      |$preParse
+      |# find source folder of this component
+      |RESOURCES_DIR=`ViashSourceDir $${BASH_SOURCE[0]}`
       |
+      |# helper function for installing extra requirements for this component
+      |function ViashSetup {
+      |$setupCommands
+      |}
+      |${if (preParse != "") "\n" + preParse + "\n" else ""}
       |VIASHARGS=''
       |while [[ $$# -gt 0 ]]; do
       |    case "$$1" in
@@ -137,12 +135,9 @@ object BashHelper {
       |            ;;
       |    esac
       |done
-      |
-      |$postParse
-      |
+      |${if (postParse != "") "\n" + postParse + "\n" else ""}
       |$heredocStart$executor $executionCode$heredocEnd
-      |
-      |$postRun""".stripMargin
+      |${if (postRun != "") "\n" + postRun + "\n" else ""}""".stripMargin
   }
 
 }

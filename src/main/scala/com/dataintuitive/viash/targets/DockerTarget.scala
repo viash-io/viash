@@ -11,7 +11,8 @@ import com.dataintuitive.viash.functionality.resources.Resource
 case class DockerTarget(
   image: String,
   target_image: Option[String] = None,
-  volumes: Option[List[Volume]] = None,
+  resolve_volume: ResolveVolume = Manual,
+  volumes: List[Volume] = Nil,
   port: Option[List[String]] = None,
   workdir: Option[String] = None,
   apk: Option[ApkEnvironment] = None,
@@ -30,15 +31,15 @@ case class DockerTarget(
     // create setup
     val (imageName, setupCommands) = processDockerSetup(functionality, resourcesPath)
 
-    // make commands
-    val executor = s"""docker run $dockerArgs $imageName"""
-    val debuggor = s"""docker run $dockerArgs -v `pwd`:/pwd --workdir /pwd -t $imageName"""
-
     // process docker mounts
-    val (volPreParse, volParsers, volPostParse, volInputs) = processDockerVolumes(functionality)
+    val (volPreParse, volParsers, volPostParse, volInputs, volExtraParams) = processDockerVolumes(functionality)
 
     // add docker debug flag
+    val debuggor = s"""docker run $dockerArgs -v `pwd`:/pwd --workdir /pwd -t $imageName"""
     val (debPreParse, debParsers, debPostParse, debInputs) = addDockerDebug(debuggor)
+
+    // make commands
+    val executor = s"""eval docker run $dockerArgs$volExtraParams $imageName"""
 
     // add extra arguments to the functionality file for each of the volumes
     val fun2 = functionality.copy(
@@ -105,30 +106,120 @@ case class DockerTarget(
     // process port parameter
     val portStr = port.getOrElse(Nil).map("-p " + _ + " ").mkString("")
 
-    // process volume parameter
-    val volumesGet = volumes.getOrElse(Nil)
-    val volStr = volumesGet.map(vol => s"""-v "$$${vol.variable}":"${vol.mount}" """).mkString("")
-
     // check whether entrypoint should be set to bash
     val entrypointStr = functionality.mainScript match {
       case Some(e: Executable) => "--entrypoint='' "
       case _ => "--entrypoint=bash "
     }
 
-    portStr + volStr + entrypointStr + "-i --rm -v \"$RESOURCES_DIR\":/resources"
+    portStr + entrypointStr + "-i --rm -v \"$RESOURCES_DIR\":/resources"
   }
 
   def processDockerVolumes(functionality: Functionality) = {
+    resolve_volume match {
+      case Automatic => processDockerVolumesAutomatic(functionality)
+      case Manual => processDockerVolumesManual(functionality)
+    }
+  }
+
+  def processDockerVolumesAutomatic(functionality: Functionality) = {
+    val storeVariable = "VIASHARGS"
+    val extraMountsVar = "VIASH_EXTRA_MOUNTS"
+
+    val args = functionality.arguments
+
+    val preParse =
+      if (args.isEmpty) {
+        ""
+      } else {
+        s"""${BashHelper.ViashAbsolutePath}
+           |${BashHelper.ViashAutodetectMount}
+           |${BashHelper.ViashExtractFlags}
+           |$extraMountsVar="" """.stripMargin
+      }
+
+   val parsers1 =
+      if (args.isEmpty) {
+        ""
+      } else {
+        args.filter(a => a.isInstanceOf[FileObject] && a.otype != "")
+          .map(arg => {
+            val part1 =
+                s"""
+                  |         ${arg.name})
+                  |            ${BashHelper.quoteSave(storeVariable, Seq("$1", "$(ViashAutodetectMount \"$2\")"))}
+                  |            ${BashHelper.save(extraMountsVar, Seq("$(ViashAutodetectMountArg \"$2\")"))}
+                  |            shift 2
+                  |            ;;""".stripMargin
+            val part2 =
+              if (arg.otype == "--") {
+                s"""
+                  |         ${arg.name}=*)
+                  |            ${BashHelper.quoteSave(storeVariable, Seq("$(ViashExtractFlags \"$1\"))", "$(ViashAutodetectMount \"$(ViashRemoveFlags \"$1\")\")"))}
+                  |            ${BashHelper.save(extraMountsVar, Seq("$(ViashAutodetectMountArg \"$(ViashRemoveFlags \"$1\")\")"))}
+                  |            shift 1
+                  |            ;;""".stripMargin
+              } else {
+                ""
+              }
+            part1 + part2
+          })
+          .mkString("")
+      }
+   val parsers2 =
+       s"""
+          |         ---v|---volume)
+          |            ${BashHelper.save(extraMountsVar, Seq("-v \"$2\""))}
+          |            shift 2
+          |            ;;
+          |         ---volume=*)
+          |            ${BashHelper.save(extraMountsVar, Seq("-v $(ViashRemoveFlags \"$2\")"))}
+          |            shift 1
+          |            ;;""".stripMargin
+
+   val parsers = parsers1 + parsers2
+
+   val extraParams = s" $$$extraMountsVar"
+
+   val positional = args.filter(a => a.otype == "")
+   val positionalStr = positional.zipWithIndex.map{tup =>
+     val ix = tup._2 + 1
+     if (tup._1.isInstanceOf[FileObject]) {
+       s"""  ARG$ix="$$(ViashQuote "$$(ViashAutodetectMount "$$(echo $$$ix | sed "s#'##g")")")"""".stripMargin
+     } else {
+       s"""  ARG$ix="$$(ViashQuote "$$$ix")"""".stripMargin
+     }
+   }
+
+   val postParse =
+     if (positional.length > 0 && positional.exists(_.isInstanceOf[FileObject])) {
+       s"""
+       |function ViashDockerPostProcessPositionals {
+       |${positionalStr.mkString("\n")}
+       |  echo ${(1 to positional.length).map("$ARG" + _).mkString(" ")}
+       |}
+       |VIASHARGS=`ViashDockerPostProcessPositionals $$VIASHARGS`
+       |""".stripMargin
+     } else {
+       ""
+     }
+
+   val inputs = Nil
+
+   (preParse, parsers, postParse, inputs, extraParams)
+  }
+
+  def processDockerVolumesManual(functionality: Functionality) = {
     val storeVariable = functionality.mainScript match {
       case Some(e: Executable) => None
       case _ => Some("VIASHARGS")
     }
 
     val parsers =
-      if (volumes.getOrElse(Nil).isEmpty) {
+      if (volumes.isEmpty) {
         ""
       } else {
-        volumes.getOrElse(Nil).map(vol =>
+        volumes.map(vol =>
           s"""
             |${BashHelper.argStore("--" + vol.name, vol.variable, "\"$2\"", 2, storeVariable)}
             |${BashHelper.argStoreSed("--" + vol.name, vol.variable, storeVariable)}"""
@@ -137,10 +228,10 @@ case class DockerTarget(
 
     val preParse = ""
     val postParse =
-      if (volumes.getOrElse(Nil).isEmpty) {
+      if (volumes.isEmpty) {
         ""
       } else {
-        volumes.getOrElse(Nil)
+        volumes
           .map(vol =>
             s"""if [ -z $${${vol.variable}+x} ]; then
               |  ${vol.variable}=`pwd`; # todo: produce error here
@@ -149,7 +240,7 @@ case class DockerTarget(
           .mkString("\n\n# provide temporary defaults for Docker\n", "\n", "")
       }
 
-    val inputs = volumes.getOrElse(Nil).map(vol =>
+    val inputs = volumes.map(vol =>
       StringObject(
         name = "--" + vol.name,
         description = Some(s"Local path to mount directory for volume '${vol.name}'."),
@@ -158,7 +249,9 @@ case class DockerTarget(
       )
     )
 
-    (preParse, parsers, postParse, inputs)
+    val extraParams = volumes.map(vol => s""" -v "$$${vol.variable}":"${vol.mount}"""").mkString("")
+
+    (preParse, parsers, postParse, inputs, extraParams)
   }
 
   def addDockerDebug(debugCommand: String) = {
