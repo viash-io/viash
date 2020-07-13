@@ -4,5 +4,5 @@
 # examples:
 #   ViashRemoveFlags --foo=bar  # returns bar
 function ViashRemoveFlags {
-  echo $1 | sed 's/^--*[a-zA-Z0-9_\-]*=//'
+  echo "$1" | sed 's/^--*[a-zA-Z0-9_\-]*=//'
 }
