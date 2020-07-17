@@ -24,7 +24,7 @@ case class PythonScript(
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
     val par_set = params.map{ par =>
-      val env_name = "VIASH_PAR_" + par.plainName.toUpperCase()
+      val env_name = par.VIASH_PAR
 
       val parse = par match {
         case o: BooleanObject if o.multiple =>
