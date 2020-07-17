@@ -12,7 +12,6 @@ case class DockerTarget(
   image: String,
   target_image: Option[String] = None,
   resolve_volume: ResolveVolume = Automatic,
-  volumes: List[Volume] = Nil,
   port: Option[List[String]] = None,
   workdir: Option[String] = None,
   apk: Option[ApkEnvironment] = None,
@@ -114,13 +113,6 @@ case class DockerTarget(
   }
 
   def processDockerVolumes(functionality: Functionality) = {
-    resolve_volume match {
-      case Automatic => processDockerVolumesAutomatic(functionality)
-      case Manual => processDockerVolumesManual(functionality)
-    }
-  }
-
-  def processDockerVolumesAutomatic(functionality: Functionality) = {
     val extraMountsVar = "VIASH_EXTRA_MOUNTS"
 
     val args = functionality.arguments
@@ -128,11 +120,14 @@ case class DockerTarget(
     val preParse =
       if (args.isEmpty) {
         ""
-      } else {
+      } else if (resolve_volume == Automatic) {
         s"""${BashHelper.ViashAbsolutePath}
            |${BashHelper.ViashAutodetectMount}
            |${BashHelper.ViashExtractFlags}
-           |$extraMountsVar="" """.stripMargin
+           |# initialise autodetect mount variable
+           |$extraMountsVar=''""".stripMargin
+      } else {
+        BashHelper.ViashExtractFlags
       }
 
     val parsers =
@@ -147,74 +142,23 @@ case class DockerTarget(
 
     val extraParams = s" $$$extraMountsVar"
 
-    val positional = args.filter(a => a.otype == "")
-    val positionalStr = positional.zipWithIndex.map{tup =>
-      val ix = tup._2 + 1
-      if (tup._1.isInstanceOf[FileObject]) {
-        s"""  ARG$ix="$$(ViashQuote "$$(ViashAutodetectMount "$$(echo $$$ix | sed "s#'##g")")")"""".stripMargin
-      } else {
-        s"""  ARG$ix="$$(ViashQuote "$$$ix")"""".stripMargin
-      }
-    }
-
-  val postParse =
-    args.filter(a => a.isInstanceOf[FileObject])
-      .map(arg => {
-        val viash_par = "VIASH_PAR_" + arg.plainName.toUpperCase()
-        s"""
-          |if [ ! -z "$$$viash_par" ]; then
-          |  VIASH_EXTRA_MOUNTS="$$VIASH_EXTRA_MOUNTS $$(ViashAutodetectMountArg "$$$viash_par")"
-          |  $viash_par=$$(ViashAutodetectMount "$$$viash_par")
-          |fi""".stripMargin
-      })
-      .mkString("")
-
-   val inputs = Nil
-
-   (preParse, parsers, postParse, inputs, extraParams)
-  }
-
-  def processDockerVolumesManual(functionality: Functionality) = {
-    val storeVariable = functionality.mainScript match {
-      case Some(e: Executable) => None
-      case _ => Some("VIASHARGS")
-    }
-
-    val parsers =
-      if (volumes.isEmpty) {
-        ""
-      } else {
-        volumes.map(vol =>
-          s"""
-            |${BashHelper.argStore("--" + vol.name, vol.variable, "\"$2\"", 2, storeVariable)}
-            |${BashHelper.argStoreSed("--" + vol.name, vol.variable, storeVariable)}"""
-        ).mkString
-      }
-
-    val preParse = ""
     val postParse =
-      if (volumes.isEmpty) {
-        ""
-      } else {
-        volumes
-          .map(vol =>
-            s"""if [ -z $${${vol.variable}+x} ]; then
-              |  ${vol.variable}=`pwd`; # todo: produce error here
+      if (resolve_volume == Automatic) {
+        args.filter(a => a.isInstanceOf[FileObject])
+          .map(arg => {
+            val viash_par = "VIASH_PAR_" + arg.plainName.toUpperCase()
+            s"""
+              |if [ ! -z "$$$viash_par" ]; then
+              |  VIASH_EXTRA_MOUNTS="$$VIASH_EXTRA_MOUNTS $$(ViashAutodetectMountArg "$$$viash_par")"
+              |  $viash_par=$$(ViashAutodetectMount "$$$viash_par")
               |fi""".stripMargin
-          )
-          .mkString("\n\n# provide temporary defaults for Docker\n", "\n", "")
+          })
+          .mkString("")
+      } else {
+        ""
       }
 
-    val inputs = volumes.map(vol =>
-      StringObject(
-        name = "--" + vol.name,
-        description = Some(s"Local path to mount directory for volume '${vol.name}'."),
-        required = true,
-        direction = Input
-      )
-    )
-
-    val extraParams = volumes.map(vol => s""" -v "$$${vol.variable}":"${vol.mount}"""").mkString("")
+    val inputs = Nil
 
     (preParse, parsers, postParse, inputs, extraParams)
   }
@@ -236,18 +180,4 @@ case class DockerTarget(
 
     (preParse, parsers, postParse, inputs)
   }
-}
-
-case class Volume(
-  name: String,
-  mount: String
-) {
-  private val VolumePattern = "^[A-Za-z_]*$".r
-
-  require(
-    VolumePattern.findFirstIn(name).isDefined,
-    message = s"Volume $name: Should only consist of characters [A-Za-z_]."
-  )
-
-  val variable = "VOLUME_" + name.toUpperCase()
 }

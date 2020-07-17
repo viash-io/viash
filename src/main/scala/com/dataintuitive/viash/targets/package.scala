@@ -25,9 +25,6 @@ package object targets {
     )
   }
 
-  implicit val encodeVolume: Encoder.AsObject[Volume] = deriveEncoder
-  implicit val decodeVolume: Decoder[Volume] = deriveDecoder
-
   implicit val encodeDockerTarget: Encoder.AsObject[DockerTarget] = deriveConfiguredEncoder
   implicit val decodeDockerTarget: Decoder[DockerTarget] = deriveConfiguredDecoder
 
