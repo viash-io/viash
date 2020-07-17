@@ -30,10 +30,10 @@ object BashWrapper {
     argsConsumed: Int,
     multiple_sep: Option[Char] = None
   ) = {
-    s"""         $name)
-      |            ${this.store(plainName, store, multiple_sep).mkString("\n            ")}
-      |            shift $argsConsumed
-      |            ;;""".stripMargin
+    s"""        $name)
+       |            ${this.store(plainName, store, multiple_sep).mkString("\n            ")}
+       |            shift $argsConsumed
+       |            ;;""".stripMargin
   }
   def argStoreSed(name: String, plainName: String, multiple_sep: Option[Char] = None) = {
     argStore(name + "=*", plainName, "$(ViashRemoveFlags \"$1\")", 1, multiple_sep)
