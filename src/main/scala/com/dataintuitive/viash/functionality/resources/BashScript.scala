@@ -28,7 +28,7 @@ case class BashScript(
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
     val par_set = params.map{ par =>
-      s"""par_${par.plainName}='$$VIASH_PAR_${par.plainName.toUpperCase()}'"""
+      s"""${par.par}='$$${par.VIASH_PAR}'"""
     }
     s"""${par_set.mkString("\n")}
       |
