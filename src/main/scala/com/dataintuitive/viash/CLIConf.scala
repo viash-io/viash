@@ -49,12 +49,6 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       required = true
     )
   }
-  val pimp = new Subcommand("pimp") with WithFunctionality {
-    val output = opt[String](
-      descr = "Path to write the pimped script to.",
-      required = false
-    )
-  }
   val test = new Subcommand("test") with WithFunctionality with WithPlatform {
     val verbose = opt[Boolean](
       name = "verbose",
@@ -72,7 +66,6 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
 
   addSubcommand(run)
   addSubcommand(export)
-  addSubcommand(pimp)
   addSubcommand(test)
 
   verify()

@@ -41,7 +41,6 @@ case class Functionality(
     }
 
   def mainCode = mainScript.flatMap(_.read)
-  def mainCodeWithArgParse = mainScript.flatMap(_.readWithArgparse(this))
 }
 
 object Functionality {

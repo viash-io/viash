@@ -72,21 +72,6 @@ object Main {
             |executablePath: $execPath""".stripMargin)
         }
       }
-      case Some(conf.pimp) => {
-        // read functionality
-        implicit val functionality = readFunctionality(conf.pimp.functionality)
-
-        // fetch argparsed code
-        val mainScript = functionality.mainScript.get
-
-        // write to file or stdout
-        if (conf.pimp.output.isDefined) {
-          val path = Paths.get(conf.pimp.output())
-          mainScript.writeWithArgparse(path, true)
-        } else {
-          println(mainScript.readWithArgparse)
-        }
-      }
       case Some(conf.test) => {
         val fun = readFunctionality(conf.test.functionality)
         val platform = readPlatform(conf.test.platform)
