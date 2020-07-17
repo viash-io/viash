@@ -6,7 +6,7 @@ arguments:
   alternatives: ["-i"]
   type: file
   description: The path to a table to be filtered.
-  mustExist: true
+  must_exist: true
   required: true
   default: train.csv
 - name: "--format"
