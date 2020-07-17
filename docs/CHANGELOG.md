@@ -24,7 +24,6 @@
 * NXF: Correctly escape path variable when running NXF command.
 * NXF: Surround parameters with quotes when running NXF command.
 
-
 # viash 0.1.0 (2020-05-14)
 * MAJOR CHANGES: Refactoring of the Functionality class as discussed in VIP1 (#1). This has resulted in a lot of internal changes, but the changes with regard to the yaml definitions are relatively minor. See the section below for more info.
 * MINOR CHANGES: Updated the functionality.yamls under `atoms/` and `src/test/` to reflect these aforementioned changes.
