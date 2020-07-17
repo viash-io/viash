@@ -1,10 +1,19 @@
-# viash 0.1.1
+# viash 0.2.0 (soon)
 
 ## NEW FEATURES
 * Allow testing a component with the `viash test` functionality. Tests are executed in a temporary directory on the specified platform. The temporary directory contains all the resource and test files. 
 * `viash --version`: Add flag for printing the version of viash.
 * Allow fetching resources from URL (http:// and https://)
-* Allow retrieving functionality and platform YAMLs from URL
+* Allow retrieving functionality and platform YAMLs from URL.
+* For docker containers, autoresolve path names of files. Use `---v path:path` or `---volume path:path` to manually mount a specific folder.
+* Implement parameter multiplicity. 
+  Set `multiple: true` to denote an argument to have higher multiplicity. 
+  Run `./cmd --foo one --foo two --foo three:four` in order for multiple values to be added to the same parameter list.
+
+## MAJOR CHANGES
+* Remove passthrough parameters.
+* Move CLI from inner script to outer script.
+* Since CLI generation is now performed in the outer script, `viash pimp` has been deprecated.	
 
 ## MINOR CHANGES
 * `viash run` and `viash test`: Allow changing the temporary directory by defining `VIASH_TEMP` as a environment variable. Temporary directories are cleaned up after successful executions.
@@ -14,6 +23,7 @@
 ## BUG FIXES
 * NXF: Correctly escape path variable when running NXF command.
 * NXF: Surround parameters with quotes when running NXF command.
+
 
 # viash 0.1.0 (2020-05-14)
 * MAJOR CHANGES: Refactoring of the Functionality class as discussed in VIP1 (#1). This has resulted in a lot of internal changes, but the changes with regard to the yaml definitions are relatively minor. See the section below for more info.
