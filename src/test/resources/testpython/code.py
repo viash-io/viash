@@ -29,8 +29,8 @@ if par['output'] is not None:
 	logging.info('Writing output to file')
 	with open(par['output'], 'w') as f:
 		for key in par.keys():
-			f.write(key + ": \"" + str(par[key]) + "\"\n")
+			f.write(key + ": |" + str(par[key]) + "|\n")
 else:
 	logging.info('Printing output to console')
 	for key in par.keys():
-		print(key + ": \"" + str(par[key]) + "\"")
+		print(key + ": |" + str(par[key]) + "|")

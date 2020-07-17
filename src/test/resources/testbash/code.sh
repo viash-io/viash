@@ -10,9 +10,6 @@ par_output="output.txt"
 par_log="log.txt"
 par_optional="help"
 par_optional_with_default="me"
-par_passthrough=test
-par_passthroughbool=true
-PASSTHROUGH="--passthrough test"
 resources_dir="."
 # VIASH END
 
@@ -41,23 +38,19 @@ else
   log "INFO: Writing output to file"
 fi
 
-output "input: \"$par_input\""
-output "real_number: \"$par_real_number\""
-output "whole_number: \"$par_whole_number\""
-output "s: \"$par_s\""
-output "truth: \"$par_truth\""
-output "output: \"$par_output\""
-output "log: \"$par_log\""
-output "optional: \"$par_optional\""
-output "optional_with_default: \"$par_optional_with_default\""
-output "passthrough: \"$par_passthrough\""
-output "passthroughbool: \"$par_passthroughbool\""
-output "resources_dir: \"$resources_dir\""
+output "input: |$par_input|"
+output "real_number: |$par_real_number|"
+output "whole_number: |$par_whole_number|"
+output "s: |$par_s|"
+output "truth: |$par_truth|"
+output "output: |$par_output|"
+output "log: |$par_log|"
+output "optional: |$par_optional|"
+output "optional_with_default: |$par_optional_with_default|"
+output "resources_dir: |$resources_dir|"
 INPUT=`head -1 "$par_input"`
-output "head of input: \"$INPUT\""
+output "head of input: |$INPUT|"
 RESOURCE=`head -1 "$resources_dir/resource1.txt"`
-output "head of resource1: \"$RESOURCE\""
-if [ ! -z "$par_data" ]; then
-  output "data: \"$par_data\""
-fi
-output "PASSTHROUGH: \"$PASSTHROUGH\""
+output "head of resource1: |$RESOURCE|"
+output "multiple: |$par_multiple|"
+output "multiple_pos: |$par_multiple_pos|"

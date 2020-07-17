@@ -24,7 +24,7 @@ write_fun <- function(file, ...) {
 
 write_fun(par$log, "INFO:Parsed input arguments.\n")
 
-str <- paste0(names(par), ": \"", par, "\"\n", collapse = "")
+str <- paste0(names(par), ": |", par, "|\n", collapse = "")
 
 if (length(par$output) > 0) {
   write_fun(par$log, 'INFO:Writing output to file\n')

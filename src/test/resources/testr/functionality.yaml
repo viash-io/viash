@@ -37,6 +37,12 @@ arguments:
 - name: "--optional_with_default"
   type: string
   default: "The default value."
+- name: "--multiple"
+  type: string
+  multiple: true
+- name: "multiple_pos"
+  type: string
+  multiple: true
 resources:
 - type: r_script
   path: ./code.R
