@@ -43,6 +43,40 @@ case class RScript(
       |""".stripMargin
   }
 
+  def generatePlaceholder(functionality: Functionality): String = {
+    val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+
+    val par_set = params.map{ par =>
+      val env_name = "VIASH_PAR_" + par.plainName.toUpperCase()
+
+      val parse = par match {
+        case o: BooleanObject if o.multiple =>
+          s"""as.logical(strsplit(toupper('$$$env_name'), split = '${o.multiple_sep}')[[1]])"""
+        case o: IntegerObject if o.multiple =>
+          s"""as.integer(strsplit('$$$env_name', split = '${o.multiple_sep}')[[1]])"""
+        case o: DoubleObject if o.multiple =>
+          s"""as.numeric(strsplit('$$$env_name', split = '${o.multiple_sep}')[[1]])"""
+        case o: FileObject if o.multiple =>
+          s"""strsplit('$$$env_name', split = '${o.multiple_sep}')[[1]]"""
+        case o: StringObject if o.multiple =>
+          s"""strsplit('$$$env_name', split = '${o.multiple_sep}')[[1]]"""
+        case o: BooleanObject => s"""as.logical(toupper('$$$env_name'))"""
+        case o: IntegerObject => s"""as.integer($$$env_name)"""
+        case o: DoubleObject => s"""as.numeric($$$env_name)"""
+        case o: FileObject => s"""'$$$env_name'"""
+        case o: StringObject => s"""'$$$env_name'"""
+      }
+
+      s""""${par.plainName}" = $$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$parse"; else echo NULL; fi )"""
+    }
+    s"""par <- list(
+      |  ${par_set.mkString(",\n  ")}
+      |)
+      |
+      |resources_dir = "$$RESOURCES_DIR"
+      |""".stripMargin
+  }
+
   def makeOptList(functionality: Functionality, params: List[DataObject[_]]): String = {
     // gather params for optlist
     val paramOptions = params.filter(_.otype != "").map(param => {
@@ -140,7 +174,7 @@ case class RScript(
     val reqFiles = params
         .filter(_.isInstanceOf[FileObject])
         .map(_.asInstanceOf[FileObject])
-        .filter(_.mustExist.getOrElse(false))
+        .filter(_.must_exist)
     if (reqFiles.isEmpty) {
       ""
     } else {

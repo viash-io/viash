@@ -9,9 +9,8 @@ case class StringObject(
     values: Option[List[String]] = None,
     tag: Option[String] = None,
     direction: Direction = Input,
-    passthrough: Boolean = false,
     multiple: Boolean = false,
-    multiple_sep: String = ":"
+    multiple_sep: Char = ':'
 ) extends DataObject[String] {
   override val `type` = "string"
 }

@@ -8,9 +8,8 @@ case class IntegerObject(
     required: Boolean = false,
     tag: Option[String] = None,
     direction: Direction = Input,
-    passthrough: Boolean = false,
     multiple: Boolean = false,
-    multiple_sep: String = ":"
+    multiple_sep: Char = ':'
 ) extends DataObject[Int] {
   override val `type` = "integer"
 }

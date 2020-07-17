@@ -17,6 +17,7 @@ case class Executable(
   def commandSeq(script: String) = Seq(script)
 
   def generateArgparse(functionality: Functionality): String = ""
+  def generatePlaceholder(functionality: Functionality): String = ""
 
   override def read: Option[String] = None
   override def write(path: Path, overwrite: Boolean) { }

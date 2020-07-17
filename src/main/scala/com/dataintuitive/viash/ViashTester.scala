@@ -23,13 +23,13 @@ object ViashTester {
         println()
       }
 
-      val count = results.count(_.exitValue != 0)
+      val count = results.count(_.exitValue == 0)
 
-      if (count > 0) {
-        println(s"$count out of ${results.length} test scripts failed!")
+      if (count < results.length) {
+        println(s"FAIL! Only $count out of ${results.length} test scripts succeeded!")
         1
       } else {
-        println("All test scripts succeeded!")
+        println(s"SUCCESS! All $count out of ${results.length} test scripts succeeded!")
         0
       }
     }
@@ -78,6 +78,7 @@ object ViashTester {
 
       // generate bash script for test
       val funonlytest = platform.modifyFunctionality(fun.copy(
+        arguments = Nil,
         resources = List(test),
         set_wd_to_resources_dir = Some(true)
       ))

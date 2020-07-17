@@ -9,10 +9,12 @@ abstract class DataObject[Type] {
   val required: Boolean
   val direction: Direction
   val tag: Option[String]
-  val passthrough: Boolean
   val multiple: Boolean
-  val multiple_sep: String
+  val multiple_sep: Char
 
   private val pattern = "^(-*)(.*)$".r
   val pattern(otype, plainName) = name
+
+  val par = "par_" + plainName
+  val VIASH_PAR = "VIASH_PAR_" + plainName.toUpperCase()
 }

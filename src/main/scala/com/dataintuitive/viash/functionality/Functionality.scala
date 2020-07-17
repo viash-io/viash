@@ -20,7 +20,19 @@ case class Functionality(
   private var _rootDir: Option[File] = None // :/
 ) {
 
-  require(resources.length > 0, message = "resources should contain at least resource")
+  require(resources.length > 0, message = "resources should contain at least one resource")
+
+  // check whether there are not multiple positional arguments with multiplicity >1
+  // and if there is one, whether its position is last
+  {
+    val positionals = arguments.filter(_.otype == "")
+    val multiix = positionals.indexWhere(_.multiple)
+
+    require(
+      multiix == -1 || multiix == positionals.length - 1,
+      message = s"positional argument ${positionals(multiix).name} should be last since it has multiplicity >1"
+    )
+  }
 
   def mainScript: Option[Script] =
     resources.head match {
