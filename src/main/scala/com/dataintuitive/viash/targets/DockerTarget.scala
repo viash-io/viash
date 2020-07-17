@@ -144,6 +144,7 @@ case class DockerTarget(
 
     val postParse =
       if (resolve_volume == Automatic) {
+        "\n# detect volumes from file arguments\n" +
         args.filter(a => a.isInstanceOf[FileObject])
           .map(arg => {
             val viash_par = "VIASH_PAR_" + arg.plainName.toUpperCase()
