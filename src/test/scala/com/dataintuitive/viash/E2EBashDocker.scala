@@ -32,7 +32,7 @@ class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
 
   // check whether executable was created
   val executable = Paths.get(tempFolStr, functionality.name).toFile()
-  val execPathInDocker = Paths.get("/data/", functionality.name).toFile().toString()
+  val execPathInDocker = Paths.get("/viash_automount", executable.getPath).toFile().toString()
 
   test("Viash should have created an executable") {
     assert(executable.exists())
@@ -76,18 +76,19 @@ class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
       Exec.run(
         Seq(
           executable.toString(),
-          execPathInDocker,
+          executable.toString(),
           "--real_number", "10.5",
           "--whole_number=10",
           "-s", "a string with a few spaces",
+          "a", "b", "c",
           "--truth",
-          "--output", "/data/output.txt",
-          "--log", "/data/log.txt",
+          "--output", output.getPath,
+          "--log", log.getPath,
           "--optional", "foo",
           "--optional_with_default", "bar",
-          "--passthrough=you shall$not#pass",
-          "--passthroughbool",
-          "--data", tempFolStr
+          "--multiple", "foo",
+          "--multiple=bar",
+          "d", "e", "f"
         )
       )
 
@@ -95,20 +96,18 @@ class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
     assert(log.exists())
 
     val outputLines = Source.fromFile(output).mkString
-    assert(outputLines.contains(s"""input: "$execPathInDocker""""))
-    assert(outputLines.contains("""real_number: "10.5""""))
-    assert(outputLines.contains("""whole_number: "10""""))
-    assert(outputLines.contains("""s: "a string with a few spaces""""))
-    assert(outputLines.contains("""truth: "true""""))
-    assert(outputLines.contains("""output: "/data/output.txt""""))
-    assert(outputLines.contains("""log: "/data/log.txt""""))
-    assert(outputLines.contains("""optional: "foo""""))
-    assert(outputLines.contains("""optional_with_default: "bar""""))
-    assert(outputLines.contains("""passthrough: "you shall$not#pass""""))
-    assert(outputLines.contains("""passthroughbool: "true""""))
-    assert(outputLines.contains("""PASSTHROUGH: " --passthrough='you shall$not#pass' --passthroughbool""""))
-    assert(outputLines.contains(s"""data: "${tempFolStr}""""))
-    assert(outputLines.contains("""resources_dir: "/resources""""))
+    assert(outputLines.contains(s"""input: |$execPathInDocker|"""))
+    assert(outputLines.contains("""real_number: |10.5|"""))
+    assert(outputLines.contains("""whole_number: |10|"""))
+    assert(outputLines.contains("""s: |a string with a few spaces|"""))
+    assert(outputLines.contains("""truth: |true|"""))
+    assert(outputLines.contains(s"""output: |/viash_automount${output.getPath}|"""))
+    assert(outputLines.contains(s"""log: |/viash_automount${log.getPath}|"""))
+    assert(outputLines.contains("""optional: |foo|"""))
+    assert(outputLines.contains("""optional_with_default: |bar|"""))
+    assert(outputLines.contains("""multiple: |foo:bar|"""))
+    assert(outputLines.contains("""multiple_pos: |a:b:c:d:e:f|"""))
+    assert(outputLines.contains("""resources_dir: |/resources|"""))
 
     val logLines = Source.fromFile(log).mkString
     assert(logLines.contains("INFO: Parsed input arguments"))
@@ -119,25 +118,23 @@ class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
       Exec.run(
         Seq(
           executable.toString(),
-          execPathInDocker,
+          executable.toString(),
           "--real_number", "123.456",
           "--whole_number", "789",
-          "-s", "my$weird#string",
-          "--data", tempFolStr
+          "-s", "my$weird#string"
         )
       )
 
-    assert(stdout.contains(s"""input: "$execPathInDocker""""))
-    assert(stdout.contains("""real_number: "123.456""""))
-    assert(stdout.contains("""whole_number: "789""""))
-    assert(stdout.contains("""s: "my$weird#string""""))
-    assert(stdout.contains("""truth: "false""""))
-    assert(stdout.contains("""optional: """""))
-    assert(stdout.contains("""optional_with_default: "The default value.""""))
-    assert(stdout.contains("""passthrough: """""))
-    assert(stdout.contains(s"""PASSTHROUGH: """""))
-    assert(stdout.contains(s"""data: "${tempFolStr}""""))
-    assert(stdout.contains("""resources_dir: "/resources""""))
+    assert(stdout.contains(s"""input: |$execPathInDocker|"""))
+    assert(stdout.contains("""real_number: |123.456|"""))
+    assert(stdout.contains("""whole_number: |789|"""))
+    assert(stdout.contains("""s: |my$weird#string|"""))
+    assert(stdout.contains("""truth: |false|"""))
+    assert(stdout.contains("""optional: ||"""))
+    assert(stdout.contains("""optional_with_default: |The default value.|"""))
+    assert(stdout.contains("""multiple: ||"""))
+    assert(stdout.contains("""multiple_pos: ||"""))
+    assert(stdout.contains("""resources_dir: |/resources|"""))
 
     assert(stdout.contains("INFO: Parsed input arguments"))
   }

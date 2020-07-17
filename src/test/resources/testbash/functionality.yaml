@@ -8,6 +8,7 @@ arguments:
   description: An input file with positional arguments.
   direction: input
   required: true
+  must_exist: true
 - name: "--real_number"
   type: double
   description: A real number with positional arguments.
@@ -38,14 +39,12 @@ arguments:
 - name: "--optional_with_default"
   type: string
   default: "The default value."
-- name: "--passthrough"
+- name: "--multiple"
   type: string
-  description: A passthrough parameter
-  passthrough: true
-- name: "--passthroughbool"
-  type: boolean_true
-  description: A passthrough parameter 2
-  passthrough: true
+  multiple: true
+- name: "multiple_pos"
+  type: string
+  multiple: true
 resources:
 - type: bash_script
   path: ./code.sh

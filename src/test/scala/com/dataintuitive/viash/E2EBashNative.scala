@@ -72,12 +72,15 @@ class E2EBashNative extends FunSuite with BeforeAndAfterAll {
           "--real_number", "10.5",
           "--whole_number=10",
           "-s", "a string with a few spaces",
+          "a", "b", "c",
           "--truth",
           "--output", output.toString(),
           "--log", log.toString(),
           "--optional", "foo",
           "--optional_with_default", "bar",
-          "--passthrough=you shall$not#pass"
+          "--multiple", "foo",
+          "--multiple=bar",
+          "d", "e", "f"
         )
       )
 
@@ -85,18 +88,18 @@ class E2EBashNative extends FunSuite with BeforeAndAfterAll {
     assert(log.exists())
 
     val outputLines = Source.fromFile(output).mkString
-    assert(outputLines.contains(s"""input: "${executable.toString()}""""))
-    assert(outputLines.contains("""real_number: "10.5""""))
-    assert(outputLines.contains("""whole_number: "10""""))
-    assert(outputLines.contains("""s: "a string with a few spaces""""))
-    assert(outputLines.contains("""truth: "true""""))
-    assert(outputLines.contains(s"""output: "${output.toString()}""""))
-    assert(outputLines.contains(s"""log: "${log.toString()}""""))
-    assert(outputLines.contains("""optional: "foo""""))
-    assert(outputLines.contains("""optional_with_default: "bar""""))
-    assert(outputLines.contains("""passthrough: "you shall$not#pass"""")) // TODO: one set of quotes should be removed
-    assert(outputLines.contains("""PASSTHROUGH: " --passthrough='you shall$not#pass'""""))
-    val regex = s"""resources_dir: ".*$tempFolStr"""".r
+    assert(outputLines.contains(s"""input: |${executable.toString()}|"""))
+    assert(outputLines.contains("""real_number: |10.5|"""))
+    assert(outputLines.contains("""whole_number: |10|"""))
+    assert(outputLines.contains("""s: |a string with a few spaces|"""))
+    assert(outputLines.contains("""truth: |true|"""))
+    assert(outputLines.contains(s"""output: |${output.toString()}|"""))
+    assert(outputLines.contains(s"""log: |${log.toString()}|"""))
+    assert(outputLines.contains("""optional: |foo|"""))
+    assert(outputLines.contains("""optional_with_default: |bar|"""))
+    assert(outputLines.contains("""multiple: |foo:bar|"""))
+    assert(outputLines.contains("""multiple_pos: |a:b:c:d:e:f|"""))
+    val regex = s"""resources_dir: |.*$tempFolStr|""".r
     assert(regex.findFirstIn(outputLines).isDefined)
 
     val logLines = Source.fromFile(log).mkString
@@ -115,16 +118,16 @@ class E2EBashNative extends FunSuite with BeforeAndAfterAll {
         )
       )
 
-    assert(stdout.contains(s"""input: "${executable.toString()}""""))
-    assert(stdout.contains("""real_number: "123.456""""))
-    assert(stdout.contains("""whole_number: "789""""))
-    assert(stdout.contains("""s: "my$weird#string""""))
-    assert(stdout.contains("""truth: "false""""))
-    assert(stdout.contains("""optional: """""))
-    assert(stdout.contains("""optional_with_default: "The default value.""""))
-    assert(stdout.contains("""passthrough: """""))
-    assert(stdout.contains(s"""PASSTHROUGH: """""))
-    val regex = s"""resources_dir: ".*$tempFolStr"""".r
+    assert(stdout.contains(s"""input: |${executable.toString()}|"""))
+    assert(stdout.contains("""real_number: |123.456|"""))
+    assert(stdout.contains("""whole_number: |789|"""))
+    assert(stdout.contains("""s: |my$weird#string|"""))
+    assert(stdout.contains("""truth: |false|"""))
+    assert(stdout.contains("""optional: ||"""))
+    assert(stdout.contains("""optional_with_default: |The default value.|"""))
+    assert(stdout.contains("""multiple: ||"""))
+    assert(stdout.contains("""multiple_pos: ||"""))
+    val regex = s"""resources_dir: |.*$tempFolStr|""".r
     assert(regex.findFirstIn(stdout).isDefined)
 
     assert(stdout.contains("INFO: Parsed input arguments"))

@@ -1,15 +1,20 @@
 name: testexecutable
 description: | 
-  Read the input file.
+  List buckets and objects with mc.
 arguments: 
-- name: "command"
-  type: file
+- name: command
+  type: string
   description: A command to run
   required: true
-- name: "arg"
-  type: string
+- name: "target"
+  type: file	
   description: An extra parameter
   required: true
+  multiple: true
+  must_exist: true
+- name: --json
+  type: boolean_true
+  description: Enable JSON formatted output
 resources:
 - type: executable
   path: mc
