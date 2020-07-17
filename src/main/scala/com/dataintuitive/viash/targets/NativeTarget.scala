@@ -2,7 +2,7 @@ package com.dataintuitive.viash.targets
 
 import com.dataintuitive.viash.functionality.{Functionality}
 import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.helpers.BashHelper
+import com.dataintuitive.viash.helpers.{BashHelper, BashWrapper}
 import com.dataintuitive.viash.targets.environments._
 
 case class NativeTarget(
@@ -21,7 +21,7 @@ case class NativeTarget(
     // create new bash script
     val bashScript = BashScript(
       name = Some(functionality.name),
-      text = Some(BashHelper.wrapScript(
+      text = Some(BashWrapper.wrapScript(
         executor = executor,
         functionality = functionality,
         setupCommands = setupCommands,
@@ -52,6 +52,6 @@ case class NativeTarget(
         }
       ).mkString
 
-    if (commands == "") ":\n" else commands
+    if (commands == "") ":" else commands
   }
 }

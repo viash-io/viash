@@ -24,12 +24,21 @@ case class BashScript(
       s.filter(_ >= ' ') // remove all control characters
   }
 
-  def generateArgparse(functionality: Functionality): String = {
+  def generatePlaceholder(functionality: Functionality): String = {
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
-    // TODO: postparse checks:
-    //  * does file exist?
-    //  * is value in list of possible values?
+    val par_set = params.map{ par =>
+      s"""par_${par.plainName}='$$VIASH_PAR_${par.plainName.toUpperCase()}'"""
+    }
+    s"""${par_set.mkString("\n")}
+      |
+      |resources_dir="$$RESOURCES_DIR"
+      |""".stripMargin
+  }
+
+
+  def generateArgparse(functionality: Functionality): String = {
+    val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
     s"""${BashHelper.ViashQuote}
       |${BashHelper.ViashRemoveFlags}
@@ -90,7 +99,6 @@ case class BashScript(
     // gather parse code for params
     val wrapperParams = params.filterNot(_.otype == "")
     val parseStrs = wrapperParams.map(param => {
-      val passthroughVariable = if (param.passthrough) Some("PASSTHROUGH") else None
       val storeVariable = "par_" + param.plainName
 
       if (param.isInstanceOf[BooleanObject] && param.asInstanceOf[BooleanObject].flagValue.isDefined) {
@@ -98,27 +106,27 @@ case class BashScript(
         val fv = bo.flagValue.get
 
         // params of the form --param
-        val part1 = BashHelper.argStore(param.name, storeVariable, fv.toString(), 1, passthroughVariable)
+        val part1 = BashHelper.argStore(param.name, storeVariable, fv.toString(), 1, None)
         // Alternatives
         val moreParts = param.alternatives.map(alt => {
-          BashHelper.argStore(alt, storeVariable, fv.toString(), 1, passthroughVariable)
+          BashHelper.argStore(alt, storeVariable, fv.toString(), 1, None)
         })
 
         (part1 :: moreParts).mkString("\n")
       } else {
         // params of the form --param ...
         val part1 = param.otype match {
-          case "---" | "--" | "-" => BashHelper.argStore(param.name, storeVariable, "\"$2\"", 2, passthroughVariable)
+          case "---" | "--" | "-" => BashHelper.argStore(param.name, storeVariable, "\"$2\"", 2, None)
           case "" => Nil
         }
         // params of the form --param=..., except -param=... is not allowed
         val part2 = param.otype match {
-            case "---" | "--" => List(BashHelper.argStoreSed(param.name, storeVariable, passthroughVariable))
+            case "---" | "--" => List(BashHelper.argStoreSed(param.name, storeVariable, None))
             case "-" | "" => Nil
           }
         // Alternatives
         val moreParts = param.alternatives.map(alt => {
-          BashHelper.argStore(alt, storeVariable, "\"$2\"", 2, passthroughVariable)
+          BashHelper.argStore(alt, storeVariable, "\"$2\"", 2, None)
         })
 
         (part1 :: part2 ::: moreParts).mkString("\n")
@@ -163,7 +171,6 @@ case class BashScript(
       |            exit;;
       |${parseStrs.mkString("\n")}
       |        *)    # unknown option
-      |${"" /*DO NOT INCLUDE PASSTHROUGH FOR * FOR NOW            PASSTHROUGH="PASSTHROUGH '$$1'"*/}
       |            POSITIONAL+=("$$1") # save it in an array for later
       |            shift # past argument
       |            ;;

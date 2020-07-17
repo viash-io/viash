@@ -5,13 +5,13 @@ import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.targets.environments._
 import java.nio.file.Paths
-import com.dataintuitive.viash.helpers.BashHelper
+import com.dataintuitive.viash.helpers.{BashHelper, BashWrapper}
 import com.dataintuitive.viash.functionality.resources.Resource
 
 case class DockerTarget(
   image: String,
   target_image: Option[String] = None,
-  resolve_volume: ResolveVolume = Manual,
+  resolve_volume: ResolveVolume = Automatic,
   volumes: List[Volume] = Nil,
   port: Option[List[String]] = None,
   workdir: Option[String] = None,
@@ -35,11 +35,15 @@ case class DockerTarget(
     val (volPreParse, volParsers, volPostParse, volInputs, volExtraParams) = processDockerVolumes(functionality)
 
     // add docker debug flag
-    val debuggor = s"""docker run $dockerArgs -v `pwd`:/pwd --workdir /pwd -t $imageName"""
+    val debuggor = s"""docker run --entrypoint=bash $dockerArgs -v `pwd`:/pwd --workdir /pwd -t $imageName"""
     val (debPreParse, debParsers, debPostParse, debInputs) = addDockerDebug(debuggor)
 
     // make commands
-    val executor = s"""eval docker run $dockerArgs$volExtraParams $imageName"""
+    val entrypointStr = functionality.mainScript.get match {
+      case s: Executable => "--entrypoint='' "
+      case _ => "--entrypoint=bash "
+    }
+    val executor = s"""eval docker run $entrypointStr$dockerArgs$volExtraParams $imageName"""
 
     // add extra arguments to the functionality file for each of the volumes
     val fun2 = functionality.copy(
@@ -49,14 +53,14 @@ case class DockerTarget(
     // create new bash script
     val bashScript = BashScript(
         name = Some(functionality.name),
-        text = Some(BashHelper.wrapScript(
+        text = Some(BashWrapper.wrapScript(
           executor = executor,
           functionality = fun2,
           resourcesPath = "/resources",
           setupCommands = setupCommands,
           preParse = volPreParse + debPreParse,
           parsers = volParsers + debParsers,
-          postParse = volPostParse + debPostParse,
+          postParse = debPostParse + volPostParse,
           postRun = ""
         )),
         is_executable = true
@@ -106,13 +110,7 @@ case class DockerTarget(
     // process port parameter
     val portStr = port.getOrElse(Nil).map("-p " + _ + " ").mkString("")
 
-    // check whether entrypoint should be set to bash
-    val entrypointStr = functionality.mainScript match {
-      case Some(e: Executable) => "--entrypoint='' "
-      case _ => "--entrypoint=bash "
-    }
-
-    portStr + entrypointStr + "-i --rm -v \"$RESOURCES_DIR\":/resources"
+    portStr + "-i --rm -v \"$RESOURCES_DIR\":/resources"
   }
 
   def processDockerVolumes(functionality: Functionality) = {
@@ -123,7 +121,6 @@ case class DockerTarget(
   }
 
   def processDockerVolumesAutomatic(functionality: Functionality) = {
-    val storeVariable = "VIASHARGS"
     val extraMountsVar = "VIASH_EXTRA_MOUNTS"
 
     val args = functionality.arguments
@@ -138,71 +135,39 @@ case class DockerTarget(
            |$extraMountsVar="" """.stripMargin
       }
 
-   val parsers1 =
-      if (args.isEmpty) {
-        ""
+    val parsers =
+        s"""        ---v|---volume)
+           |            ${BashHelper.save(extraMountsVar, Seq("-v \"$2\""))}
+           |            shift 2
+           |            ;;
+           |        ---volume=*)
+           |            ${BashHelper.save(extraMountsVar, Seq("-v $(ViashRemoveFlags \"$2\")"))}
+           |            shift 1
+           |            ;;""".stripMargin
+
+    val extraParams = s" $$$extraMountsVar"
+
+    val positional = args.filter(a => a.otype == "")
+    val positionalStr = positional.zipWithIndex.map{tup =>
+      val ix = tup._2 + 1
+      if (tup._1.isInstanceOf[FileObject]) {
+        s"""  ARG$ix="$$(ViashQuote "$$(ViashAutodetectMount "$$(echo $$$ix | sed "s#'##g")")")"""".stripMargin
       } else {
-        args.filter(a => a.isInstanceOf[FileObject] && a.otype != "")
-          .map(arg => {
-            val part1 =
-                s"""
-                  |         ${arg.name})
-                  |            ${BashHelper.quoteSave(storeVariable, Seq("$1", "$(ViashAutodetectMount \"$2\")"))}
-                  |            ${BashHelper.save(extraMountsVar, Seq("$(ViashAutodetectMountArg \"$2\")"))}
-                  |            shift 2
-                  |            ;;""".stripMargin
-            val part2 =
-              if (arg.otype == "--") {
-                s"""
-                  |         ${arg.name}=*)
-                  |            ${BashHelper.quoteSave(storeVariable, Seq("$(ViashExtractFlags \"$1\"))", "$(ViashAutodetectMount \"$(ViashRemoveFlags \"$1\")\")"))}
-                  |            ${BashHelper.save(extraMountsVar, Seq("$(ViashAutodetectMountArg \"$(ViashRemoveFlags \"$1\")\")"))}
-                  |            shift 1
-                  |            ;;""".stripMargin
-              } else {
-                ""
-              }
-            part1 + part2
-          })
-          .mkString("")
+        s"""  ARG$ix="$$(ViashQuote "$$$ix")"""".stripMargin
       }
-   val parsers2 =
-       s"""
-          |         ---v|---volume)
-          |            ${BashHelper.save(extraMountsVar, Seq("-v \"$2\""))}
-          |            shift 2
-          |            ;;
-          |         ---volume=*)
-          |            ${BashHelper.save(extraMountsVar, Seq("-v $(ViashRemoveFlags \"$2\")"))}
-          |            shift 1
-          |            ;;""".stripMargin
+    }
 
-   val parsers = parsers1 + parsers2
-
-   val extraParams = s" $$$extraMountsVar"
-
-   val positional = args.filter(a => a.otype == "")
-   val positionalStr = positional.zipWithIndex.map{tup =>
-     val ix = tup._2 + 1
-     if (tup._1.isInstanceOf[FileObject]) {
-       s"""  ARG$ix="$$(ViashQuote "$$(ViashAutodetectMount "$$(echo $$$ix | sed "s#'##g")")")"""".stripMargin
-     } else {
-       s"""  ARG$ix="$$(ViashQuote "$$$ix")"""".stripMargin
-     }
-   }
-
-   val postParse =
-     if (positional.length > 0 && positional.exists(_.isInstanceOf[FileObject])) {
-       s"""
-       |function ViashDockerPostProcessPositionals {
-       |${positionalStr.mkString("\n")}
-       |  echo ${(1 to positional.length).map("$ARG" + _).mkString(" ")}
-       |}
-       |VIASHARGS=`ViashDockerPostProcessPositionals $$VIASHARGS`
-       |""".stripMargin
-     } else {
-       ""
-     }
+  val postParse =
+    args.filter(a => a.isInstanceOf[FileObject])
+      .map(arg => {
+        val viash_par = "VIASH_PAR_" + arg.plainName.toUpperCase()
+        s"""
+          |if [ ! -z "$$$viash_par" ]; then
+          |  VIASH_EXTRA_MOUNTS="$$VIASH_EXTRA_MOUNTS $$(ViashAutodetectMountArg "$$$viash_par")"
+          |  $viash_par=$$(ViashAutodetectMount "$$$viash_par")
+          |fi""".stripMargin
+      })
+      .mkString("")
 
    val inputs = Nil
 
@@ -256,12 +221,13 @@ case class DockerTarget(
 
   def addDockerDebug(debugCommand: String) = {
     val preParse = ""
-    val parsers = "\n" + BashHelper.argStore("---debug", "VIASHDEBUG", "yes", 1, None)
+    val parsers = "\n" + BashHelper.argStore("---debug", "VIASH_DEBUG", "yes", 1, None)
     val postParse =
       s"""
         |
         |# if desired, enter a debug session
-        |if [ $${VIASHDEBUG} ]; then
+        |if [ $${VIASH_DEBUG} ]; then
+        |  echo "+ $debugCommand"
         |  $debugCommand
         |  exit 0
         |fi"""

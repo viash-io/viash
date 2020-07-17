@@ -8,9 +8,8 @@ case class DoubleObject(
     required: Boolean = false,
     tag: Option[String] = None,
     direction: Direction = Input,
-    passthrough: Boolean = false,
     multiple: Boolean = false,
-    multiple_sep: String = ":"
+    multiple_sep: Char = ':'
 ) extends DataObject[Double] {
   override val `type` = "double"
 }
