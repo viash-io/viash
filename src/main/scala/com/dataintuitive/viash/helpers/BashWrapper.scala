@@ -104,7 +104,12 @@ object BashWrapper {
 
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
     val (parPreParse, parParsers, parPostParse) = generateParsers(functionality, params)
-    val execPostParse = generateExecutableArgs(params)
+
+    val execPostParse =
+      mainResource match {
+        case Some(e: Executable) => generateExecutableArgs(params)
+        case _ => ""
+      }
 
     /* GENERATE BASH SCRIPT */
     s"""#!/usr/bin/env bash
