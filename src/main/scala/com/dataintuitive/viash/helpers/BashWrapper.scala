@@ -50,7 +50,7 @@ object BashWrapper {
   def wrapScript(
       executor: String,
       functionality: Functionality,
-      resourcesPath: String = "\\$RESOURCES_DIR",
+      resourcesPath: String = "\\$VIASH_RESOURCES_DIR",
       setupCommands: String,
       preParse: String,
       parsers: String,
@@ -76,10 +76,10 @@ object BashWrapper {
       case Some(res) => {
         val code = res.readWithPlaceholder(functionality).get
         val escapedCode = escape(code)
-          .replaceAll("\\\\\\$RESOURCES_DIR", resourcesPath)
-          .replaceAll("\\\\\\$VIASH_PAR_", "\\$VIASH_PAR_")
-          .replaceAll("\\\\\\$\\{VIASH_PAR_", "\\${VIASH_PAR_")
+          .replaceAll("\\\\\\$VIASH_RESOURCES_DIR", resourcesPath)
           .replaceAll("\\\\\\$VIASH_DOLLAR\\\\\\$", "\\$")
+          .replaceAll("\\\\\\$VIASH_", "\\$VIASH_")
+          .replaceAll("\\\\\\$\\{VIASH_", "\\${VIASH_")
         s"""
           |set -e
           |tempscript=\\$$(mktemp /tmp/viash-run-${functionality.name}-XXXXXX)
@@ -122,7 +122,7 @@ object BashWrapper {
       |${BashHelper.ViashSourceDir}
       |
       |# find source folder of this component
-      |RESOURCES_DIR=`ViashSourceDir $${BASH_SOURCE[0]}`
+      |VIASH_RESOURCES_DIR=`ViashSourceDir $${BASH_SOURCE[0]}`
       |
       |# helper function for installing extra requirements for this component
       |function ViashSetup {

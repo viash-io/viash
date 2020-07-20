@@ -109,7 +109,7 @@ case class DockerTarget(
     // process port parameter
     val portStr = port.getOrElse(Nil).map("-p " + _ + " ").mkString("")
 
-    portStr + "-i --rm -v \"$RESOURCES_DIR\":/resources"
+    portStr + "-i --rm -v \"$VIASH_RESOURCES_DIR\":/resources"
   }
 
   def processDockerVolumes(functionality: Functionality) = {

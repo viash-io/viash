@@ -32,7 +32,7 @@ case class BashScript(
     }
     s"""${par_set.mkString("\n")}
       |
-      |resources_dir="$$RESOURCES_DIR"
+      |resources_dir="$$VIASH_RESOURCES_DIR"
       |""".stripMargin
   }
 }

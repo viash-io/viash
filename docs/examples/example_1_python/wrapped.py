@@ -15,9 +15,7 @@ par = vars(parser.parse_args())
 
 # checking inputs
 
-
-
-resources_dir = "$RESOURCES_DIR"
+resources_dir = "."
 
 ### VIASH END
 
