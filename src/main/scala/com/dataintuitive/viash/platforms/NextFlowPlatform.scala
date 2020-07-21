@@ -1,28 +1,30 @@
-package com.dataintuitive.viash.targets
+package com.dataintuitive.viash.platforms
 
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.functionality.dataobjects._
-import com.dataintuitive.viash.targets.environments._
+import com.dataintuitive.viash.platforms.requirements._
 import java.nio.file.Paths
 
 /**
-/ * Target class for generating NextFlow (DSL2) modules.
+/ * Platform class for generating NextFlow (DSL2) modules.
  */
-case class NextFlowTarget(
+case class NextFlowPlatform(
   image: String,
-  apt: Option[AptEnvironment] = None,
-  r: Option[REnvironment] = None,
-  python: Option[PythonEnvironment] = None,
+  apt: Option[AptRequirements] = None,
+  r: Option[RRequirements] = None,
+  python: Option[PythonRequirements] = None,
   executor: Option[String],
   publish: Option[Boolean],
   publishSubDir: Option[Boolean],
   label: Option[String],
   stageInMode: Option[String]
-) extends Target {
+) extends Platform {
   val `type` = "nextflow"
 
-  val nativeTarget = NativeTarget(r, python)
+  val requirements = Nil
+
+  val nativePlatform = NativePlatform(r, python)
 
   def modifyFunctionality(functionality: Functionality) = {
     import NextFlowUtils._
@@ -421,7 +423,7 @@ case class NextFlowTarget(
       }
       case Some(e: Script) => {
         println(s"Add ${e.`type`} resources")
-        nativeTarget.modifyFunctionality(functionality).resources
+        nativePlatform.modifyFunctionality(functionality).resources
       }
     }
 

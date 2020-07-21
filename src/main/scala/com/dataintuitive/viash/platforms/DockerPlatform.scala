@@ -1,25 +1,33 @@
-package com.dataintuitive.viash.targets
+package com.dataintuitive.viash.platforms
 
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.targets.environments._
+import com.dataintuitive.viash.platforms.requirements._
 import java.nio.file.Paths
 import com.dataintuitive.viash.helpers.{BashHelper, BashWrapper}
 import com.dataintuitive.viash.functionality.resources.Resource
 
-case class DockerTarget(
+case class DockerPlatform(
   image: String,
   target_image: Option[String] = None,
   resolve_volume: ResolveVolume = Automatic,
   port: Option[List[String]] = None,
   workdir: Option[String] = None,
-  apk: Option[ApkEnvironment] = None,
-  apt: Option[AptEnvironment] = None,
-  r: Option[REnvironment] = None,
-  python: Option[PythonEnvironment] = None
-) extends Target {
+  apk: Option[ApkRequirements] = None,
+  apt: Option[AptRequirements] = None,
+  r: Option[RRequirements] = None,
+  python: Option[PythonRequirements] = None,
+  docker: Option[DockerRequirements] = None
+) extends Platform {
   val `type` = "docker"
+
+  val requirements =
+    apk.toList :::
+    apt.toList :::
+    r.toList :::
+    python.toList :::
+    docker.toList
 
   def modifyFunctionality(functionality: Functionality) = {
     val resourcesPath = "/app"
@@ -72,12 +80,7 @@ case class DockerTarget(
 
   def processDockerSetup(functionality: Functionality, resourcesPath: String) = {
     // get dependencies
-    val aptInstallCommands = apt.map(_.getInstallCommands()).getOrElse(Nil)
-    val apkInstallCommands = apk.map(_.getInstallCommands()).getOrElse(Nil)
-    val rInstallCommands = r.map(_.getInstallCommands()).getOrElse(Nil)
-    val pythonInstallCommands = python.map(_.getInstallCommands()).getOrElse(Nil)
-
-    val runCommands = List(aptInstallCommands, apkInstallCommands, rInstallCommands, pythonInstallCommands)
+    val runCommands = requirements.flatMap(_.installCommands)
 
     // if no extra dependencies are needed, the provided image can just be used,
     // otherwise need to construct a separate docker container

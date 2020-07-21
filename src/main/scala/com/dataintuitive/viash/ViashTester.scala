@@ -1,7 +1,7 @@
 package com.dataintuitive.viash
 
 import functionality._
-import targets._
+import platforms._
 import resources.{BashScript, Script}
 import sys.process.{Process, ProcessLogger}
 import java.io.{ByteArrayOutputStream, PrintWriter, FileWriter, File}
@@ -35,7 +35,7 @@ object ViashTester {
     }
   }
 
-  def runTests(fun: Functionality, platform: Target, dir: File, verbose: Boolean = false) = {
+  def runTests(fun: Functionality, platform: Platform, dir: File, verbose: Boolean = false) = {
     // build regular executable
     val buildfun = platform.modifyFunctionality(fun)
     val builddir = Paths.get(dir.toString(), "build_executable").toFile()
@@ -67,8 +67,8 @@ object ViashTester {
         logwriter.close()
       }
 
-    // generate executable for native target
-    val exe = NativeTarget().modifyFunctionality(fun).resources.head
+    // generate executable for native platform
+    val exe = NativePlatform().modifyFunctionality(fun).resources.head
 
     // fetch tests
     val tests = fun.tests.getOrElse(Nil)

@@ -2,7 +2,7 @@ package com.dataintuitive.viash
 
 import org.scalatest.{FunSuite, Tag}
 import com.dataintuitive.viash.functionality.Functionality
-import com.dataintuitive.viash.targets.Target
+import com.dataintuitive.viash.platforms.Platform
 import com.dataintuitive.viash.helpers._
 
 class E2ETests extends FunSuite {
@@ -17,7 +17,7 @@ class E2ETests extends FunSuite {
       val platFile = platRes.getPath()
       // parse functionality from file
       val functionality = Functionality.parse(IOHelper.uri(funcFile))
-      val platform = Target.parse(IOHelper.uri(platFile))
+      val platform = Platform.parse(IOHelper.uri(platFile))
 
       // run tests
       val dir = IOHelper.makeTemp("viash_test_" + functionality.name)

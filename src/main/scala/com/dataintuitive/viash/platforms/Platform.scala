@@ -1,21 +1,23 @@
-package com.dataintuitive.viash.targets
+package com.dataintuitive.viash.platforms
 
 import com.dataintuitive.viash.functionality.{Functionality}
 import com.dataintuitive.viash.helpers.IOHelper
 import io.circe.yaml.parser
-import com.dataintuitive.viash.targets.environments._
 import java.net.URI
+import requirements._
 
-trait Target {
+trait Platform {
   val `type`: String
   def modifyFunctionality(functionality: Functionality): Functionality
+
+  val requirements: List[Requirements]
 }
 
-object Target {
-  def parse(uri: URI): Target = {
+object Platform {
+  def parse(uri: URI): Platform = {
     val str = IOHelper.read(uri)
     parser.parse(str)
-      .fold(throw _, _.as[Target])
+      .fold(throw _, _.as[Platform])
       .fold(throw _, identity)
   }
 }

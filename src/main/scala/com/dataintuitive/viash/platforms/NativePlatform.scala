@@ -1,15 +1,19 @@
-package com.dataintuitive.viash.targets
+package com.dataintuitive.viash.platforms
 
 import com.dataintuitive.viash.functionality.{Functionality}
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.helpers.{BashHelper, BashWrapper}
-import com.dataintuitive.viash.targets.environments._
+import com.dataintuitive.viash.platforms.requirements._
 
-case class NativeTarget(
-  r: Option[REnvironment] = None,
-  python: Option[PythonEnvironment] = None
-) extends Target {
+case class NativePlatform(
+  r: Option[RRequirements] = None,
+  python: Option[PythonRequirements] = None
+) extends Platform {
   val `type` = "native"
+
+  val requirements =
+    r.toList :::
+    python.toList
 
   def modifyFunctionality(functionality: Functionality) = {
     val executor = functionality.mainScript match {
@@ -39,10 +43,8 @@ case class NativeTarget(
   }
 
   def setupCommands = {
-    val rInstallCommands = r.map(_.getInstallCommands()).getOrElse(Nil)
-    val pythonInstallCommands = python.map(_.getInstallCommands()).getOrElse(Nil)
+    val runCommands = requirements.flatMap(_.installCommands)
 
-    val runCommands = List(rInstallCommands, pythonInstallCommands)
     val commands =
       runCommands.map(li =>
         if (li.isEmpty) {

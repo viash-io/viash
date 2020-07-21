@@ -1,6 +1,6 @@
-package com.dataintuitive.viash.targets.environments
+package com.dataintuitive.viash.platforms.requirements
 
-case class REnvironment(
+case class RRequirements(
   cran: List[String] = Nil,
   bioc: List[String] = Nil,
   git: List[String] = Nil,
@@ -9,8 +9,10 @@ case class REnvironment(
   bitbucket: List[String] = Nil,
   svn: List[String] = Nil,
   url: List[String] = Nil
-) {
-  def getInstallCommands() = {
+) extends Requirements {
+  val `type` = "r"
+
+  def installCommands = {
     val installRemotes =
       if ((cran ::: git ::: github ::: gitlab ::: bitbucket ::: svn ::: url).length > 0) {
         List("""Rscript -e 'if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")'""")

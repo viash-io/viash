@@ -1,9 +1,13 @@
-package com.dataintuitive.viash.targets.environments
+package com.dataintuitive.viash.platforms.requirements
 
-case class PythonEnvironment(
+case class PythonRequirements(
   packages: List[String] = Nil,
-  github:   List[String] = Nil) {
-  def getInstallCommands() = {
+  github:   List[String] = Nil
+) extends Requirements {
+
+  val `type` = "python"
+
+  def installCommands = {
     val installPip =
       """pip install --user --upgrade pip"""
 

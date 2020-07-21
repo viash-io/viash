@@ -1,7 +1,7 @@
 package com.dataintuitive.viash
 
 import functionality._
-import targets._
+import platforms._
 import resources.Script
 
 import java.nio.file.{Paths, Files}
@@ -103,8 +103,8 @@ object Main {
 
   def readPlatform(opt: ScallopOption[String]) = {
     opt.map{ path =>
-      Target.parse(IOHelper.uri(path))
-    }.getOrElse(NativeTarget())
+      Platform.parse(IOHelper.uri(path))
+    }.getOrElse(NativePlatform())
   }
 
   def viashLogic(subcommand: WithFunctionality with WithPlatform) = {
@@ -118,7 +118,7 @@ object Main {
     // should be native and all dependencies are taken care of
     val platform = readPlatform(subcommand.platform)
 
-    // modify the functionality using the target
+    // modify the functionality using the platform
     val fun2 = platform.modifyFunctionality(functionality)
 
     (fun2, platform)
