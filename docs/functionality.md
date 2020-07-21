@@ -4,8 +4,15 @@ Description of the functionality.yaml format
   - [name \[string\]](#name-string)
   - [description \[string\]](#description-string)
   - [arguments \[list\]](#arguments-list)
-  - [resources \[list\]](#resources-list)
+      - [type: string](#type-string)
       - [type: file](#type-file)
+      - [type: integer](#type-integer)
+      - [type: double](#type-double)
+      - [type: boolean](#type-boolean)
+      - [type:
+        boolean\_true/boolean\_false](#type-boolean_trueboolean_false)
+  - [resources \[list\]](#resources-list)
+      - [type: file](#type-file-1)
       - [type: r\_script](#type-r_script)
       - [type: python\_script](#type-python_script)
       - [type: bash\_script](#type-bash_script)
@@ -116,32 +123,40 @@ Example:
   multiple_sep: ","
 ```
 
-**type: string** The value passed through an argument of this type is
-converted to an ‘str’ object in Python, and to a ‘character’ object in
-R.
+#### type: string
 
-**type: file** The resulting value is still an ‘str’ in Python and a
-‘character’ in R. However, when using a Docker platform, the value
-will automatically be substituted with the path of the mounted directory
-inside the container (see [platform\_docker.md](platform_docker.md).
-Additional property values: \* `must_exist: true/false`, denotes whether
-the file or folder should exist at the start of the execution. \*
-`direction: input/output/log`, specifies whether the file is an input,
-an output, or a log file.
+The value passed through an argument of this type is converted to an
+‘str’ object in Python, and to a ‘character’ object in R.
 
-**type: integer** The resulting value is an ‘int’ in Python and an
-‘integer’ in R.
+#### type: file
 
-**type: double** The resulting value is a ‘float’ in Python and an
-‘double’ in R.
+The resulting value is still an ‘str’ in Python and a ‘character’ in R.
+However, when using a Docker platform, the value will automatically be
+substituted with the path of the mounted directory inside the container
+(see [platform\_docker.md](platform_docker.md). Additional property
+values: \* `must_exist: true/false`, denotes whether the file or folder
+should exist at the start of the execution. \* `direction:
+input/output/log`, specifies whether the file is an input, an output, or
+a log file.
 
-**type: boolean** The resulting value is a ‘bool’ in Python and a
-‘logical’ in R.
+#### type: integer
 
-**type: boolean\_true/boolean\_false** Arguments of this type can only
-be used by providing a flag `--foo` or not. The resulting value is a
-‘bool’ in Python and a ‘logical’ in R. These properties cannot be
-altered: required is false, default is undefined, multiple is false.
+The resulting value is an ‘int’ in Python and an ‘integer’ in R.
+
+#### type: double
+
+The resulting value is a ‘float’ in Python and an ‘double’ in R.
+
+#### type: boolean
+
+The resulting value is a ‘bool’ in Python and a ‘logical’ in R.
+
+#### type: boolean\_true/boolean\_false
+
+Arguments of this type can only be used by providing a flag `--foo` or
+not. The resulting value is a ‘bool’ in Python and a ‘logical’ in R.
+These properties cannot be altered: required is false, default is
+undefined, multiple is false.
 
 ## resources \[list\]
 
@@ -168,94 +183,44 @@ Common properties:
   - `is_executable: true/false`, whether the resulting file is made
     executable.
 
-### type: file
+#### type: file
 
 A simple file which will be copied when the functionality is exported.
 The first resource cannot be of this type. If the type of a resource is
 not given, it is assumed to be of type `file`.
 
-### type: r\_script
+#### type: r\_script
 
 An R script. Must contain a code block starting with `"VIASH START"` and
 ending with `"VIASH END"`, which will be replaced if at run-time if the
-script is the first resource. See [script\_r](script_r) for more
+script is the first resource. See
+[wrapping\_an\_r\_script.md](wrapping_an_r_script.md) for more
 information.
 
-Example content:
-
-``` r
-## VIASH START
-par <- list(
-  input = "file.txt",
-  output = "output.txt",
-  remove_odd_lines = TRUE
-)
-resource_dir <- "."
-## VIASH END
-
-lines <- readLines(par$input)
-if (par$remove_odd_lines && length(lines) > 1) {
-  lines <- lines[-seq(1, length(lines), by = 2)]
-}
-writeLines(lines, par$output)
-```
-
-### type: python\_script
+#### type: python\_script
 
 A python script. Must contain a code block starting with `"VIASH START"`
 and ending with `"VIASH END"`, which will be replaced if at run-time if
-the script is the first resource. See [script\_python](script_python)
-for more information.
+the script is the first resource. See
+[wrapping\_a\_python\_script.md](wrapping_a_python_script.md) for more
+information.
 
-Example content:
-
-``` python
-## VIASH START
-par = {
-  'input': 'script.py',
-  'output': 'output.txt',
-  'remove_odd_lines': True
-}
-resource_dir = "."
-## VIASH END
-
-with open(par['input'], 'r') as fin:
-  with open(par['output'], 'w') as fout:
-    for count, line in enumerate(fin, start=1):
-      if count % 2 == 0 or not par['remove_odd_lines']:
-        fout.write(line)
-```
-
-### type: bash\_script
+#### type: bash\_script
 
 A bash script. Must contain a code block starting with `"VIASH START"`
 and ending with `"VIASH END"`, which will be replaced if at run-time if
-the script is the first resource. See [script\_bash](script_bash) for
-more information.
+the script is the first resource. See
+[wrapping\_a\_bash\_script.md](wrapping_a_bash_script.md) for more
+information.
 
-Example content:
-
-``` sh
-## VIASH START
-par_input=file.txt
-par_output=output.txt
-par_remove_odd_lines=true
-resource_dir="."
-## VIASH END
-
-if [ $par_remove_odd_lines = "true" ]; then
-  sed '1d; n; d' $par_input > $par_output
-else
-  cat $par_input > $par_output
-fi
-```
-
-### type: executable
+#### type: executable
 
 An executable which is already available on the platform. Since the
 executable is assumed to handle the command-line interface by itself,
 there should be a one-to-one mapping of the arguments described in the
-functionality and the arguments that the executable ‘understands’.
+functionality and the arguments that the executable ‘understands’. See
+[wrapping\_an\_executable.md](wrapping_an_executable.md) for more
+information.
 
 ## tests \[list\]
 
