@@ -1,4 +1,9 @@
-# NextFlow Target
+---
+title: "Running a pipeline in Nextflow"
+output: 
+  github_document:
+    toc: true
+---
 
 ## Introduction
 

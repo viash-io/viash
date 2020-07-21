@@ -1,14 +1,43 @@
 ---
-title: "Functionality YAML format"
+title: "Description of the functionality.yaml format"
 output: 
   github_document:
     toc: true
 ---
 
-The functionality yaml is a meta file which describes the behavior of a script in terms of input/output/parameters.
+The functionality yaml is a meta file which describes the behavior of a script 
+in terms of input/output/parameters. By specifying a few restrictions (e.g. mandatory arguments)
+and adding some descriptions, viash can automatically generate a command-line interface.
+
+An example of such a functionality yaml can be found below, each part of which is 
+explained in more depth in the following sections. 
+For more (extensive) examples, see [examples](examples).
+
+```yaml
+name: exe
+description: |
+  This component performs function Y and Z.
+  It is possible to make this a multiline string.
+function_type: transform
+arguments:
+- name: --input                           
+  type: file
+  alternatives: [-i]
+  description: Input file(s)
+  default: input.txt
+  must_exist: true
+  required: false
+  multiple: true
+  multiple_sep: ","
+resources:
+- type: r_script
+  path: script.R
+tests:
+- type: r_script
+  path: tests/unit_test.R
+```
 
 ## name [string]
-
 Name of the component described.
 
 Example:
@@ -59,8 +88,7 @@ Example:
 The value passed through an argument of this type is converted to an 'str' object in Python, and to a 'character' object in R. 
 
 ### type: file
-The resulting value is still an 'str' in Python and a 'character' in R. However, when using a [Docker platform](Platform.md#docker), the value will automatically be substituted 
-with the path of the mounted directory inside the container.
+The resulting value is still an 'str' in Python and a 'character' in R. However, when using a Docker platform, the value will automatically be substituted with the path of the mounted directory inside the container (see [platform_docker.md](platform_docker.md).
 
 Additional property values:
 * `must_exist: true/false`, denotes whether the file or folder should exist at the start of the execution.
@@ -100,7 +128,7 @@ A simple file which will be copied when the functionality is exported. The first
 
 ### type: r_script
 
-An R script. Must contain a code block starting with `"VIASH START"` and ending with `"VIASH END"`, which will be replaced if at run-time if the script is the first resource. See [examples/example_r](examples/example_r) for a more detailed example of an R script wrapped with viash.
+An R script. Must contain a code block starting with `"VIASH START"` and ending with `"VIASH END"`, which will be replaced if at run-time if the script is the first resource. See [script_r](script_r) for more information.
 
 Example content:
 
@@ -123,7 +151,7 @@ writeLines(lines, par$output)
 
 ### type: python_script
 
-A python script. Must contain a code block starting with `"VIASH START"` and ending with `"VIASH END"`, which will be replaced if at run-time if the script is the first resource. See [examples/example_python](examples/example_python) for a more detailed example of a python script wrapped with viash.
+A python script. Must contain a code block starting with `"VIASH START"` and ending with `"VIASH END"`, which will be replaced if at run-time if the script is the first resource. See [script_python](script_python) for more information.
 
 Example content:
 
@@ -146,7 +174,7 @@ with open(par['input'], 'r') as fin:
 
 ### type: bash_script
 
-A bash script. Must contain a code block starting with `"VIASH START"` and ending with `"VIASH END"`, which will be replaced if at run-time if the script is the first resource. See [examples/example_bash](examples/example_bash) for a more detailed example of a bash script wrapped with viash.
+A bash script. Must contain a code block starting with `"VIASH START"` and ending with `"VIASH END"`, which will be replaced if at run-time if the script is the first resource. See [script_bash](script_bash) for more information.
 
 Example content:
 
@@ -167,12 +195,17 @@ fi
 
 ### type: executable
 
-An executable which is already available on the platform and is assumed to handle the command-line interface by itself.
+An executable which is already available on the platform. Since the executable is assumed 
+to handle the command-line interface by itself, there should be a one-to-one mapping
+of the arguments described in the functionality and the arguments that the executable 'understands'.
+
 
 ## tests [list]
 
-Similar to resources, the test resources will only be used when using the `viash test` command. Each r_script/python_script/bash_script is assumed to contain unit tests which tests whether the functionality exported by viash functions as intended and exits with a code > 1 when unexpected behaviour occurs. Other files are assumed to be files used during a test.
+Similar to resources, the test resources will only be used when using the `viash test` command. Each r_script/python_script/bash_script is assumed to contain unit tests which tests whether the functionality exported by viash functions as intended and exits with a code > 1 when unexpected behavior occurs. Other files are assumed to be files used during a test.
 
 ## function_type [string]
 
-See [NextFlowTarget.md](NextFlowTarget.md).
+The function_type is used in Nextflow to describe the type of function the functionality provides. The function type affects two aspects: how many files can be used as input and output, and how should the output files be named (based on the input).
+
+See [platform_nextflow.md](platform_nextflow.md) for an explanation between the difference between function types.
