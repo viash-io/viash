@@ -1,7 +1,6 @@
 Description of the functionality.yaml format
 ================
 
-  - [Example](#example)
   - [name \[string\]](#name-string)
   - [description \[string\]](#description-string)
   - [arguments \[list\]](#arguments-list)
@@ -22,15 +21,20 @@ Description of the functionality.yaml format
   - [function\_type \[string\]](#function_type-string)
 
 The functionality yaml is a meta file which describes the behavior of a
-script in terms of input/output/parameters.
+script in terms of input/output/parameters. By specifying a few
+restrictions (e.g. mandatory arguments) and adding some descriptions,
+viash can automatically generate a command-line interface.
 
-## Example
+An example of such a functionality yaml can be found below, each part of
+which is explained in more depth in the following sections. For more
+(extensive) examples, see [examples](examples).
 
 ``` yaml
 name: exe
 description: |
   This component performs function Y and Z.
   It is possible to make this a multiline string.
+function_type: transform
 arguments:
 - name: --input                           
   type: file
@@ -275,9 +279,15 @@ Similar to resources, the test resources will only be used when using
 the `viash test` command. Each r\_script/python\_script/bash\_script is
 assumed to contain unit tests which tests whether the functionality
 exported by viash functions as intended and exits with a code \> 1 when
-unexpected behaviour occurs. Other files are assumed to be files used
+unexpected behavior occurs. Other files are assumed to be files used
 during a test.
 
 ## function\_type \[string\]
 
-See [platform\_nextflow.md](platform_nextflow.md).
+The function\_type is used in Nextflow to describe the type of function
+the functionality provides. The function type affects two aspects: how
+many files can be used as input and output, and how should the output
+files be named (based on the input).
+
+See [platform\_nextflow.md](platform_nextflow.md) for an explanation
+between the difference between function types.
