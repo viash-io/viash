@@ -93,6 +93,11 @@ case class NextFlowTarget(
       case None => Nil
     }
 
+    /**
+     * A few notes:
+     * 1. input and output are initialized as empty strings, so that no warnings appear.
+     * 2. id is initialized as empty string, which makes sense in test scenarios.
+     */
     val asNestedTuples: List[(String, Any)] = List(
       "docker.enabled" → true,
       "process.container" → "dataintuitive/portash",
@@ -100,8 +105,8 @@ case class NextFlowTarget(
         namespacedParameters :::
         List(
           "id" → "",
-          "outDir" → "out",
-          "input" → "test.md",
+          "input" → "",
+          "output" → "",
           functionality.name → {
             List(
               "name" → functionality.name,
@@ -122,6 +127,12 @@ case class NextFlowTarget(
 
     val setup_main_header = s"""nextflow.preview.dsl=2
         |import java.nio.file.Paths
+        |if (!params.containsKey("input") || params.input == "") {
+        |    exit 1, "ERROR: Please provide a --input parameter containing an .md file or a wildcard expression"
+        |}
+        |if (!params.containsKey("output") || params.output == "" ) {
+        |    exit 1, "ERROR: Please provide a --output parameter for storing the output"
+        |}
         |""".stripMargin
 
     val setup_main_utils = s"""
@@ -244,7 +255,7 @@ case class NextFlowTarget(
 
     /**
      * Some (implicit) conventions:
-     * - `outDir/` is where the output data is published
+     * - `output/` is where the output data is published
      * - For multiple samples, an additional subdir `id` can be created, but blank by default
      * - A boolean option `publishSubdir` is available to store processing steps in subdirs
      */
@@ -252,8 +263,8 @@ case class NextFlowTarget(
 
       // If id is the empty string, the subdirectory is not created
       val publishDirString = publishSubDir match {
-        case Some(true) => "${params.outDir}/${id}/" + fname
-        case _ => "${params.outDir}/${id}"
+        case Some(true) => "${params.output}/${id}/" + fname
+        case _ => "${params.output}/${id}"
       }
 
       val publishDirStr = publish match {
