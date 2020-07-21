@@ -286,7 +286,7 @@ resources:
 - path: report.Rmd
 ```
 
-We will skip over the implementation in `report.R` and `report.Rmd`, but feel free to check them out in the example directory at [docs/examples/example_3_rmd](docs/examples/example_3_rmd).
+We will skip over the implementation in `report.R` and `report.Rmd`, but feel free to check them out in the example directory at [docs/examples/example_rmd](docs/examples/example_rmd).
 
 By wrapping the script and executing it, a Rmarkdown is used to build the report:
 ```bash
