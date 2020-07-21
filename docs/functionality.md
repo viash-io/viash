@@ -4,15 +4,8 @@ Description of the functionality.yaml format
   - [name \[string\]](#name-string)
   - [description \[string\]](#description-string)
   - [arguments \[list\]](#arguments-list)
-      - [type: string](#type-string)
-      - [type: file](#type-file)
-      - [type: integer](#type-integer)
-      - [type: double](#type-double)
-      - [type: boolean](#type-boolean)
-      - [type:
-        boolean\_true/boolean\_false](#type-boolean_trueboolean_false)
   - [resources \[list\]](#resources-list)
-      - [type: file](#type-file-1)
+      - [type: file](#type-file)
       - [type: r\_script](#type-r_script)
       - [type: python\_script](#type-python_script)
       - [type: bash\_script](#type-bash_script)
@@ -123,41 +116,32 @@ Example:
   multiple_sep: ","
 ```
 
-### type: string
+**type: string** The value passed through an argument of this type is
+converted to an ‘str’ object in Python, and to a ‘character’ object in
+R.
 
-The value passed through an argument of this type is converted to an
-‘str’ object in Python, and to a ‘character’ object in R.
-
-### type: file
-
-The resulting value is still an ‘str’ in Python and a ‘character’ in R.
-However, when using a Docker platform, the value will automatically be
-substituted with the path of the mounted directory inside the container
-(see [platform\_docker.md](platform_docker.md).
-
+**type: file** The resulting value is still an ‘str’ in Python and a
+‘character’ in R. However, when using a Docker platform, the value
+will automatically be substituted with the path of the mounted directory
+inside the container (see [platform\_docker.md](platform_docker.md).
 Additional property values: \* `must_exist: true/false`, denotes whether
 the file or folder should exist at the start of the execution. \*
 `direction: input/output/log`, specifies whether the file is an input,
 an output, or a log file.
 
-### type: integer
+**type: integer** The resulting value is an ‘int’ in Python and an
+‘integer’ in R.
 
-The resulting value is an ‘int’ in Python and an ‘integer’ in R.
+**type: double** The resulting value is a ‘float’ in Python and an
+‘double’ in R.
 
-### type: double
+**type: boolean** The resulting value is a ‘bool’ in Python and a
+‘logical’ in R.
 
-The resulting value is a ‘float’ in Python and an ‘double’ in R.
-
-### type: boolean
-
-The resulting value is a ‘bool’ in Python and a ‘logical’ in R.
-
-### type: boolean\_true/boolean\_false
-
-Arguments of this type can only be used by providing a flag `--foo` or
-not. The resulting value is a ‘bool’ in Python and a ‘logical’ in R.
-These properties cannot be altered: required is false, default is
-undefined, multiple is false.
+**type: boolean\_true/boolean\_false** Arguments of this type can only
+be used by providing a flag `--foo` or not. The resulting value is a
+‘bool’ in Python and a ‘logical’ in R. These properties cannot be
+altered: required is false, default is undefined, multiple is false.
 
 ## resources \[list\]
 

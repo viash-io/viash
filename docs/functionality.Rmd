@@ -84,28 +84,19 @@ Example:
   multiple_sep: ","
 ```
 
-### type: string
-The value passed through an argument of this type is converted to an 'str' object in Python, and to a 'character' object in R. 
+**type: string** The value passed through an argument of this type is converted to an 'str' object in Python, and to a 'character' object in R. 
 
-### type: file
-The resulting value is still an 'str' in Python and a 'character' in R. However, when using a Docker platform, the value will automatically be substituted with the path of the mounted directory inside the container (see [platform_docker.md](platform_docker.md).
-
-Additional property values:
+**type: file** The resulting value is still an 'str' in Python and a 'character' in R. However, when using a Docker platform, the value will automatically be substituted with the path of the mounted directory inside the container (see [platform_docker.md](platform_docker.md). Additional property values:
 * `must_exist: true/false`, denotes whether the file or folder should exist at the start of the execution.
 * `direction: input/output/log`, specifies whether the file is an input, an output, or a log file.
 
-### type: integer
-The resulting value is an 'int' in Python and an 'integer' in R. 
+**type: integer** The resulting value is an 'int' in Python and an 'integer' in R. 
 
-### type: double
-The resulting value is a 'float' in Python and an 'double' in R. 
+**type: double** The resulting value is a 'float' in Python and an 'double' in R. 
 
-### type: boolean
-The resulting value is a 'bool' in Python and a 'logical' in R.
+**type: boolean** The resulting value is a 'bool' in Python and a 'logical' in R.
 
-### type: boolean_true/boolean_false
-Arguments of this type can only be used by providing a flag `--foo` or not. The resulting value is a 'bool' in Python and a 'logical' in R. 
-These properties cannot be altered: required is false, default is undefined, multiple is false.
+**type: boolean_true/boolean_false** Arguments of this type can only be used by providing a flag `--foo` or not. The resulting value is a 'bool' in Python and a 'logical' in R. These properties cannot be altered: required is false, default is undefined, multiple is false.
 
 ## resources [list]
 The first resource should be a script (with type r_script/python_script/bash_script) or an executable, which is what will be executed
