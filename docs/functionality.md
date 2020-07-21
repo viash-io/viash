@@ -1,6 +1,7 @@
-Functionality YAML format
+Description of the functionality.yaml format
 ================
 
+  - [Example](#example)
   - [name \[string\]](#name-string)
   - [description \[string\]](#description-string)
   - [arguments \[list\]](#arguments-list)
@@ -22,6 +23,31 @@ Functionality YAML format
 
 The functionality yaml is a meta file which describes the behavior of a
 script in terms of input/output/parameters.
+
+## Example
+
+``` yaml
+name: exe
+description: |
+  This component performs function Y and Z.
+  It is possible to make this a multiline string.
+arguments:
+- name: --input                           
+  type: file
+  alternatives: [-i]
+  description: Input file(s)
+  default: input.txt
+  must_exist: true
+  required: false
+  multiple: true
+  multiple_sep: ","
+resources:
+- type: r_script
+  path: script.R
+tests:
+- type: r_script
+  path: tests/unit_test.R
+```
 
 ## name \[string\]
 
@@ -101,9 +127,9 @@ The value passed through an argument of this type is converted to an
 ### type: file
 
 The resulting value is still an ‘str’ in Python and a ‘character’ in R.
-However, when using a [Docker platform](Platform.md#docker), the value
-will automatically be substituted with the path of the mounted directory
-inside the container.
+However, when using a Docker platform, the value will automatically be
+substituted with the path of the mounted directory inside the container
+(see [platform\_docker.md](platform_docker.md).
 
 Additional property values: \* `must_exist: true/false`, denotes whether
 the file or folder should exist at the start of the execution. \*
@@ -164,9 +190,8 @@ not given, it is assumed to be of type `file`.
 
 An R script. Must contain a code block starting with `"VIASH START"` and
 ending with `"VIASH END"`, which will be replaced if at run-time if the
-script is the first resource. See
-[examples/example\_r](examples/example_r) for a more detailed example of
-an R script wrapped with viash.
+script is the first resource. See [script\_r](script_r) for more
+information.
 
 Example content:
 
@@ -191,9 +216,8 @@ writeLines(lines, par$output)
 
 A python script. Must contain a code block starting with `"VIASH START"`
 and ending with `"VIASH END"`, which will be replaced if at run-time if
-the script is the first resource. See
-[examples/example\_python](examples/example_python) for a more detailed
-example of a python script wrapped with viash.
+the script is the first resource. See [script\_python](script_python)
+for more information.
 
 Example content:
 
@@ -218,9 +242,8 @@ with open(par['input'], 'r') as fin:
 
 A bash script. Must contain a code block starting with `"VIASH START"`
 and ending with `"VIASH END"`, which will be replaced if at run-time if
-the script is the first resource. See
-[examples/example\_bash](examples/example_bash) for a more detailed
-example of a bash script wrapped with viash.
+the script is the first resource. See [script\_bash](script_bash) for
+more information.
 
 Example content:
 
@@ -241,8 +264,10 @@ fi
 
 ### type: executable
 
-An executable which is already available on the platform and is assumed
-to handle the command-line interface by itself.
+An executable which is already available on the platform. Since the
+executable is assumed to handle the command-line interface by itself,
+there should be a one-to-one mapping of the arguments described in the
+functionality and the arguments that the executable ‘understands’.
 
 ## tests \[list\]
 
@@ -255,4 +280,4 @@ during a test.
 
 ## function\_type \[string\]
 
-See [NextFlowTarget.md](NextFlowTarget.md).
+See [platform\_nextflow.md](platform_nextflow.md).
