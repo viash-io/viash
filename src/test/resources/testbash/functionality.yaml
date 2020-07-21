@@ -5,7 +5,9 @@ description: |
 arguments: 
 - name: "input"
   type: file
-  description: An input file with positional arguments.
+  description: |
+    An input file with positional arguments.
+    More checks for multiline descriptions.
   direction: input
   required: true
   must_exist: true
