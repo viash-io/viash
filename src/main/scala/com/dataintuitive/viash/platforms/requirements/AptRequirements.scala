@@ -1,9 +1,11 @@
-package com.dataintuitive.viash.targets.environments
+package com.dataintuitive.viash.platforms.requirements
 
-case class AptEnvironment(
+case class AptRequirements(
   packages: List[String] = Nil
-) {
-  def getInstallCommands() = {
+) extends Requirements {
+  val `type` = "apt"
+
+  def installCommands = {
     val aptUpdate =
       """apt-get update"""
 

@@ -1,10 +1,12 @@
-package com.dataintuitive.viash.targets.environments
+package com.dataintuitive.viash.platforms.requirements
 
-case class DockerEnvironment(
+case class DockerRequirements(
   resources: List[String] = Nil,
   run: List[String] = Nil
-) {
-  def getInstallCommands() = {
+) extends Requirements {
+  val `type` = "docker"
+
+  def installCommands = {
 
     val copyResources =
       if (resources.length > 0) {

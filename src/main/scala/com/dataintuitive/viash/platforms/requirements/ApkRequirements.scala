@@ -1,9 +1,11 @@
-package com.dataintuitive.viash.targets.environments
+package com.dataintuitive.viash.platforms.requirements
 
-case class ApkEnvironment(
+case class ApkRequirements(
   packages: List[String] = Nil
-) {
-  def getInstallCommands() = {
+) extends Requirements {
+  val `type` = "apk"
+
+  val installCommands = {
     val installPackages =
       packages match {
         case Nil => Nil

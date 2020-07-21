@@ -1,4 +1,4 @@
-package com.dataintuitive.viash.targets
+package com.dataintuitive.viash.platforms
 
 sealed trait ResolveVolume
 case object Manual extends ResolveVolume
