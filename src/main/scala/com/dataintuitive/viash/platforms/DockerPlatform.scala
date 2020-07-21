@@ -22,7 +22,7 @@ case class DockerPlatform(
 ) extends Platform {
   val `type` = "docker"
 
-  val requirements =
+  val requirements: List[Requirements] =
     apk.toList :::
     apt.toList :::
     r.toList :::
@@ -80,18 +80,18 @@ case class DockerPlatform(
 
   def processDockerSetup(functionality: Functionality, resourcesPath: String) = {
     // get dependencies
-    val runCommands = requirements.flatMap(_.installCommands)
+    val runCommands = requirements.flatMap(_.dockerCommands)
 
     // if no extra dependencies are needed, the provided image can just be used,
     // otherwise need to construct a separate docker container
-    if (runCommands.flatten.isEmpty) {
+    if (runCommands.isEmpty) {
       (image, s"docker image inspect $image >/dev/null 2>&1 || docker pull $image")
     } else {
       val imageName = target_image.getOrElse("viash_autogen/" + functionality.name)
 
       val dockerFile =
         s"FROM $image\n" +
-          runCommands.map(li => if (li.isEmpty) "" else li.mkString("RUN ", " && \\\n  ", "\n")).mkString("\n")
+          runCommands.mkString("\n")
 
       val setupCommands =
         s"""# create temporary directory to store temporary dockerfile in

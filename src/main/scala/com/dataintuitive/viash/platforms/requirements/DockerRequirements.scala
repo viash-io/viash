@@ -6,8 +6,9 @@ case class DockerRequirements(
 ) extends Requirements {
   val `type` = "docker"
 
-  def installCommands = {
+  def installCommands = Nil
 
+  override def dockerCommands = {
     val copyResources =
       if (resources.length > 0) {
         resources.map(c => """COPY $c""")
@@ -22,6 +23,10 @@ case class DockerRequirements(
         Nil
       }
 
-    copyResources ::: runCommands
+    val li = copyResources ::: runCommands
+
+    if (li.isEmpty) None else Some(li.mkString("\n"))
   }
+
+
 }

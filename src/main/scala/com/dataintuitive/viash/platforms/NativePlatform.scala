@@ -11,7 +11,7 @@ case class NativePlatform(
 ) extends Platform {
   val `type` = "native"
 
-  val requirements =
+  val requirements: List[Requirements] =
     r.toList :::
     python.toList
 
@@ -43,7 +43,7 @@ case class NativePlatform(
   }
 
   def setupCommands = {
-    val runCommands = requirements.flatMap(_.installCommands)
+    val runCommands = requirements.map(_.installCommands)
 
     val commands =
       runCommands.map(li =>
