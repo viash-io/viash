@@ -1,4 +1,4 @@
-# viash 0.2.0 (soon)
+# viash 0.2.0 (asap)
 
 ## NEW FEATURES
 * Allow testing a component with the `viash test` functionality. Tests are executed in a temporary directory on the specified platform. The temporary directory contains all the resource and test files. 
@@ -12,7 +12,6 @@
 
 ## MAJOR CHANGES
 * Remove passthrough parameters.
-* Move CLI from inner script to outer script.
 * Since CLI generation is now performed in the outer script, `viash pimp` has been deprecated.	
 
 ## MINOR CHANGES
@@ -23,6 +22,11 @@
 ## BUG FIXES
 * NXF: Correctly escape path variable when running NXF command.
 * NXF: Surround parameters with quotes when running NXF command.
+
+## INTERNAL CHANGES
+* Move CLI from inner script to outer script.
+* Renamed Target to Platform
+* Renamed Environment to Requirements
 
 # viash 0.1.0 (2020-05-14)
 * MAJOR CHANGES: Refactoring of the Functionality class as discussed in VIP1 (#1). This has resulted in a lot of internal changes, but the changes with regard to the yaml definitions are relatively minor. See the section below for more info.
