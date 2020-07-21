@@ -164,29 +164,52 @@ object BashWrapper {
 
 
   def generateHelp(functionality: Functionality, params: List[DataObject[_]]): String = {
-    // TODO: allow description to have newlines
-
     // gather parse code for params
     val usageStrs = params.map(param => {
       val names = param.alternatives ::: List(param.name)
+
+      val exval = param.`type`
+      val exampleValues =
+        if (param.multiple) {
+          exval + "1" + param.multiple_sep + exval + "2" + param.multiple_sep + "..."
+        } else {
+          exval
+        }
+
       val exampleStrs =
         if (param.isInstanceOf[BooleanObject] && param.asInstanceOf[BooleanObject].flagValue.isDefined) {
           names
         } else {
           names.map(name => {
-            name + {if (name.startsWith("--")) "=" else " "} + param.plainName.toUpperCase()
+            if (name.startsWith("--") || name.startsWith("---")) {
+              name + "=" + exampleValues
+            } else if (name.startsWith("-")) {
+              name + " " + exampleValues
+            } else {
+              exampleValues
+            }
           })
         }
       val exampleStr = exampleStrs.mkString(", ")
-      s"""   echo "    ${exampleStrs.mkString(", ")}"
-         |   echo "        ${param.description.getOrElse("")}"
-         |   echo""".stripMargin
+
+      val properties =
+        List("type: " + param.`type`) :::
+        { if (param.required) List("required parameter") else Nil } :::
+        { if (param.multiple) List("multiple values allowed") else Nil } :::
+        { if (param.default.isDefined) List("default: " + param.default.get) else Nil }
+
+      val part1 = "    " + exampleStrs.mkString(", ")
+      val part2 = "        " + properties.mkString(", ")
+      val part3 = param.description.toList.flatMap(_.split("\n")).map("        " + _)
+
+      (part1 :: part2 :: part3 ::: List("")).map("    echo \"" + _ + "\"").mkString("\n")
     })
 
-    s"""function ViashHelp {
-       |   # Display Help
-       |   echo "Usage:" # ... TODO fillin
-       |   echo "${functionality.description.map(removeNewlines).getOrElse("")}"
+    // TODO: add usage
+
+    s"""# ViashHelp: Display helpful explanation about this executable
+       |function ViashHelp {
+       |   echo "${functionality.description.getOrElse("").stripLineEnd}"
        |   echo
        |   echo "Options:"
        |${usageStrs.mkString("\n")}
