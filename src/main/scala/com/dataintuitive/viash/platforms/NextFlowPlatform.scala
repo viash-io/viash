@@ -180,7 +180,9 @@ case class NextFlowPlatform(
           |
           |    return prefix + "." + "__f__" + "." + __e__
           |}
-          |""".stripMargin.replace("__e__", outputFileExtO.map(ext => s""""$ext"""").getOrElse("extension")).replace("__f__", fname)
+          |""".stripMargin
+              .replace("__e__", outputFileExtO.map(ext => s""""$ext"""").getOrElse("extension"))
+              .replace("__f__", fname)
       // Out format is different from in format
       case Some(ToDir) => """
           |def outFromIn(inputstr) {
@@ -195,16 +197,18 @@ case class NextFlowPlatform(
           |def outFromIn(files) {
           |    if (files in List) {
           |        // We're in join mode, files is List[String]
-          |        return "concat" + "." + "md"
+          |        return "__f__" + "." + __e__
           |    } else {
           |        // files filename is just a String
           |        def splitString = files.split(/\./)
           |        def prefix = splitString.head()
           |        def extension = splitString.last()
-          |        return prefix + "." + "concat" + "." + "md"
+          |        return prefix + "." + "__f__" + "." + __e__
           |    }
           |}
-          |""".stripMargin.replace("__e__", outputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
+          |""".stripMargin
+              .replace("__e__", outputFileExtO.map(ext => s""""$ext"""").getOrElse("extension"))
+              .replace("__f__", fname)
       case _ => """
           |def outFromIn(inputStr) {
           |
