@@ -12,10 +12,10 @@ abstract class DataObject[Type] {
   val multiple: Boolean
   val multiple_sep: Char
 
-  require(
-    !required || !default.isDefined,
-    s"parameter $name should not be required and also have a default parameter."
-  )
+  // require(
+  //   !required || !default.isDefined,
+  //   s"parameter $name should not be required and also have a default parameter."
+  // )
 
   private val pattern = "^(-*)(.*)$".r
   val pattern(otype, plainName) = name
