@@ -1,16 +1,141 @@
-Example copied from functionality.Rmd.
+---
+title: "Wrapping a Bash script with viash"
+output: 
+  github_document:
+    toc: TRUE
+---
 
-```sh
-## VIASH START
-par_input=file.txt
-par_output=output.txt
-par_remove_odd_lines=true
-resource_dir="."
-## VIASH END
-
-if [ $par_remove_odd_lines = "true" ]; then
-  sed '1d; n; d' $par_input > $par_output
-else
-  cat $par_input > $par_output
-fi
+```{r init, include=FALSE}
+library(tidyverse)
 ```
+
+This vignette demonstrates how to wrap a bash script with viash.
+
+## Demonstration
+This component is the simplest of examples. Its files are located at [examples/hello_world](examples/hello_world). 
+
+By running the component, it will output "Hello world!", followed by any other inputs provided to it.
+
+```{bash}
+cd examples/hello_world
+viash run -f functionality.yaml -- I am viash!
+```
+
+It can also be run with a Docker backend, by providing viash with a platform yaml.
+```{bash, eval=FALSE}
+viash run -f functionality.yaml -p platform_docker.yaml -- General Kenobi. --greeter="Hello there."
+```
+```{bash, echo=FALSE}
+cd examples/hello_world
+viash run -f functionality.yaml -p platform_docker.yaml -- General Kenobi. --greeter="Hello there."
+```
+
+Now that we know what the component does, we can export the functionality as an executable.
+```{bash, eval=FALSE}
+viash export -f functionality.yaml -p platform_docker.yaml -o output
+output/hello_world And now, as an executable.
+```
+```{bash, echo=FALSE}
+cd examples/hello_world
+viash export -f functionality.yaml -p platform_docker.yaml -o output
+output/hello_world And now, as an executable.
+```
+
+By running the command with a `--help` flag, more information about the component is provided.
+```{bash, eval=FALSE}
+output/hello_world --help
+```
+```{bash, echo=FALSE}
+cd examples/hello_world
+output/hello_world --help
+```
+
+To verify that the component works, use `viash test`. This can be run both with or without the Docker backend.
+
+```{bash, eval=FALSE}
+viash test -f functionality.yaml -p platform_docker.yaml
+```
+```{bash, echo=FALSE}
+cd examples/hello_world
+viash test -f functionality.yaml -p platform_docker.yaml
+```
+
+## Development process
+
+The first step of developing this component, is writing the core functionality of the component, in this case a bash script. 
+
+### Bash script
+This is a simple script which prints a simple message, along with any input provided to it through the `par_input` parameter.
+Optionally, you can override the greeter with `par_greeter`.
+
+```{r, echo = FALSE}
+readLines("examples/hello_world/hello_world.sh") %>% 
+  paste0(collapse = "\n") %>% 
+  paste0("```bash\n", ., "\n```") %>% 
+  knitr::asis_output()
+```
+
+Anything between the `## VIASH START` and `## VIASH END` lines will automatically be replaced 
+at runtime with parameter values from the CLI. Anything between these two lines can be used to 
+test the script without viash:
+
+```{bash, eval=FALSE}
+./hello_world.sh
+```
+```{bash, echo=FALSE}
+cd examples/hello_world
+./hello_world.sh
+```
+
+Next, we write a meta-file describing the functionality of this component in YAML format.
+
+### functionality.yaml
+
+This file describes the general functionality of the component, its inputs, outputs and arguments, which 
+resources are required to run it, as well as any test scripts to verify whether the component
+works correctly. For each argument, you must specify the name and type, and optionally provide a description,
+a default value, and a few more settings.
+
+```{r, echo = FALSE}
+readLines("examples/hello_world/functionality.yaml") %>% 
+  paste0(collapse = "\n") %>% 
+  paste0("```yaml\n", ., "\n```") %>% 
+  knitr::asis_output()
+```
+
+For more information regarding the functionality YAML, see [functionality.md](functionality.md).
+
+### platform_docker.yaml
+
+If no platform yaml is provided, viash will execute the component natively on the host environment. 
+In order to run the component with a Docker backend, the platform yaml needs to be provided. 
+This file describes the dependencies of the component, that is, the base docker image and if-need-be
+extra dependencies such as R or Python packages.
+
+This component requires very little requirements, so the file is very simple.
+
+```{r, echo = FALSE}
+readLines("examples/hello_world/platform_docker.yaml") %>% 
+  paste0(collapse = "\n") %>% 
+  paste0("```yaml\n", ., "\n```") %>% 
+  knitr::asis_output()
+```
+
+For more information regarding the platform YAML, see [platform.md](platform.md).
+
+### Testing the component
+Finally, writing a unit test for a viash component is relatively simple. 
+You just need to write a Bash script (or R, or Python) which runs the executable multiple
+times, and verifies the output. Take note that the test needs to produce an error code not equal to
+0 when a mistake is found.
+
+```{r, echo = FALSE}
+readLines("examples/hello_world/test_hello_world.sh") %>% 
+  paste0(collapse = "\n") %>% 
+  paste0("```bash\n", ., "\n```") %>% 
+  knitr::asis_output()
+```
+
+When running the test, viash will automatically build an executable and place it -- along with other 
+resources and test resources -- in a temporary working directory.
+
