@@ -11,6 +11,7 @@ import org.rogach.scallop.{Subcommand, ScallopOption}
 import sys.process._
 import com.dataintuitive.viash.helpers.{Exec, IOHelper}
 import com.dataintuitive.viash.functionality.resources.Resource
+import com.dataintuitive.viash.meta.Meta
 
 object Main {
   def main(args: Array[String]) {
@@ -18,10 +19,11 @@ object Main {
 
     val conf = new CLIConf(viashArgs)
 
+    val p = getClass.getPackage
+    val name = p.getImplementationTitle
+    val version = p.getImplementationVersion
+
     if (conf.version.getOrElse(false)) {
-      val p = getClass.getPackage
-      val name = p.getImplementationTitle
-      val version = p.getImplementationVersion
       println(name + " v" + version)
       System.exit(0)
     }
@@ -62,14 +64,27 @@ object Main {
         // write files to given output directory
         val dir = new java.io.File(conf.export.output())
         dir.mkdirs()
-        writeResources(fun.resources, dir)
+
+        val execPath = Paths.get(dir.toString(), fun.mainScript.get.filename).toString()
+        val functionalityPath = conf.export.functionality()
+        val platformPath = conf.export.platform.getOrElse("")
+        val outputPath = conf.export.output()
+        val executablePath = execPath
+
+        val meta = Meta(
+          "v" + version,
+          fun,
+          tar,
+          functionalityPath,
+          platformPath,
+          outputPath,
+          executablePath
+        )
+
+        writeResources(meta.resource :: fun.resources, dir)
 
         if (conf.export.meta()) {
-          val execPath = Paths.get(dir.toString(), fun.mainScript.get.filename).toString()
-          println(s"""functionalityPath: ${conf.export.functionality()}
-            |platformPath: ${conf.export.platform.getOrElse("")}
-            |outputPath: ${conf.export.output()}
-            |executablePath: $execPath""".stripMargin)
+          println(meta.yaml)
         }
       }
       case Some(conf.test) => {
@@ -135,6 +150,5 @@ object Main {
       resource.write(dest, overwrite)
     }
   }
-
 
 }
