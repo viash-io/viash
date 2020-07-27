@@ -11,6 +11,7 @@ import java.net.URI
 
 case class Functionality(
   name: String,
+  version: Option[String],
   resources: List[Resource],
   description: Option[String] = None,
   function_type: Option[FunctionType] = None,

@@ -1,8 +1,9 @@
 type: docker
 image: rocker/tidyverse
 r:
-  cran: 
+  cran:
   - optparse
+  - magrittr
 volumes:
 - name: data
   mount: /data
