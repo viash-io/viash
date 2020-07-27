@@ -10,6 +10,7 @@ import com.dataintuitive.viash.functionality.resources.Resource
 
 case class DockerPlatform(
   image: String,
+  version: Option[String],
   target_image: Option[String] = None,
   resolve_volume: ResolveVolume = Automatic,
   port: Option[List[String]] = None,

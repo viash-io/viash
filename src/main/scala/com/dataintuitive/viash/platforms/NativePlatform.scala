@@ -6,6 +6,7 @@ import com.dataintuitive.viash.helpers.{BashHelper, BashWrapper}
 import com.dataintuitive.viash.platforms.requirements._
 
 case class NativePlatform(
+  version: Option[String],
   r: Option[RRequirements] = None,
   python: Option[PythonRequirements] = None
 ) extends Platform {

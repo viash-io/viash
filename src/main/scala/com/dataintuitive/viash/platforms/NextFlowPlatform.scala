@@ -10,6 +10,7 @@ import java.nio.file.Paths
 / * Platform class for generating NextFlow (DSL2) modules.
  */
 case class NextFlowPlatform(
+  version: Option[String],
   image: String,
   apt: Option[AptRequirements] = None,
   r: Option[RRequirements] = None,
@@ -24,7 +25,7 @@ case class NextFlowPlatform(
 
   val requirements = Nil
 
-  val nativePlatform = NativePlatform(r, python)
+  val nativePlatform = NativePlatform(version, r, python)
 
   def modifyFunctionality(functionality: Functionality) = {
     import NextFlowUtils._

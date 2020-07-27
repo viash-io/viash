@@ -119,7 +119,7 @@ object Main {
   def readPlatform(opt: ScallopOption[String]) = {
     opt.map{ path =>
       Platform.parse(IOHelper.uri(path))
-    }.getOrElse(NativePlatform())
+    }.getOrElse(NativePlatform(None))
   }
 
   def viashLogic(subcommand: WithFunctionality with WithPlatform) = {
