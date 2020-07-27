@@ -6,7 +6,7 @@ viash:
 	cat src/stub.sh target/viash.jar > $(obj)
 	chmod +x $(obj)
 	
-docker:
+with-docker:
 	mkdir -p bin
 	docker build -t viash .
 	docker create -it --name viash-cp viash bash
