@@ -1,0 +1,16 @@
+name: hello_world
+description: A very simple 'Hello world' component.
+arguments:
+- type: string
+  name: input
+  multiple: true
+  multiple_sep: " "
+- type: string
+  name: --greeter
+  default: "Hello world!"
+resources:
+- type: bash_script
+  path: hello_world.sh
+tests:
+- type: bash_script
+  path: test_hello_world.sh
