@@ -12,3 +12,6 @@ project/metals.sbt
 out/*
 Makefile
 
+.Rproj.user
+.Rhistory
+*.Rproj
