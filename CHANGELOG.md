@@ -1,6 +1,8 @@
 # viash 0.2.0 (asap)
 
 ## NEW FEATURES
+
+- (WIP) Write out meta.yaml containing viash run information as well as the original `functionality.yaml` and `platform.yaml content`.
 * Allow testing a component with the `viash test` functionality. Tests are executed in a temporary directory on the specified platform. The temporary directory contains all the resource and test files. 
 * `viash --version`: Add flag for printing the version of viash.
 * Allow fetching resources from URL (http:// and https://)
