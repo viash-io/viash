@@ -3,6 +3,8 @@ package com.dataintuitive.viash.meta
 import io.circe.{ Decoder, Encoder, Json }
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 
+import sys.process._
+
 import com.dataintuitive.viash.functionality.resources.PlainFile
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.platforms._
@@ -12,26 +14,50 @@ case class Meta(
   version: String,
   fun: Functionality,
   platform: Platform,
-  functionalityPath: String,
-  platformPath: String,
-  outputPath: String,
-  executablePath: String
+  functionality_path: String,
+  platform_path: String,
+  output_path: String,
+  executable_path: String
   ) {
+
+    val isGitRepo = scala.util.Try("git rev-parse --is-inside-work-tree" !!)
+      .map(_.trim.toBoolean)
+      .toOption
+      .getOrElse(false)
+
+    val localGitRepo = scala.util.Try("git rev-parse --show-toplevel" !!)
+      .map(_.trim)
+      .toOption
+      .getOrElse("NA")
+
+    val remoteGitRepo = scala.util.Try("git remote --verbose" !!)
+      .toOption
+      .map(_.split("\n").map(_.split("\\s")).filter(_.head contains "origin").head(1))
+      .getOrElse("NA")
+
+    val commit = scala.util.Try("git log --oneline" !!)
+      .toOption
+      .map(_.split("\n").head.split(" ").head)
+      .getOrElse("NA")
+
     def info =
-      s"""version: ${version}
-         |functionalityPath: ${functionalityPath}
-         |platformPath: ${platformPath}
-         |outputPath: ${outputPath}
-         |executablePath: ${executablePath}""".stripMargin
+      s"""version:            ${version}
+         |functionality path: ${functionality_path}
+         |platform path:      ${platform_path}
+         |output path:        ${output_path}
+         |executable path:    ${executable_path}
+         |remote git repo:    ${remoteGitRepo}""".stripMargin
 
     def yaml = {
 
       val strippedMeta = StrippedMeta(
         version,
-        functionalityPath,
-        platformPath,
-        outputPath,
-        executablePath
+        remoteGitRepo,
+        commit,
+        functionality_path,
+        platform_path,
+        output_path,
+        executable_path
       )
 
       val encoded = encodeNested(Nested(strippedMeta, fun, platform))
