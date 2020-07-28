@@ -12,10 +12,12 @@ package object meta {
 
   case class StrippedMeta(
     version: String,
-    functionalityPath: String,
-    platformPath: String,
-    outputPath: String,
-    executablePath: String
+    git_remote: String,
+    git_commit: String,
+    functionality_path: String,
+    platform_path: String,
+    output_path: String,
+    executable_path: String
   )
   case class Nested(
     info: StrippedMeta,
