@@ -44,8 +44,7 @@ case class Meta(
       ).pretty(encoded)
 
       pretty
-
     }
 
-    val resource = PlainFile(Some("meta.yaml"), None, Some(yaml))
+    val resource = PlainFile(Some("viash.yaml"), None, Some(yaml))
   }
