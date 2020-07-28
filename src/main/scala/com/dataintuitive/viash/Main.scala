@@ -84,7 +84,7 @@ object Main {
         writeResources(meta.resource :: fun.resources, dir)
 
         if (conf.export.meta()) {
-          println(meta.yaml)
+          println(meta.info)
         }
       }
       case Some(conf.test) => {
