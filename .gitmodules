@@ -1,3 +1,3 @@
 [submodule "docs"]
 	path = docs
-	url = git@github.com:data-intuitive/viash_docs.git
+	url = https://github.com/data-intuitive/viash_docs.git
