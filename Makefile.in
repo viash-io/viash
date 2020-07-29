@@ -1,6 +1,8 @@
 obj = bin/viash
 
-viash:
+all: $(obj) bin/viash_build_namespace
+
+$(obj): $(find src/ -name "*.scala")
 	sbt 'set test in assembly := {}' 'set assemblyOutputPath in assembly := new File("target/viash.jar")' assembly
 	mkdir -p bin
 	cat src/stub.sh target/viash.jar > $(obj)
@@ -15,6 +17,10 @@ with-docker:
 	cat src/stub.sh /tmp/viash.jar > $(obj)
 	chmod +x $(obj)
 
+bin/viash_build_namespace: $(obj)
+	# Use build_namespace to build itself :-)
+	viash run -f src/viash/build_namespace/functionality.yaml -- -n viash -t bin
+
 .PHONY: test
 test:
 	sbt test
@@ -22,7 +28,7 @@ test:
 .PHONY: clean
 clean:
 	sbt clean
-	rm $(obj)
+	rm -r bin/
 
 .PHONY: install
 install: $(obj)
