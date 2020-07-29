@@ -10,7 +10,7 @@ output
 .cache-tests
 project/metals.sbt
 out/*
-Makefile
+# Makefile
 
 .Rproj.user
 .Rhistory
