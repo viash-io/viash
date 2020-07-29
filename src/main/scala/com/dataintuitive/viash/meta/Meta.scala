@@ -11,7 +11,7 @@ import com.dataintuitive.viash.platforms._
 import io.circe.yaml.Printer
 
 case class Meta(
-  version: String,
+  viash_version: String,
   fun: Functionality,
   platform: Platform,
   functionality_path: String,
@@ -41,7 +41,7 @@ case class Meta(
       .getOrElse("NA")
 
     def info =
-      s"""version:            ${version}
+      s"""viash_version:      ${viash_version}
          |functionality path: ${functionality_path}
          |platform path:      ${platform_path}
          |output path:        ${output_path}
@@ -51,7 +51,7 @@ case class Meta(
     def yaml = {
 
       val strippedMeta = StrippedMeta(
-        version,
+        viash_version,
         remoteGitRepo,
         commit,
         functionality_path,
