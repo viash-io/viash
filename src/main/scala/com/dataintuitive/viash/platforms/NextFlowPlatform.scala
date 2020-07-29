@@ -419,15 +419,12 @@ case class NextFlowPlatform(
 
     val additionalResources = mainResource match {
       case None => {
-        println("No additional resources required")
         Nil
       }
       case Some(e: Executable) => {
-        println("No additional resources required")
         Nil
       }
       case Some(e: Script) => {
-        println(s"Add ${e.`type`} resources")
         nativePlatform.modifyFunctionality(functionality).resources
       }
     }
