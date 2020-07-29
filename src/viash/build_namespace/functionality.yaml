@@ -1,0 +1,25 @@
+name: build_namespace
+description: |
+  Build/export a namespace under src/ and export the available platforms to
+  their respective target/ directory.
+arguments:
+- name: "--namespace"
+  alternatives: ["-n"]
+  type: string
+  description: The name of the namespace
+  required: true
+  default: viash
+- name: "--src"
+  alternatives: ["-s"]
+  type: string
+  description: An alternative location if not under src/<namespace>
+  required: false
+  default: src
+- name: "--target"
+  alternatives: ["-t"]
+  type: string
+  description: An alternative location if not target/
+  default: target
+resources:
+- type: bash_script
+  path: ./code.sh
