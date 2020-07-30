@@ -17,9 +17,11 @@ with-docker:
 	cat src/stub.sh /tmp/viash.jar > $(obj)
 	chmod +x $(obj)
 
-bin/viash_build_namespace: $(obj)
+bin/viash_build_namespace: $(obj) src/viash/build_namespace/*
 	# Use build_namespace to build itself :-)
 	viash run -f src/viash/build_namespace/functionality.yaml -- -n viash -t bin
+	# Now build all tools
+	bin/viash_build_namespace -n viash -t bin
 
 .PHONY: test
 test:
