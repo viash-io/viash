@@ -30,6 +30,7 @@ case class NativePlatform(
         executor = executor,
         functionality = functionality,
         setupCommands = setupCommands,
+        dockerfileCommands = "",
         preParse = "",
         parsers = "",
         postParse = "",
