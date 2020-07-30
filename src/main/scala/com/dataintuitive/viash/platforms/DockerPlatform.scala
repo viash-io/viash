@@ -37,7 +37,7 @@ case class DockerPlatform(
     val dockerArgs = generateDockerRunArgs(functionality)
 
     // create setup
-    val (imageName, imageVersion, setupCommands) = processDockerSetup(functionality, resourcesPath)
+    val (imageName, imageVersion, setupCommands, dockerfileCommands) = processDockerSetup(functionality, resourcesPath)
 
     // process docker mounts
     val (volPreParse, volParsers, volPostParse, volInputs, volExtraParams) = processDockerVolumes(functionality)
@@ -66,6 +66,7 @@ case class DockerPlatform(
           functionality = fun2,
           resourcesPath = "/resources",
           setupCommands = setupCommands,
+          dockerfileCommands = dockerfileCommands,
           preParse = volPreParse + debPreParse,
           parsers = volParsers + debParsers,
           postParse = debPostParse + volPostParse,
@@ -86,7 +87,7 @@ case class DockerPlatform(
     // if no extra dependencies are needed, the provided image can just be used,
     // otherwise need to construct a separate docker container
     if (runCommands.isEmpty) {
-      (image, "", s"docker image inspect $image >/dev/null 2>&1 || docker pull $image")
+      (image, "", s"docker image inspect $image >/dev/null 2>&1 || docker pull $image", "")
     } else {
       val imageName = target_image.getOrElse("viash_autogen/" + functionality.name)
       val imageVersion = version.map(":" + _).map(_.toString).getOrElse("")
@@ -106,7 +107,14 @@ case class DockerPlatform(
           |$dockerFile
           |VIASHDOCKER
           |docker build -t $imageName$imageVersion $$tmpdir""".stripMargin
-      (imageName, imageVersion, setupCommands)
+
+      val dockerfileCommands =
+        s"""# Print Dockerfile contents to stdout
+          |cat << 'VIASHDOCKER'
+          |$dockerFile
+          |VIASHDOCKER""".stripMargin
+
+      (imageName, imageVersion, setupCommands, dockerfileCommands)
     }
   }
 
