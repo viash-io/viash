@@ -43,7 +43,7 @@ case class DockerPlatform(
     val (volPreParse, volParsers, volPostParse, volInputs, volExtraParams) = processDockerVolumes(functionality)
 
     // add docker debug flag
-    val debuggor = s"""docker run --entrypoint=bash $dockerArgs -v `pwd`:/pwd --workdir /pwd -t $imageName$imageVersion"""
+    val debuggor = s"""docker run --entrypoint=bash $dockerArgs -v `pwd`:/pwd --workdir /pwd -t $imageName:$imageVersion"""
     val (debPreParse, debParsers, debPostParse, debInputs) = addDockerDebug(debuggor)
 
     // make commands
@@ -51,7 +51,7 @@ case class DockerPlatform(
       case s: Executable => "--entrypoint='' "
       case _ => "--entrypoint=bash "
     }
-    val executor = s"""eval docker run $entrypointStr$dockerArgs$volExtraParams $imageName$imageVersion"""
+    val executor = s"""eval docker run $entrypointStr$dockerArgs$volExtraParams $imageName:$imageVersion"""
 
     // add extra arguments to the functionality file for each of the volumes
     val fun2 = functionality.copy(
@@ -87,10 +87,10 @@ case class DockerPlatform(
     // if no extra dependencies are needed, the provided image can just be used,
     // otherwise need to construct a separate docker container
     if (runCommands.isEmpty) {
-      (image, "", s"docker image inspect $image >/dev/null 2>&1 || docker pull $image", "")
+      (image, "latest", s"docker image inspect $image >/dev/null 2>&1 || docker pull $image", "echo ''")
     } else {
       val imageName = target_image.getOrElse("viash_autogen/" + functionality.name)
-      val imageVersion = version.map(":" + _).map(_.toString).getOrElse("")
+      val imageVersion = version.map(_.toString).getOrElse("latest")
 
       val dockerFile =
         s"FROM $image\n" +
@@ -106,7 +106,7 @@ case class DockerPlatform(
           |cat > $$tmpdir/Dockerfile << 'VIASHDOCKER'
           |$dockerFile
           |VIASHDOCKER
-          |docker build -t $imageName$imageVersion $$tmpdir""".stripMargin
+          |docker build -t $imageName:$imageVersion $$tmpdir""".stripMargin
 
       val dockerfileCommands =
         s"""# Print Dockerfile contents to stdout

@@ -1,5 +1,7 @@
 type: docker
+version: '1'
 image: rocker/tidyverse
+target_image: test
 r:
   cran:
   - optparse
