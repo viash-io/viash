@@ -32,7 +32,7 @@ case class Meta(
 
     val remoteGitRepo = scala.util.Try("git remote --verbose" !!)
       .toOption
-      .map(_.split("\n").map(_.split("\\s")).filter(_.head contains "origin").head(1))
+      .map(_.split("\n").map(_.split("\\s")).filter(_.headOption.getOrElse("NA") contains "origin").headOption.getOrElse("No remote configured").toString)
       .getOrElse("NA")
 
     val commit = scala.util.Try("git log --oneline" !!)
