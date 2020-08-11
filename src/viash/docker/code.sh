@@ -7,6 +7,4 @@ par_platform=""
 par_output="target"
 # VIASH END
 
-set -ex
-
 eval viash "$par_mode" -f "$par_functionality" -p "$par_platform" -o "$par_output"
