@@ -27,14 +27,14 @@ for f in `find $par_src/$par_namespace -name functionality.yaml`; do
           -f $tool_dir/functionality.yaml \
           -p $tool_dir/platform_native.yaml \
           -o $par_target/native/$ns_name/$tool_name
-    cp $par_target/native/$ns_name/$tool_name/$tool_name "$par_target/${ns_name}_${tool_name}"
+    cp $par_target/native/$ns_name/$tool_name/$tool_name "$par_target/${ns_name}-${tool_name}"
   elif [ -f platform/native.yaml ]; then
     echo "  Platform file found in platform/"
     viash export \
           -f $tool_dir/functionality.yaml \
           -p platform/native.yaml \
           -o $par_target/native/$ns_name/$tool_name
-    cp $par_target/native/$ns_name/$tool_name/$tool_name "$par_target/${ns_name}_${tool_name}"
+    cp $par_target/native/$ns_name/$tool_name/$tool_name "$par_target/${ns_name}-${tool_name}"
   else
     echo "  No platform file found"
   fi
@@ -46,14 +46,14 @@ for f in `find $par_src/$par_namespace -name functionality.yaml`; do
           -f $tool_dir/functionality.yaml \
           -p $tool_dir/platform_docker.yaml \
           -o $par_target/docker/$ns_name/$tool_name
-    cp $par_target/docker/$ns_name/$tool_name/$tool_name "$par_target/${ns_name}_${tool_name}"
+    cp $par_target/docker/$ns_name/$tool_name/$tool_name "$par_target/${ns_name}-${tool_name}"
   elif [ -f platform/docker.yaml ]; then
     echo "  Platform file found in platform/"
     viash export \
           -f $tool_dir/functionality.yaml \
           -p platform/docker.yaml \
           -o $par_target/docker/$ns_name/$tool_name
-    cp $par_target/docker/$ns_name/$tool_name/$tool_name "$par_target/${ns_name}_${tool_name}"
+    cp $par_target/docker/$ns_name/$tool_name/$tool_name "$par_target/${ns_name}-${tool_name}"
   else
     echo "  No platform file found"
   fi
