@@ -80,6 +80,8 @@ case class DockerPlatform(
     )
   }
 
+  private val tagRegex = "(.*):(.*)".r
+
   def processDockerSetup(functionality: Functionality, resourcesPath: String) = {
     // get dependencies
     val runCommands = requirements.flatMap(_.dockerCommands)
@@ -87,7 +89,12 @@ case class DockerPlatform(
     // if no extra dependencies are needed, the provided image can just be used,
     // otherwise need to construct a separate docker container
     if (runCommands.isEmpty) {
-      (image, "latest", s"docker image inspect $image >/dev/null 2>&1 || docker pull $image", "echo ''")
+      val (imageName, tag) =
+        image match {
+          case tagRegex(imageName, tag) => (imageName, tag)
+          case _ => (image, "latest")
+        }
+      (imageName, tag, s"docker image inspect $imageName:$tag >/dev/null 2>&1 || docker pull $imageName:$tag", "echo ''")
     } else {
       val imageName = target_image.getOrElse("viash_autogen/" + functionality.name)
       val imageVersion = version.map(_.toString).getOrElse("latest")
