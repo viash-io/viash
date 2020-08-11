@@ -17,18 +17,24 @@ trait WithPlatform { _: ScallopConf =>
 }
 
 class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
-    banner("""viash: write once, deploy anywhere
-      |
-      |Example: viash run -f functionality.yaml
-      |
-      |USAGE:""".stripMargin)
+  version(s"${Main.name} ${Main.version} (c) 2020 Data Intuitive")
 
-  val version = opt[Boolean](
-    short = 'v',
-    descr = "Print version"
-  )
+  banner(s"""${Main.name}: from scripts to pipelines
+    |Viash is a spec and a tool for defining execution contexts
+    |and converting execution instructions to concrete instantiations.
+    |
+    |Usage:
+    |  viash run -f functionality.yaml [-p platform.yaml] [-k]
+    |  viash export -f functionality.yaml [-p platform.yaml] -o output [-m]
+    |  viash test -f functionality.yaml [-p platform.yaml] [-v] [-k]
+    |
+    |API Documentation:
+    |  https://github.com/data-intuitive/viash_docs/#viash-from-scripts-to-pipelines
+    |
+    |Options:""".stripMargin)
 
   val run = new Subcommand("run") with WithFunctionality with WithPlatform {
+
     val keep = opt[Boolean](
       name = "keep",
       short = 'k',

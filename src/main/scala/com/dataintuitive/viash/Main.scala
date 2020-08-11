@@ -14,19 +14,14 @@ import com.dataintuitive.viash.functionality.resources.Resource
 import com.dataintuitive.viash.meta.Meta
 
 object Main {
+  private val pkg = getClass.getPackage
+  val name = pkg.getImplementationTitle
+  val version = pkg.getImplementationVersion
+
   def main(args: Array[String]) {
     val (viashArgs, runArgs) = args.span(_ != "--")
 
     val conf = new CLIConf(viashArgs)
-
-    val p = getClass.getPackage
-    val name = p.getImplementationTitle
-    val version = p.getImplementationVersion
-
-    if (conf.version.getOrElse(false)) {
-      println(name + " v" + version)
-      System.exit(0)
-    }
 
     conf.subcommand match {
       case Some(conf.run) => {
