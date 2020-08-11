@@ -4,12 +4,20 @@
 par_namespace="viash"
 par_src="src"
 par_target="target"
+par_withdocker="false"
 # VIASH END
 
 red=`tput setaf 1`
 green=`tput setaf 2`
 blue=`tput setaf 4`
 reset=`tput sgr0`
+
+viash="echo"
+if [ "$par_withdocker" = "true" ]; then
+  viash="docker run -it test-viash viash"
+else
+  viash="viash"
+fi
 
 for f in `find $par_src/$par_namespace -name functionality.yaml`; do
 
@@ -23,14 +31,14 @@ for f in `find $par_src/$par_namespace -name functionality.yaml`; do
   echo "- ${blue}Native${reset}"
   if [ -f $tool_dir/platform_native.yaml ]; then
     echo "  Platform file found in $tool_dir"
-    viash export \
+    "$viash" export \
           -f $tool_dir/functionality.yaml \
           -p $tool_dir/platform_native.yaml \
           -o $par_target/native/$ns_name/$tool_name
     cp $par_target/native/$ns_name/$tool_name/$tool_name "$par_target/${ns_name}-${tool_name}"
   elif [ -f platform/native.yaml ]; then
     echo "  Platform file found in platform/"
-    viash export \
+    "$viash" export \
           -f $tool_dir/functionality.yaml \
           -p platform/native.yaml \
           -o $par_target/native/$ns_name/$tool_name
@@ -42,14 +50,14 @@ for f in `find $par_src/$par_namespace -name functionality.yaml`; do
   echo "- ${blue}Docker${reset}"
   if [ -f $tool_dir/platform_docker.yaml ]; then
     echo "  Platform file found in $tool_dir"
-    viash export \
+    "$viash" export \
           -f $tool_dir/functionality.yaml \
           -p $tool_dir/platform_docker.yaml \
           -o $par_target/docker/$ns_name/$tool_name
     cp $par_target/docker/$ns_name/$tool_name/$tool_name "$par_target/${ns_name}-${tool_name}"
   elif [ -f platform/docker.yaml ]; then
     echo "  Platform file found in platform/"
-    viash export \
+    "$viash" export \
           -f $tool_dir/functionality.yaml \
           -p platform/docker.yaml \
           -o $par_target/docker/$ns_name/$tool_name
@@ -61,13 +69,13 @@ for f in `find $par_src/$par_namespace -name functionality.yaml`; do
   echo "- ${blue}NextFlow${reset}"
   if [ -f $tool_dir/platform_nextflow.yaml ]; then
     echo "  Platform file found in $tool_dir"
-    viash export \
+    "$viash" export \
           -f $tool_dir/functionality.yaml \
           -p $tool_dir/platform_nextflow.yaml \
           -o $par_target/modules/$ns_name/$tool_name
   elif [ -f platform/nextflow.yaml ]; then
     echo "  Platform file found in platform"
-    viash export \
+    "$viash" export \
           -f $tool_dir/functionality.yaml \
           -p platform/nextflow.yaml \
           -o $par_target/modules/$ns_name/$tool_name

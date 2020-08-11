@@ -3,11 +3,12 @@ description: |
   Component for doing the setup of Docker containers on the local host by
   running <tool> ---setup
 arguments:
-- name: --input
-  type: file
-  required: true
-  description: |
-    The input path pointing to the viashed (docker) components.
+  - name: --input
+    type: file
+    required: true
+    description: |
+      The input path pointing to the viashed (docker) components.
 resources:
-- type: bash_script
-  path: code.sh
+  - type: bash_script
+    path: code.sh
+version: '"0.2.0-rc2"'
