@@ -1,5 +1,5 @@
 obj = bin/viash
-VERSION = 0.2.0-rc2
+VERSION = $(shell awk -F'\"' '/version :=/ { print $$2 }' build.sbt)
 
 all: $(obj) tools
 
