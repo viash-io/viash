@@ -21,6 +21,7 @@
 * `viash run` and `viash test`: Allow changing the temporary directory by defining `VIASH_TEMP` as a environment variable. Temporary directories are cleaned up after successful executions.
 * `viash run` and `viash test`: Exit(1) when execution or test fails.
 * `viash export`: Add -m flag for outputting metadata after export.
+* `viash run`: Required parameters can have a default value now. Produce error when a required parameter is not passed, even when a default is provided.
 
 ## BUG FIXES
 * NXF: Correctly escape path variable when running NXF command.
