@@ -1,0 +1,23 @@
+name: docker
+description:
+arguments:
+- name: "mode"
+  type: string
+  required: true
+- name: "--functionality"
+  alternatives: ["-f"]
+  type: file
+  required: true
+- name: "--platform"
+  alternatives: ["-p"]
+  type: string
+  required: true
+- name: "--output"
+  alternatives: ["-o"]
+  type: file
+  description: An alternative location if not target/
+  default: target
+  direction: output
+resources:
+- type: bash_script
+  path: ./code.sh
