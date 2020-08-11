@@ -228,20 +228,6 @@ object BashWrapper {
   }
 
   def generateParsers(functionality: Functionality, params: List[DataObject[_]]) = {
-    // construct default values, e.g.
-    // VIASH_PAR_FOO="defaultvalue"
-    val defaultsStrs = params.flatMap(param => {
-      // if boolean object has a flagvalue, add the inverse of it as a default value
-      val default =
-        if (param.isInstanceOf[BooleanObject] && param.asInstanceOf[BooleanObject].flagValue.isDefined) {
-          param.asInstanceOf[BooleanObject].flagValue.map(!_)
-        } else {
-          param.default
-        }
-
-      default.map(param.VIASH_PAR + "=\"" + _ + "\"")
-    }).mkString("\n")
-
     // gather parse code for params
     val wrapperParams = params.filterNot(_.otype == "")
     val parseStrs = wrapperParams.map(param => {
@@ -308,8 +294,29 @@ object BashWrapper {
           }.mkString("\n")
       }
 
+    // construct default values, e.g.
+    // if [ -z "$VIASH_PAR_FOO" ]; then
+    //   VIASH_PAR_FOO="defaultvalue"
+    // fi
+    val defaultsStrs = params.flatMap{param =>
+      // if boolean object has a flagvalue, add the inverse of it as a default value
+      val default =
+        if (param.required) {
+          None
+        } else if (param.isInstanceOf[BooleanObject] && param.asInstanceOf[BooleanObject].flagValue.isDefined) {
+          param.asInstanceOf[BooleanObject].flagValue.map(!_)
+        } else {
+          param.default
+        }
+
+      default.map(default => {
+        s"""if [ -z "$$${param.VIASH_PAR}" ]; then
+           |  ${param.VIASH_PAR}="$default"
+           |fi""".stripMargin
+      })
+    }.mkString("\n")
+
     // construct required file checks
-    // TODO: file checks do not work yet for array params
     val reqFiles = params
       .filter(_.isInstanceOf[FileObject])
       .map(_.asInstanceOf[FileObject])
@@ -343,9 +350,9 @@ object BashWrapper {
       }
 
     // return output
-    val preParse = defaultsStrs
+    val preParse = ""
     val parsers = parseStrs
-    val postParse = positionalStr + "\n" + reqCheckStr + "\n" + reqFilesStr
+    val postParse = positionalStr + "\n" + reqCheckStr + "\n" + defaultsStrs + "\n" + reqFilesStr
 
     (preParse, parsers, postParse)
   }
