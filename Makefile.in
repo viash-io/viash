@@ -1,6 +1,7 @@
 obj = bin/viash
+VERSION = 0.2.0-rc2
 
-all: $(obj) bin/viash_build_namespace
+all: $(obj) tools
 
 $(obj): $(find src/ -name "*.scala")
 	sbt 'set test in assembly := {}' 'set assemblyOutputPath in assembly := new File("target/viash.jar")' assembly
@@ -16,6 +17,9 @@ with-docker:
 	docker rm -f viash-cp
 	cat src/stub.sh /tmp/viash.jar > $(obj)
 	chmod +x $(obj)
+
+docker:
+	docker build -t dataintuitive/viash:$(VERSION) .
 
 tools: $(obj) src/viash/*
 	# Use build_namespace to build itself :-)
