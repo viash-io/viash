@@ -1,33 +1,31 @@
-FROM centos:8
+FROM openjdk:8
 
-# IMPORT the Centos-7 GPG key to prevent warnings
-RUN rpm --import http://mirror.centos.org/centos/RPM-GPG-KEY-CentOS-7
+# Install packages
+RUN apt-get update && \
+    apt-get install -y make git gzip
 
-# Add bintray repository where the SBT binaries are published
-RUN curl -sS https://bintray.com/sbt/rpm/rpm | tee /etc/yum.repos.d/bintray-sbt-rpm.repo
+# Install sbt
+RUN echo 'deb http://dl.bintray.com/sbt/debian /' > /etc/apt/sources.list.d/sbt.list && \
+    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 99E82A75642AC823 && \
+    apt-get -qq update && \
+    apt-get install -y sbt
 
-# Base Install + JDK
-RUN yum -y update && \
-    yum -y install java-1.8.0-openjdk && \
-    yum -y install java-1.8.0-openjdk-devel && \
-    yum -y install sbt && \
-    yum -y update bash && \
-    rm -rf /var/cache/yum/* && \
-    yum clean all
+# Install yq
+RUN curl -sSL https://github.com/mikefarah/yq/releases/download/3.3.2/yq_linux_386 > /usr/bin/yq && \
+    chmod +x /usr/bin/yq
 
-# Run SBT once so that all libraries are downloaded
+# # Run SBT once so that all libraries are downloaded
 RUN sbt exit
 
-# Install some packages
-RUN yum -y install git && \
-    yum -y install gzip
-
+# Get sources
 WORKDIR /app
-
-# get Repo
 COPY . /app/viash/
-
 WORKDIR /app/viash
 
-# Build and package
-RUN sbt 'set test in assembly := {}' 'set assemblyOutputPath in assembly := new File("target/viash.jar")' assembly
+# Build, package, install
+RUN ./configure
+RUN make bin/viash
+RUN make install
+RUN make tools
+
+ENTRYPOINT [ "viash" ]
