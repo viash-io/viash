@@ -19,8 +19,8 @@ trait WithPlatform { _: ScallopConf =>
 class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   version(s"${Main.name} ${Main.version} (c) 2020 Data Intuitive")
 
-  banner(s"""${Main.name}: from scripts to pipelines
-    |Viash is a spec and a tool for defining execution contexts
+  banner(s"""
+    |viash is a spec and a tool for defining execution contexts
     |and converting execution instructions to concrete instantiations.
     |
     |Usage:
