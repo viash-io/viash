@@ -56,5 +56,8 @@ plots <- map(c("incid", "R", "SI"), function(what) {
   g
 })
 
+summary(res$R)
+print(res$R)
+
 g <- wrap_plots(plots, ncol = 1)
 ggsave(par$output, g, height = 8, width = 8)
