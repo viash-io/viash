@@ -20,25 +20,42 @@ case class Meta(
   executable_path: String
   ) {
 
-    val isGitRepo = scala.util.Try("git rev-parse --is-inside-work-tree" !!)
-      .map(_.trim.toBoolean)
-      .toOption
-      .getOrElse(false)
+    val out = new StringBuilder
+    val err = new StringBuilder
 
-    val localGitRepo = scala.util.Try("git rev-parse --show-toplevel" !!)
-      .map(_.trim)
-      .toOption
-      .getOrElse("NA")
+    val logger = ProcessLogger(
+      (o: String) => out.append(o),
+      (e: String) => err.append(e))
 
-    val remoteGitRepo = scala.util.Try("git remote --verbose" !!)
-      .toOption
-      .map(_.split("\n").map(_.split("\\s")).filter(_.headOption.getOrElse("NA") contains "origin").headOption.getOrElse("No remote configured").toString)
-      .getOrElse("NA")
+    val isGitRepo = ( "git rev-parse --is-inside-work-tree" ! logger ) == 0
 
-    val commit = scala.util.Try("git log --oneline" !!)
-      .toOption
-      .map(_.split("\n").head.split(" ").head)
-      .getOrElse("NA")
+    val localGitRepo =
+      if (isGitRepo)
+        scala.util.Try("git rev-parse --show-toplevel" !!)
+          .map(_.trim)
+          .toOption
+          .getOrElse("NA")
+      else "NA"
+
+    val remoteGitRepo =
+      if (isGitRepo)
+        scala.util.Try("git remote --verbose" !!)
+          .toOption
+          .map(
+            _.split("\n")
+              .map(_.split("\\s"))
+              .filter(_.headOption.getOrElse("NA") contains "origin")
+              .headOption.getOrElse("No remote configured").toString)
+          .getOrElse("NA")
+      else "NA"
+
+    val commit =
+      if (isGitRepo)
+        scala.util.Try("git log --oneline" !!)
+          .toOption
+          .map(_.split("\n").head.split(" ").head)
+          .getOrElse("NA")
+      else "NA"
 
     def info =
       s"""viash_version:      ${viash_version}
