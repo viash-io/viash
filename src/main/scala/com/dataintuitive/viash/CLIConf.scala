@@ -2,6 +2,22 @@ package com.dataintuitive.viash
 
 import org.rogach.scallop.{Scallop, ScallopConf, Subcommand, ScallopHelpFormatter}
 
+trait ViashCommand {_ : ScallopConf =>
+  val functionality = opt[String](
+    descr = "Path to the functionality file.",
+    default = None,
+    required = false
+  )
+  val platform = opt[String](
+    default = None,
+    descr = "Path to the platform file. If not provided, the native platform is used.",
+    required = false
+  )
+  val component = trailArg[String](
+    descr = "A viash component",
+    default = None
+  )
+}
 trait WithFunctionality { _: ScallopConf =>
   val functionality = opt[String](
     descr = "Path to the functionality file.",
@@ -56,6 +72,21 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       |  export VIASH_TEMP=/home/myuser/.viash_temp
       |  viash run -f fun.yaml -k""".stripMargin)
   }
+  val run2 = new Subcommand("run2") with ViashCommand with WithTemporary {
+    banner(s"""viash run
+      |Executes a viash component. From the provided functionality.yaml, viash generates a temporary executable and immediately executes it with the given parameters.
+      |
+      |Usage:
+      |  viash run -f functionality.yaml [-p platform.yaml] [-k] [-- --params --to component]
+      |
+      |Arguments:""".stripMargin)
+
+    footer(s"""
+      |The temporary directory can be altered by setting the VIASH_TEMP directory. Example:
+      |  export VIASH_TEMP=/home/myuser/.viash_temp
+      |  viash run -f fun.yaml -k""".stripMargin)
+  }
+
   val export = new Subcommand("export") with WithFunctionality with WithPlatform {
     banner(s"""viash export
       |Generate an executable from the functionality and platform meta information.
@@ -100,6 +131,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   }
 
   addSubcommand(run)
+  addSubcommand(run2)
   addSubcommand(export)
   addSubcommand(test)
 

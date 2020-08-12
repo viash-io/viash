@@ -2,7 +2,7 @@ package com.dataintuitive.viash
 
 import functionality._
 import platforms._
-import resources.Script
+import resources._
 
 import java.nio.file.{Paths, Files}
 import scala.io.Source
@@ -52,6 +52,34 @@ object Main {
           }
         }
       }
+//      case Some(conf.run2) => {
+//        // create new functionality with argparsed executable
+//        val (fun, tar) = viashLogic2(conf.run2)
+//
+//        // make temporary directory
+//        val dir = IOHelper.makeTemp("viash_" + fun.name)
+//
+//        try {
+//          // write executable and resources to temporary directory
+//          writeResources(fun.resources, dir)
+//
+//          // determine command
+//          val cmd =
+//            Array(Paths.get(dir.toString(), fun.name).toString()) ++
+//            runArgs.dropWhile(_ == "--")
+//
+//          // execute command, print everything to console
+//          val code = Process(cmd).!(ProcessLogger(println, println))
+//          System.exit(code)
+//        } finally {
+//          // always remove tempdir afterwards
+//          if (!conf.run.keep()) {
+//            IOHelper.deleteRecursively(dir)
+//          } else {
+//            println(s"Files and logs are stored at '$dir'")
+//          }
+//        }
+//      }
       case Some(conf.export) => {
         // create new functionality with argparsed executable
         val (fun, tar) = viashLogic(conf.export)
@@ -110,6 +138,48 @@ object Main {
   def readFunctionality(opt: ScallopOption[String]) = {
     Functionality.parse(IOHelper.uri(opt()))
   }
+  def readComponent(opt: ScallopOption[String]) = {
+    val uri = IOHelper.uri(opt())
+
+    val str = IOHelper.read(uri)
+    val uris = uri.toString()
+    val extension = uris.substring(uris.lastIndexOf(".")).toLowerCase()
+
+    // detect whether a component was passed or a yaml
+    // using the extension
+    val (yaml, code) =
+      if (extension == "yml" || extension == "yaml") {
+        (str, None)
+      } else {
+        val commentStr = extension match {
+          case "sh" | "py" | "r" => "#'"
+          case _ => throw new RuntimeException("Unrecognised extension: " + extension)
+        }
+        val headerRegex = "^" + commentStr + "' ".r
+        assert(
+          str.contains(s"$commentStr functionality:"),
+          message = s"""Component should contain a functionality header: "$commentStr functionality: <...>""""
+        )
+
+        val (header, body) = str.split("\n").partition(headerRegex.matches(_))
+        val yaml = header.map(s => headerRegex.replace(s, "")).mkString("\n")
+        val code = body.mkString("\n")
+
+        (yaml, Some(code))
+      }
+
+    val componentScript = code.map{cod =>
+      val scr = extension match {
+        case "r" => RScript(Some("viash_main.R"), text = Some(cod))
+        case "py" => PythonScript(Some("viash_main.py"), text = Some(cod))
+        case "sh" => BashScript(Some("viash_main.sh"), text = Some(cod))
+        case _ => throw new RuntimeException("Unrecognised extension: " + extension)
+      }
+      scr.asInstanceOf[Script]
+    }
+
+    // wip
+  }
 
   def readPlatform(opt: ScallopOption[String]) = {
     opt.map{ path =>
@@ -133,6 +203,28 @@ object Main {
 
     (fun2, platform)
   }
+//  def viashLogic2(subcommand: ViashCommand) = {
+//    assert(
+//      subcommand.component.isEmpty != subcommand.functionality.isEmpty,
+//      message = "Either functionality or component need to be specified!"
+//    )
+//
+//
+//    // get the functionality yaml
+//    // let the functionality object know the path in which it resided,
+//    // so it can find back its resources
+//    // val functionality = readFunctionality(if (subcommand.functionality.isDefined) subcommand.functionality else subcommand.component)
+//
+//    // get the platform
+//    // if no platform is provided, assume the platform
+//    // should be native and all dependencies are taken care of
+//    val platform = readPlatform(subcommand.platform)
+//
+//    // modify the functionality using the platform
+//    val fun2 = platform.modifyFunctionality(functionality)
+//
+//    (fun2, platform)
+//  }
 
   def writeResources(
     resources: Seq[Resource],
