@@ -164,15 +164,31 @@ case class DockerPlatform(
 
     val postParse =
       if (resolve_volume == Automatic) {
-        "\n# detect volumes from file arguments\n" +
+        "\n\n# detect volumes from file arguments" +
         args.filter(a => a.isInstanceOf[FileObject])
           .map(arg => {
-            val viash_par = "VIASH_PAR_" + arg.plainName.toUpperCase()
-            s"""
-              |if [ ! -z "$$$viash_par" ]; then
-              |  VIASH_EXTRA_MOUNTS="$$VIASH_EXTRA_MOUNTS $$(ViashAutodetectMountArg "$$$viash_par")"
-              |  $viash_par=$$(ViashAutodetectMount "$$$viash_par")
-              |fi""".stripMargin
+
+            // resolve arguments with multiplicity different from
+            // singular args
+            if (arg.multiple) {
+              val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
+              s"""
+                |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
+                |  IFS="${arg.multiple_sep}"
+                |  for var in $$${arg.VIASH_PAR}; do
+                |    VIASH_EXTRA_MOUNTS="$$VIASH_EXTRA_MOUNTS $$(ViashAutodetectMountArg "$$var")"
+                |    ${BashWrapper.store(viash_temp, "\"$(ViashAutodetectMount \"$var\")\"", Some(arg.multiple_sep)).mkString("\n    ")}
+                |  done
+                |  unset IFS
+                |  ${arg.VIASH_PAR}="$$$viash_temp"
+                |fi""".stripMargin
+            } else {
+              s"""
+                |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
+                |  VIASH_EXTRA_MOUNTS="$$VIASH_EXTRA_MOUNTS $$(ViashAutodetectMountArg "$$${arg.VIASH_PAR}")"
+                |  ${arg.VIASH_PAR}=$$(ViashAutodetectMount "$$${arg.VIASH_PAR}")
+                |fi""".stripMargin
+            }
           })
           .mkString("")
       } else {

@@ -216,7 +216,7 @@ object BashWrapper {
       (part1 :: part2 :: part3 ::: List("")).map("    echo \"" + _ + "\"").mkString("\n")
     })
 
-    // TODO: add usage
+    // TODO: add usage?
 
     s"""# ViashHelp: Display helpful explanation about this executable
        |function ViashHelp {
@@ -259,7 +259,7 @@ object BashWrapper {
           }
         // Alternatives
         val moreParts = param.alternatives.map(alt => {
-          argStore(alt, param.VIASH_PAR, "\"$2\"", 2)
+          argStore(alt, param.VIASH_PAR, "\"$2\"", 2, multisep)
         })
 
         (part1 :: part2 ::: moreParts).mkString("\n")
@@ -311,7 +311,7 @@ object BashWrapper {
 
       default.map(default => {
         s"""if [ -z "$$${param.VIASH_PAR}" ]; then
-           |  ${param.VIASH_PAR}="$default"
+           |  ${param.VIASH_PAR}="${BashWrapper.escape(default.toString)}"
            |fi""".stripMargin
       })
     }.mkString("\n")
