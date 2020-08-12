@@ -47,6 +47,7 @@ case class Functionality(
 object Functionality {
   def parse(uri: URI): Functionality = {
     val str = IOHelper.read(uri)
+
     val fun = parser.parse(str)
       .fold(throw _, _.as[Functionality])
       .fold(throw _, identity)

@@ -18,7 +18,7 @@ case class Meta(
   platform_path: String,
   output_path: String,
   executable_path: String
-  ) {
+) {
 
     val out = new StringBuilder
     val err = new StringBuilder
