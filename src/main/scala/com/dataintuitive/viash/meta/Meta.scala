@@ -18,7 +18,7 @@ case class Meta(
   platform_path: String,
   output_path: String,
   executable_path: String
-  ) {
+) {
 
     val isGitRepo = scala.util.Try("git rev-parse --is-inside-work-tree" !!)
       .map(_.trim.toBoolean)
