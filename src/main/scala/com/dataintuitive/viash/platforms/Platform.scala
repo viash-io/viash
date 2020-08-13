@@ -8,6 +8,7 @@ import requirements._
 
 trait Platform {
   val `type`: String
+  val id: String
   val version: Option[String]
   def modifyFunctionality(functionality: Functionality): Functionality
 

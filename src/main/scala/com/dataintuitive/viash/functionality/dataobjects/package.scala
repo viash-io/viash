@@ -7,7 +7,7 @@ import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfigur
 import cats.syntax.functor._ // for .widen
 
 package object dataobjects {
-  implicit val customConfig: Configuration = Configuration.default.withDefaults
+  import com.dataintuitive.viash.helpers.Circe._
 
   // encoder and decoder for java.io.File
   implicit val encodeFile: Encoder[java.io.File] = Encoder.instance {

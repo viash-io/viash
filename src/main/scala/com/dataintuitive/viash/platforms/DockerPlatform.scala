@@ -9,8 +9,9 @@ import com.dataintuitive.viash.helpers.{BashHelper, BashWrapper}
 import com.dataintuitive.viash.functionality.resources.Resource
 
 case class DockerPlatform(
+  id: String = "docker",
   image: String,
-  version: Option[String],
+  version: Option[String] = None,
   target_image: Option[String] = None,
   resolve_volume: ResolveVolume = Automatic,
   port: Option[List[String]] = None,
@@ -76,7 +77,7 @@ case class DockerPlatform(
       )
 
     fun2.copy(
-      resources = bashScript :: fun2.resources.tail
+      resources = Some(bashScript :: fun2.resources.getOrElse(Nil).tail)
     )
   }
 

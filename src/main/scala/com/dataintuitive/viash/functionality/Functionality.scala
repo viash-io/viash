@@ -11,8 +11,8 @@ import java.net.URI
 
 case class Functionality(
   name: String,
-  version: Option[String],
-  resources: List[Resource],
+  version: Option[String] = None,
+  resources: Option[List[Resource]] = None,
   description: Option[String] = None,
   function_type: Option[FunctionType] = None,
   arguments: List[DataObject[_]] = Nil,
@@ -20,8 +20,6 @@ case class Functionality(
   set_wd_to_resources_dir: Option[Boolean] = None,
   private var _rootDir: Option[File] = None // :/
 ) {
-
-  require(resources.length > 0, message = "resources should contain at least one resource")
 
   // check whether there are not multiple positional arguments with multiplicity >1
   // and if there is one, whether its position is last
@@ -36,7 +34,7 @@ case class Functionality(
   }
 
   def mainScript: Option[Script] =
-    resources.head match {
+    resources.getOrElse(Nil).head match {
       case s: Script => Some(s)
       case _ => None
     }
@@ -52,16 +50,16 @@ object Functionality {
       .fold(throw _, _.as[Functionality])
       .fold(throw _, identity)
 
-    val resources = fun.resources.map(makeResourcePathAbsolute(_, uri))
+    val resources = fun.resources.getOrElse(Nil).map(makeResourcePathAbsolute(_, uri))
     val tests = fun.tests.getOrElse(Nil).map(makeResourcePathAbsolute(_, uri))
 
     fun.copy(
-      resources = resources,
+      resources = Some(resources),
       tests = Some(tests)
     )
   }
 
-  private def makeResourcePathAbsolute(res: Resource, parent: URI) = {
+  def makeResourcePathAbsolute(res: Resource, parent: URI) = {
     if (res.isInstanceOf[Executable] || res.path.isEmpty || res.path.get.contains("://")) {
         res
       } else {

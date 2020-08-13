@@ -9,8 +9,15 @@ trait ViashCommand {_ : ScallopConf =>
     required = false
   )
   val platform = opt[String](
+    short = 'p',
     default = None,
     descr = "Path to the platform file. If not provided, the native platform is used.",
+    required = false
+  )
+  val platformID = opt[String](
+    short = 'P',
+    default = None,
+    descr = "If multiple platforms are specified in the component, this argument allows you to choose which one.",
     required = false
   )
   val component = trailArg[String](

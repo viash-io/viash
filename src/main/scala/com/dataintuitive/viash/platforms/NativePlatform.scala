@@ -6,7 +6,8 @@ import com.dataintuitive.viash.helpers.{BashHelper, BashWrapper}
 import com.dataintuitive.viash.platforms.requirements._
 
 case class NativePlatform(
-  version: Option[String],
+  id: String = "native",
+  version: Option[String] = None,
   r: Option[RRequirements] = None,
   python: Option[PythonRequirements] = None
 ) extends Platform {
@@ -40,7 +41,7 @@ case class NativePlatform(
     )
 
     functionality.copy(
-      resources = bashScript :: functionality.resources.tail
+      resources = Some(bashScript :: functionality.resources.getOrElse(Nil).tail)
     )
   }
 

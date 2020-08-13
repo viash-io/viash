@@ -7,7 +7,7 @@ import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfigur
 import cats.syntax.functor._ // for .widen
 
 package object platforms {
-  implicit val customConfig: Configuration = Configuration.default.withDefaults
+  import com.dataintuitive.viash.helpers.Circe._
 
     // encoder and decoder for direction
   implicit val encodeResolveVolume: Encoder[ResolveVolume] = Encoder.instance {
@@ -25,11 +25,11 @@ package object platforms {
   implicit val encodeDockerPlatform: Encoder.AsObject[DockerPlatform] = deriveConfiguredEncoder
   implicit val decodeDockerPlatform: Decoder[DockerPlatform] = deriveConfiguredDecoder
 
-  implicit val encodeNextFlowPlatform: Encoder[NextFlowPlatform] = deriveEncoder
-  implicit val decodeNextFlowPlatform: Decoder[NextFlowPlatform] = deriveDecoder
+  implicit val encodeNextFlowPlatform: Encoder.AsObject[NextFlowPlatform] = deriveConfiguredEncoder
+  implicit val decodeNextFlowPlatform: Decoder[NextFlowPlatform] = deriveConfiguredDecoder
 
-  implicit val encodeNativePlatform: Encoder[NativePlatform] = deriveEncoder
-  implicit val decodeNativePlatform: Decoder[NativePlatform] = deriveDecoder
+  implicit val encodeNativePlatform: Encoder.AsObject[NativePlatform] = deriveConfiguredEncoder
+  implicit val decodeNativePlatform: Decoder[NativePlatform] = deriveConfiguredDecoder
 
   implicit def encodePlatform[A <: Platform]: Encoder[A] = Encoder.instance {
     platform =>
