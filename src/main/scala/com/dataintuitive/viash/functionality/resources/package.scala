@@ -6,7 +6,7 @@ import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfigur
 import cats.syntax.functor._ // for .widen
 
 package object resources {
-  implicit val customConfig: Configuration = Configuration.default.withDefaults
+  import com.dataintuitive.viash.helpers.Circe._
 
   // encoders and decoders for Object
   implicit val encodeBashScript: Encoder.AsObject[BashScript] = deriveConfiguredEncoder

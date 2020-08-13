@@ -3,15 +3,15 @@ package com.dataintuitive.viash
 import functionality._
 import platforms._
 import resources._
+import helpers.{Exec, IOHelper}
+import config.Config
+import meta.Meta
 
 import java.nio.file.{Paths, Files}
 import scala.io.Source
 import org.rogach.scallop.{Subcommand, ScallopOption}
 
 import sys.process._
-import com.dataintuitive.viash.helpers.{Exec, IOHelper}
-import com.dataintuitive.viash.functionality.resources.Resource
-import com.dataintuitive.viash.meta.Meta
 
 object Main {
   private val pkg = getClass.getPackage
@@ -33,7 +33,7 @@ object Main {
 
         try {
           // write executable and resources to temporary directory
-          writeResources(fun.resources, dir)
+          writeResources(fun.resources.getOrElse(Nil), dir)
 
           // determine command
           val cmd =
@@ -52,34 +52,35 @@ object Main {
           }
         }
       }
-//      case Some(conf.run2) => {
-//        // create new functionality with argparsed executable
-//        val (fun, tar) = viashLogic2(conf.run2)
-//
-//        // make temporary directory
-//        val dir = IOHelper.makeTemp("viash_" + fun.name)
-//
-//        try {
-//          // write executable and resources to temporary directory
-//          writeResources(fun.resources, dir)
-//
-//          // determine command
-//          val cmd =
-//            Array(Paths.get(dir.toString(), fun.name).toString()) ++
-//            runArgs.dropWhile(_ == "--")
-//
-//          // execute command, print everything to console
-//          val code = Process(cmd).!(ProcessLogger(println, println))
-//          System.exit(code)
-//        } finally {
-//          // always remove tempdir afterwards
-//          if (!conf.run.keep()) {
-//            IOHelper.deleteRecursively(dir)
-//          } else {
-//            println(s"Files and logs are stored at '$dir'")
-//          }
-//        }
-//      }
+      case Some(conf.run2) => {
+        // create new functionality with argparsed executable
+        val config = viashLogic2(conf.run2)
+        val fun = config.functionality
+
+        // make temporary directory
+        val dir = IOHelper.makeTemp("viash_" + fun.name)
+
+        try {
+          // write executable and resources to temporary directory
+          writeResources(fun.resources.getOrElse(Nil), dir)
+
+          // determine command
+          val cmd =
+            Array(Paths.get(dir.toString(), fun.name).toString()) ++
+            runArgs.dropWhile(_ == "--")
+
+          // execute command, print everything to console
+          val code = Process(cmd).!(ProcessLogger(println, println))
+          System.exit(code)
+        } finally {
+          // always remove tempdir afterwards
+          if (!conf.run.keep()) {
+            IOHelper.deleteRecursively(dir)
+          } else {
+            println(s"Files and logs are stored at '$dir'")
+          }
+        }
+      }
       case Some(conf.export) => {
         // create new functionality with argparsed executable
         val (fun, tar) = viashLogic(conf.export)
@@ -104,7 +105,7 @@ object Main {
           executablePath
         )
 
-        writeResources(meta.resource :: fun.resources, dir)
+        writeResources(meta.resource :: fun.resources.getOrElse(Nil), dir)
 
         if (conf.export.meta()) {
           println(meta.info)
@@ -143,7 +144,7 @@ object Main {
 
     val str = IOHelper.read(uri)
     val uris = uri.toString()
-    val extension = uris.substring(uris.lastIndexOf(".")).toLowerCase()
+    val extension = uris.substring(uris.lastIndexOf(".")+1).toLowerCase()
 
     // detect whether a component was passed or a yaml
     // using the extension
@@ -155,19 +156,21 @@ object Main {
           case "sh" | "py" | "r" => "#'"
           case _ => throw new RuntimeException("Unrecognised extension: " + extension)
         }
-        val headerRegex = "^" + commentStr + "' ".r
+        val headerComm = commentStr + " "
+        val headerRegex = "^" + commentStr + "  ".r
         assert(
           str.contains(s"$commentStr functionality:"),
           message = s"""Component should contain a functionality header: "$commentStr functionality: <...>""""
         )
 
-        val (header, body) = str.split("\n").partition(headerRegex.matches(_))
-        val yaml = header.map(s => headerRegex.replace(s, "")).mkString("\n")
+        val (header, body) = str.split("\n").partition(_.startsWith(headerComm))
+        val yaml = header.map(s => s.drop(3)).mkString("\n")
         val code = body.mkString("\n")
 
         (yaml, Some(code))
       }
 
+    // turn optional code into a Script
     val componentScript = code.map{cod =>
       val scr = extension match {
         case "r" => RScript(Some("viash_main.R"), text = Some(cod))
@@ -178,13 +181,20 @@ object Main {
       scr.asInstanceOf[Script]
     }
 
-    // wip
+    // read config
+    val config = Config.parse(yaml, uri)
+
+    config.copy(
+      functionality = config.functionality.copy(
+         resources = Some(componentScript.toList ::: config.functionality.resources.getOrElse(Nil))
+      )
+    )
   }
 
   def readPlatform(opt: ScallopOption[String]) = {
     opt.map{ path =>
       Platform.parse(IOHelper.uri(path))
-    }.getOrElse(NativePlatform(None))
+    }.getOrElse(NativePlatform())
   }
 
   def viashLogic(subcommand: WithFunctionality with WithPlatform) = {
@@ -203,28 +213,54 @@ object Main {
 
     (fun2, platform)
   }
-//  def viashLogic2(subcommand: ViashCommand) = {
-//    assert(
-//      subcommand.component.isEmpty != subcommand.functionality.isEmpty,
-//      message = "Either functionality or component need to be specified!"
-//    )
-//
-//
-//    // get the functionality yaml
-//    // let the functionality object know the path in which it resided,
-//    // so it can find back its resources
-//    // val functionality = readFunctionality(if (subcommand.functionality.isDefined) subcommand.functionality else subcommand.component)
-//
-//    // get the platform
-//    // if no platform is provided, assume the platform
-//    // should be native and all dependencies are taken care of
-//    val platform = readPlatform(subcommand.platform)
-//
-//    // modify the functionality using the platform
-//    val fun2 = platform.modifyFunctionality(functionality)
-//
-//    (fun2, platform)
-//  }
+
+
+  def viashLogic2(subcommand: ViashCommand) = {
+    // read the component if passed, else read the functionality
+    assert(
+      subcommand.component.isEmpty != subcommand.functionality.isEmpty,
+      message = "Either functionality or component need to be specified!"
+    )
+    val config =
+      if (subcommand.component.isDefined) {
+        readComponent(subcommand.component)
+      } else {
+        Config(
+          functionality = readFunctionality(subcommand.functionality)
+        )
+      }
+
+    // get the platform
+    // * if a platform yaml is passed, use that
+    // * else if a platform id is passed, look up the platform in the platforms list
+    // * else if a platform is already defined in the config, use that
+    // * else if platforms is a non-empty list, use the first platform
+    // * else use the native platform
+    val platform =
+      if (subcommand.platform.isDefined) {
+        Platform.parse(IOHelper.uri(subcommand.platform()))
+      } else if (subcommand.platformID.isDefined) {
+        val pid = subcommand.platformID()
+        val platformNames = config.platforms.map(_.id)
+        assert(
+          platformNames.contains(pid),
+          s"platform $pid is not found amongst the defined platforms: ${platformNames.mkString(", ")}"
+        )
+        config.platforms(platformNames.indexOf(pid))
+      } else if (config.platform.isDefined) {
+        config.platform.get
+      } else if (!config.platforms.isEmpty) {
+        config.platforms(0)
+      } else {
+        NativePlatform()
+      }
+
+    // modify the functionality using the platform
+    config.copy(
+      functionality = platform.modifyFunctionality(config.functionality),
+      platform = Some(platform)
+    )
+  }
 
   def writeResources(
     resources: Seq[Resource],
