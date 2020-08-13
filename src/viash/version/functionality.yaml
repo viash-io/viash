@@ -11,4 +11,4 @@ arguments:
 resources:
   - type: bash_script
     path: ./code.sh
-version: '"0.2.0-rc2"'
+version: 0.2.0-rc2
