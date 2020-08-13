@@ -1,8 +1,38 @@
-### VIASH START
-par <- list(
-  output = "plot.png"
-)
-### VIASH END
+#' functionality:
+#'   name: r-estimate
+#'   description: |
+#'   
+#'     Estimate the R value based on the vignette: 
+#'       https://cran.r-project.org/web/packages/EpiEstim/vignettes/demo.html
+#'     As input, the following are used:
+#'       https://epistat.sciensano.be/Data/COVID19BE_HOSP.csv
+#'       https://assets.researchsquare.com/files/rs-18805/v3/dataset.xlsx
+#'   
+#'   arguments:
+#'   - name: "--output"
+#'     alternatives: ["-o"]
+#'     type: file
+#'     description: The path to the output plot file.
+#'     default: output.png
+#'     required: true
+#'     direction: output
+#' platforms:
+#' - type: docker
+#'   image: rocker/tidyverse
+#'   r:
+#'     cran:
+#'     - EpiEstim
+#'     - openxlsx
+#'     - lubridate
+#'     - patchwork
+#'   workdir: /app
+#' - type: native
+#'   r:
+#'     cran:
+#'     - EpiEstim
+#'     - openxlsx
+#'     - lubridate
+#'     - patchwork
 
 library(tidyverse)
 library(EpiEstim)
