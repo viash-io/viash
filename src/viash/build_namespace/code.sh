@@ -19,70 +19,53 @@ else
   viash="viash"
 fi
 
+function ViashBuildNamespaceForPlatform {
+  file="$1"
+  platform="$2"
+  
+  if [ $platform = "nextflow" ]; then
+    platform_out="modules"
+  else
+    platform_out="$platform"
+  fi
+  
+  tool_dir=`dirname "$file"`
+  tool_name=`basename "$tool_dir"`
+  ns_dir=`dirname "$tool_dir"`
+  ns_name=`basename "$ns_dir"`
+  
+  echo "- ${blue}${platform}${reset}"
+  if [ -f $tool_dir/platform_${platform}.yaml ]; then
+    echo "  Platform file found in $tool_dir"
+    "$viash" export \
+      -f "${tool_dir}/functionality.yaml" \
+      -p "${tool_dir}/platform_${platform}.yaml" \
+      -o "${par_target}/${platform_out}/${ns_name}/${tool_name}"
+    
+    if [ $platform != "nextflow" ]; then
+      cp ${par_target}/${platform_out}/${ns_name}/${tool_name}/${tool_name} "${par_target}/${ns_name}_${tool_name}"
+    fi
+  elif [ -f platform/${platform}.yaml ]; then
+    echo "  Platform file found in platform/"
+    "$viash" export \
+      -f "${tool_dir}/functionality.yaml" \
+      -p platform/${platform}.yaml \
+      -o "${par_target}/${platform_out}/${ns_name}/${tool_name}"
+    
+    if [ $platform != "nextflow" ]; then
+      cp ${par_target}/${platform_out}/${ns_name}/${tool_name}/${tool_name} "${par_target}/${ns_name}_${tool_name}"
+    fi
+  else
+    echo "  No platform file found"
+  fi
+}
+
 for f in `find $par_src/$par_namespace -name functionality.yaml`; do
-
-  tool_dir=`dirname $f`
-  tool_name=`basename $tool_dir`
-  ns_dir=`dirname $tool_dir`
-  ns_name=`basename $ns_dir`
-
   echo "${green}Processing $tool_name in namespace $ns_name${reset}"
-
-  echo "- ${blue}Native${reset}"
-  if [ -f $tool_dir/platform_native.yaml ]; then
-    echo "  Platform file found in $tool_dir"
-    "$viash" export \
-          -f $tool_dir/functionality.yaml \
-          -p $tool_dir/platform_native.yaml \
-          -o $par_target/native/$ns_name/$tool_name
-    cp $par_target/native/$ns_name/$tool_name/$tool_name "$par_target/${ns_name}-${tool_name}"
-  elif [ -f platform/native.yaml ]; then
-    echo "  Platform file found in platform/"
-    "$viash" export \
-          -f $tool_dir/functionality.yaml \
-          -p platform/native.yaml \
-          -o $par_target/native/$ns_name/$tool_name
-    cp $par_target/native/$ns_name/$tool_name/$tool_name "$par_target/${ns_name}-${tool_name}"
-  else
-    echo "  No platform file found"
-  fi
-
-  echo "- ${blue}Docker${reset}"
-  if [ -f $tool_dir/platform_docker.yaml ]; then
-    echo "  Platform file found in $tool_dir"
-    "$viash" export \
-          -f $tool_dir/functionality.yaml \
-          -p $tool_dir/platform_docker.yaml \
-          -o $par_target/docker/$ns_name/$tool_name
-    cp $par_target/docker/$ns_name/$tool_name/$tool_name "$par_target/${ns_name}-${tool_name}"
-  elif [ -f platform/docker.yaml ]; then
-    echo "  Platform file found in platform/"
-    "$viash" export \
-          -f $tool_dir/functionality.yaml \
-          -p platform/docker.yaml \
-          -o $par_target/docker/$ns_name/$tool_name
-    cp $par_target/docker/$ns_name/$tool_name/$tool_name "$par_target/${ns_name}-${tool_name}"
-  else
-    echo "  No platform file found"
-  fi
-
-  echo "- ${blue}NextFlow${reset}"
-  if [ -f $tool_dir/platform_nextflow.yaml ]; then
-    echo "  Platform file found in $tool_dir"
-    "$viash" export \
-          -f $tool_dir/functionality.yaml \
-          -p $tool_dir/platform_nextflow.yaml \
-          -o $par_target/modules/$ns_name/$tool_name
-  elif [ -f platform/nextflow.yaml ]; then
-    echo "  Platform file found in platform"
-    "$viash" export \
-          -f $tool_dir/functionality.yaml \
-          -p platform/nextflow.yaml \
-          -o $par_target/modules/$ns_name/$tool_name
-  else
-    echo "  No platform file found"
-  fi
-
+  
+  ViashBuildNamespaceForPlatform "$f" native
+  ViashBuildNamespaceForPlatform "$f" docker
+  ViashBuildNamespaceForPlatform "$f" nextflow
 done
 
 
