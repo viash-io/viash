@@ -165,7 +165,7 @@ object Main {
 
         val (header, body) = str.split("\n").partition(_.startsWith(headerComm))
         val yaml = header.map(s => s.drop(3)).mkString("\n")
-        val code = body.mkString("\n")
+        val code = commentStr + " VIASH START\n" + commentStr + "VIASH END\n" + body.mkString("\n")
 
         (yaml, Some(code))
       }
