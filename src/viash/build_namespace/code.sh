@@ -43,7 +43,7 @@ function ViashBuildNamespaceForPlatform {
       -o "${par_target}/${platform_out}/${ns_name}/${tool_name}"
     
     if [ $platform != "nextflow" ]; then
-      cp ${par_target}/${platform_out}/${ns_name}/${tool_name}/${tool_name} "${par_target}/${ns_name}_${tool_name}"
+      cp ${par_target}/${platform_out}/${ns_name}/${tool_name}/${tool_name} "${par_target}/${ns_name}-${tool_name}"
     fi
   elif [ -f platform/${platform}.yaml ]; then
     echo "  Platform file found in platform/"
@@ -53,7 +53,7 @@ function ViashBuildNamespaceForPlatform {
       -o "${par_target}/${platform_out}/${ns_name}/${tool_name}"
     
     if [ $platform != "nextflow" ]; then
-      cp ${par_target}/${platform_out}/${ns_name}/${tool_name}/${tool_name} "${par_target}/${ns_name}_${tool_name}"
+      cp ${par_target}/${platform_out}/${ns_name}/${tool_name}/${tool_name} "${par_target}/${ns_name}-${tool_name}"
     fi
   else
     echo "  No platform file found"
