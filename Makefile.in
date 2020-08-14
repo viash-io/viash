@@ -25,7 +25,7 @@ tools: $(obj) src/viash/*
 	# Use build_namespace to build itself :-)
 	bin/viash run -f src/viash/build_namespace/functionality.yaml -- -n viash -t bin
 	# Now build all tools
-	bin/viash_build_namespace -n viash -t bin
+	bin/viash-build_namespace -n viash -t bin
 
 .PHONY: test
 test:
