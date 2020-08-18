@@ -110,10 +110,36 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       |  export VIASH_TEMP=/home/myuser/.viash_temp
       |  viash run -f fun.yaml -k""".stripMargin)
   }
+  
+  val namespace = new Subcommand("namespace") {
+    
+    val build = new Subcommand("build") {
+      val namespace = opt[String](
+        name = "namespace",
+        short = 'n',
+        required = true,
+        descr = "The name of the namespace."
+      )
+      val src = opt[String](
+        name = "src",
+        short = 's',
+        descr = "An alternative source directory if not under src/<namespace>."
+      )
+      val target = opt[String](
+        name = "target",
+        short = 't',
+        descr = "An alternative destination directory if not target/."
+      )
+    }
+    
+    addSubcommand(build)
+    requireSubcommand()
+  }
 
   addSubcommand(run)
   addSubcommand(export)
   addSubcommand(test)
+  addSubcommand(namespace)
 
   shortSubcommandsHelp(true)
 

@@ -23,8 +23,8 @@ object Main {
 
     val conf = new CLIConf(viashArgs)
 
-    conf.subcommand match {
-      case Some(conf.run) => {
+    conf.subcommands match {
+      case List(conf.run) => {
         // create new functionality with argparsed executable
         val Config(fun, _, _) = viashLogic(conf.run)
 
@@ -52,7 +52,7 @@ object Main {
           }
         }
       }
-      case Some(conf.export) => {
+      case List(conf.export) => {
         // create new functionality with argparsed executable
         val Config(fun, Some(platform), _) = viashLogic(conf.export)
 
@@ -82,7 +82,7 @@ object Main {
           println(meta.info)
         }
       }
-      case Some(conf.test) => {
+      case List(conf.test) => {
         val Config(fun, Some(platform), _) = viashLogic(conf.test, false)
 
         val verbose = conf.test.verbose()
@@ -102,6 +102,16 @@ object Main {
         }
 
         System.exit(code)
+      }
+      case List(conf.namespace, conf.namespace.build) => {
+        val namespace = conf.namespace.build.namespace()
+        val source = conf.namespace.build.src.getOrElse(Paths.get("src", namespace).toString)
+        val target = conf.namespace.build.target.getOrElse(Paths.get("target/").toString)
+        
+        import scala.collection.JavaConverters._
+        
+        val files = Files.walk(Paths.get(source)).iterator().asScala.filter(Files.isRegularFile(_))
+        
       }
       case _ => println("No subcommand was specified. See `viash --help` for more information.")
     }
