@@ -7,11 +7,12 @@ import com.dataintuitive.viash.platforms.requirements._
 import java.nio.file.Paths
 import com.dataintuitive.viash.helpers.{BashHelper, BashWrapper}
 import com.dataintuitive.viash.functionality.resources.Resource
+import com.dataintuitive.viash.config.Version
 
 case class DockerPlatform(
   id: String = "docker",
   image: String,
-  version: Option[String] = None,
+  version: Option[Version] = None,
   target_image: Option[String] = None,
   resolve_volume: ResolveVolume = Automatic,
   port: Option[List[String]] = None,

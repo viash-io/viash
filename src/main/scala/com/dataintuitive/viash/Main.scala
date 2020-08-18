@@ -26,36 +26,7 @@ object Main {
     conf.subcommand match {
       case Some(conf.run) => {
         // create new functionality with argparsed executable
-        val (fun, tar) = viashLogic(conf.run)
-
-        // make temporary directory
-        val dir = IOHelper.makeTemp("viash_" + fun.name)
-
-        try {
-          // write executable and resources to temporary directory
-          writeResources(fun.resources.getOrElse(Nil), dir)
-
-          // determine command
-          val cmd =
-            Array(Paths.get(dir.toString(), fun.name).toString()) ++
-            runArgs.dropWhile(_ == "--")
-
-          // execute command, print everything to console
-          val code = Process(cmd).!(ProcessLogger(println, println))
-          System.exit(code)
-        } finally {
-          // always remove tempdir afterwards
-          if (!conf.run.keep()) {
-            IOHelper.deleteRecursively(dir)
-          } else {
-            println(s"Files and logs are stored at '$dir'")
-          }
-        }
-      }
-      case Some(conf.run2) => {
-        // create new functionality with argparsed executable
-        val config = viashLogic2(conf.run2)
-        val fun = config.functionality
+        val Config(fun, _, _) = viashLogic(conf.run)
 
         // make temporary directory
         val dir = IOHelper.makeTemp("viash_" + fun.name)
@@ -83,7 +54,7 @@ object Main {
       }
       case Some(conf.export) => {
         // create new functionality with argparsed executable
-        val (fun, tar) = viashLogic(conf.export)
+        val Config(fun, Some(platform), _) = viashLogic(conf.export)
 
         // write files to given output directory
         val dir = new java.io.File(conf.export.output())
@@ -98,7 +69,7 @@ object Main {
         val meta = Meta(
           "v" + version,
           fun,
-          tar,
+          platform,
           functionalityPath,
           platformPath,
           outputPath,
@@ -112,8 +83,8 @@ object Main {
         }
       }
       case Some(conf.test) => {
-        val fun = readFunctionality(conf.test.functionality)
-        val platform = readPlatform(conf.test.platform)
+        val Config(fun, Some(platform), _) = viashLogic(conf.test, false)
+
         val verbose = conf.test.verbose()
 
         // create temporary directory
@@ -165,7 +136,7 @@ object Main {
 
         val (header, body) = str.split("\n").partition(_.startsWith(headerComm))
         val yaml = header.map(s => s.drop(3)).mkString("\n")
-        val code = body.mkString("\n")
+        val code = commentStr + " VIASH START\n" + commentStr + "VIASH END\n" + body.mkString("\n")
 
         (yaml, Some(code))
       }
@@ -197,25 +168,7 @@ object Main {
     }.getOrElse(NativePlatform())
   }
 
-  def viashLogic(subcommand: WithFunctionality with WithPlatform) = {
-    // get the functionality yaml
-    // let the functionality object know the path in which it resided,
-    // so it can find back its resources
-    val functionality = readFunctionality(subcommand.functionality)
-
-    // get the platform
-    // if no platform is provided, assume the platform
-    // should be native and all dependencies are taken care of
-    val platform = readPlatform(subcommand.platform)
-
-    // modify the functionality using the platform
-    val fun2 = platform.modifyFunctionality(functionality)
-
-    (fun2, platform)
-  }
-
-
-  def viashLogic2(subcommand: ViashCommand) = {
+  def viashLogic(subcommand: ViashCommand, modifyFun: Boolean = true) = {
     // read the component if passed, else read the functionality
     assert(
       subcommand.component.isEmpty != subcommand.functionality.isEmpty,
@@ -257,7 +210,12 @@ object Main {
 
     // modify the functionality using the platform
     config.copy(
-      functionality = platform.modifyFunctionality(config.functionality),
+      functionality =
+        if (modifyFun) {
+          platform.modifyFunctionality(config.functionality)
+        } else {
+          config.functionality
+        },
       platform = Some(platform)
     )
   }
