@@ -5,13 +5,14 @@ import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.platforms.requirements._
 import java.nio.file.Paths
+import com.dataintuitive.viash.config.Version
 
 /**
 / * Platform class for generating NextFlow (DSL2) modules.
  */
 case class NextFlowPlatform(
   id: String = "nextflow",
-  version: Option[String] = None,
+  version: Option[Version] = None,
   image: String,
   apt: Option[AptRequirements] = None,
   r: Option[RRequirements] = None,
