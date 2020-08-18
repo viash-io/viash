@@ -4,10 +4,11 @@ import com.dataintuitive.viash.functionality.{Functionality}
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.helpers.{BashHelper, BashWrapper}
 import com.dataintuitive.viash.platforms.requirements._
+import com.dataintuitive.viash.config.Version
 
 case class NativePlatform(
   id: String = "native",
-  version: Option[String] = None,
+  version: Option[Version] = None,
   r: Option[RRequirements] = None,
   python: Option[PythonRequirements] = None
 ) extends Platform {

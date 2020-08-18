@@ -8,10 +8,11 @@ import dataobjects._
 import resources._
 import com.dataintuitive.viash.helpers.IOHelper
 import java.net.URI
+import com.dataintuitive.viash.config.Version
 
 case class Functionality(
   name: String,
-  version: Option[String] = None,
+  version: Option[Version] = None,
   resources: Option[List[Resource]] = None,
   description: Option[String] = None,
   function_type: Option[FunctionType] = None,
