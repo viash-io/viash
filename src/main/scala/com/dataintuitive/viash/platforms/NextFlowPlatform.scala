@@ -228,14 +228,12 @@ case class NextFlowPlatform(
         |// Out: Arrays of DataObjects
         |def overrideInput(params, str) {
         |
-        |    // In 'join' mode, concatenate the strings and add double quotes around the values
-        |    def update = (str in List)
-        |        ? [ "value" : str.join(params.arguments["separator"].value) ]
-        |        : [ "value" : str ]
-        |
+        |    // Join values according to the configured parameter
         |    def overrideArgs = params.arguments.collect{ it ->
         |      (it.value.direction == "Input" && it.value.type == "file")
-        |        ? it.value + update
+        |        ? (str in List)
+        |            ? it.value + [ "value" : str.join(it.value.multiple_sep)]
+        |            : it.value + [ "value" : str ]
         |        : it.value
         |    }
         |
@@ -453,6 +451,7 @@ object NextFlowUtils {
     case (k: String, v: String) => s"""$indent$k = ${quote(v)}"""
     case (k: String, v: Boolean) => s"""$indent$k = ${v.toString}"""
     case (k: String, v: Direction) => s"""$indent$k = ${quote(v.toString)}"""
+    case (k: String, v: Char) => s"""$indent$k = ${quote(v.toString)}"""
     case _ => indent + "Parsing ERROR - Not implemented yet " + m
   }
 
@@ -487,7 +486,9 @@ object NextFlowUtils {
         List(
           "required" → dataObject.required,
           "type" → dataObject.`type`,
-          "direction" → dataObject.direction
+          "direction" → dataObject.direction,
+          "multiple" → dataObject.multiple,
+          "multiple_sep" -> dataObject.multiple_sep
         )
       }
     }
