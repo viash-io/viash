@@ -18,7 +18,7 @@ arguments:
   - name: "--target"
     alternatives: ["-t"]
     type: string
-    description: An alternative location if not target/
+    description: An alternative location if not target
     default: target
 resources:
   - type: bash_script
