@@ -2,8 +2,7 @@
 
 ## NEW FEATURES
 
-- Allow (optional) version attributes in `functionality.yaml` and `platform.yaml`.
-- (WIP) Write out meta.yaml containing viash run information as well as the original `functionality.yaml` and `platform.yaml content`.
+* Allow (optional) version attributes in `functionality.yaml` and `platform.yaml`.
 * Allow testing a component with the `viash test` functionality. Tests are executed in a temporary directory on the specified platform. The temporary directory contains all the resource and test files. 
 * `viash --version`: Add flag for printing the version of viash.
 * Allow fetching resources from URL (http:// and https://)
@@ -12,10 +11,12 @@
 * Implement parameter multiplicity. 
   Set `multiple: true` to denote an argument to have higher multiplicity. 
   Run `./cmd --foo one --foo two --foo three:four` in order for multiple values to be added to the same parameter list.
+* Added a new format for defining functionality in which the user passes the script in which the functionality and platforms are listed as yaml headers.
 
 ## MAJOR CHANGES
 * Remove passthrough parameters.
-* Since CLI generation is now performed in the outer script, `viash pimp` has been deprecated.	
+* Since CLI generation is now performed in the outer script, `viash pimp` has been deprecated.
+* (WIP) Write out meta.yaml containing viash run information as well as the original `functionality.yaml` and `platform.yaml` content.
 
 ## MINOR CHANGES
 * `viash run` and `viash test`: Allow changing the temporary directory by defining `VIASH_TEMP` as a environment variable. Temporary directories are cleaned up after successful executions.
