@@ -11,14 +11,16 @@ arguments:
     default: viash
   - name: "--src"
     alternatives: ["-s"]
-    type: string
+    type: file
+    direction: input
     description: An alternative location if not under src/<namespace>
     required: false
     default: src
   - name: "--target"
     alternatives: ["-t"]
-    type: string
+    type: file
     description: An alternative location if not target
+    direction: output
     default: target
 resources:
   - type: bash_script
