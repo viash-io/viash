@@ -1,5 +1,6 @@
 #' functionality:
 #'   name: r-estimate
+#'   version: 1.1
 #'   description: |
 #'   
 #'     Estimate the R value based on the vignette: 
