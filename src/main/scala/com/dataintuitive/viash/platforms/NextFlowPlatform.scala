@@ -230,7 +230,7 @@ case class NextFlowPlatform(
         |
         |    // In 'join' mode, concatenate the strings and add double quotes around the values
         |    def update = (str in List)
-        |        ? [ "value" : str.join(" ") ]
+        |        ? [ "value" : str.join(params.arguments["separator"].value) ]
         |        : [ "value" : str ]
         |
         |    def overrideArgs = params.arguments.collect{ it ->
