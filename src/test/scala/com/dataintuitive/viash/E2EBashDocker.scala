@@ -21,7 +21,7 @@ class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
   // parse functionality from file
   val functionality = Functionality.parse(IOHelper.uri(funcFile))
 
-  // convert testpython
+  // convert testbash
   val params = Array(
     "export",
     "-f", funcFile,

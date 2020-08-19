@@ -23,4 +23,8 @@ object Platform {
       .fold(throw _, _.as[Platform])
       .fold(throw _, identity)
   }
+
+  def read(path: String) = {
+    parse(IOHelper.uri(path))
+  }
 }
