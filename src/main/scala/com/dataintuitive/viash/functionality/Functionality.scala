@@ -78,6 +78,10 @@ object Functionality {
         }
       }
   }
+
+  def read(path: String) = {
+    parse(IOHelper.uri(path))
+  }
 }
 
 sealed trait FunctionType

@@ -5,9 +5,8 @@ import platforms._
 import resources._
 import helpers.{Exec, IOHelper}
 import config.Config
-import meta.Meta
 
-import java.nio.file.{Paths, Files}
+import java.nio.file.{Paths, Files, Path}
 import scala.io.Source
 import org.rogach.scallop.{Subcommand, ScallopOption}
 
@@ -26,7 +25,8 @@ object Main {
     conf.subcommands match {
       case List(conf.run) => {
         // create new functionality with argparsed executable
-        val Config(fun, _, _) = viashLogic(conf.run)
+        val config = readAll(conf.run)
+        val fun = config.functionality
 
         // make temporary directory
         val dir = IOHelper.makeTemp("viash_" + fun.name)
@@ -53,44 +53,26 @@ object Main {
         }
       }
       case List(conf.export) => {
-        // create new functionality with argparsed executable
-        val Config(fun, Some(platform), _) = viashLogic(conf.export)
-
-        // write files to given output directory
-        val dir = new java.io.File(conf.export.output())
-        dir.mkdirs()
-
-        val execPath = Paths.get(dir.toString(), fun.mainScript.get.filename).toString()
-        val functionalityPath = conf.export.functionality()
-        val platformPath = conf.export.platform.getOrElse("")
+        val config = readAll(conf.export)
         val outputPath = conf.export.output()
-        val executablePath = execPath
-
-        val meta = Meta(
-          "v" + version,
-          fun,
-          platform,
-          functionalityPath,
-          platformPath,
-          outputPath,
-          executablePath
+        val config2 = config.copy(
+          info = config.info.map(_.copy(
+            output_path = Some(outputPath)
+          ))
         )
-
-        writeResources(meta.resource :: fun.resources.getOrElse(Nil), dir)
-
-        if (conf.export.meta()) {
-          println(meta.info)
-        }
+        ViashExport.export(config2, outputPath, conf.export.meta())
       }
       case List(conf.test) => {
-        val Config(fun, Some(platform), _) = viashLogic(conf.test, false)
+        val config = readAll(conf.test, modifyFun = false)
+        val fun = config.functionality
+        val plat = config.platform.get
 
         val verbose = conf.test.verbose()
 
         // create temporary directory
         val dir = IOHelper.makeTemp("viash_test_" + fun.name)
 
-        val results = ViashTester.runTests(fun, platform, dir, verbose = verbose)
+        val results = ViashTester.runTests(fun, plat, dir, verbose = verbose)
 
         val code = ViashTester.reportTests(results, dir, verbose = verbose)
 
@@ -107,126 +89,23 @@ object Main {
         val namespace = conf.namespace.build.namespace()
         val source = conf.namespace.build.src.getOrElse(Paths.get("src", namespace).toString)
         val target = conf.namespace.build.target.getOrElse(Paths.get("target/").toString)
-        
-        import scala.collection.JavaConverters._
-        
-        val files = Files.walk(Paths.get(source)).iterator().asScala.filter(Files.isRegularFile(_))
-        
+
+        ViashNamespace.build(namespace, source, target)
       }
       case _ => println("No subcommand was specified. See `viash --help` for more information.")
     }
   }
 
-  def readFunctionality(opt: ScallopOption[String]) = {
-    Functionality.parse(IOHelper.uri(opt()))
-  }
-  def readComponent(opt: ScallopOption[String]) = {
-    val uri = IOHelper.uri(opt())
-
-    val str = IOHelper.read(uri)
-    val uris = uri.toString()
-    val extension = uris.substring(uris.lastIndexOf(".")+1).toLowerCase()
-
-    // detect whether a component was passed or a yaml
-    // using the extension
-    val (yaml, code) =
-      if (extension == "yml" || extension == "yaml") {
-        (str, None)
-      } else {
-        val commentStr = extension match {
-          case "sh" | "py" | "r" => "#'"
-          case _ => throw new RuntimeException("Unrecognised extension: " + extension)
-        }
-        val headerComm = commentStr + " "
-        val headerRegex = "^" + commentStr + "  ".r
-        assert(
-          str.contains(s"$commentStr functionality:"),
-          message = s"""Component should contain a functionality header: "$commentStr functionality: <...>""""
-        )
-
-        val (header, body) = str.split("\n").partition(_.startsWith(headerComm))
-        val yaml = header.map(s => s.drop(3)).mkString("\n")
-        val code = commentStr + " VIASH START\n" + commentStr + "VIASH END\n" + body.mkString("\n")
-
-        (yaml, Some(code))
-      }
-
-    // turn optional code into a Script
-    val componentScript = code.map{cod =>
-      val scr = extension match {
-        case "r" => RScript(Some("viash_main.R"), text = Some(cod))
-        case "py" => PythonScript(Some("viash_main.py"), text = Some(cod))
-        case "sh" => BashScript(Some("viash_main.sh"), text = Some(cod))
-        case _ => throw new RuntimeException("Unrecognised extension: " + extension)
-      }
-      scr.asInstanceOf[Script]
-    }
-
-    // read config
-    val config = Config.parse(yaml, uri)
-
-    config.copy(
-      functionality = config.functionality.copy(
-         resources = Some(componentScript.toList ::: config.functionality.resources.getOrElse(Nil))
-      )
-    )
-  }
-
-  def readPlatform(opt: ScallopOption[String]) = {
-    opt.map{ path =>
-      Platform.parse(IOHelper.uri(path))
-    }.getOrElse(NativePlatform())
-  }
-
-  def viashLogic(subcommand: ViashCommand, modifyFun: Boolean = true) = {
-    // read the component if passed, else read the functionality
-    assert(
-      subcommand.component.isEmpty != subcommand.functionality.isEmpty,
-      message = "Either functionality or component need to be specified!"
-    )
-    val config =
-      if (subcommand.component.isDefined) {
-        readComponent(subcommand.component)
-      } else {
-        Config(
-          functionality = readFunctionality(subcommand.functionality)
-        )
-      }
-
-    // get the platform
-    // * if a platform yaml is passed, use that
-    // * else if a platform id is passed, look up the platform in the platforms list
-    // * else if a platform is already defined in the config, use that
-    // * else if platforms is a non-empty list, use the first platform
-    // * else use the native platform
-    val platform =
-      if (subcommand.platform.isDefined) {
-        Platform.parse(IOHelper.uri(subcommand.platform()))
-      } else if (subcommand.platformID.isDefined) {
-        val pid = subcommand.platformID()
-        val platformNames = config.platforms.map(_.id)
-        assert(
-          platformNames.contains(pid),
-          s"platform $pid is not found amongst the defined platforms: ${platformNames.mkString(", ")}"
-        )
-        config.platforms(platformNames.indexOf(pid))
-      } else if (config.platform.isDefined) {
-        config.platform.get
-      } else if (!config.platforms.isEmpty) {
-        config.platforms(0)
-      } else {
-        NativePlatform()
-      }
-
-    // modify the functionality using the platform
-    config.copy(
-      functionality =
-        if (modifyFun) {
-          platform.modifyFunctionality(config.functionality)
-        } else {
-          config.functionality
-        },
-      platform = Some(platform)
+  def readAll(
+    subcommand: ViashCommand,
+    modifyFun: Boolean = true
+  ): Config = {
+    Config.read(
+      component = subcommand.component.toOption,
+      functionality = subcommand.functionality.toOption,
+      platform = subcommand.platform.toOption,
+      platformID = subcommand.platformID.toOption,
+      modifyFun = modifyFun
     )
   }
 
