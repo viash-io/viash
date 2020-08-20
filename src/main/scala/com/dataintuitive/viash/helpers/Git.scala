@@ -18,9 +18,7 @@ object Git {
     ).exitValue == 0
   }
 
-  // TODO: fix: remote git repo:    [Ljava.lang.String;@117159c0
-
-  def localGitRepo(path: File) = {
+  def getLocalRepo(path: File) = {
     Try(
       Exec.run(
         List("git", "rev-parse", "--show-toplevel"),
@@ -29,28 +27,30 @@ object Git {
     ).toOption
   }
 
-  def remoteGitRepo(path: File) = {
+  private val remoteRepoRegex = "(.*)\\s(.*)\\s(.*)".r
+
+  def getRemoteRepo(path: File) = {
    Try(
       Exec.run(
         List("git", "remote", "--verbose"),
         cwd = Some(path)
-      ).split("\n")
-      .map(_.split("\\s"))
-      .filter(_.headOption.getOrElse("NA") contains "origin")
-      .headOption.getOrElse("No remote configured").toString
+      )
+      .split("\n")
+      .flatMap{
+        case remoteRepoRegex(name, link, direction) if name contains "origin" => Some(link)
+        case _ => None
+      }
+      .headOption
+      .getOrElse("No remote configured")
     ).toOption
   }
 
-  def gitCommit(path: File) = {
+  def getCommit(path: File) = {
     Try(
-      Exec.run2(
-        List("git", "log", "--oneline"),
+      Exec.run(
+        List("git", "rev-parse", "HEAD"),
         cwd = Some(path)
-      ).output
-      .split("\n")
-      .head
-      .split(" ")
-      .head
+      ).trim
     ).toOption
   }
 
@@ -58,9 +58,9 @@ object Git {
     val igr = isGitRepo(path)
 
     if (igr) {
-      val lgr = localGitRepo(path)
-      val rgr = remoteGitRepo(path)
-      val gc = gitCommit(path)
+      val lgr = getLocalRepo(path)
+      val rgr = getRemoteRepo(path)
+      val gc = getCommit(path)
 
       GitInfo(lgr, rgr, gc)
     } else {
