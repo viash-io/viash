@@ -6,6 +6,7 @@ import resources.{BashScript, Script}
 import sys.process.{Process, ProcessLogger}
 import java.io.{ByteArrayOutputStream, PrintWriter, FileWriter, File}
 import java.nio.file.{Paths, Files}
+import helpers.IOHelper
 
 object ViashTester {
   case class TestOutput(name: String, exitValue: Int, output: String)
@@ -40,7 +41,7 @@ object ViashTester {
     val buildfun = platform.modifyFunctionality(fun)
     val builddir = Paths.get(dir.toString(), "build_executable").toFile()
     builddir.mkdir()
-    Main.writeResources(buildfun.resources.getOrElse(Nil), builddir)
+    IOHelper.writeResources(buildfun.resources.getOrElse(Nil), builddir)
 
     // run command, collect output
     val stream = new ByteArrayOutputStream
@@ -100,7 +101,7 @@ object ViashTester {
       // write resources to dir
       val newdir = Paths.get(dir.toString(), "test_" + test.filename).toFile()
       newdir.mkdir()
-      Main.writeResources(funfinal.resources.getOrElse(Nil), newdir)
+      IOHelper.writeResources(funfinal.resources.getOrElse(Nil), newdir)
 
       // run command, collect output
       val stream = new ByteArrayOutputStream

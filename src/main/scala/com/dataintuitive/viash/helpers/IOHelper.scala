@@ -10,6 +10,8 @@ import java.net.URL
 import sys.process._
 import java.nio.charset.StandardCharsets
 
+import com.dataintuitive.viash.functionality.resources.Resource
+
 object IOHelper {
   def makeTemp(name: String) = {
     val tempdir = Paths.get(scala.util.Properties.envOrElse("VIASH_TEMP", "/tmp"))
@@ -67,4 +69,17 @@ object IOHelper {
 
     file
   }
+
+  def writeResources(
+    resources: Seq[Resource],
+    outputDir: java.io.File,
+    overwrite: Boolean = true
+  ) {
+    // copy all files
+    resources.foreach{ resource =>
+      val dest = Paths.get(outputDir.getAbsolutePath, resource.filename)
+      resource.write(dest, overwrite)
+    }
+  }
+
 }

@@ -3,6 +3,7 @@ package com.dataintuitive.viash
 import config._
 import functionality.resources.PlainFile
 import io.circe.yaml.Printer
+import helpers.IOHelper
 
 object ViashExport {
   def export(config: Config, output: String, printMeta: Boolean) {
@@ -27,9 +28,9 @@ object ViashExport {
 //      text = Some(printer.pretty(configJson))
 //    )
 
-//    Main.writeResources(configResource :: fun.resources.getOrElse(Nil), dir)
+//    IOHelper.writeResources(configResource :: fun.resources.getOrElse(Nil), dir)
 
-    Main.writeResources(fun.resources.getOrElse(Nil), dir)
+    IOHelper.writeResources(fun.resources.getOrElse(Nil), dir)
 
     if (printMeta) {
       println(config.info.get.consoleString)

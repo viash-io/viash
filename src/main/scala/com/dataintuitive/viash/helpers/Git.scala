@@ -4,6 +4,12 @@ import sys.process._
 import java.io.File
 import scala.util.Try
 
+case class GitInfo(
+  localRepo: Option[String],
+  remoteRepo: Option[String],
+  commit: Option[String]
+)
+
 object Git {
   def isGitRepo(path: File) = {
     Exec.run2(
@@ -11,6 +17,8 @@ object Git {
       cwd = Some(path)
     ).exitValue == 0
   }
+
+  // TODO: fix: remote git repo:    [Ljava.lang.String;@117159c0
 
   def localGitRepo(path: File) = {
     Try(
@@ -54,13 +62,9 @@ object Git {
       val rgr = remoteGitRepo(path)
       val gc = gitCommit(path)
 
-      (lgr, rgr, gc)
+      GitInfo(lgr, rgr, gc)
     } else {
-      val lgr = None
-      val rgr = None
-      val gc = None
-
-      (lgr, rgr, gc)
+      GitInfo(None, None, None)
     }
   }
 }
