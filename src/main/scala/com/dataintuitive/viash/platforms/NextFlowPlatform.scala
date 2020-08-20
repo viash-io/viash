@@ -115,7 +115,7 @@ case class NextFlowPlatform(
           functionality.name → {
             List(
               "name" → functionality.name,
-              "container" → image,
+              "container" → (image + ":" + version.map(_.toString).getOrElse("latest")),
               "command" → executionCode
             ) :::
             extensionsAsTuple :::
