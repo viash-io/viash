@@ -21,16 +21,19 @@ object ViashExport {
       mappingStyle = Printer.FlowStyle.Block,
       splitLines = true
     )
-    val configJson = encodeConfig(config)
+    val strippedConfig = config.copy(
+      functionality = fun.copy(
+        resources = Some(fun.resources.get.tail) // drop main script
+      ),
+      platforms = Nil // drop other platforms
+    )
 
-//    val configResource = PlainFile(
-//      name = Some("viash.yaml"),
-//      text = Some(printer.pretty(configJson))
-//    )
+    val configYaml = PlainFile(
+      name = Some("viash.yaml"),
+      text = Some(printer.pretty(encodeConfig(strippedConfig)))
+    )
 
-//    IOHelper.writeResources(configResource :: fun.resources.getOrElse(Nil), dir)
-
-    IOHelper.writeResources(fun.resources.getOrElse(Nil), dir)
+    IOHelper.writeResources(configYaml :: fun.resources.getOrElse(Nil), dir)
 
     if (printMeta) {
       println(config.info.get.consoleString)

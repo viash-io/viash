@@ -14,8 +14,8 @@ import sys.process._
 
 object Main {
   private val pkg = getClass.getPackage
-  val name = pkg.getImplementationTitle
-  val version = pkg.getImplementationVersion
+  val name = if (pkg.getImplementationTitle != null) pkg.getImplementationTitle else "viash"
+  val version = if (pkg.getImplementationVersion != null) pkg.getImplementationVersion else "test"
 
   def main(args: Array[String]) {
     val (viashArgs, runArgs) = args.span(_ != "--")
