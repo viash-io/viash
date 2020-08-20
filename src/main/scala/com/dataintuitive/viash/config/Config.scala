@@ -142,7 +142,7 @@ object Config {
 
     // gather git info of functionality git
     val path = new File(functionality.getOrElse(component.getOrElse(""))).getParentFile
-    val GitInfo(_, rgr, gc) = Git.getInfo(path.getParentFile)
+    val GitInfo(_, rgr, gc) = Git.getInfo(path)
 
     // construct info object
     val info = Info(
