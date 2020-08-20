@@ -12,10 +12,12 @@ case class GitInfo(
 
 object Git {
   def isGitRepo(path: File) = {
-    Exec.run2(
-      List("git", "rev-parse", "--is-inside-work-tree"),
-      cwd = Some(path)
-    ).exitValue == 0
+    Try(
+      Exec.run2(
+        List("git", "rev-parse", "--is-inside-work-tree"),
+        cwd = Some(path)
+      ).exitValue == 0
+    ).getOrElse(false)
   }
 
   def getLocalRepo(path: File) = {
