@@ -211,7 +211,7 @@ object BashWrapper {
 
       val part1 = "    " + exampleStrs.mkString(", ")
       val part2 = "        " + properties.mkString(", ")
-      val part3 = param.description.toList.flatMap(_.split("\n")).map("        " + _)
+      val part3 = param.description.toList.flatMap(escape(_).split("\n")).map("        " + _)
 
       (part1 :: part2 :: part3 ::: List("")).map("    echo \"" + _ + "\"").mkString("\n")
     })
@@ -220,7 +220,7 @@ object BashWrapper {
 
     s"""# ViashHelp: Display helpful explanation about this executable
        |function ViashHelp {
-       |   echo "${functionality.description.getOrElse("").stripLineEnd}"
+       |   echo "${escape(functionality.description.getOrElse("").stripLineEnd)}"
        |   echo
        |   echo "Options:"
        |${usageStrs.mkString("\n")}
