@@ -22,7 +22,11 @@ class E2ETests extends FunSuite {
       // run tests
       val dir = IOHelper.makeTemp("viash_test_" + functionality.name)
 
-      val tags: List[Tag] = if (platName == "docker") List(DockerTest) else Nil
+      val tags: List[Tag] = platName match {
+        case "docker" => List(DockerTest)
+        case "native" => List(NativeTest)
+        case _ => Nil
+      }
 
       test(s"Testing $testName platform $platName", tags: _*) {
         val results = try {
