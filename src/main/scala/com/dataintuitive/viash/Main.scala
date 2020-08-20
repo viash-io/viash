@@ -53,8 +53,8 @@ object Main {
         }
       }
       case List(conf.export) => {
-        val config = readAll(conf.export)
         val outputPath = conf.export.output()
+        val config = readAll(conf.export)
         val config2 = config.copy(
           info = config.info.map(_.copy(
             output_path = Some(outputPath)
@@ -86,9 +86,9 @@ object Main {
         System.exit(code)
       }
       case List(conf.namespace, conf.namespace.build) => {
-        val namespace = conf.namespace.build.namespace()
-        val source = conf.namespace.build.src.getOrElse(Paths.get("src", namespace).toString)
-        val target = conf.namespace.build.target.getOrElse(Paths.get("target/").toString)
+        val namespace = conf.namespace.build.namespace.toOption
+        val source = conf.namespace.build.src.getOrElse("src/" + namespace.getOrElse(""))
+        val target = conf.namespace.build.target.getOrElse("target")
 
         ViashNamespace.build(namespace, source, target)
       }

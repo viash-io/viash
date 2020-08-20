@@ -6,7 +6,7 @@ import io.circe.yaml.Printer
 import helpers.IOHelper
 
 object ViashExport {
-  def export(config: Config, output: String, printMeta: Boolean) {
+  def export(config: Config, output: String, printMeta: Boolean = false) {
     val fun = config.functionality
     val plat = config.platform.get
 

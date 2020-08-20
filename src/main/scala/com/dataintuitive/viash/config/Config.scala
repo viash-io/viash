@@ -95,10 +95,10 @@ object Config {
   }
 
   def read(
-    component: Option[String],
-    functionality: Option[String],
-    platform: Option[String],
-    platformID: Option[String],
+    component: Option[String] = None,
+    functionality: Option[String] = None,
+    platform: Option[String] = None,
+    platformID: Option[String] = None,
     modifyFun: Boolean = true
   ): Config = {
     // read the component if passed, else read the functionality

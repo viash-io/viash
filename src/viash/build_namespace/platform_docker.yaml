@@ -1,9 +1,0 @@
-type: docker
-image: dataintuitive/viash
-volumes:
-  - name: in
-    mount: /in
-  - name: out
-    mount: /out
-workdir: /pwd
-version: 0.2.0-rc2
