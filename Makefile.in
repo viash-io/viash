@@ -1,14 +1,21 @@
 obj = bin/viash
 VERSION = $(shell awk -F'\"' '/version :=/ { print $$2 }' build.sbt)
 
-all: $(obj) tools
-
-$(obj): $(find src/ -name "*.scala")
+$(obj): $(shell find src/ -name "*.scala")
 	sbt 'set test in assembly := {}' 'set assemblyOutputPath in assembly := new File("target/viash.jar")' assembly
 	mkdir -p bin
 	cat src/stub.sh target/viash.jar > $(obj)
 	chmod +x $(obj)
+	@echo "==================================> $(obj)"
 	
+tools: $(obj) $(shell find src/viash)
+	# Use build_namespace to build itself :-)
+	bin/viash run -f src/viash/build_namespace/functionality.yaml -- -n viash -t bin
+	# Now build all tools
+	bin/viash-build_namespace -n viash -t bin
+	@echo "==================================> tools"
+
+.PHONY: with-docker
 with-docker:
 	mkdir -p bin
 	docker build -t viash .
@@ -18,14 +25,11 @@ with-docker:
 	cat src/stub.sh /tmp/viash.jar > $(obj)
 	chmod +x $(obj)
 
+.PHONY: docker
 docker:
 	docker build -t dataintuitive/viash:$(VERSION) .
 
-tools: $(obj) src/viash/*
-	# Use build_namespace to build itself :-)
-	bin/viash run -f src/viash/build_namespace/functionality.yaml -- -n viash -t bin
-	# Now build all tools
-	bin/viash-build_namespace -n viash -t bin
+
 
 .PHONY: test
 test:
