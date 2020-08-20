@@ -29,11 +29,9 @@ with-docker:
 docker:
 	docker build -t dataintuitive/viash:$(VERSION) .
 
-
-
 .PHONY: test
 test:
-	sbt test
+	sbt 'testOnly -- -l com.dataintuitive.viash.NativeTest'
 
 .PHONY: clean
 clean:
