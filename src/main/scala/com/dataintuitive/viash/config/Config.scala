@@ -6,7 +6,7 @@ import com.dataintuitive.viash.helpers.IOHelper
 import java.net.URI
 import io.circe.yaml.parser
 import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.helpers.Git
+import com.dataintuitive.viash.helpers.{Git, GitInfo}
 import java.io.File
 
 case class Config(
@@ -142,7 +142,7 @@ object Config {
 
     // gather git info of functionality git
     val path = new File(functionality.getOrElse(component.getOrElse(""))).getParentFile
-    val (_, rgr, gc) = Git.getInfo(path.getParentFile)
+    val GitInfo(_, rgr, gc) = Git.getInfo(path.getParentFile)
 
     // construct info object
     val info = Info(

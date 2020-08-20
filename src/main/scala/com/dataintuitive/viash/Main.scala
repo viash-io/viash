@@ -33,7 +33,7 @@ object Main {
 
         try {
           // write executable and resources to temporary directory
-          writeResources(fun.resources.getOrElse(Nil), dir)
+          IOHelper.writeResources(fun.resources.getOrElse(Nil), dir)
 
           // determine command
           val cmd =
@@ -108,17 +108,4 @@ object Main {
       modifyFun = modifyFun
     )
   }
-
-  def writeResources(
-    resources: Seq[Resource],
-    outputDir: java.io.File,
-    overwrite: Boolean = true
-  ) {
-    // copy all files
-    resources.foreach{ resource =>
-      val dest = Paths.get(outputDir.getAbsolutePath, resource.filename)
-      resource.write(dest, overwrite)
-    }
-  }
-
 }
