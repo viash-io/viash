@@ -8,6 +8,7 @@ arguments:
   description: |
     An input file with positional arguments.
     More checks for multiline descriptions.
+    Testing some characters that should be escaped: ` $ \
   direction: input
   required: true
   must_exist: true
