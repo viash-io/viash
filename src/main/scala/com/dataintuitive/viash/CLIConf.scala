@@ -44,9 +44,9 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     |viash is a spec and a tool for defining execution contexts and converting execution instructions to concrete instantiations.
     |
     |Usage:
-    |  viash run script.sh [-P docker] [-k] [-- --params --to component]
-    |  viash export script.sh [-P docker] -o output [-m]
-    |  viash test script.sh [-P docker] [-v] [-k]
+    |  viash run [arguments] script.sh -- [arguments for script]
+    |  viash export [arguments] script.sh
+    |  viash test [arguments] script.sh
     |
     |Check the help of a subcommand for more information, or the API available at:
     |  https://github.com/data-intuitive/viash_docs
@@ -58,7 +58,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       |Executes a viash component. From the provided functionality.yaml, viash generates a temporary executable and immediately executes it with the given parameters.
       |
       |Usage:
-      |  viash run script.sh [-p platform.yaml] [-P docker] [-k] [-- --params --to component]
+      |  viash run [-P docker] [-k] script.sh [arguments for script]
       |
       |Arguments:""".stripMargin)
 
@@ -73,7 +73,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       |Generate an executable from the functionality and platform meta information.
       |
       |Usage:
-      |  viash export script.sh [-p platform.yaml] [-P docker] -o output [-m]
+      |  viash export -o output [-P docker] [-m] script.sh
       |
       |Arguments:""".stripMargin)
 
@@ -94,7 +94,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       |Run the tests as defined in the functionality.yaml. Check the documentation for more information on how to write tests.
       |
       |Usage:
-      |  viash test script.sh [-p platform.yaml] [-P docker] [-v] [-k]
+      |  viash test [-P docker] [-v] [-k] script.sh
       |
       |Arguments:""".stripMargin)
 
