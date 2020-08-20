@@ -110,6 +110,7 @@ case class NextFlowPlatform(
         namespacedParameters :::
         List(
           "id" → "",
+          "dockerPrefix" -> "",
           "input" → "",
           "output" → "",
           functionality.name → {
@@ -133,7 +134,7 @@ case class NextFlowPlatform(
     val setup_main_header = s"""nextflow.preview.dsl=2
         |import java.nio.file.Paths
         |if (!params.containsKey("input") || params.input == "") {
-        |    exit 1, "ERROR: Please provide a --input parameter containing an .md file or a wildcard expression"
+        |    exit 1, "ERROR: Please provide a --input parameter containing an input file/dir or a wildcard expression"
         |}
         |if (!params.containsKey("output") || params.output == "" ) {
         |    exit 1, "ERROR: Please provide a --output parameter for storing the output"
@@ -307,7 +308,7 @@ case class NextFlowPlatform(
         |  echo { (params.debug == true) ? true : false }
         |  cache 'deep'
         |  stageInMode "$stageInModeStr"
-        |  container "$${container}"
+        |  container "$${params.dockerPrefix}$${container}"
         |  $publishDirStr
         |  input:
         |    tuple val(id), path(input), val(output), val(container), val(cli)
