@@ -3,24 +3,46 @@ package com.dataintuitive.viash
 import org.scalatest.{FunSuite, Tag}
 import com.dataintuitive.viash.functionality.Functionality
 import com.dataintuitive.viash.platforms.Platform
+import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.helpers._
 
 class E2ETests extends FunSuite {
   for (
-    testName <- List("testbash", "testpython", "testr", "testexecutable");
+    (testName, scriptName) <- List(
+      ("testbash", None),
+      ("testpython", None),
+      ("testr", Some("code.R")),
+      ("testexecutable", None)
+    );
     platName <- List("docker", "native")
   ) {
-    val funcFile = getClass.getResource(s"/$testName/functionality.yaml").getPath()
-    val platRes = getClass.getResource(s"/$testName/platform_$platName.yaml")
 
-    if (platRes != null) {
-      val platFile = platRes.getPath()
-      // parse functionality from file
-      val functionality = Functionality.parse(IOHelper.uri(funcFile))
-      val platform = Platform.parse(IOHelper.uri(platFile))
+    val config =
+      if (scriptName.isDefined) {
+        val compRes = getClass.getResource(s"/$testName/${scriptName.get}")
+        Some(Config.read(
+          component = Some(compRes.toString),
+          platformID = Some(platName),
+          modifyFun = false
+        ))
+      } else {
+        val funcRes = getClass.getResource(s"/$testName/functionality.yaml")
+        val platRes = getClass.getResource(s"/$testName/platform_$platName.yaml")
 
+        if (platRes != null) {
+          Some(Config.read(
+            functionality = Some(funcRes.toString),
+            platform = Some(platRes.toString),
+            modifyFun = false
+          ))
+        } else {
+          None
+        }
+      }
+
+    if (config.isDefined) {
       // run tests
-      val dir = IOHelper.makeTemp("viash_test_" + functionality.name)
+      val dir = IOHelper.makeTemp("viash_test_" + config.get.functionality.name)
 
       val tags: List[Tag] = platName match {
         case "docker" => List(DockerTest)
@@ -30,7 +52,7 @@ class E2ETests extends FunSuite {
 
       test(s"Testing $testName platform $platName", tags: _*) {
         val results = try {
-          ViashTester.runTests(functionality, platform, dir, verbose = false)
+          ViashTester.runTests(config.get.functionality, config.get.platform.get, dir, verbose = false)
         } finally {
           IOHelper.deleteRecursively(dir)
         }
