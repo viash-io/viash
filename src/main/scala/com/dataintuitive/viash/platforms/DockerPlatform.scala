@@ -53,7 +53,7 @@ case class DockerPlatform(
       case s: Executable => "--entrypoint='' "
       case _ => "--entrypoint=bash "
     }
-    val executor = s"""eval docker run $entrypointStr$dockerArgs$volExtraParams $imageName:$imageVersion"""
+    val executor = s"""eval docker run $$viash_user_arg $entrypointStr$dockerArgs$volExtraParams $imageName:$imageVersion"""
 
     // add extra arguments to the functionality file for each of the volumes
     val fun2 = functionality.copy(
@@ -159,6 +159,10 @@ case class DockerPlatform(
            |            ;;
            |        ---volume=*)
            |            ${BashHelper.save(extraMountsVar, Seq("-v $(ViashRemoveFlags \"$2\")"))}
+           |            shift 1
+           |            ;;
+           |        ---user)
+           |            viash_user_arg='--user "$$(id -u):$$(id -g)"'
            |            shift 1
            |            ;;""".stripMargin
 
