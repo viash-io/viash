@@ -39,9 +39,7 @@ if [ -z "$par_output" ]; then
   par_output=`echo $script_path | sed 's#\(.*\)\(\.[^\.]*\)#\1.vsh\2#'`
 fi
 
-# echo par_functionality: $par_functionality
-
-echo "Merging viash files into one!"
+echo "Generating [`basename $par_output`]"
 
 #### FUNCTIONALITY
 echo "> Merging [`basename $par_functionality`] into [`basename $par_output`]"
