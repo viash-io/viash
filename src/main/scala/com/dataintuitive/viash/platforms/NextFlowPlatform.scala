@@ -197,9 +197,9 @@ case class NextFlowPlatform(
           |""".stripMargin.replace("__f__", fname)
       // Out format is different from in format
       case Some(Join) => """
-          |// files is either String or List[String]
+          |// files is either String, List[String] or HashMap[String,String]
           |def outFromIn(files) {
-          |    if (files in List) {
+          |    if (files in List || files in HashMap) {
           |        // We're in join mode, files is List[String]
           |        return "__f__" + "." + __e__
           |    } else {
@@ -232,8 +232,12 @@ case class NextFlowPlatform(
         |    // Join values according to the configured parameter
         |    def overrideArgs = params.arguments.collect{ it ->
         |      (it.value.direction == "Input" && it.value.type == "file")
-        |        ? (str in List)
-        |            ? it.value + [ "value" : str.join(it.value.multiple_sep)]
+        |        ? (str in List || str in HashMap)
+        |            ? (str in List)
+        |                ? it.value + [ "value" : str.join(it.value.multiple_sep)]
+        |                : (str[it.value.name] != null)
+        |                    ? it.value + [ "value" : str[it.value.name]]
+        |                    : it.value + [ "value" : "PROBLEMS" ]
         |            : it.value + [ "value" : str ]
         |        : it.value
         |    }
@@ -342,14 +346,19 @@ case class NextFlowPlatform(
         |
         |    def id_input_output_function_cli_ =
         |        id_input_params_.map{ id, input, _params ->
-        |            // TODO: make sure input is List[Path] or Path, otherwise convert
-        |            def checkedInput = input
-        |            // filename is either String or List[String]
+        |            // TODO: make sure input is List[Path], HashMap[String,Path] or Path, otherwise convert
+        |            // NXF knows how to deal with an List[Path], not with HashMap !
+        |            def checkedInput =
+        |                (input in HashMap)
+        |                    ? input.collect{ k, v -> v }
+        |                    : input
+        |            // filename is either String, List[String] or HashMap[String, String]
         |            def filename =
-        |                (checkedInput in List)
-        |                    ? checkedInput.collect{ it.name }
-        |                    : checkedInput.name
-        |            // NXF knows how to deal with an List[Path]
+        |                (input in List || input in HashMap)
+        |                    ? (input in List)
+        |                        ? input.collect{ it.name }
+        |                        : input.collectEntries{ k, v -> [ k, v.name ] }
+        |                    : input.name
         |            def outputFilename = outFromIn(filename)
         |            def defaultParams = params[key] ? params[key] : [:]
         |            def overrideParams = _params[key] ? _params[key] : [:]
@@ -365,7 +374,6 @@ case class NextFlowPlatform(
         |                renderCLI([updtParams2.command], updtParams2.arguments)
         |            )
         |        }
-        |
         |    result_ = executor(id_input_output_function_cli_) \\
         |        | join(id_input_params_) \\
         |        | map{ id, output, input, original_params ->
