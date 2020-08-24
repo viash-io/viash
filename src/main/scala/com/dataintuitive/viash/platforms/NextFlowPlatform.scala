@@ -175,28 +175,7 @@ case class NextFlowPlatform(
           |}
           |""".stripMargin.replace("__e__", inputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
       // Out format is different from in format
-      case Some(Convert) | None => """
-          |def outFromIn(inputstr) {
-          |
-          |    def splitstring = inputstr.split(/\./)
-          |    def prefix = splitstring.head()
-          |    def extension = splitstring.last()
-          |
-          |    return prefix + "." + "__f__" + "." + __e__
-          |}
-          |""".stripMargin
-              .replace("__e__", outputFileExtO.map(ext => s""""$ext"""").getOrElse("extension"))
-              .replace("__f__", fname)
-      // Out format is different from in format
-      case Some(ToDir) => """
-          |def outFromIn(inputstr) {
-          |
-          |    return "__f__"
-          |
-          |}
-          |""".stripMargin.replace("__f__", fname)
-      // Out format is different from in format
-      case Some(Join) => """
+      case Some(Convert) | Some(Join) | None => """
           |// files is either String, List[String] or HashMap[String,String]
           |def outFromIn(files) {
           |    if (files in List || files in HashMap) {
@@ -213,6 +192,14 @@ case class NextFlowPlatform(
           |""".stripMargin
               .replace("__e__", outputFileExtO.map(ext => s""""$ext"""").getOrElse("extension"))
               .replace("__f__", fname)
+      // Out format is different from in format
+      case Some(ToDir) => """
+          |def outFromIn(inputstr) {
+          |
+          |    return "__f__"
+          |
+          |}
+          |""".stripMargin.replace("__f__", fname)
       case _ => """
           |def outFromIn(inputStr) {
           |
@@ -229,7 +216,8 @@ case class NextFlowPlatform(
         |// Out: Arrays of DataObjects
         |def overrideInput(params, str) {
         |
-        |    // Join values according to the configured parameter
+        |    // `str` in fact can be `String`, `List[String]` or `Map[String,String]`
+        |    // Please refer to the docs for more info
         |    def overrideArgs = params.arguments.collect{ it ->
         |      (it.value.direction == "Input" && it.value.type == "file")
         |        ? (str in List || str in HashMap)
