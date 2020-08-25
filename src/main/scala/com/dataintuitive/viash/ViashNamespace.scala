@@ -12,7 +12,7 @@ object ViashNamespace {
     Files.find(sourceDir, Integer.MAX_VALUE, (p, b) => filter(p, b)).iterator().asScala.toList
   }
 
-  def build(namespace: Option[String], source: String, target: String) {
+  def findAllConfigs(namespace: Option[String], source: String, target: String) = {
     val sourceDir = Paths.get(source)
 
     val funFiles = find(sourceDir, (path, attrs) => {
@@ -21,16 +21,19 @@ object ViashNamespace {
 
     val legacyExports = funFiles.flatMap(getLegacyConfigs(_, namespace, target))
 
-    val scriptRegex = ".*\\.r|\\.sh|\\.py".r
+    val scriptRegex = ".*\\.vsh\\.[^\\.]*$".r
     val scriptFiles = find(sourceDir, (path, attrs) => {
       scriptRegex.findFirstIn(path.toString().toLowerCase).isDefined &&
-        attrs.isRegularFile() &&
-        scala.io.Source.fromFile(path.toFile).getLines().exists(_.contains("' functionality:"))
+        attrs.isRegularFile()
     })
 
     val newExports = scriptFiles.flatMap(getNewConfigs(_, namespace, target))
 
-    val allExports = legacyExports ::: newExports
+    legacyExports ::: newExports
+  }
+
+  def build(namespace: Option[String], source: String, target: String) {
+    val allExports = findAllConfigs(namespace, source, target)
 
     for ((conf, in, out) ← allExports) {
       println(s"Exporting $in ==> $out")
