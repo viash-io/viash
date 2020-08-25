@@ -26,8 +26,8 @@ object ViashNamespace {
     for ((conf, error) ← configs) {
       if (conf.isDefined) {
         val in = conf.get.info.get.parent_path.get
-        val out = in.replace(source, target)
         val platType = conf.get.platform.get.id
+        val out = in.replace(source, target + s"/${platType}")
         println(s"Exporting $in =$platType=> $out")
         ViashBuild(conf.get, out)
       } else {
