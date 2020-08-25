@@ -4,9 +4,10 @@ import config._
 import functionality.resources.PlainFile
 import io.circe.yaml.Printer
 import helpers.IOHelper
+import java.nio.file.Paths
 
-object ViashExport {
-  def export(config: Config, output: String, printMeta: Boolean = false) {
+object ViashBuild {
+  def apply(config: Config, output: String, printMeta: Boolean = false) {
     val fun = config.functionality
     val plat = config.platform.get
 
@@ -22,9 +23,10 @@ object ViashExport {
       splitLines = true
     )
     val strippedConfig = config.copy(
-      functionality = fun.copy(
-        resources = Some(fun.resources.get.tail) // drop main script
-      ),
+      info = config.info.map(_.copy(
+        output_path = Some(output),
+        executable_path = fun.mainScript.map(scr => Paths.get(output, scr.name.get).toString)
+      )),
       platforms = Nil // drop other platforms
     )
 

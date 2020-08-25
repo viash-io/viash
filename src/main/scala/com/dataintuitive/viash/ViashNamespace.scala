@@ -5,98 +5,87 @@ import java.nio.file.attribute.BasicFileAttributes
 import functionality.Functionality
 import platforms.Platform
 import config.Config
+import config.Config.PlatformNotFoundException
+import scala.collection.JavaConverters
 
 object ViashNamespace {
   def find(sourceDir: Path, filter: (Path, BasicFileAttributes) => Boolean) = {
-    import scala.collection.JavaConverters._
-    Files.find(sourceDir, Integer.MAX_VALUE, (p, b) => filter(p, b)).iterator().asScala.toList
+    val it = Files.find(sourceDir, Integer.MAX_VALUE, (p, b) => filter(p, b)).iterator()
+    JavaConverters.asScalaIterator(it).toList
   }
 
-  def findAllConfigs(namespace: Option[String], source: String, target: String) = {
+  def build(
+    source: String,
+    target: String,
+    platform: Option[String] = None,
+    platformID: Option[String] = None,
+    namespace: Option[String] = None
+  ) {
+    val configs = findConfigs(source, platform, platformID, namespace)
+
+    for ((conf, error) ← configs) {
+      if (conf.isDefined) {
+        val in = conf.get.info.get.parent_path.get
+        val out = in.replace(source, target)
+        val platType = conf.get.platform.get.id
+        println(s"Exporting $in =$platType=> $out")
+      } else {
+        val err = error.get
+        val in = err.config.info.get.parent_path.get
+        println(s"Skipping $in --- platform ${err.platform} not found")
+      }
+    }
+  }
+
+  def findConfigs(
+    source: String,
+    platform: Option[String] = None,
+    platformID: Option[String] = None,
+    namespace: Option[String]) = {
     val sourceDir = Paths.get(source)
 
+    val namespaceMatch =
+      if (namespace.isDefined) {
+        (path: String) => {
+          val nsregex = s"""^$source/${namespace.get}/.*""".r
+          nsregex.findFirstIn(path).isDefined
+        }
+      } else {
+        (path: String) => true
+      }
+
+    // find funcionality.yaml files and parse as config
     val funFiles = find(sourceDir, (path, attrs) => {
-      path.toString().endsWith("functionality.yaml") && attrs.isRegularFile()
+      path.toString.endsWith("functionality.yaml") && attrs.isRegularFile() && namespaceMatch(path.toString)
     })
+    val legacyConfigs = funFiles.map{file =>
+      try {
+        (Some(Config.read(functionality = Some(file.toString), platform = platform, platformID = platformID)), None)
+      } catch {
+        case e: PlatformNotFoundException => {
+          (None, Some(e))
+        }
+      }
+    }
 
-    val legacyExports = funFiles.flatMap(getLegacyConfigs(_, namespace, target))
-
+    // find *.vsh.* files and parse as config
     val scriptRegex = ".*\\.vsh\\.[^\\.]*$".r
     val scriptFiles = find(sourceDir, (path, attrs) => {
       scriptRegex.findFirstIn(path.toString().toLowerCase).isDefined &&
-        attrs.isRegularFile()
+        attrs.isRegularFile() &&
+        namespaceMatch(path.toString)
     })
-
-    val newExports = scriptFiles.flatMap(getNewConfigs(_, namespace, target))
-
-    legacyExports ::: newExports
-  }
-
-  def build(namespace: Option[String], source: String, target: String) {
-    val allExports = findAllConfigs(namespace, source, target)
-
-    for ((conf, in, out) ← allExports) {
-      println(s"Exporting $in ==> $out")
-      ViashExport.export(conf, out)
-
-      val symlinkSrc = Paths.get(out, conf.functionality.name).toAbsolutePath()
-      val symlinkDest = Paths.get(target, namespace.map(_ + "-").getOrElse("") + conf.functionality.name)
-
-      if (symlinkSrc.toFile.exists) {
-        if (symlinkDest.toFile.exists) {
-          symlinkDest.toFile.delete() // overwrite previous symlinks
+    val newConfigs = scriptFiles.map{file =>
+      try {
+        (Some(Config.read(component = Some(file.toString), platform = platform, platformID = platformID)), None)
+      } catch {
+        case e: PlatformNotFoundException => {
+          (None, Some(e))
         }
-        println(s"  Symlinking $symlinkSrc ==> $symlinkDest")
-        Files.createSymbolicLink(symlinkDest, symlinkSrc)
       }
     }
-  }
 
-  def getLegacyConfigs(funPath: Path, namespace: Option[String], target: String) = {
-    val fun = Functionality.read(funPath.toString())
-
-    val dir = funPath.getParent
-
-    List("native", "docker", "nextflow").flatMap{ plat =>
-      val platPath = Paths.get(dir.toString, "platform_" + plat + ".yaml")
-      val output = if (namespace.isDefined) {
-        Paths.get(target, plat, namespace.get, fun.name)
-      } else {
-        Paths.get(target, plat, fun.name)
-      }
-
-      if (platPath.toFile.exists()) {
-        val conf = Config.read(
-          functionality = Some(funPath.toString()),
-          platform = Some(platPath.toString())
-        )
-
-        Some((conf, funPath.toString, output.toString))
-      } else {
-        None
-      }
-    }
-  }
-
-  def getNewConfigs(configPath: Path, namespace: Option[String], target: String) = {
-    val conf = Config.read(
-      component = Some(configPath.toString())
-    )
-    val platforms = if (conf.platforms contains conf.platform.get) {
-      conf.platforms
-    } else {
-      conf.platform.get :: conf.platforms
-    }
-
-    platforms.map{ pl =>
-      val output = if (namespace.isDefined) {
-        Paths.get(target, pl.id, namespace.get, conf.functionality.name)
-      } else {
-        Paths.get(target, pl.id, conf.functionality.name)
-      }
-
-      val newConf = conf.copy(platform = Some(pl))
-      (newConf, configPath.toString, output.toString)
-    }
+    // merge configs
+    legacyConfigs ::: newConfigs
   }
 }
