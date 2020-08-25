@@ -15,9 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         config: 
-          - {name: 'selfhosted', os: self-hosted, r: '3.6.1', python: '3.8' }
-        # - {name: 'ubuntu_r3.6.1_py3.8', os: ubuntu-latest, r: '3.6.1', python: '3.8' }
-        # - {name: 'ubuntu_rrelease_py3.x', os: ubuntu-latest, r: 'release', python: '3.x' }
+        - {name: 'ubuntu_r3.6.1_py3.8', os: ubuntu-latest, r: '3.6.1', python: '3.8' }
+        # - {name: 'ubuntu_rrel_py3.x', os: ubuntu-latest, r: 'release', python: '3.x' }
         # - {name: 'mac_r3.6.1_py3.8', os: macos-latest, r: '3.6.1', python: '3.8' }
 
     steps:
