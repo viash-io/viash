@@ -29,6 +29,7 @@ object ViashNamespace {
         val out = in.replace(source, target)
         val platType = conf.get.platform.get.id
         println(s"Exporting $in =$platType=> $out")
+        ViashBuild(conf.get, out)
       } else {
         val err = error.get
         val in = err.config.info.get.parent_path.get
