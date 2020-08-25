@@ -45,7 +45,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     |
     |Usage:
     |  viash run [arguments] script.vsh.sh -- [arguments for script]
-    |  viash export [arguments] script.vsh.R
+    |  viash build [arguments] script.vsh.R
     |  viash test [arguments] script.vsh.py
     |
     |Check the help of a subcommand for more information, or the API available at:
@@ -68,12 +68,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       |  viash run -f fun.yaml -k""".stripMargin)
   }
 
-  val export = new Subcommand("export") with ViashCommand {
-    banner(s"""viash export
+  val build = new Subcommand("build") with ViashCommand {
+    banner(s"""viash build
       |Generate an executable from the functionality and platform meta information.
       |
       |Usage:
-      |  viash export -o output [-P docker] [-m] script.vsh.sh
+      |  viash build -o output [-P docker] [-m] script.vsh.sh
       |
       |Arguments:""".stripMargin)
 
@@ -84,7 +84,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         descr = "Print out some meta information at the end."
       )
     val output = opt[String](
-      descr = "Path to directory in which the executable and any resources is exported to. Default: \"output/\".",
+      descr = "Path to directory in which the executable and any resources is built to. Default: \"output/\".",
       default = Some("output/"),
       required = true
     )
@@ -117,17 +117,32 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       val namespace = opt[String](
         name = "namespace",
         short = 'n',
-        descr = "The name of the namespace."
+        descr = "The name of the namespace.",
+        default = None
       )
       val src = opt[String](
         name = "src",
         short = 's',
-        descr = "An alternative source directory if not under src/<namespace>. Default = source/<namespace>."
+        descr = "An alternative source directory if not under src/<namespace>. Default = source/.",
+        default = Some("src")
       )
       val target = opt[String](
         name = "target",
         short = 't',
-        descr = "An alternative destination directory if not target/. Default = target/."
+        descr = "An alternative destination directory if not target/. Default = target/.",
+        default = Some("target")
+      )
+      val platform = opt[String](
+        short = 'p',
+        default = None,
+        descr = "Path to the platform file. If not provided, the native platform is used.",
+        required = false
+      )
+      val platformID = opt[String](
+        short = 'P',
+        default = None,
+        descr = "If multiple platforms are specified in the component, this argument allows you to choose which one.",
+        required = false
       )
     }
 
@@ -136,7 +151,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   }
 
   addSubcommand(run)
-  addSubcommand(export)
+  addSubcommand(build)
   addSubcommand(test)
   addSubcommand(namespace)
 

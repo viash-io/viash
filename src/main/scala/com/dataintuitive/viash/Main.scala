@@ -52,15 +52,10 @@ object Main {
           }
         }
       }
-      case List(conf.export) => {
-        val outputPath = conf.export.output()
-        val config = readAll(conf.export)
-        val config2 = config.copy(
-          info = config.info.map(_.copy(
-            output_path = Some(outputPath)
-          ))
-        )
-        ViashExport.export(config2, outputPath, conf.export.meta())
+      case List(conf.build) => {
+        val outputPath = conf.build.output()
+        val config = readAll(conf.build)
+        ViashBuild(config, outputPath, conf.build.meta())
       }
       case List(conf.test) => {
         val config = readAll(conf.test, modifyFun = false)
@@ -86,11 +81,13 @@ object Main {
         System.exit(code)
       }
       case List(conf.namespace, conf.namespace.build) => {
-        val namespace = conf.namespace.build.namespace.toOption
-        val source = conf.namespace.build.src.getOrElse("src/" + namespace.getOrElse(""))
-        val target = conf.namespace.build.target.getOrElse("target")
-
-        ViashNamespace.build(namespace, source, target)
+        ViashNamespace.build(
+          source = conf.namespace.build.src(),
+          target = conf.namespace.build.target(),
+          platform = conf.namespace.build.platform.toOption,
+          platformID = conf.namespace.build.platformID.toOption,
+          namespace = conf.namespace.build.namespace.toOption
+        )
       }
       case _ => println("No subcommand was specified. See `viash --help` for more information.")
     }

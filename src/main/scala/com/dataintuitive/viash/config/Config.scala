@@ -94,6 +94,8 @@ object Config {
     )
   }
 
+  class PlatformNotFoundException(val config: Config, val platform: String) extends RuntimeException(s"Platform platform could not be found")
+
   def read(
     component: Option[String] = None,
     functionality: Option[String] = None,
@@ -106,14 +108,26 @@ object Config {
       component.isEmpty != functionality.isEmpty,
       message = "Either functionality or component need to be specified!"
     )
+
+    // construct info object
     val config =
-      if (component.isDefined) {
-        readComponent(component.get)
-      } else {
-        Config(
-          functionality = Functionality.read(functionality.get)
-        )
-      }
+      {
+        if (component.isDefined) {
+          readComponent(component.get)
+        } else {
+          Config(
+            functionality = Functionality.read(functionality.get)
+          )
+        }
+      }.copy( // TODO: readCOmponent and Functionality.read should create their own info object
+        info = Some(Info(
+          functionality_path = functionality,
+          platform_path = platform,
+          platform_id = platformID,
+          config_path = component,
+          viash_version = Some(com.dataintuitive.viash.Main.version)
+        ))
+      )
 
     // get the platform
     // * if a platform yaml is passed, use that
@@ -126,12 +140,32 @@ object Config {
         Platform.parse(IOHelper.uri(platform.get))
       } else if (platformID.isDefined) {
         val pid = platformID.get
-        val platformNames = config.platforms.map(_.id)
-        assert(
-          platformNames.contains(pid),
-          s"platform $pid is not found amongst the defined platforms: ${platformNames.mkString(", ")}"
-        )
-        config.platforms(platformNames.indexOf(pid))
+        if (component.isDefined) {
+          // if input file is a joined config
+          val platformNames = config.platforms.map(_.id)
+          if (!platformNames.contains(pid)) {
+            throw new PlatformNotFoundException(config, pid)
+          }
+          config.platforms(platformNames.indexOf(pid))
+        } else {
+          val funRegex = "[^/]*.yaml$".r
+          // if input file is a functionality yaml,
+          // check if platform_*.yaml file exists
+          val platPath = funRegex.replaceFirstIn(functionality.get, "platform_" + pid + ".yaml")
+          val uri = IOHelper.uri(platPath)
+          val platform =
+            try {
+              Some(Platform.parse(uri))
+            } catch {
+              case _: Throwable => None
+            }
+
+          if (platform.isEmpty) {
+            throw new PlatformNotFoundException(config, platPath)
+          }
+
+          platform.get
+        }
       } else if (config.platform.isDefined) {
         config.platform.get
       } else if (!config.platforms.isEmpty) {
@@ -144,18 +178,6 @@ object Config {
     val path = new File(functionality.getOrElse(component.getOrElse(""))).getParentFile
     val GitInfo(_, rgr, gc) = Git.getInfo(path)
 
-    // construct info object
-    val info = Info(
-      functionality_path = functionality,
-      platform_path = platform,
-      platform_id = platformID,
-      executable_path = component,
-      output_path = None,
-      viash_version = Some(com.dataintuitive.viash.Main.version),
-      git_commit = gc,
-      git_remote = rgr
-    )
-
     // modify the functionality using the platform
     config.copy(
       functionality =
@@ -165,7 +187,10 @@ object Config {
           config.functionality
         },
       platform = Some(pl),
-      info = Some(info)
+      info = config.info.map(_.copy(
+        git_commit = gc,
+        git_remote = rgr
+      ))
     )
   }
 
