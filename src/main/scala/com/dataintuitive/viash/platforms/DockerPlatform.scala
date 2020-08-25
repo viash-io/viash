@@ -25,6 +25,26 @@ case class DockerPlatform(
 ) extends Platform {
   val `type` = "docker"
 
+  case class Mods(
+    preParse: String = "",
+    parsers: String = "",
+    postParse: String = "",
+    postRun: String = "",
+    inputs: List[DataObject[_]] = Nil,
+    extraParams: String = ""
+  ) {
+    def `++`(dm: Mods) = {
+      Mods(
+        preParse = preParse + dm.preParse,
+        parsers = parsers + dm.parsers,
+        postParse = postParse + dm.postParse,
+        postRun = postRun + dm.postRun,
+        inputs = inputs ::: dm.inputs,
+        extraParams = extraParams + dm.extraParams
+      )
+    }
+  }
+
   val requirements: List[Requirements] =
     apk.toList :::
     apt.toList :::
@@ -41,23 +61,29 @@ case class DockerPlatform(
     // create setup
     val (imageName, imageVersion, setupCommands, dockerfileCommands) = processDockerSetup(functionality, resourcesPath)
 
-    // process docker mounts
-    val (volPreParse, volParsers, volPostParse, volInputs, volExtraParams) = processDockerVolumes(functionality)
+    // generate automount code
+    val dmVol = processDockerVolumes(functionality)
 
-    // add docker debug flag
+    // add ---debug flag
     val debuggor = s"""docker run --entrypoint=bash $dockerArgs -v `pwd`:/pwd --workdir /pwd -t $imageName:$imageVersion"""
-    val (debPreParse, debParsers, debPostParse, debInputs) = addDockerDebug(debuggor)
+    val dmDebug = addDockerDebug(debuggor)
+
+    // add ---chown flag
+    val dmChown = addDockerChown(functionality, dockerArgs, dmVol.extraParams, imageName, imageVersion)
+
+    // compile modifications
+    val dm = dmVol ++ dmDebug ++ dmChown
 
     // make commands
     val entrypointStr = functionality.mainScript.get match {
       case s: Executable => "--entrypoint='' "
       case _ => "--entrypoint=bash "
     }
-    val executor = s"""eval docker run $$viash_user_arg $entrypointStr$dockerArgs$volExtraParams $imageName:$imageVersion"""
+    val executor = s"""eval docker run $entrypointStr$dockerArgs${dm.extraParams} $imageName:$imageVersion"""
 
     // add extra arguments to the functionality file for each of the volumes
     val fun2 = functionality.copy(
-      arguments = functionality.arguments ::: volInputs ::: debInputs
+      arguments = functionality.arguments ::: dm.inputs
     )
 
     // create new bash script
@@ -69,10 +95,10 @@ case class DockerPlatform(
           resourcesPath = "/resources",
           setupCommands = setupCommands,
           dockerfileCommands = dockerfileCommands,
-          preParse = volPreParse + debPreParse,
-          parsers = volParsers + debParsers,
-          postParse = debPostParse + volPostParse,
-          postRun = ""
+          preParse = dm.preParse,
+          parsers = dm.parsers,
+          postParse = dm.postParse,
+          postRun = dm.postRun
         )),
         is_executable = true
       )
@@ -160,10 +186,6 @@ case class DockerPlatform(
            |        ---volume=*)
            |            ${BashHelper.save(extraMountsVar, Seq("-v $(ViashRemoveFlags \"$2\")"))}
            |            shift 1
-           |            ;;
-           |        ---user)
-           |            viash_user_arg='--user "$$(id -u):$$(id -g)"'
-           |            shift 1
            |            ;;""".stripMargin
 
     val extraParams = s" $$$extraMountsVar"
@@ -201,13 +223,15 @@ case class DockerPlatform(
         ""
       }
 
-    val inputs = Nil
-
-    (preParse, parsers, postParse, inputs, extraParams)
+    Mods(
+      preParse = preParse,
+      parsers = parsers,
+      postParse = postParse,
+      extraParams = extraParams
+    )
   }
 
   def addDockerDebug(debugCommand: String) = {
-    val preParse = ""
     val parsers = "\n" + BashHelper.argStore("---debug", "VIASH_DEBUG", "yes", 1, None)
     val postParse =
       s"""
@@ -219,8 +243,59 @@ case class DockerPlatform(
         |  exit 0
         |fi"""
 
-    val inputs = Nil
 
-    (preParse, parsers, postParse, inputs)
+    Mods(
+      parsers = parsers,
+      postParse = postParse
+    )
+  }
+
+  def addDockerChown(functionality: Functionality, dockerArgs: String, volExtraParams: String, imageName: String, imageVersion: String) = {
+    val chownVar = "VIASH_CHOWN"
+
+    val args = functionality.arguments
+
+    def chownCommand(value: String) = {
+      s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $imageName:$imageVersion $$$chownVar -R $value"""
+    }
+
+    val parsers =
+        s"""        ---chown)
+           |            $chownVar="$$(id -u):$$(id -g)"
+           |            shift 1
+           |            ;;""".stripMargin
+
+    val postRun =
+      "\n\n# change file ownership" +
+      args
+        .filter(a => a.isInstanceOf[FileObject] && a.direction == Output)
+        .map(arg => {
+
+          // resolve arguments with multiplicity different from
+          // singular args
+          if (arg.multiple) {
+            val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
+            s"""
+              |if [ ! -z "$$$chownVar" ] && [ ! -z "$$${arg.VIASH_PAR}" ]; then
+              |  IFS="${arg.multiple_sep}"
+              |  for var in $$${arg.VIASH_PAR}; do
+              |    ${chownCommand("\"$var\"")}
+              |  done
+              |  unset IFS
+              |  ${arg.VIASH_PAR}="$$$viash_temp"
+              |fi""".stripMargin
+          } else {
+            s"""
+              |if [ ! -z "$$$chownVar" ] && [ ! -z "$$${arg.VIASH_PAR}" ]; then
+              |  ${chownCommand("\"$" + arg.VIASH_PAR + "\"")}
+              |fi""".stripMargin
+          }
+        })
+        .mkString("")
+
+    Mods(
+      parsers = parsers,
+      postRun = postRun
+    )
   }
 }
