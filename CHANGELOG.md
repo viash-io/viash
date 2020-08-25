@@ -12,6 +12,7 @@
   Set `multiple: true` to denote an argument to have higher multiplicity. 
   Run `./cmd --foo one --foo two --foo three:four` in order for multiple values to be added to the same parameter list.
 * Added a new format for defining functionality in which the user passes the script in which the functionality and platforms are listed as yaml headers.
+* A `---chown` flag has been added to Docker executables to automatically change the ownership of output files to the current user.
 
 ## MAJOR CHANGES
 * Remove passthrough parameters.
