@@ -11,14 +11,14 @@ case class DockerRequirements(
   override def dockerCommands = {
     val copyResources =
       if (resources.length > 0) {
-        resources.map(c => """COPY $c""")
+        resources.map(c => s"""COPY $c""")
       } else {
         Nil
       }
 
     val runCommands =
       if (run.length > 0) {
-        run.map(r => """RUN $r""")
+        run.map(r => s"""RUN $r""")
       } else {
         Nil
       }
