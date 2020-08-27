@@ -168,13 +168,33 @@ elif [ $input_type = "joined" ] && [ $par_format = "script" ]; then
   # writing script
   awk "/VIASH START/,/VIASH END/ { next; }; 1 {print; }" "$input_script_path" >> "$output_script_path"
 
-
 # ------------------------ JOINED -> SPLIT ------------------------
 elif [ $input_type = "joined" ] && [ $par_format = "split" ]; then
   echo "Converting from 'joined' to 'split'"
 
-  echo "> Not implemented yet"
-  exit 1
+  # determine output paths
+  funcionality_yaml_relative="functionality.yaml"
+  funcionality_yaml_path="$par_output_dir/$funcionality_yaml_relative"
+  
+  # WRITING FUNCTIONALITY YAML
+  echo "> Writing functionality yaml to $funcionality_yaml_relative"
+  yq r "$par_input" functionality > "$funcionality_yaml_path"
+  
+  #### PLATFORM(S)
+  # create platform yamls
+  platforms=$(yq read "$par_input" platforms.*.type)
+  for plat in $platforms; do
+    platform_yaml_relative="platform_${plat}.yaml"
+    platform_yaml_path="$par_output_dir/$platform_yaml_relative"
+    echo "> Writing platform yaml to $platform_yaml_relative"
+    yq read "$par_input" platforms.[type==$plat] > "$platform_yaml_path"
+  done
+  
+  # copy script
+  input_script_relative=$(yq read "$par_input" 'functionality.resources.[0].path')
+  input_script_path="$input_dir/$input_script_relative"
+  output_script_path="$par_output_dir/$input_script_relative"
+  cp "$input_script_path" "$output_script_path"
 
 # ------------------------ SPLIT -> SCRIPT ------------------------
 elif [ $input_type = "split" ] && [ $par_format = "script" ]; then
@@ -214,7 +234,7 @@ elif [ $input_type = "split" ] && [ $par_format = "script" ]; then
       platform_relative="platform_$plat.yaml"
       platform_path="$input_dir/$platform_relative"
       if [ -f "$platform_path" ]; then
-        yq delete "$platform_path" 'volumes' | sed "s/^/#'   /" | sed "s/#'   type:/#' - type:/" >> "$output_script_path"
+        yq delete "$platform_path" 'volumes' | sed "s/^/#'   /" | sed "s/#'   type:/#' - type:/" >> "$output_script_path" # should not assume type is first!  
       fi
     done
   fi
@@ -226,8 +246,33 @@ elif [ $input_type = "split" ] && [ $par_format = "script" ]; then
 elif [ $input_type = "split" ] && [ $par_format = "joined" ]; then
   echo "Converting from 'split' to 'joined'"
 
-  echo "> Not implemented yet"
-  exit 1
+  # determine output paths
+  output_yaml_relative="config.vsh.yaml"
+  output_yaml_path="$par_output_dir/$output_yaml_relative"
+  
+  # WRITING JOINED YAML
+  echo "> Writing joined yaml to $output_yaml_relative"
+  
+  # writing functionality
+  yq p "$par_input" functionality > "$output_yaml_path"
+  
+  # writing platforms  
+  possible_platforms="native docker nextflow"
+  
+  for plat in $possible_platforms; do
+    platform_relative="platform_$plat.yaml"
+    platform_path="$input_dir/$platform_relative"
+    if [ -f "$platform_path" ]; then
+      yq p "$platform_path" platforms[+] | yq m -i "$output_yaml_path" - 
+    fi
+  done
+  
+  # copy script
+  input_script_relative=$(yq read "$par_input" 'resources.[0].path')
+  input_script_path="$input_dir/$input_script_relative"
+  output_script_path="$par_output_dir/$input_script_relative"
+  cp "$input_script_path" "$output_script_path"
+
 fi
 
 
