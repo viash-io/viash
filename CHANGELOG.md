@@ -13,16 +13,18 @@
   Run `./cmd --foo one --foo two --foo three:four` in order for multiple values to be added to the same parameter list.
 * Added a new format for defining functionality in which the user passes the script in which the functionality and platforms are listed as yaml headers.
 * A `---chown` flag has been added to Docker executables to automatically change the ownership of output files to the current user.
+* `viash ns build`: A command for building a whole namespace.
 
 ## MAJOR CHANGES
 * Remove passthrough parameters.
 * Since CLI generation is now performed in the outer script, `viash pimp` has been deprecated.
 * (WIP) Write out meta.yaml containing viash run information as well as the original `functionality.yaml` and `platform.yaml` content.
+* Renamed `viash export` to `viash build`.
 
 ## MINOR CHANGES
 * `viash run` and `viash test`: Allow changing the temporary directory by defining `VIASH_TEMP` as a environment variable. Temporary directories are cleaned up after successful executions.
 * `viash run` and `viash test`: Exit(1) when execution or test fails.
-* `viash export`: Add -m flag for outputting metadata after export.
+* `viash build`: Add -m flag for outputting metadata after build.
 * `viash run`: Required parameters can have a default value now. Produce error when a required parameter is not passed, even when a default is provided.
 
 ## BUG FIXES
