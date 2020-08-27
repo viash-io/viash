@@ -23,7 +23,7 @@ class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
 
   // convert testbash
   val params = Array(
-    "export",
+    "build",
     "-f", funcFile,
     "-p", platFile,
     "-o", tempFolStr

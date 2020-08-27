@@ -11,7 +11,7 @@ class E2ETests extends FunSuite {
     (testName, scriptName) <- List(
       ("testbash", None),
       ("testpython", None),
-      ("testr", Some("code.R")),
+      ("testr", Some("code.vsh.R")),
       ("testexecutable", None)
     );
     platName <- List("docker", "native")
@@ -20,8 +20,8 @@ class E2ETests extends FunSuite {
     val config =
       if (scriptName.isDefined) {
         val compRes = getClass.getResource(s"/$testName/${scriptName.get}")
-        Some(Config.read(
-          component = Some(compRes.toString),
+        Some(Config.readSplitOrJoined(
+          joined = Some(compRes.toString),
           platformID = Some(platName),
           modifyFun = false
         ))
@@ -30,7 +30,7 @@ class E2ETests extends FunSuite {
         val platRes = getClass.getResource(s"/$testName/platform_$platName.yaml")
 
         if (platRes != null) {
-          Some(Config.read(
+          Some(Config.readSplitOrJoined(
             functionality = Some(funcRes.toString),
             platform = Some(platRes.toString),
             modifyFun = false

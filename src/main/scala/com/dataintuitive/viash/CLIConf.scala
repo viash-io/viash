@@ -14,14 +14,14 @@ trait ViashCommand {_ : ScallopConf =>
     descr = "Path to the platform file. If not provided, the native platform is used.",
     required = false
   )
-  val platformID = opt[String](
+  val platformid = opt[String](
     short = 'P',
     default = None,
     descr = "If multiple platforms are specified in the component, this argument allows you to choose which one.",
     required = false
   )
-  val component = trailArg[String](
-    descr = "A viash script written in R/Python/Bash but containing the functionality and platform metadata as a header. Example: `script.vsh.R`.",
+  val joined = trailArg[String](
+    descr = "A joined metadata file. Can also be a script written in R/Python/Bash but containing the joined metadata as a header.",
     default = None,
     required = false
   )
@@ -44,9 +44,10 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     |viash is a spec and a tool for defining execution contexts and converting execution instructions to concrete instantiations.
     |
     |Usage:
-    |  viash run [arguments] script.vsh.sh -- [arguments for script]
-    |  viash build [arguments] script.vsh.R
-    |  viash test [arguments] script.vsh.py
+    |  viash run [arguments] script.vsh.yaml -- [arguments for script]
+    |  viash build [arguments] script.vsh.sh
+    |  viash test [arguments] script.vsh.R
+    |  viash ns build [arguments]
     |
     |Check the help of a subcommand for more information, or the API available at:
     |  https://github.com/data-intuitive/viash_docs
@@ -89,6 +90,17 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       required = true
     )
   }
+
+  val export = new Subcommand("export") with ViashCommand {
+    banner(s"""`viash export` has been deprecated. Use `viash build` instead.""".stripMargin)
+
+    val trail = trailArg[String](
+      descr = "...",
+      default = None,
+      required = false
+    )
+  }
+
   val test = new Subcommand("test") with ViashCommand with WithTemporary {
     banner(s"""viash test
       |Run the tests as defined in the functionality.yaml. Check the documentation for more information on how to write tests.
@@ -114,6 +126,14 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   val namespace = new Subcommand("ns") {
 
     val build = new Subcommand("build") {
+      banner(s"""viash ns build
+        |Build a namespace containing many viash components.
+        |
+        |Usage:
+        |  viash ns build [-s src] [-t target] [-P docker] [-p platform_docker.yaml]
+        |
+        |Arguments:""".stripMargin)
+
       val namespace = opt[String](
         name = "namespace",
         short = 'n',
@@ -138,7 +158,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         descr = "Path to the platform file. If not provided, the native platform is used.",
         required = false
       )
-      val platformID = opt[String](
+      val platformid = opt[String](
         short = 'P',
         default = None,
         descr = "If multiple platforms are specified in the component, this argument allows you to choose which one.",
@@ -151,6 +171,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   }
 
   addSubcommand(run)
+  addSubcommand(export)
   addSubcommand(build)
   addSubcommand(test)
   addSubcommand(namespace)

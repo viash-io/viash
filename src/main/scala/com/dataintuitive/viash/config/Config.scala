@@ -42,14 +42,14 @@ object Config {
     )
   }
 
-  def readComponent(path: String) = {
+  def read(path: String) = {
     val uri = IOHelper.uri(path)
 
     val str = IOHelper.read(uri)
     val uris = uri.toString()
     val extension = uris.substring(uris.lastIndexOf(".")+1).toLowerCase()
 
-    // detect whether a component was passed or a yaml
+    // detect whether a script (with joined header) was passed or a joined yaml
     // using the extension
     val (yaml, code) =
       if (extension == "yml" || extension == "yaml") {
@@ -63,7 +63,7 @@ object Config {
         val headerRegex = "^" + commentStr + "  ".r
         assert(
           str.contains(s"$commentStr functionality:"),
-          message = s"""Component should contain a functionality header: "$commentStr functionality: <...>""""
+          message = s"""Script should contain a functionality header: "$commentStr functionality: <...>""""
         )
 
         val (header, body) = str.split("\n").partition(_.startsWith(headerComm))
@@ -74,7 +74,7 @@ object Config {
       }
 
     // turn optional code into a Script
-    val componentScript = code.map{cod =>
+    val optScript = code.map{cod =>
       val scr = extension match {
         case "r" => RScript(Some("viash_main.R"), text = Some(cod))
         case "py" => PythonScript(Some("viash_main.py"), text = Some(cod))
@@ -89,15 +89,15 @@ object Config {
 
     config.copy(
       functionality = config.functionality.copy(
-         resources = Some(componentScript.toList ::: config.functionality.resources.getOrElse(Nil))
+         resources = Some(optScript.toList ::: config.functionality.resources.getOrElse(Nil))
       )
     )
   }
 
   class PlatformNotFoundException(val config: Config, val platform: String) extends RuntimeException(s"Platform platform could not be found")
 
-  def read(
-    component: Option[String] = None,
+  def readSplitOrJoined(
+    joined: Option[String] = None,
     functionality: Option[String] = None,
     platform: Option[String] = None,
     platformID: Option[String] = None,
@@ -105,15 +105,15 @@ object Config {
   ): Config = {
     // read the component if passed, else read the functionality
     assert(
-      component.isEmpty != functionality.isEmpty,
-      message = "Either functionality or component need to be specified!"
+      joined.isEmpty != functionality.isEmpty,
+      message = "Either functionality or joined need to be specified!"
     )
 
     // construct info object
     val config =
       {
-        if (component.isDefined) {
-          readComponent(component.get)
+        if (joined.isDefined) {
+          read(joined.get)
         } else {
           Config(
             functionality = Functionality.read(functionality.get)
@@ -124,7 +124,7 @@ object Config {
           functionality_path = functionality,
           platform_path = platform,
           platform_id = platformID,
-          config_path = component,
+          joined_path = joined,
           viash_version = Some(com.dataintuitive.viash.Main.version)
         ))
       )
@@ -140,7 +140,7 @@ object Config {
         Platform.parse(IOHelper.uri(platform.get))
       } else if (platformID.isDefined) {
         val pid = platformID.get
-        if (component.isDefined) {
+        if (joined.isDefined) {
           // if input file is a joined config
           val platformNames = config.platforms.map(_.id)
           if (!platformNames.contains(pid)) {
@@ -175,7 +175,7 @@ object Config {
       }
 
     // gather git info of functionality git
-    val path = new File(functionality.getOrElse(component.getOrElse(""))).getParentFile
+    val path = new File(functionality.getOrElse(joined.getOrElse(""))).getParentFile
     val GitInfo(_, rgr, gc) = Git.getInfo(path)
 
     // modify the functionality using the platform

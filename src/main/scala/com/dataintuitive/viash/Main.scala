@@ -23,6 +23,10 @@ object Main {
     val conf = new CLIConf(viashArgs)
 
     conf.subcommands match {
+      case List(conf.export) => {
+        println("`viash export` has been deprecated. Use `viash build` instead.")
+        System.exit(1)
+      }
       case List(conf.run) => {
         // create new functionality with argparsed executable
         val config = readAll(conf.run)
@@ -85,7 +89,7 @@ object Main {
           source = conf.namespace.build.src(),
           target = conf.namespace.build.target(),
           platform = conf.namespace.build.platform.toOption,
-          platformID = conf.namespace.build.platformID.toOption,
+          platformID = conf.namespace.build.platformid.toOption,
           namespace = conf.namespace.build.namespace.toOption
         )
       }
@@ -97,11 +101,11 @@ object Main {
     subcommand: ViashCommand,
     modifyFun: Boolean = true
   ): Config = {
-    Config.read(
-      component = subcommand.component.toOption,
+    Config.readSplitOrJoined(
+      joined = subcommand.joined.toOption,
       functionality = subcommand.functionality.toOption,
       platform = subcommand.platform.toOption,
-      platformID = subcommand.platformID.toOption,
+      platformID = subcommand.platformid.toOption,
       modifyFun = modifyFun
     )
   }

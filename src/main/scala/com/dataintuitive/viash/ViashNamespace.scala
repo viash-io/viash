@@ -61,7 +61,7 @@ object ViashNamespace {
     })
     val legacyConfigs = funFiles.map{file =>
       try {
-        (Some(Config.read(functionality = Some(file.toString), platform = platform, platformID = platformID)), None)
+        (Some(Config.readSplitOrJoined(functionality = Some(file.toString), platform = platform, platformID = platformID)), None)
       } catch {
         case e: PlatformNotFoundException => {
           (None, Some(e))
@@ -78,7 +78,7 @@ object ViashNamespace {
     })
     val newConfigs = scriptFiles.map{file =>
       try {
-        (Some(Config.read(component = Some(file.toString), platform = platform, platformID = platformID)), None)
+        (Some(Config.readSplitOrJoined(joined = Some(file.toString), platform = platform, platformID = platformID)), None)
       } catch {
         case e: PlatformNotFoundException => {
           (None, Some(e))
