@@ -23,7 +23,7 @@ class E2EBashNative extends FunSuite with BeforeAndAfterAll {
 
   // convert testbash
   val params = Array(
-    "export",
+    "build",
     "-f", funcFile,
     "-p", platFile,
     "-o", tempFolStr
