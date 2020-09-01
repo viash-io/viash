@@ -1,4 +1,4 @@
-# viash 0.2.0 (asap)
+# viash 0.2.0 (2020-09-01)
 
 ## NEW FEATURES
 
