@@ -141,7 +141,11 @@ case class DockerPlatform(
           |cat > $$tmpdir/Dockerfile << 'VIASHDOCKER'
           |$dockerFile
           |VIASHDOCKER
-          |docker build -t $imageName:$imageVersion $$tmpdir""".stripMargin
+          |if [ ! -z $$(docker images -q $imageName:$imageVersion) ]; then
+          |  echo "Image consists locally or on DockerHub"
+          |else
+          |  docker build -t $imageName:$imageVersion $$tmpdir
+          |fi""".stripMargin
 
       val dockerfileCommands =
         s"""# Print Dockerfile contents to stdout
