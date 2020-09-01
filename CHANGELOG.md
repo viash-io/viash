@@ -18,7 +18,7 @@
 ## MAJOR CHANGES
 * Remove passthrough parameters.
 * Since CLI generation is now performed in the outer script, `viash pimp` has been deprecated.
-* (WIP) Write out meta.yaml containing viash run information as well as the original `functionality.yaml` and `platform.yaml` content.
+* Write out meta.yaml containing viash run information as well as the original `functionality.yaml` and `platform.yaml` content.
 * Renamed `viash export` to `viash build`.
 
 ## MINOR CHANGES
