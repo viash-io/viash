@@ -14,6 +14,8 @@
 * Added a new format for defining functionality in which the user passes the script in which the functionality and platforms are listed as yaml headers.
 * A `---chown` flag has been added to Docker executables to automatically change the ownership of output files to the current user.
 * `viash ns build`: A command for building a whole namespace.
+* [NXF] Join operations are now fully supported by means of `multiple`.
+* [NXF] Modules that perform joins can take either arrays (multiple input files or the same type to be joined) or hashes (multiple input files passed using different options on the CLI). Please refer to the docs for more info.
 
 ## MAJOR CHANGES
 * Remove passthrough parameters.
@@ -26,6 +28,7 @@
 * `viash run` and `viash test`: Exit(1) when execution or test fails.
 * `viash build`: Add -m flag for outputting metadata after build.
 * `viash run`: Required parameters can have a default value now. Produce error when a required parameter is not passed, even when a default is provided.
+* [NXF] _Modules_ are now stored under `target/nextflow` by default
 
 ## BUG FIXES
 * NXF: Correctly escape path variable when running NXF command.
