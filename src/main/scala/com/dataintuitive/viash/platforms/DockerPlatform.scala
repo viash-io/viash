@@ -144,6 +144,9 @@ case class DockerPlatform(
           |if [ ! -z $$(docker images -q $imageName:$imageVersion) ]; then
           |  echo "Image consists locally or on DockerHub"
           |else
+          |  # Quick workaround to have the resources available in the current dir
+          |  cp $$VIASH_RESOURCES_DIR/* $$tmpdir
+          |  # Build the container
           |  docker build -t $imageName:$imageVersion $$tmpdir
           |fi""".stripMargin
 
