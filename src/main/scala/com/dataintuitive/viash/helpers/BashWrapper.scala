@@ -52,7 +52,6 @@ object BashWrapper {
       functionality: Functionality,
       resourcesPath: String = "\\$VIASH_RESOURCES_DIR",
       setupCommands: String,
-      dockerfileCommands: String,
       preParse: String,
       parsers: String,
       postParse: String,
@@ -126,15 +125,8 @@ object BashWrapper {
       |VIASH_RESOURCES_DIR=`ViashSourceDir $${BASH_SOURCE[0]}`
       |
       |# helper function for installing extra requirements for this component
-      |function ViashDockerfile {
-      |$dockerfileCommands
-      |}
-      |
-      |# helper function for installing extra requirements for this component
-      |
-      |function ViashSetup {
       |$setupCommands
-      |}
+      |
       |${generateHelp(functionality, params)}
       |${spaceCode(parPreParse)}
       |${spaceCode(preParse)}
@@ -148,10 +140,6 @@ object BashWrapper {
       |            exit;;
       |        ---setup)
       |            ViashSetup
-      |            exit 0
-      |            ;;
-      |        ---dockerfile)
-      |            ViashDockerfile
       |            exit 0
       |            ;;
       |$parParsers

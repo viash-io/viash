@@ -32,7 +32,6 @@ case class NativePlatform(
         executor = executor,
         functionality = functionality,
         setupCommands = setupCommands,
-        dockerfileCommands = "echo ''",
         preParse = "",
         parsers = "",
         postParse = "",
@@ -58,6 +57,8 @@ case class NativePlatform(
         }
       ).mkString
 
-    if (commands == "") ":" else commands
+    s"""function ViashSetup {
+       |${if (commands == "") ":" else commands}
+       |}""".stripMargin
   }
 }
