@@ -59,7 +59,7 @@ case class DockerPlatform(
     val dockerArgs = generateDockerRunArgs(functionality)
 
     // create setup
-    val (imageName, imageVersion, setupCommands, dockerfileCommands) = processDockerSetup(functionality, resourcesPath)
+    val (imageName, imageVersion, setupCommands) = processDockerSetup(functionality, resourcesPath)
 
     // generate automount code
     val dmVol = processDockerVolumes(functionality)
@@ -71,8 +71,16 @@ case class DockerPlatform(
     // add ---chown flag
     val dmChown = addDockerChown(functionality, dockerArgs, dmVol.extraParams, imageName, imageVersion)
 
+    val dmDockerfile = Mods(
+      parsers = """
+        |        ---dockerfile)
+        |            ViashDockerfile
+        |            exit 0
+        |            ;;""".stripMargin
+      )
+
     // compile modifications
-    val dm = dmVol ++ dmDebug ++ dmChown
+    val dm = dmVol ++ dmDebug ++ dmChown ++ dmDockerfile
 
     // make commands
     val entrypointStr = functionality.mainScript.get match {
@@ -94,7 +102,6 @@ case class DockerPlatform(
           functionality = fun2,
           resourcesPath = "/resources",
           setupCommands = setupCommands,
-          dockerfileCommands = dockerfileCommands,
           preParse = dm.preParse,
           parsers = dm.parsers,
           postParse = dm.postParse,
@@ -122,41 +129,45 @@ case class DockerPlatform(
           case tagRegex(imageName, tag) => (imageName, tag)
           case _ => (image, "latest")
         }
-      (imageName, tag, s"docker image inspect $imageName:$tag >/dev/null 2>&1 || docker pull $imageName:$tag", "echo ''")
+      (imageName, tag, s"docker image inspect $imageName:$tag >/dev/null 2>&1 || docker pull $imageName:$tag")
     } else {
       val imageName = target_image.getOrElse("viash_autogen/" + functionality.name)
       val imageVersion = version.map(_.toString).getOrElse("latest")
 
       val dockerFile =
-        s"FROM $image\n" +
+        s"FROM $image\n\n" +
+          docker.flatMap(_.dockerCommandsAtBegin.map(_ + "\n")).getOrElse("") +
           runCommands.mkString("\n")
 
+      val buildArgs = docker.map(_.build_args.map(" --build-arg " + _).mkString).getOrElse("")
+
       val setupCommands =
-        s"""# create temporary directory to store temporary dockerfile in
+        s"""function ViashDockerfile {
+          |# Print Dockerfile contents to stdout
+          |cat << 'VIASHDOCKER'
+          |$dockerFile
+          |VIASHDOCKER
+          |}
+          |
+          |function ViashSetup {
+          |# create temporary directory to store temporary dockerfile in
           |tmpdir=$$(mktemp -d /tmp/viash_setupdocker-${functionality.name}-XXXXXX)
           |function clean_up {
           |  rm -rf "\\$$tmpdir"
           |}
           |trap clean_up EXIT
-          |cat > $$tmpdir/Dockerfile << 'VIASHDOCKER'
-          |$dockerFile
-          |VIASHDOCKER
+          |ViashDockerfile > $$tmpdir/Dockerfile
           |if [ ! -z $$(docker images -q $imageName:$imageVersion) ]; then
           |  echo "Image consists locally or on DockerHub"
           |else
           |  # Quick workaround to have the resources available in the current dir
           |  cp $$VIASH_RESOURCES_DIR/* $$tmpdir
           |  # Build the container
-          |  docker build -t $imageName:$imageVersion $$tmpdir
-          |fi""".stripMargin
+          |  docker build -t $imageName:$imageVersion$buildArgs $$tmpdir
+          |fi
+          |}""".stripMargin
 
-      val dockerfileCommands =
-        s"""# Print Dockerfile contents to stdout
-          |cat << 'VIASHDOCKER'
-          |$dockerFile
-          |VIASHDOCKER""".stripMargin
-
-      (imageName, imageVersion, setupCommands, dockerfileCommands)
+      (imageName, imageVersion, setupCommands)
     }
   }
 
