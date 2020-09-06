@@ -129,7 +129,11 @@ case class DockerPlatform(
           case tagRegex(imageName, tag) => (imageName, tag)
           case _ => (image, "latest")
         }
-      (imageName, tag, s"docker image inspect $imageName:$tag >/dev/null 2>&1 || docker pull $imageName:$tag")
+      val setupCommands =
+        s"""function ViashSetup {
+          |docker image inspect $imageName:$tag >/dev/null 2>&1 || docker pull $imageName:$tag
+          |}""".stripMargin
+      (imageName, tag, setupCommands)
     } else {
       val imageName = target_image.getOrElse("viash_autogen/" + functionality.name)
       val imageVersion = version.map(_.toString).getOrElse("latest")
