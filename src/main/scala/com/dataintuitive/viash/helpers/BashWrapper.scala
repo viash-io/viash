@@ -263,7 +263,10 @@ object BashWrapper {
            |  shift 1
            |done""".stripMargin
       } else {
-        s"""${param.VIASH_PAR}="$$1"; shift 1"""
+        s"""if [[ $$# -gt 0 ]]; then
+          |  ${param.VIASH_PAR}="$$1"
+          |  shift 1
+          |fi"""
       }
     }.mkString("\n")
 

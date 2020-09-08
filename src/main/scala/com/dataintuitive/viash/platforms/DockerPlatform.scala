@@ -15,6 +15,7 @@ case class DockerPlatform(
   version: Option[Version] = None,
   target_image: Option[String] = None,
   resolve_volume: ResolveVolume = Automatic,
+  chown: Boolean = true,
   port: Option[List[String]] = None,
   workdir: Option[String] = None,
   apk: Option[ApkRequirements] = None,
@@ -156,8 +157,7 @@ case class DockerPlatform(
             |VIASHDOCKER""".stripMargin
 
         val vs =
-          s"""
-            |  # create temporary directory to store temporary dockerfile in
+          s"""  # create temporary directory to store temporary dockerfile in
             |  tmpdir=$$(mktemp -d /tmp/viash_setupdocker-${functionality.name}-XXXXXX)
             |  function clean_up {
             |    rm -rf "\\$$tmpdir"
@@ -173,6 +173,7 @@ case class DockerPlatform(
             |    echo "> docker build -t $imageName:$tag$buildArgs $$tmpdir"
             |    docker build -t $imageName:$tag$buildArgs $$tmpdir
             |  fi""".stripMargin
+
         (vdf, vs)
       }
 
@@ -295,21 +296,14 @@ case class DockerPlatform(
   }
 
   def addDockerChown(functionality: Functionality, dockerArgs: String, volExtraParams: String, imageName: String, imageVersion: String) = {
-    val chownVar = "VIASH_CHOWN"
-
     val args = functionality.arguments
 
     def chownCommand(value: String) = {
-      s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $imageName:$imageVersion $$$chownVar -R $value"""
+      s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $imageName:$imageVersion "$$(id -u):$$(id -g)" -R $value"""
     }
 
-    val parsers =
-        s"""        ---chown)
-           |            $chownVar="$$(id -u):$$(id -g)"
-           |            shift 1
-           |            ;;""".stripMargin
-
     val postRun =
+      if (chown) {
       "\n\n# change file ownership" +
       args
         .filter(a => a.isInstanceOf[FileObject] && a.direction == Output)
@@ -320,7 +314,7 @@ case class DockerPlatform(
           if (arg.multiple) {
             val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
             s"""
-              |if [ ! -z "$$$chownVar" ] && [ ! -z "$$${arg.VIASH_PAR}" ]; then
+              |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
               |  IFS="${arg.multiple_sep}"
               |  for var in $$${arg.VIASH_PAR}; do
               |    ${chownCommand("\"$var\"")}
@@ -330,15 +324,17 @@ case class DockerPlatform(
               |fi""".stripMargin
           } else {
             s"""
-              |if [ ! -z "$$$chownVar" ] && [ ! -z "$$${arg.VIASH_PAR}" ]; then
+              |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
               |  ${chownCommand("\"$" + arg.VIASH_PAR + "\"")}
               |fi""".stripMargin
           }
         })
         .mkString("")
+      } else {
+        ""
+      }
 
     Mods(
-      parsers = parsers,
       postRun = postRun
     )
   }
