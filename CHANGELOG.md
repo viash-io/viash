@@ -4,6 +4,8 @@
 
 * MINOR CHANGE: Remove `---chown` flag, move to `platform.docker.chown`; is set to true by default.
 
+* MINOR CHANGE: Do not escape `${VIASH_...}` elements in default values and descriptions!
+
 # viash 0.2.0 (2020-09-01)
 
 ## NEW FEATURES

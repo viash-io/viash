@@ -10,6 +10,19 @@ object BashWrapper {
   def escape(str: String) = {
     str.replaceAll("([\\\\$`])", "\\\\$1")
   }
+  def escapeViash(str: String, resourcesPath: Option[String] = None) = {
+    val s =
+      escape(str)
+      .replaceAll("\\\\\\$VIASH_DOLLAR\\\\\\$", "\\$")
+      .replaceAll("\\\\\\$VIASH_", "\\$VIASH_")
+      .replaceAll("\\\\\\$\\{VIASH_", "\\${VIASH_")
+
+    if (resourcesPath.isDefined) {
+      s.replaceAll("\\\\\\$VIASH_RESOURCES_DIR", resourcesPath.get)
+    } else {
+      s
+    }
+  }
 
   def store(env: String, value: String, multiple_sep: Option[Char]) = {
     if (multiple_sep.isDefined) {
@@ -75,11 +88,7 @@ object BashWrapper {
       }
       case Some(res) => {
         val code = res.readWithPlaceholder(functionality).get
-        val escapedCode = escape(code)
-          .replaceAll("\\\\\\$VIASH_RESOURCES_DIR", resourcesPath)
-          .replaceAll("\\\\\\$VIASH_DOLLAR\\\\\\$", "\\$")
-          .replaceAll("\\\\\\$VIASH_", "\\$VIASH_")
-          .replaceAll("\\\\\\$\\{VIASH_", "\\${VIASH_")
+        val escapedCode = escapeViash(code, Some(resourcesPath))
         s"""
           |set -e
           |tempscript=\\$$(mktemp /tmp/viash-run-${functionality.name}-XXXXXX)
@@ -199,7 +208,7 @@ object BashWrapper {
 
       val part1 = "    " + exampleStrs.mkString(", ")
       val part2 = "        " + properties.mkString(", ")
-      val part3 = param.description.toList.flatMap(escape(_).split("\n")).map("        " + _)
+      val part3 = param.description.toList.flatMap(escapeViash(_).split("\n")).map("        " + _)
 
       (part1 :: part2 :: part3 ::: List("")).map("    echo \"" + _ + "\"").mkString("\n")
     })
@@ -208,7 +217,7 @@ object BashWrapper {
 
     s"""# ViashHelp: Display helpful explanation about this executable
        |function ViashHelp {
-       |   echo "${escape(functionality.description.getOrElse("").stripLineEnd)}"
+       |   echo "${escapeViash(functionality.description.getOrElse("").stripLineEnd)}"
        |   echo
        |   echo "Options:"
        |${usageStrs.mkString("\n")}
@@ -302,7 +311,7 @@ object BashWrapper {
 
       default.map(default => {
         s"""if [ -z "$$${param.VIASH_PAR}" ]; then
-           |  ${param.VIASH_PAR}="${BashWrapper.escape(default.toString)}"
+           |  ${param.VIASH_PAR}="${escapeViash(default.toString)}"
            |fi""".stripMargin
       })
     }.mkString("\n")
