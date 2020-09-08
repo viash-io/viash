@@ -101,7 +101,8 @@ object Config {
     functionality: Option[String] = None,
     platform: Option[String] = None,
     platformID: Option[String] = None,
-    modifyFun: Boolean = true
+    modifyFun: Boolean = true,
+    namespace: Option[String] = None
   ): Config = {
     // read the component if passed, else read the functionality
     assert(
@@ -185,7 +186,8 @@ object Config {
           pl.modifyFunctionality(config.functionality)
         } else {
           config.functionality
-        },
+        }
+        .copy(namespace = namespace),
       platform = Some(pl),
       info = config.info.map(_.copy(
         git_commit = gc,

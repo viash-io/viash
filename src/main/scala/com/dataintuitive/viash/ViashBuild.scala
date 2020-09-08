@@ -7,7 +7,7 @@ import helpers.IOHelper
 import java.nio.file.Paths
 
 object ViashBuild {
-  def apply(config: Config, output: String, printMeta: Boolean = false) {
+  def apply(config: Config, output: String, printMeta: Boolean = false, namespace: Option[String] = None) {
     val fun = config.functionality
     val plat = config.platform.get
 
@@ -28,6 +28,8 @@ object ViashBuild {
         executable_path = fun.mainScript.map(scr => Paths.get(output, scr.name.get).toString)
       )),
       platforms = Nil // drop other platforms
+    ).copy(
+      functionality = config.functionality.copy(namespace = namespace)
     )
 
     val configYaml = PlainFile(

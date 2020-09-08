@@ -12,6 +12,7 @@ import com.dataintuitive.viash.config.Version
 
 case class Functionality(
   name: String,
+  namespace: Option[String],
   version: Option[Version] = None,
   resources: Option[List[Resource]] = None,
   description: Option[String] = None,
