@@ -123,56 +123,78 @@ case class DockerPlatform(
 
     // if no extra dependencies are needed, the provided image can just be used,
     // otherwise need to construct a separate docker container
-    if (runCommands.isEmpty) {
-      val (imageName, tag) =
+
+    // get imagename and tag
+    val (imageName, tag) =
+      if (runCommands.isEmpty) {
         image match {
           case tagRegex(imageName, tag) => (imageName, tag)
           case _ => (image, "latest")
         }
-      val setupCommands =
-        s"""function ViashSetup {
-          |docker image inspect $imageName:$tag >/dev/null 2>&1 || docker pull $imageName:$tag
-          |}""".stripMargin
-      (imageName, tag, setupCommands)
-    } else {
-      val imageName = target_image.getOrElse("viash_autogen/" + functionality.name)
-      val imageVersion = version.map(_.toString).getOrElse("latest")
+      } else {
+        (
+          target_image.getOrElse("viash_autogen/" + functionality.name),
+          version.map(_.toString).getOrElse("latest")
+        )
+      }
 
-      val dockerFile =
-        s"FROM $image\n\n" +
-          docker.flatMap(_.dockerCommandsAtBegin.map(_ + "\n")).getOrElse("") +
-          runCommands.mkString("\n")
+    val (viashDockerFile, viashSetup) =
+      if (runCommands.isEmpty) {
+        ("  :", s"  docker image inspect $imageName:$tag >/dev/null 2>&1 || docker pull $imageName:$tag")
+      } else {
+        val dockerFile =
+          s"FROM $image\n\n" +
+            docker.flatMap(_.dockerCommandsAtBegin.map(_ + "\n")).getOrElse("") +
+            runCommands.mkString("\n")
 
-      val buildArgs = docker.map(_.build_args.map(" --build-arg " + _).mkString).getOrElse("")
+        val buildArgs = docker.map(_.build_args.map(" --build-arg " + _).mkString).getOrElse("")
 
-      val setupCommands =
-        s"""function ViashDockerfile {
-          |# Print Dockerfile contents to stdout
-          |cat << 'VIASHDOCKER'
-          |$dockerFile
-          |VIASHDOCKER
+        val vdf =
+          s"""# Print Dockerfile contents to stdout
+            |cat << 'VIASHDOCKER'
+            |$dockerFile
+            |VIASHDOCKER""".stripMargin
+
+        val vs =
+          s"""
+            |  # create temporary directory to store temporary dockerfile in
+            |  tmpdir=$$(mktemp -d /tmp/viash_setupdocker-${functionality.name}-XXXXXX)
+            |  function clean_up {
+            |    rm -rf "\\$$tmpdir"
+            |  }
+            |  trap clean_up EXIT
+            |  ViashDockerfile > $$tmpdir/Dockerfile
+            |  if [ ! -z $$(docker images -q $imageName:$tag) ]; then
+            |    echo "Image consists locally or on DockerHub"
+            |  else
+            |    # Quick workaround to have the resources available in the current dir
+            |    cp $$VIASH_RESOURCES_DIR/* $$tmpdir
+            |    # Build the container
+            |    echo "> docker build -t $imageName:$tag$buildArgs $$tmpdir"
+            |    docker build -t $imageName:$tag$buildArgs $$tmpdir
+            |  fi""".stripMargin
+        (vdf, vs)
+      }
+
+    val setupCommands =
+        s"""# ViashDockerFile: print the dockerfile to stdout
+          |# return : dockerfile required to run this component
+          |# examples:
+          |#   ViashDockerFile
+          |function ViashDockerfile {
+          |$viashDockerFile
           |}
           |
+          |# ViashSetup: build a docker container
+          |# if available on docker hub, the image will be pulled
+          |# from there instead.
+          |# examples:
+          |#   ViashSetup
           |function ViashSetup {
-          |# create temporary directory to store temporary dockerfile in
-          |tmpdir=$$(mktemp -d /tmp/viash_setupdocker-${functionality.name}-XXXXXX)
-          |function clean_up {
-          |  rm -rf "\\$$tmpdir"
-          |}
-          |trap clean_up EXIT
-          |ViashDockerfile > $$tmpdir/Dockerfile
-          |if [ ! -z $$(docker images -q $imageName:$imageVersion) ]; then
-          |  echo "Image consists locally or on DockerHub"
-          |else
-          |  # Quick workaround to have the resources available in the current dir
-          |  cp $$VIASH_RESOURCES_DIR/* $$tmpdir
-          |  # Build the container
-          |  docker build -t $imageName:$imageVersion$buildArgs $$tmpdir
-          |fi
+          |$viashSetup
           |}""".stripMargin
 
-      (imageName, imageVersion, setupCommands)
-    }
+    (imageName, tag, setupCommands)
   }
 
   def generateDockerRunArgs(functionality: Functionality) = {
