@@ -29,7 +29,7 @@ object ViashNamespace {
         val platType = conf.get.platform.get.id
         val out = in.replace(source, target + s"/${platType}")
         println(s"Exporting $in =$platType=> $out")
-        ViashBuild(conf.get, out)
+        ViashBuild(conf.get, out, namespace = namespace)
       } else {
         val err = error.get
         val in = err.config.info.get.parent_path.get
@@ -61,7 +61,7 @@ object ViashNamespace {
     })
     val legacyConfigs = funFiles.map{file =>
       try {
-        (Some(Config.readSplitOrJoined(functionality = Some(file.toString), platform = platform, platformID = platformID)), None)
+        (Some(Config.readSplitOrJoined(functionality = Some(file.toString), platform = platform, platformID = platformID, namespace = namespace)), None)
       } catch {
         case e: PlatformNotFoundException => {
           (None, Some(e))
@@ -78,7 +78,7 @@ object ViashNamespace {
     })
     val newConfigs = scriptFiles.map{file =>
       try {
-        (Some(Config.readSplitOrJoined(joined = Some(file.toString), platform = platform, platformID = platformID)), None)
+        (Some(Config.readSplitOrJoined(joined = Some(file.toString), platform = platform, platformID = platformID, namespace = namespace)), None)
       } catch {
         case e: PlatformNotFoundException => {
           (None, Some(e))
