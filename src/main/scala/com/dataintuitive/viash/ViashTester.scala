@@ -78,14 +78,10 @@ object ViashTester {
     val testResults = tests.filter(_.isInstanceOf[Script]).map { file =>
       val test = file.asInstanceOf[Script]
 
-      // make a new directory
-      val newdir = Paths.get(dir.toString(), "test_" + test.filename).toFile()
-      newdir.mkdir()
-
       val dirArg = FileObject(
         name = "dir",
         direction = Output,
-        default = Some(newdir)
+        default = Some(dir)
       )
       // generate bash script for test
       val funonlytest = platform.modifyFunctionality(fun.copy(
@@ -106,6 +102,10 @@ object ViashTester {
           fun.resources.getOrElse(Nil).tail ::: // other resources provided in fun.resources
           tests.filter(!_.isInstanceOf[Script]) // other resources provided in fun.tests
       ))
+
+      // make a new directory
+      val newdir = Paths.get(dir.toString(), "test_" + test.filename).toFile()
+      newdir.mkdir()
 
       // write resources to dir
       IOHelper.writeResources(funfinal.resources.getOrElse(Nil), newdir)
