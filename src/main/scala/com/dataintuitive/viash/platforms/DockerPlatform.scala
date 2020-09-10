@@ -20,11 +20,13 @@ case class DockerPlatform(
   apt: Option[AptRequirements] = None,
   r: Option[RRequirements] = None,
   python: Option[PythonRequirements] = None,
-  docker: Option[DockerRequirements] = None
+  docker: Option[DockerRequirements] = None,
+  setup: List[Requirements] = Nil
 ) extends Platform {
   val `type` = "docker"
 
   val requirements: List[Requirements] =
+    setup :::
     apk.toList :::
     apt.toList :::
     r.toList :::
@@ -121,10 +123,14 @@ case class DockerPlatform(
       } else {
         val dockerFile =
           s"FROM $image\n\n" +
-            docker.flatMap(_.dockerCommandsAtBegin.map(_ + "\n")).getOrElse("") +
             runCommands.mkString("\n")
 
-        val buildArgs = docker.map(_.build_args.map(" --build-arg " + _).mkString).getOrElse("")
+        val dockerRequirements =
+          requirements.flatMap{
+            case d: DockerRequirements => Some(d)
+            case _ => None
+          }
+        val buildArgs = dockerRequirements.map(_.build_args.map(" --build-arg " + _).mkString).mkString("")
 
         val vdf =
           s"""# Print Dockerfile contents to stdout
