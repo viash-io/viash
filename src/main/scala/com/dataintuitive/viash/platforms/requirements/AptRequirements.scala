@@ -5,7 +5,7 @@ case class AptRequirements(
 ) extends Requirements {
   val `type` = "apt"
 
-  def installCommands = {
+  def installCommands: List[String] = {
     val aptUpdate =
       """apt-get update"""
 

@@ -12,14 +12,9 @@ abstract class DataObject[Type] {
   val multiple: Boolean
   val multiple_sep: Char
 
-  // require(
-  //   !required || !default.isDefined,
-  //   s"parameter $name should not be required and also have a default parameter."
-  // )
-
   private val pattern = "^(-*)(.*)$".r
   val pattern(otype, plainName) = name
 
-  val par = "par_" + plainName
-  val VIASH_PAR = "VIASH_PAR_" + plainName.toUpperCase()
+  val par: String = "par_" + plainName
+  val VIASH_PAR: String = "VIASH_PAR_" + plainName.toUpperCase()
 }

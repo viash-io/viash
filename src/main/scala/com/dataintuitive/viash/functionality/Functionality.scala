@@ -1,6 +1,5 @@
 package com.dataintuitive.viash.functionality
 
-import scala.io.Source
 import io.circe.yaml.parser
 import java.nio.file.Paths
 import java.io.File
@@ -41,7 +40,7 @@ case class Functionality(
       case _ => None
     }
 
-  def mainCode = mainScript.flatMap(_.read)
+  def mainCode: Option[String] = mainScript.flatMap(_.read)
 }
 
 object Functionality {
@@ -61,15 +60,15 @@ object Functionality {
     )
   }
 
-  def makeResourcePathAbsolute(res: Resource, parent: URI) = {
+  def makeResourcePathAbsolute(res: Resource, parent: URI): Resource = {
     if (res.isInstanceOf[Executable] || res.path.isEmpty || res.path.get.contains("://")) {
         res
       } else {
-        val p = Paths.get(res.path.get).toFile()
+        val p = Paths.get(res.path.get).toFile
         if (p.isAbsolute) {
           res
         } else {
-          val newPath = Some(parent.resolve(res.path.get).toString())
+          val newPath = Some(parent.resolve(res.path.get).toString)
           res match {
             case s: BashScript => s.copy(path = newPath)
             case s: PythonScript => s.copy(path = newPath)
@@ -80,7 +79,7 @@ object Functionality {
       }
   }
 
-  def read(path: String) = {
+  def read(path: String): Functionality = {
     parse(IOHelper.uri(path))
   }
 }

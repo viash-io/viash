@@ -2,14 +2,12 @@ package com.dataintuitive.viash
 
 import java.nio.file.{Paths, Files, Path}
 import java.nio.file.attribute.BasicFileAttributes
-import functionality.Functionality
-import platforms.Platform
 import config.Config
 import config.Config.PlatformNotFoundException
 import scala.collection.JavaConverters
 
 object ViashNamespace {
-  def find(sourceDir: Path, filter: (Path, BasicFileAttributes) => Boolean) = {
+  def find(sourceDir: Path, filter: (Path, BasicFileAttributes) => Boolean): List[Path] = {
     val it = Files.find(sourceDir, Integer.MAX_VALUE, (p, b) => filter(p, b)).iterator()
     JavaConverters.asScalaIterator(it).toList
   }
@@ -27,7 +25,7 @@ object ViashNamespace {
       if (conf.isDefined) {
         val in = conf.get.info.get.parent_path.get
         val platType = conf.get.platform.get.id
-        val out = in.replace(source, target + s"/${platType}")
+        val out = in.replace(source, target + s"/$platType")
         println(s"Exporting $in =$platType=> $out")
         ViashBuild(conf.get, out, namespace = namespace)
       } else {
@@ -42,7 +40,8 @@ object ViashNamespace {
     source: String,
     platform: Option[String] = None,
     platformID: Option[String] = None,
-    namespace: Option[String]) = {
+    namespace: Option[String]
+  ): List[(Option[Config], Option[PlatformNotFoundException])] = {
     val sourceDir = Paths.get(source)
 
     val namespaceMatch =
@@ -52,37 +51,35 @@ object ViashNamespace {
           nsregex.findFirstIn(path).isDefined
         }
       } else {
-        (path: String) => true
+        (_: String) => true
       }
 
     // find funcionality.yaml files and parse as config
     val funFiles = find(sourceDir, (path, attrs) => {
-      path.toString.endsWith("functionality.yaml") && attrs.isRegularFile() && namespaceMatch(path.toString)
+      path.toString.endsWith("functionality.yaml") && attrs.isRegularFile && namespaceMatch(path.toString)
     })
     val legacyConfigs = funFiles.map{file =>
       try {
         (Some(Config.readSplitOrJoined(functionality = Some(file.toString), platform = platform, platformID = platformID, namespace = namespace)), None)
       } catch {
-        case e: PlatformNotFoundException => {
+        case e: PlatformNotFoundException =>
           (None, Some(e))
-        }
       }
     }
 
     // find *.vsh.* files and parse as config
-    val scriptRegex = ".*\\.vsh\\.[^\\.]*$".r
+    val scriptRegex = ".*\\.vsh\\.[^.]*$".r
     val scriptFiles = find(sourceDir, (path, attrs) => {
-      scriptRegex.findFirstIn(path.toString().toLowerCase).isDefined &&
-        attrs.isRegularFile() &&
+      scriptRegex.findFirstIn(path.toString.toLowerCase).isDefined &&
+        attrs.isRegularFile &&
         namespaceMatch(path.toString)
     })
     val newConfigs = scriptFiles.map{file =>
       try {
         (Some(Config.readSplitOrJoined(joined = Some(file.toString), platform = platform, platformID = platformID, namespace = namespace)), None)
       } catch {
-        case e: PlatformNotFoundException => {
+        case e: PlatformNotFoundException =>
           (None, Some(e))
-        }
       }
     }
 

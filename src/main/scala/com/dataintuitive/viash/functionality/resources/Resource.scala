@@ -1,8 +1,9 @@
 package com.dataintuitive.viash.functionality.resources
 
-import com.dataintuitive.viash.functionality.Functionality
+import java.net.URI
+
 import com.dataintuitive.viash.helpers.IOHelper
-import java.nio.file.{Paths, Path}
+import java.nio.file.{Path, Paths}
 
 trait Resource {
   val `type`: String
@@ -20,14 +21,14 @@ trait Resource {
     message = s"For each resources, 'name' needs to be defined if no 'path' is defined."
   )
 
-  val uri = path.map(IOHelper.uri)
+  val uri: Option[URI] = path.map(IOHelper.uri)
 
-  def filename = {
+  def filename: String = {
     if (name.isDefined) {
       name.get
     } else {
-      val path = Paths.get(uri.get.getPath())
-      path.getFileName().toString
+      val path = Paths.get(uri.get.getPath)
+      path.getFileName.toString
     }
   }
 

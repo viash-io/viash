@@ -1,26 +1,22 @@
 package com.dataintuitive.viash.helpers
 
-import sys.process.Process
-import java.io.File
-
 import sys.process.{Process, ProcessLogger}
-import java.io.{ByteArrayOutputStream, PrintWriter, FileWriter, File}
+import java.io.{ByteArrayOutputStream, PrintWriter, File}
 
 case class ExecOutput(command: Seq[String], exitValue: Int, output: String)
 
 object Exec {
-  def run(command: Seq[String], cwd: Option[File] = None, extraEnv: Seq[(String, String)] = Nil) = {
+  def run(command: Seq[String], cwd: Option[File] = None, extraEnv: Seq[(String, String)] = Nil): String = {
     try {
       Process(command, cwd = cwd, extraEnv = extraEnv: _*).!!
     } catch {
-      case e: Throwable => {
+      case e: Throwable =>
         println(e.getMessage)
         throw e
-      }
     }
   }
 
-  def run2(command: Seq[String], cwd: Option[File] = None, extraEnv: Seq[(String, String)] = Nil, loggers: Seq[String => Unit] = Nil) = {
+  def run2(command: Seq[String], cwd: Option[File] = None, extraEnv: Seq[(String, String)] = Nil, loggers: Seq[String => Unit] = Nil): ExecOutput = {
      // run command, collect output
     val stream = new ByteArrayOutputStream
     val printwriter = new PrintWriter(stream)
@@ -37,10 +33,5 @@ object Exec {
     } finally {
       printwriter.close()
     }
-  }
-
-  def appendToEnv(key: String, value: String) = util.Properties.envOrNone(key) match {
-    case Some(v) if v.nonEmpty => s"$v${System getProperty "path.separator"}$value"
-    case _ => value
   }
 }

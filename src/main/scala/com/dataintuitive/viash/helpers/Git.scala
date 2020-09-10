@@ -1,6 +1,5 @@
 package com.dataintuitive.viash.helpers
 
-import sys.process._
 import java.io.File
 import scala.util.Try
 
@@ -11,7 +10,7 @@ case class GitInfo(
 )
 
 object Git {
-  def isGitRepo(path: File) = {
+  def isGitRepo(path: File): Boolean = {
     Try(
       Exec.run2(
         List("git", "rev-parse", "--is-inside-work-tree"),
@@ -20,7 +19,7 @@ object Git {
     ).getOrElse(false)
   }
 
-  def getLocalRepo(path: File) = {
+  def getLocalRepo(path: File): Option[String] = {
     Try(
       Exec.run(
         List("git", "rev-parse", "--show-toplevel"),
@@ -31,7 +30,7 @@ object Git {
 
   private val remoteRepoRegex = "(.*)\\s(.*)\\s(.*)".r
 
-  def getRemoteRepo(path: File) = {
+  def getRemoteRepo(path: File): Option[String] = {
    Try(
       Exec.run(
         List("git", "remote", "--verbose"),
@@ -39,7 +38,7 @@ object Git {
       )
       .split("\n")
       .flatMap{
-        case remoteRepoRegex(name, link, direction) if name contains "origin" => Some(link)
+        case remoteRepoRegex(name, link, _) if name contains "origin" => Some(link)
         case _ => None
       }
       .headOption
@@ -47,7 +46,7 @@ object Git {
     ).toOption
   }
 
-  def getCommit(path: File) = {
+  def getCommit(path: File): Option[String] = {
     Try(
       Exec.run(
         List("git", "rev-parse", "HEAD"),
@@ -56,7 +55,7 @@ object Git {
     ).toOption
   }
 
-  def getInfo(path: File) = {
+  def getInfo(path: File): GitInfo = {
     val igr = isGitRepo(path)
 
     if (igr) {

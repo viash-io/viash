@@ -4,7 +4,6 @@ import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.platforms.requirements._
-import java.nio.file.Paths
 import com.dataintuitive.viash.config.Version
 
 /**
@@ -25,20 +24,18 @@ case class NextFlowPlatform(
 ) extends Platform {
   val `type` = "nextflow"
 
-  val requirements = Nil
+  val requirements: List[Requirements] = Nil
 
-  val nativePlatform = NativePlatform(id, version, r, python)
+  private val nativePlatform = NativePlatform(id, version, r, python)
 
-  def modifyFunctionality(functionality: Functionality) = {
+  def modifyFunctionality(functionality: Functionality): Functionality = {
     import NextFlowUtils._
-    implicit val fun = functionality
+    implicit val fun: Functionality = functionality
 
-    val resourcesPath = "/app"
     val fname = functionality.name
 
     // get main script/binary
     val mainResource = functionality.mainScript
-    val mainPath = Paths.get(resourcesPath, mainResource.get.filename).toFile().getPath()
     val executionCode = mainResource match {
       case Some(e: Executable) => e.path.get
       case _ => fname
@@ -48,21 +45,18 @@ case class NextFlowPlatform(
 
     def inputFileExtO = allPars
             .filter(_.`type` == "file")
-            .filter(_.direction == Input)
-            .headOption
+            .find(_.direction == Input)
             .flatMap(_.default.map(_.toString.split('.').last))
 
     def outputFileExtO = allPars
             .filter(_.`type` == "file")
-            .filter(_.direction == Output)
-            .headOption
+            .find(_.direction == Output)
             .flatMap(_.default.map(_.toString.split('.').last))
 
-    /**
-     * All values for arguments/parameters are defined in the root of
-     * the params structure. the function name is prefixed as a namespace
-     * identifier. A "__" is used to seperate namespace and arg/option.
-     */
+    // All values for arguments/parameters are defined in the root of
+    // the params structure. the function name is prefixed as a namespace
+    // identifier. A "__" is used to separate namespace and arg/option.
+
     // TODO: find a solution of the options containg a `-`
     val namespacedParameters =
       functionality.arguments.flatMap(dataObject => {
@@ -83,7 +77,7 @@ case class NextFlowPlatform(
       })
 
     val argumentsAsTuple =
-      if (functionality.arguments.length > 0) {
+      if (functionality.arguments.nonEmpty) {
         List(
           "arguments" → functionality.arguments.map(_.toTuple)
         )
@@ -310,7 +304,7 @@ case class NextFlowPlatform(
         |  input:
         |    tuple val(id), path(input), val(output), val(container), val(cli)
         |  output:
-        |    tuple val("$${id}"), path("${outputStr}")
+        |    tuple val("$${id}"), path("$outputStr")
         |  script:
         |    \"\"\"
         |    # Running the pre-hook when necessary
@@ -421,10 +415,9 @@ case class NextFlowPlatform(
 
     val additionalResources = mainResource match {
       case None => Nil
-      case Some(e: Executable) => Nil
-      case Some(e: Script) => {
+      case Some(_: Executable) => Nil
+      case Some(_: Script) =>
         nativePlatform.modifyFunctionality(functionality).resources.getOrElse(Nil)
-      }
     }
 
     functionality.copy(
@@ -435,12 +428,12 @@ case class NextFlowPlatform(
 }
 
 object NextFlowUtils {
-  def quote(str: String) = '"' + str + '"'
+  def quote(str: String): String = '"' + str + '"'
 
-  def quoteLong(str: String) = if (str.contains("-")) '"' + str + '"' else str
+  def quoteLong(str: String): String = if (str.contains("-")) '"' + str + '"' else str
 
   def mapToConfig(m: (String, Any), indent: String = ""): String = m match {
-    case (k: String, v: List[_]) => {
+    case (k: String, v: List[_]) =>
       val content = v.map { pair =>
         // cast pair because type is removed due to type erasure
         mapToConfig(pair.asInstanceOf[(String, Any)], indent + "  ")
@@ -449,7 +442,6 @@ object NextFlowUtils {
       s"""$indent$k {
         |$content
         |$indent}""".stripMargin
-    }
     case (k: String, v: String) => s"""$indent$k = ${quote(v)}"""
     case (k: String, v: Boolean) => s"""$indent$k = ${v.toString}"""
     case (k: String, v: Direction) => s"""$indent$k = ${quote(v.toString)}"""
@@ -457,20 +449,20 @@ object NextFlowUtils {
     case _ => indent + "Parsing ERROR - Not implemented yet " + m
   }
 
-  def listMapToConfig(m: List[(String, Any)]) = {
+  def listMapToConfig(m: List[(String, Any)]): String = {
     m.map(mapToConfig(_)).mkString("\n")
   }
 
   def namespacedValueTuple(key: String, value: String)(implicit fun: Functionality): (String, String) =
-    (s"${fun.name}__${key}", value)
+    (s"${fun.name}__$key", value)
 
   implicit class RichDataObject[T](val dataObject: DataObject[T])(implicit fun: Functionality) {
-    def valuePointer(key: String, value: String): String =
-      s"$${params.${fun.name}__${key}}"
+    def valuePointer(key: String): String =
+      s"$${params.${fun.name}__$key}"
 
     def valueOrPointer(str: String): String = {
       if (!dataObject.plainName.contains("-")) {
-        valuePointer(dataObject.plainName, str)
+        valuePointer(dataObject.plainName)
       } else {
         // We currently have no solution for keys that contain `-`
         str

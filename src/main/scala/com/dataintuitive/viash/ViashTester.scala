@@ -6,14 +6,14 @@ import platforms._
 import resources.{ BashScript, Script }
 import sys.process.{ Process, ProcessLogger }
 import java.io.{ ByteArrayOutputStream, PrintWriter, FileWriter, File }
-import java.nio.file.{ Paths, Files }
+import java.nio.file.Paths
 import helpers.IOHelper
 
 object ViashTester {
   case class TestOutput(name: String, exitValue: Int, output: String)
 
-  def reportTests(results: List[TestOutput], dir: File, verbose: Boolean): Int = {
-    if (results.length == 0) {
+  def reportTests(results: List[TestOutput], verbose: Boolean): Int = {
+    if (results.isEmpty) {
       println("No tests found!")
       0
     } else {
@@ -37,17 +37,17 @@ object ViashTester {
     }
   }
 
-  def runTests(fun: Functionality, platform: Platform, dir: File, verbose: Boolean = false) = {
+  def runTests(fun: Functionality, platform: Platform, dir: File, verbose: Boolean = false): List[TestOutput] = {
     // build regular executable
     val buildfun = platform.modifyFunctionality(fun)
-    val builddir = Paths.get(dir.toString(), "build_executable").toFile()
+    val builddir = Paths.get(dir.toString, "build_executable").toFile
     builddir.mkdir()
     IOHelper.writeResources(buildfun.resources.getOrElse(Nil), builddir)
 
     // run command, collect output
     val stream = new ByteArrayOutputStream
     val printwriter = new PrintWriter(stream)
-    val logwriter = new FileWriter(Paths.get(builddir.toString(), "_viash_build_log.txt").toString(), true)
+    val logwriter = new FileWriter(Paths.get(builddir.toString, "_viash_build_log.txt").toString, true)
 
     val logger: String => Unit =
       (s: String) => {
@@ -59,7 +59,7 @@ object ViashTester {
     // run command, collect output
     val buildResult =
       try {
-        val executable = Paths.get(builddir.toString(), fun.name).toString()
+        val executable = Paths.get(builddir.toString, fun.name).toString
         logger(s"+$executable ---setup")
         val exitValue = Process(Seq(executable, "---setup"), cwd = builddir).!(ProcessLogger(logger, logger))
 
@@ -104,7 +104,7 @@ object ViashTester {
       ))
 
       // make a new directory
-      val newdir = Paths.get(dir.toString(), "test_" + test.filename).toFile()
+      val newdir = Paths.get(dir.toString, "test_" + test.filename).toFile
       newdir.mkdir()
 
       // write resources to dir
@@ -113,7 +113,7 @@ object ViashTester {
       // run command, collect output
       val stream = new ByteArrayOutputStream
       val printwriter = new PrintWriter(stream)
-      val logwriter = new FileWriter(Paths.get(newdir.toString(), "_viash_test_log.txt").toString(), true)
+      val logwriter = new FileWriter(Paths.get(newdir.toString, "_viash_test_log.txt").toString, true)
 
       val logger: String => Unit =
         (s: String) => {
@@ -124,7 +124,7 @@ object ViashTester {
 
       // run command, collect output
       try {
-        val executable = Paths.get(newdir.toString(), testbash.filename).toString()
+        val executable = Paths.get(newdir.toString, testbash.filename).toString
         val exitValue = Process(Seq(executable), cwd = newdir).!(ProcessLogger(logger, logger))
 
         TestOutput(test.filename, exitValue, stream.toString)

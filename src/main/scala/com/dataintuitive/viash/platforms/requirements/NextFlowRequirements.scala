@@ -6,7 +6,7 @@ case class NextFlowRequirements(
 ) extends Requirements {
   val `type` = "nextflow"
 
-  def installCommands = {
-    List()
+  def installCommands: List[String] = {
+    Nil
   }
 }

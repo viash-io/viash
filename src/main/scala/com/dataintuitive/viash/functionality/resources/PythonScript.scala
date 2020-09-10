@@ -13,10 +13,10 @@ case class PythonScript(
 
   val commentStr = "#"
 
-  def command(script: String) = {
+  def command(script: String): String = {
     "python \"" + script + "\""
   }
-  def commandSeq(script: String) = {
+  def commandSeq(script: String): Seq[String] = {
     Seq("python", script)
   }
 
@@ -37,11 +37,11 @@ case class PythonScript(
           s"""'$$$env_name'.split('${o.multiple_sep}')"""
         case o: StringObject if o.multiple =>
           s"""'$$$env_name'.split('${o.multiple_sep}')"""
-        case o: BooleanObject => s"""'$$$env_name'.lower() == 'true'"""
-        case o: IntegerObject => s"""int('$$$env_name')"""
-        case o: DoubleObject => s"""float('$$$env_name')"""
-        case o: FileObject => s"""'$$$env_name'"""
-        case o: StringObject => s"""'$$$env_name'"""
+        case _: BooleanObject => s"""'$$$env_name'.lower() == 'true'"""
+        case _: IntegerObject => s"""int('$$$env_name')"""
+        case _: DoubleObject => s"""float('$$$env_name')"""
+        case _: FileObject => s"""'$$$env_name'"""
+        case _: StringObject => s"""'$$$env_name'"""
       }
 
       s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$parse"; else echo None; fi )"""

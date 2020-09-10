@@ -5,18 +5,15 @@ case class ApkRequirements(
 ) extends Requirements {
   val `type` = "apk"
 
-  val installCommands = {
-    val installPackages =
-      packages match {
-        case Nil => Nil
-        case packs =>
-          List(packs.mkString(
-            "apk add --no-cache ",
-            " ",
-            ""
-          ))
-      }
-
-    installPackages
+  val installCommands: List[String] = {
+    packages match {
+      case Nil => Nil
+      case packs =>
+        List(packs.mkString(
+          "apk add --no-cache ",
+          " ",
+          ""
+        ))
+    }
   }
 }

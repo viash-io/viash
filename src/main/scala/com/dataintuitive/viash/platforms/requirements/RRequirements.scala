@@ -12,9 +12,9 @@ case class RRequirements(
 ) extends Requirements {
   val `type` = "r"
 
-  def installCommands = {
+  def installCommands: List[String] = {
     val installRemotes =
-      if ((cran ::: git ::: github ::: gitlab ::: bitbucket ::: svn ::: url).length > 0) {
+      if ((cran ::: git ::: github ::: gitlab ::: bitbucket ::: svn ::: url).nonEmpty) {
         List("""Rscript -e 'if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")'""")
       } else {
         Nil
@@ -31,20 +31,20 @@ case class RRequirements(
     )
 
     val installBiocManager =
-      if (bioc.length > 0) {
+      if (bioc.nonEmpty) {
         List("""Rscript -e 'if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")'""")
       } else {
         Nil
       }
     val installBioc =
-      if (bioc.length > 0) {
+      if (bioc.nonEmpty) {
         List(s"""Rscript -e 'BiocManager::install(c("${bioc.mkString("\", \"")}"))'""")
       } else {
         Nil
       }
 
     val installers = remotePairs.flatMap{
-      case (str, Nil) => None
+      case (_, Nil) => None
       case (str, list) =>
         Some(s"""Rscript -e 'remotes::install_$str(c("${list.mkString("\", \"")}"), repos = "https://cran.rstudio.com")'""")
     }

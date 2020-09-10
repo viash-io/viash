@@ -9,7 +9,6 @@ import java.nio.file.Paths
 object ViashBuild {
   def apply(config: Config, output: String, printMeta: Boolean = false, namespace: Option[String] = None) {
     val fun = config.functionality
-    val plat = config.platform.get
 
     // create dir
     val dir = new java.io.File(output)

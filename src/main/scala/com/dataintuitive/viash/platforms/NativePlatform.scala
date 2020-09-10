@@ -1,8 +1,8 @@
 package com.dataintuitive.viash.platforms
 
-import com.dataintuitive.viash.functionality.{Functionality}
+import com.dataintuitive.viash.functionality.Functionality
 import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.helpers.{BashHelper, BashWrapper}
+import com.dataintuitive.viash.helpers.BashWrapper
 import com.dataintuitive.viash.platforms.requirements._
 import com.dataintuitive.viash.config.Version
 
@@ -18,10 +18,10 @@ case class NativePlatform(
     r.toList :::
     python.toList
 
-  def modifyFunctionality(functionality: Functionality) = {
+  def modifyFunctionality(functionality: Functionality): Functionality = {
     val executor = functionality.mainScript match {
       case None => "eval"
-      case Some(e: Executable) => "eval"
+      case Some(_: Executable) => "eval"
       case Some(_) => "bash"
     }
 
@@ -36,8 +36,7 @@ case class NativePlatform(
         parsers = "",
         postParse = "",
         postRun = ""
-      )),
-      is_executable = true
+      ))
     )
 
     functionality.copy(
@@ -45,7 +44,7 @@ case class NativePlatform(
     )
   }
 
-  def setupCommands = {
+  def setupCommands: String = {
     val runCommands = requirements.map(_.installCommands)
 
     val commands =

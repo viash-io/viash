@@ -1,8 +1,6 @@
 package com.dataintuitive.viash.functionality.resources
 
 import com.dataintuitive.viash.functionality.Functionality
-import java.nio.file.{Path, Files}
-import java.nio.charset.StandardCharsets
 
 trait Script extends Resource {
   def command(script: String): String
