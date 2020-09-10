@@ -1,8 +1,6 @@
 package com.dataintuitive.viash
 
 import org.scalatest.{FunSuite, Tag}
-import com.dataintuitive.viash.functionality.Functionality
-import com.dataintuitive.viash.platforms.Platform
 import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.helpers._
 
@@ -52,7 +50,7 @@ class E2ETests extends FunSuite {
 
       test(s"Testing $testName platform $platName", tags: _*) {
         val results = try {
-          ViashTester.runTests(config.get.functionality, config.get.platform.get, dir, verbose = false)
+          ViashTester.runTests(config.get.functionality, config.get.platform.get, dir)
         } finally {
           IOHelper.deleteRecursively(dir)
         }
