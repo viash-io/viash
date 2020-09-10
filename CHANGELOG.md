@@ -6,6 +6,8 @@
 
 * MINOR CHANGE: Do not escape `${VIASH_...}` elements in default values and descriptions!
 
+* NEW FEATURE: Allow changing the order of setup commands using the `setup:` variable.
+
 # viash 0.2.0 (2020-09-01)
 
 ## NEW FEATURES
