@@ -1,8 +1,0 @@
-name: viash
-description: Wrapper for Viash itself, wow this feels meta...
-platform: bash
-arguments: []
-resources:
-- type: bash_script
-  path: ./code.sh
-- path: ./viash-assembly-0.1.0.jar

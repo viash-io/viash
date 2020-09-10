@@ -1,6 +1,0 @@
-type: docker
-image: python
-python:
-  packages: 
-  - argparse
-workdir: /app
