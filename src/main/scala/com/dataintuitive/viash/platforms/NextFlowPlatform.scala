@@ -216,7 +216,10 @@ case class NextFlowPlatform(
         |// Out: Arrays of DataObjects
         |def overrideInput(params, str) {
         |
-        |    // `str` in fact can be `String`, `List[String]` or `Map[String,String]`
+        |    // `str` in fact can be one of:
+        |    // - `String`, 
+        |    // - `List[String]`,
+        |    // - `Map[String, String | List[String]]`
         |    // Please refer to the docs for more info
         |    def overrideArgs = params.arguments.collect{ it ->
         |      (it.value.direction == "Input" && it.value.type == "file")
@@ -224,7 +227,9 @@ case class NextFlowPlatform(
         |            ? (str in List)
         |                ? it.value + [ "value" : str.join(it.value.multiple_sep)]
         |                : (str[it.value.name] != null)
-        |                    ? it.value + [ "value" : str[it.value.name]]
+        |                    ? (str[it.value.name] in List)
+        |                        ? it.value + [ "value" : str[it.value.name].join(it.value.multiple_sep)]
+        |                        : it.value + [ "value" : str[it.value.name]]
         |                    : it.value + [ "value" : "PROBLEMS" ]
         |            : it.value + [ "value" : str ]
         |        : it.value
@@ -338,14 +343,14 @@ case class NextFlowPlatform(
         |            // NXF knows how to deal with an List[Path], not with HashMap !
         |            def checkedInput =
         |                (input in HashMap)
-        |                    ? input.collect{ k, v -> v }
+        |                    ? input.collect{ k, v -> v }.flatten()
         |                    : input
         |            // filename is either String, List[String] or HashMap[String, String]
         |            def filename =
         |                (input in List || input in HashMap)
         |                    ? (input in List)
         |                        ? input.collect{ it.name }
-        |                        : input.collectEntries{ k, v -> [ k, v.name ] }
+        |                        : input.collectEntries{ k, v -> [ k, (v in List) ? v.collect{it.name} : v.name ] }
         |                    : input.name
         |            def outputFilename = outFromIn(filename)
         |            def defaultParams = params[key] ? params[key] : [:]
