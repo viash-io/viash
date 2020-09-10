@@ -1,5 +1,0 @@
-type: native
-python:
-  packages: 
-  - argparse
-  - "anndata<0.7"

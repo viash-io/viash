@@ -8,7 +8,7 @@ class E2ETests extends FunSuite {
   for (
     (testName, scriptName) <- List(
       ("testbash", None),
-      ("testpython", None),
+      ("testpython", Some("config.vsh.yaml")),
       ("testr", Some("code.vsh.R")),
       ("testexecutable", None)
     );
