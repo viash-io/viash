@@ -12,10 +12,10 @@ case class RScript(
   val `type` = "R"
   val commentStr = "#"
 
-  def command(script: String) = {
+  def command(script: String): String = {
     "Rscript \"" + script + "\""
   }
-  def commandSeq(script: String) = {
+  def commandSeq(script: String): Seq[String] = {
     Seq("Rscript", script)
   }
 
@@ -36,11 +36,11 @@ case class RScript(
           s"""strsplit('$$$env_name', split = '${o.multiple_sep}')[[1]]"""
         case o: StringObject if o.multiple =>
           s"""strsplit('$$$env_name', split = '${o.multiple_sep}')[[1]]"""
-        case o: BooleanObject => s"""as.logical(toupper('$$$env_name'))"""
-        case o: IntegerObject => s"""as.integer($$$env_name)"""
-        case o: DoubleObject => s"""as.numeric($$$env_name)"""
-        case o: FileObject => s"""'$$$env_name'"""
-        case o: StringObject => s"""'$$$env_name'"""
+        case _: BooleanObject => s"""as.logical(toupper('$$$env_name'))"""
+        case _: IntegerObject => s"""as.integer($$$env_name)"""
+        case _: DoubleObject => s"""as.numeric($$$env_name)"""
+        case _: FileObject => s"""'$$$env_name'"""
+        case _: StringObject => s"""'$$$env_name'"""
       }
 
       s""""${par.plainName}" = $$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$parse"; else echo NULL; fi )"""

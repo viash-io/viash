@@ -16,7 +16,7 @@ class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
   val platFile = getClass.getResource(s"/$testName/platform_docker.yaml").getPath
 
   val temporaryFolder = IOHelper.makeTemp("viash_tester")
-  val tempFolStr = temporaryFolder.toString()
+  val tempFolStr = temporaryFolder.toString
 
   // parse functionality from file
   val functionality = Functionality.parse(IOHelper.uri(funcFile))
@@ -31,35 +31,34 @@ class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
   Main.main(params)
 
   // check whether executable was created
-  val executable = Paths.get(tempFolStr, functionality.name).toFile()
-  val execPathInDocker = Paths.get("/viash_automount", executable.getPath).toFile().toString()
+  val executable = Paths.get(tempFolStr, functionality.name).toFile
+  val execPathInDocker = Paths.get("/viash_automount", executable.getPath).toFile.toString
 
   test("Viash should have created an executable") {
-    assert(executable.exists())
-    assert(executable.canExecute())
+    assert(executable.exists)
+    assert(executable.canExecute)
   }
 
   test("Check whether the executable can build the image", DockerTest) {
     val out = Exec.run2(
-      Seq(executable.toString(), "---setup")
+      Seq(executable.toString, "---setup")
     )
     assert(out.exitValue == 0)
   }
 
   test("Check whether the executable can run", DockerTest) {
     Exec.run(
-      Seq(executable.toString(), "--help")
+      Seq(executable.toString, "-h")
     )
   }
 
   test("Check whether particular keywords can be found in the usage", DockerTest) {
     val stdout =
       Exec.run(
-        Seq(executable.toString(), "--help")
+        Seq(executable.toString, "--help")
       )
 
     functionality.arguments.foreach(arg => {
-      //assert(stdout.contains(arg.name))
       for (opt <- arg.alternatives; value <- opt)
         assert(stdout.contains(value))
       for (opt <- arg.description; value <- opt)
@@ -69,8 +68,8 @@ class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check whether output is correctly created", DockerTest) {
-    val output = Paths.get(tempFolStr, "output.txt").toFile()
-    val log = Paths.get(tempFolStr, "log.txt").toFile()
+    val output = Paths.get(tempFolStr, "output.txt").toFile
+    val log = Paths.get(tempFolStr, "log.txt").toFile
 
     val stdout =
       Exec.run(
@@ -107,7 +106,7 @@ class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
     assert(outputLines.contains("""optional_with_default: |bar|"""))
     assert(outputLines.contains("""multiple: |foo:bar|"""))
     assert(outputLines.contains("""multiple_pos: |a:b:c:d:e:f|"""))
-    assert(outputLines.contains("""resources_dir: |/resources|"""))
+    assert(outputLines.contains(s"""resources_dir: |/viash_automount$tempFolStr/|"""))
 
     val logLines = Source.fromFile(log).mkString
     assert(logLines.contains("INFO: Parsed input arguments"))
@@ -134,7 +133,7 @@ class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
     assert(stdout.contains("""optional_with_default: |The default value.|"""))
     assert(stdout.contains("""multiple: ||"""))
     assert(stdout.contains("""multiple_pos: ||"""))
-    assert(stdout.contains("""resources_dir: |/resources|"""))
+    assert(stdout.contains(s"""resources_dir: |/viash_automount$tempFolStr/|"""))
 
     assert(stdout.contains("INFO: Parsed input arguments"))
   }

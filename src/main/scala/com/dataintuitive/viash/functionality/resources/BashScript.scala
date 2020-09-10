@@ -2,7 +2,6 @@ package com.dataintuitive.viash.functionality.resources
 
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.dataobjects._
-import com.dataintuitive.viash.helpers.BashHelper
 
 case class BashScript(
   name: Option[String] = None,
@@ -13,15 +12,11 @@ case class BashScript(
   val `type` = "bash_script"
   val commentStr = "#"
 
-  def command(script: String) = {
+  def command(script: String): String = {
     "bash \"" + script + "\""
   }
-  def commandSeq(script: String) = {
+  def commandSeq(script: String): Seq[String] = {
     Seq("bash", script)
-  }
-
-  private def removeNewlines(s: String) = {
-      s.filter(_ >= ' ') // remove all control characters
   }
 
   def generatePlaceholder(functionality: Functionality): String = {

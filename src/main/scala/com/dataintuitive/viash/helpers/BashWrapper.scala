@@ -2,29 +2,20 @@ package com.dataintuitive.viash.helpers
 
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.resources._
-import java.nio.file.Paths
-import scala.io.Source
 import com.dataintuitive.viash.functionality.dataobjects._
 
 object BashWrapper {
-  def escape(str: String) = {
+  def escape(str: String): String = {
     str.replaceAll("([\\\\$`])", "\\\\$1")
   }
-  def escapeViash(str: String, resourcesPath: Option[String] = None) = {
-    val s =
-      escape(str)
+  def escapeViash(str: String): String = {
+    escape(str)
       .replaceAll("\\\\\\$VIASH_DOLLAR\\\\\\$", "\\$")
       .replaceAll("\\\\\\$VIASH_", "\\$VIASH_")
       .replaceAll("\\\\\\$\\{VIASH_", "\\${VIASH_")
-
-    if (resourcesPath.isDefined) {
-      s.replaceAll("\\\\\\$VIASH_RESOURCES_DIR", resourcesPath.get)
-    } else {
-      s
-    }
   }
 
-  def store(env: String, value: String, multiple_sep: Option[Char]) = {
+  def store(env: String, value: String, multiple_sep: Option[Char]): Array[String] = {
     if (multiple_sep.isDefined) {
       s"""if [ -z "$$$env" ]; then
          |  $env=$value
@@ -42,17 +33,17 @@ object BashWrapper {
     store: String,
     argsConsumed: Int,
     multiple_sep: Option[Char] = None
-  ) = {
+  ): String = {
     s"""        $name)
        |            ${this.store(plainName, store, multiple_sep).mkString("\n            ")}
        |            shift $argsConsumed
        |            ;;""".stripMargin
   }
-  def argStoreSed(name: String, plainName: String, multiple_sep: Option[Char] = None) = {
+  def argStoreSed(name: String, plainName: String, multiple_sep: Option[Char] = None): String = {
     argStore(name + "=*", plainName, "$(ViashRemoveFlags \"$1\")", 1, multiple_sep)
   }
 
-  def spaceCode(str: String) = {
+  def spaceCode(str: String): String = {
     if (str != "") {
       "\n" + str + "\n"
     } else {
@@ -60,22 +51,25 @@ object BashWrapper {
     }
   }
 
+  val var_resources_dir = "VIASH_RESOURCES_DIR"
+
   def wrapScript(
       executor: String,
       functionality: Functionality,
-      resourcesPath: String = "\\$VIASH_RESOURCES_DIR",
       setupCommands: String,
       preParse: String,
       parsers: String,
       postParse: String,
       postRun: String
-    ) = {
+    ): String = {
     val mainResource = functionality.mainScript
 
     // check whether the wd needs to be set to the resources dir
     val cdToResources =
       if (functionality.set_wd_to_resources_dir.getOrElse(false)) {
-        "\ncd \"" + resourcesPath + "\""
+        s"""
+           |cd "$$$var_resources_dir"
+           |""".stripMargin
       } else {
         ""
       }
@@ -83,12 +77,10 @@ object BashWrapper {
     // DETERMINE HOW TO RUN THE CODE
     val executionCode = mainResource match {
       case None => ""
-      case Some(e: Executable) => {
-        e.path.get + " $VIASH_EXECUTABLE_ARGS"
-      }
-      case Some(res) => {
+      case Some(e: Executable) => e.path.get + " $VIASH_EXECUTABLE_ARGS"
+      case Some(res) =>
         val code = res.readWithPlaceholder(functionality).get
-        val escapedCode = escapeViash(code, Some(resourcesPath))
+        val escapedCode = escapeViash(code)
         s"""
           |set -e
           |tempscript=\\$$(mktemp /tmp/viash-run-${functionality.name}-XXXXXX)
@@ -97,26 +89,25 @@ object BashWrapper {
           |}
           |trap clean_up EXIT
           |cat > "\\$$tempscript" << 'VIASHMAIN'
-          |${escapedCode}
+          |$escapedCode
           |VIASHMAIN$cdToResources
           |${res.command("\\$tempscript")}
           |""".stripMargin
-      }
     }
 
     // generate bash document
     val (heredocStart, heredocEnd) = mainResource match {
       case None => ("", "")
-      case Some(e: Executable) => ("", "")
+      case Some(_: Executable) => ("", "")
       case _ => ("cat << VIASHEOF | ", "\nVIASHEOF")
     }
 
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
-    val (parPreParse, parParsers, parPostParse) = generateParsers(functionality, params)
+    val (parPreParse, parParsers, parPostParse) = generateParsers(params)
 
     val execPostParse =
       mainResource match {
-        case Some(e: Executable) => generateExecutableArgs(params)
+        case Some(_: Executable) => generateExecutableArgs(params)
         case _ => ""
       }
 
@@ -131,7 +122,7 @@ object BashWrapper {
       |${BashHelper.ViashSourceDir}
       |
       |# find source folder of this component
-      |VIASH_RESOURCES_DIR=`ViashSourceDir $${BASH_SOURCE[0]}`
+      |$var_resources_dir=`ViashSourceDir $${BASH_SOURCE[0]}`
       |
       |# helper function for installing extra requirements for this component
       |$setupCommands
@@ -184,21 +175,21 @@ object BashWrapper {
           exval
         }
 
-      val exampleStrs =
-        if (param.isInstanceOf[BooleanObject] && param.asInstanceOf[BooleanObject].flagValue.isDefined) {
-          names
-        } else {
-          names.map(name => {
-            if (name.startsWith("--") || name.startsWith("---")) {
-              name + "=" + exampleValues
-            } else if (name.startsWith("-")) {
-              name + " " + exampleValues
-            } else {
-              exampleValues
-            }
-          })
+      val exampleStrs = {
+        param match {
+          case bo: BooleanObject if bo.flagValue.isDefined => names
+          case _ =>
+            names.map(name => {
+              if (name.startsWith("--") || name.startsWith("---")) {
+                name + "=" + exampleValues
+              } else if (name.startsWith("-")) {
+                name + " " + exampleValues
+              } else {
+                exampleValues
+              }
+            })
         }
-      val exampleStr = exampleStrs.mkString(", ")
+      }
 
       val properties =
         List("type: " + param.`type`) :::
@@ -224,24 +215,22 @@ object BashWrapper {
        |}""".stripMargin
   }
 
-  def generateParsers(functionality: Functionality, params: List[DataObject[_]]) = {
+  def generateParsers(params: List[DataObject[_]]): (String, String, String) = {
     // gather parse code for params
     val wrapperParams = params.filterNot(_.otype == "")
-    val parseStrs = wrapperParams.map(param => {
-
-      if (param.isInstanceOf[BooleanObject] && param.asInstanceOf[BooleanObject].flagValue.isDefined) {
-        val bo = param.asInstanceOf[BooleanObject]
+    val parseStrs = wrapperParams.map{
+      case bo: BooleanObject if bo.flagValue.isDefined =>
         val fv = bo.flagValue.get
 
         // params of the form --param
-        val part1 = argStore(param.name, param.VIASH_PAR, fv.toString(), 1)
+        val part1 = argStore(bo.name, bo.VIASH_PAR, fv.toString, 1)
         // Alternatives
-        val moreParts = param.alternatives.map(alt => {
-          argStore(alt, param.VIASH_PAR, fv.toString(), 1)
+        val moreParts = bo.alternatives.map(alt => {
+          argStore(alt, bo.VIASH_PAR, fv.toString, 1)
         })
 
         (part1 :: moreParts).mkString("\n")
-      } else {
+      case param =>
         val multisep = if (param.multiple) Some(param.multiple_sep) else None
 
         // params of the form --param ...
@@ -260,8 +249,7 @@ object BashWrapper {
         })
 
         (part1 :: part2 ::: moreParts).mkString("\n")
-      }
-    }).mkString("\n")
+    }.mkString("\n")
 
     // parse positionals
     val positionals = params.filter(_.otype == "")
@@ -300,14 +288,13 @@ object BashWrapper {
     // fi
     val defaultsStrs = params.flatMap{param =>
       // if boolean object has a flagvalue, add the inverse of it as a default value
-      val default =
-        if (param.required) {
-          None
-        } else if (param.isInstanceOf[BooleanObject] && param.asInstanceOf[BooleanObject].flagValue.isDefined) {
-          param.asInstanceOf[BooleanObject].flagValue.map(!_)
-        } else {
-          param.default
+      val default = {
+        param match {
+          case p if p.required => None
+          case bo: BooleanObject if bo.flagValue.isDefined => bo.flagValue.map(!_)
+          case p => p.default
         }
+      }
 
       default.map(default => {
         s"""if [ -z "$$${param.VIASH_PAR}" ]; then
@@ -357,14 +344,11 @@ object BashWrapper {
     (preParse, parsers, postParse)
   }
 
-  def generateExecutableArgs(params: List[DataObject[_]]) = {
-    val inserts = params.map { param =>
-      param match {
-
-        case p: BooleanObject if p.flagValue.isDefined => {
-          s"""[ "$$${p.VIASH_PAR}" == "${p.flagValue.get}" ] && VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS ${p.name}""""
-        }
-        case _ => {
+  def generateExecutableArgs(params: List[DataObject[_]]): String = {
+    val inserts = params.map {
+        case bo: BooleanObject if bo.flagValue.isDefined =>
+          s"""[ "$$${bo.VIASH_PAR}" == "${bo.flagValue.get}" ] && VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS ${bo.name}""""
+        case param =>
           val flag = if (param.otype == "") "" else " " + param.name
 
           if (param.multiple) {
@@ -382,15 +366,9 @@ object BashWrapper {
                |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$${param.VIASH_PAR}'"
                |fi""".stripMargin
           }
-        }
-      }
     }
 
     "VIASH_EXECUTABLE_ARGS=''\n" + inserts.mkString("\n")
-  }
-
-  private def removeNewlines(s: String) = {
-      s.filter(_ >= ' ') // remove all control characters
   }
 
 }

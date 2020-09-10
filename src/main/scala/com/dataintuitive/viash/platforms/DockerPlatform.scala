@@ -4,9 +4,7 @@ import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.platforms.requirements._
-import java.nio.file.Paths
 import com.dataintuitive.viash.helpers.{BashHelper, BashWrapper}
-import com.dataintuitive.viash.functionality.resources.Resource
 import com.dataintuitive.viash.config.Version
 
 case class DockerPlatform(
@@ -34,7 +32,7 @@ case class DockerPlatform(
     inputs: List[DataObject[_]] = Nil,
     extraParams: String = ""
   ) {
-    def `++`(dm: Mods) = {
+    def `++`(dm: Mods): Mods = {
       Mods(
         preParse = preParse + dm.preParse,
         parsers = parsers + dm.parsers,
@@ -53,14 +51,12 @@ case class DockerPlatform(
     python.toList :::
     docker.toList
 
-  def modifyFunctionality(functionality: Functionality) = {
-    val resourcesPath = "/app"
-
+  def modifyFunctionality(functionality: Functionality): Functionality = {
     // collect variables
-    val dockerArgs = generateDockerRunArgs(functionality)
+    val dockerArgs = generateDockerRunArgs()
 
     // create setup
-    val (imageName, imageVersion, setupCommands) = processDockerSetup(functionality, resourcesPath)
+    val (imageName, imageVersion, setupCommands) = processDockerSetup(functionality)
 
     // generate automount code
     val dmVol = processDockerVolumes(functionality)
@@ -85,7 +81,7 @@ case class DockerPlatform(
 
     // make commands
     val entrypointStr = functionality.mainScript.get match {
-      case s: Executable => "--entrypoint='' "
+      case _: Executable => "--entrypoint='' "
       case _ => "--entrypoint=bash "
     }
     val executor = s"""eval docker run $entrypointStr$dockerArgs${dm.extraParams} $imageName:$imageVersion"""
@@ -101,14 +97,12 @@ case class DockerPlatform(
         text = Some(BashWrapper.wrapScript(
           executor = executor,
           functionality = fun2,
-          resourcesPath = "/resources",
           setupCommands = setupCommands,
           preParse = dm.preParse,
           parsers = dm.parsers,
           postParse = dm.postParse,
           postRun = dm.postRun
-        )),
-        is_executable = true
+        ))
       )
 
     fun2.copy(
@@ -118,7 +112,7 @@ case class DockerPlatform(
 
   private val tagRegex = "(.*):(.*)".r
 
-  def processDockerSetup(functionality: Functionality, resourcesPath: String) = {
+  def processDockerSetup(functionality: Functionality): (String, String, String) = {
     // get dependencies
     val runCommands = requirements.flatMap(_.dockerCommands)
 
@@ -168,7 +162,7 @@ case class DockerPlatform(
             |    echo "Image consists locally or on DockerHub"
             |  else
             |    # Quick workaround to have the resources available in the current dir
-            |    cp $$VIASH_RESOURCES_DIR/* $$tmpdir
+            |    cp $$${BashWrapper.var_resources_dir}/* $$tmpdir
             |    # Build the container
             |    echo "> docker build -t $imageName:$tag$buildArgs $$tmpdir"
             |    docker build -t $imageName:$tag$buildArgs $$tmpdir
@@ -198,30 +192,25 @@ case class DockerPlatform(
     (imageName, tag, setupCommands)
   }
 
-  def generateDockerRunArgs(functionality: Functionality) = {
+  def generateDockerRunArgs(): String = {
     // process port parameter
     val portStr = port.getOrElse(Nil).map("-p " + _ + " ").mkString("")
 
-    portStr + "-i --rm -v \"$VIASH_RESOURCES_DIR\":/resources"
+    portStr + "-i --rm"
   }
 
-  def processDockerVolumes(functionality: Functionality) = {
+  def processDockerVolumes(functionality: Functionality): Mods = {
     val extraMountsVar = "VIASH_EXTRA_MOUNTS"
 
     val args = functionality.arguments
 
     val preParse =
-      if (args.isEmpty) {
-        ""
-      } else if (resolve_volume == Automatic) {
-        s"""${BashHelper.ViashAbsolutePath}
-           |${BashHelper.ViashAutodetectMount}
-           |${BashHelper.ViashExtractFlags}
-           |# initialise autodetect mount variable
-           |$extraMountsVar=''""".stripMargin
-      } else {
-        BashHelper.ViashExtractFlags
-      }
+      s"""${BashHelper.ViashAbsolutePath}
+         |${BashHelper.ViashAutodetectMount}
+         |${BashHelper.ViashExtractFlags}
+         |# initialise autodetect mount variable
+         |$extraMountsVar=''""".stripMargin
+
 
     val parsers =
         s"""        ---v|---volume)
@@ -235,38 +224,39 @@ case class DockerPlatform(
 
     val extraParams = s" $$$extraMountsVar"
 
-    val postParse =
+    val postParseVolumes =
       if (resolve_volume == Automatic) {
         "\n\n# detect volumes from file arguments" +
-        args.filter(a => a.isInstanceOf[FileObject])
-          .map(arg => {
-
-            // resolve arguments with multiplicity different from
-            // singular args
-            if (arg.multiple) {
-              val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
-              s"""
-                |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-                |  IFS="${arg.multiple_sep}"
-                |  for var in $$${arg.VIASH_PAR}; do
-                |    VIASH_EXTRA_MOUNTS="$$VIASH_EXTRA_MOUNTS $$(ViashAutodetectMountArg "$$var")"
-                |    ${BashWrapper.store(viash_temp, "\"$(ViashAutodetectMount \"$var\")\"", Some(arg.multiple_sep)).mkString("\n    ")}
-                |  done
-                |  unset IFS
-                |  ${arg.VIASH_PAR}="$$$viash_temp"
-                |fi""".stripMargin
-            } else {
-              s"""
-                |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-                |  VIASH_EXTRA_MOUNTS="$$VIASH_EXTRA_MOUNTS $$(ViashAutodetectMountArg "$$${arg.VIASH_PAR}")"
-                |  ${arg.VIASH_PAR}=$$(ViashAutodetectMount "$$${arg.VIASH_PAR}")
-                |fi""".stripMargin
-            }
-          })
-          .mkString("")
+        args.flatMap {
+          case arg: FileObject if arg.multiple =>
+            // resolve arguments with multiplicity different from singular args
+            val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
+            Some(s"""
+              |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
+              |  IFS="${arg.multiple_sep}"
+              |  for var in $$${arg.VIASH_PAR}; do
+              |    $extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$var")"
+              |    ${BashWrapper.store(viash_temp, "\"$(ViashAutodetectMount \"$var\")\"", Some(arg.multiple_sep)).mkString("\n    ")}
+              |  done
+              |  unset IFS
+              |  ${arg.VIASH_PAR}="$$$viash_temp"
+              |fi""".stripMargin)
+          case arg: FileObject =>
+            Some(s"""
+              |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
+              |  $extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$${arg.VIASH_PAR}")"
+              |  ${arg.VIASH_PAR}=$$(ViashAutodetectMount "$$${arg.VIASH_PAR}")
+              |fi""".stripMargin)
+          case _ => None
+        }.mkString("")
       } else {
         ""
       }
+
+    val postParse = postParseVolumes + "\n\n" +
+      s"""# Always mount the resource directory
+         |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$${BashWrapper.var_resources_dir}")"
+         |${BashWrapper.var_resources_dir}=$$(ViashAutodetectMount "$$${BashWrapper.var_resources_dir}")""".stripMargin
 
     Mods(
       preParse = preParse,
@@ -276,7 +266,7 @@ case class DockerPlatform(
     )
   }
 
-  def addDockerDebug(debugCommand: String) = {
+  def addDockerDebug(debugCommand: String): Mods = {
     val parsers = "\n" + BashHelper.argStore("---debug", "VIASH_DEBUG", "yes", 1, None)
     val postParse =
       s"""
@@ -295,10 +285,10 @@ case class DockerPlatform(
     )
   }
 
-  def addDockerChown(functionality: Functionality, dockerArgs: String, volExtraParams: String, imageName: String, imageVersion: String) = {
+  def addDockerChown(functionality: Functionality, dockerArgs: String, volExtraParams: String, imageName: String, imageVersion: String): Mods = {
     val args = functionality.arguments
 
-    def chownCommand(value: String) = {
+    def chownCommand(value: String): String = {
       s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $imageName:$imageVersion "$$(id -u):$$(id -g)" -R $value"""
     }
 

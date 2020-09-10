@@ -7,11 +7,11 @@ case class DockerRequirements(
 ) extends Requirements {
   val `type` = "docker"
 
-  def installCommands = Nil
+  def installCommands: List[String] = Nil
 
-  def dockerCommandsAtBegin = {
+  def dockerCommandsAtBegin: Option[String] = {
     val args =
-      if (build_args.length > 0) {
+      if (build_args.nonEmpty) {
         build_args.map(s => "ARG " + s.takeWhile(_ != '='))
       } else {
         Nil
@@ -21,16 +21,16 @@ case class DockerRequirements(
     if (li.isEmpty) None else Some(li.mkString("\n"))
   }
 
-  override def dockerCommands = {
+  override def dockerCommands: Option[String] = {
     val copyResources =
-      if (resources.length > 0) {
+      if (resources.nonEmpty) {
         resources.map(c => s"""COPY $c""")
       } else {
         Nil
       }
 
     val runCommands =
-      if (run.length > 0) {
+      if (run.nonEmpty) {
         run.map(r => s"""RUN $r""")
       } else {
         Nil

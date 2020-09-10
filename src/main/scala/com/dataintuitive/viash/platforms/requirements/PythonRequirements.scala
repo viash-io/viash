@@ -7,7 +7,7 @@ case class PythonRequirements(
 
   val `type` = "python"
 
-  def installCommands = {
+  def installCommands: List[String] = {
     val installPip =
       """pip install --user --upgrade pip"""
 

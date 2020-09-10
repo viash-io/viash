@@ -11,7 +11,7 @@ case class Info(
   git_commit: Option[String] = None,
   git_remote: Option[String] = None
 ) {
-  def consoleString = {
+  def consoleString: String = {
     s"""viash version:      ${viash_version.getOrElse("NA")}
        |functionality path: ${functionality_path.getOrElse("NA")}
        |platform path:      ${platform_path.getOrElse("NA")}
@@ -22,7 +22,7 @@ case class Info(
        |remote git repo:    ${git_remote.getOrElse("NA")}""".stripMargin
   }
 
-  def parent_path = {
+  def parent_path: Option[String] = {
     val regex = "[^/]*$".r
     if (functionality_path.isDefined) {
       Some(regex.replaceFirstIn(functionality_path.get, ""))

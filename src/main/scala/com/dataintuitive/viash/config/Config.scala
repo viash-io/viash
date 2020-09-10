@@ -42,12 +42,12 @@ object Config {
     )
   }
 
-  def read(path: String) = {
+  def read(path: String): Config = {
     val uri = IOHelper.uri(path)
 
     val str = IOHelper.read(uri)
-    val uris = uri.toString()
-    val extension = uris.substring(uris.lastIndexOf(".")+1).toLowerCase()
+    val uris = uri.toString
+    val extension = uris.substring(uris.lastIndexOf(".") + 1).toLowerCase()
 
     // detect whether a script (with joined header) was passed or a joined yaml
     // using the extension
@@ -60,7 +60,6 @@ object Config {
           case _ => throw new RuntimeException("Unrecognised extension: " + extension)
         }
         val headerComm = commentStr + " "
-        val headerRegex = "^" + commentStr + "  ".r
         assert(
           str.contains(s"$commentStr functionality:"),
           message = s"""Script should contain a functionality header: "$commentStr functionality: <...>""""
@@ -120,7 +119,7 @@ object Config {
             functionality = Functionality.read(functionality.get)
           )
         }
-      }.copy( // TODO: readCOmponent and Functionality.read should create their own info object
+      }.copy( // TODO: readComponent and Functionality.read should create their own info object
         info = Some(Info(
           functionality_path = functionality,
           platform_path = platform,
@@ -169,8 +168,8 @@ object Config {
         }
       } else if (config.platform.isDefined) {
         config.platform.get
-      } else if (!config.platforms.isEmpty) {
-        config.platforms(0)
+      } else if (config.platforms.nonEmpty) {
+        config.platforms.head
       } else {
         NativePlatform()
       }

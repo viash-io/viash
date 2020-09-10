@@ -1,6 +1,6 @@
 package com.dataintuitive.viash.platforms
 
-import com.dataintuitive.viash.functionality.{Functionality}
+import com.dataintuitive.viash.functionality.Functionality
 import com.dataintuitive.viash.helpers.IOHelper
 import io.circe.yaml.parser
 import java.net.URI
@@ -24,7 +24,7 @@ object Platform {
       .fold(throw _, identity)
   }
 
-  def read(path: String) = {
+  def read(path: String): Platform = {
     parse(IOHelper.uri(path))
   }
 }

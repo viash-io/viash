@@ -1,6 +1,6 @@
 package com.dataintuitive.viash
 
-import org.rogach.scallop.{Scallop, ScallopConf, Subcommand, ScallopHelpFormatter}
+import org.rogach.scallop.{ScallopConf, ScallopOption, Subcommand}
 
 trait ViashCommand {_ : ScallopConf =>
   val functionality = opt[String](
@@ -94,10 +94,16 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   val export = new Subcommand("export") with ViashCommand {
     banner(s"""`viash export` has been deprecated. Use `viash build` instead.""".stripMargin)
 
-    val trail = trailArg[String](
-      descr = "...",
-      default = None,
-      required = false
+    val meta: ScallopOption[Boolean] = opt[Boolean](
+      name = "meta",
+      short = 'm',
+      default = Some(false),
+      descr = "Deprecated."
+    )
+    val output: ScallopOption[String] = opt[String](
+      descr = "Deprecated.",
+      default = Some("output/"),
+      required = true
     )
   }
 

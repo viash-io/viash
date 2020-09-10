@@ -15,14 +15,14 @@ package object config {
 
   // encoder and decoder for version
   implicit val encodeVersion: Encoder[Version] = Encoder.instance {
-    vers => Json.fromString(vers.toString)
+    version => Json.fromString(version.toString)
   }
   implicit val decodeVersion: Decoder[Version] = Decoder.instance {
     cursor => {
 
       // workaround for parsing
       val y = cursor.value.as[String] match {
-        case Left(l) => cursor.value.as[Double].map(_.toString)
+        case Left(_) => cursor.value.as[Double].map(_.toString)
         case Right(r) => Right(r)
       }
 

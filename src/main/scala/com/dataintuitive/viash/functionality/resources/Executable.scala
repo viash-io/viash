@@ -13,10 +13,9 @@ case class Executable(
 
   val commentStr = "#"
 
-  def command(script: String) = script
-  def commandSeq(script: String) = Seq(script)
+  def command(script: String): String = script
+  def commandSeq(script: String): Seq[String] = Seq(script)
 
-  def generateArgparse(functionality: Functionality): String = ""
   def generatePlaceholder(functionality: Functionality): String = ""
 
   override def read: Option[String] = None

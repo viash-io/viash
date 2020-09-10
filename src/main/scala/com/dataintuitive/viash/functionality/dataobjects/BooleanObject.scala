@@ -17,7 +17,7 @@ case class BooleanObjectRegular(
 ) extends BooleanObject {
   override val `type` = "boolean"
 
-  val flagValue = None
+  val flagValue: Option[Boolean] = None
 }
 
 case class BooleanObjectTrue(
@@ -29,11 +29,11 @@ case class BooleanObjectTrue(
 ) extends BooleanObject {
   override val `type` = "boolean_true"
 
-  val required = false
-  val flagValue = Some(true)
-  val default = None
-  val multiple = false
-  val multiple_sep = ':'
+  val required: Boolean = false
+  val flagValue: Option[Boolean] = Some(true)
+  val default: Option[Boolean] = None
+  val multiple: Boolean = false
+  val multiple_sep: Char = ':'
 }
 case class BooleanObjectFalse(
     name: String,
@@ -44,9 +44,9 @@ case class BooleanObjectFalse(
 ) extends BooleanObject {
   override val `type` = "boolean_false"
 
-  val required = false
-  val flagValue = Some(false)
-  val default = None
-  val multiple = false
-  val multiple_sep = ':'
+  val required: Boolean = false
+  val flagValue: Option[Boolean] = Some(false)
+  val default: Option[Boolean] = None
+  val multiple: Boolean = false
+  val multiple_sep: Char = ':'
 }

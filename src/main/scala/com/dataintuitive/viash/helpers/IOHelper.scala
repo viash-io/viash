@@ -13,10 +13,10 @@ import java.nio.charset.StandardCharsets
 import com.dataintuitive.viash.functionality.resources.Resource
 
 object IOHelper {
-  def makeTemp(name: String) = {
+  def makeTemp(name: String): File = {
     val tempdir = Paths.get(scala.util.Properties.envOrElse("VIASH_TEMP", "/tmp"))
     if (!tempdir.toFile.exists()) Files.createDirectories(tempdir)
-    val temp = Files.createTempDirectory(tempdir, name).toFile()
+    val temp = Files.createTempDirectory(tempdir, name).toFile
     temp.mkdirs()
     temp
   }
@@ -26,21 +26,27 @@ object IOHelper {
   }
 
   private val uriRegex = "^[a-zA-Z0-9]*:".r
-  def uri(path: String) = {
+  def uri(path: String): URI = {
     val newURI = if (uriRegex.findFirstIn(path).isDefined) path else "file://" + new File(path).getAbsolutePath
     new URI(newURI)
   }
 
   def read(uri: URI): String = {
-    if (uri.getScheme == "file") {
-      Source.fromURI(uri).getLines().mkString("\n")
-    } else {
-      Source.fromURL(uri.toURL).getLines().mkString("\n")
+    val txtSource =
+      if (uri.getScheme == "file") {
+        Source.fromURI(uri)
+      } else {
+        Source.fromURL(uri.toURL)
+      }
+    try {
+      txtSource.getLines.mkString("\n")
+    } finally {
+      txtSource.close()
     }
   }
 
   def write(uri: URI, path: Path, overwrite: Boolean): File = {
-    val file = path.toFile()
+    val file = path.toFile
 
     if (overwrite && file.exists()) {
       file.delete()
@@ -59,7 +65,7 @@ object IOHelper {
   }
 
   def write(text: String, path: Path, overwrite: Boolean): File = {
-    val file = path.toFile()
+    val file = path.toFile
 
     if (overwrite && file.exists()) {
       file.delete()
