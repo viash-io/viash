@@ -16,6 +16,7 @@ case class NextFlowPlatform(
   apt: Option[AptRequirements] = None,
   r: Option[RRequirements] = None,
   python: Option[PythonRequirements] = None,
+  setup: List[Requirements] = Nil,
   executor: Option[String],
   publish: Option[Boolean],
   publishSubDir: Option[Boolean],
@@ -26,7 +27,7 @@ case class NextFlowPlatform(
 
   val requirements: List[Requirements] = Nil
 
-  private val nativePlatform = NativePlatform(id, version, r, python)
+  private val nativePlatform = NativePlatform(id = id, version = version, r = r, python = python, setup = setup)
 
   def modifyFunctionality(functionality: Functionality): Functionality = {
     import NextFlowUtils._

@@ -9,7 +9,7 @@ case class DockerRequirements(
 
   def installCommands: List[String] = Nil
 
-  def dockerCommandsAtBegin: Option[String] = {
+  override def dockerCommands: Option[String] = {
     val args =
       if (build_args.nonEmpty) {
         build_args.map(s => "ARG " + s.takeWhile(_ != '='))
@@ -17,11 +17,6 @@ case class DockerRequirements(
         Nil
       }
 
-    val li = args
-    if (li.isEmpty) None else Some(li.mkString("\n"))
-  }
-
-  override def dockerCommands: Option[String] = {
     val copyResources =
       if (resources.nonEmpty) {
         resources.map(c => s"""COPY $c""")
@@ -36,7 +31,7 @@ case class DockerRequirements(
         Nil
       }
 
-    val li = copyResources ::: runCommands
+    val li = args ::: copyResources ::: runCommands
 
     if (li.isEmpty) None else Some(li.mkString("\n"))
   }
