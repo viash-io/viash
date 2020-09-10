@@ -1,8 +1,0 @@
-type: docker
-image: rocker/tidyverse
-volumes:
-- name: in
-  mount: /in
-- name: out
-  mount: /out
-workdir: /tmp
