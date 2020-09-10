@@ -1,3 +1,0 @@
-type: nextflow
-image: rocker/tidyverse
-publishSubDir: true

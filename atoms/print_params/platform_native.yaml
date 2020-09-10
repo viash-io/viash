@@ -1,3 +1,0 @@
-type: native
-python:
-  packages: [argparse]
