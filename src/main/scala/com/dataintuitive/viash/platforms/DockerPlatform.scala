@@ -24,26 +24,6 @@ case class DockerPlatform(
 ) extends Platform {
   val `type` = "docker"
 
-  case class Mods(
-    preParse: String = "",
-    parsers: String = "",
-    postParse: String = "",
-    postRun: String = "",
-    inputs: List[DataObject[_]] = Nil,
-    extraParams: String = ""
-  ) {
-    def `++`(dm: Mods): Mods = {
-      Mods(
-        preParse = preParse + dm.preParse,
-        parsers = parsers + dm.parsers,
-        postParse = postParse + dm.postParse,
-        postRun = postRun + dm.postRun,
-        inputs = inputs ::: dm.inputs,
-        extraParams = extraParams + dm.extraParams
-      )
-    }
-  }
-
   val requirements: List[Requirements] =
     apk.toList :::
     apt.toList :::
@@ -52,8 +32,10 @@ case class DockerPlatform(
     docker.toList
 
   def modifyFunctionality(functionality: Functionality): Functionality = {
-    // collect variables
-    val dockerArgs = generateDockerRunArgs()
+    // collect docker args
+    val dockerArgs = "-i --rm" + {
+      port.getOrElse(Nil).map(" -p " + _).mkString("")
+    }
 
     // create setup
     val (imageName, imageVersion, setupCommands) = processDockerSetup(functionality)
@@ -62,13 +44,13 @@ case class DockerPlatform(
     val dmVol = processDockerVolumes(functionality)
 
     // add ---debug flag
-    val debuggor = s"""docker run --entrypoint=bash $dockerArgs -v `pwd`:/pwd --workdir /pwd -t $imageName:$imageVersion"""
+    val debuggor = s"""docker run --entrypoint=bash $dockerArgs -v "$$(pwd)":/pwd --workdir /pwd -t $imageName:$imageVersion"""
     val dmDebug = addDockerDebug(debuggor)
 
     // add ---chown flag
     val dmChown = addDockerChown(functionality, dockerArgs, dmVol.extraParams, imageName, imageVersion)
 
-    val dmDockerfile = Mods(
+    val dmDockerfile = ConfigMods(
       parsers = """
         |        ---dockerfile)
         |            ViashDockerfile
@@ -192,14 +174,7 @@ case class DockerPlatform(
     (imageName, tag, setupCommands)
   }
 
-  def generateDockerRunArgs(): String = {
-    // process port parameter
-    val portStr = port.getOrElse(Nil).map("-p " + _ + " ").mkString("")
-
-    portStr + "-i --rm"
-  }
-
-  def processDockerVolumes(functionality: Functionality): Mods = {
+  def processDockerVolumes(functionality: Functionality): ConfigMods = {
     val extraMountsVar = "VIASH_EXTRA_MOUNTS"
 
     val args = functionality.arguments
@@ -258,7 +233,7 @@ case class DockerPlatform(
          |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$${BashWrapper.var_resources_dir}")"
          |${BashWrapper.var_resources_dir}=$$(ViashAutodetectMount "$$${BashWrapper.var_resources_dir}")""".stripMargin
 
-    Mods(
+    ConfigMods(
       preParse = preParse,
       parsers = parsers,
       postParse = postParse,
@@ -266,7 +241,7 @@ case class DockerPlatform(
     )
   }
 
-  def addDockerDebug(debugCommand: String): Mods = {
+  def addDockerDebug(debugCommand: String): ConfigMods = {
     val parsers = "\n" + BashHelper.argStore("---debug", "VIASH_DEBUG", "yes", 1, None)
     val postParse =
       s"""
@@ -279,13 +254,13 @@ case class DockerPlatform(
         |fi"""
 
 
-    Mods(
+    ConfigMods(
       parsers = parsers,
       postParse = postParse
     )
   }
 
-  def addDockerChown(functionality: Functionality, dockerArgs: String, volExtraParams: String, imageName: String, imageVersion: String): Mods = {
+  def addDockerChown(functionality: Functionality, dockerArgs: String, volExtraParams: String, imageName: String, imageVersion: String): ConfigMods = {
     val args = functionality.arguments
 
     def chownCommand(value: String): String = {
@@ -324,7 +299,7 @@ case class DockerPlatform(
         ""
       }
 
-    Mods(
+    ConfigMods(
       postRun = postRun
     )
   }
