@@ -119,7 +119,7 @@ object Config {
             functionality = Functionality.read(functionality.get)
           )
         }
-      }.copy( // TODO: readComponent and Functionality.read should create their own info object
+      }.copy(
         info = Some(Info(
           functionality_path = functionality,
           platform_path = platform,
