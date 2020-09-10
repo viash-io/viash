@@ -57,24 +57,13 @@ case class NextFlowPlatform(
     // the params structure. the function name is prefixed as a namespace
     // identifier. A "__" is used to separate namespace and arg/option.
 
-    // TODO: find a solution of the options containg a `-`
     val namespacedParameters =
-      functionality.arguments.flatMap(dataObject => {
-        val name = dataObject.plainName
-
-        if (!name.contains("-")) {
-          Some(
-            namespacedValueTuple(
-              name,
-              dataObject.default.map(_.toString).getOrElse("value_not_found")
-            )
-          )
-        } else {
-          // We currently have no solution for keys that contain `-`
-          println(s"The variable $name contains a -, removing this from the global namespace...")
-          None
-        }
-      })
+      functionality.arguments.map{ dataObject =>
+        namespacedValueTuple(
+          dataObject.plainName.replace("-", "_"),
+          dataObject.default.map(_.toString).getOrElse("value_not_found")
+        )
+      }
 
     val argumentsAsTuple =
       if (functionality.arguments.nonEmpty) {
@@ -430,7 +419,7 @@ case class NextFlowPlatform(
 object NextFlowUtils {
   def quote(str: String): String = '"' + str + '"'
 
-  def quoteLong(str: String): String = if (str.contains("-")) '"' + str + '"' else str
+  def quoteLong(str: String): String = str.replace("-", "_")
 
   def mapToConfig(m: (String, Any), indent: String = ""): String = m match {
     case (k: String, v: List[_]) =>
@@ -461,12 +450,7 @@ object NextFlowUtils {
       s"$${params.${fun.name}__$key}"
 
     def valueOrPointer(str: String): String = {
-      if (!dataObject.plainName.contains("-")) {
-        valuePointer(dataObject.plainName)
-      } else {
-        // We currently have no solution for keys that contain `-`
-        str
-      }
+      valuePointer(dataObject.plainName.replace("-", "_"))
     }
 
     def toTuple: (String, List[(String, Any)]) = {
