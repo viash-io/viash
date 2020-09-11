@@ -18,11 +18,14 @@ object ViashNamespace {
     platform: Option[String] = None,
     platformID: Option[String] = None,
     namespace: Option[String] = None,
-    setup: Boolean = false
+    setup: Boolean = false,
+    parallel: Boolean = false
   ) {
     val configs = findConfigs(source, platform, platformID, namespace)
 
-    configs.foreach {
+    val configs2 = if (parallel) configs.par else configs
+
+    configs2.foreach {
       case Left(conf) =>
         val in = conf.info.get.parent_path.get
         val platType = conf.platform.get.id
