@@ -1,6 +1,6 @@
 package com.dataintuitive.viash
 
-import io.circe.{ Decoder, Encoder, Json }
+import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}

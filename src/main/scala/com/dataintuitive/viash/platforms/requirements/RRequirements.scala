@@ -43,7 +43,7 @@ case class RRequirements(
         Nil
       }
 
-    val installers = remotePairs.flatMap{
+    val installers = remotePairs.flatMap {
       case (_, Nil) => None
       case (str, list) =>
         Some(s"""Rscript -e 'remotes::install_$str(c("${list.mkString("\", \"")}"), repos = "https://cran.rstudio.com")'""")

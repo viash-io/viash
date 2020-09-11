@@ -58,7 +58,7 @@ object ViashNamespace {
     val funFiles = find(sourceDir, (path, attrs) => {
       path.toString.endsWith("functionality.yaml") && attrs.isRegularFile && namespaceMatch(path.toString)
     })
-    val legacyConfigs = funFiles.map{file =>
+    val legacyConfigs = funFiles.map { file =>
       try {
         (Some(Config.readSplitOrJoined(functionality = Some(file.toString), platform = platform, platformID = platformID, namespace = namespace)), None)
       } catch {
@@ -74,7 +74,7 @@ object ViashNamespace {
         attrs.isRegularFile &&
         namespaceMatch(path.toString)
     })
-    val newConfigs = scriptFiles.map{file =>
+    val newConfigs = scriptFiles.map { file =>
       try {
         (Some(Config.readSplitOrJoined(joined = Some(file.toString), platform = platform, platformID = platformID, namespace = namespace)), None)
       } catch {

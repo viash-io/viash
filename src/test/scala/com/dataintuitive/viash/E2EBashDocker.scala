@@ -24,7 +24,7 @@ class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
     "-f", funcFile,
     "-p", platFile,
     "-o", tempFolStr
-   )
+  )
   Main.main(params)
 
   // check whether executable was created

@@ -3,13 +3,13 @@ package com.dataintuitive.viash.wrapper
 import com.dataintuitive.viash.functionality.dataobjects.DataObject
 
 case class BashWrapperMods(
-   preParse: String = "",
-   parsers: String = "",
-   postParse: String = "",
-   postRun: String = "",
-   inputs: List[DataObject[_]] = Nil,
-   extraParams: String = ""
- ) {
+  preParse: String = "",
+  parsers: String = "",
+  postParse: String = "",
+  postRun: String = "",
+  inputs: List[DataObject[_]] = Nil,
+  extraParams: String = ""
+) {
   def `++`(other: BashWrapperMods): BashWrapperMods = {
     BashWrapperMods(
       preParse = preParse + other.preParse,

@@ -52,28 +52,28 @@ object Config {
     // detect whether a script (with joined header) was passed or a joined yaml
     // using the extension
     val (yaml, code) =
-      if (extension == "yml" || extension == "yaml") {
-        (str, None)
-      } else {
-        val commentStr = extension match {
-          case "sh" | "py" | "r" => "#'"
-          case _ => throw new RuntimeException("Unrecognised extension: " + extension)
-        }
-        val headerComm = commentStr + " "
-        assert(
-          str.contains(s"$commentStr functionality:"),
-          message = s"""Script should contain a functionality header: "$commentStr functionality: <...>""""
-        )
-
-        val (header, body) = str.split("\n").partition(_.startsWith(headerComm))
-        val yaml = header.map(s => s.drop(3)).mkString("\n")
-        val code = commentStr + " VIASH START\n" + commentStr + " VIASH END\n" + body.mkString("\n")
-
-        (yaml, Some(code))
+    if (extension == "yml" || extension == "yaml") {
+      (str, None)
+    } else {
+      val commentStr = extension match {
+        case "sh" | "py" | "r" => "#'"
+        case _ => throw new RuntimeException("Unrecognised extension: " + extension)
       }
+      val headerComm = commentStr + " "
+      assert(
+        str.contains(s"$commentStr functionality:"),
+        message = s"""Script should contain a functionality header: "$commentStr functionality: <...>""""
+      )
+
+      val (header, body) = str.split("\n").partition(_.startsWith(headerComm))
+      val yaml = header.map(s => s.drop(3)).mkString("\n")
+      val code = commentStr + " VIASH START\n" + commentStr + " VIASH END\n" + body.mkString("\n")
+
+      (yaml, Some(code))
+    }
 
     // turn optional code into a Script
-    val optScript = code.map{cod =>
+    val optScript = code.map { cod =>
       val scr = extension match {
         case "r" => RScript(Some("viash_main.R"), text = Some(cod))
         case "py" => PythonScript(Some("viash_main.py"), text = Some(cod))
@@ -88,7 +88,7 @@ object Config {
 
     config.copy(
       functionality = config.functionality.copy(
-         resources = Some(optScript.toList ::: config.functionality.resources.getOrElse(Nil))
+        resources = Some(optScript.toList ::: config.functionality.resources.getOrElse(Nil))
       )
     )
   }
@@ -110,24 +110,23 @@ object Config {
     )
 
     // construct info object
-    val config =
-      {
-        if (joined.isDefined) {
-          read(joined.get)
-        } else {
-          Config(
-            functionality = Functionality.read(functionality.get)
-          )
-        }
-      }.copy(
-        info = Some(Info(
-          functionality_path = functionality,
-          platform_path = platform,
-          platform_id = platformID,
-          joined_path = joined,
-          viash_version = Some(com.dataintuitive.viash.Main.version)
-        ))
-      )
+    val config = {
+      if (joined.isDefined) {
+        read(joined.get)
+      } else {
+        Config(
+          functionality = Functionality.read(functionality.get)
+        )
+      }
+    }.copy(
+      info = Some(Info(
+        functionality_path = functionality,
+        platform_path = platform,
+        platform_id = platformID,
+        joined_path = joined,
+        viash_version = Some(com.dataintuitive.viash.Main.version)
+      ))
+    )
 
     // get the platform
     // * if a platform yaml is passed, use that
@@ -136,43 +135,43 @@ object Config {
     // * else if platforms is a non-empty list, use the first platform
     // * else use the native platform
     val pl =
-      if (platform.isDefined) {
-        Platform.parse(IO.uri(platform.get))
-      } else if (platformID.isDefined) {
-        val pid = platformID.get
-        if (joined.isDefined) {
-          // if input file is a joined config
-          val platformNames = config.platforms.map(_.id)
-          if (!platformNames.contains(pid)) {
-            throw new PlatformNotFoundException(config, pid)
-          }
-          config.platforms(platformNames.indexOf(pid))
-        } else {
-          val funRegex = "[^/]*.yaml$".r
-          // if input file is a functionality yaml,
-          // check if platform_*.yaml file exists
-          val platPath = funRegex.replaceFirstIn(functionality.get, "platform_" + pid + ".yaml")
-          val uri = IO.uri(platPath)
-          val platform =
-            try {
-              Some(Platform.parse(uri))
-            } catch {
-              case _: Throwable => None
-            }
-
-          if (platform.isEmpty) {
-            throw new PlatformNotFoundException(config, platPath)
-          }
-
-          platform.get
+    if (platform.isDefined) {
+      Platform.parse(IO.uri(platform.get))
+    } else if (platformID.isDefined) {
+      val pid = platformID.get
+      if (joined.isDefined) {
+        // if input file is a joined config
+        val platformNames = config.platforms.map(_.id)
+        if (!platformNames.contains(pid)) {
+          throw new PlatformNotFoundException(config, pid)
         }
-      } else if (config.platform.isDefined) {
-        config.platform.get
-      } else if (config.platforms.nonEmpty) {
-        config.platforms.head
+        config.platforms(platformNames.indexOf(pid))
       } else {
-        NativePlatform()
+        val funRegex = "[^/]*.yaml$".r
+        // if input file is a functionality yaml,
+        // check if platform_*.yaml file exists
+        val platPath = funRegex.replaceFirstIn(functionality.get, "platform_" + pid + ".yaml")
+        val uri = IO.uri(platPath)
+        val platform =
+          try {
+            Some(Platform.parse(uri))
+          } catch {
+            case _: Throwable => None
+          }
+
+        if (platform.isEmpty) {
+          throw new PlatformNotFoundException(config, platPath)
+        }
+
+        platform.get
       }
+    } else if (config.platform.isDefined) {
+      config.platform.get
+    } else if (config.platforms.nonEmpty) {
+      config.platforms.head
+    } else {
+      NativePlatform()
+    }
 
     // gather git info of functionality git
     val path = new File(functionality.getOrElse(joined.getOrElse(""))).getParentFile
@@ -186,7 +185,7 @@ object Config {
         } else {
           config.functionality
         }
-        .copy(namespace = namespace),
+          .copy(namespace = namespace),
       platform = Some(pl),
       info = config.info.map(_.copy(
         git_commit = gc,

@@ -17,8 +17,8 @@ case class NativePlatform(
 
   val requirements: List[Requirements] = {
     setup :::
-    r.toList :::
-    python.toList
+      r.toList :::
+      python.toList
   }
 
   def modifyFunctionality(functionality: Functionality): Functionality = {

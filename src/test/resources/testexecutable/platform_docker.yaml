@@ -1,6 +1,6 @@
 type: docker
 image: "minio/mc"
 target_image: "viash_test_executable"
-apk: 
-  packages: 
-  - bash
+apk:
+  packages:
+    - bash

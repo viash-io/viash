@@ -65,21 +65,21 @@ object Functionality {
 
   def makeResourcePathAbsolute(res: Resource, parent: URI): Resource = {
     if (res.isInstanceOf[Executable] || res.path.isEmpty || res.path.get.contains("://")) {
+      res
+    } else {
+      val p = Paths.get(res.path.get).toFile
+      if (p.isAbsolute) {
         res
       } else {
-        val p = Paths.get(res.path.get).toFile
-        if (p.isAbsolute) {
-          res
-        } else {
-          val newPath = Some(parent.resolve(res.path.get).toString)
-          res match {
-            case s: BashScript => s.copy(path = newPath)
-            case s: PythonScript => s.copy(path = newPath)
-            case s: RScript => s.copy(path = newPath)
-            case f: PlainFile => f.copy(path = newPath)
-          }
+        val newPath = Some(parent.resolve(res.path.get).toString)
+        res match {
+          case s: BashScript => s.copy(path = newPath)
+          case s: PythonScript => s.copy(path = newPath)
+          case s: RScript => s.copy(path = newPath)
+          case f: PlainFile => f.copy(path = newPath)
         }
       }
+    }
   }
 
   def read(path: String): Functionality = {
@@ -88,7 +88,11 @@ object Functionality {
 }
 
 sealed trait FunctionType
+
 case object AsIs extends FunctionType
+
 case object Convert extends FunctionType
+
 case object ToDir extends FunctionType
+
 case object Join extends FunctionType
