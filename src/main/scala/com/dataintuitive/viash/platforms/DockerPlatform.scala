@@ -147,15 +147,15 @@ case class DockerPlatform(
             |  }
             |  trap clean_up EXIT
             |  ViashDockerfile > $$tmpdir/Dockerfile
-            |  if [ ! -z $$(docker images -q $imageName:$tag) ]; then
-            |    echo "Image consists locally or on DockerHub"
-            |  else
+            |  # if [ ! -z $$(docker images -q $imageName:$tag) ]; then
+            |  #   echo "Image exists locally or on Docker Hub"
+            |  # else
             |    # Quick workaround to have the resources available in the current dir
             |    cp $$${BashWrapper.var_resources_dir}/* $$tmpdir
             |    # Build the container
             |    echo "> docker build -t $imageName:$tag$buildArgs $$tmpdir"
             |    docker build -t $imageName:$tag$buildArgs $$tmpdir
-            |  fi""".stripMargin
+            |  #fi""".stripMargin
 
         (vdf, vs)
       }
