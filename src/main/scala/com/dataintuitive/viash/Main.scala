@@ -28,7 +28,9 @@ object Main {
           target = conf.namespace.build.target(),
           platform = conf.namespace.build.platform.toOption,
           platformID = conf.namespace.build.platformid.toOption,
-          namespace = conf.namespace.build.namespace.toOption
+          namespace = conf.namespace.build.namespace.toOption,
+          setup = conf.namespace.build.setup(),
+          parallel = conf.namespace.build.parallel()
         )
       case _ =>
         println("No subcommand was specified. See `viash --help` for more information.")
