@@ -8,6 +8,8 @@
 
 * NEW FEATURE: Allow changing the order of setup commands using the `setup:` variable.
 
+* [NXF] NEW FEATURE: Data references in Map form can now have values being lists. In other words, we can have multiple options which have one or more values.
+
 # viash 0.2.0 (2020-09-01)
 
 ## NEW FEATURES
