@@ -1,8 +1,9 @@
-package com.dataintuitive.viash.helpers
+package com.dataintuitive.viash.wrapper
 
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.helpers.Bash
 
 object BashWrapper {
   def escape(str: String): String = {
@@ -28,12 +29,12 @@ object BashWrapper {
   }
 
   def argStore(
-    name: String,
-    plainName: String,
-    store: String,
-    argsConsumed: Int,
-    multiple_sep: Option[Char] = None
-  ): String = {
+                name: String,
+                plainName: String,
+                store: String,
+                argsConsumed: Int,
+                multiple_sep: Option[Char] = None
+              ): String = {
     s"""        $name)
        |            ${this.store(plainName, store, multiple_sep).mkString("\n            ")}
        |            shift $argsConsumed
@@ -54,14 +55,14 @@ object BashWrapper {
   val var_resources_dir = "VIASH_RESOURCES_DIR"
 
   def wrapScript(
-      executor: String,
-      functionality: Functionality,
-      setupCommands: String,
-      preParse: String,
-      parsers: String,
-      postParse: String,
-      postRun: String
-    ): String = {
+                  executor: String,
+                  functionality: Functionality,
+                  setupCommands: String,
+                  preParse: String,
+                  parsers: String,
+                  postParse: String,
+                  postRun: String
+                ): String = {
     val mainResource = functionality.mainScript
 
     // check whether the wd needs to be set to the resources dir
@@ -82,17 +83,17 @@ object BashWrapper {
         val code = res.readWithPlaceholder(functionality).get
         val escapedCode = escapeViash(code)
         s"""
-          |set -e
-          |tempscript=\\$$(mktemp /tmp/viash-run-${functionality.name}-XXXXXX)
-          |function clean_up {
-          |  rm "\\$$tempscript"
-          |}
-          |trap clean_up EXIT
-          |cat > "\\$$tempscript" << 'VIASHMAIN'
-          |$escapedCode
-          |VIASHMAIN$cdToResources
-          |${res.command("\\$tempscript")}
-          |""".stripMargin
+           |set -e
+           |tempscript=\\$$(mktemp /tmp/viash-run-${functionality.name}-XXXXXX)
+           |function clean_up {
+           |  rm "\\$$tempscript"
+           |}
+           |trap clean_up EXIT
+           |cat > "\\$$tempscript" << 'VIASHMAIN'
+           |$escapedCode
+           |VIASHMAIN$cdToResources
+           |${res.command("\\$tempscript")}
+           |""".stripMargin
     }
 
     // generate bash document
@@ -113,52 +114,52 @@ object BashWrapper {
 
     /* GENERATE BASH SCRIPT */
     s"""#!/usr/bin/env bash
-      |
-      |set -e
-      |
-      |# define helper functions
-      |${BashHelper.ViashQuote}
-      |${BashHelper.ViashRemoveFlags}
-      |${BashHelper.ViashSourceDir}
-      |
-      |# find source folder of this component
-      |$var_resources_dir=`ViashSourceDir $${BASH_SOURCE[0]}`
-      |
-      |# helper function for installing extra requirements for this component
-      |$setupCommands
-      |
-      |${generateHelp(functionality, params)}
-      |${spaceCode(parPreParse)}
-      |${spaceCode(preParse)}
-      |# initialise array
-      |VIASH_POSITIONAL_ARGS=''
-      |
-      |while [[ $$# -gt 0 ]]; do
-      |    case "$$1" in
-      |        -h|--help)
-      |            ViashHelp
-      |            exit;;
-      |        ---setup)
-      |            ViashSetup
-      |            exit 0
-      |            ;;
-      |$parParsers
-      |$parsers
-      |        *)    # positional arg or unknown option
-      |            # since the positional args will be eval'd, can we always quote, instead of using ViashQuote?
-      |            VIASH_POSITIONAL_ARGS="$$VIASH_POSITIONAL_ARGS '$$1'"
-      |            shift # past argument
-      |            ;;
-      |    esac
-      |done
-      |
-      |# parse positional parameters
-      |eval set -- $$VIASH_POSITIONAL_ARGS
-      |${spaceCode(parPostParse)}
-      |${spaceCode(postParse)}
-      |${spaceCode(execPostParse)}
-      |$heredocStart$executor $executionCode$heredocEnd
-      |${spaceCode(postRun)}""".stripMargin
+       |
+       |set -e
+       |
+       |# define helper functions
+       |${Bash.ViashQuote}
+       |${Bash.ViashRemoveFlags}
+       |${Bash.ViashSourceDir}
+       |
+       |# find source folder of this component
+       |$var_resources_dir=`ViashSourceDir $${BASH_SOURCE[0]}`
+       |
+       |# helper function for installing extra requirements for this component
+       |$setupCommands
+       |
+       |${generateHelp(functionality, params)}
+       |${spaceCode(parPreParse)}
+       |${spaceCode(preParse)}
+       |# initialise array
+       |VIASH_POSITIONAL_ARGS=''
+       |
+       |while [[ $$# -gt 0 ]]; do
+       |    case "$$1" in
+       |        -h|--help)
+       |            ViashHelp
+       |            exit;;
+       |        ---setup)
+       |            ViashSetup
+       |            exit 0
+       |            ;;
+       |$parParsers
+       |$parsers
+       |        *)    # positional arg or unknown option
+       |            # since the positional args will be eval'd, can we always quote, instead of using ViashQuote?
+       |            VIASH_POSITIONAL_ARGS="$$VIASH_POSITIONAL_ARGS '$$1'"
+       |            shift # past argument
+       |            ;;
+       |    esac
+       |done
+       |
+       |# parse positional parameters
+       |eval set -- $$VIASH_POSITIONAL_ARGS
+       |${spaceCode(parPostParse)}
+       |${spaceCode(postParse)}
+       |${spaceCode(execPostParse)}
+       |$heredocStart$executor $executionCode$heredocEnd
+       |${spaceCode(postRun)}""".stripMargin
   }
 
 
@@ -193,9 +194,9 @@ object BashWrapper {
 
       val properties =
         List("type: " + param.`type`) :::
-        { if (param.required) List("required parameter") else Nil } :::
-        { if (param.multiple) List("multiple values allowed") else Nil } :::
-        { if (param.default.isDefined) List("default: " + param.default.get) else Nil }
+          { if (param.required) List("required parameter") else Nil } :::
+          { if (param.multiple) List("multiple values allowed") else Nil } :::
+          { if (param.default.isDefined) List("default: " + param.default.get) else Nil }
 
       val part1 = "    " + exampleStrs.mkString(", ")
       val part2 = "        " + properties.mkString(", ")
@@ -240,9 +241,9 @@ object BashWrapper {
         }
         // params of the form --param=..., except -param=... is not allowed
         val part2 = param.otype match {
-            case "---" | "--" => List(argStoreSed(param.name, param.VIASH_PAR, multisep))
-            case "-" | "" => Nil
-          }
+          case "---" | "--" => List(argStoreSed(param.name, param.VIASH_PAR, multisep))
+          case "-" | "" => Nil
+        }
         // Alternatives
         val moreParts = param.alternatives.map(alt => {
           argStore(alt, param.VIASH_PAR, "\"$2\"", 2, multisep)
@@ -261,9 +262,9 @@ object BashWrapper {
            |done""".stripMargin
       } else {
         s"""if [[ $$# -gt 0 ]]; then
-          |  ${param.VIASH_PAR}="$$1"
-          |  shift 1
-          |fi"""
+           |  ${param.VIASH_PAR}="$$1"
+           |  shift 1
+           |fi"""
       }
     }.mkString("\n")
 
@@ -346,26 +347,26 @@ object BashWrapper {
 
   def generateExecutableArgs(params: List[DataObject[_]]): String = {
     val inserts = params.map {
-        case bo: BooleanObject if bo.flagValue.isDefined =>
-          s"""[ "$$${bo.VIASH_PAR}" == "${bo.flagValue.get}" ] && VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS ${bo.name}""""
-        case param =>
-          val flag = if (param.otype == "") "" else " " + param.name
+      case bo: BooleanObject if bo.flagValue.isDefined =>
+        s"""[ "$$${bo.VIASH_PAR}" == "${bo.flagValue.get}" ] && VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS ${bo.name}""""
+      case param =>
+        val flag = if (param.otype == "") "" else " " + param.name
 
-          if (param.multiple) {
-            s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
-               |  IFS=${param.multiple_sep}
-               |  set -f
-               |  for val in $$${param.VIASH_PAR}; do
-               |    VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$val'"
-               |  done
-               |  set +f
-               |  unset IFS
-               |fi""".stripMargin
-          } else {
-            s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
-               |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$${param.VIASH_PAR}'"
-               |fi""".stripMargin
-          }
+        if (param.multiple) {
+          s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
+             |  IFS=${param.multiple_sep}
+             |  set -f
+             |  for val in $$${param.VIASH_PAR}; do
+             |    VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$val'"
+             |  done
+             |  set +f
+             |  unset IFS
+             |fi""".stripMargin
+        } else {
+          s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
+             |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$${param.VIASH_PAR}'"
+             |fi""".stripMargin
+        }
     }
 
     "VIASH_EXECUTABLE_ARGS=''\n" + inserts.mkString("\n")

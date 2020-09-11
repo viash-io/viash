@@ -4,8 +4,9 @@ import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.platforms.requirements._
-import com.dataintuitive.viash.helpers.{BashHelper, BashWrapper}
+import com.dataintuitive.viash.helpers.Bash
 import com.dataintuitive.viash.config.Version
+import com.dataintuitive.viash.wrapper.BashWrapper
 
 case class DockerPlatform(
   id: String = "docker",
@@ -186,20 +187,20 @@ case class DockerPlatform(
     val args = functionality.arguments
 
     val preParse =
-      s"""${BashHelper.ViashAbsolutePath}
-         |${BashHelper.ViashAutodetectMount}
-         |${BashHelper.ViashExtractFlags}
+      s"""${Bash.ViashAbsolutePath}
+         |${Bash.ViashAutodetectMount}
+         |${Bash.ViashExtractFlags}
          |# initialise autodetect mount variable
          |$extraMountsVar=''""".stripMargin
 
 
     val parsers =
         s"""        ---v|---volume)
-           |            ${BashHelper.save(extraMountsVar, Seq("-v \"$2\""))}
+           |            ${Bash.save(extraMountsVar, Seq("-v \"$2\""))}
            |            shift 2
            |            ;;
            |        ---volume=*)
-           |            ${BashHelper.save(extraMountsVar, Seq("-v $(ViashRemoveFlags \"$2\")"))}
+           |            ${Bash.save(extraMountsVar, Seq("-v $(ViashRemoveFlags \"$2\")"))}
            |            shift 1
            |            ;;""".stripMargin
 
@@ -248,7 +249,7 @@ case class DockerPlatform(
   }
 
   def addDockerDebug(debugCommand: String): ConfigMods = {
-    val parsers = "\n" + BashHelper.argStore("---debug", "VIASH_DEBUG", "yes", 1, None)
+    val parsers = "\n" + Bash.argStore("---debug", "VIASH_DEBUG", "yes", 1, None)
     val postParse =
       s"""
         |

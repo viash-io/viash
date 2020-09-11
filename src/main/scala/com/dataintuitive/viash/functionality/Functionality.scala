@@ -5,7 +5,7 @@ import java.nio.file.Paths
 import java.io.File
 import dataobjects._
 import resources._
-import com.dataintuitive.viash.helpers.IOHelper
+import com.dataintuitive.viash.helpers.IO
 import java.net.URI
 import com.dataintuitive.viash.config.Version
 
@@ -45,7 +45,7 @@ case class Functionality(
 
 object Functionality {
   def parse(uri: URI): Functionality = {
-    val str = IOHelper.read(uri)
+    val str = IO.read(uri)
 
     val fun = parser.parse(str)
       .fold(throw _, _.as[Functionality])
@@ -80,7 +80,7 @@ object Functionality {
   }
 
   def read(path: String): Functionality = {
-    parse(IOHelper.uri(path))
+    parse(IO.uri(path))
   }
 }
 

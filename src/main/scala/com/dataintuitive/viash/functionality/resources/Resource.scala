@@ -2,7 +2,7 @@ package com.dataintuitive.viash.functionality.resources
 
 import java.net.URI
 
-import com.dataintuitive.viash.helpers.IOHelper
+import com.dataintuitive.viash.helpers.IO
 import java.nio.file.{Path, Paths}
 
 trait Resource {
@@ -21,7 +21,7 @@ trait Resource {
     message = s"For each resources, 'name' needs to be defined if no 'path' is defined."
   )
 
-  val uri: Option[URI] = path.map(IOHelper.uri)
+  val uri: Option[URI] = path.map(IO.uri)
 
   def filename: String = {
     if (name.isDefined) {
@@ -36,16 +36,16 @@ trait Resource {
     if (text.isDefined) {
       text
     } else {
-      Some(IOHelper.read(uri.get))
+      Some(IO.read(uri.get))
     }
   }
 
   def write(path: Path, overwrite: Boolean) {
     val file =
       if (text.isDefined) {
-        IOHelper.write(text.get, path, overwrite)
+        IO.write(text.get, path, overwrite)
       } else {
-        IOHelper.write(uri.get, path, overwrite)
+        IO.write(uri.get, path, overwrite)
       }
 
     file.setExecutable(is_executable)

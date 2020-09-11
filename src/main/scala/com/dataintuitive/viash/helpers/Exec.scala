@@ -3,9 +3,9 @@ package com.dataintuitive.viash.helpers
 import sys.process.{Process, ProcessLogger}
 import java.io.{ByteArrayOutputStream, PrintWriter, File}
 
-case class ExecOutput(command: Seq[String], exitValue: Int, output: String)
-
 object Exec {
+  case class ExecOutput(command: Seq[String], exitValue: Int, output: String)
+
   def run(command: Seq[String], cwd: Option[File] = None, extraEnv: Seq[(String, String)] = Nil): String = {
     try {
       Process(command, cwd = cwd, extraEnv = extraEnv: _*).!!

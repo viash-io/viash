@@ -2,7 +2,7 @@ package com.dataintuitive.viash.helpers
 
 import scala.io.Source
 
-object BashHelper {
+object Bash {
   private def readUtils(s: String) = {
     val path = s"com/dataintuitive/viash/helpers/bashutils/$s.sh"
     Source.fromResource(path).getLines().mkString("\n")
