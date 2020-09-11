@@ -1,23 +1,25 @@
 package com.dataintuitive.viash
 
-import io.circe.{ Decoder, Encoder, Json }
+import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import cats.syntax.functor._ // for .widen
 
 package object platforms {
+
   import com.dataintuitive.viash.helpers.Circe._
 
-    // encoder and decoder for direction
+  // encoder and decoder for direction
   implicit val encodeResolveVolume: Encoder[ResolveVolume] = Encoder.instance {
     v => Json.fromString(v.toString)
   }
   implicit val decodeResolveVolume: Decoder[ResolveVolume] = Decoder.instance {
-    cursor => cursor.value.as[String].map(s =>
-      s.toLowerCase() match {
-        case "manual" => Manual
-        case "auto" | "automatic" => Automatic
-      }
-    )
+    cursor =>
+      cursor.value.as[String].map(s =>
+        s.toLowerCase() match {
+          case "manual" => Manual
+          case "auto" | "automatic" => Automatic
+        }
+      )
   }
 
   implicit val encodeDockerPlatform: Encoder.AsObject[DockerPlatform] = deriveConfiguredEncoder

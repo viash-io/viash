@@ -12,11 +12,11 @@ class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
   private val funcFile = getClass.getResource(s"/$testName/functionality.yaml").getPath
   private val platFile = getClass.getResource(s"/$testName/platform_docker.yaml").getPath
 
-  private val temporaryFolder = IOHelper.makeTemp("viash_tester")
+  private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
 
   // parse functionality from file
-  private val functionality = Functionality.parse(IOHelper.uri(funcFile))
+  private val functionality = Functionality.parse(IO.uri(funcFile))
 
   // convert testbash
   private val params = Array(
@@ -24,7 +24,7 @@ class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
     "-f", funcFile,
     "-p", platFile,
     "-o", tempFolStr
-   )
+  )
   Main.main(params)
 
   // check whether executable was created
@@ -146,6 +146,6 @@ class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
   }
 
   override def afterAll() {
-    IOHelper.deleteRecursively(temporaryFolder)
+    IO.deleteRecursively(temporaryFolder)
   }
 }

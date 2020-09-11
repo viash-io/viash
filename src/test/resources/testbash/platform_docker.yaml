@@ -1,7 +1,3 @@
 type: docker
 image: "bash:3.2"
-target_image: "viash_test/bash"
-volumes:
-- name: data
-  mount: /data
-workdir: /app
+target_image: "viash_test_bash"

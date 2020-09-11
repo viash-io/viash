@@ -2,9 +2,9 @@ package com.dataintuitive.viash.platforms
 
 import com.dataintuitive.viash.functionality.Functionality
 import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.helpers.BashWrapper
 import com.dataintuitive.viash.platforms.requirements._
 import com.dataintuitive.viash.config.Version
+import com.dataintuitive.viash.wrapper.BashWrapper
 
 case class NativePlatform(
   id: String = "native",
@@ -17,8 +17,8 @@ case class NativePlatform(
 
   val requirements: List[Requirements] = {
     setup :::
-    r.toList :::
-    python.toList
+      r.toList :::
+      python.toList
   }
 
   def modifyFunctionality(functionality: Functionality): Functionality = {
@@ -34,11 +34,7 @@ case class NativePlatform(
       text = Some(BashWrapper.wrapScript(
         executor = executor,
         functionality = functionality,
-        setupCommands = setupCommands,
-        preParse = "",
-        parsers = "",
-        postParse = "",
-        postRun = ""
+        setupCommands = setupCommands
       ))
     )
 

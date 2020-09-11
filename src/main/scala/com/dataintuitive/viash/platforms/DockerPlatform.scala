@@ -4,8 +4,9 @@ import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.platforms.requirements._
-import com.dataintuitive.viash.helpers.{BashHelper, BashWrapper}
+import com.dataintuitive.viash.helpers.Bash
 import com.dataintuitive.viash.config.Version
+import com.dataintuitive.viash.wrapper.{BashWrapper, BashWrapperMods}
 
 case class DockerPlatform(
   id: String = "docker",
@@ -27,11 +28,11 @@ case class DockerPlatform(
 
   val requirements: List[Requirements] =
     setup :::
-    apk.toList :::
-    apt.toList :::
-    r.toList :::
-    python.toList :::
-    docker.toList
+      apk.toList :::
+      apt.toList :::
+      r.toList :::
+      python.toList :::
+      docker.toList
 
   def modifyFunctionality(functionality: Functionality): Functionality = {
     // collect docker args
@@ -52,13 +53,14 @@ case class DockerPlatform(
     // add ---chown flag
     val dmChown = addDockerChown(functionality, dockerArgs, dmVol.extraParams, imageName, imageVersion)
 
-    val dmDockerfile = ConfigMods(
-      parsers = """
-        |        ---dockerfile)
-        |            ViashDockerfile
-        |            exit 0
-        |            ;;""".stripMargin
-      )
+    val dmDockerfile = BashWrapperMods(
+      parsers =
+        """
+          |        ---dockerfile)
+          |            ViashDockerfile
+          |            exit 0
+          |            ;;""".stripMargin
+    )
 
     // compile modifications
     val dm = dmVol ++ dmDebug ++ dmChown ++ dmDockerfile
@@ -77,17 +79,14 @@ case class DockerPlatform(
 
     // create new bash script
     val bashScript = BashScript(
-        name = Some(functionality.name),
-        text = Some(BashWrapper.wrapScript(
-          executor = executor,
-          functionality = fun2,
-          setupCommands = setupCommands,
-          preParse = dm.preParse,
-          parsers = dm.parsers,
-          postParse = dm.postParse,
-          postRun = dm.postRun
-        ))
-      )
+      name = Some(functionality.name),
+      text = Some(BashWrapper.wrapScript(
+        executor = executor,
+        functionality = fun2,
+        setupCommands = setupCommands,
+        mods = dm
+      ))
+    )
 
     fun2.copy(
       resources = Some(bashScript :: fun2.resources.getOrElse(Nil).tail)
@@ -96,7 +95,7 @@ case class DockerPlatform(
 
   private val tagRegex = "(.*):(.*)".r
 
-  def processDockerSetup(functionality: Functionality): (String, String, String) = {
+  private def processDockerSetup(functionality: Functionality) = {
     // get dependencies
     val runCommands = requirements.flatMap(_.dockerCommands)
 
@@ -126,110 +125,113 @@ case class DockerPlatform(
             runCommands.mkString("\n")
 
         val dockerRequirements =
-          requirements.flatMap{
+          requirements.flatMap {
             case d: DockerRequirements => Some(d)
             case _ => None
           }
         val buildArgs = dockerRequirements.map(_.build_args.map(" --build-arg " + _).mkString).mkString("")
 
         val vdf =
-          s"""# Print Dockerfile contents to stdout
-            |cat << 'VIASHDOCKER'
-            |$dockerFile
-            |VIASHDOCKER""".stripMargin
+          s"""cat << 'VIASHDOCKER'
+             |$dockerFile
+             |VIASHDOCKER""".stripMargin
 
         val vs =
           s"""  # create temporary directory to store temporary dockerfile in
-            |  tmpdir=$$(mktemp -d /tmp/viash_setupdocker-${functionality.name}-XXXXXX)
-            |  function clean_up {
-            |    rm -rf "\\$$tmpdir"
-            |  }
-            |  trap clean_up EXIT
-            |  ViashDockerfile > $$tmpdir/Dockerfile
-            |  if [ ! -z $$(docker images -q $imageName:$tag) ]; then
-            |    echo "Image consists locally or on DockerHub"
-            |  else
-            |    # Quick workaround to have the resources available in the current dir
-            |    cp $$${BashWrapper.var_resources_dir}/* $$tmpdir
-            |    # Build the container
-            |    echo "> docker build -t $imageName:$tag$buildArgs $$tmpdir"
-            |    docker build -t $imageName:$tag$buildArgs $$tmpdir
-            |  fi""".stripMargin
+             |  tmpdir=$$(mktemp -d /tmp/viash_setupdocker-${functionality.name}-XXXXXX)
+             |  function clean_up {
+             |    rm -rf "\\$$tmpdir"
+             |  }
+             |  trap clean_up EXIT
+             |  ViashDockerfile > $$tmpdir/Dockerfile
+             |  # if [ ! -z $$(docker images -q $imageName:$tag) ]; then
+             |  #   echo "Image exists locally or on Docker Hub"
+             |  # else
+             |    # Quick workaround to have the resources available in the current dir
+             |    cp $$${BashWrapper.var_resources_dir}/* $$tmpdir
+             |    # Build the container
+             |    echo "> docker build -t $imageName:$tag$buildArgs $$tmpdir"
+             |    docker build -t $imageName:$tag$buildArgs $$tmpdir
+             |  #fi""".stripMargin
 
         (vdf, vs)
       }
 
     val setupCommands =
-        s"""# ViashDockerFile: print the dockerfile to stdout
-          |# return : dockerfile required to run this component
-          |# examples:
-          |#   ViashDockerFile
-          |function ViashDockerfile {
-          |$viashDockerFile
-          |}
-          |
-          |# ViashSetup: build a docker container
-          |# if available on docker hub, the image will be pulled
-          |# from there instead.
-          |# examples:
-          |#   ViashSetup
-          |function ViashSetup {
-          |$viashSetup
-          |}""".stripMargin
+      s"""# ViashDockerFile: print the dockerfile to stdout
+         |# return : dockerfile required to run this component
+         |# examples:
+         |#   ViashDockerFile
+         |function ViashDockerfile {
+         |$viashDockerFile
+         |}
+         |
+         |# ViashSetup: build a docker container
+         |# if available on docker hub, the image will be pulled
+         |# from there instead.
+         |# examples:
+         |#   ViashSetup
+         |function ViashSetup {
+         |$viashSetup
+         |}""".stripMargin
 
     (imageName, tag, setupCommands)
   }
 
-  def processDockerVolumes(functionality: Functionality): ConfigMods = {
-    val extraMountsVar = "VIASH_EXTRA_MOUNTS"
+  private val extraMountsVar = "VIASH_EXTRA_MOUNTS"
 
-    val args = functionality.arguments
+  private def processDockerVolumes(functionality: Functionality) = {
+    val args = functionality.argumentsAndDummies
 
     val preParse =
-      s"""${BashHelper.ViashAbsolutePath}
-         |${BashHelper.ViashAutodetectMount}
-         |${BashHelper.ViashExtractFlags}
+      s"""
+         |${Bash.ViashAbsolutePath}
+         |${Bash.ViashAutodetectMount}
+         |${Bash.ViashExtractFlags}
          |# initialise autodetect mount variable
          |$extraMountsVar=''""".stripMargin
 
 
     val parsers =
-        s"""        ---v|---volume)
-           |            ${BashHelper.save(extraMountsVar, Seq("-v \"$2\""))}
-           |            shift 2
-           |            ;;
-           |        ---volume=*)
-           |            ${BashHelper.save(extraMountsVar, Seq("-v $(ViashRemoveFlags \"$2\")"))}
-           |            shift 1
-           |            ;;""".stripMargin
+      s"""
+         |        ---v|---volume)
+         |            ${Bash.save(extraMountsVar, Seq("-v \"$2\""))}
+         |            shift 2
+         |            ;;
+         |        ---volume=*)
+         |            ${Bash.save(extraMountsVar, Seq("-v $(ViashRemoveFlags \"$2\")"))}
+         |            shift 1
+         |            ;;""".stripMargin
 
     val extraParams = s" $$$extraMountsVar"
 
     val postParseVolumes =
       if (resolve_volume == Automatic) {
         "\n\n# detect volumes from file arguments" +
-        args.flatMap {
-          case arg: FileObject if arg.multiple =>
-            // resolve arguments with multiplicity different from singular args
-            val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
-            Some(s"""
-              |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-              |  IFS="${arg.multiple_sep}"
-              |  for var in $$${arg.VIASH_PAR}; do
-              |    $extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$var")"
-              |    ${BashWrapper.store(viash_temp, "\"$(ViashAutodetectMount \"$var\")\"", Some(arg.multiple_sep)).mkString("\n    ")}
-              |  done
-              |  unset IFS
-              |  ${arg.VIASH_PAR}="$$$viash_temp"
-              |fi""".stripMargin)
-          case arg: FileObject =>
-            Some(s"""
-              |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-              |  $extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$${arg.VIASH_PAR}")"
-              |  ${arg.VIASH_PAR}=$$(ViashAutodetectMount "$$${arg.VIASH_PAR}")
-              |fi""".stripMargin)
-          case _ => None
-        }.mkString("")
+          args.flatMap {
+            case arg: FileObject if arg.multiple =>
+              // resolve arguments with multiplicity different from singular args
+              val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
+              Some(
+                s"""
+                   |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
+                   |  IFS="${arg.multiple_sep}"
+                   |  for var in $$${arg.VIASH_PAR}; do
+                   |    $extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$var")"
+                   |    ${BashWrapper.store(viash_temp, "\"$(ViashAutodetectMount \"$var\")\"", Some(arg.multiple_sep)).mkString("\n    ")}
+                   |  done
+                   |  unset IFS
+                   |  ${arg.VIASH_PAR}="$$$viash_temp"
+                   |fi""".stripMargin)
+            case arg: FileObject =>
+              Some(
+                s"""
+                   |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
+                   |  $extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$${arg.VIASH_PAR}")"
+                   |  ${arg.VIASH_PAR}=$$(ViashAutodetectMount "$$${arg.VIASH_PAR}")
+                   |fi""".stripMargin)
+            case _ => None
+          }.mkString("")
       } else {
         ""
       }
@@ -239,7 +241,7 @@ case class DockerPlatform(
          |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$${BashWrapper.var_resources_dir}")"
          |${BashWrapper.var_resources_dir}=$$(ViashAutodetectMount "$$${BashWrapper.var_resources_dir}")""".stripMargin
 
-    ConfigMods(
+    BashWrapperMods(
       preParse = preParse,
       parsers = parsers,
       postParse = postParse,
@@ -247,66 +249,75 @@ case class DockerPlatform(
     )
   }
 
-  def addDockerDebug(debugCommand: String): ConfigMods = {
-    val parsers = "\n" + BashHelper.argStore("---debug", "VIASH_DEBUG", "yes", 1, None)
+  private def addDockerDebug(debugCommand: String) = {
+    val parsers = "\n" + Bash.argStore("---debug", "VIASH_DEBUG", "yes", 1, None)
     val postParse =
       s"""
-        |
-        |# if desired, enter a debug session
-        |if [ $${VIASH_DEBUG} ]; then
-        |  echo "+ $debugCommand"
-        |  $debugCommand
-        |  exit 0
-        |fi"""
+         |
+         |# if desired, enter a debug session
+         |if [ $${VIASH_DEBUG} ]; then
+         |  echo "+ $debugCommand"
+         |  $debugCommand
+         |  exit 0
+         |fi"""
 
 
-    ConfigMods(
+    BashWrapperMods(
       parsers = parsers,
       postParse = postParse
     )
   }
 
-  def addDockerChown(functionality: Functionality, dockerArgs: String, volExtraParams: String, imageName: String, imageVersion: String): ConfigMods = {
-    val args = functionality.arguments
+  private def addDockerChown(functionality: Functionality, dockerArgs: String, volExtraParams: String, imageName: String, imageVersion: String) = {
+    val args = functionality.argumentsAndDummies
 
     def chownCommand(value: String): String = {
       s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $imageName:$imageVersion "$$(id -u):$$(id -g)" -R $value"""
     }
 
-    val postRun =
+    val postParse =
       if (chown) {
-      "\n\n# change file ownership" +
-      args
-        .filter(a => a.isInstanceOf[FileObject] && a.direction == Output)
-        .map(arg => {
+        // chown output files/folders
+        val chownPars = args
+          .filter(a => a.isInstanceOf[FileObject] && a.direction == Output)
+          .map(arg => {
 
-          // resolve arguments with multiplicity different from
-          // singular args
-          if (arg.multiple) {
-            val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
-            s"""
-              |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-              |  IFS="${arg.multiple_sep}"
-              |  for var in $$${arg.VIASH_PAR}; do
-              |    ${chownCommand("\"$var\"")}
-              |  done
-              |  unset IFS
-              |  ${arg.VIASH_PAR}="$$$viash_temp"
-              |fi""".stripMargin
-          } else {
-            s"""
-              |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-              |  ${chownCommand("\"$" + arg.VIASH_PAR + "\"")}
-              |fi""".stripMargin
-          }
-        })
-        .mkString("")
+            // resolve arguments with multiplicity different from
+            // singular args
+            if (arg.multiple) {
+              val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
+              s"""
+                 |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
+                 |  IFS="${arg.multiple_sep}"
+                 |  for var in $$${arg.VIASH_PAR}; do
+                 |    ${chownCommand("\"$var\"")}
+                 |  done
+                 |  unset IFS
+                 |  ${arg.VIASH_PAR}="$$$viash_temp"
+                 |fi""".stripMargin
+            } else {
+              s"""
+                 |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
+                 |  ${chownCommand("\"$" + arg.VIASH_PAR + "\"")}
+                 |fi""".stripMargin
+            }
+          })
+          .mkString("")
+
+        s"""
+           |
+           |# change file ownership
+           |function viash_perform_chown {
+           |  ${chownPars.split("\n").mkString("\n  ")}
+           |}
+           |trap viash_perform_chown EXIT
+           |""".stripMargin
       } else {
         ""
       }
 
-    ConfigMods(
-      postRun = postRun
+    BashWrapperMods(
+      postParse = postParse
     )
   }
 }

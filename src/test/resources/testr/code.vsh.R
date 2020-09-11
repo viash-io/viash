@@ -8,6 +8,7 @@
 #'     type: file
 #'     description: An input file with positional arguments.
 #'     direction: input
+#'     required: true
 #'   - name: "--real_number"
 #'     type: double
 #'     description: A real number with positional arguments.
@@ -54,7 +55,7 @@
 #'     - optparse
 #' - type: docker
 #'   image: rocker/tidyverse
-#'   target_image: "viash_test/r"
+#'   target_image: "viash_test_r"
 #'   r:
 #'     cran: 
 #'     - optparse
@@ -65,10 +66,6 @@
 #'   apt:
 #'     packages:
 #'     - libhdf5-serial-dev
-#'   volumes:
-#'   - name: data
-#'     mount: /data
-#'   workdir: /app
 #' - type: nextflow
 #'   image: rocker/tidyverse
 

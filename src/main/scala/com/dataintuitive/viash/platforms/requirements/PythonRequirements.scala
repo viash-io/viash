@@ -2,7 +2,7 @@ package com.dataintuitive.viash.platforms.requirements
 
 case class PythonRequirements(
   packages: List[String] = Nil,
-  github:   List[String] = Nil
+  github: List[String] = Nil
 ) extends Requirements {
 
   val `type` = "python"

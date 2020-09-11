@@ -3,38 +3,38 @@ package com.dataintuitive.viash
 import functionality._
 import dataobjects.{FileObject, Output}
 import platforms._
-import resources.{ BashScript, Script }
-import sys.process.{ Process, ProcessLogger }
-import java.io.{ ByteArrayOutputStream, PrintWriter, FileWriter, File }
-import java.nio.file.Paths
-import helpers.IOHelper
+import resources.{BashScript, Script}
 
-object ViashTester {
+import sys.process.{Process, ProcessLogger}
+import java.io.{ByteArrayOutputStream, File, FileWriter, PrintWriter}
+import java.nio.file.Paths
+
+import com.dataintuitive.viash.config.Config
+import helpers.IO
+
+object ViashTest {
+
   case class TestOutput(name: String, exitValue: Int, output: String)
 
-  def reportTests(results: List[TestOutput], verbose: Boolean): Int = {
-    if (results.isEmpty) {
-      println("No tests found!")
-      0
+  def apply(config: Config, verbose: Boolean, keepFiles: Boolean): Unit = {
+    val fun = config.functionality
+    val plat = config.platform.get
+
+    // create temporary directory
+    val dir = IO.makeTemp("viash_test_" + fun.name)
+
+    val results = ViashTest.runTests(fun, plat, dir, verbose = verbose)
+
+    val code = ViashTest.reportTests(results, verbose = verbose)
+
+    if (!keepFiles && !results.exists(_.exitValue > 0)) {
+      println("Cleaning up temporary files")
+      IO.deleteRecursively(dir)
     } else {
-      println()
-
-      for (res ← results if res.exitValue > 0 && !verbose) {
-        println(s">> ${res.name} finished with code ${res.exitValue}:")
-        println(res.output)
-        println()
-      }
-
-      val count = results.count(_.exitValue == 0)
-
-      if (count < results.length) {
-        println(s"FAIL! Only $count out of ${results.length} test scripts succeeded!")
-        1
-      } else {
-        println(s"SUCCESS! All $count out of ${results.length} test scripts succeeded!")
-        0
-      }
+      println(s"Test files and logs are stored at '$dir'")
     }
+
+    System.exit(code)
   }
 
   def runTests(fun: Functionality, platform: Platform, dir: File, verbose: Boolean = false): List[TestOutput] = {
@@ -42,7 +42,7 @@ object ViashTester {
     val buildfun = platform.modifyFunctionality(fun)
     val builddir = Paths.get(dir.toString, "build_executable").toFile
     builddir.mkdir()
-    IOHelper.writeResources(buildfun.resources.getOrElse(Nil), builddir)
+    IO.writeResources(buildfun.resources.getOrElse(Nil), builddir)
 
     // run command, collect output
     val stream = new ByteArrayOutputStream
@@ -85,7 +85,8 @@ object ViashTester {
       )
       // generate bash script for test
       val funonlytest = platform.modifyFunctionality(fun.copy(
-        arguments = List(dirArg),
+        arguments = Nil,
+        dummy_arguments = Some(List(dirArg)),
         resources = Some(List(test)),
         set_wd_to_resources_dir = Some(true)))
       val testbash = BashScript(
@@ -108,7 +109,7 @@ object ViashTester {
       newdir.mkdir()
 
       // write resources to dir
-      IOHelper.writeResources(funfinal.resources.getOrElse(Nil), newdir)
+      IO.writeResources(funfinal.resources.getOrElse(Nil), newdir)
 
       // run command, collect output
       val stream = new ByteArrayOutputStream
@@ -136,4 +137,31 @@ object ViashTester {
 
     buildResult :: testResults
   }
+
+  def reportTests(results: List[TestOutput], verbose: Boolean): Int = {
+    if (results.isEmpty) {
+      println("No tests found!")
+      0
+    } else {
+      println()
+
+      for (res ← results if res.exitValue > 0 && !verbose) {
+        println(s">> ${res.name} finished with code ${res.exitValue}:")
+        println(res.output)
+        println()
+      }
+
+      val count = results.count(_.exitValue == 0)
+
+      if (count < results.length) {
+        println(s"FAIL! Only $count out of ${results.length} test scripts succeeded!")
+        1
+      } else {
+        println(s"SUCCESS! All $count out of ${results.length} test scripts succeeded!")
+        0
+      }
+    }
+  }
+
+
 }

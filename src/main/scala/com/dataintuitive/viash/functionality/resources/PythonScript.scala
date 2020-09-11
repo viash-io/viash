@@ -16,6 +16,7 @@ case class PythonScript(
   def command(script: String): String = {
     "python \"" + script + "\""
   }
+
   def commandSeq(script: String): Seq[String] = {
     Seq("python", script)
   }
@@ -23,7 +24,7 @@ case class PythonScript(
   def generatePlaceholder(functionality: Functionality): String = {
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
-    val par_set = params.map{ par =>
+    val par_set = params.map { par =>
       val env_name = par.VIASH_PAR
 
       val parse = par match {
@@ -47,10 +48,10 @@ case class PythonScript(
       s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$parse"; else echo None; fi )"""
     }
     s"""par = {
-      |  ${par_set.mkString(",\n  ")}
-      |}
-      |
-      |resources_dir = '$$VIASH_RESOURCES_DIR'
-      |""".stripMargin
+       |  ${par_set.mkString(",\n  ")}
+       |}
+       |
+       |resources_dir = '$$VIASH_RESOURCES_DIR'
+       |""".stripMargin
   }
 }

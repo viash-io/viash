@@ -2,7 +2,7 @@ package com.dataintuitive.viash.helpers
 
 import scala.io.Source
 
-object BashHelper {
+object Bash {
   private def readUtils(s: String) = {
     val path = s"com/dataintuitive/viash/helpers/bashutils/$s.sh"
     Source.fromResource(path).getLines().mkString("\n")
@@ -35,10 +35,11 @@ object BashHelper {
         ""
       }
     s"""         $name)
-      |            $plainName=$store$passStr
-      |            shift $argsConsumed
-      |            ;;""".stripMargin
+       |            $plainName=$store$passStr
+       |            shift $argsConsumed
+       |            ;;""".stripMargin
   }
+
   def argStoreSed(name: String, plainName: String, storeUnparsed: Option[String]): String = {
     argStore(name + "=*", plainName, "$(ViashRemoveFlags \"$1\")", 1, storeUnparsed)
   }
