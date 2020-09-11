@@ -4,13 +4,13 @@ description: |
   the target/ build directory (or different if configured like this).
 arguments:
   - name: "--namespace"
-    alternatives: ["-n"]
+    alternatives: [ "-n" ]
     type: string
     description: The name of the namespace
     required: true
     default: viash
   - name: "--target"
-    alternatives: ["-t"]
+    alternatives: [ "-t" ]
     type: string
     description: An alternative location if not target/
     default: target

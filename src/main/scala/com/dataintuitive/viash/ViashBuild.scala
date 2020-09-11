@@ -10,7 +10,8 @@ import scala.sys.process.{Process, ProcessLogger}
 
 object ViashBuild {
   def apply(config: Config, output: String, printMeta: Boolean = false,
-            namespace: Option[String] = None, setup: Boolean = false) {
+    namespace: Option[String] = None, setup: Boolean = false
+  ) {
     val fun = config.functionality
 
     // create dir

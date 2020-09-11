@@ -31,18 +31,18 @@ object Git {
   private val remoteRepoRegex = "(.*)\\s(.*)\\s(.*)".r
 
   def getRemoteRepo(path: File): Option[String] = {
-   Try(
+    Try(
       Exec.run(
         List("git", "remote", "--verbose"),
         cwd = Some(path)
       )
-      .split("\n")
-      .flatMap{
-        case remoteRepoRegex(name, link, _) if name contains "origin" => Some(link)
-        case _ => None
-      }
-      .headOption
-      .getOrElse("No remote configured")
+        .split("\n")
+        .flatMap {
+          case remoteRepoRegex(name, link, _) if name contains "origin" => Some(link)
+          case _ => None
+        }
+        .headOption
+        .getOrElse("No remote configured")
     ).toOption
   }
 

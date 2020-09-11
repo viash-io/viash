@@ -24,7 +24,7 @@ functionality:
       type: boolean_true
       description: A switch flag.
     - name: "--output"
-      alternatives: ["-o"]
+      alternatives: [ "-o" ]
       type: file
       description: Write the parameters to a json file.
       direction: output
@@ -54,19 +54,19 @@ platforms:
   - type: native
     setup:
       - type: python
-        packages: 
-        - argparse
-        - "anndata<0.7"
+        packages:
+          - argparse
+          - "anndata<0.7"
   - type: docker
     image: python
     target_image: "viash_test_python"
     setup:
       - type: docker
         build_args:
-        - TESTING_FOO=bar
+          - TESTING_FOO=bar
       - type: python
-        packages: 
-        - argparse
-        - "anndata<0.7"
+        packages:
+          - argparse
+          - "anndata<0.7"
   - type: nextflow
     image: rocker/tidyverse

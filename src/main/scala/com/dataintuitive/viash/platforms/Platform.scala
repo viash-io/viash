@@ -11,6 +11,7 @@ trait Platform {
   val `type`: String
   val id: String
   val version: Option[Version]
+
   def modifyFunctionality(functionality: Functionality): Functionality
 
   val requirements: List[Requirements]

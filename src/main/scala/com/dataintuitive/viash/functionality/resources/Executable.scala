@@ -14,10 +14,12 @@ case class Executable(
   val commentStr = "#"
 
   def command(script: String): String = script
+
   def commandSeq(script: String): Seq[String] = Seq(script)
 
   def generatePlaceholder(functionality: Functionality): String = ""
 
   override def read: Option[String] = None
-  override def write(path: Path, overwrite: Boolean) { }
+
+  override def write(path: Path, overwrite: Boolean) {}
 }

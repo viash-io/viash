@@ -9,6 +9,7 @@ object BashWrapper {
   def escape(str: String): String = {
     str.replaceAll("([\\\\$`])", "\\\\$1")
   }
+
   def escapeViash(str: String): String = {
     escape(str)
       .replaceAll("\\\\\\$VIASH_DOLLAR\\\\\\$", "\\$")
@@ -40,6 +41,7 @@ object BashWrapper {
        |            shift $argsConsumed
        |            ;;""".stripMargin
   }
+
   def argStoreSed(name: String, plainName: String, multiple_sep: Option[Char] = None): String = {
     argStore(name + "=*", plainName, "$(ViashRemoveFlags \"$1\")", 1, multiple_sep)
   }
@@ -189,10 +191,13 @@ object BashWrapper {
       }
 
       val properties =
-        List("type: " + param.`type`) :::
-          { if (param.required) List("required parameter") else Nil } :::
-          { if (param.multiple) List("multiple values allowed") else Nil } :::
-          { if (param.default.isDefined) List("default: " + param.default.get) else Nil }
+        List("type: " + param.`type`) ::: {
+          if (param.required) List("required parameter") else Nil
+        } ::: {
+          if (param.multiple) List("multiple values allowed") else Nil
+        } ::: {
+          if (param.default.isDefined) List("default: " + param.default.get) else Nil
+        }
 
       val part1 = "    " + exampleStrs.mkString(", ")
       val part2 = "        " + properties.mkString(", ")
@@ -205,12 +210,12 @@ object BashWrapper {
 
     val preParse =
       s"""# ViashHelp: Display helpful explanation about this executable
-       |function ViashHelp {
-       |   echo "${escapeViash(functionality.description.getOrElse("").stripLineEnd)}"
-       |   echo
-       |   echo "Options:"
-       |${usageStrs.mkString("\n")}
-       |}""".stripMargin
+         |function ViashHelp {
+         |   echo "${escapeViash(functionality.description.getOrElse("").stripLineEnd)}"
+         |   echo
+         |   echo "Options:"
+         |${usageStrs.mkString("\n")}
+         |}""".stripMargin
 
     BashWrapperMods(preParse = preParse)
   }
@@ -218,7 +223,7 @@ object BashWrapper {
   private def generateParsers(params: List[DataObject[_]], paramsAndDummies: List[DataObject[_]]) = {
     // gather parse code for params
     val wrapperParams = params.filterNot(_.otype == "")
-    val parseStrs = wrapperParams.map{
+    val parseStrs = wrapperParams.map {
       case bo: BooleanObject if bo.flagValue.isDefined =>
         val fv = bo.flagValue.get
 
@@ -253,7 +258,7 @@ object BashWrapper {
 
     // parse positionals
     val positionals = paramsAndDummies.filter(_.otype == "")
-    val positionalStr = positionals.map{ param =>
+    val positionalStr = positionals.map { param =>
       if (param.multiple) {
         s"""while [[ $$# -gt 0 ]]; do
            |  ${store(param.VIASH_PAR, "\"$1\"", Some(param.multiple_sep)).mkString("\n  ")}
@@ -274,7 +279,7 @@ object BashWrapper {
         ""
       } else {
         "\n# check whether required parameters exist\n" +
-          reqParams.map{ param =>
+          reqParams.map { param =>
             s"""if [ -z "$$${param.VIASH_PAR}" ]; then
                |  echo '${param.name}' is a required argument. Use "--help" to get more information on the parameters.
                |  exit 1
@@ -286,7 +291,7 @@ object BashWrapper {
     // if [ -z "$VIASH_PAR_FOO" ]; then
     //   VIASH_PAR_FOO="defaultvalue"
     // fi
-    val defaultsStrs = paramsAndDummies.flatMap{param =>
+    val defaultsStrs = paramsAndDummies.flatMap { param =>
       // if boolean object has a flagvalue, add the inverse of it as a default value
       val default = param match {
         case p if p.required => None
@@ -311,7 +316,7 @@ object BashWrapper {
         ""
       } else {
         "\n# check whether required files exist\n" +
-          reqFiles.map{ param =>
+          reqFiles.map { param =>
             if (param.multiple) {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
                  |  IFS=${param.multiple_sep}

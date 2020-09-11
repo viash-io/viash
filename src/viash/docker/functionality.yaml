@@ -5,15 +5,15 @@ arguments:
     type: string
     required: true
   - name: "--functionality"
-    alternatives: ["-f"]
+    alternatives: [ "-f" ]
     type: file
     required: true
   - name: "--platform"
-    alternatives: ["-p"]
+    alternatives: [ "-p" ]
     type: string
     required: true
   - name: "--output"
-    alternatives: ["-o"]
+    alternatives: [ "-o" ]
     type: file
     description: An alternative location if not target/
     default: target

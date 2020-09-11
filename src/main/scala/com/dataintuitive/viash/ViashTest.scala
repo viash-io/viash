@@ -13,6 +13,7 @@ import com.dataintuitive.viash.config.Config
 import helpers.IO
 
 object ViashTest {
+
   case class TestOutput(name: String, exitValue: Int, output: String)
 
   def apply(config: Config, verbose: Boolean, keepFiles: Boolean): Unit = {

@@ -5,15 +5,15 @@ abstract class BooleanObject extends DataObject[Boolean] {
 }
 
 case class BooleanObjectRegular(
-    name: String,
-    alternatives: List[String] = Nil,
-    description: Option[String] = None,
-    default: Option[Boolean] = None,
-    required: Boolean = false,
-    tag: Option[String] = None,
-    direction: Direction = Input,
-    multiple: Boolean = false,
-    multiple_sep: Char = ':'
+  name: String,
+  alternatives: List[String] = Nil,
+  description: Option[String] = None,
+  default: Option[Boolean] = None,
+  required: Boolean = false,
+  tag: Option[String] = None,
+  direction: Direction = Input,
+  multiple: Boolean = false,
+  multiple_sep: Char = ':'
 ) extends BooleanObject {
   override val `type` = "boolean"
 
@@ -21,11 +21,11 @@ case class BooleanObjectRegular(
 }
 
 case class BooleanObjectTrue(
-    name: String,
-    alternatives: List[String] = Nil,
-    description: Option[String] = None,
-    tag: Option[String] = None,
-    direction: Direction = Input,
+  name: String,
+  alternatives: List[String] = Nil,
+  description: Option[String] = None,
+  tag: Option[String] = None,
+  direction: Direction = Input,
 ) extends BooleanObject {
   override val `type` = "boolean_true"
 
@@ -35,12 +35,13 @@ case class BooleanObjectTrue(
   val multiple: Boolean = false
   val multiple_sep: Char = ':'
 }
+
 case class BooleanObjectFalse(
-    name: String,
-    alternatives: List[String] = Nil,
-    description: Option[String] = None,
-    tag: Option[String] = None,
-    direction: Direction = Input,
+  name: String,
+  alternatives: List[String] = Nil,
+  description: Option[String] = None,
+  tag: Option[String] = None,
+  direction: Direction = Input,
 ) extends BooleanObject {
   override val `type` = "boolean_false"
 

@@ -35,10 +35,11 @@ object Bash {
         ""
       }
     s"""         $name)
-      |            $plainName=$store$passStr
-      |            shift $argsConsumed
-      |            ;;""".stripMargin
+       |            $plainName=$store$passStr
+       |            shift $argsConsumed
+       |            ;;""".stripMargin
   }
+
   def argStoreSed(name: String, plainName: String, storeUnparsed: Option[String]): String = {
     argStore(name + "=*", plainName, "$(ViashRemoveFlags \"$1\")", 1, storeUnparsed)
   }

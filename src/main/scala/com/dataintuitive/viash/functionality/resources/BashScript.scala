@@ -15,6 +15,7 @@ case class BashScript(
   def command(script: String): String = {
     "bash \"" + script + "\""
   }
+
   def commandSeq(script: String): Seq[String] = {
     Seq("bash", script)
   }
@@ -22,12 +23,12 @@ case class BashScript(
   def generatePlaceholder(functionality: Functionality): String = {
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
-    val par_set = params.map{ par =>
+    val par_set = params.map { par =>
       s"""${par.par}='$$${par.VIASH_PAR}'"""
     }
     s"""${par_set.mkString("\n")}
-      |
-      |resources_dir="$$VIASH_RESOURCES_DIR"
-      |""".stripMargin
+       |
+       |resources_dir="$$VIASH_RESOURCES_DIR"
+       |""".stripMargin
   }
 }

@@ -4,6 +4,7 @@ import sys.process.{Process, ProcessLogger}
 import java.io.{ByteArrayOutputStream, PrintWriter, File}
 
 object Exec {
+
   case class ExecOutput(command: Seq[String], exitValue: Int, output: String)
 
   def run(command: Seq[String], cwd: Option[File] = None, extraEnv: Seq[(String, String)] = Nil): String = {
@@ -17,7 +18,7 @@ object Exec {
   }
 
   def run2(command: Seq[String], cwd: Option[File] = None, extraEnv: Seq[(String, String)] = Nil, loggers: Seq[String => Unit] = Nil): ExecOutput = {
-     // run command, collect output
+    // run command, collect output
     val stream = new ByteArrayOutputStream
     val printwriter = new PrintWriter(stream)
 
