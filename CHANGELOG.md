@@ -4,6 +4,8 @@
 
 * MINOR CHANGE: Remove `---chown` flag, move to `platform.docker.chown`; is set to true by default.
 
+* MINOR CHANGE: Perform chown during both run and test using a Docker platform.
+
 * MINOR CHANGE: Do not escape `${VIASH_...}` elements in default values and descriptions!
 
 * NEW FEATURE: Allow changing the order of setup commands using the `setup:` variable.

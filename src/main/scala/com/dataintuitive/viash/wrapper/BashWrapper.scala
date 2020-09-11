@@ -58,10 +58,7 @@ object BashWrapper {
     executor: String,
     functionality: Functionality,
     setupCommands: String,
-    preParse: String,
-    parsers: String,
-    postParse: String,
-    postRun: String
+    mods: BashWrapperMods = BashWrapperMods()
   ): String = {
     val mainResource = functionality.mainScript
 
@@ -113,15 +110,9 @@ object BashWrapper {
       case Some(_: Executable) => generateExecutableArgs(params)
       case _ => BashWrapperMods()
     }
-    val givenMods = BashWrapperMods(
-      preParse = preParse,
-      parsers = parsers,
-      postParse = postParse,
-      postRun = postRun
-    )
 
     // combine
-    val allMods = helpMods ++ parMods ++ execMods ++ givenMods
+    val allMods = helpMods ++ parMods ++ execMods ++ mods
 
     /* GENERATE BASH SCRIPT */
     s"""#!/usr/bin/env bash

@@ -34,11 +34,7 @@ case class NativePlatform(
       text = Some(BashWrapper.wrapScript(
         executor = executor,
         functionality = functionality,
-        setupCommands = setupCommands,
-        preParse = "",
-        parsers = "",
-        postParse = "",
-        postRun = ""
+        setupCommands = setupCommands
       ))
     )
 
