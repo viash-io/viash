@@ -16,6 +16,9 @@ case class Functionality(
   description: Option[String] = None,
   function_type: Option[FunctionType] = None,
   arguments: List[DataObject[_]] = Nil,
+
+  // dummy arguments are used for handling extra directory mounts in docker
+  dummy_arguments: Option[List[DataObject[_]]] = None,
   tests: Option[List[Resource]] = None,
   set_wd_to_resources_dir: Option[Boolean] = None,
 ) {
@@ -23,7 +26,7 @@ case class Functionality(
   // check whether there are not multiple positional arguments with multiplicity >1
   // and if there is one, whether its position is last
   {
-    val positionals = arguments.filter(_.otype == "")
+    val positionals = arguments.filter(a => a.otype == "")
     val multiix = positionals.indexWhere(_.multiple)
 
     require(
@@ -39,6 +42,8 @@ case class Functionality(
     }
 
   def mainCode: Option[String] = mainScript.flatMap(_.read)
+
+  def argumentsAndDummies: List[DataObject[_]] = arguments ::: dummy_arguments.getOrElse(Nil)
 }
 
 object Functionality {

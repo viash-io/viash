@@ -2,22 +2,22 @@ package com.dataintuitive.viash.wrapper
 
 import com.dataintuitive.viash.functionality.dataobjects.DataObject
 
-case class WrapperMods(
-                       preParse: String = "",
-                       parsers: String = "",
-                       postParse: String = "",
-                       postRun: String = "",
-                       inputs: List[DataObject[_]] = Nil,
-                       extraParams: String = ""
-                     ) {
-  def `++`(dm: ConfigMods): ConfigMods = {
-    ConfigMods(
-      preParse = preParse + dm.preParse,
-      parsers = parsers + dm.parsers,
-      postParse = postParse + dm.postParse,
-      postRun = postRun + dm.postRun,
-      inputs = inputs ::: dm.inputs,
-      extraParams = extraParams + dm.extraParams
+case class BashWrapperMods(
+   preParse: String = "",
+   parsers: String = "",
+   postParse: String = "",
+   postRun: String = "",
+   inputs: List[DataObject[_]] = Nil,
+   extraParams: String = ""
+ ) {
+  def `++`(other: BashWrapperMods): BashWrapperMods = {
+    BashWrapperMods(
+      preParse = preParse + other.preParse,
+      parsers = parsers + other.parsers,
+      postParse = postParse + other.postParse,
+      postRun = postRun + other.postRun,
+      inputs = inputs ::: other.inputs,
+      extraParams = extraParams + other.extraParams
     )
   }
 }

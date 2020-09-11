@@ -84,7 +84,8 @@ object ViashTest {
       )
       // generate bash script for test
       val funonlytest = platform.modifyFunctionality(fun.copy(
-        arguments = List(dirArg),
+        arguments = Nil,
+        dummy_arguments = Some(List(dirArg)),
         resources = Some(List(test)),
         set_wd_to_resources_dir = Some(true)))
       val testbash = BashScript(

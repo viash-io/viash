@@ -29,12 +29,12 @@ object BashWrapper {
   }
 
   def argStore(
-                name: String,
-                plainName: String,
-                store: String,
-                argsConsumed: Int,
-                multiple_sep: Option[Char] = None
-              ): String = {
+    name: String,
+    plainName: String,
+    store: String,
+    argsConsumed: Int,
+    multiple_sep: Option[Char] = None
+  ): String = {
     s"""        $name)
        |            ${this.store(plainName, store, multiple_sep).mkString("\n            ")}
        |            shift $argsConsumed
@@ -55,14 +55,14 @@ object BashWrapper {
   val var_resources_dir = "VIASH_RESOURCES_DIR"
 
   def wrapScript(
-                  executor: String,
-                  functionality: Functionality,
-                  setupCommands: String,
-                  preParse: String,
-                  parsers: String,
-                  postParse: String,
-                  postRun: String
-                ): String = {
+    executor: String,
+    functionality: Functionality,
+    setupCommands: String,
+    preParse: String,
+    parsers: String,
+    postParse: String,
+    postRun: String
+  ): String = {
     val mainResource = functionality.mainScript
 
     // check whether the wd needs to be set to the resources dir
@@ -103,14 +103,25 @@ object BashWrapper {
       case _ => ("cat << VIASHEOF | ", "\nVIASHEOF")
     }
 
+    // generate script modifiers
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
-    val (parPreParse, parParsers, parPostParse) = generateParsers(params)
+    val paramAndDummies = functionality.argumentsAndDummies.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
-    val execPostParse =
-      mainResource match {
-        case Some(_: Executable) => generateExecutableArgs(params)
-        case _ => ""
-      }
+    val helpMods = generateHelp(functionality, params)
+    val parMods = generateParsers(params, paramAndDummies)
+    val execMods = mainResource match {
+      case Some(_: Executable) => generateExecutableArgs(params)
+      case _ => BashWrapperMods()
+    }
+    val givenMods = BashWrapperMods(
+      preParse = preParse,
+      parsers = parsers,
+      postParse = postParse,
+      postRun = postRun
+    )
+
+    // combine
+    val allMods = helpMods ++ parMods ++ execMods ++ givenMods
 
     /* GENERATE BASH SCRIPT */
     s"""#!/usr/bin/env bash
@@ -125,12 +136,9 @@ object BashWrapper {
        |# find source folder of this component
        |$var_resources_dir=`ViashSourceDir $${BASH_SOURCE[0]}`
        |
-       |# helper function for installing extra requirements for this component
        |$setupCommands
        |
-       |${generateHelp(functionality, params)}
-       |${spaceCode(parPreParse)}
-       |${spaceCode(preParse)}
+       |${spaceCode(allMods.preParse)}
        |# initialise array
        |VIASH_POSITIONAL_ARGS=''
        |
@@ -143,10 +151,9 @@ object BashWrapper {
        |            ViashSetup
        |            exit 0
        |            ;;
-       |$parParsers
-       |$parsers
+       |${allMods.parsers}
        |        *)    # positional arg or unknown option
-       |            # since the positional args will be eval'd, can we always quote, instead of using ViashQuote?
+       |            # since the positional args will be eval'd, can we always quote, instead of using ViashQuote
        |            VIASH_POSITIONAL_ARGS="$$VIASH_POSITIONAL_ARGS '$$1'"
        |            shift # past argument
        |            ;;
@@ -155,15 +162,13 @@ object BashWrapper {
        |
        |# parse positional parameters
        |eval set -- $$VIASH_POSITIONAL_ARGS
-       |${spaceCode(parPostParse)}
-       |${spaceCode(postParse)}
-       |${spaceCode(execPostParse)}
+       |${spaceCode(allMods.postParse)}
        |$heredocStart$executor $executionCode$heredocEnd
-       |${spaceCode(postRun)}""".stripMargin
+       |${spaceCode(allMods.postRun)}""".stripMargin
   }
 
 
-  def generateHelp(functionality: Functionality, params: List[DataObject[_]]): String = {
+  private def generateHelp(functionality: Functionality, params: List[DataObject[_]]) = {
     // gather parse code for params
     val usageStrs = params.map(param => {
       val names = param.alternatives ::: List(param.name)
@@ -207,16 +212,19 @@ object BashWrapper {
 
     // TODO: add usage?
 
-    s"""# ViashHelp: Display helpful explanation about this executable
+    val preParse =
+      s"""# ViashHelp: Display helpful explanation about this executable
        |function ViashHelp {
        |   echo "${escapeViash(functionality.description.getOrElse("").stripLineEnd)}"
        |   echo
        |   echo "Options:"
        |${usageStrs.mkString("\n")}
        |}""".stripMargin
+
+    BashWrapperMods(preParse = preParse)
   }
 
-  def generateParsers(params: List[DataObject[_]]): (String, String, String) = {
+  private def generateParsers(params: List[DataObject[_]], paramsAndDummies: List[DataObject[_]]) = {
     // gather parse code for params
     val wrapperParams = params.filterNot(_.otype == "")
     val parseStrs = wrapperParams.map{
@@ -253,7 +261,7 @@ object BashWrapper {
     }.mkString("\n")
 
     // parse positionals
-    val positionals = params.filter(_.otype == "")
+    val positionals = paramsAndDummies.filter(_.otype == "")
     val positionalStr = positionals.map{ param =>
       if (param.multiple) {
         s"""while [[ $$# -gt 0 ]]; do
@@ -269,7 +277,7 @@ object BashWrapper {
     }.mkString("\n")
 
     // construct required checks
-    val reqParams = params.filter(p => p.required)
+    val reqParams = paramsAndDummies.filter(_.required)
     val reqCheckStr =
       if (reqParams.isEmpty) {
         ""
@@ -287,14 +295,12 @@ object BashWrapper {
     // if [ -z "$VIASH_PAR_FOO" ]; then
     //   VIASH_PAR_FOO="defaultvalue"
     // fi
-    val defaultsStrs = params.flatMap{param =>
+    val defaultsStrs = paramsAndDummies.flatMap{param =>
       // if boolean object has a flagvalue, add the inverse of it as a default value
-      val default = {
-        param match {
-          case p if p.required => None
-          case bo: BooleanObject if bo.flagValue.isDefined => bo.flagValue.map(!_)
-          case p => p.default
-        }
+      val default = param match {
+        case p if p.required => None
+        case bo: BooleanObject if bo.flagValue.isDefined => bo.flagValue.map(!_)
+        case p => p.default
       }
 
       default.map(default => {
@@ -305,10 +311,10 @@ object BashWrapper {
     }.mkString("\n")
 
     // construct required file checks
-    val reqFiles = params
-      .filter(_.isInstanceOf[FileObject])
-      .map(_.asInstanceOf[FileObject])
-      .filter(_.must_exist)
+    val reqFiles = paramsAndDummies.flatMap {
+      case f: FileObject if f.must_exist => Some(f)
+      case _ => None
+    }
     val reqFilesStr =
       if (reqFiles.isEmpty) {
         ""
@@ -338,22 +344,25 @@ object BashWrapper {
       }
 
     // return output
-    val preParse = ""
-    val parsers = parseStrs
-    val postParse = positionalStr + "\n" + reqCheckStr + "\n" + defaultsStrs + "\n" + reqFilesStr
-
-    (preParse, parsers, postParse)
+    BashWrapperMods(
+      parsers = parseStrs,
+      postParse = positionalStr + "\n" + reqCheckStr + "\n" + defaultsStrs + "\n" + reqFilesStr
+    )
   }
 
-  def generateExecutableArgs(params: List[DataObject[_]]): String = {
+  private def generateExecutableArgs(params: List[DataObject[_]]) = {
     val inserts = params.map {
       case bo: BooleanObject if bo.flagValue.isDefined =>
-        s"""[ "$$${bo.VIASH_PAR}" == "${bo.flagValue.get}" ] && VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS ${bo.name}""""
+        s"""
+           |if [ "$$${bo.VIASH_PAR}" == "${bo.flagValue.get}" ]; then
+           |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS ${bo.name}"
+           |fi""".stripMargin
       case param =>
         val flag = if (param.otype == "") "" else " " + param.name
 
         if (param.multiple) {
-          s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
+          s"""
+             |if [ ! -z "$$${param.VIASH_PAR}" ]; then
              |  IFS=${param.multiple_sep}
              |  set -f
              |  for val in $$${param.VIASH_PAR}; do
@@ -363,13 +372,16 @@ object BashWrapper {
              |  unset IFS
              |fi""".stripMargin
         } else {
-          s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
+          s"""
+             |if [ ! -z "$$${param.VIASH_PAR}" ]; then
              |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$${param.VIASH_PAR}'"
              |fi""".stripMargin
         }
     }
 
-    "VIASH_EXECUTABLE_ARGS=''\n" + inserts.mkString("\n")
+    BashWrapperMods(
+      postParse = "\nVIASH_EXECUTABLE_ARGS=''" + inserts.mkString
+    )
   }
 
 }

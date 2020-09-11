@@ -6,7 +6,7 @@ import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.platforms.requirements._
 import com.dataintuitive.viash.helpers.Bash
 import com.dataintuitive.viash.config.Version
-import com.dataintuitive.viash.wrapper.BashWrapper
+import com.dataintuitive.viash.wrapper.{BashWrapper, BashWrapperMods}
 
 case class DockerPlatform(
   id: String = "docker",
@@ -53,7 +53,7 @@ case class DockerPlatform(
     // add ---chown flag
     val dmChown = addDockerChown(functionality, dockerArgs, dmVol.extraParams, imageName, imageVersion)
 
-    val dmDockerfile = ConfigMods(
+    val dmDockerfile = BashWrapperMods(
       parsers = """
         |        ---dockerfile)
         |            ViashDockerfile
@@ -134,8 +134,7 @@ case class DockerPlatform(
         val buildArgs = dockerRequirements.map(_.build_args.map(" --build-arg " + _).mkString).mkString("")
 
         val vdf =
-          s"""# Print Dockerfile contents to stdout
-            |cat << 'VIASHDOCKER'
+          s"""cat << 'VIASHDOCKER'
             |$dockerFile
             |VIASHDOCKER""".stripMargin
 
@@ -181,13 +180,14 @@ case class DockerPlatform(
     (imageName, tag, setupCommands)
   }
 
-  def processDockerVolumes(functionality: Functionality): ConfigMods = {
-    val extraMountsVar = "VIASH_EXTRA_MOUNTS"
+  private val extraMountsVar = "VIASH_EXTRA_MOUNTS"
 
-    val args = functionality.arguments
+  def processDockerVolumes(functionality: Functionality): BashWrapperMods = {
+    val args = functionality.argumentsAndDummies
 
     val preParse =
-      s"""${Bash.ViashAbsolutePath}
+      s"""
+         |${Bash.ViashAbsolutePath}
          |${Bash.ViashAutodetectMount}
          |${Bash.ViashExtractFlags}
          |# initialise autodetect mount variable
@@ -195,7 +195,8 @@ case class DockerPlatform(
 
 
     val parsers =
-        s"""        ---v|---volume)
+        s"""
+           |        ---v|---volume)
            |            ${Bash.save(extraMountsVar, Seq("-v \"$2\""))}
            |            shift 2
            |            ;;
@@ -240,7 +241,7 @@ case class DockerPlatform(
          |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$${BashWrapper.var_resources_dir}")"
          |${BashWrapper.var_resources_dir}=$$(ViashAutodetectMount "$$${BashWrapper.var_resources_dir}")""".stripMargin
 
-    ConfigMods(
+    BashWrapperMods(
       preParse = preParse,
       parsers = parsers,
       postParse = postParse,
@@ -248,7 +249,7 @@ case class DockerPlatform(
     )
   }
 
-  def addDockerDebug(debugCommand: String): ConfigMods = {
+  def addDockerDebug(debugCommand: String): BashWrapperMods = {
     val parsers = "\n" + Bash.argStore("---debug", "VIASH_DEBUG", "yes", 1, None)
     val postParse =
       s"""
@@ -261,53 +262,62 @@ case class DockerPlatform(
         |fi"""
 
 
-    ConfigMods(
+    BashWrapperMods(
       parsers = parsers,
       postParse = postParse
     )
   }
 
-  def addDockerChown(functionality: Functionality, dockerArgs: String, volExtraParams: String, imageName: String, imageVersion: String): ConfigMods = {
-    val args = functionality.arguments
+  def addDockerChown(functionality: Functionality, dockerArgs: String, volExtraParams: String, imageName: String, imageVersion: String): BashWrapperMods = {
+    val args = functionality.argumentsAndDummies
 
     def chownCommand(value: String): String = {
       s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $imageName:$imageVersion "$$(id -u):$$(id -g)" -R $value"""
     }
 
-    val postRun =
+    val postParse =
       if (chown) {
-      "\n\n# change file ownership" +
-      args
-        .filter(a => a.isInstanceOf[FileObject] && a.direction == Output)
-        .map(arg => {
+        // chown output files/folders
+        val chownPars = args
+          .filter(a => a.isInstanceOf[FileObject] && a.direction == Output)
+          .map(arg => {
 
-          // resolve arguments with multiplicity different from
-          // singular args
-          if (arg.multiple) {
-            val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
-            s"""
-              |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-              |  IFS="${arg.multiple_sep}"
-              |  for var in $$${arg.VIASH_PAR}; do
-              |    ${chownCommand("\"$var\"")}
-              |  done
-              |  unset IFS
-              |  ${arg.VIASH_PAR}="$$$viash_temp"
-              |fi""".stripMargin
-          } else {
-            s"""
-              |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-              |  ${chownCommand("\"$" + arg.VIASH_PAR + "\"")}
-              |fi""".stripMargin
-          }
-        })
-        .mkString("")
+            // resolve arguments with multiplicity different from
+            // singular args
+            if (arg.multiple) {
+              val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
+              s"""
+                 |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
+                 |  IFS="${arg.multiple_sep}"
+                 |  for var in $$${arg.VIASH_PAR}; do
+                 |    ${chownCommand("\"$var\"")}
+                 |  done
+                 |  unset IFS
+                 |  ${arg.VIASH_PAR}="$$$viash_temp"
+                 |fi""".stripMargin
+            } else {
+              s"""
+                 |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
+                 |  ${chownCommand("\"$" + arg.VIASH_PAR + "\"")}
+                 |fi""".stripMargin
+            }
+          })
+          .mkString("")
+
+        s"""
+           |
+           |# change file ownership
+           |function viash_perform_chown {
+           |  ${chownPars.split("\n").mkString("\n  ")}
+           |}
+           |trap viash_perform_chown EXIT
+           |""".stripMargin
       } else {
         ""
       }
 
-    ConfigMods(
-      postRun = postRun
+    BashWrapperMods(
+      postParse = postParse
     )
   }
 }
