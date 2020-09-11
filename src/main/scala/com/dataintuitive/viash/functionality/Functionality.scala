@@ -2,7 +2,6 @@ package com.dataintuitive.viash.functionality
 
 import io.circe.yaml.parser
 import java.nio.file.Paths
-import java.io.File
 import dataobjects._
 import resources._
 import com.dataintuitive.viash.helpers.IO
@@ -19,7 +18,6 @@ case class Functionality(
   arguments: List[DataObject[_]] = Nil,
   tests: Option[List[Resource]] = None,
   set_wd_to_resources_dir: Option[Boolean] = None,
-  private var _rootDir: Option[File] = None // :/
 ) {
 
   // check whether there are not multiple positional arguments with multiplicity >1
