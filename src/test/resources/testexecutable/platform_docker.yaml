@@ -1,10 +1,6 @@
 type: docker
 image: "minio/mc"
-target_image: "viash_test/executable"
+target_image: "viash_test_executable"
 apk: 
   packages: 
   - bash
-volumes:
-- name: data
-  mount: /data
-workdir: /app

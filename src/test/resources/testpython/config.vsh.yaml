@@ -59,7 +59,7 @@ platforms:
         - "anndata<0.7"
   - type: docker
     image: python
-    target_image: "viash_test/python"
+    target_image: "viash_test_python"
     setup:
       - type: docker
         build_args:

@@ -1,15 +1,15 @@
-package com.dataintuitive.viash.platforms
+package com.dataintuitive.viash.wrapper
 
 import com.dataintuitive.viash.functionality.dataobjects.DataObject
 
-case class ConfigMods(
-  preParse: String = "",
-  parsers: String = "",
-  postParse: String = "",
-  postRun: String = "",
-  inputs: List[DataObject[_]] = Nil,
-  extraParams: String = ""
-) {
+case class WrapperMods(
+                       preParse: String = "",
+                       parsers: String = "",
+                       postParse: String = "",
+                       postRun: String = "",
+                       inputs: List[DataObject[_]] = Nil,
+                       extraParams: String = ""
+                     ) {
   def `++`(dm: ConfigMods): ConfigMods = {
     ConfigMods(
       preParse = preParse + dm.preParse,
