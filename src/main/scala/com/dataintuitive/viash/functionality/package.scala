@@ -3,11 +3,10 @@ package com.dataintuitive.viash
 import io.circe.{ Decoder, Encoder, Json }
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 
-import functionality.dataobjects._
-import functionality.resources._
-
-
 package object functionality {
+  // import implicits
+  import functionality.dataobjects._
+  import functionality.resources._
   import com.dataintuitive.viash.helpers.Circe._
 
   // encoder and decoder for functiontype

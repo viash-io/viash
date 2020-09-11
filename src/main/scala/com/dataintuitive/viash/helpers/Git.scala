@@ -3,15 +3,13 @@ package com.dataintuitive.viash.helpers
 import java.io.File
 import scala.util.Try
 
-
+case class GitInfo(
+  localRepo: Option[String],
+  remoteRepo: Option[String],
+  commit: Option[String]
+)
 
 object Git {
-  case class GitInfo(
-    localRepo: Option[String],
-    remoteRepo: Option[String],
-    commit: Option[String]
-  )
-
   def isGitRepo(path: File): Boolean = {
     Try(
       Exec.run2(
