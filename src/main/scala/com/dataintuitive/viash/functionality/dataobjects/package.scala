@@ -1,10 +1,11 @@
 package com.dataintuitive.viash.functionality
 
-import io.circe.{ Decoder, Encoder, Json }
+import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import cats.syntax.functor._ // for .widen
 
 package object dataobjects {
+
   import com.dataintuitive.viash.helpers.Circe._
 
   // encoder and decoder for java.io.File
@@ -20,13 +21,14 @@ package object dataobjects {
     dir => Json.fromString(dir.toString)
   }
   implicit val decodeDirection: Decoder[Direction] = Decoder.instance {
-    cursor => cursor.value.as[String].map(s =>
-      s.toLowerCase() match {
-        case "input" => Input
-        case "output" => Output
-        case "log" => Log
-      }
-    )
+    cursor =>
+      cursor.value.as[String].map(s =>
+        s.toLowerCase() match {
+          case "input" => Input
+          case "output" => Output
+          case "log" => Log
+        }
+      )
   }
 
   // encoders and decoders for Object

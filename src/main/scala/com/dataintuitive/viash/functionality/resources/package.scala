@@ -1,10 +1,11 @@
 package com.dataintuitive.viash.functionality
 
-import io.circe.{ Decoder, Encoder, Json }
+import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import cats.syntax.functor._ // for .widen
 
 package object resources {
+
   import com.dataintuitive.viash.helpers.Circe._
 
   // encoders and decoders for Object
@@ -43,9 +44,9 @@ package object resources {
           case Right("executable") => decodeExecutable.widen
           case Right("file") => decodePlainFile.widen
           case Right(typ) => throw new RuntimeException(
-              "File type " + typ + " is not recognised. Should be one of " +
+            "File type " + typ + " is not recognised. Should be one of " +
               "'bash_script', 'python_script', 'r_script', 'executable', or 'file'."
-            )
+          )
           case Left(_) => decodePlainFile.widen // default is a simple file
         }
 

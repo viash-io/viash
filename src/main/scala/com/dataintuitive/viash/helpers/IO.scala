@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets
 
 import com.dataintuitive.viash.functionality.resources.Resource
 
-object IOHelper {
+object IO {
   def makeTemp(name: String): File = {
     val tempdir = Paths.get(scala.util.Properties.envOrElse("VIASH_TEMP", "/tmp"))
     if (!tempdir.toFile.exists()) Files.createDirectories(tempdir)
@@ -26,6 +26,7 @@ object IOHelper {
   }
 
   private val uriRegex = "^[a-zA-Z0-9]*:".r
+
   def uri(path: String): URI = {
     val newURI = if (uriRegex.findFirstIn(path).isDefined) path else "file://" + new File(path).getAbsolutePath
     new URI(newURI)
@@ -56,7 +57,7 @@ object IOHelper {
       Files.copy(Paths.get(uri), path)
     } else if (uri.getScheme == "http" || uri.getScheme == "https") {
       val url = new URL(uri.toString)
-      url #> file!!
+      url #> file !!
     } else {
       throw new RuntimeException("Unsupported scheme: " + uri.getScheme)
     }
@@ -82,7 +83,7 @@ object IOHelper {
     overwrite: Boolean = true
   ) {
     // copy all files
-    resources.foreach{ resource =>
+    resources.foreach { resource =>
       val dest = Paths.get(outputDir.getAbsolutePath, resource.filename)
       resource.write(dest, overwrite)
     }

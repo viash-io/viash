@@ -3,11 +3,15 @@ package com.dataintuitive.viash
 import config._
 import functionality.resources.PlainFile
 import io.circe.yaml.Printer
-import helpers.IOHelper
+import helpers.IO
 import java.nio.file.Paths
 
+import scala.sys.process.{Process, ProcessLogger}
+
 object ViashBuild {
-  def apply(config: Config, output: String, printMeta: Boolean = false, namespace: Option[String] = None) {
+  def apply(config: Config, output: String, printMeta: Boolean = false,
+    namespace: Option[String] = None, setup: Boolean = false
+  ) {
     val fun = config.functionality
 
     // create dir
@@ -21,10 +25,13 @@ object ViashBuild {
       mappingStyle = Printer.FlowStyle.Block,
       splitLines = true
     )
+
+    val exec_path = fun.mainScript.map(scr => Paths.get(output, scr.name.get).toString)
+
     val strippedConfig = config.copy(
       info = config.info.map(_.copy(
         output_path = Some(output),
-        executable_path = fun.mainScript.map(scr => Paths.get(output, scr.name.get).toString)
+        executable_path = exec_path
       )),
       platforms = Nil // drop other platforms
     ).copy(
@@ -36,7 +43,12 @@ object ViashBuild {
       text = Some(printer.pretty(encodeConfig(strippedConfig)))
     )
 
-    IOHelper.writeResources(configYaml :: fun.resources.getOrElse(Nil), dir)
+    IO.writeResources(configYaml :: fun.resources.getOrElse(Nil), dir)
+
+    if (setup && exec_path.isDefined) {
+      val cmd = Array(exec_path.get, "---setup")
+      val code = Process(cmd).!(ProcessLogger(println, println))
+    }
 
     if (printMeta) {
       println(config.info.get.consoleString)

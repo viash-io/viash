@@ -1,11 +1,6 @@
 package com.dataintuitive.viash
 
-import helpers.IOHelper
 import config.Config
-
-import java.nio.file.Paths
-
-import sys.process._
 
 object Main {
   private val pkg = getClass.getPackage
@@ -18,63 +13,15 @@ object Main {
     val conf = new CLIConf(viashArgs)
 
     conf.subcommands match {
-      case List(conf.export) =>
-        println("`viash export` has been deprecated. Use `viash build` instead.")
-        System.exit(1)
       case List(conf.run) =>
-        // create new functionality with argparsed executable
-        val config = readAll(conf.run)
-        val fun = config.functionality
-
-        // make temporary directory
-        val dir = IOHelper.makeTemp("viash_" + fun.name)
-
-        try {
-          // write executable and resources to temporary directory
-          IOHelper.writeResources(fun.resources.getOrElse(Nil), dir)
-
-          // determine command
-          val cmd =
-            Array(Paths.get(dir.toString, fun.name).toString) ++
-              runArgs.dropWhile(_ == "--")
-
-          // execute command, print everything to console
-          val code = Process(cmd).!(ProcessLogger(println, println))
-          System.exit(code)
-        } finally {
-          // always remove tempdir afterwards
-          if (!conf.run.keep()) {
-            IOHelper.deleteRecursively(dir)
-          } else {
-            println(s"Files and logs are stored at '$dir'")
-          }
-        }
+        val config = readConfigFromArgs(conf.run)
+        ViashRun(config, args = runArgs.dropWhile(_ == "--"), keepFiles = conf.run.keep())
       case List(conf.build) =>
-        val outputPath = conf.build.output()
-        val config = readAll(conf.build)
-        ViashBuild(config, outputPath, conf.build.meta())
+        val config = readConfigFromArgs(conf.build)
+        ViashBuild(config, output = conf.build.output(), printMeta = conf.build.meta(), setup = conf.build.setup())
       case List(conf.test) =>
-        val config = readAll(conf.test, modifyFun = false)
-        val fun = config.functionality
-        val plat = config.platform.get
-
-        val verbose = conf.test.verbose()
-
-        // create temporary directory
-        val dir = IOHelper.makeTemp("viash_test_" + fun.name)
-
-        val results = ViashTester.runTests(fun, plat, dir, verbose = verbose)
-
-        val code = ViashTester.reportTests(results, verbose = verbose)
-
-        if (!conf.test.keep() && !results.exists(_.exitValue > 0)) {
-          println("Cleaning up temporary files")
-          IOHelper.deleteRecursively(dir)
-        } else {
-          println(s"Test files and logs are stored at '$dir'")
-        }
-
-        System.exit(code)
+        val config = readConfigFromArgs(conf.test, modifyFun = false)
+        ViashTest(config, verbose = conf.test.verbose(), keepFiles = conf.test.keep())
       case List(conf.namespace, conf.namespace.build) =>
         ViashNamespace.build(
           source = conf.namespace.build.src(),
@@ -88,7 +35,7 @@ object Main {
     }
   }
 
-  def readAll(
+  def readConfigFromArgs(
     subcommand: ViashCommand,
     modifyFun: Boolean = true
   ): Config = {

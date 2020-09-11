@@ -7,7 +7,7 @@ import com.dataintuitive.viash.platforms.requirements._
 import com.dataintuitive.viash.config.Version
 
 /**
-/ * Platform class for generating NextFlow (DSL2) modules.
+ * / * Platform class for generating NextFlow (DSL2) modules.
  */
 case class NextFlowPlatform(
   id: String = "nextflow",
@@ -45,21 +45,21 @@ case class NextFlowPlatform(
     val allPars = functionality.arguments
 
     def inputFileExtO = allPars
-            .filter(_.`type` == "file")
-            .find(_.direction == Input)
-            .flatMap(_.default.map(_.toString.split('.').last))
+      .filter(_.`type` == "file")
+      .find(_.direction == Input)
+      .flatMap(_.default.map(_.toString.split('.').last))
 
     def outputFileExtO = allPars
-            .filter(_.`type` == "file")
-            .find(_.direction == Output)
-            .flatMap(_.default.map(_.toString.split('.').last))
+      .filter(_.`type` == "file")
+      .find(_.direction == Output)
+      .flatMap(_.default.map(_.toString.split('.').last))
 
     // All values for arguments/parameters are defined in the root of
     // the params structure. the function name is prefixed as a namespace
     // identifier. A "__" is used to separate namespace and arg/option.
 
     val namespacedParameters =
-      functionality.arguments.map{ dataObject =>
+      functionality.arguments.map { dataObject =>
         namespacedValueTuple(
           dataObject.plainName.replace("-", "_"),
           dataObject.default.map(_.toString).getOrElse("value_not_found")
@@ -92,21 +92,21 @@ case class NextFlowPlatform(
       "process.container" → "dataintuitive/portash",
       "params" → {
         namespacedParameters :::
-        List(
-          "id" → "",
-          "dockerPrefix" -> "",
-          "input" → "",
-          "output" → "",
-          functionality.name → {
-            List(
-              "name" → functionality.name,
-              "container" → (image + ":" + version.map(_.toString).getOrElse("latest")),
-              "command" → executionCode
-            ) :::
-            extensionsAsTuple :::
-            argumentsAsTuple
-          }
-        )
+          List(
+            "id" → "",
+            "dockerPrefix" -> "",
+            "input" → "",
+            "output" → "",
+            functionality.name → {
+              List(
+                "name" → functionality.name,
+                "container" → (image + ":" + version.map(_.toString).getOrElse("latest")),
+                "command" → executionCode
+              ) :::
+                extensionsAsTuple :::
+                argumentsAsTuple
+            }
+          )
       }
     )
 
@@ -115,34 +115,36 @@ case class NextFlowPlatform(
       text = Some(listMapToConfig(asNestedTuples))
     )
 
-    val setup_main_header = s"""nextflow.preview.dsl=2
-        |import java.nio.file.Paths
-        |if (!params.containsKey("input") || params.input == "") {
-        |    exit 1, "ERROR: Please provide a --input parameter containing an input file/dir or a wildcard expression"
-        |}
-        |if (!params.containsKey("output") || params.output == "" ) {
-        |    exit 1, "ERROR: Please provide a --output parameter for storing the output"
-        |}
-        |""".stripMargin
+    val setup_main_header =
+      s"""nextflow.preview.dsl=2
+         |import java.nio.file.Paths
+         |if (!params.containsKey("input") || params.input == "") {
+         |    exit 1, "ERROR: Please provide a --input parameter containing an input file/dir or a wildcard expression"
+         |}
+         |if (!params.containsKey("output") || params.output == "" ) {
+         |    exit 1, "ERROR: Please provide a --output parameter for storing the output"
+         |}
+         |""".stripMargin
 
-    val setup_main_utils = s"""
-        |def renderCLI(command, arguments) {
-        |
-        |    def argumentsList = arguments.collect{ it ->
-        |        (it.otype == "")
-        |            ? "\\'" + it.value + "\\'"
-        |            : (it.type == "boolean_true")
-        |                ? it.otype + it.name
-        |                : (it.value == "")
-        |                    ? ""
-        |                    : it.otype + it.name + " \\'" + it.value + "\\'"
-        |    }
-        |
-        |    def command_line = command + argumentsList
-        |
-        |    return command_line.join(" ")
-        |}
-        |""".stripMargin
+    val setup_main_utils =
+      s"""
+         |def renderCLI(command, arguments) {
+         |
+         |    def argumentsList = arguments.collect{ it ->
+         |        (it.otype == "")
+         |            ? "\\'" + it.value + "\\'"
+         |            : (it.type == "boolean_true")
+         |                ? it.otype + it.name
+         |                : (it.value == "")
+         |                    ? ""
+         |                    : it.otype + it.name + " \\'" + it.value + "\\'"
+         |    }
+         |
+         |    def command_line = command + argumentsList
+         |
+         |    return command_line.join(" ")
+         |}
+         |""".stripMargin
 
     /**
      * What should the output filename be, in terms of the input?
@@ -153,49 +155,50 @@ case class NextFlowPlatform(
     val setup_main_outFromIn = functionality.function_type match {
       // in and out file format are the same, but also the filenames!
       case Some(AsIs) => """
-          |def outFromIn(inputstr) {
-          |
-          |    return "${inputstr}"
-          |}
-          |""".stripMargin.replace("__e__", inputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
+                           |def outFromIn(inputstr) {
+                           |
+                           |    return "${inputstr}"
+                           |}
+                           |""".stripMargin.replace("__e__", inputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
       // Out format is different from in format
       case Some(Convert) | Some(Join) | None => """
-          |// files is either String, List[String] or HashMap[String,String]
-          |def outFromIn(files) {
-          |    if (files in List || files in HashMap) {
-          |        // We're in join mode, files is List[String]
-          |        return "__f__" + "." + __e__
-          |    } else {
-          |        // files filename is just a String
-          |        def splitString = files.split(/\./)
-          |        def prefix = splitString.head()
-          |        def extension = splitString.last()
-          |        return prefix + "." + "__f__" + "." + __e__
-          |    }
-          |}
-          |""".stripMargin
-              .replace("__e__", outputFileExtO.map(ext => s""""$ext"""").getOrElse("extension"))
-              .replace("__f__", fname)
+                                                  |// files is either String, List[String] or HashMap[String,String]
+                                                  |def outFromIn(files) {
+                                                  |    if (files in List || files in HashMap) {
+                                                  |        // We're in join mode, files is List[String]
+                                                  |        return "__f__" + "." + __e__
+                                                  |    } else {
+                                                  |        // files filename is just a String
+                                                  |        def splitString = files.split(/\./)
+                                                  |        def prefix = splitString.head()
+                                                  |        def extension = splitString.last()
+                                                  |        return prefix + "." + "__f__" + "." + __e__
+                                                  |    }
+                                                  |}
+                                                  |""".stripMargin
+        .replace("__e__", outputFileExtO.map(ext => s""""$ext"""").getOrElse("extension"))
+        .replace("__f__", fname)
       // Out format is different from in format
       case Some(ToDir) => """
-          |def outFromIn(inputstr) {
-          |
-          |    return "__f__"
-          |
-          |}
-          |""".stripMargin.replace("__f__", fname)
+                            |def outFromIn(inputstr) {
+                            |
+                            |    return "__f__"
+                            |
+                            |}
+                            |""".stripMargin.replace("__f__", fname)
       case _ => """
-          |def outFromIn(inputStr) {
-          |
-          |    println(">>> Having a hard time generating an output file name.")
-          |    println(">>> Is the function_type attribute filled out?")
-          |
-          |    return "output"
-          |}
-          |""".stripMargin
+                  |def outFromIn(inputStr) {
+                  |
+                  |    println(">>> Having a hard time generating an output file name.")
+                  |    println(">>> Is the function_type attribute filled out?")
+                  |
+                  |    return "output"
+                  |}
+                  |""".stripMargin
     }
 
-    val setup_main_overrideInput = """
+    val setup_main_overrideInput =
+      """
         |// In: Hashmap key -> DataObjects
         |// Out: Arrays of DataObjects
         |def overrideInput(params, str) {
@@ -225,7 +228,8 @@ case class NextFlowPlatform(
         |}
         |""".stripMargin
 
-    val setup_main_overrideOutput = """
+    val setup_main_overrideOutput =
+      """
         |def overrideOutput(params, str) {
         |
         |    def update = [ "value" : str ]
@@ -282,125 +286,126 @@ case class NextFlowPlatform(
       }
 
       s"""
-        |
-        |process executor {
-        |  $labelString
-        |  tag "$${id}"
-        |  echo { (params.debug == true) ? true : false }
-        |  cache 'deep'
-        |  stageInMode "$stageInModeStr"
-        |  container "$${params.dockerPrefix}$${container}"
-        |  $publishDirStr
-        |  input:
-        |    tuple val(id), path(input), val(output), val(container), val(cli)
-        |  output:
-        |    tuple val("$${id}"), path("$outputStr")
-        |  script:
-        |    \"\"\"
-        |    # Running the pre-hook when necessary
-        |    $preHook
-        |    # Adding NXF's `$$moduleDir` to the path in order to resolve our own wrappers
-        |    export PATH="$${moduleDir}:\\$$PATH"
-        |    # Echo what will be run, handy when looking at the .command.log file
-        |    echo Running: $$cli
-        |    # Actually run the command
-        |    $$cli
-        |    \"\"\"
-        |
-        |}
-        |""".stripMargin
+         |
+         |process executor {
+         |  $labelString
+         |  tag "$${id}"
+         |  echo { (params.debug == true) ? true : false }
+         |  cache 'deep'
+         |  stageInMode "$stageInModeStr"
+         |  container "$${params.dockerPrefix}$${container}"
+         |  $publishDirStr
+         |  input:
+         |    tuple val(id), path(input), val(output), val(container), val(cli)
+         |  output:
+         |    tuple val("$${id}"), path("$outputStr")
+         |  script:
+         |    \"\"\"
+         |    # Running the pre-hook when necessary
+         |    $preHook
+         |    # Adding NXF's `$$moduleDir` to the path in order to resolve our own wrappers
+         |    export PATH="$${moduleDir}:\\$$PATH"
+         |    # Echo what will be run, handy when looking at the .command.log file
+         |    echo Running: $$cli
+         |    # Actually run the command
+         |    $$cli
+         |    \"\"\"
+         |
+         |}
+         |""".stripMargin
     }
 
-    val setup_main_workflow = s"""
-        |workflow $fname {
-        |
-        |    take:
-        |    id_input_params_
-        |
-        |    main:
-        |
-        |    def key = "$fname"
-        |
-        |    def id_input_output_function_cli_ =
-        |        id_input_params_.map{ id, input, _params ->
-        |            // TODO: make sure input is List[Path], HashMap[String,Path] or Path, otherwise convert
-        |            // NXF knows how to deal with an List[Path], not with HashMap !
-        |            def checkedInput =
-        |                (input in HashMap)
-        |                    ? input.collect{ k, v -> v }.flatten()
-        |                    : input
-        |            // filename is either String, List[String] or HashMap[String, String]
-        |            def filename =
-        |                (input in List || input in HashMap)
-        |                    ? (input in List)
-        |                        ? input.collect{ it.name }
-        |                        : input.collectEntries{ k, v -> [ k, (v in List) ? v.collect{it.name} : v.name ] }
-        |                    : input.name
-        |            def outputFilename = outFromIn(filename)
-        |            def defaultParams = params[key] ? params[key] : [:]
-        |            def overrideParams = _params[key] ? _params[key] : [:]
-        |            def updtParams = defaultParams + overrideParams
-        |            // now, switch to arrays instead of hashes...
-        |            def updtParams1 = overrideInput(updtParams, filename)
-        |            def updtParams2 = overrideOutput(updtParams1, outputFilename)
-        |            new Tuple5(
-        |                id,
-        |                checkedInput,
-        |                outputFilename,
-        |                updtParams2.container,
-        |                renderCLI([updtParams2.command], updtParams2.arguments)
-        |            )
-        |        }
-        |    result_ = executor(id_input_output_function_cli_) \\
-        |        | join(id_input_params_) \\
-        |        | map{ id, output, input, original_params ->
-        |            new Tuple3(id, output, original_params)
-        |        }
-        |
-        |    emit:
-        |    result_
-        |
-        |}
-        |""".stripMargin
+    val setup_main_workflow =
+      s"""
+         |workflow $fname {
+         |
+         |    take:
+         |    id_input_params_
+         |
+         |    main:
+         |
+         |    def key = "$fname"
+         |
+         |    def id_input_output_function_cli_ =
+         |        id_input_params_.map{ id, input, _params ->
+         |            // TODO: make sure input is List[Path], HashMap[String,Path] or Path, otherwise convert
+         |            // NXF knows how to deal with an List[Path], not with HashMap !
+         |            def checkedInput =
+         |                (input in HashMap)
+         |                    ? input.collect{ k, v -> v }.flatten()
+         |                    : input
+         |            // filename is either String, List[String] or HashMap[String, String]
+         |            def filename =
+         |                (input in List || input in HashMap)
+         |                    ? (input in List)
+         |                        ? input.collect{ it.name }
+         |                        : input.collectEntries{ k, v -> [ k, (v in List) ? v.collect{it.name} : v.name ] }
+         |                    : input.name
+         |            def outputFilename = outFromIn(filename)
+         |            def defaultParams = params[key] ? params[key] : [:]
+         |            def overrideParams = _params[key] ? _params[key] : [:]
+         |            def updtParams = defaultParams + overrideParams
+         |            // now, switch to arrays instead of hashes...
+         |            def updtParams1 = overrideInput(updtParams, filename)
+         |            def updtParams2 = overrideOutput(updtParams1, outputFilename)
+         |            new Tuple5(
+         |                id,
+         |                checkedInput,
+         |                outputFilename,
+         |                updtParams2.container,
+         |                renderCLI([updtParams2.command], updtParams2.arguments)
+         |            )
+         |        }
+         |    result_ = executor(id_input_output_function_cli_) \\
+         |        | join(id_input_params_) \\
+         |        | map{ id, output, input, original_params ->
+         |            new Tuple3(id, output, original_params)
+         |        }
+         |
+         |    emit:
+         |    result_
+         |
+         |}
+         |""".stripMargin
 
     val setup_main_entrypoint = functionality.function_type match {
       case Some(Join) => s"""
-        |workflow {
-        |
-        |   def id = params.id
-        |
-        |   def ch_ = (params.input.contains("*"))
-        |           ? Channel.fromPath(params.input)
-        |                .collect()
-        |                .map{ s -> new Tuple3(id, s, params)}
-        |           : Channel.from(Paths.get(params.input))
-        |                .map{ s -> new Tuple3(id, s, params)}
-        |
-        |   $fname(ch_)
-        |}
-        |""".stripMargin
+                            |workflow {
+                            |
+                            |   def id = params.id
+                            |
+                            |   def ch_ = (params.input.contains("*"))
+                            |           ? Channel.fromPath(params.input)
+                            |                .collect()
+                            |                .map{ s -> new Tuple3(id, s, params)}
+                            |           : Channel.from(Paths.get(params.input))
+                            |                .map{ s -> new Tuple3(id, s, params)}
+                            |
+                            |   $fname(ch_)
+                            |}
+                            |""".stripMargin
       case _ => s"""
-        |workflow {
-        |
-        |   def id = params.id
-        |   def inputPath = Paths.get(params.input)
-        |   def ch_ = Channel.from(inputPath).map{ s -> new Tuple3(id, s, params)}
-        |
-        |   $fname(ch_)
-        |}
-        |""".stripMargin
+                   |workflow {
+                   |
+                   |   def id = params.id
+                   |   def inputPath = Paths.get(params.input)
+                   |   def ch_ = Channel.from(inputPath).map{ s -> new Tuple3(id, s, params)}
+                   |
+                   |   $fname(ch_)
+                   |}
+                   |""".stripMargin
     }
 
     val setup_main = PlainFile(
       name = Some("main.nf"),
       text = Some(setup_main_header +
-                  setup_main_utils +
-                  setup_main_outFromIn +
-                  setup_main_overrideInput +
-                  setup_main_overrideOutput +
-                  setup_main_process +
-                  setup_main_workflow +
-                  setup_main_entrypoint)
+        setup_main_utils +
+        setup_main_outFromIn +
+        setup_main_overrideInput +
+        setup_main_overrideOutput +
+        setup_main_process +
+        setup_main_workflow +
+        setup_main_entrypoint)
     )
 
     val additionalResources = mainResource match {
@@ -430,8 +435,8 @@ object NextFlowUtils {
       }.mkString("\n")
 
       s"""$indent$k {
-        |$content
-        |$indent}""".stripMargin
+         |$content
+         |$indent}""".stripMargin
     case (k: String, v: String) => s"""$indent$k = ${quote(v)}"""
     case (k: String, v: Boolean) => s"""$indent$k = ${v.toString}"""
     case (k: String, v: Direction) => s"""$indent$k = ${quote(v.toString)}"""
@@ -460,16 +465,17 @@ object NextFlowUtils {
           "name" → dataObject.plainName,
           "otype" → dataObject.otype
         ) :::
-        dataObject.description.map("description" → _).toList :::
-        dataObject.default.map(x => "value" → valueOrPointer(x.toString)).toList :::
-        List(
-          "required" → dataObject.required,
-          "type" → dataObject.`type`,
-          "direction" → dataObject.direction,
-          "multiple" → dataObject.multiple,
-          "multiple_sep" -> dataObject.multiple_sep
-        )
+          dataObject.description.map("description" → _).toList :::
+          dataObject.default.map(x => "value" → valueOrPointer(x.toString)).toList :::
+          List(
+            "required" → dataObject.required,
+            "type" → dataObject.`type`,
+            "direction" → dataObject.direction,
+            "multiple" → dataObject.multiple,
+            "multiple_sep" -> dataObject.multiple_sep
+          )
       }
     }
   }
+
 }

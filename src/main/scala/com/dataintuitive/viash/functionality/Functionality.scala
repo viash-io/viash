@@ -2,10 +2,9 @@ package com.dataintuitive.viash.functionality
 
 import io.circe.yaml.parser
 import java.nio.file.Paths
-import java.io.File
 import dataobjects._
 import resources._
-import com.dataintuitive.viash.helpers.IOHelper
+import com.dataintuitive.viash.helpers.IO
 import java.net.URI
 import com.dataintuitive.viash.config.Version
 
@@ -17,15 +16,17 @@ case class Functionality(
   description: Option[String] = None,
   function_type: Option[FunctionType] = None,
   arguments: List[DataObject[_]] = Nil,
+
+  // dummy arguments are used for handling extra directory mounts in docker
+  dummy_arguments: Option[List[DataObject[_]]] = None,
   tests: Option[List[Resource]] = None,
   set_wd_to_resources_dir: Option[Boolean] = None,
-  private var _rootDir: Option[File] = None // :/
 ) {
 
   // check whether there are not multiple positional arguments with multiplicity >1
   // and if there is one, whether its position is last
   {
-    val positionals = arguments.filter(_.otype == "")
+    val positionals = arguments.filter(a => a.otype == "")
     val multiix = positionals.indexWhere(_.multiple)
 
     require(
@@ -41,11 +42,13 @@ case class Functionality(
     }
 
   def mainCode: Option[String] = mainScript.flatMap(_.read)
+
+  def argumentsAndDummies: List[DataObject[_]] = arguments ::: dummy_arguments.getOrElse(Nil)
 }
 
 object Functionality {
   def parse(uri: URI): Functionality = {
-    val str = IOHelper.read(uri)
+    val str = IO.read(uri)
 
     val fun = parser.parse(str)
       .fold(throw _, _.as[Functionality])
@@ -62,30 +65,34 @@ object Functionality {
 
   def makeResourcePathAbsolute(res: Resource, parent: URI): Resource = {
     if (res.isInstanceOf[Executable] || res.path.isEmpty || res.path.get.contains("://")) {
+      res
+    } else {
+      val p = Paths.get(res.path.get).toFile
+      if (p.isAbsolute) {
         res
       } else {
-        val p = Paths.get(res.path.get).toFile
-        if (p.isAbsolute) {
-          res
-        } else {
-          val newPath = Some(parent.resolve(res.path.get).toString)
-          res match {
-            case s: BashScript => s.copy(path = newPath)
-            case s: PythonScript => s.copy(path = newPath)
-            case s: RScript => s.copy(path = newPath)
-            case f: PlainFile => f.copy(path = newPath)
-          }
+        val newPath = Some(parent.resolve(res.path.get).toString)
+        res match {
+          case s: BashScript => s.copy(path = newPath)
+          case s: PythonScript => s.copy(path = newPath)
+          case s: RScript => s.copy(path = newPath)
+          case f: PlainFile => f.copy(path = newPath)
         }
       }
+    }
   }
 
   def read(path: String): Functionality = {
-    parse(IOHelper.uri(path))
+    parse(IO.uri(path))
   }
 }
 
 sealed trait FunctionType
+
 case object AsIs extends FunctionType
+
 case object Convert extends FunctionType
+
 case object ToDir extends FunctionType
+
 case object Join extends FunctionType
