@@ -1,7 +1,7 @@
 package com.dataintuitive.viash.platforms
 
 import com.dataintuitive.viash.functionality.Functionality
-import com.dataintuitive.viash.helpers.IOHelper
+import com.dataintuitive.viash.helpers.IO
 import io.circe.yaml.parser
 import java.net.URI
 import requirements._
@@ -18,13 +18,13 @@ trait Platform {
 
 object Platform {
   def parse(uri: URI): Platform = {
-    val str = IOHelper.read(uri)
+    val str = IO.read(uri)
     parser.parse(str)
       .fold(throw _, _.as[Platform])
       .fold(throw _, identity)
   }
 
   def read(path: String): Platform = {
-    parse(IOHelper.uri(path))
+    parse(IO.uri(path))
   }
 }

@@ -2,9 +2,9 @@ package com.dataintuitive.viash.platforms
 
 import com.dataintuitive.viash.functionality.Functionality
 import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.helpers.BashWrapper
 import com.dataintuitive.viash.platforms.requirements._
 import com.dataintuitive.viash.config.Version
+import com.dataintuitive.viash.wrapper.BashWrapper
 
 case class NativePlatform(
   id: String = "native",

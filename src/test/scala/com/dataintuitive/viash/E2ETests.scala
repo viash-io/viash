@@ -40,7 +40,7 @@ class E2ETests extends FunSuite {
 
     if (config.isDefined) {
       // run tests
-      val dir = IOHelper.makeTemp("viash_test_" + config.get.functionality.name)
+      val dir = IO.makeTemp("viash_test_" + config.get.functionality.name)
 
       val tags: List[Tag] = platName match {
         case "docker" => List(DockerTest)
@@ -50,9 +50,9 @@ class E2ETests extends FunSuite {
 
       test(s"Testing $testName platform $platName", tags: _*) {
         val results = try {
-          ViashTester.runTests(config.get.functionality, config.get.platform.get, dir)
+          ViashTest.runTests(config.get.functionality, config.get.platform.get, dir)
         } finally {
-          IOHelper.deleteRecursively(dir)
+          IO.deleteRecursively(dir)
         }
 
         for (res <- results) {

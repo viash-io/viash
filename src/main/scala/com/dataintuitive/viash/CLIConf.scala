@@ -89,21 +89,10 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       default = Some("output/"),
       required = true
     )
-  }
-
-  val export = new Subcommand("export") with ViashCommand {
-    banner(s"""`viash export` has been deprecated. Use `viash build` instead.""".stripMargin)
-
-    val meta: ScallopOption[Boolean] = opt[Boolean](
-      name = "meta",
-      short = 'm',
+    val setup = opt[Boolean](
+      name = "setup",
       default = Some(false),
-      descr = "Deprecated."
-    )
-    val output: ScallopOption[String] = opt[String](
-      descr = "Deprecated.",
-      default = Some("output/"),
-      required = true
+      descr = "Whether or not to run setup after build."
     )
   }
 
@@ -160,15 +149,20 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
       val platform = opt[String](
         short = 'p',
-        default = None,
         descr = "Path to the platform file. If not provided, the native platform is used.",
+        default = None,
         required = false
       )
       val platformid = opt[String](
         short = 'P',
-        default = None,
         descr = "If multiple platforms are specified in the component, this argument allows you to choose which one.",
+        default = None,
         required = false
+      )
+      val setup = opt[Boolean](
+        name = "setup",
+        default = Some(false),
+        descr = "Whether or not to run setup after build."
       )
     }
 
@@ -177,7 +171,6 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   }
 
   addSubcommand(run)
-  addSubcommand(export)
   addSubcommand(build)
   addSubcommand(test)
   addSubcommand(namespace)

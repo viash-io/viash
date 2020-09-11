@@ -2,7 +2,7 @@ package com.dataintuitive.viash.config
 
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.platforms._
-import com.dataintuitive.viash.helpers.IOHelper
+import com.dataintuitive.viash.helpers.IO
 import java.net.URI
 import io.circe.yaml.parser
 import com.dataintuitive.viash.functionality.resources._
@@ -18,7 +18,7 @@ case class Config(
 
 object Config {
   def parse(uri: URI): Config = {
-    val str = IOHelper.read(uri)
+    val str = IO.read(uri)
     parse(str, uri)
   }
 
@@ -43,9 +43,9 @@ object Config {
   }
 
   def read(path: String): Config = {
-    val uri = IOHelper.uri(path)
+    val uri = IO.uri(path)
 
-    val str = IOHelper.read(uri)
+    val str = IO.read(uri)
     val uris = uri.toString
     val extension = uris.substring(uris.lastIndexOf(".") + 1).toLowerCase()
 
@@ -137,7 +137,7 @@ object Config {
     // * else use the native platform
     val pl =
       if (platform.isDefined) {
-        Platform.parse(IOHelper.uri(platform.get))
+        Platform.parse(IO.uri(platform.get))
       } else if (platformID.isDefined) {
         val pid = platformID.get
         if (joined.isDefined) {
@@ -152,7 +152,7 @@ object Config {
           // if input file is a functionality yaml,
           // check if platform_*.yaml file exists
           val platPath = funRegex.replaceFirstIn(functionality.get, "platform_" + pid + ".yaml")
-          val uri = IOHelper.uri(platPath)
+          val uri = IO.uri(platPath)
           val platform =
             try {
               Some(Platform.parse(uri))
