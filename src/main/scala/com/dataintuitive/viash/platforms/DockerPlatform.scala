@@ -83,10 +83,7 @@ case class DockerPlatform(
           executor = executor,
           functionality = fun2,
           setupCommands = setupCommands,
-          preParse = dm.preParse,
-          parsers = dm.parsers,
-          postParse = dm.postParse,
-          postRun = dm.postRun
+          mods = dm
         ))
       )
 
@@ -97,7 +94,7 @@ case class DockerPlatform(
 
   private val tagRegex = "(.*):(.*)".r
 
-  def processDockerSetup(functionality: Functionality): (String, String, String) = {
+  private def processDockerSetup(functionality: Functionality) = {
     // get dependencies
     val runCommands = requirements.flatMap(_.dockerCommands)
 
@@ -182,7 +179,7 @@ case class DockerPlatform(
 
   private val extraMountsVar = "VIASH_EXTRA_MOUNTS"
 
-  def processDockerVolumes(functionality: Functionality): BashWrapperMods = {
+  private def processDockerVolumes(functionality: Functionality) = {
     val args = functionality.argumentsAndDummies
 
     val preParse =
@@ -249,7 +246,7 @@ case class DockerPlatform(
     )
   }
 
-  def addDockerDebug(debugCommand: String): BashWrapperMods = {
+  private def addDockerDebug(debugCommand: String) = {
     val parsers = "\n" + Bash.argStore("---debug", "VIASH_DEBUG", "yes", 1, None)
     val postParse =
       s"""
@@ -268,7 +265,7 @@ case class DockerPlatform(
     )
   }
 
-  def addDockerChown(functionality: Functionality, dockerArgs: String, volExtraParams: String, imageName: String, imageVersion: String): BashWrapperMods = {
+  private def addDockerChown(functionality: Functionality, dockerArgs: String, volExtraParams: String, imageName: String, imageVersion: String) = {
     val args = functionality.argumentsAndDummies
 
     def chownCommand(value: String): String = {
