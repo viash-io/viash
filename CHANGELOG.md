@@ -1,16 +1,20 @@
-# viash 0.2.0.1
+# viash 0.2.1 (2020-09-11)
 
-* BUG FIX: Issue trying to parse positional arguments even when none is provided.
+* [NXF] NEW FEATURE: Data references in Map form can now have values being lists. In other words, we can have multiple options which have one or more values.
+
+* NEW FEATURE `viash ns build`: Added --parallel and --setup flag.
+
+* NEW FEATURE `viash build`: Added --setup flag.
+
+* NEW FEATURE: Allow changing the order of setup commands using the `setup:` variable.
+
+* NEW (HIDDEN) FEATURE: Do not escape `${VIASH_...}` elements in default values and descriptions!
 
 * MINOR CHANGE: Remove `---chown` flag, move to `platform.docker.chown`; is set to true by default.
 
 * MINOR CHANGE: Perform chown during both run and test using a Docker platform.
 
-* MINOR CHANGE: Do not escape `${VIASH_...}` elements in default values and descriptions!
-
-* NEW FEATURE: Allow changing the order of setup commands using the `setup:` variable.
-
-* [NXF] NEW FEATURE: Data references in Map form can now have values being lists. In other words, we can have multiple options which have one or more values.
+* BUG FIX: Issue trying to parse positional arguments even when none is provided.
 
 # viash 0.2.0 (2020-09-01)
 
