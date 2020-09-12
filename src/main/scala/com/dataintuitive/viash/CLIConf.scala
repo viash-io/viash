@@ -174,6 +174,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         default = Some(false),
         descr = "Whether or not to run setup after build."
       )
+      val parallel = opt[Boolean](
+        name = "parallel",
+        short = 'l',
+        default = Some(false),
+        descr = "Whether or not to run the process in parallel."
+      )
     }
 
     addSubcommand(build)

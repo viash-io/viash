@@ -17,22 +17,29 @@ object ViashNamespace {
     target: String,
     platform: Option[String] = None,
     platformID: Option[String] = None,
-    namespace: Option[String] = None
+    namespace: Option[String] = None,
+    setup: Boolean = false,
+    parallel: Boolean = false
   ) {
     val configs = findConfigs(source, platform, platformID, namespace)
 
-    for ((conf, error) ← configs) {
-      if (conf.isDefined) {
-        val in = conf.get.info.get.parent_path.get
-        val platType = conf.get.platform.get.id
+    val configs2 = if (parallel) configs.par else configs
+
+    configs2.foreach {
+      case Left(conf) =>
+        val in = conf.info.get.parent_path.get
+        val platType = conf.platform.get.id
         val out = in.replace(source, target + s"/$platType")
         println(s"Exporting $in =$platType=> $out")
-        ViashBuild(conf.get, out, namespace = namespace)
-      } else {
-        val err = error.get
+        ViashBuild(
+          config = conf,
+          output = out,
+          namespace = namespace,
+          setup = setup
+        )
+      case Right(err) =>
         val in = err.config.info.get.parent_path.get
         println(s"Skipping $in --- platform ${err.platform} not found")
-      }
     }
   }
 
@@ -41,7 +48,7 @@ object ViashNamespace {
     platform: Option[String] = None,
     platformID: Option[String] = None,
     namespace: Option[String]
-  ): List[(Option[Config], Option[PlatformNotFoundException])] = {
+  ): List[Either[Config, PlatformNotFoundException]] = {
     val sourceDir = Paths.get(source)
 
     val namespaceMatch =
@@ -60,10 +67,9 @@ object ViashNamespace {
     })
     val legacyConfigs = funFiles.map { file =>
       try {
-        (Some(Config.readSplitOrJoined(functionality = Some(file.toString), platform = platform, platformID = platformID, namespace = namespace)), None)
+        Left(Config.readSplitOrJoined(functionality = Some(file.toString), platform = platform, platformID = platformID, namespace = namespace))
       } catch {
-        case e: PlatformNotFoundException =>
-          (None, Some(e))
+        case e: PlatformNotFoundException => Right(e)
       }
     }
 
@@ -76,10 +82,9 @@ object ViashNamespace {
     })
     val newConfigs = scriptFiles.map { file =>
       try {
-        (Some(Config.readSplitOrJoined(joined = Some(file.toString), platform = platform, platformID = platformID, namespace = namespace)), None)
+        Left(Config.readSplitOrJoined(joined = Some(file.toString), platform = platform, platformID = platformID, namespace = namespace))
       } catch {
-        case e: PlatformNotFoundException =>
-          (None, Some(e))
+        case e: PlatformNotFoundException => Right(e)
       }
     }
 
