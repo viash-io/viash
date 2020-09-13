@@ -52,25 +52,25 @@ object Config {
     // detect whether a script (with joined header) was passed or a joined yaml
     // using the extension
     val (yaml, code) =
-    if (extension == "yml" || extension == "yaml") {
-      (str, None)
-    } else {
-      val commentStr = extension match {
-        case "sh" | "py" | "r" => "#'"
-        case _ => throw new RuntimeException("Unrecognised extension: " + extension)
+      if (extension == "yml" || extension == "yaml") {
+        (str, None)
+      } else {
+        val commentStr = extension match {
+          case "sh" | "py" | "r" => "#'"
+          case _ => throw new RuntimeException("Unrecognised extension: " + extension)
+        }
+        val headerComm = commentStr + " "
+        assert(
+          str.contains(s"$commentStr functionality:"),
+          message = s"""Script should contain a functionality header: "$commentStr functionality: <...>""""
+        )
+
+        val (header, body) = str.split("\n").partition(_.startsWith(headerComm))
+        val yaml = header.map(s => s.drop(3)).mkString("\n")
+        val code = commentStr + " VIASH START\n" + commentStr + " VIASH END\n" + body.mkString("\n")
+
+        (yaml, Some(code))
       }
-      val headerComm = commentStr + " "
-      assert(
-        str.contains(s"$commentStr functionality:"),
-        message = s"""Script should contain a functionality header: "$commentStr functionality: <...>""""
-      )
-
-      val (header, body) = str.split("\n").partition(_.startsWith(headerComm))
-      val yaml = header.map(s => s.drop(3)).mkString("\n")
-      val code = commentStr + " VIASH START\n" + commentStr + " VIASH END\n" + body.mkString("\n")
-
-      (yaml, Some(code))
-    }
 
     // turn optional code into a Script
     val optScript = code.map { cod =>
@@ -110,7 +110,7 @@ object Config {
     )
 
     // construct info object
-    val config = {
+    val configPre = {
       if (joined.isDefined) {
         read(joined.get)
       } else {
@@ -127,6 +127,9 @@ object Config {
         viash_version = Some(com.dataintuitive.viash.Main.version)
       ))
     )
+
+    val config = configPre.copy(functionality = configPre.functionality.copy(namespace = namespace))
+
 
     // get the platform
     // * if a platform yaml is passed, use that
@@ -177,15 +180,13 @@ object Config {
     val path = new File(functionality.getOrElse(joined.getOrElse(""))).getParentFile
     val GitInfo(_, rgr, gc) = Git.getInfo(path)
 
-    // modify the functionality using the platform
     config.copy(
       functionality =
         if (modifyFun) {
           pl.modifyFunctionality(config.functionality)
         } else {
           config.functionality
-        }
-          .copy(namespace = namespace),
+        },
       platform = Some(pl),
       info = config.info.map(_.copy(
         git_commit = gc,
