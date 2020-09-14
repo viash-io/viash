@@ -137,7 +137,7 @@ case class NextFlowPlatform(
          |                ? it.otype + it.name
          |                : (it.value == "")
          |                    ? ""
-         |                    : it.otype + it.name + " \\'" + it.value + "\\'"
+         |                    : it.otype + it.name + " \\'" + ((it.value in List && it.multiple) ? it.value.join(it.multiple_sep): it.value) + "\\'"
          |    }
          |
          |    def command_line = command + argumentsList
