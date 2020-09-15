@@ -128,7 +128,13 @@ object Config {
       ))
     )
 
-    val config = configPre.copy(functionality = configPre.functionality.copy(namespace = namespace))
+    val keepExplicitNamespace =
+      if (configPre.functionality.namespace != None)
+        configPre.functionality.namespace
+      else
+        namespace
+
+    val config = configPre.copy(functionality = configPre.functionality.copy(namespace = keepExplicitNamespace))
 
 
     // get the platform
