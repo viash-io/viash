@@ -111,7 +111,7 @@ case class DockerPlatform(
         }
       } else {
         (
-          target_image.getOrElse("viash_autogen/" + functionality.name),
+          target_image.getOrElse(functionality.namespace.map(_ + "/").getOrElse("") + functionality.name),
           version.map(_.toString).getOrElse("latest")
         )
       }
