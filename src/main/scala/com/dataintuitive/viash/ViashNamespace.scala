@@ -28,12 +28,11 @@ object ViashNamespace {
     configs2.foreach {
       case Left(conf) =>
         val in = conf.info.get.parent_path.get
+        val inTool = in.split("/").lastOption.getOrElse("WRONG")
         val platType = conf.platform.get.id
         val out =
-          in.replace(
-            source,
-            conf.functionality.namespace.map( ns => target + s"/$platType/$ns").getOrElse(target + s"/$platType")
-          )
+          conf.functionality.namespace
+            .map( ns => target + s"/$platType/$ns/$inTool").getOrElse(target + s"/$platType/$inTool")
         val namespaceOrNothing = conf.functionality.namespace.map( s => "(" + s + ")").getOrElse("")
         println(s"Exporting $in $namespaceOrNothing =$platType=> $out")
         ViashBuild(
