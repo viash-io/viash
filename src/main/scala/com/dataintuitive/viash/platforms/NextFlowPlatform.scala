@@ -12,7 +12,7 @@ import com.dataintuitive.viash.config.Version
 case class NextFlowPlatform(
   id: String = "nextflow",
   version: Option[Version] = None,
-  image: String,
+  image: Option[String],
   apt: Option[AptRequirements] = None,
   r: Option[RRequirements] = None,
   python: Option[PythonRequirements] = None,
@@ -82,6 +82,11 @@ case class NextFlowPlatform(
       case None => Nil
     }
 
+    val imageName = {
+      val autogen = functionality.namespace.map( ns => s"$ns/${functionality.name}").getOrElse(functionality.name)
+      image.getOrElse(autogen)
+    }
+
     /**
      * A few notes:
      * 1. input and output are initialized as empty strings, so that no warnings appear.
@@ -100,7 +105,7 @@ case class NextFlowPlatform(
             functionality.name → {
               List(
                 "name" → functionality.name,
-                "container" → (image + ":" + version.map(_.toString).getOrElse("latest")),
+                "container" → (imageName + ":" + version.map(_.toString).getOrElse("latest")),
                 "command" → executionCode
               ) :::
                 extensionsAsTuple :::
