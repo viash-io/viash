@@ -29,7 +29,11 @@ object ViashNamespace {
       case Left(conf) =>
         val in = conf.info.get.parent_path.get
         val platType = conf.platform.get.id
-        val out = in.replace(source, target + s"/$platType")
+        val out =
+          in.replace(
+            source,
+            conf.functionality.namespace.map( ns => target + s"/$platType/$ns").getOrElse(target + s"/$platType")
+          )
         val namespaceOrNothing = conf.functionality.namespace.map( s => "(" + s + ")").getOrElse("")
         println(s"Exporting $in $namespaceOrNothing =$platType=> $out")
         ViashBuild(
