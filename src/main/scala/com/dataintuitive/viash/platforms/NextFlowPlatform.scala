@@ -19,7 +19,8 @@ case class NextFlowPlatform(
   setup: List[Requirements] = Nil,
   executor: Option[String],
   publish: Option[Boolean],
-  publishSubDir: Option[Boolean],
+  per_id: Option[Boolean],
+  path: Option[String],
   label: Option[String],
   stageInMode: Option[String]
 ) extends Platform {
@@ -253,21 +254,24 @@ case class NextFlowPlatform(
 
     /**
      * Some (implicit) conventions:
-     * - `output/` is where the output data is published
-     * - For multiple samples, an additional subdir `id` can be created, but blank by default
-     * - A boolean option `publishSubdir` is available to store processing steps in subdirs
+     * - `params.output/` is where the output data is published
+     * - per_id is for creating directories per (sample) ID, default is true
+     * - path is for modifying the layout of the output directory, default is no changes
      */
     val setup_main_process = {
 
+      val per_idParsed:Boolean = per_id.getOrElse(true)
+      val pathParsed = path.map(_.split("/").mkString("/") + "/").getOrElse("")
+
       // If id is the empty string, the subdirectory is not created
-      val publishDirString = publishSubDir match {
-        case Some(true) => "${params.output}/${id}/" + fname
-        case _ => "${params.output}/${id}"
+      val publishDirString =  per_idParsed match {
+        case true => s"$${params.output}/${pathParsed}$${id}/"
+        case _ => s"$${params.output}/${pathParsed}"
       }
 
       val publishDirStr = publish match {
-        case Some(false) => ""
-        case _ => s"""publishDir "$publishDirString", mode: 'copy', overwrite: true"""
+        case Some(true) => s"""publishDir "$publishDirString", mode: 'copy', overwrite: true"""
+        case _ => ""
       }
 
       val labelString = label match {
