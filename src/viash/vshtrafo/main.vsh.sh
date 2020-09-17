@@ -279,7 +279,7 @@ elif [ $input_type = "split" ] && [ $par_format = "joined" ]; then
     platform_relative="platform_$plat.yaml"
     platform_path="$input_dir/$platform_relative"
     if [ -f "$platform_path" ]; then
-      yq p "$platform_path" platforms[+] | yq m -i "$output_yaml_path" - 
+      yq p "$platform_path" platforms[+] | yq m -i -a "$output_yaml_path" - 
     fi
   done
   
