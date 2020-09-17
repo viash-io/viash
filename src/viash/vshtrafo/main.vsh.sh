@@ -24,15 +24,26 @@
 #'   - name: "--rm"
 #'     type: boolean_true
 #'     description: Remove the source files after use.
+#'   tests:
+#'   - type: bash_script
+#'     path: tests/test_conversion.sh
+#'   - path: tests/functionality.yaml
+#'   - path: tests/joined.vsh.yaml
+#'   - path: tests/platform_docker.yaml
+#'   - path: tests/platform_native.yaml
+#'   - path: tests/script.sh
+#'   - path: tests/script.vsh.sh
 #' platforms:
 #' - type: docker
 #'   image: mikefarah/yq
 #'   apk: 
 #'     packages:
 #'     - bash
+#' - type: native
 
 set -e
 
+# detect input type
 input_dir=$(dirname $par_input)
 if [[ "$par_input" =~ ^.*\.vsh\.(sh|r|R|py)$ ]]; then
   input_type=script
@@ -57,11 +68,16 @@ else
   exit 1
 fi
 
+# create dir if it does not exist
+[[ -d "$par_output_dir" ]] || mkdir -p "$par_output_dir"
+
+# check format
 if [[ ! $par_format =~ ^(script|joined|split)$ ]]; then
   echo "Output: unsupported format. Must be one of 'script', 'joined' or 'split'"
   exit 1
 fi
 
+# ------------------------ X -> X ------------------------
 if [ $input_type = $par_format ]; then 
   echo Input type is equal to output type. 
   echo Just use cp, you son of a silly person.
