@@ -1,0 +1,8 @@
+name: hello
+arguments:
+  - name: "name"
+    type: string
+    default: Bob
+resources:
+  - type: bash_script
+    path: script.sh
