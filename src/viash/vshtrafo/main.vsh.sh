@@ -111,14 +111,7 @@ elif [ $input_type = "script" ] && [ $par_format = "joined" ]; then
 
   # WRITING SCRIPT
   echo "> Writing script to $output_script_relative"
-  cat > "$output_script_path" << HERE
-#!/usr/bin/env $script_type
-
-## VIASH$dummy_variable_to_avoid_viash_parsing START
-
-## VIASH$dummy_variable_to_avoid_viash_parsing END
-HERE
-  cat "$par_input" | grep -v "^#' " >> "$output_script_path"
+  cat "$par_input" | grep -v "^#' " > "$output_script_path"
   
 # ------------------------ SCRIPT -> SPLIT ------------------------
 elif [ $input_type = "script" ] && [ $par_format = "split" ]; then
@@ -158,14 +151,7 @@ elif [ $input_type = "script" ] && [ $par_format = "split" ]; then
 
   # WRITING SCRIPT
   echo "> Writing script to $output_script_relative"
-  cat > "$output_script_path" << HERE
-#!/usr/bin/env $script_type
-
-## VIASH$dummy_variable_to_avoid_viash_parsing START
-
-## VIASH$dummy_variable_to_avoid_viash_parsing END
-HERE
-  cat "$par_input" | grep -v "^#' " >> "$output_script_path"
+  cat "$par_input" | grep -v "^#' " > "$output_script_path"
 
 # ------------------------ JOINED -> SCRIPT ------------------------
 elif [ $input_type = "joined" ] && [ $par_format = "script" ]; then
