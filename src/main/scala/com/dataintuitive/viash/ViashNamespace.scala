@@ -55,15 +55,16 @@ object ViashNamespace {
   ): List[Either[Config, PlatformNotFoundException]] = {
     val sourceDir = Paths.get(source)
 
-    val namespaceMatch =
-      if (namespace.isDefined) {
-        (path: String) => {
-          val nsregex = s"""^$source/${namespace.get}/.*""".r
-          nsregex.findFirstIn(path).isDefined
-        }
-      } else {
-        (_: String) => true
+    val namespaceMatch = {
+      namespace match {
+        case Some(ns) =>
+          val nsRegex = s"""^$source/$ns/.*""".r
+          (path: String) =>
+            nsRegex.findFirstIn(path).isDefined
+        case _ =>
+          (_: String) => true
       }
+    }
 
     // find funcionality.yaml files and parse as config
     val funFiles = find(sourceDir, (path, attrs) => {
