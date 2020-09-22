@@ -2,6 +2,8 @@
 
 * MINOR CHANGE: Allow generating placeholder without VIASH START/VIASH END blocks.
 
+* BUG FIX `viash ns build`: Some platforms would sometimes not be detected.
+
 # viash 0.2.1 (2020-09-11)
 
 * [NXF] NEW FEATURE: Data references in Map form can now have values being lists. In other words, we can have multiple options which have one or more values.
