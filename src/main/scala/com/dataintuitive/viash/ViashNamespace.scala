@@ -47,6 +47,22 @@ object ViashNamespace {
     }
   }
 
+  /**
+   * Given a Path to a viash config file (functionality.yaml / *.vsh.yaml),
+   * extract an implicit namespace if appropriate.
+   */
+  private def getNamespace(namespace: Option[String], file: Path): Option[String] = {
+    if (namespace.isDefined) {
+      namespace
+    } else {
+      val parentDir = file.toString.split("/").dropRight(2).lastOption.getOrElse("src")
+      if (parentDir != "src")
+        Some(parentDir)
+      else
+        None
+    }
+  }
+
   def findConfigs(
     source: String,
     platform: Option[String] = None,
@@ -66,46 +82,21 @@ object ViashNamespace {
       }
     }
 
-    // find funcionality.yaml files and parse as config
+    // find functionality.yaml files and parse as config
     val funFiles = find(sourceDir, (path, attrs) => {
       path.toString.endsWith("functionality.yaml") && attrs.isRegularFile && namespaceMatch(path.toString)
     })
 
-    /**
-     * Given a Path to a viash config file (functionality.yaml / *.vsh.yaml),
-     * extract an implicit namespace if appropriate.
-     */
-    def nameSpaceOption(file:Path):Option[String] = {
-      val parentDir = file.toString.split("/").dropRight(2).lastOption.getOrElse("src")
-      if (parentDir != "src")
-        Some(parentDir)
-      else
-        None
-    }
-
-    /**
-     * Transform a list of Paths to tuples containing either explicit (CLI) or implicit namespace.
-     */
-    def funFilesWithNamespace(
-      files: List[Path],
-      explicitNamespace: Option[String]
-    ):List[(Path, Option[String])] =
-      if (explicitNamespace.isDefined) {
-        // Explicit namespace (on the CLI)
-        files.map(file => (file, namespace))
-      } else {
-        // Implicit namespace (from src/ directory structure)
-        files.map{file => (file, nameSpaceOption(file))}
-      }
-
-    val legacyConfigs = funFilesWithNamespace(funFiles, namespace).map { case (file, _namespace) =>
+    // read functionality + platforms according to
+    val legacyConfigs = funFiles.map { file =>
       try {
-        Left(Config
-              .readSplitOrJoined(
-                functionality = Some(file.toString),
-                platform = platform,
-                platformID = platformID,
-                namespace = _namespace))
+        val _namespace = getNamespace(namespace, file)
+        Left(Config.readSplitOrJoined(
+          functionality = Some(file.toString),
+          platform = platform,
+          platformID = platformID,
+          namespace = _namespace
+        ))
       } catch {
         case e: PlatformNotFoundException => Right(e)
       }
@@ -118,14 +109,15 @@ object ViashNamespace {
         attrs.isRegularFile &&
         namespaceMatch(path.toString)
     })
-    val newConfigs = funFilesWithNamespace(scriptFiles, namespace).map { case (file, _namespace) =>
+    val newConfigs = scriptFiles.map { file =>
       try {
-        Left(Config
-              .readSplitOrJoined(
-                joined = Some(file.toString),
-                platform = platform,
-                platformID = platformID,
-                namespace = _namespace))
+        val _namespace = getNamespace(namespace, file)
+        Left(Config.readSplitOrJoined(
+          joined = Some(file.toString),
+          platform = platform,
+          platformID = platformID,
+          namespace = _namespace
+        ))
       } catch {
         case e: PlatformNotFoundException => Right(e)
       }
