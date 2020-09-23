@@ -1,8 +1,10 @@
-# viash 0.2.2
+# viash 0.2.2 (2020-09-22)
 
 * MINOR CHANGE: Allow generating placeholder without VIASH START/VIASH END blocks.
 
 * BUG FIX `viash ns build`: Some platforms would sometimes not be detected.
+
+* BUG FIX `viash run`: Avoid error when no arguments need to be chowned.
 
 # viash 0.2.1 (2020-09-11)
 

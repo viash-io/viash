@@ -302,13 +302,16 @@ case class DockerPlatform(
                  |fi""".stripMargin
             }
           })
-          .mkString("")
+
+        val chownParStr =
+          if (chownPars.isEmpty) ":"
+          else chownPars.mkString("").split("\n").mkString("\n  ")
 
         s"""
            |
            |# change file ownership
            |function viash_perform_chown {
-           |  ${chownPars.split("\n").mkString("\n  ")}
+           |  ${chownParStr}
            |}
            |trap viash_perform_chown EXIT
            |""".stripMargin
