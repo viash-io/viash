@@ -51,7 +51,10 @@ case class NativePlatform(
         if (li.isEmpty) {
           ""
         } else {
-          li.mkString("", " && \\\n  ", "\n")
+          "cat << 'HERE'\n" +
+          "# run the following commands:\n" +
+          li.mkString("", " && \\\n  ", "\n") +
+          "HERE"
         }
       ).mkString
 
