@@ -48,10 +48,10 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
        |viash is a spec and a tool for defining execution contexts and converting execution instructions to concrete instantiations.
        |
        |Usage:
-       |  viash run [arguments] meta.vsh.yaml -- [arguments for script]
-       |  viash build [arguments] meta.vsh.yaml
-       |  viash test [arguments] meta.vsh.yaml
-       |  viash ns build [arguments]
+       |  viash run config.vsh.yaml -- [arguments for script]
+       |  viash build config.vsh.yaml
+       |  viash test config.vsh.yaml
+       |  viash ns build
        |
        |Check the help of a subcommand for more information, or the API available at:
        |  https://www.data-intuitive.com/viash_docs
