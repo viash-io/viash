@@ -42,7 +42,7 @@ object Main {
     modifyFun: Boolean = true
   ): Config = {
     Config.readSplitOrJoined(
-      joined = subcommand.joined.toOption,
+      joined = subcommand.config.toOption,
       functionality = subcommand.functionality.toOption,
       platform = subcommand.platform.toOption,
       platformID = subcommand.platformid.toOption,

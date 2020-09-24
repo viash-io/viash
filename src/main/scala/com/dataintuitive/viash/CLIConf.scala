@@ -5,24 +5,24 @@ import org.rogach.scallop.{ScallopConf, ScallopOption, Subcommand}
 trait ViashCommand {
   _: ScallopConf =>
   val functionality = opt[String](
-    descr = "Path to the functionality file.",
+    descr = "[deprecated] Path to the functionality file.",
     default = None,
     required = false
   )
   val platform = opt[String](
     short = 'p',
     default = None,
-    descr = "Path to the platform file. If not provided, the native platform is used.",
+    descr = "Path to a custom platform file.",
     required = false
   )
   val platformid = opt[String](
     short = 'P',
     default = None,
-    descr = "If multiple platforms are specified in the component, this argument allows you to choose which one.",
+    descr = "If multiple platforms are specified in the config, use the platform with this name.",
     required = false
   )
-  val joined = trailArg[String](
-    descr = "A joined metadata file. Can also be a script written in R/Python/Bash but containing the joined metadata as a header.",
+  val config = trailArg[String](
+    descr = "A viash config file (example: conf.vsh.yaml). This argument can also be a script with the config as a header.",
     default = None,
     required = false
   )
@@ -48,40 +48,43 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
        |viash is a spec and a tool for defining execution contexts and converting execution instructions to concrete instantiations.
        |
        |Usage:
-       |  viash run [arguments] script.vsh.yaml -- [arguments for script]
-       |  viash build [arguments] script.vsh.sh
-       |  viash test [arguments] script.vsh.R
+       |  viash run [arguments] meta.vsh.yaml -- [arguments for script]
+       |  viash build [arguments] meta.vsh.yaml
+       |  viash test [arguments] meta.vsh.yaml
        |  viash ns build [arguments]
        |
        |Check the help of a subcommand for more information, or the API available at:
-       |  https://github.com/data-intuitive/viash_docs
+       |  https://www.data-intuitive.com/viash_docs
        |
        |Arguments:""".stripMargin)
 
   val run = new Subcommand("run") with ViashCommand with WithTemporary {
     banner(
       s"""viash run
-         |Executes a viash component. From the provided functionality.yaml, viash generates a temporary executable and immediately executes it with the given parameters.
+         |Executes a viash component from the provided viash config file. viash generates a temporary executable and immediately executes it with the given parameters.
          |
          |Usage:
-         |  viash run [-P docker] [-k] script.vsh.sh [arguments for script]
+         |  viash run [-P docker/-p platform.yaml] [-k] config.vsh.yaml -- [arguments for script]
          |
          |Arguments:""".stripMargin)
 
     footer(
-      s"""
+      s"""  -- param1 param2 ...    Extra parameters to be passed to the component itself.
+         |                          -- is used to separate viash arguments from the arguments
+         |                          of the component.
+         |
          |The temporary directory can be altered by setting the VIASH_TEMP directory. Example:
          |  export VIASH_TEMP=/home/myuser/.viash_temp
-         |  viash run -f fun.yaml -k""".stripMargin)
+         |  viash run -k config.vsh.yaml""".stripMargin)
   }
 
   val build = new Subcommand("build") with ViashCommand {
     banner(
       s"""viash build
-         |Generate an executable from the functionality and platform meta information.
+         |Build an executable from the provided viash config file.
          |
          |Usage:
-         |  viash build -o output [-P docker] [-m] script.vsh.sh
+         |  viash build -o output [-P docker/-p platform.yaml] [-m] [-s] config.vsh.yaml
          |
          |Arguments:""".stripMargin)
 
@@ -99,17 +102,17 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     val setup = opt[Boolean](
       name = "setup",
       default = Some(false),
-      descr = "Whether or not to run setup after build."
+      descr = "Whether or not to set up the platform environment after building the executable."
     )
   }
 
   val test = new Subcommand("test") with ViashCommand with WithTemporary {
     banner(
       s"""viash test
-         |Run the tests as defined in the functionality.yaml. Check the documentation for more information on how to write tests.
+         |Test the component using the tests defined in the viash config file.
          |
          |Usage:
-         |  viash test [-P docker] [-v] [-k] script.vsh.sh
+         |  viash test [-P docker/-p platform.yaml] [-v] [-k] config.vsh.yaml
          |
          |Arguments:""".stripMargin)
 
@@ -124,7 +127,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       s"""
          |The temporary directory can be altered by setting the VIASH_TEMP directory. Example:
          |  export VIASH_TEMP=/home/myuser/.viash_temp
-         |  viash run -f fun.yaml -k""".stripMargin)
+         |  viash run -k meta.vsh.yaml""".stripMargin)
   }
 
   val namespace = new Subcommand("ns") {
@@ -132,10 +135,10 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     val build = new Subcommand("build") {
       banner(
         s"""viash ns build
-           |Build a namespace containing many viash components.
+           |Build a namespace from many viash config files.
            |
            |Usage:
-           |  viash ns build [-s src] [-t target] [-P docker] [-p platform_docker.yaml]
+           |  viash ns build [-s src] [-t target] [-P docker/-p platform.yaml] [--setup] [--parallel]
            |
            |Arguments:""".stripMargin)
 
@@ -148,31 +151,31 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       val src = opt[String](
         name = "src",
         short = 's',
-        descr = "An alternative source directory if not under src/<namespace>. Default = source/.",
+        descr = " A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
         default = Some("src")
       )
       val target = opt[String](
         name = "target",
         short = 't',
-        descr = "An alternative destination directory if not target/. Default = target/.",
+        descr = "A target directory to build the executables into. Default: target/.",
         default = Some("target")
       )
       val platform = opt[String](
         short = 'p',
-        descr = "Path to the platform file. If not provided, the native platform is used.",
+        descr = "Path to a custom platform file.",
         default = None,
         required = false
       )
       val platformid = opt[String](
         short = 'P',
-        descr = "If multiple platforms are specified in the component, this argument allows you to choose which one.",
+        descr = "Only build a particular platform type.",
         default = None,
         required = false
       )
       val setup = opt[Boolean](
         name = "setup",
         default = Some(false),
-        descr = "Whether or not to run setup after build."
+        descr = "Whether or not to set up the platform environment after building the executable."
       )
       val parallel = opt[Boolean](
         name = "parallel",
