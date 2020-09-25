@@ -61,12 +61,12 @@ jobs:
 
     - name: Run tests
       run: |
-        if [[ "${{ matrix.config.os }}" ~= ^macos_*$ ]]; then
-          # macOS on github actions does not have Docker, so skip those
-          sbt 'testOnly -- -l com.dataintuitive.viash.DockerTest'
-        elif [[ "${{ matrix.config.name }}" == "main" ]] 
+        if [[ "${{ matrix.config.name }}" == "main" ]]; then
           # only run coverage on main runner
           sbt clean coverage test coverageReport
+        elif [[ "${{ matrix.config.os }}" =~ ^macos_*$ ]]; then
+          # macOS on github actions does not have Docker, so skip those
+          sbt 'testOnly -- -l com.dataintuitive.viash.DockerTest'
         else
           sbt test
         fi
