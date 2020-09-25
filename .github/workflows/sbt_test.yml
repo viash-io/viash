@@ -44,7 +44,7 @@ jobs:
         sysreqs=$(Rscript -e "pkgs <- sysreqs:::get_cran_sysreqs(sysreqs:::get_cran_deps('tidyverse')); cat(sysreqs:::sysreq_commands_pkgs(pkgs))")
         sudo -s eval "$sysreqs"
 
-    - name: Install tidyverse and optparse
+    - name: Install R dependencies
       run: |
         install.packages('remotes')
         remotes::install_cran("pillar")
@@ -60,15 +60,11 @@ jobs:
         python-version: ${{ matrix.config.python }}
 
     - name: Run tests
-      env: 
-        CONFIG_OS=${{ matrix.config.os }}
-        CONFIG_NAME=${{ matrix.config.name }}
-      if: runner.os == 'macOS'
       run: |
-        if [[ $CONFIG_OS ~= ^macos_*$ ]]; then
+        if [[ "${{ matrix.config.os }}" ~= ^macos_*$ ]]; then
           # macOS on github actions does not have Docker, so skip those
           sbt 'testOnly -- -l com.dataintuitive.viash.DockerTest'
-        elif [[ $RUNNER_NAME == "main" ]] 
+        elif [[ "${{ matrix.config.name }}" == "main" ]] 
           # only run coverage on main runner
           sbt clean coverage test coverageReport
         else
