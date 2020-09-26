@@ -116,13 +116,6 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |
          |Arguments:""".stripMargin)
 
-    val verbose = opt[Boolean](
-      name = "verbose",
-      short = 'v',
-      default = Some(false),
-      descr = "Print out all output from the tests. Otherwise, only a summary is shown."
-    )
-
     footer(
       s"""
          |The temporary directory can be altered by setting the VIASH_TEMP directory. Example:

@@ -15,38 +15,29 @@ import helpers.IO
 object ViashTest {
   case class TestOutput(name: String, exitValue: Int, output: String)
 
-  def apply(config: Config, verbose: Boolean, keepFiles: Boolean) {
+  def apply(config: Config, keepFiles: Boolean) {
     val fun = config.functionality
     val plat = config.platform.get
 
     // create temporary directory
     val dir = IO.makeTemp("viash_test_" + fun.name)
-    if (verbose) println(s"Running tests in temporary directory: '$dir'")
+    println(s"Running tests in temporary directory: '$dir'")
 
     // run tests
-    val results = ViashTest.runTests(fun, plat, dir, verbose = verbose)
+    val results = ViashTest.runTests(fun, plat, dir)
     val count = results.count(_.exitValue == 0)
     val anyErrors = count < results.length
 
-    // print results of tests with errors. if verbose, they were printed already.
-    for (res ← results if res.exitValue > 0 && !verbose) {
-      println(s">> ${res.name} finished with code ${res.exitValue}:")
-      println(res.output)
-      println()
-    }
-
-    if (verbose) {
-      if (results.isEmpty) {
-        println(s"WARNING! No tests found!")
-      } else if (anyErrors) {
-        println(s"ERROR! Only $count out of ${results.length} test scripts succeeded!")
-      } else {
-        println(s"SUCCESS! All $count out of ${results.length} test scripts succeeded!")
-      }
+    if (results.isEmpty) {
+      println(s"${Console.RED}WARNING! No tests found!${Console.RESET}")
+    } else if (anyErrors) {
+      println(s"${Console.RED}ERROR! Only $count out of ${results.length} test scripts succeeded!${Console.RESET}")
+    } else {
+      println(s"${Console.GREEN}SUCCESS! All $count out of ${results.length} test scripts succeeded!${Console.RESET}")
     }
 
     if (!keepFiles && !anyErrors) {
-      if (verbose) println("Cleaning up temporary directory")
+      println("Cleaning up temporary directory")
       IO.deleteRecursively(dir)
     }
 
@@ -55,7 +46,9 @@ object ViashTest {
     }
   }
 
-  def runTests(fun: Functionality, platform: Platform, dir: File, verbose: Boolean = false): List[TestOutput] = {
+  def runTests(fun: Functionality, platform: Platform, dir: File, verbose: Boolean = true): List[TestOutput] = {
+    val consoleLine = "===================================================================="
+
     // build regular executable
     val buildFun = platform.modifyFunctionality(fun)
     val buildDir = Paths.get(dir.toString, "build_executable").toFile
@@ -63,19 +56,21 @@ object ViashTest {
     IO.writeResources(buildFun.resources.getOrElse(Nil), buildDir)
 
     // run command, collect output
-    val stream = new ByteArrayOutputStream
-    val printWriter = new PrintWriter(stream)
-    val logWriter = new FileWriter(Paths.get(buildDir.toString, "_viash_build_log.txt").toString, true)
+    val buildResult = {
+      val stream = new ByteArrayOutputStream
+      val printWriter = new PrintWriter(stream)
+      val logWriter = new FileWriter(Paths.get(buildDir.toString, "_viash_build_log.txt").toString, true)
 
-    val logger: String => Unit =
-      (s: String) => {
-        if (verbose) println(s)
-        printWriter.println(s)
-        logWriter.append(s + sys.props("line.separator"))
-      }
+      val logger: String => Unit =
+        (s: String) => {
+          if (verbose) println(s)
+          printWriter.println(s)
+          logWriter.append(s + sys.props("line.separator"))
+        }
 
-    // run command, collect output
-    val buildResult =
+      logger(consoleLine)
+
+      // run command, collect output
       try {
         val executable = Paths.get(buildDir.toString, fun.name).toString
         logger(s"+$executable ---setup")
@@ -86,6 +81,7 @@ object ViashTest {
         printWriter.close()
         logWriter.close()
       }
+    }
 
     // generate executable for native platform
     val exe = NativePlatform(version = None).modifyFunctionality(fun).resources.get.head
@@ -94,6 +90,7 @@ object ViashTest {
     val tests = fun.tests.getOrElse(Nil)
 
     val testResults = tests.filter(_.isInstanceOf[Script]).map { file =>
+
       val test = file.asInstanceOf[Script]
 
       val dirArg = FileObject(
@@ -102,56 +99,61 @@ object ViashTest {
         default = Some(dir)
       )
       // generate bash script for test
-      val funonlytest = platform.modifyFunctionality(fun.copy(
+      val funOnlyTest = platform.modifyFunctionality(fun.copy(
         arguments = Nil,
         dummy_arguments = Some(List(dirArg)),
         resources = Some(List(test)),
         set_wd_to_resources_dir = Some(true)))
-      val testbash = BashScript(
+      val testBash = BashScript(
         name = Some(test.filename),
-        text = funonlytest.resources.getOrElse(Nil).head.text
+        text = funOnlyTest.resources.getOrElse(Nil).head.text
       )
 
       // assemble full resources list for test
-      val funfinal = fun.copy(resources = Some(
-        testbash :: // the test, wrapped in a bash script
+      val funFinal = fun.copy(resources = Some(
+        testBash :: // the test, wrapped in a bash script
           exe :: // the executable, wrapped with a native platform,
           // to be run inside of the platform of the test
-          funonlytest.resources.getOrElse(Nil).tail ::: // other resources generated by wrapping the test script
+          funOnlyTest.resources.getOrElse(Nil).tail ::: // other resources generated by wrapping the test script
           fun.resources.getOrElse(Nil).tail ::: // other resources provided in fun.resources
           tests.filter(!_.isInstanceOf[Script]) // other resources provided in fun.tests
       ))
 
       // make a new directory
-      val newdir = Paths.get(dir.toString, "test_" + test.filename).toFile
-      newdir.mkdir()
+      val newDir = Paths.get(dir.toString, "test_" + test.filename).toFile
+      newDir.mkdir()
 
       // write resources to dir
-      IO.writeResources(funfinal.resources.getOrElse(Nil), newdir)
+      IO.writeResources(funFinal.resources.getOrElse(Nil), newDir)
 
       // run command, collect output
       val stream = new ByteArrayOutputStream
-      val printwriter = new PrintWriter(stream)
-      val logwriter = new FileWriter(Paths.get(newdir.toString, "_viash_test_log.txt").toString, true)
+      val printWriter = new PrintWriter(stream)
+      val logWriter = new FileWriter(Paths.get(newDir.toString, "_viash_test_log.txt").toString, true)
 
       val logger: String => Unit =
         (s: String) => {
           if (verbose) println(s)
-          printwriter.println(s)
-          logwriter.append(s + sys.props("line.separator"))
+          printWriter.println(s)
+          logWriter.append(s + sys.props("line.separator"))
         }
+
+      logger(consoleLine)
 
       // run command, collect output
       try {
-        val executable = Paths.get(newdir.toString, testbash.filename).toString
-        val exitValue = Process(Seq(executable), cwd = newdir).!(ProcessLogger(logger, logger))
+        val executable = Paths.get(newDir.toString, testBash.filename).toString
+        logger(s"+$executable")
+        val exitValue = Process(Seq(executable), cwd = newDir).!(ProcessLogger(logger, logger))
 
         TestOutput(test.filename, exitValue, stream.toString)
       } finally {
-        printwriter.close()
-        logwriter.close()
+        printWriter.close()
+        logWriter.close()
       }
     }
+
+    if (verbose) println(consoleLine)
 
     buildResult :: testResults
   }
