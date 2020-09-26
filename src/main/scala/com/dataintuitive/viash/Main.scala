@@ -32,6 +32,14 @@ object Main {
           setup = conf.namespace.build.setup(),
           parallel = conf.namespace.build.parallel()
         )
+      case List(conf.namespace, conf.namespace.test) => // todo: allow tsv output
+        ViashNamespace.test(
+          source = conf.namespace.test.src(),
+          platform = conf.namespace.test.platform.toOption,
+          platformID = conf.namespace.test.platformid.toOption,
+          namespace = conf.namespace.test.namespace.toOption,
+          parallel = conf.namespace.test.parallel()
+        )
       case _ =>
         println("No subcommand was specified. See `viash --help` for more information.")
     }

@@ -15,38 +15,48 @@ import helpers.IO
 object ViashTest {
   case class TestOutput(name: String, exitValue: Int, output: String)
 
-  def apply(config: Config, keepFiles: Boolean) {
-    val fun = config.functionality
-    val plat = config.platform.get
-
+  def apply(
+    config: Config,
+    keepFiles: Boolean = false,
+    quiet: Boolean = false
+  ): List[TestOutput] = {
     // create temporary directory
-    val dir = IO.makeTemp("viash_test_" + fun.name)
-    println(s"Running tests in temporary directory: '$dir'")
+    val dir = IO.makeTemp("viash_test_" + config.functionality.name)
+    if (!quiet) println(s"Running tests in temporary directory: '$dir'")
 
     // run tests
-    val results = ViashTest.runTests(fun, plat, dir)
+    val results = ViashTest.runTests(config, dir, verbose = !quiet)
     val count = results.count(_.exitValue == 0)
     val anyErrors = count < results.length
 
-    if (results.isEmpty) {
-      println(s"${Console.RED}WARNING! No tests found!${Console.RESET}")
-    } else if (anyErrors) {
-      println(s"${Console.RED}ERROR! Only $count out of ${results.length} test scripts succeeded!${Console.RESET}")
-    } else {
-      println(s"${Console.GREEN}SUCCESS! All $count out of ${results.length} test scripts succeeded!${Console.RESET}")
+    if (!quiet) {
+      if (results.isEmpty) {
+        println(s"${Console.RED}WARNING! No tests found!${Console.RESET}")
+      } else if (anyErrors) {
+        println(s"${Console.RED}ERROR! Only $count out of ${results.length} test scripts succeeded!${Console.RESET}")
+      } else {
+        println(s"${Console.GREEN}SUCCESS! All $count out of ${results.length} test scripts succeeded!${Console.RESET}")
+      }
     }
 
-    if (!keepFiles && !anyErrors) {
-      println("Cleaning up temporary directory")
+    // keep temp files if user asks or any errors are encountered
+    // always remove files if quiet == true
+    if ((!keepFiles && !anyErrors) || quiet) {
+      if (!quiet) println("Cleaning up temporary directory")
       IO.deleteRecursively(dir)
     }
 
-    if (anyErrors) {
+    if (anyErrors && !quiet) {
       throw new RuntimeException(s"Only $count out of ${results.length} test scripts succeeded!")
     }
+
+    results
   }
 
-  def runTests(fun: Functionality, platform: Platform, dir: File, verbose: Boolean = true): List[TestOutput] = {
+  def runTests(config: Config, dir: File, verbose: Boolean = true): List[TestOutput] = {
+    val fun = config.functionality
+    val platform = config.platform.get
+
     val consoleLine = "===================================================================="
 
     // build regular executable

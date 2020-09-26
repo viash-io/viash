@@ -1,9 +1,12 @@
 package com.dataintuitive.viash
 
-import java.nio.file.{Paths, Files, Path}
+import java.nio.file.{Files, Path, Paths}
 import java.nio.file.attribute.BasicFileAttributes
+
+import com.dataintuitive.viash.ViashTest.TestOutput
 import config.Config
 import config.Config.PlatformNotFoundException
+
 import scala.collection.JavaConverters
 
 object ViashNamespace {
@@ -44,6 +47,42 @@ object ViashNamespace {
       case Right(err) =>
         val in = err.config.info.get.parent_path.get
         println(s"Skipping $in --- platform ${err.platform} not found")
+    }
+  }
+
+  def test(
+    source: String,
+    platform: Option[String] = None,
+    platformID: Option[String] = None,
+    namespace: Option[String] = None,
+    parallel: Boolean = false
+  ) {
+    val configs = findConfigs(source, platform, platformID, namespace)
+
+    val configs2 = if (parallel) configs.par else configs
+
+    val results =
+      configs2.flatMap {
+        case Left(conf) =>
+          Some((conf, ViashTest(
+            config = conf,
+            quiet = true
+          )))
+        case Right(_) =>
+          None
+      }.toList
+
+    printf("%20s %20s %20s %8s %8s %8s\n", "namespace", "functionality", "platform", "#success", "#tests", "result")
+    for ((conf, testRes) ← results) {
+      val namespace = conf.functionality.namespace.getOrElse("")
+      val funName = conf.functionality.name
+      val platName = conf.platform.get.id
+
+      val numTests = testRes.length - 1 // one is always the setup
+      val numSucceeds = testRes.count(_.exitValue == 0) // one is always the setup
+      val col = if (numSucceeds == numTests) Console.GREEN else Console.RED
+      val result = if (numTests == 0) "NONE!" else if (numSucceeds == numTests) "Success!" else "FAIL!"
+      printf("%s%20s %20s %20s %8d %8d %8s%s\n", col, namespace, funName, platName, numSucceeds, numTests, result, Console.RESET)
     }
   }
 
