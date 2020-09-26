@@ -21,7 +21,7 @@ object Main {
         ViashBuild(config, output = conf.build.output(), printMeta = conf.build.meta(), setup = conf.build.setup())
       case List(conf.test) =>
         val config = readConfigFromArgs(conf.test, modifyFun = false)
-        ViashTest(config, verbose = conf.test.verbose(), keepFiles = conf.test.keep())
+        ViashTest(config, keepFiles = conf.test.keep())
       case List(conf.namespace, conf.namespace.build) =>
         ViashNamespace.build(
           source = conf.namespace.build.src(),
