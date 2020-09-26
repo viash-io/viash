@@ -13,7 +13,6 @@ test_that("Checking whether output is correct", {
     "--multiple", "one", "--multiple=two", 
     "e", "f"
   ))
-  
   expect_true(file.exists("output.txt"))
   
   output <- readr::read_file("output.txt")

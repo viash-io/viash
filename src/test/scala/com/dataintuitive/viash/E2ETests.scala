@@ -1,68 +1,33 @@
 package com.dataintuitive.viash
 
-import org.scalatest.{FunSuite, Tag}
-import com.dataintuitive.viash.config.Config
-import com.dataintuitive.viash.helpers._
+import org.scalatest.FunSuite
 
 class E2ETests extends FunSuite {
-  for (
-    (testName, scriptName) <- List(
-      ("testbash", None),
-      ("testpython", Some("config.vsh.yaml")),
-      ("testr", Some("code.vsh.R")),
-      ("testexecutable", None)
-    );
-    platName <- List("docker", "native")
-  ) {
+  def getTestResource(path: String) = getClass.getResource(path).toString
 
-    val config =
-      if (scriptName.isDefined) {
-        val compRes = getClass.getResource(s"/$testName/${scriptName.get}")
-        Some(Config.readSplitOrJoined(
-          joined = Some(compRes.toString),
-          platformID = Some(platName),
-          modifyFun = false
-        ))
-      } else {
-        val funcRes = getClass.getResource(s"/$testName/functionality.yaml")
-        val platRes = getClass.getResource(s"/$testName/platform_$platName.yaml")
-
-        if (platRes != null) {
-          Some(Config.readSplitOrJoined(
-            functionality = Some(funcRes.toString),
-            platform = Some(platRes.toString),
-            modifyFun = false
-          ))
-        } else {
-          None
-        }
-      }
-
-    if (config.isDefined) {
-      // run tests
-      val dir = IO.makeTemp("viash_test_" + config.get.functionality.name)
-
-      val tags: List[Tag] = platName match {
-        case "docker" => List(DockerTest)
-        case "native" => List(NativeTest)
-        case _ => Nil
-      }
-
-      test(s"Testing $testName platform $platName", tags: _*) {
-        val results = try {
-          ViashTest.runTests(config.get.functionality, config.get.platform.get, dir)
-        } finally {
-          IO.deleteRecursively(dir)
-        }
-
-        for (res <- results) {
-          val out = "!!!! TEST FAILED '" + res.name + "' !!!!\n" + res.output
-          if (res.exitValue != 0) {
-            println(out)
-          }
-          assert(res.exitValue == 0, out)
-        }
-      }
-    }
+  test(s"Testing testbash platform native", NativeTest) {
+    Main.main(Array("test", "-P", "native", "-f", getTestResource("/testbash/functionality.yaml")))
+  }
+  test(s"Testing testbash platform docker", DockerTest) {
+    Main.main(Array("test", "-P", "docker", "-f", getTestResource("/testbash/functionality.yaml")))
+  }
+  test(s"Testing testpython platform native", NativeTest) {
+    Main.main(Array("test", "-P", "native", getTestResource("/testpython/config.vsh.yaml")))
+  }
+  test(s"Testing testpython platform docker", DockerTest) {
+    Main.main(Array("test", "-P", "docker", getTestResource("/testpython/config.vsh.yaml")))
+  }
+  test(s"Testing testr platform native", NativeTest) {
+    Main.main(Array("test", "-P", "native", getTestResource("/testr/code.vsh.R")))
+  }
+  test(s"Testing testr platform docker", DockerTest) {
+    Main.main(Array("test", "-P", "docker", getTestResource("/testr/code.vsh.R")))
+  }
+// can't expect this executable to be available on the host. should use a different executable, perhaps?
+//  test(s"Testing testexecutable platform native", NativeTest) {
+//    Main.main(Array("test", "-P", "native", "-f", testResource("/testexecutable/functionality.yaml")))
+//  }
+  test(s"Testing testexecutable platform docker", DockerTest) {
+    Main.main(Array("test", "-P", "docker", "-f", getTestResource("/testexecutable/functionality.yaml")))
   }
 }
