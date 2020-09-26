@@ -13,60 +13,78 @@ import com.dataintuitive.viash.config.Config
 import helpers.IO
 
 object ViashTest {
-
   case class TestOutput(name: String, exitValue: Int, output: String)
 
-  def apply(config: Config, verbose: Boolean, keepFiles: Boolean): Unit = {
+  def apply(config: Config, verbose: Boolean, keepFiles: Boolean) {
     val fun = config.functionality
     val plat = config.platform.get
 
     // create temporary directory
     val dir = IO.makeTemp("viash_test_" + fun.name)
+    if (verbose) println(s"Running tests in temporary directory: '$dir'")
 
+    // run tests
     val results = ViashTest.runTests(fun, plat, dir, verbose = verbose)
+    val count = results.count(_.exitValue == 0)
+    val anyErrors = count < results.length
 
-    val code = ViashTest.reportTests(results, verbose = verbose)
-
-    if (!keepFiles && !results.exists(_.exitValue > 0)) {
-      println("Cleaning up temporary files")
-      IO.deleteRecursively(dir)
-    } else {
-      println(s"Test files and logs are stored at '$dir'")
+    // print results of tests with errors. if verbose, they were printed already.
+    for (res ← results if res.exitValue > 0 && !verbose) {
+      println(s">> ${res.name} finished with code ${res.exitValue}:")
+      println(res.output)
+      println()
     }
 
-    System.exit(code)
+    if (verbose) {
+      if (results.isEmpty) {
+        println(s"WARNING! No tests found!")
+      } else if (anyErrors) {
+        println(s"ERROR! Only $count out of ${results.length} test scripts succeeded!")
+      } else {
+        println(s"SUCCESS! All $count out of ${results.length} test scripts succeeded!")
+      }
+    }
+
+    if (!keepFiles && !anyErrors) {
+      if (verbose) println("Cleaning up temporary directory")
+      IO.deleteRecursively(dir)
+    }
+
+    if (anyErrors) {
+      throw new RuntimeException(s"Only $count out of ${results.length} test scripts succeeded!")
+    }
   }
 
   def runTests(fun: Functionality, platform: Platform, dir: File, verbose: Boolean = false): List[TestOutput] = {
     // build regular executable
-    val buildfun = platform.modifyFunctionality(fun)
-    val builddir = Paths.get(dir.toString, "build_executable").toFile
-    builddir.mkdir()
-    IO.writeResources(buildfun.resources.getOrElse(Nil), builddir)
+    val buildFun = platform.modifyFunctionality(fun)
+    val buildDir = Paths.get(dir.toString, "build_executable").toFile
+    buildDir.mkdir()
+    IO.writeResources(buildFun.resources.getOrElse(Nil), buildDir)
 
     // run command, collect output
     val stream = new ByteArrayOutputStream
-    val printwriter = new PrintWriter(stream)
-    val logwriter = new FileWriter(Paths.get(builddir.toString, "_viash_build_log.txt").toString, true)
+    val printWriter = new PrintWriter(stream)
+    val logWriter = new FileWriter(Paths.get(buildDir.toString, "_viash_build_log.txt").toString, true)
 
     val logger: String => Unit =
       (s: String) => {
         if (verbose) println(s)
-        printwriter.println(s)
-        logwriter.append(s + sys.props("line.separator"))
+        printWriter.println(s)
+        logWriter.append(s + sys.props("line.separator"))
       }
 
     // run command, collect output
     val buildResult =
       try {
-        val executable = Paths.get(builddir.toString, fun.name).toString
+        val executable = Paths.get(buildDir.toString, fun.name).toString
         logger(s"+$executable ---setup")
-        val exitValue = Process(Seq(executable, "---setup"), cwd = builddir).!(ProcessLogger(logger, logger))
+        val exitValue = Process(Seq(executable, "---setup"), cwd = buildDir).!(ProcessLogger(logger, logger))
 
         TestOutput("build_executable", exitValue, stream.toString)
       } finally {
-        printwriter.close()
-        logwriter.close()
+        printWriter.close()
+        logWriter.close()
       }
 
     // generate executable for native platform
@@ -137,31 +155,4 @@ object ViashTest {
 
     buildResult :: testResults
   }
-
-  def reportTests(results: List[TestOutput], verbose: Boolean): Int = {
-    if (results.isEmpty) {
-      println("No tests found!")
-      0
-    } else {
-      println()
-
-      for (res ← results if res.exitValue > 0 && !verbose) {
-        println(s">> ${res.name} finished with code ${res.exitValue}:")
-        println(res.output)
-        println()
-      }
-
-      val count = results.count(_.exitValue == 0)
-
-      if (count < results.length) {
-        println(s"FAIL! Only $count out of ${results.length} test scripts succeeded!")
-        1
-      } else {
-        println(s"SUCCESS! All $count out of ${results.length} test scripts succeeded!")
-        0
-      }
-    }
-  }
-
-
 }
