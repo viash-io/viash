@@ -1,17 +1,19 @@
 package com.dataintuitive.viash
 
 import java.io.ByteArrayOutputStream
+import java.nio.file.Paths
 
 import com.dataintuitive.viash.functionality.Functionality
 import com.dataintuitive.viash.helpers.IO
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
+import scala.reflect.io.Directory
 
-class E2EMainBashDocker extends FunSuite with BeforeAndAfterAll {
+
+class E2EMainTest extends FunSuite with BeforeAndAfterAll {
   // which platform to test
-  private val testName = "testbash"
-  private val funcFile = getClass.getResource(s"/$testName/functionality.yaml").getPath
-  private val platFile = getClass.getResource(s"/$testName/platform_docker.yaml").getPath
+  private val funcFile = getClass.getResource("/testbash/functionality.yaml").getPath
+  private val platFile = getClass.getResource("/testbash/platform_docker.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
@@ -27,14 +29,14 @@ class E2EMainBashDocker extends FunSuite with BeforeAndAfterAll {
         "-f", funcFile,
         "-p", platFile
       ))
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 3 out of 3 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(testText.contains("Running tests in temporary directory: ") === true)
+    assert(testText.contains("SUCCESS! All 3 out of 3 test scripts succeeded!") === true)
+    assert(testText.contains("Cleaning up temporary directory") === true)
   }
 
 
 
-  test("Check output in case of --keep is specified") {
+  test("Check output in case --keep is specified") {
     val testText = executeMainAndCaptureStdOut(
       Array(
         "test",
@@ -42,14 +44,35 @@ class E2EMainBashDocker extends FunSuite with BeforeAndAfterAll {
         "-p", platFile,
         "--keep"
       ))
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 3 out of 3 test scripts succeeded!"))
-    assert(!testText.contains("Cleaning up temporary directory"))
+    assert(testText.contains("Running tests in temporary directory: ") === true)
+    assert(testText.contains("SUCCESS! All 3 out of 3 test scripts succeeded!") === true)
+    assert(testText.contains("Cleaning up temporary directory") === false)
 
-    // Running tests in temporary directory: '/tmp/viash_test_testbash9467890914539760538'
-    // Check folder exists
-    // Check file in folder
-    // remove temporary directory
+    // Get temporary directory
+    val Regex = ".*Running tests in temporary directory: '([^']*)'.*".r
+
+    var tempPath = ""
+    testText.replaceAll("\n", "") match {
+      case Regex(path) => tempPath = path
+      case _ => {}
+    }
+
+    assert(tempPath.contains("/tmp/viash_test_testbash") === true)
+
+    // Check temporary directory is still present
+    val tempFolder = new Directory(Paths.get(tempPath).toFile)
+    assert(tempFolder.exists === true)
+    assert(tempFolder.isDirectory === true)
+
+    // Check a file in the directory
+    val tempFile = Paths.get(tempPath, "build_executable/NOTICE").toFile
+    assert(tempFile.exists === true)
+    assert(tempFile.isFile === true)
+    assert(tempFile.canRead === true)
+
+    // Remove the temporary directory
+    tempFolder.deleteRecursively()
+    assert(tempFolder.exists === false)
   }
 
 
@@ -64,7 +87,7 @@ class E2EMainBashDocker extends FunSuite with BeforeAndAfterAll {
 
     val stdout = os.toString()
     //Console.print("stdout: -->")
-    //Console.print(stdout)
+    Console.print(stdout)
     //Console.println("<--")
     return stdout
   }
