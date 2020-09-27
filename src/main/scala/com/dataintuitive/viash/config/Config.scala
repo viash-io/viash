@@ -144,43 +144,43 @@ object Config {
     // * else if platforms is a non-empty list, use the first platform
     // * else use the native platform
     val pl =
-    if (platform.isDefined) {
-      Platform.parse(IO.uri(platform.get))
-    } else if (platformID.isDefined) {
-      val pid = platformID.get
-      if (joined.isDefined) {
-        // if input file is a joined config
-        val platformNames = config.platforms.map(_.id)
-        if (!platformNames.contains(pid)) {
-          throw new PlatformNotFoundException(config, pid)
-        }
-        config.platforms(platformNames.indexOf(pid))
-      } else {
-        val funRegex = "[^/]*.yaml$".r
-        // if input file is a functionality yaml,
-        // check if platform_*.yaml file exists
-        val platPath = funRegex.replaceFirstIn(functionality.get, "platform_" + pid + ".yaml")
-        val uri = IO.uri(platPath)
-        val platform =
-          try {
-            Some(Platform.parse(uri))
-          } catch {
-            case _: Throwable => None
+      if (platform.isDefined) {
+        Platform.parse(IO.uri(platform.get))
+      } else if (platformID.isDefined) {
+        val pid = platformID.get
+        if (joined.isDefined) {
+          // if input file is a joined config
+          val platformNames = config.platforms.map(_.id)
+          if (!platformNames.contains(pid)) {
+            throw new PlatformNotFoundException(config, pid)
+          }
+          config.platforms(platformNames.indexOf(pid))
+        } else {
+          val funRegex = "[^/]*.yaml$".r
+          // if input file is a functionality yaml,
+          // check if platform_*.yaml file exists
+          val platPath = funRegex.replaceFirstIn(functionality.get, "platform_" + pid + ".yaml")
+          val uri = IO.uri(platPath)
+          val platform =
+            try {
+              Some(Platform.parse(uri))
+            } catch {
+              case _: Throwable => None
+            }
+
+          if (platform.isEmpty) {
+            throw new PlatformNotFoundException(config, platPath)
           }
 
-        if (platform.isEmpty) {
-          throw new PlatformNotFoundException(config, platPath)
+          platform.get
         }
-
-        platform.get
+      } else if (config.platform.isDefined) {
+        config.platform.get
+      } else if (config.platforms.nonEmpty) {
+        config.platforms.head
+      } else {
+        NativePlatform()
       }
-    } else if (config.platform.isDefined) {
-      config.platform.get
-    } else if (config.platforms.nonEmpty) {
-      config.platforms.head
-    } else {
-      NativePlatform()
-    }
 
     // gather git info of functionality git
     val path = new File(functionality.getOrElse(joined.getOrElse(""))).getParentFile
