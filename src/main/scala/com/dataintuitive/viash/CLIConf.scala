@@ -178,8 +178,53 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
     }
 
+    val test = new Subcommand("test") {
+      banner(
+        s"""viash ns test
+           |Test a namespace containing many viash config files.
+           |
+           |Usage:
+           |  viash ns test [-s src] [-P docker/-p platform.yaml] [--parallel]
+           |
+           |Arguments:""".stripMargin)
+
+      val namespace = opt[String](
+        name = "namespace",
+        short = 'n',
+        descr = "The name of the namespace.",
+        default = None
+      )
+      val src = opt[String](
+        name = "src",
+        short = 's',
+        descr = " A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
+        default = Some("src")
+      )
+      val platform = opt[String](
+        short = 'p',
+        descr = "Path to a custom platform file.",
+        default = None,
+        required = false
+      )
+      val platformid = opt[String](
+        short = 'P',
+        descr = "Only build a particular platform type.",
+        default = None,
+        required = false
+      )
+      val parallel = opt[Boolean](
+        name = "parallel",
+        short = 'l',
+        default = Some(false),
+        descr = "Whether or not to run the process in parallel."
+      )
+    }
+
     addSubcommand(build)
+    addSubcommand(test)
     requireSubcommand()
+
+    shortSubcommandsHelp(true)
   }
 
   addSubcommand(run)
