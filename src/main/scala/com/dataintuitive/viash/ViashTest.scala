@@ -19,21 +19,30 @@ object ViashTest {
     config: Config,
     keepFiles: Boolean = false,
     quiet: Boolean = false
-  ): List[TestOutput] = {
+  ): (TestOutput, List[TestOutput]) = {
     // create temporary directory
     val dir = IO.makeTemp("viash_test_" + config.functionality.name)
     if (!quiet) println(s"Running tests in temporary directory: '$dir'")
 
     // run tests
-    val results = ViashTest.runTests(config, dir, verbose = !quiet)
+    val (setupRes, results) = ViashTest.runTests(config, dir, verbose = !quiet)
     val count = results.count(_.exitValue == 0)
-    val anyErrors = count < results.length
+    val anyErrors = setupRes.exitValue > 0 || count < results.length
+
+    val errorMessage =
+      if (!anyErrors) {
+        ""
+      } else if (setupRes.exitValue > 0) {
+        "Setup failed!"
+      } else {
+        s"Only $count out of ${results.length} test scripts succeeded!"
+      }
 
     if (!quiet) {
-      if (results.isEmpty) {
+      if (results.isEmpty && !anyErrors) {
         println(s"${Console.RED}WARNING! No tests found!${Console.RESET}")
       } else if (anyErrors) {
-        println(s"${Console.RED}ERROR! Only $count out of ${results.length} test scripts succeeded!${Console.RESET}")
+        println(s"${Console.RED}ERROR! $errorMessage${Console.RESET}")
       } else {
         println(s"${Console.GREEN}SUCCESS! All $count out of ${results.length} test scripts succeeded!${Console.RESET}")
       }
@@ -47,13 +56,13 @@ object ViashTest {
     }
 
     if (anyErrors && !quiet) {
-      throw new RuntimeException(s"Only $count out of ${results.length} test scripts succeeded!")
+      throw new RuntimeException(errorMessage)
     }
 
-    results
+    (setupRes, results)
   }
 
-  def runTests(config: Config, dir: File, verbose: Boolean = true): List[TestOutput] = {
+  def runTests(config: Config, dir: File, verbose: Boolean = true): (TestOutput, List[TestOutput]) = {
     val fun = config.functionality
     val platform = config.platform.get
 
@@ -91,6 +100,11 @@ object ViashTest {
         printWriter.close()
         logWriter.close()
       }
+    }
+
+    // if setup failed, return faster
+    if (buildResult.exitValue > 0) {
+      return (buildResult, Nil)
     }
 
     // generate executable for native platform
@@ -165,6 +179,6 @@ object ViashTest {
 
     if (verbose) println(consoleLine)
 
-    buildResult :: testResults
+    (buildResult, testResults)
   }
 }
