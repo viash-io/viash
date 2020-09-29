@@ -72,17 +72,26 @@ object ViashNamespace {
           None
       }.toList
 
-    printf("%20s %20s %20s %8s %8s %8s\n", "namespace", "functionality", "platform", "#success", "#tests", "result")
-    for ((conf, testRes) ← results) {
+    printf("%20s %20s %20s %8s %8s %12s\n", "namespace", "functionality", "platform", "#success", "#tests", "result")
+    for ((conf, (setupRes, testRes)) ← results) {
       val namespace = conf.functionality.namespace.getOrElse("")
       val funName = conf.functionality.name
       val platName = conf.platform.get.id
 
-      val numTests = testRes.length - 1 // one is always the setup
+      val numTests = testRes.length // one is always the setup
       val numSucceeds = testRes.count(_.exitValue == 0) // one is always the setup
-      val col = if (numSucceeds == numTests) Console.GREEN else Console.RED
-      val result = if (numTests == 0) "NONE!" else if (numSucceeds == numTests) "Success!" else "FAIL!"
-      printf("%s%20s %20s %20s %8d %8d %8s%s\n", col, namespace, funName, platName, numSucceeds, numTests, result, Console.RESET)
+      val result =
+        if (setupRes.exitValue > 0) {
+          "SETUP ERROR"
+        } else if (numTests == 0) {
+          "No tests :("
+        } else if (numSucceeds < numTests) {
+          "FAIL!"
+        } else {
+          "Success!"
+        }
+      val col = if (result == "Success!") Console.GREEN else Console.RED
+      printf("%s%20s %20s %20s %8d %8d %12s%s\n", col, namespace, funName, platName, numSucceeds, numTests, result, Console.RESET)
     }
   }
 
