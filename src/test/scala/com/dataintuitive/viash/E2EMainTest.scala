@@ -34,7 +34,7 @@ class E2EMainTest extends FunSuite with BeforeAndAfterAll {
         "-p", platFile
       ))
     assert(testText.contains("Running tests in temporary directory: ") === true)
-    assert(testText.contains("SUCCESS! All 3 out of 3 test scripts succeeded!") === true)
+    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!") === true)
     assert(testText.contains("Cleaning up temporary directory") === true)
   }
 
@@ -49,7 +49,7 @@ class E2EMainTest extends FunSuite with BeforeAndAfterAll {
         "--keep"
       ))
     assert(testText.contains("Running tests in temporary directory: ") === true)
-    assert(testText.contains("SUCCESS! All 3 out of 3 test scripts succeeded!") === true)
+    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!") === true)
     assert(testText.contains("Cleaning up temporary directory") === false)
 
     // Get temporary directory
@@ -88,7 +88,7 @@ class E2EMainTest extends FunSuite with BeforeAndAfterAll {
         "-p", platFile
       ))
     assert(testText.contains("Running tests in temporary directory: ") === true)
-    assert(testText.contains("SUCCESS! All 1 out of 1 test scripts succeeded!") === true)
+    assert(testText.contains("WARNING! No tests found!") === true)
     assert(testText.contains("Cleaning up temporary directory") === true)
   }
 
@@ -111,7 +111,7 @@ class E2EMainTest extends FunSuite with BeforeAndAfterAll {
     Console.print(testText)
 
     assert(testText.contains("Running tests in temporary directory: ") === true)
-    assert(testText.contains("ERROR! Only 2 out of 3 test scripts succeeded!") === true)
+    assert(testText.contains("ERROR! Only 1 out of 2 test scripts succeeded!") === true)
     assert(testText.contains("Cleaning up temporary directory") === false)
 
     // TODO clean up folder of failed test
