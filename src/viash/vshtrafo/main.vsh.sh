@@ -19,7 +19,7 @@
 #'   - name: "--format"
 #'     alternatives: ["-f"]
 #'     type: string
-#'     description: Output format. Must be one of 'script', 'joined', 'split'
+#'     description: Output format. Must be one of 'script', 'config', 'split'
 #'     required: true
 #'   - name: "--rm"
 #'     type: boolean_true
@@ -28,7 +28,7 @@
 #'   - type: bash_script
 #'     path: tests/test_conversion.sh
 #'   - path: tests/functionality.yaml
-#'   - path: tests/joined.vsh.yaml
+#'   - path: tests/config.vsh.yaml
 #'   - path: tests/platform_docker.yaml
 #'   - path: tests/platform_native.yaml
 #'   - path: tests/script.sh
@@ -60,7 +60,7 @@ if [[ "$par_input" =~ ^.*\.vsh\.(sh|r|R|py)$ ]]; then
     exit 1
   fi
 elif [[ "$par_input" =~ ^.*\.vsh\.(yaml|yml)$ ]]; then
-  input_type=joined
+  input_type=config
 elif [[ "$par_input" =~ ^.*\.(yaml|yml)$ ]]; then
   input_type=split
 else
@@ -71,9 +71,15 @@ fi
 # create dir if it does not exist
 [[ -d "$par_output_dir" ]] || mkdir -p "$par_output_dir"
 
+# format backwards compatibility
+if [[ $par_format == "joined" ]]; then
+  echo "Output: deprecated format 'joined' detected. Use 'config' instead."
+  par_format="config"
+fi
+
 # check format
-if [[ ! $par_format =~ ^(script|joined|split)$ ]]; then
-  echo "Output: unsupported format. Must be one of 'script', 'joined' or 'split'"
+if [[ ! $par_format =~ ^(script|config|split)$ ]]; then
+  echo "Output: unsupported format. Must be one of 'script', 'config' or 'split'"
   exit 1
 fi
 
@@ -83,30 +89,30 @@ if [ $input_type = $par_format ]; then
   echo Just use cp, you son of a silly person.
   cp "$par_input" "$par_output_dir/$(basename $par_input)"
 
-# ------------------------ SCRIPT -> JOINED ------------------------
-elif [ $input_type = "script" ] && [ $par_format = "joined" ]; then
-  echo "Converting from 'script' to 'joined'"
+# ------------------------ SCRIPT -> CONFIG ------------------------
+elif [ $input_type = "script" ] && [ $par_format = "config" ]; then
+  echo "Converting from 'script' to 'config'"
 
   # determine output paths
-  joined_yaml_relative="config.vsh.yaml"
-  joined_yaml_path="$par_output_dir/$joined_yaml_relative"
+  config_yaml_relative="config.vsh.yaml"
+  config_yaml_path="$par_output_dir/$config_yaml_relative"
   output_script_relative="$(basename $par_input | sed 's#\.vsh\.#.#')"
   output_script_path="$par_output_dir/$output_script_relative"
   
-  # WRITING JOINED YAML
-  echo "> Writing joined yaml to $joined_yaml_relative"
-  JOINED_YAML=$(cat "$par_input" | grep "^#' " | sed "s/^#' //")
+  # WRITING CONFIG YAML
+  echo "> Writing config yaml to $config_yaml_relative"
+  CONFIG_YAML=$(cat "$par_input" | grep "^#' " | sed "s/^#' //")
   
   # write yaml without resources
-  echo "$JOINED_YAML" | yq d - functionality.resources > "$joined_yaml_path"
+  echo "$CONFIG_YAML" | yq d - functionality.resources > "$config_yaml_path"
   
   # add script to resources
-  printf "functionality:\n  resources:\n  - type: ${script_type}_script\n    path: $output_script_relative\n" | yq m "$joined_yaml_path" - -i
+  printf "functionality:\n  resources:\n  - type: ${script_type}_script\n    path: $output_script_relative\n" | yq m "$config_yaml_path" - -i
   
   # add other resources
-  has_resources=`echo "$JOINED_YAML" | yq read - functionality.resources | head -1`
+  has_resources=`echo "$CONFIG_YAML" | yq read - functionality.resources | head -1`
   if [ ! -z "$has_resources" ]; then
-    echo "$JOINED_YAML" | yq read - functionality.resources | yq p - functionality.resources | yq m -a "$joined_yaml_path" - -i
+    echo "$CONFIG_YAML" | yq read - functionality.resources | yq p - functionality.resources | yq m -a "$config_yaml_path" - -i
   fi
 
   # WRITING SCRIPT
@@ -153,9 +159,9 @@ elif [ $input_type = "script" ] && [ $par_format = "split" ]; then
   echo "> Writing script to $output_script_relative"
   cat "$par_input" | grep -v "^#' " > "$output_script_path"
 
-# ------------------------ JOINED -> SCRIPT ------------------------
-elif [ $input_type = "joined" ] && [ $par_format = "script" ]; then
-  echo "Converting from 'joined' to 'script'"
+# ------------------------ CONFIG -> SCRIPT ------------------------
+elif [ $input_type = "config" ] && [ $par_format = "script" ]; then
+  echo "Converting from 'config' to 'script'"
 
   # determine output paths
   input_script_relative=$(yq read "$par_input" 'functionality.resources.[0].path')
@@ -170,9 +176,9 @@ elif [ $input_type = "joined" ] && [ $par_format = "script" ]; then
   # writing script
   awk "/VIASH START/,/VIASH END/ { next; }; 1 {print; }" "$input_script_path" >> "$output_script_path"
 
-# ------------------------ JOINED -> SPLIT ------------------------
-elif [ $input_type = "joined" ] && [ $par_format = "split" ]; then
-  echo "Converting from 'joined' to 'split'"
+# ------------------------ CONFIG -> SPLIT ------------------------
+elif [ $input_type = "config" ] && [ $par_format = "split" ]; then
+  echo "Converting from 'config' to 'split'"
 
   # determine output paths
   funcionality_yaml_relative="functionality.yaml"
@@ -244,16 +250,16 @@ elif [ $input_type = "split" ] && [ $par_format = "script" ]; then
   # writing script
   awk "/VIASH START/,/VIASH END/ { next; }; 1 {print; }" "$input_script_path" >> "$output_script_path"
   
-# ------------------------ SPLIT -> JOINED ------------------------
-elif [ $input_type = "split" ] && [ $par_format = "joined" ]; then
-  echo "Converting from 'split' to 'joined'"
+# ------------------------ SPLIT -> CONFIG ------------------------
+elif [ $input_type = "split" ] && [ $par_format = "config" ]; then
+  echo "Converting from 'split' to 'config'"
 
   # determine output paths
   output_yaml_relative="config.vsh.yaml"
   output_yaml_path="$par_output_dir/$output_yaml_relative"
   
-  # WRITING JOINED YAML
-  echo "> Writing joined yaml to $output_yaml_relative"
+  # WRITING CONFIG YAML
+  echo "> Writing config yaml to $output_yaml_relative"
   
   # writing functionality
   yq p "$par_input" functionality > "$output_yaml_path"
