@@ -16,6 +16,7 @@ class E2EMainTest extends FunSuite with BeforeAndAfterAll {
   private val funcNoTestFile = getClass.getResource("/testbash/functionality_no_tests.yaml").getPath
   private val funcFailedTestFile = getClass.getResource("/testbash/functionality_failed_test.yaml").getPath
   private val platFile = getClass.getResource("/testbash/platform_docker.yaml").getPath
+  private val platFailedBuildFile = getClass.getResource("/testbash/platform_docker_failed_build.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
@@ -134,6 +135,49 @@ class E2EMainTest extends FunSuite with BeforeAndAfterAll {
     tempFolder.deleteRecursively()
     assert(tempFolder.exists === false)
   }
+
+  test("Check failing build") {
+    // don't use executeMainAndCaptureStdOut here as the exception will prevent us from getting the stdout text
+    val os = new ByteArrayOutputStream()
+
+    assertThrows[RuntimeException] {
+      Console.withOut(os) {
+        Main.main(Array(
+          "test",
+          "-f", funcFile,
+          "-p", platFailedBuildFile
+        ))
+      }
+    }
+
+    val testText = os.toString()
+    Console.print(testText)
+
+    assert(testText.contains("Running tests in temporary directory: ") === true)
+    assert(testText.contains("ERROR! Setup failed!") === true)
+    assert(testText.contains("Cleaning up temporary directory") === false)
+
+    // Get temporary directory
+    val Regex = ".*Running tests in temporary directory: '([^']*)'.*".r
+
+    var tempPath = ""
+    testText.replaceAll("\n", "") match {
+      case Regex(path) => tempPath = path
+      case _ => {}
+    }
+
+    assert(tempPath.contains("/tmp/viash_test_testbash") === true)
+
+    // Check temporary directory is still present
+    val tempFolder = new Directory(Paths.get(tempPath).toFile)
+    assert(tempFolder.exists === true)
+    assert(tempFolder.isDirectory === true)
+
+    // Remove the temporary directory
+    tempFolder.deleteRecursively()
+    assert(tempFolder.exists === false)
+  }
+
 
   def executeMainAndCaptureStdOut(args: Array[String]) : String = {
     val os = new ByteArrayOutputStream()
