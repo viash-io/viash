@@ -21,7 +21,7 @@ class E2EMainTest extends FunSuite with BeforeAndAfterAll {
   private val tempFolStr = temporaryFolder.toString
 
   // parse functionality from file
-  private val functionality = Functionality.parse(IO.uri(funcFile))
+  //private val functionality = Functionality.parse(IO.uri(funcFile))
 
   Console.println(s"tempFolStr: $tempFolStr")
 
@@ -114,9 +114,26 @@ class E2EMainTest extends FunSuite with BeforeAndAfterAll {
     assert(testText.contains("ERROR! Only 1 out of 2 test scripts succeeded!") === true)
     assert(testText.contains("Cleaning up temporary directory") === false)
 
-    // TODO clean up folder of failed test
-  }
+    // Get temporary directory
+    val Regex = ".*Running tests in temporary directory: '([^']*)'.*".r
 
+    var tempPath = ""
+    testText.replaceAll("\n", "") match {
+      case Regex(path) => tempPath = path
+      case _ => {}
+    }
+
+    assert(tempPath.contains("/tmp/viash_test_testbash") === true)
+
+    // Check temporary directory is still present
+    val tempFolder = new Directory(Paths.get(tempPath).toFile)
+    assert(tempFolder.exists === true)
+    assert(tempFolder.isDirectory === true)
+
+    // Remove the temporary directory
+    tempFolder.deleteRecursively()
+    assert(tempFolder.exists === false)
+  }
 
   def executeMainAndCaptureStdOut(args: Array[String]) : String = {
     val os = new ByteArrayOutputStream()
