@@ -37,6 +37,8 @@ class E2EMainTest extends FunSuite with BeforeAndAfterAll {
     assert(testText.contains("Running tests in temporary directory: ") === true)
     assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!") === true)
     assert(testText.contains("Cleaning up temporary directory") === true)
+
+    subtestTemporaryDirectory(testText, false)
   }
 
 
@@ -53,31 +55,7 @@ class E2EMainTest extends FunSuite with BeforeAndAfterAll {
     assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!") === true)
     assert(testText.contains("Cleaning up temporary directory") === false)
 
-    // Get temporary directory
-    val Regex = ".*Running tests in temporary directory: '([^']*)'.*".r
-
-    var tempPath = ""
-    testText.replaceAll("\n", "") match {
-      case Regex(path) => tempPath = path
-      case _ => {}
-    }
-
-    assert(tempPath.contains("/tmp/viash_test_testbash") === true)
-
-    // Check temporary directory is still present
-    val tempFolder = new Directory(Paths.get(tempPath).toFile)
-    assert(tempFolder.exists === true)
-    assert(tempFolder.isDirectory === true)
-
-    // Check a file in the directory
-    val tempFile = Paths.get(tempPath, "build_executable/NOTICE").toFile
-    assert(tempFile.exists === true)
-    assert(tempFile.isFile === true)
-    assert(tempFile.canRead === true)
-
-    // Remove the temporary directory
-    tempFolder.deleteRecursively()
-    assert(tempFolder.exists === false)
+    subtestTemporaryDirectory(testText, true)
   }
 
 
@@ -91,91 +69,37 @@ class E2EMainTest extends FunSuite with BeforeAndAfterAll {
     assert(testText.contains("Running tests in temporary directory: ") === true)
     assert(testText.contains("WARNING! No tests found!") === true)
     assert(testText.contains("Cleaning up temporary directory") === true)
+
+    subtestTemporaryDirectory(testText, false)
   }
 
   test("Check test output when a test fails") {
-
-    // don't use executeMainAndCaptureStdOut here as the exception will prevent us from getting the stdout text
-    val os = new ByteArrayOutputStream()
-
-    assertThrows[RuntimeException] {
-      Console.withOut(os) {
-        Main.main(Array(
-          "test",
-          "-f", funcFailedTestFile,
-          "-p", platFile
-        ))
-      }
-    }
-
-    val testText = os.toString()
-    Console.print(testText)
+    val testText = executeMainAndCaptureStdOutWithException(Array(
+      "test",
+      "-f", funcFailedTestFile,
+      "-p", platFile
+    ))
 
     assert(testText.contains("Running tests in temporary directory: ") === true)
     assert(testText.contains("ERROR! Only 1 out of 2 test scripts succeeded!") === true)
     assert(testText.contains("Cleaning up temporary directory") === false)
 
-    // Get temporary directory
-    val Regex = ".*Running tests in temporary directory: '([^']*)'.*".r
-
-    var tempPath = ""
-    testText.replaceAll("\n", "") match {
-      case Regex(path) => tempPath = path
-      case _ => {}
-    }
-
-    assert(tempPath.contains("/tmp/viash_test_testbash") === true)
-
-    // Check temporary directory is still present
-    val tempFolder = new Directory(Paths.get(tempPath).toFile)
-    assert(tempFolder.exists === true)
-    assert(tempFolder.isDirectory === true)
-
-    // Remove the temporary directory
-    tempFolder.deleteRecursively()
-    assert(tempFolder.exists === false)
+    subtestTemporaryDirectory(testText, true)
   }
 
   test("Check failing build") {
-    // don't use executeMainAndCaptureStdOut here as the exception will prevent us from getting the stdout text
-    val os = new ByteArrayOutputStream()
-
-    assertThrows[RuntimeException] {
-      Console.withOut(os) {
-        Main.main(Array(
-          "test",
-          "-f", funcFile,
-          "-p", platFailedBuildFile
-        ))
-      }
-    }
-
-    val testText = os.toString()
-    Console.print(testText)
+    val testText = executeMainAndCaptureStdOutWithException(
+      Array(
+        "test",
+        "-f", funcFile,
+        "-p", platFailedBuildFile
+      ))
 
     assert(testText.contains("Running tests in temporary directory: ") === true)
     assert(testText.contains("ERROR! Setup failed!") === true)
     assert(testText.contains("Cleaning up temporary directory") === false)
 
-    // Get temporary directory
-    val Regex = ".*Running tests in temporary directory: '([^']*)'.*".r
-
-    var tempPath = ""
-    testText.replaceAll("\n", "") match {
-      case Regex(path) => tempPath = path
-      case _ => {}
-    }
-
-    assert(tempPath.contains("/tmp/viash_test_testbash") === true)
-
-    // Check temporary directory is still present
-    val tempFolder = new Directory(Paths.get(tempPath).toFile)
-    assert(tempFolder.exists === true)
-    assert(tempFolder.isDirectory === true)
-
-    // Remove the temporary directory
-    tempFolder.deleteRecursively()
-    assert(tempFolder.exists === false)
+    subtestTemporaryDirectory(testText, true)
   }
 
 
@@ -188,10 +112,51 @@ class E2EMainTest extends FunSuite with BeforeAndAfterAll {
     }
 
     val stdout = os.toString()
-    //Console.print("stdout: -->")
     Console.print(stdout)
-    //Console.println("<--")
-    return stdout
+    stdout
+  }
+
+  def executeMainAndCaptureStdOutWithException(args: Array[String]) : String = {
+    val os = new ByteArrayOutputStream()
+    assertThrows[RuntimeException] {
+      Console.withOut(os) {
+
+        Main.main(args)
+
+      }
+    }
+
+    val stdout = os.toString()
+    Console.print(stdout)
+    stdout
+  }
+
+
+  def subtestTemporaryDirectory(testText: String, expectDirectoryExists: Boolean) = {
+    // Get temporary directory
+    val Regex = ".*Running tests in temporary directory: '([^']*)'.*".r
+
+    var tempPath = ""
+    testText.replaceAll("\n", "") match {
+      case Regex(path) => tempPath = path
+      case _ => {}
+    }
+
+    assert(tempPath.contains("/tmp/viash_test_testbash") === true)
+
+    val tempFolder = new Directory(Paths.get(tempPath).toFile)
+    if (expectDirectoryExists) {
+      // Check temporary directory is still present
+      assert(tempFolder.exists === true)
+      assert(tempFolder.isDirectory === true)
+
+      // Remove the temporary directory
+      tempFolder.deleteRecursively()
+      assert(tempFolder.exists === false)
+    }
+    else {
+      assert(tempFolder.exists === false)
+    }
   }
 
   override def afterAll() {
