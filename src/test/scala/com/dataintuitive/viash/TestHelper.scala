@@ -19,16 +19,14 @@ object TestHelper {
    * @param args all the arguments typically passed to Main.main()
    * @return an array of strings of all the output
    */
-  def executeMainAndCaptureStdOut(args: Array[String]) : String = {
+  def testMain(args: Array[String]) : String = {
     val os = new ByteArrayOutputStream()
     Console.withOut(os) {
-
       Main.main(args)
-
     }
 
-    val stdout = os.toString()
-    Console.print(stdout)
+    val stdout = os.toString
+    // Console.print(stdout)
     stdout
   }
 
@@ -39,18 +37,16 @@ object TestHelper {
    * @param args all the arguments typically passed to Main.main()
    * @return an array of strings of all the output
    */
-  def executeMainAndCaptureStdOutWithException(args: Array[String]) : String = {
+  def testMainException[T <: AnyRef: ClassTag](args: Array[String]) : String = {
     val os = new ByteArrayOutputStream()
-    assertThrows[RuntimeException] {
+    assertThrows[T] {
       Console.withOut(os) {
-
         Main.main(args)
-
       }
     }
 
     val stdout = os.toString()
-    Console.print(stdout)
+    // Console.print(stdout)
     stdout
   }
 }
