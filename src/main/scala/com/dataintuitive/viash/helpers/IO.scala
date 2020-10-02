@@ -13,10 +13,12 @@ import java.nio.charset.StandardCharsets
 import com.dataintuitive.viash.functionality.resources.Resource
 
 object IO {
+  def tempDir: File = {
+    Paths.get(scala.util.Properties.envOrElse("VIASH_TEMP", "/tmp")).toFile
+  }
   def makeTemp(name: String): File = {
-    val tempdir = Paths.get(scala.util.Properties.envOrElse("VIASH_TEMP", "/tmp"))
-    if (!tempdir.toFile.exists()) Files.createDirectories(tempdir)
-    val temp = Files.createTempDirectory(tempdir, name).toFile
+    if (!tempDir.exists()) Files.createDirectories(tempDir.toPath)
+    val temp = Files.createTempDirectory(tempDir.toPath, name).toFile
     temp.mkdirs()
     temp
   }
