@@ -6,28 +6,28 @@ class E2ETests extends FunSuite {
   def getTestResource(path: String) = getClass.getResource(path).toString
 
   test(s"Testing testbash platform native", NativeTest) {
-    Main.main(Array("test", "-P", "native", "-f", getTestResource("/testbash/functionality.yaml")))
+    TestHelper.testMain(Array("test", "-P", "native", "-f", getTestResource("/testbash/functionality.yaml")))
   }
   test(s"Testing testbash platform docker", DockerTest) {
-    Main.main(Array("test", "-P", "docker", "-f", getTestResource("/testbash/functionality.yaml")))
+    TestHelper.testMain(Array("test", "-P", "docker", "-f", getTestResource("/testbash/functionality.yaml")))
   }
   test(s"Testing testpython platform native", NativeTest) {
-    Main.main(Array("test", "-P", "native", getTestResource("/testpython/config.vsh.yaml")))
+    TestHelper.testMain(Array("test", "-P", "native", getTestResource("/testpython/config.vsh.yaml")))
   }
   test(s"Testing testpython platform docker", DockerTest) {
-    Main.main(Array("test", "-P", "docker", getTestResource("/testpython/config.vsh.yaml")))
+    TestHelper.testMain(Array("test", "-P", "docker", getTestResource("/testpython/config.vsh.yaml")))
   }
   test(s"Testing testr platform native", NativeTest) {
-    Main.main(Array("test", "-P", "native", getTestResource("/testr/code.vsh.R")))
+    TestHelper.testMain(Array("test", "-P", "native", getTestResource("/testr/code.vsh.R")))
   }
   test(s"Testing testr platform docker", DockerTest) {
-    Main.main(Array("test", "-P", "docker", getTestResource("/testr/code.vsh.R")))
+    TestHelper.testMain(Array("test", "-P", "docker", getTestResource("/testr/code.vsh.R")))
   }
 // can't expect this executable to be available on the host. should use a different executable, perhaps?
 //  test(s"Testing testexecutable platform native", NativeTest) {
-//    Main.main(Array("test", "-P", "native", "-f", testResource("/testexecutable/functionality.yaml")))
+//    TestHelper.executeMainAndCaptureStdOut(Array("test", "-P", "native", "-f", testResource("/testexecutable/functionality.yaml")))
 //  }
   test(s"Testing testexecutable platform docker", DockerTest) {
-    Main.main(Array("test", "-P", "docker", "-f", getTestResource("/testexecutable/functionality.yaml")))
+    TestHelper.testMain(Array("test", "-P", "docker", "-f", getTestResource("/testexecutable/functionality.yaml")))
   }
 }
