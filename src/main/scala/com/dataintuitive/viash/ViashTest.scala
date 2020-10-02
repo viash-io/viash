@@ -17,7 +17,7 @@ object ViashTest {
 
   def apply(
     config: Config,
-    keepFiles: Boolean = false,
+    keepFiles: Option[Boolean] = None,
     quiet: Boolean = false
   ): (TestOutput, List[TestOutput]) = {
     // create temporary directory
@@ -49,8 +49,8 @@ object ViashTest {
     }
 
     // keep temp files if user asks or any errors are encountered
-    // always remove files if quiet == true
-    if ((!keepFiles && !anyErrors) || quiet) {
+
+    if (!keepFiles.getOrElse(anyErrors)) {
       if (!quiet) println("Cleaning up temporary directory")
       IO.deleteRecursively(dir)
     }

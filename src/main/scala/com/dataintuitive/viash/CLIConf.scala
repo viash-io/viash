@@ -1,6 +1,6 @@
 package com.dataintuitive.viash
 
-import org.rogach.scallop.{ScallopConf, ScallopOption, Subcommand}
+import org.rogach.scallop.{ScallopConf, ScallopOption, Subcommand, ValueConverter}
 
 trait ViashCommand {
   _: ScallopConf =>
@@ -30,11 +30,13 @@ trait ViashCommand {
 
 trait WithTemporary {
   _: ScallopConf =>
-  val keep = opt[Boolean](
+  val keep = opt[String](
     name = "keep",
     short = 'k',
-    default = Some(false),
-    descr = "Do not remove temporary files. The temporary directory can be overwritten by setting defining a VIASH_TEMP directory."
+    default = None,
+    descr = "Whether or not to keep temporary files. By default, files will be deleted if all goes well but remain when an error occurs." +
+      " By specifying --keep true, the temporary files will always be retained, whereas --keep false will always delete them." +
+      " The temporary directory can be overwritten by setting defining a VIASH_TEMP directory."
   )
 }
 
@@ -178,7 +180,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
     }
 
-    val test = new Subcommand("test") {
+    val test = new Subcommand("test") with WithTemporary {
       banner(
         s"""viash ns test
            |Test a namespace containing many viash config files.

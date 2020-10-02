@@ -30,13 +30,13 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, expectedTmpDirStr, false)
   }
 
-  test("Check output in case --keep is specified") {
+  test("Check output in case --keep true is specified") {
     val testText = TestHelper.testMain(
       Array(
         "test",
         "-f", funcFile,
         "-p", platFile,
-        "--keep"
+        "-k", "true"
       ))
 
     assert(testText.contains("Running tests in temporary directory: "))
@@ -46,6 +46,21 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, expectedTmpDirStr, true)
   }
 
+  test("Check output in case --keep false is specified") {
+    val testText = TestHelper.testMain(
+      Array(
+        "test",
+        "-f", funcFile,
+        "-p", platFile,
+        "--keep", "false"
+      ))
+
+    assert(testText.contains("Running tests in temporary directory: "))
+    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testText.contains("Cleaning up temporary directory"))
+
+    checkTempDirAndRemove(testText, expectedTmpDirStr, false)
+  }
 
   test("Check test output when no tests are specified in the functionality file") {
     val testText = TestHelper.testMain(

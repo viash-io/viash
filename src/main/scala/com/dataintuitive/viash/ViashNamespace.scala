@@ -55,7 +55,8 @@ object ViashNamespace {
     platform: Option[String] = None,
     platformID: Option[String] = None,
     namespace: Option[String] = None,
-    parallel: Boolean = false
+    parallel: Boolean = false,
+    keepFiles: Option[Boolean] = None
   ) {
     val configs = findConfigs(source, platform, platformID, namespace)
 
@@ -66,11 +67,29 @@ object ViashNamespace {
         case Left(conf) =>
           Some((conf, ViashTest(
             config = conf,
+            keepFiles = keepFiles,
             quiet = true
           )))
         case Right(_) =>
           None
       }.toList
+
+    for ((conf, (setupRes, testRes)) ← results) {
+      val namespace = conf.functionality.namespace.getOrElse("")
+      val funName = conf.functionality.name
+
+      if (setupRes.exitValue > 0) {
+        println(namespace + "-" + funName + " setup failed with exit code " + setupRes.exitValue + ":")
+        println(setupRes.output)
+        println()
+      }
+
+      for (test ← testRes if test.exitValue > 0) {
+        println(namespace + "-" + funName + " test '" + test.name + "' failed with exit code " + test.exitValue + ":")
+        println(test.output)
+        println()
+      }
+    }
 
     printf("%20s %20s %20s %8s %8s %12s\n", "namespace", "functionality", "platform", "#success", "#tests", "result")
     for ((conf, (setupRes, testRes)) ← results) {
