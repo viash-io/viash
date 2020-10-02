@@ -6,7 +6,7 @@ import com.dataintuitive.viash.functionality.Functionality
 import scala.io.Source
 import com.dataintuitive.viash.helpers._
 
-class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
+class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
   // which platform to test
   private val funcFile = getClass.getResource(s"/testbash/functionality.yaml").getPath
   private val platFile = getClass.getResource(s"/testbash/platform_docker.yaml").getPath
