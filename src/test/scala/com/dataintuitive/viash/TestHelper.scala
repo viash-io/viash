@@ -45,7 +45,7 @@ object TestHelper {
       }
     }
 
-    val stdout = os.toString()
+    val stdout = os.toString
     // Console.print(stdout)
     stdout
   }

@@ -23,11 +23,11 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
         "-p", platFile
       ))
 
-    assert(testText.contains("Running tests in temporary directory: "), "check for 'Running tests ...'")
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"), "check for 'SUCCESS! ...")
-    assert(testText.contains("Cleaning up temporary directory"), "check for 'Cleaning up ...")
+    assert(testText.contains("Running tests in temporary directory: "))
+    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testText.contains("Cleaning up temporary directory"))
 
-    subtestTemporaryDirectory(testText, expectedTmpDirStr, false)
+    checkTempDirAndRemove(testText, expectedTmpDirStr, false)
   }
 
   test("Check output in case --keep is specified") {
@@ -43,7 +43,7 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
     assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
     assert(!testText.contains("Cleaning up temporary directory"))
 
-    subtestTemporaryDirectory(testText, expectedTmpDirStr, true)
+    checkTempDirAndRemove(testText, expectedTmpDirStr, true)
   }
 
 
@@ -59,11 +59,11 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
     assert(testText.contains("WARNING! No tests found!"))
     assert(testText.contains("Cleaning up temporary directory"))
 
-    subtestTemporaryDirectory(testText, expectedTmpDirStr, false)
+    checkTempDirAndRemove(testText, expectedTmpDirStr, false)
   }
 
   test("Check test output when a test fails") {
-    val testText = TestHelper.testMainException(Array(
+    val testText = TestHelper.testMainException[RuntimeException](Array(
       "test",
       "-f", funcFailedTestFile,
       "-p", platFile
@@ -71,13 +71,13 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
 
     assert(testText.contains("Running tests in temporary directory: "))
     assert(testText.contains("ERROR! Only 1 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(!testText.contains("Cleaning up temporary directory"))
 
-    subtestTemporaryDirectory(testText, expectedTmpDirStr, true)
+    checkTempDirAndRemove(testText, expectedTmpDirStr, true)
   }
 
   test("Check failing build") {
-    val testText = TestHelper.testMainException(
+    val testText = TestHelper.testMainException[RuntimeException](
       Array(
         "test",
         "-f", funcFile,
@@ -86,9 +86,9 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
 
     assert(testText.contains("Running tests in temporary directory: "))
     assert(testText.contains("ERROR! Setup failed!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(!testText.contains("Cleaning up temporary directory"))
 
-    subtestTemporaryDirectory(testText, expectedTmpDirStr, true)
+    checkTempDirAndRemove(testText, expectedTmpDirStr, true)
   }
 
 
@@ -100,7 +100,7 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
    * @param expectDirectoryExists expect the directory to be present or not
    * @return
    */
-  def subtestTemporaryDirectory(testText: String, tmpDirText: String, expectDirectoryExists: Boolean) {
+  def checkTempDirAndRemove(testText: String, tmpDirText: String, expectDirectoryExists: Boolean) {
     // Get temporary directory
     val FolderRegex = ".*Running tests in temporary directory: '([^']*)'.*".r
 
@@ -109,19 +109,20 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
       case _ => ""
     }
 
-    assert(tempPath.contains(tmpDirText), s"- Expected dir in console stdout: '$tmpDirText', found: '$tempPath'")
+    assert(tempPath.contains(tmpDirText))
 
     val tempFolder = new Directory(Paths.get(tempPath).toFile)
 
     if (expectDirectoryExists) {
       // Check temporary directory is still present
-      assert(tempFolder.exists, s"- Dir does not exist: '$tempFolder'")
-      assert(tempFolder.isDirectory, s"- Is not a directory: '$tmpDirText'")
+      assert(tempFolder.exists)
+      assert(tempFolder.isDirectory)
 
       // Remove the temporary directory
       tempFolder.deleteRecursively()
     }
 
+    // folder should always have been removed at this stage
     assert(!tempFolder.exists)
   }
 }
