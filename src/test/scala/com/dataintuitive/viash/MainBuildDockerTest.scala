@@ -6,11 +6,10 @@ import com.dataintuitive.viash.functionality.Functionality
 import scala.io.Source
 import com.dataintuitive.viash.helpers._
 
-class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
+class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
   // which platform to test
-  private val testName = "testbash"
-  private val funcFile = getClass.getResource(s"/$testName/functionality.yaml").getPath
-  private val platFile = getClass.getResource(s"/$testName/platform_docker.yaml").getPath
+  private val funcFile = getClass.getResource(s"/testbash/functionality.yaml").getPath
+  private val platFile = getClass.getResource(s"/testbash/platform_docker.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
@@ -18,20 +17,19 @@ class E2EBashDocker extends FunSuite with BeforeAndAfterAll {
   // parse functionality from file
   private val functionality = Functionality.parse(IO.uri(funcFile))
 
-  // convert testbash
-  private val params = Array(
-    "build",
-    "-f", funcFile,
-    "-p", platFile,
-    "-o", tempFolStr
-  )
-  Main.main(params)
-
   // check whether executable was created
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
   private val execPathInDocker = Paths.get("/viash_automount", executable.getPath).toFile.toString
 
-  test("Viash should have created an executable") {
+  // convert testbash
+  test("viash can create an executable") {
+    TestHelper.testMain(Array(
+      "build",
+      "-f", funcFile,
+      "-p", platFile,
+      "-o", tempFolStr
+    ))
+
     assert(executable.exists)
     assert(executable.canExecute)
   }
