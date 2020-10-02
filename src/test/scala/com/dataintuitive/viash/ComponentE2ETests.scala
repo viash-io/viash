@@ -2,7 +2,7 @@ package com.dataintuitive.viash
 
 import org.scalatest.FunSuite
 
-class E2ETests extends FunSuite {
+class ComponentE2ETests extends FunSuite {
   def getTestResource(path: String) = getClass.getResource(path).toString
 
   test(s"Testing testbash platform native", NativeTest) {

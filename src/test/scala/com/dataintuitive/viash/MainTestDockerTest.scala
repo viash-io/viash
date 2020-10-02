@@ -5,7 +5,7 @@ import com.dataintuitive.viash.helpers.IO
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import scala.reflect.io.Directory
 
-class E2EMainTest extends FunSuite with BeforeAndAfterAll {
+class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
   // which platform to test
   private val funcFile = getClass.getResource("/testbash/functionality.yaml").getPath
   private val funcNoTestFile = getClass.getResource("/testbash/functionality_no_tests.yaml").getPath
