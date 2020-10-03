@@ -15,7 +15,7 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
 
   private val expectedTmpDirStr = s"${IO.tempDir}/viash_test_testbash"
 
-  test("Check standard test output for typical outputs") {
+  test("Check standard test output for typical outputs", DockerTest) {
     val testText = TestHelper.testMain(
       Array(
         "test",
@@ -30,7 +30,7 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, expectedTmpDirStr, false)
   }
 
-  test("Check output in case --keep true is specified") {
+  test("Check output in case --keep true is specified", DockerTest) {
     val testText = TestHelper.testMain(
       Array(
         "test",
@@ -62,7 +62,7 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, expectedTmpDirStr, false)
   }
 
-  test("Check test output when no tests are specified in the functionality file") {
+  test("Check test output when no tests are specified in the functionality file", DockerTest) {
     val testText = TestHelper.testMain(
       Array(
         "test",
@@ -77,7 +77,7 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, expectedTmpDirStr, false)
   }
 
-  test("Check test output when a test fails") {
+  test("Check test output when a test fails", DockerTest) {
     val testText = TestHelper.testMainException[RuntimeException](Array(
       "test",
       "-f", funcFailedTestFile,
