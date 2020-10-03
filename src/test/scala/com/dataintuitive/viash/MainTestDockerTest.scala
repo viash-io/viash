@@ -46,7 +46,7 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, expectedTmpDirStr, true)
   }
 
-  test("Check output in case --keep false is specified") {
+  test("Check output in case --keep false is specified", DockerTest) {
     val testText = TestHelper.testMain(
       Array(
         "test",
