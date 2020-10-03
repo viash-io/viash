@@ -91,6 +91,36 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, expectedTmpDirStr, true)
   }
 
+  test("Check test output when a test fails and --keep true is specified", DockerTest) {
+    val testText = TestHelper.testMainException[RuntimeException](Array(
+      "test",
+      "-f", funcFailedTestFile,
+      "-p", platFile,
+      "-k", "true"
+    ))
+
+    assert(testText.contains("Running tests in temporary directory: "))
+    assert(testText.contains("ERROR! Only 1 out of 2 test scripts succeeded!"))
+    assert(!testText.contains("Cleaning up temporary directory"))
+
+    checkTempDirAndRemove(testText, expectedTmpDirStr, true)
+  }
+
+  test("Check test output when a test fails and --keep false is specified", DockerTest) {
+    val testText = TestHelper.testMainException[RuntimeException](Array(
+      "test",
+      "-f", funcFailedTestFile,
+      "-p", platFile,
+      "-k", "false"
+    ))
+
+    assert(testText.contains("Running tests in temporary directory: "))
+    assert(testText.contains("ERROR! Only 1 out of 2 test scripts succeeded!"))
+    assert(testText.contains("Cleaning up temporary directory"))
+
+    checkTempDirAndRemove(testText, expectedTmpDirStr, false)
+  }
+
   test("Check failing build") {
     val testText = TestHelper.testMainException[RuntimeException](
       Array(
