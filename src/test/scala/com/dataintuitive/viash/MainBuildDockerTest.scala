@@ -102,7 +102,8 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
       assert(outputLines.contains("""optional_with_default: |bar|"""))
       assert(outputLines.contains("""multiple: |foo:bar|"""))
       assert(outputLines.contains("""multiple_pos: |a:b:c:d:e:f|"""))
-      assert(outputLines.contains(s"""resources_dir: |/viash_automount.*$tempFolStr/|"""))
+      val regex = s"""resources_dir: |/viash_automount.*$tempFolStr/|""".r
+      assert(regex.findFirstIn(outputLines).isDefined)
     } finally {
       outputSrc.close()
     }
@@ -138,7 +139,8 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
     assert(stdout.contains("""optional_with_default: |The default value.|"""))
     assert(stdout.contains("""multiple: ||"""))
     assert(stdout.contains("""multiple_pos: ||"""))
-    assert(stdout.contains(s"""resources_dir: |/viash_automount.*$tempFolStr/|"""))
+    val regex = s"""resources_dir: |/viash_automount.*$tempFolStr/|""".r
+    assert(regex.findFirstIn(stdout).isDefined)
 
     assert(stdout.contains("INFO: Parsed input arguments"))
   }
