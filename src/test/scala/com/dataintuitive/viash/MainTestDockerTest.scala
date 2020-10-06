@@ -15,6 +15,7 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
   private val funcFailedTestFile = getClass.getResource("/testbash/functionality_failed_test.yaml").getPath
   private val platFile = getClass.getResource("/testbash/platform_docker.yaml").getPath
   private val platFailedBuildFile = getClass.getResource("/testbash/platform_docker_failed_build.yaml").getPath
+  private val platWrongFile = getClass.getResource("/testbash/platform_ducker.yaml").getPath
   private val joinedFile = getClass.getResource("/testbash/joined.vsh.yaml").getPath
 
   private val expectedTmpDirStr = s"${IO.tempDir}/viash_test_testbash"
@@ -168,6 +169,21 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
     assert(!testText.contains("Cleaning up temporary directory"))
 
     //checkTempDirAndRemove(testText, expectedTmpDirStr, false)
+  }
+
+  test("Check wrong platform name specified in platform file") {
+    val testText = TestHelper.testMainException[RuntimeException](
+      Array(
+        "test",
+        "-f", funcFile,
+        "-p", platWrongFile
+      ))
+
+    assert(!testText.contains("Running tests in temporary directory: "))
+    assert(!testText.contains("ERROR! Setup failed!"))
+    assert(!testText.contains("Cleaning up temporary directory"))
+
+    //checkTempDirAndRemove(testText, expectedTmpDirStr, true)
   }
 
   /**
