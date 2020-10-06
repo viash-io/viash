@@ -66,7 +66,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |Executes a viash component from the provided viash config file. viash generates a temporary executable and immediately executes it with the given parameters.
          |
          |Usage:
-         |  viash run [-P docker/-p platform.yaml] [-k] config.vsh.yaml -- [arguments for script]
+         |  viash run [-P docker/-p platform.yaml] [-k true/false] config.vsh.yaml -- [arguments for script]
          |
          |Arguments:""".stripMargin)
 
@@ -77,7 +77,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |
          |The temporary directory can be altered by setting the VIASH_TEMP directory. Example:
          |  export VIASH_TEMP=/home/myuser/.viash_temp
-         |  viash run -k config.vsh.yaml""".stripMargin)
+         |  viash run config.vsh.yaml""".stripMargin)
   }
 
   val build = new Subcommand("build") with ViashCommand {
@@ -114,7 +114,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |Test the component using the tests defined in the viash config file.
          |
          |Usage:
-         |  viash test [-P docker/-p platform.yaml] [-v] [-k] config.vsh.yaml
+         |  viash test [-P docker/-p platform.yaml] [-k true/false] config.vsh.yaml
          |
          |Arguments:""".stripMargin)
 
@@ -122,7 +122,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       s"""
          |The temporary directory can be altered by setting the VIASH_TEMP directory. Example:
          |  export VIASH_TEMP=/home/myuser/.viash_temp
-         |  viash run -k meta.vsh.yaml""".stripMargin)
+         |  viash run meta.vsh.yaml""".stripMargin)
   }
 
   val namespace = new Subcommand("ns") {
