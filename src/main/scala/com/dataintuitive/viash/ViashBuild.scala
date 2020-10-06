@@ -9,8 +9,12 @@ import java.nio.file.Paths
 import scala.sys.process.{Process, ProcessLogger}
 
 object ViashBuild {
-  def apply(config: Config, output: String, printMeta: Boolean = false,
-    namespace: Option[String] = None, setup: Boolean = false
+  def apply(
+    config: Config,
+    output: String,
+    printMeta: Boolean = false,
+    namespace: Option[String] = None,
+    setup: Boolean = false
   ) {
     val fun = config.functionality
 
@@ -47,7 +51,7 @@ object ViashBuild {
 
     if (setup && exec_path.isDefined) {
       val cmd = Array(exec_path.get, "---setup")
-      val code = Process(cmd).!(ProcessLogger(println, println))
+      val _ = Process(cmd).!(ProcessLogger(println, println))
     }
 
     if (printMeta) {
