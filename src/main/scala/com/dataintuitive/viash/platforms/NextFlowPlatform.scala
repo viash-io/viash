@@ -161,11 +161,15 @@ case class NextFlowPlatform(
     val setup_main_outFromIn = functionality.function_type match {
       // in and out file format are the same, but also the filenames!
       case Some(AsIs) => """
-                           |def outFromIn(inputstr) {
-                           |
-                           |    return "${inputstr}"
-                           |}
-                           |""".stripMargin.replace("__e__", inputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
+                          |def getOutputFilename(_params) {
+                          |
+                          |    def output = _params.arguments.find{it ->
+                          |      (it.value.direction == "Output" && it.value.type == "file")
+                          |    }
+                          |
+                          |    return output.value.value
+                          |}
+                          |""".stripMargin.replace("__e__", inputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
       // Out format is different from in format
       case Some(Convert) | Some(Join) | None => """
                                                   |// files is either String, List[String] or HashMap[String,String]
@@ -324,6 +328,11 @@ case class NextFlowPlatform(
          |""".stripMargin
     }
 
+    val outFromInStr = functionality.function_type match {
+      case Some(AsIs) => "def outputFilename = getOutputFilename(updtParams)"
+      case _ => "def outputFilename = outFromIn(filename)"
+    }
+
     val setup_main_workflow =
       s"""
          |workflow $fname {
@@ -350,11 +359,11 @@ case class NextFlowPlatform(
          |                        ? input.collect{ it.name }
          |                        : input.collectEntries{ k, v -> [ k, (v in List) ? v.collect{it.name} : v.name ] }
          |                    : input.name
-         |            def outputFilename = outFromIn(filename)
          |            def defaultParams = params[key] ? params[key] : [:]
          |            def overrideParams = _params[key] ? _params[key] : [:]
          |            def updtParams = defaultParams + overrideParams
          |            // now, switch to arrays instead of hashes...
+         |            $outFromInStr
          |            def updtParams1 = overrideInput(updtParams, filename)
          |            def updtParams2 = overrideOutput(updtParams1, outputFilename)
          |            new Tuple5(
