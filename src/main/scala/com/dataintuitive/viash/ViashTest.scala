@@ -95,6 +95,7 @@ object ViashTest {
         logger(s"+$executable ---setup")
         val exitValue = Process(Seq(executable, "---setup"), cwd = buildDir).!(ProcessLogger(logger, logger))
 
+        printWriter.flush()
         TestOutput("build_executable", exitValue, stream.toString)
       } finally {
         printWriter.close()
@@ -170,6 +171,7 @@ object ViashTest {
         logger(s"+$executable")
         val exitValue = Process(Seq(executable), cwd = newDir).!(ProcessLogger(logger, logger))
 
+        printWriter.flush()
         TestOutput(test.filename, exitValue, stream.toString)
       } finally {
         printWriter.close()
