@@ -58,7 +58,7 @@ object ViashNamespace {
     parallel: Boolean = false,
     keepFiles: Option[Boolean] = None
   ) {
-    val configs = findConfigs(source, platform, platformID, namespace)
+    val configs = findConfigs(source, platform, platformID, namespace, modifyFun = false)
 
     val configs2 = if (parallel) configs.par else configs
 
@@ -85,7 +85,7 @@ object ViashNamespace {
       }
 
       for (test ← testRes if test.exitValue > 0) {
-        println(namespace + "-" + funName + " test '" + test.name + "' failed with exit code " + test.exitValue + ":")
+        println(s"""${Console.RED}ERROR! {namespace: "$namespace", name: "$funName", test: "${test.name}", exit_code: ${test.exitValue}}${Console.RESET}""")
         println(test.output)
         println()
       }
@@ -134,7 +134,8 @@ object ViashNamespace {
     source: String,
     platform: Option[String] = None,
     platformID: Option[String] = None,
-    namespace: Option[String]
+    namespace: Option[String],
+    modifyFun: Boolean = true
   ): List[Either[Config, PlatformNotFoundException]] = {
     val sourceDir = Paths.get(source)
 
@@ -162,7 +163,8 @@ object ViashNamespace {
           functionality = Some(file.toString),
           platform = platform,
           platformID = platformID,
-          namespace = _namespace
+          namespace = _namespace,
+          modifyFun = modifyFun
         ))
       } catch {
         case e: PlatformNotFoundException => Right(e)
@@ -183,7 +185,8 @@ object ViashNamespace {
           joined = Some(file.toString),
           platform = platform,
           platformID = platformID,
-          namespace = _namespace
+          namespace = _namespace,
+          modifyFun = modifyFun
         ))
       } catch {
         case e: PlatformNotFoundException => Right(e)
