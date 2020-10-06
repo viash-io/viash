@@ -220,6 +220,11 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         default = Some(false),
         descr = "Whether or not to run the process in parallel."
       )
+      val tsv = opt[String](
+        name = "tsv",
+        short = 't',
+        descr = "Path to write a summary of the test results to."
+      )
     }
 
     addSubcommand(build)

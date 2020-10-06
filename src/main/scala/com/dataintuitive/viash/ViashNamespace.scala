@@ -1,5 +1,6 @@
 package com.dataintuitive.viash
 
+import java.io.FileWriter
 import java.nio.file.{Files, Path, Paths}
 import java.nio.file.attribute.BasicFileAttributes
 
@@ -56,12 +57,14 @@ object ViashNamespace {
     platformID: Option[String] = None,
     namespace: Option[String] = None,
     parallel: Boolean = false,
-    keepFiles: Option[Boolean] = None
+    keepFiles: Option[Boolean] = None,
+    tsv: Option[String] = None
   ) {
     val configs = findConfigs(source, platform, platformID, namespace, modifyFun = false)
 
     val configs2 = if (parallel) configs.par else configs
 
+    // run all the component tests
     val results =
       configs2.flatMap {
         case Left(conf) =>
@@ -74,6 +77,7 @@ object ViashNamespace {
           None
       }.toList
 
+    // print logs of errored processes
     for ((conf, (setupRes, testRes)) ← results) {
       val namespace = conf.functionality.namespace.getOrElse("")
       val funName = conf.functionality.name
@@ -91,26 +95,38 @@ object ViashNamespace {
       }
     }
 
-    printf("%20s %20s %20s %8s %8s %12s\n", "namespace", "functionality", "platform", "#success", "#tests", "result")
-    for ((conf, (setupRes, testRes)) ← results) {
-      val namespace = conf.functionality.namespace.getOrElse("")
-      val funName = conf.functionality.name
-      val platName = conf.platform.get.id
+    // print summary table
+    val tsvWriter = tsv.map(new FileWriter(_, false))
 
-      val numTests = testRes.length // one is always the setup
-      val numSucceeds = testRes.count(_.exitValue == 0) // one is always the setup
-      val result =
-        if (setupRes.exitValue > 0) {
-          "SETUP ERROR"
-        } else if (numTests == 0) {
-          "No tests :("
-        } else if (numSucceeds < numTests) {
-          "FAIL!"
-        } else {
-          "Success!"
-        }
-      val col = if (result == "Success!") Console.GREEN else Console.RED
-      printf("%s%20s %20s %20s %8d %8d %12s%s\n", col, namespace, funName, platName, numSucceeds, numTests, result, Console.RESET)
+    try {
+      // header
+      printf("%s%20s %20s %20s %8s %8s %12s%s\n", "", "namespace", "functionality", "platform", "#success", "#tests", "result", "")
+      tsvWriter.foreach(_.append(List("namespace", "functionality", "platform", "num_successes", "num_tests", "result").mkString("\t") + sys.props("line.separator")))
+
+      // print rows
+      for ((conf, (setupRes, testRes)) ← results) {
+        val namespace = conf.functionality.namespace.getOrElse("")
+        val funName = conf.functionality.name
+        val platName = conf.platform.get.id
+
+        val numTests = testRes.length // one is always the setup
+        val numSucceeds = testRes.count(_.exitValue == 0) // one is always the setup
+        val (printResult, tsvResult, col) =
+          if (setupRes.exitValue > 0) {
+            ("SETUP ERROR", "setup_error", Console.RED)
+          } else if (numTests == 0) {
+            ("No tests :(", "no_tests", Console.RED)
+          } else if (numSucceeds < numTests) {
+            ("FAIL!", "fail", Console.RED)
+          } else {
+            ("Success!", "success", Console.GREEN)
+          }
+
+        printf("%s%20s %20s %20s %8s %8s %12s%s\n", col, namespace, funName, platName, numSucceeds, numTests, printResult, Console.RESET)
+        tsvWriter.foreach(_.append(List(namespace, funName, platName, numSucceeds, numTests, tsvResult).mkString("\t") + sys.props("line.separator")))
+      }
+    } finally {
+      tsvWriter.foreach(_.close())
     }
   }
 

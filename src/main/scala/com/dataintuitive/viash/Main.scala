@@ -39,7 +39,8 @@ object Main {
           platformID = conf.namespace.test.platformid.toOption,
           namespace = conf.namespace.test.namespace.toOption,
           parallel = conf.namespace.test.parallel(),
-          keepFiles = conf.namespace.test.keep.toOption.map(_.toBoolean)
+          keepFiles = conf.namespace.test.keep.toOption.map(_.toBoolean),
+          tsv = conf.namespace.test.tsv.toOption,
         )
       case _ =>
         println("No subcommand was specified. See `viash --help` for more information.")

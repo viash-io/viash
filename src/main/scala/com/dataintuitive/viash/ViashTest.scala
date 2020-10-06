@@ -13,7 +13,7 @@ import com.dataintuitive.viash.config.Config
 import helpers.IO
 
 object ViashTest {
-  case class TestOutput(name: String, exitValue: Int, output: String)
+  case class TestOutput(name: String, exitValue: Int, output: String, logFile: String)
 
   def apply(
     config: Config,
@@ -78,7 +78,8 @@ object ViashTest {
     val buildResult = {
       val stream = new ByteArrayOutputStream
       val printWriter = new PrintWriter(stream)
-      val logWriter = new FileWriter(Paths.get(buildDir.toString, "_viash_build_log.txt").toString, true)
+      val logPath = Paths.get(buildDir.toString, "_viash_build_log.txt").toString
+      val logWriter = new FileWriter(logPath, true)
 
       val logger: String => Unit =
         (s: String) => {
@@ -96,7 +97,7 @@ object ViashTest {
         val exitValue = Process(Seq(executable, "---setup"), cwd = buildDir).!(ProcessLogger(logger, logger))
 
         printWriter.flush()
-        TestOutput("build_executable", exitValue, stream.toString)
+        TestOutput("build_executable", exitValue, stream.toString, logPath)
       } finally {
         printWriter.close()
         logWriter.close()
@@ -154,7 +155,8 @@ object ViashTest {
       // run command, collect output
       val stream = new ByteArrayOutputStream
       val printWriter = new PrintWriter(stream)
-      val logWriter = new FileWriter(Paths.get(newDir.toString, "_viash_test_log.txt").toString, true)
+      val logPath = Paths.get(newDir.toString, "_viash_test_log.txt").toString
+      val logWriter = new FileWriter(logPath, true)
 
       val logger: String => Unit =
         (s: String) => {
@@ -172,7 +174,7 @@ object ViashTest {
         val exitValue = Process(Seq(executable), cwd = newDir).!(ProcessLogger(logger, logger))
 
         printWriter.flush()
-        TestOutput(test.filename, exitValue, stream.toString)
+        TestOutput(test.filename, exitValue, stream.toString, logPath)
       } finally {
         printWriter.close()
         logWriter.close()
