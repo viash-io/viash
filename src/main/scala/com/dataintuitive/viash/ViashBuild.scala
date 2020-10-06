@@ -1,7 +1,7 @@
 package com.dataintuitive.viash
 
 import config._
-import functionality.resources.PlainFile
+import functionality.resources.{BashScript, Executable, PlainFile, PythonScript, RScript}
 import io.circe.yaml.Printer
 import helpers.IO
 import java.nio.file.Paths
@@ -9,6 +9,16 @@ import java.nio.file.Paths
 import scala.sys.process.{Process, ProcessLogger}
 
 object ViashBuild {
+  // create a yaml printer for writing the viash.yaml file
+  // Options: https://github.com/circe/circe-yaml/blob/master/src/main/scala/io/circe/yaml/Printer.scala
+  val printer = Printer(
+    preserveOrder = true,
+    dropNullKeys = true,
+    mappingStyle = Printer.FlowStyle.Block,
+    splitLines = true,
+    stringStyle = Printer.StringStyle.DoubleQuoted
+  )
+
   def apply(
     config: Config,
     output: String,
@@ -22,38 +32,63 @@ object ViashBuild {
     val dir = new java.io.File(output)
     dir.mkdirs()
 
-    // create a yaml printer for writing the viash.yaml file
-    // Options: https://github.com/circe/circe-yaml/blob/master/src/main/scala/io/circe/yaml/Printer.scala
-    val printer = Printer(
-      preserveOrder = true,
-      dropNullKeys = true,
-      mappingStyle = Printer.FlowStyle.Block,
-      splitLines = true
-    )
-
     // get the path of where the executable will be written to
     val exec_path = fun.mainScript.map(scr => Paths.get(output, scr.name.get).toString)
+
+    // get resources
+    val placeholderMap = config.functionality.resources.getOrElse(Nil).filter(_.text.isDefined).map{ res =>
+      (res, "VIASH_PLACEHOLDER~" + res.filename + "~")
+    }.toMap
 
     // change the config object before writing to yaml:
     // * add more info variables
     // * remove other platforms other than the one finally used
     // * override namespace in functionality
-    val strippedConfig = config.copy(
+    // * substitute 'text' fields in resources with placeholders
+    val toWriteConfig = config.copy(
+      functionality = config.functionality.copy(
+        namespace = namespace,
+        resources = Some(config.functionality.resources.getOrElse(Nil).map{ res =>
+          if (res.text.isDefined) {
+            // cant use 'res.copy(text = ...)' because Resource is a trait
+            // this should be processed somewhere else, really
+            val textVal = Some(placeholderMap(res))
+            res match {
+              case b: BashScript => b.copy(text = textVal)
+              case b: RScript => b.copy(text = textVal)
+              case b: PythonScript => b.copy(text = textVal)
+              case b: Executable => b.copy(text = textVal)
+              case b: PlainFile => b.copy(text = textVal)
+            }
+          } else {
+            res
+          }
+        })
+      ),
       info = config.info.map(_.copy(
         output_path = Some(output),
         executable_path = exec_path
       )),
       platforms = Nil // drop other platforms
-    ).copy(
-      functionality = config.functionality.copy(namespace = namespace)
     )
 
-    // add yaml to resources
-    val configYamlStr = printer.pretty(encodeConfig(strippedConfig))
-    // TODO: manually change text to a nice format?
+    // convert config to yaml
+    val configYamlStr = printer.pretty(encodeConfig(toWriteConfig))
+
+    // replace text placeholders with nice multiline string
+    val configYamlStr2 = placeholderMap.foldLeft(configYamlStr) {
+      case (configStr, (res, placeholder)) =>
+        val IndentRegex = ("( *)text: \"" + placeholder + "\"").r
+        val IndentRegex(indent) = IndentRegex.findFirstIn(configStr).getOrElse("")
+        configStr.replace(
+          "\"" + placeholder + "\"",
+          "|\n" + indent + "  " + res.text.get.replace("\n", "\n  " + indent) + "\n")
+    }
+
+    // add to resources
     val configYaml = PlainFile(
       name = Some("viash.yaml"),
-      text = Some(configYamlStr)
+      text = Some(configYamlStr2)
     )
 
     // write resources to output directory
