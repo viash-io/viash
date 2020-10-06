@@ -14,18 +14,19 @@ import helpers.IO
 
 object ViashTest {
   case class TestOutput(name: String, exitValue: Int, output: String, logFile: String)
+  case class ManyTestOutput(setup: TestOutput, tests: List[TestOutput])
 
   def apply(
     config: Config,
     keepFiles: Option[Boolean] = None,
     quiet: Boolean = false
-  ): (TestOutput, List[TestOutput]) = {
+  ): ManyTestOutput = {
     // create temporary directory
     val dir = IO.makeTemp("viash_test_" + config.functionality.name)
     if (!quiet) println(s"Running tests in temporary directory: '$dir'")
 
     // run tests
-    val (setupRes, results) = ViashTest.runTests(config, dir, verbose = !quiet)
+    val ManyTestOutput(setupRes, results) = ViashTest.runTests(config, dir, verbose = !quiet)
     val count = results.count(_.exitValue == 0)
     val anyErrors = setupRes.exitValue > 0 || count < results.length
 
@@ -59,10 +60,10 @@ object ViashTest {
       throw new RuntimeException(errorMessage)
     }
 
-    (setupRes, results)
+    ManyTestOutput(setupRes, results)
   }
 
-  def runTests(config: Config, dir: File, verbose: Boolean = true): (TestOutput, List[TestOutput]) = {
+  def runTests(config: Config, dir: File, verbose: Boolean = true): ManyTestOutput = {
     val fun = config.functionality
     val platform = config.platform.get
 
@@ -106,7 +107,7 @@ object ViashTest {
 
     // if setup failed, return faster
     if (buildResult.exitValue > 0) {
-      return (buildResult, Nil)
+      return ManyTestOutput(buildResult, Nil)
     }
 
     // generate executable for native platform
@@ -183,6 +184,6 @@ object ViashTest {
 
     if (verbose) println(consoleLine)
 
-    (buildResult, testResults)
+    ManyTestOutput(buildResult, testResults)
   }
 }

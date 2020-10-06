@@ -4,7 +4,7 @@ import java.io.FileWriter
 import java.nio.file.{Files, Path, Paths}
 import java.nio.file.attribute.BasicFileAttributes
 
-import com.dataintuitive.viash.ViashTest.TestOutput
+import com.dataintuitive.viash.ViashTest.{ManyTestOutput, TestOutput}
 import config.Config
 import config.Config.PlatformNotFoundException
 
@@ -59,72 +59,62 @@ object ViashNamespace {
     parallel: Boolean = false,
     keepFiles: Option[Boolean] = None,
     tsv: Option[String] = None
-  ) {
+  ): List[(Config, ManyTestOutput)] = {
     val configs = findConfigs(source, platform, platformID, namespace, modifyFun = false)
 
     val configs2 = if (parallel) configs.par else configs
 
     // run all the component tests
-    val results =
-      configs2.flatMap {
-        case Left(conf) =>
-          Some((conf, ViashTest(
-            config = conf,
-            keepFiles = keepFiles,
-            quiet = true
-          )))
-        case Right(_) =>
-          None
-      }.toList
-
-    // print logs of errored processes
-    for ((conf, (setupRes, testRes)) ← results) {
-      val namespace = conf.functionality.namespace.getOrElse("")
-      val funName = conf.functionality.name
-
-      if (setupRes.exitValue > 0) {
-        println(namespace + "-" + funName + " setup failed with exit code " + setupRes.exitValue + ":")
-        println(setupRes.output)
-        println()
-      }
-
-      for (test ← testRes if test.exitValue > 0) {
-        println(s"""${Console.RED}ERROR! {namespace: "$namespace", name: "$funName", test: "${test.name}", exit_code: ${test.exitValue}}${Console.RESET}""")
-        println(test.output)
-        println()
-      }
-    }
-
-    // print summary table
     val tsvWriter = tsv.map(new FileWriter(_, false))
 
     try {
-      // header
-      printf("%s%20s %20s %20s %8s %8s %12s%s\n", "", "namespace", "functionality", "platform", "#success", "#tests", "result", "")
-      tsvWriter.foreach(_.append(List("namespace", "functionality", "platform", "num_successes", "num_tests", "result").mkString("\t") + sys.props("line.separator")))
+      tsvWriter.foreach(_.append(List("namespace", "functionality", "platform", "test_name", "exit_code", "result").mkString("\t") + sys.props("line.separator")))
 
-      // print rows
-      for ((conf, (setupRes, testRes)) ← results) {
-        val namespace = conf.functionality.namespace.getOrElse("")
-        val funName = conf.functionality.name
-        val platName = conf.platform.get.id
+      configs2.flatMap {
+        case Left(conf) =>
+          val ManyTestOutput(setupRes, testRes) = ViashTest(
+            config = conf,
+            keepFiles = keepFiles,
+            quiet = true
+          )
 
-        val numTests = testRes.length // one is always the setup
-        val numSucceeds = testRes.count(_.exitValue == 0) // one is always the setup
-        val (printResult, tsvResult, col) =
-          if (setupRes.exitValue > 0) {
-            ("SETUP ERROR", "setup_error", Console.RED)
-          } else if (numTests == 0) {
-            ("No tests :(", "no_tests", Console.RED)
-          } else if (numSucceeds < numTests) {
-            ("FAIL!", "fail", Console.RED)
-          } else {
-            ("Success!", "success", Console.GREEN)
+          // print results
+          val namespace = conf.functionality.namespace.getOrElse("")
+          val funName = conf.functionality.name
+          val platName = conf.platform.get.id
+
+          // print messages
+          val testRes2 =
+            if (setupRes.exitValue > 0) {
+              Nil
+            } else if (testRes.isEmpty) {
+              List(TestOutput("tests", -1, "no tests found", ""))
+            } else {
+              testRes
+            }
+          val results = setupRes :: testRes2
+          for (test ← results) {
+            val (col, msg) = {
+              if (test.exitValue > 0) {
+                (Console.RED, "ERROR")
+              } else if (test.exitValue < 0) {
+                (Console.YELLOW, "MISSING")
+              } else {
+                (Console.GREEN, "SUCCESS")
+              }
+            }
+
+            printf(s"%s%20s %20s %20s %20s %8s %20s%s\n", col, namespace, funName, platName, test.name, test.exitValue, msg, Console.RESET)
+            tsvWriter.foreach{writer =>
+              writer.append(List(namespace, funName, platName, test.name, test.exitValue, msg).mkString("\t") + sys.props("line.separator"))
+              writer.flush()
+            }
           }
 
-        printf("%s%20s %20s %20s %8s %8s %12s%s\n", col, namespace, funName, platName, numSucceeds, numTests, printResult, Console.RESET)
-        tsvWriter.foreach(_.append(List(namespace, funName, platName, numSucceeds, numTests, tsvResult).mkString("\t") + sys.props("line.separator")))
-      }
+          // return output
+          Some((conf, ManyTestOutput(setupRes, testRes)))
+        case Right(_) => None
+      }.toList
     } finally {
       tsvWriter.foreach(_.close())
     }
