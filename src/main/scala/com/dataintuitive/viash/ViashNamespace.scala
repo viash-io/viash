@@ -72,19 +72,22 @@ object ViashNamespace {
 
       configs2.flatMap {
         case Left(conf) =>
+          // get attributes
+          val namespace = conf.functionality.namespace.getOrElse("")
+          val funName = conf.functionality.name
+          val platName = conf.platform.get.id
+
+          // print start message
+          printf(s"%s%20s %20s %20s %20s %8s %20s%s\n", "", namespace, funName, platName, "start", "", "", Console.RESET)
+
+          // run tests
+          // TODO: it would actually be great if this component could subscribe to testresults messages
           val ManyTestOutput(setupRes, testRes) = ViashTest(
             config = conf,
             keepFiles = keepFiles,
             quiet = true
           )
-
-          // print results
-          val namespace = conf.functionality.namespace.getOrElse("")
-          val funName = conf.functionality.name
-          val platName = conf.platform.get.id
-
-          // print messages
-          val testRes2 =
+          val testResults =
             if (setupRes.exitValue > 0) {
               Nil
             } else if (testRes.isEmpty) {
@@ -92,7 +95,9 @@ object ViashNamespace {
             } else {
               testRes
             }
-          val results = setupRes :: testRes2
+
+          // print messages
+          val results = setupRes :: testResults
           for (test ← results) {
             val (col, msg) = {
               if (test.exitValue > 0) {
@@ -104,7 +109,10 @@ object ViashNamespace {
               }
             }
 
+            // print message
             printf(s"%s%20s %20s %20s %20s %8s %20s%s\n", col, namespace, funName, platName, test.name, test.exitValue, msg, Console.RESET)
+
+            // write to tsv
             tsvWriter.foreach{writer =>
               writer.append(List(namespace, funName, platName, test.name, test.exitValue, msg).mkString("\t") + sys.props("line.separator"))
               writer.flush()
