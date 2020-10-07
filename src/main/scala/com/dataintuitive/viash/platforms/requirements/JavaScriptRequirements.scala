@@ -1,14 +1,10 @@
 package com.dataintuitive.viash.platforms.requirements
 
-case class PythonRequirements(
+case class JavaScriptRequirements(
   packages: List[String] = Nil,
-  pip: List[String] = Nil,
+  npm: List[String] = Nil,
   git: List[String] = Nil,
   github: List[String] = Nil,
-  gitlab: List[String] = Nil,
-  mercurial: List[String] = Nil,
-  svn: List[String] = Nil,
-  bazaar: List[String] = Nil,
   url: List[String] = Nil
 ) extends Requirements {
 
@@ -19,26 +15,18 @@ case class PythonRequirements(
       case Nil => Nil
       case packs =>
         List(packs.mkString(
-          "pip install --user --no-cache-dir \"" + prefix,
+          "npm install -g \"" + prefix,
           "\" \"" + prefix,
           "\""))
     }
   }
 
   def installCommands: List[String] = {
-    val installPip =
-      """pip install --user --upgrade pip"""
-
-    val installPipPackages = generateCommands("", pip ::: packages)
+    val installNpmPackages = generateCommands("", npm ::: packages)
     val installGitPackages = generateCommands("git+", git)
-    val installGithubPackages = generateCommands("git+https://github.com/", github)
-    val installGitlabPackages = generateCommands("git+https://gitlab.com/", gitlab)
-    val installMercurialPackages = generateCommands("hg+", mercurial)
-    val installSvnPackages = generateCommands("svn+", svn)
-    val installBazaarPackages = generateCommands("bzr+", bazaar)
+    val installGithubPackages = generateCommands("", github)
     val installUrlPackages = generateCommands("", url)
 
-    installPip :: installPipPackages ::: installGitPackages ::: installGithubPackages ::: installGitlabPackages :::
-      installMercurialPackages ::: installSvnPackages ::: installBazaarPackages ::: installUrlPackages
+    installNpmPackages ::: installGitPackages ::: installGithubPackages ::: installUrlPackages
   }
 }

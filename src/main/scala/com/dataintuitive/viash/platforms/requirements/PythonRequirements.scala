@@ -14,14 +14,14 @@ case class PythonRequirements(
 
   val `type` = "python"
 
-  private def generateCommands(prefix: String, values: List[String]) = {
+  private def generateCommands(prefix: String, values: List[String], postFix: String = "") = {
     values match {
       case Nil => Nil
       case packs =>
         List(packs.mkString(
           "pip install --user --no-cache-dir \"" + prefix,
-          "\" \"" + prefix,
-          "\""))
+          postFix + "\" \"" + prefix,
+          postFix + "\""))
     }
   }
 
