@@ -45,7 +45,7 @@ trait ScriptObject {
 
 object Script {
   val extMap =
-    List(BashScript, PythonScript, RScript, JavaScriptScript)
+    List(BashScript, PythonScript, RScript, JavaScriptScript, ScalaScript)
       .map(x => (x.extension.toLowerCase, x))
       .toMap
 
