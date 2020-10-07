@@ -23,6 +23,12 @@ class ComponentE2ETests extends FunSuite {
   test(s"Testing testr platform docker", DockerTest) {
     TestHelper.testMain(Array("test", "-P", "docker", getTestResource("/testr/code.vsh.R")))
   }
+  test(s"Testing testjs platform native", NativeTest) {
+    TestHelper.testMain(Array("test", "-P", "native", getTestResource("/testjs/config.vsh.yaml")))
+  }
+  test(s"Testing testjs platform docker", DockerTest) {
+    TestHelper.testMain(Array("test", "-P", "docker", getTestResource("/testjs/config.vsh.yaml")))
+  }
 // can't expect this executable to be available on the host. should use a different executable, perhaps?
 //  test(s"Testing testexecutable platform native", NativeTest) {
 //    TestHelper.executeMainAndCaptureStdOut(Array("test", "-P", "native", "-f", testResource("/testexecutable/functionality.yaml")))
