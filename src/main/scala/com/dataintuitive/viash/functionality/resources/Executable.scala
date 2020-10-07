@@ -10,16 +10,24 @@ case class Executable(
   is_executable: Boolean = true
 ) extends Script {
   val `type` = "executable"
-
-  val commentStr = "#"
-
-  def command(script: String): String = script
-
-  def commandSeq(script: String): Seq[String] = Seq(script)
+  val meta = Executable
 
   def generatePlaceholder(functionality: Functionality): String = ""
 
   override def read: Option[String] = None
 
   override def write(path: Path, overwrite: Boolean) {}
+}
+
+object Executable extends ScriptObject {
+  val commentStr = "#"
+  val extension = "*"
+
+  def command(script: String): String = {
+    script
+  }
+
+  def commandSeq(script: String): Seq[String] = {
+    Seq(script)
+  }
 }

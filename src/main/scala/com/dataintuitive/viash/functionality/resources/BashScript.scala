@@ -10,15 +10,7 @@ case class BashScript(
   is_executable: Boolean = true
 ) extends Script {
   val `type` = "bash_script"
-  val commentStr = "#"
-
-  def command(script: String): String = {
-    "bash \"" + script + "\""
-  }
-
-  def commandSeq(script: String): Seq[String] = {
-    Seq("bash", script)
-  }
+  val meta = BashScript
 
   def generatePlaceholder(functionality: Functionality): String = {
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
@@ -30,5 +22,18 @@ case class BashScript(
        |
        |resources_dir="$$VIASH_RESOURCES_DIR"
        |""".stripMargin
+  }
+}
+
+object BashScript extends ScriptObject {
+  val commentStr = "#"
+  val extension = "sh"
+
+  def command(script: String): String = {
+    "bash \"" + script + "\""
+  }
+
+  def commandSeq(script: String): Seq[String] = {
+    Seq("bash", script)
   }
 }

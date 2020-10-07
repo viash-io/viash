@@ -51,14 +51,12 @@ object Config {
 
     // detect whether a script (with joined header) was passed or a joined yaml
     // using the extension
-    val (yaml, code) =
+    val (yaml, optScript) =
       if (extension == "yml" || extension == "yaml") {
         (str, None)
       } else {
-        val commentStr = extension match {
-          case "sh" | "py" | "r" => "#'"
-          case _ => throw new RuntimeException("Unrecognised extension: " + extension)
-        }
+        val scriptObj = Script.fromExt(extension)
+        val commentStr = scriptObj.commentStr + "'"
         val headerComm = commentStr + " "
         assert(
           str.contains(s"$commentStr functionality:"),
@@ -69,19 +67,9 @@ object Config {
         val yaml = header.map(s => s.drop(3)).mkString("\n")
         val code = commentStr + " VIASH START\n" + commentStr + " VIASH END\n" + body.mkString("\n")
 
-        (yaml, Some(code))
+        val script = scriptObj(name = Some("viash_main."), text = Some(code))
+        (yaml, Some(script))
       }
-
-    // turn optional code into a Script
-    val optScript = code.map { cod =>
-      val scr = extension match {
-        case "r" => RScript(Some("viash_main.R"), text = Some(cod))
-        case "py" => PythonScript(Some("viash_main.py"), text = Some(cod))
-        case "sh" => BashScript(Some("viash_main.sh"), text = Some(cod))
-        case _ => throw new RuntimeException("Unrecognised extension: " + extension)
-      }
-      scr.asInstanceOf[Script]
-    }
 
     // read config
     val config = parse(yaml, uri)
