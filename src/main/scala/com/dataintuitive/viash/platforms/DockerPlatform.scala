@@ -268,7 +268,13 @@ case class DockerPlatform(
     )
   }
 
-  private def addDockerChown(functionality: Functionality, dockerArgs: String, volExtraParams: String, imageName: String, imageVersion: String) = {
+  private def addDockerChown(
+    functionality: Functionality,
+    dockerArgs: String,
+    volExtraParams: String,
+    imageName: String,
+    imageVersion: String
+  ) = {
     val args = functionality.argumentsAndDummies
 
     def chownCommand(value: String): String = {
