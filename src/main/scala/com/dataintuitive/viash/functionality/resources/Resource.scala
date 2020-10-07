@@ -50,4 +50,12 @@ trait Resource {
 
     file.setExecutable(is_executable)
   }
+
+  // TODO: This can probably be solved much nicer.
+  def copyResource(
+    name: Option[String] = this.name,
+    path: Option[String] = this.path,
+    text: Option[String] = this.text,
+    is_executable: Boolean = this.is_executable
+  ): Resource
 }

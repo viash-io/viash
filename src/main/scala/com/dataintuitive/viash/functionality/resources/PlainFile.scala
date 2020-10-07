@@ -7,4 +7,7 @@ case class PlainFile(
   is_executable: Boolean = false
 ) extends Resource {
   override val `type` = "file"
+  def copyResource(name: Option[String], path: Option[String], text: Option[String], is_executable: Boolean): Resource = {
+    copy(name, path, text, is_executable)
+  }
 }

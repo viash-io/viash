@@ -11,6 +11,9 @@ case class RScript(
 ) extends Script {
   val `type` = "r_script"
   val meta = RScript
+  def copyResource(name: Option[String], path: Option[String], text: Option[String], is_executable: Boolean): Resource = {
+    copy(name, path, text, is_executable)
+  }
 
   def generatePlaceholder(functionality: Functionality): String = {
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])

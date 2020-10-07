@@ -53,13 +53,7 @@ object ViashBuild {
             // cant use 'res.copy(text = ...)' because Resource is a trait
             // this should be processed somewhere else, really
             val textVal = Some(placeholderMap(res))
-            res match {
-              case b: BashScript => b.copy(text = textVal)
-              case b: RScript => b.copy(text = textVal)
-              case b: PythonScript => b.copy(text = textVal)
-              case b: Executable => b.copy(text = textVal)
-              case b: PlainFile => b.copy(text = textVal)
-            }
+            res.copyResource(text = textVal)
           } else {
             res
           }

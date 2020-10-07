@@ -11,6 +11,9 @@ case class Executable(
 ) extends Script {
   val `type` = "executable"
   val meta = Executable
+  def copyResource(name: Option[String], path: Option[String], text: Option[String], is_executable: Boolean): Resource = {
+    copy(name, path, text, is_executable)
+  }
 
   def generatePlaceholder(functionality: Functionality): String = ""
 

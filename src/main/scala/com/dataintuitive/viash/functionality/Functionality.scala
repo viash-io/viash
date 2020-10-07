@@ -73,12 +73,7 @@ object Functionality {
         res
       } else {
         val newPath = Some(parent.resolve(res.path.get).toString)
-        res match {
-          case s: BashScript => s.copy(path = newPath)
-          case s: PythonScript => s.copy(path = newPath)
-          case s: RScript => s.copy(path = newPath)
-          case f: PlainFile => f.copy(path = newPath)
-        }
+        res.copyResource(path = newPath)
       }
     }
   }
