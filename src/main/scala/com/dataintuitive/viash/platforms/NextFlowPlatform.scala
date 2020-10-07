@@ -13,16 +13,19 @@ case class NextFlowPlatform(
   id: String = "nextflow",
   version: Option[Version] = None,
   image: Option[String],
-  apt: Option[AptRequirements] = None,
-  r: Option[RRequirements] = None,
-  python: Option[PythonRequirements] = None,
-  setup: List[Requirements] = Nil,
   executor: Option[String],
   publish: Option[Boolean],
   per_id: Option[Boolean],
   path: Option[String],
   label: Option[String],
-  stageInMode: Option[String]
+  stageInMode: Option[String],
+
+  // TODO: these parameters could (and should?) be removed
+  // as they have no actual impact on anything
+  apt: Option[AptRequirements] = None,
+  r: Option[RRequirements] = None,
+  python: Option[PythonRequirements] = None,
+  setup: List[Requirements] = Nil
 ) extends Platform {
   val `type` = "nextflow"
 
