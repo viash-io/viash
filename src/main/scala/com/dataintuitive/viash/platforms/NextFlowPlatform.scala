@@ -84,7 +84,7 @@ case class NextFlowPlatform(
     }
 
     val imageName = {
-      val autogen = functionality.namespace.map( ns => s"$ns/${functionality.name}").getOrElse(functionality.name)
+      val autogen = functionality.namespace.map( _ + "/" + functionality.name).getOrElse(functionality.name)
       image.getOrElse(autogen)
     }
 

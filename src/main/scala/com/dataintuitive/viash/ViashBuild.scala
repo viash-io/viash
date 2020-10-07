@@ -82,7 +82,8 @@ object ViashBuild {
         val IndentRegex(indent) = IndentRegex.findFirstIn(configStr).getOrElse("")
         configStr.replace(
           "\"" + placeholder + "\"",
-          "|\n" + indent + "  " + res.text.get.replace("\n", "\n  " + indent) + "\n")
+          "|\n" + indent + "  " + res.text.get.replace("\n", "\n  " + indent) + "\n"
+        )
     }
 
     // add to resources
