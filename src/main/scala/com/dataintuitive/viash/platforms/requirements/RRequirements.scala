@@ -1,6 +1,7 @@
 package com.dataintuitive.viash.platforms.requirements
 
 case class RRequirements(
+  packages: List[String] = Nil,
   cran: List[String] = Nil,
   bioc: List[String] = Nil,
   git: List[String] = Nil,
@@ -21,7 +22,7 @@ case class RRequirements(
       }
 
     val remotePairs = List(
-      ("cran", cran),
+      ("cran", cran ::: packages),
       ("git", git),
       ("github", github),
       ("gitlab", gitlab),
