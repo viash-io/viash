@@ -22,6 +22,7 @@
 ## MAJOR CHANGES
 
 * The `-P <platform>` parameter will be deprecated. For now, all `-P` values are simply passed to `-p`.
+* `viash ns build` and `viash ns test`: Now use all available platforms if `-p` is not specified.
 
 ## MINOR CHANGES
 
