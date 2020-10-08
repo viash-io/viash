@@ -20,6 +20,10 @@ object Main {
     val exceptionFlags = List("-h", "--help")
     val (configStr, viashArgs, runArgs) = {
       if (args.length >= 2 && workAroundCommands.contains(args(0)) && !exceptionFlags.contains(args(1))) {
+        if (!args(1).contains(".vsh.")) {
+          throw new RuntimeException("The first argument after 'viash " + args(0) + "' should be a viash config file.")
+        }
+
         val argNoConfig = args.patch(1, Nil, 1)
         val (vArgs, rArgs) =
           if (args(0) == "run") {
@@ -28,6 +32,8 @@ object Main {
             (argNoConfig, Array[String]())
           }
         (Some(args(1)), vArgs, rArgs)
+      } else if (args.length == 1 && workAroundCommands.contains(args(0))) {
+        throw new RuntimeException("The first argument after 'viash " + args(0) + "' should be a viash config file.")
       } else {
         (None, args, Array[String]())
       }
@@ -72,7 +78,7 @@ object Main {
     modifyFun: Boolean = true
   ): Config = {
     Config.read(
-      config = config.getOrElse(""),
+      config = config.get,
       platform = subcommand.platform.toOption | subcommand.platformid.toOption,
       modifyFun = modifyFun
     )
@@ -104,7 +110,7 @@ object Main {
     // find *.vsh.* files and parse as config
     val scriptRegex = ".*\\.vsh\\.[^.]*$".r
     val scriptFiles = find(sourceDir, (path, attrs) => {
-      scriptRegex.findFirstIn(path.toString.toLowerCase).isDefined &&
+      path.toString.contains(".vsh.") &&
         attrs.isRegularFile &&
         namespaceMatch(path.toString)
     })
