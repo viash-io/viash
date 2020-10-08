@@ -91,7 +91,7 @@ object BashWrapper {
            |cat > "\\$$tempscript" << 'VIASHMAIN'
            |$escapedCode
            |VIASHMAIN$cdToResources
-           |${res.command("\\$tempscript")}
+           |${res.meta.command("\\$tempscript")}
            |""".stripMargin
     }
 

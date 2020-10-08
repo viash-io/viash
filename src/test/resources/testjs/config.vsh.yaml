@@ -1,5 +1,5 @@
 functionality:
-  name: testpython
+  name: testjs
   description: |
     Prints out the parameter values.
     Checking what happens with multiline descriptions.
@@ -45,26 +45,21 @@ functionality:
       type: string
       multiple: true
   resources:
-    - type: python_script
-      path: ./code.py
+    - type: javascript_script
+      path: ./code.js
   tests:
-    - type: python_script
-      path: tests/check_outputs.py
+    - type: bash_script
+      path: tests/check_outputs.sh
 platforms:
   - type: native
     setup:
-      - type: python
-        packages:
-          - "argparse<1.4"
+      - type: javascript
+        npm: [ plot ]
   - type: docker
-    image: python
-    target_image: "viash_test_python"
+    image: node
+    target_image: "viash_test_js"
     setup:
-      - type: docker
-        build_args:
-          - TESTING_FOO=bar
-      - type: python
-        packages:
-          - "argparse<1.4"
+      - type: javascript
+        npm: [ plot ]
   - type: nextflow
-    image: rocker/tidyverse
+    image: viash_test_js

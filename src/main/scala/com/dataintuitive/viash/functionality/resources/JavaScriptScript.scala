@@ -3,14 +3,14 @@ package com.dataintuitive.viash.functionality.resources
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.dataobjects._
 
-case class RScript(
+case class JavaScriptScript(
   name: Option[String] = None,
   path: Option[String] = None,
   text: Option[String] = None,
   is_executable: Boolean = true
 ) extends Script {
-  val `type` = "r_script"
-  val meta = RScript
+  val `type` = "javascript_script"
+  val meta = JavaScriptScript
   def copyResource(name: Option[String], path: Option[String], text: Option[String], is_executable: Boolean): Resource = {
     copy(name, path, text, is_executable)
   }
@@ -23,42 +23,42 @@ case class RScript(
 
       val parse = par match {
         case o: BooleanObject if o.multiple =>
-          s"""as.logical(strsplit(toupper('$$$env_name'), split = '${o.multiple_sep}')[[1]])"""
+          s"""'$$$env_name'.split('${o.multiple_sep}').map(x => x.toLowerCase() === 'true')"""
         case o: IntegerObject if o.multiple =>
-          s"""as.integer(strsplit('$$$env_name', split = '${o.multiple_sep}')[[1]])"""
+          s"""'$$$env_name'.split('${o.multiple_sep}').map(x => parseInt(x))"""
         case o: DoubleObject if o.multiple =>
-          s"""as.numeric(strsplit('$$$env_name', split = '${o.multiple_sep}')[[1]])"""
+          s"""'$$$env_name'.split('${o.multiple_sep}').map(x => parseFloat(x))"""
         case o: FileObject if o.multiple =>
-          s"""strsplit('$$$env_name', split = '${o.multiple_sep}')[[1]]"""
+          s"""'$$$env_name'.split('${o.multiple_sep}')"""
         case o: StringObject if o.multiple =>
-          s"""strsplit('$$$env_name', split = '${o.multiple_sep}')[[1]]"""
-        case _: BooleanObject => s"""as.logical(toupper('$$$env_name'))"""
-        case _: IntegerObject => s"""as.integer($$$env_name)"""
-        case _: DoubleObject => s"""as.numeric($$$env_name)"""
+          s"""'$$$env_name'.split('${o.multiple_sep}')"""
+        case _: BooleanObject => s"""'$$$env_name'.toLowerCase() === 'true'"""
+        case _: IntegerObject => s"""parseInt('$$$env_name')"""
+        case _: DoubleObject => s"""parseFloat('$$$env_name')"""
         case _: FileObject => s"""'$$$env_name'"""
         case _: StringObject => s"""'$$$env_name'"""
       }
 
-      s""""${par.plainName}" = $$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$parse"; else echo NULL; fi )"""
+      s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$parse"; else echo undefined; fi )"""
     }
-    s"""par <- list(
+    s"""let par = {
        |  ${par_set.mkString(",\n  ")}
-       |)
+       |};
        |
-       |resources_dir = "$$VIASH_RESOURCES_DIR"
+       |let resources_dir = '$$VIASH_RESOURCES_DIR'
        |""".stripMargin
   }
 }
 
-object RScript extends ScriptObject {
-  val commentStr = "#"
-  val extension = "R"
+object JavaScriptScript extends ScriptObject {
+  val commentStr = "//"
+  val extension = "js"
 
   def command(script: String): String = {
-    "Rscript \"" + script + "\""
+    "node \"" + script + "\""
   }
 
   def commandSeq(script: String): Seq[String] = {
-    Seq("Rscript", script)
+    Seq("node", script)
   }
 }

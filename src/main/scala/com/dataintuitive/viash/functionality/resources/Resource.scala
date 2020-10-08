@@ -50,4 +50,26 @@ trait Resource {
 
     file.setExecutable(is_executable)
   }
+
+  def copyWithAbsolutePath(parent: URI): Resource = {
+    if (this.isInstanceOf[Executable] || path.isEmpty || path.get.contains("://")) {
+      this
+    } else {
+      val p = Paths.get(path.get).toFile
+      if (p.isAbsolute) {
+        this
+      } else {
+        val newPath = Some(parent.resolve(path.get).toString)
+        this.copyResource(path = newPath)
+      }
+    }
+  }
+
+  // TODO: This can probably be solved much nicer.
+  def copyResource(
+    name: Option[String] = this.name,
+    path: Option[String] = this.path,
+    text: Option[String] = this.text,
+    is_executable: Boolean = this.is_executable
+  ): Resource
 }

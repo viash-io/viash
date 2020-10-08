@@ -10,15 +10,9 @@ case class PythonScript(
   is_executable: Boolean = true
 ) extends Script {
   val `type` = "python_script"
-
-  val commentStr = "#"
-
-  def command(script: String): String = {
-    "python \"" + script + "\""
-  }
-
-  def commandSeq(script: String): Seq[String] = {
-    Seq("python", script)
+  val meta = PythonScript
+  def copyResource(name: Option[String], path: Option[String], text: Option[String], is_executable: Boolean): Resource = {
+    copy(name, path, text, is_executable)
   }
 
   def generatePlaceholder(functionality: Functionality): String = {
@@ -53,5 +47,18 @@ case class PythonScript(
        |
        |resources_dir = '$$VIASH_RESOURCES_DIR'
        |""".stripMargin
+  }
+}
+
+object PythonScript extends ScriptObject {
+  val commentStr = "#"
+  val extension = "py"
+
+  def command(script: String): String = {
+    "python \"" + script + "\""
+  }
+
+  def commandSeq(script: String): Seq[String] = {
+    Seq("python", script)
   }
 }

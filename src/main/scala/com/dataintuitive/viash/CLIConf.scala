@@ -1,33 +1,65 @@
 package com.dataintuitive.viash
 
-import org.rogach.scallop.{ScallopConf, ScallopOption, Subcommand, ValueConverter}
+import org.rogach.scallop.{ScallopConf, Subcommand}
 
 trait ViashCommand {
   _: ScallopConf =>
-  val functionality = opt[String](
-    descr = "[deprecated] Path to the functionality file.",
-    default = None,
-    required = false
-  )
   val platform = opt[String](
     short = 'p',
     default = None,
-    descr = "Path to a custom platform file.",
+    descr =
+      "Specifies which platform amongst those specified in the config to use. " +
+      "If this is not provided, the first platform will be used. " +
+      "If no platforms are defined in the config, the native platform will be used. " +
+      "In addition, the path to a platform yaml file can also be specified.",
     required = false
   )
   val platformid = opt[String](
     short = 'P',
     default = None,
-    descr = "If multiple platforms are specified in the config, use the platform with this name.",
-    required = false
+    descr = "[deprecated] passthrough option for platform.",
+    required = false,
+    hidden = true
   )
-  val config = trailArg[String](
-    descr = "A viash config file (example: conf.vsh.yaml). This argument can also be a script with the config as a header.",
+}
+trait ViashNs {
+  _: ScallopConf =>
+  val namespace = opt[String](
+    name = "namespace",
+    short = 'n',
+    descr = "The name of the namespace.",
+    default = None
+  )
+  val src = opt[String](
+    name = "src",
+    short = 's',
+    descr = " A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
+    default = Some("src")
+  )
+  val platform = opt[String](
+    short = 'p',
+    descr =
+      "Acts as a regular expression to filter the platform ids specified in the found config files. " +
+        "If this is not provided, all platforms will be used. " +
+        "If no platforms are defined in a config, the native platform will be used. " +
+        "In addition, the path to a platform yaml file can also be specified.",
     default = None,
     required = false
   )
+  val platformid = opt[String](
+    short = 'P',
+    descr = "[deprecated] passthrough option for platform.",
+    default = None,
+    required = false,
+    hidden = true
+  )
+  val parallel = opt[Boolean](
+    name = "parallel",
+    short = 'l',
+    default = Some(false),
+    descr = "Whether or not to run the process in parallel."
+  )
 }
-
 trait WithTemporary {
   _: ScallopConf =>
   val keep = opt[String](
@@ -66,9 +98,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |Executes a viash component from the provided viash config file. viash generates a temporary executable and immediately executes it with the given parameters.
          |
          |Usage:
-         |  viash run [-P docker/-p platform.yaml] [-k true/false] config.vsh.yaml -- [arguments for script]
+         |  viash run config.vsh.yaml [-p docker] [-k true/false]  -- [arguments for script]
          |
-         |Arguments:""".stripMargin)
+         |Arguments:
+         |  config                  A viash config file (example: config.vsh.yaml). This
+         |                          argument can also be a script with the config as a
+         |                          header.""".stripMargin)
 
     footer(
       s"""  -- param1 param2 ...    Extra parameters to be passed to the component itself.
@@ -86,9 +121,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |Build an executable from the provided viash config file.
          |
          |Usage:
-         |  viash build -o output [-P docker/-p platform.yaml] [-m] [-s] config.vsh.yaml
+         |  viash build config.vsh.yaml -o output [-p docker] [-m] [-s]
          |
-         |Arguments:""".stripMargin)
+         |Arguments:
+         |  config                  A viash config file (example: config.vsh.yaml). This
+         |                          argument can also be a script with the config as a
+         |                          header.""".stripMargin)
 
     val meta = opt[Boolean](
       name = "meta",
@@ -114,9 +152,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |Test the component using the tests defined in the viash config file.
          |
          |Usage:
-         |  viash test [-P docker/-p platform.yaml] [-k true/false] config.vsh.yaml
+         |  viash test config.vsh.yaml [-p docker [-k true/false]
          |
-         |Arguments:""".stripMargin)
+         |Arguments:
+         |  config                  A viash config file (example: config.vsh.yaml). This
+         |                          argument can also be a script with the config as a
+         |                          header.""".stripMargin)
 
     footer(
       s"""
@@ -127,99 +168,37 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
 
   val namespace = new Subcommand("ns") {
 
-    val build = new Subcommand("build") {
+    val build = new Subcommand("build") with ViashNs{
       banner(
         s"""viash ns build
            |Build a namespace from many viash config files.
            |
            |Usage:
-           |  viash ns build [-s src] [-t target] [-P docker/-p platform.yaml] [--setup] [--parallel]
+           |  viash ns build [-s src] [-t target] [-p docker] [--setup] [--parallel]
            |
            |Arguments:""".stripMargin)
-
-      val namespace = opt[String](
-        name = "namespace",
-        short = 'n',
-        descr = "The name of the namespace.",
-        default = None
-      )
-      val src = opt[String](
-        name = "src",
-        short = 's',
-        descr = " A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
-        default = Some("src")
-      )
       val target = opt[String](
         name = "target",
         short = 't',
         descr = "A target directory to build the executables into. Default: target/.",
         default = Some("target")
       )
-      val platform = opt[String](
-        short = 'p',
-        descr = "Path to a custom platform file.",
-        default = None,
-        required = false
-      )
-      val platformid = opt[String](
-        short = 'P',
-        descr = "Only build a particular platform type.",
-        default = None,
-        required = false
-      )
       val setup = opt[Boolean](
         name = "setup",
         default = Some(false),
         descr = "Whether or not to set up the platform environment after building the executable."
       )
-      val parallel = opt[Boolean](
-        name = "parallel",
-        short = 'l',
-        default = Some(false),
-        descr = "Whether or not to run the process in parallel."
-      )
     }
 
-    val test = new Subcommand("test") with WithTemporary {
+    val test = new Subcommand("test") with ViashNs with WithTemporary {
       banner(
         s"""viash ns test
            |Test a namespace containing many viash config files.
            |
            |Usage:
-           |  viash ns test [-s src] [-P docker/-p platform.yaml] [--parallel]
+           |  viash ns test [-s src] [-p docker] [--parallel]
            |
            |Arguments:""".stripMargin)
-
-      val namespace = opt[String](
-        name = "namespace",
-        short = 'n',
-        descr = "The name of the namespace.",
-        default = None
-      )
-      val src = opt[String](
-        name = "src",
-        short = 's',
-        descr = " A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
-        default = Some("src")
-      )
-      val platform = opt[String](
-        short = 'p',
-        descr = "Path to a custom platform file.",
-        default = None,
-        required = false
-      )
-      val platformid = opt[String](
-        short = 'P',
-        descr = "Only build a particular platform type.",
-        default = None,
-        required = false
-      )
-      val parallel = opt[Boolean](
-        name = "parallel",
-        short = 'l',
-        default = Some(false),
-        descr = "Whether or not to run the process in parallel."
-      )
       val tsv = opt[String](
         name = "tsv",
         short = 't',

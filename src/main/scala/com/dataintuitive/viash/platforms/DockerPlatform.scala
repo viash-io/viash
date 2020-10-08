@@ -70,7 +70,8 @@ case class DockerPlatform(
       case _: Executable => "--entrypoint='' "
       case _ => "--entrypoint=bash "
     }
-    val executor = s"""eval docker run $entrypointStr$dockerArgs${dm.extraParams} $imageName:$imageVersion"""
+    val workdirStr = workdir.map("--workdir " + _ + " ").getOrElse("")
+    val executor = s"""eval docker run $entrypointStr$workdirStr$dockerArgs${dm.extraParams} $imageName:$imageVersion"""
 
     // add extra arguments to the functionality file for each of the volumes
     val fun2 = functionality.copy(
@@ -268,7 +269,13 @@ case class DockerPlatform(
     )
   }
 
-  private def addDockerChown(functionality: Functionality, dockerArgs: String, volExtraParams: String, imageName: String, imageVersion: String) = {
+  private def addDockerChown(
+    functionality: Functionality,
+    dockerArgs: String,
+    volExtraParams: String,
+    imageName: String,
+    imageVersion: String
+  ) = {
     val args = functionality.argumentsAndDummies
 
     def chownCommand(value: String): String = {

@@ -35,10 +35,11 @@
 #'   - path: tests/script.vsh.sh
 #' platforms:
 #' - type: docker
-#'   image: mikefarah/yq
-#'   apk: 
-#'     packages:
-#'     - bash
+#'   image: bash:4.0
+#'   setup: 
+#'     - type: docker
+#'       run: 
+#'         - wget https://github.com/mikefarah/yq/releases/download/3.4.0/yq_linux_amd64 -O /usr/bin/yq && chmod +x /usr/bin/yq
 #' - type: native
 
 set -e
@@ -112,7 +113,7 @@ elif [ $input_type = "script" ] && [ $par_format = "config" ]; then
   # add other resources
   has_resources=`echo "$CONFIG_YAML" | yq read - functionality.resources | head -1`
   if [ ! -z "$has_resources" ]; then
-    echo "$CONFIG_YAML" | yq read - functionality.resources | yq p - functionality.resources | yq m -a "$config_yaml_path" - -i
+    echo "$CONFIG_YAML" | yq read - functionality.resources | yq p - functionality.resources | yq m -a append "$config_yaml_path" - -i
   fi
 
   # WRITING SCRIPT
@@ -142,7 +143,7 @@ elif [ $input_type = "script" ] && [ $par_format = "split" ]; then
   # add other resources
   has_resources=`echo "$FUNCTIONALITY_YAML" | yq read - resources | head -1`
   if [ ! -z "$has_resources" ]; then
-    echo "$FUNCTIONALITY_YAML" | yq read - resources | yq p - resources | yq m -a "$funcionality_yaml_path" - -i
+    echo "$FUNCTIONALITY_YAML" | yq read - resources | yq p - resources | yq m -a append "$funcionality_yaml_path" - -i
   fi
   
   #### PLATFORM(S)
@@ -242,7 +243,8 @@ elif [ $input_type = "split" ] && [ $par_format = "script" ]; then
       platform_relative="platform_$plat.yaml"
       platform_path="$input_dir/$platform_relative"
       if [ -f "$platform_path" ]; then
-        yq delete "$platform_path" 'volumes' | sed "s/^/#'   /" | sed "s/#'   type:/#' - type:/" >> "$output_script_path" # should not assume type is first!  
+        yq delete "$platform_path" 'volumes' | yq p - platforms[+] | yq m -i -a append "$output_yaml_path" - 
+        # yq delete "$platform_path" 'volumes' | sed "s/^/#'   /" | sed "s/#'   type:/#' - type:/" >> "$output_script_path" # should not assume type is first!  
       fi
     done
   fi
@@ -271,7 +273,7 @@ elif [ $input_type = "split" ] && [ $par_format = "config" ]; then
     platform_relative="platform_$plat.yaml"
     platform_path="$input_dir/$platform_relative"
     if [ -f "$platform_path" ]; then
-      yq p "$platform_path" platforms[+] | yq m -i -a "$output_yaml_path" - 
+      yq delete "$platform_path" 'volumes' | yq p - platforms[+] | yq m -i -a append "$output_yaml_path" - 
     fi
   done
   

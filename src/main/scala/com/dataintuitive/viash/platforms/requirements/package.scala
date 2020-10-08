@@ -14,6 +14,9 @@ package object requirements {
   implicit val encodePythonRequirements: Encoder.AsObject[PythonRequirements] = deriveConfiguredEncoder
   implicit val decodePythonRequirements: Decoder[PythonRequirements] = deriveConfiguredDecoder
 
+  implicit val encodeJavaScriptRequirements: Encoder.AsObject[JavaScriptRequirements] = deriveConfiguredEncoder
+  implicit val decodeJavaScriptRequirements: Decoder[JavaScriptRequirements] = deriveConfiguredDecoder
+
   implicit val encodeAptRequirements: Encoder.AsObject[AptRequirements] = deriveConfiguredEncoder
   implicit val decodeAptRequirements: Decoder[AptRequirements] = deriveConfiguredDecoder
 
@@ -36,6 +39,7 @@ package object requirements {
         case s: NextFlowRequirements => encodeNextFlowRequirements(s)
         case s: PythonRequirements => encodePythonRequirements(s)
         case s: RRequirements => encodeRRequirements(s)
+        case s: JavaScriptRequirements => encodeJavaScriptRequirements(s)
       }
       objJson deepMerge typeJson
   }
@@ -50,6 +54,7 @@ package object requirements {
           case Right("nextflow") => decodeNextFlowRequirements.widen
           case Right("python") => decodePythonRequirements.widen
           case Right("r") => decodeRRequirements.widen
+          case Right("javascript") => decodeJavaScriptRequirements.widen
           case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised.")
           case Left(exception) => throw exception
         }
