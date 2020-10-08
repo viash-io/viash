@@ -44,13 +44,13 @@ trait ScriptObject {
 }
 
 object Script {
-  val extMap =
+  val extensions =
     List(BashScript, PythonScript, RScript, JavaScriptScript, ScalaScript)
       .map(x => (x.extension.toLowerCase, x))
       .toMap
 
   def fromExt(extension: String): ScriptObject = {
     new RuntimeException("Unrecognised script extension: " + extension)
-    extMap(extension.toLowerCase)
+    extensions(extension.toLowerCase)
   }
 }

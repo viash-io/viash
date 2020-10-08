@@ -1,0 +1,5 @@
+type: native
+id: custom
+r: 
+  cran: 
+    - check_for_detecting_platform

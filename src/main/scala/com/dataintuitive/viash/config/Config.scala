@@ -2,11 +2,11 @@ package com.dataintuitive.viash.config
 
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.platforms._
-import com.dataintuitive.viash.helpers.IO
+import com.dataintuitive.viash.helpers.{IO, Git, GitInfo}
+import com.dataintuitive.viash.helpers.Scala._
 import java.net.URI
 import io.circe.yaml.parser
 import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.helpers.{Git, GitInfo}
 import java.io.File
 
 case class Config(
@@ -30,8 +30,8 @@ object Config {
     val fun = config.functionality
 
     // make paths absolute
-    val resources = fun.resources.getOrElse(Nil).map(Functionality.makeResourcePathAbsolute(_, uri))
-    val tests = fun.tests.getOrElse(Nil).map(Functionality.makeResourcePathAbsolute(_, uri))
+    val resources = fun.resources.getOrElse(Nil).map(_.copyWithAbsolutePath(uri))
+    val tests = fun.tests.getOrElse(Nil).map(_.copyWithAbsolutePath(uri))
 
     // copy resources with updated paths into config and return
     config.copy(
@@ -42,150 +42,113 @@ object Config {
     )
   }
 
-  def read(path: String): Config = {
-    val uri = IO.uri(path)
+  def read(
+    config: String,
+    platform: Option[String] = None,
+    modifyFun: Boolean = true,
+    namespace: Option[String] = None
+  ): Config = {
+    // get config uri
+    val configUri = IO.uri(config)
 
-    val str = IO.read(uri)
-    val uris = uri.toString
-    val extension = uris.substring(uris.lastIndexOf(".") + 1).toLowerCase()
+    // get config text
+    val configStr = IO.read(configUri)
+    val configUriStr = configUri.toString
+
+    // get extension
+    val extension = configUriStr.substring(configUriStr.lastIndexOf(".") + 1).toLowerCase()
 
     // detect whether a script (with joined header) was passed or a joined yaml
     // using the extension
     val (yaml, optScript) =
-      if (extension == "yml" || extension == "yaml") {
-        (str, None)
-      } else {
+      if ((extension == "yml" || extension == "yaml") && configStr.contains("functionality:")) {
+        (configStr, None)
+      } else if (Script.extensions.contains(extension)) {
+        // detect scripting language from extension
         val scriptObj = Script.fromExt(extension)
+
+        // check whether viash header contains a functionality
         val commentStr = scriptObj.commentStr + "'"
         val headerComm = commentStr + " "
         assert(
-          str.contains(s"$commentStr functionality:"),
-          message = s"""Script should contain a functionality header: "$commentStr functionality: <...>""""
+          configStr.contains(s"$commentStr functionality:"),
+          message = s"""viash script should contain a functionality header: "$commentStr functionality: <...>""""
         )
 
-        val (header, body) = str.split("\n").partition(_.startsWith(headerComm))
+        // split header and body
+        val (header, body) = configStr.split("\n").partition(_.startsWith(headerComm))
         val yaml = header.map(s => s.drop(3)).mkString("\n")
-        val code = commentStr + " VIASH START\n" + commentStr + " VIASH END\n" + body.mkString("\n")
+        val code = body.mkString("\n")
 
         val script = scriptObj(name = Some("viash_main."), text = Some(code))
         (yaml, Some(script))
+      } else {
+        throw new RuntimeException("config file (" + config + ") must be a yaml file containing a viash config.")
       }
 
     // read config
-    val config = parse(yaml, uri)
-
-    config.copy(
-      functionality = config.functionality.copy(
-        resources = Some(optScript.toList ::: config.functionality.resources.getOrElse(Nil))
-      )
-    )
-  }
-
-  class PlatformNotFoundException(val config: Config, val platform: String) extends RuntimeException(s"Platform platform could not be found")
-
-  def readSplitOrJoined(
-    joined: Option[String] = None,
-    functionality: Option[String] = None,
-    platform: Option[String] = None,
-    platformID: Option[String] = None,
-    modifyFun: Boolean = true,
-    namespace: Option[String] = None
-  ): Config = {
-    // read the component if passed, else read the functionality
-    assert(
-      joined.isEmpty != functionality.isEmpty,
-      message = "Either functionality or joined need to be specified!"
-    )
-
-    // construct info object
-    val configPre = {
-      if (joined.isDefined) {
-        read(joined.get)
-      } else {
-        Config(
-          functionality = Functionality.read(functionality.get)
-        )
-      }
-    }.copy(
-      info = Some(Info(
-        functionality_path = functionality,
-        platform_path = platform,
-        platform_id = platformID,
-        joined_path = joined,
-        viash_version = Some(com.dataintuitive.viash.Main.version)
-      ))
-    )
-
-    val keepExplicitNamespace =
-      if (configPre.functionality.namespace != None)
-        configPre.functionality.namespace
-      else
-        namespace
-
-    val config = configPre.copy(functionality = configPre.functionality.copy(namespace = keepExplicitNamespace))
+    val conf0 = parse(yaml, configUri)
 
 
     // get the platform
-    // * if a platform yaml is passed, use that
-    // * else if a platform id is passed, look up the platform in the platforms list
+    // * if a platform id is passed, look up the platform in the platforms list
+    // * else if a platform yaml is passed, read platform from file
     // * else if a platform is already defined in the config, use that
     // * else if platforms is a non-empty list, use the first platform
     // * else use the native platform
     val pl =
       if (platform.isDefined) {
-        Platform.parse(IO.uri(platform.get))
-      } else if (platformID.isDefined) {
-        val pid = platformID.get
-        if (joined.isDefined) {
-          // if input file is a joined config
-          val platformNames = config.platforms.map(_.id)
-          if (!platformNames.contains(pid)) {
-            throw new PlatformNotFoundException(config, pid)
-          }
-          config.platforms(platformNames.indexOf(pid))
+        val pid = platform.get
+
+        val platformNames = conf0.platforms.map(_.id)
+
+        if (platformNames.contains(pid)) {
+          conf0.platforms(platformNames.indexOf(pid))
+        } else if (pid.endsWith(".yaml") || pid.endsWith(".yml")) {
+          Platform.parse(IO.uri(platform.get))
         } else {
-          val funRegex = "[^/]*.yaml$".r
-          // if input file is a functionality yaml,
-          // check if platform_*.yaml file exists
-          val platPath = funRegex.replaceFirstIn(functionality.get, "platform_" + pid + ".yaml")
-          val uri = IO.uri(platPath)
-          val platform =
-            try {
-              Some(Platform.parse(uri))
-            } catch {
-              case _: Throwable => None
-            }
-
-          if (platform.isEmpty) {
-            throw new PlatformNotFoundException(config, platPath)
-          }
-
-          platform.get
+          throw new RuntimeException("platform must be a platform id specified in the config or a path to a platform yaml file.")
         }
-      } else if (config.platform.isDefined) {
-        config.platform.get
-      } else if (config.platforms.nonEmpty) {
-        config.platforms.head
+      } else if (conf0.platform.isDefined) {
+        conf0.platform.get
+      } else if (conf0.platforms.nonEmpty) {
+        conf0.platforms.head
       } else {
         NativePlatform()
       }
 
-    // gather git info of functionality git
-    val path = new File(functionality.getOrElse(joined.getOrElse(""))).getParentFile
+    // gather git info
+    val path = new File(config).getParentFile
     val GitInfo(_, rgr, gc) = Git.getInfo(path)
 
-    config.copy(
-      functionality =
-        if (modifyFun) {
-          pl.modifyFunctionality(config.functionality)
-        } else {
-          config.functionality
-        },
-      platform = Some(pl),
-      info = config.info.map(_.copy(
+    // check whether to modify the fun
+    val modifyFunFun: Functionality => Functionality = {
+      if (modifyFun) {
+        pl.modifyFunctionality
+      } else {
+        identity
+      }
+    }
+
+    // combine config into final object
+    conf0.copy(
+      // add info
+      info = Some(Info(
+        viash_version = Some(com.dataintuitive.viash.Main.version),
+        config = config,
+        platform = platform,
         git_commit = gc,
         git_remote = rgr
-      ))
+      )),
+      // apply platform modification to functionality
+      functionality = modifyFunFun(conf0.functionality.copy(
+        // override namespace if none is specified in config
+        namespace = conf0.functionality.namespace | namespace,
+        // add script (if available) to resources
+        resources = Some(optScript.toList ::: conf0.functionality.resources.getOrElse(Nil))
+      )),
+      // insert selected platform
+      platform = Some(pl)
     )
   }
 

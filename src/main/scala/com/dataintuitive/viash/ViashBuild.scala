@@ -60,8 +60,8 @@ object ViashBuild {
         })
       ),
       info = config.info.map(_.copy(
-        output_path = Some(output),
-        executable_path = exec_path
+        output = Some(output),
+        executable = exec_path
       )),
       platforms = Nil // drop other platforms
     )

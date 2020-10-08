@@ -1,14 +1,27 @@
-# viash 0.2.3
+# viash 0.3.0
 
+## BREAKING CHANGES
+
+* File format `functionality.yaml` is no longer supported.
+
+* `viash run`, `viash build` and `viash test`: config argument should be passed first, not last.
+
+* `viash run` and `viash test`: By default, temporary files are removed when the execution succeeded, otherwise they are kept. 
+  This behaviour can be overridden by specifying `--keep true` to always keep the temporary files, and `--keep false` to always remove them.
+  
 ## NEW FEATURES
 
-* `viash ns test`: Run all tests in a particular namespace.
+* Added `viash ns test`: Run all tests in a particular namespace.
 * Added support for JavaScript scripts.
 * Added support for Scala scripts.
 * [NXF] publishing has a few more options:
   - `publish`: Publish or yes (default is false)
   - `per_id`: Publish results in directories containing the unique (sample) ID (default is true)
   - `path`: A prefix path for the results to be published (default is empty)
+
+## MAJOR CHANGES
+
+* The `-P <platform>` parameter will be deprecated. For now, all `-P` values are simply passed to `-p`.
 
 ## MINOR CHANGES
 
@@ -20,6 +33,7 @@
 ## TESTING
 
 * `viash test`: Add tests for `viash test` functionality.
+
 
 # viash 0.2.2 (2020-09-22)
 

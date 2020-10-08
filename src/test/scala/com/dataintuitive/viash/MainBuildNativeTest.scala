@@ -1,21 +1,22 @@
 package com.dataintuitive.viash
 
-import org.scalatest.{FunSuite, BeforeAndAfterAll}
+import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import java.nio.file.Paths
-import com.dataintuitive.viash.functionality.Functionality
+
+import com.dataintuitive.viash.config.Config
+
 import scala.io.Source
 import com.dataintuitive.viash.helpers._
 
 class MainBuildNativeTest extends FunSuite with BeforeAndAfterAll {
   // which platform to test
-  private val funcFile = getClass.getResource(s"/testbash/functionality.yaml").getPath
-  private val platFile = getClass.getResource(s"/testbash/platform_native.yaml").getPath
+  private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
 
   // parse functionality from file
-  private val functionality = Functionality.parse(IO.uri(funcFile))
+  private val functionality = Config.read(configFile, modifyFun = false).functionality
 
   // check whether executable was created
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
@@ -23,9 +24,8 @@ class MainBuildNativeTest extends FunSuite with BeforeAndAfterAll {
   // convert testbash
   test("viash can create an executable") {
     TestHelper.testMain(Array(
-      "build",
-      "-f", funcFile,
-      "-p", platFile,
+      "build", configFile,
+      "-p", "native",
       "-o", tempFolStr
     ))
 

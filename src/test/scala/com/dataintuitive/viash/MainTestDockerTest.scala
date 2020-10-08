@@ -2,7 +2,6 @@ package com.dataintuitive.viash
 
 import java.nio.file.Paths
 
-import com.dataintuitive.viash.config.Config.PlatformNotFoundException
 import com.dataintuitive.viash.helpers.IO
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
@@ -10,21 +9,19 @@ import scala.reflect.io.Directory
 
 class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
   // which platform to test
-  private val funcFile = getClass.getResource("/testbash/functionality.yaml").getPath
-  private val funcNoTestFile = getClass.getResource("/testbash/functionality_no_tests.yaml").getPath
-  private val funcFailedTestFile = getClass.getResource("/testbash/functionality_failed_test.yaml").getPath
-  private val platFile = getClass.getResource("/testbash/platform_docker.yaml").getPath
-  private val platFailedBuildFile = getClass.getResource("/testbash/platform_docker_failed_build.yaml").getPath
-  private val joinedFile = getClass.getResource("/testbash/joined.vsh.yaml").getPath
+  private val configFile = getClass.getResource("/testbash/config.vsh.yaml").getPath
+  private val configNoTestFile = getClass.getResource("/testbash/config_no_tests.yaml").getPath
+  private val configFailedTestFile = getClass.getResource("/testbash/config_failed_test.yaml").getPath
+  private val configFailedBuildFile = getClass.getResource("/testbash/config_failed_build.yaml").getPath
+  private val customPlatformFile = getClass.getResource("/testbash/platform_custom.yaml").getPath
 
   private val expectedTmpDirStr = s"${IO.tempDir}/viash_test_testbash"
 
   test("Check standard test output for typical outputs", DockerTest) {
     val testText = TestHelper.testMain(
       Array(
-        "test",
-        "-f", funcFile,
-        "-p", platFile
+        "test", configFile,
+        "-p", "docker"
       ))
 
     assert(testText.contains("Running tests in temporary directory: "))
@@ -37,9 +34,8 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
   test("Check output in case --keep true is specified", DockerTest) {
     val testText = TestHelper.testMain(
       Array(
-        "test",
-        "-f", funcFile,
-        "-p", platFile,
+        "test", configFile,
+        "-p", "docker",
         "-k", "true"
       ))
 
@@ -53,9 +49,8 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
   test("Check output in case --keep false is specified", DockerTest) {
     val testText = TestHelper.testMain(
       Array(
-        "test",
-        "-f", funcFile,
-        "-p", platFile,
+        "test", configFile,
+        "-p", "docker",
         "--keep", "false"
       ))
 
@@ -66,12 +61,11 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, expectedTmpDirStr, false)
   }
 
-  test("Check test output when no tests are specified in the functionality file", DockerTest) {
+  test("Check test output when no tests are specified in the functionality file", NativeTest) {
     val testText = TestHelper.testMain(
       Array(
-        "test",
-        "-f", funcNoTestFile,
-        "-p", platFile
+        "test", configNoTestFile,
+        "-p", "native"
       ))
 
     assert(testText.contains("Running tests in temporary directory: "))
@@ -81,56 +75,51 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, expectedTmpDirStr, false)
   }
 
-  test("Check test output when a test fails", DockerTest) {
+  test("Check test output when a test fails", NativeTest) {
     val testText = TestHelper.testMainException[RuntimeException](Array(
-      "test",
-      "-f", funcFailedTestFile,
-      "-p", platFile
+      "test", configFailedTestFile,
+      "-p", "native"
     ))
 
     assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("ERROR! Only 1 out of 2 test scripts succeeded!"))
+    assert(testText.contains("ERROR! Only 0 out of 1 test scripts succeeded!"))
     assert(!testText.contains("Cleaning up temporary directory"))
 
     checkTempDirAndRemove(testText, expectedTmpDirStr, true)
   }
 
-  test("Check test output when a test fails and --keep true is specified", DockerTest) {
+  test("Check test output when a test fails and --keep true is specified", NativeTest) {
     val testText = TestHelper.testMainException[RuntimeException](Array(
-      "test",
-      "-f", funcFailedTestFile,
-      "-p", platFile,
+      "test", configFailedTestFile,
+      "-p", "native",
       "-k", "true"
     ))
 
     assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("ERROR! Only 1 out of 2 test scripts succeeded!"))
+    assert(testText.contains("ERROR! Only 0 out of 1 test scripts succeeded!"))
     assert(!testText.contains("Cleaning up temporary directory"))
 
     checkTempDirAndRemove(testText, expectedTmpDirStr, true)
   }
 
-  test("Check test output when a test fails and --keep false is specified", DockerTest) {
+  test("Check test output when a test fails and --keep false is specified", NativeTest) {
     val testText = TestHelper.testMainException[RuntimeException](Array(
-      "test",
-      "-f", funcFailedTestFile,
-      "-p", platFile,
+      "test", configFailedTestFile,
+      "-p", "native",
       "-k", "false"
     ))
 
     assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("ERROR! Only 1 out of 2 test scripts succeeded!"))
+    assert(testText.contains("ERROR! Only 0 out of 1 test scripts succeeded!"))
     assert(testText.contains("Cleaning up temporary directory"))
 
     checkTempDirAndRemove(testText, expectedTmpDirStr, false)
   }
 
-  test("Check failing build") {
+  test("Check failing build", DockerTest) {
     val testText = TestHelper.testMainException[RuntimeException](
       Array(
-        "test",
-        "-f", funcFile,
-        "-p", platFailedBuildFile
+        "test", configFailedBuildFile
       ))
 
     assert(testText.contains("Running tests in temporary directory: "))
@@ -140,34 +129,30 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, expectedTmpDirStr, true)
   }
 
-  test("Check standard test output using joined file format", DockerTest) {
-    val testText = TestHelper.testMain(
+
+  test("Check standard test output with bad platform name", NativeTest) {
+    val testText = TestHelper.testMainException[RuntimeException](
       Array(
-        "test",
-        "-P", "docker",
-        joinedFile
-      ))
-
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
-
-    checkTempDirAndRemove(testText, expectedTmpDirStr, false)
-  }
-
-  test("Check standard test output using joined file format but with bad platform name", DockerTest) {
-    val testText = TestHelper.testMainException[PlatformNotFoundException](
-      Array(
-        "test",
-        "-P", "non_existing_platform",
-        joinedFile
+        "test", configFile,
+        "-p", "non_existing_platform"
       ))
 
     assert(!testText.contains("Running tests in temporary directory: "))
     assert(!testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
     assert(!testText.contains("Cleaning up temporary directory"))
+  }
 
-    //checkTempDirAndRemove(testText, expectedTmpDirStr, false)
+  test("Check standard test output with custom platform file", NativeTest) {
+    val testText = TestHelper.testMain(
+      Array(
+        "test", configFile,
+        "-p", customPlatformFile
+      ))
+
+    assert(testText.contains("check_for_detecting_platform"))
+    assert(testText.contains("Running tests in temporary directory: "))
+    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testText.contains("Cleaning up temporary directory"))
   }
 
   /**

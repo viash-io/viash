@@ -1,11 +1,7 @@
 package com.dataintuitive.viash.functionality
 
-import io.circe.yaml.parser
-import java.nio.file.Paths
 import dataobjects._
 import resources._
-import com.dataintuitive.viash.helpers.IO
-import java.net.URI
 import com.dataintuitive.viash.config.Version
 
 case class Functionality(
@@ -45,42 +41,6 @@ case class Functionality(
   def mainCode: Option[String] = mainScript.flatMap(_.read)
 
   def argumentsAndDummies: List[DataObject[_]] = arguments ::: dummy_arguments.getOrElse(Nil)
-}
-
-object Functionality {
-  def parse(uri: URI): Functionality = {
-    val str = IO.read(uri)
-
-    val fun = parser.parse(str)
-      .fold(throw _, _.as[Functionality])
-      .fold(throw _, identity)
-
-    val resources = fun.resources.getOrElse(Nil).map(makeResourcePathAbsolute(_, uri))
-    val tests = fun.tests.getOrElse(Nil).map(makeResourcePathAbsolute(_, uri))
-
-    fun.copy(
-      resources = Some(resources),
-      tests = Some(tests)
-    )
-  }
-
-  def makeResourcePathAbsolute(res: Resource, parent: URI): Resource = {
-    if (res.isInstanceOf[Executable] || res.path.isEmpty || res.path.get.contains("://")) {
-      res
-    } else {
-      val p = Paths.get(res.path.get).toFile
-      if (p.isAbsolute) {
-        res
-      } else {
-        val newPath = Some(parent.resolve(res.path.get).toString)
-        res.copyResource(path = newPath)
-      }
-    }
-  }
-
-  def read(path: String): Functionality = {
-    parse(IO.uri(path))
-  }
 }
 
 sealed trait FunctionType
