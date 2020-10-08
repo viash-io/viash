@@ -54,7 +54,7 @@ object Main {
           parallel = cli.namespace.build.parallel()
         )
       case List(cli.namespace, cli.namespace.test) =>
-        val configs = readConfigs(cli.namespace.test)
+        val configs = readConfigs(cli.namespace.test, modifyFun = false)
         ViashNamespace.test(
           configs = configs,
           parallel = cli.namespace.test.parallel(),
