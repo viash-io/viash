@@ -21,10 +21,12 @@ const fs = require('fs')
 
 let logFun;
 if (typeof par['log'] === 'undefined') {
-	logFun = console.log
+	logFun = function(out) {
+	    console.log("INFO:" + out);
+	}
 } else {
 	logFun = function(out) {
-		fs.appendFile(par['log'], out + "\n", function (err) {
+		fs.appendFile(par['log'], "INFO:" + out + "\n", function (err) {
 			if (err) throw err;
 		});
 	}
@@ -41,12 +43,12 @@ if (typeof par['output'] === 'undefined') {
 }
 
 // process parameters
-logFun('> Parsed input arguments.')
+logFun('Parsed input arguments.')
 
 if (typeof par['output'] === 'undefined') { 
-	logFun('> Printing output to console')
+	logFun('Printing output to console')
 } else {
-	logFun('> Writing output to file')
+	logFun('Writing output to file')
 }
 
 for (const key in par) {
