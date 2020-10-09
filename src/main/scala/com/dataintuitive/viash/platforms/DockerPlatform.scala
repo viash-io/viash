@@ -140,9 +140,6 @@ case class DockerPlatform(
         val vs =
           s"""  # create temporary directory to store temporary dockerfile in
              |
-             |  if [ -z "$$VIASH_TEMP" ]; then
-             |    VIASH_TEMP=/tmp
-             |  fi
              |  tmpdir=$$(mktemp -d "$$VIASH_TEMP/viash_setupdocker-${functionality.name}-XXXXXX")
              |  function clean_up {
              |    rm -rf "\\$$tmpdir"
@@ -244,7 +241,11 @@ case class DockerPlatform(
     val postParse = postParseVolumes + "\n\n" +
       s"""# Always mount the resource directory
          |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$${BashWrapper.var_resources_dir}")"
-         |${BashWrapper.var_resources_dir}=$$(ViashAutodetectMount "$$${BashWrapper.var_resources_dir}")""".stripMargin
+         |${BashWrapper.var_resources_dir}=$$(ViashAutodetectMount "$$${BashWrapper.var_resources_dir}")
+         |
+         |# Always mount the VIASH_TEMP directory
+         |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$VIASH_TEMP")"
+         |VIASH_TEMP=$$(ViashAutodetectMount "$$VIASH_TEMP")""".stripMargin
 
     BashWrapperMods(
       preParse = preParse,
