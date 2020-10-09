@@ -60,7 +60,8 @@ jobs:
           brew update
           brew install scala
         else
-          sudo apt-get install scala
+          sudo apt-get update
+          sudo apt-get install -y scala
         fi
       
     - name: Set up Python
