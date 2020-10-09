@@ -43,6 +43,9 @@ jobs:
         Rscript -e "install.packages('remotes'); remotes::install_github('rcannood/sysreqs')"
         sysreqs=$(Rscript -e "pkgs <- sysreqs:::get_cran_sysreqs(sysreqs:::get_cran_deps('tidyverse')); cat(sysreqs:::sysreq_commands_pkgs(pkgs))")
         sudo -s eval "$sysreqs"
+      
+    - name: Set up sbt
+      uses: olafurpg/setup-scala@v5
 
     - name: Install R dependencies
       run: |
@@ -52,7 +55,13 @@ jobs:
       shell: Rscript {0}
       
     - name: Set up Scala
-      uses: olafurpg/setup-scala@v5
+      run: |
+        if [[ "${{ matrix.config.os }}" =~ ^macos_*$ ]]; then
+          brew update
+          brew install scala
+        else
+          sudo apt-get install scala
+        fi
       
     - name: Set up Python
       uses: actions/setup-python@v2
