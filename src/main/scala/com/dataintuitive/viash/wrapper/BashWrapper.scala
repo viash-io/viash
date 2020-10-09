@@ -83,7 +83,10 @@ object BashWrapper {
         val escapedCode = escapeViash(code)
         s"""
            |set -e
-           |tempscript=\\$$(mktemp /tmp/viash-run-${functionality.name}-XXXXXX)
+           |if [ -z "$$VIASH_TEMP" ]; then
+           |  VIASH_TEMP=/tmp
+           |fi
+           |tempscript=\\$$(mktemp "$$VIASH_TEMP/viash-run-${functionality.name}-XXXXXX")
            |function clean_up {
            |  rm "\\$$tempscript"
            |}

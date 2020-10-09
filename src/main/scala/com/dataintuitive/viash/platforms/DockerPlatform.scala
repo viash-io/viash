@@ -139,7 +139,11 @@ case class DockerPlatform(
 
         val vs =
           s"""  # create temporary directory to store temporary dockerfile in
-             |  tmpdir=$$(mktemp -d /tmp/viash_setupdocker-${functionality.name}-XXXXXX)
+             |
+             |  if [ -z "$$VIASH_TEMP" ]; then
+             |    VIASH_TEMP=/tmp
+             |  fi
+             |  tmpdir=$$(mktemp -d "$$VIASH_TEMP/viash_setupdocker-${functionality.name}-XXXXXX")
              |  function clean_up {
              |    rm -rf "\\$$tmpdir"
              |  }
