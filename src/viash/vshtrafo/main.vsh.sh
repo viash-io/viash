@@ -203,7 +203,10 @@ elif [ $input_type = "config" ] && [ $par_format = "split" ]; then
   input_script_relative=$(yq read "$par_input" 'functionality.resources.[0].path')
   input_script_path="$input_dir/$input_script_relative"
   output_script_path="$par_output_dir/$input_script_relative"
-  cp "$input_script_path" "$output_script_path"
+  
+  if [ "$input_script_path" != "$output_script_path" ]; then
+    cp "$input_script_path" "$output_script_path"
+  fi
 
 # ------------------------ SPLIT -> SCRIPT ------------------------
 elif [ $input_type = "split" ] && [ $par_format = "script" ]; then
@@ -281,7 +284,9 @@ elif [ $input_type = "split" ] && [ $par_format = "config" ]; then
   input_script_relative=$(yq read "$par_input" 'resources.[0].path')
   input_script_path="$input_dir/$input_script_relative"
   output_script_path="$par_output_dir/$input_script_relative"
-  cp "$input_script_path" "$output_script_path"
+  if [ "$input_script_path" != "$output_script_path" ]; then
+    cp "$input_script_path" "$output_script_path"
+  fi
 
 fi
 
