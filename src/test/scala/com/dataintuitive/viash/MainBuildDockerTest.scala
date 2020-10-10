@@ -208,6 +208,38 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
     assert(stdout.contains("GNU bash, version 3.2"))
   }
 
+  test("Get meta data of a docker ", DockerTest) {
+    // prepare the environment
+    val stdout = TestHelper.testMain(Array(
+      "build", configFile,
+      "-p", "docker",
+      "-o", tempFolStr,
+      "-m"
+    ))
+
+    assert(executableBashTagFile.exists)
+    assert(executableBashTagFile.canExecute)
+
+    //println(s"out:-->$stdout<--")
+
+    val viashVersion = com.dataintuitive.viash.Main.version
+
+    val regexViashVersion = s"viash version:\\s*$viashVersion".r
+    val regexConfig = s"config:\\s*$configFile".r
+    val regexPlatform = "platform:\\s*docker".r
+    val regexExecutable = "executable:\\s*<NA>".r
+    val regexOutput = "output:\\s*<NA>".r
+    val regexRemoteGitRepo = "remote git repo:.*viash.git".r
+
+    assert(regexViashVersion.findFirstIn(stdout).isDefined)
+    assert(regexConfig.findFirstIn(stdout).isDefined)
+    assert(regexPlatform.findFirstIn(stdout).isDefined)
+    assert(regexExecutable.findFirstIn(stdout).isDefined)
+    assert(regexOutput.findFirstIn(stdout).isDefined)
+    assert(regexRemoteGitRepo.findFirstIn(stdout).isDefined)
+
+  }
+
   override def afterAll() {
     IO.deleteRecursively(temporaryFolder)
   }
