@@ -220,15 +220,13 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
     assert(executableBashTagFile.exists)
     assert(executableBashTagFile.canExecute)
 
-    //println(s"out:-->$stdout<--")
-
     val viashVersion = com.dataintuitive.viash.Main.version
 
     val regexViashVersion = s"viash version:\\s*$viashVersion".r
     val regexConfig = s"config:\\s*$configFile".r
     val regexPlatform = "platform:\\s*docker".r
-    val regexExecutable = "executable:\\s*<NA>".r
-    val regexOutput = "output:\\s*<NA>".r
+    val regexExecutable = s"executable:\\s*$tempFolStr/testbash".r
+    val regexOutput = s"output:\\s*$tempFolStr".r
     val regexRemoteGitRepo = "remote git repo:.*viash.git".r
 
     assert(regexViashVersion.findFirstIn(stdout).isDefined)
