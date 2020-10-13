@@ -48,6 +48,14 @@ object IO {
     }
   }
 
+  def readSome(uri: URI): Option[String] = {
+    try {
+      Some(read(uri))
+    } catch {
+      case _: Exception => None
+    }
+  }
+
   def write(uri: URI, path: Path, overwrite: Boolean): File = {
     val file = path.toFile
 
