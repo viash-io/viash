@@ -303,7 +303,7 @@ case class NextFlowPlatform(
 
       s"""
          |
-         |process executor {
+         |process ${fname}_process {
          |  $labelString
          |  tag "$${id}"
          |  echo { (params.debug == true) ? true : false }
@@ -377,7 +377,7 @@ case class NextFlowPlatform(
          |                renderCLI([updtParams2.command], updtParams2.arguments)
          |            )
          |        }
-         |    result_ = executor(id_input_output_function_cli_) \\
+         |    result_ = ${fname}_process(id_input_output_function_cli_) \\
          |        | join(id_input_params_) \\
          |        | map{ id, output, input, original_params ->
          |            new Tuple3(id, output, original_params)
