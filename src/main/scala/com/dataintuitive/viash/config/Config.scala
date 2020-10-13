@@ -58,6 +58,10 @@ object Config {
     // get extension
     val extension = configUriStr.substring(configUriStr.lastIndexOf(".") + 1).toLowerCase()
 
+    // get basename
+    val basenameRegex = ".*/".r
+    val basename = basenameRegex.replaceFirstIn(configUriStr, "")
+
     // detect whether a script (with joined header) was passed or a joined yaml
     // using the extension
     val (yaml, optScript) =
@@ -80,7 +84,8 @@ object Config {
         val yaml = header.map(s => s.drop(3)).mkString("\n")
         val code = body.mkString("\n")
 
-        val script = scriptObj(name = Some("viash_main."), text = Some(code))
+        val script = scriptObj(dest = Some(basename), text = Some(code))
+
         (yaml, Some(script))
       } else {
         throw new RuntimeException("config file (" + config + ") must be a yaml file containing a viash config.")

@@ -33,7 +33,7 @@ object ViashBuild {
     dir.mkdirs()
 
     // get the path of where the executable will be written to
-    val exec_path = fun.mainScript.map(scr => Paths.get(output, scr.name.get).toString)
+    val exec_path = fun.mainScript.map(scr => Paths.get(output, scr.resourcePath).toString)
 
     // get resources
     val placeholderMap = config.functionality.resources.getOrElse(Nil).filter(_.text.isDefined).map{ res =>

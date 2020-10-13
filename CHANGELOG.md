@@ -18,6 +18,7 @@
   - `publish`: Publish or yes (default is false)
   - `per_id`: Publish results in directories containing the unique (sample) ID (default is true)
   - `path`: A prefix path for the results to be published (default is empty)
+* Functionality resources and tests: Allow to copy whole directories instead of only single files. Also allow to rename the destination folder by specifying a value for 'dest'.
 
 ## MAJOR CHANGES
 
