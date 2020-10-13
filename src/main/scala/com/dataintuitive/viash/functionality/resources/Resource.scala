@@ -36,7 +36,7 @@ trait Resource {
     if (text.isDefined) {
       text
     } else {
-      Some(IO.read(uri.get))
+      IO.readSome(uri.get)
     }
   }
 
