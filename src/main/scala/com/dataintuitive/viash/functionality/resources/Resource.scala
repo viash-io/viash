@@ -7,36 +7,48 @@ import java.nio.file.{Path, Paths}
 
 trait Resource {
   val `type`: String
-  val name: Option[String]
+  val dest: Option[String]
   val path: Option[String]
   val text: Option[String]
   val is_executable: Boolean
 
   require(
     path.isEmpty != text.isEmpty,
-    message = s"For each resource, either 'path' or 'text' should be defined, the other undefined."
+    message = s"Resource: either 'path' or 'text' should be defined, the other undefined."
   )
   require(
-    name.isDefined || path.isDefined,
-    message = s"For each resources, 'name' needs to be defined if no 'path' is defined."
+    dest.isDefined || path.isDefined,
+    message = s"Resource: 'dest' needs to be defined if no 'path' is defined."
   )
 
   val uri: Option[URI] = path.map(IO.uri)
 
-  def filename: String = {
-    if (name.isDefined) {
-      name.get
+  private val basenameRegex = ".*/".r
+
+  /**
+   * Get the path of the resource relative to the resources dir.
+   * If the dest value is defined, use that. Otherwise, use the basename of
+   * the path value.
+   */
+  def resourcePath: String = {
+    if (dest.isDefined) {
+      dest.get
     } else {
-      val path = Paths.get(uri.get.getPath)
-      path.getFileName.toString
+      basenameRegex.replaceFirstIn(path.get, "")
     }
+  }
+  /**
+   * Get the 'basename' of the object
+   */
+  def filename: String = {
+    basenameRegex.replaceFirstIn(resourcePath, "")
   }
 
   def read: Option[String] = {
     if (text.isDefined) {
       text
     } else {
-      Some(IO.read(uri.get))
+      IO.readSome(uri.get)
     }
   }
 
@@ -67,9 +79,9 @@ trait Resource {
 
   // TODO: This can probably be solved much nicer.
   def copyResource(
-    name: Option[String] = this.name,
     path: Option[String] = this.path,
     text: Option[String] = this.text,
+    dest: Option[String] = this.dest,
     is_executable: Boolean = this.is_executable
   ): Resource
 }

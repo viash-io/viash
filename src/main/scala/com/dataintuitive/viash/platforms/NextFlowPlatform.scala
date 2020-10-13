@@ -120,7 +120,7 @@ case class NextFlowPlatform(
     )
 
     val setup_nextflowconfig = PlainFile(
-      name = Some("nextflow.config"),
+      dest = Some("nextflow.config"),
       text = Some(listMapToConfig(asNestedTuples))
     )
 
@@ -303,7 +303,7 @@ case class NextFlowPlatform(
 
       s"""
          |
-         |process executor {
+         |process ${fname}_process {
          |  $labelString
          |  tag "$${id}"
          |  echo { (params.debug == true) ? true : false }
@@ -377,7 +377,7 @@ case class NextFlowPlatform(
          |                renderCLI([updtParams2.command], updtParams2.arguments)
          |            )
          |        }
-         |    result_ = executor(id_input_output_function_cli_) \\
+         |    result_ = ${fname}_process(id_input_output_function_cli_) \\
          |        | join(id_input_params_) \\
          |        | map{ id, output, input, original_params ->
          |            new Tuple3(id, output, original_params)
@@ -418,7 +418,7 @@ case class NextFlowPlatform(
     }
 
     val setup_main = PlainFile(
-      name = Some("main.nf"),
+      dest = Some("main.nf"),
       text = Some(setup_main_header +
         setup_main_utils +
         setup_main_outFromIn +

@@ -48,6 +48,14 @@ object IO {
     }
   }
 
+  def readSome(uri: URI): Option[String] = {
+    try {
+      Some(read(uri))
+    } catch {
+      case _: Exception => None
+    }
+  }
+
   def write(uri: URI, path: Path, overwrite: Boolean): File = {
     val file = path.toFile
 
@@ -56,7 +64,15 @@ object IO {
     }
 
     if (uri.getScheme == "file") {
-      Files.copy(Paths.get(uri), path)
+      val from = Paths.get(uri)
+      // check if resource is a directory
+      if (from.toFile.isDirectory) {
+        Files.walk(from).forEach{file =>
+          Files.copy(file, path.resolve(from.relativize(file)))
+        }
+      } else {
+        Files.copy(from, path)
+      }
     } else if (uri.getScheme == "http" || uri.getScheme == "https") {
       val url = new URL(uri.toString)
       url #> file !!
@@ -86,7 +102,17 @@ object IO {
   ) {
     // copy all files
     resources.foreach { resource =>
-      val dest = Paths.get(outputDir.getAbsolutePath, resource.filename)
+      // determine destination path
+      val dest = Paths.get(outputDir.getAbsolutePath, resource.resourcePath)
+
+      // create parent directory if it doesn't exist
+      val parent = dest.toFile.getParentFile
+
+      if (!parent.exists) {
+        parent.mkdirs()
+      }
+
+      // write resource to path
       resource.write(dest, overwrite)
     }
   }

@@ -33,7 +33,7 @@ object ViashBuild {
     dir.mkdirs()
 
     // get the path of where the executable will be written to
-    val exec_path = fun.mainScript.map(scr => Paths.get(output, scr.name.get).toString)
+    val exec_path = fun.mainScript.map(scr => Paths.get(output, scr.resourcePath).toString)
 
     // get resources
     val placeholderMap = config.functionality.resources.getOrElse(Nil).filter(_.text.isDefined).map{ res =>
@@ -50,8 +50,6 @@ object ViashBuild {
         namespace = namespace,
         resources = Some(config.functionality.resources.getOrElse(Nil).map{ res =>
           if (res.text.isDefined) {
-            // cant use 'res.copy(text = ...)' because Resource is a trait
-            // this should be processed somewhere else, really
             val textVal = Some(placeholderMap(res))
             res.copyResource(text = textVal)
           } else {
@@ -82,7 +80,7 @@ object ViashBuild {
 
     // add to resources
     val configYaml = PlainFile(
-      name = Some("viash.yaml"),
+      dest = Some("viash.yaml"),
       text = Some(configYamlStr2)
     )
 
@@ -97,7 +95,7 @@ object ViashBuild {
 
     // if '-m' was passed, print some yaml about the created output fiels
     if (printMeta) {
-      println(config.info.get.consoleString)
+      println(toWriteConfig.info.get.consoleString)
     }
   }
 }

@@ -4,15 +4,15 @@ import com.dataintuitive.viash.functionality._
 import java.nio.file.Path
 
 case class Executable(
-  text: Option[String] = None,
-  name: Option[String] = None,
   path: Option[String] = None,
+  text: Option[String] = None,
+  dest: Option[String] = None,
   is_executable: Boolean = true
 ) extends Script {
   val `type` = "executable"
   val meta = Executable
-  def copyResource(name: Option[String], path: Option[String], text: Option[String], is_executable: Boolean): Resource = {
-    copy(name, path, text, is_executable)
+  def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Boolean): Resource = {
+    copy(path = path, text = text, dest = dest, is_executable = is_executable)
   }
 
   def generatePlaceholder(functionality: Functionality): String = ""
