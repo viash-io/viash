@@ -95,7 +95,7 @@ object ViashBuild {
 
     // if '-m' was passed, print some yaml about the created output fiels
     if (printMeta) {
-      println(config.info.get.consoleString)
+      println(toWriteConfig.info.get.consoleString)
     }
   }
 }
