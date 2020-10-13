@@ -13,11 +13,15 @@ case class Functionality(
   description: Option[String] = None,
   function_type: Option[FunctionType] = None,
   arguments: List[DataObject[_]] = Nil,
+  tests: Option[List[Resource]] = None,
 
   // dummy arguments are used for handling extra directory mounts in docker
   dummy_arguments: Option[List[DataObject[_]]] = None,
-  tests: Option[List[Resource]] = None,
-  set_wd_to_resources_dir: Option[Boolean] = None,
+
+  // setting this to true will change the working directory
+  // to the resources directory when running the script
+  // this is used when running `viash test`.
+  set_wd_to_resources_dir: Option[Boolean] = None
 ) {
 
   // check whether there are not multiple positional arguments with multiplicity >1
@@ -42,13 +46,3 @@ case class Functionality(
 
   def argumentsAndDummies: List[DataObject[_]] = arguments ::: dummy_arguments.getOrElse(Nil)
 }
-
-sealed trait FunctionType
-
-case object AsIs extends FunctionType
-
-case object Convert extends FunctionType
-
-case object ToDir extends FunctionType
-
-case object Join extends FunctionType
