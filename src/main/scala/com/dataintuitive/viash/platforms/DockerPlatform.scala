@@ -80,7 +80,7 @@ case class DockerPlatform(
 
     // create new bash script
     val bashScript = BashScript(
-      name = Some(functionality.name),
+      dest = Some(functionality.name),
       text = Some(BashWrapper.wrapScript(
         executor = executor,
         functionality = fun2,

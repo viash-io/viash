@@ -133,7 +133,7 @@ object ViashTest {
           resources = Some(List(test)),
           set_wd_to_resources_dir = Some(true)))
         val testBash = BashScript(
-          name = Some(test.filename),
+          dest = Some(test.filename),
           text = funOnlyTest.resources.getOrElse(Nil).head.text
         )
 

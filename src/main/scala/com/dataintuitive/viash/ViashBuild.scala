@@ -50,8 +50,6 @@ object ViashBuild {
         namespace = namespace,
         resources = Some(config.functionality.resources.getOrElse(Nil).map{ res =>
           if (res.text.isDefined) {
-            // cant use 'res.copy(text = ...)' because Resource is a trait
-            // this should be processed somewhere else, really
             val textVal = Some(placeholderMap(res))
             res.copyResource(text = textVal)
           } else {
@@ -82,7 +80,7 @@ object ViashBuild {
 
     // add to resources
     val configYaml = PlainFile(
-      name = Some("viash.yaml"),
+      dest = Some("viash.yaml"),
       text = Some(configYamlStr2)
     )
 

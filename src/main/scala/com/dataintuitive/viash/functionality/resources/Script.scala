@@ -36,9 +36,9 @@ trait ScriptObject {
   def command(script: String): String
   def commandSeq(script: String): Seq[String]
   def apply(
-    name: Option[String] = None,
     path: Option[String] = None,
     text: Option[String] = None,
+    dest: Option[String] = None,
     is_executable: Boolean = true
   ): Script
 }

@@ -4,16 +4,15 @@ import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.dataobjects._
 
 case class ScalaScript(
-  name: Option[String] = None,
   path: Option[String] = None,
   text: Option[String] = None,
+  dest: Option[String] = None,
   is_executable: Boolean = true
 ) extends Script {
   val `type` = "scala_script"
   val meta = ScalaScript
-
-  def copyResource(name: Option[String], path: Option[String], text: Option[String], is_executable: Boolean): Resource = {
-    copy(name, path, text, is_executable)
+  def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Boolean): Resource = {
+    copy(path = path, text = text, dest = dest, is_executable = is_executable)
   }
 
   def generatePlaceholder(functionality: Functionality): String = {

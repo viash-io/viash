@@ -120,7 +120,7 @@ case class NextFlowPlatform(
     )
 
     val setup_nextflowconfig = PlainFile(
-      name = Some("nextflow.config"),
+      dest = Some("nextflow.config"),
       text = Some(listMapToConfig(asNestedTuples))
     )
 
@@ -418,7 +418,7 @@ case class NextFlowPlatform(
     }
 
     val setup_main = PlainFile(
-      name = Some("main.nf"),
+      dest = Some("main.nf"),
       text = Some(setup_main_header +
         setup_main_utils +
         setup_main_outFromIn +
