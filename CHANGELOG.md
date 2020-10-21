@@ -24,6 +24,7 @@
 
 * The `-P <platform>` parameter will be deprecated. For now, all `-P` values are simply passed to `-p`.
 * `viash ns build` and `viash ns test`: Now use all available platforms if `-p` is not specified.
+* By default, python packages will not be installed as user. Use `user: true` to modify this behaviour.
 
 ## MINOR CHANGES
 

@@ -1,6 +1,7 @@
 package com.dataintuitive.viash.platforms.requirements
 
 case class PythonRequirements(
+  user: Boolean = false,
   packages: List[String] = Nil,
   pip: List[String] = Nil,
   git: List[String] = Nil,
@@ -14,12 +15,15 @@ case class PythonRequirements(
 
   val `type` = "python"
 
+  private val userFlag = if (user) "--user " else ""
+
   private def generateCommands(prefix: String, values: List[String], postFix: String = "") = {
+
     values match {
       case Nil => Nil
       case packs =>
         List(packs.mkString(
-          "pip install --user --no-cache-dir \"" + prefix,
+          s"""pip install$userFlag --no-cache-dir "$prefix""",
           postFix + "\" \"" + prefix,
           postFix + "\""))
     }
@@ -27,7 +31,7 @@ case class PythonRequirements(
 
   def installCommands: List[String] = {
     val installPip =
-      """pip install --user --upgrade pip"""
+      s"""pip install$userFlag --upgrade pip"""
 
     val installPipPackages = generateCommands("", pip ::: packages)
     val installGitPackages = generateCommands("git+", git)
