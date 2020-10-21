@@ -187,8 +187,10 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
       ("resource2.txt", "9cd530447200979dbf9e117915cbcc74"),
       ("resource_folder/resource_L1_1.txt", "51954bf10062451e683121e58d858417"),
       ("resource_folder/resource_L1_2.txt", "b43991c0ef5d15710faf976e02cbb206"),
-      ("resource_folder/resource_L2_1.txt", "63165187f791a8dfff628ef8090e56ff"),
+      ("resource_folder/resource_L2/resource_L2_1.txt", "63165187f791a8dfff628ef8090e56ff"),
     )
+
+    //Paths.get(tempPath, "build_executable", "resource_folder").toFile.setExecutable(true)
 
     // Check all resources can be found in the folder
     for ((name, md5sum) <- expectedResources) {
