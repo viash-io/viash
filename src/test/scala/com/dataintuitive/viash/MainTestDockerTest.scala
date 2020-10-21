@@ -171,8 +171,6 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
     assert(testText.contains("WARNING! No tests found!"))
     assert(!testText.contains("Cleaning up temporary directory"))
 
-    println(s"testText:-->$testText<--")
-
     val FolderRegex = ".*Running tests in temporary directory: '([^']*)'.*".r
 
     val tempPath = testText.replaceAll("\n", "") match {
@@ -180,15 +178,27 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
       case _ => ""
     }
 
-    val tempFolder = new Directory(Paths.get(tempPath, "build_executable").toFile)
+    // List all expected resources and their md5sum
+    val expectedResources = List(
+      //("check_bash_version.sh", "0c3c134d4ff0ea3a4a3b32e09fb7c100"),
+      ("code.sh", "1f6268a20c06febfd431bebb72483475"),
+      ("NOTICE", "72227b5fda1a673b084aef2f1b580ec3"),
+      ("resource1.txt", "bc9171172c4723589a247f99b838732d"),
+      ("resource2.txt", "9cd530447200979dbf9e117915cbcc74"),
+      ("resource_folder/resource_L1_1.txt", "51954bf10062451e683121e58d858417"),
+      ("resource_folder/resource_L1_2.txt", "b43991c0ef5d15710faf976e02cbb206"),
+      ("resource_folder/resource_L2_1.txt", "63165187f791a8dfff628ef8090e56ff"),
+    )
 
-    println(s"tempFolder:$tempPath")
+    // Check all resources can be found in the folder
+    for ((name, md5sum) <- expectedResources) {
+      val resourceFile = Paths.get(tempPath, "build_executable", name).toFile
 
-    tempFolder.list.foreach(println)
+      assert(resourceFile.exists, s"Could not find $name")
 
-
-    val resource1 = Paths.get(tempPath, "build_executable", "resource1.txt").toFile
-    assert(resource1.exists)
+      val hash = TestHelper.computeHash(resourceFile.getPath)
+      assert(md5sum == hash, s"Calculated md5sum doesn't match the given md5sum for $name")
+    }
 
     checkTempDirAndRemove(testText, true)
   }
