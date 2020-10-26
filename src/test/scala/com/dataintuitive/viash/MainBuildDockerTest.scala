@@ -1,13 +1,15 @@
 package com.dataintuitive.viash
 
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
-import java.nio.file.Paths
+import java.nio.file.{Files, Paths}
 
 import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.functionality.Functionality
 
 import scala.io.Source
 import com.dataintuitive.viash.helpers._
+
+import scala.util.Try
 
 class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
   // which platform to test
@@ -208,36 +210,188 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
     assert(stdout.contains("GNU bash, version 3.2"))
   }
 
-  test("Get meta data of a docker ", DockerTest) {
-    // TODO: Run this test in a separate tempdir and perform a git init there
-    // prepare the environment
-    val stdout = TestHelper.testMain(Array(
-      "build", configFile,
-      "-p", "docker",
-      "-o", tempFolStr,
-      "-m"
-    ))
+  //<editor-fold desc="Test benches to check build with --meta flag">
 
-    assert(executableBashTagFile.exists)
-    assert(executableBashTagFile.canExecute)
+  test("Get meta data of a docker", DockerTest) {
+    // Create temporary folder to copy the files to so we can do a git init in that folder
+    // This is needed to check the remote git repo value
+    val tempMetaFolder = IO.makeTemp("viash_test_meta")
+    val tempMetaFolStr = tempMetaFolder.toString
 
-    val viashVersion = com.dataintuitive.viash.Main.version
+    try {
+      // Copy all needed files to a temporary location
+      for (name <- List("config.vsh.yaml", "code.sh", "resource1.txt")) {
+        val originPath = Paths.get(getClass.getResource(s"/testbash/$name").getPath)
+        val destPath = Paths.get(tempMetaFolStr, name)
 
-    val regexViashVersion = s"viash version:\\s*$viashVersion".r
-    val regexConfig = s"config:\\s*$configFile".r
-    val regexPlatform = "platform:\\s*docker".r
-    val regexExecutable = s"executable:\\s*$tempFolStr/testbash".r
-    val regexOutput = s"output:\\s*$tempFolStr".r
-    val regexRemoteGitRepo = "remote git repo:.*viash(.git)?".r
-    
-    assert(regexViashVersion.findFirstIn(stdout).isDefined)
-    assert(regexConfig.findFirstIn(stdout).isDefined)
-    assert(regexPlatform.findFirstIn(stdout).isDefined)
-    assert(regexExecutable.findFirstIn(stdout).isDefined)
-    assert(regexOutput.findFirstIn(stdout).isDefined)
-    assert(regexRemoteGitRepo.findFirstIn(stdout).isDefined)
+        //println(s"Copy $originPath to $destPath")
+        Files.copy(originPath, destPath)
+      }
 
+      val configMetaFile = Paths.get(tempMetaFolStr, "config.vsh.yaml").toString
+
+      // Run the code
+      // prepare the environment
+      val stdout = TestHelper.testMain(Array(
+        "build", configMetaFile,
+        "-p", "docker",
+        "-o", tempFolStr,
+        "-m",
+      ))
+
+      assert(executableBashTagFile.exists)
+      assert(executableBashTagFile.canExecute)
+
+      val viashVersion = com.dataintuitive.viash.Main.version
+
+      val regexViashVersion = s"viash version:\\s*$viashVersion".r
+      val regexConfig = s"config:\\s*$configMetaFile".r
+      val regexPlatform = "platform:\\s*docker".r
+      val regexExecutable = s"executable:\\s*$tempFolStr/testbash".r
+      val regexOutput = s"output:\\s*$tempFolStr".r
+      val regexNoRemoteGitRepo = "remote git repo:\\s*<NA>".r
+
+      assert(regexViashVersion.findFirstIn(stdout).isDefined, stdout)
+      assert(regexConfig.findFirstIn(stdout).isDefined, stdout)
+      assert(regexPlatform.findFirstIn(stdout).isDefined, stdout)
+      assert(regexExecutable.findFirstIn(stdout).isDefined, stdout)
+      assert(regexOutput.findFirstIn(stdout).isDefined, stdout)
+      assert(regexNoRemoteGitRepo.findFirstIn(stdout).isDefined, stdout)
+
+    }
+    finally {
+      IO.deleteRecursively(tempMetaFolder)
+    }
   }
+
+  test("Get meta data of a docker with git repo", DockerTest) {
+    // Create temporary folder to copy the files to so we can do a git init in that folder
+    // This is needed to check the remote git repo value
+    val tempMetaFolder = IO.makeTemp("viash_test_meta")
+    val tempMetaFolStr = tempMetaFolder.toString
+
+    val fakeGitRepo = "git@non.existing.repo:viash/meta-test"
+
+    try {
+      // Copy all needed files to a temporary location
+      for (name <- List("config.vsh.yaml", "code.sh", "resource1.txt")) {
+        val originPath = Paths.get(getClass.getResource(s"/testbash/$name").getPath)
+        val destPath = Paths.get(tempMetaFolStr, name)
+
+        //println(s"Copy $originPath to $destPath")
+        Files.copy(originPath, destPath)
+      }
+
+      assert(
+        Exec.run2(
+          List("git", "init"),
+          cwd = Some(tempMetaFolder)
+        ).exitValue == 0
+        , "git init")
+
+      assert(
+        Exec.run2(
+          List("git", "remote", "add", "origin", fakeGitRepo),
+          cwd = Some(tempMetaFolder)
+        ).exitValue == 0
+        , "git remote add")
+
+      val configMetaFile = Paths.get(tempMetaFolStr, "config.vsh.yaml").toString
+
+      // Run the code
+      // prepare the environment
+      val stdout = TestHelper.testMain(Array(
+        "build", configMetaFile,
+        "-p", "docker",
+        "-o", tempFolStr,
+        "-m",
+      ))
+
+      assert(executableBashTagFile.exists)
+      assert(executableBashTagFile.canExecute)
+
+      val viashVersion = com.dataintuitive.viash.Main.version
+
+      val regexViashVersion = s"viash version:\\s*$viashVersion".r
+      val regexConfig = s"config:\\s*$configMetaFile".r
+      val regexPlatform = "platform:\\s*docker".r
+      val regexExecutable = s"executable:\\s*$tempFolStr/testbash".r
+      val regexOutput = s"output:\\s*$tempFolStr".r
+      val regexRemoteGitRepo = s"remote git repo:\\s*$fakeGitRepo".r
+
+      assert(regexViashVersion.findFirstIn(stdout).isDefined, stdout)
+      assert(regexConfig.findFirstIn(stdout).isDefined, stdout)
+      assert(regexPlatform.findFirstIn(stdout).isDefined, stdout)
+      assert(regexExecutable.findFirstIn(stdout).isDefined, stdout)
+      assert(regexOutput.findFirstIn(stdout).isDefined, stdout)
+      assert(regexRemoteGitRepo.findFirstIn(stdout).isDefined, stdout)
+
+    }
+    finally {
+      IO.deleteRecursively(tempMetaFolder)
+    }
+  }
+
+  test("Get meta data of a docker with git repo, no remote", DockerTest) {
+    // Create temporary folder to copy the files to so we can do a git init in that folder
+    // This is needed to check the remote git repo value
+    val tempMetaFolder = IO.makeTemp("viash_test_meta")
+    val tempMetaFolStr = tempMetaFolder.toString
+
+    try {
+      // Copy all needed files to a temporary location
+      for (name <- List("config.vsh.yaml", "code.sh", "resource1.txt")) {
+        val originPath = Paths.get(getClass.getResource(s"/testbash/$name").getPath)
+        val destPath = Paths.get(tempMetaFolStr, name)
+
+        //println(s"Copy $originPath to $destPath")
+        Files.copy(originPath, destPath)
+      }
+
+      assert(
+        Exec.run2(
+          List("git", "init"),
+          cwd = Some(tempMetaFolder)
+        ).exitValue == 0
+      , "git init")
+
+      val configMetaFile = Paths.get(tempMetaFolStr, "config.vsh.yaml").toString
+
+      // Run the code
+      // prepare the environment
+      val stdout = TestHelper.testMain(Array(
+        "build", configMetaFile,
+        "-p", "docker",
+        "-o", tempFolStr,
+        "-m",
+      ))
+
+      assert(executableBashTagFile.exists)
+      assert(executableBashTagFile.canExecute)
+
+      val viashVersion = com.dataintuitive.viash.Main.version
+
+      val regexViashVersion = s"viash version:\\s*$viashVersion".r
+      val regexConfig = s"config:\\s*$configMetaFile".r
+      val regexPlatform = "platform:\\s*docker".r
+      val regexExecutable = s"executable:\\s*$tempFolStr/testbash".r
+      val regexOutput = s"output:\\s*$tempFolStr".r
+      val regexRemoteGitRepo = "remote git repo:\\s*No remote configured".r
+
+      assert(regexViashVersion.findFirstIn(stdout).isDefined, stdout)
+      assert(regexConfig.findFirstIn(stdout).isDefined, stdout)
+      assert(regexPlatform.findFirstIn(stdout).isDefined, stdout)
+      assert(regexExecutable.findFirstIn(stdout).isDefined, stdout)
+      assert(regexOutput.findFirstIn(stdout).isDefined, stdout)
+      assert(regexRemoteGitRepo.findFirstIn(stdout).isDefined, stdout)
+
+    }
+    finally {
+      IO.deleteRecursively(tempMetaFolder)
+    }
+  }
+
+  //</editor-fold>
 
   override def afterAll() {
     IO.deleteRecursively(temporaryFolder)
