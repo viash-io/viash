@@ -209,6 +209,7 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Get meta data of a docker ", DockerTest) {
+    // TODO: Run this test in a separate tempdir and perform a git init there
     // prepare the environment
     val stdout = TestHelper.testMain(Array(
       "build", configFile,
@@ -227,8 +228,8 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
     val regexPlatform = "platform:\\s*docker".r
     val regexExecutable = s"executable:\\s*$tempFolStr/testbash".r
     val regexOutput = s"output:\\s*$tempFolStr".r
-    val regexRemoteGitRepo = "remote git repo:.*viash.git".r
-
+    val regexRemoteGitRepo = "remote git repo:.*viash(.git)?".r
+    
     assert(regexViashVersion.findFirstIn(stdout).isDefined)
     assert(regexConfig.findFirstIn(stdout).isDefined)
     assert(regexPlatform.findFirstIn(stdout).isDefined)
