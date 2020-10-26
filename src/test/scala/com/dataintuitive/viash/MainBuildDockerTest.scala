@@ -29,6 +29,7 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
   private val functionalityBashTag = Config.read(configBashTagFile, modifyFun = false).functionality
   private val executableBashTagFile = Paths.get(tempFolStr, functionalityBashTag.name).toFile
 
+  //<editor-fold desc="Test benches to build a generic script and run various commands to see if the functionality is correct">
   // convert testbash
   test("viash can create an executable") {
     TestHelper.testMain(Array(
@@ -151,7 +152,8 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
 
     assert(stdout.contains("INFO: Parsed input arguments"))
   }
-
+  //</editor-fold>
+  //<editor-fold desc="Test benches to check building tagged docker images">
   test("Get tagged version of a docker image for bash 5.0", DockerTest) {
     // prepare the environment
     TestHelper.testMain(Array(
@@ -209,9 +211,8 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
 
     assert(stdout.contains("GNU bash, version 3.2"))
   }
-
-  //<editor-fold desc="Test benches to check build with --meta flag">
-
+  //</editor-fold>
+  //<editor-fold desc="Test benches to check building with --meta flag">
   test("Get meta data of a docker", DockerTest) {
     // Create temporary folder to copy the files to so we can do a git init in that folder
     // This is needed to check the remote git repo value
