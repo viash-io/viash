@@ -15,7 +15,7 @@ case class PythonRequirements(
 
   val `type` = "python"
 
-  private val userFlag = if (user) "--user " else ""
+  private val userFlag = if (user) " --user" else ""
 
   private def generateCommands(prefix: String, values: List[String], postFix: String = "") = {
 
