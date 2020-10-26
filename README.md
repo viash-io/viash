@@ -9,6 +9,7 @@ viash: from scripts to pipelines
         Docker](#build-from-source-using-docker)
   - [First execution](#first-execution)
   - [More documentation](#more-documentation)
+  - [License](#license)
 
 Viash helps you turn a Bash/R/Python script into a reusable component.
 By providing some meta-data regarding its functionality and the platform
@@ -100,14 +101,14 @@ You can run a simple ‘Hello World’ component by running the following
 command.
 
 ``` bash
-HELLO=https://raw.githubusercontent.com/data-intuitive/viash_docs/master/examples/hello_world/functionality.yaml
-viash run -f $HELLO
+HELLO=https://www.data-intuitive.com/viash_docs/examples/hello_world/config.vsh.yaml
+viash run $HELLO
 ```
 
     ## Hello world!
 
 ``` bash
-viash run -f $HELLO -- --help
+viash run $HELLO -- --help
 ```
 
     ## A very simple 'Hello world' component.
@@ -120,7 +121,7 @@ viash run -f $HELLO -- --help
     ##         type: string, default: Hello world!
 
 ``` bash
-viash run -f $HELLO -- General Kenobi. --greeter="Hello there."
+viash run $HELLO -- General Kenobi. --greeter="Hello there."
 ```
 
     ## Hello there. General Kenobi.
@@ -152,3 +153,20 @@ The following vignettes can help you get started with viash in a flash\!
 
 For more real-world examples, check out
 [docs/examples](https://github.com/data-intuitive/viash_docs/tree/master/examples).
+
+## License
+
+Copyright (C) 2020 Data Intuitive
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation, either version 3 of the License, or (at your
+option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program. If not, see <http://www.gnu.org/licenses/>.
