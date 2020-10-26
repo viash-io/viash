@@ -7,11 +7,11 @@ case class RScript(
   path: Option[String] = None,
   text: Option[String] = None,
   dest: Option[String] = None,
-  is_executable: Boolean = true
+  is_executable: Option[Boolean] = Some(true)
 ) extends Script {
   val `type` = "r_script"
   val meta = RScript
-  def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Boolean): Resource = {
+  def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable)
   }
 
