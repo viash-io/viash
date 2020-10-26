@@ -23,6 +23,10 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
   private val execPathInDocker = Paths.get("/viash_automount", executable.getPath).toFile.toString
 
+  private val configBashTagFile = getClass.getResource(s"/testbash/config_bash_tag.vsh.yaml").getPath
+  private val functionalityBashTag = Config.read(configBashTagFile, modifyFun = false).functionality
+  private val executableBashTagFile = Paths.get(tempFolStr, functionalityBashTag.name).toFile
+
   // convert testbash
   test("viash can create an executable") {
     TestHelper.testMain(Array(
@@ -144,6 +148,94 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
     assert(regex.findFirstIn(stdout).isDefined)
 
     assert(stdout.contains("INFO: Parsed input arguments"))
+  }
+
+  test("Get tagged version of a docker image for bash 5.0", DockerTest) {
+    // prepare the environment
+    TestHelper.testMain(Array(
+      "build", configBashTagFile,
+      "-p", "docker_5_0",
+      "-o", tempFolStr
+    ))
+
+    assert(executableBashTagFile.exists)
+    assert(executableBashTagFile.canExecute)
+
+    // create the docker image
+    val out = Exec.run2(
+      Seq(executableBashTagFile.toString, "---setup")
+    )
+    assert(out.exitValue == 0)
+    assert(out.exitValue == 0)
+
+    // run the script
+    val stdout =
+      Exec.run(
+        Seq(
+          executable.toString
+        )
+      )
+
+    assert(stdout.contains("GNU bash, version 5.0"))
+  }
+
+  test("Get tagged version of a docker image for bash 3.2", DockerTest) {
+    // prepare the environment
+    TestHelper.testMain(Array(
+      "build", configBashTagFile,
+      "-p", "docker_3_2",
+      "-o", tempFolStr
+    ))
+
+    assert(executableBashTagFile.exists)
+    assert(executableBashTagFile.canExecute)
+
+    // create the docker image
+    val out = Exec.run2(
+      Seq(executableBashTagFile.toString, "---setup")
+    )
+    assert(out.exitValue == 0)
+    assert(out.exitValue == 0)
+
+    // run the script
+    val stdout =
+      Exec.run(
+        Seq(
+          executable.toString
+        )
+      )
+
+    assert(stdout.contains("GNU bash, version 3.2"))
+  }
+
+  test("Get meta data of a docker ", DockerTest) {
+    // prepare the environment
+    val stdout = TestHelper.testMain(Array(
+      "build", configFile,
+      "-p", "docker",
+      "-o", tempFolStr,
+      "-m"
+    ))
+
+    assert(executableBashTagFile.exists)
+    assert(executableBashTagFile.canExecute)
+
+    val viashVersion = com.dataintuitive.viash.Main.version
+
+    val regexViashVersion = s"viash version:\\s*$viashVersion".r
+    val regexConfig = s"config:\\s*$configFile".r
+    val regexPlatform = "platform:\\s*docker".r
+    val regexExecutable = s"executable:\\s*$tempFolStr/testbash".r
+    val regexOutput = s"output:\\s*$tempFolStr".r
+    val regexRemoteGitRepo = "remote git repo:.*viash.git".r
+
+    assert(regexViashVersion.findFirstIn(stdout).isDefined)
+    assert(regexConfig.findFirstIn(stdout).isDefined)
+    assert(regexPlatform.findFirstIn(stdout).isDefined)
+    assert(regexExecutable.findFirstIn(stdout).isDefined)
+    assert(regexOutput.findFirstIn(stdout).isDefined)
+    assert(regexRemoteGitRepo.findFirstIn(stdout).isDefined)
+
   }
 
   override def afterAll() {

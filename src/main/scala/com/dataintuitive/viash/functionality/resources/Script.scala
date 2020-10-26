@@ -39,7 +39,7 @@ trait ScriptObject {
     path: Option[String] = None,
     text: Option[String] = None,
     dest: Option[String] = None,
-    is_executable: Boolean = true
+    is_executable: Option[Boolean] = Some(true)
   ): Script
 }
 

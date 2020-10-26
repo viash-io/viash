@@ -10,7 +10,7 @@ trait Resource {
   val dest: Option[String]
   val path: Option[String]
   val text: Option[String]
-  val is_executable: Boolean
+  val is_executable: Option[Boolean]
 
   require(
     path.isEmpty != text.isEmpty,
@@ -60,7 +60,9 @@ trait Resource {
         IO.write(uri.get, path, overwrite)
       }
 
-    file.setExecutable(is_executable)
+    if (is_executable.isDefined) {
+      file.setExecutable(is_executable.get)
+    }
   }
 
   def copyWithAbsolutePath(parent: URI): Resource = {
@@ -82,6 +84,6 @@ trait Resource {
     path: Option[String] = this.path,
     text: Option[String] = this.text,
     dest: Option[String] = this.dest,
-    is_executable: Boolean = this.is_executable
+    is_executable: Option[Boolean] = this.is_executable
   ): Resource
 }

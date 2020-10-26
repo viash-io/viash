@@ -1,0 +1,21 @@
+functionality:
+  name: testbash
+  description: |
+    Prints out version of bash.
+  resources:
+    - type: bash_script
+      path: ./check_bash_version.sh
+  arguments:
+    - name: "--optional"
+      type: string
+      description: An optional string.
+platforms:
+  - type: docker
+    image: "bash:5.0"
+    target_image: "viash_test_bash_5_0"
+    id: "docker_5_0"
+  - type: docker
+    image: "bash:3.2"
+    target_image: "viash_test_bash_3.2"
+    id: "docker_3_2"
+
