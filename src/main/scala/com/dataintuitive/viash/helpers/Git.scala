@@ -23,7 +23,8 @@ object Git {
     Try(
       Exec.run(
         List("git", "rev-parse", "--show-toplevel"),
-        cwd = Some(path)
+        cwd = Some(path),
+        printError = false
       ).trim
     ).toOption
   }
@@ -34,7 +35,8 @@ object Git {
     Try(
       Exec.run(
         List("git", "remote", "--verbose"),
-        cwd = Some(path)
+        cwd = Some(path),
+        printError = false
       )
         .split("\n")
         .flatMap {
@@ -42,7 +44,7 @@ object Git {
           case _ => None
         }
         .headOption
-        .getOrElse("No remote configured")
+        .get
     ).toOption
   }
 
@@ -50,7 +52,8 @@ object Git {
     Try(
       Exec.run(
         List("git", "rev-parse", "HEAD"),
-        cwd = Some(path)
+        cwd = Some(path),
+        printError = false
       ).trim
     ).toOption
   }

@@ -33,6 +33,10 @@
 * Internal changes to make it easier to extend viash with more scripting languages.
 * `NXF` Repurpose `asis` function type for having simple publishing steps (see docs)
 
+## BUG FIXES
+
+* `viash build`: Do not display error messages when pwd is not a git repository.
+
 ## TESTING
 
 * `viash test`: Add tests for `viash test` functionality.
