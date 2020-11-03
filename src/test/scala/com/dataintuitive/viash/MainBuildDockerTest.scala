@@ -377,7 +377,7 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
       val regexPlatform = "platform:\\s*docker".r
       val regexExecutable = s"executable:\\s*$tempFolStr/testbash".r
       val regexOutput = s"output:\\s*$tempFolStr".r
-      val regexRemoteGitRepo = "remote git repo:\\s*No remote configured".r
+      val regexRemoteGitRepo = "remote git repo:\\s*<NA>".r
 
       assert(regexViashVersion.findFirstIn(stdout).isDefined, stdout)
       assert(regexConfig.findFirstIn(stdout).isDefined, stdout)

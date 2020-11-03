@@ -7,14 +7,8 @@ object Exec {
 
   case class ExecOutput(command: Seq[String], exitValue: Int, output: String)
 
-  def run(command: Seq[String], cwd: Option[File] = None, extraEnv: Seq[(String, String)] = Nil, printError: Boolean = true): String = {
-    try {
-      Process(command, cwd = cwd, extraEnv = extraEnv: _*).!!
-    } catch {
-      case e: Throwable =>
-        if (printError) println(e.getMessage)
-        throw e
-    }
+  def run(command: Seq[String], cwd: Option[File] = None, extraEnv: Seq[(String, String)] = Nil): String = {
+    Process(command, cwd = cwd, extraEnv = extraEnv: _*).!!
   }
 
   def run2(command: Seq[String], cwd: Option[File] = None, extraEnv: Seq[(String, String)] = Nil, loggers: Seq[String => Unit] = Nil): ExecOutput = {

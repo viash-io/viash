@@ -21,11 +21,10 @@ object Git {
 
   def getLocalRepo(path: File): Option[String] = {
     Try(
-      Exec.run(
+      Exec.run2(
         List("git", "rev-parse", "--show-toplevel"),
-        cwd = Some(path),
-        printError = false
-      ).trim
+        cwd = Some(path)
+      ).output.trim
     ).toOption
   }
 
@@ -33,11 +32,10 @@ object Git {
 
   def getRemoteRepo(path: File): Option[String] = {
     Try(
-      Exec.run(
+      Exec.run2(
         List("git", "remote", "--verbose"),
-        cwd = Some(path),
-        printError = false
-      )
+        cwd = Some(path)
+      ).output
         .split("\n")
         .flatMap {
           case remoteRepoRegex(name, link, _) if name contains "origin" => Some(link)
@@ -50,11 +48,10 @@ object Git {
 
   def getCommit(path: File): Option[String] = {
     Try(
-      Exec.run(
+      Exec.run2(
         List("git", "rev-parse", "HEAD"),
-        cwd = Some(path),
-        printError = false
-      ).trim
+        cwd = Some(path)
+      ).output.trim
     ).toOption
   }
 
