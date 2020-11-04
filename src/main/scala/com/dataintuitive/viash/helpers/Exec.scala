@@ -5,7 +5,11 @@ import java.io.{ByteArrayOutputStream, PrintWriter, File}
 
 object Exec {
 
-  case class ExecOutput(command: Seq[String], exitValue: Int, output: String)
+  case class ExecOutput(
+    command: Seq[String],
+    exitValue: Int,
+    output: String
+  )
 
   def run(command: Seq[String], cwd: Option[File] = None, extraEnv: Seq[(String, String)] = Nil): String = {
     Process(command, cwd = cwd, extraEnv = extraEnv: _*).!!
@@ -24,6 +28,7 @@ object Exec {
     // run command, collect output
     try {
       val exitValue = Process(command, cwd = cwd, extraEnv = extraEnv: _*).!(ProcessLogger(logger, logger))
+      printwriter.flush()
       ExecOutput(command, exitValue, stream.toString)
     } finally {
       printwriter.close()

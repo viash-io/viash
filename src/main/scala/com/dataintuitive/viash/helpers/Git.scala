@@ -11,48 +11,52 @@ case class GitInfo(
 
 object Git {
   def isGitRepo(path: File): Boolean = {
-    Try(
-      Exec.run2(
+    Try {
+      val out = Exec.run2(
         List("git", "rev-parse", "--is-inside-work-tree"),
         cwd = Some(path)
-      ).exitValue == 0
-    ).getOrElse(false)
+      )
+      out.exitValue == 0
+    }.getOrElse(false)
   }
 
   def getLocalRepo(path: File): Option[String] = {
-    Try(
-      Exec.run2(
+    Try {
+      val out = Exec.run2(
         List("git", "rev-parse", "--show-toplevel"),
         cwd = Some(path)
-      ).output.trim
-    ).toOption
+      )
+      out.output.trim
+    }.toOption
   }
 
   private val remoteRepoRegex = "(.*)\\s(.*)\\s(.*)".r
 
   def getRemoteRepo(path: File): Option[String] = {
-    Try(
-      Exec.run2(
+    Try {
+      val out = Exec.run2(
         List("git", "remote", "--verbose"),
         cwd = Some(path)
-      ).output
+      )
+
+      out.output
         .split("\n")
         .flatMap {
           case remoteRepoRegex(name, link, _) if name contains "origin" => Some(link)
           case _ => None
         }
-        .headOption
-        .get
-    ).toOption
+        .head
+    }.toOption
   }
 
   def getCommit(path: File): Option[String] = {
-    Try(
-      Exec.run2(
+    Try {
+      val out = Exec.run2(
         List("git", "rev-parse", "HEAD"),
         cwd = Some(path)
-      ).output.trim
-    ).toOption
+      )
+      out.output.trim
+    }.toOption
   }
 
   def getInfo(path: File): GitInfo = {
