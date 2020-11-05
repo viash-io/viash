@@ -11,6 +11,12 @@ functionality:
     - path: ./resource2.txt
     - path: https://raw.githubusercontent.com/scala/scala/2.13.x/NOTICE
     - path: resource_folder
+    - path: resource1.txt
+      dest: target_folder/relocated_file_1.txt
+    - path: resource_folder/resource_L1_1.txt
+      dest: target_folder/relocated_file_2.txt
+    - path: ../testexecutable/config.vsh.yaml
+      dest: target_folder/relocated_file_3.txt
 #{path: /foo/abc} → $resources_dir/abc
 #{path: foo/abc} → $resources_dir/abc
 #{path: abc} → $resources_dir/abc
