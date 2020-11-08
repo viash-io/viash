@@ -17,6 +17,10 @@ functionality:
       dest: target_folder/relocated_file_2.txt
     - path: ../testexecutable/config.vsh.yaml
       dest: target_folder/relocated_file_3.txt
+    - path: /tmp/viash_tmp_resources/resource3.txt
+    - path: /tmp/viash_tmp_resources/resource3.txt
+      dest: target_folder/relocated_file_4.txt
+
 #{path: /foo/abc} → $resources_dir/abc
 #{path: foo/abc} → $resources_dir/abc
 #{path: abc} → $resources_dir/abc
