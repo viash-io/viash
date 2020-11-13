@@ -1,6 +1,6 @@
 name := "viash"
 
-version := "0.2.2"
+version := "0.3.0"
 
 scalaVersion := "2.12.10"
 
@@ -26,4 +26,4 @@ scalacOptions ++= Seq("-unchecked", "-deprecation")
 
 organization := "com.data-intuitive"
 
-licenses += ("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0.html"))
+licenses += ("GPL-3.0-or-later", url("http://www.gnu.org/licenses/gpl-3.0"))

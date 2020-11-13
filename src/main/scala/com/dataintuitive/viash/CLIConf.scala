@@ -27,7 +27,7 @@ trait ViashNs {
   val namespace = opt[String](
     name = "namespace",
     short = 'n',
-    descr = "The name of the namespace.",
+    descr = "Filter which namespaces get selected. Can be a regex. Example: \"build|run\".",
     default = None
   )
   val src = opt[String](
@@ -174,7 +174,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |Build a namespace from many viash config files.
            |
            |Usage:
-           |  viash ns build [-s src] [-t target] [-p docker] [--setup] [--parallel]
+           |  viash ns build [-n nmspc] [-s src] [-t target] [-p docker] [--setup] [--parallel]
            |
            |Arguments:""".stripMargin)
       val target = opt[String](
@@ -196,7 +196,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |Test a namespace containing many viash config files.
            |
            |Usage:
-           |  viash ns test [-s src] [-p docker] [--parallel]
+           |  viash ns test [-n nmspc] [-s src] [-p docker] [--parallel] [--tsv file.tsv]
            |
            |Arguments:""".stripMargin)
       val tsv = opt[String](

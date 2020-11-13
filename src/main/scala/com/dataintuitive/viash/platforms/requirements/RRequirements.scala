@@ -9,7 +9,8 @@ case class RRequirements(
   gitlab: List[String] = Nil,
   bitbucket: List[String] = Nil,
   svn: List[String] = Nil,
-  url: List[String] = Nil
+  url: List[String] = Nil,
+  bioc_force_install: Boolean = false
 ) extends Requirements {
   val `type` = "r"
 
@@ -39,7 +40,13 @@ case class RRequirements(
       }
     val installBioc =
       if (bioc.nonEmpty) {
-        List(s"""Rscript -e 'BiocManager::install(c("${bioc.mkString("\", \"")}"))'""")
+        if (bioc_force_install) {
+          List(s"""Rscript -e 'BiocManager::install(c("${bioc.mkString("\", \"")}"))'""")
+        } else {
+          bioc.map { biocPackage =>
+            s"""Rscript -e 'if (!requireNamespace("$biocPackage", quietly = TRUE)) BiocManager::install("$biocPackage")'"""
+          }
+        }
       } else {
         Nil
       }
