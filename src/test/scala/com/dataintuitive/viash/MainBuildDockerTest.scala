@@ -393,6 +393,73 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
   }
 
   //</editor-fold>
+  //<editor-fold desc="Test benches to check building with or without --setup flag">
+  test("viash without --setup doesn't create docker during build", DockerTest) {
+    //remove docker if it exists
+    removeDockerImage("hello-world")
+    assert(!checkDockerImageExists("hello-world"))
+
+    // build viash wrapper without --setup
+    TestHelper.testMain(Array(
+      "build", configFile,
+      "-p", "hello-world",
+      "-o", tempFolStr
+    ))
+
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    // verify docker still doesn't exist
+    assert(!checkDockerImageExists("hello-world"))
+
+    // run viash wrapper with ---setup
+    val out = Exec.run2(
+      Seq(executable.toString, "---setup")
+    )
+    assert(out.exitValue == 0)
+
+    // verify docker now exists
+    assert(checkDockerImageExists("hello-world"))
+  }
+
+  test("viash with --setup creates docker during build", DockerTest) {
+    // remove docker if it exists
+    removeDockerImage("hello-world")
+    assert(!checkDockerImageExists("hello-world"))
+
+    // build viash wrapper with --setup
+    TestHelper.testMain(Array(
+      "build", configFile,
+      "-p", "hello-world",
+      "-o", tempFolStr,
+      "--setup"
+    ))
+
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    // verify docker exists
+    assert(checkDockerImageExists("hello-world"))
+  }
+
+  def checkDockerImageExists(name: String): Boolean = {
+    val out = Exec.run2(
+      Seq("docker", "images", name)
+    )
+
+    print(out)
+    val regex = s"$name\\s*latest".r
+
+    regex.findFirstIn(out.output).isDefined
+  }
+
+  def removeDockerImage(name: String): Unit = {
+    Exec.run2(
+      Seq("docker", "rmi", name)
+    )
+  }
+
+  //</editor-fold>
 
   override def afterAll() {
     IO.deleteRecursively(temporaryFolder)
