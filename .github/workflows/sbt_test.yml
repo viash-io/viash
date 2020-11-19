@@ -45,7 +45,7 @@ jobs:
         sudo -s eval "$sysreqs"
       
     - name: Set up sbt
-      uses: olafurpg/setup-scala@v5
+      uses: olafurpg/setup-scala@v10
 
     - name: Install R dependencies
       run: |
