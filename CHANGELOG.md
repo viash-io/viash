@@ -34,6 +34,7 @@
 * Internal changes to make it easier to extend viash with more scripting languages.
 * `NXF`: Default image is now `ns/tool` for consistency.
 * `NXF`: Repurpose `asis` function type for having simple publishing steps (see docs).
+* `NXF`: Add component name to main `process` name
 * R dependencies: by default, do not reinstall Bioconductor packages. Set `bioc_force_install: true` to revert this behaviour.
 
 ## BUG FIXES
