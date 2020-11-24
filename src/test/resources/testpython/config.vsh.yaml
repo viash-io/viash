@@ -55,8 +55,7 @@ platforms:
     setup:
       - type: python
         packages:
-          - argparse
-          - "anndata<0.7"
+          - "argparse<1.4"
   - type: docker
     image: python
     target_image: "viash_test_python"
@@ -66,7 +65,6 @@ platforms:
           - TESTING_FOO=bar
       - type: python
         packages:
-          - argparse
-          - "anndata<0.7"
+          - "argparse<1.4"
   - type: nextflow
     image: rocker/tidyverse

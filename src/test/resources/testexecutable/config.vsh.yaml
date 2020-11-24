@@ -1,0 +1,26 @@
+functionality:
+  name: testexecutable
+  description: |
+    List buckets and objects with mc.
+  arguments:
+    - name: "target"
+      type: file
+      description: An extra parameter
+      required: true
+      multiple: true
+  resources:
+    - type: executable
+      path: ls
+    - path: resource1.txt
+  tests:
+    - type: bash_script
+      path: tests/check_outputs.sh
+    - path: resource2.txt
+platforms:
+  - type: native
+  - type: docker
+    image: "bash"
+    target_image: "viash_test_executable"
+    workdir: "$VIASH_RESOURCES_DIR"
+  - type: nextflow
+    image: viash_test_executable

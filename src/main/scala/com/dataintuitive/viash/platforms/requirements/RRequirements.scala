@@ -1,6 +1,7 @@
 package com.dataintuitive.viash.platforms.requirements
 
 case class RRequirements(
+  packages: List[String] = Nil,
   cran: List[String] = Nil,
   bioc: List[String] = Nil,
   git: List[String] = Nil,
@@ -8,9 +9,13 @@ case class RRequirements(
   gitlab: List[String] = Nil,
   bitbucket: List[String] = Nil,
   svn: List[String] = Nil,
-  url: List[String] = Nil
+  url: List[String] = Nil,
+  script: List[String] = Nil,
+  bioc_force_install: Boolean = false
 ) extends Requirements {
   val `type` = "r"
+
+  assert(script.forall(!_.contains("'")))
 
   def installCommands: List[String] = {
     val installRemotes =
@@ -21,7 +26,7 @@ case class RRequirements(
       }
 
     val remotePairs = List(
-      ("cran", cran),
+      ("cran", cran ::: packages),
       ("git", git),
       ("github", github),
       ("gitlab", gitlab),
@@ -38,7 +43,13 @@ case class RRequirements(
       }
     val installBioc =
       if (bioc.nonEmpty) {
-        List(s"""Rscript -e 'BiocManager::install(c("${bioc.mkString("\", \"")}"))'""")
+        if (bioc_force_install) {
+          List(s"""Rscript -e 'BiocManager::install(c("${bioc.mkString("\", \"")}"))'""")
+        } else {
+          bioc.map { biocPackage =>
+            s"""Rscript -e 'if (!requireNamespace("$biocPackage", quietly = TRUE)) BiocManager::install("$biocPackage")'"""
+          }
+        }
       } else {
         Nil
       }
@@ -49,6 +60,15 @@ case class RRequirements(
         Some(s"""Rscript -e 'remotes::install_$str(c("${list.mkString("\", \"")}"), repos = "https://cran.rstudio.com")'""")
     }
 
-    installRemotes ::: installBiocManager ::: installBioc ::: installers
+    val installScript =
+      if (script.nonEmpty) {
+        script.map { line =>
+          s"""Rscript -e '$line'"""
+        }
+      } else {
+        Nil
+      }
+
+    installRemotes ::: installBiocManager ::: installBioc ::: installers ::: installScript
   }
 }

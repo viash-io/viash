@@ -70,7 +70,8 @@ case class DockerPlatform(
       case _: Executable => "--entrypoint='' "
       case _ => "--entrypoint=bash "
     }
-    val executor = s"""eval docker run $entrypointStr$dockerArgs${dm.extraParams} $imageName:$imageVersion"""
+    val workdirStr = workdir.map("--workdir " + _ + " ").getOrElse("")
+    val executor = s"""eval docker run $entrypointStr$workdirStr$dockerArgs${dm.extraParams} $imageName:$imageVersion"""
 
     // add extra arguments to the functionality file for each of the volumes
     val fun2 = functionality.copy(
@@ -79,7 +80,7 @@ case class DockerPlatform(
 
     // create new bash script
     val bashScript = BashScript(
-      name = Some(functionality.name),
+      dest = Some(functionality.name),
       text = Some(BashWrapper.wrapScript(
         executor = executor,
         functionality = fun2,
@@ -138,7 +139,8 @@ case class DockerPlatform(
 
         val vs =
           s"""  # create temporary directory to store temporary dockerfile in
-             |  tmpdir=$$(mktemp -d /tmp/viash_setupdocker-${functionality.name}-XXXXXX)
+             |
+             |  tmpdir=$$(mktemp -d "$$VIASH_TEMP/viash_setupdocker-${functionality.name}-XXXXXX")
              |  function clean_up {
              |    rm -rf "\\$$tmpdir"
              |  }
@@ -239,7 +241,11 @@ case class DockerPlatform(
     val postParse = postParseVolumes + "\n\n" +
       s"""# Always mount the resource directory
          |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$${BashWrapper.var_resources_dir}")"
-         |${BashWrapper.var_resources_dir}=$$(ViashAutodetectMount "$$${BashWrapper.var_resources_dir}")""".stripMargin
+         |${BashWrapper.var_resources_dir}=$$(ViashAutodetectMount "$$${BashWrapper.var_resources_dir}")
+         |
+         |# Always mount the VIASH_TEMP directory
+         |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$VIASH_TEMP")"
+         |VIASH_TEMP=$$(ViashAutodetectMount "$$VIASH_TEMP")""".stripMargin
 
     BashWrapperMods(
       preParse = preParse,
@@ -268,7 +274,13 @@ case class DockerPlatform(
     )
   }
 
-  private def addDockerChown(functionality: Functionality, dockerArgs: String, volExtraParams: String, imageName: String, imageVersion: String) = {
+  private def addDockerChown(
+    functionality: Functionality,
+    dockerArgs: String,
+    volExtraParams: String,
+    imageName: String,
+    imageVersion: String
+  ) = {
     val args = functionality.argumentsAndDummies
 
     def chownCommand(value: String): String = {
@@ -302,13 +314,16 @@ case class DockerPlatform(
                  |fi""".stripMargin
             }
           })
-          .mkString("")
+
+        val chownParStr =
+          if (chownPars.isEmpty) ":"
+          else chownPars.mkString("").split("\n").mkString("\n  ")
 
         s"""
            |
            |# change file ownership
            |function viash_perform_chown {
-           |  ${chownPars.split("\n").mkString("\n  ")}
+           |  ${chownParStr}
            |}
            |trap viash_perform_chown EXIT
            |""".stripMargin

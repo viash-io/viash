@@ -30,7 +30,7 @@ case class NativePlatform(
 
     // create new bash script
     val bashScript = BashScript(
-      name = Some(functionality.name),
+      dest = Some(functionality.name),
       text = Some(BashWrapper.wrapScript(
         executor = executor,
         functionality = functionality,
@@ -51,7 +51,10 @@ case class NativePlatform(
         if (li.isEmpty) {
           ""
         } else {
-          li.mkString("", " && \\\n  ", "\n")
+          "cat << 'HERE'\n" +
+          "# run the following commands:\n" +
+          li.mkString("", " && \\\n  ", "\n") +
+          "HERE"
         }
       ).mkString
 

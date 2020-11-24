@@ -1,36 +1,35 @@
 package com.dataintuitive.viash
 
-import org.scalatest.{FunSuite, BeforeAndAfterAll}
+import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import java.nio.file.Paths
-import com.dataintuitive.viash.functionality.Functionality
+
+import com.dataintuitive.viash.config.Config
+
 import scala.io.Source
 import com.dataintuitive.viash.helpers._
 
-class E2EBashNative extends FunSuite with BeforeAndAfterAll {
+class MainBuildNativeTest extends FunSuite with BeforeAndAfterAll {
   // which platform to test
-  private val testName = "testbash"
-  private val funcFile = getClass.getResource(s"/$testName/functionality.yaml").getPath
-  private val platFile = getClass.getResource(s"/$testName/platform_native.yaml").getPath
+  private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
 
   // parse functionality from file
-  private val functionality = Functionality.parse(IO.uri(funcFile))
-
-  // convert testbash
-  private val params = Array(
-    "build",
-    "-f", funcFile,
-    "-p", platFile,
-    "-o", tempFolStr
-  )
-  Main.main(params)
+  private val functionality = Config.read(configFile, modifyFun = false).functionality
 
   // check whether executable was created
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
 
-  test("Viash should have created an executable") {
+  // convert testbash
+  test("viash can create an executable") {
+    TestHelper.testMain(Array(
+      "build",
+      "-p", "native",
+      "-o", tempFolStr,
+      configFile
+    ))
+
     assert(executable.exists)
     assert(executable.canExecute)
   }

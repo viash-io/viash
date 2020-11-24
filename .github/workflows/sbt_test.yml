@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master, develop ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, develop ]
 
 jobs:
   scala-ci:
@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         config: 
-        - {name: 'ubuntu_r3.6.1_py3.8', os: ubuntu-latest, r: '3.6.1', python: '3.8' }
+        - {name: 'main', os: ubuntu-latest, r: '3.6.1', python: '3.8' }
         # - {name: 'ubuntu_rrel_py3.x', os: ubuntu-latest, r: 'release', python: '3.x' }
         # - {name: 'mac_r3.6.1_py3.8', os: macos-latest, r: '3.6.1', python: '3.8' }
 
@@ -43,8 +43,11 @@ jobs:
         Rscript -e "install.packages('remotes'); remotes::install_github('rcannood/sysreqs')"
         sysreqs=$(Rscript -e "pkgs <- sysreqs:::get_cran_sysreqs(sysreqs:::get_cran_deps('tidyverse')); cat(sysreqs:::sysreq_commands_pkgs(pkgs))")
         sudo -s eval "$sysreqs"
+      
+    - name: Set up sbt
+      uses: olafurpg/setup-scala@v10
 
-    - name: Install tidyverse and optparse
+    - name: Install R dependencies
       run: |
         install.packages('remotes')
         remotes::install_cran("pillar")
@@ -52,20 +55,35 @@ jobs:
       shell: Rscript {0}
       
     - name: Set up Scala
-      uses: olafurpg/setup-scala@v5
+      run: |
+        if [[ "${{ matrix.config.os }}" =~ ^macos_*$ ]]; then
+          brew update
+          brew install scala
+        else
+          sudo apt-get update
+          sudo apt-get install -y scala
+        fi
       
     - name: Set up Python
       uses: actions/setup-python@v2
       with: 
         python-version: ${{ matrix.config.python }}
 
-    - name: Run tests on Ubuntu
-      if: runner.os != 'macOS'
-      run: sbt test
-      
-    - name: Run tests on macOS
-      if: runner.os == 'macOS'
-      run: sbt 'testOnly -- -l com.dataintuitive.viash.DockerTest'
+    - name: Run tests
+      run: |
+        if [[ "${{ matrix.config.name }}" == "main" ]]; then
+          # only run coverage on main runner
+          sbt clean coverage test coverageReport
+        elif [[ "${{ matrix.config.os }}" =~ ^macos_*$ ]]; then
+          # macOS on github actions does not have Docker, so skip those
+          sbt 'testOnly -- -l com.dataintuitive.viash.DockerTest'
+        else
+          sbt test
+        fi
+        
+    - name: Upload coverage on success
+      if: matrix.config.name == 'main'
+      run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}
       
     - name: Upload check results on fail
       if: failure()

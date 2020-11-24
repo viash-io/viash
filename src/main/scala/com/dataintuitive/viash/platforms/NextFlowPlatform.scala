@@ -13,16 +13,19 @@ case class NextFlowPlatform(
   id: String = "nextflow",
   version: Option[Version] = None,
   image: Option[String],
-  apt: Option[AptRequirements] = None,
-  r: Option[RRequirements] = None,
-  python: Option[PythonRequirements] = None,
-  setup: List[Requirements] = Nil,
   executor: Option[String],
   publish: Option[Boolean],
   per_id: Option[Boolean],
   path: Option[String],
   label: Option[String],
-  stageInMode: Option[String]
+  stageInMode: Option[String],
+
+  // TODO: these parameters could (and should?) be removed
+  // as they have no actual impact on anything
+  apt: Option[AptRequirements] = None,
+  r: Option[RRequirements] = None,
+  python: Option[PythonRequirements] = None,
+  setup: List[Requirements] = Nil
 ) extends Platform {
   val `type` = "nextflow"
 
@@ -84,7 +87,7 @@ case class NextFlowPlatform(
     }
 
     val imageName = {
-      val autogen = functionality.namespace.map( ns => s"$ns/${functionality.name}").getOrElse(functionality.name)
+      val autogen = functionality.namespace.map( _ + "/" + functionality.name).getOrElse(functionality.name)
       image.getOrElse(autogen)
     }
 
@@ -117,7 +120,7 @@ case class NextFlowPlatform(
     )
 
     val setup_nextflowconfig = PlainFile(
-      name = Some("nextflow.config"),
+      dest = Some("nextflow.config"),
       text = Some(listMapToConfig(asNestedTuples))
     )
 
@@ -161,11 +164,15 @@ case class NextFlowPlatform(
     val setup_main_outFromIn = functionality.function_type match {
       // in and out file format are the same, but also the filenames!
       case Some(AsIs) => """
-                           |def outFromIn(inputstr) {
-                           |
-                           |    return "${inputstr}"
-                           |}
-                           |""".stripMargin.replace("__e__", inputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
+                          |def getOutputFilename(_params) {
+                          |
+                          |    def output = _params.arguments.find{it ->
+                          |      (it.value.direction == "Output" && it.value.type == "file")
+                          |    }
+                          |
+                          |    return output.value.value
+                          |}
+                          |""".stripMargin.replace("__e__", inputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
       // Out format is different from in format
       case Some(Convert) | Some(Join) | None => """
                                                   |// files is either String, List[String] or HashMap[String,String]
@@ -210,7 +217,7 @@ case class NextFlowPlatform(
         |def overrideInput(params, str) {
         |
         |    // `str` in fact can be one of:
-        |    // - `String`, 
+        |    // - `String`,
         |    // - `List[String]`,
         |    // - `Map[String, String | List[String]]`
         |    // Please refer to the docs for more info
@@ -223,7 +230,7 @@ case class NextFlowPlatform(
         |                    ? (str[it.value.name] in List)
         |                        ? it.value + [ "value" : str[it.value.name].join(it.value.multiple_sep)]
         |                        : it.value + [ "value" : str[it.value.name]]
-        |                    : it.value + [ "value" : "PROBLEMS" ]
+        |                    : it.value
         |            : it.value + [ "value" : str ]
         |        : it.value
         |    }
@@ -290,13 +297,13 @@ case class NextFlowPlatform(
       }
 
       val outputStr = functionality.function_type match {
-        case Some(ToDir) => "${output}/*"
+        case Some(ToDir) => "${output}"
         case _ => "${output}"
       }
 
       s"""
          |
-         |process executor {
+         |process ${fname}_process {
          |  $labelString
          |  tag "$${id}"
          |  echo { (params.debug == true) ? true : false }
@@ -310,6 +317,8 @@ case class NextFlowPlatform(
          |    tuple val("$${id}"), path("$outputStr")
          |  script:
          |    \"\"\"
+         |    # Some useful stuff
+         |    export NUMBA_CACHE_DIR=/tmp/numba-cache
          |    # Running the pre-hook when necessary
          |    $preHook
          |    # Adding NXF's `$$moduleDir` to the path in order to resolve our own wrappers
@@ -322,6 +331,11 @@ case class NextFlowPlatform(
          |
          |}
          |""".stripMargin
+    }
+
+    val outFromInStr = functionality.function_type match {
+      case Some(AsIs) => "def outputFilename = getOutputFilename(updtParams)"
+      case _ => "def outputFilename = outFromIn(filename)"
     }
 
     val setup_main_workflow =
@@ -350,11 +364,11 @@ case class NextFlowPlatform(
          |                        ? input.collect{ it.name }
          |                        : input.collectEntries{ k, v -> [ k, (v in List) ? v.collect{it.name} : v.name ] }
          |                    : input.name
-         |            def outputFilename = outFromIn(filename)
          |            def defaultParams = params[key] ? params[key] : [:]
          |            def overrideParams = _params[key] ? _params[key] : [:]
          |            def updtParams = defaultParams + overrideParams
          |            // now, switch to arrays instead of hashes...
+         |            $outFromInStr
          |            def updtParams1 = overrideInput(updtParams, filename)
          |            def updtParams2 = overrideOutput(updtParams1, outputFilename)
          |            new Tuple5(
@@ -365,7 +379,7 @@ case class NextFlowPlatform(
          |                renderCLI([updtParams2.command], updtParams2.arguments)
          |            )
          |        }
-         |    result_ = executor(id_input_output_function_cli_) \\
+         |    result_ = ${fname}_process(id_input_output_function_cli_) \\
          |        | join(id_input_params_) \\
          |        | map{ id, output, input, original_params ->
          |            new Tuple3(id, output, original_params)
@@ -406,7 +420,7 @@ case class NextFlowPlatform(
     }
 
     val setup_main = PlainFile(
-      name = Some("main.nf"),
+      dest = Some("main.nf"),
       text = Some(setup_main_header +
         setup_main_utils +
         setup_main_outFromIn +

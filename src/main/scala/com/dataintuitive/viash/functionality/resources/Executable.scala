@@ -4,22 +4,33 @@ import com.dataintuitive.viash.functionality._
 import java.nio.file.Path
 
 case class Executable(
-  text: Option[String] = None,
-  name: Option[String] = None,
   path: Option[String] = None,
-  is_executable: Boolean = true
+  text: Option[String] = None,
+  dest: Option[String] = None,
+  is_executable: Option[Boolean] = Some(true)
 ) extends Script {
   val `type` = "executable"
-
-  val commentStr = "#"
-
-  def command(script: String): String = script
-
-  def commandSeq(script: String): Seq[String] = Seq(script)
+  val meta = Executable
+  def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean]): Resource = {
+    copy(path = path, text = text, dest = dest, is_executable = is_executable)
+  }
 
   def generatePlaceholder(functionality: Functionality): String = ""
 
   override def read: Option[String] = None
 
   override def write(path: Path, overwrite: Boolean) {}
+}
+
+object Executable extends ScriptObject {
+  val commentStr = "#"
+  val extension = "*"
+
+  def command(script: String): String = {
+    script
+  }
+
+  def commandSeq(script: String): Seq[String] = {
+    Seq(script)
+  }
 }
