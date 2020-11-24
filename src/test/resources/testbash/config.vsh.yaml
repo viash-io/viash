@@ -65,5 +65,8 @@ platforms:
   - type: docker
     image: "bash:3.2"
     target_image: "viash_test_bash"
+  - type: docker
+    image: "hello-world"
+    id: "hello-world"
   - type: nextflow
     image: viash_test_bash
