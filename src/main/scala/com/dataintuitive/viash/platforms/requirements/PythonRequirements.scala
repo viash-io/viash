@@ -10,15 +10,16 @@ case class PythonRequirements(
   mercurial: List[String] = Nil,
   svn: List[String] = Nil,
   bazaar: List[String] = Nil,
-  url: List[String] = Nil
+  url: List[String] = Nil,
+  script: List[String] = Nil
 ) extends Requirements {
-
   val `type` = "python"
+
+  assert(script.forall(!_.contains("'")))
 
   private val userFlag = if (user) " --user" else ""
 
   private def generateCommands(prefix: String, values: List[String], postFix: String = "") = {
-
     values match {
       case Nil => Nil
       case packs =>
@@ -42,7 +43,16 @@ case class PythonRequirements(
     val installBazaarPackages = generateCommands("bzr+", bazaar)
     val installUrlPackages = generateCommands("", url)
 
+    val installScript =
+      if (script.nonEmpty) {
+        script.map { line =>
+          s"""python -c '$line'"""
+        }
+      } else {
+        Nil
+      }
+
     installPip :: installPipPackages ::: installGitPackages ::: installGithubPackages ::: installGitlabPackages :::
-      installMercurialPackages ::: installSvnPackages ::: installBazaarPackages ::: installUrlPackages
+      installMercurialPackages ::: installSvnPackages ::: installBazaarPackages ::: installUrlPackages ::: installScript
   }
 }
