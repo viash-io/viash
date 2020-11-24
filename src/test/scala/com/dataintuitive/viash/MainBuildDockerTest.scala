@@ -407,9 +407,10 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
 
     // build viash wrapper without --setup
     TestHelper.testMain(Array(
-      "build", configFile,
+      "build",
       "-p", "hello-world",
-      "-o", tempFolStr
+      "-o", tempFolStr,
+      configFile
     ))
 
     assert(executable.exists)
@@ -435,10 +436,11 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
 
     // build viash wrapper with --setup
     TestHelper.testMain(Array(
-      "build", configFile,
+      "build",
       "-p", "hello-world",
       "-o", tempFolStr,
-      "--setup"
+      "--setup",
+      configFile
     ))
 
     assert(executable.exists)
