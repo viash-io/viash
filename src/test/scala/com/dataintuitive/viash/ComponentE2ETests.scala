@@ -16,10 +16,10 @@ class ComponentE2ETests extends FunSuite {
 
   for ((name, file) ← tests) {
     test(s"Testing $name platform native", NativeTest) {
-      TestHelper.testMain(Array("test", getTestResource(s"/$name/$file"), "-p", "native"))
+      TestHelper.testMain(Array("test", "-p", "native", getTestResource(s"/$name/$file")))
     }
     test(s"Testing $name platform docker", DockerTest) {
-      TestHelper.testMain(Array("test", getTestResource(s"/$name/$file"), "-p", "docker"))
+      TestHelper.testMain(Array("test", "-p", "docker", getTestResource(s"/$name/$file")))
     }
   }
 }

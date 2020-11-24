@@ -24,8 +24,9 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
   test("Check standard test output for typical outputs", DockerTest) {
     val testText = TestHelper.testMain(
       Array(
-        "test", configFile,
-        "-p", "docker"
+        "test",
+        "-p", "docker",
+        configFile
       ))
 
     assert(testText.contains("Running tests in temporary directory: "))
@@ -38,8 +39,9 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
   test("Check test output when no tests are specified in the functionality file", NativeTest) {
     val testText = TestHelper.testMain(
       Array(
-        "test", configNoTestFile,
-        "-p", "native"
+        "test",
+        "-p", "native",
+        configNoTestFile
       ))
 
     assert(testText.contains("Running tests in temporary directory: "))
@@ -51,8 +53,9 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
 
   test("Check test output when a test fails", NativeTest) {
     val testText = TestHelper.testMainException[RuntimeException](Array(
-      "test", configFailedTestFile,
-      "-p", "native"
+      "test",
+      "-p", "native",
+      configFailedTestFile
     ))
 
     assert(testText.contains("Running tests in temporary directory: "))
@@ -79,9 +82,10 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
   test("Check output in case --keep true is specified", DockerTest) {
     val testText = TestHelper.testMain(
       Array(
-        "test", configFile,
+        "test",
         "-p", "docker",
-        "-k", "true"
+        "-k", "true",
+        configFile
       ))
 
     assert(testText.contains("Running tests in temporary directory: "))
@@ -94,9 +98,10 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
   test("Check output in case --keep false is specified", DockerTest) {
     val testText = TestHelper.testMain(
       Array(
-        "test", configFile,
+        "test",
         "-p", "docker",
-        "--keep", "false"
+        "--keep", "false",
+        configFile
       ))
 
     assert(testText.contains("Running tests in temporary directory: "))
@@ -108,9 +113,10 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
 
   test("Check test output when a test fails and --keep true is specified", NativeTest) {
     val testText = TestHelper.testMainException[RuntimeException](Array(
-      "test", configFailedTestFile,
+      "test",
       "-p", "native",
-      "-k", "true"
+      "-k", "true",
+      configFailedTestFile
     ))
 
     assert(testText.contains("Running tests in temporary directory: "))
@@ -122,9 +128,10 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
 
   test("Check test output when a test fails and --keep false is specified", NativeTest) {
     val testText = TestHelper.testMainException[RuntimeException](Array(
-      "test", configFailedTestFile,
+      "test",
       "-p", "native",
-      "-k", "false"
+      "-k", "false",
+      configFailedTestFile
     ))
 
     assert(testText.contains("Running tests in temporary directory: "))
@@ -138,8 +145,9 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
   test("Check standard test output with bad platform name", NativeTest) {
     val testText = TestHelper.testMainException[RuntimeException](
       Array(
-        "test", configFile,
-        "-p", "non_existing_platform"
+        "test",
+        "-p", "non_existing_platform",
+        configFile
       ))
 
     assert(!testText.contains("Running tests in temporary directory: "))
@@ -150,8 +158,9 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
   test("Check standard test output with custom platform file", NativeTest) {
     val testText = TestHelper.testMain(
       Array(
-        "test", configFile,
-        "-p", customPlatformFile
+        "test",
+        "-p", customPlatformFile,
+        configFile
       ))
 
     assert(testText.contains("check_for_detecting_platform"))
@@ -164,9 +173,10 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
   test("Check resources are copied from and to the correct location", DockerTest) {
     val testText = TestHelper.testMain(
       Array(
-        "test", configResourcesCopyFile,
+        "test",
         "-p", "docker",
-        "-k", "true"
+        "-k", "true",
+        configResourcesCopyFile
       ))
 
     assert(testText.contains("Running tests in temporary directory: "))

@@ -15,41 +15,25 @@ object Main {
   val version: String = if (pkg.getImplementationVersion != null) pkg.getImplementationVersion else "test"
 
   def main(args: Array[String]) {
-    // circumvent CLI limitations
-    val workAroundCommands = List("run", "build", "test")
-    val exceptionFlags = List("-h", "--help")
-    val (configStr, viashArgs, runArgs) = {
-      if (args.length >= 2 && workAroundCommands.contains(args(0)) && !exceptionFlags.contains(args(1))) {
-        if (!args(1).contains(".vsh.")) {
-          throw new RuntimeException("The first argument after 'viash " + args(0) + "' should be a viash config file.")
+    val (viashArgs, runArgs) = {
+        if (args(0) == "run") {
+          args.span(_ != "--")
+        } else {
+          (args, Array[String]())
         }
-
-        val argNoConfig = args.patch(1, Nil, 1)
-        val (vArgs, rArgs) =
-          if (args(0) == "run") {
-            argNoConfig.span(_ != "--")
-          } else {
-            (argNoConfig, Array[String]())
-          }
-        (Some(args(1)), vArgs, rArgs)
-      } else if (args.length == 1 && workAroundCommands.contains(args(0))) {
-        throw new RuntimeException("The first argument after 'viash " + args(0) + "' should be a viash config file.")
-      } else {
-        (None, args, Array[String]())
-      }
     }
 
     val cli = new CLIConf(viashArgs)
 
     cli.subcommands match {
       case List(cli.run) =>
-        val config = readConfig(configStr, cli.run)
+        val config = readConfig(cli.run)
         ViashRun(config, args = runArgs.dropWhile(_ == "--"), keepFiles = cli.run.keep.toOption.map(_.toBoolean))
       case List(cli.build) =>
-        val config = readConfig(configStr, cli.build)
+        val config = readConfig(cli.build)
         ViashBuild(config, output = cli.build.output(), printMeta = cli.build.meta(), setup = cli.build.setup())
       case List(cli.test) =>
-        val config = readConfig(configStr, cli.test, modifyFun = false)
+        val config = readConfig(cli.test, modifyFun = false)
         ViashTest(config, keepFiles = cli.test.keep.toOption.map(_.toBoolean))
       case List(cli.namespace, cli.namespace.build) =>
         val configs = readConfigs(cli.namespace.build)
@@ -73,12 +57,11 @@ object Main {
   }
 
   def readConfig(
-    config: Option[String],
     subcommand: ViashCommand,
     modifyFun: Boolean = true
   ): Config = {
     Config.read(
-      config = config.get,
+      config = subcommand.config(),
       platform = subcommand.platform.toOption | subcommand.platformid.toOption,
       modifyFun = modifyFun
     )
@@ -108,7 +91,6 @@ object Main {
     }
 
     // find *.vsh.* files and parse as config
-    val scriptRegex = ".*\\.vsh\\.[^.]*$".r
     val scriptFiles = find(sourceDir, (path, attrs) => {
       path.toString.contains(".vsh.") &&
         attrs.isRegularFile &&

@@ -21,6 +21,11 @@ trait ViashCommand {
     required = false,
     hidden = true
   )
+  val config = trailArg[String](
+    descr = "A viash config file (example: config.vsh.yaml). This argument can also be a script with the config as a header.",
+    default = Some("config.vsh.yaml"),
+    required = true
+  )
 }
 trait ViashNs {
   _: ScallopConf =>
@@ -100,10 +105,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |Usage:
          |  viash run config.vsh.yaml [-p docker] [-k true/false]  -- [arguments for script]
          |
-         |Arguments:
-         |  config                  A viash config file (example: config.vsh.yaml). This
-         |                          argument can also be a script with the config as a
-         |                          header.""".stripMargin)
+         |Arguments:""".stripMargin)
 
     footer(
       s"""  -- param1 param2 ...    Extra parameters to be passed to the component itself.
@@ -123,10 +125,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |Usage:
          |  viash build config.vsh.yaml -o output [-p docker] [-m] [-s]
          |
-         |Arguments:
-         |  config                  A viash config file (example: config.vsh.yaml). This
-         |                          argument can also be a script with the config as a
-         |                          header.""".stripMargin)
+         |Arguments:""".stripMargin)
 
     val meta = opt[Boolean](
       name = "meta",
@@ -154,10 +153,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |Usage:
          |  viash test config.vsh.yaml [-p docker [-k true/false]
          |
-         |Arguments:
-         |  config                  A viash config file (example: config.vsh.yaml). This
-         |                          argument can also be a script with the config as a
-         |                          header.""".stripMargin)
+         |Arguments:""".stripMargin)
 
     footer(
       s"""

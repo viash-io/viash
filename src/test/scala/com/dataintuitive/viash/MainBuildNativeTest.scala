@@ -24,9 +24,10 @@ class MainBuildNativeTest extends FunSuite with BeforeAndAfterAll {
   // convert testbash
   test("viash can create an executable") {
     TestHelper.testMain(Array(
-      "build", configFile,
+      "build",
       "-p", "native",
-      "-o", tempFolStr
+      "-o", tempFolStr,
+      configFile
     ))
 
     assert(executable.exists)

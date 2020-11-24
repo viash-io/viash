@@ -33,9 +33,10 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
   // convert testbash
   test("viash can create an executable") {
     TestHelper.testMain(Array(
-      "build", configFile,
+      "build",
       "-p", "docker",
-      "-o", tempFolStr
+      "-o", tempFolStr,
+      configFile,
     ))
 
     assert(executable.exists)
@@ -157,9 +158,10 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
   test("Get tagged version of a docker image for bash 5.0", DockerTest) {
     // prepare the environment
     TestHelper.testMain(Array(
-      "build", configBashTagFile,
+      "build",
       "-p", "docker_5_0",
-      "-o", tempFolStr
+      "-o", tempFolStr,
+      configBashTagFile
     ))
 
     assert(executableBashTagFile.exists)
@@ -186,9 +188,10 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
   test("Get tagged version of a docker image for bash 3.2", DockerTest) {
     // prepare the environment
     TestHelper.testMain(Array(
-      "build", configBashTagFile,
+      "build",
       "-p", "docker_3_2",
-      "-o", tempFolStr
+      "-o", tempFolStr,
+      configBashTagFile
     ))
 
     assert(executableBashTagFile.exists)
@@ -234,10 +237,11 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
       // Run the code
       // prepare the environment
       val stdout = TestHelper.testMain(Array(
-        "build", configMetaFile,
+        "build",
         "-p", "docker",
         "-o", tempFolStr,
         "-m",
+        configMetaFile
       ))
 
       assert(executableBashTagFile.exists)
@@ -302,10 +306,11 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
       // Run the code
       // prepare the environment
       val stdout = TestHelper.testMain(Array(
-        "build", configMetaFile,
+        "build",
         "-p", "docker",
         "-o", tempFolStr,
         "-m",
+        configMetaFile
       ))
 
       assert(executableBashTagFile.exists)
@@ -361,10 +366,11 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
       // Run the code
       // prepare the environment
       val stdout = TestHelper.testMain(Array(
-        "build", configMetaFile,
+        "build",
         "-p", "docker",
         "-o", tempFolStr,
         "-m",
+        configMetaFile
       ))
 
       assert(executableBashTagFile.exists)
