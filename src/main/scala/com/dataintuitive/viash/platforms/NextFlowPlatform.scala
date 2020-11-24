@@ -217,7 +217,7 @@ case class NextFlowPlatform(
         |def overrideInput(params, str) {
         |
         |    // `str` in fact can be one of:
-        |    // - `String`, 
+        |    // - `String`,
         |    // - `List[String]`,
         |    // - `Map[String, String | List[String]]`
         |    // Please refer to the docs for more info
@@ -230,7 +230,7 @@ case class NextFlowPlatform(
         |                    ? (str[it.value.name] in List)
         |                        ? it.value + [ "value" : str[it.value.name].join(it.value.multiple_sep)]
         |                        : it.value + [ "value" : str[it.value.name]]
-        |                    : it.value + [ "value" : "PROBLEMS" ]
+        |                    : it.value
         |            : it.value + [ "value" : str ]
         |        : it.value
         |    }
@@ -297,7 +297,7 @@ case class NextFlowPlatform(
       }
 
       val outputStr = functionality.function_type match {
-        case Some(ToDir) => "${output}/*"
+        case Some(ToDir) => "${output}"
         case _ => "${output}"
       }
 
@@ -317,6 +317,8 @@ case class NextFlowPlatform(
          |    tuple val("$${id}"), path("$outputStr")
          |  script:
          |    \"\"\"
+         |    # Some useful stuff
+         |    export NUMBA_CACHE_DIR=/tmp/numba-cache
          |    # Running the pre-hook when necessary
          |    $preHook
          |    # Adding NXF's `$$moduleDir` to the path in order to resolve our own wrappers
