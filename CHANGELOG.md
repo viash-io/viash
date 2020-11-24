@@ -1,24 +1,23 @@
+
 # viash 0.3.0
 
 ## BREAKING CHANGES
 
-* File format `functionality.yaml` is no longer supported.
-
-* `viash run`, `viash build` and `viash test`: config argument should be passed first, not last.
+* File format `functionality.yaml` is no longer supported. Use `config.vsh.yaml` or `script.vsh.R/py/...` instead.
 
 * `viash run` and `viash test`: By default, temporary files are removed when the execution succeeded, otherwise they are kept. 
   This behaviour can be overridden by specifying `--keep true` to always keep the temporary files, and `--keep false` to always remove them.
   
 ## NEW FEATURES
 
-* Added `viash ns test`: Run all tests in a particular namespace.
+* Added `viash ns test`: Run all tests in a particular namespace. For each test, the exit code and duration is reported. Results can be written to a tsv file.
 * Added support for JavaScript scripts.
 * Added support for Scala scripts.
 * [NXF] publishing has a few more options:
   - `publish`: Publish or yes (default is false)
   - `per_id`: Publish results in directories containing the unique (sample) ID (default is true)
   - `path`: A prefix path for the results to be published (default is empty)
-* Functionality resources and tests: Allow to copy whole directories instead of only single files. Also allow to rename the destination folder by specifying a value for 'dest'.
+* Functionality resources and tests: Allow copying whole directories instead of only single files. Also allow to rename the destination folder by specifying a value for 'dest'.
 * Platform R / Python dependencies: Allow running a simple command.
 
 ## MAJOR CHANGES

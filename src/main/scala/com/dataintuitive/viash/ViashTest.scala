@@ -12,8 +12,11 @@ import java.nio.file.Paths
 import com.dataintuitive.viash.config.Config
 import helpers.IO
 
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
+
 object ViashTest {
-  case class TestOutput(name: String, exitValue: Int, output: String, logFile: String)
+  case class TestOutput(name: String, exitValue: Int, output: String, logFile: String, duration: Long)
   case class ManyTestOutput(setup: TestOutput, tests: List[TestOutput])
 
   def apply(
@@ -95,10 +98,12 @@ object ViashTest {
       try {
         val executable = Paths.get(buildDir.toString, fun.name).toString
         logger(s"+$executable ---setup")
+        val startTime = LocalDateTime.now
         val exitValue = Process(Seq(executable, "---setup"), cwd = buildDir).!(ProcessLogger(logger, logger))
-
+        val endTime = LocalDateTime.now
+        val diffTime = ChronoUnit.SECONDS.between(startTime, endTime)
         printWriter.flush()
-        TestOutput("build_executable", exitValue, stream.toString, logPath)
+        TestOutput("build_executable", exitValue, stream.toString, logPath, diffTime)
       } finally {
         printWriter.close()
         logWriter.close()
@@ -118,9 +123,10 @@ object ViashTest {
 
     val testResults = tests.filter(_.isInstanceOf[Script]).map {
       case test: Script if test.read.isEmpty =>
-        TestOutput(test.filename, 1, "Test script does not exist.", "")
+        TestOutput(test.filename, 1, "Test script does not exist.", "", 0L)
 
       case test: Script =>
+        val startTime = LocalDateTime.now
         val dirArg = FileObject(
           name = "dir",
           direction = Output,
@@ -176,7 +182,10 @@ object ViashTest {
           val exitValue = Process(Seq(executable), cwd = newDir).!(ProcessLogger(logger, logger))
 
           printWriter.flush()
-          TestOutput(test.filename, exitValue, stream.toString, logPath)
+
+          val endTime = LocalDateTime.now
+          val diffTime = ChronoUnit.SECONDS.between(startTime, endTime)
+          TestOutput(test.filename, exitValue, stream.toString, logPath, diffTime)
         } finally {
           printWriter.close()
           logWriter.close()

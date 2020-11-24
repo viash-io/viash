@@ -44,7 +44,8 @@ object ViashNamespace {
     val tsvWriter = tsv.map(new FileWriter(_, false))
 
     try {
-      tsvWriter.foreach(_.append(List("namespace", "functionality", "platform", "test_name", "exit_code", "result").mkString("\t") + sys.props("line.separator")))
+      tsvWriter.foreach(_.append(List("namespace", "functionality", "platform", "test_name", "exit_code", "duration", "result").mkString("\t") + sys.props("line.separator")))
+      printf(s"%s%20s %20s %20s %20s %9s %8s %20s%s\n", "", "namespace", "functionality", "platform", "test_name", "exit_code", "duration", "result", Console.RESET)
 
       configs2.map { conf =>
         // get attributes
@@ -53,7 +54,7 @@ object ViashNamespace {
         val platName = conf.platform.get.id
 
         // print start message
-        printf(s"%s%20s %20s %20s %20s %8s %20s%s\n", "", namespace, funName, platName, "start", "", "", Console.RESET)
+        printf(s"%s%20s %20s %20s %20s %9s %8s %20s%s\n", "", namespace, funName, platName, "start", "", "", "", Console.RESET)
 
         // run tests
         // TODO: it would actually be great if this component could subscribe to testresults messages
@@ -62,11 +63,12 @@ object ViashNamespace {
           keepFiles = keepFiles,
           quiet = true
         )
+
         val testResults =
           if (setupRes.exitValue > 0) {
             Nil
           } else if (testRes.isEmpty) {
-            List(TestOutput("tests", -1, "no tests found", ""))
+            List(TestOutput("tests", -1, "no tests found", "", 0L))
           } else {
             testRes
           }
@@ -85,11 +87,11 @@ object ViashNamespace {
           }
 
           // print message
-          printf(s"%s%20s %20s %20s %20s %8s %20s%s\n", col, namespace, funName, platName, test.name, test.exitValue, msg, Console.RESET)
+          printf(s"%s%20s %20s %20s %20s %9s %8s %20s%s\n", col, namespace, funName, platName, test.name, test.exitValue, test.duration, msg, Console.RESET)
 
           // write to tsv
           tsvWriter.foreach{writer =>
-            writer.append(List(namespace, funName, platName, test.name, test.exitValue, msg).mkString("\t") + sys.props("line.separator"))
+            writer.append(List(namespace, funName, platName, test.name, test.exitValue, test.duration, msg).mkString("\t") + sys.props("line.separator"))
             writer.flush()
           }
         }
