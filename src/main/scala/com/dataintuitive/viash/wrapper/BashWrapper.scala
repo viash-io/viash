@@ -69,9 +69,12 @@ object BashWrapper {
       if (functionality.set_wd_to_resources_dir.getOrElse(false)) {
         s"""
            |cd "$$$var_resources_dir"
+           |PATH="$$$var_resources_dir:$$PATH"
            |""".stripMargin
       } else {
-        ""
+        s"""
+           |PATH="$$$var_resources_dir:$$PATH"
+           |""".stripMargin
       }
 
     // DETERMINE HOW TO RUN THE CODE
