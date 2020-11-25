@@ -78,7 +78,7 @@ trait WithTemporary {
 }
 
 class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
-  version(s"${Main.name} ${Main.version} (c) 2020 Data Intuitive")
+  version(s"${Main.name} ${Main.version} (c) 2020 Data Intuitive, All Rights Reserved")
 
   appendDefaultToDescription = true
 
@@ -91,6 +91,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
        |  viash build config.vsh.yaml
        |  viash test config.vsh.yaml
        |  viash ns build
+       |  viash ns test
        |
        |Check the help of a subcommand for more information, or the API available at:
        |  https://www.data-intuitive.com/viash_docs
