@@ -1,5 +1,5 @@
 
-# viash 0.3.0
+# viash 0.3.0 (2020-11-24)
 
 ## BREAKING CHANGES
 

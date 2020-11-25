@@ -24,6 +24,6 @@ libraryDependencies ++= Seq(
 
 scalacOptions ++= Seq("-unchecked", "-deprecation")
 
-organization := "com.data-intuitive"
+organization := "Data Intuitive"
 
-licenses += ("GPL-3.0-or-later", url("http://www.gnu.org/licenses/gpl-3.0"))
+licenses += ("Custom", url("file://LICENSE.md"))
