@@ -27,3 +27,23 @@ platforms:
       - type: apk
         packages:
           - fortune
+  - type: docker
+    image: debian:bullseye-slim
+    target_image: "viash_requirement_apt_base"
+    id: "viash_requirement_apt_base"
+  - type: docker
+    image: debian:bullseye-slim
+    target_image: "viash_requirement_apt"
+    id: "viash_requirement_apt"
+    setup:
+      - type: apt
+        packages:
+          - aptitude
+  - type: docker
+    image: rocker/tidyverse
+    target_image: "viash_requirement_apt2"
+    id: "viash_requirement_apt2"
+    setup:
+      - type: apt
+        packages:
+          - cowsay
