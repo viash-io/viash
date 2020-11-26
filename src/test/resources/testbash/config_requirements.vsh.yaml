@@ -1,0 +1,29 @@
+functionality:
+  name: testbash
+  description: |
+    Prints out the parameter values.
+    Checking what happens with multiline descriptions.
+  arguments:
+    - name: "input"
+      type: string
+      description: Name of package for which to get the location
+      direction: input
+      required: true
+      must_exist: true
+
+  resources:
+    - type: bash_script
+      path: ./check_which.sh
+
+platforms:
+  - type: docker
+    image: "bash:3.2"
+    id: "viash_requirement_apk_base"
+  - type: docker
+    image: "bash:3.2"
+    target_image: "viash_requirement_apk"
+    id: "viash_requirement_apk"
+    setup:
+      - type: apk
+        packages:
+          - fortune
