@@ -4,16 +4,18 @@ functionality:
     Prints out the parameter values.
     Checking what happens with multiline descriptions.
   arguments:
-    - name: "input"
+    - name: "--which"
       type: string
-      description: Name of package for which to get the location
-      direction: input
-      required: true
-      must_exist: true
+      description: The name of the executable to find the path of.
+      required: false
+    - name: "--file"
+      type: string
+      description: Path to check if file exists.
+      required: false
 
   resources:
     - type: bash_script
-      path: ./check_which.sh
+      path: ./check_requirements.sh
 
 platforms:
   - type: docker
@@ -35,14 +37,6 @@ platforms:
     image: debian:bullseye-slim
     target_image: "viash_requirement_apt"
     id: "viash_requirement_apt"
-    setup:
-      - type: apt
-        packages:
-          - aptitude
-  - type: docker
-    image: rocker/tidyverse
-    target_image: "viash_requirement_apt2"
-    id: "viash_requirement_apt2"
     setup:
       - type: apt
         packages:
