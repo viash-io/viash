@@ -16,3 +16,4 @@ Makefile
 .Rhistory
 *.Rproj
 .idea
+project/metals.sbt
