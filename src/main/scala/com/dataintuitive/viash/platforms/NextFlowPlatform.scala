@@ -62,62 +62,73 @@ case class NextFlowPlatform(
     // the params structure. the function name is prefixed as a namespace
     // identifier. A "__" is used to separate namespace and arg/option.
 
-    val namespacedParameters =
+    val namespacedParameters:List[ConfigTuple] =
       functionality.arguments.map { dataObject =>
         namespacedValueTuple(
           dataObject.plainName.replace("-", "_"),
           dataObject.default.map(_.toString).getOrElse("value_not_found")
-        )
+        )(fun)
       }
 
-    val argumentsAsTuple =
+    val argumentsAsTuple:List[ConfigTuple] =
       if (functionality.arguments.nonEmpty) {
         List(
-          "arguments" → functionality.arguments.map(_.toTuple)
+          "arguments" → NestedValue(functionality.arguments.map(dataObjectToConfigTuple(_)))
         )
       } else {
         Nil
       }
 
-    val extensionsAsTuple = outputFileExtO match {
+    val extensionsAsTuple:List[ConfigTuple] = outputFileExtO match {
       case Some(ext) => List(
-        "extensions" → List(("out", ext))
+        "extensions" → NestedValue(List("out" -> ext))
       )
       case None => Nil
     }
 
-    val imageName = {
+    val imageName:String = {
       val autogen = functionality.namespace.map( _ + "/" + functionality.name).getOrElse(functionality.name)
       image.getOrElse(autogen)
     }
+
+    val mainParams:List[ConfigTuple] = List(
+        "name" → functionality.name,
+        "container" → (imageName + ":" + version.map(_.toString).getOrElse("latest")).toString,
+        "command" → executionCode
+    )
+
+    // fetch tests
+    val tests = functionality.tests.getOrElse(Nil)
+    val testPaths = tests.map(test => test.filename).toList
+    val testScript:List[String] =
+        tests.filter(_.isInstanceOf[Script]).map{
+          case test: Script => test.filename
+        }
 
     /**
      * A few notes:
      * 1. input and output are initialized as empty strings, so that no warnings appear.
      * 2. id is initialized as empty string, which makes sense in test scenarios.
      */
-    val asNestedTuples: List[(String, Any)] = List(
+    val asNestedTuples: List[ConfigTuple] = List(
       "docker.enabled" → true,
       "process.container" → "dataintuitive/portash",
-      "params" → {
+      "params" → NestedValue(
         namespacedParameters :::
-          List(
-            "id" → "",
-            "dockerPrefix" -> "",
-            "input" → "",
-            "output" → "",
-            functionality.name → {
-              List(
-                "name" → functionality.name,
-                "container" → (imageName + ":" + version.map(_.toString).getOrElse("latest")),
-                "command" → executionCode
-              ) :::
-                extensionsAsTuple :::
-                argumentsAsTuple
-            }
-          )
-      }
-    )
+        List(
+          tupleToConfigTuple("id" → ""),
+          tupleToConfigTuple("dockerPrefix" -> ""),
+          tupleToConfigTuple("input" → ""),
+          tupleToConfigTuple("output" → ""),
+          tupleToConfigTuple("testScript" -> testScript.head),
+          tupleToConfigTuple("testResources" -> testPaths),
+          tupleToConfigTuple(functionality.name → NestedValue(
+            mainParams :::
+            extensionsAsTuple :::
+            argumentsAsTuple
+          ))
+        )
+    ))
 
     val setup_nextflowconfig = PlainFile(
       dest = Some("nextflow.config"),
@@ -127,12 +138,6 @@ case class NextFlowPlatform(
     val setup_main_header =
       s"""nextflow.preview.dsl=2
          |import java.nio.file.Paths
-         |if (!params.containsKey("input") || params.input == "") {
-         |    exit 1, "ERROR: Please provide a --input parameter containing an input file/dir or a wildcard expression"
-         |}
-         |if (!params.containsKey("output") || params.output == "" ) {
-         |    exit 1, "ERROR: Please provide a --output parameter for storing the output"
-         |}
          |""".stripMargin
 
     val setup_main_utils =
@@ -316,19 +321,26 @@ case class NextFlowPlatform(
          |  output:
          |    tuple val("$${id}"), path("$outputStr")
          |  script:
-         |    \"\"\"
-         |    # Some useful stuff
-         |    export NUMBA_CACHE_DIR=/tmp/numba-cache
-         |    # Running the pre-hook when necessary
-         |    $preHook
-         |    # Adding NXF's `$$moduleDir` to the path in order to resolve our own wrappers
-         |    export PATH="$${moduleDir}:\\$$PATH"
-         |    # Echo what will be run, handy when looking at the .command.log file
-         |    echo Running: $$cli
-         |    # Actually run the command
-         |    $$cli
-         |    \"\"\"
-         |
+         |    if (params.test)
+         |        \"\"\"
+         |        # Some useful stuff
+         |        export NUMBA_CACHE_DIR=/tmp/numba-cache
+         |        # Running the pre-hook when necessary
+         |        $preHook
+         |        # Adding NXF's `$$moduleDir` to the path in order to resolve our own wrappers
+         |        export PATH="./:$${moduleDir}:\\$$PATH"
+         |        run_test.sh > $$output
+         |        \"\"\"
+         |    else
+         |        \"\"\"
+         |        # Some useful stuff
+         |        export NUMBA_CACHE_DIR=/tmp/numba-cache
+         |        # Running the pre-hook when necessary
+         |        $preHook
+         |        # Adding NXF's `$$moduleDir` to the path in order to resolve our own wrappers
+         |        export PATH="$${moduleDir}:\\$$PATH"
+         |        $$cli
+         |        \"\"\"
          |}
          |""".stripMargin
     }
@@ -446,35 +458,64 @@ case class NextFlowPlatform(
 }
 
 object NextFlowUtils {
+
+  import scala.reflect.runtime.universe._
+
   def quote(str: String): String = '"' + str + '"'
 
   def quoteLong(str: String): String = str.replace("-", "_")
 
-  def mapToConfig(m: (String, Any), indent: String = ""): String = m match {
-    case (k: String, v: List[_]) =>
-      val content = v.map { pair =>
-        // cast pair because type is removed due to type erasure
-        mapToConfig(pair.asInstanceOf[(String, Any)], indent + "  ")
-      }.mkString("\n")
+  abstract trait ValueType
 
-      s"""$indent$k {
-         |$content
-         |$indent}""".stripMargin
-    case (k: String, v: String) => s"""$indent$k = ${quote(v)}"""
-    case (k: String, v: Boolean) => s"""$indent$k = ${v.toString}"""
-    case (k: String, v: Direction) => s"""$indent$k = ${quote(v.toString)}"""
-    case (k: String, v: Char) => s"""$indent$k = ${quote(v.toString)}"""
-    case _ => indent + "Parsing ERROR - Not implemented yet " + m
+  case class PlainValue[A:TypeTag](val v:A) extends ValueType {
+    def toConfig:String = v match {
+      case s: String if typeOf[String] =:= typeOf[A] =>
+        s"""${quote(s)}"""
+      case b: Boolean if typeOf[Boolean] =:= typeOf[A] =>
+        s"""${b.toString}"""
+      case c: Char if typeOf[Char] =:= typeOf[A]  =>
+        s"""${quote(c.toString)}"""
+      case i: Int if typeOf[Int] =:= typeOf[A]  =>
+        s"""${i}"""
+      case l: List[_] =>
+        l.map(el => quote(el.toString)).mkString("[ ", ", ", " ]")
+      case _ =>
+        "Parsing ERROR - Not implemented yet " + v
+    }
   }
 
-  def listMapToConfig(m: List[(String, Any)]): String = {
-    m.map(mapToConfig(_)).mkString("\n")
+  case class ConfigTuple(val tuple: (String,ValueType)) {
+
+      def toConfig(indent: String = "  "):String = {
+          val (k,v) = tuple
+          v match {
+              case pv: PlainValue[_] =>
+                  s"""$indent$k = ${pv.toConfig}"""
+              case NestedValue(nv) =>
+                  nv.map(_.toConfig(indent + "  ")).mkString(s"$indent$k {\n", "\n", s"\n$indent}")
+          }
+      }
   }
 
-  def namespacedValueTuple(key: String, value: String)(implicit fun: Functionality): (String, String) =
+  case class NestedValue(val v:List[ConfigTuple]) extends ValueType
+
+  implicit def tupleToConfigTuple[A:TypeTag](tuple: (String, A)):ConfigTuple = {
+      val (k,v) = tuple
+      v match {
+          case NestedValue(nv) => new ConfigTuple((k, NestedValue(nv)))
+        case _ => new ConfigTuple((k, PlainValue(v)))
+      }
+  }
+
+  def listMapToConfig(m: List[ConfigTuple]): String = {
+    m.map(_.toConfig()).mkString("\n")
+  }
+
+  def namespacedValueTuple(key: String, value: String)(implicit fun: Functionality): ConfigTuple =
     (s"${fun.name}__$key", value)
 
-  implicit class RichDataObject[T](val dataObject: DataObject[T])(implicit fun: Functionality) {
+  implicit def dataObjectToConfigTuple[T:TypeTag](dataObject: DataObject[T])(implicit fun: Functionality):ConfigTuple = {
+
     def valuePointer(key: String): String =
       s"$${params.${fun.name}__$key}"
 
@@ -482,23 +523,18 @@ object NextFlowUtils {
       valuePointer(dataObject.plainName.replace("-", "_"))
     }
 
-    def toTuple: (String, List[(String, Any)]) = {
-      quoteLong(dataObject.plainName) → {
-        List(
-          "name" → dataObject.plainName,
-          "otype" → dataObject.otype
-        ) :::
-          dataObject.description.map("description" → _).toList :::
-          dataObject.default.map(x => "value" → valueOrPointer(x.toString)).toList :::
-          List(
-            "required" → dataObject.required,
-            "type" → dataObject.`type`,
-            "direction" → dataObject.direction,
-            "multiple" → dataObject.multiple,
-            "multiple_sep" -> dataObject.multiple_sep
-          )
-      }
-    }
+    quoteLong(dataObject.plainName) → NestedValue(
+      tupleToConfigTuple("name" → dataObject.plainName) ::
+      tupleToConfigTuple("otype" → dataObject.otype) ::
+      tupleToConfigTuple("required" → dataObject.required) ::
+      tupleToConfigTuple("type" → dataObject.`type`) ::
+      tupleToConfigTuple("direction" → dataObject.direction.toString) ::
+      tupleToConfigTuple("multiple" → dataObject.multiple) ::
+      tupleToConfigTuple("multiple_sep" -> dataObject.multiple_sep) ::
+      dataObject.description
+        .map(x => List(tupleToConfigTuple("description" → x.toString))).getOrElse(Nil) :::
+      dataObject.default
+        .map(x => List(tupleToConfigTuple("value" → valueOrPointer(x.toString)))).getOrElse(Nil)
+      )
   }
-
 }
