@@ -36,6 +36,37 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, false)
   }
 
+  test("Check standard test output with trailing arguments", DockerTest) {
+    val testText = TestHelper.testMain(
+      Array(
+        "test",
+        configFile,
+        "-p", "docker"
+      ))
+
+    assert(testText.contains("Running tests in temporary directory: "))
+    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testText.contains("Cleaning up temporary directory"))
+
+    checkTempDirAndRemove(testText, false)
+  }
+
+  test("Check standard test output with leading and trailing arguments", DockerTest) {
+    val testText = TestHelper.testMain(
+      Array(
+        "test",
+        "-p", "docker",
+        configFile,
+        "-k", "false"
+      ))
+
+    assert(testText.contains("Running tests in temporary directory: "))
+    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testText.contains("Cleaning up temporary directory"))
+
+    checkTempDirAndRemove(testText, false)
+  }
+
   test("Check test output when no tests are specified in the functionality file", NativeTest) {
     val testText = TestHelper.testMain(
       Array(

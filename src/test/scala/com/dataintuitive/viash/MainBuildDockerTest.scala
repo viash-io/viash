@@ -157,6 +157,18 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
 
     assert(stdout.contains("INFO: Parsed input arguments"))
   }
+
+  test("viash build with trailing arguments") {
+    TestHelper.testMain(Array(
+      "build",
+      configFile,
+      "-p", "docker",
+      "-o", tempFolStr,
+    ))
+
+    assert(executable.exists)
+    assert(executable.canExecute)
+  }
   //</editor-fold>
   //<editor-fold desc="Test benches to check building tagged docker images">
   test("Get tagged version of a docker image for bash 5.0", DockerTest) {
