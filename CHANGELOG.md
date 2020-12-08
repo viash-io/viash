@@ -1,3 +1,16 @@
+# viash 0.3.1
+
+## MINOR CHANGES
+
+* Allow parameters before and after specifying a viash config yaml. For example, 
+  both following commands now work. Up until now, only the latter would work.
+  - `viash run config.vsh.yaml -p docker`
+  - `viash run -p docker config.vsh.yaml`
+
+## BUG FIXES
+
+* `NXF viash build`: Do not assume each config yaml has at least one test.
+
 
 # viash 0.3.0 (2020-11-24)
 
