@@ -62,7 +62,7 @@ case class NextFlowPlatform(
     // the params structure. the function name is prefixed as a namespace
     // identifier. A "__" is used to separate namespace and arg/option.
 
-    val namespacedParameters:List[ConfigTuple] =
+    val namespacedParameters: List[ConfigTuple] =
       functionality.arguments.map { dataObject =>
         namespacedValueTuple(
           dataObject.plainName.replace("-", "_"),
@@ -70,7 +70,7 @@ case class NextFlowPlatform(
         )(fun)
       }
 
-    val argumentsAsTuple:List[ConfigTuple] =
+    val argumentsAsTuple: List[ConfigTuple] =
       if (functionality.arguments.nonEmpty) {
         List(
           "arguments" → NestedValue(functionality.arguments.map(dataObjectToConfigTuple(_)))
@@ -79,19 +79,19 @@ case class NextFlowPlatform(
         Nil
       }
 
-    val extensionsAsTuple:List[ConfigTuple] = outputFileExtO match {
+    val extensionsAsTuple: List[ConfigTuple] = outputFileExtO match {
       case Some(ext) => List(
         "extensions" → NestedValue(List("out" -> ext))
       )
       case None => Nil
     }
 
-    val imageName:String = {
+    val imageName: String = {
       val autogen = functionality.namespace.map( _ + "/" + functionality.name).getOrElse(functionality.name)
       image.getOrElse(autogen)
     }
 
-    val mainParams:List[ConfigTuple] = List(
+    val mainParams: List[ConfigTuple] = List(
         "name" → functionality.name,
         "container" → (imageName + ":" + version.map(_.toString).getOrElse("latest")).toString,
         "command" → executionCode
@@ -99,10 +99,11 @@ case class NextFlowPlatform(
 
     // fetch tests
     val tests = functionality.tests.getOrElse(Nil)
-    val testPaths = tests.map(test => test.filename).toList
-    val testScript:List[String] =
-        tests.filter(_.isInstanceOf[Script]).map{
-          case test: Script => test.filename
+    val testPaths = tests.map(test => test.filename)
+    val testScript: List[String] =
+        tests.flatMap{
+          case test: Script => Some(test.filename)
+          case _ => None
         }
 
     /**
@@ -120,7 +121,7 @@ case class NextFlowPlatform(
           tupleToConfigTuple("dockerPrefix" -> ""),
           tupleToConfigTuple("input" → ""),
           tupleToConfigTuple("output" → ""),
-          tupleToConfigTuple("testScript" -> testScript.head),
+          tupleToConfigTuple("testScript" -> testScript.headOption.getOrElse("")), // TODO: what about when there are multiple tests?
           tupleToConfigTuple("testResources" -> testPaths),
           tupleToConfigTuple(functionality.name → NestedValue(
             mainParams :::
