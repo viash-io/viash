@@ -15,6 +15,7 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
   private val configNoTestFile = getClass.getResource("/testbash/config_no_tests.vsh.yaml").getPath
   private val configFailedTestFile = getClass.getResource("/testbash/config_failed_test.vsh.yaml").getPath
   private val configFailedBuildFile = getClass.getResource("/testbash/config_failed_build.vsh.yaml").getPath
+  private val configNonexistentTestFile = getClass.getResource("/testbash/config_nonexistent_test.vsh.yaml").getPath
   private val configResourcesCopyFile = getClass.getResource("/testbash/config_resource_test.vsh.yaml").getPath
 
   // custom platform yamls
@@ -104,6 +105,19 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
 
     assert(testText.contains("Running tests in temporary directory: "))
     assert(testText.contains("ERROR! Setup failed!"))
+    assert(!testText.contains("Cleaning up temporary directory"))
+
+    checkTempDirAndRemove(testText, true)
+  }
+
+  test("Check test output when test doesn't exist", DockerTest) {
+    val testText = TestHelper.testMainException[RuntimeException](
+      Array(
+        "test", configNonexistentTestFile
+      ))
+
+    assert(testText.contains("Running tests in temporary directory: "))
+    assert(testText.contains("ERROR! Only 0 out of 1 test scripts succeeded!"))
     assert(!testText.contains("Cleaning up temporary directory"))
 
     checkTempDirAndRemove(testText, true)
