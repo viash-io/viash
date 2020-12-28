@@ -17,6 +17,7 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
   private val configFailedBuildFile = getClass.getResource("/testbash/config_failed_build.vsh.yaml").getPath
   private val configNonexistentTestFile = getClass.getResource("/testbash/config_nonexistent_test.vsh.yaml").getPath
   private val configResourcesCopyFile = getClass.getResource("/testbash/config_resource_test.vsh.yaml").getPath
+  private val configResourcesUnsupportedProtocolFile = getClass.getResource("/testbash/config_resource_unsupported_protocol.vsh.yaml").getPath
 
   // custom platform yamls
   private val customPlatformFile = getClass.getResource("/testbash/platform_custom.yaml").getPath
@@ -279,6 +280,24 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
     }
 
     Directory(tmpFolderResourceDestinationFolder).deleteRecursively()
+    checkTempDirAndRemove(testText, true)
+  }
+
+  test("Check resources with unsupported format", DockerTest) {
+    // generate viash script
+    val testText = TestHelper.testMainException[RuntimeException](
+      Array(
+        "test",
+        "-p", "docker",
+        "-k", "true",
+        configResourcesUnsupportedProtocolFile
+      ))
+
+    // basic checks to see if standard test/build was correct
+    assert(testText.contains("Running tests in temporary directory: "))
+    assert(!testText.contains("WARNING! No tests found!"))
+    assert(!testText.contains("Cleaning up temporary directory"))
+
     checkTempDirAndRemove(testText, true)
   }
   //</editor-fold>
