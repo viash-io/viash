@@ -28,6 +28,9 @@ functionality:
     - name: "--truth"
       type: boolean_true
       description: A switch flag.
+    - name: "--falsehood"
+      type: boolean_false
+      description: A switch flag which is false when specified.
     - name: "--output"
       alternatives: [ "-o" ]
       type: file
