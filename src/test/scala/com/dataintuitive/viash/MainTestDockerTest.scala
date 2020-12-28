@@ -16,6 +16,10 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
   private val configFailedTestFile = getClass.getResource("/testbash/config_failed_test.vsh.yaml").getPath
   private val configFailedBuildFile = getClass.getResource("/testbash/config_failed_build.vsh.yaml").getPath
   private val configNonexistentTestFile = getClass.getResource("/testbash/config_nonexistent_test.vsh.yaml").getPath
+
+  private val configInvalidFile = getClass.getResource("/testbash/invalid_configs/config_invalid.vsh.yaml").getPath
+  private val configTextFile = getClass.getResource("/testbash/invalid_configs/config.txt").getPath
+
   private val configResourcesCopyFile = getClass.getResource("/testbash/config_resource_test.vsh.yaml").getPath
   private val configResourcesUnsupportedProtocolFile = getClass.getResource("/testbash/config_resource_unsupported_protocol.vsh.yaml").getPath
 
@@ -122,6 +126,31 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
     assert(!testText.contains("Cleaning up temporary directory"))
 
     checkTempDirAndRemove(testText, true)
+  }
+  //</editor-fold>
+  //<editor-fold desc="Invalid config files">
+
+  test("Check invalid config file", DockerTest) {
+    val testText = TestHelper.testMainException[RuntimeException](
+      Array(
+        "test",
+        "-p", "docker",
+        configInvalidFile
+      ))
+
+    assert(testText.equals(""))
+
+  }
+
+  test("Check valid viash config yaml but with wrong file extension") {
+    val testText = TestHelper.testMainException[RuntimeException](
+      Array(
+        "test",
+        "-p", "docker",
+        configTextFile
+      ))
+
+    assert(testText.equals(""))
   }
   //</editor-fold>
   //<editor-fold desc="Check behavior of successful and failed tests with -keep flag specified">
