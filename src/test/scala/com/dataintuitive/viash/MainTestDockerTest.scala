@@ -253,7 +253,7 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
     // List all expected resources and their md5sum
     val expectedResources = List(
       //("check_bash_version.sh", "0c3c134d4ff0ea3a4a3b32e09fb7c100"),
-      ("code.sh", "24ce13258e830e6a5ff64fa579c433a9"),
+      ("code.sh", "efa9e1aa1c5f2a0b91f558ead5917c68"),
       ("NOTICE", "72227b5fda1a673b084aef2f1b580ec3"),
       ("resource1.txt", "bc9171172c4723589a247f99b838732d"),
       ("resource2.txt", "9cd530447200979dbf9e117915cbcc74"),

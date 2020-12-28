@@ -31,6 +31,9 @@ functionality:
     - name: "--falsehood"
       type: boolean_false
       description: A switch flag which is false when specified.
+    - name: "--reality"
+      type: boolean
+      description: A switch flag without predetermined state.
     - name: "--output"
       alternatives: [ "-o" ]
       type: file
