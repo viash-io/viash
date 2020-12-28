@@ -276,7 +276,7 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
       assert(resourceFile.exists, s"Could not find $name")
 
       val hash = TestHelper.computeHash(resourceFile.getPath)
-      assert(md5sum == hash, s"Calculated md5sum doesn't match the given md5sum for $name")
+      assert(hash == md5sum, s"Calculated md5sum doesn't match the given md5sum for $name")
     }
 
     Directory(tmpFolderResourceDestinationFolder).deleteRecursively()
