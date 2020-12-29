@@ -15,6 +15,8 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
   // which platform to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 
+  private val configPlatformFile = getClass.getResource(s"/testbash/config_platform_docker.vsh.yaml").getPath
+
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
 
@@ -168,6 +170,28 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
 
     assert(executable.exists)
     assert(executable.canExecute)
+  }
+
+  test("Specify platform (docker) in config yaml", DockerTest) {
+    val testText = TestHelper.testMain(Array(
+      "build",
+      "-o", tempFolStr,
+      "-m",
+      configPlatformFile,
+    ))
+
+    println(s"testText: $testText")
+
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    val out = Exec.run2(
+      Seq(executable.toString, "---setup")
+    )
+    assert(out.exitValue == 0)
+
+    val regexPlatform = "platform:\\s*<NA>".r
+    assert(regexPlatform.findFirstIn(testText).isDefined, testText)
   }
   //</editor-fold>
   //<editor-fold desc="Test benches to check building tagged docker images">
