@@ -17,8 +17,9 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
   private val configFailedBuildFile = getClass.getResource("/testbash/config_failed_build.vsh.yaml").getPath
   private val configNonexistentTestFile = getClass.getResource("/testbash/config_nonexistent_test.vsh.yaml").getPath
 
-  private val configInvalidFile = getClass.getResource("/testbash/invalid_configs/config_invalid.vsh.yaml").getPath
+  private val configMissingFunctionalityFile = getClass.getResource("/testbash/invalid_configs/config_missing_functionality.vsh.yaml").getPath
   private val configTextFile = getClass.getResource("/testbash/invalid_configs/config.txt").getPath
+  private val configInvalidYamlFile = getClass.getResource("/testbash/invalid_configs/config_invalid_yaml.vsh.yaml").getPath
 
   private val configResourcesCopyFile = getClass.getResource("/testbash/config_resource_test.vsh.yaml").getPath
   private val configResourcesUnsupportedProtocolFile = getClass.getResource("/testbash/config_resource_unsupported_protocol.vsh.yaml").getPath
@@ -129,28 +130,40 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
   }
   //</editor-fold>
   //<editor-fold desc="Invalid config files">
-
-  test("Check invalid config file", DockerTest) {
-    val testText = TestHelper.testMainException[RuntimeException](
+  test("Check config file without 'functionality' specified", DockerTest) {
+    val testOutput = TestHelper.testMainException2[RuntimeException](
       Array(
         "test",
         "-p", "docker",
-        configInvalidFile
+        configMissingFunctionalityFile
       ))
 
-    assert(testText.equals(""))
-
+    assert(testOutput.exceptionText.contains("must be a yaml file containing a viash config."))
+    assert(testOutput.output.equals(""))
   }
 
   test("Check valid viash config yaml but with wrong file extension") {
-    val testText = TestHelper.testMainException[RuntimeException](
+    val testOutput = TestHelper.testMainException2[RuntimeException](
       Array(
         "test",
         "-p", "docker",
         configTextFile
       ))
 
-    assert(testText.equals(""))
+    assert(testOutput.exceptionText.contains("must be a yaml file containing a viash config."))
+    assert(testOutput.output.equals(""))
+  }
+
+  test("Check invalid viash config yaml") {
+    val testOutput = TestHelper.testMainException2[io.circe.ParsingFailure](
+      Array(
+        "test",
+        "-p", "docker",
+        configInvalidYamlFile
+      ))
+
+    assert(testOutput.exceptionText.contains("while parsing a flow mapping"))
+    assert(testOutput.output.equals(""))
   }
   //</editor-fold>
   //<editor-fold desc="Check behavior of successful and failed tests with -keep flag specified">
