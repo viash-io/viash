@@ -316,8 +316,6 @@ class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
       ("target_folder/relocated_file_4.txt", "aa2037b3d308bcb6a78a3d4fbf04b297")
     )
 
-    //Paths.get(tempPath, "build_executable", "resource_folder").toFile.setExecutable(true)
-
     // Check all resources can be found in the folder
     for ((name, md5sum) <- expectedResources) {
       val resourceFile = Paths.get(tempPath, "build_executable", name).toFile
