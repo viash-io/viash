@@ -36,16 +36,8 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
   private val configResourcesUnsupportedProtocolFile = getClass.getResource("/testbash/config_resource_unsupported_protocol.vsh.yaml").getPath
 
   private val configDockerOptionsChownFile = getClass.getResource("/testbash/docker_options/config_chown.vsh.yaml").getPath
-  private val functionalityDockerOptionsChown = Config.read(configDockerOptionsChownFile, modifyFun = false).functionality
-  private val executableDockerOptionsChownFile = Paths.get(tempFolStr, functionalityDockerOptionsChown.name).toFile
-
   private val configDockerOptionsChownTwoOutputFile = getClass.getResource("/testbash/docker_options/config_chown_two_output.vsh.yaml").getPath
-  private val functionalityDockerOptionsChownTwoOutput = Config.read(configDockerOptionsChownTwoOutputFile, modifyFun = false).functionality
-  private val executableDockerOptionsChownTwoOutputFile = Paths.get(tempFolStr, functionalityDockerOptionsChownTwoOutput.name).toFile
-
   private val configDockerOptionsChownMultipleOutputFile = getClass.getResource("/testbash/docker_options/config_chown_multiple_output.vsh.yaml").getPath
-  private val functionalityDockerOptionsChownMultipleOutput = Config.read(configDockerOptionsChownMultipleOutputFile, modifyFun = false).functionality
-  private val executableDockerOptionsChownMultipleOutputFile = Paths.get(tempFolStr, functionalityDockerOptionsChownMultipleOutput.name).toFile
 
 
   //<editor-fold desc="Test benches to build a generic script and run various commands to see if the functionality is correct">
@@ -684,25 +676,29 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
   //</editor-fold>
   //<editor-fold desc="Test docker options chown, port and workdir">
   def docker_chown_get_owner(dockerId: String): String = {
+    val localConfig = configDockerOptionsChownFile
+    val localFunctionality = Config.read(localConfig, modifyFun = false).functionality
+    val localExecutable = Paths.get(tempFolStr, localFunctionality.name).toFile
+
     // prepare the environment
     TestHelper.testMain(Array(
       "build",
       "-p", dockerId,
       "-o", tempFolStr,
       "--setup",
-      configDockerOptionsChownFile
+      localConfig
     ))
 
-    assert(executableDockerOptionsChownFile.exists)
-    assert(executableDockerOptionsChownFile.canExecute)
+    assert(localExecutable.exists)
+    assert(localExecutable.canExecute)
 
     // run the script
     val output = Paths.get(tempFolStr, s"output_{$dockerId}.txt").toFile
 
     Exec.run(
       Seq(
-        executableDockerOptionsChownFile.toString,
-        executableDockerOptionsChownFile.toString,
+        localExecutable.toString,
+        localExecutable.toString,
         "--real_number", "10.5",
         "--whole_number=10",
         "-s", "a string with a few spaces",
@@ -717,17 +713,21 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
   }
 
   def docker_chown_get_owner_two_outputs(dockerId: String): (String,String) = {
+    val localConfig = configDockerOptionsChownTwoOutputFile
+    val localFunctionality = Config.read(localConfig, modifyFun = false).functionality
+    val localExecutable = Paths.get(tempFolStr, localFunctionality.name).toFile
+
     // prepare the environment
     TestHelper.testMain(Array(
       "build",
       "-p", dockerId,
       "-o", tempFolStr,
       "--setup",
-      configDockerOptionsChownTwoOutputFile
+      localConfig
     ))
 
-    assert(executableDockerOptionsChownTwoOutputFile.exists)
-    assert(executableDockerOptionsChownTwoOutputFile.canExecute)
+    assert(localExecutable.exists)
+    assert(localExecutable.canExecute)
 
     // run the script
     val output = Paths.get(tempFolStr, "output_" + dockerId + ".txt").toFile
@@ -735,8 +735,8 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
 
     val runOut = Exec.run(
       Seq(
-        executableDockerOptionsChownTwoOutputFile.toString,
-        executableDockerOptionsChownTwoOutputFile.toString,
+        localExecutable.toString,
+        localExecutable.toString,
         "--real_number", "10.5",
         "--whole_number=10",
         "-s", "a string with a few spaces",
@@ -754,17 +754,21 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
   }
 
   def docker_chown_get_owner_multiple_outputs(dockerId: String): (String,String) = {
+    val localConfig = configDockerOptionsChownMultipleOutputFile
+    val localFunctionality = Config.read(localConfig, modifyFun = false).functionality
+    val localExecutable = Paths.get(tempFolStr, localFunctionality.name).toFile
+
     // prepare the environment
     TestHelper.testMain(Array(
       "build",
       "-p", dockerId,
       "-o", tempFolStr,
       "--setup",
-      configDockerOptionsChownMultipleOutputFile
+      localConfig
     ))
 
-    assert(executableDockerOptionsChownMultipleOutputFile.exists)
-    assert(executableDockerOptionsChownMultipleOutputFile.canExecute)
+    assert(localExecutable.exists)
+    assert(localExecutable.canExecute)
 
     // run the script
     val output = Paths.get(tempFolStr, "output_" + dockerId + ".txt").toFile
@@ -772,8 +776,8 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
 
     Exec.run(
       Seq(
-        executableDockerOptionsChownMultipleOutputFile.toString,
-        executableDockerOptionsChownMultipleOutputFile.toString,
+        localExecutable.toString,
+        localExecutable.toString,
         "--real_number", "10.5",
         "--whole_number=10",
         "-s", "a string with a few spaces",
