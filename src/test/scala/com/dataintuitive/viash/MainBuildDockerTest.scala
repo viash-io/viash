@@ -35,7 +35,17 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
   private val configResourcesCopyFile = getClass.getResource("/testbash/config_resource_test.vsh.yaml").getPath
   private val configResourcesUnsupportedProtocolFile = getClass.getResource("/testbash/config_resource_unsupported_protocol.vsh.yaml").getPath
 
-  private val configDockerOptionsFile = getClass.getResource("/testbash/config_docker_options.vsh.yaml").getPath
+  private val configDockerOptionsChownFile = getClass.getResource("/testbash/docker_options/config_chown.vsh.yaml").getPath
+  private val functionalityDockerOptionsChown = Config.read(configDockerOptionsChownFile, modifyFun = false).functionality
+  private val executableDockerOptionsChownFile = Paths.get(tempFolStr, functionalityDockerOptionsChown.name).toFile
+
+  private val configDockerOptionsChownTwoOutputFile = getClass.getResource("/testbash/docker_options/config_chown_two_output.vsh.yaml").getPath
+  private val functionalityDockerOptionsChownTwoOutput = Config.read(configDockerOptionsChownTwoOutputFile, modifyFun = false).functionality
+  private val executableDockerOptionsChownTwoOutputFile = Paths.get(tempFolStr, functionalityDockerOptionsChownTwoOutput.name).toFile
+
+  private val configDockerOptionsChownMultipleOutputFile = getClass.getResource("/testbash/docker_options/config_chown_multiple_output.vsh.yaml").getPath
+  private val functionalityDockerOptionsChownMultipleOutput = Config.read(configDockerOptionsChownMultipleOutputFile, modifyFun = false).functionality
+  private val executableDockerOptionsChownMultipleOutputFile = Paths.get(tempFolStr, functionalityDockerOptionsChownMultipleOutput.name).toFile
 
 
   //<editor-fold desc="Test benches to build a generic script and run various commands to see if the functionality is correct">
@@ -680,19 +690,19 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
       "-p", dockerId,
       "-o", tempFolStr,
       "--setup",
-      configDockerOptionsFile
+      configDockerOptionsChownFile
     ))
 
-    assert(executableBashTagFile.exists)
-    assert(executableBashTagFile.canExecute)
+    assert(executableDockerOptionsChownFile.exists)
+    assert(executableDockerOptionsChownFile.canExecute)
 
     // run the script
     val output = Paths.get(tempFolStr, s"output_{$dockerId}.txt").toFile
 
     Exec.run(
       Seq(
-        executable.toString,
-        executable.toString,
+        executableDockerOptionsChownFile.toString,
+        executableDockerOptionsChownFile.toString,
         "--real_number", "10.5",
         "--whole_number=10",
         "-s", "a string with a few spaces",
@@ -706,19 +716,138 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
     owner.toString
   }
 
+  def docker_chown_get_owner_two_outputs(dockerId: String): (String,String) = {
+    // prepare the environment
+    TestHelper.testMain(Array(
+      "build",
+      "-p", dockerId,
+      "-o", tempFolStr,
+      "--setup",
+      configDockerOptionsChownTwoOutputFile
+    ))
+
+    assert(executableDockerOptionsChownTwoOutputFile.exists)
+    assert(executableDockerOptionsChownTwoOutputFile.canExecute)
+
+    // run the script
+    val output = Paths.get(tempFolStr, "output_" + dockerId + ".txt").toFile
+    val output2 = Paths.get(tempFolStr, "output_" + dockerId +"_2.txt").toFile
+
+    val runOut = Exec.run(
+      Seq(
+        executableDockerOptionsChownTwoOutputFile.toString,
+        executableDockerOptionsChownTwoOutputFile.toString,
+        "--real_number", "10.5",
+        "--whole_number=10",
+        "-s", "a string with a few spaces",
+        "--output", output.getPath,
+        "--output2", output2.getPath
+      )
+    )
+
+    assert(output.exists())
+    assert(output2.exists())
+
+    val owner = Files.getOwner(output.toPath)
+    val owner2 = Files.getOwner(output2.toPath)
+    (owner.toString, owner2.toString)
+  }
+
+  def docker_chown_get_owner_multiple_outputs(dockerId: String): (String,String) = {
+    // prepare the environment
+    TestHelper.testMain(Array(
+      "build",
+      "-p", dockerId,
+      "-o", tempFolStr,
+      "--setup",
+      configDockerOptionsChownMultipleOutputFile
+    ))
+
+    assert(executableDockerOptionsChownMultipleOutputFile.exists)
+    assert(executableDockerOptionsChownMultipleOutputFile.canExecute)
+
+    // run the script
+    val output = Paths.get(tempFolStr, "output_" + dockerId + ".txt").toFile
+    val output2 = Paths.get(tempFolStr, "output_" + dockerId +"_2.txt").toFile
+
+    Exec.run(
+      Seq(
+        executableDockerOptionsChownMultipleOutputFile.toString,
+        executableDockerOptionsChownMultipleOutputFile.toString,
+        "--real_number", "10.5",
+        "--whole_number=10",
+        "-s", "a string with a few spaces",
+        "--output", output.getPath, output2.getPath
+      )
+    )
+
+    assert(output.exists())
+    assert(output2.exists())
+
+    val owner = Files.getOwner(output.toPath)
+    val owner2 = Files.getOwner(output2.toPath)
+    (owner.toString, owner2.toString)
+  }
+
   test("Test default behaviour when chown is not specified", DockerTest) {
     val owner = docker_chown_get_owner("chown_default")
+    assert(!owner.isEmpty)
     assert(owner != "root")
   }
 
   test("Test default behaviour when chown is set to true", DockerTest) {
     val owner = docker_chown_get_owner("chown_true")
+    assert(!owner.isEmpty)
     assert(owner != "root")
   }
 
   test("Test default behaviour when chown is set to false", DockerTest) {
     val owner = docker_chown_get_owner("chown_false")
     assert(owner == "root")
+  }
+
+  test("Test default behaviour when chown is not specified with two output files", DockerTest) {
+    val owner = docker_chown_get_owner_two_outputs("two_chown_default")
+    assert(!owner._1.isEmpty)
+    assert(!owner._2.isEmpty)
+    assert(owner._1 != "root")
+    assert(owner._2 != "root")
+  }
+
+  test("Test default behaviour when chown is set to true with two output files", DockerTest) {
+    val owner = docker_chown_get_owner_two_outputs("two_chown_true")
+    assert(!owner._1.isEmpty)
+    assert(!owner._2.isEmpty)
+    assert(owner._1 != "root")
+    assert(owner._2 != "root")
+  }
+
+  test("Test default behaviour when chown is set to false with two output files", DockerTest) {
+    val owner = docker_chown_get_owner_two_outputs("two_chown_false")
+    assert(owner._1 == "root")
+    assert(owner._2 == "root")
+  }
+
+  test("Test default behaviour when chown is not specified with multiple output files", DockerTest) {
+    val owner = docker_chown_get_owner_multiple_outputs("multiple_chown_default")
+    assert(!owner._1.isEmpty)
+    assert(!owner._2.isEmpty)
+    assert(owner._1 != "root")
+    assert(owner._2 != "root")
+  }
+
+  test("Test default behaviour when chown is set to true with multiple output files", DockerTest) {
+    val owner = docker_chown_get_owner_multiple_outputs("multiple_chown_true")
+    assert(!owner._1.isEmpty)
+    assert(!owner._2.isEmpty)
+    assert(owner._1 != "root")
+    assert(owner._2 != "root")
+  }
+
+  test("Test default behaviour when chown is set to false with multiple output files", DockerTest) {
+    val owner = docker_chown_get_owner_multiple_outputs("multiple_chown_false")
+    assert(owner._1 == "root")
+    assert(owner._2 == "root")
   }
   //</editor-fold>
 

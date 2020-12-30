@@ -1,0 +1,78 @@
+functionality:
+  name: testbash
+  description: |
+    Prints out the parameter values.
+    Checking what happens with multiline descriptions.
+  arguments:
+    - name: "input"
+      type: file
+      description: |
+        An input file with positional arguments.
+        More checks for multiline descriptions.
+        Testing some characters that should be escaped: ` $ \
+      direction: input
+      required: true
+      must_exist: true
+    - name: "--real_number"
+      type: double
+      description: A real number with positional arguments.
+      required: true
+    - name: "--whole_number"
+      type: integer
+      description: A whole number with a standard flag.
+      required: true
+    - name: "-s"
+      type: string
+      description: A sentence or word with a short flag.
+      required: true
+    - name: "--truth"
+      type: boolean_true
+      description: A switch flag.
+    - name: "--falsehood"
+      type: boolean_false
+      description: A switch flag which is false when specified.
+    - name: "--reality"
+      type: boolean
+      description: A switch flag without predetermined state.
+    - name: "--output"
+      alternatives: [ "-o" ]
+      type: file
+      description: Write the parameters to a json file.
+      direction: output
+      multiple: true
+    - name: "--log"
+      type: file
+      description: An optional log file.
+      direction: log
+    - name: "--optional"
+      type: string
+      description: An optional string.
+    - name: "--optional_with_default"
+      type: string
+      default: "The default value."
+    - name: "--multiple"
+      type: string
+      multiple: true
+    - name: "multiple_pos"
+      type: string
+      multiple: true
+  resources:
+    - type: bash_script
+      path: ./code_multiple_output.sh
+    - path: ../resource1.txt
+    - path: https://raw.githubusercontent.com/scala/scala/2.13.x/NOTICE
+platforms:
+  - type: docker
+    image: "bash:3.2"
+    target_image: "viash_test_bash"
+    id: "multiple_chown_default"
+  - type: docker
+    image: "bash:3.2"
+    target_image: "viash_test_bash"
+    id: "multiple_chown_true"
+    chown: true
+  - type: docker
+    image: "bash:3.2"
+    target_image: "viash_test_bash"
+    id: "multiple_chown_false"
+    chown: false
