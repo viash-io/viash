@@ -35,6 +35,8 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
   private val configResourcesCopyFile = getClass.getResource("/testbash/config_resource_test.vsh.yaml").getPath
   private val configResourcesUnsupportedProtocolFile = getClass.getResource("/testbash/config_resource_unsupported_protocol.vsh.yaml").getPath
 
+  private val configDockerOptionsFile = getClass.getResource("/testbash/config_docker_options.vsh.yaml").getPath
+
 
   //<editor-fold desc="Test benches to build a generic script and run various commands to see if the functionality is correct">
   // convert testbash
@@ -668,6 +670,55 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
       ))
 
     assert(testOutput.exceptionText == "Unsupported scheme: ftp")
+  }
+  //</editor-fold>
+  //<editor-fold desc="Test docker options chown, port and workdir">
+  def docker_chown_get_owner(dockerId: String): String = {
+    // prepare the environment
+    TestHelper.testMain(Array(
+      "build",
+      "-p", dockerId,
+      "-o", tempFolStr,
+      "--setup",
+      configDockerOptionsFile
+    ))
+
+    assert(executableBashTagFile.exists)
+    assert(executableBashTagFile.canExecute)
+
+    // run the script
+    val output = Paths.get(tempFolStr, s"output_{$dockerId}.txt").toFile
+
+    Exec.run(
+      Seq(
+        executable.toString,
+        executable.toString,
+        "--real_number", "10.5",
+        "--whole_number=10",
+        "-s", "a string with a few spaces",
+        "--output", output.getPath
+      )
+    )
+
+    assert(output.exists())
+
+    val owner = Files.getOwner(output.toPath)
+    owner.toString
+  }
+
+  test("Test default behaviour when chown is not specified", DockerTest) {
+    val owner = docker_chown_get_owner("chown_default")
+    assert(owner != "root")
+  }
+
+  test("Test default behaviour when chown is set to true", DockerTest) {
+    val owner = docker_chown_get_owner("chown_true")
+    assert(owner != "root")
+  }
+
+  test("Test default behaviour when chown is set to false", DockerTest) {
+    val owner = docker_chown_get_owner("chown_false")
+    assert(owner == "root")
   }
   //</editor-fold>
 
