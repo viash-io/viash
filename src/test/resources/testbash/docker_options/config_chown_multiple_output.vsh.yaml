@@ -50,11 +50,9 @@ functionality:
     - name: "--optional_with_default"
       type: string
       default: "The default value."
-    - name: "--multiple"
-      type: string
-      multiple: true
-    - name: "multiple_pos"
-      type: string
+    - name: "output_pos"
+      type: file
+      direction: output
       multiple: true
   resources:
     - type: bash_script

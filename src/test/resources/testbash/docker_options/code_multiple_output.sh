@@ -19,16 +19,25 @@ set -e
 
 function log {
   if [ -z "$par_log" ]; then
-    echo $@
+    echo "$@"
   else
-    echo $@ >> $par_log
+    echo "$@" >> $par_log
   fi
 }
 function output {
   if [ -z "$par_output" ]; then
-    echo $@
+    echo "$@"
   else
-    echo $@ >> $par_output
+    echo "$@" >> $par_output
+
+    if [ ! -z "$par_output_pos" ]; then
+      IFS=":"
+      for var in $par_output_pos; do
+        echo "$@" >> $var
+      done
+      unset IFS
+    fi
+
   fi
 }
 
@@ -56,5 +65,4 @@ INPUT=`head -1 "$par_input"`
 output "head of input: |$INPUT|"
 RESOURCE=`head -1 "$resources_dir/resource1.txt"`
 output "head of resource1: |$RESOURCE|"
-output "multiple: |$par_multiple|"
-output "multiple_pos: |$par_multiple_pos|"
+output "output_pos: |$par_output_pos|"
