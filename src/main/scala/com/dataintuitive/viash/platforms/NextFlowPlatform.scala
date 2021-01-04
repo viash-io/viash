@@ -99,11 +99,18 @@ case class NextFlowPlatform(
 
     // fetch tests
     val tests = functionality.tests.getOrElse(Nil)
-    val testPaths = tests.map(test => test.filename).toList
+    val testPaths = tests.map(test => test.path.getOrElse("/dev/null")).toList
     val testScript:List[String] =
         tests.filter(_.isInstanceOf[Script]).map{
           case test: Script => test.filename
         }
+
+    val testConfig:List[ConfigTuple] = List("tests" -> NestedValue(
+        List(
+          tupleToConfigTuple("testScript" -> testScript.head),
+          tupleToConfigTuple("testResources" -> testPaths)
+        )
+      ))
 
     /**
      * A few notes:
@@ -120,10 +127,9 @@ case class NextFlowPlatform(
           tupleToConfigTuple("dockerPrefix" -> ""),
           tupleToConfigTuple("input" → ""),
           tupleToConfigTuple("output" → ""),
-          tupleToConfigTuple("testScript" -> testScript.head),
-          tupleToConfigTuple("testResources" -> testPaths),
           tupleToConfigTuple(functionality.name → NestedValue(
             mainParams :::
+            testConfig :::
             extensionsAsTuple :::
             argumentsAsTuple
           ))
@@ -282,7 +288,7 @@ case class NextFlowPlatform(
       }
 
       val publishDirStr = publish match {
-        case Some(true) => s"""publishDir "$publishDirString", mode: 'copy', overwrite: true"""
+        case Some(true) => s"""publishDir "$publishDirString", mode: 'copy', overwrite: true, enabled: !params.test"""
         case _ => ""
       }
 
@@ -329,7 +335,7 @@ case class NextFlowPlatform(
          |        $preHook
          |        # Adding NXF's `$$moduleDir` to the path in order to resolve our own wrappers
          |        export PATH="./:$${moduleDir}:\\$$PATH"
-         |        run_test.sh > $$output
+         |        ./$${params.${fname}.tests.testScript} | tee $$output
          |        \"\"\"
          |    else
          |        \"\"\"
@@ -347,7 +353,7 @@ case class NextFlowPlatform(
 
     val outFromInStr = functionality.function_type match {
       case Some(AsIs) => "def outputFilename = getOutputFilename(updtParams)"
-      case _ => "def outputFilename = outFromIn(filename)"
+      case _ => "def outputFilename = (!params.test) ? outFromIn(filename) : updtParams.output"
     }
 
     val setup_main_workflow =
@@ -431,6 +437,30 @@ case class NextFlowPlatform(
                    |""".stripMargin
     }
 
+    val setup_test_entrypoint = s"""
+                  |workflow test {
+                  |
+                  |   take:
+                  |   rootDir
+                  |
+                  |   main:
+                  |   params.test = true
+                  |   params.${fname}.output = "${fname}.log"
+                  |
+                  |   Channel.from(rootDir) \\
+                  |        | view \\
+                  |        | map{ p -> new Tuple3(
+                  |                    "tests",
+                  |                    params.${fname}.tests.testResources.collect{ file( p + it ) },
+                  |                    params
+                  |                )} \\
+                  |        | ${fname}
+                  |
+                  |    emit:
+                  |    ${fname}.out
+                  |}
+                  """.stripMargin
+
     val setup_main = PlainFile(
       dest = Some("main.nf"),
       text = Some(setup_main_header +
@@ -440,7 +470,8 @@ case class NextFlowPlatform(
         setup_main_overrideOutput +
         setup_main_process +
         setup_main_workflow +
-        setup_main_entrypoint)
+        setup_main_entrypoint +
+        setup_test_entrypoint)
     )
 
     val additionalResources = mainResource match {
