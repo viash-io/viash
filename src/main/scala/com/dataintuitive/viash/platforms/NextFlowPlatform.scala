@@ -105,7 +105,7 @@ case class NextFlowPlatform(
           case test: Script => test.filename
         }
 
-    // If 
+    // If no tests are defined, isDefined is set to FALSE
     val testConfig:List[ConfigTuple] = List("tests" -> NestedValue(
         List(
           tupleToConfigTuple("isDefined" -> (tests.size > 0)),
@@ -519,26 +519,25 @@ object NextFlowUtils {
   }
 
   case class ConfigTuple(val tuple: (String,ValueType)) {
-
-      def toConfig(indent: String = "  "):String = {
-          val (k,v) = tuple
-          v match {
-              case pv: PlainValue[_] =>
-                  s"""$indent$k = ${pv.toConfig}"""
-              case NestedValue(nv) =>
-                  nv.map(_.toConfig(indent + "  ")).mkString(s"$indent$k {\n", "\n", s"\n$indent}")
-          }
+    def toConfig(indent: String = "  "):String = {
+      val (k,v) = tuple
+      v match {
+        case pv: PlainValue[_] =>
+          s"""$indent$k = ${pv.toConfig}"""
+        case NestedValue(nv) =>
+          nv.map(_.toConfig(indent + "  ")).mkString(s"$indent$k {\n", "\n", s"\n$indent}")
       }
+    }
   }
 
   case class NestedValue(val v:List[ConfigTuple]) extends ValueType
 
   implicit def tupleToConfigTuple[A:TypeTag](tuple: (String, A)):ConfigTuple = {
-      val (k,v) = tuple
-      v match {
-          case NestedValue(nv) => new ConfigTuple((k, NestedValue(nv)))
-        case _ => new ConfigTuple((k, PlainValue(v)))
-      }
+    val (k,v) = tuple
+    v match {
+      case NestedValue(nv) => new ConfigTuple((k, NestedValue(nv)))
+      case _ => new ConfigTuple((k, PlainValue(v)))
+    }
   }
 
   def listMapToConfig(m: List[ConfigTuple]): String = {
@@ -572,3 +571,5 @@ object NextFlowUtils {
       )
   }
 }
+
+// vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab
