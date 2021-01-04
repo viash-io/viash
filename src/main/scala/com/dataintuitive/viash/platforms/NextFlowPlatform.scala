@@ -97,7 +97,7 @@ case class NextFlowPlatform(
         "command" → executionCode
     )
 
-    // fetch tests
+    // fetch test information
     val tests = functionality.tests.getOrElse(Nil)
     val testPaths = tests.map(test => test.path.getOrElse("/dev/null")).toList
     val testScript:List[String] =
@@ -105,9 +105,11 @@ case class NextFlowPlatform(
           case test: Script => test.filename
         }
 
+    // If 
     val testConfig:List[ConfigTuple] = List("tests" -> NestedValue(
         List(
-          tupleToConfigTuple("testScript" -> testScript.head),
+          tupleToConfigTuple("isDefined" -> (tests.size > 0)),
+          tupleToConfigTuple("testScript" -> testScript.headOption.getOrElse("NA")),
           tupleToConfigTuple("testResources" -> testPaths)
         )
       ))
@@ -449,6 +451,7 @@ case class NextFlowPlatform(
                   |
                   |   Channel.from(rootDir) \\
                   |        | view \\
+                  |        | filter { params.${fname}.tests.isDefined } \\
                   |        | map{ p -> new Tuple3(
                   |                    "tests",
                   |                    params.${fname}.tests.testResources.collect{ file( p + it ) },
