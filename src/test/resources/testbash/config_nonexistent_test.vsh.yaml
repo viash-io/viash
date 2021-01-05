@@ -28,12 +28,6 @@ functionality:
     - name: "--truth"
       type: boolean_true
       description: A switch flag.
-    - name: "--falsehood"
-      type: boolean_false
-      description: A switch flag which is false when specified.
-    - name: "--reality"
-      type: boolean
-      description: A switch flag without predetermined state.
     - name: "--output"
       alternatives: [ "-o" ]
       type: file
@@ -62,17 +56,11 @@ functionality:
     - path: https://raw.githubusercontent.com/scala/scala/2.13.x/NOTICE
   tests:
     - type: bash_script
-      path: tests/check_outputs.sh
-    - type: bash_script
-      path: tests/fail.sh
-    - path: resource2.txt
+      path: tests/nonexistent_test.sh
 platforms:
   - type: native
   - type: docker
     image: "bash:3.2"
     target_image: "viash_test_bash"
-  - type: docker
-    image: "hello-world"
-    id: "hello-world"
   - type: nextflow
     image: viash_test_bash

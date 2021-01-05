@@ -329,13 +329,13 @@ object BashWrapper {
                  |  IFS=${param.multiple_sep}
                  |  set -f
                  |  for file in $$${param.VIASH_PAR}; do
+                 |    unset IFS
                  |    if [ ! -e "$$file" ]; then
                  |      echo "File '$$file' does not exist."
                  |      exit 1
                  |    fi
                  |  done
                  |  set +f
-                 |  unset IFS
                  |fi""".stripMargin
             } else {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ] && [ ! -e "$$${param.VIASH_PAR}" ]; then
@@ -369,10 +369,10 @@ object BashWrapper {
              |  IFS=${param.multiple_sep}
              |  set -f
              |  for val in $$${param.VIASH_PAR}; do
+             |    unset IFS
              |    VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$val'"
              |  done
              |  set +f
-             |  unset IFS
              |fi""".stripMargin
         } else {
           s"""

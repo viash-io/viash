@@ -58,21 +58,20 @@ functionality:
   resources:
     - type: bash_script
       path: ./code.sh
-    - path: resource1.txt
+    - path: ../resource1.txt
     - path: https://raw.githubusercontent.com/scala/scala/2.13.x/NOTICE
-  tests:
-    - type: bash_script
-      path: tests/check_outputs.sh
-    - type: bash_script
-      path: tests/fail.sh
-    - path: resource2.txt
 platforms:
-  - type: native
   - type: docker
     image: "bash:3.2"
     target_image: "viash_test_bash"
+    id: "chown_default"
   - type: docker
-    image: "hello-world"
-    id: "hello-world"
-  - type: nextflow
-    image: viash_test_bash
+    image: "bash:3.2"
+    target_image: "viash_test_bash"
+    id: "chown_true"
+    chown: true
+  - type: docker
+    image: "bash:3.2"
+    target_image: "viash_test_bash"
+    id: "chown_false"
+    chown: false

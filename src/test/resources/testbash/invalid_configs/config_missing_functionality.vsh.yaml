@@ -1,4 +1,5 @@
-functionality:
+# this is an invalid viash yaml file to test code behaviour when 'functionality' is missing
+unctionality:
   name: testbash
   description: |
     Prints out the parameter values.

@@ -219,10 +219,10 @@ case class DockerPlatform(
                    |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
                    |  IFS="${arg.multiple_sep}"
                    |  for var in $$${arg.VIASH_PAR}; do
+                   |    unset IFS
                    |    $extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$var")"
                    |    ${BashWrapper.store(viash_temp, "\"$(ViashAutodetectMount \"$var\")\"", Some(arg.multiple_sep)).mkString("\n    ")}
                    |  done
-                   |  unset IFS
                    |  ${arg.VIASH_PAR}="$$$viash_temp"
                    |fi""".stripMargin)
             case arg: FileObject =>
@@ -302,9 +302,9 @@ case class DockerPlatform(
                  |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
                  |  IFS="${arg.multiple_sep}"
                  |  for var in $$${arg.VIASH_PAR}; do
+                 |    unset IFS
                  |    ${chownCommand("\"$var\"")}
                  |  done
-                 |  unset IFS
                  |  ${arg.VIASH_PAR}="$$$viash_temp"
                  |fi""".stripMargin
             } else {

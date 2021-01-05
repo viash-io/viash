@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # VIASH START
-par_input="code.sh"
+par_input="code_multiple_output.sh"
 par_real_number="123.987654"
 par_whole_number="17"
 par_s="test string"
@@ -9,6 +9,7 @@ par_truth="true"
 par_falsehood="false"
 par_reality=""
 par_output="output.txt"
+par_output2="output2.txt"
 par_log="log.txt"
 par_optional="help"
 par_optional_with_default="me"
@@ -29,6 +30,7 @@ function output {
     echo $@
   else
     echo $@ >> $par_output
+    echo $@ >> $par_output2
   fi
 }
 
@@ -48,6 +50,7 @@ output "truth: |$par_truth|"
 output "falsehood: |$par_falsehood|"
 output "reality: |$par_reality|"
 output "output: |$par_output|"
+output "output2: |$par_output2|"
 output "log: |$par_log|"
 output "optional: |$par_optional|"
 output "optional_with_default: |$par_optional_with_default|"

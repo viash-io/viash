@@ -39,6 +39,7 @@ functionality:
       type: file
       description: Write the parameters to a json file.
       direction: output
+      multiple: true
     - name: "--log"
       type: file
       description: An optional log file.
@@ -49,30 +50,27 @@ functionality:
     - name: "--optional_with_default"
       type: string
       default: "The default value."
-    - name: "--multiple"
-      type: string
-      multiple: true
-    - name: "multiple_pos"
-      type: string
+    - name: "output_pos"
+      type: file
+      direction: output
       multiple: true
   resources:
     - type: bash_script
-      path: ./code.sh
-    - path: resource1.txt
+      path: ./code_multiple_output.sh
+    - path: ../resource1.txt
     - path: https://raw.githubusercontent.com/scala/scala/2.13.x/NOTICE
-  tests:
-    - type: bash_script
-      path: tests/check_outputs.sh
-    - type: bash_script
-      path: tests/fail.sh
-    - path: resource2.txt
 platforms:
-  - type: native
   - type: docker
     image: "bash:3.2"
     target_image: "viash_test_bash"
+    id: "multiple_chown_default"
   - type: docker
-    image: "hello-world"
-    id: "hello-world"
-  - type: nextflow
-    image: viash_test_bash
+    image: "bash:3.2"
+    target_image: "viash_test_bash"
+    id: "multiple_chown_true"
+    chown: true
+  - type: docker
+    image: "bash:3.2"
+    target_image: "viash_test_bash"
+    id: "multiple_chown_false"
+    chown: false
