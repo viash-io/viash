@@ -11,6 +11,8 @@
 
 * `NXF viash build`: Do not assume each config yaml has at least one test.
 
+* Fix Docker chown fails with multiple outputs defined (#21).
+
 
 # viash 0.3.0 (2020-11-24)
 
