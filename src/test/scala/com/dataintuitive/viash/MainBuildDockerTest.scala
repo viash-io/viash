@@ -876,7 +876,7 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
 
   def removeDockerImage(name: String): Unit = {
     Exec.run2(
-      Seq("docker", "rmi", name)
+      Seq("docker", "rmi", name, "-f")
     )
   }
 
