@@ -6,14 +6,13 @@ import com.dataintuitive.viash.config.Version
 
 case class Functionality(
   name: String,
-  // author: Option[String] = None,
-  authors: List[Either[String, Author]] = Nil,
-  namespace: Option[String],
+  namespace: Option[String] = None,
   version: Option[Version] = None,
+  authors: List[Author] = Nil,
+  arguments: List[DataObject[_]] = Nil,
   resources: Option[List[Resource]] = None,
   description: Option[String] = None,
   function_type: Option[FunctionType] = None,
-  arguments: List[DataObject[_]] = Nil,
   tests: Option[List[Resource]] = None,
 
   // dummy arguments are used for handling extra directory mounts in docker
