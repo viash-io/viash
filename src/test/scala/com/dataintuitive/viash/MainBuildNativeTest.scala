@@ -147,8 +147,6 @@ class MainBuildNativeTest extends FunSuite with BeforeAndAfterAll {
       configNoPlatformFile
     ))
 
-    println(s"testText: $testText")
-
     assert(executable.exists)
     assert(executable.canExecute)
 
@@ -167,8 +165,6 @@ class MainBuildNativeTest extends FunSuite with BeforeAndAfterAll {
       "-m",
       configPlatformFile
     ))
-
-    println(s"testText: $testText")
 
     assert(executable.exists)
     assert(executable.canExecute)

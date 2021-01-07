@@ -185,8 +185,6 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
       configPlatformFile,
     ))
 
-    println(s"testText: $testText")
-
     assert(executable.exists)
     assert(executable.canExecute)
 
