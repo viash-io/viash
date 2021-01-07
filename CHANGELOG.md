@@ -2,7 +2,7 @@
 
 ## NEW FEATURES
 
-* Functionality now allows specifying the authors of a component.
+* Functionality: Added list of authors field. Example:
 
 ```yaml
 functionality:
@@ -15,18 +15,21 @@ functionality:
 
 ## MINOR CHANGES
 
-* Allow parameters before and after specifying a viash config yaml. For example, 
+* CLI: Allow parameters before and after specifying a viash config yaml. For example, 
   both following commands now work. Up until now, only the latter would work.
   - `viash run config.vsh.yaml -p docker`
   - `viash run -p docker config.vsh.yaml`
 
-* Wrapped scripts now contain a minimal header at the top.
+* Functionality: Arguments field can now be omitted.
+
+
+* Scripts: Wrapped scripts now contain a minimal header at the top.
 
 ## BUG FIXES
 
 * `NXF viash build`: Do not assume each config yaml has at least one test.
 
-* Fix Docker chown fails with multiple outputs defined (#21).
+* Scripts: Fix Docker `chown` failing when multiple outputs are defined (#21).
 
 
 # viash 0.3.0 (2020-11-24)
