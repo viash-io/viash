@@ -6,7 +6,8 @@ import com.dataintuitive.viash.config.Version
 
 case class Functionality(
   name: String,
-  author: Option[String] = None,
+  // author: Option[String] = None,
+  authors: List[Either[String, Author]] = Nil,
   namespace: Option[String],
   version: Option[Version] = None,
   resources: Option[List[Resource]] = None,

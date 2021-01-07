@@ -1,7 +1,7 @@
 package com.dataintuitive.viash
 
+import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import io.circe.{Decoder, Encoder, Json}
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 
 package object functionality {
   // import implicits
@@ -27,7 +27,12 @@ package object functionality {
       )
   }
 
+
   // encoder and decoder for Functionality
-  implicit val encodeFunctionality: Encoder[Functionality] = deriveEncoder
-  implicit val decodeFunctionality: Decoder[Functionality] = deriveDecoder
+  implicit val encodeFunctionality: Encoder.AsObject[Functionality] = deriveConfiguredEncoder
+  implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoder
+
+  // encoder and decoder for Author
+  implicit val encodeAuthor: Encoder.AsObject[Author] = deriveConfiguredEncoder
+  implicit val decodeAuthor: Decoder[Author] = deriveConfiguredDecoder
 }
