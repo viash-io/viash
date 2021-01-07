@@ -1,11 +1,26 @@
 # viash 0.3.1
 
+## NEW FEATURES
+
+* Functionality now allows specifying the authors of a component.
+
+```yaml
+functionality:
+  authors:
+    - name: Bob Cando
+      roles: [maintainer, author]
+      email: bob@cando.com
+      props: {github: bobcando, orcid: XXXAAABBB}
+```
+
 ## MINOR CHANGES
 
 * Allow parameters before and after specifying a viash config yaml. For example, 
   both following commands now work. Up until now, only the latter would work.
   - `viash run config.vsh.yaml -p docker`
   - `viash run -p docker config.vsh.yaml`
+
+* Wrapped scripts now contain a minimal header at the top.
 
 ## BUG FIXES
 
