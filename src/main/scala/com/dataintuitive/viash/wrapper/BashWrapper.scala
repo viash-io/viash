@@ -125,10 +125,7 @@ object BashWrapper {
       if (functionality.authors.isEmpty) {
         ""
       } else {
-        functionality.authors.map {
-          case Left(str) => str
-          case Right(aut) => aut.toString
-        }.mkString("#\n# component authors:\n# * ", "\n# * ", "\n")
+        functionality.authors.map(_.toString).mkString("#\n# component authors:\n# * ", "\n# * ", "\n")
       }
 
     /* GENERATE BASH SCRIPT */
