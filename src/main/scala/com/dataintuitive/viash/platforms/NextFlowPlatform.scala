@@ -463,7 +463,6 @@ case class NextFlowPlatform(
                   |   params.${fname}.output = "${fname}.log"
                   |
                   |   Channel.from(rootDir) \\
-                  |        | view \\
                   |        | filter { params.${fname}.tests.isDefined } \\
                   |        | map{ p -> new Tuple3(
                   |                    "tests",
@@ -474,8 +473,7 @@ case class NextFlowPlatform(
                   |
                   |    emit:
                   |    ${fname}.out
-                  |}
-                  """.stripMargin
+                  |}""".stripMargin
 
     val setup_main = PlainFile(
       dest = Some("main.nf"),
