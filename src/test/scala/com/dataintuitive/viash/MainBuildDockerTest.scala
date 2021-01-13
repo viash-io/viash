@@ -197,12 +197,12 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
     assert(regexPlatform.findFirstIn(testText).isDefined, testText)
   }
   //</editor-fold>
-  //<editor-fold desc="Test benches to check building tagged docker images">
+  //<editor-fold desc="Test benches to check building with tags, versions & registries">
   test("Get tagged version of a docker image for bash 5.0", DockerTest) {
     // prepare the environment
     TestHelper.testMain(Array(
       "build",
-      "-p", "docker_5_0",
+      "-p", "testtag1",
       "-o", tempFolStr,
       configBashTagFile
     ))
@@ -215,24 +215,26 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
       Seq(executableBashTagFile.toString, "---setup")
     )
     assert(out.exitValue == 0)
-    assert(out.exitValue == 0)
 
     // run the script
-    val stdout =
-      Exec.run(
-        Seq(
-          executable.toString
-        )
-      )
-
+    val stdout = Exec.run(Seq(executableBashTagFile.toString))
     assert(stdout.contains("GNU bash, version 5.0"))
+
+    // check whether script is using the expected docker image
+    val contentSource = Source.fromFile(executableBashTagFile)
+    val content = try {
+      contentSource.getLines().toList
+    } finally {
+      contentSource.close()
+    }
+    assert(content.exists(_.matches("cat << VIASHEOF \\| eval docker run .* bash:5\\.0")))
   }
 
   test("Get tagged version of a docker image for bash 3.2", DockerTest) {
     // prepare the environment
     TestHelper.testMain(Array(
       "build",
-      "-p", "docker_3_2",
+      "-p", "testtag2",
       "-o", tempFolStr,
       configBashTagFile
     ))
@@ -245,18 +247,117 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
       Seq(executableBashTagFile.toString, "---setup")
     )
     assert(out.exitValue == 0)
+
+    // run the script
+    val stdout = Exec.run(Seq(executableBashTagFile.toString))
+    assert(stdout.contains("GNU bash, version 3.2"))
+
+    // check whether script is using the expected docker image
+    val contentSource = Source.fromFile(executableBashTagFile)
+    val content = try {
+      contentSource.getLines().toList
+    } finally {
+      contentSource.close()
+    }
+    assert(content.exists(_.matches("cat << VIASHEOF \\| eval docker run .* bash:3\\.2")))
+  }
+
+  test("Check whether target image name is well formed without target_image, version or registry", DockerTest) {
+    // prepare the environment
+    TestHelper.testMain(Array(
+      "build",
+      "-p", "testtargetimage1",
+      "-o", tempFolStr,
+      configBashTagFile
+    ))
+
+    assert(executableBashTagFile.exists)
+    assert(executableBashTagFile.canExecute)
+
+    // create the docker image
+    val out = Exec.run2(
+      Seq(executableBashTagFile.toString, "---setup")
+    )
     assert(out.exitValue == 0)
 
     // run the script
-    val stdout =
-      Exec.run(
-        Seq(
-          executable.toString
-        )
-      )
+    val stdout = Exec.run(Seq(executableBashTagFile.toString))
+    assert(stdout.contains("GNU bash, version 5.0"))
 
-    assert(stdout.contains("GNU bash, version 3.2"))
+    // check whether script is using the expected docker image
+    val contentSource = Source.fromFile(executableBashTagFile)
+    val content = try {
+      contentSource.getLines().toList
+    } finally {
+      contentSource.close()
+    }
+    assert(content.exists(_.matches("cat << VIASHEOF \\| eval docker run .* testbash:latest")))
   }
+
+  test("Check whether target image name is well formed with target_image, version, and registry", DockerTest) {
+    // prepare the environment
+    TestHelper.testMain(Array(
+      "build",
+      "-p", "testtargetimage2",
+      "-o", tempFolStr,
+      configBashTagFile
+    ))
+
+    assert(executableBashTagFile.exists)
+    assert(executableBashTagFile.canExecute)
+
+    // create the docker image
+    val out = Exec.run2(
+      Seq(executableBashTagFile.toString, "---setup")
+    )
+    assert(out.exitValue == 0)
+
+    // run the script
+    val stdout = Exec.run(Seq(executableBashTagFile.toString))
+    assert(stdout.contains("GNU bash, version 5.0"))
+
+    // check whether script is using the expected docker image
+    val contentSource = Source.fromFile(executableBashTagFile)
+    val content = try {
+      contentSource.getLines().toList
+    } finally {
+      contentSource.close()
+    }
+    assert(content.exists(_.matches("cat << VIASHEOF \\| eval docker run .* foo.io/bar:0\\.0\\.1")))
+  }
+
+  test("Check whether target image name is well formed with target_image, target_tag", DockerTest) {
+    // prepare the environment
+    TestHelper.testMain(Array(
+      "build",
+      "-p", "testtargetimage3",
+      "-o", tempFolStr,
+      configBashTagFile
+    ))
+
+    assert(executableBashTagFile.exists)
+    assert(executableBashTagFile.canExecute)
+
+    // create the docker image
+    val out = Exec.run2(
+      Seq(executableBashTagFile.toString, "---setup")
+    )
+    assert(out.exitValue == 0)
+
+    // run the script
+    val stdout = Exec.run(Seq(executableBashTagFile.toString))
+    assert(stdout.contains("GNU bash, version 3.2"))
+
+    // check whether script is using the expected docker image
+    val contentSource = Source.fromFile(executableBashTagFile)
+    val content = try {
+      contentSource.getLines().toList
+    } finally {
+      contentSource.close()
+    }
+    assert(content.exists(_.matches("cat << VIASHEOF \\| eval docker run .* bar:0\\.0\\.2")))
+  }
+
   //</editor-fold>
   //<editor-fold desc="Test benches to check building with --meta flag">
   test("Get meta data of a docker", DockerTest) {
@@ -577,7 +678,7 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
     assert(!checkDockerImageExists("viash_requirement_apt"))
 
     // build viash wrapper with --setup
-    val buildout = TestHelper.testMain(Array(
+    val _ = TestHelper.testMain(Array(
       "build",
       "-p", "viash_requirement_apt",
       "-o", tempFolStr,
@@ -731,7 +832,7 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
     val output = Paths.get(tempFolStr, "output_" + dockerId + ".txt").toFile
     val output2 = Paths.get(tempFolStr, "output_" + dockerId +"_2.txt").toFile
 
-    val runOut = Exec.run(
+    val _ = Exec.run(
       Seq(
         localExecutable.toString,
         localExecutable.toString,
@@ -796,13 +897,13 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
 
   test("Test default behaviour when chown is not specified", DockerTest) {
     val owner = docker_chown_get_owner("chown_default")
-    assert(!owner.isEmpty)
+    assert(owner.nonEmpty)
     assert(owner != "root")
   }
 
   test("Test default behaviour when chown is set to true", DockerTest) {
     val owner = docker_chown_get_owner("chown_true")
-    assert(!owner.isEmpty)
+    assert(owner.nonEmpty)
     assert(owner != "root")
   }
 
@@ -813,16 +914,16 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
 
   test("Test default behaviour when chown is not specified with two output files", DockerTest) {
     val owner = docker_chown_get_owner_two_outputs("two_chown_default")
-    assert(!owner._1.isEmpty)
-    assert(!owner._2.isEmpty)
+    assert(owner._1.nonEmpty)
+    assert(owner._2.nonEmpty)
     assert(owner._1 != "root")
     assert(owner._2 != "root")
   }
 
   test("Test default behaviour when chown is set to true with two output files", DockerTest) {
     val owner = docker_chown_get_owner_two_outputs("two_chown_true")
-    assert(!owner._1.isEmpty)
-    assert(!owner._2.isEmpty)
+    assert(owner._1.nonEmpty)
+    assert(owner._2.nonEmpty)
     assert(owner._1 != "root")
     assert(owner._2 != "root")
   }
@@ -835,9 +936,9 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
 
   test("Test default behaviour when chown is not specified with multiple output files", DockerTest) {
     val owner = docker_chown_get_owner_multiple_outputs("multiple_chown_default")
-    assert(!owner._1.isEmpty)
-    assert(!owner._2.isEmpty)
-    assert(!owner._3.isEmpty)
+    assert(owner._1.nonEmpty)
+    assert(owner._2.nonEmpty)
+    assert(owner._3.nonEmpty)
     assert(owner._1 != "root")
     assert(owner._2 != "root")
     assert(owner._3 != "root")
@@ -845,9 +946,9 @@ class MainBuildDockerTest extends FunSuite with BeforeAndAfterAll {
 
   test("Test default behaviour when chown is set to true with multiple output files", DockerTest) {
     val owner = docker_chown_get_owner_multiple_outputs("multiple_chown_true")
-    assert(!owner._1.isEmpty)
-    assert(!owner._2.isEmpty)
-    assert(!owner._3.isEmpty)
+    assert(owner._1.nonEmpty)
+    assert(owner._2.nonEmpty)
+    assert(owner._3.nonEmpty)
     assert(owner._1 != "root")
     assert(owner._2 != "root")
     assert(owner._3 != "root")
