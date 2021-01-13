@@ -7,13 +7,15 @@ import com.dataintuitive.viash.platforms.requirements._
 import com.dataintuitive.viash.helpers.Bash
 import com.dataintuitive.viash.config.Version
 import com.dataintuitive.viash.wrapper.{BashWrapper, BashWrapperMods}
+import com.dataintuitive.viash.platforms.docker._
 
 case class DockerPlatform(
   id: String = "docker",
   image: String,
   version: Option[Version] = None,
   target_image: Option[String] = None,
-  resolve_volume: ResolveVolume = Automatic,
+  registry: Option[String] = None,
+  resolve_volume: DockerResolveVolume = Automatic,
   chown: Boolean = true,
   port: Option[List[String]] = None,
   workdir: Option[String] = None,
@@ -104,22 +106,25 @@ case class DockerPlatform(
     // otherwise need to construct a separate docker container
 
     // get imagename and tag
-    val (imageName, tag) =
+    val (imageRegistry, imageName, tag) =
       if (runCommands.isEmpty) {
         image match {
-          case tagRegex(imageName, tag) => (imageName, tag)
-          case _ => (image, "latest")
+          case tagRegex(a, b) => (None, a, b)
+          case _ => (None, image, "latest")
         }
       } else {
         (
+          registry,
           target_image.getOrElse(functionality.namespace.map(_ + "/").getOrElse("") + functionality.name),
           version.map(_.toString).getOrElse("latest")
         )
       }
 
+    val fullLabel = registry.map(_ + "/").getOrElse("") + imageName + ":" + tag
+
     val (viashDockerFile, viashSetup) =
       if (runCommands.isEmpty) {
-        ("  :", s"  docker image inspect $imageName:$tag >/dev/null 2>&1 || docker pull $imageName:$tag")
+        ("  :", s"  docker image inspect $fullLabel >/dev/null 2>&1 || docker pull $fullLabel")
       } else {
         val dockerFile =
           s"FROM $image\n\n" +
@@ -146,14 +151,14 @@ case class DockerPlatform(
              |  }
              |  trap clean_up EXIT
              |  ViashDockerfile > $$tmpdir/Dockerfile
-             |  # if [ ! -z $$(docker images -q $imageName:$tag) ]; then
+             |  # if [ ! -z $$(docker images -q $fullLabel) ]; then
              |  #   echo "Image exists locally or on Docker Hub"
              |  # else
              |    # Quick workaround to have the resources available in the current dir
              |    cp $$${BashWrapper.var_resources_dir}/* $$tmpdir
              |    # Build the container
-             |    echo "> docker build -t $imageName:$tag$buildArgs $$tmpdir"
-             |    docker build -t $imageName:$tag$buildArgs $$tmpdir
+             |    echo "> docker build -t $fullLabel$buildArgs $$tmpdir"
+             |    docker build -t $fullLabel$buildArgs $$tmpdir
              |  #fi""".stripMargin
 
         (vdf, vs)
