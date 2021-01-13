@@ -81,7 +81,7 @@ object BashWrapper {
     // DETERMINE HOW TO RUN THE CODE
     val executionCode = mainResource match {
       case None => ""
-      case Some(e: Executable) => e.path.get + " $VIASH_EXECUTABLE_ARGS"
+      case Some(e: Executable) => " " + e.path.get + " $VIASH_EXECUTABLE_ARGS"
       case Some(res) =>
         val code = res.readWithPlaceholder(functionality).get
         val escapedCode = escapeViash(code)
@@ -175,7 +175,7 @@ object BashWrapper {
        |# parse positional parameters
        |eval set -- $$VIASH_POSITIONAL_ARGS
        |${spaceCode(allMods.postParse)}
-       |$heredocStart$executor $executionCode$heredocEnd
+       |$heredocStart$executor$executionCode$heredocEnd
        |${spaceCode(allMods.postRun)}""".stripMargin
   }
 
