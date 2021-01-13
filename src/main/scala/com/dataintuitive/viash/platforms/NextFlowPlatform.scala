@@ -86,14 +86,17 @@ case class NextFlowPlatform(
       case None => Nil
     }
 
-    val imageName:String = {
+    val containerName:String = {
       val autogen = functionality.namespace.map( _ + "/" + functionality.name).getOrElse(functionality.name)
       image.getOrElse(autogen)
     }
 
+    val containerTag:String = version.map(_.toString).getOrElse("latest")
+
     val mainParams:List[ConfigTuple] = List(
         "name" → functionality.name,
-        "container" → (imageName + ":" + version.map(_.toString).getOrElse("latest")).toString,
+        "container" → containerName,
+        "containerTag" -> containerTag,
         "command" → executionCode
     )
 
@@ -166,7 +169,17 @@ case class NextFlowPlatform(
          |
          |    return command_line.join(" ")
          |}
+         |
+         |def effectiveContainer(processParams) {
+         |    def _registry = params.containsKey("containerRegistry") ? params.containerRegistry + "/" : ""
+         |    def _name = processParams.container
+         |    def _tag = params.containsKey("containerTag") ? "$${params.containerTag}" : "$${processParams.containerTag}"
+         |
+         |    return "$${_registry}$${_name}:$${_tag}"
+         |}
          |""".stripMargin
+
+
 
     /**
      * What should the output filename be, in terms of the input?
@@ -322,7 +335,7 @@ case class NextFlowPlatform(
          |  echo { (params.debug == true) ? true : false }
          |  cache 'deep'
          |  stageInMode "$stageInModeStr"
-         |  container "$${params.dockerPrefix}$${container}"
+         |  container "$${container}"
          |  $publishDirStr
          |  input:
          |    tuple val(id), path(input), val(output), val(container), val(cli)
@@ -395,7 +408,7 @@ case class NextFlowPlatform(
          |                id,
          |                checkedInput,
          |                outputFilename,
-         |                updtParams2.container,
+         |                effectiveContainer(updtParams2),
          |                renderCLI([updtParams2.command], updtParams2.arguments)
          |            )
          |        }
