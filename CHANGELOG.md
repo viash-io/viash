@@ -13,6 +13,16 @@ functionality:
       props: {github: bobcando, orcid: XXXAAABBB}
 ```
 
+* Docker Platform: Allow specifying the registry with `target_registry`. Added redundant `target_tag` field. Example:
+
+```ỳaml
+- type: docker
+  image: bash:4.0
+  target_registry: foo.io
+  target_image: bar
+  target_tag: 0.1
+```
+
 ## MINOR CHANGES
 
 * CLI: Allow parameters before and after specifying a viash config yaml. For example, 
@@ -22,8 +32,8 @@ functionality:
 
 * Functionality: Arguments field can now be omitted.
 
-
 * Scripts: Wrapped scripts now contain a minimal header at the top.
+
 
 ## BUG FIXES
 
