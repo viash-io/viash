@@ -14,7 +14,8 @@ case class DockerPlatform(
   image: String,
   version: Option[Version] = None,
   target_image: Option[String] = None,
-  registry: Option[String] = None,
+  target_registry: Option[String] = None,
+  target_tag: Option[Version] = None,
   resolve_volume: DockerResolveVolume = Automatic,
   chown: Boolean = true,
   port: Option[List[String]] = None,
@@ -27,6 +28,8 @@ case class DockerPlatform(
   setup: List[Requirements] = Nil
 ) extends Platform {
   val `type` = "docker"
+
+  assert(version.isEmpty || target_tag.isEmpty, "docker platform: version and target_tag should not both be defined")
 
   val requirements: List[Requirements] =
     setup :::
@@ -43,17 +46,17 @@ case class DockerPlatform(
     }
 
     // create setup
-    val (imageName, imageVersion, setupCommands) = processDockerSetup(functionality)
+    val (effectiveID, setupCommands) = processDockerSetup(functionality)
 
     // generate automount code
     val dmVol = processDockerVolumes(functionality)
 
     // add ---debug flag
-    val debuggor = s"""docker run --entrypoint=bash $dockerArgs -v "$$(pwd)":/pwd --workdir /pwd -t $imageName:$imageVersion"""
+    val debuggor = s"""docker run --entrypoint=bash $dockerArgs -v "$$(pwd)":/pwd --workdir /pwd -t $effectiveID"""
     val dmDebug = addDockerDebug(debuggor)
 
     // add ---chown flag
-    val dmChown = addDockerChown(functionality, dockerArgs, dmVol.extraParams, imageName, imageVersion)
+    val dmChown = addDockerChown(functionality, dockerArgs, dmVol.extraParams, effectiveID)
 
     val dmDockerfile = BashWrapperMods(
       parsers =
@@ -73,7 +76,7 @@ case class DockerPlatform(
       case _ => "--entrypoint=bash "
     }
     val workdirStr = workdir.map("--workdir " + _ + " ").getOrElse("")
-    val executor = s"""eval docker run $entrypointStr$workdirStr$dockerArgs${dm.extraParams} $imageName:$imageVersion"""
+    val executor = s"""eval docker run $entrypointStr$workdirStr$dockerArgs${dm.extraParams} $effectiveID"""
 
     // add extra arguments to the functionality file for each of the volumes
     val fun2 = functionality.copy(
@@ -106,7 +109,7 @@ case class DockerPlatform(
     // otherwise need to construct a separate docker container
 
     // get imagename and tag
-    val (imageRegistry, imageName, tag) =
+    val (imageRegistry, imageName, imageTag) =
       if (runCommands.isEmpty) {
         image match {
           case tagRegex(a, b) => (None, a, b)
@@ -114,17 +117,17 @@ case class DockerPlatform(
         }
       } else {
         (
-          registry,
+          target_registry,
           target_image.getOrElse(functionality.namespace.map(_ + "/").getOrElse("") + functionality.name),
-          version.map(_.toString).getOrElse("latest")
+          (version orElse target_tag).map(_.toString).getOrElse("latest")
         )
       }
 
-    val fullLabel = registry.map(_ + "/").getOrElse("") + imageName + ":" + tag
+    val effectiveID = imageRegistry.map(_ + "/").getOrElse("") + imageName + ":" + imageTag
 
     val (viashDockerFile, viashSetup) =
       if (runCommands.isEmpty) {
-        ("  :", s"  docker image inspect $fullLabel >/dev/null 2>&1 || docker pull $fullLabel")
+        ("  :", s"  docker image inspect $effectiveID >/dev/null 2>&1 || docker pull $effectiveID")
       } else {
         val dockerFile =
           s"FROM $image\n\n" +
@@ -151,14 +154,14 @@ case class DockerPlatform(
              |  }
              |  trap clean_up EXIT
              |  ViashDockerfile > $$tmpdir/Dockerfile
-             |  # if [ ! -z $$(docker images -q $fullLabel) ]; then
+             |  # if [ ! -z $$(docker images -q $effectiveID) ]; then
              |  #   echo "Image exists locally or on Docker Hub"
              |  # else
              |    # Quick workaround to have the resources available in the current dir
              |    cp $$${BashWrapper.var_resources_dir}/* $$tmpdir
              |    # Build the container
-             |    echo "> docker build -t $fullLabel$buildArgs $$tmpdir"
-             |    docker build -t $fullLabel$buildArgs $$tmpdir
+             |    echo "> docker build -t $effectiveID$buildArgs $$tmpdir"
+             |    docker build -t $effectiveID$buildArgs $$tmpdir
              |  #fi""".stripMargin
 
         (vdf, vs)
@@ -182,7 +185,7 @@ case class DockerPlatform(
          |$viashSetup
          |}""".stripMargin
 
-    (imageName, tag, setupCommands)
+    (effectiveID, setupCommands)
   }
 
   private val extraMountsVar = "VIASH_EXTRA_MOUNTS"
@@ -283,13 +286,12 @@ case class DockerPlatform(
     functionality: Functionality,
     dockerArgs: String,
     volExtraParams: String,
-    imageName: String,
-    imageVersion: String
+    fullImageID: String,
   ) = {
     val args = functionality.argumentsAndDummies
 
     def chownCommand(value: String): String = {
-      s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $imageName:$imageVersion "$$(id -u):$$(id -g)" -R $value"""
+      s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $fullImageID "$$(id -u):$$(id -g)" -R $value"""
     }
 
     val postParse =
@@ -328,7 +330,7 @@ case class DockerPlatform(
            |
            |# change file ownership
            |function viash_perform_chown {
-           |  ${chownParStr}
+           |  $chownParStr
            |}
            |trap viash_perform_chown EXIT
            |""".stripMargin
