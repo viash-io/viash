@@ -2,9 +2,12 @@ package com.dataintuitive.viash.platforms.docker
 
 sealed trait DockerSetupStrategy
 
+case object AlwaysBuildNoCache extends DockerSetupStrategy
 case object AlwaysBuild extends DockerSetupStrategy
 case object AlwaysPull extends DockerSetupStrategy
 case object AlwaysPullElseBuild extends DockerSetupStrategy
+case object AlwaysPullElseBuildNoCache extends DockerSetupStrategy
 case object IfNeedBeBuild extends DockerSetupStrategy
 case object IfNeedBePull extends DockerSetupStrategy
 case object IfNeedBePullElseBuild extends DockerSetupStrategy
+case object DoNothing extends DockerSetupStrategy
