@@ -54,12 +54,11 @@ case class NativePlatform(
           "cat << 'HERE'\n" +
           "# run the following commands:\n" +
           li.mkString("", " && \\\n  ", "\n") +
-          "HERE"
+          "HERE\n"
         }
       ).mkString
 
     s"""function ViashSetup {
-       |${if (commands == "") ":" else commands}
-       |}""".stripMargin
+       |${if (commands == "") ":\n" else commands}}""".stripMargin
   }
 }

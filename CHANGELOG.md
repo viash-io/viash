@@ -13,15 +13,19 @@ functionality:
       props: {github: bobcando, orcid: XXXAAABBB}
 ```
 
-* Docker Platform: Allow specifying the registry with `target_registry`. Added redundant `target_tag` field. Example:
+* Docker Platform: Allow specifying the registry with `target_registry`. Example:
 
-```ỳaml
+```yaml
 - type: docker
   image: bash:4.0
   target_registry: foo.io
   target_image: bar
   target_tag: 0.1
 ```
+
+* Docker Platform: `version` is now a synonym for `target_tag`.
+  If both `version` and `target_tag` are not defined, `functionality.version` will
+  be used instead.
 
 ## MINOR CHANGES
 
@@ -34,7 +38,6 @@ functionality:
 
 * Scripts: Wrapped scripts now contain a minimal header at the top.
 
-
 ## BUG FIXES
 
 * `NXF viash build`: Do not assume each config yaml has at least one test.
@@ -42,6 +45,10 @@ functionality:
 * Scripts: Fix Docker `chown` failing when multiple outputs are defined (#21).
 
 * JavaScriptRequirements: Fix type getting set to "python" when unparsing.
+
+* `viash run . ---debug`: Debug session should now work again
+
+* Native `---setup`: Fix missing newlines when running native ---setup commands.
 
 ## TESTING
 
