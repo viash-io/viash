@@ -46,7 +46,7 @@ case class DockerPlatform(
     }
 
     // create setup
-    val (effectiveID, setupCommands) = processDockerSetup(functionality)
+    val (effectiveID, setupCommands, setupMods) = processDockerSetup(functionality)
 
     // generate automount code
     val dmVol = processDockerVolumes(functionality)
@@ -58,17 +58,8 @@ case class DockerPlatform(
     // add ---chown flag
     val dmChown = addDockerChown(functionality, dockerArgs, dmVol.extraParams, effectiveID)
 
-    val dmDockerfile = BashWrapperMods(
-      parsers =
-        """
-          |        ---dockerfile)
-          |            ViashDockerfile
-          |            exit 0
-          |            ;;""".stripMargin
-    )
-
     // compile modifications
-    val dm = dmVol ++ dmDebug ++ dmChown ++ dmDockerfile
+    val dm = setupMods ++ dmVol ++ dmDebug ++ dmChown
 
     // make commands
     val entrypointStr = functionality.mainScript.get match {
@@ -99,8 +90,6 @@ case class DockerPlatform(
     )
   }
 
-  private val tagRegex = "(.*):(.*)".r
-
   private def processDockerSetup(functionality: Functionality) = {
     // get dependencies
     val runCommands = requirements.flatMap(_.dockerCommands)
@@ -109,6 +98,8 @@ case class DockerPlatform(
     // otherwise need to construct a separate docker container
 
     // get imagename and tag
+    /*
+    private val tagRegex = "(.*):(.*)".r
     val (imageRegistry, imageName, imageTag) =
       if (runCommands.isEmpty) {
         image match {
@@ -124,10 +115,22 @@ case class DockerPlatform(
       }
 
     val effectiveID = imageRegistry.map(_ + "/").getOrElse("") + imageName + ":" + imageTag
+    */
 
-    val (viashDockerFile, viashSetup) =
+    val effectiveID =
       if (runCommands.isEmpty) {
-        ("  :", s"  docker image inspect $effectiveID >/dev/null 2>&1 || docker pull $effectiveID")
+        image
+      } else {
+        val left = target_registry.map(_ + "/").getOrElse("")
+        val middle = target_image.getOrElse(functionality.namespace.map(_ + "/").getOrElse("") + functionality.name)
+        val right = ":" + (version orElse target_tag orElse functionality.version).map(_.toString).getOrElse("latest")
+
+        left + middle + right
+      }
+
+    val (viashDockerFile, viashDockerBuild) =
+      if (runCommands.isEmpty) {
+        ("  :", "  ViashDockerPull $1")
       } else {
         val dockerFile =
           s"FROM $image\n\n" +
@@ -141,33 +144,31 @@ case class DockerPlatform(
         val buildArgs = dockerRequirements.map(_.build_args.map(" --build-arg " + _).mkString).mkString("")
 
         val vdf =
-          s"""cat << 'VIASHDOCKER'
+          s"""  cat << 'VIASHDOCKER'
              |$dockerFile
              |VIASHDOCKER""".stripMargin
 
-        val vs =
-          s"""  # create temporary directory to store temporary dockerfile in
-             |
-             |  tmpdir=$$(mktemp -d "$$VIASH_TEMP/viash_setupdocker-${functionality.name}-XXXXXX")
+        val vdb =
+          s"""
+             |  # create temporary directory to store dockerfile & optional resources in
+             |  tmpdir=$$(mktemp -d "$$VIASH_TEMP/viashsetupdocker-${functionality.name}-XXXXXX")
              |  function clean_up {
-             |    rm -rf "\\$$tmpdir"
+             |    rm -rf "$$tmpdir"
              |  }
              |  trap clean_up EXIT
+             |
+             |  # store dockerfile and resources
              |  ViashDockerfile > $$tmpdir/Dockerfile
-             |  # if [ ! -z $$(docker images -q $effectiveID) ]; then
-             |  #   echo "Image exists locally or on Docker Hub"
-             |  # else
-             |    # Quick workaround to have the resources available in the current dir
-             |    cp $$${BashWrapper.var_resources_dir}/* $$tmpdir
-             |    # Build the container
-             |    echo "> docker build -t $effectiveID$buildArgs $$tmpdir"
-             |    docker build -t $effectiveID$buildArgs $$tmpdir
-             |  #fi""".stripMargin
+             |  cp -r $$${BashWrapper.var_resources_dir}/* $$tmpdir
+             |
+             |  # Build the container
+             |  echo "> docker build -t $$@$buildArgs $$tmpdir"
+             |  docker build -t $$@$buildArgs $$tmpdir""".stripMargin
 
-        (vdf, vs)
+        (vdf, vdb)
       }
 
-    val setupCommands =
+    val setupCommands = {
       s"""# ViashDockerFile: print the dockerfile to stdout
          |# return : dockerfile required to run this component
          |# examples:
@@ -175,20 +176,50 @@ case class DockerPlatform(
          |function ViashDockerfile {
          |$viashDockerFile
          |}
+         |# ViashDockerBuild: ...
+         |function ViashDockerBuild {
+         |$viashDockerBuild
+         |}
          |
-         |# ViashSetup: build a docker container
-         |# if available on docker hub, the image will be pulled
-         |# from there instead.
-         |# examples:
-         |#   ViashSetup
+         |# ViashSetup: ...
          |function ViashSetup {
-         |$viashSetup
+         |  ViashDockerSetup $effectiveID $$$dockerStrategyVar
          |}""".stripMargin
+    }
 
-    (effectiveID, setupCommands)
+    val preParse =
+      s"""
+         |${Bash.ViashDockerFuns}
+         |# initialise variables
+         |$dockerStrategyVar='alwaysbuild'""".stripMargin
+
+    val parsers =
+      s"""
+         |        ---dss|---docker_setup_strategy)
+         |            ${BashWrapper.var_exec_mode}="setup"
+         |            $dockerStrategyVar="$$2"
+         |            shift 2
+         |            ;;
+         |        ---docker_setup_strategy=*)
+         |            ${BashWrapper.var_exec_mode}="setup"
+         |            $dockerStrategyVar=$$(ViashRemoveFlags "$$2")
+         |            shift 1
+         |            ;;
+         |        ---dockerfile)
+         |            ViashDockerfile
+         |            exit 0
+         |            ;;""".stripMargin
+
+    val mods = BashWrapperMods(
+      preParse = preParse,
+      parsers = parsers
+    )
+
+    (effectiveID, setupCommands, mods)
   }
 
   private val extraMountsVar = "VIASH_EXTRA_MOUNTS"
+  private val dockerStrategyVar = "VIASH_DOCKER_SETUP_STRATEGY"
 
   private def processDockerVolumes(functionality: Functionality) = {
     val args = functionality.argumentsAndDummies
@@ -198,7 +229,7 @@ case class DockerPlatform(
          |${Bash.ViashAbsolutePath}
          |${Bash.ViashAutodetectMount}
          |${Bash.ViashExtractFlags}
-         |# initialise autodetect mount variable
+         |# initialise variables
          |$extraMountsVar=''""".stripMargin
 
 
@@ -264,21 +295,17 @@ case class DockerPlatform(
   }
 
   private def addDockerDebug(debugCommand: String) = {
-    val parsers = "\n" + Bash.argStore("---debug", "VIASH_DEBUG", "yes", 1, None)
-    val postParse =
+    val parsers =
       s"""
-         |
-         |# if desired, enter a debug session
-         |if [ $${VIASH_DEBUG} ]; then
-         |  echo "+ $debugCommand"
-         |  $debugCommand
-         |  exit 0
-         |fi"""
+         |        ---debug)
+         |            echo "+ $debugCommand"
+         |            $debugCommand
+         |            exit 0
+         |            ;;""".stripMargin
 
 
     BashWrapperMods(
-      parsers = parsers,
-      postParse = postParse
+      parsers = parsers
     )
   }
 

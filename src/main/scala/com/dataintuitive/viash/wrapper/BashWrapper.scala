@@ -56,6 +56,7 @@ object BashWrapper {
   }
 
   val var_resources_dir = "VIASH_RESOURCES_DIR"
+  val var_exec_mode = "VIASH_EXEC_MODE"
 
   def wrapScript(
     executor: String,
@@ -147,6 +148,7 @@ object BashWrapper {
        |
        |# find source folder of this component
        |$var_resources_dir=`ViashSourceDir $${BASH_SOURCE[0]}`
+       |$var_exec_mode="run"
        |
        |$setupCommands
        |
@@ -160,8 +162,8 @@ object BashWrapper {
        |            ViashHelp
        |            exit;;
        |        ---setup)
-       |            ViashSetup
-       |            exit 0
+       |            $var_exec_mode="setup"
+       |            shift 1
        |            ;;
        |${allMods.parsers}
        |        *)    # positional arg or unknown option
@@ -171,6 +173,11 @@ object BashWrapper {
        |            ;;
        |    esac
        |done
+       |
+       |if [ "$$$var_exec_mode" == "setup" ]; then
+       |  ViashSetup
+       |  exit 0
+       |fi
        |
        |# parse positional parameters
        |eval set -- $$VIASH_POSITIONAL_ARGS
@@ -229,12 +236,12 @@ object BashWrapper {
 
     val preParse =
       s"""# ViashHelp: Display helpful explanation about this executable
-         |function ViashHelp {
-         |   echo "${escapeViash(functionality.description.getOrElse("").stripLineEnd)}"
-         |   echo
-         |   echo "Options:"
-         |${usageStrs.mkString("\n")}
-         |}""".stripMargin
+      |function ViashHelp {
+      |   echo "${escapeViash(functionality.description.getOrElse("").stripLineEnd)}"
+      |   echo
+      |   echo "Options:"
+      |${usageStrs.mkString("\n")}
+      |}""".stripMargin
 
     BashWrapperMods(preParse = preParse)
   }
@@ -280,14 +287,14 @@ object BashWrapper {
     val positionalStr = positionals.map { param =>
       if (param.multiple) {
         s"""while [[ $$# -gt 0 ]]; do
-           |  ${store(param.VIASH_PAR, "\"$1\"", Some(param.multiple_sep)).mkString("\n  ")}
-           |  shift 1
-           |done""".stripMargin
+      |  ${store(param.VIASH_PAR, "\"$1\"", Some(param.multiple_sep)).mkString("\n  ")}
+    |  shift 1
+    |done""".stripMargin
       } else {
         s"""if [[ $$# -gt 0 ]]; then
-           |  ${param.VIASH_PAR}="$$1"
-           |  shift 1
-           |fi"""
+    |  ${param.VIASH_PAR}="$$1"
+    |  shift 1
+    |fi"""
       }
     }.mkString("\n")
 
@@ -300,9 +307,9 @@ object BashWrapper {
         "\n# check whether required parameters exist\n" +
           reqParams.map { param =>
             s"""if [ -z "$$${param.VIASH_PAR}" ]; then
-               |  echo '${param.name}' is a required argument. Use "--help" to get more information on the parameters.
-               |  exit 1
-               |fi""".stripMargin
+    |  echo '${param.name}' is a required argument. Use "--help" to get more information on the parameters.
+    |  exit 1
+    |fi""".stripMargin
           }.mkString("\n")
       }
 
@@ -320,8 +327,8 @@ object BashWrapper {
 
       default.map(default => {
         s"""if [ -z "$$${param.VIASH_PAR}" ]; then
-           |  ${param.VIASH_PAR}="${escapeViash(default.toString)}"
-           |fi""".stripMargin
+    |  ${param.VIASH_PAR}="${escapeViash(default.toString)}"
+    |fi""".stripMargin
       })
     }.mkString("\n")
 
@@ -338,22 +345,22 @@ object BashWrapper {
           reqFiles.map { param =>
             if (param.multiple) {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
-                 |  IFS=${param.multiple_sep}
-                 |  set -f
-                 |  for file in $$${param.VIASH_PAR}; do
-                 |    unset IFS
-                 |    if [ ! -e "$$file" ]; then
-                 |      echo "File '$$file' does not exist."
-                 |      exit 1
-                 |    fi
-                 |  done
-                 |  set +f
-                 |fi""".stripMargin
+    |  IFS=${param.multiple_sep}
+    |  set -f
+    |  for file in $$${param.VIASH_PAR}; do
+      |    unset IFS
+    |    if [ ! -e "$$file" ]; then
+    |      echo "File '$$file' does not exist."
+    |      exit 1
+    |    fi
+      |  done
+      |  set +f
+    |fi""".stripMargin
             } else {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ] && [ ! -e "$$${param.VIASH_PAR}" ]; then
-                 |  echo "File '$$${param.VIASH_PAR}' does not exist."
-                 |  exit 1
-                 |fi""".stripMargin
+    |  echo "File '$$${param.VIASH_PAR}' does not exist."
+    |  exit 1
+    |fi""".stripMargin
             }
           }.mkString("\n")
       }
@@ -369,28 +376,28 @@ object BashWrapper {
     val inserts = params.map {
       case bo: BooleanObject if bo.flagValue.isDefined =>
         s"""
-           |if [ "$$${bo.VIASH_PAR}" == "${bo.flagValue.get}" ]; then
-           |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS ${bo.name}"
-           |fi""".stripMargin
+    |if [ "$$${bo.VIASH_PAR}" == "${bo.flagValue.get}" ]; then
+    |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS ${bo.name}"
+    |fi""".stripMargin
       case param =>
         val flag = if (param.otype == "") "" else " " + param.name
 
         if (param.multiple) {
           s"""
-             |if [ ! -z "$$${param.VIASH_PAR}" ]; then
-             |  IFS=${param.multiple_sep}
-             |  set -f
-             |  for val in $$${param.VIASH_PAR}; do
-             |    unset IFS
-             |    VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$val'"
-             |  done
-             |  set +f
-             |fi""".stripMargin
+    |if [ ! -z "$$${param.VIASH_PAR}" ]; then
+    |  IFS=${param.multiple_sep}
+    |  set -f
+    |  for val in $$${param.VIASH_PAR}; do
+      |    unset IFS
+    |    VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$val'"
+    |  done
+      |  set +f
+    |fi""".stripMargin
         } else {
           s"""
-             |if [ ! -z "$$${param.VIASH_PAR}" ]; then
-             |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$${param.VIASH_PAR}'"
-             |fi""".stripMargin
+    |if [ ! -z "$$${param.VIASH_PAR}" ]; then
+    |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$${param.VIASH_PAR}'"
+    |fi""".stripMargin
         }
     }
 

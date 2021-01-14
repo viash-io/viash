@@ -26,16 +26,10 @@ package object docker {
   }
   implicit val decodeSetupStrategy: Decoder[DockerSetupStrategy] = Decoder.instance {
     cursor =>
-      cursor.value.as[String].map(s =>
-        s.toLowerCase().replaceAll("_", "") match {
-          case "alwaysbuild" => AlwaysBuild
-          case "alwayspull" => AlwaysPull
-          case "alwayspullelsebuild" => AlwaysPullElseBuild
-          case "ifneedbebuild" | "build" => IfNeedBeBuild
-          case "ifneedbepull" | "pull" => IfNeedBePull
-          case "ifneedbepullelsebuild" | "pullelsebuild" => IfNeedBePullElseBuild
-        }
-      )
+      cursor.value.as[String].map { s =>
+        val id = s.toLowerCase.replaceAll("_", "")
+        DockerSetupStrategy.map.applyOrElse(id, throw new Exception(s"Docker Setup Strategy '$id' not found"))
+      }
   }
 }
 

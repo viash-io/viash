@@ -26,6 +26,23 @@ functionality:
 * Docker Platform: `version` is now a synonym for `target_tag`.
   If both `version` and `target_tag` are not defined, `functionality.version` will
   be used instead.
+  
+* Docker Platform: Can change the Docker Setup Strategy by specifying
+  - in the yaml: `setup_strategy: xxx`
+  - on command-line: `---docker_setup_strategy xxx` or `---dss xxx`
+  
+  Allowed values for the setup strategy are:
+  - alwaysbuild / build: build the image from the dockerfile
+  - alwayscachedbuild / cachedbuild: build the image from the dockerfile, with caching
+  - alwayspull / pull: pull the image from a registry
+  - alwayspullelsebuild / pullelsebuild: try to pull the image from a registry, else build it
+  - alwayspullelsecachedbuild / pullelsecachedbuild: try to pull the image from a registry, else build it with caching
+  - ifneedbebuild: if the image does not exist locally, build the image
+  - ifneedbecachedbuild: if the image does not exist locally, build the image with caching
+  - ifneedbepull: if the image does not exist locally, pull the image
+  - ifneedbepullelsebuild: if the image does not exist locally, pull the image else build it
+  - ifneedbepullelsecachedbuild: if the image does not exist locally, pull the image else build it with caching
+  - donothing / meh: do not build or pull anything
 
 ## MINOR CHANGES
 
