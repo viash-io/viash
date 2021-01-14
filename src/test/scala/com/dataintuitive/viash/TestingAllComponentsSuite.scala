@@ -3,7 +3,7 @@ package com.dataintuitive.viash
 import com.dataintuitive.viash.config.Config
 import org.scalatest.FunSuite
 
-class ComponentE2ETests extends FunSuite {
+class TestingAllComponentsSuite extends FunSuite {
   def getTestResource(path: String) = getClass.getResource(path).toString
 
   val tests = List(

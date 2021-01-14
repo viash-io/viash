@@ -8,7 +8,7 @@ import com.dataintuitive.viash.config.Config
 import scala.io.Source
 import com.dataintuitive.viash.helpers._
 
-class MainBuildNativeTest extends FunSuite with BeforeAndAfterAll {
+class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
   // which platform to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
   private val configNoPlatformFile = getClass.getResource(s"/testbash/config_no_platform.vsh.yaml").getPath

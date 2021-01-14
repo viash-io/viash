@@ -7,7 +7,7 @@ import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 import scala.reflect.io.Directory
 
-class MainTestDockerTest extends FunSuite with BeforeAndAfterAll {
+class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   // default yaml
   private val configFile = getClass.getResource("/testbash/config.vsh.yaml").getPath
 
