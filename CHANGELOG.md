@@ -41,6 +41,11 @@ functionality:
 
 * Scripts: Fix Docker `chown` failing when multiple outputs are defined (#21).
 
+* JavaScriptRequirements: Fix type getting set to "python" when unparsing.
+
+## TESTING
+
+* YAML: Test invertibility of parsing/unparsing config objects.
 
 # viash 0.3.0 (2020-11-24)
 
