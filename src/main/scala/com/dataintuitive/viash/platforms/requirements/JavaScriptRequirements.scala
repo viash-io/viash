@@ -8,7 +8,7 @@ case class JavaScriptRequirements(
   url: List[String] = Nil
 ) extends Requirements {
 
-  val `type` = "python"
+  val `type` = "javascript"
 
   private def generateCommands(prefix: String, values: List[String]) = {
     values match {
