@@ -1,5 +1,6 @@
 package com.dataintuitive.viash
 
+import com.dataintuitive.viash.config.Config
 import org.scalatest.FunSuite
 
 class ComponentE2ETests extends FunSuite {
@@ -15,11 +16,29 @@ class ComponentE2ETests extends FunSuite {
   )
 
   for ((name, file) ← tests) {
+    val config = getTestResource(s"/$name/$file")
+
     test(s"Testing $name platform native", NativeTest) {
-      TestHelper.testMain(Array("test", "-p", "native", getTestResource(s"/$name/$file")))
+      TestHelper.testMain(Array("test", "-p", "native", config))
     }
+
     test(s"Testing $name platform docker", DockerTest) {
-      TestHelper.testMain(Array("test", "-p", "docker", getTestResource(s"/$name/$file")))
+      TestHelper.testMain(Array("test", "-p", "docker", config))
+    }
+
+    test(s"Testing $name whether yaml parsing/unparsing is invertible") {
+      import io.circe.syntax._
+
+      val conf = Config.read(config)
+
+      // convert to json
+      val confJson = conf.asJson
+
+      // convert back to config
+      val conf2 = confJson.as[Config].right.get
+
+      // check if equal
+      assert(conf == conf2)
     }
   }
 }
