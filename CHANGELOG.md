@@ -32,7 +32,7 @@ functionality:
   - on command-line: `---docker_setup_strategy xxx` or `---dss xxx`
   
   Allowed values for the setup strategy are:
-  - alwaysbuild / build: build the image from the dockerfile
+  - alwaysbuild / build: build the image from the dockerfile (DEFAULT)
   - alwayscachedbuild / cachedbuild: build the image from the dockerfile, with caching
   - alwayspull / pull: pull the image from a registry
   - alwayspullelsebuild / pullelsebuild: try to pull the image from a registry, else build it
