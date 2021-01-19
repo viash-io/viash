@@ -16,7 +16,7 @@ object Main {
 
   def main(args: Array[String]) {
     val (viashArgs, runArgs) = {
-        if (args(0) == "run") {
+        if (args.length > 0 && args(0) == "run") {
           args.span(_ != "--")
         } else {
           (args, Array[String]())
