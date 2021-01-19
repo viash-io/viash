@@ -22,13 +22,15 @@ package object docker {
 
   // encoder and decoder for direction
   implicit val encodeSetupStrategy: Encoder[DockerSetupStrategy] = Encoder.instance {
-    v => Json.fromString(v.toString)
+    dss => Json.fromString(dss.id.toLowerCase)
   }
   implicit val decodeSetupStrategy: Decoder[DockerSetupStrategy] = Decoder.instance {
     cursor =>
       cursor.value.as[String].map { s =>
         val id = s.toLowerCase.replaceAll("_", "")
-        DockerSetupStrategy.map.applyOrElse(id, throw new Exception(s"Docker Setup Strategy '$id' not found"))
+        DockerSetupStrategy.map.applyOrElse(id,
+          (key: String) => throw new Exception(s"Docker Setup Strategy '$key' not found.")
+        )
       }
   }
 }
