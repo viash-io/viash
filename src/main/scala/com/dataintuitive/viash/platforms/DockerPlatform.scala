@@ -4,7 +4,7 @@ import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.platforms.requirements._
-import com.dataintuitive.viash.helpers.Bash
+import com.dataintuitive.viash.helpers.{Bash, Docker}
 import com.dataintuitive.viash.config.Version
 import com.dataintuitive.viash.wrapper.{BashWrapper, BashWrapperMods}
 import com.dataintuitive.viash.platforms.docker._
@@ -97,40 +97,24 @@ case class DockerPlatform(
     // get dependencies
     val runCommands = requirements.flatMap(_.dockerCommands)
 
-    // if no extra dependencies are needed, the provided image can just be used,
-    // otherwise need to construct a separate docker container
-
-    // get imagename and tag
-    /*
-    private val tagRegex = "(.*):(.*)".r
-    val (imageRegistry, imageName, imageTag) =
-      if (runCommands.isEmpty) {
-        image match {
-          case tagRegex(a, b) => (None, a, b)
-          case _ => (None, image, "latest")
-        }
-      } else {
-        (
-          target_registry,
-          target_image.getOrElse(functionality.namespace.map(_ + "/").getOrElse("") + functionality.name),
-          (version orElse target_tag).map(_.toString).getOrElse("latest")
-        )
-      }
-
-    val effectiveID = imageRegistry.map(_ + "/").getOrElse("") + imageName + ":" + imageTag
-    */
-
+    // if there are no requirements, simply use the specified image
     val effectiveID =
       if (runCommands.isEmpty) {
         image
       } else {
-        val left = target_registry.map(_ + "/").getOrElse("")
-        val middle = target_image.getOrElse(functionality.namespace.map(_ + "/").getOrElse("") + functionality.name)
-        val right = ":" + (version orElse target_tag orElse functionality.version).map(_.toString).getOrElse("latest")
+        // get image info
+        val imageInfo = Docker.getImageInfo(
+          functionality,
+          customRegistry = target_registry,
+          customName = target_image,
+          customVersion = (version orElse target_tag).map(_.toString)
+        )
 
-        left + middle + right
+        imageInfo.toString
       }
 
+    // if no extra dependencies are needed, the provided image can just be used,
+    // otherwise need to construct a separate docker container
     val (viashDockerFile, viashDockerBuild) =
       if (runCommands.isEmpty) {
         ("  :", "  ViashDockerPull $1")

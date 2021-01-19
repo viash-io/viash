@@ -5,39 +5,45 @@ import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.platforms.requirements._
 import com.dataintuitive.viash.config.Version
+import com.dataintuitive.viash.helpers.Docker
 
 /**
  * / * Platform class for generating NextFlow (DSL2) modules.
  */
 case class NextFlowPlatform(
   id: String = "nextflow",
-  version: Option[Version] = None,
   image: Option[String],
-  executor: Option[String],
-  publish: Option[Boolean],
-  per_id: Option[Boolean],
-  path: Option[String],
-  label: Option[String],
-  stageInMode: Option[String],
-
-  // TODO: these parameters could (and should?) be removed
-  // as they have no actual impact on anything
-  apt: Option[AptRequirements] = None,
-  r: Option[RRequirements] = None,
-  python: Option[PythonRequirements] = None,
-  setup: List[Requirements] = Nil
+  tag: Option[Version] = None,
+  version: Option[Version] = None,
+  registry: Option[String] = None,
+  executor: Option[String] = None,
+  publish: Option[Boolean] = None,
+  per_id: Option[Boolean] = None,
+  path: Option[String] = None,
+  label: Option[String] = None,
+  stageInMode: Option[String] = None
 ) extends Platform {
   val `type` = "nextflow"
 
+  assert(version.isEmpty || tag.isEmpty, "nextflow platform: version and tag should not both be defined")
+
   val requirements: List[Requirements] = Nil
 
-  private val nativePlatform = NativePlatform(id = id, version = version, r = r, python = python, setup = setup)
+  private val nativePlatform = NativePlatform(id = id)
 
   def modifyFunctionality(functionality: Functionality): Functionality = {
     import NextFlowUtils._
     implicit val fun: Functionality = functionality
 
     val fname = functionality.name
+
+    // get image info
+    val imageInfo = Docker.getImageInfo(
+      functionality,
+      customRegistry = registry,
+      customName = image,
+      customVersion = (version orElse tag).map(_.toString)
+    )
 
     // get main script/binary
     val mainResource = functionality.mainScript
@@ -86,14 +92,10 @@ case class NextFlowPlatform(
       case None => Nil
     }
 
-    val imageName: String = {
-      val autogen = functionality.namespace.map( _ + "/" + functionality.name).getOrElse(functionality.name)
-      image.getOrElse(autogen)
-    }
-
+    // registry is handled as a parameter later on
     val mainParams: List[ConfigTuple] = List(
         "name" → functionality.name,
-        "container" → (imageName + ":" + version.map(_.toString).getOrElse("latest")).toString,
+        "container" → imageInfo.copy(registry = None).toString, // registry is handled as a separate 'dockerPrefix' parameter
         "command" → executionCode
     )
 
@@ -118,7 +120,7 @@ case class NextFlowPlatform(
         namespacedParameters :::
         List(
           tupleToConfigTuple("id" → ""),
-          tupleToConfigTuple("dockerPrefix" -> ""),
+          tupleToConfigTuple("dockerPrefix" -> imageInfo.registry.map(_ + "/").getOrElse("")),
           tupleToConfigTuple("input" → ""),
           tupleToConfigTuple("output" → ""),
           tupleToConfigTuple("testScript" -> testScript.headOption.getOrElse("")), // TODO: what about when there are multiple tests?
