@@ -52,7 +52,10 @@ object IO {
     try {
       Some(read(uri))
     } catch {
-      case _: Exception => None
+      case _: Exception => {
+        println(s"File at URI '$uri' not found")
+        None
+      }
     }
   }
 

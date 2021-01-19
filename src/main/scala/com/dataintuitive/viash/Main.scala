@@ -101,45 +101,49 @@ object Main {
       val conf1 =
         try {
           // first read config to get an idea of the available platforms
-          Config.read(file.toString, modifyFun = false)
+          Some(Config.read(file.toString, modifyFun = false))
         } catch {
           case e: Exception => {
             println(s"Reading file '$file' failed")
-            return Nil // skip this file
+            None
           }
         }
 
-      // determine which namespace to use
-      val _namespace = getNamespace(namespace, file)
-
-      if (platformStr.contains(":") || (new File(platformStr)).exists) {
-        // platform is a file
-        List(Config.read(
-          config = file.toString,
-          platform = Some(platformStr),
-          namespace = _namespace,
-          modifyFun = modifyFun
-        ))
+      if (conf1.isEmpty) {
+        Nil
       } else {
-        // platform is a regex for filtering the ids
-        val platIDs = conf1.platforms.map(_.id)
+        // determine which namespace to use
+        val _namespace = getNamespace(namespace, file)
 
-        val filteredPlats =
-          if (platIDs.isEmpty) {
-            // config did not contain any platforms, so the native platform should be used
-            List(None)
-          } else {
-            // filter platforms using the regex
-            platIDs.filter(platformStr.r.findFirstIn(_).isDefined).map(Some(_))
-          }
-
-        filteredPlats.map { plat =>
-          Config.read(
+        if (platformStr.contains(":") || (new File(platformStr)).exists) {
+          // platform is a file
+          List(Config.read(
             config = file.toString,
-            platform = plat,
+            platform = Some(platformStr),
             namespace = _namespace,
             modifyFun = modifyFun
-          )
+          ))
+        } else {
+          // platform is a regex for filtering the ids
+          val platIDs = conf1.get.platforms.map(_.id)
+
+          val filteredPlats =
+            if (platIDs.isEmpty) {
+              // config did not contain any platforms, so the native platform should be used
+              List(None)
+            } else {
+              // filter platforms using the regex
+              platIDs.filter(platformStr.r.findFirstIn(_).isDefined).map(Some(_))
+            }
+
+          filteredPlats.map { plat =>
+            Config.read(
+              config = file.toString,
+              platform = plat,
+              namespace = _namespace,
+              modifyFun = modifyFun
+            )
+          }
         }
       }
     }
