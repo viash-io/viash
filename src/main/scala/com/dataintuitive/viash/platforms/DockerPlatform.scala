@@ -20,12 +20,15 @@ case class DockerPlatform(
   chown: Boolean = true,
   port: Option[List[String]] = None,
   workdir: Option[String] = None,
+  setup_strategy: DockerSetupStrategy = AlwaysBuild,
+
+  // setup variables
+  setup: List[Requirements] = Nil,
   apk: Option[ApkRequirements] = None,
   apt: Option[AptRequirements] = None,
   r: Option[RRequirements] = None,
   python: Option[PythonRequirements] = None,
-  docker: Option[DockerRequirements] = None,
-  setup: List[Requirements] = Nil
+  docker: Option[DockerRequirements] = None
 ) extends Platform {
   val `type` = "docker"
 
@@ -191,7 +194,7 @@ case class DockerPlatform(
       s"""
          |${Bash.ViashDockerFuns}
          |# initialise variables
-         |$dockerStrategyVar='alwaysbuild'""".stripMargin
+         |$dockerStrategyVar='${setup_strategy.id}'""".stripMargin
 
     val parsers =
       s"""
