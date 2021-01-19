@@ -39,6 +39,7 @@ function ViashDockerLocalTagCheck {
 #   ViashDockerPull sdaizudceahifu
 #   echo $?                                     # returns '1'
 function ViashDockerPull {
+  echo "> docker pull $1"
   docker pull $1 && return 0 || return 1
 }
 
