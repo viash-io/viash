@@ -98,8 +98,16 @@ object Main {
     })
 
     scriptFiles.flatMap { file =>
-      // first read config to get an idea of the available platforms
-      val conf1 = Config.read(file.toString, modifyFun = false)
+      val conf1 =
+        try {
+          // first read config to get an idea of the available platforms
+          Config.read(file.toString, modifyFun = false)
+        } catch {
+          case e: Exception => {
+            println(s"Reading file '$file' failed")
+            return Nil // skip this file
+          }
+        }
 
       // determine which namespace to use
       val _namespace = getNamespace(namespace, file)
