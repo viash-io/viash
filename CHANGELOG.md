@@ -67,6 +67,10 @@ functionality:
 
 * Native `---setup`: Fix missing newlines when running native ---setup commands.
 
+* Main: Fix crashing when no arguments are supplied.
+
+* Namespace: Show error message when the config file can't be parsed.
+
 ## TESTING
 
 * YAML: Test invertibility of parsing/unparsing config objects.
