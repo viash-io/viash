@@ -8,18 +8,11 @@ import com.dataintuitive.viash.wrapper.BashWrapper
 
 case class NativePlatform(
   id: String = "native",
-  version: Option[Version] = None,
-  r: Option[RRequirements] = None,
-  python: Option[PythonRequirements] = None,
   setup: List[Requirements] = Nil
 ) extends Platform {
   val `type` = "native"
 
-  val requirements: List[Requirements] = {
-    setup :::
-      r.toList :::
-      python.toList
-  }
+  val requirements: List[Requirements] = setup
 
   def modifyFunctionality(functionality: Functionality): Functionality = {
     val executor = functionality.mainScript match {

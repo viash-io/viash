@@ -116,7 +116,7 @@ object ViashTest {
     }
 
     // generate executable for native platform
-    val exe = NativePlatform(version = None).modifyFunctionality(fun).resources.get.head
+    val exe = NativePlatform().modifyFunctionality(fun).resources.get.head
 
     // fetch tests
     val tests = fun.tests.getOrElse(Nil)
