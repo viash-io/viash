@@ -43,6 +43,10 @@ functionality:
   - ifneedbepullelsebuild: if the image does not exist locally, pull the image else build it
   - ifneedbepullelsecachedbuild: if the image does not exist locally, pull the image else build it with caching
   - donothing / meh: do not build or pull anything
+  
+## MAJOR CHANGES
+
+* License: viash is now licensed under GPL-3.
 
 ## MINOR CHANGES
 
@@ -74,6 +78,7 @@ functionality:
 ## TESTING
 
 * YAML: Test invertibility of parsing/unparsing config objects.
+
 
 # viash 0.3.0 (2020-11-24)
 
