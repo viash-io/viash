@@ -141,9 +141,9 @@ object BashWrapper {
     // generate header
     val nameAndVersion = functionality.name + functionality.version.map(" " + _).getOrElse("")
     val nameAndVersionHeader =
-      "#".repeat(nameAndVersion.length+10) + "\n" +
-      "#    " + nameAndVersion + "    #\n" +
-        "#".repeat(nameAndVersion.length+10)
+      ("#" * (nameAndVersion.length+10)) + "\n" +
+        "#    " + nameAndVersion + "    #\n" +
+        ("#" * (nameAndVersion.length+10))
 
     val authorHeader =
       if (functionality.authors.isEmpty) {
