@@ -15,23 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.dataobjects
+package com.dataintuitive.viash.helpers
 
-abstract class DataObject[Type] {
-  val `type`: String
-  val name: String
-  val alternatives: List[String]
-  val description: Option[String]
-  val default: Option[Type]
-  val required: Boolean
-  val direction: Direction
-  val tag: Option[String]
-  val multiple: Boolean
-  val multiple_sep: Char
-
-  private val pattern = "^(-*)(.*)$".r
-  val pattern(otype, plainName) = name
-
-  val par: String = "par_" + plainName
-  val VIASH_PAR: String = "VIASH_PAR_" + plainName.toUpperCase()
+object Format {
+  def wordWrap(s: String, n: Int): Seq[String] = {
+    val words = s.split("\\s")
+    if (words.isEmpty) Nil
+    else
+      words.tail.foldLeft(List[String](words.head)){ (lines, word) =>
+        if (lines.head.length + word.length + 1 > n)
+          word :: lines
+        else
+          (lines.head + " " + word) :: lines.tail
+      }.reverse
+  }
 }
+

@@ -1,8 +1,14 @@
 functionality:
   name: testbash
+  version: 0.1
   description: |
     Prints out the parameter values.
     Checking what happens with multiline descriptions.
+  authors:
+    - name: Bob Cando
+      roles: [maintainer, author]
+      email: bob@cando.com
+      props: {github: bobcando, orcid: XXXAAABBB}
   arguments:
     - name: "input"
       type: file

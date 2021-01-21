@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2020  Data Intuitive
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.dataintuitive.viash
 
 import org.rogach.scallop.{ScallopConf, Subcommand}
@@ -78,13 +95,16 @@ trait WithTemporary {
 }
 
 class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
-  version(s"${Main.name} ${Main.version} (c) 2020 Data Intuitive, All Rights Reserved")
+  version(s"${Main.name} ${Main.version} (c) 2020 Data Intuitive")
 
   appendDefaultToDescription = true
 
   banner(
     s"""
        |viash is a spec and a tool for defining execution contexts and converting execution instructions to concrete instantiations.
+       |
+       |This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it under certain conditions. For more information, see our license at the link below.
+       |  https://github.com/data-intuitive/viash/blob/master/LICENSE.md
        |
        |Usage:
        |  viash run config.vsh.yaml -- [arguments for script]
