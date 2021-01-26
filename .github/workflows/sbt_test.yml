@@ -16,8 +16,8 @@ jobs:
       matrix:
         config: 
         - {name: 'main', os: ubuntu-latest, r: '3.6.1', python: '3.8' }
-        # - {name: 'ubuntu_rrel_py3.x', os: ubuntu-latest, r: 'release', python: '3.x' }
-        # - {name: 'mac_r3.6.1_py3.8', os: macos-latest, r: '3.6.1', python: '3.8' }
+        - {name: 'ubuntu_latest', os: ubuntu-latest, r: 'release', python: '3.x' }
+        - {name: 'macos_latest', os: macos-latest, r: 'release', python: '3.x' }
 
     steps:
     - uses: actions/checkout@v2
