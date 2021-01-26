@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2020  Data Intuitive
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.dataintuitive.viash.platforms
 
 import com.dataintuitive.viash.functionality.Functionality
@@ -8,18 +25,11 @@ import com.dataintuitive.viash.wrapper.BashWrapper
 
 case class NativePlatform(
   id: String = "native",
-  version: Option[Version] = None,
-  r: Option[RRequirements] = None,
-  python: Option[PythonRequirements] = None,
   setup: List[Requirements] = Nil
 ) extends Platform {
   val `type` = "native"
 
-  val requirements: List[Requirements] = {
-    setup :::
-      r.toList :::
-      python.toList
-  }
+  val requirements: List[Requirements] = setup
 
   def modifyFunctionality(functionality: Functionality): Functionality = {
     val executor = functionality.mainScript match {
@@ -54,12 +64,11 @@ case class NativePlatform(
           "cat << 'HERE'\n" +
           "# run the following commands:\n" +
           li.mkString("", " && \\\n  ", "\n") +
-          "HERE"
+          "HERE\n"
         }
       ).mkString
 
     s"""function ViashSetup {
-       |${if (commands == "") ":" else commands}
-       |}""".stripMargin
+       |${if (commands == "") ":\n" else commands}}""".stripMargin
   }
 }

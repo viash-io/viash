@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2020  Data Intuitive
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.dataintuitive.viash
 
 import java.nio.file.{Files, Path, Paths}
@@ -16,7 +33,7 @@ object Main {
 
   def main(args: Array[String]) {
     val (viashArgs, runArgs) = {
-        if (args(0) == "run") {
+        if (args.length > 0 && args(0) == "run") {
           args.span(_ != "--")
         } else {
           (args, Array[String]())
@@ -98,40 +115,52 @@ object Main {
     })
 
     scriptFiles.flatMap { file =>
-      // first read config to get an idea of the available platforms
-      val conf1 = Config.read(file.toString, modifyFun = false)
-
-      // determine which namespace to use
-      val _namespace = getNamespace(namespace, file)
-
-      if (platformStr.contains(":") || (new File(platformStr)).exists) {
-        // platform is a file
-        List(Config.read(
-          config = file.toString,
-          platform = Some(platformStr),
-          namespace = _namespace,
-          modifyFun = modifyFun
-        ))
-      } else {
-        // platform is a regex for filtering the ids
-        val platIDs = conf1.platforms.map(_.id)
-
-        val filteredPlats =
-          if (platIDs.isEmpty) {
-            // config did not contain any platforms, so the native platform should be used
-            List(None)
-          } else {
-            // filter platforms using the regex
-            platIDs.filter(platformStr.r.findFirstIn(_).isDefined).map(Some(_))
+      val conf1 =
+        try {
+          // first read config to get an idea of the available platforms
+          Some(Config.read(file.toString, modifyFun = false))
+        } catch {
+          case e: Exception => {
+            println(s"Reading file '$file' failed")
+            None
           }
+        }
 
-        filteredPlats.map { plat =>
-          Config.read(
+      if (conf1.isEmpty) {
+        Nil
+      } else {
+        // determine which namespace to use
+        val _namespace = getNamespace(namespace, file)
+
+        if (platformStr.contains(":") || (new File(platformStr)).exists) {
+          // platform is a file
+          List(Config.read(
             config = file.toString,
-            platform = plat,
+            platform = Some(platformStr),
             namespace = _namespace,
             modifyFun = modifyFun
-          )
+          ))
+        } else {
+          // platform is a regex for filtering the ids
+          val platIDs = conf1.get.platforms.map(_.id)
+
+          val filteredPlats =
+            if (platIDs.isEmpty) {
+              // config did not contain any platforms, so the native platform should be used
+              List(None)
+            } else {
+              // filter platforms using the regex
+              platIDs.filter(platformStr.r.findFirstIn(_).isDefined).map(Some(_))
+            }
+
+          filteredPlats.map { plat =>
+            Config.read(
+              config = file.toString,
+              platform = plat,
+              namespace = _namespace,
+              modifyFun = modifyFun
+            )
+          }
         }
       }
     }

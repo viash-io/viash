@@ -8,9 +8,11 @@ import com.dataintuitive.viash.config.Config
 import scala.io.Source
 import com.dataintuitive.viash.helpers._
 
-class MainBuildNativeTest extends FunSuite with BeforeAndAfterAll {
+class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
   // which platform to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
+  private val configNoPlatformFile = getClass.getResource(s"/testbash/config_no_platform.vsh.yaml").getPath
+  private val configPlatformFile = getClass.getResource(s"/testbash/config_platform_native.vsh.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
@@ -135,6 +137,45 @@ class MainBuildNativeTest extends FunSuite with BeforeAndAfterAll {
     assert(regex.findFirstIn(stdout).isDefined)
 
     assert(stdout.contains("INFO: Parsed input arguments"))
+  }
+
+  test("when -p is omitted, the system should run as native") {
+    val testText = TestHelper.testMain(Array(
+      "build",
+      "-o", tempFolStr,
+      "-m",
+      configNoPlatformFile
+    ))
+
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    Exec.run(
+      Seq(executable.toString, "--help")
+    )
+
+    val regexPlatform = "platform:\\s*<NA>".r
+    assert(regexPlatform.findFirstIn(testText).isDefined, testText)
+  }
+
+  test("Specify platform (native) in config yaml") {
+    val testText = TestHelper.testMain(Array(
+      "build",
+      "-o", tempFolStr,
+      "-m",
+      configPlatformFile
+    ))
+
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    val out = Exec.run2(
+      Seq(executable.toString, "--help")
+    )
+    assert(out.exitValue == 0)
+
+    val regexPlatform = "platform:\\s*<NA>".r
+    assert(regexPlatform.findFirstIn(testText).isDefined, testText)
   }
 
   override def afterAll() {

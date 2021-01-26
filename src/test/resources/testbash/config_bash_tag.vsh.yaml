@@ -10,12 +10,33 @@ functionality:
       type: string
       description: An optional string.
 platforms:
-  - type: docker
+  - id: "testtag1"
+    type: docker
     image: "bash:5.0"
-    target_image: "viash_test_bash_5_0"
-    id: "docker_5_0"
-  - type: docker
+  - id: "testtag2"
+    type: docker
     image: "bash:3.2"
-    target_image: "viash_test_bash_3.2"
-    id: "docker_3_2"
+  - id: "testtargetimage1"
+    type: docker
+    image: "bash:5.0"
+    setup: 
+      - type: docker
+        run: [ ls ]
+  - id: "testtargetimage2"
+    type: docker
+    image: "bash:5.0"
+    target_image: bar
+    target_registry: foo.io
+    version: 0.0.1
+    setup: 
+      - type: docker
+        run: [ ls ]
+  - id: "testtargetimage3"
+    type: docker
+    image: "bash:3.2"
+    target_image: bar
+    target_tag: 0.0.2
+    setup: 
+      - type: docker
+        run: [ ls ]
 

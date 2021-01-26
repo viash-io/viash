@@ -1,3 +1,88 @@
+# viash 0.3.2
+
+Nothing yet.
+
+# viash 0.3.1 (2021-01-26)
+
+## NEW FEATURES
+
+* Functionality: Added list of authors field. Example:
+
+```yaml
+functionality:
+  authors:
+    - name: Bob Cando
+      roles: [maintainer, author]
+      email: bob@cando.com
+      props: {github: bobcando, orcid: XXXAAABBB}
+```
+
+* Docker Platform: Allow specifying the registry with `target_registry`. Example:
+
+```yaml
+- type: docker
+  image: bash:4.0
+  target_registry: foo.io
+  target_image: bar
+  target_tag: 0.1
+```
+
+* Docker Platform: `version` is now a synonym for `target_tag`.
+  If both `version` and `target_tag` are not defined, `functionality.version` will
+  be used instead.
+  
+* Docker Platform: Can change the Docker Setup Strategy by specifying
+  - in the yaml: `setup_strategy: xxx`
+  - on command-line: `---docker_setup_strategy xxx` or `---dss xxx`
+  
+  Allowed values for the setup strategy are:
+  - alwaysbuild / build: build the image from the dockerfile (DEFAULT)
+  - alwayscachedbuild / cachedbuild: build the image from the dockerfile, with caching
+  - alwayspull / pull: pull the image from a registry
+  - alwayspullelsebuild / pullelsebuild: try to pull the image from a registry, else build it
+  - alwayspullelsecachedbuild / pullelsecachedbuild: try to pull the image from a registry, else build it with caching
+  - ifneedbebuild: if the image does not exist locally, build the image
+  - ifneedbecachedbuild: if the image does not exist locally, build the image with caching
+  - ifneedbepull: if the image does not exist locally, pull the image
+  - ifneedbepullelsebuild: if the image does not exist locally, pull the image else build it
+  - ifneedbepullelsecachedbuild: if the image does not exist locally, pull the image else build it with caching
+  - donothing / meh: do not build or pull anything
+  
+## MAJOR CHANGES
+
+* License: viash is now licensed under GPL-3.
+
+## MINOR CHANGES
+
+* CLI: Allow parameters before and after specifying a viash config yaml. For example, 
+  both following commands now work. Up until now, only the latter would work.
+  - `viash run config.vsh.yaml -p docker`
+  - `viash run -p docker config.vsh.yaml`
+
+* Functionality: Arguments field can now be omitted.
+
+* Scripts: Wrapped scripts now contain a minimal header at the top.
+
+## BUG FIXES
+
+* `NXF viash build`: Do not assume each config yaml has at least one test.
+
+* Scripts: Fix Docker `chown` failing when multiple outputs are defined (#21).
+
+* JavaScriptRequirements: Fix type getting set to "python" when unparsing.
+
+* `viash run . ---debug`: Debug session should now work again
+
+* Native `---setup`: Fix missing newlines when running native ---setup commands.
+
+* Main: Fix crashing when no arguments are supplied.
+
+* Namespace: Show error message when the config file can't be parsed.
+
+## TESTING
+
+* YAML: Test invertibility of parsing/unparsing config objects.
+
 
 # viash 0.3.0 (2020-11-24)
 

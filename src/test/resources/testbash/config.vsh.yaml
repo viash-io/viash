@@ -1,8 +1,14 @@
 functionality:
   name: testbash
+  version: 0.1
   description: |
     Prints out the parameter values.
     Checking what happens with multiline descriptions.
+  authors:
+    - name: Bob Cando
+      roles: [maintainer, author]
+      email: bob@cando.com
+      props: {github: bobcando, orcid: XXXAAABBB}
   arguments:
     - name: "input"
       type: file
@@ -28,6 +34,12 @@ functionality:
     - name: "--truth"
       type: boolean_true
       description: A switch flag.
+    - name: "--falsehood"
+      type: boolean_false
+      description: A switch flag which is false when specified.
+    - name: "--reality"
+      type: boolean
+      description: A switch flag without predetermined state.
     - name: "--output"
       alternatives: [ "-o" ]
       type: file

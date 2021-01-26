@@ -1,13 +1,13 @@
 name := "viash"
 
-version := "0.3.0"
+version := "0.3.1"
 
 scalaVersion := "2.12.10"
 
 libraryDependencies ++= Seq(
   "org.scalactic" %% "scalactic" % "3.0.7" % "test",
   "org.scalatest" %% "scalatest" % "3.0.7" % "test",
-  "org.rogach" %% "scallop" % "3.3.2",
+  "org.rogach" %% "scallop" % "4.0.1",
   "com.github.eikek" %% "yamusca-core" % "0.5.1",
   "io.circe" %% "circe-yaml" % "0.12.0",
   "org.scala-lang" % "scala-reflect" % scalaVersion.value
@@ -25,5 +25,5 @@ libraryDependencies ++= Seq(
 scalacOptions ++= Seq("-unchecked", "-deprecation")
 
 organization := "Data Intuitive"
-
-licenses += ("Custom", url("file://LICENSE.md"))
+startYear := Some(2020)
+licenses += "GPL-3.0-or-later" -> url("https://www.gnu.org/licenses/gpl-3.0.html")

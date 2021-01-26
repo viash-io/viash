@@ -1,30 +1,55 @@
+/*
+ * Copyright (C) 2020  Data Intuitive
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.dataintuitive.viash.platforms
 
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.platforms.requirements._
-import com.dataintuitive.viash.helpers.Bash
+import com.dataintuitive.viash.helpers.{Bash, Docker}
 import com.dataintuitive.viash.config.Version
 import com.dataintuitive.viash.wrapper.{BashWrapper, BashWrapperMods}
+import com.dataintuitive.viash.platforms.docker._
 
 case class DockerPlatform(
   id: String = "docker",
   image: String,
   version: Option[Version] = None,
   target_image: Option[String] = None,
-  resolve_volume: ResolveVolume = Automatic,
+  target_registry: Option[String] = None,
+  target_tag: Option[Version] = None,
+  resolve_volume: DockerResolveVolume = Automatic,
   chown: Boolean = true,
   port: Option[List[String]] = None,
   workdir: Option[String] = None,
+  setup_strategy: DockerSetupStrategy = AlwaysBuild,
+
+  // setup variables
+  setup: List[Requirements] = Nil,
   apk: Option[ApkRequirements] = None,
   apt: Option[AptRequirements] = None,
   r: Option[RRequirements] = None,
   python: Option[PythonRequirements] = None,
-  docker: Option[DockerRequirements] = None,
-  setup: List[Requirements] = Nil
+  docker: Option[DockerRequirements] = None
 ) extends Platform {
   val `type` = "docker"
+
+  assert(version.isEmpty || target_tag.isEmpty, "docker platform: version and target_tag should not both be defined")
 
   val requirements: List[Requirements] =
     setup :::
@@ -41,29 +66,20 @@ case class DockerPlatform(
     }
 
     // create setup
-    val (imageName, imageVersion, setupCommands) = processDockerSetup(functionality)
+    val (effectiveID, setupCommands, setupMods) = processDockerSetup(functionality)
 
     // generate automount code
     val dmVol = processDockerVolumes(functionality)
 
     // add ---debug flag
-    val debuggor = s"""docker run --entrypoint=bash $dockerArgs -v "$$(pwd)":/pwd --workdir /pwd -t $imageName:$imageVersion"""
+    val debuggor = s"""docker run --entrypoint=bash $dockerArgs -v "$$(pwd)":/pwd --workdir /pwd -t $effectiveID"""
     val dmDebug = addDockerDebug(debuggor)
 
     // add ---chown flag
-    val dmChown = addDockerChown(functionality, dockerArgs, dmVol.extraParams, imageName, imageVersion)
-
-    val dmDockerfile = BashWrapperMods(
-      parsers =
-        """
-          |        ---dockerfile)
-          |            ViashDockerfile
-          |            exit 0
-          |            ;;""".stripMargin
-    )
+    val dmChown = addDockerChown(functionality, dockerArgs, dmVol.extraParams, effectiveID)
 
     // compile modifications
-    val dm = dmVol ++ dmDebug ++ dmChown ++ dmDockerfile
+    val dm = setupMods ++ dmVol ++ dmDebug ++ dmChown
 
     // make commands
     val entrypointStr = functionality.mainScript.get match {
@@ -71,7 +87,7 @@ case class DockerPlatform(
       case _ => "--entrypoint=bash "
     }
     val workdirStr = workdir.map("--workdir " + _ + " ").getOrElse("")
-    val executor = s"""eval docker run $entrypointStr$workdirStr$dockerArgs${dm.extraParams} $imageName:$imageVersion"""
+    val executor = s"""eval docker run $entrypointStr$workdirStr$dockerArgs${dm.extraParams} $effectiveID"""
 
     // add extra arguments to the functionality file for each of the volumes
     val fun2 = functionality.copy(
@@ -94,32 +110,31 @@ case class DockerPlatform(
     )
   }
 
-  private val tagRegex = "(.*):(.*)".r
-
   private def processDockerSetup(functionality: Functionality) = {
     // get dependencies
     val runCommands = requirements.flatMap(_.dockerCommands)
 
-    // if no extra dependencies are needed, the provided image can just be used,
-    // otherwise need to construct a separate docker container
-
-    // get imagename and tag
-    val (imageName, tag) =
+    // if there are no requirements, simply use the specified image
+    val effectiveID =
       if (runCommands.isEmpty) {
-        image match {
-          case tagRegex(imageName, tag) => (imageName, tag)
-          case _ => (image, "latest")
-        }
+        image
       } else {
-        (
-          target_image.getOrElse(functionality.namespace.map(_ + "/").getOrElse("") + functionality.name),
-          version.map(_.toString).getOrElse("latest")
+        // get image info
+        val imageInfo = Docker.getImageInfo(
+          functionality,
+          customRegistry = target_registry,
+          customName = target_image,
+          customVersion = (version orElse target_tag).map(_.toString)
         )
+
+        imageInfo.toString
       }
 
-    val (viashDockerFile, viashSetup) =
+    // if no extra dependencies are needed, the provided image can just be used,
+    // otherwise need to construct a separate docker container
+    val (viashDockerFile, viashDockerBuild) =
       if (runCommands.isEmpty) {
-        ("  :", s"  docker image inspect $imageName:$tag >/dev/null 2>&1 || docker pull $imageName:$tag")
+        ("  :", "  ViashDockerPull $1")
       } else {
         val dockerFile =
           s"FROM $image\n\n" +
@@ -133,33 +148,31 @@ case class DockerPlatform(
         val buildArgs = dockerRequirements.map(_.build_args.map(" --build-arg " + _).mkString).mkString("")
 
         val vdf =
-          s"""cat << 'VIASHDOCKER'
+          s"""  cat << 'VIASHDOCKER'
              |$dockerFile
              |VIASHDOCKER""".stripMargin
 
-        val vs =
-          s"""  # create temporary directory to store temporary dockerfile in
-             |
-             |  tmpdir=$$(mktemp -d "$$VIASH_TEMP/viash_setupdocker-${functionality.name}-XXXXXX")
+        val vdb =
+          s"""
+             |  # create temporary directory to store dockerfile & optional resources in
+             |  tmpdir=$$(mktemp -d "$$VIASH_TEMP/viashsetupdocker-${functionality.name}-XXXXXX")
              |  function clean_up {
-             |    rm -rf "\\$$tmpdir"
+             |    rm -rf "$$tmpdir"
              |  }
              |  trap clean_up EXIT
+             |
+             |  # store dockerfile and resources
              |  ViashDockerfile > $$tmpdir/Dockerfile
-             |  # if [ ! -z $$(docker images -q $imageName:$tag) ]; then
-             |  #   echo "Image exists locally or on Docker Hub"
-             |  # else
-             |    # Quick workaround to have the resources available in the current dir
-             |    cp $$${BashWrapper.var_resources_dir}/* $$tmpdir
-             |    # Build the container
-             |    echo "> docker build -t $imageName:$tag$buildArgs $$tmpdir"
-             |    docker build -t $imageName:$tag$buildArgs $$tmpdir
-             |  #fi""".stripMargin
+             |  cp -r $$${BashWrapper.var_resources_dir}/* $$tmpdir
+             |
+             |  # Build the container
+             |  echo "> docker build -t $$@$buildArgs $$tmpdir"
+             |  docker build -t $$@$buildArgs $$tmpdir""".stripMargin
 
-        (vdf, vs)
+        (vdf, vdb)
       }
 
-    val setupCommands =
+    val setupCommands = {
       s"""# ViashDockerFile: print the dockerfile to stdout
          |# return : dockerfile required to run this component
          |# examples:
@@ -167,20 +180,50 @@ case class DockerPlatform(
          |function ViashDockerfile {
          |$viashDockerFile
          |}
+         |# ViashDockerBuild: ...
+         |function ViashDockerBuild {
+         |$viashDockerBuild
+         |}
          |
-         |# ViashSetup: build a docker container
-         |# if available on docker hub, the image will be pulled
-         |# from there instead.
-         |# examples:
-         |#   ViashSetup
+         |# ViashSetup: ...
          |function ViashSetup {
-         |$viashSetup
+         |  ViashDockerSetup $effectiveID $$$dockerStrategyVar
          |}""".stripMargin
+    }
 
-    (imageName, tag, setupCommands)
+    val preParse =
+      s"""
+         |${Bash.ViashDockerFuns}
+         |# initialise variables
+         |$dockerStrategyVar='${setup_strategy.id}'""".stripMargin
+
+    val parsers =
+      s"""
+         |        ---dss|---docker_setup_strategy)
+         |            ${BashWrapper.var_exec_mode}="setup"
+         |            $dockerStrategyVar="$$2"
+         |            shift 2
+         |            ;;
+         |        ---docker_setup_strategy=*)
+         |            ${BashWrapper.var_exec_mode}="setup"
+         |            $dockerStrategyVar=$$(ViashRemoveFlags "$$2")
+         |            shift 1
+         |            ;;
+         |        ---dockerfile)
+         |            ViashDockerfile
+         |            exit 0
+         |            ;;""".stripMargin
+
+    val mods = BashWrapperMods(
+      preParse = preParse,
+      parsers = parsers
+    )
+
+    (effectiveID, setupCommands, mods)
   }
 
   private val extraMountsVar = "VIASH_EXTRA_MOUNTS"
+  private val dockerStrategyVar = "VIASH_DOCKER_SETUP_STRATEGY"
 
   private def processDockerVolumes(functionality: Functionality) = {
     val args = functionality.argumentsAndDummies
@@ -190,7 +233,7 @@ case class DockerPlatform(
          |${Bash.ViashAbsolutePath}
          |${Bash.ViashAutodetectMount}
          |${Bash.ViashExtractFlags}
-         |# initialise autodetect mount variable
+         |# initialise variables
          |$extraMountsVar=''""".stripMargin
 
 
@@ -219,10 +262,10 @@ case class DockerPlatform(
                    |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
                    |  IFS="${arg.multiple_sep}"
                    |  for var in $$${arg.VIASH_PAR}; do
+                   |    unset IFS
                    |    $extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$var")"
                    |    ${BashWrapper.store(viash_temp, "\"$(ViashAutodetectMount \"$var\")\"", Some(arg.multiple_sep)).mkString("\n    ")}
                    |  done
-                   |  unset IFS
                    |  ${arg.VIASH_PAR}="$$$viash_temp"
                    |fi""".stripMargin)
             case arg: FileObject =>
@@ -256,21 +299,17 @@ case class DockerPlatform(
   }
 
   private def addDockerDebug(debugCommand: String) = {
-    val parsers = "\n" + Bash.argStore("---debug", "VIASH_DEBUG", "yes", 1, None)
-    val postParse =
+    val parsers =
       s"""
-         |
-         |# if desired, enter a debug session
-         |if [ $${VIASH_DEBUG} ]; then
-         |  echo "+ $debugCommand"
-         |  $debugCommand
-         |  exit 0
-         |fi"""
+         |        ---debug)
+         |            echo "+ $debugCommand"
+         |            $debugCommand
+         |            exit 0
+         |            ;;""".stripMargin
 
 
     BashWrapperMods(
-      parsers = parsers,
-      postParse = postParse
+      parsers = parsers
     )
   }
 
@@ -278,13 +317,12 @@ case class DockerPlatform(
     functionality: Functionality,
     dockerArgs: String,
     volExtraParams: String,
-    imageName: String,
-    imageVersion: String
+    fullImageID: String,
   ) = {
     val args = functionality.argumentsAndDummies
 
     def chownCommand(value: String): String = {
-      s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $imageName:$imageVersion "$$(id -u):$$(id -g)" -R $value"""
+      s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $fullImageID "$$(id -u):$$(id -g)" -R $value"""
     }
 
     val postParse =
@@ -302,9 +340,9 @@ case class DockerPlatform(
                  |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
                  |  IFS="${arg.multiple_sep}"
                  |  for var in $$${arg.VIASH_PAR}; do
+                 |    unset IFS
                  |    ${chownCommand("\"$var\"")}
                  |  done
-                 |  unset IFS
                  |  ${arg.VIASH_PAR}="$$$viash_temp"
                  |fi""".stripMargin
             } else {
@@ -323,7 +361,7 @@ case class DockerPlatform(
            |
            |# change file ownership
            |function viash_perform_chown {
-           |  ${chownParStr}
+           |  $chownParStr
            |}
            |trap viash_perform_chown EXIT
            |""".stripMargin
