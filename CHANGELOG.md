@@ -1,4 +1,8 @@
-# viash 0.3.1
+# viash 0.3.2
+
+Nothing yet.
+
+# viash 0.3.1 (2021-01-26)
 
 ## NEW FEATURES
 
