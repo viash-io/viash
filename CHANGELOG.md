@@ -79,6 +79,8 @@ functionality:
 
 * Namespace: Show error message when the config file can't be parsed.
 
+* Executable resource: Fix Docker automount handling for Executable resources.
+
 ## TESTING
 
 * YAML: Test invertibility of parsing/unparsing config objects.

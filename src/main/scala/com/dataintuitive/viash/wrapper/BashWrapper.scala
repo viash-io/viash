@@ -136,7 +136,7 @@ object BashWrapper {
     }
 
     // combine
-    val allMods = helpMods ++ parMods ++ execMods ++ mods
+    val allMods = helpMods ++ parMods ++ mods ++ execMods
 
     // generate header
     val nameAndVersion = functionality.name + functionality.version.map(" " + _).getOrElse("")
