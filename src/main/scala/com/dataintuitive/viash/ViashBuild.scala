@@ -39,6 +39,7 @@ object ViashBuild {
   def apply(
     config: Config,
     output: String,
+    writeMeta: Boolean = false,
     printMeta: Boolean = false,
     namespace: Option[String] = None,
     setup: Boolean = false
@@ -102,7 +103,11 @@ object ViashBuild {
     )
 
     // write resources to output directory
-    IO.writeResources(configYaml :: fun.resources.getOrElse(Nil), dir)
+    if (writeMeta) {
+      IO.writeResources(configYaml :: fun.resources.getOrElse(Nil), dir)
+    } else {
+      IO.writeResources(fun.resources.getOrElse(Nil), dir)
+    }
 
     // if '--setup' was passed, run './executable ---setup'
     if (setup && exec_path.isDefined) {

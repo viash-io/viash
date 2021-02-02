@@ -1,6 +1,8 @@
 # viash 0.3.2
 
-Nothing yet.
+## Minor changes
+
+* A `-w` or `--write_meta` flag has been added to write a viash.yaml file to the resources dir.
 
 # viash 0.3.1 (2021-01-26)
 
