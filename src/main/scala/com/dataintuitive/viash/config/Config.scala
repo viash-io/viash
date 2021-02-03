@@ -48,7 +48,7 @@ object Config {
 
     // make paths absolute
     val resources = fun.resources.getOrElse(Nil).map(_.copyWithAbsolutePath(uri))
-    val tests = fun.tests.getOrElse(Nil).map(_.copyWithAbsolutePath(uri))
+    val tests = fun.tests.getOrElse(Nil)
 
     // copy resources with updated paths into config and return
     config.copy(
