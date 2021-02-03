@@ -22,7 +22,7 @@ import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.platforms.requirements._
 import com.dataintuitive.viash.config.Version
-import com.dataintuitive.viash.helpers.Docker
+import com.dataintuitive.viash.helpers.NextFlowDocker
 
 /**
  * / * Platform class for generating NextFlow (DSL2) modules.
@@ -55,7 +55,7 @@ case class NextFlowPlatform(
     val fname = functionality.name
 
     // get image info
-    val imageInfo = Docker.getImageInfo(
+    val imageInfo = NextFlowDocker.getImageInfo(
       functionality,
       customRegistry = registry,
       customName = image,
