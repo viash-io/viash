@@ -19,11 +19,20 @@ package com.dataintuitive.viash.functionality
 
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
-import cats.syntax.functor._ // for .widen
+import cats.syntax.functor._
+
+import java.net.URI // for .widen
 
 package object resources {
 
   import com.dataintuitive.viash.helpers.Circe._
+
+  implicit val encodeURI: Encoder[URI] = Encoder.instance {
+    uri => Json.fromString(uri.toString)
+  }
+  implicit val decodeURI: Decoder[URI] = Decoder.instance {
+    cursor => cursor.value.as[String].map(new URI(_))
+  }
 
   // encoders and decoders for Object
   implicit val encodeBashScript: Encoder.AsObject[BashScript] = deriveConfiguredEncoder

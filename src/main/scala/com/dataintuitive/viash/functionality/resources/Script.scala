@@ -19,6 +19,8 @@ package com.dataintuitive.viash.functionality.resources
 
 import com.dataintuitive.viash.functionality.Functionality
 
+import java.net.URI
+
 trait Script extends Resource {
   val meta: ScriptObject
 
@@ -56,7 +58,8 @@ trait ScriptObject {
     path: Option[String] = None,
     text: Option[String] = None,
     dest: Option[String] = None,
-    is_executable: Option[Boolean] = Some(true)
+    is_executable: Option[Boolean] = Some(true),
+    parent: Option[URI] = None
   ): Script
 }
 

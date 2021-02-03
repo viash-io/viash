@@ -69,10 +69,13 @@ object ViashBuild {
         resources = Some(config.functionality.resources.getOrElse(Nil).map{ res =>
           if (res.text.isDefined) {
             val textVal = Some(placeholderMap(res))
-            res.copyResource(text = textVal)
+            res.copyResource(text = textVal, parent = None)
           } else {
-            res
+            res.copyResource(parent = None)
           }
+        }),
+        tests = Some(config.functionality.tests.getOrElse(Nil).map { res =>
+          res.copyResource(parent = None)
         })
       ),
       info = config.info.map(_.copy(
