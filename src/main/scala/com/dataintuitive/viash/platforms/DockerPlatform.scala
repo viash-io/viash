@@ -37,7 +37,7 @@ case class DockerPlatform(
   chown: Boolean = true,
   port: Option[List[String]] = None,
   workdir: Option[String] = None,
-  setup_strategy: DockerSetupStrategy = AlwaysBuild,
+  setup_strategy: DockerSetupStrategy = AlwaysCachedBuild,
 
   // setup variables
   setup: List[Requirements] = Nil,
