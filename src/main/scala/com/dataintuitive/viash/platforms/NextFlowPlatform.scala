@@ -112,7 +112,7 @@ case class NextFlowPlatform(
     val mainParams: List[ConfigTuple] = List(
         "name" → functionality.name,
         "container" → imageInfo.name,
-        "containerTag" -> imageInfo.tag,
+        "containerTag" -> imageInfo.tag.getOrElse("latest"),
         "command" → executionCode
     )
 
