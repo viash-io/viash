@@ -142,6 +142,7 @@ case class NextFlowPlatform(
      */
     val asNestedTuples: List[ConfigTuple] = List(
       "docker.enabled" → true,
+      "docker.runOptions" → "-i -v ${baseDir}:${baseDir}",
       "process.container" → "dataintuitive/portash",
       "params" → NestedValue(
         namespacedParameters :::
@@ -464,8 +465,7 @@ case class NextFlowPlatform(
                    |workflow {
                    |
                    |   def id = params.id
-                   |   def inputPath = Paths.get(params.input)
-                   |   def ch_ = Channel.from(inputPath).map{ s -> new Tuple3(id, s, params)}
+                   |   def ch_ = Channel.fromPath(params.input).map{ s -> new Tuple3(id, s, params)}
                    |
                    |   $fname(ch_)
                    |}
