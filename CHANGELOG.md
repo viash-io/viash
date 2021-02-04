@@ -1,8 +1,20 @@
-# viash 0.3.2
+# viash 0.3.2 (2021-02-04)
 
-## Minor changes
+## BREAKING CHANGES
 
-* A `-w` or `--write_meta` flag has been added to write a viash.yaml file to the resources dir.
+* `viash build`: Do not automatically generate a viash.yaml when creating an executable. 
+  Instead, you need to add the `-w|--write_meta` flag in order to let viash know that it
+  should generate a viash.yaml in the resources dir.
+
+## MAJOR CHANGES
+
+* `NXF`: Add beta functionality for running viash tests in Nextflow.
+
+## BUG FIXES
+
+* `NXF`: Add temporary workaround for determining the used image name when running a component.
+
+* Docker Platform: Set default setup strategy to "alwayscachedbuild" as this used to be the default viash behaviour.
 
 # viash 0.3.1 (2021-01-26)
 
