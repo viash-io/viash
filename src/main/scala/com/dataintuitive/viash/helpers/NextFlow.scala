@@ -15,19 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.resources
+package com.dataintuitive.viash.helpers
 
-import java.net.URI
+import com.dataintuitive.viash.functionality.Functionality
 
-case class PlainFile(
-  path: Option[String] = None,
-  text: Option[String] = None,
-  dest: Option[String] = None,
-  is_executable: Option[Boolean] = None,
-  parent: Option[URI] = None
-) extends Resource {
-  override val `type` = "file"
-  def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
-    copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
+object NextFlowDocker {
+  def getImageInfo(
+    fun: Functionality,
+    customName: Option[String] = None,
+    customNamespace: Option[String] = None,
+    customRegistry: Option[String] = None,
+    customVersion: Option[String] = None
+  ) = {
+
+    val name = customName match {
+      case Some(_name) => _name
+      case None => fun.namespace.map(_ + "/").getOrElse("") + fun.name
+    }
+
+    DockerImageInfo(
+      name = name,
+      tag = (customVersion orElse fun.version.map(_.toString)),
+      registry = customRegistry
+    )
   }
 }

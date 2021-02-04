@@ -25,6 +25,7 @@ import java.nio.file.{Path, Paths}
 trait Resource {
   val `type`: String
   val dest: Option[String]
+  val parent: Option[URI]
   val path: Option[String]
   val text: Option[String]
   val is_executable: Option[Boolean]
@@ -38,7 +39,19 @@ trait Resource {
     message = s"Resource: 'dest' needs to be defined if no 'path' is defined."
   )
 
-  val uri: Option[URI] = path.map(IO.uri)
+  // val uri: Option[URI] = path.map(IO.uri)
+  def uri: Option[URI] = {
+    path match {
+      case Some(pat) => {
+        val newPath = parent match {
+          case Some(par) => par.resolve(pat).toString
+          case _ => pat
+        }
+        Some(IO.uri(newPath))
+      }
+      case None => None
+    }
+  }
 
   private val basenameRegex = ".*/".r
 
@@ -90,8 +103,7 @@ trait Resource {
       if (p.isAbsolute) {
         this
       } else {
-        val newPath = Some(parent.resolve(path.get).toString)
-        this.copyResource(path = newPath)
+        this.copyResource(parent = Some(parent))
       }
     }
   }
@@ -101,6 +113,7 @@ trait Resource {
     path: Option[String] = this.path,
     text: Option[String] = this.text,
     dest: Option[String] = this.dest,
-    is_executable: Option[Boolean] = this.is_executable
+    is_executable: Option[Boolean] = this.is_executable,
+    parent: Option[URI] = this.parent
   ): Resource
 }

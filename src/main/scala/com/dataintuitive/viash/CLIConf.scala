@@ -148,11 +148,17 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |
          |Arguments:""".stripMargin)
 
-    val meta = opt[Boolean](
+    val printMeta = opt[Boolean](
       name = "meta",
       short = 'm',
       default = Some(false),
       descr = "Print out some meta information at the end."
+    )
+    val writeMeta = opt[Boolean](
+      name = "write_meta",
+      short = 'w',
+      default = Some(false),
+      descr = "Write out some meta information to RESOURCES_DIR/viash.yaml at the end."
     )
     val output = opt[String](
       descr = "Path to directory in which the executable and any resources is built to. Default: \"output/\".",
@@ -204,6 +210,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         name = "setup",
         default = Some(false),
         descr = "Whether or not to set up the platform environment after building the executable."
+      )
+      val writeMeta = opt[Boolean](
+        name = "write_meta",
+        short = 'w',
+        default = Some(false),
+        descr = "Write out some meta information to RESOURCES_DIR/viash.yaml at the end."
       )
     }
 

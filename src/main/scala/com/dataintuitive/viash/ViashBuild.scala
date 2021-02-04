@@ -39,6 +39,7 @@ object ViashBuild {
   def apply(
     config: Config,
     output: String,
+    writeMeta: Boolean = false,
     printMeta: Boolean = false,
     namespace: Option[String] = None,
     setup: Boolean = false
@@ -68,10 +69,13 @@ object ViashBuild {
         resources = Some(config.functionality.resources.getOrElse(Nil).map{ res =>
           if (res.text.isDefined) {
             val textVal = Some(placeholderMap(res))
-            res.copyResource(text = textVal)
+            res.copyResource(text = textVal, parent = None)
           } else {
-            res
+            res.copyResource(parent = None)
           }
+        }),
+        tests = Some(config.functionality.tests.getOrElse(Nil).map { res =>
+          res.copyResource(parent = None)
         })
       ),
       info = config.info.map(_.copy(
@@ -102,7 +106,11 @@ object ViashBuild {
     )
 
     // write resources to output directory
-    IO.writeResources(configYaml :: fun.resources.getOrElse(Nil), dir)
+    if (writeMeta) {
+      IO.writeResources(configYaml :: fun.resources.getOrElse(Nil), dir)
+    } else {
+      IO.writeResources(fun.resources.getOrElse(Nil), dir)
+    }
 
     // if '--setup' was passed, run './executable ---setup'
     if (setup && exec_path.isDefined) {

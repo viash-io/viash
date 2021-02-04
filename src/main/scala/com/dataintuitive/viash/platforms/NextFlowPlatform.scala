@@ -22,7 +22,7 @@ import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.platforms.requirements._
 import com.dataintuitive.viash.config.Version
-import com.dataintuitive.viash.helpers.Docker
+import com.dataintuitive.viash.helpers.NextFlowDocker
 
 /**
  * / * Platform class for generating NextFlow (DSL2) modules.
@@ -55,7 +55,7 @@ case class NextFlowPlatform(
     val fname = functionality.name
 
     // get image info
-    val imageInfo = Docker.getImageInfo(
+    val imageInfo = NextFlowDocker.getImageInfo(
       functionality,
       customRegistry = registry,
       customName = image,
@@ -109,21 +109,31 @@ case class NextFlowPlatform(
       case None => Nil
     }
 
-    // registry is handled as a parameter later on
     val mainParams: List[ConfigTuple] = List(
         "name" → functionality.name,
-        "container" → imageInfo.copy(registry = None).toString, // registry is handled as a separate 'dockerPrefix' parameter
+        "container" → imageInfo.name,
+        "containerTag" -> imageInfo.tag.getOrElse("latest"),
         "command" → executionCode
     )
 
-    // fetch tests
+    // fetch test information
     val tests = functionality.tests.getOrElse(Nil)
-    val testPaths = tests.map(test => test.filename)
-    val testScript: List[String] =
+    val testPaths = tests.map(test => test.path.getOrElse("/dev/null")).toList
+    val testScript: List[String] = {
         tests.flatMap{
           case test: Script => Some(test.filename)
           case _ => None
         }
+    }
+
+            // If no tests are defined, isDefined is set to FALSE
+    val testConfig: List[ConfigTuple] = List("tests" -> NestedValue(
+        List(
+          tupleToConfigTuple("isDefined" -> (tests.size > 0)),
+          tupleToConfigTuple("testScript" -> testScript.headOption.getOrElse("NA")),
+          tupleToConfigTuple("testResources" -> testPaths)
+        )
+      ))
 
     /**
      * A few notes:
@@ -132,6 +142,7 @@ case class NextFlowPlatform(
      */
     val asNestedTuples: List[ConfigTuple] = List(
       "docker.enabled" → true,
+      "docker.runOptions" → "-i -v ${baseDir}:${baseDir}",
       "process.container" → "dataintuitive/portash",
       "params" → NestedValue(
         namespacedParameters :::
@@ -144,6 +155,7 @@ case class NextFlowPlatform(
           tupleToConfigTuple("testResources" -> testPaths),
           tupleToConfigTuple(functionality.name → NestedValue(
             mainParams :::
+            testConfig :::
             extensionsAsTuple :::
             argumentsAsTuple
           ))
@@ -178,7 +190,17 @@ case class NextFlowPlatform(
          |
          |    return command_line.join(" ")
          |}
+         |
+         |def effectiveContainer(processParams) {
+         |    def _registry = params.containsKey("containerRegistry") ? params.containerRegistry + "/" : ""
+         |    def _name = processParams.container
+         |    def _tag = params.containsKey("containerTag") ? "$${params.containerTag}" : "$${processParams.containerTag}"
+         |
+         |    return "$${_registry}$${_name}:$${_tag}"
+         |}
          |""".stripMargin
+
+
 
     /**
      * What should the output filename be, in terms of the input?
@@ -302,7 +324,7 @@ case class NextFlowPlatform(
       }
 
       val publishDirStr = publish match {
-        case Some(true) => s"""publishDir "$publishDirString", mode: 'copy', overwrite: true"""
+        case Some(true) => s"""publishDir "$publishDirString", mode: 'copy', overwrite: true, enabled: !params.test"""
         case _ => ""
       }
 
@@ -334,7 +356,7 @@ case class NextFlowPlatform(
          |  echo { (params.debug == true) ? true : false }
          |  cache 'deep'
          |  stageInMode "$stageInModeStr"
-         |  container "$${params.dockerPrefix}$${container}"
+         |  container "$${container}"
          |  $publishDirStr
          |  input:
          |    tuple val(id), path(input), val(output), val(container), val(cli)
@@ -349,7 +371,7 @@ case class NextFlowPlatform(
          |        $preHook
          |        # Adding NXF's `$$moduleDir` to the path in order to resolve our own wrappers
          |        export PATH="./:$${moduleDir}:\\$$PATH"
-         |        run_test.sh > $$output
+         |        ./$${params.${fname}.tests.testScript} | tee $$output
          |        \"\"\"
          |    else
          |        \"\"\"
@@ -367,7 +389,7 @@ case class NextFlowPlatform(
 
     val outFromInStr = functionality.function_type match {
       case Some(AsIs) => "def outputFilename = getOutputFilename(updtParams)"
-      case _ => "def outputFilename = outFromIn(filename)"
+      case _ => "def outputFilename = (!params.test) ? outFromIn(filename) : updtParams.output"
     }
 
     val setup_main_workflow =
@@ -407,7 +429,7 @@ case class NextFlowPlatform(
          |                id,
          |                checkedInput,
          |                outputFilename,
-         |                updtParams2.container,
+         |                effectiveContainer(updtParams2),
          |                renderCLI([updtParams2.command], updtParams2.arguments)
          |            )
          |        }
@@ -443,13 +465,35 @@ case class NextFlowPlatform(
                    |workflow {
                    |
                    |   def id = params.id
-                   |   def inputPath = Paths.get(params.input)
-                   |   def ch_ = Channel.from(inputPath).map{ s -> new Tuple3(id, s, params)}
+                   |   def ch_ = Channel.fromPath(params.input).map{ s -> new Tuple3(id, s, params)}
                    |
                    |   $fname(ch_)
                    |}
                    |""".stripMargin
     }
+
+    val setup_test_entrypoint = s"""
+                  |workflow test {
+                  |
+                  |   take:
+                  |   rootDir
+                  |
+                  |   main:
+                  |   params.test = true
+                  |   params.${fname}.output = "${fname}.log"
+                  |
+                  |   Channel.from(rootDir) \\
+                  |        | filter { params.${fname}.tests.isDefined } \\
+                  |        | map{ p -> new Tuple3(
+                  |                    "tests",
+                  |                    params.${fname}.tests.testResources.collect{ file( p + it ) },
+                  |                    params
+                  |                )} \\
+                  |        | ${fname}
+                  |
+                  |    emit:
+                  |    ${fname}.out
+                  |}""".stripMargin
 
     val setup_main = PlainFile(
       dest = Some("main.nf"),
@@ -460,7 +504,8 @@ case class NextFlowPlatform(
         setup_main_overrideOutput +
         setup_main_process +
         setup_main_workflow +
-        setup_main_entrypoint)
+        setup_main_entrypoint +
+        setup_test_entrypoint)
     )
 
     val additionalResources = mainResource match {
@@ -505,26 +550,25 @@ object NextFlowUtils {
   }
 
   case class ConfigTuple(val tuple: (String,ValueType)) {
-
-      def toConfig(indent: String = "  "):String = {
-          val (k,v) = tuple
-          v match {
-              case pv: PlainValue[_] =>
-                  s"""$indent$k = ${pv.toConfig}"""
-              case NestedValue(nv) =>
-                  nv.map(_.toConfig(indent + "  ")).mkString(s"$indent$k {\n", "\n", s"\n$indent}")
-          }
+    def toConfig(indent: String = "  "):String = {
+      val (k,v) = tuple
+      v match {
+        case pv: PlainValue[_] =>
+          s"""$indent$k = ${pv.toConfig}"""
+        case NestedValue(nv) =>
+          nv.map(_.toConfig(indent + "  ")).mkString(s"$indent$k {\n", "\n", s"\n$indent}")
       }
+    }
   }
 
   case class NestedValue(val v:List[ConfigTuple]) extends ValueType
 
   implicit def tupleToConfigTuple[A:TypeTag](tuple: (String, A)):ConfigTuple = {
-      val (k,v) = tuple
-      v match {
-          case NestedValue(nv) => new ConfigTuple((k, NestedValue(nv)))
-        case _ => new ConfigTuple((k, PlainValue(v)))
-      }
+    val (k,v) = tuple
+    v match {
+      case NestedValue(nv) => new ConfigTuple((k, NestedValue(nv)))
+      case _ => new ConfigTuple((k, PlainValue(v)))
+    }
   }
 
   def listMapToConfig(m: List[ConfigTuple]): String = {
@@ -558,3 +602,5 @@ object NextFlowUtils {
       )
   }
 }
+
+// vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab

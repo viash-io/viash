@@ -48,7 +48,13 @@ object Main {
         ViashRun(config, args = runArgs.dropWhile(_ == "--"), keepFiles = cli.run.keep.toOption.map(_.toBoolean))
       case List(cli.build) =>
         val config = readConfig(cli.build)
-        ViashBuild(config, output = cli.build.output(), printMeta = cli.build.meta(), setup = cli.build.setup())
+        ViashBuild(
+          config,
+          output = cli.build.output(),
+          printMeta = cli.build.printMeta(),
+          writeMeta = cli.build.writeMeta(),
+          setup = cli.build.setup()
+        )
       case List(cli.test) =>
         val config = readConfig(cli.test, modifyFun = false)
         ViashTest(config, keepFiles = cli.test.keep.toOption.map(_.toBoolean))
@@ -58,7 +64,8 @@ object Main {
           configs = configs,
           target = cli.namespace.build.target(),
           setup = cli.namespace.build.setup(),
-          parallel = cli.namespace.build.parallel()
+          parallel = cli.namespace.build.parallel(),
+          writeMeta = cli.namespace.build.writeMeta()
         )
       case List(cli.namespace, cli.namespace.test) =>
         val configs = readConfigs(cli.namespace.test, modifyFun = false)

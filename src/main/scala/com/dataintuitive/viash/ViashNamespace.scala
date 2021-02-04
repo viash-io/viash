@@ -27,7 +27,8 @@ object ViashNamespace {
     configs: List[Config],
     target: String,
     setup: Boolean = false,
-    parallel: Boolean = false
+    parallel: Boolean = false,
+    writeMeta: Boolean = true
   ) {
     val configs2 = if (parallel) configs.par else configs
 
@@ -44,7 +45,8 @@ object ViashNamespace {
         config = conf,
         output = out,
         namespace = conf.functionality.namespace,
-        setup = setup
+        setup = setup,
+        writeMeta = writeMeta
       )
     }
   }

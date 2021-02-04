@@ -48,6 +48,8 @@ object Config {
 
     // make paths absolute
     val resources = fun.resources.getOrElse(Nil).map(_.copyWithAbsolutePath(uri))
+
+    // make absolute otherwise viash test can't find resources
     val tests = fun.tests.getOrElse(Nil).map(_.copyWithAbsolutePath(uri))
 
     // copy resources with updated paths into config and return

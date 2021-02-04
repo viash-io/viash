@@ -20,16 +20,19 @@ package com.dataintuitive.viash.functionality.resources
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.dataobjects._
 
+import java.net.URI
+
 case class JavaScriptScript(
   path: Option[String] = None,
   text: Option[String] = None,
   dest: Option[String] = None,
-  is_executable: Option[Boolean] = Some(true)
+  is_executable: Option[Boolean] = Some(true),
+  parent: Option[URI] = None
 ) extends Script {
   val `type` = "javascript_script"
   val meta = JavaScriptScript
-  def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean]): Resource = {
-    copy(path = path, text = text, dest = dest, is_executable = is_executable)
+  def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
+    copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
   def generatePlaceholder(functionality: Functionality): String = {

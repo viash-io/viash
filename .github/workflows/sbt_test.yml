@@ -16,8 +16,8 @@ jobs:
       matrix:
         config: 
         - {name: 'main', os: ubuntu-latest, r: '3.6.1', python: '3.8' }
-        # - {name: 'ubuntu_rrel_py3.x', os: ubuntu-latest, r: 'release', python: '3.x' }
-        # - {name: 'mac_r3.6.1_py3.8', os: macos-latest, r: '3.6.1', python: '3.8' }
+        - {name: 'ubuntu_latest', os: ubuntu-latest, r: 'release', python: '3.x' }
+        - {name: 'macos_latest', os: macos-latest, r: 'release', python: '3.x' }
 
     steps:
     - uses: actions/checkout@v2
@@ -56,7 +56,7 @@ jobs:
       
     - name: Set up Scala
       run: |
-        if [[ "${{ matrix.config.os }}" =~ ^macos_*$ ]]; then
+        if [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
           brew update
           brew install scala
         else
@@ -74,7 +74,7 @@ jobs:
         if [[ "${{ matrix.config.name }}" == "main" ]]; then
           # only run coverage on main runner
           sbt clean coverage test coverageReport
-        elif [[ "${{ matrix.config.os }}" =~ ^macos_*$ ]]; then
+        elif [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
           # macOS on github actions does not have Docker, so skip those
           sbt 'testOnly -- -l com.dataintuitive.viash.DockerTest'
         else
