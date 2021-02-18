@@ -189,6 +189,33 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |  viash run meta.vsh.yaml""".stripMargin)
   }
 
+  val config = new Subcommand("config") {
+    val view = new Subcommand("view") with ViashCommand {
+      banner(
+        s"""viash config view
+           |View the config file after parsing
+           |
+           |Usage:
+           |  viash config view config.vsh.yaml
+           |
+           |Arguments:""".stripMargin)
+
+
+      val command = opt[List[String]](
+        name = "command",
+        short = 'c',
+        default = Some(Nil),
+
+        descr = "Command DSL."
+      )
+    }
+
+    addSubcommand(view)
+    requireSubcommand()
+
+    shortSubcommandsHelp(true)
+  }
+
   val namespace = new Subcommand("ns") {
 
     val build = new Subcommand("build") with ViashNs{
@@ -246,6 +273,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   addSubcommand(build)
   addSubcommand(test)
   addSubcommand(namespace)
+  addSubcommand(config)
 
   shortSubcommandsHelp(true)
 

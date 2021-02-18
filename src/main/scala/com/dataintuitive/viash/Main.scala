@@ -75,6 +75,10 @@ object Main {
           keepFiles = cli.namespace.test.keep.toOption.map(_.toBoolean),
           tsv = cli.namespace.test.tsv.toOption,
         )
+      case List(cli.config, cli.config.view) =>
+        val config = readConfig(cli.config.view, modifyFun = false)
+        ViashConfig.view(config, cli.config.view.command.getOrElse(Nil))
+        //ViashConfig.view2(cli.config.view.config())
       case _ =>
         println("No subcommand was specified. See `viash --help` for more information.")
     }

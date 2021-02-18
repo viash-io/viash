@@ -61,12 +61,7 @@ object Config {
     )
   }
 
-  def read(
-    config: String,
-    platform: Option[String] = None,
-    modifyFun: Boolean = true,
-    namespace: Option[String] = None
-  ): Config = {
+  def readYAML(config: String): (String, Option[Script]) = {
     // get config uri
     val configUri = IO.uri(config)
 
@@ -83,36 +78,46 @@ object Config {
 
     // detect whether a script (with joined header) was passed or a joined yaml
     // using the extension
-    val (yaml, optScript) =
-      if ((extension == "yml" || extension == "yaml") && configStr.contains("functionality:")) {
-        (configStr, None)
-      } else if (Script.extensions.contains(extension)) {
-        // detect scripting language from extension
-        val scriptObj = Script.fromExt(extension)
+    if ((extension == "yml" || extension == "yaml") && configStr.contains("functionality:")) {
+      (configStr, None)
+    } else if (Script.extensions.contains(extension)) {
+      // detect scripting language from extension
+      val scriptObj = Script.fromExt(extension)
 
-        // check whether viash header contains a functionality
-        val commentStr = scriptObj.commentStr + "'"
-        val headerComm = commentStr + " "
-        assert(
-          configStr.contains(s"$commentStr functionality:"),
-          message = s"""viash script should contain a functionality header: "$commentStr functionality: <...>""""
-        )
+      // check whether viash header contains a functionality
+      val commentStr = scriptObj.commentStr + "'"
+      val headerComm = commentStr + " "
+      assert(
+        configStr.contains(s"$commentStr functionality:"),
+        message = s"""viash script should contain a functionality header: "$commentStr functionality: <...>""""
+      )
 
-        // split header and body
-        val (header, body) = configStr.split("\n").partition(_.startsWith(headerComm))
-        val yaml = header.map(s => s.drop(3)).mkString("\n")
-        val code = body.mkString("\n")
+      // split header and body
+      val (header, body) = configStr.split("\n").partition(_.startsWith(headerComm))
+      val yaml = header.map(s => s.drop(3)).mkString("\n")
+      val code = body.mkString("\n")
 
-        val script = scriptObj(dest = Some(basename), text = Some(code))
+      val script = scriptObj(dest = Some(basename), text = Some(code))
 
-        (yaml, Some(script))
-      } else {
-        throw new RuntimeException("config file (" + config + ") must be a yaml file containing a viash config.")
-      }
+      (yaml, Some(script))
+    } else {
+      throw new RuntimeException("config file (" + config + ") must be a yaml file containing a viash config.")
+    }
+  }
+
+  def read(
+    config: String,
+    platform: Option[String] = None,
+    modifyFun: Boolean = true,
+    namespace: Option[String] = None
+  ): Config = {
+
+    // read yaml
+    val (yaml, optScript) = readYAML(config)
 
     // read config
+    val configUri = IO.uri(config)
     val conf0 = parse(yaml, configUri)
-
 
     // get the platform
     // * if a platform id is passed, look up the platform in the platforms list

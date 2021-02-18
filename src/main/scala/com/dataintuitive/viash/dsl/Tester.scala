@@ -1,0 +1,44 @@
+/*
+ * Copyright (C) 2020  Data Intuitive
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.dataintuitive.viash.dsl
+
+import io.circe.syntax._
+import com.dataintuitive.viash.config.Config
+import com.dataintuitive.viash.helpers.IO
+
+object DSLCommand {
+  def test() {
+    // read yaml file
+    val config = "src/test/resources/testbash/config.vsh.yaml"
+    val conf = Config.parse(IO.uri(config))
+    val confJson = conf.asJson
+
+    val cmd = CommandLexer.parse(CommandLexer.command, """.functionality.version := "6.6.6"""").get
+
+    val newJson = cmd.apply(confJson.hcursor).top.get
+    val newconfig = newJson.as[Config].fold(throw _, identity)
+
+    println(newconfig.functionality.version)
+  }
+
+  def apply(config: Config, string: String) = {
+    val cmd = CommandLexer.parse(CommandLexer.command, string).get
+    val newJson = cmd.apply(config.asJson.hcursor).top.get
+    newJson.as[Config].fold(throw _, identity)
+  }
+}
