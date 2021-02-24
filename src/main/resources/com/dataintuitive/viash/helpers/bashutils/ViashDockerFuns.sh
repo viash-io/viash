@@ -113,12 +113,14 @@ function ViashDockerPush {
   VSHD_ID="$1"
   VSHD_STRAT="$2"
   if [ "$VSHD_STRAT" == "alwayspush" -o "$VSHD_STRAT" == "force" ]; then
+    echo "Image exists, still pushing"
     docker push $1
   elif [ "$VSHD_STRAT" == "pushifnotpresent" ]; then
     ViashDockerRemoteTagCheck $1
     if [ $? -eq 0 ]; then
       echo "Image already exists, doing nothing"
     else
+      echo "Image does not exist yet, pushing"
       docker push $1
     fi
   else

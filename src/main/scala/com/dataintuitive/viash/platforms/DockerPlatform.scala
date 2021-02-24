@@ -192,7 +192,7 @@ case class DockerPlatform(
          |}
          |
          |# ViashPush: ...
-         |function Viash {
+         |function ViashPush {
          |  ViashDockerPush $effectiveID $$$dockerPushStrategyVar
          |}""".stripMargin
     }

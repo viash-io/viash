@@ -213,7 +213,7 @@ object BashWrapper {
        |fi
        |
        |if [ "$$$var_exec_mode" == "push" ]; then
-       |  ViashDockerPush
+       |  ViashPush
        |  exit 0
        |fi
        |
