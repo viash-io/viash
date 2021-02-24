@@ -20,7 +20,7 @@ package com.dataintuitive.viash.platforms.docker
 sealed class DockerPushStrategy(val id: String, val synonyms: List[String] = Nil)
 
 case object AlwaysPush extends DockerPushStrategy("alwayspush", List("forcepush"))
-case object PushIfNotPresent extends DockerPushStrategy("pushifnotpresent")
+case object PushIfNotPresent extends DockerPushStrategy("pushifnotpresent", List("gentlepush"))
 case object NoPush extends DockerPushStrategy("donothing", List("meh"))
 
 object DockerPushStrategy {

@@ -201,7 +201,7 @@ case class DockerPlatform(
       s"""
          |${Bash.ViashDockerFuns}
          |# initialise variables
-         |$dockerSetupStrategyVar='${setup_strategy.id}
+         |$dockerSetupStrategyVar='${setup_strategy.id}'
          |$dockerPushStrategyVar='${push_strategy.id}'""".stripMargin
 
     val parsers =

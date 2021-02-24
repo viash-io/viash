@@ -199,7 +199,7 @@ object BashWrapper {
        |            shift 1
        |            ;;
        |${allMods.parsers}
-       |        *)    # positional arg or unknown option
+       |        *)  # positional arg or unknown option
        |            # since the positional args will be eval'd, can we always quote, instead of using ViashQuote
        |            VIASH_POSITIONAL_ARGS="$$VIASH_POSITIONAL_ARGS '$$1'"
        |            shift # past argument
