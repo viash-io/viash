@@ -28,22 +28,23 @@ object Block {
 }
 case class Block(commands: List[Command]) {
   def apply(cursor: ACursor): ACursor = {
-    commands.foldLeft(cursor){ case (cursor, cmd) => cmd.apply(cursor) }
+    commands.foldLeft(cursor) {
+      case (cur, cmd) => cmd.apply(cur)
+    }
   }
 }
 case class Command(path: Path, op: CommandExp) {
   def apply(cursor: ACursor): ACursor = {
     val comb = Path(path.path ::: List(op))
-    comb.apply(cursor)
+    comb.apply(cursor).top.get.hcursor
   }
 }
 abstract class CommandExp extends PathExp {
   def command(cursor: ACursor): ACursor
 
   // tail should always be Path(Nil)
-  // return to root after processing command
   def apply(cursor: ACursor, tail: Path): ACursor = {
-    Root.getRoot(command(cursor))
+    command(cursor)
   }
 }
 case class Modify(value: Json) extends CommandExp {
@@ -113,8 +114,6 @@ case class Attribute(string: String) extends PathExp {
 }
 case class Filter(condition: Condition) extends PathExp {
   def apply(cursor: ACursor, tail: Path): ACursor = {
-
-    // apply tail to all
     var elemCursor = cursor.downArray
     var lastWorking = elemCursor
     while (!elemCursor.failed) {

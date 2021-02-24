@@ -141,5 +141,5 @@ object CommandLexer extends RegexParsers {
   }
   def modify: Parser[CommandExp] = ":=" ~> json ^^ { Modify(_) }
   def add: Parser[CommandExp] = "+=" ~> json ^^ { Add(_) }
-  def block: Parser[Block] = rep1(command) ^^ { Block(_) }
+  def block: Parser[Block] = repsep(command, ";") ^^ { Block(_) }
 }
