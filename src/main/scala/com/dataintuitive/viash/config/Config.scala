@@ -17,13 +17,16 @@
 
 package com.dataintuitive.viash.config
 
+import com.dataintuitive.viash.command.Block
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.platforms._
-import com.dataintuitive.viash.helpers.{IO, Git, GitInfo}
+import com.dataintuitive.viash.helpers.{Git, GitInfo, IO}
 import com.dataintuitive.viash.helpers.Scala._
+
 import java.net.URI
 import io.circe.yaml.parser
 import com.dataintuitive.viash.functionality.resources._
+
 import java.io.File
 
 case class Config(
@@ -105,12 +108,25 @@ object Config {
     }
   }
 
-  def readOnly(configPath: String): Config = {
+  // scopy paste of the Config.read command
+  def readOnly(configPath: String, commands: List[String] = Nil): Config = {
     val (yaml, _) = readYAML(configPath)
 
     val configUri = IO.uri(configPath)
 
-    parse(yaml, configUri)
+    val conf0 = parse(yaml, configUri)
+
+    // parse and apply commands
+    commands match {
+      case Nil => conf0
+      case li => {
+        val block = Block.parse(li.mkString("; "))
+        import io.circe.syntax._
+        val js = conf0.asJson
+        val modifiedJs = block.apply(js.hcursor)
+        modifiedJs.as[Config].fold(throw _, identity)
+      }
+    }
   }
 
   // reads and modifies the config based on the current setup
@@ -118,7 +134,8 @@ object Config {
     configPath: String,
     platform: Option[String] = None,
     modifyFun: Boolean = true,
-    namespace: Option[String] = None
+    namespace: Option[String] = None,
+    commands: List[String] = Nil
   ): Config = {
 
     // read yaml
@@ -127,6 +144,18 @@ object Config {
     // read config
     val configUri = IO.uri(configPath)
     val conf0 = parse(yaml, configUri)
+
+    // parse and apply commands
+    val conf1 = commands match {
+      case Nil => conf0
+      case li => {
+        val block = Block.parse(li.mkString("; "))
+        import io.circe.syntax._
+        val js = conf0.asJson
+        val modifiedJs = block.apply(js.hcursor)
+        modifiedJs.as[Config].fold(throw _, identity)
+      }
+    }
 
     // get the platform
     // * if a platform id is passed, look up the platform in the platforms list
@@ -138,19 +167,19 @@ object Config {
       if (platform.isDefined) {
         val pid = platform.get
 
-        val platformNames = conf0.platforms.map(_.id)
+        val platformNames = conf1.platforms.map(_.id)
 
         if (platformNames.contains(pid)) {
-          conf0.platforms(platformNames.indexOf(pid))
+          conf1.platforms(platformNames.indexOf(pid))
         } else if (pid.endsWith(".yaml") || pid.endsWith(".yml")) {
           Platform.parse(IO.uri(platform.get))
         } else {
           throw new RuntimeException("platform must be a platform id specified in the config or a path to a platform yaml file.")
         }
-      } else if (conf0.platform.isDefined) {
-        conf0.platform.get
-      } else if (conf0.platforms.nonEmpty) {
-        conf0.platforms.head
+      } else if (conf1.platform.isDefined) {
+        conf1.platform.get
+      } else if (conf1.platforms.nonEmpty) {
+        conf1.platforms.head
       } else {
         NativePlatform()
       }
@@ -169,7 +198,7 @@ object Config {
     }
 
     // combine config into final object
-    conf0.copy(
+    conf1.copy(
       // add info
       info = Some(Info(
         viash_version = Some(com.dataintuitive.viash.Main.version),
@@ -179,11 +208,11 @@ object Config {
         git_remote = rgr
       )),
       // apply platform modification to functionality
-      functionality = modifyFunFun(conf0.functionality.copy(
+      functionality = modifyFunFun(conf1.functionality.copy(
         // override namespace if none is specified in config
-        namespace = conf0.functionality.namespace | namespace,
+        namespace = conf1.functionality.namespace | namespace,
         // add script (if available) to resources
-        resources = Some(optScript.toList ::: conf0.functionality.resources.getOrElse(Nil))
+        resources = Some(optScript.toList ::: conf1.functionality.resources.getOrElse(Nil))
       )),
       // insert selected platform
       platform = Some(pl)

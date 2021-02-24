@@ -43,6 +43,13 @@ trait ViashCommand {
     default = Some("config.vsh.yaml"),
     required = true
   )
+  val command = opt[List[String]](
+    name = "command",
+    short = 'c',
+    default = Some(Nil),
+
+    descr = "Apply a command to the config using the viash command DSL."
+  )
 }
 trait ViashNs {
   _: ScallopConf =>
@@ -80,6 +87,13 @@ trait ViashNs {
     short = 'l',
     default = Some(false),
     descr = "Whether or not to run the process in parallel."
+  )
+  val command = opt[List[String]](
+    name = "command",
+    short = 'c',
+    default = Some(Nil),
+
+    descr = "Apply a command to the config using the viash command DSL."
   )
 }
 trait WithTemporary {
@@ -199,15 +213,6 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |  viash config view config.vsh.yaml
            |
            |Arguments:""".stripMargin)
-
-
-      val command = opt[List[String]](
-        name = "command",
-        short = 'c',
-        default = Some(Nil),
-
-        descr = "Command DSL."
-      )
     }
 
     addSubcommand(view)

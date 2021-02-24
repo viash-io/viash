@@ -18,7 +18,6 @@
 package com.dataintuitive.viash
 
 import com.dataintuitive.viash.config.{Config, encodeConfig}
-import com.dataintuitive.viash.dsl.DSLCommand
 import io.circe.yaml.Printer
 
 object ViashConfig {
@@ -30,9 +29,8 @@ object ViashConfig {
     stringStyle = Printer.StringStyle.DoubleQuoted
   )
 
-  def view(config: Config, commands: List[String])  {
-    val newConf = commands.foldLeft(config)((config, command) => DSLCommand.apply(config, command))
-    val json = encodeConfig(newConf)
+  def view(config: Config)  {
+    val json = encodeConfig(config)
     val configYamlStr = printer.pretty(json)
     println(configYamlStr)
   }

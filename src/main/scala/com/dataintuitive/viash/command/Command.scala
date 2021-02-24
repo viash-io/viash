@@ -15,9 +15,50 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.dsl
+package com.dataintuitive.viash.command
 
 import io.circe.{ACursor, FailedCursor, Json}
+
+// define command
+object Block {
+  def parse(s: String): Block = {
+    CommandLexer.parse(CommandLexer.block, s).get
+    // TODO: provide better error message
+  }
+}
+case class Block(commands: List[Command]) {
+  def apply(cursor: ACursor): ACursor = {
+    commands.foldLeft(cursor){ case (cursor, cmd) => cmd.apply(cursor) }
+  }
+}
+case class Command(path: Path, op: CommandExp) {
+  def apply(cursor: ACursor): ACursor = {
+    val comb = Path(path.path ::: List(op))
+    comb.apply(cursor)
+  }
+}
+abstract class CommandExp extends PathExp {
+  def command(cursor: ACursor): ACursor
+
+  // tail should always be Path(Nil)
+  // return to root after processing command
+  def apply(cursor: ACursor, tail: Path): ACursor = {
+    Root.getRoot(command(cursor))
+  }
+}
+case class Modify(value: Json) extends CommandExp {
+  def command(cursor: ACursor): ACursor = {
+    cursor.set(value)
+  }
+}
+case class Add(value: Json) extends CommandExp {
+  def command(cursor: ACursor): ACursor = {
+    cursor.withFocus{js =>
+      Json.fromValues(js.asArray.get ++ Array(value)) // TODO: will error if get fails
+    }
+  }
+}
+
 
 // define values
 abstract class Value {
@@ -119,39 +160,4 @@ case class Not(value: Condition) extends Condition {
     !value(cursor)
   }
 }
-
-// define command
-case class Block(commands: List[Command]) {
-  def apply(cursor: ACursor): ACursor = {
-    commands.foldLeft(cursor){ case (cursor, cmd) => cmd.apply(cursor) }
-  }
-}
-case class Command(path: Path, op: CommandExp) {
-  def apply(cursor: ACursor): ACursor = {
-    val comb = Path(path.path ::: List(op))
-    comb.apply(cursor)
-  }
-}
-abstract class CommandExp extends PathExp {
-  def command(cursor: ACursor): ACursor
-
-  // tail should always be Path(Nil)
-  // return to root after processing command
-  def apply(cursor: ACursor, tail: Path): ACursor = {
-    Root.getRoot(command(cursor))
-  }
-}
-case class Modify(value: Json) extends CommandExp {
-  def command(cursor: ACursor): ACursor = {
-    cursor.set(value)
-  }
-}
-case class Add(value: Json) extends CommandExp {
-  def command(cursor: ACursor): ACursor = {
-    cursor.withFocus{js =>
-      Json.fromValues(js.asArray.get ++ Array(value)) // TODO: will error if get fails
-    }
-  }
-}
-
 

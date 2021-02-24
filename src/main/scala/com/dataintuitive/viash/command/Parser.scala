@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.dsl
+package com.dataintuitive.viash.command
 
 import io.circe.Json
 

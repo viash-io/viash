@@ -19,7 +19,6 @@ package com.dataintuitive.viash
 
 import java.nio.file.{Files, Path, Paths}
 import java.nio.file.attribute.BasicFileAttributes
-
 import config.Config
 import helpers.Scala._
 
@@ -76,9 +75,11 @@ object Main {
           tsv = cli.namespace.test.tsv.toOption,
         )
       case List(cli.config, cli.config.view) =>
-        val config = Config.readOnly(configPath = cli.config.view.config())
-        val commands = cli.config.view.command.getOrElse(Nil)
-        ViashConfig.view(config, commands)
+        val config = Config.readOnly(
+          configPath = cli.config.view.config(),
+          commands = cli.config.view.command()
+        )
+        ViashConfig.view(config)
       case _ =>
         println("No subcommand was specified. See `viash --help` for more information.")
     }
@@ -91,7 +92,8 @@ object Main {
     Config.read(
       configPath = subcommand.config(),
       platform = subcommand.platform.toOption | subcommand.platformid.toOption,
-      modifyFun = modifyFun
+      modifyFun = modifyFun,
+      commands = subcommand.command()
     )
   }
 
@@ -129,7 +131,7 @@ object Main {
       val conf1 =
         try {
           // first read config to get an idea of the available platforms
-          Some(Config.read(file.toString, modifyFun = false))
+          Some(Config.read(file.toString, modifyFun = false, commands = subcommand.command()))
         } catch {
           case e: Exception => {
             println(s"Reading file '$file' failed")
@@ -149,7 +151,8 @@ object Main {
             configPath = file.toString,
             platform = Some(platformStr),
             namespace = _namespace,
-            modifyFun = modifyFun
+            modifyFun = modifyFun,
+            commands = subcommand.command()
           ))
         } else {
           // platform is a regex for filtering the ids
@@ -169,7 +172,8 @@ object Main {
               configPath = file.toString,
               platform = plat,
               namespace = _namespace,
-              modifyFun = modifyFun
+              modifyFun = modifyFun,
+              commands = subcommand.command()
             )
           }
         }
