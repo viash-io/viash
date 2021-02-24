@@ -38,6 +38,7 @@ case class DockerPlatform(
   port: Option[List[String]] = None,
   workdir: Option[String] = None,
   setup_strategy: DockerSetupStrategy = AlwaysCachedBuild,
+  push_strategy: DockerPushStrategy = PushIfNotPresent,
 
   // setup variables
   setup: List[Requirements] = Nil,
@@ -187,7 +188,12 @@ case class DockerPlatform(
          |
          |# ViashSetup: ...
          |function ViashSetup {
-         |  ViashDockerSetup $effectiveID $$$dockerStrategyVar
+         |  ViashDockerSetup $effectiveID $$$dockerSetupStrategyVar
+         |}
+         |
+         |# ViashPush: ...
+         |function Viash {
+         |  ViashDockerPush $effectiveID $$$dockerPushStrategyVar
          |}""".stripMargin
     }
 
@@ -195,18 +201,29 @@ case class DockerPlatform(
       s"""
          |${Bash.ViashDockerFuns}
          |# initialise variables
-         |$dockerStrategyVar='${setup_strategy.id}'""".stripMargin
+         |$dockerSetupStrategyVar='${setup_strategy.id}
+         |$dockerPushStrategyVar='${push_strategy.id}'""".stripMargin
 
     val parsers =
       s"""
          |        ---dss|---docker_setup_strategy)
          |            ${BashWrapper.var_exec_mode}="setup"
-         |            $dockerStrategyVar="$$2"
+         |            $dockerSetupStrategyVar="$$2"
          |            shift 2
          |            ;;
          |        ---docker_setup_strategy=*)
          |            ${BashWrapper.var_exec_mode}="setup"
-         |            $dockerStrategyVar=$$(ViashRemoveFlags "$$2")
+         |            $dockerSetupStrategyVar=$$(ViashRemoveFlags "$$2")
+         |            shift 1
+         |            ;;
+         |        ---dps|---docker_push_strategy)
+         |            ${BashWrapper.var_exec_mode}="push"
+         |            $dockerPushStrategyVar="$$2"
+         |            shift 2
+         |            ;;
+         |        ---docker_push_strategy=*)
+         |            ${BashWrapper.var_exec_mode}="push"
+         |            $dockerPushStrategyVar=$$(ViashRemoveFlags "$$2")
          |            shift 1
          |            ;;
          |        ---dockerfile)
@@ -223,7 +240,8 @@ case class DockerPlatform(
   }
 
   private val extraMountsVar = "VIASH_EXTRA_MOUNTS"
-  private val dockerStrategyVar = "VIASH_DOCKER_SETUP_STRATEGY"
+  private val dockerSetupStrategyVar = "VIASH_DOCKER_SETUP_STRATEGY"
+  private val dockerPushStrategyVar = "VIASH_DOCKER_PUSH_STRATEGY"
 
   private def processDockerVolumes(functionality: Functionality) = {
     val args = functionality.argumentsAndDummies

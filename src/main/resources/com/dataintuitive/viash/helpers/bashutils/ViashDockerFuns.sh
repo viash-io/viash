@@ -102,4 +102,28 @@ function ViashDockerSetup {
   fi
 }
 
+# ViashDockerPush: create a Docker image, according to specified docker setup strategy
+#
+# $1                  : image identifier with format `[registry/]image[:tag]`
+# $2                  : docker setup strategy, see DockerPushStrategy.scala
+# ViashDockerBuild    : a Bash function which builds a docker image, takes image identifier as argument.
+# examples:
+#   ViashDockerPullElseBuild mynewcomponent alwaysbuild
+function ViashDockerPush {
+  VSHD_ID="$1"
+  VSHD_STRAT="$2"
+  if [ "$VSHD_STRAT" == "alwayspush" -o "$VSHD_STRAT" == "force" ]; then
+    docker push $1
+  elif [ "$VSHD_STRAT" == "pushifnotpresent" ]; then
+    ViashDockerRemoteTagCheck $1
+    if [ $? -eq 0 ]; then
+      echo "Image already exists, doing nothing"
+    else
+      docker push $1
+    fi
+  else
+    echo "Unrecognised Docker push strategy: $VSHD_STRAT"
+  fi
+}
+
 ######## End of helper functions for setting up Docker images for viash ########
