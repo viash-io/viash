@@ -36,9 +36,4 @@ object ViashConfig {
     val configYamlStr = printer.pretty(json)
     println(configYamlStr)
   }
-
-  /*def view2(configLoc: String)  {
-    val (configYamlStr, _) = Config.readYAML(configLoc)
-    println(configYamlStr)
-  }*/
 }

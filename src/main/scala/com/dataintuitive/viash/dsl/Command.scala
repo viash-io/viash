@@ -17,56 +17,75 @@
 
 package com.dataintuitive.viash.dsl
 
-import io.circe.syntax.EncoderOps
 import io.circe.{ACursor, FailedCursor, Json}
 
 // define values
 abstract class Value {
   def get(cursor: ACursor): Option[Json]
 }
-case class Literal(value: String) extends Value {
-  def get(cursor: ACursor): Option[Json] = {
-    Some(value.asJson)
-  }
+case class JsonValue(value: Json) extends Value {
+  def get(cursor: ACursor): Option[Json] = Some(value)
 }
 
 // define paths
 case class Path(path: List[PathExp]) extends Value {
   def apply(cursor: ACursor): ACursor = {
-    path.foldLeft(cursor) { (cursor, pathexp) =>
-      pathexp.apply(cursor)
+    path match {
+      case Nil => cursor
+      case head :: tail => {
+        head.apply(cursor, Path(tail))
+      }
     }
   }
-  // assume value is a string, which is definitely not desirable
+  // assume value is a json which might not be desirable
   def get(cursor: ACursor): Option[Json] = {
     apply(cursor).focus
   }
 }
 abstract class PathExp {
-  def apply(cursor: ACursor): ACursor
+  def apply(cursor: ACursor, tail: Path): ACursor
 }
 case object Root extends PathExp {
-  def apply(cursor: ACursor): ACursor = {
+  def getRoot(cursor: ACursor): ACursor = {
     cursor.up match {
       case _: FailedCursor => cursor
-      case parent: ACursor => parent
+      case parent: ACursor if parent.succeeded => getRoot(parent)
     }
+  }
+
+  def apply(cursor: ACursor, tail: Path): ACursor = {
+    val root = getRoot(cursor)
+    tail.apply(root)
+  }
+}
+case object Parent extends PathExp {
+  def apply(cursor: ACursor, tail: Path): ACursor = {
+    val parent = cursor.up
+    tail.apply(parent)
   }
 }
 case class Attribute(string: String) extends PathExp {
-  def apply(cursor: ACursor): ACursor = {
-    cursor.downField(string)
+  def apply(cursor: ACursor, tail: Path): ACursor = {
+    val down = cursor.downField(string)
+    tail.apply(down)
   }
 }
 case class Filter(condition: Condition) extends PathExp {
-  def apply(cursor: ACursor): ACursor = {
+  def apply(cursor: ACursor, tail: Path): ACursor = {
+
+    // apply tail to all
     var elemCursor = cursor.downArray
-    // TODO: should be able to apply on multiple things
-    // with this implementation, commands are only applied on the first matching element
-    while (!elemCursor.failed && !condition.apply(elemCursor)) {
+    var lastWorking = elemCursor
+    while (!elemCursor.failed) {
+      if (condition.apply(elemCursor)) {
+        val elemModified = tail.apply(elemCursor)
+        // replay history of elemCursor on elemModified to make sure we're at the right position
+        elemCursor = elemModified.top.get.hcursor.replay(elemCursor.history)
+      }
+      lastWorking = elemCursor
       elemCursor = elemCursor.right
     }
-    elemCursor
+    lastWorking
   }
 }
 
@@ -102,17 +121,34 @@ case class Not(value: Condition) extends Condition {
 }
 
 // define command
-abstract class Command {
-  def apply(cursor: ACursor): ACursor
-}
-case class Modify(path: Path, value: Json) extends Command {
+case class Block(commands: List[Command]) {
   def apply(cursor: ACursor): ACursor = {
-    path.apply(cursor).set(value)
+    commands.foldLeft(cursor){ case (cursor, cmd) => cmd.apply(cursor) }
   }
 }
-case class Add(path: Path, value: Json) extends Command {
+case class Command(path: Path, op: CommandExp) {
   def apply(cursor: ACursor): ACursor = {
-    path.apply(cursor).withFocus{js =>
+    val comb = Path(path.path ::: List(op))
+    comb.apply(cursor)
+  }
+}
+abstract class CommandExp extends PathExp {
+  def command(cursor: ACursor): ACursor
+
+  // tail should always be Path(Nil)
+  // return to root after processing command
+  def apply(cursor: ACursor, tail: Path): ACursor = {
+    Root.getRoot(command(cursor))
+  }
+}
+case class Modify(value: Json) extends CommandExp {
+  def command(cursor: ACursor): ACursor = {
+    cursor.set(value)
+  }
+}
+case class Add(value: Json) extends CommandExp {
+  def command(cursor: ACursor): ACursor = {
+    cursor.withFocus{js =>
       Json.fromValues(js.asArray.get ++ Array(value)) // TODO: will error if get fails
     }
   }

@@ -105,18 +105,27 @@ object Config {
     }
   }
 
+  def readOnly(configPath: String): Config = {
+    val (yaml, _) = readYAML(configPath)
+
+    val configUri = IO.uri(configPath)
+
+    parse(yaml, configUri)
+  }
+
+  // reads and modifies the config based on the current setup
   def read(
-    config: String,
+    configPath: String,
     platform: Option[String] = None,
     modifyFun: Boolean = true,
     namespace: Option[String] = None
   ): Config = {
 
     // read yaml
-    val (yaml, optScript) = readYAML(config)
+    val (yaml, optScript) = readYAML(configPath)
 
     // read config
-    val configUri = IO.uri(config)
+    val configUri = IO.uri(configPath)
     val conf0 = parse(yaml, configUri)
 
     // get the platform
@@ -147,7 +156,7 @@ object Config {
       }
 
     // gather git info
-    val path = new File(config).getParentFile
+    val path = new File(configPath).getParentFile
     val GitInfo(_, rgr, gc) = Git.getInfo(path)
 
     // check whether to modify the fun
@@ -164,7 +173,7 @@ object Config {
       // add info
       info = Some(Info(
         viash_version = Some(com.dataintuitive.viash.Main.version),
-        config = config,
+        config = configPath,
         platform = platform,
         git_commit = gc,
         git_remote = rgr

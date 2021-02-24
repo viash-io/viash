@@ -76,9 +76,9 @@ object Main {
           tsv = cli.namespace.test.tsv.toOption,
         )
       case List(cli.config, cli.config.view) =>
-        val config = readConfig(cli.config.view, modifyFun = false)
-        ViashConfig.view(config, cli.config.view.command.getOrElse(Nil))
-        //ViashConfig.view2(cli.config.view.config())
+        val config = Config.readOnly(configPath = cli.config.view.config())
+        val commands = cli.config.view.command.getOrElse(Nil)
+        ViashConfig.view(config, commands)
       case _ =>
         println("No subcommand was specified. See `viash --help` for more information.")
     }
@@ -89,7 +89,7 @@ object Main {
     modifyFun: Boolean = true
   ): Config = {
     Config.read(
-      config = subcommand.config(),
+      configPath = subcommand.config(),
       platform = subcommand.platform.toOption | subcommand.platformid.toOption,
       modifyFun = modifyFun
     )
@@ -146,7 +146,7 @@ object Main {
         if (platformStr.contains(":") || (new File(platformStr)).exists) {
           // platform is a file
           List(Config.read(
-            config = file.toString,
+            configPath = file.toString,
             platform = Some(platformStr),
             namespace = _namespace,
             modifyFun = modifyFun
@@ -166,7 +166,7 @@ object Main {
 
           filteredPlats.map { plat =>
             Config.read(
-              config = file.toString,
+              configPath = file.toString,
               platform = plat,
               namespace = _namespace,
               modifyFun = modifyFun

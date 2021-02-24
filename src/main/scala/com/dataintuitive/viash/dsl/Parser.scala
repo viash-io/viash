@@ -20,6 +20,8 @@ package com.dataintuitive.viash.dsl
 import io.circe.Json
 
 import scala.util.parsing.combinator.RegexParsers
+import io.circe.syntax._
+
 
 /* DSL examples
 
@@ -40,10 +42,9 @@ import scala.util.parsing.combinator.RegexParsers
 <command>    ::= <path> ":=" <json>
                | <path> "+=" <json>
 
-<path>       ::= "$" | <path2>
-<path2>      ::= ""
-               | <path2> "." <identifier>
-               | <path2> "[" <condition> "]"
+<path>       ::= "root" | <path2>
+<path2>      ::= "." <identifier> <path2>?
+               | "[" <condition> "]" <path2>?
 
 <condition>  ::= <value> "==" <value>
                | <value> "!=" <value>
@@ -78,31 +79,42 @@ object CommandLexer extends RegexParsers {
 
   override val whiteSpace = "[ \t\r\f]+".r
 
-  // define values
-  def identifier: Parser[String] = """[a-zA-Z][a-zA-Z0-9_]*""".r ^^ {
-    _.toString
+  // basic types
+  def whole: Parser[Integer] = """[0-9]+$""".r ^^ { _.toInt }
+  def real: Parser[Double] = """[0-9]+(\.[0-9]+)?(e[0-9]+)""".r ^^ { _.toDouble }
+  def numberJson: Parser[Json] = wholeJson | realJson
+  def string: Parser[String] = """"([^"]|\\")*"|'([^']|\\')*'""".r ^^ { str =>
+    val quoteChar = str.substring(0, 1)
+    str.substring(1, str.length - 1).replaceAll("\\" + quoteChar, quoteChar)
   }
-  def literal: Parser[Literal] = {
-    // TODO: can probably solve this nicer with something like "'" ~> "[^']" <~ "'"
-    """"[^"]*"|'[^']*'""".r ^^ { str =>
-      val content = str.substring(1, str.length - 1)
-      Literal(content)
-    }
+  def boolean: Parser[Boolean] = "true" ^^^ true | "false" ^^^ false
+
+  def identifier: Parser[String] = """[a-zA-Z][a-zA-Z0-9_]*""".r
+
+  // json parsers
+  def json: Parser[Json] = objJson | arrayJson | wholeJson | realJson | stringJson | booleanJson
+  def objJson: Parser[Json] = "{" ~> repsep(fieldJson, ",") <~ "}" ^^ { Json.fromFields(_) }
+  def arrayJson: Parser[Json] = "[" ~> repsep(json, ",") <~ "]" ^^ { Json.fromValues(_) }
+  def fieldJson: Parser[(String, Json)] = (identifier | string) ~ ( ":" ~> json) ^^ {
+    case id ~ va => (id, va)
   }
-  def json: Parser[Json] = {
-    // TODO: I should use a better parser for this to make sure the brackets match etc.
-    ".*".r ^^ { str =>
-      io.circe.yaml.parser.parse(str).toOption.get // TODO: will fail when str is not valid json/yaml
-      // str.asJson
+  def wholeJson: Parser[Json] = whole ^^ { _.asJson }
+  def realJson: Parser[Json] = real ^^ { _.asJson }
+  def stringJson: Parser[Json] = string ^^ { _.asJson }
+  def booleanJson: Parser[Json] = boolean ^^ { _.asJson }
+  def nullJson: Parser[Json] = "null" ^^^ None.asJson
+
+
+  // define paths
+  def root: Parser[PathExp] = "root" ^^ { _ => Root}
+  def path: Parser[Path] = (root | down | filter) ~ rep(down | filter) ^^ {
+    case head ~ tail => {
+      Path(head :: tail)
     }
   }
 
-  // define paths
-  def root: Parser[Path] = "$" ^^ { _ => Path(Nil)}
-  def pathList: Parser[Path] = rep1(down | filter) ^^ { Path(_) }
-  def path: Parser[Path] = root | pathList
-  def down: Parser[PathExp] = "." ~> identifier ^^ { id => Attribute(id) }
-  def filter: Parser[PathExp] = "[" ~> condition <~ "]" ^^ { con => Filter(con) }
+  def down: Parser[PathExp] = "." ~> identifier ^^ { Attribute(_) }
+  def filter: Parser[PathExp] = "[" ~> condition <~ "]" ^^ { Filter(_) }
 
   // define condition operations
   def condition: Parser[Condition] = equals | cTrue | cFalse
@@ -121,14 +133,13 @@ object CommandLexer extends RegexParsers {
   def not: Parser[Not] = "!" ~> condition ^^ { Not(_) }
 
   // define condition values
-  def value: Parser[Value] = literal | path
+  def value: Parser[Value] = path | (json ^^ { JsonValue(_) })
 
   // define commands
-  def modify: Parser[Modify] = path ~ ":=" ~ json ^^ {
-    case pt ~ _ ~ js => Modify(pt, js)
+  def command: Parser[Command] = path ~ (modify | add) ^^ {
+    case pt ~ comm => Command(pt, comm)
   }
-  def add: Parser[Add] = path ~ "+=" ~ json ^^ {
-    case pt ~ _ ~ js => Add(pt, js)
-  }
-  def command: Parser[Command] = modify | add
+  def modify: Parser[CommandExp] = ":=" ~> json ^^ { Modify(_) }
+  def add: Parser[CommandExp] = "+=" ~> json ^^ { Add(_) }
+  def block: Parser[Block] = rep1(command) ^^ { Block(_) }
 }

@@ -28,7 +28,7 @@ object DSLCommand {
     val conf = Config.parse(IO.uri(config))
     val confJson = conf.asJson
 
-    val cmd = CommandLexer.parse(CommandLexer.command, """.functionality.version := "6.6.6"""").get
+    val cmd = CommandLexer.parse(CommandLexer.path, """.functionality.version := "6.6.6"""").get
 
     val newJson = cmd.apply(confJson.hcursor).top.get
     val newconfig = newJson.as[Config].fold(throw _, identity)
@@ -36,8 +36,8 @@ object DSLCommand {
     println(newconfig.functionality.version)
   }
 
-  def apply(config: Config, string: String) = {
-    val cmd = CommandLexer.parse(CommandLexer.command, string).get
+  def apply(config: Config, string: String): Config = {
+    val cmd = CommandLexer.parse(CommandLexer.block, string).get
     val newJson = cmd.apply(config.asJson.hcursor).top.get
     newJson.as[Config].fold(throw _, identity)
   }
