@@ -21,42 +21,54 @@ import io.circe.Json
 
 import scala.util.parsing.combinator.RegexParsers
 
-/* examples
+/* DSL examples
+
+# een simpele set
 .functionality.version := "0.3.0"
+
+# een subset van een lijst aanpassen:
 .platforms[.type == "docker"].container_registry := "itx-aiv"
+
+# iets aan een lijst toevoegen:
 .functionality.authors += { name: "Mr. T", role: "sponsor" }
 
-[type == "foo"]
+
 */
 
 /* BNF notation
 
-<block>      ::= <command> ("[\n;]" <command>)*
+<command>    ::= <path> ":=" <json>
+               | <path> "+=" <json>
 
-<command>    ::= <path> <whitespace> ":=" <whitespace> <json>
-               | <path> <whitespace> "+=" <whitespace> <json>
+<path>       ::= "$" | <path2>
+<path2>      ::= ""
+               | <path2> "." <identifier>
+               | <path2> "[" <condition> "]"
 
-<path>       ::= <identifier>
-               | <path> "." <identifier>
-               | <path> "[" <whitespace> <condition> <whitespace> "]"
-
-<condition>  ::= <value> <whitespace> "==" <whitespace> <value<
-<value>      ::= <path> | <literal>
+<condition>  ::= <value> "==" <value>
+               | <value> "!=" <value>
+               | <condition> "&&" <condition>
+               | <condition> "||" <condition>
+               | "(" <condition> ")"
+<value>      ::= <path> | <string> | <number> | <json>
 
 <identifier> ::= <letter> (<letter> | <digit> | "_")
-<literal>    ::= "'" <text1> "'" | '"' <text2> '"'
-<text>       ::= "" | <character> <text>
+<string>    ::= "'" <text1> "'" | '"' <text2> '"'
 <text1>      ::= "" | <character1> <text1>
 <text2>      ::= '' | <character2> <text2>
 
-<letter>     ::= "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
-<digit>      ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
-<symbol>     ::=  "|" | " " | "!" | "#" | "$" | "%" | "&" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";" | ">" | "=" | "<" | "?" | "@" | "[" | "\" | "]" | "^" | "_" | "`" | "{" | "}" | "~"
-<character>  ::= <letter> | <digit> | <symbol>
-<character1> ::= <character> | "'"
-<character2> ::= <character> | '"'
+<letter>     ::= [a-zA-Z]
+<digit>      ::= [0-9]
+<character1> ::= [^\"] | '\"' | "\"
+<character2> ::= [^\'] | "\'" | "\"
+<number>     ::= # todo, support whole and real numbers, also scientific notation
 
-<whitespace> ::= " " <whitespace> | ""
+<json>       ::= <jarray> | <jobject>
+<jvalue>     ::= <string> | <number> | <json>
+<jarray>     ::= "[" (<json> ("," <json>)*))? "]"
+<jobject>    ::= "{" (<jprop> ("," <jprop>)*))? "}"
+<jprop>      ::= <jname> ":" <jvalue>
+<jprop>      ::= <identifier> | <string>
 
 */
 
