@@ -1,4 +1,4 @@
-# viash 0.3.3
+# viash 0.4.0
 
 ## NEW FEATURES
 
