@@ -19,7 +19,6 @@ package com.dataintuitive.viash
 
 import java.nio.file.{Files, Path, Paths}
 import java.nio.file.attribute.BasicFileAttributes
-
 import config.Config
 import helpers.Scala._
 
@@ -53,7 +52,8 @@ object Main {
           output = cli.build.output(),
           printMeta = cli.build.printMeta(),
           writeMeta = cli.build.writeMeta(),
-          setup = cli.build.setup()
+          setup = cli.build.setup(),
+          push = cli.build.push()
         )
       case List(cli.test) =>
         val config = readConfig(cli.test, modifyFun = false)
@@ -64,6 +64,7 @@ object Main {
           configs = configs,
           target = cli.namespace.build.target(),
           setup = cli.namespace.build.setup(),
+          push = cli.namespace.build.push(),
           parallel = cli.namespace.build.parallel(),
           writeMeta = cli.namespace.build.writeMeta()
         )
@@ -75,6 +76,12 @@ object Main {
           keepFiles = cli.namespace.test.keep.toOption.map(_.toBoolean),
           tsv = cli.namespace.test.tsv.toOption,
         )
+      case List(cli.config, cli.config.view) =>
+        val config = Config.readOnly(
+          configPath = cli.config.view.config(),
+          commands = cli.config.view.command()
+        )
+        ViashConfig.view(config)
       case _ =>
         println("No subcommand was specified. See `viash --help` for more information.")
     }
@@ -85,9 +92,10 @@ object Main {
     modifyFun: Boolean = true
   ): Config = {
     Config.read(
-      config = subcommand.config(),
+      configPath = subcommand.config(),
       platform = subcommand.platform.toOption | subcommand.platformid.toOption,
-      modifyFun = modifyFun
+      modifyFun = modifyFun,
+      commands = subcommand.command()
     )
   }
 
@@ -125,7 +133,7 @@ object Main {
       val conf1 =
         try {
           // first read config to get an idea of the available platforms
-          Some(Config.read(file.toString, modifyFun = false))
+          Some(Config.read(file.toString, modifyFun = false, commands = subcommand.command()))
         } catch {
           case e: Exception => {
             println(s"Reading file '$file' failed")
@@ -142,10 +150,11 @@ object Main {
         if (platformStr.contains(":") || (new File(platformStr)).exists) {
           // platform is a file
           List(Config.read(
-            config = file.toString,
+            configPath = file.toString,
             platform = Some(platformStr),
             namespace = _namespace,
-            modifyFun = modifyFun
+            modifyFun = modifyFun,
+            commands = subcommand.command()
           ))
         } else {
           // platform is a regex for filtering the ids
@@ -162,10 +171,11 @@ object Main {
 
           filteredPlats.map { plat =>
             Config.read(
-              config = file.toString,
+              configPath = file.toString,
               platform = plat,
               namespace = _namespace,
-              modifyFun = modifyFun
+              modifyFun = modifyFun,
+              commands = subcommand.command()
             )
           }
         }

@@ -50,5 +50,19 @@ package object docker {
         )
       }
   }
+
+  // encoder and decoder for direction
+  implicit val encodePushStrategy: Encoder[DockerPushStrategy] = Encoder.instance {
+    dss => Json.fromString(dss.id.toLowerCase)
+  }
+  implicit val decodePushStrategy: Decoder[DockerPushStrategy] = Decoder.instance {
+    cursor =>
+      cursor.value.as[String].map { s =>
+        val id = s.toLowerCase.replaceAll("_", "")
+        DockerPushStrategy.map.applyOrElse(id,
+          (key: String) => throw new Exception(s"Docker Push Strategy '$key' not found.")
+        )
+      }
+  }
 }
 

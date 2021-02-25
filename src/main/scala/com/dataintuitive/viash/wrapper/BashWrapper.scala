@@ -194,8 +194,12 @@ object BashWrapper {
        |            $var_exec_mode="setup"
        |            shift 1
        |            ;;
+       |        ---push)
+       |            $var_exec_mode="push"
+       |            shift 1
+       |            ;;
        |${allMods.parsers}
-       |        *)    # positional arg or unknown option
+       |        *)  # positional arg or unknown option
        |            # since the positional args will be eval'd, can we always quote, instead of using ViashQuote
        |            VIASH_POSITIONAL_ARGS="$$VIASH_POSITIONAL_ARGS '$$1'"
        |            shift # past argument
@@ -205,6 +209,11 @@ object BashWrapper {
        |
        |if [ "$$$var_exec_mode" == "setup" ]; then
        |  ViashSetup
+       |  exit 0
+       |fi
+       |
+       |if [ "$$$var_exec_mode" == "push" ]; then
+       |  ViashPush
        |  exit 0
        |fi
        |

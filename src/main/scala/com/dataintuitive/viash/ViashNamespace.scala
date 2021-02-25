@@ -27,6 +27,7 @@ object ViashNamespace {
     configs: List[Config],
     target: String,
     setup: Boolean = false,
+    push: Boolean = false,
     parallel: Boolean = false,
     writeMeta: Boolean = true
   ) {
@@ -46,6 +47,7 @@ object ViashNamespace {
         output = out,
         namespace = conf.functionality.namespace,
         setup = setup,
+        push = push,
         writeMeta = writeMeta
       )
     }

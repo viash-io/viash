@@ -43,6 +43,13 @@ trait ViashCommand {
     default = Some("config.vsh.yaml"),
     required = true
   )
+  val command = opt[List[String]](
+    name = "command",
+    short = 'c',
+    default = Some(Nil),
+
+    descr = "Apply a command to the config using the viash command DSL."
+  )
 }
 trait ViashNs {
   _: ScallopConf =>
@@ -80,6 +87,13 @@ trait ViashNs {
     short = 'l',
     default = Some(false),
     descr = "Whether or not to run the process in parallel."
+  )
+  val command = opt[List[String]](
+    name = "command",
+    short = 'c',
+    default = Some(Nil),
+
+    descr = "Apply a command to the config using the viash command DSL."
   )
 }
 trait WithTemporary {
@@ -170,6 +184,11 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       default = Some(false),
       descr = "Whether or not to set up the platform environment after building the executable."
     )
+    val push = opt[Boolean](
+      name = "push",
+      default = Some(false),
+      descr = "TODO"
+    )
   }
 
   val test = new Subcommand("test") with ViashCommand with WithTemporary {
@@ -189,6 +208,24 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |  viash run meta.vsh.yaml""".stripMargin)
   }
 
+  val config = new Subcommand("config") {
+    val view = new Subcommand("view") with ViashCommand {
+      banner(
+        s"""viash config view
+           |View the config file after parsing
+           |
+           |Usage:
+           |  viash config view config.vsh.yaml
+           |
+           |Arguments:""".stripMargin)
+    }
+
+    addSubcommand(view)
+    requireSubcommand()
+
+    shortSubcommandsHelp(true)
+  }
+
   val namespace = new Subcommand("ns") {
 
     val build = new Subcommand("build") with ViashNs{
@@ -197,7 +234,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |Build a namespace from many viash config files.
            |
            |Usage:
-           |  viash ns build [-n nmspc] [-s src] [-t target] [-p docker] [--setup] [--parallel]
+           |  viash ns build [-n nmspc] [-s src] [-t target] [-p docker] [--setup] [---push] [--parallel]
            |
            |Arguments:""".stripMargin)
       val target = opt[String](
@@ -210,6 +247,11 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         name = "setup",
         default = Some(false),
         descr = "Whether or not to set up the platform environment after building the executable."
+      )
+      val push = opt[Boolean](
+        name = "push",
+        default = Some(false),
+        descr = "TODO"
       )
       val writeMeta = opt[Boolean](
         name = "write_meta",
@@ -246,6 +288,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   addSubcommand(build)
   addSubcommand(test)
   addSubcommand(namespace)
+  addSubcommand(config)
 
   shortSubcommandsHelp(true)
 
