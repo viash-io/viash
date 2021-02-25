@@ -52,7 +52,8 @@ object Main {
           output = cli.build.output(),
           printMeta = cli.build.printMeta(),
           writeMeta = cli.build.writeMeta(),
-          setup = cli.build.setup()
+          setup = cli.build.setup(),
+          push = cli.build.push()
         )
       case List(cli.test) =>
         val config = readConfig(cli.test, modifyFun = false)
@@ -63,6 +64,7 @@ object Main {
           configs = configs,
           target = cli.namespace.build.target(),
           setup = cli.namespace.build.setup(),
+          push = cli.namespace.build.push(),
           parallel = cli.namespace.build.parallel(),
           writeMeta = cli.namespace.build.writeMeta()
         )

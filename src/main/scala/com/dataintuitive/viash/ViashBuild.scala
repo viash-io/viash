@@ -42,7 +42,8 @@ object ViashBuild {
     writeMeta: Boolean = false,
     printMeta: Boolean = false,
     namespace: Option[String] = None,
-    setup: Boolean = false
+    setup: Boolean = false,
+    push: Boolean = false
   ) {
     val fun = config.functionality
 
@@ -115,6 +116,12 @@ object ViashBuild {
     // if '--setup' was passed, run './executable ---setup'
     if (setup && exec_path.isDefined) {
       val cmd = Array(exec_path.get, "---setup")
+      val _ = Process(cmd).!(ProcessLogger(println, println))
+    }
+
+    // if '--push' was passed, run './executable ---push'
+    if (push && exec_path.isDefined) {
+      val cmd = Array(exec_path.get, "---push")
       val _ = Process(cmd).!(ProcessLogger(println, println))
     }
 

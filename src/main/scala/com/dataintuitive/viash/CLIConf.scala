@@ -184,6 +184,11 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       default = Some(false),
       descr = "Whether or not to set up the platform environment after building the executable."
     )
+    val push = opt[Boolean](
+      name = "push",
+      default = Some(false),
+      descr = "TODO"
+    )
   }
 
   val test = new Subcommand("test") with ViashCommand with WithTemporary {
@@ -229,7 +234,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |Build a namespace from many viash config files.
            |
            |Usage:
-           |  viash ns build [-n nmspc] [-s src] [-t target] [-p docker] [--setup] [--parallel]
+           |  viash ns build [-n nmspc] [-s src] [-t target] [-p docker] [--setup] [---push] [--parallel]
            |
            |Arguments:""".stripMargin)
       val target = opt[String](
@@ -242,6 +247,11 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         name = "setup",
         default = Some(false),
         descr = "Whether or not to set up the platform environment after building the executable."
+      )
+      val push = opt[Boolean](
+        name = "push",
+        default = Some(false),
+        descr = "TODO"
       )
       val writeMeta = opt[Boolean](
         name = "write_meta",
