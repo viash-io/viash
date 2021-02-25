@@ -168,7 +168,7 @@ case class DockerPlatform(
              |
              |  # Build the container
              |  echo "> docker build -t $$@$buildArgs $$tmpdir"
-             |  docker build -t $$@$buildArgs $$tmpdir""".stripMargin
+             |  docker build -t $$@$buildArgs $$tmpdir > /dev/null 2> /dev/null""".stripMargin
 
         (vdf, vdb)
       }
