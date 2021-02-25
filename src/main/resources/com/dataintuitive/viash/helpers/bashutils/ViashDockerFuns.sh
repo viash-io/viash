@@ -118,9 +118,9 @@ function ViashDockerPush {
     outPush=$?
     set -e
     if [ $outPush -eq 0 ]; then
-      echo "$VSHD_ID force push ... ok"
+      echo "> $VSHD_ID force push ... ok"
     else
-      echo "$VSHD_ID force push ... error"
+      echo "> $VSHD_ID force push ... error"
       exit 1
     fi
   elif [ "$VSHD_STRAT" == "pushifnotpresent" ]; then
@@ -129,9 +129,9 @@ function ViashDockerPush {
     outCheck=$?
     set -e
     if [ $outCheck -eq 0 ]; then
-      echo "$VSHD_ID exists, doing nothing"
+      echo "> $VSHD_ID exists, doing nothing"
     else
-      echo -n "$VSHD_ID does not exist, try pushing "
+      echo -n "> $VSHD_ID does not exist, try pushing "
       set +e
       docker push $1 > /dev/null 2> /dev/null
       outPush=$?
