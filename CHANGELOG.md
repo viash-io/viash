@@ -1,3 +1,21 @@
+# viash 0.3.3
+
+## NEW FEATURES
+
+* Commands: A custom viash DSL allows overriding viash config properties at runtime. For example:
+
+```
+ viash ns test \
+  -p docker \
+  -c '.functionality.version := "1.0.0"' \
+  -c '.platforms[.type == "docker"].target_registry := "my.docker-registry.com"' \
+  -c '.platforms[.type == "docker"].setup_strategy := "pull"' \
+  -l
+```
+
+* `viash build`: The image can be pushed with `--push`. The same can be done by passing `---push` 
+  a viash executable.
+
 # viash 0.3.2 (2021-02-04)
 
 ## BREAKING CHANGES
