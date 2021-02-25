@@ -113,15 +113,34 @@ function ViashDockerPush {
   VSHD_ID="$1"
   VSHD_STRAT="$2"
   if [ "$VSHD_STRAT" == "alwayspush" -o "$VSHD_STRAT" == "force" ]; then
-    echo "Image exists, still pushing"
+    set +e
     docker push $1
-  elif [ "$VSHD_STRAT" == "pushifnotpresent" ]; then
-    ViashDockerRemoteTagCheck $1
-    if [ $? -eq 0 ]; then
-      echo "Image already exists, doing nothing"
+    outPush=$?
+    set -e
+    if [ $outPush -eq 0 ]; then
+      echo "$VSHD_ID force push ... ok"
     else
-      echo "Image does not exist yet, pushing"
-      docker push $1
+      echo "$VSHD_ID force push ... error"
+      exit 1
+    fi
+  elif [ "$VSHD_STRAT" == "pushifnotpresent" ]; then
+    set +e
+    ViashDockerRemoteTagCheck $1
+    outCheck=$?
+    set -e
+    if [ $outCheck -eq 0 ]; then
+      echo "$VSHD_ID exists, doing nothing"
+    else
+      echo -n "$VSHD_ID does not exist, try pushing "
+      set +e
+      docker push $1 > /dev/null 2> /dev/null
+      outPush=$?
+      set -e
+      if [ $outPush -eq 0 ]; then
+        echo "... ok"
+      else
+        echo "... error"
+      fi
     fi
   else
     echo "Unrecognised Docker push strategy: $VSHD_STRAT"
