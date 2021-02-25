@@ -17,7 +17,7 @@
 
 package com.dataintuitive.viash.config
 
-import com.dataintuitive.viash.command.Block
+import com.dataintuitive.viash.command.{Block, CommandParser}
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.platforms._
 import com.dataintuitive.viash.helpers.{Git, GitInfo, IO}
@@ -108,7 +108,7 @@ object Config {
     }
   }
 
-  // scopy paste of the Config.read command
+  // copy paste of the Config.read command
   def readOnly(configPath: String, commands: List[String] = Nil): Config = {
     val (yaml, _) = readYAML(configPath)
 
@@ -120,7 +120,7 @@ object Config {
     commands match {
       case Nil => conf0
       case li => {
-        val block = Block.parse(li.mkString("; "))
+        val block = CommandParser.parseBlock(li.mkString("; "))
         import io.circe.syntax._
         val js = conf0.asJson
         val modifiedJs = block.apply(js.hcursor)
@@ -149,7 +149,7 @@ object Config {
     val conf1 = commands match {
       case Nil => conf0
       case li => {
-        val block = Block.parse(li.mkString("; "))
+        val block = CommandParser.parseBlock(li.mkString("; "))
         import io.circe.syntax._
         val js = conf0.asJson
         val modifiedJs = block.apply(js.hcursor)

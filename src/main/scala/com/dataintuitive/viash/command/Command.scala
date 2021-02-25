@@ -20,12 +20,6 @@ package com.dataintuitive.viash.command
 import io.circe.{ACursor, FailedCursor, Json}
 
 // define command
-object Block {
-  def parse(s: String): Block = {
-    CommandLexer.parse(CommandLexer.block, s).get
-    // TODO: provide better error message
-  }
-}
 case class Block(commands: List[Command]) {
   def apply(cursor: ACursor): ACursor = {
     commands.foldLeft(cursor) {

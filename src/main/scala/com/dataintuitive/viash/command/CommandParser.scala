@@ -74,7 +74,12 @@ import io.circe.syntax._
 */
 
 
-object CommandLexer extends RegexParsers {
+object CommandParser extends RegexParsers {
+  def parseBlock(s: String): Block = {
+    parse(block, s).get
+    // TODO: provide better error message
+  }
+
   override def skipWhitespace = true
 
   override val whiteSpace = "[ \t\r\f]+".r
@@ -112,25 +117,24 @@ object CommandLexer extends RegexParsers {
       Path(head :: tail)
     }
   }
-
   def down: Parser[PathExp] = "." ~> identifier ^^ { Attribute(_) }
   def filter: Parser[PathExp] = "[" ~> condition <~ "]" ^^ { Filter(_) }
 
   // define condition operations
-  def condition: Parser[Condition] = equals | cTrue | cFalse
+  def condition: Parser[Condition] = equals | cTrue | cFalse | and | or | not
   def cTrue: Parser[Condition] = "true" ^^ { _ => True }
   def cFalse: Parser[Condition] = "false" ^^ { _ => False }
-
-  def equals: Parser[Equals] = value ~ "==" ~ value ^^ {
-    case left ~ _ ~ right => Equals(left, right)
+  def and: Parser[And] = condition ~ ("&&" ~> condition) ^^ {
+    case left ~ right => And(left, right)
   }
-  def and: Parser[And] = condition ~ "&&" ~ condition ^^ {
-    case left ~ _ ~ right => And(left, right)
-  }
-  def or: Parser[Or] = condition ~ "||" ~ condition ^^ {
-    case left ~ _ ~ right => Or(left, right)
+  def or: Parser[Or] = condition ~ ("||" ~> condition) ^^ {
+    case left ~ right => Or(left, right)
   }
   def not: Parser[Not] = "!" ~> condition ^^ { Not(_) }
+
+  def equals: Parser[Equals] = value ~ ("==" ~> value) ^^ {
+    case left ~ right => Equals(left, right)
+  }
 
   // define condition values
   def value: Parser[Value] = path | (json ^^ { JsonValue(_) })
