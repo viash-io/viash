@@ -85,9 +85,8 @@ object CommandParser extends RegexParsers {
   override val whiteSpace = "[ \t\r\f]+".r
 
   // basic types
-  def whole: Parser[Integer] = """[0-9]+$""".r ^^ { _.toInt }
-  def real: Parser[Double] = """[0-9]+(\.[0-9]+)?(e[0-9]+)""".r ^^ { _.toDouble }
-  def numberJson: Parser[Json] = wholeJson | realJson
+  def whole: Parser[Integer] = """[+-]?[0-9]+""".r ^^ { _.toInt }
+  def real: Parser[Double] = """[+-]?[0-9]+(((\.[0-9]+)?[eE][+-]?[0-9]+[Ff]?)|(\.[0-9]+[Ff]?)|([Ff]))""".r ^^ { _.toDouble }
   def string: Parser[String] = """"([^"]|\\")*"|'([^']|\\')*'""".r ^^ { str =>
     val quoteChar = str.substring(0, 1)
     str.substring(1, str.length - 1).replaceAll("\\" + quoteChar, quoteChar)
@@ -97,7 +96,7 @@ object CommandParser extends RegexParsers {
   def identifier: Parser[String] = """[a-zA-Z][a-zA-Z0-9_]*""".r
 
   // json parsers
-  def json: Parser[Json] = objJson | arrayJson | wholeJson | realJson | stringJson | booleanJson
+  def json: Parser[Json] = objJson | arrayJson | realJson | wholeJson | stringJson | booleanJson
   def objJson: Parser[Json] = "{" ~> repsep(fieldJson, ",") <~ "}" ^^ { Json.fromFields(_) }
   def arrayJson: Parser[Json] = "[" ~> repsep(json, ",") <~ "]" ^^ { Json.fromValues(_) }
   def fieldJson: Parser[(String, Json)] = (identifier | string) ~ ( ":" ~> json) ^^ {
@@ -121,19 +120,23 @@ object CommandParser extends RegexParsers {
   def filter: Parser[PathExp] = "[" ~> condition <~ "]" ^^ { Filter(_) }
 
   // define condition operations
-  def condition: Parser[Condition] = equals | cTrue | cFalse | and | or | not
-  def cTrue: Parser[Condition] = "true" ^^ { _ => True }
-  def cFalse: Parser[Condition] = "false" ^^ { _ => False }
-  def and: Parser[And] = condition ~ ("&&" ~> condition) ^^ {
-    case left ~ right => And(left, right)
+  def condition: Parser[Condition] = and | or | not | condAvoidRecursion
+  def condAvoidRecursion: Parser[Condition] = brackets | equals | notEquals | ("true" ^^^ True) | ("false" ^^^ False)
+  def brackets: Parser[Condition] = "(" ~> condition <~ ")"
+  def and: Parser[And] = condAvoidRecursion ~ ("&&" ~> condition) ^^ {
+    case left ~  right => And(left, right)
   }
-  def or: Parser[Or] = condition ~ ("||" ~> condition) ^^ {
+  def or: Parser[Or] = condAvoidRecursion ~ ("||" ~> condition) ^^ {
     case left ~ right => Or(left, right)
   }
   def not: Parser[Not] = "!" ~> condition ^^ { Not(_) }
 
   def equals: Parser[Equals] = value ~ ("==" ~> value) ^^ {
     case left ~ right => Equals(left, right)
+  }
+
+  def notEquals: Parser[NotEquals] = value ~ ("!=" ~> value) ^^ {
+    case left ~ right => NotEquals(left, right)
   }
 
   // define condition values

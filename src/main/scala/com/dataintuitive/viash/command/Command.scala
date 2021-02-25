@@ -138,6 +138,11 @@ case class Equals(left: Value, right: Value) extends Condition {
     left.get(cursor) == right.get(cursor)
   }
 }
+case class NotEquals(left: Value, right: Value) extends Condition {
+  def apply(cursor: ACursor): Boolean = {
+    left.get(cursor) != right.get(cursor)
+  }
+}
 case class And(left: Condition, right: Condition) extends Condition {
   def apply(cursor: ACursor): Boolean = {
     left(cursor) && right(cursor)
