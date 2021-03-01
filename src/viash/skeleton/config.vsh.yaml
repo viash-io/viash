@@ -1,0 +1,31 @@
+functionality:
+  name: skeleton
+  namespace: viash
+  version: 0.1
+  description: |
+    Create a skeleton src component
+  arguments:
+  - name: "--name"
+    alternatives: ["-n"]
+    type: string
+    description: Name of the component
+    required: true
+  - name: "--namespace"
+    alternatives: ["-s"]
+    type: string
+    description: Namespace of the component
+    required: false
+  - name: "--src"
+    type: file
+    direction: output
+    description: Target directory if different from src/
+    default: src/
+  resources:
+    - type: bash_script
+      path: script.sh
+    - type: file
+      path: skeleton.yaml
+    - type: file
+      path: skeleton.sh
+platforms:
+- type: native
