@@ -59,6 +59,12 @@ trait ViashNs {
     descr = "Filter which namespaces get selected. Can be a regex. Example: \"build|run\".",
     default = None
   )
+  val query = opt[String](
+    name = "query",
+    short = 'q',
+    descr = "Filter which components (by name) get selected. Can be a regex. Example: \"transform_.*\".",
+    default = None
+  )
   val src = opt[String](
     name = "src",
     short = 's',

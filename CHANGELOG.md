@@ -16,6 +16,8 @@
 * `viash build`: The image can be pushed with `--push`. The same can be done by passing `---push` 
   a viash executable.
 
+- `viash ns` can take an additional `--query` (`-q`) argument with a regex on the component _name_.
+
 # viash 0.3.2 (2021-02-04)
 
 ## BREAKING CHANGES

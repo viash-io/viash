@@ -59,7 +59,8 @@ object Main {
         val config = readConfig(cli.test, modifyFun = false)
         ViashTest(config, keepFiles = cli.test.keep.toOption.map(_.toBoolean))
       case List(cli.namespace, cli.namespace.build) =>
-        val configs = readConfigs(cli.namespace.build)
+        val query = cli.namespace.build.query.toOption
+        val configs = readConfigs(cli.namespace.build, query)
         ViashNamespace.build(
           configs = configs,
           target = cli.namespace.build.target(),
@@ -69,12 +70,13 @@ object Main {
           writeMeta = cli.namespace.build.writeMeta()
         )
       case List(cli.namespace, cli.namespace.test) =>
-        val configs = readConfigs(cli.namespace.test, modifyFun = false)
+        val query = cli.namespace.build.query.toOption
+        val configs = readConfigs(cli.namespace.test, query, modifyFun = false)
         ViashNamespace.test(
           configs = configs,
           parallel = cli.namespace.test.parallel(),
           keepFiles = cli.namespace.test.keep.toOption.map(_.toBoolean),
-          tsv = cli.namespace.test.tsv.toOption,
+          tsv = cli.namespace.test.tsv.toOption
         )
       case List(cli.config, cli.config.view) =>
         val config = Config.readOnly(
@@ -101,6 +103,7 @@ object Main {
 
   def readConfigs(
     subcommand: ViashNs,
+    query: Option[String] = None,
     modifyFun: Boolean = true
   ): List[Config] = {
     val source = subcommand.src()
@@ -122,11 +125,24 @@ object Main {
       }
     }
 
+    // create regex for filtering by query
+    val queryMatch = {
+      query match {
+        case Some(qStr) =>
+          val qRegex = s"""^$source/.*/$qStr""".r
+          (path: String) =>
+            qRegex.findFirstIn(path).isDefined
+        case _ =>
+          (_: String) => true
+      }
+    }
+
     // find *.vsh.* files and parse as config
     val scriptFiles = find(sourceDir, (path, attrs) => {
       path.toString.contains(".vsh.") &&
         attrs.isRegularFile &&
-        namespaceMatch(path.toString)
+        namespaceMatch(path.toString) &&
+        queryMatch(path.toString)
     })
 
     scriptFiles.flatMap { file =>
