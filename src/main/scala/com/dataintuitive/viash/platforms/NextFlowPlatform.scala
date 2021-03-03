@@ -146,9 +146,9 @@ case class NextFlowPlatform(
       "process.container" → "dataintuitive/portash",
       "params" → NestedValue(
         namespacedParameters :::
+        imageInfo.registry.map(x => List(tupleToConfigTuple("containerRegistry" -> x))).getOrElse(Nil) :::
         List(
           tupleToConfigTuple("id" → ""),
-          tupleToConfigTuple("dockerPrefix" -> imageInfo.registry.map(_ + "/").getOrElse("")),
           tupleToConfigTuple("input" → ""),
           tupleToConfigTuple("output" → ""),
           tupleToConfigTuple("testScript" -> testScript.headOption.getOrElse("")), // TODO: what about when there are multiple tests?
