@@ -85,13 +85,15 @@ case class NextFlowPlatform(
     // the params structure. the function name is prefixed as a namespace
     // identifier. A "__" is used to separate namespace and arg/option.
 
-    val namespacedParameters: List[ConfigTuple] =
+    val namespacedParameters: List[ConfigTuple] = {
       functionality.arguments.map { dataObject =>
         namespacedValueTuple(
           dataObject.plainName.replace("-", "_"),
           dataObject.default.map(_.toString).getOrElse("value_not_found")
         )(fun)
       }
+      // TODO: add containerRegistry and containerTag here
+    }
 
     val argumentsAsTuple: List[ConfigTuple] =
       if (functionality.arguments.nonEmpty) {
@@ -110,11 +112,12 @@ case class NextFlowPlatform(
     }
 
     val mainParams: List[ConfigTuple] = List(
-        "name" → functionality.name,
-        "container" → imageInfo.name,
-        "containerTag" -> imageInfo.tag.getOrElse("latest"),
-        "command" → executionCode
-    )
+      "name" → functionality.name,
+      "container" → imageInfo.name,
+      "containerTag" -> imageInfo.tag.getOrElse("latest"),
+      "command" → executionCode
+    ) :::
+      imageInfo.registry.map(x => List(tupleToConfigTuple("containerRegistry" -> x))).getOrElse(Nil)
 
     // fetch test information
     val tests = functionality.tests.getOrElse(Nil)
@@ -146,7 +149,6 @@ case class NextFlowPlatform(
       "process.container" → "dataintuitive/portash",
       "params" → NestedValue(
         namespacedParameters :::
-        imageInfo.registry.map(x => List(tupleToConfigTuple("containerRegistry" -> x))).getOrElse(Nil) :::
         List(
           tupleToConfigTuple("id" → ""),
           tupleToConfigTuple("input" → ""),
@@ -192,11 +194,11 @@ case class NextFlowPlatform(
          |}
          |
          |def effectiveContainer(processParams) {
-         |    def _registry = params.containsKey("containerRegistry") ? params.containerRegistry + "/" : ""
+         |    def _registry = params.containsKey("containerRegistry") ? params.containerRegistry : processParams.containerRegistry
          |    def _name = processParams.container
-         |    def _tag = params.containsKey("containerTag") ? "$${params.containerTag}" : "$${processParams.containerTag}"
+         |    def _tag = params.containsKey("containerTag") ? params.containerTag : processParams.containerTag
          |
-         |    return "$${_registry}$${_name}:$${_tag}"
+         |    return (_registry == "" ? "" : _registry + "/") + _name + ":" + _tag
          |}
          |""".stripMargin
 
