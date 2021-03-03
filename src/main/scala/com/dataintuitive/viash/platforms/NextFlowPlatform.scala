@@ -115,9 +115,9 @@ case class NextFlowPlatform(
       "name" → functionality.name,
       "container" → imageInfo.name,
       "containerTag" -> imageInfo.tag.getOrElse("latest"),
+      "containerRegistry" -> imageInfo.registry.getOrElse(""),
       "command" → executionCode
-    ) :::
-      imageInfo.registry.map(x => List(tupleToConfigTuple("containerRegistry" -> x))).getOrElse(Nil)
+    )
 
     // fetch test information
     val tests = functionality.tests.getOrElse(Nil)

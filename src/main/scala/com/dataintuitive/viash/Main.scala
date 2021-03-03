@@ -114,6 +114,7 @@ object Main {
     val platformStr = (subcommand.platform.toOption | subcommand.platformid.toOption).getOrElse(".*")
 
     // create regex for filtering by namespace
+    // TODO: filter namespaces after reading in the config files
     val namespaceMatch = {
       namespace match {
         case Some(ns) =>
