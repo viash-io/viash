@@ -25,7 +25,7 @@ import com.dataintuitive.viash.helpers.{Bash, Format}
 
 object BashWrapper {
   def escape(str: String): String = {
-    str.replaceAll("([\\\\$`])", "\\\\$1")
+    str.replaceAll("([\\\\$`\"])", "\\\\$1")
   }
 
   def escapeViash(str: String): String = {
