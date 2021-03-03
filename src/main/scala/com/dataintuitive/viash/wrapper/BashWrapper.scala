@@ -25,11 +25,19 @@ import com.dataintuitive.viash.helpers.{Bash, Format}
 
 object BashWrapper {
   def escape(str: String): String = {
-    str.replaceAll("([\\\\$`\"])", "\\\\$1")
+    str.replaceAll("([\\\\$`])", "\\\\$1")
   }
 
-  def escapeViash(str: String): String = {
-    escape(str)
+  def escapeViash(str: String, escapeQuotes: Boolean = false): String = {
+    val escQuo =
+      if (escapeQuotes) {
+        (s: String) => s.replaceAll("\"", "\\\"")
+      } else {
+        (s: String) => s
+      }
+
+    escQuo(escape(str))
+      .replaceAll("\"", "\\\"")
       .replaceAll("\\\\\\$VIASH_DOLLAR\\\\\\$", "\\$")
       .replaceAll("\\\\\\$VIASH_", "\\$VIASH_")
       .replaceAll("\\\\\\$\\{VIASH_", "\\${VIASH_")
@@ -265,7 +273,7 @@ object BashWrapper {
 
       val part1 = "    " + exampleStrs.mkString(", ")
       val part2 = "        " + properties.mkString(", ")
-      val part3 = param.description.toList.flatMap(escapeViash(_).split("\n")).map("        " + _)
+      val part3 = param.description.toList.flatMap(escapeViash(_, escapeQuotes = true).split("\n")).map("        " + _)
 
       (part1 :: part2 :: part3 ::: List("")).map("    echo \"" + _ + "\"").mkString("\n")
     })
@@ -275,7 +283,7 @@ object BashWrapper {
     val preParse =
       s"""# ViashHelp: Display helpful explanation about this executable
       |function ViashHelp {
-      |   echo "${escapeViash(functionality.description.getOrElse("").stripLineEnd)}"
+      |   echo "${escapeViash(functionality.description.getOrElse("").stripLineEnd, escapeQuotes = true)}"
       |   echo
       |   echo "Options:"
       |${usageStrs.mkString("\n")}
@@ -365,7 +373,7 @@ object BashWrapper {
 
       default.map(default => {
         s"""if [ -z "$$${param.VIASH_PAR}" ]; then
-    |  ${param.VIASH_PAR}="${escapeViash(default.toString)}"
+    |  ${param.VIASH_PAR}="${escapeViash(default.toString, escapeQuotes = true)}"
     |fi""".stripMargin
       })
     }.mkString("\n")
