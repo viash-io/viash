@@ -18,6 +18,11 @@
 
 - `viash ns` can take an additional `--query` (`-q`) argument with a regex on the component _name_.
 
+## BUG FIXES
+
+* Allow quotes in functionality descriptions.
+
+
 # viash 0.3.2 (2021-02-04)
 
 ## BREAKING CHANGES
