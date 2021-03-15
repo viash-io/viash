@@ -125,4 +125,26 @@ object ViashNamespace {
     }
   }
 
+  def list(
+    configs: List[Config]
+  ) {
+    // TODO: move the functionality here to a dedicated helper
+    // TODO2: align with viash config view
+
+    import config._
+    import io.circe.yaml.Printer
+    import helpers.IO
+    val printer = Printer(
+      preserveOrder = true,
+      dropNullKeys = true,
+      mappingStyle = Printer.FlowStyle.Block,
+      splitLines = true,
+      stringStyle = Printer.StringStyle.DoubleQuoted
+    )
+    println(
+      // configs.map(_.functionality)
+      printer.pretty(encodeListConfig(configs))
+    )
+
+  }
 }

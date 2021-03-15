@@ -283,8 +283,25 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
     }
 
+    val list = new Subcommand("list") with ViashNs with WithTemporary {
+      banner(
+        s"""viash ns list
+           |List a namespace containing many viash config files.
+           |
+           |Usage:
+           |  viash ns list [-n nmspc] [-s src] [-p docker] [--tsv file.tsv]
+           |
+           |Arguments:""".stripMargin)
+      val tsv = opt[String](
+        name = "tsv",
+        short = 't',
+        descr = "Path to write a summary of the list results to."
+      )
+    }
+
     addSubcommand(build)
     addSubcommand(test)
+    addSubcommand(list)
     requireSubcommand()
 
     shortSubcommandsHelp(true)

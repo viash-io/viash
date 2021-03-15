@@ -78,6 +78,12 @@ object Main {
           keepFiles = cli.namespace.test.keep.toOption.map(_.toBoolean),
           tsv = cli.namespace.test.tsv.toOption
         )
+      case List(cli.namespace, cli.namespace.list) =>
+        val query = cli.namespace.build.query.toOption
+        val configs = readConfigs(cli.namespace.test, query, modifyFun = false)
+        ViashNamespace.list(
+          configs = configs
+        )
       case List(cli.config, cli.config.view) =>
         val config = Config.readOnly(
           configPath = cli.config.view.config(),
