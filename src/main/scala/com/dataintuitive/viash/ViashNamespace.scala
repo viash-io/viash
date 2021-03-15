@@ -142,8 +142,7 @@ object ViashNamespace {
       stringStyle = Printer.StringStyle.DoubleQuoted
     )
     println(
-      // configs.map(_.functionality)
-      printer.pretty(encodeListConfig(configs))
+      printer.pretty(encodeListConfig(Configs(configs)))
     )
 
   }
