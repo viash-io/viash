@@ -91,7 +91,7 @@ object Main {
         )
         ViashConfig.view(config)
       case _ =>
-        println("No subcommand was specified. See `viash --help` for more information.")
+        System.err.println("No subcommand was specified. See `viash --help` for more information.")
     }
   }
 
@@ -110,7 +110,7 @@ object Main {
   def readConfigs(
     subcommand: ViashNs,
     query: Option[String] = None,
-    modifyFun: Boolean = true
+    modifyFun: Boolean = true,
   ): List[Config] = {
     val source = subcommand.src()
     val namespace = subcommand.namespace.toOption
@@ -159,7 +159,7 @@ object Main {
           Some(Config.read(file.toString, modifyFun = false, commands = subcommand.command()))
         } catch {
           case e: Exception => {
-            println(s"Reading file '$file' failed")
+            System.err.println(s"Reading file '$file' failed")
             None
           }
         }
