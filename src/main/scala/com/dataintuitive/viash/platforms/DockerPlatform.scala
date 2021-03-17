@@ -169,10 +169,15 @@ case class DockerPlatform(
              |  # Build the container
              |  echo "> docker build -t $$@$buildArgs $$tmpdir"
              |  set +e
-             |  docker build -t $$@$buildArgs $$tmpdir > /dev/null 2> /dev/null
+             |  docker build -t $$@$buildArgs $$tmpdir &> $$tmpdir/docker_build.log
              |  out=$$?
              |  set -e
-             |  [ $$out -eq 0 ] || echo "> ERROR: Something went wrong building the container $$@"
+             |  if [ ! $$out -eq 0 ]; then
+             |    echo "> ERROR: Something went wrong building the container $$@"
+             |    echo "> Error transcript follows:"
+             |    cat $$tmpdir/docker_build.log
+             |    echo "> --- end of error transcript"
+             |  fi
              |  exit $$out""".stripMargin
 
         (vdf, vdb)
