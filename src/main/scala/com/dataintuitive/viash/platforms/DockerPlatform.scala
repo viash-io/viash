@@ -168,7 +168,12 @@ case class DockerPlatform(
              |
              |  # Build the container
              |  echo "> docker build -t $$@$buildArgs $$tmpdir"
-             |  docker build -t $$@$buildArgs $$tmpdir > /dev/null 2> /dev/null""".stripMargin
+             |  set +e
+             |  docker build -t $$@$buildArgs $$tmpdir > /dev/null 2> /dev/null
+             |  out=$$?
+             |  set -e
+             |  [ $$out -eq 0 ] || echo "> ERROR: Something went wrong building the container $$@"
+             |  exit $$out""".stripMargin
 
         (vdf, vdb)
       }
