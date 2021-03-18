@@ -18,16 +18,16 @@
 package com.dataintuitive.viash.helpers
 
 import java.io.File
-import java.nio.file.{Paths, Files, Path}
+import java.nio.file.{Files, Path, Paths}
 import scala.reflect.io.Directory
-
 import java.net.URI
 import scala.io.Source
 import java.net.URL
 import sys.process._
 import java.nio.charset.StandardCharsets
-
 import com.dataintuitive.viash.functionality.resources.Resource
+
+import java.nio.file.attribute.PosixFilePermission
 
 object IO {
   def tempDir: File = {
@@ -76,7 +76,7 @@ object IO {
     }
   }
 
-  def write(uri: URI, path: Path, overwrite: Boolean): File = {
+  def write(uri: URI, path: Path, overwrite: Boolean, executable: Option[Boolean]): File = {
     val file = path.toFile
 
     if (overwrite && file.exists()) {
@@ -100,10 +100,12 @@ object IO {
       throw new RuntimeException("Unsupported scheme: " + uri.getScheme)
     }
 
+    setPerms(path, executable)
+
     file
   }
 
-  def write(text: String, path: Path, overwrite: Boolean): File = {
+  def write(text: String, path: Path, overwrite: Boolean, executable: Option[Boolean]): File = {
     val file = path.toFile
 
     if (overwrite && file.exists()) {
@@ -111,6 +113,8 @@ object IO {
     }
 
     Files.write(path, text.getBytes(StandardCharsets.UTF_8))
+
+    setPerms(path, executable)
 
     file
   }
@@ -137,4 +141,19 @@ object IO {
     }
   }
 
+  def setPerms(path: Path, executable: Option[Boolean]): Unit = {
+    if (executable.isDefined) {
+      val perms = Files.getPosixFilePermissions(path)
+      if (executable.get) {
+        if (perms.contains(PosixFilePermission.OWNER_READ)) perms.add(PosixFilePermission.OWNER_EXECUTE)
+        if (perms.contains(PosixFilePermission.GROUP_READ)) perms.add(PosixFilePermission.GROUP_EXECUTE)
+        if (perms.contains(PosixFilePermission.OTHERS_READ)) perms.add(PosixFilePermission.OTHERS_EXECUTE)
+      } else {
+        perms.remove(PosixFilePermission.OWNER_EXECUTE)
+        perms.remove(PosixFilePermission.GROUP_EXECUTE)
+        perms.remove(PosixFilePermission.OTHERS_EXECUTE)
+      }
+      Files.setPosixFilePermissions(path, perms)
+    }
+  }
 }
