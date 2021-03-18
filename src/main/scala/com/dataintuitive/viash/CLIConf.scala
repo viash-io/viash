@@ -56,7 +56,7 @@ trait ViashNs {
   val query = opt[String](
     name = "query",
     short = 'q',
-    descr = "Filter which components get selected by name and namespace. Can be a regex. Example: \"^mynamespace/comp1$\".",
+    descr = "Filter which components get selected by name and namespace. Can be a regex. Example: \"^mynamespace/component1$\".",
     default = None
   )
   val query_namespace = opt[String](
@@ -67,7 +67,7 @@ trait ViashNs {
   )
   val query_name = opt[String](
     name = "query_name",
-    descr = "Filter which components get selected by name. Can be a regex. Example: \"^transform_\".",
+    descr = "Filter which components get selected by name. Can be a regex. Example: \"^component1\".",
     default = None
   )
   val src = opt[String](
