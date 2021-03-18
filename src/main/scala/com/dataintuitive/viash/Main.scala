@@ -191,7 +191,6 @@ object Main {
             Config.read(
               configPath = file.toString,
               platform = plat,
-              namespace = _namespace,
               modifyFun = modifyFun,
               commands = subcommand.command()
             )
@@ -207,21 +206,5 @@ object Main {
   def find(sourceDir: Path, filter: (Path, BasicFileAttributes) => Boolean): List[Path] = {
     val it = Files.find(sourceDir, Integer.MAX_VALUE, (p, b) => filter(p, b)).iterator()
     JavaConverters.asScalaIterator(it).toList
-  }
-
-  /**
-   * Given a Path to a viash config file (functionality.yaml / *.vsh.yaml),
-   * extract an implicit namespace if appropriate.
-   */
-  private def getNamespace(namespace: Option[String], file: Path): Option[String] = {
-    if (namespace.isDefined) {
-      namespace
-    } else {
-      val parentDir = file.toString.split("/").dropRight(2).lastOption.getOrElse("src")
-      if (parentDir != "src")
-        Some(parentDir)
-      else
-        None
-    }
   }
 }

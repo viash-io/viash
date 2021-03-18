@@ -136,7 +136,6 @@ object Config {
     configPath: String,
     platform: Option[String] = None,
     modifyFun: Boolean = true,
-    namespace: Option[String] = None,
     commands: List[String] = Nil
   ): Config = {
 
@@ -211,8 +210,6 @@ object Config {
       )),
       // apply platform modification to functionality
       functionality = modifyFunFun(conf1.functionality.copy(
-        // override namespace if none is specified in config
-        namespace = conf1.functionality.namespace | namespace,
         // add script (if available) to resources
         resources = Some(optScript.toList ::: conf1.functionality.resources.getOrElse(Nil))
       )),
