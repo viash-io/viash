@@ -137,7 +137,7 @@ object Main {
           val queryTest = (queryNamespace, funNs) match {
             case (Some(regex), Some(ns)) => regex.r.findFirstIn(ns + "/" + funName).isDefined
             case (Some(regex), None) => regex.r.findFirstIn(funName).isDefined
-            case (None, None) => true
+            case (None, _) => true
           }
           val nameTest = queryName match {
             case Some(regex) => regex.r.findFirstIn(funName).isDefined
