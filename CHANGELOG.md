@@ -2,7 +2,10 @@
 
 ## BREAKING CHANGES
 
-* `viash ns`: Argument `--namespace` has been renamed to `--query_namespace`.
+* `viash ns`: Argument `--namespace` has been renamed to `--query_namespace`. 
+
+* `viash ns`: Argument `--namespace` does not implicitly change the namespace of the functionality anymore.
+  You can use the command DSL to reproduce this effect; for example: `-c '.functionality.namespace := "foo"'`.
 
 ## NEW FEATURES
 
