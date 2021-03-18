@@ -1,6 +1,7 @@
 target/
 .bloop*
 .metals*
+projects/metals.sbt
 /bin/
 .cache-main
 .classpath
