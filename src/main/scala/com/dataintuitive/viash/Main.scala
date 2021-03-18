@@ -134,14 +134,14 @@ object Main {
           val funNs = confTest.functionality.namespace
 
           // does name & namespace match regex?
-          val queryTest = (queryNamespace, funNs) match {
+          val queryTest = (query, funNs) match {
             case (Some(regex), Some(ns)) => regex.r.findFirstIn(ns + "/" + funName).isDefined
             case (Some(regex), None) => regex.r.findFirstIn(funName).isDefined
             case (None, _) => true
           }
           val nameTest = queryName match {
             case Some(regex) => regex.r.findFirstIn(funName).isDefined
-            case None => false
+            case None => true
           }
           val namespaceTest = (queryNamespace, funNs) match {
             case (Some(regex), Some(ns)) => regex.r.findFirstIn(ns).isDefined

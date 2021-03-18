@@ -133,7 +133,6 @@ object ViashNamespace {
 
     import config._
     import io.circe.yaml.Printer
-    import helpers.IO
     val printer = Printer(
       preserveOrder = true,
       dropNullKeys = true,
