@@ -59,8 +59,7 @@ object Main {
         val config = readConfig(cli.test, modifyFun = false)
         ViashTest(config, keepFiles = cli.test.keep.toOption.map(_.toBoolean))
       case List(cli.namespace, cli.namespace.build) =>
-        val query = cli.namespace.build.query.toOption
-        val configs = readConfigs(cli.namespace.build, query)
+        val configs = readConfigs(cli.namespace.build)
         ViashNamespace.build(
           configs = configs,
           target = cli.namespace.build.target(),
@@ -70,8 +69,7 @@ object Main {
           writeMeta = cli.namespace.build.writeMeta()
         )
       case List(cli.namespace, cli.namespace.test) =>
-        val query = cli.namespace.build.query.toOption
-        val configs = readConfigs(cli.namespace.test, query, modifyFun = false)
+        val configs = readConfigs(cli.namespace.test, modifyFun = false)
         ViashNamespace.test(
           configs = configs,
           parallel = cli.namespace.test.parallel(),
@@ -79,8 +77,7 @@ object Main {
           tsv = cli.namespace.test.tsv.toOption
         )
       case List(cli.namespace, cli.namespace.list) =>
-        val query = cli.namespace.build.query.toOption
-        val configs = readConfigs(cli.namespace.test, query, modifyFun = false)
+        val configs = readConfigs(cli.namespace.test, modifyFun = false)
         ViashNamespace.list(
           configs = configs
         )
@@ -109,54 +106,55 @@ object Main {
 
   def readConfigs(
     subcommand: ViashNs,
-    query: Option[String] = None,
     modifyFun: Boolean = true,
   ): List[Config] = {
     val source = subcommand.src()
-    val namespace = subcommand.namespace.toOption
+    val query = subcommand.query.toOption
+    val queryNamespace = subcommand.query_namespace.toOption
+    val queryName = subcommand.query_name.toOption
     val sourceDir = Paths.get(source)
 
     // create regex for filtering platform ids
     val platformStr = (subcommand.platform.toOption | subcommand.platformid.toOption).getOrElse(".*")
 
-    // create regex for filtering by namespace
-    // TODO: filter namespaces after reading in the config files
-    val namespaceMatch = {
-      namespace match {
-        case Some(ns) =>
-          val nsRegex = s"""^$source/$ns/.*""".r
-          (path: String) =>
-            nsRegex.findFirstIn(path).isDefined
-        case _ =>
-          (_: String) => true
-      }
-    }
-
-    // create regex for filtering by query
-    val queryMatch = {
-      query match {
-        case Some(qStr) =>
-          val qRegex = s"""^$source/.*/$qStr""".r
-          (path: String) =>
-            qRegex.findFirstIn(path).isDefined
-        case _ =>
-          (_: String) => true
-      }
-    }
-
     // find *.vsh.* files and parse as config
     val scriptFiles = find(sourceDir, (path, attrs) => {
       path.toString.contains(".vsh.") &&
-        attrs.isRegularFile &&
-        namespaceMatch(path.toString) &&
-        queryMatch(path.toString)
+        attrs.isRegularFile
     })
 
     scriptFiles.flatMap { file =>
       val conf1 =
         try {
           // first read config to get an idea of the available platforms
-          Some(Config.read(file.toString, modifyFun = false, commands = subcommand.command()))
+          val confTest =
+            Config.read(file.toString, modifyFun = false, commands = subcommand.command())
+
+          val funName = confTest.functionality.name
+          val funNs = confTest.functionality.namespace
+
+          // does name & namespace match regex?
+          val queryTest = (queryNamespace, funNs) match {
+            case (Some(regex), Some(ns)) => regex.r.findFirstIn(ns + "/" + funName).isDefined
+            case (Some(regex), None) => regex.r.findFirstIn(funName).isDefined
+            case (None, None) => true
+          }
+          val nameTest = queryName match {
+            case Some(regex) => regex.r.findFirstIn(funName).isDefined
+            case None => false
+          }
+          val namespaceTest = (queryNamespace, funNs) match {
+            case (Some(regex), Some(ns)) => regex.r.findFirstIn(ns).isDefined
+            case (Some(_), None) => false
+            case (None, _) => true
+          }
+
+          // if config passes regex checks, return it
+          if (queryTest && nameTest && namespaceTest) {
+            Some(confTest)
+          } else {
+            None
+          }
         } catch {
           case e: Exception => {
             System.err.println(s"Reading file '$file' failed")
@@ -167,15 +165,12 @@ object Main {
       if (conf1.isEmpty) {
         Nil
       } else {
-        // determine which namespace to use
-        val _namespace = getNamespace(namespace, file)
 
         if (platformStr.contains(":") || (new File(platformStr)).exists) {
           // platform is a file
           List(Config.read(
             configPath = file.toString,
             platform = Some(platformStr),
-            namespace = _namespace,
             modifyFun = modifyFun,
             commands = subcommand.command()
           ))

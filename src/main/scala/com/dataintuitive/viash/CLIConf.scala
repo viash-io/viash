@@ -53,16 +53,21 @@ trait ViashCommand {
 }
 trait ViashNs {
   _: ScallopConf =>
-  val namespace = opt[String](
-    name = "namespace",
-    short = 'n',
-    descr = "Filter which namespaces get selected. Can be a regex. Example: \"build|run\".",
-    default = None
-  )
   val query = opt[String](
     name = "query",
     short = 'q',
-    descr = "Filter which components (by name) get selected. Can be a regex. Example: \"transform_.*\".",
+    descr = "Filter which components get selected by name and namespace. Can be a regex. Example: \"^mynamespace/comp1$\".",
+    default = None
+  )
+  val query_namespace = opt[String](
+    name = "query_namespace",
+    short = 'n',
+    descr = "Filter which namespaces get selected by namespace. Can be a regex. Example: \"^mynamespace$\".",
+    default = None
+  )
+  val query_name = opt[String](
+    name = "query_name",
+    descr = "Filter which components get selected by name. Can be a regex. Example: \"^transform_\".",
     default = None
   )
   val src = opt[String](
