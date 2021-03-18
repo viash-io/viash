@@ -1,0 +1,29 @@
+functionality:
+  name: project_doc
+  namespace: viash
+  version: 0.1
+  description: |
+    Generate documentation
+  arguments:
+  - name: "repo"
+    type: file
+    default: .
+    description: Repository to generate documentation for
+  - name: "--src"
+    alternatives: [ "-s" ]
+    type: string
+    default: src
+    description: Folder to search for components, usually just src/
+  - name: "--output"
+    alternatives: [ -r ]
+    type: file
+    direction: output
+    default: project_doc.md
+    description: Name/path of the output markdown file
+  resources:
+  - type: bash_script
+    path: ./code.sh
+platforms:
+- type: native
+- type: docker
+  image: dataintuitive/viash:0.4.0-rc1
