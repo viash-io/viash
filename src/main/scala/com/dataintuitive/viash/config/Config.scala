@@ -29,8 +29,6 @@ import com.dataintuitive.viash.functionality.resources._
 
 import java.io.File
 
-case class Configs(configs:List[Config])
-
 case class Config(
   functionality: Functionality,
   platform: Option[Platform] = None,

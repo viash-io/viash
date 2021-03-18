@@ -26,8 +26,6 @@ package object config {
   implicit val customConfig: Configuration = Configuration.default.withDefaults
 
   // encoders and decoders for Config
-  implicit val encodeListConfig: Encoder.AsObject[Configs] = deriveEncoder
-
   implicit val encodeConfig: Encoder.AsObject[Config] = deriveConfiguredEncoder
   implicit val decodeConfig: Decoder[Config] = deriveConfiguredDecoder
 

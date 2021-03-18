@@ -18,7 +18,6 @@
 package com.dataintuitive.viash
 
 import java.io.FileWriter
-
 import com.dataintuitive.viash.ViashTest.{ManyTestOutput, TestOutput}
 import config.Config
 
@@ -133,6 +132,8 @@ object ViashNamespace {
 
     import config._
     import io.circe.yaml.Printer
+    import io.circe.syntax.EncoderOps
+
     val printer = Printer(
       preserveOrder = true,
       dropNullKeys = true,
@@ -141,7 +142,7 @@ object ViashNamespace {
       stringStyle = Printer.StringStyle.DoubleQuoted
     )
     println(
-      printer.pretty(encodeListConfig(Configs(configs)))
+      printer.pretty(configs.asJson)
     )
 
   }
