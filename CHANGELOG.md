@@ -1,5 +1,9 @@
 # viash 0.4.0
 
+## BREAKING CHANGES
+
+* `viash ns`: Argument `--namespace` has been renamed to `--query_namespace`.
+
 ## NEW FEATURES
 
 * Commands: A custom viash DSL allows overriding viash config properties at runtime. For example:
@@ -16,7 +20,10 @@
 * `viash build`: The image can be pushed with `--push`. The same can be done by passing `---push` 
   a viash executable.
 
-- `viash ns` can take an additional `--query` (`-q`) argument with a regex on the component _name_.
+* `viash ns` can query the name, namespace, or both, with the following arguments:
+  - `--query_namespace` or `-n`: filter the namespace with a regex.
+  - `--query_name`: filter the name with a regex.
+  - `--query` or `-q`: filter the namespace/name with a regex.
 
 ## BUG FIXES
 
