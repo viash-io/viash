@@ -27,5 +27,8 @@ functionality:
       path: skeleton.yaml
     - type: file
       path: skeleton.sh
+  tests:
+    - type: bash_script
+      path: test/run_test.sh
 platforms:
 - type: native
