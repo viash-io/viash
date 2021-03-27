@@ -39,7 +39,7 @@ if [ $errors -eq 1 ]; then
     ns=`echo -n "$f" | cut -f1`
     comp=`echo -n "$f" | cut -f2`
     platform=`echo -n "$f" | cut -f3`
-    output "- $comp in $ns, platform $platform"
+    output "- \`$comp\` in \`$ns\`, platform \`$platform\`"
   done
   output ""
 else
@@ -54,7 +54,7 @@ if [ $missings -eq 1 ]; then
     ns=`echo -n "$f" | cut -f1`
     comp=`echo -n "$f" | cut -f2`
     platform=`echo -n "$f" | cut -f3`
-    output "- $comp in $ns, platform $platform"
+    output "- \`$comp\` in \`$ns\`, platform \`$platform\`"
   done
   output ""
 else
@@ -73,7 +73,7 @@ if [ $errors -eq 1 ]; then
     comp=`echo -n "$f" | cut -f2`
     platform=`echo -n "$f" | cut -f3`
     root_test_dir=`ls -ctd "$par_tmp/viash_test_$comp"* | head -1`
-    output "### $comp Build"
+    output "### \`$comp\` Build"
     output ""
     output "Files:"
     output ""
@@ -87,7 +87,7 @@ if [ $errors -eq 1 ]; then
     cat "$root_test_dir/build_executable/_viash_build_log.txt" >> $par_output
     output '```'
 
-    output "### $comp Test"
+    output "### \`$comp\` Test"
     output ""
     output "Files:"
     output ""
