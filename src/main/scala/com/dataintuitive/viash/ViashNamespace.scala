@@ -56,16 +56,40 @@ object ViashNamespace {
     configs: List[Config],
     parallel: Boolean = false,
     keepFiles: Option[Boolean] = None,
-    tsv: Option[String] = None
+    tsv: Option[String] = None,
+    append: Boolean = false
   ): List[(Config, ManyTestOutput)] = {
     val configs2 = if (parallel) configs.par else configs
 
     // run all the component tests
-    val tsvWriter = tsv.map(new FileWriter(_, false))
+    val tsvWriter = tsv.map(new FileWriter(_, append))
 
     try {
-      tsvWriter.foreach(_.append(List("namespace", "functionality", "platform", "test_name", "exit_code", "duration", "result").mkString("\t") + sys.props("line.separator")))
-      printf(s"%s%20s %20s %20s %20s %9s %8s %20s%s\n", "", "namespace", "functionality", "platform", "test_name", "exit_code", "duration", "result", Console.RESET)
+      if (!append)
+        tsvWriter.foreach(
+          _.append(
+            List(
+              "namespace",
+              "functionality",
+              "platform",
+              "test_name",
+              "exit_code",
+              "duration",
+              "result"
+            ).mkString("\t") + sys.props("line.separator"))
+        )
+      printf(
+        s"%s%20s %20s %20s %20s %9s %8s %20s%s\n",
+        "",
+        "namespace",
+        "functionality",
+        "platform",
+        "test_name",
+        "exit_code",
+        "duration",
+        "result",
+        Console.RESET
+      )
 
       configs2.map { conf =>
         // get attributes

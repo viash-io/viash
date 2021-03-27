@@ -74,7 +74,8 @@ object Main {
           configs = configs,
           parallel = cli.namespace.test.parallel(),
           keepFiles = cli.namespace.test.keep.toOption.map(_.toBoolean),
-          tsv = cli.namespace.test.tsv.toOption
+          tsv = cli.namespace.test.tsv.toOption,
+          append = cli.namespace.test.append()
         )
       case List(cli.namespace, cli.namespace.list) =>
         val configs = readConfigs(cli.namespace.test, modifyFun = false)
