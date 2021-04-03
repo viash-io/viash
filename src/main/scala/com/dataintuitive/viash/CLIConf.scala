@@ -278,13 +278,19 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |Test a namespace containing many viash config files.
            |
            |Usage:
-           |  viash ns test [-n nmspc] [-s src] [-p docker] [--parallel] [--tsv file.tsv]
+           |  viash ns test [-n nmspc] [-s src] [-p docker] [--parallel] [--tsv file.tsv] [--append]
            |
            |Arguments:""".stripMargin)
       val tsv = opt[String](
         name = "tsv",
         short = 't',
         descr = "Path to write a summary of the test results to."
+      )
+      val append = opt[Boolean](
+        name = "append",
+        short = 'a',
+        default = Some(false),
+        descr = "Append to tsv instead of overwrite"
       )
     }
 

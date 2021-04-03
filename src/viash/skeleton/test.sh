@@ -1,5 +1,28 @@
 #!/bin/bash
 
+set -ex
+
+
+###########################################
+###        TESTING BASH SKELETON        ###
+###########################################
+
+./skeleton -n testbash -ns test -l bash --src my_src
+
+
+echo ">>> Checking whether output is generated"
+
+[[ ! -d my_src ]] && echo "It seems no src dir is generated" && exit 1
+[[ ! -d my_src/test ]] && echo "The namespace dir was not generated" && exit 1
+[[ ! -d my_src/test/testbash ]] && echo "The component dir was not generated" && exit 1
+[[ ! -f my_src/test/testbash/script.sh  ]] && echo "The skeleton script.sh was not written" && exit 1
+[[ ! -f my_src/test/testbash/config.vsh.yaml  ]] && echo "The skeleton config.vsh.yaml was not written" && exit 1
+
+viash test my_src/test/testbash/config.vsh.yaml
+
+[ $? -ne 0 ] && echo "Bash component finished unsuccessfully" && exit 1
+
+
 ###########################################
 ###       TESTING PYTHON SKELETON       ###
 ###########################################
@@ -26,17 +49,10 @@ viash test src/test/testr/config.vsh.yaml
 
 
 
-###########################################
-###        TESTING BASH SKELETON        ###
-###########################################
 
-./skeleton -n testbash -ns test -l bash
 
-[[ ! -f src/test/testbash/config.vsh.yaml ]] && echo "Output file could not be found!" && exit 1
 
-viash test src/test/testbash/config.vsh.yaml
 
-[ $? -ne 0 ] && echo "Bash component finished unsuccessfully" && exit 1
 
 ###########################################
 ###            WRAP UP TESTS            ###
