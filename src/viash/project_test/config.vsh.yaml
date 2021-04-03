@@ -45,6 +45,10 @@ functionality:
     type: file
     description: Test log file
     default: log.tsv
+  - name: "--append"
+    type: boolean
+    default: true
+    description: Append to the log file?
   - name: "--viash"
     type: file
     description: A path to the viash executable. If not specified, this component will look for 'viash' on the $PATH.

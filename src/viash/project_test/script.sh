@@ -16,6 +16,11 @@ if [ -z "$par_viash" ]; then
   par_viash="viash"
 fi
 
+# if --append (-a) true is specified, add `--append`
+if [ "$par_append" == "true" ]; then
+  par_append_parsed="--append"
+fi
+
 if [ "$par_mode" == "development" ]; then
   echo "In development mode..."
   "$par_viash" ns test \
@@ -26,7 +31,8 @@ if [ "$par_mode" == "development" ]; then
     -c '.functionality.version := "dev"' \
     -c '.platforms[.type == "docker"].setup_strategy := "donothing"' \
     -l \
-    -t "$par_log"
+    -t "$par_log" \
+    $par_append_parsed
 elif [ "$par_mode" == "integration" ]; then
   echo "In integration mode..."
   "$par_viash" ns test \
@@ -39,7 +45,8 @@ elif [ "$par_mode" == "integration" ]; then
     -c '.platforms[.type == "docker"].setup_strategy := "donothing"' \
     -c '.platforms[.type == "nextflow"].registry := "'"$par_registry"'"' \
     -l \
-    -t "$par_log"
+    -t "$par_log" \
+    $par_append_parsed
 elif [ "$par_mode" == "release" ]; then
   echo "In release mode..."
   if [ "$par_version" == "dev" ]; then
@@ -56,7 +63,8 @@ elif [ "$par_mode" == "release" ]; then
     -c '.platforms[.type == "docker"].setup_strategy := "pull"' \
     -c '.platforms[.type == "nextflow"].registry := "'"$par_registry"'"' \
     -l \
-    -t "$par_log"
+    -t "$par_log" \
+    $par_append_parsed
 else
   echo "Not a valid mode argument"
 fi
