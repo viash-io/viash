@@ -51,6 +51,6 @@ functionality:
     - type: bash_script
       path: test.sh
 platforms:
-  - type: docker
-    image: ubuntu:20.04
   - type: native
+  - type: docker
+    image: data-intuitive/viash
