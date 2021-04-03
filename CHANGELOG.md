@@ -28,6 +28,8 @@
   - `--query_name`: filter the name with a regex.
   - `--query` or `-q`: filter the namespace/name with a regex.
 
+* Added the `project_build`, `project_clean`, `project_push` and `project_test` components to this repository.
+
 ## BUG FIXES
 
 * Allow quotes in functionality descriptions.
