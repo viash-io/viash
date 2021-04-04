@@ -69,11 +69,6 @@ jobs:
 
     - name: Run tests
       run: |
-        # always run this test
-        ./configure --prefix=bin
-        make
-        bin/viash test src/test/resources/testr/script.vsh.R -p native
-
         if [[ "${{ matrix.config.name }}" == "main" ]]; then
           # only run coverage on main runner
           sbt clean coverage test coverageReport

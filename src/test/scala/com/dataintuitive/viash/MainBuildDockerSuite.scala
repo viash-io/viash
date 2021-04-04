@@ -664,7 +664,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     val output = Exec.run2(
       Seq(
-        executable.toString,
+        executableRequirementsFile.toString,
         "--which", "cowsay"
       )
     )
