@@ -10,23 +10,23 @@ jobs:
   scala-ci:
     runs-on: ${{ matrix.config.os }}
     if: "!contains(github.event.head_commit.message, 'ci skip')"
-    
+
     strategy:
       fail-fast: false
       matrix:
-        config: 
+        config:
         - {name: 'main', os: ubuntu-latest, r: '3.6.1', python: '3.8' }
         - {name: 'ubuntu_latest', os: ubuntu-latest, r: 'release', python: '3.x' }
         - {name: 'macos_latest', os: macos-latest, r: 'release', python: '3.x' }
 
     steps:
     - uses: actions/checkout@v2
-    
+
     - name: Set up R
       uses: r-lib/actions/setup-r@master
       with:
         r-version: ${{ matrix.config.r }}
-    
+
     - name: Cache R packages
       if: runner.os != 'Windows'
       uses: actions/cache@v1
@@ -34,7 +34,7 @@ jobs:
         path: ${{ env.R_LIBS_USER }}
         key: ${{ matrix.config.name }}
         restore-keys: ${{ matrix.config.name }}
-        
+
     - name: Install system dependencies
       if: runner.os == 'Linux'
       env:
@@ -43,17 +43,15 @@ jobs:
         Rscript -e "install.packages('remotes'); remotes::install_github('rcannood/sysreqs')"
         sysreqs=$(Rscript -e "pkgs <- sysreqs:::get_cran_sysreqs(sysreqs:::get_cran_deps('tidyverse')); cat(sysreqs:::sysreq_commands_pkgs(pkgs))")
         sudo -s eval "$sysreqs"
-      
+
     - name: Set up sbt
       uses: olafurpg/setup-scala@v10
 
     - name: Install R dependencies
       run: |
-        install.packages('remotes')
-        remotes::install_cran("pillar")
-        remotes::install_cran(c("rcmdcheck", "tidyverse"))
+        install.packages("processx")
       shell: Rscript {0}
-      
+
     - name: Set up Scala
       run: |
         if [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
@@ -63,14 +61,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y scala
         fi
-      
+
     - name: Set up Python
       uses: actions/setup-python@v2
-      with: 
+      with:
         python-version: ${{ matrix.config.python }}
 
     - name: Run tests
       run: |
+        # always run this test
+        ./configure --prefix=bin
+        make
+        bin/viash test src/test/resources/testr/script.vsh.R -p native
+
         if [[ "${{ matrix.config.name }}" == "main" ]]; then
           # only run coverage on main runner
           sbt clean coverage test coverageReport
@@ -80,11 +83,11 @@ jobs:
         else
           sbt test
         fi
-        
+
     - name: Upload coverage on success
       if: matrix.config.name == 'main'
       run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}
-      
+
     - name: Upload check results on fail
       if: failure()
       uses: actions/upload-artifact@master
