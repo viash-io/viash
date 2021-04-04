@@ -49,7 +49,7 @@ jobs:
 
     - name: Install R dependencies
       run: |
-        install.packages("processx")
+        install.packages(c("processx", "testthat"))
       shell: Rscript {0}
 
     - name: Set up Scala
