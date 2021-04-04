@@ -2,7 +2,7 @@
 
 prefix=/usr/local
 
-while [[ $# -gt 0 ]]; do
+while [ $# -gt 0 ]; do
     case "$1" in
         --prefix=*)
 	        prefix=`echo $1 | sed 's/--prefix=//'`
