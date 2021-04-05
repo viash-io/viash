@@ -22,6 +22,5 @@ functionality:
   - type: bash_script
     path: ./code.sh
 platforms:
-- type: native
 - type: docker
   image: dataintuitive/viash:0.4.0-rc1
