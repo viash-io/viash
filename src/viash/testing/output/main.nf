@@ -28,62 +28,66 @@ def effectiveContainer(processParams) {
 
 // Use the params map, create a hashmap of the filenames for output
 // output filename is <sample>.<method>.<arg_name>[.extension]
-def outFromIn(thisparams, sample) {
+def outFromIn(_params, sample) {
 
-    thisparams
+   _params
         .arguments
-        .findAll{ key, it -> it.type == "file" && it.direction == "Output" }
-        .collect{ key, it ->
-            def splitString =
-                ( it.default != null )
-                    ? it.default.split(/\./)
-                    : [ "", "" ]
-            def prefix = splitString.head()
-            def extension = splitString.last()
-            /* return [ it.name : sample + "." + "testing" + "." + it.name + "." ] */
+        .findAll{ it -> it.type == "file" && it.direction == "Output" }
+        .collect{ it ->
+            def extOrName = (it.dflt != null) ? it.dflt.split(/\./).last() : it.name
+            def defaultName = sample + "." + "testing" + "." + extOrName
+            it + [ value : defaultName ]
         }
 
 }
 
+// Convert the nextflow.config arguments list to a simple Map instead of a LinkedMap
+// The rest of this main.nf script uses the Map form
+def toMap(_params) {
+    def overrideArgs = _params.arguments.collect{ key, value -> value }
+    def newParams = _params + [ "arguments" : overrideArgs ]
+    return newParams
+}
+
 // In: Hashmap key -> DataObjects
 // Out: Arrays of DataObjects
-def overrideIO(params, inputs, outputs) {
+def overrideIO(_params, inputs, outputs) {
 
     // `inputs` in fact can be one of:
     // - `String`,
     // - `List[String]`,
     // - `Map[String, String | List[String]]`
     // Please refer to the docs for more info
-    def overrideArgs = params.arguments.collect{ it ->
-        if (it.value.type == "file") {
-            if (it.value.direction == "Input") {
+    def overrideArgs = _params.arguments.collect{ it ->
+        if (it.type == "file") {
+            if (it.direction == "Input") {
                 (inputs in List || inputs in HashMap)
                     ? (inputs in List)
-                        ? it.value + [ "value" : inputs.join(it.value.multiple_sep)]
-                        : (inputs[it.value.name] != null)
-                            ? (inputs[it.value.name] in List)
-                                ? it.value + [ "value" : inputs[it.value.name].join(it.value.multiple_sep)]
-                                : it.value + [ "value" : inputs[it.value.name]]
-                            : it.value
-                    : it.value + [ "value" : inputs ]
+                        ? it + [ "value" : inputs.join(it.multiple_sep)]
+                        : (inputs[it.name] != null)
+                            ? (inputs[it.name] in List)
+                                ? it + [ "value" : inputs[it.name].join(it.multiple_sep)]
+                                : it + [ "value" : inputs[it.name]]
+                            : it
+                    : it + [ "value" : inputs ]
 
             } else {
                 (outputs in List || outputs in HashMap)
                     ? (outputs in List)
-                        ? it.value + [ "value" : outputs.join(it.value.multiple_sep)]
-                        : (outputs[it.value.name] != null)
-                            ? (outputs[it.value.name] in List)
-                                ? it.value + [ "value" : outputs[it.value.name].join(it.value.multiple_sep)]
-                                : it.value + [ "value" : outputs[it.value.name]]
-                            : it.value
-                    : it.value + [ "value" : outputs ]
+                        ? it + [ "value" : outputs.join(it.multiple_sep)]
+                        : (outputs[it.name] != null)
+                            ? (outputs[it.name] in List)
+                                ? it + [ "value" : outputs[it.name].join(it.multiple_sep)]
+                                : it + [ "value" : outputs[it.name]]
+                            : it
+                    : it + [ "value" : outputs ]
             }
         } else {
-            it.value
+            it
         }
     }
 
-    def newParams = params + [ "arguments" : overrideArgs ]
+    def newParams = _params + [ "arguments" : overrideArgs ]
 
     return newParams
 
@@ -224,40 +228,42 @@ workflow test {
 
 workflow overrideIOTest {
 
-    def base = overrideIO(params.testing, [], [])
+    def asMap = toMap(params.testing)
+
+    def base = overrideIO(asMap, [], [])
 
     def input1 = "fileabcd.txt"
-    def processed1 = overrideIO(params.testing, input1, []).arguments
+    def processed1 = overrideIO(asMap, input1, []).arguments
     def test1 = processed1.findAll{ it.name == "input" }[0].value == input1
     println( "Test 1: $test1")
 
     // Passing an array means multiple options
     def input2 = [ "file1.txt", "file2.txt" ]
-    def processed2 = overrideIO(params.testing, input2, []).arguments
+    def processed2 = overrideIO(asMap, input2, []).arguments
     def test2 = processed2.findAll{ it.name == "input" }[0].value == input2.join(":")
     println( "Test 2: $test2" )
 
     // The input2 key does not occur in the arguments list, so is omitted
     def input3 = [ input: "file1.txt", input2: "file2.txt" ]
-    def processed3 = overrideIO(params.testing, input3, []).arguments
+    def processed3 = overrideIO(asMap, input3, []).arguments
     def test3 = processed3.findAll{ it.name == "input" }[0].value == input3.input
     println( "Test 3: $test3")
 
     // The input key is an array
     def input4 = [ input: [ "file1.txt", "file2.txt" ] ]
-    def processed4 = overrideIO(params.testing, input4, []).arguments
+    def processed4 = overrideIO(asMap, input4, []).arguments
     def test4 = processed4.findAll{ it.name == "input" }[0].value == input4.input.join(":")
     println( "Test 4: $test4")
 
     // The output is a hash, first a single output
     def output1 = [ output: "file1.txt" ]
-    def processed5 = overrideIO(params.testing, [], output1).arguments
+    def processed5 = overrideIO(asMap, [], output1).arguments
     def test5 = processed5.findAll{ it.name == "output" }[0].value == output1.output
     println( "Test 5: $test5")
 
     // The output is a hash, first a single output
     def output2 = [ output: "file2.txt", log: "mylogfile.txt" ]
-    def processed6 = overrideIO(params.testing, [], output2).arguments
+    def processed6 = overrideIO(asMap, [], output2).arguments
     def test6 = ( processed6.findAll{ it.name == "output" }[0].value == output2.output
         && processed6.findAll{ it.name == "log" }[0].value == output2.log )
     println( "Test 6: $test6")
@@ -266,32 +272,9 @@ workflow overrideIOTest {
 
 workflow outFromInTest {
 
-    def base = overrideIO(params.testing, [], [])
-
-    def input1 = "fileabcd.txt"
-    def processed1 = overrideIO(params.testing, input1, []).arguments
-    def test1 = processed1.findAll{ it.name == "input" }[0].value == input1
-    /* println( "Test 1: $test1") */
-
     def sample = "sample1"
 
     println(
-        base
-        .arguments
-        .findAll{ it -> it.type == "file" && it.direction == "Output" }
-        .collect{ it ->
-            def extOrName = (it.default != null) ? it.default.split(".").last : it.name
-            def defaultName = (it.default != null) ? it.default : sample + "." + "testing" + "." + extOrName
-            it + [ value : defaultName ]
-        }
-        /* .collect{ key, it -> */
-        /*     def splitString = */
-        /*         ( it.default != null ) */
-        /*             ? it.default.split(/\./) */
-        /*             : [ "", "" ] */
-        /*     def prefix = splitString.head() */
-        /*     def extension = splitString.last() */
-        /*     /1* return [ it.name : sample + "." + "testing" + "." + it.name + "." ] *1/ */
-        /* } */
+        outFromIn(toMap(params.testing), "test123")
     )
 }
