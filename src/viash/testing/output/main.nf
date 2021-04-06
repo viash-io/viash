@@ -34,7 +34,10 @@ def outFromIn(_params, sample) {
         .arguments
         .findAll{ it -> it.type == "file" && it.direction == "Output" }
         .collect{ it ->
+            // If a default (dflt) attribute is present, strip the extension from the filename,
+            // otherwise just use the option name as an extension.
             def extOrName = (it.dflt != null) ? it.dflt.split(/\./).last() : it.name
+            // The output filename is <sample> . <modulename> . <extension>
             def defaultName = sample + "." + "testing" + "." + extOrName
             it + [ value : defaultName ]
         }
@@ -274,7 +277,12 @@ workflow outFromInTest {
 
     def sample = "sample1"
 
-    println(
-        outFromIn(toMap(params.testing), "test123")
-    )
+    def result = outFromIn(toMap(params.testing), sample)
+
+    def test1 = result.findAll{ it.name == "output" }[0].value == "sample1.testing.output"
+    println( "Test 1: $test1")
+
+    def test2 = result.findAll{ it.name == "log" }[0].value == "sample1.testing.txt"
+    println( "Test 2: $test2")
+
 }

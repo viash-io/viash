@@ -1,0 +1,33 @@
+Apr-06 18:11:23.886 [main] DEBUG nextflow.cli.Launcher - $> nextflow run main.nf -entry outFromInTest
+Apr-06 18:11:24.124 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 20.10.0
+Apr-06 18:11:24.149 [main] INFO  nextflow.cli.CmdRun - Launching `main.nf` [scruffy_jepsen] - revision: 9914f1a85b
+Apr-06 18:11:24.192 [main] DEBUG nextflow.config.ConfigBuilder - Found config local: /Users/toni/code/viash/src/viash/testing/output/nextflow.config
+Apr-06 18:11:24.193 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /Users/toni/code/viash/src/viash/testing/output/nextflow.config
+Apr-06 18:11:24.228 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
+Apr-06 18:11:25.676 [main] DEBUG nextflow.Session - Session uuid: d329a859-04a6-4712-be5a-7b1fd81338d6
+Apr-06 18:11:25.676 [main] DEBUG nextflow.Session - Run name: scruffy_jepsen
+Apr-06 18:11:25.677 [main] DEBUG nextflow.Session - Executor pool size: 16
+Apr-06 18:11:25.717 [main] DEBUG nextflow.cli.CmdRun - 
+  Version: 20.10.0 build 5430
+  Created: 01-11-2020 15:14 UTC (16:14 CEST)
+  System: Mac OS X 10.16
+  Runtime: Groovy 3.0.5 on OpenJDK 64-Bit Server VM 1.8.0_282-b08
+  Encoding: UTF-8 (UTF-8)
+  Process: 44203@Tonis-MacBook-Pro [10.0.0.135]
+  CPUs: 16 - Mem: 64 GB (1.8 GB) - Swap: 50 GB (1 GB)
+Apr-06 18:11:25.740 [main] DEBUG nextflow.Session - Work-dir: /Users/toni/code/viash/src/viash/testing/output/work [Mac OS X]
+Apr-06 18:11:25.740 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /Users/toni/code/viash/src/viash/testing/output/bin
+Apr-06 18:11:25.832 [main] DEBUG nextflow.Session - Observer factory: TowerFactory
+Apr-06 18:11:25.835 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Apr-06 18:11:26.061 [main] DEBUG nextflow.Session - Session start invoked
+Apr-06 18:11:26.101 [main] WARN  nextflow.NextflowMeta$Preview - DSL 2 IS AN EXPERIMENTAL FEATURE UNDER DEVELOPMENT -- SYNTAX MAY CHANGE IN FUTURE RELEASE
+Apr-06 18:11:27.198 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
+Apr-06 18:11:27.243 [main] DEBUG nextflow.Session - Workflow process names [dsl2]: testing_process
+Apr-06 18:11:27.269 [main] DEBUG nextflow.Session - Ignite dataflow network (0)
+Apr-06 18:11:27.269 [main] DEBUG nextflow.script.ScriptRunner - > Await termination 
+Apr-06 18:11:27.269 [main] DEBUG nextflow.Session - Session await
+Apr-06 18:11:27.269 [main] DEBUG nextflow.Session - Session await > all process finished
+Apr-06 18:11:27.269 [main] DEBUG nextflow.Session - Session await > all barriers passed
+Apr-06 18:11:27.309 [main] DEBUG nextflow.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=0; failedCount=0; ignoredCount=0; cachedCount=0; pendingCount=0; submittedCount=0; runningCount=0; retriesCount=0; abortedCount=0; succeedDuration=0ms; failedDuration=0ms; cachedDuration=0ms;loadCpus=0; loadMemory=0; peakRunning=0; peakCpus=0; peakMemory=0; ]
+Apr-06 18:11:27.511 [main] DEBUG nextflow.CacheDB - Closing CacheDB done
+Apr-06 18:11:27.565 [main] DEBUG nextflow.script.ScriptRunner - > Execution complete -- Goodbye
