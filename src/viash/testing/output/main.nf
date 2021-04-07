@@ -1,5 +1,4 @@
-nextflow.preview.dsl=2
-import java.nio.file.Paths
+nextflow.enable.dsl=2
 
 def renderCLI(command, arguments) {
 
@@ -36,7 +35,9 @@ def argumentsAsList(_params) {
 
 // Use the params map, create a hashmap of the filenames for output
 // output filename is <sample>.<method>.<arg_name>[.extension]
-def outFromIn(_params, sample) {
+def outFromIn(_params) {
+
+    def id = _params.id
 
    _params
         .arguments
@@ -46,7 +47,7 @@ def outFromIn(_params, sample) {
             // otherwise just use the option name as an extension.
             def extOrName = (it.dflt != null) ? it.dflt.split(/\./).last() : it.name
             // The output filename is <sample> . <modulename> . <extension>
-            def newName = sample + "." + "testing" + "." + extOrName
+            def newName = id + "." + "testing" + "." + extOrName
             it + [ value : newName ]
         }
 
@@ -73,7 +74,6 @@ def overrideIO(_params, inputs, outputs) {
                                 : it + [ "value" : inputs[it.name]]
                             : it
                     : it + [ "value" : inputs ]
-
             } else {
                 (outputs in List || outputs in HashMap)
                     ? (outputs in List)
@@ -149,10 +149,10 @@ workflow testing {
             def overrideParams = _params[key] ? _params[key] : [:]
             def updtParams = defaultParams + overrideParams
             // Convert to List[Map] for the arguments
-            def newParams = argumentsAsList(updtParams)
+            def newParams = argumentsAsList(updtParams) + [ "id" : id ]
 
             // Generate output filenames, out comes a Map
-            def output = outFromIn(newParams, "sample1xxx")
+            def output = outFromIn(newParams)
 
             // The process expects Path or List[Path], Maps need to be converted
             def inputsForProcess =
