@@ -26,6 +26,14 @@ def effectiveContainer(processParams) {
     return (_registry == "" ? "" : _registry + "/") + _name + ":" + _tag
 }
 
+// Convert the nextflow.config arguments list to a List instead of a LinkedHashMap
+// The rest of this main.nf script uses the Map form
+def argumentsAsList(_params) {
+    def overrideArgs = _params.arguments.collect{ key, value -> value }
+    def newParams = _params + [ "arguments" : overrideArgs ]
+    return newParams
+}
+
 // Use the params map, create a hashmap of the filenames for output
 // output filename is <sample>.<method>.<arg_name>[.extension]
 def outFromIn(_params, sample) {
@@ -38,18 +46,10 @@ def outFromIn(_params, sample) {
             // otherwise just use the option name as an extension.
             def extOrName = (it.dflt != null) ? it.dflt.split(/\./).last() : it.name
             // The output filename is <sample> . <modulename> . <extension>
-            def defaultName = sample + "." + "testing" + "." + extOrName
-            it + [ value : defaultName ]
+            def newName = sample + "." + "testing" + "." + extOrName
+            it + [ value : newName ]
         }
 
-}
-
-// Convert the nextflow.config arguments list to a simple Map instead of a LinkedMap
-// The rest of this main.nf script uses the Map form
-def toMap(_params) {
-    def overrideArgs = _params.arguments.collect{ key, value -> value }
-    def newParams = _params + [ "arguments" : overrideArgs ]
-    return newParams
 }
 
 // In: Hashmap key -> DataObjects
@@ -96,34 +96,19 @@ def overrideIO(_params, inputs, outputs) {
 
 }
 
-/* def overrideOutput(params, str) { */
-
-/*     def update = [ "value" : str ] */
-
-/*     def overrideArgs = params.arguments.collect{it -> */
-/*       (it.direction == "Output" && it.type == "file") */
-/*         ? it + update */
-/*         : it */
-/*     } */
-
-/*     def newParams = params + [ "arguments" : overrideArgs ] */
-
-/*     return newParams */
-/* } */
-
-
 process testing_process {
-  
+
   tag "${id}"
   echo { (params.debug == true) ? true : false }
   cache 'deep'
   stageInMode "symlink"
   container "${container}"
-  
+  publishDir "out"
+
   input:
-    tuple val(id), path(input), val(output), val(container), val(cli)
+    tuple val(id), path(input), val(output), val(container), val(cli), val(_params)
   output:
-    tuple val("${id}"), path("${output}"), path("log.txt")
+    tuple val("${id}"), path(output), val(_params)
   script:
     if (params.test)
         """
@@ -158,39 +143,55 @@ workflow testing {
 
     def id_input_output_function_cli_ =
         id_input_params_.map{ id, input, _params ->
-            // TODO: make sure input is List[Path], HashMap[String,Path] or Path, otherwise convert
-            // NXF knows how to deal with an List[Path], not with HashMap !
-            def checkedInput =
+
+            // Start from the (global) params and overwrite with the (local) _params
+            def defaultParams = params[key] ? params[key] : [:]
+            def overrideParams = _params[key] ? _params[key] : [:]
+            def updtParams = defaultParams + overrideParams
+            // Convert to List[Map] for the arguments
+            def newParams = argumentsAsList(updtParams)
+
+            // Generate output filenames, out comes a Map
+            def output = outFromIn(newParams, "sample1xxx")
+
+            // The process expects Path or List[Path], Maps need to be converted
+            def inputsForProcess =
                 (input in HashMap)
                     ? input.collect{ k, v -> v }.flatten()
                     : input
-            // filename is either String, List[String] or HashMap[String, String]
+            def outputsForProcess = output.collect{ it.value }
+
+            // For our machinery, we convert Path -> String in the input
             def inputs =
                 (input in List || input in HashMap)
                     ? (input in List)
                         ? input.collect{ it.name }
                         : input.collectEntries{ k, v -> [ k, (v in List) ? v.collect{it.name} : v.name ] }
                     : input.name
-            def defaultParams = params[key] ? params[key] : [:]
-            def overrideParams = _params[key] ? _params[key] : [:]
-            def updtParams = defaultParams + overrideParams
-            // now, switch to arrays instead of hashes...
-            /* def outputFilename = (!params.test) ? outFromIn(filename) : updtParams.output */
-            def outputs = (!params.test) ? outFromIn(filename) : updtParams.output
-            def updtParams1 = overrideIO(updtParams, inputs, outputs)
-            /* def updtParams2 = overrideOutput(updtParams1, outputFilename) */
-            new Tuple5(
+            outputs = output.collectEntries{ [(it.name): it.value] }
+
+            def finalParams = overrideIO(newParams, inputs, outputs)
+
+            new Tuple6(
                 id,
-                checkedInput,
-                outputFilename,
-                effectiveContainer(updtParams2),
-                renderCLI([updtParams2.command], updtParams2.arguments)
+                inputsForProcess,
+                outputsForProcess,
+                effectiveContainer(finalParams),
+                renderCLI([finalParams.command], finalParams.arguments),
+                finalParams
             )
         }
+
     result_ = testing_process(id_input_output_function_cli_) \
         | join(id_input_params_) \
-        | map{ id, output, input, original_params ->
-            new Tuple3(id, output, original_params)
+        | map{ id, output, _params, input, original_params ->
+            def parsedOutput = _params.arguments
+                .findAll{ it.type == "file" && it.direction == "Output" }
+                .withIndex()
+                .collectEntries{ it, i ->
+                    [(it.name): output[i]]
+                }
+            new Tuple3(id, parsedOutput, original_params)
         }
 
     emit:
@@ -203,8 +204,18 @@ workflow {
    def id = params.id
    def ch_ = Channel.fromPath(params.input).map{ s -> new Tuple3(id, s, params)}
 
-   testing(ch_) \
-        | view{ [ it[0], it[1] ] }
+   def criteria = multiMapCriteria {
+        output: [ it[0], it[1]["output"] ]
+        log: [ it[0], it[1]["log"] ]
+   }
+
+   def result =
+       testing(ch_) \
+            | view{ [ it[0], it[1] ] } \
+            | multiMap(criteria)
+
+    result.output.view{ "output: " + it[1] }
+    result.log.view{ "log: " + it[1] }
 }
 
 workflow test {
@@ -231,45 +242,39 @@ workflow test {
 
 workflow overrideIOTest {
 
-    def asMap = toMap(params.testing)
+    def asMap = argumentsAsList(params.testing)
 
     def base = overrideIO(asMap, [], [])
 
     def input1 = "fileabcd.txt"
     def processed1 = overrideIO(asMap, input1, []).arguments
-    def test1 = processed1.findAll{ it.name == "input" }[0].value == input1
-    println( "Test 1: $test1")
+    assert processed1.findAll{ it.name == "input" }[0].value == input1
 
     // Passing an array means multiple options
     def input2 = [ "file1.txt", "file2.txt" ]
     def processed2 = overrideIO(asMap, input2, []).arguments
-    def test2 = processed2.findAll{ it.name == "input" }[0].value == input2.join(":")
-    println( "Test 2: $test2" )
+    assert processed2.findAll{ it.name == "input" }[0].value == input2.join(":")
 
     // The input2 key does not occur in the arguments list, so is omitted
     def input3 = [ input: "file1.txt", input2: "file2.txt" ]
     def processed3 = overrideIO(asMap, input3, []).arguments
-    def test3 = processed3.findAll{ it.name == "input" }[0].value == input3.input
-    println( "Test 3: $test3")
+    assert processed3.findAll{ it.name == "input" }[0].value == input3.input
 
     // The input key is an array
     def input4 = [ input: [ "file1.txt", "file2.txt" ] ]
     def processed4 = overrideIO(asMap, input4, []).arguments
-    def test4 = processed4.findAll{ it.name == "input" }[0].value == input4.input.join(":")
-    println( "Test 4: $test4")
+    assert processed4.findAll{ it.name == "input" }[0].value == input4.input.join(":")
 
     // The output is a hash, first a single output
     def output1 = [ output: "file1.txt" ]
     def processed5 = overrideIO(asMap, [], output1).arguments
-    def test5 = processed5.findAll{ it.name == "output" }[0].value == output1.output
-    println( "Test 5: $test5")
+    assert processed5.findAll{ it.name == "output" }[0].value == output1.output
 
     // The output is a hash, first a single output
     def output2 = [ output: "file2.txt", log: "mylogfile.txt" ]
     def processed6 = overrideIO(asMap, [], output2).arguments
-    def test6 = ( processed6.findAll{ it.name == "output" }[0].value == output2.output
+    assert ( processed6.findAll{ it.name == "output" }[0].value == output2.output
         && processed6.findAll{ it.name == "log" }[0].value == output2.log )
-    println( "Test 6: $test6")
 
 }
 
@@ -277,12 +282,41 @@ workflow outFromInTest {
 
     def sample = "sample1"
 
-    def result = outFromIn(toMap(params.testing), sample)
+    def result = outFromIn(argumentsAsList(params.testing), sample)
 
-    def test1 = result.findAll{ it.name == "output" }[0].value == "sample1.testing.output"
-    println( "Test 1: $test1")
+    // No default value for the --output option is provided, use output as extension
+    assert result.findAll{ it.name == "output" }[0].value == "sample1.testing.output"
 
-    def test2 = result.findAll{ it.name == "log" }[0].value == "sample1.testing.txt"
-    println( "Test 2: $test2")
+    // A default value is provided for --log, use its extension
+    assert result.findAll{ it.name == "log" }[0].value == "sample1.testing.txt"
+
+}
+
+workflow types {
+
+    println("params:                   " + params.getClass() )
+    println("params.testing:           " + params.testing.getClass() )
+    println("params.testing.arguments: " + argumentsAsList(params.testing).getClass() )
+
+    println("asList(params.testing):           " + argumentsAsList(params.testing).getClass() )
+    println("asList(params.testing).arguments: " + argumentsAsList(params.testing).arguments.getClass() )
+
+}
+
+workflow joinOutput {
+
+    def a = outFromIn(argumentsAsList(params.testing), "test123")
+    def b = [ "outputfileinworkdir.output", "logfileinworkdir.txt" ]
+
+    def aMap =
+        a
+            .findAll{ it.type == "file" && it.direction == "Output" }
+            .collectEntries{ [(it.name): it.value] }
+            .eachWithIndex{ m, i ->
+                [(m.key), b[i]]
+            }
+
+    println(aMap)
+    println(b)
 
 }
