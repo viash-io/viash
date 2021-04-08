@@ -66,7 +66,8 @@ object Main {
           setup = cli.namespace.build.setup(),
           push = cli.namespace.build.push(),
           parallel = cli.namespace.build.parallel(),
-          writeMeta = cli.namespace.build.writeMeta()
+          writeMeta = cli.namespace.build.writeMeta(),
+          flatten = cli.namespace.build.flatten()
         )
       case List(cli.namespace, cli.namespace.test) =>
         val configs = readConfigs(cli.namespace.test, modifyFun = false)

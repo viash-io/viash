@@ -29,7 +29,7 @@ cat $par_input | grep ERROR > /dev/null
 contains_errors=$?
 if [ $contains_errors -eq 0 ]; then
   errors=1
-  cat $par_input | grep ERROR > /$par_tmp/failed.tsv
+  cat $par_input | grep ERROR > $par_tmp/failed.tsv
 else
   errors=0
 fi
@@ -60,11 +60,11 @@ output ""
 output "Failed components:"
 output ""
 if [ $errors -eq 1 ]; then
-  cat /$par_tmp/failed.tsv | while read f; do
+  cat $par_tmp/failed.tsv | cut -f1,2,3 | sort | uniq | while read f; do
     ns=`echo -n "$f" | cut -f1`
     comp=`echo -n "$f" | cut -f2`
     platform=`echo -n "$f" | cut -f3`
-    still_exec=`cat $par_input | grep "$ns\t$comp\t$platform" | tail -1 | grep ERROR`
+    still_exec=`cat $par_input | grep -P "$ns\t$comp\t$platform" | tail -1 | grep ERROR`
     still=$?
     if [ $still -eq 0 ]; then
       line="- \`$comp\` in \`$ns\`, platform \`$platform\` and is still open. See full report below."
@@ -115,11 +115,11 @@ if [ $errors -eq 1 ]; then
   output "## Error report"
   output ""
 
-  cat /$par_tmp/failed.tsv | while read f; do
+  cat $par_tmp/failed.tsv | cut -f1,2,3 | sort | uniq | while read f; do
     ns=`echo -n "$f" | cut -f1`
     comp=`echo -n "$f" | cut -f2`
     platform=`echo -n "$f" | cut -f3`
-    still_exec=`cat $par_input | grep "$ns\t$comp\t$platform" | tail -1 | grep ERROR`
+    still_exec=`cat $par_input | grep -P "$ns\t$comp\t$platform" | tail -1 | grep ERROR`
     still=$?
     root_test_dir=`ls -ctd "$par_tmp/viash_test_$comp"* | head -1`
 
@@ -135,9 +135,11 @@ if [ $errors -eq 1 ]; then
       output '```'
       output ""
       output "Build log:"
+      output ""
       output '```'
       cat "$root_test_dir/build_executable/_viash_build_log.txt" >> $par_output
       output '```'
+      output ""
 
       output "### \`$comp\` Test"
       output ""
@@ -149,12 +151,13 @@ if [ $errors -eq 1 ]; then
       output '```'
       output ""
       output "Setup log:"
+      output ""
       output '```'
       cat "$root_test_dir/test_"*"/_viash_test_log.txt" >> $par_output
       output '```'
+      output ""
     fi
 
   done
-  output ""
 
 fi

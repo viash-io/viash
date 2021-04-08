@@ -247,7 +247,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |Build a namespace from many viash config files.
            |
            |Usage:
-           |  viash ns build [-n nmspc] [-s src] [-t target] [-p docker] [--setup] [---push] [--parallel]
+           |  viash ns build [-n nmspc] [-s src] [-t target] [-p docker] [--setup] [---push] [--parallel] [--flatten]
            |
            |Arguments:""".stripMargin)
       val target = opt[String](
@@ -271,6 +271,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         short = 'w',
         default = Some(false),
         descr = "Write out some meta information to RESOURCES_DIR/viash.yaml at the end."
+      )
+      val flatten = opt[Boolean](
+        name = "flatten",
+        short = 'f',
+        default = Some(false),
+        descr = "Flatten the target builds, handy for building one platform to a bin directory."
       )
     }
 
