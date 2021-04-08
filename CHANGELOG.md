@@ -30,6 +30,9 @@
 
 * Added the `project_build`, `project_clean`, `project_push` and `project_test` components to this repository.
 
+* Added a field `.functionality.info` of type `Map[String, String]` in order to be able to specify custom annotations 
+  to the component. 
+
 ## BUG FIXES
 
 * Allow quotes in functionality descriptions.
