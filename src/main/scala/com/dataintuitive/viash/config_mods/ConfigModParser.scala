@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.command
+package com.dataintuitive.viash.config_mods
 
 import io.circe.Json
 
@@ -74,8 +74,8 @@ import io.circe.syntax._
 */
 
 
-object CommandParser extends RegexParsers {
-  def parseBlock(s: String): Block = {
+object ConfigModParser extends RegexParsers {
+  def parseBlock(s: String): ConfigMods = {
     parse(block, s).get
     // TODO: provide better error message
   }
@@ -143,10 +143,10 @@ object CommandParser extends RegexParsers {
   def value: Parser[Value] = path | (json ^^ { JsonValue(_) })
 
   // define commands
-  def command: Parser[Command] = path ~ (modify | add) ^^ {
-    case pt ~ comm => Command(pt, comm)
+  def command: Parser[ConfigMod] = path ~ (modify | add) ^^ {
+    case pt ~ comm => ConfigMod(pt, comm)
   }
   def modify: Parser[CommandExp] = ":=" ~> json ^^ { Modify(_) }
   def add: Parser[CommandExp] = "+=" ~> json ^^ { Add(_) }
-  def block: Parser[Block] = repsep(command, ";") ^^ { Block(_) }
+  def block: Parser[ConfigMods] = repsep(command, ";") ^^ { ConfigMods(_) }
 }

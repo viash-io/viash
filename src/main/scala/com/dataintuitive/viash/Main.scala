@@ -86,7 +86,7 @@ object Main {
       case List(cli.config, cli.config.view) =>
         val config = Config.readOnly(
           configPath = cli.config.view.config(),
-          commands = cli.config.view.command()
+          configMods = cli.config.view.config_mods()
         )
         ViashConfig.view(config)
       case _ =>
@@ -102,7 +102,7 @@ object Main {
       configPath = subcommand.config(),
       platform = subcommand.platform.toOption | subcommand.platformid.toOption,
       modifyFun = modifyFun,
-      commands = subcommand.command()
+      configMods = subcommand.config_mods()
     )
   }
 
@@ -130,7 +130,7 @@ object Main {
         try {
           // first read config to get an idea of the available platforms
           val confTest =
-            Config.read(file.toString, modifyFun = false, commands = subcommand.command())
+            Config.read(file.toString, modifyFun = false, configMods = subcommand.config_mods())
 
           val funName = confTest.functionality.name
           val funNs = confTest.functionality.namespace
@@ -174,7 +174,7 @@ object Main {
             configPath = file.toString,
             platform = Some(platformStr),
             modifyFun = modifyFun,
-            commands = subcommand.command()
+            configMods = subcommand.config_mods()
           ))
         } else {
           // platform is a regex for filtering the ids
@@ -194,7 +194,7 @@ object Main {
               configPath = file.toString,
               platform = plat,
               modifyFun = modifyFun,
-              commands = subcommand.command()
+              configMods = subcommand.config_mods()
             )
           }
         }

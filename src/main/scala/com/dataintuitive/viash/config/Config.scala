@@ -17,11 +17,10 @@
 
 package com.dataintuitive.viash.config
 
-import com.dataintuitive.viash.command.{Block, CommandParser}
+import com.dataintuitive.viash.config_mods.ConfigModParser
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.platforms._
 import com.dataintuitive.viash.helpers.{Git, GitInfo, IO}
-import com.dataintuitive.viash.helpers.Scala._
 
 import java.net.URI
 import io.circe.yaml.parser
@@ -109,7 +108,7 @@ object Config {
   }
 
   // copy paste of the Config.read command
-  def readOnly(configPath: String, commands: List[String] = Nil): Config = {
+  def readOnly(configPath: String, configMods: List[String] = Nil): Config = {
     val (yaml, _) = readYAML(configPath)
 
     val configUri = IO.uri(configPath)
@@ -117,10 +116,10 @@ object Config {
     val conf0 = parse(yaml, configUri)
 
     // parse and apply commands
-    commands match {
+    configMods match {
       case Nil => conf0
       case li => {
-        val block = CommandParser.parseBlock(li.mkString("; "))
+        val block = ConfigModParser.parseBlock(li.mkString("; "))
         import io.circe.syntax._
         val js = conf0.asJson
         val modifiedJs = block.apply(js.hcursor)
@@ -134,7 +133,7 @@ object Config {
     configPath: String,
     platform: Option[String] = None,
     modifyFun: Boolean = true,
-    commands: List[String] = Nil
+    configMods: List[String] = Nil
   ): Config = {
 
     // read yaml
@@ -145,10 +144,10 @@ object Config {
     val conf0 = parse(yaml, configUri)
 
     // parse and apply commands
-    val conf1 = commands match {
+    val conf1 = configMods match {
       case Nil => conf0
       case li => {
-        val block = CommandParser.parseBlock(li.mkString("; "))
+        val block = ConfigModParser.parseBlock(li.mkString("; "))
         import io.circe.syntax._
         val js = conf0.asJson
         val modifiedJs = block.apply(js.hcursor)

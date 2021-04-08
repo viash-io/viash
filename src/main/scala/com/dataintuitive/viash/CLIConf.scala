@@ -43,12 +43,12 @@ trait ViashCommand {
     default = Some("config.vsh.yaml"),
     required = true
   )
-  val command = opt[List[String]](
-    name = "command",
+  val config_mods = opt[List[String]](
+    name = "config_mod",
     short = 'c',
     default = Some(Nil),
 
-    descr = "Apply a command to the config using the viash command DSL."
+    descr = "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
   )
 }
 trait ViashNs {
@@ -99,12 +99,12 @@ trait ViashNs {
     default = Some(false),
     descr = "Whether or not to run the process in parallel."
   )
-  val command = opt[List[String]](
-    name = "command",
+  val config_mods = opt[List[String]](
+    name = "config_mod",
     short = 'c',
     default = Some(Nil),
 
-    descr = "Apply a command to the config using the viash command DSL."
+    descr = "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
   )
 }
 trait WithTemporary {

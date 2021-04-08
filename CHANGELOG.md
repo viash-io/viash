@@ -1,4 +1,4 @@
-# viash 0.4.0
+# viash 0.4.0 (2021-04-08)
 
 ## BREAKING CHANGES
 
@@ -9,7 +9,7 @@
 
 ## NEW FEATURES
 
-* Commands: A custom viash DSL allows overriding viash config properties at runtime. For example:
+* Config modding: A custom viash DSL allows overriding viash config properties at runtime. See online documentation for more information. Example:
 
 ```
  viash ns test \

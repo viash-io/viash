@@ -15,19 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.command
+package com.dataintuitive.viash.config_mods
 
 import io.circe.{ACursor, FailedCursor, Json}
 
 // define command
-case class Block(commands: List[Command]) {
+case class ConfigMods(commands: List[ConfigMod]) {
   def apply(cursor: ACursor): ACursor = {
     commands.foldLeft(cursor) {
       case (cur, cmd) => cmd.apply(cur)
     }
   }
 }
-case class Command(path: Path, op: CommandExp) {
+case class ConfigMod(path: Path, op: CommandExp) {
   def apply(cursor: ACursor): ACursor = {
     val comb = Path(path.path ::: List(op))
     comb.apply(cursor).top.get.hcursor
