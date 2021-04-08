@@ -137,6 +137,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
        |  viash test config.vsh.yaml
        |  viash ns build
        |  viash ns test
+       |  viash ns list
+       |  viash config view
        |
        |Check the help of a subcommand for more information, or the API available at:
        |  https://www.data-intuitive.com/viash_docs
@@ -198,7 +200,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     val push = opt[Boolean](
       name = "push",
       default = Some(false),
-      descr = "TODO"
+      descr = "Whether or not to push the container to a Docker registry [Docker Platform only]."
     )
   }
 
@@ -223,7 +225,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     val view = new Subcommand("view") with ViashCommand {
       banner(
         s"""viash config view
-           |View the config file after parsing
+           |View the config file after parsing.
            |
            |Usage:
            |  viash config view config.vsh.yaml
@@ -262,7 +264,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       val push = opt[Boolean](
         name = "push",
         default = Some(false),
-        descr = "TODO"
+        descr = "Whether or not to push the container to a Docker registry [Docker Platform only]."
       )
       val writeMeta = opt[Boolean](
         name = "write_meta",
