@@ -258,7 +258,10 @@ case class NextFlowPlatform(
           |      // otherwise just use the option name as an extension.
           |      def extOrName = (it.dflt != null) ? it.dflt.split(/\./).last() : it.name
           |      // The output filename is <sample> . <modulename> . <extension>
-          |      def newName = id + "." + "__f__" + "." + extOrName
+          |      def newName =
+          |        (id != "")
+          |          ? id + "." + "__f__" + "." + extOrName
+          |          : "__f__" + "." + extOrName
           |      it + [ value : newName ]
           |    }
           |
