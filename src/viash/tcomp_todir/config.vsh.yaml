@@ -1,0 +1,31 @@
+functionality:
+  name: "tcomp_todir"
+  # function_type: todir
+  namespace: "viash"
+  version: 0.0.1
+  description: Test component with output directory
+  arguments:
+    - name: "--input"
+      alternatives: [ "-i" ]
+      type: file
+      required: true
+      description: Describe the input file.
+    - name: "--output"
+      alternatives: [ "-o" ]
+      type: file
+      direction: output
+      required: true
+      description: Output directory
+  resources:
+    - type: bash_script
+      path: script.sh
+    - path: input.txt
+platforms:
+  - type: docker
+    image: ubuntu:20.04
+    setup:
+      - type: apt
+        packages:
+          - bash
+  - type: nextflow
+    publish: true
