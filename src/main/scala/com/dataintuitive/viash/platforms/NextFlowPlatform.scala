@@ -38,6 +38,7 @@ case class NextFlowPlatform(
   per_id: Option[Boolean] = None,
   path: Option[String] = None,
   label: Option[String] = None,
+  labels: List[String] = Nil,
   stageInMode: Option[String] = None
 ) extends Platform {
   val `type` = "nextflow"
@@ -346,6 +347,8 @@ case class NextFlowPlatform(
         case _ => ""
       }
 
+      val labelsString = labels.map(l => s"  label '$l'").mkString("\n")
+
       val labelString = label match {
         case Some(str) => s"  label '$str'"
         case _ => ""
@@ -358,6 +361,7 @@ case class NextFlowPlatform(
 
       s"""
         |process ${fname}_process {
+        |$labelsString
         |$labelString
         |  tag "$${id}"
         |  echo { (params.debug == true) ? true : false }
