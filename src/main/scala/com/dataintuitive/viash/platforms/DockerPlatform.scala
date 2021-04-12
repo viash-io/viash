@@ -29,6 +29,7 @@ import com.dataintuitive.viash.platforms.docker._
 case class DockerPlatform(
   id: String = "docker",
   image: String,
+  tag: Option[Version] = None,
   version: Option[Version] = None,
   target_image: Option[String] = None,
   target_registry: Option[String] = None,
@@ -118,7 +119,15 @@ case class DockerPlatform(
     // if there are no requirements, simply use the specified image
     val effectiveID =
       if (runCommands.isEmpty) {
-        image
+        // If the image name contains a tag, use it
+        val derivedTag = if (image.contains(":")) Some(image.split(":").last) else None
+        val derivedImage = if (image.contains(":")) image.split(":").headOption else Some(image)
+        val imageInfo = Docker.getImageInfo(
+          functionality,
+          customName = derivedImage,
+          customVersion = (derivedTag orElse version orElse tag).map(_.toString)
+        )
+        imageInfo.toString
       } else {
         // get image info
         val imageInfo = Docker.getImageInfo(
@@ -127,7 +136,6 @@ case class DockerPlatform(
           customName = target_image,
           customVersion = (version orElse target_tag).map(_.toString)
         )
-
         imageInfo.toString
       }
 

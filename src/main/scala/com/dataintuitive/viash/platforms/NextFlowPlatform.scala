@@ -55,12 +55,16 @@ case class NextFlowPlatform(
 
     val fname = functionality.name
 
+    // The image attribute can contain the tag or not, sanitize
+    val derivedTag = image.flatMap(img => if (img.contains(":")) img.split(":").lastOption else None)
+    val derivedImage = image.flatMap(img => if (img.contains(":")) img.split(":").headOption else Some(img))
+
     // get image info
     val imageInfo = NextFlowDocker.getImageInfo(
       functionality,
       customRegistry = registry,
-      customName = image,
-      customVersion = (version orElse tag).map(_.toString)
+      customName = derivedImage,
+      customVersion = (derivedTag orElse version orElse tag).map(_.toString)
     )
 
     // get main script/binary
