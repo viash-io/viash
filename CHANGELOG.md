@@ -2,10 +2,16 @@
 
 ## BREAKING CHANGES
 
-* `viash ns`: Argument `--namespace` has been renamed to `--query_namespace`. 
+* `viash ns`: Argument `--namespace` has been renamed to `--query_namespace`.
 
 * `viash ns`: Argument `--namespace` does not implicitly change the namespace of the functionality anymore.
   You can use the command DSL to reproduce this effect; for example: `-c '.functionality.namespace := "foo"'`.
+
+* [NXF] When running a module on its own all inputs with `type: file` should be referenced the moment the pipeline is started. Previous behavior was to only us `--input` and map that to the first argument of `type: file`. For example: say `--input` and `--reference` both are input file arguments, the following should be used:
+
+    ```
+    nextflow run main.nf --input ... --reference
+    ```
 
 ## NEW FEATURES
 
@@ -20,7 +26,7 @@
   -l
 ```
 
-* `viash build`: The image can be pushed with `--push`. The same can be done by passing `---push` 
+* `viash build`: The image can be pushed with `--push`. The same can be done by passing `---push` to 
   a viash executable.
 
 * `viash ns` can query the name, namespace, or both, with the following arguments:
@@ -30,12 +36,29 @@
 
 * Added the `project_build`, `project_clean`, `project_push` and `project_test` components to this repository.
 
-* Added a field `.functionality.info` of type `Map[String, String]` in order to be able to specify custom annotations 
-  to the component. 
+* Added a field `.functionality.info` of type `Map[String, String]` in order to be able to specify custom annotations to the component.
+
+* Docker image parsing for `docker` and `nextflow` platforms are aligned. It is now also possible to choose between specifying, e.g. `image: ubuntu:latest` and `{ image: ubuntu, tag: latest }`.
+
+* [NXF] The implicitly generated names for output files/directories have been improved leading to less clashes.
+
+* [NXF] Allow for multiple output files/directories from a module while keeping compatibility for single output. Please [refer to the docs](http://www.data-intuitive.com/viash_docs/config/platform-nextflow/#multiple-outputs).
+
+* [NXF] Allow for zero input files by means of passing an empty list `[]` in the triplet
+
+* [NXF] Remove requirement for `function_type: todir`
+
+* [NXF] It is now possible to not only specify `label: ...` for a nextflow platform but also `labels: [ ...]`.
 
 ## BUG FIXES
 
 * Allow quotes in functionality descriptions.
+
+* [NXF] Providing a `default: ...` value for output file arguments is no longer necessary.
+
+## UNDER THE HOOD
+
+* [NXF] Module generation has been refactored thoroughly. 
 
 
 # viash 0.3.2 (2021-02-04)
