@@ -41,6 +41,7 @@ if [[ $par_force == true ]]; then
       -c '.platforms[.type == "docker"].setup_strategy := "donothing"' \
       -c '.platforms[.type == "docker"].push_strategy := "alwayspush"' \
       -c '.platforms[.type == "nextflow"].registry := "'"$par_registry"'"' \
+      -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
       -l \
       --setup --push | tee "$par_log"
   elif [ "$par_mode" == "release" ]; then
@@ -54,6 +55,7 @@ if [[ $par_force == true ]]; then
       -c '.platforms[.type == "docker"].setup_strategy := "donothing"' \
       -c '.platforms[.type == "docker"].push_strategy := "alwayspush"' \
       -c '.platforms[.type == "nextflow"].registry := "'"$par_registry"'"' \
+      -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
       -l \
       --setup --push | tee "$par_log"
   else
@@ -72,6 +74,7 @@ else
       -c '.platforms[.type == "docker"].target_registry := "'"$par_registry"'"' \
       -c '.platforms[.type == "docker"].setup_strategy := "donothing"' \
       -c '.platforms[.type == "nextflow"].registry := "'"$par_registry"'"' \
+      -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
       -l \
       --setup --push | tee "$par_log"
   elif [ "$par_mode" == "release" ]; then
@@ -84,6 +87,7 @@ else
       -c '.platforms[.type == "docker"].target_registry := "'"$par_registry"'"' \
       -c '.platforms[.type == "docker"].setup_strategy := "donothing"' \
       -c '.platforms[.type == "nextflow"].registry := "'"$par_registry"'"' \
+      -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
       -l \
       --setup --push | tee "$par_log"
   else

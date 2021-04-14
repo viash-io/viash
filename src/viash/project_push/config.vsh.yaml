@@ -35,6 +35,10 @@ functionality:
     alternatives: [ "-r" ]
     type: string
     description: Docker registry to use, only used when using a registry.
+  - name: "--namespace_separator"
+    default: "_"
+    type: string
+    description: The separator to use between the component name and namespace as the image name of a Docker container.
   - name: "--force"
     type: boolean_true
     description: Overwrite registry

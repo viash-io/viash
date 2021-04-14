@@ -32,6 +32,7 @@ if [ "$par_mode" == "development" ]; then
     --query_namespace "$par_query_namespace" \
     -c '.functionality.version := "dev"' \
     -c '.platforms[.type == "docker"].setup_strategy := "'$setup_strat'"' \
+    -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
     -l -w \
     --setup | tee "$par_log"
 elif [ "$par_mode" == "integration" ]; then
@@ -50,6 +51,7 @@ elif [ "$par_mode" == "integration" ]; then
     -c '.platforms[.type == "docker"].target_registry := "'"$par_registry"'"' \
     -c '.platforms[.type == "docker"].setup_strategy := "build"' \
     -c '.platforms[.type == "nextflow"].registry := "'"$par_registry"'"' \
+    -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
     -l -w \
     --setup | tee "$par_log"
 elif [ "$par_mode" == "release" ]; then
@@ -72,6 +74,7 @@ elif [ "$par_mode" == "release" ]; then
     -c '.platforms[.type == "docker"].target_registry := "'"$par_registry"'"' \
     -c '.platforms[.type == "docker"].setup_strategy := "build"' \
     -c '.platforms[.type == "nextflow"].registry := "'"$par_registry"'"' \
+    -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
     -l -w \
     --setup | tee "$par_log"
 else
