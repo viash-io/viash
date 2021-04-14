@@ -34,15 +34,20 @@
 * `Docker` & `NXF`: Attribute `version` is deprecated. Instead, the default value will be `.functionality.version`, which can be overridden by using the `tag` attribute.
 
 * `NXF`: When running a viash component as a Nextflow module on its own, you now need to specify all input files on the command line. For instance, if `--input` and `--reference` are input file arguments, you need to start the process by running `nextflow run main.nf --input <...> --reference <...> <other arguments>`. Previously only the input file needed to be specified.
+  
+* `Docker` & `NXF`: Default separator between namespace and image name has been changed from `"/"` to `"_"`.
 
-
-## NEXTFLOW REFACTORING
-
-The generation of Nextflow modules has been refactored thoroughly.
+## MINOR CHANGES
 
 * `Docker` & `NXF`: Parsing of image attributes for both `Docker` and `Nextflow` platforms are better aligned. You can define an image by specifying either of the following:
   - `{ image: 'ubuntu:latest' }` 
   - `{ image: ubuntu, tag: latest }`
+  
+* `Docker` & `NXF`: Allow changing the separator between a namespace and the image name.
+
+## NEXTFLOW REFACTORING
+
+The generation of Nextflow modules has been refactored thoroughly.
   
 * `NXF` The implicitly generated names for output files/directories have been improved leading to less clashes.
 

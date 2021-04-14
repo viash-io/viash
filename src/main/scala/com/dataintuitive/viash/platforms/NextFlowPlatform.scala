@@ -22,7 +22,7 @@ import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.platforms.requirements._
 import com.dataintuitive.viash.config.Version
-import com.dataintuitive.viash.helpers.NextFlowDocker
+import com.dataintuitive.viash.helpers.Docker
 
 /**
  * / * Platform class for generating NextFlow (DSL2) modules.
@@ -33,6 +33,7 @@ case class NextFlowPlatform(
   tag: Option[Version] = None,
   version: Option[Version] = None,
   registry: Option[String] = None,
+  namespace_separator: String = "_",
   executor: Option[String] = None,
   publish: Option[Boolean] = None,
   per_id: Option[Boolean] = None,
@@ -43,7 +44,7 @@ case class NextFlowPlatform(
 ) extends Platform {
   val `type` = "nextflow"
 
-  assert(version.isEmpty || tag.isEmpty, "nextflow platform: version and tag should not both be defined")
+  assert(version.isEmpty, "nextflow platform: attribute 'version' is deprecated")
 
   val requirements: List[Requirements] = Nil
 
@@ -55,16 +56,13 @@ case class NextFlowPlatform(
 
     val fname = functionality.name
 
-    // The image attribute can contain the tag or not, sanitize
-    val derivedTag = image.flatMap(img => if (img.contains(":")) img.split(":").lastOption else None)
-    val derivedImage = image.flatMap(img => if (img.contains(":")) img.split(":").headOption else Some(img))
-
     // get image info
-    val imageInfo = NextFlowDocker.getImageInfo(
-      functionality,
-      customRegistry = registry,
-      customName = derivedImage,
-      customVersion = (derivedTag orElse version orElse tag).map(_.toString)
+    val imageInfo = Docker.getImageInfo(
+      functionality = Some(functionality),
+      registry = registry,
+      name = image,
+      tag = tag.map(_.toString),
+      namespaceSeparator = namespace_separator
     )
 
     // get main script/binary

@@ -29,11 +29,12 @@ import com.dataintuitive.viash.platforms.docker._
 case class DockerPlatform(
   id: String = "docker",
   image: String,
+  registry: Option[String] = None,
   tag: Option[Version] = None,
-  version: Option[Version] = None,
   target_image: Option[String] = None,
   target_registry: Option[String] = None,
   target_tag: Option[Version] = None,
+  namespace_separator: String = "_",
   resolve_volume: DockerResolveVolume = Automatic,
   chown: Boolean = true,
   port: Option[List[String]] = None,
@@ -47,11 +48,14 @@ case class DockerPlatform(
   apt: Option[AptRequirements] = None,
   r: Option[RRequirements] = None,
   python: Option[PythonRequirements] = None,
-  docker: Option[DockerRequirements] = None
+  docker: Option[DockerRequirements] = None,
+
+  // deprecated
+  version: Option[Version] = None
 ) extends Platform {
   val `type` = "docker"
 
-  assert(version.isEmpty || target_tag.isEmpty, "docker platform: version and target_tag should not both be defined")
+  assert(version.isEmpty, "docker platform: attribute 'version' is deprecated")
 
   val requirements: List[Requirements] =
     setup :::
@@ -119,22 +123,22 @@ case class DockerPlatform(
     // if there are no requirements, simply use the specified image
     val effectiveID =
       if (runCommands.isEmpty) {
-        // If the image name contains a tag, use it
-        val derivedTag = if (image.contains(":")) Some(image.split(":").last) else None
-        val derivedImage = if (image.contains(":")) image.split(":").headOption else Some(image)
+        // no requirements → use base image → don't draw defaults from the Functionality
         val imageInfo = Docker.getImageInfo(
-          functionality,
-          customName = derivedImage,
-          customVersion = (derivedTag orElse version orElse tag).map(_.toString)
+          name = Some(image),
+          registry = registry,
+          tag = tag.map(_.toString),
+          namespaceSeparator = namespace_separator
         )
         imageInfo.toString
       } else {
-        // get image info
+        // there are requirements → build custom image → defaults can be drawn from the Functionality
         val imageInfo = Docker.getImageInfo(
-          functionality,
-          customRegistry = target_registry,
-          customName = target_image,
-          customVersion = (version orElse target_tag).map(_.toString)
+          functionality = Some(functionality),
+          registry = target_registry,
+          name = target_image,
+          tag = target_tag.map(_.toString),
+          namespaceSeparator = namespace_separator
         )
         imageInfo.toString
       }
