@@ -12,7 +12,7 @@ $(obj): $(shell find src/ -name "*.scala")
 	@echo "==================================> $(obj)"
 	
 tools: $(obj) $(shell find src/viash)
-	bin/viash ns build -n viash -t bin
+	bin/viash ns build -s src/viash -t bin --flatten
 	@echo "==================================> tools"
 
 .PHONY: with-docker
