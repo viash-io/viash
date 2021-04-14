@@ -57,13 +57,24 @@ case class DockerPlatform(
 
   assert(version.isEmpty, "docker platform: attribute 'version' is deprecated")
 
-  val requirements: List[Requirements] =
-    setup :::
-      apk.toList :::
-      apt.toList :::
-      r.toList :::
-      python.toList :::
-      docker.toList
+  val requirements: List[Requirements] = {
+    val x =
+      setup :::
+        apk.toList :::
+        apt.toList :::
+        r.toList :::
+        python.toList :::
+        docker.toList
+    // workaround for making sure that every docker platform creates a new container
+    if (x.isEmpty) {
+      List(DockerRequirements(
+        run = List(":")
+      ))
+    } else {
+      x
+    }
+  }
+
 
   def modifyFunctionality(functionality: Functionality): Functionality = {
     // collect docker args
