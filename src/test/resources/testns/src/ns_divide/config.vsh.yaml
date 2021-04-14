@@ -23,5 +23,7 @@ functionality:
   tests:
     - type: bash_script
       path: test.sh
+    - type: bash_script
+      path: test_div0.sh
 platforms:
   - type: native
