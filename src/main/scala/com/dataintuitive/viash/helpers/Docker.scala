@@ -20,7 +20,7 @@ package com.dataintuitive.viash.helpers
 import com.dataintuitive.viash.functionality.Functionality
 
 case class DockerImageInfo(name: String, tag: String, registry: Option[String] = None) {
-  override def toString = {
+  override def toString: String = {
     registry.map(_ + "/").getOrElse("") +
       name + ":" + tag
   }
@@ -35,7 +35,7 @@ object Docker {
     registry: Option[String] = None,
     tag: Option[String] = None,
     namespaceSeparator: String
-  ) = {
+  ): DockerImageInfo = {
 
     // If the image name contains a tag, use it
     val (derivedName, derivedTag) = name match {
@@ -50,7 +50,7 @@ object Docker {
     } orElse {
       functionality.flatMap(fun => fun.namespace.map(_ + namespaceSeparator + fun.name))
     } orElse {
-      functionality.flatMap(fun => Some(fun.name))
+      functionality.map(fun => fun.name)
     }
 
     val actualTag = {

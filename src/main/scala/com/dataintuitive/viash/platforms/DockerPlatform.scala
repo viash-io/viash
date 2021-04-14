@@ -120,27 +120,27 @@ case class DockerPlatform(
     // get dependencies
     val runCommands = requirements.flatMap(_.dockerCommands)
 
+    // don't draw defaults from functionality for the from image
+    val fromImageInfo = Docker.getImageInfo(
+      name = Some(image),
+      registry = registry,
+      tag = tag.map(_.toString),
+      namespaceSeparator = namespace_separator
+    )
+    val targetImageInfo = Docker.getImageInfo(
+      functionality = Some(functionality),
+      registry = target_registry,
+      name = target_image,
+      tag = target_tag.map(_.toString),
+      namespaceSeparator = namespace_separator
+    )
+
     // if there are no requirements, simply use the specified image
     val effectiveID =
       if (runCommands.isEmpty) {
-        // no requirements → use base image → don't draw defaults from the Functionality
-        val imageInfo = Docker.getImageInfo(
-          name = Some(image),
-          registry = registry,
-          tag = tag.map(_.toString),
-          namespaceSeparator = namespace_separator
-        )
-        imageInfo.toString
+        fromImageInfo.toString
       } else {
-        // there are requirements → build custom image → defaults can be drawn from the Functionality
-        val imageInfo = Docker.getImageInfo(
-          functionality = Some(functionality),
-          registry = target_registry,
-          name = target_image,
-          tag = target_tag.map(_.toString),
-          namespaceSeparator = namespace_separator
-        )
-        imageInfo.toString
+        targetImageInfo.toString
       }
 
     // if no extra dependencies are needed, the provided image can just be used,
@@ -150,7 +150,7 @@ case class DockerPlatform(
         ("  :", "  ViashDockerPull $1")
       } else {
         val dockerFile =
-          s"FROM $image\n\n" +
+          s"FROM ${fromImageInfo.toString}\n\n" +
             runCommands.mkString("\n")
 
         val dockerRequirements =
