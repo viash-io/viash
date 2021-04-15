@@ -15,28 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.helpers
+package com.dataintuitive.viash
 
-import com.dataintuitive.viash.functionality.Functionality
+import com.dataintuitive.viash.config.{Config, encodeConfig}
+import io.circe.yaml.Printer
 
-object NextFlowDocker {
-  def getImageInfo(
-    fun: Functionality,
-    customName: Option[String] = None,
-    customNamespace: Option[String] = None,
-    customRegistry: Option[String] = None,
-    customVersion: Option[String] = None
-  ) = {
+object ViashConfig {
+  val printer = Printer(
+    preserveOrder = true,
+    dropNullKeys = true,
+    mappingStyle = Printer.FlowStyle.Block,
+    splitLines = true,
+    stringStyle = Printer.StringStyle.DoubleQuoted
+  )
 
-    val name = customName match {
-      case Some(_name) => _name
-      case None => fun.namespace.map(_ + "/").getOrElse("") + fun.name
-    }
-
-    DockerImageInfo(
-      name = name,
-      tag = (customVersion orElse fun.version.map(_.toString)),
-      registry = customRegistry
-    )
+  def view(config: Config)  {
+    val json = encodeConfig(config)
+    val configYamlStr = printer.pretty(json)
+    println(configYamlStr)
   }
 }

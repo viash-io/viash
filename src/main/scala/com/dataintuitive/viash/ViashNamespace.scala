@@ -18,7 +18,6 @@
 package com.dataintuitive.viash
 
 import java.io.FileWriter
-
 import com.dataintuitive.viash.ViashTest.{ManyTestOutput, TestOutput}
 import config.Config
 
@@ -27,8 +26,10 @@ object ViashNamespace {
     configs: List[Config],
     target: String,
     setup: Boolean = false,
+    push: Boolean = false,
     parallel: Boolean = false,
-    writeMeta: Boolean = true
+    writeMeta: Boolean = true,
+    flatten: Boolean = false
   ) {
     val configs2 = if (parallel) configs.par else configs
 
@@ -36,9 +37,13 @@ object ViashNamespace {
       val in = conf.info.get.parent_path
       val inTool = in.split("/").lastOption.getOrElse("WRONG")
       val platType = conf.platform.get.id
-      val out =
-        conf.functionality.namespace
-          .map( ns => target + s"/$platType/$ns/$inTool").getOrElse(target + s"/$platType/$inTool")
+      val out = flatten match {
+        case false =>
+          conf.functionality.namespace
+            .map( ns => target + s"/$platType/$ns/$inTool").getOrElse(target + s"/$platType/$inTool")
+        case true =>
+          target
+      }
       val namespaceOrNothing = conf.functionality.namespace.map( s => "(" + s + ")").getOrElse("")
       println(s"Exporting $in $namespaceOrNothing =$platType=> $out")
       ViashBuild(
@@ -46,6 +51,7 @@ object ViashNamespace {
         output = out,
         namespace = conf.functionality.namespace,
         setup = setup,
+        push = push,
         writeMeta = writeMeta
       )
     }
@@ -55,16 +61,40 @@ object ViashNamespace {
     configs: List[Config],
     parallel: Boolean = false,
     keepFiles: Option[Boolean] = None,
-    tsv: Option[String] = None
+    tsv: Option[String] = None,
+    append: Boolean = false
   ): List[(Config, ManyTestOutput)] = {
     val configs2 = if (parallel) configs.par else configs
 
     // run all the component tests
-    val tsvWriter = tsv.map(new FileWriter(_, false))
+    val tsvWriter = tsv.map(new FileWriter(_, append))
 
     try {
-      tsvWriter.foreach(_.append(List("namespace", "functionality", "platform", "test_name", "exit_code", "duration", "result").mkString("\t") + sys.props("line.separator")))
-      printf(s"%s%20s %20s %20s %20s %9s %8s %20s%s\n", "", "namespace", "functionality", "platform", "test_name", "exit_code", "duration", "result", Console.RESET)
+      if (!append)
+        tsvWriter.foreach(
+          _.append(
+            List(
+              "namespace",
+              "functionality",
+              "platform",
+              "test_name",
+              "exit_code",
+              "duration",
+              "result"
+            ).mkString("\t") + sys.props("line.separator"))
+        )
+      printf(
+        s"%s%20s %20s %20s %20s %9s %8s %20s%s\n",
+        "",
+        "namespace",
+        "functionality",
+        "platform",
+        "test_name",
+        "exit_code",
+        "duration",
+        "result",
+        Console.RESET
+      )
 
       configs2.map { conf =>
         // get attributes
@@ -123,4 +153,26 @@ object ViashNamespace {
     }
   }
 
+  def list(
+    configs: List[Config]
+  ) {
+    // TODO: move the functionality here to a dedicated helper
+    // TODO2: align with viash config view
+
+    import config._
+    import io.circe.yaml.Printer
+    import io.circe.syntax.EncoderOps
+
+    val printer = Printer(
+      preserveOrder = true,
+      dropNullKeys = true,
+      mappingStyle = Printer.FlowStyle.Block,
+      splitLines = true,
+      stringStyle = Printer.StringStyle.DoubleQuoted
+    )
+    println(
+      printer.pretty(configs.asJson)
+    )
+
+  }
 }

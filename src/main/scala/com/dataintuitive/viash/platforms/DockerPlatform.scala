@@ -29,15 +29,18 @@ import com.dataintuitive.viash.platforms.docker._
 case class DockerPlatform(
   id: String = "docker",
   image: String,
-  version: Option[Version] = None,
+  registry: Option[String] = None,
+  tag: Option[Version] = None,
   target_image: Option[String] = None,
   target_registry: Option[String] = None,
   target_tag: Option[Version] = None,
+  namespace_separator: String = "_",
   resolve_volume: DockerResolveVolume = Automatic,
   chown: Boolean = true,
   port: Option[List[String]] = None,
   workdir: Option[String] = None,
   setup_strategy: DockerSetupStrategy = AlwaysCachedBuild,
+  push_strategy: DockerPushStrategy = PushIfNotPresent,
 
   // setup variables
   setup: List[Requirements] = Nil,
@@ -45,19 +48,33 @@ case class DockerPlatform(
   apt: Option[AptRequirements] = None,
   r: Option[RRequirements] = None,
   python: Option[PythonRequirements] = None,
-  docker: Option[DockerRequirements] = None
+  docker: Option[DockerRequirements] = None,
+
+  // deprecated
+  version: Option[Version] = None
 ) extends Platform {
   val `type` = "docker"
 
-  assert(version.isEmpty || target_tag.isEmpty, "docker platform: version and target_tag should not both be defined")
+  assert(version.isEmpty, "docker platform: attribute 'version' is deprecated")
 
-  val requirements: List[Requirements] =
-    setup :::
-      apk.toList :::
-      apt.toList :::
-      r.toList :::
-      python.toList :::
-      docker.toList
+  val requirements: List[Requirements] = {
+    val x =
+      setup :::
+        apk.toList :::
+        apt.toList :::
+        r.toList :::
+        python.toList :::
+        docker.toList
+    // workaround for making sure that every docker platform creates a new container
+    if (x.isEmpty) {
+      List(DockerRequirements(
+        run = List(":")
+      ))
+    } else {
+      x
+    }
+  }
+
 
   def modifyFunctionality(functionality: Functionality): Functionality = {
     // collect docker args
@@ -114,20 +131,27 @@ case class DockerPlatform(
     // get dependencies
     val runCommands = requirements.flatMap(_.dockerCommands)
 
+    // don't draw defaults from functionality for the from image
+    val fromImageInfo = Docker.getImageInfo(
+      name = Some(image),
+      registry = registry,
+      tag = tag.map(_.toString),
+      namespaceSeparator = namespace_separator
+    )
+    val targetImageInfo = Docker.getImageInfo(
+      functionality = Some(functionality),
+      registry = target_registry,
+      name = target_image,
+      tag = target_tag.map(_.toString),
+      namespaceSeparator = namespace_separator
+    )
+
     // if there are no requirements, simply use the specified image
     val effectiveID =
       if (runCommands.isEmpty) {
-        image
+        fromImageInfo.toString
       } else {
-        // get image info
-        val imageInfo = Docker.getImageInfo(
-          functionality,
-          customRegistry = target_registry,
-          customName = target_image,
-          customVersion = (version orElse target_tag).map(_.toString)
-        )
-
-        imageInfo.toString
+        targetImageInfo.toString
       }
 
     // if no extra dependencies are needed, the provided image can just be used,
@@ -137,7 +161,7 @@ case class DockerPlatform(
         ("  :", "  ViashDockerPull $1")
       } else {
         val dockerFile =
-          s"FROM $image\n\n" +
+          s"FROM ${fromImageInfo.toString}\n\n" +
             runCommands.mkString("\n")
 
         val dockerRequirements =
@@ -167,7 +191,17 @@ case class DockerPlatform(
              |
              |  # Build the container
              |  echo "> docker build -t $$@$buildArgs $$tmpdir"
-             |  docker build -t $$@$buildArgs $$tmpdir""".stripMargin
+             |  set +e
+             |  docker build -t $$@$buildArgs $$tmpdir &> $$tmpdir/docker_build.log
+             |  out=$$?
+             |  set -e
+             |  if [ ! $$out -eq 0 ]; then
+             |    echo "> ERROR: Something went wrong building the container $$@"
+             |    echo "> Error transcript follows:"
+             |    cat $$tmpdir/docker_build.log
+             |    echo "> --- end of error transcript"
+             |  fi
+             |  exit $$out""".stripMargin
 
         (vdf, vdb)
       }
@@ -187,7 +221,12 @@ case class DockerPlatform(
          |
          |# ViashSetup: ...
          |function ViashSetup {
-         |  ViashDockerSetup $effectiveID $$$dockerStrategyVar
+         |  ViashDockerSetup $effectiveID $$$dockerSetupStrategyVar
+         |}
+         |
+         |# ViashPush: ...
+         |function ViashPush {
+         |  ViashDockerPush $effectiveID $$$dockerPushStrategyVar
          |}""".stripMargin
     }
 
@@ -195,18 +234,29 @@ case class DockerPlatform(
       s"""
          |${Bash.ViashDockerFuns}
          |# initialise variables
-         |$dockerStrategyVar='${setup_strategy.id}'""".stripMargin
+         |$dockerSetupStrategyVar='${setup_strategy.id}'
+         |$dockerPushStrategyVar='${push_strategy.id}'""".stripMargin
 
     val parsers =
       s"""
          |        ---dss|---docker_setup_strategy)
          |            ${BashWrapper.var_exec_mode}="setup"
-         |            $dockerStrategyVar="$$2"
+         |            $dockerSetupStrategyVar="$$2"
          |            shift 2
          |            ;;
          |        ---docker_setup_strategy=*)
          |            ${BashWrapper.var_exec_mode}="setup"
-         |            $dockerStrategyVar=$$(ViashRemoveFlags "$$2")
+         |            $dockerSetupStrategyVar=$$(ViashRemoveFlags "$$2")
+         |            shift 1
+         |            ;;
+         |        ---dps|---docker_push_strategy)
+         |            ${BashWrapper.var_exec_mode}="push"
+         |            $dockerPushStrategyVar="$$2"
+         |            shift 2
+         |            ;;
+         |        ---docker_push_strategy=*)
+         |            ${BashWrapper.var_exec_mode}="push"
+         |            $dockerPushStrategyVar=$$(ViashRemoveFlags "$$2")
          |            shift 1
          |            ;;
          |        ---dockerfile)
@@ -223,7 +273,8 @@ case class DockerPlatform(
   }
 
   private val extraMountsVar = "VIASH_EXTRA_MOUNTS"
-  private val dockerStrategyVar = "VIASH_DOCKER_SETUP_STRATEGY"
+  private val dockerSetupStrategyVar = "VIASH_DOCKER_SETUP_STRATEGY"
+  private val dockerPushStrategyVar = "VIASH_DOCKER_PUSH_STRATEGY"
 
   private def processDockerVolumes(functionality: Functionality) = {
     val args = functionality.argumentsAndDummies

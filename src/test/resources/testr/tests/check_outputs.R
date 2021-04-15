@@ -1,8 +1,9 @@
-# assume tidyverse is installed
-options(tidyverse.quiet = TRUE)
-library(tidyverse)
+library(processx, warn.conflicts = FALSE)
 library(testthat, warn.conflicts = FALSE)
 
+read_file <- function(file) {
+  paste(paste0(readLines(file), "\n"), collapse = "")
+}
 
 test_that("Checking whether output is correct", {
   out <- processx::run("./testr", c(
@@ -15,7 +16,7 @@ test_that("Checking whether output is correct", {
   ))
   expect_true(file.exists("output.txt"))
   
-  output <- readr::read_file("output.txt")
+  output <- read_file("output.txt")
   expect_match(output, 'input: \\|help\\|')
   expect_match(output, 'real_number: \\|10.5\\|')
   expect_match(output, 'whole_number: \\|10\\|')
@@ -29,7 +30,7 @@ test_that("Checking whether output is correct", {
   expect_match(output, 'multiple_pos: \\|c\\("a", "b", "c", "d", "e", "f"\\)\\|')
   
   expect_true(file.exists("log.txt"))
-  log <- readr::read_file("log.txt")
+  log <- read_file("log.txt")
   expect_match(log, 'Parsed input arguments.')
 })
 

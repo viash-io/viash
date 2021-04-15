@@ -11,10 +11,12 @@ RUN echo 'deb http://dl.bintray.com/sbt/debian /' > /etc/apt/sources.list.d/sbt.
     apt-get install -y sbt
 
 # Install yq
-RUN curl -sSL https://github.com/mikefarah/yq/releases/download/3.3.2/yq_linux_386 > /usr/bin/yq && \
+RUN curl -sSL https://github.com/mikefarah/yq/releases/download/v4.6.1/yq_linux_386 > /usr/bin/yq && \
     chmod +x /usr/bin/yq
 
-# # Run SBT once so that all libraries are downloaded
+# Run SBT once so that all libraries are downloaded
+# Avoid running sbt from /
+WORKDIR /app
 RUN sbt exit
 
 # Get sources

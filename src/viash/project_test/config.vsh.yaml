@@ -1,0 +1,63 @@
+functionality:
+  name: project_test
+  namespace: viash
+  version: 0.1
+  description: |
+    Test a project, usually in the context of a pipeline.
+  arguments:
+  # - name: "--src"
+  #   alternatives: [ "-s" ]
+  #   type: file
+  #   description: Directory for sources if different from src/
+  #   default: src
+  - name: "--mode"
+    alternatives: [ "-m" ]
+    type: string
+    description: "The mode to run in. Possible values are: 'development', 'integration', 'release'."
+    default: development
+  - name: "--platforms"
+    alternatives: [ "-p" ]
+    type: string
+    description: Which platforms to test, default is 'docker'.
+    default: "docker"
+  - name: "--query"
+    alternatives: [ "-q" ]
+    type: string
+    description: "Filter which components get selected by name and namespace. Can be a regex. Example: '^mynamespace/component1$'."
+  - name: "--query_namespace"
+    alternatives: [ "-n" ]
+    type: string
+    description: "Filter which namespaces get selected by namespace. Can be a regex. Example: '^mynamespace$'."
+  - name: "--query_name"
+    type: string
+    description: "Filter which components get selected by name. Can be a regex. Example: '^component1'."
+  - name: "--version"
+    alternatives: [ "-v" ]
+    type: string
+    description: Which version of the pipeline to use.
+    default: "dev"
+  - name: "--registry"
+    alternatives: [ "-r" ]
+    type: string
+    description: Docker registry to use, only used when using a registry.
+  - name: "--namespace_separator"
+    default: "_"
+    type: string
+    description: The separator to use between the component name and namespace as the image name of a Docker container.
+  - name: "--log"
+    alternatives: [ "-l" ]
+    type: file
+    description: Test log file
+    default: log.tsv
+  - name: "--append"
+    type: boolean
+    default: true
+    description: Append to the log file?
+  - name: "--viash"
+    type: file
+    description: A path to the viash executable. If not specified, this component will look for 'viash' on the $PATH.
+  resources:
+    - type: bash_script
+      path: script.sh
+platforms:
+- type: native

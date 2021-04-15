@@ -85,14 +85,10 @@ trait Resource {
   def write(path: Path, overwrite: Boolean) {
     val file =
       if (text.isDefined) {
-        IO.write(text.get, path, overwrite)
+        IO.write(text.get, path, overwrite, executable = is_executable)
       } else {
-        IO.write(uri.get, path, overwrite)
+        IO.write(uri.get, path, overwrite, executable = is_executable)
       }
-
-    if (is_executable.isDefined) {
-      file.setExecutable(is_executable.get)
-    }
   }
 
   def copyWithAbsolutePath(parent: URI): Resource = {

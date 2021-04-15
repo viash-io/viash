@@ -1,0 +1,57 @@
+functionality:
+  name: project_push
+  namespace: viash
+  version: 0.1
+  description: |
+    Push a project, usually in the context of a pipeline.
+  arguments:
+  # - name: "--src"
+  #   alternatives: [ "-s" ]
+  #   type: file
+  #   description: Directory for sources if different from src/
+  #   default: src
+  - name: "--mode"
+    alternatives: [ "-m" ]
+    type: string
+    description: "The mode to run in. Possible values are: 'development', 'integration', 'release'."
+    default: development
+  - name: "--query"
+    alternatives: [ "-q" ]
+    type: string
+    description: "Filter which components get selected by name and namespace. Can be a regex. Example: '^mynamespace/component1$'."
+  - name: "--query_namespace"
+    alternatives: [ "-n" ]
+    type: string
+    description: "Filter which namespaces get selected by namespace. Can be a regex. Example: '^mynamespace$'."
+  - name: "--query_name"
+    type: string
+    description: "Filter which components get selected by name. Can be a regex. Example: '^component1'."
+  - name: "--version"
+    alternatives: [ "-v" ]
+    type: string
+    description: Which version of the pipeline to use.
+    default: "dev"
+  - name: "--registry"
+    alternatives: [ "-r" ]
+    type: string
+    description: Docker registry to use, only used when using a registry.
+  - name: "--namespace_separator"
+    default: "_"
+    type: string
+    description: The separator to use between the component name and namespace as the image name of a Docker container.
+  - name: "--force"
+    type: boolean_true
+    description: Overwrite registry
+  - name: "--log"
+    short: [ "-l" ]
+    type: file
+    description: Log file
+    default: log.txt
+  - name: "--viash"
+    type: file
+    description: A path to the viash executable. If not specified, this component will look for 'viash' on the $PATH.
+  resources:
+    - type: bash_script
+      path: script.sh
+platforms:
+- type: native

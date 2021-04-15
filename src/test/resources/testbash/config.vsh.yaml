@@ -72,6 +72,9 @@ functionality:
     - type: bash_script
       path: tests/fail.sh
     - path: resource2.txt
+  info:
+    foo: bar
+    custom_tag: custom_value
 platforms:
   - type: native
   - type: docker

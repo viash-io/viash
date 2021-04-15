@@ -56,7 +56,7 @@ platforms:
       - type: javascript
         npm: [ plot ]
   - type: docker
-    image: node
+    image: node:15-buster
     target_image: "viash_test_js"
     setup:
       - type: javascript

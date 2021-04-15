@@ -43,13 +43,31 @@ trait ViashCommand {
     default = Some("config.vsh.yaml"),
     required = true
   )
+  val config_mods = opt[List[String]](
+    name = "config_mod",
+    short = 'c',
+    default = Some(Nil),
+
+    descr = "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
+  )
 }
 trait ViashNs {
   _: ScallopConf =>
-  val namespace = opt[String](
-    name = "namespace",
+  val query = opt[String](
+    name = "query",
+    short = 'q',
+    descr = "Filter which components get selected by name and namespace. Can be a regex. Example: \"^mynamespace/component1$\".",
+    default = None
+  )
+  val query_namespace = opt[String](
+    name = "query_namespace",
     short = 'n',
-    descr = "Filter which namespaces get selected. Can be a regex. Example: \"build|run\".",
+    descr = "Filter which namespaces get selected by namespace. Can be a regex. Example: \"^mynamespace$\".",
+    default = None
+  )
+  val query_name = opt[String](
+    name = "query_name",
+    descr = "Filter which components get selected by name. Can be a regex. Example: \"^component1\".",
     default = None
   )
   val src = opt[String](
@@ -80,6 +98,13 @@ trait ViashNs {
     short = 'l',
     default = Some(false),
     descr = "Whether or not to run the process in parallel."
+  )
+  val config_mods = opt[List[String]](
+    name = "config_mod",
+    short = 'c',
+    default = Some(Nil),
+
+    descr = "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
   )
 }
 trait WithTemporary {
@@ -112,6 +137,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
        |  viash test config.vsh.yaml
        |  viash ns build
        |  viash ns test
+       |  viash ns list
+       |  viash config view
        |
        |Check the help of a subcommand for more information, or the API available at:
        |  https://www.data-intuitive.com/viash_docs
@@ -170,6 +197,11 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       default = Some(false),
       descr = "Whether or not to set up the platform environment after building the executable."
     )
+    val push = opt[Boolean](
+      name = "push",
+      default = Some(false),
+      descr = "Whether or not to push the container to a Docker registry [Docker Platform only]."
+    )
   }
 
   val test = new Subcommand("test") with ViashCommand with WithTemporary {
@@ -178,7 +210,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |Test the component using the tests defined in the viash config file.
          |
          |Usage:
-         |  viash test config.vsh.yaml [-p docker [-k true/false]
+         |  viash test config.vsh.yaml [-p docker] [-k true/false]
          |
          |Arguments:""".stripMargin)
 
@@ -189,6 +221,24 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |  viash run meta.vsh.yaml""".stripMargin)
   }
 
+  val config = new Subcommand("config") {
+    val view = new Subcommand("view") with ViashCommand {
+      banner(
+        s"""viash config view
+           |View the config file after parsing.
+           |
+           |Usage:
+           |  viash config view config.vsh.yaml
+           |
+           |Arguments:""".stripMargin)
+    }
+
+    addSubcommand(view)
+    requireSubcommand()
+
+    shortSubcommandsHelp(true)
+  }
+
   val namespace = new Subcommand("ns") {
 
     val build = new Subcommand("build") with ViashNs{
@@ -197,7 +247,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |Build a namespace from many viash config files.
            |
            |Usage:
-           |  viash ns build [-n nmspc] [-s src] [-t target] [-p docker] [--setup] [--parallel]
+           |  viash ns build [-n nmspc] [-s src] [-t target] [-p docker] [--setup] [---push] [--parallel] [--flatten]
            |
            |Arguments:""".stripMargin)
       val target = opt[String](
@@ -211,11 +261,22 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         default = Some(false),
         descr = "Whether or not to set up the platform environment after building the executable."
       )
+      val push = opt[Boolean](
+        name = "push",
+        default = Some(false),
+        descr = "Whether or not to push the container to a Docker registry [Docker Platform only]."
+      )
       val writeMeta = opt[Boolean](
         name = "write_meta",
         short = 'w',
         default = Some(false),
         descr = "Write out some meta information to RESOURCES_DIR/viash.yaml at the end."
+      )
+      val flatten = opt[Boolean](
+        name = "flatten",
+        short = 'f',
+        default = Some(false),
+        descr = "Flatten the target builds, handy for building one platform to a bin directory."
       )
     }
 
@@ -225,7 +286,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |Test a namespace containing many viash config files.
            |
            |Usage:
-           |  viash ns test [-n nmspc] [-s src] [-p docker] [--parallel] [--tsv file.tsv]
+           |  viash ns test [-n nmspc] [-s src] [-p docker] [--parallel] [--tsv file.tsv] [--append]
            |
            |Arguments:""".stripMargin)
       val tsv = opt[String](
@@ -233,10 +294,33 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         short = 't',
         descr = "Path to write a summary of the test results to."
       )
+      val append = opt[Boolean](
+        name = "append",
+        short = 'a',
+        default = Some(false),
+        descr = "Append to tsv instead of overwrite"
+      )
+    }
+
+    val list = new Subcommand("list") with ViashNs with WithTemporary {
+      banner(
+        s"""viash ns list
+           |List a namespace containing many viash config files.
+           |
+           |Usage:
+           |  viash ns list [-n nmspc] [-s src] [-p docker] [--tsv file.tsv]
+           |
+           |Arguments:""".stripMargin)
+      val tsv = opt[String](
+        name = "tsv",
+        short = 't',
+        descr = "Path to write a summary of the list results to."
+      )
     }
 
     addSubcommand(build)
     addSubcommand(test)
+    addSubcommand(list)
     requireSubcommand()
 
     shortSubcommandsHelp(true)
@@ -246,6 +330,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   addSubcommand(build)
   addSubcommand(test)
   addSubcommand(namespace)
+  addSubcommand(config)
 
   shortSubcommandsHelp(true)
 

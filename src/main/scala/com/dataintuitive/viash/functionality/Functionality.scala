@@ -31,6 +31,7 @@ case class Functionality(
   description: Option[String] = None,
   function_type: Option[FunctionType] = None,
   tests: Option[List[Resource]] = None,
+  info: Map[String, String] = Map.empty[String, String],
 
   // dummy arguments are used for handling extra directory mounts in docker
   dummy_arguments: Option[List[DataObject[_]]] = None,

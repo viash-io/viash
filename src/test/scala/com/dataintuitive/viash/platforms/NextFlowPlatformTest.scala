@@ -5,8 +5,6 @@ import org.scalatest.FunSuite
 
 import scala.util.Try
 import com.dataintuitive.viash.platforms.NextFlowUtils._
-import com.dataintuitive.viash.config.Config
-import com.dataintuitive.viash.functionality.Functionality
 
 class NextFlowPlatformTest extends FunSuite {
 

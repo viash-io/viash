@@ -28,8 +28,16 @@ object BashWrapper {
     str.replaceAll("([\\\\$`])", "\\\\$1")
   }
 
-  def escapeViash(str: String): String = {
-    escape(str)
+  def escapeViash(str: String, escapeQuotes: Boolean = false): String = {
+    val escQuo =
+      if (escapeQuotes) {
+        (s: String) => s.replaceAll("\"", "\\\"")
+      } else {
+        (s: String) => s
+      }
+
+    escQuo(escape(str))
+      .replaceAll("\"", "\\\"")
       .replaceAll("\\\\\\$VIASH_DOLLAR\\\\\\$", "\\$")
       .replaceAll("\\\\\\$VIASH_", "\\$VIASH_")
       .replaceAll("\\\\\\$\\{VIASH_", "\\${VIASH_")
@@ -194,8 +202,12 @@ object BashWrapper {
        |            $var_exec_mode="setup"
        |            shift 1
        |            ;;
+       |        ---push)
+       |            $var_exec_mode="push"
+       |            shift 1
+       |            ;;
        |${allMods.parsers}
-       |        *)    # positional arg or unknown option
+       |        *)  # positional arg or unknown option
        |            # since the positional args will be eval'd, can we always quote, instead of using ViashQuote
        |            VIASH_POSITIONAL_ARGS="$$VIASH_POSITIONAL_ARGS '$$1'"
        |            shift # past argument
@@ -205,6 +217,11 @@ object BashWrapper {
        |
        |if [ "$$$var_exec_mode" == "setup" ]; then
        |  ViashSetup
+       |  exit 0
+       |fi
+       |
+       |if [ "$$$var_exec_mode" == "push" ]; then
+       |  ViashPush
        |  exit 0
        |fi
        |
@@ -256,7 +273,7 @@ object BashWrapper {
 
       val part1 = "    " + exampleStrs.mkString(", ")
       val part2 = "        " + properties.mkString(", ")
-      val part3 = param.description.toList.flatMap(escapeViash(_).split("\n")).map("        " + _)
+      val part3 = param.description.toList.flatMap(escapeViash(_, escapeQuotes = true).split("\n")).map("        " + _)
 
       (part1 :: part2 :: part3 ::: List("")).map("    echo \"" + _ + "\"").mkString("\n")
     })
@@ -266,7 +283,7 @@ object BashWrapper {
     val preParse =
       s"""# ViashHelp: Display helpful explanation about this executable
       |function ViashHelp {
-      |   echo "${escapeViash(functionality.description.getOrElse("").stripLineEnd)}"
+      |   echo "${escapeViash(functionality.description.getOrElse("").stripLineEnd, escapeQuotes = true)}"
       |   echo
       |   echo "Options:"
       |${usageStrs.mkString("\n")}
@@ -356,7 +373,7 @@ object BashWrapper {
 
       default.map(default => {
         s"""if [ -z "$$${param.VIASH_PAR}" ]; then
-    |  ${param.VIASH_PAR}="${escapeViash(default.toString)}"
+    |  ${param.VIASH_PAR}="${escapeViash(default.toString, escapeQuotes = true)}"
     |fi""".stripMargin
       })
     }.mkString("\n")

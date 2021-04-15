@@ -2,15 +2,17 @@ obj = bin/viash
 VERSION = $(shell awk -F'\"' '/version :=/ { print $$2 }' build.sbt)
 
 $(obj): $(shell find src/ -name "*.scala")
-	sbt headerCreate
-	sbt 'set test in assembly := {}' 'set assemblyOutputPath in assembly := new File("target/viash.jar")' assembly
+	sbt headerCreate \
+	  'set test in assembly := {}' \
+	  'set assemblyOutputPath in assembly := new File("target/viash.jar")' \
+	  assembly
 	mkdir -p bin
 	cat src/stub.sh target/viash.jar > $(obj)
 	chmod +x $(obj)
 	@echo "==================================> $(obj)"
 	
 tools: $(obj) $(shell find src/viash)
-	bin/viash ns build -n viash -t bin
+	bin/viash ns build -s src/viash -t bin --flatten
 	@echo "==================================> tools"
 
 .PHONY: with-docker

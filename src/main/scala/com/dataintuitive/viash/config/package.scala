@@ -27,7 +27,6 @@ package object config {
 
   // encoders and decoders for Config
   implicit val encodeConfig: Encoder.AsObject[Config] = deriveConfiguredEncoder
-
   implicit val decodeConfig: Decoder[Config] = deriveConfiguredDecoder
 
   // encoder and decoder for version

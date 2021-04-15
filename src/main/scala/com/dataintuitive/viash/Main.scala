@@ -19,7 +19,6 @@ package com.dataintuitive.viash
 
 import java.nio.file.{Files, Path, Paths}
 import java.nio.file.attribute.BasicFileAttributes
-
 import config.Config
 import helpers.Scala._
 
@@ -53,7 +52,8 @@ object Main {
           output = cli.build.output(),
           printMeta = cli.build.printMeta(),
           writeMeta = cli.build.writeMeta(),
-          setup = cli.build.setup()
+          setup = cli.build.setup(),
+          push = cli.build.push()
         )
       case List(cli.test) =>
         val config = readConfig(cli.test, modifyFun = false)
@@ -64,8 +64,10 @@ object Main {
           configs = configs,
           target = cli.namespace.build.target(),
           setup = cli.namespace.build.setup(),
+          push = cli.namespace.build.push(),
           parallel = cli.namespace.build.parallel(),
-          writeMeta = cli.namespace.build.writeMeta()
+          writeMeta = cli.namespace.build.writeMeta(),
+          flatten = cli.namespace.build.flatten()
         )
       case List(cli.namespace, cli.namespace.test) =>
         val configs = readConfigs(cli.namespace.test, modifyFun = false)
@@ -74,9 +76,21 @@ object Main {
           parallel = cli.namespace.test.parallel(),
           keepFiles = cli.namespace.test.keep.toOption.map(_.toBoolean),
           tsv = cli.namespace.test.tsv.toOption,
+          append = cli.namespace.test.append()
         )
+      case List(cli.namespace, cli.namespace.list) =>
+        val configs = readConfigs(cli.namespace.test, modifyFun = false)
+        ViashNamespace.list(
+          configs = configs
+        )
+      case List(cli.config, cli.config.view) =>
+        val config = Config.readOnly(
+          configPath = cli.config.view.config(),
+          configMods = cli.config.view.config_mods()
+        )
+        ViashConfig.view(config)
       case _ =>
-        println("No subcommand was specified. See `viash --help` for more information.")
+        System.err.println("No subcommand was specified. See `viash --help` for more information.")
     }
   }
 
@@ -85,50 +99,67 @@ object Main {
     modifyFun: Boolean = true
   ): Config = {
     Config.read(
-      config = subcommand.config(),
+      configPath = subcommand.config(),
       platform = subcommand.platform.toOption | subcommand.platformid.toOption,
-      modifyFun = modifyFun
+      modifyFun = modifyFun,
+      configMods = subcommand.config_mods()
     )
   }
 
   def readConfigs(
     subcommand: ViashNs,
-    modifyFun: Boolean = true
+    modifyFun: Boolean = true,
   ): List[Config] = {
     val source = subcommand.src()
-    val namespace = subcommand.namespace.toOption
+    val query = subcommand.query.toOption
+    val queryNamespace = subcommand.query_namespace.toOption
+    val queryName = subcommand.query_name.toOption
     val sourceDir = Paths.get(source)
 
     // create regex for filtering platform ids
     val platformStr = (subcommand.platform.toOption | subcommand.platformid.toOption).getOrElse(".*")
 
-    // create regex for filtering by namespace
-    val namespaceMatch = {
-      namespace match {
-        case Some(ns) =>
-          val nsRegex = s"""^$source/$ns/.*""".r
-          (path: String) =>
-            nsRegex.findFirstIn(path).isDefined
-        case _ =>
-          (_: String) => true
-      }
-    }
-
     // find *.vsh.* files and parse as config
     val scriptFiles = find(sourceDir, (path, attrs) => {
       path.toString.contains(".vsh.") &&
-        attrs.isRegularFile &&
-        namespaceMatch(path.toString)
+        attrs.isRegularFile
     })
 
     scriptFiles.flatMap { file =>
       val conf1 =
         try {
           // first read config to get an idea of the available platforms
-          Some(Config.read(file.toString, modifyFun = false))
+          val confTest =
+            Config.read(file.toString, modifyFun = false, configMods = subcommand.config_mods())
+
+          val funName = confTest.functionality.name
+          val funNs = confTest.functionality.namespace
+
+          // does name & namespace match regex?
+          val queryTest = (query, funNs) match {
+            case (Some(regex), Some(ns)) => regex.r.findFirstIn(ns + "/" + funName).isDefined
+            case (Some(regex), None) => regex.r.findFirstIn(funName).isDefined
+            case (None, _) => true
+          }
+          val nameTest = queryName match {
+            case Some(regex) => regex.r.findFirstIn(funName).isDefined
+            case None => true
+          }
+          val namespaceTest = (queryNamespace, funNs) match {
+            case (Some(regex), Some(ns)) => regex.r.findFirstIn(ns).isDefined
+            case (Some(_), None) => false
+            case (None, _) => true
+          }
+
+          // if config passes regex checks, return it
+          if (queryTest && nameTest && namespaceTest) {
+            Some(confTest)
+          } else {
+            None
+          }
         } catch {
           case e: Exception => {
-            println(s"Reading file '$file' failed")
+            System.err.println(s"Reading file '$file' failed")
             None
           }
         }
@@ -136,16 +167,14 @@ object Main {
       if (conf1.isEmpty) {
         Nil
       } else {
-        // determine which namespace to use
-        val _namespace = getNamespace(namespace, file)
 
         if (platformStr.contains(":") || (new File(platformStr)).exists) {
           // platform is a file
           List(Config.read(
-            config = file.toString,
+            configPath = file.toString,
             platform = Some(platformStr),
-            namespace = _namespace,
-            modifyFun = modifyFun
+            modifyFun = modifyFun,
+            configMods = subcommand.config_mods()
           ))
         } else {
           // platform is a regex for filtering the ids
@@ -162,10 +191,10 @@ object Main {
 
           filteredPlats.map { plat =>
             Config.read(
-              config = file.toString,
+              configPath = file.toString,
               platform = plat,
-              namespace = _namespace,
-              modifyFun = modifyFun
+              modifyFun = modifyFun,
+              configMods = subcommand.config_mods()
             )
           }
         }
@@ -179,21 +208,5 @@ object Main {
   def find(sourceDir: Path, filter: (Path, BasicFileAttributes) => Boolean): List[Path] = {
     val it = Files.find(sourceDir, Integer.MAX_VALUE, (p, b) => filter(p, b)).iterator()
     JavaConverters.asScalaIterator(it).toList
-  }
-
-  /**
-   * Given a Path to a viash config file (functionality.yaml / *.vsh.yaml),
-   * extract an implicit namespace if appropriate.
-   */
-  private def getNamespace(namespace: Option[String], file: Path): Option[String] = {
-    if (namespace.isDefined) {
-      namespace
-    } else {
-      val parentDir = file.toString.split("/").dropRight(2).lastOption.getOrElse("src")
-      if (parentDir != "src")
-        Some(parentDir)
-      else
-        None
-    }
   }
 }
