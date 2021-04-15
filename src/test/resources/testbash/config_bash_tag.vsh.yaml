@@ -19,7 +19,7 @@ platforms:
   - id: "testtargetimage1"
     type: docker
     image: "bash:5.0"
-    setup: 
+    setup:
       - type: docker
         run: [ ls ]
   - id: "testtargetimage2"
@@ -27,8 +27,8 @@ platforms:
     image: "bash:5.0"
     target_image: bar
     target_registry: foo.io
-    version: 0.0.1
-    setup: 
+    target_tag: 0.0.1
+    setup:
       - type: docker
         run: [ ls ]
   - id: "testtargetimage3"
@@ -36,7 +36,7 @@ platforms:
     image: "bash:3.2"
     target_image: bar
     target_tag: 0.0.2
-    setup: 
+    setup:
       - type: docker
         run: [ ls ]
 

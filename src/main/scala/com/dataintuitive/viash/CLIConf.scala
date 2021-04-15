@@ -210,7 +210,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |Test the component using the tests defined in the viash config file.
          |
          |Usage:
-         |  viash test config.vsh.yaml [-p docker [-k true/false]
+         |  viash test config.vsh.yaml [-p docker] [-k true/false]
          |
          |Arguments:""".stripMargin)
 

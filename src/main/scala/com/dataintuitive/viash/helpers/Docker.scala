@@ -19,30 +19,54 @@ package com.dataintuitive.viash.helpers
 
 import com.dataintuitive.viash.functionality.Functionality
 
-case class DockerImageInfo(name: String, tag: Option[String] = None, registry: Option[String] = None) {
-  override def toString = {
+case class DockerImageInfo(name: String, tag: String, registry: Option[String] = None) {
+  override def toString: String = {
     registry.map(_ + "/").getOrElse("") +
-      name + ":" +
-      tag.getOrElse("latest")
+      name + ":" + tag
   }
 }
 
 object Docker {
+  private val TagRegex = "^(.*):(.*)$".r
+
   def getImageInfo(
-    fun: Functionality,
-    customName: Option[String] = None,
-    customNamespace: Option[String] = None,
-    customRegistry: Option[String] = None,
-    customVersion: Option[String] = None
-  ) = {
-    val name =
-      (customNamespace orElse fun.namespace).map(_ + "/").getOrElse("") +
-        customName.getOrElse(fun.name)
+    functionality: Option[Functionality] = None,
+    name: Option[String] = None,
+    registry: Option[String] = None,
+    tag: Option[String] = None,
+    namespaceSeparator: String
+  ): DockerImageInfo = {
+
+    // If the image name contains a tag, use it
+    val (derivedName, derivedTag) = name match {
+      case Some(TagRegex(dName, dTag)) => (Some(dName), Some(dTag))
+      case _ => (None, None)
+    }
+
+    val actualName = {
+      derivedName
+    } orElse {
+      name
+    } orElse {
+      functionality.flatMap(fun => fun.namespace.map(_ + namespaceSeparator + fun.name))
+    } orElse {
+      functionality.map(fun => fun.name)
+    }
+
+    val actualTag = {
+      derivedTag
+    } orElse {
+      tag
+    } orElse {
+      functionality.flatMap(fun => fun.version.map(_.toString))
+    } orElse {
+      Some("latest")
+    }
 
     DockerImageInfo(
-      name = name,
-      tag = (customVersion orElse fun.version.map(_.toString)),
-      registry = customRegistry
+      name = actualName.get,
+      tag = actualTag.get,
+      registry = registry
     )
   }
 }

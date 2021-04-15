@@ -29,10 +29,12 @@ import com.dataintuitive.viash.platforms.docker._
 case class DockerPlatform(
   id: String = "docker",
   image: String,
-  version: Option[Version] = None,
+  registry: Option[String] = None,
+  tag: Option[Version] = None,
   target_image: Option[String] = None,
   target_registry: Option[String] = None,
   target_tag: Option[Version] = None,
+  namespace_separator: String = "_",
   resolve_volume: DockerResolveVolume = Automatic,
   chown: Boolean = true,
   port: Option[List[String]] = None,
@@ -46,19 +48,33 @@ case class DockerPlatform(
   apt: Option[AptRequirements] = None,
   r: Option[RRequirements] = None,
   python: Option[PythonRequirements] = None,
-  docker: Option[DockerRequirements] = None
+  docker: Option[DockerRequirements] = None,
+
+  // deprecated
+  version: Option[Version] = None
 ) extends Platform {
   val `type` = "docker"
 
-  assert(version.isEmpty || target_tag.isEmpty, "docker platform: version and target_tag should not both be defined")
+  assert(version.isEmpty, "docker platform: attribute 'version' is deprecated")
 
-  val requirements: List[Requirements] =
-    setup :::
-      apk.toList :::
-      apt.toList :::
-      r.toList :::
-      python.toList :::
-      docker.toList
+  val requirements: List[Requirements] = {
+    val x =
+      setup :::
+        apk.toList :::
+        apt.toList :::
+        r.toList :::
+        python.toList :::
+        docker.toList
+    // workaround for making sure that every docker platform creates a new container
+    if (x.isEmpty) {
+      List(DockerRequirements(
+        run = List(":")
+      ))
+    } else {
+      x
+    }
+  }
+
 
   def modifyFunctionality(functionality: Functionality): Functionality = {
     // collect docker args
@@ -115,20 +131,27 @@ case class DockerPlatform(
     // get dependencies
     val runCommands = requirements.flatMap(_.dockerCommands)
 
+    // don't draw defaults from functionality for the from image
+    val fromImageInfo = Docker.getImageInfo(
+      name = Some(image),
+      registry = registry,
+      tag = tag.map(_.toString),
+      namespaceSeparator = namespace_separator
+    )
+    val targetImageInfo = Docker.getImageInfo(
+      functionality = Some(functionality),
+      registry = target_registry,
+      name = target_image,
+      tag = target_tag.map(_.toString),
+      namespaceSeparator = namespace_separator
+    )
+
     // if there are no requirements, simply use the specified image
     val effectiveID =
       if (runCommands.isEmpty) {
-        image
+        fromImageInfo.toString
       } else {
-        // get image info
-        val imageInfo = Docker.getImageInfo(
-          functionality,
-          customRegistry = target_registry,
-          customName = target_image,
-          customVersion = (version orElse target_tag).map(_.toString)
-        )
-
-        imageInfo.toString
+        targetImageInfo.toString
       }
 
     // if no extra dependencies are needed, the provided image can just be used,
@@ -138,7 +161,7 @@ case class DockerPlatform(
         ("  :", "  ViashDockerPull $1")
       } else {
         val dockerFile =
-          s"FROM $image\n\n" +
+          s"FROM ${fromImageInfo.toString}\n\n" +
             runCommands.mkString("\n")
 
         val dockerRequirements =

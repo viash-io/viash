@@ -17,6 +17,10 @@ fi
 out_dir="$par_src/$par_namespace/$par_name"
 mkdir -p "$out_dir"
 
+##################################################################################
+###                                FUNCTIONALITY                               ###
+##################################################################################
+
 # write header
 cat > "$out_dir/config.vsh.yaml" << HERE
 functionality:
@@ -53,7 +57,9 @@ cat >> "$out_dir/config.vsh.yaml" << HERE
       default: "default-"
 HERE
 
-# write resources
+##################################################################################
+###                                 BASH SCRIPTS                               ###
+##################################################################################
 if [ $script_lang == "bash" ]; then
 cat >> "$out_dir/config.vsh.yaml" << HERE
   resources:
@@ -63,9 +69,61 @@ cat >> "$out_dir/config.vsh.yaml" << HERE
     - type: bash_script
       path: test.sh
 HERE
-  cp "$resources_dir/template_script.sh" "$out_dir/script.sh"
-  cat "$resources_dir/template_test.sh" | sed "s#EXECUTABLE#$par_name#" > "$out_dir/test.sh"
 
+cat >> "$out_dir/script.sh" << 'HERE'
+#!/bin/bash
+
+echo "This is a skeleton component"
+echo "The arguments are:"
+echo " - input:  $par_input"
+echo " - output: $par_output"
+echo " - option: $par_option"
+echo
+
+echo "Writing output file"
+cat "$par_input" | sed "s#.*#$par_option-&#" > "$par_output"
+HERE
+
+cat >> "$out_dir/test.sh" << MAJORHERE
+#!/bin/bash
+
+set -ex
+
+echo ">>> Creating dummy input file"
+cat > input.txt << HERE
+one
+two
+three
+HERE
+
+echo ">>> Running executable"
+./$par_name --input input.txt --output output.txt --option FOO
+
+echo ">>> Checking whether output file exists"
+[[ ! -f output.txt ]] && echo "Output file could not be found!" && exit 1
+
+# create expected output file
+cat > expected_output.txt << HERE
+FOO-one
+FOO-two
+FOO-three
+HERE
+
+echo ">>> Checking whether content matches expected content"
+diff output.txt expected_output.txt
+[ \$? -ne 0 ] && echo "Output file did not equal expected output" && exit 1
+
+# print final message
+echo ">>> Test finished successfully"
+
+# do not remove this
+# as otherwise your test might exit with a different exit code
+exit 0
+MAJORHERE
+
+##################################################################################
+###                                 RLANG SCRIPTS                              ###
+##################################################################################
 elif [ $script_lang == "r" ]; then
 cat >> "$out_dir/config.vsh.yaml" << HERE
   resources:
@@ -75,9 +133,48 @@ cat >> "$out_dir/config.vsh.yaml" << HERE
     - type: r_script
       path: test.R
 HERE
-  cp "$resources_dir/template_script.R" "$out_dir/script.R"
-  cat "$resources_dir/template_test.R" | sed "s#EXECUTABLE#$par_name#" > "$out_dir/test.R"
+cat >> "$out_dir/script.R" << 'HERE'
+cat("This is a skeleton component\n")
+cat("The arguments are:\n")
+cat(" - input: ", par$input, "\n", sep = "")
+cat(" - output: ", par$output, "\n", sep = "")
+cat(" - option: ", par$option, "\n", sep = "")
+cat("\n")
 
+cat("Reading input file\n")
+lines <- readLines(par$input)
+
+cat("Running output algorithm\n")
+new_lines <- paste0(par$option, "-", lines)
+
+cat("Writing output file\n")
+writeLines(new_lines, con = par$output)
+HERE
+
+cat >> "$out_dir/test.R" << HERE
+library(testthat)
+
+# create dummy input file
+old_lines <- c("one", "two", "three")
+writeLines(old_lines, "input.txt")
+
+# run executable
+system("./$par_name --input input.txt --output output.txt --option FOO")
+
+# check whether output file exists
+expect_true(file.exists("output.txt"))
+
+# check whether content matches expected content
+expected_lines <- c("FOO-one", "FOO-two", "FOO-three")
+new_lines <- readLines("output.txt")
+expect_equal(new_lines, expected_lines)
+
+cat(">>> Test finished successfully!")
+HERE
+
+##################################################################################
+###                                PYTHON SCRIPTS                              ###
+##################################################################################
 elif [ $script_lang == "python" ]; then
 cat >> "$out_dir/config.vsh.yaml" << HERE
   resources:
@@ -87,10 +184,55 @@ cat >> "$out_dir/config.vsh.yaml" << HERE
     - type: python_script
       path: test.py
 HERE
-  cp "$resources_dir/template_script.py" "$out_dir/script.py"
-  cat "$resources_dir/template_test.py" | sed "s#EXECUTABLE#$par_name#" > "$out_dir/test.py"
+
+cat >> "$out_dir/script.py" << 'HERE'
+print("This is a skeleton component")
+print("The arguments are:")
+print(" - input: ", par["input"])
+print(" - output: ", par["output"])
+print(" - option: ", par["option"])
+print("")
+
+
+with open(par["input"], "r") as reader, open(par["output"], "w") as writer:
+    lines = reader.readlines()
+    
+    new_lines = [par["option"] + x for x in lines]
+    
+    writer.writelines(new_lines)
+HERE
+
+cat >> "$out_dir/test.py" << HERE
+import unittest
+import os
+from os import path
+import subprocess
+
+
+with open("input.txt", "w") as writer:
+    writer.writelines(["one\n", "two\n", "three\n"])
+
+
+class MyTest(unittest.TestCase):
+    def test_component(self):
+        out = subprocess.check_output(["./$par_name", "--input", "input.txt", "--output", "output.txt", "--option", "FOO-"]).decode("utf-8")
+
+        self.assertTrue(path.exists("output.txt"))
+        
+        with open("output.txt", "r") as reader:
+            lines = reader.readlines()
+        
+        self.assertEqual(lines, ["FOO-one\n", "FOO-two\n", "FOO-three\n"])
+    
+        
+unittest.main()
+HERE
+
 fi
 
+##################################################################################
+###                                  PLATFORMS                                 ###
+##################################################################################
 # write platforms
 cat >> "$out_dir/config.vsh.yaml" << HERE
 platforms:

@@ -35,18 +35,6 @@ functionality:
   resources:
     - type: bash_script
       path: script.sh
-    - type: file
-      path: template_script.sh
-    - type: file
-      path: template_test.sh
-    - type: file
-      path: template_script.R
-    - type: file
-      path: template_test.R
-    - type: file
-      path: template_script.py
-    - type: file
-      path: template_test.py
   tests:
     - type: bash_script
       path: test.sh
