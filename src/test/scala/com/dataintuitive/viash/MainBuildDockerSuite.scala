@@ -220,14 +220,15 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     val stdout = Exec.run(Seq(executableBashTagFile.toString))
     assert(stdout.contains("GNU bash, version 5.0"))
 
-    // check whether script is using the expected docker image
-    val contentSource = Source.fromFile(executableBashTagFile)
-    val content = try {
-      contentSource.getLines().toList
-    } finally {
-      contentSource.close()
-    }
-    assert(content.exists(_.matches("cat << VIASHEOF \\| eval docker run .* bash:5\\.0")))
+    // check whether the internal docker is correct
+    val dockerout = Exec.run(Seq(executableBashTagFile.toString, "---dockerfile"))
+    // we expect something basic like
+    // FROM bash:5.0
+    //
+    // RUN :
+    // Allow for extra spaces just in case the format changes slightly format-wise but without functional differences
+    val regex = """^FROM bash:5\.0[\r\n\s]*RUN\s+:\s*$""".r
+    assert(regex.findFirstIn(dockerout).isDefined, regex.toString)
   }
 
   test("Get tagged version of a docker image for bash 3.2", DockerTest) {
@@ -252,14 +253,15 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     val stdout = Exec.run(Seq(executableBashTagFile.toString))
     assert(stdout.contains("GNU bash, version 3.2"))
 
-    // check whether script is using the expected docker image
-    val contentSource = Source.fromFile(executableBashTagFile)
-    val content = try {
-      contentSource.getLines().toList
-    } finally {
-      contentSource.close()
-    }
-    assert(content.exists(_.matches("cat << VIASHEOF \\| eval docker run .* bash:3\\.2")))
+    // check whether the internal docker is correct
+    val dockerout = Exec.run(Seq(executableBashTagFile.toString, "---dockerfile"))
+    // we expect something basic like
+    // FROM bash:3.2
+    //
+    // RUN :
+    // Allow for extra spaces just in case the format changes slightly format-wise but without functional differences
+    val regex = """^FROM bash:3\.2[\r\n\s]*RUN\s+:\s*$""".r
+    assert(regex.findFirstIn(dockerout).isDefined, regex.toString)
   }
 
   test("Check whether target image name is well formed without target_image, version or registry", DockerTest) {
