@@ -36,7 +36,7 @@ case class RRequirements(
 
   def installCommands: List[String] = {
     val installRemotes =
-      if ((cran ::: git ::: github ::: gitlab ::: bitbucket ::: svn ::: url).nonEmpty) {
+      if ((packages ::: cran ::: git ::: github ::: gitlab ::: bitbucket ::: svn ::: url).nonEmpty) {
         List("""Rscript -e 'if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")'""")
       } else {
         Nil
