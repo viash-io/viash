@@ -548,13 +548,13 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   //<editor-fold desc="Test benches to check building with or without --setup flag">
   test("viash without --setup doesn't create docker during build", DockerTest) {
     //remove docker if it exists
-    removeDockerImage("hello-world")
-    assert(!checkDockerImageExists("hello-world"))
+    removeDockerImage("busybox")
+    assert(!checkDockerImageExists("busybox"))
 
     // build viash wrapper without --setup
     TestHelper.testMain(Array(
       "build",
-      "-p", "hello-world",
+      "-p", "busybox",
       "-o", tempFolStr,
       configFile
     ))
@@ -563,7 +563,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     // verify docker still doesn't exist
-    assert(!checkDockerImageExists("hello-world"))
+    assert(!checkDockerImageExists("busybox"))
 
     // run viash wrapper with ---setup
     val out = Exec.run2(
@@ -572,18 +572,18 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(out.exitValue == 0)
 
     // verify docker now exists
-    assert(checkDockerImageExists("hello-world"))
+    assert(checkDockerImageExists("busybox"))
   }
 
   test("viash with --setup creates docker during build", DockerTest) {
     // remove docker if it exists
-    removeDockerImage("hello-world")
-    assert(!checkDockerImageExists("hello-world"))
+    removeDockerImage("busybox")
+    assert(!checkDockerImageExists("busybox"))
 
     // build viash wrapper with --setup
     TestHelper.testMain(Array(
       "build",
-      "-p", "hello-world",
+      "-p", "busybox",
       "-o", tempFolStr,
       "--setup",
       configFile
@@ -593,7 +593,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     // verify docker exists
-    assert(checkDockerImageExists("hello-world"))
+    assert(checkDockerImageExists("busybox"))
   }
   //</editor-fold>
   //<editor-fold desc="Test benches to check additional installation of required packages">
