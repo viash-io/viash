@@ -1,3 +1,15 @@
+# viash 0.4.1
+
+## MINOR CHANGES
+
+* `Docker Platform`: Added `privileged` argument, allowing to run docker with the `--privileged` flag.
+
+* `Docker Requirements`: Allow specifying environment variables in the Dockerfile.
+
+## BUG FIXES
+
+* `Docker R Requirements`: Install `remotes` when using `{ type: r, packages: [ foo ] }`.
+
 # viash 0.4.0 (2021-04-14)
 
 ## NEW FEATURES

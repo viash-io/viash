@@ -41,6 +41,7 @@ case class DockerPlatform(
   workdir: Option[String] = None,
   setup_strategy: DockerSetupStrategy = AlwaysCachedBuild,
   push_strategy: DockerPushStrategy = PushIfNotPresent,
+  privileged: Boolean = false,
 
   // setup variables
   setup: List[Requirements] = Nil,
@@ -80,6 +81,8 @@ case class DockerPlatform(
     // collect docker args
     val dockerArgs = "-i --rm" + {
       port.getOrElse(Nil).map(" -p " + _).mkString("")
+    } + {
+      if (privileged) " --privileged" else ""
     }
 
     // create setup
