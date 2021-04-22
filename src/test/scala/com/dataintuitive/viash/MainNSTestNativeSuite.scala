@@ -30,13 +30,13 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
     for (component ← components) {
       for ((step, resultPattern) ← steps) {
         val regex = s"""testns\\s*$component\\s*native\\s*$step$resultPattern""".r
-        assert(regex.findFirstIn(testText).isDefined, regex.toString)
+        assert(regex.findFirstIn(testText).isDefined, s"-->${regex.toString}<-->$testText<--")
       }
     }
 
     // Check for the one failing test of ns_divide
     val regexFail = s"""testns\\s*ns_divide\\s*native\\s*test_div0\\.sh\\s*1\\s*0\\s*ERROR""".r
-    assert(regexFail.findFirstIn(testText).isDefined, regexFail.toString)
+    assert(regexFail.findFirstIn(testText).isDefined, s"-->${regexFail.toString}<-->$testText<--")
   }
 
 }
