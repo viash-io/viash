@@ -1,5 +1,9 @@
 # viash 0.4.1
 
+## MAJOR CHANGES
+
+* [NXF] An argument can be either `required` or not and can have a `default: ...` value or not. This version changes the handling logic for these 4 combinations and improves the overall ability to override parameters from the CLI/pipeline. Please refer to the [documentation](http://www.data-intuitive.com/viash_docs/config/platform-nextflow/#access-arguments-from-the-nextflow-cli-v041).
+
 ## MINOR CHANGES
 
 * `Docker Platform`: Added `privileged` argument, allowing to run docker with the `--privileged` flag.
