@@ -26,6 +26,12 @@ if [ -z "$par_viash" ]; then
   par_viash="viash"
 fi
 
+
+# if specified, use par_max_threads as a java argument
+if [ ! -z "$par_max_threads" ]; then
+  export JAVA_ARGS="$JAVA_ARGS -Dscala.concurrent.context.maxThreads=$par_max_threads"
+fi
+
 if [[ $par_force == true ]]; then
   echo "Force push... handle with care..."
   if [ "$par_mode" == "development" ]; then

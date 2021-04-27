@@ -45,6 +45,9 @@ functionality:
     default: "_"
     type: string
     description: The separator to use between the component name and namespace as the image name of a Docker container.
+  - name: "--max_threads"
+    type: integer
+    description: The maximum number of threads viash will use when `--parallell` during parallel tasks.
   - name: "--no_cache"
     alternatives: [ "-nc", "--no-cache" ]
     type: boolean_true
