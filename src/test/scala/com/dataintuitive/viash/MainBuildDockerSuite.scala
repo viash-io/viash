@@ -220,14 +220,15 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     val stdout = Exec.run(Seq(executableBashTagFile.toString))
     assert(stdout.contains("GNU bash, version 5.0"))
 
-    // check whether script is using the expected docker image
-    val contentSource = Source.fromFile(executableBashTagFile)
-    val content = try {
-      contentSource.getLines().toList
-    } finally {
-      contentSource.close()
-    }
-    assert(content.exists(_.matches("cat << VIASHEOF \\| eval docker run .* bash:5\\.0")))
+    // check whether the internal docker is correct
+    val dockerout = Exec.run(Seq(executableBashTagFile.toString, "---dockerfile"))
+    // we expect something basic like
+    // FROM bash:5.0
+    //
+    // RUN :
+    // Allow for extra spaces just in case the format changes slightly format-wise but without functional differences
+    val regex = """^FROM bash:5\.0[\r\n\s]*RUN\s+:\s*$""".r
+    assert(regex.findFirstIn(dockerout).isDefined, regex.toString)
   }
 
   test("Get tagged version of a docker image for bash 3.2", DockerTest) {
@@ -252,14 +253,15 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     val stdout = Exec.run(Seq(executableBashTagFile.toString))
     assert(stdout.contains("GNU bash, version 3.2"))
 
-    // check whether script is using the expected docker image
-    val contentSource = Source.fromFile(executableBashTagFile)
-    val content = try {
-      contentSource.getLines().toList
-    } finally {
-      contentSource.close()
-    }
-    assert(content.exists(_.matches("cat << VIASHEOF \\| eval docker run .* bash:3\\.2")))
+    // check whether the internal docker is correct
+    val dockerout = Exec.run(Seq(executableBashTagFile.toString, "---dockerfile"))
+    // we expect something basic like
+    // FROM bash:3.2
+    //
+    // RUN :
+    // Allow for extra spaces just in case the format changes slightly format-wise but without functional differences
+    val regex = """^FROM bash:3\.2[\r\n\s]*RUN\s+:\s*$""".r
+    assert(regex.findFirstIn(dockerout).isDefined, regex.toString)
   }
 
   test("Check whether target image name is well formed without target_image, version or registry", DockerTest) {
@@ -546,13 +548,13 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   //<editor-fold desc="Test benches to check building with or without --setup flag">
   test("viash without --setup doesn't create docker during build", DockerTest) {
     //remove docker if it exists
-    removeDockerImage("hello-world")
-    assert(!checkDockerImageExists("hello-world"))
+    removeDockerImage("busybox")
+    assert(!checkDockerImageExists("busybox"))
 
     // build viash wrapper without --setup
     TestHelper.testMain(Array(
       "build",
-      "-p", "hello-world",
+      "-p", "busybox",
       "-o", tempFolStr,
       configFile
     ))
@@ -561,7 +563,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     // verify docker still doesn't exist
-    assert(!checkDockerImageExists("hello-world"))
+    assert(!checkDockerImageExists("busybox"))
 
     // run viash wrapper with ---setup
     val out = Exec.run2(
@@ -570,18 +572,18 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(out.exitValue == 0)
 
     // verify docker now exists
-    assert(checkDockerImageExists("hello-world"))
+    assert(checkDockerImageExists("busybox"))
   }
 
   test("viash with --setup creates docker during build", DockerTest) {
     // remove docker if it exists
-    removeDockerImage("hello-world")
-    assert(!checkDockerImageExists("hello-world"))
+    removeDockerImage("busybox")
+    assert(!checkDockerImageExists("busybox"))
 
     // build viash wrapper with --setup
     TestHelper.testMain(Array(
       "build",
-      "-p", "hello-world",
+      "-p", "busybox",
       "-o", tempFolStr,
       "--setup",
       configFile
@@ -591,7 +593,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     // verify docker exists
-    assert(checkDockerImageExists("hello-world"))
+    assert(checkDockerImageExists("busybox"))
   }
   //</editor-fold>
   //<editor-fold desc="Test benches to check additional installation of required packages">

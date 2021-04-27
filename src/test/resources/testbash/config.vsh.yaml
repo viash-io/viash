@@ -80,8 +80,8 @@ platforms:
   - type: docker
     image: "bash:3.2"
   - type: docker
-    image: "hello-world"
-    id: "hello-world"
+    image: "busybox"
+    id: "busybox"
   - type: nextflow
     image: ubuntu
     publish: true
