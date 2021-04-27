@@ -91,13 +91,33 @@ case class NextFlowPlatform(
     // identifier. A "__" is used to separate namespace and arg/option.
 
     val namespacedParameters: List[ConfigTuple] = {
-      functionality.arguments.map { dataObject =>
-        namespacedValueTuple(
-          dataObject.plainName.replace("-", "_"),
-          dataObject.default.map(_.toString).getOrElse("value_not_found")
-        )(fun)
-      }
-      // TODO: add containerRegistry and containerTag here
+      functionality.arguments.flatMap { dataObject => (dataObject.required, dataObject.default) match {
+        case (true, Some(x)) =>
+          Some(
+            namespacedValueTuple(
+              dataObject.plainName.replace("-", "_"),
+              x.toString
+            )(fun)
+          )
+        case (true, None) =>
+          println(">>> Warning: " + dataObject.plainName + " is set to be required, but has no default value.")
+          println(">>>          This will cause issues with NextFlow if this parameter is not provided explicitly.")
+          None
+        case (false, Some(x)) =>
+          Some(
+            namespacedValueTuple(
+              dataObject.plainName.replace("-", "_"),
+              x.toString
+            )(fun)
+          )
+        case (false, None) =>
+          Some(
+            namespacedValueTuple(
+              dataObject.plainName.replace("-", "_"),
+              "no_default_value_configured"
+            )(fun)
+          )
+      }}
     }
 
     val argumentsAsTuple: List[ConfigTuple] =
@@ -634,7 +654,7 @@ object NextFlowUtils {
     def valuePointer(key: String): String =
       s"$${params.${fun.name}__$key}"
 
-    def valueOrPointer(str: String): String = {
+    val valueOrPointer: String = {
       valuePointer(dataObject.plainName.replace("-", "_"))
     }
 
@@ -646,12 +666,11 @@ object NextFlowUtils {
       tupleToConfigTuple("direction" → dataObject.direction.toString) ::
       tupleToConfigTuple("multiple" → dataObject.multiple) ::
       tupleToConfigTuple("multiple_sep" -> dataObject.multiple_sep) ::
+      tupleToConfigTuple("value" → valueOrPointer) ::
       dataObject.default
         .map(x => List(tupleToConfigTuple("dflt" -> x.toString))).getOrElse(Nil) :::
       dataObject.description
-        .map(x => List(tupleToConfigTuple("description" → x.toString))).getOrElse(Nil) :::
-      dataObject.default
-        .map(x => List(tupleToConfigTuple("value" → valueOrPointer(x.toString)))).getOrElse(Nil)
+        .map(x => List(tupleToConfigTuple("description" → x.toString))).getOrElse(Nil)
       )
   }
 }
