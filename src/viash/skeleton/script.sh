@@ -208,24 +208,22 @@ import os
 from os import path
 import subprocess
 
-
+print(">> Writing test file")
 with open("input.txt", "w") as writer:
     writer.writelines(["one\n", "two\n", "three\n"])
 
+print(">> Running component")
+out = subprocess.check_output(["./$par_name", "--input", "input.txt", "--output", "output.txt", "--option", "FOO-"]).decode("utf-8")
 
-class MyTest(unittest.TestCase):
-    def test_component(self):
-        out = subprocess.check_output(["./$par_name", "--input", "input.txt", "--output", "output.txt", "--option", "FOO-"]).decode("utf-8")
+print(">> Checking whether output file exists")
+assert path.exists("output.txt")
 
-        self.assertTrue(path.exists("output.txt"))
-        
-        with open("output.txt", "r") as reader:
-            lines = reader.readlines()
-        
-        self.assertEqual(lines, ["FOO-one\n", "FOO-two\n", "FOO-three\n"])
-    
-        
-unittest.main()
+print(">> Checking contents of output file")
+with open("output.txt", "r") as reader:
+    lines = reader.readlines()
+assert lines == ["FOO-one\n", "FOO-two\n", "FOO-three\n"]
+
+print(">> All tests succeeded successfully!")
 HERE
 
 fi
