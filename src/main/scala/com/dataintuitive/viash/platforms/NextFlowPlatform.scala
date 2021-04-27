@@ -223,7 +223,7 @@ case class NextFlowPlatform(
         |      ? "\\'" + it.value + "\\'"
         |      : (it.type == "boolean_true")
         |        ? it.otype + it.name
-        |        : (it.value == "")
+        |        : (it.value == "no_default_value_configured")
         |          ? ""
         |          : it.otype + it.name + " \\'" + ((it.value in List && it.multiple) ? it.value.join(it.multiple_sep): it.value) + "\\'"
         |  }
