@@ -37,6 +37,7 @@ if [ "$par_mode" == "development" ]; then
     -c '.functionality.version := "dev"' \
     -c '.platforms[.type == "docker"].setup_strategy := "donothing"' \
     -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
+    -c "$par_config_mod" \
     -l \
     -t "$par_log" \
     $par_append_parsed
@@ -52,6 +53,7 @@ elif [ "$par_mode" == "integration" ]; then
     -c '.platforms[.type == "docker"].setup_strategy := "donothing"' \
     -c '.platforms[.type == "nextflow"].registry := "'"$par_registry"'"' \
     -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
+    -c "$par_config_mod" \
     -l \
     -t "$par_log" \
     $par_append_parsed
@@ -71,6 +73,7 @@ elif [ "$par_mode" == "release" ]; then
     -c '.platforms[.type == "docker"].setup_strategy := "pull"' \
     -c '.platforms[.type == "nextflow"].registry := "'"$par_registry"'"' \
     -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
+    -c "$par_config_mod" \
     -l \
     -t "$par_log" \
     $par_append_parsed
