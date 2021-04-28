@@ -53,6 +53,13 @@ case class Add(value: Json) extends CommandExp {
     }
   }
 }
+case class Prepend(value: Json) extends CommandExp {
+  def command(cursor: ACursor): ACursor = {
+    cursor.withFocus{js =>
+      Json.fromValues(Array(value) ++ js.asArray.get) // TODO: will error if get fails
+    }
+  }
+}
 
 
 // define values

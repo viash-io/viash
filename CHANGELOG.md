@@ -6,6 +6,8 @@
 
 * `Docker Requirements`: Allow specifying environment variables in the Dockerfile.
 
+* Config modding: Added a `+0=` operator to prepend items to a list.
+
 ## BUG FIXES
 
 * `Docker R Requirements`: Install `remotes` when using `{ type: r, packages: [ foo ] }`.

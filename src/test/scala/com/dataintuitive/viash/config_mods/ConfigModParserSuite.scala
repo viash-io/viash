@@ -1,5 +1,6 @@
 package com.dataintuitive.viash.config_mods
 
+import io.circe.Json
 import org.scalatest.FunSuite
 import io.circe.syntax._
 
@@ -105,6 +106,42 @@ class ConfigModParserSuite extends FunSuite {
       )
     ))
     val command = """.x[true && (false || false)] := "x""""
+    val result = ConfigModParser.parseBlock(command)
+    assert(result == expected)
+  }
+
+  test("add command") {
+    val expected = ConfigMods(List(
+      ConfigMod(
+        Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("id"))),
+        Add("test".asJson)
+      )
+    ))
+    val command = """.platforms[.type == "native"].id += "test""""
+    val result = ConfigModParser.parseBlock(command)
+    assert(result == expected)
+  }
+
+  test("add command with complex json") {
+    val expected = ConfigMods(List(
+      ConfigMod(
+        Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
+        Add(Json.fromFields(List(("type", "docker".asJson))))
+      )
+    ))
+    val command = """.platforms[.type == "native"].setup += { type: "docker" }"""
+    val result = ConfigModParser.parseBlock(command)
+    assert(result == expected)
+  }
+
+  test("prepend command") {
+    val expected = ConfigMods(List(
+      ConfigMod(
+        Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
+        Prepend("foo".asJson)
+      )
+    ))
+    val command = """.platforms[.type == "native"].setup +0= "foo""""
     val result = ConfigModParser.parseBlock(command)
     assert(result == expected)
   }

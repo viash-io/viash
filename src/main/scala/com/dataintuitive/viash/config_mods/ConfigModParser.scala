@@ -143,10 +143,11 @@ object ConfigModParser extends RegexParsers {
   def value: Parser[Value] = path | (json ^^ { JsonValue(_) })
 
   // define commands
-  def command: Parser[ConfigMod] = path ~ (modify | add) ^^ {
+  def command: Parser[ConfigMod] = path ~ (modify | add | prepend) ^^ {
     case pt ~ comm => ConfigMod(pt, comm)
   }
   def modify: Parser[CommandExp] = ":=" ~> json ^^ { Modify(_) }
   def add: Parser[CommandExp] = "+=" ~> json ^^ { Add(_) }
+  def prepend: Parser[CommandExp] = "+0=" ~> json ^^ { Prepend(_) }
   def block: Parser[ConfigMods] = repsep(command, ";") ^^ { ConfigMods(_) }
 }
