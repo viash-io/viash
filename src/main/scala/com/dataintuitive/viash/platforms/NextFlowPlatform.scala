@@ -466,7 +466,7 @@ case class NextFlowPlatform(
         |            // would select just one element from the path
         |            [(it.name): (output in List) ? output[i] : output ]
         |          }
-        |        new Tuple3(id, parsedOutput, _params)
+        |        new Tuple3(id, parsedOutput, original_params)
         |      }
         |
         |  result_ \\
