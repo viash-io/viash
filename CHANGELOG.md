@@ -1,3 +1,9 @@
+# viash 0.4.0.1 (2021-05-04)
+
+## BUG FIX
+
+* `NXF`: Return original_params instead of updated params for now.
+
 # viash 0.4.0 (2021-04-14)
 
 ## NEW FEATURES
