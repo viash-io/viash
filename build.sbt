@@ -29,3 +29,5 @@ scalacOptions ++= Seq("-unchecked", "-deprecation")
 organization := "Data Intuitive"
 startYear := Some(2020)
 licenses += "GPL-3.0-or-later" -> url("https://www.gnu.org/licenses/gpl-3.0.html")
+
+Test / parallelExecution := false
