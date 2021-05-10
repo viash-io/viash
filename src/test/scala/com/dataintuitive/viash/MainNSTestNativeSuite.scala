@@ -96,7 +96,6 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
   test("Check namespace test output with tsv and append options") {
     val log = Paths.get(tempFolStr, "log_append.tsv").toFile
 
-    // TODO: create log_append.tsv
     val fileHeader = "Test header" + sys.props("line.separator")
     Files.write(log.toPath, fileHeader.getBytes(StandardCharsets.UTF_8))
 
@@ -123,8 +122,6 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
     val logSrc = Source.fromFile(log)
     try {
       val logLines = logSrc.mkString
-
-      println(s"-->$logLines<--")
 
       // Test inclusion of a header
       val regexHeader = "namespace\\tfunctionality\\tplatform\\ttest_name\\texit_code\\tduration\\tresult".r
