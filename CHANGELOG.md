@@ -16,6 +16,14 @@
 
 * `Docker R Requirements`: Install `remotes` when using `{ type: r, packages: [ foo ] }`.
 
+# viash 0.4.0.1 (2021-05-12)
+
+## BUG FIX
+
+* `NXF`: Return original_params instead of updated params for now.
+
+* `NXF`: Reinstate function_type: asis in line with the refactored module generation code
+
 # viash 0.4.0 (2021-04-14)
 
 ## NEW FEATURES

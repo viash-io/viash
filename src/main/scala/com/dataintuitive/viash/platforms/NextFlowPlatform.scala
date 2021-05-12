@@ -252,18 +252,6 @@ case class NextFlowPlatform(
         |""".stripMargin
 
     val setup_main_outFromIn = functionality.function_type match {
-      // in and out file format are the same, but also the filenames!
-      case Some(AsIs) =>
-        """
-          |def getOutputFilename(_params) {
-          |
-          |  def output = _params.arguments.find{it ->
-          |    (it.value.direction == "Output" && it.value.type == "file")
-          |  }
-          |
-          |  return output.value.value
-          |}
-          |""".stripMargin.replace("__e__", inputFileExtO.getOrElse("OOPS")).replace("__f__", fname)
       // Out format is different from in format
       case Some(Convert) | Some(Join) | Some(ToDir) | None =>
         """
@@ -290,6 +278,19 @@ case class NextFlowPlatform(
           |
           |}
           |""".stripMargin.replace("__f__", fname)
+      case Some(AsIs) =>
+        """
+          |// Only perform a selection on the appropriate output arguments of type `file`.
+          |def outFromIn(_params) {
+          |
+          |  def id = _params.id
+          |
+          |  _params
+          |    .arguments
+          |    .findAll{ it -> it.type == "file" && it.direction == "Output" }
+          |
+          |}
+          |""".stripMargin
       case _ =>
         """
           |def outFromIn(inputStr) {
@@ -418,11 +419,6 @@ case class NextFlowPlatform(
         |""".stripMargin
     }
 
-    // val outFromInStr = functionality.function_type match {
-    //   case Some(AsIs) => "def outputFilename = getOutputFilename(updtParams)"
-    //   case _ => "def outputFilename = (!params.test) ? outFromIn(filename) : updtParams.output"
-    // }
-
     val setup_main_workflow =
       s"""
         |workflow $fname {
@@ -486,7 +482,7 @@ case class NextFlowPlatform(
         |            // would select just one element from the path
         |            [(it.name): (output in List) ? output[i] : output ]
         |          }
-        |        new Tuple3(id, parsedOutput, _params)
+        |        new Tuple3(id, parsedOutput, original_params)
         |      }
         |
         |  result_ \\
@@ -517,7 +513,7 @@ case class NextFlowPlatform(
               |""".stripMargin
           )
       } else {
-        List("result.view{ it[1] }")
+        List("  result.view{ it[1] }")
       }
 
     val setup_main_entrypoint =
