@@ -1,0 +1,40 @@
+functionality:
+  name: project_update
+  namespace: viash
+  version: 0.1
+  description: |
+    Initiate or update a project's CI/CD artefacts
+  arguments:
+  - name: "--pwd"
+    type: file
+    description: Directory for sources if different ./
+    default: ./
+  - name: "--registry"
+    alternatives: [ "-r" ]
+    default: ""
+    type: string
+    description: Docker registry to use, only used when using a registry.
+  - name: "--namespace_separator"
+    default: "_"
+    type: string
+    description: The separator to use between the component name and namespace as the image name of a Docker container.
+  - name: "--config_mod"
+    alternatives: [ "-c" ]
+    type: string
+    multiple: true
+    multiple_sep: ";"
+    description: "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
+  - name: "--viash"
+    type: file
+    description: A path to the viash executable. If not specified, this component will look for 'viash' on the $PATH.
+  resources:
+    - type: bash_script
+      path: script.sh
+platforms:
+- type: docker
+  image: dataintuitive/viash:latest
+  setup:
+    - type: docker
+      run:
+        - "curl -sSLfo /usr/local/bin/fetch https://github.com/gruntwork-io/fetch/releases/download/v0.4.2/fetch_linux_amd64"
+        - "chmod +x /usr/local/bin/fetch"
