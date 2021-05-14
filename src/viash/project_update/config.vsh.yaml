@@ -5,10 +5,10 @@ functionality:
   description: |
     Initiate or update a project's CI/CD artefacts
   arguments:
-  - name: "--pwd"
+  - name: "--bin"
     type: file
     description: Directory for sources if different ./
-    default: ./
+    default: bin/
   - name: "--registry"
     alternatives: [ "-r" ]
     default: ""
