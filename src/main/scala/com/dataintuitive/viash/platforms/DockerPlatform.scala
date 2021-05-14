@@ -204,7 +204,9 @@ case class DockerPlatform(
              |    cat $$tmpdir/docker_build.log
              |    echo "> --- end of error transcript"
              |  fi
-             |  exit $$out""".stripMargin
+             |  if [ "$$VIASH_EXEC_MODE" == "setup" ]; then
+             |    exit $$out
+             |  fi""".stripMargin
 
         (vdf, vdb)
       }

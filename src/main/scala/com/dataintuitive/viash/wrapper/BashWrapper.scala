@@ -200,6 +200,12 @@ object BashWrapper {
        |            exit;;
        |        ---setup)
        |            $var_exec_mode="setup"
+       |            ViashSetup
+       |            shift 1
+       |            ;;
+       |        ---force_setup)
+       |            $var_exec_mode="force_setup"
+       |            ViashSetup
        |            shift 1
        |            ;;
        |        ---push)
@@ -214,11 +220,6 @@ object BashWrapper {
        |            ;;
        |    esac
        |done
-       |
-       |if [ "$$$var_exec_mode" == "setup" ]; then
-       |  ViashSetup
-       |  exit 0
-       |fi
        |
        |if [ "$$$var_exec_mode" == "push" ]; then
        |  ViashPush
