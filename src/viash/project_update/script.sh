@@ -36,6 +36,6 @@ viash ns build \
 
 # copy viash itself
 echo "> Install viash under bin/"
-cp `which viash` bin/
+cp `which viash` $par_bin
 
 echo "> Done, happy viash-ing!"
