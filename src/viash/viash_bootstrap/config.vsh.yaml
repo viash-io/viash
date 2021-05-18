@@ -1,9 +1,9 @@
 functionality:
-  name: project_update
+  name: viash_bootstrap
   namespace: viash
   version: 0.1
   description: |
-    Initiate or update a project's CI/CD artefacts
+    Initiate or update a viash project's CI/CD artefacts
   arguments:
   - name: "--bin"
     type: file
@@ -24,6 +24,10 @@ functionality:
     multiple: true
     multiple_sep: ";"
     description: "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
+  - name: "--version"
+    alternatives: [ "-v" ]
+    type: string
+    description: "Version of viash to use, leave blank for the latest release"
   - name: "--viash"
     type: file
     description: A path to the viash executable. If not specified, this component will look for 'viash' on the $PATH.

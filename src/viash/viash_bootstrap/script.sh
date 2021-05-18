@@ -8,19 +8,31 @@ if [ ! -d "$par_bin" ]; then
   mkdir "$par_bin"
 fi
 
+cd "$par_bin"
+
+# Retrieving version
+viash_version=`viash -v | sed -E 's/^viash ([v0-9.]+[\-rc0-9]*).*/\1/'`
+if [ -z $par_version ]; then
+  par_version="$viash_version"
+  same_version=1
+else
+  same_version=0
+fi
+echo "> Using version $par_version"
+
 # remove previous binaries
 echo "> Cleanup"
-if [ -f $par_bin/viash* ]; then
+if [ -f viash* ]; then
   echo "  > Removing previous versions of viash"
-  rm $par_bin/viash*
+  rm viash*
 fi
-if [ -f $par_bin/project_update ]; then
+if [ -f project_update ]; then
   echo "  > Removing previous versions of project binaries"
-  rm $par_bin/project_*
+  rm project_*
 fi
-if [ -f $par_bin/skeleton ]; then
+if [ -f skeleton ]; then
   echo "  > Removing previous versions of skeleton binary"
-  rm $par_bin/skeleton*
+  rm skeleton*
 fi
 
 # build helper components
@@ -30,23 +42,28 @@ function clean_up {
 }
 trap clean_up EXIT
 
+# Install viash itself
+echo "> Install viash $par_version under $par_bin"
+if [ $same_version = 1 ];then
+  cp `which viash` .
+else
+  wget -nv "https://github.com/data-intuitive/viash/releases/download/$par_version/viash"
+  chmod +x viash
+fi
+
 # download latest viash components
 echo "> Fetching components sources"
-fetch --repo="https://github.com/data-intuitive/viash" --branch="develop" --source-path="/src/viash" "$build_dir"
+fetch --repo="https://github.com/data-intuitive/viash" --branch="$par_version" --source-path="/src/viash" "$build_dir"
 
 # build components
 echo "> Building components"
-viash ns build \
+./viash ns build \
   -s "$build_dir" \
-  -t "$par_bin" \
+  -t . \
   --flatten \
   -c '.functionality.arguments[.name == "--registry"].default := "'$par_registry'"' \
   -c '.functionality.arguments[.name == "--viash"].default := "'$par_viash'"' \
   -c '.functionality.arguments[.name == "--log" && root.functionality.name == "project_test"].default := "docs/viash_ns_test_output.tsv"' \
   -c '.functionality.arguments[.name == "--namespace_separator"].default := "'$par_namespace_separator'"'
-
-# copy viash itself
-echo "> Install viash under $par_bin"
-cp `which viash` "$par_bin"
 
 echo "> Done, happy viash-ing!"
