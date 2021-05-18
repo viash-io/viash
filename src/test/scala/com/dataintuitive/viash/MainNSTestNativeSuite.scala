@@ -14,26 +14,26 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
   private val temporaryFolder = IO.makeTemp("viash_ns_test_tsv")
   private val tempFolStr = temporaryFolder.toString
 
-  val stepsSuccess = List(
-    ("start",""),
-    ("build_executable","\\s*0\\s*\\d+\\s*SUCCESS"),
-    ("test\\.sh","\\s*0\\s*\\d+\\s*SUCCESS")
+  private val stepsSuccess = List(
+    ("start", ""),
+    ("build_executable", raw"\s*0\s*\d+\s*SUCCESS"),
+    (raw"test\.sh", raw"\s*0\s*\d+\s*SUCCESS")
   )
 
-  val stepsFailure = List(
-    ("start",""),
-    ("build_executable","\\s*0\\s*\\d+\\s*SUCCESS"),
-    ("test\\.sh","\\s*0\\s*\\d+\\s*SUCCESS"),
-    ("test_div0\\.sh","\\s*1\\s*\\d+\\s*ERROR"),
+  private val stepsFailure = List(
+    ("start", ""),
+    ("build_executable", raw"\s*0\s*\d+\s*SUCCESS"),
+    (raw"test\.sh", raw"\s*0\s*\d+\s*SUCCESS"),
+    (raw"test_div0\.sh", raw"\s*1\s*\d+\s*ERROR"),
   )
 
-  val stepsMissing = List(
-    ("start",""),
-    ("build_executable","\\s*0\\s*\\d+\\s*SUCCESS"),
-    ("tests","\\s*-1\\s*\\d+\\s*MISSING")
+  private val stepsMissing = List(
+    ("start", ""),
+    ("build_executable", raw"\s*0\s*\d+\s*SUCCESS"),
+    ("tests", raw"\s*-1\s*\d+\s*MISSING")
   )
 
-  val components = List(
+  private val components = List(
     ("ns_add", stepsSuccess),
     ("ns_subtract", stepsSuccess),
     ("ns_multiply", stepsSuccess),
@@ -48,6 +48,10 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
         "ns", "test",
         "--src", nsPath
       ))
+
+    // Test inclusion of a header
+    val regexHeader = raw"^\s*namespace\s*functionality\s*platform\s*test_name\s*exit_code\s*duration\s*result".r
+    assert(regexHeader.findFirstIn(testText).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$testText")
 
     for ((component, steps) ← components) {
       for ((step, resultPattern) ← steps) {
@@ -71,10 +75,8 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
     try {
       val logLines = logSrc.mkString
 
-      println(s"-->$logLines<--")
-
       // Test inclusion of a header
-      val regexHeader = "^namespace\\tfunctionality\\tplatform\\ttest_name\\texit_code\\tduration\\tresult".r
+      val regexHeader = raw"^namespace\tfunctionality\tplatform\ttest_name\texit_code\tduration\tresult".r
       assert(regexHeader.findFirstIn(logLines).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$logLines")
 
       for ((component, steps) ← components) {
@@ -110,7 +112,7 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
       val logLines = logSrc.mkString
 
       // Test inclusion of a header
-      val regexHeader = "namespace\\tfunctionality\\tplatform\\ttest_name\\texit_code\\tduration\\tresult".r
+      val regexHeader = raw"namespace\tfunctionality\tplatform\ttest_name\texit_code\tduration\tresult".r
       assert(!regexHeader.findFirstIn(logLines).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$logLines")
       val regexHeader2 = "^Test header".r
       assert(regexHeader2.findFirstIn(logLines).isDefined, s"\rRegex: ${regexHeader2.toString}; text: \r$logLines")
