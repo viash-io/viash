@@ -192,10 +192,10 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       default = Some("output/"),
       required = true
     )
-    val setup = opt[Boolean](
+    val setup = opt[String](
       name = "setup",
-      default = Some(false),
-      descr = "Whether or not to set up the platform environment after building the executable."
+      default = None,
+      descr = "Which setup strategy for creating the container to use [Docker Platform only]."
     )
     val push = opt[Boolean](
       name = "push",
@@ -256,10 +256,10 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         descr = "A target directory to build the executables into. Default: target/.",
         default = Some("target")
       )
-      val setup = opt[Boolean](
+      val setup = opt[String](
         name = "setup",
-        default = Some(false),
-        descr = "Whether or not to set up the platform environment after building the executable."
+        default = None,
+        descr = "Which setup strategy for creating the container to use [Docker Platform only]."
       )
       val push = opt[Boolean](
         name = "push",

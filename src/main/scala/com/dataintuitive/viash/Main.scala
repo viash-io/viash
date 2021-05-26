@@ -52,7 +52,7 @@ object Main {
           output = cli.build.output(),
           printMeta = cli.build.printMeta(),
           writeMeta = cli.build.writeMeta(),
-          setup = cli.build.setup(),
+          setup = cli.build.setup.toOption,
           push = cli.build.push()
         )
       case List(cli.test) =>
@@ -63,7 +63,7 @@ object Main {
         ViashNamespace.build(
           configs = configs,
           target = cli.namespace.build.target(),
-          setup = cli.namespace.build.setup(),
+          setup = cli.namespace.build.setup.toOption,
           push = cli.namespace.build.push(),
           parallel = cli.namespace.build.parallel(),
           writeMeta = cli.namespace.build.writeMeta(),
@@ -158,10 +158,9 @@ object Main {
             None
           }
         } catch {
-          case e: Exception => {
+          case _: Exception =>
             System.err.println(s"Reading file '$file' failed")
             None
-          }
         }
 
       if (conf1.isEmpty) {

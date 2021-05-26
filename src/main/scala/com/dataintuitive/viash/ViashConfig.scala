@@ -21,7 +21,7 @@ import com.dataintuitive.viash.config.{Config, encodeConfig}
 import io.circe.yaml.Printer
 
 object ViashConfig {
-  val printer = Printer(
+  private val printer = Printer(
     preserveOrder = true,
     dropNullKeys = true,
     mappingStyle = Printer.FlowStyle.Block,
@@ -29,7 +29,7 @@ object ViashConfig {
     stringStyle = Printer.StringStyle.DoubleQuoted
   )
 
-  def view(config: Config)  {
+  def view(config: Config) {
     val json = encodeConfig(config)
     val configYamlStr = printer.pretty(json)
     println(configYamlStr)

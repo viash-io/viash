@@ -56,7 +56,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
   test("Check whether the executable can build the image", DockerTest) {
     val out = Exec.run2(
-      Seq(executable.toString, "---setup")
+      Seq(executable.toString, "---setup", "build")
     )
     assert(out.exitValue == 0)
   }
@@ -189,7 +189,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     val out = Exec.run2(
-      Seq(executable.toString, "---setup")
+      Seq(executable.toString, "---setup", "build")
     )
     assert(out.exitValue == 0)
 
@@ -212,7 +212,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     // create the docker image
     val out = Exec.run2(
-      Seq(executableBashTagFile.toString, "---setup")
+      Seq(executableBashTagFile.toString, "---setup", "build")
     )
     assert(out.exitValue == 0)
 
@@ -245,7 +245,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     // create the docker image
     val out = Exec.run2(
-      Seq(executableBashTagFile.toString, "---setup")
+      Seq(executableBashTagFile.toString, "---setup", "build")
     )
     assert(out.exitValue == 0)
 
@@ -278,7 +278,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     // create the docker image
     val out = Exec.run2(
-      Seq(executableBashTagFile.toString, "---setup")
+      Seq(executableBashTagFile.toString, "---setup", "build")
     )
     assert(out.exitValue == 0)
 
@@ -310,7 +310,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     // create the docker image
     val out = Exec.run2(
-      Seq(executableBashTagFile.toString, "---setup")
+      Seq(executableBashTagFile.toString, "---setup", "build")
     )
     assert(out.exitValue == 0)
 
@@ -342,7 +342,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     // create the docker image
     val out = Exec.run2(
-      Seq(executableBashTagFile.toString, "---setup")
+      Seq(executableBashTagFile.toString, "---setup", "build")
     )
     assert(out.exitValue == 0)
 
@@ -567,7 +567,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     // run viash wrapper with ---setup
     val out = Exec.run2(
-      Seq(executable.toString, "---setup")
+      Seq(executable.toString, "---setup", "build")
     )
     assert(out.exitValue == 0)
 
@@ -585,7 +585,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       "build",
       "-p", "busybox",
       "-o", tempFolStr,
-      "--setup",
+      "--setup", "build",
       configFile
     ))
 
@@ -602,7 +602,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       "build",
       "-p", "viash_requirement_apk_base",
       "-o", tempFolStr,
-      "--setup",
+      "--setup", "build",
       configRequirementsFile
     ))
 
@@ -629,7 +629,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       "build",
       "-p", "viash_requirement_apk",
       "-o", tempFolStr,
-      "--setup",
+      "--setup", "build",
       configRequirementsFile
     ))
 
@@ -657,7 +657,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       "build",
       "-p", "viash_requirement_apt_base",
       "-o", tempFolStr,
-      "--setup",
+      "--setup", "build",
       configRequirementsFile
     ))
 
@@ -684,7 +684,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       "build",
       "-p", "viash_requirement_apt",
       "-o", tempFolStr,
-      "--setup",
+      "--setup", "build",
       configRequirementsFile
     ))
 
@@ -786,7 +786,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       "build",
       "-p", dockerId,
       "-o", tempFolStr,
-      "--setup",
+      "--setup", "build",
       localConfig
     ))
 
@@ -823,7 +823,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       "build",
       "-p", dockerId,
       "-o", tempFolStr,
-      "--setup",
+      "--setup", "build",
       localConfig
     ))
 
@@ -864,7 +864,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       "build",
       "-p", dockerId,
       "-o", tempFolStr,
-      "--setup",
+      "--setup", "build",
       localConfig
     ))
 

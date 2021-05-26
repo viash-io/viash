@@ -25,7 +25,7 @@ object ViashNamespace {
   def build(
     configs: List[Config],
     target: String,
-    setup: Boolean = false,
+    setup: Option[String] = None,
     push: Boolean = false,
     parallel: Boolean = false,
     writeMeta: Boolean = true,
@@ -37,13 +37,13 @@ object ViashNamespace {
       val in = conf.info.get.parent_path
       val inTool = in.split("/").lastOption.getOrElse("WRONG")
       val platType = conf.platform.get.id
-      val out = flatten match {
-        case false =>
+      val out =
+        if (!flatten) {
           conf.functionality.namespace
             .map( ns => target + s"/$platType/$ns/$inTool").getOrElse(target + s"/$platType/$inTool")
-        case true =>
+        } else {
           target
-      }
+        }
       val namespaceOrNothing = conf.functionality.namespace.map( s => "(" + s + ")").getOrElse("")
       println(s"Exporting $in $namespaceOrNothing =$platType=> $out")
       ViashBuild(
