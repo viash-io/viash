@@ -81,12 +81,10 @@ object BashWrapper {
   }
 
   val var_resources_dir = "VIASH_RESOURCES_DIR"
-  val var_exec_mode = "VIASH_EXEC_MODE"
 
   def wrapScript(
     executor: String,
     functionality: Functionality,
-    setupCommands: String,
     mods: BashWrapperMods = BashWrapperMods()
   ): String = {
     val mainResource = functionality.mainScript
@@ -185,9 +183,6 @@ object BashWrapper {
        |
        |# find source folder of this component
        |$var_resources_dir=`ViashSourceDir $${BASH_SOURCE[0]}`
-       |$var_exec_mode="run"
-       |
-       |$setupCommands
        |
        |${spaceCode(allMods.preParse)}
        |# initialise array
@@ -198,20 +193,6 @@ object BashWrapper {
        |        -h|--help)
        |            ViashHelp
        |            exit;;
-       |        ---setup)
-       |            $var_exec_mode="setup"
-       |            ViashSetup
-       |            shift 1
-       |            ;;
-       |        ---force_setup)
-       |            $var_exec_mode="force_setup"
-       |            ViashSetup
-       |            shift 1
-       |            ;;
-       |        ---push)
-       |            $var_exec_mode="push"
-       |            shift 1
-       |            ;;
        |${allMods.parsers}
        |        *)  # positional arg or unknown option
        |            # since the positional args will be eval'd, can we always quote, instead of using ViashQuote
@@ -220,11 +201,6 @@ object BashWrapper {
        |            ;;
        |    esac
        |done
-       |
-       |if [ "$$$var_exec_mode" == "push" ]; then
-       |  ViashPush
-       |  exit 0
-       |fi
        |
        |# parse positional parameters
        |eval set -- $$VIASH_POSITIONAL_ARGS

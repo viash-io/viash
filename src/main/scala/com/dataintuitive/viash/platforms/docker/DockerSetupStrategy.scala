@@ -19,17 +19,19 @@ package com.dataintuitive.viash.platforms.docker
 
 sealed class DockerSetupStrategy(val id: String, val synonyms: List[String] = Nil)
 
-case object AlwaysBuild extends DockerSetupStrategy("alwaysbuild", List("build"))
-case object AlwaysPull extends DockerSetupStrategy("alwayspull", List("pull"))
+case object AlwaysBuild extends DockerSetupStrategy("alwaysbuild", List("build", "b"))
+case object AlwaysPull extends DockerSetupStrategy("alwayspull", List("pull", "p"))
 case object AlwaysPullElseBuild extends DockerSetupStrategy("alwayspullelsebuild", List("pullelsebuild"))
 case object AlwaysPullElseCachedBuild extends DockerSetupStrategy("alwayspullelsecachedbuild", List("pullelsecachedbuild"))
-case object AlwaysCachedBuild extends DockerSetupStrategy("alwayscachedbuild", List("cachedbuild"))
-case object IfNeedBeBuild extends DockerSetupStrategy("ifneedbebuild")
-case object IfNeedBeCachedBuild extends DockerSetupStrategy("ifneedbecachedbuild")
-case object IfNeedBePull extends DockerSetupStrategy( "idneedbepull")
-case object IfNeedBePullElseBuild extends DockerSetupStrategy("ifneedbepullelsebuild")
-case object IfNeedBePullElseCachedBuild extends DockerSetupStrategy("ifneedbepullelsecachedbuild")
+case object AlwaysCachedBuild extends DockerSetupStrategy("alwayscachedbuild", List("cachedbuild", "cb"))
+case object IfNeedBeBuild extends DockerSetupStrategy("ifneedbebuild", Nil)
+case object IfNeedBeCachedBuild extends DockerSetupStrategy("ifneedbecachedbuild", Nil)
+case object IfNeedBePull extends DockerSetupStrategy( "ifneedbepull", Nil)
+case object IfNeedBePullElseBuild extends DockerSetupStrategy("ifneedbepullelsebuild", Nil)
+case object IfNeedBePullElseCachedBuild extends DockerSetupStrategy("ifneedbepullelsecachedbuild", Nil)
 case object DoNothing extends DockerSetupStrategy("donothing", List("meh"))
+case object Push extends DockerSetupStrategy("push", List("forcepush", "alwayspush"))
+case object PushIfNotPresent extends DockerSetupStrategy("pushifnotpresent", List("gentlepush", "maybepush"))
 
 object DockerSetupStrategy {
   val objs: List[DockerSetupStrategy] = List(
@@ -43,6 +45,8 @@ object DockerSetupStrategy {
     IfNeedBePull,
     IfNeedBePullElseBuild,
     IfNeedBePullElseCachedBuild,
+    Push,
+    PushIfNotPresent,
     DoNothing
   )
 

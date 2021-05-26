@@ -1,4 +1,10 @@
-# viash 0.4.1
+# viash 0.5.0
+
+## BREAKING CHANGES
+
+* `DockerPlatform`: a Docker setup will be performed by default. Default strategy has been changed to `ifneedbepullelsecachedbuild`.
+  `---setup` strategy has been removed and `---docker_setup_strategy` has been renamed to `---setup`.
+  This change allows running a component for the first time. During first time setup, the Docker container will be pulled or built automatically.
 
 ## MAJOR CHANGES
 
