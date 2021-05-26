@@ -114,7 +114,7 @@ object ViashNamespace {
         )
 
         val testResults =
-          if (setupRes.exitValue > 0) {
+          if (setupRes.isDefined && setupRes.get.exitValue > 0) {
             Nil
           } else if (testRes.isEmpty) {
             List(TestOutput("tests", -1, "no tests found", "", 0L))
@@ -123,7 +123,7 @@ object ViashNamespace {
           }
 
         // print messages
-        val results = setupRes :: testResults
+        val results = setupRes.toList ::: testResults
         for (test ← results) {
           val (col, msg) = {
             if (test.exitValue > 0) {

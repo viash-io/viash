@@ -43,6 +43,7 @@ case class NextFlowPlatform(
   stageInMode: Option[String] = None
 ) extends Platform {
   val `type` = "nextflow"
+  val hasSetup = false
 
   assert(version.isEmpty, "nextflow platform: attribute 'version' is deprecated")
 

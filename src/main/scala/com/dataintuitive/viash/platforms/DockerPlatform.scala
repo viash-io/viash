@@ -54,6 +54,7 @@ case class DockerPlatform(
   version: Option[Version] = None
 ) extends Platform {
   val `type` = "docker"
+  val hasSetup = true
 
   assert(version.isEmpty, "docker platform: attribute 'version' is deprecated")
 

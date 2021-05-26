@@ -34,7 +34,7 @@ import java.time.temporal.ChronoUnit
 
 object ViashTest {
   case class TestOutput(name: String, exitValue: Int, output: String, logFile: String, duration: Long)
-  case class ManyTestOutput(setup: TestOutput, tests: List[TestOutput])
+  case class ManyTestOutput(setup: Option[TestOutput], tests: List[TestOutput])
 
   def apply(
     config: Config,
@@ -48,12 +48,12 @@ object ViashTest {
     // run tests
     val ManyTestOutput(setupRes, results) = ViashTest.runTests(config, dir, verbose = !quiet)
     val count = results.count(_.exitValue == 0)
-    val anyErrors = setupRes.exitValue > 0 || count < results.length
+    val anyErrors = setupRes.map(_.exitValue > 0).getOrElse(false) || count < results.length
 
     val errorMessage =
       if (!anyErrors) {
         ""
-      } else if (setupRes.exitValue > 0) {
+      } else if (setupRes.isDefined && setupRes.get.exitValue > 0) {
         "Setup failed!"
       } else {
         s"Only $count out of ${results.length} test scripts succeeded!"
@@ -96,39 +96,43 @@ object ViashTest {
     IO.writeResources(buildFun.resources.getOrElse(Nil), buildDir)
 
     // run command, collect output
-    val buildResult = {
-      val stream = new ByteArrayOutputStream
-      val printWriter = new PrintWriter(stream)
-      val logPath = Paths.get(buildDir.toString, "_viash_build_log.txt").toString
-      val logWriter = new FileWriter(logPath, true)
+    val buildResult =
+      if (!platform.hasSetup) {
+        None
+      } else {
+        val stream = new ByteArrayOutputStream
+        val printWriter = new PrintWriter(stream)
+        val logPath = Paths.get(buildDir.toString, "_viash_build_log.txt").toString
+        val logWriter = new FileWriter(logPath, true)
 
-      val logger: String => Unit =
-        (s: String) => {
-          if (verbose) println(s)
-          printWriter.println(s)
-          logWriter.append(s + sys.props("line.separator"))
+        val logger: String => Unit =
+          (s: String) => {
+            if (verbose) println(s)
+            printWriter.println(s)
+            logWriter.append(s + sys.props("line.separator"))
+          }
+
+        logger(consoleLine)
+
+        // run command, collect output
+        try {
+          val executable = Paths.get(buildDir.toString, fun.name).toString
+          logger(s"+$executable ---setup cachedbuild")
+          val startTime = LocalDateTime.now
+          val exitValue = Process(Seq(executable, "---setup", "cachedbuild"), cwd = buildDir).!(ProcessLogger(logger, logger))
+          val endTime = LocalDateTime.now
+          val diffTime = ChronoUnit.SECONDS.between(startTime, endTime)
+          printWriter.flush()
+          Some(TestOutput("build_executable", exitValue, stream.toString, logPath, diffTime))
+        } finally {
+          printWriter.close()
+          logWriter.close()
         }
-
-      logger(consoleLine)
-
-      // run command, collect output
-      try {
-        val executable = Paths.get(buildDir.toString, fun.name).toString
-        logger(s"+$executable ---setup")
-        val startTime = LocalDateTime.now
-        val exitValue = Process(Seq(executable, "---setup"), cwd = buildDir).!(ProcessLogger(logger, logger))
-        val endTime = LocalDateTime.now
-        val diffTime = ChronoUnit.SECONDS.between(startTime, endTime)
-        printWriter.flush()
-        TestOutput("build_executable", exitValue, stream.toString, logPath, diffTime)
-      } finally {
-        printWriter.close()
-        logWriter.close()
       }
-    }
+
 
     // if setup failed, return faster
-    if (buildResult.exitValue > 0) {
+    if (buildResult.isDefined && buildResult.get.exitValue > 0) {
       return ManyTestOutput(buildResult, Nil)
     }
 

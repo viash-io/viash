@@ -28,6 +28,8 @@ trait Platform {
   val `type`: String
   val id: String
 
+  val hasSetup: Boolean
+
   def modifyFunctionality(functionality: Functionality): Functionality
 
   val requirements: List[Requirements]

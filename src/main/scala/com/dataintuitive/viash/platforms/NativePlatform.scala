@@ -28,6 +28,7 @@ case class NativePlatform(
   setup: List[Requirements] = Nil
 ) extends Platform {
   val `type` = "native"
+  val hasSetup = false
 
   val requirements: List[Requirements] = setup
 
