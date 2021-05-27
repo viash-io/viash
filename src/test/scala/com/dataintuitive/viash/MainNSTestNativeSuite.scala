@@ -14,22 +14,24 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
   private val temporaryFolder = IO.makeTemp("viash_ns_test_tsv")
   private val tempFolStr = temporaryFolder.toString
 
+  // TODO: check 'build_executable' output when a docker component setup fails.
+
   private val stepsSuccess = List(
     ("start", ""),
-    ("build_executable", raw"\s*0\s*\d+\s*SUCCESS"),
+    // ("build_executable", raw"\s*0\s*\d+\s*SUCCESS"),
     (raw"test\.sh", raw"\s*0\s*\d+\s*SUCCESS")
   )
 
   private val stepsFailure = List(
     ("start", ""),
-    ("build_executable", raw"\s*0\s*\d+\s*SUCCESS"),
+    // ("build_executable", raw"\s*0\s*\d+\s*SUCCESS"),
     (raw"test\.sh", raw"\s*0\s*\d+\s*SUCCESS"),
     (raw"test_div0\.sh", raw"\s*1\s*\d+\s*ERROR"),
   )
 
   private val stepsMissing = List(
     ("start", ""),
-    ("build_executable", raw"\s*0\s*\d+\s*SUCCESS"),
+    //("build_executable", raw"\s*0\s*\d+\s*SUCCESS"),
     ("tests", raw"\s*-1\s*\d+\s*MISSING")
   )
 

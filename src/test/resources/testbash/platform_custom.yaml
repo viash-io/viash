@@ -1,6 +1,6 @@
-type: native
+type: docker
 id: custom
-setup: 
- - type: r
-   cran: 
-    - check_for_detecting_platform
+image: python:3.8
+setup:
+  - type: python
+    packages: [ anndata ]
