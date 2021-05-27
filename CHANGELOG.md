@@ -21,6 +21,8 @@
 
 * Config modding: Added a `+0=` operator to prepend items to a list.
 
+* `viash run`: Added a `--version` flag to viash executables for viewing the version of the component.
+
 ## BUG FIXES
 
 * `Docker R Requirements`: Install `remotes` when using `{ type: r, packages: [ foo ] }`.
