@@ -55,14 +55,14 @@ case class Functionality(
   }
 
   // check functionality name
-  require(Functionality.nameRegex.findFirstIn(name).isDefined, message = "functionality name must begin with a letter and consist only of alphanumeric characters or underscores.")
+  require(name.matches("^[A-Za-z][A-Za-z0-9_]*$"), message = "functionality name must begin with a letter and consist only of alphanumeric characters or underscores.")
 
   // check arguments
   arguments.foreach { arg =>
-    require(!Functionality.reservedParameters.contains(arg.name), message = s"${arg.name} is a viash reserved parameter name")
-    require(Functionality.nameRegex.findFirstIn(arg.name).isDefined, message = s"argument ${arg.name}: name must begin with a letter and consist only of alphanumeric characters or underscores.")
-    arg.alternatives.foreach { alternative =>
-      require(!Functionality.reservedParameters.contains(alternative), message = s"argument ${alternative}: name is reserved by viash")
+    require(arg.name.matches("^(-?|--|\\$)[A-Za-z][A-Za-z0-9_]*$"), message = s"argument $arg.name: name must begin with a letter and consist only of alphanumeric characters or underscores.")
+    (arg.name :: arg.alternatives).foreach { argName =>
+      require(!Functionality.reservedParameters.contains(argName), message = s"argument $argName: name is reserved by viash")
+      require(!argName.matches("^\\$VIASH_"), message = s"argument $argName: environment variables beginning with 'VIASH_' are reserved for viash.")
     }
   }
 
@@ -78,6 +78,5 @@ case class Functionality(
 }
 
 object Functionality {
-  val nameRegex = "^-?-?[A-Za-z][A-Za-z0-9_]*$".r
   val reservedParameters = List("-h", "--help", "-v", "--verbose", "--verbosity", "--version")
 }
