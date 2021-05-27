@@ -192,16 +192,23 @@ case class DockerPlatform(
              |  cp -r $$${BashWrapper.var_resources_dir}/* $$tmpdir
              |
              |  # Build the container
-             |  echo "> docker build -t $$@$buildArgs $$tmpdir"
+             |  ViashNotice "Running 'docker build -t $$@$buildArgs $$tmpdir'"
              |  set +e
-             |  docker build -t $$@$buildArgs $$tmpdir &> $$tmpdir/docker_build.log
+             |  if [ $$${BashWrapper.var_verbosity} -ge 6 ]; then
+             |    docker build -t $$@$buildArgs $$tmpdir
+             |  else
+             |    docker build -t $$@$buildArgs $$tmpdir &> $$tmpdir/docker_build.log
+             |  fi
              |  out=$$?
              |  set -e
              |  if [ ! $$out -eq 0 ]; then
-             |    echo "> ERROR: Something went wrong while building the container $$@"
-             |    echo "> Error transcript follows:"
-             |    cat "$$tmpdir/docker_build.log"
-             |    echo "> --- end of error transcript"
+             |    ViashError "Error occurred while building the container $$@."
+             |    if [ ! $$${BashWrapper.var_verbosity} -ge 6 ]; then
+             |      ViashError "Transcript: --------------------------------"
+             |      cat "$$tmpdir/docker_build.log"
+             |      ViashError "End of transcript --------------------------"
+             |    fi
+             |    exit 1
              |  fi""".stripMargin
 
         (vdf, vdb)
@@ -333,7 +340,7 @@ case class DockerPlatform(
     val parsers =
       s"""
          |        ---debug)
-         |            echo "+ $debugCommand"
+         |            ViashNotice "+ $debugCommand"
          |            $debugCommand
          |            exit 0
          |            ;;""".stripMargin

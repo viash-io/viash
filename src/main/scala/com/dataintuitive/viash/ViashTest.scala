@@ -83,7 +83,7 @@ object ViashTest {
     ManyTestOutput(setupRes, results)
   }
 
-  def runTests(config: Config, dir: File, verbose: Boolean = true): ManyTestOutput = {
+  def runTests(config: Config, dir: File, verbose: Boolean = true, setupStrategy: String, verbosityLevel: Int): ManyTestOutput = {
     val fun = config.functionality
     val platform = config.platform.get
 
@@ -117,9 +117,9 @@ object ViashTest {
         // run command, collect output
         try {
           val executable = Paths.get(buildDir.toString, fun.name).toString
-          logger(s"+$executable ---setup cachedbuild")
+          logger(s"+$executable --verbosity $verbosityLevel ---setup $setupStrategy")
           val startTime = LocalDateTime.now
-          val exitValue = Process(Seq(executable, "---setup", "cachedbuild"), cwd = buildDir).!(ProcessLogger(logger, logger))
+          val exitValue = Process(Seq(executable, "--verbosity", verbosityLevel.toString, "---setup", setupStrategy), cwd = buildDir).!(ProcessLogger(logger, logger))
           val endTime = LocalDateTime.now
           val diffTime = ChronoUnit.SECONDS.between(startTime, endTime)
           printWriter.flush()
@@ -130,9 +130,8 @@ object ViashTest {
         }
       }
 
-
     // if setup failed, return faster
-    if (buildResult.isDefined && buildResult.get.exitValue > 0) {
+    if (buildResult.exists(_.exitValue > 0)) {
       return ManyTestOutput(buildResult, Nil)
     }
 

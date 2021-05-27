@@ -2,13 +2,16 @@
 
 ## BREAKING CHANGES
 
-* `DockerPlatform`: a Docker setup will be performed by default. Default strategy has been changed to `ifneedbepullelsecachedbuild`.
+* `DockerPlatform`: a Docker setup will be performed by default. Default strategy has been changed to `ifneedbepullelsecachedbuild` (#57).
   `---setup` strategy has been removed and `---docker_setup_strategy` has been renamed to `---setup`.
-  This change allows running a component for the first time. During first time setup, the Docker container will be pulled or built automatically.
+  This change allows running a component for the first time. During first time setup, the Docker container will be pulled or built automatically. 
 
 ## MAJOR CHANGES
 
 * `NXF`: An argument can be either `required` or not and can have a `default: ...` value or not. This version changes the handling logic for these 4 combinations and improves the overall ability to override parameters from the CLI/pipeline. Please refer to the [documentation](http://www.data-intuitive.com/viash_docs/config/platform-nextflow/#access-arguments-from-the-nextflow-cli-v041).
+
+* `viash run`: Implement verbosity levels (#58). viash executables now have 7 levels of verbosity: emergency, alert, critical, error, warning, notice, info, debug.
+  The default verbosity level is 'notice'. Passing `-v` or `--verbose` bumps up the verbosity level by one, `-vv` by two. The verbosity level can be set manually by passing `--verbosity x`.
 
 ## MINOR CHANGES
 
@@ -30,7 +33,7 @@
 
 * `NXF`: Reinstate function_type: asis in line with the refactored module generation code
 
-* `ns test`: print header when `--tsv foo.tsv --append true` but foo.tsv doesn't exist yet. Fixes #45.
+* `viash ns test`: print header when `--tsv foo.tsv --append true` but foo.tsv doesn't exist yet. Fixes #45.
 
 # viash 0.4.0 (2021-04-14)
 

@@ -80,6 +80,7 @@ object BashWrapper {
     }
   }
 
+  val var_verbosity = "VIASH_VERBOSITY"
   val var_resources_dir = "VIASH_RESOURCES_DIR"
 
   def wrapScript(
@@ -163,6 +164,8 @@ object BashWrapper {
          |
          |The component may contain files which fall under a different license. The authors of this component should specify the license in the header of such files, or include a separate license file detailing the licenses of all included files.""".stripMargin
 
+    val reserved = List("-h", "--help", "-v", "--verbosity", "--verbosity_level")
+
     /* GENERATE BASH SCRIPT */
     s"""#!/usr/bin/env bash
        |
@@ -180,6 +183,7 @@ object BashWrapper {
        |${Bash.ViashQuote}
        |${Bash.ViashRemoveFlags}
        |${Bash.ViashSourceDir}
+       |${Bash.ViashLogging}
        |
        |# find source folder of this component
        |$var_resources_dir=`ViashSourceDir $${BASH_SOURCE[0]}`
@@ -193,6 +197,22 @@ object BashWrapper {
        |        -h|--help)
        |            ViashHelp
        |            exit;;
+       |        -v|--verbose)
+       |            let "$var_verbosity=$var_verbosity+1"
+       |            shift 1
+       |            ;;
+       |        -vv)
+       |            let "$var_verbosity=$var_verbosity+2"
+       |            shift 1
+       |            ;;
+       |        --verbosity)
+       |            $var_verbosity="$$2"
+       |            shift 2
+       |            ;;
+       |        --verbosity=*)
+       |            $var_verbosity="$$(ViashRemoveFlags "$$1")"
+       |            shift 1
+       |            ;;
        |${allMods.parsers}
        |        *)  # positional arg or unknown option
        |            # since the positional args will be eval'd, can we always quote, instead of using ViashQuote
@@ -330,7 +350,7 @@ object BashWrapper {
         "\n# check whether required parameters exist\n" +
           reqParams.map { param =>
             s"""if [ -z "$$${param.VIASH_PAR}" ]; then
-    |  echo '${param.name}' is a required argument. Use "--help" to get more information on the parameters.
+    |  ViashError '${param.name}' is a required argument. Use "--help" to get more information on the parameters.
     |  exit 1
     |fi""".stripMargin
           }.mkString("\n")
@@ -373,7 +393,7 @@ object BashWrapper {
     |  for file in $$${param.VIASH_PAR}; do
       |    unset IFS
     |    if [ ! -e "$$file" ]; then
-    |      echo "File '$$file' does not exist."
+    |      ViashError "File '$$file' does not exist."
     |      exit 1
     |    fi
       |  done
@@ -381,7 +401,7 @@ object BashWrapper {
     |fi""".stripMargin
             } else {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ] && [ ! -e "$$${param.VIASH_PAR}" ]; then
-    |  echo "File '$$${param.VIASH_PAR}' does not exist."
+    |  ViashError "File '$$${param.VIASH_PAR}' does not exist."
     |  exit 1
     |fi""".stripMargin
             }

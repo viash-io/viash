@@ -39,13 +39,14 @@ function ViashDockerLocalTagCheck {
 #   ViashDockerPull sdaizudceahifu
 #   echo $?                                     # returns '1'
 function ViashDockerPull {
-  echo "> docker pull $1"
+  ViashNotice "Running 'docker pull $1'"
   docker pull $1 && return 0 || return 1
 }
 
 # ViashDockerPullElseBuild: pull a Docker image, else build it
 #
 # $1                  : image identifier with format `[registry/]image[:tag]`
+# ViashDockerBuild    : a Bash function which builds a docker image, takes image identifier as argument.
 # examples:
 #   ViashDockerPullElseBuild mynewcomponent
 function ViashDockerPullElseBuild {
@@ -84,8 +85,7 @@ function ViashDockerSetup {
     outCheck=$?
     set -e
     if [ $outCheck -eq 0 ]; then
-      # echo "Image $VSHD_ID already exists"
-      :
+      ViashInfo "Image $VSHD_ID already exists"
     elif [ "$VSHD_STRAT" == "ifneedbebuild" ]; then
       ViashDockerBuild $VSHD_ID --no-cache
     elif [ "$VSHD_STRAT" == "ifneedbecachedbuild" ]; then
@@ -97,7 +97,7 @@ function ViashDockerSetup {
     elif [ "$VSHD_STRAT" == "ifneedbepullelsecachedbuild" ]; then
       ViashDockerPullElseBuild $VSHD_ID
     else
-      echo "Unrecognised Docker strategy: $VSHD_STRAT"
+      ViashError "Unrecognised Docker strategy: $VSHD_STRAT"
       exit 1
     fi
   elif [ "$VSHD_STRAT" == "push" -o "$VSHD_STRAT" == "forcepush" -o "$VSHD_STRAT" == "alwayspush" ]; then
@@ -106,9 +106,9 @@ function ViashDockerSetup {
     outPush=$?
     set -e
     if [ $outPush -eq 0 ]; then
-      echo "> $VSHD_ID force push ... ok"
+      ViashNotice "Container '$VSHD_ID' push succeeded."
     else
-      echo "> $VSHD_ID force push ... error"
+      ViashError "Container '$VSHD_ID' push errored."
       exit 1
     fi
   elif [ "$VSHD_STRAT" == "pushifnotpresent" -o "$VSHD_STRAT" == "gentlepush" -o "$VSHD_STRAT" == "maybepush" ]; then
@@ -117,24 +117,24 @@ function ViashDockerSetup {
     outCheck=$?
     set -e
     if [ $outCheck -eq 0 ]; then
-      echo "> $VSHD_ID exists, doing nothing"
+      ViashNotice "Container '$VSHD_ID' exists, doing nothing."
     else
-      echo -n "> $VSHD_ID does not exist, try pushing "
+      ViashNotice "Container '$VSHD_ID' does not yet exist."
       set +e
       docker push $1 > /dev/null 2> /dev/null
       outPush=$?
       set -e
       if [ $outPush -eq 0 ]; then
-        echo "... ok"
+        ViashNotice "Container '$VSHD_ID' push succeeded."
       else
-        echo "... error"
+      ViashError "Container '$VSHD_ID' push errored."
         exit 1
       fi
     fi
   elif [ "$VSHD_STRAT" == "donothing" -o "$VSHD_STRAT" == "meh" ]; then
-    echo "Skipping setup."
+    ViashNotice "Skipping setup."
   else
-    echo "Unrecognised Docker strategy: $VSHD_STRAT"
+    ViashError "Unrecognised Docker strategy: $VSHD_STRAT"
     exit 1
   fi
 }
