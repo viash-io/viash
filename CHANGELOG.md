@@ -23,6 +23,8 @@
 
 * `viash run`: Added a `--version` flag to viash executables for viewing the version of the component.
 
+* `Functionality`: Added checks on the functionality and argument names.
+
 ## BUG FIXES
 
 * `Docker R Requirements`: Install `remotes` when using `{ type: r, packages: [ foo ] }`.

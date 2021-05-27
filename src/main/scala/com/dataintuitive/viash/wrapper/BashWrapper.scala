@@ -25,8 +25,6 @@ import com.dataintuitive.viash.helpers.{Bash, Format}
 
 object BashWrapper {
 
-  val reservedParameters = List("-h", "--help", "-v", "--verbose", "--verbosity", "--version")
-
   def nameAndVersion(functionality: Functionality): String = {
     functionality.name + functionality.version.map(" " + _).getOrElse("<not versioned>")
   }
@@ -340,14 +338,14 @@ object BashWrapper {
     val positionalStr = positionals.map { param =>
       if (param.multiple) {
         s"""while [[ $$# -gt 0 ]]; do
-      |  ${store(param.VIASH_PAR, "\"$1\"", Some(param.multiple_sep)).mkString("\n  ")}
-    |  shift 1
-    |done""".stripMargin
+           |  ${store(param.VIASH_PAR, "\"$1\"", Some(param.multiple_sep)).mkString("\n  ")}
+           |  shift 1
+           |done""".stripMargin
       } else {
         s"""if [[ $$# -gt 0 ]]; then
-    |  ${param.VIASH_PAR}="$$1"
-    |  shift 1
-    |fi"""
+           |  ${param.VIASH_PAR}="$$1"
+           |  shift 1
+           |fi"""
       }
     }.mkString("\n")
 
@@ -360,9 +358,9 @@ object BashWrapper {
         "\n# check whether required parameters exist\n" +
           reqParams.map { param =>
             s"""if [ -z "$$${param.VIASH_PAR}" ]; then
-    |  ViashError '${param.name}' is a required argument. Use "--help" to get more information on the parameters.
-    |  exit 1
-    |fi""".stripMargin
+               |  ViashError '${param.name}' is a required argument. Use "--help" to get more information on the parameters.
+               |  exit 1
+               |fi""".stripMargin
           }.mkString("\n")
       }
 
@@ -380,8 +378,8 @@ object BashWrapper {
 
       default.map(default => {
         s"""if [ -z "$$${param.VIASH_PAR}" ]; then
-    |  ${param.VIASH_PAR}="${escapeViash(default.toString, escapeQuotes = true)}"
-    |fi""".stripMargin
+           |  ${param.VIASH_PAR}="${escapeViash(default.toString, escapeQuotes = true)}"
+           |fi""".stripMargin
       })
     }.mkString("\n")
 
@@ -398,22 +396,22 @@ object BashWrapper {
           reqFiles.map { param =>
             if (param.multiple) {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
-    |  IFS=${param.multiple_sep}
-    |  set -f
-    |  for file in $$${param.VIASH_PAR}; do
-      |    unset IFS
-    |    if [ ! -e "$$file" ]; then
-    |      ViashError "File '$$file' does not exist."
-    |      exit 1
-    |    fi
-      |  done
-      |  set +f
-    |fi""".stripMargin
-            } else {
-              s"""if [ ! -z "$$${param.VIASH_PAR}" ] && [ ! -e "$$${param.VIASH_PAR}" ]; then
-    |  ViashError "File '$$${param.VIASH_PAR}' does not exist."
-    |  exit 1
-    |fi""".stripMargin
+                 |  IFS=${param.multiple_sep}
+                 |  set -f
+                 |  for file in $$${param.VIASH_PAR}; do
+                 |    unset IFS
+                 |    if [ ! -e "$$file" ]; then
+                 |      ViashError "File '$$file' does not exist."
+                 |      exit 1
+                 |    fi
+                 |  done
+                 |  set +f
+                 |fi""".stripMargin
+          } else {
+            s"""if [ ! -z "$$${param.VIASH_PAR}" ] && [ ! -e "$$${param.VIASH_PAR}" ]; then
+               |  ViashError "File '$$${param.VIASH_PAR}' does not exist."
+               |  exit 1
+               |fi""".stripMargin
             }
           }.mkString("\n")
       }
@@ -429,28 +427,28 @@ object BashWrapper {
     val inserts = params.map {
       case bo: BooleanObject if bo.flagValue.isDefined =>
         s"""
-    |if [ "$$${bo.VIASH_PAR}" == "${bo.flagValue.get}" ]; then
-    |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS ${bo.name}"
-    |fi""".stripMargin
+           |if [ "$$${bo.VIASH_PAR}" == "${bo.flagValue.get}" ]; then
+           |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS ${bo.name}"
+           |fi""".stripMargin
       case param =>
         val flag = if (param.otype == "") "" else " " + param.name
 
         if (param.multiple) {
           s"""
-    |if [ ! -z "$$${param.VIASH_PAR}" ]; then
-    |  IFS=${param.multiple_sep}
-    |  set -f
-    |  for val in $$${param.VIASH_PAR}; do
-      |    unset IFS
-    |    VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$val'"
-    |  done
-      |  set +f
-    |fi""".stripMargin
+             |if [ ! -z "$$${param.VIASH_PAR}" ]; then
+             |  IFS=${param.multiple_sep}
+             |  set -f
+             |  for val in $$${param.VIASH_PAR}; do
+             |    unset IFS
+             |    VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$val'"
+             |  done
+             |  set +f
+             |fi""".stripMargin
         } else {
           s"""
-    |if [ ! -z "$$${param.VIASH_PAR}" ]; then
-    |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$${param.VIASH_PAR}'"
-    |fi""".stripMargin
+             |if [ ! -z "$$${param.VIASH_PAR}" ]; then
+             |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$${param.VIASH_PAR}'"
+             |fi""".stripMargin
         }
     }
 
