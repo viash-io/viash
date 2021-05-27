@@ -25,12 +25,12 @@ import resources.{BashScript, Script}
 import sys.process.{Process, ProcessLogger}
 import java.io.{ByteArrayOutputStream, File, FileWriter, PrintWriter}
 import java.nio.file.Paths
-
-import com.dataintuitive.viash.config.Config
+import com.dataintuitive.viash.config.{Config, Version}
 import helpers.IO
 
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import scala.util.Random
 
 object ViashTest {
   case class TestOutput(name: String, exitValue: Int, output: String, logFile: String, duration: Long)
@@ -39,21 +39,41 @@ object ViashTest {
   def apply(
     config: Config,
     keepFiles: Option[Boolean] = None,
-    quiet: Boolean = false
+    quiet: Boolean = false,
+    setupStrategy: String = "cachedbuild",
+    tempVersion: Boolean = true,
+    verbosityLevel: Int = 6
   ): ManyTestOutput = {
     // create temporary directory
     val dir = IO.makeTemp("viash_test_" + config.functionality.name)
     if (!quiet) println(s"Running tests in temporary directory: '$dir'")
 
+    // set version to temporary value
+    val config2 = if (tempVersion) {
+      config.copy(
+        functionality = config.functionality.copy(
+          version = Some(Version(Random.alphanumeric.take(12).mkString))
+        )
+      )
+    } else {
+      config
+    }
+
     // run tests
-    val ManyTestOutput(setupRes, results) = ViashTest.runTests(config, dir, verbose = !quiet)
+    val ManyTestOutput(setupRes, results) = ViashTest.runTests(
+      config = config2,
+      dir = dir,
+      verbose = !quiet,
+      setupStrategy = setupStrategy,
+      verbosityLevel = verbosityLevel
+    )
     val count = results.count(_.exitValue == 0)
-    val anyErrors = setupRes.map(_.exitValue > 0).getOrElse(false) || count < results.length
+    val anyErrors = setupRes.exists(_.exitValue > 0) || count < results.length
 
     val errorMessage =
       if (!anyErrors) {
         ""
-      } else if (setupRes.isDefined && setupRes.get.exitValue > 0) {
+      } else if (setupRes.exists(_.exitValue > 0)) {
         "Setup failed!"
       } else {
         s"Only $count out of ${results.length} test scripts succeeded!"
@@ -100,6 +120,7 @@ object ViashTest {
       if (!platform.hasSetup) {
         None
       } else {
+        // todo: setupStrategy will have to be handled differently when non-docker platforms need setting up.
         val stream = new ByteArrayOutputStream
         val printWriter = new PrintWriter(stream)
         val logPath = Paths.get(buildDir.toString, "_viash_build_log.txt").toString
