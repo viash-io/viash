@@ -30,6 +30,8 @@
 
 * `NXF`: Reinstate function_type: asis in line with the refactored module generation code
 
+* `ns test`: print header when `--tsv foo.tsv --append true` but foo.tsv doesn't exist yet. Fixes #45.
+
 # viash 0.4.0 (2021-04-14)
 
 ## NEW FEATURES

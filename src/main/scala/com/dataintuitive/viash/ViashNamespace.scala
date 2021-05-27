@@ -17,7 +17,7 @@
 
 package com.dataintuitive.viash
 
-import java.io.FileWriter
+import java.nio.file.{Paths, Files, StandardOpenOption}
 import com.dataintuitive.viash.ViashTest.{ManyTestOutput, TestOutput}
 import config.Config
 
@@ -67,12 +67,14 @@ object ViashNamespace {
     val configs2 = if (parallel) configs.par else configs
 
     // run all the component tests
-    val tsvWriter = tsv.map(new FileWriter(_, append))
+    val tsvPath = tsv.map(Paths.get(_))
+    val tsvExists = tsvPath.exists(Files.exists(_))
+    val tsvWriter = tsvPath.map(Files.newBufferedWriter(_, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND))
 
     try {
-      if (!append)
-        tsvWriter.foreach(
-          _.append(
+      if (!append || !tsvExists)
+        tsvWriter.foreach { writer =>
+          writer.append(
             List(
               "namespace",
               "functionality",
@@ -82,7 +84,8 @@ object ViashNamespace {
               "duration",
               "result"
             ).mkString("\t") + sys.props("line.separator"))
-        )
+          writer.flush()
+        }
       printf(
         s"%s%20s %20s %20s %20s %9s %8s %20s%s\n",
         "",
@@ -153,26 +156,7 @@ object ViashNamespace {
     }
   }
 
-  def list(
-    configs: List[Config]
-  ) {
-    // TODO: move the functionality here to a dedicated helper
-    // TODO2: align with viash config view
-
-    import config._
-    import io.circe.yaml.Printer
-    import io.circe.syntax.EncoderOps
-
-    val printer = Printer(
-      preserveOrder = true,
-      dropNullKeys = true,
-      mappingStyle = Printer.FlowStyle.Block,
-      splitLines = true,
-      stringStyle = Printer.StringStyle.DoubleQuoted
-    )
-    println(
-      printer.pretty(configs.asJson)
-    )
-
+  def list(configs: List[Config]) {
+    ViashConfig.viewMany(configs)
   }
 }
