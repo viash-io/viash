@@ -32,7 +32,7 @@
 #'   - name: "--log"
 #'     type: file
 #'     description: An optional log file.
-#'     direction: log
+#'     direction: output
 #'   - name: "--optional"
 #'     type: string
 #'     description: An optional string.

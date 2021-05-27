@@ -43,7 +43,6 @@ package object dataobjects {
         s.toLowerCase() match {
           case "input" => Input
           case "output" => Output
-          case "log" => Log
         }
       )
   }
