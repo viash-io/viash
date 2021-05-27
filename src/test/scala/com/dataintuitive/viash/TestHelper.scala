@@ -25,10 +25,10 @@ object TestHelper {
    * @param args all the arguments typically passed to Main.main()
    * @return an array of strings of all the output
    */
-  def testMain(args: Array[String]) : String = {
+  def testMain(args: String*) : String = {
     val os = new ByteArrayOutputStream()
     Console.withOut(os) {
-      Main.main(args)
+      Main.main(args.toArray)
     }
 
     val stdout = os.toString
@@ -43,11 +43,11 @@ object TestHelper {
    * @param args all the arguments typically passed to Main.main()
    * @return an array of strings of all the output
    */
-  def testMainException[T <: AnyRef: ClassTag](args: Array[String]) : String = {
+  def testMainException[T <: AnyRef: ClassTag](args: String*) : String = {
     val os = new ByteArrayOutputStream()
     assertThrows[T] {
       Console.withOut(os) {
-        Main.main(args)
+        Main.main(args.toArray)
       }
     }
 
@@ -63,11 +63,11 @@ object TestHelper {
    * @param args all the arguments typically passed to Main.main()
    * @return ExceptionOutput containing the exception text and the console output text
    */
-  def testMainException2[T <: Exception](args: Array[String]) : ExceptionOutput = {
+  def testMainException2[T <: Exception](args: String*) : ExceptionOutput = {
     val os = new ByteArrayOutputStream()
     val caught = intercept[Exception] {
       Console.withOut(os) {
-        Main.main(args)
+        Main.main(args.toArray)
       }
     }
 

@@ -19,11 +19,11 @@ class TestingAllComponentsSuite extends FunSuite {
     val config = getTestResource(s"/$name/$file")
 
     test(s"Testing $name platform native", NativeTest) {
-      TestHelper.testMain(Array("test", "-p", "native", config))
+      TestHelper.testMain("test", "-p", "native", config)
     }
 
     test(s"Testing $name platform docker", DockerTest) {
-      TestHelper.testMain(Array("test", "-p", "docker", config))
+      TestHelper.testMain("test", "-p", "docker", config)
     }
 
     test(s"Testing $name whether yaml parsing/unparsing is invertible") {

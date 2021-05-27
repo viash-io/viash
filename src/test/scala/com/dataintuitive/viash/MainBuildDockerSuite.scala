@@ -43,12 +43,12 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   //<editor-fold desc="Test benches to build a generic script and run various commands to see if the functionality is correct">
   // convert testbash
   test("viash can create an executable") {
-    TestHelper.testMain(Array(
+    TestHelper.testMain(
       "build",
       "-p", "docker",
       "-o", tempFolStr,
       configFile,
-    ))
+    )
 
     assert(executable.exists)
     assert(executable.canExecute)
@@ -166,24 +166,24 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("viash build with trailing arguments") {
-    TestHelper.testMain(Array(
+    TestHelper.testMain(
       "build",
       configFile,
       "-p", "docker",
       "-o", tempFolStr,
-    ))
+    )
 
     assert(executable.exists)
     assert(executable.canExecute)
   }
 
   test("Specify platform (docker) in config yaml", DockerTest) {
-    val testText = TestHelper.testMain(Array(
+    val testText = TestHelper.testMain(
       "build",
       "-o", tempFolStr,
       "-m",
       configPlatformFile,
-    ))
+    )
 
     assert(executable.exists)
     assert(executable.canExecute)
@@ -200,12 +200,12 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   //<editor-fold desc="Test benches to check building with tags, versions & registries">
   test("Get tagged version of a docker image for bash 5.0", DockerTest) {
     // prepare the environment
-    TestHelper.testMain(Array(
+    TestHelper.testMain(
       "build",
       "-p", "testtag1",
       "-o", tempFolStr,
       configBashTagFile
-    ))
+    )
 
     assert(executableBashTagFile.exists)
     assert(executableBashTagFile.canExecute)
@@ -233,12 +233,12 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
   test("Get tagged version of a docker image for bash 3.2", DockerTest) {
     // prepare the environment
-    TestHelper.testMain(Array(
+    TestHelper.testMain(
       "build",
       "-p", "testtag2",
       "-o", tempFolStr,
       configBashTagFile
-    ))
+    )
 
     assert(executableBashTagFile.exists)
     assert(executableBashTagFile.canExecute)
@@ -266,12 +266,12 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
   test("Check whether target image name is well formed without target_image, version or registry", DockerTest) {
     // prepare the environment
-    TestHelper.testMain(Array(
+    TestHelper.testMain(
       "build",
       "-p", "testtargetimage1",
       "-o", tempFolStr,
       configBashTagFile
-    ))
+    )
 
     assert(executableBashTagFile.exists)
     assert(executableBashTagFile.canExecute)
@@ -298,12 +298,12 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
   test("Check whether target image name is well formed with target_image, version, and registry", DockerTest) {
     // prepare the environment
-    TestHelper.testMain(Array(
+    TestHelper.testMain(
       "build",
       "-p", "testtargetimage2",
       "-o", tempFolStr,
       configBashTagFile
-    ))
+    )
 
     assert(executableBashTagFile.exists)
     assert(executableBashTagFile.canExecute)
@@ -330,12 +330,12 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
   test("Check whether target image name is well formed with target_image, target_tag", DockerTest) {
     // prepare the environment
-    TestHelper.testMain(Array(
+    TestHelper.testMain(
       "build",
       "-p", "testtargetimage3",
       "-o", tempFolStr,
       configBashTagFile
-    ))
+    )
 
     assert(executableBashTagFile.exists)
     assert(executableBashTagFile.canExecute)
@@ -382,13 +382,13 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
       // Run the code
       // prepare the environment
-      val stdout = TestHelper.testMain(Array(
+      val stdout = TestHelper.testMain(
         "build",
         "-p", "docker",
         "-o", tempFolStr,
         "-m",
         configMetaFile
-      ))
+      )
 
       assert(executableBashTagFile.exists)
       assert(executableBashTagFile.canExecute)
@@ -451,13 +451,13 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
       // Run the code
       // prepare the environment
-      val stdout = TestHelper.testMain(Array(
+      val stdout = TestHelper.testMain(
         "build",
         "-p", "docker",
         "-o", tempFolStr,
         "-m",
         configMetaFile
-      ))
+      )
 
       assert(executableBashTagFile.exists)
       assert(executableBashTagFile.canExecute)
@@ -511,13 +511,13 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
       // Run the code
       // prepare the environment
-      val stdout = TestHelper.testMain(Array(
+      val stdout = TestHelper.testMain(
         "build",
         "-p", "docker",
         "-o", tempFolStr,
         "-m",
         configMetaFile
-      ))
+      )
 
       assert(executableBashTagFile.exists)
       assert(executableBashTagFile.canExecute)
@@ -552,12 +552,12 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(!checkDockerImageExists("busybox"))
 
     // build viash wrapper without --setup
-    TestHelper.testMain(Array(
+    TestHelper.testMain(
       "build",
       "-p", "busybox",
       "-o", tempFolStr,
       configFile
-    ))
+    )
 
     assert(executable.exists)
     assert(executable.canExecute)
@@ -581,13 +581,13 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(!checkDockerImageExists("busybox"))
 
     // build viash wrapper with --setup
-    TestHelper.testMain(Array(
+    TestHelper.testMain(
       "build",
       "-p", "busybox",
       "-o", tempFolStr,
       "--setup", "build",
       configFile
-    ))
+    )
 
     assert(executable.exists)
     assert(executable.canExecute)
@@ -598,13 +598,13 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   //</editor-fold>
   //<editor-fold desc="Test benches to check additional installation of required packages">
   test("check base image for apk still does not contain the fortune package", DockerTest) {
-    TestHelper.testMain(Array(
+    TestHelper.testMain(
       "build",
       "-p", "viash_requirement_apk_base",
       "-o", tempFolStr,
       "--setup", "build",
       configRequirementsFile
-    ))
+    )
 
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
@@ -625,13 +625,13 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(!checkDockerImageExists("viash_requirement_apk"))
 
     // build viash wrapper with --setup
-    TestHelper.testMain(Array(
+    TestHelper.testMain(
       "build",
       "-p", "viash_requirement_apk",
       "-o", tempFolStr,
       "--setup", "build",
       configRequirementsFile
-    ))
+    )
 
     // verify docker exists
     assert(checkDockerImageExists("viash_requirement_apk"))
@@ -653,13 +653,13 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("check base image for apt still does not contain the cowsay package", DockerTest) {
-    TestHelper.testMain(Array(
+    TestHelper.testMain(
       "build",
       "-p", "viash_requirement_apt_base",
       "-o", tempFolStr,
       "--setup", "build",
       configRequirementsFile
-    ))
+    )
 
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
@@ -680,13 +680,13 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(!checkDockerImageExists("viash_requirement_apt"))
 
     // build viash wrapper with --setup
-    val _ = TestHelper.testMain(Array(
+    val _ = TestHelper.testMain(
       "build",
       "-p", "viash_requirement_apt",
       "-o", tempFolStr,
       "--setup", "build",
       configRequirementsFile
-    ))
+    )
 
     // verify docker exists
     assert(checkDockerImageExists("viash_requirement_apt"))
@@ -724,12 +724,11 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     // generate viash script
     TestHelper.testMain(
-      Array(
-        "build",
-        "-p", "docker",
-        "-o", tempFolStr,
-        configResourcesCopyFile
-      ))
+      "build",
+      "-p", "docker",
+      "-o", tempFolStr,
+      configResourcesCopyFile
+    )
 
     assert(executable.exists)
     assert(executable.canExecute)
@@ -765,12 +764,11 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   test("Check resources with unsupported format") {
     // generate viash script
     val testOutput = TestHelper.testMainException2[RuntimeException](
-      Array(
-        "build",
-        "-p", "docker",
-        "-o", tempFolStr,
-        configResourcesUnsupportedProtocolFile
-      ))
+      "build",
+      "-p", "docker",
+      "-o", tempFolStr,
+      configResourcesUnsupportedProtocolFile
+    )
 
     assert(testOutput.exceptionText == "Unsupported scheme: ftp")
   }
@@ -782,13 +780,13 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     val localExecutable = Paths.get(tempFolStr, localFunctionality.name).toFile
 
     // prepare the environment
-    TestHelper.testMain(Array(
+    TestHelper.testMain(
       "build",
       "-p", dockerId,
       "-o", tempFolStr,
       "--setup", "build",
       localConfig
-    ))
+    )
 
     assert(localExecutable.exists)
     assert(localExecutable.canExecute)
@@ -819,13 +817,13 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     val localExecutable = Paths.get(tempFolStr, localFunctionality.name).toFile
 
     // prepare the environment
-    TestHelper.testMain(Array(
+    TestHelper.testMain(
       "build",
       "-p", dockerId,
       "-o", tempFolStr,
       "--setup", "build",
       localConfig
-    ))
+    )
 
     assert(localExecutable.exists)
     assert(localExecutable.canExecute)
@@ -860,13 +858,13 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     val localExecutable = Paths.get(tempFolStr, localFunctionality.name).toFile
 
     // prepare the environment
-    TestHelper.testMain(Array(
+    TestHelper.testMain(
       "build",
       "-p", dockerId,
       "-o", tempFolStr,
       "--setup", "build",
       localConfig
-    ))
+    )
 
     assert(localExecutable.exists)
     assert(localExecutable.canExecute)

@@ -46,10 +46,9 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
 
   test("Check namespace test output") {
     val testText = TestHelper.testMain(
-      Array(
-        "ns", "test",
-        "--src", nsPath
-      ))
+      "ns", "test",
+      "--src", nsPath
+    )
 
     // Test inclusion of a header
     val regexHeader = raw"^\s*namespace\s*functionality\s*platform\s*test_name\s*exit_code\s*duration\s*result".r
@@ -67,11 +66,10 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
     val log = Paths.get(tempFolStr, "log.tsv").toFile
 
     val testText = TestHelper.testMain(
-      Array(
-        "ns", "test",
-        "--tsv", log.toString,
-        "--src", nsPath
-      ))
+      "ns", "test",
+      "--tsv", log.toString,
+      "--src", nsPath
+    )
 
     val logSrc = Source.fromFile(log)
     try {
@@ -102,12 +100,11 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
     Files.write(log.toPath, fileHeader.getBytes(StandardCharsets.UTF_8))
 
     val testText = TestHelper.testMain(
-      Array(
-        "ns", "test",
-        "--tsv", log.toString,
-        "--append",
-        "--src", nsPath
-      ))
+      "ns", "test",
+      "--tsv", log.toString,
+      "--append",
+      "--src", nsPath
+    )
 
     val logSrc = Source.fromFile(log)
     try {
