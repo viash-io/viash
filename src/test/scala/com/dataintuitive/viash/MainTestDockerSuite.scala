@@ -250,7 +250,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(testOutput.output.isEmpty)
   }
 
-  test("Check standard test output with custom platform file", NativeTest) {
+  test("Check standard test output with custom platform file", DockerTest) {
     val testText = TestHelper.testMain(
       Array(
         "test",
