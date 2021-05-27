@@ -21,6 +21,7 @@ case class StringObject(
   name: String,
   alternatives: List[String] = Nil,
   description: Option[String] = None,
+  example: Option[String] = None,
   default: Option[String] = None,
   required: Boolean = false,
   values: Option[List[String]] = None,

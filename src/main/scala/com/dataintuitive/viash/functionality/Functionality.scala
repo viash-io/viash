@@ -29,6 +29,7 @@ case class Functionality(
   arguments: List[DataObject[_]] = Nil,
   resources: Option[List[Resource]] = None,
   description: Option[String] = None,
+  usage: Option[String] = None,
   function_type: Option[FunctionType] = None,
   tests: Option[List[Resource]] = None,
   info: Map[String, String] = Map.empty[String, String],

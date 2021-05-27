@@ -23,6 +23,7 @@ case class FileObject(
   name: String,
   alternatives: List[String] = Nil,
   description: Option[String] = None,
+  example: Option[String] = None,
   default: Option[File] = None,
   must_exist: Boolean = false,
   required: Boolean = false,

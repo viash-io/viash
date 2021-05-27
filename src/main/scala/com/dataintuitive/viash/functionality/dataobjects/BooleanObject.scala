@@ -25,6 +25,7 @@ case class BooleanObjectRegular(
   name: String,
   alternatives: List[String] = Nil,
   description: Option[String] = None,
+  example: Option[String] = None,
   default: Option[Boolean] = None,
   required: Boolean = false,
   tag: Option[String] = None,
@@ -41,6 +42,7 @@ case class BooleanObjectTrue(
   name: String,
   alternatives: List[String] = Nil,
   description: Option[String] = None,
+  example: Option[String] = None,
   tag: Option[String] = None,
   direction: Direction = Input,
 ) extends BooleanObject {
@@ -57,6 +59,7 @@ case class BooleanObjectFalse(
   name: String,
   alternatives: List[String] = Nil,
   description: Option[String] = None,
+  example: Option[String] = None,
   tag: Option[String] = None,
   direction: Direction = Input,
 ) extends BooleanObject {

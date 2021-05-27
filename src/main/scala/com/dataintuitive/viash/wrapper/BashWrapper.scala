@@ -240,58 +240,59 @@ object BashWrapper {
 
   private def generateHelp(functionality: Functionality, params: List[DataObject[_]]) = {
     // gather parse code for params
-    val usageStrs = params.map(param => {
+    val paramStrs = params.map(param => {
       val names = param.alternatives ::: List(param.name)
 
-      val exval = param.`type`
-      val exampleValues =
-        if (param.multiple) {
-          exval + "1" + param.multiple_sep + exval + "2" + param.multiple_sep + "..."
-        } else {
-          exval
-        }
+      val unnamedProps = List(
+        ("required parameter", param.required),
+        ("multiple values allowed", param.multiple),
+        ("output", param.direction == Output),
+        ("file must exist", param.isInstanceOf[FileObject] && param.asInstanceOf[FileObject].must_exist)
+      ).filter(_._2).map(_._1)
 
-      val exampleStrs = {
-        param match {
-          case bo: BooleanObject if bo.flagValue.isDefined => names
-          case _ =>
-            names.map(name => {
-              if (name.startsWith("--") || name.startsWith("---")) {
-                name + "=" + exampleValues
-              } else if (name.startsWith("-")) {
-                name + " " + exampleValues
-              } else {
-                exampleValues
-              }
-            })
-        }
-      }
+      val namedProps = List(
+        ("type", Some((param.`type` :: unnamedProps).mkString(", "))),
+        ("default", param.default),
+        ("example", param.example)
+      ).flatMap { case (name, x) =>
+        x.map("\necho \"        " + name + ": " + _ + "\"")
+      }.mkString
 
-      val properties =
-        List("type: " + param.`type`) ::: {
-          if (param.required) List("required parameter") else Nil
-        } ::: {
-          if (param.multiple) List("multiple values allowed") else Nil
-        } ::: {
-          if (param.default.isDefined) List("default: " + param.default.get) else Nil
-        }
+      val descStr = param.description.map{ desc =>
+        val escapedDesc = escapeViash(desc, escapeQuotes = true).split("\n")
+        escapedDesc.map("\necho \"        " + _ + "\"").mkString
+      }.getOrElse("")
 
-      val part1 = "    " + exampleStrs.mkString(", ")
-      val part2 = "        " + properties.mkString(", ")
-      val part3 = param.description.toList.flatMap(escapeViash(_, escapeQuotes = true).split("\n")).map("        " + _)
-
-      (part1 :: part2 :: part3 ::: List("")).map("    echo \"" + _ + "\"").mkString("\n")
+      s"""
+         |echo "    ${names.mkString(", ")}"$namedProps$descStr
+         |echo ""
+         |""".stripMargin
     })
 
-    // TODO: add usage?
+    val descrStr =
+      if (functionality.description.isDefined) {
+        s"""
+           |echo "${escapeViash(functionality.description.get.stripLineEnd, escapeQuotes = true)}"""".stripMargin
+      } else {
+        ""
+      }
+
+    val usageStr =
+      if (functionality.usage.isDefined) {
+        s"""
+           |echo "Usage: ${escapeViash(functionality.usage.get.stripLineEnd, escapeQuotes = true)}"
+           |echo""".stripMargin
+      } else {
+        ""
+      }
 
     val preParse =
       s"""# ViashHelp: Display helpful explanation about this executable
       |function ViashHelp {
-      |   echo "${escapeViash(functionality.description.getOrElse("").stripLineEnd, escapeQuotes = true)}"
-      |   echo
+      |   echo "${nameAndVersion(functionality)}"$descrStr
+      |   echo$usageStr
       |   echo "Options:"
-      |${usageStrs.mkString("\n")}
+      |${paramStrs.mkString("\n")}
       |}""".stripMargin
 
     BashWrapperMods(preParse = preParse)

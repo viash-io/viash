@@ -19,6 +19,7 @@ functionality:
       direction: input
       required: true
       must_exist: true
+      example: input.txt
     - name: "--real_number"
       type: double
       description: A real number with positional arguments.

@@ -25,6 +25,8 @@
 
 * `Functionality`: Added checks on the functionality and argument names.
 
+* `viash run`: Added examples to functionality and arguments. Reworked `--help` formatting to include more information and be more consistent (#56).
+
 ## BUG FIXES
 
 * `Docker R Requirements`: Install `remotes` when using `{ type: r, packages: [ foo ] }`.
