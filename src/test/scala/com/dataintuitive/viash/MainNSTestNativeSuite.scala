@@ -110,11 +110,43 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
     try {
       val logLines = logSrc.mkString
 
-      // Test inclusion of a header
+      // Test inclusion of a header, header should not be present
       val regexHeader = raw"namespace\tfunctionality\tplatform\ttest_name\texit_code\tduration\tresult".r
       assert(!regexHeader.findFirstIn(logLines).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$logLines")
       val regexHeader2 = "^Test header".r
       assert(regexHeader2.findFirstIn(logLines).isDefined, s"\rRegex: ${regexHeader2.toString}; text: \r$logLines")
+
+      for ((component, steps) ← components) {
+        for ((step, resultPattern) ← steps) {
+          // tsv doesn't output the "start" step, so ignore that
+          if (step != "start") {
+            val regex = s"""testns\\t$component\\tnative\\t$step$resultPattern""".r
+            assert(regex.findFirstIn(logLines).isDefined, s"\nRegex: '${regex.toString}'; text: \n$logLines")
+          }
+        }
+      }
+    } finally {
+      logSrc.close()
+    }
+  }
+
+  test("Check namespace test output with tsv and append options without the output file exists") {
+    val log = Paths.get(tempFolStr, "log_append_new.tsv").toFile
+
+    val testText = TestHelper.testMain(
+      "ns", "test",
+      "--tsv", log.toString,
+      "--append",
+      "--src", nsPath
+    )
+
+    val logSrc = Source.fromFile(log)
+    try {
+      val logLines = logSrc.mkString
+
+      // Test inclusion of a header, header *should* be added if the file didn't exist yet
+      val regexHeader = raw"namespace\tfunctionality\tplatform\ttest_name\texit_code\tduration\tresult".r
+      assert(regexHeader.findFirstIn(logLines).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$logLines")
 
       for ((component, steps) ← components) {
         for ((step, resultPattern) ← steps) {
