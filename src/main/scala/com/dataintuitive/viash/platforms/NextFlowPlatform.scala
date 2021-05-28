@@ -170,7 +170,7 @@ case class NextFlowPlatform(
     val asNestedTuples: List[ConfigTuple] = List(
       "docker.enabled" → true,
       "docker.runOptions" → "-i -v ${baseDir}:${baseDir}",
-      "process.container" → "dataintuitive/portash",
+      "process.container" → "dataintuitive/viash",
       "params" → NestedValue(
         namespacedParameters :::
         List(
