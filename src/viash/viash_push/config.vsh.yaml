@@ -1,15 +1,10 @@
 functionality:
-  name: project_push
+  name: viash_push
   namespace: viash
   version: 0.1
   description: |
     Push a project, usually in the context of a pipeline.
   arguments:
-  # - name: "--src"
-  #   alternatives: [ "-s" ]
-  #   type: file
-  #   description: Directory for sources if different from src/
-  #   default: src
   - name: "--mode"
     alternatives: [ "-m" ]
     type: string
@@ -26,10 +21,10 @@ functionality:
   - name: "--query_name"
     type: string
     description: "Filter which components get selected by name. Can be a regex. Example: '^component1'."
-  - name: "--version"
-    alternatives: [ "-v" ]
+  - name: "--tag"
+    alternatives: [ "-t" ]
     type: string
-    description: Which version of the pipeline to use.
+    description: The tag/version to be used.
     default: "dev"
   - name: "--registry"
     alternatives: [ "-r" ]

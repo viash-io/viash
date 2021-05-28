@@ -2,11 +2,11 @@
 
 if [ "$par_mode" == "release" ]; then
   echo "In release mode..."
-  if [ "$par_version" == "dev" ]; then
+  if [ "$par_tag" == "dev" ]; then
     echo "For a release, you have to specify an explicit version using --version"
     exit 1
   else
-    echo "Using version $par_version" to tag containers
+    echo "Using version $par_tag" to tag containers
   fi
 fi
 
@@ -57,7 +57,7 @@ if [[ $par_force == true ]]; then
       --query "$par_query" \
       --query_name "$par_query_name" \
       --query_namespace "$par_query_namespace" \
-      -c '.functionality.version := "'"$par_version"'"' \
+      -c '.functionality.version := "'"$par_tag"'"' \
       -c '.platforms[.type == "docker"].target_registry := "'"$par_registry"'"' \
       -c '.platforms[.type == "docker"].setup_strategy := "donothing"' \
       -c '.platforms[.type == "docker"].push_strategy := "alwayspush"' \
@@ -92,7 +92,7 @@ else
       --query "$par_query" \
       --query_name "$par_query_name" \
       --query_namespace "$par_query_namespace" \
-      -c '.functionality.version := "'"$par_version"'"' \
+      -c '.functionality.version := "'"$par_tag"'"' \
       -c '.platforms[.type == "docker"].target_registry := "'"$par_registry"'"' \
       -c '.platforms[.type == "docker"].setup_strategy := "donothing"' \
       -c '.platforms[.type == "nextflow"].registry := "'"$par_registry"'"' \

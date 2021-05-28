@@ -12,13 +12,13 @@ cd "$par_bin"
 
 # Retrieving version
 viash_version=`viash -v | sed -E 's/^viash ([v0-9.]+[\-rc0-9]*).*/\1/'`
-if [ -z $par_version ]; then
-  par_version="$viash_version"
+if [ -z $par_tag ]; then
+  par_tag="$viash_version"
   same_version=1
 else
   same_version=0
 fi
-echo "> Using version $par_version"
+echo "> Using tag $par_tag"
 
 # remove previous binaries
 echo "> Cleanup"
@@ -43,17 +43,17 @@ function clean_up {
 trap clean_up EXIT
 
 # Install viash itself
-echo "> Install viash $par_version under $par_bin"
+echo "> Install viash $par_tag under $par_bin"
 if [ $same_version = 1 ];then
   cp `which viash` .
 else
-  wget -nv "https://github.com/data-intuitive/viash/releases/download/$par_version/viash"
+  wget -nv "https://github.com/data-intuitive/viash/releases/download/$par_tag/viash"
   chmod +x viash
 fi
 
 # download latest viash components
 echo "> Fetching components sources"
-fetch --repo="https://github.com/data-intuitive/viash" --branch="$par_version" --source-path="/src/viash" "$build_dir"
+fetch --repo="https://github.com/data-intuitive/viash" --branch="$par_tag" --source-path="/src/viash" "$build_dir"
 
 # build components
 echo "> Building components"
