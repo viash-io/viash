@@ -33,16 +33,16 @@ if [ "$par_mode" == "development" ]; then
   fi
   
   "$par_viash" ns build \
+    -s "$par_src" \
     --platform "$par_platforms" \
     --query "$par_query" \
     --query_name "$par_query_name" \
     --query_namespace "$par_query_namespace" \
     -c '.functionality.version := "dev"' \
-    -c '.platforms[.type == "docker"].setup_strategy := "'$setup_strat'"' \
     -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
     -c "$par_config_mod" \
     -l -w \
-    --setup | tee "$par_log"
+    --setup "$setup_strat" | tee "$par_log"
 elif [ "$par_mode" == "integration" ]; then
   echo "In integration mode..."
   
@@ -51,6 +51,7 @@ elif [ "$par_mode" == "integration" ]; then
   fi
   
   "$par_viash" ns build \
+    -s "$par_src" \
     --platform "$par_platforms" \
     --query "$par_query" \
     --query_name "$par_query_name" \
@@ -62,7 +63,7 @@ elif [ "$par_mode" == "integration" ]; then
     -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
     -c "$par_config_mod" \
     -l -w \
-    --setup | tee "$par_log"
+    --setup "$setup_strat" | tee "$par_log"
 elif [ "$par_mode" == "release" ]; then
   echo "In release mode..."
   
@@ -75,6 +76,7 @@ elif [ "$par_mode" == "release" ]; then
     exit 1
   fi
   "$par_viash" ns build \
+    -s "$par_src" \
     --platform "$par_platforms" \
     --query "$par_query" \
     --query_name "$par_query_name" \
@@ -86,7 +88,7 @@ elif [ "$par_mode" == "release" ]; then
     -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
     -c "$par_config_mod" \
     -l -w \
-    --setup | tee "$par_log"
+    --setup "$setup_strat" | tee "$par_log"
 else
   echo "Not a valid mode argument"
 fi

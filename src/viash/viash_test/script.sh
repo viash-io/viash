@@ -30,6 +30,7 @@ fi
 if [ "$par_mode" == "development" ]; then
   echo "In development mode..."
   "$par_viash" ns test \
+    -s "$par_src" \
     --platform "$par_platforms" \
     --query "$par_query" \
     --query_name "$par_query_name" \
@@ -44,6 +45,7 @@ if [ "$par_mode" == "development" ]; then
 elif [ "$par_mode" == "integration" ]; then
   echo "In integration mode..."
   "$par_viash" ns test \
+    -s "$par_src" \
     --platform "$par_platforms" \
     --query "$par_query" \
     --query_name "$par_query_name" \
@@ -64,6 +66,7 @@ elif [ "$par_mode" == "release" ]; then
     exit 1
   fi
   "$par_viash" ns test \
+    -s "$par_src" \
     --platform "$par_platforms" \
     --query "$par_query" \
     --query_name "$par_query_name" \

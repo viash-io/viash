@@ -38,6 +38,7 @@ if [[ $par_force == true ]]; then
     echo "No container push can and should be performed in this mode"
   elif [ "$par_mode" == "integration" ]; then
     "$par_viash" ns build \
+      -s "$par_src" \
       --platform "docker" \
       --query "$par_query" \
       --query_name "$par_query_name" \
@@ -53,6 +54,7 @@ if [[ $par_force == true ]]; then
       --setup --push | tee "$par_log"
   elif [ "$par_mode" == "release" ]; then
     "$par_viash" ns build \
+      -s "$par_src" \
       --platform "docker" \
       --query "$par_query" \
       --query_name "$par_query_name" \
@@ -74,6 +76,7 @@ else
     echo "No container push can and should be performed in this mode"
   elif [ "$par_mode" == "integration" ]; then
     "$par_viash" ns build \
+      -s "$par_src" \
       --platform "docker" \
       --query "$par_query" \
       --query_name "$par_query_name" \
@@ -88,6 +91,7 @@ else
       --setup --push | tee "$par_log"
   elif [ "$par_mode" == "release" ]; then
     "$par_viash" ns build \
+      -s "$par_src" \
       --platform "docker" \
       --query "$par_query" \
       --query_name "$par_query_name" \

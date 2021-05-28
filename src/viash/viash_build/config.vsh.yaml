@@ -5,6 +5,11 @@ functionality:
   description: |
     Build a project, usually in the context of a pipeline.
   arguments:
+  - name: "--src"
+    alternatives: [ "-s" ]
+    type: file
+    description: Directory for sources if different from src/
+    default: src
   - name: "--mode"
     alternatives: [ "-m" ]
     type: string
