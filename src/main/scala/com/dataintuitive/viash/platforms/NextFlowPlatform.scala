@@ -103,7 +103,12 @@ case class NextFlowPlatform(
         case (true, None) =>
           println(">>> Warning: " + dataObject.plainName + " is set to be required, but has no default value.")
           println(">>>          This will cause issues with NextFlow if this parameter is not provided explicitly.")
-          None
+          Some(
+            namespacedValueTuple(
+              dataObject.plainName.replace("-", "_"),
+              s"$${params.${dataObject.plainName}}"
+            )(fun)
+          )
         case (false, Some(x)) =>
           Some(
             namespacedValueTuple(
