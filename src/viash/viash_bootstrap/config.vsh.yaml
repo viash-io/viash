@@ -3,11 +3,11 @@ functionality:
   namespace: viash
   version: 0.1
   description: |
-    Initiate or update a viash project's CI/CD artefacts
+    Bootstrap or update a viash project's CI/CD artefacts
   arguments:
   - name: "--bin"
     type: file
-    description: Directory for sources if different ./
+    description: Target dir for viash scripts and tools
     default: bin/
   - name: "--registry"
     alternatives: [ "-r" ]
