@@ -47,13 +47,13 @@ echo "> Install viash $par_tag under $par_bin"
 if [ $same_version = 1 ];then
   cp `which viash` .
 else
-  wget -nv "https://github.com/data-intuitive/viash/releases/download/$par_tag/viash"
+  wget -nv "https://github.com/viash-io/viash/releases/download/$par_tag/viash"
   chmod +x viash
 fi
 
 # download latest viash components
 echo "> Fetching components sources"
-fetch --repo="https://github.com/data-intuitive/viash" --branch="$par_tag" --source-path="/src/viash" "$build_dir"
+fetch --repo="https://github.com/viash-io/viash" --branch="$par_tag" --source-path="/src/viash" "$build_dir"
 
 # build components
 echo "> Building components"
