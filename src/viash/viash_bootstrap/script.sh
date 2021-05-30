@@ -22,8 +22,8 @@ echo "> Using tag $par_tag"
 
 # remove previous binaries
 echo "> Cleanup"
-if [ -f viash* ]; then
-  echo "  > Removing previous versions of viash"
+if [ -f viash ]; then
+  echo "  > Removing previous versions of viash and recent project binaries"
   rm viash*
 fi
 if [ -f project_update ]; then
@@ -32,7 +32,7 @@ if [ -f project_update ]; then
 fi
 if [ -f skeleton ]; then
   echo "  > Removing previous versions of skeleton binary"
-  rm skeleton*
+  rm skeleton
 fi
 
 # build helper components
@@ -46,13 +46,24 @@ trap clean_up EXIT
 echo "> Install viash $par_tag under $par_bin"
 if [ $same_version = 1 ];then
   cp `which viash` .
+elif [ $par_tag == "develop" ]; then
+  cd $build_dir
+  git clone --branch develop https://github.com/viash-io/viash
+  cd $build_dir/viash
+  ls
+  ./configure
+  make bin/viash
+  cp bin/viash $par_bin
+  cd ..
+  rm -r viash
+  cd $par_bin
 else
   wget -nv "https://github.com/viash-io/viash/releases/download/$par_tag/viash"
   chmod +x viash
 fi
 
-# download latest viash components
-echo "> Fetching components sources"
+# download viash components
+echo "> Fetching components sources (version $par_tag)"
 fetch --repo="https://github.com/viash-io/viash" --branch="$par_tag" --source-path="/src/viash" "$build_dir"
 
 # build components
