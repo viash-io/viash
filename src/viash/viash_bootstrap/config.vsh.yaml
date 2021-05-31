@@ -8,6 +8,7 @@ functionality:
   - name: "--bin"
     type: file
     description: Target dir for viash scripts and tools
+    direction: output
     default: bin/
   - name: "--registry"
     alternatives: [ "-r" ]
