@@ -74,7 +74,7 @@ echo "> Building components"
   --flatten \
   -c '.functionality.arguments[.name == "--registry"].default := "'$par_registry'"' \
   -c '.functionality.arguments[.name == "--viash"].default := "'$par_viash'"' \
-  -c '.functionality.arguments[.name == "--log" && root.functionality.name == "project_test"].default := "docs/viash_ns_test_output.tsv"' \
+  -c '.functionality.arguments[.name == "--log" && root.functionality.name == "project_test"].default := "'$par_log'"' \
   -c '.functionality.arguments[.name == "--namespace_separator"].default := "'$par_namespace_separator'"'
 
 echo "> Done, happy viash-ing!"

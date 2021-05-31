@@ -28,6 +28,10 @@ functionality:
     alternatives: [ "-t" ]
     type: string
     description: "Which tag/version of viash to use, leave blank for the latest release"
+  - name: "--log"
+    type: file
+    description: Path to write the test logs to.
+    default: log.tsv
   - name: "--viash"
     type: file
     description: A path to the viash executable. If not specified, this component will look for 'viash' on the $PATH.
