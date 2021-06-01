@@ -58,12 +58,12 @@ elif [ "$par_mode" == "integration" ]; then
     --query_namespace "$par_query_namespace" \
     -c '.functionality.version := "'"$par_tag"'"' \
     -c '.platforms[.type == "docker"].target_registry := "'"$par_registry"'"' \
-    -c '.platforms[.type == "docker"].setup_strategy := "build"' \
+    -c '.platforms[.type == "docker"].setup_strategy := "ifneedbepullelsecachedbuild"' \
     -c '.platforms[.type == "nextflow"].registry := "'"$par_registry"'"' \
     -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
     -c "$par_config_mod" \
     -l -w \
-    --setup "$setup_strat" | tee "$par_log"
+    --setup "build" | tee "$par_log"
 elif [ "$par_mode" == "release" ]; then
   echo "In release mode..."
   
@@ -83,12 +83,12 @@ elif [ "$par_mode" == "release" ]; then
     --query_namespace "$par_query_namespace" \
     -c '.functionality.version := "'"$par_tag"'"' \
     -c '.platforms[.type == "docker"].target_registry := "'"$par_registry"'"' \
-    -c '.platforms[.type == "docker"].setup_strategy := "build"' \
+    -c '.platforms[.type == "docker"].setup_strategy := "ifneedbepullelsecachedbuild"' \
     -c '.platforms[.type == "nextflow"].registry := "'"$par_registry"'"' \
     -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
     -c "$par_config_mod" \
     -l -w \
-    --setup "$setup_strat" | tee "$par_log"
+    --setup "build" | tee "$par_log"
 else
   echo "Not a valid mode argument"
 fi
