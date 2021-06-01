@@ -51,7 +51,7 @@ if [[ $par_force == true ]]; then
       -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
       -c "$par_config_mod" \
       -l \
-      --setup --push | tee "$par_log"
+      --setup "push" | tee "$par_log"
   elif [ "$par_mode" == "release" ]; then
     "$par_viash" ns build \
       -s "$par_src" \
@@ -67,7 +67,7 @@ if [[ $par_force == true ]]; then
       -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
       -c "$par_config_mod" \
       -l \
-      --setup --push | tee "$par_log"
+      --setup "push" | tee "$par_log"
   else
     echo "Not a valid mode argument"
   fi
@@ -88,7 +88,7 @@ else
       -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
       -c "$par_config_mod" \
       -l \
-      --setup --push | tee "$par_log"
+      --setup "push" | tee "$par_log"
   elif [ "$par_mode" == "release" ]; then
     "$par_viash" ns build \
       -s "$par_src" \
@@ -103,7 +103,7 @@ else
       -c '.platforms[.type == "docker" || .type == "nextflow"].namespace_separator := "'$par_namespace_separator'"' \
       -c "$par_config_mod" \
       -l \
-      --setup --push | tee "$par_log"
+      --setup "push" | tee "$par_log"
   else
     echo "Not a valid mode argument"
   fi
