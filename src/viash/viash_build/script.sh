@@ -22,6 +22,13 @@ if [ ! -z "$par_max_threads" ]; then
   export JAVA_ARGS="$JAVA_ARGS -Dscala.concurrent.context.maxThreads=$par_max_threads"
 fi
 
+if [ "$par_mode" == "release" ]; then
+  echo "In release mode with tag '$par_tag'."
+  if [ "$par_tag" == "dev" ]; then
+    echo "For a release, you have to specify an explicit version using --tag"
+    exit 1
+  fi
+fi
 
 if [ "$par_mode" == "development" ]; then
   echo "In development mode..."
@@ -65,16 +72,11 @@ elif [ "$par_mode" == "integration" ]; then
     -l -w \
     --setup "build" | tee "$par_log"
 elif [ "$par_mode" == "release" ]; then
-  echo "In release mode..."
   
   if [ "$par_no_cache" == "true" ]; then
     echo "Warning: '--no_cache' only applies when '--mode=development'."
   fi
   
-  if [ "$par_tag" == "dev" ]; then
-    echo "Error: For a release, you have to specify an explicit version using --version"
-    exit 1
-  fi
   "$par_viash" ns build \
     -s "$par_src" \
     --platform "$par_platforms" \

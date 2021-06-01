@@ -32,7 +32,7 @@ functionality:
     type: string
     description: "Filter which components get selected by name. Can be a regex. Example: '^component1'."
   - name: "--tag"
-    alternatives: [ "-tag" ]
+    alternatives: [ "-t" ]
     type: string
     description: Which tag/version of the pipeline to use.
     default: "dev"

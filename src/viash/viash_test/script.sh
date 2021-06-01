@@ -27,6 +27,14 @@ if [ ! -z "$par_max_threads" ]; then
   export JAVA_ARGS="$JAVA_ARGS -Dscala.concurrent.context.maxThreads=$par_max_threads"
 fi
 
+if [ "$par_mode" == "release" ]; then
+  echo "In release mode with tag '$par_tag'."
+  if [ "$par_tag" == "dev" ]; then
+    echo "For a release, you have to specify an explicit version using --tag"
+    exit 1
+  fi
+fi
+
 if [ "$par_mode" == "development" ]; then
   echo "In development mode..."
   "$par_viash" ns test \
@@ -60,11 +68,6 @@ elif [ "$par_mode" == "integration" ]; then
     -t "$par_log" \
     $par_append_parsed
 elif [ "$par_mode" == "release" ]; then
-  echo "In release mode..."
-  if [ "$par_tag" == "dev" ]; then
-    echo "For a release, you have to specify an explicit version using --version"
-    exit 1
-  fi
   "$par_viash" ns test \
     -s "$par_src" \
     --platform "$par_platforms" \

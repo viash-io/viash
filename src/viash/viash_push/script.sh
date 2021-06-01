@@ -1,12 +1,10 @@
 #!/bin/bash
 
 if [ "$par_mode" == "release" ]; then
-  echo "In release mode..."
+  echo "In release mode with tag '$par_tag'."
   if [ "$par_tag" == "dev" ]; then
-    echo "For a release, you have to specify an explicit version using --version"
+    echo "For a release, you have to specify an explicit version using --tag"
     exit 1
-  else
-    echo "Using version $par_tag" to tag containers
   fi
 fi
 
