@@ -86,18 +86,14 @@ case class NextFlowPlatform(
     // All values for arguments/parameters are defined in the root of
     // the params structure. the function name is prefixed as a namespace
     // identifier. A "__" is used to separate namespace and arg/option.
+    //
+    // Required arguments also get a params.<argument> entry so that they can be
+    // called using --param value when using those standalone.
 
     val namespacedParameters: List[ConfigTuple] = {
       functionality.arguments.flatMap { dataObject => (dataObject.required, dataObject.default) match {
-        case (true, Some(x)) =>
-          Some(
-            namespacedValueTuple(
-              dataObject.plainName.replace("-", "_"),
-              x.toString
-            )(fun)
-          )
-        case (true, None) =>
-          println(">>> Warning: " + dataObject.plainName + " is set to be required, but has no default value.")
+        case (true, _) =>
+          println(">>> Warning: " + dataObject.plainName + " is set to be required")
           println(">>>          This will cause issues with NextFlow if this parameter is not provided explicitly.")
           Some(
             namespacedValueTuple(
@@ -119,6 +115,16 @@ case class NextFlowPlatform(
               "no_default_value_configured"
             )(fun)
           )
+      }}
+    }
+
+    val requiredParameters: List[ConfigTuple] = {
+      functionality.arguments.flatMap { dataObject => (dataObject.required, dataObject.default) match {
+        case (true, _) =>
+          Some(
+            tupleToConfigTuple(dataObject.plainName.replace("-", "-") -> "viash_no_value")
+          )
+        case _ => None
       }}
     }
 
@@ -168,6 +174,7 @@ case class NextFlowPlatform(
       "docker.runOptions" → "-i -v ${baseDir}:${baseDir}",
       "process.container" → "dataintuitive/viash",
       "params" → NestedValue(
+        requiredParameters :::
         namespacedParameters :::
         List(
           tupleToConfigTuple("id" → ""),
@@ -215,6 +222,21 @@ case class NextFlowPlatform(
             |
             |}""".stripMargin
           ).mkString("\n")
+
+    val setup_main_check =
+      s"""
+        |def checkParams(_params) {
+        |  _params.arguments.collect{
+        |    if (it.value == "viash_no_value") {
+        |      println("[ERROR] option --$${it.name} not specified in component ${fname}")
+        |      println("exiting now...")
+        |        exit 1
+        |    }
+        |  }
+        |}
+        |
+        |""".stripMargin
+
 
     val setup_main_utils =
       s"""
@@ -463,6 +485,8 @@ case class NextFlowPlatform(
         |
         |      def finalParams = overrideIO(newParams, inputs, outputs)
         |
+        |      checkParams(finalParams)
+        |
         |      new Tuple6(
         |        id,
         |        inputsForProcess,
@@ -567,6 +591,7 @@ case class NextFlowPlatform(
     val setup_main = PlainFile(
       dest = Some("main.nf"),
       text = Some(setup_main_header +
+        setup_main_check +
         setup_main_utils +
         setup_main_outFromIn +
         setup_main_outputFilters +
