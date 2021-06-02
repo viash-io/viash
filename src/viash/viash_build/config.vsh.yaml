@@ -1,20 +1,25 @@
 functionality:
-  name: project_push
+  name: viash_build
   namespace: viash
   version: 0.1
   description: |
-    Push a project, usually in the context of a pipeline.
+    Build a project, usually in the context of a pipeline.
   arguments:
-  # - name: "--src"
-  #   alternatives: [ "-s" ]
-  #   type: file
-  #   description: Directory for sources if different from src/
-  #   default: src
+  - name: "--src"
+    alternatives: [ "-s" ]
+    type: file
+    description: Directory for sources if different from src/
+    default: src
   - name: "--mode"
     alternatives: [ "-m" ]
     type: string
     description: "The mode to run in. Possible values are: 'development', 'integration', 'release'."
     default: development
+  - name: "--platforms"
+    alternatives: [ "-p" ]
+    type: string
+    description: "Which platforms to test, default is 'docker|nextflow'."
+    default: "docker|nextflow"
   - name: "--query"
     alternatives: [ "-q" ]
     type: string
@@ -26,22 +31,20 @@ functionality:
   - name: "--query_name"
     type: string
     description: "Filter which components get selected by name. Can be a regex. Example: '^component1'."
-  - name: "--version"
-    alternatives: [ "-v" ]
+  - name: "--tag"
+    alternatives: [ "-t" ]
     type: string
-    description: Which version of the pipeline to use.
+    description: The tag/version to be used.
     default: "dev"
   - name: "--registry"
     alternatives: [ "-r" ]
+    default: ""
     type: string
     description: Docker registry to use, only used when using a registry.
   - name: "--namespace_separator"
     default: "_"
     type: string
     description: The separator to use between the component name and namespace as the image name of a Docker container.
-  - name: "--force"
-    type: boolean_true
-    description: Overwrite registry
   - name: "--max_threads"
     type: integer
     description: The maximum number of threads viash will use when `--parallell` during parallel tasks.
@@ -51,11 +54,16 @@ functionality:
     multiple: true
     multiple_sep: ";"
     description: "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
+  - name: "--no_cache"
+    alternatives: [ "-nc", "--no-cache" ]
+    type: boolean_true
+    description: Don't cache the docker build in development mode.
   - name: "--log"
-    short: [ "-l" ]
+    alternatives: [ "-l" ]
     type: file
     description: Log file
     default: log.txt
+    direction: output
   - name: "--viash"
     type: file
     description: A path to the viash executable. If not specified, this component will look for 'viash' on the $PATH.

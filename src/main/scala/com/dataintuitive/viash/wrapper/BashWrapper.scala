@@ -251,7 +251,7 @@ object BashWrapper {
       ).filter(_._2).map(_._1)
 
       val namedProps = List(
-        ("type", Some((param.`type` :: unnamedProps).mkString(", "))),
+        ("type", Some((param.oType :: unnamedProps).mkString(", "))),
         ("default", param.default),
         ("example", param.example)
       ).flatMap { case (name, x) =>

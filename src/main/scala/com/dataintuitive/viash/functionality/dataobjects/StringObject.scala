@@ -28,7 +28,6 @@ case class StringObject(
   tag: Option[String] = None,
   direction: Direction = Input,
   multiple: Boolean = false,
-  multiple_sep: Char = ':'
-) extends DataObject[String] {
-  override val `type` = "string"
-}
+  multiple_sep: Char = ':',
+  oType: String = "string"
+) extends DataObject[String]

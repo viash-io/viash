@@ -41,6 +41,7 @@ case class DockerPlatform(
   workdir: Option[String] = None,
   setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,
   privileged: Boolean = false,
+  oType: String = "docker",
 
   // setup variables
   setup: List[Requirements] = Nil,
@@ -53,12 +54,11 @@ case class DockerPlatform(
   // deprecated
   version: Option[Version] = None
 ) extends Platform {
-  val `type` = "docker"
-  val hasSetup = true
+  override val hasSetup = true
 
   assert(version.isEmpty, "docker platform: attribute 'version' is deprecated")
 
-  val requirements: List[Requirements] = {
+  override val requirements: List[Requirements] = {
     val x =
       setup :::
         apk.toList :::

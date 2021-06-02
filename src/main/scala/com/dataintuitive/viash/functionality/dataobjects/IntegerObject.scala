@@ -27,7 +27,6 @@ case class IntegerObject(
   tag: Option[String] = None,
   direction: Direction = Input,
   multiple: Boolean = false,
-  multiple_sep: Char = ':'
-) extends DataObject[Int] {
-  override val `type` = "integer"
-}
+  multiple_sep: Char = ':',
+  oType: String = "integer"
+) extends DataObject[Int]

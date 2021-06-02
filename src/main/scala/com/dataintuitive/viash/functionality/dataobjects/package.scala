@@ -58,7 +58,7 @@ package object dataobjects {
 
   implicit def encodeDataObject[A <: DataObject[_]]: Encoder[A] = Encoder.instance {
     par =>
-      val typeJson = Json.obj("type" → Json.fromString(par.`type`))
+      val typeJson = Json.obj("type" → Json.fromString(par.oType))
       val objJson = par match {
         case s: StringObject => encodeStringObject(s)
         case s: IntegerObject => encodeIntegerObject(s)
@@ -90,7 +90,7 @@ package object dataobjects {
           case Right("boolean_true") => decodeBooleanObjectT.widen
           case Right("boolean_false") => decodeBooleanObjectF.widen
           case Right("file") => decodeFileObject.widen
-          case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised.")
+          case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised. Valid types are string, integer, double, boolean, boolean_true, boolean_false and file.")
           case Left(exception) => throw exception
         }
 

@@ -18,7 +18,7 @@
 package com.dataintuitive.viash.platforms.requirements
 
 trait Requirements {
-  val `type`: String
+  val oType: String
 
   def installCommands: List[String]
 

@@ -1,25 +1,20 @@
 functionality:
-  name: project_test
+  name: viash_push
   namespace: viash
   version: 0.1
   description: |
-    Test a project, usually in the context of a pipeline.
+    Push a project, usually in the context of a pipeline.
   arguments:
-  # - name: "--src"
-  #   alternatives: [ "-s" ]
-  #   type: file
-  #   description: Directory for sources if different from src/
-  #   default: src
+  - name: "--src"
+    alternatives: [ "-s" ]
+    type: file
+    description: Directory for sources if different from src/
+    default: src
   - name: "--mode"
     alternatives: [ "-m" ]
     type: string
     description: "The mode to run in. Possible values are: 'development', 'integration', 'release'."
     default: development
-  - name: "--platforms"
-    alternatives: [ "-p" ]
-    type: string
-    description: Which platforms to test, default is 'docker'.
-    default: "docker"
   - name: "--query"
     alternatives: [ "-q" ]
     type: string
@@ -31,10 +26,10 @@ functionality:
   - name: "--query_name"
     type: string
     description: "Filter which components get selected by name. Can be a regex. Example: '^component1'."
-  - name: "--version"
-    alternatives: [ "-v" ]
+  - name: "--tag"
+    alternatives: [ "-t" ]
     type: string
-    description: Which version of the pipeline to use.
+    description: The tag/version to be used.
     default: "dev"
   - name: "--registry"
     alternatives: [ "-r" ]
@@ -44,6 +39,9 @@ functionality:
     default: "_"
     type: string
     description: The separator to use between the component name and namespace as the image name of a Docker container.
+  - name: "--force"
+    type: boolean_true
+    description: Overwrite registry
   - name: "--max_threads"
     type: integer
     description: The maximum number of threads viash will use when `--parallell` during parallel tasks.
@@ -56,12 +54,8 @@ functionality:
   - name: "--log"
     alternatives: [ "-l" ]
     type: file
-    description: Test log file
-    default: log.tsv
-  - name: "--append"
-    type: boolean
-    default: true
-    description: Append to the log file?
+    description: Log file
+    default: log.txt
   - name: "--viash"
     type: file
     description: A path to the viash executable. If not specified, this component will look for 'viash' on the $PATH.

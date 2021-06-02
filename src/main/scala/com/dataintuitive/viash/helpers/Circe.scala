@@ -21,15 +21,20 @@ import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.Configuration
 
 object Circe {
-  implicit val customConfig: Configuration = Configuration.default.withDefaults
+  implicit val customConfig: Configuration =
+    Configuration.default.withDefaults.withStrictDecoding.copy(
+      transformMemberNames = {
+        case "oType" => "type"
+        case other => other
+      }
+    )
+
+      /*.withSnakeCaseMemberNames*/
 
   // encoder and decoder for Either
-  implicit def encodeEither[A,B](implicit ea: Encoder[A], eb: Encoder[B]): Encoder[Either[A,B]] = new Encoder[Either[A, B]] {
-    final def apply(eit: Either[A,B]): Json =
-      eit match {
-        case Left(a) => ea(a)
-        case Right(b) => eb(b)
-      }
+  implicit def encodeEither[A,B](implicit ea: Encoder[A], eb: Encoder[B]): Encoder[Either[A,B]] = {
+    case Left(a) => ea(a)
+    case Right(b) => eb(b)
   }
 
   implicit def decodeEither[A,B](implicit a: Decoder[A], b: Decoder[B]): Decoder[Either[A,B]] = {

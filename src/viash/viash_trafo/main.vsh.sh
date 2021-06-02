@@ -1,5 +1,5 @@
 #' functionality:
-#'   name: vshtrafo
+#'   name: viash_trafo
 #'   namespace: viash
 #'   version: 1.0
 #'   description: |

@@ -113,14 +113,14 @@ object ViashBuild {
       IO.writeResources(fun.resources.getOrElse(Nil), dir)
     }
 
-    // if '--setup' was passed, run './executable ---setup'
-    if (setup.isDefined && exec_path.isDefined) {
+    // if '--setup <strat>' was passed, run './executable ---setup <strat>'
+    if (setup.isDefined && exec_path.isDefined && config.platform.exists(_.hasSetup)) {
       val cmd = Array(exec_path.get, "---setup", setup.get)
       val _ = Process(cmd).!(ProcessLogger(println, println))
     }
 
-    // if '--push' was passed, run './executable ---push'
-    if (push && exec_path.isDefined) {
+    // if '--push' was passed, run './executable ---setup push'
+    if (push && exec_path.isDefined && config.platform.exists(_.hasSetup)) {
       val cmd = Array(exec_path.get, "---setup push")
       val _ = Process(cmd).!(ProcessLogger(println, println))
     }

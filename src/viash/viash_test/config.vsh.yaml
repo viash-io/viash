@@ -1,15 +1,15 @@
 functionality:
-  name: project_build
+  name: viash_test
   namespace: viash
   version: 0.1
   description: |
-    Build a project, usually in the context of a pipeline.
+    Test a project, usually in the context of a pipeline.
   arguments:
-  # - name: "--src"
-  #   alternatives: [ "-s" ]
-  #   type: file
-  #   description: Directory for sources if different from src/
-  #   default: src
+  - name: "--src"
+    alternatives: [ "-s" ]
+    type: file
+    description: Directory for sources if different from src/
+    default: src
   - name: "--mode"
     alternatives: [ "-m" ]
     type: string
@@ -18,8 +18,8 @@ functionality:
   - name: "--platforms"
     alternatives: [ "-p" ]
     type: string
-    description: "Which platforms to test, default is 'docker|nextflow'."
-    default: "docker|nextflow"
+    description: Which platforms to test, default is 'docker'.
+    default: "docker"
   - name: "--query"
     alternatives: [ "-q" ]
     type: string
@@ -31,14 +31,13 @@ functionality:
   - name: "--query_name"
     type: string
     description: "Filter which components get selected by name. Can be a regex. Example: '^component1'."
-  - name: "--version"
-    alternatives: [ "-v" ]
+  - name: "--tag"
+    alternatives: [ "-t" ]
     type: string
-    description: Which version of the pipeline to use.
+    description: Which tag/version of the pipeline to use.
     default: "dev"
   - name: "--registry"
     alternatives: [ "-r" ]
-    default: ""
     type: string
     description: Docker registry to use, only used when using a registry.
   - name: "--namespace_separator"
@@ -54,15 +53,15 @@ functionality:
     multiple: true
     multiple_sep: ";"
     description: "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
-  - name: "--no_cache"
-    alternatives: [ "-nc", "--no-cache" ]
-    type: boolean_true
-    description: Don't cache the docker build in development mode.
   - name: "--log"
-    short: [ "-l" ]
+    alternatives: [ "-l" ]
     type: file
-    description: Log file
-    default: log.txt
+    description: Test log file
+    default: log.tsv
+  - name: "--append"
+    type: boolean
+    default: true
+    description: Append to the log file?
   - name: "--viash"
     type: file
     description: A path to the viash executable. If not specified, this component will look for 'viash' on the $PATH.

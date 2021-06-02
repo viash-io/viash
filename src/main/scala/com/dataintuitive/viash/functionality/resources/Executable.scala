@@ -27,9 +27,9 @@ case class Executable(
   text: Option[String] = None,
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
-  parent: Option[URI] = None
+  parent: Option[URI] = None,
+  oType: String = "executable"
 ) extends Script {
-  val `type` = "executable"
   val meta = Executable
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
@@ -45,6 +45,7 @@ case class Executable(
 object Executable extends ScriptObject {
   val commentStr = "#"
   val extension = "*"
+  val oType = "executable"
 
   def command(script: String): String = {
     script

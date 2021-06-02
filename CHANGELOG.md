@@ -2,9 +2,11 @@
 
 ## BREAKING CHANGES
 
-* `DockerPlatform`: a Docker setup will be performed by default. Default strategy has been changed to `ifneedbepullelsecachedbuild` (#57).
+* `DockerPlatform`: A Docker setup will be performed by default. Default strategy has been changed to `ifneedbepullelsecachedbuild` (#57).
   `---setup` strategy has been removed and `---docker_setup_strategy` has been renamed to `---setup`.
   This change allows running a component for the first time. During first time setup, the Docker container will be pulled or built automatically. 
+
+* `NativePlatform`: Deprecated the native setup field.
 
 ## MAJOR CHANGES
 
@@ -30,6 +32,8 @@
 ## BUG FIXES
 
 * `Docker R Requirements`: Install `remotes` when using `{ type: r, packages: [ foo ] }`.
+
+* `config`: Throw error when user made a typo in the viash config (#62). 
 
 # viash 0.4.0.1 (2021-05-12)
 
