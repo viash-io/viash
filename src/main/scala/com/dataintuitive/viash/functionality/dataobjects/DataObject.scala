@@ -18,7 +18,7 @@
 package com.dataintuitive.viash.functionality.dataobjects
 
 abstract class DataObject[Type] {
-  val `type`: String
+  val oType: String
   val name: String
   val alternatives: List[String]
   val description: Option[String]

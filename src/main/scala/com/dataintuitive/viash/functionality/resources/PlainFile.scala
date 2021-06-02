@@ -24,9 +24,9 @@ case class PlainFile(
   text: Option[String] = None,
   dest: Option[String] = None,
   is_executable: Option[Boolean] = None,
-  parent: Option[URI] = None
+  parent: Option[URI] = None,
+  oType: String = "file"
 ) extends Resource {
-  override val `type` = "file"
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }

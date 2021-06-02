@@ -31,9 +31,9 @@ case class BooleanObjectRegular(
   tag: Option[String] = None,
   direction: Direction = Input,
   multiple: Boolean = false,
-  multiple_sep: Char = ':'
+  multiple_sep: Char = ':',
+  oType: String = "boolean"
 ) extends BooleanObject {
-  override val `type` = "boolean"
 
   val flagValue: Option[Boolean] = None
 }
@@ -45,8 +45,8 @@ case class BooleanObjectTrue(
   example: Option[String] = None,
   tag: Option[String] = None,
   direction: Direction = Input,
+  oType: String = "boolean_true"
 ) extends BooleanObject {
-  override val `type` = "boolean_true"
 
   val required: Boolean = false
   val flagValue: Option[Boolean] = Some(true)
@@ -62,8 +62,8 @@ case class BooleanObjectFalse(
   example: Option[String] = None,
   tag: Option[String] = None,
   direction: Direction = Input,
+  oType: String = "boolean_false"
 ) extends BooleanObject {
-  override val `type` = "boolean_false"
 
   val required: Boolean = false
   val flagValue: Option[Boolean] = Some(false)

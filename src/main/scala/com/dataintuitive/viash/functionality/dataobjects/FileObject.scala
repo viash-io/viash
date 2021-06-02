@@ -30,7 +30,6 @@ case class FileObject(
   tag: Option[String] = None,
   direction: Direction = Input,
   multiple: Boolean = false,
-  multiple_sep: Char = ':'
-) extends DataObject[File] {
-  override val `type` = "file"
-}
+  multiple_sep: Char = ':',
+  oType: String = "file"
+) extends DataObject[File]

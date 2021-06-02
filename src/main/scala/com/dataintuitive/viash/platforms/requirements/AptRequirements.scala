@@ -18,10 +18,9 @@
 package com.dataintuitive.viash.platforms.requirements
 
 case class AptRequirements(
-  packages: List[String] = Nil
+  packages: List[String] = Nil,
+  oType: String = "apt"
 ) extends Requirements {
-  val `type` = "apt"
-
   def installCommands: List[String] = {
     val aptUpdate =
       """apt-get update"""

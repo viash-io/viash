@@ -27,7 +27,6 @@ case class DoubleObject(
   tag: Option[String] = None,
   direction: Direction = Input,
   multiple: Boolean = false,
-  multiple_sep: Char = ':'
-) extends DataObject[Double] {
-  override val `type` = "double"
-}
+  multiple_sep: Char = ':',
+  oType: String = "double"
+) extends DataObject[Double]

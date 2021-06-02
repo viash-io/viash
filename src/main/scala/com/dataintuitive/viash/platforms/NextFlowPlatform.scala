@@ -40,9 +40,9 @@ case class NextFlowPlatform(
   path: Option[String] = None,
   label: Option[String] = None,
   labels: List[String] = Nil,
-  stageInMode: Option[String] = None
+  stageInMode: Option[String] = None,
+  oType: String = "nextflow"
 ) extends Platform {
-  val `type` = "nextflow"
   val hasSetup = false
 
   assert(version.isEmpty, "nextflow platform: attribute 'version' is deprecated")
@@ -76,15 +76,15 @@ case class NextFlowPlatform(
     val allPars = functionality.arguments
 
     def inputFileExtO = allPars
-      .filter(_.`type` == "file")
+      .filter(_.isInstanceOf[FileObject])
       .find(_.direction == Input)
       .flatMap(_.default.map(_.toString.split('.').last))
 
     def inputs = allPars
-      .filter(_.`type` == "file")
+      .filter(_.isInstanceOf[FileObject])
       .count(_.direction == Input)
     def outputs = allPars
-      .filter(_.`type` == "file")
+      .filter(_.isInstanceOf[FileObject])
       .count(_.direction == Output)
 
     // All values for arguments/parameters are defined in the root of
@@ -201,7 +201,7 @@ case class NextFlowPlatform(
 
     val setup_main_outputFilters:String =
       allPars
-        .filter(_.`type` == "file")
+        .filter(_.isInstanceOf[FileObject])
         .filter(_.direction == Output)
         .map(par =>
           s"""
@@ -509,7 +509,7 @@ case class NextFlowPlatform(
     val resultParseBlocks:List[String] =
       if (outputs >= 2) {
         allPars
-          .filter(_.`type` == "file")
+          .filter(_.isInstanceOf[FileObject])
           .filter(_.direction == Output)
           .map(par =>
             s"""
@@ -660,11 +660,12 @@ object NextFlowUtils {
       valuePointer(dataObject.plainName.replace("-", "_"))
     }
 
+    // TODO: Should this not be converted from the json?
     quoteLong(dataObject.plainName) → NestedValue(
       tupleToConfigTuple("name" → dataObject.plainName) ::
-      tupleToConfigTuple("otype" → dataObject.otype) ::
+      tupleToConfigTuple("otype" → dataObject.oType) ::
       tupleToConfigTuple("required" → dataObject.required) ::
-      tupleToConfigTuple("type" → dataObject.`type`) ::
+      tupleToConfigTuple("type" → dataObject.oType) ::
       tupleToConfigTuple("direction" → dataObject.direction.toString) ::
       tupleToConfigTuple("multiple" → dataObject.multiple) ::
       tupleToConfigTuple("multiple_sep" -> dataObject.multiple_sep) ::

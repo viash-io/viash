@@ -18,12 +18,10 @@
 package com.dataintuitive.viash.platforms.requirements
 
 case class RubyRequirements(
-  packages: List[String] = Nil
+  packages: List[String] = Nil,
+  oType: String = "ruby"
 ) extends Requirements {
-
-  val `type` = "ruby"
-
-  private val installGemCommands =
+private val installGemCommands =
     packages match {
       case Nil => Nil
       case packs =>

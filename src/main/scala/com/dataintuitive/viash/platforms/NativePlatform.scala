@@ -25,9 +25,9 @@ import com.dataintuitive.viash.wrapper.BashWrapper
 
 case class NativePlatform(
   id: String = "native",
-  setup: List[Requirements] = Nil
+  setup: List[Requirements] = Nil,
+  oType: String = "native"
 ) extends Platform {
-  val `type` = "native"
   val hasSetup = false
 
   val requirements: List[Requirements] = setup

@@ -28,10 +28,9 @@ case class PythonRequirements(
   svn: List[String] = Nil,
   bazaar: List[String] = Nil,
   url: List[String] = Nil,
-  script: List[String] = Nil
+  script: List[String] = Nil,
+  oType: String = "python"
 ) extends Requirements {
-  val `type` = "python"
-
   assert(script.forall(!_.contains("'")))
 
   private val userFlag = if (user) " --user" else ""
