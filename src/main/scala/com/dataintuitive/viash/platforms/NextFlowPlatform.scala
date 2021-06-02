@@ -684,7 +684,7 @@ object NextFlowUtils {
     // TODO: Should this not be converted from the json?
     quoteLong(dataObject.plainName) → NestedValue(
       tupleToConfigTuple("name" → dataObject.plainName) ::
-      tupleToConfigTuple("otype" → dataObject.oType) ::
+      tupleToConfigTuple("otype" → dataObject.otype) ::
       tupleToConfigTuple("required" → dataObject.required) ::
       tupleToConfigTuple("type" → dataObject.oType) ::
       tupleToConfigTuple("direction" → dataObject.direction.toString) ::
