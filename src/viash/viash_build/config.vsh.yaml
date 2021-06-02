@@ -59,7 +59,7 @@ functionality:
     type: boolean_true
     description: Don't cache the docker build in development mode.
   - name: "--log"
-    short: [ "-l" ]
+    alternatives: [ "-l" ]
     type: file
     description: Log file
     default: log.txt
