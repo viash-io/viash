@@ -4,6 +4,7 @@ import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.helpers.{Exec, IO}
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
+import java.io.File
 import java.nio.file.Paths
 import scala.io.Source
 
@@ -13,8 +14,11 @@ class MainNSBuildNativeSuite extends FunSuite with BeforeAndAfterAll{
 
   private val temporaryFolder = IO.makeTemp("viash_ns_build")
   private val tempFolStr = temporaryFolder.toString
-
   private val nsFolder = Paths.get(tempFolStr, "native/testns/").toFile
+
+  def componentExecutableFile(componentName: String): File = {
+    Paths.get(nsFolder.toString, s"$componentName/$componentName").toFile
+  }
 
   private val components = List(
     ("ns_add",      1, 2, 3),
@@ -23,7 +27,6 @@ class MainNSBuildNativeSuite extends FunSuite with BeforeAndAfterAll{
     ("ns_divide",   10, 2, 5),
     ("ns_power",    3, 4, 81),
   )
-
 
   // convert testbash
   test("viash ns can build") {
@@ -37,35 +40,28 @@ class MainNSBuildNativeSuite extends FunSuite with BeforeAndAfterAll{
     assert(nsFolder.isDirectory)
 
     for ((component, _, _, _) ← components) {
-      val executable = Paths.get(nsFolder.toString, s"$component/$component").toFile
+      val executable = componentExecutableFile(component)
       assert(executable.exists)
       assert(executable.canExecute)
     }
-
   }
 
-
   test("Check whether the executable can run") {
-
     for ((component, _, _, _) ← components) {
-      val executable = Paths.get(nsFolder.toString, s"$component/$component").toFile
       Exec.run(
-        Seq(executable.toString, "--help")
+        Seq(componentExecutableFile(component).toString, "--help")
       )
     }
-
   }
 
   test("Check whether particular keywords can be found in the usage") {
-
     for ((component, _, _, _) ← components) {
-      val executable = Paths.get(nsFolder.toString, s"$component/$component").toFile
       val configFile = getClass.getResource(s"/testns/src/$component/config.vsh.yaml").getPath
       val functionality = Config.read(configFile, modifyFun = false).functionality
 
       val stdout =
         Exec.run(
-          Seq(executable.toString, "--help")
+          Seq(componentExecutableFile(component).toString, "--help")
         )
 
       functionality.arguments.foreach(arg => {
@@ -74,19 +70,16 @@ class MainNSBuildNativeSuite extends FunSuite with BeforeAndAfterAll{
         for (opt <- arg.description; value <- opt)
           assert(stdout.contains(value))
       })
-
     }
-
   }
 
   test("Check whether output is correctly created") {
     for ((component, input1, input2, expectedOutput) ← components) {
-      val executable = Paths.get(nsFolder.toString, s"$component/$component").toFile
       val output = Paths.get(tempFolStr, s"output_$component.txt").toFile
 
       Exec.run(
         Seq(
-          executable.toString,
+          componentExecutableFile(component).toString,
           "--input1", input1.toString,
           "--input2", input2.toString,
           "--output", output.toString,
@@ -102,7 +95,6 @@ class MainNSBuildNativeSuite extends FunSuite with BeforeAndAfterAll{
       } finally {
         outputSrc.close()
       }
-
     }
   }
 
