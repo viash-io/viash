@@ -28,11 +28,12 @@ trait Platform {
   val oType: String
   val id: String
 
-  val hasSetup: Boolean
+  val hasSetup: Boolean = false
+  val requirements: List[Requirements] = Nil
 
   def modifyFunctionality(functionality: Functionality): Functionality
 
-  val requirements: List[Requirements]
+
 }
 
 object Platform {

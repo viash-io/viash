@@ -52,10 +52,6 @@ functionality:
       path: tests/check_outputs.py
 platforms:
   - type: native
-    setup:
-      - type: python
-        packages:
-          - "argparse<1.4"
   - type: docker
     image: python
     target_image: "viash_test_python"

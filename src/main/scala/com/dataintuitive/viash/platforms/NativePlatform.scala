@@ -25,13 +25,8 @@ import com.dataintuitive.viash.wrapper.BashWrapper
 
 case class NativePlatform(
   id: String = "native",
-  setup: List[Requirements] = Nil,
   oType: String = "native"
 ) extends Platform {
-  val hasSetup = false
-
-  val requirements: List[Requirements] = setup
-
   def modifyFunctionality(functionality: Functionality): Functionality = {
     val executor = functionality.mainScript match {
       case None => "eval"

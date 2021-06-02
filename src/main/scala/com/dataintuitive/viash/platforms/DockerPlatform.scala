@@ -54,11 +54,11 @@ case class DockerPlatform(
   // deprecated
   version: Option[Version] = None
 ) extends Platform {
-  val hasSetup = true
+  override val hasSetup = true
 
   assert(version.isEmpty, "docker platform: attribute 'version' is deprecated")
 
-  val requirements: List[Requirements] = {
+  override val requirements: List[Requirements] = {
     val x =
       setup :::
         apk.toList :::

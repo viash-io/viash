@@ -52,9 +52,6 @@ functionality:
       path: tests/check_outputs.sh
 platforms:
   - type: native
-    setup:
-      - type: javascript
-        npm: [ plot ]
   - type: docker
     image: node:15-buster
     target_image: "viash_test_js"

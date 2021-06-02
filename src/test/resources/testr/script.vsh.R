@@ -50,13 +50,6 @@
 #'     path: tests/check_outputs.R
 #' platforms:
 #' - type: native
-#'   setup:
-#'     - type: r
-#'       cran: 
-#'         - optparse
-#'     - type: r
-#'       cran: 
-#'         - optparse
 #' - type: docker
 #'   image: rocker/tidyverse
 #'   target_image: "viash_test_r"

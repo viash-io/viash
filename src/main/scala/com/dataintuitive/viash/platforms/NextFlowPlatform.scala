@@ -43,11 +43,7 @@ case class NextFlowPlatform(
   stageInMode: Option[String] = None,
   oType: String = "nextflow"
 ) extends Platform {
-  val hasSetup = false
-
   assert(version.isEmpty, "nextflow platform: attribute 'version' is deprecated")
-
-  val requirements: List[Requirements] = Nil
 
   private val nativePlatform = NativePlatform(id = id)
 
