@@ -31,6 +31,8 @@
 
 * `Docker R Requirements`: Install `remotes` when using `{ type: r, packages: [ foo ] }`.
 
+* `config`: Throw error when user made a typo in the viash config (#62). 
+
 # viash 0.4.0.1 (2021-05-12)
 
 ## BUG FIX
