@@ -90,11 +90,18 @@ case class NextFlowPlatform(
     // Required arguments also get a params.<argument> entry so that they can be
     // called using --param value when using those standalone.
 
+    /**
+      * A representation of viash's functionality.arguments is converted into a
+      * nextflow.config data structure under params.<function>.arguments.
+      *
+      * A `value` attribute is added that points to params.<function>__<argument>.
+      * In turn, 
+      */
     val namespacedParameters: List[ConfigTuple] = {
       functionality.arguments.flatMap { dataObject => (dataObject.required, dataObject.default) match {
         case (true, _) =>
-          println(">>> Warning: " + dataObject.plainName + " is set to be required")
-          println(">>>          This will cause issues with NextFlow if this parameter is not provided explicitly.")
+          println(s"> ${dataObject.plainName} in ${fname} is set to be required.")
+          println(s"> ${dataObject.otype}${dataObject.plainName} <...> has to be specified when running this module standalone.")
           Some(
             namespacedValueTuple(
               dataObject.plainName.replace("-", "_"),
@@ -178,8 +185,6 @@ case class NextFlowPlatform(
         namespacedParameters :::
         List(
           tupleToConfigTuple("id" → ""),
-          tupleToConfigTuple("input" → ""),
-          tupleToConfigTuple("output" → ""),
           tupleToConfigTuple("testScript" -> testScript.headOption.getOrElse("")), // TODO: what about when there are multiple tests?
           tupleToConfigTuple("testResources" -> testPaths),
           tupleToConfigTuple(functionality.name → NestedValue(
@@ -200,6 +205,7 @@ case class NextFlowPlatform(
         |
         |params.test = false
         |params.debug = false
+        |params.publishDir = "./"
         |""".stripMargin
 
     val setup_main_outputFilters:String =
@@ -293,10 +299,15 @@ case class NextFlowPlatform(
           |      // otherwise just use the option name as an extension.
           |      def extOrName = (it.dflt != null) ? it.dflt.split(/\./).last() : it.name
           |      // The output filename is <sample> . <modulename> . <extension>
+          |      // Unless the output argument is explicilty specified on the CLI
           |      def newName =
+          |        (params[it.name] != "viash_no_value")
+          |            ? params[it.name]
+          |            : "__f__" + "." + extOrName
+          |      def newValue =
           |        (id != "")
-          |          ? id + "." + "__f__" + "." + extOrName
-          |          : "__f__" + "." + extOrName
+          |          ? id + "." + newName
+          |          : newName
           |      it + [ value : newName ]
           |    }
           |
@@ -385,8 +396,8 @@ case class NextFlowPlatform(
 
       // If id is the empty string, the subdirectory is not created
       val publishDirString =  per_idParsed match {
-        case true => s"$${params.output}/${pathParsed}$${id}/"
-        case _ => s"$${params.output}/${pathParsed}"
+        case true => s"$${params.publishDir}/${pathParsed}$${id}/"
+        case _ => s"$${params.publishDir}/${pathParsed}"
       }
 
       val publishDirStr = publish match {
