@@ -10,7 +10,11 @@
 
 ## MAJOR CHANGES
 
-* `NXF`: An argument can be either `required` or not and can have a `default: ...` value or not. This version changes the handling logic for these 4 combinations and improves the overall ability to override parameters from the CLI/pipeline. Please refer to the [documentation](http://www.data-intuitive.com/viash_docs/config/platform-nextflow/#access-arguments-from-the-nextflow-cli-v041).
+* `NXF`: This version changes the handling logic for arguments. An argument can be either `required` or not and can have a `default: ...` value or not. Checks are implemented to verify that required arguments are effectively provided _during_ pipeline running.
+
+* `NXF`: If one sticks to long-option argments in the viash config, for all arguments that are _required_, the way of specifying the arguments on the CLI is identical for the Docker and NextFlow platforms. Non-required arguments can still be accessed from CLI using `--<component_name>__<argument_name> ...`.
+
+* `NXF`: Running a module as a standalone pipeline has become easier.
 
 * `viash run`: Implement verbosity levels (#58). viash executables now have 7 levels of verbosity: emergency, alert, critical, error, warning, notice, info, debug.
   The default verbosity level is 'notice'. Passing `-v` or `--verbose` bumps up the verbosity level by one, `-vv` by two. The verbosity level can be set manually by passing `--verbosity x`.

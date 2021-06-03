@@ -95,13 +95,16 @@ case class NextFlowPlatform(
       * nextflow.config data structure under params.<function>.arguments.
       *
       * A `value` attribute is added that points to params.<function>__<argument>.
-      * In turn, 
+      * In turn, a pointer is configured to params.argument.
+      *
+      * The goal is to have a configuration file that works both when running
+      * the module standalone as well as in a pipeline.
       */
     val namespacedParameters: List[ConfigTuple] = {
       functionality.arguments.flatMap { dataObject => (dataObject.required, dataObject.default) match {
         case (true, _) =>
           println(s"> ${dataObject.plainName} in ${fname} is set to be required.")
-          println(s"> ${dataObject.otype}${dataObject.plainName} <...> has to be specified when running this module standalone.")
+          println(s"> --${dataObject.plainName} <...> has to be specified when running this module standalone.")
           Some(
             namespacedValueTuple(
               dataObject.plainName.replace("-", "_"),
@@ -231,6 +234,7 @@ case class NextFlowPlatform(
 
     val setup_main_check =
       s"""
+        |// A function to verify (at runtime) if all required arguments are effectively provided.
         |def checkParams(_params) {
         |  _params.arguments.collect{
         |    if (it.value == "viash_no_value") {
