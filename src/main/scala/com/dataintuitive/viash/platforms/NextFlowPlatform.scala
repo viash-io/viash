@@ -108,7 +108,7 @@ case class NextFlowPlatform(
           Some(
             namespacedValueTuple(
               dataObject.plainName.replace("-", "_"),
-              s"$${params.${dataObject.plainName}}"
+              "viash_no_value"
             )(fun)
           )
         case (false, Some(x)) =>
@@ -125,16 +125,6 @@ case class NextFlowPlatform(
               "no_default_value_configured"
             )(fun)
           )
-      }}
-    }
-
-    val requiredParameters: List[ConfigTuple] = {
-      functionality.arguments.flatMap { dataObject => (dataObject.required, dataObject.default) match {
-        case (true, _) =>
-          Some(
-            tupleToConfigTuple(dataObject.plainName.replace("-", "-") -> "viash_no_value")
-          )
-        case _ => None
       }}
     }
 
@@ -184,7 +174,6 @@ case class NextFlowPlatform(
       "docker.runOptions" → "-i -v ${baseDir}:${baseDir}",
       "process.container" → "dataintuitive/viash",
       "params" → NestedValue(
-        requiredParameters :::
         namespacedParameters :::
         List(
           tupleToConfigTuple("id" → ""),
@@ -311,14 +300,10 @@ case class NextFlowPlatform(
           |      // The output filename is <sample> . <modulename> . <extension>
           |      // Unless the output argument is explicitly specified on the CLI
           |      def newName =
-          |        (params[it.name] != "viash_no_value")
-          |            ? params[it.name]
-          |            : "__f__" + "." + extOrName
-          |      def newValue =
           |        (id != "")
-          |          ? id + "." + newName
-          |          : newName
-          |      it + [ value : newValue ]
+          |          ? id + "." + "__f__" + "." + extOrName
+          |          : "__f__" + "." + extOrName
+          |      it + [ value : newName ]
           |    }
           |
           |}
@@ -566,15 +551,24 @@ case class NextFlowPlatform(
     val setup_main_entrypoint =
       s"""
         |workflow {
-        |
         |  def id = params.id
-        |  def _params = argumentsAsList(params.${fname}) + [ "id" : id ]
-        |  def p = _params
+        |  def key = "$fname"
+        |
+        |  def _params = params
+        |
+        |  // could be refactored to be FP
+        |  for (par in _params[key].arguments) {
+        |    if (_params[par.name] != null) {
+        |      _params[key].arguments[par.name].value = _params[par.name]
+        |    }
+        |  }
+        |
+        |  def inputFiles = argumentsAsList(_params[key])
         |    .arguments
         |    .findAll{ it.type == "file" && it.direction == "Input" }
-        |    .collectEntries{ [(it.name): file(params[it.name]) ] }
+        |    .collectEntries{ [(it.name): file(_params[it.name]) ] }
         |
-        |  def ch_ = Channel.from("").map{ s -> new Tuple3(id, p, params)}
+        |  def ch_ = Channel.from("").map{ s -> new Tuple3(id, inputFiles, _params)}
         |
         |  result = $fname(ch_)
         |""".stripMargin +
