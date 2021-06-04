@@ -299,11 +299,17 @@ case class NextFlowPlatform(
           |    .arguments
           |    .findAll{ it -> it.type == "file" && it.direction == "Output" }
           |    .collect{ it ->
-          |      // If a default (dflt) attribute is present, strip the extension from the filename,
-          |      // otherwise just use the option name as an extension.
-          |      def extOrName = (it.dflt != null) ? it.dflt.split(/\./).last() : it.name
+          |      // If an 'example' attribute is present, strip the extension from the filename,
+          |      // If a 'dflt' attribute is present, strip the extension from the filename,
+          |      // Otherwise just use the option name as an extension.
+          |      def extOrName =
+          |        (it.example != null)
+          |          ? it.example.split(/\./).last()
+          |          : { (it.dflt != null)
+          |            ? it.dflt.split(/\./).last()
+          |            : it.name }
           |      // The output filename is <sample> . <modulename> . <extension>
-          |      // Unless the output argument is explicilty specified on the CLI
+          |      // Unless the output argument is explicitly specified on the CLI
           |      def newName =
           |        (params[it.name] != "viash_no_value")
           |            ? params[it.name]
@@ -312,7 +318,7 @@ case class NextFlowPlatform(
           |        (id != "")
           |          ? id + "." + newName
           |          : newName
-          |      it + [ value : newName ]
+          |      it + [ value : newValue ]
           |    }
           |
           |}
@@ -708,8 +714,10 @@ object NextFlowUtils {
       tupleToConfigTuple("value" → valueOrPointer) ::
       dataObject.default
         .map(x => List(tupleToConfigTuple("dflt" -> x.toString))).getOrElse(Nil) :::
+      dataObject.example
+        .map(x => List(tupleToConfigTuple("example" -> x))).getOrElse(Nil) :::
       dataObject.description
-        .map(x => List(tupleToConfigTuple("description" → x.toString))).getOrElse(Nil)
+        .map(x => List(tupleToConfigTuple("description" → x))).getOrElse(Nil)
       )
   }
 }
