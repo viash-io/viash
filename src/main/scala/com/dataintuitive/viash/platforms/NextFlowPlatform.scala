@@ -294,9 +294,9 @@ case class NextFlowPlatform(
           |      def extOrName =
           |        (it.example != null)
           |          ? it.example.split(/\./).last()
-          |          : { (it.dflt != null)
+          |          : (it.dflt != null)
           |            ? it.dflt.split(/\./).last()
-          |            : it.name }
+          |            : it.name
           |      // The output filename is <sample> . <modulename> . <extension>
           |      // Unless the output argument is explicitly specified on the CLI
           |      def newName =
