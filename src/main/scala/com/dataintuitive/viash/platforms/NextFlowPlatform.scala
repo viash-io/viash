@@ -552,10 +552,7 @@ case class NextFlowPlatform(
       s"""
         |workflow {
         |  def id = params.id
-        |  def fnamex-special/nautilus-clipboard
-        |copy
-        |file:///home/rcannood/workspace/di/viash/bin/viash
-        | = "$fname"
+        |  def fname = "$fname"
         |
         |  def _params = params
         |
