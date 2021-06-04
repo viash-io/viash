@@ -552,23 +552,27 @@ case class NextFlowPlatform(
       s"""
         |workflow {
         |  def id = params.id
-        |  def key = "$fname"
+        |  def fnamex-special/nautilus-clipboard
+        |copy
+        |file:///home/rcannood/workspace/di/viash/bin/viash
+        | = "$fname"
         |
         |  def _params = params
         |
         |  // could be refactored to be FP
-        |  for (par in _params[key].arguments) {
-        |    if (_params[par.name] != null) {
-        |      _params[key].arguments[par.name].value = _params[par.name]
+        |  for (entry in params[fname].arguments) {
+        |    def name = entry.value.name
+        |    if (params[name] != null) {
+        |      params[fname].arguments[name].value = params[name]
         |    }
         |  }
         |
-        |  def inputFiles = argumentsAsList(_params[key])
+        |  def inputFiles = params.$fname
         |    .arguments
-        |    .findAll{ it.type == "file" && it.direction == "Input" }
-        |    .collectEntries{ [(it.name): file(_params[it.name]) ] }
+        |    .findAll{ key, par -> par.type == "file" && par.direction == "Input" }
+        |    .collectEntries{ key, par -> [(par.name): file(params[fname].arguments[par.name].value) ] }
         |
-        |  def ch_ = Channel.from("").map{ s -> new Tuple3(id, inputFiles, _params)}
+        |  def ch_ = Channel.from("").map{ s -> new Tuple3(id, inputFiles, params)}
         |
         |  result = $fname(ch_)
         |""".stripMargin +
