@@ -14,8 +14,6 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
   private val temporaryFolder = IO.makeTemp("viash_ns_test_tsv")
   private val tempFolStr = temporaryFolder.toString
 
-  // TODO: check 'build_executable' output when a docker component setup fails.
-
   private val stepsSuccess = List(
     ("start", ""),
     // ("build_executable", raw"\s*0\s*\d+\s*SUCCESS"),
@@ -45,21 +43,24 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
 
 
   test("Check namespace test output") {
-    val testText = TestHelper.testMain(
+    val (stdout, stderr) = TestHelper.testMainWithStdErr(
       "ns", "test",
       "--src", nsPath
     )
 
     // Test inclusion of a header
     val regexHeader = raw"^\s*namespace\s*functionality\s*platform\s*test_name\s*exit_code\s*duration\s*result".r
-    assert(regexHeader.findFirstIn(testText).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$testText")
+    assert(regexHeader.findFirstIn(stdout).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$stdout")
 
     for ((component, steps) ← components) {
       for ((step, resultPattern) ← steps) {
         val regex = s"""testns\\s*$component\\s*native\\s*$step$resultPattern""".r
-        assert(regex.findFirstIn(testText).isDefined, s"\nRegex: '${regex.toString}'; text: \n$testText")
+        assert(regex.findFirstIn(stdout).isDefined, s"\nRegex: '${regex.toString}'; text: \n$stdout")
       }
     }
+
+    val regexBuildError = raw"Reading file \'.*/src/ns_error/config\.vsh\.yaml\' failed".r
+    assert(regexBuildError.findFirstIn(stderr).isDefined, "Expecting to get an error because of an invalid yaml in ns_error")
   }
 
   test("Check namespace test output with tsv option") {

@@ -90,7 +90,7 @@ object Main {
         )
         ViashConfig.view(config)
       case _ =>
-        System.err.println("No subcommand was specified. See `viash --help` for more information.")
+        Console.err.println("No subcommand was specified. See `viash --help` for more information.")
     }
   }
 
@@ -159,7 +159,7 @@ object Main {
           }
         } catch {
           case _: Exception =>
-            System.err.println(s"Reading file '$file' failed")
+            Console.err.println(s"Reading file '$file' failed")
             None
         }
 

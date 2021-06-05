@@ -25,12 +25,12 @@ class MainNSBuildNativeSuite extends FunSuite with BeforeAndAfterAll{
     ("ns_subtract", 7, 2, 5),
     ("ns_multiply", 4, 3, 12),
     ("ns_divide",   10, 2, 5),
-    ("ns_power",    3, 4, 81),
+    ("ns_power",    3, 4, 81)
   )
 
   // convert testbash
   test("viash ns can build") {
-    val out = TestHelper.testMain(
+    val (stdout, stderr) = TestHelper.testMainWithStdErr(
     "ns", "build",
       "-s", nsPath,
       "-t", tempFolStr
@@ -44,6 +44,9 @@ class MainNSBuildNativeSuite extends FunSuite with BeforeAndAfterAll{
       assert(executable.exists)
       assert(executable.canExecute)
     }
+
+    val regexBuildError = raw"Reading file \'.*/src/ns_error/config\.vsh\.yaml\' failed".r
+    assert(regexBuildError.findFirstIn(stderr).isDefined, "Expecting to get an error because of an invalid yaml in ns_error")
   }
 
   test("Check whether the executable can run") {
