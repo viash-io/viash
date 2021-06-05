@@ -299,10 +299,14 @@ case class NextFlowPlatform(
           |            : it.name
           |      // The output filename is <sample> . <modulename> . <extension>
           |      // Unless the output argument is explicitly specified on the CLI
+          |      def newValue =
+          |        (it.value == "viash_no_value")
+          |          ? "__f__" + "." + extOrName
+          |          : it.value
           |      def newName =
           |        (id != "")
-          |          ? id + "." + "__f__" + "." + extOrName
-          |          : "__f__" + "." + extOrName
+          |          ? id + newValue
+          |          : newValue
           |      it + [ value : newName ]
           |    }
           |
