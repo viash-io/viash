@@ -33,9 +33,9 @@ function output {
     if [ ! -z "$par_output_pos" ]; then
       IFS=":"
       for var in $par_output_pos; do
+        unset IFS
         echo "$@" >> $var
       done
-      unset IFS
     fi
 
   fi
