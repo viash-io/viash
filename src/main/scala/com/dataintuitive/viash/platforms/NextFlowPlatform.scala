@@ -305,7 +305,7 @@ case class NextFlowPlatform(
           |          : it.value
           |      def newName =
           |        (id != "")
-          |          ? id + newValue
+          |          ? id + "." + newValue
           |          : newValue
           |      it + [ value : newName ]
           |    }
