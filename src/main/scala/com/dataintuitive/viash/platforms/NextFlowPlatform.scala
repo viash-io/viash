@@ -432,6 +432,12 @@ case class NextFlowPlatform(
         |    tuple val(id), path(input), val(output), val(container), val(cli), val(_params)
         |  output:
         |    tuple val("$${id}"), path(output), val(_params)
+        |  stub:
+        |    \"\"\"
+        |    # Adding NXF's `$$moduleDir` to the path in order to resolve our own wrappers
+        |    export PATH="$${moduleDir}:\\$$PATH"
+        |    STUB=1 $$cli
+        |    \"\"\"
         |  script:
         |    if (params.test)
         |      \"\"\"
