@@ -1,0 +1,29 @@
+functionality:
+  name: step2
+  arguments:
+    - name: "--input1"
+      type: file
+      required: true
+    - name: "--input2"
+      type: file
+      required: true
+    - name: "--optional"
+      type: file
+      required: false
+    - name: "--output1"
+      type: file
+      required: true
+      direction: output
+    - name: "--output2"
+      type: file
+      required: true
+      direction: output
+  resources:
+    - type: bash_script
+      path: script.sh
+platforms:
+  - type: native
+  - type: docker
+    image: nextflow/bash:latest
+  - type: nextflow
+      
