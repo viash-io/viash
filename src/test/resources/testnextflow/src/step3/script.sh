@@ -15,4 +15,4 @@ if [ ! -z "$par_input" ]; then
   done
 fi
 
-wc -l "$tmpfile"
+wc -l "$tmpfile" > "$par_output"

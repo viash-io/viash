@@ -30,9 +30,10 @@ workflow {
         | step2 \
         | view { ["DEBUG3", it[0], it[1] ] } \
         | toList() \
-        | map { [ it[0][0], [ "input": it.collect{ it[1] } ], it[0][2] ] } \
-        | view { ["DEBUG4", it[0], it[1] ] } /*\
-        | step3*/ // TODO: flatten input 
+        | map { [ it[0][0], [ "input": it.collect{ it[1].values() }.flatten() ], it[0][2] ] } \
+        | view { ["DEBUG4", it[0], it[1] ] } \
+        | step3 \
+        | view { ["DEBUG5", it[0], it[1] ] }
 
 
 }
