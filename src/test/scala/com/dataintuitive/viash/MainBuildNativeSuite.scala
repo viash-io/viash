@@ -25,12 +25,12 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
 
   // convert testbash
   test("viash can create an executable") {
-    TestHelper.testMain(Array(
+    TestHelper.testMain(
       "build",
       "-p", "native",
       "-o", tempFolStr,
       configFile
-    ))
+    )
 
     assert(executable.exists)
     assert(executable.canExecute)
@@ -140,12 +140,12 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("when -p is omitted, the system should run as native") {
-    val testText = TestHelper.testMain(Array(
+    val testText = TestHelper.testMain(
       "build",
       "-o", tempFolStr,
       "-m",
       configNoPlatformFile
-    ))
+    )
 
     assert(executable.exists)
     assert(executable.canExecute)
@@ -159,12 +159,12 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Specify platform (native) in config yaml") {
-    val testText = TestHelper.testMain(Array(
+    val testText = TestHelper.testMain(
       "build",
       "-o", tempFolStr,
       "-m",
       configPlatformFile
-    ))
+    )
 
     assert(executable.exists)
     assert(executable.canExecute)
