@@ -45,7 +45,7 @@ class MainNSListNativeSuite extends FunSuite{
       assert(config.isInstanceOf[Array[Config]])
     }
     catch {
-      case _ => fail("Parsing the output from ns list should be parsable again")
+      case _: Throwable  => fail("Parsing the output from ns list should be parsable again")
     }
 
 
