@@ -12,6 +12,7 @@ workflow {
     first = Channel.fromPath("${params.rootDir}/resources/lines*.txt") \
         | toList() \
         | map{ [ "foo", [ "input" : it ], params ] } \
+        | view { ["DEBUG0", it[0], it[1] ] } \
         | step1 \
         | view { ["DEBUG1", it[0], it[1] ] } \
         | combine(second) \
