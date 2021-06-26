@@ -1,5 +1,5 @@
 functionality:
-  name: testbash
+  name: auxiliary_resources
   description: |
     Test various ways of specifying resources and check they ended up being in the right place.
   resources:
@@ -15,7 +15,7 @@ functionality:
       dest: target_folder/relocated_file_1.txt
     - path: resource_folder/resource_L1_1.txt
       dest: target_folder/relocated_file_2.txt
-    - path: ../testexecutable/config.vsh.yaml
+    - path: ../../testexecutable/config.vsh.yaml
       dest: target_folder/relocated_file_3.txt
     - path: /tmp/viash_tmp_resources/resource3.txt
     - path: /tmp/viash_tmp_resources/resource3.txt
