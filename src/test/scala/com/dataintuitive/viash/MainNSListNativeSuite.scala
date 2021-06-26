@@ -53,13 +53,13 @@ class MainNSListNativeSuite extends FunSuite{
     // Do some sample checks whether relevant information is available. This certainly isn't comprehensive.
     // List of tuples with regex and expected count
     val samples = List(
-      (raw"""[\r\n]+\s+name: "--input1"[\r\n]+""".r, 5),
-      (raw"""[\r\n]+\s+resources:[\r\n]+\s+- type: "python_script"[\r\n]+""".r, 5),
-      (raw"""[\r\n]+\s+tests:[\r\n]+\s+- type: "bash_script"[\r\n]+""".r, 4)
+      (raw"""[\r\n]+\s+name: "--input1"[\r\n]+""", 5),
+      (raw"""[\r\n]+\s+resources:[\r\n]+\s+- type: "python_script"[\r\n]+""", 5),
+      (raw"""[\r\n]+\s+tests:[\r\n]+\s+- type: "bash_script"[\r\n]+""", 4)
     )
 
     for ((regex, count) <- samples) {
-      assert(regex.findAllMatchIn(stdout).size == count, s"Expecting $count hits on stdout of regex [$regex]")
+      assert(regex.r.findAllMatchIn(stdout).size == count, s"Expecting $count hits on stdout of regex [$regex]")
     }
   }
 
