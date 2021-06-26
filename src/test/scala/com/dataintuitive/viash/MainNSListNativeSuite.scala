@@ -30,12 +30,12 @@ class MainNSListNativeSuite extends FunSuite{
     )
 
     for (component ← components) {
-      val regexName = raw"""name:\s+"$component"""".r
-      assert(regexName.findFirstIn(stdout).isDefined, s"\nRegex: ${regexName.toString}; text: \n$stdout")
+      val regexName = raw"""name:\s+"$component""""
+      assert(regexName.r.findFirstIn(stdout).isDefined, s"\nRegex: ${regexName}; text: \n$stdout")
     }
 
-    val regexBuildError = raw"Reading file \'.*/src/ns_error/config\.vsh\.yaml\' failed".r
-    assert(regexBuildError.findFirstIn(stderr).isDefined, "Expecting to get an error because of an invalid yaml in ns_error")
+    val regexBuildError = raw"Reading file \'.*/src/ns_error/config\.vsh\.yaml\' failed"
+    assert(regexBuildError.r.findFirstIn(stderr).isDefined, "Expecting to get an error because of an invalid yaml in ns_error")
 
     try {
       val config = parser.parse(stdout)
