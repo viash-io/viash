@@ -1,5 +1,5 @@
 functionality:
-  name: testbash
+  name: testbash_tag
   description: |
     Prints out version of bash.
   resources:
