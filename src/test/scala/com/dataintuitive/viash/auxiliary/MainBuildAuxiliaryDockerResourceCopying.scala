@@ -12,18 +12,18 @@ class MainBuildAuxiliaryDockerResourceCopying extends FunSuite with BeforeAndAft
   private val tempFolStr = temporaryFolder.toString
 
 
-  private val configFile = getClass.getResource("/testbash/auxiliary/config_resource_test.vsh.yaml").getPath
+  private val configFile = getClass.getResource("/testbash/auxiliary_resource/config_resource_test.vsh.yaml").getPath
   private val functionality = Config.read(configFile, modifyFun = false).functionality
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
 
-  private val configResourcesUnsupportedProtocolFile = getClass.getResource("/testbash/auxiliary/config_resource_unsupported_protocol.vsh.yaml").getPath
+  private val configResourcesUnsupportedProtocolFile = getClass.getResource("/testbash/auxiliary_resource/config_resource_unsupported_protocol.vsh.yaml").getPath
 
 
 
   test("Check resources are copied from and to the correct location") {
 
     // copy some resources to /tmp/viash_tmp_resources/ so we can test absolute path resources
-    val tmpFolderResourceSourceFile = Paths.get(getClass.getResource("/testbash/auxiliary/resource3.txt").getFile)
+    val tmpFolderResourceSourceFile = Paths.get(getClass.getResource("/testbash/auxiliary_resource/resource3.txt").getFile)
 
     val tmpFolderResourceDestinationFolder = Paths.get("/tmp/viash_tmp_resources/").toFile
     val tmpFolderResourceDestinationFile = Paths.get(tmpFolderResourceDestinationFolder.getPath, "resource3.txt")

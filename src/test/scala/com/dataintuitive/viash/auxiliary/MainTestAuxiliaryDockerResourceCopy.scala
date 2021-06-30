@@ -8,8 +8,8 @@ import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.reflect.io.Directory
 
 class MainTestAuxiliaryDockerResourceCopy extends FunSuite with BeforeAndAfterAll {
-  private val configResourcesCopyFile = getClass.getResource("/testbash/auxiliary/config_resource_test.vsh.yaml").getPath
-  private val configResourcesUnsupportedProtocolFile = getClass.getResource("/testbash/auxiliary/config_resource_unsupported_protocol.vsh.yaml").getPath
+  private val configResourcesCopyFile = getClass.getResource("/testbash/auxiliary_resource/config_resource_test.vsh.yaml").getPath
+  private val configResourcesUnsupportedProtocolFile = getClass.getResource("/testbash/auxiliary_resource/config_resource_unsupported_protocol.vsh.yaml").getPath
 
   test("Check resources are copied from and to the correct location", DockerTest) {
 

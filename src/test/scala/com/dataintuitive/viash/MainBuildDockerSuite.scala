@@ -28,10 +28,6 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   private val functionalityBashTag = Config.read(configBashTagFile, modifyFun = false).functionality
   private val executableBashTagFile = Paths.get(tempFolStr, functionalityBashTag.name).toFile
 
-  private val configRequirementsFile = getClass.getResource(s"/testbash/config_requirements.vsh.yaml").getPath
-  private val functionalityRequirements = Config.read(configRequirementsFile, modifyFun = false).functionality
-  private val executableRequirementsFile = Paths.get(tempFolStr, functionalityRequirements.name).toFile
-
   //<editor-fold desc="Test benches to build a generic script and run various commands to see if the functionality is correct">
   // convert testbash
   test("viash can create an executable") {
@@ -587,118 +583,6 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     // verify docker exists
     assert(checkDockerImageExists("busybox"))
   }
-  //</editor-fold>
-  //<editor-fold desc="Test benches to check additional installation of required packages">
-  test("check base image for apk still does not contain the fortune package", DockerTest) {
-    TestHelper.testMain(
-      "build",
-      "-p", "viash_requirement_apk_base",
-      "-o", tempFolStr,
-      "--setup", "build",
-      configRequirementsFile
-    )
-
-    assert(executableRequirementsFile.exists)
-    assert(executableRequirementsFile.canExecute)
-
-    val output = Exec.run2(
-      Seq(
-        executable.toString,
-        "--which", "fortune"
-      )
-    )
-
-    assert(output.output == "")
-  }
-
-  test("check docker requirements using apk to add the fortune package", DockerTest) {
-    // remove docker if it exists
-    removeDockerImage("viash_requirement_apk")
-    assert(!checkDockerImageExists("viash_requirement_apk"))
-
-    // build viash wrapper with --setup
-    TestHelper.testMain(
-      "build",
-      "-p", "viash_requirement_apk",
-      "-o", tempFolStr,
-      "--setup", "build",
-      configRequirementsFile
-    )
-
-    // verify docker exists
-    assert(checkDockerImageExists("viash_requirement_apk"))
-
-    assert(executableRequirementsFile.exists)
-    assert(executableRequirementsFile.canExecute)
-
-    val output = Exec.run2(
-      Seq(
-        executable.toString,
-        "--which", "fortune"
-      )
-    )
-
-    assert(output.output == "/usr/bin/fortune\n")
-
-    // Tests finished, remove docker image
-    removeDockerImage("viash_requirement_apk")
-  }
-
-  test("check base image for apt still does not contain the cowsay package", DockerTest) {
-    TestHelper.testMain(
-      "build",
-      "-p", "viash_requirement_apt_base",
-      "-o", tempFolStr,
-      "--setup", "build",
-      configRequirementsFile
-    )
-
-    assert(executableRequirementsFile.exists)
-    assert(executableRequirementsFile.canExecute)
-
-    val output = Exec.run2(
-      Seq(
-        executableRequirementsFile.toString,
-        "--which", "cowsay"
-      )
-    )
-
-    assert(output.output == "")
-  }
-
-  test("check docker requirements using apt to add the cowsay package", DockerTest) {
-    // remove docker if it exists
-    removeDockerImage("viash_requirement_apt")
-    assert(!checkDockerImageExists("viash_requirement_apt"))
-
-    // build viash wrapper with --setup
-    val _ = TestHelper.testMain(
-      "build",
-      "-p", "viash_requirement_apt",
-      "-o", tempFolStr,
-      "--setup", "build",
-      configRequirementsFile
-    )
-
-    // verify docker exists
-    assert(checkDockerImageExists("viash_requirement_apt"))
-
-    assert(executableRequirementsFile.exists)
-    assert(executableRequirementsFile.canExecute)
-
-    val output = Exec.run2(
-      Seq(
-        executable.toString,
-        "--file", "/usr/games/cowsay"
-      )
-    )
-
-    assert(output.output == "/usr/games/cowsay exists.\n")
-
-    // Tests finished, remove docker image
-    removeDockerImage("viash_requirement_apt")
-  }
-
   //</editor-fold>
 
   def checkDockerImageExists(name: String): Boolean = {

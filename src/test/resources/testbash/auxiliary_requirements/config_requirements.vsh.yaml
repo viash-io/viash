@@ -1,5 +1,5 @@
 functionality:
-  name: testbash
+  name: testbash_requirements
   description: |
     Prints out the parameter values.
     Checking what happens with multiline descriptions.
