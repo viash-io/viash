@@ -24,10 +24,11 @@ jobs:
     
     - name: Set up nextflow
       run: |
-        curl -s https://get.nextflow.io | bash
         mkdir -p "$HOME/.local/bin"
         echo "$HOME/.local/bin" >> $GITHUB_PATH
+        curl -s https://get.nextflow.io | bash
         mv nextflow "$HOME/.local/bin"
+        nextflow -version
 
     - name: Set up R
       uses: r-lib/actions/setup-r@master
