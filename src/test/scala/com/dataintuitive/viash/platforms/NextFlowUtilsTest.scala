@@ -1,12 +1,12 @@
 package com.dataintuitive.viash.platforms
 
 import com.dataintuitive.viash.DockerTest
+import com.dataintuitive.viash.platforms.NextFlowUtils._
 import org.scalatest.FunSuite
 
 import scala.util.Try
-import com.dataintuitive.viash.platforms.NextFlowUtils._
 
-class NextFlowPlatformTest extends FunSuite {
+class NextFlowUtilsTest extends FunSuite {
 
   val simpleTuple1:ConfigTuple = ("key", "value")
   val simpleTuple2:ConfigTuple = ("key", true)

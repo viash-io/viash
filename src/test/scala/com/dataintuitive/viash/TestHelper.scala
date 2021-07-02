@@ -12,6 +12,8 @@ object DockerTest extends Tag("com.dataintuitive.viash.DockerTest")
 
 object NativeTest extends Tag("com.dataintuitive.viash.NativeTest")
 
+object NextFlowTest extends Tag("com.dataintuitive.viash.NextFlowTest")
+
 object TestHelper {
 
   case class ExceptionOutput(
