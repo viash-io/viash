@@ -24,7 +24,7 @@ class NextFlowPlatformTest extends FunSuite {
 
     import sys.process._
     val output = Process(
-      Seq("nextflow", "run", ".", "-main-script", "workflows/main.nf", "input", "resources/*", "--publishDir", "output"),
+      Seq("nextflow", "run", ".", "-main-script", "workflows/main.nf", "--input", "resources/*", "--publishDir", "output"),
       new File(rootPath),
       "NXF_VER" -> "21.04.1"
     ).!!
