@@ -23,6 +23,7 @@ jobs:
     - uses: actions/checkout@v2
     
     - name: Set up nextflow
+      if: runner.os == 'Linux'
       run: |
         mkdir -p "$HOME/.local/bin"
         echo "$HOME/.local/bin" >> $GITHUB_PATH
