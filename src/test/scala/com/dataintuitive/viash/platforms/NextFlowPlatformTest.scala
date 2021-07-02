@@ -19,7 +19,8 @@ class NextFlowPlatformTest extends FunSuite {
     val (_, _) = TestHelper.testMainWithStdErr(
       "ns", "build",
       "-s", srcPath,
-      "-t", targetPath
+      "-t", targetPath,
+      "--setup", "cb"
     )
 
     import sys.process._
