@@ -47,6 +47,7 @@
 
 * `viash ns`: Added a basic testbench for namespace tests.
 
+
 # viash 0.4.0.1 (2021-05-12)
 
 ## BUG FIX
