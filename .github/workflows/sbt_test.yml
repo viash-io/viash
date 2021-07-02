@@ -21,6 +21,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    
+    - name: Set up nextflow
+      run: |
+        curl -s https://get.nextflow.io | bash
+        mkdir -p "$HOME/.local/bin"
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        mv nextflow "$HOME/.local/bin"
 
     - name: Set up R
       uses: r-lib/actions/setup-r@master
