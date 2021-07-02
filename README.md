@@ -1,5 +1,24 @@
-viash: from scripts to pipelines
-================
+
+<p align="center">
+<a href="https://viash.io/">
+<img alt="viash" src="https://viash.io/viash.svg" width="300"> </a>
+</p>
+<h3 align="center">
+script + metadata = standalone component
+</h3>
+<p align="center">
+<a href="https://github.com/viash-io/viash/blob/master/LICENSE.md">
+<img src="https://img.shields.io/github/license/viash-io/viash?style=flat-square" alt="GitHub">
+</a> <a href="https://github.com/viash-io/viash/releases">
+<img src="https://img.shields.io/github/v/release/viash-io/viash?include_prereleases&style=flat-square"alt="GitHub release (latest SemVer including pre-releases)">
+</a>
+<a href="https://github.com/viash-io/viash/actions?query=workflow%3A%22Scala+CI%22">
+<img src="https://img.shields.io/github/workflow/status/viash-io/viash/Scala%20CI/master?style=flat-square" alt="CI Status">
+</a>
+<a href="https://github.com/viash-io/viash_web/actions?query=workflow%3A%22GitHub+Pages%22">
+<img src="https://img.shields.io/github/workflow/status/viash-io/viash_web/GitHub%20Pages?label=deploy&style=flat-square" alt="GitHub Pages Status">
+</a>
+</p>
 
 viash helps you turn a script (Bash/R/Python/Scala/JavaScript) into a
 reusable component. By providing some meta-data regarding its

@@ -17,11 +17,12 @@
 
 package com.dataintuitive.viash
 
-import com.dataintuitive.viash.config.{Config, encodeConfig}
+import com.dataintuitive.viash.config.Config
+import io.circe.syntax.EncoderOps
 import io.circe.yaml.Printer
 
 object ViashConfig {
-  val printer = Printer(
+  private val printer = Printer(
     preserveOrder = true,
     dropNullKeys = true,
     mappingStyle = Printer.FlowStyle.Block,
@@ -29,8 +30,14 @@ object ViashConfig {
     stringStyle = Printer.StringStyle.DoubleQuoted
   )
 
-  def view(config: Config)  {
-    val json = encodeConfig(config)
+  def view(config: Config) {
+    val json = config.asJson
+    val configYamlStr = printer.pretty(json)
+    println(configYamlStr)
+  }
+
+  def viewMany(configs: List[Config]) {
+    val json = configs.asJson
     val configYamlStr = printer.pretty(json)
     println(configYamlStr)
   }

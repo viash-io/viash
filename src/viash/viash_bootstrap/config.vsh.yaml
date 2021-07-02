@@ -1,0 +1,49 @@
+functionality:
+  name: viash_bootstrap
+  namespace: viash
+  version: 0.1
+  description: |
+    Bootstrap or update a viash project's CI/CD artefacts
+  arguments:
+  - name: "--bin"
+    type: file
+    description: Target dir for viash scripts and tools
+    direction: output
+    default: bin/
+  - name: "--registry"
+    alternatives: [ "-r" ]
+    default: ""
+    type: string
+    description: Docker registry to use, only used when using a registry.
+  - name: "--namespace_separator"
+    default: "_"
+    type: string
+    description: The separator to use between the component name and namespace as the image name of a Docker container.
+  - name: "--config_mod"
+    alternatives: [ "-c" ]
+    type: string
+    multiple: true
+    multiple_sep: ";"
+    description: "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
+  - name: "--tag"
+    alternatives: [ "-t" ]
+    type: string
+    description: "Which tag/version of viash to use, leave blank for the latest release"
+  - name: "--log"
+    type: file
+    description: Path to write the test logs to.
+    default: log.tsv
+  - name: "--viash"
+    type: file
+    description: A path to the viash executable. If not specified, this component will look for 'viash' on the $PATH.
+  resources:
+    - type: bash_script
+      path: script.sh
+platforms:
+- type: docker
+  image: dataintuitive/viash:latest
+  setup:
+    - type: docker
+      run:
+        - "curl -sSLfo /usr/local/bin/fetch https://github.com/gruntwork-io/fetch/releases/download/v0.4.2/fetch_linux_amd64"
+        - "chmod +x /usr/local/bin/fetch"

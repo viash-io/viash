@@ -31,6 +31,9 @@ package object requirements {
   implicit val encodePythonRequirements: Encoder.AsObject[PythonRequirements] = deriveConfiguredEncoder
   implicit val decodePythonRequirements: Decoder[PythonRequirements] = deriveConfiguredDecoder
 
+  implicit val encodeRubyRequirements: Encoder.AsObject[RubyRequirements] = deriveConfiguredEncoder
+  implicit val decodeRubyRequirements: Decoder[RubyRequirements] = deriveConfiguredDecoder
+
   implicit val encodeJavaScriptRequirements: Encoder.AsObject[JavaScriptRequirements] = deriveConfiguredEncoder
   implicit val decodeJavaScriptRequirements: Decoder[JavaScriptRequirements] = deriveConfiguredDecoder
 
@@ -43,20 +46,17 @@ package object requirements {
   implicit val encodeDockerRequirements: Encoder.AsObject[DockerRequirements] = deriveConfiguredEncoder
   implicit val decodeDockerRequirements: Decoder[DockerRequirements] = deriveConfiguredDecoder
 
-  implicit val encodeNextFlowRequirements: Encoder.AsObject[NextFlowRequirements] = deriveConfiguredEncoder
-  implicit val decodeNextFlowRequirements: Decoder[NextFlowRequirements] = deriveConfiguredDecoder
-
   implicit def encodeRequirements[A <: Requirements]: Encoder[A] = Encoder.instance {
     reqs =>
-      val typeJson = Json.obj("type" → Json.fromString(reqs.`type`))
+      val typeJson = Json.obj("type" → Json.fromString(reqs.oType))
       val objJson = reqs match {
         case s: ApkRequirements => encodeApkRequirements(s)
         case s: AptRequirements => encodeAptRequirements(s)
         case s: DockerRequirements => encodeDockerRequirements(s)
-        case s: NextFlowRequirements => encodeNextFlowRequirements(s)
         case s: PythonRequirements => encodePythonRequirements(s)
         case s: RRequirements => encodeRRequirements(s)
         case s: JavaScriptRequirements => encodeJavaScriptRequirements(s)
+        case s: RubyRequirements => encodeRubyRequirements(s)
       }
       objJson deepMerge typeJson
   }
@@ -68,10 +68,10 @@ package object requirements {
           case Right("apk") => decodeApkRequirements.widen
           case Right("apt") => decodeAptRequirements.widen
           case Right("docker") => decodeDockerRequirements.widen
-          case Right("nextflow") => decodeNextFlowRequirements.widen
           case Right("python") => decodePythonRequirements.widen
           case Right("r") => decodeRRequirements.widen
           case Right("javascript") => decodeJavaScriptRequirements.widen
+          case Right("ruby") => decodeRubyRequirements.widen
           case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised.")
           case Left(exception) => throw exception
         }

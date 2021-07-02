@@ -32,7 +32,7 @@
 #'   - name: "--log"
 #'     type: file
 #'     description: An optional log file.
-#'     direction: log
+#'     direction: output
 #'   - name: "--optional"
 #'     type: string
 #'     description: An optional string.
@@ -50,13 +50,6 @@
 #'     path: tests/check_outputs.R
 #' platforms:
 #' - type: native
-#'   setup:
-#'     - type: r
-#'       cran: 
-#'         - optparse
-#'     - type: r
-#'       cran: 
-#'         - optparse
 #' - type: docker
 #'   image: rocker/tidyverse
 #'   target_image: "viash_test_r"

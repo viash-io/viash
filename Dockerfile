@@ -29,5 +29,3 @@ RUN ./configure
 RUN make bin/viash
 RUN make install
 RUN make tools
-
-ENTRYPOINT [ "viash" ]

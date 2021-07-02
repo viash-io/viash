@@ -2,7 +2,7 @@ name: Scala CI
 
 on:
   push:
-    branches: [ master, develop ]
+    branches: [ master, develop, test_improvement ]
   pull_request:
     branches: [ master, develop ]
 
@@ -21,6 +21,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    
+    - name: Set up nextflow
+      if: runner.os == 'Linux'
+      run: |
+        mkdir -p "$HOME/.local/bin"
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        curl -s https://get.nextflow.io | bash
+        mv nextflow "$HOME/.local/bin"
+        nextflow -version
 
     - name: Set up R
       uses: r-lib/actions/setup-r@master
@@ -80,8 +89,7 @@ jobs:
         fi
 
     - name: Upload coverage on success
-      if: matrix.config.name == 'main'
-      run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}
+      run: bash <(curl -s https://codecov.io/bash) # -t ${{ secrets.CODECOV_TOKEN }}
 
     - name: Upload check results on fail
       if: failure()

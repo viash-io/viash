@@ -1,0 +1,44 @@
+functionality:
+  name: viash_skeleton
+  namespace: viash
+  version: 0.1
+  description: |
+    Create a skeleton src component
+  arguments:
+    - name: "--name"
+      alternatives: ["-n"]
+      type: string
+      description: Name of the component
+      required: true
+    - name: "--namespace"
+      alternatives: ["-ns"]
+      type: string
+      description: Namespace of the component
+      required: false
+    - name: "--language"
+      alternatives: ["-l"]
+      type: string
+      description: Which scripting language to use. Possible values are 'bash', 'r', and 'python'.
+      default: 'bash'
+    - name: "--platform"
+      alternatives: ["-p"]
+      type: string
+      description: Which platforms to add. Possible values are 'native', 'docker', 'nextflow'. By default, all three will be added.
+      default: 'docker,native,nextflow'
+      multiple: true
+      multiple_sep: ','
+    - name: "--src"
+      type: file
+      direction: output
+      description: Target directory if different from src/
+      default: src/
+  resources:
+    - type: bash_script
+      path: script.sh
+  tests:
+    - type: bash_script
+      path: test.sh
+platforms:
+  - type: native
+#  - type: docker
+#    image: data-intuitive/viash

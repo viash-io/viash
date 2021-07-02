@@ -28,15 +28,13 @@ case class RRequirements(
   svn: List[String] = Nil,
   url: List[String] = Nil,
   script: List[String] = Nil,
-  bioc_force_install: Boolean = false
-) extends Requirements {
-  val `type` = "r"
-
-  assert(script.forall(!_.contains("'")))
+  bioc_force_install: Boolean = false,
+  oType: String = "r"
+) extends Requirements {assert(script.forall(!_.contains("'")))
 
   def installCommands: List[String] = {
     val installRemotes =
-      if ((cran ::: git ::: github ::: gitlab ::: bitbucket ::: svn ::: url).nonEmpty) {
+      if ((packages ::: cran ::: git ::: github ::: gitlab ::: bitbucket ::: svn ::: url).nonEmpty) {
         List("""Rscript -e 'if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")'""")
       } else {
         Nil

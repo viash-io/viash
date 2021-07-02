@@ -17,7 +17,7 @@
 
 package com.dataintuitive.viash
 
-import java.io.FileWriter
+import java.nio.file.{Paths, Files, StandardOpenOption}
 import com.dataintuitive.viash.ViashTest.{ManyTestOutput, TestOutput}
 import config.Config
 
@@ -25,7 +25,7 @@ object ViashNamespace {
   def build(
     configs: List[Config],
     target: String,
-    setup: Boolean = false,
+    setup: Option[String] = None,
     push: Boolean = false,
     parallel: Boolean = false,
     writeMeta: Boolean = true,
@@ -37,13 +37,13 @@ object ViashNamespace {
       val in = conf.info.get.parent_path
       val inTool = in.split("/").lastOption.getOrElse("WRONG")
       val platType = conf.platform.get.id
-      val out = flatten match {
-        case false =>
+      val out =
+        if (!flatten) {
           conf.functionality.namespace
             .map( ns => target + s"/$platType/$ns/$inTool").getOrElse(target + s"/$platType/$inTool")
-        case true =>
+        } else {
           target
-      }
+        }
       val namespaceOrNothing = conf.functionality.namespace.map( s => "(" + s + ")").getOrElse("")
       println(s"Exporting $in $namespaceOrNothing =$platType=> $out")
       ViashBuild(
@@ -67,12 +67,14 @@ object ViashNamespace {
     val configs2 = if (parallel) configs.par else configs
 
     // run all the component tests
-    val tsvWriter = tsv.map(new FileWriter(_, append))
+    val tsvPath = tsv.map(Paths.get(_))
+    val tsvExists = tsvPath.exists(Files.exists(_))
+    val tsvWriter = tsvPath.map(Files.newBufferedWriter(_, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND))
 
     try {
-      if (!append)
-        tsvWriter.foreach(
-          _.append(
+      if (!append || !tsvExists)
+        tsvWriter.foreach { writer =>
+          writer.append(
             List(
               "namespace",
               "functionality",
@@ -82,7 +84,8 @@ object ViashNamespace {
               "duration",
               "result"
             ).mkString("\t") + sys.props("line.separator"))
-        )
+          writer.flush()
+        }
       printf(
         s"%s%20s %20s %20s %20s %9s %8s %20s%s\n",
         "",
@@ -114,7 +117,7 @@ object ViashNamespace {
         )
 
         val testResults =
-          if (setupRes.exitValue > 0) {
+          if (setupRes.isDefined && setupRes.get.exitValue > 0) {
             Nil
           } else if (testRes.isEmpty) {
             List(TestOutput("tests", -1, "no tests found", "", 0L))
@@ -123,7 +126,7 @@ object ViashNamespace {
           }
 
         // print messages
-        val results = setupRes :: testResults
+        val results = setupRes.toList ::: testResults
         for (test ← results) {
           val (col, msg) = {
             if (test.exitValue > 0) {
@@ -153,26 +156,7 @@ object ViashNamespace {
     }
   }
 
-  def list(
-    configs: List[Config]
-  ) {
-    // TODO: move the functionality here to a dedicated helper
-    // TODO2: align with viash config view
-
-    import config._
-    import io.circe.yaml.Printer
-    import io.circe.syntax.EncoderOps
-
-    val printer = Printer(
-      preserveOrder = true,
-      dropNullKeys = true,
-      mappingStyle = Printer.FlowStyle.Block,
-      splitLines = true,
-      stringStyle = Printer.StringStyle.DoubleQuoted
-    )
-    println(
-      printer.pretty(configs.asJson)
-    )
-
+  def list(configs: List[Config]) {
+    ViashConfig.viewMany(configs)
   }
 }

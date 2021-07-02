@@ -35,7 +35,7 @@ package object platforms {
 
   implicit def encodePlatform[A <: Platform]: Encoder[A] = Encoder.instance {
     platform =>
-      val typeJson = Json.obj("type" → Json.fromString(platform.`type`))
+      val typeJson = Json.obj("type" → Json.fromString(platform.oType))
       val objJson = platform match {
         case s: DockerPlatform => encodeDockerPlatform(s)
         case s: NextFlowPlatform => encodeNextFlowPlatform(s)

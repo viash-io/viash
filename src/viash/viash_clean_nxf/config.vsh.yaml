@@ -1,0 +1,29 @@
+functionality:
+  name: viash_clean_nxf
+  namespace: viash
+  version: 0.1
+  description: |
+    Clean a (nextflow) project directory
+  arguments:
+  - name: "dir"
+    type: file
+    description: Base directory
+    default: ./
+  # - name: "-dry-run"
+  #   alternatives: [ "-n" ]
+  #   type: boolean_true
+  #   description: "Print names of file to be removed without deleting them"
+  - name: "-after"
+    type: string
+  - name: "-before"
+    type: string
+  resources:
+    - type: bash_script
+      path: script.sh
+  tests:
+  - type: bash_script
+    path: tests/run_test.sh
+platforms:
+- type: native
+- type: docker
+  image: nextflow/nextflow

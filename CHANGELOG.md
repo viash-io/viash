@@ -1,3 +1,53 @@
+# viash 0.5.0
+
+## BREAKING CHANGES
+
+* `DockerPlatform`: A Docker setup will be performed by default. Default strategy has been changed to `ifneedbepullelsecachedbuild` (#57).
+  `---setup` strategy has been removed and `---docker_setup_strategy` has been renamed to `---setup`.
+  This change allows running a component for the first time. During first time setup, the Docker container will be pulled or built automatically. 
+
+* `NativePlatform`: Deprecated the native setup field.
+
+## MAJOR CHANGES
+
+* `NXF`: This version changes the handling logic for arguments. An argument can be either `required` or not and can have a `default: ...` value or not. Checks are implemented to verify that required arguments are effectively provided _during_ pipeline running.
+
+* `NXF`: If one sticks to long-option argments in the viash config, for all arguments that are _required_, the way of specifying the arguments on the CLI is identical for the Docker and NextFlow platforms. Non-required arguments can still be accessed from CLI using `--<component_name>__<argument_name> ...`.
+
+* `NXF`: Running a module as a standalone pipeline has become easier.
+
+* `viash run`: Implement verbosity levels (#58). viash executables now have 7 levels of verbosity: emergency, alert, critical, error, warning, notice, info, debug.
+  The default verbosity level is 'notice'. Passing `-v` or `--verbose` bumps up the verbosity level by one, `-vv` by two. The verbosity level can be set manually by passing `--verbosity x`.
+
+## MINOR CHANGES
+
+* `Docker Platform`: Added `privileged` argument, allowing to run docker with the `--privileged` flag.
+
+* `Docker Requirements`: Allow specifying environment variables in the Dockerfile.
+
+* Config modding: Added a `+0=` operator to prepend items to a list.
+
+* `viash run`: Added a `--version` flag to viash executables for viewing the version of the component.
+
+* `Functionality`: Added checks on the functionality and argument names.
+
+* `viash run`: Added examples to functionality and arguments. Reworked `--help` formatting to include more information and be more consistent (#56).
+
+## BUG FIXES
+
+* `Docker R Requirements`: Install `remotes` when using `{ type: r, packages: [ foo ] }`.
+
+* `config`: Throw error when user made a typo in the viash config (#62). 
+
+## TESTING
+
+* `NXF`: Add an end-to-end test for running a nextflow pipeline using viash components.
+
+* `Docker`: Reorganized viash docker build testbench into a main testbench with smaller auxiliary testbenches to keep them more manageable and clear what happens where.
+
+* `viash ns`: Added a basic testbench for namespace tests.
+
+
 # viash 0.4.0.1 (2021-05-12)
 
 ## BUG FIX
@@ -5,6 +55,8 @@
 * `NXF`: Return original_params instead of updated params for now.
 
 * `NXF`: Reinstate function_type: asis in line with the refactored module generation code
+
+* `viash ns test`: print header when `--tsv foo.tsv --append true` but foo.tsv doesn't exist yet. Fixes #45.
 
 # viash 0.4.0 (2021-04-14)
 
@@ -57,21 +109,21 @@
 
 The generation of Nextflow modules has been refactored thoroughly.
   
-* `NXF` The implicitly generated names for output files/directories have been improved leading to less clashes.
+* `NXF`: The implicitly generated names for output files/directories have been improved leading to less clashes.
 
-* `NXF` Allow for multiple output files/directories from a module while keeping compatibility for single output. Please [refer to the docs](http://www.data-intuitive.com/viash_docs/config/platform-nextflow/#multiple-outputs).
+* `NXF`: Allow for multiple output files/directories from a module while keeping compatibility for single output. Please [refer to the docs](http://www.data-intuitive.com/viash_docs/config/platform-nextflow/#multiple-outputs).
 
-* `NXF` Allow for zero input files by means of passing an empty list `[]` in the triplet
+* `NXF`: Allow for zero input files by means of passing an empty list `[]` in the triplet
 
-* `NXF` Remove requirement for `function_type: todir`
+* `NXF`: Remove requirement for `function_type: todir`
 
-* `NXF` It is now possible to not only specify `label: ...` for a nextflow platform but also `labels: [ ...]`.
+* `NXF`: It is now possible to not only specify `label: ...` for a nextflow platform but also `labels: [ ...]`.
   
 ## BUG FIXES
 
 * Allow quotes in functionality descriptions.
 
-* `NXF` Providing a `default: ...` value for output file arguments is no longer necessary.
+* `NXF`: Providing a `default: ...` value for output file arguments is no longer necessary.
 
 
 # viash 0.3.2 (2021-02-04)
@@ -200,7 +252,7 @@ functionality:
 * Added `viash ns test`: Run all tests in a particular namespace. For each test, the exit code and duration is reported. Results can be written to a tsv file.
 * Added support for JavaScript scripts.
 * Added support for Scala scripts.
-* `NXF` publishing has a few more options:
+* `NXF`: publishing has a few more options:
   - `publish`: Publish or yes (default is false)
   - `per_id`: Publish results in directories containing the unique (sample) ID (default is true)
   - `path`: A prefix path for the results to be published (default is empty)
@@ -264,8 +316,8 @@ functionality:
 * Added a new format for defining functionality in which the user passes the script in which the functionality and platforms are listed as yaml headers.
 * A `---chown` flag has been added to Docker executables to automatically change the ownership of output files to the current user.
 * `viash ns build`: A command for building a whole namespace.
-* `NXF` Join operations are now fully supported by means of `multiple`.
-* `NXF` Modules that perform joins can take either arrays (multiple input files or the same type to be joined) or hashes (multiple input files passed using different options on the CLI). Please refer to the docs for more info.
+* `NXF`: Join operations are now fully supported by means of `multiple`.
+* `NXF`: Modules that perform joins can take either arrays (multiple input files or the same type to be joined) or hashes (multiple input files passed using different options on the CLI). Please refer to the docs for more info.
 
 ## MAJOR CHANGES
 * Remove passthrough parameters.
@@ -278,7 +330,7 @@ functionality:
 * `viash run` and `viash test`: Exit(1) when execution or test fails.
 * `viash build`: Add -m flag for outputting metadata after build.
 * `viash run`: Required parameters can have a default value now. Produce error when a required parameter is not passed, even when a default is provided.
-* `NXF` _Modules_ are now stored under `target/nextflow` by default
+* `NXF`: _Modules_ are now stored under `target/nextflow` by default
 
 ## BUG FIXES
 * `NXF`: Correctly escape path variable when running NXF command.

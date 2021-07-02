@@ -52,6 +52,7 @@ trait Script extends Resource {
 trait ScriptObject {
   val commentStr: String
   val extension: String
+  val oType: String
   def command(script: String): String
   def commandSeq(script: String): Seq[String]
   def apply(
@@ -59,7 +60,8 @@ trait ScriptObject {
     text: Option[String] = None,
     dest: Option[String] = None,
     is_executable: Option[Boolean] = Some(true),
-    parent: Option[URI] = None
+    parent: Option[URI] = None,
+    oType: String = oType
   ): Script
 }
 

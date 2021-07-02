@@ -25,12 +25,8 @@ import com.dataintuitive.viash.wrapper.BashWrapper
 
 case class NativePlatform(
   id: String = "native",
-  setup: List[Requirements] = Nil
+  oType: String = "native"
 ) extends Platform {
-  val `type` = "native"
-
-  val requirements: List[Requirements] = setup
-
   def modifyFunctionality(functionality: Functionality): Functionality = {
     val executor = functionality.mainScript match {
       case None => "eval"
@@ -43,32 +39,12 @@ case class NativePlatform(
       dest = Some(functionality.name),
       text = Some(BashWrapper.wrapScript(
         executor = executor,
-        functionality = functionality,
-        setupCommands = setupCommands
+        functionality = functionality
       ))
     )
 
     functionality.copy(
       resources = Some(bashScript :: functionality.resources.getOrElse(Nil).tail)
     )
-  }
-
-  def setupCommands: String = {
-    val runCommands = requirements.map(_.installCommands)
-
-    val commands =
-      runCommands.map(li =>
-        if (li.isEmpty) {
-          ""
-        } else {
-          "cat << 'HERE'\n" +
-          "# run the following commands:\n" +
-          li.mkString("", " && \\\n  ", "\n") +
-          "HERE\n"
-        }
-      ).mkString
-
-    s"""function ViashSetup {
-       |${if (commands == "") ":\n" else commands}}""".stripMargin
   }
 }

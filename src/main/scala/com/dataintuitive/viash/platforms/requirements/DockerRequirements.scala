@@ -20,10 +20,10 @@ package com.dataintuitive.viash.platforms.requirements
 case class DockerRequirements(
   resources: List[String] = Nil,
   run: List[String] = Nil,
-  build_args: List[String] = Nil
+  build_args: List[String] = Nil,
+  env: List[String] = Nil,
+  oType: String = "docker"
 ) extends Requirements {
-  val `type` = "docker"
-
   def installCommands: List[String] = Nil
 
   override def dockerCommands: Option[String] = {
@@ -41,6 +41,13 @@ case class DockerRequirements(
         Nil
       }
 
+    val envs =
+      if (env.nonEmpty) {
+        env.map(c => s"""ENV $c""")
+      } else {
+        Nil
+      }
+
     val runCommands =
       if (run.nonEmpty) {
         run.map(r => s"""RUN $r""")
@@ -48,7 +55,7 @@ case class DockerRequirements(
         Nil
       }
 
-    val li = args ::: copyResources ::: runCommands
+    val li = args ::: envs ::: copyResources ::: runCommands
 
     if (li.isEmpty) None else Some(li.mkString("\n"))
   }

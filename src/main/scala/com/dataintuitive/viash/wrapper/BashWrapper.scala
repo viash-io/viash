@@ -24,6 +24,11 @@ import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.helpers.{Bash, Format}
 
 object BashWrapper {
+
+  def nameAndVersion(functionality: Functionality): String = {
+    functionality.name + functionality.version.map(" " + _).getOrElse("<not versioned>")
+  }
+
   def escape(str: String): String = {
     str.replaceAll("([\\\\$`])", "\\\\$1")
   }
@@ -80,13 +85,12 @@ object BashWrapper {
     }
   }
 
+  val var_verbosity = "VIASH_VERBOSITY"
   val var_resources_dir = "VIASH_RESOURCES_DIR"
-  val var_exec_mode = "VIASH_EXEC_MODE"
 
   def wrapScript(
     executor: String,
     functionality: Functionality,
-    setupCommands: String,
     mods: BashWrapperMods = BashWrapperMods()
   ): String = {
     val mainResource = functionality.mainScript
@@ -147,11 +151,11 @@ object BashWrapper {
     val allMods = helpMods ++ parMods ++ mods ++ execMods
 
     // generate header
-    val nameAndVersion = functionality.name + functionality.version.map(" " + _).getOrElse("")
+    val nav = nameAndVersion(functionality)
     val nameAndVersionHeader =
-      ("#" * (nameAndVersion.length+10)) + "\n" +
-        "#    " + nameAndVersion + "    #\n" +
-        ("#" * (nameAndVersion.length+10))
+      ("#" * (nav.length+10)) + "\n" +
+        "#    " + nav + "    #\n" +
+        ("#" * (nav.length+10))
 
     val authorHeader =
       if (functionality.authors.isEmpty) {
@@ -182,12 +186,10 @@ object BashWrapper {
        |${Bash.ViashQuote}
        |${Bash.ViashRemoveFlags}
        |${Bash.ViashSourceDir}
+       |${Bash.ViashLogging}
        |
        |# find source folder of this component
        |$var_resources_dir=`ViashSourceDir $${BASH_SOURCE[0]}`
-       |$var_exec_mode="run"
-       |
-       |$setupCommands
        |
        |${spaceCode(allMods.preParse)}
        |# initialise array
@@ -197,14 +199,27 @@ object BashWrapper {
        |    case "$$1" in
        |        -h|--help)
        |            ViashHelp
-       |            exit;;
-       |        ---setup)
-       |            $var_exec_mode="setup"
+       |            exit
+       |            ;;
+       |        -v|--verbose)
+       |            let "$var_verbosity=$var_verbosity+1"
        |            shift 1
        |            ;;
-       |        ---push)
-       |            $var_exec_mode="push"
+       |        -vv)
+       |            let "$var_verbosity=$var_verbosity+2"
        |            shift 1
+       |            ;;
+       |        --verbosity)
+       |            $var_verbosity="$$2"
+       |            shift 2
+       |            ;;
+       |        --verbosity=*)
+       |            $var_verbosity="$$(ViashRemoveFlags "$$1")"
+       |            shift 1
+       |            ;;
+       |        --version)
+       |            echo "${nameAndVersion(functionality)}"
+       |            exit
        |            ;;
        |${allMods.parsers}
        |        *)  # positional arg or unknown option
@@ -214,16 +229,6 @@ object BashWrapper {
        |            ;;
        |    esac
        |done
-       |
-       |if [ "$$$var_exec_mode" == "setup" ]; then
-       |  ViashSetup
-       |  exit 0
-       |fi
-       |
-       |if [ "$$$var_exec_mode" == "push" ]; then
-       |  ViashPush
-       |  exit 0
-       |fi
        |
        |# parse positional parameters
        |eval set -- $$VIASH_POSITIONAL_ARGS
@@ -235,58 +240,59 @@ object BashWrapper {
 
   private def generateHelp(functionality: Functionality, params: List[DataObject[_]]) = {
     // gather parse code for params
-    val usageStrs = params.map(param => {
+    val paramStrs = params.map(param => {
       val names = param.alternatives ::: List(param.name)
 
-      val exval = param.`type`
-      val exampleValues =
-        if (param.multiple) {
-          exval + "1" + param.multiple_sep + exval + "2" + param.multiple_sep + "..."
-        } else {
-          exval
-        }
+      val unnamedProps = List(
+        ("required parameter", param.required),
+        ("multiple values allowed", param.multiple),
+        ("output", param.direction == Output),
+        ("file must exist", param.isInstanceOf[FileObject] && param.asInstanceOf[FileObject].must_exist)
+      ).filter(_._2).map(_._1)
 
-      val exampleStrs = {
-        param match {
-          case bo: BooleanObject if bo.flagValue.isDefined => names
-          case _ =>
-            names.map(name => {
-              if (name.startsWith("--") || name.startsWith("---")) {
-                name + "=" + exampleValues
-              } else if (name.startsWith("-")) {
-                name + " " + exampleValues
-              } else {
-                exampleValues
-              }
-            })
-        }
-      }
+      val namedProps = List(
+        ("type", Some((param.oType :: unnamedProps).mkString(", "))),
+        ("default", param.default),
+        ("example", param.example)
+      ).flatMap { case (name, x) =>
+        x.map("\necho \"        " + name + ": " + _ + "\"")
+      }.mkString
 
-      val properties =
-        List("type: " + param.`type`) ::: {
-          if (param.required) List("required parameter") else Nil
-        } ::: {
-          if (param.multiple) List("multiple values allowed") else Nil
-        } ::: {
-          if (param.default.isDefined) List("default: " + param.default.get) else Nil
-        }
+      val descStr = param.description.map{ desc =>
+        val escapedDesc = escapeViash(desc, escapeQuotes = true).split("\n")
+        escapedDesc.map("\necho \"        " + _ + "\"").mkString
+      }.getOrElse("")
 
-      val part1 = "    " + exampleStrs.mkString(", ")
-      val part2 = "        " + properties.mkString(", ")
-      val part3 = param.description.toList.flatMap(escapeViash(_, escapeQuotes = true).split("\n")).map("        " + _)
-
-      (part1 :: part2 :: part3 ::: List("")).map("    echo \"" + _ + "\"").mkString("\n")
+      s"""
+         |echo "    ${names.mkString(", ")}"$namedProps$descStr
+         |echo ""
+         |""".stripMargin
     })
 
-    // TODO: add usage?
+    val descrStr =
+      if (functionality.description.isDefined) {
+        s"""
+           |echo "${escapeViash(functionality.description.get.stripLineEnd, escapeQuotes = true)}"""".stripMargin
+      } else {
+        ""
+      }
+
+    val usageStr =
+      if (functionality.usage.isDefined) {
+        s"""
+           |echo "Usage: ${escapeViash(functionality.usage.get.stripLineEnd, escapeQuotes = true)}"
+           |echo""".stripMargin
+      } else {
+        ""
+      }
 
     val preParse =
       s"""# ViashHelp: Display helpful explanation about this executable
       |function ViashHelp {
-      |   echo "${escapeViash(functionality.description.getOrElse("").stripLineEnd, escapeQuotes = true)}"
-      |   echo
+      |   echo "${nameAndVersion(functionality)}"$descrStr
+      |   echo$usageStr
       |   echo "Options:"
-      |${usageStrs.mkString("\n")}
+      |${paramStrs.mkString("\n")}
       |}""".stripMargin
 
     BashWrapperMods(preParse = preParse)
@@ -333,14 +339,14 @@ object BashWrapper {
     val positionalStr = positionals.map { param =>
       if (param.multiple) {
         s"""while [[ $$# -gt 0 ]]; do
-      |  ${store(param.VIASH_PAR, "\"$1\"", Some(param.multiple_sep)).mkString("\n  ")}
-    |  shift 1
-    |done""".stripMargin
+           |  ${store(param.VIASH_PAR, "\"$1\"", Some(param.multiple_sep)).mkString("\n  ")}
+           |  shift 1
+           |done""".stripMargin
       } else {
         s"""if [[ $$# -gt 0 ]]; then
-    |  ${param.VIASH_PAR}="$$1"
-    |  shift 1
-    |fi"""
+           |  ${param.VIASH_PAR}="$$1"
+           |  shift 1
+           |fi"""
       }
     }.mkString("\n")
 
@@ -353,9 +359,9 @@ object BashWrapper {
         "\n# check whether required parameters exist\n" +
           reqParams.map { param =>
             s"""if [ -z "$$${param.VIASH_PAR}" ]; then
-    |  echo '${param.name}' is a required argument. Use "--help" to get more information on the parameters.
-    |  exit 1
-    |fi""".stripMargin
+               |  ViashError '${param.name}' is a required argument. Use "--help" to get more information on the parameters.
+               |  exit 1
+               |fi""".stripMargin
           }.mkString("\n")
       }
 
@@ -373,8 +379,8 @@ object BashWrapper {
 
       default.map(default => {
         s"""if [ -z "$$${param.VIASH_PAR}" ]; then
-    |  ${param.VIASH_PAR}="${escapeViash(default.toString, escapeQuotes = true)}"
-    |fi""".stripMargin
+           |  ${param.VIASH_PAR}="${escapeViash(default.toString, escapeQuotes = true)}"
+           |fi""".stripMargin
       })
     }.mkString("\n")
 
@@ -391,22 +397,22 @@ object BashWrapper {
           reqFiles.map { param =>
             if (param.multiple) {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
-    |  IFS=${param.multiple_sep}
-    |  set -f
-    |  for file in $$${param.VIASH_PAR}; do
-      |    unset IFS
-    |    if [ ! -e "$$file" ]; then
-    |      echo "File '$$file' does not exist."
-    |      exit 1
-    |    fi
-      |  done
-      |  set +f
-    |fi""".stripMargin
-            } else {
-              s"""if [ ! -z "$$${param.VIASH_PAR}" ] && [ ! -e "$$${param.VIASH_PAR}" ]; then
-    |  echo "File '$$${param.VIASH_PAR}' does not exist."
-    |  exit 1
-    |fi""".stripMargin
+                 |  IFS=${param.multiple_sep}
+                 |  set -f
+                 |  for file in $$${param.VIASH_PAR}; do
+                 |    unset IFS
+                 |    if [ ! -e "$$file" ]; then
+                 |      ViashError "File '$$file' does not exist."
+                 |      exit 1
+                 |    fi
+                 |  done
+                 |  set +f
+                 |fi""".stripMargin
+          } else {
+            s"""if [ ! -z "$$${param.VIASH_PAR}" ] && [ ! -e "$$${param.VIASH_PAR}" ]; then
+               |  ViashError "File '$$${param.VIASH_PAR}' does not exist."
+               |  exit 1
+               |fi""".stripMargin
             }
           }.mkString("\n")
       }
@@ -422,28 +428,28 @@ object BashWrapper {
     val inserts = params.map {
       case bo: BooleanObject if bo.flagValue.isDefined =>
         s"""
-    |if [ "$$${bo.VIASH_PAR}" == "${bo.flagValue.get}" ]; then
-    |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS ${bo.name}"
-    |fi""".stripMargin
+           |if [ "$$${bo.VIASH_PAR}" == "${bo.flagValue.get}" ]; then
+           |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS ${bo.name}"
+           |fi""".stripMargin
       case param =>
         val flag = if (param.otype == "") "" else " " + param.name
 
         if (param.multiple) {
           s"""
-    |if [ ! -z "$$${param.VIASH_PAR}" ]; then
-    |  IFS=${param.multiple_sep}
-    |  set -f
-    |  for val in $$${param.VIASH_PAR}; do
-      |    unset IFS
-    |    VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$val'"
-    |  done
-      |  set +f
-    |fi""".stripMargin
+             |if [ ! -z "$$${param.VIASH_PAR}" ]; then
+             |  IFS=${param.multiple_sep}
+             |  set -f
+             |  for val in $$${param.VIASH_PAR}; do
+             |    unset IFS
+             |    VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$val'"
+             |  done
+             |  set +f
+             |fi""".stripMargin
         } else {
           s"""
-    |if [ ! -z "$$${param.VIASH_PAR}" ]; then
-    |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$${param.VIASH_PAR}'"
-    |fi""".stripMargin
+             |if [ ! -z "$$${param.VIASH_PAR}" ]; then
+             |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$${param.VIASH_PAR}'"
+             |fi""".stripMargin
         }
     }
 
