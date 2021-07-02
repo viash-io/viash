@@ -33,10 +33,6 @@
 
 * `viash run`: Added examples to functionality and arguments. Reworked `--help` formatting to include more information and be more consistent (#56).
 
-* Reorganized viash docker build testbench into a main testbench with smaller auxiliary testbenches to keep them more manageable and clear what happens where.
-
-* Added a basic testbench for namespace tests.
-
 ## BUG FIXES
 
 * `Docker R Requirements`: Install `remotes` when using `{ type: r, packages: [ foo ] }`.
@@ -46,6 +42,10 @@
 ## TESTING
 
 * `NXF`: Add an end-to-end test for running a nextflow pipeline using viash components.
+
+* `Docker`: Reorganized viash docker build testbench into a main testbench with smaller auxiliary testbenches to keep them more manageable and clear what happens where.
+
+* `viash ns`: Added a basic testbench for namespace tests.
 
 # viash 0.4.0.1 (2021-05-12)
 
