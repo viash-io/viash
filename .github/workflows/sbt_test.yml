@@ -89,8 +89,7 @@ jobs:
         fi
 
     - name: Upload coverage on success
-      if: matrix.config.name == 'main'
-      run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}
+      run: bash <(curl -s https://codecov.io/bash) # -t ${{ secrets.CODECOV_TOKEN }}
 
     - name: Upload check results on fail
       if: failure()
