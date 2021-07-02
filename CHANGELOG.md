@@ -33,6 +33,10 @@
 
 * `viash run`: Added examples to functionality and arguments. Reworked `--help` formatting to include more information and be more consistent (#56).
 
+* Reorganized viash docker build testbench into a main testbench with smaller auxiliary testbenches to keep them more manageable and clear what happens where.
+
+* Added a basic testbench for namespace tests.
+
 ## BUG FIXES
 
 * `Docker R Requirements`: Install `remotes` when using `{ type: r, packages: [ foo ] }`.
