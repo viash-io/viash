@@ -43,6 +43,10 @@
 
 * `config`: Throw error when user made a typo in the viash config (#62). 
 
+## TESTING
+
+* `NXF`: Add an end-to-end test for running a nextflow pipeline using viash components.
+
 # viash 0.4.0.1 (2021-05-12)
 
 ## BUG FIX
