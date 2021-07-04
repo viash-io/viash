@@ -60,7 +60,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     functionality.arguments.foreach(arg => {
       for (opt <- arg.alternatives; value <- opt)
         assert(stdout.contains(value))
-      for (opt <- arg.description; value <- opt)
+      for (opt <- arg.description; value <- opt.split("\\s+"))
         assert(stdout.contains(value))
     })
 
