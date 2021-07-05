@@ -22,11 +22,9 @@ case class JavaScriptRequirements(
   npm: List[String] = Nil,
   git: List[String] = Nil,
   github: List[String] = Nil,
-  url: List[String] = Nil
+  url: List[String] = Nil,
+  oType: String = "javascript"
 ) extends Requirements {
-
-  val `type` = "javascript"
-
   private def generateCommands(prefix: String, values: List[String]) = {
     values match {
       case Nil => Nil

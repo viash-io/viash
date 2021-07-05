@@ -21,10 +21,9 @@ case class DockerRequirements(
   resources: List[String] = Nil,
   run: List[String] = Nil,
   build_args: List[String] = Nil,
-  env: List[String] = Nil
+  env: List[String] = Nil,
+  oType: String = "docker"
 ) extends Requirements {
-  val `type` = "docker"
-
   def installCommands: List[String] = Nil
 
   override def dockerCommands: Option[String] = {

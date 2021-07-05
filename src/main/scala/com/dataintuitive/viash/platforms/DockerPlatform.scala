@@ -39,9 +39,9 @@ case class DockerPlatform(
   chown: Boolean = true,
   port: Option[List[String]] = None,
   workdir: Option[String] = None,
-  setup_strategy: DockerSetupStrategy = AlwaysCachedBuild,
-  push_strategy: DockerPushStrategy = PushIfNotPresent,
+  setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,
   privileged: Boolean = false,
+  oType: String = "docker",
 
   // setup variables
   setup: List[Requirements] = Nil,
@@ -54,11 +54,11 @@ case class DockerPlatform(
   // deprecated
   version: Option[Version] = None
 ) extends Platform {
-  val `type` = "docker"
+  override val hasSetup = true
 
   assert(version.isEmpty, "docker platform: attribute 'version' is deprecated")
 
-  val requirements: List[Requirements] = {
+  override val requirements: List[Requirements] = {
     val x =
       setup :::
         apk.toList :::
@@ -86,7 +86,7 @@ case class DockerPlatform(
     }
 
     // create setup
-    val (effectiveID, setupCommands, setupMods) = processDockerSetup(functionality)
+    val (effectiveID, setupMods) = processDockerSetup(functionality)
 
     // generate automount code
     val dmVol = processDockerVolumes(functionality)
@@ -120,7 +120,6 @@ case class DockerPlatform(
       text = Some(BashWrapper.wrapScript(
         executor = executor,
         functionality = fun2,
-        setupCommands = setupCommands,
         mods = dm
       ))
     )
@@ -193,93 +192,76 @@ case class DockerPlatform(
              |  cp -r $$${BashWrapper.var_resources_dir}/* $$tmpdir
              |
              |  # Build the container
-             |  echo "> docker build -t $$@$buildArgs $$tmpdir"
+             |  ViashNotice "Running 'docker build -t $$@$buildArgs $$tmpdir'"
              |  set +e
-             |  docker build -t $$@$buildArgs $$tmpdir &> $$tmpdir/docker_build.log
+             |  if [ $$${BashWrapper.var_verbosity} -ge 6 ]; then
+             |    docker build -t $$@$buildArgs $$tmpdir
+             |  else
+             |    docker build -t $$@$buildArgs $$tmpdir &> $$tmpdir/docker_build.log
+             |  fi
              |  out=$$?
              |  set -e
              |  if [ ! $$out -eq 0 ]; then
-             |    echo "> ERROR: Something went wrong building the container $$@"
-             |    echo "> Error transcript follows:"
-             |    cat $$tmpdir/docker_build.log
-             |    echo "> --- end of error transcript"
-             |  fi
-             |  if [ "$$VIASH_EXEC_MODE" == "setup" ]; then
-             |    exit $$out
+             |    ViashError "Error occurred while building the container $$@."
+             |    if [ ! $$${BashWrapper.var_verbosity} -ge 6 ]; then
+             |      ViashError "Transcript: --------------------------------"
+             |      cat "$$tmpdir/docker_build.log"
+             |      ViashError "End of transcript --------------------------"
+             |    fi
+             |    exit 1
              |  fi""".stripMargin
 
         (vdf, vdb)
       }
 
-    val setupCommands = {
-      s"""# ViashDockerFile: print the dockerfile to stdout
+    val preParse =
+      s"""
+         |${Bash.ViashDockerFuns}
+         |
+         |# ViashDockerFile: print the dockerfile to stdout
          |# return : dockerfile required to run this component
          |# examples:
          |#   ViashDockerFile
          |function ViashDockerfile {
          |$viashDockerFile
          |}
-         |# ViashDockerBuild: ...
+         |
+         |# ViashDockerBuild: build a docker container
+         |# $$1              : image identifier with format `[registry/]image[:tag]`
+         |# exit code $$?    : whether or not the image was built
          |function ViashDockerBuild {
          |$viashDockerBuild
-         |}
-         |
-         |# ViashSetup: ...
-         |function ViashSetup {
-         |  ViashDockerSetup $effectiveID $$$dockerSetupStrategyVar
-         |}
-         |
-         |# ViashPush: ...
-         |function ViashPush {
-         |  ViashDockerPush $effectiveID $$$dockerPushStrategyVar
          |}""".stripMargin
-    }
-
-    val preParse =
-      s"""
-         |${Bash.ViashDockerFuns}
-         |# initialise variables
-         |$dockerSetupStrategyVar='${setup_strategy.id}'
-         |$dockerPushStrategyVar='${push_strategy.id}'""".stripMargin
 
     val parsers =
       s"""
-         |        ---dss|---docker_setup_strategy)
-         |            ${BashWrapper.var_exec_mode}="setup"
-         |            $dockerSetupStrategyVar="$$2"
-         |            shift 2
+         |        ---setup)
+         |            ViashDockerSetup '$effectiveID' "$$2"
+         |            exit 0
          |            ;;
-         |        ---docker_setup_strategy=*)
-         |            ${BashWrapper.var_exec_mode}="setup"
-         |            $dockerSetupStrategyVar=$$(ViashRemoveFlags "$$2")
-         |            shift 1
-         |            ;;
-         |        ---dps|---docker_push_strategy)
-         |            ${BashWrapper.var_exec_mode}="push"
-         |            $dockerPushStrategyVar="$$2"
-         |            shift 2
-         |            ;;
-         |        ---docker_push_strategy=*)
-         |            ${BashWrapper.var_exec_mode}="push"
-         |            $dockerPushStrategyVar=$$(ViashRemoveFlags "$$2")
-         |            shift 1
+         |        ---setup=*)
+         |            ViashDockerSetup '$effectiveID' "$$(ViashRemoveFlags "$$1")"
+         |            exit 0
          |            ;;
          |        ---dockerfile)
          |            ViashDockerfile
          |            exit 0
          |            ;;""".stripMargin
 
+    def postParse =
+      s"""
+         |ViashDockerSetup '$effectiveID' ${IfNeedBePullElseCachedBuild.id}""".stripMargin
+
     val mods = BashWrapperMods(
       preParse = preParse,
-      parsers = parsers
+      parsers = parsers,
+      postParse = postParse
     )
 
-    (effectiveID, setupCommands, mods)
+    (effectiveID, mods)
   }
 
   private val extraMountsVar = "VIASH_EXTRA_MOUNTS"
-  private val dockerSetupStrategyVar = "VIASH_DOCKER_SETUP_STRATEGY"
-  private val dockerPushStrategyVar = "VIASH_DOCKER_PUSH_STRATEGY"
 
   private def processDockerVolumes(functionality: Functionality) = {
     val args = functionality.argumentsAndDummies
@@ -358,7 +340,7 @@ case class DockerPlatform(
     val parsers =
       s"""
          |        ---debug)
-         |            echo "+ $debugCommand"
+         |            ViashNotice "+ $debugCommand"
          |            $debugCommand
          |            exit 0
          |            ;;""".stripMargin

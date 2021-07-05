@@ -23,7 +23,7 @@ import com.dataintuitive.viash.helpers.IO
 import java.nio.file.{Path, Paths}
 
 trait Resource {
-  val `type`: String
+  val oType: String
   val dest: Option[String]
   val parent: Option[URI]
   val path: Option[String]
@@ -83,12 +83,11 @@ trait Resource {
   }
 
   def write(path: Path, overwrite: Boolean) {
-    val file =
-      if (text.isDefined) {
-        IO.write(text.get, path, overwrite, executable = is_executable)
-      } else {
-        IO.write(uri.get, path, overwrite, executable = is_executable)
-      }
+    if (text.isDefined) {
+      IO.write(text.get, path, overwrite, executable = is_executable)
+    } else {
+      IO.write(uri.get, path, overwrite, executable = is_executable)
+    }
   }
 
   def copyWithAbsolutePath(parent: URI): Resource = {

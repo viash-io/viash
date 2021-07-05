@@ -32,6 +32,7 @@ object Bash {
   lazy val ViashAutodetectMount: String = readUtils("ViashAutodetectMount")
   lazy val ViashSourceDir: String = readUtils("ViashSourceDir")
   lazy val ViashDockerFuns: String = readUtils("ViashDockerFuns")
+  lazy val ViashLogging: String = readUtils("ViashLogging")
 
   def save(saveVariable: String, args: Seq[String]): String = {
     saveVariable + "=\"$" + saveVariable + " " + args.mkString(" ") + "\""

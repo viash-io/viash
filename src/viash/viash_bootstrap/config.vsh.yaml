@@ -3,11 +3,12 @@ functionality:
   namespace: viash
   version: 0.1
   description: |
-    Initiate or update a viash project's CI/CD artefacts
+    Bootstrap or update a viash project's CI/CD artefacts
   arguments:
   - name: "--bin"
     type: file
-    description: Directory for sources if different ./
+    description: Target dir for viash scripts and tools
+    direction: output
     default: bin/
   - name: "--registry"
     alternatives: [ "-r" ]
@@ -24,10 +25,14 @@ functionality:
     multiple: true
     multiple_sep: ";"
     description: "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
-  - name: "--version"
-    alternatives: [ "-v" ]
+  - name: "--tag"
+    alternatives: [ "-t" ]
     type: string
-    description: "Version of viash to use, leave blank for the latest release"
+    description: "Which tag/version of viash to use, leave blank for the latest release"
+  - name: "--log"
+    type: file
+    description: Path to write the test logs to.
+    default: log.tsv
   - name: "--viash"
     type: file
     description: A path to the viash executable. If not specified, this component will look for 'viash' on the $PATH.

@@ -29,6 +29,7 @@ case class Functionality(
   arguments: List[DataObject[_]] = Nil,
   resources: Option[List[Resource]] = None,
   description: Option[String] = None,
+  usage: Option[String] = None,
   function_type: Option[FunctionType] = None,
   tests: Option[List[Resource]] = None,
   info: Map[String, String] = Map.empty[String, String],
@@ -54,6 +55,18 @@ case class Functionality(
     )
   }
 
+  // check functionality name
+  require(name.matches("^[A-Za-z][A-Za-z0-9_]*$"), message = "functionality name must begin with a letter and consist only of alphanumeric characters or underscores.")
+
+  // check arguments
+  arguments.foreach { arg =>
+    require(arg.name.matches("^(-?|--|\\$)[A-Za-z][A-Za-z0-9_]*$"), message = s"argument $arg.name: name must begin with a letter and consist only of alphanumeric characters or underscores.")
+    (arg.name :: arg.alternatives).foreach { argName =>
+      require(!Functionality.reservedParameters.contains(argName), message = s"argument $argName: name is reserved by viash")
+      require(!argName.matches("^\\$VIASH_"), message = s"argument $argName: environment variables beginning with 'VIASH_' are reserved for viash.")
+    }
+  }
+
   def mainScript: Option[Script] =
     resources.getOrElse(Nil).head match {
       case s: Script => Some(s)
@@ -63,4 +76,8 @@ case class Functionality(
   def mainCode: Option[String] = mainScript.flatMap(_.read)
 
   def argumentsAndDummies: List[DataObject[_]] = arguments ::: dummy_arguments.getOrElse(Nil)
+}
+
+object Functionality {
+  val reservedParameters = List("-h", "--help", "-v", "--verbose", "--verbosity", "--version")
 }

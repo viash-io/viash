@@ -23,7 +23,7 @@ import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfigur
 package object docker {
   import com.dataintuitive.viash.helpers.Circe._
 
-  // encoder and decoder for direction
+  // encoder and decoder for resolvevolume
   implicit val encodeResolveVolume: Encoder[DockerResolveVolume] = Encoder.instance {
     v => Json.fromString(v.toString)
   }
@@ -37,7 +37,7 @@ package object docker {
       )
   }
 
-  // encoder and decoder for direction
+  // encoder and decoder for setup strategy
   implicit val encodeSetupStrategy: Encoder[DockerSetupStrategy] = Encoder.instance {
     dss => Json.fromString(dss.id.toLowerCase)
   }
@@ -51,18 +51,5 @@ package object docker {
       }
   }
 
-  // encoder and decoder for direction
-  implicit val encodePushStrategy: Encoder[DockerPushStrategy] = Encoder.instance {
-    dss => Json.fromString(dss.id.toLowerCase)
-  }
-  implicit val decodePushStrategy: Decoder[DockerPushStrategy] = Decoder.instance {
-    cursor =>
-      cursor.value.as[String].map { s =>
-        val id = s.toLowerCase.replaceAll("_", "")
-        DockerPushStrategy.map.applyOrElse(id,
-          (key: String) => throw new Exception(s"Docker Push Strategy '$key' not found.")
-        )
-      }
-  }
 }
 

@@ -19,6 +19,7 @@ functionality:
       direction: input
       required: true
       must_exist: true
+      example: input.txt
     - name: "--real_number"
       type: double
       description: A real number with positional arguments.
@@ -48,7 +49,7 @@ functionality:
     - name: "--log"
       type: file
       description: An optional log file.
-      direction: log
+      direction: output
     - name: "--optional"
       type: string
       description: An optional string.

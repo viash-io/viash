@@ -21,20 +21,16 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   private val configTextFile = getClass.getResource("/testbash/invalid_configs/config.txt").getPath
   private val configInvalidYamlFile = getClass.getResource("/testbash/invalid_configs/config_invalid_yaml.vsh.yaml").getPath
 
-  private val configResourcesCopyFile = getClass.getResource("/testbash/config_resource_test.vsh.yaml").getPath
-  private val configResourcesUnsupportedProtocolFile = getClass.getResource("/testbash/config_resource_unsupported_protocol.vsh.yaml").getPath
-
   // custom platform yamls
   private val customPlatformFile = getClass.getResource("/testbash/platform_custom.yaml").getPath
 
   //<editor-fold desc="Check behavior relative normal behavior such as success, no tests, failed tests, failed build">
   test("Check standard test output for typical outputs", DockerTest) {
     val testText = TestHelper.testMain(
-      Array(
-        "test",
-        "-p", "docker",
-        configFile
-      ))
+      "test",
+      "-p", "docker",
+      configFile
+    )
 
     assert(testText.contains("Running tests in temporary directory: "))
     assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
@@ -45,11 +41,10 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
 
   test("Check standard test output with trailing arguments", DockerTest) {
     val testText = TestHelper.testMain(
-      Array(
-        "test",
-        configFile,
-        "-p", "docker"
-      ))
+      "test",
+      configFile,
+      "-p", "docker"
+    )
 
     assert(testText.contains("Running tests in temporary directory: "))
     assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
@@ -60,12 +55,11 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
 
   test("Check standard test output with leading and trailing arguments", DockerTest) {
     val testText = TestHelper.testMain(
-      Array(
-        "test",
-        "-p", "docker",
-        configFile,
-        "-k", "false"
-      ))
+      "test",
+      "-p", "docker",
+      configFile,
+      "-k", "false"
+    )
 
     assert(testText.contains("Running tests in temporary directory: "))
     assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
@@ -76,11 +70,10 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
 
   test("Check test output when no tests are specified in the functionality file", NativeTest) {
     val testText = TestHelper.testMain(
-      Array(
-        "test",
-        "-p", "native",
-        configNoTestFile
-      ))
+      "test",
+      "-p", "native",
+      configNoTestFile
+    )
 
     assert(testText.contains("Running tests in temporary directory: "))
     assert(testText.contains("WARNING! No tests found!"))
@@ -90,11 +83,11 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check test output when a test fails", NativeTest) {
-    val testText = TestHelper.testMainException[RuntimeException](Array(
+    val testText = TestHelper.testMainException[RuntimeException](
       "test",
       "-p", "native",
       configFailedTestFile
-    ))
+    )
 
     assert(testText.contains("Running tests in temporary directory: "))
     assert(testText.contains("ERROR! Only 0 out of 1 test scripts succeeded!"))
@@ -105,9 +98,8 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
 
   test("Check failing build", DockerTest) {
     val testOutput = TestHelper.testMainException2[RuntimeException](
-      Array(
-        "test", configFailedBuildFile
-      ))
+      "test", configFailedBuildFile
+    )
 
     assert(testOutput.exceptionText == "Setup failed!")
 
@@ -120,9 +112,8 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
 
   test("Check test output when test doesn't exist", DockerTest) {
     val testOutput = TestHelper.testMainException2[RuntimeException](
-      Array(
-        "test", configNonexistentTestFile
-      ))
+      "test", configNonexistentTestFile
+    )
 
     assert(testOutput.exceptionText == "Only 0 out of 1 test scripts succeeded!")
 
@@ -136,11 +127,10 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   //<editor-fold desc="Invalid config files">
   test("Check config file without 'functionality' specified", DockerTest) {
     val testOutput = TestHelper.testMainException2[RuntimeException](
-      Array(
-        "test",
-        "-p", "docker",
-        configMissingFunctionalityFile
-      ))
+      "test",
+      "-p", "docker",
+      configMissingFunctionalityFile
+    )
 
     assert(testOutput.exceptionText.contains("must be a yaml file containing a viash config."))
     assert(testOutput.output.isEmpty)
@@ -148,11 +138,10 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
 
   test("Check valid viash config yaml but with wrong file extension") {
     val testOutput = TestHelper.testMainException2[RuntimeException](
-      Array(
-        "test",
-        "-p", "docker",
-        configTextFile
-      ))
+      "test",
+      "-p", "docker",
+      configTextFile
+    )
 
     assert(testOutput.exceptionText.contains("must be a yaml file containing a viash config."))
     assert(testOutput.output.isEmpty)
@@ -160,11 +149,10 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
 
   test("Check invalid viash config yaml") {
     val testOutput = TestHelper.testMainException2[io.circe.ParsingFailure](
-      Array(
-        "test",
-        "-p", "docker",
-        configInvalidYamlFile
-      ))
+      "test",
+      "-p", "docker",
+      configInvalidYamlFile
+    )
 
     assert(testOutput.exceptionText.contains("while parsing a flow mapping"))
     assert(testOutput.output.isEmpty)
@@ -173,12 +161,11 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   //<editor-fold desc="Check behavior of successful and failed tests with -keep flag specified">
   test("Check output in case --keep true is specified", DockerTest) {
     val testText = TestHelper.testMain(
-      Array(
-        "test",
-        "-p", "docker",
-        "-k", "true",
-        configFile
-      ))
+      "test",
+      "-p", "docker",
+      "-k", "true",
+      configFile
+    )
 
     assert(testText.contains("Running tests in temporary directory: "))
     assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
@@ -189,12 +176,11 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
 
   test("Check output in case --keep false is specified", DockerTest) {
     val testText = TestHelper.testMain(
-      Array(
-        "test",
-        "-p", "docker",
-        "--keep", "false",
-        configFile
-      ))
+      "test",
+      "-p", "docker",
+      "--keep", "false",
+      configFile
+    )
 
     assert(testText.contains("Running tests in temporary directory: "))
     assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
@@ -204,12 +190,12 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check test output when a test fails and --keep true is specified", NativeTest) {
-    val testOutput = TestHelper.testMainException2[RuntimeException](Array(
+    val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "-p", "native",
       "-k", "true",
       configFailedTestFile
-    ))
+    )
 
     assert(testOutput.exceptionText == "Only 0 out of 1 test scripts succeeded!")
 
@@ -221,12 +207,12 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check test output when a test fails and --keep false is specified", NativeTest) {
-    val testOutput = TestHelper.testMainException2[RuntimeException](Array(
+    val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "-p", "native",
       "-k", "false",
       configFailedTestFile
-    ))
+    )
 
     assert(testOutput.exceptionText == "Only 0 out of 1 test scripts succeeded!")
 
@@ -240,115 +226,26 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   //<editor-fold desc="Verify behavior of platform name specifications">
   test("Check standard test output with bad platform name", NativeTest) {
     val testOutput = TestHelper.testMainException2[RuntimeException](
-      Array(
-        "test",
-        "-p", "non_existing_platform",
-        configFile
-      ))
+      "test",
+      "-p", "non_existing_platform",
+      configFile
+    )
 
     assert(testOutput.exceptionText == "platform must be a platform id specified in the config or a path to a platform yaml file.")
     assert(testOutput.output.isEmpty)
   }
 
-  test("Check standard test output with custom platform file", NativeTest) {
+  test("Check standard test output with custom platform file", DockerTest) {
     val testText = TestHelper.testMain(
-      Array(
-        "test",
-        "-p", customPlatformFile,
-        configFile
-      ))
+      "test",
+      "-p", customPlatformFile,
+      configFile
+    )
 
-    assert(testText.contains("check_for_detecting_platform"))
+    assert(testText.contains("anndata")) // check whether custom package was picked up
     assert(testText.contains("Running tests in temporary directory: "))
     assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
     assert(testText.contains("Cleaning up temporary directory"))
-  }
-  //</editor-fold>
-  //<editor-fold desc="Verify correct copying of resources">
-  test("Check resources are copied from and to the correct location", DockerTest) {
-
-    // copy some resources to /tmp/viash_tmp_resources/ so we can test absolute path resources
-    val tmpFolderResourceSourceFile = Paths.get(getClass.getResource("/testbash/resource3.txt").getFile)
-
-    val tmpFolderResourceDestinationFolder = Paths.get("/tmp/viash_tmp_resources/").toFile
-    val tmpFolderResourceDestinationFile = Paths.get(tmpFolderResourceDestinationFolder.getPath, "resource3.txt")
-
-    if (!tmpFolderResourceDestinationFolder.exists())
-      tmpFolderResourceDestinationFolder.mkdir()
-
-    Files.copy(tmpFolderResourceSourceFile, tmpFolderResourceDestinationFile, StandardCopyOption.REPLACE_EXISTING)
-
-    // generate viash script
-    val testText = TestHelper.testMain(
-      Array(
-        "test",
-        "-p", "docker",
-        "-k", "true",
-        configResourcesCopyFile
-      ))
-
-    // basic checks to see if standard test/build was correct
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("WARNING! No tests found!"))
-    assert(!testText.contains("Cleaning up temporary directory"))
-
-    val FolderRegex = ".*Running tests in temporary directory: '([^']*)'.*".r
-
-    val tempPath = testText.replaceAll("\n", "") match {
-      case FolderRegex(path) => path
-      case _ => ""
-    }
-
-    // List all expected resources and their md5sum
-    val expectedResources = List(
-      //("check_bash_version.sh", "0c3c134d4ff0ea3a4a3b32e09fb7c100"),
-      ("code.sh", "efa9e1aa1c5f2a0b91f558ead5917c68"),
-      ("NOTICE", ".*"), // turn off checksum match for notice, as it might change.
-      ("resource1.txt", "bc9171172c4723589a247f99b838732d"),
-      ("resource2.txt", "9cd530447200979dbf9e117915cbcc74"),
-      ("resource_folder/resource_L1_1.txt", "51954bf10062451e683121e58d858417"),
-      ("resource_folder/resource_L1_2.txt", "b43991c0ef5d15710faf976e02cbb206"),
-      ("resource_folder/resource_L2/resource_L2_1.txt", "63165187f791a8dfff628ef8090e56ff"),
-      ("target_folder/relocated_file_1.txt", "bc9171172c4723589a247f99b838732d"),
-      ("target_folder/relocated_file_2.txt", "51954bf10062451e683121e58d858417"),
-      ("target_folder/relocated_file_3.txt", "6b0e05ae3d38b7db48ebdfc564366bce"),
-      ("resource3.txt", "aa2037b3d308bcb6a78a3d4fbf04b297"),
-      ("target_folder/relocated_file_4.txt", "aa2037b3d308bcb6a78a3d4fbf04b297")
-    )
-
-    // Check all resources can be found in the folder
-    for ((name, md5sum) <- expectedResources) {
-      val resourceFile = Paths.get(tempPath, "build_executable", name).toFile
-
-      assert(resourceFile.exists, s"Could not find $name")
-
-      val hash = TestHelper.computeHash(resourceFile.getPath)
-
-      assert(md5sum.r.findFirstMatchIn(hash).isDefined, s"Calculated md5sum doesn't match the given md5sum for $name")
-    }
-
-    Directory(tmpFolderResourceDestinationFolder).deleteRecursively()
-    checkTempDirAndRemove(testText, true)
-  }
-
-  test("Check resources with unsupported format", DockerTest) {
-    // generate viash script
-    val testOutput = TestHelper.testMainException2[RuntimeException](
-      Array(
-        "test",
-        "-p", "docker",
-        "-k", "true",
-        configResourcesUnsupportedProtocolFile
-      ))
-
-    assert(testOutput.exceptionText == "Unsupported scheme: ftp")
-
-    // basic checks to see if standard test/build was correct
-    assert(testOutput.output.contains("Running tests in temporary directory: "))
-    assert(!testOutput.output.contains("WARNING! No tests found!"))
-    assert(!testOutput.output.contains("Cleaning up temporary directory"))
-
-    checkTempDirAndRemove(testOutput.output, true)
   }
   //</editor-fold>
 
