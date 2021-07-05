@@ -57,24 +57,15 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
         Seq(executable.toString, "--help")
       )
 
+    val stripAll = (s : String) => s.replaceAll(raw"\s+", " ").strip
+
     functionality.arguments.foreach(arg => {
       for (opt <- arg.alternatives; value <- opt)
         assert(stdout.contains(value))
       for (description <- arg.description) {
-        val regex = description.split(raw"\s+")
-          .map(word => {
-            // escape words containing regex special characters
-            if (word.matches(""".*[\<\(\[\{\\\^\-\=\$\!\|\]\}\)\?\*\+\.\>].*"""))
-              s"\\Q$word\\E"
-            else
-              word
-          })
-          .mkString(raw"[\r\n]?\s+")
-        assert(regex.r.findFirstIn(stdout).isDefined)
+        assert(stripAll(stdout).contains(stripAll(description)))
       }
-
     })
-
   }
 
   test("Check whether output is correctly created", DockerTest) {
