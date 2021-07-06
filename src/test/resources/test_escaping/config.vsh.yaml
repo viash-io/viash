@@ -1,0 +1,33 @@
+functionality:
+  name: testbash_character_escapes
+  version: 0.1
+  description: |
+    Standard script description but with some special characters.
+    As a separate {test_detect} word.
+    And directly inl{test_detect}ine of a word.
+    Or as only entry:
+    {test_detect}
+  arguments:
+    - name: "input"
+      type: file
+      description: |
+        Standard script description but with some special characters.
+        As a separate {test_detect} word.
+        And directly inl{test_detect}ine of a word.
+        Or as only entry
+        {test_detect}
+      direction: input
+      required: true
+      must_exist: true
+      example: input.txt
+    - name: "--output"
+      alternatives:
+      type: file
+      description: Also test in {test_detect} single line of text.
+      direction: output
+  resources:
+    - type: bash_script
+      path: ./code.sh
+platforms:
+  - type: native
+
