@@ -41,91 +41,62 @@ class EscapingNativeTest extends FunSuite with BeforeAndAfterAll {
     Exec.run(
       Seq(executable.toString, "--help")
     )
-    println(s"stdout: $stdout")
   }
 
-  val escapeCharacters = List(/*'`', */"$", "\\\\", "\"")
+  // define character sequences like it would be regex'ed in sed
+  val escapeCharacters = List("$", raw"\\", "\"", "`", "'", raw"\n")
 
   var i = 0
-  for (char <- escapeCharacters) {
+  for (chars <- escapeCharacters) {
     i += 1
 
     // make a subfolder for each character to test
     val tempSubFolder = Paths.get(tempFolStr, s"test_$i")
     tempSubFolder.toFile.mkdir
-    copyFolder(rootPath.toString, tempSubFolder.toString)
+    TestHelper.copyFolder(rootPath, tempSubFolder.toString)
 
     val configSubFile = Paths.get(tempSubFolder.toString, s"config.vsh.yaml")
-    val executableSub = Paths.get(tempSubFolder.toString, "output", functionality.name).toFile
 
-    println(s"temp Folder and file: ${tempSubFolder.toString} ${configSubFile.toString} ${executableSub.toString}")
-
-    //sed 's/Athens/Rome/;s/Greece/Italy/' message.txt
+    // replace placeholder with character sequence
     Exec.run(
-      Seq("sed", "-i", s"s/{test_detect}/$char/g", configSubFile.toString)
+      Seq("sed", "-i", s"s/{test_detect}/$chars/g", configSubFile.toString)
     )
 
-    // TODO replace '{test_detect}' with character
+    test(s"Check whether $chars get escaped properly") {
 
+      val functionalitySub = Config.read(configSubFile.toString, modifyFun = false).functionality
+      val executableSub = Paths.get(tempSubFolder.toString, "output", functionalitySub.name).toFile
 
-
-    TestHelper.testMain(
-      "build",
-      "-p", "native",
-      "-o", Paths.get(tempSubFolder.toString, "output").toString,
-      configSubFile.toString
-    )
-
-    assert(executableSub.exists)
-    assert(executableSub.canExecute)
-  }
-
-  test("Check whether particular keywords can be found in the usage") {
-    val stdout =
-      Exec.run(
-        Seq(executable.toString, "--help")
+      // build the script
+      TestHelper.testMain(
+        "build",
+        "-p", "native",
+        "-o", Paths.get(tempSubFolder.toString, "output").toString,
+        configSubFile.toString
       )
 
-    val stripAll = (s : String) => s.replaceAll(raw"\s+", " ").strip
+      assert(executableSub.exists)
+      assert(executableSub.canExecute)
 
-    functionality.arguments.foreach(arg => {
-      for (opt <- arg.alternatives; value <- opt)
-        assert(stdout.contains(value))
-      for (description <- arg.description) {
-        assert(stripAll(stdout).contains(stripAll(description)))
-      }
-    })
-  }
 
-  // code based on https://stackoverflow.com/questions/29076439/java-8-copy-directory-recursively/34254130#34254130
-  def copyFolder(src: String, dest: String): Unit = {
-    try {
-      val stream = Files.walk(Paths.get(src))
-      try stream.forEachOrdered((sourcePath: Path) => {
+      val stdout =
+        Exec.run(
+          Seq(executableSub.toString, "--help")
+        )
 
-        def foo(sourcePath: Path) =
-          try {
-            val newPath = Paths.get(dest).resolve(Paths.get(src).relativize(sourcePath))
-            if (sourcePath.toFile.isFile) {
-              Files.copy(sourcePath, newPath)
-            }
-            else if (sourcePath.toFile.isDirectory) {
-              newPath.toFile.mkdir()
-            }
+      val stripAll = (s: String) => s.replaceAll(raw"\s+", " ").strip
 
-          } catch {
-            case e: IOException =>
-              throw new UncheckedIOException(e)
-          }
-
-        foo(sourcePath)
+      // test if descriptions match
+      functionalitySub.arguments.foreach(arg => {
+        for (opt <- arg.alternatives; value <- opt)
+          assert(stdout.contains(value))
+        for (description <- arg.description)
+          assert(stripAll(stdout).contains(stripAll(description)))
       })
-      finally if (stream != null) stream.close()
     }
   }
 
-
   override def afterAll() {
-    //IO.deleteRecursively(temporaryFolder)
+    IO.deleteRecursively(temporaryFolder)
   }
 }
