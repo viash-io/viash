@@ -48,9 +48,13 @@ class NextFlowPlatformTest extends FunSuite with BeforeAndAfterAll {
     val DebugRegex = "\\[DEBUG7, foo, (.*)\\]".r
     val DebugRegex(path) = lines.get
 
-    val step3Out = Source.fromFile(path).getLines.mkString
-    assert(step3Out.matches("^11 .*$"))
-
+    val src = Source.fromFile(path)
+    try {
+      val step3Out = src.getLines.mkString
+      assert(step3Out.matches("^11 .*$"))
+    } finally {
+      src.close()
+    }
     // TODO: check other debug flags as well.
     // TODO: change step3 into something more interesting.
   }
@@ -58,29 +62,29 @@ class NextFlowPlatformTest extends FunSuite with BeforeAndAfterAll {
 
 
   // code based on https://stackoverflow.com/questions/29076439/java-8-copy-directory-recursively/34254130#34254130
-  def copyFolder(src: String, dest: String): Unit = {
+  def copyFolder(src: String, dest: String) {
+    val stream = Files.walk(Paths.get(src))
+
     try {
-      val stream = Files.walk(Paths.get(src))
-      try stream.forEachOrdered((sourcePath: Path) => {
+      stream.forEachOrdered((sourcePath: Path) => {
 
-        def foo(sourcePath: Path) =
-          try {
-            val newPath = Paths.get(dest).resolve(Paths.get(src).relativize(sourcePath))
-            if (sourcePath.toFile.isFile) {
-              Files.copy(sourcePath, newPath)
-            }
-            else if (sourcePath.toFile.isDirectory) {
-              newPath.toFile.mkdir()
-            }
+        try {
+          val newPath = Paths.get(dest).resolve(Paths.get(src).relativize(sourcePath))
+          if (sourcePath.toFile.isFile) {
+            Files.copy(sourcePath, newPath)
+          } else if (sourcePath.toFile.isDirectory) {
+            newPath.toFile.mkdir()
+          }
 
-          } catch {
-            case e: IOException =>
-              throw new UncheckedIOException(e)
+        } catch {
+          case e: IOException =>
+            throw new UncheckedIOException(e)
         }
 
-        foo(sourcePath)
       })
-      finally if (stream != null) stream.close()
+
+    } finally {
+      stream.close()
     }
   }
 
