@@ -2,9 +2,9 @@ name: Scala CI
 
 on:
   push:
-    branches: [ master, develop, test_improvement ]
+    branches: [ '*' ]
   pull_request:
-    branches: [ master, develop ]
+    branches: [ '*' ]
 
 jobs:
   scala-ci:
@@ -21,7 +21,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    
+
     - name: Set up nextflow
       if: runner.os == 'Linux'
       run: |
