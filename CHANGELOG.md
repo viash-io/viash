@@ -1,3 +1,11 @@
+# viash 0.5.1
+
+## BUG FIXES
+
+* `BashWrapper`: Refactor escaping descriptions, usages, defaults, and examples.
+
+* `NextFlowWrapper`: Refactor escaping descriptions, usages, defaults and examples (#75).
+
 # viash 0.5.0
 
 ## BREAKING CHANGES

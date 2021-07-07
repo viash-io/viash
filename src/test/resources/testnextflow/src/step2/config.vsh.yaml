@@ -30,6 +30,11 @@ functionality:
     - name: "--input1"
       type: file
       required: true
+    - name: "--input2"
+      type: file
+      required: true
+    - name: "--default_arg"
+      type: string
       description: |
         This is the description that never ends.
           And it goes on and on my friend.
@@ -43,7 +48,7 @@ functionality:
         §1234567890'^
         °+"*ç%&/()=?`
         \n\r\t\s\
-      example: |
+      default: |
         This is the description that never ends.
           And it goes on and on my friend.
             Some people started writing it without knowing what it was.
@@ -53,13 +58,12 @@ functionality:
           Some people started writing it without knowing what it was.
         And now they keep on writing it forever just because.
         ...
-        §1234567890'^
+        §1234567890^ <-- no apostrophe
         °+"*ç%&/()=?`
         \n\r\t\s\
-    - name: "--input2"
-      type: file
-      required: true
-      default: |
+    - name: "--example"
+      type: string
+      example: |
         This is the description that never ends.
           And it goes on and on my friend.
             Some people started writing it without knowing what it was.

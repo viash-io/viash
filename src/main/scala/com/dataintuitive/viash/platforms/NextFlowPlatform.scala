@@ -20,9 +20,8 @@ package com.dataintuitive.viash.platforms
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.functionality.dataobjects._
-import com.dataintuitive.viash.platforms.requirements._
 import com.dataintuitive.viash.config.Version
-import com.dataintuitive.viash.helpers.Docker
+import com.dataintuitive.viash.helpers.{Docker, Bash}
 
 /**
  * / * Platform class for generating NextFlow (DSL2) modules.
@@ -115,7 +114,7 @@ case class NextFlowPlatform(
           Some(
             namespacedValueTuple(
               dataObject.plainName.replace("-", "_"),
-              x.toString
+              Bash.escape(x.toString, backtick = false, newline = true, quote = true)
             )(fun)
           )
         case (false, None) =>
@@ -239,16 +238,20 @@ case class NextFlowPlatform(
 
     val setup_main_utils =
       s"""
+        |def escape(str) {
+        |  return str.replaceAll('\\\\\\\\', '\\\\\\\\\\\\\\\\').replaceAll("\\"", "\\\\\\\\\\"").replaceAll("\\n", "\\\\\\\\n").replaceAll("`", "\\\\\\\\`")
+        |}
+        |
         |def renderCLI(command, arguments) {
         |
         |  def argumentsList = arguments.collect{ it ->
         |    (it.otype == "")
-        |      ? "\\'" + it.value + "\\'"
+        |      ? "\\'" + escape(it.value) + "\\'"
         |      : (it.type == "boolean_true")
         |        ? it.otype + it.name
         |        : (it.value == "no_default_value_configured")
         |          ? ""
-        |          : it.otype + it.name + " \\'" + ((it.value in List && it.multiple) ? it.value.join(it.multiple_sep): it.value) + "\\'"
+        |          : it.otype + it.name + " \\'" + escape((it.value in List && it.multiple) ? it.value.join(it.multiple_sep): it.value) + "\\'"
         |  }
         |
         |  def command_line = command + argumentsList
@@ -645,7 +648,6 @@ case class NextFlowPlatform(
 }
 
 object NextFlowUtils {
-
   import scala.reflect.runtime.universe._
 
   def quote(str: String): String = '"' + str + '"'
@@ -700,14 +702,8 @@ object NextFlowUtils {
   def namespacedValueTuple(key: String, value: String)(implicit fun: Functionality): ConfigTuple =
     (s"${fun.name}__$key", value)
 
-  implicit def dataObjectToConfigTuple[T:TypeTag](dataObject: DataObject[T])(implicit fun: Functionality):ConfigTuple = {
-
-    def valuePointer(key: String): String =
-      s"$${params.${fun.name}__$key}"
-
-    val valueOrPointer: String = {
-      valuePointer(dataObject.plainName.replace("-", "_"))
-    }
+  implicit def dataObjectToConfigTuple[T:TypeTag](dataObject: DataObject[T])(implicit fun: Functionality): ConfigTuple = {
+    val pointer = "${params." + fun.name + "__" + dataObject.plainName + "}"
 
     // TODO: Should this not be converted from the json?
     quoteLong(dataObject.plainName) → NestedValue(
@@ -718,14 +714,17 @@ object NextFlowUtils {
       tupleToConfigTuple("direction" → dataObject.direction.toString) ::
       tupleToConfigTuple("multiple" → dataObject.multiple) ::
       tupleToConfigTuple("multiple_sep" -> dataObject.multiple_sep) ::
-      tupleToConfigTuple("value" → valueOrPointer) ::
-      dataObject.default
-        .map(x => List(tupleToConfigTuple("dflt" -> x.toString))).getOrElse(Nil) :::
-      dataObject.example
-        .map(x => List(tupleToConfigTuple("example" -> x))).getOrElse(Nil) :::
-      dataObject.description
-        .map(x => List(tupleToConfigTuple("description" → x))).getOrElse(Nil)
-      )
+      tupleToConfigTuple("value" → pointer) ::
+      dataObject.default.map{ x =>
+        List(tupleToConfigTuple("dflt" -> Bash.escape(x.toString, backtick = false, quote = true, newline = true)))
+      }.getOrElse(Nil) :::
+      dataObject.example.map{x =>
+        List(tupleToConfigTuple("example" -> Bash.escape(x, backtick = false, quote = true, newline = true)))
+      }.getOrElse(Nil) :::
+      dataObject.description.map{x =>
+        List(tupleToConfigTuple("description" → Bash.escape(x, backtick = false, quote = true, newline = true)))
+      }.getOrElse(Nil)
+    )
   }
 }
 
