@@ -26,7 +26,7 @@ class NextFlowPlatformTest extends FunSuite with BeforeAndAfterAll {
 
     // copy resources to temporary folder so we can build in a clean environment
     for (resource <- List("src", "workflows", "resources"))
-      copyFolder(Paths.get(rootPath, resource).toString, Paths.get(tempFolStr, resource).toString)
+      TestHelper.copyFolder(Paths.get(rootPath, resource).toString, Paths.get(tempFolStr, resource).toString)
 
     // build the nextflow containers
     val (_, _) = TestHelper.testMainWithStdErr(
@@ -57,35 +57,6 @@ class NextFlowPlatformTest extends FunSuite with BeforeAndAfterAll {
     }
     // TODO: check other debug flags as well.
     // TODO: change step3 into something more interesting.
-  }
-
-
-
-  // code based on https://stackoverflow.com/questions/29076439/java-8-copy-directory-recursively/34254130#34254130
-  def copyFolder(src: String, dest: String) {
-    val stream = Files.walk(Paths.get(src))
-
-    try {
-      stream.forEachOrdered((sourcePath: Path) => {
-
-        try {
-          val newPath = Paths.get(dest).resolve(Paths.get(src).relativize(sourcePath))
-          if (sourcePath.toFile.isFile) {
-            Files.copy(sourcePath, newPath)
-          } else if (sourcePath.toFile.isDirectory) {
-            newPath.toFile.mkdir()
-          }
-
-        } catch {
-          case e: IOException =>
-            throw new UncheckedIOException(e)
-        }
-
-      })
-
-    } finally {
-      stream.close()
-    }
   }
 
 
