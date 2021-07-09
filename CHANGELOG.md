@@ -8,6 +8,8 @@
 
 * `NextFlowPlatform`: Add argument to output path to avoid naming conflicts for components with multiple output files (#76).
 
+* `DockerPlatform`: Only chown when output file exists.
+
 # viash 0.5.0
 
 ## BREAKING CHANGES
