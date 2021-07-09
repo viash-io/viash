@@ -57,13 +57,15 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
         Seq(executable.toString, "--help")
       )
 
+    val stripAll = (s : String) => s.replaceAll(raw"\s+", " ").strip
+
     functionality.arguments.foreach(arg => {
       for (opt <- arg.alternatives; value <- opt)
         assert(stdout.contains(value))
-      for (opt <- arg.description; value <- opt)
-        assert(stdout.contains(value))
+      for (description <- arg.description) {
+        assert(stripAll(stdout).contains(stripAll(description)))
+      }
     })
-
   }
 
   test("Check whether output is correctly created", DockerTest) {
