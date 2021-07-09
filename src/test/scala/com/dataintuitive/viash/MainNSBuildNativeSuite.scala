@@ -67,7 +67,7 @@ class MainNSBuildNativeSuite extends FunSuite with BeforeAndAfterAll{
           Seq(componentExecutableFile(component).toString, "--help")
         )
 
-      val stripAll = (s: String) => s.replaceAll(raw"\s+", " ").strip()
+      val stripAll = (s: String) => s.replaceAll(raw"\s+", " ").trim
 
       functionality.arguments.foreach(arg => {
         for (opt <- arg.alternatives; value <- opt)
