@@ -304,12 +304,12 @@ case class NextFlowPlatform(
           |      // Unless the output argument is explicitly specified on the CLI
           |      def newValue =
           |        (it.value == "viash_no_value")
-          |          ? "$fname" + "." + extOrName
+          |          ? "$fname." + it.name + "." + extOrName
           |          : it.value
           |      def newName =
           |        (id != "")
           |          ? id + "." + newValue
-          |          : newValue
+          |          : it.name + newValue
           |      it + [ value : newName ]
           |    }
           |
@@ -515,7 +515,7 @@ case class NextFlowPlatform(
         |        effectiveContainer(finalParams),
         |        renderCLI([finalParams.command], finalParams.arguments),
         |        finalParams
-        |        )
+        |      )
         |    }
         |
         |  result_ = ${fname}_process(id_input_output_function_cli_params_) \\

@@ -4,7 +4,9 @@
 
 * `BashWrapper`: Refactor escaping descriptions, usages, defaults, and examples.
 
-* `NextFlowWrapper`: Refactor escaping descriptions, usages, defaults and examples (#75).
+* `NextFlowPlatform`: Refactor escaping descriptions, usages, defaults and examples (#75).
+
+* `NextFlowPlatform`: Add argument to output path to avoid naming conflicts for components with multiple output files (#76).
 
 # viash 0.5.0
 
