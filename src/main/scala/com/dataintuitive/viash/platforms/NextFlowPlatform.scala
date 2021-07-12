@@ -242,17 +242,31 @@ case class NextFlowPlatform(
         |  return str.replaceAll('\\\\\\\\', '\\\\\\\\\\\\\\\\').replaceAll("\\"", "\\\\\\\\\\"").replaceAll("\\n", "\\\\\\\\n").replaceAll("`", "\\\\\\\\`")
         |}
         |
-        |def renderCLI(command, arguments) {
-        |
-        |  def argumentsList = arguments.collect{ it ->
-        |    (it.otype == "")
-        |      ? "\\'" + escape(it.value) + "\\'"
-        |      : (it.type == "boolean_true")
-        |        ? it.otype + it.name
-        |        : (it.value == "no_default_value_configured")
-        |          ? ""
-        |          : it.otype + it.name + " \\'" + escape((it.value in List && it.multiple) ? it.value.join(it.multiple_sep): it.value) + "\\'"
+        |def renderArg(it) {
+        |  if (it.otype == "") {
+        |    return "\'" + escape(it.value) + "\'"
+        |  } else if (it.type == "boolean_true") {
+        |    if (it.value.toLowerCase() == "true") {
+        |      return it.otype + it.name
+        |    } else {
+        |      return ""
+        |    }
+        |  } else if (it.type == "boolean_false") {
+        |    if (it.value.toLowerCase() == "true") {
+        |      return ""
+        |    } else {
+        |      return it.otype + it.name
+        |    }
+        |  } else if (it.value == "no_default_value_configured") {
+        |    return ""
+        |  } else {
+        |    def retVal = it.value in List && it.multiple ? it.value.join(it.multiple_sep): it.value
+        |    return it.otype + it.name + " \'" + escape(retVal) + "\'"
         |  }
+        |}
+        |
+        |def renderCLI(command, arguments) {
+        |  def argumentsList = arguments.collect{renderArg(it)}.findAll{it != ""}
         |
         |  def command_line = command + argumentsList
         |

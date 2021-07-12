@@ -2,11 +2,13 @@
 
 ## BUG FIXES
 
-* `BashWrapper`: Refactor escaping descriptions, usages, defaults, and examples.
+* `BashWrapper`: Refactor escaping descriptions, usages, defaults, and examples (#75).
 
 * `NextFlowPlatform`: Refactor escaping descriptions, usages, defaults and examples (#75).
 
 * `NextFlowPlatform`: Add argument to output path to avoid naming conflicts for components with multiple output files (#76).
+
+* `NextFlowPlatform`, `renderCLI()`: Only had flag to command when boolean_true is actually true (#78).
 
 * `DockerPlatform`: Only chown when output file exists.
 
