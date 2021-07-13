@@ -8,14 +8,14 @@
 
 * `NextFlowPlatform`: Add argument to output path to avoid naming conflicts for components with multiple output files (#76).
 
-* `NextFlowPlatform`, `renderCLI()`: Only had flag to command when boolean_true is actually true (#78).
+* `NextFlowPlatform`, `renderCLI()`: Only add flag to rendered command when boolean_true is actually true (#78).
 
 * `DockerPlatform`: Only chown when output file exists.
 
 ## TESTING
-* `viash build`: Capture stdout messages when errors are expected so they don't clutter the expected output.
+* `viash build`: Capture stdout messages when errors are expected, so that they don't clutter the expected output.
 
-* `viash build`: Check --help description output on the whole text instead of per letter or word basis, thus greatly improving the use of the test.
+* `viash build`: Check `--help` description output on the whole text instead of per letter or word basis.
 
 # viash 0.5.0
 
