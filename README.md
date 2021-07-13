@@ -35,18 +35,7 @@ viash can help you:
 ## Documentation
 
 The viash documentation is available online at
-[`www.data-intuitive.com/viash_docs`](https://www.data-intuitive.com/viash_docs):
-
--   [Getting started with
-    viash](https://www.data-intuitive.com/viash_docs/)
--   [Information on viash
-    commands](https://www.data-intuitive.com/viash_docs/commands)
--   [Information on config
-    files](https://www.data-intuitive.com/viash_docs/config)
--   [Good practices with
-    viash](https://www.data-intuitive.com/viash_docs/good_practices)
--   [Version history of
-    viash](https://www.data-intuitive.com/viash_docs/versions)
+[`viash.io`](https://viash.io).
 
 ## License
 
