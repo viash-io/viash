@@ -12,6 +12,7 @@ class TestingAllComponentsSuite extends FunSuite {
     ("testr", "script.vsh.R"),
     ("testjs", "config.vsh.yaml"),
     ("testscala", "config.vsh.yaml"),
+    ("testcsharp", "config.vsh.yaml"),
     ("testexecutable", "config.vsh.yaml")
   )
 
