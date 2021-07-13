@@ -20,9 +20,8 @@ package com.dataintuitive.viash.platforms
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.functionality.dataobjects._
-import com.dataintuitive.viash.platforms.requirements._
 import com.dataintuitive.viash.config.Version
-import com.dataintuitive.viash.helpers.Docker
+import com.dataintuitive.viash.helpers.{Docker, Bash}
 
 /**
  * / * Platform class for generating NextFlow (DSL2) modules.
@@ -71,15 +70,7 @@ case class NextFlowPlatform(
 
     val allPars = functionality.arguments
 
-    def inputFileExtO = allPars
-      .filter(_.isInstanceOf[FileObject])
-      .find(_.direction == Input)
-      .flatMap(_.default.map(_.toString.split('.').last))
-
-    def inputs = allPars
-      .filter(_.isInstanceOf[FileObject])
-      .count(_.direction == Input)
-    def outputs = allPars
+    val outputs = allPars
       .filter(_.isInstanceOf[FileObject])
       .count(_.direction == Output)
 
@@ -115,7 +106,7 @@ case class NextFlowPlatform(
           Some(
             namespacedValueTuple(
               dataObject.plainName.replace("-", "_"),
-              x.toString
+              Bash.escape(x.toString, backtick = false, newline = true, quote = true)
             )(fun)
           )
         case (false, None) =>
@@ -239,17 +230,35 @@ case class NextFlowPlatform(
 
     val setup_main_utils =
       s"""
-        |def renderCLI(command, arguments) {
+        |def escape(str) {
+        |  return str.replaceAll('\\\\\\\\', '\\\\\\\\\\\\\\\\').replaceAll("\\"", "\\\\\\\\\\"").replaceAll("\\n", "\\\\\\\\n").replaceAll("`", "\\\\\\\\`")
+        |}
         |
-        |  def argumentsList = arguments.collect{ it ->
-        |    (it.otype == "")
-        |      ? "\\'" + it.value + "\\'"
-        |      : (it.type == "boolean_true")
-        |        ? it.otype + it.name
-        |        : (it.value == "no_default_value_configured")
-        |          ? ""
-        |          : it.otype + it.name + " \\'" + ((it.value in List && it.multiple) ? it.value.join(it.multiple_sep): it.value) + "\\'"
+        |def renderArg(it) {
+        |  if (it.otype == "") {
+        |    return "\'" + escape(it.value) + "\'"
+        |  } else if (it.type == "boolean_true") {
+        |    if (it.value.toLowerCase() == "true") {
+        |      return it.otype + it.name
+        |    } else {
+        |      return ""
+        |    }
+        |  } else if (it.type == "boolean_false") {
+        |    if (it.value.toLowerCase() == "true") {
+        |      return ""
+        |    } else {
+        |      return it.otype + it.name
+        |    }
+        |  } else if (it.value == "no_default_value_configured") {
+        |    return ""
+        |  } else {
+        |    def retVal = it.value in List && it.multiple ? it.value.join(it.multiple_sep): it.value
+        |    return it.otype + it.name + " \'" + escape(retVal) + "\'"
         |  }
+        |}
+        |
+        |def renderCLI(command, arguments) {
+        |  def argumentsList = arguments.collect{renderArg(it)}.findAll{it != ""}
         |
         |  def command_line = command + argumentsList
         |
@@ -301,12 +310,12 @@ case class NextFlowPlatform(
           |      // Unless the output argument is explicitly specified on the CLI
           |      def newValue =
           |        (it.value == "viash_no_value")
-          |          ? "$fname" + "." + extOrName
+          |          ? "$fname." + it.name + "." + extOrName
           |          : it.value
           |      def newName =
           |        (id != "")
           |          ? id + "." + newValue
-          |          : newValue
+          |          : it.name + newValue
           |      it + [ value : newName ]
           |    }
           |
@@ -512,7 +521,7 @@ case class NextFlowPlatform(
         |        effectiveContainer(finalParams),
         |        renderCLI([finalParams.command], finalParams.arguments),
         |        finalParams
-        |        )
+        |      )
         |    }
         |
         |  result_ = ${fname}_process(id_input_output_function_cli_params_) \\
@@ -645,7 +654,6 @@ case class NextFlowPlatform(
 }
 
 object NextFlowUtils {
-
   import scala.reflect.runtime.universe._
 
   def quote(str: String): String = '"' + str + '"'
@@ -700,14 +708,8 @@ object NextFlowUtils {
   def namespacedValueTuple(key: String, value: String)(implicit fun: Functionality): ConfigTuple =
     (s"${fun.name}__$key", value)
 
-  implicit def dataObjectToConfigTuple[T:TypeTag](dataObject: DataObject[T])(implicit fun: Functionality):ConfigTuple = {
-
-    def valuePointer(key: String): String =
-      s"$${params.${fun.name}__$key}"
-
-    val valueOrPointer: String = {
-      valuePointer(dataObject.plainName.replace("-", "_"))
-    }
+  implicit def dataObjectToConfigTuple[T:TypeTag](dataObject: DataObject[T])(implicit fun: Functionality): ConfigTuple = {
+    val pointer = "${params." + fun.name + "__" + dataObject.plainName + "}"
 
     // TODO: Should this not be converted from the json?
     quoteLong(dataObject.plainName) → NestedValue(
@@ -718,14 +720,17 @@ object NextFlowUtils {
       tupleToConfigTuple("direction" → dataObject.direction.toString) ::
       tupleToConfigTuple("multiple" → dataObject.multiple) ::
       tupleToConfigTuple("multiple_sep" -> dataObject.multiple_sep) ::
-      tupleToConfigTuple("value" → valueOrPointer) ::
-      dataObject.default
-        .map(x => List(tupleToConfigTuple("dflt" -> x.toString))).getOrElse(Nil) :::
-      dataObject.example
-        .map(x => List(tupleToConfigTuple("example" -> x))).getOrElse(Nil) :::
-      dataObject.description
-        .map(x => List(tupleToConfigTuple("description" → x))).getOrElse(Nil)
-      )
+      tupleToConfigTuple("value" → pointer) ::
+      dataObject.default.map{ x =>
+        List(tupleToConfigTuple("dflt" -> Bash.escape(x.toString, backtick = false, quote = true, newline = true)))
+      }.getOrElse(Nil) :::
+      dataObject.example.map{x =>
+        List(tupleToConfigTuple("example" -> Bash.escape(x, backtick = false, quote = true, newline = true)))
+      }.getOrElse(Nil) :::
+      dataObject.description.map{x =>
+        List(tupleToConfigTuple("description" → Bash.escape(x, backtick = false, quote = true, newline = true)))
+      }.getOrElse(Nil)
+    )
   }
 }
 

@@ -26,23 +26,11 @@ import com.dataintuitive.viash.helpers.{Bash, Format}
 object BashWrapper {
 
   def nameAndVersion(functionality: Functionality): String = {
-    functionality.name + functionality.version.map(" " + _).getOrElse("<not versioned>")
+    functionality.name + functionality.version.map(" " + _).getOrElse(" <not versioned>")
   }
 
-  def escape(str: String): String = {
-    str.replaceAll("([\\\\$`])", "\\\\$1")
-  }
-
-  def escapeViash(str: String, escapeQuotes: Boolean = false): String = {
-    val escQuo =
-      if (escapeQuotes) {
-        (s: String) => s.replaceAll("\"", "\\\"")
-      } else {
-        (s: String) => s
-      }
-
-    escQuo(escape(str))
-      .replaceAll("\"", "\\\"")
+  def escapeViash(str: String, quote: Boolean = false, newline: Boolean = false): String = {
+    Bash.escape(str, quote = quote, newline = newline)
       .replaceAll("\\\\\\$VIASH_DOLLAR\\\\\\$", "\\$")
       .replaceAll("\\\\\\$VIASH_", "\\$VIASH_")
       .replaceAll("\\\\\\$\\{VIASH_", "\\${VIASH_")
@@ -252,46 +240,39 @@ object BashWrapper {
 
       val namedProps = List(
         ("type", Some((param.oType :: unnamedProps).mkString(", "))),
-        ("default", param.default),
-        ("example", param.example)
+        ("default", param.default.map(de => escapeViash(de.toString, quote = true, newline = true))),
+        ("example", param.example.map(ex => escapeViash(ex, quote = true, newline = true)))
       ).flatMap { case (name, x) =>
-        x.map("\necho \"        " + name + ": " + _ + "\"")
+        x.map("\n  echo \"        " + name + ": " + _ + "\"")
       }.mkString
 
       val descStr = param.description.map{ desc =>
-        val escapedDesc = escapeViash(desc, escapeQuotes = true).split("\n")
-        escapedDesc.map("\necho \"        " + _ + "\"").mkString
+        val escapedDesc = escapeViash(desc.stripLineEnd, quote = true).split("\n")
+        escapedDesc.map("\n  echo \"        " + _ + "\"").mkString
       }.getOrElse("")
 
       s"""
-         |echo "    ${names.mkString(", ")}"$namedProps$descStr
-         |echo ""
+         |  echo "   ${names.mkString(", ")}"$namedProps$descStr
+         |  echo ""
          |""".stripMargin
     })
 
-    val descrStr =
-      if (functionality.description.isDefined) {
-        s"""
-           |echo "${escapeViash(functionality.description.get.stripLineEnd, escapeQuotes = true)}"""".stripMargin
-      } else {
-        ""
-      }
+    val descrStr = functionality.description.map{ desc =>
+      val escapedDesc = escapeViash(desc.stripLineEnd, quote = true).split("\n")
+      escapedDesc.map("\n  echo \"" + _ + "\"").mkString
+    }.getOrElse("")
 
-    val usageStr =
-      if (functionality.usage.isDefined) {
-        s"""
-           |echo "Usage: ${escapeViash(functionality.usage.get.stripLineEnd, escapeQuotes = true)}"
-           |echo""".stripMargin
-      } else {
-        ""
-      }
+    val usageStr = functionality.usage.map{ desc =>
+      val escapedDesc = escapeViash(desc.stripLineEnd, quote = true).split("\n")
+      escapedDesc.map("\n  echo \"Usage: " + _ + "\"").mkString
+    }.getOrElse("")
 
     val preParse =
       s"""# ViashHelp: Display helpful explanation about this executable
       |function ViashHelp {
-      |   echo "${nameAndVersion(functionality)}"$descrStr
-      |   echo$usageStr
-      |   echo "Options:"
+      |  echo "${nameAndVersion(functionality)}"$descrStr
+      |  echo$usageStr
+      |  echo "Options:"
       |${paramStrs.mkString("\n")}
       |}""".stripMargin
 
@@ -379,7 +360,7 @@ object BashWrapper {
 
       default.map(default => {
         s"""if [ -z "$$${param.VIASH_PAR}" ]; then
-           |  ${param.VIASH_PAR}="${escapeViash(default.toString, escapeQuotes = true)}"
+           |  ${param.VIASH_PAR}="${escapeViash(default.toString, quote = true, newline = true)}"
            |fi""".stripMargin
       })
     }.mkString("\n")

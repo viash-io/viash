@@ -360,7 +360,7 @@ case class DockerPlatform(
     val args = functionality.argumentsAndDummies
 
     def chownCommand(value: String): String = {
-      s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $fullImageID "$$(id -u):$$(id -g)" -R $value"""
+      s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $fullImageID "$$(id -u):$$(id -g)" --silent --recursive $value"""
     }
 
     val postParse =

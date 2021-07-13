@@ -5,10 +5,12 @@ functionality:
       type: file
       required: true
       multiple: true
+      example: input.txt
     - name: "--output"
       type: file
       required: true
       direction: output
+      example: output.txt
   resources:
     - type: bash_script
       path: script.sh
@@ -17,3 +19,4 @@ platforms:
   - type: docker
     image: nextflow/bash:latest
   - type: nextflow
+    publish: true
