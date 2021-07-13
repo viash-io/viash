@@ -70,15 +70,7 @@ case class NextFlowPlatform(
 
     val allPars = functionality.arguments
 
-    def inputFileExtO = allPars
-      .filter(_.isInstanceOf[FileObject])
-      .find(_.direction == Input)
-      .flatMap(_.default.map(_.toString.split('.').last))
-
-    def inputs = allPars
-      .filter(_.isInstanceOf[FileObject])
-      .count(_.direction == Input)
-    def outputs = allPars
+    val outputs = allPars
       .filter(_.isInstanceOf[FileObject])
       .count(_.direction == Output)
 
