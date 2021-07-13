@@ -48,7 +48,7 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
         Seq(executable.toString, "--help")
       )
 
-    val stripAll = (s : String) => s.replaceAll(raw"\s+", " ").strip
+    val stripAll = (s : String) => s.replaceAll(raw"\s+", " ").trim
 
     functionality.arguments.foreach(arg => {
       for (opt <- arg.alternatives; value <- opt)

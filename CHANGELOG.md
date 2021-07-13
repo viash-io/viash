@@ -12,6 +12,11 @@
 
 * `DockerPlatform`: Only chown when output file exists.
 
+## TESTING
+* `viash build`: Capture stdout messages when errors are expected so they don't clutter the expected output.
+
+* `viash build`: Check --help description output on the whole text instead of per letter or word basis, thus greatly improving the use of the test.
+
 # viash 0.5.0
 
 ## BREAKING CHANGES
