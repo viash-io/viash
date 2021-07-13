@@ -53,5 +53,5 @@ functionality:
 platforms:
   - type: native
   - type: docker
-    image: "hjerpbakk/dotnet-script"
+    image: "andmos/dotnet-script"
   - type: nextflow
