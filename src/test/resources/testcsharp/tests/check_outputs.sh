@@ -10,17 +10,17 @@ echo ">>> Checking whether output is correct"
   e f
 
 [[ ! -f output.txt ]] && echo "Output file could not be found!" && exit 1
-grep -q 'input: |Some(NOTICE)|' output.txt
+grep -q 'input: |NOTICE|' output.txt
 grep -q 'real_number: |10.5|' output.txt
 grep -q 'whole_number: |10|' output.txt
 grep -q 's: |a string with spaces|' output.txt
-grep -q 'truth: |true|' output.txt
-grep -q 'output: |Some(.*/output.txt)|' output.txt
-grep -q 'log: |Some(.*/log.txt)|' output.txt
-grep -q 'optional: |Some(foo)|' output.txt
-grep -q 'optional_with_default: |Some(bar)|' output.txt
-grep -q 'multiple: |List(one, two)|' output.txt
-grep -q 'multiple_pos: |List(a, b, c, d, e, f)|' output.txt
+grep -q 'truth: |True|' output.txt
+grep -q 'output: |.*/output.txt|' output.txt
+grep -q 'log: |.*/log.txt|' output.txt
+grep -q 'optional: |foo|' output.txt
+grep -q 'optional_with_default: |bar|' output.txt
+grep -q 'multiple: |one, two|' output.txt
+grep -q 'multiple_pos: |a, b, c, d, e, f|' output.txt
 grep -q 'resources_dir: |..*|' output.txt
 
 [[ ! -f log.txt ]] && echo "Log file could not be found!" && exit 1
@@ -31,17 +31,17 @@ echo ">>> Checking whether output is correct with minimal parameters"
   > output2.txt
 
 [[ ! -f output2.txt ]] && echo "Output file could not be found!" && exit 1
-grep -q 'input: |Some(resource2.txt)|' output2.txt
+grep -q 'input: |resource2.txt|' output2.txt
 grep -q 'real_number: |123.456|' output2.txt
 grep -q 'whole_number: |789|' output2.txt
 grep -q 's: |my$weird#string|' output2.txt
-grep -q 'truth: |false|' output2.txt
-grep -q 'output: |None|' output2.txt
-grep -q 'log: |None|' output2.txt
-grep -q 'optional: |None|' output2.txt
-grep -q 'optional_with_default: |Some(The default value.)|' output2.txt
-grep -q 'multiple: |List()|' output2.txt
-grep -q 'multiple_pos: |List()|' output2.txt
+grep -q 'truth: |False|' output2.txt
+grep -q 'output: ||' output2.txt
+grep -q 'log: ||' output2.txt
+grep -q 'optional: ||' output2.txt
+grep -q 'optional_with_default: |The default value.|' output2.txt
+grep -q 'multiple: ||' output2.txt
+grep -q 'multiple_pos: ||' output2.txt
 grep -q 'resources_dir: |..*|' output2.txt
 
 echo ">>> Test finished successfully"

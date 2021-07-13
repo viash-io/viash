@@ -45,7 +45,18 @@ if (par.output != null)
     {
         foreach (PropertyInfo p in pi)
         {
-            sw.WriteLine(p.Name + ": |" + p.GetValue(par) + "|");
+            if (p.PropertyType.IsArray)
+            {
+                object[] array = (object[])p.GetValue(par);
+
+                sw.Write(p.Name + ": |");
+                sw.Write("{0}", string.Join(", ", array));
+                sw.WriteLine("|");
+            }
+            else
+            {
+                sw.WriteLine(p.Name + ": |" + p.GetValue(par) + "|");
+            }
         }
 
         sw.WriteLine("resources_dir: |" + resources_dir + "|");
@@ -58,7 +69,18 @@ else
     PropertyInfo [] pi = t.GetProperties();
     foreach (PropertyInfo p in pi)
     {
-        System.Console.WriteLine(p.Name + ": |" + p.GetValue(par) + "|");
+        if (p.PropertyType.IsArray)
+        {
+            object[] array = (object[])p.GetValue(par);
+
+            System.Console.Write(p.Name + ": |");
+            Console.Write("{0}", string.Join(", ", array));
+            System.Console.WriteLine("|");
+        }
+        else
+        {
+            System.Console.WriteLine(p.Name + ": |" + p.GetValue(par) + "|");
+        }
     }
 
     System.Console.WriteLine("resources_dir: |" + resources_dir + "|");
