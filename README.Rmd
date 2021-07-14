@@ -37,13 +37,7 @@ the platform on which you want to run the software, viash can help you:
 * unit-test your component to ensure that it works at all times.
 
 ## Documentation
-The viash documentation is available online at [`www.data-intuitive.com/viash_docs`](https://www.data-intuitive.com/viash_docs):
-
-* [Getting started with viash](https://www.data-intuitive.com/viash_docs/)
-* [Information on viash commands](https://www.data-intuitive.com/viash_docs/commands)
-* [Information on config files](https://www.data-intuitive.com/viash_docs/config)
-* [Good practices with viash](https://www.data-intuitive.com/viash_docs/good_practices)
-* [Version history of viash](https://www.data-intuitive.com/viash_docs/versions)
+The viash documentation is available online at [`viash.io`](https://viash.io).
 
 ## License
 Copyright (C) 2020 Data Intuitive
