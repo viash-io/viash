@@ -2,7 +2,7 @@
 
 ## BUG FIXES
 
-* `BashWrapper`: Refactor escaping descriptions, usages, defaults, and examples (#75).
+* `BashWrapper`: Refactor escaping descriptions, usages, defaults, and examples (#34).
 
 * `NextFlowPlatform`: Refactor escaping descriptions, usages, defaults and examples (#75).
 
@@ -13,9 +13,12 @@
 * `DockerPlatform`: Only chown when output file exists.
 
 ## TESTING
+
 * `viash build`: Capture stdout messages when errors are expected, so that they don't clutter the expected output.
 
 * `viash build`: Check `--help` description output on the whole text instead of per letter or word basis.
+
+* `TestingAllComponentsSuite`: Only testing bash natively, because other dependencies might not be available.
 
 # viash 0.5.0
 
