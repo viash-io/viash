@@ -1,5 +1,9 @@
 # viash 0.5.1
 
+## NEW FEATURES
+
+* `CSharpScript`: Added support for C# scripts (`type: "csharp_script"`) to viash.
+
 ## BUG FIXES
 
 * `BashWrapper`: Refactor escaping descriptions, usages, defaults, and examples (#34).
