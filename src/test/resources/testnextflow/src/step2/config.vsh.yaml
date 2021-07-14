@@ -1,23 +1,102 @@
 functionality:
   name: step2
+  description: |
+    This is the description that never ends.
+      And it goes on and on my friend.
+        Some people started writing it without knowing what it was.
+          And now they keep on writing it forever just because.
+          This is the description that never ends.
+        And it goes on and on my friend.
+      Some people started writing it without knowing what it was.
+    And now they keep on writing it forever just because.
+    ...
+    §1234567890'^
+    °+"*ç%&/()=?`
+    \n\r\t\s\
+  usage: |
+    This is the description that never ends.
+      And it goes on and on my friend.
+        Some people started writing it without knowing what it was.
+          And now they keep on writing it forever just because.
+          This is the description that never ends.
+        And it goes on and on my friend.
+      Some people started writing it without knowing what it was.
+    And now they keep on writing it forever just because.
+    ...
+    §1234567890'^
+    °+"*ç%&/()=?`
+    \n\r\t\s\
   arguments:
+    # input arguments
     - name: "--input1"
       type: file
+      example: input1.txt
       required: true
     - name: "--input2"
       type: file
       required: true
+      example: input2.txt
     - name: "--optional"
       type: file
       required: false
+      example: optional.txt
+      
+    # output arguments
     - name: "--output1"
       type: file
       required: true
       direction: output
+      example: output1.txt
     - name: "--output2"
       type: file
       required: true
       direction: output
+      example: output2.txt
+      
+    # some non-file arguments
+    - name: "--default_arg"
+      type: string
+      description: |
+        This is the description that never ends.
+          And it goes on and on my friend.
+            Some people started writing it without knowing what it was.
+              And now they keep on writing it forever just because.
+              This is the description that never ends.
+            And it goes on and on my friend.
+          Some people started writing it without knowing what it was.
+        And now they keep on writing it forever just because.
+        ...
+        §1234567890'^
+        °+"*ç%&/()=?`
+        \n\r\t\s\
+      default: |
+        This is the description that never ends.
+          And it goes on and on my friend.
+            Some people started writing it without knowing what it was.
+              And now they keep on writing it forever just because.
+              This is the description that never ends.
+            And it goes on and on my friend.
+          Some people started writing it without knowing what it was.
+        And now they keep on writing it forever just because.
+        ...
+        §1234567890^ <-- no apostrophe
+        °+"*ç%&/()=?`
+        \n\r\t\s\
+    - name: "--example"
+      type: string
+      example: |
+        This is the description that never ends.
+          And it goes on and on my friend.
+            Some people started writing it without knowing what it was.
+              And now they keep on writing it forever just because.
+              This is the description that never ends.
+            And it goes on and on my friend.
+          Some people started writing it without knowing what it was.
+        And now they keep on writing it forever just because.
+        ...
+        §1234567890'^
+        °+"*ç%&/()=?`
+        \n\r\t\s\
   resources:
     - type: bash_script
       path: script.sh
@@ -26,4 +105,5 @@ platforms:
   - type: docker
     image: nextflow/bash:latest
   - type: nextflow
+    publish: true
       

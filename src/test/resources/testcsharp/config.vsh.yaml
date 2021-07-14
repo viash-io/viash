@@ -1,5 +1,5 @@
 functionality:
-  name: testscala
+  name: testcsharp
   description: |
     Prints out the parameter values.
     Checking what happens with multiline descriptions.
@@ -45,13 +45,13 @@ functionality:
       type: string
       multiple: true
   resources:
-    - type: scala_script
-      path: ./script.scala
+    - type: csharp_script
+      path: ./script.csx
   tests:
     - type: bash_script
       path: tests/check_outputs.sh
 platforms:
   - type: native
   - type: docker
-    image: denvazh/scala:2.11.8
+    image: "andmos/dotnet-script"
   - type: nextflow

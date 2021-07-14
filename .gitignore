@@ -18,3 +18,4 @@ Makefile
 *.Rproj
 .idea
 project/metals.sbt
+.vscode/settings.json
