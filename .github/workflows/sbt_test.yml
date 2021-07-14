@@ -25,6 +25,7 @@ jobs:
         curl -s https://get.nextflow.io | bash
         mv nextflow "$HOME/.local/bin"
         nextflow -version
+        NXF_VER=21.04.1 nextflow run hello
 
     - name: Set up sbt
       uses: olafurpg/setup-scala@v10
