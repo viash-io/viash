@@ -11,8 +11,9 @@ jobs:
       fail-fast: false
       matrix:
         config:
-        - {name: 'main', os: ubuntu-latest }
-        - {name: 'macos_latest', os: macos-latest }
+          - {name: 'main', os: ubuntu-latest, r: '3.6.1', python: '3.8' }
+          - {name: 'ubuntu_latest', os: ubuntu-latest, r: 'release', python: '3.x' }
+          - {name: 'macos_latest', os: macos-latest, r: 'release', python: '3.x' }
 
     steps:
     - uses: actions/checkout@v2
@@ -24,11 +25,52 @@ jobs:
         echo "$HOME/.local/bin" >> $GITHUB_PATH
         curl -s https://get.nextflow.io | bash
         mv nextflow "$HOME/.local/bin"
-        nextflow -version
         NXF_VER=21.04.1 nextflow run hello
+        nextflow -version
+
+    - name: Set up R
+      uses: r-lib/actions/setup-r@master
+      with:
+        r-version: ${{ matrix.config.r }}
+
+    - name: Cache R packages
+      if: runner.os != 'Windows'
+      uses: actions/cache@v1
+      with:
+        path: ${{ env.R_LIBS_USER }}
+        key: ${{ matrix.config.name }}
+        restore-keys: ${{ matrix.config.name }}
+
+    - name: Install system dependencies
+      if: runner.os == 'Linux'
+      env:
+        RHUB_PLATFORM: linux-x86_64-ubuntu-gcc
+      run: |
+        Rscript -e "install.packages('remotes'); remotes::install_github('rcannood/sysreqs')"
+        sysreqs=$(Rscript -e "pkgs <- sysreqs:::get_cran_sysreqs(sysreqs:::get_cran_deps('tidyverse')); cat(sysreqs:::sysreq_commands_pkgs(pkgs))")
+        sudo -s eval "$sysreqs"
 
     - name: Set up sbt
       uses: olafurpg/setup-scala@v10
+
+    - name: Install R dependencies
+      run: |
+        install.packages(c("processx", "testthat"))
+      shell: Rscript {0}
+
+    - name: Set up Scala
+      run: |
+        if [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
+          brew update
+          brew install scala
+        else
+          sudo apt-get update
+          sudo apt-get install -y scala
+        fi
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.config.python }}
 
     - name: Run tests
       run: |
