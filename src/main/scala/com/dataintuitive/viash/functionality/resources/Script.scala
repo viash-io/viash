@@ -41,7 +41,7 @@ trait Script extends Resource {
         if (startIndex >= 0 && endIndex >= 0) {
           lines.slice(0, startIndex + 1) ++ viashLines ++ lines.slice(endIndex, lines.length)
         } else {
-          lines ++ viashLines
+          viashLines ++ lines
         }
 
       li.mkString("\n")
