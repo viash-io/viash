@@ -40,6 +40,9 @@ case class NextFlowPlatform(
   label: Option[String] = None,
   labels: List[String] = Nil,
   stageInMode: Option[String] = None,
+  directiveCpus: Option[Integer] = None,
+  directiveMaxForks: Option[Integer] = None,
+  directiveTime: Option[String] = None,
   oType: String = "nextflow"
 ) extends Platform {
   assert(version.isEmpty, "nextflow platform: attribute 'version' is deprecated")
@@ -391,6 +394,10 @@ case class NextFlowPlatform(
         |}
         |""".stripMargin
 
+    def formatDirective(id: String, value: Option[String], delim: String): String = {
+      value.map(v => s"\n  $id $delim$v$delim").getOrElse("")
+    }
+
     /**
      * Some (implicit) conventions:
      * - `params.output/` is where the output data is published
@@ -415,12 +422,12 @@ case class NextFlowPlatform(
         case _ => ""
       }
 
-      val labelsString = labels.map(l => s"  label '$l'").mkString("\n")
-
-      val labelString = label match {
-        case Some(str) => s"  label '$str'"
-        case _ => ""
-      }
+      val directives =
+        labels.map(l => formatDirective("label", Some(l), "'")).mkString +
+          formatDirective("label", label, "'") +
+          formatDirective("cpus", directiveCpus.map(_.toString), "") +
+          formatDirective("maxForks", directiveMaxForks.map(_.toString), "") +
+          formatDirective("time", directiveTime, "'")
 
       val stageInModeStr = stageInMode match {
         case Some("copy") => "copy"
@@ -428,9 +435,7 @@ case class NextFlowPlatform(
       }
 
       s"""
-        |process ${fname}_process {
-        |$labelsString
-        |$labelString
+        |process ${fname}_process {$directives
         |  tag "$${id}"
         |  echo { (params.debug == true) ? true : false }
         |  cache 'deep'
