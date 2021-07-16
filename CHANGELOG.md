@@ -2,7 +2,7 @@
 
 ## MINOR CHANGES
 
-* `NextFlowPlatform`: Added `directiveCpus`, `directiveMaxForks` and `directiveTime` parameters.
+* `NextFlowPlatform`: Added `directive_cpus`, `directive_max_forks`, `directive_memory` and `directive_time` parameters.
 
 # viash 0.5.1
 

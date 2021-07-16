@@ -40,9 +40,10 @@ case class NextFlowPlatform(
   label: Option[String] = None,
   labels: List[String] = Nil,
   stageInMode: Option[String] = None,
-  directiveCpus: Option[Integer] = None,
-  directiveMaxForks: Option[Integer] = None,
-  directiveTime: Option[String] = None,
+  directive_cpus: Option[Integer] = None,
+  directive_max_forks: Option[Integer] = None,
+  directive_time: Option[String] = None,
+  directive_memory: Option[String] = None,
   oType: String = "nextflow"
 ) extends Platform {
   assert(version.isEmpty, "nextflow platform: attribute 'version' is deprecated")
@@ -425,9 +426,10 @@ case class NextFlowPlatform(
       val directives =
         labels.map(l => formatDirective("label", Some(l), "'")).mkString +
           formatDirective("label", label, "'") +
-          formatDirective("cpus", directiveCpus.map(_.toString), "") +
-          formatDirective("maxForks", directiveMaxForks.map(_.toString), "") +
-          formatDirective("time", directiveTime, "'")
+          formatDirective("cpus", directive_cpus.map(_.toString), "") +
+          formatDirective("maxForks", directive_max_forks.map(_.toString), "") +
+          formatDirective("time", directive_time, "'") +
+          formatDirective("memory", directive_memory, "'")
 
       val stageInModeStr = stageInMode match {
         case Some("copy") => "copy"
