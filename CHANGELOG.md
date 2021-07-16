@@ -4,6 +4,10 @@
 
 * `CSharpScript`: Added support for C# scripts (`type: "csharp_script"`) to viash.
 
+## MINOR CHANGES
+
+* `NextFlowPlatform`: Added `directive_cpus`, `directive_max_forks`, `directive_memory` and `directive_time` parameters.
+
 ## BUG FIXES
 
 * `BashWrapper`: Refactor escaping descriptions, usages, defaults, and examples (#34).
