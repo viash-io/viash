@@ -1,3 +1,9 @@
+# viash 0.5.2
+
+## MINOR CHANGES
+
+* `DockerPlatform`: Added `run_args` field to allow setting `docker run` arguments.
+
 # viash 0.5.1
 
 ## NEW FEATURES
