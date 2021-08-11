@@ -4,6 +4,10 @@
 
 * `DockerPlatform`: Added `run_args` field to allow setting `docker run` arguments.
 
+## BUG FIX
+
+* `IO`: Allow overriding directory resources upon rebuild.
+
 # viash 0.5.1
 
 ## NEW FEATURES

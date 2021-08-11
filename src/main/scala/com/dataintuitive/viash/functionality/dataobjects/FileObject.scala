@@ -17,14 +17,14 @@
 
 package com.dataintuitive.viash.functionality.dataobjects
 
-import java.io.File
+import java.nio.file.Path
 
 case class FileObject(
   name: String,
   alternatives: List[String] = Nil,
   description: Option[String] = None,
   example: Option[String] = None,
-  default: Option[File] = None,
+  default: Option[Path] = None,
   must_exist: Boolean = false,
   required: Boolean = false,
   tag: Option[String] = None,
@@ -32,4 +32,4 @@ case class FileObject(
   multiple: Boolean = false,
   multiple_sep: Char = ':',
   oType: String = "file"
-) extends DataObject[File]
+) extends DataObject[Path]

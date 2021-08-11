@@ -18,7 +18,8 @@
 package com.dataintuitive.viash.helpers
 
 import sys.process.{Process, ProcessLogger}
-import java.io.{ByteArrayOutputStream, PrintWriter, File}
+import java.io.{ByteArrayOutputStream, File, PrintWriter}
+import java.nio.file.Path
 
 object Exec {
 
@@ -50,5 +51,13 @@ object Exec {
     } finally {
       printwriter.close()
     }
+  }
+
+  def runPath(command: Seq[String], cwd: Option[Path] = None, extraEnv: Seq[(String, String)] = Nil): String = {
+    run(command, cwd.map(_.toFile), extraEnv)
+  }
+
+  def run2Path(command: Seq[String], cwd: Option[Path] = None, extraEnv: Seq[(String, String)] = Nil, loggers: Seq[String => Unit] = Nil): ExecOutput = {
+    run2(command, cwd.map(_.toFile), extraEnv, loggers)
   }
 }
