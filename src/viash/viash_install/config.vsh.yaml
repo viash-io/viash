@@ -1,5 +1,5 @@
 functionality:
-  name: viash_bootstrap
+  name: viash_install
   namespace: viash
   version: 0.1
   description: |
