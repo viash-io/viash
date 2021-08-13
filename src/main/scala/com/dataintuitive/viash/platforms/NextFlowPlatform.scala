@@ -485,11 +485,9 @@ case class NextFlowPlatform(
 
     val emitter =
       if (separate_multiple_outputs) {
-        """  result_ \\
-          |    | filter { it[1].keySet().size() > 1 } \\
-          |    | view{
-          |        ">> Be careful, multiple outputs from this component!"
-          |    }
+        s"""  result_
+          |     | filter { it[1].keySet().size() > 1 }
+          |     | view{">> Be careful, multiple outputs from this component!"}
           |
           |  emit:
           |  result_.flatMap{ it ->
@@ -556,8 +554,8 @@ case class NextFlowPlatform(
         |      )
         |    }
         |
-        |  result_ = ${fname}_process(id_input_output_function_cli_params_) \\
-        |    | join(id_input_params_) \\
+        |  result_ = ${fname}_process(id_input_output_function_cli_params_)
+        |    | join(id_input_params_)
         |    | map{ id, output, _params, input, original_params ->
         |        def parsedOutput = _params.arguments
         |          .findAll{ it.type == "file" && it.direction == "Output" }
@@ -570,7 +568,7 @@ case class NextFlowPlatform(
         |        new Tuple3(id, parsedOutput, original_params)
         |      }
         |
-        |$emitter
+        |${emitter.replaceAll("\n", "\n|")}
         |}
         |""".stripMargin
 
@@ -614,7 +612,7 @@ case class NextFlowPlatform(
         |  def ch_ = Channel.from("").map{ s -> new Tuple3(id, inputFiles, params)}
         |
         |  result = $fname(ch_)
-        |${resultParseBlocks.mkString("\n")}
+        |${resultParseBlocks.mkString("\n").replaceAll("\n", "\n|")}
         |}
         |""".stripMargin
 
