@@ -256,14 +256,14 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       }
 
       assert(
-        Exec.run2(
+        Exec.run2Path(
           List("git", "init"),
           cwd = Some(tempMetaFolder)
         ).exitValue == 0
         , "git init")
 
       assert(
-        Exec.run2(
+        Exec.run2Path(
           List("git", "remote", "add", "origin", fakeGitRepo),
           cwd = Some(tempMetaFolder)
         ).exitValue == 0
@@ -323,7 +323,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       }
 
       assert(
-        Exec.run2(
+        Exec.run2Path(
           List("git", "init"),
           cwd = Some(tempMetaFolder)
         ).exitValue == 0

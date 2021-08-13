@@ -19,7 +19,9 @@ package com.dataintuitive.viash.functionality
 
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
-import cats.syntax.functor._ // for .widen
+import cats.syntax.functor._
+
+import java.nio.file.Paths // for .widen
 
 package object dataobjects {
 
@@ -31,6 +33,14 @@ package object dataobjects {
   }
   implicit val decodeFile: Decoder[java.io.File] = Decoder.instance {
     cursor => cursor.value.as[String].map(new java.io.File(_))
+  }
+
+  // encoder and decoder for java.nio.file.Path
+  implicit val encodePath: Encoder[java.nio.file.Path] = Encoder.instance {
+    file => Json.fromString(file.toString)
+  }
+  implicit val decodePath: Decoder[java.nio.file.Path] = Decoder.instance {
+    cursor => cursor.value.as[String].map(Paths.get(_))
   }
 
   // encoder and decoder for direction

@@ -21,14 +21,14 @@ import config._
 import functionality.resources.{BashScript, Executable, PlainFile, PythonScript, RScript}
 import io.circe.yaml.Printer
 import helpers.IO
-import java.nio.file.Paths
 
+import java.nio.file.{Files, Paths}
 import scala.sys.process.{Process, ProcessLogger}
 
 object ViashBuild {
   // create a yaml printer for writing the viash.yaml file
   // Options: https://github.com/circe/circe-yaml/blob/master/src/main/scala/io/circe/yaml/Printer.scala
-  val printer = Printer(
+  private val printer = Printer(
     preserveOrder = true,
     dropNullKeys = true,
     mappingStyle = Printer.FlowStyle.Block,
@@ -48,8 +48,8 @@ object ViashBuild {
     val fun = config.functionality
 
     // create dir
-    val dir = new java.io.File(output)
-    dir.mkdirs()
+    val dir = Paths.get(output)
+    Files.createDirectories(dir)
 
     // get the path of where the executable will be written to
     val exec_path = fun.mainScript.map(scr => Paths.get(output, scr.resourcePath).toString)

@@ -46,9 +46,8 @@ jobs:
       env:
         RHUB_PLATFORM: linux-x86_64-ubuntu-gcc
       run: |
-        Rscript -e "install.packages('remotes'); remotes::install_github('rcannood/sysreqs')"
-        sysreqs=$(Rscript -e "pkgs <- sysreqs:::get_cran_sysreqs(sysreqs:::get_cran_deps('tidyverse')); cat(sysreqs:::sysreq_commands_pkgs(pkgs))")
-        sudo -s eval "$sysreqs"
+        sudo apt-get update
+        sudo apt-get install -y libicu-dev make libssl-dev libxml2-dev zlib1g-dev libbibutils6 libghc-pandoc-citeproc-data pandoc-data
 
     - name: Set up sbt
       uses: olafurpg/setup-scala@v10

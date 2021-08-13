@@ -36,6 +36,7 @@ case class NextFlowPlatform(
   executor: Option[String] = None,
   publish: Option[Boolean] = None,
   per_id: Option[Boolean] = None,
+  separate_multiple_outputs: Boolean = true,
   path: Option[String] = None,
   label: Option[String] = None,
   labels: List[String] = Nil,
@@ -195,26 +196,31 @@ case class NextFlowPlatform(
         |params.publishDir = "./"
         |""".stripMargin
 
-    val setup_main_outputFilters:String =
-      allPars
-        .filter(_.isInstanceOf[FileObject])
-        .filter(_.direction == Output)
-        .map(par =>
-          s"""
-            |// A process that filters out ${par.plainName} from the output Map
-            |process filter${par.plainName.capitalize} {
-            |
-            |  input:
-            |    tuple val(id), val(input), val(_params)
-            |  output:
-            |    tuple val(id), val(output), val(_params)
-            |  when:
-            |    input.keySet().contains("${par.plainName}")
-            |  exec:
-            |    output = input["${par.plainName}"]
-            |
-            |}""".stripMargin
+    val setup_main_outputFilters: String = {
+      if (separate_multiple_outputs) {
+        allPars
+          .filter(_.isInstanceOf[FileObject])
+          .filter(_.direction == Output)
+          .map(par =>
+            s"""
+               |// A process that filters out ${par.plainName} from the output Map
+               |process filter${par.plainName.capitalize} {
+               |
+               |  input:
+               |    tuple val(id), val(input), val(_params)
+               |  output:
+               |    tuple val(id), val(output), val(_params)
+               |  when:
+               |    input.keySet().contains("${par.plainName}")
+               |  exec:
+               |    output = input["${par.plainName}"]
+               |
+               |}""".stripMargin
           ).mkString("\n")
+      } else {
+        ""
+      }
+    }
 
     val setup_main_check =
       s"""
@@ -477,6 +483,23 @@ case class NextFlowPlatform(
         |""".stripMargin
     }
 
+    val emitter =
+      if (separate_multiple_outputs) {
+        s"""  result_
+          |     | filter { it[1].keySet().size() > 1 }
+          |     | view{">> Be careful, multiple outputs from this component!"}
+          |
+          |  emit:
+          |  result_.flatMap{ it ->
+          |    (it[1].keySet().size() > 1)
+          |      ? it[1].collect{ k, el -> [ it[0], [ (k): el ], it[2] ] }
+          |      : it[1].collect{ k, el -> [ it[0], el, it[2] ] }
+          |  }""".stripMargin
+      } else {
+        """  emit:
+          |  result_""".stripMargin
+      }
+
     val setup_main_workflow =
       s"""
         |workflow $fname {
@@ -531,8 +554,8 @@ case class NextFlowPlatform(
         |      )
         |    }
         |
-        |  result_ = ${fname}_process(id_input_output_function_cli_params_) \\
-        |    | join(id_input_params_) \\
+        |  result_ = ${fname}_process(id_input_output_function_cli_params_)
+        |    | join(id_input_params_)
         |    | map{ id, output, _params, input, original_params ->
         |        def parsedOutput = _params.arguments
         |          .findAll{ it.type == "file" && it.direction == "Output" }
@@ -545,23 +568,12 @@ case class NextFlowPlatform(
         |        new Tuple3(id, parsedOutput, original_params)
         |      }
         |
-        |  result_ \\
-        |    | filter { it[1].keySet().size() > 1 } \\
-        |    | view{
-        |        ">> Be careful, multiple outputs from this component!"
-        |    }
-        |
-        |  emit:
-        |  result_.flatMap{ it ->
-        |    (it[1].keySet().size() > 1)
-        |      ? it[1].collect{ k, el -> [ it[0], [ (k): el ], it[2] ] }
-        |      : it[1].collect{ k, el -> [ it[0], el, it[2] ] }
-        |  }
+        |${emitter.replaceAll("\n", "\n|")}
         |}
         |""".stripMargin
 
-    val resultParseBlocks:List[String] =
-      if (outputs >= 2) {
+    val resultParseBlocks: List[String] =
+      if (separate_multiple_outputs && outputs >= 2) {
         allPars
           .filter(_.isInstanceOf[FileObject])
           .filter(_.direction == Output)
@@ -600,9 +612,7 @@ case class NextFlowPlatform(
         |  def ch_ = Channel.from("").map{ s -> new Tuple3(id, inputFiles, params)}
         |
         |  result = $fname(ch_)
-        |""".stripMargin +
-      resultParseBlocks.mkString("\n") +
-      s"""
+        |${resultParseBlocks.mkString("\n").replaceAll("\n", "\n|")}
         |}
         |""".stripMargin
 

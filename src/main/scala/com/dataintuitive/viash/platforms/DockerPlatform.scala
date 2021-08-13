@@ -41,6 +41,7 @@ case class DockerPlatform(
   workdir: Option[String] = None,
   setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,
   privileged: Boolean = false,
+  run_args: Option[List[String]] = None,
   oType: String = "docker",
 
   // setup variables
@@ -79,11 +80,10 @@ case class DockerPlatform(
 
   def modifyFunctionality(functionality: Functionality): Functionality = {
     // collect docker args
-    val dockerArgs = "-i --rm" + {
-      port.getOrElse(Nil).map(" -p " + _).mkString("")
-    } + {
-      if (privileged) " --privileged" else ""
-    }
+    val dockerArgs = "-i --rm" +
+      port.getOrElse(Nil).map(" -p " + _).mkString +
+      run_args.getOrElse(Nil).map(" " + _).mkString +
+      { if (privileged) " --privileged" else "" }
 
     // create setup
     val (effectiveID, setupMods) = processDockerSetup(functionality)

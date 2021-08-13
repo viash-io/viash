@@ -24,7 +24,7 @@ import resources.{BashScript, Script}
 
 import sys.process.{Process, ProcessLogger}
 import java.io.{ByteArrayOutputStream, File, FileWriter, PrintWriter}
-import java.nio.file.Paths
+import java.nio.file.{Files, Path, Paths}
 import com.dataintuitive.viash.config.{Config, Version}
 import helpers.IO
 
@@ -103,7 +103,7 @@ object ViashTest {
     ManyTestOutput(setupRes, results)
   }
 
-  def runTests(config: Config, dir: File, verbose: Boolean = true, setupStrategy: String, verbosityLevel: Int): ManyTestOutput = {
+  def runTests(config: Config, dir: Path, verbose: Boolean = true, setupStrategy: String, verbosityLevel: Int): ManyTestOutput = {
     val fun = config.functionality
     val platform = config.platform.get
 
@@ -111,8 +111,8 @@ object ViashTest {
 
     // build regular executable
     val buildFun = platform.modifyFunctionality(fun)
-    val buildDir = Paths.get(dir.toString, "build_executable").toFile
-    buildDir.mkdir()
+    val buildDir = dir.resolve("build_executable")
+    Files.createDirectories(buildDir)
     IO.writeResources(buildFun.resources.getOrElse(Nil), buildDir)
 
     // run command, collect output
@@ -140,7 +140,7 @@ object ViashTest {
           val executable = Paths.get(buildDir.toString, fun.name).toString
           logger(s"+$executable --verbosity $verbosityLevel ---setup $setupStrategy")
           val startTime = LocalDateTime.now
-          val exitValue = Process(Seq(executable, "--verbosity", verbosityLevel.toString, "---setup", setupStrategy), cwd = buildDir).!(ProcessLogger(logger, logger))
+          val exitValue = Process(Seq(executable, "--verbosity", verbosityLevel.toString, "---setup", setupStrategy), cwd = buildDir.toFile).!(ProcessLogger(logger, logger))
           val endTime = LocalDateTime.now
           val diffTime = ChronoUnit.SECONDS.between(startTime, endTime)
           printWriter.flush()
@@ -195,8 +195,8 @@ object ViashTest {
         ))
 
         // make a new directory
-        val newDir = Paths.get(dir.toString, "test_" + test.filename).toFile
-        newDir.mkdir()
+        val newDir = dir.resolve( "test_" + test.filename)
+        Files.createDirectories(newDir)
 
         // write resources to dir
         IO.writeResources(funFinal.resources.getOrElse(Nil), newDir)
@@ -220,7 +220,7 @@ object ViashTest {
         try {
           val executable = Paths.get(newDir.toString, testBash.filename).toString
           logger(s"+$executable")
-          val exitValue = Process(Seq(executable), cwd = newDir).!(ProcessLogger(logger, logger))
+          val exitValue = Process(Seq(executable), cwd = newDir.toFile).!(ProcessLogger(logger, logger))
 
           printWriter.flush()
 
