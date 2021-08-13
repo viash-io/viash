@@ -9,7 +9,7 @@
 
 ## BUG FIX
 
-* `IO`: Allow overriding directory resources upon rebuild.
+* `IO`: Allow overwriting directory resources upon rebuild.
 
 # viash 0.5.1
 
