@@ -496,8 +496,12 @@ case class NextFlowPlatform(
           |      : it[1].collect{ k, el -> [ it[0], el, it[2] ] }
           |  }""".stripMargin
       } else {
-        """  emit:
-          |  result_""".stripMargin
+        s"""  emit:
+           |  result_.flatMap{ it ->
+           |    (it[1].keySet().size() > 1)
+           |      ? it
+           |      : it[1].collect{ k, el -> [ it[0], el, it[2] ] }
+           |  }""".stripMargin
       }
 
     val setup_main_workflow =
