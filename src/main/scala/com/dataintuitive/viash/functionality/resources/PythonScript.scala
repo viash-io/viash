@@ -19,6 +19,7 @@ package com.dataintuitive.viash.functionality.resources
 
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.wrapper.BashWrapper
 
 import java.net.URI
 
@@ -38,7 +39,7 @@ case class PythonScript(
   def generatePlaceholder(functionality: Functionality): String = {
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
-    val par_set = params.map { par =>
+    val parSet = params.map { par =>
       val env_name = par.VIASH_PAR
 
       val parse = par match {
@@ -61,8 +62,15 @@ case class PythonScript(
 
       s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$parse"; else echo None; fi )"""
     }
+    val metaSet = BashWrapper.metaFields.map{ case (env_name, script_name) =>
+      s"""'$script_name': '$$$env_name'"""
+    }
+
     s"""par = {
-       |  ${par_set.mkString(",\n  ")}
+       |  ${parSet.mkString(",\n  ")}
+       |}
+       |meta = {
+       |  ${metaSet.mkString(",\n  ")}
        |}
        |
        |resources_dir = '$$VIASH_RESOURCES_DIR'
