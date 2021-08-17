@@ -28,6 +28,8 @@ test_that("Checking whether output is correct", {
   expect_match(output, 'optional_with_default: \\|bar\\|')
   expect_match(output, 'multiple: \\|c\\("one", "two"\\)\\|')
   expect_match(output, 'multiple_pos: \\|c\\("a", "b", "c", "d", "e", "f"\\)\\|')
+  expect_match(output, 'meta_resources_dir: \\|..*\\|')
+  expect_match(output, 'meta_functionality_name: \\|testr\\|')
   
   expect_true(file.exists("log.txt"))
   log <- read_file("log.txt")
@@ -50,6 +52,8 @@ test_that("Checking whether output is correct with minimal parameters", {
   expect_match(output, 'Parsed input arguments')
   expect_match(output, 'multiple: \\|NULL\\|')
   expect_match(output, 'multiple_pos: \\|NULL\\|')
+  expect_match(output, 'meta_resources_dir: \\|..*\\|')
+  expect_match(output, 'meta_functionality_name: \\|testr\\|')
 })
 
 test_that("Checking whether executable fails when wrong parameters are given", {

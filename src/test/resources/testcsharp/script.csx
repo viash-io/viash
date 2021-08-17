@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.IO;
 
 // TODO: make sure certain stdout and stderrs are generated
 // TODO: write stdout and stderr to file if --output and --log are specified
@@ -35,53 +36,70 @@ void Log(string log)
 
 Log("Parsed input arguments.");
 
-if (par.output != null)
-{
+StreamWriter file;
+if (par.output != null) {
     Log("Writing output to file");
-    Type t = par.GetType();
-    PropertyInfo [] pi = t.GetProperties();
-
-    using (StreamWriter sw = File.AppendText(par.output))
-    {
-        foreach (PropertyInfo p in pi)
-        {
-            if (p.PropertyType.IsArray)
-            {
-                object[] array = (object[])p.GetValue(par);
-
-                sw.Write(p.Name + ": |");
-                sw.Write("{0}", string.Join(", ", array));
-                sw.WriteLine("|");
-            }
-            else
-            {
-                sw.WriteLine(p.Name + ": |" + p.GetValue(par) + "|");
-            }
-        }
-
-        sw.WriteLine("resources_dir: |" + resources_dir + "|");
-    }
+    file = new(par.output);
 }
 else
 {
     Log("Printing output to console'");
+}
+
+void Output(string str)
+{
+    if (par.output != null)
+    {
+        file.WriteLine(str);
+    }
+    else
+    {
+        System.Console.WriteLine(str);
+    }
+}
+
+try
+{
     Type t = par.GetType();
     PropertyInfo [] pi = t.GetProperties();
+
     foreach (PropertyInfo p in pi)
     {
         if (p.PropertyType.IsArray)
         {
             object[] array = (object[])p.GetValue(par);
 
-            System.Console.Write(p.Name + ": |");
-            Console.Write("{0}", string.Join(", ", array));
-            System.Console.WriteLine("|");
+            Output(p.Name + ": |" + string.Join(", ", array) + "|");
         }
         else
         {
-            System.Console.WriteLine(p.Name + ": |" + p.GetValue(par) + "|");
+            Output(p.Name + ": |" + p.GetValue(par) + "|");
         }
     }
 
-    System.Console.WriteLine("resources_dir: |" + resources_dir + "|");
+    Output("resources_dir: |" + resources_dir + "|");
+
+    t = meta.GetType();
+    pi = t.GetProperties();
+
+    foreach (PropertyInfo p in pi)
+    {
+        if (p.PropertyType.IsArray)
+        {
+            object[] array = (object[])p.GetValue(meta);
+
+            Output("meta_" + p.Name + ": |" + string.Join(", ", array) + "|");
+        }
+        else
+        {
+            Output("meta_" + p.Name + ": |" + p.GetValue(meta) + "|");
+        }
+    }
+}
+finally
+{
+    if (par.output != null)
+    {
+        file.Close();
+    }
 }

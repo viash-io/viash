@@ -28,10 +28,12 @@ def toStringWithFields(c: AnyRef): Map[String, Any] = {
 try {
   logFun("Parsed input arguments.")
 
-  val map = toStringWithFields(par)
-
-  for ((name, value) ← map) {
+  for ((name, value) ← toStringWithFields(par)) {
     outputFun(s"$name: |$value|")
+  }
+
+  for ((name, value) ← toStringWithFields(meta)) {
+    outputFun(s"meta_$name: |$value|")
   }
   outputFun(s"resources_dir: |$resources_dir|")
   

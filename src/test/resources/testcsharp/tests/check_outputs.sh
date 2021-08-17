@@ -22,6 +22,8 @@ grep -q 'optional_with_default: |bar|' output.txt
 grep -q 'multiple: |one, two|' output.txt
 grep -q 'multiple_pos: |a, b, c, d, e, f|' output.txt
 grep -q 'resources_dir: |..*|' output.txt
+grep -q 'meta_resources_dir: |..*|' output.txt
+grep -q 'meta_functionality_name: |testcsharp|' output.txt
 
 [[ ! -f log.txt ]] && echo "Log file could not be found!" && exit 1
 grep -q 'Parsed input arguments.' log.txt
@@ -43,5 +45,7 @@ grep -q 'optional_with_default: |The default value.|' output2.txt
 grep -q 'multiple: ||' output2.txt
 grep -q 'multiple_pos: ||' output2.txt
 grep -q 'resources_dir: |..*|' output2.txt
+grep -q 'meta_resources_dir: |..*|' output.txt
+grep -q 'meta_functionality_name: |testcsharp|' output.txt
 
 echo ">>> Test finished successfully"

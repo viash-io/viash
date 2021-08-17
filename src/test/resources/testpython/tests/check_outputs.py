@@ -32,6 +32,8 @@ class TestCheckOutputs(unittest.TestCase):
     self.assertRegex(output, 'optional_with_default: \\|bar\\|')
     self.assertRegex(output, 'multiple: \\|\\[\'one\', \'two\'\\]\\|')
     self.assertRegex(output, 'multiple_pos: \\|\\[\'a\', \'b\', \'c\', \'d\', \'e\', \'f\'\\]\\|')
+    self.assertRegex(output, 'meta_resources_dir: \\|..*\\|')
+    self.assertRegex(output, 'meta_functionality_name: \\|testpython\\|')
 
     
     self.assertTrue(path.exists("log.txt"))
