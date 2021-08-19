@@ -167,7 +167,7 @@ case class NextFlowPlatform(
      */
     val asNestedTuples: List[ConfigTuple] = List(
       "docker.enabled" → true,
-      "docker.runOptions" → "-i -v ${baseDir}:${baseDir}",
+      "def viash_temp = System.getenv(\"VIASH_TEMP\") ?: \"/tmp/\"\n  docker.runOptions" → "-i -v ${baseDir}:${baseDir} -v $viash_temp:$viash_temp",
       "process.container" → "dataintuitive/viash",
       "params" → NestedValue(
         namespacedParameters :::
@@ -504,7 +504,7 @@ case class NextFlowPlatform(
         s"""  emit:
            |  result_.flatMap{ it ->
            |    (it[1].keySet().size() > 1)
-           |      ? it
+           |      ? [ it ]
            |      : it[1].collect{ k, el -> [ it[0], el, it[2] ] }
            |  }""".stripMargin
       }

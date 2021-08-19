@@ -9,6 +9,10 @@
 
 * `NextFlowPlatform`: Export `VIASH_TEMP` environment variable. 
 
+## BUG FIXES
+
+* `NextFlowPlatform`: Fix output formatting when `separate_multiple_outputs` is `false`.
+
 # viash 0.5.2
 
 ## MINOR CHANGES
