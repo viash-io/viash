@@ -7,6 +7,8 @@
   - `meta["resources_dir"]`: Path to the directory containing the resources
   - `meta["functionality_name"]`: Name of the component
 
+* `NextFlowPlatform`: Export `VIASH_TEMP` environment variable. 
+
 # viash 0.5.2
 
 ## MINOR CHANGES
