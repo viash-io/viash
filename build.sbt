@@ -1,6 +1,6 @@
 name := "viash"
 
-version := "0.5.3dev"
+version := "0.5.3"
 
 scalaVersion := "2.12.10"
 
