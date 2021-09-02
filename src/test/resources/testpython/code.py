@@ -25,12 +25,24 @@ else:
 
 logging.info('Parsed input arguments.')
 
-if par['output'] is not None: 
-	logging.info('Writing output to file')
-	with open(par['output'], 'w') as f:
-		for key in par.keys():
-			f.write(key + ": |" + str(par[key]) + "|\n")
+if par['output'] is not None:
+    logging.info('Writing output to file')
+    output_file = open(par['output'], 'w')
 else:
-	logging.info('Printing output to console')
-	for key in par.keys():
-		print(key + ": |" + str(par[key]) + "|")
+    logging.info('Printing output to console')
+
+def echo(s):
+    if par['output'] is not None:
+        output_file.write(s + "\n")
+    else:
+        print(s)
+
+try:
+    for key, value in par.items():
+        echo(f"{key}: |{value}|")
+
+    for key, value in meta.items():
+        echo(f"meta_{key}: |{value}|")
+finally:
+    if par['output'] is not None:
+        output_file.close()

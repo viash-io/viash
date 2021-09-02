@@ -19,6 +19,7 @@ package com.dataintuitive.viash.functionality.resources
 
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.wrapper.BashWrapper
 
 import java.net.URI
 
@@ -38,7 +39,7 @@ case class ScalaScript(
   def generatePlaceholder(functionality: Functionality): String = {
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
-    val classTypes = params.map { par =>
+    val parClassTypes = params.map { par =>
       val classType = par match {
         case o: BooleanObject if o.multiple => "List[Boolean]"
         case o: IntegerObject if o.multiple => "List[Integer]"
@@ -58,9 +59,7 @@ case class ScalaScript(
         case _: StringObject => "String"
       }
       par.plainName + ": " + classType
-
     }
-
     val parSet = params.map { par =>
       val env_name = par.VIASH_PAR
 
@@ -100,12 +99,25 @@ case class ScalaScript(
         case None => parse
       }
     }
+
+    val metaClassTypes = BashWrapper.metaFields.map { case (_, script_name) =>
+      script_name + ": String"
+    }
+    val metaSet = BashWrapper.metaFields.map { case (env_name, script_name) =>
+      s""""$$$env_name""""
+    }
     s"""case class ViashPar(
-       |  ${classTypes.mkString(",\n  ")}
+       |  ${parClassTypes.mkString(",\n  ")}
        |)
-       |
        |val par = ViashPar(
        |  ${parSet.mkString(",\n  ")}
+       |)
+       |
+       |case class ViashMeta(
+       |  ${metaClassTypes.mkString(",\n  ")}
+       |)
+       |val meta = ViashMeta(
+       |  ${metaSet.mkString(",\n  ")}
        |)
        |
        |val resources_dir = "$$VIASH_RESOURCES_DIR"

@@ -1,3 +1,18 @@
+# viash 0.5.3
+
+## NEW FEATURES
+
+* Similar to `par`, each script now also has a `meta` list. `meta` contains meta information about the component
+  or the execution thereof. It currently has the following fields:
+  - `meta["resources_dir"]`: Path to the directory containing the resources
+  - `meta["functionality_name"]`: Name of the component
+
+* `NextFlowPlatform`: Export `VIASH_TEMP` environment variable. 
+
+## BUG FIXES
+
+* `NextFlowPlatform`: Fix output formatting when `separate_multiple_outputs` is `false`.
+
 # viash 0.5.2
 
 ## MINOR CHANGES

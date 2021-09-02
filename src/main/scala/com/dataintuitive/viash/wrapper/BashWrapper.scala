@@ -24,6 +24,12 @@ import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.helpers.{Bash, Format}
 
 object BashWrapper {
+  val metaFields: List[(String, String)] = {
+    List(
+      ("VIASH_META_FUNCTIONALITY_NAME", "functionality_name"),
+      ("VIASH_RESOURCES_DIR", "resources_dir")
+    )
+  }
 
   def nameAndVersion(functionality: Functionality): String = {
     functionality.name + functionality.version.map(" " + _).getOrElse(" <not versioned>")
@@ -178,6 +184,9 @@ object BashWrapper {
        |
        |# find source folder of this component
        |$var_resources_dir=`ViashSourceDir $${BASH_SOURCE[0]}`
+       |
+       |# define meta fields
+       |VIASH_META_FUNCTIONALITY_NAME="${functionality.name}"
        |
        |${spaceCode(allMods.preParse)}
        |# initialise array

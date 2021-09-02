@@ -54,3 +54,6 @@ if (typeof par['output'] === 'undefined') {
 for (const key in par) {
 	outFun(`${key}: |${par[key]}|`)
 }
+for (const key in meta) {
+	outFun(`meta_${key}: |${meta[key]}|`)
+}

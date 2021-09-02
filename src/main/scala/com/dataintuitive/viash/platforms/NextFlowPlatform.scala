@@ -167,7 +167,7 @@ case class NextFlowPlatform(
      */
     val asNestedTuples: List[ConfigTuple] = List(
       "docker.enabled" → true,
-      "docker.runOptions" → "-i -v ${baseDir}:${baseDir}",
+      "def viash_temp = System.getenv(\"VIASH_TEMP\") ?: \"/tmp/\"\n  docker.runOptions" → "-i -v ${baseDir}:${baseDir} -v $viash_temp:$viash_temp",
       "process.container" → "dataintuitive/viash",
       "params" → NestedValue(
         namespacedParameters :::
@@ -461,11 +461,14 @@ case class NextFlowPlatform(
         |    STUB=1 $$cli
         |    \"\"\"
         |  script:
+        |    def viash_temp = System.getenv("VIASH_TEMP") ?: "/tmp/"
         |    if (params.test)
         |      \"\"\"
         |      # Some useful stuff
         |      export NUMBA_CACHE_DIR=/tmp/numba-cache
         |      # Running the pre-hook when necessary
+        |      # Pass viash temp dir
+        |      export VIASH_TEMP="$${viash_temp}"
         |      # Adding NXF's `$$moduleDir` to the path in order to resolve our own wrappers
         |      export PATH="./:$${moduleDir}:\\$$PATH"
         |      ./$${params.$fname.tests.testScript} | tee $$output
@@ -475,6 +478,8 @@ case class NextFlowPlatform(
         |      # Some useful stuff
         |      export NUMBA_CACHE_DIR=/tmp/numba-cache
         |      # Running the pre-hook when necessary
+        |      # Pass viash temp dir
+        |      export VIASH_TEMP="$${viash_temp}"
         |      # Adding NXF's `$$moduleDir` to the path in order to resolve our own wrappers
         |      export PATH="$${moduleDir}:\\$$PATH"
         |      $$cli
@@ -499,7 +504,7 @@ case class NextFlowPlatform(
         s"""  emit:
            |  result_.flatMap{ it ->
            |    (it[1].keySet().size() > 1)
-           |      ? it
+           |      ? [ it ]
            |      : it[1].collect{ k, el -> [ it[0], el, it[2] ] }
            |  }""".stripMargin
       }

@@ -19,6 +19,7 @@ package com.dataintuitive.viash.functionality.resources
 
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.wrapper.BashWrapper
 
 import java.net.URI
 
@@ -83,10 +84,15 @@ case class CSharpScript(
 
       s"${par.plainName} = $setter"
     }
+    val metaSet = BashWrapper.metaFields.map{ case (env_name, script_name) =>
+      s"""$script_name = "$$$env_name""""
+    }
     s"""var par = new {
        |  ${parSet.mkString(",\n  ")}
        |};
-       |
+       |var meta = new {
+       |  ${metaSet.mkString(",\n  ")}
+       |};
        |var resources_dir = "$$VIASH_RESOURCES_DIR";
        |""".stripMargin
   }

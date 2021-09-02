@@ -53,5 +53,8 @@ functionality:
 platforms:
   - type: native
   - type: docker
-    image: "andmos/dotnet-script"
+    image: "hjerpbakk/dotnet-script:1.0.1"
+    setup:
+      - type: apk
+        packages: [ bash ]
   - type: nextflow

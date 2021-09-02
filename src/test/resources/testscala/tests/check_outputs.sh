@@ -22,6 +22,8 @@ grep -q 'optional_with_default: |Some(bar)|' output.txt
 grep -q 'multiple: |List(one, two)|' output.txt
 grep -q 'multiple_pos: |List(a, b, c, d, e, f)|' output.txt
 grep -q 'resources_dir: |..*|' output.txt
+grep -q 'meta_resources_dir: |..*|' output.txt
+grep -q 'meta_functionality_name: |testscala|' output.txt
 
 [[ ! -f log.txt ]] && echo "Log file could not be found!" && exit 1
 grep -q 'Parsed input arguments.' log.txt
@@ -43,5 +45,7 @@ grep -q 'optional_with_default: |Some(The default value.)|' output2.txt
 grep -q 'multiple: |List()|' output2.txt
 grep -q 'multiple_pos: |List()|' output2.txt
 grep -q 'resources_dir: |..*|' output2.txt
+grep -q 'meta_resources_dir: |..*|' output2.txt
+grep -q 'meta_functionality_name: |testscala|' output2.txt
 
 echo ">>> Test finished successfully"
