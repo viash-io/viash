@@ -1,3 +1,13 @@
+# Viash 0.5.4
+
+## NEW FEATURES
+
+* `NextFlowPlatform`: Added `cache` directive to specify the typing of caching to be performed.
+
+## DEFAULT BEHAVIOR CHANGE
+
+* `NextFlowPlatform`: The default caching mechanism is now what NextFlow uses as default. In order to replicate earlier caching, `cache: deep` should be specified in the Viash config file.
+
 # viash 0.5.3
 
 ## NEW FEATURES
