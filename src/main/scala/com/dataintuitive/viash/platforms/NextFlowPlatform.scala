@@ -45,6 +45,7 @@ case class NextFlowPlatform(
   directive_max_forks: Option[Integer] = None,
   directive_time: Option[String] = None,
   directive_memory: Option[String] = None,
+  directive_cache: Option[String] = None,
   oType: String = "nextflow"
 ) extends Platform {
   assert(version.isEmpty, "nextflow platform: attribute 'version' is deprecated")
@@ -435,7 +436,8 @@ case class NextFlowPlatform(
           formatDirective("cpus", directive_cpus.map(_.toString), "") +
           formatDirective("maxForks", directive_max_forks.map(_.toString), "") +
           formatDirective("time", directive_time, "'") +
-          formatDirective("memory", directive_memory, "'")
+          formatDirective("memory", directive_memory, "'") +
+          formatDirective("cache", directive_cache, "'")
 
       val stageInModeStr = stageInMode match {
         case Some("copy") => "copy"
@@ -446,7 +448,6 @@ case class NextFlowPlatform(
         |process ${fname}_process {$directives
         |  tag "$${id}"
         |  echo { (params.debug == true) ? true : false }
-        |  cache 'deep'
         |  stageInMode "$stageInModeStr"
         |  container "$${container}"
         |$publishDirStr
