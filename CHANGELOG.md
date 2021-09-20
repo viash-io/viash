@@ -1,14 +1,14 @@
 # Viash 0.5.4
 
+## BREAKING CHANGES
+
+* `NextFlowPlatform`: The default caching mechanism is now what NextFlow uses as default. In order to replicate earlier caching, `cache: deep` should be specified in the Viash config file.
+
 ## NEW FEATURES
 
 * `NextFlowPlatform`: Added `cache` directive to specify the typing of caching to be performed.
 
-## DEFAULT BEHAVIOR CHANGE
-
-* `NextFlowPlatform`: The default caching mechanism is now what NextFlow uses as default. In order to replicate earlier caching, `cache: deep` should be specified in the Viash config file.
-
-# viash 0.5.3
+# Viash 0.5.3
 
 ## NEW FEATURES
 
@@ -23,7 +23,7 @@
 
 * `NextFlowPlatform`: Fix output formatting when `separate_multiple_outputs` is `false`.
 
-# viash 0.5.2
+# Viash 0.5.2
 
 ## MINOR CHANGES
 
@@ -36,7 +36,7 @@
 
 * `IO`: Allow overwriting directory resources upon rebuild.
 
-# viash 0.5.1
+# Viash 0.5.1
 
 ## NEW FEATURES
 
@@ -66,7 +66,7 @@
 
 * `TestingAllComponentsSuite`: Only testing bash natively, because other dependencies might not be available.
 
-# viash 0.5.0
+# Viash 0.5.0
 
 ## BREAKING CHANGES
 
@@ -116,7 +116,7 @@
 * `viash ns`: Added a basic testbench for namespace tests.
 
 
-# viash 0.4.0.1 (2021-05-12)
+# Viash 0.4.0.1 (2021-05-12)
 
 ## BUG FIX
 
@@ -126,7 +126,7 @@
 
 * `viash ns test`: print header when `--tsv foo.tsv --append true` but foo.tsv doesn't exist yet. Fixes #45.
 
-# viash 0.4.0 (2021-04-14)
+# Viash 0.4.0 (2021-04-14)
 
 ## NEW FEATURES
 
@@ -194,7 +194,7 @@ The generation of Nextflow modules has been refactored thoroughly.
 * `NXF`: Providing a `default: ...` value for output file arguments is no longer necessary.
 
 
-# viash 0.3.2 (2021-02-04)
+# Viash 0.3.2 (2021-02-04)
 
 ## BREAKING CHANGES
 
@@ -220,7 +220,7 @@ The generation of Nextflow modules has been refactored thoroughly.
 
 * `NXF`: Accept multiple inputs when component is running as standalone.
 
-# viash 0.3.1 (2021-01-26)
+# Viash 0.3.1 (2021-01-26)
 
 ## NEW FEATURES
 
@@ -304,7 +304,7 @@ functionality:
 * YAML: Test invertibility of parsing/unparsing config objects.
 
 
-# viash 0.3.0 (2020-11-24)
+# Viash 0.3.0 (2020-11-24)
 
 ## BREAKING CHANGES
 
@@ -351,13 +351,13 @@ functionality:
 * `viash test`: Add tests for `viash test` functionality.
 
 
-# viash 0.2.2 (2020-09-22)
+# Viash 0.2.2 (2020-09-22)
 
 * MINOR CHANGE: Allow generating placeholder without VIASH START/VIASH END blocks.
 * BUG FIX `viash ns build`: Some platforms would sometimes not be detected.
 * BUG FIX `viash run`: Avoid error when no arguments need to be chowned.
 
-# viash 0.2.1 (2020-09-11)
+# Viash 0.2.1 (2020-09-11)
 
 * NEW FEATURE `NXF`: Data references in Map form can now have values being lists. In other words, we can have multiple options which have one or more values.
 * NEW FEATURE `viash ns build`: Added --parallel and --setup flag.
@@ -368,7 +368,7 @@ functionality:
 * MINOR CHANGE: Perform chown during both run and test using a Docker platform.
 * BUG FIX: Issue trying to parse positional arguments even when none is provided.
 
-# viash 0.2.0 (2020-09-01)
+# Viash 0.2.0 (2020-09-01)
 
 ## NEW FEATURES
 
@@ -409,7 +409,7 @@ functionality:
 * Renamed Target to Platform
 * Renamed Environment to Requirements
 
-# viash 0.1.0 (2020-05-14)
+# Viash 0.1.0 (2020-05-14)
 * MAJOR CHANGES: Refactoring of the Functionality class as discussed in VIP1 (#1). This has resulted in a lot of internal changes, but the changes with regard to the yaml definitions are relatively minor. See the section below for more info.
 * MINOR CHANGES: Updated the functionality.yamls under `atoms/` and `src/test/` to reflect these aforementioned changes.
 * BUG FIX: Do not quote passthrough flags.
@@ -428,5 +428,5 @@ functionality:
 ## Changes to platform_(docker/native).yaml
 * The `r: packages:` field has been renamed to `r: cran:`.
 
-# viash 0.0.1 (2020-05-05)
+# Viash 0.0.1 (2020-05-05)
 * Initial proof of concept.
