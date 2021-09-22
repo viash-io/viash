@@ -1,11 +1,9 @@
 
 <p align="center">
 <a href="https://viash.io/">
-<img alt="viash" src="https://viash.io/viash.svg" width="300"> </a>
+<img alt="viash" src="https://viash.io/logo/viash_large.svg" width="300">
+</a>
 </p>
-<h3 align="center">
-script + metadata = standalone component
-</h3>
 <p align="center">
 <a href="https://github.com/viash-io/viash/blob/master/LICENSE.md">
 <img src="https://img.shields.io/github/license/viash-io/viash?style=flat-square" alt="GitHub">
