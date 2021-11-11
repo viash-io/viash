@@ -216,8 +216,8 @@ object ViashTest {
 
         logger(consoleLine)
 
-        // run command, collect output
         try {
+          // run command, collect output
           val executable = Paths.get(newDir.toString, testBash.filename).toString
           logger(s"+$executable")
           val exitValue = Process(Seq(executable), cwd = newDir.toFile).!(ProcessLogger(logger, logger))
