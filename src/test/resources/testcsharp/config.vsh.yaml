@@ -53,7 +53,7 @@ functionality:
 platforms:
   - type: native
   - type: docker
-    image: "hjerpbakk/dotnet-script:1.0.1"
+    image: dataintuitive/dotnet-script:1.2.1
     setup:
       - type: apk
         packages: [ bash ]

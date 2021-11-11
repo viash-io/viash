@@ -1,3 +1,11 @@
+# Viash 0.5.5
+
+## MINOR CHANGES
+
+* Bash Script: only define variables which have values.
+
+* CSharp Test Component: Change Docker image to dataintuitive/dotnet-script to have more control over the lifecycle of versioned tags.
+
 # Viash 0.5.4
 
 ## BREAKING CHANGES
