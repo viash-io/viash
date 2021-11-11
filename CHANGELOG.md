@@ -1,5 +1,10 @@
 # Viash 0.5.5
 
+## BREAKING CHANGES
+
+* `Functionality`: The resources dir no longer automatically added to the PATH variable. 
+  To alter this behaviour, set `.functionality.add_resources_to_path` to `true`.
+
 ## MINOR CHANGES
 
 * Bash Script: only define variables which have values.
