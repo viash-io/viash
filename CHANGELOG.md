@@ -9,13 +9,20 @@
 
 * Bash Script: only define variables which have values.
 
-* CSharp Test Component: Change Docker image to dataintuitive/dotnet-script to have more control over the lifecycle of versioned tags.
+* CSharp Test Component: Change Docker image to dataintuitive/dotnet-script to have more control over the lifecycle of 
+  versioned tags.
+
+## BUG FIXES
+
+* Viash namespace: Fix incorrect output path when the parent directory of a Viash component is not equal to the value of
+  `.functionality.name`.
 
 # Viash 0.5.4
 
 ## BREAKING CHANGES
 
-* `NextFlowPlatform`: The default caching mechanism is now what NextFlow uses as default. In order to replicate earlier caching, `cache: deep` should be specified in the Viash config file.
+* `NextFlowPlatform`: The default caching mechanism is now what NextFlow uses as default. In order to replicate earlier
+  caching, `cache: deep` should be specified in the Viash config file.
 
 ## NEW FEATURES
 

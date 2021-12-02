@@ -34,18 +34,17 @@ object ViashNamespace {
     val configs2 = if (parallel) configs.par else configs
 
     configs2.foreach { conf =>
-      val in = conf.info.get.parent_path
-      val inTool = in.split("/").lastOption.getOrElse("WRONG")
-      val platType = conf.platform.get.id
+      val funName = conf.functionality.name
+      val platformId = conf.platform.get.id
       val out =
         if (!flatten) {
           conf.functionality.namespace
-            .map( ns => target + s"/$platType/$ns/$inTool").getOrElse(target + s"/$platType/$inTool")
+            .map( ns => target + s"/$platformId/$ns/$funName").getOrElse(target + s"/$platformId/$funName")
         } else {
           target
         }
       val namespaceOrNothing = conf.functionality.namespace.map( s => "(" + s + ")").getOrElse("")
-      println(s"Exporting $in $namespaceOrNothing =$platType=> $out")
+      println(s"Exporting $funName $namespaceOrNothing =$platformId=> $out")
       ViashBuild(
         config = conf,
         output = out,
