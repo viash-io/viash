@@ -93,13 +93,18 @@ object BashWrapper {
     val cdToResources =
       if (functionality.set_wd_to_resources_dir.getOrElse(false)) {
         s"""
-           |cd "$$$var_resources_dir"
-           |PATH="$$$var_resources_dir:\\$$PATH"
-           |""".stripMargin
+          |cd "$$$var_resources_dir"""".stripMargin
       } else {
+        ""
+      }
+
+    // check whether the resources dir needs to be added to the path
+    val resourcesToPath =
+      if (functionality.set_wd_to_resources_dir.getOrElse(false)) {
         s"""
-           |PATH="$$$var_resources_dir:\\$$PATH"
-           |""".stripMargin
+          |PATH="$$$var_resources_dir:\\$$PATH"""".stripMargin
+      } else {
+        ""
       }
 
     // DETERMINE HOW TO RUN THE CODE
@@ -118,7 +123,7 @@ object BashWrapper {
            |trap clean_up EXIT
            |cat > "\\$$tempscript" << 'VIASHMAIN'
            |$escapedCode
-           |VIASHMAIN$cdToResources
+           |VIASHMAIN$cdToResources$resourcesToPath
            |${res.meta.command("\\$tempscript")}
            |""".stripMargin
     }

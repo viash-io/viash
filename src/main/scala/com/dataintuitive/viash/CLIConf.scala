@@ -129,7 +129,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
        |viash is a spec and a tool for defining execution contexts and converting execution instructions to concrete instantiations.
        |
        |This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it under certain conditions. For more information, see our license at the link below.
-       |  https://github.com/data-intuitive/viash/blob/master/LICENSE.md
+       |  https://github.com/viash-io/viash/blob/master/LICENSE.md
        |
        |Usage:
        |  viash run config.vsh.yaml -- [arguments for script]
@@ -141,7 +141,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
        |  viash config view
        |
        |Check the help of a subcommand for more information, or the API available at:
-       |  https://www.data-intuitive.com/viash_docs
+       |  https://viash.io
        |
        |Arguments:""".stripMargin)
 
