@@ -12,6 +12,8 @@
 * CSharp Test Component: Change Docker image to dataintuitive/dotnet-script to have more control over the lifecycle of 
   versioned tags.
 
+* Updated Code of Conduct from v2.0 to v2.1.
+
 ## BUG FIXES
 
 * Viash namespace: Fix incorrect output path when the parent directory of a Viash component is not equal to the value of
