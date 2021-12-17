@@ -1,5 +1,9 @@
 # Viash 0.5.6
 
+## MINOR CHANGES
+
+* Set version of helper scripts to the same version as Viash.
+
 ## BUG FIXES
 
 * `viash_install`:
