@@ -9,7 +9,7 @@
 
 * Bash Script: only define variables which have values.
 
-* CSharp Test Component: Change Docker image to dataintuitive/dotnet-script to have more control over the lifecycle of 
+* CSharp Test Component: Change Docker image to `dataintuitive/dotnet-script` to have more control over the lifecycle of 
   versioned tags.
 
 * Updated Code of Conduct from v2.0 to v2.1.
