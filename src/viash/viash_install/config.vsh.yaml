@@ -28,7 +28,8 @@ functionality:
   - name: "--tag"
     alternatives: [ "-t" ]
     type: string
-    description: "Which tag/version of viash to use, leave blank for the latest release"
+    description: "Which tag/version of viash to use."
+    default: latest
   - name: "--log"
     type: file
     description: Path to write the test logs to.
