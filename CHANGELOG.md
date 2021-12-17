@@ -1,3 +1,12 @@
+# Viash 0.5.6
+
+## BUG FIXES
+
+* `viash_install`:
+  - Passing Viash path as a string instead of as a file to ensure the path is not converted to an absolute path
+  - Switch from Docker backend to a Native backend, 'unzip' and 'wget' are required.
+  - Correctly set the log file for viash_test.
+
 # Viash 0.5.5
 
 ## BREAKING CHANGES
