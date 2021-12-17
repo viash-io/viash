@@ -178,7 +178,9 @@ object ViashTest {
           arguments = Nil,
           dummy_arguments = Some(List(dirArg)),
           resources = Some(List(test)),
-          set_wd_to_resources_dir = Some(true)))
+          set_wd_to_resources_dir = Some(true),
+          add_resources_to_path = true
+        ))
         val testBash = BashScript(
           dest = Some(test.filename),
           text = funOnlyTest.resources.getOrElse(Nil).head.text
@@ -216,8 +218,8 @@ object ViashTest {
 
         logger(consoleLine)
 
-        // run command, collect output
         try {
+          // run command, collect output
           val executable = Paths.get(newDir.toString, testBash.filename).toString
           logger(s"+$executable")
           val exitValue = Process(Seq(executable), cwd = newDir.toFile).!(ProcessLogger(logger, logger))
