@@ -10,7 +10,10 @@
   - Passing Viash path as a string instead of as a file to ensure the path is not converted to an absolute path
   - Switch from Docker backend to a Native backend, 'unzip' and 'wget' are required.
   - Correctly set the log file for viash_test.
-
+  
+* `DockerPlatform`: Added sleep workaround to avoid concurrency issue where a file is executed to
+  build docker containers but apparently still in the process of being written.
+  
 # Viash 0.5.5
 
 ## BREAKING CHANGES
@@ -31,9 +34,6 @@
 
 * Viash namespace: Fix incorrect output path when the parent directory of a Viash component is not equal to the value of
   `.functionality.name`.
-  
-* `DockerPlatform`: Added sleep workaround to avoid concurrency issue where a file is executed to 
-  build docker containers but apparently still in the process of being written.
 
 # Viash 0.5.4
 
