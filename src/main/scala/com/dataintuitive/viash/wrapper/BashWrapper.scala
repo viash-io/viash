@@ -203,19 +203,15 @@ object BashWrapper {
        |            ViashHelp
        |            exit
        |            ;;
-       |        -v|--verbose)
+       |        ---v|---verbose)
        |            let "$var_verbosity=$var_verbosity+1"
        |            shift 1
        |            ;;
-       |        -vv)
-       |            let "$var_verbosity=$var_verbosity+2"
-       |            shift 1
-       |            ;;
-       |        --verbosity)
+       |        ---verbosity)
        |            $var_verbosity="$$2"
        |            shift 2
        |            ;;
-       |        --verbosity=*)
+       |        ---verbosity=*)
        |            $var_verbosity="$$(ViashRemoveFlags "$$1")"
        |            shift 1
        |            ;;

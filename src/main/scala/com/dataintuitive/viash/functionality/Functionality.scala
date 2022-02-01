@@ -82,5 +82,5 @@ case class Functionality(
 }
 
 object Functionality {
-  val reservedParameters = List("-h", "--help", "-v", "--verbose", "--verbosity", "--version")
+  val reservedParameters = List("-h", "--help", "--version", "---v", "---verbose", "---verbosity")
 }

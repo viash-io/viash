@@ -1,5 +1,9 @@
 # Viash 0.5.6
 
+## BREAKING CHANGES
+
+* `BashWrapper`: Forbidden flags `-v`, `--verbose`, `--verbosity` have been renamed to `---v`, `---verbose`, `---verbosity`.
+
 ## MINOR CHANGES
 
 * Set version of helper scripts to the same version as Viash.
