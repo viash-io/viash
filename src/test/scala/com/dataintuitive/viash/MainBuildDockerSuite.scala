@@ -192,7 +192,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     try {
       // Copy all needed files to a temporary location
-      for (name <- List("config.vsh.yaml", "code.sh", "resource1.txt")) {
+      for (name <- List("config.vsh.yaml", "code.sh", "resource1.txt", "NOTICE")) {
         val originPath = Paths.get(getClass.getResource(s"/testbash/$name").getPath)
         val destPath = Paths.get(tempMetaFolStr, name)
 
@@ -247,7 +247,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     try {
       // Copy all needed files to a temporary location
-      for (name <- List("config.vsh.yaml", "code.sh", "resource1.txt")) {
+      for (name <- List("config.vsh.yaml", "code.sh", "resource1.txt", "NOTICE")) {
         val originPath = Paths.get(getClass.getResource(s"/testbash/$name").getPath)
         val destPath = Paths.get(tempMetaFolStr, name)
 
@@ -314,7 +314,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     try {
       // Copy all needed files to a temporary location
-      for (name <- List("config.vsh.yaml", "code.sh", "resource1.txt")) {
+      for (name <- List("config.vsh.yaml", "code.sh", "resource1.txt", "NOTICE")) {
         val originPath = Paths.get(getClass.getResource(s"/testbash/$name").getPath)
         val destPath = Paths.get(tempMetaFolStr, name)
 

@@ -63,7 +63,7 @@ functionality:
     - type: bash_script
       path: ./code_two_output.sh
     - path: ../resource1.txt
-    - path: https://raw.githubusercontent.com/scala/scala/2.13.x/NOTICE
+    - path: ../NOTICE
 platforms:
   - type: docker
     image: "bash:3.2"
