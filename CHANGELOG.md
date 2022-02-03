@@ -8,6 +8,10 @@
 
 * Set version of helper scripts to the same version as Viash.
 
+* `DockerPlatform`: Produce helpful warning message when Docker image can't be found remotely (#94).
+
+* `DockerPlatform`: Produce helpful error message when Docker isn't installed or the daemon is not running (#94 bis).
+
 ## BUG FIXES
 
 * `viash_install`:
@@ -18,6 +22,10 @@
 * `DockerPlatform`: Added sleep workaround to avoid concurrency issue where a file is executed to
   build docker containers but apparently still in the process of being written.
   
+* `DockerPlatform`: Fix order issue of ---verbose flag in combination with ---setup, allowing to run 
+  `viash run config.vsh.yaml -- ---setup cb ---verbose` and actually get output.
+  
+
 # Viash 0.5.5
 
 ## BREAKING CHANGES

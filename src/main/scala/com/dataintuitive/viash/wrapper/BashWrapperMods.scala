@@ -23,6 +23,7 @@ case class BashWrapperMods(
   preParse: String = "",
   parsers: String = "",
   postParse: String = "",
+  preRun: String = "",
   postRun: String = "",
   inputs: List[DataObject[_]] = Nil,
   extraParams: String = ""
@@ -32,6 +33,7 @@ case class BashWrapperMods(
       preParse = preParse + other.preParse,
       parsers = parsers + other.parsers,
       postParse = postParse + other.postParse,
+      preRun = preRun + other.preRun,
       postRun = postRun + other.postRun,
       inputs = inputs ::: other.inputs,
       extraParams = extraParams + other.extraParams

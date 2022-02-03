@@ -196,6 +196,7 @@ object BashWrapper {
        |${spaceCode(allMods.preParse)}
        |# initialise array
        |VIASH_POSITIONAL_ARGS=''
+       |VIASH_MODE='run'
        |
        |while [[ $$# -gt 0 ]]; do
        |    case "$$1" in
@@ -231,6 +232,7 @@ object BashWrapper {
        |# parse positional parameters
        |eval set -- $$VIASH_POSITIONAL_ARGS
        |${spaceCode(allMods.postParse)}
+       |${spaceCode(allMods.preRun)}
        |$heredocStart$executor$executionCode$heredocEnd
        |${spaceCode(allMods.postRun)}""".stripMargin
   }
@@ -411,7 +413,7 @@ object BashWrapper {
     // return output
     BashWrapperMods(
       parsers = parseStrs,
-      postParse = positionalStr + "\n" + reqCheckStr + "\n" + defaultsStrs + "\n" + reqFilesStr
+      preRun = positionalStr + "\n" + reqCheckStr + "\n" + defaultsStrs + "\n" + reqFilesStr
     )
   }
 
@@ -445,7 +447,7 @@ object BashWrapper {
     }
 
     BashWrapperMods(
-      postParse = "\nVIASH_EXECUTABLE_ARGS=''" + inserts.mkString
+      preRun = "\nVIASH_EXECUTABLE_ARGS=''" + inserts.mkString
     )
   }
 

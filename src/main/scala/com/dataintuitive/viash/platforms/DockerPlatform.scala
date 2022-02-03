@@ -91,15 +91,18 @@ case class DockerPlatform(
     // generate automount code
     val dmVol = processDockerVolumes(functionality)
 
+    // generate installationcheck code
+    val dmDockerCheck = addDockerCheck()
+
     // add ---debug flag
-    val debuggor = s"""docker run --entrypoint=bash $dockerArgs -v "$$(pwd)":/pwd --workdir /pwd -t $effectiveID"""
+    val debuggor = s"""docker run --entrypoint=bash $dockerArgs -v "$$(pwd)":/pwd --workdir /pwd -t '$effectiveID'"""
     val dmDebug = addDockerDebug(debuggor)
 
     // add ---chown flag
     val dmChown = addDockerChown(functionality, dockerArgs, dmVol.extraParams, effectiveID)
 
     // compile modifications
-    val dm = setupMods ++ dmVol ++ dmDebug ++ dmChown
+    val dm = dmDockerCheck ++ setupMods ++ dmVol ++ dmDebug ++ dmChown
 
     // make commands
     val entrypointStr = functionality.mainScript.get match {
@@ -179,8 +182,7 @@ case class DockerPlatform(
              |VIASHDOCKER""".stripMargin
 
         val vdb =
-          s"""
-             |  # create temporary directory to store dockerfile & optional resources in
+          s"""  # create temporary directory to store dockerfile & optional resources in
              |  tmpdir=$$(mktemp -d "$$VIASH_TEMP/viashsetupdocker-${functionality.name}-XXXXXX")
              |  function clean_up {
              |    rm -rf "$$tmpdir"
@@ -192,18 +194,19 @@ case class DockerPlatform(
              |  cp -r $$${BashWrapper.var_resources_dir}/* $$tmpdir
              |
              |  # Build the container
-             |  ViashNotice "Running 'docker build -t $$@$buildArgs $$tmpdir'"
-             |  set +e
-             |  if [ $$${BashWrapper.var_verbosity} -ge 6 ]; then
+             |  ViashNotice "Building container '$$1' with Dockerfile"
+             |  ViashInfo "Running 'docker build -t $$@$buildArgs $$tmpdir'"
+             |  save=$$-; set +e
+             |  if [ $$${BashWrapper.var_verbosity} -ge $$VIASH_LOGCODE_INFO ]; then
              |    docker build -t $$@$buildArgs $$tmpdir
              |  else
              |    docker build -t $$@$buildArgs $$tmpdir &> $$tmpdir/docker_build.log
              |  fi
              |  out=$$?
-             |  set -e
-             |  if [ ! $$out -eq 0 ]; then
-             |    ViashError "Error occurred while building the container $$@."
-             |    if [ ! $$${BashWrapper.var_verbosity} -ge 6 ]; then
+             |  [[ $$save =~ e ]] && set -e
+             |  if [ $$out -ne 0 ]; then
+             |    ViashError "Error occurred while building container '$$1'"
+             |    if [ $$${BashWrapper.var_verbosity} -lt $$VIASH_LOGCODE_INFO ]; then
              |      ViashError "Transcript: --------------------------------"
              |      cat "$$tmpdir/docker_build.log"
              |      ViashError "End of transcript --------------------------"
@@ -236,20 +239,26 @@ case class DockerPlatform(
     val parsers =
       s"""
          |        ---setup)
-         |            ViashDockerSetup '$effectiveID' "$$2"
-         |            exit 0
+         |            VIASH_MODE='docker_setup'
+         |            VIASH_DOCKER_SETUP_STRATEGY="$$2"
+         |            shift 1
          |            ;;
          |        ---setup=*)
-         |            ViashDockerSetup '$effectiveID' "$$(ViashRemoveFlags "$$1")"
-         |            exit 0
+         |            VIASH_MODE='docker_setup'
+         |            VIASH_DOCKER_SETUP_STRATEGY="$$(ViashRemoveFlags "$$1")"
+         |            shift 2
          |            ;;
          |        ---dockerfile)
          |            ViashDockerfile
          |            exit 0
          |            ;;""".stripMargin
 
-    def postParse =
+    val postParse =
       s"""
+         |if [ $$VIASH_MODE == "docker_setup" ]; then
+         |  ViashDockerSetup '$effectiveID' "$$VIASH_DOCKER_SETUP_STRATEGY"
+         |  exit 0
+         |fi
          |ViashDockerSetup '$effectiveID' ${IfNeedBePullElseCachedBuild.id}""".stripMargin
 
     val mods = BashWrapperMods(
@@ -319,7 +328,7 @@ case class DockerPlatform(
         ""
       }
 
-    val postParse = postParseVolumes + "\n\n" +
+    val preRun = postParseVolumes + "\n\n" +
       s"""# Always mount the resource directory
          |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$${BashWrapper.var_resources_dir}")"
          |${BashWrapper.var_resources_dir}=$$(ViashAutodetectMount "$$${BashWrapper.var_resources_dir}")
@@ -331,8 +340,18 @@ case class DockerPlatform(
     BashWrapperMods(
       preParse = preParse,
       parsers = parsers,
-      postParse = postParse,
+      preRun = preRun,
       extraParams = extraParams
+    )
+  }
+
+  private def addDockerCheck() = {
+    val postParse =
+      s"""
+         |ViashDockerInstallationCheck""".stripMargin
+
+    BashWrapperMods(
+      postParse = postParse
     )
   }
 
@@ -340,14 +359,21 @@ case class DockerPlatform(
     val parsers =
       s"""
          |        ---debug)
-         |            ViashNotice "+ $debugCommand"
-         |            $debugCommand
-         |            exit 0
+         |            VIASH_MODE='docker_debug'
+         |            shift 1
          |            ;;""".stripMargin
 
+    val postParse =
+      s"""
+         |if [ $$VIASH_MODE == "docker_debug" ]; then
+         |  ViashNotice "+ $debugCommand"
+         |  $debugCommand
+         |  exit 0
+         |fi""".stripMargin
 
     BashWrapperMods(
-      parsers = parsers
+      parsers = parsers,
+      postParse = postParse
     )
   }
 
@@ -363,7 +389,7 @@ case class DockerPlatform(
       s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $fullImageID "$$(id -u):$$(id -g)" --silent --recursive $value"""
     }
 
-    val postParse =
+    val preRun =
       if (chown) {
         // chown output files/folders
         val chownPars = args
@@ -396,19 +422,18 @@ case class DockerPlatform(
           else chownPars.mkString("").split("\n").mkString("\n  ")
 
         s"""
-           |
            |# change file ownership
-           |function viash_perform_chown {
+           |function ViashPerformChown {
            |  $chownParStr
            |}
-           |trap viash_perform_chown EXIT
+           |trap ViashPerformChown EXIT
            |""".stripMargin
       } else {
         ""
       }
 
     BashWrapperMods(
-      postParse = postParse
+      preRun = preRun
     )
   }
 }
