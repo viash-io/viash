@@ -53,7 +53,7 @@ functionality:
     - type: bash_script
       path: ./code.sh
     - path: resource1.txt
-    - path: ./NOTICE
+    - path: https://raw.githubusercontent.com/scala/scala/2.13.x/NOTICE
 platforms:
   - type: native
   - type: docker

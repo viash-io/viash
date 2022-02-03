@@ -48,7 +48,7 @@ class MainBuildAuxiliaryDockerResourceCopying extends FunSuite with BeforeAndAft
     val expectedResources = List(
       //("check_bash_version.sh", "0c3c134d4ff0ea3a4a3b32e09fb7c100"),
       ("code.sh", "efa9e1aa1c5f2a0b91f558ead5917c68"),
-      ("NOTICE", "5a62872d96ae55f002c44daba9509dba"),
+      ("NOTICE", "d64d250d1c3a5af25977651b5443aedb"),
       ("resource1.txt", "bc9171172c4723589a247f99b838732d"),
       ("resource2.txt", "9cd530447200979dbf9e117915cbcc74"),
       ("resource_folder/resource_L1_1.txt", "51954bf10062451e683121e58d858417"),
