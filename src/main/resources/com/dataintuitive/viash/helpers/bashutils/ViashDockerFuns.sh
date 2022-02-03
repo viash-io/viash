@@ -1,5 +1,28 @@
 ######## Helper functions for setting up Docker images for viash ########
 
+# ViashDockerInstallationCheck: check whether Docker is installed correctly
+#
+# examples:
+#   ViashDockerInstallationCheck
+function ViashDockerInstallationCheck {
+  ViashDebug "Checking whether Docker is installed"
+  if [ ! command -v docker &> /dev/null ]; then
+    ViashCritical "Docker doesn't seem to be installed. See 'https://docs.docker.com/get-docker/' for instructions."
+    exit 1
+  fi
+
+  ViashDebug "Checking whether the Docker daemon is running"
+  save=$-; set +e
+  docker_version=$(docker version --format '{{.Client.APIVersion}}' 2> /dev/null)
+  out=$?
+  [[ $save =~ e ]] && set -e
+  if [ $out -ne 0 ]; then
+    ViashCritical "Docker daemon does not seem to be running. Try one of the following:"
+    ViashCritical "- Try running 'dockerd' in the command line"
+    ViashCritical "- See https://docs.docker.com/config/daemon/"
+    exit 1
+  fi
+}
 
 # ViashDockerRemoteTagCheck: check whether a Docker image is available 
 # on a remote. Assumes `docker login` has been performed, if relevant.
@@ -39,8 +62,19 @@ function ViashDockerLocalTagCheck {
 #   ViashDockerPull sdaizudceahifu
 #   echo $?                                     # returns '1'
 function ViashDockerPull {
-  ViashNotice "Running 'docker pull $1'"
-  docker pull $1 && return 0 || return 1
+  ViashNotice "Checking if Docker image is available at '$1'"
+  if [ $VIASH_VERBOSITY -ge $VIASH_LOGCODE_INFO ]; then
+    docker pull $1 && return 0 || return 1
+  else
+    save=$-; set +e
+    docker pull $1 2> /dev/null > /dev/null
+    out=$?
+    [[ $save =~ e ]] && set -e
+    if [ $out -ne 0 ]; then
+      ViashWarning "Could not pull from '$1'. Docker image doesn't exist or is not accessible."
+    fi
+    return $out
+  fi
 }
 
 # ViashDockerPullElseBuild: pull a Docker image, else build it
@@ -50,10 +84,10 @@ function ViashDockerPull {
 # examples:
 #   ViashDockerPullElseBuild mynewcomponent
 function ViashDockerPullElseBuild {
-  set +e
+  save=$-; set +e
   ViashDockerPull $1
   out=$?
-  set -e
+  [[ $save =~ e ]] && set -e
   if [ $out -ne 0 ]; then
     ViashDockerBuild $@
   fi
@@ -80,10 +114,10 @@ function ViashDockerSetup {
   elif [ "$VSHD_STRAT" == "alwayscachedbuild" -o "$VSHD_STRAT" == "cachedbuild" -o "$VSHD_STRAT" == "cb" ]; then
     ViashDockerBuild $VSHD_ID
   elif [[ "$VSHD_STRAT" =~ ^ifneedbe ]]; then
-    set +e
+    save=$-; set +e
     ViashDockerLocalTagCheck $VSHD_ID
     outCheck=$?
-    set -e
+    [[ $save =~ e ]] && set -e
     if [ $outCheck -eq 0 ]; then
       ViashInfo "Image $VSHD_ID already exists"
     elif [ "$VSHD_STRAT" == "ifneedbebuild" ]; then
@@ -101,10 +135,10 @@ function ViashDockerSetup {
       exit 1
     fi
   elif [ "$VSHD_STRAT" == "push" -o "$VSHD_STRAT" == "forcepush" -o "$VSHD_STRAT" == "alwayspush" ]; then
-    set +e
+    save=$-; set +e
     docker push $VSHD_ID
     outPush=$?
-    set -e
+    [[ $save =~ e ]] && set -e
     if [ $outPush -eq 0 ]; then
       ViashNotice "Container '$VSHD_ID' push succeeded."
     else
@@ -112,18 +146,18 @@ function ViashDockerSetup {
       exit 1
     fi
   elif [ "$VSHD_STRAT" == "pushifnotpresent" -o "$VSHD_STRAT" == "gentlepush" -o "$VSHD_STRAT" == "maybepush" ]; then
-    set +e
+    save=$-; set +e
     ViashDockerRemoteTagCheck $VSHD_ID
     outCheck=$?
-    set -e
+    [[ $save =~ e ]] && set -e
     if [ $outCheck -eq 0 ]; then
       ViashNotice "Container '$VSHD_ID' exists, doing nothing."
     else
       ViashNotice "Container '$VSHD_ID' does not yet exist."
-      set +e
+      save=$-; set +e
       docker push $1 > /dev/null 2> /dev/null
       outPush=$?
-      set -e
+      [[ $save =~ e ]] && set -e
       if [ $outPush -eq 0 ]; then
         ViashNotice "Container '$VSHD_ID' push succeeded."
       else

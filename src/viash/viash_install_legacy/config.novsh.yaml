@@ -1,5 +1,5 @@
 functionality:
-  name: viash_install
+  name: viash_install_legacy
   namespace: viash
   version: 0.1
   description: |
@@ -28,8 +28,7 @@ functionality:
   - name: "--tag"
     alternatives: [ "-t" ]
     type: string
-    description: "Which tag/version of viash to use."
-    default: latest
+    description: "Which tag/version of viash to use, leave blank for the latest release"
   - name: "--log"
     type: file
     description: Path to write the test logs to.
@@ -41,4 +40,10 @@ functionality:
     - type: bash_script
       path: script.sh
 platforms:
-- type: native
+- type: docker
+  image: dataintuitive/viash:latest
+  setup:
+    - type: docker
+      run:
+        - "curl -sSLfo /usr/local/bin/fetch https://github.com/gruntwork-io/fetch/releases/download/v0.4.2/fetch_linux_amd64"
+        - "chmod +x /usr/local/bin/fetch"

@@ -9,7 +9,7 @@ functionality:
       path: ./code.sh
     - path: resource1.txt
     - path: ./resource2.txt
-    - path: https://raw.githubusercontent.com/scala/scala/2.13.x/NOTICE
+    - path: https://raw.githubusercontent.com/scala/scala/fff4ec3539ac58f56fdc8f1382c365f32a9fd25a/NOTICE
     - path: resource_folder
     - path: resource1.txt
       dest: target_folder/relocated_file_1.txt

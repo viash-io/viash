@@ -130,6 +130,11 @@ object IO {
 
     setPerms(path, executable)
 
+    // sleep to avoid concurrency issue where
+    // file is executed to build docker containers
+    // but apparently still in the process of being written
+    Thread.sleep(50)
+
     path
   }
 
