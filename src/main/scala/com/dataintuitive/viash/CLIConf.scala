@@ -232,8 +232,19 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |
            |Arguments:""".stripMargin)
     }
+    val inject = new Subcommand("inject") with ViashCommand {
+      banner(
+        s"""viash config inject
+           |Inject a Viash header into the main script of a Viash component.
+           |
+           |Usage:
+           |  viash config inject config.vsh.yaml
+           |
+           |Arguments:""".stripMargin)
+    }
 
     addSubcommand(view)
+    addSubcommand(inject)
     requireSubcommand()
 
     shortSubcommandsHelp(true)
