@@ -29,4 +29,20 @@ case class IntegerObject(
   multiple: Boolean = false,
   multiple_sep: Char = ':',
   oType: String = "integer"
-) extends DataObject[Int]
+) extends DataObject[Int] {
+  def copyDO(
+    oType: String, 
+    name: String, 
+    alternatives: List[String],
+    description: Option[String],
+    example: Option[String],
+    default: Option[Int],
+    required: Boolean,
+    direction: Direction,
+    tag: Option[String],
+    multiple: Boolean,
+    multiple_sep: Char
+  ): DataObject[Int] = {
+    copy(name, alternatives, description, example, default, required, tag, direction, multiple, multiple_sep, oType)
+  }
+}

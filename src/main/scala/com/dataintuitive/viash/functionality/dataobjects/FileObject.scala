@@ -32,4 +32,20 @@ case class FileObject(
   multiple: Boolean = false,
   multiple_sep: Char = ':',
   oType: String = "file"
-) extends DataObject[Path]
+) extends DataObject[Path] {
+  def copyDO(
+    oType: String, 
+    name: String, 
+    alternatives: List[String],
+    description: Option[String],
+    example: Option[String],
+    default: Option[Path],
+    required: Boolean,
+    direction: Direction,
+    tag: Option[String],
+    multiple: Boolean,
+    multiple_sep: Char
+  ): DataObject[Path] = {
+    copy(name, alternatives, description, example, default, must_exist, required, tag, direction, multiple, multiple_sep, oType)
+  }
+}

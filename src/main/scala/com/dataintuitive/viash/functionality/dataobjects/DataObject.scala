@@ -35,4 +35,18 @@ abstract class DataObject[Type] {
 
   val par: String = "par_" + plainName
   val VIASH_PAR: String = "VIASH_PAR_" + plainName.toUpperCase()
+
+  def copyDO(
+    oType: String = this.oType,
+    name: String = this.name,
+    alternatives: List[String] = this.alternatives,
+    description: Option[String] = this.description,
+    example: Option[String] = this.example,
+    default: Option[Type] = this.default,
+    required: Boolean = this.required,
+    direction: Direction = this.direction,
+    tag: Option[String] = this.tag,
+    multiple: Boolean = this.multiple,
+    multiple_sep: Char = this.multiple_sep
+  ): DataObject[Type]
 }

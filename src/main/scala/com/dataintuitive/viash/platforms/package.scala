@@ -33,6 +33,9 @@ package object platforms {
   implicit val encodeNativePlatform: Encoder.AsObject[NativePlatform] = deriveConfiguredEncoder
   implicit val decodeNativePlatform: Decoder[NativePlatform] = deriveConfiguredDecoder
 
+  implicit val encodeDebugPlatform: Encoder.AsObject[DebugPlatform] = deriveConfiguredEncoder
+  implicit val decodeDebugPlatform: Decoder[DebugPlatform] = deriveConfiguredDecoder
+
   implicit def encodePlatform[A <: Platform]: Encoder[A] = Encoder.instance {
     platform =>
       val typeJson = Json.obj("type" → Json.fromString(platform.oType))
@@ -40,6 +43,7 @@ package object platforms {
         case s: DockerPlatform => encodeDockerPlatform(s)
         case s: NextFlowPlatform => encodeNextFlowPlatform(s)
         case s: NativePlatform => encodeNativePlatform(s)
+        case s: DebugPlatform => encodeDebugPlatform(s)
       }
       objJson deepMerge typeJson
   }
@@ -50,6 +54,7 @@ package object platforms {
         cursor.downField("type").as[String] match {
           case Right("docker") => decodeDockerPlatform.widen
           case Right("native") => decodeNativePlatform.widen
+          case Right("debug") => decodeDebugPlatform.widen
           case Right("nextflow") => decodeNextFlowPlatform.widen
           case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised.")
           case Left(exception) => throw exception

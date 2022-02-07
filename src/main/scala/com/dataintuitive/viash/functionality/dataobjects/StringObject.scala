@@ -30,4 +30,20 @@ case class StringObject(
   multiple: Boolean = false,
   multiple_sep: Char = ':',
   oType: String = "string"
-) extends DataObject[String]
+) extends DataObject[String] {
+  def copyDO(
+    oType: String, 
+    name: String, 
+    alternatives: List[String],
+    description: Option[String],
+    example: Option[String],
+    default: Option[String],
+    required: Boolean,
+    direction: Direction,
+    tag: Option[String],
+    multiple: Boolean,
+    multiple_sep: Char
+  ): DataObject[String] = {
+    copy(name, alternatives, description, example, default, required, values, tag, direction, multiple, multiple_sep, oType)
+  }
+}
