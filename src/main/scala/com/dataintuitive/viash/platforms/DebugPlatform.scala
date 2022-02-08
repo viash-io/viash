@@ -26,15 +26,19 @@ import com.dataintuitive.viash.functionality.dataobjects._
 import java.nio.file.Path
 import java.nio.file.Paths
 
+// A platform solely for running `viash config inject` with.
 case class DebugPlatform(
   id: String = "debug",
   oType: String = "debug",
   path: String
 ) extends Platform {
   def modifyFunctionality(functionality: Functionality): Functionality = {
-    val executor = s"tee '$path' > /dev/null"
+    if (functionality.mainScript.isEmpty) {
+      throw new RuntimeException("Can't generate a debug platform when there is no script.")
+    }
 
-    val newFun = functionality.copy(
+    // disable required arguments and set defaults for all arguments
+    val fun0 = functionality.copy(
       arguments = functionality.arguments.map {
         case arg if arg.required && arg.default.isDefined => 
           arg.copyDO(required = false)
@@ -56,12 +60,12 @@ case class DebugPlatform(
     val bashScript = BashScript(
       dest = Some(functionality.name),
       text = Some(BashWrapper.wrapScript(
-        executor = executor,
-        functionality = newFun
+        executor = "bash",
+        functionality = fun0,
+        debugPath = Some(path)
       ))
     )
-
-    newFun.copy(
+    fun0.copy(
       resources = Some(List(bashScript))
     )
   }

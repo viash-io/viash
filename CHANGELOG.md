@@ -1,5 +1,9 @@
 # Viash 0.5.7
 
+## NEW FUNCTIONALITY
+
+* `viash config inject`: A command for inserting a Viash header into your script.
+
 ## BUG FIXES
 
 * `ViashTest`: Fix verbosity passthrough.
