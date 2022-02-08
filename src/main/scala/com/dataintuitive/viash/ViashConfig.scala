@@ -81,7 +81,6 @@ object ViashConfig {
 
     // create temporary directory
     val dir = IO.makeTemp("viash_inject_" + config.functionality.name)
-    println(s"Running injection in temporary directory: '$dir'")
 
     // build regular executable
     Files.createDirectories(dir)
