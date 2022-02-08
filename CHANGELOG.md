@@ -1,3 +1,9 @@
+# Viash 0.5.7
+
+## BUG FIXES
+
+* `ViashTest`: Fix verbosity passthrough.
+
 # Viash 0.5.6
 
 ## BREAKING CHANGES

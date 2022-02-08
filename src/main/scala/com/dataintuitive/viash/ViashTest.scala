@@ -138,9 +138,9 @@ object ViashTest {
         // run command, collect output
         try {
           val executable = Paths.get(buildDir.toString, fun.name).toString
-          logger(s"+$executable --verbosity $verbosityLevel ---setup $setupStrategy")
+          logger(s"+$executable ---verbosity $verbosityLevel ---setup $setupStrategy")
           val startTime = LocalDateTime.now
-          val exitValue = Process(Seq(executable, "--verbosity", verbosityLevel.toString, "---setup", setupStrategy), cwd = buildDir.toFile).!(ProcessLogger(logger, logger))
+          val exitValue = Process(Seq(executable, "---verbosity", verbosityLevel.toString, "---setup", setupStrategy), cwd = buildDir.toFile).!(ProcessLogger(logger, logger))
           val endTime = LocalDateTime.now
           val diffTime = ChronoUnit.SECONDS.between(startTime, endTime)
           printWriter.flush()
