@@ -91,8 +91,7 @@ object ViashConfig {
     val executable = Paths.get(dir.toString, fun.name).toString
     val exitValue = Process(Seq(executable), cwd = dir.toFile).!
 
-    println("LALALA " + debugPlatform.path)
-    println("Exit value: " + exitValue)
+    // TODO: remove tempdir
   }
 
 
