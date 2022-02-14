@@ -42,7 +42,7 @@ case class DebugPlatform(
       arguments = functionality.arguments.map {
         case arg if arg.required && arg.default.isDefined => 
           arg.copyDO(required = false)
-        case arg if arg.required && arg.example.isDefined => 
+        case arg if arg.default.isEmpty && arg.example.isDefined => 
           arg.copyDO(required = false, default = arg.example)
         case arg: BooleanObject if arg.default.isEmpty => 
           arg.copyDO(required = false, default = Some(true))
