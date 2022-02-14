@@ -76,13 +76,14 @@ case class BooleanObjectTrue(
     alternatives: List[String],
     description: Option[String],
     default: Option[Boolean],
+    example: Option[Boolean],
     required: Boolean,
     direction: Direction,
     tag: Option[String],
     multiple: Boolean,
     multiple_sep: Char
   ): DataObject[Boolean] = {
-    copy(name, alternatives, description, example, tag, direction, oType)
+    copy(name, alternatives, description, tag, direction, oType)
   }
 }
 
@@ -108,12 +109,13 @@ case class BooleanObjectFalse(
     alternatives: List[String],
     description: Option[String],
     default: Option[Boolean],
+    example: Option[Boolean],
     required: Boolean,
     direction: Direction,
     tag: Option[String],
     multiple: Boolean,
     multiple_sep: Char
   ): DataObject[Boolean] = {
-    copy(name, alternatives, description, example, tag, direction, oType)
+    copy(name, alternatives, description, tag, direction, oType)
   }
 }

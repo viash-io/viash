@@ -279,7 +279,7 @@ object BashWrapper {
       val namedProps = List(
         ("type", Some((param.oType :: unnamedProps).mkString(", "))),
         ("default", param.default.map(de => escapeViash(de.toString, quote = true, newline = true))),
-        ("example", param.example.map(ex => escapeViash(ex, quote = true, newline = true)))
+        ("example", param.example.map(ex => escapeViash(ex.toString, quote = true, newline = true)))
       ).flatMap { case (name, x) =>
         x.map("\n  echo \"        " + name + ": " + _ + "\"")
       }.mkString
