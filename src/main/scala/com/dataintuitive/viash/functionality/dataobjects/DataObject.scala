@@ -22,7 +22,7 @@ abstract class DataObject[Type] {
   val name: String
   val alternatives: List[String]
   val description: Option[String]
-  val example: Option[String]
+  val example: Option[Type]
   val default: Option[Type]
   val required: Boolean
   val direction: Direction
@@ -41,7 +41,7 @@ abstract class DataObject[Type] {
     name: String = this.name,
     alternatives: List[String] = this.alternatives,
     description: Option[String] = this.description,
-    example: Option[String] = this.example,
+    example: Option[Type] = this.example,
     default: Option[Type] = this.default,
     required: Boolean = this.required,
     direction: Direction = this.direction,
