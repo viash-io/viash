@@ -14,6 +14,8 @@
 
 * `ViashTest`: Fix verbosity passthrough.
 
+* `--help`: Fix repeated usage flag when printing the help.
+
 # Viash 0.5.6
 
 ## BREAKING CHANGES

@@ -300,9 +300,11 @@ object BashWrapper {
       escapedDesc.map("\n  echo \"" + _ + "\"").mkString
     }.getOrElse("")
 
-    val usageStr = functionality.usage.map{ desc =>
-      val escapedDesc = escapeViash(desc.stripLineEnd, quote = true).split("\n")
-      escapedDesc.map("\n  echo \"Usage: " + _ + "\"").mkString
+    val usageStr = functionality.usage.map{ usa =>
+      val escapedUsa = escapeViash(usa.stripLineEnd, quote = true).split("\n")
+      val eu2 = escapedUsa.map("\n  echo \"" + _ + "\"")
+      val eu3 = if (eu2.nonEmpty) Array("\n  echo -n \"Usage: \"") ++ eu2 ++ Array("\n  echo") else eu2
+      eu3.mkString
     }.getOrElse("")
 
     val preParse =
