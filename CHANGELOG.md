@@ -10,6 +10,9 @@
 
 * `viash config inject`: A command for inserting a Viash header into your script.
 
+* `DockerPlatform`: Added a requirement setup for installing through yum. Example:
+  `setup: [ [ type: yum, packages: wget ] ]`
+
 ## BUG FIXES
 
 * `ViashTest`: Fix verbosity passthrough.
