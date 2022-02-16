@@ -89,6 +89,12 @@ object Main {
           configMods = cli.config.view.config_mods()
         )
         ViashConfig.view(config)
+      case List(cli.config, cli.config.inject) =>
+        val config = Config.readOnly(
+          configPath = cli.config.inject.config(),
+          configMods = cli.config.inject.config_mods()
+        )
+        ViashConfig.inject(config)
       case _ =>
         Console.err.println("No subcommand was specified. See `viash --help` for more information.")
     }

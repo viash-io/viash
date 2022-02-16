@@ -22,7 +22,7 @@ abstract class DataObject[Type] {
   val name: String
   val alternatives: List[String]
   val description: Option[String]
-  val example: Option[String]
+  val example: Option[Type]
   val default: Option[Type]
   val required: Boolean
   val direction: Direction
@@ -35,4 +35,18 @@ abstract class DataObject[Type] {
 
   val par: String = "par_" + plainName
   val VIASH_PAR: String = "VIASH_PAR_" + plainName.toUpperCase()
+
+  def copyDO(
+    oType: String = this.oType,
+    name: String = this.name,
+    alternatives: List[String] = this.alternatives,
+    description: Option[String] = this.description,
+    example: Option[Type] = this.example,
+    default: Option[Type] = this.default,
+    required: Boolean = this.required,
+    direction: Direction = this.direction,
+    tag: Option[String] = this.tag,
+    multiple: Boolean = this.multiple,
+    multiple_sep: Char = this.multiple_sep
+  ): DataObject[Type]
 }

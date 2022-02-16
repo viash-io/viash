@@ -85,7 +85,8 @@ object BashWrapper {
   def wrapScript(
     executor: String,
     functionality: Functionality,
-    mods: BashWrapperMods = BashWrapperMods()
+    mods: BashWrapperMods = BashWrapperMods(),
+    debugPath: Option[String] = None
   ): String = {
     val mainResource = functionality.mainScript
 
@@ -109,23 +110,48 @@ object BashWrapper {
 
     // DETERMINE HOW TO RUN THE CODE
     val executionCode = mainResource match {
+      // if mainResource is empty (shouldn't be the case)
       case None => ""
+
+      // if mainResource is simply an executable
       case Some(e: Executable) => " " + e.path.get + " $VIASH_EXECUTABLE_ARGS"
-      case Some(res) =>
+
+      // if mainResource is a script
+      case Some(res) if debugPath.isEmpty =>
         val code = res.readWithPlaceholder(functionality).get
         val escapedCode = escapeViash(code)
+
+        // check whether the script can be written to a temprorary location or
+        // whether it needs to be a specific path
+        val scriptSetup = 
+          s"""
+            |tempscript=\\$$(mktemp "$$VIASH_TEMP/viash-run-${functionality.name}-XXXXXX")
+            |function clean_up {
+            |  rm "\\$$tempscript"
+            |}
+            |trap clean_up EXIT""".stripMargin
+        val scriptPath = "\\$tempscript"
+
         s"""
-           |set -e
-           |tempscript=\\$$(mktemp "$$VIASH_TEMP/viash-run-${functionality.name}-XXXXXX")
-           |function clean_up {
-           |  rm "\\$$tempscript"
-           |}
-           |trap clean_up EXIT
-           |cat > "\\$$tempscript" << 'VIASHMAIN'
-           |$escapedCode
-           |VIASHMAIN$cdToResources$resourcesToPath
-           |${res.meta.command("\\$tempscript")}
-           |""".stripMargin
+          |set -e$scriptSetup
+          |cat > "$scriptPath" << 'VIASHMAIN'
+          |$escapedCode
+          |VIASHMAIN$cdToResources$resourcesToPath
+          |${res.meta.command(scriptPath)}
+          |""".stripMargin
+
+      // if we want to debug our code
+      case Some(res) if debugPath.isDefined =>
+        val code = res.readWithPlaceholder(functionality).get
+        val escapedCode = escapeViash(code)
+        val deb = debugPath.get
+
+        s"""
+          |set -e
+          |cat > "${debugPath.get}" << 'VIASHMAIN'
+          |$escapedCode
+          |VIASHMAIN
+          |""".stripMargin
     }
 
     // generate bash document
@@ -253,7 +279,7 @@ object BashWrapper {
       val namedProps = List(
         ("type", Some((param.oType :: unnamedProps).mkString(", "))),
         ("default", param.default.map(de => escapeViash(de.toString, quote = true, newline = true))),
-        ("example", param.example.map(ex => escapeViash(ex, quote = true, newline = true)))
+        ("example", param.example.map(ex => escapeViash(ex.toString, quote = true, newline = true)))
       ).flatMap { case (name, x) =>
         x.map("\n  echo \"        " + name + ": " + _ + "\"")
       }.mkString
@@ -274,9 +300,11 @@ object BashWrapper {
       escapedDesc.map("\n  echo \"" + _ + "\"").mkString
     }.getOrElse("")
 
-    val usageStr = functionality.usage.map{ desc =>
-      val escapedDesc = escapeViash(desc.stripLineEnd, quote = true).split("\n")
-      escapedDesc.map("\n  echo \"Usage: " + _ + "\"").mkString
+    val usageStr = functionality.usage.map{ usa =>
+      val escapedUsa = escapeViash(usa.stripLineEnd, quote = true).split("\n")
+      val eu2 = escapedUsa.map("\n  echo \"" + _ + "\"")
+      val eu3 = if (eu2.nonEmpty) Array("\n  echo -n \"Usage: \"") ++ eu2 ++ Array("\n  echo") else eu2
+      eu3.mkString
     }.getOrElse("")
 
     val preParse =

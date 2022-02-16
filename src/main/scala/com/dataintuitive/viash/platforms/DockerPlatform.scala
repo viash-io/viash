@@ -48,6 +48,7 @@ case class DockerPlatform(
   setup: List[Requirements] = Nil,
   apk: Option[ApkRequirements] = None,
   apt: Option[AptRequirements] = None,
+  yum: Option[YumRequirements] = None,
   r: Option[RRequirements] = None,
   python: Option[PythonRequirements] = None,
   docker: Option[DockerRequirements] = None,
@@ -64,6 +65,7 @@ case class DockerPlatform(
       setup :::
         apk.toList :::
         apt.toList :::
+        yum.toList :::
         r.toList :::
         python.toList :::
         docker.toList

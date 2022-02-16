@@ -40,6 +40,9 @@ package object requirements {
   implicit val encodeAptRequirements: Encoder.AsObject[AptRequirements] = deriveConfiguredEncoder
   implicit val decodeAptRequirements: Decoder[AptRequirements] = deriveConfiguredDecoder
 
+  implicit val encodeYumRequirements: Encoder.AsObject[YumRequirements] = deriveConfiguredEncoder
+  implicit val decodeYumRequirements: Decoder[YumRequirements] = deriveConfiguredDecoder
+
   implicit val encodeApkRequirements: Encoder.AsObject[ApkRequirements] = deriveConfiguredEncoder
   implicit val decodeApkRequirements: Decoder[ApkRequirements] = deriveConfiguredDecoder
 
@@ -52,6 +55,7 @@ package object requirements {
       val objJson = reqs match {
         case s: ApkRequirements => encodeApkRequirements(s)
         case s: AptRequirements => encodeAptRequirements(s)
+        case s: YumRequirements => encodeYumRequirements(s)
         case s: DockerRequirements => encodeDockerRequirements(s)
         case s: PythonRequirements => encodePythonRequirements(s)
         case s: RRequirements => encodeRRequirements(s)
@@ -67,6 +71,7 @@ package object requirements {
         cursor.downField("type").as[String] match {
           case Right("apk") => decodeApkRequirements.widen
           case Right("apt") => decodeAptRequirements.widen
+          case Right("yum") => decodeYumRequirements.widen
           case Right("docker") => decodeDockerRequirements.widen
           case Right("python") => decodePythonRequirements.widen
           case Right("r") => decodeRRequirements.widen

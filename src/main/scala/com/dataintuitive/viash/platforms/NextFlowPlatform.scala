@@ -752,7 +752,7 @@ object NextFlowUtils {
         List(tupleToConfigTuple("dflt" -> Bash.escape(x.toString, backtick = false, quote = true, newline = true)))
       }.getOrElse(Nil) :::
       dataObject.example.map{x =>
-        List(tupleToConfigTuple("example" -> Bash.escape(x, backtick = false, quote = true, newline = true)))
+        List(tupleToConfigTuple("example" -> Bash.escape(x.toString, backtick = false, quote = true, newline = true)))
       }.getOrElse(Nil) :::
       dataObject.description.map{x =>
         List(tupleToConfigTuple("description" → Bash.escape(x, backtick = false, quote = true, newline = true)))

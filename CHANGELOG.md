@@ -1,3 +1,27 @@
+# Viash 0.5.7
+
+## BREAKING CHANGES
+
+* `viash config`: An argument's example now needs to be of the same type as the argument itself. 
+  For example, `[ type: integer, name: foo, example: 10 ]` is valid, whereas 
+  `[ type: integer, name: foo, example: bar ]` is not, as 'bar' cannot be cast to an integer.
+
+## NEW FUNCTIONALITY
+
+* `viash config inject`: A command for inserting a Viash header into your script.
+
+* `DockerPlatform`: Added a requirement setup for installing through yum. Example:
+  `setup: [ [ type: yum, packages: [ wget] ] ]`
+
+* `DockerPlatform`: Allow using copy and add instructions. Example:
+  `setup: [ [ type: docker, add: [ "http://foo.bar ." ]]]`
+
+## BUG FIXES
+
+* `ViashTest`: Fix verbosity passthrough.
+
+* `--help`: Fix repeated usage flag when printing the help.
+
 # Viash 0.5.6
 
 ## BREAKING CHANGES
