@@ -140,7 +140,7 @@ object BashWrapper {
           |${res.meta.command(scriptPath)}
           |""".stripMargin
 
-      // if mainResource is a script
+      // if we want to debug our code
       case Some(res) if debugPath.isDefined =>
         val code = res.readWithPlaceholder(functionality).get
         val escapedCode = escapeViash(code)
