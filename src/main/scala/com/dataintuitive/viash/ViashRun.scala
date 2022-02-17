@@ -36,7 +36,7 @@ object ViashRun {
       default = Some(dir)
     )
     val fun2 = fun.copy(
-      dummy_arguments = Some(List(dirArg))
+      dummy_arguments = List(dirArg)
     )
 
     // execute command, print everything to console

@@ -31,11 +31,11 @@ case class Functionality(
   description: Option[String] = None,
   usage: Option[String] = None,
   function_type: Option[FunctionType] = None,
-  tests: Option[List[Resource]] = None,
+  tests: List[Resource] = Nil,
   info: Map[String, String] = Map.empty[String, String],
 
   // dummy arguments are used for handling extra directory mounts in docker
-  dummy_arguments: Option[List[DataObject[_]]] = None,
+  dummy_arguments: List[DataObject[_]] = Nil,
 
   // setting this to true will change the working directory
   // to the resources directory when running the script
@@ -78,7 +78,7 @@ case class Functionality(
 
   def mainCode: Option[String] = mainScript.flatMap(_.read)
 
-  def argumentsAndDummies: List[DataObject[_]] = arguments ::: dummy_arguments.getOrElse(Nil)
+  def argumentsAndDummies: List[DataObject[_]] = arguments ::: dummy_arguments
 }
 
 object Functionality {

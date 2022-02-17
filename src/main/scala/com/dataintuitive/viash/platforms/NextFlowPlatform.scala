@@ -143,7 +143,7 @@ case class NextFlowPlatform(
     )
 
     // fetch test information
-    val tests = functionality.tests.getOrElse(Nil)
+    val tests = functionality.tests
     val testPaths = tests.map(test => test.path.getOrElse("/dev/null"))
     val testScript: List[String] = {
         tests.flatMap{

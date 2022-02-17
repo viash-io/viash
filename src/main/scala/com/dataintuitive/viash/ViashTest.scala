@@ -160,7 +160,7 @@ object ViashTest {
     val exe = NativePlatform().modifyFunctionality(fun).resources.head
 
     // fetch tests
-    val tests = fun.tests.getOrElse(Nil)
+    val tests = fun.tests
 
     val testResults = tests.filter(_.isInstanceOf[Script]).map {
       case test: Script if test.read.isEmpty =>
@@ -176,7 +176,7 @@ object ViashTest {
         // generate bash script for test
         val funOnlyTest = platform.modifyFunctionality(fun.copy(
           arguments = Nil,
-          dummy_arguments = Some(List(dirArg)),
+          dummy_arguments = List(dirArg),
           resources = List(test),
           set_wd_to_resources_dir = true,
           add_resources_to_path = true
