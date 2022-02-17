@@ -1,5 +1,18 @@
 # Viash 0.5.8
 
+## NEW FUNCTIONALITY
+
+* `DockerPlatform`: Allow defining a container's organisation. Example:
+  ```yaml
+    - type: docker
+      registry: ghcr.io
+      organisation: viash-io
+      image: viash
+      tag: "1.0"
+      target_registry: ghcr.io
+      target_organization: viash-io
+  ```
+
 ## BREAKING CHANGES
 
 * `viash test`: Do not automatically add the resources dir to the path when running a `viash test`.

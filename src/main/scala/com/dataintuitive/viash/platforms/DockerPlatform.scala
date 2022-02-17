@@ -29,9 +29,11 @@ import com.dataintuitive.viash.platforms.docker._
 case class DockerPlatform(
   id: String = "docker",
   image: String,
+  organization: Option[String],
   registry: Option[String] = None,
   tag: Option[Version] = None,
   target_image: Option[String] = None,
+  target_organization: Option[String] = None,
   target_registry: Option[String] = None,
   target_tag: Option[Version] = None,
   namespace_separator: String = "_",
@@ -142,12 +144,14 @@ case class DockerPlatform(
     val fromImageInfo = Docker.getImageInfo(
       name = Some(image),
       registry = registry,
+      organization = organization,
       tag = tag.map(_.toString),
       namespaceSeparator = namespace_separator
     )
     val targetImageInfo = Docker.getImageInfo(
       functionality = Some(functionality),
       registry = target_registry,
+      organization = target_organization,
       name = target_image,
       tag = target_tag.map(_.toString),
       namespaceSeparator = namespace_separator
@@ -218,7 +222,7 @@ case class DockerPlatform(
 
         (vdf, vdb)
       }
-
+      
     val preParse =
       s"""
          |${Bash.ViashDockerFuns}
