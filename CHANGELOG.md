@@ -1,3 +1,9 @@
+# Viash 0.5.8
+
+## BUG FIXES
+
+* `Functionality`: Fix `.functionality.add_resources_to_path` not being picked up correctly.
+
 # Viash 0.5.7
 
 ## BREAKING CHANGES

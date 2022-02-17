@@ -40,7 +40,7 @@ case class Functionality(
   // setting this to true will change the working directory
   // to the resources directory when running the script
   // this is used when running `viash test`.
-  set_wd_to_resources_dir: Option[Boolean] = None,
+  set_wd_to_resources_dir: Boolean = false,
 
   // whether or not to add the resource dir to the path
   add_resources_to_path: Boolean = false

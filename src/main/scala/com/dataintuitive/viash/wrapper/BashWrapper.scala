@@ -92,7 +92,7 @@ object BashWrapper {
 
     // check whether the wd needs to be set to the resources dir
     val cdToResources =
-      if (functionality.set_wd_to_resources_dir.getOrElse(false)) {
+      if (functionality.set_wd_to_resources_dir) {
         s"""
           |cd "$$$var_resources_dir"""".stripMargin
       } else {
@@ -101,7 +101,7 @@ object BashWrapper {
 
     // check whether the resources dir needs to be added to the path
     val resourcesToPath =
-      if (functionality.set_wd_to_resources_dir.getOrElse(false)) {
+      if (functionality.add_resources_to_path) {
         s"""
           |PATH="$$$var_resources_dir:\\$$PATH"""".stripMargin
       } else {
