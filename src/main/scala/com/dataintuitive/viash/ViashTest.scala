@@ -178,8 +178,7 @@ object ViashTest {
           arguments = Nil,
           dummy_arguments = List(dirArg),
           resources = List(test),
-          set_wd_to_resources_dir = true,
-          add_resources_to_path = true
+          set_wd_to_resources_dir = true
         ))
         val testBash = BashScript(
           dest = Some(test.filename),

@@ -1,5 +1,9 @@
 # Viash 0.5.8
 
+## BREAKING CHANGES
+
+* `viash test`: Do not automatically add the resources dir to the path when running a `viash test`.
+
 ## BUG FIXES
 
 * `Functionality`: Fix `.functionality.add_resources_to_path` not being picked up correctly.
