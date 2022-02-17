@@ -49,7 +49,7 @@ object Config {
     val fun = config.functionality
 
     // make paths absolute
-    val resources = fun.resources.getOrElse(Nil).map(_.copyWithAbsolutePath(uri))
+    val resources = fun.resources.map(_.copyWithAbsolutePath(uri))
 
     // make absolute otherwise viash test can't find resources
     val tests = fun.tests.getOrElse(Nil).map(_.copyWithAbsolutePath(uri))
@@ -57,7 +57,7 @@ object Config {
     // copy resources with updated paths into config and return
     config.copy(
       functionality = fun.copy(
-        resources = Some(resources),
+        resources = resources,
         tests = Some(tests)
       )
     )
@@ -208,7 +208,7 @@ object Config {
       // apply platform modification to functionality
       functionality = modifyFunFun(conf1.functionality.copy(
         // add script (if available) to resources
-        resources = Some(optScript.toList ::: conf1.functionality.resources.getOrElse(Nil))
+        resources = optScript.toList ::: conf1.functionality.resources
       )),
       // insert selected platform
       platform = Some(pl)

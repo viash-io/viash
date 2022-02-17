@@ -55,7 +55,7 @@ object ViashBuild {
     val exec_path = fun.mainScript.map(scr => Paths.get(output, scr.resourcePath).toString)
 
     // get resources
-    val placeholderMap = config.functionality.resources.getOrElse(Nil).filter(_.text.isDefined).map{ res =>
+    val placeholderMap = config.functionality.resources.filter(_.text.isDefined).map{ res =>
       (res, "VIASH_PLACEHOLDER~" + res.filename + "~")
     }.toMap
 
@@ -67,14 +67,14 @@ object ViashBuild {
     val toWriteConfig = config.copy(
       functionality = config.functionality.copy(
         namespace = namespace,
-        resources = Some(config.functionality.resources.getOrElse(Nil).map{ res =>
+        resources = config.functionality.resources.map{ res =>
           if (res.text.isDefined) {
             val textVal = Some(placeholderMap(res))
             res.copyResource(text = textVal, parent = None)
           } else {
             res.copyResource(parent = None)
           }
-        }),
+        },
         tests = Some(config.functionality.tests.getOrElse(Nil).map { res =>
           res.copyResource(parent = None)
         })
@@ -108,9 +108,9 @@ object ViashBuild {
 
     // write resources to output directory
     if (writeMeta) {
-      IO.writeResources(configYaml :: fun.resources.getOrElse(Nil), dir)
+      IO.writeResources(configYaml :: fun.resources, dir)
     } else {
-      IO.writeResources(fun.resources.getOrElse(Nil), dir)
+      IO.writeResources(fun.resources, dir)
     }
 
     // if '--setup <strat>' was passed, run './executable ---setup <strat>'

@@ -43,7 +43,7 @@ object ViashRun {
     var code = -1
     try {
       // write executable and resources to temporary directory
-      IO.writeResources(fun2.resources.getOrElse(Nil), dir)
+      IO.writeResources(fun2.resources, dir)
 
       // determine command
       val cmd =

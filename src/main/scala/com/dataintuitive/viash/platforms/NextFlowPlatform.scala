@@ -670,12 +670,12 @@ case class NextFlowPlatform(
       case None => Nil
       case Some(_: Executable) => Nil
       case Some(_: Script) =>
-        nativePlatform.modifyFunctionality(functionality).resources.getOrElse(Nil)
+        nativePlatform.modifyFunctionality(functionality).resources
     }
 
     functionality.copy(
       resources =
-        Some(additionalResources ::: List(setup_nextflowconfig, setup_main))
+        additionalResources ::: List(setup_nextflowconfig, setup_main)
     )
   }
 }

@@ -27,7 +27,7 @@ case class Functionality(
   version: Option[Version] = None,
   authors: List[Author] = Nil,
   arguments: List[DataObject[_]] = Nil,
-  resources: Option[List[Resource]] = None,
+  resources: List[Resource] = Nil,
   description: Option[String] = None,
   usage: Option[String] = None,
   function_type: Option[FunctionType] = None,
@@ -71,7 +71,7 @@ case class Functionality(
   }
 
   def mainScript: Option[Script] =
-    resources.getOrElse(Nil).head match {
+    resources.head match {
       case s: Script => Some(s)
       case _ => None
     }

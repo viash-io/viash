@@ -68,7 +68,7 @@ case class DebugPlatform(
       ))
     )
     fun0.copy(
-      resources = Some(List(bashScript))
+      resources = List(bashScript)
     )
   }
 }

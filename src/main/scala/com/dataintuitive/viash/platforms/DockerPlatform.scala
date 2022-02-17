@@ -130,7 +130,7 @@ case class DockerPlatform(
     )
 
     fun2.copy(
-      resources = Some(bashScript :: fun2.resources.getOrElse(Nil).tail)
+      resources = bashScript :: fun2.resources.tail
     )
   }
 
