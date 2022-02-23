@@ -19,6 +19,7 @@ package com.dataintuitive.viash.platforms.requirements
 
 case class DockerRequirements(
   resources: List[String] = Nil,
+  label: List[String] = Nil,
   add: List[String] = Nil,
   copy: List[String] = Nil,
   run: List[String] = Nil,
@@ -32,6 +33,13 @@ case class DockerRequirements(
     val args =
       if (build_args.nonEmpty) {
         build_args.map(s => "ARG " + s.takeWhile(_ != '='))
+      } else {
+        Nil
+      }
+
+    val labels =
+      if (label.nonEmpty) {
+        label.map(c => s"""LABEL $c""")
       } else {
         Nil
       }
@@ -71,7 +79,7 @@ case class DockerRequirements(
         Nil
       }
 
-    val li = args ::: envs ::: copys ::: resourcess ::: adds ::: runCommands
+    val li = args ::: labels ::: envs ::: copys ::: resourcess ::: adds ::: runCommands
 
     if (li.isEmpty) None else Some(li.mkString("\n"))
   }

@@ -13,6 +13,9 @@
       target_organization: viash-io
   ```
 
+* `DockerRequirement`: Add label instructions. Example:
+  `setup: [ [ type: docker, label: [ "foo BAR" ]]]`
+
 ## BREAKING CHANGES
 
 * `viash test`: Do not automatically add the resources dir to the path when running a `viash test`.
