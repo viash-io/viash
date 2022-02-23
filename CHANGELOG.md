@@ -24,6 +24,13 @@
 
 * `Functionality`: Fix `.functionality.add_resources_to_path` not being picked up correctly.
 
+* `AptRequirement`: Set `DEBIAN_FRONTEND=noninteractive` by default. This can be turned off by specifying:
+  ```yaml
+    - type: apt
+      packages: [ foo, bar ]
+      interactive: true
+  ```
+
 # Viash 0.5.7
 
 ## BREAKING CHANGES
@@ -36,10 +43,10 @@
 
 * `viash config inject`: A command for inserting a Viash header into your script.
 
-* `DockerPlatform`: Added a requirement setup for installing through yum. Example:
+* `YumRequirement`: Added a requirement setup for installing through yum. Example:
   `setup: [ [ type: yum, packages: [ wget] ] ]`
 
-* `DockerPlatform`: Allow using copy and add instructions. Example:
+* `DockerRequirement`: Allow using copy and add instructions. Example:
   `setup: [ [ type: docker, add: [ "http://foo.bar ." ]]]`
 
 ## BUG FIXES

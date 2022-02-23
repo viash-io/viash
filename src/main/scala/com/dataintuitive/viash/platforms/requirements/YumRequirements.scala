@@ -38,6 +38,7 @@ case class YumRequirements(
 
     val clean = List("yum clean all", "rm -rf /var/cache/yum")
 
-    update :: installPackages ::: clean
+    //update :: 
+    installPackages ::: clean
   }
 }
