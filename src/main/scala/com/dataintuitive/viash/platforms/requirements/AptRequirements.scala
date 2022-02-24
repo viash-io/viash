@@ -17,8 +17,10 @@
 
 package com.dataintuitive.viash.platforms.requirements
 
+import com.dataintuitive.viash.helpers.Circe._
+
 case class AptRequirements(
-  packages: List[String] = Nil,
+  packages: OneOrMore[String] = Nil,
   interactive: Boolean = false,
   oType: String = "apt"
 ) extends Requirements {
@@ -28,7 +30,7 @@ case class AptRequirements(
 
     val interactiveEnv = if (!interactive) "DEBIAN_FRONTEND=noninteractive " else ""
     val installPackages =
-      packages match {
+      packages.toList match {
         case Nil => Nil
         case packs =>
           List(packs.mkString(

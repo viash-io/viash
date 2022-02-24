@@ -21,10 +21,9 @@ import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import cats.syntax.functor._ // for .widen
+import com.dataintuitive.viash.helpers.Circe._
 
 package object requirements {
-  implicit val customConfig: Configuration = Configuration.default.withDefaults
-
   implicit val encodeRRequirements: Encoder.AsObject[RRequirements] = deriveConfiguredEncoder
   implicit val decodeRRequirements: Decoder[RRequirements] = deriveConfiguredDecoder
 

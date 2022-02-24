@@ -22,6 +22,7 @@ import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.config.Version
 import com.dataintuitive.viash.helpers.{Docker, Bash}
+import com.dataintuitive.viash.helpers.Circe._
 
 /**
  * / * Platform class for generating NextFlow (DSL2) modules.
@@ -39,7 +40,7 @@ case class NextFlowPlatform(
   separate_multiple_outputs: Boolean = true,
   path: Option[String] = None,
   label: Option[String] = None,
-  labels: List[String] = Nil,
+  labels: OneOrMore[String] = Nil,
   stageInMode: Option[String] = None,
   directive_cpus: Option[Integer] = None,
   directive_max_forks: Option[Integer] = None,

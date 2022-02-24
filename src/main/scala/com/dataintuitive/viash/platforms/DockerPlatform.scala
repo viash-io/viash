@@ -25,6 +25,7 @@ import com.dataintuitive.viash.helpers.{Bash, Docker}
 import com.dataintuitive.viash.config.Version
 import com.dataintuitive.viash.wrapper.{BashWrapper, BashWrapperMods}
 import com.dataintuitive.viash.platforms.docker._
+import com.dataintuitive.viash.helpers.Circe._
 
 case class DockerPlatform(
   id: String = "docker",
@@ -39,11 +40,11 @@ case class DockerPlatform(
   namespace_separator: String = "_",
   resolve_volume: DockerResolveVolume = Automatic,
   chown: Boolean = true,
-  port: Option[List[String]] = None,
+  port: OneOrMore[String] = Nil,
   workdir: Option[String] = None,
   setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,
   privileged: Boolean = false,
-  run_args: Option[List[String]] = None,
+  run_args: OneOrMore[String] = Nil,
   oType: String = "docker",
 
   // setup variables
@@ -85,8 +86,8 @@ case class DockerPlatform(
   def modifyFunctionality(functionality: Functionality): Functionality = {
     // collect docker args
     val dockerArgs = "-i --rm" +
-      port.getOrElse(Nil).map(" -p " + _).mkString +
-      run_args.getOrElse(Nil).map(" " + _).mkString +
+      port.map(" -p " + _).mkString +
+      run_args.map(" " + _).mkString +
       { if (privileged) " --privileged" else "" }
 
     // create setup

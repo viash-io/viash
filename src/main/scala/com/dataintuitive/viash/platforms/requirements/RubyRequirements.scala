@@ -17,12 +17,14 @@
 
 package com.dataintuitive.viash.platforms.requirements
 
+import com.dataintuitive.viash.helpers.Circe._
+
 case class RubyRequirements(
-  packages: List[String] = Nil,
+  packages: OneOrMore[String] = Nil,
   oType: String = "ruby"
 ) extends Requirements {
 private val installGemCommands =
-    packages match {
+    packages.toList match {
       case Nil => Nil
       case packs =>
         List(packs.mkString(

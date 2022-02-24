@@ -17,18 +17,20 @@
 
 package com.dataintuitive.viash.platforms.requirements
 
+import com.dataintuitive.viash.helpers.Circe._
+
 case class PythonRequirements(
   user: Boolean = false,
-  packages: List[String] = Nil,
-  pip: List[String] = Nil,
-  git: List[String] = Nil,
-  github: List[String] = Nil,
-  gitlab: List[String] = Nil,
-  mercurial: List[String] = Nil,
-  svn: List[String] = Nil,
-  bazaar: List[String] = Nil,
-  url: List[String] = Nil,
-  script: List[String] = Nil,
+  packages: OneOrMore[String] = Nil,
+  pip: OneOrMore[String] = Nil,
+  git: OneOrMore[String] = Nil,
+  github: OneOrMore[String] = Nil,
+  gitlab: OneOrMore[String] = Nil,
+  mercurial: OneOrMore[String] = Nil,
+  svn: OneOrMore[String] = Nil,
+  bazaar: OneOrMore[String] = Nil,
+  url: OneOrMore[String] = Nil,
+  script: OneOrMore[String] = Nil,
   oType: String = "python"
 ) extends Requirements {
   assert(script.forall(!_.contains("'")))

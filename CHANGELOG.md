@@ -16,9 +16,26 @@
 * `DockerRequirement`: Add label instructions. Example:
   `setup: [ [ type: docker, label: [ "foo BAR" ]]]`
 
+* `Config`: In specific places, allow parsing a value as a list of values. Fixes #97.
+  This mostly applies to list values in `DockerPlatform`, but also to author roles.
+  Examples:
+  ```yaml
+  functionality:
+    name: foo
+    authors:
+      - name: Alice
+        role: author # can be a string or a list
+  platforms:
+    - type: docker
+      port: "80:80" # can be a string or a list
+      setup:
+        - type: r
+          packages: incgraph # can be a string or a list
+  ```
+  
 ## BREAKING CHANGES
 
-* `viash test`: Do not automatically add the resources dir to the path when running a `viash test`.
+* `viash test`: This command doesn't automatically add the resources dir to the path.
 
 ## BUG FIXES
 

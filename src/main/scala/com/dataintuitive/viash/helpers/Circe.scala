@@ -29,8 +29,6 @@ object Circe {
       }
     )
 
-      /*.withSnakeCaseMemberNames*/
-
   // encoder and decoder for Either
   implicit def encodeEither[A,B](implicit ea: Encoder[A], eb: Encoder[B]): Encoder[Either[A,B]] = {
     case Left(a) => ea(a)
@@ -40,6 +38,31 @@ object Circe {
   implicit def decodeEither[A,B](implicit a: Decoder[A], b: Decoder[B]): Decoder[Either[A,B]] = {
     val l: Decoder[Either[A,B]] = a.map(Left.apply)
     val r: Decoder[Either[A,B]] = b.map(Right.apply)
+    l or r
+  }
+
+  // oneormore helper type
+  abstract class OneOrMore[+A] {
+    def toList: List[A]
+  }
+  case class One[A](element: A) extends OneOrMore[A] {
+    def toList = List(element)
+  }
+  case class More[A](list: List[A]) extends OneOrMore[A] {
+    def toList = list
+  }
+
+  implicit def oneOrMoreToList[A](oom: OneOrMore[A]): List[A] = oom.toList
+  implicit def listToOneOrMore[A](li: List[A]): OneOrMore[A] = More(li)
+
+  
+  implicit def encodeOneOrMore[A](implicit enc: Encoder[List[A]]): Encoder[OneOrMore[A]] = { 
+    oom: OneOrMore[A] => enc(oom.toList)
+  }
+
+  implicit def decodeOneOrMore[A](implicit da: Decoder[A], dl: Decoder[List[A]]): Decoder[OneOrMore[A]] = {
+    val l: Decoder[OneOrMore[A]] = da.map(One.apply)
+    val r: Decoder[OneOrMore[A]] = dl.map(More.apply)
     l or r
   }
 }

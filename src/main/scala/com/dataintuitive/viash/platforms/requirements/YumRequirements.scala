@@ -17,8 +17,10 @@
 
 package com.dataintuitive.viash.platforms.requirements
 
+import com.dataintuitive.viash.helpers.Circe._
+
 case class YumRequirements(
-  packages: List[String] = Nil,
+  packages: OneOrMore[String] = Nil,
   oType: String = "yum"
 ) extends Requirements {
   def installCommands: List[String] = {
@@ -26,7 +28,7 @@ case class YumRequirements(
       """yum -y upgrade"""
 
     val installPackages =
-      packages match {
+      packages.toList match {
         case Nil => Nil
         case packs =>
           List(packs.mkString(

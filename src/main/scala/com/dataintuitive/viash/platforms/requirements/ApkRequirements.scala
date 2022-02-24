@@ -17,12 +17,14 @@
 
 package com.dataintuitive.viash.platforms.requirements
 
+import com.dataintuitive.viash.helpers.Circe._
+
 case class ApkRequirements(
-  packages: List[String] = Nil,
+  packages: OneOrMore[String] = Nil,
   oType: String = "apk"
 ) extends Requirements {
   val installCommands: List[String] = {
-    packages match {
+    packages.toList match {
       case Nil => Nil
       case packs =>
         List(packs.mkString(

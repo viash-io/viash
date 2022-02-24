@@ -17,14 +17,16 @@
 
 package com.dataintuitive.viash.platforms.requirements
 
+import com.dataintuitive.viash.helpers.Circe._
+
 case class DockerRequirements(
-  resources: List[String] = Nil,
-  label: List[String] = Nil,
-  add: List[String] = Nil,
-  copy: List[String] = Nil,
-  run: List[String] = Nil,
-  build_args: List[String] = Nil,
-  env: List[String] = Nil,
+  resources: OneOrMore[String] = Nil,
+  label: OneOrMore[String] = Nil,
+  add: OneOrMore[String] = Nil,
+  copy: OneOrMore[String] = Nil,
+  run: OneOrMore[String] = Nil,
+  build_args: OneOrMore[String] = Nil,
+  env: OneOrMore[String] = Nil,
   oType: String = "docker"
 ) extends Requirements {
   def installCommands: List[String] = Nil
