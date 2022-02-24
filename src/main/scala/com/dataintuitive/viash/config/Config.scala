@@ -27,6 +27,8 @@ import io.circe.yaml.parser
 import com.dataintuitive.viash.functionality.resources._
 
 import java.io.File
+import io.circe.DecodingFailure
+import io.circe.ParsingFailure
 
 case class Config(
   functionality: Functionality,
@@ -42,9 +44,14 @@ object Config {
   }
 
   def parse(yamlText: String, uri: URI): Config = {
+    def errorHandler[C](e: Exception): C = {
+      println(s"Error parsing '${uri}'. Details:")
+      throw e
+    }
+
     val config = parser.parse(yamlText)
-      .fold(throw _, _.as[Config])
-      .fold(throw _, identity)
+      .fold(errorHandler, _.as[Config])
+      .fold(errorHandler, identity)
 
     val fun = config.functionality
 
@@ -141,6 +148,7 @@ object Config {
 
     // read config
     val configUri = IO.uri(configPath)
+    
     val conf0 = parse(yaml, configUri)
 
     // parse and apply commands

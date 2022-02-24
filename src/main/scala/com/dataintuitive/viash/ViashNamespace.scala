@@ -150,6 +150,10 @@ object ViashNamespace {
         // return output
         (conf, ManyTestOutput(setupRes, testRes))
       }.toList
+    } catch {
+      case e: Exception => 
+        println(e.getMessage())
+        Nil
     } finally {
       tsvWriter.foreach(_.close())
     }
