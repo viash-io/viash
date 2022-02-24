@@ -65,5 +65,5 @@ platforms:
     image: "bash:3.2"
     target_image: "viash_test_bash"
     apt:
-      package:
+      packages:
         - get_the_machine_that_goes_ping
