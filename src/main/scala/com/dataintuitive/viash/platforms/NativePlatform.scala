@@ -44,7 +44,7 @@ case class NativePlatform(
     )
 
     functionality.copy(
-      resources = Some(bashScript :: functionality.resources.getOrElse(Nil).tail)
+      resources = bashScript :: functionality.resources.tail
     )
   }
 }

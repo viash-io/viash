@@ -17,13 +17,16 @@
 
 package com.dataintuitive.viash.platforms.requirements
 
+import com.dataintuitive.viash.helpers.Circe._
+
 case class DockerRequirements(
-  resources: List[String] = Nil,
-  add: List[String] = Nil,
-  copy: List[String] = Nil,
-  run: List[String] = Nil,
-  build_args: List[String] = Nil,
-  env: List[String] = Nil,
+  resources: OneOrMore[String] = Nil,
+  label: OneOrMore[String] = Nil,
+  add: OneOrMore[String] = Nil,
+  copy: OneOrMore[String] = Nil,
+  run: OneOrMore[String] = Nil,
+  build_args: OneOrMore[String] = Nil,
+  env: OneOrMore[String] = Nil,
   oType: String = "docker"
 ) extends Requirements {
   def installCommands: List[String] = Nil
@@ -32,6 +35,13 @@ case class DockerRequirements(
     val args =
       if (build_args.nonEmpty) {
         build_args.map(s => "ARG " + s.takeWhile(_ != '='))
+      } else {
+        Nil
+      }
+
+    val labels =
+      if (label.nonEmpty) {
+        label.map(c => s"""LABEL $c""")
       } else {
         Nil
       }
@@ -71,7 +81,7 @@ case class DockerRequirements(
         Nil
       }
 
-    val li = args ::: envs ::: copys ::: resourcess ::: adds ::: runCommands
+    val li = args ::: labels ::: envs ::: copys ::: resourcess ::: adds ::: runCommands
 
     if (li.isEmpty) None else Some(li.mkString("\n"))
   }

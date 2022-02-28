@@ -36,14 +36,14 @@ object ViashRun {
       default = Some(dir)
     )
     val fun2 = fun.copy(
-      dummy_arguments = Some(List(dirArg))
+      dummy_arguments = List(dirArg)
     )
 
     // execute command, print everything to console
     var code = -1
     try {
       // write executable and resources to temporary directory
-      IO.writeResources(fun2.resources.getOrElse(Nil), dir)
+      IO.writeResources(fun2.resources, dir)
 
       // determine command
       val cmd =

@@ -27,20 +27,20 @@ case class Functionality(
   version: Option[Version] = None,
   authors: List[Author] = Nil,
   arguments: List[DataObject[_]] = Nil,
-  resources: Option[List[Resource]] = None,
+  resources: List[Resource] = Nil,
   description: Option[String] = None,
   usage: Option[String] = None,
   function_type: Option[FunctionType] = None,
-  tests: Option[List[Resource]] = None,
+  tests: List[Resource] = Nil,
   info: Map[String, String] = Map.empty[String, String],
 
   // dummy arguments are used for handling extra directory mounts in docker
-  dummy_arguments: Option[List[DataObject[_]]] = None,
+  dummy_arguments: List[DataObject[_]] = Nil,
 
   // setting this to true will change the working directory
   // to the resources directory when running the script
   // this is used when running `viash test`.
-  set_wd_to_resources_dir: Option[Boolean] = None,
+  set_wd_to_resources_dir: Boolean = false,
 
   // whether or not to add the resource dir to the path
   add_resources_to_path: Boolean = false
@@ -71,14 +71,14 @@ case class Functionality(
   }
 
   def mainScript: Option[Script] =
-    resources.getOrElse(Nil).head match {
+    resources.head match {
       case s: Script => Some(s)
       case _ => None
     }
 
   def mainCode: Option[String] = mainScript.flatMap(_.read)
 
-  def argumentsAndDummies: List[DataObject[_]] = arguments ::: dummy_arguments.getOrElse(Nil)
+  def argumentsAndDummies: List[DataObject[_]] = arguments ::: dummy_arguments
 }
 
 object Functionality {

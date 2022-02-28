@@ -17,16 +17,18 @@
 
 package com.dataintuitive.viash.platforms.requirements
 
+import com.dataintuitive.viash.helpers.Circe._
+
 case class JavaScriptRequirements(
-  packages: List[String] = Nil,
-  npm: List[String] = Nil,
-  git: List[String] = Nil,
-  github: List[String] = Nil,
-  url: List[String] = Nil,
+  packages: OneOrMore[String] = Nil,
+  npm: OneOrMore[String] = Nil,
+  git: OneOrMore[String] = Nil,
+  github: OneOrMore[String] = Nil,
+  url: OneOrMore[String] = Nil,
   oType: String = "javascript"
 ) extends Requirements {
   private def generateCommands(prefix: String, values: List[String]) = {
-    values match {
+    values.toList match {
       case Nil => Nil
       case packs =>
         List(packs.mkString(

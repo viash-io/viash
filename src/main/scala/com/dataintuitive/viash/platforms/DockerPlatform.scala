@@ -25,23 +25,26 @@ import com.dataintuitive.viash.helpers.{Bash, Docker}
 import com.dataintuitive.viash.config.Version
 import com.dataintuitive.viash.wrapper.{BashWrapper, BashWrapperMods}
 import com.dataintuitive.viash.platforms.docker._
+import com.dataintuitive.viash.helpers.Circe._
 
 case class DockerPlatform(
   id: String = "docker",
   image: String,
+  organization: Option[String],
   registry: Option[String] = None,
   tag: Option[Version] = None,
   target_image: Option[String] = None,
+  target_organization: Option[String] = None,
   target_registry: Option[String] = None,
   target_tag: Option[Version] = None,
   namespace_separator: String = "_",
   resolve_volume: DockerResolveVolume = Automatic,
   chown: Boolean = true,
-  port: Option[List[String]] = None,
+  port: OneOrMore[String] = Nil,
   workdir: Option[String] = None,
   setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,
   privileged: Boolean = false,
-  run_args: Option[List[String]] = None,
+  run_args: OneOrMore[String] = Nil,
   oType: String = "docker",
 
   // setup variables
@@ -83,8 +86,8 @@ case class DockerPlatform(
   def modifyFunctionality(functionality: Functionality): Functionality = {
     // collect docker args
     val dockerArgs = "-i --rm" +
-      port.getOrElse(Nil).map(" -p " + _).mkString +
-      run_args.getOrElse(Nil).map(" " + _).mkString +
+      port.map(" -p " + _).mkString +
+      run_args.map(" " + _).mkString +
       { if (privileged) " --privileged" else "" }
 
     // create setup
@@ -130,7 +133,7 @@ case class DockerPlatform(
     )
 
     fun2.copy(
-      resources = Some(bashScript :: fun2.resources.getOrElse(Nil).tail)
+      resources = bashScript :: fun2.resources.tail
     )
   }
 
@@ -142,12 +145,14 @@ case class DockerPlatform(
     val fromImageInfo = Docker.getImageInfo(
       name = Some(image),
       registry = registry,
+      organization = organization,
       tag = tag.map(_.toString),
       namespaceSeparator = namespace_separator
     )
     val targetImageInfo = Docker.getImageInfo(
       functionality = Some(functionality),
       registry = target_registry,
+      organization = target_organization,
       name = target_image,
       tag = target_tag.map(_.toString),
       namespaceSeparator = namespace_separator
@@ -218,7 +223,7 @@ case class DockerPlatform(
 
         (vdf, vdb)
       }
-
+      
     val preParse =
       s"""
          |${Bash.ViashDockerFuns}

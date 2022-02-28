@@ -17,10 +17,12 @@
 
 package com.dataintuitive.viash.functionality
 
+import com.dataintuitive.viash.helpers.Circe._
+
 case class Author(
   name: String,
   email: Option[String] = None,
-  roles: List[String] = Nil,
+  roles: OneOrMore[String] = Nil,
   props: Map[String, String] = Map.empty[String, String]
 ) {
   override def toString: String = {

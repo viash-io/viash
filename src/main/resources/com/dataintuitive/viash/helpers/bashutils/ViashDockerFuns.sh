@@ -1,4 +1,5 @@
 ######## Helper functions for setting up Docker images for viash ########
+# expects: ViashDockerBuild
 
 # ViashDockerInstallationCheck: check whether Docker is installed correctly
 #
@@ -77,6 +78,34 @@ function ViashDockerPull {
   fi
 }
 
+# ViashDockerPush: push a Docker image
+#
+# $1                  : image identifier with format `[registry/]image[:tag]`
+# exit code $?        : whether or not the image was found
+# examples:
+#   ViashDockerPush python:latest
+#   echo $?                                     # returns '0'
+#   ViashDockerPush sdaizudceahifu
+#   echo $?                                     # returns '1'
+function ViashDockerPush {
+  ViashNotice "Pushing image to '$1'"
+  save=$-; set +e
+  if [ $VIASH_VERBOSITY -ge $VIASH_LOGCODE_INFO ]; then
+    docker push $1
+    out=$?
+  else
+    docker push $1 2> /dev/null > /dev/null
+    out=$?
+  fi
+  [[ $save =~ e ]] && set -e
+  if [ $out -eq 0 ]; then
+    ViashNotice "Container '$VSHD_ID' push succeeded."
+  else
+    ViashError "Container '$VSHD_ID' push errored. You might not be logged in or have the necessary permissions."
+  fi
+  return $out
+}
+
 # ViashDockerPullElseBuild: pull a Docker image, else build it
 #
 # $1                  : image identifier with format `[registry/]image[:tag]`
@@ -135,16 +164,7 @@ function ViashDockerSetup {
       exit 1
     fi
   elif [ "$VSHD_STRAT" == "push" -o "$VSHD_STRAT" == "forcepush" -o "$VSHD_STRAT" == "alwayspush" ]; then
-    save=$-; set +e
-    docker push $VSHD_ID
-    outPush=$?
-    [[ $save =~ e ]] && set -e
-    if [ $outPush -eq 0 ]; then
-      ViashNotice "Container '$VSHD_ID' push succeeded."
-    else
-      ViashError "Container '$VSHD_ID' push errored."
-      exit 1
-    fi
+    ViashDockerPush "$VSHD_ID"
   elif [ "$VSHD_STRAT" == "pushifnotpresent" -o "$VSHD_STRAT" == "gentlepush" -o "$VSHD_STRAT" == "maybepush" ]; then
     save=$-; set +e
     ViashDockerRemoteTagCheck $VSHD_ID
@@ -154,16 +174,7 @@ function ViashDockerSetup {
       ViashNotice "Container '$VSHD_ID' exists, doing nothing."
     else
       ViashNotice "Container '$VSHD_ID' does not yet exist."
-      save=$-; set +e
-      docker push $1 > /dev/null 2> /dev/null
-      outPush=$?
-      [[ $save =~ e ]] && set -e
-      if [ $outPush -eq 0 ]; then
-        ViashNotice "Container '$VSHD_ID' push succeeded."
-      else
-      ViashError "Container '$VSHD_ID' push errored."
-        exit 1
-      fi
+      ViashDockerPush "$VSHD_ID"
     fi
   elif [ "$VSHD_STRAT" == "donothing" -o "$VSHD_STRAT" == "meh" ]; then
     ViashNotice "Skipping setup."

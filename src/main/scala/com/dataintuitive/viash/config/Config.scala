@@ -27,6 +27,8 @@ import io.circe.yaml.parser
 import com.dataintuitive.viash.functionality.resources._
 
 import java.io.File
+import io.circe.DecodingFailure
+import io.circe.ParsingFailure
 
 case class Config(
   functionality: Functionality,
@@ -42,23 +44,28 @@ object Config {
   }
 
   def parse(yamlText: String, uri: URI): Config = {
+    def errorHandler[C](e: Exception): C = {
+      System.err.println(s"Error parsing '${uri}'. Details:")
+      throw e
+    }
+
     val config = parser.parse(yamlText)
-      .fold(throw _, _.as[Config])
-      .fold(throw _, identity)
+      .fold(errorHandler, _.as[Config])
+      .fold(errorHandler, identity)
 
     val fun = config.functionality
 
     // make paths absolute
-    val resources = fun.resources.getOrElse(Nil).map(_.copyWithAbsolutePath(uri))
+    val resources = fun.resources.map(_.copyWithAbsolutePath(uri))
 
     // make absolute otherwise viash test can't find resources
-    val tests = fun.tests.getOrElse(Nil).map(_.copyWithAbsolutePath(uri))
+    val tests = fun.tests.map(_.copyWithAbsolutePath(uri))
 
     // copy resources with updated paths into config and return
     config.copy(
       functionality = fun.copy(
-        resources = Some(resources),
-        tests = Some(tests)
+        resources = resources,
+        tests = tests
       )
     )
   }
@@ -141,6 +148,7 @@ object Config {
 
     // read config
     val configUri = IO.uri(configPath)
+    
     val conf0 = parse(yaml, configUri)
 
     // parse and apply commands
@@ -208,7 +216,7 @@ object Config {
       // apply platform modification to functionality
       functionality = modifyFunFun(conf1.functionality.copy(
         // add script (if available) to resources
-        resources = Some(optScript.toList ::: conf1.functionality.resources.getOrElse(Nil))
+        resources = optScript.toList ::: conf1.functionality.resources
       )),
       // insert selected platform
       platform = Some(pl)

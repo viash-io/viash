@@ -30,7 +30,16 @@ object Main {
   val name: String = if (pkg.getImplementationTitle != null) pkg.getImplementationTitle else "viash"
   val version: String = if (pkg.getImplementationVersion != null) pkg.getImplementationVersion else "test"
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
+    try {
+      internalMain(args)
+    } catch {
+      case e: Exception => 
+        System.err.println(e.getMessage())
+        System.exit(1)
+    }
+  }
+  def internalMain(args: Array[String]): Unit = {
     val (viashArgs, runArgs) = {
         if (args.length > 0 && args(0) == "run") {
           args.span(_ != "--")

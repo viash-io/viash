@@ -1,3 +1,70 @@
+# Viash 0.5.8
+
+## NEW FUNCTIONALITY
+
+* `DockerPlatform`: Allow defining a container's organisation. Example:
+  ```yaml
+    - type: docker
+      registry: ghcr.io
+      organisation: viash-io
+      image: viash
+      tag: "1.0"
+      target_registry: ghcr.io
+      target_organization: viash-io
+  ```
+
+* `DockerRequirement`: Add label instructions. Example:
+  `setup: [ [ type: docker, label: [ "foo BAR" ]]]`
+
+* `Config`: In specific places, allow parsing a value as a list of values. Fixes #97.
+  This mostly applies to list values in `DockerPlatform`, but also to author roles.
+  Examples:
+  ```yaml
+  functionality:
+    name: foo
+    authors:
+      - name: Alice
+        role: author # can be a string or a list
+  platforms:
+    - type: docker
+      port: "80:80" # can be a string or a list
+      setup:
+        - type: r
+          packages: incgraph # can be a string or a list
+  ```
+  
+## BREAKING CHANGES
+
+* `viash test`: This command doesn't automatically add the resources dir to the path.
+
+## BUG FIXES
+
+* `Functionality`: Fix `.functionality.add_resources_to_path` not being picked up correctly.
+
+* `AptRequirement`: Set `DEBIAN_FRONTEND=noninteractive` by default. This can be turned off by specifying:
+  ```yaml
+    - type: apt
+      packages: [ foo, bar ]
+      interactive: true
+  ```
+
+## MINOR CHANGES
+
+* `Main`: Slightly better error messages when parsing of viash yaml file fails.
+  Before:
+  ```
+  $ viash test src/test/resources/testbash/config_failed_build.vsh.yaml 
+  Exception in thread "main" DecodingFailure(Unexpected field: [package]; valid fields: packages, interactive, type, List(DownField(apt), DownArray, DownField(platforms)))
+  ```
+  
+  After:
+  ```
+  $ viash test src/test/resources/testbash/config_failed_build.vsh.yaml 
+  Error parsing 'file:///path/to/viash/src/test/resources/testbash/config_failed_build.vsh.yaml'. Details:
+  Unexpected field: [package]; valid fields: packages, interactive, type: DownField(apt),DownArray,DownField(platforms)
+  ```
+
+
 # Viash 0.5.7
 
 ## BREAKING CHANGES
@@ -10,10 +77,10 @@
 
 * `viash config inject`: A command for inserting a Viash header into your script.
 
-* `DockerPlatform`: Added a requirement setup for installing through yum. Example:
+* `YumRequirement`: Added a requirement setup for installing through yum. Example:
   `setup: [ [ type: yum, packages: [ wget] ] ]`
 
-* `DockerPlatform`: Allow using copy and add instructions. Example:
+* `DockerRequirement`: Allow using copy and add instructions. Example:
   `setup: [ [ type: docker, add: [ "http://foo.bar ." ]]]`
 
 ## BUG FIXES

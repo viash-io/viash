@@ -17,17 +17,19 @@
 
 package com.dataintuitive.viash.platforms.requirements
 
+import com.dataintuitive.viash.helpers.Circe._
+
 case class RRequirements(
-  packages: List[String] = Nil,
-  cran: List[String] = Nil,
-  bioc: List[String] = Nil,
-  git: List[String] = Nil,
-  github: List[String] = Nil,
-  gitlab: List[String] = Nil,
-  bitbucket: List[String] = Nil,
-  svn: List[String] = Nil,
-  url: List[String] = Nil,
-  script: List[String] = Nil,
+  packages: OneOrMore[String] = Nil,
+  cran: OneOrMore[String] = Nil,
+  bioc: OneOrMore[String] = Nil,
+  git: OneOrMore[String] = Nil,
+  github: OneOrMore[String] = Nil,
+  gitlab: OneOrMore[String] = Nil,
+  bitbucket: OneOrMore[String] = Nil,
+  svn: OneOrMore[String] = Nil,
+  url: OneOrMore[String] = Nil,
+  script: OneOrMore[String] = Nil,
   bioc_force_install: Boolean = false,
   oType: String = "r"
 ) extends Requirements {assert(script.forall(!_.contains("'")))
@@ -40,7 +42,7 @@ case class RRequirements(
         Nil
       }
 
-    val remotePairs = List(
+    val remotePairs: List[(String, List[String])] = List(
       ("cran", cran ::: packages),
       ("git", git),
       ("github", github),

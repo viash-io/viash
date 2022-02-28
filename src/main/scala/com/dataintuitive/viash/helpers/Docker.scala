@@ -19,9 +19,15 @@ package com.dataintuitive.viash.helpers
 
 import com.dataintuitive.viash.functionality.Functionality
 
-case class DockerImageInfo(name: String, tag: String, registry: Option[String] = None) {
+case class DockerImageInfo(
+  name: String, 
+  tag: String, 
+  registry: Option[String] = None,
+  organization: Option[String] = None
+) {
   override def toString: String = {
     registry.map(_ + "/").getOrElse("") +
+    organization.map(_ + "/").getOrElse("") +
       name + ":" + tag
   }
 }
@@ -33,6 +39,7 @@ object Docker {
     functionality: Option[Functionality] = None,
     name: Option[String] = None,
     registry: Option[String] = None,
+    organization: Option[String] = None,
     tag: Option[String] = None,
     namespaceSeparator: String
   ): DockerImageInfo = {
@@ -66,7 +73,8 @@ object Docker {
     DockerImageInfo(
       name = actualName.get,
       tag = actualTag.get,
-      registry = registry
+      registry = registry,
+      organization = organization
     )
   }
 }

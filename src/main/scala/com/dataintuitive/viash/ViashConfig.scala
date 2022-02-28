@@ -84,7 +84,7 @@ object ViashConfig {
 
     // build regular executable
     Files.createDirectories(dir)
-    IO.writeResources(debugFun.resources.getOrElse(Nil), dir)
+    IO.writeResources(debugFun.resources, dir)
 
     // run command, collect output
     val executable = Paths.get(dir.toString, fun.name).toString
