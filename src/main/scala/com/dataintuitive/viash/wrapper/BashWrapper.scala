@@ -123,13 +123,18 @@ object BashWrapper {
 
         // check whether the script can be written to a temprorary location or
         // whether it needs to be a specific path
-        val scriptSetup = 
+        val scriptSetup =
           s"""
             |tempscript=\\$$(mktemp "$$VIASH_TEMP/viash-run-${functionality.name}-XXXXXX")
             |function clean_up {
             |  rm "\\$$tempscript"
             |}
-            |trap clean_up EXIT""".stripMargin
+            |function interrupt {
+            |  echo -e "\\nCTRL-C Pressed..."
+            |  exit 1
+            |}
+            |trap clean_up EXIT
+            |trap interrupt INT SIGINT""".stripMargin
         val scriptPath = "\\$tempscript"
 
         s"""
@@ -137,7 +142,8 @@ object BashWrapper {
           |cat > "$scriptPath" << 'VIASHMAIN'
           |$escapedCode
           |VIASHMAIN$cdToResources$resourcesToPath
-          |${res.meta.command(scriptPath)}
+          |${res.meta.command(scriptPath)} &
+          |wait
           |""".stripMargin
 
       // if we want to debug our code
