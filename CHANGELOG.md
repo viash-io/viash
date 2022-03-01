@@ -1,3 +1,9 @@
+# Viash 0.5.9
+
+## NEW FEATURES
+
+* A long running Viash component can be interrupted by pressing CTRL-C or by sending it a `INT` or `SIGINT` signal.
+
 # Viash 0.5.8
 
 ## NEW FUNCTIONALITY
