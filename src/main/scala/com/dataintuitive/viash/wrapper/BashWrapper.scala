@@ -143,7 +143,7 @@ object BashWrapper {
           |$escapedCode
           |VIASHMAIN$cdToResources$resourcesToPath
           |${res.meta.command(scriptPath)} &
-          |wait
+          |wait "\\$$!"
           |""".stripMargin
 
       // if we want to debug our code
