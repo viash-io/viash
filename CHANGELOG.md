@@ -48,6 +48,23 @@
       interactive: true
   ```
 
+## MINOR CHANGES
+
+* `Main`: Slightly better error messages when parsing of viash yaml file fails.
+  Before:
+  ```
+  $ viash test src/test/resources/testbash/config_failed_build.vsh.yaml 
+  Exception in thread "main" DecodingFailure(Unexpected field: [package]; valid fields: packages, interactive, type, List(DownField(apt), DownArray, DownField(platforms)))
+  ```
+  
+  After:
+  ```
+  $ viash test src/test/resources/testbash/config_failed_build.vsh.yaml 
+  Error parsing 'file:///path/to/viash/src/test/resources/testbash/config_failed_build.vsh.yaml'. Details:
+  Unexpected field: [package]; valid fields: packages, interactive, type: DownField(apt),DownArray,DownField(platforms)
+  ```
+
+
 # Viash 0.5.7
 
 ## BREAKING CHANGES
