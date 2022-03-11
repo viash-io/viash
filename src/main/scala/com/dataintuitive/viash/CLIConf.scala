@@ -231,6 +231,13 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |  viash config view config.vsh.yaml
            |
            |Arguments:""".stripMargin)
+      val format = choice(
+        name = "format",
+        short = 'f',
+        default = Some("yaml"),
+        choices = List("yaml", "json"),
+        descr = "Which output format to use."
+      )
     }
     val inject = new Subcommand("inject") with ViashCommand {
       banner(
@@ -322,6 +329,13 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |  viash ns list [-n nmspc] [-s src] [-p docker]
            |
            |Arguments:""".stripMargin)
+      val format = choice(
+        name = "format",
+        short = 'f',
+        default = Some("yaml"),
+        choices = List("yaml", "json"),
+        descr = "Which output format to use."
+      )
     }
 
     addSubcommand(build)

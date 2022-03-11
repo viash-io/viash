@@ -88,16 +88,17 @@ object Main {
           append = cli.namespace.test.append()
         )
       case List(cli.namespace, cli.namespace.list) =>
-        val configs = readConfigs(cli.namespace.test, modifyFun = false)
+        val configs = readConfigs(cli.namespace.list, modifyFun = false)
         ViashNamespace.list(
-          configs = configs
+          configs = configs,
+          cli.namespace.list.format()
         )
       case List(cli.config, cli.config.view) =>
         val config = Config.readOnly(
           configPath = cli.config.view.config(),
           configMods = cli.config.view.config_mods()
         )
-        ViashConfig.view(config)
+        ViashConfig.view(config, cli.config.view.format())
       case List(cli.config, cli.config.inject) =>
         val config = Config.readOnly(
           configPath = cli.config.inject.config(),

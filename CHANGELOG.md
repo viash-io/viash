@@ -1,3 +1,15 @@
+# Viash 0.5.9
+
+## MINOR CHANGES
+
+* `viash ns list`: Added `--format yaml/json` argument to be able to return the
+  output as a json as well. Useful for when `jq` is installed but `yq` is not. Example:
+  ```
+    viash ns list -p docker -f json | jq '.[] | .info.config'
+  ```
+
+* `viash config view`: Same as above.
+
 # Viash 0.5.8
 
 ## NEW FUNCTIONALITY
