@@ -35,7 +35,7 @@ object Main {
       internalMain(args)
     } catch {
       case e: Exception => 
-        System.err.println(e.getMessage())
+        System.err.println(e)
         System.exit(1)
     }
   }

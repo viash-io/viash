@@ -1,5 +1,9 @@
 # Viash 0.5.9
 
+## NEW FEATURES
+
+* A long running Viash component can be interrupted by pressing CTRL-C or by sending it a `INT` or `SIGINT` signal.
+
 ## MINOR CHANGES
 
 * `viash ns list`: Added `--format yaml/json` argument to be able to return the
