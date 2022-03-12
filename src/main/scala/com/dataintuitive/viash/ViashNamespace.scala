@@ -159,7 +159,7 @@ object ViashNamespace {
     }
   }
 
-  def list(configs: List[Config]) {
-    ViashConfig.viewMany(configs)
+  def list(configs: List[Config], format: String = "yaml") {
+    ViashConfig.viewMany(configs, format)
   }
 }

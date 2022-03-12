@@ -22,33 +22,39 @@ import com.dataintuitive.viash.helpers.IO
 
 import java.nio.file.{Files, Paths}
 import io.circe.syntax.EncoderOps
-import io.circe.yaml.Printer
+import io.circe.{Json, Printer => JsonPrinter}
+import io.circe.yaml.{Printer => YamlPrinter}
 
 import scala.sys.process.Process
 import com.dataintuitive.viash.platforms.DebugPlatform
 
 object ViashConfig {
-  private val printer = Printer(
+  private val yamlPrinter = YamlPrinter(
     preserveOrder = true,
     dropNullKeys = true,
-    mappingStyle = Printer.FlowStyle.Block,
+    mappingStyle = YamlPrinter.FlowStyle.Block,
     splitLines = true,
-    stringStyle = Printer.StringStyle.DoubleQuoted
+    stringStyle = YamlPrinter.StringStyle.DoubleQuoted
   )
+  private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
 
-  def view(config: Config) {
-    val json = config.asJson
-    val configYamlStr = printer.pretty(json)
-    println(configYamlStr)
+  private def printJson(json: Json, format: String): Unit = {
+    val str = format match {
+      case "yaml" => yamlPrinter.pretty(json)
+      case "json" => jsonPrinter.print(json)
+    }
+    println(str)
   }
 
-  def viewMany(configs: List[Config]) {
-    val json = configs.asJson
-    val configYamlStr = printer.pretty(json)
-    println(configYamlStr)
+  def view(config: Config, format: String): Unit = {
+    printJson(config.asJson, format)
   }
 
-  def inject(config: Config) {
+  def viewMany(configs: List[Config], format: String): Unit = {
+    printJson(configs.asJson, format)
+  }
+
+  def inject(config: Config): Unit = {
     val fun = config.functionality
 
     // check if config has a main script

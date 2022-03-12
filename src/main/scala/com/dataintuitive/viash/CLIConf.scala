@@ -31,13 +31,6 @@ trait ViashCommand {
       "In addition, the path to a platform yaml file can also be specified.",
     required = false
   )
-  val platformid = opt[String](
-    short = 'P',
-    default = None,
-    descr = "[deprecated] passthrough option for platform.",
-    required = false,
-    hidden = true
-  )
   val config = trailArg[String](
     descr = "A viash config file (example: config.vsh.yaml). This argument can also be a script with the config as a header.",
     default = Some("config.vsh.yaml"),
@@ -85,13 +78,6 @@ trait ViashNs {
         "In addition, the path to a platform yaml file can also be specified.",
     default = None,
     required = false
-  )
-  val platformid = opt[String](
-    short = 'P',
-    descr = "[deprecated] passthrough option for platform.",
-    default = None,
-    required = false,
-    hidden = true
   )
   val parallel = opt[Boolean](
     name = "parallel",
@@ -231,6 +217,13 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |  viash config view config.vsh.yaml
            |
            |Arguments:""".stripMargin)
+      val format = choice(
+        name = "format",
+        short = 'f',
+        default = Some("yaml"),
+        choices = List("yaml", "json"),
+        descr = "Which output format to use."
+      )
     }
     val inject = new Subcommand("inject") with ViashCommand {
       banner(
@@ -322,6 +315,13 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |  viash ns list [-n nmspc] [-s src] [-p docker]
            |
            |Arguments:""".stripMargin)
+      val format = choice(
+        name = "format",
+        short = 'f',
+        default = Some("yaml"),
+        choices = List("yaml", "json"),
+        descr = "Which output format to use."
+      )
     }
 
     addSubcommand(build)

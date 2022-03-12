@@ -45,6 +45,7 @@ case class DockerPlatform(
   setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,
   privileged: Boolean = false,
   run_args: OneOrMore[String] = Nil,
+  target_image_source: Option[String] = None,
   oType: String = "docker",
 
   // setup variables
@@ -54,14 +55,9 @@ case class DockerPlatform(
   yum: Option[YumRequirements] = None,
   r: Option[RRequirements] = None,
   python: Option[PythonRequirements] = None,
-  docker: Option[DockerRequirements] = None,
-
-  // deprecated
-  version: Option[Version] = None
+  docker: Option[DockerRequirements] = None
 ) extends Platform {
   override val hasSetup = true
-
-  assert(version.isEmpty, "docker platform: attribute 'version' is deprecated")
 
   override val requirements: List[Requirements] = {
     val x =
@@ -138,8 +134,26 @@ case class DockerPlatform(
   }
 
   private def processDockerSetup(functionality: Functionality) = {
+    // construct labels from metadata
+    val auth = functionality.authors match {
+      case Nil => Nil
+      case aut: List[Author] => List(s"""authors="${aut.mkString(", ")}"""")
+    }
+    /*val descr = functionality.description.map{ des => 
+      s"""org.opencontainers.image.description="${Bash.escape(des)}""""
+    }.toList*/
+    
+    val descr = List(
+      s"""org.opencontainers.image.description="Companion container for running component ${functionality.namespace.map(_ + " ").getOrElse("")}${functionality.name}""""
+    )
+    val imageSource = target_image_source.map(des => s"""org.opencontainers.image.source="${Bash.escape(des)}"""").toList
+    val labelReq = DockerRequirements(label = auth ::: descr ::: imageSource)
+
+    val requirements2 = labelReq :: requirements
+
     // get dependencies
-    val runCommands = requirements.flatMap(_.dockerCommands)
+    val runCommands = requirements2.flatMap(_.dockerCommands)
+
 
     // don't draw defaults from functionality for the from image
     val fromImageInfo = Docker.getImageInfo(

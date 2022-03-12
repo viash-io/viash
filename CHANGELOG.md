@@ -1,3 +1,35 @@
+# Viash 0.5.9
+
+## NEW FEATURES
+
+* `viash run`: A long running Viash component can be interrupted by pressing 
+  CTRL-C or by sending it an `INT` or `SIGINT` signal.
+
+* `DockerPlatform`: Automatically add a few labels based on metadata to Dockerfile.
+
+* `DockerPlatform`: Added value `target_image_source` for setting the source of 
+  the target image. This is used for defining labels in the dockerfile.
+  Example:
+  ```yaml
+  target_image_source: https://github.com/foo/bar
+  ```
+
+## MINOR CHANGES
+
+* `viash ns list`: Added `--format yaml/json` argument to be able to return the
+  output as a json as well. Useful for when `jq` is installed but `yq` is not. Example:
+  ```
+    viash ns list -p docker -f json | jq '.[] | .info.config'
+  ```
+
+* `viash config view`: Same as above.
+
+## DEPRECATION
+
+* `CLI`: Deprecated `-P` flag use `-p` intead.
+
+* `DockerPlatform`: Deprecated `version` value.
+
 # Viash 0.5.8
 
 ## NEW FUNCTIONALITY

@@ -35,7 +35,7 @@ object Main {
       internalMain(args)
     } catch {
       case e: Exception => 
-        System.err.println(e.getMessage())
+        System.err.println(e)
         System.exit(1)
     }
   }
@@ -88,16 +88,17 @@ object Main {
           append = cli.namespace.test.append()
         )
       case List(cli.namespace, cli.namespace.list) =>
-        val configs = readConfigs(cli.namespace.test, modifyFun = false)
+        val configs = readConfigs(cli.namespace.list, modifyFun = false)
         ViashNamespace.list(
-          configs = configs
+          configs = configs,
+          cli.namespace.list.format()
         )
       case List(cli.config, cli.config.view) =>
         val config = Config.readOnly(
           configPath = cli.config.view.config(),
           configMods = cli.config.view.config_mods()
         )
-        ViashConfig.view(config)
+        ViashConfig.view(config, cli.config.view.format())
       case List(cli.config, cli.config.inject) =>
         val config = Config.readOnly(
           configPath = cli.config.inject.config(),
@@ -115,7 +116,7 @@ object Main {
   ): Config = {
     Config.read(
       configPath = subcommand.config(),
-      platform = subcommand.platform.toOption | subcommand.platformid.toOption,
+      platform = subcommand.platform.toOption,
       modifyFun = modifyFun,
       configMods = subcommand.config_mods()
     )
@@ -132,7 +133,7 @@ object Main {
     val sourceDir = Paths.get(source)
 
     // create regex for filtering platform ids
-    val platformStr = (subcommand.platform.toOption | subcommand.platformid.toOption).getOrElse(".*")
+    val platformStr = (subcommand.platform.toOption).getOrElse(".*")
 
     // find *.vsh.* files and parse as config
     val scriptFiles = find(sourceDir, (path, attrs) => {
