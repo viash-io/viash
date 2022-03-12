@@ -4,6 +4,13 @@
 
 * A long running Viash component can be interrupted by pressing CTRL-C or by sending it a `INT` or `SIGINT` signal.
 
+* `DockerPlatform`: Automatically add a few labels based on metadata to Dockerfile.
+
+* `DockerPlatform`: Added value `target_image_source` for setting the source of the target image. Example:
+  ```yaml
+  target_image_source: https://github.com/foo/bar
+  ```
+
 ## MINOR CHANGES
 
 * `viash ns list`: Added `--format yaml/json` argument to be able to return the
