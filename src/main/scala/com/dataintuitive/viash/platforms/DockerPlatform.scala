@@ -54,14 +54,9 @@ case class DockerPlatform(
   yum: Option[YumRequirements] = None,
   r: Option[RRequirements] = None,
   python: Option[PythonRequirements] = None,
-  docker: Option[DockerRequirements] = None,
-
-  // deprecated
-  version: Option[Version] = None
+  docker: Option[DockerRequirements] = None
 ) extends Platform {
   override val hasSetup = true
-
-  assert(version.isEmpty, "docker platform: attribute 'version' is deprecated")
 
   override val requirements: List[Requirements] = {
     val x =

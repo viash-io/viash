@@ -116,7 +116,7 @@ object Main {
   ): Config = {
     Config.read(
       configPath = subcommand.config(),
-      platform = subcommand.platform.toOption | subcommand.platformid.toOption,
+      platform = subcommand.platform.toOption,
       modifyFun = modifyFun,
       configMods = subcommand.config_mods()
     )
@@ -133,7 +133,7 @@ object Main {
     val sourceDir = Paths.get(source)
 
     // create regex for filtering platform ids
-    val platformStr = (subcommand.platform.toOption | subcommand.platformid.toOption).getOrElse(".*")
+    val platformStr = (subcommand.platform.toOption).getOrElse(".*")
 
     // find *.vsh.* files and parse as config
     val scriptFiles = find(sourceDir, (path, attrs) => {

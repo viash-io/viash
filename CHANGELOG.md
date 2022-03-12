@@ -14,6 +14,12 @@
 
 * `viash config view`: Same as above.
 
+## DEPRECATION
+
+* `CLI`: Deprecated `-P` flag use `-p` intead.
+
+* `DockerPlatform`: Deprecated `version` value.
+
 # Viash 0.5.8
 
 ## NEW FUNCTIONALITY
