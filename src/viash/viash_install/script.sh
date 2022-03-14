@@ -81,15 +81,28 @@ else
 fi
 
 # build components
+extra_args=()
+
+if [ ! -z "$par_registry" ]; then
+  extra_args+=( -c ".functionality.arguments[.name == '--registry'].default := '$par_registry'" )
+fi
+if [ ! -z "$par_organization" ]; then
+  extra_args+=( -c ".functionality.arguments[.name == '--organization'].default := '$par_organization'" )
+fi
+if [ ! -z "$par_namespace_separator" ]; then
+  extra_args+=( -c ".functionality.arguments[.name == '--namespace_separator'].default := '$par_namespace_separator'" )
+fi
+if [ ! -z "$par_config_mod" ]; then
+  extra_args+=( -c ".functionality.arguments[.name == '--config_mod'].default := '${par_config_mod@Q}'" )
+fi
+
 echo "> Building Viash helper scripts from source"
 "$par_bin/viash" ns build \
   -s "$build_dir/viash-$par_tag/src/viash" \
   -t "$par_bin/" \
   --flatten \
-  -c ".functionality.arguments[.name == '--registry'].default := '$par_registry'" \
-  -c ".functionality.arguments[.name == '--viash'].default := '$par_viash'" \
-  -c ".functionality.arguments[.name == '--log' && root.functionality.name == 'viash_test'].default := '$par_log'" \
-  -c ".functionality.arguments[.name == '--namespace_separator'].default := '$par_namespace_separator'" \
+  "${extra_args[@]}"
+  -c ".functionality.arguments[.name == '--viash'].default := '"$par_bin/viash"'"
   -c ".functionality.version := '$par_tag'"
 
 echo "> Done, happy viash-ing!"
