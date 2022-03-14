@@ -95,6 +95,10 @@ fi
 if [ ! -z "$par_config_mod" ]; then
   extra_args+=( -c ".functionality.arguments[.name == '--config_mod'].default := '${par_config_mod@Q}'" )
 fi
+if [ ! -z "$par_target_image_source" ]; then
+  extra_args+=( -c ".functionality.arguments[.name == '--target_image_source'].default := '$par_target_image_source'" )
+fi
+
 
 echo "> Building Viash helper scripts from source"
 "$par_bin/viash" ns build \

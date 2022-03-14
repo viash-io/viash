@@ -20,6 +20,11 @@ functionality:
     example: myorganisation
     type: string
     description: Which organisation name to use in the Docker image name.
+  - name: "--target_image_source"
+    alternatives: [ "-tis" ]
+    type: string
+    description: Which image source to specify in the component builds.
+    example: https://github.com/myorganisation/myrepository
   - name: "--namespace_separator"
     example: "_"
     type: string

@@ -4,6 +4,9 @@
 
 * `NextflowPlatform`: Added the `organization` field to the nextflow platform as well.
 
+* `Viash Tools`: Rework `viash_build`, `viash_install`, `viash_push` and `viash_test` to improve
+  modularity. Added arguments `--organization` and `--target_image_source`
+
 # Viash 0.5.9
 
 ## NEW FEATURES
