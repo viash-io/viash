@@ -33,6 +33,7 @@ case class NextFlowPlatform(
   tag: Option[Version] = None,
   version: Option[Version] = None,
   registry: Option[String] = None,
+  organization: Option[String] = None,
   namespace_separator: String = "_",
   executor: Option[String] = None,
   publish: Option[Boolean] = None,
@@ -63,6 +64,7 @@ case class NextFlowPlatform(
     val imageInfo = Docker.getImageInfo(
       functionality = Some(functionality),
       registry = registry,
+      organization = organization,
       name = image,
       tag = tag.map(_.toString),
       namespaceSeparator = namespace_separator
