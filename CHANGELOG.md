@@ -1,3 +1,9 @@
+# Viash 0.5.10
+
+## MINOR CHANGES
+
+* `NextflowPlatform`: Added the `organization` field to the nextflow platform as well.
+
 # Viash 0.5.9
 
 ## NEW FEATURES
