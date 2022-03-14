@@ -9,6 +9,9 @@ if ! command -v curl &> /dev/null; then
     exit
 fi
 
+set -e
+
+
 
 # get the root of the repository
 REPO_ROOT=`pwd`
@@ -93,7 +96,8 @@ if [ ! -z "$par_namespace_separator" ]; then
   extra_args+=( -c ".functionality.arguments[.name == '--namespace_separator'].default := '$par_namespace_separator'" )
 fi
 if [ ! -z "$par_config_mod" ]; then
-  extra_args+=( -c ".functionality.arguments[.name == '--config_mod'].default := '${par_config_mod@Q}'" )
+  echo "Warning: Adding config mods to viash install is currently not supported."
+  # extra_args+=( -c ".functionality.arguments[.name == '--config_mod'].default := '${par_config_mod@Q}'" )
 fi
 if [ ! -z "$par_target_image_source" ]; then
   extra_args+=( -c ".functionality.arguments[.name == '--target_image_source'].default := '$par_target_image_source'" )
@@ -105,8 +109,8 @@ echo "> Building Viash helper scripts from source"
   -s "$build_dir/viash-$par_tag/src/viash" \
   -t "$par_bin/" \
   --flatten \
-  "${extra_args[@]}"
-  -c ".functionality.arguments[.name == '--viash'].default := '"$par_bin/viash"'"
+  "${extra_args[@]}" \
+  -c ".functionality.arguments[.name == '--viash'].default := '"$par_bin/viash"'" \
   -c ".functionality.version := '$par_tag'"
 
 echo "> Done, happy viash-ing!"
