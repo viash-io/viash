@@ -44,8 +44,8 @@ functionality:
     example: ghcr.io
     type: string
     description: Which Docker registry to use in the Docker image name.
-  - name: "--organisation"
-    alternatives: [ "-o" ]
+  - name: "--organization"
+    alternatives: [ "-o", "--organisation" ]
     example: myorganisation
     type: string
     description: Which organisation name to use in the Docker image name.

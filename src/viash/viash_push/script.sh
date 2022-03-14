@@ -92,10 +92,10 @@ if [ ! -z "$par_registry" ]; then
   )
 fi
 
-if [ ! -z "$par_organisation" ]; then
+if [ ! -z "$par_organization" ]; then
   command_builder+=(
-    --config_mod ".platforms[.type == 'docker'].target_organisation := '$par_organisation'"
-    --config_mod ".platforms[.type == 'nextflow'].organisation := '$par_organisation'"
+    --config_mod ".platforms[.type == 'docker'].target_organization := '$par_organization'"
+    --config_mod ".platforms[.type == 'nextflow'].organization := '$par_organization'"
   )
 fi
 

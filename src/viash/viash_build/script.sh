@@ -53,16 +53,16 @@ command_builder+=(
   --setup "$setup_strat"
 )
 
-# check registry and organisation
+# check registry and organization
 if [ "$par_mode" == "development" ]; then
   if [ ! -z "$par_registry" ]; then
     echo "Warning: --par_registry is ignored when '--mode=development'."
     unset par_registry
   fi
 
-  if [ ! -z "$par_organisation" ]; then
-    echo "Warning: --par_organisation is ignored when '--mode=development'."
-    unset par_organisation
+  if [ ! -z "$par_organization" ]; then
+    echo "Warning: --par_organization is ignored when '--mode=development'."
+    unset par_organization
   fi
 fi
 
@@ -106,10 +106,10 @@ if [ ! -z "$par_registry" ]; then
   )
 fi
 
-if [ ! -z "$par_organisation" ]; then
+if [ ! -z "$par_organization" ]; then
   command_builder+=(
-    --config_mod ".platforms[.type == 'docker'].target_organisation := '$par_organisation'"
-    --config_mod ".platforms[.type == 'nextflow'].organisation := '$par_organisation'"
+    --config_mod ".platforms[.type == 'docker'].target_organization := '$par_organization'"
+    --config_mod ".platforms[.type == 'nextflow'].organization := '$par_organization'"
   )
 fi
 
