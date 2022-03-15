@@ -2,6 +2,7 @@
 
 # start creating command
 command_builder=(
+  ns build
   --src "$par_src"
   --parallel --write_meta
 )
@@ -56,12 +57,12 @@ command_builder+=(
 # check registry and organization
 if [ "$par_mode" == "development" ]; then
   if [ ! -z "$par_registry" ]; then
-    # echo "Warning: --par_registry is ignored when '--mode=development'."
+    [[ "$par_verbose" == "true" ]] && echo "Note: --par_registry is ignored when '--mode=development'."
     unset par_registry
   fi
 
   if [ ! -z "$par_organization" ]; then
-    # echo "Warning: --par_organization is ignored when '--mode=development'."
+    [[ "$par_verbose" == "true" ]] && echo "Note: --par_organization is ignored when '--mode=development'."
     unset par_organization
   fi
 fi
@@ -130,9 +131,11 @@ if [ ! -z "$par_platform" ]; then
 fi
 
 ################ RUN COMMAND ################
+[[ "$par_verbose" == "true" ]] && echo "+ $par_viash" "${command_builder[@]}"
+
 if [ -z "$par_log" ]; then
-  "$par_viash" ns build "${command_builder[@]}"
+  "$par_viash" "${command_builder[@]}"
 else
   rm "$par_log"
-  "$par_viash" ns build "${command_builder[@]}" > >(tee -a "$par_log") 2> >(tee -a "$par_log")
+  "$par_viash" "${command_builder[@]}" > >(tee -a "$par_log") 2> >(tee -a "$par_log")
 fi

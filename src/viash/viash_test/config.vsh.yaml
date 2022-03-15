@@ -84,6 +84,9 @@ functionality:
   - name: "--viash"
     type: file
     description: A path to the viash executable. If not specified, this component will look for 'viash' on the $PATH.
+  - name: "--verbose"
+    type: boolean_true
+    description: "Increase verbosity."
   resources:
     - type: bash_script
       path: script.sh
