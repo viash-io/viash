@@ -1,21 +1,29 @@
-target/
-.bloop*
-.metals*
-projects/metals.sbt
-/bin/
-.cache-main
-.classpath
-.project
-.settings
-output
-.cache-tests
-project/metals.sbt
-out/*
+# build related
+bin/
 Makefile
 
+# sbt-related
+target/
+
+# Temporary files / folders
+output
+out/*
+
+# Rstudio-related
 .Rproj.user
 .Rhistory
 *.Rproj
+
+# Idea-related
 .idea
-project/metals.sbt
+.cache-main
+.cache-tests
+.classpath
+.project
+.settings
+
+# VS Code related
 .vscode/settings.json
+**/metals.sbt
+.bloop*
+.metals*
