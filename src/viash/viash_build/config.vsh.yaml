@@ -75,7 +75,7 @@ functionality:
     alternatives: [ "-l" ]
     type: file
     description: Log file
-    example: viash_build_log.txt
+    example: .viash_build_log.txt
     direction: output
   - name: "--viash"
     type: file

@@ -65,7 +65,7 @@ functionality:
     alternatives: [ "-l" ]
     type: file
     description: Log file
-    example: viash_push_log.txt
+    example: .viash_push_log.txt
   - name: "--viash"
     type: file
     description: A path to the viash executable. If not specified, this component will look for 'viash' on the $PATH.

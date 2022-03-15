@@ -71,12 +71,12 @@ functionality:
   - name: "--tsv"
     type: file
     description: Test results stored as a tabular text file.
-    example: viash_test_log.tsv
+    example: .viash_test_log.tsv
   - name: "--log"
     alternatives: [ "-l" ]
     type: file
     description: Test log file
-    example: viash_test_log.txt
+    example: .viash_test_log.txt
   - name: "--append"
     type: boolean
     default: true
