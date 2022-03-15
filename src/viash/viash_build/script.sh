@@ -84,10 +84,10 @@ fi
 if [ ! -z "$par_query" ]; then
   command_builder+=("--query" "$par_query")
 fi
-if [ ! -z "$par_query_namespace" ]; then
+if [ ! -z "$par_query_name" ]; then
   command_builder+=("--query_name" "$par_query_name")
 fi
-if [ ! -z "$par_query_name" ]; then
+if [ ! -z "$par_query_namespace" ]; then
   command_builder+=("--query_namespace" "$par_query_namespace")
 fi
 
