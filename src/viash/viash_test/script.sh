@@ -53,12 +53,12 @@ command_builder+=(
 # check registry and organization
 if [ "$par_mode" == "development" ]; then
   if [ ! -z "$par_registry" ]; then
-    echo "Warning: --par_registry is ignored when '--mode=development'."
+    # echo "Warning: --par_registry is ignored when '--mode=development'."
     unset par_registry
   fi
 
   if [ ! -z "$par_organization" ]; then
-    echo "Warning: --par_organization is ignored when '--mode=development'."
+    # echo "Warning: --par_organization is ignored when '--mode=development'."
     unset par_organization
   fi
 fi
