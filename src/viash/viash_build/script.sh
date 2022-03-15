@@ -39,7 +39,7 @@ command_builder+=(
 if [ "$par_mode" == "development" ]; then
   if [ "$par_no_cache" == "true" ]; then
     setup_strat="build"
-  else 
+  else
     setup_strat="cachedbuild"
   fi
 elif [ "$par_mode" == "integration" ]; then
@@ -82,13 +82,13 @@ fi
 
 # process queries
 if [ ! -z "$par_query" ]; then
-  command_builder+=( "--query" "$par_query" )
+  command_builder+=("--query" "$par_query")
 fi
 if [ ! -z "$par_query_namespace" ]; then
-  command_builder+=( "--query_name" "$par_query_namespace" )
+  command_builder+=("--query_name" "$par_query_name")
 fi
 if [ ! -z "$par_query_name" ]; then
-  command_builder+=( "--query_namespace" "$par_query_name" )
+  command_builder+=("--query_namespace" "$par_query_namespace")
 fi
 
 # process config mods
@@ -96,7 +96,7 @@ if [ ! -z "$par_config_mod" ]; then
   IFS=";"
   for var in $par_config_mod; do
     unset IFS
-    command_builder+=( "--config_mod" "$var" )
+    command_builder+=("--config_mod" "$var")
   done
 fi
 
@@ -127,7 +127,7 @@ if [ ! -z "$par_target_image_source" ]; then
 fi
 
 if [ ! -z "$par_platform" ]; then
-  command_builder+=( --platform "$par_platform" )
+  command_builder+=(--platform "$par_platform")
 fi
 
 ################ RUN COMMAND ################
