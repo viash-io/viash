@@ -12,11 +12,21 @@ functionality:
     default: bin/
   - name: "--registry"
     alternatives: [ "-r" ]
-    default: ""
+    example: ghcr.io
     type: string
-    description: Docker registry to use, only used when using a registry.
+    description: Which Docker registry to use in the Docker image name.
+  - name: "--organization"
+    alternatives: [ "-o", "--organisation" ]
+    example: myorganisation
+    type: string
+    description: Which organisation name to use in the Docker image name.
+  - name: "--target_image_source"
+    alternatives: [ "-tis" ]
+    type: string
+    description: Which image source to specify in the component builds.
+    example: https://github.com/myorganisation/myrepository
   - name: "--namespace_separator"
-    default: "_"
+    example: "_"
     type: string
     description: The separator to use between the component name and namespace as the image name of a Docker container.
   - name: "--config_mod"
@@ -30,13 +40,11 @@ functionality:
     type: string
     description: "Which tag/version of viash to use."
     default: latest
-  - name: "--log"
-    type: file
-    description: Path to write the test logs to.
-    default: log.tsv
-  - name: "--viash"
+  - name: "--log_prefix"
+    alternatives: [ "-l" ]
     type: string
-    description: A path to the viash executable. If not specified, this component will look for 'viash' on the $PATH.
+    description: "A prefix path or directory for where to store the log files."
+    default: ./.viash_log_
   resources:
     - type: bash_script
       path: script.sh

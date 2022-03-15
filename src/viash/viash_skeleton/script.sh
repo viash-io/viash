@@ -45,12 +45,14 @@ cat >> "$out_dir/config.vsh.yaml" << HERE
       type: file
       required: true
       description: Describe the input file.
+      example: input.txt
     - name: "--output"
       alternatives: [ "-o" ]
       type: file
       direction: output
       required: true
       description: Describe the output file.
+      example: output.txt
     - name: "--option"
       type: string
       description: Describe an optional parameter.

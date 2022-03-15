@@ -1,7 +1,6 @@
 functionality:
   name: viash_clean_nxf
   namespace: viash
-  version: 0.1
   description: |
     Clean a (nextflow) project directory
   arguments:

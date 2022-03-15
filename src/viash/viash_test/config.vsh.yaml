@@ -15,49 +15,68 @@ functionality:
     type: string
     description: "The mode to run in. Possible values are: 'development', 'integration', 'release'."
     default: development
-  - name: "--platforms"
+  - name: "--platform"
     alternatives: [ "-p" ]
     type: string
-    description: Which platforms to test, default is 'docker'.
-    default: "docker"
+    description: "Which platforms to process."
+    default: "docker" # to do: should be set to 'example'
   - name: "--query"
     alternatives: [ "-q" ]
     type: string
-    description: "Filter which components get selected by name and namespace. Can be a regex. Example: '^mynamespace/component1$'."
+    description: "Filter which components get selected by name and namespace. Can be a regex."
+    example: "^mynamespace/component1$"
   - name: "--query_namespace"
     alternatives: [ "-n" ]
     type: string
-    description: "Filter which namespaces get selected by namespace. Can be a regex. Example: '^mynamespace$'."
+    description: "Filter which namespaces get selected by namespace. Can be a regex."
+    example: "^mynamespace$"
   - name: "--query_name"
     type: string
-    description: "Filter which components get selected by name. Can be a regex. Example: '^component1'."
+    description: "Filter which components get selected by name. Can be a regex."
+    example: "^component1$"
   - name: "--tag"
     alternatives: [ "-t" ]
     type: string
     description: Which tag/version of the pipeline to use.
-    default: "dev"
+    example: "0.1.0"
   - name: "--registry"
     alternatives: [ "-r" ]
+    example: ghcr.io
     type: string
-    description: Docker registry to use, only used when using a registry.
+    description: Which Docker registry to use in the Docker image name.
+  - name: "--organization"
+    alternatives: [ "-o", "--organisation" ]
+    example: myorganisation
+    type: string
+    description: Which organisation name to use in the Docker image name.
+  - name: "--target_image_source"
+    alternatives: [ "-tis" ]
+    type: string
+    description: Which image source to specify in the component builds.
+    example: https://github.com/myorganisation/myrepository
   - name: "--namespace_separator"
-    default: "_"
+    example: "_"
     type: string
     description: The separator to use between the component name and namespace as the image name of a Docker container.
   - name: "--max_threads"
     type: integer
-    description: The maximum number of threads viash will use when `--parallell` during parallel tasks.
+    description: The maximum number of threads viash will use when `--parallel` during parallel tasks.
+    example: 8
   - name: "--config_mod"
     alternatives: [ "-c" ]
     type: string
     multiple: true
     multiple_sep: ";"
     description: "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
+  - name: "--tsv"
+    type: file
+    description: Test results stored as a tabular text file.
+    example: .viash_test_log.tsv
   - name: "--log"
     alternatives: [ "-l" ]
     type: file
     description: Test log file
-    default: log.tsv
+    example: .viash_test_log.txt
   - name: "--append"
     type: boolean
     default: true
@@ -65,6 +84,9 @@ functionality:
   - name: "--viash"
     type: file
     description: A path to the viash executable. If not specified, this component will look for 'viash' on the $PATH.
+  - name: "--verbose"
+    type: boolean_true
+    description: "Increase verbosity."
   resources:
     - type: bash_script
       path: script.sh
