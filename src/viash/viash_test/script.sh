@@ -138,5 +138,6 @@ fi
 if [ -z "$par_log" ]; then
   "$par_viash" ns test "${command_builder[@]}"
 else
-  "$par_viash" ns test "${command_builder[@]}" | tee "$par_log"
+  rm "$par_log"
+  "$par_viash" ns test "${command_builder[@]}" > >(tee -a "$par_log") 2> >(tee -a "$par_log")
 fi
