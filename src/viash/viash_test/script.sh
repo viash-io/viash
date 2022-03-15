@@ -3,8 +3,7 @@
 # start creating command
 command_builder=(
   --src "$par_src"
-  --parallel --write_meta
-  --log "$par_tsv"
+  --parallel
 )
 
 # check par mode
@@ -27,7 +26,7 @@ if [ "$par_mode" == "development" ]; then
   par_tag="dev"
 fi
 if [ -z "$par_tag" ]; then
-  echo "Error: --par_tag is a requirement argument when '--mode=$par_mode'."
+  echo "Error: --tag is a requirement argument when '--mode=$par_mode'."
   exit 1
 fi
 
@@ -131,5 +130,13 @@ if [ "$par_organization" == "true" ]; then
   command_builder+=("--append")
 fi
 
+if [ ! -z "$par_tsv" ]; then
+  command_builder+=( --tsv "$par_tsv" )
+fi
+
 ################ RUN COMMAND ################
-"$par_viash" ns test "${command_builder[@]}" | tee "$par_log"
+if [ -z "$par_log" ]; then
+  "$par_viash" ns test "${command_builder[@]}"
+else
+  "$par_viash" ns test "${command_builder[@]}" | tee "$par_log"
+fi

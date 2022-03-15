@@ -40,6 +40,11 @@ functionality:
     type: string
     description: "Which tag/version of viash to use."
     default: latest
+  - name: "--log_prefix"
+    alternatives: [ "-l" ]
+    type: string
+    description: "A prefix path or directory for where to store the log files."
+    default: ./.viash_log_
   resources:
     - type: bash_script
       path: script.sh

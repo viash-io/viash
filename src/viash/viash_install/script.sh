@@ -111,6 +111,10 @@ echo "> Building Viash helper scripts from source"
   --flatten \
   "${extra_args[@]}" \
   -c ".functionality.arguments[.name == '--viash'].default := '"$par_bin/viash"'" \
+  -c ".functionality.arguments[.name == '--log' && root.functionality.name == 'viash_build'].default := '"${par_log_prefix}build.txt"'" \
+  -c ".functionality.arguments[.name == '--log' && root.functionality.name == 'viash_test'].default := '"${par_log_prefix}test.txt"'" \
+  -c ".functionality.arguments[.name == '--tsv' && root.functionality.name == 'viash_test'].default := '"${par_log_prefix}test.tsv"'" \
+  -c ".functionality.arguments[.name == '--log' && root.functionality.name == 'viash_push'].default := '"${par_log_prefix}push.txt"'" \
   -c ".functionality.version := '$par_tag'"
 
 echo "> Done, happy viash-ing!"
