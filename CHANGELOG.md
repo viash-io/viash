@@ -14,6 +14,7 @@
   - Added `--organization`: Id of the organisation to be used in the Docker image name, i.e. "<registry>/<organization>/<namespace><namespace_sep><name>".
   - Added `--target_image_source`: Url to the Git repo in which this project resides.
   - Changed default of `--log` from `log.txt` to `.viash_build_log.txt`.
+  - Added `--verbose`: Print out the underlying `viash ns build` command before running it.
 
 * `viash_test`:
   - Reduce code duplication by contructing the command with Bash Arrays.
@@ -22,11 +23,13 @@
   - Added `--target_image_source`: Url to the Git repo in which this project resides.
   - Changed default of `--log` from `log.txt` to `.viash_test_log.txt`.
   - Changed default of `--tsv` from `log.tsv` to `.viash_test_log.tsv`.
+  - Added `--verbose`: Print out the underlying `viash ns test` command before running it.
 
 * `viash_push`:
   - Reduce code duplication by contructing the command with Bash Arrays.
   - Added `--organization`: Id of the organisation to be used in the Docker image name, i.e. "<registry>/<organization>/<namespace><namespace_sep><name>".
   - Changed default of `--log` from `log.txt` to `.viash_push_log.txt`.
+  - Added `--verbose`: Print out the underlying `viash ns build` command before running it.
 
 ## MINOR CHANGES
 
