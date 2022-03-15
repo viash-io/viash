@@ -60,7 +60,7 @@ if [ $par_tag == "develop" ]; then
   fi
 
   # Download Viash helper scripts
-  echo "> Downloading source v$par_tag"
+  echo "> Downloading Viash source code @$par_tag"
   curl -L -s "https://github.com/viash-io/viash/archive/refs/heads/$par_tag.zip" -o "$build_dir/$par_tag.zip"
   unzip -q "$build_dir/$par_tag.zip" -d "$build_dir"
 

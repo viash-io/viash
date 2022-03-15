@@ -19,7 +19,7 @@ functionality:
     alternatives: [ "-p" ]
     type: string
     description: "Which platforms to process."
-    example: "docker"
+    default: "docker" # to do: should be set to 'example'
   - name: "--query"
     alternatives: [ "-q" ]
     type: string
