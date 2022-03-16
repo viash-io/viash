@@ -1,3 +1,9 @@
+# Viash 0.5.10.1
+
+## BUG FIX
+
+* `NextflowPlatform`: Fix passthrough of `organization` field.
+
 # Viash 0.5.10
 
 ## MAJOR CHANGES
