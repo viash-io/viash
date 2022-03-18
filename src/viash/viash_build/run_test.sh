@@ -16,13 +16,13 @@ log=build_log.txt
     >$defaults_output
 
 # Check if defaults output exists
-[[ ! -f $defaults_output ]] && echo "Test output file could not be found!" && exit 1
+[[ ! -f $defaults_output ]] && echo "Default: Test output file could not be found!" && exit 1
 
 # Check if default arguments are as expected
 grep -q "viash ns build --src src --parallel --write_meta --config_mod .functionality.version := 'dev' --setup cachedbuild" $defaults_output
 
 # Check if target dir hierarchy exists
-[[ ! -d $expected_target_dir ]] && echo "target directory hierarchy could not be found!" && exit 1
+[[ ! -d $expected_target_dir ]] && echo "Default: target directory hierarchy could not be found!" && exit 1
 
 # Remove target dir
 rm -r target
@@ -51,7 +51,7 @@ cp -r src $alt_src
 >$alt_output
 
 # Check if alt output exists
-[[ ! -f $alt_output ]] && echo "Test output file could not be found!" && exit 1
+[[ ! -f $alt_output ]] && echo "Alt: Test output file could not be found!" && exit 1
 
 # Only ns_add should be included because of the query mame
 [[ -d "$expected_target_dir/ns_divide" ]] && echo "The ns_divide component shouldn't have been built!" && exit 1
@@ -60,6 +60,6 @@ cp -r src $alt_src
 grep -q "Reading file 'alt_src/ns_error/config.vsh.yaml' failed" $log
 
 # Check if target dir hierarchy exists
-[[ ! -d $expected_target_dir ]] && echo "target directory hierarchy could not be found!" && exit 1
+[[ ! -d $expected_target_dir ]] && echo "Alt: target directory hierarchy could not be found!" && exit 1
 
 echo ">>> Test finished successfully"
