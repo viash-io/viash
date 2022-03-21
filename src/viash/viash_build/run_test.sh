@@ -2,12 +2,14 @@
 
 set -ex
 
-defaults_output=defaults_test_output.txt
-expected_target_dir=target/native/testns
+defaults_output="defaults_test_output.txt"
+expected_target_dir="target/native/testns"
 
 alt_output=alt_test_output.txt
 alt_src="alt_src"
 log=build_log.txt
+target_ns_add="target/native/testns/ns_add/ns_add"
+target_ns_add_yaml="target/native/testns/ns_add/viash.yaml"
 
 # 1. Run component with default arguments
 # Run component
@@ -61,5 +63,14 @@ grep -q "Reading file 'alt_src/ns_error/config.vsh.yaml' failed" $log
 
 # Check if target dir hierarchy exists
 [[ ! -d $expected_target_dir ]] && echo "Alt: target directory hierarchy could not be found!" && exit 1
+
+# Check if ns_add exists in target dir
+[[ ! -f $target_ns_add ]] && echo "Alt: ns_add couldn't be found in target directory!" && exit 1
+
+# Check if the version of ns_add is changed to 5.0
+grep -q "ns_add 5.0" $target_ns_add
+
+# Check if the namespace of ns_add is testns
+grep -q 'namespace: "testns"' $target_ns_add_yaml
 
 echo ">>> Test finished successfully"
