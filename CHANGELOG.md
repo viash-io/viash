@@ -1,3 +1,9 @@
+# Viash 0.5.11
+
+## MINOR CHANGES
+
+* `DockerPlatform`: Move description labels to the end of the Dockerfile to improve cross-component caching.
+
 # Viash 0.5.10.1
 
 ## BUG FIX

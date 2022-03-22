@@ -149,7 +149,7 @@ case class DockerPlatform(
     val imageSource = target_image_source.map(des => s"""org.opencontainers.image.source="${Bash.escape(des)}"""").toList
     val labelReq = DockerRequirements(label = auth ::: descr ::: imageSource)
 
-    val requirements2 = labelReq :: requirements
+    val requirements2 = requirements ::: List(labelReq)
 
     // get dependencies
     val runCommands = requirements2.flatMap(_.dockerCommands)
