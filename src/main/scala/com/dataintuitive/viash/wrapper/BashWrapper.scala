@@ -281,11 +281,24 @@ object BashWrapper {
         ("output", param.direction == Output),
         ("file must exist", param.isInstanceOf[FileObject] && param.asInstanceOf[FileObject].must_exist)
       ).filter(_._2).map(_._1)
-
+      
+      // TO DO: should print as list?
+      val default = 
+        if (param.default.nonEmpty) {
+          Some(param.default.map(_.toString).mkString(param.multiple_sep.toString))
+        } else {
+          None
+        }
+      val example = 
+        if (param.example.nonEmpty) {
+          Some(param.example.map(_.toString).mkString(param.multiple_sep.toString))
+        } else {
+          None
+        }
       val namedProps = List(
         ("type", Some((param.oType :: unnamedProps).mkString(", "))),
-        ("default", param.default.map(de => escapeViash(de.toString, quote = true, newline = true))),
-        ("example", param.example.map(ex => escapeViash(ex.toString, quote = true, newline = true)))
+        ("default", default.map(de => escapeViash(de, quote = true, newline = true))),
+        ("example", example.map(ex => escapeViash(ex, quote = true, newline = true)))
       ).flatMap { case (name, x) =>
         x.map("\n  echo \"        " + name + ": " + _ + "\"")
       }.mkString
@@ -401,7 +414,8 @@ object BashWrapper {
       val default = param match {
         case p if p.required => None
         case bo: BooleanObject if bo.flagValue.isDefined => bo.flagValue.map(!_)
-        case p => p.default
+        case p if p.default.nonEmpty => Some(p.default.map(_.toString).mkString(p.multiple_sep.toString))
+        case p if p.default.isEmpty => None
       }
 
       default.map(default => {

@@ -4,6 +4,8 @@
 
 * `DockerPlatform`: Move description labels to the end of the Dockerfile to improve cross-component caching.
 
+* `Functionality`: Arguments where `.multiple` is `true` can now have lists as `default` and `example`.
+
 # Viash 0.5.10.1
 
 ## BUG FIX

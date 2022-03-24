@@ -21,6 +21,7 @@ import com.dataintuitive.viash.functionality.Functionality
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.platforms.requirements._
 import com.dataintuitive.viash.config.Version
+import com.dataintuitive.viash.helpers.Circe.One
 import com.dataintuitive.viash.wrapper.BashWrapper
 import com.dataintuitive.viash.functionality.dataobjects._
 import java.nio.file.Path
@@ -40,20 +41,20 @@ case class DebugPlatform(
     // disable required arguments and set defaults for all arguments
     val fun0 = functionality.copy(
       arguments = functionality.arguments.map {
-        case arg if arg.required && arg.default.isDefined => 
+        case arg if arg.required && arg.default.nonEmpty => 
           arg.copyDO(required = false)
-        case arg if arg.default.isEmpty && arg.example.isDefined => 
+        case arg if arg.default.nonEmpty && arg.example.nonEmpty => 
           arg.copyDO(required = false, default = arg.example)
-        case arg: BooleanObject if arg.default.isEmpty => 
-          arg.copyDO(required = false, default = Some(true))
-        case arg: DoubleObject if arg.default.isEmpty => 
-          arg.copyDO(required = false, default = Some(123.0))
-        case arg: FileObject if arg.default.isEmpty => 
-          arg.copyDO(required = false, default = Some(Paths.get("/path/to/file")))
-        case arg: IntegerObject if arg.default.isEmpty =>
-           arg.copyDO(required = false, default = Some(123))
-        case arg: StringObject if arg.default.isEmpty => 
-          arg.copyDO(required = false, default = Some("value"))
+        case arg: BooleanObject if arg.default.nonEmpty => 
+          arg.copyDO(required = false, default = One(true))
+        case arg: DoubleObject if arg.default.nonEmpty => 
+          arg.copyDO(required = false, default = One(123.0))
+        case arg: FileObject if arg.default.nonEmpty => 
+          arg.copyDO(required = false, default = One(Paths.get("/path/to/file")))
+        case arg: IntegerObject if arg.default.nonEmpty =>
+           arg.copyDO(required = false, default = One(123))
+        case arg: StringObject if arg.default.nonEmpty => 
+          arg.copyDO(required = false, default = One("value"))
         case a => a
       }
     )

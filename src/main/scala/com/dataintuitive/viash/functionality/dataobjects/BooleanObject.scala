@@ -17,6 +17,8 @@
 
 package com.dataintuitive.viash.functionality.dataobjects
 
+import com.dataintuitive.viash.helpers.Circe.OneOrMore
+
 abstract class BooleanObject extends DataObject[Boolean] {
   val flagValue: Option[Boolean]
 }
@@ -25,8 +27,8 @@ case class BooleanObjectRegular(
   name: String,
   alternatives: List[String] = Nil,
   description: Option[String] = None,
-  example: Option[Boolean] = None,
-  default: Option[Boolean] = None,
+  example: OneOrMore[Boolean] = Nil,
+  default: OneOrMore[Boolean] = Nil,
   required: Boolean = false,
   tag: Option[String] = None,
   direction: Direction = Input,
@@ -42,8 +44,8 @@ case class BooleanObjectRegular(
     name: String, 
     alternatives: List[String],
     description: Option[String],
-    example: Option[Boolean],
-    default: Option[Boolean],
+    example: OneOrMore[Boolean],
+    default: OneOrMore[Boolean],
     required: Boolean,
     direction: Direction,
     tag: Option[String],
@@ -65,18 +67,18 @@ case class BooleanObjectTrue(
 
   val required: Boolean = false
   val flagValue: Option[Boolean] = Some(true)
-  val default: Option[Boolean] = None
+  val default: OneOrMore[Boolean] = Nil
   val multiple: Boolean = false
   val multiple_sep: Char = ':'
-  val example: Option[Boolean] = None
+  val example: OneOrMore[Boolean] = Nil
 
   def copyDO(
     oType: String, 
     name: String, 
     alternatives: List[String],
     description: Option[String],
-    default: Option[Boolean],
-    example: Option[Boolean],
+    default: OneOrMore[Boolean],
+    example: OneOrMore[Boolean],
     required: Boolean,
     direction: Direction,
     tag: Option[String],
@@ -98,18 +100,18 @@ case class BooleanObjectFalse(
 
   val required: Boolean = false
   val flagValue: Option[Boolean] = Some(false)
-  val default: Option[Boolean] = None
+  val default: OneOrMore[Boolean] = Nil
   val multiple: Boolean = false
   val multiple_sep: Char = ':'
-  val example: Option[Boolean] = None
+  val example: OneOrMore[Boolean] = Nil
 
   def copyDO(
     oType: String, 
     name: String, 
     alternatives: List[String],
     description: Option[String],
-    default: Option[Boolean],
-    example: Option[Boolean],
+    default: OneOrMore[Boolean],
+    example: OneOrMore[Boolean],
     required: Boolean,
     direction: Direction,
     tag: Option[String],

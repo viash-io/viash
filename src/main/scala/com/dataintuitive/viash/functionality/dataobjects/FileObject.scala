@@ -18,13 +18,14 @@
 package com.dataintuitive.viash.functionality.dataobjects
 
 import java.nio.file.Path
+import com.dataintuitive.viash.helpers.Circe.OneOrMore
 
 case class FileObject(
   name: String,
   alternatives: List[String] = Nil,
   description: Option[String] = None,
-  example: Option[Path] = None,
-  default: Option[Path] = None,
+  example: OneOrMore[Path] = Nil,
+  default: OneOrMore[Path] = Nil,
   must_exist: Boolean = false,
   required: Boolean = false,
   tag: Option[String] = None,
@@ -38,8 +39,8 @@ case class FileObject(
     name: String, 
     alternatives: List[String],
     description: Option[String],
-    example: Option[Path],
-    default: Option[Path],
+    example: OneOrMore[Path],
+    default: OneOrMore[Path],
     required: Boolean,
     direction: Direction,
     tag: Option[String],
