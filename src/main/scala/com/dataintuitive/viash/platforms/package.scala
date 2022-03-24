@@ -30,6 +30,9 @@ package object platforms {
   implicit val encodeNextFlowPlatform: Encoder.AsObject[NextFlowPlatform] = deriveConfiguredEncoder
   implicit val decodeNextFlowPlatform: Decoder[NextFlowPlatform] = deriveConfiguredDecoder
 
+  implicit val encodeNextFlowPlatformPoc: Encoder.AsObject[NextFlowPlatformPoc] = deriveConfiguredEncoder
+  implicit val decodeNextFlowPlatformPoc: Decoder[NextFlowPlatformPoc] = deriveConfiguredDecoder
+
   implicit val encodeNativePlatform: Encoder.AsObject[NativePlatform] = deriveConfiguredEncoder
   implicit val decodeNativePlatform: Decoder[NativePlatform] = deriveConfiguredDecoder
 
@@ -43,6 +46,7 @@ package object platforms {
       val objJson = platform match {
         case s: DockerPlatform => encodeDockerPlatform(s)
         case s: NextFlowPlatform => encodeNextFlowPlatform(s)
+        case s: NextFlowPlatformPoc => encodeNextFlowPlatformPoc(s)
         case s: NativePlatform => encodeNativePlatform(s)
         // case s: DebugPlatform => encodeDebugPlatform(s)
       }
@@ -57,6 +61,7 @@ package object platforms {
           case Right("native") => decodeNativePlatform.widen
           // case Right("debug") => decodeDebugPlatform.widen
           case Right("nextflow") => decodeNextFlowPlatform.widen
+          case Right("nextflowpoc") => decodeNextFlowPlatformPoc.widen
           case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised.")
           case Left(exception) => throw exception
         }
