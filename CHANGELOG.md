@@ -1,3 +1,15 @@
+# Viash 0.5.11
+
+## MINOR CHANGES
+
+* `viash_build`: Added unit test for this component.
+* `viash_test`: Added unit test for this component.
+
+## BUG FIXES
+
+* `viash_build`: The `query_name` and `query_namespace` arguments were switched around. These arguments are now passed correctly.
+* `viash_test`: The `query_name` and `query_namespace` arguments were switched around. These arguments are now passed correctly.
+
 # Viash 0.5.10
 
 ## MAJOR CHANGES
