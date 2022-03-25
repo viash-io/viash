@@ -71,7 +71,7 @@ case class JavaScriptScript(
        |let meta = {
        |  ${metaSet.mkString(",\n  ")}
        |};
-       |let resources_dir = '$$VIASH_RESOURCES_DIR'
+       |let resources_dir = '$$VIASH_META_RESOURCES_DIR'
        |""".stripMargin
   }
 }

@@ -120,7 +120,7 @@ case class ScalaScript(
        |  ${metaSet.mkString(",\n  ")}
        |)
        |
-       |val resources_dir = "$$VIASH_RESOURCES_DIR"
+       |val resources_dir = "$$VIASH_META_RESOURCES_DIR"
        |""".stripMargin
   }
 }

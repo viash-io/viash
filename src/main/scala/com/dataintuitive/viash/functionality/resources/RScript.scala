@@ -77,7 +77,7 @@ case class RScript(
        |)
        |
        |# get resources dir
-       |resources_dir = "$$VIASH_RESOURCES_DIR"
+       |resources_dir = "$$VIASH_META_RESOURCES_DIR"
        |""".stripMargin
   }
 }
