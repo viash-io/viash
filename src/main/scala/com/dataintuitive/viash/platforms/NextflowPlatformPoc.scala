@@ -26,11 +26,12 @@ import com.dataintuitive.viash.helpers.{Docker, Bash}
 import com.dataintuitive.viash.helpers.Circe._
 import com.dataintuitive.viash.wrapper.BashWrapper
 import com.dataintuitive.viash.helpers.Format
+import com.dataintuitive.viash.platforms.nextflow.NextflowHelper
 
 /**
  * Next-gen Platform class for generating NextFlow (DSL2) modules.
  */
-case class NextFlowPlatformPoc(
+case class NextflowPlatformPoc(
   id: String = "nextflowpoc",
   oType: String = "nextflowpoc"
 ) extends Platform {
@@ -155,30 +156,36 @@ case class NextFlowPlatformPoc(
       |
       |nextflow.enable.dsl=2
       |
-      |import nextflow.script.IncludeDef
-      |import nextflow.script.ScriptBinding
-      |import nextflow.script.ScriptMeta
-      |import java.nio.file.Files
-      |import java.nio.file.Paths
-      |
-      |// Define some global variables
-      |metaThis = ScriptMeta.current()
-      |resourcesDir = metaThis.getScriptPath().getParent()
-      |
-      |tempDir = Paths.get(
-      |  System.getenv('NXF_TEMP') ?:
-      |    System.getenv('VIASH_TEMP') ?: 
-      |    System.getenv('TEMPDIR') ?: 
-      |    System.getenv('TMPDIR') ?: 
-      |    '/tmp'
-      |).toAbsolutePath()
+      |// DEFINE CUSTOM CODE
       |
       |// functionality metadata
-      |fun = [
+      |thisFunctionality = [
       |  'name': '${functionality.name}',
       |  'arguments': [${argumentsStr.mkString(",")}
       |  ]
-      |]""".stripMargin
+      |]
+      |
+      |thisHelpMessage = "foo"    // TODO: fill in by functionality
+      |
+      |thisScript = "echo hi"     // TODO: fill in by functionality
+      |
+      |thisDefaultDirectives = [  // TODO: fill in by NextflowPlatformPoc.directives
+      |]
+      |
+      |thisDefaultProcessArgs = [
+      |  key: thisFunctionality.name,
+      |  args: [:],
+      |  simplifyInput: false,    // TODO: make configurable
+      |  simplifyOutput: false,   // TODO: make configurable
+      |  map: null,               // identity operator: { it -> it }
+      |  mapId: null,             // identity operator: { it -> it[0] }
+      |  mapData: null,           // identity operator: { it -> it[1] }
+      |  renameKeys: null         // usage: [ "new_key": "old_key" ]
+      |]
+      |
+      |// END CUSTOM CODE
+      |
+      |""".stripMargin + NextflowHelper.code
   }
 
   def createMainNfFile(functionality: Functionality): Resource = {
