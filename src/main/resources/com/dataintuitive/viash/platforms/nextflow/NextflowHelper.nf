@@ -16,7 +16,7 @@ tempDir = Paths.get(
 ).toAbsolutePath()
 
 def assertMapKeys(map, expectedKeys, requiredKeys, mapName) {
-  assert map instanceof HashMap : "Expected publish argument '$elem' to be a String or a HashMap. Found: class ${elem.getClass()}"
+  assert map instanceof HashMap : "Expected argument '$mapName' to be a HashMap. Found: class ${map.getClass()}"
   map.forEach { key, val -> 
     assert key in expectedKeys : "Unexpected key '$key' in ${mapName ? mapName + " " : ""}map"
   }
@@ -27,6 +27,9 @@ def assertMapKeys(map, expectedKeys, requiredKeys, mapName) {
 
 // TODO: unit test processDirectives
 def processDirectives(Map drctv) {
+  // remove null values
+  drctv = drctv.findAll{k, v -> v}
+
   /* DIRECTIVE accelerator
     accepted examples:
     - [ limit: 4, type: "nvidia-tesla-k80" ]

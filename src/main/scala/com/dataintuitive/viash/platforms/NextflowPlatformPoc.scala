@@ -26,14 +26,18 @@ import com.dataintuitive.viash.helpers.{Docker, Bash}
 import com.dataintuitive.viash.helpers.Circe._
 import com.dataintuitive.viash.wrapper.BashWrapper
 import com.dataintuitive.viash.helpers.Format
-import com.dataintuitive.viash.platforms.nextflow.NextflowHelper
+import com.dataintuitive.viash.platforms.nextflow._
+import io.circe.syntax._
 
 /**
  * Next-gen Platform class for generating NextFlow (DSL2) modules.
  */
 case class NextflowPlatformPoc(
   id: String = "nextflowpoc",
-  oType: String = "nextflowpoc"
+  oType: String = "nextflowpoc",
+  directives: NextflowDirectives = NextflowDirectives(),
+  simplifyInput: Boolean = false,
+  simplifyOutput: Boolean = false
 ) extends Platform {
 
 
@@ -69,7 +73,7 @@ case class NextflowPlatformPoc(
 
   // interpreted from BashWrapper
   def renderMainNf(functionality: Functionality): String = {
-    
+    /************************* HEADER *************************/
     // generate header
     val nav = BashWrapper.nameAndVersion(functionality)
     val nameAndVersionHeader =
@@ -93,10 +97,12 @@ case class NextflowPlatformPoc(
          |The authors of this component should specify the license in the header of such files, 
          |or include a separate license file detailing the licenses of all included files.""".stripMargin
 
+    /************************* FUNCTIONALITY *************************/
     val argumentsStr = functionality.arguments.map{ arg => 
       // TODO: escape descr
       val descrStr = arg.description.map(des => s"\n      'description': '$des',").getOrElse("")
       // TODO: better type check of default values
+      // TODO: _could_ write this a lot more elegantly
       val defaultStr = 
         if (arg.isInstanceOf[FileObject] && arg.direction == Output) {
           val mult = if (arg.multiple) "_*" else ""
@@ -140,21 +146,56 @@ case class NextflowPlatformPoc(
       s"""
          |    [
          |      'name': '${arg.plainName}',
-         |      'otype': '${arg.otype}',
          |      'required': ${arg.required},
          |      'type': '${arg.oType}',
          |      'direction': '${arg.direction}',${descrStr}${defaultStr}${exampleStr}
-         |      'multiple': ${arg.multiple},
-         |      'multiple_sep': '${arg.multiple_sep}'
+         |      'multiple': ${arg.multiple}
          |    ]""".stripMargin
     }
 
+    /************************* HELP *************************/
+
+    /************************* SCRIPT *************************/
+    val executionCode = functionality.mainScript match {
+      // if mainResource is empty (shouldn't be the case)
+      case None => ""
+
+      // if mainResource is simply an executable
+      case Some(e: Executable) => //" " + e.path.get + " $VIASH_EXECUTABLE_ARGS"
+        throw new NotImplementedError("Running executables through a NextflowPlatform is not yet implemented. Create a support ticket to request this functionality if necessary.")
+
+      // if mainResource is a script
+      case Some(res) =>
+        val code = res.readWithPlaceholder(functionality).get
+        val escapedCode = BashWrapper.escapeViash(code).replace("\\", "\\\\")
+
+        // IMPORTANT! difference between code below and BashWrapper:
+        // script is stored as `.viash_script.sh`.
+        val scriptPath = "$tempscript"
+
+        s"""
+          |set -e
+          |tempscript=".viash_script.sh"
+          |cat > "$scriptPath" << VIASHMAIN
+          |$escapedCode
+          |VIASHMAIN
+          |${res.meta.command(scriptPath)}
+          |""".stripMargin
+    }
+
+    /************************* MAIN.NF *************************/
+    val tripQuo = """""""""
     s"""$nameAndVersionHeader
       |
       |// ${Format.wordWrap(header, 78).mkString("\n// ")}
       |$authorHeader
       |
       |nextflow.enable.dsl=2
+      |
+      |
+      |import groovy.json.JsonSlurper
+      |def jsonSlurper = new JsonSlurper()
+      |
       |
       |// DEFINE CUSTOM CODE
       |
@@ -167,20 +208,25 @@ case class NextflowPlatformPoc(
       |
       |thisHelpMessage = "foo"    // TODO: fill in by functionality
       |
-      |thisScript = "echo hi"     // TODO: fill in by functionality
+      |thisScript = '''$executionCode'''.replace('\\\\', '\\\\\\\\').replace('$$', '\\\\$$')
       |
-      |thisDefaultDirectives = [  // TODO: fill in by NextflowPlatformPoc.directives
-      |]
+      |thisDefaultDirectives = jsonSlurper.parseText($tripQuo${directives.asJson}$tripQuo)
       |
       |thisDefaultProcessArgs = [
       |  key: thisFunctionality.name,
       |  args: [:],
-      |  simplifyInput: false,    // TODO: make configurable
-      |  simplifyOutput: false,   // TODO: make configurable
-      |  map: null,               // identity operator: { it -> it }
-      |  mapId: null,             // identity operator: { it -> it[0] }
-      |  mapData: null,           // identity operator: { it -> it[1] }
-      |  renameKeys: null         // usage: [ "new_key": "old_key" ]
+      |  // whether or not to accept [id, Path, ...] inputs instead of [id, [input: Path], ...]
+      |  simplifyInput: $simplifyInput,
+      |  // if output is a single file, will output [id, Path, ...] instead of [id, [output: Path], ...]
+      |  simplifyOutput: $simplifyOutput,
+      |  // identity operator: { it -> it }
+      |  map: null,
+      |  // identity operator: { it -> it[0] }
+      |  mapId: null,
+      |  // identity operator: { it -> it[1] }
+      |  mapData: null,
+      |  // usage: [ "new_key": "old_key" ]
+      |  renameKeys: null
       |]
       |
       |// END CUSTOM CODE
