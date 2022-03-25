@@ -33,7 +33,7 @@ import io.circe.{Printer => JsonPrinter}
 /**
  * Next-gen Platform class for generating NextFlow (DSL2) modules.
  */
-case class NextflowPlatformPoc(
+case class NextflowPocPlatform(
   id: String = "nextflowpoc",
   oType: String = "nextflowpoc",
   directives: NextflowDirectives = NextflowDirectives(),
