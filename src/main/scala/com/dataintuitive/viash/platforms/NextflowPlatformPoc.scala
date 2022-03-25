@@ -28,6 +28,7 @@ import com.dataintuitive.viash.wrapper.BashWrapper
 import com.dataintuitive.viash.helpers.Format
 import com.dataintuitive.viash.platforms.nextflow._
 import io.circe.syntax._
+import io.circe.{Printer => JsonPrinter}
 
 /**
  * Next-gen Platform class for generating NextFlow (DSL2) modules.
@@ -185,6 +186,7 @@ case class NextflowPlatformPoc(
 
     /************************* MAIN.NF *************************/
     val tripQuo = """""""""
+    val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
     s"""$nameAndVersionHeader
       |
       |// ${Format.wordWrap(header, 78).mkString("\n// ")}
@@ -210,7 +212,7 @@ case class NextflowPlatformPoc(
       |
       |thisScript = '''$executionCode'''.replace('\\\\', '\\\\\\\\').replace('$$', '\\\\$$')
       |
-      |thisDefaultDirectives = jsonSlurper.parseText($tripQuo${directives.asJson}$tripQuo)
+      |thisDefaultDirectives = jsonSlurper.parseText($tripQuo${jsonPrinter.print(directives.asJson)}$tripQuo)
       |
       |thisDefaultProcessArgs = [
       |  key: thisFunctionality.name,

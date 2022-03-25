@@ -21,7 +21,7 @@ import com.dataintuitive.viash.functionality.Functionality
 
 case class DockerImageInfo(
   name: String, 
-  tag: String, 
+  tag: String = "latest", 
   registry: Option[String] = None,
   organization: Option[String] = None
 ) {
