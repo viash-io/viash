@@ -2,7 +2,12 @@
 
 ## MINOR CHANGES
 
+* `DockerPlatform`: Move description labels to the end of the Dockerfile to improve cross-component caching.
+
+* `Functionality`: Arguments where `.multiple` is `true` can now have lists as `default` and `example`.
+
 * `viash_build`: Added unit test for this component.
+
 * `viash_test`: Added unit test for this component.
 
 ## BUG FIXES
@@ -10,35 +15,44 @@
 * `viash_build`: The `query_name` and `query_namespace` arguments were switched around. These arguments are now passed correctly.
 * `viash_test`: The `query_name` and `query_namespace` arguments were switched around. These arguments are now passed correctly.
 
+# Viash 0.5.10.1
+
+## BUG FIX
+
+* `NextflowPlatform`: Fix passthrough of `organization` field.
+
 # Viash 0.5.10
 
 ## MAJOR CHANGES
 
 * `viash_install`:
   - Added `--log_prefix`: This prefix is used to determine the path of the log files for `viash_build`, `viash_test` and `viash_push`.
-  - Added `--organization`: Id of the organisation to be used in the Docker image name, i.e. "<registry>/<organization>/<namespace><namespace_sep><name>".
+  - Added `--organization`: Id of the organisation to be used in the Docker image name, i.e. `<registry>/<organization>/<namespace><namespace_sep><name>`.
   - Added `--target_image_source`: Url to the Git repo in which this project resides.
   - Removed `--log`.
 
 * `viash_build`:
   - Reduce code duplication by contructing the command with Bash Arrays.
   - Renamed `--platforms` to `--platform`.
-  - Added `--organization`: Id of the organisation to be used in the Docker image name, i.e. "<registry>/<organization>/<namespace><namespace_sep><name>".
+  - Added `--organization`: Id of the organisation to be used in the Docker image name, i.e. `<registry>/<organization>/<namespace><namespace_sep><name>`.
   - Added `--target_image_source`: Url to the Git repo in which this project resides.
   - Changed default of `--log` from `log.txt` to `.viash_build_log.txt`.
+  - Added `--verbose`: Print out the underlying `viash ns build` command before running it.
 
 * `viash_test`:
   - Reduce code duplication by contructing the command with Bash Arrays.
   - Renamed `--platforms` to `--platform`.
-  - Added `--organization`: Id of the organisation to be used in the Docker image name, i.e. "<registry>/<organization>/<namespace><namespace_sep><name>".
+  - Added `--organization`: Id of the organisation to be used in the Docker image name, i.e. `<registry>/<organization>/<namespace><namespace_sep><name>`.
   - Added `--target_image_source`: Url to the Git repo in which this project resides.
   - Changed default of `--log` from `log.txt` to `.viash_test_log.txt`.
   - Changed default of `--tsv` from `log.tsv` to `.viash_test_log.tsv`.
+  - Added `--verbose`: Print out the underlying `viash ns test` command before running it.
 
 * `viash_push`:
   - Reduce code duplication by contructing the command with Bash Arrays.
-  - Added `--organization`: Id of the organisation to be used in the Docker image name, i.e. "<registry>/<organization>/<namespace><namespace_sep><name>".
+  - Added `--organization`: Id of the organisation to be used in the Docker image name, i.e. `<registry>/<organization>/<namespace><namespace_sep><name>`.
   - Changed default of `--log` from `log.txt` to `.viash_push_log.txt`.
+  - Added `--verbose`: Print out the underlying `viash ns build` command before running it.
 
 ## MINOR CHANGES
 

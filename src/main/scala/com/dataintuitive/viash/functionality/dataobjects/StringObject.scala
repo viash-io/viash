@@ -17,12 +17,14 @@
 
 package com.dataintuitive.viash.functionality.dataobjects
 
+import com.dataintuitive.viash.helpers.Circe.OneOrMore
+
 case class StringObject(
   name: String,
   alternatives: List[String] = Nil,
   description: Option[String] = None,
-  example: Option[String] = None,
-  default: Option[String] = None,
+  example: OneOrMore[String] = Nil,
+  default: OneOrMore[String] = Nil,
   required: Boolean = false,
   values: Option[List[String]] = None,
   tag: Option[String] = None,
@@ -36,8 +38,8 @@ case class StringObject(
     name: String, 
     alternatives: List[String],
     description: Option[String],
-    example: Option[String],
-    default: Option[String],
+    example: OneOrMore[String],
+    default: OneOrMore[String],
     required: Boolean,
     direction: Direction,
     tag: Option[String],

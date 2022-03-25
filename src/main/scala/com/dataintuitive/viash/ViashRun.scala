@@ -22,6 +22,7 @@ import java.nio.file.Paths
 import com.dataintuitive.viash.config._
 import com.dataintuitive.viash.functionality.dataobjects.{FileObject, Output}
 import com.dataintuitive.viash.helpers.IO
+import com.dataintuitive.viash.helpers.Circe.{OneOrMore, One, More}
 
 import scala.sys.process.{Process, ProcessLogger}
 
@@ -33,7 +34,7 @@ object ViashRun {
     val dirArg = FileObject(
       name = "--viash_tempdir_arg",
       direction = Output,
-      default = Some(dir)
+      default = One(dir)
     )
     val fun2 = fun.copy(
       dummy_arguments = List(dirArg)

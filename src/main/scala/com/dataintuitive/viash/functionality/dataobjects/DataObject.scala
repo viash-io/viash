@@ -17,13 +17,15 @@
 
 package com.dataintuitive.viash.functionality.dataobjects
 
+import com.dataintuitive.viash.helpers.Circe.OneOrMore
+
 abstract class DataObject[Type] {
   val oType: String
   val name: String
   val alternatives: List[String]
   val description: Option[String]
-  val example: Option[Type]
-  val default: Option[Type]
+  val example: OneOrMore[Type]
+  val default: OneOrMore[Type]
   val required: Boolean
   val direction: Direction
   val tag: Option[String]
@@ -41,12 +43,15 @@ abstract class DataObject[Type] {
     name: String = this.name,
     alternatives: List[String] = this.alternatives,
     description: Option[String] = this.description,
-    example: Option[Type] = this.example,
-    default: Option[Type] = this.default,
+    example: OneOrMore[Type] = this.example,
+    default: OneOrMore[Type] = this.default,
     required: Boolean = this.required,
     direction: Direction = this.direction,
     tag: Option[String] = this.tag,
     multiple: Boolean = this.multiple,
     multiple_sep: Char = this.multiple_sep
   ): DataObject[Type]
+
+  assert(example.length <= 1 || multiple, s"Argument $name: 'example' should be length <= 1 if 'multiple' is false")
+  assert(default.length <= 1 || multiple, s"Argument $name: 'default' should be length <= 1 if 'multiple' is false")
 }

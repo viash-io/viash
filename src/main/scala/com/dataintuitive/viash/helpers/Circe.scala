@@ -44,6 +44,14 @@ object Circe {
   // oneormore helper type
   abstract class OneOrMore[+A] {
     def toList: List[A]
+    override def equals(that: Any): Boolean = {
+      that match {
+        case that: OneOrMore[_] => {
+          this.toList.equals(that.toList)
+        }
+        case _ => false
+      }
+    }
   }
   case class One[A](element: A) extends OneOrMore[A] {
     def toList = List(element)
@@ -52,12 +60,18 @@ object Circe {
     def toList = list
   }
 
-  implicit def oneOrMoreToList[A](oom: OneOrMore[A]): List[A] = oom.toList
+  implicit def oneOrMoreToList[A](oom: OneOrMore[A]): List[A] = {
+    if (oom == null) {
+      Nil
+    } else {
+      oom.toList
+    }
+  }
   implicit def listToOneOrMore[A](li: List[A]): OneOrMore[A] = More(li)
 
   
   implicit def encodeOneOrMore[A](implicit enc: Encoder[List[A]]): Encoder[OneOrMore[A]] = { 
-    oom: OneOrMore[A] => enc(oom.toList)
+    oom: OneOrMore[A] => if (oom == null) enc(Nil) else enc(oom.toList)
   }
 
   implicit def decodeOneOrMore[A](implicit da: Decoder[A], dl: Decoder[List[A]]): Decoder[OneOrMore[A]] = {

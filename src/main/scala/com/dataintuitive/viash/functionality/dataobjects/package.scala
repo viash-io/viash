@@ -27,6 +27,25 @@ package object dataobjects {
 
   import com.dataintuitive.viash.helpers.Circe._
 
+  implicit val encodeDouble: Encoder[Double] = Encoder.instance {
+      value => 
+        if (value.isPosInfinity) {
+          Json.fromString("+Infinity")
+        } else {
+          Json.fromDoubleOrString(value)
+        }
+    }
+  implicit val decodeDouble: Decoder[Double] = 
+    io.circe.Decoder.decodeDouble or
+    Decoder.instance {
+      cursor => cursor.value.as[String].map(_.toLowerCase()) match {
+        case Right("+inf" | "+infinity" | "positiveinfinity" | "positiveinf") => Right(Double.PositiveInfinity)
+        case Right("-inf" | "-infinity" | "negativeinfinity" | "negativeinf") => Right(Double.NegativeInfinity)
+        case Right("nan") => Right(Double.NaN)
+        case a => a.map(_.toDouble)
+      }
+    }
+
   // encoder and decoder for java.io.File
   implicit val encodeFile: Encoder[java.io.File] = Encoder.instance {
     file => Json.fromString(file.getPath)

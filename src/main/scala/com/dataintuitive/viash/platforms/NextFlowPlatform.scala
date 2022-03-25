@@ -101,7 +101,7 @@ case class NextFlowPlatform(
       * the module standalone as well as in a pipeline.
       */
     val namespacedParameters: List[ConfigTuple] = {
-      functionality.arguments.flatMap { dataObject => (dataObject.required, dataObject.default) match {
+      functionality.arguments.flatMap { dataObject => (dataObject.required, dataObject.default.toList) match {
         case (true, _) =>
           println(s"> ${dataObject.plainName} in $fname is set to be required.")
           println(s"> --${dataObject.plainName} <...> has to be specified when running this module standalone.")
@@ -111,18 +111,18 @@ case class NextFlowPlatform(
               "viash_no_value"
             )(fun)
           )
-        case (false, Some(x)) =>
-          Some(
-            namespacedValueTuple(
-              dataObject.plainName.replace("-", "_"),
-              Bash.escape(x.toString, backtick = false, newline = true, quote = true)
-            )(fun)
-          )
-        case (false, None) =>
+        case (false, Nil) =>
           Some(
             namespacedValueTuple(
               dataObject.plainName.replace("-", "_"),
               "no_default_value_configured"
+            )(fun)
+          )
+        case (false, li) =>
+          Some(
+            namespacedValueTuple(
+              dataObject.plainName.replace("-", "_"),
+              Bash.escape(li.mkString(dataObject.multiple_sep.toString), backtick = false, newline = true, quote = true)
             )(fun)
           )
       }}
@@ -142,6 +142,7 @@ case class NextFlowPlatform(
       "container" → imageInfo.name,
       "containerTag" -> imageInfo.tag,
       "containerRegistry" -> imageInfo.registry.getOrElse(""),
+      "containerOrganization" -> imageInfo.organization.getOrElse(""),
       "command" → executionCode
     )
 
@@ -280,11 +281,12 @@ case class NextFlowPlatform(
         |}
         |
         |def effectiveContainer(processParams) {
+        |  def _organization = params.containsKey("containerOrganization") ? params.containerOrganization : processParams.containerOrganization
         |  def _registry = params.containsKey("containerRegistry") ? params.containerRegistry : processParams.containerRegistry
         |  def _name = processParams.container
         |  def _tag = params.containsKey("containerTag") ? params.containerTag : processParams.containerTag
         |
-        |  return (_registry == "" ? "" : _registry + "/") + _name + ":" + _tag
+        |  return (_registry == "" ? "" : _registry + "/") + (_organization == "" ? "" : _organization + "/") + _name + ":" + _tag
         |}
         |
         |// Convert the nextflow.config arguments list to a List instead of a LinkedHashMap
@@ -742,6 +744,8 @@ object NextFlowUtils {
     val pointer = "${params." + fun.name + "__" + dataObject.plainName + "}"
 
     // TODO: Should this not be converted from the json?
+    val default = if (dataObject.default.isEmpty) None else Some(dataObject.default.mkString(dataObject.multiple_sep.toString))
+    val example = if (dataObject.example.isEmpty) None else Some(dataObject.default.mkString(dataObject.multiple_sep.toString))
     quoteLong(dataObject.plainName) → NestedValue(
       tupleToConfigTuple("name" → dataObject.plainName) ::
       tupleToConfigTuple("otype" → dataObject.otype) ::
@@ -751,10 +755,10 @@ object NextFlowUtils {
       tupleToConfigTuple("multiple" → dataObject.multiple) ::
       tupleToConfigTuple("multiple_sep" -> dataObject.multiple_sep) ::
       tupleToConfigTuple("value" → pointer) ::
-      dataObject.default.map{ x =>
+      default.map{ x =>
         List(tupleToConfigTuple("dflt" -> Bash.escape(x.toString, backtick = false, quote = true, newline = true)))
       }.getOrElse(Nil) :::
-      dataObject.example.map{x =>
+      example.map{x =>
         List(tupleToConfigTuple("example" -> Bash.escape(x.toString, backtick = false, quote = true, newline = true)))
       }.getOrElse(Nil) :::
       dataObject.description.map{x =>

@@ -27,6 +27,7 @@ import java.io.{ByteArrayOutputStream, File, FileWriter, PrintWriter}
 import java.nio.file.{Files, Path, Paths}
 import com.dataintuitive.viash.config.{Config, Version}
 import helpers.IO
+import com.dataintuitive.viash.helpers.Circe.{OneOrMore, One, More}
 
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -171,7 +172,7 @@ object ViashTest {
         val dirArg = FileObject(
           name = "dir",
           direction = Output,
-          default = Some(dir)
+          default = One(dir)
         )
         // generate bash script for test
         val funOnlyTest = platform.modifyFunctionality(fun.copy(
