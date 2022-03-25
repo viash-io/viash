@@ -26,7 +26,7 @@ case class StringObject(
   example: OneOrMore[String] = Nil,
   default: OneOrMore[String] = Nil,
   required: Boolean = false,
-  values: Option[List[String]] = None,
+  values: List[String] = Nil,
   tag: Option[String] = None,
   direction: Direction = Input,
   multiple: Boolean = false,

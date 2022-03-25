@@ -93,7 +93,7 @@ case class CSharpScript(
        |var meta = new {
        |  ${metaSet.mkString(",\n  ")}
        |};
-       |var resources_dir = "$$VIASH_RESOURCES_DIR";
+       |var resources_dir = "$$VIASH_META_RESOURCES_DIR";
        |""".stripMargin
   }
 }

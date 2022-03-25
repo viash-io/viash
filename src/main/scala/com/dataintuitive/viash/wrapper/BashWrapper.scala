@@ -27,7 +27,8 @@ object BashWrapper {
   val metaFields: List[(String, String)] = {
     List(
       ("VIASH_META_FUNCTIONALITY_NAME", "functionality_name"),
-      ("VIASH_RESOURCES_DIR", "resources_dir")
+      ("VIASH_META_RESOURCES_DIR", "resources_dir"),
+      ("VIASH_META_TEMP_DIR", "temp_dir")
     )
   }
 
