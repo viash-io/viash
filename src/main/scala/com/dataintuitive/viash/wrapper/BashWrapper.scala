@@ -224,7 +224,7 @@ object BashWrapper {
        |$var_resources_dir=`ViashSourceDir $${BASH_SOURCE[0]}`
        |
        |# backwards compatibility
-       |VIASH_RESOURCES_DIR="$var_resources_dir"
+       |VIASH_RESOURCES_DIR="$$$var_resources_dir"
        |
        |# define meta fields
        |VIASH_META_FUNCTIONALITY_NAME="${functionality.name}"
