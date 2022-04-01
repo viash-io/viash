@@ -28,7 +28,7 @@ object BashWrapper {
     List(
       ("VIASH_META_FUNCTIONALITY_NAME", "functionality_name"),
       ("VIASH_META_RESOURCES_DIR", "resources_dir"),
-      ("VIASH_META_TEMP_DIR", "temp_dir")
+      ("VIASH_TEMP", "temp_dir")
     )
   }
 
@@ -81,7 +81,7 @@ object BashWrapper {
   }
 
   val var_verbosity = "VIASH_VERBOSITY"
-  val var_resources_dir = "VIASH_RESOURCES_DIR"
+  val var_resources_dir = "VIASH_META_RESOURCES_DIR"
 
   def wrapScript(
     executor: String,
@@ -222,6 +222,9 @@ object BashWrapper {
        |
        |# find source folder of this component
        |$var_resources_dir=`ViashSourceDir $${BASH_SOURCE[0]}`
+       |
+       |# backwards compatibility
+       |VIASH_RESOURCES_DIR="$var_resources_dir"
        |
        |# define meta fields
        |VIASH_META_FUNCTIONALITY_NAME="${functionality.name}"
