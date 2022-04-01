@@ -63,11 +63,25 @@ object Bash {
     argStore(name + "=*", plainName, "$(ViashRemoveFlags \"$1\")", 1, storeUnparsed)
   }
 
-  def escape(str: String, backtick: Boolean = true, quote: Boolean = false, newline: Boolean = false): String = {
-    val x = str.replaceAll("([\\\\$])", "\\\\$1")
-    val y = if (quote) x.replaceAll("\"", "\\\\\"") else x
-    val z = if (newline) y.replaceAll("\n", "\\\\n") else y
-    val a = if (backtick) z.replaceAll("`", "\\\\`") else z
-    a
+  case class Escaper(str: String) {
+    def transform(fun: Function[String, String], apply: Boolean = true): Escaper = {
+      Escaper(if (apply) fun(str) else str)
+    }
+  }
+
+  def escape(
+    str: String,
+    backtick: Boolean = true,
+    quote: Boolean = false,
+    singleQuote: Boolean = false,
+    newline: Boolean = false
+  ): String = {
+    val x = Escaper(str)
+      .transform(_.replaceAll("([\\\\$])", "\\\\$1"))
+      .transform(_.replaceAll("`", "\\\\`"), backtick)
+      .transform(_.replaceAll("\"", "\\\\\""), quote)
+      .transform(_.replaceAll("'", "\\\\'"), singleQuote)
+      .transform(_.replaceAll("\n", "\\\\n"), newline)
+    x.str
   }
 }

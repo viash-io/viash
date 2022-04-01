@@ -29,6 +29,7 @@ import com.dataintuitive.viash.helpers.Format
 import com.dataintuitive.viash.platforms.nextflow._
 import io.circe.syntax._
 import io.circe.{Printer => JsonPrinter}
+import shapeless.syntax.singleton
 
 /**
  * Next-gen Platform class for generating NextFlow (DSL2) modules.
@@ -56,8 +57,22 @@ case class NextflowPocPlatform(
 
   def renderNextflowConfig(functionality: Functionality): String = {
     val versStr = functionality.version.map(ver => s"\n  version = '$ver'").getOrElse("")
-    val descStr = functionality.description.map(ver => s"\n  description = '$ver'").getOrElse("")
-    val authStr = if (functionality.authors.isEmpty) "" else "\n  author = '" + functionality.authors.mkString(", ") + "'"
+
+    // val descStr = functionality.description.map(ver => s"\n  description = '$ver'").getOrElse("")
+    val descStr = functionality.description.map{des => 
+      val escDes = Bash.escape(des, singleQuote = true, newline = true)
+      s"\n  description = '$escDes'"
+    }.getOrElse("")
+
+    // val authStr = if (functionality.authors.isEmpty) "" else "\n  author = '" + functionality.authors.mkString(", ") + "'"
+    val authStr = 
+      if (functionality.authors.isEmpty) {
+        "" 
+      } else {
+        val escAut = Bash.escape(functionality.authors.mkString(", "), singleQuote = true)
+        s"\n  author = '$escAut'"
+      }
+
     s"""manifest {
     |  name = '${functionality.name}'
     |  mainScript = 'main.nf'$versStr$descStr$authStr
@@ -86,7 +101,7 @@ case class NextflowPocPlatform(
       if (functionality.authors.isEmpty) {
         ""
       } else {
-        functionality.authors.map(_.toString).mkString("//\n// Component authors:\n// * ", "\n// * ", "\n")
+        functionality.authors.map(_.toString.replace("\n", " ")).mkString("//\n// Component authors:\n// * ", "\n// * ", "\n")
       }
 
     // TODO: remove code duplication w/ BashWrapper
@@ -100,11 +115,13 @@ case class NextflowPocPlatform(
 
     /************************* FUNCTIONALITY *************************/
     val argumentsStr = functionality.arguments.map{ arg => 
-      // TODO: escape descr
-      val descrStr = arg.description.map(des => s"\n      'description': '$des',").getOrElse("")
-      // TODO: better type check of default values
-      // TODO: _could_ write this a lot more elegantly
-      val defaultStr = 
+      val descrStr = arg.description.map{des => 
+        val escDes = Bash.escape(des, singleQuote = true, newline = true)
+        s"\n      'description': '$escDes',"
+      }.getOrElse("")
+
+      // construct data for default
+      val defTup = 
         if (arg.isInstanceOf[FileObject] && arg.direction == Output) {
           val mult = if (arg.multiple) "_*" else ""
           val reg = ".*\\.".r
@@ -116,34 +133,47 @@ case class NextflowPocPlatform(
             } else {
               ""
             }
-          s"\n      'default': '$$id.$$key.${arg.plainName}${mult}${ext}',"
+          ("'", Some(s"$$id.$$key.${arg.plainName}${mult}${ext}"), "'", false)
         } else if (arg.default.isEmpty) {
-          ""
+          ("", None, "", false)
         } else if (arg.multiple && (arg.isInstanceOf[StringObject] || arg.isInstanceOf[FileObject]) ) {
-          s"\n      'default': ['${arg.default.toList.mkString("', '")}'],"
+          ("['", Some(arg.default.toList.mkString("', '")), "']", true)
         } else if (arg.multiple) {
-          s"\n      'default': [${arg.default.toList.mkString(", ")}],"
+          ("[", Some(arg.default.toList.mkString(", ")), "]", true)
         } else if (arg.isInstanceOf[StringObject] || arg.isInstanceOf[FileObject]) {
-          s"\n      'default': '${arg.default.head}',"
+          ("'", Some(arg.default.head.toString), "'", true)
         } else {
-          s"\n      'default': ${arg.default.head},"
+          ("", Some(arg.default.head.toString), "", true)
         }
-      val exampleStr = 
-        if (arg.example.isEmpty) {
-          ""
-        } else if (arg.multiple && (arg.isInstanceOf[StringObject] || arg.isInstanceOf[FileObject]) ) {
-          s"\n      'example': ['${arg.example.toList.mkString("', '")}'],"
-        } else if (arg.multiple) {
-          s"\n      'example': [${arg.example.toList.mkString(", ")}],"
-        } else if (arg.isInstanceOf[StringObject] || arg.isInstanceOf[FileObject]) {
-          s"\n      'example': '${arg.example.head}',"
-        } else {
-          s"\n      'example': ${arg.example.head},"
-        }
-
-      if (arg.oType == "file" && arg.direction == Output) {      
-        "'default': '$id.$key.output_multi_*.txt',"
+      // format default as string
+      val defaultStr = defTup match {
+        case (_, None, _, _) => ""
+        case (left, Some(middle), right, escape) =>
+          val middleEsc = if (escape) Bash.escape(middle, singleQuote = true, newline = true) else middle
+          s"\n      'default': $left$middleEsc$right,"
       }
+
+      // construct data for example
+      val exaTup = 
+        if (arg.example.isEmpty) {
+          ("", None, "", false)
+        } else if (arg.multiple && (arg.isInstanceOf[StringObject] || arg.isInstanceOf[FileObject]) ) {
+          ("['", Some(arg.example.toList.mkString("', '")), "']", true)
+        } else if (arg.multiple) {
+          ("[", Some(arg.example.toList.mkString(", ")), "]", true)
+        } else if (arg.isInstanceOf[StringObject] || arg.isInstanceOf[FileObject]) {
+          ("'", Some(arg.example.head.toString), "'", true)
+        } else {
+          ("", Some(arg.example.head.toString), "", true)
+        }
+      // format example as string
+      val exampleStr = exaTup match {
+        case (_, None, _, _) => ""
+        case (left, Some(middle), right, escape) =>
+          val middleEsc = if (escape) Bash.escape(middle, singleQuote = true, newline = true) else middle
+          s"\n      'example': $left$middleEsc$right,"
+      }
+
       s"""
          |    [
          |      'name': '${arg.plainName}',
@@ -168,7 +198,9 @@ case class NextflowPocPlatform(
       // if mainResource is a script
       case Some(res) =>
         val code = res.readWithPlaceholder(functionality).get
-        val escapedCode = BashWrapper.escapeViash(code).replace("\\", "\\\\")
+        val escapedCode = BashWrapper.escapeViash(code)
+          .replace("'''", "\\'\\'\\'")
+          .replace("\\", "\\\\")
 
         // IMPORTANT! difference between code below and BashWrapper:
         // script is stored as `.viash_script.sh`.

@@ -492,9 +492,10 @@ def processFactory(Map processArgs) {
   |\${inject["stub"]}
   |$tripQuo
   |script:
+  |def tripQuo='$tripQuo'
   |$tripQuo
   |\${inject["before_script"]}
-  |${thisScript}
+  |${thisScript.replaceAll(tripQuo, '\\$tripQuo')}
   |\${inject["after_script"]}
   |$tripQuo
   |}
@@ -757,7 +758,8 @@ def workflowFactory(Map args) {
             |export VIASH_RESOURCES_DIR="\$VIASH_META_RESOURCES_DIR"
             |export VIASH_TEMP="\$VIASH_META_TEMP_DIR"
             |export TEMP_DIR="\$VIASH_META_TEMP_DIR"
-            """.stripMargin() +
+            |
+            |""".stripMargin() +
             parVariables.join("\n")
           def afterScript = ""
 
