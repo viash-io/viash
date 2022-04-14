@@ -153,6 +153,8 @@ case class NextflowPocPlatform(
           s"\n      'default': $left$middleEsc$right,"
       }
 
+      val multipleSepStr = if (arg.multiple) s",\n      'multiple_sep': '${arg.multiple_sep}'" else ""
+
       // construct data for example
       val exaTup = 
         if (arg.example.isEmpty) {
@@ -179,8 +181,8 @@ case class NextflowPocPlatform(
          |      'name': '${arg.plainName}',
          |      'required': ${arg.required},
          |      'type': '${arg.oType}',
-         |      'direction': '${arg.direction}',${descrStr}${defaultStr}${exampleStr}
-         |      'multiple': ${arg.multiple}
+         |      'direction': '${arg.direction.toString.toLowerCase}',${descrStr}${defaultStr}${exampleStr}
+         |      'multiple': ${arg.multiple}${multipleSepStr}
          |    ]""".stripMargin
     }
 
