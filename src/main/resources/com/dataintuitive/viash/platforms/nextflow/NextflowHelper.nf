@@ -743,8 +743,15 @@ def workflowFactory(Map args) {
               out = output[index + 2]
               // strip dummy '.exitcode' file from output (see nextflow-io/nextflow#2678)
               if (!out instanceof List || out.size() <= 1) {
-                out = null
-              } else if (out.size() == 2) {
+                if (par.multiple) {
+                  out = []
+                } else {
+                  assert !par.required :
+                      "Error in process '${processKey}' id '${output[0]}' argument '${par.name}'.\n" +
+                      "  Required output file is missing"
+                  out = null
+                }
+              } else if (out.size() == 2 && !par.multiple) {
                 out = out[1]
               } else {
                 out = out.drop(1)
