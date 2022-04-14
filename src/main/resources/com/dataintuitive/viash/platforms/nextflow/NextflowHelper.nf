@@ -5,8 +5,6 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 // Define some global variables
-resourcesDir = ScriptMeta.current().getScriptPath().getParent()
-
 tempDir = Paths.get(
   System.getenv('NXF_TEMP') ?:
     System.getenv('VIASH_TEMP') ?: 
@@ -14,6 +12,11 @@ tempDir = Paths.get(
     System.getenv('TMPDIR') ?: 
     '/tmp'
 ).toAbsolutePath()
+
+metaFiles = [
+  'resources_dir' : ScriptMeta.current().getScriptPath().getParent(),
+  'temp_dir': tempDir
+]
 
 def assertMapKeys(map, expectedKeys, requiredKeys, mapName) {
   assert map instanceof HashMap : "Expected argument '$mapName' to be a HashMap. Found: class ${map.getClass()}"
@@ -471,12 +474,40 @@ def processFactory(Map processArgs) {
     }
   }.join()
 
-  def outputPaths = thisFunctionality.arguments
-    .findAll { it.type == "file" && it.direction.toLowerCase() == "output" }
-    .collect { par ->
-      ', path("${args.' + par.name + '}"' + (par.required ? "" : ", optional: true") + ')'
-    }
+  def inputPaths = thisFunctionality.arguments
+    .findAll { it.type == "file" && it.direction == "input" }
+    .collect { ', path(viash_par_' + it.name + ')' }
     .join()
+
+  def outputPaths = thisFunctionality.arguments
+    .findAll { it.type == "file" && it.direction == "output" }
+    // .collect { ', path("${args.' + it.name + '}")' }
+    .collect { par -> ', path("${args.' + par.name + '}"' + (par.required ? "" : ", optional: true") + ')' }
+    .join()
+
+  // construct inputFileExports
+  def inputFileExports = thisFunctionality.arguments
+    .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
+    .collect { par ->
+      if (!par.required && !par.multiple) {
+        "\n\${viash_par_${par.name}.empty ? \"\" : \"export VIASH_PAR_${par.name.toUpperCase()}=\\\"\" + viash_par_${par.name}[0] + \"\\\"\"}"
+      } else {
+        "\nexport VIASH_PAR_${par.name.toUpperCase()}=\"\${viash_par_${par.name}.join(\":\")}\""
+      }
+    }
+
+  // construct metaFiles
+  def metaVariables = metaFiles.keySet().withIndex().collect { key, index ->
+    "export VIASH_META_${key.toUpperCase()}=\"\${meta[$index]}\""
+  }
+
+  // construct stub
+  def stub = thisFunctionality.arguments
+    .findAll { it.type == "file" && it.direction == "output" }
+    .collect { par -> 
+      'touch "${viash_par_' + par.name + '.join(\'" "\')}"'
+    }
+    .join("\n")
 
   // generate process string
   def procStr = 
@@ -484,19 +515,31 @@ def processFactory(Map processArgs) {
   |
   |process $procKey {$drctvStrs
   |input:
-  |  tuple val(id), path(paths), val(args), val(inject), val(passthrough)
+  |  tuple val(id)$inputPaths, val(args), val(passthrough), path(meta)
   |output:
   |  tuple val("\$id"), val(passthrough)$outputPaths
   |stub:
   |$tripQuo
-  |\${inject["stub"]}
+  |$stub
   |$tripQuo
   |script:
-  |def tripQuo='$tripQuo'
+  |def parInject = args.collect{ key, value ->
+  |  "export VIASH_PAR_\${key.toUpperCase()}=\\\"\$value\\\""
+  |}.join("\\n")
   |$tripQuo
-  |\${inject["before_script"]}
-  |${thisScript.replaceAll(tripQuo, '\\$tripQuo')}
-  |\${inject["after_script"]}
+  |# meta exports
+  |${metaVariables.join("\n")}
+  |export VIASH_META_FUNCTIONALITY_NAME="${thisFunctionality.name}"
+  |
+  |# meta synonyms
+  |export VIASH_RESOURCES_DIR="\\\$VIASH_META_RESOURCES_DIR"
+  |export VIASH_TEMP="\\\$VIASH_META_TEMP_DIR"
+  |export TEMP_DIR="\\\$VIASH_META_TEMP_DIR"
+  |
+  |# argument exports${inputFileExports.join()}
+  |\$parInject
+  |
+  |# process script${thisScript}
   |$tripQuo
   |}
   |""".stripMargin()
@@ -563,7 +606,7 @@ def workflowFactory(Map args) {
           // match file to input file
           if (processArgs.simplifyInput && tuple[1] instanceof Path) {
             def inputFiles = thisFunctionality.arguments
-              .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
+              .findAll { it.type == "file" && it.direction == "input" }
             
             assert inputFiles.size() == 1 : 
                 "Error in process '${processKey}' id '${tuple[0]}'.\n" +
@@ -610,7 +653,7 @@ def workflowFactory(Map args) {
           // rename map with wrong name
           if (processArgs.simplifyInput) {
             def inputFiles = thisFunctionality.arguments
-              .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
+              .findAll { it.type == "file" && it.direction == "input" }
             def foundFiles = tuple[1].findAll{k, v -> v instanceof Path}.collect{k, v -> k}
             if (inputFiles.size() == 1 && foundFiles.size() == 1) {
               // if (params.debug) println("process '${processKey}' id '${tuple[0]}' - Renaming key '${foundFiles[0]}' to '${inputFiles[0].name}'.")
@@ -621,11 +664,12 @@ def workflowFactory(Map args) {
           
           def id = tuple[0]
           def data = tuple[1]
+          def passthrough = tuple.drop(2)
 
           // fetch default params from functionality
-          def defaultArgs = thisFunctionality.arguments.findAll{ it.default }.collectEntries {
-            [ it.name, it.default ]
-          }
+          def defaultArgs = thisFunctionality.arguments
+            .findAll { it.containsKey("default") }
+            .collectEntries { [ it.name, it.default ] }
 
           // fetch overrides in params
           def paramArgs = thisFunctionality.arguments
@@ -640,88 +684,21 @@ def workflowFactory(Map args) {
           // combine params
           def combinedArgs = defaultArgs + paramArgs + processArgs.args + dataArgs
 
-          def procArgs = thisFunctionality.arguments
-            .findAll { combinedArgs.containsKey(it.name) }
-            .collectEntries { par ->
-              def parVal = combinedArgs[par.name]
-              if (par.direction.toLowerCase() == "output" && par.type == "file") {
-                def newVal = parVal.replaceAll('\\$id', id).replaceAll('\\$key', processKey)
-                [par.name, newVal]
-              } else {
-                [par.name, parVal]
-              }
-              
-            }
-
           // check whether required arguments exist
           thisFunctionality.arguments
             .forEach { par ->
               if (par.required) {
-                assert procArgs.containsKey(par.name): "Argument ${par.name} is required but does not have a value"
+                assert combinedArgs.containsKey(par.name): "Argument ${par.name} is required but does not have a value"
               }
             }
 
           // TODO: check whether parameters have the right type
 
-          // check for filename clashes
-          def fileNames = procArgs.collectMany { name, val ->
-            if (!val) {
-              []
-            } else if (val instanceof List) {
-              val.collectMany{ it instanceof Path ? [ it.getName() ] : [] }
-            } else if (val instanceof Path) {
-              [ val.getName() ]
-            } else {
-              []
-            }
-          }
-          // resolve filename clashes if need be
-          if (fileNames.unique(false).size() != fileNames.size()) {
-            print("WARNING: Detected input filename clashes. Resolving by creating temporary directory with symlinks.")
-            // create tempdir, add symlinks to input files
-            tmpdir = Files.createTempDirectory(dir = tempDir, prefix = "nxf_clash_linking")
-            // TODO: Remove temp directory after use
-            // the following doesn't work:
-            // addShutdownHook {
-            //   tmpdir.deleteDir()
-            // }
-            //printAllMethods(tmpdir)
-            procArgs = procArgs.collectEntries { name, val ->
-              if (val && val instanceof List) {
-                files_with_index = [1..val.size(), val].transpose()
-                val_new = files_with_index.collect { index, file_i ->
-                  if (file_i instanceof Path) {
-                    dest = tmpdir.resolve(file_i.getBaseName() + ".clash_" + name + "_" + index + "." + file_i.getExtension())
-                    file_i.mklink(dest)
-                  } else {
-                    file_i
-                  }
-                }
-              } else if (val && val instanceof Path) {
-                dest = tmpdir.resolve(val.getBaseName() + ".clash_" + name + "." + val.getExtension())
-                val_new = val.mklink(dest)
-              } else {
-                val_new = val
-              }
-              if (val != val_new) print("  Renamed $name: $val to $val_new")
-              [ name, val_new ]
-            }
-          }
-
-          def meta = [
-            'resources_dir' : resourcesDir,
-            'functionality_name': thisFunctionality.name,
-            'temp_dir': tempDir
-          ]
-
-          // find all paths
-          def inputPathsFromArgs = thisFunctionality.arguments
-            .findAll { it.type == "file" && it.direction.toLowerCase() == "input" && procArgs.containsKey(it.name) }
-            .collect { procArgs[it.name] }
-          def inputPathsFromMeta = meta
-
-          def inputPaths = (inputPathsFromArgs + inputPathsFromMeta)
-            .collectMany{ val ->
+          // process input files separately
+          def inputPaths = thisFunctionality.arguments
+            .findAll { it.type == "file" && it.direction == "input" }
+            .collect { par ->
+              def val = combinedArgs.containsKey(par.name) ? combinedArgs[par.name] : []
               if (val == null) {
                 []
               } else if (val instanceof List) {
@@ -731,55 +708,29 @@ def workflowFactory(Map args) {
               } else {
                 []
               }
+            }.collect{ it.findAll{ it.exists() } }
+
+          // remove input files
+          def argsExclInputFiles = thisFunctionality.arguments
+            .findAll { it.type != "file" || it.direction != "input" }
+            .collectEntries { par ->
+              def key = par.name
+              def val = combinedArgs[key]
+              if (par.multiple && val instanceof Collection) {
+                val = val.join(par.multiple_sep)
+              }
+              if (par.direction == "output" && par.type == "file") {
+                val = val.replaceAll('\\$id', id).replaceAll('\\$key', processKey)
+              }
+              [key, val]
             }
-            .findAll{ it.exists() }
 
-          // construct injects
-          def parVariables = procArgs.collect{ key, value ->
-            if (value instanceof Collection) {
-              "export VIASH_PAR_${key.toUpperCase()}=\"${value.join(":")}\""
-            } else {
-              "export VIASH_PAR_${key.toUpperCase()}=\"$value\""
-            }
-          }
-          def metaVariables = meta.collect{ key, value ->
-            if (value instanceof Collection) {
-              "export VIASH_META_${key.toUpperCase()}=\"${value.join(":")}\""
-            } else {
-              "export VIASH_META_${key.toUpperCase()}=\"$value\""
-            }
-          }
-
-          def beforeScript = 
-            "\n" + 
-            metaVariables.join("\n") +
-            """
-            |# synonyms
-            |export VIASH_RESOURCES_DIR="\$VIASH_META_RESOURCES_DIR"
-            |export VIASH_TEMP="\$VIASH_META_TEMP_DIR"
-            |export TEMP_DIR="\$VIASH_META_TEMP_DIR"
-            |
-            |""".stripMargin() +
-            parVariables.join("\n")
-          def afterScript = ""
-
-          def stub = thisFunctionality.arguments
-            .findAll { it.type == "file" && it.direction.toLowerCase() == "output" }
-            .collect { "touch \"${procArgs[it.name]}\"" }
-            .join("\n")
-          
-          def inject = [
-            "stub": stub,
-            "before_script": beforeScript,
-            "after_script": afterScript
-          ]
-
-          [ id, inputPaths, procArgs, inject, tuple.drop(2) ]
+          [ id ] + inputPaths + [ argsExclInputFiles, passthrough, metaFiles.values() ]
         }
         | processObj
         | map { output ->
           def outputFiles = thisFunctionality.arguments
-            .findAll { it.type == "file" && it.direction.toLowerCase() == "output" }
+            .findAll { it.type == "file" && it.direction == "output" }
             .indexed()
             .collectEntries{ index, par ->
               out = output[index + 2]
@@ -834,7 +785,7 @@ workflow {
   def args = thisFunctionality.arguments
     .findAll { params.containsKey(it.name) }
     .collectEntries { par ->
-      if (par.type == "file" && par.direction.toLowerCase() == "input") {
+      if (par.type == "file" && par.direction == "input") {
         [ par.name, file(params[par.name]) ]
       } else {
         [ par.name, params[par.name] ]
