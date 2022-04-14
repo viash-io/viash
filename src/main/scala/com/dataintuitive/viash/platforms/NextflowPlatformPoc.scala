@@ -38,8 +38,8 @@ case class NextflowPocPlatform(
   id: String = "nextflowpoc",
   oType: String = "nextflowpoc",
   directives: NextflowDirectives = NextflowDirectives(),
-  simplifyInput: Boolean = false,
-  simplifyOutput: Boolean = false
+  simplifyInput: Boolean = true,
+  simplifyOutput: Boolean = true
 ) extends Platform {
 
 
