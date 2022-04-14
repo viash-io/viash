@@ -481,8 +481,15 @@ def processFactory(Map processArgs) {
 
   def outputPaths = thisFunctionality.arguments
     .findAll { it.type == "file" && it.direction == "output" }
-    // .collect { ', path("${args.' + it.name + '}")' }
-    .collect { par -> ', path("${args.' + par.name + '}"' + (par.required ? "" : ", optional: true") + ')' }
+    .collect { par ->
+      // insert dummy into every output (see nextflow-io/nextflow#2678)
+      if (!par.multiple) {
+        ', path{[".exitcode", args.' + par.name + ']}'
+      } else {
+        ', path{[".exitcode"] + args.' + par.name + '}'
+      }
+    }
+    // .collect { par -> ', path("${args.' + par.name + '}"' + (par.required ? "" : ", optional: true") + ')' }
     .join()
 
   // construct inputFileExports
@@ -517,7 +524,7 @@ def processFactory(Map processArgs) {
   |input:
   |  tuple val(id)$inputPaths, val(args), val(passthrough), path(meta)
   |output:
-  |  tuple val("\$id"), val(passthrough)$outputPaths
+  |  tuple val("\$id"), val(passthrough)$outputPaths, optional: true
   |stub:
   |$tripQuo
   |$stub
@@ -734,8 +741,13 @@ def workflowFactory(Map args) {
             .indexed()
             .collectEntries{ index, par ->
               out = output[index + 2]
-              if (out instanceof List && out.size() <= 1) {
-                out = out[0] // out will become null if out is []
+              // strip dummy '.exitcode' file from output (see nextflow-io/nextflow#2678)
+              if (!out instanceof List || out.size() <= 1) {
+                out = null
+              } else if (out.size() == 2) {
+                out = out[1]
+              } else {
+                out = out.drop(1)
               }
               [ par.name, out ]
             }
