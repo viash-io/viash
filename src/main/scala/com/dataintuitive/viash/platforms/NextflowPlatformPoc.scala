@@ -135,6 +135,8 @@ case class NextflowPocPlatform(
               ""
             }
           (lef, Some(s"$$id.$$key.${arg.plainName}${mult}${ext}"), rig, false)
+        } else if (arg.isInstanceOf[BooleanObject] && arg.asInstanceOf[BooleanObject].flagValue.isDefined) {
+          ("", Some((!arg.asInstanceOf[BooleanObject].flagValue.get).toString), "", false)
         } else if (arg.default.isEmpty) {
           ("", None, "", false)
         } else if (arg.multiple && (arg.isInstanceOf[StringObject] || arg.isInstanceOf[FileObject]) ) {
