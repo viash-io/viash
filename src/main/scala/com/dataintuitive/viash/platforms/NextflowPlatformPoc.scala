@@ -211,8 +211,7 @@ case class NextflowPocPlatform(
         // script is stored as `.viash_script.sh`.
         val scriptPath = "$tempscript"
 
-        s"""
-          |set -e
+        s"""set -e
           |tempscript=".viash_script.sh"
           |cat > "$scriptPath" << VIASHMAIN
           |$escapedCode
@@ -247,7 +246,7 @@ case class NextflowPocPlatform(
       |
       |thisHelpMessage = "foo"    // TODO: fill in by functionality
       |
-      |thisScript = '''$executionCode'''.replace('\\\\', '\\\\\\\\').replace('$$', '\\\\$$')
+      |thisScript = '''$executionCode'''
       |
       |thisDefaultDirectives = jsonSlurper.parseText($tripQuo${jsonPrinter.print(directives.asJson)}$tripQuo)
       |

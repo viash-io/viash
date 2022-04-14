@@ -516,6 +516,9 @@ def processFactory(Map processArgs) {
     }
     .join("\n")
 
+  // escape script
+  def escapedScript = thisScript.replace('\\', '\\\\').replace('$', '\\$').replace('"""', '\\"\\"\\"')
+
   // generate process string
   def procStr = 
   """nextflow.enable.dsl=2
@@ -546,7 +549,8 @@ def processFactory(Map processArgs) {
   |# argument exports${inputFileExports.join()}
   |\$parInject
   |
-  |# process script${thisScript}
+  |# process script
+  |${escapedScript}
   |$tripQuo
   |}
   |""".stripMargin()
