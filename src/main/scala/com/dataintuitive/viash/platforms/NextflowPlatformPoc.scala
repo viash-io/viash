@@ -124,6 +124,7 @@ case class NextflowPocPlatform(
       val defTup = 
         if (arg.isInstanceOf[FileObject] && arg.direction == Output) {
           val mult = if (arg.multiple) "_*" else ""
+          val (lef, rig) = if (arg.multiple) ("['", "']") else ("'", "'")
           val reg = ".*\\.".r
           val ext = 
             if (arg.default.nonEmpty) {
@@ -133,7 +134,7 @@ case class NextflowPocPlatform(
             } else {
               ""
             }
-          ("'", Some(s"$$id.$$key.${arg.plainName}${mult}${ext}"), "'", false)
+          (lef, Some(s"$$id.$$key.${arg.plainName}${mult}${ext}"), rig, false)
         } else if (arg.default.isEmpty) {
           ("", None, "", false)
         } else if (arg.multiple && (arg.isInstanceOf[StringObject] || arg.isInstanceOf[FileObject]) ) {
