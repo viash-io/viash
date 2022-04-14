@@ -603,7 +603,7 @@ def workflowFactory(Map args) {
                 "  Key '$oldKey' is missing in the data map. tuple[1].keySet() is '${tuple[1].keySet()}'"
               tuple[1].put(newKey, tuple[1][oldKey])
             }
-            tuple[1].removeAll(processArgs.renameKeys.collect{ newKey, oldKey -> oldKey })
+            tuple[1].keySet().removeAll(processArgs.renameKeys.collect{ newKey, oldKey -> oldKey })
           }
 
           /*
