@@ -533,9 +533,10 @@ def processFactory(Map processArgs) {
   |$stub
   |$tripQuo
   |script:
-  |def parInject = args.collect{ key, value ->
-  |  "export VIASH_PAR_\${key.toUpperCase()}=\\\"\$value\\\""
-  |}.join("\\n")
+  |def parInject = args
+  |  .findAll{key, value -> value}
+  |  .collect{key, value -> "export VIASH_PAR_\${key.toUpperCase()}=\\\"\$value\\\""}
+  |  .join("\\n")
   |$tripQuo
   |# meta exports
   |${metaVariables.join("\n")}
@@ -695,6 +696,9 @@ def workflowFactory(Map args) {
           // combine params
           def combinedArgs = defaultArgs + paramArgs + processArgs.args + dataArgs
 
+          // remove arguments with explicit null values
+          combinedArgs.removeAll{it == null}
+
           // check whether required arguments exist
           thisFunctionality.arguments
             .forEach { par ->
@@ -762,6 +766,9 @@ def workflowFactory(Map args) {
               }
               [ par.name, out ]
             }
+          
+          // drop null outputs
+          outputFiles.removeAll{it.value == null}
 
           if (processArgs.simplifyOutput && outputFiles.size() == 1) {
             outputFiles = outputFiles.values()[0]

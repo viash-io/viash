@@ -38,8 +38,8 @@ case class NextflowPocPlatform(
   id: String = "nextflowpoc",
   oType: String = "nextflowpoc",
   directives: NextflowDirectives = NextflowDirectives(),
-  simplifyInput: Boolean = true,
-  simplifyOutput: Boolean = true
+  simplify_input: Boolean = false,
+  simplify_output: Boolean = false
 ) extends Platform {
 
 
@@ -125,7 +125,7 @@ case class NextflowPocPlatform(
         if (arg.isInstanceOf[FileObject] && arg.direction == Output) {
           val mult = if (arg.multiple) "_*" else ""
           val (lef, rig) = if (arg.multiple) ("['", "']") else ("'", "'")
-          val ExtReg = ".*(\\.[^\\.]*)?".r
+          val ExtReg = ".*(\\.[^\\.]*)".r
           val ext = 
             if (arg.default.nonEmpty) {
               arg.default.map(_.toString).toList match {
@@ -257,12 +257,14 @@ case class NextflowPocPlatform(
       |thisDefaultDirectives = jsonSlurper.parseText($tripQuo${jsonPrinter.print(directives.asJson)}$tripQuo)
       |
       |thisDefaultProcessArgs = [
+      |  // key to be used to trace the process and determine output names
       |  key: thisFunctionality.name,
+      |  // fixed arguments to be passed to script
       |  args: [:],
       |  // whether or not to accept [id, Path, ...] inputs instead of [id, [input: Path], ...]
-      |  simplifyInput: $simplifyInput,
-      |  // if output is a single file, will output [id, Path, ...] instead of [id, [output: Path], ...]
-      |  simplifyOutput: $simplifyOutput,
+      |  simplifyInput: $simplify_input,
+      |  // if output is a single file, will simplify output to [id, Path, ...] instead of [id, [output: Path], ...]
+      |  simplifyOutput: $simplify_output,
       |  // identity operator: { it -> it }
       |  map: null,
       |  // identity operator: { it -> it[0] }
