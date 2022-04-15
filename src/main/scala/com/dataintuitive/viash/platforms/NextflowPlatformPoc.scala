@@ -125,12 +125,18 @@ case class NextflowPocPlatform(
         if (arg.isInstanceOf[FileObject] && arg.direction == Output) {
           val mult = if (arg.multiple) "_*" else ""
           val (lef, rig) = if (arg.multiple) ("['", "']") else ("'", "'")
-          val reg = ".*\\.".r
+          val ExtReg = ".*(\\.[^\\.]*)?".r
           val ext = 
             if (arg.default.nonEmpty) {
-              reg.replaceFirstIn(arg.default.head.toString, ".")
+              arg.default.map(_.toString).toList match {
+                case ExtReg(ext) :: _ => ext
+                case _ => ""
+              }
             } else if (arg.example.nonEmpty) {
-              reg.replaceFirstIn(arg.example.head.toString, ".")
+              arg.example.map(_.toString).toList match {
+                case ExtReg(ext) :: _ => ext
+                case _ => ""
+              }
             } else {
               ""
             }
