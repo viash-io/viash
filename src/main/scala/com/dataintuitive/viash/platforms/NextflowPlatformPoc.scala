@@ -38,8 +38,8 @@ case class NextflowPocPlatform(
   id: String = "nextflowpoc",
   oType: String = "nextflowpoc",
   directives: NextflowDirectives = NextflowDirectives(),
-  simplify_input: Boolean = false,
-  simplify_output: Boolean = false
+  simplifyInput: Boolean = false,
+  simplifyOutput: Boolean = false
 ) extends Platform {
 
 
@@ -262,9 +262,9 @@ case class NextflowPocPlatform(
       |  // fixed arguments to be passed to script
       |  args: [:],
       |  // whether or not to accept [id, Path, ...] inputs instead of [id, [input: Path], ...]
-      |  simplifyInput: $simplify_input,
+      |  simplifyInput: $simplifyInput,
       |  // if output is a single file, will simplify output to [id, Path, ...] instead of [id, [output: Path], ...]
-      |  simplifyOutput: $simplify_output,
+      |  simplifyOutput: $simplifyOutput,
       |  // identity operator: { it -> it }
       |  map: null,
       |  // identity operator: { it -> it[0] }
