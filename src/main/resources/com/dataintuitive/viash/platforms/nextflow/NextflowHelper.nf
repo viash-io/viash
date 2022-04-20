@@ -578,6 +578,29 @@ def workflowFactory(Map args) {
   // write process to temporary nf file and parse it in memory
   def processObj = processFactory(processArgs)
 
+  def printFlush = { msg ->
+    if (processArgs.debug) {
+      print(msg)
+      System.out.flush()
+      System.err.flush()
+    }
+  }
+  def printTuple = { key, tuple ->
+    if (processArgs.debug) {
+      // TODO: fix
+      // print("  $key:\n${JsonOutput.prettyPrint(JsonOutput.toJson(tuple))}")
+      // js = JsonOutput.toJson(tuple)
+      // pjs = JsonOutput.prettyPrint(js)
+      print("  $key: $tuple")
+      System.out.flush()
+      System.err.flush()
+    }
+  }
+
+  if (processArgs.debug) {
+    printFlush("Debugging process $processKey")
+  }
+
   workflow pocInstance {
     take:
     input_
@@ -585,20 +608,23 @@ def workflowFactory(Map args) {
     main:
     output_= input_
         | map{ tuple ->
-          // TODO: add debug option to see what goes in and out of the workflow
-          // if (params.debug) {
-          //   println("Process '$processKey' input: $tuple")
-          // }
+          printTuple("process '$processKey' input tuple", tuple)
 
           if (processArgs.map) {
             tuple = processArgs.map(tuple)
           }
           if (processArgs.mapId) {
             tuple[0] = processArgs.mapId(tuple)
+            // TODO: alternative
+            // tuple[0] = processArgs.mapId(tuple[0])
           }
           if (processArgs.mapData) {
             tuple[1] = processArgs.mapData(tuple)
+            // TODO: alternative
+            // tuple[1] = processArgs.mapData(tuple[1])
           }
+          // TODO: implement?
+          // if (processArgs.mapPassthrough)
 
           // check tuple
           assert tuple instanceof AbstractList : 
@@ -663,18 +689,7 @@ def workflowFactory(Map args) {
             tuple[1].keySet().removeAll(processArgs.renameKeys.collect{ newKey, oldKey -> oldKey })
           }
 
-          /*
-          // rename map with wrong name
-          if (processArgs.simplifyInput) {
-            def inputFiles = thisFunctionality.arguments
-              .findAll { it.type == "file" && it.direction == "input" }
-            def foundFiles = tuple[1].findAll{k, v -> v instanceof Path}.collect{k, v -> k}
-            if (inputFiles.size() == 1 && foundFiles.size() == 1) {
-              // if (params.debug) println("process '${processKey}' id '${tuple[0]}' - Renaming key '${foundFiles[0]}' to '${inputFiles[0].name}'.")
-              tuple[1].put(inputFiles[0].name, tuple[1].remove(foundFiles[0]))
-            }
-          }
-          */
+          printTuple("process '$processKey' processed tuple", tuple)
           
           def id = tuple[0]
           def data = tuple[1]
@@ -782,6 +797,8 @@ def workflowFactory(Map args) {
           if (output[1]) {
             out.addAll(output[1])
           }
+
+          printTuple("process '$processKey' output tuple", out)
 
           out
         }

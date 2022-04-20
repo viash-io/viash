@@ -39,7 +39,8 @@ case class NextflowPocPlatform(
   oType: String = "nextflowpoc",
   directives: NextflowDirectives = NextflowDirectives(),
   simplifyInput: Boolean = true,
-  simplifyOutput: Boolean = true
+  simplifyOutput: Boolean = true,
+  debug: Boolean = false
 ) extends Platform {
   def escapeText(txt: String): String = {
     Bash.escape(txt, singleQuote = true, newline = true, backtick = false)
@@ -238,10 +239,12 @@ case class NextflowPocPlatform(
       |
       |nextflow.enable.dsl=2
       |
-      |
+      |// Required imports
       |import groovy.json.JsonSlurper
-      |def jsonSlurper = new JsonSlurper()
+      |// import groovy.json.JsonOutput
       |
+      |// initialise slurper
+      |def jsonSlurper = new JsonSlurper()
       |
       |// DEFINE CUSTOM CODE
       |
@@ -274,7 +277,9 @@ case class NextflowPocPlatform(
       |  // identity operator: { it -> it[1] }
       |  mapData: null,
       |  // usage: [ "new_key": "old_key" ]
-      |  renameKeys: null
+      |  renameKeys: null,
+      |  // whether or not to print debug messages
+      |  debug: false
       |]
       |
       |// END CUSTOM CODE
