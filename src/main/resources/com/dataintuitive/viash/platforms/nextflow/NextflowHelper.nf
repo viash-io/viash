@@ -644,6 +644,7 @@ def workflowFactory(Map args) {
                 "Error renaming data keys in process '${processKey}' id '${tuple[0]}'.\n" +
                 "  Expected class: HashMap. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
 
+            // TODO: allow renameKeys to be a function?
             processArgs.renameKeys.each { newKey, oldKey ->
               assert newKey instanceof String : 
                 "Error renaming data keys in process '${processKey}' id '${tuple[0]}'.\n" +
@@ -803,17 +804,19 @@ ScriptMeta.current().addDefinition(poc)
 
 // Implicit workflow for running this module standalone
 workflow {
-  params.id = "run"
-  params.publishDir = "./"
-
-  // TODO: add help message
-  if (params.containsKey("help") && params[["help"]]) {
+  if (params.containsKey("help") && params["help"]) {
     exit 0, thisHelpMessage
+  }
+  if (!params.containsKey("id")) {
+    params.id = "run"
+  }
+  if (!params.containsKey("publishDir")) {
+    params.publishDir = "./"
   }
 
   // fetch parameters
   def args = thisFunctionality.arguments
-    .findAll { params.containsKey(it.name) }
+    .findAll { par -> params.containsKey(par.name) }
     .collectEntries { par ->
       if (par.type == "file" && par.direction == "input") {
         [ par.name, file(params[par.name]) ]
