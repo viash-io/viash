@@ -505,7 +505,7 @@ def processFactory(Map processArgs) {
 
   // construct metaFiles
   def metaVariables = metaFiles.keySet().withIndex().collect { key, index ->
-    "export VIASH_META_${key.toUpperCase()}=\"\${meta[$index]}\""
+    "export VIASH_META_${key.toUpperCase()}=\"\${escapeText(meta[$index])}\""
   }
 
   // construct stub
@@ -533,9 +533,10 @@ def processFactory(Map processArgs) {
   |$stub
   |$tripQuo
   |script:
+  |def escapeText = { s -> s.toString().replaceAll('([`"])', '\\\\\\\\\$1') }
   |def parInject = args
   |  .findAll{key, value -> value}
-  |  .collect{key, value -> "export VIASH_PAR_\${key.toUpperCase()}=\\\"\$value\\\""}
+  |  .collect{key, value -> "export VIASH_PAR_\${key.toUpperCase()}=\\\"\${escapeText(value)}\\\""}
   |  .join("\\n")
   |$tripQuo
   |# meta exports
