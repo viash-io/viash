@@ -41,7 +41,9 @@ case class NextflowPocPlatform(
   simplifyInput: Boolean = true,
   simplifyOutput: Boolean = true
 ) extends Platform {
-
+  def escapeText(txt: String): String = {
+    Bash.escape(txt, singleQuote = true, newline = true, backtick = false)
+  }
 
   def modifyFunctionality(functionality: Functionality): Functionality = {
     val mainFile = createMainNfFile(functionality)
@@ -60,7 +62,7 @@ case class NextflowPocPlatform(
 
     // val descStr = functionality.description.map(ver => s"\n  description = '$ver'").getOrElse("")
     val descStr = functionality.description.map{des => 
-      val escDes = Bash.escape(des, singleQuote = true, newline = true)
+      val escDes = escapeText(des)
       s"\n  description = '$escDes'"
     }.getOrElse("")
 
@@ -69,7 +71,7 @@ case class NextflowPocPlatform(
       if (functionality.authors.isEmpty) {
         "" 
       } else {
-        val escAut = Bash.escape(functionality.authors.mkString(", "), singleQuote = true)
+        val escAut = escapeText(functionality.authors.mkString(", "))
         s"\n  author = '$escAut'"
       }
 
@@ -116,7 +118,7 @@ case class NextflowPocPlatform(
     /************************* FUNCTIONALITY *************************/
     val argumentsStr = functionality.arguments.map{ arg => 
       val descrStr = arg.description.map{des => 
-        val escDes = Bash.escape(des, singleQuote = true, newline = true)
+        val escDes = escapeText(des)
         s"\n      'description': '$escDes',"
       }.getOrElse("")
 
@@ -158,7 +160,7 @@ case class NextflowPocPlatform(
       val defaultStr = defTup match {
         case (_, None, _, _) => ""
         case (left, Some(middle), right, escape) =>
-          val middleEsc = if (escape) Bash.escape(middle, singleQuote = true, newline = true) else middle
+          val middleEsc = if (escape) escapeText(middle) else middle
           s"\n      'default': $left$middleEsc$right,"
       }
 
@@ -181,7 +183,7 @@ case class NextflowPocPlatform(
       val exampleStr = exaTup match {
         case (_, None, _, _) => ""
         case (left, Some(middle), right, escape) =>
-          val middleEsc = if (escape) Bash.escape(middle, singleQuote = true, newline = true) else middle
+          val middleEsc = if (escape) escapeText(middle) else middle
           s"\n      'example': $left$middleEsc$right,"
       }
 
