@@ -35,10 +35,38 @@ class NextFlowPocPlatformTest extends FunSuite with BeforeAndAfterAll {
       "-t", targetPath,
       "--setup", "cb"
     )
+  }
+
+  test("Run pipeline", DockerTest, NextFlowTest) {
 
     import sys.process._
     val output = Process(
       Seq("nextflow", "run", ".", "-main-script", "workflows/pipeline1/main.nf", "--input", "resources/*", "--publishDir", "output"),
+      new File(tempFolStr),
+      "NXF_VER" -> "21.04.1"
+    ).!!
+    val lines = output.split("\n").find(_.contains("DEBUG6"))
+
+    assert(lines.isDefined)
+    val DebugRegex = "DEBUG6: \\[foo, (.*)\\]".r
+    val DebugRegex(path) = lines.get
+
+    val src = Source.fromFile(path)
+    try {
+      val step3Out = src.getLines.mkString
+      assert(step3Out.matches("^11 .*$"))
+    } finally {
+      src.close()
+    }
+    // TODO: check other debug flags as well.
+    // TODO: change step3 into something more interesting.
+  }
+
+  test("Run pipeline with components using map functionality", DockerTest, NextFlowTest) {
+
+    import sys.process._
+    val output = Process(
+      Seq("nextflow", "run", ".", "-main-script", "workflows/pipeline2/main.nf", "--input", "resources/*", "--publishDir", "output"),
       new File(tempFolStr),
       "NXF_VER" -> "21.04.1"
     ).!!
@@ -59,6 +87,30 @@ class NextFlowPocPlatformTest extends FunSuite with BeforeAndAfterAll {
     // TODO: change step3 into something more interesting.
   }
 
+  test("Run pipeline with components using mapData functionality", DockerTest, NextFlowTest) {
+
+    import sys.process._
+    val output = Process(
+      Seq("nextflow", "run", ".", "-main-script", "workflows/pipeline3/main.nf", "--input", "resources/*", "--publishDir", "output"),
+      new File(tempFolStr),
+      "NXF_VER" -> "21.04.1"
+    ).!!
+    val lines = output.split("\n").find(_.contains("DEBUG4"))
+
+    assert(lines.isDefined)
+    val DebugRegex = "DEBUG4: \\[foo, (.*)\\]".r
+    val DebugRegex(path) = lines.get
+
+    val src = Source.fromFile(path)
+    try {
+      val step3Out = src.getLines.mkString
+      assert(step3Out.matches("^11 .*$"))
+    } finally {
+      src.close()
+    }
+    // TODO: check other debug flags as well.
+    // TODO: change step3 into something more interesting.
+  }
 
   override def afterAll() {
     IO.deleteRecursively(temporaryFolder)

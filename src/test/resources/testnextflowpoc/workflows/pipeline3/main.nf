@@ -29,26 +29,27 @@ workflow {
         | view{ "DEBUG2: $it" }
         // : Channel[(String, File, File)]
 
-        | map{ [ it[0], [ "input1" : it[1], "input2" : it[2] ] ] }
-        | view{ "DEBUG3: $it" }
+        | step2.run(
+            map: { [ it[0], [ "input1" : it[1], "input2" : it[2] ] ] },
+            // : Channel[(String, Map[String, File], File)]
+            //     * it[1]: a map with two files (named input1 and input2)
+        )
+        | view { "DEBUG3: $it" }
         // : Channel[(String, Map[String, File], File)]
         //     * it[1]: a map with two files (named input1 and input2)
 
-        | step2
-        | view{ "DEBUG4: $it" }
-        // : Channel[(String, Map[String, File], File)]
-        //     * it[1]: a map with two files (named input1 and input2)
-
-        | map{ [ it[0], [ "input": [ it[1].output1 , it[1].output2 ] ] ] }
-        | view{ "DEBUG5: $it" }
-        // : Channel[(String, Map[String, List[File]])]
-        //     * it[1]: a map with a list of files
+        // strip off passthrough
+        | map{ [ it[0], it[1] ] }
+        // : Channel[(String, Map[String, File])]
 
         | step3.run(
+            mapData: { [ "input": [ it[1].output1 , it[1].output2 ] ] },
+            // : Channel[(String, Map[String, List[File]])]
+            //     * it[1]: a map with a list of files
             directives: [
                 publishDir: "output/foo"
             ],
         )
-        | view{ "DEBUG6: $it" }
+        | view { "DEBUG4: $it" }
         // : Channel[(String, File)]
 }
