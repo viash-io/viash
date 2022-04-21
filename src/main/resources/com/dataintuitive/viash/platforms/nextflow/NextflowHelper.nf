@@ -421,14 +421,13 @@ def processProcessArgs(Map args) {
   assert processArgs["directives"] instanceof HashMap
   processArgs["directives"] = processDirectives(thisDefaultDirectives + processArgs["directives"])
 
-  for (nam in [ "map", "mapId", "mapData" ]) {
+  for (nam in [ "map", "mapId", "mapData", "mapPassthrough" ]) {
     if (processArgs.containsKey(nam) && processArgs[nam]) {
       assert processArgs[nam] instanceof Closure : "Expected process argument '$nam' to be null or a Closure. Found: class ${processArgs[nam].getClass()}"
     }
   }
 
   // return output
-  
   return processArgs
 }
 
@@ -571,237 +570,218 @@ def processFactory(Map processArgs) {
   return proc_out
 }
 
+def debug(processArgs, debugKey) {
+  if (processArgs.debug) {
+    view { "process '${processArgs.key}' $debugKey tuple: $it"  }
+  } else {
+    map { it }
+  }
+}
+
 def workflowFactory(Map args) {
   def processArgs = processProcessArgs(args)
   def processKey = processArgs["key"]
 
   // write process to temporary nf file and parse it in memory
   def processObj = processFactory(processArgs)
-
-  def printFlush = { msg ->
-    if (processArgs.debug) {
-      print(msg)
-      System.out.flush()
-      System.err.flush()
-    }
-  }
-  def printTuple = { key, tuple ->
-    if (processArgs.debug) {
-      // TODO: fix
-      // print("  $key:\n${JsonOutput.prettyPrint(JsonOutput.toJson(tuple))}")
-      // js = JsonOutput.toJson(tuple)
-      // pjs = JsonOutput.prettyPrint(js)
-      print("  $key: $tuple")
-      System.out.flush()
-      System.err.flush()
-    }
-  }
-
-  if (processArgs.debug) {
-    printFlush("Debugging process $processKey")
-  }
-
+  
   workflow pocInstance {
     take:
     input_
 
     main:
-    output_= input_
-        | map{ tuple ->
-          printTuple("process '$processKey' input tuple", tuple)
+    output_ = input_
+      | debug(processArgs, "input")
+      | map { tuple ->
+        if (processArgs.map) {
+          tuple = processArgs.map(tuple)
+        }
+        if (processArgs.mapId) {
+          tuple[0] = processArgs.mapId(tuple[0])
+        }
+        if (processArgs.mapData) {
+          tuple[1] = processArgs.mapData(tuple[1])
+        }
+        if (processArgs.mapPassthrough) {
+          tuple = tuple.take(2) + processArgs.mapPassthrough(tuple.drop(2))
+        }
 
-          if (processArgs.map) {
-            tuple = processArgs.map(tuple)
-          }
-          if (processArgs.mapId) {
-            tuple[0] = processArgs.mapId(tuple)
-            // TODO: alternative
-            // tuple[0] = processArgs.mapId(tuple[0])
-          }
-          if (processArgs.mapData) {
-            tuple[1] = processArgs.mapData(tuple)
-            // TODO: alternative
-            // tuple[1] = processArgs.mapData(tuple[1])
-          }
-          // TODO: implement?
-          // if (processArgs.mapPassthrough)
-
-          // check tuple
-          assert tuple instanceof AbstractList : 
-            "Error in process '${processKey}': element in channel should be a tuple [id, data, ...otherargs...]\n" +
-            "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
-            "  Expected class: List. Found: tuple.getClass() is ${tuple.getClass()}"
-          assert tuple.size() >= 2 : 
-            "Error in process '${processKey}': expected length of tuple in input channel to be two or greater.\n" +
-            "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
-            "  Found: tuple.size() == ${tuple.size()}"
-          
-          // check id field
-          assert tuple[0] instanceof String : 
-            "Error in process '${processKey}': first element of tuple in channel should be a String\n" +
-            "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
-            "  Found: ${tuple[0]}"
-          
-          // match file to input file
-          if (processArgs.simplifyInput && tuple[1] instanceof Path) {
-            def inputFiles = thisFunctionality.arguments
-              .findAll { it.type == "file" && it.direction == "input" }
-            
-            assert inputFiles.size() == 1 : 
-                "Error in process '${processKey}' id '${tuple[0]}'.\n" +
-                "  Anonymous file inputs are only allowed when the process has exactly one file input.\n" +
-                "  Expected: inputFiles.size() == 1. Found: inputFiles.size() is ${inputFiles.size()}"
-
-            tuple[1] = [[ inputFiles[0].name, tuple[1] ]].collectEntries()
-          }
-
-          // check data field
-          assert tuple[1] instanceof HashMap : 
-            "Error in process '${processKey}' id '${tuple[0]}': second element of tuple in channel should be a HashMap\n" +
-            "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
-            "  Expected class: HashMap. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
-
-          // rename keys of data field in tuple
-          if (processArgs.renameKeys) {
-            assert processArgs.renameKeys instanceof HashMap : 
-                "Error renaming data keys in process '${processKey}' id '${tuple[0]}'.\n" +
-                "  Example: renameKeys: ['new_key': 'old_key'].\n" +
-                "  Expected class: HashMap. Found: renameKeys.getClass() is ${processArgs.renameKeys.getClass()}"
-            assert tuple[1] instanceof HashMap : 
-                "Error renaming data keys in process '${processKey}' id '${tuple[0]}'.\n" +
-                "  Expected class: HashMap. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
-
-            // TODO: allow renameKeys to be a function?
-            processArgs.renameKeys.each { newKey, oldKey ->
-              assert newKey instanceof String : 
-                "Error renaming data keys in process '${processKey}' id '${tuple[0]}'.\n" +
-                "  Example: renameKeys: ['new_key': 'old_key'].\n" +
-                "  Expected class of newKey: String. Found: newKey.getClass() is ${newKey.getClass()}"
-              assert oldKey instanceof String : 
-                "Error renaming data keys in process '${processKey}' id '${tuple[0]}'.\n" +
-                "  Example: renameKeys: ['new_key': 'old_key'].\n" +
-                "  Expected class of oldKey: String. Found: oldKey.getClass() is ${oldKey.getClass()}"
-              assert tuple[1].containsKey(oldKey) : 
-                "Error renaming data keys in process '${processKey}' id '${tuple[0]}'.\n" +
-                "  Key '$oldKey' is missing in the data map. tuple[1].keySet() is '${tuple[1].keySet()}'"
-              tuple[1].put(newKey, tuple[1][oldKey])
-            }
-            tuple[1].keySet().removeAll(processArgs.renameKeys.collect{ newKey, oldKey -> oldKey })
-          }
-
-          printTuple("process '$processKey' processed tuple", tuple)
-          
-          def id = tuple[0]
-          def data = tuple[1]
-          def passthrough = tuple.drop(2)
-
-          // fetch default params from functionality
-          def defaultArgs = thisFunctionality.arguments
-            .findAll { it.containsKey("default") }
-            .collectEntries { [ it.name, it.default ] }
-
-          // fetch overrides in params
-          def paramArgs = thisFunctionality.arguments
-            .findAll { params.containsKey(processKey + "__" + it.name) }
-            .collectEntries { [ it.name, params[processKey + "__" + it.name] ] }
-          
-          // fetch overrides in data
-          def dataArgs = thisFunctionality.arguments
-            .findAll { data.containsKey(it.name) }
-            .collectEntries { [ it.name, data[it.name] ] }
-          
-          // combine params
-          def combinedArgs = defaultArgs + paramArgs + processArgs.args + dataArgs
-
-          // remove arguments with explicit null values
-          combinedArgs.removeAll{it == null}
-
-          // check whether required arguments exist
-          thisFunctionality.arguments
-            .forEach { par ->
-              if (par.required) {
-                assert combinedArgs.containsKey(par.name): "Argument ${par.name} is required but does not have a value"
-              }
-            }
-
-          // TODO: check whether parameters have the right type
-
-          // process input files separately
-          def inputPaths = thisFunctionality.arguments
+        // check tuple
+        assert tuple instanceof AbstractList : 
+          "Error in process '${processKey}': element in channel should be a tuple [id, data, ...otherargs...]\n" +
+          "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
+          "  Expected class: List. Found: tuple.getClass() is ${tuple.getClass()}"
+        assert tuple.size() >= 2 : 
+          "Error in process '${processKey}': expected length of tuple in input channel to be two or greater.\n" +
+          "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
+          "  Found: tuple.size() == ${tuple.size()}"
+        
+        // check id field
+        assert tuple[0] instanceof String : 
+          "Error in process '${processKey}': first element of tuple in channel should be a String\n" +
+          "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
+          "  Found: ${tuple[0]}"
+        
+        // match file to input file
+        if (processArgs.simplifyInput && tuple[1] instanceof Path) {
+          def inputFiles = thisFunctionality.arguments
             .findAll { it.type == "file" && it.direction == "input" }
-            .collect { par ->
-              def val = combinedArgs.containsKey(par.name) ? combinedArgs[par.name] : []
-              if (val == null) {
-                []
-              } else if (val instanceof List) {
-                val
-              } else if (val instanceof Path) {
-                [ val ]
-              } else {
-                []
-              }
-            }.collect{ it.findAll{ it.exists() } }
-
-          // remove input files
-          def argsExclInputFiles = thisFunctionality.arguments
-            .findAll { it.type != "file" || it.direction != "input" }
-            .collectEntries { par ->
-              def key = par.name
-              def val = combinedArgs[key]
-              if (par.multiple && val instanceof Collection) {
-                val = val.join(par.multiple_sep)
-              }
-              if (par.direction == "output" && par.type == "file") {
-                val = val.replaceAll('\\$id', id).replaceAll('\\$key', processKey)
-              }
-              [key, val]
-            }
-
-          [ id ] + inputPaths + [ argsExclInputFiles, passthrough, metaFiles.values() ]
-        }
-        | processObj
-        | map { output ->
-          def outputFiles = thisFunctionality.arguments
-            .findAll { it.type == "file" && it.direction == "output" }
-            .indexed()
-            .collectEntries{ index, par ->
-              out = output[index + 2]
-              // strip dummy '.exitcode' file from output (see nextflow-io/nextflow#2678)
-              if (!out instanceof List || out.size() <= 1) {
-                if (par.multiple) {
-                  out = []
-                } else {
-                  assert !par.required :
-                      "Error in process '${processKey}' id '${output[0]}' argument '${par.name}'.\n" +
-                      "  Required output file is missing"
-                  out = null
-                }
-              } else if (out.size() == 2 && !par.multiple) {
-                out = out[1]
-              } else {
-                out = out.drop(1)
-              }
-              [ par.name, out ]
-            }
           
-          // drop null outputs
-          outputFiles.removeAll{it.value == null}
+          assert inputFiles.size() == 1 : 
+              "Error in process '${processKey}' id '${tuple[0]}'.\n" +
+              "  Anonymous file inputs are only allowed when the process has exactly one file input.\n" +
+              "  Expected: inputFiles.size() == 1. Found: inputFiles.size() is ${inputFiles.size()}"
 
-          if (processArgs.simplifyOutput && outputFiles.size() == 1) {
-            outputFiles = outputFiles.values()[0]
-          }
-
-          def out = [ output[0], outputFiles ]
-
-          // passthrough additional items
-          if (output[1]) {
-            out.addAll(output[1])
-          }
-
-          printTuple("process '$processKey' output tuple", out)
-
-          out
+          tuple[1] = [[ inputFiles[0].name, tuple[1] ]].collectEntries()
         }
+
+        // check data field
+        assert tuple[1] instanceof HashMap : 
+          "Error in process '${processKey}' id '${tuple[0]}': second element of tuple in channel should be a HashMap\n" +
+          "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
+          "  Expected class: HashMap. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
+
+        // rename keys of data field in tuple
+        if (processArgs.renameKeys) {
+          assert processArgs.renameKeys instanceof HashMap : 
+              "Error renaming data keys in process '${processKey}' id '${tuple[0]}'.\n" +
+              "  Example: renameKeys: ['new_key': 'old_key'].\n" +
+              "  Expected class: HashMap. Found: renameKeys.getClass() is ${processArgs.renameKeys.getClass()}"
+          assert tuple[1] instanceof HashMap : 
+              "Error renaming data keys in process '${processKey}' id '${tuple[0]}'.\n" +
+              "  Expected class: HashMap. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
+
+          // TODO: allow renameKeys to be a function?
+          processArgs.renameKeys.each { newKey, oldKey ->
+            assert newKey instanceof String : 
+              "Error renaming data keys in process '${processKey}' id '${tuple[0]}'.\n" +
+              "  Example: renameKeys: ['new_key': 'old_key'].\n" +
+              "  Expected class of newKey: String. Found: newKey.getClass() is ${newKey.getClass()}"
+            assert oldKey instanceof String : 
+              "Error renaming data keys in process '${processKey}' id '${tuple[0]}'.\n" +
+              "  Example: renameKeys: ['new_key': 'old_key'].\n" +
+              "  Expected class of oldKey: String. Found: oldKey.getClass() is ${oldKey.getClass()}"
+            assert tuple[1].containsKey(oldKey) : 
+              "Error renaming data keys in process '${processKey}' id '${tuple[0]}'.\n" +
+              "  Key '$oldKey' is missing in the data map. tuple[1].keySet() is '${tuple[1].keySet()}'"
+            tuple[1].put(newKey, tuple[1][oldKey])
+          }
+          tuple[1].keySet().removeAll(processArgs.renameKeys.collect{ newKey, oldKey -> oldKey })
+        }
+        tuple
+      }
+      | debug(processArgs, "processed")
+      | map { tuple ->
+        def id = tuple[0]
+        def data = tuple[1]
+        def passthrough = tuple.drop(2)
+
+        // fetch default params from functionality
+        def defaultArgs = thisFunctionality.arguments
+          .findAll { it.containsKey("default") }
+          .collectEntries { [ it.name, it.default ] }
+
+        // fetch overrides in params
+        def paramArgs = thisFunctionality.arguments
+          .findAll { params.containsKey(processKey + "__" + it.name) }
+          .collectEntries { [ it.name, params[processKey + "__" + it.name] ] }
+        
+        // fetch overrides in data
+        def dataArgs = thisFunctionality.arguments
+          .findAll { data.containsKey(it.name) }
+          .collectEntries { [ it.name, data[it.name] ] }
+        
+        // combine params
+        def combinedArgs = defaultArgs + paramArgs + processArgs.args + dataArgs
+
+        // remove arguments with explicit null values
+        combinedArgs.removeAll{it == null}
+
+        // check whether required arguments exist
+        thisFunctionality.arguments
+          .forEach { par ->
+            if (par.required) {
+              assert combinedArgs.containsKey(par.name): "Argument ${par.name} is required but does not have a value"
+            }
+          }
+
+        // TODO: check whether parameters have the right type
+
+        // process input files separately
+        def inputPaths = thisFunctionality.arguments
+          .findAll { it.type == "file" && it.direction == "input" }
+          .collect { par ->
+            def val = combinedArgs.containsKey(par.name) ? combinedArgs[par.name] : []
+            if (val == null) {
+              []
+            } else if (val instanceof List) {
+              val
+            } else if (val instanceof Path) {
+              [ val ]
+            } else {
+              []
+            }
+          }.collect{ it.findAll{ it.exists() } }
+
+        // remove input files
+        def argsExclInputFiles = thisFunctionality.arguments
+          .findAll { it.type != "file" || it.direction != "input" }
+          .collectEntries { par ->
+            def key = par.name
+            def val = combinedArgs[key]
+            if (par.multiple && val instanceof Collection) {
+              val = val.join(par.multiple_sep)
+            }
+            if (par.direction == "output" && par.type == "file") {
+              val = val.replaceAll('\\$id', id).replaceAll('\\$key', processKey)
+            }
+            [key, val]
+          }
+
+        [ id ] + inputPaths + [ argsExclInputFiles, passthrough, metaFiles.values() ]
+      }
+      | processObj
+      | map { output ->
+        def outputFiles = thisFunctionality.arguments
+          .findAll { it.type == "file" && it.direction == "output" }
+          .indexed()
+          .collectEntries{ index, par ->
+            out = output[index + 2]
+            // strip dummy '.exitcode' file from output (see nextflow-io/nextflow#2678)
+            if (!out instanceof List || out.size() <= 1) {
+              if (par.multiple) {
+                out = []
+              } else {
+                assert !par.required :
+                    "Error in process '${processKey}' id '${output[0]}' argument '${par.name}'.\n" +
+                    "  Required output file is missing"
+                out = null
+              }
+            } else if (out.size() == 2 && !par.multiple) {
+              out = out[1]
+            } else {
+              out = out.drop(1)
+            }
+            [ par.name, out ]
+          }
+        
+        // drop null outputs
+        outputFiles.removeAll{it.value == null}
+
+        if (processArgs.simplifyOutput && outputFiles.size() == 1) {
+          outputFiles = outputFiles.values()[0]
+        }
+
+        def out = [ output[0], outputFiles ]
+
+        // passthrough additional items
+        if (output[1]) {
+          out.addAll(output[1])
+        }
+
+        out
+      }
+      | debug(processArgs, "output")
 
     emit:
     output_
