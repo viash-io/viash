@@ -41,7 +41,12 @@ class NextFlowPocPlatformTest extends FunSuite with BeforeAndAfterAll {
 
     import sys.process._
     val output = Process(
-      Seq("nextflow", "run", ".", "-main-script", "workflows/pipeline1/main.nf", "--input", "resources/*", "--publishDir", "output"),
+      Seq("nextflow", "run", ".",
+      "-main-script", "workflows/pipeline1/main.nf",
+      "--input", "resources/*",
+      "--publishDir", "output",
+      "-entry", "base",
+      ),
       new File(tempFolStr),
       "NXF_VER" -> "21.04.1"
     ).!!
@@ -66,7 +71,12 @@ class NextFlowPocPlatformTest extends FunSuite with BeforeAndAfterAll {
 
     import sys.process._
     val output = Process(
-      Seq("nextflow", "run", ".", "-main-script", "workflows/pipeline2/main.nf", "--input", "resources/*", "--publishDir", "output"),
+      Seq("nextflow", "run", ".",
+      "-main-script", "workflows/pipeline1/main.nf",
+      "--input", "resources/*",
+      "--publishDir", "output",
+      "-entry", "map_variant",
+      ),
       new File(tempFolStr),
       "NXF_VER" -> "21.04.1"
     ).!!
@@ -91,7 +101,12 @@ class NextFlowPocPlatformTest extends FunSuite with BeforeAndAfterAll {
 
     import sys.process._
     val output = Process(
-      Seq("nextflow", "run", ".", "-main-script", "workflows/pipeline3/main.nf", "--input", "resources/*", "--publishDir", "output"),
+      Seq("nextflow", "run", ".",
+      "-main-script", "workflows/pipeline1/main.nf",
+      "--input", "resources/*",
+      "--publishDir", "output",
+      "-entry", "mapData_variant",
+      ),
       new File(tempFolStr),
       "NXF_VER" -> "21.04.1"
     ).!!
@@ -117,9 +132,10 @@ class NextFlowPocPlatformTest extends FunSuite with BeforeAndAfterAll {
     import sys.process._
     val output = Process(
       Seq("nextflow", "run", ".",
-        "-main-script", "workflows/pipeline4/main.nf",
+        "-main-script", "workflows/pipeline1/main.nf",
         "--input", "resources/*",
         "--publishDir", "output",
+        "-entry", "debug_variant",
         "--displayDebug", "false",
         ),
       new File(tempFolStr),
@@ -150,9 +166,10 @@ class NextFlowPocPlatformTest extends FunSuite with BeforeAndAfterAll {
     import sys.process._
     val output = Process(
       Seq("nextflow", "run", ".",
-        "-main-script", "workflows/pipeline4/main.nf",
+        "-main-script", "workflows/pipeline1/main.nf",
         "--input", "resources/*",
         "--publishDir", "output",
+        "-entry", "debug_variant",
         "--displayDebug", "true",
         ),
       new File(tempFolStr),
