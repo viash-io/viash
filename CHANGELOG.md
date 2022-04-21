@@ -10,6 +10,8 @@
 
 * `viash_test`: Added unit test for this component.
 
+* `PythonRequirements`: Allow upgrading components. Example: `[ type: python. pypi: anndata, upgrade: true ]`.
+
 ## BUG FIXES
 
 * `viash_build`: The `query_name` and `query_namespace` arguments were switched around. These arguments are now passed correctly.
