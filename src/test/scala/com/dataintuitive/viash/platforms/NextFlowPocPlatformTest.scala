@@ -21,8 +21,24 @@ class NextFlowPocPlatformTest extends FunSuite with BeforeAndAfterAll {
   private val srcPath = Paths.get(tempFolStr, "src").toFile.toString
   private val targetPath = Paths.get(tempFolStr, "target").toFile.toString
 
+  def outputFileMatchChecker(output: String, headerKeyword: String, fileContentMatcher: String) = {
+    val lines = output.split("\n").find(_.contains(headerKeyword))
+
+    assert(lines.isDefined)
+    val DebugRegex = s"$headerKeyword: \\[foo, (.*)\\]".r
+    val DebugRegex(path) = lines.get
+
+    val src = Source.fromFile(path)
+    try {
+      val step3Out = src.getLines.mkString
+      assert(step3Out.matches(fileContentMatcher))
+    } finally {
+      src.close()
+    }
+  }
+
   // convert testbash
-  test("build pipeline components", DockerTest, NextFlowTest) {
+  test("Build pipeline components", DockerTest, NextFlowTest) {
 
     // copy resources to temporary folder so we can build in a clean environment
     for (resource <- List("src", "workflows", "resources"))
@@ -50,21 +66,9 @@ class NextFlowPocPlatformTest extends FunSuite with BeforeAndAfterAll {
       new File(tempFolStr),
       "NXF_VER" -> "21.04.1"
     ).!!
-    val lines = output.split("\n").find(_.contains("DEBUG6"))
 
-    assert(lines.isDefined)
-    val DebugRegex = "DEBUG6: \\[foo, (.*)\\]".r
-    val DebugRegex(path) = lines.get
+    outputFileMatchChecker(output, "DEBUG6", "^11 .*$")
 
-    val src = Source.fromFile(path)
-    try {
-      val step3Out = src.getLines.mkString
-      assert(step3Out.matches("^11 .*$"))
-    } finally {
-      src.close()
-    }
-    // TODO: check other debug flags as well.
-    // TODO: change step3 into something more interesting.
   }
 
   test("Run pipeline with components using map functionality", DockerTest, NextFlowTest) {
@@ -80,21 +84,9 @@ class NextFlowPocPlatformTest extends FunSuite with BeforeAndAfterAll {
       new File(tempFolStr),
       "NXF_VER" -> "21.04.1"
     ).!!
-    val lines = output.split("\n").find(_.contains("DEBUG4"))
 
-    assert(lines.isDefined)
-    val DebugRegex = "DEBUG4: \\[foo, (.*)\\]".r
-    val DebugRegex(path) = lines.get
+    outputFileMatchChecker(output, "DEBUG4", "^11 .*$")
 
-    val src = Source.fromFile(path)
-    try {
-      val step3Out = src.getLines.mkString
-      assert(step3Out.matches("^11 .*$"))
-    } finally {
-      src.close()
-    }
-    // TODO: check other debug flags as well.
-    // TODO: change step3 into something more interesting.
   }
 
   test("Run pipeline with components using mapData functionality", DockerTest, NextFlowTest) {
@@ -110,21 +102,9 @@ class NextFlowPocPlatformTest extends FunSuite with BeforeAndAfterAll {
       new File(tempFolStr),
       "NXF_VER" -> "21.04.1"
     ).!!
-    val lines = output.split("\n").find(_.contains("DEBUG4"))
 
-    assert(lines.isDefined)
-    val DebugRegex = "DEBUG4: \\[foo, (.*)\\]".r
-    val DebugRegex(path) = lines.get
+    outputFileMatchChecker(output, "DEBUG4", "^11 .*$")
 
-    val src = Source.fromFile(path)
-    try {
-      val step3Out = src.getLines.mkString
-      assert(step3Out.matches("^11 .*$"))
-    } finally {
-      src.close()
-    }
-    // TODO: check other debug flags as well.
-    // TODO: change step3 into something more interesting.
   }
 
   test("Run pipeline with debug = false", DockerTest, NextFlowTest) {
@@ -141,22 +121,10 @@ class NextFlowPocPlatformTest extends FunSuite with BeforeAndAfterAll {
       new File(tempFolStr),
       "NXF_VER" -> "21.04.1"
     ).!!
-    val lines = output.split("\n").find(_.contains("DEBUG4"))
 
-    assert(lines.isDefined)
-    val DebugRegex = "DEBUG4: \\[foo, (.*)\\]".r
-    val DebugRegex(path) = lines.get
-
-    val src = Source.fromFile(path)
-    try {
-      val step3Out = src.getLines.mkString
-      assert(step3Out.matches("^11 .*$"))
-    } finally {
-      src.close()
-    }
+    outputFileMatchChecker(output, "DEBUG4", "^11 .*$")
 
     val lines2 = output.split("\n").find(_.contains("process 'step3' output tuple"))
-
     assert(!lines2.isDefined)
 
   }
@@ -175,33 +143,9 @@ class NextFlowPocPlatformTest extends FunSuite with BeforeAndAfterAll {
       new File(tempFolStr),
       "NXF_VER" -> "21.04.1"
     ).!!
-    val lines = output.split("\n").find(_.contains("DEBUG4"))
 
-    assert(lines.isDefined)
-    val DebugRegex = "DEBUG4: \\[foo, (.*)\\]".r
-    val DebugRegex(path) = lines.get
-
-    val src = Source.fromFile(path)
-    try {
-      val step3Out = src.getLines.mkString
-      assert(step3Out.matches("^11 .*$"))
-    } finally {
-      src.close()
-    }
-
-    val lines2 = output.split("\n").find(_.contains("process 'step3' output tuple"))
-
-    assert(lines2.isDefined)
-    val DebugRegex2 = "process 'step3' output tuple: \\[foo, (.*)\\]".r
-    val DebugRegex2(path2) = lines2.get
-
-    val src2 = Source.fromFile(path2)
-    try {
-      val step3Out2 = src2.getLines.mkString
-      assert(step3Out2.matches("^11 .*$"))
-    } finally {
-      src2.close()
-    }
+    outputFileMatchChecker(output, "DEBUG4", "^11 .*$")
+    outputFileMatchChecker(output, "process 'step3' output tuple", "^11 .*$")
 
   }
 
