@@ -270,16 +270,23 @@ case class NextflowPocPlatform(
       |  simplifyInput: $simplifyInput,
       |  // if output is a single file, will simplify output to [id, Path, ...] instead of [id, [output: Path], ...]
       |  simplifyOutput: $simplifyOutput,
-      |  // identity operator: { it -> it }
+      |  // apply a map over the incoming tuple
+      |  // example: { tup -> [ tup[0], [input: tup[1].output], tup[2] ] }
       |  map: null,
-      |  // identity operator: { it -> it[0] }
+      |  // apply a map over the ID element of a tuple (i.e. the first element)
+      |  // example: { id -> id + "_foo" }
       |  mapId: null,
-      |  // identity operator: { it -> it[1] }
+      |  // apply a map over the data element of a tuple (i.e. the second element)
+      |  // example: { data -> [ input: data.output ] }
       |  mapData: null,
-      |  // usage: [ "new_key": "old_key" ]
+      |  // apply a map over the passthrough elements of a tuple (i.e. the tuple excl. the first two elements)
+      |  // example: { pt -> pt.drop(1) }
+      |  mapPassthrough: null,
+      |  // rename keys in the data field of the tuple (i.e. the second element)
+      |  // example: [ "new_key": "old_key" ]
       |  renameKeys: null,
       |  // whether or not to print debug messages
-      |  debug: false
+      |  debug: $debug
       |]
       |
       |// END CUSTOM CODE
