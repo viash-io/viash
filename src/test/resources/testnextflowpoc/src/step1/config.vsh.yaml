@@ -1,0 +1,25 @@
+functionality:
+  name: step1
+  arguments:
+    - name: "--input"
+      type: file
+      multiple: true
+      required: true
+      example: input.txt
+    - name: "--output"
+      type: file
+      required: true
+      direction: output
+      example: output.txt
+  resources:
+    - type: bash_script
+      path: script.sh
+platforms:
+  - type: native
+  - type: docker
+    image: nextflow/bash:latest
+  - type: nextflow
+    publish: false
+  - type: nextflowpoc
+    directives:
+      container: nextflow/bash:latest
