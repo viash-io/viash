@@ -11,6 +11,8 @@ include  { step2 }    from "$targetDir/step2/main.nf"
 // ["input": List[File]] -> File
 include  { step3 }    from "$targetDir/step3/main.nf"
 
+def debug = params.displayDebug
+
 workflow {
     Channel.value([ 
           "foo", // id
@@ -19,22 +21,22 @@ workflow {
           ],
           file("${params.rootDir}/resources/lines3.txt") // pass-through
         ])
-        | view{ "DEBUG1: $it" }
         // : Channel[(String, Map[String, List[File]], params)]
         //     * it[0]: a string identifier
         //     * it[1]: a map with a list of files
         //     * it[2]: a file
 
-        | step1
-        | view{ "DEBUG2: $it" }
+        | step1.run(
+            debug: debug,
+        )
         // : Channel[(String, File, File)]
 
         | step2.run(
             map: { [ it[0], [ "input1" : it[1], "input2" : it[2] ] ] },
             // : Channel[(String, Map[String, File], File)]
             //     * it[1]: a map with two files (named input1 and input2)
+            debug: debug,
         )
-        | view { "DEBUG3: $it" }
         // : Channel[(String, Map[String, File], File)]
         //     * it[1]: a map with two files (named input1 and input2)
 
@@ -45,6 +47,7 @@ workflow {
             directives: [
                 publishDir: "output/foo"
             ],
+            debug: debug,
         )
         | view { "DEBUG4: $it" }
         // : Channel[(String, File)]

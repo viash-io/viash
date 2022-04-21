@@ -112,6 +112,82 @@ class NextFlowPocPlatformTest extends FunSuite with BeforeAndAfterAll {
     // TODO: change step3 into something more interesting.
   }
 
+  test("Run pipeline with debug = false", DockerTest, NextFlowTest) {
+
+    import sys.process._
+    val output = Process(
+      Seq("nextflow", "run", ".",
+        "-main-script", "workflows/pipeline4/main.nf",
+        "--input", "resources/*",
+        "--publishDir", "output",
+        "--displayDebug", "false",
+        ),
+      new File(tempFolStr),
+      "NXF_VER" -> "21.04.1"
+    ).!!
+    val lines = output.split("\n").find(_.contains("DEBUG4"))
+
+    assert(lines.isDefined)
+    val DebugRegex = "DEBUG4: \\[foo, (.*)\\]".r
+    val DebugRegex(path) = lines.get
+
+    val src = Source.fromFile(path)
+    try {
+      val step3Out = src.getLines.mkString
+      assert(step3Out.matches("^11 .*$"))
+    } finally {
+      src.close()
+    }
+
+    val lines2 = output.split("\n").find(_.contains("process 'step3' output tuple"))
+
+    assert(!lines2.isDefined)
+
+  }
+
+  test("Run pipeline with debug = true", DockerTest, NextFlowTest) {
+
+    import sys.process._
+    val output = Process(
+      Seq("nextflow", "run", ".",
+        "-main-script", "workflows/pipeline4/main.nf",
+        "--input", "resources/*",
+        "--publishDir", "output",
+        "--displayDebug", "true",
+        ),
+      new File(tempFolStr),
+      "NXF_VER" -> "21.04.1"
+    ).!!
+    val lines = output.split("\n").find(_.contains("DEBUG4"))
+
+    assert(lines.isDefined)
+    val DebugRegex = "DEBUG4: \\[foo, (.*)\\]".r
+    val DebugRegex(path) = lines.get
+
+    val src = Source.fromFile(path)
+    try {
+      val step3Out = src.getLines.mkString
+      assert(step3Out.matches("^11 .*$"))
+    } finally {
+      src.close()
+    }
+
+    val lines2 = output.split("\n").find(_.contains("process 'step3' output tuple"))
+
+    assert(lines2.isDefined)
+    val DebugRegex2 = "process 'step3' output tuple: \\[foo, (.*)\\]".r
+    val DebugRegex2(path2) = lines2.get
+
+    val src2 = Source.fromFile(path2)
+    try {
+      val step3Out2 = src2.getLines.mkString
+      assert(step3Out2.matches("^11 .*$"))
+    } finally {
+      src2.close()
+    }
+
+  }
+
   override def afterAll() {
     IO.deleteRecursively(temporaryFolder)
   }
