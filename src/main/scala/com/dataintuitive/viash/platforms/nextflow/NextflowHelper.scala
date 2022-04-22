@@ -15,23 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.helpers
+package com.dataintuitive.viash.platforms.nextflow
 
-object Format {
-  private def wordWrap(s: String, n: Int): Seq[String] = {
-    val words = s.split("\\s")
-    if (words.isEmpty) Nil
-    else
-      words.tail.foldLeft(List[String](words.head)){ (lines, word) =>
-        if (lines.head.length + word.length + 1 > n)
-          word :: lines
-        else
-          (lines.head + " " + word) :: lines.tail
-      }.reverse
+import scala.io.Source
+
+object NextflowHelper {
+  private def readSource(s: String) = {
+    val path = s"com/dataintuitive/viash/platforms/nextflow/$s"
+    Source.fromResource(path).getLines().mkString("\n")
   }
 
-  def paragraphWrap(s: String, n: Int): Seq[String] = {
-    s.split("\n").flatMap(t => Format.wordWrap(t, n))
-  }
+  lazy val code: String = readSource("NextflowHelper.nf")
 }
-

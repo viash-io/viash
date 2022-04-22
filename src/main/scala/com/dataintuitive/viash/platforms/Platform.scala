@@ -18,6 +18,7 @@
 package com.dataintuitive.viash.platforms
 
 import com.dataintuitive.viash.functionality.Functionality
+import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.helpers.IO
 import io.circe.yaml.parser
 import java.net.URI
@@ -31,9 +32,7 @@ trait Platform {
   val hasSetup: Boolean = false
   val requirements: List[Requirements] = Nil
 
-  def modifyFunctionality(functionality: Functionality): Functionality
-
-
+  def modifyFunctionality(config: Config): Functionality
 }
 
 object Platform {

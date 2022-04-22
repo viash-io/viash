@@ -17,6 +17,7 @@
 
 package com.dataintuitive.viash.platforms
 
+import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.functionality.dataobjects._
@@ -27,7 +28,7 @@ import com.dataintuitive.viash.helpers.Circe._
 /**
  * / * Platform class for generating NextFlow (DSL2) modules.
  */
-case class NextFlowPlatform(
+case class NextflowLegacyPlatform(
   id: String = "nextflow",
   image: Option[String],
   tag: Option[Version] = None,
@@ -48,13 +49,15 @@ case class NextFlowPlatform(
   directive_time: Option[String] = None,
   directive_memory: Option[String] = None,
   directive_cache: Option[String] = None,
-  oType: String = "nextflow"
-) extends Platform {
+  oType: String = "nextflow",
+  variant: String = "legacy"
+) extends NextflowPlatform {
   assert(version.isEmpty, "nextflow platform: attribute 'version' is deprecated")
 
   private val nativePlatform = NativePlatform(id = id)
 
-  def modifyFunctionality(functionality: Functionality): Functionality = {
+  def modifyFunctionality(config: Config): Functionality = {
+    val functionality = config.functionality
     import NextFlowUtils._
     implicit val fun: Functionality = functionality
 
@@ -675,7 +678,7 @@ case class NextFlowPlatform(
       case None => Nil
       case Some(_: Executable) => Nil
       case Some(_: Script) =>
-        nativePlatform.modifyFunctionality(functionality).resources
+        nativePlatform.modifyFunctionality(config).resources
     }
 
     functionality.copy(

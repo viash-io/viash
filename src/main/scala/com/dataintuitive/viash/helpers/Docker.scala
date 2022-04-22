@@ -21,7 +21,7 @@ import com.dataintuitive.viash.functionality.Functionality
 
 case class DockerImageInfo(
   name: String, 
-  tag: String, 
+  tag: String = "latest", 
   registry: Option[String] = None,
   organization: Option[String] = None
 ) {
@@ -29,6 +29,16 @@ case class DockerImageInfo(
     registry.map(_ + "/").getOrElse("") +
     organization.map(_ + "/").getOrElse("") +
       name + ":" + tag
+  }
+
+  def toMap: Map[String, String] = {
+    val image = organization.map(_ + "/").getOrElse("") + name
+    
+    registry.map(r => Map("registry" -> r)).getOrElse(Map()) ++
+    Map(
+      "image" -> image,
+      "tag" -> tag
+    )
   }
 }
 

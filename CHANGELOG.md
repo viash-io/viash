@@ -1,5 +1,14 @@
 # Viash 0.5.11
 
+## MAJOR CHANGES
+
+* `NextflowNeoPlatform`: Added a beta implementation for generating next gen Nextflow modules (#82).
+  Names and arguments are subject to change, as well as the internal workings. 
+  Known issues:
+    - Viash does not automatically fill in the container directive.
+    - No documentation yet.
+    - No unit tests yet.
+
 ## MINOR CHANGES
 
 * `DockerPlatform`: Move description labels to the end of the Dockerfile to improve cross-component caching.
