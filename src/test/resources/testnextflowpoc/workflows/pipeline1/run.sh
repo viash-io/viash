@@ -7,4 +7,5 @@ nextflow \
   -main-script workflows/pipeline1/main.nf \
   --input "resources/*" \
   --publishDir "output" \
-  -resume
+  -resume \
+  -entry base
