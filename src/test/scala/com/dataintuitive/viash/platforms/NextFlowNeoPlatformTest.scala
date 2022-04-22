@@ -11,13 +11,13 @@ import scala.io.Source
 import java.io.IOException
 import java.io.UncheckedIOException
 
-class NextFlowPocPlatformTest extends FunSuite with BeforeAndAfterAll {
+class NextFlowNeoPlatformTest extends FunSuite with BeforeAndAfterAll {
   // temporary folder to work in
-  private val temporaryFolder = IO.makeTemp("viash_tester_nextflowpoc")
+  private val temporaryFolder = IO.makeTemp("viash_tester_nextflowneo")
   private val tempFolStr = temporaryFolder.toString
 
   // path to namespace components
-  private val rootPath = getClass.getResource("/testnextflowpoc/").getPath
+  private val rootPath = getClass.getResource("/testnextflowneo/").getPath
   private val srcPath = Paths.get(tempFolStr, "src").toFile.toString
   private val targetPath = Paths.get(tempFolStr, "target").toFile.toString
 
@@ -167,7 +167,7 @@ class NextFlowPocPlatformTest extends FunSuite with BeforeAndAfterAll {
 
   }
 
-    test("Run legacy and poc combined pipeline", DockerTest, NextFlowTest) {
+    test("Run legacy and neo combined pipeline", DockerTest, NextFlowTest) {
 
     import sys.process._
     val output = Process(
@@ -175,7 +175,7 @@ class NextFlowPocPlatformTest extends FunSuite with BeforeAndAfterAll {
       "-main-script", "workflows/pipeline2/main.nf",
       "--input", "resources/*",
       "--publishDir", "output",
-      "-entry", "legacy_and_poc",
+      "-entry", "legacy_and_neo",
       ),
       new File(tempFolStr),
       "NXF_VER" -> "21.04.1"

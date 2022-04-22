@@ -20,6 +20,8 @@ platforms:
     image: nextflow/bash:latest
   - type: nextflow
     publish: false
-  - type: nextflowpoc
+  - type: nextflow
+    id: nextflowneo
+    variant: neo
     directives:
       container: nextflow/bash:latest

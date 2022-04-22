@@ -67,6 +67,8 @@ platforms:
     image: nextflow/bash:latest
   - type: nextflow
     publish: true
-  - type: nextflowpoc
-    directives: 
+  - type: nextflow
+    id: nextflowneo
+    variant: neo
+    directives:
       container: nextflow/bash:latest

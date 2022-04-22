@@ -1,6 +1,6 @@
 nextflow.enable.dsl=2
 
-targetDir = "${params.rootDir}/target/nextflowpoc"
+targetDir = "${params.rootDir}/target/nextflowneo"
 
 // ["input": List[File]] -> File
 include  { step1 }    from "$targetDir/step1/main.nf"
