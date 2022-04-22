@@ -17,6 +17,7 @@
 
 package com.dataintuitive.viash.platforms
 
+import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.functionality.Functionality
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.platforms.requirements._
@@ -33,7 +34,8 @@ case class DebugPlatform(
   oType: String = "debug",
   path: String
 ) extends Platform {
-  def modifyFunctionality(functionality: Functionality): Functionality = {
+  def modifyFunctionality(config: Config): Functionality = {
+    val functionality = config.functionality
     if (functionality.mainScript.isEmpty) {
       throw new RuntimeException("Can't generate a debug platform when there is no script.")
     }

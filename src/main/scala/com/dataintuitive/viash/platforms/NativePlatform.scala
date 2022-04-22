@@ -17,6 +17,7 @@
 
 package com.dataintuitive.viash.platforms
 
+import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.functionality.Functionality
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.platforms.requirements._
@@ -27,7 +28,8 @@ case class NativePlatform(
   id: String = "native",
   oType: String = "native"
 ) extends Platform {
-  def modifyFunctionality(functionality: Functionality): Functionality = {
+  def modifyFunctionality(config: Config): Functionality = {
+    val functionality = config.functionality
     val executor = functionality.mainScript match {
       case None => "eval"
       case Some(_: Executable) => "eval"

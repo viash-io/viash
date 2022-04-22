@@ -30,6 +30,16 @@ case class DockerImageInfo(
     organization.map(_ + "/").getOrElse("") +
       name + ":" + tag
   }
+
+  def toMap: Map[String, String] = {
+    val image = organization.map(_ + "/").getOrElse("") + name
+    
+    registry.map(r => Map("registry" -> r)).getOrElse(Map()) ++
+    Map(
+      "image" -> image,
+      "tag" -> tag
+    )
+  }
 }
 
 object Docker {

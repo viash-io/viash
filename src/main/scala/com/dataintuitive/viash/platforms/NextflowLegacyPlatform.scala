@@ -17,6 +17,7 @@
 
 package com.dataintuitive.viash.platforms
 
+import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.functionality.dataobjects._
@@ -55,7 +56,8 @@ case class NextflowLegacyPlatform(
 
   private val nativePlatform = NativePlatform(id = id)
 
-  def modifyFunctionality(functionality: Functionality): Functionality = {
+  def modifyFunctionality(config: Config): Functionality = {
+    val functionality = config.functionality
     import NextFlowUtils._
     implicit val fun: Functionality = functionality
 
@@ -676,7 +678,7 @@ case class NextflowLegacyPlatform(
       case None => Nil
       case Some(_: Executable) => Nil
       case Some(_: Script) =>
-        nativePlatform.modifyFunctionality(functionality).resources
+        nativePlatform.modifyFunctionality(config).resources
     }
 
     functionality.copy(

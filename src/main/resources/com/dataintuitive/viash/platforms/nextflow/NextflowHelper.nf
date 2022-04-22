@@ -19,7 +19,7 @@ metaFiles = [
 ]
 
 def assertMapKeys(map, expectedKeys, requiredKeys, mapName) {
-  assert map instanceof HashMap : "Expected argument '$mapName' to be a HashMap. Found: class ${map.getClass()}"
+  assert map instanceof Map : "Expected argument '$mapName' to be a Map. Found: class ${map.getClass()}"
   map.forEach { key, val -> 
     assert key in expectedKeys : "Unexpected key '$key' in ${mapName ? mapName + " " : ""}map"
   }
@@ -78,7 +78,7 @@ def processDirectives(Map drctv) {
     - ["bwa=0.7.15", "fastqc=0.11.5"]
   */
   if (drctv.containsKey("conda")) {
-    if (drctv["conda"] instanceof ArrayList) {
+    if (drctv["conda"] instanceof List) {
       drctv["conda"] = drctv["conda"].join(" ")
     }
     assert drctv["conda"] instanceof String
@@ -93,8 +93,8 @@ def processDirectives(Map drctv) {
       is transformed to "im:latest"
   */
   if (drctv.containsKey("container")) {
-    assert drctv["container"] instanceof HashMap || drctv["container"] instanceof String
-    if (drctv["container"] instanceof HashMap) {
+    assert drctv["container"] instanceof Map || drctv["container"] instanceof String
+    if (drctv["container"] instanceof Map) {
       def m = drctv["container"]
       assertMapKeys(m, [ "registry", "image", "tag" ], ["image"], "container")
       def part1 = m.registry ? m.registry + "/" : ""
@@ -110,7 +110,7 @@ def processDirectives(Map drctv) {
     - ["--foo bar", "-f b"]
   */
   if (drctv.containsKey("containerOptions")) {
-    if (drctv["containerOptions"] instanceof ArrayList) {
+    if (drctv["containerOptions"] instanceof List) {
       drctv["containerOptions"] = drctv["containerOptions"].join(" ")
     }
     assert drctv["containerOptions"] instanceof String
@@ -222,7 +222,7 @@ def processDirectives(Map drctv) {
     - ["ncbi-blast/2.2.27", "t_coffee/10.0"]
   */
   if (drctv.containsKey("module")) {
-    if (drctv["module"] instanceof ArrayList) {
+    if (drctv["module"] instanceof List) {
       drctv["module"] = drctv["module"].join(":")
     }
     assert drctv["module"] instanceof String
@@ -244,12 +244,12 @@ def processDirectives(Map drctv) {
     - [ [label: "l", value: "v"], [env: "e", value: "v"]]
   */
   if (drctv.containsKey("pod")) {
-    if (drctv["pod"] instanceof HashMap) {
+    if (drctv["pod"] instanceof Map) {
       drctv["pod"] = [ drctv["pod"] ]
     }
-    assert drctv["pod"] instanceof ArrayList
+    assert drctv["pod"] instanceof List
     drctv["pod"].forEach { pod ->
-      assert pod instanceof HashMap
+      assert pod instanceof Map
       // TODO: should more checks be added?
       // See https://www.nextflow.io/docs/latest/process.html?highlight=directives#pod
       // e.g. does it contain 'label' and 'value', or 'annotation' and 'value', or ...?
@@ -270,11 +270,11 @@ def processDirectives(Map drctv) {
     def pblsh = drctv["publishDir"]
     
     // check different options
-    assert pblsh instanceof ArrayList || pblsh instanceof HashMap || pblsh instanceof String
+    assert pblsh instanceof List || pblsh instanceof Map || pblsh instanceof String
     
     // turn into list if not already so
-    // for some reason, 'if (!pblsh instanceof ArrayList) pblsh = [ pblsh ]' doesn't work.
-    pblsh = pblsh instanceof ArrayList ? pblsh : [ pblsh ]
+    // for some reason, 'if (!pblsh instanceof List) pblsh = [ pblsh ]' doesn't work.
+    pblsh = pblsh instanceof List ? pblsh : [ pblsh ]
 
     // check elements of publishDir
     pblsh = pblsh.collect{ elem ->
@@ -282,7 +282,7 @@ def processDirectives(Map drctv) {
       elem = elem instanceof String ? [ path: elem ] : elem
 
       // check types and keys
-      assert elem instanceof HashMap : "Expected publish argument '$elem' to be a String or a HashMap. Found: class ${elem.getClass()}"
+      assert elem instanceof Map : "Expected publish argument '$elem' to be a String or a Map. Found: class ${elem.getClass()}"
       assertMapKeys(elem, [ "path", "mode", "overwrite", "pattern", "saveAs", "enabled" ], ["path"], "publishDir")
 
       // check elements in map
@@ -319,7 +319,7 @@ def processDirectives(Map drctv) {
     - ["short", "long"]
   */
   if (drctv.containsKey("queue")) {
-    if (drctv["queue"] instanceof ArrayList) {
+    if (drctv["queue"] instanceof List) {
       drctv["queue"] = drctv["queue"].join(",")
     }
     assert drctv["queue"] instanceof String
@@ -335,7 +335,7 @@ def processDirectives(Map drctv) {
     if (drctv["label"] instanceof String) {
       drctv["label"] = [ drctv["label"] ]
     }
-    assert drctv["label"] instanceof ArrayList
+    assert drctv["label"] instanceof List
     drctv["label"].forEach { label ->
       assert label instanceof String
       // assert label.matches("[a-zA-Z0-9]([a-zA-Z0-9_]*[a-zA-Z0-9])?")
@@ -418,7 +418,7 @@ def processProcessArgs(Map args) {
   if (!processArgs.containsKey("directives")) {
     processArgs["directives"] = [:]
   }
-  assert processArgs["directives"] instanceof HashMap
+  assert processArgs["directives"] instanceof Map
   processArgs["directives"] = processDirectives(thisDefaultDirectives + processArgs["directives"])
 
   for (nam in [ "map", "mapId", "mapData", "mapPassthrough" ]) {
@@ -607,7 +607,7 @@ def workflowFactory(Map args) {
         }
 
         // check tuple
-        assert tuple instanceof AbstractList : 
+        assert tuple instanceof List : 
           "Error in process '${processKey}': element in channel should be a tuple [id, data, ...otherargs...]\n" +
           "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
           "  Expected class: List. Found: tuple.getClass() is ${tuple.getClass()}"
@@ -636,20 +636,20 @@ def workflowFactory(Map args) {
         }
 
         // check data field
-        assert tuple[1] instanceof HashMap : 
-          "Error in process '${processKey}' id '${tuple[0]}': second element of tuple in channel should be a HashMap\n" +
+        assert tuple[1] instanceof Map : 
+          "Error in process '${processKey}' id '${tuple[0]}': second element of tuple in channel should be a Map\n" +
           "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
-          "  Expected class: HashMap. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
+          "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
 
         // rename keys of data field in tuple
         if (processArgs.renameKeys) {
-          assert processArgs.renameKeys instanceof HashMap : 
+          assert processArgs.renameKeys instanceof Map : 
               "Error renaming data keys in process '${processKey}' id '${tuple[0]}'.\n" +
               "  Example: renameKeys: ['new_key': 'old_key'].\n" +
-              "  Expected class: HashMap. Found: renameKeys.getClass() is ${processArgs.renameKeys.getClass()}"
-          assert tuple[1] instanceof HashMap : 
+              "  Expected class: Map. Found: renameKeys.getClass() is ${processArgs.renameKeys.getClass()}"
+          assert tuple[1] instanceof Map : 
               "Error renaming data keys in process '${processKey}' id '${tuple[0]}'.\n" +
-              "  Expected class: HashMap. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
+              "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
 
           // TODO: allow renameKeys to be a function?
           processArgs.renameKeys.each { newKey, oldKey ->

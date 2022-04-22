@@ -17,6 +17,7 @@
 
 package com.dataintuitive.viash.platforms
 
+import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.functionality.resources._
@@ -79,7 +80,8 @@ case class DockerPlatform(
   }
 
 
-  def modifyFunctionality(functionality: Functionality): Functionality = {
+  def modifyFunctionality(config: Config): Functionality = {
+    val functionality = config.functionality
     // collect docker args
     val dockerArgs = "-i --rm" +
       port.map(" -p " + _).mkString +
