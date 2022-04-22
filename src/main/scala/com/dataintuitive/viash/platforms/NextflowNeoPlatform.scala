@@ -18,6 +18,7 @@
 package com.dataintuitive.viash.platforms
 
 import com.dataintuitive.viash.Main
+import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.functionality.dataobjects._
@@ -30,6 +31,7 @@ import com.dataintuitive.viash.platforms.nextflow._
 import io.circe.syntax._
 import io.circe.{Printer => JsonPrinter}
 import shapeless.syntax.singleton
+import com.dataintuitive.viash.helpers.DockerImageInfo
 
 /**
  * Next-gen Platform class for generating NextFlow (DSL2) modules.
@@ -41,14 +43,19 @@ case class NextflowNeoPlatform(
   simplifyInput: Boolean = true,
   simplifyOutput: Boolean = true,
   debug: Boolean = false,
-  variant: String = "neo"
+  variant: String = "neo",
+
+  // TODO: solve differently
+  container: String = "docker"
 ) extends NextflowPlatform {
   def escapeText(txt: String): String = {
     Bash.escape(txt, singleQuote = true, newline = true, backtick = false)
   }
 
-  def modifyFunctionality(functionality: Functionality): Functionality = {
-    val mainFile = createMainNfFile(functionality)
+  def modifyFunctionality(config: Config): Functionality = {
+    val functionality = config.functionality
+    val condir = containerDirective(config)
+    val mainFile = createMainNfFile(functionality, condir)
     val nextflowConfigFile = createNextflowConfigFile(functionality)
 
     // remove main
@@ -57,6 +64,25 @@ case class NextflowNeoPlatform(
     functionality.copy(
       resources = mainFile :: nextflowConfigFile :: otherResources
     )
+  }
+
+  def containerDirective(config: Config): Option[DockerImageInfo] = {
+    val plat = config.platforms.find(p => p.id == container)
+    plat match {
+      case Some(p) if !p.isInstanceOf[DockerPlatform] => 
+        throw new RuntimeException(s"NextflowPlatform 'container' variable: Platform $container is not a Docker Platform")
+      case Some(pp) if pp.isInstanceOf[DockerPlatform] => 
+        val p = pp.asInstanceOf[DockerPlatform]
+        Some(Docker.getImageInfo(
+          functionality = Some(config.functionality),
+          registry = p.target_registry,
+          organization = p.target_organization,
+          name = p.target_image,
+          tag = p.target_tag.map(_.toString),
+          namespaceSeparator = p.namespace_separator
+        ))
+      case None => None
+    }
   }
 
   def renderNextflowConfig(functionality: Functionality): String = {
@@ -92,7 +118,7 @@ case class NextflowNeoPlatform(
   }
 
   // interpreted from BashWrapper
-  def renderMainNf(functionality: Functionality): String = {
+  def renderMainNf(functionality: Functionality, containerDirective: Option[DockerImageInfo]): String = {
     /************************* HEADER *************************/
     // generate header
     val nav = BashWrapper.nameAndVersion(functionality)
@@ -231,6 +257,10 @@ case class NextflowNeoPlatform(
     }
 
     /************************* MAIN.NF *************************/
+    // override container
+    val directives2 = directives.copy(
+      container = directives.container orElse containerDirective.map(cd => Left(cd.toMap))
+    )
     val tripQuo = """""""""
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
     s"""$nameAndVersionHeader
@@ -260,7 +290,7 @@ case class NextflowNeoPlatform(
       |
       |thisScript = '''$executionCode'''
       |
-      |thisDefaultDirectives = jsonSlurper.parseText($tripQuo${jsonPrinter.print(directives.asJson)}$tripQuo)
+      |thisDefaultDirectives = jsonSlurper.parseText($tripQuo${jsonPrinter.print(directives2.asJson)}$tripQuo)
       |
       |thisDefaultProcessArgs = [
       |  // key to be used to trace the process and determine output names
@@ -295,10 +325,10 @@ case class NextflowNeoPlatform(
       |""".stripMargin + NextflowHelper.code
   }
 
-  def createMainNfFile(functionality: Functionality): Resource = {
+  def createMainNfFile(functionality: Functionality, containerDirective: Option[DockerImageInfo]): Resource = {
     PlainFile(
       dest = Some("main.nf"),
-      text = Some(renderMainNf(functionality))
+      text = Some(renderMainNf(functionality, containerDirective))
     )
   }
 }
