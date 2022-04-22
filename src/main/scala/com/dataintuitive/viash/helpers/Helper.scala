@@ -109,7 +109,4 @@ object Helper {
 
     Format.paragraphWrap(out, 80).toList
   }
-
-
-  // TODO: move scriptheader from BashWrapper to here!
 }
