@@ -585,7 +585,7 @@ def workflowFactory(Map args) {
   // write process to temporary nf file and parse it in memory
   def processObj = processFactory(processArgs)
   
-  workflow pocInstance {
+  workflow workflowInstance {
     take:
     input_
 
@@ -790,18 +790,18 @@ def workflowFactory(Map args) {
     output_
   }
 
-  return pocInstance.cloneWithName(processKey)
+  return workflowInstance.cloneWithName(processKey)
 }
 
 // initialise standard workflow
-poc = workflowFactory(key: thisFunctionality.name)
+myWfInstance = workflowFactory(key: thisFunctionality.name)
 
 // add factory function
-poc.metaClass.run = { args ->
+myWfInstance.metaClass.run = { args ->
   workflowFactory(args)
 }
 // add workflow to environment
-ScriptMeta.current().addDefinition(poc)
+ScriptMeta.current().addDefinition(myWfInstance)
 
 // Implicit workflow for running this module standalone
 workflow {
@@ -828,7 +828,7 @@ workflow {
           
   Channel.value([ params.id, args ])
     | view { "input: $it" }
-    | poc.run(
+    | myWfInstance.run(
         key: thisFunctionality.name + "_",
         directives: [publishDir: params.publishDir]
       )

@@ -40,7 +40,7 @@ case class BashScript(
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
     val parSet = params.map { par =>
-      val parse = s"""${par.par}='$$${par.VIASH_PAR}'"""
+      val parse = par.par + "=" + par.viash_par_escaped("'", """\'""", """\'\"\'\"\'""")
       s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; fi )"""
     }
     val metaSet = BashWrapper.metaFields.map{ case (env_name, script_name) =>

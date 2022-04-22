@@ -40,27 +40,28 @@ case class JavaScriptScript(
     val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
     val parSet = params.map { par =>
-      val env_name = par.VIASH_PAR
+      // val env_name = par.VIASH_PAR
+      val env_name = par.viash_par_escaped("'", """\'""", """\\\'""")
 
       val parse = par match {
         case o: BooleanObject if o.multiple =>
-          s"""'$$$env_name'.split('${o.multiple_sep}').map(x => x.toLowerCase() === 'true')"""
+          s"""$env_name.split('${o.multiple_sep}').map(x => x.toLowerCase() === 'true')"""
         case o: IntegerObject if o.multiple =>
-          s"""'$$$env_name'.split('${o.multiple_sep}').map(x => parseInt(x))"""
+          s"""$env_name.split('${o.multiple_sep}').map(x => parseInt(x))"""
         case o: DoubleObject if o.multiple =>
-          s"""'$$$env_name'.split('${o.multiple_sep}').map(x => parseFloat(x))"""
+          s"""$env_name.split('${o.multiple_sep}').map(x => parseFloat(x))"""
         case o: FileObject if o.multiple =>
-          s"""'$$$env_name'.split('${o.multiple_sep}')"""
+          s"""$env_name.split('${o.multiple_sep}')"""
         case o: StringObject if o.multiple =>
-          s"""'$$$env_name'.split('${o.multiple_sep}')"""
-        case _: BooleanObject => s"""'$$$env_name'.toLowerCase() === 'true'"""
-        case _: IntegerObject => s"""parseInt('$$$env_name')"""
-        case _: DoubleObject => s"""parseFloat('$$$env_name')"""
-        case _: FileObject => s"""'$$$env_name'"""
-        case _: StringObject => s"""'$$$env_name'"""
+          s"""$env_name.split('${o.multiple_sep}')"""
+        case _: BooleanObject => s"""$env_name.toLowerCase() === 'true'"""
+        case _: IntegerObject => s"""parseInt($env_name)"""
+        case _: DoubleObject => s"""parseFloat($env_name)"""
+        case _: FileObject => s"""$env_name"""
+        case _: StringObject => s"""$env_name"""
       }
 
-      s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$parse"; else echo undefined; fi )"""
+      s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo undefined; fi )"""
     }
     val metaSet = BashWrapper.metaFields.map{ case (env_name, script_name) =>
       s"""'$script_name': '$$$env_name'"""

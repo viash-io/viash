@@ -17,32 +17,6 @@
 
 package com.dataintuitive.viash.platforms
 
-import com.dataintuitive.viash.functionality.Functionality
-import com.dataintuitive.viash.helpers.IO
-import io.circe.yaml.parser
-import java.net.URI
-import requirements._
-import com.dataintuitive.viash.config.Version
-
-trait Platform {
-  val oType: String
-  val id: String
-
-  val hasSetup: Boolean = false
-  val requirements: List[Requirements] = Nil
-
-  def modifyFunctionality(functionality: Functionality): Functionality
-}
-
-object Platform {
-  def parse(uri: URI): Platform = {
-    val str = IO.read(uri)
-    parser.parse(str)
-      .fold(throw _, _.as[Platform])
-      .fold(throw _, identity)
-  }
-
-  def read(path: String): Platform = {
-    parse(IO.uri(path))
-  }
+trait NextflowPlatform extends Platform {
+  val variant: String
 }
