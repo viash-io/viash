@@ -31,10 +31,10 @@ object Helper {
     def nameStr = nameAndVersion(functionality)
 
     // PART 2: DESCRIPTION
-    val descrStr = functionality.description.map("\n\n" + _.strip).getOrElse("")
+    val descrStr = functionality.description.map("\n\n" + _.strip()).getOrElse("")
 
     // PART 3: Usage
-    val usageStr = functionality.usage.map("\n\nUsage:\n" + _.strip).getOrElse("")
+    val usageStr = functionality.usage.map("\n\nUsage:\n" + _.strip()).getOrElse("")
 
     // PART 4: Options
     val paramStrs = params.map(param => {
@@ -68,7 +68,7 @@ object Helper {
       }.mkString
 
       val descStr = param.description.map{ desc =>
-        ("\n" + desc.strip).replaceAll("\n", "\n        ")
+        ("\n" + desc.strip()).replaceAll("\n", "\n        ")
       }.getOrElse("")
       
       "\n    " +
