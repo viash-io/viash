@@ -70,5 +70,3 @@ platforms:
   - type: nextflow
     id: nextflowneo
     variant: neo
-    directives:
-      container: nextflow/bash:latest
