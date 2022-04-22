@@ -683,7 +683,10 @@ def workflowFactory(Map args) {
 
         // fetch overrides in params
         def paramArgs = thisFunctionality.arguments
-          .findAll { params.containsKey(processKey + "__" + it.name) }
+          .findAll { par ->
+            def argKey = processKey + "__" + par.name
+            params.containsKey(argKey) && params[argKey] != "viash_no_value"
+          }
           .collectEntries { [ it.name, params[processKey + "__" + it.name] ] }
         
         // fetch overrides in data
