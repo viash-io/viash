@@ -39,14 +39,14 @@ test_that("Checking whether output is correct", {
 
 test_that("Checking whether output is correct with minimal parameters", {
   out <- processx::run("./testr", c(
-    "test", "--real_number", "123.456", "--whole_number=789", "-s", 'my$weird#string"""\'\'\'`'
+    "test", "--real_number", "123.456", "--whole_number=789", "-s", 'my$weird#string"""\'\'\'`@'
   ))
   
   output <- out$stdout
   expect_match(output, 'input: \\|test\\|')
   expect_match(output, 'real_number: \\|123.456\\|')
   expect_match(output, 'whole_number: \\|789\\|')
-  expect_match(output, 's: \\|my\\$weird#string"""\'\'\'`\\|')
+  expect_match(output, 's: \\|my\\$weird#string"""\'\'\'`@\\|')
   expect_match(output, 'truth: \\|FALSE\\|')
   expect_match(output, 'optional_with_default: \\|The default value.\\|')
   expect_match(output, 'Parsed input arguments')

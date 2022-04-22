@@ -84,7 +84,7 @@ case class RScript(
        |resources_dir = "$$VIASH_META_RESOURCES_DIR"
        |
        |# restore original warn setting
-       |options(op)
+       |options(viash_orig_warn_)
        |rm(viash_orig_warn_)
        |""".stripMargin
   }

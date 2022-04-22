@@ -42,7 +42,7 @@ echo ">>> Checking whether output is correct with minimal parameters"
 grep -q 'input: |resource2.txt|' output2.txt
 grep -q 'real_number: |123.456|' output2.txt
 grep -q 'whole_number: |789|' output2.txt
-grep -q "s: |my\$weird#string\"\"\"'''\`\\@|" output2.txt
+grep -q "s: |my\$weird#string\"\"\"'''\`\\\\@|" output2.txt
 grep -q 'truth: |false|' output2.txt
 grep -q 'falsehood: |true|' output2.txt
 grep -q 'reality: ||' output2.txt

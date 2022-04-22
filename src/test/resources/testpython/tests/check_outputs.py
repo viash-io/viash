@@ -46,13 +46,13 @@ class TestCheckOutputs(unittest.TestCase):
   def test_check_output_with_minimal_args(self):
     output = subprocess.check_output(
       ["./testpython", "test", "--real_number", "123.456",
-      "--whole_number", "789", "-s", 'my$weird#string"""\'\'\'`']
+      "--whole_number", "789", "-s", 'my$weird#string"""\'\'\'`\\@']
     ).decode("utf-8")
     
     self.assertRegex(output, 'input: \\|test\\|')
     self.assertRegex(output, 'real_number: \\|123.456\\|')
     self.assertRegex(output, 'whole_number: \\|789\\|')
-    self.assertRegex(output, 's: \\|my\\$weird#string"""\'\'\'`\\|')
+    self.assertRegex(output, 's: \\|my\\$weird#string"""\'\'\'`\\\\@\\|')
     self.assertRegex(output, 'truth: \\|False\\|')
     self.assertRegex(output, 'output: \\|None\\|')
     self.assertRegex(output, 'log: \\|None\\|')
