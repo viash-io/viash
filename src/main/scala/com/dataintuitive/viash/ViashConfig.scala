@@ -83,7 +83,7 @@ object ViashConfig {
 
     // debugFun
     val debugPlatform = DebugPlatform(path = uri.getPath())
-    val debugFun = debugPlatform.modifyFunctionality(fun)
+    val debugFun = debugPlatform.modifyFunctionality(config)
 
     // create temporary directory
     val dir = IO.makeTemp("viash_inject_" + config.functionality.name)

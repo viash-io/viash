@@ -195,11 +195,11 @@ object Config {
     val GitInfo(_, rgr, gc) = Git.getInfo(path)
 
     // check whether to modify the fun
-    val modifyFunFun: Functionality => Functionality = {
+    val modifyFunFun: Config => Functionality = {
       if (modifyFun) {
         pl.modifyFunctionality
       } else {
-        identity
+        (c: Config) => c.functionality
       }
     }
 
@@ -214,9 +214,12 @@ object Config {
         git_remote = rgr
       )),
       // apply platform modification to functionality
-      functionality = modifyFunFun(conf1.functionality.copy(
-        // add script (if available) to resources
-        resources = optScript.toList ::: conf1.functionality.resources
+      // .. oh boy
+      functionality = modifyFunFun(conf1.copy(
+        functionality = conf1.functionality.copy(
+          // add script (if available) to resources
+          resources = optScript.toList ::: conf1.functionality.resources
+        )
       )),
       // insert selected platform
       platform = Some(pl)
