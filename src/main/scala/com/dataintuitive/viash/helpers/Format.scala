@@ -18,7 +18,7 @@
 package com.dataintuitive.viash.helpers
 
 object Format {
-  def wordWrap(s: String, n: Int): Seq[String] = {
+  private def wordWrap(s: String, n: Int): Seq[String] = {
     val words = s.split("\\s")
     if (words.isEmpty) Nil
     else
@@ -28,6 +28,10 @@ object Format {
         else
           (lines.head + " " + word) :: lines.tail
       }.reverse
+  }
+
+  def paragraphWrap(s: String, n: Int): Seq[String] = {
+    s.split("\n").flatMap(t => Format.wordWrap(t, n))
   }
 }
 
