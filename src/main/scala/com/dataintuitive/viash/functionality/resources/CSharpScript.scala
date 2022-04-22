@@ -41,19 +41,20 @@ case class CSharpScript(
 
     val parSet = params.map { par =>
       // val env_name = par.VIASH_PAR
-      val env_name = par.viash_par_escaped("\"'\"'\"", """\"""", """\\\"""")
+      val quo = "\"'\"'\""
+      val env_name = par.viash_par_escaped(quo, """\"""", """\\\"""")
 
       val parse = { par match {
         case o: BooleanObject if o.multiple =>
-          s"""$env_name.Split("${o.multiple_sep}").Select(x => bool.Parse(x.ToLower())).ToArray()"""
+          s"""$env_name.Split($quo${o.multiple_sep}$quo).Select(x => bool.Parse(x.ToLower())).ToArray()"""
         case o: IntegerObject if o.multiple =>
-          s"""$env_name.Split("${o.multiple_sep}").Select(x => Convert.ToInt32(x)).ToArray()"""
+          s"""$env_name.Split($quo${o.multiple_sep}$quo).Select(x => Convert.ToInt32(x)).ToArray()"""
         case o: DoubleObject if o.multiple =>
-          s"""$env_name.Split("${o.multiple_sep}").Select(x => Convert.ToDouble(x)).ToArray()"""
+          s"""$env_name.Split($quo${o.multiple_sep}$quo).Select(x => Convert.ToDouble(x)).ToArray()"""
         case o: FileObject if o.multiple =>
-          s"""$env_name.Split("${o.multiple_sep}").ToArray()"""
+          s"""$env_name.Split($quo${o.multiple_sep}$quo).ToArray()"""
         case o: StringObject if o.multiple =>
-          s"""$env_name.Split("${o.multiple_sep}").ToArray()"""
+          s"""$env_name.Split($quo${o.multiple_sep}$quo).ToArray()"""
         case _: BooleanObject => s"""bool.Parse($env_name.ToLower())"""
         case _: IntegerObject => s"""Convert.ToInt32($env_name)"""
         case _: DoubleObject => s"""Convert.ToDouble($env_name)"""
@@ -80,7 +81,7 @@ case class CSharpScript(
       val setter = notFound match {
         case Some(nf) =>
           s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo "$nf"; fi )"""
-        case None => parse.replaceAll("\"'\"'\"", "\"")
+        case None => parse.replaceAll(quo, "\"")
       }
 
       s"${par.plainName} = $setter"
