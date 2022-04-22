@@ -34,14 +34,15 @@ import shapeless.syntax.singleton
 /**
  * Next-gen Platform class for generating NextFlow (DSL2) modules.
  */
-case class NextflowPocPlatform(
-  id: String = "nextflowpoc",
-  oType: String = "nextflowpoc",
+case class NextflowNeoPlatform(
+  id: String = "nextflow",
+  oType: String = "nextflow",
   directives: NextflowDirectives = NextflowDirectives(),
   simplifyInput: Boolean = true,
   simplifyOutput: Boolean = true,
-  debug: Boolean = false
-) extends Platform {
+  debug: Boolean = false,
+  variant: String = "neo"
+) extends NextflowPlatform {
   def escapeText(txt: String): String = {
     Bash.escape(txt, singleQuote = true, newline = true, backtick = false)
   }

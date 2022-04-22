@@ -2,13 +2,12 @@
 
 ## MAJOR CHANGES
 
-* `NextflowPocPlatform`: Added a beta implementation for generating next gen Nextflow modules (#82).
+* `NextflowNeoPlatform`: Added a beta implementation for generating next gen Nextflow modules (#82).
   Names and arguments are subject to change, as well as the internal workings. 
   Known issues:
     - Viash does not automatically fill in the container directive.
     - No documentation yet.
     - No unit tests yet.
-    - Character `'` is not properly escaped in default values.
 
 ## MINOR CHANGES
 
