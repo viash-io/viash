@@ -7,7 +7,7 @@ class TestCheckOutputs(unittest.TestCase):
   def test_check_output(self):
     out = subprocess.check_output([
         "./testpython", 
-        "help", "--real_number", "10.5", "--whole_number=10", "-s", "you shall#not$pass",
+        "help", "--real_number", "10.5", "--whole_number=10", "-s", "a string with spaces",
         "--truth", "--optional", "foo", "--optional_with_default", "bar",
         "a", "b", "c", "d",
         "--output", "./output.txt", "--log", "./log.txt",
@@ -24,7 +24,7 @@ class TestCheckOutputs(unittest.TestCase):
     self.assertRegex(output, 'input: \\|help\\|')
     self.assertRegex(output, 'real_number: \\|10.5\\|')
     self.assertRegex(output, 'whole_number: \\|10\\|')
-    self.assertRegex(output, 's: \\|you shall#not\\$pass\\|')
+    self.assertRegex(output, 's: \\|a string with spaces\\|')
     self.assertRegex(output, 'truth: \\|True\\|')
     self.assertRegex(output, 'output: \\|..*/output.txt\\|')
     self.assertRegex(output, 'log: \\|..*/log.txt\\|')
@@ -46,13 +46,13 @@ class TestCheckOutputs(unittest.TestCase):
   def test_check_output_with_minimal_args(self):
     output = subprocess.check_output(
       ["./testpython", "test", "--real_number", "123.456",
-      "--whole_number", "789", "-s", "my weird string"]
+      "--whole_number", "789", "-s", 'my$weird#string"""\'\'\'`\\@']
     ).decode("utf-8")
     
     self.assertRegex(output, 'input: \\|test\\|')
     self.assertRegex(output, 'real_number: \\|123.456\\|')
     self.assertRegex(output, 'whole_number: \\|789\\|')
-    self.assertRegex(output, 's: \\|my weird string\\|')
+    self.assertRegex(output, 's: \\|my\\$weird#string"""\'\'\'`\\\\@\\|')
     self.assertRegex(output, 'truth: \\|False\\|')
     self.assertRegex(output, 'output: \\|None\\|')
     self.assertRegex(output, 'log: \\|None\\|')

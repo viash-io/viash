@@ -19,10 +19,17 @@
 
 * `viash_test`: Added unit test for this component.
 
+* `PythonRequirements`: Allow upgrading components. Example: `[ type: python. pypi: anndata, upgrade: true ]`.
+
 ## BUG FIXES
 
 * `viash_build`: The `query_name` and `query_namespace` arguments were switched around. These arguments are now passed correctly.
+
 * `viash_test`: The `query_name` and `query_namespace` arguments were switched around. These arguments are now passed correctly.
+
+* `BashScript`, `JavaScriptScript`, `PythonScript`, `RScript`: Correctly escape `'` (#113). Update unit tests accordingly.
+
+* `CSharpScript`, `ScalaScript`: Correctly escape `"` (#113). Update unit tests accordingly.
 
 # Viash 0.5.10.1
 

@@ -35,8 +35,25 @@ abstract class DataObject[Type] {
   private val pattern = "^(-*)(.*)$".r
   val pattern(otype, plainName) = name
 
+  /** Common parameter name for this object */
   val par: String = "par_" + plainName
+
+  /** Parameter name in bash scripts */
   val VIASH_PAR: String = "VIASH_PAR_" + plainName.toUpperCase()
+
+  /** 
+   * Access the parameters contents in a bash script,
+   * taking into account that some characters need to be escaped.
+   * 
+   * Example: viash_par_escaped("'", """\'""", """\\\'""") 
+   * results in '${VIASH_PAR//\'/\\\'}'. 
+   * 
+   * Sidenote: a '\' will be escaped as '\VIASH_SLASH\', so BashWrapper
+   * substitutes it back for a '\' instead of escaping it as a '\\'.
+   */
+  def viash_par_escaped(quot: String, from: String, to: String) = {
+    s"$quot$${$VIASH_PAR//$from/$to}$quot".replaceAll("\\\\", "\\\\VIASH_SLASH\\\\")
+  }
 
   def copyDO(
     oType: String = this.oType,
