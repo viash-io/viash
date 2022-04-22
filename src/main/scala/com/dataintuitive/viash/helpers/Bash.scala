@@ -84,4 +84,12 @@ object Bash {
       .transform(_.replaceAll("\n", "\\\\n"), newline)
     x.str
   }
+
+  def escapeMore(str: String, quote: Boolean = false, newline: Boolean = false): String = {
+    escape(str, quote = quote, newline = newline)
+      .replaceAll("\\\\\\$VIASH_DOLLAR\\\\\\$", "\\$")
+      .replaceAll("\\\\\\\\VIASH_SLASH\\\\\\\\", "\\\\")
+      .replaceAll("\\\\\\$VIASH_", "\\$VIASH_")
+      .replaceAll("\\\\\\$\\{VIASH_", "\\${VIASH_")
+  }
 }

@@ -32,6 +32,7 @@ import io.circe.syntax._
 import io.circe.{Printer => JsonPrinter}
 import shapeless.syntax.singleton
 import com.dataintuitive.viash.helpers.DockerImageInfo
+import com.dataintuitive.viash.helpers.Helper
 
 /**
  * Next-gen Platform class for generating NextFlow (DSL2) modules.
@@ -121,7 +122,7 @@ case class NextflowNeoPlatform(
   def renderMainNf(functionality: Functionality, containerDirective: Option[DockerImageInfo]): String = {
     /************************* HEADER *************************/
     // generate header
-    val nav = BashWrapper.nameAndVersion(functionality)
+    val nav = Helper.nameAndVersion(functionality)
     val nameAndVersionHeader =
       "/" + ("*" * (nav.length+10)) + "\n" +
         " *    " + nav + "    *\n" +
@@ -226,6 +227,18 @@ case class NextflowNeoPlatform(
     }
 
     /************************* HELP *************************/
+    val helpParams = functionality.arguments.map {
+      case arg => arg.copyDO(
+        name = "--" + arg.plainName,
+        alternatives = Nil
+      )
+    }
+    val help = Helper.generateHelp(functionality, helpParams)
+    val helpStr = help
+      .map(h => Bash.escapeMore(h))
+      .mkString("\n")
+      .replace("'''", "\\'\\'\\'")
+      // .replace("\\", "\\\\")
 
     /************************* SCRIPT *************************/
     val executionCode = functionality.mainScript match {
@@ -239,7 +252,7 @@ case class NextflowNeoPlatform(
       // if mainResource is a script
       case Some(res) =>
         val code = res.readWithPlaceholder(functionality).get
-        val escapedCode = BashWrapper.escapeViash(code)
+        val escapedCode = Bash.escapeMore(code)
           .replace("'''", "\\'\\'\\'")
           .replace("\\", "\\\\")
 
@@ -286,7 +299,7 @@ case class NextflowNeoPlatform(
       |  ]
       |]
       |
-      |thisHelpMessage = "foo"    // TODO: fill in by functionality
+      |thisHelpMessage = '''$helpStr'''
       |
       |thisScript = '''$executionCode'''
       |
