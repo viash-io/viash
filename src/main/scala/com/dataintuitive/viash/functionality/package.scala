@@ -19,6 +19,7 @@ package com.dataintuitive.viash
 
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import io.circe.{Decoder, Encoder, Json}
+import io.circe.ACursor
 
 package object functionality {
   // import implicits
@@ -47,7 +48,32 @@ package object functionality {
 
   // encoder and decoder for Functionality
   implicit val encodeFunctionality: Encoder.AsObject[Functionality] = deriveConfiguredEncoder
-  implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoder
+  // implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoder
+  implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoder[Functionality].prepare { (aCursor: ACursor) =>
+    {
+      aCursor.withFocus(json => {
+        json.mapObject(jsonObject => {
+          val inputs = jsonObject.apply("inputs")
+          val outputs = jsonObject.apply("outputs")
+          val arguments = jsonObject.apply("arguments")
+          
+          if (inputs.isDefined) {
+            println("inputs:" + inputs)
+          }
+          if (outputs.isDefined) {
+            println("outputs:" + outputs)
+          }
+          
+          jsonObject
+          // if (jsonObject.contains("public")) {
+          //   jsonObject
+          // } else {
+          //   jsonObject.add("public", Json.fromBoolean(false))
+          // }
+        })
+      })
+    }
+  }
 
   // encoder and decoder for Author
   implicit val encodeAuthor: Encoder.AsObject[Author] = deriveConfiguredEncoder
