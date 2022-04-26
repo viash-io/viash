@@ -177,7 +177,9 @@ object ViashTest {
         // generate bash script for test
         val funOnlyTest = platform.modifyFunctionality(config.copy(
           functionality = config.functionality.copy(
-            arguments = Nil,
+            inputs = Nil,
+            outputs = Nil,
+            argumentsOrig = Nil,
             dummy_arguments = List(dirArg),
             resources = List(test),
             set_wd_to_resources_dir = true

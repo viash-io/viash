@@ -10,34 +10,24 @@ functionality:
       §1234567890'^
       °+"*ç%&/()=?`$"""'''@\\//\/
     \n\r\t\s\
-  arguments:
-    # input arguments
+  inputs:
     - name: "--input1"
-      type: file
       example: input1.txt
       required: true
     - name: "--input2"
-      type: file
       required: true
       example: input2.txt
     - name: "--optional"
-      type: file
       required: false
       example: optional.txt
-      
-    # output arguments
+  outputs:
     - name: "--output1"
-      type: file
       required: true
-      direction: output
       example: output1.txt
     - name: "--output2"
-      type: file
       required: true
-      direction: output
       example: output2.txt
-      
-    # some non-file arguments
+  arguments:
     - name: "--default_arg"
       type: string
       description: |
