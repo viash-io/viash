@@ -748,7 +748,7 @@ object NextFlowUtils {
 
     // TODO: Should this not be converted from the json?
     val default = if (dataObject.default.isEmpty) None else Some(dataObject.default.mkString(dataObject.multiple_sep.toString))
-    val example = if (dataObject.example.isEmpty) None else Some(dataObject.default.mkString(dataObject.multiple_sep.toString))
+    val example = if (dataObject.example.isEmpty) None else Some(dataObject.example.mkString(dataObject.multiple_sep.toString))
     quoteLong(dataObject.plainName) → NestedValue(
       tupleToConfigTuple("name" → dataObject.plainName) ::
       tupleToConfigTuple("otype" → dataObject.otype) ::
