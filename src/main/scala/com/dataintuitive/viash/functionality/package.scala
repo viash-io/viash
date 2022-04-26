@@ -53,23 +53,37 @@ package object functionality {
     {
       aCursor.withFocus(json => {
         json.mapObject(jsonObject => {
-          val inputs = jsonObject.apply("inputs")
-          val outputs = jsonObject.apply("outputs")
-          val arguments = jsonObject.apply("arguments")
+
+          val inputJson = jsonObject.apply("inputs").get.mapArray(_.map(
+            _.mapObject( obj =>	
+              obj.contains("type") match {
+                case false => obj.add("type", Json.fromString("file"))
+                case true => obj
+              }
+            )
+            .mapObject( obj =>	
+              obj.contains("direction") match {
+                case false => obj.add("direction", Json.fromString("input"))
+                case true => obj
+              }
+            )
+          ))
+          val outputJson = jsonObject.apply("outputs").get.mapArray(_.map(
+            _.mapObject( obj =>	
+              obj.contains("type") match {
+                case false => obj.add("type", Json.fromString("file"))
+                case true => obj
+              }
+            )
+            .mapObject( obj =>	
+              obj.contains("direction") match {
+                case false => obj.add("direction", Json.fromString("output"))
+                case true => obj
+              }
+            )
+          ))
           
-          if (inputs.isDefined) {
-            println("inputs:" + inputs)
-          }
-          if (outputs.isDefined) {
-            println("outputs:" + outputs)
-          }
-          
-          jsonObject
-          // if (jsonObject.contains("public")) {
-          //   jsonObject
-          // } else {
-          //   jsonObject.add("public", Json.fromBoolean(false))
-          // }
+          jsonObject.add("inputs", inputJson).add("outputs", outputJson)
         })
       })
     }
