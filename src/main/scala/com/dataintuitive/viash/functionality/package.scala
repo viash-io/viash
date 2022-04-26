@@ -54,36 +54,45 @@ package object functionality {
       aCursor.withFocus(json => {
         json.mapObject(jsonObject => {
 
-          val inputJson = jsonObject.apply("inputs").get.mapArray(_.map(
-            _.mapObject( obj =>	
-              obj.contains("type") match {
-                case false => obj.add("type", Json.fromString("file"))
-                case true => obj
-              }
-            )
-            .mapObject( obj =>	
-              obj.contains("direction") match {
-                case false => obj.add("direction", Json.fromString("input"))
-                case true => obj
-              }
-            )
-          ))
-          val outputJson = jsonObject.apply("outputs").get.mapArray(_.map(
-            _.mapObject( obj =>	
-              obj.contains("type") match {
-                case false => obj.add("type", Json.fromString("file"))
-                case true => obj
-              }
-            )
-            .mapObject( obj =>	
-              obj.contains("direction") match {
-                case false => obj.add("direction", Json.fromString("output"))
-                case true => obj
-              }
-            )
-          ))
+          var newJsonObject = jsonObject
+
+          if (jsonObject.contains("inputs")) {
+            val inputJson = jsonObject.apply("inputs").get.mapArray(_.map(
+              _.mapObject( obj =>	
+                obj.contains("type") match {
+                  case false => obj.add("type", Json.fromString("file"))
+                  case true => obj
+                }
+              )
+              .mapObject( obj =>	
+                obj.contains("direction") match {
+                  case false => obj.add("direction", Json.fromString("input"))
+                  case true => obj
+                }
+              )
+            ))
+            newJsonObject = newJsonObject.add("inputs", inputJson)
+          }
           
-          jsonObject.add("inputs", inputJson).add("outputs", outputJson)
+          if (jsonObject.contains("outputs")) {
+            val outputJson = jsonObject.apply("outputs").get.mapArray(_.map(
+              _.mapObject( obj =>	
+                obj.contains("type") match {
+                  case false => obj.add("type", Json.fromString("file"))
+                  case true => obj
+                }
+              )
+              .mapObject( obj =>	
+                obj.contains("direction") match {
+                  case false => obj.add("direction", Json.fromString("output"))
+                  case true => obj
+                }
+              )
+            ))
+            newJsonObject = newJsonObject.add("outputs", outputJson)
+          }
+          
+          newJsonObject
         })
       })
     }
