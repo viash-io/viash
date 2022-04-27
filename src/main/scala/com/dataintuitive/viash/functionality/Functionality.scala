@@ -52,10 +52,10 @@ case class Functionality(
   // note that in the Functionality companion object, defaults gets added to inputs and outputs *before* actually 
   // parsing the configuration file with Circe. This is done in the .prepare step.
   inputs.foreach {
-    input => require(input.direction != Output, s"input $input.name can only have input as direction")
+    input => require(input.direction == Input, s"input ${input.name} can only have input as direction")
   }
   outputs.foreach {
-    output => require(output.direction != Input, s"input $output.name can only have output as direction")
+    output => require(output.direction == Output, s"input ${output.name} can only have output as direction")
   }
 
   // Combine inputs, outputs and arguments into one combined list
