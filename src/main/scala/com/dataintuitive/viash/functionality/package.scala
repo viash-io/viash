@@ -48,54 +48,33 @@ package object functionality {
 
   // encoder and decoder for Functionality
   implicit val encodeFunctionality: Encoder.AsObject[Functionality] = deriveConfiguredEncoder
+
   // implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoder
-  implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoder[Functionality].prepare { (aCursor: ACursor) =>
-    {
-      aCursor.withFocus(json => {
-        json.mapObject(jsonObject => {
+  implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoder[Functionality].prepare {
+    _.withFocus(_.mapObject{ fun0 =>
+      
+      val fun1 = fun0.apply("inputs") match {
+        case Some(inputs) => 
+          val newInputs = inputs.mapArray(_.map{ js =>
+            js.withDefault("type", Json.fromString("file"))
+              .withDefault("direction", Json.fromString("input"))
+          })
+          fun0.add("inputs", newInputs)
+        case None => fun0
+      }
 
-          var newJsonObject = jsonObject
+      val fun2 = fun1.apply("outputs") match {
+        case Some(outputs) => 
+          val newOutputs = outputs.mapArray(_.map{ js =>
+            js.withDefault("type", Json.fromString("file"))
+              .withDefault("direction", Json.fromString("output"))
+          })
+          fun1.add("outputs", newOutputs)
+        case None => fun1
+      }
 
-          if (jsonObject.contains("inputs")) {
-            val inputJson = jsonObject.apply("inputs").get.mapArray(_.map(
-              _.mapObject( obj =>	
-                obj.contains("type") match {
-                  case false => obj.add("type", Json.fromString("file"))
-                  case true => obj
-                }
-              )
-              .mapObject( obj =>	
-                obj.contains("direction") match {
-                  case false => obj.add("direction", Json.fromString("input"))
-                  case true => obj
-                }
-              )
-            ))
-            newJsonObject = newJsonObject.add("inputs", inputJson)
-          }
-          
-          if (jsonObject.contains("outputs")) {
-            val outputJson = jsonObject.apply("outputs").get.mapArray(_.map(
-              _.mapObject( obj =>	
-                obj.contains("type") match {
-                  case false => obj.add("type", Json.fromString("file"))
-                  case true => obj
-                }
-              )
-              .mapObject( obj =>	
-                obj.contains("direction") match {
-                  case false => obj.add("direction", Json.fromString("output"))
-                  case true => obj
-                }
-              )
-            ))
-            newJsonObject = newJsonObject.add("outputs", outputJson)
-          }
-          
-          newJsonObject
-        })
-      })
-    }
+      fun2
+    })
   }
 
   // encoder and decoder for Author
