@@ -30,12 +30,15 @@ case class Functionality(
   resources: List[Resource] = Nil,
   description: Option[String] = None,
   usage: Option[String] = None,
-  function_type: Option[FunctionType] = None,
   tests: List[Resource] = Nil,
   info: Map[String, String] = Map.empty[String, String],
 
   // dummy arguments are used for handling extra directory mounts in docker
   dummy_arguments: List[DataObject[_]] = Nil,
+
+  // Robrecht: I want to deprecate the arguments below 
+  // used by nextflow legacy platform
+  function_type: Option[FunctionType] = None,
 
   // setting this to true will change the working directory
   // to the resources directory when running the script
