@@ -49,7 +49,7 @@ package object functionality {
   // encoder and decoder for Functionality
   implicit val encodeFunctionality: Encoder.AsObject[Functionality] = deriveConfiguredEncoder
 
-  // implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoder
+  // add file & direction defaults for inputs & outputs
   implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoder[Functionality].prepare {
     _.withFocus(_.mapObject{ fun0 =>
       

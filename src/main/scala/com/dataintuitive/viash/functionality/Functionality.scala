@@ -49,6 +49,8 @@ case class Functionality(
   add_resources_to_path: Boolean = false
 ) {
 
+  // note that in the Functionality companion object, defaults gets added to inputs and outputs *before* actually 
+  // parsing the configuration file with Circe. This is done in the .prepare step.
   inputs.foreach {
     input => require(input.direction != Output, s"input $input.name can only have input as direction")
   }
