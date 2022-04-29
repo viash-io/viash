@@ -13,10 +13,7 @@ tempDir = Paths.get(
     '/tmp'
 ).toAbsolutePath()
 
-metaFiles = [
-  'resources_dir' : ScriptMeta.current().getScriptPath().getParent(),
-  'temp_dir': tempDir
-]
+resourcesDir = ScriptMeta.current().getScriptPath().getParent()
 
 def assertMapKeys(map, expectedKeys, requiredKeys, mapName) {
   assert map instanceof Map : "Expected argument '$mapName' to be a Map. Found: class ${map.getClass()}"
@@ -501,11 +498,8 @@ def processFactory(Map processArgs) {
         "\nexport VIASH_PAR_${par.name.toUpperCase()}=\"\${viash_par_${par.name}.join(\":\")}\""
       }
     }
-
-  // construct metaFiles
-  def metaVariables = metaFiles.keySet().withIndex().collect { key, index ->
-    "export VIASH_META_${key.toUpperCase()}=\"\${escapeText(meta[$index])}\""
-  }
+  
+  def tmpDir = "/tmp" // check if component is docker based
 
   // construct stub
   def stub = thisFunctionality.arguments
@@ -524,7 +518,7 @@ def processFactory(Map processArgs) {
   |
   |process $procKey {$drctvStrs
   |input:
-  |  tuple val(id)$inputPaths, val(args), val(passthrough), path(meta)
+  |  tuple val(id)$inputPaths, val(args), val(passthrough), path(resourcesDir)
   |output:
   |  tuple val("\$id"), val(passthrough)$outputPaths, optional: true
   |stub:
@@ -539,7 +533,8 @@ def processFactory(Map processArgs) {
   |  .join("\\n")
   |$tripQuo
   |# meta exports
-  |${metaVariables.join("\n")}
+  |export VIASH_META_RESOURCES_DIR="\$resourcesDir"
+  |export VIASH_META_TEMP_DIR="${tmpDir}"
   |export VIASH_META_FUNCTIONALITY_NAME="${thisFunctionality.name}"
   |
   |# meta synonyms
@@ -741,7 +736,7 @@ def workflowFactory(Map args) {
             [key, val]
           }
 
-        [ id ] + inputPaths + [ argsExclInputFiles, passthrough, metaFiles.values() ]
+        [ id ] + inputPaths + [ argsExclInputFiles, passthrough, resourcesDir ]
       }
       | processObj
       | map { output ->

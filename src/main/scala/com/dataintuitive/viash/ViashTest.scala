@@ -96,6 +96,7 @@ object ViashTest {
       if (!quiet) println("Cleaning up temporary directory")
       IO.deleteRecursively(dir)
     }
+    // TODO: remove container
 
     if (anyErrors && !quiet) {
       throw new RuntimeException(errorMessage)

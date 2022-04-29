@@ -55,8 +55,16 @@ case class NextflowNeoPlatform(
   def modifyFunctionality(config: Config): Functionality = {
     val functionality = config.functionality
     val condir = containerDirective(config)
-    val mainFile = createMainNfFile(functionality, condir)
-    val nextflowConfigFile = createNextflowConfigFile(functionality)
+
+    // create main.nf file
+    val mainFile = PlainFile(
+      dest = Some("main.nf"),
+      text = Some(renderMainNf(functionality, condir))
+    )
+    val nextflowConfigFile = PlainFile(
+      dest = Some("nextflow.config"),
+      text = Some(renderNextflowConfig(functionality, condir))
+    )
 
     // remove main
     val otherResources = functionality.resources.tail
@@ -85,16 +93,14 @@ case class NextflowNeoPlatform(
     }
   }
 
-  def renderNextflowConfig(functionality: Functionality): String = {
+  def renderNextflowConfig(functionality: Functionality, containerDirective: Option[DockerImageInfo]): String = {
     val versStr = functionality.version.map(ver => s"\n  version = '$ver'").getOrElse("")
 
-    // val descStr = functionality.description.map(ver => s"\n  description = '$ver'").getOrElse("")
     val descStr = functionality.description.map{des => 
       val escDes = escapeText(des)
       s"\n  description = '$escDes'"
     }.getOrElse("")
 
-    // val authStr = if (functionality.authors.isEmpty) "" else "\n  author = '" + functionality.authors.mkString(", ") + "'"
     val authStr = 
       if (functionality.authors.isEmpty) {
         "" 
@@ -103,18 +109,71 @@ case class NextflowNeoPlatform(
         s"\n  author = '$escAut'"
       }
 
+    // TODO: define profiles
+    val dockerTemp = 
+      if (containerDirective.isEmpty) {
+        "" 
+      } else {
+        s"""
+        |
+        |// detect tempdir
+        |tempDir = java.nio.file.Paths.get(
+        |  System.getenv('NXF_TEMP') ?:
+        |    System.getenv('VIASH_TEMP') ?: 
+        |    System.getenv('TEMPDIR') ?: 
+        |    System.getenv('TMPDIR') ?: 
+        |    '/tmp'
+        |).toAbsolutePath()
+        |
+        |profiles {
+        |  docker {
+        |    docker.enabled         = true
+        |    docker.userEmulation   = true
+        |    docker.temp            = tempDir
+        |    singularity.enabled    = false
+        |    podman.enabled         = false
+        |    shifter.enabled        = false
+        |    charliecloud.enabled   = false
+        |  }
+        |  singularity {
+        |    singularity.enabled    = true
+        |    singularity.autoMounts = true
+        |    docker.enabled         = false
+        |    podman.enabled         = false
+        |    shifter.enabled        = false
+        |    charliecloud.enabled   = false
+        |  }
+        |  podman {
+        |    podman.enabled         = true
+        |    podman.temp            = tempDir
+        |    docker.enabled         = false
+        |    singularity.enabled    = false
+        |    shifter.enabled        = false
+        |    charliecloud.enabled   = false
+        |  }
+        |  shifter {
+        |    shifter.enabled        = true
+        |    docker.enabled         = false
+        |    singularity.enabled    = false
+        |    podman.enabled         = false
+        |    charliecloud.enabled   = false
+        |  }
+        |  charliecloud {
+        |    charliecloud.enabled   = true
+        |    charliecloud.temp      = tempDir
+        |    docker.enabled         = false
+        |    singularity.enabled    = false
+        |    podman.enabled         = false
+        |    shifter.enabled        = false
+        |  }
+        |}""".stripMargin
+      }
+
     s"""manifest {
     |  name = '${functionality.name}'
-    |  mainScript = 'main.nf'$versStr$descStr$authStr
-    |}
-    |""".stripMargin
-  }
-
-  def createNextflowConfigFile(functionality: Functionality): Resource = {
-    PlainFile(
-      dest = Some("nextflow.config"),
-      text = Some(renderNextflowConfig(functionality))
-    )
+    |  mainScript = 'main.nf'
+    |  nextflowVersion = '!>=20.12.1-edge'$versStr$descStr$authStr
+    |}$dockerTemp""".stripMargin
   }
 
   // interpreted from BashWrapper
@@ -312,13 +371,6 @@ case class NextflowNeoPlatform(
       |// END CUSTOM CODE
       |
       |""".stripMargin + NextflowHelper.code
-  }
-
-  def createMainNfFile(functionality: Functionality, containerDirective: Option[DockerImageInfo]): Resource = {
-    PlainFile(
-      dest = Some("main.nf"),
-      text = Some(renderMainNf(functionality, containerDirective))
-    )
   }
 }
 
