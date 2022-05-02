@@ -22,16 +22,12 @@ import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.config.Version
-import com.dataintuitive.viash.helpers.{Docker, Bash}
+import com.dataintuitive.viash.helpers.{Docker, Bash, DockerImageInfo, Helper}
 import com.dataintuitive.viash.helpers.Circe._
-import com.dataintuitive.viash.wrapper.BashWrapper
-import com.dataintuitive.viash.helpers.Format
 import com.dataintuitive.viash.platforms.nextflow._
 import io.circe.syntax._
 import io.circe.{Printer => JsonPrinter, Json, JsonObject}
 import shapeless.syntax.singleton
-import com.dataintuitive.viash.helpers.DockerImageInfo
-import com.dataintuitive.viash.helpers.Helper
 
 /**
  * Next-gen Platform class for generating NextFlow (DSL2) modules.
@@ -39,11 +35,12 @@ import com.dataintuitive.viash.helpers.Helper
 case class NextflowNeoPlatform(
   id: String = "nextflow",
   oType: String = "nextflow",
-  directives: NextflowDirectives = NextflowDirectives(),
-  simplifyInput: Boolean = true,
-  simplifyOutput: Boolean = true,
-  debug: Boolean = false,
   variant: String = "neo",
+  
+  // nxf params
+  directives: NextflowDirectives = NextflowDirectives(),
+  auto: NextflowAuto = NextflowAuto(),
+  debug: Boolean = false,
 
   // TODO: solve differently
   container: String = "docker"
@@ -322,7 +319,6 @@ case class NextflowNeoPlatform(
       |
       |// Required imports
       |import groovy.json.JsonSlurper
-      |// import groovy.json.JsonOutput
       |
       |// initialise slurper
       |def jsonSlurper = new JsonSlurper()
@@ -340,17 +336,15 @@ case class NextflowNeoPlatform(
       |
       |thisScript = '''$executionCode'''
       |
-      |thisDefaultDirectives = jsonSlurper.parseText($tripQuo${jsonPrinter.print(dirJson)}$tripQuo)
-      |
       |thisDefaultProcessArgs = [
       |  // key to be used to trace the process and determine output names
       |  key: thisFunctionality.name + "_",
       |  // fixed arguments to be passed to script
       |  args: [:],
-      |  // whether or not to accept [id, Path, ...] inputs instead of [id, [input: Path], ...]
-      |  simplifyInput: $simplifyInput,
-      |  // if output is a single file, will simplify output to [id, Path, ...] instead of [id, [output: Path], ...]
-      |  simplifyOutput: $simplifyOutput,
+      |  // default directives
+      |  directives: jsonSlurper.parseText($tripQuo${jsonPrinter.print(dirJson)}$tripQuo),
+      |  // auto settings
+      |  auto: jsonSlurper.parseText($tripQuo${jsonPrinter.print(auto.asJson.dropEmptyRecursively())}$tripQuo),
       |  // apply a map over the incoming tuple
       |  // example: { tup -> [ tup[0], [input: tup[1].output], tup[2] ] }
       |  map: null,

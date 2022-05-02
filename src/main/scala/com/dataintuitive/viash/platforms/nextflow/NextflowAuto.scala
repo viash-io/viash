@@ -15,17 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.platforms
+package com.dataintuitive.viash.platforms.nextflow
 
-import io.circe.{Decoder, Encoder, Json}
-import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
-
-package object nextflow {
-  import com.dataintuitive.viash.helpers.Circe._
-
-  implicit val encodeNextflowDirectives: Encoder.AsObject[NextflowDirectives] = deriveConfiguredEncoder
-  implicit val decodeNextflowDirectives: Decoder[NextflowDirectives] = deriveConfiguredDecoder
-
-  implicit val encodeNextflowAuto: Encoder.AsObject[NextflowAuto] = deriveConfiguredEncoder
-  implicit val decodeNextflowAuto: Decoder[NextflowAuto] = deriveConfiguredDecoder
-}
+case class NextflowAuto(
+  simplifyInput: Boolean = true,
+  simplifyOutput: Boolean = true,
+  transcript: Boolean = false,
+  publish: Boolean = false
+)
