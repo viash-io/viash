@@ -145,7 +145,7 @@ class NextFlowNeoPlatformTest extends FunSuite with BeforeAndAfterAll {
     ).!!
 
     outputFileMatchChecker(output, "DEBUG4", "^11 .*$")
-    outputFileMatchChecker(output, "process 'step3' output tuple", "^11 .*$")
+    outputFileMatchChecker(output, "process 'step3_' output tuple", "^11 .*$")
 
   }
 
