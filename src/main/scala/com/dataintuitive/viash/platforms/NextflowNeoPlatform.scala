@@ -35,10 +35,12 @@ import shapeless.syntax.singleton
 case class NextflowNeoPlatform(
   id: String = "nextflow",
   oType: String = "nextflow",
+  variant: String = "neo",
+  
+  // nxf params
   directives: NextflowDirectives = NextflowDirectives(),
   auto: NextflowAuto = NextflowAuto(),
   debug: Boolean = false,
-  variant: String = "neo",
 
   // TODO: solve differently
   container: String = "docker"
