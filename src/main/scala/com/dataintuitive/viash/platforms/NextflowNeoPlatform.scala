@@ -28,7 +28,7 @@ import com.dataintuitive.viash.wrapper.BashWrapper
 import com.dataintuitive.viash.helpers.Format
 import com.dataintuitive.viash.platforms.nextflow._
 import io.circe.syntax._
-import io.circe.{Printer => JsonPrinter}
+import io.circe.{Printer => JsonPrinter, Json, JsonObject}
 import shapeless.syntax.singleton
 import com.dataintuitive.viash.helpers.DockerImageInfo
 import com.dataintuitive.viash.helpers.Helper
@@ -314,6 +314,8 @@ case class NextflowNeoPlatform(
     )
     val tripQuo = """""""""
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
+    val dirJson = directives2.asJson.dropEmptyRecursively()
+
     s"""$header
       |
       |nextflow.enable.dsl=2
@@ -338,11 +340,11 @@ case class NextflowNeoPlatform(
       |
       |thisScript = '''$executionCode'''
       |
-      |thisDefaultDirectives = jsonSlurper.parseText($tripQuo${jsonPrinter.print(directives2.asJson)}$tripQuo)
+      |thisDefaultDirectives = jsonSlurper.parseText($tripQuo${jsonPrinter.print(dirJson)}$tripQuo)
       |
       |thisDefaultProcessArgs = [
       |  // key to be used to trace the process and determine output names
-      |  key: thisFunctionality.name,
+      |  key: thisFunctionality.name + "_",
       |  // fixed arguments to be passed to script
       |  args: [:],
       |  // whether or not to accept [id, Path, ...] inputs instead of [id, [input: Path], ...]

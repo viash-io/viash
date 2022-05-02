@@ -90,6 +90,28 @@ object Circe {
         }
       }
     }
+
+    def dropEmptyRecursively(): Json = {
+      if (json.isObject) {
+        val newJs = json.mapObject{
+          _.mapValues(_.dropEmptyRecursively())
+            .filter(!_._2.isNull)
+        }
+        if (newJs.asObject.get.isEmpty) {
+          Json.Null
+        } else {
+          newJs
+        }
+      } else if (json.isArray) {
+        if (json.asArray.get.isEmpty) {
+          Json.Null
+        } else {
+          json
+        }
+      } else {
+        json
+      }
+    }
   }
 
 }
