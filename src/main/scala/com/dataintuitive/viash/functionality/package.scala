@@ -19,6 +19,7 @@ package com.dataintuitive.viash
 
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import io.circe.{Decoder, Encoder, Json}
+import io.circe.ACursor
 
 package object functionality {
   // import implicits
@@ -47,7 +48,34 @@ package object functionality {
 
   // encoder and decoder for Functionality
   implicit val encodeFunctionality: Encoder.AsObject[Functionality] = deriveConfiguredEncoder
-  implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoder
+
+  // add file & direction defaults for inputs & outputs
+  implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoder[Functionality].prepare {
+    _.withFocus(_.mapObject{ fun0 =>
+      
+      val fun1 = fun0.apply("inputs") match {
+        case Some(inputs) => 
+          val newInputs = inputs.mapArray(_.map{ js =>
+            js.withDefault("type", Json.fromString("file"))
+              .withDefault("direction", Json.fromString("input"))
+          })
+          fun0.add("inputs", newInputs)
+        case None => fun0
+      }
+
+      val fun2 = fun1.apply("outputs") match {
+        case Some(outputs) => 
+          val newOutputs = outputs.mapArray(_.map{ js =>
+            js.withDefault("type", Json.fromString("file"))
+              .withDefault("direction", Json.fromString("output"))
+          })
+          fun1.add("outputs", newOutputs)
+        case None => fun1
+      }
+
+      fun2
+    })
+  }
 
   // encoder and decoder for Author
   implicit val encodeAuthor: Encoder.AsObject[Author] = deriveConfiguredEncoder

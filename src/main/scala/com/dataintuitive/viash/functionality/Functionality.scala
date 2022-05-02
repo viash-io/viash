@@ -20,13 +20,16 @@ package com.dataintuitive.viash.functionality
 import dataobjects._
 import resources._
 import com.dataintuitive.viash.config.Version
+import io.circe.generic.extras._
 
 case class Functionality(
   name: String,
   namespace: Option[String] = None,
   version: Option[Version] = None,
   authors: List[Author] = Nil,
-  arguments: List[DataObject[_]] = Nil,
+  inputs: List[DataObject[_]] = Nil,
+  outputs: List[DataObject[_]] = Nil,
+  @JsonKey("arguments") argumentsOrig: List[DataObject[_]] = Nil,
   resources: List[Resource] = Nil,
   description: Option[String] = None,
   usage: Option[String] = None,
@@ -48,6 +51,18 @@ case class Functionality(
   // whether or not to add the resource dir to the path
   add_resources_to_path: Boolean = false
 ) {
+
+  // note that in the Functionality companion object, defaults gets added to inputs and outputs *before* actually 
+  // parsing the configuration file with Circe. This is done in the .prepare step.
+  inputs.foreach {
+    input => require(input.direction == Input, s"input ${input.name} can only have input as direction")
+  }
+  outputs.foreach {
+    output => require(output.direction == Output, s"input ${output.name} can only have output as direction")
+  }
+
+  // Combine inputs, outputs and arguments into one combined list
+  def arguments = inputs ::: outputs ::: argumentsOrig
 
   // check whether there are not multiple positional arguments with multiplicity >1
   // and if there is one, whether its position is last

@@ -42,7 +42,7 @@ case class DebugPlatform(
 
     // disable required arguments and set defaults for all arguments
     val fun0 = functionality.copy(
-      arguments = functionality.arguments.map {
+      argumentsOrig = functionality.arguments.map {
         case arg if arg.required && arg.default.nonEmpty => 
           arg.copyDO(required = false)
         case arg if arg.default.isEmpty && arg.example.nonEmpty => 

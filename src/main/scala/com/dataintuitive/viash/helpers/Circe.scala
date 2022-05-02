@@ -79,4 +79,17 @@ object Circe {
     val r: Decoder[OneOrMore[A]] = dl.map(More.apply)
     l or r
   }
+  
+  implicit class RichJson(json: Json) {
+    def withDefault(field: String, value: Json): Json = {
+      json.mapObject{ obj =>	
+        if (!obj.contains(field)) {
+          obj.add(field, value)
+        } else {
+          obj
+        }
+      }
+    }
+  }
+
 }
