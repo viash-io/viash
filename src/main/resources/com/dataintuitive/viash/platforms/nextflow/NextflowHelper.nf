@@ -3,6 +3,7 @@ import nextflow.script.ScriptBinding
 import nextflow.script.ScriptMeta
 import nextflow.script.ScriptParser
 
+// retrieve resourcesDir here to make sure the correct path is found
 resourcesDir = ScriptMeta.current().getScriptPath().getParent()
 
 def assertMapKeys(map, expectedKeys, requiredKeys, mapName) {
@@ -18,7 +19,7 @@ def assertMapKeys(map, expectedKeys, requiredKeys, mapName) {
 // TODO: unit test processDirectives
 def processDirectives(Map drctv) {
   // remove null values
-  drctv = drctv.findAll{k, v -> v}
+  drctv = drctv.findAll{k, v -> v != null}
 
   /* DIRECTIVE accelerator
     accepted examples:
@@ -392,6 +393,22 @@ def processDirectives(Map drctv) {
   return drctv
 }
 
+// TODO: unit test processAuto
+def processAuto(Map auto) {
+  // remove null values
+  auto = auto.findAll{k, v -> v != null}
+
+  expectedKeys = ["simplifyInput", "simplifyOutput", "transcript", "publish"]
+
+  // check whether expected keys are all booleans (for now)
+  for (key in expectedKeys) {
+    assert auto.containsKey(key)
+    assert auto[key] instanceof Boolean
+  }
+
+  return auto.subMap(expectedKeys)
+}
+
 def processProcessArgs(Map args) {
   // override defaults with args
   def processArgs = thisDefaultProcessArgs + args
@@ -402,11 +419,14 @@ def processProcessArgs(Map args) {
   assert processArgs["key"] ==~ /^[a-zA-Z_][a-zA-Z0-9_]*$/
 
   // check whether directives exists and apply defaults
-  if (!processArgs.containsKey("directives")) {
-    processArgs["directives"] = [:]
-  }
+  assert processArgs.containsKey("directives")
   assert processArgs["directives"] instanceof Map
-  processArgs["directives"] = processDirectives(thisDefaultDirectives + processArgs["directives"])
+  processArgs["directives"] = processDirectives(thisDefaultProcessArgs.directives + processArgs["directives"])
+
+  // check whether directives exists and apply defaults
+  assert processArgs.containsKey("auto")
+  assert processArgs["auto"] instanceof Map
+  processArgs["auto"] = processAuto(thisDefaultProcessArgs.auto + processArgs["auto"])
 
   for (nam in [ "map", "mapId", "mapData", "mapPassthrough" ]) {
     if (processArgs.containsKey(nam) && processArgs[nam]) {
@@ -627,7 +647,7 @@ def workflowFactory(Map args) {
           "  Found: ${tuple[0]}"
         
         // match file to input file
-        if (processArgs.simplifyInput && tuple[1] instanceof Path) {
+        if (processArgs.auto.simplifyInput && tuple[1] instanceof Path) {
           def inputFiles = thisFunctionality.arguments
             .findAll { it.type == "file" && it.direction == "input" }
           
@@ -775,7 +795,7 @@ def workflowFactory(Map args) {
         // drop null outputs
         outputFiles.removeAll{it.value == null}
 
-        if (processArgs.simplifyOutput && outputFiles.size() == 1) {
+        if (processArgs.auto.simplifyOutput && outputFiles.size() == 1) {
           outputFiles = outputFiles.values()[0]
         }
 
