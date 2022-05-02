@@ -9,6 +9,9 @@
     - No documentation yet.
     - No unit tests yet.
 
+* `Functionality`: Now also accepts 'inputs' and 'outputs' in addition to 'arguments'. For inputs and outputs,
+  any specified arguments will have default `type: file` and `direction: input` or `direction: output` respectively.
+
 ## MINOR CHANGES
 
 * `DockerPlatform`: Move description labels to the end of the Dockerfile to improve cross-component caching.
