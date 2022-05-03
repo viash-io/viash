@@ -14,8 +14,6 @@
     - convert final Json back to Config
 
 
-
-
 ## MAJOR CHANGES
 
 * `NextflowNeoPlatform`: Added a beta implementation for generating next gen Nextflow modules (#82).
@@ -39,6 +37,8 @@
 * `viash_test`: Added unit test for this component.
 
 * `PythonRequirements`: Allow upgrading components. Example: `[ type: python. pypi: anndata, upgrade: true ]`.
+
+* `NextflowLegacyPlatform`: Remove annoying messages when building Nxf modules.
 
 ## BUG FIXES
 

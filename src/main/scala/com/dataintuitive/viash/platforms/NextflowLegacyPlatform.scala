@@ -106,8 +106,8 @@ case class NextflowLegacyPlatform(
     val namespacedParameters: List[ConfigTuple] = {
       functionality.arguments.flatMap { dataObject => (dataObject.required, dataObject.default.toList) match {
         case (true, _) =>
-          println(s"> ${dataObject.plainName} in $fname is set to be required.")
-          println(s"> --${dataObject.plainName} <...> has to be specified when running this module standalone.")
+          // println(s"> ${dataObject.plainName} in $fname is set to be required.")
+          // println(s"> --${dataObject.plainName} <...> has to be specified when running this module standalone.")
           Some(
             namespacedValueTuple(
               dataObject.plainName.replace("-", "_"),
