@@ -34,8 +34,16 @@ object Main {
     try {
       internalMain(args)
     } catch {
-      case e: Exception => 
-        System.err.println(e)
+      case e: Exception =>
+        System.err.println(
+          s"""Unexpected error occurred! If you think this is a bug, please post
+            |create an issue at https://github.com/viash-io/viash/issues containing
+            |a reproducible example and the stack trace below.
+            |
+            |$name - $version
+            |Stacktrace:""".stripMargin
+        )
+        e.printStackTrace()
         System.exit(1)
     }
   }
