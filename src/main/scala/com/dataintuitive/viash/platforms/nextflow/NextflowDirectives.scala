@@ -25,13 +25,14 @@ case class NextflowDirectives(
   beforeScript: Option[String] = None,
   cache: Option[Either[Boolean, String]] = None,
   conda: OneOrMore[String] = Nil,
-  container: Option[Either[Map[String, String], String]] = None, //Some(Right("@docker")), // TODO: is this the best format?
+  container: Option[Either[Map[String, String], String]] = None, // TODO: need to implement container class?
   containerOptions: OneOrMore[String] = Nil,
   cpus: Option[Either[Int, String]] = None,
   disk: Option[String] = None,
   echo: Option[Either[Boolean, String]] = None,
   errorStrategy: Option[String] = None,
   executor: Option[String] = None,
+  label: OneOrMore[String] = Nil,
   machineType: Option[String] = None,
   maxErrors: Option[Either[String, Int]] = None,
   maxForks: Option[Either[String, Int]] = None,
@@ -40,9 +41,8 @@ case class NextflowDirectives(
   module: OneOrMore[String] = Nil,
   penv: Option[String] = None,
   pod: OneOrMore[Map[String, String]] = Nil,
-  publishDir: OneOrMore[Either[String, Map[String, String]]] = Nil, // TODO: need to implement publishdir class
+  publishDir: OneOrMore[Either[String, Map[String, String]]] = Nil, // TODO: need to implement publishdir class?
   queue: OneOrMore[String] = Nil,
-  label: OneOrMore[String] = Nil,
   scratch: Option[Either[Boolean, String]] = None,
   storeDir: Option[String] = None,
   stageInMode: Option[String] = None,
