@@ -1,5 +1,21 @@
 # Viash 0.5.11
 
+## NEW FUNCTIONALITY
+
+* `ConfigMods`: Expanded the DSL to allow specifying at which point to apply a config mod.
+  This functionality was necessary to allow for setting fields which alter the way configs are parsed.
+  Example of when this is useful: `<preparse> .platforms[.type == "nextflow"].variant := "neo"`.
+  Updating workflow of parsing a config file is:
+    - read Yaml from file
+    - apply preparse config mods
+    - parse resulting Json as Config, thereby instantiating default values etc.
+    - convert Config back to Json
+    - apply postparse config mods (original config mods)
+    - convert final Json back to Config
+
+
+
+
 ## MAJOR CHANGES
 
 * `NextflowNeoPlatform`: Added a beta implementation for generating next gen Nextflow modules (#82).

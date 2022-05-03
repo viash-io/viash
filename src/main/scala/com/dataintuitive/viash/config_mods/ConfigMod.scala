@@ -21,16 +21,21 @@ import io.circe.{ACursor, FailedCursor, Json}
 
 // define command
 case class ConfigMods(commands: List[ConfigMod]) {
-  def apply(cursor: ACursor): ACursor = {
+  def apply(cursor: ACursor, preparse: Boolean): ACursor = {
     commands.foldLeft(cursor) {
-      case (cur, cmd) => cmd.apply(cur)
+      case (cur, cmd) => 
+        cmd.apply(cur, preparse)
     }
   }
 }
-case class ConfigMod(path: Path, op: CommandExp) {
-  def apply(cursor: ACursor): ACursor = {
-    val comb = Path(path.path ::: List(op))
-    comb.apply(cursor).top.get.hcursor
+case class ConfigMod(path: Path, op: CommandExp, preparse: Boolean = false) {
+  def apply(cursor: ACursor, preparse: Boolean): ACursor = {
+    if (this.preparse == preparse) {
+      val comb = Path(path.path ::: List(op))
+      comb.apply(cursor).top.get.hcursor
+    } else {
+      cursor
+    }
   }
 }
 abstract class CommandExp extends PathExp {
