@@ -53,16 +53,18 @@ case class Modify(value: Json) extends CommandExp {
 }
 case class Add(value: Json) extends CommandExp {
   def command(cursor: ACursor): ACursor = {
-    cursor.withFocus{js =>
-      Json.fromValues(js.asArray.get ++ Array(value)) // TODO: will error if get fails
-    }
+    cursor.withFocus(_.mapArray(_ ++ Vector(value)))
+    // cursor.withFocus{js =>
+    //   Json.fromValues(js.asArray.get ++ Array(value)) // TODO: will error if get fails
+    // }
   }
 }
 case class Prepend(value: Json) extends CommandExp {
   def command(cursor: ACursor): ACursor = {
-    cursor.withFocus{js =>
-      Json.fromValues(Array(value) ++ js.asArray.get) // TODO: will error if get fails
-    }
+    cursor.withFocus(_.mapArray(Vector(value) ++ _))
+    // cursor.withFocus{js =>
+    //   Json.fromValues(Array(value) ++ js.asArray.get) // TODO: will error if get fails
+    // }
   }
 }
 
@@ -115,7 +117,14 @@ case object Parent extends PathExp {
 case class Attribute(string: String) extends PathExp {
   def apply(cursor: ACursor, tail: Path): ACursor = {
     val down = cursor.downField(string)
-    tail.apply(down)
+    if (down.failed) {
+      val newDown = cursor
+        .withFocus(_.mapObject(_.add(string, Json.Null)))
+        .downField(string)
+      tail(newDown)
+    } else {
+      tail(down)
+    }
   }
 }
 case class Filter(condition: Condition) extends PathExp {
