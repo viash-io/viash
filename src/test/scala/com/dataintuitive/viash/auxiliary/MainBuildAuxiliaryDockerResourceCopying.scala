@@ -13,7 +13,7 @@ class MainBuildAuxiliaryDockerResourceCopying extends FunSuite with BeforeAndAft
 
 
   private val configFile = getClass.getResource("/testbash/auxiliary_resource/config_resource_test.vsh.yaml").getPath
-  private val functionality = Config.read(configFile, modifyFun = false).functionality
+  private val functionality = Config.read(configFile, applyPlatform = false).functionality
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
 
   private val configResourcesUnsupportedProtocolFile = getClass.getResource("/testbash/auxiliary_resource/config_resource_unsupported_protocol.vsh.yaml").getPath

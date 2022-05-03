@@ -60,7 +60,7 @@ class MainNSBuildNativeSuite extends FunSuite with BeforeAndAfterAll{
   test("Check whether particular keywords can be found in the usage") {
     for ((component, _, _, _) ← components) {
       val configFile = getClass.getResource(s"/testns/src/$component/config.vsh.yaml").getPath
-      val functionality = Config.read(configFile, modifyFun = false).functionality
+      val functionality = Config.read(configFile, applyPlatform = false).functionality
 
       val stdout =
         Exec.run(

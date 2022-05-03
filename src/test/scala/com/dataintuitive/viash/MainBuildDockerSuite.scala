@@ -18,7 +18,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   private val tempFolStr = temporaryFolder.toString
 
   // parse functionality from file
-  private val functionality = Config.read(configFile, modifyFun = false).functionality
+  private val functionality = Config.read(configFile, applyPlatform = false).functionality
 
   // check whether executable was created
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
