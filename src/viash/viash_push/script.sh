@@ -115,6 +115,6 @@ fi
 if [ -z "$par_log" ]; then
   "$par_viash" "${command_builder[@]}"
 else
-  rm "$par_log"
+  [ ! -f "$par_log" ] || rm "$par_log"
   "$par_viash" "${command_builder[@]}" > >(tee -a "$par_log") 2> >(tee -a "$par_log")
 fi

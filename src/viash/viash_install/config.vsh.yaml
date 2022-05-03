@@ -29,6 +29,10 @@ functionality:
     example: "_"
     type: string
     description: The separator to use between the component name and namespace as the image name of a Docker container.
+  - name: "--nextflow_variant"
+    default: "legacy"
+    type: string
+    description: "Which nextflow variant to use. Options are 'legacy' and 'neo'."
   - name: "--config_mod"
     alternatives: [ "-c" ]
     type: string

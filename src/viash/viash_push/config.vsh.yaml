@@ -73,7 +73,7 @@ functionality:
     type: boolean_true
     description: "Increase verbosity."
   resources:
-    - type: bash_script
+    - type: bash1_script
       path: script.sh
 platforms:
 - type: native

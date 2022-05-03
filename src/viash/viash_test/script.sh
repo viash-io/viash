@@ -97,6 +97,12 @@ if [ ! -z "$par_config_mod" ]; then
   done
 fi
 
+if [ ! -z "$par_nextflow_variant" ]; then
+  command_builder+=(
+    --config_mod "<preparse> .platforms[.type == 'nextflow'].variant := '$par_nextflow_variant'"
+  )
+fi
+
 if [ ! -z "$par_registry" ]; then
   command_builder+=(
     --config_mod ".platforms[.type == 'docker'].target_registry := '$par_registry'"
@@ -142,6 +148,6 @@ fi
 if [ -z "$par_log" ]; then
   "$par_viash" "${command_builder[@]}"
 else
-  rm "$par_log"
+  [ ! -f "$par_log" ] || rm "$par_log"
   "$par_viash" "${command_builder[@]}" > >(tee -a "$par_log") 2> >(tee -a "$par_log")
 fi

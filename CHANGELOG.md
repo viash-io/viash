@@ -19,9 +19,7 @@
 * `NextflowNeoPlatform`: Added a beta implementation for generating next gen Nextflow modules (#82).
   Names and arguments are subject to change, as well as the internal workings. 
   Known issues:
-    - Viash does not automatically fill in the container directive.
     - No documentation yet.
-    - No unit tests yet.
 
 * `Functionality`: Now also accepts 'inputs' and 'outputs' in addition to 'arguments'. For inputs and outputs,
   any specified arguments will have default `type: file` and `direction: input` or `direction: output` respectively.
@@ -36,19 +34,19 @@
 
 * `viash_test`: Added unit test for this component.
 
-* `PythonRequirements`: Allow upgrading components. Example: `[ type: python. pypi: anndata, upgrade: true ]`.
+* `PythonRequirements`: Allow upgrading dependencies. Example: `[ type: python. pypi: anndata, upgrade: true ]`.
 
 * `NextflowLegacyPlatform`: Remove annoying messages when building Nxf modules.
 
 ## BUG FIXES
 
-* `viash_build`: The `query_name` and `query_namespace` arguments were switched around. These arguments are now passed correctly.
-
-* `viash_test`: The `query_name` and `query_namespace` arguments were switched around. These arguments are now passed correctly.
+* `viash_build` and `viash_test`: The `query_name` and `query_namespace` arguments were switched around. These arguments are now passed correctly.
 
 * `BashScript`, `JavaScriptScript`, `PythonScript`, `RScript`: Correctly escape `'` (#113). Update unit tests accordingly.
 
 * `CSharpScript`, `ScalaScript`: Correctly escape `"` (#113). Update unit tests accordingly.
+
+* `viash_build`, `viash_test`, `viash_push`: Don't try to remove log files if they don't exist.
 
 # Viash 0.5.10.1
 
