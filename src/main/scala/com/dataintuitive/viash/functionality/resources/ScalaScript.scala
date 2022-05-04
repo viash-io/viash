@@ -37,7 +37,7 @@ case class ScalaScript(
   }
 
   def generatePlaceholder(functionality: Functionality): String = {
-    val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
     val parClassTypes = params.map { par =>
       val classType = par match {

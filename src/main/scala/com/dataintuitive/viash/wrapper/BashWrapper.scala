@@ -157,8 +157,8 @@ object BashWrapper {
     }
 
     // generate script modifiers
-    val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
-    val paramAndDummies = functionality.argumentsAndDummies.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+    val paramAndDummies = functionality.allArgumentsAndDummies.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
     val helpMods = generateHelp(functionality, params)
     val parMods = generateParsers(params, paramAndDummies)

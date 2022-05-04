@@ -29,7 +29,7 @@ case class Functionality(
   authors: List[Author] = Nil,
   inputs: List[DataObject[_]] = Nil,
   outputs: List[DataObject[_]] = Nil,
-  @JsonKey("arguments") argumentsOrig: List[DataObject[_]] = Nil,
+  arguments: List[DataObject[_]] = Nil,
   resources: List[Resource] = Nil,
   description: Option[String] = None,
   usage: Option[String] = None,
@@ -55,12 +55,12 @@ case class Functionality(
   }
 
   // Combine inputs, outputs and arguments into one combined list
-  def arguments = inputs ::: outputs ::: argumentsOrig
+  def allArguments = inputs ::: outputs ::: arguments
 
   // check whether there are not multiple positional arguments with multiplicity >1
   // and if there is one, whether its position is last
   {
-    val positionals = arguments.filter(a => a.flags == "")
+    val positionals = allArguments.filter(a => a.flags == "")
     val multiix = positionals.indexWhere(_.multiple)
 
     require(
@@ -73,7 +73,7 @@ case class Functionality(
   require(name.matches("^[A-Za-z][A-Za-z0-9_]*$"), message = "functionality name must begin with a letter and consist only of alphanumeric characters or underscores.")
 
   // check arguments
-  arguments.foreach { arg =>
+  allArguments.foreach { arg =>
     require(arg.name.matches("^(-?|--|\\$)[A-Za-z][A-Za-z0-9_]*$"), message = s"argument $arg.name: name must begin with a letter and consist only of alphanumeric characters or underscores.")
     (arg.name :: arg.alternatives).foreach { argName =>
       require(!Functionality.reservedParameters.contains(argName), message = s"argument $argName: name is reserved by viash")
@@ -89,7 +89,7 @@ case class Functionality(
 
   def mainCode: Option[String] = mainScript.flatMap(_.read)
 
-  def argumentsAndDummies: List[DataObject[_]] = arguments ::: dummy_arguments
+  def allArgumentsAndDummies: List[DataObject[_]] = allArguments ::: dummy_arguments
 }
 
 object Functionality {

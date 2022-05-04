@@ -50,7 +50,7 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
 
     val stripAll = (s : String) => s.replaceAll(raw"\s+", " ").trim
 
-    functionality.arguments.foreach(arg => {
+    functionality.allArguments.foreach(arg => {
       for (opt <- arg.alternatives; value <- opt)
         assert(stdout.contains(value))
       for (description <- arg.description) {

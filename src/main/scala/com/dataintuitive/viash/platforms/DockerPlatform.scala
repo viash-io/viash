@@ -117,7 +117,7 @@ case class DockerPlatform(
 
     // add extra arguments to the functionality file for each of the volumes
     val fun2 = functionality.copy(
-      argumentsOrig = functionality.arguments ::: dm.inputs
+      arguments = functionality.allArguments ::: dm.inputs
     )
 
     // create new bash script
@@ -296,7 +296,7 @@ case class DockerPlatform(
   private val extraMountsVar = "VIASH_EXTRA_MOUNTS"
 
   private def processDockerVolumes(functionality: Functionality) = {
-    val args = functionality.argumentsAndDummies
+    val args = functionality.allArgumentsAndDummies
 
     val preParse =
       s"""
@@ -406,7 +406,7 @@ case class DockerPlatform(
     volExtraParams: String,
     fullImageID: String,
   ) = {
-    val args = functionality.argumentsAndDummies
+    val args = functionality.allArgumentsAndDummies
 
     def chownCommand(value: String): String = {
       s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $fullImageID "$$(id -u):$$(id -g)" --silent --recursive $value"""

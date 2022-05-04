@@ -182,7 +182,7 @@ case class NextflowNeoPlatform(
       .mkString("// ", "\n// ", "")
 
     /************************* FUNCTIONALITY *************************/
-    val argumentsStr = functionality.arguments.map{ arg => 
+    val argumentsStr = functionality.allArguments.map{ arg => 
       val descrStr = arg.description.map{des => 
         val escDes = escapeText(des)
         s"\n      'description': '$escDes',"
@@ -264,7 +264,7 @@ case class NextflowNeoPlatform(
     }
 
     /************************* HELP *************************/
-    val helpParams = functionality.arguments.map {
+    val helpParams = functionality.allArguments.map {
       case arg => arg.copyDO(
         name = "--" + arg.plainName,
         alternatives = Nil

@@ -80,7 +80,7 @@ case class NextflowLegacyPlatform(
       case _ => fname
     }
 
-    val allPars = functionality.arguments
+    val allPars = functionality.allArguments
 
     val outputs = allPars
       .filter(_.isInstanceOf[FileObject])
@@ -132,9 +132,9 @@ case class NextflowLegacyPlatform(
     }
 
     val argumentsAsTuple: List[ConfigTuple] =
-      if (functionality.arguments.nonEmpty) {
+      if (functionality.allArguments.nonEmpty) {
         List(
-          "arguments" → NestedValue(functionality.arguments.map(dataObjectToConfigTuple(_)))
+          "arguments" → NestedValue(functionality.allArguments.map(dataObjectToConfigTuple(_)))
         )
       } else {
         Nil
