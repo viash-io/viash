@@ -17,21 +17,19 @@
 
 package com.dataintuitive.viash
 
-import functionality._
-import dataobjects.{FileObject, Output}
-import platforms._
-import resources.{BashScript, Script}
-
 import sys.process.{Process, ProcessLogger}
-import java.io.{ByteArrayOutputStream, File, FileWriter, PrintWriter}
+import java.io.{ByteArrayOutputStream, FileWriter, PrintWriter}
 import java.nio.file.{Files, Path, Paths}
-import com.dataintuitive.viash.config.{Config, Version}
-import helpers.IO
-import com.dataintuitive.viash.helpers.Circe.{OneOrMore, One, More}
-
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import scala.util.Random
+
+import config.{Config, Version}
+import functionality.dataobjects.{FileObject, Output}
+import functionality.resources.{BashScript, Script}
+import platforms.NativePlatform
+import helpers.IO
+import helpers.Circe.{OneOrMore, One, More}
 
 object ViashTest {
   case class TestOutput(name: String, exitValue: Int, output: String, logFile: String, duration: Long)
