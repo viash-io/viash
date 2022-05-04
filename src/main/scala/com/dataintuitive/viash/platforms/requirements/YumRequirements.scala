@@ -21,7 +21,7 @@ import com.dataintuitive.viash.helpers.Circe._
 
 case class YumRequirements(
   packages: OneOrMore[String] = Nil,
-  oType: String = "yum"
+  `type`: String = "yum"
 ) extends Requirements {
   def installCommands: List[String] = {
     val update =

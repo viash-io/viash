@@ -29,7 +29,7 @@ case class PythonScript(
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
-  oType: String = "python_script"
+  `type`: String = "python_script"
 ) extends Script {
   val meta = PythonScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
@@ -82,7 +82,7 @@ case class PythonScript(
 object PythonScript extends ScriptObject {
   val commentStr = "#"
   val extension = "py"
-  val oType = "python_script"
+  val `type` = "python_script"
 
   def command(script: String): String = {
     "python \"" + script + "\""

@@ -29,7 +29,7 @@ case class CSharpScript(
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
-  oType: String = "csharp_script"
+  `type`: String = "csharp_script"
 ) extends Script {
   val meta = CSharpScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
@@ -103,7 +103,7 @@ case class CSharpScript(
 object CSharpScript extends ScriptObject {
   val commentStr = "//"
   val extension = "csx"
-  val oType = "csharp_script"
+  val `type` = "csharp_script"
 
   def command(script: String): String = {
     "dotnet script \"" + script + "\""

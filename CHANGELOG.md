@@ -46,12 +46,14 @@
 
 * `viash_build`, `viash_test`, `viash_push`: Don't try to remove log files if they don't exist.
 
-## DEPRECATION
+## INTERNAL CHANGES
 
 * `DataObject`: 
   - Renamed `otype` to `flags`.
   - Renamed `oType` to `type`
   - Deprecated `tag` (unused feature).
+
+* All abstract / inherited classes: Renamed `oType` to `type`.
 
 # Viash 0.5.10.1
 

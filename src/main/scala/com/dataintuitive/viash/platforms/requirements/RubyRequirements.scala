@@ -21,7 +21,7 @@ import com.dataintuitive.viash.helpers.Circe._
 
 case class RubyRequirements(
   packages: OneOrMore[String] = Nil,
-  oType: String = "ruby"
+  `type`: String = "ruby"
 ) extends Requirements {
 private val installGemCommands =
     packages.toList match {

@@ -31,7 +31,7 @@ import java.nio.file.Paths
 // A platform solely for running `viash config inject` with.
 case class DebugPlatform(
   id: String = "debug",
-  oType: String = "debug",
+  `type`: String = "debug",
   path: String
 ) extends Platform {
   def modifyFunctionality(config: Config): Functionality = {

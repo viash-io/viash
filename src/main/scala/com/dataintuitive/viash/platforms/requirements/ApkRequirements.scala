@@ -21,7 +21,7 @@ import com.dataintuitive.viash.helpers.Circe._
 
 case class ApkRequirements(
   packages: OneOrMore[String] = Nil,
-  oType: String = "apk"
+  `type`: String = "apk"
 ) extends Requirements {
   val installCommands: List[String] = {
     packages.toList match {

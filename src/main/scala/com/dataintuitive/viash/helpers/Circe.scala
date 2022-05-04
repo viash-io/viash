@@ -22,12 +22,7 @@ import io.circe.generic.extras.Configuration
 
 object Circe {
   implicit val customConfig: Configuration =
-    Configuration.default.withDefaults.withStrictDecoding.copy(
-      transformMemberNames = {
-        case "oType" => "type"
-        case other => other
-      }
-    )
+    Configuration.default.withDefaults.withStrictDecoding
 
   // encoder and decoder for Either
   implicit def encodeEither[A,B](implicit ea: Encoder[A], eb: Encoder[B]): Encoder[Either[A,B]] = {

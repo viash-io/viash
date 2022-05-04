@@ -47,7 +47,7 @@ case class DockerPlatform(
   privileged: Boolean = false,
   run_args: OneOrMore[String] = Nil,
   target_image_source: Option[String] = None,
-  oType: String = "docker",
+  `type`: String = "docker",
 
   // setup variables
   setup: List[Requirements] = Nil,

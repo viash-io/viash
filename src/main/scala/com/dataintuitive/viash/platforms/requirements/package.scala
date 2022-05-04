@@ -50,7 +50,7 @@ package object requirements {
 
   implicit def encodeRequirements[A <: Requirements]: Encoder[A] = Encoder.instance {
     reqs =>
-      val typeJson = Json.obj("type" → Json.fromString(reqs.oType))
+      val typeJson = Json.obj("type" → Json.fromString(reqs.`type`))
       val objJson = reqs match {
         case s: ApkRequirements => encodeApkRequirements(s)
         case s: AptRequirements => encodeAptRequirements(s)

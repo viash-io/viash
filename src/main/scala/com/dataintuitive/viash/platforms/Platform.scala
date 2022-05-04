@@ -26,7 +26,7 @@ import requirements._
 import com.dataintuitive.viash.config.Version
 
 trait Platform {
-  val oType: String
+  val `type`: String
   val id: String
 
   val hasSetup: Boolean = false

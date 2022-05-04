@@ -26,7 +26,7 @@ import com.dataintuitive.viash.wrapper.BashWrapper
 
 case class NativePlatform(
   id: String = "native",
-  oType: String = "native"
+  `type`: String = "native"
 ) extends Platform {
   def modifyFunctionality(config: Config): Functionality = {
     val functionality = config.functionality

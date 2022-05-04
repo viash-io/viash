@@ -60,7 +60,7 @@ object Helper {
           None
         }
       val namedPropsStr = List(
-        ("type", Some((param.oType :: unnamedProps).mkString(", "))),
+        ("type", Some((param.`type` :: unnamedProps).mkString(", "))),
         ("default", default),
         ("example", example)
       ).flatMap { case (name, x) =>

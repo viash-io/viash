@@ -49,7 +49,7 @@ case class NextflowLegacyPlatform(
   directive_time: Option[String] = None,
   directive_memory: Option[String] = None,
   directive_cache: Option[String] = None,
-  oType: String = "nextflow",
+  `type`: String = "nextflow",
   variant: String = "legacy"
 ) extends NextflowPlatform {
   assert(version.isEmpty, "nextflow platform: attribute 'version' is deprecated")
@@ -302,9 +302,7 @@ case class NextflowLegacyPlatform(
         |
         |""".stripMargin
 
-    val setup_main_outFromIn = functionality.function_type match {
-      // Out format is different from in format
-      case Some(Convert) | Some(Join) | Some(ToDir) | None =>
+    val setup_main_outFromIn = 
         s"""
           |// Use the params map, create a hashmap of the filenames for output
           |// output filename is <sample>.<method>.<arg_name>[.extension]
@@ -340,30 +338,6 @@ case class NextflowLegacyPlatform(
           |
           |}
           |""".stripMargin
-      case Some(AsIs) =>
-        """
-          |// Only perform a selection on the appropriate output arguments of type `file`.
-          |def outFromIn(_params) {
-          |
-          |  def id = _params.id
-          |
-          |  _params
-          |    .arguments
-          |    .findAll{ it -> it.type == "file" && it.direction == "Output" }
-          |
-          |}
-          |""".stripMargin
-      case _ =>
-        """
-          |def outFromIn(inputStr) {
-          |
-          |  println(">>> Having a hard time generating an output file name.")
-          |  println(">>> Is the function_type attribute filled out?")
-          |
-          |  return "output"
-          |}
-          |""".stripMargin
-    }
 
     val setup_main_overrideIO =
       """
@@ -753,7 +727,7 @@ object NextFlowUtils {
       tupleToConfigTuple("name" → dataObject.plainName) ::
       tupleToConfigTuple("flags" → dataObject.flags) ::
       tupleToConfigTuple("required" → dataObject.required) ::
-      tupleToConfigTuple("type" → dataObject.oType) ::
+      tupleToConfigTuple("type" → dataObject.`type`) ::
       tupleToConfigTuple("direction" → dataObject.direction.toString) ::
       tupleToConfigTuple("multiple" → dataObject.multiple) ::
       tupleToConfigTuple("multiple_sep" -> dataObject.multiple_sep) ::

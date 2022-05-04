@@ -33,7 +33,7 @@ case class PythonRequirements(
   url: OneOrMore[String] = Nil,
   script: OneOrMore[String] = Nil,
   upgrade: Boolean = true,
-  oType: String = "python"
+  `type`: String = "python"
 ) extends Requirements {
   assert(script.forall(!_.contains("'")))
 

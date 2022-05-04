@@ -34,7 +34,7 @@ import shapeless.syntax.singleton
  */
 case class NextflowNeoPlatform(
   id: String = "nextflow",
-  oType: String = "nextflow",
+  `type`: String = "nextflow",
   variant: String = "neo",
   
   // nxf params
@@ -257,7 +257,7 @@ case class NextflowNeoPlatform(
          |    [
          |      'name': '${arg.plainName}',
          |      'required': ${arg.required},
-         |      'type': '${arg.oType}',
+         |      'type': '${arg.`type`}',
          |      'direction': '${arg.direction.toString.toLowerCase}',${descrStr}${defaultStr}${exampleStr}
          |      'multiple': ${arg.multiple}${multipleSepStr}
          |    ]""".stripMargin

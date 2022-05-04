@@ -22,7 +22,7 @@ import com.dataintuitive.viash.helpers.Circe._
 case class AptRequirements(
   packages: OneOrMore[String] = Nil,
   interactive: Boolean = false,
-  oType: String = "apt"
+  `type`: String = "apt"
 ) extends Requirements {
   def installCommands: List[String] = {
     val aptUpdate =
