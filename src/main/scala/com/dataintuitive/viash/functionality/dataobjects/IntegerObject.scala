@@ -26,14 +26,13 @@ case class IntegerObject(
   example: OneOrMore[Int] = Nil,
   default: OneOrMore[Int] = Nil,
   required: Boolean = false,
-  tag: Option[String] = None,
   direction: Direction = Input,
   multiple: Boolean = false,
   multiple_sep: Char = ':',
-  oType: String = "integer"
+  `type`: String = "integer"
 ) extends DataObject[Int] {
   def copyDO(
-    oType: String, 
+    `type`: String, 
     name: String, 
     alternatives: List[String],
     description: Option[String],
@@ -41,10 +40,9 @@ case class IntegerObject(
     default: OneOrMore[Int],
     required: Boolean,
     direction: Direction,
-    tag: Option[String],
     multiple: Boolean,
     multiple_sep: Char
   ): DataObject[Int] = {
-    copy(name, alternatives, description, example, default, required, tag, direction, multiple, multiple_sep, oType)
+    copy(name, alternatives, description, example, default, required, direction, multiple, multiple_sep, `type`)
   }
 }

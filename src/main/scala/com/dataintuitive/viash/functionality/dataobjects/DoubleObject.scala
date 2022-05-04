@@ -26,14 +26,13 @@ case class DoubleObject(
   example: OneOrMore[Double] = Nil,
   default: OneOrMore[Double] = Nil,
   required: Boolean = false,
-  tag: Option[String] = None,
   direction: Direction = Input,
   multiple: Boolean = false,
   multiple_sep: Char = ':',
-  oType: String = "double"
+  `type`: String = "double"
 ) extends DataObject[Double] {
   def copyDO(
-    oType: String, 
+    `type`: String, 
     name: String, 
     alternatives: List[String],
     description: Option[String],
@@ -41,10 +40,9 @@ case class DoubleObject(
     default: OneOrMore[Double],
     required: Boolean,
     direction: Direction,
-    tag: Option[String],
     multiple: Boolean,
     multiple_sep: Char
   ): DataObject[Double] = {
-    copy(name, alternatives, description, example, default, required, tag, direction, multiple, multiple_sep, oType)
+    copy(name, alternatives, description, example, default, required, direction, multiple, multiple_sep, `type`)
   }
 }

@@ -64,7 +64,7 @@ package object dataobjects {
 
   // encoder and decoder for direction
   implicit val encodeDirection: Encoder[Direction] = Encoder.instance {
-    dir => Json.fromString(dir.toString)
+    dir => Json.fromString(dir.toString.toLowerCase())
   }
   implicit val decodeDirection: Decoder[Direction] = Decoder.instance {
     cursor =>
@@ -87,7 +87,7 @@ package object dataobjects {
 
   implicit def encodeDataObject[A <: DataObject[_]]: Encoder[A] = Encoder.instance {
     par =>
-      val typeJson = Json.obj("type" → Json.fromString(par.oType))
+      val typeJson = Json.obj("type" → Json.fromString(par.`type`))
       val objJson = par match {
         case s: StringObject => encodeStringObject(s)
         case s: IntegerObject => encodeIntegerObject(s)

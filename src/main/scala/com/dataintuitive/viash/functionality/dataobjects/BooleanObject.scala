@@ -30,17 +30,16 @@ case class BooleanObjectRegular(
   example: OneOrMore[Boolean] = Nil,
   default: OneOrMore[Boolean] = Nil,
   required: Boolean = false,
-  tag: Option[String] = None,
   direction: Direction = Input,
   multiple: Boolean = false,
   multiple_sep: Char = ':',
-  oType: String = "boolean"
+  `type`: String = "boolean"
 ) extends BooleanObject {
 
   val flagValue: Option[Boolean] = None
 
   def copyDO(
-    oType: String, 
+    `type`: String, 
     name: String, 
     alternatives: List[String],
     description: Option[String],
@@ -48,11 +47,10 @@ case class BooleanObjectRegular(
     default: OneOrMore[Boolean],
     required: Boolean,
     direction: Direction,
-    tag: Option[String],
     multiple: Boolean,
     multiple_sep: Char
   ): DataObject[Boolean] = {
-    copy(name, alternatives, description, example, default, required, tag, direction, multiple, multiple_sep, oType)
+    copy(name, alternatives, description, example, default, required, direction, multiple, multiple_sep, `type`)
   }
 }
 
@@ -60,9 +58,8 @@ case class BooleanObjectTrue(
   name: String,
   alternatives: List[String] = Nil,
   description: Option[String] = None,
-  tag: Option[String] = None,
   direction: Direction = Input,
-  oType: String = "boolean_true"
+  `type`: String = "boolean_true"
 ) extends BooleanObject {
 
   val required: Boolean = false
@@ -73,7 +70,7 @@ case class BooleanObjectTrue(
   val example: OneOrMore[Boolean] = Nil
 
   def copyDO(
-    oType: String, 
+    `type`: String, 
     name: String, 
     alternatives: List[String],
     description: Option[String],
@@ -81,11 +78,10 @@ case class BooleanObjectTrue(
     example: OneOrMore[Boolean],
     required: Boolean,
     direction: Direction,
-    tag: Option[String],
     multiple: Boolean,
     multiple_sep: Char
   ): DataObject[Boolean] = {
-    copy(name, alternatives, description, tag, direction, oType)
+    copy(name, alternatives, description, direction, `type`)
   }
 }
 
@@ -93,9 +89,8 @@ case class BooleanObjectFalse(
   name: String,
   alternatives: List[String] = Nil,
   description: Option[String] = None,
-  tag: Option[String] = None,
   direction: Direction = Input,
-  oType: String = "boolean_false"
+  `type`: String = "boolean_false"
 ) extends BooleanObject {
 
   val required: Boolean = false
@@ -106,7 +101,7 @@ case class BooleanObjectFalse(
   val example: OneOrMore[Boolean] = Nil
 
   def copyDO(
-    oType: String, 
+    `type`: String, 
     name: String, 
     alternatives: List[String],
     description: Option[String],
@@ -114,10 +109,9 @@ case class BooleanObjectFalse(
     example: OneOrMore[Boolean],
     required: Boolean,
     direction: Direction,
-    tag: Option[String],
     multiple: Boolean,
     multiple_sep: Char
   ): DataObject[Boolean] = {
-    copy(name, alternatives, description, tag, direction, oType)
+    copy(name, alternatives, description, direction, `type`)
   }
 }

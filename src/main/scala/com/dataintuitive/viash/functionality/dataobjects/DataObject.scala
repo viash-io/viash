@@ -20,7 +20,7 @@ package com.dataintuitive.viash.functionality.dataobjects
 import com.dataintuitive.viash.helpers.Circe.OneOrMore
 
 abstract class DataObject[Type] {
-  val oType: String
+  val `type`: String
   val name: String
   val alternatives: List[String]
   val description: Option[String]
@@ -28,7 +28,6 @@ abstract class DataObject[Type] {
   val default: OneOrMore[Type]
   val required: Boolean
   val direction: Direction
-  val tag: Option[String]
   val multiple: Boolean
   val multiple_sep: Char
 
@@ -56,7 +55,7 @@ abstract class DataObject[Type] {
   }
 
   def copyDO(
-    oType: String = this.oType,
+    `type`: String = this.`type`,
     name: String = this.name,
     alternatives: List[String] = this.alternatives,
     description: Option[String] = this.description,
@@ -64,7 +63,6 @@ abstract class DataObject[Type] {
     default: OneOrMore[Type] = this.default,
     required: Boolean = this.required,
     direction: Direction = this.direction,
-    tag: Option[String] = this.tag,
     multiple: Boolean = this.multiple,
     multiple_sep: Char = this.multiple_sep
   ): DataObject[Type]
