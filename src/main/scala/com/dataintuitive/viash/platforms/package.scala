@@ -55,7 +55,7 @@ package object platforms {
           case Right("legacy") => decodeNextflowLegacyPlatform.widen
           case Right("neo") => decodeNextflowNeoPlatform.widen
           case Right(typ) => throw new RuntimeException("Variant " + typ + " is not recognised.")
-          case Left(exception) => decodeNextflowLegacyPlatform.widen // TODO: default is legacy, will be changed in Viash 1.0
+          case Left(exception) => decodeNextflowNeoPlatform.widen // TODO: default is legacy, will be changed in Viash 1.0
         }
 
       decoder(cursor)
