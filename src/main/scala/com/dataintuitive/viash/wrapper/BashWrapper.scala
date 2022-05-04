@@ -88,15 +88,6 @@ object BashWrapper {
         ""
       }
 
-    // check whether the resources dir needs to be added to the path
-    val resourcesToPath =
-      if (functionality.add_resources_to_path) {
-        s"""
-          |PATH="$$$var_resources_dir:\\$$PATH"""".stripMargin
-      } else {
-        ""
-      }
-
     // DETERMINE HOW TO RUN THE CODE
     val executionCode = mainResource match {
       // if mainResource is empty (shouldn't be the case)
@@ -130,7 +121,7 @@ object BashWrapper {
           |set -e$scriptSetup
           |cat > "$scriptPath" << 'VIASHMAIN'
           |$escapedCode
-          |VIASHMAIN$cdToResources$resourcesToPath
+          |VIASHMAIN$cdToResources
           |${res.meta.command(scriptPath)} &
           |wait "\\$$!"
           |""".stripMargin
