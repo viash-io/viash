@@ -58,3 +58,4 @@ platforms:
       - type: apk
         packages: [ bash ]
   - type: nextflow
+    variant: legacy

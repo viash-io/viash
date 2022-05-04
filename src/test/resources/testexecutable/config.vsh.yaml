@@ -23,4 +23,5 @@ platforms:
     target_image: "viash_test_executable"
     workdir: "$VIASH_RESOURCES_DIR"
   - type: nextflow
+    variant: legacy
     image: viash_test_executable

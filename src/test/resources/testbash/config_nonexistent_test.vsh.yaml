@@ -63,4 +63,5 @@ platforms:
     image: "bash:3.2"
     target_image: "viash_test_bash"
   - type: nextflow
+    variant: legacy
     image: viash_test_bash

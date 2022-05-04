@@ -64,6 +64,7 @@
 #'     packages:
 #'     - libhdf5-serial-dev
 #' - type: nextflow
+#'   variant: legacy
 #'   image: rocker/tidyverse
 
 write_fun <- function(file, ...) {

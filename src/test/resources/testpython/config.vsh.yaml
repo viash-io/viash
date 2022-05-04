@@ -63,4 +63,5 @@ platforms:
         packages:
           - "argparse<1.4"
   - type: nextflow
+    variant: legacy
     image: rocker/tidyverse
