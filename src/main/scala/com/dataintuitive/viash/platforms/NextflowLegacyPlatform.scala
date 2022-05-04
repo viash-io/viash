@@ -253,11 +253,11 @@ case class NextflowLegacyPlatform(
         |}
         |
         |def renderArg(it) {
-        |  if (it.otype == "") {
+        |  if (it.flags == "") {
         |    return "\'" + escape(it.value) + "\'"
         |  } else if (it.type == "boolean_true") {
         |    if (it.value.toLowerCase() == "true") {
-        |      return it.otype + it.name
+        |      return it.flags + it.name
         |    } else {
         |      return ""
         |    }
@@ -265,13 +265,13 @@ case class NextflowLegacyPlatform(
         |    if (it.value.toLowerCase() == "true") {
         |      return ""
         |    } else {
-        |      return it.otype + it.name
+        |      return it.flags + it.name
         |    }
         |  } else if (it.value == "no_default_value_configured") {
         |    return ""
         |  } else {
         |    def retVal = it.value in List && it.multiple ? it.value.join(it.multiple_sep): it.value
-        |    return it.otype + it.name + " \'" + escape(retVal) + "\'"
+        |    return it.flags + it.name + " \'" + escape(retVal) + "\'"
         |  }
         |}
         |
@@ -751,7 +751,7 @@ object NextFlowUtils {
     val example = if (dataObject.example.isEmpty) None else Some(dataObject.example.mkString(dataObject.multiple_sep.toString))
     quoteLong(dataObject.plainName) → NestedValue(
       tupleToConfigTuple("name" → dataObject.plainName) ::
-      tupleToConfigTuple("otype" → dataObject.otype) ::
+      tupleToConfigTuple("flags" → dataObject.flags) ::
       tupleToConfigTuple("required" → dataObject.required) ::
       tupleToConfigTuple("type" → dataObject.oType) ::
       tupleToConfigTuple("direction" → dataObject.direction.toString) ::

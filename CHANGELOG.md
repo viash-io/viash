@@ -46,6 +46,10 @@
 
 * `viash_build`, `viash_test`, `viash_push`: Don't try to remove log files if they don't exist.
 
+## INTERNAL CHANGES
+
+* `DataObject`: Rename `otype` to `flags` to avoid confusion with `oType`.
+
 # Viash 0.5.10.1
 
 ## BUG FIX

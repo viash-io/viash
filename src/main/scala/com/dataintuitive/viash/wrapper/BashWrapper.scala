@@ -261,7 +261,7 @@ object BashWrapper {
 
   private def generateParsers(params: List[DataObject[_]], paramsAndDummies: List[DataObject[_]]) = {
     // gather parse code for params
-    val wrapperParams = params.filterNot(_.otype == "")
+    val wrapperParams = params.filterNot(_.flags == "")
     val parseStrs = wrapperParams.map {
       case bo: BooleanObject if bo.flagValue.isDefined =>
         val fv = bo.flagValue.get
@@ -278,12 +278,12 @@ object BashWrapper {
         val multisep = if (param.multiple) Some(param.multiple_sep) else None
 
         // params of the form --param ...
-        val part1 = param.otype match {
+        val part1 = param.flags match {
           case "---" | "--" | "-" => argStore(param.name, param.VIASH_PAR, "\"$2\"", 2, multisep)
           case "" => Nil
         }
         // params of the form --param=..., except -param=... is not allowed
-        val part2 = param.otype match {
+        val part2 = param.flags match {
           case "---" | "--" => List(argStoreSed(param.name, param.VIASH_PAR, multisep))
           case "-" | "" => Nil
         }
@@ -296,7 +296,7 @@ object BashWrapper {
     }.mkString("\n")
 
     // parse positionals
-    val positionals = paramsAndDummies.filter(_.otype == "")
+    val positionals = paramsAndDummies.filter(_.flags == "")
     val positionalStr = positionals.map { param =>
       if (param.multiple) {
         s"""while [[ $$# -gt 0 ]]; do
@@ -394,7 +394,7 @@ object BashWrapper {
            |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS ${bo.name}"
            |fi""".stripMargin
       case param =>
-        val flag = if (param.otype == "") "" else " " + param.name
+        val flag = if (param.flags == "") "" else " " + param.name
 
         if (param.multiple) {
           s"""

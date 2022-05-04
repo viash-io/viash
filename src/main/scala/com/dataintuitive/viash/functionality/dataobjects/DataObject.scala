@@ -33,7 +33,7 @@ abstract class DataObject[Type] {
   val multiple_sep: Char
 
   private val pattern = "^(-*)(.*)$".r
-  val pattern(otype, plainName) = name
+  val pattern(flags, plainName) = name
 
   /** Common parameter name for this object */
   val par: String = "par_" + plainName

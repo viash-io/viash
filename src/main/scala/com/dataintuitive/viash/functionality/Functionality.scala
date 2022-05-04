@@ -67,7 +67,7 @@ case class Functionality(
   // check whether there are not multiple positional arguments with multiplicity >1
   // and if there is one, whether its position is last
   {
-    val positionals = arguments.filter(a => a.otype == "")
+    val positionals = arguments.filter(a => a.flags == "")
     val multiix = positionals.indexWhere(_.multiple)
 
     require(
