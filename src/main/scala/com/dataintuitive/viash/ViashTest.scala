@@ -180,7 +180,7 @@ object ViashTest {
           functionality = config.functionality.copy(
             inputs = Nil,
             outputs = Nil,
-            argumentsOrig = Nil,
+            arguments = Nil,
             dummy_arguments = List(dirArg),
             resources = List(test),
             set_wd_to_resources_dir = true
