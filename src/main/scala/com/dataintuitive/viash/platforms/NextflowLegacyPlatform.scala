@@ -104,7 +104,7 @@ case class NextflowLegacyPlatform(
       * the module standalone as well as in a pipeline.
       */
     val namespacedParameters: List[ConfigTuple] = {
-      functionality.arguments.flatMap { dataObject => (dataObject.required, dataObject.default.toList) match {
+      functionality.allArguments.flatMap { dataObject => (dataObject.required, dataObject.default.toList) match {
         case (true, _) =>
           // println(s"> ${dataObject.plainName} in $fname is set to be required.")
           // println(s"> --${dataObject.plainName} <...> has to be specified when running this module standalone.")
