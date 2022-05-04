@@ -60,6 +60,11 @@
 
 * All abstract / inherited classes: Renamed `oType` to `type`.
 
+## DEPRECATION
+
+* `Functionality`: Deprecated `function_type` and `add_resources_to_path`. These should be 
+  unused features, by now.
+  
 # Viash 0.5.10.1
 
 ## BUG FIX

@@ -39,17 +39,10 @@ case class Functionality(
   // dummy arguments are used for handling extra directory mounts in docker
   dummy_arguments: List[DataObject[_]] = Nil,
 
-  // Robrecht: I want to deprecate the arguments below 
-  // used by nextflow legacy platform
-  function_type: Option[FunctionType] = None,
-
   // setting this to true will change the working directory
   // to the resources directory when running the script
   // this is used when running `viash test`.
-  set_wd_to_resources_dir: Boolean = false,
-
-  // whether or not to add the resource dir to the path
-  add_resources_to_path: Boolean = false
+  set_wd_to_resources_dir: Boolean = false
 ) {
 
   // note that in the Functionality companion object, defaults gets added to inputs and outputs *before* actually 
