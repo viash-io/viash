@@ -30,8 +30,8 @@ package object platforms {
   implicit val encodeNextflowLegacyPlatform: Encoder.AsObject[NextflowLegacyPlatform] = deriveConfiguredEncoder
   implicit val decodeNextflowLegacyPlatform: Decoder[NextflowLegacyPlatform] = deriveConfiguredDecoder
 
-  implicit val encodeNextflowNeoPlatform: Encoder.AsObject[NextflowNeoPlatform] = deriveConfiguredEncoder
-  implicit val decodeNextflowNeoPlatform: Decoder[NextflowNeoPlatform] = deriveConfiguredDecoder
+  implicit val encodeNextflowVdsl3Platform: Encoder.AsObject[NextflowVdsl3Platform] = deriveConfiguredEncoder
+  implicit val decodeNextflowVdsl3Platform: Decoder[NextflowVdsl3Platform] = deriveConfiguredDecoder
 
   implicit val encodeNativePlatform: Encoder.AsObject[NativePlatform] = deriveConfiguredEncoder
   implicit val decodeNativePlatform: Decoder[NativePlatform] = deriveConfiguredDecoder
@@ -42,7 +42,7 @@ package object platforms {
       val objJson = platform match {
         case s: DockerPlatform => encodeDockerPlatform(s)
         case s: NextflowLegacyPlatform => encodeNextflowLegacyPlatform(s)
-        case s: NextflowNeoPlatform => encodeNextflowNeoPlatform(s)
+        case s: NextflowVdsl3Platform => encodeNextflowVdsl3Platform(s)
         case s: NativePlatform => encodeNativePlatform(s)
       }
       objJson deepMerge typeJson
@@ -53,9 +53,9 @@ package object platforms {
       val decoder: Decoder[NextflowPlatform] =
         cursor.downField("variant").as[String] match {
           case Right("legacy") => decodeNextflowLegacyPlatform.widen
-          case Right("neo") => decodeNextflowNeoPlatform.widen
+          case Right("vdsl3") => decodeNextflowVdsl3Platform.widen
           case Right(typ) => throw new RuntimeException("Variant " + typ + " is not recognised.")
-          case Left(exception) => decodeNextflowNeoPlatform.widen // TODO: default is legacy, will be changed in Viash 1.0
+          case Left(exception) => decodeNextflowVdsl3Platform.widen // TODO: default is legacy, will be changed in Viash 1.0
         }
 
       decoder(cursor)

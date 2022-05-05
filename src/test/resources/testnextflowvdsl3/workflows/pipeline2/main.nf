@@ -1,14 +1,14 @@
 nextflow.enable.dsl=2
 
 targetDir = "${params.rootDir}/target/nextflow"
-targetNeoDir = "${params.rootDir}/target/nextflowneo"
+targetVdsl3Dir = "${params.rootDir}/target/nextflowvdsl3"
 
 // ["input": List[File]] -> File
 include { step1 } from "$targetDir/step1/main.nf" params(params)
 
 // ["input1": File, "input2": File, "optional": Option[File]] -> ["output1": File] and ["output2": File]
 include { step2 } from "$targetDir/step2/main.nf" params(params)
-include { step2 as step2neo } from "$targetNeoDir/step2/main.nf"
+include { step2 as step2vdsl3 } from "$targetVdsl3Dir/step2/main.nf"
 
 // ["input": List[File]] -> File
 include { step3 } from "$targetDir/step3/main.nf" params(params)
@@ -42,7 +42,7 @@ workflow legacy_base {
   // : Channel[(String, Map[String, File], File)]
   //     * it[1]: a map with two files (named input1 and input2)
 
-  | step2neo
+  | step2vdsl3
   | view { "DEBUG4: [${it[0]}, ${it[1]}]" }
   // : Channel[(String, Map[String, File], File)]
   //     * it[1]: a map with two files (named input1 and input2)
@@ -57,7 +57,7 @@ workflow legacy_base {
   | view { "DEBUG6: [${it[0]}, ${it[1]}]" }
 }
 
-workflow legacy_and_neo {
+workflow legacy_and_vdsl3 {
   second = Channel.fromPath("${params.rootDir}/resources/lines3.txt")
 
   channelValue
@@ -67,7 +67,7 @@ workflow legacy_and_neo {
   | combine(second)
   | map{ [ it[0], [ "input1" : it[1], "input2" : it[3] ], it[2] ] }
   | view { "DEBUG3: [${it[0]}, ${it[1]}]" }
-  | step2neo
+  | step2vdsl3
   | view { "DEBUG4: [${it[0]}, ${it[1]}]" }
   | map{ [ it[0], [ "input": [ it[1].output1 , it[1].output2 ] ], it[2] ] }
   | view { "DEBUG5: [${it[0]}, ${it[1]}]" }

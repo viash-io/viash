@@ -22,5 +22,5 @@ platforms:
     variant: legacy
     publish: false
   - type: nextflow
-    id: nextflowneo
-    variant: neo
+    id: nextflowvdsl3
+    variant: vdsl3

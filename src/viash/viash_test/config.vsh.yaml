@@ -61,7 +61,7 @@ functionality:
   - name: "--nextflow_variant"
     default: "legacy"
     type: string
-    description: "Which nextflow variant to use. Options are 'legacy' and 'neo'."
+    description: "Which nextflow variant to use. Options are 'legacy' and 'vdsl3'."
   - name: "--max_threads"
     type: integer
     description: The maximum number of threads viash will use when `--parallel` during parallel tasks.

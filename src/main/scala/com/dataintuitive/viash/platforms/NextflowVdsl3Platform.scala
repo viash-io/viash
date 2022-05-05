@@ -32,10 +32,10 @@ import shapeless.syntax.singleton
 /**
  * Next-gen Platform class for generating NextFlow (DSL2) modules.
  */
-case class NextflowNeoPlatform(
+case class NextflowVdsl3Platform(
   id: String = "nextflow",
   `type`: String = "nextflow",
-  variant: String = "neo",
+  variant: String = "vdsl3",
   
   // nxf params
   directives: NextflowDirectives = NextflowDirectives(),

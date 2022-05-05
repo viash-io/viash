@@ -38,7 +38,7 @@ import io.circe.syntax._
 .functionality.authors +0= { name: "Mr. T", role: "sponsor" }
 
 # apply config mod before parsing the json
-<preparse> .platforms[.type == "nextflow"].variant := "neo"
+<preparse> .platforms[.type == "nextflow"].variant := "vdsl3"
 
 */
 
