@@ -4,7 +4,7 @@
 
 ## MAJOR CHANGES
 
-* `NextflowNeoPlatform`: The next generation Viash+Nextflow modules are here!
+* `NextflowVdsl3Platform`: The next generation Viash+Nextflow modules are here!
   See https://github.com/viash-io/viash/issues/82 for more information. You can access the previous Nextflow
   platform by using the `variant` parameter:
   ```yaml
@@ -32,7 +32,7 @@
 
 * `ConfigMods`: Expanded the DSL to allow specifying at which point to apply a config mod.
   This functionality was necessary to allow for setting fields which alter the way configs are parsed.
-  Example of when this is useful: `<preparse> .platforms[.type == "nextflow"].variant := "neo"`.
+  Example of when this is useful: `<preparse> .platforms[.type == "nextflow"].variant := "vdsl3"`.
   Updating workflow of parsing a config file is:
     - read Yaml from file
     - apply preparse config mods
