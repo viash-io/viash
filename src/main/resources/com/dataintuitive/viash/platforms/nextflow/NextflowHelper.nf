@@ -475,7 +475,7 @@ def processFactory(Map processArgs) {
   def meta = ScriptMeta.current()
 
   assert ! (procKey in meta.getProcessNames()) : 
-    "Error in module '${workflowKey}': workflow key '$procKey' is already used.\n" +
+    "Error in module '${procKey}': process key '$procKey' is already used.\n" +
     "  Make sure to specify a new key when running a Viash module multiple times.\n" +
     "  Example: myModule.run(key: 'foo') | myModule.run(key: 'bar')\n" +
     "  Expected: ! '$procKey' in ScriptMeta.current().getProcessNames()"
