@@ -338,7 +338,7 @@ case class NextflowVdsl3Platform(
       |
       |thisDefaultProcessArgs = [
       |  // key to be used to trace the process and determine output names
-      |  key: thisFunctionality.name + "_",
+      |  key: thisFunctionality.name + "_run",
       |  // fixed arguments to be passed to script
       |  args: [:],
       |  // default directives

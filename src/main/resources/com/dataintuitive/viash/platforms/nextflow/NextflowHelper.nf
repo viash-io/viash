@@ -416,6 +416,11 @@ def processProcessArgs(Map args) {
 
   // check whether 'key' exists
   assert processArgs.containsKey("key")
+
+  // if 'key' is a closure, apply it to the original key
+  if (processArgs["key"] instanceof Closure) {
+    processArgs["key"] = processArgs["key"](thisFunctionality.name)
+  }
   assert processArgs["key"] instanceof CharSequence
   assert processArgs["key"] ==~ /^[a-zA-Z_][a-zA-Z0-9_]*$/
 
