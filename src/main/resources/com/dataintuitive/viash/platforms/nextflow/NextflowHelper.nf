@@ -587,7 +587,7 @@ def processFactory(Map processArgs) {
   |script:
   |def escapeText = { s -> s.toString().replaceAll('([`"])', '\\\\\\\\\$1') }
   |def parInject = args
-  |  .findAll{key, value -> value}
+  |  .findAll{key, value -> value != null}
   |  .collect{key, value -> "export VIASH_PAR_\${key.toUpperCase()}=\\\"\${escapeText(value)}\\\""}
   |  .join("\\n")
   |$tripQuo
