@@ -1,17 +1,6 @@
-# Viash 0.6.0
-
-!! TODO: update with link to viash.io blog post.
+# Viash 0.5.11
 
 ## MAJOR CHANGES
-
-* `NextflowVdsl3Platform`: The next generation Viash+Nextflow modules are here!
-  See https://github.com/viash-io/viash/issues/82 for more information. You can access the previous Nextflow
-  platform by using the `variant` parameter:
-  ```yaml
-  - type: nextflow
-    variant: legacy
-    separate_multiple_outputs: false
-  ```
 
 * `Functionality`: Now also accepts 'inputs' and 'outputs' in addition to 'arguments'. For inputs and outputs,
   any specified arguments will have default `type: file` and `direction: input` or `direction: output` respectively.
@@ -40,6 +29,17 @@
     - convert Config back to Json
     - apply postparse config mods (original config mods)
     - convert final Json back to Config
+
+## BETA FUNCTIONALITY
+
+* `NextflowVdsl3Platform`: A beta implementation of the next-generation Viash+Nextflow platform.
+  See https://github.com/viash-io/viash/issues/82 for more information. You can access the previous Nextflow
+  platform by using the `variant` parameter:
+  ```yaml
+  - type: nextflow
+    variant: legacy
+    separate_multiple_outputs: false
+  ```
 
 ## BUG FIXES
 
