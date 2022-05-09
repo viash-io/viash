@@ -17,6 +17,7 @@
 
 package com.dataintuitive.viash.platforms
 
+import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.functionality.resources._
@@ -46,7 +47,7 @@ case class DockerPlatform(
   privileged: Boolean = false,
   run_args: OneOrMore[String] = Nil,
   target_image_source: Option[String] = None,
-  oType: String = "docker",
+  `type`: String = "docker",
 
   // setup variables
   setup: List[Requirements] = Nil,
@@ -79,7 +80,8 @@ case class DockerPlatform(
   }
 
 
-  def modifyFunctionality(functionality: Functionality): Functionality = {
+  def modifyFunctionality(config: Config): Functionality = {
+    val functionality = config.functionality
     // collect docker args
     val dockerArgs = "-i --rm" +
       port.map(" -p " + _).mkString +
@@ -115,7 +117,7 @@ case class DockerPlatform(
 
     // add extra arguments to the functionality file for each of the volumes
     val fun2 = functionality.copy(
-      arguments = functionality.arguments ::: dm.inputs
+      arguments = functionality.allArguments ::: dm.inputs
     )
 
     // create new bash script
@@ -149,7 +151,7 @@ case class DockerPlatform(
     val imageSource = target_image_source.map(des => s"""org.opencontainers.image.source="${Bash.escape(des)}"""").toList
     val labelReq = DockerRequirements(label = auth ::: descr ::: imageSource)
 
-    val requirements2 = labelReq :: requirements
+    val requirements2 = requirements ::: List(labelReq)
 
     // get dependencies
     val runCommands = requirements2.flatMap(_.dockerCommands)
@@ -294,7 +296,7 @@ case class DockerPlatform(
   private val extraMountsVar = "VIASH_EXTRA_MOUNTS"
 
   private def processDockerVolumes(functionality: Functionality) = {
-    val args = functionality.argumentsAndDummies
+    val args = functionality.allArgumentsAndDummies
 
     val preParse =
       s"""
@@ -404,7 +406,7 @@ case class DockerPlatform(
     volExtraParams: String,
     fullImageID: String,
   ) = {
-    val args = functionality.argumentsAndDummies
+    val args = functionality.allArgumentsAndDummies
 
     def chownCommand(value: String): String = {
       s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $fullImageID "$$(id -u):$$(id -g)" --silent --recursive $value"""

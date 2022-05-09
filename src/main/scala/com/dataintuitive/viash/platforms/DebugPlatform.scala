@@ -17,10 +17,12 @@
 
 package com.dataintuitive.viash.platforms
 
+import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.functionality.Functionality
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.platforms.requirements._
 import com.dataintuitive.viash.config.Version
+import com.dataintuitive.viash.helpers.Circe.One
 import com.dataintuitive.viash.wrapper.BashWrapper
 import com.dataintuitive.viash.functionality.dataobjects._
 import java.nio.file.Path
@@ -29,31 +31,32 @@ import java.nio.file.Paths
 // A platform solely for running `viash config inject` with.
 case class DebugPlatform(
   id: String = "debug",
-  oType: String = "debug",
+  `type`: String = "debug",
   path: String
 ) extends Platform {
-  def modifyFunctionality(functionality: Functionality): Functionality = {
+  def modifyFunctionality(config: Config): Functionality = {
+    val functionality = config.functionality
     if (functionality.mainScript.isEmpty) {
       throw new RuntimeException("Can't generate a debug platform when there is no script.")
     }
 
     // disable required arguments and set defaults for all arguments
     val fun0 = functionality.copy(
-      arguments = functionality.arguments.map {
-        case arg if arg.required && arg.default.isDefined => 
+      arguments = functionality.allArguments.map {
+        case arg if arg.required && arg.default.nonEmpty => 
           arg.copyDO(required = false)
-        case arg if arg.default.isEmpty && arg.example.isDefined => 
+        case arg if arg.default.isEmpty && arg.example.nonEmpty => 
           arg.copyDO(required = false, default = arg.example)
         case arg: BooleanObject if arg.default.isEmpty => 
-          arg.copyDO(required = false, default = Some(true))
+          arg.copyDO(required = false, default = One(true))
         case arg: DoubleObject if arg.default.isEmpty => 
-          arg.copyDO(required = false, default = Some(123.0))
+          arg.copyDO(required = false, default = One(123.0))
         case arg: FileObject if arg.default.isEmpty => 
-          arg.copyDO(required = false, default = Some(Paths.get("/path/to/file")))
+          arg.copyDO(required = false, default = One(Paths.get("/path/to/file")))
         case arg: IntegerObject if arg.default.isEmpty =>
-           arg.copyDO(required = false, default = Some(123))
+           arg.copyDO(required = false, default = One(123))
         case arg: StringObject if arg.default.isEmpty => 
-          arg.copyDO(required = false, default = Some("value"))
+          arg.copyDO(required = false, default = One("value"))
         case a => a
       }
     )

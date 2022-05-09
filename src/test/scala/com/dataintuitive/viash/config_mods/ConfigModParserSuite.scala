@@ -145,5 +145,18 @@ class ConfigModParserSuite extends FunSuite {
     val result = ConfigModParser.parseBlock(command)
     assert(result == expected)
   }
+
+  test("preparse prepend command") {
+    val expected = ConfigMods(List(
+      ConfigMod(
+        Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
+        Prepend("foo".asJson),
+        preparse = true
+      )
+    ))
+    val command = """<preparse> .platforms[.type == "native"].setup +0= "foo""""
+    val result = ConfigModParser.parseBlock(command)
+    assert(result == expected)
+  }
   // TODO: extend tests for more conditions
 }

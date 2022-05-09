@@ -29,7 +29,7 @@ case class ScalaScript(
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
-  oType: String = "scala_script"
+  `type`: String = "scala_script"
 ) extends Script {
   val meta = ScalaScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
@@ -37,7 +37,7 @@ case class ScalaScript(
   }
 
   def generatePlaceholder(functionality: Functionality): String = {
-    val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
     val parClassTypes = params.map { par =>
       val classType = par match {
@@ -61,29 +61,31 @@ case class ScalaScript(
       par.plainName + ": " + classType
     }
     val parSet = params.map { par =>
-      val env_name = par.VIASH_PAR
+      // val env_name = par.VIASH_PAR
+      val quo = "\"'\"'\""
+      val env_name = par.viash_par_escaped(quo, """\"""", """\\\"""")
 
       val parse = { par match {
         case o: BooleanObject if o.multiple =>
-          s""""$$$env_name".split("${o.multiple_sep}").map(_.toLowerCase.toBoolean).toList"""
+          s"""$env_name.split($quo${o.multiple_sep}$quo).map(_.toLowerCase.toBoolean).toList"""
         case o: IntegerObject if o.multiple =>
-          s""""$$$env_name".split("${o.multiple_sep}").map(_.toInt).toList"""
+          s"""$env_name.split($quo${o.multiple_sep}$quo).map(_.toInt).toList"""
         case o: DoubleObject if o.multiple =>
-          s""""$$$env_name".split("${o.multiple_sep}").map(_.toDouble).toList"""
+          s"""$env_name.split($quo${o.multiple_sep}$quo).map(_.toDouble).toList"""
         case o: FileObject if o.multiple =>
-          s""""$$$env_name".split("${o.multiple_sep}").toList"""
+          s"""$env_name.split($quo${o.multiple_sep}$quo).toList"""
         case o: StringObject if o.multiple =>
-          s""""$$$env_name".split("${o.multiple_sep}").toList"""
-        case o: BooleanObject if !o.required && o.flagValue.isEmpty => s"""Some("$$$env_name".toLowerCase.toBoolean)"""
-        case o: IntegerObject if !o.required => s"""Some("$$$env_name".toInt)"""
-        case o: DoubleObject if !o.required => s"""Some("$$$env_name".toDouble)"""
-        case o: FileObject if !o.required => s"""Some("$$$env_name")"""
-        case o: StringObject if !o.required => s"""Some("$$$env_name")"""
-        case _: BooleanObject => s""""$$$env_name".toLowerCase.toBoolean"""
-        case _: IntegerObject => s""""$$$env_name".toInt"""
-        case _: DoubleObject => s""""$$$env_name".toDouble"""
-        case _: FileObject => s""""$$$env_name""""
-        case _: StringObject => s""""$$$env_name""""
+          s"""$env_name.split($quo${o.multiple_sep}$quo).toList"""
+        case o: BooleanObject if !o.required && o.flagValue.isEmpty => s"""Some($env_name.toLowerCase.toBoolean)"""
+        case o: IntegerObject if !o.required => s"""Some($env_name.toInt)"""
+        case o: DoubleObject if !o.required => s"""Some($env_name.toDouble)"""
+        case o: FileObject if !o.required => s"""Some($env_name)"""
+        case o: StringObject if !o.required => s"""Some($env_name)"""
+        case _: BooleanObject => s"""$env_name.toLowerCase.toBoolean"""
+        case _: IntegerObject => s"""$env_name.toInt"""
+        case _: DoubleObject => s"""$env_name.toDouble"""
+        case _: FileObject => s"""$env_name"""
+        case _: StringObject => s"""$env_name"""
       }}
 
       val notFound = par match {
@@ -95,8 +97,9 @@ case class ScalaScript(
 
       notFound match {
         case Some(nf) =>
-          s"""$$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "${parse.replaceAll("\"", "\"'\"'\"")}"; else echo "$nf"; fi )"""
-        case None => parse
+          s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo "$nf"; fi )"""
+        case None => 
+          parse.replaceAll(quo, "\"") // undo quote escape as string is not part of echo
       }
     }
 
@@ -120,7 +123,7 @@ case class ScalaScript(
        |  ${metaSet.mkString(",\n  ")}
        |)
        |
-       |val resources_dir = "$$VIASH_RESOURCES_DIR"
+       |val resources_dir = "$$VIASH_META_RESOURCES_DIR"
        |""".stripMargin
   }
 }
@@ -128,7 +131,7 @@ case class ScalaScript(
 object ScalaScript extends ScriptObject {
   val commentStr = "//"
   val extension = "scala"
-  val oType = "scala_script"
+  val `type` = "scala_script"
 
   def command(script: String): String = {
     "scala -nc \"" + script + "\""

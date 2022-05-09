@@ -25,22 +25,29 @@ import io.circe.syntax._
 
 /* DSL examples
 
-# een simpele set
+# setting a value
 .functionality.version := "0.3.0"
 
-# een subset van een lijst aanpassen:
+# setting a value after subsetting a list
 .platforms[.type == "docker"].container_registry := "itx-aiv"
 
-# iets aan een lijst toevoegen:
+# add something to a list
 .functionality.authors += { name: "Mr. T", role: "sponsor" }
 
+# prepend something to a list
+.functionality.authors +0= { name: "Mr. T", role: "sponsor" }
+
+# apply config mod before parsing the json
+<preparse> .platforms[.type == "nextflow"].variant := "vdsl3"
 
 */
 
 /* BNF notation
 
 <command>    ::= <path> ":=" <json>
+               | <path> "+0=" <json>
                | <path> "+=" <json>
+               | "<preparse>" <command>
 
 <path>       ::= "root" | <path2>
 <path2>      ::= "." <identifier> <path2>?
@@ -143,11 +150,14 @@ object ConfigModParser extends RegexParsers {
   def value: Parser[Value] = path | (json ^^ { JsonValue(_) })
 
   // define commands
-  def command: Parser[ConfigMod] = path ~ (modify | add | prepend) ^^ {
-    case pt ~ comm => ConfigMod(pt, comm)
+  def command: Parser[ConfigMod] = preparse ~ path ~ (modify | add | prepend) ^^ {
+    case prep ~ pt ~ comm => ConfigMod(pt, comm, preparse = prep)
   }
   def modify: Parser[CommandExp] = ":=" ~> json ^^ { Modify(_) }
   def add: Parser[CommandExp] = "+=" ~> json ^^ { Add(_) }
   def prepend: Parser[CommandExp] = "+0=" ~> json ^^ { Prepend(_) }
   def block: Parser[ConfigMods] = repsep(command, ";") ^^ { ConfigMods(_) }
+  def preparse: Parser[Boolean] = opt("<preparse>") ^^ {
+    case found => found.isDefined
+  }
 }

@@ -21,16 +21,21 @@ import io.circe.{ACursor, FailedCursor, Json}
 
 // define command
 case class ConfigMods(commands: List[ConfigMod]) {
-  def apply(cursor: ACursor): ACursor = {
+  def apply(cursor: ACursor, preparse: Boolean): ACursor = {
     commands.foldLeft(cursor) {
-      case (cur, cmd) => cmd.apply(cur)
+      case (cur, cmd) => 
+        cmd.apply(cur, preparse)
     }
   }
 }
-case class ConfigMod(path: Path, op: CommandExp) {
-  def apply(cursor: ACursor): ACursor = {
-    val comb = Path(path.path ::: List(op))
-    comb.apply(cursor).top.get.hcursor
+case class ConfigMod(path: Path, op: CommandExp, preparse: Boolean = false) {
+  def apply(cursor: ACursor, preparse: Boolean): ACursor = {
+    if (this.preparse == preparse) {
+      val comb = Path(path.path ::: List(op))
+      comb.apply(cursor).top.get.hcursor
+    } else {
+      cursor
+    }
   }
 }
 abstract class CommandExp extends PathExp {
@@ -48,16 +53,18 @@ case class Modify(value: Json) extends CommandExp {
 }
 case class Add(value: Json) extends CommandExp {
   def command(cursor: ACursor): ACursor = {
-    cursor.withFocus{js =>
-      Json.fromValues(js.asArray.get ++ Array(value)) // TODO: will error if get fails
-    }
+    cursor.withFocus(_.mapArray(_ ++ Vector(value)))
+    // cursor.withFocus{js =>
+    //   Json.fromValues(js.asArray.get ++ Array(value)) // TODO: will error if get fails
+    // }
   }
 }
 case class Prepend(value: Json) extends CommandExp {
   def command(cursor: ACursor): ACursor = {
-    cursor.withFocus{js =>
-      Json.fromValues(Array(value) ++ js.asArray.get) // TODO: will error if get fails
-    }
+    cursor.withFocus(_.mapArray(Vector(value) ++ _))
+    // cursor.withFocus{js =>
+    //   Json.fromValues(Array(value) ++ js.asArray.get) // TODO: will error if get fails
+    // }
   }
 }
 
@@ -110,7 +117,14 @@ case object Parent extends PathExp {
 case class Attribute(string: String) extends PathExp {
   def apply(cursor: ACursor, tail: Path): ACursor = {
     val down = cursor.downField(string)
-    tail.apply(down)
+    if (down.failed) {
+      val newDown = cursor
+        .withFocus(_.mapObject(_.add(string, Json.Null)))
+        .downField(string)
+      tail(newDown)
+    } else {
+      tail(down)
+    }
   }
 }
 case class Filter(condition: Condition) extends PathExp {

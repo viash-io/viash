@@ -19,4 +19,5 @@ platforms:
   - type: docker
     image: nextflow/bash:latest
   - type: nextflow
+    variant: legacy
     publish: true

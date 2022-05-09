@@ -29,7 +29,7 @@ case class CSharpScript(
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
-  oType: String = "csharp_script"
+  `type`: String = "csharp_script"
 ) extends Script {
   val meta = CSharpScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
@@ -37,27 +37,29 @@ case class CSharpScript(
   }
 
   def generatePlaceholder(functionality: Functionality): String = {
-    val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
     val parSet = params.map { par =>
-      val env_name = par.VIASH_PAR
+      // val env_name = par.VIASH_PAR
+      val quo = "\"'\"'\""
+      val env_name = par.viash_par_escaped(quo, """\"""", """\\\"""")
 
       val parse = { par match {
         case o: BooleanObject if o.multiple =>
-          s""""$$$env_name".Split("${o.multiple_sep}").Select(x => bool.Parse(x.ToLower())).ToArray()"""
+          s"""$env_name.Split($quo${o.multiple_sep}$quo).Select(x => bool.Parse(x.ToLower())).ToArray()"""
         case o: IntegerObject if o.multiple =>
-          s""""$$$env_name".Split("${o.multiple_sep}").Select(x => Convert.ToInt32(x)).ToArray()"""
+          s"""$env_name.Split($quo${o.multiple_sep}$quo).Select(x => Convert.ToInt32(x)).ToArray()"""
         case o: DoubleObject if o.multiple =>
-          s""""$$$env_name".Split("${o.multiple_sep}").Select(x => Convert.ToDouble(x)).ToArray()"""
+          s"""$env_name.Split($quo${o.multiple_sep}$quo).Select(x => Convert.ToDouble(x)).ToArray()"""
         case o: FileObject if o.multiple =>
-          s""""$$$env_name".Split("${o.multiple_sep}").ToArray()"""
+          s"""$env_name.Split($quo${o.multiple_sep}$quo).ToArray()"""
         case o: StringObject if o.multiple =>
-          s""""$$$env_name".Split("${o.multiple_sep}").ToArray()"""
-        case _: BooleanObject => s"""bool.Parse("$$$env_name".ToLower())"""
-        case _: IntegerObject => s"""Convert.ToInt32("$$$env_name")"""
-        case _: DoubleObject => s"""Convert.ToDouble("$$$env_name")"""
-        case _: FileObject => s""""$$$env_name""""
-        case _: StringObject => s""""$$$env_name""""
+          s"""$env_name.Split($quo${o.multiple_sep}$quo).ToArray()"""
+        case _: BooleanObject => s"""bool.Parse($env_name.ToLower())"""
+        case _: IntegerObject => s"""Convert.ToInt32($env_name)"""
+        case _: DoubleObject => s"""Convert.ToDouble($env_name)"""
+        case _: FileObject => s"""$env_name"""
+        case _: StringObject => s"""$env_name"""
       }}
 
       val class_ = par match {
@@ -78,8 +80,8 @@ case class CSharpScript(
 
       val setter = notFound match {
         case Some(nf) =>
-          s"""$$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "${parse.replaceAll("\"", "\"'\"'\"")}"; else echo "$nf"; fi )"""
-        case None => parse
+          s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo "$nf"; fi )"""
+        case None => parse.replaceAll(quo, "\"")
       }
 
       s"${par.plainName} = $setter"
@@ -93,7 +95,7 @@ case class CSharpScript(
        |var meta = new {
        |  ${metaSet.mkString(",\n  ")}
        |};
-       |var resources_dir = "$$VIASH_RESOURCES_DIR";
+       |var resources_dir = "$$VIASH_META_RESOURCES_DIR";
        |""".stripMargin
   }
 }
@@ -101,7 +103,7 @@ case class CSharpScript(
 object CSharpScript extends ScriptObject {
   val commentStr = "//"
   val extension = "csx"
-  val oType = "csharp_script"
+  val `type` = "csharp_script"
 
   def command(script: String): String = {
     "dotnet script \"" + script + "\""

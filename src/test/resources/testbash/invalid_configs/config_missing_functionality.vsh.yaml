@@ -76,4 +76,5 @@ platforms:
     image: "hello-world"
     id: "hello-world"
   - type: nextflow
+    variant: legacy
     image: viash_test_bash

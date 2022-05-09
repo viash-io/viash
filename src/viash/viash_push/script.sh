@@ -89,20 +89,21 @@ fi
 if [ ! -z "$par_registry" ]; then
   command_builder+=(
     --config_mod ".platforms[.type == 'docker'].target_registry := '$par_registry'"
-    --config_mod ".platforms[.type == 'nextflow'].registry := '$par_registry'"
+    --config_mod ".platforms[.type == 'nextflow' && .variant == 'legacy'].registry := '$par_registry'"
   )
 fi
 
 if [ ! -z "$par_organization" ]; then
   command_builder+=(
     --config_mod ".platforms[.type == 'docker'].target_organization := '$par_organization'"
-    --config_mod ".platforms[.type == 'nextflow'].organization := '$par_organization'"
+    --config_mod ".platforms[.type == 'nextflow' && .variant == 'legacy'].organization := '$par_organization'"
   )
 fi
 
 if [ ! -z "$par_namespace_separator" ]; then
   command_builder+=(
-    --config_mod ".platforms[.type == 'docker' || .type == 'nextflow'].namespace_separator := '$par_namespace_separator'"
+    --config_mod ".platforms[.type == 'docker'].namespace_separator := '$par_namespace_separator'"
+    --config_mod ".platforms[.type == 'nextflow' && .variant == 'legacy'].namespace_separator := '$par_namespace_separator'"
   )
 fi
 
@@ -114,6 +115,6 @@ fi
 if [ -z "$par_log" ]; then
   "$par_viash" "${command_builder[@]}"
 else
-  rm "$par_log"
+  [ ! -f "$par_log" ] || rm "$par_log"
   "$par_viash" "${command_builder[@]}" > >(tee -a "$par_log") 2> >(tee -a "$par_log")
 fi

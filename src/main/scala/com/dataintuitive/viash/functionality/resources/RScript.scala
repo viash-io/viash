@@ -29,7 +29,7 @@ case class RScript(
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
-  oType: String = "r_script"
+  `type`: String = "r_script"
 ) extends Script {
   val meta = RScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
@@ -37,36 +37,40 @@ case class RScript(
   }
 
   def generatePlaceholder(functionality: Functionality): String = {
-    val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
     val parSet = params.map { par =>
-      val env_name = par.VIASH_PAR
+      // val env_name = par.VIASH_PAR
+      val env_name = par.viash_par_escaped("'", """\'""", """\\\'""")
 
       val parse = par match {
         case o: BooleanObject if o.multiple =>
-          s"""as.logical(strsplit(toupper('$$$env_name'), split = '${o.multiple_sep}')[[1]])"""
+          s"""as.logical(strsplit(toupper($env_name), split = '${o.multiple_sep}')[[1]])"""
         case o: IntegerObject if o.multiple =>
-          s"""as.integer(strsplit('$$$env_name', split = '${o.multiple_sep}')[[1]])"""
+          s"""as.integer(strsplit($env_name, split = '${o.multiple_sep}')[[1]])"""
         case o: DoubleObject if o.multiple =>
-          s"""as.numeric(strsplit('$$$env_name', split = '${o.multiple_sep}')[[1]])"""
+          s"""as.numeric(strsplit($env_name, split = '${o.multiple_sep}')[[1]])"""
         case o: FileObject if o.multiple =>
-          s"""strsplit('$$$env_name', split = '${o.multiple_sep}')[[1]]"""
+          s"""strsplit($env_name, split = '${o.multiple_sep}')[[1]]"""
         case o: StringObject if o.multiple =>
-          s"""strsplit('$$$env_name', split = '${o.multiple_sep}')[[1]]"""
-        case _: BooleanObject => s"""as.logical(toupper('$$$env_name'))"""
-        case _: IntegerObject => s"""as.integer($$$env_name)"""
-        case _: DoubleObject => s"""as.numeric($$$env_name)"""
-        case _: FileObject => s"""'$$$env_name'"""
-        case _: StringObject => s"""'$$$env_name'"""
+          s"""strsplit($env_name, split = '${o.multiple_sep}')[[1]]"""
+        case _: BooleanObject => s"""as.logical(toupper($env_name))"""
+        case _: IntegerObject => s"""as.integer($env_name)"""
+        case _: DoubleObject => s"""as.numeric($env_name)"""
+        case _: FileObject => s"""$env_name"""
+        case _: StringObject => s"""$env_name"""
       }
 
-      s""""${par.plainName}" = $$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$parse"; else echo NULL; fi )"""
+      s""""${par.plainName}" = $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo NULL; fi )"""
     }
     val metaSet = BashWrapper.metaFields.map{ case (env_name, script_name) =>
       s"""$script_name = "$$$env_name""""
     }
 
-    s"""# get parameters from cli
+    s"""# treat warnings as errors
+       |viash_orig_warn_ <- options(warn = 2)
+       |
+       |# get parameters from cli
        |par <- list(
        |  ${parSet.mkString(",\n  ")}
        |)
@@ -77,7 +81,11 @@ case class RScript(
        |)
        |
        |# get resources dir
-       |resources_dir = "$$VIASH_RESOURCES_DIR"
+       |resources_dir = "$$VIASH_META_RESOURCES_DIR"
+       |
+       |# restore original warn setting
+       |options(viash_orig_warn_)
+       |rm(viash_orig_warn_)
        |""".stripMargin
   }
 }
@@ -85,7 +93,7 @@ case class RScript(
 object RScript extends ScriptObject {
   val commentStr = "#"
   val extension = "R"
-  val oType = "r_script"
+  val `type` = "r_script"
 
   def command(script: String): String = {
     "Rscript \"" + script + "\""

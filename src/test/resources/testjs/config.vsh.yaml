@@ -59,4 +59,5 @@ platforms:
       - type: javascript
         npm: [ plot ]
   - type: nextflow
+    variant: legacy
     image: viash_test_js

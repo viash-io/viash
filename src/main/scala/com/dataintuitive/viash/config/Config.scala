@@ -29,6 +29,7 @@ import com.dataintuitive.viash.functionality.resources._
 import java.io.File
 import io.circe.DecodingFailure
 import io.circe.ParsingFailure
+import com.dataintuitive.viash.config_mods.ConfigMods
 
 case class Config(
   functionality: Functionality,
@@ -38,32 +39,36 @@ case class Config(
 )
 
 object Config {
-  def parse(uri: URI): Config = {
+  def parse(uri: URI, preparseMods: Option[ConfigMods]): Config = {
     val str = IO.read(uri)
-    parse(str, uri)
+    parse(str, uri, preparseMods)
   }
 
-  def parse(yamlText: String, uri: URI): Config = {
+  def parse(yamlText: String, uri: URI, preparseMods: Option[ConfigMods]): Config = {
     def errorHandler[C](e: Exception): C = {
       System.err.println(s"Error parsing '${uri}'. Details:")
       throw e
     }
 
-    val config = parser.parse(yamlText)
-      .fold(errorHandler, _.as[Config])
-      .fold(errorHandler, identity)
+    // read json
+    val js = parser.parse(yamlText).fold(errorHandler, a => a)
 
-    val fun = config.functionality
+    // apply preparse config mods
+    val modifiedJs = preparseMods match {
+      case None => js
+      case Some(cmds) => cmds(js.hcursor, preparse = true).top.get
+    }
+
+    // parse as config
+    val config = modifiedJs.as[Config].fold(errorHandler, identity)
 
     // make paths absolute
-    val resources = fun.resources.map(_.copyWithAbsolutePath(uri))
-
-    // make absolute otherwise viash test can't find resources
-    val tests = fun.tests.map(_.copyWithAbsolutePath(uri))
+    val resources = config.functionality.resources.map(_.copyWithAbsolutePath(uri))
+    val tests = config.functionality.tests.map(_.copyWithAbsolutePath(uri))
 
     // copy resources with updated paths into config and return
     config.copy(
-      functionality = fun.copy(
+      functionality = config.functionality.copy(
         resources = resources,
         tests = tests
       )
@@ -114,24 +119,12 @@ object Config {
     }
   }
 
-  // copy paste of the Config.read command
-  def readOnly(configPath: String, configMods: List[String] = Nil): Config = {
-    val (yaml, _) = readYAML(configPath)
-
-    val configUri = IO.uri(configPath)
-
-    val conf0 = parse(yaml, configUri)
-
-    // parse and apply commands
-    configMods match {
-      case Nil => conf0
-      case li => {
-        val block = ConfigModParser.parseBlock(li.mkString("; "))
-        import io.circe.syntax._
-        val js = conf0.asJson
-        val modifiedJs = block.apply(js.hcursor)
-        modifiedJs.as[Config].fold(throw _, identity)
-      }
+  // parse
+  def parseConfigMods(li: List[String] = Nil): Option[ConfigMods] = {
+    if (li.isEmpty) {
+      None
+    } else {
+      Some(ConfigModParser.parseBlock(li.mkString("; ")))
     }
   }
 
@@ -139,28 +132,32 @@ object Config {
   def read(
     configPath: String,
     platform: Option[String] = None,
-    modifyFun: Boolean = true,
+    modifyConfig: Boolean = true,
+    applyPlatform: Boolean = true,
     configMods: List[String] = Nil
   ): Config = {
 
     // read yaml
     val (yaml, optScript) = readYAML(configPath)
 
-    // read config
-    val configUri = IO.uri(configPath)
+    // read config mods
+    val confMods = parseConfigMods(configMods)
     
-    val conf0 = parse(yaml, configUri)
+    // parse yaml as config, incl preparse configmods
+    val conf0 = parse(yaml, IO.uri(configPath), confMods)
 
     // parse and apply commands
-    val conf1 = configMods match {
-      case Nil => conf0
-      case li => {
-        val block = ConfigModParser.parseBlock(li.mkString("; "))
-        import io.circe.syntax._
-        val js = conf0.asJson
-        val modifiedJs = block.apply(js.hcursor)
+    val conf1 = confMods match {
+      case None => conf0
+      case Some(cmds) => {
+        val js = encodeConfig(conf0)
+        val modifiedJs = cmds(js.hcursor, preparse = false)
         modifiedJs.as[Config].fold(throw _, identity)
       }
+    }
+
+    if (!modifyConfig) {
+      return conf1
     }
 
     // get the platform
@@ -195,11 +192,11 @@ object Config {
     val GitInfo(_, rgr, gc) = Git.getInfo(path)
 
     // check whether to modify the fun
-    val modifyFunFun: Functionality => Functionality = {
-      if (modifyFun) {
+    val modifyFunFun: Config => Functionality = {
+      if (applyPlatform) {
         pl.modifyFunctionality
       } else {
-        identity
+        (c: Config) => c.functionality
       }
     }
 
@@ -214,9 +211,12 @@ object Config {
         git_remote = rgr
       )),
       // apply platform modification to functionality
-      functionality = modifyFunFun(conf1.functionality.copy(
-        // add script (if available) to resources
-        resources = optScript.toList ::: conf1.functionality.resources
+      // .. oh boy
+      functionality = modifyFunFun(conf1.copy(
+        functionality = conf1.functionality.copy(
+          // add script (if available) to resources
+          resources = optScript.toList ::: conf1.functionality.resources
+        )
       )),
       // insert selected platform
       platform = Some(pl)

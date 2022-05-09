@@ -27,7 +27,7 @@ case class DockerRequirements(
   run: OneOrMore[String] = Nil,
   build_args: OneOrMore[String] = Nil,
   env: OneOrMore[String] = Nil,
-  oType: String = "docker"
+  `type`: String = "docker"
 ) extends Requirements {
   def installCommands: List[String] = Nil
 

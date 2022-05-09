@@ -29,14 +29,14 @@ grep -q 'meta_functionality_name: |testcsharp|' output.txt
 grep -q 'Parsed input arguments.' log.txt
 
 echo ">>> Checking whether output is correct with minimal parameters"
-./testcsharp "resource2.txt" --real_number 123.456 --whole_number=789 -s 'my$weird#string' \
+./testcsharp "resource2.txt" --real_number 123.456 --whole_number=789 -s "my\$weird#string\"\"\"'''\`" \
   > output2.txt
 
 [[ ! -f output2.txt ]] && echo "Output file could not be found!" && exit 1
 grep -q 'input: |resource2.txt|' output2.txt
 grep -q 'real_number: |123.456|' output2.txt
 grep -q 'whole_number: |789|' output2.txt
-grep -q 's: |my$weird#string|' output2.txt
+grep -q "s: |my\$weird#string\"\"\"'''\`|" output2.txt
 grep -q 'truth: |False|' output2.txt
 grep -q 'output: ||' output2.txt
 grep -q 'log: ||' output2.txt

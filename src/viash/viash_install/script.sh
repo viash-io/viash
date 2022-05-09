@@ -53,24 +53,25 @@ function clean_up {
 trap clean_up EXIT
 
 
-if [ $par_tag == "develop" ]; then
+if [[ "$par_tag" == "develop" || "$par_tag" == ^@.*$ ]]; then
+  used_tag=${par_tag#@}
   if ! command -v sbt &> /dev/null; then
       echo "sbt needs to be installed to build from source"
       exit
   fi
 
   # Download Viash helper scripts
-  echo "> Downloading Viash source code @$par_tag"
-  curl -L -s "https://github.com/viash-io/viash/archive/refs/heads/$par_tag.zip" -o "$build_dir/$par_tag.zip"
-  unzip -q "$build_dir/$par_tag.zip" -d "$build_dir"
+  echo "> Downloading Viash source code @$used_tag"
+  curl -L -s "https://github.com/viash-io/viash/archive/refs/heads/$used_tag.zip" -o "$build_dir/$used_tag.zip"
+  unzip -q "$build_dir/$used_tag.zip" -d "$build_dir"
 
   # Build Viash
   echo "> Building Viash from source"
-  cd "$build_dir/viash-$par_tag"
+  cd "$build_dir/viash-$used_tag"
   ./configure
   make bin/viash
   cd "$REPO_ROOT"
-  cp "$build_dir/viash-$par_tag/bin/viash" "$par_bin"
+  cp "$build_dir/viash-$used_tag/bin/viash" "$par_bin"
 else
   # Download Viash
   echo "> Downloading Viash v$par_tag under $par_bin"
@@ -101,6 +102,9 @@ if [ ! -z "$par_config_mod" ]; then
 fi
 if [ ! -z "$par_target_image_source" ]; then
   extra_args+=( -c ".functionality.arguments[.name == '--target_image_source'].default := '$par_target_image_source'" )
+fi
+if [ ! -z "$par_target_image_source" ]; then
+  extra_args+=( -c ".functionality.arguments[.name == '--nextflow_variant'].default := '$par_nextflow_variant'" )
 fi
 
 

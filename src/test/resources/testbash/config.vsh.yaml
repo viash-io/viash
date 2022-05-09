@@ -84,6 +84,9 @@ platforms:
     image: "busybox"
     id: "busybox"
   - type: nextflow
+    id: "nextflowlegacy"
+    variant: legacy
     image: ubuntu
     publish: true
     tag: xenial
+  - type: nextflow

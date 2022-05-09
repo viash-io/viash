@@ -18,7 +18,7 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
   private val tempFolStr = temporaryFolder.toString
 
   // parse functionality from file
-  private val functionality = Config.read(configFile, modifyFun = false).functionality
+  private val functionality = Config.read(configFile, applyPlatform = false).functionality
 
   // check whether executable was created
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
@@ -50,7 +50,7 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
 
     val stripAll = (s : String) => s.replaceAll(raw"\s+", " ").trim
 
-    functionality.arguments.foreach(arg => {
+    functionality.allArguments.foreach(arg => {
       for (opt <- arg.alternatives; value <- opt)
         assert(stdout.contains(value))
       for (description <- arg.description) {

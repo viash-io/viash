@@ -25,4 +25,4 @@ functionality:
 platforms:
 - type: native
 - type: docker
-  image: nextflow/nextflow
+  image: nextflow/nextflow:21.10.6

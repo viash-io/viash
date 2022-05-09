@@ -1,3 +1,70 @@
+# Viash 0.5.11
+
+## MAJOR CHANGES
+
+* `Functionality`: Now also accepts 'inputs' and 'outputs' in addition to 'arguments'. For inputs and outputs,
+  any specified arguments will have default `type: file` and `direction: input` or `direction: output` respectively.
+
+## MINOR CHANGES
+
+* `DockerPlatform`: Move description labels to the end of the Dockerfile to improve cross-component caching.
+
+* `Functionality`: Arguments where `.multiple` is `true` can now have lists as `default` and `example`.
+
+* `viash_build`: Added unit test for this component.
+
+* `viash_test`: Added unit test for this component.
+
+* `PythonRequirements`: Allow upgrading dependencies. Example: `[ type: python. pypi: anndata, upgrade: true ]`.
+
+* `NextflowLegacyPlatform`: Remove annoying messages when building Nxf modules.
+
+* `ConfigMods`: Expanded the DSL to allow specifying at which point to apply a config mod.
+  This functionality was necessary to allow for setting fields which alter the way configs are parsed.
+  Example of when this is useful: `<preparse> .platforms[.type == "nextflow"].variant := "vdsl3"`.
+  Updating workflow of parsing a config file is:
+    - read Yaml from file
+    - apply preparse config mods
+    - parse resulting Json as Config, thereby instantiating default values etc.
+    - convert Config back to Json
+    - apply postparse config mods (original config mods)
+    - convert final Json back to Config
+
+## BETA FUNCTIONALITY
+
+* `NextflowVdsl3Platform`: A beta implementation of the next-generation Viash+Nextflow platform.
+  See https://github.com/viash-io/viash/issues/82 for more information. You can access the previous Nextflow
+  platform by using the `variant` parameter:
+  ```yaml
+  - type: nextflow
+    variant: legacy
+    separate_multiple_outputs: false
+  ```
+
+## BUG FIXES
+
+* `viash_build` and `viash_test`: The `query_name` and `query_namespace` arguments were switched around. These arguments are now passed correctly.
+
+* `BashScript`, `JavaScriptScript`, `PythonScript`, `RScript`: Correctly escape `'` (#113). Update unit tests accordingly.
+
+* `CSharpScript`, `ScalaScript`: Correctly escape `"` (#113). Update unit tests accordingly.
+
+* `viash_build`, `viash_test`, `viash_push`: Don't try to remove log files if they don't exist.
+
+## INTERNAL CHANGES
+
+* `DataObject`: 
+  - Renamed `otype` to `flags`.
+  - Renamed `oType` to `type`
+  - Deprecated `tag` (unused feature).
+
+* All abstract / inherited classes: Renamed `oType` to `type`.
+
+## DEPRECATION
+
+* `Functionality`: Deprecated `function_type` and `add_resources_to_path`. These should be 
+  unused features, by now.
+  
 # Viash 0.5.10.1
 
 ## BUG FIX

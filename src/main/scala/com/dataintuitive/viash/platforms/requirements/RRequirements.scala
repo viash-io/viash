@@ -31,7 +31,7 @@ case class RRequirements(
   url: OneOrMore[String] = Nil,
   script: OneOrMore[String] = Nil,
   bioc_force_install: Boolean = false,
-  oType: String = "r"
+  `type`: String = "r"
 ) extends Requirements {assert(script.forall(!_.contains("'")))
 
   def installCommands: List[String] = {

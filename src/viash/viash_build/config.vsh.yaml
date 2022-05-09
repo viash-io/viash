@@ -57,6 +57,10 @@ functionality:
     example: "_"
     type: string
     description: The separator to use between the component name and namespace as the image name of a Docker container.
+  - name: "--nextflow_variant"
+    default: "vdsl3"
+    type: string
+    description: "Which nextflow variant to use. Options are 'legacy' and 'vdsl3'."
   - name: "--max_threads"
     type: integer
     description: The maximum number of threads viash will use when `--parallel` during parallel tasks.
@@ -86,5 +90,9 @@ functionality:
   resources:
     - type: bash_script
       path: script.sh
+  tests:
+    - type: bash_script
+      path: run_test.sh
+    - path: ../../test/resources/testns/src
 platforms:
 - type: native

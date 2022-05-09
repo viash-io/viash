@@ -29,14 +29,14 @@ grep -q 'meta_functionality_name: |testscala|' output.txt
 grep -q 'Parsed input arguments.' log.txt
 
 echo ">>> Checking whether output is correct with minimal parameters"
-./testscala "resource2.txt" --real_number 123.456 --whole_number=789 -s 'my$weird#string' \
+./testscala "resource2.txt" --real_number 123.456 --whole_number=789 -s "my\$weird#string\"\"\"'''\`@" \
   > output2.txt
 
 [[ ! -f output2.txt ]] && echo "Output file could not be found!" && exit 1
 grep -q 'input: |Some(resource2.txt)|' output2.txt
 grep -q 'real_number: |123.456|' output2.txt
 grep -q 'whole_number: |789|' output2.txt
-grep -q 's: |my$weird#string|' output2.txt
+grep -q "s: |my\$weird#string\"\"\"'''\`@|" output2.txt
 grep -q 'truth: |false|' output2.txt
 grep -q 'output: |None|' output2.txt
 grep -q 'log: |None|' output2.txt

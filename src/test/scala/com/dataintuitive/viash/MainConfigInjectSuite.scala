@@ -19,7 +19,7 @@ class MainConfigInjectSuite extends FunSuite with BeforeAndAfterAll {
     
     // check source file exists
     val srcConfigFile = srcPath.resolve("config.vsh.yaml")
-    val functionality = Config.read(srcConfigFile.toString(), modifyFun = false).functionality
+    val functionality = Config.read(srcConfigFile.toString(), applyPlatform = false).functionality
     assert(srcConfigFile.toFile().exists, "Check source config exists")
 
     // copy to destination

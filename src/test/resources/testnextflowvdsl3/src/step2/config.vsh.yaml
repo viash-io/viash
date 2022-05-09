@@ -1,0 +1,63 @@
+functionality:
+  name: step2
+  description: |
+    This is the description that never ends.
+      §1234567890'^
+      °+"*ç%&/()=?`$"""'''@\\//\/
+    \n\r\t\s\
+  usage: |
+    This is the description that never ends.
+      §1234567890'^
+      °+"*ç%&/()=?`$"""'''@\\//\/
+    \n\r\t\s\
+  inputs:
+    - name: "--input1"
+      example: input1.txt
+      required: true
+    - name: "--input2"
+      required: true
+      example: input2.txt
+    - name: "--optional"
+      required: false
+      example: optional.txt
+  outputs:
+    - name: "--output1"
+      required: true
+      example: output1.txt
+    - name: "--output2"
+      required: true
+      example: output2.txt
+  arguments:
+    - name: "--default_arg"
+      type: string
+      description: |
+        This is the description that never ends.
+          §1234567890'^
+          °+"*ç%&/()=?`$"""'''@\\//\/
+        \n\r\t\s\
+      # TODO: fix single quotes
+      default: |
+        This is the description that never ends.
+          §1234567890^
+          °+"*ç%&/()=?`$"""@\\//\/
+        \n\r\t\s\
+    - name: "--example"
+      type: string
+      example: |
+        This is the description that never ends.
+          §1234567890'^
+          °+"*ç%&/()=?`$"""'''@\\//\/
+        \n\r\t\s\
+  resources:
+    - type: bash_script
+      path: script.sh
+platforms:
+  - type: native
+  - type: docker
+    image: nextflow/bash:latest
+  - type: nextflow
+    variant: legacy
+    publish: true
+  - type: nextflow
+    id: nextflowvdsl3
+    variant: vdsl3

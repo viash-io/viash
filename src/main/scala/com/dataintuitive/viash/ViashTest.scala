@@ -17,20 +17,19 @@
 
 package com.dataintuitive.viash
 
-import functionality._
-import dataobjects.{FileObject, Output}
-import platforms._
-import resources.{BashScript, Script}
-
 import sys.process.{Process, ProcessLogger}
-import java.io.{ByteArrayOutputStream, File, FileWriter, PrintWriter}
+import java.io.{ByteArrayOutputStream, FileWriter, PrintWriter}
 import java.nio.file.{Files, Path, Paths}
-import com.dataintuitive.viash.config.{Config, Version}
-import helpers.IO
-
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import scala.util.Random
+
+import config.{Config, Version}
+import functionality.dataobjects.{FileObject, Output}
+import functionality.resources.{BashScript, Script}
+import platforms.NativePlatform
+import helpers.IO
+import helpers.Circe.{OneOrMore, One, More}
 
 object ViashTest {
   case class TestOutput(name: String, exitValue: Int, output: String, logFile: String, duration: Long)
@@ -95,6 +94,7 @@ object ViashTest {
       if (!quiet) println("Cleaning up temporary directory")
       IO.deleteRecursively(dir)
     }
+    // TODO: remove container
 
     if (anyErrors && !quiet) {
       throw new RuntimeException(errorMessage)
@@ -110,7 +110,7 @@ object ViashTest {
     val consoleLine = "===================================================================="
 
     // build regular executable
-    val buildFun = platform.modifyFunctionality(fun)
+    val buildFun = platform.modifyFunctionality(config)
     val buildDir = dir.resolve("build_executable")
     Files.createDirectories(buildDir)
     IO.writeResources(buildFun.resources, buildDir)
@@ -157,7 +157,7 @@ object ViashTest {
     }
 
     // generate executable for native platform
-    val exe = NativePlatform().modifyFunctionality(fun).resources.head
+    val exe = NativePlatform().modifyFunctionality(config).resources.head
 
     // fetch tests
     val tests = fun.tests
@@ -171,14 +171,18 @@ object ViashTest {
         val dirArg = FileObject(
           name = "dir",
           direction = Output,
-          default = Some(dir)
+          default = One(dir)
         )
         // generate bash script for test
-        val funOnlyTest = platform.modifyFunctionality(fun.copy(
-          arguments = Nil,
-          dummy_arguments = List(dirArg),
-          resources = List(test),
-          set_wd_to_resources_dir = true
+        val funOnlyTest = platform.modifyFunctionality(config.copy(
+          functionality = config.functionality.copy(
+            inputs = Nil,
+            outputs = Nil,
+            arguments = Nil,
+            dummy_arguments = List(dirArg),
+            resources = List(test),
+            set_wd_to_resources_dir = true
+          )
         ))
         val testBash = BashScript(
           dest = Some(test.filename),

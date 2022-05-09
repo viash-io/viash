@@ -25,7 +25,7 @@ case class JavaScriptRequirements(
   git: OneOrMore[String] = Nil,
   github: OneOrMore[String] = Nil,
   url: OneOrMore[String] = Nil,
-  oType: String = "javascript"
+  `type`: String = "javascript"
 ) extends Requirements {
   private def generateCommands(prefix: String, values: List[String]) = {
     values.toList match {

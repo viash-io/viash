@@ -20,17 +20,19 @@ package com.dataintuitive.viash.functionality
 import dataobjects._
 import resources._
 import com.dataintuitive.viash.config.Version
+import io.circe.generic.extras._
 
 case class Functionality(
   name: String,
   namespace: Option[String] = None,
   version: Option[Version] = None,
   authors: List[Author] = Nil,
+  inputs: List[DataObject[_]] = Nil,
+  outputs: List[DataObject[_]] = Nil,
   arguments: List[DataObject[_]] = Nil,
   resources: List[Resource] = Nil,
   description: Option[String] = None,
   usage: Option[String] = None,
-  function_type: Option[FunctionType] = None,
   tests: List[Resource] = Nil,
   info: Map[String, String] = Map.empty[String, String],
 
@@ -40,16 +42,25 @@ case class Functionality(
   // setting this to true will change the working directory
   // to the resources directory when running the script
   // this is used when running `viash test`.
-  set_wd_to_resources_dir: Boolean = false,
-
-  // whether or not to add the resource dir to the path
-  add_resources_to_path: Boolean = false
+  set_wd_to_resources_dir: Boolean = false
 ) {
+
+  // note that in the Functionality companion object, defaults gets added to inputs and outputs *before* actually 
+  // parsing the configuration file with Circe. This is done in the .prepare step.
+  inputs.foreach {
+    input => require(input.direction == Input, s"input ${input.name} can only have input as direction")
+  }
+  outputs.foreach {
+    output => require(output.direction == Output, s"input ${output.name} can only have output as direction")
+  }
+
+  // Combine inputs, outputs and arguments into one combined list
+  def allArguments = inputs ::: outputs ::: arguments
 
   // check whether there are not multiple positional arguments with multiplicity >1
   // and if there is one, whether its position is last
   {
-    val positionals = arguments.filter(a => a.otype == "")
+    val positionals = allArguments.filter(a => a.flags == "")
     val multiix = positionals.indexWhere(_.multiple)
 
     require(
@@ -62,7 +73,7 @@ case class Functionality(
   require(name.matches("^[A-Za-z][A-Za-z0-9_]*$"), message = "functionality name must begin with a letter and consist only of alphanumeric characters or underscores.")
 
   // check arguments
-  arguments.foreach { arg =>
+  allArguments.foreach { arg =>
     require(arg.name.matches("^(-?|--|\\$)[A-Za-z][A-Za-z0-9_]*$"), message = s"argument $arg.name: name must begin with a letter and consist only of alphanumeric characters or underscores.")
     (arg.name :: arg.alternatives).foreach { argName =>
       require(!Functionality.reservedParameters.contains(argName), message = s"argument $argName: name is reserved by viash")
@@ -78,7 +89,7 @@ case class Functionality(
 
   def mainCode: Option[String] = mainScript.flatMap(_.read)
 
-  def argumentsAndDummies: List[DataObject[_]] = arguments ::: dummy_arguments
+  def allArgumentsAndDummies: List[DataObject[_]] = allArguments ::: dummy_arguments
 }
 
 object Functionality {
