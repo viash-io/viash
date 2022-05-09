@@ -44,7 +44,7 @@ class EscapingNativeTest extends FunSuite with BeforeAndAfterAll {
   }
 
   // define character sequences like it would be regex'ed in sed
-  val escapeCharacters = List("$", raw"\\", "\"", "`", "'", raw"\n")
+  val escapeCharacters = List("$", raw"\\", "\"", "`", "'", raw"\\\\", "\"\"", "''", "``", raw"\\\\\\", "\"\"\"", "```", "'''", raw"\n")
 
   var i = 0
   for (chars <- escapeCharacters) {
