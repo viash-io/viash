@@ -23,7 +23,7 @@ import com.dataintuitive.viash.Main
 
 object Helper {
   def nameAndVersion(functionality: Functionality): String = {
-    functionality.name + functionality.version.map(" " + _).getOrElse(" <not versioned>")
+    functionality.name + functionality.version.map(" " + _).getOrElse("")
   }
 
   def generateHelp(functionality: Functionality, params: List[DataObject[_]]): List[String] = {

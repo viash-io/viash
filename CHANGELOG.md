@@ -1,3 +1,10 @@
+# Viash 0.5.12
+
+## MINOR CHANGES
+
+* `--help`: Don't print "my_component <not versioned>" when no version is specified, 
+  but instead simply "my_component".
+  
 # Viash 0.5.11
 
 ## MAJOR CHANGES
