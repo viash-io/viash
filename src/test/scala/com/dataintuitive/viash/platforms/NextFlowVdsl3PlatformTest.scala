@@ -22,10 +22,11 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   private val targetPath = Paths.get(tempFolStr, "target").toFile.toString
 
   def outputFileMatchChecker(output: String, headerKeyword: String, fileContentMatcher: String) = {
-    val lines = output.split("\n").find(_.contains(headerKeyword))
+    val DebugRegex = s"$headerKeyword: \\[foo, (.*)\\]".r
+
+    val lines = output.split("\n").find(DebugRegex.findFirstIn(_).isDefined)
 
     assert(lines.isDefined)
-    val DebugRegex = s"$headerKeyword: \\[foo, (.*)\\]".r
     val DebugRegex(path) = lines.get
 
     val src = Source.fromFile(path)
@@ -145,7 +146,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     ).!!
 
     outputFileMatchChecker(output, "DEBUG4", "^11 .*$")
-    outputFileMatchChecker(output, "process 'step3_' output tuple", "^11 .*$")
+    outputFileMatchChecker(output, "process 'step3[^']*' output tuple", "^11 .*$")
 
   }
 
