@@ -19,11 +19,32 @@ package com.dataintuitive.viash.functionality
 
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
-import cats.syntax.functor._ // for .widen
+import cats.syntax.functor._
+
+import java.nio.file.Paths // for .widen
 
 package object dataobjects {
 
   import com.dataintuitive.viash.helpers.Circe._
+
+  implicit val encodeDouble: Encoder[Double] = Encoder.instance {
+      value => 
+        if (value.isPosInfinity) {
+          Json.fromString("+Infinity")
+        } else {
+          Json.fromDoubleOrString(value)
+        }
+    }
+  implicit val decodeDouble: Decoder[Double] = 
+    io.circe.Decoder.decodeDouble or
+    Decoder.instance {
+      cursor => cursor.value.as[String].map(_.toLowerCase()) match {
+        case Right("+inf" | "+infinity" | "positiveinfinity" | "positiveinf") => Right(Double.PositiveInfinity)
+        case Right("-inf" | "-infinity" | "negativeinfinity" | "negativeinf") => Right(Double.NegativeInfinity)
+        case Right("nan") => Right(Double.NaN)
+        case a => a.map(_.toDouble)
+      }
+    }
 
   // encoder and decoder for java.io.File
   implicit val encodeFile: Encoder[java.io.File] = Encoder.instance {
@@ -33,9 +54,17 @@ package object dataobjects {
     cursor => cursor.value.as[String].map(new java.io.File(_))
   }
 
+  // encoder and decoder for java.nio.file.Path
+  implicit val encodePath: Encoder[java.nio.file.Path] = Encoder.instance {
+    file => Json.fromString(file.toString)
+  }
+  implicit val decodePath: Decoder[java.nio.file.Path] = Decoder.instance {
+    cursor => cursor.value.as[String].map(Paths.get(_))
+  }
+
   // encoder and decoder for direction
   implicit val encodeDirection: Encoder[Direction] = Encoder.instance {
-    dir => Json.fromString(dir.toString)
+    dir => Json.fromString(dir.toString.toLowerCase())
   }
   implicit val decodeDirection: Decoder[Direction] = Decoder.instance {
     cursor =>
@@ -58,7 +87,7 @@ package object dataobjects {
 
   implicit def encodeDataObject[A <: DataObject[_]]: Encoder[A] = Encoder.instance {
     par =>
-      val typeJson = Json.obj("type" → Json.fromString(par.oType))
+      val typeJson = Json.obj("type" → Json.fromString(par.`type`))
       val objJson = par match {
         case s: StringObject => encodeStringObject(s)
         case s: IntegerObject => encodeIntegerObject(s)

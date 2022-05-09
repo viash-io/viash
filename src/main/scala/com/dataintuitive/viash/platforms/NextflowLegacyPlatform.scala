@@ -17,36 +17,47 @@
 
 package com.dataintuitive.viash.platforms
 
+import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.functionality.dataobjects._
 import com.dataintuitive.viash.config.Version
 import com.dataintuitive.viash.helpers.{Docker, Bash}
+import com.dataintuitive.viash.helpers.Circe._
 
 /**
  * / * Platform class for generating NextFlow (DSL2) modules.
  */
-case class NextFlowPlatform(
+case class NextflowLegacyPlatform(
   id: String = "nextflow",
   image: Option[String],
   tag: Option[Version] = None,
   version: Option[Version] = None,
   registry: Option[String] = None,
+  organization: Option[String] = None,
   namespace_separator: String = "_",
   executor: Option[String] = None,
   publish: Option[Boolean] = None,
   per_id: Option[Boolean] = None,
+  separate_multiple_outputs: Boolean = true,
   path: Option[String] = None,
   label: Option[String] = None,
-  labels: List[String] = Nil,
+  labels: OneOrMore[String] = Nil,
   stageInMode: Option[String] = None,
-  oType: String = "nextflow"
-) extends Platform {
+  directive_cpus: Option[Integer] = None,
+  directive_max_forks: Option[Integer] = None,
+  directive_time: Option[String] = None,
+  directive_memory: Option[String] = None,
+  directive_cache: Option[String] = None,
+  `type`: String = "nextflow",
+  variant: String = "legacy"
+) extends NextflowPlatform {
   assert(version.isEmpty, "nextflow platform: attribute 'version' is deprecated")
 
   private val nativePlatform = NativePlatform(id = id)
 
-  def modifyFunctionality(functionality: Functionality): Functionality = {
+  def modifyFunctionality(config: Config): Functionality = {
+    val functionality = config.functionality
     import NextFlowUtils._
     implicit val fun: Functionality = functionality
 
@@ -56,6 +67,7 @@ case class NextFlowPlatform(
     val imageInfo = Docker.getImageInfo(
       functionality = Some(functionality),
       registry = registry,
+      organization = organization,
       name = image,
       tag = tag.map(_.toString),
       namespaceSeparator = namespace_separator
@@ -68,17 +80,9 @@ case class NextFlowPlatform(
       case _ => fname
     }
 
-    val allPars = functionality.arguments
+    val allPars = functionality.allArguments
 
-    def inputFileExtO = allPars
-      .filter(_.isInstanceOf[FileObject])
-      .find(_.direction == Input)
-      .flatMap(_.default.map(_.toString.split('.').last))
-
-    def inputs = allPars
-      .filter(_.isInstanceOf[FileObject])
-      .count(_.direction == Input)
-    def outputs = allPars
+    val outputs = allPars
       .filter(_.isInstanceOf[FileObject])
       .count(_.direction == Output)
 
@@ -100,37 +104,37 @@ case class NextFlowPlatform(
       * the module standalone as well as in a pipeline.
       */
     val namespacedParameters: List[ConfigTuple] = {
-      functionality.arguments.flatMap { dataObject => (dataObject.required, dataObject.default) match {
+      functionality.allArguments.flatMap { dataObject => (dataObject.required, dataObject.default.toList) match {
         case (true, _) =>
-          println(s"> ${dataObject.plainName} in $fname is set to be required.")
-          println(s"> --${dataObject.plainName} <...> has to be specified when running this module standalone.")
+          // println(s"> ${dataObject.plainName} in $fname is set to be required.")
+          // println(s"> --${dataObject.plainName} <...> has to be specified when running this module standalone.")
           Some(
             namespacedValueTuple(
               dataObject.plainName.replace("-", "_"),
               "viash_no_value"
             )(fun)
           )
-        case (false, Some(x)) =>
-          Some(
-            namespacedValueTuple(
-              dataObject.plainName.replace("-", "_"),
-              Bash.escape(x.toString, backtick = false, newline = true, quote = true)
-            )(fun)
-          )
-        case (false, None) =>
+        case (false, Nil) =>
           Some(
             namespacedValueTuple(
               dataObject.plainName.replace("-", "_"),
               "no_default_value_configured"
             )(fun)
           )
+        case (false, li) =>
+          Some(
+            namespacedValueTuple(
+              dataObject.plainName.replace("-", "_"),
+              Bash.escape(li.mkString(dataObject.multiple_sep.toString), backtick = false, newline = true, quote = true)
+            )(fun)
+          )
       }}
     }
 
     val argumentsAsTuple: List[ConfigTuple] =
-      if (functionality.arguments.nonEmpty) {
+      if (functionality.allArguments.nonEmpty) {
         List(
-          "arguments" → NestedValue(functionality.arguments.map(dataObjectToConfigTuple(_)))
+          "arguments" → NestedValue(functionality.allArguments.map(dataObjectToConfigTuple(_)))
         )
       } else {
         Nil
@@ -141,11 +145,12 @@ case class NextFlowPlatform(
       "container" → imageInfo.name,
       "containerTag" -> imageInfo.tag,
       "containerRegistry" -> imageInfo.registry.getOrElse(""),
+      "containerOrganization" -> imageInfo.organization.getOrElse(""),
       "command" → executionCode
     )
 
     // fetch test information
-    val tests = functionality.tests.getOrElse(Nil)
+    val tests = functionality.tests
     val testPaths = tests.map(test => test.path.getOrElse("/dev/null"))
     val testScript: List[String] = {
         tests.flatMap{
@@ -170,7 +175,7 @@ case class NextFlowPlatform(
      */
     val asNestedTuples: List[ConfigTuple] = List(
       "docker.enabled" → true,
-      "docker.runOptions" → "-i -v ${baseDir}:${baseDir}",
+      "def viash_temp = System.getenv(\"VIASH_TEMP\") ?: \"/tmp/\"\n  docker.runOptions" → "-i -v ${baseDir}:${baseDir} -v $viash_temp:$viash_temp",
       "process.container" → "dataintuitive/viash",
       "params" → NestedValue(
         namespacedParameters :::
@@ -199,26 +204,31 @@ case class NextFlowPlatform(
         |params.publishDir = "./"
         |""".stripMargin
 
-    val setup_main_outputFilters:String =
-      allPars
-        .filter(_.isInstanceOf[FileObject])
-        .filter(_.direction == Output)
-        .map(par =>
-          s"""
-            |// A process that filters out ${par.plainName} from the output Map
-            |process filter${par.plainName.capitalize} {
-            |
-            |  input:
-            |    tuple val(id), val(input), val(_params)
-            |  output:
-            |    tuple val(id), val(output), val(_params)
-            |  when:
-            |    input.keySet().contains("${par.plainName}")
-            |  exec:
-            |    output = input["${par.plainName}"]
-            |
-            |}""".stripMargin
+    val setup_main_outputFilters: String = {
+      if (separate_multiple_outputs) {
+        allPars
+          .filter(_.isInstanceOf[FileObject])
+          .filter(_.direction == Output)
+          .map(par =>
+            s"""
+               |// A process that filters out ${par.plainName} from the output Map
+               |process filter${par.plainName.capitalize} {
+               |
+               |  input:
+               |    tuple val(id), val(input), val(_params)
+               |  output:
+               |    tuple val(id), val(output), val(_params)
+               |  when:
+               |    input.keySet().contains("${par.plainName}")
+               |  exec:
+               |    output = input["${par.plainName}"]
+               |
+               |}""".stripMargin
           ).mkString("\n")
+      } else {
+        ""
+      }
+    }
 
     val setup_main_check =
       s"""
@@ -242,17 +252,31 @@ case class NextFlowPlatform(
         |  return str.replaceAll('\\\\\\\\', '\\\\\\\\\\\\\\\\').replaceAll("\\"", "\\\\\\\\\\"").replaceAll("\\n", "\\\\\\\\n").replaceAll("`", "\\\\\\\\`")
         |}
         |
-        |def renderCLI(command, arguments) {
-        |
-        |  def argumentsList = arguments.collect{ it ->
-        |    (it.otype == "")
-        |      ? "\\'" + escape(it.value) + "\\'"
-        |      : (it.type == "boolean_true")
-        |        ? it.otype + it.name
-        |        : (it.value == "no_default_value_configured")
-        |          ? ""
-        |          : it.otype + it.name + " \\'" + escape((it.value in List && it.multiple) ? it.value.join(it.multiple_sep): it.value) + "\\'"
+        |def renderArg(it) {
+        |  if (it.flags == "") {
+        |    return "\'" + escape(it.value) + "\'"
+        |  } else if (it.type == "boolean_true") {
+        |    if (it.value.toLowerCase() == "true") {
+        |      return it.flags + it.name
+        |    } else {
+        |      return ""
+        |    }
+        |  } else if (it.type == "boolean_false") {
+        |    if (it.value.toLowerCase() == "true") {
+        |      return ""
+        |    } else {
+        |      return it.flags + it.name
+        |    }
+        |  } else if (it.value == "no_default_value_configured") {
+        |    return ""
+        |  } else {
+        |    def retVal = it.value in List && it.multiple ? it.value.join(it.multiple_sep): it.value
+        |    return it.flags + it.name + " \'" + escape(retVal) + "\'"
         |  }
+        |}
+        |
+        |def renderCLI(command, arguments) {
+        |  def argumentsList = arguments.collect{renderArg(it)}.findAll{it != ""}
         |
         |  def command_line = command + argumentsList
         |
@@ -260,11 +284,12 @@ case class NextFlowPlatform(
         |}
         |
         |def effectiveContainer(processParams) {
+        |  def _organization = params.containsKey("containerOrganization") ? params.containerOrganization : processParams.containerOrganization
         |  def _registry = params.containsKey("containerRegistry") ? params.containerRegistry : processParams.containerRegistry
         |  def _name = processParams.container
         |  def _tag = params.containsKey("containerTag") ? params.containerTag : processParams.containerTag
         |
-        |  return (_registry == "" ? "" : _registry + "/") + _name + ":" + _tag
+        |  return (_registry == "" ? "" : _registry + "/") + (_organization == "" ? "" : _organization + "/") + _name + ":" + _tag
         |}
         |
         |// Convert the nextflow.config arguments list to a List instead of a LinkedHashMap
@@ -277,9 +302,7 @@ case class NextFlowPlatform(
         |
         |""".stripMargin
 
-    val setup_main_outFromIn = functionality.function_type match {
-      // Out format is different from in format
-      case Some(Convert) | Some(Join) | Some(ToDir) | None =>
+    val setup_main_outFromIn = 
         s"""
           |// Use the params map, create a hashmap of the filenames for output
           |// output filename is <sample>.<method>.<arg_name>[.extension]
@@ -304,41 +327,17 @@ case class NextFlowPlatform(
           |      // Unless the output argument is explicitly specified on the CLI
           |      def newValue =
           |        (it.value == "viash_no_value")
-          |          ? "$fname" + "." + extOrName
+          |          ? "$fname." + it.name + "." + extOrName
           |          : it.value
           |      def newName =
           |        (id != "")
           |          ? id + "." + newValue
-          |          : newValue
+          |          : it.name + newValue
           |      it + [ value : newName ]
           |    }
           |
           |}
           |""".stripMargin
-      case Some(AsIs) =>
-        """
-          |// Only perform a selection on the appropriate output arguments of type `file`.
-          |def outFromIn(_params) {
-          |
-          |  def id = _params.id
-          |
-          |  _params
-          |    .arguments
-          |    .findAll{ it -> it.type == "file" && it.direction == "Output" }
-          |
-          |}
-          |""".stripMargin
-      case _ =>
-        """
-          |def outFromIn(inputStr) {
-          |
-          |  println(">>> Having a hard time generating an output file name.")
-          |  println(">>> Is the function_type attribute filled out?")
-          |
-          |  return "output"
-          |}
-          |""".stripMargin
-    }
 
     val setup_main_overrideIO =
       """
@@ -385,6 +384,10 @@ case class NextFlowPlatform(
         |}
         |""".stripMargin
 
+    def formatDirective(id: String, value: Option[String], delim: String): String = {
+      value.map(v => s"\n  $id $delim$v$delim").getOrElse("")
+    }
+
     /**
      * Some (implicit) conventions:
      * - `params.output/` is where the output data is published
@@ -409,12 +412,14 @@ case class NextFlowPlatform(
         case _ => ""
       }
 
-      val labelsString = labels.map(l => s"  label '$l'").mkString("\n")
-
-      val labelString = label match {
-        case Some(str) => s"  label '$str'"
-        case _ => ""
-      }
+      val directives =
+        labels.map(l => formatDirective("label", Some(l), "'")).mkString +
+          formatDirective("label", label, "'") +
+          formatDirective("cpus", directive_cpus.map(_.toString), "") +
+          formatDirective("maxForks", directive_max_forks.map(_.toString), "") +
+          formatDirective("time", directive_time, "'") +
+          formatDirective("memory", directive_memory, "'") +
+          formatDirective("cache", directive_cache, "'")
 
       val stageInModeStr = stageInMode match {
         case Some("copy") => "copy"
@@ -422,12 +427,9 @@ case class NextFlowPlatform(
       }
 
       s"""
-        |process ${fname}_process {
-        |$labelsString
-        |$labelString
+        |process ${fname}_process {$directives
         |  tag "$${id}"
         |  echo { (params.debug == true) ? true : false }
-        |  cache 'deep'
         |  stageInMode "$stageInModeStr"
         |  container "$${container}"
         |$publishDirStr
@@ -442,11 +444,14 @@ case class NextFlowPlatform(
         |    STUB=1 $$cli
         |    \"\"\"
         |  script:
+        |    def viash_temp = System.getenv("VIASH_TEMP") ?: "/tmp/"
         |    if (params.test)
         |      \"\"\"
         |      # Some useful stuff
         |      export NUMBA_CACHE_DIR=/tmp/numba-cache
         |      # Running the pre-hook when necessary
+        |      # Pass viash temp dir
+        |      export VIASH_TEMP="$${viash_temp}"
         |      # Adding NXF's `$$moduleDir` to the path in order to resolve our own wrappers
         |      export PATH="./:$${moduleDir}:\\$$PATH"
         |      ./$${params.$fname.tests.testScript} | tee $$output
@@ -456,6 +461,8 @@ case class NextFlowPlatform(
         |      # Some useful stuff
         |      export NUMBA_CACHE_DIR=/tmp/numba-cache
         |      # Running the pre-hook when necessary
+        |      # Pass viash temp dir
+        |      export VIASH_TEMP="$${viash_temp}"
         |      # Adding NXF's `$$moduleDir` to the path in order to resolve our own wrappers
         |      export PATH="$${moduleDir}:\\$$PATH"
         |      $$cli
@@ -463,6 +470,27 @@ case class NextFlowPlatform(
         |}
         |""".stripMargin
     }
+
+    val emitter =
+      if (separate_multiple_outputs) {
+        s"""  result_
+          |     | filter { it[1].keySet().size() > 1 }
+          |     | view{">> Be careful, multiple outputs from this component!"}
+          |
+          |  emit:
+          |  result_.flatMap{ it ->
+          |    (it[1].keySet().size() > 1)
+          |      ? it[1].collect{ k, el -> [ it[0], [ (k): el ], it[2] ] }
+          |      : it[1].collect{ k, el -> [ it[0], el, it[2] ] }
+          |  }""".stripMargin
+      } else {
+        s"""  emit:
+           |  result_.flatMap{ it ->
+           |    (it[1].keySet().size() > 1)
+           |      ? [ it ]
+           |      : it[1].collect{ k, el -> [ it[0], el, it[2] ] }
+           |  }""".stripMargin
+      }
 
     val setup_main_workflow =
       s"""
@@ -515,11 +543,11 @@ case class NextFlowPlatform(
         |        effectiveContainer(finalParams),
         |        renderCLI([finalParams.command], finalParams.arguments),
         |        finalParams
-        |        )
+        |      )
         |    }
         |
-        |  result_ = ${fname}_process(id_input_output_function_cli_params_) \\
-        |    | join(id_input_params_) \\
+        |  result_ = ${fname}_process(id_input_output_function_cli_params_)
+        |    | join(id_input_params_)
         |    | map{ id, output, _params, input, original_params ->
         |        def parsedOutput = _params.arguments
         |          .findAll{ it.type == "file" && it.direction == "Output" }
@@ -532,23 +560,12 @@ case class NextFlowPlatform(
         |        new Tuple3(id, parsedOutput, original_params)
         |      }
         |
-        |  result_ \\
-        |    | filter { it[1].keySet().size() > 1 } \\
-        |    | view{
-        |        ">> Be careful, multiple outputs from this component!"
-        |    }
-        |
-        |  emit:
-        |  result_.flatMap{ it ->
-        |    (it[1].keySet().size() > 1)
-        |      ? it[1].collect{ k, el -> [ it[0], [ (k): el ], it[2] ] }
-        |      : it[1].collect{ k, el -> [ it[0], el, it[2] ] }
-        |  }
+        |${emitter.replaceAll("\n", "\n|")}
         |}
         |""".stripMargin
 
-    val resultParseBlocks:List[String] =
-      if (outputs >= 2) {
+    val resultParseBlocks: List[String] =
+      if (separate_multiple_outputs && outputs >= 2) {
         allPars
           .filter(_.isInstanceOf[FileObject])
           .filter(_.direction == Output)
@@ -587,9 +604,7 @@ case class NextFlowPlatform(
         |  def ch_ = Channel.from("").map{ s -> new Tuple3(id, inputFiles, params)}
         |
         |  result = $fname(ch_)
-        |""".stripMargin +
-      resultParseBlocks.mkString("\n") +
-      s"""
+        |${resultParseBlocks.mkString("\n").replaceAll("\n", "\n|")}
         |}
         |""".stripMargin
 
@@ -637,12 +652,12 @@ case class NextFlowPlatform(
       case None => Nil
       case Some(_: Executable) => Nil
       case Some(_: Script) =>
-        nativePlatform.modifyFunctionality(functionality).resources.getOrElse(Nil)
+        nativePlatform.modifyFunctionality(config).resources
     }
 
     functionality.copy(
       resources =
-        Some(additionalResources ::: List(setup_nextflowconfig, setup_main))
+        additionalResources ::: List(setup_nextflowconfig, setup_main)
     )
   }
 }
@@ -706,20 +721,22 @@ object NextFlowUtils {
     val pointer = "${params." + fun.name + "__" + dataObject.plainName + "}"
 
     // TODO: Should this not be converted from the json?
+    val default = if (dataObject.default.isEmpty) None else Some(dataObject.default.mkString(dataObject.multiple_sep.toString))
+    val example = if (dataObject.example.isEmpty) None else Some(dataObject.example.mkString(dataObject.multiple_sep.toString))
     quoteLong(dataObject.plainName) → NestedValue(
       tupleToConfigTuple("name" → dataObject.plainName) ::
-      tupleToConfigTuple("otype" → dataObject.otype) ::
+      tupleToConfigTuple("flags" → dataObject.flags) ::
       tupleToConfigTuple("required" → dataObject.required) ::
-      tupleToConfigTuple("type" → dataObject.oType) ::
+      tupleToConfigTuple("type" → dataObject.`type`) ::
       tupleToConfigTuple("direction" → dataObject.direction.toString) ::
       tupleToConfigTuple("multiple" → dataObject.multiple) ::
       tupleToConfigTuple("multiple_sep" -> dataObject.multiple_sep) ::
       tupleToConfigTuple("value" → pointer) ::
-      dataObject.default.map{ x =>
+      default.map{ x =>
         List(tupleToConfigTuple("dflt" -> Bash.escape(x.toString, backtick = false, quote = true, newline = true)))
       }.getOrElse(Nil) :::
-      dataObject.example.map{x =>
-        List(tupleToConfigTuple("example" -> Bash.escape(x, backtick = false, quote = true, newline = true)))
+      example.map{x =>
+        List(tupleToConfigTuple("example" -> Bash.escape(x.toString, backtick = false, quote = true, newline = true)))
       }.getOrElse(Nil) :::
       dataObject.description.map{x =>
         List(tupleToConfigTuple("description" → Bash.escape(x, backtick = false, quote = true, newline = true)))

@@ -31,13 +31,6 @@ trait ViashCommand {
       "In addition, the path to a platform yaml file can also be specified.",
     required = false
   )
-  val platformid = opt[String](
-    short = 'P',
-    default = None,
-    descr = "[deprecated] passthrough option for platform.",
-    required = false,
-    hidden = true
-  )
   val config = trailArg[String](
     descr = "A viash config file (example: config.vsh.yaml). This argument can also be a script with the config as a header.",
     default = Some("config.vsh.yaml"),
@@ -86,13 +79,6 @@ trait ViashNs {
     default = None,
     required = false
   )
-  val platformid = opt[String](
-    short = 'P',
-    descr = "[deprecated] passthrough option for platform.",
-    default = None,
-    required = false,
-    hidden = true
-  )
   val parallel = opt[Boolean](
     name = "parallel",
     short = 'l',
@@ -129,7 +115,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
        |viash is a spec and a tool for defining execution contexts and converting execution instructions to concrete instantiations.
        |
        |This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it under certain conditions. For more information, see our license at the link below.
-       |  https://github.com/data-intuitive/viash/blob/master/LICENSE.md
+       |  https://github.com/viash-io/viash/blob/master/LICENSE.md
        |
        |Usage:
        |  viash run config.vsh.yaml -- [arguments for script]
@@ -141,7 +127,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
        |  viash config view
        |
        |Check the help of a subcommand for more information, or the API available at:
-       |  https://www.data-intuitive.com/viash_docs
+       |  https://viash.io
        |
        |Arguments:""".stripMargin)
 
@@ -231,9 +217,27 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |  viash config view config.vsh.yaml
            |
            |Arguments:""".stripMargin)
+      val format = choice(
+        name = "format",
+        short = 'f',
+        default = Some("yaml"),
+        choices = List("yaml", "json"),
+        descr = "Which output format to use."
+      )
+    }
+    val inject = new Subcommand("inject") with ViashCommand {
+      banner(
+        s"""viash config inject
+           |Inject a Viash header into the main script of a Viash component.
+           |
+           |Usage:
+           |  viash config inject config.vsh.yaml
+           |
+           |Arguments:""".stripMargin)
     }
 
     addSubcommand(view)
+    addSubcommand(inject)
     requireSubcommand()
 
     shortSubcommandsHelp(true)
@@ -311,6 +315,13 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |  viash ns list [-n nmspc] [-s src] [-p docker]
            |
            |Arguments:""".stripMargin)
+      val format = choice(
+        name = "format",
+        short = 'f',
+        default = Some("yaml"),
+        choices = List("yaml", "json"),
+        descr = "Which output format to use."
+      )
     }
 
     addSubcommand(build)

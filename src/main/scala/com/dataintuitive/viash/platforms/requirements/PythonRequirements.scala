@@ -17,30 +17,35 @@
 
 package com.dataintuitive.viash.platforms.requirements
 
+import com.dataintuitive.viash.helpers.Circe._
+
 case class PythonRequirements(
   user: Boolean = false,
-  packages: List[String] = Nil,
-  pip: List[String] = Nil,
-  git: List[String] = Nil,
-  github: List[String] = Nil,
-  gitlab: List[String] = Nil,
-  mercurial: List[String] = Nil,
-  svn: List[String] = Nil,
-  bazaar: List[String] = Nil,
-  url: List[String] = Nil,
-  script: List[String] = Nil,
-  oType: String = "python"
+  packages: OneOrMore[String] = Nil,
+  pip: OneOrMore[String] = Nil,
+  pypi: OneOrMore[String] = Nil,
+  git: OneOrMore[String] = Nil,
+  github: OneOrMore[String] = Nil,
+  gitlab: OneOrMore[String] = Nil,
+  mercurial: OneOrMore[String] = Nil,
+  svn: OneOrMore[String] = Nil,
+  bazaar: OneOrMore[String] = Nil,
+  url: OneOrMore[String] = Nil,
+  script: OneOrMore[String] = Nil,
+  upgrade: Boolean = true,
+  `type`: String = "python"
 ) extends Requirements {
   assert(script.forall(!_.contains("'")))
 
   private val userFlag = if (user) " --user" else ""
+  private val upgradeFlag = if (upgrade) " --upgrade" else ""
 
   private def generateCommands(prefix: String, values: List[String], postFix: String = "") = {
     values match {
       case Nil => Nil
       case packs =>
         List(packs.mkString(
-          s"""pip install$userFlag --no-cache-dir "$prefix""",
+          s"""pip install$userFlag$upgradeFlag --no-cache-dir "$prefix""",
           postFix + "\" \"" + prefix,
           postFix + "\""))
     }
@@ -51,6 +56,7 @@ case class PythonRequirements(
       s"""pip install$userFlag --upgrade pip"""
 
     val installPipPackages = generateCommands("", pip ::: packages)
+    val installPypiPackages = generateCommands("", pypi ::: packages)
     val installGitPackages = generateCommands("git+", git)
     val installGithubPackages = generateCommands("git+https://github.com/", github)
     val installGitlabPackages = generateCommands("git+https://gitlab.com/", gitlab)
@@ -68,7 +74,7 @@ case class PythonRequirements(
         Nil
       }
 
-    installPip :: installPipPackages ::: installGitPackages ::: installGithubPackages ::: installGitlabPackages :::
+    installPip :: installPipPackages ::: installPypiPackages ::: installGitPackages ::: installGithubPackages ::: installGitlabPackages :::
       installMercurialPackages ::: installSvnPackages ::: installBazaarPackages ::: installUrlPackages ::: installScript
   }
 }

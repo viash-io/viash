@@ -1,10 +1,6 @@
 name: Scala CI
 
-on:
-  push:
-    branches: [ master, develop, test_improvement ]
-  pull_request:
-    branches: [ master, develop ]
+on: [push, pull_request]
 
 jobs:
   scala-ci:
@@ -15,13 +11,13 @@ jobs:
       fail-fast: false
       matrix:
         config:
-        - {name: 'main', os: ubuntu-latest, r: '3.6.1', python: '3.8' }
-        - {name: 'ubuntu_latest', os: ubuntu-latest, r: 'release', python: '3.x' }
-        - {name: 'macos_latest', os: macos-latest, r: 'release', python: '3.x' }
+          - {name: 'main', os: ubuntu-latest, r: '3.6.1', python: '3.8' }
+          - {name: 'ubuntu_latest', os: ubuntu-latest, r: 'release', python: '3.x' }
+          - {name: 'macos_latest', os: macos-latest, r: 'release', python: '3.x' }
 
     steps:
     - uses: actions/checkout@v2
-    
+
     - name: Set up nextflow
       if: runner.os == 'Linux'
       run: |
@@ -29,6 +25,7 @@ jobs:
         echo "$HOME/.local/bin" >> $GITHUB_PATH
         curl -s https://get.nextflow.io | bash
         mv nextflow "$HOME/.local/bin"
+        NXF_VER=21.04.1 nextflow run hello
         nextflow -version
 
     - name: Set up R
@@ -49,9 +46,8 @@ jobs:
       env:
         RHUB_PLATFORM: linux-x86_64-ubuntu-gcc
       run: |
-        Rscript -e "install.packages('remotes'); remotes::install_github('rcannood/sysreqs')"
-        sysreqs=$(Rscript -e "pkgs <- sysreqs:::get_cran_sysreqs(sysreqs:::get_cran_deps('tidyverse')); cat(sysreqs:::sysreq_commands_pkgs(pkgs))")
-        sudo -s eval "$sysreqs"
+        sudo apt-get update
+        sudo apt-get install -y libicu-dev make libssl-dev libxml2-dev zlib1g-dev libbibutils6 libghc-pandoc-citeproc-data pandoc-data
 
     - name: Set up sbt
       uses: olafurpg/setup-scala@v10
@@ -70,7 +66,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y scala
         fi
-
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
@@ -89,7 +84,7 @@ jobs:
         fi
 
     - name: Upload coverage on success
-      run: bash <(curl -s https://codecov.io/bash) # -t ${{ secrets.CODECOV_TOKEN }}
+      run: bash <(curl -s https://codecov.io/bash)
 
     - name: Upload check results on fail
       if: failure()

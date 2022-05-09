@@ -12,14 +12,18 @@ class TestingAllComponentsSuite extends FunSuite {
     ("testr", "script.vsh.R"),
     ("testjs", "config.vsh.yaml"),
     ("testscala", "config.vsh.yaml"),
+    ("testcsharp", "config.vsh.yaml"),
     ("testexecutable", "config.vsh.yaml")
   )
 
   for ((name, file) ← tests) {
     val config = getTestResource(s"/$name/$file")
 
-    test(s"Testing $name platform native", NativeTest) {
-      TestHelper.testMain("test", "-p", "native", config)
+    // only run testbash natively because other requirements might not be available
+    if (name == "testbash") {
+      test(s"Testing $name platform native", NativeTest) {
+        TestHelper.testMain("test", "-p", "native", config)
+      }
     }
 
     test(s"Testing $name platform docker", DockerTest) {

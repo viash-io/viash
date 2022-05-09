@@ -1,12 +1,355 @@
-# viash 0.5.1
+# Viash 0.5.11
+
+## MAJOR CHANGES
+
+* `Functionality`: Now also accepts 'inputs' and 'outputs' in addition to 'arguments'. For inputs and outputs,
+  any specified arguments will have default `type: file` and `direction: input` or `direction: output` respectively.
+
+## MINOR CHANGES
+
+* `DockerPlatform`: Move description labels to the end of the Dockerfile to improve cross-component caching.
+
+* `Functionality`: Arguments where `.multiple` is `true` can now have lists as `default` and `example`.
+
+* `viash_build`: Added unit test for this component.
+
+* `viash_test`: Added unit test for this component.
+
+* `PythonRequirements`: Allow upgrading dependencies. Example: `[ type: python. pypi: anndata, upgrade: true ]`.
+
+* `NextflowLegacyPlatform`: Remove annoying messages when building Nxf modules.
+
+* `ConfigMods`: Expanded the DSL to allow specifying at which point to apply a config mod.
+  This functionality was necessary to allow for setting fields which alter the way configs are parsed.
+  Example of when this is useful: `<preparse> .platforms[.type == "nextflow"].variant := "vdsl3"`.
+  Updating workflow of parsing a config file is:
+    - read Yaml from file
+    - apply preparse config mods
+    - parse resulting Json as Config, thereby instantiating default values etc.
+    - convert Config back to Json
+    - apply postparse config mods (original config mods)
+    - convert final Json back to Config
+
+## BETA FUNCTIONALITY
+
+* `NextflowVdsl3Platform`: A beta implementation of the next-generation Viash+Nextflow platform.
+  See https://github.com/viash-io/viash/issues/82 for more information. You can access the previous Nextflow
+  platform by using the `variant` parameter:
+  ```yaml
+  - type: nextflow
+    variant: legacy
+    separate_multiple_outputs: false
+  ```
 
 ## BUG FIXES
 
-* `BashWrapper`: Refactor escaping descriptions, usages, defaults, and examples.
+* `viash_build` and `viash_test`: The `query_name` and `query_namespace` arguments were switched around. These arguments are now passed correctly.
 
-* `NextFlowWrapper`: Refactor escaping descriptions, usages, defaults and examples (#75).
+* `BashScript`, `JavaScriptScript`, `PythonScript`, `RScript`: Correctly escape `'` (#113). Update unit tests accordingly.
 
-# viash 0.5.0
+* `CSharpScript`, `ScalaScript`: Correctly escape `"` (#113). Update unit tests accordingly.
+
+* `viash_build`, `viash_test`, `viash_push`: Don't try to remove log files if they don't exist.
+
+## INTERNAL CHANGES
+
+* `DataObject`: 
+  - Renamed `otype` to `flags`.
+  - Renamed `oType` to `type`
+  - Deprecated `tag` (unused feature).
+
+* All abstract / inherited classes: Renamed `oType` to `type`.
+
+## DEPRECATION
+
+* `Functionality`: Deprecated `function_type` and `add_resources_to_path`. These should be 
+  unused features, by now.
+  
+# Viash 0.5.10.1
+
+## BUG FIX
+
+* `NextflowPlatform`: Fix passthrough of `organization` field.
+
+# Viash 0.5.10
+
+## MAJOR CHANGES
+
+* `viash_install`:
+  - Added `--log_prefix`: This prefix is used to determine the path of the log files for `viash_build`, `viash_test` and `viash_push`.
+  - Added `--organization`: Id of the organisation to be used in the Docker image name, i.e. `<registry>/<organization>/<namespace><namespace_sep><name>`.
+  - Added `--target_image_source`: Url to the Git repo in which this project resides.
+  - Removed `--log`.
+
+* `viash_build`:
+  - Reduce code duplication by contructing the command with Bash Arrays.
+  - Renamed `--platforms` to `--platform`.
+  - Added `--organization`: Id of the organisation to be used in the Docker image name, i.e. `<registry>/<organization>/<namespace><namespace_sep><name>`.
+  - Added `--target_image_source`: Url to the Git repo in which this project resides.
+  - Changed default of `--log` from `log.txt` to `.viash_build_log.txt`.
+  - Added `--verbose`: Print out the underlying `viash ns build` command before running it.
+
+* `viash_test`:
+  - Reduce code duplication by contructing the command with Bash Arrays.
+  - Renamed `--platforms` to `--platform`.
+  - Added `--organization`: Id of the organisation to be used in the Docker image name, i.e. `<registry>/<organization>/<namespace><namespace_sep><name>`.
+  - Added `--target_image_source`: Url to the Git repo in which this project resides.
+  - Changed default of `--log` from `log.txt` to `.viash_test_log.txt`.
+  - Changed default of `--tsv` from `log.tsv` to `.viash_test_log.tsv`.
+  - Added `--verbose`: Print out the underlying `viash ns test` command before running it.
+
+* `viash_push`:
+  - Reduce code duplication by contructing the command with Bash Arrays.
+  - Added `--organization`: Id of the organisation to be used in the Docker image name, i.e. `<registry>/<organization>/<namespace><namespace_sep><name>`.
+  - Changed default of `--log` from `log.txt` to `.viash_push_log.txt`.
+  - Added `--verbose`: Print out the underlying `viash ns build` command before running it.
+
+## MINOR CHANGES
+
+* `NextflowPlatform`: Added the `organization` field to the nextflow platform as well.
+
+# Viash 0.5.9
+
+## NEW FEATURES
+
+* `viash run`: A long running Viash component can be interrupted by pressing 
+  CTRL-C or by sending it an `INT` or `SIGINT` signal.
+
+* `DockerPlatform`: Automatically add a few labels based on metadata to Dockerfile.
+
+* `DockerPlatform`: Added value `target_image_source` for setting the source of 
+  the target image. This is used for defining labels in the dockerfile.
+  Example:
+  ```yaml
+  target_image_source: https://github.com/foo/bar
+  ```
+
+## MINOR CHANGES
+
+* `viash ns list`: Added `--format yaml/json` argument to be able to return the
+  output as a json as well. Useful for when `jq` is installed but `yq` is not. Example:
+  ```
+    viash ns list -p docker -f json | jq '.[] | .info.config'
+  ```
+
+* `viash config view`: Same as above.
+
+## DEPRECATION
+
+* `CLI`: Deprecated `-P` flag use `-p` intead.
+
+* `DockerPlatform`: Deprecated `version` value.
+
+# Viash 0.5.8
+
+## NEW FUNCTIONALITY
+
+* `DockerPlatform`: Allow defining a container's organisation. Example:
+  ```yaml
+    - type: docker
+      registry: ghcr.io
+      organisation: viash-io
+      image: viash
+      tag: "1.0"
+      target_registry: ghcr.io
+      target_organization: viash-io
+  ```
+
+* `DockerRequirement`: Add label instructions. Example:
+  `setup: [ [ type: docker, label: [ "foo BAR" ]]]`
+
+* `Config`: In specific places, allow parsing a value as a list of values. Fixes #97.
+  This mostly applies to list values in `DockerPlatform`, but also to author roles.
+  Examples:
+  ```yaml
+  functionality:
+    name: foo
+    authors:
+      - name: Alice
+        role: author # can be a string or a list
+  platforms:
+    - type: docker
+      port: "80:80" # can be a string or a list
+      setup:
+        - type: r
+          packages: incgraph # can be a string or a list
+  ```
+  
+## BREAKING CHANGES
+
+* `viash test`: This command doesn't automatically add the resources dir to the path.
+
+## BUG FIXES
+
+* `Functionality`: Fix `.functionality.add_resources_to_path` not being picked up correctly.
+
+* `AptRequirement`: Set `DEBIAN_FRONTEND=noninteractive` by default. This can be turned off by specifying:
+  ```yaml
+    - type: apt
+      packages: [ foo, bar ]
+      interactive: true
+  ```
+
+## MINOR CHANGES
+
+* `Main`: Slightly better error messages when parsing of viash yaml file fails.
+  Before:
+  ```
+  $ viash test src/test/resources/testbash/config_failed_build.vsh.yaml 
+  Exception in thread "main" DecodingFailure(Unexpected field: [package]; valid fields: packages, interactive, type, List(DownField(apt), DownArray, DownField(platforms)))
+  ```
+  
+  After:
+  ```
+  $ viash test src/test/resources/testbash/config_failed_build.vsh.yaml 
+  Error parsing 'file:///path/to/viash/src/test/resources/testbash/config_failed_build.vsh.yaml'. Details:
+  Unexpected field: [package]; valid fields: packages, interactive, type: DownField(apt),DownArray,DownField(platforms)
+  ```
+
+
+# Viash 0.5.7
+
+## BREAKING CHANGES
+
+* `viash config`: An argument's example now needs to be of the same type as the argument itself. 
+  For example, `[ type: integer, name: foo, example: 10 ]` is valid, whereas 
+  `[ type: integer, name: foo, example: bar ]` is not, as 'bar' cannot be cast to an integer.
+
+## NEW FUNCTIONALITY
+
+* `viash config inject`: A command for inserting a Viash header into your script.
+
+* `YumRequirement`: Added a requirement setup for installing through yum. Example:
+  `setup: [ [ type: yum, packages: [ wget] ] ]`
+
+* `DockerRequirement`: Allow using copy and add instructions. Example:
+  `setup: [ [ type: docker, add: [ "http://foo.bar ." ]]]`
+
+## BUG FIXES
+
+* `ViashTest`: Fix verbosity passthrough.
+
+* `--help`: Fix repeated usage flag when printing the help.
+
+# Viash 0.5.6
+
+## BREAKING CHANGES
+
+* `BashWrapper`: Forbidden flags `-v`, `--verbose`, `--verbosity` have been renamed to `---v`, `---verbose`, `---verbosity`.
+
+## MINOR CHANGES
+
+* Set version of helper scripts to the same version as Viash.
+
+* `DockerPlatform`: Produce helpful warning message when Docker image can't be found remotely (#94).
+
+* `DockerPlatform`: Produce helpful error message when Docker isn't installed or the daemon is not running (#94 bis).
+
+## BUG FIXES
+
+* `viash_install`:
+  - Passing Viash path as a string instead of as a file to ensure the path is not converted to an absolute path
+  - Switch from Docker backend to a Native backend, 'unzip' and 'wget' are required.
+  - Correctly set the log file for viash_test.
+  
+* `DockerPlatform`: Added sleep workaround to avoid concurrency issue where a file is executed to
+  build docker containers but apparently still in the process of being written.
+  
+* `DockerPlatform`: Fix order issue of ---verbose flag in combination with ---setup, allowing to run 
+  `viash run config.vsh.yaml -- ---setup cb ---verbose` and actually get output.
+  
+
+# Viash 0.5.5
+
+## BREAKING CHANGES
+
+* `Functionality`: The resources dir no longer automatically added to the PATH variable. 
+  To alter this behaviour, set `.functionality.add_resources_to_path` to `true`.
+
+## MINOR CHANGES
+
+* Bash Script: only define variables which have values.
+
+* CSharp Test Component: Change Docker image to `dataintuitive/dotnet-script` to have more control over the lifecycle of 
+  versioned tags.
+
+* Updated Code of Conduct from v2.0 to v2.1.
+
+## BUG FIXES
+
+* Viash namespace: Fix incorrect output path when the parent directory of a Viash component is not equal to the value of
+  `.functionality.name`.
+
+# Viash 0.5.4
+
+## BREAKING CHANGES
+
+* `NextFlowPlatform`: The default caching mechanism is now what NextFlow uses as default. In order to replicate earlier
+  caching, `cache: deep` should be specified in the Viash config file.
+
+## NEW FEATURES
+
+* `NextFlowPlatform`: Added `cache` directive to specify the typing of caching to be performed.
+
+# Viash 0.5.3
+
+## NEW FEATURES
+
+* Similar to `par`, each script now also has a `meta` list. `meta` contains meta information about the component
+  or the execution thereof. It currently has the following fields:
+  - `meta["resources_dir"]`: Path to the directory containing the resources
+  - `meta["functionality_name"]`: Name of the component
+
+* `NextFlowPlatform`: Export `VIASH_TEMP` environment variable. 
+
+## BUG FIXES
+
+* `NextFlowPlatform`: Fix output formatting when `separate_multiple_outputs` is `false`.
+
+# Viash 0.5.2
+
+## MINOR CHANGES
+
+* `DockerPlatform`: Added `run_args` field to allow setting `docker run` arguments.
+
+* `NextFlowPlatform`: Added argument `separate_multiple_outputs` to allow not separating the outputs generated by a 
+  component with multiple outputs as separate events on the channel.
+
+## BUG FIX
+
+* `IO`: Allow overwriting directory resources upon rebuild.
+
+# Viash 0.5.1
+
+## NEW FEATURES
+
+* `CSharpScript`: Added support for C# scripts (`type: "csharp_script"`) to viash.
+
+## MINOR CHANGES
+
+* `NextFlowPlatform`: Added `directive_cpus`, `directive_max_forks`, `directive_memory` and `directive_time` parameters.
+
+## BUG FIXES
+
+* `BashWrapper`: Refactor escaping descriptions, usages, defaults, and examples (#34).
+
+* `NextFlowPlatform`: Refactor escaping descriptions, usages, defaults and examples (#75).
+
+* `NextFlowPlatform`: Add argument to output path to avoid naming conflicts for components with multiple output files (#76).
+
+* `NextFlowPlatform`, `renderCLI()`: Only add flag to rendered command when boolean_true is actually true (#78).
+
+* `DockerPlatform`: Only chown when output file exists.
+
+## TESTING
+
+* `viash build`: Capture stdout messages when errors are expected, so that they don't clutter the expected output.
+
+* `viash build`: Check `--help` description output on the whole text instead of per letter or word basis.
+
+* `TestingAllComponentsSuite`: Only testing bash natively, because other dependencies might not be available.
+
+# Viash 0.5.0
 
 ## BREAKING CHANGES
 
@@ -56,7 +399,7 @@
 * `viash ns`: Added a basic testbench for namespace tests.
 
 
-# viash 0.4.0.1 (2021-05-12)
+# Viash 0.4.0.1 (2021-05-12)
 
 ## BUG FIX
 
@@ -66,7 +409,7 @@
 
 * `viash ns test`: print header when `--tsv foo.tsv --append true` but foo.tsv doesn't exist yet. Fixes #45.
 
-# viash 0.4.0 (2021-04-14)
+# Viash 0.4.0 (2021-04-14)
 
 ## NEW FEATURES
 
@@ -134,7 +477,7 @@ The generation of Nextflow modules has been refactored thoroughly.
 * `NXF`: Providing a `default: ...` value for output file arguments is no longer necessary.
 
 
-# viash 0.3.2 (2021-02-04)
+# Viash 0.3.2 (2021-02-04)
 
 ## BREAKING CHANGES
 
@@ -160,7 +503,7 @@ The generation of Nextflow modules has been refactored thoroughly.
 
 * `NXF`: Accept multiple inputs when component is running as standalone.
 
-# viash 0.3.1 (2021-01-26)
+# Viash 0.3.1 (2021-01-26)
 
 ## NEW FEATURES
 
@@ -244,7 +587,7 @@ functionality:
 * YAML: Test invertibility of parsing/unparsing config objects.
 
 
-# viash 0.3.0 (2020-11-24)
+# Viash 0.3.0 (2020-11-24)
 
 ## BREAKING CHANGES
 
@@ -291,13 +634,13 @@ functionality:
 * `viash test`: Add tests for `viash test` functionality.
 
 
-# viash 0.2.2 (2020-09-22)
+# Viash 0.2.2 (2020-09-22)
 
 * MINOR CHANGE: Allow generating placeholder without VIASH START/VIASH END blocks.
 * BUG FIX `viash ns build`: Some platforms would sometimes not be detected.
 * BUG FIX `viash run`: Avoid error when no arguments need to be chowned.
 
-# viash 0.2.1 (2020-09-11)
+# Viash 0.2.1 (2020-09-11)
 
 * NEW FEATURE `NXF`: Data references in Map form can now have values being lists. In other words, we can have multiple options which have one or more values.
 * NEW FEATURE `viash ns build`: Added --parallel and --setup flag.
@@ -308,7 +651,7 @@ functionality:
 * MINOR CHANGE: Perform chown during both run and test using a Docker platform.
 * BUG FIX: Issue trying to parse positional arguments even when none is provided.
 
-# viash 0.2.0 (2020-09-01)
+# Viash 0.2.0 (2020-09-01)
 
 ## NEW FEATURES
 
@@ -349,7 +692,7 @@ functionality:
 * Renamed Target to Platform
 * Renamed Environment to Requirements
 
-# viash 0.1.0 (2020-05-14)
+# Viash 0.1.0 (2020-05-14)
 * MAJOR CHANGES: Refactoring of the Functionality class as discussed in VIP1 (#1). This has resulted in a lot of internal changes, but the changes with regard to the yaml definitions are relatively minor. See the section below for more info.
 * MINOR CHANGES: Updated the functionality.yamls under `atoms/` and `src/test/` to reflect these aforementioned changes.
 * BUG FIX: Do not quote passthrough flags.
@@ -368,5 +711,5 @@ functionality:
 ## Changes to platform_(docker/native).yaml
 * The `r: packages:` field has been renamed to `r: cran:`.
 
-# viash 0.0.1 (2020-05-05)
+# Viash 0.0.1 (2020-05-05)
 * Initial proof of concept.

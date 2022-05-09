@@ -13,7 +13,7 @@ class MainBuildAuxiliaryDockerTag extends FunSuite with BeforeAndAfterAll {
   private val tempFolStr = temporaryFolder.toString
 
   private val configBashTagFile = getClass.getResource(s"/testbash/auxiliary_tag/config_bash_tag.vsh.yaml").getPath
-  private val functionalityBashTag = Config.read(configBashTagFile, modifyFun = false).functionality
+  private val functionalityBashTag = Config.read(configBashTagFile, applyPlatform = false).functionality
   private val executableBashTagFile = Paths.get(tempFolStr, functionalityBashTag.name).toFile
 
   test("Get tagged version of a docker image for bash 5.0", DockerTest) {
@@ -42,10 +42,10 @@ class MainBuildAuxiliaryDockerTag extends FunSuite with BeforeAndAfterAll {
     val dockerout = Exec.run(Seq(executableBashTagFile.toString, "---dockerfile"))
     // we expect something basic like
     // FROM bash:5.0
-    //
+    // LABEL ...
     // RUN :
     // Allow for extra spaces just in case the format changes slightly format-wise but without functional differences
-    val regex = """^FROM bash:5\.0[\r\n\s]*RUN\s+:\s*$""".r
+    val regex = """^FROM bash:5\.0[\r\n\s]*.*""".r
     assert(regex.findFirstIn(dockerout).isDefined, regex.toString)
   }
 
@@ -75,10 +75,10 @@ class MainBuildAuxiliaryDockerTag extends FunSuite with BeforeAndAfterAll {
     val dockerout = Exec.run(Seq(executableBashTagFile.toString, "---dockerfile"))
     // we expect something basic like
     // FROM bash:3.2
-    //
+    // LABEL ...
     // RUN :
     // Allow for extra spaces just in case the format changes slightly format-wise but without functional differences
-    val regex = """^FROM bash:3\.2[\r\n\s]*RUN\s+:\s*$""".r
+    val regex = """^FROM bash:3\.2[\r\n\s]*.*""".r
     assert(regex.findFirstIn(dockerout).isDefined, regex.toString)
   }
 

@@ -58,7 +58,7 @@ functionality:
     - type: bash_script
       path: ./code_multiple_output.sh
     - path: ../resource1.txt
-    - path: https://raw.githubusercontent.com/scala/scala/2.13.x/NOTICE
+    - path: https://raw.githubusercontent.com/scala/scala/fff4ec3539ac58f56fdc8f1382c365f32a9fd25a/NOTICE
 platforms:
   - type: docker
     image: "bash:3.2"

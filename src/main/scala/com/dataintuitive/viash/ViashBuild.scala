@@ -21,14 +21,14 @@ import config._
 import functionality.resources.{BashScript, Executable, PlainFile, PythonScript, RScript}
 import io.circe.yaml.Printer
 import helpers.IO
-import java.nio.file.Paths
 
+import java.nio.file.{Files, Paths}
 import scala.sys.process.{Process, ProcessLogger}
 
 object ViashBuild {
   // create a yaml printer for writing the viash.yaml file
   // Options: https://github.com/circe/circe-yaml/blob/master/src/main/scala/io/circe/yaml/Printer.scala
-  val printer = Printer(
+  private val printer = Printer(
     preserveOrder = true,
     dropNullKeys = true,
     mappingStyle = Printer.FlowStyle.Block,
@@ -48,14 +48,14 @@ object ViashBuild {
     val fun = config.functionality
 
     // create dir
-    val dir = new java.io.File(output)
-    dir.mkdirs()
+    val dir = Paths.get(output)
+    Files.createDirectories(dir)
 
     // get the path of where the executable will be written to
     val exec_path = fun.mainScript.map(scr => Paths.get(output, scr.resourcePath).toString)
 
     // get resources
-    val placeholderMap = config.functionality.resources.getOrElse(Nil).filter(_.text.isDefined).map{ res =>
+    val placeholderMap = config.functionality.resources.filter(_.text.isDefined).map{ res =>
       (res, "VIASH_PLACEHOLDER~" + res.filename + "~")
     }.toMap
 
@@ -67,17 +67,17 @@ object ViashBuild {
     val toWriteConfig = config.copy(
       functionality = config.functionality.copy(
         namespace = namespace,
-        resources = Some(config.functionality.resources.getOrElse(Nil).map{ res =>
+        resources = config.functionality.resources.map{ res =>
           if (res.text.isDefined) {
             val textVal = Some(placeholderMap(res))
             res.copyResource(text = textVal, parent = None)
           } else {
             res.copyResource(parent = None)
           }
-        }),
-        tests = Some(config.functionality.tests.getOrElse(Nil).map { res =>
+        },
+        tests = config.functionality.tests.map { res =>
           res.copyResource(parent = None)
-        })
+        }
       ),
       info = config.info.map(_.copy(
         output = Some(output),
@@ -108,9 +108,9 @@ object ViashBuild {
 
     // write resources to output directory
     if (writeMeta) {
-      IO.writeResources(configYaml :: fun.resources.getOrElse(Nil), dir)
+      IO.writeResources(configYaml :: fun.resources, dir)
     } else {
-      IO.writeResources(fun.resources.getOrElse(Nil), dir)
+      IO.writeResources(fun.resources, dir)
     }
 
     // if '--setup <strat>' was passed, run './executable ---setup <strat>'

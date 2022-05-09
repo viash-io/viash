@@ -53,7 +53,6 @@ functionality:
 platforms:
   - type: native
   - type: docker
-    image: denvazh/scala
-    target_image: "viash_test_scala"
+    image: denvazh/scala:2.11.8
   - type: nextflow
-    image: viash_test_scala
+    variant: legacy

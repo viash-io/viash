@@ -40,18 +40,20 @@ package object resources {
   implicit val encodeRScript: Encoder.AsObject[RScript] = deriveConfiguredEncoder
   implicit val encodeJavaScriptScript: Encoder.AsObject[JavaScriptScript] = deriveConfiguredEncoder
   implicit val encodeScalaScript: Encoder.AsObject[ScalaScript] = deriveConfiguredEncoder
+  implicit val encodeCSharpScript: Encoder.AsObject[CSharpScript] = deriveConfiguredEncoder
   implicit val encodeExecutable: Encoder.AsObject[Executable] = deriveConfiguredEncoder
   implicit val encodePlainFile: Encoder.AsObject[PlainFile] = deriveConfiguredEncoder
 
   implicit def encodeResource[A <: Resource]: Encoder[A] = Encoder.instance {
     par =>
-      val typeJson = Json.obj("type" → Json.fromString(par.oType))
+      val typeJson = Json.obj("type" → Json.fromString(par.`type`))
       val objJson = par match {
         case s: BashScript => encodeBashScript(s)
         case s: PythonScript => encodePythonScript(s)
         case s: RScript => encodeRScript(s)
         case s: JavaScriptScript => encodeJavaScriptScript(s)
         case s: ScalaScript => encodeScalaScript(s)
+        case s: CSharpScript => encodeCSharpScript(s)
         case s: Executable => encodeExecutable(s)
         case s: PlainFile => encodePlainFile(s)
       }
@@ -63,6 +65,7 @@ package object resources {
   implicit val decodeRScript: Decoder[RScript] = deriveConfiguredDecoder
   implicit val decodeJavaScriptScript: Decoder[JavaScriptScript] = deriveConfiguredDecoder
   implicit val decodeScalaScript: Decoder[ScalaScript] = deriveConfiguredDecoder
+  implicit val decodeCSharpScript: Decoder[CSharpScript] = deriveConfiguredDecoder
   implicit val decodeExecutable: Decoder[Executable] = deriveConfiguredDecoder
   implicit val decodePlainFile: Decoder[PlainFile] = deriveConfiguredDecoder
 
@@ -75,11 +78,12 @@ package object resources {
           case Right("r_script") => decodeRScript.widen
           case Right("javascript_script") => decodeJavaScriptScript.widen
           case Right("scala_script") => decodeScalaScript.widen
+          case Right("csharp_script") => decodeCSharpScript.widen
           case Right("executable") => decodeExecutable.widen
           case Right("file") => decodePlainFile.widen
           case Right(typ) => throw new RuntimeException(
             "File type " + typ + " is not recognised. Should be one of " +
-              "'bash_script', 'python_script', 'r_script', 'javascript_script', 'scala_script', 'executable', or 'file'."
+              "'bash_script', 'python_script', 'r_script', 'javascript_script', 'scala_script', 'csharp_script', 'executable', or 'file'."
           )
           case Left(_) => decodePlainFile.widen // default is a simple file
         }

@@ -15,14 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality
+package com.dataintuitive.viash.platforms.nextflow
 
-sealed trait FunctionType
-
-case object AsIs extends FunctionType
-
-case object Convert extends FunctionType
-
-case object ToDir extends FunctionType
-
-case object Join extends FunctionType
+case class NextflowAuto(
+  simplifyInput: Boolean = true,
+  simplifyOutput: Boolean = true,
+  transcript: Boolean = false,
+  publish: Boolean = false
+)

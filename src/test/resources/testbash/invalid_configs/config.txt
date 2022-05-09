@@ -57,15 +57,15 @@ functionality:
       multiple: true
   resources:
     - type: bash_script
-      path: ./code.sh
-    - path: resource1.txt
-    - path: https://raw.githubusercontent.com/scala/scala/2.13.x/NOTICE
+      path: ../code.sh
+    - path: ../resource1.txt
+    - path: https://raw.githubusercontent.com/scala/scala/fff4ec3539ac58f56fdc8f1382c365f32a9fd25a/NOTICE
   tests:
     - type: bash_script
-      path: tests/check_outputs.sh
+      path: ../tests/check_outputs.sh
     - type: bash_script
-      path: tests/fail.sh
-    - path: resource2.txt
+      path: ../tests/fail.sh
+    - path: ../resource2.txt
 platforms:
   - type: native
   - type: docker
@@ -75,4 +75,5 @@ platforms:
     image: "hello-world"
     id: "hello-world"
   - type: nextflow
+    variant: legacy
     image: viash_test_bash

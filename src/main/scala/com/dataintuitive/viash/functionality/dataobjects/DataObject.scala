@@ -17,22 +17,56 @@
 
 package com.dataintuitive.viash.functionality.dataobjects
 
+import com.dataintuitive.viash.helpers.Circe.OneOrMore
+
 abstract class DataObject[Type] {
-  val oType: String
+  val `type`: String
   val name: String
   val alternatives: List[String]
   val description: Option[String]
-  val example: Option[String]
-  val default: Option[Type]
+  val example: OneOrMore[Type]
+  val default: OneOrMore[Type]
   val required: Boolean
   val direction: Direction
-  val tag: Option[String]
   val multiple: Boolean
   val multiple_sep: Char
 
   private val pattern = "^(-*)(.*)$".r
-  val pattern(otype, plainName) = name
+  val pattern(flags, plainName) = name
 
+  /** Common parameter name for this object */
   val par: String = "par_" + plainName
+
+  /** Parameter name in bash scripts */
   val VIASH_PAR: String = "VIASH_PAR_" + plainName.toUpperCase()
+
+  /** 
+   * Access the parameters contents in a bash script,
+   * taking into account that some characters need to be escaped.
+   * 
+   * Example: viash_par_escaped("'", """\'""", """\\\'""") 
+   * results in '${VIASH_PAR//\'/\\\'}'. 
+   * 
+   * Sidenote: a '\' will be escaped as '\VIASH_SLASH\', so BashWrapper
+   * substitutes it back for a '\' instead of escaping it as a '\\'.
+   */
+  def viash_par_escaped(quot: String, from: String, to: String) = {
+    s"$quot$${$VIASH_PAR//$from/$to}$quot".replaceAll("\\\\", "\\\\VIASH_SLASH\\\\")
+  }
+
+  def copyDO(
+    `type`: String = this.`type`,
+    name: String = this.name,
+    alternatives: List[String] = this.alternatives,
+    description: Option[String] = this.description,
+    example: OneOrMore[Type] = this.example,
+    default: OneOrMore[Type] = this.default,
+    required: Boolean = this.required,
+    direction: Direction = this.direction,
+    multiple: Boolean = this.multiple,
+    multiple_sep: Char = this.multiple_sep
+  ): DataObject[Type]
+
+  assert(example.length <= 1 || multiple, s"Argument $name: 'example' should be length <= 1 if 'multiple' is false")
+  assert(default.length <= 1 || multiple, s"Argument $name: 'default' should be length <= 1 if 'multiple' is false")
 }

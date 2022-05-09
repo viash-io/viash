@@ -17,19 +17,34 @@
 
 package com.dataintuitive.viash.functionality.dataobjects
 
-import java.io.File
+import java.nio.file.Path
+import com.dataintuitive.viash.helpers.Circe.OneOrMore
 
 case class FileObject(
   name: String,
   alternatives: List[String] = Nil,
   description: Option[String] = None,
-  example: Option[String] = None,
-  default: Option[File] = None,
+  example: OneOrMore[Path] = Nil,
+  default: OneOrMore[Path] = Nil,
   must_exist: Boolean = false,
   required: Boolean = false,
-  tag: Option[String] = None,
   direction: Direction = Input,
   multiple: Boolean = false,
   multiple_sep: Char = ':',
-  oType: String = "file"
-) extends DataObject[File]
+  `type`: String = "file"
+) extends DataObject[Path] {
+  def copyDO(
+    `type`: String, 
+    name: String, 
+    alternatives: List[String],
+    description: Option[String],
+    example: OneOrMore[Path],
+    default: OneOrMore[Path],
+    required: Boolean,
+    direction: Direction,
+    multiple: Boolean,
+    multiple_sep: Char
+  ): DataObject[Path] = {
+    copy(name, alternatives, description, example, default, must_exist, required, direction, multiple, multiple_sep, `type`)
+  }
+}

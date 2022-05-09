@@ -17,20 +17,24 @@
 
 package com.dataintuitive.viash.platforms.requirements
 
+import com.dataintuitive.viash.helpers.Circe._
+
 case class AptRequirements(
-  packages: List[String] = Nil,
-  oType: String = "apt"
+  packages: OneOrMore[String] = Nil,
+  interactive: Boolean = false,
+  `type`: String = "apt"
 ) extends Requirements {
   def installCommands: List[String] = {
     val aptUpdate =
       """apt-get update"""
 
+    val interactiveEnv = if (!interactive) "DEBIAN_FRONTEND=noninteractive " else ""
     val installPackages =
-      packages match {
+      packages.toList match {
         case Nil => Nil
         case packs =>
           List(packs.mkString(
-            "apt-get install -y ",
+            s"${interactiveEnv}apt-get install -y ",
             " ",
             ""
           ))

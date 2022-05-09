@@ -17,23 +17,18 @@
 
 package com.dataintuitive.viash.wrapper
 
-import com.dataintuitive.viash.Main
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.functionality.dataobjects._
-import com.dataintuitive.viash.helpers.{Bash, Format}
+import com.dataintuitive.viash.helpers.{Bash, Format, Helper}
 
 object BashWrapper {
-
-  def nameAndVersion(functionality: Functionality): String = {
-    functionality.name + functionality.version.map(" " + _).getOrElse(" <not versioned>")
-  }
-
-  def escapeViash(str: String, quote: Boolean = false, newline: Boolean = false): String = {
-    Bash.escape(str, quote = quote, newline = newline)
-      .replaceAll("\\\\\\$VIASH_DOLLAR\\\\\\$", "\\$")
-      .replaceAll("\\\\\\$VIASH_", "\\$VIASH_")
-      .replaceAll("\\\\\\$\\{VIASH_", "\\${VIASH_")
+  val metaFields: List[(String, String)] = {
+    List(
+      ("VIASH_META_FUNCTIONALITY_NAME", "functionality_name"),
+      ("VIASH_META_RESOURCES_DIR", "resources_dir"),
+      ("VIASH_TEMP", "temp_dir")
+    )
   }
 
   def store(env: String, value: String, multiple_sep: Option[Char]): Array[String] = {
@@ -74,47 +69,75 @@ object BashWrapper {
   }
 
   val var_verbosity = "VIASH_VERBOSITY"
-  val var_resources_dir = "VIASH_RESOURCES_DIR"
+  val var_resources_dir = "VIASH_META_RESOURCES_DIR"
 
   def wrapScript(
     executor: String,
     functionality: Functionality,
-    mods: BashWrapperMods = BashWrapperMods()
+    mods: BashWrapperMods = BashWrapperMods(),
+    debugPath: Option[String] = None
   ): String = {
     val mainResource = functionality.mainScript
 
     // check whether the wd needs to be set to the resources dir
     val cdToResources =
-      if (functionality.set_wd_to_resources_dir.getOrElse(false)) {
+      if (functionality.set_wd_to_resources_dir) {
         s"""
-           |cd "$$$var_resources_dir"
-           |PATH="$$$var_resources_dir:\\$$PATH"
-           |""".stripMargin
+          |cd "$$$var_resources_dir"""".stripMargin
       } else {
-        s"""
-           |PATH="$$$var_resources_dir:\\$$PATH"
-           |""".stripMargin
+        ""
       }
 
     // DETERMINE HOW TO RUN THE CODE
     val executionCode = mainResource match {
+      // if mainResource is empty (shouldn't be the case)
       case None => ""
+
+      // if mainResource is simply an executable
       case Some(e: Executable) => " " + e.path.get + " $VIASH_EXECUTABLE_ARGS"
-      case Some(res) =>
+
+      // if mainResource is a script
+      case Some(res) if debugPath.isEmpty =>
         val code = res.readWithPlaceholder(functionality).get
-        val escapedCode = escapeViash(code)
+        val escapedCode = Bash.escapeMore(code)
+
+        // check whether the script can be written to a temprorary location or
+        // whether it needs to be a specific path
+        val scriptSetup =
+          s"""
+            |tempscript=\\$$(mktemp "$$VIASH_TEMP/viash-run-${functionality.name}-XXXXXX")
+            |function clean_up {
+            |  rm "\\$$tempscript"
+            |}
+            |function interrupt {
+            |  echo -e "\\nCTRL-C Pressed..."
+            |  exit 1
+            |}
+            |trap clean_up EXIT
+            |trap interrupt INT SIGINT""".stripMargin
+        val scriptPath = "\\$tempscript"
+
         s"""
-           |set -e
-           |tempscript=\\$$(mktemp "$$VIASH_TEMP/viash-run-${functionality.name}-XXXXXX")
-           |function clean_up {
-           |  rm "\\$$tempscript"
-           |}
-           |trap clean_up EXIT
-           |cat > "\\$$tempscript" << 'VIASHMAIN'
-           |$escapedCode
-           |VIASHMAIN$cdToResources
-           |${res.meta.command("\\$tempscript")}
-           |""".stripMargin
+          |set -e$scriptSetup
+          |cat > "$scriptPath" << 'VIASHMAIN'
+          |$escapedCode
+          |VIASHMAIN$cdToResources
+          |${res.meta.command(scriptPath)} &
+          |wait "\\$$!"
+          |""".stripMargin
+
+      // if we want to debug our code
+      case Some(res) if debugPath.isDefined =>
+        val code = res.readWithPlaceholder(functionality).get
+        val escapedCode = Bash.escapeMore(code)
+        val deb = debugPath.get
+
+        s"""
+          |set -e
+          |cat > "${debugPath.get}" << 'VIASHMAIN'
+          |$escapedCode
+          |VIASHMAIN
+          |""".stripMargin
     }
 
     // generate bash document
@@ -125,8 +148,8 @@ object BashWrapper {
     }
 
     // generate script modifiers
-    val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
-    val paramAndDummies = functionality.argumentsAndDummies.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+    val paramAndDummies = functionality.allArgumentsAndDummies.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
     val helpMods = generateHelp(functionality, params)
     val parMods = generateParsers(params, paramAndDummies)
@@ -139,31 +162,15 @@ object BashWrapper {
     val allMods = helpMods ++ parMods ++ mods ++ execMods
 
     // generate header
-    val nav = nameAndVersion(functionality)
-    val nameAndVersionHeader =
-      ("#" * (nav.length+10)) + "\n" +
-        "#    " + nav + "    #\n" +
-        ("#" * (nav.length+10))
-
-    val authorHeader =
-      if (functionality.authors.isEmpty) {
-        ""
-      } else {
-        functionality.authors.map(_.toString).mkString("#\n# Component authors:\n# * ", "\n# * ", "\n")
-      }
-
-    val header =
-      s"""This wrapper script is auto-generated by ${Main.name} ${Main.version} and is thus a derivative work thereof. This software comes with ABSOLUTELY NO WARRANTY from Data Intuitive.
-         |
-         |The component may contain files which fall under a different license. The authors of this component should specify the license in the header of such files, or include a separate license file detailing the licenses of all included files.""".stripMargin
+    val header = Helper.generateScriptHeader(functionality)
+      .map(h => Bash.escapeMore(h))
+      .mkString("# ", "\n# ", "")
 
     /* GENERATE BASH SCRIPT */
     s"""#!/usr/bin/env bash
        |
-       |$nameAndVersionHeader
+       |$header
        |
-       |# ${Format.wordWrap(header, 78).mkString("\n# ")}
-       |$authorHeader
        |set -e
        |
        |if [ -z "$$VIASH_TEMP" ]; then
@@ -179,9 +186,16 @@ object BashWrapper {
        |# find source folder of this component
        |$var_resources_dir=`ViashSourceDir $${BASH_SOURCE[0]}`
        |
+       |# backwards compatibility
+       |VIASH_RESOURCES_DIR="$$$var_resources_dir"
+       |
+       |# define meta fields
+       |VIASH_META_FUNCTIONALITY_NAME="${functionality.name}"
+       |
        |${spaceCode(allMods.preParse)}
        |# initialise array
        |VIASH_POSITIONAL_ARGS=''
+       |VIASH_MODE='run'
        |
        |while [[ $$# -gt 0 ]]; do
        |    case "$$1" in
@@ -189,24 +203,20 @@ object BashWrapper {
        |            ViashHelp
        |            exit
        |            ;;
-       |        -v|--verbose)
+       |        ---v|---verbose)
        |            let "$var_verbosity=$var_verbosity+1"
        |            shift 1
        |            ;;
-       |        -vv)
-       |            let "$var_verbosity=$var_verbosity+2"
-       |            shift 1
-       |            ;;
-       |        --verbosity)
+       |        ---verbosity)
        |            $var_verbosity="$$2"
        |            shift 2
        |            ;;
-       |        --verbosity=*)
+       |        ---verbosity=*)
        |            $var_verbosity="$$(ViashRemoveFlags "$$1")"
        |            shift 1
        |            ;;
        |        --version)
-       |            echo "${nameAndVersion(functionality)}"
+       |            echo "${Helper.nameAndVersion(functionality)}"
        |            exit
        |            ;;
        |${allMods.parsers}
@@ -221,59 +231,20 @@ object BashWrapper {
        |# parse positional parameters
        |eval set -- $$VIASH_POSITIONAL_ARGS
        |${spaceCode(allMods.postParse)}
+       |${spaceCode(allMods.preRun)}
        |$heredocStart$executor$executionCode$heredocEnd
        |${spaceCode(allMods.postRun)}""".stripMargin
   }
 
 
   private def generateHelp(functionality: Functionality, params: List[DataObject[_]]) = {
-    // gather parse code for params
-    val paramStrs = params.map(param => {
-      val names = param.alternatives ::: List(param.name)
-
-      val unnamedProps = List(
-        ("required parameter", param.required),
-        ("multiple values allowed", param.multiple),
-        ("output", param.direction == Output),
-        ("file must exist", param.isInstanceOf[FileObject] && param.asInstanceOf[FileObject].must_exist)
-      ).filter(_._2).map(_._1)
-
-      val namedProps = List(
-        ("type", Some((param.oType :: unnamedProps).mkString(", "))),
-        ("default", param.default.map(de => escapeViash(de.toString, quote = true, newline = true))),
-        ("example", param.example.map(ex => escapeViash(ex, quote = true, newline = true)))
-      ).flatMap { case (name, x) =>
-        x.map("\n  echo \"        " + name + ": " + _ + "\"")
-      }.mkString
-
-      val descStr = param.description.map{ desc =>
-        val escapedDesc = escapeViash(desc.stripLineEnd, quote = true).split("\n")
-        escapedDesc.map("\n  echo \"        " + _ + "\"").mkString
-      }.getOrElse("")
-
-      s"""
-         |  echo "   ${names.mkString(", ")}"$namedProps$descStr
-         |  echo ""
-         |""".stripMargin
-    })
-
-    val descrStr = functionality.description.map{ desc =>
-      val escapedDesc = escapeViash(desc.stripLineEnd, quote = true).split("\n")
-      escapedDesc.map("\n  echo \"" + _ + "\"").mkString
-    }.getOrElse("")
-
-    val usageStr = functionality.usage.map{ desc =>
-      val escapedDesc = escapeViash(desc.stripLineEnd, quote = true).split("\n")
-      escapedDesc.map("\n  echo \"Usage: " + _ + "\"").mkString
-    }.getOrElse("")
+    val help = Helper.generateHelp(functionality, params)
+    val helpStr = help.map(h => Bash.escapeMore(h, quote = true)).mkString("  echo \"", "\"\n  echo \"", "\"")
 
     val preParse =
       s"""# ViashHelp: Display helpful explanation about this executable
       |function ViashHelp {
-      |  echo "${nameAndVersion(functionality)}"$descrStr
-      |  echo$usageStr
-      |  echo "Options:"
-      |${paramStrs.mkString("\n")}
+      |$helpStr
       |}""".stripMargin
 
     BashWrapperMods(preParse = preParse)
@@ -281,7 +252,7 @@ object BashWrapper {
 
   private def generateParsers(params: List[DataObject[_]], paramsAndDummies: List[DataObject[_]]) = {
     // gather parse code for params
-    val wrapperParams = params.filterNot(_.otype == "")
+    val wrapperParams = params.filterNot(_.flags == "")
     val parseStrs = wrapperParams.map {
       case bo: BooleanObject if bo.flagValue.isDefined =>
         val fv = bo.flagValue.get
@@ -298,12 +269,12 @@ object BashWrapper {
         val multisep = if (param.multiple) Some(param.multiple_sep) else None
 
         // params of the form --param ...
-        val part1 = param.otype match {
+        val part1 = param.flags match {
           case "---" | "--" | "-" => argStore(param.name, param.VIASH_PAR, "\"$2\"", 2, multisep)
           case "" => Nil
         }
         // params of the form --param=..., except -param=... is not allowed
-        val part2 = param.otype match {
+        val part2 = param.flags match {
           case "---" | "--" => List(argStoreSed(param.name, param.VIASH_PAR, multisep))
           case "-" | "" => Nil
         }
@@ -316,7 +287,7 @@ object BashWrapper {
     }.mkString("\n")
 
     // parse positionals
-    val positionals = paramsAndDummies.filter(_.otype == "")
+    val positionals = paramsAndDummies.filter(_.flags == "")
     val positionalStr = positionals.map { param =>
       if (param.multiple) {
         s"""while [[ $$# -gt 0 ]]; do
@@ -355,12 +326,13 @@ object BashWrapper {
       val default = param match {
         case p if p.required => None
         case bo: BooleanObject if bo.flagValue.isDefined => bo.flagValue.map(!_)
-        case p => p.default
+        case p if p.default.nonEmpty => Some(p.default.map(_.toString).mkString(p.multiple_sep.toString))
+        case p if p.default.isEmpty => None
       }
 
       default.map(default => {
         s"""if [ -z "$$${param.VIASH_PAR}" ]; then
-           |  ${param.VIASH_PAR}="${escapeViash(default.toString, quote = true, newline = true)}"
+           |  ${param.VIASH_PAR}="${Bash.escapeMore(default.toString, quote = true, newline = true)}"
            |fi""".stripMargin
       })
     }.mkString("\n")
@@ -401,7 +373,7 @@ object BashWrapper {
     // return output
     BashWrapperMods(
       parsers = parseStrs,
-      postParse = positionalStr + "\n" + reqCheckStr + "\n" + defaultsStrs + "\n" + reqFilesStr
+      preRun = positionalStr + "\n" + reqCheckStr + "\n" + defaultsStrs + "\n" + reqFilesStr
     )
   }
 
@@ -413,7 +385,7 @@ object BashWrapper {
            |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS ${bo.name}"
            |fi""".stripMargin
       case param =>
-        val flag = if (param.otype == "") "" else " " + param.name
+        val flag = if (param.flags == "") "" else " " + param.name
 
         if (param.multiple) {
           s"""
@@ -435,7 +407,7 @@ object BashWrapper {
     }
 
     BashWrapperMods(
-      postParse = "\nVIASH_EXECUTABLE_ARGS=''" + inserts.mkString
+      preRun = "\nVIASH_EXECUTABLE_ARGS=''" + inserts.mkString
     )
   }
 

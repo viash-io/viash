@@ -24,6 +24,8 @@ grep -q 'optional: |foo|' output.txt
 grep -q 'optional_with_default: |bar|' output.txt
 grep -q 'multiple: |one:two|' output.txt
 grep -q 'multiple_pos: |a:b:c:d:e:f|' output.txt
+grep -q 'meta_functionality_name: |testbash|' output.txt
+grep -q 'meta_resources_dir: |..*|' output.txt
 
 grep -q 'resources_dir: |..*|' output.txt
 grep -q 'head of input: |Scala|' output.txt
@@ -33,14 +35,14 @@ grep -q 'head of resource1: |if you can read this,|' output.txt
 grep -q 'Parsed input arguments.' log.txt
 
 echo ">>> Checking whether output is correct with minimal parameters"
-./testbash "resource2.txt" --real_number 123.456 --whole_number=789 -s 'my$weird#string' \
+./testbash "resource2.txt" --real_number 123.456 --whole_number=789 -s "my\$weird#string\"\"\"" \
   > output2.txt
 
 [[ ! -f output2.txt ]] && echo "Output file could not be found!" && exit 1
 grep -q 'input: |resource2.txt|' output2.txt
 grep -q 'real_number: |123.456|' output2.txt
 grep -q 'whole_number: |789|' output2.txt
-grep -q 's: |my$weird#string|' output2.txt
+grep -q "s: |my\$weird#string\"\"\"|" output2.txt
 grep -q 'truth: |false|' output2.txt
 grep -q 'falsehood: |true|' output2.txt
 grep -q 'reality: ||' output2.txt
@@ -50,6 +52,9 @@ grep -q 'optional: ||' output2.txt
 grep -q 'optional_with_default: |The default value.|' output2.txt
 grep -q 'multiple: ||' output2.txt
 grep -q 'multiple_pos: ||' output2.txt
+
+grep -q 'meta_functionality_name: |testbash|' output2.txt
+grep -q 'meta_resources_dir: |..*|' output2.txt
 
 grep -q 'resources_dir: |..*|' output2.txt
 grep -q 'head of input: |this file is only for testing|' output2.txt

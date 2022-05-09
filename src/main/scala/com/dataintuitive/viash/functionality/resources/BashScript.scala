@@ -19,6 +19,7 @@ package com.dataintuitive.viash.functionality.resources
 
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.wrapper.BashWrapper
 
 import java.net.URI
 
@@ -28,7 +29,7 @@ case class BashScript(
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
-  oType: String = "bash_script"
+  `type`: String = "bash_script"
 ) extends Script {
   val meta = BashScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
@@ -36,14 +37,18 @@ case class BashScript(
   }
 
   def generatePlaceholder(functionality: Functionality): String = {
-    val params = functionality.arguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
 
-    val par_set = params.map { par =>
-      s"""${par.par}='$$${par.VIASH_PAR}'"""
+    val parSet = params.map { par =>
+      val parse = par.par + "=" + par.viash_par_escaped("'", """\'""", """\'\"\'\"\'""")
+      s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; fi )"""
     }
-    s"""${par_set.mkString("\n")}
-       |
-       |resources_dir="$$VIASH_RESOURCES_DIR"
+    val metaSet = BashWrapper.metaFields.map{ case (env_name, script_name) =>
+      s"""meta_$script_name='$$$env_name'""".stripMargin
+    }
+    s"""${parSet.mkString("\n")}
+       |${metaSet.mkString("\n")}
+       |resources_dir="$$VIASH_META_RESOURCES_DIR"
        |""".stripMargin
   }
 }
@@ -51,7 +56,7 @@ case class BashScript(
 object BashScript extends ScriptObject {
   val commentStr = "#"
   val extension = "sh"
-  val oType = "bash_script"
+  val `type` = "bash_script"
 
   def command(script: String): String = {
     "bash \"" + script + "\""

@@ -1,6 +1,4 @@
 type: docker
 id: custom
 image: python:3.8
-setup:
-  - type: python
-    packages: [ anndata ]
+target_image: custom_target_image_tag

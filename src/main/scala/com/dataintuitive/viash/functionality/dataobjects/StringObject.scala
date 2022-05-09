@@ -17,17 +17,33 @@
 
 package com.dataintuitive.viash.functionality.dataobjects
 
+import com.dataintuitive.viash.helpers.Circe.OneOrMore
+
 case class StringObject(
   name: String,
   alternatives: List[String] = Nil,
   description: Option[String] = None,
-  example: Option[String] = None,
-  default: Option[String] = None,
+  example: OneOrMore[String] = Nil,
+  default: OneOrMore[String] = Nil,
   required: Boolean = false,
-  values: Option[List[String]] = None,
-  tag: Option[String] = None,
+  values: List[String] = Nil,
   direction: Direction = Input,
   multiple: Boolean = false,
   multiple_sep: Char = ':',
-  oType: String = "string"
-) extends DataObject[String]
+  `type`: String = "string"
+) extends DataObject[String] {
+  def copyDO(
+    `type`: String, 
+    name: String, 
+    alternatives: List[String],
+    description: Option[String],
+    example: OneOrMore[String],
+    default: OneOrMore[String],
+    required: Boolean,
+    direction: Direction,
+    multiple: Boolean,
+    multiple_sep: Char
+  ): DataObject[String] = {
+    copy(name, alternatives, description, example, default, required, values, direction, multiple, multiple_sep, `type`)
+  }
+}

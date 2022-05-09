@@ -27,21 +27,39 @@ package object platforms {
   implicit val encodeDockerPlatform: Encoder.AsObject[DockerPlatform] = deriveConfiguredEncoder
   implicit val decodeDockerPlatform: Decoder[DockerPlatform] = deriveConfiguredDecoder
 
-  implicit val encodeNextFlowPlatform: Encoder.AsObject[NextFlowPlatform] = deriveConfiguredEncoder
-  implicit val decodeNextFlowPlatform: Decoder[NextFlowPlatform] = deriveConfiguredDecoder
+  implicit val encodeNextflowLegacyPlatform: Encoder.AsObject[NextflowLegacyPlatform] = deriveConfiguredEncoder
+  implicit val decodeNextflowLegacyPlatform: Decoder[NextflowLegacyPlatform] = deriveConfiguredDecoder
+
+  implicit val encodeNextflowVdsl3Platform: Encoder.AsObject[NextflowVdsl3Platform] = deriveConfiguredEncoder
+  implicit val decodeNextflowVdsl3Platform: Decoder[NextflowVdsl3Platform] = deriveConfiguredDecoder
 
   implicit val encodeNativePlatform: Encoder.AsObject[NativePlatform] = deriveConfiguredEncoder
   implicit val decodeNativePlatform: Decoder[NativePlatform] = deriveConfiguredDecoder
 
   implicit def encodePlatform[A <: Platform]: Encoder[A] = Encoder.instance {
     platform =>
-      val typeJson = Json.obj("type" → Json.fromString(platform.oType))
+      val typeJson = Json.obj("type" → Json.fromString(platform.`type`))
       val objJson = platform match {
         case s: DockerPlatform => encodeDockerPlatform(s)
-        case s: NextFlowPlatform => encodeNextFlowPlatform(s)
+        case s: NextflowLegacyPlatform => encodeNextflowLegacyPlatform(s)
+        case s: NextflowVdsl3Platform => encodeNextflowVdsl3Platform(s)
         case s: NativePlatform => encodeNativePlatform(s)
       }
       objJson deepMerge typeJson
+  }
+
+  implicit def decodeNextflowPlatform: Decoder[NextflowPlatform] = Decoder.instance {
+    cursor =>
+      val decoder: Decoder[NextflowPlatform] =
+        cursor.downField("variant").as[String] match {
+          case Right("legacy") => decodeNextflowLegacyPlatform.widen
+          case Right("vdsl3") => decodeNextflowVdsl3Platform.widen
+          case Right(typ) => throw new RuntimeException("Variant " + typ + " is not recognised.")
+          // TODO: default is legacy, will be changed in Viash 0.6 or 1.0
+          case Left(exception) => decodeNextflowLegacyPlatform.widen
+        }
+
+      decoder(cursor)
   }
 
   implicit def decodePlatform: Decoder[Platform] = Decoder.instance {
@@ -50,7 +68,7 @@ package object platforms {
         cursor.downField("type").as[String] match {
           case Right("docker") => decodeDockerPlatform.widen
           case Right("native") => decodeNativePlatform.widen
-          case Right("nextflow") => decodeNextFlowPlatform.widen
+          case Right("nextflow") => decodeNextflowPlatform.widen
           case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised.")
           case Left(exception) => throw exception
         }

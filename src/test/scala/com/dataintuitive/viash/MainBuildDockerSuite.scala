@@ -18,7 +18,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   private val tempFolStr = temporaryFolder.toString
 
   // parse functionality from file
-  private val functionality = Config.read(configFile, modifyFun = false).functionality
+  private val functionality = Config.read(configFile, applyPlatform = false).functionality
 
   // check whether executable was created
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
@@ -57,9 +57,9 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
         Seq(executable.toString, "--help")
       )
 
-    val stripAll = (s : String) => s.replaceAll(raw"\s+", " ").strip
+    val stripAll = (s : String) => s.replaceAll(raw"\s+", " ").trim
 
-    functionality.arguments.foreach(arg => {
+    functionality.allArguments.foreach(arg => {
       for (opt <- arg.alternatives; value <- opt)
         assert(stdout.contains(value))
       for (description <- arg.description) {
@@ -256,14 +256,14 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       }
 
       assert(
-        Exec.run2(
+        Exec.run2Path(
           List("git", "init"),
           cwd = Some(tempMetaFolder)
         ).exitValue == 0
         , "git init")
 
       assert(
-        Exec.run2(
+        Exec.run2Path(
           List("git", "remote", "add", "origin", fakeGitRepo),
           cwd = Some(tempMetaFolder)
         ).exitValue == 0
@@ -323,7 +323,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       }
 
       assert(
-        Exec.run2(
+        Exec.run2Path(
           List("git", "init"),
           cwd = Some(tempMetaFolder)
         ).exitValue == 0

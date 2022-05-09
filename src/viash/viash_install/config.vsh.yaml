@@ -1,0 +1,56 @@
+functionality:
+  name: viash_install
+  namespace: viash
+  version: 0.1
+  description: |
+    Bootstrap or update a viash project's CI/CD artefacts
+  arguments:
+  - name: "--bin"
+    type: file
+    description: Target dir for viash scripts and tools
+    direction: output
+    default: bin/
+  - name: "--registry"
+    alternatives: [ "-r" ]
+    example: ghcr.io
+    type: string
+    description: Which Docker registry to use in the Docker image name.
+  - name: "--organization"
+    alternatives: [ "-o", "--organisation" ]
+    example: myorganisation
+    type: string
+    description: Which organisation name to use in the Docker image name.
+  - name: "--target_image_source"
+    alternatives: [ "-tis" ]
+    type: string
+    description: Which image source to specify in the component builds.
+    example: https://github.com/myorganisation/myrepository
+  - name: "--namespace_separator"
+    example: "_"
+    type: string
+    description: The separator to use between the component name and namespace as the image name of a Docker container.
+  - name: "--nextflow_variant"
+    default: "legacy"
+    type: string
+    description: "Which nextflow variant to use. Options are 'legacy' and 'vdsl3'."
+  - name: "--config_mod"
+    alternatives: [ "-c" ]
+    type: string
+    multiple: true
+    multiple_sep: ";"
+    description: "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
+  - name: "--tag"
+    alternatives: [ "-t" ]
+    type: string
+    description: "Which tag/version of viash to use."
+    default: latest
+  - name: "--log_prefix"
+    alternatives: [ "-l" ]
+    type: string
+    description: "A prefix path or directory for where to store the log files."
+    default: ./.viash_log_
+  resources:
+    - type: bash_script
+      path: script.sh
+platforms:
+- type: native

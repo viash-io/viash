@@ -23,7 +23,7 @@ import com.dataintuitive.viash.helpers.IO
 import java.nio.file.{Path, Paths}
 
 trait Resource {
-  val oType: String
+  val `type`: String
   val dest: Option[String]
   val parent: Option[URI]
   val path: Option[String]

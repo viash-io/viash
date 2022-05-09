@@ -17,8 +17,9 @@
 
 package com.dataintuitive.viash.helpers
 
-import java.io.File
-import java.nio.file.{Files, Path, Paths}
+import java.io.{File, IOException}
+import java.nio.file.{FileVisitResult, Files, Path, Paths, SimpleFileVisitor}
+import java.nio.file.attribute.BasicFileAttributes
 import scala.reflect.io.Directory
 import java.net.URI
 import scala.io.Source
@@ -28,20 +29,30 @@ import java.nio.charset.StandardCharsets
 import com.dataintuitive.viash.functionality.resources.Resource
 
 import java.nio.file.attribute.PosixFilePermission
+import java.util.Comparator
 
 object IO {
-  def tempDir: File = {
-    Paths.get(scala.util.Properties.envOrElse("VIASH_TEMP", "/tmp")).toFile
+  def tempDir: Path = {
+    Paths.get(scala.util.Properties.envOrElse("VIASH_TEMP", "/tmp"))
   }
-  def makeTemp(name: String): File = {
-    if (!tempDir.exists()) Files.createDirectories(tempDir.toPath)
-    val temp = Files.createTempDirectory(tempDir.toPath, name).toFile
-    temp.mkdirs()
+  def makeTemp(name: String): Path = {
+    if (!Files.exists(tempDir)) Files.createDirectories(tempDir)
+    val temp = Files.createTempDirectory(tempDir, name)
+    Files.createDirectories(temp)
     temp
   }
 
-  def deleteRecursively(dir: File) {
-    new Directory(dir).deleteRecursively()
+  def deleteRecursively(dir: Path) {
+    Files.walkFileTree(dir, new SimpleFileVisitor[Path] {
+      override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+        Files.delete(file)
+        FileVisitResult.CONTINUE
+      }
+      override def postVisitDirectory(dir: Path, exc: IOException): FileVisitResult = {
+        Files.delete(dir)
+        FileVisitResult.CONTINUE
+      }
+    })
   }
 
   private val uriRegex = "^[a-zA-Z0-9]*:".r
@@ -69,18 +80,19 @@ object IO {
     try {
       Some(read(uri))
     } catch {
-      case _: Exception => {
+      case _: Exception =>
         println(s"File at URI '$uri' not found")
         None
       }
-    }
   }
 
-  def write(uri: URI, path: Path, overwrite: Boolean, executable: Option[Boolean]): File = {
-    val file = path.toFile
-
-    if (overwrite && file.exists()) {
-      file.delete()
+  def write(uri: URI, path: Path, overwrite: Boolean, executable: Option[Boolean]): Path = {
+    if (overwrite && Files.exists(path)) {
+      if (Files.isDirectory(path)) {
+        deleteRecursively(path)
+      } else {
+        Files.delete(path)
+      }
     }
 
     if (uri.getScheme == "file") {
@@ -95,45 +107,52 @@ object IO {
       }
     } else if (uri.getScheme == "http" || uri.getScheme == "https") {
       val url = new URL(uri.toString)
-      url #> file !!
+      (url #> path.toFile).!!
     } else {
       throw new RuntimeException("Unsupported scheme: " + uri.getScheme)
     }
 
     setPerms(path, executable)
 
-    file
+    path
   }
 
-  def write(text: String, path: Path, overwrite: Boolean, executable: Option[Boolean]): File = {
-    val file = path.toFile
-
-    if (overwrite && file.exists()) {
-      file.delete()
+  def write(text: String, path: Path, overwrite: Boolean, executable: Option[Boolean]): Path = {
+    if (overwrite && Files.exists(path)) {
+      if (Files.isDirectory(path)) {
+        deleteRecursively(path)
+      } else {
+        Files.delete(path)
+      }
     }
 
     Files.write(path, text.getBytes(StandardCharsets.UTF_8))
 
     setPerms(path, executable)
 
-    file
+    // sleep to avoid concurrency issue where
+    // file is executed to build docker containers
+    // but apparently still in the process of being written
+    Thread.sleep(50)
+
+    path
   }
 
   def writeResources(
     resources: Seq[Resource],
-    outputDir: java.io.File,
+    outputDir: Path,
     overwrite: Boolean = true
   ) {
     // copy all files
     resources.foreach { resource =>
       // determine destination path
-      val dest = Paths.get(outputDir.getAbsolutePath, resource.resourcePath)
+      val dest = outputDir.resolve(resource.resourcePath).toAbsolutePath
 
       // create parent directory if it doesn't exist
-      val parent = dest.toFile.getParentFile
+      val parent = dest.getParent
 
-      if (!parent.exists) {
-        parent.mkdirs()
+      if (!Files.exists(parent)) {
+        Files.createDirectories(parent)
       }
 
       // write resource to path

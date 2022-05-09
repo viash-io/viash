@@ -27,12 +27,33 @@ functionality:
     °+"*ç%&/()=?`
     \n\r\t\s\
   arguments:
+    # input arguments
     - name: "--input1"
       type: file
+      example: input1.txt
       required: true
     - name: "--input2"
       type: file
       required: true
+      example: input2.txt
+    - name: "--optional"
+      type: file
+      required: false
+      example: optional.txt
+      
+    # output arguments
+    - name: "--output1"
+      type: file
+      required: true
+      direction: output
+      example: output1.txt
+    - name: "--output2"
+      type: file
+      required: true
+      direction: output
+      example: output2.txt
+      
+    # some non-file arguments
     - name: "--default_arg"
       type: string
       description: |
@@ -76,17 +97,6 @@ functionality:
         §1234567890'^
         °+"*ç%&/()=?`
         \n\r\t\s\
-    - name: "--optional"
-      type: file
-      required: false
-    - name: "--output1"
-      type: file
-      required: true
-      direction: output
-    - name: "--output2"
-      type: file
-      required: true
-      direction: output
   resources:
     - type: bash_script
       path: script.sh
@@ -95,4 +105,6 @@ platforms:
   - type: docker
     image: nextflow/bash:latest
   - type: nextflow
+    variant: legacy
+    publish: true
       

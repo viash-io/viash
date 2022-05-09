@@ -30,7 +30,7 @@ object TestHelper {
   def testMain(args: String*) : String = {
     val os = new ByteArrayOutputStream()
     Console.withOut(os) {
-      Main.main(args.toArray)
+      Main.internalMain(args.toArray)
     }
 
     val stdout = os.toString
@@ -49,7 +49,7 @@ object TestHelper {
     val errStream = new ByteArrayOutputStream()
     Console.withOut(outStream) {
       Console.withErr(errStream) {
-        Main.main(args.toArray)
+        Main.internalMain(args.toArray)
       }
     }
 
@@ -70,7 +70,7 @@ object TestHelper {
     val os = new ByteArrayOutputStream()
     assertThrows[T] {
       Console.withOut(os) {
-        Main.main(args.toArray)
+        Main.internalMain(args.toArray)
       }
     }
 
@@ -90,7 +90,7 @@ object TestHelper {
     val os = new ByteArrayOutputStream()
     val caught = intercept[Exception] {
       Console.withOut(os) {
-        Main.main(args.toArray)
+        Main.internalMain(args.toArray)
       }
     }
 

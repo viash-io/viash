@@ -1,7 +1,6 @@
 functionality:
   name: viash_clean_nxf
   namespace: viash
-  version: 0.1
   description: |
     Clean a (nextflow) project directory
   arguments:
@@ -26,4 +25,4 @@ functionality:
 platforms:
 - type: native
 - type: docker
-  image: nextflow/nextflow
+  image: nextflow/nextflow:21.10.6

@@ -18,33 +18,43 @@ functionality:
   - name: "--query"
     alternatives: [ "-q" ]
     type: string
-    description: "Filter which components get selected by name and namespace. Can be a regex. Example: '^mynamespace/component1$'."
+    description: "Filter which components get selected by name and namespace. Can be a regex."
+    example: "^mynamespace/component1$"
   - name: "--query_namespace"
     alternatives: [ "-n" ]
     type: string
-    description: "Filter which namespaces get selected by namespace. Can be a regex. Example: '^mynamespace$'."
+    description: "Filter which namespaces get selected by namespace. Can be a regex."
+    example: "^mynamespace$"
   - name: "--query_name"
     type: string
-    description: "Filter which components get selected by name. Can be a regex. Example: '^component1'."
+    description: "Filter which components get selected by name. Can be a regex."
+    example: "^component1$"
   - name: "--tag"
     alternatives: [ "-t" ]
     type: string
     description: The tag/version to be used.
-    default: "dev"
+    example: "dev"
   - name: "--registry"
     alternatives: [ "-r" ]
+    example: ghcr.io
     type: string
-    description: Docker registry to use, only used when using a registry.
+    description: Which Docker registry to use in the Docker image name.
+  - name: "--organization"
+    alternatives: [ "-o", "--organisation" ]
+    example: myorganisation
+    type: string
+    description: Which organisation name to use in the Docker image name.
   - name: "--namespace_separator"
-    default: "_"
+    example: "_"
     type: string
     description: The separator to use between the component name and namespace as the image name of a Docker container.
-  - name: "--force"
-    type: boolean_true
-    description: Overwrite registry
   - name: "--max_threads"
     type: integer
-    description: The maximum number of threads viash will use when `--parallell` during parallel tasks.
+    description: The maximum number of threads viash will use when `--parallel` during parallel tasks.
+    example: 8
+  - name: "--force"
+    type: boolean_true
+    description: Overwrite existing container.
   - name: "--config_mod"
     alternatives: [ "-c" ]
     type: string
@@ -55,12 +65,15 @@ functionality:
     alternatives: [ "-l" ]
     type: file
     description: Log file
-    default: log.txt
+    example: .viash_push_log.txt
   - name: "--viash"
     type: file
     description: A path to the viash executable. If not specified, this component will look for 'viash' on the $PATH.
+  - name: "--verbose"
+    type: boolean_true
+    description: "Increase verbosity."
   resources:
-    - type: bash_script
+    - type: bash1_script
       path: script.sh
 platforms:
 - type: native

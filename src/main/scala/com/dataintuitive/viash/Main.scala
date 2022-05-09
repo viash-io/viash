@@ -30,7 +30,24 @@ object Main {
   val name: String = if (pkg.getImplementationTitle != null) pkg.getImplementationTitle else "viash"
   val version: String = if (pkg.getImplementationVersion != null) pkg.getImplementationVersion else "test"
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
+    try {
+      internalMain(args)
+    } catch {
+      case e: Exception =>
+        System.err.println(
+          s"""Unexpected error occurred! If you think this is a bug, please post
+            |create an issue at https://github.com/viash-io/viash/issues containing
+            |a reproducible example and the stack trace below.
+            |
+            |$name - $version
+            |Stacktrace:""".stripMargin
+        )
+        e.printStackTrace()
+        System.exit(1)
+    }
+  }
+  def internalMain(args: Array[String]): Unit = {
     val (viashArgs, runArgs) = {
         if (args.length > 0 && args(0) == "run") {
           args.span(_ != "--")
@@ -56,7 +73,7 @@ object Main {
           push = cli.build.push()
         )
       case List(cli.test) =>
-        val config = readConfig(cli.test, modifyFun = false)
+        val config = readConfig(cli.test, applyPlatform = false)
         ViashTest(config, keepFiles = cli.test.keep.toOption.map(_.toBoolean))
       case List(cli.namespace, cli.namespace.build) =>
         val configs = readConfigs(cli.namespace.build)
@@ -70,7 +87,7 @@ object Main {
           flatten = cli.namespace.build.flatten()
         )
       case List(cli.namespace, cli.namespace.test) =>
-        val configs = readConfigs(cli.namespace.test, modifyFun = false)
+        val configs = readConfigs(cli.namespace.test, applyPlatform = false)
         ViashNamespace.test(
           configs = configs,
           parallel = cli.namespace.test.parallel(),
@@ -79,16 +96,25 @@ object Main {
           append = cli.namespace.test.append()
         )
       case List(cli.namespace, cli.namespace.list) =>
-        val configs = readConfigs(cli.namespace.test, modifyFun = false)
+        val configs = readConfigs(cli.namespace.list, applyPlatform = false)
         ViashNamespace.list(
-          configs = configs
+          configs = configs,
+          cli.namespace.list.format()
         )
       case List(cli.config, cli.config.view) =>
-        val config = Config.readOnly(
+        val config = Config.read(
           configPath = cli.config.view.config(),
-          configMods = cli.config.view.config_mods()
+          configMods = cli.config.view.config_mods(),
+          modifyConfig = false
         )
-        ViashConfig.view(config)
+        ViashConfig.view(config, cli.config.view.format())
+      case List(cli.config, cli.config.inject) =>
+        val config = Config.read(
+          configPath = cli.config.inject.config(),
+          configMods = cli.config.inject.config_mods(),
+          modifyConfig = false
+        )
+        ViashConfig.inject(config)
       case _ =>
         Console.err.println("No subcommand was specified. See `viash --help` for more information.")
     }
@@ -96,19 +122,19 @@ object Main {
 
   def readConfig(
     subcommand: ViashCommand,
-    modifyFun: Boolean = true
+    applyPlatform: Boolean = true
   ): Config = {
     Config.read(
       configPath = subcommand.config(),
-      platform = subcommand.platform.toOption | subcommand.platformid.toOption,
-      modifyFun = modifyFun,
+      platform = subcommand.platform.toOption,
+      applyPlatform = applyPlatform,
       configMods = subcommand.config_mods()
     )
   }
 
   def readConfigs(
     subcommand: ViashNs,
-    modifyFun: Boolean = true,
+    applyPlatform: Boolean = true,
   ): List[Config] = {
     val source = subcommand.src()
     val query = subcommand.query.toOption
@@ -117,7 +143,7 @@ object Main {
     val sourceDir = Paths.get(source)
 
     // create regex for filtering platform ids
-    val platformStr = (subcommand.platform.toOption | subcommand.platformid.toOption).getOrElse(".*")
+    val platformStr = (subcommand.platform.toOption).getOrElse(".*")
 
     // find *.vsh.* files and parse as config
     val scriptFiles = find(sourceDir, (path, attrs) => {
@@ -129,8 +155,11 @@ object Main {
       val conf1 =
         try {
           // first read config to get an idea of the available platforms
-          val confTest =
-            Config.read(file.toString, modifyFun = false, configMods = subcommand.config_mods())
+          val confTest = Config.read(
+            file.toString, 
+            applyPlatform = false, 
+            configMods = subcommand.config_mods()
+          )
 
           val funName = confTest.functionality.name
           val funNs = confTest.functionality.namespace
@@ -172,7 +201,7 @@ object Main {
           List(Config.read(
             configPath = file.toString,
             platform = Some(platformStr),
-            modifyFun = modifyFun,
+            applyPlatform = applyPlatform,
             configMods = subcommand.config_mods()
           ))
         } else {
@@ -192,7 +221,7 @@ object Main {
             Config.read(
               configPath = file.toString,
               platform = plat,
-              modifyFun = modifyFun,
+              applyPlatform = applyPlatform,
               configMods = subcommand.config_mods()
             )
           }

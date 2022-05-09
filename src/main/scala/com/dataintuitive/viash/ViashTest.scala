@@ -17,20 +17,19 @@
 
 package com.dataintuitive.viash
 
-import functionality._
-import dataobjects.{FileObject, Output}
-import platforms._
-import resources.{BashScript, Script}
-
 import sys.process.{Process, ProcessLogger}
-import java.io.{ByteArrayOutputStream, File, FileWriter, PrintWriter}
-import java.nio.file.Paths
-import com.dataintuitive.viash.config.{Config, Version}
-import helpers.IO
-
+import java.io.{ByteArrayOutputStream, FileWriter, PrintWriter}
+import java.nio.file.{Files, Path, Paths}
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import scala.util.Random
+
+import config.{Config, Version}
+import functionality.dataobjects.{FileObject, Output}
+import functionality.resources.{BashScript, Script}
+import platforms.NativePlatform
+import helpers.IO
+import helpers.Circe.{OneOrMore, One, More}
 
 object ViashTest {
   case class TestOutput(name: String, exitValue: Int, output: String, logFile: String, duration: Long)
@@ -95,6 +94,7 @@ object ViashTest {
       if (!quiet) println("Cleaning up temporary directory")
       IO.deleteRecursively(dir)
     }
+    // TODO: remove container
 
     if (anyErrors && !quiet) {
       throw new RuntimeException(errorMessage)
@@ -103,17 +103,17 @@ object ViashTest {
     ManyTestOutput(setupRes, results)
   }
 
-  def runTests(config: Config, dir: File, verbose: Boolean = true, setupStrategy: String, verbosityLevel: Int): ManyTestOutput = {
+  def runTests(config: Config, dir: Path, verbose: Boolean = true, setupStrategy: String, verbosityLevel: Int): ManyTestOutput = {
     val fun = config.functionality
     val platform = config.platform.get
 
     val consoleLine = "===================================================================="
 
     // build regular executable
-    val buildFun = platform.modifyFunctionality(fun)
-    val buildDir = Paths.get(dir.toString, "build_executable").toFile
-    buildDir.mkdir()
-    IO.writeResources(buildFun.resources.getOrElse(Nil), buildDir)
+    val buildFun = platform.modifyFunctionality(config)
+    val buildDir = dir.resolve("build_executable")
+    Files.createDirectories(buildDir)
+    IO.writeResources(buildFun.resources, buildDir)
 
     // run command, collect output
     val buildResult =
@@ -138,9 +138,9 @@ object ViashTest {
         // run command, collect output
         try {
           val executable = Paths.get(buildDir.toString, fun.name).toString
-          logger(s"+$executable --verbosity $verbosityLevel ---setup $setupStrategy")
+          logger(s"+$executable ---verbosity $verbosityLevel ---setup $setupStrategy")
           val startTime = LocalDateTime.now
-          val exitValue = Process(Seq(executable, "--verbosity", verbosityLevel.toString, "---setup", setupStrategy), cwd = buildDir).!(ProcessLogger(logger, logger))
+          val exitValue = Process(Seq(executable, "---verbosity", verbosityLevel.toString, "---setup", setupStrategy), cwd = buildDir.toFile).!(ProcessLogger(logger, logger))
           val endTime = LocalDateTime.now
           val diffTime = ChronoUnit.SECONDS.between(startTime, endTime)
           printWriter.flush()
@@ -157,10 +157,10 @@ object ViashTest {
     }
 
     // generate executable for native platform
-    val exe = NativePlatform().modifyFunctionality(fun).resources.get.head
+    val exe = NativePlatform().modifyFunctionality(config).resources.head
 
     // fetch tests
-    val tests = fun.tests.getOrElse(Nil)
+    val tests = fun.tests
 
     val testResults = tests.filter(_.isInstanceOf[Script]).map {
       case test: Script if test.read.isEmpty =>
@@ -171,35 +171,40 @@ object ViashTest {
         val dirArg = FileObject(
           name = "dir",
           direction = Output,
-          default = Some(dir)
+          default = One(dir)
         )
         // generate bash script for test
-        val funOnlyTest = platform.modifyFunctionality(fun.copy(
-          arguments = Nil,
-          dummy_arguments = Some(List(dirArg)),
-          resources = Some(List(test)),
-          set_wd_to_resources_dir = Some(true)))
+        val funOnlyTest = platform.modifyFunctionality(config.copy(
+          functionality = config.functionality.copy(
+            inputs = Nil,
+            outputs = Nil,
+            arguments = Nil,
+            dummy_arguments = List(dirArg),
+            resources = List(test),
+            set_wd_to_resources_dir = true
+          )
+        ))
         val testBash = BashScript(
           dest = Some(test.filename),
-          text = funOnlyTest.resources.getOrElse(Nil).head.text
+          text = funOnlyTest.resources.head.text
         )
 
         // assemble full resources list for test
-        val funFinal = fun.copy(resources = Some(
+        val funFinal = fun.copy(resources = 
           testBash :: // the test, wrapped in a bash script
             exe :: // the executable, wrapped with a native platform,
             // to be run inside of the platform of the test
-            funOnlyTest.resources.getOrElse(Nil).tail ::: // other resources generated by wrapping the test script
-            fun.resources.getOrElse(Nil).tail ::: // other resources provided in fun.resources
+            funOnlyTest.resources.tail ::: // other resources generated by wrapping the test script
+            fun.resources.tail ::: // other resources provided in fun.resources
             tests.filter(!_.isInstanceOf[Script]) // other resources provided in fun.tests
-        ))
+        )
 
         // make a new directory
-        val newDir = Paths.get(dir.toString, "test_" + test.filename).toFile
-        newDir.mkdir()
+        val newDir = dir.resolve( "test_" + test.filename)
+        Files.createDirectories(newDir)
 
         // write resources to dir
-        IO.writeResources(funFinal.resources.getOrElse(Nil), newDir)
+        IO.writeResources(funFinal.resources, newDir)
 
         // run command, collect output
         val stream = new ByteArrayOutputStream
@@ -216,11 +221,11 @@ object ViashTest {
 
         logger(consoleLine)
 
-        // run command, collect output
         try {
+          // run command, collect output
           val executable = Paths.get(newDir.toString, testBash.filename).toString
           logger(s"+$executable")
-          val exitValue = Process(Seq(executable), cwd = newDir).!(ProcessLogger(logger, logger))
+          val exitValue = Process(Seq(executable), cwd = newDir.toFile).!(ProcessLogger(logger, logger))
 
           printWriter.flush()
 

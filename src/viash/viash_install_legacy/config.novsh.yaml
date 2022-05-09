@@ -1,5 +1,5 @@
 functionality:
-  name: viash_bootstrap
+  name: viash_install_legacy
   namespace: viash
   version: 0.1
   description: |
@@ -34,7 +34,7 @@ functionality:
     description: Path to write the test logs to.
     default: log.tsv
   - name: "--viash"
-    type: file
+    type: string
     description: A path to the viash executable. If not specified, this component will look for 'viash' on the $PATH.
   resources:
     - type: bash_script
