@@ -457,7 +457,7 @@ def processProcessArgs(Map args) {
     def timestamp = Nextflow.getSession().getWorkflowMetadata().start.format('yyyy-MM-dd_HH-mm-ss')
     def transcriptsPublishDir = [ 
       path: "$transcriptsDir/${timestamp}/${processArgs["key"]}/\${id}/", 
-      saveAs: "{ it.startsWith('.') ? it.replaceAll('^.', "") : null }", 
+      saveAs: "{ it.startsWith('.') ? it.replaceAll('^.', '') : null }", 
       mode: "copy"
     ]
     def publishDirs = processArgs.directives.publishDir ?: []
