@@ -35,9 +35,10 @@ object IO {
   def tempDir: Path = {
     Paths.get(scala.util.Properties.envOrElse("VIASH_TEMP", "/tmp"))
   }
-  def makeTemp(name: String): Path = {
-    if (!Files.exists(tempDir)) Files.createDirectories(tempDir)
-    val temp = Files.createTempDirectory(tempDir, name)
+  def makeTemp(name: String, parentTempPath: Option[Path] = None): Path = {
+    val workTempDir = parentTempPath.getOrElse(tempDir)
+    if (!Files.exists(workTempDir)) Files.createDirectories(workTempDir)
+    val temp = Files.createTempDirectory(workTempDir, name)
     Files.createDirectories(temp)
     temp
   }

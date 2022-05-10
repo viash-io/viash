@@ -41,10 +41,11 @@ object ViashTest {
     quiet: Boolean = false,
     setupStrategy: String = "cachedbuild",
     tempVersion: Boolean = true,
-    verbosityLevel: Int = 6
+    verbosityLevel: Int = 6,
+    parentTempPath: Option[Path] = None
   ): ManyTestOutput = {
     // create temporary directory
-    val dir = IO.makeTemp("viash_test_" + config.functionality.name)
+    val dir = IO.makeTemp("viash_test_" + config.functionality.name, parentTempPath)
     if (!quiet) println(s"Running tests in temporary directory: '$dir'")
 
     // set version to temporary value
