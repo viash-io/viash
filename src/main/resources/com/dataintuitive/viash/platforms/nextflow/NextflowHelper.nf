@@ -443,7 +443,8 @@ def processProcessArgs(Map args) {
     // TODO: more asserts on publishDir?
     processArgs.directives.publishDir = [[ 
       path: params.publishDir, 
-      saveAs: "{ it.startsWith('.') ? null : it }" // don't publish hidden files, by default
+      saveAs: "{ it.startsWith('.') ? null : it }", // don't publish hidden files, by default
+      mode: "copy"
     ]]
   }
 
@@ -456,8 +457,8 @@ def processProcessArgs(Map args) {
     def timestamp = Nextflow.getSession().getWorkflowMetadata().start.format('yyyy-MM-dd_HH-mm-ss')
     def transcriptsPublishDir = [ 
       path: "$transcriptsDir/${timestamp}/${processArgs["key"]}/\${id}/", 
-      saveAs: '{ it.replaceAll("^.", "") }',
-      pattern: ".command*"
+      saveAs: "{ it.startsWith('.') ? it.replaceAll('^.', '') : null }", 
+      mode: "copy"
     ]
     def publishDirs = processArgs.directives.publishDir ?: []
     processArgs.directives.publishDir = publishDirs + transcriptsPublishDir

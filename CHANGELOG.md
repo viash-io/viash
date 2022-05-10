@@ -4,6 +4,8 @@
 
 * `--help`: Don't print "my_component <not versioned>" when no version is specified, 
   but instead simply "my_component".
+
+* `NextflowVdsl2Platform`: Set `mode=copy` for `auto.publish` and `auto.transcript`.
   
 # Viash 0.5.11
 
