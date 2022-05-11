@@ -71,7 +71,7 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
     )
 
     // Test inclusion of a header
-    val regexHeader = raw"^The woring directory for the namespace tests is [\w/]+[\r\n]{1,2}\s*namespace\s*functionality\s*platform\s*test_name\s*exit_code\s*duration\s*result".r
+    val regexHeader = raw"^The working directory for the namespace tests is [\w/]+[\r\n]{1,2}\s*namespace\s*functionality\s*platform\s*test_name\s*exit_code\s*duration\s*result".r
     assert(regexHeader.findFirstIn(stdout).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$stdout")
 
     for ((component, steps) ← components) {
