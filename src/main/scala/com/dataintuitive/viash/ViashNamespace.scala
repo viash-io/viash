@@ -72,9 +72,10 @@ object ViashNamespace {
     val tsvWriter = tsvPath.map(Files.newBufferedWriter(_, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND))
 
     val parentTempPath = IO.makeTemp("viash_ns_test")
-    if (keepFiles != Some(false))
-      printf("The woring directory for the namespace tests is %s\n", parentTempPath.toString())
-
+    if (keepFiles.getOrElse(true)) {
+      printf("The working directory for the namespace tests is %s\n", parentTempPath.toString())
+    }
+    
     try {
       if (!append || !tsvExists)
         tsvWriter.foreach { writer =>
