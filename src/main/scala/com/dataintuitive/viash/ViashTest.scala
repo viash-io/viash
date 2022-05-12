@@ -30,6 +30,7 @@ import functionality.resources.{BashScript, Script}
 import platforms.NativePlatform
 import helpers.IO
 import helpers.Circe.{OneOrMore, One, More}
+import com.dataintuitive.viash.helpers.MissingResourceFileException
 
 object ViashTest {
   case class TestOutput(name: String, exitValue: Int, output: String, logFile: String, duration: Long)
@@ -114,7 +115,16 @@ object ViashTest {
     val buildFun = platform.modifyFunctionality(config)
     val buildDir = dir.resolve("build_executable")
     Files.createDirectories(buildDir)
-    IO.writeResources(buildFun.resources, buildDir)
+    try {
+      IO.writeResources(buildFun.resources, buildDir)
+    } catch {
+      case e: MissingResourceFileException =>
+        // add config file name to the exception and throw again
+        if (config.info.isDefined) {
+          throw MissingResourceFileException(e.resource, Some(config.info.get.config), cause= e.cause)
+        }
+        throw e
+    }
 
     // run command, collect output
     val buildResult =

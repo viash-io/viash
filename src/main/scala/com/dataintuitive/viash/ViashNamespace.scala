@@ -21,6 +21,7 @@ import java.nio.file.{Paths, Files, StandardOpenOption}
 import com.dataintuitive.viash.ViashTest.{ManyTestOutput, TestOutput}
 import config.Config
 import helpers.IO
+import com.dataintuitive.viash.helpers.MissingResourceFileException
 
 object ViashNamespace {
   def build(
@@ -115,12 +116,21 @@ object ViashNamespace {
 
         // run tests
         // TODO: it would actually be great if this component could subscribe to testresults messages
-        val ManyTestOutput(setupRes, testRes) = ViashTest(
-          config = conf,
-          keepFiles = keepFiles,
-          quiet = true,
-          parentTempPath = Some(parentTempPath)
-        )
+        var setupRes: Option[TestOutput] = None
+        var testRes = List[TestOutput]()
+        try {
+          val ManyTestOutput(setupRes_, testRes_) = ViashTest(
+            config = conf,
+            keepFiles = keepFiles,
+            quiet = true,
+            parentTempPath = Some(parentTempPath)
+          )
+          setupRes = setupRes_
+          testRes = testRes_
+        } catch {
+          case e: MissingResourceFileException => 
+            System.err.printf(s"%sviash ns: %s%s\n",Console.YELLOW, e.getMessage, Console.RESET)
+        }
 
         val testResults =
           if (setupRes.isDefined && setupRes.get.exitValue > 0) {

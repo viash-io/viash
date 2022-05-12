@@ -24,6 +24,9 @@ import helpers.Scala._
 
 import scala.collection.JavaConverters
 import java.io.File
+import java.io.FileNotFoundException
+import java.nio.file.NoSuchFileException
+import com.dataintuitive.viash.helpers.MissingResourceFileException
 
 object Main {
   private val pkg = getClass.getPackage
@@ -34,6 +37,9 @@ object Main {
     try {
       internalMain(args)
     } catch {
+      case e @ ( _: FileNotFoundException | _: NoSuchFileException | _: MissingResourceFileException ) =>
+        System.err.println(s"viash: ${e.getMessage()}")
+        System.exit(1)
       case e: Exception =>
         System.err.println(
           s"""Unexpected error occurred! If you think this is a bug, please post
