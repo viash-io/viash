@@ -116,20 +116,18 @@ object ViashNamespace {
 
         // run tests
         // TODO: it would actually be great if this component could subscribe to testresults messages
-        var setupRes: Option[TestOutput] = None
-        var testRes = List[TestOutput]()
-        try {
-          val ManyTestOutput(setupRes_, testRes_) = ViashTest(
+
+        val ManyTestOutput(setupRes, testRes) = try {
+          ViashTest(
             config = conf,
             keepFiles = keepFiles,
             quiet = true,
             parentTempPath = Some(parentTempPath)
           )
-          setupRes = setupRes_
-          testRes = testRes_
         } catch {
           case e: MissingResourceFileException => 
-            System.err.printf(s"%sviash ns: %s%s\n",Console.YELLOW, e.getMessage, Console.RESET)
+            System.err.println(s"${Console.YELLOW}viash ns: ${e.getMessage}${Console.RESET}")
+            ManyTestOutput(None, List())
         }
 
         val testResults =

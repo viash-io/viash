@@ -28,7 +28,7 @@ object MissingResourceFileException {
     def apply(resource: String, config: Option[String], cause: Throwable): MissingResourceFileException = {
         val message = config match {
             case None => s"Missing resource $resource"
-            case _ => s"Missing resource $resource as specified in $config.get"
+            case _ => s"Missing resource $resource as specified in ${config.get}"
         }
         MissingResourceFileException(resource, config.getOrElse(""), message, cause)
     }
