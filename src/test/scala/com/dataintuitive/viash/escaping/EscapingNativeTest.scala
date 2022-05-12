@@ -87,7 +87,7 @@ class EscapingNativeTest extends FunSuite with BeforeAndAfterAll {
           Seq(executableSub.toString, "--help")
         )
 
-      val stripAll = (s: String) => s.replaceAll(raw"\s+", " ").strip
+      val stripAll = (s: String) => s.replaceAll(raw"\s+", " ").trim
 
       // test if descriptions match
       functionalitySub.arguments.foreach(arg => {
