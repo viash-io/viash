@@ -20,6 +20,7 @@ package com.dataintuitive.viash
 import java.nio.file.{Paths, Files, StandardOpenOption}
 import com.dataintuitive.viash.ViashTest.{ManyTestOutput, TestOutput}
 import config.Config
+import helpers.IO
 
 object ViashNamespace {
   def build(
@@ -70,6 +71,11 @@ object ViashNamespace {
     val tsvExists = tsvPath.exists(Files.exists(_))
     val tsvWriter = tsvPath.map(Files.newBufferedWriter(_, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND))
 
+    val parentTempPath = IO.makeTemp("viash_ns_test")
+    if (keepFiles.getOrElse(true)) {
+      printf("The working directory for the namespace tests is %s\n", parentTempPath.toString())
+    }
+    
     try {
       if (!append || !tsvExists)
         tsvWriter.foreach { writer =>
@@ -112,7 +118,8 @@ object ViashNamespace {
         val ManyTestOutput(setupRes, testRes) = ViashTest(
           config = conf,
           keepFiles = keepFiles,
-          quiet = true
+          quiet = true,
+          parentTempPath = Some(parentTempPath)
         )
 
         val testResults =
@@ -156,6 +163,13 @@ object ViashNamespace {
         Nil
     } finally {
       tsvWriter.foreach(_.close())
+
+      // Delete temp path if empty, otherwise fail quietly and keep.
+      // (tests should have cleaned themselves according to the overall 'keep' value)
+      if (!keepFiles.getOrElse(false)) {
+        parentTempPath.toFile().delete()
+      }
+
     }
   }
 

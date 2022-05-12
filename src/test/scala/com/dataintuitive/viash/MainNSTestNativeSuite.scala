@@ -42,14 +42,36 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
   )
 
 
-  test("Check namespace test output") {
+  test("Check namespace test output without working dir message") {
     val (stdout, stderr) = TestHelper.testMainWithStdErr(
       "ns", "test",
-      "--src", nsPath
+      "--src", nsPath,
+      "--keep", "false"
     )
 
     // Test inclusion of a header
     val regexHeader = raw"^\s*namespace\s*functionality\s*platform\s*test_name\s*exit_code\s*duration\s*result".r
+    assert(regexHeader.findFirstIn(stdout).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$stdout")
+
+    for ((component, steps) ← components) {
+      for ((step, resultPattern) ← steps) {
+        val regex = s"""testns\\s*$component\\s*native\\s*$step$resultPattern""".r
+        assert(regex.findFirstIn(stdout).isDefined, s"\nRegex: '${regex.toString}'; text: \n$stdout")
+      }
+    }
+
+    val regexBuildError = raw"Reading file \'.*/src/ns_error/config\.vsh\.yaml\' failed".r
+    assert(regexBuildError.findFirstIn(stderr).isDefined, "Expecting to get an error because of an invalid yaml in ns_error")
+  }
+
+  test("Check namespace test output with working dir message") {
+    val (stdout, stderr) = TestHelper.testMainWithStdErr(
+      "ns", "test",
+      "--src", nsPath,
+    )
+
+    // Test inclusion of a header
+    val regexHeader = raw"^The working directory for the namespace tests is [\w/]+[\r\n]{1,2}\s*namespace\s*functionality\s*platform\s*test_name\s*exit_code\s*duration\s*result".r
     assert(regexHeader.findFirstIn(stdout).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$stdout")
 
     for ((component, steps) ← components) {
