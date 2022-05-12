@@ -44,7 +44,9 @@ class EscapingNativeTest extends FunSuite with BeforeAndAfterAll {
   }
 
   // define character sequences like it would be regex'ed in sed
-  val escapeCharacters = List("$", raw"\\", "\"", "`", "'", raw"\\\\", "\"\"", "''", "``", raw"\\\\\\", "\"\"\"", "```", "'''", raw"\n")
+  val singleChars = List("$", raw"\n")
+  val repeatingChars = List(raw"\", "\"", "'", "`")
+  val escapeCharacters = singleChars ::: repeatingChars ::: repeatingChars.map(c => c+c) ::: repeatingChars.map(c => c+c+c)
 
   var i = 0
   for (chars <- escapeCharacters) {
@@ -56,10 +58,11 @@ class EscapingNativeTest extends FunSuite with BeforeAndAfterAll {
     TestHelper.copyFolder(rootPath, tempSubFolder.toString)
 
     val configSubFile = Paths.get(tempSubFolder.toString, s"config.vsh.yaml")
+    val sedEscaped = chars.replaceAll(raw"\\", raw"\\\\")
 
     // replace placeholder with character sequence
     Exec.run(
-      Seq("sed", "-i", s"s/{test_detect}/$chars/g", configSubFile.toString)
+      Seq("sed", "-i", s"s/{test_detect}/$sedEscaped/g", configSubFile.toString)
     )
 
     test(s"Check whether $chars get escaped properly") {
