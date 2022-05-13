@@ -641,15 +641,16 @@ def debug(processArgs, debugKey) {
   }
 }
 
-wfKeyCounter = -1
+// wfKeyCounter = -1
 
 def workflowFactory(Map args) {
   def processArgs = processProcessArgs(args)
   def key = processArgs["key"]
   def meta = ScriptMeta.current()
 
-  def workflowKey = wfKeyCounter == -1 ? key : "$key$wfKeyCounter"
-  wfKeyCounter++
+  // def workflowKey = wfKeyCounter == -1 ? key : "$key$wfKeyCounter"
+  // wfKeyCounter++
+  def workflowKey = key
 
   // write process to temporary nf file and parse it in memory
   def processObj = processFactory(processArgs)
