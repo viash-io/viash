@@ -5,10 +5,12 @@
 * `--help`: Don't print "my_component <not versioned>" when no version is specified, 
   but instead simply "my_component".
 
-* `NextflowVdsl2Platform`: Set `mode=copy` for `auto.publish` and `auto.transcript`.
+* `NextflowVdsl3Platform`: Set `mode=copy` for `auto.publish` and `auto.transcript`.
 
-* `NextflowVdsl2Platform`: When a module is used multiple times in the same workflow, 
+* `NextflowVdsl3Platform`: When a module is used multiple times in the same workflow, 
   don't throw an error anymore, instead simply generate a warning.
+
+* `NextflowVdsl3Platform`: Throw an error when an input file was not found.
   
 # Viash 0.5.11
 
