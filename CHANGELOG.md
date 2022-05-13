@@ -6,6 +6,9 @@
   but instead simply "my_component".
 
 * `NextflowVdsl2Platform`: Set `mode=copy` for `auto.publish` and `auto.transcript`.
+
+* `NextflowVdsl2Platform`: When a module is used multiple times in the same workflow, 
+  don't throw an error anymore, instead simply generate a warning.
   
 # Viash 0.5.11
 
