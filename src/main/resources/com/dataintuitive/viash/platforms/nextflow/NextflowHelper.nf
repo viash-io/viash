@@ -478,13 +478,21 @@ def processFactory(Map processArgs) {
   def tripQuo = "\"\"\""
 
   // autodetect process key
-  def procKeyPrefix = processArgs["key"] + "_process"
+  def wfKey = processArgs["key"]
+  def procKeyPrefix = "${wfKey}_process"
   def meta = ScriptMeta.current()
   def existing = meta.getProcessNames().findAll{it.startsWith(procKeyPrefix)}
   def numbers = existing.collect{it.replace(procKeyPrefix, "").toInteger()}
   def newNumber = (numbers + [-1]).max() + 1
 
-  def procKey = "$procKeyPrefix$newNumber"
+  def procKey = newNumber == 0 ? procKeyPrefix : "$procKeyPrefix$newNumber"
+
+  if (newNumber > 0) {
+    log.warn "Key for module '${wfKey}' is duplicated.\n",
+      "If you run a component multiple times in the same workflow,\n" +
+      "it's recommended you set a unique key for every call,\n" +
+      "for example: ${wfKey}.run(key: \"foo\")."
+  }
 
   // subset directives and convert to list of tuples
   def drctv = processArgs.directives
