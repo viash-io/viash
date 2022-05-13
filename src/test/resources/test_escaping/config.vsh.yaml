@@ -25,6 +25,11 @@ functionality:
       type: file
       description: Also test in {test_detect} single line of text.
       direction: output
+    - name: "-s"
+      type: string
+      description: Test {test_detect} description
+      default: Test {test_detect} default value
+      example: Test {test_detect} example value
   resources:
     - type: bash_script
       path: ./code.sh
