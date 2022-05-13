@@ -43,14 +43,10 @@ class EscapingNativeTest extends FunSuite with BeforeAndAfterAll {
     )
   }
 
-  // define character sequences like it would be regex'ed in sed
-  val singleChars = List("$", raw"\n")
-  val repeatingChars = List(raw"\", "\"", "'", "`")
-  val escapeCharacters = singleChars ::: repeatingChars ::: repeatingChars.map(c => c+c) ::: repeatingChars.map(c => c+c+c)
-
-  var i = 0
-  for (chars <- escapeCharacters) {
-    i += 1
+  val singleChars = Seq("$", raw"\n")
+  val repeatingChars = for (c <- Seq(raw"\", "\"", "'", "`"); r <- 1 to 4) yield c * r
+  
+  for ((chars, i) <- (singleChars ++ repeatingChars).zipWithIndex) {
 
     // make a subfolder for each character to test
     val tempSubFolder = Paths.get(tempFolStr, s"test_$i")
