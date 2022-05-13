@@ -785,16 +785,26 @@ def workflowFactory(Map args) {
           .findAll { it.type == "file" && it.direction == "input" }
           .collect { par ->
             def val = combinedArgs.containsKey(par.name) ? combinedArgs[par.name] : []
+            def inputFiles = []
             if (val == null) {
-              []
+              inputFiles = []
             } else if (val instanceof List) {
-              val
+              inputFiles = val
             } else if (val instanceof Path) {
-              [ val ]
+              inputFiles = [ val ]
             } else {
-              []
+              inputFiles = []
             }
-          }.collect{ it.findAll{ it.exists() } }
+            // throw error when an input file doesn't exist
+            inputFiles.each{ file -> 
+              assert file.exists() :
+                "Error in module '${key}' id '${id}' argument '${par.name}'.\n" +
+                "  Required input file does not exist.\n" +
+                "  Path: '$file'.\n" +
+                "  Expected input file to exist"
+            }
+            inputFiles 
+          } 
 
         // remove input files
         def argsExclInputFiles = thisFunctionality.arguments
