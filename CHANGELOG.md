@@ -11,6 +11,8 @@
   don't throw an error anymore, instead simply generate a warning.
 
 * `NextflowVdsl3Platform`: Throw an error when an input file was not found.
+
+* `viash build`: Indent auto-generated code according the indentation of `VIASH START` when found.
   
 # Viash 0.5.11
 
