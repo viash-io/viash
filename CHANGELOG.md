@@ -6,6 +6,10 @@
   but instead simply "my_component".
 
 * `NextflowVdsl2Platform`: Set `mode=copy` for `auto.publish` and `auto.transcript`.
+
+## BUG FIXES
+
+* `Main`: Added support spaces in filenames of config files and resources
   
 # Viash 0.5.11
 
