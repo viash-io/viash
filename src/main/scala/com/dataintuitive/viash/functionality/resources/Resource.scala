@@ -91,7 +91,12 @@ trait Resource {
         IO.write(uri.get, path, overwrite, executable = is_executable)
       }
     } catch {
-      case e: NoSuchFileException => throw MissingResourceFileException.apply(path.toString(), None, e)
+      case e: NoSuchFileException => 
+        val configString = parent match {
+          case Some(uri) => Some(uri.toString)
+          case _ => None
+        }
+        throw MissingResourceFileException.apply(path.toString(), configString, e)
     }
   }
 

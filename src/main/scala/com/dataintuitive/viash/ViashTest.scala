@@ -120,7 +120,7 @@ object ViashTest {
     } catch {
       case e: MissingResourceFileException =>
         // add config file name to the exception and throw again
-        if (config.info.isDefined) {
+        if (config.info.isDefined && e.config == "") {
           throw MissingResourceFileException(e.resource, Some(config.info.get.config), cause= e.cause)
         }
         throw e
