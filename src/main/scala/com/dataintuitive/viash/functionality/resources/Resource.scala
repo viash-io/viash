@@ -43,8 +43,9 @@ trait Resource {
   def uri: Option[URI] = {
     path match {
       case Some(pat) => {
+        val patEsc = pat.replaceAll(" ", "%20")
         val newPath = parent match {
-          case Some(par) => par.resolve(pat).toString
+          case Some(par) => par.resolve(patEsc).toString
           case _ => pat
         }
         Some(IO.uri(newPath))
