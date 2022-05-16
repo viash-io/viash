@@ -482,7 +482,7 @@ def processFactory(Map processArgs) {
   def procKeyPrefix = "${wfKey}_process"
   def meta = ScriptMeta.current()
   def existing = meta.getProcessNames().findAll{it.startsWith(procKeyPrefix)}
-  def numbers = existing.collect{it.replace(procKeyPrefix, "").toInteger()}
+  def numbers = existing.collect{it.replace(procKeyPrefix, "0").toInteger()}
   def newNumber = (numbers + [-1]).max() + 1
 
   def procKey = newNumber == 0 ? procKeyPrefix : "$procKeyPrefix$newNumber"
