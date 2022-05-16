@@ -78,20 +78,23 @@ object ViashNamespace {
     }
     
     try {
-      if (!append || !tsvExists)
-        tsvWriter.foreach { writer =>
-          writer.append(
-            List(
-              "namespace",
-              "functionality",
-              "platform",
-              "test_name",
-              "exit_code",
-              "duration",
-              "result"
-            ).mkString("\t") + sys.props("line.separator"))
-          writer.flush()
-        }
+      if (append && tsvExists) {
+        tsvPath.foreach(Files.deleteIfExists(_))
+      }
+
+      tsvWriter.foreach { writer =>
+        writer.write(
+          List(
+            "namespace",
+            "functionality",
+            "platform",
+            "test_name",
+            "exit_code",
+            "duration",
+            "result"
+          ).mkString("\t") + sys.props("line.separator"))
+        writer.flush()
+      }
       printf(
         s"%s%20s %20s %20s %20s %9s %8s %20s%s\n",
         "",

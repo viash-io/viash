@@ -15,6 +15,10 @@
 ## BUG FIXES
 
 * `viash_test`: Add back `--no_cache` parameter to `viash_test`.
+
+* `viash_test`: Fix `--append` parameter for `viash_test`, was not getting passed through.
+
+* `viash ns test`: Fix `--append` parameter, actually start from a clean file if append is false.
   
 # Viash 0.5.11
 
