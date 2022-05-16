@@ -11,6 +11,10 @@
   don't throw an error anymore, instead simply generate a warning.
 
 * `NextflowVdsl3Platform`: Throw an error when an input file was not found.
+
+## BUG FIXES
+
+* `viash_test`: Add back `--no_cache` parameter to `viash_test`.
   
 # Viash 0.5.11
 
