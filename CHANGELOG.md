@@ -12,6 +12,9 @@
 
 * `NextflowVdsl3Platform`: Throw an error when an input file was not found.
 
+* `Main`: Handle not finding the config file or resources in a config file better.
+  Display a more helpful message instead of a stack trace.
+
 ## BUG FIXES
 
 * `viash_test`: Add back `--no_cache` parameter to `viash_test`.
