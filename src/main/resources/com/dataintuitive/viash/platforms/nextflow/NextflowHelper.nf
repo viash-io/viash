@@ -920,7 +920,7 @@ workflow {
   Channel.value([ params.id, args ])
     | view { "input: $it" }
     | myWfInstance.run(
-        directives: [publishDir: params.publishDir]
-      )
+      auto: [ publish: true ]
+    )
     | view { "output: $it" }
 }
