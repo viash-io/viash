@@ -24,7 +24,10 @@
 * `viash ns test`: Fix `--append` parameter, actually start from a clean file if append is false.
 
 * `viash_push`: Fix component not being built during a release of Viash.
-  
+
+* `PythonRequirements`: Fix packages being mentioned twice in a Dockerfile.
+
+
 # Viash 0.5.11
 
 ## MAJOR CHANGES
