@@ -12,6 +12,8 @@
 
 * `NextflowVdsl3Platform`: Throw an error when an input file was not found.
 
+* `viash build`: Indent auto-generated code according the indentation of `VIASH START` when found.
+  
 * `Main`: Handle not finding the config file or resources in a config file better.
   Display a more helpful message instead of a stack trace.
 
