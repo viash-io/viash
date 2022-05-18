@@ -27,6 +27,7 @@
 
 * `PythonRequirements`: Fix packages being mentioned twice in a Dockerfile.
 
+* `Main`: Added support spaces in filenames of config files and resources
 
 # Viash 0.5.11
 
