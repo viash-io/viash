@@ -75,6 +75,7 @@ object ViashNamespace {
       Files.deleteIfExists(tsv)
     }
 
+    val tsvExists = tsvPath.exists(Files.exists(_))
     val tsvWriter = tsvPath.map(Files.newBufferedWriter(_, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND))
 
     val parentTempPath = IO.makeTemp("viash_ns_test")
@@ -84,7 +85,7 @@ object ViashNamespace {
     
     try {
       // only print header if file does not exist
-      for (writer <- tsvWriter if tsvPath.exists(Files.exists(_))) {
+      for (writer <- tsvWriter if !tsvExists) {
         writer.write(
           List(
             "namespace",
