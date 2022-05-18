@@ -310,10 +310,33 @@ object BashWrapper {
       } else {
         "\n# check whether required parameters exist\n" +
           reqParams.map { param =>
-            s"""if [ -z "$$${param.VIASH_PAR}" ]; then
-               |  ViashError '${param.name}' is a required argument. Use "--help" to get more information on the parameters.
-               |  exit 1
-               |fi""".stripMargin
+            param match {
+              case io: IntegerObject =>
+                s"""if [ -z "$$${io.VIASH_PAR}" ]; then
+                   |  ViashError '${io.name}' is a required argument. Use "--help" to get more information on the parameters.
+                   |  exit 1
+                   |fi
+                   |if ! [[ "$$${io.VIASH_PAR}" =~ ^[0-9]+$$ ]]; then
+                   |  ViashError '${io.name}' has to be an integer. Use "--help" to get more information on the parameters.
+                   |  exit 1
+                   |fi
+                   |""".stripMargin
+              case dO: DoubleObject =>
+                s"""if [ -z "$$${dO.VIASH_PAR}" ]; then
+                   |  ViashError '${dO.name}' is a required argument. Use "--help" to get more information on the parameters.
+                   |  exit 1
+                   |fi
+                   |if ! [[ "$$${dO.VIASH_PAR}" =~ ^[0-9.]+$$ ]]; then
+                   |  ViashError '${dO.name}' has to be a double. Use "--help" to get more information on the parameters.
+                   |  exit 1
+                   |fi
+                   |""".stripMargin
+              case p => 
+                s"""if [ -z "$$${p.VIASH_PAR}" ]; then
+                   |  ViashError '${p.name}' is a required argument. Use "--help" to get more information on the parameters.
+                   |  exit 1
+                   |fi""".stripMargin
+            }           
           }.mkString("\n")
       }
 
