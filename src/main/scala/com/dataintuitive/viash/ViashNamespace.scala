@@ -69,6 +69,12 @@ object ViashNamespace {
 
     // run all the component tests
     val tsvPath = tsv.map(Paths.get(_))
+
+    // remove if not append
+    for (tsv <- tsvPath if !append) {
+      Files.deleteIfExists(tsv)
+    }
+
     val tsvExists = tsvPath.exists(Files.exists(_))
     val tsvWriter = tsvPath.map(Files.newBufferedWriter(_, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND))
 
@@ -78,20 +84,20 @@ object ViashNamespace {
     }
     
     try {
-      if (!append || !tsvExists)
-        tsvWriter.foreach { writer =>
-          writer.append(
-            List(
-              "namespace",
-              "functionality",
-              "platform",
-              "test_name",
-              "exit_code",
-              "duration",
-              "result"
-            ).mkString("\t") + sys.props("line.separator"))
-          writer.flush()
-        }
+      // only print header if file does not exist
+      for (writer <- tsvWriter if !tsvExists) {
+        writer.write(
+          List(
+            "namespace",
+            "functionality",
+            "platform",
+            "test_name",
+            "exit_code",
+            "duration",
+            "result"
+          ).mkString("\t") + sys.props("line.separator"))
+        writer.flush()
+      }
       printf(
         s"%s%20s %20s %20s %20s %9s %8s %20s%s\n",
         "",

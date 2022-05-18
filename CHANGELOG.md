@@ -14,6 +14,23 @@
 
 * `viash build`: Indent auto-generated code according the indentation of `VIASH START` when found.
   
+* `Main`: Handle not finding the config file or resources in a config file better.
+  Display a more helpful message instead of a stack trace.
+
+## BUG FIXES
+
+* `viash_test`: Add back `--no_cache` parameter to `viash_test`.
+
+* `viash_test`: Fix `--append` parameter for `viash_test`, was not getting passed through.
+
+* `viash ns test`: Fix `--append` parameter, actually start from a clean file if append is false.
+
+* `viash_push`: Fix component not being built during a release of Viash.
+
+* `PythonRequirements`: Fix packages being mentioned twice in a Dockerfile.
+
+* `Main`: Added support spaces in filenames of config files and resources
+
 # Viash 0.5.11
 
 ## MAJOR CHANGES

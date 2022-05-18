@@ -59,8 +59,7 @@ object IO {
   private val uriRegex = "^[a-zA-Z0-9]*:".r
 
   def uri(path: String): URI = {
-    val newURI = if (uriRegex.findFirstIn(path).isDefined) path else "file://" + new File(path).getAbsolutePath
-    new URI(newURI)
+    if (uriRegex.findFirstIn(path).isDefined) new URI(path) else new File(path).toURI()
   }
 
   def read(uri: URI): String = {
