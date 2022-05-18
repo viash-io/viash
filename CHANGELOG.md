@@ -5,12 +5,30 @@
 * `--help`: Don't print "my_component <not versioned>" when no version is specified, 
   but instead simply "my_component".
 
-* `NextflowVdsl2Platform`: Set `mode=copy` for `auto.publish` and `auto.transcript`.
+* `NextflowVdsl3Platform`: Set `mode=copy` for `auto.publish` and `auto.transcript`.
+
+* `NextflowVdsl3Platform`: When a module is used multiple times in the same workflow, 
+  don't throw an error anymore, instead simply generate a warning.
+
+* `NextflowVdsl3Platform`: Throw an error when an input file was not found.
+
+* `Main`: Handle not finding the config file or resources in a config file better.
+  Display a more helpful message instead of a stack trace.
 
 ## BUG FIXES
 
+* `viash_test`: Add back `--no_cache` parameter to `viash_test`.
+
+* `viash_test`: Fix `--append` parameter for `viash_test`, was not getting passed through.
+
+* `viash ns test`: Fix `--append` parameter, actually start from a clean file if append is false.
+
+* `viash_push`: Fix component not being built during a release of Viash.
+
+* `PythonRequirements`: Fix packages being mentioned twice in a Dockerfile.
+
 * `Main`: Added support spaces in filenames of config files and resources
-  
+
 # Viash 0.5.11
 
 ## MAJOR CHANGES

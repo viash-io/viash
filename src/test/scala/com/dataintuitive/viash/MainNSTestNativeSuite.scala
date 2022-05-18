@@ -53,11 +53,12 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
     val regexHeader = raw"^\s*namespace\s*functionality\s*platform\s*test_name\s*exit_code\s*duration\s*result".r
     assert(regexHeader.findFirstIn(stdout).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$stdout")
 
-    for ((component, steps) ← components) {
-      for ((step, resultPattern) ← steps) {
-        val regex = s"""testns\\s*$component\\s*native\\s*$step$resultPattern""".r
-        assert(regex.findFirstIn(stdout).isDefined, s"\nRegex: '${regex.toString}'; text: \n$stdout")
-      }
+    for (
+      (component, steps) ← components;
+      (step, resultPattern) ← steps
+    ) {
+      val regex = s"""testns\\s*$component\\s*native\\s*$step$resultPattern""".r
+      assert(regex.findFirstIn(stdout).isDefined, s"\nRegex: '${regex.toString}'; text: \n$stdout")
     }
 
     val regexBuildError = raw"Reading file \'.*/src/ns_error/config\.vsh\.yaml\' failed".r
@@ -74,11 +75,12 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
     val regexHeader = raw"^The working directory for the namespace tests is [\w/]+[\r\n]{1,2}\s*namespace\s*functionality\s*platform\s*test_name\s*exit_code\s*duration\s*result".r
     assert(regexHeader.findFirstIn(stdout).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$stdout")
 
-    for ((component, steps) ← components) {
-      for ((step, resultPattern) ← steps) {
-        val regex = s"""testns\\s*$component\\s*native\\s*$step$resultPattern""".r
-        assert(regex.findFirstIn(stdout).isDefined, s"\nRegex: '${regex.toString}'; text: \n$stdout")
-      }
+    for (
+      (component, steps) ← components;
+      (step, resultPattern) ← steps
+    ) {
+      val regex = s"""testns\\s*$component\\s*native\\s*$step$resultPattern""".r
+      assert(regex.findFirstIn(stdout).isDefined, s"\nRegex: '${regex.toString}'; text: \n$stdout")
     }
 
     val regexBuildError = raw"Reading file \'.*/src/ns_error/config\.vsh\.yaml\' failed".r
@@ -102,14 +104,13 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
       val regexHeader = raw"^namespace\tfunctionality\tplatform\ttest_name\texit_code\tduration\tresult".r
       assert(regexHeader.findFirstIn(logLines).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$logLines")
 
-      for ((component, steps) ← components) {
-        for ((step, resultPattern) ← steps) {
-          // tsv doesn't output the "start" step, so ignore that
-          if (step != "start") {
-            val regex = s"""testns\\t$component\\tnative\\t$step$resultPattern""".r
-            assert(regex.findFirstIn(logLines).isDefined, s"\nRegex: '${regex.toString}'; text: \n$logLines")
-          }
-        }
+      for (
+        (component, steps) ← components;
+        (step, resultPattern) ← steps if step != "start"
+      ) {
+        // tsv doesn't output the "start" step, so ignore that
+        val regex = s"""testns\\t$component\\tnative\\t$step$resultPattern""".r
+        assert(regex.findFirstIn(logLines).isDefined, s"\nRegex: '${regex.toString}'; text: \n$logLines")
       }
     } finally {
       logSrc.close()
@@ -139,14 +140,13 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
       val regexHeader2 = "^Test header".r
       assert(regexHeader2.findFirstIn(logLines).isDefined, s"\rRegex: ${regexHeader2.toString}; text: \r$logLines")
 
-      for ((component, steps) ← components) {
-        for ((step, resultPattern) ← steps) {
-          // tsv doesn't output the "start" step, so ignore that
-          if (step != "start") {
-            val regex = s"""testns\\t$component\\tnative\\t$step$resultPattern""".r
-            assert(regex.findFirstIn(logLines).isDefined, s"\nRegex: '${regex.toString}'; text: \n$logLines")
-          }
-        }
+      for (
+        (component, steps) ← components;
+        (step, resultPattern) ← steps if step != "start"
+      ) {
+        // tsv doesn't output the "start" step, so ignore that
+        val regex = s"""testns\\t$component\\tnative\\t$step$resultPattern""".r
+        assert(regex.findFirstIn(logLines).isDefined, s"\nRegex: '${regex.toString}'; text: \n$logLines")
       }
     } finally {
       logSrc.close()
@@ -171,14 +171,13 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
       val regexHeader = raw"namespace\tfunctionality\tplatform\ttest_name\texit_code\tduration\tresult".r
       assert(regexHeader.findFirstIn(logLines).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$logLines")
 
-      for ((component, steps) ← components) {
-        for ((step, resultPattern) ← steps) {
-          // tsv doesn't output the "start" step, so ignore that
-          if (step != "start") {
-            val regex = s"""testns\\t$component\\tnative\\t$step$resultPattern""".r
-            assert(regex.findFirstIn(logLines).isDefined, s"\nRegex: '${regex.toString}'; text: \n$logLines")
-          }
-        }
+      for (
+        (component, steps) ← components;
+        (step, resultPattern) ← steps if step != "start"
+      ) {
+        // tsv doesn't output the "start" step, so ignore that
+        val regex = s"""testns\\t$component\\tnative\\t$step$resultPattern""".r
+        assert(regex.findFirstIn(logLines).isDefined, s"\nRegex: '${regex.toString}'; text: \n$logLines")
       }
     } finally {
       logSrc.close()

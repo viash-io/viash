@@ -21,6 +21,7 @@ import java.nio.file.{Paths, Files, StandardOpenOption}
 import com.dataintuitive.viash.ViashTest.{ManyTestOutput, TestOutput}
 import config.Config
 import helpers.IO
+import com.dataintuitive.viash.helpers.MissingResourceFileException
 
 object ViashNamespace {
   def build(
@@ -68,6 +69,12 @@ object ViashNamespace {
 
     // run all the component tests
     val tsvPath = tsv.map(Paths.get(_))
+
+    // remove if not append
+    for (tsv <- tsvPath if !append) {
+      Files.deleteIfExists(tsv)
+    }
+
     val tsvExists = tsvPath.exists(Files.exists(_))
     val tsvWriter = tsvPath.map(Files.newBufferedWriter(_, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND))
 
@@ -77,20 +84,20 @@ object ViashNamespace {
     }
     
     try {
-      if (!append || !tsvExists)
-        tsvWriter.foreach { writer =>
-          writer.append(
-            List(
-              "namespace",
-              "functionality",
-              "platform",
-              "test_name",
-              "exit_code",
-              "duration",
-              "result"
-            ).mkString("\t") + sys.props("line.separator"))
-          writer.flush()
-        }
+      // only print header if file does not exist
+      for (writer <- tsvWriter if !tsvExists) {
+        writer.write(
+          List(
+            "namespace",
+            "functionality",
+            "platform",
+            "test_name",
+            "exit_code",
+            "duration",
+            "result"
+          ).mkString("\t") + sys.props("line.separator"))
+        writer.flush()
+      }
       printf(
         s"%s%20s %20s %20s %20s %9s %8s %20s%s\n",
         "",
@@ -115,12 +122,19 @@ object ViashNamespace {
 
         // run tests
         // TODO: it would actually be great if this component could subscribe to testresults messages
-        val ManyTestOutput(setupRes, testRes) = ViashTest(
-          config = conf,
-          keepFiles = keepFiles,
-          quiet = true,
-          parentTempPath = Some(parentTempPath)
-        )
+
+        val ManyTestOutput(setupRes, testRes) = try {
+          ViashTest(
+            config = conf,
+            keepFiles = keepFiles,
+            quiet = true,
+            parentTempPath = Some(parentTempPath)
+          )
+        } catch {
+          case e: MissingResourceFileException => 
+            System.err.println(s"${Console.YELLOW}viash ns: ${e.getMessage}${Console.RESET}")
+            ManyTestOutput(None, List())
+        }
 
         val testResults =
           if (setupRes.isDefined && setupRes.get.exitValue > 0) {

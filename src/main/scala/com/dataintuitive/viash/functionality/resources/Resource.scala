@@ -19,8 +19,9 @@ package com.dataintuitive.viash.functionality.resources
 
 import java.net.URI
 
-import com.dataintuitive.viash.helpers.IO
+import com.dataintuitive.viash.helpers.{IO, MissingResourceFileException}
 import java.nio.file.{Path, Paths}
+import java.nio.file.NoSuchFileException
 
 trait Resource {
   val `type`: String
@@ -84,10 +85,19 @@ trait Resource {
   }
 
   def write(path: Path, overwrite: Boolean) {
-    if (text.isDefined) {
-      IO.write(text.get, path, overwrite, executable = is_executable)
-    } else {
-      IO.write(uri.get, path, overwrite, executable = is_executable)
+    try {
+      if (text.isDefined) {
+        IO.write(text.get, path, overwrite, executable = is_executable)
+      } else {
+        IO.write(uri.get, path, overwrite, executable = is_executable)
+      }
+    } catch {
+      case e: NoSuchFileException => 
+        val configString = parent match {
+          case Some(uri) => Some(uri.toString)
+          case _ => None
+        }
+        throw MissingResourceFileException.apply(path.toString(), configString, e)
     }
   }
 

@@ -23,7 +23,7 @@ out/*
 .settings
 
 # VS Code related
-.vscode/settings.json
+.vscode/
 **/metals.sbt
 .bloop*
 .metals*
