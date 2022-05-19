@@ -31,6 +31,9 @@
 
 * `Main`: Added support spaces in filenames of config files and resources
 
+* `BashWrapper`: Display a message when the last parsed argument would require more values than are still available.
+  Now display a message that values are missing, used to silently crash the wrapper.
+
 # Viash 0.5.11
 
 ## MAJOR CHANGES
