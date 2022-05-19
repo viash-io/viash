@@ -310,33 +310,10 @@ object BashWrapper {
       } else {
         "\n# check whether required parameters exist\n" +
           reqParams.map { param =>
-            param match {
-              case io: IntegerObject =>
-                s"""if [ -z "$$${io.VIASH_PAR}" ]; then
-                   |  ViashError '${io.name}' is a required argument. Use "--help" to get more information on the parameters.
-                   |  exit 1
-                   |fi
-                   |if ! [[ "$$${io.VIASH_PAR}" =~ ^[0-9]+$$ ]]; then
-                   |  ViashError '${io.name}' has to be an integer. Use "--help" to get more information on the parameters.
-                   |  exit 1
-                   |fi
-                   |""".stripMargin
-              case dO: DoubleObject =>
-                s"""if [ -z "$$${dO.VIASH_PAR}" ]; then
-                   |  ViashError '${dO.name}' is a required argument. Use "--help" to get more information on the parameters.
-                   |  exit 1
-                   |fi
-                   |if ! [[ "$$${dO.VIASH_PAR}" =~ ^[0-9.]+$$ ]]; then
-                   |  ViashError '${dO.name}' has to be a double. Use "--help" to get more information on the parameters.
-                   |  exit 1
-                   |fi
-                   |""".stripMargin
-              case p => 
-                s"""if [ -z "$$${p.VIASH_PAR}" ]; then
-                   |  ViashError '${p.name}' is a required argument. Use "--help" to get more information on the parameters.
-                   |  exit 1
-                   |fi""".stripMargin
-            }           
+            s"""if [ -z "$$${param.VIASH_PAR}" ]; then
+               |  ViashError '${param.name}' is a required argument. Use "--help" to get more information on the parameters.
+               |  exit 1
+               |fi""".stripMargin
           }.mkString("\n")
       }
 
@@ -393,10 +370,42 @@ object BashWrapper {
           }.mkString("\n")
       }
 
+    // construct type checks
+    val typeParams = paramsAndDummies
+    val typeCheckStr =
+      if (typeParams.isEmpty) {
+        ""
+      } else {
+        "\n# check whether parameters values are of the right type\n" +
+          typeParams.map { param =>
+            param match {
+              case io: IntegerObject =>
+                s"""if ! [[ -z "$$${io.VIASH_PAR}" || "$$${io.VIASH_PAR}" =~ ^[-+]?[0-9]+$$ ]]; then
+                   |  ViashError '${io.name}' has to be an integer. Use "--help" to get more information on the parameters.
+                   |  exit 1
+                   |fi
+                   |""".stripMargin
+              case dO: DoubleObject =>
+                s"""if ! [[ -z "$$${dO.VIASH_PAR}" || "$$${dO.VIASH_PAR}" =~ ^[-+]?(\\.[0-9]+|[0-9]+(\\.[0-9]*)?)([eE][-+]?[0-9]+)?$$ ]]; then
+                   |  ViashError '${dO.name}' has to be a double. Use "--help" to get more information on the parameters.
+                   |  exit 1
+                   |fi
+                   |""".stripMargin
+              case bo: BooleanObject =>
+                s"""if ! [[ -z "$$${bo.VIASH_PAR}" || "$$${bo.VIASH_PAR}" =~ ^true|True|TRUE|false|False|FALSE$$ ]]; then
+                   |  ViashError '${bo.name}' has to be a boolean. Use "--help" to get more information on the parameters.
+                   |  exit 1
+                   |fi
+                   |""".stripMargin
+              case _ => ""
+            }           
+          }.mkString("\n")
+      }
+
     // return output
     BashWrapperMods(
       parsers = parseStrs,
-      preRun = positionalStr + "\n" + reqCheckStr + "\n" + defaultsStrs + "\n" + reqFilesStr
+      preRun = positionalStr + "\n" + reqCheckStr + "\n" + defaultsStrs + "\n" + reqFilesStr + "\n" + typeCheckStr
     )
   }
 

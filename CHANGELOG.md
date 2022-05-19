@@ -15,6 +15,8 @@
 * `Main`: Handle not finding the config file or resources in a config file better.
   Display a more helpful message instead of a stack trace.
 
+* `BashWrapper`: Add checks on parameters for valid integer, double and boolean values.
+
 ## BUG FIXES
 
 * `viash_test`: Add back `--no_cache` parameter to `viash_test`.
