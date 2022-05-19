@@ -50,10 +50,20 @@ object BashWrapper {
     argsConsumed: Int,
     multiple_sep: Option[Char] = None
   ): String = {
-    s"""        $name)
-       |            ${this.store(plainName, store, multiple_sep).mkString("\n            ")}
-       |            shift $argsConsumed
-       |            ;;""".stripMargin
+    argsConsumed match {
+      case num if num > 1 =>
+        s"""        $name)
+           |            ${this.store(plainName, store, multiple_sep).mkString("\n            ")}
+           |            [ $$# -lt $argsConsumed ] && ViashError Not enough arguments passed to $name. Use "--help" to get more information on the parameters. && exit 1
+           |            shift $argsConsumed
+           |            ;;""".stripMargin
+      case _ =>
+        s"""        $name)
+           |            ${this.store(plainName, store, multiple_sep).mkString("\n            ")}
+           |            shift $argsConsumed
+           |            ;;""".stripMargin
+    }
+    
   }
 
   def argStoreSed(name: String, plainName: String, multiple_sep: Option[Char] = None): String = {
