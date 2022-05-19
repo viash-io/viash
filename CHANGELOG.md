@@ -17,6 +17,11 @@
 * `Main`: Handle not finding the config file or resources in a config file better.
   Display a more helpful message instead of a stack trace.
 
+* Dependencies:
+  - Scala was upgraded from 2.12.10 to 2.12.15
+  - sbt was upgraded from 1.3.4 to 1.6.1
+  - sbt-scoverage was upgraded from 1.5.1 to 1.9.3
+
 ## BUG FIXES
 
 * `viash_test`: Add back `--no_cache` parameter to `viash_test`.
