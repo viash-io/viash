@@ -392,7 +392,7 @@ object BashWrapper {
                    |fi
                    |""".stripMargin
               case bo: BooleanObject =>
-                s"""if ! [[ -z "$$${bo.VIASH_PAR}" || "$$${bo.VIASH_PAR}" =~ ^true|True|TRUE|false|False|FALSE$$ ]]; then
+                s"""if ! [[ -z "$$${bo.VIASH_PAR}" || "$$${bo.VIASH_PAR}" =~ ^true|True|TRUE|false|False|FALSE|yes|Yes|YES|no|No|NO$$ ]]; then
                    |  ViashError '${bo.name}' has to be a boolean. Use "--help" to get more information on the parameters.
                    |  exit 1
                    |fi
