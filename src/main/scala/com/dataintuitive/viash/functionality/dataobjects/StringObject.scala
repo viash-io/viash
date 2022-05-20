@@ -26,7 +26,7 @@ case class StringObject(
   example: OneOrMore[String] = Nil,
   default: OneOrMore[String] = Nil,
   required: Boolean = false,
-  values: List[String] = Nil,
+  choices: List[String] = Nil,
   direction: Direction = Input,
   multiple: Boolean = false,
   multiple_sep: Char = ':',
@@ -44,6 +44,6 @@ case class StringObject(
     multiple: Boolean,
     multiple_sep: Char
   ): DataObject[String] = {
-    copy(name, alternatives, description, example, default, required, values, direction, multiple, multiple_sep, `type`)
+    copy(name, alternatives, description, example, default, required, choices, direction, multiple, multiple_sep, `type`)
   }
 }

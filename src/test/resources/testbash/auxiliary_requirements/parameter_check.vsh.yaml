@@ -17,7 +17,7 @@ functionality:
     - name: "--string"
       type: string
       description: A sentence or word with specificly allowed options
-      values:
+      choices:
         - "one"
         - "2"
         - "two words"
@@ -30,7 +30,7 @@ functionality:
     - name: "--multiple"
       type: string
       multiple: true
-      values:
+      choices:
         - "one"
         - "2"
         - "two words"
