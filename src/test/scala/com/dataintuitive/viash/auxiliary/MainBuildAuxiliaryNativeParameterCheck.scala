@@ -11,7 +11,7 @@ import com.dataintuitive.viash.TestHelper
 
 class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfterAll {
   // which platform to test
-  private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
+  private val configFile = getClass.getResource("/testbash/auxiliary_requirements/parameter_check.vsh.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
@@ -72,13 +72,10 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       val out = Exec.run2(
         Seq(
           executable.toString,
-          executable.toString,
           "--real_number", param,
-          "--whole_number=10",
-          "-s", "string",
         )
       )
-      assert(out.exitValue == 0, s"Test real_number: $param should pass")
+      assert(out.exitValue == 0, s"Test real_number: $param should pass\n${out.output}")
     }
 
     for(
@@ -89,13 +86,10 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       val out = Exec.run2(
         Seq(
           executable.toString,
-          executable.toString,
           "--real_number", param,
-          "--whole_number=10",
-          "-s", "string",
         )
       )
-      assert(out.exitValue != 0, s"Test real_number: $param should fail")
+      assert(out.exitValue != 0, s"Test real_number: $param should fail\n${out.output}")
     }
 
   }
@@ -114,13 +108,10 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       val out = Exec.run2(
         Seq(
           executable.toString,
-          executable.toString,
-          "--real_number", "1.23",
           "--whole_number", param,
-          "-s", "string",
         )
       )
-      assert(out.exitValue == 0, s"Test whole_number: $param should pass")
+      assert(out.exitValue == 0, s"Test whole_number: $param should pass\n${out.output}")
     }
 
     for(
@@ -131,13 +122,10 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       val out = Exec.run2(
         Seq(
           executable.toString,
-          executable.toString,
-          "--real_number", "1.23",
           "--whole_number", param,
-          "-s", "string",
         )
       )
-      assert(out.exitValue != 0, s"Test whole_number: $param should fail")
+      assert(out.exitValue != 0, s"Test whole_number: $param should fail\n${out.output}")
     }
 
   }
@@ -154,14 +142,10 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       val out = Exec.run2(
         Seq(
           executable.toString,
-          executable.toString,
-          "--real_number", "1.23",
-          "--whole_number", "10",
-          "-s", "string",
           "--reality", param,
         )
       )
-      assert(out.exitValue == 0, s"Test reality: $param should pass")
+      assert(out.exitValue == 0, s"Test reality: $param should pass\n${out.output}")
     }
 
     for(
@@ -170,14 +154,10 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       val out = Exec.run2(
         Seq(
           executable.toString,
-          executable.toString,
-          "--real_number", "1.23",
-          "--whole_number", "10",
-          "-s", "string",
-          "--reality", param
+          "--reality", param,
         )
       )
-      assert(out.exitValue != 0, s"Test reality: $param should fail")
+      assert(out.exitValue != 0, s"Test reality: $param should fail\n${out.output}")
     }
 
     for(
@@ -188,14 +168,10 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       val out = Exec.run2(
         Seq(
           executable.toString,
-          executable.toString,
-          "--real_number", "1.23",
-          "--whole_number", "10",
-          "-s", "string",
-          "--reality", param
+          "--reality", param,
         )
       )
-      assert(out.exitValue != 0, s"Test reality: $param should fail")
+      assert(out.exitValue != 0, s"Test reality: $param should fail\n${out.output}")
     }
 
   }

@@ -1,0 +1,40 @@
+functionality:
+  name: parameter_check
+  version: 0.1
+  description: |
+    Prints out the parameter values.
+    Checking what happens with multiline descriptions.
+  arguments:
+    - name: "--real_number"
+      type: double
+      description: A real number.
+    - name: "--whole_number"
+      type: integer
+      description: A whole number.
+    - name: "--string"
+      type: string
+      description: A sentence or word with specificly allowed options
+      values:
+        - "one"
+        - "2"
+        - "two words"
+        - "three separate words"
+        - "Two full blown sentences with punctuation. The weather is nice today!"
+        - "Capital"
+        - "ALL CAPITALS"
+        - "a"
+        - a
+        - "B"
+        - B
+    - name: "--reality"
+      type: boolean
+      description: A switch flag without predetermined state.
+
+  resources:
+    - type: bash_script
+      path: ./parameter_check.sh
+  info:
+    foo: bar
+    custom_tag: custom_value
+platforms:
+  - type: native
