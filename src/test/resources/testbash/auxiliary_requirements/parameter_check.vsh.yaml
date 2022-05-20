@@ -11,6 +11,9 @@ functionality:
     - name: "--whole_number"
       type: integer
       description: A whole number.
+    - name: "--reality"
+      type: boolean
+      description: A switch flag without predetermined state.
     - name: "--string"
       type: string
       description: A sentence or word with specificly allowed options
@@ -22,13 +25,21 @@ functionality:
         - "Two full blown sentences with punctuation. The weather is nice today!"
         - "Capital"
         - "ALL CAPITALS"
-        - "a"
         - a
-        - "B"
         - B
-    - name: "--reality"
-      type: boolean
-      description: A switch flag without predetermined state.
+    - name: "--multiple"
+      type: string
+      multiple: true
+      values:
+        - "one"
+        - "2"
+        - "two words"
+        - "three separate words"
+        - "Two full blown sentences with punctuation. The weather is nice today!"
+        - "Capital"
+        - "ALL CAPITALS"
+        - a
+        - B
 
   resources:
     - type: bash_script

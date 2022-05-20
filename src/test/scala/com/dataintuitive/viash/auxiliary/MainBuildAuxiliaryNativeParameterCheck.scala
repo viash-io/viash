@@ -176,6 +176,116 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
 
   }
 
+  test("Check whether string values with allowed values are checked correctly") {
+    // Decision was made to allow quite permissive syntax checking
+    val checksPass = Seq("one", "2", "two words", "three separate words", 
+      "Two full blown sentences with punctuation. The weather is nice today!", "Capital",
+      "ALL CAPITALS", "a", "B")
+    val checksFail = Seq("0", "1", "foo", "bone", "one 2")
+
+    for(
+      param <- checksPass
+    ) {
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--string", param,
+        )
+      )
+      assert(out.exitValue == 0, s"Test string: $param should pass\n${out.output}")
+    }
+
+    for(
+      param <- checksFail
+    ) {
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--string", param,
+        )
+      )
+      assert(out.exitValue != 0, s"Test string: $param should fail\n${out.output}")
+    }
+
+  }
+
+  test("Check whether string with multiple values with allowed values are checked correctly") {
+    // Decision was made to allow quite permissive syntax checking
+    val checksPass = Seq("one", "2", "two words", "three separate words", 
+      "Two full blown sentences with punctuation. The weather is nice today!", "Capital",
+      "ALL CAPITALS", "a", "B")
+    val checksFail = Seq("0", "1", "foo", "bone", "one 2")
+
+    for(
+      param <- checksPass
+    ) {
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--multiple", param,
+        )
+      )
+      assert(out.exitValue == 0, s"Test multiple: $param should pass\n${out.output}")
+    }
+
+    for(
+      param <- checksFail
+    ) {
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--multiple", param,
+        )
+      )
+      assert(out.exitValue != 0, s"Test multiple: $param should fail\n${out.output}")
+    }
+
+    // test combination of good and/or bad values
+    for(
+      params <- checksPass.combinations(3)
+    ) {
+      val param = params.mkString(":")
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--multiple", param,
+        )
+      )
+      assert(out.exitValue == 0, s"Test multiple: $param should pass\n${out.output}")
+    }
+
+    for(
+      params <- checksFail.combinations(3)
+    ) {
+      val param = params.mkString(":")
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--multiple", param,
+        )
+      )
+      assert(out.exitValue != 0, s"Test multiple: $param should fail\n${out.output}")
+    }
+
+    for(
+      combLength <- (1 to 3);
+      paramsPass <- checksPass.take(4).combinations(combLength);
+      paramsFail <- checksFail.take(4).combinations(combLength)
+    ) {
+      val param = (paramsPass ++ paramsFail).mkString(":")
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--multiple", param,
+        )
+      )
+      assert(out.exitValue != 0, s"Test multiple: $param should fail\n${out.output}")
+    }
+
+
+
+  }
+
   override def afterAll() {
     IO.deleteRecursively(temporaryFolder)
   }

@@ -407,6 +407,37 @@ object BashWrapper {
                    |  exit 1
                    |fi
                    |""".stripMargin
+              case so: StringObject if so.values != Nil && param.multiple =>
+                val allValues = so.values.mkString(param.multiple_sep.toString)
+                s"""
+                   |if [ ! -z "$$${param.VIASH_PAR}" ]; then
+                   |  ${param.VIASH_PAR}_VALUES=("$allValues")
+                   |  IFS=${param.multiple_sep}
+                   |  set -f
+                   |  for val in $$${param.VIASH_PAR}; do
+                   |    if ! [[ "${param.multiple_sep}$${${param.VIASH_PAR}_VALUES[*]}${param.multiple_sep}" =~ "${param.multiple_sep}$${val}${param.multiple_sep}" ]]; then
+                   |      ViashError '${so.name}' specified value of \\'$${val}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
+                   |      exit 1
+                   |    fi
+                   |  done
+                   |  set +f
+                   |  unset IFS
+                   |fi""".stripMargin
+              case so: StringObject if so.values != Nil =>
+                val allValues = so.values.mkString(param.multiple_sep.toString)
+                s"""
+                   |if [ ! -z "$$${param.VIASH_PAR}" ]; then
+                   |  ${param.VIASH_PAR}_VALUES=("$allValues")
+                   |  IFS=${param.multiple_sep}
+                   |  set -f
+                   |  if ! [[ "${param.multiple_sep}$${${param.VIASH_PAR}_VALUES[*]}${param.multiple_sep}" =~ "${param.multiple_sep}$$${param.VIASH_PAR}${param.multiple_sep}" ]]; then
+                   |    ViashError '${so.name}' specified value of \\'$$${param.VIASH_PAR}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
+                   |    exit 1
+                   |  fi
+                   |  set +f
+                   |  unset IFS
+                   |fi""".stripMargin
+
               case _ => ""
             }           
           }.mkString("\n")

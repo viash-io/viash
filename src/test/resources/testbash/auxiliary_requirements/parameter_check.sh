@@ -4,8 +4,8 @@
 par_input="code.sh"
 par_real_number="123.987654"
 par_whole_number="17"
-par_string="test string"
 par_reality=""
+par_string="test string"
 # VIASH END
 
 set -e
@@ -20,5 +20,6 @@ function output {
 
 output "real_number: |$par_real_number|"
 output "whole_number: |$par_whole_number|"
-output "string: |$par_string|"
 output "reality: |$par_reality|"
+output "string: |$par_string|"
+output "multiple: |$par_multiple|"
