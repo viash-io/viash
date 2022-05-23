@@ -12,12 +12,19 @@
 
 * `NextflowVdsl3Platform`: Throw an error when an input file was not found.
 
+* `viash build`: Indent auto-generated code according the indentation of `VIASH START` when found.
+  
 * `Main`: Handle not finding the config file or resources in a config file better.
   Display a more helpful message instead of a stack trace.
 
 * `BashWrapper`: Add checks on parameters for valid integer, double and boolean values.
 
 * `BashWrapper`: Add option to limit string values to specific choice values.
+
+* Dependencies:
+  - Scala was upgraded from 2.12.10 to 2.12.15
+  - sbt was upgraded from 1.3.4 to 1.6.1
+  - sbt-scoverage was upgraded from 1.5.1 to 1.9.3
 
 ## BUG FIXES
 
