@@ -409,8 +409,7 @@ object BashWrapper {
                    |""".stripMargin
               case so: StringObject if so.choices != Nil && param.multiple =>
                 val allValues = so.choices.mkString(param.multiple_sep.toString)
-                s"""
-                   |if [ ! -z "$$${param.VIASH_PAR}" ]; then
+                s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
                    |  ${param.VIASH_PAR}_CHOICES=("$allValues")
                    |  IFS=${param.multiple_sep}
                    |  set -f
@@ -422,11 +421,11 @@ object BashWrapper {
                    |  done
                    |  set +f
                    |  unset IFS
-                   |fi""".stripMargin
+                   |fi
+                   |""".stripMargin
               case so: StringObject if so.choices != Nil =>
                 val allValues = so.choices.mkString(param.multiple_sep.toString)
-                s"""
-                   |if [ ! -z "$$${param.VIASH_PAR}" ]; then
+                s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
                    |  ${param.VIASH_PAR}_CHOICES=("$allValues")
                    |  IFS=${param.multiple_sep}
                    |  set -f
@@ -436,7 +435,8 @@ object BashWrapper {
                    |  fi
                    |  set +f
                    |  unset IFS
-                   |fi""".stripMargin
+                   |fi
+                   |""".stripMargin
 
               case _ => ""
             }           
