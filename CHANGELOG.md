@@ -17,6 +17,8 @@
 
 * `BashWrapper`: Add checks on parameters for valid integer, double and boolean values.
 
+* `BashWrapper`: Add option to limit string values to specific choice values.
+
 ## BUG FIXES
 
 * `viash_test`: Add back `--no_cache` parameter to `viash_test`.

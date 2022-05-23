@@ -66,6 +66,12 @@ object Helper {
       ).flatMap { case (name, x) =>
         x.map("\n        " + name + ": " + _.replaceAll("\n", "\\n"))
       }.mkString
+      val choicesStr = 
+        param match {
+          case so: StringObject if so.choices != Nil =>
+            "\n        choices: " + so.choices.map("\n            - " + _).mkString
+          case _ => ""
+        }
 
       val descStr = param.description.map{ desc =>
         ("\n" + desc.trim).replaceAll("\n", "\n        ")
@@ -73,7 +79,8 @@ object Helper {
       
       "\n    " +
         names.mkString(", ") +
-        namedPropsStr + 
+        namedPropsStr +
+        choicesStr +
         descStr
     })
     
