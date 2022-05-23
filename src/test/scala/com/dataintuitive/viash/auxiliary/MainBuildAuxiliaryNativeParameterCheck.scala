@@ -22,7 +22,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
   // check whether executable was created
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
 
-  def generatePassAndFailForMultiples(passSigns: Seq[String], passValues: Seq[String], failSigns: Seq[String], failValues: Seq[String]) = {
+  def generatePassAndFail(passSigns: Seq[String], passValues: Seq[String], failSigns: Seq[String], failValues: Seq[String]) = {
     assert(passSigns.length > 0)
     assert(passValues.length > 0)
     assert(failSigns.length > 0)
@@ -46,8 +46,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       f <- failSingles.take(4).combinations(b); // limit amount of tests with .take, this becomes big *fast*
       order <- Seq(true, false)
     ) yield if (order) (p++f).mkString(":") else (f++p).mkString(":")
-    
-    (passCombined, failCombined++failMixCombined)
+    (passSingles, failSingles, passCombined, failCombined++failMixCombined)
   }
 
   // convert testbash
@@ -92,54 +91,28 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
     val checksFail = Seq("1+", "1-", "1+2", "1-2", "foo", "123foo", "123.foo", "12e0.5")
     val signs = Seq("", "+", "-")
 
-    for(
-      value <- checksPass;
-      sign <- signs
+    val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass, signs, checksFail)
+
+    val tests = Seq(
+      ("--real_number", passSingle, 0),
+      ("--real_number", failSingle, 1),
+      ("--real_number_multiple", passMulti, 0),
+      ("--real_number_multiple", failMulti, 1)
+    )
+
+    for (
+      (param, tests, expected_result) <- tests;
+      value <- tests
     ) {
-      val param = sign + value
       val out = Exec.run2(
         Seq(
           executable.toString,
-          "--real_number", param,
+          param, value,
         )
       )
-      assert(out.exitValue == 0, s"Test real_number: $param should pass\n${out.output}")
+      assert(out.exitValue == expected_result, s"Test failed for $param: $value\n${out.output}")
     }
 
-    for(
-      value <- checksFail;
-      sign <- signs
-    ) {
-      val param = sign + value
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--real_number", param,
-        )
-      )
-      assert(out.exitValue != 0, s"Test real_number: $param should fail\n${out.output}")
-    }
-
-    // test combination of good and/or bad values
-    val (passMulti, failMulti) = generatePassAndFailForMultiples(signs, checksPass, signs, checksFail)
-    for(param <- passMulti) {
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--real_number_multiple", param,
-        )
-      )
-      assert(out.exitValue == 0, s"Test real_number_multiple: $param should pass\n${out.output}")
-    }
-    for(param <- failMulti) {
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--real_number_multiple", param,
-        )
-      )
-      assert(out.exitValue != 0, s"Test real_number_multiple: $param should fail\n${out.output}")
-    }
   }
 
   test("Check whether integer values are checked correctly") {
@@ -148,53 +121,26 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
     val checksFail = Seq("1.5", ".7", "1.5e5", "2.6e+6", "3.8e-7", "1+", "1-", "1+2", "1-2", "foo", "123foo", "123.foo", "12e0.5")
     val signs = Seq("", "+", "-")
 
-    for(
-      value <- checksPass;
-      sign <- signs
-    ) {
-      val param = sign + value
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--whole_number", param,
-        )
-      )
-      assert(out.exitValue == 0, s"Test whole_number: $param should pass\n${out.output}")
-    }
+    val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass, signs, checksFail)
 
-    for(
-      value <- checksFail;
-      sign <- signs
-    ) {
-      val param = sign + value
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--whole_number", param,
-        )
-      )
-      assert(out.exitValue != 0, s"Test whole_number: $param should fail\n${out.output}")
-    }
+    val tests = Seq(
+      ("--whole_number", passSingle, 0),
+      ("--whole_number", failSingle, 1),
+      ("--whole_number_multiple", passMulti, 0),
+      ("--whole_number_multiple", failMulti, 1)
+    )
 
-    // test combination of good and/or bad values
-    val (passMulti, failMulti) = generatePassAndFailForMultiples(signs, checksPass, signs, checksFail)
-    for(param <- passMulti) {
+    for (
+      (param, tests, expected_result) <- tests;
+      value <- tests
+    ) {
       val out = Exec.run2(
         Seq(
           executable.toString,
-          "--whole_number_multiple", param,
+          param, value,
         )
       )
-      assert(out.exitValue == 0, s"Test whole_number_multiple: $param should pass\n${out.output}")
-    }
-    for(param <- failMulti) {
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--whole_number_multiple", param,
-        )
-      )
-      assert(out.exitValue != 0, s"Test whole_number_multiple: $param should fail\n${out.output}")
+      assert(out.exitValue == expected_result, s"Test failed for $param: $value\n${out.output}")
     }
 
   }
@@ -205,33 +151,31 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
     val checksFail = Seq("0", "1", "foo", "tRuE", "fALSE")
     val signs = Seq("", "+", "-")
 
-    for(
-      param <- checksPass
-    ) {
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--reality", param,
-        )
-      )
-      assert(out.exitValue == 0, s"Test reality: $param should pass\n${out.output}")
-    }
+    val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(Seq(""), checksPass, signs, checksFail)
 
-    for(
-      param <- checksFail
+    val tests = Seq(
+      ("--reality", passSingle, 0),
+      ("--reality", failSingle, 1),
+      ("--reality_multiple", passMulti, 0),
+      ("--reality_multiple", failMulti, 1)
+    )
+
+    for (
+      (param, tests, expected_result) <- tests;
+      value <- tests
     ) {
       val out = Exec.run2(
         Seq(
           executable.toString,
-          "--reality", param,
+          param, value,
         )
       )
-      assert(out.exitValue != 0, s"Test reality: $param should fail\n${out.output}")
+      assert(out.exitValue == expected_result, s"Test failed for $param: $value\n${out.output}")
     }
 
     // Signs are never allowed, ie. "+true", "-false", etc
     for(
-      value <- checksPass ++ checksFail;
+      value <- checksPass;
       sign <- Seq("+", "-")
     ) {
       val param = sign + value
@@ -244,27 +188,6 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       assert(out.exitValue != 0, s"Test reality: $param should fail\n${out.output}")
     }
 
-    // test combination of good and/or bad values
-    val (passMulti, failMulti) = generatePassAndFailForMultiples(Seq(""), checksPass, signs, checksFail)
-    for(param <- passMulti) {
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--reality_multiple", param,
-        )
-      )
-      assert(out.exitValue == 0, s"Test reality_multiple: $param should pass\n${out.output}")
-    }
-    for(param <- failMulti) {
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--reality_multiple", param,
-        )
-      )
-      assert(out.exitValue != 0, s"Test reality_multiple: $param should fail\n${out.output}")
-    }
-
   }
 
   test("Check whether string values with allowed values are checked correctly") {
@@ -274,103 +197,26 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       "ALL CAPITALS", "a", "B")
     val checksFail = Seq("0", "1", "foo", "bone", "one 2")
 
-    for(
-      param <- checksPass
+    val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(Seq(""), checksPass, Seq(""), checksFail)
+
+    val tests = Seq(
+      ("--string", passSingle, 0),
+      ("--string", failSingle, 1),
+      ("--multiple", passMulti, 0),
+      ("--multiple", failMulti, 1)
+    )
+
+    for (
+      (param, tests, expected_result) <- tests;
+      value <- tests
     ) {
       val out = Exec.run2(
         Seq(
           executable.toString,
-          "--string", param,
+          param, value,
         )
       )
-      assert(out.exitValue == 0, s"Test string: $param should pass\n${out.output}")
-    }
-
-    for(
-      param <- checksFail
-    ) {
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--string", param,
-        )
-      )
-      assert(out.exitValue != 0, s"Test string: $param should fail\n${out.output}")
-    }
-
-  }
-
-  test("Check whether string with multiple values with allowed values are checked correctly") {
-    // Decision was made to allow quite permissive syntax checking
-    val checksPass = Seq("one", "2", "two words", "three separate words", 
-      "Two full blown sentences with punctuation. The weather is nice today!", "Capital",
-      "ALL CAPITALS", "a", "B")
-    val checksFail = Seq("0", "1", "foo", "bone", "one 2")
-
-    for(
-      param <- checksPass
-    ) {
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--multiple", param,
-        )
-      )
-      assert(out.exitValue == 0, s"Test multiple: $param should pass\n${out.output}")
-    }
-
-    for(
-      param <- checksFail
-    ) {
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--multiple", param,
-        )
-      )
-      assert(out.exitValue != 0, s"Test multiple: $param should fail\n${out.output}")
-    }
-
-    // test combination of good and/or bad values
-    for(
-      params <- checksPass.combinations(3)
-    ) {
-      val param = params.mkString(":")
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--multiple", param,
-        )
-      )
-      assert(out.exitValue == 0, s"Test multiple: $param should pass\n${out.output}")
-    }
-
-    for(
-      params <- checksFail.combinations(3)
-    ) {
-      val param = params.mkString(":")
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--multiple", param,
-        )
-      )
-      assert(out.exitValue != 0, s"Test multiple: $param should fail\n${out.output}")
-    }
-
-    for(
-      combLength <- (1 to 3);
-      paramsPass <- checksPass.take(4).combinations(combLength);
-      paramsFail <- checksFail.take(4).combinations(combLength)
-    ) {
-      val param = (paramsPass ++ paramsFail).mkString(":")
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--multiple", param,
-        )
-      )
-      assert(out.exitValue != 0, s"Test multiple: $param should fail\n${out.output}")
+      assert(out.exitValue == expected_result, s"Test failed for $param: $value\n${out.output}")
     }
 
   }
@@ -379,105 +225,29 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
     val checksPass = Seq("0", "1", "3", "-10")
     val checksFail = Seq("2", "-1", "foo")
 
-    for(
-      param <- checksPass
-    ) {
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--whole_number_choice", param,
-        )
-      )
-      assert(out.exitValue == 0, s"Test whole_number_choice: $param should pass\n${out.output}")
-    }
+    val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(Seq(""), checksPass, Seq(""), checksFail)
 
-    for(
-      param <- checksFail
+    val tests = Seq(
+      ("--whole_number_choice", passSingle, 0),
+      ("--whole_number_choice", failSingle, 1),
+      ("--whole_number_choice_multiple", passMulti, 0),
+      ("--whole_number_choice_multiple", failMulti, 1)
+    )
+
+    for (
+      (param, tests, expected_result) <- tests;
+      value <- tests
     ) {
       val out = Exec.run2(
         Seq(
           executable.toString,
-          "--whole_number_choice", param,
+          param, value,
         )
       )
-      assert(out.exitValue != 0, s"Test whole_number_choice: $param should fail\n${out.output}")
+      assert(out.exitValue == expected_result, s"Test failed for $param: $value\n${out.output}")
     }
 
   }
-
-  test("Check whether integer with multiple values with allowed values are checked correctly") {
-    val checksPass = Seq("0", "1", "3", "-10")
-    val checksFail = Seq("2", "-1", "foo")
-
-    for(
-      param <- checksPass
-    ) {
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--whole_number_choice_multiple", param,
-        )
-      )
-      assert(out.exitValue == 0, s"Test whole_number_choice_multiple: $param should pass\n${out.output}")
-    }
-
-    for(
-      param <- checksFail
-    ) {
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--whole_number_choice_multiple", param,
-        )
-      )
-      assert(out.exitValue != 0, s"Test whole_number_choice_multiple: $param should fail\n${out.output}")
-    }
-
-    // test combination of good and/or bad values
-    for(
-      params <- checksPass.combinations(3)
-    ) {
-      val param = params.mkString(":")
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--whole_number_choice_multiple", param,
-        )
-      )
-      assert(out.exitValue == 0, s"Test whole_number_choice_multiple: $param should pass\n${out.output}")
-    }
-
-    for(
-      params <- checksFail.combinations(3)
-    ) {
-      val param = params.mkString(":")
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--whole_number_choice_multiple", param,
-        )
-      )
-      assert(out.exitValue != 0, s"Test whole_number_choice_multiple: $param should fail\n${out.output}")
-    }
-
-    for(
-      combLength <- (1 to 3);
-      paramsPass <- checksPass.combinations(combLength);
-      paramsFail <- checksFail.combinations(combLength)
-    ) {
-      val param = (paramsPass ++ paramsFail).mkString(":")
-      val out = Exec.run2(
-        Seq(
-          executable.toString,
-          "--whole_number_choice_multiple", param,
-        )
-      )
-      assert(out.exitValue != 0, s"Test whole_number_choice_multiple: $param should fail\n${out.output}")
-    }
-    
-  }
-
-
 
   override def afterAll() {
     IO.deleteRecursively(temporaryFolder)

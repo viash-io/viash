@@ -19,8 +19,11 @@ function output {
 }
 
 output "real_number: |$par_real_number|"
+output "real_number_multiple: |$par_real_number_multiple|"
 output "whole_number: |$par_whole_number|"
+output "whole_number_multiple: |$par_whole_number_multiple|"
 output "reality: |$par_reality|"
+output "reality_multiple: |$par_reality_multiple|"
 output "string: |$par_string|"
 output "multiple: |$par_multiple|"
 output "whole_number_choice: |$whole_number_choice|"
