@@ -19,7 +19,7 @@
 
 * `BashWrapper`: Add checks on parameters for valid integer, double and boolean values.
 
-* `BashWrapper`: Add option to limit string values to specific choice values.
+* `BashWrapper`: Add option to limit string and integer values to specific choice values.
 
 * Dependencies:
   - Scala was upgraded from 2.12.10 to 2.12.15
