@@ -381,63 +381,98 @@ object BashWrapper {
       }
 
     // construct type checks
-    val typeParams = paramsAndDummies
+    def typeCheck[T](param: DataObject[T], regex: String) = {
+      val typeWithArticle = param match {
+        case i: IntegerObject => "an " + param.`type`
+        case _ => "a " + param.`type`
+      }
+      param match {
+        case param if param.multiple =>
+          s"""if ! [ -z "$$${param.VIASH_PAR}" ]; then
+             |  IFS=${param.multiple_sep}
+             |  set -f
+             |  for val in $$${param.VIASH_PAR}; do
+             |    if ! [[ "$${val}" =~ $regex ]]; then
+             |      ViashError '${param.name}' has to be ${typeWithArticle}. Use "--help" to get more information on the parameters.
+             |      exit 1
+             |    fi
+             |  done
+             |  set +f
+             |  unset IFS
+             |fi
+             |""".stripMargin
+        case _ =>
+          s"""if ! [[ -z "$$${param.VIASH_PAR}" || "$$${param.VIASH_PAR}" =~ ^[-+]?[0-9]+$$ ]]; then
+             |  ViashError '${param.name}' has to be an integer. Use "--help" to get more information on the parameters.
+             |  exit 1
+             |fi
+             |""".stripMargin
+      }
+    }
     val typeCheckStr =
-      if (typeParams.isEmpty) {
+      if (paramsAndDummies.isEmpty) {
         ""
       } else {
         "\n# check whether parameters values are of the right type\n" +
-          typeParams.map { param =>
+          paramsAndDummies.map { param =>
             param match {
               case io: IntegerObject =>
-                s"""if ! [[ -z "$$${io.VIASH_PAR}" || "$$${io.VIASH_PAR}" =~ ^[-+]?[0-9]+$$ ]]; then
-                   |  ViashError '${io.name}' has to be an integer. Use "--help" to get more information on the parameters.
-                   |  exit 1
-                   |fi
-                   |""".stripMargin
+                typeCheck(io, "^[-+]?[0-9]+$")
               case dO: DoubleObject =>
-                s"""if ! [[ -z "$$${dO.VIASH_PAR}" || "$$${dO.VIASH_PAR}" =~ ^[-+]?(\\.[0-9]+|[0-9]+(\\.[0-9]*)?)([eE][-+]?[0-9]+)?$$ ]]; then
-                   |  ViashError '${dO.name}' has to be a double. Use "--help" to get more information on the parameters.
-                   |  exit 1
-                   |fi
-                   |""".stripMargin
+                typeCheck(dO, "^[-+]?(\\.[0-9]+|[0-9]+(\\.[0-9]*)?)([eE][-+]?[0-9]+)?$")
               case bo: BooleanObject =>
-                s"""if ! [[ -z "$$${bo.VIASH_PAR}" || "$$${bo.VIASH_PAR}" =~ ^(true|True|TRUE|false|False|FALSE|yes|Yes|YES|no|No|NO)$$ ]]; then
-                   |  ViashError '${bo.name}' has to be a boolean. Use "--help" to get more information on the parameters.
-                   |  exit 1
-                   |fi
-                   |""".stripMargin
-              case so: StringObject if so.choices != Nil && param.multiple =>
-                val allValues = so.choices.mkString(param.multiple_sep.toString)
-                s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
-                   |  ${param.VIASH_PAR}_CHOICES=("$allValues")
-                   |  IFS=${param.multiple_sep}
-                   |  set -f
-                   |  for val in $$${param.VIASH_PAR}; do
-                   |    if ! [[ "${param.multiple_sep}$${${param.VIASH_PAR}_CHOICES[*]}${param.multiple_sep}" =~ "${param.multiple_sep}$${val}${param.multiple_sep}" ]]; then
-                   |      ViashError '${so.name}' specified value of \\'$${val}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
-                   |      exit 1
-                   |    fi
-                   |  done
-                   |  set +f
-                   |  unset IFS
-                   |fi
-                   |""".stripMargin
-              case so: StringObject if so.choices != Nil =>
-                val allValues = so.choices.mkString(param.multiple_sep.toString)
-                s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
-                   |  ${param.VIASH_PAR}_CHOICES=("$allValues")
-                   |  IFS=${param.multiple_sep}
-                   |  set -f
-                   |  if ! [[ "${param.multiple_sep}$${${param.VIASH_PAR}_CHOICES[*]}${param.multiple_sep}" =~ "${param.multiple_sep}$$${param.VIASH_PAR}${param.multiple_sep}" ]]; then
-                   |    ViashError '${so.name}' specified value of \\'$$${param.VIASH_PAR}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
-                   |    exit 1
-                   |  fi
-                   |  set +f
-                   |  unset IFS
-                   |fi
-                   |""".stripMargin
+                typeCheck(bo, "^(true|True|TRUE|false|False|FALSE|yes|Yes|YES|no|No|NO)$")               
+              case _ => ""
+            }           
+          }.mkString("\n")
+      }
 
+
+    def checkChoices[T](param: DataObject[T], allowedChoices: List[T]) = {
+      val allowedChoicesString = allowedChoices.mkString(param.multiple_sep.toString)
+
+      param match {
+        case _ if param.multiple =>
+          s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
+             |  ${param.VIASH_PAR}_CHOICES=("$allowedChoicesString")
+             |  IFS=${param.multiple_sep}
+             |  set -f
+             |  for val in $$${param.VIASH_PAR}; do
+             |    if ! [[ "${param.multiple_sep}$${${param.VIASH_PAR}_CHOICES[*]}${param.multiple_sep}" =~ "${param.multiple_sep}$${val}${param.multiple_sep}" ]]; then
+             |      ViashError '${param.name}' specified value of \\'$${val}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
+             |      exit 1
+             |    fi
+             |  done
+             |  set +f
+             |  unset IFS
+             |fi
+             |""".stripMargin
+        case _ =>
+          s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
+             |  ${param.VIASH_PAR}_CHOICES=("$allowedChoicesString")
+             |  IFS=${param.multiple_sep}
+             |  set -f
+             |  if ! [[ "${param.multiple_sep}$${${param.VIASH_PAR}_CHOICES[*]}${param.multiple_sep}" =~ "${param.multiple_sep}$$${param.VIASH_PAR}${param.multiple_sep}" ]]; then
+             |    ViashError '${param.name}' specified value of \\'$$${param.VIASH_PAR}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
+             |    exit 1
+             |  fi
+             |  set +f
+             |  unset IFS
+             |fi
+             |""".stripMargin
+      }
+    }
+    val choiceCheckStr =
+      if (paramsAndDummies.isEmpty) {
+        ""
+      } else {
+        "\n# check whether parameters values are of the right type\n" +
+          paramsAndDummies.map { param =>
+            param match {
+              case io: IntegerObject if io.choices != Nil =>
+                checkChoices(io, io.choices)
+              case so: StringObject if so.choices != Nil =>
+                checkChoices(so, so.choices)
               case _ => ""
             }           
           }.mkString("\n")
@@ -446,7 +481,7 @@ object BashWrapper {
     // return output
     BashWrapperMods(
       parsers = parseStrs,
-      preRun = positionalStr + "\n" + reqCheckStr + "\n" + defaultsStrs + "\n" + reqFilesStr + "\n" + typeCheckStr
+      preRun = positionalStr + "\n" + reqCheckStr + "\n" + defaultsStrs + "\n" + reqFilesStr + "\n" + typeCheckStr + "\n" + choiceCheckStr
     )
   }
 

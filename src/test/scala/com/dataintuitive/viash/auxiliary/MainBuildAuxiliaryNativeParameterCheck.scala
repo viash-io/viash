@@ -282,9 +282,111 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       assert(out.exitValue != 0, s"Test multiple: $param should fail\n${out.output}")
     }
 
+  }
 
+  test("Check whether integer values with allowed values are checked correctly") {
+    val checksPass = Seq("0", "1", "3", "-10")
+    val checksFail = Seq("2", "-1", "foo")
+
+    for(
+      param <- checksPass
+    ) {
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--whole_number_choice", param,
+        )
+      )
+      assert(out.exitValue == 0, s"Test whole_number_choice: $param should pass\n${out.output}")
+    }
+
+    for(
+      param <- checksFail
+    ) {
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--whole_number_choice", param,
+        )
+      )
+      assert(out.exitValue != 0, s"Test whole_number_choice: $param should fail\n${out.output}")
+    }
 
   }
+
+  test("Check whether integer with multiple values with allowed values are checked correctly") {
+    val checksPass = Seq("0", "1", "3", "-10")
+    val checksFail = Seq("2", "-1", "foo")
+
+    for(
+      param <- checksPass
+    ) {
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--whole_number_choice_multiple", param,
+        )
+      )
+      assert(out.exitValue == 0, s"Test whole_number_choice_multiple: $param should pass\n${out.output}")
+    }
+
+    for(
+      param <- checksFail
+    ) {
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--whole_number_choice_multiple", param,
+        )
+      )
+      assert(out.exitValue != 0, s"Test whole_number_choice_multiple: $param should fail\n${out.output}")
+    }
+
+    // test combination of good and/or bad values
+    for(
+      params <- checksPass.combinations(3)
+    ) {
+      val param = params.mkString(":")
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--whole_number_choice_multiple", param,
+        )
+      )
+      assert(out.exitValue == 0, s"Test whole_number_choice_multiple: $param should pass\n${out.output}")
+    }
+
+    for(
+      params <- checksFail.combinations(3)
+    ) {
+      val param = params.mkString(":")
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--whole_number_choice_multiple", param,
+        )
+      )
+      assert(out.exitValue != 0, s"Test whole_number_choice_multiple: $param should fail\n${out.output}")
+    }
+
+    for(
+      combLength <- (1 to 3);
+      paramsPass <- checksPass.combinations(combLength);
+      paramsFail <- checksFail.combinations(combLength)
+    ) {
+      val param = (paramsPass ++ paramsFail).mkString(":")
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--whole_number_choice_multiple", param,
+        )
+      )
+      assert(out.exitValue != 0, s"Test whole_number_choice_multiple: $param should fail\n${out.output}")
+    }
+    
+  }
+
+
 
   override def afterAll() {
     IO.deleteRecursively(temporaryFolder)
