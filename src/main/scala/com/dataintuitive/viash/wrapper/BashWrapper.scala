@@ -392,7 +392,7 @@ object BashWrapper {
              |  IFS=${param.multiple_sep}
              |  set -f
              |  for val in $$${param.VIASH_PAR}; do
-             |    if ! [[ "$${val}" =~ $regex ]]; then
+             |    if ! [[ "$${val}" =~ ${regex} ]]; then
              |      ViashError '${param.name}' has to be ${typeWithArticle}. Use "--help" to get more information on the parameters.
              |      exit 1
              |    fi
@@ -402,8 +402,8 @@ object BashWrapper {
              |fi
              |""".stripMargin
         case _ =>
-          s"""if ! [[ -z "$$${param.VIASH_PAR}" || "$$${param.VIASH_PAR}" =~ ^[-+]?[0-9]+$$ ]]; then
-             |  ViashError '${param.name}' has to be an integer. Use "--help" to get more information on the parameters.
+          s"""if ! [[ -z "$$${param.VIASH_PAR}" || "$$${param.VIASH_PAR}" =~ ${regex} ]]; then
+             |  ViashError '${param.name}' has to be ${typeWithArticle}. Use "--help" to get more information on the parameters.
              |  exit 1
              |fi
              |""".stripMargin

@@ -92,6 +92,51 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       assert(out.exitValue != 0, s"Test real_number: $param should fail\n${out.output}")
     }
 
+    // test combination of good and/or bad values
+    for(
+      params <- checksPass.combinations(3);
+      sign <- signs
+    ) {
+      val param = sign + params.mkString(":")
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--real_number_multiple", param,
+        )
+      )
+      assert(out.exitValue == 0, s"Test real_number_multiple: $param should pass\n${out.output}")
+    }
+
+    for(
+      params <- checksFail.combinations(3);
+      sign <- signs
+    ) {
+      val param = sign + params.mkString(":")
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--real_number_multiple", param,
+        )
+      )
+      assert(out.exitValue != 0, s"Test real_number_multiple: $param should fail\n${out.output}")
+    }
+
+    for(
+      combLength <- (1 to 3);
+      paramsPass <- checksPass.take(4).combinations(combLength);
+      paramsFail <- checksFail.take(4).combinations(combLength);
+      sign <- signs
+    ) {
+      val param = sign + (paramsPass ++ paramsFail).mkString(":")
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--real_number_multiple", param,
+        )
+      )
+      assert(out.exitValue != 0, s"Test real_number_multiple: $param should fail\n${out.output}")
+    }
+
   }
 
   test("Check whether integer values are checked correctly") {
@@ -126,6 +171,51 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
         )
       )
       assert(out.exitValue != 0, s"Test whole_number: $param should fail\n${out.output}")
+    }
+
+    // test combination of good and/or bad values
+    for(
+      params <- checksPass.combinations(3);
+      sign <- signs
+    ) {
+      val param = sign + params.mkString(":")
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--whole_number_multiple", param,
+        )
+      )
+      assert(out.exitValue == 0, s"Test whole_number_multiple: $param should pass\n${out.output}")
+    }
+
+    for(
+      params <- checksFail.combinations(3);
+      sign <- signs
+    ) {
+      val param = sign + params.mkString(":")
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--whole_number_multiple", param,
+        )
+      )
+      assert(out.exitValue != 0, s"Test whole_number_multiple: $param should fail\n${out.output}")
+    }
+
+    for(
+      combLength <- (1 to 3);
+      paramsPass <- checksPass.take(4).combinations(combLength);
+      paramsFail <- checksFail.take(4).combinations(combLength);
+      sign <- signs
+    ) {
+      val param = sign + (paramsPass ++ paramsFail).mkString(":")
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--whole_number_multiple", param,
+        )
+      )
+      assert(out.exitValue != 0, s"Test whole_number_multiple: $param should fail\n${out.output}")
     }
 
   }
@@ -172,6 +262,48 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
         )
       )
       assert(out.exitValue != 0, s"Test reality: $param should fail\n${out.output}")
+    }
+
+    // test combination of good and/or bad values
+    for(
+      params <- checksPass.combinations(3)
+    ) {
+      val param = params.mkString(":")
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--reality_multiple", param,
+        )
+      )
+      assert(out.exitValue == 0, s"Test reality_multiple: $param should pass\n${out.output}")
+    }
+
+    for(
+      params <- checksFail.combinations(3)
+    ) {
+      val param = params.mkString(":")
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--reality_multiple", param,
+        )
+      )
+      assert(out.exitValue != 0, s"Test reality_multiple: $param should fail\n${out.output}")
+    }
+
+    for(
+      combLength <- (1 to 3);
+      paramsPass <- checksPass.take(4).combinations(combLength);
+      paramsFail <- checksFail.take(4).combinations(combLength)
+    ) {
+      val param = (paramsPass ++ paramsFail).mkString(":")
+      val out = Exec.run2(
+        Seq(
+          executable.toString,
+          "--reality_multiple", param,
+        )
+      )
+      assert(out.exitValue != 0, s"Test reality_multiple: $param should fail\n${out.output}")
     }
 
   }
