@@ -42,6 +42,9 @@ case class IntegerObject(
     example: OneOrMore[Int],
     default: OneOrMore[Int],
     required: Boolean,
+    choices: List[Int] = this.choices,
+    min: OneOrMore[Int] = this.min,
+    max: OneOrMore[Int] = this.max,
     direction: Direction,
     multiple: Boolean,
     multiple_sep: Char

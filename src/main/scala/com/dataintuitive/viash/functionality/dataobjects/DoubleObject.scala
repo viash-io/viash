@@ -41,6 +41,9 @@ case class DoubleObject(
     example: OneOrMore[Double],
     default: OneOrMore[Double],
     required: Boolean,
+    choices: List[Double],
+    min: OneOrMore[Double] = this.min,
+    max: OneOrMore[Double] = this.max,
     direction: Direction,
     multiple: Boolean,
     multiple_sep: Char

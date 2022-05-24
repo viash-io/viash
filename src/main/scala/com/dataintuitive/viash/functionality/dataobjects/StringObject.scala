@@ -40,6 +40,9 @@ case class StringObject(
     example: OneOrMore[String],
     default: OneOrMore[String],
     required: Boolean,
+    choices: List[String] = this.choices,
+    min: OneOrMore[String],
+    max: OneOrMore[String],
     direction: Direction,
     multiple: Boolean,
     multiple_sep: Char

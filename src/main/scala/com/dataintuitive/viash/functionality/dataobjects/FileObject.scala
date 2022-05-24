@@ -41,6 +41,9 @@ case class FileObject(
     example: OneOrMore[Path],
     default: OneOrMore[Path],
     required: Boolean,
+    choices: List[Path],
+    min: OneOrMore[Path],
+    max: OneOrMore[Path],
     direction: Direction,
     multiple: Boolean,
     multiple_sep: Char
