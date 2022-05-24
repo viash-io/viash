@@ -59,10 +59,29 @@ object Helper {
         } else {
           None
         }
+      val min = param match {
+          case p: IntegerObject if p.min.nonEmpty =>
+            Some(p.min.map(_.toString).mkString(p.multiple_sep.toString))
+          case p: DoubleObject if p.min.nonEmpty =>
+            Some(p.min.map(_.toString).mkString(p.multiple_sep.toString))
+          case _ =>
+            None
+        }
+      val max = param match {
+          case p: IntegerObject if p.max.nonEmpty =>
+            Some(p.max.map(_.toString).mkString(p.multiple_sep.toString))
+          case p: DoubleObject if p.max.nonEmpty =>
+            Some(p.max.map(_.toString).mkString(p.multiple_sep.toString))
+          case _ =>
+            None
+        }
+
       val namedPropsStr = List(
         ("type", Some((param.`type` :: unnamedProps).mkString(", "))),
         ("default", default),
-        ("example", example)
+        ("example", example),
+        ("min", min),
+        ("max", max)
       ).flatMap { case (name, x) =>
         x.map("\n        " + name + ": " + _.replaceAll("\n", "\\n"))
       }.mkString

@@ -67,6 +67,54 @@ functionality:
         - 3
         - -10
 
+    - name: "--whole_number_min"
+      type: integer
+      min: -3
+    - name: "--whole_number_max"
+      type: integer
+      max: 5
+    - name: "--whole_number_min_max"
+      type: integer
+      min: -3
+      max: 5
+    - name: "--real_number_min"
+      type: double
+      min: -3.2
+    - name: "--real_number_max"
+      type: double
+      max: 5.7
+    - name: "--real_number_min_max"
+      type: double
+      min: -3.2
+      max: 5.7
+
+    - name: "--whole_number_min_multiple"
+      type: integer
+      min: -3
+      multiple: true
+    - name: "--whole_number_max_multiple"
+      type: integer
+      max: 5
+      multiple: true
+    - name: "--whole_number_min_max_multiple"
+      type: integer
+      min: -3
+      max: 5
+      multiple: true
+    - name: "--real_number_min_multiple"
+      type: double
+      min: -3.2
+      multiple: true
+    - name: "--real_number_max_multiple"
+      type: double
+      max: 5.7
+      multiple: true
+    - name: "--real_number_min_max_multiple"
+      type: double
+      min: -3.2
+      max: 5.7
+      multiple: true
+
   resources:
     - type: bash_script
       path: ./parameter_check.sh

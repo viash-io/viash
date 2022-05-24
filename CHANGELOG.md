@@ -21,6 +21,8 @@
 
 * `BashWrapper`: Add option to limit string and integer values to specific choice values.
 
+* `BashWrapper`: Add option to set min and max values for integer and double values.
+
 * Dependencies:
   - Scala was upgraded from 2.12.10 to 2.12.15
   - sbt was upgraded from 1.3.4 to 1.6.1

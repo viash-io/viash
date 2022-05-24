@@ -381,35 +381,65 @@ object BashWrapper {
       }
 
     // construct type checks
-    def typeCheck[T](param: DataObject[T], regex: String) = {
+    def typeMinMaxCheck[T](param: DataObject[T], regex: String, min: Option[T] = None, max: Option[T] = None) = {
       val typeWithArticle = param match {
         case i: IntegerObject => "an " + param.`type`
         case _ => "a " + param.`type`
       }
+
+      val typeCheck = s"""  if ! [[ "$$${param.VIASH_PAR}" =~ ${regex} ]]; then
+                         |    ViashError '${param.name}' has to be ${typeWithArticle}. Use "--help" to get more information on the parameters.
+                         |    exit 1
+                         |  fi
+                         |""".stripMargin
+      val minCheck = min match {
+        case _ if min.isDefined =>
+          s"""  if ! [[ `echo $$${param.VIASH_PAR} '>=' ${min.get} | bc` -eq 1 ]]; then
+             |    ViashError '${param.name}' has be more than or equal to ${min.get}. Use "--help" to get more information on the parameters.
+             |    exit 1
+             |  fi
+             |""".stripMargin
+        case _ => ""
+      }
+      val maxCheck = max match {
+        case _ if max.isDefined =>
+          s"""  if ! [[ `echo $$${param.VIASH_PAR} '<=' ${max.get} | bc` -eq 1 ]]; then
+             |    ViashError '${param.name}' has to be less than or equal to ${max.get}. Use "--help" to get more information on the parameters.
+             |    exit 1
+             |  fi
+             |""".stripMargin
+        case _ => ""
+      }
+
       param match {
         case param if param.multiple =>
-          s"""if ! [ -z "$$${param.VIASH_PAR}" ]; then
-             |  IFS=${param.multiple_sep}
-             |  set -f
-             |  for val in $$${param.VIASH_PAR}; do
-             |    if ! [[ "$${val}" =~ ${regex} ]]; then
-             |      ViashError '${param.name}' has to be ${typeWithArticle}. Use "--help" to get more information on the parameters.
-             |      exit 1
-             |    fi
-             |  done
-             |  set +f
-             |  unset IFS
-             |fi
-             |""".stripMargin
+          val checkStart = 
+            s"""if [ -n "$$${param.VIASH_PAR}" ]; then
+               |  IFS=${param.multiple_sep}
+               |  set -f
+               |  for val in $$${param.VIASH_PAR}; do
+               |"""
+          val checkEnd =
+            s"""  done
+               |  set +f
+               |  unset IFS
+               |fi
+               |""".stripMargin
+          // TODO add extra spaces for typeCheck, minCheck, maxCheck
+          checkStart +
+          (typeCheck + minCheck + maxCheck)
+            .replaceAll(param.VIASH_PAR, "{val}") // use {val} in the 'for' loop
+            .replaceAll("^", "  ").replaceAll("\\n  ", "\n    ") + // fix indentation in a brute force way
+          checkEnd
         case _ =>
-          s"""if ! [[ -z "$$${param.VIASH_PAR}" || "$$${param.VIASH_PAR}" =~ ${regex} ]]; then
-             |  ViashError '${param.name}' has to be ${typeWithArticle}. Use "--help" to get more information on the parameters.
-             |  exit 1
-             |fi
-             |""".stripMargin
+          val checkStart = s"""if [[ -n "$$${param.VIASH_PAR}" ]]; then
+                              |""".stripMargin
+          val checkEnd = """fi
+                           |""".stripMargin
+          checkStart + typeCheck + minCheck + maxCheck + checkEnd
       }
     }
-    val typeCheckStr =
+    val typeMinMaxCheckStr =
       if (paramsAndDummies.isEmpty) {
         ""
       } else {
@@ -417,11 +447,27 @@ object BashWrapper {
           paramsAndDummies.map { param =>
             param match {
               case io: IntegerObject =>
-                typeCheck(io, "^[-+]?[0-9]+$")
+                val min = io.min match {
+                  case m if m.nonEmpty => Some(m.head)
+                  case _ => None
+                }
+                val max = io.max match {
+                  case m if m.nonEmpty => Some(m.head)
+                  case _ => None
+                }
+                typeMinMaxCheck(io, "^[-+]?[0-9]+$", min, max)
               case dO: DoubleObject =>
-                typeCheck(dO, "^[-+]?(\\.[0-9]+|[0-9]+(\\.[0-9]*)?)([eE][-+]?[0-9]+)?$")
+                val min = dO.min match {
+                  case m if m.nonEmpty => Some(m.head)
+                  case _ => None
+                }
+                val max = dO.max match {
+                  case m if m.nonEmpty => Some(m.head)
+                  case _ => None
+                }
+                typeMinMaxCheck(dO, "^[-+]?(\\.[0-9]+|[0-9]+(\\.[0-9]*)?)([eE][-+]?[0-9]+)?$", min, max)
               case bo: BooleanObject =>
-                typeCheck(bo, "^(true|True|TRUE|false|False|FALSE|yes|Yes|YES|no|No|NO)$")               
+                typeMinMaxCheck(bo, "^(true|True|TRUE|false|False|FALSE|yes|Yes|YES|no|No|NO)$")               
               case _ => ""
             }           
           }.mkString("\n")
@@ -481,7 +527,7 @@ object BashWrapper {
     // return output
     BashWrapperMods(
       parsers = parseStrs,
-      preRun = positionalStr + "\n" + reqCheckStr + "\n" + defaultsStrs + "\n" + reqFilesStr + "\n" + typeCheckStr + "\n" + choiceCheckStr
+      preRun = positionalStr + "\n" + reqCheckStr + "\n" + defaultsStrs + "\n" + reqFilesStr + "\n" + typeMinMaxCheckStr + "\n" + choiceCheckStr
     )
   }
 

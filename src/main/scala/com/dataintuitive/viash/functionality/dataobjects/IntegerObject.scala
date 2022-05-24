@@ -27,6 +27,8 @@ case class IntegerObject(
   default: OneOrMore[Int] = Nil,
   required: Boolean = false,
   choices: List[Int] = Nil,
+  min: OneOrMore[Int] = Nil,
+  max: OneOrMore[Int] = Nil,
   direction: Direction = Input,
   multiple: Boolean = false,
   multiple_sep: Char = ':',
@@ -44,6 +46,6 @@ case class IntegerObject(
     multiple: Boolean,
     multiple_sep: Char
   ): DataObject[Int] = {
-    copy(name, alternatives, description, example, default, required, choices, direction, multiple, multiple_sep, `type`)
+    copy(name, alternatives, description, example, default, required, choices, min, max, direction, multiple, multiple_sep, `type`)
   }
 }
