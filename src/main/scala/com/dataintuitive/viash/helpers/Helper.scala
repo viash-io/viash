@@ -61,17 +61,17 @@ object Helper {
         }
       val min = param match {
           case p: IntegerObject if p.min.nonEmpty =>
-            Some(p.min.map(_.toString).mkString(p.multiple_sep.toString))
+            p.min.map(_.toString)
           case p: DoubleObject if p.min.nonEmpty =>
-            Some(p.min.map(_.toString).mkString(p.multiple_sep.toString))
+            p.min.map(_.toString)
           case _ =>
             None
         }
       val max = param match {
           case p: IntegerObject if p.max.nonEmpty =>
-            Some(p.max.map(_.toString).mkString(p.multiple_sep.toString))
+            p.max.map(_.toString)
           case p: DoubleObject if p.max.nonEmpty =>
-            Some(p.max.map(_.toString).mkString(p.multiple_sep.toString))
+            p.max.map(_.toString)
           case _ =>
             None
         }
@@ -85,9 +85,12 @@ object Helper {
       ).flatMap { case (name, x) =>
         x.map("\n        " + name + ": " + _.replaceAll("\n", "\\n"))
       }.mkString
+      
       val choicesStr = 
         param match {
           case so: StringObject if so.choices != Nil =>
+            "\n        choices: " + so.choices.map("\n            - " + _).mkString
+          case so: IntegerObject if so.choices != Nil =>
             "\n        choices: " + so.choices.map("\n            - " + _).mkString
           case _ => ""
         }
