@@ -17,6 +17,12 @@
 * `Main`: Handle not finding the config file or resources in a config file better.
   Display a more helpful message instead of a stack trace.
 
+* `BashWrapper`: Add checks on parameters for valid integer, double and boolean values.
+
+* `BashWrapper`: Add option to limit string and integer values to specific choice values.
+
+* `BashWrapper`: Add option to set min and max values for integer and double values.
+
 * Dependencies:
   - Scala was upgraded from 2.12.10 to 2.12.15
   - sbt was upgraded from 1.3.4 to 1.6.1
@@ -36,7 +42,11 @@
 
 * `Main`: Added support spaces in filenames of config files and resources
 
+* `BashWrapper`: Display a message when the last parsed argument would require more values than are still available.
+  Now display a message that values are missing, used to silently crash the wrapper.
+
 * `viash config inject`: Fix error when file argument is `must_exist: true`.
+  
 
 # Viash 0.5.11
 
