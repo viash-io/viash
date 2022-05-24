@@ -40,13 +40,10 @@ case class StringObject(
     example: OneOrMore[String],
     default: OneOrMore[String],
     required: Boolean,
-    choices: List[String] = this.choices,
-    min: OneOrMore[String],
-    max: OneOrMore[String],
     direction: Direction,
     multiple: Boolean,
     multiple_sep: Char
   ): DataObject[String] = {
-    copy(name, alternatives, description, example, default, required, choices, direction, multiple, multiple_sep, `type`)
+    copy(name, alternatives, description, example, default, required, this.choices, direction, multiple, multiple_sep, `type`)
   }
 }

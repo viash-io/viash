@@ -62,9 +62,6 @@ abstract class DataObject[Type] {
     example: OneOrMore[Type] = this.example,
     default: OneOrMore[Type] = this.default,
     required: Boolean = this.required,
-    choices: List[Type] = Nil,
-    min: OneOrMore[Type] = Nil,
-    max: OneOrMore[Type] = Nil,
     direction: Direction = this.direction,
     multiple: Boolean = this.multiple,
     multiple_sep: Char = this.multiple_sep

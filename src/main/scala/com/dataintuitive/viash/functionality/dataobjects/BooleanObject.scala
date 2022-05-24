@@ -46,9 +46,6 @@ case class BooleanObjectRegular(
     example: OneOrMore[Boolean],
     default: OneOrMore[Boolean],
     required: Boolean,
-    choices: List[Boolean],
-    min: OneOrMore[Boolean],
-    max: OneOrMore[Boolean],
     direction: Direction,
     multiple: Boolean,
     multiple_sep: Char
@@ -80,9 +77,6 @@ case class BooleanObjectTrue(
     default: OneOrMore[Boolean],
     example: OneOrMore[Boolean],
     required: Boolean,
-    choices: List[Boolean],
-    min: OneOrMore[Boolean],
-    max: OneOrMore[Boolean],
     direction: Direction,
     multiple: Boolean,
     multiple_sep: Char
@@ -114,9 +108,6 @@ case class BooleanObjectFalse(
     default: OneOrMore[Boolean],
     example: OneOrMore[Boolean],
     required: Boolean,
-    choices: List[Boolean],
-    min: OneOrMore[Boolean],
-    max: OneOrMore[Boolean],
     direction: Direction,
     multiple: Boolean,
     multiple_sep: Char

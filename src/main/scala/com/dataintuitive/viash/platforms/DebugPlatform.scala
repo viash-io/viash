@@ -50,13 +50,13 @@ case class DebugPlatform(
         case arg: BooleanObject if arg.default.isEmpty => 
           arg.copyDO(required = false, default = One(true))
         case arg: DoubleObject if arg.default.isEmpty => 
-          arg.copyDO(required = false, default = One(123.0), min = Nil, max = Nil)
+          arg.copy(required = false, default = One(123.0), min = None, max = None)
         case arg: FileObject if arg.default.isEmpty => 
           arg.copy(required = false, default = One(Paths.get("/path/to/file")), must_exist = false)
         case arg: IntegerObject if arg.default.isEmpty =>
-           arg.copyDO(required = false, default = One(123), choices = Nil, min = Nil, max = Nil)
+           arg.copy(required = false, default = One(123), choices = Nil, min = None, max = None)
         case arg: StringObject if arg.default.isEmpty => 
-          arg.copyDO(required = false, default = One("value"), choices = Nil)
+          arg.copy(required = false, default = One("value"), choices = Nil)
         case a => a
       }
     )

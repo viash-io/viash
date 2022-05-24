@@ -41,13 +41,10 @@ case class FileObject(
     example: OneOrMore[Path],
     default: OneOrMore[Path],
     required: Boolean,
-    choices: List[Path],
-    min: OneOrMore[Path],
-    max: OneOrMore[Path],
     direction: Direction,
     multiple: Boolean,
     multiple_sep: Char
   ): DataObject[Path] = {
-    copy(name, alternatives, description, example, default, must_exist, required, direction, multiple, multiple_sep, `type`)
+    copy(name, alternatives, description, example, default, this.must_exist, required, direction, multiple, multiple_sep, `type`)
   }
 }

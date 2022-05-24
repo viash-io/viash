@@ -26,8 +26,8 @@ case class DoubleObject(
   example: OneOrMore[Double] = Nil,
   default: OneOrMore[Double] = Nil,
   required: Boolean = false,
-  min: OneOrMore[Double] = Nil,
-  max: OneOrMore[Double] = Nil,
+  min: Option[Double] = None,
+  max: Option[Double] = None,
   direction: Direction = Input,
   multiple: Boolean = false,
   multiple_sep: Char = ':',
@@ -41,13 +41,10 @@ case class DoubleObject(
     example: OneOrMore[Double],
     default: OneOrMore[Double],
     required: Boolean,
-    choices: List[Double],
-    min: OneOrMore[Double] = this.min,
-    max: OneOrMore[Double] = this.max,
     direction: Direction,
     multiple: Boolean,
     multiple_sep: Char
   ): DataObject[Double] = {
-    copy(name, alternatives, description, example, default, required, min, max, direction, multiple, multiple_sep, `type`)
+    copy(name, alternatives, description, example, default, required, this.min, this.max, direction, multiple, multiple_sep, `type`)
   }
 }
