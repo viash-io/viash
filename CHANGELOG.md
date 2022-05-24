@@ -45,6 +45,9 @@
 * `BashWrapper`: Display a message when the last parsed argument would require more values than are still available.
   Now display a message that values are missing, used to silently crash the wrapper.
 
+* `viash config inject`: Fix error when file argument is `must_exist: true`.
+  
+
 # Viash 0.5.11
 
 ## MAJOR CHANGES
