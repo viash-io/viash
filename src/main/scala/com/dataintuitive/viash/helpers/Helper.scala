@@ -23,7 +23,7 @@ import com.dataintuitive.viash.Main
 
 object Helper {
   def nameAndVersion(functionality: Functionality): String = {
-    functionality.name + functionality.version.map(" " + _).getOrElse(" <not versioned>")
+    functionality.name + functionality.version.map(" " + _).getOrElse("")
   }
 
   def generateHelp(functionality: Functionality, params: List[DataObject[_]]): List[String] = {
@@ -59,13 +59,41 @@ object Helper {
         } else {
           None
         }
+      val min = param match {
+          case p: IntegerObject if p.min.nonEmpty =>
+            p.min.map(_.toString)
+          case p: DoubleObject if p.min.nonEmpty =>
+            p.min.map(_.toString)
+          case _ =>
+            None
+        }
+      val max = param match {
+          case p: IntegerObject if p.max.nonEmpty =>
+            p.max.map(_.toString)
+          case p: DoubleObject if p.max.nonEmpty =>
+            p.max.map(_.toString)
+          case _ =>
+            None
+        }
+
       val namedPropsStr = List(
         ("type", Some((param.`type` :: unnamedProps).mkString(", "))),
         ("default", default),
-        ("example", example)
+        ("example", example),
+        ("min", min),
+        ("max", max)
       ).flatMap { case (name, x) =>
         x.map("\n        " + name + ": " + _.replaceAll("\n", "\\n"))
       }.mkString
+      
+      val choicesStr = 
+        param match {
+          case so: StringObject if so.choices != Nil =>
+            "\n        choices: " + so.choices.map("\n            - " + _).mkString
+          case so: IntegerObject if so.choices != Nil =>
+            "\n        choices: " + so.choices.map("\n            - " + _).mkString
+          case _ => ""
+        }
 
       val descStr = param.description.map{ desc =>
         ("\n" + desc.trim).replaceAll("\n", "\n        ")
@@ -73,7 +101,8 @@ object Helper {
       
       "\n    " +
         names.mkString(", ") +
-        namedPropsStr + 
+        namedPropsStr +
+        choicesStr +
         descStr
     })
     

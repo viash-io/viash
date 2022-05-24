@@ -1,3 +1,53 @@
+# Viash 0.5.12
+
+## MINOR CHANGES
+
+* `--help`: Don't print "my_component <not versioned>" when no version is specified, 
+  but instead simply "my_component".
+
+* `NextflowVdsl3Platform`: Set `mode=copy` for `auto.publish` and `auto.transcript`.
+
+* `NextflowVdsl3Platform`: When a module is used multiple times in the same workflow, 
+  don't throw an error anymore, instead simply generate a warning.
+
+* `NextflowVdsl3Platform`: Throw an error when an input file was not found.
+
+* `viash build`: Indent auto-generated code according the indentation of `VIASH START` when found.
+  
+* `Main`: Handle not finding the config file or resources in a config file better.
+  Display a more helpful message instead of a stack trace.
+
+* `BashWrapper`: Add checks on parameters for valid integer, double and boolean values.
+
+* `BashWrapper`: Add option to limit string and integer values to specific choice values.
+
+* `BashWrapper`: Add option to set min and max values for integer and double values.
+
+* Dependencies:
+  - Scala was upgraded from 2.12.10 to 2.12.15
+  - sbt was upgraded from 1.3.4 to 1.6.1
+  - sbt-scoverage was upgraded from 1.5.1 to 1.9.3
+
+## BUG FIXES
+
+* `viash_test`: Add back `--no_cache` parameter to `viash_test`.
+
+* `viash_test`: Fix `--append` parameter for `viash_test`, was not getting passed through.
+
+* `viash ns test`: Fix `--append` parameter, actually start from a clean file if append is false.
+
+* `viash_push`: Fix component not being built during a release of Viash.
+
+* `PythonRequirements`: Fix packages being mentioned twice in a Dockerfile.
+
+* `Main`: Added support spaces in filenames of config files and resources
+
+* `BashWrapper`: Display a message when the last parsed argument would require more values than are still available.
+  Now display a message that values are missing, used to silently crash the wrapper.
+
+* `viash config inject`: Fix error when file argument is `must_exist: true`.
+  
+
 # Viash 0.5.11
 
 ## MAJOR CHANGES

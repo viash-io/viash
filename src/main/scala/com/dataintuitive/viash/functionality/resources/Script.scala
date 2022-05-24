@@ -39,7 +39,15 @@ trait Script extends Resource {
 
       val li =
         if (startIndex >= 0 && endIndex >= 0) {
-          lines.slice(0, startIndex + 1) ++ viashLines ++ lines.slice(endIndex, lines.length)
+          val Whitespace = raw"^(\s+).*".r
+          val viashLinesWDelimiter = 
+            lines(startIndex) match {
+              case Whitespace(prefix) => 
+                viashLines.flatMap(_.split("\n")).map(prefix + _)
+              case _ => viashLines
+            }
+
+          lines.slice(0, startIndex + 1) ++ viashLinesWDelimiter ++ lines.slice(endIndex, lines.length)
         } else {
           Array(meta.commentStr + meta.commentStr + " VIASH START") ++
           viashLines ++ 

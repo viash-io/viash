@@ -55,8 +55,7 @@ case class PythonRequirements(
     val installPip =
       s"""pip install$userFlag --upgrade pip"""
 
-    val installPipPackages = generateCommands("", pip ::: packages)
-    val installPypiPackages = generateCommands("", pypi ::: packages)
+    val installPipPackages = generateCommands("", pip ::: packages ::: pypi)
     val installGitPackages = generateCommands("git+", git)
     val installGithubPackages = generateCommands("git+https://github.com/", github)
     val installGitlabPackages = generateCommands("git+https://gitlab.com/", gitlab)
@@ -74,7 +73,7 @@ case class PythonRequirements(
         Nil
       }
 
-    installPip :: installPipPackages ::: installPypiPackages ::: installGitPackages ::: installGithubPackages ::: installGitlabPackages :::
+    installPip :: installPipPackages ::: installGitPackages ::: installGithubPackages ::: installGitlabPackages :::
       installMercurialPackages ::: installSvnPackages ::: installBazaarPackages ::: installUrlPackages ::: installScript
   }
 }

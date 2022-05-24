@@ -76,6 +76,10 @@ functionality:
     type: file
     description: Test results stored as a tabular text file.
     example: .viash_test_log.tsv
+  - name: "--no_cache"
+    alternatives: [ "-nc", "--no-cache" ]
+    type: boolean_true
+    description: Don't cache the docker build in development mode.
   - name: "--log"
     alternatives: [ "-l" ]
     type: file

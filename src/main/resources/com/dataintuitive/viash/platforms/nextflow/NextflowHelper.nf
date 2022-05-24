@@ -443,7 +443,8 @@ def processProcessArgs(Map args) {
     // TODO: more asserts on publishDir?
     processArgs.directives.publishDir = [[ 
       path: params.publishDir, 
-      saveAs: "{ it.startsWith('.') ? null : it }" // don't publish hidden files, by default
+      saveAs: "{ it.startsWith('.') ? null : it }", // don't publish hidden files, by default
+      mode: "copy"
     ]]
   }
 
@@ -455,9 +456,9 @@ def processProcessArgs(Map args) {
     def transcriptsDir = params.containsKey("transcriptsDir") ? params.transcriptsDir : params.publishDir + "/_transcripts"
     def timestamp = Nextflow.getSession().getWorkflowMetadata().start.format('yyyy-MM-dd_HH-mm-ss')
     def transcriptsPublishDir = [ 
-      path: "$transcriptsDir/${timestamp}/${processArgs["key"]}/\${id}/", 
-      saveAs: '{ it.replaceAll("^.", "") }',
-      pattern: ".command*"
+      path: "$transcriptsDir/$timestamp/\${task.process.replaceAll(':', '-')}/\${id}/", 
+      saveAs: "{ it.startsWith('.') ? it.replaceAll('^.', '') : null }", 
+      mode: "copy"
     ]
     def publishDirs = processArgs.directives.publishDir ?: []
     processArgs.directives.publishDir = publishDirs + transcriptsPublishDir
@@ -475,15 +476,23 @@ def processProcessArgs(Map args) {
 
 def processFactory(Map processArgs) {
   def tripQuo = "\"\"\""
-  def procKey = processArgs["key"] + "_process"
 
+  // autodetect process key
+  def wfKey = processArgs["key"]
+  def procKeyPrefix = "${wfKey}_process"
   def meta = ScriptMeta.current()
+  def existing = meta.getProcessNames().findAll{it.startsWith(procKeyPrefix)}
+  def numbers = existing.collect{it.replace(procKeyPrefix, "0").toInteger()}
+  def newNumber = (numbers + [-1]).max() + 1
 
-  assert ! (procKey in meta.getProcessNames()) : 
-    "Error in module '${procKey}': process key '$procKey' is already used.\n" +
-    "  Make sure to specify a new key when running a Viash module multiple times.\n" +
-    "  Example: myModule.run(key: 'foo') | myModule.run(key: 'bar')\n" +
-    "  Expected: ! '$procKey' in ScriptMeta.current().getProcessNames()"
+  def procKey = newNumber == 0 ? procKeyPrefix : "$procKeyPrefix$newNumber"
+
+  if (newNumber > 0) {
+    log.warn "Key for module '${wfKey}' is duplicated.\n",
+      "If you run a component multiple times in the same workflow,\n" +
+      "it's recommended you set a unique key for every call,\n" +
+      "for example: ${wfKey}.run(key: \"foo\")."
+  }
 
   // subset directives and convert to list of tuples
   def drctv = processArgs.directives
@@ -628,7 +637,7 @@ def processFactory(Map processArgs) {
   // register module in meta
   meta.addModule(moduleScript, module.name, module.alias)
 
-  // retrieve process from meta
+  // retrieve and return process from meta
   return meta.getProcess(procKey)
 }
 
@@ -640,16 +649,16 @@ def debug(processArgs, debugKey) {
   }
 }
 
+// wfKeyCounter = -1
+
 def workflowFactory(Map args) {
   def processArgs = processProcessArgs(args)
-  def workflowKey = processArgs["key"]
+  def key = processArgs["key"]
   def meta = ScriptMeta.current()
 
-  assert ! (workflowKey in meta.getAllNames()) : 
-    "Error in module '${workflowKey}': workflow key '$workflowKey' is already used.\n" +
-    "  Make sure to specify a new key when running a Viash module multiple times.\n" +
-    "  Example: myModule.run(key: 'foo') | myModule.run(key: 'bar')\n" +
-    "  Expected: ! '$workflowKey' in ScriptMeta.current().getAllNames()"
+  // def workflowKey = wfKeyCounter == -1 ? key : "$key$wfKeyCounter"
+  // wfKeyCounter++
+  def workflowKey = key
 
   // write process to temporary nf file and parse it in memory
   def processObj = processFactory(processArgs)
@@ -677,17 +686,17 @@ def workflowFactory(Map args) {
 
         // check tuple
         assert tuple instanceof List : 
-          "Error in module '${workflowKey}': element in channel should be a tuple [id, data, ...otherargs...]\n" +
+          "Error in module '${key}': element in channel should be a tuple [id, data, ...otherargs...]\n" +
           "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
           "  Expected class: List. Found: tuple.getClass() is ${tuple.getClass()}"
         assert tuple.size() >= 2 : 
-          "Error in module '${workflowKey}': expected length of tuple in input channel to be two or greater.\n" +
+          "Error in module '${key}': expected length of tuple in input channel to be two or greater.\n" +
           "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
           "  Found: tuple.size() == ${tuple.size()}"
         
         // check id field
         assert tuple[0] instanceof CharSequence : 
-          "Error in module '${workflowKey}': first element of tuple in channel should be a String\n" +
+          "Error in module '${key}': first element of tuple in channel should be a String\n" +
           "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
           "  Found: ${tuple[0]}"
         
@@ -697,7 +706,7 @@ def workflowFactory(Map args) {
             .findAll { it.type == "file" && it.direction == "input" }
           
           assert inputFiles.size() == 1 : 
-              "Error in module '${workflowKey}' id '${tuple[0]}'.\n" +
+              "Error in module '${key}' id '${tuple[0]}'.\n" +
               "  Anonymous file inputs are only allowed when the process has exactly one file input.\n" +
               "  Expected: inputFiles.size() == 1. Found: inputFiles.size() is ${inputFiles.size()}"
 
@@ -706,32 +715,32 @@ def workflowFactory(Map args) {
 
         // check data field
         assert tuple[1] instanceof Map : 
-          "Error in module '${workflowKey}' id '${tuple[0]}': second element of tuple in channel should be a Map\n" +
+          "Error in module '${key}' id '${tuple[0]}': second element of tuple in channel should be a Map\n" +
           "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
           "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
 
         // rename keys of data field in tuple
         if (processArgs.renameKeys) {
           assert processArgs.renameKeys instanceof Map : 
-              "Error renaming data keys in module '${workflowKey}' id '${tuple[0]}'.\n" +
+              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
               "  Example: renameKeys: ['new_key': 'old_key'].\n" +
               "  Expected class: Map. Found: renameKeys.getClass() is ${processArgs.renameKeys.getClass()}"
           assert tuple[1] instanceof Map : 
-              "Error renaming data keys in module '${workflowKey}' id '${tuple[0]}'.\n" +
+              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
               "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
 
           // TODO: allow renameKeys to be a function?
           processArgs.renameKeys.each { newKey, oldKey ->
             assert newKey instanceof CharSequence : 
-              "Error renaming data keys in module '${workflowKey}' id '${tuple[0]}'.\n" +
+              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
               "  Example: renameKeys: ['new_key': 'old_key'].\n" +
               "  Expected class of newKey: String. Found: newKey.getClass() is ${newKey.getClass()}"
             assert oldKey instanceof CharSequence : 
-              "Error renaming data keys in module '${workflowKey}' id '${tuple[0]}'.\n" +
+              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
               "  Example: renameKeys: ['new_key': 'old_key'].\n" +
               "  Expected class of oldKey: String. Found: oldKey.getClass() is ${oldKey.getClass()}"
             assert tuple[1].containsKey(oldKey) : 
-              "Error renaming data keys in module '${workflowKey}' id '${tuple[0]}'.\n" +
+              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
               "  Key '$oldKey' is missing in the data map. tuple[1].keySet() is '${tuple[1].keySet()}'"
             tuple[1].put(newKey, tuple[1][oldKey])
           }
@@ -753,10 +762,10 @@ def workflowFactory(Map args) {
         // fetch overrides in params
         def paramArgs = thisFunctionality.arguments
           .findAll { par ->
-            def argKey = workflowKey + "__" + par.name
+            def argKey = key + "__" + par.name
             params.containsKey(argKey) && params[argKey] != "viash_no_value"
           }
-          .collectEntries { [ it.name, params[workflowKey + "__" + it.name] ] }
+          .collectEntries { [ it.name, params[key + "__" + it.name] ] }
         
         // fetch overrides in data
         def dataArgs = thisFunctionality.arguments
@@ -784,30 +793,40 @@ def workflowFactory(Map args) {
           .findAll { it.type == "file" && it.direction == "input" }
           .collect { par ->
             def val = combinedArgs.containsKey(par.name) ? combinedArgs[par.name] : []
+            def inputFiles = []
             if (val == null) {
-              []
+              inputFiles = []
             } else if (val instanceof List) {
-              val
+              inputFiles = val
             } else if (val instanceof Path) {
-              [ val ]
+              inputFiles = [ val ]
             } else {
-              []
+              inputFiles = []
             }
-          }.collect{ it.findAll{ it.exists() } }
+            // throw error when an input file doesn't exist
+            inputFiles.each{ file -> 
+              assert file.exists() :
+                "Error in module '${key}' id '${id}' argument '${par.name}'.\n" +
+                "  Required input file does not exist.\n" +
+                "  Path: '$file'.\n" +
+                "  Expected input file to exist"
+            }
+            inputFiles 
+          } 
 
         // remove input files
         def argsExclInputFiles = thisFunctionality.arguments
           .findAll { it.type != "file" || it.direction != "input" }
           .collectEntries { par ->
-            def key = par.name
-            def val = combinedArgs[key]
+            def parName = par.name
+            def val = combinedArgs[parName]
             if (par.multiple && val instanceof Collection) {
               val = val.join(par.multiple_sep)
             }
             if (par.direction == "output" && par.type == "file") {
-              val = val.replaceAll('\\$id', id).replaceAll('\\$key', workflowKey)
+              val = val.replaceAll('\\$id', id).replaceAll('\\$key', key)
             }
-            [key, val]
+            [parName, val]
           }
 
         [ id ] + inputPaths + [ argsExclInputFiles, passthrough, resourcesDir ]
@@ -825,7 +844,7 @@ def workflowFactory(Map args) {
                 out = []
               } else {
                 assert !par.required :
-                    "Error in module '${workflowKey}' id '${output[0]}' argument '${par.name}'.\n" +
+                    "Error in module '${key}' id '${output[0]}' argument '${par.name}'.\n" +
                     "  Required output file is missing"
                 out = null
               }
@@ -859,20 +878,23 @@ def workflowFactory(Map args) {
     output_
   }
 
-  return workflowInstance.cloneWithName(workflowKey)
+  def wf = workflowInstance.cloneWithName(workflowKey)
+
+  // add factory function
+  wf.metaClass.run = { runArgs ->
+    workflowFactory(runArgs)
+  }
+
+  return wf
 }
 
-// initialise standard workflow
-myWfInstance = workflowFactory(key: thisFunctionality.name)
+// initialise default workflow
+myWfInstance = workflowFactory([:])
 
-// add factory function
-myWfInstance.metaClass.run = { args ->
-  workflowFactory(args)
-}
 // add workflow to environment
 ScriptMeta.current().addDefinition(myWfInstance)
 
-// Implicit workflow for running this module standalone
+// anonymous workflow for running this module as a standalone
 workflow {
   if (params.containsKey("help") && params["help"]) {
     exit 0, thisHelpMessage
@@ -898,7 +920,7 @@ workflow {
   Channel.value([ params.id, args ])
     | view { "input: $it" }
     | myWfInstance.run(
-        directives: [publishDir: params.publishDir]
-      )
+      auto: [ publish: true ]
+    )
     | view { "output: $it" }
 }
