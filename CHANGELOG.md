@@ -36,6 +36,8 @@
 
 * `Main`: Added support spaces in filenames of config files and resources
 
+* `viash config inject`: Fix error when file argument is `must_exist: true`.
+
 # Viash 0.5.11
 
 ## MAJOR CHANGES

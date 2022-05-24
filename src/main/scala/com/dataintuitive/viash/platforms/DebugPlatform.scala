@@ -52,7 +52,7 @@ case class DebugPlatform(
         case arg: DoubleObject if arg.default.isEmpty => 
           arg.copyDO(required = false, default = One(123.0))
         case arg: FileObject if arg.default.isEmpty => 
-          arg.copyDO(required = false, default = One(Paths.get("/path/to/file")))
+          arg.copy(required = false, default = One(Paths.get("/path/to/file")), must_exist = false)
         case arg: IntegerObject if arg.default.isEmpty =>
            arg.copyDO(required = false, default = One(123))
         case arg: StringObject if arg.default.isEmpty => 
