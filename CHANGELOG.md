@@ -1,3 +1,10 @@
+# Viash [NEXT VERSION]
+
+## MINOR CHANGES
+
+* `Functionality` and `viash ns`: Added `.enabled` in functionality, set to `true` by default.
+  Filter for disabled components in namespace commands
+
 # Viash 0.5.12
 
 ## MINOR CHANGES

@@ -187,7 +187,7 @@ object Main {
           }
 
           // if config passes regex checks, return it
-          if (queryTest && nameTest && namespaceTest) {
+          if (queryTest && nameTest && namespaceTest && confTest.functionality.enabled) {
             Some(confTest)
           } else {
             None
