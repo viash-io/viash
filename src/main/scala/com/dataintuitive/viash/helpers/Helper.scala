@@ -76,25 +76,36 @@ object Helper {
             None
         }
 
+      def escapeChoice(choice: String) = {        
+        val s1 = choice.replaceAll("\\n", "\\\\n")
+        val s2 = s1.replaceAll("\"", """\\\"""")
+        s2 match {
+          case s if s.contains(',') || s != choice =>
+            "\"" + s + "\""
+          case _ =>
+            s2
+        }
+      }
+      val choices = 
+        param match {
+          case so: StringObject if so.choices != Nil =>
+            Some("[ " + so.choices.map(escapeChoice(_)).mkString(", ") + " ]")
+          case so: IntegerObject if so.choices != Nil =>
+            Some(" [ " + so.choices.mkString(", ") + " ]")
+          case _ => None
+        }
+
       val namedPropsStr = List(
         ("type", Some((param.`type` :: unnamedProps).mkString(", "))),
         ("default", default),
         ("example", example),
+        ("choices", choices),
         ("min", min),
         ("max", max)
       ).flatMap { case (name, x) =>
         x.map("\n        " + name + ": " + _.replaceAll("\n", "\\n"))
       }.mkString
       
-      val choicesStr = 
-        param match {
-          case so: StringObject if so.choices != Nil =>
-            "\n        choices: " + so.choices.map("\n            - " + _).mkString
-          case so: IntegerObject if so.choices != Nil =>
-            "\n        choices: " + so.choices.map("\n            - " + _).mkString
-          case _ => ""
-        }
-
       val descStr = param.description.map{ desc =>
         ("\n" + desc.trim).replaceAll("\n", "\n        ")
       }.getOrElse("")
@@ -102,7 +113,6 @@ object Helper {
       "\n    " +
         names.mkString(", ") +
         namedPropsStr +
-        choicesStr +
         descStr
     })
     
