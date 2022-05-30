@@ -184,7 +184,14 @@ object BashWrapper {
        |set -e
        |
        |if [ -z "$$VIASH_TEMP" ]; then
-       |  VIASH_TEMP=/tmp
+       |  VIASH_TEMP=$${VIASH_TEMP:-$$VIASH_TMPDIR}
+       |  VIASH_TEMP=$${VIASH_TEMP:-$$VIASH_TEMPDIR}
+       |  VIASH_TEMP=$${VIASH_TEMP:-$$VIASH_TMP}
+       |  VIASH_TEMP=$${VIASH_TEMP:-$$TMPDIR}
+       |  VIASH_TEMP=$${VIASH_TEMP:-$$TMP}
+       |  VIASH_TEMP=$${VIASH_TEMP:-$$TEMPDIR}
+       |  VIASH_TEMP=$${VIASH_TEMP:-$$TEMP}
+       |  VIASH_TEMP=$${VIASH_TEMP:-/tmp}
        |fi
        |
        |# define helper functions
