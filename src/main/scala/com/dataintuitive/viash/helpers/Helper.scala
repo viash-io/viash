@@ -91,7 +91,7 @@ object Helper {
           case so: StringObject if so.choices != Nil =>
             Some("[ " + so.choices.map(escapeChoice(_)).mkString(", ") + " ]")
           case so: IntegerObject if so.choices != Nil =>
-            Some(" [ " + so.choices.mkString(", ") + " ]")
+            Some("[ " + so.choices.mkString(", ") + " ]")
           case _ => None
         }
 
