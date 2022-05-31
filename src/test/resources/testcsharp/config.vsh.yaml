@@ -47,7 +47,7 @@ functionality:
   resources:
     - type: csharp_script
       path: ./script.csx
-  tests:
+  test_resources:
     - type: bash_script
       path: tests/check_outputs.sh
 platforms:

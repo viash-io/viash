@@ -55,7 +55,7 @@ class MainNSListNativeSuite extends FunSuite{
     val samples = List(
       (raw"""[\r\n]+\s+name: "--input1"[\r\n]+""", 5),
       (raw"""[\r\n]+\s+resources:[\r\n]+\s+- type: "python_script"[\r\n]+""", 5),
-      (raw"""[\r\n]+\s+tests:[\r\n]+\s+- type: "bash_script"[\r\n]+""", 4)
+      (raw"""[\r\n]+\s+test_resources:[\r\n]+\s+- type: "bash_script"[\r\n]+""", 4)
     )
 
     for ((regex, count) <- samples) {

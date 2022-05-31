@@ -64,13 +64,13 @@ object Config {
 
     // make paths absolute
     val resources = config.functionality.resources.map(_.copyWithAbsolutePath(uri))
-    val tests = config.functionality.tests.map(_.copyWithAbsolutePath(uri))
+    val tests = config.functionality.test_resources.map(_.copyWithAbsolutePath(uri))
 
     // copy resources with updated paths into config and return
     config.copy(
       functionality = config.functionality.copy(
         resources = resources,
-        tests = tests
+        test_resources = tests
       )
     )
   }
@@ -194,7 +194,7 @@ object Config {
     // check whether to modify the fun
     val modifyFunFun: Config => Functionality = {
       if (applyPlatform) {
-        pl.modifyFunctionality
+        (c: Config) => pl.modifyFunctionality(c, false)
       } else {
         (c: Config) => c.functionality
       }
