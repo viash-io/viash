@@ -42,7 +42,10 @@ case class Functionality(
   // setting this to true will change the working directory
   // to the resources directory when running the script
   // this is used when running `viash test`.
-  set_wd_to_resources_dir: Boolean = false
+  set_wd_to_resources_dir: Boolean = false,
+
+  // setting this to false with disable this component when using namespaces.
+  enabled: Boolean = true
 ) {
 
   // note that in the Functionality companion object, defaults gets added to inputs and outputs *before* actually 
