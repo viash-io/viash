@@ -454,25 +454,9 @@ object BashWrapper {
           paramsAndDummies.map { param =>
             param match {
               case io: IntegerObject =>
-                val min = io.min match {
-                  case m if m.nonEmpty => Some(m.head)
-                  case _ => None
-                }
-                val max = io.max match {
-                  case m if m.nonEmpty => Some(m.head)
-                  case _ => None
-                }
-                typeMinMaxCheck(io, "^[-+]?[0-9]+$", min, max)
+                typeMinMaxCheck(io, "^[-+]?[0-9]+$", io.min, io.max)
               case dO: DoubleObject =>
-                val min = dO.min match {
-                  case m if m.nonEmpty => Some(m.head)
-                  case _ => None
-                }
-                val max = dO.max match {
-                  case m if m.nonEmpty => Some(m.head)
-                  case _ => None
-                }
-                typeMinMaxCheck(dO, "^[-+]?(\\.[0-9]+|[0-9]+(\\.[0-9]*)?)([eE][-+]?[0-9]+)?$", min, max)
+                typeMinMaxCheck(dO, "^[-+]?(\\.[0-9]+|[0-9]+(\\.[0-9]*)?)([eE][-+]?[0-9]+)?$", dO.min, dO.max)
               case bo: BooleanObject =>
                 typeMinMaxCheck(bo, "^(true|True|TRUE|false|False|FALSE|yes|Yes|YES|no|No|NO)$")               
               case _ => ""
