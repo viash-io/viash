@@ -16,6 +16,9 @@ functionality:
   resources:
     - type: bash_script
       path: ./check_requirements.sh
+  test_resources:
+    - type: bash_script
+      path: ./check_requirements_test.sh
 
 platforms:
   - type: docker
@@ -41,3 +44,12 @@ platforms:
       - type: apt
         packages:
           - cowsay
+  - type: docker
+    image: "bash:3.2"
+    target_image: "viash_requirement_apk"
+    id: "viash_requirement_apk_test_setup"
+    test_setup:
+      - type: apk
+        packages:
+          - fortune
+
