@@ -1,9 +1,16 @@
 # Viash [NEXT VERSION]
 
+## MAJOR CHANGES
+
+* `Functionality`: renamed `tests` to `test_resources`.
+
 ## MINOR CHANGES
 
 * `Functionality` and `viash ns`: Added `.enabled` in functionality, set to `true` by default.
   Filter for disabled components in namespace commands.
+
+* `DockerPlatform`: added a `test_setup` that allows adding apt/apk/... setup requirements.
+  These are only executed when running tests.
 
 # Viash 0.5.12
 
