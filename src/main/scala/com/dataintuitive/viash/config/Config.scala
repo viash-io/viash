@@ -200,23 +200,26 @@ object Config {
       }
     }
 
-    // combine config into final object
-    conf1.copy(
-      // add info
-      info = Some(Info(
+    val info = Some(Info(
         viash_version = Some(com.dataintuitive.viash.Main.version),
         config = configPath,
         platform = platform,
         git_commit = gc,
         git_remote = rgr
-      )),
+      ))
+
+    // combine config into final object
+    conf1.copy(
+      // add info
+      info = info,
       // apply platform modification to functionality
       // .. oh boy
       functionality = modifyFunFun(conf1.copy(
         functionality = conf1.functionality.copy(
           // add script (if available) to resources
           resources = optScript.toList ::: conf1.functionality.resources
-        )
+        ),
+        info = info
       )),
       // insert selected platform
       platform = Some(pl)

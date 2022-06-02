@@ -27,6 +27,7 @@ import com.dataintuitive.viash.config.Version
 import com.dataintuitive.viash.wrapper.{BashWrapper, BashWrapperMods}
 import com.dataintuitive.viash.platforms.docker._
 import com.dataintuitive.viash.helpers.Circe._
+import com.dataintuitive.viash.config.Info
 
 case class DockerPlatform(
   id: String = "docker",
@@ -89,7 +90,7 @@ case class DockerPlatform(
       { if (privileged) " --privileged" else "" }
 
     // create setup
-    val (effectiveID, setupMods) = processDockerSetup(functionality)
+    val (effectiveID, setupMods) = processDockerSetup(functionality, config.info)
 
     // generate automount code
     val dmVol = processDockerVolumes(functionality)
@@ -135,20 +136,25 @@ case class DockerPlatform(
     )
   }
 
-  private def processDockerSetup(functionality: Functionality) = {
+  private def processDockerSetup(functionality: Functionality, info: Option[Info]) = {
     // construct labels from metadata
     val auth = functionality.authors match {
       case Nil => Nil
       case aut: List[Author] => List(s"""authors="${aut.mkString(", ")}"""")
     }
-    /*val descr = functionality.description.map{ des => 
-      s"""org.opencontainers.image.description="${Bash.escape(des)}""""
-    }.toList*/
-    
-    val descr = List(
-      s"""org.opencontainers.image.description="Companion container for running component ${functionality.namespace.map(_ + " ").getOrElse("")}${functionality.name}""""
-    )
-    val imageSource = target_image_source.map(des => s"""org.opencontainers.image.source="${Bash.escape(des)}"""").toList
+
+
+    // git config --get remote.origin.url | sed -E 's/:([^\/])/\/\1/g' | sed -e 's/ssh\/\/\///g' | sed -e 's/git@/https:\/\//g'
+    val opencontainers_image_source = (target_image_source, info) match {
+      case (Some(tis), _) => Some(tis)
+      case (None, Some(i)) =>
+        i.git_remote.map(url => url.replaceAll(":([^/])", "/$1").replaceAllLiterally("ssh//", "").replaceAllLiterally("git@", "https://"))
+      case _ => None
+    }
+    val opencontainers_image_description = s""""Companion container for running component ${functionality.namespace.map(_ + " ").getOrElse("")}${functionality.name}""""
+    // val opencontainers_image_description = functionality.description
+    val descr = List(s"org.opencontainers.image.description=$opencontainers_image_description")
+    val imageSource = opencontainers_image_source.map(des => s"""org.opencontainers.image.source="${Bash.escape(des)}"""").toList
     val labelReq = DockerRequirements(label = auth ::: descr ::: imageSource)
 
     val requirements2 = requirements ::: List(labelReq)
