@@ -28,6 +28,8 @@ import com.dataintuitive.viash.wrapper.{BashWrapper, BashWrapperMods}
 import com.dataintuitive.viash.platforms.docker._
 import com.dataintuitive.viash.helpers.Circe._
 import com.dataintuitive.viash.config.Info
+import java.util.Date
+import java.text.SimpleDateFormat
 
 case class DockerPlatform(
   id: String = "docker",
@@ -151,11 +153,19 @@ case class DockerPlatform(
         i.git_remote.map(url => url.replaceAll(":([^/])", "/$1").replaceAllLiterally("ssh//", "").replaceAllLiterally("git@", "https://"))
       case _ => None
     }
+    val opencontainers_image_revision = info match {
+      case Some(i) => i.git_commit
+      case _ => None
+    }
     val opencontainers_image_description = s""""Companion container for running component ${functionality.namespace.map(_ + " ").getOrElse("")}${functionality.name}""""
     // val opencontainers_image_description = functionality.description
+    val opencontainers_image_created = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date())
+
     val descr = List(s"org.opencontainers.image.description=$opencontainers_image_description")
     val imageSource = opencontainers_image_source.map(des => s"""org.opencontainers.image.source="${Bash.escape(des)}"""").toList
-    val labelReq = DockerRequirements(label = auth ::: descr ::: imageSource)
+    val created = List(s"""org.opencontainers.image.created="$opencontainers_image_created"""")
+    val revision = opencontainers_image_revision.map(rev => s"""org.opencontainers.image.revision="$rev"""").toList
+    val labelReq = DockerRequirements(label = auth ::: descr ::: created ::: imageSource ::: revision)
 
     val requirements2 = requirements ::: List(labelReq)
 
