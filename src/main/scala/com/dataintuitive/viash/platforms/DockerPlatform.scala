@@ -140,32 +140,30 @@ case class DockerPlatform(
 
   private def processDockerSetup(functionality: Functionality, info: Option[Info]) = {
     // construct labels from metadata
-    val auth = functionality.authors match {
-      case Nil => Nil
-      case aut: List[Author] => List(s"""authors="${aut.mkString(", ")}"""")
+    val opencontainers_image_authors = functionality.authors match {
+      case Nil => None
+      case aut: List[Author] => Some(aut.mkString(", "))
     }
-
-
-    // git config --get remote.origin.url | sed -E 's/:([^\/])/\/\1/g' | sed -e 's/ssh\/\/\///g' | sed -e 's/git@/https:\/\//g'
+    // if no target_image_source is defined,
+    // translate git@github.com:viash-io/viash.git -> https://github.com/viash-io/viash.git
     val opencontainers_image_source = (target_image_source, info) match {
       case (Some(tis), _) => Some(tis)
       case (None, Some(i)) =>
         i.git_remote.map(url => url.replaceAll(":([^/])", "/$1").replaceAllLiterally("ssh//", "").replaceAllLiterally("git@", "https://"))
       case _ => None
     }
-    val opencontainers_image_revision = info match {
-      case Some(i) => i.git_commit
-      case _ => None
-    }
+    val opencontainers_image_revision = info.flatMap(_.git_commit)
+    val opencontainers_image_version = info.flatMap(_.git_tag)
     val opencontainers_image_description = s""""Companion container for running component ${functionality.namespace.map(_ + " ").getOrElse("")}${functionality.name}""""
-    // val opencontainers_image_description = functionality.description
     val opencontainers_image_created = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date())
 
+    val authors = opencontainers_image_authors.map(aut => s"""org.opencontainers.image.authors="$aut"""").toList
     val descr = List(s"org.opencontainers.image.description=$opencontainers_image_description")
     val imageSource = opencontainers_image_source.map(des => s"""org.opencontainers.image.source="${Bash.escape(des)}"""").toList
     val created = List(s"""org.opencontainers.image.created="$opencontainers_image_created"""")
     val revision = opencontainers_image_revision.map(rev => s"""org.opencontainers.image.revision="$rev"""").toList
-    val labelReq = DockerRequirements(label = auth ::: descr ::: created ::: imageSource ::: revision)
+    val version = opencontainers_image_version.map(v => s"""org.opencontainers.image.version="$v"""").toList
+    val labelReq = DockerRequirements(label = authors ::: descr ::: created ::: imageSource ::: revision ::: version)
 
     val requirements2 = requirements ::: List(labelReq)
 

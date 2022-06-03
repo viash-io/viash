@@ -189,7 +189,7 @@ object Config {
 
     // gather git info
     val path = new File(configPath).getParentFile
-    val GitInfo(_, rgr, gc) = Git.getInfo(path)
+    val GitInfo(_, rgr, gc, gt) = Git.getInfo(path)
 
     // check whether to modify the fun
     val modifyFunFun: Config => Functionality = {
@@ -205,7 +205,8 @@ object Config {
         config = configPath,
         platform = platform,
         git_commit = gc,
-        git_remote = rgr
+        git_remote = rgr,
+        git_tag = gt
       ))
 
     // combine config into final object
