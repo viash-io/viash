@@ -446,6 +446,20 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
       assert(
         Exec.run2Path(
+          List("git", "config", "user.email", "\"viash_test_build@example.com\""),
+          cwd = Some(tempMetaFolder)
+        ).exitValue == 0
+        , "git config")
+
+      assert(
+        Exec.run2Path(
+          List("git", "config", "user.name", "\"viash CI\""),
+          cwd = Some(tempMetaFolder)
+        ).exitValue == 0
+        , "git config")
+
+      assert(
+        Exec.run2Path(
           List("git", "remote", "add", "origin", fakeGitRepo),
           cwd = Some(tempMetaFolder)
         ).exitValue == 0
