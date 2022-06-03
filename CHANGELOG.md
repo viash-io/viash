@@ -5,6 +5,8 @@
 * `Functionality` and `viash ns`: Added `.enabled` in functionality, set to `true` by default.
   Filter for disabled components in namespace commands.
 
+* `DockerPlatform`: Add org.opencontainers.image annotations to built docker images.
+
 # Viash 0.5.12
 
 ## MINOR CHANGES
