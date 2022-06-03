@@ -419,6 +419,100 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
   //</editor-fold>
 
+    test("Get info of a docker image using docker inspect", DockerTest) {
+    // Create temporary folder to copy the files to so we can do a git init in that folder
+    // This is needed to check the remote git repo value
+    val tempMetaFolder = IO.makeTemp("viash_test_meta")
+    val tempMetaFolStr = tempMetaFolder.toString
+
+    val fakeGitRepo = "git@non.existing.repo:viash/meta-test"
+
+    try {
+      // Copy all needed files to a temporary location
+      for (name <- List("config.vsh.yaml", "code.sh", "resource1.txt")) {
+        val originPath = Paths.get(getClass.getResource(s"/testbash/$name").getPath)
+        val destPath = Paths.get(tempMetaFolStr, name)
+
+        //println(s"Copy $originPath to $destPath")
+        Files.copy(originPath, destPath)
+      }
+
+      assert(
+        Exec.run2Path(
+          List("git", "init"),
+          cwd = Some(tempMetaFolder)
+        ).exitValue == 0
+        , "git init")
+
+      assert(
+        Exec.run2Path(
+          List("git", "remote", "add", "origin", fakeGitRepo),
+          cwd = Some(tempMetaFolder)
+        ).exitValue == 0
+        , "git remote add")
+
+      assert(
+        Exec.run2Path(
+          List("git", "add", "*"),
+          cwd = Some(tempMetaFolder)
+        ).exitValue == 0
+        , "git add *")
+
+
+      assert(
+        Exec.run2Path(
+          List("git", "commit", "-m", "\"initial commit\""),
+          cwd = Some(tempMetaFolder)
+        ).exitValue == 0
+        , "git commit")
+
+      assert(
+        Exec.run2Path(
+          List("git", "tag", "v1"),
+          cwd = Some(tempMetaFolder)
+        ).exitValue == 0
+        , "git tag")
+
+      val configMetaFile = Paths.get(tempMetaFolStr, "config.vsh.yaml").toString
+
+      // Run the code
+      // prepare the environment
+      val stdout = TestHelper.testMain(
+        "build",
+        "-p", "docker",
+        "-o", tempFolStr,
+        "--setup", "alwaysbuild",
+        configMetaFile
+      )
+
+      assert(executable.exists)
+      assert(executable.canExecute)
+
+      val inspectOut = Exec.run(
+        Seq("docker", "inspect", s"${functionality.name}:${functionality.version.get}")
+      )
+
+      val regexOciAuthors = raw""""org.opencontainers.image.authors": "Bob Cando <bob@cando.com> \(maintainer, author\) \{github: bobcando, orcid: XXXAAABBB\}"""".r
+      val regexOciCreated = raw""""org.opencontainers.image.created": "((?:(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2}(?:\.\d+)?))(Z|[\+-]\d{2}:\d{2})?)"""".r
+      val regexOciDescription = """"org.opencontainers.image.description": "Companion container for running component testbash"""".r
+      val regexOciRevision = """"org.opencontainers.image.revision": "[0-9a-f]{40}"""".r
+      val regexOciSource = """"org.opencontainers.image.source": "https://non.existing.repo/viash/meta-test"""".r
+      val regexOciVersion = """"org.opencontainers.image.version": "v1"""".r
+
+
+      assert(regexOciAuthors.findFirstIn(inspectOut).isDefined, inspectOut)
+      assert(regexOciCreated.findFirstIn(inspectOut).isDefined, inspectOut)
+      assert(regexOciDescription.findFirstIn(inspectOut).isDefined, inspectOut)
+      assert(regexOciRevision.findFirstIn(inspectOut).isDefined, inspectOut)
+      assert(regexOciSource.findFirstIn(inspectOut).isDefined, inspectOut)
+      assert(regexOciVersion.findFirstIn(inspectOut).isDefined, inspectOut)
+
+    }
+    finally {
+      IO.deleteRecursively(tempMetaFolder)
+    }
+  }
+
   def checkDockerImageExists(name: String): Boolean = {
     val out = Exec.run2(
       Seq("docker", "images", name)
