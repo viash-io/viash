@@ -459,12 +459,13 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
         , "git add *")
 
 
-      assert(
-        Exec.run2Path(
+      val commitOut = Exec.run2Path(
           List("git", "commit", "-m", "\"initial commit\""),
           cwd = Some(tempMetaFolder)
-        ).exitValue == 0
-        , "git commit")
+        )
+      assert(
+        commitOut.exitValue == 0
+        , s"git commit: ${commitOut.output}")
 
       assert(
         Exec.run2Path(
