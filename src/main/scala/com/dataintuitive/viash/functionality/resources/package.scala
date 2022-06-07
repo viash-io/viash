@@ -22,6 +22,7 @@ import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfigur
 import cats.syntax.functor._
 
 import java.net.URI // for .widen
+import io.circe.ACursor
 
 package object resources {
 
@@ -60,12 +61,16 @@ package object resources {
       objJson deepMerge typeJson
   }
 
-  implicit val decodeBashScript: Decoder[BashScript] = deriveConfiguredDecoder
-  implicit val decodePythonScript: Decoder[PythonScript] = deriveConfiguredDecoder
-  implicit val decodeRScript: Decoder[RScript] = deriveConfiguredDecoder
-  implicit val decodeJavaScriptScript: Decoder[JavaScriptScript] = deriveConfiguredDecoder
-  implicit val decodeScalaScript: Decoder[ScalaScript] = deriveConfiguredDecoder
-  implicit val decodeCSharpScript: Decoder[CSharpScript] = deriveConfiguredDecoder
+  val setDefaultPath = (default: String) => (aCursor: ACursor) => {aCursor.withFocus(js => {
+        js.withDefault("path", Json.fromString(default))
+      })}
+
+  implicit val decodeBashScript: Decoder[BashScript] = deriveConfiguredDecoder[BashScript].prepare { setDefaultPath("./script.sh") }
+  implicit val decodePythonScript: Decoder[PythonScript] = deriveConfiguredDecoder[PythonScript].prepare { setDefaultPath("./script.py") }
+  implicit val decodeRScript: Decoder[RScript] = deriveConfiguredDecoder[RScript].prepare { setDefaultPath("./script.R") }
+  implicit val decodeJavaScriptScript: Decoder[JavaScriptScript] = deriveConfiguredDecoder[JavaScriptScript].prepare { setDefaultPath("./script.js") }
+  implicit val decodeScalaScript: Decoder[ScalaScript] = deriveConfiguredDecoder[ScalaScript].prepare { setDefaultPath("./script.scala") }
+  implicit val decodeCSharpScript: Decoder[CSharpScript] = deriveConfiguredDecoder[CSharpScript].prepare { setDefaultPath("./script.csx") }
   implicit val decodeExecutable: Decoder[Executable] = deriveConfiguredDecoder
   implicit val decodePlainFile: Decoder[PlainFile] = deriveConfiguredDecoder
 
