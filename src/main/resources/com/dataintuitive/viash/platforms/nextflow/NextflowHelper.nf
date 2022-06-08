@@ -698,7 +698,7 @@ def workflowFactory(Map args) {
           "  Found: ${tuple[0]}"
         
         // match file to input file
-        if (processArgs.auto.simplifyInput && tuple[1] instanceof Path) {
+        if (processArgs.auto.simplifyInput && (tuple[1] instanceof Path || tuple[1] instanceof List)) {
           def inputFiles = thisFunctionality.arguments
             .findAll { it.type == "file" && it.direction == "input" }
           

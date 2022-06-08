@@ -13,6 +13,8 @@
 
 * `NextflowVdsl3Platform`: Fix escaping of triple single quotes.
 
+* `NextflowVdsl3Platform`: Also apply auto.simplifyInput to Lists.
+
 # Viash 0.5.12
 
 ## MINOR CHANGES
