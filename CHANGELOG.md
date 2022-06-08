@@ -5,6 +5,9 @@
 * `Functionality` and `viash ns`: Added `.enabled` in functionality, set to `true` by default.
   Filter for disabled components in namespace commands.
 
+* `Functionality`: when defining text resources, permit defining `path` instead of `dest`.
+  If both `dest` and `path` are unset, use a default file name depending on the resource type, such as `script.sh` or `text.txt`.
+
 # Viash 0.5.12
 
 ## MINOR CHANGES
