@@ -139,9 +139,9 @@ object ViashTest {
 
         val logger: String => Unit =
           (s: String) => {
-            if (verbose) println(s)
             printWriter.println(s)
             logWriter.append(s + sys.props("line.separator"))
+            printWriter.flush()
           }
 
         logger(consoleLine)
