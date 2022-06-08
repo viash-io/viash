@@ -7,7 +7,9 @@
 
 ## BUG FIXES
 
-* `NextflowVdsl3Platform`: undefined input files should not inject a `VIASH_PAR_*` variable when `multiple: true`.
+* `NextflowVdsl3Platform`: Undefined input files should not inject a `VIASH_PAR_*` variable when `multiple: true`.
+
+* `NextflowVdsl3Platform`: Make injected resources dir absolute.
 
 # Viash 0.5.12
 

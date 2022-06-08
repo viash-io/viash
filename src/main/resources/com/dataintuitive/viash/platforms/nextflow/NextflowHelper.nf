@@ -598,7 +598,7 @@ def processFactory(Map processArgs) {
   |  .join("\\n")
   |$tripQuo
   |# meta exports
-  |export VIASH_META_RESOURCES_DIR="\$resourcesDir"
+  |export VIASH_META_RESOURCES_DIR="\${resourcesDir.toRealPath().toAbsolutePath()}"
   |export VIASH_META_TEMP_DIR="${tmpDir}"
   |export VIASH_META_FUNCTIONALITY_NAME="${thisFunctionality.name}"
   |
