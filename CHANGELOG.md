@@ -5,6 +5,10 @@
 * `Functionality` and `viash ns`: Added `.enabled` in functionality, set to `true` by default.
   Filter for disabled components in namespace commands.
 
+## BUG FIXES
+
+* `NextflowVdsl3Platform`: undefined input files should not inject a `VIASH_PAR_*` variable when `multiple: true`.
+
 # Viash 0.5.12
 
 ## MINOR CHANGES
