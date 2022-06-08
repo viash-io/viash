@@ -11,6 +11,8 @@
 
 * `NextflowVdsl3Platform`: Make injected resources dir absolute.
 
+* `NextflowVdsl3Platform`: Fix escaping of triple single quotes.
+
 # Viash 0.5.12
 
 ## MINOR CHANGES
