@@ -3,6 +3,7 @@
 ## MAJOR CHANGES
 
 * `Functionality`: renamed `tests` to `test_resources`.
+  Backwards compatibility provided but a notification message is displayed on the console.
 
 ## MINOR CHANGES
 
