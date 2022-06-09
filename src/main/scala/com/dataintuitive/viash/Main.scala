@@ -194,7 +194,7 @@ object Main {
           }
         } catch {
           case _: Exception =>
-            Console.err.println(s"Reading file '$file' failed")
+            Console.err.println(s"${Console.RED}Reading file '$file' failed${Console.RESET}")
             None
         }
 
