@@ -1,5 +1,10 @@
 # Viash [NEXT VERSION]
 
+## NEW FUNCTIONALITY
+
+* `NextflowVdsl3Platform`: Allow overriding the container registry of all Viash components by 
+  setting the `params.override_container_registry` value. Only works for auto-derived image names.
+
 ## MINOR CHANGES
 
 * `Functionality` and `viash ns`: Added `.enabled` in functionality, set to `true` by default.

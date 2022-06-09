@@ -86,7 +86,7 @@ def processDirectives(Map drctv) {
     if (drctv["container"] instanceof Map) {
       def m = drctv["container"]
       assertMapKeys(m, [ "registry", "image", "tag" ], ["image"], "container")
-      def part1 = m.registry ? m.registry + "/" : ""
+      def part1 = params.containsKey("override_container_registry") ? params["override_container_registry"] : m.registry ? m.registry + "/" : ""
       def part2 = m.image
       def part3 = m.tag ? ":" + m.tag : ":latest"
       drctv["container"] = part1 + part2 + part3
