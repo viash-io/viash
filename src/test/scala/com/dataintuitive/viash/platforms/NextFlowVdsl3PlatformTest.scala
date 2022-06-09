@@ -40,11 +40,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
 
   // Wrapper function to make logging of processes easier, provide default command to run nextflow from . directory
   // TODO: consider reading nextflow dot files and provide extra info of which workflow step fails and how
-  def runNextflowProcess(variableCommand: Seq[String], extraEnv: (String, String)*): (Int, String, String) = {
-    runNextflowProcess(variableCommand, cwd = new File(tempFolStr), extraEnv: _*)
-  }
-
-  def runNextflowProcess(variableCommand: Seq[String], cwd: File, extraEnv: (String, String)*): (Int, String, String) = {
+  def runNextflowProcess(variableCommand: Seq[String], cwd: File = new File(tempFolStr), extraEnv: Seq[(String, String)] = Nil): (Int, String, String) = {
 
     import sys.process._
 
