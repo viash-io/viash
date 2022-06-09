@@ -7,6 +7,9 @@
 
 * `DockerPlatform`: Add org.opencontainers.image annotations to built docker images.
 
+* `Functionality`: when defining text resources, permit defining `path` instead of `dest`.
+  If both `dest` and `path` are unset, use a default file name depending on the resource type, such as `script.sh` or `text.txt`.
+
 ## BUG FIXES
 
 * `NextflowVdsl3Platform`: Undefined input files should not inject a `VIASH_PAR_*` variable when `multiple: true`.
