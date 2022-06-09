@@ -40,6 +40,10 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
 
   // Wrapper function to make logging of processes easier, provide default command to run nextflow from . directory
   // TODO: consider reading nextflow dot files and provide extra info of which workflow step fails and how
+  def runNextflowProcess(variableCommand: Seq[String], extraEnv: (String, String)*): (Int, String, String) = {
+    runNextflowProcess(variableCommand, cwd = new File(tempFolStr), extraEnv: _*)
+  }
+
   def runNextflowProcess(variableCommand: Seq[String], cwd: File, extraEnv: (String, String)*): (Int, String, String) = {
 
     import sys.process._
@@ -49,7 +53,9 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
 
     val fixedCommand = Seq("nextflow", "run", ".")
 
-    val exitCode = Process(fixedCommand ++ variableCommand, cwd, extraEnv: _*).!(ProcessLogger(str => stdOut ++= s"$str\n", str => stdErr ++= s"$str\n"))
+    val extraEnv_ = extraEnv :+ ( "NXF_VER" -> "21.04.1" )
+
+    val exitCode = Process(fixedCommand ++ variableCommand, cwd, extraEnv_ : _*).!(ProcessLogger(str => stdOut ++= s"$str\n", str => stdErr ++= s"$str\n"))
 
     (exitCode, stdOut.toString, stdErr.toString)
   }
@@ -78,9 +84,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
       "--input", "resources/*",
       "--publishDir", "output",
       "-entry", "base",
-      ),
-      new File(tempFolStr),
-      "NXF_VER" -> "21.04.1"
+      )
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -95,9 +99,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
       "--input", "resources/*",
       "--publishDir", "output",
       "-entry", "map_variant",
-      ),
-      new File(tempFolStr),
-      "NXF_VER" -> "21.04.1"
+      )
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -112,9 +114,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
       "--input", "resources/*",
       "--publishDir", "output",
       "-entry", "mapData_variant",
-      ),
-      new File(tempFolStr),
-      "NXF_VER" -> "21.04.1"
+      )
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -130,9 +130,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
         "--publishDir", "output",
         "-entry", "debug_variant",
         "--displayDebug", "false",
-        ),
-      new File(tempFolStr),
-      "NXF_VER" -> "21.04.1"
+        )
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -152,9 +150,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
         "--publishDir", "output",
         "-entry", "debug_variant",
         "--displayDebug", "true",
-        ),
-      new File(tempFolStr),
-      "NXF_VER" -> "21.04.1"
+        )
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -170,9 +166,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
         "--input", "resources/*",
         "--publishDir", "output",
         "-entry", "legacy_base",
-        ),
-      new File(tempFolStr),
-      "NXF_VER" -> "21.04.1"
+        )
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -187,9 +181,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
         "--input", "resources/*",
         "--publishDir", "output",
         "-entry", "legacy_and_vdsl3",
-        ),
-      new File(tempFolStr),
-      "NXF_VER" -> "21.04.1"
+        )
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
