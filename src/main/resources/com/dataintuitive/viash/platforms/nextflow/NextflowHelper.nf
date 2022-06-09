@@ -560,11 +560,8 @@ def processFactory(Map processArgs) {
   def inputFileExports = thisFunctionality.arguments
     .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
     .collect { par ->
-      if (!par.required && !par.multiple) {
-        "\n\${viash_par_${par.name}.empty ? \"\" : \"export VIASH_PAR_${par.name.toUpperCase()}=\\\"\" + viash_par_${par.name}[0] + \"\\\"\"}"
-      } else {
-        "\nexport VIASH_PAR_${par.name.toUpperCase()}=\"\${viash_par_${par.name}.join(\":\")}\""
-      }
+      viash_par_contents = !par.required && !par.multiple ? "viash_par_${par.name}[0]" : "viash_par_${par.name}.join(\":\")"
+      "\n\${viash_par_${par.name}.empty ? \"\" : \"export VIASH_PAR_${par.name.toUpperCase()}=\\\"\" + ${viash_par_contents} + \"\\\"\"}"
     }
   
   def tmpDir = "/tmp" // check if component is docker based
@@ -601,7 +598,7 @@ def processFactory(Map processArgs) {
   |  .join("\\n")
   |$tripQuo
   |# meta exports
-  |export VIASH_META_RESOURCES_DIR="\$resourcesDir"
+  |export VIASH_META_RESOURCES_DIR="\${resourcesDir.toRealPath().toAbsolutePath()}"
   |export VIASH_META_TEMP_DIR="${tmpDir}"
   |export VIASH_META_FUNCTIONALITY_NAME="${thisFunctionality.name}"
   |
@@ -701,7 +698,7 @@ def workflowFactory(Map args) {
           "  Found: ${tuple[0]}"
         
         // match file to input file
-        if (processArgs.auto.simplifyInput && tuple[1] instanceof Path) {
+        if (processArgs.auto.simplifyInput && (tuple[1] instanceof Path || tuple[1] instanceof List)) {
           def inputFiles = thisFunctionality.arguments
             .findAll { it.type == "file" && it.direction == "input" }
           
