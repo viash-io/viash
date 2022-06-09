@@ -7,6 +7,16 @@
 
 * `DockerPlatform`: Add org.opencontainers.image annotations to built docker images.
 
+## BUG FIXES
+
+* `NextflowVdsl3Platform`: Undefined input files should not inject a `VIASH_PAR_*` variable when `multiple: true`.
+
+* `NextflowVdsl3Platform`: Make injected resources dir absolute.
+
+* `NextflowVdsl3Platform`: Fix escaping of triple single quotes.
+
+* `NextflowVdsl3Platform`: Also apply auto.simplifyInput to Lists.
+
 # Viash 0.5.12
 
 ## MINOR CHANGES
