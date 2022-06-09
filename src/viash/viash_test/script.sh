@@ -134,7 +134,7 @@ if [ ! -z "$par_platform" ]; then
   command_builder+=(--platform "$par_platform")
 fi
 
-if [ "$par_organization" == "true" ]; then
+if [ "$par_append" == "true" ]; then
   command_builder+=("--append")
 fi
 

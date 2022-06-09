@@ -103,7 +103,7 @@ fi
 if [ ! -z "$par_target_image_source" ]; then
   extra_args+=( -c ".functionality.arguments[.name == '--target_image_source'].default := '$par_target_image_source'" )
 fi
-if [ ! -z "$par_target_image_source" ]; then
+if [ ! -z "$par_nextflow_variant" ]; then
   extra_args+=( -c ".functionality.arguments[.name == '--nextflow_variant'].default := '$par_nextflow_variant'" )
 fi
 

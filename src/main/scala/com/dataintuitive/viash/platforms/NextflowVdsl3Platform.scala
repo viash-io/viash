@@ -288,8 +288,8 @@ case class NextflowVdsl3Platform(
       case Some(res) =>
         val code = res.readWithPlaceholder(functionality).get
         val escapedCode = Bash.escapeMore(code)
-          .replace("'''", "\\'\\'\\'")
           .replace("\\", "\\\\")
+          .replace("'''", "\\'\\'\\'")
 
         // IMPORTANT! difference between code below and BashWrapper:
         // script is stored as `.viash_script.sh`.
@@ -338,7 +338,7 @@ case class NextflowVdsl3Platform(
       |
       |thisDefaultProcessArgs = [
       |  // key to be used to trace the process and determine output names
-      |  key: thisFunctionality.name + "_run",
+      |  key: thisFunctionality.name,
       |  // fixed arguments to be passed to script
       |  args: [:],
       |  // default directives

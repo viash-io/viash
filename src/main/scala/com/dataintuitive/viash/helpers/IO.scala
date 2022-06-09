@@ -35,9 +35,10 @@ object IO {
   def tempDir: Path = {
     Paths.get(scala.util.Properties.envOrElse("VIASH_TEMP", "/tmp"))
   }
-  def makeTemp(name: String): Path = {
-    if (!Files.exists(tempDir)) Files.createDirectories(tempDir)
-    val temp = Files.createTempDirectory(tempDir, name)
+  def makeTemp(name: String, parentTempPath: Option[Path] = None): Path = {
+    val workTempDir = parentTempPath.getOrElse(tempDir)
+    if (!Files.exists(workTempDir)) Files.createDirectories(workTempDir)
+    val temp = Files.createTempDirectory(workTempDir, name)
     Files.createDirectories(temp)
     temp
   }
@@ -58,8 +59,7 @@ object IO {
   private val uriRegex = "^[a-zA-Z0-9]*:".r
 
   def uri(path: String): URI = {
-    val newURI = if (uriRegex.findFirstIn(path).isDefined) path else "file://" + new File(path).getAbsolutePath
-    new URI(newURI)
+    if (uriRegex.findFirstIn(path).isDefined) new URI(path) else new File(path).toURI()
   }
 
   def read(uri: URI): String = {

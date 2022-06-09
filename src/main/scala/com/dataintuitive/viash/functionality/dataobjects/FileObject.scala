@@ -45,6 +45,6 @@ case class FileObject(
     multiple: Boolean,
     multiple_sep: Char
   ): DataObject[Path] = {
-    copy(name, alternatives, description, example, default, must_exist, required, direction, multiple, multiple_sep, `type`)
+    copy(name, alternatives, description, example, default, this.must_exist, required, direction, multiple, multiple_sep, `type`)
   }
 }
