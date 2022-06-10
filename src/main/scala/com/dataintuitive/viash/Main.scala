@@ -84,7 +84,6 @@ object Main {
         ViashTest(config, keepFiles = cli.test.keep.toOption.map(_.toBoolean))
       case List(cli.namespace, cli.namespace.build) =>
         val configs = readConfigs(cli.namespace.build)
-        println(s"configs length: ${configs.length}")
         ViashNamespace.build(
           configs = configs,
           target = cli.namespace.build.target(),
@@ -158,8 +157,6 @@ object Main {
       path.toString.contains(".vsh.") &&
         attrs.isRegularFile
     })
-
-    println(s"scriptFiles length: ${scriptFiles.length}")
 
     scriptFiles.flatMap { file =>
       val conf1 =
