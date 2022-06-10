@@ -1,3 +1,32 @@
+# Viash 0.5.13
+
+## NEW FUNCTIONALITY
+
+* `NextflowVdsl3Platform`: Allow overriding the container registry of all Viash components by 
+  setting the `params.override_container_registry` value. Only works for auto-derived image names.
+
+## MINOR CHANGES
+
+* `Functionality` and `viash ns`: Added `.enabled` in functionality, set to `true` by default.
+  Filter for disabled components in namespace commands.
+
+* `DockerPlatform`: Add org.opencontainers.image annotations to built docker images.
+
+* `Functionality`: when defining text resources, permit defining `path` instead of `dest`.
+  If both `dest` and `path` are unset, use a default file name depending on the resource type, such as `script.sh` or `text.txt`.
+
+* `viash build`: Errors are printed in red.
+
+## BUG FIXES
+
+* `NextflowVdsl3Platform`: Undefined input files should not inject a `VIASH_PAR_*` variable when `multiple: true`.
+
+* `NextflowVdsl3Platform`: Make injected resources dir absolute.
+
+* `NextflowVdsl3Platform`: Fix escaping of triple single quotes.
+
+* `NextflowVdsl3Platform`: Also apply auto.simplifyInput to Lists.
+
 # Viash 0.5.12
 
 ## MINOR CHANGES

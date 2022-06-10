@@ -1,0 +1,28 @@
+functionality:
+  name: ns_disabled
+  namespace: testns
+  version: 0.1
+  description: |
+    Represents a component that is WIP and thus still left disabled
+  enabled: false
+  arguments:
+    - name: "--input1"
+      type: integer
+      description: Value of the first number
+      required: true
+    - name: "--input2"
+      type: integer
+      description: Value of the second number
+      required: true
+    - name: "--output"
+      type: file
+      description: Write the output to a text file.
+      direction: output
+  resources:
+    - type: python_script
+      path: code.py
+  tests:
+    - type: bash_script
+      path: test.sh
+platforms:
+  - type: native

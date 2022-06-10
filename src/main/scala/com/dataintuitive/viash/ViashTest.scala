@@ -211,7 +211,7 @@ object ViashTest {
         )
 
         // make a new directory
-        val newDir = dir.resolve( "test_" + test.filename)
+        val newDir = dir.resolve("test_" + test.filename)
         Files.createDirectories(newDir)
 
         // write resources to dir
