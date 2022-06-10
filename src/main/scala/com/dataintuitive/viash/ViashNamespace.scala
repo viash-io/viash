@@ -22,10 +22,12 @@ import com.dataintuitive.viash.ViashTest.{ManyTestOutput, TestOutput}
 import config.Config
 import helpers.IO
 import com.dataintuitive.viash.helpers.MissingResourceFileException
+import com.dataintuitive.viash.helpers.BuildStatus._
+import java.nio.file.Path
 
 object ViashNamespace {
   def build(
-    configs: List[Config],
+    configs: List[Either[Config, BuildStatus]],
     target: String,
     setup: Option[String] = None,
     push: Boolean = false,
@@ -35,26 +37,50 @@ object ViashNamespace {
   ) {
     val configs2 = if (parallel) configs.par else configs
 
-    configs2.foreach { conf =>
-      val funName = conf.functionality.name
-      val platformId = conf.platform.get.id
-      val out =
-        if (!flatten) {
-          conf.functionality.namespace
-            .map( ns => target + s"/$platformId/$ns/$funName").getOrElse(target + s"/$platformId/$funName")
-        } else {
-          target
-        }
-      val namespaceOrNothing = conf.functionality.namespace.map( s => "(" + s + ")").getOrElse("")
-      println(s"Exporting $funName $namespaceOrNothing =$platformId=> $out")
-      ViashBuild(
-        config = conf,
-        output = out,
-        namespace = conf.functionality.namespace,
-        setup = setup,
-        push = push,
-        writeMeta = writeMeta
-      )
+    val results = configs2.map { confTuple =>
+      if (confTuple.isRight) {
+        confTuple
+      }
+      else {
+        val conf = confTuple.left.get
+        val funName = conf.functionality.name
+        val platformId = conf.platform.get.id
+        val out =
+          if (!flatten) {
+            conf.functionality.namespace
+              .map( ns => target + s"/$platformId/$ns/$funName").getOrElse(target + s"/$platformId/$funName")
+          } else {
+            target
+          }
+        val namespaceOrNothing = conf.functionality.namespace.map( s => "(" + s + ")").getOrElse("")
+        println(s"Exporting $funName $namespaceOrNothing =$platformId=> $out")
+        ViashBuild(
+          config = conf,
+          output = out,
+          namespace = conf.functionality.namespace,
+          setup = setup,
+          push = push,
+          writeMeta = writeMeta
+        )
+        Right(helpers.BuildStatus.Success)
+      }
+    }
+
+    val statuses = results.map(r => r.fold(fa => helpers.BuildStatus.Success, fb => fb))
+    val parseErrors = statuses.count(_ == helpers.BuildStatus.ParseError)
+    val disableds = statuses.count(_ == helpers.BuildStatus.Disabled)
+    val buildErrors = statuses.count(_ == helpers.BuildStatus.BuildError)
+    val successes = statuses.count(_ == helpers.BuildStatus.Success)
+
+    if (successes != statuses.length) {
+      println(s"${Console.YELLOW}Not all configs built successfully${Console.RESET}")
+      if (parseErrors > 0) println(s"  ${Console.RED}${parseErrors}/${results.length} configs encountered parse errors${Console.RESET}")
+      if (disableds > 0) println(s"  ${Console.YELLOW}${disableds}/${results.length} configs were disabled${Console.RESET}")
+      if (buildErrors > 0) println(s"  ${Console.RED}${buildErrors}/${results.length} configs built failures${Console.RESET}") // Not currently implemented
+      if (successes > 0) println(s"  ${Console.GREEN}${successes}/${results.length} configs built successfully${Console.RESET}")
+    }
+    else {
+      println(s"${Console.GREEN}All ${successes} configs built successfully${Console.RESET}")
     }
   }
 

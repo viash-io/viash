@@ -27,6 +27,7 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.nio.file.NoSuchFileException
 import com.dataintuitive.viash.helpers.MissingResourceFileException
+import com.dataintuitive.viash.helpers.BuildStatus._
 
 object Main {
   private val pkg = getClass.getPackage
@@ -83,6 +84,7 @@ object Main {
         ViashTest(config, keepFiles = cli.test.keep.toOption.map(_.toBoolean))
       case List(cli.namespace, cli.namespace.build) =>
         val configs = readConfigs(cli.namespace.build)
+        println(s"configs length: ${configs.length}")
         ViashNamespace.build(
           configs = configs,
           target = cli.namespace.build.target(),
@@ -95,7 +97,7 @@ object Main {
       case List(cli.namespace, cli.namespace.test) =>
         val configs = readConfigs(cli.namespace.test, applyPlatform = false)
         ViashNamespace.test(
-          configs = configs,
+          configs = configs.flatMap(_.left.toOption),
           parallel = cli.namespace.test.parallel(),
           keepFiles = cli.namespace.test.keep.toOption.map(_.toBoolean),
           tsv = cli.namespace.test.tsv.toOption,
@@ -104,7 +106,7 @@ object Main {
       case List(cli.namespace, cli.namespace.list) =>
         val configs = readConfigs(cli.namespace.list, applyPlatform = false)
         ViashNamespace.list(
-          configs = configs,
+          configs = configs.flatMap(_.left.toOption),
           cli.namespace.list.format()
         )
       case List(cli.config, cli.config.view) =>
@@ -141,7 +143,7 @@ object Main {
   def readConfigs(
     subcommand: ViashNs,
     applyPlatform: Boolean = true,
-  ): List[Config] = {
+  ): List[Either[Config, BuildStatus]] = {
     val source = subcommand.src()
     val query = subcommand.query.toOption
     val queryNamespace = subcommand.query_namespace.toOption
@@ -156,6 +158,8 @@ object Main {
       path.toString.contains(".vsh.") &&
         attrs.isRegularFile
     })
+
+    println(s"scriptFiles length: ${scriptFiles.length}")
 
     scriptFiles.flatMap { file =>
       val conf1 =
@@ -188,21 +192,21 @@ object Main {
 
           // if config passes regex checks, return it
           if (queryTest && nameTest && namespaceTest && confTest.functionality.enabled) {
-            Some(confTest)
+            Left(confTest)
           } else {
-            None
+            Right(Disabled)
           }
         } catch {
           case _: Exception =>
             Console.err.println(s"${Console.RED}Reading file '$file' failed${Console.RESET}")
-            None
+            Right(ParseError)
         }
 
-      if (conf1.isEmpty) {
-        Nil
+      if (conf1.isRight) {
+        List(conf1)
       } else {
 
-        if (platformStr.contains(":") || (new File(platformStr)).exists) {
+        val configs = if (platformStr.contains(":") || (new File(platformStr)).exists) {
           // platform is a file
           List(Config.read(
             configPath = file.toString,
@@ -212,7 +216,7 @@ object Main {
           ))
         } else {
           // platform is a regex for filtering the ids
-          val platIDs = conf1.get.platforms.map(_.id)
+          val platIDs = conf1.left.get.platforms.map(_.id)
 
           val filteredPlats =
             if (platIDs.isEmpty) {
@@ -232,6 +236,7 @@ object Main {
             )
           }
         }
+        configs.map(c => Left(c))
       }
     }
   }
