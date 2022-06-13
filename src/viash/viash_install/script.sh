@@ -55,10 +55,6 @@ trap clean_up EXIT
 
 if [[ "$par_tag" == "develop" || "$par_tag" == ^@.*$ ]]; then
   used_tag=${par_tag#@}
-  if ! command -v sbt &> /dev/null; then
-      echo "sbt needs to be installed to build from source"
-      exit
-  fi
 
   # Download Viash helper scripts
   echo "> Downloading Viash source code @$used_tag"
@@ -69,7 +65,20 @@ if [[ "$par_tag" == "develop" || "$par_tag" == ^@.*$ ]]; then
   echo "> Building Viash from source"
   cd "$build_dir/viash-$used_tag"
   ./configure
-  make bin/viash
+
+  if ! command -v sbt &> /dev/null; then
+      echo "WARNING: sbt could not be found, using a Docker backend to build Viash from source instead. Install sbt to remove this warning."
+
+      if ! command -v docker &> /dev/null; then
+          echo "docker needs to be installed"
+          exit
+      fi
+
+      make with-docker
+  else
+      make bin/viash
+  fi
+  
   cd "$REPO_ROOT"
   cp "$build_dir/viash-$used_tag/bin/viash" "$par_bin"
 else

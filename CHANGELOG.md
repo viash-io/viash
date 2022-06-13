@@ -1,4 +1,4 @@
-# Viash [NEXT VERSION]
+# Viash 0.5.13
 
 ## NEW FUNCTIONALITY
 
@@ -14,6 +14,8 @@
 
 * `Functionality`: when defining text resources, permit defining `path` instead of `dest`.
   If both `dest` and `path` are unset, use a default file name depending on the resource type, such as `script.sh` or `text.txt`.
+
+* `viash build`: Errors are printed in red.
 
 ## BUG FIXES
 
