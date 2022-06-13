@@ -1,3 +1,8 @@
+
+## MINOR CHANGES
+
+* `viash ns`: Display overview results with X amount failed & Y amount successfully built.
+
 # Viash 0.5.13
 
 ## NEW FUNCTIONALITY
