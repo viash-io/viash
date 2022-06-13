@@ -198,7 +198,7 @@ object ViashNamespace {
               } else {
                 testRes.map(to => if (to.exitValue == 0) Success else TestError)
               }
-          val setupStatus = setupRes.toList.map(to => if (to.exitValue == 0) Success else TestError)
+          val setupStatus = setupRes.toList.map(to => if (to.exitValue == 0) Success else BuildError)
           setupStatus ::: testStatus
         },
         fb => List(fb)))
@@ -224,27 +224,31 @@ object ViashNamespace {
   def list(configs: List[Either[Config, BuildStatus]], format: String = "yaml") {
     val configs2 = configs.flatMap(_.left.toOption)
     ViashConfig.viewMany(configs2, format)
+
+    printResults(configs.map(_.fold(fa => Success, fb => fb)))
   }
 
   def printResults(statuses: Seq[BuildStatus]) {
-    val parseErrors = statuses.count(_ == helpers.BuildStatus.ParseError)
-    val disableds = statuses.count(_ == helpers.BuildStatus.Disabled)
-    val buildErrors = statuses.count(_ == helpers.BuildStatus.BuildError)
-    val testErrors = statuses.count(_ == helpers.BuildStatus.TestError)
-    val testMissing = statuses.count(_ == helpers.BuildStatus.TestMissing)
     val successes = statuses.count(_ == helpers.BuildStatus.Success)
 
+    val messages = List(
+      (helpers.BuildStatus.ParseError, Console.RED, "configs encountered parse errors"),
+      (helpers.BuildStatus.Disabled, Console.YELLOW, "configs were disabled"),
+      (helpers.BuildStatus.BuildError, Console.RED, "configs built failed"),
+      (helpers.BuildStatus.TestError, Console.RED, "tests failed"),
+      (helpers.BuildStatus.TestMissing, Console.YELLOW, "tests missing"),
+      (helpers.BuildStatus.Success, Console.GREEN, "configs built/tested successfully"))
+
     if (successes != statuses.length) {
-      println(s"${Console.YELLOW}Not all configs built successfully${Console.RESET}")
-      if (parseErrors > 0) println(s"  ${Console.RED}${parseErrors}/${statuses.length} configs encountered parse errors${Console.RESET}")
-      if (disableds > 0) println(s"  ${Console.YELLOW}${disableds}/${statuses.length} configs were disabled${Console.RESET}")
-      if (buildErrors > 0) println(s"  ${Console.RED}${buildErrors}/${statuses.length} configs built failures${Console.RESET}") // Not currently implemented
-      if (testErrors > 0) println(s"  ${Console.RED}${testErrors}/${statuses.length} tests failed${Console.RESET}")
-      if (testMissing > 0) println(s"  ${Console.YELLOW}${testMissing}/${statuses.length} tests missing${Console.RESET}")
-      if (successes > 0) println(s"  ${Console.GREEN}${successes}/${statuses.length} configs built successfully${Console.RESET}")
+      println(s"${Console.YELLOW}Not all configs built or tested successfully${Console.RESET}")
+      for (message <- messages) {
+        val count = statuses.count(_ == message._1)
+        if (count > 0)
+          println(s"  ${message._2}$count/${statuses.length} ${message._3}${Console.RESET}")
+      }
     }
     else {
-      println(s"${Console.GREEN}All ${successes} configs built successfully${Console.RESET}")
+      println(s"${Console.GREEN}All ${successes} configs built or tested successfully${Console.RESET}")
     }
   }
 }
