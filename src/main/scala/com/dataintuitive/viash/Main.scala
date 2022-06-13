@@ -96,7 +96,7 @@ object Main {
       case List(cli.namespace, cli.namespace.test) =>
         val configs = readConfigs(cli.namespace.test, applyPlatform = false)
         ViashNamespace.test(
-          configs = configs.flatMap(_.left.toOption),
+          configs = configs,
           parallel = cli.namespace.test.parallel(),
           keepFiles = cli.namespace.test.keep.toOption.map(_.toBoolean),
           tsv = cli.namespace.test.tsv.toOption,
@@ -105,7 +105,7 @@ object Main {
       case List(cli.namespace, cli.namespace.list) =>
         val configs = readConfigs(cli.namespace.list, applyPlatform = false)
         ViashNamespace.list(
-          configs = configs.flatMap(_.left.toOption),
+          configs = configs,
           cli.namespace.list.format()
         )
       case List(cli.config, cli.config.view) =>

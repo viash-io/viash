@@ -19,5 +19,5 @@ package com.dataintuitive.viash.helpers
 
 object BuildStatus extends Enumeration {
   type BuildStatus = Value
-  val ParseError, Disabled, BuildError, Success = Value
+  val ParseError, Disabled, BuildError, TestError, TestMissing, Success = Value
 }

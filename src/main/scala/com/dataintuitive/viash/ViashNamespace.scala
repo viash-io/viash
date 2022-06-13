@@ -64,16 +64,16 @@ object ViashNamespace {
         }
       }
 
-    printResults(results.toList)
+    printResults(results.map(r => r.fold(fa => helpers.BuildStatus.Success, fb => fb)).toList)
   }
 
   def test(
-    configs: List[Config],
+    configs: List[Either[Config, BuildStatus]],
     parallel: Boolean = false,
     keepFiles: Option[Boolean] = None,
     tsv: Option[String] = None,
     append: Boolean = false
-  ): List[(Config, ManyTestOutput)] = {
+  ): List[Either[(Config, ManyTestOutput), BuildStatus]] = {
     val configs2 = if (parallel) configs.par else configs
 
     // run all the component tests
@@ -120,66 +120,91 @@ object ViashNamespace {
         Console.RESET
       )
 
-      configs2.map { conf =>
-        // get attributes
-        val namespace = conf.functionality.namespace.getOrElse("")
-        val funName = conf.functionality.name
-        val platName = conf.platform.get.id
+      val results = configs2.map { config =>
+        config match {
+          case Right(status) => Right(status)
+          case Left(conf) =>
+            // get attributes
+            val namespace = conf.functionality.namespace.getOrElse("")
+            val funName = conf.functionality.name
+            val platName = conf.platform.get.id
 
-        // print start message
-        printf(s"%s%20s %20s %20s %20s %9s %8s %20s%s\n", "", namespace, funName, platName, "start", "", "", "", Console.RESET)
+            // print start message
+            printf(s"%s%20s %20s %20s %20s %9s %8s %20s%s\n", "", namespace, funName, platName, "start", "", "", "", Console.RESET)
 
-        // run tests
-        // TODO: it would actually be great if this component could subscribe to testresults messages
+            // run tests
+            // TODO: it would actually be great if this component could subscribe to testresults messages
 
-        val ManyTestOutput(setupRes, testRes) = try {
-          ViashTest(
-            config = conf,
-            keepFiles = keepFiles,
-            quiet = true,
-            parentTempPath = Some(parentTempPath)
-          )
-        } catch {
-          case e: MissingResourceFileException => 
-            System.err.println(s"${Console.YELLOW}viash ns: ${e.getMessage}${Console.RESET}")
-            ManyTestOutput(None, List())
-        }
-
-        val testResults =
-          if (setupRes.isDefined && setupRes.get.exitValue > 0) {
-            Nil
-          } else if (testRes.isEmpty) {
-            List(TestOutput("tests", -1, "no tests found", "", 0L))
-          } else {
-            testRes
-          }
-
-        // print messages
-        val results = setupRes.toList ::: testResults
-        for (test ← results) {
-          val (col, msg) = {
-            if (test.exitValue > 0) {
-              (Console.RED, "ERROR")
-            } else if (test.exitValue < 0) {
-              (Console.YELLOW, "MISSING")
-            } else {
-              (Console.GREEN, "SUCCESS")
+            val ManyTestOutput(setupRes, testRes) = try {
+              ViashTest(
+                config = conf,
+                keepFiles = keepFiles,
+                quiet = true,
+                parentTempPath = Some(parentTempPath)
+              )
+            } catch {
+              case e: MissingResourceFileException => 
+                System.err.println(s"${Console.YELLOW}viash ns: ${e.getMessage}${Console.RESET}")
+                ManyTestOutput(None, List())
             }
+
+            val testResults =
+              if (setupRes.isDefined && setupRes.get.exitValue > 0) {
+                Nil
+              } else if (testRes.isEmpty) {
+                List(TestOutput("tests", -1, "no tests found", "", 0L))
+              } else {
+                testRes
+              }
+
+            // print messages
+            val results = setupRes.toList ::: testResults
+            for (test ← results) {
+              val (col, msg) = {
+                if (test.exitValue > 0) {
+                  (Console.RED, "ERROR")
+                } else if (test.exitValue < 0) {
+                  (Console.YELLOW, "MISSING")
+                } else {
+                  (Console.GREEN, "SUCCESS")
+                }
+              }
+
+              // print message
+              printf(s"%s%20s %20s %20s %20s %9s %8s %20s%s\n", col, namespace, funName, platName, test.name, test.exitValue, test.duration, msg, Console.RESET)
+
+              // write to tsv
+              tsvWriter.foreach{writer =>
+                writer.append(List(namespace, funName, platName, test.name, test.exitValue, test.duration, msg).mkString("\t") + sys.props("line.separator"))
+                writer.flush()
+              }
+            }
+
+            // return output
+            Left((conf, ManyTestOutput(setupRes, testRes)))
           }
 
-          // print message
-          printf(s"%s%20s %20s %20s %20s %9s %8s %20s%s\n", col, namespace, funName, platName, test.name, test.exitValue, test.duration, msg, Console.RESET)
-
-          // write to tsv
-          tsvWriter.foreach{writer =>
-            writer.append(List(namespace, funName, platName, test.name, test.exitValue, test.duration, msg).mkString("\t") + sys.props("line.separator"))
-            writer.flush()
-          }
-        }
-
-        // return output
-        (conf, ManyTestOutput(setupRes, testRes))
       }.toList
+
+      val testResults = results.flatMap(r => r.fold(fa => 
+        {
+          val setupRes = fa._2.setup
+          val testRes = fa._2.tests
+          val testStatus =
+              if (setupRes.isDefined && setupRes.get.exitValue > 0) {
+                Nil
+              } else if (testRes.isEmpty) {
+                List(TestMissing)
+              } else {
+                testRes.map(to => if (to.exitValue == 0) Success else TestError)
+              }
+          val setupStatus = setupRes.toList.map(to => if (to.exitValue == 0) Success else TestError)
+          setupStatus ::: testStatus
+        },
+        fb => List(fb)))
+      printResults(testResults)
+
+      results
     } catch {
       case e: Exception => 
         println(e.getMessage())
@@ -196,23 +221,27 @@ object ViashNamespace {
     }
   }
 
-  def list(configs: List[Config], format: String = "yaml") {
-    ViashConfig.viewMany(configs, format)
+  def list(configs: List[Either[Config, BuildStatus]], format: String = "yaml") {
+    val configs2 = configs.flatMap(_.left.toOption)
+    ViashConfig.viewMany(configs2, format)
   }
 
-  def printResults(results: Seq[Either[Config, BuildStatus]]) {
-    val statuses = results.map(r => r.fold(fa => helpers.BuildStatus.Success, fb => fb))
+  def printResults(statuses: Seq[BuildStatus]) {
     val parseErrors = statuses.count(_ == helpers.BuildStatus.ParseError)
     val disableds = statuses.count(_ == helpers.BuildStatus.Disabled)
     val buildErrors = statuses.count(_ == helpers.BuildStatus.BuildError)
+    val testErrors = statuses.count(_ == helpers.BuildStatus.TestError)
+    val testMissing = statuses.count(_ == helpers.BuildStatus.TestMissing)
     val successes = statuses.count(_ == helpers.BuildStatus.Success)
 
     if (successes != statuses.length) {
       println(s"${Console.YELLOW}Not all configs built successfully${Console.RESET}")
-      if (parseErrors > 0) println(s"  ${Console.RED}${parseErrors}/${results.length} configs encountered parse errors${Console.RESET}")
-      if (disableds > 0) println(s"  ${Console.YELLOW}${disableds}/${results.length} configs were disabled${Console.RESET}")
-      if (buildErrors > 0) println(s"  ${Console.RED}${buildErrors}/${results.length} configs built failures${Console.RESET}") // Not currently implemented
-      if (successes > 0) println(s"  ${Console.GREEN}${successes}/${results.length} configs built successfully${Console.RESET}")
+      if (parseErrors > 0) println(s"  ${Console.RED}${parseErrors}/${statuses.length} configs encountered parse errors${Console.RESET}")
+      if (disableds > 0) println(s"  ${Console.YELLOW}${disableds}/${statuses.length} configs were disabled${Console.RESET}")
+      if (buildErrors > 0) println(s"  ${Console.RED}${buildErrors}/${statuses.length} configs built failures${Console.RESET}") // Not currently implemented
+      if (testErrors > 0) println(s"  ${Console.RED}${testErrors}/${statuses.length} tests failed${Console.RESET}")
+      if (testMissing > 0) println(s"  ${Console.YELLOW}${testMissing}/${statuses.length} tests missing${Console.RESET}")
+      if (successes > 0) println(s"  ${Console.GREEN}${successes}/${statuses.length} configs built successfully${Console.RESET}")
     }
     else {
       println(s"${Console.GREEN}All ${successes} configs built successfully${Console.RESET}")
