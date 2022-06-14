@@ -481,12 +481,12 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
         commitOut.exitValue == 0
         , s"git commit: ${commitOut.output}")
 
-      assert(
-        Exec.run2Path(
-          List("git", "tag", "v1"),
-          cwd = Some(tempMetaFolder)
-        ).exitValue == 0
-        , "git tag")
+      // assert(
+      //   Exec.run2Path(
+      //     List("git", "tag", "v1"),
+      //     cwd = Some(tempMetaFolder)
+      //   ).exitValue == 0
+      //   , "git tag")
 
       val configMetaFile = Paths.get(tempMetaFolStr, "config.vsh.yaml").toString
 
@@ -512,7 +512,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       val regexOciDescription = """"org.opencontainers.image.description": "Companion container for running component testbash"""".r
       val regexOciRevision = """"org.opencontainers.image.revision": "[0-9a-f]{40}"""".r
       val regexOciSource = """"org.opencontainers.image.source": "https://non.existing.repo/viash/meta-test"""".r
-      val regexOciVersion = """"org.opencontainers.image.version": "v1"""".r
+      val regexOciVersion = """"org.opencontainers.image.version": "0.1"""".r
 
 
       assert(regexOciAuthors.findFirstIn(inspectOut).isDefined, inspectOut)
