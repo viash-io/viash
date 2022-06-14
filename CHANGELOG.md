@@ -1,5 +1,8 @@
 # Viash [Next version]
 
+## MINOR CHANGES
+* `NextflowVdsl3Platform`: Allow both `--publish_dir` and `--publishDir` when `auto.publish = true`.
+
 ## BUG FIXES
 
 * `DockerPlatform`: Change `org.opencontainers.image.version` annotation to `functionality.version` when set.
