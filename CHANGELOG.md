@@ -1,3 +1,10 @@
+# Viash [Next version]
+
+## BUG FIXES
+
+* `DockerPlatform`: Change `org.opencontainers.image.version` annotation to `functionality.version` when set.
+  Additionally fixed retreaving the git tag possibly returning `fatal: No names found, cannot describe anything.` or similar.
+
 # Viash 0.5.13
 
 ## NEW FUNCTIONALITY

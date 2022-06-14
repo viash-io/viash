@@ -153,7 +153,7 @@ case class DockerPlatform(
       case _ => None
     }
     val opencontainers_image_revision = info.flatMap(_.git_commit)
-    val opencontainers_image_version = info.flatMap(_.git_tag)
+    val opencontainers_image_version = functionality.version.map(v => v.toString())
     val opencontainers_image_description = s""""Companion container for running component ${functionality.namespace.map(_ + " ").getOrElse("")}${functionality.name}""""
     val opencontainers_image_created = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date())
 

@@ -83,8 +83,11 @@ object Git {
         List("git", "describe", "--tags"),
         cwd = Some(path)
       )
-      out.output.trim
-    }.toOption 
+      out.exitValue match {
+        case 0 => Some(out.output.trim)
+        case _ => None
+      }
+    }.getOrElse(None)
   }
 
   def getInfo(path: File): GitInfo = {
