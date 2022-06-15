@@ -18,6 +18,7 @@
 package com.dataintuitive.viash
 
 import org.rogach.scallop.{ScallopConf, Subcommand}
+import org.rogach.scallop.ScallopConfBase
 
 trait ViashCommand {
   _: ScallopConf =>
@@ -105,7 +106,19 @@ trait WithTemporary {
   )
 }
 
+/**
+  * Wrapper class for Subcommand to expose protected members
+  * We need this information to scrape the CLI to export to json
+  */
+class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(commandNameAndAliases:_*) {
+  def getCommandNameAndAliases = commandNameAndAliases
+  def getOpts = builder.opts
+  def getSubconfigs = subconfigs
+}
+
 class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
+  def getSubconfigs = subconfigs
+ 
   version(s"${Main.name} ${Main.version} (c) 2020 Data Intuitive")
 
   appendDefaultToDescription = true
@@ -131,7 +144,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
        |
        |Arguments:""".stripMargin)
 
-  val run = new Subcommand("run") with ViashCommand with WithTemporary {
+  val run = new DocumentedSubcommand("run") with ViashCommand with WithTemporary {
     banner(
       s"""viash run
          |Executes a viash component from the provided viash config file. viash generates a temporary executable and immediately executes it with the given parameters.
@@ -151,7 +164,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |  viash run config.vsh.yaml""".stripMargin)
   }
 
-  val build = new Subcommand("build") with ViashCommand {
+  val build = new DocumentedSubcommand("build") with ViashCommand {
     banner(
       s"""viash build
          |Build an executable from the provided viash config file.
@@ -190,7 +203,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     )
   }
 
-  val test = new Subcommand("test") with ViashCommand with WithTemporary {
+  val test = new DocumentedSubcommand("test") with ViashCommand with WithTemporary {
     banner(
       s"""viash test
          |Test the component using the tests defined in the viash config file.
@@ -207,8 +220,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |  viash run meta.vsh.yaml""".stripMargin)
   }
 
-  val config = new Subcommand("config") {
-    val view = new Subcommand("view") with ViashCommand {
+  val config = new DocumentedSubcommand("config") {
+    val view = new DocumentedSubcommand("view") with ViashCommand {
       banner(
         s"""viash config view
            |View the config file after parsing.
@@ -225,7 +238,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         descr = "Which output format to use."
       )
     }
-    val inject = new Subcommand("inject") with ViashCommand {
+    val inject = new DocumentedSubcommand("inject") with ViashCommand {
       banner(
         s"""viash config inject
            |Inject a Viash header into the main script of a Viash component.
@@ -243,9 +256,9 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     shortSubcommandsHelp(true)
   }
 
-  val namespace = new Subcommand("ns") {
+  val namespace = new DocumentedSubcommand("ns") {
 
-    val build = new Subcommand("build") with ViashNs{
+    val build = new DocumentedSubcommand("build") with ViashNs{
       banner(
         s"""viash ns build
            |Build a namespace from many viash config files.
@@ -284,7 +297,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
     }
 
-    val test = new Subcommand("test") with ViashNs with WithTemporary {
+    val test = new DocumentedSubcommand("test") with ViashNs with WithTemporary {
       banner(
         s"""viash ns test
            |Test a namespace containing many viash config files.
@@ -306,7 +319,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
     }
 
-    val list = new Subcommand("list") with ViashNs {
+    val list = new DocumentedSubcommand("list") with ViashNs {
       banner(
         s"""viash ns list
            |List a namespace containing many viash config files.
