@@ -124,7 +124,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
        |  viash ns build
        |  viash ns test
        |  viash ns list
-       |  viash config view
+       |  viash config view config.vsh.yaml
+       |  viash config inject config.vsh.yaml
        |
        |Check the help of a subcommand for more information, or the API available at:
        |  https://viash.io
