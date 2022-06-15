@@ -21,7 +21,7 @@ import io.circe.Encoder
 import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
 import org.rogach.scallop.CliOption
 
-package object helpers {
+package object cli {
   import com.dataintuitive.viash.helpers.Circe._
   
   implicit val encodeCLICommand: Encoder.AsObject[CLICommand] = deriveConfiguredEncoder

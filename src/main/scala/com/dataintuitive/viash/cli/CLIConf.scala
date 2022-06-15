@@ -19,6 +19,7 @@ package com.dataintuitive.viash
 
 import org.rogach.scallop.{ScallopConf, Subcommand}
 import org.rogach.scallop.ScallopConfBase
+import java.lang.annotation.Documented
 
 trait ViashCommand {
   _: ScallopConf =>
@@ -347,11 +348,21 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     shortSubcommandsHelp(true)
   }
 
+  val cliexport = new DocumentedSubcommand("cliexport") with ViashNs {
+    banner(
+      s"""viash cliexport
+          |Export CLI information to json to allow automated documentation generation
+          |""".stripMargin
+    )
+  }
+
+
   addSubcommand(run)
   addSubcommand(build)
   addSubcommand(test)
   addSubcommand(namespace)
   addSubcommand(config)
+  addSubcommand(cliexport)
 
   shortSubcommandsHelp(true)
 

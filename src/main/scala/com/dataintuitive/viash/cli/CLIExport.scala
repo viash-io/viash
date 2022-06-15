@@ -15,11 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.helpers
+package com.dataintuitive.viash
 
-import com.dataintuitive.viash.CLIConf
 import org.rogach.scallop.ScallopConfBase
-import com.dataintuitive.viash.DocumentedSubcommand
 import io.circe.{Json, Printer => JsonPrinter}
 import org.rogach.scallop.Scallop
 import io.circe.Encoder
@@ -27,8 +25,10 @@ import io.circe.syntax.EncoderOps
 
 import com.dataintuitive.viash.helpers.Circe._
 import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
-import com.dataintuitive.viash.helpers._
+import com.dataintuitive.viash.cli._
 import org.rogach.scallop.CliOption
+import com.dataintuitive.viash.CLIOption.fromCliOption
+import com.dataintuitive.viash.CLICommand.fromDocumentedSubCommand
 
 case class CLICommand (
   name: String,
@@ -44,6 +44,24 @@ case class CLIOption (
   descr: String,
   default: Option[String]
 )
+
+object CLICommand {
+  implicit def fromDocumentedSubCommand(ds: DocumentedSubcommand): CLICommand = 
+    CLICommand(
+      ds.getCommandNameAndAliases.mkString(" + "),
+      ds.getBanner,
+      ds.getFooter,
+      ds.getSubconfigs.flatMap(_ match {
+        case ds2: DocumentedSubcommand => Option(fromDocumentedSubCommand(ds2))
+        case _ => None
+      }),
+      ds.getOpts.map(o => fromCliOption(o))
+    )
+}
+
+object CLIOption {
+  implicit def fromCliOption(o: CliOption): CLIOption = CLIOption(o.name, o.shortNames, o.descr, o.default().map(d => d.toString()))
+}
 
 object CLIExport {
 
@@ -71,36 +89,17 @@ object CLIExport {
     }
   }
 
-  private def convertToCaseClasses(opts: List[CliOption]): Seq[CLIOption] = {
-    opts.map(o => CLIOption(o.name, o.shortNames, o.descr, o.default().map(d => d.toString())))
-  }
-
-  private def convertToCaseClasses(subconfigs:Seq[ScallopConfBase]): Seq[CLICommand] = {
-    
-    // TODO add sub-commands and opts
-    subconfigs.flatMap(
-      _ match {
-        case ds: DocumentedSubcommand => Option(
-          CLICommand(
-            ds.getCommandNameAndAliases.mkString(" + "),
-            ds.getBanner,
-            ds.getFooter,
-            convertToCaseClasses(ds.getSubconfigs),
-            convertToCaseClasses(ds.getOpts)//ds.getOpts.map(o => convertCliOption(o))
-          ))
-        case _ => None
-      }
-    )
-  }
-
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
 
   def export() {
     val cli = new CLIConf(Nil)
-    val data = convertToCaseClasses(cli.getSubconfigs)
+    val data = cli.getSubconfigs.flatMap(_ match {
+      case ds: DocumentedSubcommand => Option(fromDocumentedSubCommand(ds))
+      case _ => None
+    })
     val str = jsonPrinter.print(data.asJson)
     println(str)
 
-    printInformation(cli.getSubconfigs)
+    // printInformation(cli.getSubconfigs)
   }
 }
