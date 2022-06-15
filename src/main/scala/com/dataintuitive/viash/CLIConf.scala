@@ -112,6 +112,8 @@ trait WithTemporary {
   */
 class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(commandNameAndAliases:_*) {
   def getCommandNameAndAliases = commandNameAndAliases
+  def getBanner = builder.bann
+  def getFooter = builder.foot
   def getOpts = builder.opts
   def getSubconfigs = subconfigs
 }
