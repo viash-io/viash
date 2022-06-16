@@ -19,7 +19,6 @@ package com.dataintuitive.viash
 
 import org.rogach.scallop.{ScallopConf, Subcommand}
 import org.rogach.scallop.ScallopConfBase
-import java.lang.annotation.Documented
 
 trait ViashCommand {
   _: ScallopConf =>

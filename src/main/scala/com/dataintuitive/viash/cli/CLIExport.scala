@@ -28,7 +28,11 @@ import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
 import com.dataintuitive.viash.cli._
 import org.rogach.scallop.CliOption
 import com.dataintuitive.viash.CLIOption.fromCliOption
+import com.dataintuitive.viash.CLICommand.fromScallopConfBase
 import com.dataintuitive.viash.CLICommand.fromDocumentedSubCommand
+
+import org.rogach.scallop.ScallopConfBase
+import cats.instances.boolean
 
 case class CLICommand (
   name: String,
@@ -42,25 +46,33 @@ case class CLIOption (
   name: String,
   shortNames: Seq[Char],
   descr: String,
-  default: Option[String]
+  default: Option[String],
+  required: Boolean
 )
 
 object CLICommand {
+  implicit def fromScallopConfBase(scb: ScallopConfBase): Option[CLICommand] = scb match {
+    case dc: DocumentedSubcommand => Option(fromDocumentedSubCommand(dc))
+    case _ => None
+  }
   implicit def fromDocumentedSubCommand(ds: DocumentedSubcommand): CLICommand = 
     CLICommand(
       ds.getCommandNameAndAliases.mkString(" + "),
       ds.getBanner,
       ds.getFooter,
-      ds.getSubconfigs.flatMap(_ match {
-        case ds2: DocumentedSubcommand => Option(fromDocumentedSubCommand(ds2))
-        case _ => None
-      }),
+      ds.getSubconfigs.flatMap(fromScallopConfBase),
       ds.getOpts.map(o => fromCliOption(o))
     )
 }
 
 object CLIOption {
-  implicit def fromCliOption(o: CliOption): CLIOption = CLIOption(o.name, o.shortNames, o.descr, o.default().map(d => d.toString()))
+  implicit def fromCliOption(o: CliOption): CLIOption = 
+    CLIOption(
+      o.name,
+      o.shortNames,
+      o.descr,
+      o.default().map(d => d.toString()),
+      o.required)
 }
 
 object CLIExport {
@@ -93,10 +105,7 @@ object CLIExport {
 
   def export() {
     val cli = new CLIConf(Nil)
-    val data = cli.getSubconfigs.flatMap(_ match {
-      case ds: DocumentedSubcommand => Option(fromDocumentedSubCommand(ds))
-      case _ => None
-    })
+    val data = cli.getSubconfigs.flatMap(fromScallopConfBase)
     val str = jsonPrinter.print(data.asJson)
     println(str)
 
