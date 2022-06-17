@@ -27,7 +27,6 @@ import com.dataintuitive.viash.helpers.Circe._
 import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
 import com.dataintuitive.viash.cli._
 import org.rogach.scallop.CliOption
-import com.dataintuitive.viash.CLIOption.fromCliOption
 import com.dataintuitive.viash.CLICommand.fromScallopConfBase
 import com.dataintuitive.viash.CLICommand.fromDocumentedSubCommand
 
@@ -39,15 +38,9 @@ case class CLICommand (
   banner: Option[String],
   footer: Option[String],
   subcommands: Seq[CLICommand],
-  opts: Seq[CLIOption]
-)
-
-case class CLIOption (
-  name: String,
-  shortNames: Seq[Char],
-  descr: String,
-  default: Option[String],
-  required: Boolean
+  opts: Seq[RegisteredOpt],
+  choices: Seq[RegisteredChoice],
+  trailAgs: Seq[RegisteredTrailArg],
 )
 
 object CLICommand {
@@ -60,46 +53,14 @@ object CLICommand {
       ds.getCommandNameAndAliases.mkString(" + "),
       ds.getBanner,
       ds.getFooter,
-      ds.getSubconfigs.flatMap(fromScallopConfBase),
-      ds.getOpts.map(o => fromCliOption(o))
+      ds.registeredSubCommands.map(ds => fromDocumentedSubCommand(ds)),
+      ds.registeredOpts,
+      ds.registeredChoices,
+      ds.registeredTrailArgs,
     )
-}
-
-object CLIOption {
-  implicit def fromCliOption(o: CliOption): CLIOption = 
-    CLIOption(
-      o.name,
-      o.shortNames,
-      o.descr,
-      o.default().map(d => d.toString()),
-      o.required)
 }
 
 object CLIExport {
-
-  def printInformation(subconfigs: Seq[ScallopConfBase]) {
-    subconfigs.map(
-      _ match {
-        case ds: DocumentedSubcommand => printInformation(ds)
-        case u => Console.err.println(s"CLIExport: Unsupported type $u")
-      }
-    )
-  }
-
-  def printInformation(command: DocumentedSubcommand) {
-    println(s"command name: ${command.getCommandNameAndAliases.mkString(" + ")}")
-    println(s"\tbanner: ${command.getBanner}")
-    println(s"\tfooter: ${command.getFooter}")
-    for (o <- command.getOpts) {
-      println(s"\n\tname: ${o.name} short: ${o.shortNames.mkString(",")} descr: ${o.descr} default: ${o.default()}")
-    }
-    for (c <- command.getSubconfigs) {
-      c match {
-        case ds: DocumentedSubcommand => printInformation(ds)
-        case _ => println(s"Unsupported type ${c.toString}")
-      }
-    }
-  }
 
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
 
@@ -108,7 +69,5 @@ object CLIExport {
     val data = cli.getSubconfigs.flatMap(fromScallopConfBase)
     val str = jsonPrinter.print(data.asJson)
     println(str)
-
-    // printInformation(cli.getSubconfigs)
   }
 }

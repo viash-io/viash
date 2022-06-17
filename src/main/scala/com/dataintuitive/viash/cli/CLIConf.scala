@@ -19,92 +19,47 @@ package com.dataintuitive.viash
 
 import org.rogach.scallop.{ScallopConf, Subcommand}
 import org.rogach.scallop.ScallopConfBase
+import org.rogach.scallop.ScallopOptionGroup
+import org.rogach.scallop.ValueConverter
+import org.rogach.scallop.ScallopOption
 
-trait ViashCommand {
-  _: ScallopConf =>
-  val platform = opt[String](
-    short = 'p',
-    default = None,
-    descr =
-      "Specifies which platform amongst those specified in the config to use. " +
-      "If this is not provided, the first platform will be used. " +
-      "If no platforms are defined in the config, the native platform will be used. " +
-      "In addition, the path to a platform yaml file can also be specified.",
-    required = false
-  )
-  val config = trailArg[String](
-    descr = "A viash config file (example: config.vsh.yaml). This argument can also be a script with the config as a header.",
-    default = Some("config.vsh.yaml"),
-    required = true
-  )
-  val config_mods = opt[List[String]](
-    name = "config_mod",
-    short = 'c',
-    default = Some(Nil),
+case class RegisteredOpt (
+  name: String,
+  short: Char,
+  descr: String,
+  default: String,
+  // validate: A => Boolean = (_:A),
+  required: Boolean,
+  argName: String,
+  hidden: Boolean,
+  noshort: Boolean,
+  // group: ScallopOptionGroup,
+  `type`: String
+)
 
-    descr = "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
-  )
-}
-trait ViashNs {
-  _: ScallopConf =>
-  val query = opt[String](
-    name = "query",
-    short = 'q',
-    descr = "Filter which components get selected by name and namespace. Can be a regex. Example: \"^mynamespace/component1$\".",
-    default = None
-  )
-  val query_namespace = opt[String](
-    name = "query_namespace",
-    short = 'n',
-    descr = "Filter which namespaces get selected by namespace. Can be a regex. Example: \"^mynamespace$\".",
-    default = None
-  )
-  val query_name = opt[String](
-    name = "query_name",
-    descr = "Filter which components get selected by name. Can be a regex. Example: \"^component1\".",
-    default = None
-  )
-  val src = opt[String](
-    name = "src",
-    short = 's',
-    descr = " A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
-    default = Some("src")
-  )
-  val platform = opt[String](
-    short = 'p',
-    descr =
-      "Acts as a regular expression to filter the platform ids specified in the found config files. " +
-        "If this is not provided, all platforms will be used. " +
-        "If no platforms are defined in a config, the native platform will be used. " +
-        "In addition, the path to a platform yaml file can also be specified.",
-    default = None,
-    required = false
-  )
-  val parallel = opt[Boolean](
-    name = "parallel",
-    short = 'l',
-    default = Some(false),
-    descr = "Whether or not to run the process in parallel."
-  )
-  val config_mods = opt[List[String]](
-    name = "config_mod",
-    short = 'c',
-    default = Some(Nil),
+case class RegisteredChoice(
+  choices: Seq[String],
+  name: String,
+  short: Char,
+  descr: String,
+  default: String,
+  required: Boolean,
+  argName: String,
+  hidden: Boolean,
+  noshort: Boolean,
+  // group: ScallopOptionGroup
+)
 
-    descr = "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
-  )
-}
-trait WithTemporary {
-  _: ScallopConf =>
-  val keep = opt[String](
-    name = "keep",
-    short = 'k',
-    default = None,
-    descr = "Whether or not to keep temporary files. By default, files will be deleted if all goes well but remain when an error occurs." +
-      " By specifying --keep true, the temporary files will always be retained, whereas --keep false will always delete them." +
-      " The temporary directory can be overwritten by setting defining a VIASH_TEMP directory."
-  )
-}
+case class RegisteredTrailArg(
+  name: String,
+  descr: String,
+  // validate: A => Boolean = (_:A) => true,
+  required: Boolean ,
+  default: String,
+  hidden: Boolean,
+  // group: ScallopOptionGroup = null
+  `type`: String
+)
 
 /**
   * Wrapper class for Subcommand to expose protected members
@@ -114,8 +69,179 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
   def getCommandNameAndAliases = commandNameAndAliases
   def getBanner = builder.bann
   def getFooter = builder.foot
-  def getOpts = builder.opts
-  def getSubconfigs = subconfigs
+  // def getOpts = builder.opts
+  // def getSubconfigs = subconfigs
+  var registeredSubCommands: Seq[DocumentedSubcommand] = Nil
+  var registeredOpts: Seq[RegisteredOpt] = Nil
+  var registeredChoices: Seq[RegisteredChoice] = Nil
+  var registeredTrailArgs: Seq[RegisteredTrailArg] = Nil
+
+  import scala.reflect.runtime.universe._
+
+  override def addSubcommand(conf: Subcommand): Unit = {
+    if (conf.isInstanceOf[DocumentedSubcommand])
+      registeredSubCommands = registeredSubCommands :+ conf.asInstanceOf[DocumentedSubcommand]
+    super.addSubcommand(conf)
+  }
+
+  def registerOpt[A](
+    name: String = null,
+    short: Char = '\u0000',
+    descr: String = "",
+    default: => Option[A] = None,
+    validate: A => Boolean = (_:A) => true,
+    required: Boolean = false,
+    argName: String = "arg",
+    hidden: Boolean = false,
+    noshort: Boolean = builder.noshort,
+    group: ScallopOptionGroup = null
+  )(implicit conv:ValueConverter[A], tag: TypeTag[A]): ScallopOption[A] = {
+
+    val `type` = tag.tpe
+    val cleanName = name match {
+      case null => ""
+      case _ => name
+    }
+    
+    val registeredOpt = RegisteredOpt(cleanName, short, descr, default.toString(), required, argName, hidden, noshort, `type`.toString())
+    registeredOpts = registeredOpts :+ registeredOpt
+
+    opt(name, short, descr, default, validate, required, argName, hidden, noshort, group)
+  }
+
+  def registerChoice(
+    choices: Seq[String],
+    name: String = null,
+    short: Char = '\u0000',
+    descr: String = "",
+    default: => Option[String] = None,
+    required: Boolean = false,
+    argName: String = "arg",
+    hidden: Boolean = false,
+    noshort: Boolean = noshort,
+    group: ScallopOptionGroup = null
+  ): ScallopOption[String] = {
+
+    val cleanName = name match {
+      case null => ""
+      case _ => name
+    }
+
+    val registeredChoice = RegisteredChoice(choices, cleanName, short, descr, default.toString(), required, argName, hidden, noshort)
+    registeredChoices = registeredChoices :+ registeredChoice
+
+    choice(choices, name, short, descr, default, required, argName, hidden, noshort, group)
+  }
+
+  def registerTrailArg[A](
+    name: String = null,
+    descr: String = "",
+    validate: A => Boolean = (_:A) => true,
+    required: Boolean = true,
+    default: => Option[A] = None,
+    hidden: Boolean = false,
+    group: ScallopOptionGroup = null
+  )(implicit conv:ValueConverter[A], tag: TypeTag[A]) = {
+
+    val `type` = tag.tpe
+    val cleanName = name match {
+      case null => ""
+      case _ => name
+    }
+
+    val registeredTrailArg = RegisteredTrailArg(cleanName, descr, required, default.toString(), hidden, `type`.toString())
+    registeredTrailArgs = registeredTrailArgs :+ registeredTrailArg
+
+    trailArg[A](name, descr, validate, required, default, hidden, group)
+  }
+
+}
+
+
+trait ViashCommand {
+  _: DocumentedSubcommand =>
+  val platform = registerOpt[String](
+    short = 'p',
+    default = None,
+    descr =
+      "Specifies which platform amongst those specified in the config to use. " +
+      "If this is not provided, the first platform will be used. " +
+      "If no platforms are defined in the config, the native platform will be used. " +
+      "In addition, the path to a platform yaml file can also be specified.",
+    required = false
+  )
+  val config = registerTrailArg[String](
+    descr = "A viash config file (example: config.vsh.yaml). This argument can also be a script with the config as a header.",
+    default = Some("config.vsh.yaml"),
+    required = true
+  )
+  val config_mods = registerOpt[List[String]](
+    name = "config_mod",
+    short = 'c',
+    default = Some(Nil),
+
+    descr = "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
+  )
+}
+trait ViashNs {
+  _: DocumentedSubcommand =>
+  val query = registerOpt[String](
+    name = "query",
+    short = 'q',
+    descr = "Filter which components get selected by name and namespace. Can be a regex. Example: \"^mynamespace/component1$\".",
+    default = None
+  )
+  val query_namespace = registerOpt[String](
+    name = "query_namespace",
+    short = 'n',
+    descr = "Filter which namespaces get selected by namespace. Can be a regex. Example: \"^mynamespace$\".",
+    default = None
+  )
+  val query_name = registerOpt[String](
+    name = "query_name",
+    descr = "Filter which components get selected by name. Can be a regex. Example: \"^component1\".",
+    default = None
+  )
+  val src = registerOpt[String](
+    name = "src",
+    short = 's',
+    descr = " A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
+    default = Some("src")
+  )
+  val platform = registerOpt[String](
+    short = 'p',
+    descr =
+      "Acts as a regular expression to filter the platform ids specified in the found config files. " +
+        "If this is not provided, all platforms will be used. " +
+        "If no platforms are defined in a config, the native platform will be used. " +
+        "In addition, the path to a platform yaml file can also be specified.",
+    default = None,
+    required = false
+  )
+  val parallel = registerOpt[Boolean](
+    name = "parallel",
+    short = 'l',
+    default = Some(false),
+    descr = "Whether or not to run the process in parallel."
+  )
+  val config_mods = registerOpt[List[String]](
+    name = "config_mod",
+    short = 'c',
+    default = Some(Nil),
+
+    descr = "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
+  )
+}
+trait WithTemporary {
+  _: DocumentedSubcommand =>
+  val keep = registerOpt[String](
+    name = "keep",
+    short = 'k',
+    default = None,
+    descr = "Whether or not to keep temporary files. By default, files will be deleted if all goes well but remain when an error occurs." +
+      " By specifying --keep true, the temporary files will always be retained, whereas --keep false will always delete them." +
+      " The temporary directory can be overwritten by setting defining a VIASH_TEMP directory."
+  )
 }
 
 class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
@@ -176,29 +302,29 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |
          |Arguments:""".stripMargin)
 
-    val printMeta = opt[Boolean](
+    val printMeta = registerOpt[Boolean](
       name = "meta",
       short = 'm',
       default = Some(false),
       descr = "Print out some meta information at the end."
     )
-    val writeMeta = opt[Boolean](
+    val writeMeta = registerOpt[Boolean](
       name = "write_meta",
       short = 'w',
       default = Some(false),
       descr = "Write out some meta information to RESOURCES_DIR/viash.yaml at the end."
     )
-    val output = opt[String](
+    val output = registerOpt[String](
       descr = "Path to directory in which the executable and any resources is built to. Default: \"output/\".",
       default = Some("output/"),
       required = true
     )
-    val setup = opt[String](
+    val setup = registerOpt[String](
       name = "setup",
       default = None,
       descr = "Which setup strategy for creating the container to use [Docker Platform only]."
     )
-    val push = opt[Boolean](
+    val push = registerOpt[Boolean](
       name = "push",
       default = Some(false),
       descr = "Whether or not to push the container to a Docker registry [Docker Platform only]."
@@ -232,7 +358,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |  viash config view config.vsh.yaml
            |
            |Arguments:""".stripMargin)
-      val format = choice(
+      val format = registerChoice(
         name = "format",
         short = 'f',
         default = Some("yaml"),
@@ -269,29 +395,29 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |  viash ns build [-n nmspc] [-s src] [-t target] [-p docker] [--setup] [---push] [--parallel] [--flatten]
            |
            |Arguments:""".stripMargin)
-      val target = opt[String](
+      val target = registerOpt[String](
         name = "target",
         short = 't',
         descr = "A target directory to build the executables into. Default: target/.",
         default = Some("target")
       )
-      val setup = opt[String](
+      val setup = registerOpt[String](
         name = "setup",
         default = None,
         descr = "Which setup strategy for creating the container to use [Docker Platform only]."
       )
-      val push = opt[Boolean](
+      val push = registerOpt[Boolean](
         name = "push",
         default = Some(false),
         descr = "Whether or not to push the container to a Docker registry [Docker Platform only]."
       )
-      val writeMeta = opt[Boolean](
+      val writeMeta = registerOpt[Boolean](
         name = "write_meta",
         short = 'w',
         default = Some(false),
         descr = "Write out some meta information to RESOURCES_DIR/viash.yaml at the end."
       )
-      val flatten = opt[Boolean](
+      val flatten = registerOpt[Boolean](
         name = "flatten",
         short = 'f',
         default = Some(false),
@@ -308,12 +434,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |  viash ns test [-n nmspc] [-s src] [-p docker] [--parallel] [--tsv file.tsv] [--append]
            |
            |Arguments:""".stripMargin)
-      val tsv = opt[String](
+      val tsv = registerOpt[String](
         name = "tsv",
         short = 't',
         descr = "Path to write a summary of the test results to."
       )
-      val append = opt[Boolean](
+      val append = registerOpt[Boolean](
         name = "append",
         short = 'a',
         default = Some(false),
@@ -330,7 +456,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |  viash ns list [-n nmspc] [-s src] [-p docker]
            |
            |Arguments:""".stripMargin)
-      val format = choice(
+      val format = registerChoice(
         name = "format",
         short = 'f',
         default = Some("yaml"),
