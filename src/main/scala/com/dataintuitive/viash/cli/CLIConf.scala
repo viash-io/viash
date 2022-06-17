@@ -479,7 +479,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     shortSubcommandsHelp(true)
   }
 
-  val cliexport = new DocumentedSubcommand("cliexport") with ViashNs {
+  val cliexport = new DocumentedSubcommand("cliexport") {
     banner(
       s"""viash cliexport
           |Export CLI information to json to allow automated documentation generation
