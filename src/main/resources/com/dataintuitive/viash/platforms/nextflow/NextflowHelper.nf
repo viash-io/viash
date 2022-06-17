@@ -916,7 +916,13 @@ workflow {
     .findAll { par -> params.containsKey(par.name) }
     .collectEntries { par ->
       if (par.multiple) {
-        par_data = params[par.name].split(par.multiple_sep)
+        par_data = params[par.name]
+        if (par_data instanceof List) {
+          par_data = par_data.collect{it.split(par.multiple_sep)}.flatten()
+        } else {
+          par_data = par_data.split(par.multiple_sep)
+        }
+        // todo: does this work for non-strings?
       } else {
         par_data = [ params[par.name] ]
       }
@@ -924,7 +930,7 @@ workflow {
         par_data = par_data.collect{file(it)}.flatten()
       }
       if (!par.multiple) {
-        assert par_data.length == 1 : 
+        assert par_data.size() == 1 : 
           "Error: argument ${par.name} has too many values.\n" +
           "  Expected amount: 1. Found: ${par_data.length}"
         par_data = par_data[0]
