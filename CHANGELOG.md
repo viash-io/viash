@@ -4,6 +4,8 @@
 
 * `NextflowVdsl3Platform`: Allow both `--publish_dir` and `--publishDir` when `auto.publish = true`.
 
+* `NextflowVdsl3Platform`: Allow passing parameters with multiplicity > 1 from Nextflow CLI.
+
 ## BUG FIXES
 
 * `DockerPlatform`: Change `org.opencontainers.image.version` annotation to `functionality.version` when set.

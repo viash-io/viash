@@ -915,11 +915,21 @@ workflow {
   def args = thisFunctionality.arguments
     .findAll { par -> params.containsKey(par.name) }
     .collectEntries { par ->
-      if (par.type == "file" && par.direction == "input") {
-        [ par.name, file(params[par.name]) ]
+      if (par.multiple) {
+        par_data = params[par.name].split(par.multiple_sep)
       } else {
-        [ par.name, params[par.name] ]
+        par_data = [ params[par.name] ]
       }
+      if (par.type == "file" && par.direction == "input") {
+        par_data = par_data.collect{file(it)}.flatten()
+      }
+      if (!par.multiple) {
+        assert par_data.length == 1 : 
+          "Error: argument ${par.name} has too many values.\n" +
+          "  Expected amount: 1. Found: ${par_data.length}"
+        par_data = par_data[0]
+      }
+      [ par.name, par_data ]
     }
           
   Channel.value([ params.id, args ])
