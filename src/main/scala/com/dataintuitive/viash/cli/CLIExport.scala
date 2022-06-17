@@ -39,8 +39,6 @@ case class CLICommand (
   footer: Option[String],
   subcommands: Seq[CLICommand],
   opts: Seq[RegisteredOpt],
-  choices: Seq[RegisteredChoice],
-  trailAgs: Seq[RegisteredTrailArg],
 )
 
 object CLICommand {
@@ -55,8 +53,6 @@ object CLICommand {
       ds.getFooter,
       ds.registeredSubCommands.map(ds => fromDocumentedSubCommand(ds)),
       ds.registeredOpts,
-      ds.registeredChoices,
-      ds.registeredTrailArgs,
     )
 }
 

@@ -25,8 +25,5 @@ package object cli {
   import com.dataintuitive.viash.helpers.Circe._
   
   implicit val encodeCLICommand: Encoder.AsObject[CLICommand] = deriveConfiguredEncoder
-  implicit val encodeRegisteredOpt: Encoder.AsObject[RegisteredOpt] = deriveConfiguredEncoder
-  implicit val encodeRegisteredChoice: Encoder.AsObject[RegisteredChoice] = deriveConfiguredEncoder
-  implicit val encodeRegisteredTrailArg: Encoder.AsObject[RegisteredTrailArg] = deriveConfiguredEncoder
- 
+  implicit val encodeRegisteredOpt: Encoder.AsObject[RegisteredOpt] = deriveConfiguredEncoder 
 }

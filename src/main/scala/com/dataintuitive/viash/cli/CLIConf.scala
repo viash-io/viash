@@ -25,41 +25,55 @@ import org.rogach.scallop.ScallopOption
 
 case class RegisteredOpt (
   name: String,
-  short: Char,
-  descr: String,
-  default: String,
-  // validate: A => Boolean = (_:A),
-  required: Boolean,
-  argName: String,
-  hidden: Boolean,
-  noshort: Boolean,
-  // group: ScallopOptionGroup,
-  `type`: String
-)
-
-case class RegisteredChoice(
-  choices: Seq[String],
-  name: String,
-  short: Char,
+  short: Option[Char],
   descr: String,
   default: String,
   required: Boolean,
-  argName: String,
+  argName: Option[String],
   hidden: Boolean,
-  noshort: Boolean,
-  // group: ScallopOptionGroup
-)
+  noshort: Option[Boolean],
+  choices: Option[Seq[String]],
+  `type`: String,
+  optType: String,
+) 
 
-case class RegisteredTrailArg(
-  name: String,
-  descr: String,
-  // validate: A => Boolean = (_:A) => true,
-  required: Boolean ,
-  default: String,
-  hidden: Boolean,
-  // group: ScallopOptionGroup = null
-  `type`: String
-)
+object RegisteredOpt {
+  def opt(name: String,
+    short: Char,
+    descr: String,
+    default: String,
+    // validate: A => Boolean = (_:A),
+    required: Boolean,
+    argName: String,
+    hidden: Boolean,
+    noshort: Boolean,
+    // group: ScallopOptionGroup,
+    `type`: String
+  ) = RegisteredOpt(name, Some(short), descr, default, required, Some(argName), hidden, Some(noshort), None, `type`, "opt")
+
+  def choice(
+    choices: Seq[String],
+    name: String,
+    short: Char,
+    descr: String,
+    default: String,
+    required: Boolean,
+    argName: String,
+    hidden: Boolean,
+    noshort: Boolean,
+  ) = RegisteredOpt(name, Some(short), descr, default, required, Some(argName), hidden, Some(noshort), Some(choices), "String", "choice")
+
+  def trailArgs(
+    name: String,
+    descr: String,
+    required: Boolean,
+    default: String,
+    hidden: Boolean,
+    `type`: String
+  ) = RegisteredOpt(name, None, descr, default, required, None, hidden, None, None, `type`, "trailArgs")
+
+
+}
 
 /**
   * Wrapper class for Subcommand to expose protected members
@@ -73,8 +87,6 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
   // def getSubconfigs = subconfigs
   var registeredSubCommands: Seq[DocumentedSubcommand] = Nil
   var registeredOpts: Seq[RegisteredOpt] = Nil
-  var registeredChoices: Seq[RegisteredChoice] = Nil
-  var registeredTrailArgs: Seq[RegisteredTrailArg] = Nil
 
   import scala.reflect.runtime.universe._
 
@@ -103,9 +115,7 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       case _ => name
     }
     
-    val registeredOpt = RegisteredOpt(cleanName, short, descr, default.toString(), required, argName, hidden, noshort, `type`.toString())
-    registeredOpts = registeredOpts :+ registeredOpt
-
+    registeredOpts = registeredOpts :+ RegisteredOpt.opt(cleanName, short, descr, default.toString(), required, argName, hidden, noshort, `type`.toString())
     opt(name, short, descr, default, validate, required, argName, hidden, noshort, group)
   }
 
@@ -127,9 +137,7 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       case _ => name
     }
 
-    val registeredChoice = RegisteredChoice(choices, cleanName, short, descr, default.toString(), required, argName, hidden, noshort)
-    registeredChoices = registeredChoices :+ registeredChoice
-
+    registeredOpts = registeredOpts :+ RegisteredOpt.choice(choices, cleanName, short, descr, default.toString(), required, argName, hidden, noshort)
     choice(choices, name, short, descr, default, required, argName, hidden, noshort, group)
   }
 
@@ -149,9 +157,7 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       case _ => name
     }
 
-    val registeredTrailArg = RegisteredTrailArg(cleanName, descr, required, default.toString(), hidden, `type`.toString())
-    registeredTrailArgs = registeredTrailArgs :+ registeredTrailArg
-
+    registeredOpts = registeredOpts :+ RegisteredOpt.trailArgs(cleanName, descr, required, default.toString(), hidden, `type`.toString())
     trailArg[A](name, descr, validate, required, default, hidden, group)
   }
 
