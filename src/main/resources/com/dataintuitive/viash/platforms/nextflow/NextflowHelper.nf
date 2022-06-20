@@ -916,26 +916,26 @@ workflow {
     .findAll { par -> params.containsKey(par.name) }
     .collectEntries { par ->
       if (par.multiple) {
-        par_data = params[par.name]
-        if (par_data instanceof List) {
-          par_data = par_data.collect{it.split(par.multiple_sep)}.flatten()
+        parData = params[par.name]
+        if (parData instanceof List) {
+          parData = parData.collect{it.split(par.multiple_sep)}.flatten()
         } else {
-          par_data = par_data.split(par.multiple_sep)
+          parData = parData.split(par.multiple_sep)
         }
         // todo: does this work for non-strings?
       } else {
-        par_data = [ params[par.name] ]
+        parData = [ params[par.name] ]
       }
       if (par.type == "file" && par.direction == "input") {
-        par_data = par_data.collect{file(it)}.flatten()
+        parData = parData.collect{file(it)}.flatten()
       }
       if (!par.multiple) {
-        assert par_data.size() == 1 : 
+        assert parData.size() == 1 : 
           "Error: argument ${par.name} has too many values.\n" +
-          "  Expected amount: 1. Found: ${par_data.length}"
-        par_data = par_data[0]
+          "  Expected amount: 1. Found: ${parData.length}"
+        parData = parData[0]
       }
-      [ par.name, par_data ]
+      [ par.name, parData ]
     }
           
   Channel.value([ params.id, args ])
