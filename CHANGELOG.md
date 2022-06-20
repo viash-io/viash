@@ -1,8 +1,9 @@
 # Viash [Next version]
 
 ## MINOR CHANGES
-
 * `NextflowVdsl3Platform`: Allow both `--publish_dir` and `--publishDir` when `auto.publish = true`.
+
+* `NextflowVdsl3Platform`: Allow passing parameters with multiplicity > 1 from Nextflow CLI.
 
 * `Main`: Add `--cliexport` option which outputs the internal cli construction information to console. This is to be used to automate populating the documentation website.
 
@@ -10,6 +11,8 @@
 
 * `DockerPlatform`: Change `org.opencontainers.image.version` annotation to `functionality.version` when set.
   Additionally fixed retreaving the git tag possibly returning `fatal: No names found, cannot describe anything.` or similar.
+
+* `viash config inject`: Fix config inject when `.functionality.inputs` or `.functionality.outputs` is used.
 
 # Viash 0.5.13
 
