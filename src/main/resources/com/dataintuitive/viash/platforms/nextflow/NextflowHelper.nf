@@ -918,8 +918,8 @@ workflow {
       if (par.multiple) {
         parData = params[par.name]
         if (parData instanceof List) {
-          parData = parData.collect{it.split(par.multiple_sep)}.flatten()
-        } else {
+          parData = parData.collect{it instanceof String ? it.split(par.multiple_sep) : it }.flatten()
+        } else if (parData instanceof String) {
           parData = parData.split(par.multiple_sep)
         }
         // todo: does this work for non-strings?
@@ -927,7 +927,7 @@ workflow {
         parData = [ params[par.name] ]
       }
       if (par.type == "file" && par.direction == "input") {
-        parData = parData.collect{file(it)}.flatten()
+        parData = parData.collect{it instanceof String ? file(it) : it}.flatten()
       }
       if (!par.multiple) {
         assert parData.size() == 1 : 
