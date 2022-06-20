@@ -96,6 +96,9 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
     super.addSubcommand(conf)
   }
 
+  // We need to get the TypeTag[A], which changes the interface of 'opt', however since we have default values we can't just overload the methods.
+  // The same goes for 'trailArgs'. Not really for 'choice' but it's better to keep the same change in naming schema here too.
+
   def registerOpt[A](
     name: String = null,
     short: Char = '\u0000',
@@ -479,21 +482,19 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     shortSubcommandsHelp(true)
   }
 
-  val cliexport = new DocumentedSubcommand("cliexport") {
-    banner(
-      s"""viash cliexport
-          |Export CLI information to json to allow automated documentation generation
-          |""".stripMargin
-    )
-  }
-
+  val cliexport = opt[Boolean](
+    name = "cli_export",
+    default = Some(false),
+    descr = "Export CLI information to json to allow automated documentation generation",
+    noshort = true,
+    hidden = true
+  )
 
   addSubcommand(run)
   addSubcommand(build)
   addSubcommand(test)
   addSubcommand(namespace)
   addSubcommand(config)
-  addSubcommand(cliexport)
 
   shortSubcommandsHelp(true)
 

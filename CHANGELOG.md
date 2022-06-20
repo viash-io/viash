@@ -1,7 +1,10 @@
 # Viash [Next version]
 
 ## MINOR CHANGES
+
 * `NextflowVdsl3Platform`: Allow both `--publish_dir` and `--publishDir` when `auto.publish = true`.
+
+* `Main`: Add `--cliexport` option which outputs the internal cli construction information to console. This is to be used to automate populating the documentation website.
 
 ## BUG FIXES
 
