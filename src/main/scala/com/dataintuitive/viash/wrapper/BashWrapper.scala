@@ -406,6 +406,8 @@ object BashWrapper {
              |      ViashError '${param.name}' has be more than or equal to ${min.get}. Use "--help" to get more information on the parameters.
              |      exit 1
              |    fi
+             |  else
+             |    ViashNotice '${param.name}' specifies a minimum value but the value was not verified as \\'bc\\' is not present on the system.
              |  fi
              |""".stripMargin
         case _ => ""
@@ -417,6 +419,8 @@ object BashWrapper {
              |      ViashError '${param.name}' has to be less than or equal to ${max.get}. Use "--help" to get more information on the parameters.
              |      exit 1
              |    fi
+             |  else
+             |    ViashNotice '${param.name}' specifies a maximum value but the value was not verified as \\'bc\\' is not present on the system.
              |  fi
              |""".stripMargin
         case _ => ""
