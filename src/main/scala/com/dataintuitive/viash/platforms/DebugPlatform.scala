@@ -41,8 +41,8 @@ case class DebugPlatform(
     }
 
     // disable required arguments and set defaults for all arguments
-    val fun0 = functionality.copy(
-      arguments = functionality.allArguments.map {
+    def mapArgs(args: List[DataObject[_]]) = {
+      args.map {
         case arg if arg.required && arg.default.nonEmpty => 
           arg.copyDO(required = false)
         case arg if arg.default.isEmpty && arg.example.nonEmpty => 
@@ -59,6 +59,11 @@ case class DebugPlatform(
           arg.copy(required = false, default = One("value"), choices = Nil)
         case a => a
       }
+    }
+    val fun0 = functionality.copy(
+      inputs = mapArgs(functionality.inputs),
+      outputs = mapArgs(functionality.outputs),
+      arguments = mapArgs(functionality.arguments)
     )
 
     // create new bash script

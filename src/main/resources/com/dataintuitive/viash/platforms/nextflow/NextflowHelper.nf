@@ -439,13 +439,14 @@ def processProcessArgs(Map args) {
 
   // auto define publish, if so desired
   if (processArgs.auto.publish == true && (processArgs.directives.publishDir ?: [:]).isEmpty()) {
-    assert params.containsKey("publishDir") : 
-      "Error in module '${processArgs['key']}': if auto.publish is true, params.publishDir needs to be defined.\n" +
-      "  Example: params.transcriptsDir = \"./output/\""
+    assert params.containsKey("publishDir") || params.containsKey("publish_dir") : 
+      "Error in module '${processArgs['key']}': if auto.publish is true, params.publish_dir needs to be defined.\n" +
+      "  Example: params.transcripts_dir = \"./output/\""
+    def publishDir = params.containsKey("publish_dir") ? params.publish_dir : params.publishDir
     
     // TODO: more asserts on publishDir?
     processArgs.directives.publishDir = [[ 
-      path: params.publishDir, 
+      path: publishDir, 
       saveAs: "{ it.startsWith('.') ? null : it }", // don't publish hidden files, by default
       mode: "copy"
     ]]
@@ -453,10 +454,14 @@ def processProcessArgs(Map args) {
 
   // auto define transcript, if so desired
   if (processArgs.auto.transcript == true) {
-    assert params.containsKey("transcriptsDir") || params.containsKey("publishDir") : 
-      "Error in module '${processArgs['key']}': if auto.transcript is true, either params.transcriptsDir or params.publishDir needs to be defined.\n" +
-      "  Example: params.transcriptsDir = \"./transcripts/\""
-    def transcriptsDir = params.containsKey("transcriptsDir") ? params.transcriptsDir : params.publishDir + "/_transcripts"
+    assert params.containsKey("transcriptsDir") || params.containsKey("transcripts_dir") || params.containsKey("publishDir") || params.containsKey("publish_dir") : 
+      "Error in module '${processArgs['key']}': if auto.transcript is true, either params.transcripts_dir or params.publish_dir needs to be defined.\n" +
+      "  Example: params.transcripts_dir = \"./transcripts/\""
+    def transcriptsDir = 
+      params.containsKey("transcripts_dir") ? params.transcripts_dir : 
+      params.containsKey("transcriptsDir") ? params.transcriptsDir : 
+      params.containsKey("publish_dir") ? params.publish_dir + "/_transcripts" :
+      params.publishDir + "/_transcripts"
     def timestamp = Nextflow.getSession().getWorkflowMetadata().start.format('yyyy-MM-dd_HH-mm-ss')
     def transcriptsPublishDir = [ 
       path: "$transcriptsDir/$timestamp/\${task.process.replaceAll(':', '-')}/\${id}/", 
@@ -910,11 +915,27 @@ workflow {
   def args = thisFunctionality.arguments
     .findAll { par -> params.containsKey(par.name) }
     .collectEntries { par ->
-      if (par.type == "file" && par.direction == "input") {
-        [ par.name, file(params[par.name]) ]
+      if (par.multiple) {
+        parData = params[par.name]
+        if (parData instanceof List) {
+          parData = parData.collect{it instanceof String ? it.split(par.multiple_sep) : it }.flatten()
+        } else if (parData instanceof String) {
+          parData = parData.split(par.multiple_sep)
+        }
+        // todo: does this work for non-strings?
       } else {
-        [ par.name, params[par.name] ]
+        parData = [ params[par.name] ]
       }
+      if (par.type == "file" && par.direction == "input") {
+        parData = parData.collect{it instanceof String ? file(it) : it}.flatten()
+      }
+      if (!par.multiple) {
+        assert parData.size() == 1 : 
+          "Error: argument ${par.name} has too many values.\n" +
+          "  Expected amount: 1. Found: ${parData.length}"
+        parData = parData[0]
+      }
+      [ par.name, parData ]
     }
           
   Channel.value([ params.id, args ])
