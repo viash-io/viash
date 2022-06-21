@@ -74,7 +74,14 @@ object ViashNamespace {
     tsv: Option[String] = None,
     append: Boolean = false
   ): List[Either[(Config, ManyTestOutput), BuildStatus]] = {
-    val configs2 = if (parallel) configs.par else configs
+    // we can't currently test nextflow platforms, so exclude them from the tests
+    val testableConfigs = configs.filter(conf =>
+      conf match {
+        case Left(l) if l.platform.get.`type` == "nextflow" => false
+        case _ => true
+      })
+
+    val configs2 = if (parallel) testableConfigs.par else testableConfigs
 
     // run all the component tests
     val tsvPath = tsv.map(Paths.get(_))
