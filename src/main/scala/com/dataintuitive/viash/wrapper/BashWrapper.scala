@@ -407,7 +407,7 @@ object BashWrapper {
              |      exit 1
              |    fi
              |  else
-             |    ViashNotice '${param.name}' specifies a minimum value but the value was not verified as \\'bc\\' is not present on the system.
+             |    ViashWarning '${param.name}' specifies a minimum value but the value was not verified as \\'bc\\' is not present on the system.
              |  fi
              |""".stripMargin
         case _ => ""
@@ -420,7 +420,7 @@ object BashWrapper {
              |      exit 1
              |    fi
              |  else
-             |    ViashNotice '${param.name}' specifies a maximum value but the value was not verified as \\'bc\\' is not present on the system.
+             |    ViashWarning '${param.name}' specifies a maximum value but the value was not verified as \\'bc\\' is not present on the system.
              |  fi
              |""".stripMargin
         case _ => ""
