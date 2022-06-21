@@ -122,6 +122,8 @@ object Main {
           modifyConfig = false
         )
         ViashConfig.inject(config)
+      case Nil if (cli.cliexport()) =>
+          CLIExport.export()
       case _ =>
         Console.err.println("No subcommand was specified. See `viash --help` for more information.")
     }
