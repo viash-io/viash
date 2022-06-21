@@ -15,23 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash
+package com.dataintuitive.viash.cli
 
 import org.rogach.scallop.ScallopConfBase
-import io.circe.{Json, Printer => JsonPrinter}
-import org.rogach.scallop.Scallop
-import io.circe.Encoder
+import io.circe.{Printer => JsonPrinter}
 import io.circe.syntax.EncoderOps
-
 import com.dataintuitive.viash.helpers.Circe._
-import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
-import com.dataintuitive.viash.cli._
-import org.rogach.scallop.CliOption
-import com.dataintuitive.viash.CLICommand.fromScallopConfBase
-import com.dataintuitive.viash.CLICommand.fromDocumentedSubCommand
-
-import org.rogach.scallop.ScallopConfBase
-import cats.instances.boolean
+// import com.dataintuitive.viash.cli._
+import com.dataintuitive.viash.cli.CLICommand
 
 case class CLICommand (
   name: String,
@@ -62,8 +53,8 @@ object CLIExport {
 
   def export() {
     val cli = new CLIConf(Nil)
-    val data = cli.getSubconfigs.flatMap(fromScallopConfBase)
-    val str = jsonPrinter.print(data.asJson)
+    val data = cli.getSubconfigs.flatMap(CLICommand.fromScallopConfBase)
+    val str = jsonPrinter.print(data(0).asJson)
     println(str)
   }
 }
