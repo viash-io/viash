@@ -25,7 +25,7 @@ abstract class BooleanObject extends DataObject[Boolean] {
 
 case class BooleanObjectRegular(
   name: String,
-  alternatives: List[String] = Nil,
+  alternatives: OneOrMore[String] = Nil,
   description: Option[String] = None,
   example: OneOrMore[Boolean] = Nil,
   default: OneOrMore[Boolean] = Nil,
@@ -41,7 +41,7 @@ case class BooleanObjectRegular(
   def copyDO(
     `type`: String, 
     name: String, 
-    alternatives: List[String],
+    alternatives: OneOrMore[String],
     description: Option[String],
     example: OneOrMore[Boolean],
     default: OneOrMore[Boolean],
@@ -56,7 +56,7 @@ case class BooleanObjectRegular(
 
 case class BooleanObjectTrue(
   name: String,
-  alternatives: List[String] = Nil,
+  alternatives: OneOrMore[String] = Nil,
   description: Option[String] = None,
   direction: Direction = Input,
   `type`: String = "boolean_true"
@@ -72,7 +72,7 @@ case class BooleanObjectTrue(
   def copyDO(
     `type`: String, 
     name: String, 
-    alternatives: List[String],
+    alternatives: OneOrMore[String],
     description: Option[String],
     default: OneOrMore[Boolean],
     example: OneOrMore[Boolean],
@@ -87,7 +87,7 @@ case class BooleanObjectTrue(
 
 case class BooleanObjectFalse(
   name: String,
-  alternatives: List[String] = Nil,
+  alternatives: OneOrMore[String] = Nil,
   description: Option[String] = None,
   direction: Direction = Input,
   `type`: String = "boolean_false"
@@ -103,7 +103,7 @@ case class BooleanObjectFalse(
   def copyDO(
     `type`: String, 
     name: String, 
-    alternatives: List[String],
+    alternatives: OneOrMore[String],
     description: Option[String],
     default: OneOrMore[Boolean],
     example: OneOrMore[Boolean],

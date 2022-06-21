@@ -9,6 +9,10 @@
 
 * `viash ns`: Display overview results with X amount failed & Y amount successfully built.
 
+* `DataObject`: `.alternatives` is now a `OneOrMore[String]` instead of `List[String]`, meaning
+  you can now specify `{ type: string, name: "--foo", alternatives: "-f" }` instead of 
+  `{ type: string, name: "--foo", alternatives: [ "-f" ] }`
+
 ## BUG FIXES
 
 * `DockerPlatform`: Change `org.opencontainers.image.version` annotation to `functionality.version` when set.
