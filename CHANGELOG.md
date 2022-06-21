@@ -1,5 +1,17 @@
 # Viash [Next version]
 
+## NEW FUNCTIONALITY
+
+* `Functionality`: Allow specifying argument groups. Example:
+  ```yaml
+  functionality:
+    ...
+    argument_groups:
+      - name: First group
+        arguments: [foo, bar]
+        description: Description
+  ```
+
 ## MINOR CHANGES
 * `NextflowVdsl3Platform`: Allow both `--publish_dir` and `--publishDir` when `auto.publish = true`.
 
