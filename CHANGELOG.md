@@ -6,6 +6,8 @@
 
 * `NextflowVdsl3Platform`: Allow passing parameters with multiplicity > 1 from Nextflow CLI.
 
+* `viash ns`: Display overview results with X amount failed & Y amount successfully built.
+
 ## BUG FIXES
 
 * `DockerPlatform`: Change `org.opencontainers.image.version` annotation to `functionality.version` when set.

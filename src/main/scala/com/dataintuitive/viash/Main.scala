@@ -27,6 +27,7 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.nio.file.NoSuchFileException
 import com.dataintuitive.viash.helpers.MissingResourceFileException
+import com.dataintuitive.viash.helpers.BuildStatus._
 
 object Main {
   private val pkg = getClass.getPackage
@@ -141,7 +142,7 @@ object Main {
   def readConfigs(
     subcommand: ViashNs,
     applyPlatform: Boolean = true,
-  ): List[Config] = {
+  ): List[Either[Config, BuildStatus]] = {
     val source = subcommand.src()
     val query = subcommand.query.toOption
     val queryNamespace = subcommand.query_namespace.toOption
@@ -188,21 +189,21 @@ object Main {
 
           // if config passes regex checks, return it
           if (queryTest && nameTest && namespaceTest && confTest.functionality.enabled) {
-            Some(confTest)
+            Left(confTest)
           } else {
-            None
+            Right(Disabled)
           }
         } catch {
           case _: Exception =>
             Console.err.println(s"${Console.RED}Reading file '$file' failed${Console.RESET}")
-            None
+            Right(ParseError)
         }
 
-      if (conf1.isEmpty) {
-        Nil
+      if (conf1.isRight) {
+        List(conf1)
       } else {
 
-        if (platformStr.contains(":") || (new File(platformStr)).exists) {
+        val configs = if (platformStr.contains(":") || (new File(platformStr)).exists) {
           // platform is a file
           List(Config.read(
             configPath = file.toString,
@@ -212,7 +213,7 @@ object Main {
           ))
         } else {
           // platform is a regex for filtering the ids
-          val platIDs = conf1.get.platforms.map(_.id)
+          val platIDs = conf1.left.get.platforms.map(_.id)
 
           val filteredPlats =
             if (platIDs.isEmpty) {
@@ -232,6 +233,7 @@ object Main {
             )
           }
         }
+        configs.map(c => Left(c))
       }
     }
   }
