@@ -16,6 +16,8 @@
 
 * `viash config inject`: Fix config inject when `.functionality.inputs` or `.functionality.outputs` is used.
 
+* `DockerPlatform`: Fix inputs & outputs arguments being present twice.
+
 # Viash 0.5.13
 
 ## NEW FUNCTIONALITY

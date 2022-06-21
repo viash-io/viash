@@ -120,7 +120,7 @@ case class DockerPlatform(
 
     // add extra arguments to the functionality file for each of the volumes
     val fun2 = functionality.copy(
-      arguments = functionality.allArguments ::: dm.inputs
+      arguments = functionality.arguments ::: dm.inputs
     )
 
     // create new bash script
