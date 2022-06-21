@@ -7,6 +7,8 @@
 
 * `Main`: Add `--cliexport` option which outputs the internal cli construction information to console. This is to be used to automate populating the documentation website.
 
+* `viash ns`: Display overview results with X amount failed & Y amount successfully built.
+
 ## BUG FIXES
 
 * `DockerPlatform`: Change `org.opencontainers.image.version` annotation to `functionality.version` when set.

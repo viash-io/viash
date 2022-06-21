@@ -22,10 +22,12 @@ import com.dataintuitive.viash.ViashTest.{ManyTestOutput, TestOutput}
 import config.Config
 import helpers.IO
 import com.dataintuitive.viash.helpers.MissingResourceFileException
+import com.dataintuitive.viash.helpers.BuildStatus._
+import java.nio.file.Path
 
 object ViashNamespace {
   def build(
-    configs: List[Config],
+    configs: List[Either[Config, BuildStatus]],
     target: String,
     setup: Option[String] = None,
     push: Boolean = false,
@@ -35,36 +37,43 @@ object ViashNamespace {
   ) {
     val configs2 = if (parallel) configs.par else configs
 
-    configs2.foreach { conf =>
-      val funName = conf.functionality.name
-      val platformId = conf.platform.get.id
-      val out =
-        if (!flatten) {
-          conf.functionality.namespace
-            .map( ns => target + s"/$platformId/$ns/$funName").getOrElse(target + s"/$platformId/$funName")
-        } else {
-          target
+    val results = configs2.map { config =>
+      config match {
+        case Right(_) => config
+        case Left(conf) =>
+          val funName = conf.functionality.name
+          val platformId = conf.platform.get.id
+          val out =
+            if (!flatten) {
+              conf.functionality.namespace
+                .map( ns => target + s"/$platformId/$ns/$funName").getOrElse(target + s"/$platformId/$funName")
+            } else {
+              target
+            }
+          val namespaceOrNothing = conf.functionality.namespace.map( s => "(" + s + ")").getOrElse("")
+          println(s"Exporting $funName $namespaceOrNothing =$platformId=> $out")
+          ViashBuild(
+            config = conf,
+            output = out,
+            namespace = conf.functionality.namespace,
+            setup = setup,
+            push = push,
+            writeMeta = writeMeta
+          )
+          Right(helpers.BuildStatus.Success)
         }
-      val namespaceOrNothing = conf.functionality.namespace.map( s => "(" + s + ")").getOrElse("")
-      println(s"Exporting $funName $namespaceOrNothing =$platformId=> $out")
-      ViashBuild(
-        config = conf,
-        output = out,
-        namespace = conf.functionality.namespace,
-        setup = setup,
-        push = push,
-        writeMeta = writeMeta
-      )
-    }
+      }
+
+    printResults(results.map(r => r.fold(fa => helpers.BuildStatus.Success, fb => fb)).toList)
   }
 
   def test(
-    configs: List[Config],
+    configs: List[Either[Config, BuildStatus]],
     parallel: Boolean = false,
     keepFiles: Option[Boolean] = None,
     tsv: Option[String] = None,
     append: Boolean = false
-  ): List[(Config, ManyTestOutput)] = {
+  ): List[Either[(Config, ManyTestOutput), BuildStatus]] = {
     val configs2 = if (parallel) configs.par else configs
 
     // run all the component tests
@@ -111,66 +120,91 @@ object ViashNamespace {
         Console.RESET
       )
 
-      configs2.map { conf =>
-        // get attributes
-        val namespace = conf.functionality.namespace.getOrElse("")
-        val funName = conf.functionality.name
-        val platName = conf.platform.get.id
+      val results = configs2.map { config =>
+        config match {
+          case Right(status) => Right(status)
+          case Left(conf) =>
+            // get attributes
+            val namespace = conf.functionality.namespace.getOrElse("")
+            val funName = conf.functionality.name
+            val platName = conf.platform.get.id
 
-        // print start message
-        printf(s"%s%20s %20s %20s %20s %9s %8s %20s%s\n", "", namespace, funName, platName, "start", "", "", "", Console.RESET)
+            // print start message
+            printf(s"%s%20s %20s %20s %20s %9s %8s %20s%s\n", "", namespace, funName, platName, "start", "", "", "", Console.RESET)
 
-        // run tests
-        // TODO: it would actually be great if this component could subscribe to testresults messages
+            // run tests
+            // TODO: it would actually be great if this component could subscribe to testresults messages
 
-        val ManyTestOutput(setupRes, testRes) = try {
-          ViashTest(
-            config = conf,
-            keepFiles = keepFiles,
-            quiet = true,
-            parentTempPath = Some(parentTempPath)
-          )
-        } catch {
-          case e: MissingResourceFileException => 
-            System.err.println(s"${Console.YELLOW}viash ns: ${e.getMessage}${Console.RESET}")
-            ManyTestOutput(None, List())
-        }
-
-        val testResults =
-          if (setupRes.isDefined && setupRes.get.exitValue > 0) {
-            Nil
-          } else if (testRes.isEmpty) {
-            List(TestOutput("tests", -1, "no tests found", "", 0L))
-          } else {
-            testRes
-          }
-
-        // print messages
-        val results = setupRes.toList ::: testResults
-        for (test ← results) {
-          val (col, msg) = {
-            if (test.exitValue > 0) {
-              (Console.RED, "ERROR")
-            } else if (test.exitValue < 0) {
-              (Console.YELLOW, "MISSING")
-            } else {
-              (Console.GREEN, "SUCCESS")
+            val ManyTestOutput(setupRes, testRes) = try {
+              ViashTest(
+                config = conf,
+                keepFiles = keepFiles,
+                quiet = true,
+                parentTempPath = Some(parentTempPath)
+              )
+            } catch {
+              case e: MissingResourceFileException => 
+                System.err.println(s"${Console.YELLOW}viash ns: ${e.getMessage}${Console.RESET}")
+                ManyTestOutput(None, List())
             }
+
+            val testResults =
+              if (setupRes.isDefined && setupRes.get.exitValue > 0) {
+                Nil
+              } else if (testRes.isEmpty) {
+                List(TestOutput("tests", -1, "no tests found", "", 0L))
+              } else {
+                testRes
+              }
+
+            // print messages
+            val results = setupRes.toList ::: testResults
+            for (test ← results) {
+              val (col, msg) = {
+                if (test.exitValue > 0) {
+                  (Console.RED, "ERROR")
+                } else if (test.exitValue < 0) {
+                  (Console.YELLOW, "MISSING")
+                } else {
+                  (Console.GREEN, "SUCCESS")
+                }
+              }
+
+              // print message
+              printf(s"%s%20s %20s %20s %20s %9s %8s %20s%s\n", col, namespace, funName, platName, test.name, test.exitValue, test.duration, msg, Console.RESET)
+
+              // write to tsv
+              tsvWriter.foreach{writer =>
+                writer.append(List(namespace, funName, platName, test.name, test.exitValue, test.duration, msg).mkString("\t") + sys.props("line.separator"))
+                writer.flush()
+              }
+            }
+
+            // return output
+            Left((conf, ManyTestOutput(setupRes, testRes)))
           }
 
-          // print message
-          printf(s"%s%20s %20s %20s %20s %9s %8s %20s%s\n", col, namespace, funName, platName, test.name, test.exitValue, test.duration, msg, Console.RESET)
-
-          // write to tsv
-          tsvWriter.foreach{writer =>
-            writer.append(List(namespace, funName, platName, test.name, test.exitValue, test.duration, msg).mkString("\t") + sys.props("line.separator"))
-            writer.flush()
-          }
-        }
-
-        // return output
-        (conf, ManyTestOutput(setupRes, testRes))
       }.toList
+
+      val testResults = results.flatMap(r => r.fold(fa => 
+        {
+          val setupRes = fa._2.setup
+          val testRes = fa._2.tests
+          val testStatus =
+              if (setupRes.isDefined && setupRes.get.exitValue > 0) {
+                Nil
+              } else if (testRes.isEmpty) {
+                List(TestMissing)
+              } else {
+                testRes.map(to => if (to.exitValue == 0) Success else TestError)
+              }
+          val setupStatus = setupRes.toList.map(to => if (to.exitValue == 0) Success else BuildError)
+          setupStatus ::: testStatus
+        },
+        fb => List(fb)))
+      printResults(testResults)
+
+      results
     } catch {
       case e: Exception => 
         println(e.getMessage())
@@ -187,7 +221,34 @@ object ViashNamespace {
     }
   }
 
-  def list(configs: List[Config], format: String = "yaml") {
-    ViashConfig.viewMany(configs, format)
+  def list(configs: List[Either[Config, BuildStatus]], format: String = "yaml") {
+    val configs2 = configs.flatMap(_.left.toOption)
+    ViashConfig.viewMany(configs2, format)
+
+    printResults(configs.map(_.fold(fa => Success, fb => fb)))
+  }
+
+  def printResults(statuses: Seq[BuildStatus]) {
+    val successes = statuses.count(_ == helpers.BuildStatus.Success)
+
+    val messages = List(
+      (helpers.BuildStatus.ParseError, Console.RED, "configs encountered parse errors"),
+      (helpers.BuildStatus.Disabled, Console.YELLOW, "configs were disabled"),
+      (helpers.BuildStatus.BuildError, Console.RED, "configs built failed"),
+      (helpers.BuildStatus.TestError, Console.RED, "tests failed"),
+      (helpers.BuildStatus.TestMissing, Console.YELLOW, "tests missing"),
+      (helpers.BuildStatus.Success, Console.GREEN, "configs built/tested successfully"))
+
+    if (successes != statuses.length) {
+      println(s"${Console.YELLOW}Not all configs built or tested successfully${Console.RESET}")
+      for (message <- messages) {
+        val count = statuses.count(_ == message._1)
+        if (count > 0)
+          println(s"  ${message._2}$count/${statuses.length} ${message._3}${Console.RESET}")
+      }
+    }
+    else {
+      println(s"${Console.GREEN}All ${successes} configs built or tested successfully${Console.RESET}")
+    }
   }
 }
