@@ -59,7 +59,8 @@ case class DockerPlatform(
   yum: Option[YumRequirements] = None,
   r: Option[RRequirements] = None,
   python: Option[PythonRequirements] = None,
-  docker: Option[DockerRequirements] = None
+  docker: Option[DockerRequirements] = None,
+  test_setup: List[Requirements] = Nil
 ) extends Platform {
   override val hasSetup = true
 
@@ -83,7 +84,7 @@ case class DockerPlatform(
   }
 
 
-  def modifyFunctionality(config: Config): Functionality = {
+  def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
     val functionality = config.functionality
     // collect docker args
     val dockerArgs = "-i --rm" +
@@ -92,7 +93,7 @@ case class DockerPlatform(
       { if (privileged) " --privileged" else "" }
 
     // create setup
-    val (effectiveID, setupMods) = processDockerSetup(functionality, config.info)
+    val (effectiveID, setupMods) = processDockerSetup(functionality, config.info, testing)
 
     // generate automount code
     val dmVol = processDockerVolumes(functionality)
@@ -138,7 +139,7 @@ case class DockerPlatform(
     )
   }
 
-  private def processDockerSetup(functionality: Functionality, info: Option[Info]) = {
+  private def processDockerSetup(functionality: Functionality, info: Option[Info], testing: Boolean) = {
     // construct labels from metadata
     val opencontainers_image_authors = functionality.authors match {
       case Nil => None
@@ -165,7 +166,11 @@ case class DockerPlatform(
     val version = opencontainers_image_version.map(v => s"""org.opencontainers.image.version="$v"""").toList
     val labelReq = DockerRequirements(label = authors ::: descr ::: created ::: imageSource ::: revision ::: version)
 
-    val requirements2 = requirements ::: List(labelReq)
+    val setupRequirements = testing match {
+      case true => test_setup
+      case _ => Nil
+    }
+    val requirements2 = requirements ::: setupRequirements ::: List(labelReq)
 
     // get dependencies
     val runCommands = requirements2.flatMap(_.dockerCommands)

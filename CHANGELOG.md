@@ -30,6 +30,11 @@
 * `NextflowVdsl3Platform`: Allow overriding the container registry of all Viash components by 
   setting the `params.override_container_registry` value. Only works for auto-derived image names.
 
+## MAJOR CHANGES
+
+* `Functionality`: renamed `tests` to `test_resources`.
+  Backwards compatibility provided but a notification message is displayed on the console.
+
 ## MINOR CHANGES
 
 * `Functionality` and `viash ns`: Added `.enabled` in functionality, set to `true` by default.
@@ -51,6 +56,9 @@
 * `NextflowVdsl3Platform`: Fix escaping of triple single quotes.
 
 * `NextflowVdsl3Platform`: Also apply auto.simplifyInput to Lists.
+
+* `DockerPlatform`: added a `test_setup` that allows adding apt/apk/... setup requirements.
+  These are only executed when running tests.
 
 # Viash 0.5.12
 

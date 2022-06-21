@@ -47,7 +47,7 @@ functionality:
   resources:
     - type: javascript_script
       path: ./code.js
-  tests:
+  test_resources:
     - type: bash_script
       path: tests/check_outputs.sh
 platforms:

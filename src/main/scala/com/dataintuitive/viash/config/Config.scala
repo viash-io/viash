@@ -64,13 +64,13 @@ object Config {
 
     // make paths absolute
     val resources = config.functionality.resources.map(_.copyWithAbsolutePath(uri))
-    val tests = config.functionality.tests.map(_.copyWithAbsolutePath(uri))
+    val tests = config.functionality.test_resources.map(_.copyWithAbsolutePath(uri))
 
     // copy resources with updated paths into config and return
     config.copy(
       functionality = config.functionality.copy(
         resources = resources,
-        tests = tests
+        test_resources = tests
       )
     )
   }
@@ -224,7 +224,7 @@ object Config {
         conf2
       } else {
         conf2.copy(
-          functionality = pl.modifyFunctionality(conf2)
+          functionality = pl.modifyFunctionality(conf2, false)
         )
       }
     

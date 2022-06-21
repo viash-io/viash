@@ -112,7 +112,7 @@ object ViashTest {
     val consoleLine = "===================================================================="
 
     // build regular executable
-    val buildFun = platform.modifyFunctionality(config)
+    val buildFun = platform.modifyFunctionality(config, true)
     val buildDir = dir.resolve("build_executable")
     Files.createDirectories(buildDir)
     try {
@@ -168,10 +168,10 @@ object ViashTest {
     }
 
     // generate executable for native platform
-    val exe = NativePlatform().modifyFunctionality(config).resources.head
+    val exe = NativePlatform().modifyFunctionality(config, true).resources.head
 
     // fetch tests
-    val tests = fun.tests
+    val tests = fun.test_resources
 
     val testResults = tests.filter(_.isInstanceOf[Script]).map {
       case test: Script if test.read.isEmpty =>
@@ -194,7 +194,7 @@ object ViashTest {
             resources = List(test),
             set_wd_to_resources_dir = true
           )
-        ))
+        ), true)
         val testBash = BashScript(
           dest = Some(test.filename),
           text = funOnlyTest.resources.head.text

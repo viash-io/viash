@@ -33,7 +33,7 @@ case class Functionality(
   resources: List[Resource] = Nil,
   description: Option[String] = None,
   usage: Option[String] = None,
-  tests: List[Resource] = Nil,
+  test_resources: List[Resource] = Nil,
   info: Map[String, String] = Map.empty[String, String],
 
   // dummy arguments are used for handling extra directory mounts in docker
