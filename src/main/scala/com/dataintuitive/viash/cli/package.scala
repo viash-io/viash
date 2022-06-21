@@ -24,6 +24,6 @@ import org.rogach.scallop.CliOption
 package object cli {
   import com.dataintuitive.viash.helpers.Circe._
   
-  implicit val encodeCLICommand: Encoder.AsObject[CLICommand] = deriveConfiguredEncoder
+  implicit val encodeRegisteredCommand: Encoder.AsObject[RegisteredCommand] = deriveConfiguredEncoder
   implicit val encodeRegisteredOpt: Encoder.AsObject[RegisteredOpt] = deriveConfiguredEncoder 
 }
