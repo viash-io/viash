@@ -56,7 +56,7 @@ case class NextflowLegacyPlatform(
 
   private val nativePlatform = NativePlatform(id = id)
 
-  def modifyFunctionality(config: Config): Functionality = {
+  def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
     val functionality = config.functionality
     import NextFlowUtils._
     implicit val fun: Functionality = functionality
@@ -150,7 +150,7 @@ case class NextflowLegacyPlatform(
     )
 
     // fetch test information
-    val tests = functionality.tests
+    val tests = functionality.test_resources
     val testPaths = tests.map(test => test.path.getOrElse("/dev/null"))
     val testScript: List[String] = {
         tests.flatMap{
@@ -652,7 +652,7 @@ case class NextflowLegacyPlatform(
       case None => Nil
       case Some(_: Executable) => Nil
       case Some(_: Script) =>
-        nativePlatform.modifyFunctionality(config).resources
+        nativePlatform.modifyFunctionality(config, false).resources
     }
 
     functionality.copy(

@@ -22,7 +22,7 @@ import com.dataintuitive.viash.helpers.Circe.OneOrMore
 
 case class FileObject(
   name: String,
-  alternatives: List[String] = Nil,
+  alternatives: OneOrMore[String] = Nil,
   description: Option[String] = None,
   example: OneOrMore[Path] = Nil,
   default: OneOrMore[Path] = Nil,
@@ -36,7 +36,7 @@ case class FileObject(
   def copyDO(
     `type`: String, 
     name: String, 
-    alternatives: List[String],
+    alternatives: OneOrMore[String],
     description: Option[String],
     example: OneOrMore[Path],
     default: OneOrMore[Path],

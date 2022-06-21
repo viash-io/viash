@@ -20,7 +20,7 @@ functionality:
   resources:
     - type: python_script
       path: code.py
-  tests:
+  test_resources:
     - type: bash_script
       path: test.sh
 platforms:

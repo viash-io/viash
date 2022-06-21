@@ -1,10 +1,18 @@
 # Viash [Next version]
 
 ## MINOR CHANGES
-
 * `NextflowVdsl3Platform`: Allow both `--publish_dir` and `--publishDir` when `auto.publish = true`.
 
 * `NextflowVdsl3Platform`: Allow passing parameters with multiplicity > 1 from Nextflow CLI.
+
+* `Main`: Added `viash --cli_export` which outputs the internal cli construction information 
+  to console. This is to be used to automate populating the documentation website.
+
+* `viash ns`: Display overview results with X amount failed & Y amount successfully built.
+
+* `DataObject`: `.alternatives` is now a `OneOrMore[String]` instead of `List[String]`, meaning
+  you can now specify `{ type: string, name: "--foo", alternatives: "-f" }` instead of 
+  `{ type: string, name: "--foo", alternatives: [ "-f" ] }`
 
 ## BUG FIXES
 
@@ -15,12 +23,19 @@
 
 * `BashWrapper`: Don't add `bc` as dependency. Only perform integer/float min/max checks when bc is available, otherwise ignore.
 
+* `DockerPlatform`: Fix inputs & outputs arguments being present twice.
+
 # Viash 0.5.13
 
 ## NEW FUNCTIONALITY
 
 * `NextflowVdsl3Platform`: Allow overriding the container registry of all Viash components by 
   setting the `params.override_container_registry` value. Only works for auto-derived image names.
+
+## MAJOR CHANGES
+
+* `Functionality`: renamed `tests` to `test_resources`.
+  Backwards compatibility provided but a notification message is displayed on the console.
 
 ## MINOR CHANGES
 
@@ -43,6 +58,9 @@
 * `NextflowVdsl3Platform`: Fix escaping of triple single quotes.
 
 * `NextflowVdsl3Platform`: Also apply auto.simplifyInput to Lists.
+
+* `DockerPlatform`: added a `test_setup` that allows adding apt/apk/... setup requirements.
+  These are only executed when running tests.
 
 # Viash 0.5.12
 

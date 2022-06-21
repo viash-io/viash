@@ -22,7 +22,7 @@ import com.dataintuitive.viash.helpers.Circe.OneOrMore
 abstract class DataObject[Type] {
   val `type`: String
   val name: String
-  val alternatives: List[String]
+  val alternatives: OneOrMore[String]
   val description: Option[String]
   val example: OneOrMore[Type]
   val default: OneOrMore[Type]
@@ -57,7 +57,7 @@ abstract class DataObject[Type] {
   def copyDO(
     `type`: String = this.`type`,
     name: String = this.name,
-    alternatives: List[String] = this.alternatives,
+    alternatives: OneOrMore[String] = this.alternatives,
     description: Option[String] = this.description,
     example: OneOrMore[Type] = this.example,
     default: OneOrMore[Type] = this.default,

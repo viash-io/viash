@@ -34,7 +34,7 @@ case class DebugPlatform(
   `type`: String = "debug",
   path: String
 ) extends Platform {
-  def modifyFunctionality(config: Config): Functionality = {
+  def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
     val functionality = config.functionality
     if (functionality.mainScript.isEmpty) {
       throw new RuntimeException("Can't generate a debug platform when there is no script.")

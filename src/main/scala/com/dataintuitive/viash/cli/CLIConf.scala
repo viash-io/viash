@@ -15,13 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash
+package com.dataintuitive.viash.cli
 
 import org.rogach.scallop.{ScallopConf, Subcommand}
+import org.rogach.scallop.ScallopConfBase
+import org.rogach.scallop.ScallopOptionGroup
+import org.rogach.scallop.ValueConverter
+import org.rogach.scallop.ScallopOption
+import com.dataintuitive.viash.Main
+
 
 trait ViashCommand {
-  _: ScallopConf =>
-  val platform = opt[String](
+  _: DocumentedSubcommand =>
+  val platform = registerOpt[String](
     short = 'p',
     default = None,
     descr =
@@ -31,12 +37,12 @@ trait ViashCommand {
       "In addition, the path to a platform yaml file can also be specified.",
     required = false
   )
-  val config = trailArg[String](
+  val config = registerTrailArg[String](
     descr = "A viash config file (example: config.vsh.yaml). This argument can also be a script with the config as a header.",
     default = Some("config.vsh.yaml"),
     required = true
   )
-  val config_mods = opt[List[String]](
+  val config_mods = registerOpt[List[String]](
     name = "config_mod",
     short = 'c',
     default = Some(Nil),
@@ -45,31 +51,31 @@ trait ViashCommand {
   )
 }
 trait ViashNs {
-  _: ScallopConf =>
-  val query = opt[String](
+  _: DocumentedSubcommand =>
+  val query = registerOpt[String](
     name = "query",
     short = 'q',
     descr = "Filter which components get selected by name and namespace. Can be a regex. Example: \"^mynamespace/component1$\".",
     default = None
   )
-  val query_namespace = opt[String](
+  val query_namespace = registerOpt[String](
     name = "query_namespace",
     short = 'n',
     descr = "Filter which namespaces get selected by namespace. Can be a regex. Example: \"^mynamespace$\".",
     default = None
   )
-  val query_name = opt[String](
+  val query_name = registerOpt[String](
     name = "query_name",
     descr = "Filter which components get selected by name. Can be a regex. Example: \"^component1\".",
     default = None
   )
-  val src = opt[String](
+  val src = registerOpt[String](
     name = "src",
     short = 's',
     descr = " A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
     default = Some("src")
   )
-  val platform = opt[String](
+  val platform = registerOpt[String](
     short = 'p',
     descr =
       "Acts as a regular expression to filter the platform ids specified in the found config files. " +
@@ -79,13 +85,13 @@ trait ViashNs {
     default = None,
     required = false
   )
-  val parallel = opt[Boolean](
+  val parallel = registerOpt[Boolean](
     name = "parallel",
     short = 'l',
     default = Some(false),
     descr = "Whether or not to run the process in parallel."
   )
-  val config_mods = opt[List[String]](
+  val config_mods = registerOpt[List[String]](
     name = "config_mod",
     short = 'c',
     default = Some(Nil),
@@ -94,8 +100,8 @@ trait ViashNs {
   )
 }
 trait WithTemporary {
-  _: ScallopConf =>
-  val keep = opt[String](
+  _: DocumentedSubcommand =>
+  val keep = registerOpt[String](
     name = "keep",
     short = 'k',
     default = None,
@@ -106,6 +112,8 @@ trait WithTemporary {
 }
 
 class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
+  def getSubconfigs = subconfigs
+ 
   version(s"${Main.name} ${Main.version} (c) 2020 Data Intuitive")
 
   appendDefaultToDescription = true
@@ -132,7 +140,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
        |
        |Arguments:""".stripMargin)
 
-  val run = new Subcommand("run") with ViashCommand with WithTemporary {
+  val run = new DocumentedSubcommand("run") with ViashCommand with WithTemporary {
     banner(
       s"""viash run
          |Executes a viash component from the provided viash config file. viash generates a temporary executable and immediately executes it with the given parameters.
@@ -152,7 +160,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |  viash run config.vsh.yaml""".stripMargin)
   }
 
-  val build = new Subcommand("build") with ViashCommand {
+  val build = new DocumentedSubcommand("build") with ViashCommand {
     banner(
       s"""viash build
          |Build an executable from the provided viash config file.
@@ -162,36 +170,36 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |
          |Arguments:""".stripMargin)
 
-    val printMeta = opt[Boolean](
+    val printMeta = registerOpt[Boolean](
       name = "meta",
       short = 'm',
       default = Some(false),
       descr = "Print out some meta information at the end."
     )
-    val writeMeta = opt[Boolean](
+    val writeMeta = registerOpt[Boolean](
       name = "write_meta",
       short = 'w',
       default = Some(false),
       descr = "Write out some meta information to RESOURCES_DIR/viash.yaml at the end."
     )
-    val output = opt[String](
+    val output = registerOpt[String](
       descr = "Path to directory in which the executable and any resources is built to. Default: \"output/\".",
       default = Some("output/"),
       required = true
     )
-    val setup = opt[String](
+    val setup = registerOpt[String](
       name = "setup",
       default = None,
       descr = "Which setup strategy for creating the container to use [Docker Platform only]."
     )
-    val push = opt[Boolean](
+    val push = registerOpt[Boolean](
       name = "push",
       default = Some(false),
       descr = "Whether or not to push the container to a Docker registry [Docker Platform only]."
     )
   }
 
-  val test = new Subcommand("test") with ViashCommand with WithTemporary {
+  val test = new DocumentedSubcommand("test") with ViashCommand with WithTemporary {
     banner(
       s"""viash test
          |Test the component using the tests defined in the viash config file.
@@ -208,8 +216,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |  viash run meta.vsh.yaml""".stripMargin)
   }
 
-  val config = new Subcommand("config") {
-    val view = new Subcommand("view") with ViashCommand {
+  val config = new DocumentedSubcommand("config") {
+    val view = new DocumentedSubcommand("view") with ViashCommand {
       banner(
         s"""viash config view
            |View the config file after parsing.
@@ -218,7 +226,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |  viash config view config.vsh.yaml
            |
            |Arguments:""".stripMargin)
-      val format = choice(
+      val format = registerChoice(
         name = "format",
         short = 'f',
         default = Some("yaml"),
@@ -226,7 +234,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         descr = "Which output format to use."
       )
     }
-    val inject = new Subcommand("inject") with ViashCommand {
+    val inject = new DocumentedSubcommand("inject") with ViashCommand {
       banner(
         s"""viash config inject
            |Inject a Viash header into the main script of a Viash component.
@@ -244,9 +252,9 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     shortSubcommandsHelp(true)
   }
 
-  val namespace = new Subcommand("ns") {
+  val namespace = new DocumentedSubcommand("ns") {
 
-    val build = new Subcommand("build") with ViashNs{
+    val build = new DocumentedSubcommand("build") with ViashNs{
       banner(
         s"""viash ns build
            |Build a namespace from many viash config files.
@@ -255,29 +263,29 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |  viash ns build [-n nmspc] [-s src] [-t target] [-p docker] [--setup] [---push] [--parallel] [--flatten]
            |
            |Arguments:""".stripMargin)
-      val target = opt[String](
+      val target = registerOpt[String](
         name = "target",
         short = 't',
         descr = "A target directory to build the executables into. Default: target/.",
         default = Some("target")
       )
-      val setup = opt[String](
+      val setup = registerOpt[String](
         name = "setup",
         default = None,
         descr = "Which setup strategy for creating the container to use [Docker Platform only]."
       )
-      val push = opt[Boolean](
+      val push = registerOpt[Boolean](
         name = "push",
         default = Some(false),
         descr = "Whether or not to push the container to a Docker registry [Docker Platform only]."
       )
-      val writeMeta = opt[Boolean](
+      val writeMeta = registerOpt[Boolean](
         name = "write_meta",
         short = 'w',
         default = Some(false),
         descr = "Write out some meta information to RESOURCES_DIR/viash.yaml at the end."
       )
-      val flatten = opt[Boolean](
+      val flatten = registerOpt[Boolean](
         name = "flatten",
         short = 'f',
         default = Some(false),
@@ -285,7 +293,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
     }
 
-    val test = new Subcommand("test") with ViashNs with WithTemporary {
+    val test = new DocumentedSubcommand("test") with ViashNs with WithTemporary {
       banner(
         s"""viash ns test
            |Test a namespace containing many viash config files.
@@ -294,12 +302,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |  viash ns test [-n nmspc] [-s src] [-p docker] [--parallel] [--tsv file.tsv] [--append]
            |
            |Arguments:""".stripMargin)
-      val tsv = opt[String](
+      val tsv = registerOpt[String](
         name = "tsv",
         short = 't',
         descr = "Path to write a summary of the test results to."
       )
-      val append = opt[Boolean](
+      val append = registerOpt[Boolean](
         name = "append",
         short = 'a',
         default = Some(false),
@@ -307,7 +315,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
     }
 
-    val list = new Subcommand("list") with ViashNs {
+    val list = new DocumentedSubcommand("list") with ViashNs {
       banner(
         s"""viash ns list
            |List a namespace containing many viash config files.
@@ -316,7 +324,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |  viash ns list [-n nmspc] [-s src] [-p docker]
            |
            |Arguments:""".stripMargin)
-      val format = choice(
+      val format = registerChoice(
         name = "format",
         short = 'f',
         default = Some("yaml"),
@@ -332,6 +340,14 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
 
     shortSubcommandsHelp(true)
   }
+
+  val cliexport = opt[Boolean](
+    name = "cli_export",
+    default = Some(false),
+    descr = "Export CLI information to json to allow automated documentation generation",
+    noshort = true,
+    hidden = true
+  )
 
   addSubcommand(run)
   addSubcommand(build)

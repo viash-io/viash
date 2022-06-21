@@ -56,7 +56,7 @@ class MainBuildAuxiliaryDockerResourceCopying extends FunSuite with BeforeAndAft
       ("resource_folder/resource_L2/resource_L2_1.txt", "63165187f791a8dfff628ef8090e56ff"),
       ("target_folder/relocated_file_1.txt", "bc9171172c4723589a247f99b838732d"),
       ("target_folder/relocated_file_2.txt", "51954bf10062451e683121e58d858417"),
-      ("target_folder/relocated_file_3.txt", "929b27b8f17561fbc38cdcb9ff340472"),
+      ("target_folder/relocated_file_3.txt", "72e1eb986908527057e9dbd465ddd799"),
       ("resource3.txt", "aa2037b3d308bcb6a78a3d4fbf04b297"),
       ("target_folder/relocated_file_4.txt", "aa2037b3d308bcb6a78a3d4fbf04b297")
     )

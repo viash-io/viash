@@ -45,7 +45,7 @@
 #'   - name: "multiple_pos"
 #'     type: string
 #'     multiple: true
-#'   tests:
+#'   test_resources:
 #'   - type: r_script
 #'     path: tests/check_outputs.R
 #' platforms:

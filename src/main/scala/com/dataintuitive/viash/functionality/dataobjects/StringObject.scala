@@ -21,7 +21,7 @@ import com.dataintuitive.viash.helpers.Circe.OneOrMore
 
 case class StringObject(
   name: String,
-  alternatives: List[String] = Nil,
+  alternatives: OneOrMore[String] = Nil,
   description: Option[String] = None,
   example: OneOrMore[String] = Nil,
   default: OneOrMore[String] = Nil,
@@ -35,7 +35,7 @@ case class StringObject(
   def copyDO(
     `type`: String, 
     name: String, 
-    alternatives: List[String],
+    alternatives: OneOrMore[String],
     description: Option[String],
     example: OneOrMore[String],
     default: OneOrMore[String],

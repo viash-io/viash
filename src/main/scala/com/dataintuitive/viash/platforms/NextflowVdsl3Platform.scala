@@ -49,7 +49,7 @@ case class NextflowVdsl3Platform(
     Bash.escape(txt, singleQuote = true, newline = true, backtick = false)
   }
 
-  def modifyFunctionality(config: Config): Functionality = {
+  def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
     val functionality = config.functionality
     val condir = containerDirective(config)
 
