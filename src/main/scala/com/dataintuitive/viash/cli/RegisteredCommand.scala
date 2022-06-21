@@ -22,14 +22,25 @@ import io.circe.{Printer => JsonPrinter}
 import io.circe.syntax.EncoderOps
 import com.dataintuitive.viash.helpers.Circe._
 
+case class RegisteredCommand (
+  name: String,
+  banner: Option[String],
+  footer: Option[String],
+  subcommands: Seq[RegisteredCommand],
+  opts: Seq[RegisteredOpt],
+)
 
-object CLIExport {
-  private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
-
-  def export() {
-    val cli = new CLIConf(Nil)
-    val data = cli.getSubconfigs.flatMap(RegisteredCommand.maybeWrap)
-    val str = jsonPrinter.print(data(0).asJson)
-    println(str)
+object RegisteredCommand {
+  def maybeWrap(scb: ScallopConfBase): Option[RegisteredCommand] = scb match {
+    case dc: DocumentedSubcommand => Option(wrap(dc))
+    case _ => None
   }
+  def wrap(ds: DocumentedSubcommand): RegisteredCommand = 
+    RegisteredCommand(
+      name = ds.getCommandNameAndAliases.mkString(" + "),
+      banner = ds.getBanner,
+      footer = ds.getFooter,
+      subcommands = ds.registeredSubCommands.map(ds => wrap(ds)),
+      opts = ds.registeredOpts,
+    )
 }
