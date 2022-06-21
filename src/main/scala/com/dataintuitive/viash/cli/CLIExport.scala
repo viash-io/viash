@@ -29,7 +29,7 @@ object CLIExport {
   def export() {
     val cli = new CLIConf(Nil)
     val data = cli.getSubconfigs.flatMap(RegisteredCommand.maybeWrap)
-    val str = jsonPrinter.print(data(0).asJson)
+    val str = jsonPrinter.print(data.asJson)
     println(str)
   }
 }
