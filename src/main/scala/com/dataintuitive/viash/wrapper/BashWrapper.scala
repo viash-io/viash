@@ -401,18 +401,26 @@ object BashWrapper {
                          |""".stripMargin
       val minCheck = min match {
         case _ if min.isDefined =>
-          s"""  if ! [[ `echo $$${param.VIASH_PAR} '>=' ${min.get} | bc` -eq 1 ]]; then
-             |    ViashError '${param.name}' has be more than or equal to ${min.get}. Use "--help" to get more information on the parameters.
-             |    exit 1
+          s"""  if command -v bc &> /dev/null; then
+             |    if ! [[ `echo $$${param.VIASH_PAR} '>=' ${min.get} | bc` -eq 1 ]]; then
+             |      ViashError '${param.name}' has be more than or equal to ${min.get}. Use "--help" to get more information on the parameters.
+             |      exit 1
+             |    fi
+             |  else
+             |    ViashWarning '${param.name}' specifies a minimum value but the value was not verified as \\'bc\\' is not present on the system.
              |  fi
              |""".stripMargin
         case _ => ""
       }
       val maxCheck = max match {
         case _ if max.isDefined =>
-          s"""  if ! [[ `echo $$${param.VIASH_PAR} '<=' ${max.get} | bc` -eq 1 ]]; then
-             |    ViashError '${param.name}' has to be less than or equal to ${max.get}. Use "--help" to get more information on the parameters.
-             |    exit 1
+          s"""  if command -v bc &> /dev/null; then
+             |    if ! [[ `echo $$${param.VIASH_PAR} '<=' ${max.get} | bc` -eq 1 ]]; then
+             |      ViashError '${param.name}' has to be less than or equal to ${max.get}. Use "--help" to get more information on the parameters.
+             |      exit 1
+             |    fi
+             |  else
+             |    ViashWarning '${param.name}' specifies a maximum value but the value was not verified as \\'bc\\' is not present on the system.
              |  fi
              |""".stripMargin
         case _ => ""

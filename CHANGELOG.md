@@ -21,6 +21,8 @@
 
 * `viash config inject`: Fix config inject when `.functionality.inputs` or `.functionality.outputs` is used.
 
+* `BashWrapper`: Don't add `bc` as dependency. Only perform integer/float min/max checks when bc is available, otherwise ignore.
+
 * `DockerPlatform`: Fix inputs & outputs arguments being present twice.
 
 # Viash 0.5.13
