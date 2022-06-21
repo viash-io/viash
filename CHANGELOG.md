@@ -23,6 +23,8 @@
 
 * `DockerPlatform`: Fix inputs & outputs arguments being present twice.
 
+* `viash ns test`: Silently skip Nextflow platforms as these don't support tests and will always fail.
+
 # Viash 0.5.13
 
 ## NEW FUNCTIONALITY
