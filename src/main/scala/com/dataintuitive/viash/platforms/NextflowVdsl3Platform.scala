@@ -112,6 +112,7 @@ case class NextflowVdsl3Platform(
         "" 
       } else {
         s"""
+        |process.container = 'nextflow/bash:latest'
         |
         |// detect tempdir
         |tempDir = java.nio.file.Paths.get(
@@ -123,10 +124,14 @@ case class NextflowVdsl3Platform(
         |).toAbsolutePath()
         |
         |profiles {
+        |  mount_temp {
+        |    docker.temp            = tempDir
+        |    podman.temp            = tempDir
+        |    charliecloud.temp      = tempDir
+        |  }
         |  docker {
         |    docker.enabled         = true
         |    docker.userEmulation   = true
-        |    docker.temp            = tempDir
         |    singularity.enabled    = false
         |    podman.enabled         = false
         |    shifter.enabled        = false
@@ -142,7 +147,6 @@ case class NextflowVdsl3Platform(
         |  }
         |  podman {
         |    podman.enabled         = true
-        |    podman.temp            = tempDir
         |    docker.enabled         = false
         |    singularity.enabled    = false
         |    shifter.enabled        = false
@@ -157,7 +161,6 @@ case class NextflowVdsl3Platform(
         |  }
         |  charliecloud {
         |    charliecloud.enabled   = true
-        |    charliecloud.temp      = tempDir
         |    docker.enabled         = false
         |    singularity.enabled    = false
         |    podman.enabled         = false
