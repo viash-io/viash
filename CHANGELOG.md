@@ -42,6 +42,8 @@
 
 * `viash ns test`: Silently skip Nextflow platforms as these don't support tests and will always fail.
 
+* `Testbenches`: Better capture expected error messages while running testbenches. Having these show on the console could be confusing.
+
 # Viash 0.5.13
 
 ## NEW FUNCTIONALITY

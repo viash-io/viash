@@ -18,7 +18,8 @@ object TestHelper {
 
   case class ExceptionOutput(
     exceptionText: String,
-    output: String
+    output: String,
+    error: String,
   )
 
   /**
@@ -87,16 +88,20 @@ object TestHelper {
    * @return ExceptionOutput containing the exception text and the console output text
    */
   def testMainException2[T <: Exception](args: String*) : ExceptionOutput = {
-    val os = new ByteArrayOutputStream()
+    val outStream = new ByteArrayOutputStream()
+    val errStream = new ByteArrayOutputStream()
     val caught = intercept[Exception] {
-      Console.withOut(os) {
-        Main.internalMain(args.toArray)
+      Console.withOut(outStream) {
+        Console.withErr(errStream) {
+          Main.internalMain(args.toArray)
+        }
       }
     }
 
-    val stdout = os.toString
+    val stdout = outStream.toString
+    val stderr = errStream.toString
     // Console.print(stdout)
-    ExceptionOutput(caught.getMessage, stdout)
+    ExceptionOutput(caught.getMessage, stdout, stderr)
   }
 
   // Code borrowed from https://stackoverflow.com/questions/41642595/scala-file-hashing
