@@ -64,7 +64,7 @@ object ViashNamespace {
         }
       }
 
-    printResults(results.map(r => r.fold(fa => helpers.BuildStatus.Success, fb => fb)).toList)
+    printResults(results.map(r => r.fold(fa => helpers.BuildStatus.Success, fb => fb)).toList, true, false)
   }
 
   def test(
@@ -209,7 +209,7 @@ object ViashNamespace {
           setupStatus ::: testStatus
         },
         fb => List(fb)))
-      printResults(testResults)
+      printResults(testResults, true, true)
 
       results
     } catch {
@@ -232,11 +232,18 @@ object ViashNamespace {
     val configs2 = configs.flatMap(_.left.toOption)
     ViashConfig.viewMany(configs2, format)
 
-    printResults(configs.map(_.fold(fa => Success, fb => fb)))
+    printResults(configs.map(_.fold(fa => Success, fb => fb)), false, false)
   }
 
-  def printResults(statuses: Seq[BuildStatus]) {
+  def printResults(statuses: Seq[BuildStatus], performedBuild: Boolean, performedTest: Boolean) {
     val successes = statuses.count(_ == helpers.BuildStatus.Success)
+
+    val successAction = (performedBuild, performedTest) match {
+      case (false, false) => "parsed"
+      case (true, false) => "built"
+      case (true, true) => "built and tested"
+      case (false, true) => "[Unknown action!]"
+    }
 
     val messages = List(
       (helpers.BuildStatus.ParseError, Console.RED, "configs encountered parse errors"),
@@ -244,10 +251,10 @@ object ViashNamespace {
       (helpers.BuildStatus.BuildError, Console.RED, "configs built failed"),
       (helpers.BuildStatus.TestError, Console.RED, "tests failed"),
       (helpers.BuildStatus.TestMissing, Console.YELLOW, "tests missing"),
-      (helpers.BuildStatus.Success, Console.GREEN, "configs built/tested successfully"))
+      (helpers.BuildStatus.Success, Console.GREEN, s"configs $successAction successfully"))
 
     if (successes != statuses.length) {
-      println(s"${Console.YELLOW}Not all configs built or tested successfully${Console.RESET}")
+      println(s"${Console.YELLOW}Not all configs $successAction successfully${Console.RESET}")
       for (message <- messages) {
         val count = statuses.count(_ == message._1)
         if (count > 0)
@@ -255,7 +262,7 @@ object ViashNamespace {
       }
     }
     else {
-      println(s"${Console.GREEN}All ${successes} configs built or tested successfully${Console.RESET}")
+      println(s"${Console.GREEN}All ${successes} configs $successAction successfully${Console.RESET}")
     }
   }
 }
