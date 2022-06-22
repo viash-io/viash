@@ -74,4 +74,8 @@ package object functionality {
   // encoder and decoder for Author
   implicit val encodeAuthor: Encoder.AsObject[Author] = deriveConfiguredEncoder
   implicit val decodeAuthor: Decoder[Author] = deriveConfiguredDecoder
+  
+  // encoder and decoder for ArgumentGroup
+  implicit val encodeArgumentGroup: Encoder.AsObject[ArgumentGroup] = deriveConfiguredEncoder
+  implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoder
 }
