@@ -62,13 +62,16 @@ case class Functionality(
   def allArguments = inputs ::: outputs ::: arguments
 
   // check argument groups
-  for (group <- argument_groups; argument <- group.arguments) {
-    require(allArguments.map(_.plainName).contains(argument), s"group ${group.name} has unknown argument $argument")
+  {
+    val allArgumentNames = allArguments.map(_.plainName)
+    for (group <- argument_groups; argument <- group.arguments) {
+      require(allArgumentNames.contains(argument), s"group '${group.name}' has unknown argument '$argument'")
+    }
+    argument_groups.flatMap(_.arguments).groupBy(identity).foreach { case (arg, args) => 
+      require(args.length == 1, s"argument '${arg}' can be in at most one argument group")
+    }
   }
-  argument_groups.flatMap(_.arguments).groupBy(identity) foreach { case (arg, args) =>
-    require(args.length == 1, s"argument $arg can be in at most one argument group")
-  }
-  
+    
   // check whether there are not multiple positional arguments with multiplicity >1
   // and if there is one, whether its position is last
   {

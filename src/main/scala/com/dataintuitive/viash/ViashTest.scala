@@ -191,6 +191,7 @@ object ViashTest {
             outputs = Nil,
             arguments = Nil,
             dummy_arguments = List(dirArg),
+            argument_groups = Nil,
             resources = List(test),
             set_wd_to_resources_dir = true
           )
