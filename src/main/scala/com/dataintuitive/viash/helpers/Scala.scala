@@ -28,3 +28,11 @@ object Scala {
     }
   }
 }
+
+import scala.annotation.meta._
+
+@getter @setter @beanGetter @beanSetter @field
+class since(since: String) extends scala.annotation.StaticAnnotation
+
+@getter @setter @beanGetter @beanSetter @field
+class example(example: String, format: String = "") extends scala.annotation.StaticAnnotation

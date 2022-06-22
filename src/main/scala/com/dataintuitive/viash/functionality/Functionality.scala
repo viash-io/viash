@@ -21,20 +21,60 @@ import dataobjects._
 import resources._
 import com.dataintuitive.viash.config.Version
 import io.circe.generic.extras._
+import com.dataintuitive.viash.helpers._
 
+/**
+  * The functionality-part of the config file describes the behaviour of the script in terms of arguments and resources.
+  * By specifying a few restrictions (e.g. mandatory arguments) and adding some descriptions, Viash will automatically generate a stylish command-line interface for you.
+  *
+  * @param name Name of the component and the filename of the executable when built with `viash build` .
+  * @param namespace Namespace this component is a part of. This is required when grouping components together in a pipeline and building multiple components at once using `viash ns build` .
+  * @param version Version of the component. This field will be used to version the executable and the Docker container.
+  * @param authors A list of authors (introduced in Viash 0.3.1). An author must at least have a name, but can also have a list of roles, an e-mail address, and a map of custom properties.
+  * @param inputs List of input arguments
+  * @param outputs List of output arguments
+  * @param arguments
+  * @param resources
+  * @param description A description of the component. This will be displayed with `--help` .
+  * @param usage
+  * @param test_resources
+  * @param info A map for storing custom annotation (introduced in Viash 0.4.0).
+  * @param dummy_arguments
+  * @param set_wd_to_resources_dir
+  * @param enabled
+  */
 case class Functionality(
   name: String,
   namespace: Option[String] = None,
   version: Option[Version] = None,
   authors: List[Author] = Nil,
+
+  @since("Viash 0.5.11")
   inputs: List[DataObject[_]] = Nil,
+
+  @since("Viash 0.5.11")
   outputs: List[DataObject[_]] = Nil,
   arguments: List[DataObject[_]] = Nil,
+
+  @example("""resources:
+             |  - type: r_script
+             |    path: script.R
+             |  - type: file
+             |    path: resource1.txt
+             |""".stripMargin,
+             "yaml")
+  @example("""resources:
+             |  - type: r_script
+             |    path: script.R
+             |  - type: file
+             |    path: resource1.txt
+             |""".stripMargin,
+             "blah")  
   resources: List[Resource] = Nil,
-  description: Option[String] = None,
+  @deprecated description: Option[String] = None,
   usage: Option[String] = None,
   test_resources: List[Resource] = Nil,
-  info: Map[String, String] = Map.empty[String, String],
+  @since("Viash 0.4.0") info: Map[String, String] = Map.empty[String, String],
 
   // dummy arguments are used for handling extra directory mounts in docker
   dummy_arguments: List[DataObject[_]] = Nil,

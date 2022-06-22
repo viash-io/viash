@@ -35,6 +35,16 @@ object Main {
   val name: String = if (pkg.getImplementationTitle != null) pkg.getImplementationTitle else "viash"
   val version: String = if (pkg.getImplementationVersion != null) pkg.getImplementationVersion else "test"
 
+  import scala.reflect.runtime.universe
+  def annotationsOf[T: universe.TypeTag](obj: T) = {
+      // universe.typeOf[T].members.foldLeft(Nil: List[universe.type#Annotation]) {
+      //     (xs, x) => x.annotations ::: xs
+      // }
+      universe.typeOf[T].members.map(x => (x.fullName, x.annotations)).filter(_._2.length > 0)
+  }
+  val fun = com.dataintuitive.viash.functionality.Functionality("foo")
+  annotationsOf(fun).foreach(t => println(s"${t._1} -> ${t._2}"))
+
   def main(args: Array[String]): Unit = {
     try {
       internalMain(args)
