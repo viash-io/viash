@@ -32,6 +32,7 @@ case class IntegerObject(
   direction: Direction = Input,
   multiple: Boolean = false,
   multiple_sep: Char = ':',
+  hidden: Boolean = false,
   `type`: String = "integer"
 ) extends DataObject[Int] {
   def copyDO(
@@ -44,8 +45,9 @@ case class IntegerObject(
     required: Boolean,
     direction: Direction,
     multiple: Boolean,
-    multiple_sep: Char
+    multiple_sep: Char,
+    hidden: Boolean
   ): DataObject[Int] = {
-    copy(name, alternatives, description, example, default, required, this.choices, this.min, this.max, direction, multiple, multiple_sep, `type`)
+    copy(name, alternatives, description, example, default, required, this.choices, this.min, this.max, direction, multiple, multiple_sep, hidden, `type`)
   }
 }

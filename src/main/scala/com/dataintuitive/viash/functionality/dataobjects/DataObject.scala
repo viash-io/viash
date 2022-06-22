@@ -30,6 +30,7 @@ abstract class DataObject[Type] {
   val direction: Direction
   val multiple: Boolean
   val multiple_sep: Char
+  val hidden: Boolean
 
   private val pattern = "^(-*)(.*)$".r
   val pattern(flags, plainName) = name
@@ -64,7 +65,8 @@ abstract class DataObject[Type] {
     required: Boolean = this.required,
     direction: Direction = this.direction,
     multiple: Boolean = this.multiple,
-    multiple_sep: Char = this.multiple_sep
+    multiple_sep: Char = this.multiple_sep,
+    hidden: Boolean = this.hidden
   ): DataObject[Type]
 
   assert(example.length <= 1 || multiple, s"Argument $name: 'example' should be length <= 1 if 'multiple' is false")

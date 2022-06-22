@@ -33,6 +33,7 @@ case class BooleanObjectRegular(
   direction: Direction = Input,
   multiple: Boolean = false,
   multiple_sep: Char = ':',
+  hidden: Boolean = false,
   `type`: String = "boolean"
 ) extends BooleanObject {
 
@@ -48,9 +49,10 @@ case class BooleanObjectRegular(
     required: Boolean,
     direction: Direction,
     multiple: Boolean,
-    multiple_sep: Char
+    multiple_sep: Char,
+    hidden: Boolean
   ): DataObject[Boolean] = {
-    copy(name, alternatives, description, example, default, required, direction, multiple, multiple_sep, `type`)
+    copy(name, alternatives, description, example, default, required, direction, multiple, multiple_sep, hidden, `type`)
   }
 }
 
@@ -59,6 +61,7 @@ case class BooleanObjectTrue(
   alternatives: OneOrMore[String] = Nil,
   description: Option[String] = None,
   direction: Direction = Input,
+  hidden: Boolean = false,
   `type`: String = "boolean_true"
 ) extends BooleanObject {
 
@@ -79,9 +82,10 @@ case class BooleanObjectTrue(
     required: Boolean,
     direction: Direction,
     multiple: Boolean,
-    multiple_sep: Char
+    multiple_sep: Char,
+    hidden: Boolean
   ): DataObject[Boolean] = {
-    copy(name, alternatives, description, direction, `type`)
+    copy(name, alternatives, description, direction, hidden, `type`)
   }
 }
 
@@ -90,6 +94,7 @@ case class BooleanObjectFalse(
   alternatives: OneOrMore[String] = Nil,
   description: Option[String] = None,
   direction: Direction = Input,
+  hidden: Boolean = false,
   `type`: String = "boolean_false"
 ) extends BooleanObject {
 
@@ -110,8 +115,9 @@ case class BooleanObjectFalse(
     required: Boolean,
     direction: Direction,
     multiple: Boolean,
-    multiple_sep: Char
+    multiple_sep: Char,
+    hidden: Boolean
   ): DataObject[Boolean] = {
-    copy(name, alternatives, description, direction, `type`)
+    copy(name, alternatives, description, direction, hidden, `type`)
   }
 }

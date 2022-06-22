@@ -31,6 +31,7 @@ case class DoubleObject(
   direction: Direction = Input,
   multiple: Boolean = false,
   multiple_sep: Char = ':',
+  hidden: Boolean = false,
   `type`: String = "double"
 ) extends DataObject[Double] {
   def copyDO(
@@ -43,8 +44,9 @@ case class DoubleObject(
     required: Boolean,
     direction: Direction,
     multiple: Boolean,
-    multiple_sep: Char
+    multiple_sep: Char,
+    hidden: Boolean
   ): DataObject[Double] = {
-    copy(name, alternatives, description, example, default, required, this.min, this.max, direction, multiple, multiple_sep, `type`)
+    copy(name, alternatives, description, example, default, required, this.min, this.max, direction, multiple, multiple_sep, hidden, `type`)
   }
 }
