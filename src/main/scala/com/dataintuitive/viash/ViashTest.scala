@@ -25,6 +25,7 @@ import java.time.temporal.ChronoUnit
 import scala.util.Random
 
 import config.{Config, Version}
+import functionality.Functionality
 import functionality.dataobjects.{FileObject, Output}
 import functionality.resources.{BashScript, Script}
 import platforms.NativePlatform
@@ -185,19 +186,24 @@ object ViashTest {
           default = One(dir)
         )
         // generate bash script for test
-        val funOnlyTest = platform.modifyFunctionality(config.copy(
-          functionality = config.functionality.copy(
-            inputs = Nil,
-            outputs = Nil,
-            arguments = Nil,
-            dummy_arguments = List(dirArg),
-            argument_groups = Nil,
-            resources = List(test),
-            set_wd_to_resources_dir = true
-          )
-        ), true)
+       val funOnlyTest = platform.modifyFunctionality(
+          config.copy(
+            functionality = Functionality(
+              // set same name, namespace and version
+              // to be able to reuse same docker container
+              name = config.functionality.name,
+              namespace = config.functionality.namespace,
+              version = config.functionality.version,
+              // set custom arguments and resources
+              dummy_arguments = List(dirArg),
+              resources = List(test),
+              set_wd_to_resources_dir = true
+            )
+          ), 
+          testing = true
+        )
         val testBash = BashScript(
-          dest = Some(test.filename),
+          dest = Some("test_executable"),
           text = funOnlyTest.resources.head.text
         )
 
@@ -212,7 +218,8 @@ object ViashTest {
         )
 
         // make a new directory
-        val newDir = dir.resolve("test_" + test.filename)
+        val dirName = "test_" + test.filename.replaceAll("\\.[^\\.]*$", "")
+        val newDir = dir.resolve(dirName)
         Files.createDirectories(newDir)
 
         // write resources to dir
