@@ -26,6 +26,9 @@
   you can now specify `{ type: string, name: "--foo", alternatives: "-f" }` instead of 
   `{ type: string, name: "--foo", alternatives: [ "-f" ] }`
 
+* `BashWrapper`: Added metadata field `meta_executable`, which is a shorthand notation for
+  `meta_executable="$meta_resources_dir/$meta_functionality_name"`
+
 ## BUG FIXES
 
 * `DockerPlatform`: Change `org.opencontainers.image.version` annotation to `functionality.version` when set.

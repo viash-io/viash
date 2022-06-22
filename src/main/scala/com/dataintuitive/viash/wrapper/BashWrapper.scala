@@ -27,9 +27,12 @@ object BashWrapper {
     List(
       ("VIASH_META_FUNCTIONALITY_NAME", "functionality_name"),
       ("VIASH_META_RESOURCES_DIR", "resources_dir"),
+      ("VIASH_META_EXECUTABLE", "executable"),
       ("VIASH_TEMP", "temp_dir")
     )
   }
+  val var_resources_dir = "VIASH_META_RESOURCES_DIR"
+  val var_executable = "VIASH_META_EXECUTABLE"
 
   def store(env: String, value: String, multiple_sep: Option[Char]): Array[String] = {
     if (multiple_sep.isDefined) {
@@ -79,7 +82,6 @@ object BashWrapper {
   }
 
   val var_verbosity = "VIASH_VERBOSITY"
-  val var_resources_dir = "VIASH_META_RESOURCES_DIR"
 
   def wrapScript(
     executor: String,
@@ -208,6 +210,7 @@ object BashWrapper {
        |
        |# define meta fields
        |VIASH_META_FUNCTIONALITY_NAME="${functionality.name}"
+       |VIASH_META_EXECUTABLE="$$VIASH_META_RESOURCES_DIR/$$VIASH_META_FUNCTIONALITY_NAME"
        |
        |${spaceCode(allMods.preParse)}
        |# initialise array

@@ -374,6 +374,7 @@ case class DockerPlatform(
       s"""# Always mount the resource directory
          |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$${BashWrapper.var_resources_dir}")"
          |${BashWrapper.var_resources_dir}=$$(ViashAutodetectMount "$$${BashWrapper.var_resources_dir}")
+         |${BashWrapper.var_executable}=$$(ViashAutodetectMount "$$${BashWrapper.var_executable}")
          |
          |# Always mount the VIASH_TEMP directory
          |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$VIASH_TEMP")"
