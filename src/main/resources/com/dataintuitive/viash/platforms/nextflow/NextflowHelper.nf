@@ -609,7 +609,7 @@ def processFactory(Map processArgs) {
   |export VIASH_META_RESOURCES_DIR="\${resourcesDir.toRealPath().toAbsolutePath()}"
   |export VIASH_META_TEMP_DIR="${tmpDir}"
   |export VIASH_META_FUNCTIONALITY_NAME="${thisFunctionality.name}"
-  |export VIASH_META_EXECUTABLE="\$VIASH_META_RESOURCES_DIR/\$VIASH_META_FUNCTIONALITY_NAME"
+  |export VIASH_META_EXECUTABLE="\\\$VIASH_META_RESOURCES_DIR/\\\$VIASH_META_FUNCTIONALITY_NAME"
   |
   |# meta synonyms
   |export VIASH_RESOURCES_DIR="\\\$VIASH_META_RESOURCES_DIR"
