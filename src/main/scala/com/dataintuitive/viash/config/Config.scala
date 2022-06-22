@@ -46,7 +46,7 @@ object Config {
 
   def parse(yamlText: String, uri: URI, preparseMods: Option[ConfigMods]): Config = {
     def errorHandler[C](e: Exception): C = {
-      System.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
+      Console.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
       throw e
     }
 
