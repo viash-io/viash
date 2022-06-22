@@ -18,7 +18,7 @@
 package com.dataintuitive.viash.functionality.resources
 
 import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.functionality.arguments._
 import com.dataintuitive.viash.wrapper.BashWrapper
 
 import java.net.URI
@@ -37,7 +37,7 @@ case class BashScript(
   }
 
   def generatePlaceholder(functionality: Functionality): String = {
-    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
 
     val parSet = params.map { par =>
       val parse = par.par + "=" + par.viash_par_escaped("'", """\'""", """\'\"\'\"\'""")

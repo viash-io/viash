@@ -26,7 +26,7 @@ import scala.util.Random
 
 import config.{Config, Version}
 import functionality.Functionality
-import functionality.dataobjects.{FileObject, Output}
+import functionality.arguments.{FileArgument, Output}
 import functionality.resources.{BashScript, Script}
 import platforms.NativePlatform
 import helpers.IO
@@ -180,7 +180,7 @@ object ViashTest {
 
       case test: Script =>
         val startTime = LocalDateTime.now
-        val dirArg = FileObject(
+        val dirArg = FileArgument(
           name = "dir",
           direction = Output,
           default = One(dir)

@@ -18,7 +18,7 @@
 package com.dataintuitive.viash.functionality.resources
 
 import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.functionality.arguments._
 import com.dataintuitive.viash.wrapper.BashWrapper
 
 import java.net.URI
@@ -37,28 +37,28 @@ case class PythonScript(
   }
 
   def generatePlaceholder(functionality: Functionality): String = {
-    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
 
     val parSet = params.map { par =>
       // val env_name = par.VIASH_PAR
       val env_name = par.viash_par_escaped("'", """\'""", """\\\'""")
 
       val parse = par match {
-        case o: BooleanObject if o.multiple =>
+        case o: BooleanArgument if o.multiple =>
           s"""list(map(lambda x: (x.lower() == 'true'), $env_name.split('${o.multiple_sep}')))"""
-        case o: IntegerObject if o.multiple =>
+        case o: IntegerArgument if o.multiple =>
           s"""list(map(int, $env_name.split('${o.multiple_sep}')))"""
-        case o: DoubleObject if o.multiple =>
+        case o: DoubleArgument if o.multiple =>
           s"""list(map(float, $env_name.split('${o.multiple_sep}')))"""
-        case o: FileObject if o.multiple =>
+        case o: FileArgument if o.multiple =>
           s"""$env_name.split('${o.multiple_sep}')"""
-        case o: StringObject if o.multiple =>
+        case o: StringArgument if o.multiple =>
           s"""$env_name.split('${o.multiple_sep}')"""
-        case _: BooleanObject => s"""$env_name.lower() == 'true'"""
-        case _: IntegerObject => s"""int($env_name)"""
-        case _: DoubleObject => s"""float($env_name)"""
-        case _: FileObject => s"""$env_name"""
-        case _: StringObject => s"""$env_name"""
+        case _: BooleanArgument => s"""$env_name.lower() == 'true'"""
+        case _: IntegerArgument => s"""int($env_name)"""
+        case _: DoubleArgument => s"""float($env_name)"""
+        case _: FileArgument => s"""$env_name"""
+        case _: StringArgument => s"""$env_name"""
       }
 
       s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo None; fi )"""

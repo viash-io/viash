@@ -29,6 +29,8 @@
 * `BashWrapper`: Added metadata field `meta_executable`, which is a shorthand notation for
   `meta_executable="$meta_resources_dir/$meta_functionality_name"`
 
+* `Arguments`: Internal naming of functionality.arguments is changed from DataObject to Arguments. Change is also applied to child classes, e.g. StringObject -> StringArgument.
+
 ## BUG FIXES
 
 * `DockerPlatform`: Change `org.opencontainers.image.version` annotation to `functionality.version` when set.

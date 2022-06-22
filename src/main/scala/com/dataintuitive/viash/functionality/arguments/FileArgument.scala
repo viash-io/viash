@@ -15,12 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.dataobjects
+package com.dataintuitive.viash.functionality.arguments
 
 import java.nio.file.Path
 import com.dataintuitive.viash.helpers.Circe.OneOrMore
 
-case class FileObject(
+case class FileArgument(
   name: String,
   alternatives: OneOrMore[String] = Nil,
   description: Option[String] = None,
@@ -32,8 +32,8 @@ case class FileObject(
   multiple: Boolean = false,
   multiple_sep: Char = ':',
   `type`: String = "file"
-) extends DataObject[Path] {
-  def copyDO(
+) extends Argument[Path] {
+  def copyArg(
     `type`: String, 
     name: String, 
     alternatives: OneOrMore[String],
@@ -44,7 +44,7 @@ case class FileObject(
     direction: Direction,
     multiple: Boolean,
     multiple_sep: Char
-  ): DataObject[Path] = {
+  ): Argument[Path] = {
     copy(name, alternatives, description, example, default, this.must_exist, required, direction, multiple, multiple_sep, `type`)
   }
 }

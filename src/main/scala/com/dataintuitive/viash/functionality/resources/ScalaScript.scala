@@ -18,7 +18,7 @@
 package com.dataintuitive.viash.functionality.resources
 
 import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.functionality.arguments._
 import com.dataintuitive.viash.wrapper.BashWrapper
 
 import java.net.URI
@@ -37,26 +37,26 @@ case class ScalaScript(
   }
 
   def generatePlaceholder(functionality: Functionality): String = {
-    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
 
     val parClassTypes = params.map { par =>
       val classType = par match {
-        case o: BooleanObject if o.multiple => "List[Boolean]"
-        case o: IntegerObject if o.multiple => "List[Integer]"
-        case o: DoubleObject if o.multiple => "List[Double]"
-        case o: FileObject if o.multiple => "List[String]"
-        case o: StringObject if o.multiple => "List[String]"
+        case o: BooleanArgument if o.multiple => "List[Boolean]"
+        case o: IntegerArgument if o.multiple => "List[Integer]"
+        case o: DoubleArgument if o.multiple => "List[Double]"
+        case o: FileArgument if o.multiple => "List[String]"
+        case o: StringArgument if o.multiple => "List[String]"
         // we could argue about whether these should be options or not
-        case o: BooleanObject if !o.required && o.flagValue.isEmpty => "Option[Boolean]"
-        case o: IntegerObject if !o.required => "Option[Integer]"
-        case o: DoubleObject if !o.required => "Option[Double]"
-        case o: FileObject if !o.required => "Option[String]"
-        case o: StringObject if !o.required => "Option[String]"
-        case _: BooleanObject => "Boolean"
-        case _: IntegerObject => "Integer"
-        case _: DoubleObject => "Double"
-        case _: FileObject => "String"
-        case _: StringObject => "String"
+        case o: BooleanArgument if !o.required && o.flagValue.isEmpty => "Option[Boolean]"
+        case o: IntegerArgument if !o.required => "Option[Integer]"
+        case o: DoubleArgument if !o.required => "Option[Double]"
+        case o: FileArgument if !o.required => "Option[String]"
+        case o: StringArgument if !o.required => "Option[String]"
+        case _: BooleanArgument => "Boolean"
+        case _: IntegerArgument => "Integer"
+        case _: DoubleArgument => "Double"
+        case _: FileArgument => "String"
+        case _: StringArgument => "String"
       }
       par.plainName + ": " + classType
     }
@@ -66,33 +66,33 @@ case class ScalaScript(
       val env_name = par.viash_par_escaped(quo, """\"""", """\\\"""")
 
       val parse = { par match {
-        case o: BooleanObject if o.multiple =>
+        case o: BooleanArgument if o.multiple =>
           s"""$env_name.split($quo${o.multiple_sep}$quo).map(_.toLowerCase.toBoolean).toList"""
-        case o: IntegerObject if o.multiple =>
+        case o: IntegerArgument if o.multiple =>
           s"""$env_name.split($quo${o.multiple_sep}$quo).map(_.toInt).toList"""
-        case o: DoubleObject if o.multiple =>
+        case o: DoubleArgument if o.multiple =>
           s"""$env_name.split($quo${o.multiple_sep}$quo).map(_.toDouble).toList"""
-        case o: FileObject if o.multiple =>
+        case o: FileArgument if o.multiple =>
           s"""$env_name.split($quo${o.multiple_sep}$quo).toList"""
-        case o: StringObject if o.multiple =>
+        case o: StringArgument if o.multiple =>
           s"""$env_name.split($quo${o.multiple_sep}$quo).toList"""
-        case o: BooleanObject if !o.required && o.flagValue.isEmpty => s"""Some($env_name.toLowerCase.toBoolean)"""
-        case o: IntegerObject if !o.required => s"""Some($env_name.toInt)"""
-        case o: DoubleObject if !o.required => s"""Some($env_name.toDouble)"""
-        case o: FileObject if !o.required => s"""Some($env_name)"""
-        case o: StringObject if !o.required => s"""Some($env_name)"""
-        case _: BooleanObject => s"""$env_name.toLowerCase.toBoolean"""
-        case _: IntegerObject => s"""$env_name.toInt"""
-        case _: DoubleObject => s"""$env_name.toDouble"""
-        case _: FileObject => s"""$env_name"""
-        case _: StringObject => s"""$env_name"""
+        case o: BooleanArgument if !o.required && o.flagValue.isEmpty => s"""Some($env_name.toLowerCase.toBoolean)"""
+        case o: IntegerArgument if !o.required => s"""Some($env_name.toInt)"""
+        case o: DoubleArgument if !o.required => s"""Some($env_name.toDouble)"""
+        case o: FileArgument if !o.required => s"""Some($env_name)"""
+        case o: StringArgument if !o.required => s"""Some($env_name)"""
+        case _: BooleanArgument => s"""$env_name.toLowerCase.toBoolean"""
+        case _: IntegerArgument => s"""$env_name.toInt"""
+        case _: DoubleArgument => s"""$env_name.toDouble"""
+        case _: FileArgument => s"""$env_name"""
+        case _: StringArgument => s"""$env_name"""
       }}
 
       val notFound = par match {
-        case o: DataObject[_] if o.multiple => Some("Nil")
-        case o: BooleanObject if o.flagValue.isDefined => None
-        case o: DataObject[_] if !o.required => Some("None")
-        case _: DataObject[_] => None
+        case o: Argument[_] if o.multiple => Some("Nil")
+        case o: BooleanArgument if o.flagValue.isDefined => None
+        case o: Argument[_] if !o.required => Some("None")
+        case _: Argument[_] => None
       }
 
       notFound match {

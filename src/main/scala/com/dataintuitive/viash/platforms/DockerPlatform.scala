@@ -19,7 +19,7 @@ package com.dataintuitive.viash.platforms
 
 import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.functionality.arguments._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.platforms.requirements._
 import com.dataintuitive.viash.helpers.{Bash, Docker}
@@ -343,7 +343,7 @@ case class DockerPlatform(
       if (resolve_volume == Automatic) {
         "\n\n# detect volumes from file arguments" +
           args.flatMap {
-            case arg: FileObject if arg.multiple =>
+            case arg: FileArgument if arg.multiple =>
               // resolve arguments with multiplicity different from singular args
               val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
               Some(
@@ -357,7 +357,7 @@ case class DockerPlatform(
                    |  done
                    |  ${arg.VIASH_PAR}="$$$viash_temp"
                    |fi""".stripMargin)
-            case arg: FileObject =>
+            case arg: FileArgument =>
               Some(
                 s"""
                    |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
@@ -436,7 +436,7 @@ case class DockerPlatform(
       if (chown) {
         // chown output files/folders
         val chownPars = args
-          .filter(a => a.isInstanceOf[FileObject] && a.direction == Output)
+          .filter(a => a.isInstanceOf[FileArgument] && a.direction == Output)
           .map(arg => {
 
             // resolve arguments with multiplicity different from
