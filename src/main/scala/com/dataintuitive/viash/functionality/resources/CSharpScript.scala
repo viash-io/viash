@@ -45,16 +45,16 @@ case class CSharpScript(
       val env_name = par.viash_par_escaped(quo, """\"""", """\\\"""")
 
       val parse = { par match {
-        case o: BooleanArgument if o.multiple =>
-          s"""$env_name.Split($quo${o.multiple_sep}$quo).Select(x => bool.Parse(x.ToLower())).ToArray()"""
-        case o: IntegerArgument if o.multiple =>
-          s"""$env_name.Split($quo${o.multiple_sep}$quo).Select(x => Convert.ToInt32(x)).ToArray()"""
-        case o: DoubleArgument if o.multiple =>
-          s"""$env_name.Split($quo${o.multiple_sep}$quo).Select(x => Convert.ToDouble(x)).ToArray()"""
-        case o: FileArgument if o.multiple =>
-          s"""$env_name.Split($quo${o.multiple_sep}$quo).ToArray()"""
-        case o: StringArgument if o.multiple =>
-          s"""$env_name.Split($quo${o.multiple_sep}$quo).ToArray()"""
+        case a: BooleanArgument if a.multiple =>
+          s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => bool.Parse(x.ToLower())).ToArray()"""
+        case a: IntegerArgument if a.multiple =>
+          s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => Convert.ToInt32(x)).ToArray()"""
+        case a: DoubleArgument if a.multiple =>
+          s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => Convert.ToDouble(x)).ToArray()"""
+        case a: FileArgument if a.multiple =>
+          s"""$env_name.Split($quo${a.multiple_sep}$quo).ToArray()"""
+        case a: StringArgument if a.multiple =>
+          s"""$env_name.Split($quo${a.multiple_sep}$quo).ToArray()"""
         case _: BooleanArgument => s"""bool.Parse($env_name.ToLower())"""
         case _: IntegerArgument => s"""Convert.ToInt32($env_name)"""
         case _: DoubleArgument => s"""Convert.ToDouble($env_name)"""
@@ -71,10 +71,10 @@ case class CSharpScript(
       }
 
       val notFound = par match {
-        case o: Argument[_] if o.multiple => Some(s"new $class_[0]")
-        case o: StringArgument if !o.required => Some(s"(${class_}) null")
-        case o: FileArgument if !o.required => Some(s"(${class_}) null")
-        case o: Argument[_] if !o.required => Some(s"(${class_}?) null")
+        case a: Argument[_] if a.multiple => Some(s"new $class_[0]")
+        case a: StringArgument if !a.required => Some(s"(${class_}) null")
+        case a: FileArgument if !a.required => Some(s"(${class_}) null")
+        case a: Argument[_] if !a.required => Some(s"(${class_}?) null")
         case _: Argument[_] => None
       }
 

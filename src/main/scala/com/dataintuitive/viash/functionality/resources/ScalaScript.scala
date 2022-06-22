@@ -41,17 +41,17 @@ case class ScalaScript(
 
     val parClassTypes = params.map { par =>
       val classType = par match {
-        case o: BooleanArgument if o.multiple => "List[Boolean]"
-        case o: IntegerArgument if o.multiple => "List[Integer]"
-        case o: DoubleArgument if o.multiple => "List[Double]"
-        case o: FileArgument if o.multiple => "List[String]"
-        case o: StringArgument if o.multiple => "List[String]"
+        case a: BooleanArgument if a.multiple => "List[Boolean]"
+        case a: IntegerArgument if a.multiple => "List[Integer]"
+        case a: DoubleArgument if a.multiple => "List[Double]"
+        case a: FileArgument if a.multiple => "List[String]"
+        case a: StringArgument if a.multiple => "List[String]"
         // we could argue about whether these should be options or not
-        case o: BooleanArgument if !o.required && o.flagValue.isEmpty => "Option[Boolean]"
-        case o: IntegerArgument if !o.required => "Option[Integer]"
-        case o: DoubleArgument if !o.required => "Option[Double]"
-        case o: FileArgument if !o.required => "Option[String]"
-        case o: StringArgument if !o.required => "Option[String]"
+        case a: BooleanArgument if !a.required && a.flagValue.isEmpty => "Option[Boolean]"
+        case a: IntegerArgument if !a.required => "Option[Integer]"
+        case a: DoubleArgument if !a.required => "Option[Double]"
+        case a: FileArgument if !a.required => "Option[String]"
+        case a: StringArgument if !a.required => "Option[String]"
         case _: BooleanArgument => "Boolean"
         case _: IntegerArgument => "Integer"
         case _: DoubleArgument => "Double"
@@ -66,21 +66,21 @@ case class ScalaScript(
       val env_name = par.viash_par_escaped(quo, """\"""", """\\\"""")
 
       val parse = { par match {
-        case o: BooleanArgument if o.multiple =>
-          s"""$env_name.split($quo${o.multiple_sep}$quo).map(_.toLowerCase.toBoolean).toList"""
-        case o: IntegerArgument if o.multiple =>
-          s"""$env_name.split($quo${o.multiple_sep}$quo).map(_.toInt).toList"""
-        case o: DoubleArgument if o.multiple =>
-          s"""$env_name.split($quo${o.multiple_sep}$quo).map(_.toDouble).toList"""
-        case o: FileArgument if o.multiple =>
-          s"""$env_name.split($quo${o.multiple_sep}$quo).toList"""
-        case o: StringArgument if o.multiple =>
-          s"""$env_name.split($quo${o.multiple_sep}$quo).toList"""
-        case o: BooleanArgument if !o.required && o.flagValue.isEmpty => s"""Some($env_name.toLowerCase.toBoolean)"""
-        case o: IntegerArgument if !o.required => s"""Some($env_name.toInt)"""
-        case o: DoubleArgument if !o.required => s"""Some($env_name.toDouble)"""
-        case o: FileArgument if !o.required => s"""Some($env_name)"""
-        case o: StringArgument if !o.required => s"""Some($env_name)"""
+        case a: BooleanArgument if a.multiple =>
+          s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toLowerCase.toBoolean).toList"""
+        case a: IntegerArgument if a.multiple =>
+          s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toInt).toList"""
+        case a: DoubleArgument if a.multiple =>
+          s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toDouble).toList"""
+        case a: FileArgument if a.multiple =>
+          s"""$env_name.split($quo${a.multiple_sep}$quo).toList"""
+        case a: StringArgument if a.multiple =>
+          s"""$env_name.split($quo${a.multiple_sep}$quo).toList"""
+        case a: BooleanArgument if !a.required && a.flagValue.isEmpty => s"""Some($env_name.toLowerCase.toBoolean)"""
+        case a: IntegerArgument if !a.required => s"""Some($env_name.toInt)"""
+        case a: DoubleArgument if !a.required => s"""Some($env_name.toDouble)"""
+        case a: FileArgument if !a.required => s"""Some($env_name)"""
+        case a: StringArgument if !a.required => s"""Some($env_name)"""
         case _: BooleanArgument => s"""$env_name.toLowerCase.toBoolean"""
         case _: IntegerArgument => s"""$env_name.toInt"""
         case _: DoubleArgument => s"""$env_name.toDouble"""
@@ -89,9 +89,9 @@ case class ScalaScript(
       }}
 
       val notFound = par match {
-        case o: Argument[_] if o.multiple => Some("Nil")
-        case o: BooleanArgument if o.flagValue.isDefined => None
-        case o: Argument[_] if !o.required => Some("None")
+        case a: Argument[_] if a.multiple => Some("Nil")
+        case a: BooleanArgument if a.flagValue.isDefined => None
+        case a: Argument[_] if !a.required => Some("None")
         case _: Argument[_] => None
       }
 

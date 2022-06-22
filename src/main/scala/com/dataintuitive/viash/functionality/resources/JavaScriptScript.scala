@@ -44,16 +44,16 @@ case class JavaScriptScript(
       val env_name = par.viash_par_escaped("'", """\'""", """\\\'""")
 
       val parse = par match {
-        case o: BooleanArgument if o.multiple =>
-          s"""$env_name.split('${o.multiple_sep}').map(x => x.toLowerCase() === 'true')"""
-        case o: IntegerArgument if o.multiple =>
-          s"""$env_name.split('${o.multiple_sep}').map(x => parseInt(x))"""
-        case o: DoubleArgument if o.multiple =>
-          s"""$env_name.split('${o.multiple_sep}').map(x => parseFloat(x))"""
-        case o: FileArgument if o.multiple =>
-          s"""$env_name.split('${o.multiple_sep}')"""
-        case o: StringArgument if o.multiple =>
-          s"""$env_name.split('${o.multiple_sep}')"""
+        case a: BooleanArgument if a.multiple =>
+          s"""$env_name.split('${a.multiple_sep}').map(x => x.toLowerCase() === 'true')"""
+        case a: IntegerArgument if a.multiple =>
+          s"""$env_name.split('${a.multiple_sep}').map(x => parseInt(x))"""
+        case a: DoubleArgument if a.multiple =>
+          s"""$env_name.split('${a.multiple_sep}').map(x => parseFloat(x))"""
+        case a: FileArgument if a.multiple =>
+          s"""$env_name.split('${a.multiple_sep}')"""
+        case a: StringArgument if a.multiple =>
+          s"""$env_name.split('${a.multiple_sep}')"""
         case _: BooleanArgument => s"""$env_name.toLowerCase() === 'true'"""
         case _: IntegerArgument => s"""parseInt($env_name)"""
         case _: DoubleArgument => s"""parseFloat($env_name)"""

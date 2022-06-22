@@ -44,16 +44,16 @@ case class RScript(
       val env_name = par.viash_par_escaped("'", """\'""", """\\\'""")
 
       val parse = par match {
-        case o: BooleanArgument if o.multiple =>
-          s"""as.logical(strsplit(toupper($env_name), split = '${o.multiple_sep}')[[1]])"""
-        case o: IntegerArgument if o.multiple =>
-          s"""as.integer(strsplit($env_name, split = '${o.multiple_sep}')[[1]])"""
-        case o: DoubleArgument if o.multiple =>
-          s"""as.numeric(strsplit($env_name, split = '${o.multiple_sep}')[[1]])"""
-        case o: FileArgument if o.multiple =>
-          s"""strsplit($env_name, split = '${o.multiple_sep}')[[1]]"""
-        case o: StringArgument if o.multiple =>
-          s"""strsplit($env_name, split = '${o.multiple_sep}')[[1]]"""
+        case a: BooleanArgument if a.multiple =>
+          s"""as.logical(strsplit(toupper($env_name), split = '${a.multiple_sep}')[[1]])"""
+        case a: IntegerArgument if a.multiple =>
+          s"""as.integer(strsplit($env_name, split = '${a.multiple_sep}')[[1]])"""
+        case a: DoubleArgument if a.multiple =>
+          s"""as.numeric(strsplit($env_name, split = '${a.multiple_sep}')[[1]])"""
+        case a: FileArgument if a.multiple =>
+          s"""strsplit($env_name, split = '${a.multiple_sep}')[[1]]"""
+        case a: StringArgument if a.multiple =>
+          s"""strsplit($env_name, split = '${a.multiple_sep}')[[1]]"""
         case _: BooleanArgument => s"""as.logical(toupper($env_name))"""
         case _: IntegerArgument => s"""as.integer($env_name)"""
         case _: DoubleArgument => s"""as.numeric($env_name)"""

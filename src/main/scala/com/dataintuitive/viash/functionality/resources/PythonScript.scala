@@ -44,16 +44,16 @@ case class PythonScript(
       val env_name = par.viash_par_escaped("'", """\'""", """\\\'""")
 
       val parse = par match {
-        case o: BooleanArgument if o.multiple =>
-          s"""list(map(lambda x: (x.lower() == 'true'), $env_name.split('${o.multiple_sep}')))"""
-        case o: IntegerArgument if o.multiple =>
-          s"""list(map(int, $env_name.split('${o.multiple_sep}')))"""
-        case o: DoubleArgument if o.multiple =>
-          s"""list(map(float, $env_name.split('${o.multiple_sep}')))"""
-        case o: FileArgument if o.multiple =>
-          s"""$env_name.split('${o.multiple_sep}')"""
-        case o: StringArgument if o.multiple =>
-          s"""$env_name.split('${o.multiple_sep}')"""
+        case a: BooleanArgument if a.multiple =>
+          s"""list(map(lambda x: (x.lower() == 'true'), $env_name.split('${a.multiple_sep}')))"""
+        case a: IntegerArgument if a.multiple =>
+          s"""list(map(int, $env_name.split('${a.multiple_sep}')))"""
+        case a: DoubleArgument if a.multiple =>
+          s"""list(map(float, $env_name.split('${a.multiple_sep}')))"""
+        case a: FileArgument if a.multiple =>
+          s"""$env_name.split('${a.multiple_sep}')"""
+        case a: StringArgument if a.multiple =>
+          s"""$env_name.split('${a.multiple_sep}')"""
         case _: BooleanArgument => s"""$env_name.lower() == 'true'"""
         case _: IntegerArgument => s"""int($env_name)"""
         case _: DoubleArgument => s"""float($env_name)"""
