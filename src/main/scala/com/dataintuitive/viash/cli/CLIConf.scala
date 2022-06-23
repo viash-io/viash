@@ -29,7 +29,7 @@ trait ViashCommand {
   _: DocumentedSubcommand =>
   val platform = registerOpt[String](
     name = "platform",
-    short = Option('p'),
+    short = Some('p'),
     default = None,
     descr =
       "Specifies which platform amongst those specified in the config to use. " +
@@ -46,7 +46,7 @@ trait ViashCommand {
   )
   val config_mods = registerOpt[List[String]](
     name = "config_mod",
-    short = Option('c'),
+    short = Some('c'),
     default = Some(Nil),
 
     descr = "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
@@ -56,13 +56,13 @@ trait ViashNs {
   _: DocumentedSubcommand =>
   val query = registerOpt[String](
     name = "query",
-    short = Option('q'),
+    short = Some('q'),
     descr = "Filter which components get selected by name and namespace. Can be a regex. Example: \"^mynamespace/component1$\".",
     default = None
   )
   val query_namespace = registerOpt[String](
     name = "query_namespace",
-    short = Option('n'),
+    short = Some('n'),
     descr = "Filter which namespaces get selected by namespace. Can be a regex. Example: \"^mynamespace$\".",
     default = None
   )
@@ -73,13 +73,13 @@ trait ViashNs {
   )
   val src = registerOpt[String](
     name = "src",
-    short = Option('s'),
+    short = Some('s'),
     descr = " A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
     default = Some("src")
   )
   val platform = registerOpt[String](
     name = "platform",
-    short = Option('p'),
+    short = Some('p'),
     descr =
       "Acts as a regular expression to filter the platform ids specified in the found config files. " +
         "If this is not provided, all platforms will be used. " +
@@ -90,13 +90,13 @@ trait ViashNs {
   )
   val parallel = registerOpt[Boolean](
     name = "parallel",
-    short = Option('l'),
+    short = Some('l'),
     default = Some(false),
     descr = "Whether or not to run the process in parallel."
   )
   val config_mods = registerOpt[List[String]](
     name = "config_mod",
-    short = Option('c'),
+    short = Some('c'),
     default = Some(Nil),
     descr = "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
   )
@@ -105,7 +105,7 @@ trait WithTemporary {
   _: DocumentedSubcommand =>
   val keep = registerOpt[String](
     name = "keep",
-    short = Option('k'),
+    short = Some('k'),
     default = None,
     descr = "Whether or not to keep temporary files. By default, files will be deleted if all goes well but remain when an error occurs." +
       " By specifying --keep true, the temporary files will always be retained, whereas --keep false will always delete them." +
