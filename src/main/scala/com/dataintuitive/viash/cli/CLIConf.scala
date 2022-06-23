@@ -95,7 +95,6 @@ trait ViashNs {
     name = "config_mod",
     short = 'c',
     default = Some(Nil),
-
     descr = "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
   )
 }
@@ -112,7 +111,12 @@ trait WithTemporary {
 }
 
 class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
-  def getSubconfigs = subconfigs
+  def getRegisteredCommands = subconfigs.flatMap{ sc =>
+    sc match {
+      case ds: DocumentedSubcommand => Some(ds.toRegisteredCommand)
+      case _ => None
+    }
+  }
  
   version(s"${Main.name} ${Main.version} (c) 2020 Data Intuitive")
 

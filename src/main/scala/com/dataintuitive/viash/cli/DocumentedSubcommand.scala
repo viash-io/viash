@@ -21,25 +21,21 @@ import org.rogach.scallop.Subcommand
 import org.rogach.scallop.ScallopOptionGroup
 import org.rogach.scallop.ValueConverter
 import org.rogach.scallop.ScallopOption
+import scala.reflect.runtime.universe._
 
 /**
   * Wrapper class for Subcommand to expose protected members
   * We need this information to scrape the CLI to export to json
   */
 class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(commandNameAndAliases:_*) {
-  def getCommandNameAndAliases = commandNameAndAliases
-  def getBanner = builder.bann
-  def getFooter = builder.foot
-  // def getOpts = builder.opts
-  // def getSubconfigs = subconfigs
   var registeredSubCommands: Seq[DocumentedSubcommand] = Nil
   var registeredOpts: Seq[RegisteredOpt] = Nil
 
-  import scala.reflect.runtime.universe._
 
   override def addSubcommand(conf: Subcommand): Unit = {
-    if (conf.isInstanceOf[DocumentedSubcommand])
+    if (conf.isInstanceOf[DocumentedSubcommand]) {
       registeredSubCommands = registeredSubCommands :+ conf.asInstanceOf[DocumentedSubcommand]
+    }
     super.addSubcommand(conf)
   }
 
@@ -65,7 +61,20 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       case _ => name
     }
     
-    registeredOpts = registeredOpts :+ RegisteredOpt.opt(cleanName, short, descr, default.toString(), required, argName, hidden, noshort, `type`.toString())
+    val registeredOpt = RegisteredOpt(
+      name = cleanName, 
+      short = Some(short), 
+      descr = descr, 
+      default = default.toString(), 
+      required = required, 
+      argName = Some(argName), 
+      hidden = hidden, 
+      noshort = Some(noshort), 
+      choices = None, 
+      `type` = `type`.toString(), 
+      optType = "opt"
+    )
+    registeredOpts = registeredOpts :+ registeredOpt
     opt(name, short, descr, default, validate, required, argName, hidden, noshort, group)
   }
 
@@ -87,7 +96,20 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       case _ => name
     }
 
-    registeredOpts = registeredOpts :+ RegisteredOpt.choice(choices, cleanName, short, descr, default.toString(), required, argName, hidden, noshort)
+    val registeredOpt = RegisteredOpt(
+      name = cleanName, 
+      short = Some(short), 
+      descr = descr, 
+      default = default.toString(), 
+      required = required, 
+      argName = Some(argName), 
+      hidden = hidden, 
+      noshort = Some(noshort), 
+      choices = Some(choices), 
+      `type` = "String", 
+      optType = "choice"
+    )
+    registeredOpts = registeredOpts :+ registeredOpt
     choice(choices, name, short, descr, default, required, argName, hidden, noshort, group)
   }
 
@@ -107,8 +129,29 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       case _ => name
     }
 
-    registeredOpts = registeredOpts :+ RegisteredOpt.trailArgs(cleanName, descr, required, default.toString(), hidden, `type`.toString())
+    val registeredOpt = RegisteredOpt(
+      name = cleanName, 
+      short = None, 
+      descr = descr, 
+      default = default.toString(), 
+      required = required, 
+      argName = None, 
+      hidden = hidden, 
+      noshort = None, 
+      choices = None, 
+      `type` = `type`.toString, 
+      optType = "trailArgs"
+    )
+    registeredOpts = registeredOpts :+ registeredOpt
     trailArg[A](name, descr, validate, required, default, hidden, group)
   }
 
+  def toRegisteredCommand: RegisteredCommand = 
+    RegisteredCommand(
+      name = commandNameAndAliases.mkString(" + "),
+      banner = builder.bann,
+      footer = builder.foot,
+      subcommands = registeredSubCommands.map(_.toRegisteredCommand),
+      opts = registeredOpts
+    )
 }
