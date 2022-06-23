@@ -36,3 +36,9 @@ class since(since: String) extends scala.annotation.StaticAnnotation
 
 @getter @setter @beanGetter @beanSetter @field
 class example(example: String, format: String = "") extends scala.annotation.StaticAnnotation
+
+@getter @setter @beanGetter @beanSetter @field
+class description(example: String) extends scala.annotation.StaticAnnotation
+
+@getter @setter @beanGetter @beanSetter @field
+class removed(message: String = "", since: String = "") extends scala.annotation.StaticAnnotation
