@@ -43,8 +43,8 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
   // The same goes for 'trailArgs'. Not really for 'choice' but it's better to keep the same change in naming schema here too.
 
   def registerOpt[A](
-    name: String = null,
-    short: Char = '\u0000',
+    name: String,
+    short: Option[Char] = None,
     descr: String = "",
     default: => Option[A] = None,
     validate: A => Boolean = (_:A) => true,
@@ -63,9 +63,9 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
     
     val registeredOpt = RegisteredOpt(
       name = cleanName, 
-      short = Some(short), 
+      short = short,
       descr = descr, 
-      default = default.toString(), 
+      default = default.map(_.toString()), 
       required = required, 
       argName = Some(argName), 
       hidden = hidden, 
@@ -75,13 +75,13 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       optType = "opt"
     )
     registeredOpts = registeredOpts :+ registeredOpt
-    opt(name, short, descr, default, validate, required, argName, hidden, noshort, group)
+    opt(name, short.getOrElse('\u0000'), descr, default, validate, required, argName, hidden, noshort, group)
   }
 
   def registerChoice(
     choices: Seq[String],
-    name: String = null,
-    short: Char = '\u0000',
+    name: String,
+    short: Option[Char],
     descr: String = "",
     default: => Option[String] = None,
     required: Boolean = false,
@@ -98,9 +98,9 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
 
     val registeredOpt = RegisteredOpt(
       name = cleanName, 
-      short = Some(short), 
+      short = short, 
       descr = descr, 
-      default = default.toString(), 
+      default = default.map(_.toString()), 
       required = required, 
       argName = Some(argName), 
       hidden = hidden, 
@@ -110,11 +110,11 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       optType = "choice"
     )
     registeredOpts = registeredOpts :+ registeredOpt
-    choice(choices, name, short, descr, default, required, argName, hidden, noshort, group)
+    choice(choices, name, short.getOrElse('\u0000'), descr, default, required, argName, hidden, noshort, group)
   }
 
   def registerTrailArg[A](
-    name: String = null,
+    name: String,
     descr: String = "",
     validate: A => Boolean = (_:A) => true,
     required: Boolean = true,
@@ -133,7 +133,7 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       name = cleanName, 
       short = None, 
       descr = descr, 
-      default = default.toString(), 
+      default = default.map(_.toString()), 
       required = required, 
       argName = None, 
       hidden = hidden, 

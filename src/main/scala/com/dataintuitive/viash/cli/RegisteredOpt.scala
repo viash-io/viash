@@ -21,7 +21,7 @@ case class RegisteredOpt (
   name: String,
   short: Option[Char],
   descr: String,
-  default: String,
+  default: Option[String],
   required: Boolean,
   argName: Option[String],
   hidden: Boolean,
