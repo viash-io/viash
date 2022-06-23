@@ -18,7 +18,7 @@
 package com.dataintuitive.viash.functionality.resources
 
 import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.functionality.arguments._
 import com.dataintuitive.viash.wrapper.BashWrapper
 
 import java.net.URI
@@ -37,7 +37,7 @@ case class CSharpScript(
   }
 
   def generatePlaceholder(functionality: Functionality): String = {
-    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
 
     val parSet = params.map { par =>
       // val env_name = par.VIASH_PAR
@@ -45,37 +45,37 @@ case class CSharpScript(
       val env_name = par.viash_par_escaped(quo, """\"""", """\\\"""")
 
       val parse = { par match {
-        case o: BooleanObject if o.multiple =>
-          s"""$env_name.Split($quo${o.multiple_sep}$quo).Select(x => bool.Parse(x.ToLower())).ToArray()"""
-        case o: IntegerObject if o.multiple =>
-          s"""$env_name.Split($quo${o.multiple_sep}$quo).Select(x => Convert.ToInt32(x)).ToArray()"""
-        case o: DoubleObject if o.multiple =>
-          s"""$env_name.Split($quo${o.multiple_sep}$quo).Select(x => Convert.ToDouble(x)).ToArray()"""
-        case o: FileObject if o.multiple =>
-          s"""$env_name.Split($quo${o.multiple_sep}$quo).ToArray()"""
-        case o: StringObject if o.multiple =>
-          s"""$env_name.Split($quo${o.multiple_sep}$quo).ToArray()"""
-        case _: BooleanObject => s"""bool.Parse($env_name.ToLower())"""
-        case _: IntegerObject => s"""Convert.ToInt32($env_name)"""
-        case _: DoubleObject => s"""Convert.ToDouble($env_name)"""
-        case _: FileObject => s"""$env_name"""
-        case _: StringObject => s"""$env_name"""
+        case a: BooleanArgument if a.multiple =>
+          s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => bool.Parse(x.ToLower())).ToArray()"""
+        case a: IntegerArgument if a.multiple =>
+          s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => Convert.ToInt32(x)).ToArray()"""
+        case a: DoubleArgument if a.multiple =>
+          s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => Convert.ToDouble(x)).ToArray()"""
+        case a: FileArgument if a.multiple =>
+          s"""$env_name.Split($quo${a.multiple_sep}$quo).ToArray()"""
+        case a: StringArgument if a.multiple =>
+          s"""$env_name.Split($quo${a.multiple_sep}$quo).ToArray()"""
+        case _: BooleanArgument => s"""bool.Parse($env_name.ToLower())"""
+        case _: IntegerArgument => s"""Convert.ToInt32($env_name)"""
+        case _: DoubleArgument => s"""Convert.ToDouble($env_name)"""
+        case _: FileArgument => s"""$env_name"""
+        case _: StringArgument => s"""$env_name"""
       }}
 
       val class_ = par match {
-        case _: BooleanObject => "bool"
-        case _: IntegerObject => "int"
-        case _: DoubleObject => "double"
-        case _: FileObject => "string"
-        case _: StringObject => "string"
+        case _: BooleanArgument => "bool"
+        case _: IntegerArgument => "int"
+        case _: DoubleArgument => "double"
+        case _: FileArgument => "string"
+        case _: StringArgument => "string"
       }
 
       val notFound = par match {
-        case o: DataObject[_] if o.multiple => Some(s"new $class_[0]")
-        case o: StringObject if !o.required => Some(s"(${class_}) null")
-        case o: FileObject if !o.required => Some(s"(${class_}) null")
-        case o: DataObject[_] if !o.required => Some(s"(${class_}?) null")
-        case _: DataObject[_] => None
+        case a: Argument[_] if a.multiple => Some(s"new $class_[0]")
+        case a: StringArgument if !a.required => Some(s"(${class_}) null")
+        case a: FileArgument if !a.required => Some(s"(${class_}) null")
+        case a: Argument[_] if !a.required => Some(s"(${class_}?) null")
+        case _: Argument[_] => None
       }
 
       val setter = notFound match {

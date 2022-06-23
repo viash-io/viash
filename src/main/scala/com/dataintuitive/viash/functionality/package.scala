@@ -24,7 +24,7 @@ import io.circe.ACursor
 package object functionality {
   // import implicits
 
-  import functionality.dataobjects._
+  import functionality.arguments._
   import functionality.resources._
   import com.dataintuitive.viash.helpers.Circe._
 

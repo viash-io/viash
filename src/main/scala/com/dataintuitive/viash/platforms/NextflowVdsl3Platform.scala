@@ -20,7 +20,7 @@ package com.dataintuitive.viash.platforms
 import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.functionality.arguments._
 import com.dataintuitive.viash.config.Version
 import com.dataintuitive.viash.helpers.{Docker, Bash, DockerImageInfo, Helper}
 import com.dataintuitive.viash.helpers.Circe._
@@ -193,7 +193,7 @@ case class NextflowVdsl3Platform(
 
       // construct data for default
       val defTup = 
-        if (arg.isInstanceOf[FileObject] && arg.direction == Output) {
+        if (arg.isInstanceOf[FileArgument] && arg.direction == Output) {
           val mult = if (arg.multiple) "_*" else ""
           val (lef, rig) = if (arg.multiple) ("['", "']") else ("'", "'")
           val ExtReg = ".*(\\.[^\\.]*)".r
@@ -212,15 +212,15 @@ case class NextflowVdsl3Platform(
               ""
             }
           (lef, Some(s"$$id.$$key.${arg.plainName}${mult}${ext}"), rig, false)
-        } else if (arg.isInstanceOf[BooleanObject] && arg.asInstanceOf[BooleanObject].flagValue.isDefined) {
-          ("", Some((!arg.asInstanceOf[BooleanObject].flagValue.get).toString), "", false)
+        } else if (arg.isInstanceOf[BooleanArgument] && arg.asInstanceOf[BooleanArgument].flagValue.isDefined) {
+          ("", Some((!arg.asInstanceOf[BooleanArgument].flagValue.get).toString), "", false)
         } else if (arg.default.isEmpty) {
           ("", None, "", false)
-        } else if (arg.multiple && (arg.isInstanceOf[StringObject] || arg.isInstanceOf[FileObject]) ) {
+        } else if (arg.multiple && (arg.isInstanceOf[StringArgument] || arg.isInstanceOf[FileArgument]) ) {
           ("['", Some(arg.default.toList.mkString("', '")), "']", true)
         } else if (arg.multiple) {
           ("[", Some(arg.default.toList.mkString(", ")), "]", true)
-        } else if (arg.isInstanceOf[StringObject] || arg.isInstanceOf[FileObject]) {
+        } else if (arg.isInstanceOf[StringArgument] || arg.isInstanceOf[FileArgument]) {
           ("'", Some(arg.default.head.toString), "'", true)
         } else {
           ("", Some(arg.default.head.toString), "", true)
@@ -239,11 +239,11 @@ case class NextflowVdsl3Platform(
       val exaTup = 
         if (arg.example.isEmpty) {
           ("", None, "", false)
-        } else if (arg.multiple && (arg.isInstanceOf[StringObject] || arg.isInstanceOf[FileObject]) ) {
+        } else if (arg.multiple && (arg.isInstanceOf[StringArgument] || arg.isInstanceOf[FileArgument]) ) {
           ("['", Some(arg.example.toList.mkString("', '")), "']", true)
         } else if (arg.multiple) {
           ("[", Some(arg.example.toList.mkString(", ")), "]", true)
-        } else if (arg.isInstanceOf[StringObject] || arg.isInstanceOf[FileObject]) {
+        } else if (arg.isInstanceOf[StringArgument] || arg.isInstanceOf[FileArgument]) {
           ("'", Some(arg.example.head.toString), "'", true)
         } else {
           ("", Some(arg.example.head.toString), "", true)
@@ -268,7 +268,7 @@ case class NextflowVdsl3Platform(
 
     /************************* HELP *************************/
     val helpParams = functionality.allArguments.map {
-      case arg => arg.copyDO(
+      case arg => arg.copyArg(
         name = "--" + arg.plainName,
         alternatives = Nil
       )

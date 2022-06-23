@@ -17,7 +17,7 @@
 
 package com.dataintuitive.viash.functionality
 
-import dataobjects._
+import arguments._
 import resources._
 import com.dataintuitive.viash.config.Version
 import io.circe.generic.extras._
@@ -27,9 +27,9 @@ case class Functionality(
   namespace: Option[String] = None,
   version: Option[Version] = None,
   authors: List[Author] = Nil,
-  inputs: List[DataObject[_]] = Nil,
-  outputs: List[DataObject[_]] = Nil,
-  arguments: List[DataObject[_]] = Nil,
+  inputs: List[Argument[_]] = Nil,
+  outputs: List[Argument[_]] = Nil,
+  arguments: List[Argument[_]] = Nil,
   argument_groups: List[ArgumentGroup] = Nil,
   resources: List[Resource] = Nil,
   description: Option[String] = None,
@@ -38,7 +38,7 @@ case class Functionality(
   info: Map[String, String] = Map.empty[String, String],
 
   // dummy arguments are used for handling extra directory mounts in docker
-  dummy_arguments: List[DataObject[_]] = Nil,
+  dummy_arguments: List[Argument[_]] = Nil,
 
   // setting this to true will change the working directory
   // to the resources directory when running the script
@@ -104,7 +104,7 @@ case class Functionality(
 
   def mainCode: Option[String] = mainScript.flatMap(_.read)
 
-  def allArgumentsAndDummies: List[DataObject[_]] = allArguments ::: dummy_arguments
+  def allArgumentsAndDummies: List[Argument[_]] = allArguments ::: dummy_arguments
 }
 
 object Functionality {

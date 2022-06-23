@@ -19,7 +19,7 @@ package com.dataintuitive.viash.wrapper
 
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.functionality.arguments._
 import com.dataintuitive.viash.helpers.{Bash, Format, Helper}
 
 object BashWrapper {
@@ -160,8 +160,8 @@ object BashWrapper {
     }
 
     // generate script modifiers
-    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
-    val paramAndDummies = functionality.allArgumentsAndDummies.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
+    val paramAndDummies = functionality.allArgumentsAndDummies.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
 
     val helpMods = generateHelp(functionality, params)
     val parMods = generateParsers(params, paramAndDummies)
@@ -257,7 +257,7 @@ object BashWrapper {
   }
 
 
-  private def generateHelp(functionality: Functionality, params: List[DataObject[_]]) = {
+  private def generateHelp(functionality: Functionality, params: List[Argument[_]]) = {
     val help = Helper.generateHelp(functionality, params)
     val helpStr = help.map(h => Bash.escapeMore(h, quote = true)).mkString("  echo \"", "\"\n  echo \"", "\"")
 
@@ -270,11 +270,11 @@ object BashWrapper {
     BashWrapperMods(preParse = preParse)
   }
 
-  private def generateParsers(params: List[DataObject[_]], paramsAndDummies: List[DataObject[_]]) = {
+  private def generateParsers(params: List[Argument[_]], paramsAndDummies: List[Argument[_]]) = {
     // gather parse code for params
     val wrapperParams = params.filterNot(_.flags == "")
     val parseStrs = wrapperParams.map {
-      case bo: BooleanObject if bo.flagValue.isDefined =>
+      case bo: BooleanArgument if bo.flagValue.isDefined =>
         val fv = bo.flagValue.get
 
         // params of the form --param
@@ -342,10 +342,10 @@ object BashWrapper {
     //   VIASH_PAR_FOO="defaultvalue"
     // fi
     val defaultsStrs = paramsAndDummies.flatMap { param =>
-      // if boolean object has a flagvalue, add the inverse of it as a default value
+      // if boolean argument has a flagvalue, add the inverse of it as a default value
       val default = param match {
         case p if p.required => None
-        case bo: BooleanObject if bo.flagValue.isDefined => bo.flagValue.map(!_)
+        case bo: BooleanArgument if bo.flagValue.isDefined => bo.flagValue.map(!_)
         case p if p.default.nonEmpty => Some(p.default.map(_.toString).mkString(p.multiple_sep.toString))
         case p if p.default.isEmpty => None
       }
@@ -359,7 +359,7 @@ object BashWrapper {
 
     // construct required file checks
     val reqFiles = paramsAndDummies.flatMap {
-      case f: FileObject if f.must_exist => Some(f)
+      case f: FileArgument if f.must_exist => Some(f)
       case _ => None
     }
     val reqFilesStr =
@@ -391,9 +391,9 @@ object BashWrapper {
       }
 
     // construct type checks
-    def typeMinMaxCheck[T](param: DataObject[T], regex: String, min: Option[T] = None, max: Option[T] = None) = {
+    def typeMinMaxCheck[T](param: Argument[T], regex: String, min: Option[T] = None, max: Option[T] = None) = {
       val typeWithArticle = param match {
-        case i: IntegerObject => "an " + param.`type`
+        case i: IntegerArgument => "an " + param.`type`
         case _ => "a " + param.`type`
       }
 
@@ -464,11 +464,11 @@ object BashWrapper {
         "\n# check whether parameters values are of the right type\n" +
           paramsAndDummies.map { param =>
             param match {
-              case io: IntegerObject =>
+              case io: IntegerArgument =>
                 typeMinMaxCheck(io, "^[-+]?[0-9]+$", io.min, io.max)
-              case dO: DoubleObject =>
+              case dO: DoubleArgument =>
                 typeMinMaxCheck(dO, "^[-+]?(\\.[0-9]+|[0-9]+(\\.[0-9]*)?)([eE][-+]?[0-9]+)?$", dO.min, dO.max)
-              case bo: BooleanObject =>
+              case bo: BooleanArgument =>
                 typeMinMaxCheck(bo, "^(true|True|TRUE|false|False|FALSE|yes|Yes|YES|no|No|NO)$")               
               case _ => ""
             }           
@@ -476,7 +476,7 @@ object BashWrapper {
       }
 
 
-    def checkChoices[T](param: DataObject[T], allowedChoices: List[T]) = {
+    def checkChoices[T](param: Argument[T], allowedChoices: List[T]) = {
       val allowedChoicesString = allowedChoices.mkString(param.multiple_sep.toString)
 
       param match {
@@ -517,9 +517,9 @@ object BashWrapper {
         "\n# check whether parameters values are of the right type\n" +
           paramsAndDummies.map { param =>
             param match {
-              case io: IntegerObject if io.choices != Nil =>
+              case io: IntegerArgument if io.choices != Nil =>
                 checkChoices(io, io.choices)
-              case so: StringObject if so.choices != Nil =>
+              case so: StringArgument if so.choices != Nil =>
                 checkChoices(so, so.choices)
               case _ => ""
             }           
@@ -533,9 +533,9 @@ object BashWrapper {
     )
   }
 
-  private def generateExecutableArgs(params: List[DataObject[_]]) = {
+  private def generateExecutableArgs(params: List[Argument[_]]) = {
     val inserts = params.map {
-      case bo: BooleanObject if bo.flagValue.isDefined =>
+      case bo: BooleanArgument if bo.flagValue.isDefined =>
         s"""
            |if [ "$$${bo.VIASH_PAR}" == "${bo.flagValue.get}" ]; then
            |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS ${bo.name}"

@@ -15,15 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.dataobjects
+package com.dataintuitive.viash.functionality.arguments
 
 import com.dataintuitive.viash.helpers.Circe.OneOrMore
 
-abstract class BooleanObject extends DataObject[Boolean] {
+abstract class BooleanArgument extends Argument[Boolean] {
   val flagValue: Option[Boolean]
 }
 
-case class BooleanObjectRegular(
+case class BooleanArgumentRegular(
   name: String,
   alternatives: OneOrMore[String] = Nil,
   description: Option[String] = None,
@@ -34,11 +34,11 @@ case class BooleanObjectRegular(
   multiple: Boolean = false,
   multiple_sep: Char = ':',
   `type`: String = "boolean"
-) extends BooleanObject {
+) extends BooleanArgument {
 
   val flagValue: Option[Boolean] = None
 
-  def copyDO(
+  def copyArg(
     `type`: String, 
     name: String, 
     alternatives: OneOrMore[String],
@@ -49,18 +49,18 @@ case class BooleanObjectRegular(
     direction: Direction,
     multiple: Boolean,
     multiple_sep: Char
-  ): DataObject[Boolean] = {
+  ): Argument[Boolean] = {
     copy(name, alternatives, description, example, default, required, direction, multiple, multiple_sep, `type`)
   }
 }
 
-case class BooleanObjectTrue(
+case class BooleanArgumentTrue(
   name: String,
   alternatives: OneOrMore[String] = Nil,
   description: Option[String] = None,
   direction: Direction = Input,
   `type`: String = "boolean_true"
-) extends BooleanObject {
+) extends BooleanArgument {
 
   val required: Boolean = false
   val flagValue: Option[Boolean] = Some(true)
@@ -69,7 +69,7 @@ case class BooleanObjectTrue(
   val multiple_sep: Char = ':'
   val example: OneOrMore[Boolean] = Nil
 
-  def copyDO(
+  def copyArg(
     `type`: String, 
     name: String, 
     alternatives: OneOrMore[String],
@@ -80,18 +80,18 @@ case class BooleanObjectTrue(
     direction: Direction,
     multiple: Boolean,
     multiple_sep: Char
-  ): DataObject[Boolean] = {
+  ): Argument[Boolean] = {
     copy(name, alternatives, description, direction, `type`)
   }
 }
 
-case class BooleanObjectFalse(
+case class BooleanArgumentFalse(
   name: String,
   alternatives: OneOrMore[String] = Nil,
   description: Option[String] = None,
   direction: Direction = Input,
   `type`: String = "boolean_false"
-) extends BooleanObject {
+) extends BooleanArgument {
 
   val required: Boolean = false
   val flagValue: Option[Boolean] = Some(false)
@@ -100,7 +100,7 @@ case class BooleanObjectFalse(
   val multiple_sep: Char = ':'
   val example: OneOrMore[Boolean] = Nil
 
-  def copyDO(
+  def copyArg(
     `type`: String, 
     name: String, 
     alternatives: OneOrMore[String],
@@ -111,7 +111,7 @@ case class BooleanObjectFalse(
     direction: Direction,
     multiple: Boolean,
     multiple_sep: Char
-  ): DataObject[Boolean] = {
+  ): Argument[Boolean] = {
     copy(name, alternatives, description, direction, `type`)
   }
 }
