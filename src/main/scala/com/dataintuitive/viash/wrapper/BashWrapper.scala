@@ -134,7 +134,7 @@ object BashWrapper {
           |cat > "$scriptPath" << 'VIASHMAIN'
           |$escapedCode
           |VIASHMAIN$cdToResources
-          |${res.meta.command(scriptPath)} &
+          |${res.companion.command(scriptPath)} &
           |wait "\\$$!"
           |""".stripMargin
 

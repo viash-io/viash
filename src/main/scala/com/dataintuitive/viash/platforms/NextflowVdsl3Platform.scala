@@ -303,7 +303,7 @@ case class NextflowVdsl3Platform(
           |cat > "$scriptPath" << VIASHMAIN
           |$escapedCode
           |VIASHMAIN
-          |${res.meta.command(scriptPath)}
+          |${res.companion.command(scriptPath)}
           |""".stripMargin
     }
 

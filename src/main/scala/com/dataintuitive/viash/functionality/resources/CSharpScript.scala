@@ -28,10 +28,9 @@ case class CSharpScript(
   text: Option[String] = None,
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
-  parent: Option[URI] = None,
-  `type`: String = "csharp_script"
+  parent: Option[URI] = None
 ) extends Script {
-  val meta = CSharpScript
+  val companion = CSharpScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
@@ -100,11 +99,7 @@ case class CSharpScript(
   }
 }
 
-object CSharpScript extends ScriptObject {
-  val commentStr = "//"
-  val extension = "csx"
-  val `type` = "csharp_script"
-
+object CSharpScript extends ScriptCompanion("csharp_script", "csx", "//") {
   def command(script: String): String = {
     "dotnet script \"" + script + "\""
   }

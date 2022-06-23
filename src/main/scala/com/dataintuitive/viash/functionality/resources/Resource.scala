@@ -23,13 +23,13 @@ import com.dataintuitive.viash.helpers.{IO, MissingResourceFileException}
 import java.nio.file.{Path, Paths}
 import java.nio.file.NoSuchFileException
 
-trait Resource {
-  val `type`: String
-  val dest: Option[String]
-  val parent: Option[URI]
+abstract class Resource {
   val path: Option[String]
   val text: Option[String]
+  val dest: Option[String]
   val is_executable: Option[Boolean]
+  val parent: Option[URI]
+  val companion: ResourceCompanion
 
   require(
     path.isEmpty != text.isEmpty,
@@ -40,7 +40,6 @@ trait Resource {
     message = s"Resource: 'dest' needs to be defined if no 'path' is defined."
   )
 
-  // val uri: Option[URI] = path.map(IO.uri)
   def uri: Option[URI] = {
     path match {
       case Some(pat) => {
@@ -121,5 +120,18 @@ trait Resource {
     dest: Option[String] = this.dest,
     is_executable: Option[Boolean] = this.is_executable,
     parent: Option[URI] = this.parent
+  ): Resource
+}
+
+abstract class ResourceCompanion(
+  val `type`: String,
+  val extension: String
+) {
+  def apply(
+    path: Option[String],
+    text: Option[String],
+    dest: Option[String],
+    is_executable: Option[Boolean],
+    parent: Option[URI]
   ): Resource
 }

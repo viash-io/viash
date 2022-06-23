@@ -28,10 +28,9 @@ case class BashScript(
   text: Option[String] = None,
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
-  parent: Option[URI] = None,
-  `type`: String = "bash_script"
+  parent: Option[URI] = None
 ) extends Script {
-  val meta = BashScript
+  val companion = BashScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
@@ -53,11 +52,7 @@ case class BashScript(
   }
 }
 
-object BashScript extends ScriptObject {
-  val commentStr = "#"
-  val extension = "sh"
-  val `type` = "bash_script"
-
+object BashScript extends ScriptCompanion("bash_script", "sh", "#") {
   def command(script: String): String = {
     "bash \"" + script + "\""
   }

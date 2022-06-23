@@ -28,10 +28,9 @@ case class JavaScriptScript(
   text: Option[String] = None,
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
-  parent: Option[URI] = None,
-  `type`: String = "javascript_script"
+  parent: Option[URI] = None
 ) extends Script {
-  val meta = JavaScriptScript
+  val companion = JavaScriptScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
@@ -77,11 +76,7 @@ case class JavaScriptScript(
   }
 }
 
-object JavaScriptScript extends ScriptObject {
-  val commentStr = "//"
-  val extension = "js"
-  val `type` = "javascript_script"
-
+object JavaScriptScript extends ScriptCompanion("javascript_script", "js", "//") {
   def command(script: String): String = {
     "node \"" + script + "\""
   }

@@ -47,7 +47,7 @@ package object resources {
 
   implicit def encodeResource[A <: Resource]: Encoder[A] = Encoder.instance {
     par =>
-      val typeJson = Json.obj("type" → Json.fromString(par.`type`))
+      val typeJson = Json.obj("type" → Json.fromString(par.companion.`type`))
       val objJson = par match {
         case s: BashScript => encodeBashScript(s)
         case s: PythonScript => encodePythonScript(s)
@@ -61,30 +61,55 @@ package object resources {
       objJson deepMerge typeJson
   }
 
-  val setDestToPathOrDefault = (default: String) => (aCursor: ACursor) => {aCursor.withFocus(js => {
-        js.mapObject{ obj =>	
-          // when json defines 'text' but no 'dest' set
-          // if has 'path' -> switch 'path' to 'dest'
-          // else if no 'path' or 'dest' -> set 'dest' to default value
-          if (obj.contains("text") && !obj.contains("dest")) {
-            if (obj.contains("path"))
-              obj.add("dest", obj("path").get).remove("path")
-            else 
-              obj.add("dest", Json.fromString(default))
-          } else {
-            obj
-          }
-        }
-      })}
+  def setDestDefault(default: String) = (aCursor: ACursor) => {aCursor.withFocus(
+    _.mapObject{ obj =>	
+      // when json defines 'text' but no 'dest' set
+      // if has 'path' -> switch 'path' to 'dest'
+      // else if no 'path' or 'dest' -> set 'dest' to default value
+      if (!obj.contains("text") || obj.contains("dest")) {
+        obj
+      } else if (obj.contains("path")) {
+        obj.add("dest", obj("path").get).remove("path")
+      } else {
+        obj.add("dest", Json.fromString(default))
+      }
+    //   if (obj.contains("text") && !obj.contains("dest")) {
+    //     if (obj.contains("path"))
+    //       obj.add("dest", obj("path").get).remove("path")
+    //     else 
+    //       obj.add("dest", Json.fromString(default))
+    //   } else {
+    //     obj
+    //   }
+    }
+  )}
 
-  implicit val decodeBashScript: Decoder[BashScript] = deriveConfiguredDecoder[BashScript].prepare { setDestToPathOrDefault("./script.sh") }
-  implicit val decodePythonScript: Decoder[PythonScript] = deriveConfiguredDecoder[PythonScript].prepare { setDestToPathOrDefault("./script.py") }
-  implicit val decodeRScript: Decoder[RScript] = deriveConfiguredDecoder[RScript].prepare { setDestToPathOrDefault("./script.R") }
-  implicit val decodeJavaScriptScript: Decoder[JavaScriptScript] = deriveConfiguredDecoder[JavaScriptScript].prepare { setDestToPathOrDefault("./script.js") }
-  implicit val decodeScalaScript: Decoder[ScalaScript] = deriveConfiguredDecoder[ScalaScript].prepare { setDestToPathOrDefault("./script.scala") }
-  implicit val decodeCSharpScript: Decoder[CSharpScript] = deriveConfiguredDecoder[CSharpScript].prepare { setDestToPathOrDefault("./script.csx") }
-  implicit val decodeExecutable: Decoder[Executable] = deriveConfiguredDecoder
-  implicit val decodePlainFile: Decoder[PlainFile] = deriveConfiguredDecoder[PlainFile].prepare { setDestToPathOrDefault("./text.txt") }
+  def prepareScript(companion: ResourceCompanion, prefix: String = "script") = {
+    val f1 = setDestDefault(s"./$prefix.${companion.extension}")
+    val f2 = removeType
+    f1 andThen f2
+  }
+  val removeType = (aCursor: ACursor) => {
+    val c2 = aCursor.downField("type").delete
+    if (c2.succeeded) c2 else aCursor
+  }
+
+  implicit val decodeBashScript: Decoder[BashScript] = deriveConfiguredDecoder[BashScript]
+    .prepare(prepareScript(BashScript))
+  implicit val decodePythonScript: Decoder[PythonScript] = deriveConfiguredDecoder[PythonScript]
+    .prepare(prepareScript(PythonScript))
+  implicit val decodeRScript: Decoder[RScript] = deriveConfiguredDecoder[RScript]
+    .prepare(prepareScript(RScript))
+  implicit val decodeJavaScriptScript: Decoder[JavaScriptScript] = deriveConfiguredDecoder[JavaScriptScript]
+    .prepare(prepareScript(JavaScriptScript))
+  implicit val decodeScalaScript: Decoder[ScalaScript] = deriveConfiguredDecoder[ScalaScript]
+    .prepare(prepareScript(ScalaScript))
+  implicit val decodeCSharpScript: Decoder[CSharpScript] = deriveConfiguredDecoder[CSharpScript]
+    .prepare(prepareScript(CSharpScript))
+  implicit val decodeExecutable: Decoder[Executable] = deriveConfiguredDecoder[Executable]
+    .prepare(removeType)
+  implicit val decodePlainFile: Decoder[PlainFile] = deriveConfiguredDecoder[PlainFile]
+    .prepare(prepareScript(PlainFile, prefix = "file"))
 
   implicit def decodeResource: Decoder[Resource] = Decoder.instance {
     cursor =>
@@ -104,7 +129,6 @@ package object resources {
           )
           case Left(_) => decodePlainFile.widen // default is a simple file
         }
-
       decoder(cursor)
   }
 }

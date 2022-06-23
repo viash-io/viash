@@ -29,9 +29,8 @@ case class ScalaScript(
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
-  `type`: String = "scala_script"
 ) extends Script {
-  val meta = ScalaScript
+  val companion = ScalaScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
@@ -128,11 +127,7 @@ case class ScalaScript(
   }
 }
 
-object ScalaScript extends ScriptObject {
-  val commentStr = "//"
-  val extension = "scala"
-  val `type` = "scala_script"
-
+object ScalaScript extends ScriptCompanion("scala_script", "scala", "//") {
   def command(script: String): String = {
     "scala -nc \"" + script + "\""
   }

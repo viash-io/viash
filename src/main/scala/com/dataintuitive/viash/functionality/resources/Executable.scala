@@ -27,10 +27,9 @@ case class Executable(
   text: Option[String] = None,
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
-  parent: Option[URI] = None,
-  `type`: String = "executable"
+  parent: Option[URI] = None
 ) extends Script {
-  val meta = Executable
+  val companion = Executable
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
@@ -42,11 +41,7 @@ case class Executable(
   override def write(path: Path, overwrite: Boolean) {}
 }
 
-object Executable extends ScriptObject {
-  val commentStr = "#"
-  val extension = "*"
-  val `type` = "executable"
-
+object Executable extends ScriptCompanion("executable", "*", "#") {
   def command(script: String): String = {
     script
   }
