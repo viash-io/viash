@@ -29,21 +29,12 @@ import java.io.FileNotFoundException
 import java.nio.file.NoSuchFileException
 import com.dataintuitive.viash.helpers.MissingResourceFileException
 import com.dataintuitive.viash.helpers.BuildStatus._
+import com.dataintuitive.viash.helpers.ConfigSchema
 
 object Main {
   private val pkg = getClass.getPackage
   val name: String = if (pkg.getImplementationTitle != null) pkg.getImplementationTitle else "viash"
   val version: String = if (pkg.getImplementationVersion != null) pkg.getImplementationVersion else "test"
-
-  import scala.reflect.runtime.universe
-  def annotationsOf[T: universe.TypeTag](obj: T) = {
-      // universe.typeOf[T].members.foldLeft(Nil: List[universe.type#Annotation]) {
-      //     (xs, x) => x.annotations ::: xs
-      // }
-      universe.typeOf[T].members.map(x => (x.fullName, x.annotations)).filter(_._2.length > 0)
-  }
-  val fun = com.dataintuitive.viash.functionality.Functionality("foo")
-  annotationsOf(fun).foreach(t => println(s"${t._1} -> ${t._2}"))
 
   def main(args: Array[String]): Unit = {
     try {
@@ -135,6 +126,8 @@ object Main {
         ViashConfig.inject(config)
       case Nil if (cli.cliexport()) =>
           CLIExport.export()
+      case Nil if (cli.schemaexport()) =>
+          ConfigSchema.export()
       case _ =>
         Console.err.println("No subcommand was specified. See `viash --help` for more information.")
     }
