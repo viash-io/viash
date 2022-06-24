@@ -63,17 +63,17 @@ object ConfigSchema {
           args.collect({
             case i: Tree =>
               i match {
+                // Here 'Apply' contains lists
+                // While 'Select' has a single element
                 case Literal(Constant(value)) =>
                   value.toString()
-                case Select(value, stripMargin) =>
-                  //(value, stripMargin)
-                  // TODO do correct stripMargin
-                  value.toString().stripMargin
-                case Apply(value, stripMargin) =>
-                  //(value, stripMargin)
-                  // println(s"stripMargin: ${stripMargin.head.toString}")
-                  // TODO do correct stripMargin
-                  value.toString().stripMargin(stripMargin.head.toString.charAt(0))
+                case Select(Select(a, b), stripMargin) =>
+                  b.toString().stripMargin
+                case Select(Apply(a, b), stripMargin) =>
+                  b.map(_.toString().stripMargin).mkString
+                case Apply(Select(Apply(a, a2), b), stripMargin) =>
+                  val stripper = stripMargin.head.toString.charAt(0)
+                  a2.map(_.toString().stripMargin(stripper)).mkString
                 case _ =>
                   i.toString()
               }
@@ -105,7 +105,7 @@ object ConfigSchema {
 
 
     val data = ConfigSchema(funSchema)
-    val str = jsonPrinter.print(funSchema.asJson)
+    val str = jsonPrinter.print(data.asJson)
     println(str)
   }
 }
