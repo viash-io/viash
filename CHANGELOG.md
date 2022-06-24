@@ -12,6 +12,8 @@
         description: Description
   ```
 
+* Addition of the `viash_nxf_schema` component for converting a Viash config (for a workflow) into a nextflow schema file.
+
 ## MINOR CHANGES
 * `NextflowVdsl3Platform`: Allow both `--publish_dir` and `--publishDir` when `auto.publish = true`.
 
