@@ -36,19 +36,19 @@ case class Functionality(
   version: Option[Version] = None,
 
   @description("""A list of authors. An author must at least have a name, but can also have a list of roles, an e-mail address, and a map of custom properties.
-                 \
-                 \Suggested values for roles are:
-                 \| Role | Abbrev. | Description |
-                 \|------|---------|-------------|
-                 \| maintainer | mnt | for the maintainer of the code. Ideally, exactly one maintainer is specified. |
-                 \|author | aut | for persons who have made substantial contributions to the software. |
-                 \| contributor | ctb| for persons who have made smaller contributions (such as code patches).
-                 \| datacontributor | dtc | for persons or organisations that contributed data sets for the software
-                 \| copyrightholder | cph | for all copyright holders. This is a legal concept so should use the legal name of an institution or corporate body.
-                 \| funder | fnd | for persons or organizations that furnished financial support for the development of the software
-                 \
-                 \The [full list of roles](https://www.loc.gov/marc/relators/relaterm.html) is extremely comprehensive.
-                 \""".stripMargin('\\'))
+                 +
+                 +Suggested values for roles are:
+                 +| Role | Abbrev. | Description |
+                 +|------|---------|-------------|
+                 +| maintainer | mnt | for the maintainer of the code. Ideally, exactly one maintainer is specified. |
+                 +|author | aut | for persons who have made substantial contributions to the software. |
+                 +| contributor | ctb| for persons who have made smaller contributions (such as code patches).
+                 +| datacontributor | dtc | for persons or organisations that contributed data sets for the software
+                 +| copyrightholder | cph | for all copyright holders. This is a legal concept so should use the legal name of an institution or corporate body.
+                 +| funder | fnd | for persons or organizations that furnished financial support for the development of the software
+                 +
+                 +The [full list of roles](https://www.loc.gov/marc/relators/relaterm.html) is extremely comprehensive.
+                 +""".stripMargin('+'))
   @since("Viash 0.3.1")
   authors: List[Author] = Nil,
 
@@ -120,9 +120,9 @@ case class Functionality(
 
   @description("A description of the component. This will be displayed with --help.")
   @example("""description: |
-             \This component performs function Y and Z.
-             \It is possible to make this a multiline string.
-             \""".stripMargin('\\'), "yaml")
+             +This component performs function Y and Z.
+             +It is possible to make this a multiline string.
+             +""".stripMargin('+'), "yaml")
   description: Option[String] = None,
 
   @description("A description of the component. This will be displayed with --help under the 'Usage:' section.")

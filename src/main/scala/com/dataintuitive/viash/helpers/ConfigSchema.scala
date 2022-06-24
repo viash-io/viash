@@ -34,7 +34,7 @@ final case class ParameterSchema(
   name: String,
   `type`: String,
   descripton: Option[String],
-  example: List[String],
+  example: List[Example],
   since: Option[String],
   deprecated: Option[DeprecatedOrRemoved],
   removed: Option[DeprecatedOrRemoved],
@@ -42,7 +42,12 @@ final case class ParameterSchema(
 
 final case class DeprecatedOrRemoved(
   message: String,
-  since: String
+  since: String,
+)
+
+final case class Example(
+  example: String,
+  format: String,
 )
 
 object ConfigSchema {
@@ -53,8 +58,12 @@ object ConfigSchema {
   implicit val encodeConfigSchema: Encoder.AsObject[ConfigSchema] = deriveConfiguredEncoder
   implicit val encodeParameterSchema: Encoder.AsObject[ParameterSchema] = deriveConfiguredEncoder
   implicit val encodeDeprecatedOrRemoved: Encoder.AsObject[DeprecatedOrRemoved] = deriveConfiguredEncoder
+  implicit val encodeExample: Encoder.AsObject[Example] = deriveConfiguredEncoder
 
   def export() {
+
+    def unfinishedStringStripMargin(s: Any, marginChar: Char = '|'): String = 
+      s.toString().replaceAll("\\\\n", "\n").stripMargin(marginChar).replaceAll("\n", "\\\\n")
 
     def annotationToStrings(ann: Annotation):(String, List[String]) = {
       val name = ann.tree.tpe.toString()
@@ -68,12 +77,12 @@ object ConfigSchema {
                 case Literal(Constant(value)) =>
                   value.toString()
                 case Select(Select(a, b), stripMargin) =>
-                  b.toString().stripMargin
+                  unfinishedStringStripMargin(b)
                 case Select(Apply(a, b), stripMargin) =>
-                  b.map(_.toString().stripMargin).mkString
+                  b.map(unfinishedStringStripMargin(_)).mkString
                 case Apply(Select(Apply(a, a2), b), stripMargin) =>
-                  val stripper = stripMargin.head.toString.charAt(0)
-                  a2.map(_.toString().stripMargin(stripper)).mkString
+                  val stripper = stripMargin.head.toString.charAt(1)
+                  a2.map(unfinishedStringStripMargin(_, stripper)).mkString
                 case _ =>
                   i.toString()
               }
@@ -96,7 +105,8 @@ object ConfigSchema {
       val annStrings = a._3.map(annotationToStrings(_))
 
       val description = annStrings.collectFirst({case (name, value) if name.endsWith("description") => value.head})
-      val example = annStrings.collect({case (name, value) if name.endsWith("example") => value.head})
+      // TODO handle example.format correctly
+      val example = annStrings.collect({case (name, value) if name.endsWith("example") => value}).map(l => Example(l(0), l(1)))
       val since = annStrings.collectFirst({case (name, value) if name.endsWith("since") => value.head})
       val deprecated = annStrings.collectFirst({case (name, value) if name.endsWith("deprecated") => value}).map(l => DeprecatedOrRemoved(l(0), l(1)))
       val removed = annStrings.collectFirst({case (name, value) if name.endsWith("removed") => value}).map(l => DeprecatedOrRemoved(l(0), l(1)))
