@@ -41,4 +41,7 @@ class example(example: String, format: String = "") extends scala.annotation.Sta
 class description(example: String) extends scala.annotation.StaticAnnotation
 
 @getter @setter @beanGetter @beanSetter @field
+class deprecated(message: String = "", since: String = "") extends scala.annotation.StaticAnnotation
+
+@getter @setter @beanGetter @beanSetter @field
 class removed(message: String = "", since: String = "") extends scala.annotation.StaticAnnotation

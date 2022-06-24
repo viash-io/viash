@@ -23,6 +23,7 @@ import com.dataintuitive.viash.helpers.Circe._
 
 import io.circe.Encoder
 import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
+import com.dataintuitive.viash.functionality.Functionality
 
 final case class ConfigSchema (
   functionality: List[ParameterSchema]
@@ -45,7 +46,7 @@ final case class DeprecatedOrRemoved(
 )
 
 object ConfigSchema {
-  import scala.reflect.runtime.universe
+  import scala.reflect.runtime.universe._
 
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
 
@@ -54,18 +55,53 @@ object ConfigSchema {
   implicit val encodeDeprecatedOrRemoved: Encoder.AsObject[DeprecatedOrRemoved] = deriveConfiguredEncoder
 
   def export() {
-    
-    def annotationsOf[T: universe.TypeTag](obj: T) = {
-      // universe.typeOf[T].members.foldLeft(Nil: List[universe.type#Annotation]) {
-      //     (xs, x) => x.annotations ::: xs
-      // }
-      universe.typeOf[T].members.map(x => (x.fullName, x.annotations)).filter(_._2.length > 0)
+
+    def annotationToStrings(ann: Annotation):(String, List[String]) = {
+      val name = ann.tree.tpe.toString()
+      val values = ann.tree match {
+        case Apply(c, args: List[Tree]) =>
+          args.collect({
+            case i: Tree =>
+              i match {
+                case Literal(Constant(value)) =>
+                  value.toString()
+                case Select(value, stripMargin) =>
+                  //(value, stripMargin)
+                  // TODO do correct stripMargin
+                  value.toString().stripMargin
+                case Apply(value, stripMargin) =>
+                  //(value, stripMargin)
+                  // println(s"stripMargin: ${stripMargin.head.toString}")
+                  // TODO do correct stripMargin
+                  value.toString().stripMargin(stripMargin.head.toString.charAt(0))
+                case _ =>
+                  i.toString()
+              }
+          })
+      }
+
+      (name, values)
     }
+    
+    def annotationsOf[T: TypeTag](obj: T) = {
+      typeOf[T].members.map(x => (x.fullName, x.info.toString(), x.annotations)).filter(_._3.length > 0)
+    }
+
     val fun = com.dataintuitive.viash.functionality.Functionality("foo")
-    //annotationsOf(fun).foreach(t => println(s"${t._1} -> ${t._2}"))
-    val annotations = annotationsOf(fun).filter(_._1.startsWith("com.dataintuitive.viash"))
-    annotations.foreach(t => println(s"${t._1} -> ${t._2}"))
-    val funSchema = annotations.map(a => ParameterSchema(a._1.toString(), "foo", None, a._2.map(_.toString()), None, None, None)).toList
+    // filter out any information not from our own class and lazy evaluators (we'll use the standard one - otherwise double info and more complex)
+    val annotations = annotationsOf(fun).filter(_._1.startsWith("com.dataintuitive.viash")).filter(!_._2.startsWith("=> "))
+    val funSchema = annotations.map(a => {
+      val name = a._1.replaceFirst("com.dataintuitive.viash.functionality.Functionality.", "")
+      val `type` = a._2
+      val annStrings = a._3.map(annotationToStrings(_))
+
+      val description = annStrings.collectFirst({case (name, value) if name.endsWith("description") => value.head})
+      val example = annStrings.collect({case (name, value) if name.endsWith("example") => value.head})
+      val since = annStrings.collectFirst({case (name, value) if name.endsWith("since") => value.head})
+      val deprecated = annStrings.collectFirst({case (name, value) if name.endsWith("deprecated") => value}).map(l => DeprecatedOrRemoved(l(0), l(1)))
+      val removed = annStrings.collectFirst({case (name, value) if name.endsWith("removed") => value}).map(l => DeprecatedOrRemoved(l(0), l(1)))
+      ParameterSchema(name, `type`, description, example, since, deprecated, removed)
+    }).toList
 
 
     val data = ConfigSchema(funSchema)

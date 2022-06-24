@@ -150,7 +150,7 @@ case class Functionality(
   // this is used when running `viash test`.
   set_wd_to_resources_dir: Boolean = false,
 
-  @description("setting this to false with disable this component when using namespaces.")
+  @description("Setting this to false with disable this component when using namespaces.")
   @since("Viash 0.5.13")
   enabled: Boolean = true
 ) {
