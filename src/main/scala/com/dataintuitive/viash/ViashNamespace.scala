@@ -254,15 +254,15 @@ object ViashNamespace {
       (helpers.BuildStatus.Success, Console.GREEN, s"configs $successAction successfully"))
 
     if (successes != statuses.length) {
-      println(s"${Console.YELLOW}Not all configs $successAction successfully${Console.RESET}")
+      System.err.println(s"${Console.YELLOW}Not all configs $successAction successfully${Console.RESET}")
       for (message <- messages) {
         val count = statuses.count(_ == message._1)
         if (count > 0)
-          println(s"  ${message._2}$count/${statuses.length} ${message._3}${Console.RESET}")
+          System.err.println(s"  ${message._2}$count/${statuses.length} ${message._3}${Console.RESET}")
       }
     }
     else {
-      println(s"${Console.GREEN}All ${successes} configs $successAction successfully${Console.RESET}")
+      System.err.println(s"${Console.GREEN}All ${successes} configs $successAction successfully${Console.RESET}")
     }
   }
 }

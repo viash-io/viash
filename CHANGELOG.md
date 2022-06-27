@@ -20,7 +20,7 @@
 * `Main`: Added `viash --cli_export` which outputs the internal cli construction information 
   to console. This is to be used to automate populating the documentation website.
 
-* `viash ns`: Display overview results with X amount failed & Y amount successfully built.
+* `viash ns`: Display success and failure summary statistics, printed to stderr.
 
 * `DataObject`: `.alternatives` is now a `OneOrMore[String]` instead of `List[String]`, meaning
   you can now specify `{ type: string, name: "--foo", alternatives: "-f" }` instead of 
