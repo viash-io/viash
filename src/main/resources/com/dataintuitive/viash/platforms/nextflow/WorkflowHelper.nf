@@ -1,3 +1,7 @@
+/////////////////////////////////////
+// Viash Workflow helper functions //
+/////////////////////////////////////
+
 import java.util.regex.Pattern
 import java.io.BufferedReader
 import java.io.FileReader
@@ -90,8 +94,7 @@ def readYaml(file) {
   yamlSlurper.load(inputFile)
 }
 
-def readConfig(file) {
-  def config = readYaml(file)
+def processConfig(config) {
   // assert .functionality etc.
   config.functionality.arguments = 
     config.functionality.arguments.collect{arg ->
@@ -104,6 +107,11 @@ def readConfig(file) {
       arg
     }
   config
+}
+
+def readConfig(file) {
+  def config = readYaml(file)
+  processConfig(config)
 }
 
 
@@ -288,6 +296,13 @@ def paramsToList(params, config) {
       }
 
     }
+  
+  // check processed params
+  processedParams.forEach { args ->
+    assert args.containsKey("id"): "Each argument set should have an 'id'. Argument set: $args"
+  }
+  def ppIds = processedParams{it.id}
+  assert ppIds.size() == ppIds.unique().size() : "All argument sets should have unique ids. Detected ids: $ppIds"
 
   processedParams
 }

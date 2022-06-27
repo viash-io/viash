@@ -111,62 +111,7 @@ case class NextflowVdsl3Platform(
       if (containerDirective.isEmpty) {
         "" 
       } else {
-        s"""
-        |process.container = 'nextflow/bash:latest'
-        |
-        |// detect tempdir
-        |tempDir = java.nio.file.Paths.get(
-        |  System.getenv('NXF_TEMP') ?:
-        |    System.getenv('VIASH_TEMP') ?: 
-        |    System.getenv('TEMPDIR') ?: 
-        |    System.getenv('TMPDIR') ?: 
-        |    '/tmp'
-        |).toAbsolutePath()
-        |
-        |profiles {
-        |  mount_temp {
-        |    docker.temp            = tempDir
-        |    podman.temp            = tempDir
-        |    charliecloud.temp      = tempDir
-        |  }
-        |  docker {
-        |    docker.enabled         = true
-        |    docker.userEmulation   = true
-        |    singularity.enabled    = false
-        |    podman.enabled         = false
-        |    shifter.enabled        = false
-        |    charliecloud.enabled   = false
-        |  }
-        |  singularity {
-        |    singularity.enabled    = true
-        |    singularity.autoMounts = true
-        |    docker.enabled         = false
-        |    podman.enabled         = false
-        |    shifter.enabled        = false
-        |    charliecloud.enabled   = false
-        |  }
-        |  podman {
-        |    podman.enabled         = true
-        |    docker.enabled         = false
-        |    singularity.enabled    = false
-        |    shifter.enabled        = false
-        |    charliecloud.enabled   = false
-        |  }
-        |  shifter {
-        |    shifter.enabled        = true
-        |    docker.enabled         = false
-        |    singularity.enabled    = false
-        |    podman.enabled         = false
-        |    charliecloud.enabled   = false
-        |  }
-        |  charliecloud {
-        |    charliecloud.enabled   = true
-        |    docker.enabled         = false
-        |    singularity.enabled    = false
-        |    podman.enabled         = false
-        |    shifter.enabled        = false
-        |  }
-        |}""".stripMargin
+        "\n\n" + NextflowHelper.profilesHelper
       }
 
     s"""manifest {
@@ -315,6 +260,7 @@ case class NextflowVdsl3Platform(
     val tripQuo = """""""""
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
     val dirJson = directives2.asJson.dropEmptyRecursively()
+    val funJson = functionality.asJson.dropEmptyRecursively()
 
     s"""$header
       |
@@ -329,19 +275,18 @@ case class NextflowVdsl3Platform(
       |// DEFINE CUSTOM CODE
       |
       |// functionality metadata
-      |thisFunctionality = [
-      |  'name': '${functionality.name}',
-      |  'arguments': [${argumentsStr.mkString(",")}
-      |  ]
-      |]
+      |thisConfig = processConfig([
+      |  functionality: jsonSlurper.parseText($tripQuo${jsonPrinter.print(funJson)}$tripQuo)
+      |])
       |
+      |// TODO: remove in favour for helpMessage()
       |thisHelpMessage = '''$helpStr'''
       |
       |thisScript = '''$executionCode'''
       |
       |thisDefaultProcessArgs = [
       |  // key to be used to trace the process and determine output names
-      |  key: thisFunctionality.name,
+      |  key: thisConfig.functionality.name,
       |  // fixed arguments to be passed to script
       |  args: [:],
       |  // default directives
@@ -367,9 +312,9 @@ case class NextflowVdsl3Platform(
       |  debug: $debug
       |]
       |
-      |// END CUSTOM CODE
-      |
-      |""".stripMargin + NextflowHelper.code
+      |// END CUSTOM CODE""".stripMargin + 
+      "\n\n" + NextflowHelper.workflowHelper + 
+      "\n\n" + NextflowHelper.vdsl3Helper
   }
 }
 
