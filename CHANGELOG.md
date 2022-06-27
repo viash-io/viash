@@ -35,6 +35,8 @@
 
 * `Script`: Allow more control over where injected code ends up.
 
+* Restructure type system to allow type-specific arguments.
+
 ## BUG FIXES
 
 * `DockerPlatform`: Change `org.opencontainers.image.version` annotation to `functionality.version` when set.
