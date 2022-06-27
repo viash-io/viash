@@ -29,7 +29,11 @@
 * `BashWrapper`: Added metadata field `meta_executable`, which is a shorthand notation for
   `meta_executable="$meta_resources_dir/$meta_functionality_name"`
 
+## INTERNAL CHANGES
+
 * `Arguments`: Internal naming of functionality.arguments is changed from DataObject to Arguments. Change is also applied to child classes, e.g. StringObject -> StringArgument.
+
+* `Script`: Allow more control over where injected code ends up.
 
 ## BUG FIXES
 
@@ -45,6 +49,7 @@
 * `viash ns test`: Silently skip Nextflow platforms as these don't support tests and will always fail.
 
 * `Testbenches`: Better capture expected error messages while running testbenches. Having these show on the console could be confusing.
+
 
 # Viash 0.5.13
 

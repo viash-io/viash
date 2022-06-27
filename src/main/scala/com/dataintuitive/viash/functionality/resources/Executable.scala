@@ -28,24 +28,21 @@ case class Executable(
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
+  entrypoint: Option[String] = None,
   `type`: String = "executable"
 ) extends Script {
-  val meta = Executable
+  assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")
+
+  val companion = Executable
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generatePlaceholder(functionality: Functionality): String = ""
+  def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = ScriptInjectionMods()
 
   override def read: Option[String] = None
 
   override def write(path: Path, overwrite: Boolean) {}
-}
-
-object Executable extends ScriptObject {
-  val commentStr = "#"
-  val extension = "*"
-  val `type` = "executable"
 
   def command(script: String): String = {
     script
@@ -54,4 +51,10 @@ object Executable extends ScriptObject {
   def commandSeq(script: String): Seq[String] = {
     Seq(script)
   }
+}
+
+object Executable extends ScriptCompanion {
+  val commentStr = "#"
+  val extension = "*"
+  val `type` = "executable"
 }
