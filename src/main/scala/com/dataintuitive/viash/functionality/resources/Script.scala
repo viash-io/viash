@@ -85,7 +85,7 @@ trait ScriptCompanion {
 }
 
 object Script {
-  val companions = List(BashScript, PythonScript, RScript, JavaScriptScript, ScalaScript, CSharpScript)
+  val companions = List(BashScript, PythonScript, RScript, JavaScriptScript, NextflowScript, ScalaScript, CSharpScript)
   val extensions =
     companions
       .map(x => (x.extension.toLowerCase, x))
@@ -111,6 +111,8 @@ object Script {
         CSharpScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint)
       case JavaScriptScript.`type` =>
         JavaScriptScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint)
+      case NextflowScript.`type` =>
+        NextflowScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint)
       case PythonScript.`type` =>
         PythonScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint)
       case RScript.`type` =>
