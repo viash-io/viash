@@ -58,11 +58,11 @@ package object functionality {
       // provide backwords compability for tests -> test_resources
       val fun3 = (fun2.contains("tests"), fun2.contains("test_resources")) match {
         case (true, true) => 
-          println("Error: functionality.tests is deprecated. Please use functionality.test_resources instead.")
-          println("Backwards compability is provided but not in combination with functionality.test_resources.")
+          System.err.println("Error: functionality.tests is deprecated. Please use functionality.test_resources instead.")
+          System.err.println("Backwards compability is provided but not in combination with functionality.test_resources.")
           fun2
         case (true, false) =>
-          println("Notice: functionality.tests is deprecated. Please use functionality.test_resources instead.")
+          System.err.println("Notice: functionality.tests is deprecated. Please use functionality.test_resources instead.")
           fun2.add("test_resources", fun2.apply("tests").get).remove("tests")
         case (_, _) => fun2
       }
