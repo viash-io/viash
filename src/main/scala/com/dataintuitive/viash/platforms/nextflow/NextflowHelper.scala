@@ -25,5 +25,7 @@ object NextflowHelper {
     Source.fromResource(path).getLines().mkString("\n")
   }
 
-  lazy val code: String = readSource("NextflowHelper.nf")
+  lazy val vdsl3Helper: String = readSource("VDSL3Helper.nf")
+  lazy val workflowHelper: String = readSource("WorkflowHelper.nf")
+  lazy val profilesHelper: String = readSource("ProfilesHelper.config")
 }

@@ -1,3 +1,7 @@
+////////////////////////////
+// VDSL3 helper functions //
+////////////////////////////
+
 import nextflow.Nextflow
 import nextflow.script.IncludeDef
 import nextflow.script.ScriptBinding
@@ -422,7 +426,7 @@ def processProcessArgs(Map args) {
 
   // if 'key' is a closure, apply it to the original key
   if (processArgs["key"] instanceof Closure) {
-    processArgs["key"] = processArgs["key"](thisFunctionality.name)
+    processArgs["key"] = processArgs["key"](thisConfig.functionality.name)
   }
   assert processArgs["key"] instanceof CharSequence
   assert processArgs["key"] ==~ /^[a-zA-Z_][a-zA-Z0-9_]*$/
@@ -540,12 +544,12 @@ def processFactory(Map processArgs) {
     }
   }.join()
 
-  def inputPaths = thisFunctionality.arguments
+  def inputPaths = thisConfig.functionality.arguments
     .findAll { it.type == "file" && it.direction == "input" }
     .collect { ', path(viash_par_' + it.name + ')' }
     .join()
 
-  def outputPaths = thisFunctionality.arguments
+  def outputPaths = thisConfig.functionality.arguments
     .findAll { it.type == "file" && it.direction == "output" }
     .collect { par ->
       // insert dummy into every output (see nextflow-io/nextflow#2678)
@@ -565,7 +569,7 @@ def processFactory(Map processArgs) {
   }
 
   // construct inputFileExports
-  def inputFileExports = thisFunctionality.arguments
+  def inputFileExports = thisConfig.functionality.arguments
     .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
     .collect { par ->
       viash_par_contents = !par.required && !par.multiple ? "viash_par_${par.name}[0]" : "viash_par_${par.name}.join(\":\")"
@@ -575,7 +579,7 @@ def processFactory(Map processArgs) {
   def tmpDir = "/tmp" // check if component is docker based
 
   // construct stub
-  def stub = thisFunctionality.arguments
+  def stub = thisConfig.functionality.arguments
     .findAll { it.type == "file" && it.direction == "output" }
     .collect { par -> 
       'touch "${viash_par_' + par.name + '.join(\'" "\')}"'
@@ -608,7 +612,7 @@ def processFactory(Map processArgs) {
   |# meta exports
   |export VIASH_META_RESOURCES_DIR="\${resourcesDir.toRealPath().toAbsolutePath()}"
   |export VIASH_META_TEMP_DIR="${tmpDir}"
-  |export VIASH_META_FUNCTIONALITY_NAME="${thisFunctionality.name}"
+  |export VIASH_META_FUNCTIONALITY_NAME="${thisConfig.functionality.name}"
   |export VIASH_META_EXECUTABLE="\\\$VIASH_META_RESOURCES_DIR/\\\$VIASH_META_FUNCTIONALITY_NAME"
   |
   |# meta synonyms
@@ -708,7 +712,7 @@ def workflowFactory(Map args) {
         
         // match file to input file
         if (processArgs.auto.simplifyInput && (tuple[1] instanceof Path || tuple[1] instanceof List)) {
-          def inputFiles = thisFunctionality.arguments
+          def inputFiles = thisConfig.functionality.arguments
             .findAll { it.type == "file" && it.direction == "input" }
           
           assert inputFiles.size() == 1 : 
@@ -761,12 +765,12 @@ def workflowFactory(Map args) {
         def passthrough = tuple.drop(2)
 
         // fetch default params from functionality
-        def defaultArgs = thisFunctionality.arguments
+        def defaultArgs = thisConfig.functionality.arguments
           .findAll { it.containsKey("default") }
           .collectEntries { [ it.name, it.default ] }
 
         // fetch overrides in params
-        def paramArgs = thisFunctionality.arguments
+        def paramArgs = thisConfig.functionality.arguments
           .findAll { par ->
             def argKey = key + "__" + par.name
             params.containsKey(argKey) && params[argKey] != "viash_no_value"
@@ -774,7 +778,7 @@ def workflowFactory(Map args) {
           .collectEntries { [ it.name, params[key + "__" + it.name] ] }
         
         // fetch overrides in data
-        def dataArgs = thisFunctionality.arguments
+        def dataArgs = thisConfig.functionality.arguments
           .findAll { data.containsKey(it.name) }
           .collectEntries { [ it.name, data[it.name] ] }
         
@@ -785,7 +789,7 @@ def workflowFactory(Map args) {
         combinedArgs.removeAll{it == null}
 
         // check whether required arguments exist
-        thisFunctionality.arguments
+        thisConfig.functionality.arguments
           .forEach { par ->
             if (par.required) {
               assert combinedArgs.containsKey(par.name): "Argument ${par.name} is required but does not have a value"
@@ -795,7 +799,7 @@ def workflowFactory(Map args) {
         // TODO: check whether parameters have the right type
 
         // process input files separately
-        def inputPaths = thisFunctionality.arguments
+        def inputPaths = thisConfig.functionality.arguments
           .findAll { it.type == "file" && it.direction == "input" }
           .collect { par ->
             def val = combinedArgs.containsKey(par.name) ? combinedArgs[par.name] : []
@@ -821,7 +825,7 @@ def workflowFactory(Map args) {
           } 
 
         // remove input files
-        def argsExclInputFiles = thisFunctionality.arguments
+        def argsExclInputFiles = thisConfig.functionality.arguments
           .findAll { it.type != "file" || it.direction != "input" }
           .collectEntries { par ->
             def parName = par.name
@@ -839,7 +843,7 @@ def workflowFactory(Map args) {
       }
       | processObj
       | map { output ->
-        def outputFiles = thisFunctionality.arguments
+        def outputFiles = thisConfig.functionality.arguments
           .findAll { it.type == "file" && it.direction == "output" }
           .indexed()
           .collectEntries{ index, par ->
@@ -913,7 +917,7 @@ workflow {
   }
 
   // fetch parameters
-  def args = thisFunctionality.arguments
+  def args = thisConfig.functionality.arguments
     .findAll { par -> params.containsKey(par.name) }
     .collectEntries { par ->
       if (par.multiple) {

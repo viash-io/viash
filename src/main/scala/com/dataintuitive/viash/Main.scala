@@ -21,7 +21,7 @@ import java.nio.file.{Files, Path, Paths}
 import java.nio.file.attribute.BasicFileAttributes
 import config.Config
 import helpers.Scala._
-import cli.{CLIConf, CLIExport, ViashCommand, ViashNs}
+import cli.{CLIConf, ViashCommand, ViashNs}
 
 import scala.collection.JavaConverters
 import java.io.File
