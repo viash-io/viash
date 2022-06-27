@@ -29,14 +29,16 @@ case class CSharpScript(
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
-  `type`: String = "csharp_script"
+  entrypoint: Option[String] = None,
+  `type`: String = CSharpScript.`type`
 ) extends Script {
-  val meta = CSharpScript
+  assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")
+  val companion = CSharpScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generatePlaceholder(functionality: Functionality): String = {
+  def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
     val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
 
     val parSet = params.map { par =>
@@ -89,7 +91,9 @@ case class CSharpScript(
     val metaSet = BashWrapper.metaFields.map{ case (env_name, script_name) =>
       s"""$script_name = "$$$env_name""""
     }
-    s"""var par = new {
+    
+    val paramsCode = 
+      s"""var par = new {
        |  ${parSet.mkString(",\n  ")}
        |};
        |var meta = new {
@@ -97,13 +101,9 @@ case class CSharpScript(
        |};
        |var resources_dir = "$$VIASH_META_RESOURCES_DIR";
        |""".stripMargin
-  }
-}
 
-object CSharpScript extends ScriptObject {
-  val commentStr = "//"
-  val extension = "csx"
-  val `type` = "csharp_script"
+    ScriptInjectionMods(params = paramsCode)
+  }
 
   def command(script: String): String = {
     "dotnet script \"" + script + "\""
@@ -112,5 +112,11 @@ object CSharpScript extends ScriptObject {
   def commandSeq(script: String): Seq[String] = {
     Seq("dotnet", "script", script)
   }
+}
+
+object CSharpScript extends ScriptCompanion {
+  val commentStr = "//"
+  val extension = "csx"
+  val `type` = "csharp_script"
 }
 

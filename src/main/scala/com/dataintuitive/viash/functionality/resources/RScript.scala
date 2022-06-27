@@ -29,14 +29,17 @@ case class RScript(
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
-  `type`: String = "r_script"
+  entrypoint: Option[String] = None,
+  `type`: String = RScript.`type`
 ) extends Script {
-  val meta = RScript
+  assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")
+  
+  val companion = RScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generatePlaceholder(functionality: Functionality): String = {
+  def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
     val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
 
     val parSet = params.map { par =>
@@ -67,7 +70,7 @@ case class RScript(
       s"""$script_name = "$$$env_name""""
     }
 
-    s"""# treat warnings as errors
+    val paramsCode = s"""# treat warnings as errors
        |viash_orig_warn_ <- options(warn = 2)
        |
        |# get parameters from cli
@@ -87,13 +90,8 @@ case class RScript(
        |options(viash_orig_warn_)
        |rm(viash_orig_warn_)
        |""".stripMargin
+    ScriptInjectionMods(params = paramsCode)
   }
-}
-
-object RScript extends ScriptObject {
-  val commentStr = "#"
-  val extension = "R"
-  val `type` = "r_script"
 
   def command(script: String): String = {
     "Rscript \"" + script + "\""
@@ -102,4 +100,10 @@ object RScript extends ScriptObject {
   def commandSeq(script: String): Seq[String] = {
     Seq("Rscript", script)
   }
+}
+
+object RScript extends ScriptCompanion {
+  val commentStr = "#"
+  val extension = "R"
+  val `type` = "r_script"
 }

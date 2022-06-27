@@ -29,14 +29,17 @@ case class ScalaScript(
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
-  `type`: String = "scala_script"
+  entrypoint: Option[String] = None,
+  `type`: String = ScalaScript.`type`
 ) extends Script {
-  val meta = ScalaScript
+  assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")
+  
+  val companion = ScalaScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generatePlaceholder(functionality: Functionality): String = {
+  def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
     val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
 
     val parClassTypes = params.map { par =>
@@ -109,7 +112,7 @@ case class ScalaScript(
     val metaSet = BashWrapper.metaFields.map { case (env_name, script_name) =>
       s""""$$$env_name""""
     }
-    s"""case class ViashPar(
+    val paramsCode = s"""case class ViashPar(
        |  ${parClassTypes.mkString(",\n  ")}
        |)
        |val par = ViashPar(
@@ -125,13 +128,8 @@ case class ScalaScript(
        |
        |val resources_dir = "$$VIASH_META_RESOURCES_DIR"
        |""".stripMargin
+    ScriptInjectionMods(params = paramsCode)
   }
-}
-
-object ScalaScript extends ScriptObject {
-  val commentStr = "//"
-  val extension = "scala"
-  val `type` = "scala_script"
 
   def command(script: String): String = {
     "scala -nc \"" + script + "\""
@@ -140,4 +138,10 @@ object ScalaScript extends ScriptObject {
   def commandSeq(script: String): Seq[String] = {
     Seq("scala", "-nc", script)
   }
+}
+
+object ScalaScript extends ScriptCompanion {
+  val commentStr = "//"
+  val extension = "scala"
+  val `type` = "scala_script"
 }
