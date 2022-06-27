@@ -73,6 +73,28 @@ trait ScriptCompanion {
   val commentStr: String
   val extension: String
   val `type`: String
+  // def apply(
+  //   path: Option[String] = None,
+  //   text: Option[String] = None,
+  //   dest: Option[String] = None,
+  //   is_executable: Option[Boolean] = Some(true),
+  //   parent: Option[URI] = None,
+  //   entrypoint: Option[String] = None,
+  //   `type`: String = `type`
+  // ): Script
+}
+
+object Script {
+  val companions = List(BashScript, PythonScript, RScript, JavaScriptScript, ScalaScript, CSharpScript)
+  val extensions =
+    companions
+      .map(x => (x.extension.toLowerCase, x))
+      .toMap
+
+  def fromExt(extension: String): ScriptCompanion = {
+    extensions(extension.toLowerCase)
+  }
+
   def apply(
     path: Option[String] = None,
     text: Option[String] = None,
@@ -80,18 +102,21 @@ trait ScriptCompanion {
     is_executable: Option[Boolean] = Some(true),
     parent: Option[URI] = None,
     entrypoint: Option[String] = None,
-    `type`: String = `type`
-  ): Script
-}
-
-object Script {
-  val extensions =
-    List(BashScript, PythonScript, RScript, JavaScriptScript, ScalaScript, CSharpScript)
-      .map(x => (x.extension.toLowerCase, x))
-      .toMap
-
-  def fromExt(extension: String): ScriptCompanion = {
-    new RuntimeException("Unrecognised script extension: " + extension)
-    extensions(extension.toLowerCase)
+    `type`: String
+  ): Script = {
+    `type` match {
+      case BashScript.`type` =>
+        BashScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint)
+      case CSharpScript.`type` =>
+        CSharpScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint)
+      case JavaScriptScript.`type` =>
+        JavaScriptScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint)
+      case PythonScript.`type` =>
+        PythonScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint)
+      case RScript.`type` =>
+        RScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint)
+      case ScalaScript.`type` =>
+        ScalaScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint)
+    }
   }
 }
