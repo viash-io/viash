@@ -260,6 +260,10 @@ case class NextflowVdsl3Platform(
     val tripQuo = """""""""
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
     val dirJson = directives2.asJson.dropEmptyRecursively()
+    val funJson = functionality.asJson.dropEmptyRecursively()
+    val configJson = Bash.escapeMore(jsonPrinter.print(funJson))
+      .replace("\\", "\\\\")
+      .replace("'''", "\\'\\'\\'")
 
     s"""$header
       |
@@ -274,14 +278,11 @@ case class NextflowVdsl3Platform(
       |// DEFINE CUSTOM CODE
       |
       |// functionality metadata
-      |thisConfig = [
-      |  'functionality': [
-      |    'name': '${functionality.name}',
-      |    'arguments': [${argumentsStr.mkString(",")}
-      |    ]
-      |  ]
-      |]
+      |thisConfig = processConfig([
+      |  functionality: jsonSlurper.parseText('''$configJson''')
+      |])
       |
+      |// TODO: remove in favour for helpMessage()
       |thisHelpMessage = '''$helpStr'''
       |
       |thisScript = '''$executionCode'''
@@ -315,6 +316,7 @@ case class NextflowVdsl3Platform(
       |]
       |
       |// END CUSTOM CODE""".stripMargin + 
+      "\n\n" + NextflowHelper.workflowHelper + 
       "\n\n" + NextflowHelper.vdsl3Helper
   }
 }
