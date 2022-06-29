@@ -41,7 +41,7 @@
 ## BUG FIXES
 
 * `DockerPlatform`: Change `org.opencontainers.image.version` annotation to `functionality.version` when set.
-  Additionally fixed retreaving the git tag possibly returning `fatal: No names found, cannot describe anything.` or similar.
+  Additionally fixed retrieving the git tag possibly returning `fatal: No names found, cannot describe anything.` or similar.
 
 * `viash config inject`: Fix config inject when `.functionality.inputs` or `.functionality.outputs` is used.
 
