@@ -29,6 +29,9 @@
 * `BashWrapper`: Added metadata field `meta_executable`, which is a shorthand notation for
   `meta_executable="$meta_resources_dir/$meta_functionality_name"`
 
+* `viash_build`, `viash_test`: Allow overriding the setup strategy with `--force_setup_strategy`.
+  For example, `--force_setup_strategy cb`.
+
 ## INTERNAL CHANGES
 
 * `Arguments`: Internal naming of functionality.arguments is changed from DataObject to Arguments. Change is also applied to child classes, e.g. StringObject -> StringArgument.

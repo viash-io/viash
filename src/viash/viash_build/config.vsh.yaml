@@ -75,6 +75,9 @@ functionality:
     alternatives: [ "-nc", "--no-cache" ]
     type: boolean_true
     description: Don't cache the docker build in development mode.
+  - name: "--force_setup_strategy"
+    type: string
+    description: "Use with caution. Override which setup strategy for creating the container to use."
   - name: "--log"
     alternatives: [ "-l" ]
     type: file
