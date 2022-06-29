@@ -251,7 +251,7 @@ def paramsToList(params, config) {
     "asis": {[null, it]},
     "none": {[null, [[:]]]}
   ]
-  assert multiOptionFunctions.containsKey("param_list_format"): 
+  assert multiOptionFunctions.containsKey(multiParamFormat): 
     "Format of provided --param_list not recognised.\n" +
     "You can use '--param_list_format' to manually specify the format.\n" +
     "Found: '$multiParamFormat'. Expected: one of 'csv', 'json', 'yaml', 'yaml_blob', 'asis' or 'none'"
