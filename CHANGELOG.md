@@ -13,6 +13,7 @@
   ```
 
 ## MINOR CHANGES
+
 * `NextflowVdsl3Platform`: Allow both `--publish_dir` and `--publishDir` when `auto.publish = true`.
 
 * `NextflowVdsl3Platform`: Allow passing parameters with multiplicity > 1 from Nextflow CLI.
@@ -55,6 +56,7 @@
 
 * `Testbenches`: Better capture expected error messages while running testbenches. Having these show on the console could be confusing.
 
+* `NextflowVdsl3Platform`: Fix issue when running multiple VDSL3 modules concurrently on the same channel.
 
 # Viash 0.5.13
 
