@@ -135,8 +135,8 @@ def helpMessage(params, config) {
       "functionality" : [
         "arguments": [
           [
-            'name': '--publishDir',
-            'plainName' : 'publishDir',
+            'name': '--publish_dir',
+            'plainName' : 'publish_dir',
             'required': true,
             'type': 'string',
             'description': 'Path to an output directory.',
@@ -144,32 +144,35 @@ def helpMessage(params, config) {
             'multiple': false
           ],
           [
-            'name': '--multiParams',
-            'plainName' : 'multiParams',
+            'name': '--param_list',
+            'plainName' : 'param_list',
             'required': false,
             'type': 'string',
-            'description': 'Path to a multiple parameter file. Possible formats are csv, json, or yaml. Also supports a yaml blob as input.',
+            'description': '''Allows inputting multiple parameter sets to initialise a Nextflow channel. Possible formats are csv, json, yaml, or simply a yaml_blob.
+            A csv should have column names which correspond to the different arguments of this pipeline.
+            A json or a yaml file should be a list of maps, each of which has keys corresponding to the arguments of the pipeline.
+            A yaml blob can also be passed directly as a parameter.
+            Inside the Nextflow pipeline code, params.params_list can also be used to directly a list of parameter sets.
+            When passing a csv, json or yaml, relative path names are relativized to the location of the parameter file.''',
             'example': 'my_params.yaml',
             'multiple': false
           ],
           [
-            'name': '--multiParamFormat',
-            'plainName' : 'multiParamFormat',
+            'name': '--param_list_format',
+            'plainName' : 'param_list_format',
             'required': false,
             'type': 'string',
-            'description': 'Manually specify the multiParamFormat. Must be one of \'csv\', \'json\', \'yaml\', \'yaml_blob\', \'asis\' or \'none\'.',
+            'description': 'Manually specify the param_list_format. Must be one of \'csv\', \'json\', \'yaml\', \'yaml_blob\', \'asis\' or \'none\'.',
             'example': 'yaml',
+            'choices': ['csv', 'json', 'yaml', 'yaml_blob', 'asis', 'none'],
             'multiple': false
           ],
         ],
         "arguments_groups": [
           [
-            "name": "Output",
-            "arguments" : [ "publishDir" ]
-          ],
-          [
-            "name": "Multi-inputs",
-            "arguments" : [ "multiParams", "multiParamFormat" ]
+            "name": "Global",
+            "description": "Nextflow-related arguments.",
+            "arguments" : [ "publish_dir", "param_list", "param_list_format" ]
           ]
         ]
       ]
@@ -179,7 +182,8 @@ def helpMessage(params, config) {
     |${functionality.name}
     |
     |${functionality.description}
-    |<% for (group in (functionality.arguments_groups.size() > 1 ) ? functionality.arguments_groups : [ [ name: "Options", arguments: functionality.arguments.collect{ it.plainName } ] ] ) { %><%= group.name ? (group.name + ":          ").take(16) : "" %><%= group.description ? group.description : "" %>     <% for (argument in functionality.arguments) { %><% if (group.arguments.contains(argument.plainName)) { %>
+    |<% for (group in (functionality.arguments_groups.size() > 1 ) ? functionality.arguments_groups : [ [ name: "Options", arguments: functionality.arguments.collect{ it.plainName } ] ] ) { %>
+    |<%= group.name ? group.name + " options:": "" %><%= group.description ? "\\n    " + group.description + "\\n" : "" %>     <% for (argument in functionality.arguments) { %><% if (group.arguments.contains(argument.plainName)) { %>
     |    <%= argument.name %>
     |        type: <%= argument.type %><%= (argument.required) ? ", required parameter" : "" %><%= (argument.multiple) ? ", multiple values allowed" : "" %>
     |        <%= (argument.example)  ? "example: ${argument.example}" : "REMOVE" %>
@@ -203,20 +207,20 @@ def helpMessage(params, config) {
 }
 
 def guessMultiParamFormat(params) {
-  if (!params.containsKey("multiParams")) {
+  if (!params.containsKey("param_list")) {
     "none"
   } else if (params.containsKey("multiParamsFormat")) {
     params.multiParamsFormat
   } else {
-    def multiParams = params.multiParams
+    def param_list = params.param_list
 
-    if (multiParams !instanceof String) {
+    if (param_list !instanceof String) {
       "asis"
-    } else if (multiParams.endsWith(".csv")) {
+    } else if (param_list.endsWith(".csv")) {
       "csv"
-    } else if (multiParams.endsWith(".json")) {
+    } else if (param_list.endsWith(".json") || param_list.endsWith(".jsn")) {
       "json"
-    } else if (multiParams.endsWith(".yaml")) {
+    } else if (param_list.endsWith(".yaml") || param_list.endsWith(".yml")) {
       "yaml"
     } else {
       "yaml_blob"
@@ -247,25 +251,26 @@ def paramsToList(params, config) {
     "asis": {[null, it]},
     "none": {[null, [[:]]]}
   ]
-  assert multiOptionFunctions.containsKey(multiParamFormat): 
-    "Format of provided --multiParams not recognised.\n" +
-    "You can use '--multiParamFormat' to manually specify the format.\n" +
+  assert multiOptionFunctions.containsKey("param_list_format"): 
+    "Format of provided --param_list not recognised.\n" +
+    "You can use '--param_list_format' to manually specify the format.\n" +
     "Found: '$multiParamFormat'. Expected: one of 'csv', 'json', 'yaml', 'yaml_blob', 'asis' or 'none'"
 
   // fetch multi param inputs
   def multiOptionFun = multiOptionFunctions.get(multiParamFormat)
-  def multiOptionOut = multiOptionFun(params.containsKey("multiParams") ? params.multiParams : "")
-  def multiParams = multiOptionOut[1]
+  // todo: add try catch
+  def multiOptionOut = multiOptionFun(params.containsKey("param_list") ? params.param_list : "")
+  def paramList = multiOptionOut[1]
   def multiFile = multiOptionOut[0]
 
   // data checks
-  assert multiParams instanceof List: "--$readerId should contain a list of maps"
-  for (value in multiParams) {
+  assert paramList instanceof List: "--$readerId should contain a list of maps"
+  for (value in paramList) {
     assert value instanceof Map: "--$readerId should contain a list of maps"
   }
   
   // combine parameters
-  def processedParams = multiParams.collect{ multiParam ->
+  def processedParams = paramList.collect{ multiParam ->
     // combine params
     def combinedArgs = defaultArgs + multiParam + paramArgs
 
