@@ -1,4 +1,4 @@
-# Viash [Next version]
+# Viash 0.5.14
 
 ## NEW FUNCTIONALITY
 
