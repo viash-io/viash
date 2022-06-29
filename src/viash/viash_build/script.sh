@@ -36,23 +36,18 @@ command_builder+=(
 )
 
 # derive setup strategy
-if [ -z "$par_force_setup_strategy" ]; then
-  if [ "$par_mode" == "development" ]; then
-    if [ "$par_no_cache" == "true" ]; then
-      setup_strat="build"
-    else
-      setup_strat="cachedbuild"
-    fi
-  elif [ "$par_mode" == "integration" ]; then
-    echo "Warning: --par_no_cache is ignored when '--mode=$par_mode'."
-    setup_strat="ifneedbepullelsecachedbuild"
-  elif [ "$par_mode" == "release" ]; then
-    echo "Warning: --par_no_cache is ignored when '--mode=$par_mode'."
+if [ "$par_mode" == "development" ]; then
+  if [ "$par_no_cache" == "true" ]; then
     setup_strat="build"
+  else
+    setup_strat="cachedbuild"
   fi
-else
-  echo "Forcing strategy '$par_force_setup_strategy'"
-  setup_strat="$par_force_setup_strategy"
+elif [ "$par_mode" == "integration" ]; then
+  echo "Warning: --par_no_cache is ignored when '--mode=$par_mode'."
+  setup_strat="ifneedbepullelsecachedbuild"
+elif [ "$par_mode" == "release" ]; then
+  echo "Warning: --par_no_cache is ignored when '--mode=$par_mode'."
+  setup_strat="build"
 fi
 
 command_builder+=(
