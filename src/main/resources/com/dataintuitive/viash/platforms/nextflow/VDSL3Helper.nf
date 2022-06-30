@@ -445,7 +445,7 @@ def processProcessArgs(Map args) {
   if (processArgs.auto.publish == true && (processArgs.directives.publishDir ?: [:]).isEmpty()) {
     assert params.containsKey("publishDir") || params.containsKey("publish_dir") : 
       "Error in module '${processArgs['key']}': if auto.publish is true, params.publish_dir needs to be defined.\n" +
-      "  Example: params.transcripts_dir = \"./output/\""
+      "  Example: params.publish_dir = \"./output/\""
     def publishDir = params.containsKey("publish_dir") ? params.publish_dir : params.publishDir
     
     // TODO: more asserts on publishDir?
@@ -544,19 +544,19 @@ def processFactory(Map processArgs) {
     }
   }.join()
 
-  def inputPaths = thisConfig.functionality.arguments
+  def inputPaths = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "input" }
-    .collect { ', path(viash_par_' + it.name + ')' }
+    .collect { ', path(viash_par_' + it.plainName + ')' }
     .join()
 
-  def outputPaths = thisConfig.functionality.arguments
+  def outputPaths = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "output" }
     .collect { par ->
       // insert dummy into every output (see nextflow-io/nextflow#2678)
       if (!par.multiple) {
-        ', path{[".exitcode", args.' + par.name + ']}'
+        ', path{[".exitcode", args.' + par.plainName + ']}'
       } else {
-        ', path{[".exitcode"] + args.' + par.name + '}'
+        ', path{[".exitcode"] + args.' + par.plainName + '}'
       }
     }
     .join()
@@ -569,20 +569,20 @@ def processFactory(Map processArgs) {
   }
 
   // construct inputFileExports
-  def inputFileExports = thisConfig.functionality.arguments
+  def inputFileExports = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
     .collect { par ->
-      viash_par_contents = !par.required && !par.multiple ? "viash_par_${par.name}[0]" : "viash_par_${par.name}.join(\":\")"
-      "\n\${viash_par_${par.name}.empty ? \"\" : \"export VIASH_PAR_${par.name.toUpperCase()}=\\\"\" + ${viash_par_contents} + \"\\\"\"}"
+      viash_par_contents = !par.required && !par.multiple ? "viash_par_${par.plainName}[0]" : "viash_par_${par.plainName}.join(\":\")"
+      "\n\${viash_par_${par.plainName}.empty ? \"\" : \"export VIASH_PAR_${par.plainName.toUpperCase()}=\\\"\" + ${viash_par_contents} + \"\\\"\"}"
     }
   
   def tmpDir = "/tmp" // check if component is docker based
 
   // construct stub
-  def stub = thisConfig.functionality.arguments
+  def stub = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "output" }
     .collect { par -> 
-      'touch "${viash_par_' + par.name + '.join(\'" "\')}"'
+      'touch "${viash_par_' + par.plainName + '.join(\'" "\')}"'
     }
     .join("\n")
 
@@ -659,15 +659,11 @@ def debug(processArgs, debugKey) {
   }
 }
 
-// wfKeyCounter = -1
-
 def workflowFactory(Map args) {
   def processArgs = processProcessArgs(args)
   def key = processArgs["key"]
   def meta = ScriptMeta.current()
 
-  // def workflowKey = wfKeyCounter == -1 ? key : "$key$wfKeyCounter"
-  // wfKeyCounter++
   def workflowKey = key
 
   // write process to temporary nf file and parse it in memory
@@ -714,7 +710,7 @@ def workflowFactory(Map args) {
         
         // match file to input file
         if (processArgs.auto.simplifyInput && (tuple[1] instanceof Path || tuple[1] instanceof List)) {
-          def inputFiles = thisConfig.functionality.arguments
+          def inputFiles = thisConfig.functionality.allArguments
             .findAll { it.type == "file" && it.direction == "input" }
           
           assert inputFiles.size() == 1 : 
@@ -767,22 +763,22 @@ def workflowFactory(Map args) {
         def passthrough = tuple.drop(2)
 
         // fetch default params from functionality
-        def defaultArgs = thisConfig.functionality.arguments
+        def defaultArgs = thisConfig.functionality.allArguments
           .findAll { it.containsKey("default") }
-          .collectEntries { [ it.name, it.default ] }
+          .collectEntries { [ it.plainName, it.default ] }
 
         // fetch overrides in params
-        def paramArgs = thisConfig.functionality.arguments
+        def paramArgs = thisConfig.functionality.allArguments
           .findAll { par ->
-            def argKey = key + "__" + par.name
+            def argKey = key + "__" + par.plainName
             params.containsKey(argKey) && params[argKey] != "viash_no_value"
           }
-          .collectEntries { [ it.name, params[key + "__" + it.name] ] }
+          .collectEntries { [ it.plainName, params[key + "__" + it.plainName] ] }
         
         // fetch overrides in data
-        def dataArgs = thisConfig.functionality.arguments
-          .findAll { data.containsKey(it.name) }
-          .collectEntries { [ it.name, data[it.name] ] }
+        def dataArgs = thisConfig.functionality.allArguments
+          .findAll { data.containsKey(it.plainName) }
+          .collectEntries { [ it.plainName, data[it.plainName] ] }
         
         // combine params
         def combinedArgs = defaultArgs + paramArgs + processArgs.args + dataArgs
@@ -791,20 +787,20 @@ def workflowFactory(Map args) {
         combinedArgs.removeAll{it == null}
 
         // check whether required arguments exist
-        thisConfig.functionality.arguments
+        thisConfig.functionality.allArguments
           .forEach { par ->
             if (par.required) {
-              assert combinedArgs.containsKey(par.name): "Argument ${par.name} is required but does not have a value"
+              assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
             }
           }
 
         // TODO: check whether parameters have the right type
 
         // process input files separately
-        def inputPaths = thisConfig.functionality.arguments
+        def inputPaths = thisConfig.functionality.allArguments
           .findAll { it.type == "file" && it.direction == "input" }
           .collect { par ->
-            def val = combinedArgs.containsKey(par.name) ? combinedArgs[par.name] : []
+            def val = combinedArgs.containsKey(par.plainName) ? combinedArgs[par.plainName] : []
             def inputFiles = []
             if (val == null) {
               inputFiles = []
@@ -818,7 +814,7 @@ def workflowFactory(Map args) {
             // throw error when an input file doesn't exist
             inputFiles.each{ file -> 
               assert file.exists() :
-                "Error in module '${key}' id '${id}' argument '${par.name}'.\n" +
+                "Error in module '${key}' id '${id}' argument '${par.plainName}'.\n" +
                 "  Required input file does not exist.\n" +
                 "  Path: '$file'.\n" +
                 "  Expected input file to exist"
@@ -827,10 +823,10 @@ def workflowFactory(Map args) {
           } 
 
         // remove input files
-        def argsExclInputFiles = thisConfig.functionality.arguments
+        def argsExclInputFiles = thisConfig.functionality.allArguments
           .findAll { it.type != "file" || it.direction != "input" }
           .collectEntries { par ->
-            def parName = par.name
+            def parName = par.plainName
             def val = combinedArgs[parName]
             if (par.multiple && val instanceof Collection) {
               val = val.join(par.multiple_sep)
@@ -845,7 +841,7 @@ def workflowFactory(Map args) {
       }
       | processObj
       | map { output ->
-        def outputFiles = thisConfig.functionality.arguments
+        def outputFiles = thisConfig.functionality.allArguments
           .findAll { it.type == "file" && it.direction == "output" }
           .indexed()
           .collectEntries{ index, par ->
@@ -856,7 +852,7 @@ def workflowFactory(Map args) {
                 out = []
               } else {
                 assert !par.required :
-                    "Error in module '${key}' id '${output[0]}' argument '${par.name}'.\n" +
+                    "Error in module '${key}' id '${output[0]}' argument '${par.plainName}'.\n" +
                     "  Required output file is missing"
                 out = null
               }
@@ -865,7 +861,7 @@ def workflowFactory(Map args) {
             } else {
               out = out.drop(1)
             }
-            [ par.name, out ]
+            [ par.plainName, out ]
           }
         
         // drop null outputs
@@ -908,44 +904,9 @@ ScriptMeta.current().addDefinition(myWfInstance)
 
 // anonymous workflow for running this module as a standalone
 workflow {
-  if (params.containsKey("help") && params["help"]) {
-    exit 0, thisHelpMessage
-  }
-  if (!params.containsKey("id")) {
-    params.id = "run"
-  }
-  if (!params.containsKey("publishDir")) {
-    params.publishDir = "./"
-  }
+  helpMessage(params, thisConfig)
 
-  // fetch parameters
-  def args = thisConfig.functionality.arguments
-    .findAll { par -> params.containsKey(par.name) }
-    .collectEntries { par ->
-      if (par.multiple) {
-        parData = params[par.name]
-        if (parData instanceof List) {
-          parData = parData.collect{it instanceof String ? it.split(par.multiple_sep) : it }.flatten()
-        } else if (parData instanceof String) {
-          parData = parData.split(par.multiple_sep)
-        }
-        // todo: does this work for non-strings?
-      } else {
-        parData = [ params[par.name] ]
-      }
-      if (par.type == "file" && par.direction == "input") {
-        parData = parData.collect{it instanceof String ? file(it) : it}.flatten()
-      }
-      if (!par.multiple) {
-        assert parData.size() == 1 : 
-          "Error: argument ${par.name} has too many values.\n" +
-          "  Expected amount: 1. Found: ${parData.length}"
-        parData = parData[0]
-      }
-      [ par.name, parData ]
-    }
-          
-  Channel.value([ params.id, args ])
+  viashChannel(params, thisConfig)
     | view { "input: $it" }
     | myWfInstance.run(
       auto: [ publish: true ]

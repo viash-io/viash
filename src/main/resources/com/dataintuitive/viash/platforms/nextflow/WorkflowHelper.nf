@@ -94,18 +94,61 @@ def readYaml(file) {
   yamlSlurper.load(inputFile)
 }
 
+def processArgument(arg) {
+  arg.multiple = arg.multiple ?: false
+  arg.required = arg.required ?: false
+  arg.direction = arg.direction ?: "input"
+  arg.multiple_sep = arg.multiple_sep ?: ":"
+  arg.plainName = arg.name.replaceAll("^-*", "")
+
+  if (arg.type == "file" && arg.direction == "output") {
+    def mult = arg.multiple ? "_*" : ""
+    def extSearch = ""
+    if (arg.default != null) {
+      extSearch = arg.default
+    } else if (arg.example != null) {
+      extSearch = arg.example
+    }
+    if (extSearch instanceof List) {
+      extSearch = extSearch[0]
+    }
+    def ext = extSearch.find("\\.[^\\.]+\$") ?: ""
+    arg.default = "\$id.\$key.${arg.plainName}${mult}${ext}"
+  }
+
+  if (!arg.multiple) {
+    if (arg.default != null && arg.default instanceof List) {
+      arg.default = arg.default[0]
+    }
+    if (arg.example != null && arg.example instanceof List) {
+      arg.example = arg.example[0]
+    }
+  }
+
+  arg
+}
 def processConfig(config) {
   // assert .functionality etc.
-  config.functionality.arguments = 
-    config.functionality.arguments.collect{arg ->
-      // fill in defaults
-      arg.multiple = arg.multiple ?: false
-      arg.required = arg.required ?: false
-      arg.direction = arg.direction ?: "input"
-      arg.multiple_sep = arg.multiple_sep ?: ":"
-      arg.plainName = arg.name.replaceAll("^--", "")
-      arg
+  config.functionality.inputs = 
+    (config.functionality.inputs ?: []).collect{arg ->
+      arg.type = arg.type ?: "file"
+      arg.direction = "input"
+      processArgument(arg)
     }
+  config.functionality.outputs = 
+    (config.functionality.outputs ?: []).collect{arg ->
+      arg.type = arg.type ?: "file"
+      arg.direction = "output"
+      processArgument(arg)
+    }
+  config.functionality.arguments = 
+    (config.functionality.arguments ?: []).collect{arg ->
+      processArgument(arg)
+    }
+  config.functionality.allArguments = 
+    config.functionality.inputs +
+    config.functionality.outputs +
+    config.functionality.arguments
   config
 }
 
@@ -116,22 +159,22 @@ def readConfig(file) {
 
 
 def mergeMap(Map lhs, Map rhs) {
-    return rhs.inject(lhs.clone()) { map, entry ->
-        if (map[entry.key] instanceof Map && entry.value instanceof Map) {
-            map[entry.key] = mergeMap(map[entry.key], entry.value)
-        } else if (map[entry.key] instanceof Collection && entry.value instanceof Collection) {
-            map[entry.key] += entry.value
-        } else {
-            map[entry.key] = entry.value
-        }
-        return map
+  return rhs.inject(lhs.clone()) { map, entry ->
+    if (map[entry.key] instanceof Map && entry.value instanceof Map) {
+      map[entry.key] = mergeMap(map[entry.key], entry.value)
+    } else if (map[entry.key] instanceof Collection && entry.value instanceof Collection) {
+      map[entry.key] += entry.value
+    } else {
+      map[entry.key] = entry.value
     }
+    return map
+  }
 }
 
 def helpMessage(params, config) {
   if (paramExists("help")) {
 
-    localConfig = [
+    def localConfig = [
       "functionality" : [
         "arguments": [
           [
@@ -149,11 +192,11 @@ def helpMessage(params, config) {
             'required': false,
             'type': 'string',
             'description': '''Allows inputting multiple parameter sets to initialise a Nextflow channel. Possible formats are csv, json, yaml, or simply a yaml_blob.
-            A csv should have column names which correspond to the different arguments of this pipeline.
-            A json or a yaml file should be a list of maps, each of which has keys corresponding to the arguments of the pipeline.
-            A yaml blob can also be passed directly as a parameter.
-            Inside the Nextflow pipeline code, params.params_list can also be used to directly a list of parameter sets.
-            When passing a csv, json or yaml, relative path names are relativized to the location of the parameter file.''',
+            |A csv should have column names which correspond to the different arguments of this pipeline.
+            |A json or a yaml file should be a list of maps, each of which has keys corresponding to the arguments of the pipeline.
+            |A yaml blob can also be passed directly as a parameter.
+            |Inside the Nextflow pipeline code, params.params_list can also be used to directly a list of parameter sets.
+            |When passing a csv, json or yaml, relative path names are relativized to the location of the parameter file.'''.stripMargin(),
             'example': 'my_params.yaml',
             'multiple': false
           ],
@@ -180,25 +223,25 @@ def helpMessage(params, config) {
 
     def template = '''\
     |${functionality.name}
-    |
-    |${functionality.description}
-    |<% for (group in (functionality.arguments_groups.size() > 1 ) ? functionality.arguments_groups : [ [ name: "Options", arguments: functionality.arguments.collect{ it.plainName } ] ] ) { %>
-    |<%= group.name ? group.name + " options:": "" %><%= group.description ? "\\n    " + group.description + "\\n" : "" %>     <% for (argument in functionality.arguments) { %><% if (group.arguments.contains(argument.plainName)) { %>
-    |    <%= argument.name %>
+    |<%= (functionality.description) ? "\\n" + functionality.description.trim() : "<<REMOVE>>" %>
+    |<% for (group in (functionality.arguments_groups.size() > 1 ) ? functionality.arguments_groups : [ [ name: "Options", arguments: functionality.allArguments.collect{ it.plainName } ] ] ) { %>
+    |<%= group.name ? group.name + (group.name == "Options" ? ":" : " options:"): "" %>
+    |<%= group.description ? "    " + group.description.trim().replaceAll("\\n", "\\n    ") + "\\n" : "<<REMOVE>>" %><% for (argument in functionality.allArguments) { %><% if (group.arguments.contains(argument.plainName)) { %>
+    |    <%= "--" + argument.plainName %>
     |        type: <%= argument.type %><%= (argument.required) ? ", required parameter" : "" %><%= (argument.multiple) ? ", multiple values allowed" : "" %>
-    |        <%= (argument.example)  ? "example: ${argument.example}" : "REMOVE" %>
-    |        <%= (argument.default)  ? "default: ${argument.default}" : "REMOVE" %>
-    |        <%= argument.description.trim() %>
+    |        <%= (argument.example)  ? "example: ${argument.example}" : "<<REMOVE>>" %>
+    |        <%= (argument.default)  ? "default: ${argument.default}" : "<<REMOVE>>" %>
+    |        <%= (argument.description) ? argument.description.trim().replaceAll("\\n", "\\n        ") : "<<REMOVE>>" %>
     |<% } } } %>
     '''.stripMargin()
 
     def engine = new groovy.text.SimpleTemplateEngine()
-    def mergedConfig = mergeMap(config, localConfig)
+    def mergedConfig = processConfig(mergeMap(config, localConfig))
     def help = engine
         .createTemplate(template)
         .make(mergedConfig)
         .toString()
-        .replaceAll("\s+REMOVE\n","")
+        .replaceAll("\s*<<REMOVE>>\n","")
 
     println(help)
     exit 0
@@ -230,12 +273,12 @@ def guessMultiParamFormat(params) {
 
 def paramsToList(params, config) {
   // fetch default params from functionality
-  def defaultArgs = config.functionality.arguments
+  def defaultArgs = config.functionality.allArguments
     .findAll { it.containsKey("default") }
     .collectEntries { [ it.plainName, it.default ] }
 
   // fetch overrides in params
-  def paramArgs = config.functionality.arguments
+  def paramArgs = config.functionality.allArguments
     .findAll { params.containsKey(it.plainName) }
     .collectEntries { [ it.plainName, params[it.plainName] ] }
   
@@ -275,14 +318,14 @@ def paramsToList(params, config) {
     def combinedArgs = defaultArgs + multiParam + paramArgs
 
     // check whether required arguments exist
-    config.functionality.arguments
+    config.functionality.allArguments
       .findAll { it.required }
       .forEach { par ->
         assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
       }
     
     // process arguments
-    def inputs = config.functionality.arguments
+    def inputs = config.functionality.allArguments
       .collectEntries { par ->
         // split on 'multiple_sep'
         if (par.multiple) {
