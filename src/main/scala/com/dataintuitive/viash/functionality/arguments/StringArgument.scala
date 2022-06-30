@@ -15,13 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.dataobjects
+package com.dataintuitive.viash.functionality.arguments
 
 import com.dataintuitive.viash.helpers.Circe.OneOrMore
 
-case class StringObject(
+case class StringArgument(
   name: String,
-  alternatives: List[String] = Nil,
+  alternatives: OneOrMore[String] = Nil,
   description: Option[String] = None,
   example: OneOrMore[String] = Nil,
   default: OneOrMore[String] = Nil,
@@ -31,11 +31,11 @@ case class StringObject(
   multiple: Boolean = false,
   multiple_sep: Char = ':',
   `type`: String = "string"
-) extends DataObject[String] {
-  def copyDO(
+) extends Argument[String] {
+  def copyArg(
     `type`: String, 
     name: String, 
-    alternatives: List[String],
+    alternatives: OneOrMore[String],
     description: Option[String],
     example: OneOrMore[String],
     default: OneOrMore[String],
@@ -43,7 +43,7 @@ case class StringObject(
     direction: Direction,
     multiple: Boolean,
     multiple_sep: Char
-  ): DataObject[String] = {
+  ): Argument[String] = {
     copy(name, alternatives, description, example, default, required, this.choices, direction, multiple, multiple_sep, `type`)
   }
 }

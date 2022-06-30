@@ -47,7 +47,7 @@ functionality:
   resources:
     - type: scala_script
       path: ./script.scala
-  tests:
+  test_resources:
     - type: bash_script
       path: tests/check_outputs.sh
 platforms:

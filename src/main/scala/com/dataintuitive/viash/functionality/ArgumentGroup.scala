@@ -15,10 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.dataobjects
+package com.dataintuitive.viash.functionality
 
-sealed trait Direction
+import com.dataintuitive.viash.helpers.Circe.OneOrMore
 
-case object Input extends Direction
-
-case object Output extends Direction
+case class ArgumentGroup(
+  name: String,
+  description: Option[String] = None,
+  arguments: OneOrMore[String] = Nil
+)

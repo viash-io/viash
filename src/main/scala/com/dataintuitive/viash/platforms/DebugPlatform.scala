@@ -24,7 +24,7 @@ import com.dataintuitive.viash.platforms.requirements._
 import com.dataintuitive.viash.config.Version
 import com.dataintuitive.viash.helpers.Circe.One
 import com.dataintuitive.viash.wrapper.BashWrapper
-import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.functionality.arguments._
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -34,31 +34,36 @@ case class DebugPlatform(
   `type`: String = "debug",
   path: String
 ) extends Platform {
-  def modifyFunctionality(config: Config): Functionality = {
+  def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
     val functionality = config.functionality
     if (functionality.mainScript.isEmpty) {
       throw new RuntimeException("Can't generate a debug platform when there is no script.")
     }
 
     // disable required arguments and set defaults for all arguments
-    val fun0 = functionality.copy(
-      arguments = functionality.allArguments.map {
+    def mapArgs(args: List[Argument[_]]) = {
+      args.map {
         case arg if arg.required && arg.default.nonEmpty => 
-          arg.copyDO(required = false)
+          arg.copyArg(required = false)
         case arg if arg.default.isEmpty && arg.example.nonEmpty => 
-          arg.copyDO(required = false, default = arg.example)
-        case arg: BooleanObject if arg.default.isEmpty => 
-          arg.copyDO(required = false, default = One(true))
-        case arg: DoubleObject if arg.default.isEmpty => 
+          arg.copyArg(required = false, default = arg.example)
+        case arg: BooleanArgument if arg.default.isEmpty => 
+          arg.copyArg(required = false, default = One(true))
+        case arg: DoubleArgument if arg.default.isEmpty => 
           arg.copy(required = false, default = One(123.0), min = None, max = None)
-        case arg: FileObject if arg.default.isEmpty => 
+        case arg: FileArgument if arg.default.isEmpty => 
           arg.copy(required = false, default = One(Paths.get("/path/to/file")), must_exist = false)
-        case arg: IntegerObject if arg.default.isEmpty =>
+        case arg: IntegerArgument if arg.default.isEmpty =>
            arg.copy(required = false, default = One(123), choices = Nil, min = None, max = None)
-        case arg: StringObject if arg.default.isEmpty => 
+        case arg: StringArgument if arg.default.isEmpty => 
           arg.copy(required = false, default = One("value"), choices = Nil)
         case a => a
       }
+    }
+    val fun0 = functionality.copy(
+      inputs = mapArgs(functionality.inputs),
+      outputs = mapArgs(functionality.outputs),
+      arguments = mapArgs(functionality.arguments)
     )
 
     // create new bash script

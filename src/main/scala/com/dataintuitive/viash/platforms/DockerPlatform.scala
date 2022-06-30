@@ -19,7 +19,7 @@ package com.dataintuitive.viash.platforms
 
 import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.functionality.arguments._
 import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.platforms.requirements._
 import com.dataintuitive.viash.helpers.{Bash, Docker}
@@ -59,7 +59,8 @@ case class DockerPlatform(
   yum: Option[YumRequirements] = None,
   r: Option[RRequirements] = None,
   python: Option[PythonRequirements] = None,
-  docker: Option[DockerRequirements] = None
+  docker: Option[DockerRequirements] = None,
+  test_setup: List[Requirements] = Nil
 ) extends Platform {
   override val hasSetup = true
 
@@ -83,7 +84,7 @@ case class DockerPlatform(
   }
 
 
-  def modifyFunctionality(config: Config): Functionality = {
+  def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
     val functionality = config.functionality
     // collect docker args
     val dockerArgs = "-i --rm" +
@@ -92,7 +93,7 @@ case class DockerPlatform(
       { if (privileged) " --privileged" else "" }
 
     // create setup
-    val (effectiveID, setupMods) = processDockerSetup(functionality, config.info)
+    val (effectiveID, setupMods) = processDockerSetup(functionality, config.info, testing)
 
     // generate automount code
     val dmVol = processDockerVolumes(functionality)
@@ -120,7 +121,7 @@ case class DockerPlatform(
 
     // add extra arguments to the functionality file for each of the volumes
     val fun2 = functionality.copy(
-      arguments = functionality.allArguments ::: dm.inputs
+      arguments = functionality.arguments ::: dm.inputs
     )
 
     // create new bash script
@@ -138,7 +139,7 @@ case class DockerPlatform(
     )
   }
 
-  private def processDockerSetup(functionality: Functionality, info: Option[Info]) = {
+  private def processDockerSetup(functionality: Functionality, info: Option[Info], testing: Boolean) = {
     // construct labels from metadata
     val opencontainers_image_authors = functionality.authors match {
       case Nil => None
@@ -153,7 +154,7 @@ case class DockerPlatform(
       case _ => None
     }
     val opencontainers_image_revision = info.flatMap(_.git_commit)
-    val opencontainers_image_version = info.flatMap(_.git_tag)
+    val opencontainers_image_version = functionality.version.map(v => v.toString())
     val opencontainers_image_description = s""""Companion container for running component ${functionality.namespace.map(_ + " ").getOrElse("")}${functionality.name}""""
     val opencontainers_image_created = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date())
 
@@ -165,7 +166,11 @@ case class DockerPlatform(
     val version = opencontainers_image_version.map(v => s"""org.opencontainers.image.version="$v"""").toList
     val labelReq = DockerRequirements(label = authors ::: descr ::: created ::: imageSource ::: revision ::: version)
 
-    val requirements2 = requirements ::: List(labelReq)
+    val setupRequirements = testing match {
+      case true => test_setup
+      case _ => Nil
+    }
+    val requirements2 = requirements ::: setupRequirements ::: List(labelReq)
 
     // get dependencies
     val runCommands = requirements2.flatMap(_.dockerCommands)
@@ -338,7 +343,7 @@ case class DockerPlatform(
       if (resolve_volume == Automatic) {
         "\n\n# detect volumes from file arguments" +
           args.flatMap {
-            case arg: FileObject if arg.multiple =>
+            case arg: FileArgument if arg.multiple =>
               // resolve arguments with multiplicity different from singular args
               val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
               Some(
@@ -352,7 +357,7 @@ case class DockerPlatform(
                    |  done
                    |  ${arg.VIASH_PAR}="$$$viash_temp"
                    |fi""".stripMargin)
-            case arg: FileObject =>
+            case arg: FileArgument =>
               Some(
                 s"""
                    |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
@@ -369,6 +374,7 @@ case class DockerPlatform(
       s"""# Always mount the resource directory
          |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$${BashWrapper.var_resources_dir}")"
          |${BashWrapper.var_resources_dir}=$$(ViashAutodetectMount "$$${BashWrapper.var_resources_dir}")
+         |${BashWrapper.var_executable}=$$(ViashAutodetectMount "$$${BashWrapper.var_executable}")
          |
          |# Always mount the VIASH_TEMP directory
          |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$VIASH_TEMP")"
@@ -430,7 +436,7 @@ case class DockerPlatform(
       if (chown) {
         // chown output files/folders
         val chownPars = args
-          .filter(a => a.isInstanceOf[FileObject] && a.direction == Output)
+          .filter(a => a.isInstanceOf[FileArgument] && a.direction == Output)
           .map(arg => {
 
             // resolve arguments with multiplicity different from

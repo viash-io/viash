@@ -18,7 +18,7 @@
 package com.dataintuitive.viash.helpers
 
 import com.dataintuitive.viash.functionality.Functionality
-import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.functionality.arguments._
 import com.dataintuitive.viash.Main
 
 object Helper {
@@ -26,7 +26,7 @@ object Helper {
     functionality.name + functionality.version.map(" " + _).getOrElse("")
   }
 
-  def generateHelp(functionality: Functionality, params: List[DataObject[_]]): List[String] = {
+  def generateHelp(functionality: Functionality, params: List[Argument[_]]): List[String] = {
     // PART 1: NAME AND VERSION
     def nameStr = nameAndVersion(functionality)
 
@@ -44,7 +44,7 @@ object Helper {
         ("required parameter", param.required),
         ("multiple values allowed", param.multiple),
         ("output", param.direction == Output),
-        ("file must exist", param.isInstanceOf[FileObject] && param.asInstanceOf[FileObject].must_exist)
+        ("file must exist", param.isInstanceOf[FileArgument] && param.asInstanceOf[FileArgument].must_exist)
       ).filter(_._2).map(_._1)
       
       val default = 
@@ -60,17 +60,17 @@ object Helper {
           None
         }
       val min = param match {
-          case p: IntegerObject if p.min.nonEmpty =>
+          case p: IntegerArgument if p.min.nonEmpty =>
             p.min.map(_.toString)
-          case p: DoubleObject if p.min.nonEmpty =>
+          case p: DoubleArgument if p.min.nonEmpty =>
             p.min.map(_.toString)
           case _ =>
             None
         }
       val max = param match {
-          case p: IntegerObject if p.max.nonEmpty =>
+          case p: IntegerArgument if p.max.nonEmpty =>
             p.max.map(_.toString)
-          case p: DoubleObject if p.max.nonEmpty =>
+          case p: DoubleArgument if p.max.nonEmpty =>
             p.max.map(_.toString)
           case _ =>
             None
@@ -88,9 +88,9 @@ object Helper {
       }
       val choices = 
         param match {
-          case so: StringObject if so.choices != Nil =>
+          case so: StringArgument if so.choices != Nil =>
             Some("[ " + so.choices.map(escapeChoice(_)).mkString(", ") + " ]")
-          case so: IntegerObject if so.choices != Nil =>
+          case so: IntegerArgument if so.choices != Nil =>
             Some("[ " + so.choices.mkString(", ") + " ]")
           case _ => None
         }

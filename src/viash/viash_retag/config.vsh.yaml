@@ -1,0 +1,45 @@
+functionality:
+  name: viash_tag
+  namespace: viash
+  version: 0.1
+  description: |
+    Download existing docker images from a registry and tag them for upload to another registry.
+  arguments:
+  - name: "--build_dir"
+    alternatives: [ "-b" ]
+    description: "Output folder from viash build. Should contain a 'docker' folder."
+    required: true
+    type: file
+    example: "/foo/output/"
+  - name: "--tag"
+    alternatives: [ "-t" ]
+    type: string
+    description: Git tag of the verison of the images you would like to pull.
+    required: false
+    default: "latest"
+    example: "3.0.1"
+  - name: "--target_registry"
+    alternatives: [ "-r" ]
+    type: string
+    description: Target container registry to push to.
+    required: true
+    example: "ghcr.io"
+  - name: "--source_registry"
+    alternatives: [ "-s" ]
+    type: string
+    description: Source image repository uri.
+    required: false
+    default: "registry.hub.docker.com"
+  - name: "--organization"
+    alternatives: [ "-o" ]
+    type: string
+    description: Organization name.
+    required: false
+  - name: "--dry_run"
+    alternatives: [ "-d" ]
+    type: boolean_true
+  resources:
+    - type: bash_script
+      path: script.sh
+platforms:
+- type: native

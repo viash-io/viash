@@ -16,7 +16,7 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
   private val functionalityRequirements = Config.read(configRequirementsFile, applyPlatform = false).functionality
   private val executableRequirementsFile = Paths.get(tempFolStr, functionalityRequirements.name).toFile
 
-  test("check base image for apk still does not contain the fortune package", DockerTest) {
+  test("setup; check base image for apk still does not contain the fortune package", DockerTest) {
     TestHelper.testMain(
       "build",
       "-p", "viash_requirement_apk_base",
@@ -38,7 +38,7 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
     assert(output.output == "")
   }
 
-  test("check docker requirements using apk to add the fortune package", DockerTest) {
+  test("setup; check docker requirements using apk to add the fortune package", DockerTest) {
     // remove docker if it exists
     removeDockerImage("viash_requirement_apk")
     assert(!checkDockerImageExists("viash_requirement_apk"))
@@ -71,7 +71,7 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
     removeDockerImage("viash_requirement_apk")
   }
 
-  test("check base image for apt still does not contain the cowsay package", DockerTest) {
+  test("setup; check base image for apt still does not contain the cowsay package", DockerTest) {
     TestHelper.testMain(
       "build",
       "-p", "viash_requirement_apt_base",
@@ -93,7 +93,7 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
     assert(output.output == "")
   }
 
-  test("check docker requirements using apt to add the cowsay package", DockerTest) {
+  test("setup; check docker requirements using apt to add the cowsay package", DockerTest) {
     // remove docker if it exists
     removeDockerImage("viash_requirement_apt")
     assert(!checkDockerImageExists("viash_requirement_apt"))
@@ -124,6 +124,57 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
 
     // Tests finished, remove docker image
     removeDockerImage("viash_requirement_apt")
+  }
+
+
+  test("test_setup; check the fortune package isn't added for the build option", DockerTest) {
+    TestHelper.testMain(
+      "build",
+      "-p", "viash_requirement_apk_test_setup",
+      "-o", tempFolStr,
+      "--setup", "build",
+      configRequirementsFile
+    )
+
+    assert(executableRequirementsFile.exists)
+    assert(executableRequirementsFile.canExecute)
+
+    val output = Exec.run2(
+      Seq(
+        executableRequirementsFile.toString,
+        "--which", "fortune"
+      )
+    )
+
+    assert(output.output == "")
+  }
+
+  test("test_setup; check the fortune package is added for the test option", DockerTest) {
+    val testText = TestHelper.testMain(
+      "test",
+      "-p", "viash_requirement_apk_test_setup",
+      configRequirementsFile
+    )
+
+    assert(testText.contains("Running tests in temporary directory: "))
+    assert(testText.contains("SUCCESS! All 1 out of 1 test scripts succeeded!"))
+    assert(testText.contains("Cleaning up temporary directory"))
+  }
+
+  test("test_setup; check the fortune package is not added for the test option when not specified", DockerTest) {
+
+    val testOutput = TestHelper.testMainException2[RuntimeException](
+      "test",
+      "-p", "viash_requirement_apk_base",
+      "-k", "false",
+      configRequirementsFile
+    )
+
+    assert(testOutput.exceptionText == "Only 0 out of 1 test scripts succeeded!")
+
+    assert(testOutput.output.contains("Running tests in temporary directory: "))
+    assert(testOutput.output.contains("ERROR! Only 0 out of 1 test scripts succeeded!"))
+    assert(testOutput.output.contains("Cleaning up temporary directory"))
   }
 
   def checkDockerImageExists(name: String): Boolean = {

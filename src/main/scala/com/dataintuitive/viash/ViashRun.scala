@@ -20,7 +20,7 @@ package com.dataintuitive.viash
 import java.nio.file.Paths
 
 import com.dataintuitive.viash.config._
-import com.dataintuitive.viash.functionality.dataobjects.{FileObject, Output}
+import com.dataintuitive.viash.functionality.arguments.{FileArgument, Output}
 import com.dataintuitive.viash.helpers.IO
 import com.dataintuitive.viash.helpers.Circe.{OneOrMore, One, More}
 
@@ -31,7 +31,7 @@ object ViashRun {
     val fun = config.functionality
     val dir = IO.makeTemp("viash_" + fun.name)
 
-    val dirArg = FileObject(
+    val dirArg = FileArgument(
       name = "--viash_tempdir_arg",
       direction = Output,
       default = One(dir)

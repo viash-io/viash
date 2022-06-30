@@ -32,7 +32,7 @@ trait Platform {
   val hasSetup: Boolean = false
   val requirements: List[Requirements] = Nil
 
-  def modifyFunctionality(config: Config): Functionality
+  def modifyFunctionality(config: Config, testing: Boolean): Functionality
 }
 
 object Platform {

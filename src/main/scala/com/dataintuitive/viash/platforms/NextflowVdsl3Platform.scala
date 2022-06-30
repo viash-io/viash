@@ -20,7 +20,7 @@ package com.dataintuitive.viash.platforms
 import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.functionality.arguments._
 import com.dataintuitive.viash.config.Version
 import com.dataintuitive.viash.helpers.{Docker, Bash, DockerImageInfo, Helper}
 import com.dataintuitive.viash.helpers.Circe._
@@ -49,7 +49,7 @@ case class NextflowVdsl3Platform(
     Bash.escape(txt, singleQuote = true, newline = true, backtick = false)
   }
 
-  def modifyFunctionality(config: Config): Functionality = {
+  def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
     val functionality = config.functionality
     val condir = containerDirective(config)
 
@@ -111,59 +111,7 @@ case class NextflowVdsl3Platform(
       if (containerDirective.isEmpty) {
         "" 
       } else {
-        s"""
-        |
-        |// detect tempdir
-        |tempDir = java.nio.file.Paths.get(
-        |  System.getenv('NXF_TEMP') ?:
-        |    System.getenv('VIASH_TEMP') ?: 
-        |    System.getenv('TEMPDIR') ?: 
-        |    System.getenv('TMPDIR') ?: 
-        |    '/tmp'
-        |).toAbsolutePath()
-        |
-        |profiles {
-        |  docker {
-        |    docker.enabled         = true
-        |    docker.userEmulation   = true
-        |    docker.temp            = tempDir
-        |    singularity.enabled    = false
-        |    podman.enabled         = false
-        |    shifter.enabled        = false
-        |    charliecloud.enabled   = false
-        |  }
-        |  singularity {
-        |    singularity.enabled    = true
-        |    singularity.autoMounts = true
-        |    docker.enabled         = false
-        |    podman.enabled         = false
-        |    shifter.enabled        = false
-        |    charliecloud.enabled   = false
-        |  }
-        |  podman {
-        |    podman.enabled         = true
-        |    podman.temp            = tempDir
-        |    docker.enabled         = false
-        |    singularity.enabled    = false
-        |    shifter.enabled        = false
-        |    charliecloud.enabled   = false
-        |  }
-        |  shifter {
-        |    shifter.enabled        = true
-        |    docker.enabled         = false
-        |    singularity.enabled    = false
-        |    podman.enabled         = false
-        |    charliecloud.enabled   = false
-        |  }
-        |  charliecloud {
-        |    charliecloud.enabled   = true
-        |    charliecloud.temp      = tempDir
-        |    docker.enabled         = false
-        |    singularity.enabled    = false
-        |    podman.enabled         = false
-        |    shifter.enabled        = false
-        |  }
-        |}""".stripMargin
+        "\n\n" + NextflowHelper.profilesHelper
       }
 
     s"""manifest {
@@ -181,100 +129,6 @@ case class NextflowVdsl3Platform(
       .map(h => Bash.escapeMore(h))
       .mkString("// ", "\n// ", "")
 
-    /************************* FUNCTIONALITY *************************/
-    val argumentsStr = functionality.allArguments.map{ arg => 
-      val descrStr = arg.description.map{des => 
-        val escDes = escapeText(des)
-        s"\n      'description': '$escDes',"
-      }.getOrElse("")
-
-      // construct data for default
-      val defTup = 
-        if (arg.isInstanceOf[FileObject] && arg.direction == Output) {
-          val mult = if (arg.multiple) "_*" else ""
-          val (lef, rig) = if (arg.multiple) ("['", "']") else ("'", "'")
-          val ExtReg = ".*(\\.[^\\.]*)".r
-          val ext = 
-            if (arg.default.nonEmpty) {
-              arg.default.map(_.toString).toList match {
-                case ExtReg(ext) :: _ => ext
-                case _ => ""
-              }
-            } else if (arg.example.nonEmpty) {
-              arg.example.map(_.toString).toList match {
-                case ExtReg(ext) :: _ => ext
-                case _ => ""
-              }
-            } else {
-              ""
-            }
-          (lef, Some(s"$$id.$$key.${arg.plainName}${mult}${ext}"), rig, false)
-        } else if (arg.isInstanceOf[BooleanObject] && arg.asInstanceOf[BooleanObject].flagValue.isDefined) {
-          ("", Some((!arg.asInstanceOf[BooleanObject].flagValue.get).toString), "", false)
-        } else if (arg.default.isEmpty) {
-          ("", None, "", false)
-        } else if (arg.multiple && (arg.isInstanceOf[StringObject] || arg.isInstanceOf[FileObject]) ) {
-          ("['", Some(arg.default.toList.mkString("', '")), "']", true)
-        } else if (arg.multiple) {
-          ("[", Some(arg.default.toList.mkString(", ")), "]", true)
-        } else if (arg.isInstanceOf[StringObject] || arg.isInstanceOf[FileObject]) {
-          ("'", Some(arg.default.head.toString), "'", true)
-        } else {
-          ("", Some(arg.default.head.toString), "", true)
-        }
-      // format default as string
-      val defaultStr = defTup match {
-        case (_, None, _, _) => ""
-        case (left, Some(middle), right, escape) =>
-          val middleEsc = if (escape) escapeText(middle) else middle
-          s"\n      'default': $left$middleEsc$right,"
-      }
-
-      val multipleSepStr = if (arg.multiple) s",\n      'multiple_sep': '${arg.multiple_sep}'" else ""
-
-      // construct data for example
-      val exaTup = 
-        if (arg.example.isEmpty) {
-          ("", None, "", false)
-        } else if (arg.multiple && (arg.isInstanceOf[StringObject] || arg.isInstanceOf[FileObject]) ) {
-          ("['", Some(arg.example.toList.mkString("', '")), "']", true)
-        } else if (arg.multiple) {
-          ("[", Some(arg.example.toList.mkString(", ")), "]", true)
-        } else if (arg.isInstanceOf[StringObject] || arg.isInstanceOf[FileObject]) {
-          ("'", Some(arg.example.head.toString), "'", true)
-        } else {
-          ("", Some(arg.example.head.toString), "", true)
-        }
-      // format example as string
-      val exampleStr = exaTup match {
-        case (_, None, _, _) => ""
-        case (left, Some(middle), right, escape) =>
-          val middleEsc = if (escape) escapeText(middle) else middle
-          s"\n      'example': $left$middleEsc$right,"
-      }
-
-      s"""
-         |    [
-         |      'name': '${arg.plainName}',
-         |      'required': ${arg.required},
-         |      'type': '${arg.`type`}',
-         |      'direction': '${arg.direction.toString.toLowerCase}',${descrStr}${defaultStr}${exampleStr}
-         |      'multiple': ${arg.multiple}${multipleSepStr}
-         |    ]""".stripMargin
-    }
-
-    /************************* HELP *************************/
-    val helpParams = functionality.allArguments.map {
-      case arg => arg.copyDO(
-        name = "--" + arg.plainName,
-        alternatives = Nil
-      )
-    }
-    val help = Helper.generateHelp(functionality, helpParams)
-    val helpStr = help
-      .map(h => h.replace("'''", "\\'\\'\\'").replace("\\", "\\\\"))
-      .mkString("\n")
-
     /************************* SCRIPT *************************/
     val executionCode = functionality.mainScript match {
       // if mainResource is empty (shouldn't be the case)
@@ -286,7 +140,7 @@ case class NextflowVdsl3Platform(
 
       // if mainResource is a script
       case Some(res) =>
-        val code = res.readWithPlaceholder(functionality).get
+        val code = res.readWithInjection(functionality).get
         val escapedCode = Bash.escapeMore(code)
           .replace("\\", "\\\\")
           .replace("'''", "\\'\\'\\'")
@@ -300,18 +154,27 @@ case class NextflowVdsl3Platform(
           |cat > "$scriptPath" << VIASHMAIN
           |$escapedCode
           |VIASHMAIN
-          |${res.meta.command(scriptPath)}
+          |${res.command(scriptPath)}
           |""".stripMargin
     }
 
-    /************************* MAIN.NF *************************/
+    /************************* JSONS *************************/
     // override container
-    val directives2 = directives.copy(
+    val directivesToJson = directives.copy(
       container = directives.container orElse containerDirective.map(cd => Left(cd.toMap))
     )
-    val tripQuo = """""""""
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
-    val dirJson = directives2.asJson.dropEmptyRecursively()
+    val dirJson = directivesToJson.asJson.dropEmptyRecursively()
+    val funJson = functionality.asJson.dropEmptyRecursively()
+    val funJsonStr = jsonPrinter.print(funJson)
+      .replace("\\\\", "\\\\\\\\")
+      .replace("\\\"", "\\\\\"")
+      .replace("'''", "\\'\\'\\'")
+    val autoJson = auto.asJson.dropEmptyRecursively()
+
+    /************************* MAIN.NF *************************/
+    val tripQuo = """""""""
+
 
     s"""$header
       |
@@ -326,25 +189,21 @@ case class NextflowVdsl3Platform(
       |// DEFINE CUSTOM CODE
       |
       |// functionality metadata
-      |thisFunctionality = [
-      |  'name': '${functionality.name}',
-      |  'arguments': [${argumentsStr.mkString(",")}
-      |  ]
-      |]
-      |
-      |thisHelpMessage = '''$helpStr'''
+      |thisConfig = processConfig([
+      |  functionality: jsonSlurper.parseText('''$funJsonStr''')
+      |])
       |
       |thisScript = '''$executionCode'''
       |
       |thisDefaultProcessArgs = [
       |  // key to be used to trace the process and determine output names
-      |  key: thisFunctionality.name,
+      |  key: thisConfig.functionality.name,
       |  // fixed arguments to be passed to script
       |  args: [:],
       |  // default directives
-      |  directives: jsonSlurper.parseText($tripQuo${jsonPrinter.print(dirJson)}$tripQuo),
+      |  directives: jsonSlurper.parseText('''${jsonPrinter.print(dirJson)}'''),
       |  // auto settings
-      |  auto: jsonSlurper.parseText($tripQuo${jsonPrinter.print(auto.asJson.dropEmptyRecursively())}$tripQuo),
+      |  auto: jsonSlurper.parseText('''${jsonPrinter.print(autoJson)}'''),
       |  // apply a map over the incoming tuple
       |  // example: { tup -> [ tup[0], [input: tup[1].output], tup[2] ] }
       |  map: null,
@@ -364,9 +223,9 @@ case class NextflowVdsl3Platform(
       |  debug: $debug
       |]
       |
-      |// END CUSTOM CODE
-      |
-      |""".stripMargin + NextflowHelper.code
+      |// END CUSTOM CODE""".stripMargin + 
+      "\n\n" + NextflowHelper.workflowHelper + 
+      "\n\n" + NextflowHelper.vdsl3Helper
   }
 }
 

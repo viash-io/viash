@@ -46,7 +46,7 @@ object Config {
 
   def parse(yamlText: String, uri: URI, preparseMods: Option[ConfigMods]): Config = {
     def errorHandler[C](e: Exception): C = {
-      System.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
+      Console.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
       throw e
     }
 
@@ -64,13 +64,13 @@ object Config {
 
     // make paths absolute
     val resources = config.functionality.resources.map(_.copyWithAbsolutePath(uri))
-    val tests = config.functionality.tests.map(_.copyWithAbsolutePath(uri))
+    val tests = config.functionality.test_resources.map(_.copyWithAbsolutePath(uri))
 
     // copy resources with updated paths into config and return
     config.copy(
       functionality = config.functionality.copy(
         resources = resources,
-        tests = tests
+        test_resources = tests
       )
     )
   }
@@ -111,7 +111,7 @@ object Config {
       val yaml = header.map(s => s.drop(3)).mkString("\n")
       val code = body.mkString("\n")
 
-      val script = scriptObj(dest = Some(basename), text = Some(code))
+      val script = Script(dest = Some(basename), text = Some(code), `type` = scriptObj.`type`)
 
       (yaml, Some(script))
     } else {
@@ -224,7 +224,7 @@ object Config {
         conf2
       } else {
         conf2.copy(
-          functionality = pl.modifyFunctionality(conf2)
+          functionality = pl.modifyFunctionality(conf2, false)
         )
       }
     

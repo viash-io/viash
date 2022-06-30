@@ -15,36 +15,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.dataobjects
+package com.dataintuitive.viash.functionality.arguments
 
-import java.nio.file.Path
 import com.dataintuitive.viash.helpers.Circe.OneOrMore
 
-case class FileObject(
+case class DoubleArgument(
   name: String,
-  alternatives: List[String] = Nil,
+  alternatives: OneOrMore[String] = Nil,
   description: Option[String] = None,
-  example: OneOrMore[Path] = Nil,
-  default: OneOrMore[Path] = Nil,
-  must_exist: Boolean = false,
+  example: OneOrMore[Double] = Nil,
+  default: OneOrMore[Double] = Nil,
   required: Boolean = false,
+  min: Option[Double] = None,
+  max: Option[Double] = None,
   direction: Direction = Input,
   multiple: Boolean = false,
   multiple_sep: Char = ':',
-  `type`: String = "file"
-) extends DataObject[Path] {
-  def copyDO(
+  `type`: String = "double"
+) extends Argument[Double] {
+  def copyArg(
     `type`: String, 
     name: String, 
-    alternatives: List[String],
+    alternatives: OneOrMore[String],
     description: Option[String],
-    example: OneOrMore[Path],
-    default: OneOrMore[Path],
+    example: OneOrMore[Double],
+    default: OneOrMore[Double],
     required: Boolean,
     direction: Direction,
     multiple: Boolean,
     multiple_sep: Char
-  ): DataObject[Path] = {
-    copy(name, alternatives, description, example, default, this.must_exist, required, direction, multiple, multiple_sep, `type`)
+  ): Argument[Double] = {
+    copy(name, alternatives, description, example, default, required, this.min, this.max, direction, multiple, multiple_sep, `type`)
   }
 }

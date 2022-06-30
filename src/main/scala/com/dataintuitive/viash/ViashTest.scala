@@ -25,7 +25,8 @@ import java.time.temporal.ChronoUnit
 import scala.util.Random
 
 import config.{Config, Version}
-import functionality.dataobjects.{FileObject, Output}
+import functionality.Functionality
+import functionality.arguments.{FileArgument, Output}
 import functionality.resources.{BashScript, Script}
 import platforms.NativePlatform
 import helpers.IO
@@ -112,7 +113,7 @@ object ViashTest {
     val consoleLine = "===================================================================="
 
     // build regular executable
-    val buildFun = platform.modifyFunctionality(config)
+    val buildFun = platform.modifyFunctionality(config, true)
     val buildDir = dir.resolve("build_executable")
     Files.createDirectories(buildDir)
     try {
@@ -168,10 +169,10 @@ object ViashTest {
     }
 
     // generate executable for native platform
-    val exe = NativePlatform().modifyFunctionality(config).resources.head
+    val exe = NativePlatform().modifyFunctionality(config, true).resources.head
 
     // fetch tests
-    val tests = fun.tests
+    val tests = fun.test_resources
 
     val testResults = tests.filter(_.isInstanceOf[Script]).map {
       case test: Script if test.read.isEmpty =>
@@ -179,24 +180,30 @@ object ViashTest {
 
       case test: Script =>
         val startTime = LocalDateTime.now
-        val dirArg = FileObject(
+        val dirArg = FileArgument(
           name = "dir",
           direction = Output,
           default = One(dir)
         )
         // generate bash script for test
-        val funOnlyTest = platform.modifyFunctionality(config.copy(
-          functionality = config.functionality.copy(
-            inputs = Nil,
-            outputs = Nil,
-            arguments = Nil,
-            dummy_arguments = List(dirArg),
-            resources = List(test),
-            set_wd_to_resources_dir = true
-          )
-        ))
+       val funOnlyTest = platform.modifyFunctionality(
+          config.copy(
+            functionality = Functionality(
+              // set same name, namespace and version
+              // to be able to reuse same docker container
+              name = config.functionality.name,
+              namespace = config.functionality.namespace,
+              version = config.functionality.version,
+              // set custom arguments and resources
+              dummy_arguments = List(dirArg),
+              resources = List(test),
+              set_wd_to_resources_dir = true
+            )
+          ), 
+          testing = true
+        )
         val testBash = BashScript(
-          dest = Some(test.filename),
+          dest = Some("test_executable"),
           text = funOnlyTest.resources.head.text
         )
 
@@ -211,7 +218,8 @@ object ViashTest {
         )
 
         // make a new directory
-        val newDir = dir.resolve("test_" + test.filename)
+        val dirName = "test_" + test.filename.replaceAll("\\.[^\\.]*$", "")
+        val newDir = dir.resolve(dirName)
         Files.createDirectories(newDir)
 
         // write resources to dir
