@@ -129,100 +129,6 @@ case class NextflowVdsl3Platform(
       .map(h => Bash.escapeMore(h))
       .mkString("// ", "\n// ", "")
 
-    /************************* FUNCTIONALITY *************************/
-    val argumentsStr = functionality.allArguments.map{ arg => 
-      val descrStr = arg.description.map{des => 
-        val escDes = escapeText(des)
-        s"\n      'description': '$escDes',"
-      }.getOrElse("")
-
-      // construct data for default
-      val defTup = 
-        if (arg.isInstanceOf[FileArgument] && arg.direction == Output) {
-          val mult = if (arg.multiple) "_*" else ""
-          val (lef, rig) = if (arg.multiple) ("['", "']") else ("'", "'")
-          val ExtReg = ".*(\\.[^\\.]*)".r
-          val ext = 
-            if (arg.default.nonEmpty) {
-              arg.default.map(_.toString).toList match {
-                case ExtReg(ext) :: _ => ext
-                case _ => ""
-              }
-            } else if (arg.example.nonEmpty) {
-              arg.example.map(_.toString).toList match {
-                case ExtReg(ext) :: _ => ext
-                case _ => ""
-              }
-            } else {
-              ""
-            }
-          (lef, Some(s"$$id.$$key.${arg.plainName}${mult}${ext}"), rig, false)
-        } else if (arg.isInstanceOf[BooleanArgument] && arg.asInstanceOf[BooleanArgument].flagValue.isDefined) {
-          ("", Some((!arg.asInstanceOf[BooleanArgument].flagValue.get).toString), "", false)
-        } else if (arg.default.isEmpty) {
-          ("", None, "", false)
-        } else if (arg.multiple && (arg.isInstanceOf[StringArgument] || arg.isInstanceOf[FileArgument]) ) {
-          ("['", Some(arg.default.toList.mkString("', '")), "']", true)
-        } else if (arg.multiple) {
-          ("[", Some(arg.default.toList.mkString(", ")), "]", true)
-        } else if (arg.isInstanceOf[StringArgument] || arg.isInstanceOf[FileArgument]) {
-          ("'", Some(arg.default.head.toString), "'", true)
-        } else {
-          ("", Some(arg.default.head.toString), "", true)
-        }
-      // format default as string
-      val defaultStr = defTup match {
-        case (_, None, _, _) => ""
-        case (left, Some(middle), right, escape) =>
-          val middleEsc = if (escape) escapeText(middle) else middle
-          s"\n      'default': $left$middleEsc$right,"
-      }
-
-      val multipleSepStr = if (arg.multiple) s",\n      'multiple_sep': '${arg.multiple_sep}'" else ""
-
-      // construct data for example
-      val exaTup = 
-        if (arg.example.isEmpty) {
-          ("", None, "", false)
-        } else if (arg.multiple && (arg.isInstanceOf[StringArgument] || arg.isInstanceOf[FileArgument]) ) {
-          ("['", Some(arg.example.toList.mkString("', '")), "']", true)
-        } else if (arg.multiple) {
-          ("[", Some(arg.example.toList.mkString(", ")), "]", true)
-        } else if (arg.isInstanceOf[StringArgument] || arg.isInstanceOf[FileArgument]) {
-          ("'", Some(arg.example.head.toString), "'", true)
-        } else {
-          ("", Some(arg.example.head.toString), "", true)
-        }
-      // format example as string
-      val exampleStr = exaTup match {
-        case (_, None, _, _) => ""
-        case (left, Some(middle), right, escape) =>
-          val middleEsc = if (escape) escapeText(middle) else middle
-          s"\n      'example': $left$middleEsc$right,"
-      }
-
-      s"""
-         |    [
-         |      'name': '${arg.plainName}',
-         |      'required': ${arg.required},
-         |      'type': '${arg.`type`}',
-         |      'direction': '${arg.direction.toString.toLowerCase}',${descrStr}${defaultStr}${exampleStr}
-         |      'multiple': ${arg.multiple}${multipleSepStr}
-         |    ]""".stripMargin
-    }
-
-    /************************* HELP *************************/
-    val helpParams = functionality.allArguments.map {
-      case arg => arg.copyArg(
-        name = "--" + arg.plainName,
-        alternatives = Nil
-      )
-    }
-    val help = Helper.generateHelp(functionality, helpParams)
-    val helpStr = help
-      .map(h => h.replace("'''", "\\'\\'\\'").replace("\\", "\\\\"))
-      .mkString("\n")
-
     /************************* SCRIPT *************************/
     val executionCode = functionality.mainScript match {
       // if mainResource is empty (shouldn't be the case)
@@ -252,18 +158,37 @@ case class NextflowVdsl3Platform(
           |""".stripMargin
     }
 
-    /************************* MAIN.NF *************************/
+    /************************* JSONS *************************/
     // override container
-    val directives2 = directives.copy(
+    val directivesToJson = directives.copy(
       container = directives.container orElse containerDirective.map(cd => Left(cd.toMap))
     )
-    val tripQuo = """""""""
+    // add id if it does not exist yet
+    val functionalityToJson = if (functionality.arguments.exists(_.plainName == "id")) {
+      functionality
+    } else {
+      val sa = StringArgument(
+        name = "--id",
+        description = Some("A unique id for every sample."),
+        default = List("run"),
+        required = true
+      )
+      functionality.copy(
+        arguments = sa :: functionality.arguments
+      )
+    }
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
-    val dirJson = directives2.asJson.dropEmptyRecursively()
-    val funJson = functionality.asJson.dropEmptyRecursively()
-    val configJson = Bash.escapeMore(jsonPrinter.print(funJson))
-      .replace("\\", "\\\\")
+    val dirJson = directivesToJson.asJson.dropEmptyRecursively()
+    val funJson = functionalityToJson.asJson.dropEmptyRecursively()
+    val funJsonStr = jsonPrinter.print(funJson)
+      .replace("\\\\", "\\\\\\\\")
+      .replace("\\\"", "\\\\\"")
       .replace("'''", "\\'\\'\\'")
+    val autoJson = auto.asJson.dropEmptyRecursively()
+
+    /************************* MAIN.NF *************************/
+    val tripQuo = """""""""
+
 
     s"""$header
       |
@@ -279,11 +204,8 @@ case class NextflowVdsl3Platform(
       |
       |// functionality metadata
       |thisConfig = processConfig([
-      |  functionality: jsonSlurper.parseText('''$configJson''')
+      |  functionality: jsonSlurper.parseText('''$funJsonStr''')
       |])
-      |
-      |// TODO: remove in favour for helpMessage()
-      |thisHelpMessage = '''$helpStr'''
       |
       |thisScript = '''$executionCode'''
       |
@@ -293,9 +215,9 @@ case class NextflowVdsl3Platform(
       |  // fixed arguments to be passed to script
       |  args: [:],
       |  // default directives
-      |  directives: jsonSlurper.parseText($tripQuo${jsonPrinter.print(dirJson)}$tripQuo),
+      |  directives: jsonSlurper.parseText('''${jsonPrinter.print(dirJson)}'''),
       |  // auto settings
-      |  auto: jsonSlurper.parseText($tripQuo${jsonPrinter.print(auto.asJson.dropEmptyRecursively())}$tripQuo),
+      |  auto: jsonSlurper.parseText('''${jsonPrinter.print(autoJson)}'''),
       |  // apply a map over the incoming tuple
       |  // example: { tup -> [ tup[0], [input: tup[1].output], tup[2] ] }
       |  map: null,
