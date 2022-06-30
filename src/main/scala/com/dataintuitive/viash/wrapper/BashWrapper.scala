@@ -108,8 +108,21 @@ object BashWrapper {
       // if mainResource is simply an executable
       case Some(e: Executable) => " " + e.path.get + " $VIASH_EXECUTABLE_ARGS"
 
+      // if we want to debug our code
+      case Some(res) if debugPath.isDefined =>
+        val code = res.readWithInjection(functionality).get
+        val escapedCode = Bash.escapeMore(code)
+        val deb = debugPath.get
+
+        s"""
+          |set -e
+          |cat > "${debugPath.get}" << 'VIASHMAIN'
+          |$escapedCode
+          |VIASHMAIN
+          |""".stripMargin
+
       // if mainResource is a script
-      case Some(res) if debugPath.isEmpty =>
+      case Some(res) =>
         val code = res.readWithInjection(functionality).get
         val escapedCode = Bash.escapeMore(code)
 
@@ -136,19 +149,6 @@ object BashWrapper {
           |VIASHMAIN$cdToResources
           |${res.command(scriptPath)} &
           |wait "\\$$!"
-          |""".stripMargin
-
-      // if we want to debug our code
-      case Some(res) if debugPath.isDefined =>
-        val code = res.readWithInjection(functionality).get
-        val escapedCode = Bash.escapeMore(code)
-        val deb = debugPath.get
-
-        s"""
-          |set -e
-          |cat > "${debugPath.get}" << 'VIASHMAIN'
-          |$escapedCode
-          |VIASHMAIN
           |""".stripMargin
     }
 

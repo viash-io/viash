@@ -163,23 +163,9 @@ case class NextflowVdsl3Platform(
     val directivesToJson = directives.copy(
       container = directives.container orElse containerDirective.map(cd => Left(cd.toMap))
     )
-    // add id if it does not exist yet
-    val functionalityToJson = if (functionality.arguments.exists(_.plainName == "id")) {
-      functionality
-    } else {
-      val sa = StringArgument(
-        name = "--id",
-        description = Some("A unique id for every sample."),
-        default = List("run"),
-        required = true
-      )
-      functionality.copy(
-        arguments = sa :: functionality.arguments
-      )
-    }
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
     val dirJson = directivesToJson.asJson.dropEmptyRecursively()
-    val funJson = functionalityToJson.asJson.dropEmptyRecursively()
+    val funJson = functionality.asJson.dropEmptyRecursively()
     val funJsonStr = jsonPrinter.print(funJson)
       .replace("\\\\", "\\\\\\\\")
       .replace("\\\"", "\\\\\"")

@@ -905,6 +905,10 @@ ScriptMeta.current().addDefinition(myWfInstance)
 // anonymous workflow for running this module as a standalone
 workflow {
   helpMessage(params, thisConfig)
+  
+  if (!params.containsKey("id")) {
+    params.id = "run"
+  }
 
   viashChannel(params, thisConfig)
     | view { "input: $it" }

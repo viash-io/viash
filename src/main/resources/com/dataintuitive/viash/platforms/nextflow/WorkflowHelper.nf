@@ -178,8 +178,15 @@ def helpMessage(params, config) {
       "functionality" : [
         "arguments": [
           [
+            'name': '--id',
+            'required': true,
+            'type': 'string',
+            'description': 'A unique id for every entry.',
+            'default': 'run',
+            'multiple': false
+          ],
+          [
             'name': '--publish_dir',
-            'plainName' : 'publish_dir',
             'required': true,
             'type': 'string',
             'description': 'Path to an output directory.',
@@ -188,7 +195,6 @@ def helpMessage(params, config) {
           ],
           [
             'name': '--param_list',
-            'plainName' : 'param_list',
             'required': false,
             'type': 'string',
             'description': '''Allows inputting multiple parameter sets to initialise a Nextflow channel. Possible formats are csv, json, yaml, or simply a yaml_blob.
@@ -202,7 +208,6 @@ def helpMessage(params, config) {
           ],
           [
             'name': '--param_list_format',
-            'plainName' : 'param_list_format',
             'required': false,
             'type': 'string',
             'description': 'Manually specify the param_list_format. Must be one of \'csv\', \'json\', \'yaml\', \'yaml_blob\', \'asis\' or \'none\'.',

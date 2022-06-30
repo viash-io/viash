@@ -46,7 +46,7 @@ case class NextflowScript(
       case Some(entry) => " -entry " + entry
       case None => ""
     }
-    "nextflow run \"" + script + "\"" + entryStr
+    "nextflow run . -main-script \"" + script + "\"" + entryStr
   }
 
   def commandSeq(script: String): Seq[String] = {
@@ -54,7 +54,8 @@ case class NextflowScript(
       case Some(entry) => Seq("-entry", entry)
       case None => Seq()
     }
-    Seq("nextflow", "run", script) ++ entrySeq
+    // Seq("nextflow", "run", script) ++ entrySeq
+    Seq("nextflow", "run", ".", "-main-script", script) ++ entrySeq
   }
 }
 
