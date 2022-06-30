@@ -718,7 +718,7 @@ def workflowFactory(Map args) {
               "  Anonymous file inputs are only allowed when the process has exactly one file input.\n" +
               "  Expected: inputFiles.size() == 1. Found: inputFiles.size() is ${inputFiles.size()}"
 
-          tuple[1] = [[ inputFiles[0].name, tuple[1] ]].collectEntries()
+          tuple[1] = [[ inputFiles[0].plainName, tuple[1] ]].collectEntries()
         }
 
         // check data field
@@ -905,7 +905,7 @@ ScriptMeta.current().addDefinition(myWfInstance)
 // anonymous workflow for running this module as a standalone
 workflow {
   helpMessage(params, thisConfig)
-  
+
   if (!params.containsKey("id")) {
     params.id = "run"
   }
