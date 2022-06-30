@@ -103,7 +103,23 @@ def processConfig(config) {
       arg.required = arg.required ?: false
       arg.direction = arg.direction ?: "input"
       arg.multiple_sep = arg.multiple_sep ?: ":"
-      arg.plainName = arg.name.replaceAll("^--", "")
+      arg.plainName = arg.name.replaceAll("^-*", "")
+
+      if (arg.type == "file" && arg.direction == "output") {
+        def mult = arg.multiple ? "_*" : ""
+        def extSearch = ""
+        if (arg.default != null) {
+          extSearch = arg.default
+        } else if (arg.example != null) {
+          extSearch = arg.example
+        }
+        if (extSearch instanceof List) {
+          extSearch = extSearch[0]
+        }
+        def ext = extSearch.find("\\.[^\\.]+\$") ?: ""
+        arg.default = "\$id.\$key.${arg.plainName}${mult}${ext}"
+      }
+
       arg
     }
   config
