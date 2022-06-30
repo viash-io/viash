@@ -174,7 +174,7 @@ def mergeMap(Map lhs, Map rhs) {
 def helpMessage(params, config) {
   if (paramExists("help")) {
 
-    localConfig = [
+    def localConfig = [
       "functionality" : [
         "arguments": [
           [
@@ -236,7 +236,7 @@ def helpMessage(params, config) {
     '''.stripMargin()
 
     def engine = new groovy.text.SimpleTemplateEngine()
-    def mergedConfig = mergeMap(config, localConfig)
+    def mergedConfig = processConfig(mergeMap(config, localConfig))
     def help = engine
         .createTemplate(template)
         .make(mergedConfig)
