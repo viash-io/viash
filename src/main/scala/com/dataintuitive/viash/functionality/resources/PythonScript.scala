@@ -29,14 +29,17 @@ case class PythonScript(
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
-  `type`: String = "python_script"
+  entrypoint: Option[String] = None,
+  `type`: String = PythonScript.`type`
 ) extends Script {
-  val meta = PythonScript
+  assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")
+  
+  val companion = PythonScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generatePlaceholder(functionality: Functionality): String = {
+  def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
     val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
 
     val parSet = params.map { par =>
@@ -67,7 +70,7 @@ case class PythonScript(
       s"""'$script_name': '$$$env_name'"""
     }
 
-    s"""par = {
+    val paramsCode = s"""par = {
        |  ${parSet.mkString(",\n  ")}
        |}
        |meta = {
@@ -76,13 +79,8 @@ case class PythonScript(
        |
        |resources_dir = '$$VIASH_META_RESOURCES_DIR'
        |""".stripMargin
+    ScriptInjectionMods(params = paramsCode)
   }
-}
-
-object PythonScript extends ScriptObject {
-  val commentStr = "#"
-  val extension = "py"
-  val `type` = "python_script"
 
   def command(script: String): String = {
     "python \"" + script + "\""
@@ -91,4 +89,10 @@ object PythonScript extends ScriptObject {
   def commandSeq(script: String): Seq[String] = {
     Seq("python", script)
   }
+}
+
+object PythonScript extends ScriptCompanion {
+  val commentStr = "#"
+  val extension = "py"
+  val `type` = "python_script"
 }

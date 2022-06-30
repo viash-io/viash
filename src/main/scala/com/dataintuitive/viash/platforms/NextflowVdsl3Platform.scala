@@ -234,7 +234,7 @@ case class NextflowVdsl3Platform(
 
       // if mainResource is a script
       case Some(res) =>
-        val code = res.readWithPlaceholder(functionality).get
+        val code = res.readWithInjection(functionality).get
         val escapedCode = Bash.escapeMore(code)
           .replace("\\", "\\\\")
           .replace("'''", "\\'\\'\\'")
@@ -248,7 +248,7 @@ case class NextflowVdsl3Platform(
           |cat > "$scriptPath" << VIASHMAIN
           |$escapedCode
           |VIASHMAIN
-          |${res.meta.command(scriptPath)}
+          |${res.command(scriptPath)}
           |""".stripMargin
     }
 

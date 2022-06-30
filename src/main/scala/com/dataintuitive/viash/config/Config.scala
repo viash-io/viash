@@ -111,7 +111,7 @@ object Config {
       val yaml = header.map(s => s.drop(3)).mkString("\n")
       val code = body.mkString("\n")
 
-      val script = scriptObj(dest = Some(basename), text = Some(code))
+      val script = Script(dest = Some(basename), text = Some(code), `type` = scriptObj.`type`)
 
       (yaml, Some(script))
     } else {

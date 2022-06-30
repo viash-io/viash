@@ -677,6 +677,8 @@ def workflowFactory(Map args) {
     output_ = input_
       | debug(processArgs, "input")
       | map { tuple ->
+        tuple = tuple.clone()
+        
         if (processArgs.map) {
           tuple = processArgs.map(tuple)
         }

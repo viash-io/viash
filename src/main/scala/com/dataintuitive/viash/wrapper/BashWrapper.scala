@@ -110,7 +110,7 @@ object BashWrapper {
 
       // if mainResource is a script
       case Some(res) if debugPath.isEmpty =>
-        val code = res.readWithPlaceholder(functionality).get
+        val code = res.readWithInjection(functionality).get
         val escapedCode = Bash.escapeMore(code)
 
         // check whether the script can be written to a temprorary location or
@@ -134,13 +134,13 @@ object BashWrapper {
           |cat > "$scriptPath" << 'VIASHMAIN'
           |$escapedCode
           |VIASHMAIN$cdToResources
-          |${res.meta.command(scriptPath)} &
+          |${res.command(scriptPath)} &
           |wait "\\$$!"
           |""".stripMargin
 
       // if we want to debug our code
       case Some(res) if debugPath.isDefined =>
-        val code = res.readWithPlaceholder(functionality).get
+        val code = res.readWithInjection(functionality).get
         val escapedCode = Bash.escapeMore(code)
         val deb = debugPath.get
 

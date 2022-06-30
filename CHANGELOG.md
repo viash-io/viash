@@ -1,4 +1,4 @@
-# Viash [Next version]
+# Viash 0.5.14
 
 ## NEW FUNCTIONALITY
 
@@ -13,6 +13,7 @@
   ```
 
 ## MINOR CHANGES
+
 * `NextflowVdsl3Platform`: Allow both `--publish_dir` and `--publishDir` when `auto.publish = true`.
 
 * `NextflowVdsl3Platform`: Allow passing parameters with multiplicity > 1 from Nextflow CLI.
@@ -20,7 +21,7 @@
 * `Main`: Added `viash --cli_export` which outputs the internal cli construction information 
   to console. This is to be used to automate populating the documentation website.
 
-* `viash ns`: Display overview results with X amount failed & Y amount successfully built.
+* `viash ns`: Display success and failure summary statistics, printed to stderr.
 
 * `DataObject`: `.alternatives` is now a `OneOrMore[String]` instead of `List[String]`, meaning
   you can now specify `{ type: string, name: "--foo", alternatives: "-f" }` instead of 
@@ -29,12 +30,18 @@
 * `BashWrapper`: Added metadata field `meta_executable`, which is a shorthand notation for
   `meta_executable="$meta_resources_dir/$meta_functionality_name"`
 
+## INTERNAL CHANGES
+
 * `Arguments`: Internal naming of functionality.arguments is changed from DataObject to Arguments. Change is also applied to child classes, e.g. StringObject -> StringArgument.
+
+* `Script`: Allow more control over where injected code ends up.
+
+* Restructure type system to allow type-specific arguments.
 
 ## BUG FIXES
 
 * `DockerPlatform`: Change `org.opencontainers.image.version` annotation to `functionality.version` when set.
-  Additionally fixed retreaving the git tag possibly returning `fatal: No names found, cannot describe anything.` or similar.
+  Additionally fixed retrieving the git tag possibly returning `fatal: No names found, cannot describe anything.` or similar.
 
 * `viash config inject`: Fix config inject when `.functionality.inputs` or `.functionality.outputs` is used.
 
@@ -45,6 +52,8 @@
 * `viash ns test`: Silently skip Nextflow platforms as these don't support tests and will always fail.
 
 * `Testbenches`: Better capture expected error messages while running testbenches. Having these show on the console could be confusing.
+
+* `NextflowVdsl3Platform`: Fix issue when running multiple VDSL3 modules concurrently on the same channel.
 
 # Viash 0.5.13
 
