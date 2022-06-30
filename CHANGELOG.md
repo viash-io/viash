@@ -19,8 +19,13 @@
 
 * `NextflowVdsl3Platform`: The `--help` is auto-generated from the config.
 
-* `NextflowVdsl3Platform`: VDSL3 modules can now instantiate a channel using the `--param_list` argument. 
-  See `--help` for more info.
+* `NextflowVdsl3Platform`: Use `--param_list` to initialise a Nextflow channel with multiple parameter sets. 
+  Possible formats are csv, json, yaml, or simply a yaml_blob.
+  A csv should have column names which correspond to the different arguments of this pipeline.
+  A json or a yaml file should be a list of maps, each of which has keys corresponding to the arguments of the pipeline.
+  A yaml blob can also be passed directly as a parameter.
+  Inside the Nextflow pipeline code, params.params_list can also be used to directly a list of parameter sets.
+  When passing a csv, json or yaml, relative path names are relativized to the location of the parameter file.
 
 ## MINOR CHANGES
 
