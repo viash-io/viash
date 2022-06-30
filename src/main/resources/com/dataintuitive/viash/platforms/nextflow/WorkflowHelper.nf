@@ -120,6 +120,15 @@ def processConfig(config) {
         arg.default = "\$id.\$key.${arg.plainName}${mult}${ext}"
       }
 
+      if (!arg.multiple) {
+        if (arg.default != null && arg.default instanceof List) {
+          arg.default = arg.default[0]
+        }
+        if (arg.example != null && arg.example instanceof List) {
+          arg.example = arg.example[0]
+        }
+      }
+
       arg
     }
   config
