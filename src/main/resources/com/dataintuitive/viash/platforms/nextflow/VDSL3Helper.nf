@@ -445,7 +445,7 @@ def processProcessArgs(Map args) {
   if (processArgs.auto.publish == true && (processArgs.directives.publishDir ?: [:]).isEmpty()) {
     assert params.containsKey("publishDir") || params.containsKey("publish_dir") : 
       "Error in module '${processArgs['key']}': if auto.publish is true, params.publish_dir needs to be defined.\n" +
-      "  Example: params.transcripts_dir = \"./output/\""
+      "  Example: params.publish_dir = \"./output/\""
     def publishDir = params.containsKey("publish_dir") ? params.publish_dir : params.publishDir
     
     // TODO: more asserts on publishDir?
@@ -904,18 +904,7 @@ ScriptMeta.current().addDefinition(myWfInstance)
 
 // anonymous workflow for running this module as a standalone
 workflow {
-  // TODO: remove in favour for helpMessage()
-  if (params.containsKey("help") && params["help"]) {
-    exit 0, thisHelpMessage
-  }
-  // helpMessage(params, thisConfig)
-
-  if (!params.containsKey("id")) {
-    params.id = "run"
-  }
-  if (!params.containsKey("publishDir")) {
-    params.publishDir = "./"
-  }
+  helpMessage(params, thisConfig)
 
   viashChannel(params, thisConfig)
     | view { "input: $it" }
