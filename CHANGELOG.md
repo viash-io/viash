@@ -12,6 +12,16 @@
         description: Description
   ```
 
+## MAJOR CHANGES
+
+* `NextflowVdsl3Platform`: The functionality is now slurped from a json instead of manually
+  taking care of the formatting in Groovy.
+
+* `NextflowVdsl3Platform`: The `--help` is auto-generated from the config.
+
+* `NextflowVdsl3Platform`: VDSL3 modules can now instantiate a channel using the `--param_list` argument. 
+  See `--help` for more info.
+
 ## MINOR CHANGES
 
 * `NextflowVdsl3Platform`: Allow both `--publish_dir` and `--publishDir` when `auto.publish = true`.
