@@ -174,11 +174,11 @@ def helpMessage(params, config) {
             'required': false,
             'type': 'string',
             'description': '''Allows inputting multiple parameter sets to initialise a Nextflow channel. Possible formats are csv, json, yaml, or simply a yaml_blob.
-            A csv should have column names which correspond to the different arguments of this pipeline.
-            A json or a yaml file should be a list of maps, each of which has keys corresponding to the arguments of the pipeline.
-            A yaml blob can also be passed directly as a parameter.
-            Inside the Nextflow pipeline code, params.params_list can also be used to directly a list of parameter sets.
-            When passing a csv, json or yaml, relative path names are relativized to the location of the parameter file.''',
+            |A csv should have column names which correspond to the different arguments of this pipeline.
+            |A json or a yaml file should be a list of maps, each of which has keys corresponding to the arguments of the pipeline.
+            |A yaml blob can also be passed directly as a parameter.
+            |Inside the Nextflow pipeline code, params.params_list can also be used to directly a list of parameter sets.
+            |When passing a csv, json or yaml, relative path names are relativized to the location of the parameter file.'''.stripMargin(),
             'example': 'my_params.yaml',
             'multiple': false
           ],
@@ -205,15 +205,15 @@ def helpMessage(params, config) {
 
     def template = '''\
     |${functionality.name}
-    |
-    |${functionality.description}
+    |<%= (functionality.description) ? "\\n" + functionality.description.trim() : "<<REMOVE>>" %>
     |<% for (group in (functionality.arguments_groups.size() > 1 ) ? functionality.arguments_groups : [ [ name: "Options", arguments: functionality.arguments.collect{ it.plainName } ] ] ) { %>
-    |<%= group.name ? group.name + " options:": "" %><%= group.description ? "\\n    " + group.description + "\\n" : "" %>     <% for (argument in functionality.arguments) { %><% if (group.arguments.contains(argument.plainName)) { %>
-    |    <%= argument.name %>
+    |<%= group.name ? group.name + (group.name == "Options" ? ":" : " options:"): "" %>
+    |<%= group.description ? "    " + group.description.trim().replaceAll("\\n", "\\n    ") + "\\n" : "<<REMOVE>>" %><% for (argument in functionality.arguments) { %><% if (group.arguments.contains(argument.plainName)) { %>
+    |    <%= "--" + argument.plainName %>
     |        type: <%= argument.type %><%= (argument.required) ? ", required parameter" : "" %><%= (argument.multiple) ? ", multiple values allowed" : "" %>
-    |        <%= (argument.example)  ? "example: ${argument.example}" : "REMOVE" %>
-    |        <%= (argument.default)  ? "default: ${argument.default}" : "REMOVE" %>
-    |        <%= argument.description.trim() %>
+    |        <%= (argument.example)  ? "example: ${argument.example}" : "<<REMOVE>>" %>
+    |        <%= (argument.default)  ? "default: ${argument.default}" : "<<REMOVE>>" %>
+    |        <%= (argument.description) ? argument.description.trim().replaceAll("\\n", "\\n        ") : "<<REMOVE>>" %>
     |<% } } } %>
     '''.stripMargin()
 
@@ -223,7 +223,7 @@ def helpMessage(params, config) {
         .createTemplate(template)
         .make(mergedConfig)
         .toString()
-        .replaceAll("\s+REMOVE\n","")
+        .replaceAll("\s*<<REMOVE>>\n","")
 
     println(help)
     exit 0
