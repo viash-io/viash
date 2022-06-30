@@ -544,12 +544,12 @@ def processFactory(Map processArgs) {
     }
   }.join()
 
-  def inputPaths = thisConfig.functionality.arguments
+  def inputPaths = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "input" }
     .collect { ', path(viash_par_' + it.plainName + ')' }
     .join()
 
-  def outputPaths = thisConfig.functionality.arguments
+  def outputPaths = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "output" }
     .collect { par ->
       // insert dummy into every output (see nextflow-io/nextflow#2678)
@@ -569,7 +569,7 @@ def processFactory(Map processArgs) {
   }
 
   // construct inputFileExports
-  def inputFileExports = thisConfig.functionality.arguments
+  def inputFileExports = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
     .collect { par ->
       viash_par_contents = !par.required && !par.multiple ? "viash_par_${par.plainName}[0]" : "viash_par_${par.plainName}.join(\":\")"
@@ -579,7 +579,7 @@ def processFactory(Map processArgs) {
   def tmpDir = "/tmp" // check if component is docker based
 
   // construct stub
-  def stub = thisConfig.functionality.arguments
+  def stub = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "output" }
     .collect { par -> 
       'touch "${viash_par_' + par.plainName + '.join(\'" "\')}"'
@@ -710,7 +710,7 @@ def workflowFactory(Map args) {
         
         // match file to input file
         if (processArgs.auto.simplifyInput && (tuple[1] instanceof Path || tuple[1] instanceof List)) {
-          def inputFiles = thisConfig.functionality.arguments
+          def inputFiles = thisConfig.functionality.allArguments
             .findAll { it.type == "file" && it.direction == "input" }
           
           assert inputFiles.size() == 1 : 
@@ -763,12 +763,12 @@ def workflowFactory(Map args) {
         def passthrough = tuple.drop(2)
 
         // fetch default params from functionality
-        def defaultArgs = thisConfig.functionality.arguments
+        def defaultArgs = thisConfig.functionality.allArguments
           .findAll { it.containsKey("default") }
           .collectEntries { [ it.plainName, it.default ] }
 
         // fetch overrides in params
-        def paramArgs = thisConfig.functionality.arguments
+        def paramArgs = thisConfig.functionality.allArguments
           .findAll { par ->
             def argKey = key + "__" + par.plainName
             params.containsKey(argKey) && params[argKey] != "viash_no_value"
@@ -776,7 +776,7 @@ def workflowFactory(Map args) {
           .collectEntries { [ it.plainName, params[key + "__" + it.plainName] ] }
         
         // fetch overrides in data
-        def dataArgs = thisConfig.functionality.arguments
+        def dataArgs = thisConfig.functionality.allArguments
           .findAll { data.containsKey(it.plainName) }
           .collectEntries { [ it.plainName, data[it.plainName] ] }
         
@@ -787,7 +787,7 @@ def workflowFactory(Map args) {
         combinedArgs.removeAll{it == null}
 
         // check whether required arguments exist
-        thisConfig.functionality.arguments
+        thisConfig.functionality.allArguments
           .forEach { par ->
             if (par.required) {
               assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
@@ -797,7 +797,7 @@ def workflowFactory(Map args) {
         // TODO: check whether parameters have the right type
 
         // process input files separately
-        def inputPaths = thisConfig.functionality.arguments
+        def inputPaths = thisConfig.functionality.allArguments
           .findAll { it.type == "file" && it.direction == "input" }
           .collect { par ->
             def val = combinedArgs.containsKey(par.plainName) ? combinedArgs[par.plainName] : []
@@ -823,7 +823,7 @@ def workflowFactory(Map args) {
           } 
 
         // remove input files
-        def argsExclInputFiles = thisConfig.functionality.arguments
+        def argsExclInputFiles = thisConfig.functionality.allArguments
           .findAll { it.type != "file" || it.direction != "input" }
           .collectEntries { par ->
             def parName = par.plainName
@@ -841,7 +841,7 @@ def workflowFactory(Map args) {
       }
       | processObj
       | map { output ->
-        def outputFiles = thisConfig.functionality.arguments
+        def outputFiles = thisConfig.functionality.allArguments
           .findAll { it.type == "file" && it.direction == "output" }
           .indexed()
           .collectEntries{ index, par ->
