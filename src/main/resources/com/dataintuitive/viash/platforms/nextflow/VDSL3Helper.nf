@@ -904,13 +904,25 @@ ScriptMeta.current().addDefinition(myWfInstance)
 
 // anonymous workflow for running this module as a standalone
 workflow {
-  helpMessage(params, thisConfig)
+  def localConfig = [
+    "functionality" : [
+      "arguments": [
+        [
+          'name': '--id',
+          'required': false,
+          'type': 'string',
+          'description': 'A unique id for every entry.',
+          'default': 'run',
+          'multiple': false
+        ]
+      ]
+    ]
+  ]
+  def mergedConfig = processConfig(mergeMap(thisConfig, localConfig))
 
-  if (!params.containsKey("id")) {
-    params.id = "run"
-  }
+  helpMessage(params, mergedConfig)
 
-  viashChannel(params, thisConfig)
+  viashChannel(params, mergedConfig)
     | view { "input: $it" }
     | myWfInstance.run(
       auto: [ publish: true ]

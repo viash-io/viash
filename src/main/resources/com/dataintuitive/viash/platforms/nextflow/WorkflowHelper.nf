@@ -173,18 +173,9 @@ def mergeMap(Map lhs, Map rhs) {
 
 def helpMessage(params, config) {
   if (paramExists("help")) {
-
     def localConfig = [
       "functionality" : [
         "arguments": [
-          [
-            'name': '--id',
-            'required': true,
-            'type': 'string',
-            'description': 'A unique id for every entry.',
-            'default': 'run',
-            'multiple': false
-          ],
           [
             'name': '--publish_dir',
             'required': true,
@@ -225,6 +216,7 @@ def helpMessage(params, config) {
         ]
       ]
     ]
+    def mergedConfig = processConfig(mergeMap(config, localConfig))
 
     def template = '''\
     |${functionality.name}
@@ -241,7 +233,6 @@ def helpMessage(params, config) {
     '''.stripMargin()
 
     def engine = new groovy.text.SimpleTemplateEngine()
-    def mergedConfig = processConfig(mergeMap(config, localConfig))
     def help = engine
         .createTemplate(template)
         .make(mergedConfig)

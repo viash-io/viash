@@ -1,3 +1,9 @@
+# VIASH 0.5.15
+
+## BUG FIXES
+
+* `NextflowVdsl3Platform`: Change how `--id` is processed when a VDSL3 module is called from the CLI.
+
 # Viash 0.5.14
 
 ## NEW FUNCTIONALITY
@@ -32,8 +38,6 @@
   taking care of the formatting in Groovy.
 
 * `NextflowVdsl3Platform`: The `--help` is auto-generated from the config.
-
-
 
 ## MINOR CHANGES
 
