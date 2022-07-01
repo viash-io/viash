@@ -4,6 +4,8 @@
 
 * `NextflowVdsl3Platform`: Change how `--id` is processed when a VDSL3 module is called from the CLI.
 
+* `NextflowVdsl3Platform`: Fix error when param_list is `null`.
+
 # Viash 0.5.14
 
 ## NEW FUNCTIONALITY
