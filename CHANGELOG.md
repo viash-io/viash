@@ -6,6 +6,8 @@
 
 * `NextflowVdsl3Platform`: Fix error when param_list is `null`.
 
+* `NextflowVdsl3Platform`: Fix error when optional, multiple arguments are set to `null`.
+
 # Viash 0.5.14
 
 ## NEW FUNCTIONALITY

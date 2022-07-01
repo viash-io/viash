@@ -322,6 +322,7 @@ def paramsToList(params, config) {
     
     // process arguments
     def inputs = config.functionality.allArguments
+      .findAll{ par -> combinedArgs.containsKey(par.plainName) }
       .collectEntries { par ->
         // split on 'multiple_sep'
         if (par.multiple) {
@@ -330,6 +331,8 @@ def paramsToList(params, config) {
             parData = parData.collect{it instanceof String ? it.split(par.multiple_sep) : it }
           } else if (parData instanceof String) {
             parData = parData.split(par.multiple_sep)
+          } else if (parData == null) {
+            parData = []
           } else {
             parData = [ parData ]
           }
@@ -369,8 +372,10 @@ def paramsToList(params, config) {
         // return pair
         [ par.plainName, parData ]
       }
-
+      // remove parameters which were explicitly set to null
+      .findAll{ par -> par != null }
     }
+    
   
   // check processed params
   processedParams.forEach { args ->
