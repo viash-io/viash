@@ -1,5 +1,9 @@
 # VIASH 0.5.15
 
+## MINOR CHANGES
+
+* `Testbenches`: Add a testbench framework to test lots of character sequences, single or repeating to be tested in the yaml config. This can be used to later extend to other tests.
+
 ## BUG FIXES
 
 * `NextflowVdsl3Platform`: Change how `--id` is processed when a VDSL3 module is called from the CLI.
