@@ -61,7 +61,7 @@ class EscapingNativeTest extends FunSuite with BeforeAndAfterAll {
       Seq("sed", "-i", s"s/{test_detect}/$sedEscaped/g", configSubFile.toString)
     )
 
-    test(s"Check whether $chars get escaped properly") {
+    test(s"Check whether $chars gets escaped properly") {
 
       val functionalitySub = Config.read(configSubFile.toString, modifyConfig = false).functionality
       val executableSub = Paths.get(tempSubFolder.toString, "output", functionalitySub.name).toFile
