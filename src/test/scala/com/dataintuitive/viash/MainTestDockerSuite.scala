@@ -16,6 +16,8 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   private val configFailedTestFile = getClass.getResource("/testbash/config_failed_test.vsh.yaml").getPath
   private val configFailedBuildFile = getClass.getResource("/testbash/config_failed_build.vsh.yaml").getPath
   private val configNonexistentTestFile = getClass.getResource("/testbash/config_nonexistent_test.vsh.yaml").getPath
+  private val configWithSpacesFile = getClass.getResource("/testbash/config test.vsh.yaml").getPath.replaceAll("%20", " ")
+  private val configLegacyTestFile = getClass.getResource("/testbash/config_legacy.vsh.yaml").getPath
 
   private val configMissingFunctionalityFile = getClass.getResource("/testbash/invalid_configs/config_missing_functionality.vsh.yaml").getPath
   private val configTextFile = getClass.getResource("/testbash/invalid_configs/config.txt").getPath
@@ -122,6 +124,34 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(!testOutput.output.contains("Cleaning up temporary directory"))
 
     checkTempDirAndRemove(testOutput.output, true)
+  }
+
+  test("Check config and resource files with spaces in the filename", DockerTest) {
+    val testText = TestHelper.testMain(
+      "test",
+      "-p", "docker",
+      configWithSpacesFile
+    )
+
+    assert(testText.contains("Running tests in temporary directory: "))
+    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testText.contains("Cleaning up temporary directory"))
+
+    checkTempDirAndRemove(testText, false)
+  }
+
+    test("Check standard test output with legacy 'tests' definition", DockerTest) {
+    val testText = TestHelper.testMain(
+      "test",
+      "-p", "docker",
+      configLegacyTestFile
+    )
+
+    assert(testText.contains("Running tests in temporary directory: "))
+    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testText.contains("Cleaning up temporary directory"))
+
+    checkTempDirAndRemove(testText, false)
   }
   //</editor-fold>
   //<editor-fold desc="Invalid config files">

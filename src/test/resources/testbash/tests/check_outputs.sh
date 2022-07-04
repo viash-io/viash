@@ -2,7 +2,7 @@
 set -ex
 
 echo ">>> Checking whether output is correct"
-./testbash "NOTICE" --real_number 10.5 --whole_number=10 -s "a string with spaces" \
+$meta_executable "NOTICE" --real_number 10.5 --whole_number=10 -s "a string with spaces" \
   --truth --falsehood --reality true \
   --optional foo --optional_with_default bar \
   a b c d \
@@ -35,7 +35,7 @@ grep -q 'head of resource1: |if you can read this,|' output.txt
 grep -q 'Parsed input arguments.' log.txt
 
 echo ">>> Checking whether output is correct with minimal parameters"
-./testbash "resource2.txt" --real_number 123.456 --whole_number=789 -s "my\$weird#string\"\"\"" \
+./$meta_functionality_name "resource2.txt" --real_number 123.456 --whole_number=789 -s "my\$weird#string\"\"\"" \
   > output2.txt
 
 [[ ! -f output2.txt ]] && echo "Output file could not be found!" && exit 1

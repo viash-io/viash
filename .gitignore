@@ -6,7 +6,7 @@ Makefile
 target/
 
 # Temporary files / folders
-output
+output*
 out/*
 
 # Rstudio-related
@@ -23,7 +23,11 @@ out/*
 .settings
 
 # VS Code related
-.vscode/settings.json
+.vscode/
 **/metals.sbt
 .bloop*
 .metals*
+
+# nextflow related
+.nextflow*
+work

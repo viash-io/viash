@@ -1,3 +1,7 @@
+////////////////////////////
+// VDSL3 helper functions //
+////////////////////////////
+
 import nextflow.Nextflow
 import nextflow.script.IncludeDef
 import nextflow.script.ScriptBinding
@@ -86,7 +90,10 @@ def processDirectives(Map drctv) {
     if (drctv["container"] instanceof Map) {
       def m = drctv["container"]
       assertMapKeys(m, [ "registry", "image", "tag" ], ["image"], "container")
-      def part1 = m.registry ? m.registry + "/" : ""
+      def part1 = 
+        params.containsKey("override_container_registry") ? params["override_container_registry"] + "/" : 
+        m.registry ? m.registry + "/" : 
+        ""
       def part2 = m.image
       def part3 = m.tag ? ":" + m.tag : ":latest"
       drctv["container"] = part1 + part2 + part3
@@ -419,7 +426,7 @@ def processProcessArgs(Map args) {
 
   // if 'key' is a closure, apply it to the original key
   if (processArgs["key"] instanceof Closure) {
-    processArgs["key"] = processArgs["key"](thisFunctionality.name)
+    processArgs["key"] = processArgs["key"](thisConfig.functionality.name)
   }
   assert processArgs["key"] instanceof CharSequence
   assert processArgs["key"] ==~ /^[a-zA-Z_][a-zA-Z0-9_]*$/
@@ -436,28 +443,34 @@ def processProcessArgs(Map args) {
 
   // auto define publish, if so desired
   if (processArgs.auto.publish == true && (processArgs.directives.publishDir ?: [:]).isEmpty()) {
-    assert params.containsKey("publishDir") : 
-      "Error in module '${processArgs['key']}': if auto.publish is true, params.publishDir needs to be defined.\n" +
-      "  Example: params.transcriptsDir = \"./output/\""
+    assert params.containsKey("publishDir") || params.containsKey("publish_dir") : 
+      "Error in module '${processArgs['key']}': if auto.publish is true, params.publish_dir needs to be defined.\n" +
+      "  Example: params.publish_dir = \"./output/\""
+    def publishDir = params.containsKey("publish_dir") ? params.publish_dir : params.publishDir
     
     // TODO: more asserts on publishDir?
     processArgs.directives.publishDir = [[ 
-      path: params.publishDir, 
-      saveAs: "{ it.startsWith('.') ? null : it }" // don't publish hidden files, by default
+      path: publishDir, 
+      saveAs: "{ it.startsWith('.') ? null : it }", // don't publish hidden files, by default
+      mode: "copy"
     ]]
   }
 
   // auto define transcript, if so desired
   if (processArgs.auto.transcript == true) {
-    assert params.containsKey("transcriptsDir") || params.containsKey("publishDir") : 
-      "Error in module '${processArgs['key']}': if auto.transcript is true, either params.transcriptsDir or params.publishDir needs to be defined.\n" +
-      "  Example: params.transcriptsDir = \"./transcripts/\""
-    def transcriptsDir = params.containsKey("transcriptsDir") ? params.transcriptsDir : params.publishDir + "/_transcripts"
+    assert params.containsKey("transcriptsDir") || params.containsKey("transcripts_dir") || params.containsKey("publishDir") || params.containsKey("publish_dir") : 
+      "Error in module '${processArgs['key']}': if auto.transcript is true, either params.transcripts_dir or params.publish_dir needs to be defined.\n" +
+      "  Example: params.transcripts_dir = \"./transcripts/\""
+    def transcriptsDir = 
+      params.containsKey("transcripts_dir") ? params.transcripts_dir : 
+      params.containsKey("transcriptsDir") ? params.transcriptsDir : 
+      params.containsKey("publish_dir") ? params.publish_dir + "/_transcripts" :
+      params.publishDir + "/_transcripts"
     def timestamp = Nextflow.getSession().getWorkflowMetadata().start.format('yyyy-MM-dd_HH-mm-ss')
     def transcriptsPublishDir = [ 
-      path: "$transcriptsDir/${timestamp}/${processArgs["key"]}/\${id}/", 
-      saveAs: '{ it.replaceAll("^.", "") }',
-      pattern: ".command*"
+      path: "$transcriptsDir/$timestamp/\${task.process.replaceAll(':', '-')}/\${id}/", 
+      saveAs: "{ it.startsWith('.') ? it.replaceAll('^.', '') : null }", 
+      mode: "copy"
     ]
     def publishDirs = processArgs.directives.publishDir ?: []
     processArgs.directives.publishDir = publishDirs + transcriptsPublishDir
@@ -475,15 +488,23 @@ def processProcessArgs(Map args) {
 
 def processFactory(Map processArgs) {
   def tripQuo = "\"\"\""
-  def procKey = processArgs["key"] + "_process"
 
+  // autodetect process key
+  def wfKey = processArgs["key"]
+  def procKeyPrefix = "${wfKey}_process"
   def meta = ScriptMeta.current()
+  def existing = meta.getProcessNames().findAll{it.startsWith(procKeyPrefix)}
+  def numbers = existing.collect{it.replace(procKeyPrefix, "0").toInteger()}
+  def newNumber = (numbers + [-1]).max() + 1
 
-  assert ! (procKey in meta.getProcessNames()) : 
-    "Error in module '${procKey}': process key '$procKey' is already used.\n" +
-    "  Make sure to specify a new key when running a Viash module multiple times.\n" +
-    "  Example: myModule.run(key: 'foo') | myModule.run(key: 'bar')\n" +
-    "  Expected: ! '$procKey' in ScriptMeta.current().getProcessNames()"
+  def procKey = newNumber == 0 ? procKeyPrefix : "$procKeyPrefix$newNumber"
+
+  if (newNumber > 0) {
+    log.warn "Key for module '${wfKey}' is duplicated.\n",
+      "If you run a component multiple times in the same workflow,\n" +
+      "it's recommended you set a unique key for every call,\n" +
+      "for example: ${wfKey}.run(key: \"foo\")."
+  }
 
   // subset directives and convert to list of tuples
   def drctv = processArgs.directives
@@ -523,19 +544,19 @@ def processFactory(Map processArgs) {
     }
   }.join()
 
-  def inputPaths = thisFunctionality.arguments
+  def inputPaths = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "input" }
-    .collect { ', path(viash_par_' + it.name + ')' }
+    .collect { ', path(viash_par_' + it.plainName + ')' }
     .join()
 
-  def outputPaths = thisFunctionality.arguments
+  def outputPaths = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "output" }
     .collect { par ->
       // insert dummy into every output (see nextflow-io/nextflow#2678)
       if (!par.multiple) {
-        ', path{[".exitcode", args.' + par.name + ']}'
+        ', path{[".exitcode", args.' + par.plainName + ']}'
       } else {
-        ', path{[".exitcode"] + args.' + par.name + '}'
+        ', path{[".exitcode"] + args.' + par.plainName + '}'
       }
     }
     .join()
@@ -548,23 +569,20 @@ def processFactory(Map processArgs) {
   }
 
   // construct inputFileExports
-  def inputFileExports = thisFunctionality.arguments
+  def inputFileExports = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
     .collect { par ->
-      if (!par.required && !par.multiple) {
-        "\n\${viash_par_${par.name}.empty ? \"\" : \"export VIASH_PAR_${par.name.toUpperCase()}=\\\"\" + viash_par_${par.name}[0] + \"\\\"\"}"
-      } else {
-        "\nexport VIASH_PAR_${par.name.toUpperCase()}=\"\${viash_par_${par.name}.join(\":\")}\""
-      }
+      viash_par_contents = !par.required && !par.multiple ? "viash_par_${par.plainName}[0]" : "viash_par_${par.plainName}.join(\":\")"
+      "\n\${viash_par_${par.plainName}.empty ? \"\" : \"export VIASH_PAR_${par.plainName.toUpperCase()}=\\\"\" + ${viash_par_contents} + \"\\\"\"}"
     }
   
   def tmpDir = "/tmp" // check if component is docker based
 
   // construct stub
-  def stub = thisFunctionality.arguments
+  def stub = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "output" }
     .collect { par -> 
-      'touch "${viash_par_' + par.name + '.join(\'" "\')}"'
+      'touch "${viash_par_' + par.plainName + '.join(\'" "\')}"'
     }
     .join("\n")
 
@@ -592,9 +610,10 @@ def processFactory(Map processArgs) {
   |  .join("\\n")
   |$tripQuo
   |# meta exports
-  |export VIASH_META_RESOURCES_DIR="\$resourcesDir"
+  |export VIASH_META_RESOURCES_DIR="\${resourcesDir.toRealPath().toAbsolutePath()}"
   |export VIASH_META_TEMP_DIR="${tmpDir}"
-  |export VIASH_META_FUNCTIONALITY_NAME="${thisFunctionality.name}"
+  |export VIASH_META_FUNCTIONALITY_NAME="${thisConfig.functionality.name}"
+  |export VIASH_META_EXECUTABLE="\\\$VIASH_META_RESOURCES_DIR/\\\$VIASH_META_FUNCTIONALITY_NAME"
   |
   |# meta synonyms
   |export VIASH_RESOURCES_DIR="\\\$VIASH_META_RESOURCES_DIR"
@@ -628,7 +647,7 @@ def processFactory(Map processArgs) {
   // register module in meta
   meta.addModule(moduleScript, module.name, module.alias)
 
-  // retrieve process from meta
+  // retrieve and return process from meta
   return meta.getProcess(procKey)
 }
 
@@ -642,14 +661,10 @@ def debug(processArgs, debugKey) {
 
 def workflowFactory(Map args) {
   def processArgs = processProcessArgs(args)
-  def workflowKey = processArgs["key"]
+  def key = processArgs["key"]
   def meta = ScriptMeta.current()
 
-  assert ! (workflowKey in meta.getAllNames()) : 
-    "Error in module '${workflowKey}': workflow key '$workflowKey' is already used.\n" +
-    "  Make sure to specify a new key when running a Viash module multiple times.\n" +
-    "  Example: myModule.run(key: 'foo') | myModule.run(key: 'bar')\n" +
-    "  Expected: ! '$workflowKey' in ScriptMeta.current().getAllNames()"
+  def workflowKey = key
 
   // write process to temporary nf file and parse it in memory
   def processObj = processFactory(processArgs)
@@ -662,6 +677,8 @@ def workflowFactory(Map args) {
     output_ = input_
       | debug(processArgs, "input")
       | map { tuple ->
+        tuple = tuple.clone()
+        
         if (processArgs.map) {
           tuple = processArgs.map(tuple)
         }
@@ -677,61 +694,61 @@ def workflowFactory(Map args) {
 
         // check tuple
         assert tuple instanceof List : 
-          "Error in module '${workflowKey}': element in channel should be a tuple [id, data, ...otherargs...]\n" +
+          "Error in module '${key}': element in channel should be a tuple [id, data, ...otherargs...]\n" +
           "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
           "  Expected class: List. Found: tuple.getClass() is ${tuple.getClass()}"
         assert tuple.size() >= 2 : 
-          "Error in module '${workflowKey}': expected length of tuple in input channel to be two or greater.\n" +
+          "Error in module '${key}': expected length of tuple in input channel to be two or greater.\n" +
           "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
           "  Found: tuple.size() == ${tuple.size()}"
         
         // check id field
         assert tuple[0] instanceof CharSequence : 
-          "Error in module '${workflowKey}': first element of tuple in channel should be a String\n" +
+          "Error in module '${key}': first element of tuple in channel should be a String\n" +
           "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
           "  Found: ${tuple[0]}"
         
         // match file to input file
-        if (processArgs.auto.simplifyInput && tuple[1] instanceof Path) {
-          def inputFiles = thisFunctionality.arguments
+        if (processArgs.auto.simplifyInput && (tuple[1] instanceof Path || tuple[1] instanceof List)) {
+          def inputFiles = thisConfig.functionality.allArguments
             .findAll { it.type == "file" && it.direction == "input" }
           
           assert inputFiles.size() == 1 : 
-              "Error in module '${workflowKey}' id '${tuple[0]}'.\n" +
+              "Error in module '${key}' id '${tuple[0]}'.\n" +
               "  Anonymous file inputs are only allowed when the process has exactly one file input.\n" +
               "  Expected: inputFiles.size() == 1. Found: inputFiles.size() is ${inputFiles.size()}"
 
-          tuple[1] = [[ inputFiles[0].name, tuple[1] ]].collectEntries()
+          tuple[1] = [[ inputFiles[0].plainName, tuple[1] ]].collectEntries()
         }
 
         // check data field
         assert tuple[1] instanceof Map : 
-          "Error in module '${workflowKey}' id '${tuple[0]}': second element of tuple in channel should be a Map\n" +
+          "Error in module '${key}' id '${tuple[0]}': second element of tuple in channel should be a Map\n" +
           "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
           "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
 
         // rename keys of data field in tuple
         if (processArgs.renameKeys) {
           assert processArgs.renameKeys instanceof Map : 
-              "Error renaming data keys in module '${workflowKey}' id '${tuple[0]}'.\n" +
+              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
               "  Example: renameKeys: ['new_key': 'old_key'].\n" +
               "  Expected class: Map. Found: renameKeys.getClass() is ${processArgs.renameKeys.getClass()}"
           assert tuple[1] instanceof Map : 
-              "Error renaming data keys in module '${workflowKey}' id '${tuple[0]}'.\n" +
+              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
               "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
 
           // TODO: allow renameKeys to be a function?
           processArgs.renameKeys.each { newKey, oldKey ->
             assert newKey instanceof CharSequence : 
-              "Error renaming data keys in module '${workflowKey}' id '${tuple[0]}'.\n" +
+              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
               "  Example: renameKeys: ['new_key': 'old_key'].\n" +
               "  Expected class of newKey: String. Found: newKey.getClass() is ${newKey.getClass()}"
             assert oldKey instanceof CharSequence : 
-              "Error renaming data keys in module '${workflowKey}' id '${tuple[0]}'.\n" +
+              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
               "  Example: renameKeys: ['new_key': 'old_key'].\n" +
               "  Expected class of oldKey: String. Found: oldKey.getClass() is ${oldKey.getClass()}"
             assert tuple[1].containsKey(oldKey) : 
-              "Error renaming data keys in module '${workflowKey}' id '${tuple[0]}'.\n" +
+              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
               "  Key '$oldKey' is missing in the data map. tuple[1].keySet() is '${tuple[1].keySet()}'"
             tuple[1].put(newKey, tuple[1][oldKey])
           }
@@ -746,22 +763,22 @@ def workflowFactory(Map args) {
         def passthrough = tuple.drop(2)
 
         // fetch default params from functionality
-        def defaultArgs = thisFunctionality.arguments
+        def defaultArgs = thisConfig.functionality.allArguments
           .findAll { it.containsKey("default") }
-          .collectEntries { [ it.name, it.default ] }
+          .collectEntries { [ it.plainName, it.default ] }
 
         // fetch overrides in params
-        def paramArgs = thisFunctionality.arguments
+        def paramArgs = thisConfig.functionality.allArguments
           .findAll { par ->
-            def argKey = workflowKey + "__" + par.name
+            def argKey = key + "__" + par.plainName
             params.containsKey(argKey) && params[argKey] != "viash_no_value"
           }
-          .collectEntries { [ it.name, params[workflowKey + "__" + it.name] ] }
+          .collectEntries { [ it.plainName, params[key + "__" + it.plainName] ] }
         
         // fetch overrides in data
-        def dataArgs = thisFunctionality.arguments
-          .findAll { data.containsKey(it.name) }
-          .collectEntries { [ it.name, data[it.name] ] }
+        def dataArgs = thisConfig.functionality.allArguments
+          .findAll { data.containsKey(it.plainName) }
+          .collectEntries { [ it.plainName, data[it.plainName] ] }
         
         // combine params
         def combinedArgs = defaultArgs + paramArgs + processArgs.args + dataArgs
@@ -770,51 +787,61 @@ def workflowFactory(Map args) {
         combinedArgs.removeAll{it == null}
 
         // check whether required arguments exist
-        thisFunctionality.arguments
+        thisConfig.functionality.allArguments
           .forEach { par ->
             if (par.required) {
-              assert combinedArgs.containsKey(par.name): "Argument ${par.name} is required but does not have a value"
+              assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
             }
           }
 
         // TODO: check whether parameters have the right type
 
         // process input files separately
-        def inputPaths = thisFunctionality.arguments
+        def inputPaths = thisConfig.functionality.allArguments
           .findAll { it.type == "file" && it.direction == "input" }
           .collect { par ->
-            def val = combinedArgs.containsKey(par.name) ? combinedArgs[par.name] : []
+            def val = combinedArgs.containsKey(par.plainName) ? combinedArgs[par.plainName] : []
+            def inputFiles = []
             if (val == null) {
-              []
+              inputFiles = []
             } else if (val instanceof List) {
-              val
+              inputFiles = val
             } else if (val instanceof Path) {
-              [ val ]
+              inputFiles = [ val ]
             } else {
-              []
+              inputFiles = []
             }
-          }.collect{ it.findAll{ it.exists() } }
+            // throw error when an input file doesn't exist
+            inputFiles.each{ file -> 
+              assert file.exists() :
+                "Error in module '${key}' id '${id}' argument '${par.plainName}'.\n" +
+                "  Required input file does not exist.\n" +
+                "  Path: '$file'.\n" +
+                "  Expected input file to exist"
+            }
+            inputFiles 
+          } 
 
         // remove input files
-        def argsExclInputFiles = thisFunctionality.arguments
+        def argsExclInputFiles = thisConfig.functionality.allArguments
           .findAll { it.type != "file" || it.direction != "input" }
           .collectEntries { par ->
-            def key = par.name
-            def val = combinedArgs[key]
+            def parName = par.plainName
+            def val = combinedArgs[parName]
             if (par.multiple && val instanceof Collection) {
               val = val.join(par.multiple_sep)
             }
             if (par.direction == "output" && par.type == "file") {
-              val = val.replaceAll('\\$id', id).replaceAll('\\$key', workflowKey)
+              val = val.replaceAll('\\$id', id).replaceAll('\\$key', key)
             }
-            [key, val]
+            [parName, val]
           }
 
         [ id ] + inputPaths + [ argsExclInputFiles, passthrough, resourcesDir ]
       }
       | processObj
       | map { output ->
-        def outputFiles = thisFunctionality.arguments
+        def outputFiles = thisConfig.functionality.allArguments
           .findAll { it.type == "file" && it.direction == "output" }
           .indexed()
           .collectEntries{ index, par ->
@@ -825,7 +852,7 @@ def workflowFactory(Map args) {
                 out = []
               } else {
                 assert !par.required :
-                    "Error in module '${workflowKey}' id '${output[0]}' argument '${par.name}'.\n" +
+                    "Error in module '${key}' id '${output[0]}' argument '${par.plainName}'.\n" +
                     "  Required output file is missing"
                 out = null
               }
@@ -834,7 +861,7 @@ def workflowFactory(Map args) {
             } else {
               out = out.drop(1)
             }
-            [ par.name, out ]
+            [ par.plainName, out ]
           }
         
         // drop null outputs
@@ -859,46 +886,46 @@ def workflowFactory(Map args) {
     output_
   }
 
-  return workflowInstance.cloneWithName(workflowKey)
+  def wf = workflowInstance.cloneWithName(workflowKey)
+
+  // add factory function
+  wf.metaClass.run = { runArgs ->
+    workflowFactory(runArgs)
+  }
+
+  return wf
 }
 
-// initialise standard workflow
-myWfInstance = workflowFactory(key: thisFunctionality.name)
+// initialise default workflow
+myWfInstance = workflowFactory([:])
 
-// add factory function
-myWfInstance.metaClass.run = { args ->
-  workflowFactory(args)
-}
 // add workflow to environment
 ScriptMeta.current().addDefinition(myWfInstance)
 
-// Implicit workflow for running this module standalone
+// anonymous workflow for running this module as a standalone
 workflow {
-  if (params.containsKey("help") && params["help"]) {
-    exit 0, thisHelpMessage
-  }
-  if (!params.containsKey("id")) {
-    params.id = "run"
-  }
-  if (!params.containsKey("publishDir")) {
-    params.publishDir = "./"
-  }
+  def localConfig = [
+    "functionality" : [
+      "arguments": [
+        [
+          'name': '--id',
+          'required': false,
+          'type': 'string',
+          'description': 'A unique id for every entry.',
+          'default': 'run',
+          'multiple': false
+        ]
+      ]
+    ]
+  ]
+  def mergedConfig = processConfig(mergeMap(thisConfig, localConfig))
 
-  // fetch parameters
-  def args = thisFunctionality.arguments
-    .findAll { par -> params.containsKey(par.name) }
-    .collectEntries { par ->
-      if (par.type == "file" && par.direction == "input") {
-        [ par.name, file(params[par.name]) ]
-      } else {
-        [ par.name, params[par.name] ]
-      }
-    }
-          
-  Channel.value([ params.id, args ])
+  helpMessage(params, mergedConfig)
+
+  viashChannel(params, mergedConfig)
     | view { "input: $it" }
     | myWfInstance.run(
-        directives: [publishDir: params.publishDir]
-      )
+      auto: [ publish: true ]
+    )
     | view { "output: $it" }
 }

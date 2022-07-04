@@ -17,7 +17,7 @@
 
 package com.dataintuitive.viash.functionality
 
-import dataobjects._
+import arguments._
 import resources._
 import com.dataintuitive.viash.config.Version
 import io.circe.generic.extras._
@@ -27,36 +27,51 @@ case class Functionality(
   namespace: Option[String] = None,
   version: Option[Version] = None,
   authors: List[Author] = Nil,
-  inputs: List[DataObject[_]] = Nil,
-  outputs: List[DataObject[_]] = Nil,
-  arguments: List[DataObject[_]] = Nil,
+  inputs: List[Argument[_]] = Nil,
+  outputs: List[Argument[_]] = Nil,
+  arguments: List[Argument[_]] = Nil,
+  argument_groups: List[ArgumentGroup] = Nil,
   resources: List[Resource] = Nil,
   description: Option[String] = None,
   usage: Option[String] = None,
-  tests: List[Resource] = Nil,
+  test_resources: List[Resource] = Nil,
   info: Map[String, String] = Map.empty[String, String],
 
   // dummy arguments are used for handling extra directory mounts in docker
-  dummy_arguments: List[DataObject[_]] = Nil,
+  dummy_arguments: List[Argument[_]] = Nil,
 
   // setting this to true will change the working directory
   // to the resources directory when running the script
   // this is used when running `viash test`.
-  set_wd_to_resources_dir: Boolean = false
+  set_wd_to_resources_dir: Boolean = false,
+
+  // setting this to false with disable this component when using namespaces.
+  enabled: Boolean = true
 ) {
 
   // note that in the Functionality companion object, defaults gets added to inputs and outputs *before* actually 
   // parsing the configuration file with Circe. This is done in the .prepare step.
-  inputs.foreach {
-    input => require(input.direction == Input, s"input ${input.name} can only have input as direction")
+  inputs.foreach { input =>
+    require(input.direction == Input, s"input ${input.name} can only have input as direction")
   }
-  outputs.foreach {
-    output => require(output.direction == Output, s"input ${output.name} can only have output as direction")
+  outputs.foreach { output =>
+    require(output.direction == Output, s"input ${output.name} can only have output as direction")
   }
 
   // Combine inputs, outputs and arguments into one combined list
   def allArguments = inputs ::: outputs ::: arguments
 
+  // check argument groups
+  {
+    val allArgumentNames = allArguments.map(_.plainName)
+    for (group <- argument_groups; argument <- group.arguments) {
+      require(allArgumentNames.contains(argument), s"group '${group.name}' has unknown argument '$argument'")
+    }
+    argument_groups.flatMap(_.arguments).groupBy(identity).foreach { case (arg, args) => 
+      require(args.length == 1, s"argument '${arg}' can be in at most one argument group")
+    }
+  }
+    
   // check whether there are not multiple positional arguments with multiplicity >1
   // and if there is one, whether its position is last
   {
@@ -89,7 +104,7 @@ case class Functionality(
 
   def mainCode: Option[String] = mainScript.flatMap(_.read)
 
-  def allArgumentsAndDummies: List[DataObject[_]] = allArguments ::: dummy_arguments
+  def allArgumentsAndDummies: List[Argument[_]] = allArguments ::: dummy_arguments
 }
 
 object Functionality {

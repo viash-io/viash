@@ -1,8 +1,8 @@
 name := "viash"
 
-version := "0.5.11"
+version := "0.5.14"
 
-scalaVersion := "2.12.10"
+scalaVersion := "2.12.15"
 
 libraryDependencies ++= Seq(
   "org.scalactic" %% "scalactic" % "3.0.7" % "test",

@@ -23,7 +23,8 @@ import scala.util.Try
 case class GitInfo(
   localRepo: Option[String],
   remoteRepo: Option[String],
-  commit: Option[String]
+  commit: Option[String],
+  tag: Option[String]
 )
 
 object Git {
@@ -76,6 +77,19 @@ object Git {
     }.toOption
   }
 
+  def getTag(path: File): Option[String] = {
+    Try {
+      val out = Exec.run2(
+        List("git", "describe", "--tags"),
+        cwd = Some(path)
+      )
+      out.exitValue match {
+        case 0 => Some(out.output.trim)
+        case _ => None
+      }
+    }.getOrElse(None)
+  }
+
   def getInfo(path: File): GitInfo = {
     val igr = isGitRepo(path)
 
@@ -83,10 +97,11 @@ object Git {
       val lgr = getLocalRepo(path)
       val rgr = getRemoteRepo(path)
       val gc = getCommit(path)
+      val gt = getTag(path)
 
-      GitInfo(lgr, rgr, gc)
+      GitInfo(lgr, rgr, gc, gt)
     } else {
-      GitInfo(None, None, None)
+      GitInfo(None, None, None, None)
     }
   }
 }

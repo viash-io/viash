@@ -15,34 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.dataobjects
+package com.dataintuitive.viash.functionality
 
 import com.dataintuitive.viash.helpers.Circe.OneOrMore
 
-case class IntegerObject(
+case class ArgumentGroup(
   name: String,
-  alternatives: List[String] = Nil,
   description: Option[String] = None,
-  example: OneOrMore[Int] = Nil,
-  default: OneOrMore[Int] = Nil,
-  required: Boolean = false,
-  direction: Direction = Input,
-  multiple: Boolean = false,
-  multiple_sep: Char = ':',
-  `type`: String = "integer"
-) extends DataObject[Int] {
-  def copyDO(
-    `type`: String, 
-    name: String, 
-    alternatives: List[String],
-    description: Option[String],
-    example: OneOrMore[Int],
-    default: OneOrMore[Int],
-    required: Boolean,
-    direction: Direction,
-    multiple: Boolean,
-    multiple_sep: Char
-  ): DataObject[Int] = {
-    copy(name, alternatives, description, example, default, required, direction, multiple, multiple_sep, `type`)
-  }
-}
+  arguments: OneOrMore[String] = Nil
+)

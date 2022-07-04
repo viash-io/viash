@@ -19,7 +19,7 @@ package com.dataintuitive.viash.wrapper
 
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.functionality.arguments._
 import com.dataintuitive.viash.helpers.{Bash, Format, Helper}
 
 object BashWrapper {
@@ -27,9 +27,12 @@ object BashWrapper {
     List(
       ("VIASH_META_FUNCTIONALITY_NAME", "functionality_name"),
       ("VIASH_META_RESOURCES_DIR", "resources_dir"),
+      ("VIASH_META_EXECUTABLE", "executable"),
       ("VIASH_TEMP", "temp_dir")
     )
   }
+  val var_resources_dir = "VIASH_META_RESOURCES_DIR"
+  val var_executable = "VIASH_META_EXECUTABLE"
 
   def store(env: String, value: String, multiple_sep: Option[Char]): Array[String] = {
     if (multiple_sep.isDefined) {
@@ -50,10 +53,20 @@ object BashWrapper {
     argsConsumed: Int,
     multiple_sep: Option[Char] = None
   ): String = {
-    s"""        $name)
-       |            ${this.store(plainName, store, multiple_sep).mkString("\n            ")}
-       |            shift $argsConsumed
-       |            ;;""".stripMargin
+    argsConsumed match {
+      case num if num > 1 =>
+        s"""        $name)
+           |            ${this.store(plainName, store, multiple_sep).mkString("\n            ")}
+           |            [ $$# -lt $argsConsumed ] && ViashError Not enough arguments passed to $name. Use "--help" to get more information on the parameters. && exit 1
+           |            shift $argsConsumed
+           |            ;;""".stripMargin
+      case _ =>
+        s"""        $name)
+           |            ${this.store(plainName, store, multiple_sep).mkString("\n            ")}
+           |            shift $argsConsumed
+           |            ;;""".stripMargin
+    }
+    
   }
 
   def argStoreSed(name: String, plainName: String, multiple_sep: Option[Char] = None): String = {
@@ -69,7 +82,6 @@ object BashWrapper {
   }
 
   val var_verbosity = "VIASH_VERBOSITY"
-  val var_resources_dir = "VIASH_META_RESOURCES_DIR"
 
   def wrapScript(
     executor: String,
@@ -96,9 +108,22 @@ object BashWrapper {
       // if mainResource is simply an executable
       case Some(e: Executable) => " " + e.path.get + " $VIASH_EXECUTABLE_ARGS"
 
+      // if we want to debug our code
+      case Some(res) if debugPath.isDefined =>
+        val code = res.readWithInjection(functionality).get
+        val escapedCode = Bash.escapeMore(code)
+        val deb = debugPath.get
+
+        s"""
+          |set -e
+          |cat > "${debugPath.get}" << 'VIASHMAIN'
+          |$escapedCode
+          |VIASHMAIN
+          |""".stripMargin
+
       // if mainResource is a script
-      case Some(res) if debugPath.isEmpty =>
-        val code = res.readWithPlaceholder(functionality).get
+      case Some(res) =>
+        val code = res.readWithInjection(functionality).get
         val escapedCode = Bash.escapeMore(code)
 
         // check whether the script can be written to a temprorary location or
@@ -122,21 +147,8 @@ object BashWrapper {
           |cat > "$scriptPath" << 'VIASHMAIN'
           |$escapedCode
           |VIASHMAIN$cdToResources
-          |${res.meta.command(scriptPath)} &
+          |${res.command(scriptPath)} &
           |wait "\\$$!"
-          |""".stripMargin
-
-      // if we want to debug our code
-      case Some(res) if debugPath.isDefined =>
-        val code = res.readWithPlaceholder(functionality).get
-        val escapedCode = Bash.escapeMore(code)
-        val deb = debugPath.get
-
-        s"""
-          |set -e
-          |cat > "${debugPath.get}" << 'VIASHMAIN'
-          |$escapedCode
-          |VIASHMAIN
           |""".stripMargin
     }
 
@@ -148,8 +160,8 @@ object BashWrapper {
     }
 
     // generate script modifiers
-    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
-    val paramAndDummies = functionality.allArgumentsAndDummies.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
+    val paramAndDummies = functionality.allArgumentsAndDummies.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
 
     val helpMods = generateHelp(functionality, params)
     val parMods = generateParsers(params, paramAndDummies)
@@ -174,7 +186,14 @@ object BashWrapper {
        |set -e
        |
        |if [ -z "$$VIASH_TEMP" ]; then
-       |  VIASH_TEMP=/tmp
+       |  VIASH_TEMP=$${VIASH_TEMP:-$$VIASH_TMPDIR}
+       |  VIASH_TEMP=$${VIASH_TEMP:-$$VIASH_TEMPDIR}
+       |  VIASH_TEMP=$${VIASH_TEMP:-$$VIASH_TMP}
+       |  VIASH_TEMP=$${VIASH_TEMP:-$$TMPDIR}
+       |  VIASH_TEMP=$${VIASH_TEMP:-$$TMP}
+       |  VIASH_TEMP=$${VIASH_TEMP:-$$TEMPDIR}
+       |  VIASH_TEMP=$${VIASH_TEMP:-$$TEMP}
+       |  VIASH_TEMP=$${VIASH_TEMP:-/tmp}
        |fi
        |
        |# define helper functions
@@ -191,6 +210,7 @@ object BashWrapper {
        |
        |# define meta fields
        |VIASH_META_FUNCTIONALITY_NAME="${functionality.name}"
+       |VIASH_META_EXECUTABLE="$$VIASH_META_RESOURCES_DIR/$$VIASH_META_FUNCTIONALITY_NAME"
        |
        |${spaceCode(allMods.preParse)}
        |# initialise array
@@ -237,7 +257,7 @@ object BashWrapper {
   }
 
 
-  private def generateHelp(functionality: Functionality, params: List[DataObject[_]]) = {
+  private def generateHelp(functionality: Functionality, params: List[Argument[_]]) = {
     val help = Helper.generateHelp(functionality, params)
     val helpStr = help.map(h => Bash.escapeMore(h, quote = true)).mkString("  echo \"", "\"\n  echo \"", "\"")
 
@@ -250,11 +270,11 @@ object BashWrapper {
     BashWrapperMods(preParse = preParse)
   }
 
-  private def generateParsers(params: List[DataObject[_]], paramsAndDummies: List[DataObject[_]]) = {
+  private def generateParsers(params: List[Argument[_]], paramsAndDummies: List[Argument[_]]) = {
     // gather parse code for params
     val wrapperParams = params.filterNot(_.flags == "")
     val parseStrs = wrapperParams.map {
-      case bo: BooleanObject if bo.flagValue.isDefined =>
+      case bo: BooleanArgument if bo.flagValue.isDefined =>
         val fv = bo.flagValue.get
 
         // params of the form --param
@@ -322,10 +342,10 @@ object BashWrapper {
     //   VIASH_PAR_FOO="defaultvalue"
     // fi
     val defaultsStrs = paramsAndDummies.flatMap { param =>
-      // if boolean object has a flagvalue, add the inverse of it as a default value
+      // if boolean argument has a flagvalue, add the inverse of it as a default value
       val default = param match {
         case p if p.required => None
-        case bo: BooleanObject if bo.flagValue.isDefined => bo.flagValue.map(!_)
+        case bo: BooleanArgument if bo.flagValue.isDefined => bo.flagValue.map(!_)
         case p if p.default.nonEmpty => Some(p.default.map(_.toString).mkString(p.multiple_sep.toString))
         case p if p.default.isEmpty => None
       }
@@ -339,7 +359,7 @@ object BashWrapper {
 
     // construct required file checks
     val reqFiles = paramsAndDummies.flatMap {
-      case f: FileObject if f.must_exist => Some(f)
+      case f: FileArgument if f.must_exist => Some(f)
       case _ => None
     }
     val reqFilesStr =
@@ -370,16 +390,152 @@ object BashWrapper {
           }.mkString("\n")
       }
 
+    // construct type checks
+    def typeMinMaxCheck[T](param: Argument[T], regex: String, min: Option[T] = None, max: Option[T] = None) = {
+      val typeWithArticle = param match {
+        case i: IntegerArgument => "an " + param.`type`
+        case _ => "a " + param.`type`
+      }
+
+      val typeCheck = s"""  if ! [[ "$$${param.VIASH_PAR}" =~ ${regex} ]]; then
+                         |    ViashError '${param.name}' has to be ${typeWithArticle}. Use "--help" to get more information on the parameters.
+                         |    exit 1
+                         |  fi
+                         |""".stripMargin
+      val minCheck = min match {
+        case _ if min.isDefined =>
+          s"""  if command -v bc &> /dev/null; then
+             |    if ! [[ `echo $$${param.VIASH_PAR} '>=' ${min.get} | bc` -eq 1 ]]; then
+             |      ViashError '${param.name}' has be more than or equal to ${min.get}. Use "--help" to get more information on the parameters.
+             |      exit 1
+             |    fi
+             |  else
+             |    ViashWarning '${param.name}' specifies a minimum value but the value was not verified as \\'bc\\' is not present on the system.
+             |  fi
+             |""".stripMargin
+        case _ => ""
+      }
+      val maxCheck = max match {
+        case _ if max.isDefined =>
+          s"""  if command -v bc &> /dev/null; then
+             |    if ! [[ `echo $$${param.VIASH_PAR} '<=' ${max.get} | bc` -eq 1 ]]; then
+             |      ViashError '${param.name}' has to be less than or equal to ${max.get}. Use "--help" to get more information on the parameters.
+             |      exit 1
+             |    fi
+             |  else
+             |    ViashWarning '${param.name}' specifies a maximum value but the value was not verified as \\'bc\\' is not present on the system.
+             |  fi
+             |""".stripMargin
+        case _ => ""
+      }
+
+      param match {
+        case param if param.multiple =>
+          val checkStart = 
+            s"""if [ -n "$$${param.VIASH_PAR}" ]; then
+               |  IFS=${param.multiple_sep}
+               |  set -f
+               |  for val in $$${param.VIASH_PAR}; do
+               |"""
+          val checkEnd =
+            s"""  done
+               |  set +f
+               |  unset IFS
+               |fi
+               |""".stripMargin
+          // TODO add extra spaces for typeCheck, minCheck, maxCheck
+          checkStart +
+          (typeCheck + minCheck + maxCheck)
+            .replaceAll(param.VIASH_PAR, "{val}") // use {val} in the 'for' loop
+            .replaceAll("^", "  ").replaceAll("\\n  ", "\n    ") + // fix indentation in a brute force way
+          checkEnd
+        case _ =>
+          val checkStart = s"""if [[ -n "$$${param.VIASH_PAR}" ]]; then
+                              |""".stripMargin
+          val checkEnd = """fi
+                           |""".stripMargin
+          checkStart + typeCheck + minCheck + maxCheck + checkEnd
+      }
+    }
+    val typeMinMaxCheckStr =
+      if (paramsAndDummies.isEmpty) {
+        ""
+      } else {
+        "\n# check whether parameters values are of the right type\n" +
+          paramsAndDummies.map { param =>
+            param match {
+              case io: IntegerArgument =>
+                typeMinMaxCheck(io, "^[-+]?[0-9]+$", io.min, io.max)
+              case dO: DoubleArgument =>
+                typeMinMaxCheck(dO, "^[-+]?(\\.[0-9]+|[0-9]+(\\.[0-9]*)?)([eE][-+]?[0-9]+)?$", dO.min, dO.max)
+              case bo: BooleanArgument =>
+                typeMinMaxCheck(bo, "^(true|True|TRUE|false|False|FALSE|yes|Yes|YES|no|No|NO)$")               
+              case _ => ""
+            }           
+          }.mkString("\n")
+      }
+
+
+    def checkChoices[T](param: Argument[T], allowedChoices: List[T]) = {
+      val allowedChoicesString = allowedChoices.mkString(param.multiple_sep.toString)
+
+      param match {
+        case _ if param.multiple =>
+          s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
+             |  ${param.VIASH_PAR}_CHOICES=("$allowedChoicesString")
+             |  IFS=${param.multiple_sep}
+             |  set -f
+             |  for val in $$${param.VIASH_PAR}; do
+             |    if ! [[ "${param.multiple_sep}$${${param.VIASH_PAR}_CHOICES[*]}${param.multiple_sep}" =~ "${param.multiple_sep}$${val}${param.multiple_sep}" ]]; then
+             |      ViashError '${param.name}' specified value of \\'$${val}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
+             |      exit 1
+             |    fi
+             |  done
+             |  set +f
+             |  unset IFS
+             |fi
+             |""".stripMargin
+        case _ =>
+          s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
+             |  ${param.VIASH_PAR}_CHOICES=("$allowedChoicesString")
+             |  IFS=${param.multiple_sep}
+             |  set -f
+             |  if ! [[ "${param.multiple_sep}$${${param.VIASH_PAR}_CHOICES[*]}${param.multiple_sep}" =~ "${param.multiple_sep}$$${param.VIASH_PAR}${param.multiple_sep}" ]]; then
+             |    ViashError '${param.name}' specified value of \\'$$${param.VIASH_PAR}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
+             |    exit 1
+             |  fi
+             |  set +f
+             |  unset IFS
+             |fi
+             |""".stripMargin
+      }
+    }
+    val choiceCheckStr =
+      if (paramsAndDummies.isEmpty) {
+        ""
+      } else {
+        "\n# check whether parameters values are of the right type\n" +
+          paramsAndDummies.map { param =>
+            param match {
+              case io: IntegerArgument if io.choices != Nil =>
+                checkChoices(io, io.choices)
+              case so: StringArgument if so.choices != Nil =>
+                checkChoices(so, so.choices)
+              case _ => ""
+            }           
+          }.mkString("\n")
+      }
+
     // return output
     BashWrapperMods(
       parsers = parseStrs,
-      preRun = positionalStr + "\n" + reqCheckStr + "\n" + defaultsStrs + "\n" + reqFilesStr
+      preRun = positionalStr + "\n" + reqCheckStr + "\n" + defaultsStrs + "\n" + reqFilesStr + "\n" + typeMinMaxCheckStr + "\n" + choiceCheckStr
     )
   }
 
-  private def generateExecutableArgs(params: List[DataObject[_]]) = {
+  private def generateExecutableArgs(params: List[Argument[_]]) = {
     val inserts = params.map {
-      case bo: BooleanObject if bo.flagValue.isDefined =>
+      case bo: BooleanArgument if bo.flagValue.isDefined =>
         s"""
            |if [ "$$${bo.VIASH_PAR}" == "${bo.flagValue.get}" ]; then
            |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS ${bo.name}"

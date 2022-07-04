@@ -17,7 +17,7 @@
 
 package com.dataintuitive.viash.wrapper
 
-import com.dataintuitive.viash.functionality.dataobjects.DataObject
+import com.dataintuitive.viash.functionality.arguments.Argument
 
 case class BashWrapperMods(
   preParse: String = "",
@@ -25,7 +25,7 @@ case class BashWrapperMods(
   postParse: String = "",
   preRun: String = "",
   postRun: String = "",
-  inputs: List[DataObject[_]] = Nil,
+  inputs: List[Argument[_]] = Nil,
   extraParams: String = ""
 ) {
   def `++`(other: BashWrapperMods): BashWrapperMods = {

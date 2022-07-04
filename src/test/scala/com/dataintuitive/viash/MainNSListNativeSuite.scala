@@ -37,8 +37,10 @@ class MainNSListNativeSuite extends FunSuite{
     val regexBuildError = raw"Reading file \'.*/src/ns_error/config\.vsh\.yaml\' failed"
     assert(regexBuildError.r.findFirstIn(stderr).isDefined, "Expecting to get an error because of an invalid yaml in ns_error")
 
+    val stdout2 = s"(?s)(\u001b.{4})?((Not all configs parsed successfully)|(All \\d+ configs parsed successfully)).*$$".r.replaceAllIn(stdout, "")
+
     try {
-      val config = parser.parse(stdout)
+      val config = parser.parse(stdout2)
         .fold(throw _, _.as[Array[Config]])
         .fold(throw _, identity)
 
@@ -55,7 +57,7 @@ class MainNSListNativeSuite extends FunSuite{
     val samples = List(
       (raw"""[\r\n]+\s+name: "--input1"[\r\n]+""", 5),
       (raw"""[\r\n]+\s+resources:[\r\n]+\s+- type: "python_script"[\r\n]+""", 5),
-      (raw"""[\r\n]+\s+tests:[\r\n]+\s+- type: "bash_script"[\r\n]+""", 4)
+      (raw"""[\r\n]+\s+test_resources:[\r\n]+\s+- type: "bash_script"[\r\n]+""", 4)
     )
 
     for ((regex, count) <- samples) {

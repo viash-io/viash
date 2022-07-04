@@ -46,7 +46,7 @@ object Config {
 
   def parse(yamlText: String, uri: URI, preparseMods: Option[ConfigMods]): Config = {
     def errorHandler[C](e: Exception): C = {
-      System.err.println(s"Error parsing '${uri}'. Details:")
+      Console.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
       throw e
     }
 
@@ -64,13 +64,13 @@ object Config {
 
     // make paths absolute
     val resources = config.functionality.resources.map(_.copyWithAbsolutePath(uri))
-    val tests = config.functionality.tests.map(_.copyWithAbsolutePath(uri))
+    val tests = config.functionality.test_resources.map(_.copyWithAbsolutePath(uri))
 
     // copy resources with updated paths into config and return
     config.copy(
       functionality = config.functionality.copy(
         resources = resources,
-        tests = tests
+        test_resources = tests
       )
     )
   }
@@ -111,7 +111,7 @@ object Config {
       val yaml = header.map(s => s.drop(3)).mkString("\n")
       val code = body.mkString("\n")
 
-      val script = scriptObj(dest = Some(basename), text = Some(code))
+      val script = Script(dest = Some(basename), text = Some(code), `type` = scriptObj.`type`)
 
       (yaml, Some(script))
     } else {
@@ -143,15 +143,20 @@ object Config {
     // read config mods
     val confMods = parseConfigMods(configMods)
     
+    /* CONFIG 0: read from yaml */
     // parse yaml as config, incl preparse configmods
     val conf0 = parse(yaml, IO.uri(configPath), confMods)
 
+    /* CONFIG 1: apply config mods */
     // parse and apply commands
     val conf1 = confMods match {
       case None => conf0
       case Some(cmds) => {
+        // turn config back into json
         val js = encodeConfig(conf0)
+        // apply config mods
         val modifiedJs = cmds(js.hcursor, preparse = false)
+        // turn json back into a config
         modifiedJs.as[Config].fold(throw _, identity)
       }
     }
@@ -159,6 +164,32 @@ object Config {
     if (!modifyConfig) {
       return conf1
     }
+
+    /* CONFIG 2: add info and script (if available) */
+    // gather git info
+    val path = new File(configPath).getParentFile
+    val GitInfo(_, rgr, gc, gt) = Git.getInfo(path)
+
+    // create info object
+    val info = 
+      Info(
+        viash_version = Some(com.dataintuitive.viash.Main.version),
+        config = configPath,
+        platform = platform,
+        git_commit = gc,
+        git_remote = rgr,
+        git_tag = gt
+      )
+    
+    // add info and additional resources
+    val conf2 = conf1.copy(
+      info = Some(info),
+      functionality = conf1.functionality.copy(
+        resources = optScript.toList ::: conf1.functionality.resources
+      )
+    )
+
+    /* CONFIG 3: apply platform wrapper */
 
     // get the platform
     // * if a platform id is passed, look up the platform in the platforms list
@@ -186,39 +217,19 @@ object Config {
       } else {
         NativePlatform()
       }
-
-    // gather git info
-    val path = new File(configPath).getParentFile
-    val GitInfo(_, rgr, gc) = Git.getInfo(path)
-
-    // check whether to modify the fun
-    val modifyFunFun: Config => Functionality = {
-      if (applyPlatform) {
-        pl.modifyFunctionality
+    
+    // apply platform to functionality if so desired
+    val conf3 = 
+      if (!applyPlatform) {
+        conf2
       } else {
-        (c: Config) => c.functionality
-      }
-    }
-
-    // combine config into final object
-    conf1.copy(
-      // add info
-      info = Some(Info(
-        viash_version = Some(com.dataintuitive.viash.Main.version),
-        config = configPath,
-        platform = platform,
-        git_commit = gc,
-        git_remote = rgr
-      )),
-      // apply platform modification to functionality
-      // .. oh boy
-      functionality = modifyFunFun(conf1.copy(
-        functionality = conf1.functionality.copy(
-          // add script (if available) to resources
-          resources = optScript.toList ::: conf1.functionality.resources
+        conf2.copy(
+          functionality = pl.modifyFunctionality(conf2, false)
         )
-      )),
-      // insert selected platform
+      }
+    
+    // insert selected platform
+    conf3.copy(
       platform = Some(pl)
     )
   }

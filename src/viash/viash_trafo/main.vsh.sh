@@ -25,7 +25,7 @@
 #'   - name: "--rm"
 #'     type: boolean_true
 #'     description: Remove the source files after use.
-#'   tests:
+#'   test_resources:
 #'   - type: bash_script
 #'     path: tests/test_conversion.sh
 #'   - path: tests/config.novsh.yaml

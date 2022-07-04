@@ -15,10 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.dataobjects
+package com.dataintuitive.viash
 
-sealed trait Direction
+import cli._
+import io.circe.{Printer => JsonPrinter}
+import io.circe.syntax.EncoderOps
+import com.dataintuitive.viash.helpers.Circe._
 
-case object Input extends Direction
+object CLIExport {
+  private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
 
-case object Output extends Direction
+  def export() {
+    val cli = new CLIConf(Nil)
+    val data = cli.getRegisteredCommands
+    val str = jsonPrinter.print(data.asJson)
+    println(str)
+  }
+}

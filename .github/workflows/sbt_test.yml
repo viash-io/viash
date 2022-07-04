@@ -1,6 +1,6 @@
 name: Scala CI
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   scala-ci:
@@ -50,7 +50,7 @@ jobs:
         sudo apt-get install -y libicu-dev make libssl-dev libxml2-dev zlib1g-dev libbibutils6 libghc-pandoc-citeproc-data pandoc-data
 
     - name: Set up sbt
-      uses: olafurpg/setup-scala@v10
+      uses: olafurpg/setup-scala@v13
 
     - name: Install R dependencies
       run: |

@@ -22,6 +22,7 @@ import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfigur
 import cats.syntax.functor._
 
 import java.net.URI // for .widen
+import io.circe.ACursor
 
 package object resources {
 
@@ -39,6 +40,7 @@ package object resources {
   implicit val encodePythonScript: Encoder.AsObject[PythonScript] = deriveConfiguredEncoder
   implicit val encodeRScript: Encoder.AsObject[RScript] = deriveConfiguredEncoder
   implicit val encodeJavaScriptScript: Encoder.AsObject[JavaScriptScript] = deriveConfiguredEncoder
+  implicit val encodeNextflowScript: Encoder.AsObject[NextflowScript] = deriveConfiguredEncoder
   implicit val encodeScalaScript: Encoder.AsObject[ScalaScript] = deriveConfiguredEncoder
   implicit val encodeCSharpScript: Encoder.AsObject[CSharpScript] = deriveConfiguredEncoder
   implicit val encodeExecutable: Encoder.AsObject[Executable] = deriveConfiguredEncoder
@@ -52,6 +54,7 @@ package object resources {
         case s: PythonScript => encodePythonScript(s)
         case s: RScript => encodeRScript(s)
         case s: JavaScriptScript => encodeJavaScriptScript(s)
+        case s: NextflowScript => encodeNextflowScript(s)
         case s: ScalaScript => encodeScalaScript(s)
         case s: CSharpScript => encodeCSharpScript(s)
         case s: Executable => encodeExecutable(s)
@@ -60,14 +63,31 @@ package object resources {
       objJson deepMerge typeJson
   }
 
-  implicit val decodeBashScript: Decoder[BashScript] = deriveConfiguredDecoder
-  implicit val decodePythonScript: Decoder[PythonScript] = deriveConfiguredDecoder
-  implicit val decodeRScript: Decoder[RScript] = deriveConfiguredDecoder
-  implicit val decodeJavaScriptScript: Decoder[JavaScriptScript] = deriveConfiguredDecoder
-  implicit val decodeScalaScript: Decoder[ScalaScript] = deriveConfiguredDecoder
-  implicit val decodeCSharpScript: Decoder[CSharpScript] = deriveConfiguredDecoder
+  val setDestToPathOrDefault = (default: String) => (aCursor: ACursor) => {aCursor.withFocus(js => {
+        js.mapObject{ obj =>	
+          // when json defines 'text' but no 'dest' set
+          // if has 'path' -> switch 'path' to 'dest'
+          // else if no 'path' or 'dest' -> set 'dest' to default value
+          if (obj.contains("text") && !obj.contains("dest")) {
+            if (obj.contains("path"))
+              obj.add("dest", obj("path").get).remove("path")
+            else 
+              obj.add("dest", Json.fromString(default))
+          } else {
+            obj
+          }
+        }
+      })}
+
+  implicit val decodeBashScript: Decoder[BashScript] = deriveConfiguredDecoder[BashScript].prepare { setDestToPathOrDefault("./script.sh") }
+  implicit val decodePythonScript: Decoder[PythonScript] = deriveConfiguredDecoder[PythonScript].prepare { setDestToPathOrDefault("./script.py") }
+  implicit val decodeRScript: Decoder[RScript] = deriveConfiguredDecoder[RScript].prepare { setDestToPathOrDefault("./script.R") }
+  implicit val decodeJavaScriptScript: Decoder[JavaScriptScript] = deriveConfiguredDecoder[JavaScriptScript].prepare { setDestToPathOrDefault("./script.js") }
+  implicit val decodeNextflowScript: Decoder[NextflowScript] = deriveConfiguredDecoder[NextflowScript].prepare { setDestToPathOrDefault("./script.nf") }
+  implicit val decodeScalaScript: Decoder[ScalaScript] = deriveConfiguredDecoder[ScalaScript].prepare { setDestToPathOrDefault("./script.scala") }
+  implicit val decodeCSharpScript: Decoder[CSharpScript] = deriveConfiguredDecoder[CSharpScript].prepare { setDestToPathOrDefault("./script.csx") }
   implicit val decodeExecutable: Decoder[Executable] = deriveConfiguredDecoder
-  implicit val decodePlainFile: Decoder[PlainFile] = deriveConfiguredDecoder
+  implicit val decodePlainFile: Decoder[PlainFile] = deriveConfiguredDecoder[PlainFile].prepare { setDestToPathOrDefault("./text.txt") }
 
   implicit def decodeResource: Decoder[Resource] = Decoder.instance {
     cursor =>
@@ -77,13 +97,15 @@ package object resources {
           case Right("python_script") => decodePythonScript.widen
           case Right("r_script") => decodeRScript.widen
           case Right("javascript_script") => decodeJavaScriptScript.widen
+          case Right("nextflow_script") => decodeNextflowScript.widen
           case Right("scala_script") => decodeScalaScript.widen
           case Right("csharp_script") => decodeCSharpScript.widen
           case Right("executable") => decodeExecutable.widen
           case Right("file") => decodePlainFile.widen
           case Right(typ) => throw new RuntimeException(
             "File type " + typ + " is not recognised. Should be one of " +
-              "'bash_script', 'python_script', 'r_script', 'javascript_script', 'scala_script', 'csharp_script', 'executable', or 'file'."
+              Script.companions.mkString("'", "', '", "'") +
+              ", or 'file'."
           )
           case Left(_) => decodePlainFile.widen // default is a simple file
         }

@@ -1,3 +1,179 @@
+# VIASH 0.5.15
+
+## BUG FIXES
+
+* `NextflowVdsl3Platform`: Change how `--id` is processed when a VDSL3 module is called from the CLI.
+
+* `NextflowVdsl3Platform`: Fix error when param_list is `null`.
+
+* `NextflowVdsl3Platform`: Fix error when optional, multiple arguments are set to `null`.
+
+# Viash 0.5.14
+
+## NEW FUNCTIONALITY
+
+* `Functionality`: Allow specifying argument groups. Example:
+  ```yaml
+  functionality:
+    ...
+    argument_groups:
+      - name: First group
+        arguments: [foo, bar]
+        description: Description
+  ```
+
+* `NextflowVdsl3Platform`: Use `--param_list` to initialise a Nextflow channel with multiple parameter sets.
+  Possible formats are csv, json, yaml, or simply a yaml_blob.
+  A csv should have column names which correspond to the different arguments of this pipeline.
+  A json or a yaml file should be a list of maps, each of which has keys corresponding to the arguments of the pipeline.
+  A yaml blob can also be passed directly as a parameter.
+  Inside the Nextflow pipeline code, params.params_list can also be used to directly a list of parameter sets.
+  When passing a csv, json or yaml, relative path names are relativized to the location of the parameter file.
+  
+  Examples: 
+  ```sh
+  nextflow run "target/foo/bar/main.nf" --param_list '[{"id": "foo", "input": "/path/to/bar"}]'
+  nextflow run "target/foo/bar/main.nf" --param_list "params.csv" --reference "/path/to/ref"
+  ```
+
+## MAJOR CHANGES
+
+* `NextflowVdsl3Platform`: The functionality is now slurped from a json instead of manually
+  taking care of the formatting in Groovy.
+
+* `NextflowVdsl3Platform`: The `--help` is auto-generated from the config.
+
+## MINOR CHANGES
+
+* `NextflowVdsl3Platform`: Allow both `--publish_dir` and `--publishDir` when `auto.publish = true`.
+
+* `NextflowVdsl3Platform`: Allow passing parameters with multiplicity > 1 from Nextflow CLI.
+
+* `Main`: Added `viash --cli_export` which outputs the internal cli construction information 
+  to console. This is to be used to automate populating the documentation website.
+
+* `viash ns`: Display success and failure summary statistics, printed to stderr.
+
+* `DataObject`: `.alternatives` is now a `OneOrMore[String]` instead of `List[String]`, meaning
+  you can now specify `{ type: string, name: "--foo", alternatives: "-f" }` instead of 
+  `{ type: string, name: "--foo", alternatives: [ "-f" ] }`
+
+* `BashWrapper`: Added metadata field `meta_executable`, which is a shorthand notation for
+  `meta_executable="$meta_resources_dir/$meta_functionality_name"`
+
+## INTERNAL CHANGES
+
+* `Arguments`: Internal naming of functionality.arguments is changed from DataObject to Arguments. Change is also applied to child classes, e.g. StringObject -> StringArgument.
+
+* `Script`: Allow more control over where injected code ends up.
+
+* Restructure type system to allow type-specific arguments.
+
+## BUG FIXES
+
+* `DockerPlatform`: Change `org.opencontainers.image.version` annotation to `functionality.version` when set.
+  Additionally fixed retrieving the git tag possibly returning `fatal: No names found, cannot describe anything.` or similar.
+
+* `viash config inject`: Fix config inject when `.functionality.inputs` or `.functionality.outputs` is used.
+
+* `BashWrapper`: Don't add `bc` as dependency. Only perform integer/float min/max checks when bc is available, otherwise ignore.
+
+* `DockerPlatform`: Fix inputs & outputs arguments being present twice.
+
+* `viash ns test`: Silently skip Nextflow platforms as these don't support tests and will always fail.
+
+* `Testbenches`: Better capture expected error messages while running testbenches. Having these show on the console could be confusing.
+
+* `NextflowVdsl3Platform`: Fix issue when running multiple VDSL3 modules concurrently on the same channel.
+
+
+# Viash 0.5.13
+
+## NEW FUNCTIONALITY
+
+* `NextflowVdsl3Platform`: Allow overriding the container registry of all Viash components by 
+  setting the `params.override_container_registry` value. Only works for auto-derived image names.
+
+## MAJOR CHANGES
+
+* `Functionality`: renamed `tests` to `test_resources`.
+  Backwards compatibility provided but a notification message is displayed on the console.
+
+## MINOR CHANGES
+
+* `Functionality` and `viash ns`: Added `.enabled` in functionality, set to `true` by default.
+  Filter for disabled components in namespace commands.
+
+* `DockerPlatform`: Add org.opencontainers.image annotations to built docker images.
+
+* `Functionality`: when defining text resources, permit defining `path` instead of `dest`.
+  If both `dest` and `path` are unset, use a default file name depending on the resource type, such as `script.sh` or `text.txt`.
+
+* `viash build`: Errors are printed in red.
+
+## BUG FIXES
+
+* `NextflowVdsl3Platform`: Undefined input files should not inject a `VIASH_PAR_*` variable when `multiple: true`.
+
+* `NextflowVdsl3Platform`: Make injected resources dir absolute.
+
+* `NextflowVdsl3Platform`: Fix escaping of triple single quotes.
+
+* `NextflowVdsl3Platform`: Also apply auto.simplifyInput to Lists.
+
+* `DockerPlatform`: added a `test_setup` that allows adding apt/apk/... setup requirements.
+  These are only executed when running tests.
+
+# Viash 0.5.12
+
+## MINOR CHANGES
+
+* `--help`: Don't print "my_component <not versioned>" when no version is specified, 
+  but instead simply "my_component".
+
+* `NextflowVdsl3Platform`: Set `mode=copy` for `auto.publish` and `auto.transcript`.
+
+* `NextflowVdsl3Platform`: When a module is used multiple times in the same workflow, 
+  don't throw an error anymore, instead simply generate a warning.
+
+* `NextflowVdsl3Platform`: Throw an error when an input file was not found.
+
+* `viash build`: Indent auto-generated code according the indentation of `VIASH START` when found.
+  
+* `Main`: Handle not finding the config file or resources in a config file better.
+  Display a more helpful message instead of a stack trace.
+
+* `BashWrapper`: Add checks on parameters for valid integer, double and boolean values.
+
+* `BashWrapper`: Add option to limit string and integer values to specific choice values.
+
+* `BashWrapper`: Add option to set min and max values for integer and double values.
+
+* Dependencies:
+  - Scala was upgraded from 2.12.10 to 2.12.15
+  - sbt was upgraded from 1.3.4 to 1.6.1
+  - sbt-scoverage was upgraded from 1.5.1 to 1.9.3
+
+## BUG FIXES
+
+* `viash_test`: Add back `--no_cache` parameter to `viash_test`.
+
+* `viash_test`: Fix `--append` parameter for `viash_test`, was not getting passed through.
+
+* `viash ns test`: Fix `--append` parameter, actually start from a clean file if append is false.
+
+* `viash_push`: Fix component not being built during a release of Viash.
+
+* `PythonRequirements`: Fix packages being mentioned twice in a Dockerfile.
+
+* `Main`: Added support spaces in filenames of config files and resources
+
+* `BashWrapper`: Display a message when the last parsed argument would require more values than are still available.
+  Now display a message that values are missing, used to silently crash the wrapper.
+
+* `viash config inject`: Fix error when file argument is `must_exist: true`.
+  
+
 # Viash 0.5.11
 
 ## MAJOR CHANGES

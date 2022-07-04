@@ -24,7 +24,8 @@ case class Info(
   executable: Option[String] = None,
   viash_version: Option[String] = None,
   git_commit: Option[String] = None,
-  git_remote: Option[String] = None
+  git_remote: Option[String] = None,
+  git_tag: Option[String] = None
 ) {
   def consoleString: String = {
     val missing = "<NA>"

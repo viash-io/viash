@@ -75,7 +75,7 @@ object ViashBuild {
             res.copyResource(parent = None)
           }
         },
-        tests = config.functionality.tests.map { res =>
+        test_resources = config.functionality.test_resources.map { res =>
           res.copyResource(parent = None)
         }
       ),

@@ -23,7 +23,7 @@ import cats.syntax.functor._
 
 import java.nio.file.Paths // for .widen
 
-package object dataobjects {
+package object arguments {
 
   import com.dataintuitive.viash.helpers.Circe._
 
@@ -76,49 +76,49 @@ package object dataobjects {
       )
   }
 
-  // encoders and decoders for Object
-  implicit val encodeStringObject: Encoder.AsObject[StringObject] = deriveConfiguredEncoder
-  implicit val encodeIntegerObject: Encoder.AsObject[IntegerObject] = deriveConfiguredEncoder
-  implicit val encodeDoubleObject: Encoder.AsObject[DoubleObject] = deriveConfiguredEncoder
-  implicit val encodeBooleanObjectR: Encoder.AsObject[BooleanObjectRegular] = deriveConfiguredEncoder
-  implicit val encodeBooleanObjectT: Encoder.AsObject[BooleanObjectTrue] = deriveConfiguredEncoder
-  implicit val encodeBooleanObjectF: Encoder.AsObject[BooleanObjectFalse] = deriveConfiguredEncoder
-  implicit val encodeFileObject: Encoder.AsObject[FileObject] = deriveConfiguredEncoder
+  // encoders and decoders for Argument
+  implicit val encodeStringArgument: Encoder.AsObject[StringArgument] = deriveConfiguredEncoder
+  implicit val encodeIntegerArgument: Encoder.AsObject[IntegerArgument] = deriveConfiguredEncoder
+  implicit val encodeDoubleArgument: Encoder.AsObject[DoubleArgument] = deriveConfiguredEncoder
+  implicit val encodeBooleanArgumentR: Encoder.AsObject[BooleanArgumentRegular] = deriveConfiguredEncoder
+  implicit val encodeBooleanArgumentT: Encoder.AsObject[BooleanArgumentTrue] = deriveConfiguredEncoder
+  implicit val encodeBooleanArgumentF: Encoder.AsObject[BooleanArgumentFalse] = deriveConfiguredEncoder
+  implicit val encodeFileArgument: Encoder.AsObject[FileArgument] = deriveConfiguredEncoder
 
-  implicit def encodeDataObject[A <: DataObject[_]]: Encoder[A] = Encoder.instance {
+  implicit def encodeArgument[A <: Argument[_]]: Encoder[A] = Encoder.instance {
     par =>
       val typeJson = Json.obj("type" → Json.fromString(par.`type`))
       val objJson = par match {
-        case s: StringObject => encodeStringObject(s)
-        case s: IntegerObject => encodeIntegerObject(s)
-        case s: DoubleObject => encodeDoubleObject(s)
-        case s: BooleanObjectRegular => encodeBooleanObjectR(s)
-        case s: BooleanObjectTrue => encodeBooleanObjectT(s)
-        case s: BooleanObjectFalse => encodeBooleanObjectF(s)
-        case s: FileObject => encodeFileObject(s)
+        case s: StringArgument => encodeStringArgument(s)
+        case s: IntegerArgument => encodeIntegerArgument(s)
+        case s: DoubleArgument => encodeDoubleArgument(s)
+        case s: BooleanArgumentRegular => encodeBooleanArgumentR(s)
+        case s: BooleanArgumentTrue => encodeBooleanArgumentT(s)
+        case s: BooleanArgumentFalse => encodeBooleanArgumentF(s)
+        case s: FileArgument => encodeFileArgument(s)
       }
       objJson deepMerge typeJson
   }
 
-  implicit val decodeStringObject: Decoder[StringObject] = deriveConfiguredDecoder
-  implicit val decodeIntegerObject: Decoder[IntegerObject] = deriveConfiguredDecoder
-  implicit val decodeDoubleObject: Decoder[DoubleObject] = deriveConfiguredDecoder
-  implicit val decodeBooleanObjectR: Decoder[BooleanObjectRegular] = deriveConfiguredDecoder
-  implicit val decodeBooleanObjectT: Decoder[BooleanObjectTrue] = deriveConfiguredDecoder
-  implicit val decodeBooleanObjectF: Decoder[BooleanObjectFalse] = deriveConfiguredDecoder
-  implicit val decodeFileObject: Decoder[FileObject] = deriveConfiguredDecoder
+  implicit val decodeStringArgument: Decoder[StringArgument] = deriveConfiguredDecoder
+  implicit val decodeIntegerArgument: Decoder[IntegerArgument] = deriveConfiguredDecoder
+  implicit val decodeDoubleArgument: Decoder[DoubleArgument] = deriveConfiguredDecoder
+  implicit val decodeBooleanArgumentR: Decoder[BooleanArgumentRegular] = deriveConfiguredDecoder
+  implicit val decodeBooleanArgumentT: Decoder[BooleanArgumentTrue] = deriveConfiguredDecoder
+  implicit val decodeBooleanArgumentF: Decoder[BooleanArgumentFalse] = deriveConfiguredDecoder
+  implicit val decodeFileArgument: Decoder[FileArgument] = deriveConfiguredDecoder
 
-  implicit def decodeDataObject: Decoder[DataObject[_]] = Decoder.instance {
+  implicit def decodeDataArgument: Decoder[Argument[_]] = Decoder.instance {
     cursor =>
-      val decoder: Decoder[DataObject[_]] =
+      val decoder: Decoder[Argument[_]] =
         cursor.downField("type").as[String] match {
-          case Right("string") => decodeStringObject.widen
-          case Right("integer") => decodeIntegerObject.widen
-          case Right("double") => decodeDoubleObject.widen
-          case Right("boolean") => decodeBooleanObjectR.widen
-          case Right("boolean_true") => decodeBooleanObjectT.widen
-          case Right("boolean_false") => decodeBooleanObjectF.widen
-          case Right("file") => decodeFileObject.widen
+          case Right("string") => decodeStringArgument.widen
+          case Right("integer") => decodeIntegerArgument.widen
+          case Right("double") => decodeDoubleArgument.widen
+          case Right("boolean") => decodeBooleanArgumentR.widen
+          case Right("boolean_true") => decodeBooleanArgumentT.widen
+          case Right("boolean_false") => decodeBooleanArgumentF.widen
+          case Right("file") => decodeFileArgument.widen
           case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised. Valid types are string, integer, double, boolean, boolean_true, boolean_false and file.")
           case Left(exception) => throw exception
         }

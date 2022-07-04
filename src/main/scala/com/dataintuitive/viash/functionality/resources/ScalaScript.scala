@@ -18,7 +18,7 @@
 package com.dataintuitive.viash.functionality.resources
 
 import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.functionality.arguments._
 import com.dataintuitive.viash.wrapper.BashWrapper
 
 import java.net.URI
@@ -29,34 +29,37 @@ case class ScalaScript(
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
-  `type`: String = "scala_script"
+  entrypoint: Option[String] = None,
+  `type`: String = ScalaScript.`type`
 ) extends Script {
-  val meta = ScalaScript
+  assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")
+  
+  val companion = ScalaScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generatePlaceholder(functionality: Functionality): String = {
-    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+  def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
+    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
 
     val parClassTypes = params.map { par =>
       val classType = par match {
-        case o: BooleanObject if o.multiple => "List[Boolean]"
-        case o: IntegerObject if o.multiple => "List[Integer]"
-        case o: DoubleObject if o.multiple => "List[Double]"
-        case o: FileObject if o.multiple => "List[String]"
-        case o: StringObject if o.multiple => "List[String]"
+        case a: BooleanArgument if a.multiple => "List[Boolean]"
+        case a: IntegerArgument if a.multiple => "List[Integer]"
+        case a: DoubleArgument if a.multiple => "List[Double]"
+        case a: FileArgument if a.multiple => "List[String]"
+        case a: StringArgument if a.multiple => "List[String]"
         // we could argue about whether these should be options or not
-        case o: BooleanObject if !o.required && o.flagValue.isEmpty => "Option[Boolean]"
-        case o: IntegerObject if !o.required => "Option[Integer]"
-        case o: DoubleObject if !o.required => "Option[Double]"
-        case o: FileObject if !o.required => "Option[String]"
-        case o: StringObject if !o.required => "Option[String]"
-        case _: BooleanObject => "Boolean"
-        case _: IntegerObject => "Integer"
-        case _: DoubleObject => "Double"
-        case _: FileObject => "String"
-        case _: StringObject => "String"
+        case a: BooleanArgument if !a.required && a.flagValue.isEmpty => "Option[Boolean]"
+        case a: IntegerArgument if !a.required => "Option[Integer]"
+        case a: DoubleArgument if !a.required => "Option[Double]"
+        case a: FileArgument if !a.required => "Option[String]"
+        case a: StringArgument if !a.required => "Option[String]"
+        case _: BooleanArgument => "Boolean"
+        case _: IntegerArgument => "Integer"
+        case _: DoubleArgument => "Double"
+        case _: FileArgument => "String"
+        case _: StringArgument => "String"
       }
       par.plainName + ": " + classType
     }
@@ -66,33 +69,33 @@ case class ScalaScript(
       val env_name = par.viash_par_escaped(quo, """\"""", """\\\"""")
 
       val parse = { par match {
-        case o: BooleanObject if o.multiple =>
-          s"""$env_name.split($quo${o.multiple_sep}$quo).map(_.toLowerCase.toBoolean).toList"""
-        case o: IntegerObject if o.multiple =>
-          s"""$env_name.split($quo${o.multiple_sep}$quo).map(_.toInt).toList"""
-        case o: DoubleObject if o.multiple =>
-          s"""$env_name.split($quo${o.multiple_sep}$quo).map(_.toDouble).toList"""
-        case o: FileObject if o.multiple =>
-          s"""$env_name.split($quo${o.multiple_sep}$quo).toList"""
-        case o: StringObject if o.multiple =>
-          s"""$env_name.split($quo${o.multiple_sep}$quo).toList"""
-        case o: BooleanObject if !o.required && o.flagValue.isEmpty => s"""Some($env_name.toLowerCase.toBoolean)"""
-        case o: IntegerObject if !o.required => s"""Some($env_name.toInt)"""
-        case o: DoubleObject if !o.required => s"""Some($env_name.toDouble)"""
-        case o: FileObject if !o.required => s"""Some($env_name)"""
-        case o: StringObject if !o.required => s"""Some($env_name)"""
-        case _: BooleanObject => s"""$env_name.toLowerCase.toBoolean"""
-        case _: IntegerObject => s"""$env_name.toInt"""
-        case _: DoubleObject => s"""$env_name.toDouble"""
-        case _: FileObject => s"""$env_name"""
-        case _: StringObject => s"""$env_name"""
+        case a: BooleanArgument if a.multiple =>
+          s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toLowerCase.toBoolean).toList"""
+        case a: IntegerArgument if a.multiple =>
+          s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toInt).toList"""
+        case a: DoubleArgument if a.multiple =>
+          s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toDouble).toList"""
+        case a: FileArgument if a.multiple =>
+          s"""$env_name.split($quo${a.multiple_sep}$quo).toList"""
+        case a: StringArgument if a.multiple =>
+          s"""$env_name.split($quo${a.multiple_sep}$quo).toList"""
+        case a: BooleanArgument if !a.required && a.flagValue.isEmpty => s"""Some($env_name.toLowerCase.toBoolean)"""
+        case a: IntegerArgument if !a.required => s"""Some($env_name.toInt)"""
+        case a: DoubleArgument if !a.required => s"""Some($env_name.toDouble)"""
+        case a: FileArgument if !a.required => s"""Some($env_name)"""
+        case a: StringArgument if !a.required => s"""Some($env_name)"""
+        case _: BooleanArgument => s"""$env_name.toLowerCase.toBoolean"""
+        case _: IntegerArgument => s"""$env_name.toInt"""
+        case _: DoubleArgument => s"""$env_name.toDouble"""
+        case _: FileArgument => s"""$env_name"""
+        case _: StringArgument => s"""$env_name"""
       }}
 
       val notFound = par match {
-        case o: DataObject[_] if o.multiple => Some("Nil")
-        case o: BooleanObject if o.flagValue.isDefined => None
-        case o: DataObject[_] if !o.required => Some("None")
-        case _: DataObject[_] => None
+        case a: Argument[_] if a.multiple => Some("Nil")
+        case a: BooleanArgument if a.flagValue.isDefined => None
+        case a: Argument[_] if !a.required => Some("None")
+        case _: Argument[_] => None
       }
 
       notFound match {
@@ -109,7 +112,7 @@ case class ScalaScript(
     val metaSet = BashWrapper.metaFields.map { case (env_name, script_name) =>
       s""""$$$env_name""""
     }
-    s"""case class ViashPar(
+    val paramsCode = s"""case class ViashPar(
        |  ${parClassTypes.mkString(",\n  ")}
        |)
        |val par = ViashPar(
@@ -125,13 +128,8 @@ case class ScalaScript(
        |
        |val resources_dir = "$$VIASH_META_RESOURCES_DIR"
        |""".stripMargin
+    ScriptInjectionMods(params = paramsCode)
   }
-}
-
-object ScalaScript extends ScriptObject {
-  val commentStr = "//"
-  val extension = "scala"
-  val `type` = "scala_script"
 
   def command(script: String): String = {
     "scala -nc \"" + script + "\""
@@ -140,4 +138,10 @@ object ScalaScript extends ScriptObject {
   def commandSeq(script: String): Seq[String] = {
     Seq("scala", "-nc", script)
   }
+}
+
+object ScalaScript extends ScriptCompanion {
+  val commentStr = "//"
+  val extension = "scala"
+  val `type` = "scala_script"
 }

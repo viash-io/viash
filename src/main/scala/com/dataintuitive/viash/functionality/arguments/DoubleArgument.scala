@@ -15,35 +15,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.dataobjects
+package com.dataintuitive.viash.functionality.arguments
 
 import com.dataintuitive.viash.helpers.Circe.OneOrMore
 
-case class StringObject(
+case class DoubleArgument(
   name: String,
-  alternatives: List[String] = Nil,
+  alternatives: OneOrMore[String] = Nil,
   description: Option[String] = None,
-  example: OneOrMore[String] = Nil,
-  default: OneOrMore[String] = Nil,
+  example: OneOrMore[Double] = Nil,
+  default: OneOrMore[Double] = Nil,
   required: Boolean = false,
-  values: List[String] = Nil,
+  min: Option[Double] = None,
+  max: Option[Double] = None,
   direction: Direction = Input,
   multiple: Boolean = false,
   multiple_sep: Char = ':',
-  `type`: String = "string"
-) extends DataObject[String] {
-  def copyDO(
+  `type`: String = "double"
+) extends Argument[Double] {
+  def copyArg(
     `type`: String, 
     name: String, 
-    alternatives: List[String],
+    alternatives: OneOrMore[String],
     description: Option[String],
-    example: OneOrMore[String],
-    default: OneOrMore[String],
+    example: OneOrMore[Double],
+    default: OneOrMore[Double],
     required: Boolean,
     direction: Direction,
     multiple: Boolean,
     multiple_sep: Char
-  ): DataObject[String] = {
-    copy(name, alternatives, description, example, default, required, values, direction, multiple, multiple_sep, `type`)
+  ): Argument[Double] = {
+    copy(name, alternatives, description, example, default, required, this.min, this.max, direction, multiple, multiple_sep, `type`)
   }
 }

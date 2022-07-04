@@ -38,6 +38,24 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     }
   }
 
+  // Wrapper function to make logging of processes easier, provide default command to run nextflow from . directory
+  // TODO: consider reading nextflow dot files and provide extra info of which workflow step fails and how
+  def runNextflowProcess(variableCommand: Seq[String], cwd: File = new File(tempFolStr), extraEnv: Seq[(String, String)] = Nil): (Int, String, String) = {
+
+    import sys.process._
+
+    val stdOut = new StringBuilder
+    val stdErr = new StringBuilder
+
+    val fixedCommand = Seq("nextflow", "run", ".")
+
+    val extraEnv_ = extraEnv :+ ( "NXF_VER" -> "21.04.1" )
+
+    val exitCode = Process(fixedCommand ++ variableCommand, cwd, extraEnv_ : _*).!(ProcessLogger(str => stdOut ++= s"$str\n", str => stdErr ++= s"$str\n"))
+
+    (exitCode, stdOut.toString, stdErr.toString)
+  }
+
   // convert testbash
   test("Build pipeline components", DockerTest, NextFlowTest) {
 
@@ -56,134 +74,114 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
 
   test("Run pipeline", DockerTest, NextFlowTest) {
 
-    import sys.process._
-    val output = Process(
-      Seq("nextflow", "run", ".",
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
       "-main-script", "workflows/pipeline1/main.nf",
       "--input", "resources/*",
       "--publishDir", "output",
       "-entry", "base",
-      ),
-      new File(tempFolStr),
-      "NXF_VER" -> "21.04.1"
-    ).!!
+      )
+    )
 
-    outputFileMatchChecker(output, "DEBUG6", "^11 .*$")
-
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
   }
 
   test("Run pipeline with components using map functionality", DockerTest, NextFlowTest) {
 
-    import sys.process._
-    val output = Process(
-      Seq("nextflow", "run", ".",
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
       "-main-script", "workflows/pipeline1/main.nf",
       "--input", "resources/*",
       "--publishDir", "output",
       "-entry", "map_variant",
-      ),
-      new File(tempFolStr),
-      "NXF_VER" -> "21.04.1"
-    ).!!
+      )
+    )
 
-    outputFileMatchChecker(output, "DEBUG4", "^11 .*$")
-
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
   }
 
   test("Run pipeline with components using mapData functionality", DockerTest, NextFlowTest) {
 
-    import sys.process._
-    val output = Process(
-      Seq("nextflow", "run", ".",
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
       "-main-script", "workflows/pipeline1/main.nf",
       "--input", "resources/*",
       "--publishDir", "output",
       "-entry", "mapData_variant",
-      ),
-      new File(tempFolStr),
-      "NXF_VER" -> "21.04.1"
-    ).!!
+      )
+    )
 
-    outputFileMatchChecker(output, "DEBUG4", "^11 .*$")
-
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
   }
 
   test("Run pipeline with debug = false", DockerTest, NextFlowTest) {
 
-    import sys.process._
-    val output = Process(
-      Seq("nextflow", "run", ".",
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
         "-main-script", "workflows/pipeline1/main.nf",
         "--input", "resources/*",
         "--publishDir", "output",
         "-entry", "debug_variant",
         "--displayDebug", "false",
-        ),
-      new File(tempFolStr),
-      "NXF_VER" -> "21.04.1"
-    ).!!
+        )
+    )
 
-    outputFileMatchChecker(output, "DEBUG4", "^11 .*$")
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
 
-    val lines2 = output.split("\n").find(_.contains("process 'step3' output tuple"))
+    val lines2 = stdOut.split("\n").find(_.contains("process 'step3' output tuple"))
     assert(!lines2.isDefined)
 
   }
 
   test("Run pipeline with debug = true", DockerTest, NextFlowTest) {
 
-    import sys.process._
-    val output = Process(
-      Seq("nextflow", "run", ".",
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
         "-main-script", "workflows/pipeline1/main.nf",
         "--input", "resources/*",
         "--publishDir", "output",
         "-entry", "debug_variant",
         "--displayDebug", "true",
-        ),
-      new File(tempFolStr),
-      "NXF_VER" -> "21.04.1"
-    ).!!
+        )
+    )
 
-    outputFileMatchChecker(output, "DEBUG4", "^11 .*$")
-    outputFileMatchChecker(output, "process 'step3[^']*' output tuple", "^11 .*$")
-
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
+    outputFileMatchChecker(stdOut, "process 'step3[^']*' output tuple", "^11 .*$")
   }
 
   test("Run legacy pipeline", DockerTest, NextFlowTest) {
 
-    import sys.process._
-    val output = Process(
-      Seq("nextflow", "run", ".",
-      "-main-script", "workflows/pipeline2/main.nf",
-      "--input", "resources/*",
-      "--publishDir", "output",
-      "-entry", "legacy_base",
-      ),
-      new File(tempFolStr),
-      "NXF_VER" -> "21.04.1"
-    ).!!
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
+        "-main-script", "workflows/pipeline2/main.nf",
+        "--input", "resources/*",
+        "--publishDir", "output",
+        "-entry", "legacy_base",
+        )
+    )
 
-    outputFileMatchChecker(output, "DEBUG6", "^11 .*$")
-
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
   }
 
     test("Run legacy and vdsl3 combined pipeline", DockerTest, NextFlowTest) {
 
-    import sys.process._
-    val output = Process(
-      Seq("nextflow", "run", ".",
-      "-main-script", "workflows/pipeline2/main.nf",
-      "--input", "resources/*",
-      "--publishDir", "output",
-      "-entry", "legacy_and_vdsl3",
-      ),
-      new File(tempFolStr),
-      "NXF_VER" -> "21.04.1"
-    ).!!
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
+        "-main-script", "workflows/pipeline2/main.nf",
+        "--input", "resources/*",
+        "--publishDir", "output",
+        "-entry", "legacy_and_vdsl3",
+        )
+    )
 
-    outputFileMatchChecker(output, "DEBUG6", "^11 .*$")
-
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
   }
 
   override def afterAll() {

@@ -20,7 +20,7 @@ package com.dataintuitive.viash.platforms
 import com.dataintuitive.viash.config.Config
 import com.dataintuitive.viash.functionality._
 import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.functionality.arguments._
 import com.dataintuitive.viash.config.Version
 import com.dataintuitive.viash.helpers.{Docker, Bash}
 import com.dataintuitive.viash.helpers.Circe._
@@ -56,7 +56,7 @@ case class NextflowLegacyPlatform(
 
   private val nativePlatform = NativePlatform(id = id)
 
-  def modifyFunctionality(config: Config): Functionality = {
+  def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
     val functionality = config.functionality
     import NextFlowUtils._
     implicit val fun: Functionality = functionality
@@ -83,7 +83,7 @@ case class NextflowLegacyPlatform(
     val allPars = functionality.allArguments
 
     val outputs = allPars
-      .filter(_.isInstanceOf[FileObject])
+      .filter(_.isInstanceOf[FileArgument])
       .count(_.direction == Output)
 
     // All values for arguments/parameters are defined in the root of
@@ -104,28 +104,28 @@ case class NextflowLegacyPlatform(
       * the module standalone as well as in a pipeline.
       */
     val namespacedParameters: List[ConfigTuple] = {
-      functionality.allArguments.flatMap { dataObject => (dataObject.required, dataObject.default.toList) match {
+      functionality.allArguments.flatMap { argument => (argument.required, argument.default.toList) match {
         case (true, _) =>
-          // println(s"> ${dataObject.plainName} in $fname is set to be required.")
-          // println(s"> --${dataObject.plainName} <...> has to be specified when running this module standalone.")
+          // println(s"> ${argument.plainName} in $fname is set to be required.")
+          // println(s"> --${argument.plainName} <...> has to be specified when running this module standalone.")
           Some(
             namespacedValueTuple(
-              dataObject.plainName.replace("-", "_"),
+              argument.plainName.replace("-", "_"),
               "viash_no_value"
             )(fun)
           )
         case (false, Nil) =>
           Some(
             namespacedValueTuple(
-              dataObject.plainName.replace("-", "_"),
+              argument.plainName.replace("-", "_"),
               "no_default_value_configured"
             )(fun)
           )
         case (false, li) =>
           Some(
             namespacedValueTuple(
-              dataObject.plainName.replace("-", "_"),
-              Bash.escape(li.mkString(dataObject.multiple_sep.toString), backtick = false, newline = true, quote = true)
+              argument.plainName.replace("-", "_"),
+              Bash.escape(li.mkString(argument.multiple_sep.toString), backtick = false, newline = true, quote = true)
             )(fun)
           )
       }}
@@ -134,7 +134,7 @@ case class NextflowLegacyPlatform(
     val argumentsAsTuple: List[ConfigTuple] =
       if (functionality.allArguments.nonEmpty) {
         List(
-          "arguments" → NestedValue(functionality.allArguments.map(dataObjectToConfigTuple(_)))
+          "arguments" → NestedValue(functionality.allArguments.map(argumentToConfigTuple(_)))
         )
       } else {
         Nil
@@ -150,7 +150,7 @@ case class NextflowLegacyPlatform(
     )
 
     // fetch test information
-    val tests = functionality.tests
+    val tests = functionality.test_resources
     val testPaths = tests.map(test => test.path.getOrElse("/dev/null"))
     val testScript: List[String] = {
         tests.flatMap{
@@ -207,7 +207,7 @@ case class NextflowLegacyPlatform(
     val setup_main_outputFilters: String = {
       if (separate_multiple_outputs) {
         allPars
-          .filter(_.isInstanceOf[FileObject])
+          .filter(_.isInstanceOf[FileArgument])
           .filter(_.direction == Output)
           .map(par =>
             s"""
@@ -567,7 +567,7 @@ case class NextflowLegacyPlatform(
     val resultParseBlocks: List[String] =
       if (separate_multiple_outputs && outputs >= 2) {
         allPars
-          .filter(_.isInstanceOf[FileObject])
+          .filter(_.isInstanceOf[FileArgument])
           .filter(_.direction == Output)
           .map(par =>
             s"""
@@ -652,7 +652,7 @@ case class NextflowLegacyPlatform(
       case None => Nil
       case Some(_: Executable) => Nil
       case Some(_: Script) =>
-        nativePlatform.modifyFunctionality(config).resources
+        nativePlatform.modifyFunctionality(config, false).resources
     }
 
     functionality.copy(
@@ -717,20 +717,20 @@ object NextFlowUtils {
   def namespacedValueTuple(key: String, value: String)(implicit fun: Functionality): ConfigTuple =
     (s"${fun.name}__$key", value)
 
-  implicit def dataObjectToConfigTuple[T:TypeTag](dataObject: DataObject[T])(implicit fun: Functionality): ConfigTuple = {
-    val pointer = "${params." + fun.name + "__" + dataObject.plainName + "}"
+  implicit def argumentToConfigTuple[T:TypeTag](argument: Argument[T])(implicit fun: Functionality): ConfigTuple = {
+    val pointer = "${params." + fun.name + "__" + argument.plainName + "}"
 
     // TODO: Should this not be converted from the json?
-    val default = if (dataObject.default.isEmpty) None else Some(dataObject.default.mkString(dataObject.multiple_sep.toString))
-    val example = if (dataObject.example.isEmpty) None else Some(dataObject.example.mkString(dataObject.multiple_sep.toString))
-    quoteLong(dataObject.plainName) → NestedValue(
-      tupleToConfigTuple("name" → dataObject.plainName) ::
-      tupleToConfigTuple("flags" → dataObject.flags) ::
-      tupleToConfigTuple("required" → dataObject.required) ::
-      tupleToConfigTuple("type" → dataObject.`type`) ::
-      tupleToConfigTuple("direction" → dataObject.direction.toString) ::
-      tupleToConfigTuple("multiple" → dataObject.multiple) ::
-      tupleToConfigTuple("multiple_sep" -> dataObject.multiple_sep) ::
+    val default = if (argument.default.isEmpty) None else Some(argument.default.mkString(argument.multiple_sep.toString))
+    val example = if (argument.example.isEmpty) None else Some(argument.example.mkString(argument.multiple_sep.toString))
+    quoteLong(argument.plainName) → NestedValue(
+      tupleToConfigTuple("name" → argument.plainName) ::
+      tupleToConfigTuple("flags" → argument.flags) ::
+      tupleToConfigTuple("required" → argument.required) ::
+      tupleToConfigTuple("type" → argument.`type`) ::
+      tupleToConfigTuple("direction" → argument.direction.toString) ::
+      tupleToConfigTuple("multiple" → argument.multiple) ::
+      tupleToConfigTuple("multiple_sep" -> argument.multiple_sep) ::
       tupleToConfigTuple("value" → pointer) ::
       default.map{ x =>
         List(tupleToConfigTuple("dflt" -> Bash.escape(x.toString, backtick = false, quote = true, newline = true)))
@@ -738,7 +738,7 @@ object NextFlowUtils {
       example.map{x =>
         List(tupleToConfigTuple("example" -> Bash.escape(x.toString, backtick = false, quote = true, newline = true)))
       }.getOrElse(Nil) :::
-      dataObject.description.map{x =>
+      argument.description.map{x =>
         List(tupleToConfigTuple("description" → Bash.escape(x, backtick = false, quote = true, newline = true)))
       }.getOrElse(Nil)
     )

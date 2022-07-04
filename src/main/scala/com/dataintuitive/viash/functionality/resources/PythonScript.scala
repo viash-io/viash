@@ -18,7 +18,7 @@
 package com.dataintuitive.viash.functionality.resources
 
 import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.dataobjects._
+import com.dataintuitive.viash.functionality.arguments._
 import com.dataintuitive.viash.wrapper.BashWrapper
 
 import java.net.URI
@@ -29,36 +29,39 @@ case class PythonScript(
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
-  `type`: String = "python_script"
+  entrypoint: Option[String] = None,
+  `type`: String = PythonScript.`type`
 ) extends Script {
-  val meta = PythonScript
+  assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")
+  
+  val companion = PythonScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generatePlaceholder(functionality: Functionality): String = {
-    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileObject])
+  def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
+    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
 
     val parSet = params.map { par =>
       // val env_name = par.VIASH_PAR
       val env_name = par.viash_par_escaped("'", """\'""", """\\\'""")
 
       val parse = par match {
-        case o: BooleanObject if o.multiple =>
-          s"""list(map(lambda x: (x.lower() == 'true'), $env_name.split('${o.multiple_sep}')))"""
-        case o: IntegerObject if o.multiple =>
-          s"""list(map(int, $env_name.split('${o.multiple_sep}')))"""
-        case o: DoubleObject if o.multiple =>
-          s"""list(map(float, $env_name.split('${o.multiple_sep}')))"""
-        case o: FileObject if o.multiple =>
-          s"""$env_name.split('${o.multiple_sep}')"""
-        case o: StringObject if o.multiple =>
-          s"""$env_name.split('${o.multiple_sep}')"""
-        case _: BooleanObject => s"""$env_name.lower() == 'true'"""
-        case _: IntegerObject => s"""int($env_name)"""
-        case _: DoubleObject => s"""float($env_name)"""
-        case _: FileObject => s"""$env_name"""
-        case _: StringObject => s"""$env_name"""
+        case a: BooleanArgument if a.multiple =>
+          s"""list(map(lambda x: (x.lower() == 'true'), $env_name.split('${a.multiple_sep}')))"""
+        case a: IntegerArgument if a.multiple =>
+          s"""list(map(int, $env_name.split('${a.multiple_sep}')))"""
+        case a: DoubleArgument if a.multiple =>
+          s"""list(map(float, $env_name.split('${a.multiple_sep}')))"""
+        case a: FileArgument if a.multiple =>
+          s"""$env_name.split('${a.multiple_sep}')"""
+        case a: StringArgument if a.multiple =>
+          s"""$env_name.split('${a.multiple_sep}')"""
+        case _: BooleanArgument => s"""$env_name.lower() == 'true'"""
+        case _: IntegerArgument => s"""int($env_name)"""
+        case _: DoubleArgument => s"""float($env_name)"""
+        case _: FileArgument => s"""$env_name"""
+        case _: StringArgument => s"""$env_name"""
       }
 
       s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo None; fi )"""
@@ -67,7 +70,7 @@ case class PythonScript(
       s"""'$script_name': '$$$env_name'"""
     }
 
-    s"""par = {
+    val paramsCode = s"""par = {
        |  ${parSet.mkString(",\n  ")}
        |}
        |meta = {
@@ -76,13 +79,8 @@ case class PythonScript(
        |
        |resources_dir = '$$VIASH_META_RESOURCES_DIR'
        |""".stripMargin
+    ScriptInjectionMods(params = paramsCode)
   }
-}
-
-object PythonScript extends ScriptObject {
-  val commentStr = "#"
-  val extension = "py"
-  val `type` = "python_script"
 
   def command(script: String): String = {
     "python \"" + script + "\""
@@ -91,4 +89,10 @@ object PythonScript extends ScriptObject {
   def commandSeq(script: String): Seq[String] = {
     Seq("python", script)
   }
+}
+
+object PythonScript extends ScriptCompanion {
+  val commentStr = "#"
+  val extension = "py"
+  val `type` = "python_script"
 }

@@ -28,7 +28,7 @@ case class NativePlatform(
   id: String = "native",
   `type`: String = "native"
 ) extends Platform {
-  def modifyFunctionality(config: Config): Functionality = {
+  def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
     val functionality = config.functionality
     val executor = functionality.mainScript match {
       case None => "eval"
