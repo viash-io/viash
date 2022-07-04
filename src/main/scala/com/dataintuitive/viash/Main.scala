@@ -40,10 +40,10 @@ object Main {
       internalMain(args)
     } catch {
       case e @ ( _: FileNotFoundException | _: NoSuchFileException | _: MissingResourceFileException ) =>
-        System.err.println(s"viash: ${e.getMessage()}")
+        Console.err.println(s"viash: ${e.getMessage()}")
         System.exit(1)
       case e: Exception =>
-        System.err.println(
+        Console.err.println(
           s"""Unexpected error occurred! If you think this is a bug, please post
             |create an issue at https://github.com/viash-io/viash/issues containing
             |a reproducible example and the stack trace below.
