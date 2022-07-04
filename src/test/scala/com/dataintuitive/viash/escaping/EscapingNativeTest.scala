@@ -58,7 +58,7 @@ class EscapingNativeTest extends FunSuite with BeforeAndAfterAll {
 
     // replace placeholder with character sequence
     Exec.run(
-      Seq("sed", "-i", s"s/{test_detect}/$sedEscaped/g", configSubFile.toString)
+      Seq("sed", "-i'.original'", s"s/{test_detect}/$sedEscaped/g", configSubFile.toString)
     )
 
     test(s"Check whether $chars gets escaped properly") {
