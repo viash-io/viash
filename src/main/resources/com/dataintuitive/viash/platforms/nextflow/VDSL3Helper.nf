@@ -904,21 +904,21 @@ ScriptMeta.current().addDefinition(myWfInstance)
 
 // anonymous workflow for running this module as a standalone
 workflow {
-  def localConfig = [
-    "functionality" : [
-      "arguments": [
-        [
-          'name': '--id',
-          'required': false,
-          'type': 'string',
-          'description': 'A unique id for every entry.',
-          'default': 'run',
-          'multiple': false
-        ]
-      ]
+  def mergedConfig = thisConfig
+
+  // add id argument if it's not already in the config
+  if (mergedConfig.functionality.arguments.every{it.plainName != "id"}) {
+    def idArg = [
+      'name': '--id',
+      'required': false,
+      'type': 'string',
+      'description': 'A unique id for every entry.',
+      'default': 'run',
+      'multiple': false
     ]
-  ]
-  def mergedConfig = processConfig(mergeMap(thisConfig, localConfig))
+    mergedConfig.functionality.arguments.add(0, idArg)
+    mergedConfig = processConfig(mergedConfig)
+  }
 
   helpMessage(params, mergedConfig)
 
