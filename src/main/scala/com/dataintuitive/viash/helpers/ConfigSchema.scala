@@ -26,26 +26,27 @@ import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
 import com.dataintuitive.viash.functionality.Functionality
 
 final case class ConfigSchema (
-  functionality: List[ParameterSchema]
-
+  functionality: List[ParameterSchema],
+  nativePlatform: List[ParameterSchema],
+  dockerPlatform: List[ParameterSchema],
 )
 
 final case class ParameterSchema(
   name: String,
   `type`: String,
   descripton: Option[String],
-  example: List[Example],
+  example: List[ExampleSchema],
   since: Option[String],
-  deprecated: Option[DeprecatedOrRemoved],
-  removed: Option[DeprecatedOrRemoved],
+  deprecated: Option[DeprecatedOrRemovedSchema],
+  removed: Option[DeprecatedOrRemovedSchema],
 )
 
-final case class DeprecatedOrRemoved(
+final case class DeprecatedOrRemovedSchema(
   message: String,
   since: String,
 )
 
-final case class Example(
+final case class ExampleSchema(
   example: String,
   format: String,
 )
@@ -57,8 +58,8 @@ object ConfigSchema {
 
   implicit val encodeConfigSchema: Encoder.AsObject[ConfigSchema] = deriveConfiguredEncoder
   implicit val encodeParameterSchema: Encoder.AsObject[ParameterSchema] = deriveConfiguredEncoder
-  implicit val encodeDeprecatedOrRemoved: Encoder.AsObject[DeprecatedOrRemoved] = deriveConfiguredEncoder
-  implicit val encodeExample: Encoder.AsObject[Example] = deriveConfiguredEncoder
+  implicit val encodeDeprecatedOrRemoved: Encoder.AsObject[DeprecatedOrRemovedSchema] = deriveConfiguredEncoder
+  implicit val encodeExample: Encoder.AsObject[ExampleSchema] = deriveConfiguredEncoder
 
   def export() {
 
@@ -96,25 +97,35 @@ object ConfigSchema {
       typeOf[T].members.map(x => (x.fullName, x.info.toString(), x.annotations)).filter(_._3.length > 0)
     }
 
+    def annotationsToSchema(annotations: Iterable[(String, String, List[Annotation])]) = {
+      annotations.map(a => {
+        val name = a._1.split('.').last // format is e.g. "com.dataintuitive.viash.functionality.Functionality.name", only keep "name"
+        val `type` = a._2
+        val annStrings = a._3.map(annotationToStrings(_))
+
+        val description = annStrings.collectFirst({case (name, value) if name.endsWith("description") => value.head})
+        val example = annStrings.collect({case (name, value) if name.endsWith("example") => value}).map(l => ExampleSchema(l(0), l(1)))
+        val since = annStrings.collectFirst({case (name, value) if name.endsWith("since") => value.head})
+        val deprecated = annStrings.collectFirst({case (name, value) if name.endsWith("deprecated") => value}).map(l => DeprecatedOrRemovedSchema(l(0), l(1)))
+        val removed = annStrings.collectFirst({case (name, value) if name.endsWith("removed") => value}).map(l => DeprecatedOrRemovedSchema(l(0), l(1)))
+        ParameterSchema(name, `type`, description, example, since, deprecated, removed)
+      }).toList
+    }
+
     val fun = com.dataintuitive.viash.functionality.Functionality("foo")
     // filter out any information not from our own class and lazy evaluators (we'll use the standard one - otherwise double info and more complex)
-    val annotations = annotationsOf(fun).filter(_._1.startsWith("com.dataintuitive.viash")).filter(!_._2.startsWith("=> "))
-    val funSchema = annotations.map(a => {
-      val name = a._1.replaceFirst("com.dataintuitive.viash.functionality.Functionality.", "")
-      val `type` = a._2
-      val annStrings = a._3.map(annotationToStrings(_))
+    val funAnn = annotationsOf(fun).filter(_._1.startsWith("com.dataintuitive.viash")).filter(!_._2.startsWith("=> "))
+    val funSchema = annotationsToSchema(funAnn)
 
-      val description = annStrings.collectFirst({case (name, value) if name.endsWith("description") => value.head})
-      // TODO handle example.format correctly
-      val example = annStrings.collect({case (name, value) if name.endsWith("example") => value}).map(l => Example(l(0), l(1)))
-      val since = annStrings.collectFirst({case (name, value) if name.endsWith("since") => value.head})
-      val deprecated = annStrings.collectFirst({case (name, value) if name.endsWith("deprecated") => value}).map(l => DeprecatedOrRemoved(l(0), l(1)))
-      val removed = annStrings.collectFirst({case (name, value) if name.endsWith("removed") => value}).map(l => DeprecatedOrRemoved(l(0), l(1)))
-      ParameterSchema(name, `type`, description, example, since, deprecated, removed)
-    }).toList
+    val nativePlat = com.dataintuitive.viash.platforms.NativePlatform()
+    val nativeAnn = annotationsOf(nativePlat).filter(_._1.startsWith("com.dataintuitive.viash")).filter(!_._2.startsWith("=> "))
+    val nativeSchema = annotationsToSchema(nativeAnn)
 
+    val dockerPlat = com.dataintuitive.viash.platforms.DockerPlatform("", "", None)
+    val dockerAnn = annotationsOf(dockerPlat).filter(_._1.startsWith("com.dataintuitive.viash")).filter(!_._2.startsWith("=> "))
+    val dockerSchema = annotationsToSchema(dockerAnn)
 
-    val data = ConfigSchema(funSchema)
+    val data = ConfigSchema(funSchema, nativeSchema, dockerSchema)
     val str = jsonPrinter.print(data.asJson)
     println(str)
   }
