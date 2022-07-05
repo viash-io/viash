@@ -49,7 +49,7 @@ final case class CollectedSchemas (
 final case class ParameterSchema(
   name: String,
   `type`: String,
-  descripton: Option[String],
+  description: Option[String],
   example: List[ExampleSchema],
   since: Option[String],
   deprecated: Option[DeprecatedOrRemovedSchema],
