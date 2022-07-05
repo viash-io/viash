@@ -24,6 +24,8 @@ import com.dataintuitive.viash.helpers.Circe._
 import io.circe.Encoder
 import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
 import com.dataintuitive.viash.functionality.Functionality
+import com.dataintuitive.viash.platforms._
+import com.dataintuitive.viash.platforms.requirements._
 
 final case class CollectedSchemas (
   // functionality
@@ -105,7 +107,7 @@ object CollectedSchemas {
       (name, values)
     }
     
-    def annotationsOf[T: TypeTag](obj: T) = {
+    def annotationsOf[T: TypeTag]() = {
       val annMembers = typeOf[T].members.map(x => (x.fullName, x.info.toString(), x.annotations)).filter(_._3.length > 0)
       val annThis = ("__this__", typeOf[T].toString(), typeOf[T].typeSymbol.annotations)
       val allAnnotations = annThis :: annMembers.toList
@@ -128,55 +130,23 @@ object CollectedSchemas {
       }).toList
     }
 
-    val fun = com.dataintuitive.viash.functionality.Functionality("foo")
-    val funSchema = annotationsToSchema( annotationsOf(fun) )
-
-    val nativePlat = com.dataintuitive.viash.platforms.NativePlatform()
-    val nativeSchema = annotationsToSchema( annotationsOf(nativePlat) )
-
-    val dockerPlat = com.dataintuitive.viash.platforms.DockerPlatform("", "", None)
-    val dockerSchema = annotationsToSchema( annotationsOf(dockerPlat) )
-
-    val nextflowLegacyPlat = com.dataintuitive.viash.platforms.NextflowLegacyPlatform("", None)
-    val nextflowLegacyPlatSchema = annotationsToSchema( annotationsOf(nextflowLegacyPlat) )
-
-    val apkReq = com.dataintuitive.viash.platforms.requirements.ApkRequirements()
-    val apkReqSchema = annotationsToSchema( annotationsOf(apkReq) )
-
-    val aptReq = com.dataintuitive.viash.platforms.requirements.AptRequirements()
-    val aptReqSchema = annotationsToSchema( annotationsOf(aptReq) )
-
-    val dockerReq = com.dataintuitive.viash.platforms.requirements.DockerRequirements()
-    val dockerReqSchema = annotationsToSchema( annotationsOf(dockerReq) )
-
-    val javascriptReq = com.dataintuitive.viash.platforms.requirements.JavaScriptRequirements()
-    val javascriptReqSchema = annotationsToSchema( annotationsOf(javascriptReq) )
-
-    val pythonReq = com.dataintuitive.viash.platforms.requirements.PythonRequirements()
-    val pythonReqSchema = annotationsToSchema( annotationsOf(pythonReq) )
-
-    val rReq = com.dataintuitive.viash.platforms.requirements.RRequirements()
-    val rReqSchema = annotationsToSchema( annotationsOf(rReq) )
-
-    val rubyReq = com.dataintuitive.viash.platforms.requirements.RubyRequirements()
-    val rubyReqSchema = annotationsToSchema( annotationsOf(rubyReq) )
-
-    val yumReq = com.dataintuitive.viash.platforms.requirements.YumRequirements()
-    val yumReqSchema = annotationsToSchema( annotationsOf(yumReq) )
+    def getSchema[T: TypeTag] = {
+      annotationsToSchema( annotationsOf[T])
+    }
 
     val data = CollectedSchemas(
-      functionality = funSchema,
-      nativePlatform = nativeSchema,
-      dockerPlatform = dockerSchema,
-      nextflowLegacyPlatform = nextflowLegacyPlatSchema,
-      apkRequirements = apkReqSchema,
-      aptRequirements = aptReqSchema,
-      dockerRequirements = dockerReqSchema,
-      javascriptRequirements = javascriptReqSchema,
-      pythonRequirements = pythonReqSchema,
-      rRequirements = rReqSchema,
-      rubyRequirements = rubyReqSchema,
-      yumRequirements = yumReqSchema,
+      functionality          = getSchema[Functionality],
+      nativePlatform         = getSchema[NativePlatform],
+      dockerPlatform         = getSchema[DockerPlatform],
+      nextflowLegacyPlatform = getSchema[NextflowLegacyPlatform],
+      apkRequirements        = getSchema[ApkRequirements],
+      aptRequirements        = getSchema[AptRequirements],
+      dockerRequirements     = getSchema[DockerRequirements],
+      javascriptRequirements = getSchema[JavaScriptRequirements],
+      pythonRequirements     = getSchema[PythonRequirements],
+      rRequirements          = getSchema[RRequirements],
+      rubyRequirements       = getSchema[RubyRequirements],
+      yumRequirements        = getSchema[YumRequirements],
     )
     val str = jsonPrinter.print(data.asJson)
     println(str)
