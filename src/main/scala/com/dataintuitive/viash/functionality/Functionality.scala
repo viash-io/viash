@@ -25,11 +25,11 @@ import com.dataintuitive.viash.helpers._
 
 case class Functionality(
   @description("Name of the component and the filename of the executable when built with `viash build`.")
-  @example("name: exe")
+  @example("name: exe", "yaml")
   name: String,
 
   @description("Namespace this component is a part of. This is required when grouping components together in a pipeline and building multiple components at once using viash `ns build`.")
-  @example("namespace: fancy_components")
+  @example("namespace: fancy_components", "yaml")
   namespace: Option[String] = None,
 
   @description("Version of the component. This field will be used to version the executable and the Docker container.")
@@ -41,7 +41,7 @@ case class Functionality(
                  +| Role | Abbrev. | Description |
                  +|------|---------|-------------|
                  +| maintainer | mnt | for the maintainer of the code. Ideally, exactly one maintainer is specified. |
-                 +|author | aut | for persons who have made substantial contributions to the software. |
+                 +| author | aut | for persons who have made substantial contributions to the software. |
                  +| contributor | ctb| for persons who have made smaller contributions (such as code patches).
                  +| datacontributor | dtc | for persons or organisations that contributed data sets for the software
                  +| copyrightholder | cph | for all copyright holders. This is a legal concept so should use the legal name of an institution or corporate body.
@@ -109,13 +109,6 @@ case class Functionality(
              |  - type: file
              |    path: resource1.txt
              |""".stripMargin, "yaml")
-  @example("""resources:
-             |  - type: r_script
-             |    path: script.R
-             |  - type: file
-             |    path: resource1.txt
-             |""".stripMargin,
-             "foo")  
   resources: List[Resource] = Nil,
 
   @description("A description of the component. This will be displayed with --help.")

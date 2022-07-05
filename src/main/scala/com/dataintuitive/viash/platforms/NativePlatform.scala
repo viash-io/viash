@@ -23,8 +23,12 @@ import com.dataintuitive.viash.functionality.resources._
 import com.dataintuitive.viash.platforms.requirements._
 import com.dataintuitive.viash.config.Version
 import com.dataintuitive.viash.wrapper.BashWrapper
+import com.dataintuitive.viash.helpers.description
+import com.dataintuitive.viash.helpers.example
 
 case class NativePlatform(
+  @description("As with all platforms, you can give a platform a different name. By specifying `id: foo`, you can target this platform (only) by specifying `-p foo` in any of the Viash commands.")
+  @example("id: foo", "yaml")
   id: String = "native",
   `type`: String = "native"
 ) extends Platform {

@@ -35,7 +35,7 @@ import scala.annotation.meta._
 class since(since: String) extends scala.annotation.StaticAnnotation
 
 @getter @setter @beanGetter @beanSetter @field
-class example(example: String, format: String = "") extends scala.annotation.StaticAnnotation
+class example(example: String, format: String) extends scala.annotation.StaticAnnotation
 
 @getter @setter @beanGetter @beanSetter @field
 class description(example: String) extends scala.annotation.StaticAnnotation
