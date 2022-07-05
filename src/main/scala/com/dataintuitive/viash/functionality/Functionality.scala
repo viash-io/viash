@@ -95,6 +95,8 @@ case class Functionality(
              |  multiple_sep: ","
              |""".stripMargin, "yaml")
   arguments: List[Argument[_]] = Nil,
+
+  @since("Viash 0.5.14")
   argument_groups: List[ArgumentGroup] = Nil,
 
   @description("""The first resource should be a script (bash_script, r_script, python_script, javascript_script, scala_script) which is what will be executed when the functionality is run. Additional resources will be copied to the same directory.
