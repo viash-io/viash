@@ -25,10 +25,22 @@ import io.circe.Encoder
 import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
 import com.dataintuitive.viash.functionality.Functionality
 
-final case class ConfigSchema (
+final case class CollectedSchemas (
+  // functionality
   functionality: List[ParameterSchema],
+  // platforms
   nativePlatform: List[ParameterSchema],
   dockerPlatform: List[ParameterSchema],
+  nextflowLegacyPlatform: List[ParameterSchema],
+  // platform requirements
+  apkRequirements: List[ParameterSchema],
+  aptRequirements: List[ParameterSchema],
+  dockerRequirements: List[ParameterSchema],
+  javascriptRequirements: List[ParameterSchema],
+  pythonRequirements: List[ParameterSchema],
+  rRequirements: List[ParameterSchema],
+  rubyRequirements: List[ParameterSchema],
+  yumRequirements: List[ParameterSchema],
 )
 
 final case class ParameterSchema(
@@ -51,12 +63,12 @@ final case class ExampleSchema(
   format: String,
 )
 
-object ConfigSchema {
+object CollectedSchemas {
   import scala.reflect.runtime.universe._
 
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
 
-  implicit val encodeConfigSchema: Encoder.AsObject[ConfigSchema] = deriveConfiguredEncoder
+  implicit val encodeConfigSchema: Encoder.AsObject[CollectedSchemas] = deriveConfiguredEncoder
   implicit val encodeParameterSchema: Encoder.AsObject[ParameterSchema] = deriveConfiguredEncoder
   implicit val encodeDeprecatedOrRemoved: Encoder.AsObject[DeprecatedOrRemovedSchema] = deriveConfiguredEncoder
   implicit val encodeExample: Encoder.AsObject[ExampleSchema] = deriveConfiguredEncoder
@@ -96,7 +108,9 @@ object ConfigSchema {
     def annotationsOf[T: TypeTag](obj: T) = {
       val annMembers = typeOf[T].members.map(x => (x.fullName, x.info.toString(), x.annotations)).filter(_._3.length > 0)
       val annThis = ("__this__", typeOf[T].toString(), typeOf[T].typeSymbol.annotations)
-      annThis :: annMembers.toList
+      val allAnnotations = annThis :: annMembers.toList
+      // filter out any information not from our own class and lazy evaluators (we'll use the standard one - otherwise double info and more complex)
+      allAnnotations.filter(a => a._1.startsWith("com.dataintuitive.viash") || a._1 == "__this__").filter(!_._2.startsWith("=> "))
     }
 
     def annotationsToSchema(annotations: Iterable[(String, String, List[Annotation])]) = {
@@ -115,19 +129,55 @@ object ConfigSchema {
     }
 
     val fun = com.dataintuitive.viash.functionality.Functionality("foo")
-    // filter out any information not from our own class and lazy evaluators (we'll use the standard one - otherwise double info and more complex)
-    val funAnn = annotationsOf(fun).filter(a => a._1.startsWith("com.dataintuitive.viash") || a._1 == "__this__").filter(!_._2.startsWith("=> "))
-    val funSchema = annotationsToSchema(funAnn)
+    val funSchema = annotationsToSchema( annotationsOf(fun) )
 
     val nativePlat = com.dataintuitive.viash.platforms.NativePlatform()
-    val nativeAnn = annotationsOf(nativePlat).filter(_._1.startsWith("com.dataintuitive.viash")).filter(!_._2.startsWith("=> "))
-    val nativeSchema = annotationsToSchema(nativeAnn)
+    val nativeSchema = annotationsToSchema( annotationsOf(nativePlat) )
 
     val dockerPlat = com.dataintuitive.viash.platforms.DockerPlatform("", "", None)
-    val dockerAnn = annotationsOf(dockerPlat).filter(_._1.startsWith("com.dataintuitive.viash")).filter(!_._2.startsWith("=> "))
-    val dockerSchema = annotationsToSchema(dockerAnn)
+    val dockerSchema = annotationsToSchema( annotationsOf(dockerPlat) )
 
-    val data = ConfigSchema(funSchema, nativeSchema, dockerSchema)
+    val nextflowLegacyPlat = com.dataintuitive.viash.platforms.NextflowLegacyPlatform("", None)
+    val nextflowLegacyPlatSchema = annotationsToSchema( annotationsOf(nextflowLegacyPlat) )
+
+    val apkReq = com.dataintuitive.viash.platforms.requirements.ApkRequirements()
+    val apkReqSchema = annotationsToSchema( annotationsOf(apkReq) )
+
+    val aptReq = com.dataintuitive.viash.platforms.requirements.AptRequirements()
+    val aptReqSchema = annotationsToSchema( annotationsOf(aptReq) )
+
+    val dockerReq = com.dataintuitive.viash.platforms.requirements.DockerRequirements()
+    val dockerReqSchema = annotationsToSchema( annotationsOf(dockerReq) )
+
+    val javascriptReq = com.dataintuitive.viash.platforms.requirements.JavaScriptRequirements()
+    val javascriptReqSchema = annotationsToSchema( annotationsOf(javascriptReq) )
+
+    val pythonReq = com.dataintuitive.viash.platforms.requirements.PythonRequirements()
+    val pythonReqSchema = annotationsToSchema( annotationsOf(pythonReq) )
+
+    val rReq = com.dataintuitive.viash.platforms.requirements.RRequirements()
+    val rReqSchema = annotationsToSchema( annotationsOf(rReq) )
+
+    val rubyReq = com.dataintuitive.viash.platforms.requirements.RubyRequirements()
+    val rubyReqSchema = annotationsToSchema( annotationsOf(rubyReq) )
+
+    val yumReq = com.dataintuitive.viash.platforms.requirements.YumRequirements()
+    val yumReqSchema = annotationsToSchema( annotationsOf(yumReq) )
+
+    val data = CollectedSchemas(
+      functionality = funSchema,
+      nativePlatform = nativeSchema,
+      dockerPlatform = dockerSchema,
+      nextflowLegacyPlatform = nextflowLegacyPlatSchema,
+      apkRequirements = apkReqSchema,
+      aptRequirements = aptReqSchema,
+      dockerRequirements = dockerReqSchema,
+      javascriptRequirements = javascriptReqSchema,
+      pythonRequirements = pythonReqSchema,
+      rRequirements = rReqSchema,
+      rubyRequirements = rubyReqSchema,
+      yumRequirements = yumReqSchema,
+    )
     val str = jsonPrinter.print(data.asJson)
     println(str)
   }
