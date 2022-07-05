@@ -1,5 +1,10 @@
 # VIASH 0.5.15
 
+## MINOR CHANGES
+
+* `Main`: Added `viash --schema_export` which outputs a schema of the Viash config file
+  to console. This is to be used to automate populating the documentation website.
+
 ## BUG FIXES
 
 * `NextflowVdsl3Platform`: Change how `--id` is processed when a VDSL3 module is called from the CLI.
