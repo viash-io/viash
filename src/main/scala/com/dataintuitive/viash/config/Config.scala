@@ -46,7 +46,7 @@ object Config {
 
   def parse(yamlText: String, uri: URI, preparseMods: Option[ConfigMods]): Config = {
     def errorHandler[C](e: Exception): C = {
-      System.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
+      Console.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
       throw e
     }
 
@@ -111,7 +111,7 @@ object Config {
       val yaml = header.map(s => s.drop(3)).mkString("\n")
       val code = body.mkString("\n")
 
-      val script = scriptObj(dest = Some(basename), text = Some(code))
+      val script = Script(dest = Some(basename), text = Some(code), `type` = scriptObj.`type`)
 
       (yaml, Some(script))
     } else {

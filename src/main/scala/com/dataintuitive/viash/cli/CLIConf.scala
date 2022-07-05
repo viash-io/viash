@@ -28,7 +28,8 @@ import com.dataintuitive.viash.Main
 trait ViashCommand {
   _: DocumentedSubcommand =>
   val platform = registerOpt[String](
-    short = 'p',
+    name = "platform",
+    short = Some('p'),
     default = None,
     descr =
       "Specifies which platform amongst those specified in the config to use. " +
@@ -38,13 +39,14 @@ trait ViashCommand {
     required = false
   )
   val config = registerTrailArg[String](
+    name = "config",
     descr = "A viash config file (example: config.vsh.yaml). This argument can also be a script with the config as a header.",
     default = Some("config.vsh.yaml"),
     required = true
   )
   val config_mods = registerOpt[List[String]](
     name = "config_mod",
-    short = 'c',
+    short = Some('c'),
     default = Some(Nil),
 
     descr = "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
@@ -54,13 +56,13 @@ trait ViashNs {
   _: DocumentedSubcommand =>
   val query = registerOpt[String](
     name = "query",
-    short = 'q',
+    short = Some('q'),
     descr = "Filter which components get selected by name and namespace. Can be a regex. Example: \"^mynamespace/component1$\".",
     default = None
   )
   val query_namespace = registerOpt[String](
     name = "query_namespace",
-    short = 'n',
+    short = Some('n'),
     descr = "Filter which namespaces get selected by namespace. Can be a regex. Example: \"^mynamespace$\".",
     default = None
   )
@@ -71,12 +73,13 @@ trait ViashNs {
   )
   val src = registerOpt[String](
     name = "src",
-    short = 's',
+    short = Some('s'),
     descr = " A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
     default = Some("src")
   )
   val platform = registerOpt[String](
-    short = 'p',
+    name = "platform",
+    short = Some('p'),
     descr =
       "Acts as a regular expression to filter the platform ids specified in the found config files. " +
         "If this is not provided, all platforms will be used. " +
@@ -87,15 +90,14 @@ trait ViashNs {
   )
   val parallel = registerOpt[Boolean](
     name = "parallel",
-    short = 'l',
+    short = Some('l'),
     default = Some(false),
     descr = "Whether or not to run the process in parallel."
   )
   val config_mods = registerOpt[List[String]](
     name = "config_mod",
-    short = 'c',
+    short = Some('c'),
     default = Some(Nil),
-
     descr = "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
   )
 }
@@ -103,7 +105,7 @@ trait WithTemporary {
   _: DocumentedSubcommand =>
   val keep = registerOpt[String](
     name = "keep",
-    short = 'k',
+    short = Some('k'),
     default = None,
     descr = "Whether or not to keep temporary files. By default, files will be deleted if all goes well but remain when an error occurs." +
       " By specifying --keep true, the temporary files will always be retained, whereas --keep false will always delete them." +
@@ -112,7 +114,12 @@ trait WithTemporary {
 }
 
 class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
-  def getSubconfigs = subconfigs
+  def getRegisteredCommands = subconfigs.flatMap{ sc =>
+    sc match {
+      case ds: DocumentedSubcommand => Some(ds.toRegisteredCommand)
+      case _ => None
+    }
+  }
  
   version(s"${Main.name} ${Main.version} (c) 2020 Data Intuitive")
 
@@ -172,17 +179,18 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
 
     val printMeta = registerOpt[Boolean](
       name = "meta",
-      short = 'm',
+      short = Some('m'),
       default = Some(false),
       descr = "Print out some meta information at the end."
     )
     val writeMeta = registerOpt[Boolean](
       name = "write_meta",
-      short = 'w',
+      short = Some('w'),
       default = Some(false),
       descr = "Write out some meta information to RESOURCES_DIR/viash.yaml at the end."
     )
     val output = registerOpt[String](
+      name = "output",
       descr = "Path to directory in which the executable and any resources is built to. Default: \"output/\".",
       default = Some("output/"),
       required = true
@@ -228,7 +236,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |Arguments:""".stripMargin)
       val format = registerChoice(
         name = "format",
-        short = 'f',
+        short = Some('f'),
         default = Some("yaml"),
         choices = List("yaml", "json"),
         descr = "Which output format to use."
@@ -265,7 +273,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |Arguments:""".stripMargin)
       val target = registerOpt[String](
         name = "target",
-        short = 't',
+        short = Some('t'),
         descr = "A target directory to build the executables into. Default: target/.",
         default = Some("target")
       )
@@ -281,13 +289,13 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
       val writeMeta = registerOpt[Boolean](
         name = "write_meta",
-        short = 'w',
+        short = Some('w'),
         default = Some(false),
         descr = "Write out some meta information to RESOURCES_DIR/viash.yaml at the end."
       )
       val flatten = registerOpt[Boolean](
         name = "flatten",
-        short = 'f',
+        short = Some('f'),
         default = Some(false),
         descr = "Flatten the target builds, handy for building one platform to a bin directory."
       )
@@ -304,12 +312,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |Arguments:""".stripMargin)
       val tsv = registerOpt[String](
         name = "tsv",
-        short = 't',
+        short = Some('t'),
         descr = "Path to write a summary of the test results to."
       )
       val append = registerOpt[Boolean](
         name = "append",
-        short = 'a',
+        short = Some('a'),
         default = Some(false),
         descr = "Append to tsv instead of overwrite"
       )
@@ -326,7 +334,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
            |Arguments:""".stripMargin)
       val format = registerChoice(
         name = "format",
-        short = 'f',
+        short = Some('f'),
         default = Some("yaml"),
         choices = List("yaml", "json"),
         descr = "Which output format to use."

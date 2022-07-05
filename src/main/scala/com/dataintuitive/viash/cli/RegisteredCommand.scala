@@ -29,18 +29,3 @@ case class RegisteredCommand (
   subcommands: Seq[RegisteredCommand],
   opts: Seq[RegisteredOpt],
 )
-
-object RegisteredCommand {
-  def maybeWrap(scb: ScallopConfBase): Option[RegisteredCommand] = scb match {
-    case dc: DocumentedSubcommand => Option(wrap(dc))
-    case _ => None
-  }
-  def wrap(ds: DocumentedSubcommand): RegisteredCommand = 
-    RegisteredCommand(
-      name = ds.getCommandNameAndAliases.mkString(" + "),
-      banner = ds.getBanner,
-      footer = ds.getFooter,
-      subcommands = ds.registeredSubCommands.map(ds => wrap(ds)),
-      opts = ds.registeredOpts,
-    )
-}

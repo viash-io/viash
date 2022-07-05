@@ -98,7 +98,7 @@ functionality:
   resources:
     - type: bash_script
       path: script.sh
-  tests:
+  test_resources:
     - type: bash_script
       path: run_test.sh
     - path: ../../test/resources/testns/src

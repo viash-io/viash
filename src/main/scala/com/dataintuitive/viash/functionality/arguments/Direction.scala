@@ -15,17 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.platforms.nextflow
+package com.dataintuitive.viash.functionality.arguments
 
-import scala.io.Source
+sealed trait Direction
 
-object NextflowHelper {
-  private def readSource(s: String) = {
-    val path = s"com/dataintuitive/viash/platforms/nextflow/$s"
-    Source.fromResource(path).getLines().mkString("\n")
-  }
+case object Input extends Direction
 
-  lazy val vdsl3Helper: String = readSource("VDSL3Helper.nf")
-  lazy val workflowHelper: String = readSource("WorkflowHelper.nf")
-  lazy val profilesHelper: String = readSource("ProfilesHelper.config")
-}
+case object Output extends Direction

@@ -22,9 +22,10 @@ import io.circe.{Decoder, Encoder, Json}
 import io.circe.ACursor
 
 package object functionality {
+  private var noticeFunTestDepr: Boolean = true
   // import implicits
 
-  import functionality.dataobjects._
+  import functionality.arguments._
   import functionality.resources._
   import com.dataintuitive.viash.helpers.Circe._
 
@@ -58,11 +59,15 @@ package object functionality {
       // provide backwords compability for tests -> test_resources
       val fun3 = (fun2.contains("tests"), fun2.contains("test_resources")) match {
         case (true, true) => 
-          println("Error: functionality.tests is deprecated. Please use functionality.test_resources instead.")
-          println("Backwards compability is provided but not in combination with functionality.test_resources.")
+          System.err.println("Error: functionality.tests is deprecated. Please use functionality.test_resources instead.")
+          System.err.println("Backwards compability is provided but not in combination with functionality.test_resources.")
           fun2
         case (true, false) =>
-          println("Notice: functionality.tests is deprecated. Please use functionality.test_resources instead.")
+          if (noticeFunTestDepr) {
+            // todo: solve this in a cleaner way
+            System.err.println("Notice: functionality.tests is deprecated. Please use functionality.test_resources instead.")
+            noticeFunTestDepr = false
+          }
           fun2.add("test_resources", fun2.apply("tests").get).remove("tests")
         case (_, _) => fun2
       }
@@ -74,4 +79,8 @@ package object functionality {
   // encoder and decoder for Author
   implicit val encodeAuthor: Encoder.AsObject[Author] = deriveConfiguredEncoder
   implicit val decodeAuthor: Decoder[Author] = deriveConfiguredDecoder
+  
+  // encoder and decoder for ArgumentGroup
+  implicit val encodeArgumentGroup: Encoder.AsObject[ArgumentGroup] = deriveConfiguredEncoder
+  implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoder
 }

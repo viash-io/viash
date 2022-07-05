@@ -15,17 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.platforms.nextflow
+package com.dataintuitive.viash.functionality.resources
 
-import scala.io.Source
-
-object NextflowHelper {
-  private def readSource(s: String) = {
-    val path = s"com/dataintuitive/viash/platforms/nextflow/$s"
-    Source.fromResource(path).getLines().mkString("\n")
+case class ScriptInjectionMods(
+  header: String = "",
+  params: String = "",
+  footer: String = ""
+) {
+  def `++`(other: ScriptInjectionMods): ScriptInjectionMods = {
+    ScriptInjectionMods(
+      header = header + other.header,
+      params = params + other.params,
+      footer = footer + other.footer
+    )
   }
-
-  lazy val vdsl3Helper: String = readSource("VDSL3Helper.nf")
-  lazy val workflowHelper: String = readSource("WorkflowHelper.nf")
-  lazy val profilesHelper: String = readSource("ProfilesHelper.config")
 }

@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.dataobjects
+package com.dataintuitive.viash.functionality.arguments
 
 import com.dataintuitive.viash.helpers.Circe.OneOrMore
 
-case class DoubleObject(
+case class DoubleArgument(
   name: String,
   alternatives: OneOrMore[String] = Nil,
   description: Option[String] = None,
@@ -32,8 +32,8 @@ case class DoubleObject(
   multiple: Boolean = false,
   multiple_sep: Char = ':',
   `type`: String = "double"
-) extends DataObject[Double] {
-  def copyDO(
+) extends Argument[Double] {
+  def copyArg(
     `type`: String, 
     name: String, 
     alternatives: OneOrMore[String],
@@ -44,7 +44,7 @@ case class DoubleObject(
     direction: Direction,
     multiple: Boolean,
     multiple_sep: Char
-  ): DataObject[Double] = {
+  ): Argument[Double] = {
     copy(name, alternatives, description, example, default, required, this.min, this.max, direction, multiple, multiple_sep, `type`)
   }
 }

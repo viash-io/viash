@@ -20,41 +20,47 @@ package com.dataintuitive.viash.functionality.resources
 import com.dataintuitive.viash.functionality._
 
 import java.net.URI
-import java.nio.file.Path
 
-case class Executable(
+case class NextflowScript(
   path: Option[String] = None,
   text: Option[String] = None,
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
-  entrypoint: Option[String] = None,
-  `type`: String = "executable"
+   entrypoint: Option[String] = None,
+  `type`: String = NextflowScript.`type`
 ) extends Script {
-  assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")
+  
+  val companion = NextflowScript
 
-  val companion = Executable
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = ScriptInjectionMods()
-
-  override def read: Option[String] = None
-
-  override def write(path: Path, overwrite: Boolean) {}
+  def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
+    ScriptInjectionMods()
+  }
 
   def command(script: String): String = {
-    script
+    val entryStr = entrypoint match {
+      case Some(entry) => " -entry " + entry
+      case None => ""
+    }
+    "nextflow run . -main-script \"" + script + "\"" + entryStr
   }
 
   def commandSeq(script: String): Seq[String] = {
-    Seq(script)
+    val entrySeq = entrypoint match {
+      case Some(entry) => Seq("-entry", entry)
+      case None => Seq()
+    }
+    // Seq("nextflow", "run", script) ++ entrySeq
+    Seq("nextflow", "run", ".", "-main-script", script) ++ entrySeq
   }
 }
 
-object Executable extends ScriptCompanion {
-  val commentStr = "#"
-  val extension = "*"
-  val `type` = "executable"
+object NextflowScript extends ScriptCompanion {
+  val commentStr = "//"
+  val extension = "nf"
+  val `type` = "nextflow_script"
 }
