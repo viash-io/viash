@@ -94,7 +94,9 @@ object ConfigSchema {
     }
     
     def annotationsOf[T: TypeTag](obj: T) = {
-      typeOf[T].members.map(x => (x.fullName, x.info.toString(), x.annotations)).filter(_._3.length > 0)
+      val annMembers = typeOf[T].members.map(x => (x.fullName, x.info.toString(), x.annotations)).filter(_._3.length > 0)
+      val annThis = ("__this__", typeOf[T].toString(), typeOf[T].typeSymbol.annotations)
+      annThis :: annMembers.toList
     }
 
     def annotationsToSchema(annotations: Iterable[(String, String, List[Annotation])]) = {
@@ -114,7 +116,7 @@ object ConfigSchema {
 
     val fun = com.dataintuitive.viash.functionality.Functionality("foo")
     // filter out any information not from our own class and lazy evaluators (we'll use the standard one - otherwise double info and more complex)
-    val funAnn = annotationsOf(fun).filter(_._1.startsWith("com.dataintuitive.viash")).filter(!_._2.startsWith("=> "))
+    val funAnn = annotationsOf(fun).filter(a => a._1.startsWith("com.dataintuitive.viash") || a._1 == "__this__").filter(!_._2.startsWith("=> "))
     val funSchema = annotationsToSchema(funAnn)
 
     val nativePlat = com.dataintuitive.viash.platforms.NativePlatform()

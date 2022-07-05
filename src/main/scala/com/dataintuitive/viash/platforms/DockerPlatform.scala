@@ -32,7 +32,11 @@ import java.util.Date
 import java.text.SimpleDateFormat
 import com.dataintuitive.viash.helpers.description
 import com.dataintuitive.viash.helpers.example
+import com.dataintuitive.viash.helpers.deprecated
 
+@description("""Run a Viash component on a Docker backend platform.
+               |By specifying which dependencies your component needs, users will be able to build a docker container from scratch using the setup flag, or pull it from a docker repository.
+               |""".stripMargin)
 case class DockerPlatform(
   @description("As with all platforms, you can give a platform a different name. By specifying `id: foo`, you can target this platform (only) by specifying `-p foo` in any of the Viash commands.")
   @example("id: foo", "yaml")
@@ -109,14 +113,12 @@ case class DockerPlatform(
                  |""".stripMargin)
   setup: List[Requirements] = Nil,
 
-  // TODO Javascript section is missing
-  // TODO Current viash documentation site lists requirements as e.g. "Python requirements" while this will document as "python"
-
   @description("Specify which apk packages should be available in order to run the component.")
   @example("""setup:
              |  - type: apk
              |    packages: [ sl ]
              |""".stripMargin, "yaml")
+  @deprecated("Use `setup` instead.", "Viash 0.5.15")
   apk: Option[ApkRequirements] = None,
 
   @description("Specify which apt packages should be available in order to run the component.")
@@ -124,6 +126,7 @@ case class DockerPlatform(
              |  - type: apt
              |    packages: [ sl ]
              |""".stripMargin, "yaml")
+  @deprecated("Use `setup` instead.", "Viash 0.5.15")
   apt: Option[AptRequirements] = None,
 
   @description("Specify which yum packages should be available in order to run the component.")
@@ -131,6 +134,7 @@ case class DockerPlatform(
              |  - type: yum
              |    packages: [ sl ]
              |""".stripMargin, "yaml")
+  @deprecated("Use `setup` instead.", "Viash 0.5.15")
   yum: Option[YumRequirements] = None,
 
   @description("Specify which R packages should be available in order to run the component.")
@@ -145,6 +149,7 @@ case class DockerPlatform(
              |    url: [ https://github.com/hadley/stringr/archive/HEAD.zip ]
              |    script: [ 'devtools::install(".")' ]
              |""".stripMargin, "yaml")
+  @deprecated("Use `setup` instead.", "Viash 0.5.15")
   r: Option[RRequirements] = None,
 
   @description("Specify which Python packages should be available in order to run the component.")
@@ -159,6 +164,7 @@ case class DockerPlatform(
              |    bazaar: [ http://... ]
              |    url: [ http://... ]
              |""".stripMargin, "yaml")
+  @deprecated("Use `setup` instead.", "Viash 0.5.15")
   python: Option[PythonRequirements] = None,
 
   @description("Specify which Docker commands should be run during setup.")
@@ -171,6 +177,7 @@ case class DockerPlatform(
              |    resources: 
              |      - resource.txt /path/to/resource.txt
              |""".stripMargin, "yaml")
+  @deprecated("Use `setup` instead.", "Viash 0.5.15")
   docker: Option[DockerRequirements] = None,
   test_setup: List[Requirements] = Nil
 ) extends Platform {
