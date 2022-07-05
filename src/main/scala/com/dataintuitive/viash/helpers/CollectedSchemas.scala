@@ -58,8 +58,18 @@ final case class ParameterSchema(
 
 object ParameterSchema {
   // Aid processing `augmentString` strings
-  private def unfinishedStringStripMargin(s: Any, marginChar: Char = '|'): String = 
-    s.toString().replaceAll("\\\\n", "\n").stripMargin(marginChar).replaceAll("\n", "\\\\n")
+  private def unfinishedStringStripMargin(s: Any, marginChar: Char = '|'): String = {
+    s.toString().replaceAll("\\\\n", "\n").stripMargin(marginChar)
+  }
+
+  private def mapTreeList(l: List[Tree], marginChar: Char = '|'): String = {
+    l.map(i => i match {
+      case Literal(Constant(value)) =>
+        unfinishedStringStripMargin(value, marginChar)
+      case _ =>
+        i.toString()
+    }).mkString
+  }
 
   // Traverse tree information and extract values or lists of values
   private def annotationToStrings(ann: Annotation):(String, List[String]) = {
@@ -76,10 +86,10 @@ object ParameterSchema {
               case Select(Select(a, b), stripMargin) =>
                 unfinishedStringStripMargin(b)
               case Select(Apply(a, b), stripMargin) =>
-                b.map(unfinishedStringStripMargin(_)).mkString
+                mapTreeList(b)
               case Apply(Select(Apply(a, a2), b), stripMargin) =>
                 val stripper = stripMargin.head.toString.charAt(1)
-                a2.map(unfinishedStringStripMargin(_, stripper)).mkString
+                mapTreeList(a2, stripper)
               case _ =>
                 i.toString()
             }
