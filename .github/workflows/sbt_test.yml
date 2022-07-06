@@ -78,7 +78,7 @@ jobs:
           sbt clean coverage test coverageReport
         elif [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
           # macOS on github actions does not have Docker, so skip those
-          sbt 'testOnly -- -l com.dataintuitive.viash.DockerTest -l com.dataintuitive.viash.NextflowTest'
+          sbt 'testOnly -- -l com.dataintuitive.viash.DockerTest -l com.dataintuitive.viash.NextFlowTest'
         else
           sbt test
         fi
