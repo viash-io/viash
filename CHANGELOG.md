@@ -2,6 +2,8 @@
 
 ## MINOR CHANGES
 
+* `Testbenches`: Add a testbench framework to test lots of character sequences, single or repeating to be tested in the yaml config. This can be used to later extend to other tests.
+
 * `Main`: Added `viash --schema_export` which outputs a schema of the Viash config file
   to console. This is to be used to automate populating the documentation website.
 
@@ -12,6 +14,8 @@
 * `NextflowVdsl3Platform`: Fix error when param_list is `null`.
 
 * `NextflowVdsl3Platform`: Fix error when optional, multiple arguments are set to `null`.
+
+* `Testbenches`: Better capture expected error messages while running testbenches again. Code changes right before previous release re-introduced some of the messages.
 
 # Viash 0.5.14
 

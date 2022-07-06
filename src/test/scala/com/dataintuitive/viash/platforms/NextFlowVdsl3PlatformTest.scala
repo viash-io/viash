@@ -38,6 +38,35 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     }
   }
 
+  def outputTupleProcessor(output: String, headerKeyword: String) = {
+    val stdOutLines = output.split("\n")
+
+    val DebugRegex = s"$headerKeyword: \\[(.*), \\[(.*)\\]\\]".r
+    val debugPrints = stdOutLines.flatMap{ _ match {
+      case DebugRegex(id, argStr) =>
+
+        // turn argStr into Map[String, String]
+        import io.circe.yaml.parser
+        import io.circe.Json
+
+        val input2 = "{" + argStr.replaceAll(":", ": ") + "}"
+
+        val js = parser.parse(input2).right.get
+        val js2 = js.mapObject(_.mapValues{v => v match {
+          case a if a.isArray => Json.fromString(a.asArray.get.map(_.asString.get).mkString("[", ", ", "]"))
+          case a if a.isString => Json.fromString(a.asString.get)
+          case _ => Json.fromString(v.toString)
+        }})
+
+        val argMap = js2.as[Map[String, String]].right.get
+
+        Some((id, argMap))
+      case _ => None
+    }}
+
+    debugPrints
+  }
+
   // Wrapper function to make logging of processes easier, provide default command to run nextflow from . directory
   // TODO: consider reading nextflow dot files and provide extra info of which workflow step fails and how
   def runNextflowProcess(variableCommand: Seq[String], cwd: File = new File(tempFolStr), extraEnv: Seq[(String, String)] = Nil): (Int, String, String) = {
@@ -183,6 +212,125 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
     outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
   }
+
+  test("Run config pipeline", NextFlowTest) {
+
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
+        "-main-script", "workflows/pipeline3/main.nf",
+        "--id", "foo",
+        "--input", "resources/lines3.txt",
+        "--real_number", "10.5",
+        "--whole_number", "10",
+        "--str", "foo",
+        "--multiple", "a:b:c:d",
+        "--publishDir", "output",
+        "-entry", "base",
+      )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+
+    val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
+
+    val fooDebug = debugPrints.find(_._1 == "foo")
+    assert(fooDebug.isDefined)
+    val fooDebugArgs = fooDebug.get._2
+    assert(fooDebugArgs.contains("input"))
+    assert(fooDebugArgs("input").matches(".*/lines3.txt"))
+    assert(fooDebugArgs.contains("real_number"))
+    assert(fooDebugArgs("real_number") == "10.5")
+    assert(fooDebugArgs.contains("whole_number"))
+    assert(fooDebugArgs("whole_number") == "10")
+    assert(fooDebugArgs.contains("str"))
+    assert(fooDebugArgs("str") == "foo")
+    assert(fooDebugArgs.contains("truth"))
+    assert(fooDebugArgs("truth") == "false")
+    assert(fooDebugArgs.contains("falsehood"))
+    assert(fooDebugArgs("falsehood") == "true")
+    assert(!fooDebugArgs.contains("reality"))
+    // assert(fooDebugArgs("reality") == "null")
+    assert(!fooDebugArgs.contains("optional"))
+    // assert(fooDebugArgs("optional") == "null")
+    assert(fooDebugArgs.contains("optional_with_default"))
+    assert(fooDebugArgs("optional_with_default") == "The default value.")
+    assert(fooDebugArgs.contains("multiple"))
+    assert(fooDebugArgs("multiple") == "[a, b, c, d]")
+  }
+
+  test("Run config pipeline with yamlblob", NextFlowTest) {
+    val fooArgs = "{id: foo, input: resources/lines3.txt, whole_number: 3, optional_with_default: foo, multiple: [a, b, c]}"
+    val barArgs = "{id: bar, input: resources/lines5.txt, real_number: 0.5, optional: bar, reality: true}"
+
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
+        "-main-script", "workflows/pipeline3/main.nf",
+        "--param_list", s"[$fooArgs, $barArgs]",
+        "--real_number", "10.5",
+        "--whole_number", "10",
+        "--str", "foo",
+        "--publishDir", "output",
+        "-entry", "base",
+      )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
+
+    val fooDebug = debugPrints.find(_._1 == "foo")
+    assert(fooDebug.isDefined)
+    val fooDebugArgs = fooDebug.get._2
+    assert(fooDebugArgs.contains("input"))
+    assert(fooDebugArgs("input").matches(".*/lines3.txt"))
+    assert(fooDebugArgs.contains("real_number"))
+    assert(fooDebugArgs("real_number") == "10.5")
+    assert(fooDebugArgs.contains("whole_number"))
+    assert(fooDebugArgs("whole_number") == "3")
+    assert(fooDebugArgs.contains("str"))
+    assert(fooDebugArgs("str") == "foo")
+    assert(fooDebugArgs.contains("truth"))
+    assert(fooDebugArgs("truth") == "false")
+    assert(fooDebugArgs.contains("falsehood"))
+    assert(fooDebugArgs("falsehood") == "true")
+    assert(!fooDebugArgs.contains("reality"))
+    // assert(fooDebugArgs("reality") == "null")
+    assert(!fooDebugArgs.contains("optional"))
+    // assert(fooDebugArgs("optional") == "null")
+    assert(fooDebugArgs.contains("optional_with_default"))
+    assert(fooDebugArgs("optional_with_default") == "foo")
+    assert(fooDebugArgs.contains("multiple"))
+    assert(fooDebugArgs("multiple") == "[a, b, c]")
+
+    val barDebug = debugPrints.find(_._1 == "bar")
+    assert(barDebug.isDefined)
+    val barDebugArgs = barDebug.get._2
+    assert(barDebugArgs.contains("input"))
+    assert(barDebugArgs("input").matches(".*/lines5.txt"))
+    assert(barDebugArgs.contains("real_number"))
+    assert(barDebugArgs("real_number") == "0.5")
+    assert(barDebugArgs.contains("whole_number"))
+    assert(barDebugArgs("whole_number") == "10")
+    assert(barDebugArgs.contains("str"))
+    assert(barDebugArgs("str") == "foo")
+    assert(barDebugArgs.contains("truth"))
+    assert(barDebugArgs("truth") == "false")
+    assert(barDebugArgs.contains("falsehood"))
+    assert(barDebugArgs("falsehood") == "true")
+    assert(barDebugArgs.contains("reality"))
+    assert(barDebugArgs("reality") == "true")
+    assert(barDebugArgs.contains("optional"))
+    assert(barDebugArgs("optional") == "bar")
+    assert(barDebugArgs.contains("optional_with_default"))
+    assert(barDebugArgs("optional_with_default") == "The default value.")
+    assert(!barDebugArgs.contains("multiple"))
+    // assert(barDebugArgs("multiple") == "null")
+  }
+
+  // todo: try out with paramlist json
+  // todo: try out with paramlist yaml
+  // todo: try out with paramlist csv
+  // todo: try out with paramlist asis
 
   override def afterAll() {
     IO.deleteRecursively(temporaryFolder)

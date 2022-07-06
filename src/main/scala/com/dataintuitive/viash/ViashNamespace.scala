@@ -151,7 +151,7 @@ object ViashNamespace {
               )
             } catch {
               case e: MissingResourceFileException => 
-                System.err.println(s"${Console.YELLOW}viash ns: ${e.getMessage}${Console.RESET}")
+                Console.err.println(s"${Console.YELLOW}viash ns: ${e.getMessage}${Console.RESET}")
                 ManyTestOutput(None, List())
             }
 
