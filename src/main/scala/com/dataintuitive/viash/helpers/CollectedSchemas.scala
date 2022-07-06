@@ -58,16 +58,16 @@ final case class ParameterSchema(
 
 object ParameterSchema {
   // Aid processing `augmentString` strings
-  private def unfinishedStringStripMargin(s: Any, marginChar: Char = '|'): String = {
-    s.toString().replaceAll("\\\\n", "\n").stripMargin(marginChar)
+  private def unfinishedStringStripMargin(s: String, marginChar: Char = '|'): String = {
+    s.replaceAll("\\\\n", "\n").stripMargin(marginChar)
   }
 
   private def mapTreeList(l: List[Tree], marginChar: Char = '|'): String = {
     l.map(i => i match {
-      case Literal(Constant(value)) =>
+      case Literal(Constant(value: String)) =>
         unfinishedStringStripMargin(value, marginChar)
       case _ =>
-        i.toString()
+        "unmatched in mapTreeList: " + i.toString()
     }).mkString
   }
 
@@ -81,17 +81,17 @@ object ParameterSchema {
             i match {
               // Here 'Apply' contains lists
               // While 'Select' has a single element
-              case Literal(Constant(value)) =>
-                value.toString()
-              case Select(Select(a, b), stripMargin) =>
-                unfinishedStringStripMargin(b)
-              case Select(Apply(a, b), stripMargin) =>
-                mapTreeList(b)
-              case Apply(Select(Apply(a, a2), b), stripMargin) =>
+              case Literal(Constant(value: String)) =>
+                value
+              // case Select(Select(a, b), stripMargin) =>
+              //   unfinishedStringStripMargin(b)
+              case Select(Apply(a, a2), b) if b.toString == "stripMargin" =>
+                mapTreeList(a2)
+              case Apply(Select(Apply(a, a2), b), stripMargin) if b.toString == "stripMargin" =>
                 val stripper = stripMargin.head.toString.charAt(1)
                 mapTreeList(a2, stripper)
               case _ =>
-                i.toString()
+                "unmatched in annotationToStrings: " + i.toString()
             }
         })
     }
