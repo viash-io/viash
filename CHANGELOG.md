@@ -8,6 +8,8 @@
 
 * `NextflowVdsl3Platform`: Fix error when optional, multiple arguments are set to `null`.
 
+* `Testbenches`: Better capture expected error messages while running testbenches again. Code changes right before previous release re-introduced some of the messages.
+
 # Viash 0.5.14
 
 ## NEW FUNCTIONALITY
