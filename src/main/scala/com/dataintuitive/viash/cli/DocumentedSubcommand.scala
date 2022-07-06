@@ -31,6 +31,18 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
   var registeredSubCommands: Seq[DocumentedSubcommand] = Nil
   var registeredOpts: Seq[RegisteredOpt] = Nil
 
+  var command: Option[String] = None
+  var description: Option[String] = None
+  var usage: Option[String] = None
+
+  def banner(command: String, description: String, usage: String): Unit = {
+    this.command = Some(command)
+    this.description = Some(description)
+    this.usage = Some(usage)
+
+    super.banner(s"$command\n$description\n\nUsage:\n  $usage\n\nArguments:")
+  }
+
 
   override def addSubcommand(conf: Subcommand): Unit = {
     if (conf.isInstanceOf[DocumentedSubcommand]) {
@@ -149,7 +161,9 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
   def toRegisteredCommand: RegisteredCommand = 
     RegisteredCommand(
       name = commandNameAndAliases.mkString(" + "),
-      banner = builder.bann,
+      bannerCommand = command,
+      bannerDescription = description,
+      bannerUsage = usage,
       footer = builder.foot,
       subcommands = registeredSubCommands.map(_.toRegisteredCommand),
       opts = registeredOpts
