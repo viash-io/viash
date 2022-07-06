@@ -143,12 +143,21 @@ object CollectedSchemas {
   private implicit val encodeDeprecatedOrRemoved: Encoder.AsObject[DeprecatedOrRemovedSchema] = deriveConfiguredEncoder
   private implicit val encodeExample: Encoder.AsObject[ExampleSchema] = deriveConfiguredEncoder
 
+  private def trimTypeName(s: String) = {
+    // first: com.dataintuitive.viash.helpers.Circe.OneOrMore[String] -> OneOrMore[String]
+    // second: List[com.dataintuitive.viash.platforms.requirements.Requirements] -> List[Requirements]
+    s.replaceAll("^(\\w*\\.)*", "").replaceAll("""(\w*)\[[\w\.]*?([\w,]*)(\[_\])?\]""", "$1 of $2")
+  }
+
   private def annotationsOf[T: TypeTag]() = {
     val annMembers = typeOf[T].members.map(x => (x.fullName, x.info.toString(), x.annotations)).filter(_._3.length > 0)
-    val annThis = ("__this__", typeOf[T].toString(), typeOf[T].typeSymbol.annotations)
+    val annThis = ("__this__", typeOf[T].typeSymbol.name.toString(), typeOf[T].typeSymbol.annotations)
     val allAnnotations = annThis :: annMembers.toList
     // filter out any information not from our own class and lazy evaluators (we'll use the standard one - otherwise double info and more complex)
-    allAnnotations.filter(a => a._1.startsWith("com.dataintuitive.viash") || a._1 == "__this__").filter(!_._2.startsWith("=> "))
+    allAnnotations
+      .filter(a => a._1.startsWith("com.dataintuitive.viash") || a._1 == "__this__")
+      .filter(!_._2.startsWith("=> "))
+      .map({case (a, b, c) => (a, trimTypeName(b), c)})
   }
 
   private def getSchema[T: TypeTag] = {
