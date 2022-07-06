@@ -184,6 +184,70 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
   }
 
+  test("Run config pipeline", DockerTest, NextFlowTest) {
+
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
+        "-main-script", "workflows/pipeline3/main.nf",
+        "--id", "foo",
+        "--input", "resources/lines3.txt",
+        "--real_number", "10.5",
+        "--whole_number", "10",
+        "--str", "foo",
+        "--publishDir", "output",
+        "-entry", "base",
+      )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val stdOutLines = stdOut.split("\n")
+
+    val DebugRegex = s"DEBUG: \\[(.*), \\[(.*)\\]\\]".r
+    val debugPrints = stdOutLines.filter(DebugRegex.findFirstIn(_).isDefined).map{
+      case DebugRegex(id, argStr) => 
+        val argMap = argStr.split(", ").flatMap{ entry =>
+          val spl = entry.split(":")
+          if (spl.length == 2) {
+            Some((spl(0), spl(1)))
+          } else {
+            None
+          }
+        }.toMap
+        (id, argMap)
+    }
+
+    val fooDebug = debugPrints.find(_._1 == "foo")
+    assert(fooDebug.isDefined)
+    val fooDebugArgs = fooDebug.get._2
+    assert(fooDebugArgs.contains("input"))
+    assert(fooDebugArgs("input").matches(".*/lines3.txt"))
+    assert(fooDebugArgs.contains("real_number"))
+    assert(fooDebugArgs("real_number") == "10.5")
+    assert(fooDebugArgs.contains("whole_number"))
+    assert(fooDebugArgs("whole_number") == "10")
+    assert(fooDebugArgs.contains("str"))
+    assert(fooDebugArgs("str") == "foo")
+    assert(fooDebugArgs.contains("truth"))
+    assert(fooDebugArgs("truth") == "false")
+    assert(fooDebugArgs.contains("falsehood"))
+    assert(fooDebugArgs("falsehood") == "true")
+    assert(!fooDebugArgs.contains("reality"))
+    // assert(fooDebugArgs("reality") == "null")
+    assert(!fooDebugArgs.contains("optional"))
+    // assert(fooDebugArgs("optional") == "null")
+    assert(fooDebugArgs.contains("optional_with_default"))
+    assert(fooDebugArgs("optional_with_default") == "The default value.")
+    assert(!fooDebugArgs.contains("multiple"))
+    // assert(fooDebugArgs("multiple") == "null")
+  }
+
+  // todo: try out with paramlist json
+  // todo: try out with paramlist yaml
+  // todo: try out with paramlist csv
+  // todo: try out with paramlist yamlblob
+  // todo: try out with paramlist asis
+
   override def afterAll() {
     IO.deleteRecursively(temporaryFolder)
   }
