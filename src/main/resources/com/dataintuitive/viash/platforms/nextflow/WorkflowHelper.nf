@@ -318,7 +318,7 @@ def paramsToList(params, config) {
   // combine parameters
   def processedParams = paramList.collect{ multiParam ->
     // combine params
-    def combinedArgs = defaultArgs + multiParam + paramArgs
+    def combinedArgs = defaultArgs + paramArgs + multiParam
 
     // check whether required arguments exist
     config.functionality.allArguments
