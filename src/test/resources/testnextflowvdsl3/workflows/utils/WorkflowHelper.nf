@@ -1,0 +1,1 @@
+../../../../../main/resources/com/dataintuitive/viash/platforms/nextflow/WorkflowHelper.nf
