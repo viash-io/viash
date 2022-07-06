@@ -102,6 +102,7 @@ case class DockerPlatform(
 
   // setup variables
   @description("""A list of requirements for installing the following types of packages:
+                 |
                  | - apt
                  | - apk
                  | - yum
@@ -109,6 +110,7 @@ case class DockerPlatform(
                  | - Python
                  | - JavaScript
                  | - Docker setup instructions
+                 |
                  |The order in which these dependencies are specified determines the order in which they will be installed.
                  |""".stripMargin)
   setup: List[Requirements] = Nil,

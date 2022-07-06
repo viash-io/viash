@@ -41,6 +41,7 @@ case class Functionality(
   @description("""A list of authors. An author must at least have a name, but can also have a list of roles, an e-mail address, and a map of custom properties.
                  +
                  +Suggested values for roles are:
+                 + 
                  +| Role | Abbrev. | Description |
                  +|------|---------|-------------|
                  +| maintainer | mnt | for the maintainer of the code. Ideally, exactly one maintainer is specified. |
@@ -62,6 +63,7 @@ case class Functionality(
   outputs: List[Argument[_]] = Nil,
   
   @description("""A list of arguments for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. Common properties for all argument types are the following.
+                 |
                  | - `type: string/file/integer/double/boolean/boolean_true/boolean_false`, the type of argument determining to what object type the value will be cast in the downstream scripts.
                  | - `direction: input/output`, the directionality of the argument. Only needs to be specified for output files. Default: “input”.
                  | - `name: --foo`, the name of the argument. Can also be `-foo` or `foo`. The number of dashes determines how values can be passed:
@@ -74,15 +76,20 @@ case class Functionality(
                  | - `required: true/false`, whether the argument is required. If true and the functionality is executed, an error will be produced if no value is provided. Default = false.
                  | - `multiple: true/false`, whether to treat the argument value as an array or not. Arrays can be passed using the delimiter `--foo=1:2:3` or by providing the same argument multiple times `--foo 1 --foo 2`. Default = false.
                  | - `multiple_sep: ":"`, the delimiter for providing multiple values. Default = “:”.
+                 |
                  |On types: 
+                 |
                  | * `type: string`, The value passed through an argument of this type is converted to an ‘str’ object in Python, and to a ‘character’ object in R.
                  | * `type: integer`, The resulting value is an ‘int’ in Python and an ‘integer’ in R.
                  | * `type: double`, The resulting value is a ‘float’ in Python and an ‘double’ in R.
                  | * `type: boolean`, The resulting value is a ‘bool’ in Python and a ‘logical’ in R.
                  | * `type: boolean_true/boolean_false`, Arguments of this type can only be used by providing a flag `--foo` or not. The resulting value is a ‘bool’ in Python and a ‘logical’ in R. These properties cannot be altered: required is false, default is undefined, multiple is false.
                  | * `type: file`, The resulting value is still an ‘str’ in Python and a ‘character’ in R. In order to correctly pass files in some platforms (e.g. Docker and Nextflow), Viash needs to know which arguments are input/output files.
+                 |
                  |Additional property values:
+                 |
                  | - `must_exist: true/false`, denotes whether the file or folder should exist at the start of the execution.
+                 |
                  |""".stripMargin)
   @example("""- name: --foo                           
              |  type: file
@@ -119,8 +126,8 @@ case class Functionality(
 
   @description("A description of the component. This will be displayed with --help.")
   @example("""description: |
-             +This component performs function Y and Z.
-             +It is possible to make this a multiline string.
+             +  This component performs function Y and Z.
+             +  It is possible to make this a multiline string.
              +""".stripMargin('+'), "yaml")
   description: Option[String] = None,
 

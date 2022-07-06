@@ -82,6 +82,7 @@ case class NextflowLegacyPlatform(
                  |
                  | - publish is optional
                  | - Default value is false
+                 |
                  |This attribute simply defines if output of a component should be published yes or no. The output location has to be provided at pipeline launch by means of the option `--publishDir ...` or as `params.publishDir` in `nextflow.config`:
                  |```
                  |params.publishDir = "..."
@@ -125,7 +126,8 @@ case class NextflowLegacyPlatform(
                  |```
                  |path: raw_data/bcl
                  |```
-                 |Please note that `per_id` and `path` can be combined.""")
+                 |Please note that `per_id` and `path` can be combined.
+                 |""".stripMargin)
   path: Option[String] = None,
 
   @description("""When running the module in a cluster context and depending on the cluster type, [NextFlow allows for attaching labels](https://www.nextflow.io/docs/latest/process.html#label) to the process that can later be used as selectors for associating resources to this process.
