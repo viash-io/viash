@@ -125,6 +125,13 @@ def processArgument(arg) {
     }
   }
 
+  if (arg.type == "boolean_true") {
+    arg.default = false
+  }
+  if (arg.type == "boolean_false") {
+    arg.default = true
+  }
+
   arg
 }
 def processConfig(config) {
@@ -358,7 +365,7 @@ def paramsToList(params, config) {
           parData = parData.collect{it as Integer}
         } else if (par.type == "double") {
           parData = parData.collect{it as Double}
-        } else if (par.type == "boolean") {
+        } else if (par.type == "boolean" || par.type == "boolean_true" || par.type == "boolean_false") {
           parData = parData.collect{it as Boolean}
         }
         // simplify list to value if need be
