@@ -67,6 +67,36 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     debugPrints
   }
 
+  trait CheckArg {
+    val name: String
+    def assert(id: String, args: Map[String, String]): Unit
+  }
+  case class MatchCheck(name: String, s: String) extends CheckArg {
+    import org.scalatest.Assertions.{assert => scassert}
+    def assert(id: String, args: Map[String, String]) = {
+      scassert(args.contains(name), s"$id : args should contain $name")
+      scassert(args(name).matches(s), s"$id : args($name): ${args(name)} should match $s")
+    }
+  }
+  case class EqualsCheck(name: String, s: String) extends CheckArg {
+    import org.scalatest.Assertions.{assert => scassert}
+    def assert(id: String, args: Map[String, String]) = {
+      scassert(args.contains(name), s"$id : args should contain $name")
+      scassert(args(name) == s, s"$id : args($name) should equal $s")
+    }
+  }
+  case class NotAvailCheck(name: String) extends CheckArg {
+    import org.scalatest.Assertions.{assert => scassert}
+    def assert(id: String, args: Map[String, String]) = {
+      scassert(!args.contains(name), s"$id : args should not contain $name")
+    }
+  }
+  def checkDebugArgs(id: String, debugPrints: Array[(String, Map[String,String])], expectedValues: List[CheckArg]) {
+    val idDebugPrints = debugPrints.find(_._1 == id)
+    assert(idDebugPrints.isDefined)
+    expectedValues.foreach(_.assert(id, idDebugPrints.get._2))
+  }
+
   // Wrapper function to make logging of processes easier, provide default command to run nextflow from . directory
   // TODO: consider reading nextflow dot files and provide extra info of which workflow step fails and how
   def runNextflowProcess(variableCommand: Seq[String], cwd: File = new File(tempFolStr), extraEnv: Seq[(String, String)] = Nil): (Int, String, String) = {
@@ -198,7 +228,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
   }
 
-    test("Run legacy and vdsl3 combined pipeline", DockerTest, NextFlowTest) {
+  test("Run legacy and vdsl3 combined pipeline", DockerTest, NextFlowTest) {
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
       Seq(
@@ -211,31 +241,6 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
     outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
-  }
-
-  trait CheckArg {
-    val name: String
-    def assert(id: String, args: Map[String, String]): Unit
-  }
-  case class MatchCheck(name: String, s: String) extends CheckArg {
-    import org.scalatest.Assertions.{assert => scassert}
-    def assert(id: String, args: Map[String, String]) = {
-      scassert(args.contains(name), s"$id : args should contain $name")
-      scassert(args(name).matches(s), s"$id : args($name) should match $s")
-    }
-  }
-  case class EqualsCheck(name: String, s: String) extends CheckArg {
-    import org.scalatest.Assertions.{assert => scassert}
-    def assert(id: String, args: Map[String, String]) = {
-      scassert(args.contains(name), s"$id : args should contain $name")
-      scassert(args(name) == s, s"$id : args($name) should equal $s")
-    }
-  }
-  case class NotAvailCheck(name: String) extends CheckArg {
-    import org.scalatest.Assertions.{assert => scassert}
-    def assert(id: String, args: Map[String, String]) = {
-      scassert(!args.contains(name), s"$id : args should not contain $name")
-    }
   }
 
   val expectedFoo: List[CheckArg] = List(
@@ -262,12 +267,6 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     EqualsCheck("optional_with_default", "The default value."),
     NotAvailCheck("multiple")
   )
-
-  def checkDebugArgs(id: String, debugPrints: Array[(String, Map[String,String])], expectedValues: List[CheckArg]) {
-    val idDebugPrints = debugPrints.find(_._1 == "foo")
-    assert(idDebugPrints.isDefined)
-    expectedValues.foreach(_.assert(id, idDebugPrints.get._2))
-  }
 
   test("Run config pipeline", NextFlowTest) {
 
@@ -338,6 +337,27 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
 
   test("Run config pipeline with json file", NextFlowTest) {
     val param_list_file = getClass.getResource("/testnextflowvdsl3/param_list_files/pipeline3.json").getPath
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
+        "-main-script", "workflows/pipeline3/main.nf",
+        "--param_list", param_list_file,
+        "--real_number", "10.5",
+        "--whole_number", "10",
+        "--str", "foo",
+        "--publishDir", "output",
+        "-entry", "base",
+      )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
+    checkDebugArgs("foo", debugPrints, expectedFoo)
+    checkDebugArgs("bar", debugPrints, expectedBar)
+  }
+
+  test("Run config pipeline with csv file", NextFlowTest) {
+    val param_list_file = getClass.getResource("/testnextflowvdsl3/param_list_files/pipeline3.csv").getPath
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
       Seq(
         "-main-script", "workflows/pipeline3/main.nf",
