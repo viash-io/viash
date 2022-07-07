@@ -20,6 +20,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   private val rootPath = getClass.getResource("/testnextflowvdsl3/").getPath
   private val srcPath = Paths.get(tempFolStr, "src").toFile.toString
   private val targetPath = Paths.get(tempFolStr, "target").toFile.toString
+  private val resourcesPath = Paths.get(tempFolStr, "resources").toFile.toString
 
   def outputFileMatchChecker(output: String, headerKeyword: String, fileContentMatcher: String) = {
     val DebugRegex = s"$headerKeyword: \\[foo, (.*)\\]".r
@@ -312,10 +313,12 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
     checkDebugArgs("foo", debugPrints, expectedFoo)
     checkDebugArgs("bar", debugPrints, expectedBar)
+    // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
+    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
   }
 
   test("Run config pipeline with yaml file", NextFlowTest) {
-    val param_list_file = getClass.getResource("/testnextflowvdsl3/param_list_files/pipeline3.yaml").getPath
+    val param_list_file = Paths.get(resourcesPath, "pipeline3.yaml").toFile.toString
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
       Seq(
         "-main-script", "workflows/pipeline3/main.nf",
@@ -333,10 +336,12 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
     checkDebugArgs("foo", debugPrints, expectedFoo)
     checkDebugArgs("bar", debugPrints, expectedBar)
+    // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
+    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
   }
 
   test("Run config pipeline with json file", NextFlowTest) {
-    val param_list_file = getClass.getResource("/testnextflowvdsl3/param_list_files/pipeline3.json").getPath
+    val param_list_file = Paths.get(resourcesPath, "pipeline3.json").toFile.toString
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
       Seq(
         "-main-script", "workflows/pipeline3/main.nf",
@@ -354,10 +359,12 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
     checkDebugArgs("foo", debugPrints, expectedFoo)
     checkDebugArgs("bar", debugPrints, expectedBar)
+    // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
+    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
   }
 
   test("Run config pipeline with csv file", NextFlowTest) {
-    val param_list_file = getClass.getResource("/testnextflowvdsl3/param_list_files/pipeline3.csv").getPath
+    val param_list_file = Paths.get(resourcesPath, "pipeline3.csv").toFile.toString
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
       Seq(
         "-main-script", "workflows/pipeline3/main.nf",
@@ -375,12 +382,32 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
     checkDebugArgs("foo", debugPrints, expectedFoo)
     checkDebugArgs("bar", debugPrints, expectedBar)
+    // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
+    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
   }
 
-  // todo: try out with paramlist json
-  // todo: try out with paramlist yaml
-  // todo: try out with paramlist csv
-  // todo: try out with paramlist asis
+  test("Run config pipeline asis, default nextflow implementation", NextFlowTest) {
+    val param_list_file = Paths.get(resourcesPath, "pipeline3.asis.yaml").toFile.toString
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
+        "-main-script", "workflows/pipeline3/main.nf",
+        "--real_number", "10.5",
+        "--whole_number", "10",
+        "--str", "foo",
+        "--publishDir", "output",
+        "-entry", "base",
+        "-params-file", param_list_file
+      )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
+    checkDebugArgs("foo", debugPrints, expectedFoo)
+    checkDebugArgs("bar", debugPrints, expectedBar)
+    // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
+    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+  }
 
   override def afterAll() {
     IO.deleteRecursively(temporaryFolder)
