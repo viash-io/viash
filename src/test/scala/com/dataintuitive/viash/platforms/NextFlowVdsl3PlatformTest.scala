@@ -409,6 +409,48 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
   }
 
+  test("Run module as standalone", NextFlowTest) {
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
+        "-main-script", "target/nextflowvdsl3/step2/main.nf",
+        "--input1", "resources/lines3.txt",
+        "--input2", "resources/lines5.txt",
+        "--publish_dir", "moduleOutput1"
+      )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val src = Source.fromFile(tempFolStr+"/moduleOutput1/run.step2.output1.txt")
+    try {
+      val moduleOut = src.getLines.mkString(",")
+      assert(moduleOut.equals("one,two,three"))
+    } finally {
+      src.close()
+    }
+  }
+
+  test("Run module as standalone, yamlblob", NextFlowTest) {
+    val fooArgs = "{input1: resources/lines3.txt, input2: resources/lines5.txt}"
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
+        "-main-script", "target/nextflowvdsl3/step2/main.nf",
+        "--param_list", s"[$fooArgs]",
+        "--publish_dir", "moduleOutput2"
+      )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val src = Source.fromFile(tempFolStr+"/moduleOutput2/run.step2.output1.txt")
+    try {
+      val moduleOut = src.getLines.mkString(",")
+      assert(moduleOut.equals("one,two,three"))
+    } finally {
+      src.close()
+    }
+  }
+
   override def afterAll() {
     IO.deleteRecursively(temporaryFolder)
   }
