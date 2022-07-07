@@ -1,0 +1,21 @@
+[
+    {
+      "id": "foo",
+      "input": "resources/lines3.txt",
+      "whole_number": 3,
+      "optional_with_default": "foo",
+      "multiple": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "id": "bar",
+      "input": "resources/lines5.txt",
+      "real_number": 0.5,
+      "optional": "bar",
+      "reality": true
+    }
+  ]
+  
