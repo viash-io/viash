@@ -784,7 +784,7 @@ def workflowFactory(Map args) {
         def combinedArgs = defaultArgs + paramArgs + processArgs.args + dataArgs
 
         // remove arguments with explicit null values
-        combinedArgs.removeAll{it == null}
+        combinedArgs.removeAll{it.value == null}
 
         // check whether required arguments exist
         thisConfig.functionality.allArguments
