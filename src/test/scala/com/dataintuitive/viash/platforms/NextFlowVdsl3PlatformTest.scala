@@ -213,6 +213,62 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
   }
 
+  trait CheckArg {
+    val name: String
+    def assert(id: String, args: Map[String, String]): Unit
+  }
+  case class MatchCheck(name: String, s: String) extends CheckArg {
+    import org.scalatest.Assertions.{assert => scassert}
+    def assert(id: String, args: Map[String, String]) = {
+      scassert(args.contains(name), s"$id : args should contain $name")
+      scassert(args(name).matches(s), s"$id : args($name) should match $s")
+    }
+  }
+  case class EqualsCheck(name: String, s: String) extends CheckArg {
+    import org.scalatest.Assertions.{assert => scassert}
+    def assert(id: String, args: Map[String, String]) = {
+      scassert(args.contains(name), s"$id : args should contain $name")
+      scassert(args(name) == s, s"$id : args($name) should equal $s")
+    }
+  }
+  case class NotAvailCheck(name: String) extends CheckArg {
+    import org.scalatest.Assertions.{assert => scassert}
+    def assert(id: String, args: Map[String, String]) = {
+      scassert(!args.contains(name), s"$id : args should not contain $name")
+    }
+  }
+
+  val expectedFoo: List[CheckArg] = List(
+    MatchCheck("input", ".*/lines3.txt"),
+    EqualsCheck("real_number", "10.5"),
+    EqualsCheck("whole_number", "3"),
+    EqualsCheck("str", "foo"),
+    EqualsCheck("truth", "false"),
+    EqualsCheck("falsehood", "true"),
+    NotAvailCheck("reality"),
+    NotAvailCheck("optional"),
+    EqualsCheck("optional_with_default", "foo"),
+    EqualsCheck("multiple", "[a, b, c]")
+  )
+  val expectedBar: List[CheckArg] = List(
+    MatchCheck("input", ".*/lines5.txt"),
+    EqualsCheck("real_number", "0.5"),
+    EqualsCheck("whole_number", "10"),
+    EqualsCheck("str", "foo"),
+    EqualsCheck("truth", "false"),
+    EqualsCheck("falsehood", "true"),
+    EqualsCheck("reality", "true"),
+    EqualsCheck("optional", "bar"),
+    EqualsCheck("optional_with_default", "The default value."),
+    NotAvailCheck("multiple")
+  )
+
+  def checkDebugArgs(id: String, debugPrints: Array[(String, Map[String,String])], expectedValues: List[CheckArg]) {
+    val idDebugPrints = debugPrints.find(_._1 == "foo")
+    assert(idDebugPrints.isDefined)
+    expectedValues.foreach(_.assert(id, idDebugPrints.get._2))
+  }
+
   test("Run config pipeline", NextFlowTest) {
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
@@ -221,9 +277,10 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
         "--id", "foo",
         "--input", "resources/lines3.txt",
         "--real_number", "10.5",
-        "--whole_number", "10",
+        "--whole_number", "3",
         "--str", "foo",
-        "--multiple", "a:b:c:d",
+        "--optional_with_default", "foo",
+        "--multiple", "a:b:c",
         "--publishDir", "output",
         "-entry", "base",
       )
@@ -232,69 +289,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
 
     val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
-
-    val fooDebug = debugPrints.find(_._1 == "foo")
-    assert(fooDebug.isDefined)
-    val fooDebugArgs = fooDebug.get._2
-    assert(fooDebugArgs.contains("input"))
-    assert(fooDebugArgs("input").matches(".*/lines3.txt"))
-    assert(fooDebugArgs.contains("real_number"))
-    assert(fooDebugArgs("real_number") == "10.5")
-    assert(fooDebugArgs.contains("whole_number"))
-    assert(fooDebugArgs("whole_number") == "10")
-    assert(fooDebugArgs.contains("str"))
-    assert(fooDebugArgs("str") == "foo")
-    assert(fooDebugArgs.contains("truth"))
-    assert(fooDebugArgs("truth") == "false")
-    assert(fooDebugArgs.contains("falsehood"))
-    assert(fooDebugArgs("falsehood") == "true")
-    assert(!fooDebugArgs.contains("reality"))
-    // assert(fooDebugArgs("reality") == "null")
-    assert(!fooDebugArgs.contains("optional"))
-    // assert(fooDebugArgs("optional") == "null")
-    assert(fooDebugArgs.contains("optional_with_default"))
-    assert(fooDebugArgs("optional_with_default") == "The default value.")
-    assert(fooDebugArgs.contains("multiple"))
-    assert(fooDebugArgs("multiple") == "[a, b, c, d]")
-  }
-
-  val expectedFoo: Map[String, Option[String]] = Map(
-    ("input", Some(".*/lines3.txt")),
-    ("real_number", Some("10.5")),
-    ("whole_number", Some("3")),
-    ("str", Some("foo")),
-    ("truth", Some("false")),
-    ("falsehood", Some("true")),
-    ("reality", None),
-    ("optional", None),
-    ("optional_with_default", Some("foo")),
-    ("multiple", Some("[a, b, c]"))
-  )
-  val expectedBar: Map[String, Option[String]] = Map(
-    ("input", Some(".*/lines5.txt")),
-    ("real_number", Some("0.5")),
-    ("whole_number", Some("10")),
-    ("str", Some("foo")),
-    ("truth", Some("false")),
-    ("falsehood", Some("true")),
-    ("reality", Some("true")),
-    ("optional", Some("bar")),
-    ("optional_with_default", Some("The default value.")),
-    ("multiple", None)
-  )
-
-  def checkDebugArgs(id: String, debugArgs: Map[String, String], expectedValues: Map[String, Option[String]]) {
-    for((name, value) <- expectedValues) {
-      if (value != None) {
-        assert(debugArgs.contains(name), s"$id - contains $name")
-        if (name == "input")
-          assert(debugArgs(name).matches(value.get), s"$id - match value $name")
-        else
-          assert(debugArgs(name) == value.get, s"$id - check value $name")
-      } else {
-        assert(!debugArgs.contains(name), s"$id - not contains $name")
-      }
-    }
+    checkDebugArgs("foo", debugPrints, expectedFoo)
   }
 
   test("Run config pipeline with yamlblob", NextFlowTest) {
@@ -316,14 +311,8 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
     
     val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
-
-    val fooDebug = debugPrints.find(_._1 == "foo")
-    assert(fooDebug.isDefined)
-    checkDebugArgs("foo", fooDebug.get._2, expectedFoo)
-
-    val barDebug = debugPrints.find(_._1 == "bar")
-    assert(barDebug.isDefined)
-    checkDebugArgs("bar", barDebug.get._2, expectedBar)
+    checkDebugArgs("foo", debugPrints, expectedFoo)
+    checkDebugArgs("bar", debugPrints, expectedBar)
   }
 
   test("Run config pipeline with yaml file", NextFlowTest) {
@@ -343,14 +332,8 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
     
     val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
-
-    val fooDebug = debugPrints.find(_._1 == "foo")
-    assert(fooDebug.isDefined)
-    checkDebugArgs("foo", fooDebug.get._2, expectedFoo)
-
-    val barDebug = debugPrints.find(_._1 == "bar")
-    assert(barDebug.isDefined)
-    checkDebugArgs("bar", barDebug.get._2, expectedBar)
+    checkDebugArgs("foo", debugPrints, expectedFoo)
+    checkDebugArgs("bar", debugPrints, expectedBar)
   }
 
   test("Run config pipeline with json file", NextFlowTest) {
@@ -370,14 +353,8 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
     
     val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
-
-    val fooDebug = debugPrints.find(_._1 == "foo")
-    assert(fooDebug.isDefined)
-    checkDebugArgs("foo", fooDebug.get._2, expectedFoo)
-
-    val barDebug = debugPrints.find(_._1 == "bar")
-    assert(barDebug.isDefined)
-    checkDebugArgs("bar", barDebug.get._2, expectedBar)
+    checkDebugArgs("foo", debugPrints, expectedFoo)
+    checkDebugArgs("bar", debugPrints, expectedBar)
   }
 
   // todo: try out with paramlist json
