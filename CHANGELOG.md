@@ -16,6 +16,8 @@
 
 * `NextflowVdsl3Platform`: Fix issue where optional parameters aren't removed when `.run(args: [optarg: null])`.
 
+* `WorkflowHelper::readCsv`: Treat empty values as undefined instead of throwing an error.
+
 # Viash 0.5.14
 
 ## NEW FUNCTIONALITY
