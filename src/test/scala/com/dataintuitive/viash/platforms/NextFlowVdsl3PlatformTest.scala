@@ -20,6 +20,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   private val rootPath = getClass.getResource("/testnextflowvdsl3/").getPath
   private val srcPath = Paths.get(tempFolStr, "src").toFile.toString
   private val targetPath = Paths.get(tempFolStr, "target").toFile.toString
+  private val resourcesPath = Paths.get(tempFolStr, "resources").toFile.toString
 
   def outputFileMatchChecker(output: String, headerKeyword: String, fileContentMatcher: String) = {
     val DebugRegex = s"$headerKeyword: \\[foo, (.*)\\]".r
@@ -65,6 +66,36 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     }}
 
     debugPrints
+  }
+
+  trait CheckArg {
+    val name: String
+    def assert(id: String, args: Map[String, String]): Unit
+  }
+  case class MatchCheck(name: String, s: String) extends CheckArg {
+    import org.scalatest.Assertions.{assert => scassert}
+    def assert(id: String, args: Map[String, String]) = {
+      scassert(args.contains(name), s"$id : args should contain $name")
+      scassert(args(name).matches(s), s"$id : args($name): ${args(name)} should match $s")
+    }
+  }
+  case class EqualsCheck(name: String, s: String) extends CheckArg {
+    import org.scalatest.Assertions.{assert => scassert}
+    def assert(id: String, args: Map[String, String]) = {
+      scassert(args.contains(name), s"$id : args should contain $name")
+      scassert(args(name) == s, s"$id : args($name) should equal $s")
+    }
+  }
+  case class NotAvailCheck(name: String) extends CheckArg {
+    import org.scalatest.Assertions.{assert => scassert}
+    def assert(id: String, args: Map[String, String]) = {
+      scassert(!args.contains(name), s"$id : args should not contain $name")
+    }
+  }
+  def checkDebugArgs(id: String, debugPrints: Array[(String, Map[String,String])], expectedValues: List[CheckArg]) {
+    val idDebugPrints = debugPrints.find(_._1 == id)
+    assert(idDebugPrints.isDefined)
+    expectedValues.foreach(_.assert(id, idDebugPrints.get._2))
   }
 
   // Wrapper function to make logging of processes easier, provide default command to run nextflow from . directory
@@ -198,7 +229,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
   }
 
-    test("Run legacy and vdsl3 combined pipeline", DockerTest, NextFlowTest) {
+  test("Run legacy and vdsl3 combined pipeline", DockerTest, NextFlowTest) {
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
       Seq(
@@ -213,6 +244,31 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
   }
 
+  val expectedFoo: List[CheckArg] = List(
+    MatchCheck("input", ".*/lines3.txt"),
+    EqualsCheck("real_number", "10.5"),
+    EqualsCheck("whole_number", "3"),
+    EqualsCheck("str", "foo"),
+    EqualsCheck("truth", "false"),
+    EqualsCheck("falsehood", "true"),
+    NotAvailCheck("reality"),
+    NotAvailCheck("optional"),
+    EqualsCheck("optional_with_default", "foo"),
+    EqualsCheck("multiple", "[a, b, c]")
+  )
+  val expectedBar: List[CheckArg] = List(
+    MatchCheck("input", ".*/lines5.txt"),
+    EqualsCheck("real_number", "0.5"),
+    EqualsCheck("whole_number", "10"),
+    EqualsCheck("str", "foo"),
+    EqualsCheck("truth", "false"),
+    EqualsCheck("falsehood", "true"),
+    EqualsCheck("reality", "true"),
+    EqualsCheck("optional", "bar"),
+    EqualsCheck("optional_with_default", "The default value."),
+    NotAvailCheck("multiple")
+  )
+
   test("Run config pipeline", NextFlowTest) {
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
@@ -221,9 +277,10 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
         "--id", "foo",
         "--input", "resources/lines3.txt",
         "--real_number", "10.5",
-        "--whole_number", "10",
+        "--whole_number", "3",
         "--str", "foo",
-        "--multiple", "a:b:c:d",
+        "--optional_with_default", "foo",
+        "--multiple", "a:b:c",
         "--publishDir", "output",
         "-entry", "base",
       )
@@ -232,30 +289,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
 
     val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
-
-    val fooDebug = debugPrints.find(_._1 == "foo")
-    assert(fooDebug.isDefined)
-    val fooDebugArgs = fooDebug.get._2
-    assert(fooDebugArgs.contains("input"))
-    assert(fooDebugArgs("input").matches(".*/lines3.txt"))
-    assert(fooDebugArgs.contains("real_number"))
-    assert(fooDebugArgs("real_number") == "10.5")
-    assert(fooDebugArgs.contains("whole_number"))
-    assert(fooDebugArgs("whole_number") == "10")
-    assert(fooDebugArgs.contains("str"))
-    assert(fooDebugArgs("str") == "foo")
-    assert(fooDebugArgs.contains("truth"))
-    assert(fooDebugArgs("truth") == "false")
-    assert(fooDebugArgs.contains("falsehood"))
-    assert(fooDebugArgs("falsehood") == "true")
-    assert(!fooDebugArgs.contains("reality"))
-    // assert(fooDebugArgs("reality") == "null")
-    assert(!fooDebugArgs.contains("optional"))
-    // assert(fooDebugArgs("optional") == "null")
-    assert(fooDebugArgs.contains("optional_with_default"))
-    assert(fooDebugArgs("optional_with_default") == "The default value.")
-    assert(fooDebugArgs.contains("multiple"))
-    assert(fooDebugArgs("multiple") == "[a, b, c, d]")
+    checkDebugArgs("foo", debugPrints, expectedFoo)
   }
 
   test("Run config pipeline with yamlblob", NextFlowTest) {
@@ -277,60 +311,170 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
     
     val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
-
-    val fooDebug = debugPrints.find(_._1 == "foo")
-    assert(fooDebug.isDefined)
-    val fooDebugArgs = fooDebug.get._2
-    assert(fooDebugArgs.contains("input"))
-    assert(fooDebugArgs("input").matches(".*/lines3.txt"))
-    assert(fooDebugArgs.contains("real_number"))
-    assert(fooDebugArgs("real_number") == "10.5")
-    assert(fooDebugArgs.contains("whole_number"))
-    assert(fooDebugArgs("whole_number") == "3")
-    assert(fooDebugArgs.contains("str"))
-    assert(fooDebugArgs("str") == "foo")
-    assert(fooDebugArgs.contains("truth"))
-    assert(fooDebugArgs("truth") == "false")
-    assert(fooDebugArgs.contains("falsehood"))
-    assert(fooDebugArgs("falsehood") == "true")
-    assert(!fooDebugArgs.contains("reality"))
-    // assert(fooDebugArgs("reality") == "null")
-    assert(!fooDebugArgs.contains("optional"))
-    // assert(fooDebugArgs("optional") == "null")
-    assert(fooDebugArgs.contains("optional_with_default"))
-    assert(fooDebugArgs("optional_with_default") == "foo")
-    assert(fooDebugArgs.contains("multiple"))
-    assert(fooDebugArgs("multiple") == "[a, b, c]")
-
-    val barDebug = debugPrints.find(_._1 == "bar")
-    assert(barDebug.isDefined)
-    val barDebugArgs = barDebug.get._2
-    assert(barDebugArgs.contains("input"))
-    assert(barDebugArgs("input").matches(".*/lines5.txt"))
-    assert(barDebugArgs.contains("real_number"))
-    assert(barDebugArgs("real_number") == "0.5")
-    assert(barDebugArgs.contains("whole_number"))
-    assert(barDebugArgs("whole_number") == "10")
-    assert(barDebugArgs.contains("str"))
-    assert(barDebugArgs("str") == "foo")
-    assert(barDebugArgs.contains("truth"))
-    assert(barDebugArgs("truth") == "false")
-    assert(barDebugArgs.contains("falsehood"))
-    assert(barDebugArgs("falsehood") == "true")
-    assert(barDebugArgs.contains("reality"))
-    assert(barDebugArgs("reality") == "true")
-    assert(barDebugArgs.contains("optional"))
-    assert(barDebugArgs("optional") == "bar")
-    assert(barDebugArgs.contains("optional_with_default"))
-    assert(barDebugArgs("optional_with_default") == "The default value.")
-    assert(!barDebugArgs.contains("multiple"))
-    // assert(barDebugArgs("multiple") == "null")
+    checkDebugArgs("foo", debugPrints, expectedFoo)
+    checkDebugArgs("bar", debugPrints, expectedBar)
+    // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
+    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
   }
 
-  // todo: try out with paramlist json
-  // todo: try out with paramlist yaml
-  // todo: try out with paramlist csv
-  // todo: try out with paramlist asis
+  test("Run config pipeline with yaml file", NextFlowTest) {
+    val param_list_file = Paths.get(resourcesPath, "pipeline3.yaml").toFile.toString
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
+        "-main-script", "workflows/pipeline3/main.nf",
+        "--param_list", param_list_file,
+        "--real_number", "10.5",
+        "--whole_number", "10",
+        "--str", "foo",
+        "--publishDir", "output",
+        "-entry", "base",
+      )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
+    checkDebugArgs("foo", debugPrints, expectedFoo)
+    checkDebugArgs("bar", debugPrints, expectedBar)
+    // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
+    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+  }
+
+  test("Run config pipeline with json file", NextFlowTest) {
+    val param_list_file = Paths.get(resourcesPath, "pipeline3.json").toFile.toString
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
+        "-main-script", "workflows/pipeline3/main.nf",
+        "--param_list", param_list_file,
+        "--real_number", "10.5",
+        "--whole_number", "10",
+        "--str", "foo",
+        "--publishDir", "output",
+        "-entry", "base",
+      )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
+    checkDebugArgs("foo", debugPrints, expectedFoo)
+    checkDebugArgs("bar", debugPrints, expectedBar)
+    // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
+    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+  }
+
+  test("Run config pipeline with csv file", NextFlowTest) {
+    val param_list_file = Paths.get(resourcesPath, "pipeline3.csv").toFile.toString
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
+        "-main-script", "workflows/pipeline3/main.nf",
+        "--param_list", param_list_file,
+        "--real_number", "10.5",
+        "--whole_number", "10",
+        "--str", "foo",
+        "--publishDir", "output",
+        "-entry", "base",
+      )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
+    checkDebugArgs("foo", debugPrints, expectedFoo)
+    checkDebugArgs("bar", debugPrints, expectedBar)
+    // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
+    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+  }
+
+  test("Run config pipeline asis, default nextflow implementation", NextFlowTest) {
+    val param_list_file = Paths.get(resourcesPath, "pipeline3.asis.yaml").toFile.toString
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
+        "-main-script", "workflows/pipeline3/main.nf",
+        "--real_number", "10.5",
+        "--whole_number", "10",
+        "--str", "foo",
+        "--publishDir", "output",
+        "-entry", "base",
+        "-params-file", param_list_file
+      )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
+    checkDebugArgs("foo", debugPrints, expectedFoo)
+    checkDebugArgs("bar", debugPrints, expectedBar)
+    // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
+    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+  }
+
+  test("Run module as standalone", NextFlowTest) {
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
+        "-main-script", "target/nextflowvdsl3/step2/main.nf",
+        "--input1", "resources/lines3.txt",
+        "--input2", "resources/lines5.txt",
+        "--publish_dir", "moduleOutput1"
+      )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val src = Source.fromFile(tempFolStr+"/moduleOutput1/run.step2.output1.txt")
+    try {
+      val moduleOut = src.getLines.mkString(",")
+      assert(moduleOut.equals("one,two,three"))
+    } finally {
+      src.close()
+    }
+  }
+
+  test("Run module as standalone, yamlblob", NextFlowTest) {
+    val fooArgs = "{input1: resources/lines3.txt, input2: resources/lines5.txt}"
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
+        "-main-script", "target/nextflowvdsl3/step2/main.nf",
+        "--param_list", s"[$fooArgs]",
+        "--publish_dir", "moduleOutput2"
+      )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val src = Source.fromFile(tempFolStr+"/moduleOutput2/run.step2.output1.txt")
+    try {
+      val moduleOut = src.getLines.mkString(",")
+      assert(moduleOut.equals("one,two,three"))
+    } finally {
+      src.close()
+    }
+  }
+
+  test("Run module as standalone, test optional input", NextFlowTest) {
+
+    Files.copy(Paths.get(resourcesPath, "lines5.txt"), Paths.get(resourcesPath, "lines5-bis.txt"))
+
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
+        "-main-script", "target/nextflowvdsl3/step2/main.nf",
+        "--input1", "resources/lines3.txt",
+        "--input2", "resources/lines5.txt",
+        "--optional", "resources/lines5-bis.txt",
+        "--publish_dir", "moduleOutput3"
+      )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val src = Source.fromFile(tempFolStr+"/moduleOutput3/run.step2.output1.txt")
+    try {
+      val moduleOut = src.getLines.mkString(",")
+      assert(moduleOut.equals("one,two,three,1,2,3,4,5"))
+    } finally {
+      src.close()
+    }
+  }
 
   override def afterAll() {
     IO.deleteRecursively(temporaryFolder)

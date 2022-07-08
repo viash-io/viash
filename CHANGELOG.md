@@ -4,6 +4,12 @@
 
 * `Testbenches`: Add a testbench framework to test lots of character sequences, single or repeating to be tested in the yaml config. This can be used to later extend to other tests.
 
+* `Testbenches::vdsl3`: Add testbenches to verify functionality:
+  - Vdsl3's `param_list` (`yamlblob`, `yaml`, `json`, `csv`).
+  - NextFlow's own `params-file`.
+  - Vdsl3's recalculating resource file paths to be relative to the `param_list` file instead of the workflow file (only available for `yaml`, `json`, `csv`).
+  - Vdsl3's wrapping of modules to run these as a separate workflow automagically out of the box.
+
 * `Main`: Added `viash --schema_export` which outputs a schema of the Viash config file
   to console. This is to be used to automate populating the documentation website.
 
