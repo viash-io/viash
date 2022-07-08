@@ -451,6 +451,31 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     }
   }
 
+  test("Run module as standalone, test optional input", NextFlowTest) {
+
+    Files.copy(Paths.get(resourcesPath, "lines5.txt"), Paths.get(resourcesPath, "lines5-bis.txt"))
+
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      Seq(
+        "-main-script", "target/nextflowvdsl3/step2/main.nf",
+        "--input1", "resources/lines3.txt",
+        "--input2", "resources/lines5.txt",
+        "--optional", "resources/lines5-bis.txt",
+        "--publish_dir", "moduleOutput3"
+      )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val src = Source.fromFile(tempFolStr+"/moduleOutput3/run.step2.output1.txt")
+    try {
+      val moduleOut = src.getLines.mkString(",")
+      assert(moduleOut.equals("one,two,three,1,2,3,4,5"))
+    } finally {
+      src.close()
+    }
+  }
+
   override def afterAll() {
     IO.deleteRecursively(temporaryFolder)
   }
