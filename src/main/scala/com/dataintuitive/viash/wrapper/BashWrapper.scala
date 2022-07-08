@@ -160,10 +160,10 @@ object BashWrapper {
     }
 
     // generate script modifiers
-    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
-    val paramAndDummies = functionality.allArgumentsAndDummies.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
+    val params = functionality.allArguments
+    val paramAndDummies = functionality.allArgumentsAndDummies
 
-    val helpMods = generateHelp(functionality, params)
+    val helpMods = generateHelp(functionality)
     val parMods = generateParsers(params, paramAndDummies)
     val execMods = mainResource match {
       case Some(_: Executable) => generateExecutableArgs(params)
@@ -257,8 +257,8 @@ object BashWrapper {
   }
 
 
-  private def generateHelp(functionality: Functionality, params: List[Argument[_]]) = {
-    val help = Helper.generateHelp(functionality, params)
+  private def generateHelp(functionality: Functionality) = {
+    val help = Helper.generateHelp(functionality)
     val helpStr = help.map(h => Bash.escapeMore(h, quote = true)).mkString("  echo \"", "\"\n  echo \"", "\"")
 
     val preParse =

@@ -26,7 +26,7 @@ object Helper {
     functionality.name + functionality.version.map(" " + _).getOrElse("")
   }
 
-  def generateHelp(functionality: Functionality, params: List[Argument[_]]): List[String] = {
+  def generateHelp(functionality: Functionality): List[String] = {
     // PART 1: NAME AND VERSION
     def nameStr = nameAndVersion(functionality)
 
@@ -37,7 +37,7 @@ object Helper {
     val usageStr = functionality.usage.map("\n\nUsage:\n" + _.trim).getOrElse("")
 
     // PART 4: Options
-    val paramStrs = params.map(param => {
+    val paramStrs = functionality.allArguments.map(param => {
       val names = param.alternatives ::: List(param.name)
 
       val unnamedProps = List(
