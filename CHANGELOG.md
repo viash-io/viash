@@ -27,6 +27,8 @@
 
 * `WorkflowHelper::readCsv`: Treat empty values as undefined instead of throwing an error.
 
+* `NextflowVdsl3Platform`: Use `$NXF_TEMP` or `$VIASH_TEMP` as temporary directory if the container engine is not set to `docker`, `podman` or `charlieengine`, else set to `/tmp`.
+
 # Viash 0.5.14
 
 ## NEW FUNCTIONALITY

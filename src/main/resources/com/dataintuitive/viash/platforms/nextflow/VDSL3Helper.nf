@@ -575,8 +575,20 @@ def processFactory(Map processArgs) {
       viash_par_contents = !par.required && !par.multiple ? "viash_par_${par.plainName}[0]" : "viash_par_${par.plainName}.join(\":\")"
       "\n\${viash_par_${par.plainName}.empty ? \"\" : \"export VIASH_PAR_${par.plainName.toUpperCase()}=\\\"\" + ${viash_par_contents} + \"\\\"\"}"
     }
-  
-  def tmpDir = "/tmp" // check if component is docker based
+
+  // NOTE: if using docker, use /tmp instead of tmpDir!
+  def tmpDir = java.nio.file.Paths.get(
+    System.getenv('NXF_TEMP') ?: 
+    System.getenv('VIASH_TEMP') ?: 
+    System.getenv('VIASH_TMPDIR') ?: 
+    System.getenv('VIASH_TEMPDIR') ?: 
+    System.getenv('VIASH_TMP') ?: 
+    System.getenv('TEMP') ?: 
+    System.getenv('TMPDIR') ?: 
+    System.getenv('TEMPDIR') ?:
+    System.getenv('TMP') ?: 
+    '/tmp'
+  ).toAbsolutePath()
 
   // construct stub
   def stub = thisConfig.functionality.allArguments
@@ -611,7 +623,7 @@ def processFactory(Map processArgs) {
   |$tripQuo
   |# meta exports
   |export VIASH_META_RESOURCES_DIR="\${resourcesDir.toRealPath().toAbsolutePath()}"
-  |export VIASH_META_TEMP_DIR="${tmpDir}"
+  |export VIASH_META_TEMP_DIR="${['docker', 'podman', 'charliecloud'].any{ it == workflow.containerEngine } ? '/tmp' : tmpDir}"
   |export VIASH_META_FUNCTIONALITY_NAME="${thisConfig.functionality.name}"
   |export VIASH_META_EXECUTABLE="\\\$VIASH_META_RESOURCES_DIR/\\\$VIASH_META_FUNCTIONALITY_NAME"
   |

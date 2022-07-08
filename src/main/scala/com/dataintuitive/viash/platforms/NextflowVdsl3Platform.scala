@@ -165,6 +165,7 @@ case class NextflowVdsl3Platform(
     )
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
     val dirJson = directivesToJson.asJson.dropEmptyRecursively()
+    val dirJson2 = if (dirJson.isNull) Json.obj() else dirJson
     val funJson = functionality.asJson.dropEmptyRecursively()
     val funJsonStr = jsonPrinter.print(funJson)
       .replace("\\\\", "\\\\\\\\")
@@ -201,7 +202,7 @@ case class NextflowVdsl3Platform(
       |  // fixed arguments to be passed to script
       |  args: [:],
       |  // default directives
-      |  directives: jsonSlurper.parseText('''${jsonPrinter.print(dirJson)}'''),
+      |  directives: jsonSlurper.parseText('''${jsonPrinter.print(dirJson2)}'''),
       |  // auto settings
       |  auto: jsonSlurper.parseText('''${jsonPrinter.print(autoJson)}'''),
       |  // apply a map over the incoming tuple
