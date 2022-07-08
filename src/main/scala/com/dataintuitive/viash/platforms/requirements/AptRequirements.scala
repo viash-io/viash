@@ -18,7 +18,14 @@
 package com.dataintuitive.viash.platforms.requirements
 
 import com.dataintuitive.viash.helpers.Circe._
+import com.dataintuitive.viash.helpers.description
+import com.dataintuitive.viash.helpers.example
 
+@description("Specify which apt packages should be available in order to run the component.")
+@example("""setup:
+           |  - type: apt
+           |    packages: [ sl ]
+           |""".stripMargin, "yaml")
 case class AptRequirements(
   packages: OneOrMore[String] = Nil,
   interactive: Boolean = false,

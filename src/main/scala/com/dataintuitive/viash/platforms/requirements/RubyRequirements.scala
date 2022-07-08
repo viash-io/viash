@@ -18,7 +18,9 @@
 package com.dataintuitive.viash.platforms.requirements
 
 import com.dataintuitive.viash.helpers.Circe._
+import com.dataintuitive.viash.helpers.description
 
+@description("Specify which Ruby packages should be available in order to run the component.")
 case class RubyRequirements(
   packages: OneOrMore[String] = Nil,
   `type`: String = "ruby"

@@ -329,6 +329,14 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     hidden = true
   )
 
+  val schemaexport = opt[Boolean](
+    name = "schema_export",
+    default = Some(false),
+    descr = "Export Configuration schema information to json to allow automated documentation generation",
+    noshort = true,
+    hidden = true
+  )
+
   addSubcommand(run)
   addSubcommand(build)
   addSubcommand(test)
