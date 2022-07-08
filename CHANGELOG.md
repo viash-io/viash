@@ -10,6 +10,9 @@
   - Vdsl3's recalculating resource file paths to be relative to the `param_list` file instead of the workflow file (only available for `yaml`, `json`, `csv`).
   - Vdsl3's wrapping of modules to run these as a separate workflow automagically out of the box.
 
+* `Main`: Added `viash --schema_export` which outputs a schema of the Viash config file
+  to console. This is to be used to automate populating the documentation website.
+
 ## BUG FIXES
 
 * `NextflowVdsl3Platform`: Change how `--id` is processed when a VDSL3 module is called from the CLI.

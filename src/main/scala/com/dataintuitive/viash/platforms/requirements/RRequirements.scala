@@ -18,7 +18,21 @@
 package com.dataintuitive.viash.platforms.requirements
 
 import com.dataintuitive.viash.helpers.Circe._
+import com.dataintuitive.viash.helpers.description
+import com.dataintuitive.viash.helpers.example
 
+@description("Specify which R packages should be available in order to run the component.")
+@example("""setup: 
+           |  - type: r
+           |    cran: [ dynutils ]
+           |    bioc: [ AnnotationDbi ]
+           |    git: [ https://some.git.repository/org/repo ]
+           |    github: [ rcannood/SCORPIUS ]
+           |    gitlab: [ org/package ]
+           |    svn: [ https://path.to.svn/group/repo ]
+           |    url: [ https://github.com/hadley/stringr/archive/HEAD.zip ]
+           |    script: [ 'devtools::install(".")' ]
+           |""".stripMargin, "yaml")
 case class RRequirements(
   packages: OneOrMore[String] = Nil,
   cran: OneOrMore[String] = Nil,

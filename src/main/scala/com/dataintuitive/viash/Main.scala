@@ -29,6 +29,7 @@ import java.io.FileNotFoundException
 import java.nio.file.NoSuchFileException
 import com.dataintuitive.viash.helpers.MissingResourceFileException
 import com.dataintuitive.viash.helpers.BuildStatus._
+import com.dataintuitive.viash.helpers.CollectedSchemas
 
 object Main {
   private val pkg = getClass.getPackage
@@ -125,6 +126,8 @@ object Main {
         ViashConfig.inject(config)
       case Nil if (cli.cliexport()) =>
           CLIExport.export()
+      case Nil if (cli.schemaexport()) =>
+          CollectedSchemas.export()
       case _ =>
         Console.err.println("No subcommand was specified. See `viash --help` for more information.")
     }
