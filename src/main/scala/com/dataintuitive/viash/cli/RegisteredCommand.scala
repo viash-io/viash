@@ -24,7 +24,9 @@ import com.dataintuitive.viash.helpers.Circe._
 
 case class RegisteredCommand (
   name: String,
-  banner: Option[String],
+  bannerCommand: Option[String],
+  bannerDescription: Option[String],
+  bannerUsage: Option[String],
   footer: Option[String],
   subcommands: Seq[RegisteredCommand],
   opts: Seq[RegisteredOpt],
