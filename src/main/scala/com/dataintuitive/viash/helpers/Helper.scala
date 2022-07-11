@@ -20,6 +20,7 @@ package com.dataintuitive.viash.helpers
 import com.dataintuitive.viash.functionality.Functionality
 import com.dataintuitive.viash.functionality.arguments._
 import com.dataintuitive.viash.Main
+import com.dataintuitive.viash.functionality.ArgumentGroup
 
 object Helper {
   def nameAndVersion(functionality: Functionality): String = {
@@ -37,94 +38,107 @@ object Helper {
     val usageStr = functionality.usage.map("\n\nUsage:\n" + _.trim).getOrElse("")
 
     // PART 4: Options
-    val paramStrs = functionality.allArguments.map(param => {
-      val names = param.alternatives ::: List(param.name)
-
-      val unnamedProps = List(
-        ("required parameter", param.required),
-        ("multiple values allowed", param.multiple),
-        ("output", param.direction == Output),
-        ("file must exist", param.isInstanceOf[FileArgument] && param.asInstanceOf[FileArgument].must_exist)
-      ).filter(_._2).map(_._1)
+    val argGroupStrs = functionality.allArgumentGroups.map{argGroup =>
+      val name = argGroup.name
+      val descriptionStr = argGroup.description.map("\n    " + _ + "\n").getOrElse("")
+      val arguments = argGroup.arguments.flatMap{ argName => functionality.allArguments.find(_.plainName == argName )}
+      val argumentStrs = arguments.map(param => generateArgumentHelp(param))
       
-      val default = 
-        if (param.default.nonEmpty) {
-          Some(param.default.map(_.toString).mkString(param.multiple_sep.toString))
-        } else {
-          None
-        }
-      val example = 
-        if (param.example.nonEmpty) {
-          Some(param.example.map(_.toString).mkString(param.multiple_sep.toString))
-        } else {
-          None
-        }
-      val min = param match {
-          case p: IntegerArgument if p.min.nonEmpty =>
-            p.min.map(_.toString)
-          case p: DoubleArgument if p.min.nonEmpty =>
-            p.min.map(_.toString)
-          case _ =>
-            None
-        }
-      val max = param match {
-          case p: IntegerArgument if p.max.nonEmpty =>
-            p.max.map(_.toString)
-          case p: DoubleArgument if p.max.nonEmpty =>
-            p.max.map(_.toString)
-          case _ =>
-            None
-        }
-
-      def escapeChoice(choice: String) = {        
-        val s1 = choice.replaceAll("\\n", "\\\\n")
-        val s2 = s1.replaceAll("\"", """\\\"""")
-        s2 match {
-          case s if s.contains(',') || s != choice =>
-            "\"" + s + "\""
-          case _ =>
-            s2
-        }
-      }
-      val choices = 
-        param match {
-          case so: StringArgument if so.choices != Nil =>
-            Some("[ " + so.choices.map(escapeChoice(_)).mkString(", ") + " ]")
-          case so: IntegerArgument if so.choices != Nil =>
-            Some("[ " + so.choices.mkString(", ") + " ]")
-          case _ => None
-        }
-
-      val namedPropsStr = List(
-        ("type", Some((param.`type` :: unnamedProps).mkString(", "))),
-        ("default", default),
-        ("example", example),
-        ("choices", choices),
-        ("min", min),
-        ("max", max)
-      ).flatMap { case (name, x) =>
-        x.map("\n        " + name + ": " + _.replaceAll("\n", "\\n"))
-      }.mkString
-      
-      val descStr = param.description.map{ desc =>
-        ("\n" + desc.trim).replaceAll("\n", "\n        ")
-      }.getOrElse("")
-      
-      "\n    " +
-        names.mkString(", ") +
-        namedPropsStr +
-        descStr
-    })
+      s"\n\n$name:" +
+      descriptionStr +
+      argumentStrs.mkString("\n")
+    }
+    // val paramStrs = functionality.allArguments.map(param => generateArgumentHelp(param))
     
-    val paramStr = if (paramStrs.nonEmpty) "\n\nOptions: " + paramStrs.mkString("\n") else ""
+    // val paramStr = if (paramStrs.nonEmpty) "\n\nArguments: " + paramStrs.mkString("\n") else ""
 
     // FINAL: combine
     val out = nameStr + 
       descrStr +
       usageStr + 
-      paramStr
+      // paramStr +
+      argGroupStrs.mkString
 
     Format.paragraphWrap(out, 80).toList
+  }
+
+  def generateArgumentHelp(param: Argument[_]) = {
+    val names = param.alternatives ::: List(param.name)
+
+    val unnamedProps = List(
+      ("required parameter", param.required),
+      ("multiple values allowed", param.multiple),
+      ("output", param.direction == Output),
+      ("file must exist", param.isInstanceOf[FileArgument] && param.asInstanceOf[FileArgument].must_exist)
+    ).filter(_._2).map(_._1)
+    
+    val default = 
+      if (param.default.nonEmpty) {
+        Some(param.default.map(_.toString).mkString(param.multiple_sep.toString))
+      } else {
+        None
+      }
+    val example = 
+      if (param.example.nonEmpty) {
+        Some(param.example.map(_.toString).mkString(param.multiple_sep.toString))
+      } else {
+        None
+      }
+    val min = param match {
+        case p: IntegerArgument if p.min.nonEmpty =>
+          p.min.map(_.toString)
+        case p: DoubleArgument if p.min.nonEmpty =>
+          p.min.map(_.toString)
+        case _ =>
+          None
+      }
+    val max = param match {
+        case p: IntegerArgument if p.max.nonEmpty =>
+          p.max.map(_.toString)
+        case p: DoubleArgument if p.max.nonEmpty =>
+          p.max.map(_.toString)
+        case _ =>
+          None
+      }
+
+    def escapeChoice(choice: String) = {        
+      val s1 = choice.replaceAll("\\n", "\\\\n")
+      val s2 = s1.replaceAll("\"", """\\\"""")
+      s2 match {
+        case s if s.contains(',') || s != choice =>
+          "\"" + s + "\""
+        case _ =>
+          s2
+      }
+    }
+    val choices = 
+      param match {
+        case so: StringArgument if so.choices != Nil =>
+          Some("[ " + so.choices.map(escapeChoice(_)).mkString(", ") + " ]")
+        case so: IntegerArgument if so.choices != Nil =>
+          Some("[ " + so.choices.mkString(", ") + " ]")
+        case _ => None
+      }
+
+    val namedPropsStr = List(
+      ("type", Some((param.`type` :: unnamedProps).mkString(", "))),
+      ("default", default),
+      ("example", example),
+      ("choices", choices),
+      ("min", min),
+      ("max", max)
+    ).flatMap { case (name, x) =>
+      x.map("\n        " + name + ": " + _.replaceAll("\n", "\\n"))
+    }.mkString
+    
+    val descStr = param.description.map{ desc =>
+      ("\n" + desc.trim).replaceAll("\n", "\n        ")
+    }.getOrElse("")
+    
+    "\n    " +
+      names.mkString(", ") +
+      namedPropsStr +
+      descStr
   }
 
   def generateScriptHeader(functionality: Functionality): List[String] = {
