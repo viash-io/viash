@@ -76,6 +76,7 @@ case class Functionality(
                  | - `required: true/false`, whether the argument is required. If true and the functionality is executed, an error will be produced if no value is provided. Default = false.
                  | - `multiple: true/false`, whether to treat the argument value as an array or not. Arrays can be passed using the delimiter `--foo=1:2:3` or by providing the same argument multiple times `--foo 1 --foo 2`. Default = false.
                  | - `multiple_sep: ":"`, the delimiter for providing multiple values. Default = “:”.
+                 | - `must_exist: true/false`, denotes whether the file or folder should exist at the start of the execution. Only when 'type' is 'file'.
                  |
                  |On types: 
                  |
@@ -86,12 +87,8 @@ case class Functionality(
                  | * `type: boolean_true/boolean_false`, Arguments of this type can only be used by providing a flag `--foo` or not. The resulting value is a ‘bool’ in Python and a ‘logical’ in R. These properties cannot be altered: required is false, default is undefined, multiple is false.
                  | * `type: file`, The resulting value is still an ‘str’ in Python and a ‘character’ in R. In order to correctly pass files in some platforms (e.g. Docker and Nextflow), Viash needs to know which arguments are input/output files.
                  |
-                 |Additional property values:
-                 |
-                 | - `must_exist: true/false`, denotes whether the file or folder should exist at the start of the execution.
-                 |
                  |""".stripMargin)
-  @example("""- name: --foo                           
+  @example("""- name: --foo
              |  type: file
              |  alternatives: [-f]
              |  description: Description of foo
@@ -103,6 +100,21 @@ case class Functionality(
              |""".stripMargin, "yaml")
   arguments: List[Argument[_]] = Nil,
 
+  @description("""A grouping of the arguments, used to display the help message.
+                 |
+                 | - `name: foo`, the name of the argument group. 
+                 | - `description: Description of foo`, a description of the argument group. Multiline descriptions are supported.
+                 | - `arguments: [arg1, arg2, ...]`, list of the arguments names.
+                 |
+                 |""".stripMargin)
+  @example("""- name: "Input"
+             |  arguments: [ id, input1, input2 ]
+             |- name: "Output"
+             |  arguments: [ output, optional_output ]
+             |- name: "Foo"
+             |  description: Arguments related to the foo functionality of this component.
+             |  arguments: [ foo, bar, zing, bork ]
+             |""".stripMargin, "yaml")
   @since("Viash 0.5.14")
   argument_groups: List[ArgumentGroup] = Nil,
 
