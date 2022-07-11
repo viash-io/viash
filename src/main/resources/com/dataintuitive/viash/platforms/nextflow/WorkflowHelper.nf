@@ -10,6 +10,7 @@ import groovy.json.JsonSlurper
 import groovy.text.SimpleTemplateEngine
 import org.yaml.snakeyaml.Yaml
 
+// param helpers //
 def paramExists(name) {
   return params.containsKey(name) && params[name] != ""
 }
@@ -20,6 +21,7 @@ def assertParamExists(name, description) {
   }
 }
 
+// helper functions for reading params from file //
 def getChild(parent, child) {
   if (child.contains("://") || Paths.get(child).isAbsolute()) {
     child
@@ -101,6 +103,9 @@ def readYaml(file) {
   yamlSlurper.load(inputFile)
 }
 
+// helper functions for reading a viash config in groovy //
+
+// based on how Functionality.scala is implemented
 def processArgument(arg) {
   arg.multiple = arg.multiple ?: false
   arg.required = arg.required ?: false
@@ -142,7 +147,7 @@ def processArgument(arg) {
   arg
 }
 
-// based on Functionality.scala
+// based on how Functionality.scala is implemented
 def processArgumentGroup(argumentGroups, name, arguments) {
   def argNamesInGroups = argumentGroups.collect{it.arguments}.flatten().toSet()
 
@@ -164,6 +169,7 @@ def processArgumentGroup(argumentGroups, name, arguments) {
   }
 }
 
+// based on how Functionality.scala is implemented
 def processConfig(config) {
   // TODO: assert .functionality etc.
 
@@ -214,7 +220,7 @@ def readConfig(file) {
   processConfig(config)
 }
 
-
+// recursively merge two maps
 def mergeMap(Map lhs, Map rhs) {
   return rhs.inject(lhs.clone()) { map, entry ->
     if (map[entry.key] instanceof Map && entry.value instanceof Map) {
@@ -276,19 +282,53 @@ def addGlobalParams(config) {
   return processConfig(mergeMap(config, localConfig))
 }
 
-// TODO: port Format.paragraphWrap!
-// def trimOutput(String input, int width) {
-//   input.split( '\n' ).
-//     collect{chars ->
-//       chars.
-//         toList().
-//         collate(width).
-//         collect{ it.join() }.
-//         join("\n")
-//     }.
-//     flatten().
-//     join("\n")
-// }
+// helper functions for generating help // 
+
+// based on io.viash.helpers.Format.wordWrap
+def formatWordWrap(str, maxLength) {
+  def words = str.split("\\s").toList()
+
+  def word = null
+  def line = ""
+  def lines = []
+  while(!words.isEmpty()) {
+    word = words.pop()
+    if (line.length() + word.length() + 1 <= maxLength) {
+      line = line + " " + word
+    } else {
+      lines.add(line)
+      line = word
+    }
+    if (words.isEmpty()) {
+      lines.add(line)
+    }
+  }
+  return lines
+}
+
+// based on Format.paragraphWrap
+def paragraphWrap(str, maxLength) {
+  def outLines = []
+  str.split("\n").each{par ->
+    def words = par.split("\\s").toList()
+
+    def word = null
+    def line = words.pop()
+    while(!words.isEmpty()) {
+      word = words.pop()
+      if (line.length() + word.length() + 1 <= maxLength) {
+        line = line + " " + word
+      } else {
+        outLines.add(line)
+        line = word
+      }
+    }
+    if (words.isEmpty()) {
+      outLines.add(line)
+    }
+  }
+  return outLines
+}
 
 def generateArgumentHelp(param) {
   // alternatives are not supported
@@ -343,9 +383,9 @@ def generateArgumentHelp(param) {
   
   def descStr = param.description == null ?
     "" :
-    ("\n" + param.description.trim()).replaceAll("\n", "\n        ")
+    paragraphWrap("\n" + param.description.trim(), 80 - 8).join("\n        ")
   
-  "\n    " + param.name +
+  "\n    --" + param.plainName +
     namedPropsStr +
     descStr
 }
@@ -360,7 +400,7 @@ def generateHelp(config) {
   // PART 2: DESCRIPTION
   def descrStr = fun.description == null ? 
     "" :
-    "\n\n" + fun.description.trim()
+    "\n\n" + paragraphWrap(fun.description.trim(), 80).join("\n")
 
   // PART 3: Usage
   def usageStr = fun.usage == null ? 
@@ -372,7 +412,7 @@ def generateHelp(config) {
     def name = argGroup.name
     def descriptionStr = argGroup.description == null ?
       "" :
-      "\n    " + argGroup.description + "\n"
+      "\n    " + paragraphWrap(argGroup.description.trim(), 80-4).join("\n    ") + "\n"
     def arguments = argGroup.arguments.collect{argName -> 
       fun.allArguments.find{it.plainName == argName}
     }.findAll{it != null}
@@ -389,7 +429,6 @@ def generateHelp(config) {
     usageStr + 
     argGroupStrs.join("")
 
-  // return trimOutput(out, 80)
   return out
 }
 
