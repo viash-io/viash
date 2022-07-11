@@ -23,16 +23,19 @@ import com.dataintuitive.viash.Main
 import com.dataintuitive.viash.functionality.ArgumentGroup
 
 object Helper {
+  private val maxWidth: Int = 80
+
   def nameAndVersion(functionality: Functionality): String = {
     functionality.name + functionality.version.map(" " + _).getOrElse("")
   }
 
+  // NOTE! changes to this function should also be ported to WorkflowHelper.nf::generateHelp
   def generateHelp(functionality: Functionality): List[String] = {
     // PART 1: NAME AND VERSION
     def nameStr = nameAndVersion(functionality)
 
     // PART 2: DESCRIPTION
-    val descrStr = functionality.description.map("\n\n" + _.trim).getOrElse("")
+    val descrStr = functionality.description.map(des => "\n\n" + Format.paragraphWrap(des.trim, maxWidth).mkString("\n")).getOrElse("")
 
     // PART 3: Usage
     val usageStr = functionality.usage.map("\n\nUsage:\n" + _.trim).getOrElse("")
@@ -40,7 +43,9 @@ object Helper {
     // PART 4: Options
     val argGroupStrs = functionality.allArgumentGroups.map{argGroup =>
       val name = argGroup.name
-      val descriptionStr = argGroup.description.map("\n    " + _ + "\n").getOrElse("")
+      val descriptionStr = argGroup.description.map{
+        des => "\n    " + Format.paragraphWrap(des.trim, maxWidth-4).mkString("\n    ") + "\n"
+      }.getOrElse("")
       val arguments = argGroup.arguments.flatMap{ argName => functionality.allArguments.find(_.plainName == argName )}
       val argumentStrs = arguments.map(param => generateArgumentHelp(param))
       
@@ -48,20 +53,17 @@ object Helper {
       descriptionStr +
       argumentStrs.mkString("\n")
     }
-    // val paramStrs = functionality.allArguments.map(param => generateArgumentHelp(param))
-    
-    // val paramStr = if (paramStrs.nonEmpty) "\n\nArguments: " + paramStrs.mkString("\n") else ""
 
     // FINAL: combine
     val out = nameStr + 
       descrStr +
       usageStr + 
-      // paramStr +
       argGroupStrs.mkString
 
     Format.paragraphWrap(out, 80).toList
   }
 
+  // NOTE! changes to this function should also be ported to WorkflowHelper.nf::generateArgumentHelp
   def generateArgumentHelp(param: Argument[_]) = {
     val names = param.alternatives ::: List(param.name)
 
@@ -132,7 +134,7 @@ object Helper {
     }.mkString
     
     val descStr = param.description.map{ desc =>
-      ("\n" + desc.trim).replaceAll("\n", "\n        ")
+      Format.paragraphWrap("\n" + desc.trim, maxWidth-8).mkString("\n        ")
     }.getOrElse("")
     
     "\n    " +

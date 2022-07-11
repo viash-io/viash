@@ -207,7 +207,7 @@ case class Functionality(
   }
 
   private def addToArgGroup(argumentGroups: List[ArgumentGroup], name: String, arguments: List[Argument[_]]): List[ArgumentGroup] = {
-    val argNamesInGroups = argument_groups.flatMap(_.arguments).toSet
+    val argNamesInGroups = argumentGroups.flatMap(_.arguments).toSet
 
     // Check if 'arguments' is in 'argumentGroups'. 
     val argumentsNotInGroup = arguments.map(_.plainName).filter(argName => !argNamesInGroups.contains(argName))
@@ -235,8 +235,6 @@ case class Functionality(
   }
 
   def allArgumentGroups: List[ArgumentGroup] = {
-    val argNamesInGroups = argument_groups.flatMap(_.arguments).toSet
-
     val inputGroup = addToArgGroup(argument_groups, "Inputs", inputs)
     val outputGroup = addToArgGroup(argument_groups, "Outputs", outputs)
     val defaultGroup = addToArgGroup(argument_groups, "Arguments", arguments)
