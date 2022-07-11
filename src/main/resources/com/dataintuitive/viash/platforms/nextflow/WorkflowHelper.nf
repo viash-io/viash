@@ -163,6 +163,11 @@ def processConfig(config) {
     config.functionality.inputs +
     config.functionality.outputs +
     config.functionality.arguments
+  config.functionality.argument_groups = 
+    (config.functionality.argument_groups ?: []).collect{grp ->
+      grp.arguments = (grp.arguments ?: []).collect{arg_name -> arg_name.replaceAll("^-*", "")}
+      // TODO: add Inputs, Outputs and Arguments if need be
+    }
   config
 }
 
@@ -221,7 +226,7 @@ def helpMessage(params, config) {
             'multiple': false
           ],
         ],
-        "arguments_groups": [
+        "argument_groups": [
           [
             "name": "Global",
             "description": "Nextflow-related arguments.",
@@ -230,12 +235,13 @@ def helpMessage(params, config) {
         ]
       ]
     ]
+
     def mergedConfig = processConfig(mergeMap(config, localConfig))
 
     def template = '''\
     |${functionality.name}
     |<%= (functionality.description) ? "\\n" + functionality.description.trim() : "<<REMOVE>>" %>
-    |<% for (group in (functionality.arguments_groups.size() > 1 ) ? functionality.arguments_groups : [ [ name: "Options", arguments: functionality.allArguments.collect{ it.plainName } ] ] ) { %>
+    |<% for (group in (functionality.argument_groups.size() > 1 ) ? functionality.argument_groups : [ [ name: "Options", arguments: functionality.allArguments.collect{ it.plainName } ] ] ) { %>
     |<%= group.name ? group.name + (group.name == "Options" ? ":" : " options:"): "" %>
     |<%= group.description ? "    " + group.description.trim().replaceAll("\\n", "\\n    ") + "\\n" : "<<REMOVE>>" %><% for (argument in functionality.allArguments) { %><% if (group.arguments.contains(argument.plainName)) { %>
     |    <%= "--" + argument.plainName %>

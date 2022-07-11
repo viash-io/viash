@@ -205,6 +205,45 @@ case class Functionality(
       require(args.length == 1, s"argument '${arg}' can be in at most one argument group")
     }
   }
+
+  private def addToArgGroup(argumentGroups: List[ArgumentGroup], name: String, arguments: List[Argument[_]]): List[ArgumentGroup] = {
+    val argNamesInGroups = argument_groups.flatMap(_.arguments).toSet
+
+    // Check if 'arguments' is in 'argumentGroups'. 
+    val argumentsNotInGroup = arguments.map(_.plainName).filter(argName => !argNamesInGroups.contains(argName))
+
+    // Check whether an argument group of 'name' exists.
+    val existing = argumentGroups.find(gr => name == gr.name)
+
+    // if there are no arguments missing from the argument group, just return the existing group (if any)
+    if (argumentsNotInGroup.isEmpty) {
+      existing.toList
+
+    // if there are missing arguments and there is an existing group, add the missing arguments to it
+    } else if (existing.isDefined) {
+      List(existing.get.copy(
+        arguments = existing.get.arguments.toList ::: argumentsNotInGroup
+      ))
+    
+    // else create a new group
+    } else {
+      List(ArgumentGroup(
+        name = name,
+        arguments = argumentsNotInGroup
+      ))
+    }
+  }
+
+  def allArgumentGroups: List[ArgumentGroup] = {
+    val argNamesInGroups = argument_groups.flatMap(_.arguments).toSet
+
+    val inputGroup = addToArgGroup(argument_groups, "Inputs", inputs)
+    val outputGroup = addToArgGroup(argument_groups, "Outputs", outputs)
+    val defaultGroup = addToArgGroup(argument_groups, "Arguments", arguments)
+    val groupsFiltered = argument_groups.filter(gr => !List("Inputs", "Outputs", "Arguments").contains(gr.name))
+
+    inputGroup ::: outputGroup ::: groupsFiltered ::: defaultGroup
+  }
     
   // check whether there are not multiple positional arguments with multiplicity >1
   // and if there is one, whether its position is last
