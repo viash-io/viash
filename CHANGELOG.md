@@ -13,6 +13,12 @@
 * `Main`: Added `viash --schema_export` which outputs a schema of the Viash config file
   to console. This is to be used to automate populating the documentation website.
 
+* `Helper`: Split help message by argument group.
+
+* `Helper`: Remove unneeded arguments.
+
+* `Functionality`: Add default groups `Inputs`, `Outputs` and `Arguments` for all arguments missing from user-defined `argument_groups`.
+
 ## BUG FIXES
 
 * `NextflowVdsl3Platform`: Change how `--id` is processed when a VDSL3 module is called from the CLI.
