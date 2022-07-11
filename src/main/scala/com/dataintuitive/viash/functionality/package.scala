@@ -56,7 +56,7 @@ package object functionality {
         case None => fun1
       }
 
-      // provide backwords compability for tests -> test_resources
+      // provide backwards compability for tests -> test_resources
       val fun3 = (fun2.contains("tests"), fun2.contains("test_resources")) match {
         case (true, true) => 
           Console.err.println("Error: functionality.tests is deprecated. Please use functionality.test_resources instead.")
