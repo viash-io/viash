@@ -271,8 +271,7 @@ def addGlobalParams(config) {
       ],
       "argument_groups": [
         [
-          "name": "Global",
-          "description": "Nextflow-related arguments.",
+          "name": "Nextflow input/output arguments",
           "arguments" : [ "publish_dir", "param_list", "param_list_format" ]
         ]
       ]
