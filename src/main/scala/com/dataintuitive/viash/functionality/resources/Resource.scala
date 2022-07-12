@@ -66,7 +66,7 @@ trait Resource {
     if (dest.isDefined) {
       dest.get
     } else {
-      basenameRegex.replaceFirstIn(path.get, "")
+      basenameRegex.replaceFirstIn(path.get.stripSuffix("/"), "")
     }
   }
   /**
