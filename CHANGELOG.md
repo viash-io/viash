@@ -1,5 +1,9 @@
 # VIASH 0.5.15
 
+## BREAKING CHANGES
+
+* `WorkflowHelper::helpMessage`: Now only takes one argument, namely the config.
+
 ## MINOR CHANGES
 
 * `Testbenches`: Add a testbench framework to test lots of character sequences, single or repeating to be tested in the yaml config. This can be used to later extend to other tests.
@@ -12,6 +16,14 @@
 
 * `Main`: Added `viash --schema_export` which outputs a schema of the Viash config file
   to console. This is to be used to automate populating the documentation website.
+
+* `Helper`: Split help message by argument group.
+
+* `Helper`: Remove unneeded arguments.
+
+* `Functionality`: Add default groups `Inputs`, `Outputs` and `Arguments` for all arguments missing from user-defined `argument_groups`.
+
+* `WorkflowHelper::helpMessage`: Rewrite to bring on par with Viash's help message.
 
 ## BUG FIXES
 

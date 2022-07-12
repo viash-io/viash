@@ -21,6 +21,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   private val srcPath = Paths.get(tempFolStr, "src").toFile.toString
   private val targetPath = Paths.get(tempFolStr, "target").toFile.toString
   private val resourcesPath = Paths.get(tempFolStr, "resources").toFile.toString
+  private val workflowsPath = Paths.get(tempFolStr, "workflows").toFile.toString
 
   def outputFileMatchChecker(output: String, headerKeyword: String, fileContentMatcher: String) = {
     val DebugRegex = s"$headerKeyword: \\[foo, (.*)\\]".r
@@ -100,18 +101,33 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
 
   // Wrapper function to make logging of processes easier, provide default command to run nextflow from . directory
   // TODO: consider reading nextflow dot files and provide extra info of which workflow step fails and how
-  def runNextflowProcess(variableCommand: Seq[String], cwd: File = new File(tempFolStr), extraEnv: Seq[(String, String)] = Nil): (Int, String, String) = {
+  def runNextflowProcess(
+    mainScript: String,
+    args: List[String],
+    entry: Option[String] = None,
+    paramsFile: Option[String] = None,
+    cwd: File = new File(tempFolStr), 
+    extraEnv: Seq[(String, String)] = Nil,
+    quiet: Boolean = false
+  ): (Int, String, String) = {
 
     import sys.process._
 
     val stdOut = new StringBuilder
     val stdErr = new StringBuilder
 
-    val fixedCommand = Seq("nextflow", "run", ".")
+    val command = 
+      "nextflow" :: 
+        { if (quiet) List("-q") else Nil } ::: 
+        "run" :: "." :: 
+        "-main-script" :: mainScript :: 
+        { if (entry.isDefined) List("-entry", entry.get) else Nil } :::
+        { if (paramsFile.isDefined) List("-params-file", paramsFile.get) else Nil } :::
+        args
 
     val extraEnv_ = extraEnv :+ ( "NXF_VER" -> "21.04.1" )
 
-    val exitCode = Process(fixedCommand ++ variableCommand, cwd, extraEnv_ : _*).!(ProcessLogger(str => stdOut ++= s"$str\n", str => stdErr ++= s"$str\n"))
+    val exitCode = Process(command, cwd, extraEnv_ : _*).!(ProcessLogger(str => stdOut ++= s"$str\n", str => stdErr ++= s"$str\n"))
 
     (exitCode, stdOut.toString, stdErr.toString)
   }
@@ -131,15 +147,15 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
       "--setup", "cb"
     )
   }
-
+  
   test("Run pipeline", DockerTest, NextFlowTest) {
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      Seq(
-      "-main-script", "workflows/pipeline1/main.nf",
-      "--input", "resources/*",
-      "--publishDir", "output",
-      "-entry", "base",
+      mainScript = "workflows/pipeline1/main.nf",
+      entry = Some("base"),
+      args = List(
+        "--input", "resources/*",
+        "--publish_dir", "output",
       )
     )
 
@@ -150,11 +166,11 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   test("Run pipeline with components using map functionality", DockerTest, NextFlowTest) {
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      Seq(
-      "-main-script", "workflows/pipeline1/main.nf",
-      "--input", "resources/*",
-      "--publishDir", "output",
-      "-entry", "map_variant",
+      mainScript = "workflows/pipeline1/main.nf",
+      entry = Some("map_variant"),
+      args = List(
+        "--input", "resources/*",
+        "--publish_dir", "output",
       )
     )
 
@@ -165,11 +181,11 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   test("Run pipeline with components using mapData functionality", DockerTest, NextFlowTest) {
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      Seq(
-      "-main-script", "workflows/pipeline1/main.nf",
-      "--input", "resources/*",
-      "--publishDir", "output",
-      "-entry", "mapData_variant",
+      mainScript = "workflows/pipeline1/main.nf",
+      entry = Some("mapData_variant"),
+      args = List(
+        "--input", "resources/*",
+        "--publish_dir", "output",
       )
     )
 
@@ -180,13 +196,13 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   test("Run pipeline with debug = false", DockerTest, NextFlowTest) {
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      Seq(
-        "-main-script", "workflows/pipeline1/main.nf",
+      mainScript = "workflows/pipeline1/main.nf",
+      entry = Some("debug_variant"),
+      args = List(
         "--input", "resources/*",
-        "--publishDir", "output",
-        "-entry", "debug_variant",
+        "--publish_dir", "output",
         "--displayDebug", "false",
-        )
+      )
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -200,13 +216,13 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   test("Run pipeline with debug = true", DockerTest, NextFlowTest) {
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      Seq(
-        "-main-script", "workflows/pipeline1/main.nf",
+      mainScript = "workflows/pipeline1/main.nf",
+      entry = Some("debug_variant"),
+      args = List(
         "--input", "resources/*",
-        "--publishDir", "output",
-        "-entry", "debug_variant",
+        "--publish_dir", "output",
         "--displayDebug", "true",
-        )
+      )
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -217,12 +233,12 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   test("Run legacy pipeline", DockerTest, NextFlowTest) {
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      Seq(
-        "-main-script", "workflows/pipeline2/main.nf",
+      mainScript = "workflows/pipeline2/main.nf",
+      entry = Some("legacy_base"),
+      args = List(
         "--input", "resources/*",
-        "--publishDir", "output",
-        "-entry", "legacy_base",
-        )
+        "--publish_dir", "output",
+      )
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -232,12 +248,12 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   test("Run legacy and vdsl3 combined pipeline", DockerTest, NextFlowTest) {
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      Seq(
-        "-main-script", "workflows/pipeline2/main.nf",
+      mainScript = "workflows/pipeline2/main.nf",
+      entry = Some("legacy_and_vdsl3"),
+      args = List(
         "--input", "resources/*",
-        "--publishDir", "output",
-        "-entry", "legacy_and_vdsl3",
-        )
+        "--publish_dir", "output",
+      )
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -249,8 +265,6 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     EqualsCheck("real_number", "10.5"),
     EqualsCheck("whole_number", "3"),
     EqualsCheck("str", "foo"),
-    EqualsCheck("truth", "false"),
-    EqualsCheck("falsehood", "true"),
     NotAvailCheck("reality"),
     NotAvailCheck("optional"),
     EqualsCheck("optional_with_default", "foo"),
@@ -261,8 +275,6 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     EqualsCheck("real_number", "0.5"),
     EqualsCheck("whole_number", "10"),
     EqualsCheck("str", "foo"),
-    EqualsCheck("truth", "false"),
-    EqualsCheck("falsehood", "true"),
     EqualsCheck("reality", "true"),
     EqualsCheck("optional", "bar"),
     EqualsCheck("optional_with_default", "The default value."),
@@ -272,8 +284,9 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   test("Run config pipeline", NextFlowTest) {
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      Seq(
-        "-main-script", "workflows/pipeline3/main.nf",
+      mainScript = "workflows/pipeline3/main.nf",
+      entry = Some("base"),
+      args = List(
         "--id", "foo",
         "--input", "resources/lines3.txt",
         "--real_number", "10.5",
@@ -281,8 +294,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
         "--str", "foo",
         "--optional_with_default", "foo",
         "--multiple", "a:b:c",
-        "--publishDir", "output",
-        "-entry", "base",
+        "--publish_dir", "output",
       )
     )
 
@@ -297,14 +309,14 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     val barArgs = "{id: bar, input: resources/lines5.txt, real_number: 0.5, optional: bar, reality: true}"
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      Seq(
-        "-main-script", "workflows/pipeline3/main.nf",
+      mainScript = "workflows/pipeline3/main.nf",
+      entry = Some("base"),
+      args = List(
         "--param_list", s"[$fooArgs, $barArgs]",
         "--real_number", "10.5",
         "--whole_number", "10",
         "--str", "foo",
-        "--publishDir", "output",
-        "-entry", "base",
+        "--publish_dir", "output",
       )
     )
 
@@ -320,15 +332,15 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   test("Run config pipeline with yaml file", NextFlowTest) {
     val param_list_file = Paths.get(resourcesPath, "pipeline3.yaml").toFile.toString
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      Seq(
-        "-main-script", "workflows/pipeline3/main.nf",
+      mainScript = "workflows/pipeline3/main.nf",
+      entry = Some("base"),
+      args = List(
         "--param_list", param_list_file,
         "--real_number", "10.5",
         "--whole_number", "10",
         "--str", "foo",
-        "--publishDir", "output",
-        "-entry", "base",
-      )
+        "--publish_dir", "output",
+        )
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -343,15 +355,15 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   test("Run config pipeline with json file", NextFlowTest) {
     val param_list_file = Paths.get(resourcesPath, "pipeline3.json").toFile.toString
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      Seq(
-        "-main-script", "workflows/pipeline3/main.nf",
+      mainScript = "workflows/pipeline3/main.nf",
+      entry = Some("base"),
+      args = List(
         "--param_list", param_list_file,
         "--real_number", "10.5",
         "--whole_number", "10",
         "--str", "foo",
-        "--publishDir", "output",
-        "-entry", "base",
-      )
+        "--publish_dir", "output",
+        )
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -366,15 +378,15 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   test("Run config pipeline with csv file", NextFlowTest) {
     val param_list_file = Paths.get(resourcesPath, "pipeline3.csv").toFile.toString
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      Seq(
-        "-main-script", "workflows/pipeline3/main.nf",
+      mainScript = "workflows/pipeline3/main.nf",
+      entry = Some("base"),
+      args = List(
         "--param_list", param_list_file,
         "--real_number", "10.5",
         "--whole_number", "10",
         "--str", "foo",
-        "--publishDir", "output",
-        "-entry", "base",
-      )
+        "--publish_dir", "output",
+        )
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -389,14 +401,14 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   test("Run config pipeline asis, default nextflow implementation", NextFlowTest) {
     val param_list_file = Paths.get(resourcesPath, "pipeline3.asis.yaml").toFile.toString
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      Seq(
-        "-main-script", "workflows/pipeline3/main.nf",
+      mainScript = "workflows/pipeline3/main.nf",
+      entry = Some("base"),
+      paramsFile = Some(param_list_file),
+      args = List(
         "--real_number", "10.5",
         "--whole_number", "10",
         "--str", "foo",
-        "--publishDir", "output",
-        "-entry", "base",
-        "-params-file", param_list_file
+        "--publish_dir", "output",
       )
     )
 
@@ -411,8 +423,8 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
 
   test("Run module as standalone", NextFlowTest) {
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      Seq(
-        "-main-script", "target/nextflowvdsl3/step2/main.nf",
+      mainScript = "target/nextflowvdsl3/step2/main.nf",
+      args = List(
         "--input1", "resources/lines3.txt",
         "--input2", "resources/lines5.txt",
         "--publish_dir", "moduleOutput1"
@@ -433,8 +445,8 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   test("Run module as standalone, yamlblob", NextFlowTest) {
     val fooArgs = "{input1: resources/lines3.txt, input2: resources/lines5.txt}"
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      Seq(
-        "-main-script", "target/nextflowvdsl3/step2/main.nf",
+      mainScript = "target/nextflowvdsl3/step2/main.nf",
+      args = List(
         "--param_list", s"[$fooArgs]",
         "--publish_dir", "moduleOutput2"
       )
@@ -456,8 +468,8 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     Files.copy(Paths.get(resourcesPath, "lines5.txt"), Paths.get(resourcesPath, "lines5-bis.txt"))
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      Seq(
-        "-main-script", "target/nextflowvdsl3/step2/main.nf",
+      mainScript = "target/nextflowvdsl3/step2/main.nf",
+      args = List(
         "--input1", "resources/lines3.txt",
         "--input2", "resources/lines5.txt",
         "--optional", "resources/lines5-bis.txt",
@@ -474,6 +486,42 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     } finally {
       src.close()
     }
+  }
+
+  test("Check whether --help is same as Viash's --help", NextFlowTest) {
+    // except that WorkflowHelper.nf will not print alternatives, and
+    // will always prefix argument names with -- (so --foo, not -f or foo).
+
+    // run WorkflowHelper's --help
+    val (exitCode, stdOut1, stdErr1) = runNextflowProcess(
+      mainScript = "workflows/utils/HelpViewer.nf",
+      args = List(
+        "--help",
+        "--rootDir", tempFolStr,
+        "--config", "workflows/pipeline3/config.vsh.yaml"
+      ),
+      quiet = true
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut1\nStd error:\n$stdErr1")
+
+    // explicitly remove defaults set by output files
+    // these defaults make sense in nextflow but not in viash
+    val correctedStdOut1 = stdOut1.replaceAll("        default: \\$id\\.\\$key\\.[^\n]*\n", "")
+    // explicitly remove global arguments
+    // these arguments make sense in nextflow but not in viash
+    import java.util.regex.Pattern
+    val regex = Pattern.compile("Nextflow input/output arguments:.*Arguments:", Pattern.DOTALL)
+    val correctedStdOut2 = regex.matcher(correctedStdOut1).replaceAll("Arguments:")
+
+    // run Viash's --help
+    val (stdOut2, stdErr2) = TestHelper.testMainWithStdErr(
+      "run", workflowsPath + "/pipeline3/config.vsh.yaml",
+      "--", "--help"
+    )
+
+    // check if they are the same
+    assert(correctedStdOut2 == stdOut2)
   }
 
   override def afterAll() {

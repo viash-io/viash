@@ -76,6 +76,7 @@ case class Functionality(
                  | - `required: true/false`, whether the argument is required. If true and the functionality is executed, an error will be produced if no value is provided. Default = false.
                  | - `multiple: true/false`, whether to treat the argument value as an array or not. Arrays can be passed using the delimiter `--foo=1:2:3` or by providing the same argument multiple times `--foo 1 --foo 2`. Default = false.
                  | - `multiple_sep: ":"`, the delimiter for providing multiple values. Default = “:”.
+                 | - `must_exist: true/false`, denotes whether the file or folder should exist at the start of the execution. Only when 'type' is 'file'.
                  |
                  |On types: 
                  |
@@ -86,12 +87,8 @@ case class Functionality(
                  | * `type: boolean_true/boolean_false`, Arguments of this type can only be used by providing a flag `--foo` or not. The resulting value is a ‘bool’ in Python and a ‘logical’ in R. These properties cannot be altered: required is false, default is undefined, multiple is false.
                  | * `type: file`, The resulting value is still an ‘str’ in Python and a ‘character’ in R. In order to correctly pass files in some platforms (e.g. Docker and Nextflow), Viash needs to know which arguments are input/output files.
                  |
-                 |Additional property values:
-                 |
-                 | - `must_exist: true/false`, denotes whether the file or folder should exist at the start of the execution.
-                 |
                  |""".stripMargin)
-  @example("""- name: --foo                           
+  @example("""- name: --foo
              |  type: file
              |  alternatives: [-f]
              |  description: Description of foo
@@ -103,6 +100,21 @@ case class Functionality(
              |""".stripMargin, "yaml")
   arguments: List[Argument[_]] = Nil,
 
+  @description("""A grouping of the arguments, used to display the help message.
+                 |
+                 | - `name: foo`, the name of the argument group. 
+                 | - `description: Description of foo`, a description of the argument group. Multiline descriptions are supported.
+                 | - `arguments: [arg1, arg2, ...]`, list of the arguments names.
+                 |
+                 |""".stripMargin)
+  @example("""- name: "Input"
+             |  arguments: [ id, input1, input2 ]
+             |- name: "Output"
+             |  arguments: [ output, optional_output ]
+             |- name: "Foo"
+             |  description: Arguments related to the foo functionality of this component.
+             |  arguments: [ foo, bar, zing, bork ]
+             |""".stripMargin, "yaml")
   @since("Viash 0.5.14")
   argument_groups: List[ArgumentGroup] = Nil,
 
@@ -192,6 +204,43 @@ case class Functionality(
     argument_groups.flatMap(_.arguments).groupBy(identity).foreach { case (arg, args) => 
       require(args.length == 1, s"argument '${arg}' can be in at most one argument group")
     }
+  }
+
+  private def addToArgGroup(argumentGroups: List[ArgumentGroup], name: String, arguments: List[Argument[_]]): List[ArgumentGroup] = {
+    val argNamesInGroups = argumentGroups.flatMap(_.arguments).toSet
+
+    // Check if 'arguments' is in 'argumentGroups'. 
+    val argumentsNotInGroup = arguments.map(_.plainName).filter(argName => !argNamesInGroups.contains(argName))
+
+    // Check whether an argument group of 'name' exists.
+    val existing = argumentGroups.find(gr => name == gr.name)
+
+    // if there are no arguments missing from the argument group, just return the existing group (if any)
+    if (argumentsNotInGroup.isEmpty) {
+      existing.toList
+
+    // if there are missing arguments and there is an existing group, add the missing arguments to it
+    } else if (existing.isDefined) {
+      List(existing.get.copy(
+        arguments = existing.get.arguments.toList ::: argumentsNotInGroup
+      ))
+    
+    // else create a new group
+    } else {
+      List(ArgumentGroup(
+        name = name,
+        arguments = argumentsNotInGroup
+      ))
+    }
+  }
+
+  def allArgumentGroups: List[ArgumentGroup] = {
+    val inputGroup = addToArgGroup(argument_groups, "Inputs", inputs)
+    val outputGroup = addToArgGroup(argument_groups, "Outputs", outputs)
+    val defaultGroup = addToArgGroup(argument_groups, "Arguments", arguments)
+    val groupsFiltered = argument_groups.filter(gr => !List("Inputs", "Outputs", "Arguments").contains(gr.name))
+
+    inputGroup ::: outputGroup ::: groupsFiltered ::: defaultGroup
   }
     
   // check whether there are not multiple positional arguments with multiplicity >1

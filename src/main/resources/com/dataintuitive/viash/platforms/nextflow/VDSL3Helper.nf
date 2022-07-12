@@ -932,7 +932,7 @@ workflow {
     mergedConfig = processConfig(mergedConfig)
   }
 
-  helpMessage(params, mergedConfig)
+  helpMessage(mergedConfig)
 
   viashChannel(params, mergedConfig)
     | view { "input: $it" }
