@@ -434,7 +434,8 @@ def generateHelp(config) {
 
 def helpMessage(config) {
   if (paramExists("help")) {
-    def helpStr = generateHelp(config)
+    def mergedConfig = addGlobalParams(config)
+    def helpStr = generateHelp(mergedConfig)
     println(helpStr)
     exit 0
   }

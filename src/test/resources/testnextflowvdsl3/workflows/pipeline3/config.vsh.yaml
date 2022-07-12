@@ -32,12 +32,6 @@ functionality:
       type: string
       description: A sentence or word with a short flag.
       required: true
-    - name: "--truth"
-      type: boolean_true
-      description: A switch flag.
-    - name: "--falsehood"
-      type: boolean_false
-      description: A switch flag which is false when specified.
     - name: "--reality"
       type: boolean
       description: A switch flag without predetermined state.
