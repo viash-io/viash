@@ -68,7 +68,7 @@ trait Resource {
     if (dest.isDefined) {
       dest.get
     } else {
-      getFolderNameRegex.replaceFirstIn(path.get, "$1")
+      getFolderNameRegex.replaceFirstIn(Paths.get(path.get).normalize.toString, "$1")
     }
   }
   /**
