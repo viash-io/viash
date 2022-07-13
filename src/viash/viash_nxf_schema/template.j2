@@ -1,17 +1,16 @@
-{%- set updtArgs = functionality.arguments + [{ "name": "--publishDir", "type": "file", "required": true, "description": "Output path for the pipeline results" } ] -%}
+{%- set updtArgs = functionality.allArguments -%}
 {
     "$schema": "http://json-schema.org/draft-07/schema",
     "title": "{{ functionality.name }}",
     "description": {{ functionality.description | default("No description", true) | tojson }},
     "type": "object",
   {%- if functionality.argument_groups | default([], true) -%}
-    {%- set updtGroups = functionality.argument_groups + [{'name': "Output", "description": "Output Parameters", "arguments": [ "publishDir" ] } ] %}
     "definitions": {
-      {%- for group in updtGroups %}
+      {%- for group in functionality.argument_groups %}
       "{{ group.name | lower }}" : {
         "title": "{{ group.name }}",
         "type": "object",
-        "description": {{ group.description | tojson }},
+        "description": {{ group.description | default("No description", true) | tojson }},
         "default": "",
         "properties": {
           {%- for argument in updtArgs if argument.name | replace("--", "") in group.arguments %}
