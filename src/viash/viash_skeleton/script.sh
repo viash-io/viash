@@ -67,7 +67,7 @@ cat >> "$out_dir/config.vsh.yaml" << HERE
   resources:
     - type: bash_script
       path: script.sh
-  tests:
+  test_resources:
     - type: bash_script
       path: test.sh
 HERE
@@ -131,7 +131,7 @@ cat >> "$out_dir/config.vsh.yaml" << HERE
   resources:
     - type: r_script
       path: script.R
-  tests:
+  test_resources:
     - type: r_script
       path: test.R
 HERE
@@ -182,7 +182,7 @@ cat >> "$out_dir/config.vsh.yaml" << HERE
   resources:
     - type: python_script
       path: script.py
-  tests:
+  test_resources:
     - type: python_script
       path: test.py
 HERE

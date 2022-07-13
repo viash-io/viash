@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.dataobjects
+package com.dataintuitive.viash.functionality.arguments
 
 import com.dataintuitive.viash.helpers.Circe.OneOrMore
 
-abstract class DataObject[Type] {
+abstract class Argument[Type] {
   val `type`: String
   val name: String
   val alternatives: OneOrMore[String]
@@ -34,7 +34,7 @@ abstract class DataObject[Type] {
   private val pattern = "^(-*)(.*)$".r
   val pattern(flags, plainName) = name
 
-  /** Common parameter name for this object */
+  /** Common parameter name for this argument */
   val par: String = "par_" + plainName
 
   /** Parameter name in bash scripts */
@@ -54,7 +54,7 @@ abstract class DataObject[Type] {
     s"$quot$${$VIASH_PAR//$from/$to}$quot".replaceAll("\\\\", "\\\\VIASH_SLASH\\\\")
   }
 
-  def copyDO(
+  def copyArg(
     `type`: String = this.`type`,
     name: String = this.name,
     alternatives: OneOrMore[String] = this.alternatives,
@@ -65,7 +65,7 @@ abstract class DataObject[Type] {
     direction: Direction = this.direction,
     multiple: Boolean = this.multiple,
     multiple_sep: Char = this.multiple_sep
-  ): DataObject[Type]
+  ): Argument[Type]
 
   assert(example.length <= 1 || multiple, s"Argument $name: 'example' should be length <= 1 if 'multiple' is false")
   assert(default.length <= 1 || multiple, s"Argument $name: 'default' should be length <= 1 if 'multiple' is false")

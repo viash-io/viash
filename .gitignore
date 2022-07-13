@@ -6,7 +6,7 @@ Makefile
 target/
 
 # Temporary files / folders
-output
+output*
 out/*
 
 # Rstudio-related
@@ -27,3 +27,7 @@ out/*
 **/metals.sbt
 .bloop*
 .metals*
+
+# nextflow related
+.nextflow*
+work

@@ -151,7 +151,7 @@ object ViashNamespace {
               )
             } catch {
               case e: MissingResourceFileException => 
-                System.err.println(s"${Console.YELLOW}viash ns: ${e.getMessage}${Console.RESET}")
+                Console.err.println(s"${Console.YELLOW}viash ns: ${e.getMessage}${Console.RESET}")
                 ManyTestOutput(None, List())
             }
 
@@ -254,15 +254,15 @@ object ViashNamespace {
       (helpers.BuildStatus.Success, Console.GREEN, s"configs $successAction successfully"))
 
     if (successes != statuses.length) {
-      println(s"${Console.YELLOW}Not all configs $successAction successfully${Console.RESET}")
-      for (message <- messages) {
-        val count = statuses.count(_ == message._1)
+      Console.err.println(s"${Console.YELLOW}Not all configs $successAction successfully${Console.RESET}")
+      for ((status, colour, message) <- messages) {
+        val count = statuses.count(_ == status)
         if (count > 0)
-          println(s"  ${message._2}$count/${statuses.length} ${message._3}${Console.RESET}")
+          Console.err.println(s"  ${colour}$count/${statuses.length} ${message}${Console.RESET}")
       }
     }
     else {
-      println(s"${Console.GREEN}All ${successes} configs $successAction successfully${Console.RESET}")
+      Console.err.println(s"${Console.GREEN}All ${successes} configs $successAction successfully${Console.RESET}")
     }
   }
 }

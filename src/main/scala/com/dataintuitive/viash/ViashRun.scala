@@ -20,18 +20,18 @@ package com.dataintuitive.viash
 import java.nio.file.Paths
 
 import com.dataintuitive.viash.config._
-import com.dataintuitive.viash.functionality.dataobjects.{FileObject, Output}
+import com.dataintuitive.viash.functionality.arguments.{FileArgument, Output}
 import com.dataintuitive.viash.helpers.IO
 import com.dataintuitive.viash.helpers.Circe.{OneOrMore, One, More}
 
 import scala.sys.process.{Process, ProcessLogger}
 
 object ViashRun {
-  def apply(config: Config, args: Seq[String], keepFiles: Option[Boolean]) {
+  def apply(config: Config, args: Seq[String], keepFiles: Option[Boolean]): Integer = {
     val fun = config.functionality
     val dir = IO.makeTemp("viash_" + fun.name)
 
-    val dirArg = FileObject(
+    val dirArg = FileArgument(
       name = "--viash_tempdir_arg",
       direction = Output,
       default = One(dir)
@@ -52,7 +52,8 @@ object ViashRun {
 
       // execute command, print everything to console
       code = Process(cmd).!(ProcessLogger(println, println))
-      System.exit(code)
+      // System.exit(code)
+      code 
     } finally {
       // remove tempdir if desired
       if (!keepFiles.getOrElse(code != 0)) {

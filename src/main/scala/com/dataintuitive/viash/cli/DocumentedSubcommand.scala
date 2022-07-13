@@ -21,25 +21,33 @@ import org.rogach.scallop.Subcommand
 import org.rogach.scallop.ScallopOptionGroup
 import org.rogach.scallop.ValueConverter
 import org.rogach.scallop.ScallopOption
+import scala.reflect.runtime.universe._
 
 /**
   * Wrapper class for Subcommand to expose protected members
   * We need this information to scrape the CLI to export to json
   */
 class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(commandNameAndAliases:_*) {
-  def getCommandNameAndAliases = commandNameAndAliases
-  def getBanner = builder.bann
-  def getFooter = builder.foot
-  // def getOpts = builder.opts
-  // def getSubconfigs = subconfigs
   var registeredSubCommands: Seq[DocumentedSubcommand] = Nil
   var registeredOpts: Seq[RegisteredOpt] = Nil
 
-  import scala.reflect.runtime.universe._
+  var command: Option[String] = None
+  var description: Option[String] = None
+  var usage: Option[String] = None
+
+  def banner(command: String, description: String, usage: String): Unit = {
+    this.command = Some(command)
+    this.description = Some(description)
+    this.usage = Some(usage)
+
+    super.banner(s"$command\n$description\n\nUsage:\n  $usage\n\nArguments:")
+  }
+
 
   override def addSubcommand(conf: Subcommand): Unit = {
-    if (conf.isInstanceOf[DocumentedSubcommand])
+    if (conf.isInstanceOf[DocumentedSubcommand]) {
       registeredSubCommands = registeredSubCommands :+ conf.asInstanceOf[DocumentedSubcommand]
+    }
     super.addSubcommand(conf)
   }
 
@@ -47,8 +55,8 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
   // The same goes for 'trailArgs'. Not really for 'choice' but it's better to keep the same change in naming schema here too.
 
   def registerOpt[A](
-    name: String = null,
-    short: Char = '\u0000',
+    name: String,
+    short: Option[Char] = None,
     descr: String = "",
     default: => Option[A] = None,
     validate: A => Boolean = (_:A) => true,
@@ -65,14 +73,27 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       case _ => name
     }
     
-    registeredOpts = registeredOpts :+ RegisteredOpt.opt(cleanName, short, descr, default.toString(), required, argName, hidden, noshort, `type`.toString())
-    opt(name, short, descr, default, validate, required, argName, hidden, noshort, group)
+    val registeredOpt = RegisteredOpt(
+      name = cleanName, 
+      short = short,
+      descr = descr, 
+      default = default.map(_.toString()), 
+      required = required, 
+      argName = Some(argName), 
+      hidden = hidden, 
+      noshort = Some(noshort), 
+      choices = None, 
+      `type` = `type`.toString(), 
+      optType = "opt"
+    )
+    registeredOpts = registeredOpts :+ registeredOpt
+    opt(name, short.getOrElse('\u0000'), descr, default, validate, required, argName, hidden, noshort, group)
   }
 
   def registerChoice(
     choices: Seq[String],
-    name: String = null,
-    short: Char = '\u0000',
+    name: String,
+    short: Option[Char],
     descr: String = "",
     default: => Option[String] = None,
     required: Boolean = false,
@@ -87,12 +108,25 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       case _ => name
     }
 
-    registeredOpts = registeredOpts :+ RegisteredOpt.choice(choices, cleanName, short, descr, default.toString(), required, argName, hidden, noshort)
-    choice(choices, name, short, descr, default, required, argName, hidden, noshort, group)
+    val registeredOpt = RegisteredOpt(
+      name = cleanName, 
+      short = short, 
+      descr = descr, 
+      default = default.map(_.toString()), 
+      required = required, 
+      argName = Some(argName), 
+      hidden = hidden, 
+      noshort = Some(noshort), 
+      choices = Some(choices), 
+      `type` = "String", 
+      optType = "choice"
+    )
+    registeredOpts = registeredOpts :+ registeredOpt
+    choice(choices, name, short.getOrElse('\u0000'), descr, default, required, argName, hidden, noshort, group)
   }
 
   def registerTrailArg[A](
-    name: String = null,
+    name: String,
     descr: String = "",
     validate: A => Boolean = (_:A) => true,
     required: Boolean = true,
@@ -107,8 +141,31 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       case _ => name
     }
 
-    registeredOpts = registeredOpts :+ RegisteredOpt.trailArgs(cleanName, descr, required, default.toString(), hidden, `type`.toString())
+    val registeredOpt = RegisteredOpt(
+      name = cleanName, 
+      short = None, 
+      descr = descr, 
+      default = default.map(_.toString()), 
+      required = required, 
+      argName = None, 
+      hidden = hidden, 
+      noshort = None, 
+      choices = None, 
+      `type` = `type`.toString, 
+      optType = "trailArgs"
+    )
+    registeredOpts = registeredOpts :+ registeredOpt
     trailArg[A](name, descr, validate, required, default, hidden, group)
   }
 
+  def toRegisteredCommand: RegisteredCommand = 
+    RegisteredCommand(
+      name = commandNameAndAliases.mkString(" + "),
+      bannerCommand = command,
+      bannerDescription = description,
+      bannerUsage = usage,
+      footer = builder.foot,
+      subcommands = registeredSubCommands.map(_.toRegisteredCommand),
+      opts = registeredOpts
+    )
 }

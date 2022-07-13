@@ -18,7 +18,14 @@
 package com.dataintuitive.viash.platforms.requirements
 
 import com.dataintuitive.viash.helpers.Circe._
+import com.dataintuitive.viash.helpers.description
+import com.dataintuitive.viash.helpers.example
 
+@description("Specify which yum packages should be available in order to run the component.")
+@example("""setup:
+           |  - type: yum
+           |    packages: [ sl ]
+           |""".stripMargin, "yaml")
 case class YumRequirements(
   packages: OneOrMore[String] = Nil,
   `type`: String = "yum"

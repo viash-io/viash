@@ -1,4 +1,47 @@
-# Viash [Next version]
+# VIASH 0.5.15
+
+## BREAKING CHANGES
+
+* `WorkflowHelper::helpMessage`: Now only takes one argument, namely the config.
+
+## MINOR CHANGES
+
+* `Testbenches`: Add a testbench framework to test lots of character sequences, single or repeating to be tested in the yaml config. This can be used to later extend to other tests.
+
+* `Testbenches::vdsl3`: Add testbenches to verify functionality:
+  - Vdsl3's `param_list` (`yamlblob`, `yaml`, `json`, `csv`).
+  - NextFlow's own `params-file`.
+  - Vdsl3's recalculating resource file paths to be relative to the `param_list` file instead of the workflow file (only available for `yaml`, `json`, `csv`).
+  - Vdsl3's wrapping of modules to run these as a separate workflow automagically out of the box.
+
+* `Main`: Added `viash --schema_export` which outputs a schema of the Viash config file
+  to console. This is to be used to automate populating the documentation website.
+
+* `Helper`: Split help message by argument group.
+
+* `Helper`: Remove unneeded arguments.
+
+* `Functionality`: Add default groups `Inputs`, `Outputs` and `Arguments` for all arguments missing from user-defined `argument_groups`.
+
+* `WorkflowHelper::helpMessage`: Rewrite to bring on par with Viash's help message.
+
+## BUG FIXES
+
+* `NextflowVdsl3Platform`: Change how `--id` is processed when a VDSL3 module is called from the CLI.
+
+* `NextflowVdsl3Platform`: Fix error when param_list is `null`.
+
+* `NextflowVdsl3Platform`: Fix error when optional, multiple arguments are set to `null`.
+
+* `Testbenches`: Better capture expected error messages while running testbenches again. Code changes right before previous release re-introduced some of the messages.
+
+* `NextflowVdsl3Platform`: Fix issue where optional parameters aren't removed when `.run(args: [optarg: null])`.
+
+* `WorkflowHelper::readCsv`: Treat empty values as undefined instead of throwing an error.
+
+* `NextflowVdsl3Platform`: Use `$NXF_TEMP` or `$VIASH_TEMP` as temporary directory if the container engine is not set to `docker`, `podman` or `charlieengine`, else set to `/tmp`.
+
+# Viash 0.5.14
 
 ## NEW FUNCTIONALITY
 
@@ -12,9 +55,33 @@
         description: Description
   ```
 
+
 * Addition of the `viash_nxf_schema` component for converting a Viash config (for a workflow) into a nextflow schema file.
 
+* `NextflowVdsl3Platform`: Use `--param_list` to initialise a Nextflow channel with multiple parameter sets.
+  Possible formats are csv, json, yaml, or simply a yaml_blob.
+  A csv should have column names which correspond to the different arguments of this pipeline.
+  A json or a yaml file should be a list of maps, each of which has keys corresponding to the arguments of the pipeline.
+  A yaml blob can also be passed directly as a parameter.
+  Inside the Nextflow pipeline code, params.params_list can also be used to directly a list of parameter sets.
+  When passing a csv, json or yaml, relative path names are relativized to the location of the parameter file.
+  
+  Examples: 
+  ```sh
+  nextflow run "target/foo/bar/main.nf" --param_list '[{"id": "foo", "input": "/path/to/bar"}]'
+  nextflow run "target/foo/bar/main.nf" --param_list "params.csv" --reference "/path/to/ref"
+  ```
+
+## MAJOR CHANGES
+
+* `NextflowVdsl3Platform`: The functionality is now slurped from a json instead of manually
+  taking care of the formatting in Groovy.
+
+* `NextflowVdsl3Platform`: The `--help` is auto-generated from the config.
+
+
 ## MINOR CHANGES
+
 * `NextflowVdsl3Platform`: Allow both `--publish_dir` and `--publishDir` when `auto.publish = true`.
 
 * `NextflowVdsl3Platform`: Allow passing parameters with multiplicity > 1 from Nextflow CLI.
@@ -22,7 +89,7 @@
 * `Main`: Added `viash --cli_export` which outputs the internal cli construction information 
   to console. This is to be used to automate populating the documentation website.
 
-* `viash ns`: Display overview results with X amount failed & Y amount successfully built.
+* `viash ns`: Display success and failure summary statistics, printed to stderr.
 
 * `DataObject`: `.alternatives` is now a `OneOrMore[String]` instead of `List[String]`, meaning
   you can now specify `{ type: string, name: "--foo", alternatives: "-f" }` instead of 
@@ -31,10 +98,18 @@
 * `BashWrapper`: Added metadata field `meta_executable`, which is a shorthand notation for
   `meta_executable="$meta_resources_dir/$meta_functionality_name"`
 
+## INTERNAL CHANGES
+
+* `Arguments`: Internal naming of functionality.arguments is changed from DataObject to Arguments. Change is also applied to child classes, e.g. StringObject -> StringArgument.
+
+* `Script`: Allow more control over where injected code ends up.
+
+* Restructure type system to allow type-specific arguments.
+
 ## BUG FIXES
 
 * `DockerPlatform`: Change `org.opencontainers.image.version` annotation to `functionality.version` when set.
-  Additionally fixed retreaving the git tag possibly returning `fatal: No names found, cannot describe anything.` or similar.
+  Additionally fixed retrieving the git tag possibly returning `fatal: No names found, cannot describe anything.` or similar.
 
 * `viash config inject`: Fix config inject when `.functionality.inputs` or `.functionality.outputs` is used.
 
@@ -45,6 +120,9 @@
 * `viash ns test`: Silently skip Nextflow platforms as these don't support tests and will always fail.
 
 * `Testbenches`: Better capture expected error messages while running testbenches. Having these show on the console could be confusing.
+
+* `NextflowVdsl3Platform`: Fix issue when running multiple VDSL3 modules concurrently on the same channel.
+
 
 # Viash 0.5.13
 

@@ -1,6 +1,6 @@
 name: Scala CI
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   scala-ci:
@@ -78,7 +78,7 @@ jobs:
           sbt clean coverage test coverageReport
         elif [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
           # macOS on github actions does not have Docker, so skip those
-          sbt 'testOnly -- -l com.dataintuitive.viash.DockerTest'
+          sbt 'testOnly -- -l com.dataintuitive.viash.DockerTest -l com.dataintuitive.viash.NextFlowTest'
         else
           sbt test
         fi

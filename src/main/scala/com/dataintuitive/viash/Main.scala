@@ -21,7 +21,7 @@ import java.nio.file.{Files, Path, Paths}
 import java.nio.file.attribute.BasicFileAttributes
 import config.Config
 import helpers.Scala._
-import cli.{CLIConf, CLIExport, ViashCommand, ViashNs}
+import cli.{CLIConf, ViashCommand, ViashNs}
 
 import scala.collection.JavaConverters
 import java.io.File
@@ -29,6 +29,7 @@ import java.io.FileNotFoundException
 import java.nio.file.NoSuchFileException
 import com.dataintuitive.viash.helpers.MissingResourceFileException
 import com.dataintuitive.viash.helpers.BuildStatus._
+import com.dataintuitive.viash.helpers.CollectedSchemas
 
 object Main {
   private val pkg = getClass.getPackage
@@ -40,10 +41,10 @@ object Main {
       internalMain(args)
     } catch {
       case e @ ( _: FileNotFoundException | _: NoSuchFileException | _: MissingResourceFileException ) =>
-        System.err.println(s"viash: ${e.getMessage()}")
+        Console.err.println(s"viash: ${e.getMessage()}")
         System.exit(1)
       case e: Exception =>
-        System.err.println(
+        Console.err.println(
           s"""Unexpected error occurred! If you think this is a bug, please post
             |create an issue at https://github.com/viash-io/viash/issues containing
             |a reproducible example and the stack trace below.
@@ -125,6 +126,8 @@ object Main {
         ViashConfig.inject(config)
       case Nil if (cli.cliexport()) =>
           CLIExport.export()
+      case Nil if (cli.schemaexport()) =>
+          CollectedSchemas.export()
       case _ =>
         Console.err.println("No subcommand was specified. See `viash --help` for more information.")
     }
