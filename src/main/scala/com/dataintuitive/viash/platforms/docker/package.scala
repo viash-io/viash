@@ -15,13 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.platforms
+package io.viash.platforms
 
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 
 package object docker {
-  import com.dataintuitive.viash.helpers.Circe._
+  import io.viash.helpers.Circe._
 
   // encoder and decoder for resolvevolume
   implicit val encodeResolveVolume: Encoder[DockerResolveVolume] = Encoder.instance {

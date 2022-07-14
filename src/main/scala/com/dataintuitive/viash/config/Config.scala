@@ -15,21 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.config
+package io.viash.config
 
-import com.dataintuitive.viash.config_mods.ConfigModParser
-import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.platforms._
-import com.dataintuitive.viash.helpers.{Git, GitInfo, IO}
+import io.viash.config_mods.ConfigModParser
+import io.viash.functionality._
+import io.viash.platforms._
+import io.viash.helpers.{Git, GitInfo, IO}
 
 import java.net.URI
 import io.circe.yaml.parser
-import com.dataintuitive.viash.functionality.resources._
+import io.viash.functionality.resources._
 
 import java.io.File
 import io.circe.DecodingFailure
 import io.circe.ParsingFailure
-import com.dataintuitive.viash.config_mods.ConfigMods
+import io.viash.config_mods.ConfigMods
 
 case class Config(
   functionality: Functionality,
@@ -173,7 +173,7 @@ object Config {
     // create info object
     val info = 
       Info(
-        viash_version = Some(com.dataintuitive.viash.Main.version),
+        viash_version = Some(io.viash.Main.version),
         config = configPath,
         platform = platform,
         git_commit = gc,

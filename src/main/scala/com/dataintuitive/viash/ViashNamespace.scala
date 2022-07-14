@@ -15,14 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash
+package io.viash
 
 import java.nio.file.{Paths, Files, StandardOpenOption}
-import com.dataintuitive.viash.ViashTest.{ManyTestOutput, TestOutput}
+import io.viash.ViashTest.{ManyTestOutput, TestOutput}
 import config.Config
 import helpers.IO
-import com.dataintuitive.viash.helpers.MissingResourceFileException
-import com.dataintuitive.viash.helpers.BuildStatus._
+import io.viash.helpers.MissingResourceFileException
+import io.viash.helpers.BuildStatus._
 import java.nio.file.Path
 
 object ViashNamespace {

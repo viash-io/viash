@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality
+package io.viash.functionality
 
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
@@ -26,7 +26,7 @@ import io.circe.ACursor
 
 package object resources {
 
-  import com.dataintuitive.viash.helpers.Circe._
+  import io.viash.helpers.Circe._
 
   implicit val encodeURI: Encoder[URI] = Encoder.instance {
     uri => Json.fromString(uri.toString)

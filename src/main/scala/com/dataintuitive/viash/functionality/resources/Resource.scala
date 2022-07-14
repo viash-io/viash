@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.resources
+package io.viash.functionality.resources
 
 import java.net.URI
 
-import com.dataintuitive.viash.helpers.{IO, MissingResourceFileException}
+import io.viash.helpers.{IO, MissingResourceFileException}
 import java.nio.file.{Path, Paths}
 import java.nio.file.NoSuchFileException
 
@@ -56,6 +56,8 @@ trait Resource {
   }
 
   private val basenameRegex = ".*/".r
+  private val getFolderNameRegex = ".*?([^/]+|/)/*$".r
+  
 
   /**
    * Get the path of the resource relative to the resources dir.
@@ -66,7 +68,7 @@ trait Resource {
     if (dest.isDefined) {
       dest.get
     } else {
-      basenameRegex.replaceFirstIn(path.get, "")
+      getFolderNameRegex.replaceFirstIn(Paths.get(path.get).normalize.toString, "$1")
     }
   }
   /**

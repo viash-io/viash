@@ -15,9 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.wrapper
+package io.viash.wrapper
 
-import com.dataintuitive.viash.functionality.arguments.Argument
+import io.viash.functionality.arguments.Argument
 
 case class BashWrapperMods(
   preParse: String = "",

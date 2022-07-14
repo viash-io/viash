@@ -15,17 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.platforms
+package io.viash.platforms
 
-import com.dataintuitive.viash.config.Config
-import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.functionality.arguments._
-import com.dataintuitive.viash.config.Version
-import com.dataintuitive.viash.helpers.{Docker, Bash}
-import com.dataintuitive.viash.helpers.Circe._
-import com.dataintuitive.viash.helpers.description
-import com.dataintuitive.viash.helpers.example
+import io.viash.config.Config
+import io.viash.functionality._
+import io.viash.functionality.resources._
+import io.viash.functionality.arguments._
+import io.viash.config.Version
+import io.viash.helpers.{Docker, Bash}
+import io.viash.helpers.Circe._
+import io.viash.helpers.description
+import io.viash.helpers.example
 
 /**
  * / * Platform class for generating NextFlow (DSL2) modules.

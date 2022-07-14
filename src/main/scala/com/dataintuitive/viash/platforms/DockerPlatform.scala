@@ -15,24 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.platforms
+package io.viash.platforms
 
-import com.dataintuitive.viash.config.Config
-import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.arguments._
-import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.platforms.requirements._
-import com.dataintuitive.viash.helpers.{Bash, Docker}
-import com.dataintuitive.viash.config.Version
-import com.dataintuitive.viash.wrapper.{BashWrapper, BashWrapperMods}
-import com.dataintuitive.viash.platforms.docker._
-import com.dataintuitive.viash.helpers.Circe._
-import com.dataintuitive.viash.config.Info
+import io.viash.config.Config
+import io.viash.functionality._
+import io.viash.functionality.arguments._
+import io.viash.functionality.resources._
+import io.viash.platforms.requirements._
+import io.viash.helpers.{Bash, Docker}
+import io.viash.config.Version
+import io.viash.wrapper.{BashWrapper, BashWrapperMods}
+import io.viash.platforms.docker._
+import io.viash.helpers.Circe._
+import io.viash.config.Info
 import java.util.Date
 import java.text.SimpleDateFormat
-import com.dataintuitive.viash.helpers.description
-import com.dataintuitive.viash.helpers.example
-import com.dataintuitive.viash.helpers.deprecated
+import io.viash.helpers.description
+import io.viash.helpers.example
+import io.viash.helpers.deprecated
 
 @description("""Run a Viash component on a Docker backend platform.
                |By specifying which dependencies your component needs, users will be able to build a docker container from scratch using the setup flag, or pull it from a docker repository.

@@ -1,8 +1,12 @@
-# VIASH 0.5.15
+# Viash 0.5.15
 
 ## BREAKING CHANGES
 
 * `WorkflowHelper::helpMessage`: Now only takes one argument, namely the config.
+
+## MAJOR CHANGES
+
+* `Namespace`: Changed the namespace of viash from `com.dataintuitive.viash` to `io.viash`.
 
 ## MINOR CHANGES
 
@@ -25,6 +29,11 @@
 
 * `WorkflowHelper::helpMessage`: Rewrite to bring on par with Viash's help message.
 
+* `BooleanArguments`: Renamed internal class names for BooleanArguments to be better in line with how they are named in the config yaml.
+  `BooleanArgumentRegular` -> `BooleanArgument` (in line with `boolean`)
+  `BooleanArgumentTrue` -> `BooleanTrueArgument` (in line with `boolean_true`)
+  `BooleanArgumentFalse` -> `BooleanFalseArgument` (in line with `boolean_false`)
+
 ## BUG FIXES
 
 * `NextflowVdsl3Platform`: Change how `--id` is processed when a VDSL3 module is called from the CLI.
@@ -40,6 +49,9 @@
 * `WorkflowHelper::readCsv`: Treat empty values as undefined instead of throwing an error.
 
 * `NextflowVdsl3Platform`: Use `$NXF_TEMP` or `$VIASH_TEMP` as temporary directory if the container engine is not set to `docker`, `podman` or `charlieengine`, else set to `/tmp`.
+
+* `Resources`: When adding a resource folder, allow a trailing `/` at the end of the path.
+  Previously this caused the target folder to be erased and the content of the resource folder to be written directly into the target folder.
 
 # Viash 0.5.14
 

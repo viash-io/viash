@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.cli
+package io.viash.cli
 
 import org.rogach.scallop.Subcommand
 import org.rogach.scallop.ScallopOptionGroup

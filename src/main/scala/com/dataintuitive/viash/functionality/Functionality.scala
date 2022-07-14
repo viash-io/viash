@@ -15,13 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality
+package io.viash.functionality
 
 import arguments._
 import resources._
-import com.dataintuitive.viash.config.Version
+import io.viash.config.Version
 import io.circe.generic.extras._
-import com.dataintuitive.viash.helpers._
+import io.viash.helpers._
 
 @description("""The functionality-part of the config file describes the behaviour of the script in terms of arguments and resources.
                |By specifying a few restrictions (e.g. mandatory arguments) and adding some descriptions, Viash will automatically generate a stylish command-line interface for you.

@@ -15,14 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.cli
+package io.viash.cli
 
 import org.rogach.scallop.{ScallopConf, Subcommand}
 import org.rogach.scallop.ScallopConfBase
 import org.rogach.scallop.ScallopOptionGroup
 import org.rogach.scallop.ValueConverter
 import org.rogach.scallop.ScallopOption
-import com.dataintuitive.viash.Main
+import io.viash.Main
 
 
 trait ViashCommand {

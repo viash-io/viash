@@ -15,10 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash
+package io.viash
 
-import com.dataintuitive.viash.config.Config
-import com.dataintuitive.viash.helpers.IO
+import io.viash.config.Config
+import io.viash.helpers.IO
 
 import java.nio.file.{Files, Paths}
 import io.circe.syntax.EncoderOps
@@ -26,7 +26,7 @@ import io.circe.{Json, Printer => JsonPrinter}
 import io.circe.yaml.{Printer => YamlPrinter}
 
 import scala.sys.process.Process
-import com.dataintuitive.viash.platforms.DebugPlatform
+import io.viash.platforms.DebugPlatform
 
 object ViashConfig {
   private val yamlPrinter = YamlPrinter(

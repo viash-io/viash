@@ -1,8 +1,8 @@
-package com.dataintuitive.viash.auxiliary
+package io.viash.auxiliary
 
-import com.dataintuitive.viash.{DockerTest, TestHelper}
-import com.dataintuitive.viash.config.Config
-import com.dataintuitive.viash.helpers._
+import io.viash.{DockerTest, TestHelper}
+import io.viash.config.Config
+import io.viash.helpers._
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 import java.nio.file.{Files, Paths, StandardCopyOption}

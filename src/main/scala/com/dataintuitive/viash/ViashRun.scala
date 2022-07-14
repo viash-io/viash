@@ -15,14 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash
+package io.viash
 
 import java.nio.file.Paths
 
-import com.dataintuitive.viash.config._
-import com.dataintuitive.viash.functionality.arguments.{FileArgument, Output}
-import com.dataintuitive.viash.helpers.IO
-import com.dataintuitive.viash.helpers.Circe.{OneOrMore, One, More}
+import io.viash.config._
+import io.viash.functionality.arguments.{FileArgument, Output}
+import io.viash.helpers.IO
+import io.viash.helpers.Circe.{OneOrMore, One, More}
 
 import scala.sys.process.{Process, ProcessLogger}
 

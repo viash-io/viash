@@ -15,9 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality
+package io.viash.functionality
 
-import com.dataintuitive.viash.helpers.Circe._
+import io.viash.helpers.Circe._
 
 case class Author(
   name: String,

@@ -15,12 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash
+package io.viash
 
 import cli._
 import io.circe.{Printer => JsonPrinter}
 import io.circe.syntax.EncoderOps
-import com.dataintuitive.viash.helpers.Circe._
+import io.viash.helpers.Circe._
 
 object CLIExport {
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)

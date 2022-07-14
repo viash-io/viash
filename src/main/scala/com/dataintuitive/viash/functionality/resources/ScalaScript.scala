@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.resources
+package io.viash.functionality.resources
 
-import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.arguments._
-import com.dataintuitive.viash.wrapper.BashWrapper
+import io.viash.functionality._
+import io.viash.functionality.arguments._
+import io.viash.wrapper.BashWrapper
 
 import java.net.URI
 
@@ -44,18 +44,18 @@ case class ScalaScript(
 
     val parClassTypes = params.map { par =>
       val classType = par match {
-        case a: BooleanArgument if a.multiple => "List[Boolean]"
+        case a: BooleanArgumentBase if a.multiple => "List[Boolean]"
         case a: IntegerArgument if a.multiple => "List[Integer]"
         case a: DoubleArgument if a.multiple => "List[Double]"
         case a: FileArgument if a.multiple => "List[String]"
         case a: StringArgument if a.multiple => "List[String]"
         // we could argue about whether these should be options or not
-        case a: BooleanArgument if !a.required && a.flagValue.isEmpty => "Option[Boolean]"
+        case a: BooleanArgumentBase if !a.required && a.flagValue.isEmpty => "Option[Boolean]"
         case a: IntegerArgument if !a.required => "Option[Integer]"
         case a: DoubleArgument if !a.required => "Option[Double]"
         case a: FileArgument if !a.required => "Option[String]"
         case a: StringArgument if !a.required => "Option[String]"
-        case _: BooleanArgument => "Boolean"
+        case _: BooleanArgumentBase => "Boolean"
         case _: IntegerArgument => "Integer"
         case _: DoubleArgument => "Double"
         case _: FileArgument => "String"
@@ -69,7 +69,7 @@ case class ScalaScript(
       val env_name = par.viash_par_escaped(quo, """\"""", """\\\"""")
 
       val parse = { par match {
-        case a: BooleanArgument if a.multiple =>
+        case a: BooleanArgumentBase if a.multiple =>
           s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toLowerCase.toBoolean).toList"""
         case a: IntegerArgument if a.multiple =>
           s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toInt).toList"""
@@ -79,12 +79,12 @@ case class ScalaScript(
           s"""$env_name.split($quo${a.multiple_sep}$quo).toList"""
         case a: StringArgument if a.multiple =>
           s"""$env_name.split($quo${a.multiple_sep}$quo).toList"""
-        case a: BooleanArgument if !a.required && a.flagValue.isEmpty => s"""Some($env_name.toLowerCase.toBoolean)"""
+        case a: BooleanArgumentBase if !a.required && a.flagValue.isEmpty => s"""Some($env_name.toLowerCase.toBoolean)"""
         case a: IntegerArgument if !a.required => s"""Some($env_name.toInt)"""
         case a: DoubleArgument if !a.required => s"""Some($env_name.toDouble)"""
         case a: FileArgument if !a.required => s"""Some($env_name)"""
         case a: StringArgument if !a.required => s"""Some($env_name)"""
-        case _: BooleanArgument => s"""$env_name.toLowerCase.toBoolean"""
+        case _: BooleanArgumentBase => s"""$env_name.toLowerCase.toBoolean"""
         case _: IntegerArgument => s"""$env_name.toInt"""
         case _: DoubleArgument => s"""$env_name.toDouble"""
         case _: FileArgument => s"""$env_name"""
@@ -93,7 +93,7 @@ case class ScalaScript(
 
       val notFound = par match {
         case a: Argument[_] if a.multiple => Some("Nil")
-        case a: BooleanArgument if a.flagValue.isDefined => None
+        case a: BooleanArgumentBase if a.flagValue.isDefined => None
         case a: Argument[_] if !a.required => Some("None")
         case _: Argument[_] => None
       }

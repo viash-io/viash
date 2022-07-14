@@ -15,10 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.arguments
+package io.viash.functionality.arguments
 
-import com.dataintuitive.viash.helpers.Circe.OneOrMore
-import com.dataintuitive.viash.helpers.description
+import io.viash.helpers.Circe.OneOrMore
+import io.viash.helpers.description
 
 @description("")
 case class DoubleArgument(
