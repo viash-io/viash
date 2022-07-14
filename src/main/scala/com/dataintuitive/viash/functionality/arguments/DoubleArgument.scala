@@ -18,18 +18,31 @@
 package com.dataintuitive.viash.functionality.arguments
 
 import com.dataintuitive.viash.helpers.Circe.OneOrMore
+import com.dataintuitive.viash.helpers.description
 
+@description("")
 case class DoubleArgument(
+  @description("")
   name: String,
+  @description("")
   alternatives: OneOrMore[String] = Nil,
+  @description("")
   description: Option[String] = None,
+  @description("")
   example: OneOrMore[Double] = Nil,
+  @description("")
   default: OneOrMore[Double] = Nil,
+  @description("")
   required: Boolean = false,
+  @description("")
   min: Option[Double] = None,
+  @description("")
   max: Option[Double] = None,
+  @description("")
   direction: Direction = Input,
+  @description("")
   multiple: Boolean = false,
+  @description("")
   multiple_sep: Char = ':',
   `type`: String = "double"
 ) extends Argument[Double] {

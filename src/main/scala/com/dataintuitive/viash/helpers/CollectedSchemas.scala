@@ -27,23 +27,13 @@ import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
 import com.dataintuitive.viash.functionality.Functionality
 import com.dataintuitive.viash.platforms._
 import com.dataintuitive.viash.platforms.requirements._
+import com.dataintuitive.viash.functionality.arguments._
 
 final case class CollectedSchemas (
-  // functionality
   functionality: List[ParameterSchema],
-  // platforms
-  nativePlatform: List[ParameterSchema],
-  dockerPlatform: List[ParameterSchema],
-  nextflowLegacyPlatform: List[ParameterSchema],
-  // platform requirements
-  apkRequirements: List[ParameterSchema],
-  aptRequirements: List[ParameterSchema],
-  dockerRequirements: List[ParameterSchema],
-  javascriptRequirements: List[ParameterSchema],
-  pythonRequirements: List[ParameterSchema],
-  rRequirements: List[ParameterSchema],
-  rubyRequirements: List[ParameterSchema],
-  yumRequirements: List[ParameterSchema],
+  platforms: Map[String, List[ParameterSchema]],
+  requirements: Map[String, List[ParameterSchema]],
+  arguments: Map[String, List[ParameterSchema]],
 )
 
 final case class ParameterSchema(
@@ -166,18 +156,31 @@ object CollectedSchemas {
 
   def export() {
     val data = CollectedSchemas(
-      functionality          = getSchema[Functionality],
-      nativePlatform         = getSchema[NativePlatform],
-      dockerPlatform         = getSchema[DockerPlatform],
-      nextflowLegacyPlatform = getSchema[NextflowLegacyPlatform],
-      apkRequirements        = getSchema[ApkRequirements],
-      aptRequirements        = getSchema[AptRequirements],
-      dockerRequirements     = getSchema[DockerRequirements],
-      javascriptRequirements = getSchema[JavaScriptRequirements],
-      pythonRequirements     = getSchema[PythonRequirements],
-      rRequirements          = getSchema[RRequirements],
-      rubyRequirements       = getSchema[RubyRequirements],
-      yumRequirements        = getSchema[YumRequirements],
+      functionality = getSchema[Functionality],
+      platforms = Map(
+        ("nativePlatform"        , getSchema[NativePlatform]),
+        ("dockerPlatform"        , getSchema[DockerPlatform]),
+        ("nextflowLegacyPlatform", getSchema[NextflowLegacyPlatform])
+      ),
+      requirements = Map(
+        ("apkRequirements"        , getSchema[ApkRequirements]),
+        ("aptRequirements"        , getSchema[AptRequirements]),
+        ("dockerRequirements"     , getSchema[DockerRequirements]),
+        ("javascriptRequirements" , getSchema[JavaScriptRequirements]),
+        ("pythonRequirements"     , getSchema[PythonRequirements]),
+        ("rRequirements"          , getSchema[RRequirements]),
+        ("rubyRequirements"       , getSchema[RubyRequirements]),
+        ("yumRequirements"        , getSchema[YumRequirements]),
+      ),
+      arguments = Map(
+        ("booleanArgument"        , getSchema[BooleanArgumentRegular]),
+        ("booleanArgumentTrue"    , getSchema[BooleanArgumentTrue]),
+        ("booleanArgumentFalse"   , getSchema[BooleanArgumentFalse]),
+        ("doubleArgument"         , getSchema[DoubleArgument]),
+        ("fileArgument"           , getSchema[FileArgument]),
+        ("integerArgument"        , getSchema[IntegerArgument]),
+        ("stringArgument"         , getSchema[StringArgument]),
+      ),
     )
     val str = jsonPrinter.print(data.asJson)
     println(str)

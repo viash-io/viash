@@ -18,19 +18,33 @@
 package com.dataintuitive.viash.functionality.arguments
 
 import com.dataintuitive.viash.helpers.Circe.OneOrMore
+import com.dataintuitive.viash.helpers.description
 
+@description("")
 case class IntegerArgument(
+  @description("")
   name: String,
+  @description("")
   alternatives: OneOrMore[String] = Nil,
+  @description("")
   description: Option[String] = None,
+  @description("")
   example: OneOrMore[Int] = Nil,
+  @description("")
   default: OneOrMore[Int] = Nil,
+  @description("")
   required: Boolean = false,
+  @description("")
   choices: List[Int] = Nil,
+  @description("")
   min: Option[Int] = None,
+  @description("")
   max: Option[Int] = None,
+  @description("")
   direction: Direction = Input,
+  @description("")
   multiple: Boolean = false,
+  @description("")
   multiple_sep: Char = ':',
   `type`: String = "integer"
 ) extends Argument[Int] {

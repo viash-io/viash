@@ -18,20 +18,31 @@
 package com.dataintuitive.viash.functionality.arguments
 
 import com.dataintuitive.viash.helpers.Circe.OneOrMore
+import com.dataintuitive.viash.helpers.description
 
 abstract class BooleanArgument extends Argument[Boolean] {
   val flagValue: Option[Boolean]
 }
 
+@description("")
 case class BooleanArgumentRegular(
+  @description("")
   name: String,
+  @description("")
   alternatives: OneOrMore[String] = Nil,
+  @description("")
   description: Option[String] = None,
+  @description("")
   example: OneOrMore[Boolean] = Nil,
+  @description("")
   default: OneOrMore[Boolean] = Nil,
+  @description("")
   required: Boolean = false,
+  @description("")
   direction: Direction = Input,
+  @description("")
   multiple: Boolean = false,
+  @description("")
   multiple_sep: Char = ':',
   `type`: String = "boolean"
 ) extends BooleanArgument {
@@ -54,10 +65,15 @@ case class BooleanArgumentRegular(
   }
 }
 
+@description("")
 case class BooleanArgumentTrue(
+  @description("")
   name: String,
+  @description("")
   alternatives: OneOrMore[String] = Nil,
+  @description("")
   description: Option[String] = None,
+  @description("")
   direction: Direction = Input,
   `type`: String = "boolean_true"
 ) extends BooleanArgument {
@@ -85,10 +101,15 @@ case class BooleanArgumentTrue(
   }
 }
 
+@description("")
 case class BooleanArgumentFalse(
+  @description("")
   name: String,
+  @description("")
   alternatives: OneOrMore[String] = Nil,
+  @description("")
   description: Option[String] = None,
+  @description("")
   direction: Direction = Input,
   `type`: String = "boolean_false"
 ) extends BooleanArgument {

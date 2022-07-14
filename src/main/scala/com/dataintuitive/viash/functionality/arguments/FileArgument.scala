@@ -19,17 +19,29 @@ package com.dataintuitive.viash.functionality.arguments
 
 import java.nio.file.Path
 import com.dataintuitive.viash.helpers.Circe.OneOrMore
+import com.dataintuitive.viash.helpers.description
 
+@description("")
 case class FileArgument(
+  @description("")
   name: String,
+  @description("")
   alternatives: OneOrMore[String] = Nil,
+  @description("")
   description: Option[String] = None,
+  @description("")
   example: OneOrMore[Path] = Nil,
+  @description("")
   default: OneOrMore[Path] = Nil,
+  @description("")
   must_exist: Boolean = false,
+  @description("")
   required: Boolean = false,
+  @description("")
   direction: Direction = Input,
+  @description("")
   multiple: Boolean = false,
+  @description("")
   multiple_sep: Char = ':',
   `type`: String = "file"
 ) extends Argument[Path] {
