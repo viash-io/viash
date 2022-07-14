@@ -1,0 +1,5 @@
+# Inputs
+input: "path/to/file"
+
+# Outputs
+output: "path/to/file"

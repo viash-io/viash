@@ -1,27 +1,26 @@
 functionality:
-  name: viash_nxf_schema
+  name: viash_nxf_params
   namespace: viash
   version: 0.1
   description: |
-    Generate a Nextflow schema file based on a workflow config.
-    See https://nf-co.re/pipeline_schema_builder
+    Generate a Nextflow params file based on a viash workflow config.
   inputs:
   - name: "--input"
-    alternatives: [ -i, --config ]
+    alternatives: [ -i ]
     type: file
     default: config.vsh.yaml
     description: A Viash config for a workflow
+    required: true
   outputs:
   - name: "--output"
-    alternatives: [ -o, --schema ]
+    alternatives: [ -o ]
     type: file
-    default: nextflow_schema.json
-    description: nextflow schema file
+    description: nextflow params file
+    required: false
   resources:
   - type: bash_script
     path: script.sh
   - path: main.nf
-  - path: template.j2
   - path: ../../../src/main/resources/com/dataintuitive/viash/platforms/nextflow/WorkflowHelper.nf
   test_resources:
   - type: bash_script
