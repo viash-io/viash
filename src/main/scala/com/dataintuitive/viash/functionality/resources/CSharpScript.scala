@@ -47,7 +47,7 @@ case class CSharpScript(
       val env_name = par.viash_par_escaped(quo, """\"""", """\\\"""")
 
       val parse = { par match {
-        case a: BooleanArgument if a.multiple =>
+        case a: BooleanArgumentBase if a.multiple =>
           s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => bool.Parse(x.ToLower())).ToArray()"""
         case a: IntegerArgument if a.multiple =>
           s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => Convert.ToInt32(x)).ToArray()"""
@@ -57,7 +57,7 @@ case class CSharpScript(
           s"""$env_name.Split($quo${a.multiple_sep}$quo).ToArray()"""
         case a: StringArgument if a.multiple =>
           s"""$env_name.Split($quo${a.multiple_sep}$quo).ToArray()"""
-        case _: BooleanArgument => s"""bool.Parse($env_name.ToLower())"""
+        case _: BooleanArgumentBase => s"""bool.Parse($env_name.ToLower())"""
         case _: IntegerArgument => s"""Convert.ToInt32($env_name)"""
         case _: DoubleArgument => s"""Convert.ToDouble($env_name)"""
         case _: FileArgument => s"""$env_name"""
@@ -65,7 +65,7 @@ case class CSharpScript(
       }}
 
       val class_ = par match {
-        case _: BooleanArgument => "bool"
+        case _: BooleanArgumentBase => "bool"
         case _: IntegerArgument => "int"
         case _: DoubleArgument => "double"
         case _: FileArgument => "string"

@@ -25,6 +25,11 @@
 
 * `WorkflowHelper::helpMessage`: Rewrite to bring on par with Viash's help message.
 
+* `BooleanArguments`: Renamed internal class names for BooleanArguments to be better in line with how they are named in the config yaml.
+  `BooleanArgumentRegular` -> `BooleanArgument` (in line with `boolean`)
+  `BooleanArgumentTrue` -> `BooleanTrueArgument` (in line with `boolean_true`)
+  `BooleanArgumentFalse` -> `BooleanFalseArgument` (in line with `boolean_false`)
+
 ## BUG FIXES
 
 * `NextflowVdsl3Platform`: Change how `--id` is processed when a VDSL3 module is called from the CLI.

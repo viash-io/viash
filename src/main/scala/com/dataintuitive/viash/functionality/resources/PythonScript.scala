@@ -47,7 +47,7 @@ case class PythonScript(
       val env_name = par.viash_par_escaped("'", """\'""", """\\\'""")
 
       val parse = par match {
-        case a: BooleanArgument if a.multiple =>
+        case a: BooleanArgumentBase if a.multiple =>
           s"""list(map(lambda x: (x.lower() == 'true'), $env_name.split('${a.multiple_sep}')))"""
         case a: IntegerArgument if a.multiple =>
           s"""list(map(int, $env_name.split('${a.multiple_sep}')))"""
@@ -57,7 +57,7 @@ case class PythonScript(
           s"""$env_name.split('${a.multiple_sep}')"""
         case a: StringArgument if a.multiple =>
           s"""$env_name.split('${a.multiple_sep}')"""
-        case _: BooleanArgument => s"""$env_name.lower() == 'true'"""
+        case _: BooleanArgumentBase => s"""$env_name.lower() == 'true'"""
         case _: IntegerArgument => s"""int($env_name)"""
         case _: DoubleArgument => s"""float($env_name)"""
         case _: FileArgument => s"""$env_name"""

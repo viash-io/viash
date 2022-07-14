@@ -47,7 +47,7 @@ case class JavaScriptScript(
       val env_name = par.viash_par_escaped("'", """\'""", """\\\'""")
 
       val parse = par match {
-        case a: BooleanArgument if a.multiple =>
+        case a: BooleanArgumentBase if a.multiple =>
           s"""$env_name.split('${a.multiple_sep}').map(x => x.toLowerCase() === 'true')"""
         case a: IntegerArgument if a.multiple =>
           s"""$env_name.split('${a.multiple_sep}').map(x => parseInt(x))"""
@@ -57,7 +57,7 @@ case class JavaScriptScript(
           s"""$env_name.split('${a.multiple_sep}')"""
         case a: StringArgument if a.multiple =>
           s"""$env_name.split('${a.multiple_sep}')"""
-        case _: BooleanArgument => s"""$env_name.toLowerCase() === 'true'"""
+        case _: BooleanArgumentBase => s"""$env_name.toLowerCase() === 'true'"""
         case _: IntegerArgument => s"""parseInt($env_name)"""
         case _: DoubleArgument => s"""parseFloat($env_name)"""
         case _: FileArgument => s"""$env_name"""

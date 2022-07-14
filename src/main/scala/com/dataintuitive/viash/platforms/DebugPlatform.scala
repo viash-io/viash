@@ -47,7 +47,7 @@ case class DebugPlatform(
           arg.copyArg(required = false)
         case arg if arg.default.isEmpty && arg.example.nonEmpty => 
           arg.copyArg(required = false, default = arg.example)
-        case arg: BooleanArgument if arg.default.isEmpty => 
+        case arg: BooleanArgumentBase if arg.default.isEmpty => 
           arg.copyArg(required = false, default = One(true))
         case arg: DoubleArgument if arg.default.isEmpty => 
           arg.copy(required = false, default = One(123.0), min = None, max = None)

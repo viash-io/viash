@@ -274,7 +274,7 @@ object BashWrapper {
     // gather parse code for params
     val wrapperParams = params.filterNot(_.flags == "")
     val parseStrs = wrapperParams.map {
-      case bo: BooleanArgument if bo.flagValue.isDefined =>
+      case bo: BooleanArgumentBase if bo.flagValue.isDefined =>
         val fv = bo.flagValue.get
 
         // params of the form --param
@@ -345,7 +345,7 @@ object BashWrapper {
       // if boolean argument has a flagvalue, add the inverse of it as a default value
       val default = param match {
         case p if p.required => None
-        case bo: BooleanArgument if bo.flagValue.isDefined => bo.flagValue.map(!_)
+        case bo: BooleanArgumentBase if bo.flagValue.isDefined => bo.flagValue.map(!_)
         case p if p.default.nonEmpty => Some(p.default.map(_.toString).mkString(p.multiple_sep.toString))
         case p if p.default.isEmpty => None
       }
@@ -468,7 +468,7 @@ object BashWrapper {
                 typeMinMaxCheck(io, "^[-+]?[0-9]+$", io.min, io.max)
               case dO: DoubleArgument =>
                 typeMinMaxCheck(dO, "^[-+]?(\\.[0-9]+|[0-9]+(\\.[0-9]*)?)([eE][-+]?[0-9]+)?$", dO.min, dO.max)
-              case bo: BooleanArgument =>
+              case bo: BooleanArgumentBase =>
                 typeMinMaxCheck(bo, "^(true|True|TRUE|false|False|FALSE|yes|Yes|YES|no|No|NO)$")               
               case _ => ""
             }           
@@ -535,7 +535,7 @@ object BashWrapper {
 
   private def generateExecutableArgs(params: List[Argument[_]]) = {
     val inserts = params.map {
-      case bo: BooleanArgument if bo.flagValue.isDefined =>
+      case bo: BooleanArgumentBase if bo.flagValue.isDefined =>
         s"""
            |if [ "$$${bo.VIASH_PAR}" == "${bo.flagValue.get}" ]; then
            |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS ${bo.name}"

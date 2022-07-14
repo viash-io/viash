@@ -80,9 +80,9 @@ package object arguments {
   implicit val encodeStringArgument: Encoder.AsObject[StringArgument] = deriveConfiguredEncoder
   implicit val encodeIntegerArgument: Encoder.AsObject[IntegerArgument] = deriveConfiguredEncoder
   implicit val encodeDoubleArgument: Encoder.AsObject[DoubleArgument] = deriveConfiguredEncoder
-  implicit val encodeBooleanArgumentR: Encoder.AsObject[BooleanArgumentRegular] = deriveConfiguredEncoder
-  implicit val encodeBooleanArgumentT: Encoder.AsObject[BooleanArgumentTrue] = deriveConfiguredEncoder
-  implicit val encodeBooleanArgumentF: Encoder.AsObject[BooleanArgumentFalse] = deriveConfiguredEncoder
+  implicit val encodeBooleanArgumentR: Encoder.AsObject[BooleanArgument] = deriveConfiguredEncoder
+  implicit val encodeBooleanArgumentT: Encoder.AsObject[BooleanTrueArgument] = deriveConfiguredEncoder
+  implicit val encodeBooleanArgumentF: Encoder.AsObject[BooleanFalseArgument] = deriveConfiguredEncoder
   implicit val encodeFileArgument: Encoder.AsObject[FileArgument] = deriveConfiguredEncoder
 
   implicit def encodeArgument[A <: Argument[_]]: Encoder[A] = Encoder.instance {
@@ -92,9 +92,9 @@ package object arguments {
         case s: StringArgument => encodeStringArgument(s)
         case s: IntegerArgument => encodeIntegerArgument(s)
         case s: DoubleArgument => encodeDoubleArgument(s)
-        case s: BooleanArgumentRegular => encodeBooleanArgumentR(s)
-        case s: BooleanArgumentTrue => encodeBooleanArgumentT(s)
-        case s: BooleanArgumentFalse => encodeBooleanArgumentF(s)
+        case s: BooleanArgument => encodeBooleanArgumentR(s)
+        case s: BooleanTrueArgument => encodeBooleanArgumentT(s)
+        case s: BooleanFalseArgument => encodeBooleanArgumentF(s)
         case s: FileArgument => encodeFileArgument(s)
       }
       objJson deepMerge typeJson
@@ -103,9 +103,9 @@ package object arguments {
   implicit val decodeStringArgument: Decoder[StringArgument] = deriveConfiguredDecoder
   implicit val decodeIntegerArgument: Decoder[IntegerArgument] = deriveConfiguredDecoder
   implicit val decodeDoubleArgument: Decoder[DoubleArgument] = deriveConfiguredDecoder
-  implicit val decodeBooleanArgumentR: Decoder[BooleanArgumentRegular] = deriveConfiguredDecoder
-  implicit val decodeBooleanArgumentT: Decoder[BooleanArgumentTrue] = deriveConfiguredDecoder
-  implicit val decodeBooleanArgumentF: Decoder[BooleanArgumentFalse] = deriveConfiguredDecoder
+  implicit val decodeBooleanArgumentR: Decoder[BooleanArgument] = deriveConfiguredDecoder
+  implicit val decodeBooleanArgumentT: Decoder[BooleanTrueArgument] = deriveConfiguredDecoder
+  implicit val decodeBooleanArgumentF: Decoder[BooleanFalseArgument] = deriveConfiguredDecoder
   implicit val decodeFileArgument: Decoder[FileArgument] = deriveConfiguredDecoder
 
   implicit def decodeDataArgument: Decoder[Argument[_]] = Decoder.instance {
