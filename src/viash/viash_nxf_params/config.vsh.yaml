@@ -17,6 +17,11 @@ functionality:
     type: file
     description: nextflow params file
     required: false
+  arguments:
+  - name: "--add_globals"
+    type: boolean
+    default: true
+    description: "Add global Nxf arguments"
   resources:
   - type: bash_script
     path: script.sh

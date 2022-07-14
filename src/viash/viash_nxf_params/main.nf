@@ -4,10 +4,23 @@ include { readConfig; addGlobalParams } from params.resourcesDir + "/WorkflowHel
 
 def config = readConfig(params.input)
 
+// add nxf global params
+if (params.addGlobals) {
+  config = addGlobalParams(config)
+}
+
 def text = config.functionality.argument_groups.collect{group -> 
   def argText = group.arguments.collect{argName ->
     def arg = config.functionality.allArguments.find{it.plainName == argName}
+    
+    // set output files to optional
+    if (arg.type == "file" && arg.direction == "output") {
+      arg.required = false
+      arg.example = arg.default ?: arg.example
+      arg.default = null
+    }
 
+    def name = arg.plainName
     def val = ""
     // based on DebugPlatform.scala
     if (arg.default != null) {
@@ -25,8 +38,25 @@ def text = config.functionality.argument_groups.collect{group ->
     } else if (arg.type == "file") {
         val = "path/to/file"
     }
-    quo = (arg.type == "string" || arg.type == "file") ? "\"" : ""
-    "${arg.plainName}: $quo$val$quo\n"
+    // split multiple if need be
+    if (arg.multiple && val !instanceof List) {
+      val = val.split(arg.multiple_sep).toList()
+    }
+    // enquote values
+    if (arg.type == "string" || arg.type == "file") {
+      if (arg.multiple && val !instanceof String) {
+        val = val.collect{"\"$it\""}
+      } else {
+        val = "\"$val\""
+      }
+    }
+    if (arg.required) {
+      val = "# please fill in - example: $val"
+    } else if (arg.default == null) {
+      name = "# $name"
+    }
+
+    "$name: $val\n"
   }.join()
 
   "# ${group.name}\n${argText}"
