@@ -40,7 +40,7 @@ final case class ParameterSchema(
   name: String,
   `type`: String,
   description: Option[String],
-  example: List[ExampleSchema],
+  example: Option[List[ExampleSchema]],
   since: Option[String],
   deprecated: Option[DeprecatedOrRemovedSchema],
   removed: Option[DeprecatedOrRemovedSchema],
@@ -95,7 +95,10 @@ object ParameterSchema {
     val annStrings = annotations.map(annotationToStrings(_))
 
     val description = annStrings.collectFirst({case (name, value) if name.endsWith("description") => value.head})
-    val example = annStrings.collect({case (name, value) if name.endsWith("example") => value}).map(ExampleSchema(_))
+    val example = annStrings.collect({case (name, value) if name.endsWith("example") => value}).map(ExampleSchema(_)) match {
+      case l if l.length > 0 => Some(l)
+      case _ => None
+    }
     val since = annStrings.collectFirst({case (name, value) if name.endsWith("since") => value.head})
     val deprecated = annStrings.collectFirst({case (name, value) if name.endsWith("deprecated") => value}).map(DeprecatedOrRemovedSchema(_))
     val removed = annStrings.collectFirst({case (name, value) if name.endsWith("removed") => value}).map(DeprecatedOrRemovedSchema(_))
