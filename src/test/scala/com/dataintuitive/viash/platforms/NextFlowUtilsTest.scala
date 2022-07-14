@@ -1,7 +1,7 @@
-package com.dataintuitive.viash.platforms
+package io.viash.platforms
 
-import com.dataintuitive.viash.DockerTest
-import com.dataintuitive.viash.platforms.NextFlowUtils._
+import io.viash.DockerTest
+import io.viash.platforms.NextFlowUtils._
 import org.scalatest.FunSuite
 
 import scala.util.Try

@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.resources
+package io.viash.functionality.resources
 
-import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.arguments._
-import com.dataintuitive.viash.wrapper.BashWrapper
+import io.viash.functionality._
+import io.viash.functionality.arguments._
+import io.viash.wrapper.BashWrapper
 
 import java.net.URI
 
@@ -47,7 +47,7 @@ case class RScript(
       val env_name = par.viash_par_escaped("'", """\'""", """\\\'""")
 
       val parse = par match {
-        case a: BooleanArgument if a.multiple =>
+        case a: BooleanArgumentBase if a.multiple =>
           s"""as.logical(strsplit(toupper($env_name), split = '${a.multiple_sep}')[[1]])"""
         case a: IntegerArgument if a.multiple =>
           s"""as.integer(strsplit($env_name, split = '${a.multiple_sep}')[[1]])"""
@@ -57,7 +57,7 @@ case class RScript(
           s"""strsplit($env_name, split = '${a.multiple_sep}')[[1]]"""
         case a: StringArgument if a.multiple =>
           s"""strsplit($env_name, split = '${a.multiple_sep}')[[1]]"""
-        case _: BooleanArgument => s"""as.logical(toupper($env_name))"""
+        case _: BooleanArgumentBase => s"""as.logical(toupper($env_name))"""
         case _: IntegerArgument => s"""as.integer($env_name)"""
         case _: DoubleArgument => s"""as.numeric($env_name)"""
         case _: FileArgument => s"""$env_name"""

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.helpers
+package io.viash.helpers
 
 import java.io.{File, IOException}
 import java.nio.file.{FileVisitResult, Files, Path, Paths, SimpleFileVisitor}
@@ -26,7 +26,7 @@ import scala.io.Source
 import java.net.URL
 import sys.process._
 import java.nio.charset.StandardCharsets
-import com.dataintuitive.viash.functionality.resources.Resource
+import io.viash.functionality.resources.Resource
 
 import java.nio.file.attribute.PosixFilePermission
 import java.util.Comparator

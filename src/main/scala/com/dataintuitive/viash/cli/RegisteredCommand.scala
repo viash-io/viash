@@ -15,12 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.cli
+package io.viash.cli
 
 import org.rogach.scallop.ScallopConfBase
 import io.circe.{Printer => JsonPrinter}
 import io.circe.syntax.EncoderOps
-import com.dataintuitive.viash.helpers.Circe._
+import io.viash.helpers.Circe._
 
 case class RegisteredCommand (
   name: String,

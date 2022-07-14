@@ -15,14 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash
+package io.viash
 
 import io.circe.Encoder
 import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
 import org.rogach.scallop.CliOption
 
 package object cli {
-  import com.dataintuitive.viash.helpers.Circe._
+  import io.viash.helpers.Circe._
   
   implicit val encodeRegisteredCommand: Encoder.AsObject[RegisteredCommand] = deriveConfiguredEncoder
   implicit val encodeRegisteredOpt: Encoder.AsObject[RegisteredOpt] = deriveConfiguredEncoder 

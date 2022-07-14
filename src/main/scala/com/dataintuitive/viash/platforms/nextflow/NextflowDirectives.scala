@@ -15,9 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.platforms.nextflow
+package io.viash.platforms.nextflow
 
-import com.dataintuitive.viash.helpers.Circe.OneOrMore
+import io.viash.helpers.Circe.OneOrMore
 // todo: assert contents?
 case class NextflowDirectives(
   accelerator: Map[String, String] = Map(),

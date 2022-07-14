@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.config
+package io.viash.config
 
 case class Version(s: String) {
   override def toString: String = s

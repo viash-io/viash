@@ -4,6 +4,10 @@
 
 * `WorkflowHelper::helpMessage`: Now only takes one argument, namely the config.
 
+## MAJOR CHANGES
+
+* `Namespace`: Changed the namespace of viash from `com.dataintuitive.viash` to `io.viash`.
+
 ## MINOR CHANGES
 
 * `Testbenches`: Add a testbench framework to test lots of character sequences, single or repeating to be tested in the yaml config. This can be used to later extend to other tests.
@@ -24,6 +28,11 @@
 * `Functionality`: Add default groups `Inputs`, `Outputs` and `Arguments` for all arguments missing from user-defined `argument_groups`.
 
 * `WorkflowHelper::helpMessage`: Rewrite to bring on par with Viash's help message.
+
+* `BooleanArguments`: Renamed internal class names for BooleanArguments to be better in line with how they are named in the config yaml.
+  `BooleanArgumentRegular` -> `BooleanArgument` (in line with `boolean`)
+  `BooleanArgumentTrue` -> `BooleanTrueArgument` (in line with `boolean_true`)
+  `BooleanArgumentFalse` -> `BooleanFalseArgument` (in line with `boolean_false`)
 
 ## BUG FIXES
 

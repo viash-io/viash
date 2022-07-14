@@ -15,18 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.helpers
+package io.viash.helpers
 
 import scala.reflect.runtime.universe._
 import io.circe.{Printer => JsonPrinter}
 import io.circe.syntax.EncoderOps
-import com.dataintuitive.viash.helpers.Circe._
+import io.viash.helpers.Circe._
 
 import io.circe.Encoder
 import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
-import com.dataintuitive.viash.functionality.Functionality
-import com.dataintuitive.viash.platforms._
-import com.dataintuitive.viash.platforms.requirements._
+import io.viash.functionality.Functionality
+import io.viash.platforms._
+import io.viash.platforms.requirements._
 
 final case class CollectedSchemas (
   // functionality
@@ -99,7 +99,7 @@ object ParameterSchema {
   }
 
   def apply(name: String, `type`: String, annotations: List[Annotation]): ParameterSchema = {
-    // name is e.g. "com.dataintuitive.viash.functionality.Functionality.name", only keep "name"
+    // name is e.g. "io.viash.functionality.Functionality.name", only keep "name"
     // name can also be "__this__"
     val name_ = name.split('.').last
     val annStrings = annotations.map(annotationToStrings(_))
@@ -144,8 +144,8 @@ object CollectedSchemas {
   private implicit val encodeExample: Encoder.AsObject[ExampleSchema] = deriveConfiguredEncoder
 
   private def trimTypeName(s: String) = {
-    // first: com.dataintuitive.viash.helpers.Circe.OneOrMore[String] -> OneOrMore[String]
-    // second: List[com.dataintuitive.viash.platforms.requirements.Requirements] -> List[Requirements]
+    // first: io.viash.helpers.Circe.OneOrMore[String] -> OneOrMore[String]
+    // second: List[io.viash.platforms.requirements.Requirements] -> List[Requirements]
     s.replaceAll("^(\\w*\\.)*", "").replaceAll("""(\w*)\[[\w\.]*?([\w,]*)(\[_\])?\]""", "$1 of $2")
   }
 
@@ -155,7 +155,7 @@ object CollectedSchemas {
     val allAnnotations = annThis :: annMembers.toList
     // filter out any information not from our own class and lazy evaluators (we'll use the standard one - otherwise double info and more complex)
     allAnnotations
-      .filter(a => a._1.startsWith("com.dataintuitive.viash") || a._1 == "__this__")
+      .filter(a => a._1.startsWith("io.viash") || a._1 == "__this__")
       .filter(!_._2.startsWith("=> "))
       .map({case (a, b, c) => (a, trimTypeName(b), c)})
   }

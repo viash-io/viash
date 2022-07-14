@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.platforms.nextflow
+package io.viash.platforms.nextflow
 
 case class NextflowAuto(
   simplifyInput: Boolean = true,

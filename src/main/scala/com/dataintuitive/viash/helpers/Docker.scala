@@ -15,9 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.helpers
+package io.viash.helpers
 
-import com.dataintuitive.viash.functionality.Functionality
+import io.viash.functionality.Functionality
 
 case class DockerImageInfo(
   name: String, 

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash
+package io.viash
 
 import config._
 import functionality.resources.{BashScript, Executable, PlainFile, PythonScript, RScript}

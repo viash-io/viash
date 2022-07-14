@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.resources
+package io.viash.functionality.resources
 
 import java.net.URI
 
-import com.dataintuitive.viash.helpers.{IO, MissingResourceFileException}
+import io.viash.helpers.{IO, MissingResourceFileException}
 import java.nio.file.{Path, Paths}
 import java.nio.file.NoSuchFileException
 

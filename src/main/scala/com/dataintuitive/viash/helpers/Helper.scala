@@ -15,12 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.helpers
+package io.viash.helpers
 
-import com.dataintuitive.viash.functionality.Functionality
-import com.dataintuitive.viash.functionality.arguments._
-import com.dataintuitive.viash.Main
-import com.dataintuitive.viash.functionality.ArgumentGroup
+import io.viash.functionality.Functionality
+import io.viash.functionality.arguments._
+import io.viash.Main
+import io.viash.functionality.ArgumentGroup
 
 object Helper {
   private val maxWidth: Int = 80

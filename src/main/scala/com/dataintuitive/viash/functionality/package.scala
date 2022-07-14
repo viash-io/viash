@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash
+package io.viash
 
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import io.circe.{Decoder, Encoder, Json}
@@ -27,7 +27,7 @@ package object functionality {
 
   import functionality.arguments._
   import functionality.resources._
-  import com.dataintuitive.viash.helpers.Circe._
+  import io.viash.helpers.Circe._
 
   // encoder and decoder for Functionality
   implicit val encodeFunctionality: Encoder.AsObject[Functionality] = deriveConfiguredEncoder

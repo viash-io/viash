@@ -15,15 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.arguments
+package io.viash.functionality.arguments
 
-import com.dataintuitive.viash.helpers.Circe.OneOrMore
+import io.viash.helpers.Circe.OneOrMore
 
-abstract class BooleanArgument extends Argument[Boolean] {
+abstract class BooleanArgumentBase extends Argument[Boolean] {
   val flagValue: Option[Boolean]
 }
 
-case class BooleanArgumentRegular(
+case class BooleanArgument(
   name: String,
   alternatives: OneOrMore[String] = Nil,
   description: Option[String] = None,
@@ -34,7 +34,7 @@ case class BooleanArgumentRegular(
   multiple: Boolean = false,
   multiple_sep: Char = ':',
   `type`: String = "boolean"
-) extends BooleanArgument {
+) extends BooleanArgumentBase {
 
   val flagValue: Option[Boolean] = None
 
@@ -54,13 +54,13 @@ case class BooleanArgumentRegular(
   }
 }
 
-case class BooleanArgumentTrue(
+case class BooleanTrueArgument(
   name: String,
   alternatives: OneOrMore[String] = Nil,
   description: Option[String] = None,
   direction: Direction = Input,
   `type`: String = "boolean_true"
-) extends BooleanArgument {
+) extends BooleanArgumentBase {
 
   val required: Boolean = false
   val flagValue: Option[Boolean] = Some(true)
@@ -85,13 +85,13 @@ case class BooleanArgumentTrue(
   }
 }
 
-case class BooleanArgumentFalse(
+case class BooleanFalseArgument(
   name: String,
   alternatives: OneOrMore[String] = Nil,
   description: Option[String] = None,
   direction: Direction = Input,
   `type`: String = "boolean_false"
-) extends BooleanArgument {
+) extends BooleanArgumentBase {
 
   val required: Boolean = false
   val flagValue: Option[Boolean] = Some(false)
