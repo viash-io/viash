@@ -1,8 +1,8 @@
-package com.dataintuitive.viash
+package io.viash
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 
-import com.dataintuitive.viash.helpers.IO
+import io.viash.helpers.IO
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 import scala.reflect.io.Directory
@@ -140,18 +140,20 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, false)
   }
 
-    test("Check standard test output with legacy 'tests' definition", DockerTest) {
-    val testText = TestHelper.testMain(
+  test("Check standard test output with legacy 'tests' definition", DockerTest) {
+    val (stdout, stderr) = TestHelper.testMainWithStdErr(
       "test",
       "-p", "docker",
       configLegacyTestFile
     )
 
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(stderr.contains("Notice: functionality.tests is deprecated. Please use functionality.test_resources instead."))
 
-    checkTempDirAndRemove(testText, false)
+    assert(stdout.contains("Running tests in temporary directory: "))
+    assert(stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(stdout.contains("Cleaning up temporary directory"))
+
+    checkTempDirAndRemove(stdout, false)
   }
   //</editor-fold>
   //<editor-fold desc="Invalid config files">

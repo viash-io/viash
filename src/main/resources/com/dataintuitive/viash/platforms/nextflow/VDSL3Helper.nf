@@ -572,11 +572,23 @@ def processFactory(Map processArgs) {
   def inputFileExports = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
     .collect { par ->
-      viash_par_contents = !par.required && !par.multiple ? "viash_par_${par.plainName}[0]" : "viash_par_${par.plainName}.join(\":\")"
+      viash_par_contents = !par.required && !par.multiple ? "viash_par_${par.plainName}[0]" : "viash_par_${par.plainName}.join(\"${par.multiple_sep}\")"
       "\n\${viash_par_${par.plainName}.empty ? \"\" : \"export VIASH_PAR_${par.plainName.toUpperCase()}=\\\"\" + ${viash_par_contents} + \"\\\"\"}"
     }
-  
-  def tmpDir = "/tmp" // check if component is docker based
+
+  // NOTE: if using docker, use /tmp instead of tmpDir!
+  def tmpDir = java.nio.file.Paths.get(
+    System.getenv('NXF_TEMP') ?: 
+    System.getenv('VIASH_TEMP') ?: 
+    System.getenv('VIASH_TMPDIR') ?: 
+    System.getenv('VIASH_TEMPDIR') ?: 
+    System.getenv('VIASH_TMP') ?: 
+    System.getenv('TEMP') ?: 
+    System.getenv('TMPDIR') ?: 
+    System.getenv('TEMPDIR') ?:
+    System.getenv('TMP') ?: 
+    '/tmp'
+  ).toAbsolutePath()
 
   // construct stub
   def stub = thisConfig.functionality.allArguments
@@ -611,7 +623,7 @@ def processFactory(Map processArgs) {
   |$tripQuo
   |# meta exports
   |export VIASH_META_RESOURCES_DIR="\${resourcesDir.toRealPath().toAbsolutePath()}"
-  |export VIASH_META_TEMP_DIR="${tmpDir}"
+  |export VIASH_META_TEMP_DIR="${['docker', 'podman', 'charliecloud'].any{ it == workflow.containerEngine } ? '/tmp' : tmpDir}"
   |export VIASH_META_FUNCTIONALITY_NAME="${thisConfig.functionality.name}"
   |export VIASH_META_EXECUTABLE="\\\$VIASH_META_RESOURCES_DIR/\\\$VIASH_META_FUNCTIONALITY_NAME"
   |
@@ -784,7 +796,7 @@ def workflowFactory(Map args) {
         def combinedArgs = defaultArgs + paramArgs + processArgs.args + dataArgs
 
         // remove arguments with explicit null values
-        combinedArgs.removeAll{it == null}
+        combinedArgs.removeAll{it.value == null}
 
         // check whether required arguments exist
         thisConfig.functionality.allArguments
@@ -904,13 +916,25 @@ ScriptMeta.current().addDefinition(myWfInstance)
 
 // anonymous workflow for running this module as a standalone
 workflow {
-  helpMessage(params, thisConfig)
+  def mergedConfig = thisConfig
 
-  if (!params.containsKey("id")) {
-    params.id = "run"
+  // add id argument if it's not already in the config
+  if (mergedConfig.functionality.arguments.every{it.plainName != "id"}) {
+    def idArg = [
+      'name': '--id',
+      'required': false,
+      'type': 'string',
+      'description': 'A unique id for every entry.',
+      'default': 'run',
+      'multiple': false
+    ]
+    mergedConfig.functionality.arguments.add(0, idArg)
+    mergedConfig = processConfig(mergedConfig)
   }
 
-  viashChannel(params, thisConfig)
+  helpMessage(mergedConfig)
+
+  viashChannel(params, mergedConfig)
     | view { "input: $it" }
     | myWfInstance.run(
       auto: [ publish: true ]

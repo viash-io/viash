@@ -1,7 +1,7 @@
-package com.dataintuitive.viash
+package io.viash
 
-import com.dataintuitive.viash.config.Config
-import com.dataintuitive.viash.helpers.{Exec, IO}
+import io.viash.config.Config
+import io.viash.helpers.{Exec, IO}
 import io.circe.yaml.parser
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 

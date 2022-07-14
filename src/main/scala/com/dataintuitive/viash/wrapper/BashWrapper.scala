@@ -15,12 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.wrapper
+package io.viash.wrapper
 
-import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.functionality.arguments._
-import com.dataintuitive.viash.helpers.{Bash, Format, Helper}
+import io.viash.functionality._
+import io.viash.functionality.resources._
+import io.viash.functionality.arguments._
+import io.viash.helpers.{Bash, Format, Helper}
 
 object BashWrapper {
   val metaFields: List[(String, String)] = {
@@ -160,10 +160,10 @@ object BashWrapper {
     }
 
     // generate script modifiers
-    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
-    val paramAndDummies = functionality.allArgumentsAndDummies.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
+    val params = functionality.allArguments
+    val paramAndDummies = functionality.allArgumentsAndDummies
 
-    val helpMods = generateHelp(functionality, params)
+    val helpMods = generateHelp(functionality)
     val parMods = generateParsers(params, paramAndDummies)
     val execMods = mainResource match {
       case Some(_: Executable) => generateExecutableArgs(params)
@@ -257,8 +257,8 @@ object BashWrapper {
   }
 
 
-  private def generateHelp(functionality: Functionality, params: List[Argument[_]]) = {
-    val help = Helper.generateHelp(functionality, params)
+  private def generateHelp(functionality: Functionality) = {
+    val help = Helper.generateHelp(functionality)
     val helpStr = help.map(h => Bash.escapeMore(h, quote = true)).mkString("  echo \"", "\"\n  echo \"", "\"")
 
     val preParse =
@@ -274,7 +274,7 @@ object BashWrapper {
     // gather parse code for params
     val wrapperParams = params.filterNot(_.flags == "")
     val parseStrs = wrapperParams.map {
-      case bo: BooleanArgument if bo.flagValue.isDefined =>
+      case bo: BooleanArgumentBase if bo.flagValue.isDefined =>
         val fv = bo.flagValue.get
 
         // params of the form --param
@@ -345,7 +345,7 @@ object BashWrapper {
       // if boolean argument has a flagvalue, add the inverse of it as a default value
       val default = param match {
         case p if p.required => None
-        case bo: BooleanArgument if bo.flagValue.isDefined => bo.flagValue.map(!_)
+        case bo: BooleanArgumentBase if bo.flagValue.isDefined => bo.flagValue.map(!_)
         case p if p.default.nonEmpty => Some(p.default.map(_.toString).mkString(p.multiple_sep.toString))
         case p if p.default.isEmpty => None
       }
@@ -468,7 +468,7 @@ object BashWrapper {
                 typeMinMaxCheck(io, "^[-+]?[0-9]+$", io.min, io.max)
               case dO: DoubleArgument =>
                 typeMinMaxCheck(dO, "^[-+]?(\\.[0-9]+|[0-9]+(\\.[0-9]*)?)([eE][-+]?[0-9]+)?$", dO.min, dO.max)
-              case bo: BooleanArgument =>
+              case bo: BooleanArgumentBase =>
                 typeMinMaxCheck(bo, "^(true|True|TRUE|false|False|FALSE|yes|Yes|YES|no|No|NO)$")               
               case _ => ""
             }           
@@ -535,7 +535,7 @@ object BashWrapper {
 
   private def generateExecutableArgs(params: List[Argument[_]]) = {
     val inserts = params.map {
-      case bo: BooleanArgument if bo.flagValue.isDefined =>
+      case bo: BooleanArgumentBase if bo.flagValue.isDefined =>
         s"""
            |if [ "$$${bo.VIASH_PAR}" == "${bo.flagValue.get}" ]; then
            |  VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS ${bo.name}"

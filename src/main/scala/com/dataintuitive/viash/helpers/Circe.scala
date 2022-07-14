@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.helpers
+package io.viash.helpers
 
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.Configuration

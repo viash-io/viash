@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.cli
+package io.viash.cli
 
 import org.rogach.scallop.Subcommand
 import org.rogach.scallop.ScallopOptionGroup
@@ -30,6 +30,18 @@ import scala.reflect.runtime.universe._
 class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(commandNameAndAliases:_*) {
   var registeredSubCommands: Seq[DocumentedSubcommand] = Nil
   var registeredOpts: Seq[RegisteredOpt] = Nil
+
+  var command: Option[String] = None
+  var description: Option[String] = None
+  var usage: Option[String] = None
+
+  def banner(command: String, description: String, usage: String): Unit = {
+    this.command = Some(command)
+    this.description = Some(description)
+    this.usage = Some(usage)
+
+    super.banner(s"$command\n$description\n\nUsage:\n  $usage\n\nArguments:")
+  }
 
 
   override def addSubcommand(conf: Subcommand): Unit = {
@@ -149,7 +161,9 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
   def toRegisteredCommand: RegisteredCommand = 
     RegisteredCommand(
       name = commandNameAndAliases.mkString(" + "),
-      banner = builder.bann,
+      bannerCommand = command,
+      bannerDescription = description,
+      bannerUsage = usage,
       footer = builder.foot,
       subcommands = registeredSubCommands.map(_.toRegisteredCommand),
       opts = registeredOpts

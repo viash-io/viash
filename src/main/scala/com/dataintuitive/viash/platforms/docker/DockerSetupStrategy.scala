@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.platforms.docker
+package io.viash.platforms.docker
 
 sealed class DockerSetupStrategy(val id: String, val synonyms: List[String] = Nil)
 

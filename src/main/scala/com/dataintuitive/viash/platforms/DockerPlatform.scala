@@ -15,50 +15,171 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.platforms
+package io.viash.platforms
 
-import com.dataintuitive.viash.config.Config
-import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.arguments._
-import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.platforms.requirements._
-import com.dataintuitive.viash.helpers.{Bash, Docker}
-import com.dataintuitive.viash.config.Version
-import com.dataintuitive.viash.wrapper.{BashWrapper, BashWrapperMods}
-import com.dataintuitive.viash.platforms.docker._
-import com.dataintuitive.viash.helpers.Circe._
-import com.dataintuitive.viash.config.Info
+import io.viash.config.Config
+import io.viash.functionality._
+import io.viash.functionality.arguments._
+import io.viash.functionality.resources._
+import io.viash.platforms.requirements._
+import io.viash.helpers.{Bash, Docker}
+import io.viash.config.Version
+import io.viash.wrapper.{BashWrapper, BashWrapperMods}
+import io.viash.platforms.docker._
+import io.viash.helpers.Circe._
+import io.viash.config.Info
 import java.util.Date
 import java.text.SimpleDateFormat
+import io.viash.helpers.description
+import io.viash.helpers.example
+import io.viash.helpers.deprecated
 
+@description("""Run a Viash component on a Docker backend platform.
+               |By specifying which dependencies your component needs, users will be able to build a docker container from scratch using the setup flag, or pull it from a docker repository.
+               |""".stripMargin)
 case class DockerPlatform(
+  @description("As with all platforms, you can give a platform a different name. By specifying `id: foo`, you can target this platform (only) by specifying `-p foo` in any of the Viash commands.")
+  @example("id: foo", "yaml")
   id: String = "docker",
+
+  @description("The base container to start from. You can also add the tag here if you wish.")
+  @example("image: \"bash:4.0\"", "yaml")
   image: String,
+
+  @description("Name of a container’s [organization](https://docs.docker.com/docker-hub/orgs/).")
   organization: Option[String],
+
+  @description("The URL to the a [custom Docker registry](https://docs.docker.com/registry/)")
+  @example("registry: https://my-docker-registry.org", "yaml")
   registry: Option[String] = None,
+
+  @description("Specify a Docker image based on its tag.")
+  @example("tag: 4.0", "yaml")
   tag: Option[Version] = None,
+  
+  @description("If anything is specified in the setup section, running the `---setup` will result in an image with the name of `<target_image>:<version>`. If nothing is specified in the `setup` section, simply `image` will be used.")
+  @example("target_image: myfoo", "yaml")
   target_image: Option[String] = None,
   target_organization: Option[String] = None,
+
+  @description("The URL where the resulting image will be pushed to.")
+  @example("target_registry: https://my-docker-registry.org", "yaml")
   target_registry: Option[String] = None,
+
+  @description("The tag the resulting image gets.")
+  @example("target_tag: 0.5.0", "yaml")
   target_tag: Option[Version] = None,
+
+  @description("The default namespace separator is \"_\".")
+  @example("namespace_separator: \"+\"", "yaml")
   namespace_separator: String = "_",
   resolve_volume: DockerResolveVolume = Automatic,
+
+  @description("In Linux, files created by a Docker container will be owned by `root`. With `chown: true`, Viash will automatically change the ownership of output files (arguments with `type: file` and `direction: output`) to the user running the Viash command after execution of the component. Default value: `true`.")
+  @example("chown: false", "yaml")
   chown: Boolean = true,
+
+  @description("A list of enabled ports. This doesn’t change the Dockerfile but gets added as a command-line argument at runtime.")
+  @example("""port:
+             |  - 80
+             |  - 8080
+             |""".stripMargin, "yaml")
   port: OneOrMore[String] = Nil,
+
+  @description("The working directory when starting the container. This doesn’t change the Dockerfile but gets added as a command-line argument at runtime.")
+  @example("workdir: /home/user", "yaml")
   workdir: Option[String] = None,
   setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,
   privileged: Boolean = false,
+
+  @description("Add [docker run](https://docs.docker.com/engine/api/commandline/run/) arguments.")
   run_args: OneOrMore[String] = Nil,
+
+  @description("The source of the target image. This is used for defining labels in the dockerfile.")
+  @example("target_image_source: https://github.com/foo/bar", "yaml")
   target_image_source: Option[String] = None,
   `type`: String = "docker",
 
   // setup variables
+  @description("""A list of requirements for installing the following types of packages:
+                 |
+                 | - apt
+                 | - apk
+                 | - yum
+                 | - R
+                 | - Python
+                 | - JavaScript
+                 | - Docker setup instructions
+                 |
+                 |The order in which these dependencies are specified determines the order in which they will be installed.
+                 |""".stripMargin)
   setup: List[Requirements] = Nil,
+
+  @description("Specify which apk packages should be available in order to run the component.")
+  @example("""setup:
+             |  - type: apk
+             |    packages: [ sl ]
+             |""".stripMargin, "yaml")
+  @deprecated("Use `setup` instead.", "Viash 0.5.15")
   apk: Option[ApkRequirements] = None,
+
+  @description("Specify which apt packages should be available in order to run the component.")
+  @example("""setup:
+             |  - type: apt
+             |    packages: [ sl ]
+             |""".stripMargin, "yaml")
+  @deprecated("Use `setup` instead.", "Viash 0.5.15")
   apt: Option[AptRequirements] = None,
+
+  @description("Specify which yum packages should be available in order to run the component.")
+  @example("""setup:
+             |  - type: yum
+             |    packages: [ sl ]
+             |""".stripMargin, "yaml")
+  @deprecated("Use `setup` instead.", "Viash 0.5.15")
   yum: Option[YumRequirements] = None,
+
+  @description("Specify which R packages should be available in order to run the component.")
+  @example("""setup: 
+             |  - type: r
+             |    cran: [ dynutils ]
+             |    bioc: [ AnnotationDbi ]
+             |    git: [ https://some.git.repository/org/repo ]
+             |    github: [ rcannood/SCORPIUS ]
+             |    gitlab: [ org/package ]
+             |    svn: [ https://path.to.svn/group/repo ]
+             |    url: [ https://github.com/hadley/stringr/archive/HEAD.zip ]
+             |    script: [ 'devtools::install(".")' ]
+             |""".stripMargin, "yaml")
+  @deprecated("Use `setup` instead.", "Viash 0.5.15")
   r: Option[RRequirements] = None,
+
+  @description("Specify which Python packages should be available in order to run the component.")
+  @example("""setup:
+             |  - type: python
+             |    pip: [ numpy ]
+             |    git: [ https://some.git.repository/org/repo ]
+             |    github: [ jkbr/httpie ]
+             |    gitlab: [ foo/bar ]
+             |    mercurial: [ http://... ]
+             |    svn: [ http://...]
+             |    bazaar: [ http://... ]
+             |    url: [ http://... ]
+             |""".stripMargin, "yaml")
+  @deprecated("Use `setup` instead.", "Viash 0.5.15")
   python: Option[PythonRequirements] = None,
+
+  @description("Specify which Docker commands should be run during setup.")
+  @example("""setup:
+             |  - type: docker
+             |    build_args: [ GITHUB_PAT=hello_world ]
+             |    run: [ git clone ... ]
+             |    add: [ "http://foo.bar ." ]
+             |    copy: [ "http://foo.bar ." ]
+             |    resources: 
+             |      - resource.txt /path/to/resource.txt
+             |""".stripMargin, "yaml")
+  @deprecated("Use `setup` instead.", "Viash 0.5.15")
   docker: Option[DockerRequirements] = None,
   test_setup: List[Requirements] = Nil
 ) extends Platform {

@@ -15,10 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.platforms.requirements
+package io.viash.platforms.requirements
 
-import com.dataintuitive.viash.helpers.Circe._
+import io.viash.helpers.Circe._
+import io.viash.helpers.description
 
+@description("Specify which Ruby packages should be available in order to run the component.")
 case class RubyRequirements(
   packages: OneOrMore[String] = Nil,
   `type`: String = "ruby"

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.helpers
+package io.viash.helpers
 
 object Scala {
   implicit class AugmentedOption[T](opt: Option[T]) {
@@ -28,3 +28,20 @@ object Scala {
     }
   }
 }
+
+import scala.annotation.meta._
+
+@getter @setter @beanGetter @beanSetter @field
+class since(since: String) extends scala.annotation.StaticAnnotation
+
+@getter @setter @beanGetter @beanSetter @field
+class example(example: String, format: String) extends scala.annotation.StaticAnnotation
+
+@getter @setter @beanGetter @beanSetter @field
+class description(example: String) extends scala.annotation.StaticAnnotation
+
+@getter @setter @beanGetter @beanSetter @field
+class deprecated(message: String = "", since: String = "") extends scala.annotation.StaticAnnotation
+
+@getter @setter @beanGetter @beanSetter @field
+class removed(message: String = "", since: String = "") extends scala.annotation.StaticAnnotation

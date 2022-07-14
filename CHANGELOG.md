@@ -1,3 +1,58 @@
+# Viash 0.5.15
+
+## BREAKING CHANGES
+
+* `WorkflowHelper::helpMessage`: Now only takes one argument, namely the config.
+
+## MAJOR CHANGES
+
+* `Namespace`: Changed the namespace of viash from `com.dataintuitive.viash` to `io.viash`.
+
+## MINOR CHANGES
+
+* `Testbenches`: Add a testbench framework to test lots of character sequences, single or repeating to be tested in the yaml config. This can be used to later extend to other tests.
+
+* `Testbenches::vdsl3`: Add testbenches to verify functionality:
+  - Vdsl3's `param_list` (`yamlblob`, `yaml`, `json`, `csv`).
+  - NextFlow's own `params-file`.
+  - Vdsl3's recalculating resource file paths to be relative to the `param_list` file instead of the workflow file (only available for `yaml`, `json`, `csv`).
+  - Vdsl3's wrapping of modules to run these as a separate workflow automagically out of the box.
+
+* `Main`: Added `viash --schema_export` which outputs a schema of the Viash config file
+  to console. This is to be used to automate populating the documentation website.
+
+* `Helper`: Split help message by argument group.
+
+* `Helper`: Remove unneeded arguments.
+
+* `Functionality`: Add default groups `Inputs`, `Outputs` and `Arguments` for all arguments missing from user-defined `argument_groups`.
+
+* `WorkflowHelper::helpMessage`: Rewrite to bring on par with Viash's help message.
+
+* `BooleanArguments`: Renamed internal class names for BooleanArguments to be better in line with how they are named in the config yaml.
+  `BooleanArgumentRegular` -> `BooleanArgument` (in line with `boolean`)
+  `BooleanArgumentTrue` -> `BooleanTrueArgument` (in line with `boolean_true`)
+  `BooleanArgumentFalse` -> `BooleanFalseArgument` (in line with `boolean_false`)
+
+## BUG FIXES
+
+* `NextflowVdsl3Platform`: Change how `--id` is processed when a VDSL3 module is called from the CLI.
+
+* `NextflowVdsl3Platform`: Fix error when param_list is `null`.
+
+* `NextflowVdsl3Platform`: Fix error when optional, multiple arguments are set to `null`.
+
+* `Testbenches`: Better capture expected error messages while running testbenches again. Code changes right before previous release re-introduced some of the messages.
+
+* `NextflowVdsl3Platform`: Fix issue where optional parameters aren't removed when `.run(args: [optarg: null])`.
+
+* `WorkflowHelper::readCsv`: Treat empty values as undefined instead of throwing an error.
+
+* `NextflowVdsl3Platform`: Use `$NXF_TEMP` or `$VIASH_TEMP` as temporary directory if the container engine is not set to `docker`, `podman` or `charlieengine`, else set to `/tmp`.
+
+* `Resources`: When adding a resource folder, allow a trailing `/` at the end of the path.
+  Previously this caused the target folder to be erased and the content of the resource folder to be written directly into the target folder.
+
 # Viash 0.5.14
 
 ## NEW FUNCTIONALITY
@@ -32,8 +87,6 @@
   taking care of the formatting in Groovy.
 
 * `NextflowVdsl3Platform`: The `--help` is auto-generated from the config.
-
-
 
 ## MINOR CHANGES
 

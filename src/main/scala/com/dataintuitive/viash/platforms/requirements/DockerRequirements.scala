@@ -15,10 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.platforms.requirements
+package io.viash.platforms.requirements
 
-import com.dataintuitive.viash.helpers.Circe._
+import io.viash.helpers.Circe._
+import io.viash.helpers.description
+import io.viash.helpers.example
 
+@description("Specify which Docker commands should be run during setup.")
+@example("""setup:
+           |  - type: docker
+           |    build_args: [ GITHUB_PAT=hello_world ]
+           |    run: [ git clone ... ]
+           |    add: [ "http://foo.bar ." ]
+           |    copy: [ "http://foo.bar ." ]
+           |    resources: 
+           |      - resource.txt /path/to/resource.txt
+           |""".stripMargin, "yaml")
 case class DockerRequirements(
   resources: OneOrMore[String] = Nil,
   label: OneOrMore[String] = Nil,

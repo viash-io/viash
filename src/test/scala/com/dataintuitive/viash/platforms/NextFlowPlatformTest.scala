@@ -1,7 +1,7 @@
-package com.dataintuitive.viash.platforms
+package io.viash.platforms
 
-import com.dataintuitive.viash.helpers.IO
-import com.dataintuitive.viash.{DockerTest, NextFlowTest, TestHelper}
+import io.viash.helpers.IO
+import io.viash.{DockerTest, NextFlowTest, TestHelper}
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 import java.io.File

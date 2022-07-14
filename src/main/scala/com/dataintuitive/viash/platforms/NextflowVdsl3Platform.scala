@@ -15,16 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.platforms
+package io.viash.platforms
 
-import com.dataintuitive.viash.config.Config
-import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.functionality.arguments._
-import com.dataintuitive.viash.config.Version
-import com.dataintuitive.viash.helpers.{Docker, Bash, DockerImageInfo, Helper}
-import com.dataintuitive.viash.helpers.Circe._
-import com.dataintuitive.viash.platforms.nextflow._
+import io.viash.config.Config
+import io.viash.functionality._
+import io.viash.functionality.resources._
+import io.viash.functionality.arguments._
+import io.viash.config.Version
+import io.viash.helpers.{Docker, Bash, DockerImageInfo, Helper}
+import io.viash.helpers.Circe._
+import io.viash.platforms.nextflow._
 import io.circe.syntax._
 import io.circe.{Printer => JsonPrinter, Json, JsonObject}
 import shapeless.syntax.singleton
@@ -165,6 +165,7 @@ case class NextflowVdsl3Platform(
     )
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
     val dirJson = directivesToJson.asJson.dropEmptyRecursively()
+    val dirJson2 = if (dirJson.isNull) Json.obj() else dirJson
     val funJson = functionality.asJson.dropEmptyRecursively()
     val funJsonStr = jsonPrinter.print(funJson)
       .replace("\\\\", "\\\\\\\\")
@@ -201,7 +202,7 @@ case class NextflowVdsl3Platform(
       |  // fixed arguments to be passed to script
       |  args: [:],
       |  // default directives
-      |  directives: jsonSlurper.parseText('''${jsonPrinter.print(dirJson)}'''),
+      |  directives: jsonSlurper.parseText('''${jsonPrinter.print(dirJson2)}'''),
       |  // auto settings
       |  auto: jsonSlurper.parseText('''${jsonPrinter.print(autoJson)}'''),
       |  // apply a map over the incoming tuple

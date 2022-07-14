@@ -1,4 +1,4 @@
-package com.dataintuitive.viash.config_mods
+package io.viash.config_mods
 
 import io.circe.Json
 import org.scalatest.FunSuite

@@ -15,10 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.platforms.requirements
+package io.viash.platforms.requirements
 
-import com.dataintuitive.viash.helpers.Circe._
+import io.viash.helpers.Circe._
+import io.viash.helpers.description
+import io.viash.helpers.example
 
+@description("Specify which R packages should be available in order to run the component.")
+@example("""setup: 
+           |  - type: r
+           |    cran: [ dynutils ]
+           |    bioc: [ AnnotationDbi ]
+           |    git: [ https://some.git.repository/org/repo ]
+           |    github: [ rcannood/SCORPIUS ]
+           |    gitlab: [ org/package ]
+           |    svn: [ https://path.to.svn/group/repo ]
+           |    url: [ https://github.com/hadley/stringr/archive/HEAD.zip ]
+           |    script: [ 'devtools::install(".")' ]
+           |""".stripMargin, "yaml")
 case class RRequirements(
   packages: OneOrMore[String] = Nil,
   cran: OneOrMore[String] = Nil,

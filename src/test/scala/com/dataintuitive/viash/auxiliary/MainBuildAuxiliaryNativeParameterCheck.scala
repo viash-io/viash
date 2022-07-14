@@ -1,13 +1,13 @@
-package com.dataintuitive.viash.auxiliary
+package io.viash.auxiliary
 
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import java.nio.file.Paths
 
-import com.dataintuitive.viash.config.Config
+import io.viash.config.Config
 
 import scala.io.Source
-import com.dataintuitive.viash.helpers._
-import com.dataintuitive.viash.TestHelper
+import io.viash.helpers._
+import io.viash.TestHelper
 
 class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfterAll {
   // which platform to test

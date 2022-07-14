@@ -15,10 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.platforms.requirements
+package io.viash.platforms.requirements
 
-import com.dataintuitive.viash.helpers.Circe._
+import io.viash.helpers.Circe._
+import io.viash.helpers.description
+import io.viash.helpers.example
 
+@description("Specify which apk packages should be available in order to run the component.")
+@example("""setup:
+           |  - type: apk
+           |    packages: [ sl ]
+           |""".stripMargin, "yaml")
 case class ApkRequirements(
   packages: OneOrMore[String] = Nil,
   `type`: String = "apk"

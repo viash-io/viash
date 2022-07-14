@@ -1,0 +1,3 @@
+id,input,real_number,whole_number,reality,optional,optional_with_default,multiple
+foo,lines3.txt,,3,,,foo,a:b:c
+bar,lines5.txt,0.5,,true,bar,,

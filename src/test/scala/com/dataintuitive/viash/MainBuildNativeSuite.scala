@@ -1,12 +1,12 @@
-package com.dataintuitive.viash
+package io.viash
 
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import java.nio.file.Paths
 
-import com.dataintuitive.viash.config.Config
+import io.viash.config.Config
 
 import scala.io.Source
-import com.dataintuitive.viash.helpers._
+import io.viash.helpers._
 
 class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
   // which platform to test

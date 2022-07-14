@@ -15,10 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.platforms.requirements
+package io.viash.platforms.requirements
 
-import com.dataintuitive.viash.helpers.Circe._
+import io.viash.helpers.Circe._
+import io.viash.helpers.description
+import io.viash.helpers.example
 
+@description("Specify which JavaScript packages should be available in order to run the component.")
+@example("""setup:
+           |  - type: javascript
+           |    npm: [ packagename ]
+           |    git: [ https://... ]
+           |    github: [ owner/repository ]
+           |    url: [ https://... ]
+           |""".stripMargin, "yaml")
 case class JavaScriptRequirements(
   packages: OneOrMore[String] = Nil,
   npm: OneOrMore[String] = Nil,

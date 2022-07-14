@@ -15,19 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash
+package io.viash
 
 import java.nio.file.Paths
 
-import com.dataintuitive.viash.config._
-import com.dataintuitive.viash.functionality.arguments.{FileArgument, Output}
-import com.dataintuitive.viash.helpers.IO
-import com.dataintuitive.viash.helpers.Circe.{OneOrMore, One, More}
+import io.viash.config._
+import io.viash.functionality.arguments.{FileArgument, Output}
+import io.viash.helpers.IO
+import io.viash.helpers.Circe.{OneOrMore, One, More}
 
 import scala.sys.process.{Process, ProcessLogger}
 
 object ViashRun {
-  def apply(config: Config, args: Seq[String], keepFiles: Option[Boolean]) {
+  def apply(config: Config, args: Seq[String], keepFiles: Option[Boolean]): Integer = {
     val fun = config.functionality
     val dir = IO.makeTemp("viash_" + fun.name)
 
@@ -52,7 +52,8 @@ object ViashRun {
 
       // execute command, print everything to console
       code = Process(cmd).!(ProcessLogger(println, println))
-      System.exit(code)
+      // System.exit(code)
+      code 
     } finally {
       // remove tempdir if desired
       if (!keepFiles.getOrElse(code != 0)) {

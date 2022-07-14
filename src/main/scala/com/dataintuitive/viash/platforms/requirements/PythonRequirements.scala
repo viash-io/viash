@@ -15,10 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.platforms.requirements
+package io.viash.platforms.requirements
 
-import com.dataintuitive.viash.helpers.Circe._
+import io.viash.helpers.Circe._
+import io.viash.helpers.description
+import io.viash.helpers.example
 
+@description("Specify which Python packages should be available in order to run the component.")
+@example("""setup:
+           |  - type: python
+           |    pip: [ numpy ]
+           |    git: [ https://some.git.repository/org/repo ]
+           |    github: [ jkbr/httpie ]
+           |    gitlab: [ foo/bar ]
+           |    mercurial: [ http://... ]
+           |    svn: [ http://...]
+           |    bazaar: [ http://... ]
+           |    url: [ http://... ]
+           |""".stripMargin, "yaml")
 case class PythonRequirements(
   user: Boolean = false,
   packages: OneOrMore[String] = Nil,

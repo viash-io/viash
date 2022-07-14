@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.arguments
+package io.viash.functionality.arguments
 
 sealed trait Direction
 

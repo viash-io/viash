@@ -1,0 +1,51 @@
+functionality:
+  name: pipeline3
+  inputs:
+    - name: "--input"
+      description: |
+        An input file with positional arguments.
+        More checks for multiline descriptions.
+        Testing some characters that should be escaped: ` $ \
+      required: true
+      must_exist: true
+      example: input.txt
+  outputs:
+    - name: "--output"
+      description: Write the parameters to a json file.
+      required: true
+    - name: "--log"
+      description: An optional log file.
+      required: false
+  arguments:
+    - name: "--id"
+      type: string
+      required: true
+    - name: "--real_number"
+      type: double
+      description: A real number with positional arguments.
+      required: true
+    - name: "--whole_number"
+      type: integer
+      description: A whole number with a standard flag.
+      required: true
+    - name: "--str"
+      type: string
+      description: A sentence or word with a short flag.
+      required: true
+    - name: "--reality"
+      type: boolean
+      description: A switch flag without predetermined state.
+    - name: "--optional"
+      type: string
+      description: An optional string.
+    - name: "--optional_with_default"
+      type: string
+      default: "The default value."
+    - name: "--multiple"
+      type: string
+      multiple: true
+  resources:
+    - type: nextflow_script
+      path: main.nf
+platforms:
+  - type: native
