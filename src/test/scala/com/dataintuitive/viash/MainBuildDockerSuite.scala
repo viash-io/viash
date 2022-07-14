@@ -1,12 +1,12 @@
-package com.dataintuitive.viash
+package io.viash
 
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import java.nio.file.{Files, Paths, StandardCopyOption}
 
-import com.dataintuitive.viash.config.Config
+import io.viash.config.Config
 
 import scala.io.Source
-import com.dataintuitive.viash.helpers._
+import io.viash.helpers._
 
 class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   // which platform to test
@@ -215,7 +215,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       assert(executable.exists)
       assert(executable.canExecute)
 
-      val viashVersion = com.dataintuitive.viash.Main.version
+      val viashVersion = io.viash.Main.version
 
       val regexViashVersion = s"viash version:\\s*$viashVersion".r
       val regexConfig = s"config:\\s*$configMetaFile".r
@@ -284,7 +284,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       assert(executable.exists)
       assert(executable.canExecute)
 
-      val viashVersion = com.dataintuitive.viash.Main.version
+      val viashVersion = io.viash.Main.version
 
       val regexViashVersion = s"viash version:\\s*$viashVersion".r
       val regexConfig = s"config:\\s*$configMetaFile".r
@@ -344,7 +344,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       assert(executable.exists)
       assert(executable.canExecute)
 
-      val viashVersion = com.dataintuitive.viash.Main.version
+      val viashVersion = io.viash.Main.version
 
       val regexViashVersion = s"viash version:\\s*$viashVersion".r
       val regexConfig = s"config:\\s*$configMetaFile".r

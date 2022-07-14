@@ -15,12 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.wrapper
+package io.viash.wrapper
 
-import com.dataintuitive.viash.functionality._
-import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.functionality.arguments._
-import com.dataintuitive.viash.helpers.{Bash, Format, Helper}
+import io.viash.functionality._
+import io.viash.functionality.resources._
+import io.viash.functionality.arguments._
+import io.viash.helpers.{Bash, Format, Helper}
 
 object BashWrapper {
   val metaFields: List[(String, String)] = {

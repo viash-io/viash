@@ -31,7 +31,7 @@ docker:
 
 .PHONY: test
 test:
-	sbt 'testOnly -- -l com.dataintuitive.viash.NativeTest'
+	sbt 'testOnly -- -l io.viash.NativeTest'
 
 .PHONY: clean
 clean:

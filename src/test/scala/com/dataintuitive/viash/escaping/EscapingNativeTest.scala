@@ -1,8 +1,8 @@
-package com.dataintuitive.viash.escaping
+package io.viash.escaping
 
-import com.dataintuitive.viash.TestHelper
-import com.dataintuitive.viash.config.Config
-import com.dataintuitive.viash.helpers._
+import io.viash.TestHelper
+import io.viash.config.Config
+import io.viash.helpers._
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 import java.io.{IOException, UncheckedIOException}

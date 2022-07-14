@@ -15,16 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.platforms
+package io.viash.platforms
 
-import com.dataintuitive.viash.config.Config
-import com.dataintuitive.viash.functionality.Functionality
-import com.dataintuitive.viash.functionality.resources._
-import com.dataintuitive.viash.platforms.requirements._
-import com.dataintuitive.viash.config.Version
-import com.dataintuitive.viash.helpers.Circe.One
-import com.dataintuitive.viash.wrapper.BashWrapper
-import com.dataintuitive.viash.functionality.arguments._
+import io.viash.config.Config
+import io.viash.functionality.Functionality
+import io.viash.functionality.resources._
+import io.viash.platforms.requirements._
+import io.viash.config.Version
+import io.viash.helpers.Circe.One
+import io.viash.wrapper.BashWrapper
+import io.viash.functionality.arguments._
 import java.nio.file.Path
 import java.nio.file.Paths
 

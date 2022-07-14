@@ -1,8 +1,8 @@
-package com.dataintuitive.viash
+package io.viash
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 
-import com.dataintuitive.viash.helpers.IO
+import io.viash.helpers.IO
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 import scala.reflect.io.Directory

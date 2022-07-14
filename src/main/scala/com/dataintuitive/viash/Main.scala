@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash
+package io.viash
 
 import java.nio.file.{Files, Path, Paths}
 import java.nio.file.attribute.BasicFileAttributes
@@ -27,9 +27,9 @@ import scala.collection.JavaConverters
 import java.io.File
 import java.io.FileNotFoundException
 import java.nio.file.NoSuchFileException
-import com.dataintuitive.viash.helpers.MissingResourceFileException
-import com.dataintuitive.viash.helpers.BuildStatus._
-import com.dataintuitive.viash.helpers.CollectedSchemas
+import io.viash.helpers.MissingResourceFileException
+import io.viash.helpers.BuildStatus._
+import io.viash.helpers.CollectedSchemas
 
 object Main {
   private val pkg = getClass.getPackage

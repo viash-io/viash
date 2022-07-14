@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash
+package io.viash
 
 import sys.process.{Process, ProcessLogger}
 import java.io.{ByteArrayOutputStream, FileWriter, PrintWriter}
@@ -31,7 +31,7 @@ import functionality.resources.{BashScript, Script}
 import platforms.NativePlatform
 import helpers.IO
 import helpers.Circe.{OneOrMore, One, More}
-import com.dataintuitive.viash.helpers.MissingResourceFileException
+import io.viash.helpers.MissingResourceFileException
 
 object ViashTest {
   case class TestOutput(name: String, exitValue: Int, output: String, logFile: String, duration: Long)

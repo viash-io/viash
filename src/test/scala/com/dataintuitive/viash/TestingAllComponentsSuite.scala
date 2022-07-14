@@ -1,6 +1,6 @@
-package com.dataintuitive.viash
+package io.viash
 
-import com.dataintuitive.viash.config.Config
+import io.viash.config.Config
 import org.scalatest.FunSuite
 
 class TestingAllComponentsSuite extends FunSuite {

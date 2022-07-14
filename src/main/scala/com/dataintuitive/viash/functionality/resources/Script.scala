@@ -15,9 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dataintuitive.viash.functionality.resources
+package io.viash.functionality.resources
 
-import com.dataintuitive.viash.functionality.Functionality
+import io.viash.functionality.Functionality
 
 import java.net.URI
 

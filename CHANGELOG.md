@@ -4,6 +4,10 @@
 
 * `WorkflowHelper::helpMessage`: Now only takes one argument, namely the config.
 
+## MAJOR CHANGES
+
+* `Namespace`: Changed the namespace of viash from `com.dataintuitive.viash` to `io.viash`.
+
 ## MINOR CHANGES
 
 * `Testbenches`: Add a testbench framework to test lots of character sequences, single or repeating to be tested in the yaml config. This can be used to later extend to other tests.
