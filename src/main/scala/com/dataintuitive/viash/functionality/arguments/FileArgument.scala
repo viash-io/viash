@@ -43,6 +43,7 @@ case class FileArgument(
   multiple: Boolean = false,
   @description("")
   multiple_sep: Char = ':',
+  @description("")
   `type`: String = "file"
 ) extends Argument[Path] {
   def copyArg(

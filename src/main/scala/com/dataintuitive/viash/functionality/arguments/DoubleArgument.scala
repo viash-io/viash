@@ -44,6 +44,7 @@ case class DoubleArgument(
   multiple: Boolean = false,
   @description("")
   multiple_sep: Char = ':',
+  @description("")
   `type`: String = "double"
 ) extends Argument[Double] {
   def copyArg(

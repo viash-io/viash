@@ -44,6 +44,7 @@ case class BooleanArgument(
   multiple: Boolean = false,
   @description("")
   multiple_sep: Char = ':',
+  @description("")
   `type`: String = "boolean"
 ) extends BooleanArgumentBase {
 
@@ -75,6 +76,7 @@ case class BooleanTrueArgument(
   description: Option[String] = None,
   @description("")
   direction: Direction = Input,
+  @description("")
   `type`: String = "boolean_true"
 ) extends BooleanArgumentBase {
 
@@ -111,6 +113,7 @@ case class BooleanFalseArgument(
   description: Option[String] = None,
   @description("")
   direction: Direction = Input,
+  @description("")
   `type`: String = "boolean_false"
 ) extends BooleanArgumentBase {
 

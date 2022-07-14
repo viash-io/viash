@@ -46,6 +46,7 @@ case class IntegerArgument(
   multiple: Boolean = false,
   @description("")
   multiple_sep: Char = ':',
+  @description("")
   `type`: String = "integer"
 ) extends Argument[Int] {
   def copyArg(
