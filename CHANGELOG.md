@@ -41,6 +41,9 @@
 
 * `NextflowVdsl3Platform`: Use `$NXF_TEMP` or `$VIASH_TEMP` as temporary directory if the container engine is not set to `docker`, `podman` or `charlieengine`, else set to `/tmp`.
 
+* `Resources`: When adding a resource folder, allow a trailing `/` at the end of the path.
+  Previously this caused the target folder to be erased and the content of the resource folder to be written directly into the target folder.
+
 # Viash 0.5.14
 
 ## NEW FUNCTIONALITY

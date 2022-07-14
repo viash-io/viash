@@ -56,6 +56,8 @@ trait Resource {
   }
 
   private val basenameRegex = ".*/".r
+  private val getFolderNameRegex = ".*?([^/]+|/)/*$".r
+  
 
   /**
    * Get the path of the resource relative to the resources dir.
@@ -66,7 +68,7 @@ trait Resource {
     if (dest.isDefined) {
       dest.get
     } else {
-      basenameRegex.replaceFirstIn(path.get, "")
+      getFolderNameRegex.replaceFirstIn(Paths.get(path.get).normalize.toString, "$1")
     }
   }
   /**
