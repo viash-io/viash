@@ -408,8 +408,13 @@ object BashWrapper {
                                            |      ViashError '${param.name}' has be more than or equal to $min. Use "--help" to get more information on the parameters.
                                            |      exit 1
                                            |    fi
+                                           |  elif command -v awk &> /dev/null; then
+                                           |    if ! [[ `awk -v n1=$$${param.VIASH_PAR} -v n2=$min 'BEGIN { print (n1 >= n2) ? "1" : "0" }'` -eq 1 ]]; then
+                                           |      ViashError '${param.name}' has be more than or equal to $min. Use "--help" to get more information on the parameters.
+                                           |      exit 1
+                                           |    fi
                                            |  else
-                                           |    ViashWarning '${param.name}' specifies a minimum value but the value was not verified as \\'bc\\' is not present on the system.
+                                           |    ViashWarning '${param.name}' specifies a minimum value but the value was not verified as neither \\'bc\\' or \\`awk\\` are present on the system.
                                            |  fi
                                            |""".stripMargin
       def maxCheckDouble(max: Double) = s"""  if command -v bc &> /dev/null; then
@@ -417,8 +422,13 @@ object BashWrapper {
                                            |      ViashError '${param.name}' has to be less than or equal to $max. Use "--help" to get more information on the parameters.
                                            |      exit 1
                                            |    fi
+                                           |  elif command -v awk &> /dev/null; then
+                                           |    if ! [[ `awk -v n1=$$${param.VIASH_PAR} -v n2=$max 'BEGIN { print (n1 <= n2) ? "1" : "0" }'` -eq 1 ]]; then
+                                           |      ViashError '${param.name}' has be less than or equal to $max. Use "--help" to get more information on the parameters.
+                                           |      exit 1
+                                           |    fi
                                            |  else
-                                           |    ViashWarning '${param.name}' specifies a maximum value but the value was not verified as \\'bc\\' is not present on the system.
+                                           |    ViashWarning '${param.name}' specifies a maximum value but the value was not verified as neither \\'bc\\' or \\'awk\\' are present on the system.
                                            |  fi
                                            |""".stripMargin
       def minCheckInt(min: Int) = s"""  if [[ $$${param.VIASH_PAR} -lt $min ]]; then
