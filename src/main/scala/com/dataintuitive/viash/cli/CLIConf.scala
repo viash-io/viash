@@ -313,9 +313,25 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
     }
 
+    val exec = new DocumentedSubcommand("exec") with ViashNs {
+      banner(
+        "viash ns exec",
+        "Execute a command applied to namespace component config files.",
+        "viash ns exec 'cat {} \\;'"
+      )
+
+      val cmd = registerTrailArg[String](
+        name = "cmd",
+        descr = "The command to execute for each viash config file in the namespace.",
+        default = Some("'viash_nxf_params -i {} -o {dir}/params.yaml \\;'"),
+        required = true,
+      )
+    }
+
     addSubcommand(build)
     addSubcommand(test)
     addSubcommand(list)
+    addSubcommand(exec)
     requireSubcommand()
 
     shortSubcommandsHelp(true)

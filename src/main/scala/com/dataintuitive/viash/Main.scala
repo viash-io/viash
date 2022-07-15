@@ -110,6 +110,9 @@ object Main {
           configs = configs,
           cli.namespace.list.format()
         )
+      case List(cli.namespace, cli.namespace.exec) =>
+        val configs = readConfigs(cli.namespace.exec, applyPlatform = false)
+        Console.println(s"ns exec: ${cli.namespace.exec.cmd()}")
       case List(cli.config, cli.config.view) =>
         val config = Config.read(
           configPath = cli.config.view.config(),
