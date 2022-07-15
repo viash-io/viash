@@ -91,7 +91,7 @@ def processDirectives(Map drctv) {
       def m = drctv["container"]
       assertMapKeys(m, [ "registry", "image", "tag" ], ["image"], "container")
       def part1 = 
-        System.getenv('OVERRIDE_CONTAINER_REGISTRY') ? System.getenv('OVERRIDE_CONTAINER_REGISTRY') "/" : 
+        System.getenv('OVERRIDE_CONTAINER_REGISTRY') ? System.getenv('OVERRIDE_CONTAINER_REGISTRY') + "/" : 
         params.containsKey("override_container_registry") ? params["override_container_registry"] + "/" : // todo: remove?
         m.registry ? m.registry + "/" : 
         ""
