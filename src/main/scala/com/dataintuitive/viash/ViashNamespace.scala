@@ -24,6 +24,7 @@ import helpers.IO
 import io.viash.helpers.MissingResourceFileException
 import io.viash.helpers.BuildStatus._
 import java.nio.file.Path
+import com.dataintuitive.viash.helpers.NsExecData
 
 object ViashNamespace {
   def build(
@@ -233,6 +234,18 @@ object ViashNamespace {
     ViashConfig.viewMany(configs2, format)
 
     printResults(configs.map(_.fold(fa => Success, fb => fb)), false, false)
+  }
+
+  def exec(configs: List[Either[Config, BuildStatus]], command: String, dryrun: Boolean) {
+    Console.println(s"ns exec: $command")
+    Console.println(s"dryrun: $dryrun")
+
+    val goodConfigs = configs.flatMap(_.left.toOption).groupBy(_.info.get.config)
+    for (c <- goodConfigs) {
+        Console.println(s"Found config: ${c._1}")
+        // Just take first config. More can be available but those have different platforms. Platforms are currently ignored.
+        Console.println(NsExecData(c._1, c._2.head))
+    }
   }
 
   def printResults(statuses: Seq[BuildStatus], performedBuild: Boolean, performedTest: Boolean) {

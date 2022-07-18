@@ -320,6 +320,13 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         "viash ns exec 'cat {} \\;'"
       )
 
+      val dryrun = registerOpt[Boolean] (
+        name = "dry-run",
+        short = Some('d'),
+        default = Some(false),
+        descr = "Perform a dry run."
+      )
+
       val cmd = registerTrailArg[String](
         name = "cmd",
         descr = "The command to execute for each viash config file in the namespace.",
