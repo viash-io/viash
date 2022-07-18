@@ -1,3 +1,10 @@
+# Viash 0.5.16
+
+## MINOR CHANGES
+
+* `BashWrapper`: For int min/max checking: use native bash functionality so there is no dependency to `bc`.
+  For double min/max checking: add fallback code to use `awk` in case `bc` is not present on the system (most likely to happen when running tests in a docker container).
+
 # Viash 0.5.15
 
 ## BREAKING CHANGES
