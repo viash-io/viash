@@ -24,6 +24,7 @@ import helpers.IO
 import io.viash.helpers.MissingResourceFileException
 import io.viash.helpers.BuildStatus._
 import java.nio.file.Path
+import com.dataintuitive.viash.helpers.NsExecData._
 import com.dataintuitive.viash.helpers.NsExecData
 
 object ViashNamespace {
@@ -241,11 +242,53 @@ object ViashNamespace {
     Console.println(s"dryrun: $dryrun")
 
     val goodConfigs = configs.flatMap(_.left.toOption).groupBy(_.info.get.config)
-    for (c <- goodConfigs) {
-        Console.println(s"Found config: ${c._1}")
-        // Just take first config. More can be available but those have different platforms. Platforms are currently ignored.
-        Console.println(NsExecData(c._1, c._2.head))
+    // Just take first config. More can be available but those have different platforms. Platforms are currently ignored.
+    val configData = goodConfigs.map(c => NsExecData(c._1, c._2.head))
+    if (configData.isEmpty) {
+      Console.err.println("No config files found to work with.")
+      return
     }
+
+    // try to match to something like "cat {arg1} foo {arg2} ;"
+    // Slashes for ';' or '+' are not needed here, but let's allow it anyway
+    val matchChecker = """([^{}]*\{[\w-]*\})*[^{}]* \\?[;+]$"""
+    if (!command.matches(matchChecker)) {
+      Console.err.println(s"Invalid command syntax.}")
+      return
+    }
+
+    // Get all fields and trim off curly brackets
+    val fields = """\{[^\{\}]*\}""".r.findAllIn(command).map(_.replaceAll("^.|.$", "")).toList
+    val unfoundFields = fields.filter(getField(configData.head, _).isEmpty)
+    if (!unfoundFields.isEmpty) {
+      Console.err.println(s"Not all substitution fields are supported fields: ${unfoundFields.mkString(" ")}.")
+      return
+    }
+
+    val collectedData = command.endsWith(";") match {
+      case true =>
+        configData.toList
+      case false =>
+        List(NsExecData(
+          configFullPath = configData.map(_.configFullPath).mkString(" "),
+          absoluteConfigFullPath = configData.map(_.absoluteConfigFullPath).mkString(" "),
+          dir = configData.map(_.dir).mkString(" "),
+          absoluteDir = configData.map(_.absoluteDir).mkString(" "),
+          mainScript = configData.map(_.mainScript).mkString(" "),
+          absoluteMainScript = configData.map(_.absoluteMainScript).mkString(" "),
+          functionalityName = configData.map(_.functionalityName).mkString(" ")
+        ))
+    }
+
+    for (d <- collectedData) {
+      // remove trailing + or ; mode character
+      var c = command.replaceFirst(""" \\?[;+]$""", "")
+      for (f <- fields) {
+        c = c.replaceAllLiterally(s"{$f}", getField(d, f).get)
+      }
+      Console.println(s"-- $c")
+    }
+   
   }
 
   def printResults(statuses: Seq[BuildStatus], performedBuild: Boolean, performedTest: Boolean) {
