@@ -28,14 +28,27 @@ final case class NsExecData(
   mainScript: String,
   absoluteMainScript: String,
   functionalityName: String
-)
+) {
+  def getField(name: String) = {
+    name match {
+      case "" | "path" => Some(this.configFullPath)
+      case "abs-path" => Some(this.absoluteConfigFullPath)
+      case "dir" => Some(this.dir)
+      case "abs-dir" => Some(this.absoluteDir)
+      case "main-script" => Some(this.mainScript)
+      case "abs-main-script" => Some(this.absoluteMainScript)
+      case "functionality-name" => Some(this.functionalityName)
+      case _ => None
+    }
+  }
+}
 
 object NsExecData {
   def apply(configPath: String, config: Config):NsExecData = {
     val configPath_ = Paths.get(configPath)
     val mainScript = config.functionality.mainScript.flatMap(s => s.path)
     val absoluteMainScript = mainScript.flatMap(m => Some(Paths.get(m).toAbsolutePath.toString))
-    NsExecData(
+    apply(
       configFullPath = configPath,
       absoluteConfigFullPath = configPath_.toAbsolutePath.toString,
       dir = configPath_.getParent.toString,
@@ -46,16 +59,15 @@ object NsExecData {
     )
   }
 
-  def getField(data: NsExecData, name: String) = {
-    name match {
-      case "" | "path" => Some(data.configFullPath)
-      case "abs-path" => Some(data.absoluteConfigFullPath)
-      case "dir" => Some(data.dir)
-      case "abs-dir" => Some(data.absoluteDir)
-      case "main-script" => Some(data.mainScript)
-      case "abs-main-script" => Some(data.absoluteMainScript)
-      case "functionality-name" => Some(data.functionalityName)
-      case _ => None
-    }
+  def combine(data: Iterable[NsExecData]) = {
+    apply(
+      configFullPath = data.map(_.configFullPath).mkString(" "),
+      absoluteConfigFullPath = data.map(_.absoluteConfigFullPath).mkString(" "),
+      dir = data.map(_.dir).mkString(" "),
+      absoluteDir = data.map(_.absoluteDir).mkString(" "),
+      mainScript = data.map(_.mainScript).mkString(" "),
+      absoluteMainScript = data.map(_.absoluteMainScript).mkString(" "),
+      functionalityName = data.map(_.functionalityName).mkString(" ")
+    )
   }
 }
