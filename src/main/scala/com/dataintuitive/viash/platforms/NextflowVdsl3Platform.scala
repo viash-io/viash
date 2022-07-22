@@ -64,7 +64,7 @@ case class NextflowVdsl3Platform(
     )
 
     // remove main
-    val otherResources = functionality.resources.tail
+    val otherResources = functionality.additionalResources
 
     functionality.copy(
       resources = mainFile :: nextflowConfigFile :: otherResources
