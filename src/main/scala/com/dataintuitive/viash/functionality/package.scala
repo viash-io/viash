@@ -105,7 +105,10 @@ package object functionality {
   implicit val encodeArgumentGroup: Encoder.AsObject[ArgumentGroup] = deriveConfiguredEncoder
   implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoder
 
+  // encoder and decoder for Status, make string lowercase before decoding
   implicit val encodeStatus: Encoder[Status] = Encoder.encodeEnumeration(Status)
-  implicit val decodeStatus: Decoder[Status] = Decoder.decodeEnumeration(Status)
+  implicit val decodeStatus: Decoder[Status] = Decoder.decodeEnumeration(Status).prepare {
+    _.withFocus(_.mapString(_.toLowerCase()))
+  }
 
 }

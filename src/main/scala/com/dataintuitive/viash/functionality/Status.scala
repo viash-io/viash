@@ -19,7 +19,7 @@ package io.viash.functionality
 
 object Status extends Enumeration {
   type Status = Value
-  val enabled = Value("enabled")
-  val disabled = Value("disabled")
-  val deprecated = Value("deprecated")
+  val Enabled = Value("enabled")
+  val Disabled = Value("disabled")
+  val Deprecated = Value("deprecated")
 }

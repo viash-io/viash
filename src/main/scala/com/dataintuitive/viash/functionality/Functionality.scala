@@ -163,7 +163,7 @@ case class Functionality(
 
   @description("Allows setting a component to active, deprecated or disabled.")
   @since("Viash 0.5.16")
-  status: Status = Status.enabled,
+  status: Status = Status.Enabled,
 
   // dummy arguments are used for handling extra directory mounts in docker
   dummy_arguments: List[Argument[_]] = Nil,
@@ -283,7 +283,7 @@ case class Functionality(
 
   def allArgumentsAndDummies: List[Argument[_]] = allArguments ::: dummy_arguments
 
-  def isEnabled: Boolean = status != Status.disabled
+  def isEnabled: Boolean = status != Status.Disabled
 }
 
 object Functionality {
