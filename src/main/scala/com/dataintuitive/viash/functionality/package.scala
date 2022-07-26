@@ -22,11 +22,13 @@ import io.circe.{Decoder, Encoder, Json}
 import io.circe.ACursor
 
 package object functionality {
-  private var noticeFunTestDepr: Boolean = true
+  private var noticeFunTestDeprTests: Boolean = true
+  private var noticeFunTestDeprEnabled: Boolean = true
   // import implicits
 
   import functionality.arguments._
   import functionality.resources._
+  import functionality.Status._
   import io.viash.helpers.Circe._
 
   // encoder and decoder for Functionality
@@ -63,16 +65,35 @@ package object functionality {
           Console.err.println("Backwards compability is provided but not in combination with functionality.test_resources.")
           fun2
         case (true, false) =>
-          if (noticeFunTestDepr) {
+          if (noticeFunTestDeprTests) {
             // todo: solve this in a cleaner way
             Console.err.println("Notice: functionality.tests is deprecated. Please use functionality.test_resources instead.")
-            noticeFunTestDepr = false
+            noticeFunTestDeprTests = false
           }
           fun2.add("test_resources", fun2.apply("tests").get).remove("tests")
         case (_, _) => fun2
       }
 
-      fun3
+      // provide backwards compability for enabled -> status
+      val fun4 = (fun3.contains("enabled"), fun3.contains("status")) match {
+        case (true, true) =>
+          Console.err.println("Error: functionality.enabled is deprecated. Please use functionality.status instead.")
+          Console.err.println("Backwards compability is provided but not in combination with functionality.status")
+          fun3
+        case (true, false) =>
+          if (noticeFunTestDeprEnabled) {
+            Console.err.println("Notice: functionality.enabled is deprecated. Please use functionality.status instead.")
+            noticeFunTestDeprEnabled = false
+          }
+          fun3.apply("enabled").get.asBoolean match {
+            case Some(true) => fun3.add("status", Json.fromString("enabled")).remove("enabled")
+            case Some(false) => fun3.add("status", Json.fromString("disabled")).remove("enabled")
+            case None => fun3
+          }
+        case (_, _) => fun3
+      }
+
+      fun4
     })
   }
 
@@ -83,4 +104,8 @@ package object functionality {
   // encoder and decoder for ArgumentGroup
   implicit val encodeArgumentGroup: Encoder.AsObject[ArgumentGroup] = deriveConfiguredEncoder
   implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoder
+
+  implicit val encodeStatus: Encoder[Status] = Encoder.encodeEnumeration(Status)
+  implicit val decodeStatus: Decoder[Status] = Decoder.decodeEnumeration(Status)
+
 }

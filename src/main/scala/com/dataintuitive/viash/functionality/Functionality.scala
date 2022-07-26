@@ -19,6 +19,7 @@ package io.viash.functionality
 
 import arguments._
 import resources._
+import Status._
 import io.viash.config.Version
 import io.circe.generic.extras._
 import io.viash.helpers._
@@ -160,6 +161,10 @@ case class Functionality(
   @since("Viash 0.4.0")
   info: Map[String, String] = Map.empty[String, String],
 
+  @description("Allows setting a component to active, deprecated or disabled.")
+  @since("Viash 0.5.16")
+  status: Status = Status.enabled,
+
   // dummy arguments are used for handling extra directory mounts in docker
   dummy_arguments: List[Argument[_]] = Nil,
 
@@ -167,10 +172,6 @@ case class Functionality(
   // to the resources directory when running the script
   // this is used when running `viash test`.
   set_wd_to_resources_dir: Boolean = false,
-
-  @description("Setting this to false with disable this component when using namespaces.")
-  @since("Viash 0.5.13")
-  enabled: Boolean = true
 ) {
   // START OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
   @description("Adds the resources directory to the PATH variable when set to true. This is set to false by default.")
@@ -181,6 +182,11 @@ case class Functionality(
   @description("One or more Bash/R/Python scripts to be used to test the component behaviour when `viash test` is invoked. Additional files of type `file` will be made available only during testing. Each test script should expect no command-line inputs, be platform-independent, and return an exit code >0 when unexpected behaviour occurs during testing.")
   @deprecated("Use `test_resources` instead. No functional difference.", "Viash 0.5.13")
   private val tests: List[Resource] = Nil
+
+  @description("Setting this to false with disable this component when using namespaces.")
+  @since("Viash 0.5.13")
+  @deprecated("Use `status` instead.", "Viash 0.5.16")
+  private val enabled: Boolean = true
   // END OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
 
   // note that in the Functionality companion object, defaults gets added to inputs and outputs *before* actually 
@@ -276,6 +282,8 @@ case class Functionality(
   def mainCode: Option[String] = mainScript.flatMap(_.read)
 
   def allArgumentsAndDummies: List[Argument[_]] = allArguments ::: dummy_arguments
+
+  def isEnabled: Boolean = status != Status.disabled
 }
 
 object Functionality {
