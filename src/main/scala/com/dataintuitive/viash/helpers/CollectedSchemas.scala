@@ -163,7 +163,8 @@ object CollectedSchemas {
       platforms = Map(
         ("nativePlatform"        , getSchema[NativePlatform]),
         ("dockerPlatform"        , getSchema[DockerPlatform]),
-        ("nextflowLegacyPlatform", getSchema[NextflowLegacyPlatform])
+        ("nextflowVdsl3Platform" , getSchema[NextflowVdsl3Platform]),
+        ("nextflowLegacyPlatform", getSchema[NextflowLegacyPlatform]),
       ),
       requirements = Map(
         ("apkRequirements"        , getSchema[ApkRequirements]),

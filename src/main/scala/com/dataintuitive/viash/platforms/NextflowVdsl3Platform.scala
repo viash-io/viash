@@ -28,11 +28,14 @@ import io.viash.platforms.nextflow._
 import io.circe.syntax._
 import io.circe.{Printer => JsonPrinter, Json, JsonObject}
 import shapeless.syntax.singleton
+import io.viash.helpers.description
 
 /**
  * Next-gen Platform class for generating NextFlow (DSL2) modules.
  */
+@description("Run a Viash component as a Nextflow module.")
 case class NextflowVdsl3Platform(
+  @description("Every platform can be given a specific id that can later be referred to explicitly when running or building the Viash component.")
   id: String = "nextflow",
   `type`: String = "nextflow",
   variant: String = "vdsl3",
