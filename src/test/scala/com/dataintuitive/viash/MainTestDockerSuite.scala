@@ -66,7 +66,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, false)
   }
 
-  test("Prepare tests with derived configs, copy resources to temporary folder", DockerTest) {
+  test("Prepare tests with derived configs, copy resources to temporary folder", NativeTest) {
     val rootPath = getClass.getResource(s"/testbash/").getPath
     TestHelper.copyFolder(rootPath, tempFolStr)
     
@@ -74,7 +74,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     val testText = TestHelper.testMain(
       "test",
-      "-p", "docker",
+      "-p", "native",
       newConfigFilePath
     )
 
