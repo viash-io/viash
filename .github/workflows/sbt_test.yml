@@ -71,6 +71,20 @@ jobs:
       with:
         python-version: ${{ matrix.config.python }}
 
+    - name: Add yq used to derive config files
+      if: runner.os == 'Linux'
+      uses: mikefarah/yq@master
+
+    - name: Add yq package
+      run: |
+        if [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
+          brew update
+          brew install yq
+        # else
+        #   sudo apt-get update
+        #   sudo apt-get install -y scala
+        fi
+
     - name: Run tests
       run: |
         if [[ "${{ matrix.config.name }}" == "main" ]]; then
