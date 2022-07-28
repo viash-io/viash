@@ -15,14 +15,9 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   private val temporaryFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
   private val tempFolStr = temporaryFolder.toString
 
-  // private val configMissingFunctionalityFile = getClass.getResource("/testbash/invalid_configs/config_missing_functionality.vsh.yaml").getPath
-  // private val configTextFile = getClass.getResource("/testbash/invalid_configs/config.txt").getPath
   private val configInvalidYamlFile = getClass.getResource("/testbash/invalid_configs/config_invalid_yaml.vsh.yaml").getPath
-
-  // custom platform yamls
   private val customPlatformFile = getClass.getResource("/testbash/platform_custom.yaml").getPath
 
-  //<editor-fold desc="Check behavior relative normal behavior such as success, no tests, failed tests, failed build">
   test("Check standard test output for typical outputs", DockerTest) {
     val testText = TestHelper.testMain(
       "test",
@@ -181,8 +176,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     checkTempDirAndRemove(stdout, false)
   }
-  //</editor-fold>
-  //<editor-fold desc="Invalid config files">
+
   test("Check config file without 'functionality' specified", DockerTest) {
     val newConfigFilePath = deriveNewConfigWithYq(""".unctionality=.functionality | del(.functionality)""", "missing_functionality")
     val testOutput = TestHelper.testMainException2[RuntimeException](
@@ -218,8 +212,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(testOutput.exceptionText.contains("while parsing a flow mapping"))
     assert(testOutput.output.isEmpty)
   }
-  //</editor-fold>
-  //<editor-fold desc="Check behavior of successful and failed tests with -keep flag specified">
+
   test("Check output in case --keep true is specified", DockerTest) {
     val testText = TestHelper.testMain(
       "test",
@@ -285,8 +278,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     checkTempDirAndRemove(testOutput.output, false)
   }
-  //</editor-fold>
-  //<editor-fold desc="Verify behavior of platform name specifications">
+
   test("Check standard test output with bad platform name", NativeTest) {
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
@@ -310,7 +302,6 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
     assert(testText.contains("Cleaning up temporary directory"))
   }
-  //</editor-fold>
 
   /**
     * Derive a config file from the default config
