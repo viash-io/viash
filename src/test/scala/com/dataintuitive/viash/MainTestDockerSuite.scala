@@ -326,7 +326,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     val fullCmd = s"""yq '$cmd' -i ./$yamlFileStr"""
     val newConfigShPath = Paths.get(tempFolStr, shFileStr)
-    Files.writeString(newConfigShPath, fullCmd)
+    Files.write(newConfigShPath, fullCmd.getBytes())
 
     Exec.run(
       Seq("sh", shFileStr),
