@@ -33,6 +33,7 @@ import java.text.SimpleDateFormat
 import io.viash.helpers.description
 import io.viash.helpers.example
 import io.viash.helpers.deprecated
+import io.viash.helpers.since
 
 @description("""Run a Viash component on a Docker backend platform.
                |By specifying which dependencies your component needs, users will be able to build a docker container from scratch using the setup flag, or pull it from a docker repository.
@@ -181,6 +182,9 @@ case class DockerPlatform(
              |""".stripMargin, "yaml")
   @deprecated("Use `setup` instead.", "Viash 0.5.15")
   docker: Option[DockerRequirements] = None,
+
+  @description("")
+  @since("Viash 0.5.13")
   test_setup: List[Requirements] = Nil
 ) extends Platform {
   override val hasSetup = true
