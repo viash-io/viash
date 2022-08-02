@@ -184,5 +184,26 @@ function ViashDockerSetup {
   fi
 }
 
+# ViashDockerCheckUtility: Check whether a docker container has the required utilities
+#
+# $1                  : image identifier with format `[registry/]image[:tag]`
+# $@                  : utilities to verify being present
+# examples:
+#   ViashDockerCheckUtility mynewcomponent bash ps
+function ViashDockerCheckUtility {
+  tag=$1
+  shift 1
+  save=$-; set +e
+  res=$(docker run --rm -t $tag which $@)
+  if [ $? -ne 0 ]; then
+  	ViashError "Docker container $tag does not contain one of these utilities: $@."
+  	if [[ -n $res ]]; then
+	  	ViashError "Docker output of resolved utilities:$IFS$res"
+	fi
+  	exit 1
+  fi
+  [[ $save =~ e ]] && set -e
+}
+
 
 ######## End of helper functions for setting up Docker images for viash ########

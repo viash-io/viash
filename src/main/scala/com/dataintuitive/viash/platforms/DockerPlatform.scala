@@ -416,13 +416,24 @@ case class DockerPlatform(
          |            exit 0
          |            ;;""".stripMargin
 
+    val utilitiesToCheck = Seq("which", "bash", "awk", "date", "grep", "egrep", "ps", "sed", "tail", "tee")
+    val utilitiesToCheckStr = utilitiesToCheck.mkString(" ")
+
     val postParse =
       s"""
          |if [ $$VIASH_MODE == "docker_setup" ]; then
          |  ViashDockerSetup '$effectiveID' "$$VIASH_DOCKER_SETUP_STRATEGY"
+         |  ViashDockerCheckUtility '$effectiveID' $utilitiesToCheckStr
          |  exit 0
          |fi
-         |ViashDockerSetup '$effectiveID' ${IfNeedBePullElseCachedBuild.id}""".stripMargin
+         |save=$$-; set +e
+         |ViashDockerLocalTagCheck '$effectiveID'
+         |outCheck=$$?
+         |[[ $$save =~ e ]] && set -e
+         |if [ $$outCheck -ne 0 ]; then
+         |  ViashDockerSetup '$effectiveID' ${IfNeedBePullElseCachedBuild.id}
+         |  ViashDockerCheckUtility '$effectiveID' $utilitiesToCheckStr
+         |fi""".stripMargin
 
     val mods = BashWrapperMods(
       preParse = preParse,
