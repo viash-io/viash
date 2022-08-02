@@ -37,7 +37,7 @@
     {% endfor %}
     },
     "allOf": [
-      {% for group in updtGroups %}{
+      {% for group in functionality.argument_groups %}{
         "$ref": "#/definitions/{{ group.name | lower }}"
       }{%- if not loop.last -%},{%- endif %}
       {% endfor %}
