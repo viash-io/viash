@@ -194,7 +194,7 @@ function ViashDockerCheckUtility {
   tag=$1
   shift 1
   save=$-; set +e
-  res=$(docker run --rm -t $tag which $@)
+  res=$(docker run --entrypoint=which --rm -t $tag $@)
   if [ $? -ne 0 ]; then
   	ViashError "Docker container $tag does not contain one of these utilities: $@."
   	if [[ -n $res ]]; then
