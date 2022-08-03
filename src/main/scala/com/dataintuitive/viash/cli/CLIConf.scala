@@ -183,12 +183,14 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     )
     val output = registerOpt[String](
       name = "output",
+      short = Some('o'),
       descr = "Path to directory in which the executable and any resources is built to. Default: \"output/\".",
       default = Some("output/"),
       required = true
     )
     val setup = registerOpt[String](
       name = "setup",
+      short = Some('s'),
       default = None,
       descr = "Which setup strategy for creating the container to use [Docker Platform only]."
     )
