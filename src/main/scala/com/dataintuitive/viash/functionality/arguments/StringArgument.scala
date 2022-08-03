@@ -19,6 +19,8 @@ package io.viash.functionality.arguments
 
 import io.viash.helpers.Circe.OneOrMore
 import io.viash.helpers.description
+import io.viash.helpers.example
+import io.viash.helpers.exampleWithDescription
 
 @description("")
 case class StringArgument(
@@ -28,7 +30,12 @@ case class StringArgument(
   alternatives: OneOrMore[String] = Nil,
   @description("")
   description: Option[String] = None,
-  @description("")
+  
+  @description("an example with examples! examples all the way down!")
+  @example("example1 without descr", "yaml")
+  @example("example2 without descr", "yaml")
+  @exampleWithDescription("example3 with descr", "yaml", "whoa!")
+  @exampleWithDescription("example4 with descr", "bloop", "nice!")
   example: OneOrMore[String] = Nil,
   @description("")
   default: OneOrMore[String] = Nil,

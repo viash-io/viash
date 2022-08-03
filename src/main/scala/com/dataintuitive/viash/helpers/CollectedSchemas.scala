@@ -95,14 +95,16 @@ object ParameterSchema {
     val annStrings = annotations.map(annotationToStrings(_))
 
     val description = annStrings.collectFirst({case (name, value) if name.endsWith("description") => value.head})
-    val example = annStrings.collect({case (name, value) if name.endsWith("example") => value}).map(ExampleSchema(_)) match {
+    val example = annStrings.collect({case (name, value) if name.endsWith("example") => value}).map(ExampleSchema(_))
+    val exampleWithDescription = annStrings.collect({case (name, value) if name.endsWith("exampleWithDescription") => value}).map(ExampleSchema(_))
+    val examples = example ::: exampleWithDescription match {
       case l if l.length > 0 => Some(l)
       case _ => None
     }
     val since = annStrings.collectFirst({case (name, value) if name.endsWith("since") => value.head})
     val deprecated = annStrings.collectFirst({case (name, value) if name.endsWith("deprecated") => value}).map(DeprecatedOrRemovedSchema(_))
     val removed = annStrings.collectFirst({case (name, value) if name.endsWith("removed") => value}).map(DeprecatedOrRemovedSchema(_))
-    ParameterSchema(name_, `type`, description, example, since, deprecated, removed)
+    ParameterSchema(name_, `type`, description, examples, since, deprecated, removed)
   }
 }
 
@@ -120,11 +122,16 @@ object DeprecatedOrRemovedSchema {
 final case class ExampleSchema(
   example: String,
   format: String,
+  description: Option[String],
 )
 
 object ExampleSchema {
   def apply(l: List[String]): ExampleSchema = {
-    ExampleSchema(l(0), l(1))
+    l match {
+      case _ if l.length == 2 => ExampleSchema(l(0), l(1), None)
+      case _ if l.length == 3 => ExampleSchema(l(0), l(1), Some(l(2)))
+    }
+    
   }
 }
 
