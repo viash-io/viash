@@ -95,42 +95,29 @@ case class Functionality(
   @since("Viash 0.5.11")
   outputs: List[Argument[_]] = Nil,
   
-  @description("""A list of arguments for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. Common properties for all argument types are the following.
-                 |
-                 | - `type: string/file/integer/double/boolean/boolean_true/boolean_false`, the type of argument determining to what object type the value will be cast in the downstream scripts.
-                 | - `direction: input/output`, the directionality of the argument. Only needs to be specified for output files. Default: “input”.
-                 | - `name: --foo`, the name of the argument. Can also be `-foo` or `foo`. The number of dashes determines how values can be passed:
-                 |   - with `--foo`: long option, e.g. `exe --foo=bar` or exe `--foo bar`
-                 |   - with `-foo`: short option, e.g. `exe -foo bar`
-                 |   - with `foo`: argument, e.g. `exe bar`
-                 | - `alternatives: [-f]`, list of alternative names. Typically only used to provide a short alternative option.
-                 | - `description: Description of foo`, a description of the argument. Multiline descriptions are supported.
-                 | - `default: bar`, the default value when no argument value is provided. Not allowed when `required: true`.
-                 | - `required: true/false`, whether the argument is required. If true and the functionality is executed, an error will be produced if no value is provided. Default = false.
-                 | - `multiple: true/false`, whether to treat the argument value as an array or not. Arrays can be passed using the delimiter `--foo=1:2:3` or by providing the same argument multiple times `--foo 1 --foo 2`. Default = false.
-                 | - `multiple_sep: ":"`, the delimiter for providing multiple values. Default = “:”.
-                 | - `must_exist: true/false`, denotes whether the file or folder should exist at the start of the execution. Only when 'type' is 'file'.
-                 |
-                 |On types: 
-                 |
-                 | * `type: string`, The value passed through an argument of this type is converted to an ‘str’ object in Python, and to a ‘character’ object in R.
-                 | * `type: integer`, The resulting value is an ‘int’ in Python and an ‘integer’ in R.
-                 | * `type: double`, The resulting value is a ‘float’ in Python and an ‘double’ in R.
-                 | * `type: boolean`, The resulting value is a ‘bool’ in Python and a ‘logical’ in R.
-                 | * `type: boolean_true/boolean_false`, Arguments of this type can only be used by providing a flag `--foo` or not. The resulting value is a ‘bool’ in Python and a ‘logical’ in R. These properties cannot be altered: required is false, default is undefined, multiple is false.
-                 | * `type: file`, The resulting value is still an ‘str’ in Python and a ‘character’ in R. In order to correctly pass files in some platforms (e.g. Docker and Nextflow), Viash needs to know which arguments are input/output files.
-                 |
-                 |""".stripMargin)
-  @example("""- name: --foo
-             |  type: file
-             |  alternatives: [-f]
-             |  description: Description of foo
-             |  default: "/foo/bar"
-             |  must_exist: true
-             |  required: false
-             |  multiple: true
-             |  multiple_sep: ","
-             |""".stripMargin, "yaml")
+  @description("""A list of arguments for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. See these reference pages per type for more information:  
+    |
+    | - [string](/documentation/reference/config/arguments/string.html)
+    | - [file](/documentation/reference/config/arguments/file.html)
+    | - [integer](/documentation/reference/config/arguments/integer.html)
+    | - [double](/documentation/reference/config/arguments/double.html)
+    | - [boolean](/documentation/reference/config/arguments/boolean.html)
+    | - [boolean_true](/documentation/reference/config/arguments/boolean_true.html)
+    | - [boolean_false](/documentation/reference/config/arguments/boolean_false.html)
+       |""".stripMargin)
+  @example("""arguments:
+             |   - name: --foo
+             |    type: file
+             |    alternatives: [-f]
+             |    description: Description of foo
+             |    default: "/foo/bar"
+             |    must_exist: true
+             |    required: false
+             |    multiple: true
+             |    multiple_sep: ","
+             |   - name: --bar
+             |    type: string
+             |  """.stripMargin, "yaml")
   arguments: List[Argument[_]] = Nil,
 
   @description("""A grouping of the arguments, used to display the help message.
