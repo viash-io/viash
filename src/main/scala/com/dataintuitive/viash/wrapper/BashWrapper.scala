@@ -42,7 +42,10 @@ object BashWrapper {
          |  $env="$$$env${multiple_sep.get}"$value
          |fi""".stripMargin.split("\n")
     } else {
-      Array(env + "=" + value)
+      Array(
+        s"""[ -n "$$$env" ] && ViashError Bad arguments for option '$env': \\'$$$env $$2\\' - you should provide exactly one argument for this option. && exit 1""",
+        env + "=" + value
+      )
     }
   }
 
