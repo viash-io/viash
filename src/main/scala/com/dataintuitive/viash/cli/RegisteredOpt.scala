@@ -25,7 +25,6 @@ case class RegisteredOpt (
   required: Boolean,
   argName: Option[String],
   hidden: Boolean,
-  noshort: Option[Boolean],
   choices: Option[Seq[String]],
   `type`: String,
   optType: String,
