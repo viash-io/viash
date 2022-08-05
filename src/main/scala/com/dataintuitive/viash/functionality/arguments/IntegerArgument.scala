@@ -58,7 +58,7 @@ case class IntegerArgument(
 """.stripMargin, "yaml")
   example: OneOrMore[Int] = Nil,
 
-  @description("An example value for this argument. If no [`default`](#default) property was specified, this will be used for that purpose.")
+  @description("The default value when no argument value is provided. This will not work if the [`required`](#required) property is enabled.")
   @example("""- name: --my_integer
 |  type: integer
 |  default: 100
