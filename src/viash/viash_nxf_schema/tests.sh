@@ -46,10 +46,9 @@ echo "Check if output is written"
 
 echo "Lint the schema file"
 nf-core schema lint schema_with_groups.json 2> with_groups.lint
-grep -vq ERROR with_groups.lint
+grep -q Error with_groups.lint
+[[ $? == 0 ]] && echo -e "Schema linting failed\nFull output of the linting:" && cat with_groups.lint && exit 1
 
-echo "Full output of the linting:"
-cat with_groups.lint
 
 ##############################################
 
@@ -97,9 +96,7 @@ echo "Check if output is written"
 
 echo "Lint the schema file"
 nf-core schema lint schema.json 2> no_groups.lint
-grep -vq ERROR no_groups.lint
-
-echo "Full output of the linting:"
-cat no_groups.lint
+grep -q Error no_groups.lint
+[[ $? == 0 ]] && echo -e "Schema linting failed\nFull output of the linting:" && cat no_groups.lint && exit 1
 
 echo "Test ok"
