@@ -1,8 +1,8 @@
 #!/bin/bash
 
 nextflow -q run \
-  "$resources_dir/main.nf" \
-  --resourcesDir "$resources_dir" \
+  "$meta_resources_dir/main.nf" \
+  --resourcesDir "$meta_resources_dir" \
   --input "$par_input" \
   --output config.json
 
