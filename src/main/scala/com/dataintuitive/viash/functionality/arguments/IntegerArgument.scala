@@ -90,7 +90,8 @@ case class IntegerArgument(
   @example("""- name: --my_integer
                |  type: integer
                |  max: 150
-""".stripMargin, "yaml")  max: Option[Int] = None,
+""".stripMargin, "yaml")  
+  max: Option[Int] = None,
 
 
   direction: Direction = Input,
