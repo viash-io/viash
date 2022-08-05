@@ -191,7 +191,7 @@ case class Functionality(
              |""".stripMargin, "yaml")
   resources: List[Resource] = Nil,
 
-  @description("A description of the component. This will be displayed with --help.")
+  @description("A description of the component. This will be displayed with `--help`.")
   @example("""description: |
              +  This component performs function Y and Z.
              +  It is possible to make this a multiline string.
