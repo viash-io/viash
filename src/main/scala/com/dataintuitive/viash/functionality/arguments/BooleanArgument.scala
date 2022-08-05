@@ -25,7 +25,7 @@ abstract class BooleanArgumentBase extends Argument[Boolean] {
 }
 
 @description("""
-|A `boolean` argument has two possible values: `true` or `false`.
+|A `boolean` type argument has two possible values: `true` or `false`.
 |  
 |Example:  
 |  
