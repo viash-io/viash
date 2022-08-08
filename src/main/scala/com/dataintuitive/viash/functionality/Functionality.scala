@@ -268,14 +268,14 @@ case class Functionality(
   }
 
   def mainScript: Option[Script] =
-    resources.headOption.flatMap({
+    resources.headOption.flatMap {
       case s: Script => Some(s)
       case _ => None
-    })
+    }
   def mainCode: Option[String] = mainScript.flatMap(_.read)
   // provide function to use resources.tail but that allows resources to be an empty list
   def additionalResources = resources match {
-    case r if r.nonEmpty => r.tail
+    case _ :: tail => tail
     case _ => List.empty[Resource]
   }
 
