@@ -1,0 +1,39 @@
+functionality:
+  name: viash_nxf_schema
+  namespace: viash
+  version: 0.1
+  description: |
+    Generate a Nextflow schema file based on a workflow config.
+    See https://nf-co.re/pipeline_schema_builder
+  inputs:
+  - name: "--input"
+    alternatives: [ -i, --config ]
+    type: file
+    default: config.vsh.yaml
+    description: A Viash config for a workflow
+  outputs:
+  - name: "--output"
+    alternatives: [ -o, --schema ]
+    type: file
+    default: nextflow_schema.json
+    description: nextflow schema file
+  resources:
+  - type: bash_script
+    path: script.sh
+  - path: main.nf
+  - path: template.j2
+  - path: ../../../src/main/resources/com/dataintuitive/viash/platforms/nextflow/WorkflowHelper.nf
+  test_resources:
+  - type: bash_script
+    path: tests.sh
+platforms:
+- type: docker
+  # image: nextflow/nextflow
+  image: python:3.8
+  setup:
+    - type: apt
+      packages: openjdk-11-jre-headless
+    - type: docker
+      run: cd /usr/bin/ && wget -qO- https://get.nextflow.io | bash
+    - type: python
+      packages: [ jinja-cli, nf-core ]
