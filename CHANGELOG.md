@@ -1,3 +1,9 @@
+# Viash 0.5.16
+
+## MINOR CHANGES
+
+* `Resources`: Handle edge case when no resources are specified in the `vsh.yaml` config file and display a warning message.
+
 # Viash 0.5.15
 
 ## BREAKING CHANGES
