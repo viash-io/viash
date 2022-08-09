@@ -1,3 +1,9 @@
+# Viash 0.5.16
+
+## MINOR CHANGES
+
+* `BashWrapper`: Add check to verify a parameter isn't declared twice on the CLI, except in the case `multiple: true` is declared as then it's a valid use case.
+
 # Viash 0.5.15
 
 ## BREAKING CHANGES
