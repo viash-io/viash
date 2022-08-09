@@ -259,15 +259,17 @@ case class Functionality(
   require(name.matches("^[A-Za-z][A-Za-z0-9_]*$"), message = "functionality name must begin with a letter and consist only of alphanumeric characters or underscores.")
 
   // check arguments
-  val allNames = allArguments.map(a => a.name) ::: allArguments.flatMap(a => a.alternatives)
-  val allNamesCounted = allNames.groupBy(identity).map(a => (a._1, a._2.length))
+  {
+    val allNames = allArguments.map(a => a.name) ::: allArguments.flatMap(a => a.alternatives)
+    val allNamesCounted = allNames.groupBy(identity).map(a => (a._1, a._2.length))
 
-  allArguments.foreach { arg =>
-    require(arg.name.matches("^(-?|--|\\$)[A-Za-z][A-Za-z0-9_]*$"), message = s"argument $arg.name: name must begin with a letter and consist only of alphanumeric characters or underscores.")
-    (arg.name :: arg.alternatives).foreach { argName =>
-      require(!Functionality.reservedParameters.contains(argName), message = s"argument $argName: name is reserved by viash")
-      require(!argName.matches("^\\$VIASH_"), message = s"argument $argName: environment variables beginning with 'VIASH_' are reserved for viash.")
-      require(allNamesCounted(argName) == 1, message = s"argument $argName: name or alternative name is not unique.")
+    allArguments.foreach { arg =>
+      require(arg.name.matches("^(-?|--|\\$)[A-Za-z][A-Za-z0-9_]*$"), message = s"argument $arg.name: name must begin with a letter and consist only of alphanumeric characters or underscores.")
+      (arg.name :: arg.alternatives).foreach { argName =>
+        require(!Functionality.reservedParameters.contains(argName), message = s"argument $argName: name is reserved by viash")
+        require(!argName.matches("^\\$VIASH_"), message = s"argument $argName: environment variables beginning with 'VIASH_' are reserved for viash.")
+        require(allNamesCounted(argName) == 1, message = s"argument $argName: name or alternative name is not unique.")
+      }
     }
   }
 

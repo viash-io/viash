@@ -1,3 +1,9 @@
+# Viash 0.5.16
+
+## MINOR CHANGES
+
+* `Functionality`: Add check to verify there are no double argument names or short names in the config `vsh.yaml` declarations.
+
 # Viash 0.5.15
 
 ## BREAKING CHANGES
