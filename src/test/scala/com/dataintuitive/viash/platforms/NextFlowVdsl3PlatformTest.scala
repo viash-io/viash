@@ -511,7 +511,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     // explicitly remove global arguments
     // these arguments make sense in nextflow but not in viash
     import java.util.regex.Pattern
-    val regex = Pattern.compile("Nextflow input/output arguments:.*Arguments:", Pattern.DOTALL)
+    val regex = Pattern.compile("Nextflow input-output arguments:.*Arguments:", Pattern.DOTALL)
     val correctedStdOut2 = regex.matcher(correctedStdOut1).replaceAll("Arguments:")
 
     // run Viash's --help

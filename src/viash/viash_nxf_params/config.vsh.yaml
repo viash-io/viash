@@ -1,0 +1,43 @@
+functionality:
+  name: viash_nxf_params
+  namespace: viash
+  version: 0.1
+  description: |
+    Generate a Nextflow params file based on a viash workflow config.
+  inputs:
+  - name: "--input"
+    alternatives: [ -i ]
+    type: file
+    default: config.vsh.yaml
+    description: A Viash config for a workflow
+    required: true
+  outputs:
+  - name: "--output"
+    alternatives: [ -o ]
+    type: file
+    description: nextflow params file
+    required: false
+  arguments:
+  - name: "--add_globals"
+    type: boolean
+    default: true
+    description: "Add global Nxf arguments"
+  resources:
+  - type: bash_script
+    path: script.sh
+  - path: main.nf
+  - path: ../../../src/main/resources/com/dataintuitive/viash/platforms/nextflow/WorkflowHelper.nf
+  test_resources:
+  - type: bash_script
+    path: tests.sh
+platforms:
+- type: docker
+  # image: nextflow/nextflow
+  image: python:3.8
+  setup:
+    - type: apt
+      packages: openjdk-11-jre-headless
+    - type: docker
+      run: cd /usr/bin/ && wget -qO- https://get.nextflow.io | bash
+    - type: python
+      packages: [ jinja-cli, nf-core ]
