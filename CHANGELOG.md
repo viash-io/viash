@@ -1,3 +1,9 @@
+# Viash 0.5.16
+
+## MINOR CHANGES
+
+* `BashWrapper`: Add a warning when an argument containing flags (e.g. `--foo`) is not recognized and will be handled as a positional argument as this is likely a mistake.
+
 # Viash 0.5.15
 
 ## BREAKING CHANGES
