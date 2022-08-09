@@ -1,3 +1,10 @@
+# Viash 0.5.16
+
+## MINOR CHANGES
+
+* `BashWrapper`: For int min/max checking: use native bash functionality so there is no dependency to `bc`.
+  For double min/max checking: add fallback code to use `awk` in case `bc` is not present on the system (most likely to happen when running tests in a docker container).
+
 # Viash 0.5.15
 
 ## BREAKING CHANGES
@@ -67,6 +74,9 @@
         description: Description
   ```
 
+
+* Addition of the `viash_nxf_schema` component for converting a Viash config (for a workflow) into a nextflow schema file.
+
 * `NextflowVdsl3Platform`: Use `--param_list` to initialise a Nextflow channel with multiple parameter sets.
   Possible formats are csv, json, yaml, or simply a yaml_blob.
   A csv should have column names which correspond to the different arguments of this pipeline.
@@ -87,6 +97,7 @@
   taking care of the formatting in Groovy.
 
 * `NextflowVdsl3Platform`: The `--help` is auto-generated from the config.
+
 
 ## MINOR CHANGES
 
