@@ -111,7 +111,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check failing build", DockerTest) {
-    val newConfigFilePath = deriveNewConfigWithYq(""".platforms[1].apt.packages[0]="get_the_machine_that_goes_ping"""", "failed_build")
+    val newConfigFilePath = deriveNewConfigWithYq("""with(.platforms ; .[] | select(.type == "docker" and has("id") | not) | .apt.packages[0]="get_the_machine_that_goes_ping")""", "failed_build")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "-p", "docker",
