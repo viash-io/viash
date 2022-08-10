@@ -2,6 +2,8 @@
 
 ## MINOR CHANGES
 
+* `Resources`: Handle edge case when no resources are specified in the `vsh.yaml` config file and display a warning message.
+
 * `BashWrapper`: Add a warning when an argument containing flags (e.g. `--foo`) is not recognized and will be handled as a positional argument as this is likely a mistake.
 
 * `Functionality`: Add check to verify there are no double argument names or short names in the config `vsh.yaml` declarations.

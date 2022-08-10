@@ -53,7 +53,7 @@ case class NativePlatform(
     )
 
     functionality.copy(
-      resources = bashScript :: functionality.resources.tail
+      resources = bashScript :: functionality.additionalResources
     )
   }
 }
