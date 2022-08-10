@@ -2,11 +2,12 @@
 
 ## MINOR CHANGES
 
+* `Functionality`: Add check to verify there are no double argument names or short names in the config `vsh.yaml` declarations.
+
 * `BashWrapper`: Add check to verify a parameter isn't declared twice on the CLI, except in the case `multiple: true` is declared as then it's a valid use case.
 
 * `BashWrapper`: For int min/max checking: use native bash functionality so there is no dependency to `bc`.
   For double min/max checking: add fallback code to use `awk` in case `bc` is not present on the system (most likely to happen when running tests in a docker container).
-
 
 # Viash 0.5.15
 
