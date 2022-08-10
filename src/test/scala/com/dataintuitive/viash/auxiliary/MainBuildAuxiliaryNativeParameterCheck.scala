@@ -1,7 +1,7 @@
 package io.viash.auxiliary
 
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
-import java.nio.file.Paths
+import java.nio.file.{Paths, Files, StandardCopyOption}
 
 import io.viash.config.Config
 
@@ -334,6 +334,97 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
   }
 
   test("Check whether double values with min and/or max specified are checked correctly") {
+    // min -3.2
+    // max 5.7
+    // traditionally bad arguments should already be checked elsewhere, so do less of them here
+    val checkMin = Seq("-10", "-4", "-3.3")
+    val checkMax = Seq("5.8", "6", "10")
+    val checksPass = Seq("-3.2", "0", "2", "5.7")
+    val checksFail = Seq("1+", "1-", "foo")
+    val signs = Seq("")
+
+    {
+      val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass ++ checkMax, signs, checksFail ++ checkMin)
+
+      val tests = Seq(
+        ("--real_number_min", passSingle, 0),
+        ("--real_number_min", failSingle, 1),
+        ("--real_number_min_multiple", passMulti, 0),
+        ("--real_number_min_multiple", failMulti, 1)
+      )
+
+      for (
+        (param, tests, expected_result) <- tests;
+        value <- tests
+      ) {
+        val out = Exec.run2(
+          Seq(
+            executable.toString,
+            param, value,
+          )
+        )
+        assert(out.exitValue == expected_result, s"Test failed for min $param: $value\n${out.output}")
+      }
+    }
+
+    {
+      val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass ++ checkMin, signs, checksFail ++ checkMax)
+
+      val tests = Seq(
+        ("--real_number_max", passSingle, 0),
+        ("--real_number_max", failSingle, 1),
+        ("--real_number_max_multiple", passMulti, 0),
+        ("--real_number_max_multiple", failMulti, 1)
+      )
+
+      for (
+        (param, tests, expected_result) <- tests;
+        value <- tests
+      ) {
+        val out = Exec.run2(
+          Seq(
+            executable.toString,
+            param, value,
+          )
+        )
+        assert(out.exitValue == expected_result, s"Test failed for max $param: $value\n${out.output}")
+      }
+    }
+
+    {
+      val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass, signs, checksFail ++ checkMin ++ checkMax)
+
+      val tests = Seq(
+        ("--real_number_min_max", passSingle, 0),
+        ("--real_number_min_max", failSingle, 1),
+        ("--real_number_min_max_multiple", passMulti, 0),
+        ("--real_number_min_max_multiple", failMulti, 1)
+      )
+
+      for (
+        (param, tests, expected_result) <- tests;
+        value <- tests
+      ) {
+        val out = Exec.run2(
+          Seq(
+            executable.toString,
+            param, value,
+          )
+        )
+        assert(out.exitValue == expected_result, s"Test failed for minmax $param: $value\n${out.output}")
+      }
+    }
+
+  }
+
+  test("Check whether double values with min and/or max specified are checked correctly using the awk fallback") {
+    // change the tests so it won't find 'bc'
+    val executableAwk = Paths.get(executable + "_awk").toFile()
+    Files.copy(executable.toPath(), executableAwk.toPath(), StandardCopyOption.REPLACE_EXISTING)
+    Exec.run(
+      Seq("sed", "-i'.original'", "s/command -v bc/command -v bcfoo/g", executableAwk.toString)
+    )
+
     // min -3.2
     // max 5.7
     // traditionally bad arguments should already be checked elsewhere, so do less of them here
