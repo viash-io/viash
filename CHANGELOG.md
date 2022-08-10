@@ -4,6 +4,12 @@
 
 * `Resources`: Handle edge case when no resources are specified in the `vsh.yaml` config file and display a warning message.
 
+* `BashWrapper`: Add a warning when an argument containing flags (e.g. `--foo`) is not recognized and will be handled as a positional argument as this is likely a mistake.
+
+* `Functionality`: Add check to verify there are no double argument names or short names in the config `vsh.yaml` declarations.
+
+* `BashWrapper`: Add check to verify a parameter isn't declared twice on the CLI, except in the case `multiple: true` is declared as then it's a valid use case.
+
 * `BashWrapper`: For int min/max checking: use native bash functionality so there is no dependency to `bc`.
   For double min/max checking: add fallback code to use `awk` in case `bc` is not present on the system (most likely to happen when running tests in a docker container).
 

@@ -141,6 +141,55 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
     assert(stdout.contains("INFO: Parsed input arguments"))
   }
 
+  test("Repeated regular arguments are not allowed") {
+    val out = Exec.run2(
+      Seq(
+        executable.toString,
+        executable.toString,
+        "--real_number", "123.456",
+        "--whole_number", "789",
+        "-s", "my$weird#string",
+        "--whole_number", "123",
+      )
+    )
+
+    assert(out.exitValue == 1)
+    assert(out.output.contains("[error] Bad arguments for option VIASH_PAR_WHOLE_NUMBER: '789 123' - you should provide exactly one argument for this option."))
+  }
+
+  test("Repeated flag arguments are not allowed") {
+    val out = Exec.run2(
+      Seq(
+        executable.toString,
+        executable.toString,
+        "--real_number", "123.456",
+        "--whole_number", "789",
+        "-s", "my$weird#string",
+        "--falsehood",
+        "--falsehood"
+      )
+    )
+    assert(out.exitValue == 1)
+    assert(out.output.contains("[error] Bad arguments for option VIASH_PAR_FALSEHOOD: 'false ' - you should provide exactly one argument for this option."))
+  }
+
+  test("Repeated arguments with --multiple defined are allowed") {
+    val out = Exec.run2(
+      Seq(
+        executable.toString,
+        executable.toString,
+        "--real_number", "123.456",
+        "--whole_number", "789",
+        "-s", "my$weird#string",
+        "--multiple", "foo",
+        "--multiple", "bar"
+      )
+    )
+    
+    assert(out.exitValue == 0)
+    assert(out.output.contains("multiple: |foo:bar|"))
+  }
+
   test("when -p is omitted, the system should run as native") {
     val testText = TestHelper.testMain(
       "build",
