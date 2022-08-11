@@ -26,6 +26,13 @@ grep -q 'multiple: |one:two|' output.txt
 grep -q 'multiple_pos: |a:b:c:d:e:f|' output.txt
 grep -q 'meta_functionality_name: |testbash|' output.txt
 grep -q 'meta_resources_dir: |..*|' output.txt
+grep -q 'meta_n_proc: |10|' output.txt
+grep -q 'meta_memory_b: |1073741824|' output.txt
+grep -q 'meta_memory_kb: |1048576|' output.txt
+grep -q 'meta_memory_mb: |1024|' output.txt
+grep -q 'meta_memory_gb: |1|' output.txt
+grep -q 'meta_memory_tb: |1|' output.txt
+grep -q 'meta_memory_pb: |1|' output.txt
 
 grep -q 'resources_dir: |..*|' output.txt
 grep -q 'head of input: |Scala|' output.txt
@@ -35,7 +42,13 @@ grep -q 'head of resource1: |if you can read this,|' output.txt
 grep -q 'Parsed input arguments.' log.txt
 
 echo ">>> Checking whether output is correct with minimal parameters"
-./$meta_functionality_name "resource2.txt" --real_number 123.456 --whole_number=789 -s "my\$weird#string\"\"\"" \
+./$meta_functionality_name \
+  "resource2.txt" \
+  --real_number 123.456 \
+  --whole_number=789 \
+  -s "my\$weird#string\"\"\"" \
+  ---n_proc 666 \
+  ---memory 3gb \
   > output2.txt
 
 [[ ! -f output2.txt ]] && echo "Output file could not be found!" && exit 1
@@ -55,6 +68,13 @@ grep -q 'multiple_pos: ||' output2.txt
 
 grep -q 'meta_functionality_name: |testbash|' output2.txt
 grep -q 'meta_resources_dir: |..*|' output2.txt
+grep -q 'meta_n_proc: |666|' output.txt
+grep -q 'meta_memory_b: |3221225472|' output.txt
+grep -q 'meta_memory_kb: |3145728|' output.txt
+grep -q 'meta_memory_mb: |3072|' output.txt
+grep -q 'meta_memory_gb: |3|' output.txt
+grep -q 'meta_memory_tb: |1|' output.txt
+grep -q 'meta_memory_pb: |1|' output.txt
 
 grep -q 'resources_dir: |..*|' output2.txt
 grep -q 'head of input: |this file is only for testing|' output2.txt
