@@ -1,5 +1,9 @@
 # Viash 0.5.16
 
+## NEW FUNCTIONALITY
+
+* `ConfigMod`: Added a `del(...)` config mod to be able to delete a value from the yaml. Example: `del(.functionality.version)`.
+
 ## MINOR CHANGES
 
 * `Resources`: Handle edge case when no resources are specified in the `vsh.yaml` config file and display a warning message.
