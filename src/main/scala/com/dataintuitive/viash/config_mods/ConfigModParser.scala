@@ -40,12 +40,16 @@ import io.circe.syntax._
 # apply config mod before parsing the json
 <preparse> .platforms[.type == "nextflow"].variant := "vdsl3"
 
+# delete a value
+del(.functionality.version)
+
 */
 
 /* BNF notation
 
 <command>    ::= <path> ":=" <json>
                | <path> "+0=" <json>
+               | "del" <path>
                | <path> "+=" <json>
                | "<preparse>" <command>
 
@@ -83,7 +87,11 @@ import io.circe.syntax._
 
 object ConfigModParser extends RegexParsers {
   def parseBlock(s: String): ConfigMods = {
-    parse(block, s).get
+    val out = parse(block, s).get
+    if (s != "" && out.commands.isEmpty) {
+      throw new RuntimeException("Could not parse config mods: '" + s + "'")
+    }
+    out
     // TODO: provide better error message
   }
 
@@ -117,7 +125,7 @@ object ConfigModParser extends RegexParsers {
 
 
   // define paths
-  def root: Parser[PathExp] = "root" ^^ { _ => Root}
+  def root: Parser[PathExp] = "root" ^^^ Root
   def path: Parser[Path] = (root | down | filter) ~ rep(down | filter) ^^ {
     case head ~ tail => {
       Path(head :: tail)
@@ -150,12 +158,21 @@ object ConfigModParser extends RegexParsers {
   def value: Parser[Value] = path | (json ^^ { JsonValue(_) })
 
   // define commands
-  def command: Parser[ConfigMod] = preparse ~ path ~ (modify | add | prepend) ^^ {
-    case prep ~ pt ~ comm => ConfigMod(pt, comm, preparse = prep)
+  def command: Parser[ConfigMod] = preparse ~ (delete | modify | add | prepend) ^^ {
+    case prep ~ cm => cm.copy(preparse = prep)
   }
-  def modify: Parser[CommandExp] = ":=" ~> json ^^ { Modify(_) }
-  def add: Parser[CommandExp] = "+=" ~> json ^^ { Add(_) }
-  def prepend: Parser[CommandExp] = "+0=" ~> json ^^ { Prepend(_) }
+  def delete: Parser[ConfigMod] = "del(" ~> path <~ ")" ^^ { pt => 
+    ConfigMod(pt, Delete)
+  }
+  def modify: Parser[ConfigMod] = path ~ (":=" ~> json) ^^ { 
+    case pt ~ js => ConfigMod(pt, Modify(js))
+  }
+  def add: Parser[ConfigMod] = path ~ ("+=" ~> json) ^^ { 
+    case pt ~ js => ConfigMod(pt, Add(js))
+  }
+  def prepend: Parser[ConfigMod] = path ~ ("+0=" ~> json) ^^ { 
+    case pt ~ js => ConfigMod(pt, Prepend(js))
+  }
   def block: Parser[ConfigMods] = repsep(command, ";") ^^ { ConfigMods(_) }
   def preparse: Parser[Boolean] = opt("<preparse>") ^^ {
     case found => found.isDefined

@@ -233,8 +233,8 @@ case class DockerPlatform(
     val dm = dmDockerCheck ++ setupMods ++ dmVol ++ dmDebug ++ dmChown
 
     // make commands
-    val entrypointStr = functionality.mainScript.get match {
-      case _: Executable => "--entrypoint='' "
+    val entrypointStr = functionality.mainScript match {
+      case Some(_: Executable) => "--entrypoint='' "
       case _ => "--entrypoint=bash "
     }
     val workdirStr = workdir.map("--workdir " + _ + " ").getOrElse("")
@@ -256,7 +256,7 @@ case class DockerPlatform(
     )
 
     fun2.copy(
-      resources = bashScript :: fun2.resources.tail
+      resources = bashScript :: fun2.additionalResources
     )
   }
 

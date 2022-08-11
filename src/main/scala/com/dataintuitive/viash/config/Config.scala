@@ -161,6 +161,9 @@ object Config {
       }
     }
 
+    if (conf1.functionality.resources.isEmpty)
+      Console.err.println("Warning: no resources specified!")
+
     if (!modifyConfig) {
       return conf1
     }
