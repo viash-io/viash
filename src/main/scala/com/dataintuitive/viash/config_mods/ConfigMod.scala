@@ -169,6 +169,15 @@ case class NotEquals(left: Value, right: Value) extends Condition {
     left.get(cursor) != right.get(cursor)
   }
 }
+case class Has(id: Value) extends Condition {
+  def apply(cursor: ACursor): Boolean = {
+    id.get(cursor) match {
+      case None => false
+      case Some(j: Json) => !j.isNull
+      case _ => true
+    }
+  }
+}
 case class And(left: Condition, right: Condition) extends Condition {
   def apply(cursor: ACursor): Boolean = {
     left(cursor) && right(cursor)

@@ -43,13 +43,16 @@ import io.circe.syntax._
 # delete a value
 del(.functionality.version)
 
+# check an identifier is specified
+.functionality.authors[!has(role)].email := "unknown"
+
 */
 
 /* BNF notation
 
 <command>    ::= <path> ":=" <json>
                | <path> "+0=" <json>
-               | "del" <path>
+               | "del(" <path> ")"
                | <path> "+=" <json>
                | "<preparse>" <command>
 
@@ -59,6 +62,7 @@ del(.functionality.version)
 
 <condition>  ::= <value> "==" <value>
                | <value> "!=" <value>
+               | "has(" <path> ")"
                | <condition> "&&" <condition>
                | <condition> "||" <condition>
                | "(" <condition> ")"
@@ -136,7 +140,7 @@ object ConfigModParser extends RegexParsers {
 
   // define condition operations
   def condition: Parser[Condition] = and | or | not | condAvoidRecursion
-  def condAvoidRecursion: Parser[Condition] = brackets | equals | notEquals | ("true" ^^^ True) | ("false" ^^^ False)
+  def condAvoidRecursion: Parser[Condition] = brackets | equals | notEquals | has | ("true" ^^^ True) | ("false" ^^^ False)
   def brackets: Parser[Condition] = "(" ~> condition <~ ")"
   def and: Parser[And] = condAvoidRecursion ~ ("&&" ~> condition) ^^ {
     case left ~  right => And(left, right)
@@ -153,6 +157,8 @@ object ConfigModParser extends RegexParsers {
   def notEquals: Parser[NotEquals] = value ~ ("!=" ~> value) ^^ {
     case left ~ right => NotEquals(left, right)
   }
+
+  def has: Parser[Has] = "has(" ~> path <~ ")" ^^ { Has(_) }
 
   // define condition values
   def value: Parser[Value] = path | (json ^^ { JsonValue(_) })

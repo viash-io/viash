@@ -115,8 +115,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check failing build", DockerTest) {
-    // TODO change selector for .id. to .id not being set instead of not "busybox"
-    val newConfigFilePath = deriveNewConfig(""".platforms[.type == "docker" && ! .id == "busybox"].apt := { packages: ["get_the_machine_that_goes_ping"] }""", "failed_build")
+    val newConfigFilePath = deriveNewConfig(""".platforms[.type == "docker" && !has(.id) ].apt := { packages: ["get_the_machine_that_goes_ping"] }""", "failed_build")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "-p", "docker",
