@@ -8,6 +8,7 @@ import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import scala.reflect.io.Directory
 import sys.process._
 
+import io.viash.config.Config.parseConfigMods
 import io.circe.yaml.parser
 import io.circe.yaml.{Printer => YamlPrinter}
 
@@ -68,7 +69,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
     val rootPath = getClass.getResource(s"/testbash/").getPath
     TestHelper.copyFolder(rootPath, tempFolStr)
     
-    val newConfigFilePath = deriveNewConfig(".", "default_config")
+    val newConfigFilePath = deriveNewConfig(Nil, "default_config")
 
     val testText = TestHelper.testMain(
       "test",
@@ -306,13 +307,17 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(testText.contains("Cleaning up temporary directory"))
   }
 
+  def deriveNewConfig(configMod: String, name: String): String = {
+    deriveNewConfig(List(configMod), name)
+  }
+
   /**
     * Derive a config file from the default config
-    * @param cmd Command to pass to yq
+    * @param comnifMods Config mods to apply to the yaml
     * @param name name of the new .vsh.yaml file
     * @return Path to the new config file as string
     */
-  def deriveNewConfig(cmd: String, name: String): String = {
+  def deriveNewConfig(configMods: List[String], name: String): String = {
     val shFileStr = s"$name.sh"
     val yamlFileStr = s"$name.vsh.yaml"
     val newConfigFilePath = Paths.get(tempFolStr, s"$yamlFileStr")
@@ -326,8 +331,13 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     val js = parser.parse(yamlText).fold(errorHandler, a => a)
 
-    // TODO do something with the json file
-    
+    val confMods = parseConfigMods(configMods)
+
+    val modifiedJs = confMods match {
+      case None => js
+      case Some(cmds) => cmds(js.hcursor, preparse = false).top.get
+    }
+
     val yamlPrinter = YamlPrinter(
       preserveOrder = true,
       dropNullKeys = true,
@@ -335,7 +345,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
       splitLines = true,
       stringStyle = YamlPrinter.StringStyle.Plain
     )
-    val yaml = yamlPrinter.pretty(js)
+    val yaml = yamlPrinter.pretty(modifiedJs)
     Files.write(newConfigFilePath, yaml.getBytes)
 
     newConfigFilePath.toString
