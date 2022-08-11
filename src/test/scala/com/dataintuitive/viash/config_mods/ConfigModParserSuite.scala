@@ -166,7 +166,7 @@ class ConfigModParserSuite extends FunSuite {
         Delete
       )
     ))
-    val command = """delete(.x)"""
+    val command = """del(.x)"""
     val result = ConfigModParser.parseBlock(command)
     assert(result == expected)
   }
