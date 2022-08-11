@@ -51,6 +51,11 @@ case class Modify(value: Json) extends CommandExp {
     cursor.set(value)
   }
 }
+case object Delete extends CommandExp {
+  def command(cursor: ACursor): ACursor = {
+    cursor.delete
+  }
+}
 case class Add(value: Json) extends CommandExp {
   def command(cursor: ACursor): ACursor = {
     cursor.withFocus(_.mapArray(_ ++ Vector(value)))

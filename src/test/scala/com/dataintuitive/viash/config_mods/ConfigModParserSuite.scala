@@ -159,4 +159,15 @@ class ConfigModParserSuite extends FunSuite {
     assert(result == expected)
   }
   // TODO: extend tests for more conditions
+  test("test delete command") {
+    val expected = ConfigMods(List(
+      ConfigMod(
+        Path(List(Attribute("x"))),
+        Delete
+      )
+    ))
+    val command = """delete(.x)"""
+    val result = ConfigModParser.parseBlock(command)
+    assert(result == expected)
+  }
 }
