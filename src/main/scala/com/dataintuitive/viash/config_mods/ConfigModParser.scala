@@ -87,7 +87,11 @@ del(.functionality.version)
 
 object ConfigModParser extends RegexParsers {
   def parseBlock(s: String): ConfigMods = {
-    parse(block, s).get
+    val out = parse(block, s).get
+    if (s != "" && out.commands.isEmpty) {
+      throw new RuntimeException("Could not parse config mods: '" + s + "'")
+    }
+    out
     // TODO: provide better error message
   }
 
