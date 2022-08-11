@@ -21,6 +21,7 @@ import io.viash.functionality._
 import io.viash.functionality.resources._
 import io.viash.functionality.arguments._
 import io.viash.helpers.{Bash, Format, Helper}
+import io.viash.helpers.description
 
 object BashWrapper {
   val metaFields: List[(String, String)] = {
@@ -28,7 +29,15 @@ object BashWrapper {
       ("VIASH_META_FUNCTIONALITY_NAME", "functionality_name"),
       ("VIASH_META_RESOURCES_DIR", "resources_dir"),
       ("VIASH_META_EXECUTABLE", "executable"),
-      ("VIASH_TEMP", "temp_dir")
+      ("VIASH_TEMP", "temp_dir"),
+      ("VIASH_META_N_PROC", "n_proc"),
+      ("VIASH_META_MEMORY_B", "memory_b"),
+      ("VIASH_META_MEMORY_KB", "memory_kb"),
+      ("VIASH_META_MEMORY_MB", "memory_mb"),
+      ("VIASH_META_MEMORY_GB", "memory_gb"),
+      ("VIASH_META_MEMORY_TB", "memory_tb"),
+      ("VIASH_META_MEMORY_PB", "memory_pb")
+
     )
   }
   val var_resources_dir = "VIASH_META_RESOURCES_DIR"
@@ -167,6 +176,7 @@ object BashWrapper {
     val paramAndDummies = functionality.allArgumentsAndDummies
 
     val helpMods = generateHelp(functionality)
+    val computationalRequirementMods = generateComputationalRequirements(functionality)
     val parMods = generateParsers(params, paramAndDummies)
     val execMods = mainResource match {
       case Some(_: Executable) => generateExecutableArgs(params)
@@ -174,7 +184,7 @@ object BashWrapper {
     }
 
     // combine
-    val allMods = helpMods ++ parMods ++ mods ++ execMods
+    val allMods = helpMods ++ parMods ++ mods ++ execMods ++ computationalRequirementMods
 
     // generate header
     val header = Helper.generateScriptHeader(functionality)
@@ -490,15 +500,15 @@ object BashWrapper {
         ""
       } else {
         "\n# check whether parameters values are of the right type\n" +
-          paramsAndDummies.map { param =>
+          paramsAndDummies.flatMap { param =>
             param match {
               case io: IntegerArgument =>
-                typeMinMaxCheck(io, "^[-+]?[0-9]+$", io.min, io.max)
+                Some(typeMinMaxCheck(io, "^[-+]?[0-9]+$", io.min, io.max))
               case dO: DoubleArgument =>
-                typeMinMaxCheck(dO, "^[-+]?(\\.[0-9]+|[0-9]+(\\.[0-9]*)?)([eE][-+]?[0-9]+)?$", dO.min, dO.max)
+                Some(typeMinMaxCheck(dO, "^[-+]?(\\.[0-9]+|[0-9]+(\\.[0-9]*)?)([eE][-+]?[0-9]+)?$", dO.min, dO.max))
               case bo: BooleanArgumentBase =>
-                typeMinMaxCheck(bo, "^(true|True|TRUE|false|False|FALSE|yes|Yes|YES|no|No|NO)$")               
-              case _ => ""
+                Some(typeMinMaxCheck(bo, "^(true|True|TRUE|false|False|FALSE|yes|Yes|YES|no|No|NO)$"))
+              case _ => None
             }           
           }.mkString("\n")
       }
@@ -558,6 +568,52 @@ object BashWrapper {
     BashWrapperMods(
       parsers = parseStrs,
       preRun = positionalStr + "\n" + reqCheckStr + "\n" + defaultsStrs + "\n" + reqFilesStr + "\n" + typeMinMaxCheckStr + "\n" + choiceCheckStr
+    )
+  }
+
+
+  private def generateComputationalRequirements(functionality: Functionality) = {
+    val compArgs = List(
+      ("---n_proc", "VIASH_META_N_PROC", functionality.requirements.n_proc.map(_.toString)),
+      ("---memory", "VIASH_META_MEMORY", functionality.requirements.memoryAsBytes.map(_.toString))
+    )
+
+    // gather parse code for params
+    val parsers = 
+      compArgs.flatMap{ case (flag, env, _) => 
+        List(
+          argStore(flag, env, "\"$2\"", 2),
+          argStoreSed(flag, env)
+        )
+      }.map("\n" + _).mkString
+
+    // construct default values, e.g.
+    val defaultsStrs = compArgs.flatMap{ case (_, env, default) =>
+      default.map(dflt => {
+        s"""if [ -z "$$$env" ]; then
+           |  $env="${Bash.escapeMore(dflt, quote = true, newline = true)}"
+           |fi""".stripMargin
+      })
+    }.mkString("\n")
+
+    // calculators
+    val memoryCalculations = 
+      s"""# compute memory in different units
+      |if [ ! -z "$$VIASH_META_MEMORY" ]; then
+      |  # convert to lower case
+      |  VIASH_META_MEMORY=`echo "$$VIASH_META_MEMORY" | tr '[:upper:]' '[:lower:]'`
+      |  VIASH_META_MEMORY_B=$$VIASH_META_MEMORY
+      |  VIASH_META_MEMORY_KB=$$(( ($$VIASH_META_MEMORY_B+1023) / 1024 ))
+      |  VIASH_META_MEMORY_MB=$$(( ($$VIASH_META_MEMORY_KB+1023) / 1024 ))
+      |  VIASH_META_MEMORY_GB=$$(( ($$VIASH_META_MEMORY_MB+1023) / 1024 ))
+      |  VIASH_META_MEMORY_TB=$$(( ($$VIASH_META_MEMORY_GB+1023) / 1024 ))
+      |  VIASH_META_MEMORY_PB=$$(( ($$VIASH_META_MEMORY_TB+1023) / 1024 ))
+      |fi""".stripMargin
+
+    // return output
+    BashWrapperMods(
+      parsers = parsers,
+      preRun = defaultsStrs + "\n" + memoryCalculations
     )
   }
 
