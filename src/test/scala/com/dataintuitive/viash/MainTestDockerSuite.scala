@@ -100,7 +100,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check test output when a test fails", NativeTest) {
-    val newConfigFilePath = deriveNewConfig(""".functionality.test_resources[0].path="tests/fail_failed_test.sh"""", "failed_test")
+    val newConfigFilePath = deriveNewConfig(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""", "failed_test")
     val testText = TestHelper.testMainException[RuntimeException](
       "test",
       "-p", "native",
@@ -115,7 +115,8 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check failing build", DockerTest) {
-    val newConfigFilePath = deriveNewConfig("""with(.platforms ; .[] | select(.type == "docker" and has("id") | not) | .apt.packages[0]="get_the_machine_that_goes_ping")""", "failed_build")
+    // TODO change selector for .id. to .id not being set instead of not "busybox"
+    val newConfigFilePath = deriveNewConfig(""".platforms[.type == "docker" && ! .id == "busybox"].apt := { packages: ["get_the_machine_that_goes_ping"] }""", "failed_build")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "-p", "docker",
@@ -132,7 +133,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check test output when test doesn't exist", DockerTest) {
-    val newConfigFilePath = deriveNewConfig(""".functionality.test_resources[0].path="tests/nonexistent_test.sh"""", "nonexisting_test")
+    val newConfigFilePath = deriveNewConfig(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/nonexistent_test.sh"""", "nonexisting_test")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "-p", "docker",
@@ -182,7 +183,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check config file without 'functionality' specified", DockerTest) {
-    val newConfigFilePath = deriveNewConfig(""".unctionality=.functionality | del(.functionality)""", "missing_functionality")
+    val newConfigFilePath = deriveNewConfig("""del(.functionality)""", "missing_functionality")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "-p", "docker",
@@ -248,7 +249,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check test output when a test fails and --keep true is specified", NativeTest) {
-    val newConfigFilePath = deriveNewConfig(""".functionality.test_resources[0].path="tests/fail_failed_test.sh"""", "failed_test_keep_true")
+    val newConfigFilePath = deriveNewConfig(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""", "failed_test_keep_true")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "-p", "native",
@@ -266,7 +267,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check test output when a test fails and --keep false is specified", NativeTest) {
-    val newConfigFilePath = deriveNewConfig(""".functionality.test_resources[0].path="tests/fail_failed_test.sh"""", "failed_test_keep_false")
+    val newConfigFilePath = deriveNewConfig(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""", "failed_test_keep_false")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "-p", "native",
