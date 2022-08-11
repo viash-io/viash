@@ -1,0 +1,51 @@
+/*
+ * Copyright (C) 2020  Data Intuitive
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package io.viash.functionality
+
+import io.viash.helpers._
+
+@description("Computational requirements related to running the component.")
+@since("Viash 0.5.16")
+case class ComputationalRequirements(
+  @description("The maximum number of processes a component is allowed to spawn in parallel.")
+  @example("n_proc: 10", "yaml")
+  n_proc: Option[Integer] = None,
+  @description("The maximum amount of memory a component is allowed to allocate. Unit must be one of B, KB, MB, GB, TB or PB.")
+  @example("memory: 10GB", "yaml")
+  memory: Option[String] = None
+) {
+  def memoryAsBytes: Option[BigInt] = {
+    val Regex = "^([0-9]+) *([kmgtp]b?|b)$".r
+    val lookup = Map(
+      "b" -> 0,
+      "kb" -> 1,
+      "mb" -> 2,
+      "gb" -> 3,
+      "tb" -> 4,
+      "pb" -> 5
+    )
+    memory.map(_.toLowerCase()) match {
+      case Some(Regex(amnt, unit)) => 
+        val amntBigInt = BigInt(amnt)
+        val multiplier = BigInt(1024)
+        val exp = lookup(unit)
+        Some(multiplier.pow(exp))
+      case None => None
+    }
+  }
+}

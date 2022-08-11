@@ -170,7 +170,18 @@ case class Functionality(
 
   @description("Setting this to false with disable this component when using namespaces.")
   @since("Viash 0.5.13")
-  enabled: Boolean = true
+  enabled: Boolean = true,
+
+  @description("""Computational requirements related to running the component. 
+    |`n_proc` specifies the maximum number of processes a component is allowed to spawn in parallel, whereas
+    |`memory` specifies the maximum amount of memory a component is allowed to allicate. Memory units must be
+    |in B, KB, MB, GB, TB or PB.""".stripMargin)
+  @example("""requirements:
+             |  n_proc: 5
+             |  memory: 10GB
+             |""".stripMargin, "yaml")
+  @since("Viash 0.5.16")
+  requirements: ComputationalRequirements = ComputationalRequirements()
 ) {
   // START OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
   @description("Adds the resources directory to the PATH variable when set to true. This is set to false by default.")
