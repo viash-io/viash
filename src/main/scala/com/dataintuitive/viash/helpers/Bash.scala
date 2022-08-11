@@ -63,6 +63,20 @@ object Bash {
     argStore(name + "=*", plainName, "$(ViashRemoveFlags \"$1\")", 1, storeUnparsed)
   }
 
+  /** 
+   * Access the parameters contents in a bash script,
+   * taking into account that some characters need to be escaped.
+   * 
+   * Example: Bash.getEscapedArgument("VIASH_PAR_MYSTRING", "'", """\'""", """\\\'""") 
+   * results in '${VIASH_PAR_MYSTRING//\'/\\\'}'. 
+   * 
+   * Sidenote: a '\' will be escaped as '\VIASH_SLASH\', so BashWrapper
+   * substitutes it back for a '\' instead of escaping it as a '\\'.
+   */
+  def getEscapedArgument(env: String, quot: String, from: String, to: String) = {
+    s"$quot$${$env//$from/$to}$quot".replaceAll("\\\\", "\\\\VIASH_SLASH\\\\")
+  }
+
   case class Escaper(str: String) {
     def transform(fun: Function[String, String], apply: Boolean = true): Escaper = {
       Escaper(if (apply) fun(str) else str)

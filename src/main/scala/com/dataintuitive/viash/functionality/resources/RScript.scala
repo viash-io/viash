@@ -18,6 +18,7 @@
 package io.viash.functionality.resources
 
 import io.viash.functionality._
+import io.viash.helpers.Bash
 import io.viash.functionality.arguments._
 import io.viash.wrapper.BashWrapper
 
@@ -44,7 +45,7 @@ case class RScript(
 
     val parSet = params.map { par =>
       // val env_name = par.VIASH_PAR
-      val env_name = par.viash_par_escaped("'", """\'""", """\\\'""")
+      val env_name = Bash.getEscapedArgument(par.VIASH_PAR, "'", """\'""", """\\\'""")
 
       val parse = par match {
         case a: BooleanArgumentBase if a.multiple =>
