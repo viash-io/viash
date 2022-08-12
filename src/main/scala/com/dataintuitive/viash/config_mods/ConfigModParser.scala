@@ -164,30 +164,21 @@ object ConfigModParser extends RegexParsers {
   def value: Parser[Value] = path | (json ^^ { JsonValue(_) })
 
   // define commands
-  def command: Parser[(Boolean, Command)] = preparse ~ (assign) ^^ {
+  def command: Parser[(Boolean, Command)] = preparse ~ (delete | assign | append | prepend) ^^ {
     case prep ~ cm => (prep, cm)
   }
-  // def command: Parser[(Boolean, ConfigMod)] = preparse ~ (delete | modify | modifyPath | add | addPath | prepend) ^^ {
-  //   case prep ~ cm => (prep, cm)
-  // }
-  // def delete: Parser[ConfigMod] = "del(" ~> path <~ ")" ^^ { pt => 
-  //   ConfigMod(pt, Delete)
-  // }
+  def delete: Parser[Command] = "del(" ~> path <~ ")" ^^ { pt => 
+    Delete(pt)
+  }
   def assign: Parser[Command] = path ~ (":=" ~> value) ^^ { 
     case lhs ~ rhs => Assign(lhs, rhs)
   }
-  // def modifyPath: Parser[ConfigMod] = path ~ (":=" ~> path) ^^ {
-  //   case pt ~ pt2 => ConfigMod(pt, ModifyPath(pt2))
-  // }
-  // def add: Parser[ConfigMod] = path ~ ("+=" ~> json) ^^ { 
-  //   case pt ~ js => ConfigMod(pt, Add(js))
-  // }
-  // def addPath: Parser[ConfigMod] = path ~ ("+=" ~> path) ^^ { 
-  //   case pt ~ pt2 => ConfigMod(pt, AddPath(pt2))
-  // }
-  // def prepend: Parser[ConfigMod] = path ~ ("+0=" ~> json) ^^ { 
-  //   case pt ~ js => ConfigMod(pt, Prepend(js))
-  // }
+  def append: Parser[Command] = path ~ ("+=" ~> value) ^^ { 
+    case lhs ~ rhs => Append(lhs, rhs)
+  }
+  def prepend: Parser[Command] = path ~ ("+0=" ~> value) ^^ { 
+    case lhs ~ rhs => Prepend(lhs, rhs)
+  }
   def block: Parser[ConfigMods] = repsep(command, ";") ^^ { cmds =>
     val preparseCommands = cmds.filter(_._1).map(_._2)
     val postparseCommands = cmds.filter(!_._1).map(_._2)
