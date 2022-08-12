@@ -344,7 +344,7 @@ object BashWrapper {
       } else {
         "\n# check whether required parameters exist\n" +
           reqParams.map { param =>
-            s"""if [ -z "$$${param.VIASH_PAR}" ]; then
+            s"""if [ -z $${${param.VIASH_PAR}+x} ]; then
                |  ViashError '${param.name}' is a required argument. Use "--help" to get more information on the parameters.
                |  exit 1
                |fi""".stripMargin
@@ -365,7 +365,7 @@ object BashWrapper {
       }
 
       default.map(default => {
-        s"""if [ -z "$$${param.VIASH_PAR}" ]; then
+        s"""if [ -z $${${param.VIASH_PAR}+x} ]; then
            |  ${param.VIASH_PAR}="${Bash.escapeMore(default.toString, quote = true, newline = true)}"
            |fi""".stripMargin
       })
@@ -580,7 +580,7 @@ object BashWrapper {
   private def generateComputationalRequirements(functionality: Functionality) = {
     val compArgs = List(
       ("---n_proc", "VIASH_META_N_PROC", functionality.requirements.n_proc.map(_.toString)),
-      ("---memory", "VIASH_META_MEMORY", functionality.requirements.memoryAsBytes.map(_.toString))
+      ("---memory", "VIASH_META_MEMORY", functionality.requirements.memoryAsBytes.map(_.toString + "b"))
     )
 
     // gather parse code for params
@@ -595,7 +595,7 @@ object BashWrapper {
     // construct default values, e.g.
     val defaultsStrs = compArgs.flatMap{ case (_, env, default) =>
       default.map(dflt => {
-        s"""if [ -z "$$$env" ]; then
+        s"""if [ -z $${$env+x} ]; then
            |  $env="${Bash.escapeMore(dflt, quote = true, newline = true)}"
            |fi""".stripMargin
       })
@@ -603,16 +603,42 @@ object BashWrapper {
 
     // calculators
     val memoryCalculations = 
-      s"""# compute memory in different units
-      |if [ ! -z "$$VIASH_META_MEMORY" ]; then
-      |  # convert to lower case
-      |  VIASH_META_MEMORY=`echo "$$VIASH_META_MEMORY" | tr '[:upper:]' '[:lower:]'`
-      |  VIASH_META_MEMORY_B=$$VIASH_META_MEMORY
-      |  VIASH_META_MEMORY_KB=$$(( ($$VIASH_META_MEMORY_B+1023) / 1024 ))
-      |  VIASH_META_MEMORY_MB=$$(( ($$VIASH_META_MEMORY_KB+1023) / 1024 ))
-      |  VIASH_META_MEMORY_GB=$$(( ($$VIASH_META_MEMORY_MB+1023) / 1024 ))
-      |  VIASH_META_MEMORY_TB=$$(( ($$VIASH_META_MEMORY_GB+1023) / 1024 ))
-      |  VIASH_META_MEMORY_PB=$$(( ($$VIASH_META_MEMORY_TB+1023) / 1024 ))
+      """# helper function for parsing memory strings
+      |function ViashMemoryAsBytes {
+      |  local memory=`echo "$1" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]'`
+      |  local memory_regex='^([0-9]+)([kmgtp]b?|b)$'
+      |  if [[ $memory =~ $memory_regex ]]; then
+      |    local number=${memory/[^0-9]*/}
+      |    local symbol=${memory/*[0-9]/}
+      |    
+      |    case $symbol in
+      |      b)      memory_b=$number ;;
+      |      kb|k)   memory_b=$(( $number * 1024 )) ;;
+      |      mb|m)   memory_b=$(( $number * 1024 * 1024 )) ;;
+      |      gb|g)   memory_b=$(( $number * 1024 * 1024 * 1024 )) ;;
+      |      tb|t)   memory_b=$(( $number * 1024 * 1024 * 1024 * 1024 )) ;;
+      |      pb|p)   memory_b=$(( $number * 1024 * 1024 * 1024 * 1024 * 1024 )) ;;
+      |    esac
+      |    echo "$memory_b"
+      |  fi
+      |}
+      |# compute memory in different units
+      |if [ ! -z ${VIASH_META_MEMORY+x} ]; then
+      |  VIASH_META_MEMORY_B=`ViashMemoryAsBytes $VIASH_META_MEMORY`
+      |  if [ ! -z "$VIASH_META_MEMORY" ]; then
+      |    VIASH_META_MEMORY_KB=$(( ($VIASH_META_MEMORY_B+1023) / 1024 ))
+      |    VIASH_META_MEMORY_MB=$(( ($VIASH_META_MEMORY_KB+1023) / 1024 ))
+      |    VIASH_META_MEMORY_GB=$(( ($VIASH_META_MEMORY_MB+1023) / 1024 ))
+      |    VIASH_META_MEMORY_TB=$(( ($VIASH_META_MEMORY_GB+1023) / 1024 ))
+      |    VIASH_META_MEMORY_PB=$(( ($VIASH_META_MEMORY_TB+1023) / 1024 ))
+      |  else
+      |    # unset memory if string is empty
+      |    unset $VIASH_META_MEMORY_B
+      |  fi
+      |fi
+      |# unset nproc if string is empty
+      |if [ -z "$VIASH_META_N_PROC" ]; then
+      |  unset $VIASH_META_N_PROC
       |fi""".stripMargin
 
     // return output
