@@ -50,7 +50,7 @@ del(.functionality.version)
 
 /* BNF notation
 
-<command>    ::= <path> ":=" <json>
+<command>    ::= <path> ":=" <json> | <path>
                | <path> "+0=" <json>
                | "del(" <path> ")"
                | <path> "+=" <json>
@@ -164,7 +164,7 @@ object ConfigModParser extends RegexParsers {
   def value: Parser[Value] = path | (json ^^ { JsonValue(_) })
 
   // define commands
-  def command: Parser[ConfigMod] = preparse ~ (delete | modify | add | prepend) ^^ {
+  def command: Parser[ConfigMod] = preparse ~ (delete | modify | modifyPath | add | prepend) ^^ {
     case prep ~ cm => cm.copy(preparse = prep)
   }
   def delete: Parser[ConfigMod] = "del(" ~> path <~ ")" ^^ { pt => 
@@ -172,6 +172,9 @@ object ConfigModParser extends RegexParsers {
   }
   def modify: Parser[ConfigMod] = path ~ (":=" ~> json) ^^ { 
     case pt ~ js => ConfigMod(pt, Modify(js))
+  }
+  def modifyPath: Parser[ConfigMod] = path ~ (":=" ~> path) ^^ {
+    case pt ~ pt2 => ConfigMod(pt, ModifyPath(pt2))
   }
   def add: Parser[ConfigMod] = path ~ ("+=" ~> json) ^^ { 
     case pt ~ js => ConfigMod(pt, Add(js))

@@ -165,7 +165,11 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check standard test output with legacy 'tests' definition", DockerTest) {
-    val newConfigFilePath = deriveNewConfig("""with(.functionality ; .tests=.test_resources | del(.test_resources))""", "legacy")
+    val newConfigFilePath = deriveNewConfig(
+      List(
+        """.functionality.tests := .functionality.test_resources""",
+        """del(.functionality.test_resources)"""
+      ) , "legacy")
     val (stdout, stderr) = TestHelper.testMainWithStdErr(
       "test",
       "-p", "docker",

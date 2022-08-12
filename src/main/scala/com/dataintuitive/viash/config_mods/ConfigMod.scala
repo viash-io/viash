@@ -51,6 +51,11 @@ case class Modify(value: Json) extends CommandExp {
     cursor.set(value)
   }
 }
+case class ModifyPath(path: Path) extends CommandExp {
+  def command(cursor: ACursor): ACursor = {
+    cursor.set(path.get(cursor.top.get.hcursor).get)
+  }
+}
 case object Delete extends CommandExp {
   def command(cursor: ACursor): ACursor = {
     cursor.delete
