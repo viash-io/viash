@@ -611,10 +611,10 @@ case class DockerPlatform(
     val extraArgs = 
       """# helper function for filling in extra docker args
         |VIASH_EXTRA_DOCKER_ARGS=""
-        |if [ ! -z ${VIASH_META_MEMORY_MB+x} ]; then
+        |if [ ! -z "$VIASH_META_MEMORY_MB" ]; then
         |  VIASH_EXTRA_DOCKER_ARGS="$VIASH_EXTRA_DOCKER_ARGS --memory=${VIASH_META_MEMORY_MB}m"
         |fi
-        |if [ ! -z ${VIASH_META_N_PROC+x} ]; then
+        |if [ ! -z "$VIASH_META_N_PROC" ]; then
         |  VIASH_EXTRA_DOCKER_ARGS="$VIASH_EXTRA_DOCKER_ARGS --cpus=${VIASH_META_N_PROC}"
         |fi""".stripMargin
 
