@@ -56,7 +56,7 @@ object Config {
     // apply preparse config mods
     val modifiedJs = preparseMods match {
       case None => js
-      case Some(cmds) => cmds(js.hcursor, preparse = true).top.get
+      case Some(cmds) => cmds(js, preparse = true)
     }
 
     // parse as config
@@ -155,7 +155,7 @@ object Config {
         // turn config back into json
         val js = encodeConfig(conf0)
         // apply config mods
-        val modifiedJs = cmds(js.hcursor, preparse = false)
+        val modifiedJs = cmds(js, preparse = false)
         // turn json back into a config
         modifiedJs.as[Config].fold(throw _, identity)
       }

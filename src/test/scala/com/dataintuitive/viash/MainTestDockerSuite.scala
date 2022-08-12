@@ -339,7 +339,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     val modifiedJs = confMods match {
       case None => js
-      case Some(cmds) => cmds(js.hcursor, preparse = false).top.get
+      case Some(cmds) => cmds(js, preparse = false)
     }
 
     val yamlPrinter = YamlPrinter(
