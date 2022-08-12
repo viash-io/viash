@@ -87,7 +87,9 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
         "--optional_with_default", "bar",
         "--multiple", "foo",
         "--multiple=bar",
-        "d", "e", "f"
+        "d", "e", "f",
+        "---n_proc", "2",
+        "---memory", "1gb"
       )
     )
 
@@ -132,7 +134,9 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
           executable.toString,
           "--real_number", "123.456",
           "--whole_number", "789",
-          "-s", "my$weird#string"
+          "-s", "my$weird#string",
+          "---n_proc", "", // unset defaults
+          "---memory", "" // unset defaults
         )
       )
 
