@@ -164,7 +164,7 @@ object ConfigModParser extends RegexParsers {
   def value: Parser[Value] = path | (json ^^ { JsonValue(_) })
 
   // define commands
-  def command: Parser[ConfigMod] = preparse ~ (delete | modify | modifyPath | add | prepend) ^^ {
+  def command: Parser[ConfigMod] = preparse ~ (delete | modify | modifyPath | add | addPath | prepend) ^^ {
     case prep ~ cm => cm.copy(preparse = prep)
   }
   def delete: Parser[ConfigMod] = "del(" ~> path <~ ")" ^^ { pt => 
@@ -178,6 +178,9 @@ object ConfigModParser extends RegexParsers {
   }
   def add: Parser[ConfigMod] = path ~ ("+=" ~> json) ^^ { 
     case pt ~ js => ConfigMod(pt, Add(js))
+  }
+  def addPath: Parser[ConfigMod] = path ~ ("+=" ~> path) ^^ { 
+    case pt ~ pt2 => ConfigMod(pt, AddPath(pt2))
   }
   def prepend: Parser[ConfigMod] = path ~ ("+0=" ~> json) ^^ { 
     case pt ~ js => ConfigMod(pt, Prepend(js))
