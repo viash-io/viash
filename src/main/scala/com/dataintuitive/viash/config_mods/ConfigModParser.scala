@@ -140,7 +140,7 @@ object ConfigModParser extends RegexParsers {
 
   // define condition operations
   def condition: Parser[Condition] = and | or | not | condAvoidRecursion
-  def condAvoidRecursion: Parser[Condition] = brackets | equals | notEquals | has | ("true" ^^^ True) | ("false" ^^^ False)
+  def condAvoidRecursion: Parser[Condition] = brackets | equals | notEquals /*| has*/ | ("true" ^^^ True) | ("false" ^^^ False)
   def brackets: Parser[Condition] = "(" ~> condition <~ ")"
   def and: Parser[And] = condAvoidRecursion ~ ("&&" ~> condition) ^^ {
     case left ~  right => And(left, right)
@@ -158,34 +158,41 @@ object ConfigModParser extends RegexParsers {
     case left ~ right => NotEquals(left, right)
   }
 
-  def has: Parser[Has] = "has(" ~> path <~ ")" ^^ { Has(_) }
+  // def has: Parser[Has] = "has(" ~> path <~ ")" ^^ { Has(_) }
 
   // define condition values
   def value: Parser[Value] = path | (json ^^ { JsonValue(_) })
 
   // define commands
-  def command: Parser[ConfigMod] = preparse ~ (delete | modify | modifyPath | add | addPath | prepend) ^^ {
-    case prep ~ cm => cm.copy(preparse = prep)
+  def command: Parser[(Boolean, Command)] = preparse ~ (assign) ^^ {
+    case prep ~ cm => (prep, cm)
   }
-  def delete: Parser[ConfigMod] = "del(" ~> path <~ ")" ^^ { pt => 
-    ConfigMod(pt, Delete)
+  // def command: Parser[(Boolean, ConfigMod)] = preparse ~ (delete | modify | modifyPath | add | addPath | prepend) ^^ {
+  //   case prep ~ cm => (prep, cm)
+  // }
+  // def delete: Parser[ConfigMod] = "del(" ~> path <~ ")" ^^ { pt => 
+  //   ConfigMod(pt, Delete)
+  // }
+  def assign: Parser[Command] = path ~ (":=" ~> value) ^^ { 
+    case lhs ~ rhs => Assign(lhs, rhs)
   }
-  def modify: Parser[ConfigMod] = path ~ (":=" ~> json) ^^ { 
-    case pt ~ js => ConfigMod(pt, Modify(js))
+  // def modifyPath: Parser[ConfigMod] = path ~ (":=" ~> path) ^^ {
+  //   case pt ~ pt2 => ConfigMod(pt, ModifyPath(pt2))
+  // }
+  // def add: Parser[ConfigMod] = path ~ ("+=" ~> json) ^^ { 
+  //   case pt ~ js => ConfigMod(pt, Add(js))
+  // }
+  // def addPath: Parser[ConfigMod] = path ~ ("+=" ~> path) ^^ { 
+  //   case pt ~ pt2 => ConfigMod(pt, AddPath(pt2))
+  // }
+  // def prepend: Parser[ConfigMod] = path ~ ("+0=" ~> json) ^^ { 
+  //   case pt ~ js => ConfigMod(pt, Prepend(js))
+  // }
+  def block: Parser[ConfigMods] = repsep(command, ";") ^^ { cmds =>
+    val preparseCommands = cmds.filter(_._1).map(_._2)
+    val postparseCommands = cmds.filter(!_._1).map(_._2)
+    ConfigMods(commands = postparseCommands, preparseCommands = preparseCommands)
   }
-  def modifyPath: Parser[ConfigMod] = path ~ (":=" ~> path) ^^ {
-    case pt ~ pt2 => ConfigMod(pt, ModifyPath(pt2))
-  }
-  def add: Parser[ConfigMod] = path ~ ("+=" ~> json) ^^ { 
-    case pt ~ js => ConfigMod(pt, Add(js))
-  }
-  def addPath: Parser[ConfigMod] = path ~ ("+=" ~> path) ^^ { 
-    case pt ~ pt2 => ConfigMod(pt, AddPath(pt2))
-  }
-  def prepend: Parser[ConfigMod] = path ~ ("+0=" ~> json) ^^ { 
-    case pt ~ js => ConfigMod(pt, Prepend(js))
-  }
-  def block: Parser[ConfigMods] = repsep(command, ";") ^^ { ConfigMods(_) }
   def preparse: Parser[Boolean] = opt("<preparse>") ^^ {
     case found => found.isDefined
   }

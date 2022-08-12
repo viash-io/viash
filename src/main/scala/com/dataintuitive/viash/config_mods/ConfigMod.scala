@@ -17,151 +17,202 @@
 
 package io.viash.config_mods
 
-import io.circe.{ACursor, FailedCursor, Json}
+import io.circe.{ACursor, HCursor, FailedCursor, Json}
 
 // define command
-case class ConfigMods(commands: List[ConfigMod]) {
-  def apply(cursor: ACursor, preparse: Boolean): ACursor = {
-    commands.foldLeft(cursor) {
-      case (cur, cmd) => 
-        cmd.apply(cur, preparse)
+case class ConfigMods(
+  commands: List[Command] = Nil,
+  preparseCommands: List[Command] = Nil
+) {
+  def apply(json: Json, preparse: Boolean): Json = {
+    val commandsToApply = if (preparse) preparseCommands else commands
+    commandsToApply.foldLeft(json) {
+      case (cur, cmd) => cmd.apply(cur)
     }
   }
 }
-case class ConfigMod(path: Path, op: CommandExp, preparse: Boolean = false) {
-  def apply(cursor: ACursor, preparse: Boolean): ACursor = {
-    if (this.preparse == preparse) {
-      val comb = Path(path.path ::: List(op))
-      comb.apply(cursor).top.get.hcursor
-    } else {
-      cursor
-    }
-  }
-}
-abstract class CommandExp extends PathExp {
-  def command(cursor: ACursor): ACursor
 
-  // tail should always be Path(Nil)
-  def apply(cursor: ACursor, tail: Path): ACursor = {
-    command(cursor)
+// A class inheriting from Command can be applied to a Json to generate another Json
+abstract class Command {
+  def apply(json: Json): Json
+}
+
+// A class inheriting from Value can be used to extract a Json from another Json.
+abstract class Value {
+  def get(json: Json): Json = {
+    get(json.hcursor)
+  }
+  def get(cur: ACursor): Json
+}
+
+case class Assign(lhs: Path, rhs: Value) extends Command {
+
+  def apply(json: Json): Json = {
+    val result = rhs.get(json)
+    lhs.applyCommand(json, { _.set(result) })
   }
 }
-case class Modify(value: Json) extends CommandExp {
-  def command(cursor: ACursor): ACursor = {
-    cursor.set(value)
-  }
-}
-case class ModifyPath(path: Path) extends CommandExp {
-  def command(cursor: ACursor): ACursor = {
-    val value = path.get(cursor.top.get.hcursor).get
-    Modify(value).command(cursor)
-  }
-}
-case object Delete extends CommandExp {
-  def command(cursor: ACursor): ACursor = {
-    cursor.delete
-  }
-}
-case class Add(value: Json) extends CommandExp {
-  def command(cursor: ACursor): ACursor = {
-    if (value.isArray)
-      cursor.withFocus(_.mapArray(_ ++ value.asArray.get))
-    else
-      cursor.withFocus(_.mapArray(_ ++ Vector(value)))
-    // cursor.withFocus{js =>
-    //   Json.fromValues(js.asArray.get ++ Array(value)) // TODO: will error if get fails
-    // }
-  }
-}
-case class AddPath(path: Path) extends CommandExp {
-  def command(cursor: ACursor): ACursor = {
-    val value = path.get(cursor.top.get.hcursor).get
-    println(s"AddPath $path $value")
-    Add(value).command(cursor)
-  }
-}
-case class Prepend(value: Json) extends CommandExp {
-  def command(cursor: ACursor): ACursor = {
-    cursor.withFocus(_.mapArray(Vector(value) ++ _))
-    // cursor.withFocus{js =>
-    //   Json.fromValues(Array(value) ++ js.asArray.get) // TODO: will error if get fails
-    // }
-  }
-}
+// case class ModifyPath(path: Path) extends CommandExp {
+//   def command(cursor: ACursor): ACursor = {
+//     val value = path.get(cursor.top.get.hcursor).get
+//     Modify(value).command(cursor)
+//   }
+// }
+// case object Delete extends CommandExp {
+//   def command(cursor: ACursor): ACursor = {
+//     cursor.delete
+//   }
+// }
+// case class Add(value: Json) extends CommandExp {
+//   def command(cursor: ACursor): ACursor = {
+//     if (value.isArray)
+//       cursor.withFocus(_.mapArray(_ ++ value.asArray.get))
+//     else
+//       cursor.withFocus(_.mapArray(_ ++ Vector(value)))
+//     // cursor.withFocus{js =>
+//     //   Json.fromValues(js.asArray.get ++ Array(value)) // TODO: will error if get fails
+//     // }
+//   }
+// }
+// case class AddPath(path: Path) extends CommandExp {
+//   def command(cursor: ACursor): ACursor = {
+//     val value = path.get(cursor.top.get.hcursor).get
+//     println(s"AddPath $path $value")
+//     Add(value).command(cursor)
+//   }
+// }
+// case class Prepend(value: Json) extends CommandExp {
+//   def command(cursor: ACursor): ACursor = {
+//     cursor.withFocus(_.mapArray(Vector(value) ++ _))
+//     // cursor.withFocus{js =>
+//     //   Json.fromValues(Array(value) ++ js.asArray.get) // TODO: will error if get fails
+//     // }
+//   }
+// }
 
 
 // define values
-abstract class Value {
-  def get(cursor: ACursor): Option[Json]
-}
+
 case class JsonValue(value: Json) extends Value {
-  def get(cursor: ACursor): Option[Json] = Some(value)
+  def get(json: ACursor): Json = value
 }
 
 // define paths
 case class Path(path: List[PathExp]) extends Value {
-  def apply(cursor: ACursor): ACursor = {
+  def applyCommand(json: Json, cmd: ACursor => ACursor): Json = {
+    applyCommand(json.hcursor, cmd).top.get
+  }
+  def applyCommand(cursor: ACursor, cmd: ACursor => ACursor): ACursor = {
     path match {
-      case Nil => cursor
       case head :: tail => {
-        head.apply(cursor, Path(tail))
+        head.applyCommand(cursor, cmd, Path(tail))
+      }
+      case Nil => cmd(cursor) // or throw error?
+    }
+  }
+  def get(cursor: ACursor): Json = {
+    path match {
+      case head :: tail => {
+        head.get(cursor, Path(tail))
+      }
+      case Nil => {
+        cursor.focus match {
+          case Some(js) => js
+          case None => Json.Null // or throw error?
+        }
       }
     }
   }
-  // assume value is a json which might not be desirable
-  def get(cursor: ACursor): Option[Json] = {
-    apply(cursor).focus
-  }
 }
 abstract class PathExp {
-  def apply(cursor: ACursor, tail: Path): ACursor
+  def applyCommand(cursor: ACursor, cmd: ACursor => ACursor, remaining: Path): ACursor
+  def get(cursor: ACursor, remaining: Path): Json
 }
 case object Root extends PathExp {
-  def getRoot(cursor: ACursor): ACursor = {
-    cursor.up match {
-      case _: FailedCursor => cursor
-      case parent: ACursor if parent.succeeded => getRoot(parent)
+  def applyCommand(cursor: ACursor, cmd: ACursor => ACursor, remaining: Path): ACursor = {
+    val parent = cursor.up
+    if (parent.failed) {
+      remaining.applyCommand(cursor, cmd)
+      // todo: go back down again?
+    } else {
+      applyCommand(parent, cmd, remaining)
     }
   }
-
-  def apply(cursor: ACursor, tail: Path): ACursor = {
-    val root = getRoot(cursor)
-    tail.apply(root)
-  }
-}
-case object Parent extends PathExp {
-  def apply(cursor: ACursor, tail: Path): ACursor = {
+  def get(cursor: ACursor, remaining: Path): Json = {
     val parent = cursor.up
-    tail.apply(parent)
+    if (parent.failed) {
+      remaining.get(cursor)
+    } else {
+      get(parent, remaining)
+    }
   }
 }
 case class Attribute(string: String) extends PathExp {
-  def apply(cursor: ACursor, tail: Path): ACursor = {
+  def applyCommand(cursor: ACursor, cmd: ACursor => ACursor, remaining: Path): ACursor = {
+    val down = cursor.downField(string)
+    val newCursor = 
+      if (down.failed) {
+        // create field if it doesn't exist
+        val newDown = cursor
+          .withFocus(_.mapObject(_.add(string, Json.Null)))
+          .downField(string)
+        newDown
+      } else {
+        down
+      }
+    val result = remaining.applyCommand(newCursor, cmd)
+    val tryGoingUp = result.up
+    if (tryGoingUp.failed) {
+      // todo: going up should always work, so throw an error if it doesn't?
+      result
+    } else {
+      tryGoingUp
+    }
+  }
+  def get(cursor: ACursor, remaining: Path): Json = {
     val down = cursor.downField(string)
     if (down.failed) {
-      val newDown = cursor
-        .withFocus(_.mapObject(_.add(string, Json.Null)))
-        .downField(string)
-      tail(newDown)
+      Json.Null // todo: is it okay not to process the remaining path?
     } else {
-      tail(down)
+      remaining.get(down)
     }
   }
 }
 case class Filter(condition: Condition) extends PathExp {
-  def apply(cursor: ACursor, tail: Path): ACursor = {
+  def applyCommand(cursor: ACursor, cmd: ACursor => ACursor, remaining: Path): ACursor = {
     var elemCursor = cursor.downArray
     var lastWorking = elemCursor
     while (!elemCursor.failed) {
       if (condition.apply(elemCursor)) {
-        val elemModified = tail.apply(elemCursor)
+        val elemModified = remaining.applyCommand(elemCursor, cmd)
         // replay history of elemCursor on elemModified to make sure we're at the right position
-        elemCursor = elemModified.top.get.hcursor.replay(elemCursor.history)
+        // elemCursor = elemModified.top.get.hcursor.replay(elemCursor.history)
+        // todo: does this need to be re-enabled?
+        elemCursor = elemModified
       }
       lastWorking = elemCursor
       elemCursor = elemCursor.right
     }
-    lastWorking
+    val tryGoingUp = lastWorking.up
+    if (tryGoingUp.failed) { // try to go back up
+      lastWorking
+    } else {
+      tryGoingUp
+    }
+  }
+
+  def get(cursor: ACursor, remaining: Path): Json = {
+    var elemCursor = cursor.downArray
+    var lastWorking = elemCursor
+    val out = new scala.collection.mutable.ListBuffer[Json]()
+    while (!elemCursor.failed) {
+      if (condition.apply(elemCursor)) {
+        out += remaining.get(elemCursor)
+      }
+      lastWorking = elemCursor
+      elemCursor = elemCursor.right
+    }
+    Json.fromValues(out)
   }
 }
 
@@ -185,15 +236,15 @@ case class NotEquals(left: Value, right: Value) extends Condition {
     left.get(cursor) != right.get(cursor)
   }
 }
-case class Has(id: Value) extends Condition {
-  def apply(cursor: ACursor): Boolean = {
-    id.get(cursor) match {
-      case None => false
-      case Some(j: Json) => !j.isNull
-      case _ => true
-    }
-  }
-}
+// case class Has(id: Value) extends Condition {
+//   def apply(cursor: ACursor): Boolean = {
+//     id.get(cursor) match {
+//       case None => false
+//       case Some(j: Json) => !j.isNull
+//       case _ => true
+//     }
+//   }
+// }
 case class And(left: Condition, right: Condition) extends Condition {
   def apply(cursor: ACursor): Boolean = {
     left(cursor) && right(cursor)
