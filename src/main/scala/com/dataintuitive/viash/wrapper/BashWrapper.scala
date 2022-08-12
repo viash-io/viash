@@ -645,7 +645,7 @@ object BashWrapper {
     // return output
     BashWrapperMods(
       parsers = parsers,
-      postParse = defaultsStrs + "\n" + memoryCalculations
+      postParse = "\n" + defaultsStrs + "\n" + memoryCalculations
     )
   }
 

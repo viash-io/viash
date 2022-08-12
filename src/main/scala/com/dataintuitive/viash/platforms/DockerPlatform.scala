@@ -610,18 +610,18 @@ case class DockerPlatform(
     // add requirements to parameters
     val extraArgs = 
       """# helper function for filling in extra docker args
-      |VIASH_EXTRA_DOCKER_ARGS=""
-      |if [ ! -z ${VIASH_META_MEMORY_MB+x} ]; then
-      |  VIASH_EXTRA_DOCKER_ARGS="$VIASH_EXTRA_DOCKER_ARGS --memory=${VIASH_META_MEMORY_MB}m"
-      |fi
-      |if [ ! -z ${VIASH_META_N_PROC+x} ]; then
-      |  VIASH_EXTRA_DOCKER_ARGS="$VIASH_EXTRA_DOCKER_ARGS --cpus=${VIASH_META_N_PROC}"
-      |fi""".stripMargin
+        |VIASH_EXTRA_DOCKER_ARGS=""
+        |if [ ! -z ${VIASH_META_MEMORY_MB+x} ]; then
+        |  VIASH_EXTRA_DOCKER_ARGS="$VIASH_EXTRA_DOCKER_ARGS --memory=${VIASH_META_MEMORY_MB}m"
+        |fi
+        |if [ ! -z ${VIASH_META_N_PROC+x} ]; then
+        |  VIASH_EXTRA_DOCKER_ARGS="$VIASH_EXTRA_DOCKER_ARGS --cpus=${VIASH_META_N_PROC}"
+        |fi""".stripMargin
 
     // return output
     BashWrapperMods(
       extraParams = " $VIASH_EXTRA_DOCKER_ARGS",
-      preRun = extraArgs
+      preRun = "\n" + extraArgs
     )
   }
 }
