@@ -625,7 +625,8 @@ object BashWrapper {
       |# compute memory in different units
       |if [ ! -z ${VIASH_META_MEMORY+x} ]; then
       |  VIASH_META_MEMORY_B=`ViashMemoryAsBytes $VIASH_META_MEMORY`
-      |  if [ ! -z "$VIASH_META_MEMORY" ]; then
+      |  # do not define other variables if memory_b is an empty string
+      |  if [ ! -z "$VIASH_META_MEMORY_B" ]; then
       |    VIASH_META_MEMORY_KB=$(( ($VIASH_META_MEMORY_B+1023) / 1024 ))
       |    VIASH_META_MEMORY_MB=$(( ($VIASH_META_MEMORY_KB+1023) / 1024 ))
       |    VIASH_META_MEMORY_GB=$(( ($VIASH_META_MEMORY_MB+1023) / 1024 ))
