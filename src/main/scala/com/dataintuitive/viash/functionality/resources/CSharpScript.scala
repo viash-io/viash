@@ -22,6 +22,7 @@ import io.viash.functionality.arguments._
 import io.viash.wrapper.BashWrapper
 
 import java.net.URI
+import io.viash.helpers.Bash
 
 case class CSharpScript(
   path: Option[String] = None,
@@ -44,7 +45,7 @@ case class CSharpScript(
     val parSet = params.map { par =>
       // val env_name = par.VIASH_PAR
       val quo = "\"'\"'\""
-      val env_name = par.viash_par_escaped(quo, """\"""", """\\\"""")
+      val env_name = Bash.getEscapedArgument(par.VIASH_PAR, quo, """\"""", """\\\"""")
 
       val parse = { par match {
         case a: BooleanArgumentBase if a.multiple =>
