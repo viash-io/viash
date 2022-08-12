@@ -26,11 +26,11 @@ grep -q 'multiple: |one:two|' output.txt
 grep -q 'multiple_pos: |a:b:c:d:e:f|' output.txt
 grep -q 'meta_functionality_name: |testbash|' output.txt
 grep -q 'meta_resources_dir: |..*|' output.txt
-grep -q 'meta_n_proc: |10|' output.txt
-grep -q 'meta_memory_b: |1073741824|' output.txt
-grep -q 'meta_memory_kb: |1048576|' output.txt
-grep -q 'meta_memory_mb: |1024|' output.txt
-grep -q 'meta_memory_gb: |1|' output.txt
+grep -q 'meta_n_proc: |2|' output.txt
+grep -q 'meta_memory_b: |2147483648|' output.txt
+grep -q 'meta_memory_kb: |2097152|' output.txt
+grep -q 'meta_memory_mb: |2048|' output.txt
+grep -q 'meta_memory_gb: |2|' output.txt
 grep -q 'meta_memory_tb: |1|' output.txt
 grep -q 'meta_memory_pb: |1|' output.txt
 
@@ -48,7 +48,7 @@ echo ">>> Checking whether output is correct with minimal parameters"
   --whole_number=789 \
   -s "my\$weird#string\"\"\"" \
   ---n_proc 666 \
-  ---memory 3gb \
+  ---memory 100PB \
   > output2.txt
 
 [[ ! -f output2.txt ]] && echo "Output file could not be found!" && exit 1
@@ -69,36 +69,16 @@ grep -q 'multiple_pos: ||' output2.txt
 grep -q 'meta_functionality_name: |testbash|' output2.txt
 grep -q 'meta_resources_dir: |..*|' output2.txt
 grep -q 'meta_n_proc: |666|' output2.txt
-grep -q 'meta_memory_b: |3221225472|' output2.txt
-grep -q 'meta_memory_kb: |3145728|' output2.txt
-grep -q 'meta_memory_mb: |3072|' output2.txt
-grep -q 'meta_memory_gb: |3|' output2.txt
-grep -q 'meta_memory_tb: |1|' output2.txt
-grep -q 'meta_memory_pb: |1|' output2.txt
+grep -q 'meta_memory_b: |112589990684262400|' output2.txt
+grep -q 'meta_memory_kb: |109951162777600|' output2.txt
+grep -q 'meta_memory_mb: |107374182400|' output2.txt
+grep -q 'meta_memory_gb: |104857600|' output2.txt
+grep -q 'meta_memory_tb: |102400|' output2.txt
+grep -q 'meta_memory_pb: |100|' output2.txt
 
 grep -q 'resources_dir: |..*|' output2.txt
 grep -q 'head of input: |this file is only for testing|' output2.txt
 grep -q 'head of resource1: |if you can read this,|' output2.txt
-
-
-
-echo ">>> Checking memory parsing"
-./$meta_functionality_name \
-  "resource2.txt" \
-  --real_number 123.456 \
-  --whole_number=789 \
-  -s "my\$weird#string\"\"\"" \
-  ---n_proc 666 \
-  ---memory 100PB \
-  > output3.txt
-
-[[ ! -f output3.txt ]] && echo "Output file could not be found!" && exit 1
-grep -q 'meta_memory_b: |112589990684262400|' output3.txt
-grep -q 'meta_memory_kb: |109951162777600|' output3.txt
-grep -q 'meta_memory_mb: |107374182400|' output3.txt
-grep -q 'meta_memory_gb: |104857600|' output3.txt
-grep -q 'meta_memory_tb: |102400|' output3.txt
-grep -q 'meta_memory_pb: |100|' output3.txt
 
 
 
