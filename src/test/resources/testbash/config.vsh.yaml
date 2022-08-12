@@ -84,7 +84,7 @@ functionality:
     custom_tag: custom_value
   requirements:
     n_proc: 2
-    memory: 3GB
+    memory: 2GB
 platforms:
   - type: native
   - type: docker

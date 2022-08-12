@@ -44,7 +44,7 @@ case class ComputationalRequirements(
         val amntBigInt = BigInt(amnt)
         val multiplier = BigInt(1024)
         val exp = lookup(unit)
-        Some(multiplier.pow(exp))
+        Some(amntBigInt * multiplier.pow(exp))
       case None => None
     }
   }
