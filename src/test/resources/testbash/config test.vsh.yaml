@@ -62,6 +62,12 @@ functionality:
     - name: "multiple_pos"
       type: string
       multiple: true
+  argument_groups:
+    - name: First group
+      arguments: [ input, real_number, whole_number, s ]
+    - name: Second group
+      arguments: [ truth, falsehood, reality ]
+      description: Foo
   resources:
     - type: bash_script
       path: ./code.sh
@@ -77,6 +83,9 @@ functionality:
   info:
     foo: bar
     custom_tag: custom_value
+  requirements:
+    n_proc: 10
+    memory: 100GB
 platforms:
   - type: native
   - type: docker
@@ -91,3 +100,4 @@ platforms:
     publish: true
     tag: xenial
   - type: nextflow
+    variant: vdsl3
