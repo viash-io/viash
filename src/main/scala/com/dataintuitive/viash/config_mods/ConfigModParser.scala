@@ -44,7 +44,7 @@ import io.circe.syntax._
 del(.functionality.version)
 
 # check an identifier is specified
-.functionality.authors[!has(role)].email := "unknown"
+<preparse> .functionality.authors[!has(roles)].email := "unknown"
 
 */
 
@@ -115,7 +115,7 @@ object ConfigModParser extends RegexParsers {
   def identifier: Parser[String] = """[a-zA-Z][a-zA-Z0-9_]*""".r
 
   // json parsers
-  def json: Parser[Json] = objJson | arrayJson | realJson | wholeJson | stringJson | booleanJson
+  def json: Parser[Json] = objJson | arrayJson | realJson | wholeJson | stringJson | booleanJson | nullJson
   def objJson: Parser[Json] = "{" ~> repsep(fieldJson, ",") <~ "}" ^^ { Json.fromFields(_) }
   def arrayJson: Parser[Json] = "[" ~> repsep(json, ",") <~ "]" ^^ { Json.fromValues(_) }
   def fieldJson: Parser[(String, Json)] = (identifier | string) ~ ( ":" ~> json) ^^ {
