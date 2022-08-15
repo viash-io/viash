@@ -21,11 +21,11 @@ import io.circe.{ACursor, HCursor, FailedCursor, Json}
 
 // define command
 case class ConfigMods(
-  commands: List[Command] = Nil,
+  postparseCommands: List[Command] = Nil,
   preparseCommands: List[Command] = Nil
 ) {
   def apply(json: Json, preparse: Boolean): Json = {
-    val commandsToApply = if (preparse) preparseCommands else commands
+    val commandsToApply = if (preparse) preparseCommands else postparseCommands
     commandsToApply.foldLeft(json) {
       case (cur, cmd) => cmd.apply(cur)
     }
