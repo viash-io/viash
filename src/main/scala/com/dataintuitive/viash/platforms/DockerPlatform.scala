@@ -229,8 +229,11 @@ case class DockerPlatform(
     // add ---chown flag
     val dmChown = addDockerChown(functionality, dockerArgs, dmVol.extraParams, effectiveID)
 
+    // process n_proc and memory_b
+    val dmReqs = addComputationalRequirements(functionality)
+
     // compile modifications
-    val dm = dmDockerCheck ++ setupMods ++ dmVol ++ dmDebug ++ dmChown
+    val dm = dmDockerCheck ++ setupMods ++ dmVol ++ dmDebug ++ dmChown ++ dmReqs
 
     // make commands
     val entrypointStr = functionality.mainScript match {
@@ -598,6 +601,27 @@ case class DockerPlatform(
 
     BashWrapperMods(
       preRun = preRun
+    )
+  }
+
+  private def addComputationalRequirements(
+    functionality: Functionality
+  ) = {
+    // add requirements to parameters
+    val extraArgs = 
+      """# helper function for filling in extra docker args
+        |VIASH_EXTRA_DOCKER_ARGS=""
+        |if [ ! -z "$VIASH_META_MEMORY_MB" ]; then
+        |  VIASH_EXTRA_DOCKER_ARGS="$VIASH_EXTRA_DOCKER_ARGS --memory=${VIASH_META_MEMORY_MB}m"
+        |fi
+        |if [ ! -z "$VIASH_META_N_PROC" ]; then
+        |  VIASH_EXTRA_DOCKER_ARGS="$VIASH_EXTRA_DOCKER_ARGS --cpus=${VIASH_META_N_PROC}"
+        |fi""".stripMargin
+
+    // return output
+    BashWrapperMods(
+      extraParams = " $VIASH_EXTRA_DOCKER_ARGS",
+      preRun = "\n" + extraArgs
     )
   }
 }

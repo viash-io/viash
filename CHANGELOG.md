@@ -2,6 +2,32 @@
 
 ## NEW FUNCTIONALITY
 
+* Allow setting the number of processes and memory limit from within the Viash config. Example:
+
+  ```yaml
+  functionality:
+  name: foo
+  requirements:
+    n_proc: 10
+    memory: 10G
+  ```
+  
+  You can override the default requirements at runtime:
+
+  - `./foo ---n_proc 4 ---memory 100pb` (for NativePlatform or DockerPlatform)
+  - By adding `process.cpus = 4` and `process.memory "100 PB"` to a nextflow.config (for NextflowPlatform)
+
+  This results the following meta variables to be injected into a script:
+
+  - `meta_n_proc` (in Bash) or `meta["n_proc"]` (in any other language): Number of processes the script is allowed to spawn.
+  - `meta_memory_b` (in Bash) or `meta["memory_b"]` (in any other language): Amount of memory the script is allowed to allocate, in bytes.
+  - `meta_memory_kb` (in Bash) or `meta["memory_kb"]` (in any other language): Same but in kilobytes, rounded up.
+  - `meta_memory_mb` (in Bash) or `meta["memory_mb"]` (in any other language): Same but in megabytes, rounded up.
+  - `meta_memory_gb` (in Bash) or `meta["memory_gb"]` (in any other language): Same but in gigabytes, rounded up.
+  - `meta_memory_tb` (in Bash) or `meta["memory_tb"]` (in any other language): Same but in terabytes, rounded up.
+  - `meta_memory_pb` (in Bash) or `meta["memory_pb"]` (in any other language): Same but in petabytes, rounded up.
+  
+
 * `ConfigMod`: Added a `del(...)` config mod to be able to delete a value from the yaml. Example: `del(.functionality.version)`.
 
 ## MINOR CHANGES
