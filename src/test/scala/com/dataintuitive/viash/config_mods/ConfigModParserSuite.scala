@@ -14,7 +14,7 @@ class ConfigModParserSuite extends FunSuite {
       )
     ))
     val command = """.one.two.three.four.five := 6"""
-    val result = ConfigModParser.parseBlock(command)
+    val result = ConfigModParser.block.parse(command)
     assert(result == expected)
   }
 
@@ -26,12 +26,12 @@ class ConfigModParserSuite extends FunSuite {
       )
     ))
     val command = """.platforms[.type == "native"].id := "test""""
-    val result = ConfigModParser.parseBlock(command)
+    val result = ConfigModParser.block.parse(command)
     assert(result == expected)
 
     // funky whitespacing also works
     val commandWs = """    .  platforms   [   . type   ==    "native"    ]  .  id   :=    "test"    """
-    val resultWs = ConfigModParser.parseBlock(commandWs)
+    val resultWs = ConfigModParser.block.parse(commandWs)
     assert(resultWs == expected)
   }
 
@@ -46,7 +46,7 @@ class ConfigModParserSuite extends FunSuite {
       )
     ))
     val command = """["native" == .type][.foo == "bar"] := "test""""
-    val result = ConfigModParser.parseBlock(command)
+    val result = ConfigModParser.block.parse(command)
     assert(result == expected)
   }
 
@@ -58,7 +58,7 @@ class ConfigModParserSuite extends FunSuite {
       )
     ))
     val command = """.x[.y == 4] := 5"""
-    val result = ConfigModParser.parseBlock(command)
+    val result = ConfigModParser.block.parse(command)
     assert(result == expected)
   }
 
@@ -70,7 +70,7 @@ class ConfigModParserSuite extends FunSuite {
       )
     ))
     val command = """.x[.y == 0.5] := 4.2e3"""
-    val result = ConfigModParser.parseBlock(command)
+    val result = ConfigModParser.block.parse(command)
     assert(result == expected)
   }
 
@@ -82,7 +82,7 @@ class ConfigModParserSuite extends FunSuite {
       )
     ))
     val command = """.x[.y == true] := false"""
-    val result = ConfigModParser.parseBlock(command)
+    val result = ConfigModParser.block.parse(command)
     assert(result == expected)
   }
 
@@ -94,7 +94,7 @@ class ConfigModParserSuite extends FunSuite {
       )
     ))
     val command = """.x[true][false] := "x""""
-    val result = ConfigModParser.parseBlock(command)
+    val result = ConfigModParser.block.parse(command)
     assert(result == expected)
   }
 
@@ -106,66 +106,66 @@ class ConfigModParserSuite extends FunSuite {
       )
     ))
     val command = """.x[true && (false || false)] := "x""""
-    val result = ConfigModParser.parseBlock(command)
+    val result = ConfigModParser.block.parse(command)
     assert(result == expected)
   }
 
-  // test("add command") {
-  //   val expected = ConfigMods(List(
-  //     Add(
-  //       Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("id"))),
-  //       JsonValue("test".asJson)
-  //     )
-  //   ))
-  //   val command = """.platforms[.type == "native"].id += "test""""
-  //   val result = ConfigModParser.parseBlock(command)
-  //   assert(result == expected)
-  // }
+  test("append command") {
+    val expected = ConfigMods(List(
+      Append(
+        Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("id"))),
+        JsonValue("test".asJson)
+      )
+    ))
+    val command = """.platforms[.type == "native"].id += "test""""
+    val result = ConfigModParser.block.parse(command)
+    assert(result == expected)
+  }
 
-  // test("add command with complex json") {
-  //   val expected = ConfigMods(List(
-  //     Add(
-  //       Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
-  //       JsonValue(Json.fromFields(List(("type", "docker".asJson))))
-  //     )
-  //   ))
-  //   val command = """.platforms[.type == "native"].setup += { type: "docker" }"""
-  //   val result = ConfigModParser.parseBlock(command)
-  //   assert(result == expected)
-  // }
+  test("add command with complex json") {
+    val expected = ConfigMods(List(
+      Append(
+        Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
+        JsonValue(Json.fromFields(List(("type", "docker".asJson))))
+      )
+    ))
+    val command = """.platforms[.type == "native"].setup += { type: "docker" }"""
+    val result = ConfigModParser.block.parse(command)
+    assert(result == expected)
+  }
 
-  // test("prepend command") {
-  //   val expected = ConfigMods(List(
-  //     Prepend(
-  //       Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
-  //       JsonValue("foo".asJson)
-  //     )
-  //   ))
-  //   val command = """.platforms[.type == "native"].setup +0= "foo""""
-  //   val result = ConfigModParser.parseBlock(command)
-  //   assert(result == expected)
-  // }
+  test("prepend command") {
+    val expected = ConfigMods(List(
+      Prepend(
+        Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
+        JsonValue("foo".asJson)
+      )
+    ))
+    val command = """.platforms[.type == "native"].setup +0= "foo""""
+    val result = ConfigModParser.block.parse(command)
+    assert(result == expected)
+  }
 
-  // test("preparse prepend command") {
-  //   val expected = ConfigMods(preparseCommands = List(
-  //     Prepend(
-  //       Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
-  //       JsonValue("foo".asJson)
-  //     )
-  //   ))
-  //   val command = """<preparse> .platforms[.type == "native"].setup +0= "foo""""
-  //   val result = ConfigModParser.parseBlock(command)
-  //   assert(result == expected)
-  // }
-  // // TODO: extend tests for more conditions
-  // test("test delete command") {
-  //   val expected = ConfigMods(List(
-  //     Delete(
-  //       Path(List(Attribute("x")))
-  //     )
-  //   ))
-  //   val command = """del(.x)"""
-  //   val result = ConfigModParser.parseBlock(command)
-  //   assert(result == expected)
-  // }
+  test("preparse prepend command") {
+    val expected = ConfigMods(preparseCommands = List(
+      Prepend(
+        Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
+        JsonValue("foo".asJson)
+      )
+    ))
+    val command = """<preparse> .platforms[.type == "native"].setup +0= "foo""""
+    val result = ConfigModParser.block.parse(command)
+    assert(result == expected)
+  }
+  
+  test("test delete command") {
+    val expected = ConfigMods(List(
+      Delete(
+        Path(List(Attribute("x")))
+      )
+    ))
+    val command = """del(.x)"""
+    val result = ConfigModParser.block.parse(command)
+    assert(result == expected)
+  }
 }

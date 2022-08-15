@@ -124,7 +124,7 @@ object Config {
     if (li.isEmpty) {
       None
     } else {
-      Some(ConfigModParser.parseBlock(li.mkString("; ")))
+      Some(ConfigModParser.block.parse(li.mkString("; ")))
     }
   }
 
