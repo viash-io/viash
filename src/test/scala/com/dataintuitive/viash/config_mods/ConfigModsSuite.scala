@@ -30,6 +30,18 @@ class ConfigModsSuite extends FunSuite {
         |baz: 123
         |list_of_stuff: [4, 5, 6]
         |""".stripMargin).right.get
+    val cmd2 = ConfigModParser.block.parse(""".foo := [ 1, 2, 3 ]""")
+    val res2 = cmd2.apply(baseJson, false)
+    assert(res2 == expected2)
+  }
+  
+  test("test simple assign 3") {
+    val expected2: Json = parse(
+      """foo: bar
+        |bar: [1, 2, 3]
+        |baz: 123
+        |list_of_stuff: [4, 5, 6]
+        |""".stripMargin).right.get
     val cmd2 = ConfigModParser.block.parse(""".bar := [ 1, 2, 3 ]""")
     val res2 = cmd2.apply(baseJson, false)
     assert(res2 == expected2)
