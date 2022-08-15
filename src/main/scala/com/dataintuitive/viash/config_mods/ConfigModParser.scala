@@ -90,12 +90,22 @@ del(.functionality.version)
 
 
 object ConfigModParser extends RegexParsers {
+  implicit class RichParser[A](p: Parser[A]) {
+    def parse(s: String): A = {
+      ConfigModParser.parse(p, s) match {
+        case Success(result, next) => result
+        case _: NoSuccess => 
+          throw new IllegalArgumentException("Cound not parse config mod: " + s)
+      }
+    }
+  }
+
   def parseBlock(s: String): ConfigMods = {
-    val out = parse(block, s).get
-    if (s != "" && out.commands.isEmpty) {
+    val configMods = block.parse(s)
+    if (s != "" && configMods.commands.isEmpty) {
       throw new RuntimeException("Could not parse config mods: '" + s + "'")
     }
-    out
+    configMods
     // TODO: provide better error message
   }
 
