@@ -102,7 +102,7 @@ object ConfigModParser extends RegexParsers {
 
   def parseBlock(s: String): ConfigMods = {
     val configMods = block.parse(s)
-    if (s != "" && configMods.commands.isEmpty) {
+    if (s != "" && configMods.preparseCommands.isEmpty && configMods.postparseCommands.isEmpty) {
       throw new RuntimeException("Could not parse config mods: '" + s + "'")
     }
     configMods
@@ -192,7 +192,10 @@ object ConfigModParser extends RegexParsers {
   def block: Parser[ConfigMods] = repsep(command, ";") ^^ { cmds =>
     val preparseCommands = cmds.filter(_._1).map(_._2)
     val postparseCommands = cmds.filter(!_._1).map(_._2)
-    ConfigMods(commands = postparseCommands, preparseCommands = preparseCommands)
+    ConfigMods(
+      postparseCommands = postparseCommands,
+      preparseCommands = preparseCommands
+    )
   }
   def preparse: Parser[Boolean] = opt("<preparse>") ^^ {
     case found => found.isDefined
