@@ -140,7 +140,7 @@ object ConfigModParser extends RegexParsers {
 
   // define condition operations
   def condition: Parser[Condition] = and | or | not | condAvoidRecursion
-  def condAvoidRecursion: Parser[Condition] = brackets | equals | notEquals /*| has*/ | ("true" ^^^ True) | ("false" ^^^ False)
+  def condAvoidRecursion: Parser[Condition] = brackets | equals | notEquals | has | ("true" ^^^ True) | ("false" ^^^ False)
   def brackets: Parser[Condition] = "(" ~> condition <~ ")"
   def and: Parser[And] = condAvoidRecursion ~ ("&&" ~> condition) ^^ {
     case left ~  right => And(left, right)
@@ -158,7 +158,7 @@ object ConfigModParser extends RegexParsers {
     case left ~ right => NotEquals(left, right)
   }
 
-  // def has: Parser[Has] = "has(" ~> path <~ ")" ^^ { Has(_) }
+  def has: Parser[Has] = "has(" ~> path <~ ")" ^^ { Has(_) }
 
   // define condition values
   def value: Parser[Value] = path | (json ^^ { JsonValue(_) })
