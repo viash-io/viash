@@ -17,26 +17,26 @@
 
 package io.viash.config_mods
 
-import io.circe.{ACursor}
+import io.circe.Json
 
 // define condition ops
 abstract class Condition {
-  def apply(cursor: ACursor): Boolean
+  def apply(json: Json): Boolean
 }
 case object True extends Condition {
-  def apply(cursor: ACursor) = true
+  def apply(json: Json) = true
 }
 case object False extends Condition {
-  def apply(cursor: ACursor) = false
+  def apply(json: Json) = false
 }
 case class Equals(left: Value, right: Value) extends Condition {
-  def apply(cursor: ACursor): Boolean = {
-    left.get(cursor) == right.get(cursor)
+  def apply(json: Json): Boolean = {
+    left.get(json) == right.get(json)
   }
 }
 case class NotEquals(left: Value, right: Value) extends Condition {
-  def apply(cursor: ACursor): Boolean = {
-    left.get(cursor) != right.get(cursor)
+  def apply(json: Json): Boolean = {
+    left.get(json) != right.get(json)
   }
 }
 // case class Has(id: Value) extends Condition {
@@ -49,17 +49,17 @@ case class NotEquals(left: Value, right: Value) extends Condition {
 //   }
 // }
 case class And(left: Condition, right: Condition) extends Condition {
-  def apply(cursor: ACursor): Boolean = {
-    left(cursor) && right(cursor)
+  def apply(json: Json): Boolean = {
+    left(json) && right(json)
   }
 }
 case class Or(left: Condition, right: Condition) extends Condition {
-  def apply(cursor: ACursor): Boolean = {
-    left(cursor) || right(cursor)
+  def apply(json: Json): Boolean = {
+    left(json) || right(json)
   }
 }
 case class Not(value: Condition) extends Condition {
-  def apply(cursor: ACursor): Boolean = {
-    !value(cursor)
+  def apply(json: Json): Boolean = {
+    !value(json)
   }
 }

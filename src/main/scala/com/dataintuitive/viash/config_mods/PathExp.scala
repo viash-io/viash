@@ -78,7 +78,7 @@ case class Filter(condition: Condition) extends PathExp {
     var elemCursor = cursor.downArray
     var lastWorking = elemCursor
     while (!elemCursor.failed) {
-      if (condition.apply(elemCursor)) {
+      if (condition.apply(elemCursor.focus.get)) {
         val elemModified = remaining.applyCommand(elemCursor, cmd)
         // replay history of elemCursor on elemModified to make sure we're at the right position
         // elemCursor = elemModified.top.get.hcursor.replay(elemCursor.history)
@@ -101,7 +101,7 @@ case class Filter(condition: Condition) extends PathExp {
     var lastWorking = elemCursor
     val out = new scala.collection.mutable.ListBuffer[Json]()
     while (!elemCursor.failed) {
-      if (condition.apply(elemCursor)) {
+      if (condition.apply(elemCursor.focus.get)) {
         out += remaining.get(elemCursor)
       }
       lastWorking = elemCursor
