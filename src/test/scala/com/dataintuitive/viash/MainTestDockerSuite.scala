@@ -389,7 +389,6 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   override def afterAll() {
-    println(s"temp folder: $temporaryFolder")
-    // IO.deleteRecursively(temporaryFolder)
+    IO.deleteRecursively(temporaryFolder)
   }
 }
