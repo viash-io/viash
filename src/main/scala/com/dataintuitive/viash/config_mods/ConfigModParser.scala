@@ -40,12 +40,19 @@ import io.circe.syntax._
 # apply config mod before parsing the json
 <preparse> .platforms[.type == "nextflow"].variant := "vdsl3"
 
+# delete a value
+del(.functionality.version)
+
+# check an identifier is specified
+<preparse> .functionality.authors[!has(roles)].email := "unknown"
+
 */
 
 /* BNF notation
 
-<command>    ::= <path> ":=" <json>
+<command>    ::= <path> ":=" <json> | <path>
                | <path> "+0=" <json>
+               | "del(" <path> ")"
                | <path> "+=" <json>
                | "<preparse>" <command>
 
@@ -55,6 +62,7 @@ import io.circe.syntax._
 
 <condition>  ::= <value> "==" <value>
                | <value> "!=" <value>
+               | "has(" <path> ")"
                | <condition> "&&" <condition>
                | <condition> "||" <condition>
                | "(" <condition> ")"
@@ -82,9 +90,14 @@ import io.circe.syntax._
 
 
 object ConfigModParser extends RegexParsers {
-  def parseBlock(s: String): ConfigMods = {
-    parse(block, s).get
-    // TODO: provide better error message
+  implicit class RichParser[A](p: Parser[A]) {
+    def parse(s: String): A = {
+      ConfigModParser.parse(p, s) match {
+        case Success(result, next) => result
+        case _: NoSuccess => 
+          throw new IllegalArgumentException("Cound not parse config mod: " + s)
+      }
+    }
   }
 
   override def skipWhitespace = true
@@ -103,7 +116,7 @@ object ConfigModParser extends RegexParsers {
   def identifier: Parser[String] = """[a-zA-Z][a-zA-Z0-9_]*""".r
 
   // json parsers
-  def json: Parser[Json] = objJson | arrayJson | realJson | wholeJson | stringJson | booleanJson
+  def json: Parser[Json] = objJson | arrayJson | realJson | wholeJson | stringJson | booleanJson | nullJson
   def objJson: Parser[Json] = "{" ~> repsep(fieldJson, ",") <~ "}" ^^ { Json.fromFields(_) }
   def arrayJson: Parser[Json] = "[" ~> repsep(json, ",") <~ "]" ^^ { Json.fromValues(_) }
   def fieldJson: Parser[(String, Json)] = (identifier | string) ~ ( ":" ~> json) ^^ {
@@ -117,7 +130,7 @@ object ConfigModParser extends RegexParsers {
 
 
   // define paths
-  def root: Parser[PathExp] = "root" ^^ { _ => Root}
+  def root: Parser[PathExp] = "root" ^^^ Root
   def path: Parser[Path] = (root | down | filter) ~ rep(down | filter) ^^ {
     case head ~ tail => {
       Path(head :: tail)
@@ -128,7 +141,7 @@ object ConfigModParser extends RegexParsers {
 
   // define condition operations
   def condition: Parser[Condition] = and | or | not | condAvoidRecursion
-  def condAvoidRecursion: Parser[Condition] = brackets | equals | notEquals | ("true" ^^^ True) | ("false" ^^^ False)
+  def condAvoidRecursion: Parser[Condition] = brackets | equals | notEquals | has | ("true" ^^^ True) | ("false" ^^^ False)
   def brackets: Parser[Condition] = "(" ~> condition <~ ")"
   def and: Parser[And] = condAvoidRecursion ~ ("&&" ~> condition) ^^ {
     case left ~  right => And(left, right)
@@ -146,17 +159,35 @@ object ConfigModParser extends RegexParsers {
     case left ~ right => NotEquals(left, right)
   }
 
+  def has: Parser[Has] = "has(" ~> path <~ ")" ^^ { Has(_) }
+
   // define condition values
   def value: Parser[Value] = path | (json ^^ { JsonValue(_) })
 
   // define commands
-  def command: Parser[ConfigMod] = preparse ~ path ~ (modify | add | prepend) ^^ {
-    case prep ~ pt ~ comm => ConfigMod(pt, comm, preparse = prep)
+  def command: Parser[(Boolean, Command)] = preparse ~ (delete | assign | append | prepend) ^^ {
+    case prep ~ cm => (prep, cm)
   }
-  def modify: Parser[CommandExp] = ":=" ~> json ^^ { Modify(_) }
-  def add: Parser[CommandExp] = "+=" ~> json ^^ { Add(_) }
-  def prepend: Parser[CommandExp] = "+0=" ~> json ^^ { Prepend(_) }
-  def block: Parser[ConfigMods] = repsep(command, ";") ^^ { ConfigMods(_) }
+  def delete: Parser[Command] = "del(" ~> path <~ ")" ^^ { pt => 
+    Delete(pt)
+  }
+  def assign: Parser[Command] = path ~ (":=" ~> value) ^^ { 
+    case lhs ~ rhs => Assign(lhs, rhs)
+  }
+  def append: Parser[Command] = path ~ ("+=" ~> value) ^^ { 
+    case lhs ~ rhs => Append(lhs, rhs)
+  }
+  def prepend: Parser[Command] = path ~ ("+0=" ~> value) ^^ { 
+    case lhs ~ rhs => Prepend(lhs, rhs)
+  }
+  def block: Parser[ConfigMods] = rep1sep(command, ";") ^^ { cmds =>
+    val preparseCommands = cmds.filter(_._1).map(_._2)
+    val postparseCommands = cmds.filter(!_._1).map(_._2)
+    ConfigMods(
+      postparseCommands = postparseCommands,
+      preparseCommands = preparseCommands
+    )
+  }
   def preparse: Parser[Boolean] = opt("<preparse>") ^^ {
     case found => found.isDefined
   }

@@ -27,6 +27,9 @@
   - `meta_memory_tb` (in Bash) or `meta["memory_tb"]` (in any other language): Same but in terabytes, rounded up.
   - `meta_memory_pb` (in Bash) or `meta["memory_pb"]` (in any other language): Same but in petabytes, rounded up.
   
+
+* `ConfigMod`: Added a `del(...)` config mod to be able to delete a value from the yaml. Example: `del(.functionality.version)`.
+
 ## MINOR CHANGES
 
 * `Resources`: Handle edge case when no resources are specified in the `vsh.yaml` config file and display a warning message.
@@ -39,6 +42,13 @@
 
 * `BashWrapper`: For int min/max checking: use native bash functionality so there is no dependency to `bc`.
   For double min/max checking: add fallback code to use `awk` in case `bc` is not present on the system (most likely to happen when running tests in a docker container).
+
+# TESTING
+
+* `ConfigMod`: Added unit tests for config mod functionality (WIP).
+
+* `MainTestDockerSuite`: Derive config alternatives from the base `vsh.yaml` instead of adding the changes in separate files.
+  This both reduces file clutter and prevents having to change several files when there are updates in the config format.
 
 # Viash 0.5.15
 
