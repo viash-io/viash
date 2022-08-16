@@ -52,7 +52,7 @@ object BashWrapper {
          |fi""".stripMargin.split("\n")
     } else {
       Array(
-        s"""[ -n "$$$env" ] && ViashError Bad arguments for option \\'$name\\': \\'$$$env\\' \\& \\' $$2\\' - you should provide exactly one argument for this option. && exit 1""",
+        s"""[ -n "$$$env" ] && ViashError Bad arguments for option \\'$name\\': \\'$$$env\\' \\& \\'$$2\\' - you should provide exactly one argument for this option. && exit 1""",
         env + "=" + value
       )
     }
