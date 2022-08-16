@@ -43,7 +43,7 @@ object BashWrapper {
   val var_resources_dir = "VIASH_META_RESOURCES_DIR"
   val var_executable = "VIASH_META_EXECUTABLE"
 
-  def store(env: String, value: String, multiple_sep: Option[Char]): Array[String] = {
+  def store(name: String, env: String, value: String, multiple_sep: Option[Char]): Array[String] = {
     if (multiple_sep.isDefined) {
       s"""if [ -z "$$$env" ]; then
          |  $env=$value
@@ -52,7 +52,7 @@ object BashWrapper {
          |fi""".stripMargin.split("\n")
     } else {
       Array(
-        s"""[ -n "$$$env" ] && ViashError Bad arguments for option '$env': \\'$$$env $$2\\' - you should provide exactly one argument for this option. && exit 1""",
+        s"""[ -n "$$$env" ] && ViashError Bad arguments for option \\'$name\\': \\'$$$env\\' \\& \\' $$2\\' - you should provide exactly one argument for this option. && exit 1""",
         env + "=" + value
       )
     }
@@ -68,13 +68,13 @@ object BashWrapper {
     argsConsumed match {
       case num if num > 1 =>
         s"""        $name)
-           |            ${this.store(plainName, store, multiple_sep).mkString("\n            ")}
+           |            ${this.store(name, plainName, store, multiple_sep).mkString("\n            ")}
            |            [ $$# -lt $argsConsumed ] && ViashError Not enough arguments passed to $name. Use "--help" to get more information on the parameters. && exit 1
            |            shift $argsConsumed
            |            ;;""".stripMargin
       case _ =>
         s"""        $name)
-           |            ${this.store(plainName, store, multiple_sep).mkString("\n            ")}
+           |            ${this.store(name, plainName, store, multiple_sep).mkString("\n            ")}
            |            shift $argsConsumed
            |            ;;""".stripMargin
     }
@@ -325,7 +325,7 @@ object BashWrapper {
     val positionalStr = positionals.map { param =>
       if (param.multiple) {
         s"""while [[ $$# -gt 0 ]]; do
-           |  ${store(param.VIASH_PAR, "\"$1\"", Some(param.multiple_sep)).mkString("\n  ")}
+           |  ${store("positionalArg", param.VIASH_PAR, "\"$1\"", Some(param.multiple_sep)).mkString("\n  ")}
            |  shift 1
            |done""".stripMargin
       } else {
