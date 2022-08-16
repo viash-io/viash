@@ -47,6 +47,9 @@
 
 * `ConfigMod`: Added unit tests for config mod functionality (WIP).
 
+* `MainTestDockerSuite`: Derive config alternatives from the base `vsh.yaml` instead of adding the changes in separate files.
+  This both reduces file clutter and prevents having to change several files when there are updates in the config format.
+
 # Viash 0.5.15
 
 ## BREAKING CHANGES
