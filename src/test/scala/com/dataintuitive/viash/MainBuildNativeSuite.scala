@@ -154,7 +154,7 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
     )
 
     assert(out.exitValue == 1)
-    assert(out.output.contains("[error] Bad arguments for option VIASH_PAR_WHOLE_NUMBER: '789 123' - you should provide exactly one argument for this option."))
+    assert(out.output.contains("[error] Bad arguments for option '--whole_number': '789' & '123' - you should provide exactly one argument for this option."))
   }
 
   test("Repeated flag arguments are not allowed") {
@@ -170,7 +170,7 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
       )
     )
     assert(out.exitValue == 1)
-    assert(out.output.contains("[error] Bad arguments for option VIASH_PAR_FALSEHOOD: 'false ' - you should provide exactly one argument for this option."))
+    assert(out.output.contains("[error] Bad arguments for option '--falsehood': 'false' & '' - you should provide exactly one argument for this option."))
   }
 
   test("Repeated arguments with --multiple defined are allowed") {
