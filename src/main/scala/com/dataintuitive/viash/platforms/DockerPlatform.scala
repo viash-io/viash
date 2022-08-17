@@ -419,8 +419,7 @@ case class DockerPlatform(
          |            exit 0
          |            ;;""".stripMargin
 
-    val utilitiesToCheck = Seq("which", "bash", "awk", "date", "grep", "egrep", "ps", "sed", "tail", "tee")
-    val utilitiesToCheckStr = utilitiesToCheck.mkString(" ")
+    val utilitiesToCheckStr = functionality.requirements.utilities.mkString(" ")
 
     val postParse =
       s"""
