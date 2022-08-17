@@ -170,7 +170,18 @@ case class Functionality(
 
   @description("Setting this to false with disable this component when using namespaces.")
   @since("Viash 0.5.13")
-  enabled: Boolean = true
+  enabled: Boolean = true,
+
+  @description("""Computational requirements related to running the component. 
+    |`n_proc` specifies the maximum number of processes a component is allowed to spawn in parallel, whereas
+    |`memory` specifies the maximum amount of memory a component is allowed to allicate. Memory units must be
+    |in B, KB, MB, GB, TB or PB.""".stripMargin)
+  @example("""requirements:
+             |  n_proc: 5
+             |  memory: 10GB
+             |""".stripMargin, "yaml")
+  @since("Viash 0.5.16")
+  requirements: ComputationalRequirements = ComputationalRequirements()
 ) {
   // START OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
   @description("Adds the resources directory to the PATH variable when set to true. This is set to false by default.")
@@ -259,21 +270,31 @@ case class Functionality(
   require(name.matches("^[A-Za-z][A-Za-z0-9_]*$"), message = "functionality name must begin with a letter and consist only of alphanumeric characters or underscores.")
 
   // check arguments
-  allArguments.foreach { arg =>
-    require(arg.name.matches("^(-?|--|\\$)[A-Za-z][A-Za-z0-9_]*$"), message = s"argument $arg.name: name must begin with a letter and consist only of alphanumeric characters or underscores.")
-    (arg.name :: arg.alternatives).foreach { argName =>
-      require(!Functionality.reservedParameters.contains(argName), message = s"argument $argName: name is reserved by viash")
-      require(!argName.matches("^\\$VIASH_"), message = s"argument $argName: environment variables beginning with 'VIASH_' are reserved for viash.")
+  {
+    val allNames = allArguments.map(a => a.name) ::: allArguments.flatMap(a => a.alternatives)
+    val allNamesCounted = allNames.groupBy(identity).map(a => (a._1, a._2.length))
+
+    allArguments.foreach { arg =>
+      require(arg.name.matches("^(-?|--|\\$)[A-Za-z][A-Za-z0-9_]*$"), message = s"argument $arg.name: name must begin with a letter and consist only of alphanumeric characters or underscores.")
+      (arg.name :: arg.alternatives).foreach { argName =>
+        require(!Functionality.reservedParameters.contains(argName), message = s"argument $argName: name is reserved by viash")
+        require(!argName.matches("^\\$VIASH_"), message = s"argument $argName: environment variables beginning with 'VIASH_' are reserved for viash.")
+        require(allNamesCounted(argName) == 1, message = s"argument $argName: name or alternative name is not unique.")
+      }
     }
   }
 
   def mainScript: Option[Script] =
-    resources.head match {
+    resources.headOption.flatMap {
       case s: Script => Some(s)
       case _ => None
     }
-
   def mainCode: Option[String] = mainScript.flatMap(_.read)
+  // provide function to use resources.tail but that allows resources to be an empty list
+  def additionalResources = resources match {
+    case _ :: tail => tail
+    case _ => List.empty[Resource]
+  }
 
   def allArgumentsAndDummies: List[Argument[_]] = allArguments ::: dummy_arguments
 }

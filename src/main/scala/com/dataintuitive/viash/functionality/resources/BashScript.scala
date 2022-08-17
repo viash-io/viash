@@ -22,6 +22,7 @@ import io.viash.functionality.arguments._
 import io.viash.wrapper.BashWrapper
 
 import java.net.URI
+import io.viash.helpers.Bash
 
 case class BashScript(
   path: Option[String] = None,
@@ -43,11 +44,12 @@ case class BashScript(
     val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
 
     val parSet = params.map { par =>
-      val parse = par.par + "=" + par.viash_par_escaped("'", """\'""", """\'\"\'\"\'""")
+      val parse = par.par + "=" + Bash.getEscapedArgument(par.VIASH_PAR, "'", """\'""", """\'\"\'\"\'""")
       s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; fi )"""
     }
     val metaSet = BashWrapper.metaFields.map{ case (env_name, script_name) =>
-      s"""meta_$script_name='$$$env_name'""".stripMargin
+      val parse = "meta_" + script_name + "=" + Bash.getEscapedArgument(env_name, "'", """\'""", """\'\"\'\"\'""")
+      s"""$$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$parse"; fi )"""
     }
     val paramsCode = 
       s"""${parSet.mkString("\n")}

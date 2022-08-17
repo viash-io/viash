@@ -21,6 +21,7 @@ import io.viash.functionality._
 import io.viash.functionality.resources._
 import io.viash.functionality.arguments._
 import io.viash.helpers.{Bash, Format, Helper}
+import io.viash.helpers.description
 
 object BashWrapper {
   val metaFields: List[(String, String)] = {
@@ -28,7 +29,15 @@ object BashWrapper {
       ("VIASH_META_FUNCTIONALITY_NAME", "functionality_name"),
       ("VIASH_META_RESOURCES_DIR", "resources_dir"),
       ("VIASH_META_EXECUTABLE", "executable"),
-      ("VIASH_TEMP", "temp_dir")
+      ("VIASH_TEMP", "temp_dir"),
+      ("VIASH_META_N_PROC", "n_proc"),
+      ("VIASH_META_MEMORY_B", "memory_b"),
+      ("VIASH_META_MEMORY_KB", "memory_kb"),
+      ("VIASH_META_MEMORY_MB", "memory_mb"),
+      ("VIASH_META_MEMORY_GB", "memory_gb"),
+      ("VIASH_META_MEMORY_TB", "memory_tb"),
+      ("VIASH_META_MEMORY_PB", "memory_pb")
+
     )
   }
   val var_resources_dir = "VIASH_META_RESOURCES_DIR"
@@ -42,7 +51,10 @@ object BashWrapper {
          |  $env="$$$env${multiple_sep.get}"$value
          |fi""".stripMargin.split("\n")
     } else {
-      Array(env + "=" + value)
+      Array(
+        s"""[ -n "$$$env" ] && ViashError Bad arguments for option '$env': \\'$$$env $$2\\' - you should provide exactly one argument for this option. && exit 1""",
+        env + "=" + value
+      )
     }
   }
 
@@ -164,6 +176,7 @@ object BashWrapper {
     val paramAndDummies = functionality.allArgumentsAndDummies
 
     val helpMods = generateHelp(functionality)
+    val computationalRequirementMods = generateComputationalRequirements(functionality)
     val parMods = generateParsers(params, paramAndDummies)
     val execMods = mainResource match {
       case Some(_: Executable) => generateExecutableArgs(params)
@@ -171,7 +184,7 @@ object BashWrapper {
     }
 
     // combine
-    val allMods = helpMods ++ parMods ++ mods ++ execMods
+    val allMods = helpMods ++ parMods ++ mods ++ execMods ++ computationalRequirementMods
 
     // generate header
     val header = Helper.generateScriptHeader(functionality)
@@ -243,6 +256,7 @@ object BashWrapper {
        |        *)  # positional arg or unknown option
        |            # since the positional args will be eval'd, can we always quote, instead of using ViashQuote
        |            VIASH_POSITIONAL_ARGS="$$VIASH_POSITIONAL_ARGS '$$1'"
+       |            [[ $$1 == -* ]] && ViashWarning $$1 looks like a parameter but is not a defined parameter and will instead be treated as a positional argument. Use "--help" to get more information on the parameters.
        |            shift # past argument
        |            ;;
        |    esac
@@ -330,7 +344,7 @@ object BashWrapper {
       } else {
         "\n# check whether required parameters exist\n" +
           reqParams.map { param =>
-            s"""if [ -z "$$${param.VIASH_PAR}" ]; then
+            s"""if [ -z $${${param.VIASH_PAR}+x} ]; then
                |  ViashError '${param.name}' is a required argument. Use "--help" to get more information on the parameters.
                |  exit 1
                |fi""".stripMargin
@@ -351,7 +365,7 @@ object BashWrapper {
       }
 
       default.map(default => {
-        s"""if [ -z "$$${param.VIASH_PAR}" ]; then
+        s"""if [ -z $${${param.VIASH_PAR}+x} ]; then
            |  ${param.VIASH_PAR}="${Bash.escapeMore(default.toString, quote = true, newline = true)}"
            |fi""".stripMargin
       })
@@ -397,35 +411,64 @@ object BashWrapper {
         case _ => "a " + param.`type`
       }
 
-      val typeCheck = s"""  if ! [[ "$$${param.VIASH_PAR}" =~ ${regex} ]]; then
-                         |    ViashError '${param.name}' has to be ${typeWithArticle}. Use "--help" to get more information on the parameters.
-                         |    exit 1
-                         |  fi
-                         |""".stripMargin
-      val minCheck = min match {
-        case _ if min.isDefined =>
-          s"""  if command -v bc &> /dev/null; then
-             |    if ! [[ `echo $$${param.VIASH_PAR} '>=' ${min.get} | bc` -eq 1 ]]; then
-             |      ViashError '${param.name}' has be more than or equal to ${min.get}. Use "--help" to get more information on the parameters.
-             |      exit 1
-             |    fi
-             |  else
-             |    ViashWarning '${param.name}' specifies a minimum value but the value was not verified as \\'bc\\' is not present on the system.
-             |  fi
-             |""".stripMargin
+      val typeCheck = 
+        s"""  if ! [[ "$$${param.VIASH_PAR}" =~ ${regex} ]]; then
+          |    ViashError '${param.name}' has to be ${typeWithArticle}. Use "--help" to get more information on the parameters.
+          |    exit 1
+          |  fi
+          |""".stripMargin
+
+      def minCheckDouble(min: Double) = 
+        s"""  if command -v bc &> /dev/null; then
+          |    if ! [[ `echo $$${param.VIASH_PAR} '>=' $min | bc` -eq 1 ]]; then
+          |      ViashError '${param.name}' has be more than or equal to $min. Use "--help" to get more information on the parameters.
+          |      exit 1
+          |    fi
+          |  elif command -v awk &> /dev/null; then
+          |    if ! [[ `awk -v n1=$$${param.VIASH_PAR} -v n2=$min 'BEGIN { print (n1 >= n2) ? "1" : "0" }'` -eq 1 ]]; then
+          |      ViashError '${param.name}' has be more than or equal to $min. Use "--help" to get more information on the parameters.
+          |      exit 1
+          |    fi
+          |  else
+          |    ViashWarning '${param.name}' specifies a minimum value but the value was not verified as neither \\'bc\\' or \\`awk\\` are present on the system.
+          |  fi
+          |""".stripMargin
+      def maxCheckDouble(max: Double) = 
+        s"""  if command -v bc &> /dev/null; then
+          |    if ! [[ `echo $$${param.VIASH_PAR} '<=' $max | bc` -eq 1 ]]; then
+          |      ViashError '${param.name}' has to be less than or equal to $max. Use "--help" to get more information on the parameters.
+          |      exit 1
+          |    fi
+          |  elif command -v awk &> /dev/null; then
+          |    if ! [[ `awk -v n1=$$${param.VIASH_PAR} -v n2=$max 'BEGIN { print (n1 <= n2) ? "1" : "0" }'` -eq 1 ]]; then
+          |      ViashError '${param.name}' has be less than or equal to $max. Use "--help" to get more information on the parameters.
+          |      exit 1
+          |    fi
+          |  else
+          |    ViashWarning '${param.name}' specifies a maximum value but the value was not verified as neither \\'bc\\' or \\'awk\\' are present on the system.
+          |  fi
+          |""".stripMargin
+      def minCheckInt(min: Int) = 
+        s"""  if [[ $$${param.VIASH_PAR} -lt $min ]]; then
+          |    ViashError '${param.name}' has be more than or equal to $min. Use "--help" to get more information on the parameters.
+          |    exit 1
+          |  fi
+          |""".stripMargin
+      def maxCheckInt(max: Int) = 
+        s"""  if [[ $$${param.VIASH_PAR} -gt $max ]]; then
+          |    ViashError '${param.name}' has be less than or equal to $max. Use "--help" to get more information on the parameters.
+          |    exit 1
+          |  fi
+          |""".stripMargin
+
+      val minCheck = param match {
+        case p: IntegerArgument if min.isDefined => minCheckInt(min.get)
+        case p: DoubleArgument if min.isDefined => minCheckDouble(min.get)
         case _ => ""
       }
-      val maxCheck = max match {
-        case _ if max.isDefined =>
-          s"""  if command -v bc &> /dev/null; then
-             |    if ! [[ `echo $$${param.VIASH_PAR} '<=' ${max.get} | bc` -eq 1 ]]; then
-             |      ViashError '${param.name}' has to be less than or equal to ${max.get}. Use "--help" to get more information on the parameters.
-             |      exit 1
-             |    fi
-             |  else
-             |    ViashWarning '${param.name}' specifies a maximum value but the value was not verified as \\'bc\\' is not present on the system.
-             |  fi
-             |""".stripMargin
+      val maxCheck = param match {
+        case p: IntegerArgument if max.isDefined => maxCheckInt(max.get)
+        case p: DoubleArgument if max.isDefined => maxCheckDouble(max.get)
         case _ => ""
       }
 
@@ -462,15 +505,15 @@ object BashWrapper {
         ""
       } else {
         "\n# check whether parameters values are of the right type\n" +
-          paramsAndDummies.map { param =>
+          paramsAndDummies.flatMap { param =>
             param match {
               case io: IntegerArgument =>
-                typeMinMaxCheck(io, "^[-+]?[0-9]+$", io.min, io.max)
+                Some(typeMinMaxCheck(io, "^[-+]?[0-9]+$", io.min, io.max))
               case dO: DoubleArgument =>
-                typeMinMaxCheck(dO, "^[-+]?(\\.[0-9]+|[0-9]+(\\.[0-9]*)?)([eE][-+]?[0-9]+)?$", dO.min, dO.max)
+                Some(typeMinMaxCheck(dO, "^[-+]?(\\.[0-9]+|[0-9]+(\\.[0-9]*)?)([eE][-+]?[0-9]+)?$", dO.min, dO.max))
               case bo: BooleanArgumentBase =>
-                typeMinMaxCheck(bo, "^(true|True|TRUE|false|False|FALSE|yes|Yes|YES|no|No|NO)$")               
-              case _ => ""
+                Some(typeMinMaxCheck(bo, "^(true|True|TRUE|false|False|FALSE|yes|Yes|YES|no|No|NO)$"))
+              case _ => None
             }           
           }.mkString("\n")
       }
@@ -530,6 +573,79 @@ object BashWrapper {
     BashWrapperMods(
       parsers = parseStrs,
       preRun = positionalStr + "\n" + reqCheckStr + "\n" + defaultsStrs + "\n" + reqFilesStr + "\n" + typeMinMaxCheckStr + "\n" + choiceCheckStr
+    )
+  }
+
+
+  private def generateComputationalRequirements(functionality: Functionality) = {
+    val compArgs = List(
+      ("---n_proc", "VIASH_META_N_PROC", functionality.requirements.n_proc.map(_.toString)),
+      ("---memory", "VIASH_META_MEMORY", functionality.requirements.memoryAsBytes.map(_.toString + "b"))
+    )
+
+    // gather parse code for params
+    val parsers = 
+      compArgs.flatMap{ case (flag, env, _) => 
+        List(
+          argStore(flag, env, "\"$2\"", 2),
+          argStoreSed(flag, env)
+        )
+      }.map("\n" + _).mkString
+
+    // construct default values, e.g.
+    val defaultsStrs = compArgs.flatMap{ case (_, env, default) =>
+      default.map(dflt => {
+        s"""if [ -z $${$env+x} ]; then
+           |  $env="${Bash.escapeMore(dflt, quote = true, newline = true)}"
+           |fi""".stripMargin
+      })
+    }.mkString("\n")
+
+    // calculators
+    val memoryCalculations = 
+      """# helper function for parsing memory strings
+      |function ViashMemoryAsBytes {
+      |  local memory=`echo "$1" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]'`
+      |  local memory_regex='^([0-9]+)([kmgtp]b?|b)$'
+      |  if [[ $memory =~ $memory_regex ]]; then
+      |    local number=${memory/[^0-9]*/}
+      |    local symbol=${memory/*[0-9]/}
+      |    
+      |    case $symbol in
+      |      b)      memory_b=$number ;;
+      |      kb|k)   memory_b=$(( $number * 1024 )) ;;
+      |      mb|m)   memory_b=$(( $number * 1024 * 1024 )) ;;
+      |      gb|g)   memory_b=$(( $number * 1024 * 1024 * 1024 )) ;;
+      |      tb|t)   memory_b=$(( $number * 1024 * 1024 * 1024 * 1024 )) ;;
+      |      pb|p)   memory_b=$(( $number * 1024 * 1024 * 1024 * 1024 * 1024 )) ;;
+      |    esac
+      |    echo "$memory_b"
+      |  fi
+      |}
+      |# compute memory in different units
+      |if [ ! -z ${VIASH_META_MEMORY+x} ]; then
+      |  VIASH_META_MEMORY_B=`ViashMemoryAsBytes $VIASH_META_MEMORY`
+      |  # do not define other variables if memory_b is an empty string
+      |  if [ ! -z "$VIASH_META_MEMORY_B" ]; then
+      |    VIASH_META_MEMORY_KB=$(( ($VIASH_META_MEMORY_B+1023) / 1024 ))
+      |    VIASH_META_MEMORY_MB=$(( ($VIASH_META_MEMORY_KB+1023) / 1024 ))
+      |    VIASH_META_MEMORY_GB=$(( ($VIASH_META_MEMORY_MB+1023) / 1024 ))
+      |    VIASH_META_MEMORY_TB=$(( ($VIASH_META_MEMORY_GB+1023) / 1024 ))
+      |    VIASH_META_MEMORY_PB=$(( ($VIASH_META_MEMORY_TB+1023) / 1024 ))
+      |  else
+      |    # unset memory if string is empty
+      |    unset $VIASH_META_MEMORY_B
+      |  fi
+      |fi
+      |# unset nproc if string is empty
+      |if [ -z "$VIASH_META_N_PROC" ]; then
+      |  unset $VIASH_META_N_PROC
+      |fi""".stripMargin
+
+    // return output
+    BashWrapperMods(
+      parsers = parsers,
+      postParse = "\n" + defaultsStrs + "\n" + memoryCalculations
     )
   }
 

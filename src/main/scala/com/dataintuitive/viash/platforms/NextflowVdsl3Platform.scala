@@ -64,7 +64,7 @@ case class NextflowVdsl3Platform(
     )
 
     // remove main
-    val otherResources = functionality.resources.tail
+    val otherResources = functionality.additionalResources
 
     functionality.copy(
       resources = mainFile :: nextflowConfigFile :: otherResources
@@ -161,7 +161,12 @@ case class NextflowVdsl3Platform(
     /************************* JSONS *************************/
     // override container
     val directivesToJson = directives.copy(
-      container = directives.container orElse containerDirective.map(cd => Left(cd.toMap))
+      // if a docker platform is defined but the directives.container isn't, use the image of the dockerplatform as default
+      container = directives.container orElse containerDirective.map(cd => Left(cd.toMap)),
+      // is memory requirements are defined but directives.memory isn't, use that instead
+      memory = directives.memory orElse functionality.requirements.memoryAsBytes.map(_.toString + " B"),
+      // is cpu requirements are defined but directives.cpus isn't, use that instead
+      cpus = directives.cpus orElse functionality.requirements.n_proc.map(np => Left(np))
     )
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
     val dirJson = directivesToJson.asJson.dropEmptyRecursively()

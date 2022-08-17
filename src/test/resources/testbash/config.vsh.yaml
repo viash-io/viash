@@ -82,6 +82,9 @@ functionality:
   info:
     foo: bar
     custom_tag: custom_value
+  requirements:
+    n_proc: 2
+    memory: 2GB
 platforms:
   - type: native
   - type: docker
