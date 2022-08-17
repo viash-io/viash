@@ -8,16 +8,13 @@ import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import scala.reflect.io.Directory
 import sys.process._
 
-import io.viash.config.Config.parseConfigMods
-import io.circe.yaml.parser
-import io.circe.yaml.{Printer => YamlPrinter}
-
 class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   // default yaml
   private val configFile = getClass.getResource("/testbash/config.vsh.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
   private val tempFolStr = temporaryFolder.toString
+  private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryFolder)
 
   private val configInvalidYamlFile = getClass.getResource("/testbash/invalid_configs/config_invalid_yaml.vsh.yaml").getPath
   private val customPlatformFile = getClass.getResource("/testbash/platform_custom.yaml").getPath
@@ -69,7 +66,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
     val rootPath = getClass.getResource(s"/testbash/").getPath
     TestHelper.copyFolder(rootPath, tempFolStr)
     
-    val newConfigFilePath = deriveNewConfig(Nil, "default_config")
+    val newConfigFilePath = configDeriver.derive(Nil, "default_config")
 
     val testText = TestHelper.testMain(
       "test",
@@ -85,7 +82,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check test output when no tests are specified in the functionality file", NativeTest) {
-    val newConfigFilePath = deriveNewConfig("del(.functionality.test_resources)", "no_tests")
+    val newConfigFilePath = configDeriver.derive("del(.functionality.test_resources)", "no_tests")
     val testText = TestHelper.testMain(
       "test",
       "-p", "native",
@@ -100,7 +97,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check test output when a test fails", NativeTest) {
-    val newConfigFilePath = deriveNewConfig(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""", "failed_test")
+    val newConfigFilePath = configDeriver.derive(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""", "failed_test")
     val testText = TestHelper.testMainException[RuntimeException](
       "test",
       "-p", "native",
@@ -115,7 +112,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check failing build", DockerTest) {
-    val newConfigFilePath = deriveNewConfig(""".platforms[.type == "docker" && !has(.id) ].apt := { packages: ["get_the_machine_that_goes_ping"] }""", "failed_build")
+    val newConfigFilePath = configDeriver.derive(""".platforms[.type == "docker" && !has(.id) ].apt := { packages: ["get_the_machine_that_goes_ping"] }""", "failed_build")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "-p", "docker",
@@ -132,7 +129,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check test output when test doesn't exist", DockerTest) {
-    val newConfigFilePath = deriveNewConfig(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/nonexistent_test.sh"""", "nonexisting_test")
+    val newConfigFilePath = configDeriver.derive(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/nonexistent_test.sh"""", "nonexisting_test")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "-p", "docker",
@@ -165,7 +162,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check standard test output with legacy 'tests' definition", DockerTest) {
-    val newConfigFilePath = deriveNewConfig(
+    val newConfigFilePath = configDeriver.derive(
       List(
         """.functionality.tests := .functionality.test_resources""",
         """del(.functionality.test_resources)"""
@@ -186,7 +183,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check config file without 'functionality' specified", DockerTest) {
-    val newConfigFilePath = deriveNewConfig("""del(.functionality)""", "missing_functionality")
+    val newConfigFilePath = configDeriver.derive("""del(.functionality)""", "missing_functionality")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "-p", "docker",
@@ -252,7 +249,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check test output when a test fails and --keep true is specified", NativeTest) {
-    val newConfigFilePath = deriveNewConfig(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""", "failed_test_keep_true")
+    val newConfigFilePath = configDeriver.derive(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""", "failed_test_keep_true")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "-p", "native",
@@ -270,7 +267,10 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check test output when a test fails and --keep false is specified", NativeTest) {
-    val newConfigFilePath = deriveNewConfig(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""", "failed_test_keep_false")
+    val newConfigFilePath = configDeriver.derive(
+      """.functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""",
+      "failed_test_keep_false"
+    )
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "-p", "native",
@@ -309,50 +309,6 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(testText.contains("Running tests in temporary directory: "))
     assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
     assert(testText.contains("Cleaning up temporary directory"))
-  }
-
-  def deriveNewConfig(configMod: String, name: String): String = {
-    deriveNewConfig(List(configMod), name)
-  }
-
-  /**
-    * Derive a config file from the default config
-    * @param comnifMods Config mods to apply to the yaml
-    * @param name name of the new .vsh.yaml file
-    * @return Path to the new config file as string
-    */
-  def deriveNewConfig(configMods: List[String], name: String): String = {
-    val shFileStr = s"$name.sh"
-    val yamlFileStr = s"$name.vsh.yaml"
-    val newConfigFilePath = Paths.get(tempFolStr, s"$yamlFileStr")
-    
-    val yamlText = IO.read(IO.uri(configFile))
-
-    def errorHandler[C](e: Exception): C = {
-      Console.err.println(s"${Console.RED}Error parsing '$name'.${Console.RESET}\nDetails:")
-      throw e
-    }
-
-    val js = parser.parse(yamlText).fold(errorHandler, a => a)
-
-    val confMods = parseConfigMods(configMods)
-
-    val modifiedJs = confMods match {
-      case None => js
-      case Some(cmds) => cmds(js, preparse = false)
-    }
-
-    val yamlPrinter = YamlPrinter(
-      preserveOrder = true,
-      dropNullKeys = true,
-      mappingStyle = YamlPrinter.FlowStyle.Block,
-      splitLines = true,
-      stringStyle = YamlPrinter.StringStyle.Plain
-    )
-    val yaml = yamlPrinter.pretty(modifiedJs)
-    Files.write(newConfigFilePath, yaml.getBytes)
-
-    newConfigFilePath.toString
   }
 
   /**
