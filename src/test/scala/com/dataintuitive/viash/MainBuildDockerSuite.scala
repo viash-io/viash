@@ -16,6 +16,9 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
+  private val temporaryConfigFolder = IO.makeTemp("viash_tester_configs")
+
+  private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
 
   // parse functionality from file
   private val functionality = Config.read(configFile, applyPlatform = false).functionality
@@ -421,7 +424,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
   //</editor-fold>
 
-    test("Get info of a docker image using docker inspect", DockerTest) {
+  test("Get info of a docker image using docker inspect", DockerTest) {
     // Create temporary folder to copy the files to so we can do a git init in that folder
     // This is needed to check the remote git repo value
     val tempMetaFolder = IO.makeTemp("viash_test_meta")
@@ -530,6 +533,66 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     }
   }
 
+  test("Prepare base config derivation and verify") {
+    val rootPath = getClass.getResource(s"/testbash/").getPath
+    TestHelper.copyFolder(rootPath, temporaryConfigFolder.toString)
+
+    val newConfigFilePath = configDeriver.derive(
+      Nil,
+      "utilities_default"
+    )
+    
+    val stdout = TestHelper.testMain(
+      "build",
+      "-p", "docker",
+      "-o", tempFolStr,
+      newConfigFilePath,
+      "--setup", "alwaysbuild"
+    )
+
+    assert(stdout.matches("\\[notice\\] Building container 'testbash:0\\.1' with Dockerfile\\s*"), stdout)
+  }
+
+  test("Verify adding extra utilities to verify") {
+    val newConfigFilePath = configDeriver.derive(
+      """.functionality.requirements := { utilities: ["which", "bash", "ps", "grep"] }""",
+      "utilities_extra"
+    )
+    
+    val stdout = TestHelper.testMain(
+      "build",
+      "-p", "docker",
+      "-o", tempFolStr,
+      newConfigFilePath,
+      "--setup", "alwaysbuild"
+    )
+
+    assert(stdout.matches("\\[notice\\] Building container 'testbash:0\\.1' with Dockerfile\\s*"), stdout)
+  }
+
+  test("Verify base adding an extra utility that doesn't exist") {
+    val newConfigFilePath = configDeriver.derive(
+      """.functionality.requirements := { utilities: ["which", "bash", "ps", "grep", "non_existing_utility"] }""",
+      "utilities_not_found"
+    )
+    
+    val stdout = TestHelper.testMain(
+      "build",
+      "-p", "docker",
+      "-o", tempFolStr,
+      newConfigFilePath,
+      "--setup", "alwaysbuild"
+    )
+
+    assert(stdout.contains("[notice] Building container 'testbash:0.1' with Dockerfile"))
+    assert(stdout.contains("[error] Docker container testbash:0.1 does not contain one of these utilities: which bash ps grep non_existing_utility."))
+    assert(stdout.contains("[error] Docker output of resolved utilities:"), stdout)
+    assert(stdout.contains("which"))
+    assert(stdout.contains("bash"))
+    assert(stdout.contains("ps"))
+    assert(stdout.contains("grep"))
+  }
+
   def checkDockerImageExists(name: String): Boolean = checkDockerImageExists(name, "latest")
 
   def checkDockerImageExists(name: String, tag: String): Boolean = {
@@ -557,5 +620,6 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
   override def afterAll() {
     IO.deleteRecursively(temporaryFolder)
+    IO.deleteRecursively(temporaryConfigFolder)
   }
 }
