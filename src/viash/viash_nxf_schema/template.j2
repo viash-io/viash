@@ -28,8 +28,10 @@
                     {%- endif -%}
                     ,
             "description": {{ argument.description | default("No description", true) | tojson }},
-            "default": "{{ argument.default }}",
-            "hidden": false
+            {% if argument.hidden is sameas true -%}
+            "hidden": true,
+            {%- endif %}
+            "default": "{{ argument.default }}"
           }{%- if not loop.last -%},{%- endif -%}
           {% endfor %}
         }
@@ -59,8 +61,11 @@
               {%- endif -%}
               ,
       "description": {{ argument.description | default("No description", true) | tojson }},
-      "default": "{{ argument.default }}",
-      "hidden": false
+      "hidden": {{ argument.hidden | default(false, true) | tojson }},
+      {% if argument.hidden is sameas true -%}
+      "hidden": true,
+      {%- endif %}
+      "default": "{{ argument.default }}"
     }{%- if not loop.last -%},{%- endif -%}
     {% endfor %}
   }
