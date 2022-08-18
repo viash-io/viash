@@ -30,6 +30,10 @@
 
 * `ConfigMod`: Added a `del(...)` config mod to be able to delete a value from the yaml. Example: `del(.functionality.version)`.
 
+## MAJOR CHANGES
+
+* `Folder structure`: Adjusted the folder structure to correctly reflect the the namespace change of viash from `com.dataintuitive.viash` to `io.viash`.
+
 ## MINOR CHANGES
 
 * `Resources`: Handle edge case when no resources are specified in the `vsh.yaml` config file and display a warning message.
