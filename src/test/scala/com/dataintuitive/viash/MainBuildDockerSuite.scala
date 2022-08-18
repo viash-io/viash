@@ -533,7 +533,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     }
   }
 
-  test("Prepare base config derivation and verify") {
+  test("Prepare base config derivation and verify", DockerTest) {
     val rootPath = getClass.getResource(s"/testbash/").getPath
     TestHelper.copyFolder(rootPath, temporaryConfigFolder.toString)
 
@@ -553,7 +553,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(stdout.matches("\\[notice\\] Building container 'testbash:0\\.1' with Dockerfile\\s*"), stdout)
   }
 
-  test("Verify adding extra utilities to verify") {
+  test("Verify adding extra utilities to verify", DockerTest) {
     val newConfigFilePath = configDeriver.derive(
       """.functionality.requirements := { utilities: ["which", "bash", "ps", "grep"] }""",
       "utilities_extra"
@@ -570,7 +570,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(stdout.matches("\\[notice\\] Building container 'testbash:0\\.1' with Dockerfile\\s*"), stdout)
   }
 
-  test("Verify base adding an extra utility that doesn't exist") {
+  test("Verify base adding an extra utility that doesn't exist", DockerTest) {
     val newConfigFilePath = configDeriver.derive(
       """.functionality.requirements := { utilities: ["which", "bash", "ps", "grep", "non_existing_utility"] }""",
       "utilities_not_found"
