@@ -31,6 +31,9 @@
             {% if argument.hidden is sameas true -%}
             "hidden": true,
             {%- endif %}
+            {% if argument.choices is defined -%}
+            "enum": {{ argument.choices | tojson }},
+            {%- endif %}
             "default": "{{ argument.default }}"
           }{%- if not loop.last -%},{%- endif -%}
           {% endfor %}
@@ -64,6 +67,9 @@
       "hidden": {{ argument.hidden | default(false, true) | tojson }},
       {% if argument.hidden is sameas true -%}
       "hidden": true,
+      {%- endif %}
+      {% if argument.choices is defined -%}
+      "enum": {{ argument.choices | tojson }},
       {%- endif %}
       "default": "{{ argument.default }}"
     }{%- if not loop.last -%},{%- endif -%}
