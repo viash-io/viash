@@ -21,7 +21,7 @@ import scala.io.Source
 
 object Bash {
   private def readUtils(s: String) = {
-    val path = s"com/dataintuitive/viash/helpers/bashutils/$s.sh"
+    val path = s"io/viash/helpers/bashutils/$s.sh"
     Source.fromResource(path).getLines().mkString("\n")
   }
 
