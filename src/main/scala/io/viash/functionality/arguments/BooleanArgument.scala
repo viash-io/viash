@@ -38,7 +38,7 @@ abstract class BooleanArgumentBase extends Argument[Boolean] {
     |    alternatives: ["-t"]
     |```  
     |  
-    """.stripMargin)
+    |""".stripMargin)
 case class BooleanArgument(
   @description(
   """The name of the argument. Can be in the formats `--trim`, `-t` or `trim`. The number of dashes determines how values can be passed:  
@@ -46,7 +46,7 @@ case class BooleanArgument(
     |  - `--trim` is a long option, which can be passed with `executable_name --trim`
     |  - `-t` is a short option, which can be passed with `executable_name -t`
     |  - `trim` is an argument, which can be passed with `executable_name trim`  
-    """.stripMargin)
+    |""".stripMargin)
   name: String,
 
   @description("List of alternative format variations for this argument.")
@@ -60,7 +60,7 @@ case class BooleanArgument(
   """- name: --my_boolean
     |  type: boolean
     |  example: true
-    """.stripMargin, "yaml")
+    |""".stripMargin, "yaml")
   example: OneOrMore[Boolean] = Nil,
 
   @description("The default value when no argument value is provided. This will not work if the [`required`](#required) property is enabled.")
@@ -68,7 +68,7 @@ case class BooleanArgument(
   """- name: --my_boolean
     |  type: boolean
     |  default: true
-    """.stripMargin, "yaml") 
+    |""".stripMargin, "yaml") 
   default: OneOrMore[Boolean] = Nil,
 
   @description("Make the value for this argument required. If set to `true`, an error will be produced if no value was provided. `false` by default.")
@@ -76,7 +76,7 @@ case class BooleanArgument(
   """- name: --my_boolean
     |  type: boolean
     |  required: true
-    """.stripMargin, "yaml")
+    |""".stripMargin, "yaml")
   required: Boolean = false,
 
   direction: Direction = Input,
@@ -86,7 +86,7 @@ case class BooleanArgument(
   """- name: --my_boolean
     |  type: boolean
     |  multiple: true
-    """.stripMargin, "yaml")
+    |""".stripMargin, "yaml")
   @exampleWithDescription("my_component --my_boolean=true:true:false", "bash", "Here's an example of how to use this:")
   multiple: Boolean = false,
 
@@ -96,7 +96,7 @@ case class BooleanArgument(
     |  type: boolean
     |  multiple: true
     |  multiple_sep: ","
-    """.stripMargin, "yaml")
+    |""".stripMargin, "yaml")
   @exampleWithDescription("my_component --my_boolean=true,true,false", "bash", "Here's an example of how to use this:")
   multiple_sep: Char = ':',
 
@@ -134,7 +134,7 @@ case class BooleanArgument(
     |    alternatives: ["-s"]
     |```  
     |  
-    """.stripMargin)
+    |""".stripMargin)
 case class BooleanTrueArgument(
   @description(
   """The name of the argument. Can be in the formats `--silent`, `-s` or `silent`. The number of dashes determines how values can be passed:  
@@ -142,7 +142,7 @@ case class BooleanTrueArgument(
     |  - `--silent` is a long option, which can be passed with `executable_name --silent`
     |  - `-s` is a short option, which can be passed with `executable_name -s`
     |  - `silent` is an argument, which can be passed with `executable_name silent`  
-    """.stripMargin)
+    |""".stripMargin)
   name: String,
 
   @description("List of alternative format variations for this argument.")
@@ -192,7 +192,7 @@ case class BooleanTrueArgument(
     |    alternatives: ["-nl"]
     |```  
     |  
-    """.stripMargin)
+    |""".stripMargin)
 case class BooleanFalseArgument(
   @description(
   """The name of the argument. Can be in the formats `--no-log`, `-n` or `no-log`. The number of dashes determines how values can be passed:  
@@ -200,7 +200,7 @@ case class BooleanFalseArgument(
     |  - `--no-log` is a long option, which can be passed with `executable_name --no-log`
     |  - `-n` is a short option, which can be passed with `executable_name -n`
     |  - `no-log` is an argument, which can be passed with `executable_name no-log`  
-    """.stripMargin)
+    |""".stripMargin)
   name: String,
 
   @description("List of alternative format variations for this argument.")
