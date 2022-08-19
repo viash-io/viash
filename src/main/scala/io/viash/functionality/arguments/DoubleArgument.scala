@@ -20,21 +20,16 @@ package io.viash.functionality.arguments
 import io.viash.helpers.Circe.OneOrMore
 import io.viash.schemas._
 
-@description(
-  """A `double` type argument has a numeric value with decimal points.
-    |  
-    |Example:  
-    |  
-    | ```yaml  
-    |arguments:
+@description("A `double` type argument has a numeric value with decimal points")
+@example(
+  """arguments:
     |  - name: --litres
     |    type: double
     |    default: 1.5
     |    description: Litres of fluid to process
     |    alternatives: ["-l"]
-    |```  
-    |  
-    |""".stripMargin)
+    |""".stripMargin,
+    "yaml")
 case class DoubleArgument(
   @description(
     """The name of the argument. Can be in the formats `--foo`, `-f` or `foo`. The number of dashes determines how values can be passed:  

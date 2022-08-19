@@ -20,21 +20,16 @@ package io.viash.functionality.arguments
 import io.viash.helpers.Circe.OneOrMore
 import io.viash.schemas._
 
-@description(
-  """A `string` type argument has a value made up of an ordered sequences of characters, like "Hello" or "I'm a string".
-    |  
-    |Example:  
-    |  
-    | ```yaml  
-    |arguments:
+@description("A `string` type argument has a value made up of an ordered sequences of characters, like \"Hello\" or \"I'm a string\".")
+@example(
+  """arguments:
     |  - name: --search_query
     |    type: string
     |    default: "meaning of life"
     |    description: The term to search for
     |    alternatives: ["-q"]
-    |```  
-    |  
-    |""".stripMargin)
+    |""".stripMargin,
+    "yaml")
 case class StringArgument(
   @description(
     """The name of the argument. Can be in the formats `--foo`, `-f` or `foo`. The number of dashes determines how values can be passed:  

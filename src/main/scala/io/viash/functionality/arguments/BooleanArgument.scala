@@ -24,21 +24,16 @@ abstract class BooleanArgumentBase extends Argument[Boolean] {
   val flagValue: Option[Boolean]
 }
 
-@description( 
-  """A `boolean` type argument has two possible values: `true` or `false`.
-    |  
-    |Example:  
-    |  
-    | ```yaml  
-    |arguments:
+@description("A `boolean` type argument has two possible values: `true` or `false`.")
+@example(
+  """arguments:
     |  - name: --trim
     |    type: boolean
     |    default: true
     |    description: Trim whitespace from the final output
     |    alternatives: ["-t"]
-    |```  
-    |  
-    |""".stripMargin)
+    |""".stripMargin,
+    "yaml")
 case class BooleanArgument(
   @description(
     """The name of the argument. Can be in the formats `--trim`, `-t` or `trim`. The number of dashes determines how values can be passed:  
@@ -126,20 +121,15 @@ case class BooleanArgument(
   }
 }
 
-@description(
-  """An argument of the `boolean_true` type acts like a `boolean` flag with a default value of `false`. When called as an argument it sets the `boolean` to `true`.  
-    |  
-    |Example:  
-    |  
-    | ```yaml  
-    |arguments:
+@description("An argument of the `boolean_true` type acts like a `boolean` flag with a default value of `false`. When called as an argument it sets the `boolean` to `true`.")
+@example(
+  """arguments:
     |  - name: --silent
     |    type: boolean_true
     |    description: Ignore console output
     |    alternatives: ["-s"]
-    |```  
-    |  
-    |""".stripMargin)
+    |""".stripMargin,
+    "yaml")
 case class BooleanTrueArgument(
   @description(
     """The name of the argument. Can be in the formats `--silent`, `-s` or `silent`. The number of dashes determines how values can be passed:  
@@ -184,20 +174,15 @@ case class BooleanTrueArgument(
   }
 }
 
-@description(
-  """An argument of the `boolean_false` type acts like an inverted `boolean` flag with a default value of `true`. When called as an argument it sets the `boolean` to `false`.  
-    |  
-    |Example:  
-    |  
-    | ```yaml  
-    |arguments:
+@description("An argument of the `boolean_false` type acts like an inverted `boolean` flag with a default value of `true`. When called as an argument it sets the `boolean` to `false`.")
+@example(
+  """arguments:
     |  - name: --no-log
     |    type: boolean_false
     |    description: Disable logging
     |    alternatives: ["-nl"]
-    |```  
-    |  
-    |""".stripMargin)
+    |""".stripMargin,
+    "yaml")
 case class BooleanFalseArgument(
   @description(
     """The name of the argument. Can be in the formats `--no-log`, `-n` or `no-log`. The number of dashes determines how values can be passed:  
