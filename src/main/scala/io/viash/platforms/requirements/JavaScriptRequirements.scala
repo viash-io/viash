@@ -21,13 +21,15 @@ import io.viash.helpers.Circe._
 import io.viash.schemas._
 
 @description("Specify which JavaScript packages should be available in order to run the component.")
-@example("""setup:
-           |  - type: javascript
-           |    npm: [ packagename ]
-           |    git: [ https://... ]
-           |    github: [ owner/repository ]
-           |    url: [ https://... ]
-           |""".stripMargin, "yaml")
+@example(
+  """setup:
+    |  - type: javascript
+    |    npm: [ packagename ]
+    |    git: [ https://... ]
+    |    github: [ owner/repository ]
+    |    url: [ https://... ]
+    |""".stripMargin,
+    "yaml")
 case class JavaScriptRequirements(
   packages: OneOrMore[String] = Nil,
   npm: OneOrMore[String] = Nil,

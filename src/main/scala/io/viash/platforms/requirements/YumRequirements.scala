@@ -21,10 +21,12 @@ import io.viash.helpers.Circe._
 import io.viash.schemas._
 
 @description("Specify which yum packages should be available in order to run the component.")
-@example("""setup:
-           |  - type: yum
-           |    packages: [ sl ]
-           |""".stripMargin, "yaml")
+@example(
+  """setup:
+    |  - type: yum
+    |    packages: [ sl ]
+    |""".stripMargin,
+    "yaml")
 case class YumRequirements(
   packages: OneOrMore[String] = Nil,
   `type`: String = "yum"
