@@ -257,7 +257,8 @@ def addGlobalParams(config) {
           |Inside the Nextflow pipeline code, params.params_list can also be used to directly a list of parameter sets.
           |When passing a csv, json or yaml, relative path names are relativized to the location of the parameter file.'''.stripMargin(),
           'example': 'my_params.yaml',
-          'multiple': false
+          'multiple': false,
+          'hidden': true
         ],
         [
           'name': '--param_list_format',
@@ -266,12 +267,13 @@ def addGlobalParams(config) {
           'description': 'Manually specify the param_list_format. Must be one of \'csv\', \'json\', \'yaml\', \'yaml_blob\', \'asis\' or \'none\'.',
           'example': 'yaml',
           'choices': ['csv', 'json', 'yaml', 'yaml_blob', 'asis', 'none'],
-          'multiple': false
+          'multiple': false,
+          'hidden': true
         ],
       ],
       "argument_groups": [
         [
-          "name": "Nextflow input/output arguments",
+          "name": "Nextflow input-output arguments",
           "arguments" : [ "publish_dir", "param_list", "param_list_format" ]
         ]
       ]

@@ -91,7 +91,8 @@ def processDirectives(Map drctv) {
       def m = drctv["container"]
       assertMapKeys(m, [ "registry", "image", "tag" ], ["image"], "container")
       def part1 = 
-        params.containsKey("override_container_registry") ? params["override_container_registry"] + "/" : 
+        System.getenv('OVERRIDE_CONTAINER_REGISTRY') ? System.getenv('OVERRIDE_CONTAINER_REGISTRY') + "/" : 
+        params.containsKey("override_container_registry") ? params["override_container_registry"] + "/" : // todo: remove?
         m.registry ? m.registry + "/" : 
         ""
       def part2 = m.image
@@ -626,6 +627,15 @@ def processFactory(Map processArgs) {
   |export VIASH_META_TEMP_DIR="${['docker', 'podman', 'charliecloud'].any{ it == workflow.containerEngine } ? '/tmp' : tmpDir}"
   |export VIASH_META_FUNCTIONALITY_NAME="${thisConfig.functionality.name}"
   |export VIASH_META_EXECUTABLE="\\\$VIASH_META_RESOURCES_DIR/\\\$VIASH_META_FUNCTIONALITY_NAME"
+  |\${task.cpus ? "export VIASH_META_N_PROC=\$task.cpus" : "" }
+  |\${task.memory?.bytes != null ? "export VIASH_META_MEMORY_B=\$task.memory.bytes" : "" }
+  |if [ ! -z \\\${VIASH_META_MEMORY_B+x} ]; then
+  |  export VIASH_META_MEMORY_KB=\\\$(( (\\\$VIASH_META_MEMORY_B+1023) / 1024 ))
+  |  export VIASH_META_MEMORY_MB=\\\$(( (\\\$VIASH_META_MEMORY_KB+1023) / 1024 ))
+  |  export VIASH_META_MEMORY_GB=\\\$(( (\\\$VIASH_META_MEMORY_MB+1023) / 1024 ))
+  |  export VIASH_META_MEMORY_TB=\\\$(( (\\\$VIASH_META_MEMORY_GB+1023) / 1024 ))
+  |  export VIASH_META_MEMORY_PB=\\\$(( (\\\$VIASH_META_MEMORY_TB+1023) / 1024 ))
+  |fi
   |
   |# meta synonyms
   |export VIASH_RESOURCES_DIR="\\\$VIASH_META_RESOURCES_DIR"
