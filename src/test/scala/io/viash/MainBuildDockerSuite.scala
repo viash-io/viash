@@ -539,7 +539,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     val newConfigFilePath = configDeriver.derive(
       Nil,
-      "utilities_default"
+      "commands_default"
     )
     
     val stdout = TestHelper.testMain(
@@ -553,10 +553,10 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(stdout.matches("\\[notice\\] Building container 'testbash:0\\.1' with Dockerfile\\s*"), stdout)
   }
 
-  test("Verify adding extra utilities to verify", DockerTest) {
+  test("Verify adding extra commands to verify", DockerTest) {
     val newConfigFilePath = configDeriver.derive(
-      """.functionality.requirements := { utilities: ["which", "bash", "ps", "grep"] }""",
-      "utilities_extra"
+      """.functionality.requirements := { commands: ["which", "bash", "ps", "grep"] }""",
+      "commands_extra"
     )
     
     val stdout = TestHelper.testMain(
@@ -570,10 +570,10 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(stdout.matches("\\[notice\\] Building container 'testbash:0\\.1' with Dockerfile\\s*"), stdout)
   }
 
-  test("Verify base adding an extra utility that doesn't exist", DockerTest) {
+  test("Verify base adding an extra required command that doesn't exist", DockerTest) {
     val newConfigFilePath = configDeriver.derive(
-      """.functionality.requirements := { utilities: ["which", "bash", "ps", "grep", "non_existing_utility"] }""",
-      "utilities_not_found"
+      """.functionality.requirements := { commands: ["which", "bash", "ps", "grep", "non_existing_command"] }""",
+      "non_existing_command"
     )
     
     val stdout = TestHelper.testMain(
@@ -585,8 +585,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     )
 
     assert(stdout.contains("[notice] Building container 'testbash:0.1' with Dockerfile"))
-    assert(stdout.contains("[error] Docker container testbash:0.1 does not contain one of these utilities: which bash ps grep non_existing_utility."))
-    assert(stdout.contains("[error] Docker output of resolved utilities:"), stdout)
+    assert(stdout.contains("[error] Docker container 'testbash:0.1' does not contain command 'non_existing_command'."))
     assert(stdout.contains("which"))
     assert(stdout.contains("bash"))
     assert(stdout.contains("ps"))

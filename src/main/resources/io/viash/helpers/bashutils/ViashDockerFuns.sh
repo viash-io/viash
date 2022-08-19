@@ -184,24 +184,24 @@ function ViashDockerSetup {
   fi
 }
 
-# ViashDockerCheckUtility: Check whether a docker container has the required utilities
+# ViashDockerCheckCommands: Check whether a docker container has the required commands
 #
 # $1                  : image identifier with format `[registry/]image[:tag]`
-# $@                  : utilities to verify being present
+# $@                  : commands to verify being present
 # examples:
-#   ViashDockerCheckUtility mynewcomponent bash ps
-function ViashDockerCheckUtility {
+#   ViashDockerCheckCommands bash:4.0 bash ps foo
+function ViashDockerCheckCommands {
   tag=$1
   shift 1
   save=$-; set +e
-  res=$(docker run --entrypoint=which --rm -t $tag $@)
-  if [ $? -ne 0 ]; then
-  	ViashError "Docker container $tag does not contain one of these utilities: $@."
-  	if [[ -n $res ]]; then
-	  	ViashError "Docker output of resolved utilities:$IFS$res"
-	fi
-  	exit 1
-  fi
+  while(($#)); do
+    docker run --rm --entrypoint=sh $tag -c "command -v $1 >/dev/null 2>&1"
+    if [ $? -ne 0 ]; then
+    	ViashError "Docker container '$tag' does not contain command '$1'."
+    	exit 1
+    fi
+    shift
+  done
   [[ $save =~ e ]] && set -e
 }
 
