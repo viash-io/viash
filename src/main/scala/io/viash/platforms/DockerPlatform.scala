@@ -94,7 +94,7 @@ case class DockerPlatform(
   setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,
   privileged: Boolean = false,
 
-  @description("Add [docker run](https://docs.docker.com/engine/api/commandline/run/) arguments.")
+  @description("Add [docker run](https://docs.docker.com/engine/reference/run/) arguments.")
   run_args: OneOrMore[String] = Nil,
 
   @description("The source of the target image. This is used for defining labels in the dockerfile.")
