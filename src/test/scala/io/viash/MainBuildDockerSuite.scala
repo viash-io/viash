@@ -2,11 +2,11 @@ package io.viash
 
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import java.nio.file.{Files, Paths, StandardCopyOption}
+import io.viash.helpers.{IO, Exec}
 
 import io.viash.config.Config
 
 import scala.io.Source
-import io.viash.helpers._
 
 class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   // which platform to test

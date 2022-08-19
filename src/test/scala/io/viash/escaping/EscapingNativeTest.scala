@@ -2,12 +2,12 @@ package io.viash.escaping
 
 import io.viash.TestHelper
 import io.viash.config.Config
-import io.viash.helpers._
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 import java.io.{IOException, UncheckedIOException}
 import java.nio.file.{Files, Path, Paths}
 import scala.io.Source
+import io.viash.helpers.{IO, Exec}
 
 class EscapingNativeTest extends FunSuite with BeforeAndAfterAll {
   // which platform to test

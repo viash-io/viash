@@ -18,8 +18,7 @@
 package io.viash.functionality.arguments
 
 import io.viash.helpers.Circe.OneOrMore
-import io.viash.helpers.description
-import io.viash.helpers._
+import io.viash.schemas._
 
 @description("""
                |A `string` type argument has a value made up of an ordered sequences of characters, like "Hello" or "I'm a string".

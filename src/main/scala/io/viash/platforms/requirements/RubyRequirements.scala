@@ -18,7 +18,7 @@
 package io.viash.platforms.requirements
 
 import io.viash.helpers.Circe._
-import io.viash.helpers.description
+import io.viash.schemas._
 
 @description("Specify which Ruby packages should be available in order to run the component.")
 case class RubyRequirements(

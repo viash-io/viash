@@ -21,7 +21,7 @@ import arguments._
 import resources._
 import io.viash.config.Version
 import io.circe.generic.extras._
-import io.viash.helpers._
+import io.viash.schemas._
 
 @description("""The functionality-part of the config file describes the behaviour of the script in terms of arguments and resources.
                |By specifying a few restrictions (e.g. mandatory arguments) and adding some descriptions, Viash will automatically generate a stylish command-line interface for you.

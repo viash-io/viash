@@ -17,6 +17,9 @@
 
 package io.viash.platforms
 
+import java.util.Date
+import java.text.SimpleDateFormat
+
 import io.viash.config.Config
 import io.viash.functionality._
 import io.viash.functionality.arguments._
@@ -28,12 +31,7 @@ import io.viash.wrapper.{BashWrapper, BashWrapperMods}
 import io.viash.platforms.docker._
 import io.viash.helpers.Circe._
 import io.viash.config.Info
-import java.util.Date
-import java.text.SimpleDateFormat
-import io.viash.helpers.description
-import io.viash.helpers.example
-import io.viash.helpers.deprecated
-import io.viash.helpers.since
+import io.viash.schemas._
 
 @description("""Run a Viash component on a Docker backend platform.
                |By specifying which dependencies your component needs, users will be able to build a docker container from scratch using the setup flag, or pull it from a docker repository.

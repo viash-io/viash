@@ -2,7 +2,7 @@ package io.viash.auxiliary
 
 import io.viash.{DockerTest, TestHelper}
 import io.viash.config.Config
-import io.viash.helpers._
+import io.viash.helpers.{IO, Exec}
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 import java.nio.file.{Files, Paths}

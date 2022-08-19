@@ -23,8 +23,7 @@ import io.viash.functionality.resources._
 import io.viash.platforms.requirements._
 import io.viash.config.Version
 import io.viash.wrapper.BashWrapper
-import io.viash.helpers.description
-import io.viash.helpers.example
+import io.viash.schemas._
 
 @description("""Running a Viash component on a native platform means that the script will be executed in your current environment.
                |Any dependencies are assumed to have been installed by the user, so the native platform is meant for developers (who know what they’re doing) or for simple bash scripts (which have no extra dependencies).

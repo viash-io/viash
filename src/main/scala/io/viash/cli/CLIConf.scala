@@ -17,11 +17,7 @@
 
 package io.viash.cli
 
-import org.rogach.scallop.{ScallopConf, Subcommand}
-import org.rogach.scallop.ScallopConfBase
-import org.rogach.scallop.ScallopOptionGroup
-import org.rogach.scallop.ValueConverter
-import org.rogach.scallop.ScallopOption
+import org.rogach.scallop._
 import io.viash.Main
 
 

@@ -18,7 +18,7 @@
 package io.viash.functionality.arguments
 
 import io.viash.helpers.Circe.OneOrMore
-import io.viash.helpers._
+import io.viash.schemas._
 
 @description("""
                |An `integer` type argument has a numeric value without decimal points.

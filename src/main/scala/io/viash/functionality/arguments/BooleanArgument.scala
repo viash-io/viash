@@ -18,7 +18,7 @@
 package io.viash.functionality.arguments
 
 import io.viash.helpers.Circe.OneOrMore
-import io.viash.helpers._
+import io.viash.schemas._
 
 abstract class BooleanArgumentBase extends Argument[Boolean] {
   val flagValue: Option[Boolean]

@@ -17,7 +17,7 @@
 
 package io.viash.functionality
 
-import io.viash.helpers._
+import io.viash.schemas._
 
 @description("Computational requirements related to running the component.")
 @since("Viash 0.5.16")

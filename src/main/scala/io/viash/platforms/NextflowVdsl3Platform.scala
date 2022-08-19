@@ -28,7 +28,7 @@ import io.viash.platforms.nextflow._
 import io.circe.syntax._
 import io.circe.{Printer => JsonPrinter, Json, JsonObject}
 import shapeless.syntax.singleton
-import io.viash.helpers._
+import io.viash.schemas._
 
 /**
  * Next-gen Platform class for generating NextFlow (DSL2) modules.

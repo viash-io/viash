@@ -24,8 +24,7 @@ import io.viash.functionality.arguments._
 import io.viash.config.Version
 import io.viash.helpers.{Docker, Bash}
 import io.viash.helpers.Circe._
-import io.viash.helpers.description
-import io.viash.helpers.example
+import io.viash.schemas._
 
 /**
  * / * Platform class for generating NextFlow (DSL2) modules.
