@@ -91,10 +91,10 @@ case class Functionality(
 
   @description("A list of output arguments in addition to the `arguments` list. Any arguments specified here will have their `type` set to `file` and thr `direction` set to `output` by default.")
   @example(
-    """outputs:
-      |  - name: output_file
-      |  - name: another_output""".stripMargin,
-      "yaml")
+  """outputs:
+    |  - name: output_file
+    |  - name: another_output""".stripMargin,
+    "yaml")
   @exampleWithDescription(
   """component_with_outputs
     |  
