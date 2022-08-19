@@ -418,8 +418,9 @@ case class DockerPlatform(
          |            ViashDockerfile
          |            exit 0
          |            ;;""".stripMargin
-
-    val utilitiesToCheckStr = functionality.requirements.utilities.mkString(" ")
+    
+    val utilitiesToCheck = functionality.requirements.utilities ::: List("bash", "which")
+    val utilitiesToCheckStr = utilitiesToCheck.mkString(" ")
 
     val postParse =
       s"""

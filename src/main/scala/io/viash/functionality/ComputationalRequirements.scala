@@ -30,7 +30,7 @@ case class ComputationalRequirements(
   memory: Option[String] = None,
   @description("A list of utilities which should be present on the system for the script to function.")
   @example("utilities: [ which, bash, awk, date, grep, egrep, ps, sed, tail, tee ]", "yaml")
-  utilities: List[String] = List("which", "bash")
+  utilities: List[String] = Nil
 ) {
   def memoryAsBytes: Option[BigInt] = {
     val Regex = "^([0-9]+) *([kmgtp]b?|b)$".r
