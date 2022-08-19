@@ -193,16 +193,15 @@ function ViashDockerSetup {
 function ViashDockerCheckCommands {
   tag=$1
   shift 1
+  commands="$@"
   save=$-; set +e
-  while(($#)); do
-    docker run --rm --entrypoint=sh $tag -c "command -v $1 >/dev/null 2>&1"
-    if [ $? -ne 0 ]; then
-    	ViashError "Docker container '$tag' does not contain command '$1'."
-    	exit 1
-    fi
-    shift
-  done
+  missing=$(docker run --rm --entrypoint=sh $tag -c "for command in $commands; do command -v \$command >/dev/null 2>&1; if [ \$? -ne 0 ]; then echo \$command; exit 1; fi; done")
+  outCheck=$?
   [[ $save =~ e ]] && set -e
+  if [ $outCheck -ne 0 ]; then
+  	ViashError "Docker container '$tag' does not contain command '$missing'."
+  	exit 1
+  fi
 }
 
 
