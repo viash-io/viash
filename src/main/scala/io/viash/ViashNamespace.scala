@@ -24,8 +24,8 @@ import helpers.IO
 import io.viash.helpers.MissingResourceFileException
 import io.viash.helpers.BuildStatus._
 import java.nio.file.Path
-import com.dataintuitive.viash.helpers.NsExecData._
-import com.dataintuitive.viash.helpers.NsExecData
+import io.viash.helpers.NsExecData._
+import io.viash.helpers.NsExecData
 import sys.process._
 import java.io.{ByteArrayOutputStream, File, PrintWriter}
 
