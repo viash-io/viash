@@ -487,7 +487,7 @@ case class DockerPlatform(
                    |  for var in $$${arg.VIASH_PAR}; do
                    |    unset IFS
                    |    $extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$var")"
-                   |    ${BashWrapper.store(viash_temp, "\"$(ViashAutodetectMount \"$var\")\"", Some(arg.multiple_sep)).mkString("\n    ")}
+                   |    ${BashWrapper.store("ViashAutodetectMountArg", viash_temp, "\"$(ViashAutodetectMount \"$var\")\"", Some(arg.multiple_sep)).mkString("\n    ")}
                    |  done
                    |  ${arg.VIASH_PAR}="$$$viash_temp"
                    |fi""".stripMargin)
