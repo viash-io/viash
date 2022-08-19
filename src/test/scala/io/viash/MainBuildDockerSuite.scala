@@ -586,10 +586,6 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
     assert(stdout.contains("[notice] Building container 'testbash:0.1' with Dockerfile"))
     assert(stdout.contains("[error] Docker container 'testbash:0.1' does not contain command 'non_existing_command'."))
-    assert(stdout.contains("which"))
-    assert(stdout.contains("bash"))
-    assert(stdout.contains("ps"))
-    assert(stdout.contains("grep"))
   }
 
   def checkDockerImageExists(name: String): Boolean = checkDockerImageExists(name, "latest")
