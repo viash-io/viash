@@ -382,6 +382,10 @@ case class DockerPlatform(
 
         (vdf, vdb)
       }
+    
+    // get list of all the commands that should be available in the container
+    val commandsToCheck = functionality.requirements.commands ::: List("bash")
+    val commandsToCheckStr = commandsToCheck.mkString("'", "' '", "'")
       
     val preParse =
       s"""
@@ -400,6 +404,7 @@ case class DockerPlatform(
          |# exit code $$?    : whether or not the image was built
          |function ViashDockerBuild {
          |$viashDockerBuild
+         |  ViashDockerCheckCommands "$$1" $commandsToCheckStr
          |}""".stripMargin
 
     val parsers =
@@ -418,25 +423,14 @@ case class DockerPlatform(
          |            ViashDockerfile
          |            exit 0
          |            ;;""".stripMargin
-    
-    val commandsToCheck = functionality.requirements.commands ::: List("bash")
-    val commandsToCheckStr = commandsToCheck.mkString(" ")
 
     val postParse =
       s"""
          |if [ $$VIASH_MODE == "docker_setup" ]; then
          |  ViashDockerSetup '$effectiveID' "$$VIASH_DOCKER_SETUP_STRATEGY"
-         |  ViashDockerCheckCommands '$effectiveID' $commandsToCheckStr
          |  exit 0
          |fi
-         |save=$$-; set +e
-         |ViashDockerLocalTagCheck '$effectiveID'
-         |outCheck=$$?
-         |[[ $$save =~ e ]] && set -e
-         |if [ $$outCheck -ne 0 ]; then
-         |  ViashDockerSetup '$effectiveID' ${IfNeedBePullElseCachedBuild.id}
-         |  ViashDockerCheckCommands '$effectiveID' $commandsToCheckStr
-         |fi""".stripMargin
+         |ViashDockerSetup '$effectiveID' ${IfNeedBePullElseCachedBuild.id}""".stripMargin
 
     val mods = BashWrapperMods(
       preParse = preParse,
