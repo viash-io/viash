@@ -87,6 +87,7 @@ case class Functionality(
       "bash",
       "This results in the following output when calling the component with the `--help` argument:")
   @since("Viash 0.5.11")
+  @deprecated("Use `arguments` instead.", "Viash 0.5.16")
   inputs: List[Argument[_]] = Nil,
 
   @description("A list of output arguments in addition to the `arguments` list. Any arguments specified here will have their `type` set to `file` and thr `direction` set to `output` by default.")
@@ -107,6 +108,7 @@ case class Functionality(
       "bash",
       "This results in the following output when calling the component with the `--help` argument:")
   @since("Viash 0.5.11")
+  @deprecated("Use `arguments` instead.", "Viash 0.5.16")
   outputs: List[Argument[_]] = Nil,
   
   @description(
@@ -148,12 +150,22 @@ case class Functionality(
   @example(
     """argument_groups:
       |  - name: "Input"
-      |    arguments: [ id, input1, input2 ]
+      |    arguments:
+      |      - name: "--id"
+      |        type: string
+      |        required: true
+      |      - name: "--input"
+      |        type: file
+      |        required: true
       |  - name: "Output"
-      |    arguments: [ output, optional_output ]
-      |  - name: "Foo"
-      |    description: Arguments related to the foo functionality of this component.
-      |    arguments: [ foo, bar, zing, bork ]
+      |    arguments:
+      |      - name: "--output"
+      |        type: file
+      |        direction: output
+      |        required: true
+      |      - name: "--output_optional"
+      |        type: file
+      |        direction: output
       |""".stripMargin,
       "yaml")
   @exampleWithDescription(
@@ -163,10 +175,7 @@ case class Functionality(
       |      --id
       |          type: string
       |
-      |      --input1
-      |          type: file
-      |
-      |      --input2
+      |      --input
       |          type: file
       |
       |  Output:
@@ -175,21 +184,6 @@ case class Functionality(
       |
       |      --optional_output
       |          type: file
-      |
-      |  Foo:
-      |      Arguments related to the foo functionality of this component.
-      |
-      |      --foo
-      |          type: integer
-      |
-      |      --bar
-      |          type: double
-      |
-      |      --zing
-      |          type: boolean
-      |
-      |      --bork
-      |          type: string
       |""".stripMargin,
       "bash",
       "This results in the following output when calling the component with the `--help` argument:")
@@ -286,6 +280,12 @@ case class Functionality(
   @deprecated("Use `test_resources` instead. No functional difference.", "Viash 0.5.13")
   private val tests: List[Resource] = Nil
   // END OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
+  if (inputs.nonEmpty) {
+    Console.err.println("Notice: .functionality.inputs is deprecated. Please use .functionality.arguments instead.")
+  }
+  if (outputs.nonEmpty) {
+    Console.err.println("Notice: .functionality.outputs is deprecated. Please use .functionality.arguments instead.")
+  }
 
   // note that in the Functionality companion object, defaults gets added to inputs and outputs *before* actually 
   // parsing the configuration file with Circe. This is done in the .prepare step.
@@ -297,7 +297,7 @@ case class Functionality(
   }
 
   // Combine inputs, outputs and arguments into one combined list
-  def allArguments = inputs ::: outputs ::: arguments
+  def allArguments = inputs ::: outputs ::: arguments ::: argument_groups.flatMap(_.argumentArguments)
 
   // check argument groups
   {
@@ -311,7 +311,7 @@ case class Functionality(
   }
 
   private def addToArgGroup(argumentGroups: List[ArgumentGroup], name: String, arguments: List[Argument[_]]): List[ArgumentGroup] = {
-    val argNamesInGroups = argumentGroups.flatMap(_.arguments).toSet
+    val argNamesInGroups = argumentGroups.flatMap(_.stringArguments).toSet
 
     // Check if 'arguments' is in 'argumentGroups'. 
     val argumentsNotInGroup = arguments.map(_.plainName).filter(argName => !argNamesInGroups.contains(argName))
@@ -326,14 +326,14 @@ case class Functionality(
     // if there are missing arguments and there is an existing group, add the missing arguments to it
     } else if (existing.isDefined) {
       List(existing.get.copy(
-        arguments = existing.get.arguments.toList ::: argumentsNotInGroup
+        arguments = existing.get.arguments.toList ::: argumentsNotInGroup.map(arg => Left(arg))
       ))
     
     // else create a new group
     } else {
       List(ArgumentGroup(
         name = name,
-        arguments = argumentsNotInGroup
+        arguments = argumentsNotInGroup.map(arg => Left(arg))
       ))
     }
   }

@@ -18,9 +18,22 @@
 package io.viash.functionality
 
 import io.viash.helpers.Circe.OneOrMore
+import io.viash.functionality.arguments.Argument
 
 case class ArgumentGroup(
   name: String,
   description: Option[String] = None,
-  arguments: OneOrMore[String] = Nil
-)
+  arguments: OneOrMore[Either[String, Argument[_]]] = Nil
+) {
+  if (arguments.exists(_.isLeft)) {
+    Console.err.println("Notice: The '.arguments' field should be a list of arguments and should not contain strings.")
+  }
+
+  def stringArguments: OneOrMore[String] = {
+    arguments.flatMap{_.left.toOption}
+  }
+
+  def argumentArguments: OneOrMore[Argument[_]] = {
+    arguments.flatMap{_.right.toOption}
+  }
+}
