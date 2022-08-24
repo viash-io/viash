@@ -17,6 +17,9 @@
 
 package io.viash.platforms
 
+import java.util.Date
+import java.text.SimpleDateFormat
+
 import io.viash.config.Config
 import io.viash.functionality._
 import io.viash.functionality.arguments._
@@ -28,15 +31,12 @@ import io.viash.wrapper.{BashWrapper, BashWrapperMods}
 import io.viash.platforms.docker._
 import io.viash.helpers.Circe._
 import io.viash.config.Info
-import java.util.Date
-import java.text.SimpleDateFormat
-import io.viash.helpers.description
-import io.viash.helpers.example
-import io.viash.helpers.deprecated
+import io.viash.schemas._
 
-@description("""Run a Viash component on a Docker backend platform.
-               |By specifying which dependencies your component needs, users will be able to build a docker container from scratch using the setup flag, or pull it from a docker repository.
-               |""".stripMargin)
+@description(
+  """Run a Viash component on a Docker backend platform.
+    |By specifying which dependencies your component needs, users will be able to build a docker container from scratch using the setup flag, or pull it from a docker repository.
+    |""".stripMargin)
 case class DockerPlatform(
   @description("As with all platforms, you can give a platform a different name. By specifying `id: foo`, you can target this platform (only) by specifying `-p foo` in any of the Viash commands.")
   @example("id: foo", "yaml")
@@ -80,10 +80,12 @@ case class DockerPlatform(
   chown: Boolean = true,
 
   @description("A list of enabled ports. This doesn’t change the Dockerfile but gets added as a command-line argument at runtime.")
-  @example("""port:
-             |  - 80
-             |  - 8080
-             |""".stripMargin, "yaml")
+  @example(
+    """port:
+      |  - 80
+      |  - 8080
+      |""".stripMargin,
+      "yaml")
   port: OneOrMore[String] = Nil,
 
   @description("The working directory when starting the container. This doesn’t change the Dockerfile but gets added as a command-line argument at runtime.")
@@ -92,7 +94,7 @@ case class DockerPlatform(
   setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,
   privileged: Boolean = false,
 
-  @description("Add [docker run](https://docs.docker.com/engine/api/commandline/run/) arguments.")
+  @description("Add [docker run](https://docs.docker.com/engine/reference/run/) arguments.")
   run_args: OneOrMore[String] = Nil,
 
   @description("The source of the target image. This is used for defining labels in the dockerfile.")
@@ -101,86 +103,102 @@ case class DockerPlatform(
   `type`: String = "docker",
 
   // setup variables
-  @description("""A list of requirements for installing the following types of packages:
-                 |
-                 | - apt
-                 | - apk
-                 | - yum
-                 | - R
-                 | - Python
-                 | - JavaScript
-                 | - Docker setup instructions
-                 |
-                 |The order in which these dependencies are specified determines the order in which they will be installed.
-                 |""".stripMargin)
+  @description(
+    """A list of requirements for installing the following types of packages:
+      |
+      | - apt
+      | - apk
+      | - yum
+      | - R
+      | - Python
+      | - JavaScript
+      | - Docker setup instructions
+      |
+      |The order in which these dependencies are specified determines the order in which they will be installed.
+      |""".stripMargin)
   setup: List[Requirements] = Nil,
 
   @description("Specify which apk packages should be available in order to run the component.")
-  @example("""setup:
-             |  - type: apk
-             |    packages: [ sl ]
-             |""".stripMargin, "yaml")
+  @example(
+    """setup:
+      |  - type: apk
+      |    packages: [ sl ]
+      |""".stripMargin,
+      "yaml")
   @deprecated("Use `setup` instead.", "Viash 0.5.15")
   apk: Option[ApkRequirements] = None,
 
   @description("Specify which apt packages should be available in order to run the component.")
-  @example("""setup:
-             |  - type: apt
-             |    packages: [ sl ]
-             |""".stripMargin, "yaml")
+  @example(
+    """setup:
+      |  - type: apt
+      |    packages: [ sl ]
+      |""".stripMargin,
+      "yaml")
   @deprecated("Use `setup` instead.", "Viash 0.5.15")
   apt: Option[AptRequirements] = None,
 
   @description("Specify which yum packages should be available in order to run the component.")
-  @example("""setup:
-             |  - type: yum
-             |    packages: [ sl ]
-             |""".stripMargin, "yaml")
+  @example(
+    """setup:
+      |  - type: yum
+      |    packages: [ sl ]
+      |""".stripMargin,
+      "yaml")
   @deprecated("Use `setup` instead.", "Viash 0.5.15")
   yum: Option[YumRequirements] = None,
 
   @description("Specify which R packages should be available in order to run the component.")
-  @example("""setup: 
-             |  - type: r
-             |    cran: [ dynutils ]
-             |    bioc: [ AnnotationDbi ]
-             |    git: [ https://some.git.repository/org/repo ]
-             |    github: [ rcannood/SCORPIUS ]
-             |    gitlab: [ org/package ]
-             |    svn: [ https://path.to.svn/group/repo ]
-             |    url: [ https://github.com/hadley/stringr/archive/HEAD.zip ]
-             |    script: [ 'devtools::install(".")' ]
-             |""".stripMargin, "yaml")
+  @example(
+    """setup: 
+      |  - type: r
+      |    cran: [ dynutils ]
+      |    bioc: [ AnnotationDbi ]
+      |    git: [ https://some.git.repository/org/repo ]
+      |    github: [ rcannood/SCORPIUS ]
+      |    gitlab: [ org/package ]
+      |    svn: [ https://path.to.svn/group/repo ]
+      |    url: [ https://github.com/hadley/stringr/archive/HEAD.zip ]
+      |    script: [ 'devtools::install(".")' ]
+      |""".stripMargin,
+      "yaml")
   @deprecated("Use `setup` instead.", "Viash 0.5.15")
   r: Option[RRequirements] = None,
 
   @description("Specify which Python packages should be available in order to run the component.")
-  @example("""setup:
-             |  - type: python
-             |    pip: [ numpy ]
-             |    git: [ https://some.git.repository/org/repo ]
-             |    github: [ jkbr/httpie ]
-             |    gitlab: [ foo/bar ]
-             |    mercurial: [ http://... ]
-             |    svn: [ http://...]
-             |    bazaar: [ http://... ]
-             |    url: [ http://... ]
-             |""".stripMargin, "yaml")
+  @example(
+    """setup:
+      |  - type: python
+      |    pip: [ numpy ]
+      |    git: [ https://some.git.repository/org/repo ]
+      |    github: [ jkbr/httpie ]
+      |    gitlab: [ foo/bar ]
+      |    mercurial: [ http://... ]
+      |    svn: [ http://...]
+      |    bazaar: [ http://... ]
+      |    url: [ http://... ]
+      |""".stripMargin,
+      "yaml")
   @deprecated("Use `setup` instead.", "Viash 0.5.15")
   python: Option[PythonRequirements] = None,
 
   @description("Specify which Docker commands should be run during setup.")
-  @example("""setup:
-             |  - type: docker
-             |    build_args: [ GITHUB_PAT=hello_world ]
-             |    run: [ git clone ... ]
-             |    add: [ "http://foo.bar ." ]
-             |    copy: [ "http://foo.bar ." ]
-             |    resources: 
-             |      - resource.txt /path/to/resource.txt
-             |""".stripMargin, "yaml")
+  @example(
+    """setup:
+      |  - type: docker
+      |    build_args: [ GITHUB_PAT=hello_world ]
+      |    run: [ git clone ... ]
+      |    add: [ "http://foo.bar ." ]
+      |    copy: [ "http://foo.bar ." ]
+      |    resources: 
+      |      - resource.txt /path/to/resource.txt
+      |""".stripMargin,
+      "yaml")
   @deprecated("Use `setup` instead.", "Viash 0.5.15")
   docker: Option[DockerRequirements] = None,
+
+  @description("")
+  @since("Viash 0.5.13")
   test_setup: List[Requirements] = Nil
 ) extends Platform {
   override val hasSetup = true

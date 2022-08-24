@@ -29,7 +29,7 @@ import java.io.FileNotFoundException
 import java.nio.file.NoSuchFileException
 import io.viash.helpers.MissingResourceFileException
 import io.viash.helpers.BuildStatus._
-import io.viash.helpers.CollectedSchemas
+import io.viash.schemas.CollectedSchemas
 
 object Main {
   private val pkg = getClass.getPackage

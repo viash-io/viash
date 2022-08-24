@@ -18,14 +18,15 @@
 package io.viash.platforms.requirements
 
 import io.viash.helpers.Circe._
-import io.viash.helpers.description
-import io.viash.helpers.example
+import io.viash.schemas._
 
 @description("Specify which apk packages should be available in order to run the component.")
-@example("""setup:
-           |  - type: apk
-           |    packages: [ sl ]
-           |""".stripMargin, "yaml")
+@example(
+  """setup:
+    |  - type: apk
+    |    packages: [ sl ]
+    |""".stripMargin,
+    "yaml")
 case class ApkRequirements(
   packages: OneOrMore[String] = Nil,
   `type`: String = "apk"

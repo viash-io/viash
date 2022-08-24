@@ -2,7 +2,7 @@ package io.viash
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 
-import io.viash.helpers._
+import io.viash.helpers.{IO, Exec}
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 import scala.reflect.io.Directory

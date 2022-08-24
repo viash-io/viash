@@ -18,14 +18,15 @@
 package io.viash.platforms.requirements
 
 import io.viash.helpers.Circe._
-import io.viash.helpers.description
-import io.viash.helpers.example
+import io.viash.schemas._
 
 @description("Specify which apt packages should be available in order to run the component.")
-@example("""setup:
-           |  - type: apt
-           |    packages: [ sl ]
-           |""".stripMargin, "yaml")
+@example(
+  """setup:
+    |  - type: apt
+    |    packages: [ sl ]
+    |""".stripMargin,
+    "yaml")
 case class AptRequirements(
   packages: OneOrMore[String] = Nil,
   interactive: Boolean = false,
