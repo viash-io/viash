@@ -27,7 +27,10 @@ case class ComputationalRequirements(
   n_proc: Option[Integer] = None,
   @description("The maximum amount of memory a component is allowed to allocate. Unit must be one of B, KB, MB, GB, TB or PB.")
   @example("memory: 10GB", "yaml")
-  memory: Option[String] = None
+  memory: Option[String] = None,
+  @description("A list of commands which should be present on the system for the script to function.")
+  @example("commands: [ which, bash, awk, date, grep, egrep, ps, sed, tail, tee ]", "yaml")
+  commands: List[String] = Nil
 ) {
   def memoryAsBytes: Option[BigInt] = {
     val Regex = "^([0-9]+) *([kmgtp]b?|b)$".r

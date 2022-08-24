@@ -2,7 +2,8 @@
 
 ## NEW FUNCTIONALITY
 
-* Allow setting the number of processes and memory limit from within the Viash config. Example:
+* Allow setting the number of processes and memory limit from within the Viash config, 
+  as well as a list of required commands. Example:
 
   ```yaml
   functionality:
@@ -10,6 +11,7 @@
   requirements:
     n_proc: 10
     memory: 10G
+    commands: [ bash, r, perl ]
   ```
   
   You can override the default requirements at runtime:
@@ -26,7 +28,6 @@
   - `meta_memory_gb` (in Bash) or `meta["memory_gb"]` (in any other language): Same but in gigabytes, rounded up.
   - `meta_memory_tb` (in Bash) or `meta["memory_tb"]` (in any other language): Same but in terabytes, rounded up.
   - `meta_memory_pb` (in Bash) or `meta["memory_pb"]` (in any other language): Same but in petabytes, rounded up.
-  
 
 * `ConfigMod`: Added a `del(...)` config mod to be able to delete a value from the yaml. Example: `del(.functionality.version)`.
 
