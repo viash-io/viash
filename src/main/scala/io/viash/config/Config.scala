@@ -161,7 +161,7 @@ object Config {
       }
     }
 
-    if (conf1.functionality.resources.isEmpty)
+    if (conf1.functionality.resources.isEmpty && optScript.isEmpty)
       Console.err.println("Warning: no resources specified!")
 
     if (!modifyConfig) {
