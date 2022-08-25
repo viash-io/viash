@@ -16,6 +16,9 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
+  private val temporaryConfigFolder = IO.makeTemp("viash_tester_configs")
+
+  private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
 
   // parse functionality from file
   private val functionality = Config.read(configFile, applyPlatform = false).functionality
@@ -372,13 +375,13 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   //<editor-fold desc="Test benches to check building with or without --setup flag">
   test("viash without --setup doesn't create docker during build", DockerTest) {
     //remove docker if it exists
-    removeDockerImage("busybox")
-    assert(!checkDockerImageExists("busybox"))
+    removeDockerImage("throwawayimage", "0.1")
+    assert(!checkDockerImageExists("throwawayimage", "0.1"))
 
     // build viash wrapper without --setup
     TestHelper.testMain(
       "build",
-      "-p", "busybox",
+      "-p", "throwawayimage",
       "-o", tempFolStr,
       configFile
     )
@@ -387,7 +390,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     // verify docker still doesn't exist
-    assert(!checkDockerImageExists("busybox"))
+    assert(!checkDockerImageExists("throwawayimage", "0.1"))
 
     // run viash wrapper with ---setup
     val out = Exec.run2(
@@ -396,18 +399,18 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(out.exitValue == 0)
 
     // verify docker now exists
-    assert(checkDockerImageExists("busybox"))
+    assert(checkDockerImageExists("throwawayimage", "0.1"))
   }
 
   test("viash with --setup creates docker during build", DockerTest) {
     // remove docker if it exists
-    removeDockerImage("busybox")
-    assert(!checkDockerImageExists("busybox"))
+    removeDockerImage("throwawayimage", "0.1")
+    assert(!checkDockerImageExists("throwawayimage", "0.1"))
 
     // build viash wrapper with --setup
     TestHelper.testMain(
       "build",
-      "-p", "busybox",
+      "-p", "throwawayimage",
       "-o", tempFolStr,
       "--setup", "build",
       configFile
@@ -417,11 +420,11 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     // verify docker exists
-    assert(checkDockerImageExists("busybox"))
+    assert(checkDockerImageExists("throwawayimage", "0.1"))
   }
   //</editor-fold>
 
-    test("Get info of a docker image using docker inspect", DockerTest) {
+  test("Get info of a docker image using docker inspect", DockerTest) {
     // Create temporary folder to copy the files to so we can do a git init in that folder
     // This is needed to check the remote git repo value
     val tempMetaFolder = IO.makeTemp("viash_test_meta")
@@ -530,13 +533,70 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     }
   }
 
-  def checkDockerImageExists(name: String): Boolean = {
+  test("Prepare base config derivation and verify", DockerTest) {
+    val rootPath = getClass.getResource(s"/testbash/").getPath
+    TestHelper.copyFolder(rootPath, temporaryConfigFolder.toString)
+
+    val newConfigFilePath = configDeriver.derive(
+      Nil,
+      "commands_default"
+    )
+    
+    val stdout = TestHelper.testMain(
+      "build",
+      "-p", "docker",
+      "-o", tempFolStr,
+      newConfigFilePath,
+      "--setup", "alwaysbuild"
+    )
+
+    assert(stdout.matches("\\[notice\\] Building container 'testbash:0\\.1' with Dockerfile\\s*"), stdout)
+  }
+
+  test("Verify adding extra commands to verify", DockerTest) {
+    val newConfigFilePath = configDeriver.derive(
+      """.functionality.requirements := { commands: ["which", "bash", "ps", "grep"] }""",
+      "commands_extra"
+    )
+    
+    val stdout = TestHelper.testMain(
+      "build",
+      "-p", "docker",
+      "-o", tempFolStr,
+      newConfigFilePath,
+      "--setup", "alwaysbuild"
+    )
+
+    assert(stdout.matches("\\[notice\\] Building container 'testbash:0\\.1' with Dockerfile\\s*"), stdout)
+  }
+
+  test("Verify base adding an extra required command that doesn't exist", DockerTest) {
+    val newConfigFilePath = configDeriver.derive(
+      """.functionality.requirements := { commands: ["which", "bash", "ps", "grep", "non_existing_command"] }""",
+      "non_existing_command"
+    )
+    
+    val stdout = TestHelper.testMain(
+      "build",
+      "-p", "docker",
+      "-o", tempFolStr,
+      newConfigFilePath,
+      "--setup", "alwaysbuild"
+    )
+
+    assert(stdout.contains("[notice] Building container 'testbash:0.1' with Dockerfile"))
+    assert(stdout.contains("[error] Docker container 'testbash:0.1' does not contain command 'non_existing_command'."))
+  }
+
+  def checkDockerImageExists(name: String): Boolean = checkDockerImageExists(name, "latest")
+
+  def checkDockerImageExists(name: String, tag: String): Boolean = {
     val out = Exec.run2(
       Seq("docker", "images", name)
     )
 
     // print(out)
-    val regex = s"$name\\s*latest".r
+    val regex = s"$name\\s*$tag".r
 
     regex.findFirstIn(out.output).isDefined
   }
@@ -547,7 +607,14 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     )
   }
 
+    def removeDockerImage(name: String, tag: String): Unit = {
+    Exec.run2(
+      Seq("docker", "rmi", s"$name:$tag", "-f")
+    )
+  }
+
   override def afterAll() {
     IO.deleteRecursively(temporaryFolder)
+    IO.deleteRecursively(temporaryConfigFolder)
   }
 }

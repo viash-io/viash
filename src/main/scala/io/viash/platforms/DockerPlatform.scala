@@ -400,6 +400,10 @@ case class DockerPlatform(
 
         (vdf, vdb)
       }
+    
+    // get list of all the commands that should be available in the container
+    val commandsToCheck = functionality.requirements.commands ::: List("bash")
+    val commandsToCheckStr = commandsToCheck.mkString("'", "' '", "'")
       
     val preParse =
       s"""
@@ -418,6 +422,7 @@ case class DockerPlatform(
          |# exit code $$?    : whether or not the image was built
          |function ViashDockerBuild {
          |$viashDockerBuild
+         |  ViashDockerCheckCommands "$$1" $commandsToCheckStr
          |}""".stripMargin
 
     val parsers =
