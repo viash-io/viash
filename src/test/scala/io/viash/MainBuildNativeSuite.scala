@@ -234,7 +234,6 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
     val testText = TestHelper.testMain(
       "build",
       "-o", tempFolStr,
-      "-m",
       configDeprecatedArgumentGroups
     )
 
@@ -246,8 +245,8 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
     )
     assert(out.exitValue == 0)
 
-    val regexPlatform = "Warning: specifying strings in the .argument field of argument group 'First group' is deprecated.".r
-    assert(regexPlatform.findFirstIn(testText).isDefined, testText)
+    val testRegex = "Warning: specifying strings in the .argument field of argument group 'First group' is deprecated.".r
+    assert(testRegex.findFirstIn(testText).isDefined, testText)
   }
 
   override def afterAll() {
