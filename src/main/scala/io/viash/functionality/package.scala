@@ -65,7 +65,7 @@ package object functionality {
         case (true, false) =>
           if (noticeFunTestDepr) {
             // todo: solve this in a cleaner way
-            Console.err.println("Notice: functionality.tests is deprecated. Please use functionality.test_resources instead.")
+            Console.err.println("Warning: functionality.tests is deprecated. Please use functionality.test_resources instead.")
             noticeFunTestDepr = false
           }
           fun2.add("test_resources", fun2.apply("tests").get).remove("tests")

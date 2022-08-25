@@ -26,7 +26,11 @@ case class ArgumentGroup(
   arguments: List[Either[String, Argument[_]]] = Nil
 ) {
   if (arguments.exists(_.isLeft)) {
-    Console.err.println("Notice: The '.arguments' field should be a list of arguments and should not contain strings.")
+    Console.err.println(
+      f"""Warning: specifying strings in the .argument field of argument group '$name' is deprecated. The .arguments field of an argument group should only contain arguments.
+         |To solve this issue, copy the arguments ${arguments.flatMap(_.left.toOption).mkString("'", "', '", "'")} directly into the argument group.""".stripMargin
+    )
+
   }
 
   def stringArguments: List[String] = {

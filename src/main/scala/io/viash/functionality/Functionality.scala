@@ -281,10 +281,10 @@ case class Functionality(
   private val tests: List[Resource] = Nil
   // END OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
   if (inputs.nonEmpty) {
-    Console.err.println("Notice: .functionality.inputs is deprecated. Please use .functionality.arguments instead.")
+    Console.err.println("Warning: .functionality.inputs is deprecated. Please use .functionality.arguments instead.")
   }
   if (outputs.nonEmpty) {
-    Console.err.println("Notice: .functionality.outputs is deprecated. Please use .functionality.arguments instead.")
+    Console.err.println("Warning: .functionality.outputs is deprecated. Please use .functionality.arguments instead.")
   }
 
   // note that in the Functionality companion object, defaults gets added to inputs and outputs *before* actually 
@@ -314,7 +314,7 @@ case class Functionality(
     val argNamesInGroups = argumentGroups.flatMap(_.stringArguments).toSet
 
     // Check if 'arguments' is in 'argumentGroups'. 
-    val argumentsNotInGroup = arguments.map(_.plainName).filter(argName => !argNamesInGroups.contains(argName))
+    val argumentsNotInGroup = arguments.filter(arg => !argNamesInGroups.contains(arg.plainName))
 
     // Check whether an argument group of 'name' exists.
     val existing = argumentGroups.find(gr => name == gr.name)
@@ -326,14 +326,14 @@ case class Functionality(
     // if there are missing arguments and there is an existing group, add the missing arguments to it
     } else if (existing.isDefined) {
       List(existing.get.copy(
-        arguments = existing.get.arguments.toList ::: argumentsNotInGroup.map(arg => Left(arg))
+        arguments = existing.get.arguments.toList ::: argumentsNotInGroup.map(arg => Right(arg))
       ))
     
     // else create a new group
     } else {
       List(ArgumentGroup(
         name = name,
-        arguments = argumentsNotInGroup.map(arg => Left(arg))
+        arguments = argumentsNotInGroup.map(arg => Right(arg))
       ))
     }
   }
@@ -344,7 +344,7 @@ case class Functionality(
     val defaultGroup = addToArgGroup(argument_groups, "Arguments", arguments)
     val groupsFiltered = argument_groups.filter(gr => !List("Inputs", "Outputs", "Arguments").contains(gr.name))
 
-    inputGroup ::: outputGroup ::: groupsFiltered ::: defaultGroup
+    inputGroup ::: outputGroup ::: defaultGroup ::: groupsFiltered
   }
     
   // check whether there are not multiple positional arguments with multiplicity >1
