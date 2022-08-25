@@ -302,10 +302,10 @@ case class Functionality(
   // check argument groups
   {
     val allArgumentNames = allArguments.map(_.plainName)
-    for (group <- argument_groups; argument <- group.arguments) {
+    for (group <- argument_groups; argument <- group.stringArguments) {
       require(allArgumentNames.contains(argument), s"group '${group.name}' has unknown argument '$argument'")
     }
-    argument_groups.flatMap(_.arguments).groupBy(identity).foreach { case (arg, args) => 
+    argument_groups.flatMap(_.stringArguments).groupBy(identity).foreach { case (arg, args) => 
       require(args.length == 1, s"argument '${arg}' can be in at most one argument group")
     }
   }
