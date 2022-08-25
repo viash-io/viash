@@ -1,5 +1,62 @@
 # Viash 0.5.16
 
+## BREAKING CHANGES
+
+* `Functionality`: Fields `.inputs` and `.outputs` has been deprecated. Please use `.argument_groups` instead.
+  Before:
+  ```yaml
+  functionality:
+    inputs:
+      - name: "--foo"
+    outputs:
+      - name: "--bar"
+  ```
+  Now:
+  ```yaml
+  functionality:
+    argument_groups:
+      - name: Inputs
+        arguments:
+          - name: "--foo"
+            type: file
+      - name: Outputs
+        arguments:
+          - name: "--bar"
+            type: file
+            direction: output
+  ```
+
+* Passing strings to an argument group's arguments has been deprecated. Please simply copy the argument itself into the argument group.
+  Before:
+  ```yaml
+  functionality:
+    arguments:
+      - name: "--foo"
+        type: file
+      - name: "--bar"
+        type: file
+        direction: output
+    argument_groups:
+      - name: Inputs
+        arguments: [ foo ]
+      - name: Outputs
+        arguments: [ bar ]
+  ```
+  Now:
+  ```yaml
+  functionality:
+    argument_groups:
+      - name: Inputs
+        arguments:
+          - name: "--foo"
+            type: file
+      - name: Outputs
+        arguments:
+          - name: "--bar"
+            type: file
+            direction: output
+  ```
+
 ## NEW FUNCTIONALITY
 
 * Allow setting the number of processes and memory limit from within the Viash config. Example:
