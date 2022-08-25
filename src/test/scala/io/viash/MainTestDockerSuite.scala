@@ -176,7 +176,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
       newConfigFilePath
     )
 
-    assert(stderr.contains("Notice: functionality.tests is deprecated. Please use functionality.test_resources instead."))
+    assert(stderr.contains("Warning: functionality.tests is deprecated. Please use functionality.test_resources instead."))
 
     assert(stdout.contains("Running tests in temporary directory: "))
     assert(stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
