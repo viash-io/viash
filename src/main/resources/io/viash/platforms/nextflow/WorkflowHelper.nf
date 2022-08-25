@@ -210,7 +210,7 @@ def processConfig(config) {
   def outputGroup = processArgumentGroup(argGroups, "Outputs", config.functionality.outputs)
   def defaultGroup = processArgumentGroup(argGroups, "Arguments", config.functionality.arguments)
   def groupsFiltered = argGroups.findAll(gr -> !(["Inputs", "Outputs", "Arguments"].contains(gr.name)))
-  config.functionality.argument_groups = inputGroup + outputGroup + groupsFiltered + defaultGroup
+  config.functionality.argument_groups = inputGroup + outputGroup + defaultGroup + groupsFiltered
 
   config
 }
@@ -274,6 +274,7 @@ def addGlobalParams(config) {
       "argument_groups": [
         [
           "name": "Nextflow input-output arguments",
+          "description": "Input/output parameters for Nextflow itself. Please note that both publishDir and publish_dir are supported but at least one has to be configured.",
           "arguments" : [ "publish_dir", "param_list", "param_list_format" ]
         ]
       ]
