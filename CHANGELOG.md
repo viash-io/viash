@@ -2,7 +2,7 @@
 
 ## BREAKING CHANGES
 
-* `Functionality`: Fields `.inputs` and `.outputs` has been deprecated. Please use `.argument_groups` instead.
+* `Functionality`: Fields `.inputs` and `.outputs` has been deprecated. Please use `.argument_groups` instead (#186).
   Before:
   ```yaml
   functionality:
@@ -26,7 +26,7 @@
             direction: output
   ```
 
-* Passing strings to an argument group's arguments has been deprecated. Please simply copy the argument itself into the argument group.
+* Passing strings to an argument group's arguments has been deprecated. Please simply copy the argument itself into the argument group (#186).
   Before:
   ```yaml
   functionality:
