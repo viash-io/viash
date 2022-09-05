@@ -39,7 +39,7 @@ echo ">>> Checking whether output is correct with minimal parameters"
 $meta_executable \
   "resource2.txt" \
   --real_number 123.456 \
-  --whole_number=789 -s "my\$weird#string\"\"\"'''\`" \
+  --whole_number=789 -s "my\$weird#string\"\"\"'''\`@" \
   ---n_proc 666 \
   ---memory 100PB \
   > output2.txt
@@ -59,12 +59,12 @@ grep -q 'multiple_pos: |List()|' output2.txt
 grep -q 'resources_dir: |..*|' output2.txt
 grep -q 'meta_resources_dir: |..*|' output2.txt
 grep -q 'meta_functionality_name: |testscala|' output2.txt
-grep -q 'meta_n_proc: |666|' output2.txt
-grep -q 'meta_memory_b: |112589990684262400|' output2.txt
-grep -q 'meta_memory_kb: |109951162777600|' output2.txt
-grep -q 'meta_memory_mb: |107374182400|' output2.txt
-grep -q 'meta_memory_gb: |104857600|' output2.txt
-grep -q 'meta_memory_tb: |102400|' output2.txt
-grep -q 'meta_memory_pb: |100|' output2.txt
+grep -q 'meta_n_proc: |Some(666)|' output2.txt
+grep -q 'meta_memory_b: |Some(112589990684262400)|' output2.txt
+grep -q 'meta_memory_kb: |Some(109951162777600)|' output2.txt
+grep -q 'meta_memory_mb: |Some(107374182400)|' output2.txt
+grep -q 'meta_memory_gb: |Some(104857600)|' output2.txt
+grep -q 'meta_memory_tb: |Some(102400)|' output2.txt
+grep -q 'meta_memory_pb: |Some(100)|' output2.txt
 
 echo ">>> Test finished successfully"

@@ -92,7 +92,7 @@ case class CSharpScript(
     }
     val metaSet = BashWrapper.metaFields.map{ case BashWrapper.ViashMeta(env_name, script_name, _) =>
       val env_name_escaped = Bash.getEscapedArgument(env_name, quo, """\"""", """\\\"""")
-      s"""$script_name = $$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$env_name_escaped"; else echo "$quo(string) null$quo"; fi )"""
+      s"""$script_name = $$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$env_name_escaped"; else echo "(string) null"; fi )"""
     }
     
     val paramsCode = 

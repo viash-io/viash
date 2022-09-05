@@ -39,7 +39,8 @@ echo ">>> Checking whether output is correct with minimal parameters"
 $meta_executable \
   "resource2.txt" \
   --real_number 123.456 \
-  --whole_number=789 -s "my\$weird#string\"\"\"'''\`" \
+  --whole_number=789 \
+  -s "my\$weird#string\"\"\"'''\`@" \
   ---n_proc 666 \
   ---memory 100PB \
   > output2.txt
