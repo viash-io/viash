@@ -240,8 +240,6 @@ object ViashNamespace {
   }
 
   def exec(configs: List[Either[Config, BuildStatus]], command: String, dryrun: Boolean) {
-    Console.println(s"ns exec: $command")
-    Console.println(s"dryrun: $dryrun")
 
     val goodConfigs = configs.flatMap(_.left.toOption).groupBy(_.info.get.config)
     // Just take first config. More can be available but those have different platforms. Platforms are currently ignored.
