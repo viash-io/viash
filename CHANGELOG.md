@@ -35,6 +35,10 @@
 
 * `Folder structure`: Adjusted the folder structure to correctly reflect the the namespace change of viash from `com.dataintuitive.viash` to `io.viash`.
 
+* `Functionality`: Reworked the `enabled` field from boolean to a `status` field which can have the following statusses: `enabled`, `disabled` and `deprecated`.
+  When parsing a config file which has the `status` field set to `deprecated` a warning message is displayed on stderr.
+  Backwards for `enabled` is provided where `enabled: true` => `status: enabled` and `enabled: false` => `status: false`. The `enabled` field is marked deprecated.
+
 ## MINOR CHANGES
 
 * `Resources`: Handle edge case when no resources are specified in the `vsh.yaml` config file and display a warning message.
