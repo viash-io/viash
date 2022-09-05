@@ -18,19 +18,103 @@
 package io.viash.functionality.arguments
 
 import io.viash.helpers.Circe.OneOrMore
+import io.viash.schemas._
 
+@description("A `double` type argument has a numeric value with decimal points")
+@example(
+  """arguments:
+    |  - name: --litres
+    |    type: double
+    |    default: 1.5
+    |    description: Litres of fluid to process
+    |    alternatives: ["-l"]
+    |""".stripMargin,
+    "yaml")
 case class DoubleArgument(
+  @description(
+    """The name of the argument. Can be in the formats `--foo`, `-f` or `foo`. The number of dashes determines how values can be passed:  
+      |
+      |  - `--foo` is a long option, which can be passed with `executable_name --foo=value` or `executable_name --foo value`
+      |  - `-f` is a short option, which can be passed with `executable_name -f value`
+      |  - `foo` is an argument, which can be passed with `executable_name value`  
+      |""".stripMargin)
   name: String,
+
+  @description("List of alternative format variations for this argument.")
   alternatives: OneOrMore[String] = Nil,
+
+  @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
+
+  @description("An example value for this argument. If no [`default`](#default) property was specified, this will be used for that purpose.")
+  @example(
+    """- name: --my_double
+      |  type: double
+      |  example: 5.8
+      |""".stripMargin,
+      "yaml")
   example: OneOrMore[Double] = Nil,
+
+  @description("The default value when no argument value is provided. This will not work if the [`required`](#required) property is enabled.")
+  @example(
+    """- name: --my_double
+      |  type: double
+      |  default: 5.8
+      |""".stripMargin,
+      "yaml")
   default: OneOrMore[Double] = Nil,
+
+  @description("Make the value for this argument required. If set to `true`, an error will be produced if no value was provided. `false` by default.")
+  @example(
+    """- name: --my_double
+      |  type: double
+      |  required: true
+      |""".stripMargin,
+      "yaml")
   required: Boolean = false,
+
+  @description("Minimum allowed value for this argument. If set and the provided value is lower than the minimum, an error will be produced. Can be combined with [`max`](#max) to clamp values.")
+  @example(
+    """- name: --my_double
+      |  type: double
+      |  min: 25.5
+      |""".stripMargin,
+      "yaml")
   min: Option[Double] = None,
+
+  @description("Maximum allowed value for this argument. If set and the provided value is higher than the maximum, an error will be produced. Can be combined with [`min`](#min) to clamp values.")
+  @example(
+    """- name: --my_double
+      |  type: double
+      |  max: 80.4
+      |""".stripMargin,
+      "yaml")  
   max: Option[Double] = None,
+
   direction: Direction = Input,
+
+  @description("Treat the argument value as an array. Arrays can be passed using the delimiter `--foo=1:2:3` or by providing the same argument multiple times `--foo 1 --foo 2`. You can use a custom delimiter by using the [`multiple_sep`](#multiple_sep) property. `false` by default.")
+  @example(
+    """- name: --my_double
+      |  type: double
+      |  multiple: true
+      |""".stripMargin,
+      "yaml")
+  @exampleWithDescription("my_component --my_double=5.8:22.6:200.4", "bash", "Here's an example of how to use this:")
   multiple: Boolean = false,
+
+  @description("The delimiter character for providing [`multiple`](#multiple) values. `:` by default.")
+  @example(
+    """- name: --my_double
+      |  type: double
+      |  multiple: true
+      |  multiple_sep: ","
+      |""".stripMargin,
+      "yaml")
+  @exampleWithDescription("my_component --my_double=5.8,22.6,200.4", "bash", "Here's an example of how to use this:")
   multiple_sep: Char = ':',
+
+
   `type`: String = "double"
 ) extends Argument[Double] {
   def copyArg(

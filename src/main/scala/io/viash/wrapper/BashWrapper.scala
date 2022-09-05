@@ -21,7 +21,6 @@ import io.viash.functionality._
 import io.viash.functionality.resources._
 import io.viash.functionality.arguments._
 import io.viash.helpers.{Bash, Format, Helper}
-import io.viash.helpers.description
 
 object BashWrapper {
   val metaFields: List[(String, String)] = {

@@ -6,7 +6,7 @@ import java.nio.file.{Files, Paths, StandardCopyOption}
 import io.viash.config.Config
 
 import scala.io.Source
-import io.viash.helpers._
+import io.viash.helpers.{IO, Exec}
 
 class MainConfigInjectSuite extends FunSuite with BeforeAndAfterAll {
   private val temporaryFolder = IO.makeTemp("viash_tester")

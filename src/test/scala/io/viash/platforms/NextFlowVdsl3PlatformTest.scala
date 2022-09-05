@@ -119,13 +119,13 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     val command = 
       "nextflow" :: 
         { if (quiet) List("-q") else Nil } ::: 
-        "run" :: "." :: 
-        "-main-script" :: mainScript :: 
+        "run" :: "." ::
+        "-main-script" :: mainScript ::
         { if (entry.isDefined) List("-entry", entry.get) else Nil } :::
         { if (paramsFile.isDefined) List("-params-file", paramsFile.get) else Nil } :::
         args
 
-    val extraEnv_ = extraEnv :+ ( "NXF_VER" -> "21.04.1" )
+    val extraEnv_ = extraEnv :+ ( "NXF_VER" -> "22.04.5")
 
     val exitCode = Process(command, cwd, extraEnv_ : _*).!(ProcessLogger(str => stdOut ++= s"$str\n", str => stdErr ++= s"$str\n"))
 
@@ -133,12 +133,12 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   }
 
   // convert testbash
+
+  // copy resources to temporary folder so we can build in a clean environment
+  for (resource <- List("src", "workflows", "resources"))
+    TestHelper.copyFolder(Paths.get(rootPath, resource).toString, Paths.get(tempFolStr, resource).toString)
+
   test("Build pipeline components", DockerTest, NextFlowTest) {
-
-    // copy resources to temporary folder so we can build in a clean environment
-    for (resource <- List("src", "workflows", "resources"))
-      TestHelper.copyFolder(Paths.get(rootPath, resource).toString, Paths.get(tempFolStr, resource).toString)
-
     // build the nextflow containers
     val (_, _) = TestHelper.testMainWithStdErr(
       "ns", "build",
@@ -511,8 +511,8 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     // explicitly remove global arguments
     // these arguments make sense in nextflow but not in viash
     import java.util.regex.Pattern
-    val regex = Pattern.compile("Nextflow input-output arguments:.*Arguments:", Pattern.DOTALL)
-    val correctedStdOut2 = regex.matcher(correctedStdOut1).replaceAll("Arguments:")
+    val regex = Pattern.compile("\nNextflow input-output arguments:.*", Pattern.DOTALL)
+    val correctedStdOut2 = regex.matcher(correctedStdOut1).replaceAll("")
 
     // run Viash's --help
     val (stdOut2, stdErr2) = TestHelper.testMainWithStdErr(
