@@ -227,7 +227,7 @@ def processConfig(config) {
   def outputGroup = processArgumentGroup(argGroups, "Outputs", config.functionality.outputs)
   def defaultGroup = processArgumentGroup(argGroups, "Arguments", config.functionality.arguments)
   def groupsFiltered = argGroups.findAll(gr -> !(["Inputs", "Outputs", "Arguments"].contains(gr.name)))
-  config.functionality.argument_groups = inputGroup + outputGroup + defaultGroup + groupsFiltered
+  config.functionality.allArgumentGroups = inputGroup + outputGroup + defaultGroup + groupsFiltered
 
   config
 }
@@ -427,7 +427,7 @@ def generateHelp(config) {
     "\n\nUsage:\n" + fun.usage.trim()
 
   // PART 4: Options
-  def argGroupStrs = fun.argument_groups.collect{argGroup ->
+  def argGroupStrs = fun.allArgumentGroups.collect{argGroup ->
     def name = argGroup.name
     def descriptionStr = argGroup.description == null ?
       "" :
