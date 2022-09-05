@@ -251,9 +251,9 @@ object ViashNamespace {
 
     // try to match to something like "cat {arg1} foo {arg2} ;"
     // Slashes for ';' or '+' are not needed here, but let's allow it anyway
-    val matchChecker = """([^{}]*\{[\w-]*\})*[^{}]* \\?[;+]$"""
+    val matchChecker = """([^{}]*\{[\w-]*\})*[^{}]*(\\?[;+])?$"""
     if (!command.matches(matchChecker)) {
-      Console.err.println(s"Invalid command syntax.}")
+      Console.err.println("Invalid command syntax.")
       return
     }
 
