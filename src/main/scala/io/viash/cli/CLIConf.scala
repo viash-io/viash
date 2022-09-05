@@ -336,7 +336,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
 
       val dryrun = registerOpt[Boolean] (
-        name = "dry-run",
+        name = "dry_run",
         short = Some('d'),
         default = Some(false),
         descr = "Perform a dry run."
@@ -345,8 +345,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       val cmd = registerTrailArg[String](
         name = "cmd",
         descr = "The command to execute for each viash config file in the namespace.",
-        default = Some("'viash_nxf_params -i {} -o {dir}/params.yaml \\;'"),
-        required = true,
+        required = true
       )
     }
 
