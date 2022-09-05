@@ -4,7 +4,7 @@ functionality:
   version: 0.1
   description: |
     Represents a component that is WIP and thus still left disabled
-  enabled: false
+  status: disabled
   arguments:
     - name: "--input1"
       type: integer

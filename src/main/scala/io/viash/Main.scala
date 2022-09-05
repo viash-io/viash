@@ -171,7 +171,8 @@ object Main {
           val confTest = Config.read(
             file.toString, 
             applyPlatform = false, 
-            configMods = subcommand.config_mods()
+            configMods = subcommand.config_mods(),
+            displayWarnings = false // warnings will be displayed when reading the second time
           )
 
           val funName = confTest.functionality.name
