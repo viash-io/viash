@@ -19,6 +19,7 @@ package io.viash.functionality
 
 import arguments._
 import resources._
+import Status._
 import io.viash.config.Version
 import io.circe.generic.extras._
 import io.viash.schemas._
@@ -241,11 +242,10 @@ case class Functionality(
   @since("Viash 0.4.0")
   info: Map[String, String] = Map.empty[String, String],
 
-  @description("Setting this to `false` will disable this component when using namespaces.")
-  @example("enabled: false", "yaml")
-  @since("Viash 0.5.13")
-  enabled: Boolean = true,
-
+  @description("Allows setting a component to active, deprecated or disabled.")
+  @since("Viash 0.5.16")
+  status: Status = Status.Enabled,
+  
   @description(
     """Computational requirements related to running the component. 
       |`n_proc` specifies the maximum number of processes a component is allowed to spawn in parallel, whereas
@@ -279,6 +279,11 @@ case class Functionality(
   @description("One or more Bash/R/Python scripts to be used to test the component behaviour when `viash test` is invoked. Additional files of type `file` will be made available only during testing. Each test script should expect no command-line inputs, be platform-independent, and return an exit code >0 when unexpected behaviour occurs during testing.")
   @deprecated("Use `test_resources` instead. No functional difference.", "Viash 0.5.13")
   private val tests: List[Resource] = Nil
+
+  @description("Setting this to false with disable this component when using namespaces.")
+  @since("Viash 0.5.13")
+  @deprecated("Use `status` instead.", "Viash 0.5.16")
+  private val enabled: Boolean = true
   // END OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
   if (inputs.nonEmpty) {
     Console.err.println("Warning: .functionality.inputs is deprecated. Please use .functionality.arguments instead.")
@@ -390,6 +395,8 @@ case class Functionality(
   }
 
   def allArgumentsAndDummies: List[Argument[_]] = allArguments ::: dummy_arguments
+
+  def isEnabled: Boolean = status != Status.Disabled
 }
 
 object Functionality {

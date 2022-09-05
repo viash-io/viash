@@ -134,7 +134,8 @@ object Config {
     platform: Option[String] = None,
     modifyConfig: Boolean = true,
     applyPlatform: Boolean = true,
-    configMods: List[String] = Nil
+    configMods: List[String] = Nil,
+    displayWarnings: Boolean = true
   ): Config = {
 
     // read yaml
@@ -161,8 +162,11 @@ object Config {
       }
     }
 
-    if (conf1.functionality.resources.isEmpty && optScript.isEmpty)
-      Console.err.println("Warning: no resources specified!")
+    if (conf1.functionality.status == Status.Deprecated && displayWarnings)
+      Console.err.println(s"${Console.YELLOW}Warning: The status of the component '${conf1.functionality.name}' is set to deprecated.${Console.RESET}")
+    
+    if (conf1.functionality.resources.isEmpty && displayWarnings && optScript.isEmpty)
+      Console.err.println(s"${Console.YELLOW}Warning: no resources specified!${Console.RESET}")
 
     if (!modifyConfig) {
       return conf1

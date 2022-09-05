@@ -588,6 +588,20 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(stdout.contains("[error] Docker container 'testbash:0.1' does not contain command 'non_existing_command'."))
   }
 
+  test("Check deprecated warning", DockerTest) {
+    val newConfigFilePath = configDeriver.derive(""".functionality.status := "deprecated"""", "deprecated")
+    
+    val (stdout, stderr) = TestHelper.testMainWithStdErr(
+      "build",
+      "-p", "docker",
+      "-o", tempFolStr,
+      newConfigFilePath,
+      "--setup", "alwaysbuild"
+    )
+
+    assert(stderr.contains("The status of the component 'testbash' is set to deprecated."))
+  }
+
   def checkDockerImageExists(name: String): Boolean = checkDockerImageExists(name, "latest")
 
   def checkDockerImageExists(name: String, tag: String): Boolean = {

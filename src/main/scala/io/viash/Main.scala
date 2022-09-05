@@ -179,7 +179,8 @@ object Main {
           val confTest = Config.read(
             file.toString, 
             applyPlatform = false, 
-            configMods = subcommand.config_mods()
+            configMods = subcommand.config_mods(),
+            displayWarnings = false // warnings will be displayed when reading the second time
           )
 
           val funName = confTest.functionality.name
@@ -202,7 +203,7 @@ object Main {
           }
 
           // if config passes regex checks, return it
-          if (queryTest && nameTest && namespaceTest && confTest.functionality.enabled) {
+          if (queryTest && nameTest && namespaceTest && confTest.functionality.isEnabled) {
             Left(confTest)
           } else {
             Right(Disabled)

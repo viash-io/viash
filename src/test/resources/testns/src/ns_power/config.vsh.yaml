@@ -4,6 +4,7 @@ functionality:
   version: 0.1
   description: |
     Create a sample component that does basic powers
+  status: deprecated
   arguments:
     - name: "--input1"
       type: integer

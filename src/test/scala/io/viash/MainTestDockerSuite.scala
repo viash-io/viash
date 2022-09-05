@@ -266,6 +266,23 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testOutput.output, true)
   }
 
+  test("Check deprecation warning", NativeTest) {
+    val newConfigFilePath = configDeriver.derive(""".functionality.status := "deprecated"""", "deprecated")
+    val (testText, stderr) = TestHelper.testMainWithStdErr(
+      "test",
+      "-p", "native",
+      newConfigFilePath
+    )
+
+    assert(testText.contains("Running tests in temporary directory: "))
+    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testText.contains("Cleaning up temporary directory"))
+
+    assert(stderr.contains("The status of the component 'testbash' is set to deprecated."))
+    
+    checkTempDirAndRemove(testText, false)
+  }
+
   test("Check test output when a test fails and --keep false is specified", NativeTest) {
     val newConfigFilePath = configDeriver.derive(
       """.functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""",
