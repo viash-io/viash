@@ -24,12 +24,24 @@ grep -q 'multiple_pos: |List(a, b, c, d, e, f)|' output.txt
 grep -q 'resources_dir: |..*|' output.txt
 grep -q 'meta_resources_dir: |..*|' output.txt
 grep -q 'meta_functionality_name: |testscala|' output.txt
+grep -q 'meta_n_proc: |None|' output.txt
+grep -q 'meta_memory_b: |None|' output.txt
+grep -q 'meta_memory_kb: |None|' output.txt
+grep -q 'meta_memory_mb: |None|' output.txt
+grep -q 'meta_memory_gb: |None|' output.txt
+grep -q 'meta_memory_tb: |None|' output.txt
+grep -q 'meta_memory_pb: |None|' output.txt
 
 [[ ! -f log.txt ]] && echo "Log file could not be found!" && exit 1
 grep -q 'Parsed input arguments.' log.txt
 
 echo ">>> Checking whether output is correct with minimal parameters"
-./testscala "resource2.txt" --real_number 123.456 --whole_number=789 -s "my\$weird#string\"\"\"'''\`@" \
+$meta_executable \
+  "resource2.txt" \
+  --real_number 123.456 \
+  --whole_number=789 -s "my\$weird#string\"\"\"'''\`" \
+  ---n_proc 666 \
+  ---memory 100PB \
   > output2.txt
 
 [[ ! -f output2.txt ]] && echo "Output file could not be found!" && exit 1
@@ -47,5 +59,12 @@ grep -q 'multiple_pos: |List()|' output2.txt
 grep -q 'resources_dir: |..*|' output2.txt
 grep -q 'meta_resources_dir: |..*|' output2.txt
 grep -q 'meta_functionality_name: |testscala|' output2.txt
+grep -q 'meta_n_proc: |666|' output2.txt
+grep -q 'meta_memory_b: |112589990684262400|' output2.txt
+grep -q 'meta_memory_kb: |109951162777600|' output2.txt
+grep -q 'meta_memory_mb: |107374182400|' output2.txt
+grep -q 'meta_memory_gb: |104857600|' output2.txt
+grep -q 'meta_memory_tb: |102400|' output2.txt
+grep -q 'meta_memory_pb: |100|' output2.txt
 
 echo ">>> Test finished successfully"
