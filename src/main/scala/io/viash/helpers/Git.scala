@@ -44,8 +44,11 @@ object Git {
         List("git", "rev-parse", "--show-toplevel"),
         cwd = Some(path)
       )
-      out.output.trim
-    }.toOption
+      out.exitValue match {
+        case 0 => Some(out.output.trim)
+        case _ => None
+      }
+    }.getOrElse(None)
   }
 
   private val remoteRepoRegex = "(.*)\\s(.*)\\s(.*)".r
@@ -73,8 +76,11 @@ object Git {
         List("git", "rev-parse", "HEAD"),
         cwd = Some(path)
       )
-      out.output.trim
-    }.toOption
+      out.exitValue match {
+        case 0 => Some(out.output.trim)
+        case _ => None
+      }
+    }.getOrElse(None)
   }
 
   def getTag(path: File): Option[String] = {
