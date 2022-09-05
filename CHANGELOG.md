@@ -85,6 +85,22 @@
   - `meta_memory_gb` (in Bash) or `meta["memory_gb"]` (in any other language): Same but in gigabytes, rounded up.
   - `meta_memory_tb` (in Bash) or `meta["memory_tb"]` (in any other language): Same but in terabytes, rounded up.
   - `meta_memory_pb` (in Bash) or `meta["memory_pb"]` (in any other language): Same but in petabytes, rounded up.
+  
+* `viash ns exec`: Added a command for executing arbitrary commands for all found Viash components.
+  The syntax of this command is inspired by `find . -exec echo {} \;`.
+  
+  The following fields are automatically replaced:
+   * `{}` | `{path}`: path to the config file
+   * `{abs-path}`: absolute path to the config file
+   * `{dir}`: path to the parent directory of the config file
+   * `{abs-dir}`: absolute path to the directory of the config file
+   * `{main-script}`: path to the main script (if any)
+   * `{abs-main-script}`: absolute path to the main script (if any)
+   * `{functionality-name}`: name of the component
+  
+  A command suffixed by `\;` (or nothing) will execute one command for each
+  of the Viash components, whereas a command suffixed by `+` will execute one
+  command for all Viash components.
 
 * `ConfigMod`: Added a `del(...)` config mod to be able to delete a value from the yaml. Example: `del(.functionality.version)`.
 

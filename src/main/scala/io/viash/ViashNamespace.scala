@@ -24,6 +24,10 @@ import helpers.IO
 import io.viash.helpers.MissingResourceFileException
 import io.viash.helpers.BuildStatus._
 import java.nio.file.Path
+import io.viash.helpers.NsExecData._
+import io.viash.helpers.NsExecData
+import sys.process._
+import java.io.{ByteArrayOutputStream, File, PrintWriter}
 
 object ViashNamespace {
   def build(
@@ -233,6 +237,81 @@ object ViashNamespace {
     ViashConfig.viewMany(configs2, format)
 
     printResults(configs.map(_.fold(fa => Success, fb => fb)), false, false)
+  }
+
+  def exec(configs: List[Either[Config, BuildStatus]], command: String, dryrun: Boolean) {
+
+    val goodConfigs = configs.flatMap(_.left.toOption).groupBy(_.info.get.config)
+    // Just take first config. More can be available but those have different platforms. Platforms are currently ignored.
+    val configData = goodConfigs.map(c => NsExecData(c._1, c._2.head))
+    if (configData.isEmpty) {
+      Console.err.println("No config files found to work with.")
+      return
+    }
+
+    // try to match to something like "cat {arg1} foo {arg2} ;"
+    // Slashes for ';' or '+' are not needed here, but let's allow it anyway
+    val matchChecker = """([^{}]*\{[\w-]*\})*[^{}]*(\\?[;+])?$"""
+    if (!command.matches(matchChecker)) {
+      Console.err.println("Invalid command syntax.")
+      return
+    }
+
+    // Get all fields and trim off curly brackets
+    val fields = """\{[^\{\}]*\}""".r.findAllIn(command).map(_.replaceAll("^.|.$", "")).toList
+    val unfoundFields = fields.filter(configData.head.getField(_).isEmpty)
+    if (!unfoundFields.isEmpty) {
+      Console.err.println(s"Not all substitution fields are supported fields: ${unfoundFields.mkString(" ")}.")
+      return
+    }
+
+    val collectedData = command.endsWith("+") match {
+      case true =>
+        List(combine(configData))
+      case _ =>
+        configData
+    }
+
+    for (data <- collectedData) {
+      // remove trailing + or ; mode character
+      val commandNoMode = command.replaceFirst(""" \\?[;+]$""", "")
+      val replacedCommand = 
+        fields.foldRight(commandNoMode){ (field, command) => 
+          command.replaceAllLiterally(s"{$field}", data.getField(field).get)
+        }
+
+      if (dryrun) {
+        Console.println(s"+ $replacedCommand")
+      } else {
+        Console.println(s"+ $replacedCommand")
+        val (exitcode, output) = runExecCommand(replacedCommand)
+        Console.println(s"  Exit code: $exitcode")
+        Console.println(s"  Output: $output")
+      }
+    }
+  }
+
+  def runExecCommand(command: String) = {
+    // run command, collect output
+    val stream = new ByteArrayOutputStream
+    val printwriter = new PrintWriter(stream)
+
+    val logger = (s: String) => {
+      printwriter.println(s)
+    }
+
+    // run command, collect output
+    try {
+      val exitValue = command.!(ProcessLogger(logger, logger))
+      printwriter.flush()
+      (exitValue, stream.toString)
+    } catch {
+      case e: Throwable =>
+        Console.err.println(s"  Exception: $e")
+        (-1, e.getMessage())
+    } finally {
+      printwriter.close()
+    }
   }
 
   def printResults(statuses: Seq[BuildStatus], performedBuild: Boolean, performedTest: Boolean) {

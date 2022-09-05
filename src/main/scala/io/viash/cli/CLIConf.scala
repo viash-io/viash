@@ -311,9 +311,46 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
     }
 
+    val exec = new DocumentedSubcommand("exec") with ViashNs {
+      banner(
+        "viash ns exec",
+        """Execute a command for all found Viash components.
+          |The syntax of this command is inspired by `find . -exec echo {} \;`.
+          |
+          |The following fields are automatically replaced:
+          | * `{}` | `{path}`: path to the config file
+          | * `{abs-path}`: absolute path to the config file
+          | * `{dir}`: path to the parent directory of the config file
+          | * `{abs-dir}`: absolute path to the directory of the config file
+          | * `{main-script}`: path to the main script (if any)
+          | * `{abs-main-script}`: absolute path to the main script (if any)
+          | * `{functionality-name}`: name of the component
+          |
+          |A command suffixed by `\;` (or nothing) will execute one command for each
+          |of the Viash components, whereas a command suffixed by `+` will execute one
+          |command for all Viash components.""".stripMargin,
+        """viash ns exec 'echo {path} \\;'
+          |viash ns exec 'chmod +x {main-script} +'""".stripMargin
+      )
+
+      val dryrun = registerOpt[Boolean] (
+        name = "dry_run",
+        short = Some('d'),
+        default = Some(false),
+        descr = "Perform a dry run."
+      )
+
+      val cmd = registerTrailArg[String](
+        name = "cmd",
+        descr = "The command to execute for each viash config file in the namespace.",
+        required = true
+      )
+    }
+
     addSubcommand(build)
     addSubcommand(test)
     addSubcommand(list)
+    addSubcommand(exec)
     requireSubcommand()
 
     shortSubcommandsHelp(true)
