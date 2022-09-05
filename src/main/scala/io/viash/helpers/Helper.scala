@@ -46,7 +46,10 @@ object Helper {
       val descriptionStr = argGroup.description.map{
         des => "\n    " + Format.paragraphWrap(des.trim, maxWidth-4).mkString("\n    ") + "\n"
       }.getOrElse("")
-      val arguments = argGroup.arguments.flatMap{ argName => functionality.allArguments.find(_.plainName == argName )}
+      val arguments = argGroup.arguments.flatMap{ 
+        case Left(argName) => functionality.allArguments.find(_.plainName == argName )
+        case Right(arg) => Some(arg)
+      }
       val argumentStrs = arguments.map(param => generateArgumentHelp(param))
       
       s"\n\n$name:" +

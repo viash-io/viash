@@ -1,5 +1,62 @@
 # Viash 0.5.16
 
+## BREAKING CHANGES
+
+* `Functionality`: Fields `.inputs` and `.outputs` has been deprecated. Please use `.argument_groups` instead (#186).
+  Before:
+  ```yaml
+  functionality:
+    inputs:
+      - name: "--foo"
+    outputs:
+      - name: "--bar"
+  ```
+  Now:
+  ```yaml
+  functionality:
+    argument_groups:
+      - name: Inputs
+        arguments:
+          - name: "--foo"
+            type: file
+      - name: Outputs
+        arguments:
+          - name: "--bar"
+            type: file
+            direction: output
+  ```
+
+* Passing strings to an argument group's arguments has been deprecated. Please simply copy the argument itself into the argument group (#186).
+  Before:
+  ```yaml
+  functionality:
+    arguments:
+      - name: "--foo"
+        type: file
+      - name: "--bar"
+        type: file
+        direction: output
+    argument_groups:
+      - name: Inputs
+        arguments: [ foo ]
+      - name: Outputs
+        arguments: [ bar ]
+  ```
+  Now:
+  ```yaml
+  functionality:
+    argument_groups:
+      - name: Inputs
+        arguments:
+          - name: "--foo"
+            type: file
+      - name: Outputs
+        arguments:
+          - name: "--bar"
+            type: file
+            direction: output
+  ```
+
 ## NEW FUNCTIONALITY
 
 * Allow setting the number of processes and memory limit from within the Viash config, 
@@ -52,12 +109,18 @@
 * `BashWrapper`: For int min/max checking: use native bash functionality so there is no dependency to `bc`.
   For double min/max checking: add fallback code to use `awk` in case `bc` is not present on the system (most likely to happen when running tests in a docker container).
 
-# TESTING
+## TESTING
 
 * `ConfigMod`: Added unit tests for config mod functionality (WIP).
 
 * `MainTestDockerSuite`: Derive config alternatives from the base `vsh.yaml` instead of adding the changes in separate files.
   This both reduces file clutter and prevents having to change several files when there are updates in the config format.
+
+## BUG FIXES
+
+* `csharp_script`, `javascript_script`, `python_script`, `r_script`, `scala_script`: Make meta fields for `memory` and `n_proc` optional.
+
+* `NextflowVdsl3Platform`: Don't generate an error when `--publish_dir` is not defined and `-profile no_publish` is used.
 
 # Viash 0.5.15
 
