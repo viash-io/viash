@@ -272,21 +272,21 @@ object ViashNamespace {
         configData
     }
 
-    for (d <- collectedData) {
+    for (data <- collectedData) {
       // remove trailing + or ; mode character
-      var c = command.replaceFirst(""" \\?[;+]$""", "")
-      for (f <- fields) {
-        c = c.replaceAllLiterally(s"{$f}", d.getField(f).get)
-      }
+      val commandNoMode = command.replaceFirst(""" \\?[;+]$""", "")
+      val replacedCommand = 
+        fields.foldRight(commandNoMode){ (field, command) => 
+          command.replaceAllLiterally(s"{$field}", data.getField(field).get)
+        }
 
       if (dryrun) {
-        Console.println(s"< $c")
-      }
-      else {
-        val out = runExecCommand(c)
-        println(s"< $c")
-        println(s"  Exit code: ${out._1}")
-        println(s"  Output: ${out._2}")
+        Console.println(s"+ $replacedCommand")
+      } else {
+        Console.println(s"+ $replacedCommand")
+        val (exitcode, output) = runExecCommand(replacedCommand)
+        Console.println(s"  Exit code: $exitcode")
+        Console.println(s"  Output: $output")
       }
     }
   }
