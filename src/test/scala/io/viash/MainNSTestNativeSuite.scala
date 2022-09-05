@@ -63,6 +63,8 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
 
     val regexBuildError = raw"Reading file \'.*/src/ns_error/config\.vsh\.yaml\' failed".r
     assert(regexBuildError.findFirstIn(stderr).isDefined, "Expecting to get an error because of an invalid yaml in ns_error")
+
+    assert(stderr.contains("The status of the component 'ns_power' is set to deprecated."))
   }
 
   test("Check namespace test output with working dir message") {
