@@ -55,6 +55,10 @@
 * `MainTestDockerSuite`: Derive config alternatives from the base `vsh.yaml` instead of adding the changes in separate files.
   This both reduces file clutter and prevents having to change several files when there are updates in the config format.
 
+# BUG FIXES
+
+* `NextflowVdsl3Platform`: Don't generate an error when `--publish_dir` is not defined and `-profile no_publish` is used.
+
 # Viash 0.5.15
 
 ## BREAKING CHANGES
