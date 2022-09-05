@@ -40,11 +40,12 @@ case class CSharpScript(
   }
 
   def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
+    val quo = "\"'\"'\""
+
     val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
 
     val parSet = params.map { par =>
       // val env_name = par.VIASH_PAR
-      val quo = "\"'\"'\""
       val env_name = Bash.getEscapedArgument(par.VIASH_PAR, quo, """\"""", """\\\"""")
 
       val parse = { par match {
@@ -89,8 +90,9 @@ case class CSharpScript(
 
       s"${par.plainName} = $setter"
     }
-    val metaSet = BashWrapper.metaFields.map{ case (env_name, script_name) =>
-      s"""$script_name = "$$$env_name""""
+    val metaSet = BashWrapper.metaFields.map{ case BashWrapper.ViashMeta(env_name, script_name, _) =>
+      val env_name_escaped = Bash.getEscapedArgument(env_name, quo, """\"""", """\\\"""")
+      s"""$script_name = $$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$env_name_escaped"; else echo "(string) null"; fi )"""
     }
     
     val paramsCode = 

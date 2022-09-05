@@ -23,19 +23,20 @@ import io.viash.functionality.arguments._
 import io.viash.helpers.{Bash, Format, Helper}
 
 object BashWrapper {
-  val metaFields: List[(String, String)] = {
+  case class ViashMeta(envName: String, plainName: String, required: Boolean = true)
+  val metaFields: List[ViashMeta] = {
     List(
-      ("VIASH_META_FUNCTIONALITY_NAME", "functionality_name"),
-      ("VIASH_META_RESOURCES_DIR", "resources_dir"),
-      ("VIASH_META_EXECUTABLE", "executable"),
-      ("VIASH_TEMP", "temp_dir"),
-      ("VIASH_META_N_PROC", "n_proc"),
-      ("VIASH_META_MEMORY_B", "memory_b"),
-      ("VIASH_META_MEMORY_KB", "memory_kb"),
-      ("VIASH_META_MEMORY_MB", "memory_mb"),
-      ("VIASH_META_MEMORY_GB", "memory_gb"),
-      ("VIASH_META_MEMORY_TB", "memory_tb"),
-      ("VIASH_META_MEMORY_PB", "memory_pb")
+      ViashMeta("VIASH_META_FUNCTIONALITY_NAME", "functionality_name"),
+      ViashMeta("VIASH_META_RESOURCES_DIR", "resources_dir"),
+      ViashMeta("VIASH_META_EXECUTABLE", "executable"),
+      ViashMeta("VIASH_TEMP", "temp_dir"),
+      ViashMeta("VIASH_META_N_PROC", "n_proc", required = false),
+      ViashMeta("VIASH_META_MEMORY_B", "memory_b", required = false),
+      ViashMeta("VIASH_META_MEMORY_KB", "memory_kb", required = false),
+      ViashMeta("VIASH_META_MEMORY_MB", "memory_mb", required = false),
+      ViashMeta("VIASH_META_MEMORY_GB", "memory_gb", required = false),
+      ViashMeta("VIASH_META_MEMORY_TB", "memory_tb", required = false),
+      ViashMeta("VIASH_META_MEMORY_PB", "memory_pb", required = false)
 
     )
   }

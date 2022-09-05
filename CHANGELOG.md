@@ -48,14 +48,16 @@
 * `BashWrapper`: For int min/max checking: use native bash functionality so there is no dependency to `bc`.
   For double min/max checking: add fallback code to use `awk` in case `bc` is not present on the system (most likely to happen when running tests in a docker container).
 
-# TESTING
+## TESTING
 
 * `ConfigMod`: Added unit tests for config mod functionality (WIP).
 
 * `MainTestDockerSuite`: Derive config alternatives from the base `vsh.yaml` instead of adding the changes in separate files.
   This both reduces file clutter and prevents having to change several files when there are updates in the config format.
 
-# BUG FIXES
+## BUG FIXES
+
+* `csharp_script`, `javascript_script`, `python_script`, `r_script`, `scala_script`: Make meta fields for `memory` and `n_proc` optional.
 
 * `NextflowVdsl3Platform`: Don't generate an error when `--publish_dir` is not defined and `-profile no_publish` is used.
 
