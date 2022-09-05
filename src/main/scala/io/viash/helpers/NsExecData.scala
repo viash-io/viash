@@ -44,17 +44,17 @@ final case class NsExecData(
 }
 
 object NsExecData {
-  def apply(configPath: String, config: Config):NsExecData = {
+  def apply(configPath: String, config: Config): NsExecData = {
     val configPath_ = Paths.get(configPath)
-    val mainScript = config.functionality.mainScript.flatMap(s => s.path)
-    val absoluteMainScript = mainScript.flatMap(m => Some(Paths.get(m).toAbsolutePath.toString))
+    val dirPath = configPath_.getParent()
+    val mainScript = config.functionality.mainScript.flatMap(s => s.path).map(dirPath.resolve(_))
     apply(
       configFullPath = configPath,
       absoluteConfigFullPath = configPath_.toAbsolutePath.toString,
-      dir = configPath_.getParent.toString,
-      absoluteDir = configPath_.toAbsolutePath.getParent.toString,
-      mainScript = mainScript.getOrElse(""),
-      absoluteMainScript = absoluteMainScript.getOrElse(""),
+      dir = dirPath.toString,
+      absoluteDir = dirPath.toAbsolutePath.toString,
+      mainScript = mainScript.map(_.toString).getOrElse(""),
+      absoluteMainScript = mainScript.map(_.toAbsolutePath.toString).getOrElse(""),
       functionalityName = config.functionality.name
     )
   }
