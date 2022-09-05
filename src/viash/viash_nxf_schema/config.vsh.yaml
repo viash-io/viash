@@ -22,7 +22,7 @@ functionality:
     path: script.sh
   - path: main.nf
   - path: template.j2
-  - path: ../../../src/main/resources/com/dataintuitive/viash/platforms/nextflow/WorkflowHelper.nf
+  - path: ../../../src/main/resources/io/viash/platforms/nextflow/WorkflowHelper.nf
   test_resources:
   - type: bash_script
     path: tests.sh

@@ -90,8 +90,13 @@ platforms:
   - type: docker
     image: "bash:3.2"
   - type: docker
-    image: "busybox"
-    id: "busybox"
+    image: "bash:3.2"
+    id: "throwawayimage"
+    target_image: "throwawayimage"
+    setup:
+      - type: apk
+        packages:
+          - fortune
   - type: nextflow
     id: "nextflowlegacy"
     variant: legacy

@@ -28,18 +28,76 @@ import io.viash.platforms.nextflow._
 import io.circe.syntax._
 import io.circe.{Printer => JsonPrinter, Json, JsonObject}
 import shapeless.syntax.singleton
+import io.viash.schemas._
 
 /**
  * Next-gen Platform class for generating NextFlow (DSL2) modules.
  */
+@description("Next-gen platform for generating NextFlow VDSL3 modules.")
 case class NextflowVdsl3Platform(
+  @description("Every platform can be given a specific id that can later be referred to explicitly when running or building the Viash component.")
+  @example("id: foo", "yaml")
   id: String = "nextflow",
+
   `type`: String = "nextflow",
+
   variant: String = "vdsl3",
   
   // nxf params
+  @description(
+    """Directives are optional settings that affect the execution of the process. These mostly match up with the Nextflow counterparts that are linked below:  
+      |
+      | - [`accelerator`](https://www.nextflow.io/docs/latest/process.html#accelerator)
+      | - [`afterScript`](https://www.nextflow.io/docs/latest/process.html#afterscript)
+      | - [`beforeScript`](https://www.nextflow.io/docs/latest/process.html#beforeScript)
+      | - [`cache`](https://www.nextflow.io/docs/latest/process.html#cache)
+      | - [`conda`](https://www.nextflow.io/docs/latest/process.html#conda)
+      | - [`container`](https://www.nextflow.io/docs/latest/process.html#container)
+      | - [`containerOptions`](https://www.nextflow.io/docs/latest/process.html#containeroptions)
+      | - [`cpus`](https://www.nextflow.io/docs/latest/process.html#cpus)
+      | - [`disk`](https://www.nextflow.io/docs/latest/process.html#disk)
+      | - [`echo`](https://www.nextflow.io/docs/latest/process.html#echo)
+      | - [`errorStrategy`](https://www.nextflow.io/docs/latest/process.html#errorstrategy)
+      | - [`executor`](https://www.nextflow.io/docs/latest/process.html#executor)
+      | - [`machineType`](https://www.nextflow.io/docs/latest/process.html#machinetype)
+      | - [`maxErrors`](https://www.nextflow.io/docs/latest/process.html#maxerrors)
+      | - [`maxForks`](https://www.nextflow.io/docs/latest/process.html#maxforks)
+      | - [`maxRetries`](https://www.nextflow.io/docs/latest/process.html#maxretries)
+      | - [`memory`](https://www.nextflow.io/docs/latest/process.html#memory)
+      | - [`module`](https://www.nextflow.io/docs/latest/process.html#module)
+      | - [`penv`](https://www.nextflow.io/docs/latest/process.html#penv)
+      | - [`publishDir`](https://www.nextflow.io/docs/latest/process.html#publishdir)
+      | - [`queue`](https://www.nextflow.io/docs/latest/process.html#queue)
+      | - [`scratch`](https://www.nextflow.io/docs/latest/process.html#scratch)
+      | - [`storeDir`](https://www.nextflow.io/docs/latest/process.html#storeDir)
+      | - [`stageInMode`](https://www.nextflow.io/docs/latest/process.html#stageinmode)
+      | - [`stageOutMode`](https://www.nextflow.io/docs/latest/process.html#stageoutmode)
+      | - [`tag`](https://www.nextflow.io/docs/latest/process.html#tag)
+      | - [`time`](https://www.nextflow.io/docs/latest/process.html#time)""".stripMargin)
+  @example(
+    """directives:
+      |    container: rocker/r-ver:4.1
+      |    label: highcpu
+      |    cpus: 4
+      |    memory: 16 GB""".stripMargin,
+      "yaml")
   directives: NextflowDirectives = NextflowDirectives(),
+
+  @description(
+    """Automated processing flags which can be toggled on or off:  
+      |
+      | - `simplifyInput`: If `true`, an input tuple only containing only a single File (e.g. `["foo", file("in.h5ad")]`) is automatically transformed to a map (i.e. `["foo", [ input: file("in.h5ad") ] ]`). Default is `true`.
+      | - `simplifyOutput`: If `true`, an output tuple containing a map with a File (e.g. `["foo", [ output: file("out.h5ad") ] ]`) is automatically transformed to a map (i.e. `["foo", file("out.h5ad")]`). Default is `true`.
+      | - `transcript`: If `true`, the module's transcripts from `work/` are automatically published to `params.transcriptDir`. If not defined, `params.publishDir + "/_transcripts"` will be used. Will throw an error if neither are defined. Default is `false`.
+      | - `publish`: If `true`, the module's outputs are automatically published to `params.publishDir`.  Will throw an error if `params.publishDir` is not defined. Default is `false`.
+      |""".stripMargin)
+  @example(
+    """auto:
+      |    publish: true""".stripMargin,
+      "yaml")
   auto: NextflowAuto = NextflowAuto(),
+
+  @description("Whether or not to print debug messages.")
   debug: Boolean = false,
 
   // TODO: solve differently

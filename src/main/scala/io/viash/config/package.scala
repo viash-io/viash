@@ -20,7 +20,6 @@ package io.viash
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 
 package object config {
   implicit val customConfig: Configuration = Configuration.default.withDefaults
@@ -48,6 +47,6 @@ package object config {
     }
   }
 
-  implicit val encodeInfo: Encoder[Info] = deriveEncoder
-  implicit val decodeInfo: Decoder[Info] = deriveDecoder
+  implicit val encodeInfo: Encoder[Info] = deriveConfiguredEncoder
+  implicit val decodeInfo: Decoder[Info] = deriveConfiguredDecoder
 }

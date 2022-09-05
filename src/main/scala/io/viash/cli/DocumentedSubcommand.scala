@@ -63,7 +63,6 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
     required: Boolean = false,
     argName: String = "arg",
     hidden: Boolean = false,
-    noshort: Boolean = builder.noshort,
     group: ScallopOptionGroup = null
   )(implicit conv:ValueConverter[A], tag: TypeTag[A]): ScallopOption[A] = {
 
@@ -81,13 +80,12 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       required = required, 
       argName = Some(argName), 
       hidden = hidden, 
-      noshort = Some(noshort), 
       choices = None, 
       `type` = `type`.toString(), 
       optType = "opt"
     )
     registeredOpts = registeredOpts :+ registeredOpt
-    opt(name, short.getOrElse('\u0000'), descr, default, validate, required, argName, hidden, noshort, group)
+    opt(name, short.getOrElse('\u0000'), descr, default, validate, required, argName, hidden, short.isEmpty, group)
   }
 
   def registerChoice(
@@ -99,7 +97,6 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
     required: Boolean = false,
     argName: String = "arg",
     hidden: Boolean = false,
-    noshort: Boolean = noshort,
     group: ScallopOptionGroup = null
   ): ScallopOption[String] = {
 
@@ -116,13 +113,12 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       required = required, 
       argName = Some(argName), 
       hidden = hidden, 
-      noshort = Some(noshort), 
       choices = Some(choices), 
       `type` = "String", 
       optType = "choice"
     )
     registeredOpts = registeredOpts :+ registeredOpt
-    choice(choices, name, short.getOrElse('\u0000'), descr, default, required, argName, hidden, noshort, group)
+    choice(choices, name, short.getOrElse('\u0000'), descr, default, required, argName, hidden, short.isEmpty, group)
   }
 
   def registerTrailArg[A](
@@ -149,7 +145,6 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       required = required, 
       argName = None, 
       hidden = hidden, 
-      noshort = None, 
       choices = None, 
       `type` = `type`.toString, 
       optType = "trailArgs"

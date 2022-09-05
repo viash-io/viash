@@ -28,54 +28,54 @@ function ViashLog {
 # usage: ViashEmergency Oh no something went wrong.
 # stdout: Your input, prepended by '[emergency] '.
 function ViashEmergency {
-  ViashLog $VIASH_LOGCODE_EMERGENCY emergency $@
+  ViashLog $VIASH_LOGCODE_EMERGENCY emergency "$@"
 }
 
 # ViashAlert: log events when actions must be taken immediately (e.g. corrupted system database)
 # usage: ViashAlert Oh no something went wrong.
 # stdout: Your input, prepended by '[alert] '.
 function ViashAlert {
-  ViashLog $VIASH_LOGCODE_ALERT alert $@
+  ViashLog $VIASH_LOGCODE_ALERT alert "$@"
 }
 
 # ViashCritical: log events when a critical condition occurs
 # usage: ViashCritical Oh no something went wrong.
 # stdout: Your input, prepended by '[critical] '.
 function ViashCritical {
-  ViashLog $VIASH_LOGCODE_CRITICAL critical $@
+  ViashLog $VIASH_LOGCODE_CRITICAL critical "$@"
 }
 
 # ViashError: log events when an error condition occurs
 # usage: ViashError Oh no something went wrong.
 # stdout: Your input, prepended by '[error] '.
 function ViashError {
-  ViashLog $VIASH_LOGCODE_ERROR error $@
+  ViashLog $VIASH_LOGCODE_ERROR error "$@"
 }
 
 # ViashWarning: log potentially abnormal events
 # usage: ViashWarning Something may have gone wrong.
 # stdout: Your input, prepended by '[warning] '.
 function ViashWarning {
-  ViashLog $VIASH_LOGCODE_WARNING warning $@
+  ViashLog $VIASH_LOGCODE_WARNING warning "$@"
 }
 
 # ViashNotice: log significant but normal events
 # usage: ViashNotice This just happened.
 # stdout: Your input, prepended by '[notice] '.
 function ViashNotice {
-  ViashLog $VIASH_LOGCODE_NOTICE notice $@
+  ViashLog $VIASH_LOGCODE_NOTICE notice "$@"
 }
 
 # ViashInfo: log normal events
 # usage: ViashInfo This just happened.
 # stdout: Your input, prepended by '[info] '.
 function ViashInfo {
-  ViashLog $VIASH_LOGCODE_INFO info $@
+  ViashLog $VIASH_LOGCODE_INFO info "$@"
 }
 
 # ViashDebug: log all events, for debugging purposes
 # usage: ViashDebug This just happened.
 # stdout: Your input, prepended by '[debug] '.
 function ViashDebug {
-  ViashLog $VIASH_LOGCODE_DEBUG debug $@
+  ViashLog $VIASH_LOGCODE_DEBUG debug "$@"
 }
