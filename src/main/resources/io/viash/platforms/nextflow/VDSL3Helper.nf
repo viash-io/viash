@@ -468,13 +468,13 @@ def processProcessArgs(Map args) {
     // assert params.containsKey("transcriptsDir") || params.containsKey("transcripts_dir") || params.containsKey("publishDir") || params.containsKey("publish_dir") : 
     //   "Error in module '${processArgs['key']}': if auto.transcript is true, either params.transcripts_dir or params.publish_dir needs to be defined.\n" +
     //   "  Example: params.transcripts_dir = \"./transcripts/\""
-    def transcriptsRootDir = 
+    def transcriptsDir = 
       params.containsKey("transcripts_dir") ? params.transcripts_dir : 
       params.containsKey("transcriptsDir") ? params.transcriptsDir : 
       params.containsKey("publish_dir") ? params.publish_dir + "/_transcripts" :
       params.containsKey("publishDir") ? params.publishDir + "/_transcripts" : 
       null
-    if (transcriptsRootDir != null) {
+    if (transcriptsDir != null) {
       def timestamp = Nextflow.getSession().getWorkflowMetadata().start.format('yyyy-MM-dd_HH-mm-ss')
       def transcriptsPublishDir = [ 
         path: "$transcriptsDir/$timestamp/\${task.process.replaceAll(':', '-')}/\${id}/",
