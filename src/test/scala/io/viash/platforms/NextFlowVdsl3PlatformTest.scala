@@ -494,11 +494,9 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
 
     // run WorkflowHelper's --help
     val (exitCode, stdOut1, stdErr1) = runNextflowProcess(
-      mainScript = "workflows/utils/HelpViewer.nf",
+      mainScript = "workflows/pipeline3/main.nf",
       args = List(
-        "--help",
-        "--rootDir", tempFolStr,
-        "--config", "workflows/pipeline3/config.vsh.yaml"
+        "--help"
       ),
       quiet = true
     )
