@@ -444,37 +444,46 @@ def processProcessArgs(Map args) {
 
   // auto define publish, if so desired
   if (processArgs.auto.publish == true && (processArgs.directives.publishDir ?: [:]).isEmpty()) {
-    assert params.containsKey("publishDir") || params.containsKey("publish_dir") : 
-      "Error in module '${processArgs['key']}': if auto.publish is true, params.publish_dir needs to be defined.\n" +
-      "  Example: params.publish_dir = \"./output/\""
-    def publishDir = params.containsKey("publish_dir") ? params.publish_dir : params.publishDir
+    // can't assert at this level thanks to the no_publish profile
+    // assert params.containsKey("publishDir") || params.containsKey("publish_dir") : 
+    //   "Error in module '${processArgs['key']}': if auto.publish is true, params.publish_dir needs to be defined.\n" +
+    //   "  Example: params.publish_dir = \"./output/\""
+    def publishDir = 
+      params.containsKey("publish_dir") ? params.publish_dir : 
+      params.containsKey("publishDir") ? params.publishDir : 
+      null
     
-    // TODO: more asserts on publishDir?
-    processArgs.directives.publishDir = [[ 
-      path: publishDir, 
-      saveAs: "{ it.startsWith('.') ? null : it }", // don't publish hidden files, by default
-      mode: "copy"
-    ]]
+    if (publishDir != null) {
+      processArgs.directives.publishDir = [[ 
+        path: publishDir, 
+        saveAs: "{ it.startsWith('.') ? null : it }", // don't publish hidden files, by default
+        mode: "copy"
+      ]]
+    }
   }
 
   // auto define transcript, if so desired
   if (processArgs.auto.transcript == true) {
-    assert params.containsKey("transcriptsDir") || params.containsKey("transcripts_dir") || params.containsKey("publishDir") || params.containsKey("publish_dir") : 
-      "Error in module '${processArgs['key']}': if auto.transcript is true, either params.transcripts_dir or params.publish_dir needs to be defined.\n" +
-      "  Example: params.transcripts_dir = \"./transcripts/\""
-    def transcriptsDir = 
+    // can't assert at this level thanks to the no_publish profile
+    // assert params.containsKey("transcriptsDir") || params.containsKey("transcripts_dir") || params.containsKey("publishDir") || params.containsKey("publish_dir") : 
+    //   "Error in module '${processArgs['key']}': if auto.transcript is true, either params.transcripts_dir or params.publish_dir needs to be defined.\n" +
+    //   "  Example: params.transcripts_dir = \"./transcripts/\""
+    def transcriptsRootDir = 
       params.containsKey("transcripts_dir") ? params.transcripts_dir : 
       params.containsKey("transcriptsDir") ? params.transcriptsDir : 
       params.containsKey("publish_dir") ? params.publish_dir + "/_transcripts" :
-      params.publishDir + "/_transcripts"
-    def timestamp = Nextflow.getSession().getWorkflowMetadata().start.format('yyyy-MM-dd_HH-mm-ss')
-    def transcriptsPublishDir = [ 
-      path: "$transcriptsDir/$timestamp/\${task.process.replaceAll(':', '-')}/\${id}/", 
-      saveAs: "{ it.startsWith('.') ? it.replaceAll('^.', '') : null }", 
-      mode: "copy"
-    ]
-    def publishDirs = processArgs.directives.publishDir ?: []
-    processArgs.directives.publishDir = publishDirs + transcriptsPublishDir
+      params.containsKey("publishDir") ? params.publishDir + "/_transcripts" : 
+      null
+    if (transcriptsRootDir != null) {
+      def timestamp = Nextflow.getSession().getWorkflowMetadata().start.format('yyyy-MM-dd_HH-mm-ss')
+      def transcriptsPublishDir = [ 
+        path: "$transcriptsDir/$timestamp/\${task.process.replaceAll(':', '-')}/\${id}/",
+        saveAs: "{ it.startsWith('.') ? it.replaceAll('^.', '') : null }", 
+        mode: "copy"
+      ]
+      def publishDirs = processArgs.directives.publishDir ?: []
+      processArgs.directives.publishDir = publishDirs + transcriptsPublishDir
+    }
   }
 
   for (nam in [ "map", "mapId", "mapData", "mapPassthrough" ]) {
@@ -528,12 +537,15 @@ def processFactory(Map processArgs) {
       val.inspect()
     }
   }
+
   // multiple entries allowed: label, publishdir
   def drctvStrs = drctv.collect { key, value ->
     if (key in ["label", "publishDir"]) {
       value.collect{ val ->
         if (val instanceof Map) {
           "\n$key " + val.collect{ k, v -> k + ": " + valueToStr(v) }.join(", ")
+        } else if (val == null) {
+          ""
         } else {
           "\n$key " + valueToStr(val)
         }
@@ -602,6 +614,11 @@ def processFactory(Map processArgs) {
   // escape script
   def escapedScript = thisScript.replace('\\', '\\\\').replace('$', '\\$').replace('"""', '\\"\\"\\"')
 
+  // publishdir assert
+  def assertStr = processArgs.auto.publish || processArgs.auto.transcript ? 
+    """\nassert task.publishDir.size() > 0: "if auto.publish is true, params.publish_dir needs to be defined.\\n  Example: --publish_dir './output/'" """ :
+    ""
+
   // generate process string
   def procStr = 
   """nextflow.enable.dsl=2
@@ -615,7 +632,7 @@ def processFactory(Map processArgs) {
   |$tripQuo
   |$stub
   |$tripQuo
-  |script:
+  |script:$assertStr
   |def escapeText = { s -> s.toString().replaceAll('([`"])', '\\\\\\\\\$1') }
   |def parInject = args
   |  .findAll{key, value -> value != null}

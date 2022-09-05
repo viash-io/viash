@@ -67,8 +67,9 @@ case class PythonScript(
 
       s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo None; fi )"""
     }
-    val metaSet = BashWrapper.metaFields.map{ case (env_name, script_name) =>
-      s"""'$script_name': '$$$env_name'"""
+    val metaSet = BashWrapper.metaFields.map{ case BashWrapper.ViashMeta(env_name, script_name, _) =>
+      val env_name_escaped = Bash.getEscapedArgument(env_name, "'", """\'""", """\\\'""")
+      s"""'$script_name': $$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$env_name_escaped"; else echo None; fi )"""
     }
 
     val paramsCode = s"""par = {

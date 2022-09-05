@@ -41,6 +41,7 @@ case class ScalaScript(
   }
 
   def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
+    val quo = "\"'\"'\""
     val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
 
     val parClassTypes = params.map { par =>
@@ -66,7 +67,6 @@ case class ScalaScript(
     }
     val parSet = params.map { par =>
       // val env_name = par.VIASH_PAR
-      val quo = "\"'\"'\""
       val env_name = Bash.getEscapedArgument(par.VIASH_PAR, quo, """\"""", """\\\"""")
 
       val parse = { par match {
@@ -107,11 +107,17 @@ case class ScalaScript(
       }
     }
 
-    val metaClassTypes = BashWrapper.metaFields.map { case (_, script_name) =>
-      script_name + ": String"
+    val metaClassTypes = BashWrapper.metaFields.map { case BashWrapper.ViashMeta(_, script_name, required) =>
+      val classType = if (required) "String" else "Option[String]"
+      script_name + ": " + classType
     }
-    val metaSet = BashWrapper.metaFields.map { case (env_name, script_name) =>
-      s""""$$$env_name""""
+    val metaSet = BashWrapper.metaFields.map { case BashWrapper.ViashMeta(env_name, script_name, required) =>
+      if (required) {
+        s""""$$$env_name""""
+      } else {
+        val env_name_escaped = Bash.getEscapedArgument(env_name, quo, """\"""", """\\\"""")
+        s"""$$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "Some($env_name_escaped)"; else echo None; fi )"""
+      }
     }
     val paramsCode = s"""case class ViashPar(
        |  ${parClassTypes.mkString(",\n  ")}

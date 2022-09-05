@@ -47,7 +47,7 @@ case class BashScript(
       val parse = par.par + "=" + Bash.getEscapedArgument(par.VIASH_PAR, "'", """\'""", """\'\"\'\"\'""")
       s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; fi )"""
     }
-    val metaSet = BashWrapper.metaFields.map{ case (env_name, script_name) =>
+    val metaSet = BashWrapper.metaFields.map{ case BashWrapper.ViashMeta(env_name, script_name, _) =>
       val parse = "meta_" + script_name + "=" + Bash.getEscapedArgument(env_name, "'", """\'""", """\'\"\'\"\'""")
       s"""$$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$parse"; fi )"""
     }
