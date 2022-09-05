@@ -149,22 +149,27 @@ def processArgument(arg) {
 
 // based on how Functionality.scala is implemented
 def processArgumentGroup(argumentGroups, name, arguments) {
-  def argNamesInGroups = argumentGroups.collect{it.arguments}.flatten().toSet()
+  def argNamesInGroups = argumentGroups.collectMany{it.arguments.findAll{it instanceof String}}.toSet()
 
   // Check if 'arguments' is in 'argumentGroups'. 
-  def argumentsNotInGroup = arguments.collect{it.plainName}.findAll{argName -> !argNamesInGroups.contains(argName)}
+  def argumentsNotInGroup = arguments.findAll{arg -> !(argNamesInGroups.contains(arg.plainName))}
 
   // Check whether an argument group of 'name' exists.
   def existing = argumentGroups.find{gr -> name == gr.name}
 
+  // if there are no arguments missing from the argument group, just return the existing group (if any)
   if (argumentsNotInGroup.isEmpty()) {
     return existing == null ? [] : [existing]
+  
+  // if there are missing arguments and there is an existing group, add the missing arguments to it
   } else if (existing != null) {
     def newEx = existing.clone()
-    newEx.arguments.addAll(argumentsNotInGroup)
+    newEx.arguments.addAll(argumentsNotInGroup.findAll{it !instanceof String})
     return [newEx]
+
+  // else create a new group
   } else {
-    def newEx = [name: name, arguments: argumentsNotInGroup]
+    def newEx = [name: name, arguments: argumentsNotInGroup.findAll{it !instanceof String}]
     return [newEx]
   }
 }
@@ -172,6 +177,12 @@ def processArgumentGroup(argumentGroups, name, arguments) {
 // based on how Functionality.scala is implemented
 def processConfig(config) {
   // TODO: assert .functionality etc.
+  if (config.functionality.inputs) {
+    System.err.println("Warning: .functionality.inputs is deprecated. Please use .functionality.arguments instead.")
+  }
+  if (config.functionality.outputs) {
+    System.err.println("Warning: .functionality.outputs is deprecated. Please use .functionality.arguments instead.")
+  }
 
   // set defaults for inputs
   config.functionality.inputs = 
@@ -192,25 +203,31 @@ def processConfig(config) {
     (config.functionality.arguments ?: []).collect{arg ->
       processArgument(arg)
     }
+  // set defaults for argument_group arguments
+  config.functionality.argument_groups =
+    (config.functionality.argument_groups ?: []).collect{grp ->
+      grp.arguments = (grp.arguments ?: []).collect{arg ->
+        arg instanceof String ? arg.replaceAll("^-*", "") : processArgument(arg)
+      }
+      grp
+    }
+
   // create combined arguments list
   config.functionality.allArguments = 
     config.functionality.inputs +
     config.functionality.outputs +
-    config.functionality.arguments
-  
-  // remove leading dashes for argument names in argument groups
-  def argGroups = 
-    (config.functionality.argument_groups ?: []).collect{grp ->
-      grp.arguments = (grp.arguments ?: []).collect{arg_name -> arg_name.replaceAll("^-*", "")}
-      grp
+    config.functionality.arguments +
+    config.functionality.argument_groups.collectMany{ group ->
+      group.arguments.findAll{ it !instanceof String }
     }
   
   // add missing argument groups (based on Functionality::allArgumentGroups())
+  def argGroups = config.functionality.argument_groups
   def inputGroup = processArgumentGroup(argGroups, "Inputs", config.functionality.inputs)
   def outputGroup = processArgumentGroup(argGroups, "Outputs", config.functionality.outputs)
   def defaultGroup = processArgumentGroup(argGroups, "Arguments", config.functionality.arguments)
   def groupsFiltered = argGroups.findAll(gr -> !(["Inputs", "Outputs", "Arguments"].contains(gr.name)))
-  config.functionality.argument_groups = inputGroup + outputGroup + defaultGroup + groupsFiltered
+  config.functionality.allArgumentGroups = inputGroup + outputGroup + defaultGroup + groupsFiltered
 
   config
 }
@@ -237,45 +254,44 @@ def mergeMap(Map lhs, Map rhs) {
 def addGlobalParams(config) {
   def localConfig = [
     "functionality" : [
-      "arguments": [
-        [
-          'name': '--publish_dir',
-          'required': true,
-          'type': 'string',
-          'description': 'Path to an output directory.',
-          'example': 'output/',
-          'multiple': false
-        ],
-        [
-          'name': '--param_list',
-          'required': false,
-          'type': 'string',
-          'description': '''Allows inputting multiple parameter sets to initialise a Nextflow channel. Possible formats are csv, json, yaml, or simply a yaml_blob.
-          |A csv should have column names which correspond to the different arguments of this pipeline.
-          |A json or a yaml file should be a list of maps, each of which has keys corresponding to the arguments of the pipeline.
-          |A yaml blob can also be passed directly as a parameter.
-          |Inside the Nextflow pipeline code, params.params_list can also be used to directly a list of parameter sets.
-          |When passing a csv, json or yaml, relative path names are relativized to the location of the parameter file.'''.stripMargin(),
-          'example': 'my_params.yaml',
-          'multiple': false,
-          'hidden': true
-        ],
-        [
-          'name': '--param_list_format',
-          'required': false,
-          'type': 'string',
-          'description': 'Manually specify the param_list_format. Must be one of \'csv\', \'json\', \'yaml\', \'yaml_blob\', \'asis\' or \'none\'.',
-          'example': 'yaml',
-          'choices': ['csv', 'json', 'yaml', 'yaml_blob', 'asis', 'none'],
-          'multiple': false,
-          'hidden': true
-        ],
-      ],
       "argument_groups": [
         [
           "name": "Nextflow input-output arguments",
           "description": "Input/output parameters for Nextflow itself. Please note that both publishDir and publish_dir are supported but at least one has to be configured.",
-          "arguments" : [ "publish_dir", "param_list", "param_list_format" ]
+          "arguments" : [
+            [
+              'name': '--publish_dir',
+              'required': true,
+              'type': 'string',
+              'description': 'Path to an output directory.',
+              'example': 'output/',
+              'multiple': false
+            ],
+            [
+              'name': '--param_list',
+              'required': false,
+              'type': 'string',
+              'description': '''Allows inputting multiple parameter sets to initialise a Nextflow channel. Possible formats are csv, json, yaml, or simply a yaml_blob.
+              |A csv should have column names which correspond to the different arguments of this pipeline.
+              |A json or a yaml file should be a list of maps, each of which has keys corresponding to the arguments of the pipeline.
+              |A yaml blob can also be passed directly as a parameter.
+              |Inside the Nextflow pipeline code, params.params_list can also be used to directly a list of parameter sets.
+              |When passing a csv, json or yaml, relative path names are relativized to the location of the parameter file.'''.stripMargin(),
+              'example': 'my_params.yaml',
+              'multiple': false,
+              'hidden': true
+            ],
+            [
+              'name': '--param_list_format',
+              'required': false,
+              'type': 'string',
+              'description': 'Manually specify the param_list_format. Must be one of \'csv\', \'json\', \'yaml\', \'yaml_blob\', \'asis\' or \'none\'.',
+              'example': 'yaml',
+              'choices': ['csv', 'json', 'yaml', 'yaml_blob', 'asis', 'none'],
+              'multiple': false,
+              'hidden': true
+            ],
+          ]
         ]
       ]
     ]
@@ -392,6 +408,7 @@ def generateArgumentHelp(param) {
     descStr
 }
 
+// Based on Helper.generateHelp() in Helper.scala
 def generateHelp(config) {
   def fun = config.functionality
 
@@ -410,13 +427,13 @@ def generateHelp(config) {
     "\n\nUsage:\n" + fun.usage.trim()
 
   // PART 4: Options
-  def argGroupStrs = fun.argument_groups.collect{argGroup ->
+  def argGroupStrs = fun.allArgumentGroups.collect{argGroup ->
     def name = argGroup.name
     def descriptionStr = argGroup.description == null ?
       "" :
       "\n    " + paragraphWrap(argGroup.description.trim(), 80-4).join("\n    ") + "\n"
-    def arguments = argGroup.arguments.collect{argName -> 
-      fun.allArguments.find{it.plainName == argName}
+    def arguments = argGroup.arguments.collect{arg -> 
+      arg instanceof String ? fun.allArguments.find{it.plainName == arg} : arg
     }.findAll{it != null}
     def argumentStrs = arguments.collect{param -> generateArgumentHelp(param)}
     

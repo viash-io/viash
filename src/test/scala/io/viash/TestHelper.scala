@@ -30,8 +30,10 @@ object TestHelper {
    */
   def testMain(args: String*) : String = {
     val os = new ByteArrayOutputStream()
-    Console.withOut(os) {
-      Main.internalMain(args.toArray)
+    Console.withErr(os) {
+      Console.withOut(os) {
+        Main.internalMain(args.toArray)
+      }
     }
 
     val stdout = os.toString

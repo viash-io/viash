@@ -13,6 +13,7 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
   private val configNoPlatformFile = getClass.getResource(s"/testbash/config_no_platform.vsh.yaml").getPath
   private val configPlatformFile = getClass.getResource(s"/testbash/config_platform_native.vsh.yaml").getPath
+  private val configDeprecatedArgumentGroups = getClass.getResource(s"/testbash/config_deprecated_argument_groups.vsh.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
@@ -227,6 +228,25 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
 
     val regexPlatform = "platform:\\s*<NA>".r
     assert(regexPlatform.findFirstIn(testText).isDefined, testText)
+  }
+
+  test("Test whether defining strings as arguments in argument groups throws a deprecation warning") {
+    val testText = TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      configDeprecatedArgumentGroups
+    )
+
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    val out = Exec.run2(
+      Seq(executable.toString, "--help")
+    )
+    assert(out.exitValue == 0)
+
+    val testRegex = "Warning: specifying strings in the .argument field of argument group 'First group' is deprecated.".r
+    assert(testRegex.findFirstIn(testText).isDefined, testText)
   }
 
   override def afterAll() {
