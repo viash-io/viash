@@ -59,6 +59,8 @@
 
 * `csharp_script`, `javascript_script`, `python_script`, `r_script`, `scala_script`: Make meta fields for `memory` and `n_proc` optional.
 
+* `NextflowVdsl3Platform`: Don't generate an error when `--publish_dir` is not defined and `-profile no_publish` is used.
+
 # Viash 0.5.15
 
 ## BREAKING CHANGES
