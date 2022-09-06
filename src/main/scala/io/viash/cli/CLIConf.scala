@@ -406,7 +406,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       banner(
         "viash export config_schema",
         """Export the schema of a Viash config""".stripMargin,
-        """viash export schema_config [--output file.json]""".stripMargin
+        """viash export config_schema [--output file.json]""".stripMargin
       )
       val output = registerOpt[String](
         name = "output",
