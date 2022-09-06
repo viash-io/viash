@@ -27,7 +27,7 @@ import io.viash.helpers.Circe.{OneOrMore, One, More}
 import scala.sys.process.{Process, ProcessLogger}
 
 object ViashRun {
-  def apply(config: Config, args: Seq[String], keepFiles: Option[Boolean]): Integer = {
+  def apply(config: Config, args: Seq[String], keepFiles: Option[Boolean]): Int = {
     val fun = config.functionality
     val dir = IO.makeTemp("viash_" + fun.name)
 
