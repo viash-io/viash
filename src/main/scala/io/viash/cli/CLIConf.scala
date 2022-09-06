@@ -112,7 +112,7 @@ trait WithTemporary {
 class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   def getRegisteredCommands = subconfigs.flatMap{ sc =>
     sc match {
-      case ds: DocumentedSubcommand => Some(ds.toRegisteredCommand)
+      case ds: DocumentedSubcommand if !ds.hidden => Some(ds.toRegisteredCommand)
       case _ => None
     }
   }
@@ -367,42 +367,61 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   }
 
   val export = new DocumentedSubcommand("export") {
+    hidden = true
 
-    banner(
-      "viash export",
-      """Export a Viash resource""".stripMargin,
-      """viash export --resource platforms/nextflow/WorkflowHelper.nf
-        |viash export --schema_cli --output schema_cli.json
-        |viash export --schema_config""".stripMargin
-    )
+    val resource = new DocumentedSubcommand("resource") {
+      banner(
+        "viash export resource",
+        """Export an internal resource file""".stripMargin,
+        """viash export resource platforms/nextflow/WorkflowHelper.nf [--output foo.nf]""".stripMargin
+      )
 
-    val resource = opt[String](
-      name = "resource",
-      default = None,
-      descr = "Export an internal resource file",
-      noshort = true
-    )
+      val path = registerTrailArg[String](
+        name = "path",
+        descr = "Path to an internal resource file",
+        required = true,
+        default = None
+      )
+      val output = registerOpt[String](
+        name = "output",
+        default = None,
+        descr = "Destination path"
+      )
+    }
 
-    val schema_cli = opt[Boolean](
-      name = "schema_cli",
-      default = Some(false),
-      descr = "Export CLI information to json to allow automated documentation generation",
-      noshort = true
-    )
+    val cli_schema = new DocumentedSubcommand("cli_schema") {
+      banner(
+        "viash export cli_schema",
+        """Export the CLI as a json""".stripMargin,
+        """viash export cli_schema [--output file.json]""".stripMargin
+      )
+      val output = registerOpt[String](
+        name = "output",
+        default = None,
+        descr = "Destination path"
+      )
+    }
 
-    val schema_config = opt[Boolean](
-      name = "schema_config",
-      default = Some(false),
-      descr = "Export Configuration schema information to json to allow automated documentation generation",
-      noshort = true
-    )
+    val config_schema = new DocumentedSubcommand("config_schema") {
+      banner(
+        "viash export config_schema",
+        """Export the schema of a Viash config""".stripMargin,
+        """viash export schema_config [--output file.json]""".stripMargin
+      )
+      val output = registerOpt[String](
+        name = "output",
+        default = None,
+        descr = "Destination path"
+      )
+    }
 
-    val output = opt[String](
-      name = "output",
-      default = None,
-      descr = "Destination path",
-      noshort = true
-    )
+    addSubcommand(resource)
+    addSubcommand(cli_schema)
+    addSubcommand(config_schema)
+
+    requireSubcommand()
+
+    shortSubcommandsHelp(true)
   }
 
   addSubcommand(run)
@@ -419,9 +438,11 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   helpFormatter = new ScallopHelpFormatter {
     override def getShortSubcommandsHelp(s: Scallop): String = {
       val maxCommandLength = s.subbuilders.map(_._1.size).max
+      // todo: how to make this more generic?
+      val filteredSubbuilders = s.subbuilders.filterNot(_._1 == "export")
 
       "\n\n" + getSubcommandsSectionName + "\n" +
-      s.subbuilders.filterNot(_._1 == "export").map { case (name, option) =>
+      filteredSubbuilders.map { case (name, option) =>
         "  " + name.padTo(maxCommandLength, ' ') + "   " + option.descr
       }.mkString("\n")
     }

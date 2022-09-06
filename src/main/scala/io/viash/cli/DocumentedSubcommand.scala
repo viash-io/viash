@@ -31,6 +31,7 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
   var registeredSubCommands: Seq[DocumentedSubcommand] = Nil
   var registeredOpts: Seq[RegisteredOpt] = Nil
 
+  var hidden: Boolean = false
   var command: Option[String] = None
   var description: Option[String] = None
   var usage: Option[String] = None
