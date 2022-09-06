@@ -392,7 +392,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     val cli_schema = new DocumentedSubcommand("cli_schema") {
       banner(
         "viash export cli_schema",
-        """Export the CLI as a json""".stripMargin,
+        """Export tje schema of the Viash CLI as a JSON""".stripMargin,
         """viash export cli_schema [--output file.json]""".stripMargin
       )
       val output = registerOpt[String](
@@ -405,7 +405,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     val config_schema = new DocumentedSubcommand("config_schema") {
       banner(
         "viash export config_schema",
-        """Export the schema of a Viash config""".stripMargin,
+        """Export the schema of a Viash config as a JSON""".stripMargin,
         """viash export config_schema [--output file.json]""".stripMargin
       )
       val output = registerOpt[String](
