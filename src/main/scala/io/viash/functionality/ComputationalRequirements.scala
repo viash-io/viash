@@ -20,7 +20,7 @@ package io.viash.functionality
 import io.viash.schemas._
 
 @description("Computational requirements related to running the component.")
-@since("Viash 0.5.16")
+@since("Viash 0.6.0")
 case class ComputationalRequirements(
   @description("The maximum number of processes a component is allowed to spawn in parallel.")
   @example("n_proc: 10", "yaml")

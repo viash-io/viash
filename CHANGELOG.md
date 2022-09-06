@@ -1,4 +1,4 @@
-# Viash 0.5.16
+# Viash 0.6.0
 
 ## BREAKING CHANGES
 
