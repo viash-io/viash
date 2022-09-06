@@ -38,7 +38,8 @@ object Main {
 
   def main(args: Array[String]): Unit = {
     try {
-      internalMain(args)
+      val exitCode = internalMain(args)
+      System.exit(exitCode)
     } catch {
       case e @ ( _: FileNotFoundException | _: NoSuchFileException | _: MissingResourceFileException ) =>
         Console.err.println(s"viash: ${e.getMessage()}")
@@ -56,7 +57,7 @@ object Main {
         System.exit(1)
     }
   }
-  def internalMain(args: Array[String]): Unit = {
+  def internalMain(args: Array[String]): Int = {
     val (viashArgs, runArgs) = {
         if (args.length > 0 && args(0) == "run") {
           args.span(_ != "--")
@@ -81,9 +82,11 @@ object Main {
           setup = cli.build.setup.toOption,
           push = cli.build.push()
         )
+        0 // Exceptions are thrown when something bad happens, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.test) =>
         val config = readConfig(cli.test, applyPlatform = false)
         ViashTest(config, keepFiles = cli.test.keep.toOption.map(_.toBoolean))
+        0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
         val configs = readConfigs(cli.namespace.build)
         ViashNamespace.build(
@@ -95,15 +98,21 @@ object Main {
           writeMeta = cli.namespace.build.writeMeta(),
           flatten = cli.namespace.build.flatten()
         )
+        0 // Might be possible to be improved further.
       case List(cli.namespace, cli.namespace.test) =>
         val configs = readConfigs(cli.namespace.test, applyPlatform = false)
-        ViashNamespace.test(
+        val testResults = ViashNamespace.test(
           configs = configs,
           parallel = cli.namespace.test.parallel(),
           keepFiles = cli.namespace.test.keep.toOption.map(_.toBoolean),
           tsv = cli.namespace.test.tsv.toOption,
           append = cli.namespace.test.append()
         )
+        val errors = testResults.flatMap(_.right.toOption).count(status => List(Success, Disabled, TestMissing).contains(status))
+        if (errors > 0)
+          1
+        else
+          0
       case List(cli.namespace, cli.namespace.list) =>
         val configs = readConfigs(cli.namespace.list, addOptMainScript = false)
         ViashNamespace.list(
@@ -111,6 +120,11 @@ object Main {
           format = cli.namespace.list.format(),
           parseArgumentGroups = cli.namespace.list.parse_argument_groups()
         )
+        val errors = configs.flatMap(_.right.toOption).count(status => List(Success, Disabled, TestMissing).contains(status))
+        if (errors > 0)
+          1
+        else
+          0
       case List(cli.namespace, cli.namespace.exec) =>
         val configs = readConfigs(cli.namespace.exec, applyPlatform = false)
         ViashNamespace.exec(
@@ -118,7 +132,11 @@ object Main {
           command = cli.namespace.exec.cmd(),
           dryrun = cli.namespace.exec.dryrun()
         )
-
+        val errors = configs.flatMap(_.right.toOption).count(status => List(Success, Disabled, TestMissing).contains(status))
+        if (errors > 0)
+          1
+        else
+          0
       case List(cli.config, cli.config.view) =>
         val config = Config.read(
           configPath = cli.config.view.config(),
@@ -130,6 +148,7 @@ object Main {
           format = cli.config.view.format(),
           parseArgumentGroups = cli.config.view.parse_argument_groups()
         )
+        0
       case List(cli.config, cli.config.inject) =>
         val config = Config.read(
           configPath = cli.config.inject.config(),
@@ -137,12 +156,16 @@ object Main {
           addOptMainScript = false
         )
         ViashConfig.inject(config)
+        0
       case Nil if (cli.cliexport()) =>
-          CLIExport.export()
+        CLIExport.export()
+        0
       case Nil if (cli.schemaexport()) =>
-          CollectedSchemas.export()
+        CollectedSchemas.export()
+        0
       case _ =>
         Console.err.println("No subcommand was specified. See `viash --help` for more information.")
+        1
     }
   }
 
