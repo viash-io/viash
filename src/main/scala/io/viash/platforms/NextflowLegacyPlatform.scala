@@ -30,6 +30,7 @@ import io.viash.schemas._
  * / * Platform class for generating NextFlow (DSL2) modules.
  */
 @description("Run a Viash component as a Nextflow module.")
+@deprecated("Use VDSL3 Nextflow modules instead", "Viash 0.6.0")
 case class NextflowLegacyPlatform(
   @description("Every platform can be given a specific id that can later be referred to explicitly when running or building the Viash component.")
   id: String = "nextflow",
@@ -183,6 +184,8 @@ case class NextflowLegacyPlatform(
   `type`: String = "nextflow",
   variant: String = "legacy"
 ) extends NextflowPlatform {
+  Console.err.println("Error: `variant: legacy` is deprecated. Please use `variant: vdsl3` instead.")
+
   assert(version.isEmpty, "nextflow platform: attribute 'version' is deprecated")
 
   private val nativePlatform = NativePlatform(id = id)
