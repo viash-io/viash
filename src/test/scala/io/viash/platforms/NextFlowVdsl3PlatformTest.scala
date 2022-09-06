@@ -230,36 +230,6 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     outputFileMatchChecker(stdOut, "process 'step3[^']*' output tuple", "^11 .*$")
   }
 
-  test("Run legacy pipeline", DockerTest, NextFlowTest) {
-
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "workflows/pipeline2/main.nf",
-      entry = Some("legacy_base"),
-      args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
-      )
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
-  }
-
-  test("Run legacy and vdsl3 combined pipeline", DockerTest, NextFlowTest) {
-
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "workflows/pipeline2/main.nf",
-      entry = Some("legacy_and_vdsl3"),
-      args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
-      )
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
-  }
-
   val expectedFoo: List[CheckArg] = List(
     MatchCheck("input", ".*/lines3.txt"),
     EqualsCheck("real_number", "10.5"),
