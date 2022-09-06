@@ -38,7 +38,8 @@ object Main {
 
   def main(args: Array[String]): Unit = {
     try {
-      internalMain(args)
+      val exitCode = internalMain(args)
+      System.exit(exitCode)
     } catch {
       case e @ ( _: FileNotFoundException | _: NoSuchFileException | _: MissingResourceFileException ) =>
         Console.err.println(s"viash: ${e.getMessage()}")
@@ -56,7 +57,7 @@ object Main {
         System.exit(1)
     }
   }
-  def internalMain(args: Array[String]): Unit = {
+  def internalMain(args: Array[String]): Int = {
     val (viashArgs, runArgs) = {
         if (args.length > 0 && args(0) == "run") {
           args.span(_ != "--")
@@ -81,9 +82,11 @@ object Main {
           setup = cli.build.setup.toOption,
           push = cli.build.push()
         )
+        0
       case List(cli.test) =>
         val config = readConfig(cli.test, applyPlatform = false)
         ViashTest(config, keepFiles = cli.test.keep.toOption.map(_.toBoolean))
+        0
       case List(cli.namespace, cli.namespace.build) =>
         val configs = readConfigs(cli.namespace.build)
         ViashNamespace.build(
@@ -95,6 +98,7 @@ object Main {
           writeMeta = cli.namespace.build.writeMeta(),
           flatten = cli.namespace.build.flatten()
         )
+        0
       case List(cli.namespace, cli.namespace.test) =>
         val configs = readConfigs(cli.namespace.test, applyPlatform = false)
         ViashNamespace.test(
@@ -104,12 +108,14 @@ object Main {
           tsv = cli.namespace.test.tsv.toOption,
           append = cli.namespace.test.append()
         )
+        0
       case List(cli.namespace, cli.namespace.list) =>
         val configs = readConfigs(cli.namespace.list, applyPlatform = false)
         ViashNamespace.list(
           configs = configs,
           cli.namespace.list.format()
         )
+        0
       case List(cli.namespace, cli.namespace.exec) =>
         val configs = readConfigs(cli.namespace.exec, applyPlatform = false)
         ViashNamespace.exec(
@@ -117,7 +123,7 @@ object Main {
           command = cli.namespace.exec.cmd(),
           dryrun = cli.namespace.exec.dryrun()
         )
-
+        0
       case List(cli.config, cli.config.view) =>
         val config = Config.read(
           configPath = cli.config.view.config(),
@@ -125,6 +131,7 @@ object Main {
           modifyConfig = false
         )
         ViashConfig.view(config, cli.config.view.format())
+        0
       case List(cli.config, cli.config.inject) =>
         val config = Config.read(
           configPath = cli.config.inject.config(),
@@ -132,12 +139,16 @@ object Main {
           modifyConfig = false
         )
         ViashConfig.inject(config)
+        0
       case Nil if (cli.cliexport()) =>
-          CLIExport.export()
+        CLIExport.export()
+        0
       case Nil if (cli.schemaexport()) =>
-          CollectedSchemas.export()
+        CollectedSchemas.export()
+        0
       case _ =>
         Console.err.println("No subcommand was specified. See `viash --help` for more information.")
+        1
     }
   }
 
