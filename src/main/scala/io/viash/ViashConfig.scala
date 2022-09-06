@@ -46,12 +46,35 @@ object ViashConfig {
     println(str)
   }
 
-  def view(config: Config, format: String): Unit = {
-    printJson(config.asJson, format)
+  def view(config: Config, format: String, parseArgumentGroups: Boolean): Unit = {
+    val conf0 = 
+      if (parseArgumentGroups) {
+        config.copy(
+          functionality = config.functionality.copy(
+            arguments = Nil,
+            argument_groups = config.functionality.allArgumentGroups,
+          )
+        )
+      } else {
+        config
+      }
+    printJson(conf0.asJson, format)
   }
 
-  def viewMany(configs: List[Config], format: String): Unit = {
-    printJson(configs.asJson, format)
+  def viewMany(configs: List[Config], format: String, parseArgumentGroups: Boolean): Unit = {
+    val confs0 = configs.map{ config => 
+      if (parseArgumentGroups) {
+        config.copy(
+          functionality = config.functionality.copy(
+            arguments = Nil,
+            argument_groups = config.functionality.allArgumentGroups,
+          )
+        )
+      } else {
+        config
+      }
+    }
+    printJson(confs0.asJson, format)
   }
 
   def inject(config: Config): Unit = {

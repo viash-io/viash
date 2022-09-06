@@ -232,9 +232,9 @@ object ViashNamespace {
     }
   }
 
-  def list(configs: List[Either[Config, BuildStatus]], format: String = "yaml") {
+  def list(configs: List[Either[Config, BuildStatus]], format: String = "yaml", parseArgumentGroups: Boolean) {
     val configs2 = configs.flatMap(_.left.toOption)
-    ViashConfig.viewMany(configs2, format)
+    ViashConfig.viewMany(configs2, format, parseArgumentGroups)
 
     printResults(configs.map(_.fold(fa => Success, fb => fb)), false, false)
   }
