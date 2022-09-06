@@ -367,6 +367,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   }
 
   val export = new DocumentedSubcommand("export") {
+
     banner(
       "viash export",
       """Export a Viash resource""".stripMargin,
@@ -412,6 +413,19 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   addSubcommand(export)
 
   shortSubcommandsHelp(true)
+
+  // remove 'export' command from help
+  // see https://github.com/scallop/scallop/issues/228
+  helpFormatter = new ScallopHelpFormatter {
+    override def getShortSubcommandsHelp(s: Scallop): String = {
+      val maxCommandLength = s.subbuilders.map(_._1.size).max
+
+      "\n\n" + getSubcommandsSectionName + "\n" +
+      s.subbuilders.filterNot(_._1 == "export").map { case (name, option) =>
+        "  " + name.padTo(maxCommandLength, ' ') + "   " + option.descr
+      }.mkString("\n")
+    }
+  }
 
   verify()
 }
