@@ -55,4 +55,3 @@ platforms:
   - type: docker
     image: denvazh/scala:2.11.8
   - type: nextflow
-    variant: legacy

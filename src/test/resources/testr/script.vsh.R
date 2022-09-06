@@ -52,20 +52,14 @@
 #' - type: native
 #' - type: docker
 #'   image: rocker/tidyverse
-#'   target_image: "viash_test_r"
-#'   r:
-#'     cran: 
-#'     - optparse
-#'     github:
-#'     - dynverse/dynutils@devel
-#'     bioc:
-#'     - limma
-#'   apt:
-#'     packages:
-#'     - libhdf5-serial-dev
+#'   setup:
+#'     - type: r
+#'       cran: optparse
+#'       github: dynverse/dynutils@devel
+#'       bioc: limma
+#'     - type: apt
+#'       packages: libhdf5-serial-dev
 #' - type: nextflow
-#'   variant: legacy
-#'   image: rocker/tidyverse
 
 write_fun <- function(file, ...) {
   str <- paste0(..., sep = "")

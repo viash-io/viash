@@ -38,4 +38,3 @@ platforms:
   - type: native
   - type: docker
     image: "bash:3.2"
-    target_image: "viash_test_bash"
