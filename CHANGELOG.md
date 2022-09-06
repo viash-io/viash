@@ -138,6 +138,8 @@
 
 * `NextflowVdsl3Platform`: Don't generate an error when `--publish_dir` is not defined and `-profile no_publish` is used.
 
+* `Viash run`: Viash now properly returns the exit code from the executed script.
+
 # Viash 0.5.15
 
 ## BREAKING CHANGES
