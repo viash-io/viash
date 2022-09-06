@@ -17,18 +17,45 @@
 
 package io.viash
 
+import helpers._
 import cli._
 import io.circe.{Printer => JsonPrinter}
 import io.circe.syntax.EncoderOps
 import io.viash.helpers.Circe._
+import java.nio.file.{Path, Paths, Files}
+import io.viash.schemas.CollectedSchemas
 
-object CLIExport {
+object ViashExport {
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
 
-  def export() {
+  def exportCLISchema(output: Option[Path]): Unit = {
     val cli = new CLIConf(Nil)
     val data = cli.getRegisteredCommands
     val str = jsonPrinter.print(data.asJson)
-    println(str)
+    if (output.isDefined) {
+      Files.write(output.get, str.getBytes())
+    } else {
+      println(str)
+    }
+  }
+
+  def exportConfigSchema(output: Option[Path]): Unit = {
+    val data = CollectedSchemas.getJson
+    val str = jsonPrinter.print(data.asJson)
+    if (output.isDefined) {
+      Files.write(output.get, str.getBytes())
+    } else {
+      println(str)
+    }
+  }
+
+  def exportResource(input: String, output: Option[Path]): Unit = {
+    val pth = getClass.getResource(s"/io/viash/$input")
+    val str = IO.read(pth.toURI())
+    if (output.isDefined) {
+      Files.write(output.get, str.getBytes())
+    } else {
+      println(str)
+    }
   }
 }

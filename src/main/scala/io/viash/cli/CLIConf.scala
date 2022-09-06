@@ -366,27 +366,50 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     shortSubcommandsHelp(true)
   }
 
-  val cliexport = opt[Boolean](
-    name = "cli_export",
-    default = Some(false),
-    descr = "Export CLI information to json to allow automated documentation generation",
-    noshort = true,
-    hidden = true
-  )
+  val export = new DocumentedSubcommand("export") {
+    banner(
+      "viash export",
+      """Export a Viash resource""".stripMargin,
+      """viash export --resource platforms/nextflow/WorkflowHelper.nf
+        |viash export --schema_cli --output schema_cli.json
+        |viash export --schema_config""".stripMargin
+    )
 
-  val schemaexport = opt[Boolean](
-    name = "schema_export",
-    default = Some(false),
-    descr = "Export Configuration schema information to json to allow automated documentation generation",
-    noshort = true,
-    hidden = true
-  )
+    val resource = opt[String](
+      name = "resource",
+      default = None,
+      descr = "Export an internal resource file",
+      noshort = true
+    )
+
+    val schema_cli = opt[Boolean](
+      name = "schema_cli",
+      default = Some(false),
+      descr = "Export CLI information to json to allow automated documentation generation",
+      noshort = true
+    )
+
+    val schema_config = opt[Boolean](
+      name = "schema_config",
+      default = Some(false),
+      descr = "Export Configuration schema information to json to allow automated documentation generation",
+      noshort = true
+    )
+
+    val output = opt[String](
+      name = "output",
+      default = None,
+      descr = "Destination path",
+      noshort = true
+    )
+  }
 
   addSubcommand(run)
   addSubcommand(build)
   addSubcommand(test)
   addSubcommand(namespace)
   addSubcommand(config)
+  addSubcommand(export)
 
   shortSubcommandsHelp(true)
 
