@@ -184,7 +184,7 @@ case class NextflowLegacyPlatform(
   `type`: String = "nextflow",
   variant: String = "legacy"
 ) extends NextflowPlatform {
-  Console.err.println("Error: `variant: legacy` is deprecated. Please use `variant: vdsl3` instead.")
+  Console.err.println("Warning: `variant: legacy` is deprecated and will be removed in Viash 0.7.0. Please use `variant: vdsl3` instead.")
 
   assert(version.isEmpty, "nextflow platform: attribute 'version' is deprecated")
 
