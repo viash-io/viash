@@ -393,7 +393,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
 
   test("Run module as standalone", NextFlowTest) {
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "target/nextflowvdsl3/step2/main.nf",
+      mainScript = "target/nextflow/step2/main.nf",
       args = List(
         "--input1", "resources/lines3.txt",
         "--input2", "resources/lines5.txt",
@@ -415,7 +415,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   test("Run module as standalone, yamlblob", NextFlowTest) {
     val fooArgs = "{input1: resources/lines3.txt, input2: resources/lines5.txt}"
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "target/nextflowvdsl3/step2/main.nf",
+      mainScript = "target/nextflow/step2/main.nf",
       args = List(
         "--param_list", s"[$fooArgs]",
         "--publish_dir", "moduleOutput2"
@@ -438,7 +438,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     Files.copy(Paths.get(resourcesPath, "lines5.txt"), Paths.get(resourcesPath, "lines5-bis.txt"))
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "target/nextflowvdsl3/step2/main.nf",
+      mainScript = "target/nextflow/step2/main.nf",
       args = List(
         "--input1", "resources/lines3.txt",
         "--input2", "resources/lines5.txt",
