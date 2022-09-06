@@ -29,11 +29,12 @@ object Exec {
     output: String
   )
 
+  // run command, throw exception if command fails
   def run(command: Seq[String], cwd: Option[File] = None, extraEnv: Seq[(String, String)] = Nil): String = {
     Process(command, cwd = cwd, extraEnv = extraEnv: _*).!!
   }
 
-  def run2(command: Seq[String], cwd: Option[File] = None, extraEnv: Seq[(String, String)] = Nil, loggers: Seq[String => Unit] = Nil): ExecOutput = {
+  def runCatch(command: Seq[String], cwd: Option[File] = None, extraEnv: Seq[(String, String)] = Nil, loggers: Seq[String => Unit] = Nil): ExecOutput = {
     // run command, collect output
     val stream = new ByteArrayOutputStream
     val printwriter = new PrintWriter(stream)
@@ -53,11 +54,28 @@ object Exec {
     }
   }
 
+  def runOpt(command: Seq[String], cwd: Option[File] = None, extraEnv: Seq[(String, String)] = Nil, loggers: Seq[String => Unit] = Nil): Option[String] = {
+    try {
+      val out = runCatch(command, cwd, extraEnv, loggers)
+      if (out.exitValue == 0) Some(out.output) else None
+    } catch {
+      case _: Throwable => None
+    }
+  }
+
   def runPath(command: Seq[String], cwd: Option[Path] = None, extraEnv: Seq[(String, String)] = Nil): String = {
     run(command, cwd.map(_.toFile), extraEnv)
   }
 
-  def run2Path(command: Seq[String], cwd: Option[Path] = None, extraEnv: Seq[(String, String)] = Nil, loggers: Seq[String => Unit] = Nil): ExecOutput = {
-    run2(command, cwd.map(_.toFile), extraEnv, loggers)
+  def runCatchPath(command: Seq[String], cwd: Option[Path] = None, extraEnv: Seq[(String, String)] = Nil, loggers: Seq[String => Unit] = Nil): ExecOutput = {
+    runCatch(command, cwd.map(_.toFile), extraEnv, loggers)
+  }
+
+  def runOptPath(command: Seq[String], cwd: Option[Path] = None, extraEnv: Seq[(String, String)] = Nil): Option[String] = {
+    try {
+      Some(runPath(command, cwd, extraEnv))
+    } catch {
+      case _: Throwable => None
+    }
   }
 }

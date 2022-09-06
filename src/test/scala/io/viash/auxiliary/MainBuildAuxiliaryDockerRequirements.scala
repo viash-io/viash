@@ -28,7 +28,7 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
-    val output = Exec.run2(
+    val output = Exec.runCatch(
       Seq(
         executableRequirementsFile.toString,
         "--which", "fortune"
@@ -58,7 +58,7 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
-    val output = Exec.run2(
+    val output = Exec.runCatch(
       Seq(
         executableRequirementsFile.toString,
         "--which", "fortune"
@@ -83,7 +83,7 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
-    val output = Exec.run2(
+    val output = Exec.runCatch(
       Seq(
         executableRequirementsFile.toString,
         "--which", "cowsay"
@@ -113,7 +113,7 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
-    val output = Exec.run2(
+    val output = Exec.runCatch(
       Seq(
         executableRequirementsFile.toString,
         "--file", "/usr/games/cowsay"
@@ -139,7 +139,7 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
-    val output = Exec.run2(
+    val output = Exec.runCatch(
       Seq(
         executableRequirementsFile.toString,
         "--which", "fortune"
@@ -178,7 +178,7 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
   }
 
   def checkDockerImageExists(name: String): Boolean = {
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq("docker", "images", name)
     )
 
@@ -189,7 +189,7 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
   }
 
   def removeDockerImage(name: String): Unit = {
-    Exec.run2(
+    Exec.runCatch(
       Seq("docker", "rmi", name, "-f")
     )
   }

@@ -42,7 +42,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check whether the executable can build the image", DockerTest) {
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq(executable.toString, "---setup", "build")
     )
     assert(out.exitValue == 0)
@@ -179,7 +179,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(executable.exists)
     assert(executable.canExecute)
 
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq(executable.toString, "---setup", "build")
     )
     assert(out.exitValue == 0)
@@ -261,14 +261,14 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       }
 
       assert(
-        Exec.run2Path(
+        Exec.runCatchPath(
           List("git", "init"),
           cwd = Some(tempMetaFolder)
         ).exitValue == 0
         , "git init")
 
       assert(
-        Exec.run2Path(
+        Exec.runCatchPath(
           List("git", "remote", "add", "origin", fakeGitRepo),
           cwd = Some(tempMetaFolder)
         ).exitValue == 0
@@ -328,7 +328,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       }
 
       assert(
-        Exec.run2Path(
+        Exec.runCatchPath(
           List("git", "init"),
           cwd = Some(tempMetaFolder)
         ).exitValue == 0
@@ -393,7 +393,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(!checkDockerImageExists("throwawayimage", "0.1"))
 
     // run viash wrapper with ---setup
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq(executable.toString, "---setup", "build")
     )
     assert(out.exitValue == 0)
@@ -443,42 +443,42 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       }
 
       assert(
-        Exec.run2Path(
+        Exec.runCatchPath(
           List("git", "init"),
           cwd = Some(tempMetaFolder)
         ).exitValue == 0
         , "git init")
 
       assert(
-        Exec.run2Path(
+        Exec.runCatchPath(
           List("git", "config", "user.email", "\"viash_test_build@example.com\""),
           cwd = Some(tempMetaFolder)
         ).exitValue == 0
         , "git config")
 
       assert(
-        Exec.run2Path(
+        Exec.runCatchPath(
           List("git", "config", "user.name", "\"viash CI\""),
           cwd = Some(tempMetaFolder)
         ).exitValue == 0
         , "git config")
 
       assert(
-        Exec.run2Path(
+        Exec.runCatchPath(
           List("git", "remote", "add", "origin", fakeGitRepo),
           cwd = Some(tempMetaFolder)
         ).exitValue == 0
         , "git remote add")
 
       assert(
-        Exec.run2Path(
+        Exec.runCatchPath(
           List("git", "add", "*"),
           cwd = Some(tempMetaFolder)
         ).exitValue == 0
         , "git add *")
 
 
-      val commitOut = Exec.run2Path(
+      val commitOut = Exec.runCatchPath(
           List("git", "commit", "-m", "\"initial commit\""),
           cwd = Some(tempMetaFolder)
         )
@@ -487,7 +487,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
         , s"git commit: ${commitOut.output}")
 
       // assert(
-      //   Exec.run2Path(
+      //   Exec.runCatchPath(
       //     List("git", "tag", "v1"),
       //     cwd = Some(tempMetaFolder)
       //   ).exitValue == 0
@@ -605,7 +605,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   def checkDockerImageExists(name: String): Boolean = checkDockerImageExists(name, "latest")
 
   def checkDockerImageExists(name: String, tag: String): Boolean = {
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq("docker", "images", name)
     )
 
@@ -616,13 +616,13 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   def removeDockerImage(name: String): Unit = {
-    Exec.run2(
+    Exec.runCatch(
       Seq("docker", "rmi", name, "-f")
     )
   }
 
     def removeDockerImage(name: String, tag: String): Unit = {
-    Exec.run2(
+    Exec.runCatch(
       Seq("docker", "rmi", s"$name:$tag", "-f")
     )
   }

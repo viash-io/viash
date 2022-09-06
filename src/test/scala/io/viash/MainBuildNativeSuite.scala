@@ -143,7 +143,7 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Repeated regular arguments are not allowed") {
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq(
         executable.toString,
         executable.toString,
@@ -159,7 +159,7 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Repeated flag arguments are not allowed") {
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq(
         executable.toString,
         executable.toString,
@@ -175,7 +175,7 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Repeated arguments with --multiple defined are allowed") {
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq(
         executable.toString,
         executable.toString,
@@ -221,7 +221,7 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
     assert(executable.exists)
     assert(executable.canExecute)
 
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq(executable.toString, "--help")
     )
     assert(out.exitValue == 0)
@@ -240,7 +240,7 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
     assert(executable.exists)
     assert(executable.canExecute)
 
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq(executable.toString, "--help")
     )
     assert(out.exitValue == 0)
