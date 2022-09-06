@@ -2,6 +2,8 @@
 
 ## BREAKING CHANGES
 
+* `NextflowPlatform`: `variant: vdsl3` is now the default NextflowPlatform. `variant: legacy` has been deprecated.
+
 * `Functionality`: Fields `.inputs` and `.outputs` has been deprecated. Please use `.argument_groups` instead (#186).
   Before:
   ```yaml
