@@ -82,11 +82,11 @@ object Main {
           setup = cli.build.setup.toOption,
           push = cli.build.push()
         )
-        0
+        0 // Exceptions are thrown when something bad happens, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.test) =>
         val config = readConfig(cli.test, applyPlatform = false)
         ViashTest(config, keepFiles = cli.test.keep.toOption.map(_.toBoolean))
-        0
+        0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
         val configs = readConfigs(cli.namespace.build)
         ViashNamespace.build(
@@ -98,24 +98,32 @@ object Main {
           writeMeta = cli.namespace.build.writeMeta(),
           flatten = cli.namespace.build.flatten()
         )
-        0
+        0 // Might be possible to be improved further.
       case List(cli.namespace, cli.namespace.test) =>
         val configs = readConfigs(cli.namespace.test, applyPlatform = false)
-        ViashNamespace.test(
+        val testResults = ViashNamespace.test(
           configs = configs,
           parallel = cli.namespace.test.parallel(),
           keepFiles = cli.namespace.test.keep.toOption.map(_.toBoolean),
           tsv = cli.namespace.test.tsv.toOption,
           append = cli.namespace.test.append()
         )
-        0
+        val errors = testResults.flatMap(_.right.toOption).count(status => List(Success, Disabled, TestMissing).contains(status))
+        if (errors > 0)
+          1
+        else
+          0
       case List(cli.namespace, cli.namespace.list) =>
         val configs = readConfigs(cli.namespace.list, applyPlatform = false)
         ViashNamespace.list(
           configs = configs,
           cli.namespace.list.format()
         )
-        0
+        val errors = configs.flatMap(_.right.toOption).count(status => List(Success, Disabled, TestMissing).contains(status))
+        if (errors > 0)
+          1
+        else
+          0
       case List(cli.namespace, cli.namespace.exec) =>
         val configs = readConfigs(cli.namespace.exec, applyPlatform = false)
         ViashNamespace.exec(
@@ -123,7 +131,11 @@ object Main {
           command = cli.namespace.exec.cmd(),
           dryrun = cli.namespace.exec.dryrun()
         )
-        0
+        val errors = configs.flatMap(_.right.toOption).count(status => List(Success, Disabled, TestMissing).contains(status))
+        if (errors > 0)
+          1
+        else
+          0
       case List(cli.config, cli.config.view) =>
         val config = Config.read(
           configPath = cli.config.view.config(),
