@@ -18,7 +18,6 @@
 package io.viash.helpers
 
 import java.io.File
-import scala.util.Try
 
 case class GitInfo(
   localRepo: Option[String],
@@ -29,13 +28,11 @@ case class GitInfo(
 
 object Git {
   def isGitRepo(path: File): Boolean = {
-    Try {
-      val out = Exec.runCatch(
-        List("git", "rev-parse", "--is-inside-work-tree"),
-        cwd = Some(path)
-      )
-      out.exitValue == 0
-    }.getOrElse(false)
+    val out = Exec.runCatch(
+      List("git", "rev-parse", "--is-inside-work-tree"),
+      cwd = Some(path)
+    )
+    out.exitValue == 0
   }
 
   def getLocalRepo(path: File): Option[String] = {
