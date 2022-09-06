@@ -71,9 +71,10 @@ object Exec {
     runCatch(command, cwd.map(_.toFile), extraEnv, loggers)
   }
 
-  def runOptPath(command: Seq[String], cwd: Option[Path] = None, extraEnv: Seq[(String, String)] = Nil): Option[String] = {
+  def runOptPath(command: Seq[String], cwd: Option[Path] = None, extraEnv: Seq[(String, String)] = Nil, loggers: Seq[String => Unit] = Nil): Option[String] = {
     try {
-      Some(runPath(command, cwd, extraEnv))
+      val out = runCatchPath(command, cwd, extraEnv, loggers)
+      if (out.exitValue == 0) Some(out.output) else None
     } catch {
       case _: Throwable => None
     }
