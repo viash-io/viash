@@ -63,6 +63,12 @@ class GitTest extends FunSuite with BeforeAndAfterAll {
     val gitAddOut = Exec.runCatch(List("git", "add", "file.txt"), cwd = Some(tempDir))
     assert(gitAddOut.exitValue == 0, s"git add: ${gitAddOut.output}")
 
+    val gitConfigName = Exec.runCatch(List("git", "config", "user.name", "Viash CI"), cwd = Some(tempDir))
+    assert(gitConfigName.exitValue == 0, s"git config name: ${gitConfigName.output}")
+
+    val gitConfigEmail = Exec.runCatch(List("git", "config", "user.email", "viash_test_build@viash.io"), cwd = Some(tempDir))
+    assert(gitConfigEmail.exitValue == 0, s"git config email: ${gitConfigEmail.output}")
+
     val gitCommitOut = Exec.runCatch(List("git", "commit", "-m", "initial commit"), cwd = Some(tempDir))
     assert(gitCommitOut.exitValue == 0, s"git commit: ${gitCommitOut.output}")
 
@@ -89,6 +95,12 @@ class GitTest extends FunSuite with BeforeAndAfterAll {
 
     val gitAddOut = Exec.runCatch(List("git", "add", "file.txt"), cwd = Some(tempDir))
     assert(gitAddOut.exitValue == 0, s"git add: ${gitAddOut.output}")
+
+    val gitConfigName = Exec.runCatch(List("git", "config", "user.name", "Viash CI"), cwd = Some(tempDir))
+    assert(gitConfigName.exitValue == 0, s"git config name: ${gitConfigName.output}")
+    
+    val gitConfigEmail = Exec.runCatch(List("git", "config", "user.email", "viash_test_build@viash.io"), cwd = Some(tempDir))
+    assert(gitConfigEmail.exitValue == 0, s"git config email: ${gitConfigEmail.output}")
 
     val gitCommitOut = Exec.runCatch(List("git", "commit", "-m", "initial commit"), cwd = Some(tempDir))
     assert(gitCommitOut.exitValue == 0, s"git commit: ${gitCommitOut.output}")
