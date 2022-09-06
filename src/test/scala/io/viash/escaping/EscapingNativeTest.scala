@@ -18,7 +18,7 @@ class EscapingNativeTest extends FunSuite with BeforeAndAfterAll {
   private val tempFolStr = temporaryFolder.toString
 
   // parse functionality from file
-  private val functionality = Config.read(configFile, modifyConfig = false).functionality
+  private val functionality = Config.read(configFile, addOptMainScript = false).functionality
 
   // check whether executable was created
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
@@ -63,7 +63,7 @@ class EscapingNativeTest extends FunSuite with BeforeAndAfterAll {
 
     test(s"Check whether $chars gets escaped properly") {
 
-      val functionalitySub = Config.read(configSubFile.toString, modifyConfig = false).functionality
+      val functionalitySub = Config.read(configSubFile.toString, addOptMainScript = false).functionality
       val executableSub = Paths.get(tempSubFolder.toString, "output", functionalitySub.name).toFile
 
       // build the script

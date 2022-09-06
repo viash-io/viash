@@ -114,10 +114,11 @@ object Main {
         else
           0
       case List(cli.namespace, cli.namespace.list) =>
-        val configs = readConfigs(cli.namespace.list, applyPlatform = false)
+        val configs = readConfigs(cli.namespace.list, addOptMainScript = false)
         ViashNamespace.list(
           configs = configs,
-          cli.namespace.list.format()
+          format = cli.namespace.list.format(),
+          parseArgumentGroups = cli.namespace.list.parse_argument_groups()
         )
         val errors = configs.flatMap(_.right.toOption).count(status => List(Success, Disabled, TestMissing).contains(status))
         if (errors > 0)
@@ -140,15 +141,19 @@ object Main {
         val config = Config.read(
           configPath = cli.config.view.config(),
           configMods = cli.config.view.config_mods(),
-          modifyConfig = false
+          addOptMainScript = false
         )
-        ViashConfig.view(config, cli.config.view.format())
+        ViashConfig.view(
+          config, 
+          format = cli.config.view.format(),
+          parseArgumentGroups = cli.config.view.parse_argument_groups()
+        )
         0
       case List(cli.config, cli.config.inject) =>
         val config = Config.read(
           configPath = cli.config.inject.config(),
           configMods = cli.config.inject.config_mods(),
-          modifyConfig = false
+          addOptMainScript = false
         )
         ViashConfig.inject(config)
         0
@@ -166,11 +171,13 @@ object Main {
 
   def readConfig(
     subcommand: ViashCommand,
+    addOptMainScript: Boolean = true,
     applyPlatform: Boolean = true
   ): Config = {
     Config.read(
       configPath = subcommand.config(),
       platform = subcommand.platform.toOption,
+      addOptMainScript = addOptMainScript,
       applyPlatform = applyPlatform,
       configMods = subcommand.config_mods()
     )
@@ -178,7 +185,8 @@ object Main {
 
   def readConfigs(
     subcommand: ViashNs,
-    applyPlatform: Boolean = true,
+    addOptMainScript: Boolean = true,
+    applyPlatform: Boolean = true
   ): List[Either[Config, BuildStatus]] = {
     val source = subcommand.src()
     val query = subcommand.query.toOption
@@ -201,6 +209,7 @@ object Main {
           // first read config to get an idea of the available platforms
           val confTest = Config.read(
             file.toString, 
+            addOptMainScript = false,
             applyPlatform = false, 
             configMods = subcommand.config_mods(),
             displayWarnings = false // warnings will be displayed when reading the second time
@@ -247,6 +256,7 @@ object Main {
             configPath = file.toString,
             platform = Some(platformStr),
             applyPlatform = applyPlatform,
+            addOptMainScript = addOptMainScript,
             configMods = subcommand.config_mods()
           ))
         } else {
@@ -267,6 +277,7 @@ object Main {
               configPath = file.toString,
               platform = plat,
               applyPlatform = applyPlatform,
+              addOptMainScript = addOptMainScript,
               configMods = subcommand.config_mods()
             )
           }

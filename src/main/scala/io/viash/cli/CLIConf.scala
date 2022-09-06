@@ -224,6 +224,11 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         choices = List("yaml", "json"),
         descr = "Which output format to use."
       )
+      val parse_argument_groups = registerOpt[Boolean](
+        name = "parse_argument_groups",
+        default = Some(false),
+        descr = "Whether or not to postprocess each component's argument groups."
+      )
     }
     val inject = new DocumentedSubcommand("inject") with ViashCommand {
       banner(
@@ -308,6 +313,11 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         default = Some("yaml"),
         choices = List("yaml", "json"),
         descr = "Which output format to use."
+      )
+      val parse_argument_groups = registerOpt[Boolean](
+        name = "parse_argument_groups",
+        default = Some(false),
+        descr = "Whether or not to postprocess each component's argument groups."
       )
     }
 

@@ -132,7 +132,7 @@ object Config {
   def read(
     configPath: String,
     platform: Option[String] = None,
-    modifyConfig: Boolean = true,
+    addOptMainScript: Boolean = true,
     applyPlatform: Boolean = true,
     configMods: List[String] = Nil,
     displayWarnings: Boolean = true
@@ -168,11 +168,8 @@ object Config {
     if (conf1.functionality.resources.isEmpty && displayWarnings && optScript.isEmpty)
       Console.err.println(s"${Console.YELLOW}Warning: no resources specified!${Console.RESET}")
 
-    if (!modifyConfig) {
-      return conf1
-    }
 
-    /* CONFIG 2: add info and script (if available) */
+    /* CONFIG 2: add info */
     // gather git info
     val path = new File(configPath).getParentFile
     val GitInfo(_, rgr, gc, gt) = Git.getInfo(path)
@@ -189,10 +186,17 @@ object Config {
       )
     
     // add info and additional resources
-    val conf2 = conf1.copy(
+    val conf2a = conf1.copy(
       info = Some(info),
-      functionality = conf1.functionality.copy(
-        resources = optScript.toList ::: conf1.functionality.resources
+    )
+    if (!addOptMainScript) {
+      return conf2a
+    }
+    
+    // add info and additional resources
+    val conf2b = conf2a.copy(
+      functionality = conf2a.functionality.copy(
+        resources = optScript.toList ::: conf2a.functionality.resources
       )
     )
 
@@ -228,10 +232,10 @@ object Config {
     // apply platform to functionality if so desired
     val conf3 = 
       if (!applyPlatform) {
-        conf2
+        conf2b
       } else {
-        conf2.copy(
-          functionality = pl.modifyFunctionality(conf2, false)
+        conf2b.copy(
+          functionality = pl.modifyFunctionality(conf2b, false)
         )
       }
     
