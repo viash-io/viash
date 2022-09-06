@@ -49,6 +49,8 @@ object Exec {
       val exitValue = Process(command, cwd = cwd, extraEnv = extraEnv: _*).!(ProcessLogger(logger, logger))
       printwriter.flush()
       ExecOutput(command, exitValue, stream.toString)
+    } catch {
+      case e: Exception => ExecOutput(command, exitValue = 1, e.getMessage())
     } finally {
       printwriter.close()
     }
