@@ -127,10 +127,12 @@
 
 ## TESTING
 
-* `ConfigMod`: Added unit tests for config mod functionality (WIP).
+* `ConfigMod`: Added unit tests for condition config mods.
 
 * `MainTestDockerSuite`: Derive config alternatives from the base `vsh.yaml` instead of adding the changes in separate files.
   This both reduces file clutter and prevents having to change several files when there are updates in the config format.
+
+* `GitTest`: Added unit tests for Git helper (#216).
 
 ## BUG FIXES
 
@@ -139,6 +141,8 @@
 * `NextflowVdsl3Platform`: Don't generate an error when `--publish_dir` is not defined and `-profile no_publish` is used.
 
 * `Viash run`: Viash now properly returns the exit code from the executed script.
+
+* `Git`: Fix incorrect metadata when git repository is empty (#216).
 
 # Viash 0.5.15
 
