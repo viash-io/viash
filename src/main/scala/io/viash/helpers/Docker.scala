@@ -80,11 +80,17 @@ object Docker {
       Some("latest")
     }
 
+    val actualOrganization = {
+      organization
+    } orElse {
+      functionality.flatMap(fun => fun.organization)
+    }
+
     DockerImageInfo(
       name = actualName.get,
       tag = actualTag.get,
       registry = registry,
-      organization = organization
+      organization = actualOrganization
     )
   }
 }

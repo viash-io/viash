@@ -115,7 +115,7 @@ fi
 
 if [ ! -z "$par_organization" ]; then
   command_builder+=(
-    --config_mod ".platforms[.type == 'docker'].target_organization := '$par_organization'"
+    --config_mod ".functionality.organization := '$par_organization'"
     --config_mod ".platforms[.type == 'nextflow' && .variant == 'legacy'].organization := '$par_organization'"
   )
 fi

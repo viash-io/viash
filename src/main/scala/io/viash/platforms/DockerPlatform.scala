@@ -46,8 +46,8 @@ case class DockerPlatform(
   @example("image: \"bash:4.0\"", "yaml")
   image: String,
 
-  @description("Name of a container’s [organization](https://docs.docker.com/docker-hub/orgs/).")
-  organization: Option[String],
+  @description("Name of a container's [organization](https://docs.docker.com/docker-hub/orgs/).")
+  organization: Option[String] = None,
 
   @description("The URL to the a [custom Docker registry](https://docs.docker.com/registry/)")
   @example("registry: https://my-docker-registry.org", "yaml")

@@ -37,6 +37,10 @@ case class Functionality(
   @example("namespace: fancy_components", "yaml")
   namespace: Option[String] = None,
 
+  @description("Organization this component is a part of.")
+  @example("organization: my_organization", "yaml")
+  organization: Option[String] = None,
+
   @description("Version of the component. This field will be used to version the executable and the Docker container.")
   @example("version: 0.8", "yaml")
   version: Option[Version] = None,
