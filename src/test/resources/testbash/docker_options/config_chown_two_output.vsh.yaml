@@ -67,15 +67,12 @@ functionality:
 platforms:
   - type: docker
     image: "bash:3.2"
-    target_image: "viash_test_bash"
     id: "two_chown_default"
   - type: docker
     image: "bash:3.2"
-    target_image: "viash_test_bash"
     id: "two_chown_true"
     chown: true
   - type: docker
     image: "bash:3.2"
-    target_image: "viash_test_bash"
     id: "two_chown_false"
     chown: false

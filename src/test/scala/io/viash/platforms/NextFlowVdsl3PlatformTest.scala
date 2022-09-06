@@ -230,36 +230,6 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     outputFileMatchChecker(stdOut, "process 'step3[^']*' output tuple", "^11 .*$")
   }
 
-  test("Run legacy pipeline", DockerTest, NextFlowTest) {
-
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "workflows/pipeline2/main.nf",
-      entry = Some("legacy_base"),
-      args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
-      )
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
-  }
-
-  test("Run legacy and vdsl3 combined pipeline", DockerTest, NextFlowTest) {
-
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "workflows/pipeline2/main.nf",
-      entry = Some("legacy_and_vdsl3"),
-      args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
-      )
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
-  }
-
   val expectedFoo: List[CheckArg] = List(
     MatchCheck("input", ".*/lines3.txt"),
     EqualsCheck("real_number", "10.5"),
@@ -423,7 +393,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
 
   test("Run module as standalone", NextFlowTest) {
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "target/nextflowvdsl3/step2/main.nf",
+      mainScript = "target/nextflow/step2/main.nf",
       args = List(
         "--input1", "resources/lines3.txt",
         "--input2", "resources/lines5.txt",
@@ -445,7 +415,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
   test("Run module as standalone, yamlblob", NextFlowTest) {
     val fooArgs = "{input1: resources/lines3.txt, input2: resources/lines5.txt}"
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "target/nextflowvdsl3/step2/main.nf",
+      mainScript = "target/nextflow/step2/main.nf",
       args = List(
         "--param_list", s"[$fooArgs]",
         "--publish_dir", "moduleOutput2"
@@ -468,7 +438,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     Files.copy(Paths.get(resourcesPath, "lines5.txt"), Paths.get(resourcesPath, "lines5-bis.txt"))
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "target/nextflowvdsl3/step2/main.nf",
+      mainScript = "target/nextflow/step2/main.nf",
       args = List(
         "--input1", "resources/lines3.txt",
         "--input2", "resources/lines5.txt",

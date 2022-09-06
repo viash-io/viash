@@ -54,10 +54,7 @@ platforms:
   - type: native
   - type: docker
     image: node:15-buster
-    target_image: "viash_test_js"
     setup:
       - type: javascript
         npm: [ plot ]
   - type: nextflow
-    variant: legacy
-    image: viash_test_js

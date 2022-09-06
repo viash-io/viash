@@ -88,7 +88,7 @@ case class Functionality(
       "bash",
       "This results in the following output when calling the component with the `--help` argument:")
   @since("Viash 0.5.11")
-  @deprecated("Use `arguments` instead.", "Viash 0.5.16")
+  @deprecated("Use `arguments` instead.", "Viash 0.6.0")
   inputs: List[Argument[_]] = Nil,
 
   @description("A list of output arguments in addition to the `arguments` list. Any arguments specified here will have their `type` set to `file` and thr `direction` set to `output` by default.")
@@ -109,7 +109,7 @@ case class Functionality(
       "bash",
       "This results in the following output when calling the component with the `--help` argument:")
   @since("Viash 0.5.11")
-  @deprecated("Use `arguments` instead.", "Viash 0.5.16")
+  @deprecated("Use `arguments` instead.", "Viash 0.6.0")
   outputs: List[Argument[_]] = Nil,
   
   @description(
@@ -243,7 +243,7 @@ case class Functionality(
   info: Map[String, String] = Map.empty[String, String],
 
   @description("Allows setting a component to active, deprecated or disabled.")
-  @since("Viash 0.5.16")
+  @since("Viash 0.6.0")
   status: Status = Status.Enabled,
   
   @description(
@@ -257,7 +257,7 @@ case class Functionality(
       |  memory: 10GB
       |""".stripMargin,
       "yaml")
-  @since("Viash 0.5.16")
+  @since("Viash 0.6.0")
   requirements: ComputationalRequirements = ComputationalRequirements(),
 
   // The variables below are for internal use and shouldn't be publicly documented
@@ -282,7 +282,7 @@ case class Functionality(
 
   @description("Setting this to false with disable this component when using namespaces.")
   @since("Viash 0.5.13")
-  @deprecated("Use `status` instead.", "Viash 0.5.16")
+  @deprecated("Use `status` instead.", "Viash 0.6.0")
   private val enabled: Boolean = true
   // END OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
   if (inputs.nonEmpty) {

@@ -55,8 +55,7 @@ package object platforms {
           case Right("legacy") => decodeNextflowLegacyPlatform.widen
           case Right("vdsl3") => decodeNextflowVdsl3Platform.widen
           case Right(typ) => throw new RuntimeException("Variant " + typ + " is not recognised.")
-          // TODO: default is legacy, will be changed in Viash 0.6 or 1.0
-          case Left(exception) => decodeNextflowLegacyPlatform.widen
+          case Left(exception) => decodeNextflowVdsl3Platform.widen
         }
 
       decoder(cursor)

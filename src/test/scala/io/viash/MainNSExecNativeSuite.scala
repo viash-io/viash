@@ -46,7 +46,6 @@ class MainNSExecNativeSuite extends FunSuite with BeforeAndAfterAll {
       "echo {path} +"
     )
     val stdout = stdoutRaw.replaceAll(nsPath, "src/")
-    println(stdout)
 
     // can't guarantee order of components
     val regexCommand = s"""\\+ echo src/[^/]*/config.vsh.yaml src/[^/]*/config.vsh.yaml src/[^/]*/config.vsh.yaml src/[^/]*/config.vsh.yaml""".r
