@@ -63,7 +63,7 @@ class MainBuildAuxiliaryNativeUnknownParameter extends FunSuite with BeforeAndAf
   }
 
   test("Check normal call with known parameters") {
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq(
         executable.toString,
         executable.toString,
@@ -78,7 +78,7 @@ class MainBuildAuxiliaryNativeUnknownParameter extends FunSuite with BeforeAndAf
   }
 
   test("Check call with unknown --foo parameter") {
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq(
         executable.toString,
         executable.toString,
@@ -94,7 +94,7 @@ class MainBuildAuxiliaryNativeUnknownParameter extends FunSuite with BeforeAndAf
   }
 
   test("Check call with unknown -foo parameter") {
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq(
         executable.toString,
         executable.toString,
@@ -110,7 +110,7 @@ class MainBuildAuxiliaryNativeUnknownParameter extends FunSuite with BeforeAndAf
   }
 
   test("Check call with unknown foo parameter, expecting processing as positional arguments") {
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq(
         executable.toString,
         executable.toString,

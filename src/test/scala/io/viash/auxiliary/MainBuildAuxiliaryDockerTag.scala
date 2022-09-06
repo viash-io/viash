@@ -29,7 +29,7 @@ class MainBuildAuxiliaryDockerTag extends FunSuite with BeforeAndAfterAll {
     assert(executableBashTagFile.canExecute)
 
     // create the docker image
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq(executableBashTagFile.toString, "---setup", "build")
     )
     assert(out.exitValue == 0)
@@ -62,7 +62,7 @@ class MainBuildAuxiliaryDockerTag extends FunSuite with BeforeAndAfterAll {
     assert(executableBashTagFile.canExecute)
 
     // create the docker image
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq(executableBashTagFile.toString, "---setup", "build")
     )
     assert(out.exitValue == 0)
@@ -95,7 +95,7 @@ class MainBuildAuxiliaryDockerTag extends FunSuite with BeforeAndAfterAll {
     assert(executableBashTagFile.canExecute)
 
     // create the docker image
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq(executableBashTagFile.toString, "---setup", "build")
     )
     assert(out.exitValue == 0)
@@ -127,7 +127,7 @@ class MainBuildAuxiliaryDockerTag extends FunSuite with BeforeAndAfterAll {
     assert(executableBashTagFile.canExecute)
 
     // create the docker image
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq(executableBashTagFile.toString, "---setup", "build")
     )
     assert(out.exitValue == 0)
@@ -159,7 +159,7 @@ class MainBuildAuxiliaryDockerTag extends FunSuite with BeforeAndAfterAll {
     assert(executableBashTagFile.canExecute)
 
     // create the docker image
-    val out = Exec.run2(
+    val out = Exec.runCatch(
       Seq(executableBashTagFile.toString, "---setup", "build")
     )
     assert(out.exitValue == 0)

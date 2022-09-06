@@ -18,7 +18,6 @@
 package io.viash.helpers
 
 import java.io.File
-import scala.util.Try
 
 case class GitInfo(
   localRepo: Option[String],
@@ -29,77 +28,59 @@ case class GitInfo(
 
 object Git {
   def isGitRepo(path: File): Boolean = {
-    Try {
-      val out = Exec.run2(
-        List("git", "rev-parse", "--is-inside-work-tree"),
-        cwd = Some(path)
-      )
-      out.exitValue == 0
-    }.getOrElse(false)
+    val out = Exec.runCatch(
+      List("git", "rev-parse", "--is-inside-work-tree"),
+      cwd = Some(path)
+    )
+    out.exitValue == 0
   }
 
   def getLocalRepo(path: File): Option[String] = {
-    Try {
-      val out = Exec.run2(
-        List("git", "rev-parse", "--show-toplevel"),
-        cwd = Some(path)
-      )
-      out.output.trim
-    }.toOption
+    Exec.runOpt(
+      List("git", "rev-parse", "--show-toplevel"),
+      cwd = Some(path)
+    ).map(_.trim)
   }
 
   private val remoteRepoRegex = "(.*)\\s(.*)\\s(.*)".r
 
   def getRemoteRepo(path: File): Option[String] = {
-    Try {
-      val out = Exec.run2(
-        List("git", "remote", "--verbose"),
-        cwd = Some(path)
-      )
-
-      out.output
+    Exec.runOpt(
+      List("git", "remote", "--verbose"),
+      cwd = Some(path)
+    ).flatMap{ line => 
+      line
         .split("\n")
         .flatMap {
           case remoteRepoRegex(name, link, _) if name contains "origin" => Some(link)
           case _ => None
         }
-        .head
-    }.toOption
+        .headOption
+    }
   }
 
   def getCommit(path: File): Option[String] = {
-    Try {
-      val out = Exec.run2(
-        List("git", "rev-parse", "HEAD"),
-        cwd = Some(path)
-      )
-      out.output.trim
-    }.toOption
+    Exec.runOpt(
+      List("git", "rev-parse", "HEAD"),
+      cwd = Some(path)
+    ).map(_.trim)
   }
 
   def getTag(path: File): Option[String] = {
-    Try {
-      val out = Exec.run2(
-        List("git", "describe", "--tags"),
-        cwd = Some(path)
-      )
-      out.exitValue match {
-        case 0 => Some(out.output.trim)
-        case _ => None
-      }
-    }.getOrElse(None)
+    Exec.runOpt(
+      List("git", "describe", "--tags"),
+      cwd = Some(path)
+    ).map(_.trim)
   }
 
   def getInfo(path: File): GitInfo = {
-    val igr = isGitRepo(path)
-
-    if (igr) {
-      val lgr = getLocalRepo(path)
-      val rgr = getRemoteRepo(path)
-      val gc = getCommit(path)
-      val gt = getTag(path)
-
-      GitInfo(lgr, rgr, gc, gt)
+    if (isGitRepo(path)) {
+      GitInfo(
+        localRepo = getLocalRepo(path),
+        remoteRepo = getRemoteRepo(path),
+        commit = getCommit(path),
+        tag = getTag(path)
+      )
     } else {
       GitInfo(None, None, None, None)
     }

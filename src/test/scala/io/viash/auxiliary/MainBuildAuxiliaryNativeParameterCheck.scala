@@ -104,7 +104,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       (param, tests, expected_result) <- tests;
       value <- tests
     ) {
-      val out = Exec.run2(
+      val out = Exec.runCatch(
         Seq(
           executable.toString,
           param, value,
@@ -134,7 +134,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       (param, tests, expected_result) <- tests;
       value <- tests
     ) {
-      val out = Exec.run2(
+      val out = Exec.runCatch(
         Seq(
           executable.toString,
           param, value,
@@ -164,7 +164,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       (param, tests, expected_result) <- tests;
       value <- tests
     ) {
-      val out = Exec.run2(
+      val out = Exec.runCatch(
         Seq(
           executable.toString,
           param, value,
@@ -179,7 +179,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       sign <- Seq("+", "-")
     ) {
       val param = sign + value
-      val out = Exec.run2(
+      val out = Exec.runCatch(
         Seq(
           executable.toString,
           "--reality", param,
@@ -210,7 +210,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       (param, tests, expected_result) <- tests;
       value <- tests
     ) {
-      val out = Exec.run2(
+      val out = Exec.runCatch(
         Seq(
           executable.toString,
           param, value,
@@ -238,7 +238,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       (param, tests, expected_result) <- tests;
       value <- tests
     ) {
-      val out = Exec.run2(
+      val out = Exec.runCatch(
         Seq(
           executable.toString,
           param, value,
@@ -273,7 +273,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
         (param, tests, expected_result) <- tests;
         value <- tests
       ) {
-        val out = Exec.run2(
+        val out = Exec.runCatch(
           Seq(
             executable.toString,
             param, value,
@@ -297,7 +297,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
         (param, tests, expected_result) <- tests;
         value <- tests
       ) {
-        val out = Exec.run2(
+        val out = Exec.runCatch(
           Seq(
             executable.toString,
             param, value,
@@ -321,7 +321,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
         (param, tests, expected_result) <- tests;
         value <- tests
       ) {
-        val out = Exec.run2(
+        val out = Exec.runCatch(
           Seq(
             executable.toString,
             param, value,
@@ -357,7 +357,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
         (param, tests, expected_result) <- tests;
         value <- tests
       ) {
-        val out = Exec.run2(
+        val out = Exec.runCatch(
           Seq(
             executable.toString,
             param, value,
@@ -381,7 +381,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
         (param, tests, expected_result) <- tests;
         value <- tests
       ) {
-        val out = Exec.run2(
+        val out = Exec.runCatch(
           Seq(
             executable.toString,
             param, value,
@@ -405,7 +405,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
         (param, tests, expected_result) <- tests;
         value <- tests
       ) {
-        val out = Exec.run2(
+        val out = Exec.runCatch(
           Seq(
             executable.toString,
             param, value,
@@ -448,7 +448,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
         (param, tests, expected_result) <- tests;
         value <- tests
       ) {
-        val out = Exec.run2(
+        val out = Exec.runCatch(
           Seq(
             executable.toString,
             param, value,
@@ -472,7 +472,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
         (param, tests, expected_result) <- tests;
         value <- tests
       ) {
-        val out = Exec.run2(
+        val out = Exec.runCatch(
           Seq(
             executable.toString,
             param, value,
@@ -496,7 +496,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
         (param, tests, expected_result) <- tests;
         value <- tests
       ) {
-        val out = Exec.run2(
+        val out = Exec.runCatch(
           Seq(
             executable.toString,
             param, value,
