@@ -24,7 +24,8 @@ class GitTest extends FunSuite with BeforeAndAfterAll {
     val gitInfo = Git.getInfo(tempDir)
     assert(Git.isGitRepo(tempDir), "Git.isGitRepo")
     assert(Git.getCommit(tempDir).isEmpty, "Git.getCommit")
-    assert(Git.getLocalRepo(tempDir) == Some(tempDir.toString), "Git.getLocalRepo")
+    val lr = Git.getLocalRepo(tempDir)
+    assert(lr.isDefined && lr.get.contains(tempDir.toString), "Git.getLocalRepo")
     assert(Git.getRemoteRepo(tempDir).isEmpty, "Git.getRemoteRepo")
     assert(Git.getTag(tempDir).isEmpty, "Git.getTag")
   }
@@ -41,7 +42,8 @@ class GitTest extends FunSuite with BeforeAndAfterAll {
     val gitInfo = Git.getInfo(tempDir)
     assert(Git.isGitRepo(tempDir), "Git.isGitRepo")
     assert(Git.getCommit(tempDir).isEmpty, "Git.getCommit")
-    assert(Git.getLocalRepo(tempDir) == Some(tempDir.toString), "Git.getLocalRepo")
+    val lr = Git.getLocalRepo(tempDir)
+    assert(lr.isDefined && lr.get.contains(tempDir.toString), "Git.getLocalRepo")
     assert(Git.getRemoteRepo(tempDir) == Some(fakeGitRepo), "Git.getRemoteRepo")
     assert(Git.getTag(tempDir).isEmpty, "Git.getTag")
   }
@@ -67,7 +69,8 @@ class GitTest extends FunSuite with BeforeAndAfterAll {
     val gitInfo = Git.getInfo(tempDir)
     assert(Git.isGitRepo(tempDir), "Git.isGitRepo")
     assert(Git.getCommit(tempDir).isDefined, "Git.getCommit")
-    assert(Git.getLocalRepo(tempDir) == Some(tempDir.toString), "Git.getLocalRepo")
+    val lr = Git.getLocalRepo(tempDir)
+    assert(lr.isDefined && lr.get.contains(tempDir.toString), "Git.getLocalRepo")
     assert(Git.getRemoteRepo(tempDir) == Some(fakeGitRepo), "Git.getRemoteRepo")
     assert(Git.getTag(tempDir).isEmpty, "Git.getTag")
   }
@@ -96,7 +99,8 @@ class GitTest extends FunSuite with BeforeAndAfterAll {
     val gitInfo = Git.getInfo(tempDir)
     assert(Git.isGitRepo(tempDir), "Git.isGitRepo")
     assert(Git.getCommit(tempDir).isDefined, "Git.getCommit")
-    assert(Git.getLocalRepo(tempDir) == Some(tempDir.toString), "Git.getLocalRepo")
+    val lr = Git.getLocalRepo(tempDir)
+    assert(lr.isDefined && lr.get.contains(tempDir.toString), "Git.getLocalRepo")
     assert(Git.getRemoteRepo(tempDir) == Some(fakeGitRepo), "Git.getRemoteRepo")
     assert(Git.getTag(tempDir) == Some("0.1.1"), "Git.getTag")
   }
