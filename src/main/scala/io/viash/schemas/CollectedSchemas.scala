@@ -27,6 +27,7 @@ import io.viash.functionality.Functionality
 import io.viash.platforms._
 import io.viash.platforms.requirements._
 import io.viash.functionality.arguments._
+import io.circe.Json
 
 final case class CollectedSchemas (
   functionality: List[ParameterSchema],
@@ -64,7 +65,7 @@ object CollectedSchemas {
       annotationsOf[T].map({case (a, b, c) => ParameterSchema(a, b, c)})
   }
 
-  def export() {
+  def getJson: Json = {
     val data = CollectedSchemas(
       functionality = getSchema[Functionality],
       platforms = Map(
@@ -93,7 +94,6 @@ object CollectedSchemas {
         ("string"                 , getSchema[StringArgument]),
       ),
     )
-    val str = jsonPrinter.print(data.asJson)
-    println(str)
+    data.asJson
   }
 }

@@ -157,11 +157,17 @@ object Main {
         )
         ViashConfig.inject(config)
         0
-      case Nil if (cli.cliexport()) =>
-        CLIExport.export()
+      case List(cli.export, cli.export.cli_schema) =>
+        val output = cli.export.cli_schema.output.toOption.map(Paths.get(_))
+        ViashExport.exportCLISchema(output)
         0
-      case Nil if (cli.schemaexport()) =>
-        CollectedSchemas.export()
+      case List(cli.export, cli.export.config_schema) =>
+        val output = cli.export.config_schema.output.toOption.map(Paths.get(_))
+        ViashExport.exportConfigSchema(output)
+        0
+      case List(cli.export, cli.export.resource) =>
+        val output = cli.export.resource.output.toOption.map(Paths.get(_))
+        ViashExport.exportResource(cli.export.resource.path.toOption.get, output)
         0
       case _ =>
         Console.err.println("No subcommand was specified. See `viash --help` for more information.")
