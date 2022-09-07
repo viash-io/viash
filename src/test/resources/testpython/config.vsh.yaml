@@ -54,7 +54,6 @@ platforms:
   - type: native
   - type: docker
     image: python
-    target_image: "viash_test_python"
     setup:
       - type: docker
         build_args:
@@ -63,5 +62,3 @@ platforms:
         packages:
           - "argparse<1.4"
   - type: nextflow
-    variant: legacy
-    image: rocker/tidyverse

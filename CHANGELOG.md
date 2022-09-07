@@ -1,3 +1,160 @@
+# Viash 0.6.0
+
+The first (major) release this year! The biggest changes are:
+
+* Nextflow VDSL3 is now the default Nextflow platform, whereas the legacy Nextflow platform has been deprecated.
+* Support for tracking memory and cpu requirements more elegantly
+* Grouping arguments in groups more concisely.
+* The addition of a `viash ns exec` command, to be able to execute commands on Viash components more easily.
+
+## BREAKING CHANGES
+
+* `NextflowPlatform`: `variant: vdsl3` is now the default NextflowPlatform. `variant: legacy` has been deprecated.
+
+* `Functionality`: Fields `.inputs` and `.outputs` has been deprecated. Please use `.argument_groups` instead (#186).
+  Before:
+  ```yaml
+  functionality:
+    inputs:
+      - name: "--foo"
+    outputs:
+      - name: "--bar"
+  ```
+  Now:
+  ```yaml
+  functionality:
+    argument_groups:
+      - name: Inputs
+        arguments:
+          - name: "--foo"
+            type: file
+      - name: Outputs
+        arguments:
+          - name: "--bar"
+            type: file
+            direction: output
+  ```
+
+* Passing strings to an argument group's arguments has been deprecated. Please simply copy the argument itself into the argument group (#186).
+  Before:
+  ```yaml
+  functionality:
+    arguments:
+      - name: "--foo"
+        type: file
+      - name: "--bar"
+        type: file
+        direction: output
+    argument_groups:
+      - name: Inputs
+        arguments: [ foo ]
+      - name: Outputs
+        arguments: [ bar ]
+  ```
+  Now:
+  ```yaml
+  functionality:
+    argument_groups:
+      - name: Inputs
+        arguments:
+          - name: "--foo"
+            type: file
+      - name: Outputs
+        arguments:
+          - name: "--bar"
+            type: file
+            direction: output
+  ```
+
+## NEW FUNCTIONALITY
+
+* Allow setting the number of processes and memory limit from within the Viash config, 
+  as well as a list of required commands. Example:
+
+  ```yaml
+  functionality:
+  name: foo
+  requirements:
+    n_proc: 10
+    memory: 10G
+    commands: [ bash, r, perl ]
+  ```
+  
+  You can override the default requirements at runtime:
+
+  - `./foo ---n_proc 4 ---memory 100pb` (for NativePlatform or DockerPlatform)
+  - By adding `process.cpus = 4` and `process.memory "100 PB"` to a nextflow.config (for NextflowPlatform)
+
+  This results the following meta variables to be injected into a script:
+
+  - `meta_n_proc` (in Bash) or `meta["n_proc"]` (in any other language): Number of processes the script is allowed to spawn.
+  - `meta_memory_b` (in Bash) or `meta["memory_b"]` (in any other language): Amount of memory the script is allowed to allocate, in bytes.
+  - `meta_memory_kb` (in Bash) or `meta["memory_kb"]` (in any other language): Same but in kilobytes, rounded up.
+  - `meta_memory_mb` (in Bash) or `meta["memory_mb"]` (in any other language): Same but in megabytes, rounded up.
+  - `meta_memory_gb` (in Bash) or `meta["memory_gb"]` (in any other language): Same but in gigabytes, rounded up.
+  - `meta_memory_tb` (in Bash) or `meta["memory_tb"]` (in any other language): Same but in terabytes, rounded up.
+  - `meta_memory_pb` (in Bash) or `meta["memory_pb"]` (in any other language): Same but in petabytes, rounded up.
+  
+* `viash ns exec`: Added a command for executing arbitrary commands for all found Viash components.
+  The syntax of this command is inspired by `find . -exec echo {} \;`.
+  
+  The following fields are automatically replaced:
+   * `{}` | `{path}`: path to the config file
+   * `{abs-path}`: absolute path to the config file
+   * `{dir}`: path to the parent directory of the config file
+   * `{abs-dir}`: absolute path to the directory of the config file
+   * `{main-script}`: path to the main script (if any)
+   * `{abs-main-script}`: absolute path to the main script (if any)
+   * `{functionality-name}`: name of the component
+  
+  A command suffixed by `\;` (or nothing) will execute one command for each
+  of the Viash components, whereas a command suffixed by `+` will execute one
+  command for all Viash components.
+
+* `ConfigMod`: Added a `del(...)` config mod to be able to delete a value from the yaml. Example: `del(.functionality.version)`.
+
+## MAJOR CHANGES
+
+* `Folder structure`: Adjusted the folder structure to correctly reflect the the namespace change of viash from `com.dataintuitive.viash` to `io.viash`.
+
+* `Functionality`: Reworked the `enabled` field from boolean to a `status` field which can have the following statusses: `enabled`, `disabled` and `deprecated`.
+  When parsing a config file which has the `status` field set to `deprecated` a warning message is displayed on stderr.
+  Backwards for `enabled` is provided where `enabled: true` => `status: enabled` and `enabled: false` => `status: false`. The `enabled` field is marked deprecated.
+
+## MINOR CHANGES
+
+* `Resources`: Handle edge case when no resources are specified in the `vsh.yaml` config file and display a warning message.
+
+* `BashWrapper`: Add a warning when an argument containing flags (e.g. `--foo`) is not recognized and will be handled as a positional argument as this is likely a mistake.
+
+* `Functionality`: Add check to verify there are no double argument names or short names in the config `vsh.yaml` declarations.
+
+* `BashWrapper`: Add check to verify a parameter isn't declared twice on the CLI, except in the case `multiple: true` is declared as then it's a valid use case.
+
+* `BashWrapper`: For int min/max checking: use native bash functionality so there is no dependency to `bc`.
+  For double min/max checking: add fallback code to use `awk` in case `bc` is not present on the system (most likely to happen when running tests in a docker container).
+
+* `viash ns list/viash config view`: Allow viewing the post-processed argument groups by passing the `--parse_argument_groups` parameter.
+
+## TESTING
+
+* `ConfigMod`: Added unit tests for condition config mods.
+
+* `MainTestDockerSuite`: Derive config alternatives from the base `vsh.yaml` instead of adding the changes in separate files.
+  This both reduces file clutter and prevents having to change several files when there are updates in the config format.
+
+* `GitTest`: Added unit tests for Git helper (#216).
+
+## BUG FIXES
+
+* `csharp_script`, `javascript_script`, `python_script`, `r_script`, `scala_script`: Make meta fields for `memory` and `n_proc` optional.
+
+* `NextflowVdsl3Platform`: Don't generate an error when `--publish_dir` is not defined and `-profile no_publish` is used.
+
+* `Viash run`: Viash now properly returns the exit code from the executed script.
+
+* `Git`: Fix incorrect metadata when git repository is empty (#216).
+
 # Viash 0.5.15
 
 ## BREAKING CHANGES
@@ -67,6 +224,9 @@
         description: Description
   ```
 
+
+* Addition of the `viash_nxf_schema` component for converting a Viash config (for a workflow) into a nextflow schema file.
+
 * `NextflowVdsl3Platform`: Use `--param_list` to initialise a Nextflow channel with multiple parameter sets.
   Possible formats are csv, json, yaml, or simply a yaml_blob.
   A csv should have column names which correspond to the different arguments of this pipeline.
@@ -87,6 +247,7 @@
   taking care of the formatting in Groovy.
 
 * `NextflowVdsl3Platform`: The `--help` is auto-generated from the config.
+
 
 ## MINOR CHANGES
 

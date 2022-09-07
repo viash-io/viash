@@ -30,6 +30,13 @@ test_that("Checking whether output is correct", {
   expect_match(output, 'multiple_pos: \\|c\\("a", "b", "c", "d", "e", "f"\\)\\|')
   expect_match(output, 'meta_resources_dir: \\|..*\\|')
   expect_match(output, 'meta_functionality_name: \\|testr\\|')
+  expect_match(output, 'meta_n_proc: \\|NULL\\|')
+  expect_match(output, 'meta_memory_b: \\|NULL\\|')
+  expect_match(output, 'meta_memory_kb: \\|NULL\\|')
+  expect_match(output, 'meta_memory_mb: \\|NULL\\|')
+  expect_match(output, 'meta_memory_gb: \\|NULL\\|')
+  expect_match(output, 'meta_memory_tb: \\|NULL\\|')
+  expect_match(output, 'meta_memory_pb: \\|NULL\\|')
   
   expect_true(file.exists("log.txt"))
   log <- read_file("log.txt")
@@ -39,7 +46,8 @@ test_that("Checking whether output is correct", {
 
 test_that("Checking whether output is correct with minimal parameters", {
   out <- processx::run("./testr", c(
-    "test", "--real_number", "123.456", "--whole_number=789", "-s", 'my$weird#string"""\'\'\'`@'
+    "test", "--real_number", "123.456", "--whole_number=789", 
+    "-s", 'my$weird#string"""\'\'\'`@', "---n_proc", "666", "---memory", "100PB"
   ))
   
   output <- out$stdout
@@ -54,11 +62,19 @@ test_that("Checking whether output is correct with minimal parameters", {
   expect_match(output, 'multiple_pos: \\|NULL\\|')
   expect_match(output, 'meta_resources_dir: \\|..*\\|')
   expect_match(output, 'meta_functionality_name: \\|testr\\|')
+  expect_match(output, 'meta_n_proc: \\|666\\|')
+  expect_match(output, 'meta_memory_b: \\|112589990684262400\\|')
+  expect_match(output, 'meta_memory_kb: \\|109951162777600\\|')
+  expect_match(output, 'meta_memory_mb: \\|107374182400\\|')
+  expect_match(output, 'meta_memory_gb: \\|104857600\\|')
+  expect_match(output, 'meta_memory_tb: \\|102400\\|')
+  expect_match(output, 'meta_memory_pb: \\|100\\|')
 })
 
 test_that("Checking whether executable fails when wrong parameters are given", {
   out <- processx::run("./testr", error_on_status = FALSE, c(
-    "test", "--real_number", "abc", "--whole_number=abc", "-s", "my weird string", "--derp"
+    "test", "--real_number", "abc", "--whole_number=abc",
+    "-s", "my weird string", "--derp"
   ))
   print(out)
   

@@ -97,12 +97,6 @@ if [ ! -z "$par_config_mod" ]; then
   done
 fi
 
-if [ ! -z "$par_nextflow_variant" ]; then
-  command_builder+=(
-    --config_mod "<preparse> .platforms[.type == 'nextflow'].variant := '$par_nextflow_variant'"
-  )
-fi
-
 if [ ! -z "$par_registry" ]; then
   command_builder+=(
     --config_mod ".platforms[.type == 'docker'].target_registry := '$par_registry'"

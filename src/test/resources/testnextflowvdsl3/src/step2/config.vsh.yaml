@@ -56,8 +56,3 @@ platforms:
   - type: docker
     image: nextflow/bash:latest
   - type: nextflow
-    variant: legacy
-    publish: true
-  - type: nextflow
-    id: nextflowvdsl3
-    variant: vdsl3

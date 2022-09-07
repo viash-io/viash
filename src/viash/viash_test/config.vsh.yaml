@@ -1,7 +1,6 @@
 functionality:
   name: viash_test
   namespace: viash
-  version: 0.1
   description: |
     Test a project, usually in the context of a pipeline.
   arguments:
@@ -59,9 +58,8 @@ functionality:
     type: string
     description: The separator to use between the component name and namespace as the image name of a Docker container.
   - name: "--nextflow_variant"
-    default: "vdsl3"
     type: string
-    description: "Which nextflow variant to use. Options are 'legacy' and 'vdsl3'."
+    description: "[Deprecated] Which nextflow variant to use."
   - name: "--max_threads"
     type: integer
     description: The maximum number of threads viash will use when `--parallel` during parallel tasks.

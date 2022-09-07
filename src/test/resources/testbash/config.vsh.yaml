@@ -9,65 +9,66 @@ functionality:
       roles: [maintainer, author]
       email: bob@cando.com
       props: {github: bobcando, orcid: XXXAAABBB}
-  arguments:
-    - name: "input"
-      type: file
-      description: |
-        An input file with positional arguments.
-        More checks for multiline descriptions.
-        Testing some characters that should be escaped: ` $ \
-      direction: input
-      required: true
-      must_exist: true
-      example: input.txt
-    - name: "--real_number"
-      type: double
-      description: A real number with positional arguments.
-      required: true
-    - name: "--whole_number"
-      type: integer
-      description: A whole number with a standard flag.
-      required: true
-    - name: "-s"
-      type: string
-      description: A sentence or word with a short flag.
-      required: true
-    - name: "--truth"
-      type: boolean_true
-      description: A switch flag.
-    - name: "--falsehood"
-      type: boolean_false
-      description: A switch flag which is false when specified.
-    - name: "--reality"
-      type: boolean
-      description: A switch flag without predetermined state.
-    - name: "--output"
-      alternatives: [ "-o" ]
-      type: file
-      description: Write the parameters to a json file.
-      direction: output
-    - name: "--log"
-      type: file
-      description: An optional log file.
-      direction: output
-    - name: "--optional"
-      type: string
-      description: An optional string.
-    - name: "--optional_with_default"
-      type: string
-      default: "The default value."
-    - name: "--multiple"
-      type: string
-      multiple: true
-    - name: "multiple_pos"
-      type: string
-      multiple: true
   argument_groups:
     - name: First group
-      arguments: [ input, real_number, whole_number, s ]
+      arguments:
+        - name: "input"
+          type: file
+          description: |
+            An input file with positional arguments.
+            More checks for multiline descriptions.
+            Testing some characters that should be escaped: ` $ \
+          direction: input
+          required: true
+          must_exist: true
+          example: input.txt
+        - name: "--real_number"
+          type: double
+          description: A real number with positional arguments.
+          required: true
+        - name: "--whole_number"
+          type: integer
+          description: A whole number with a standard flag.
+          required: true
+        - name: "-s"
+          type: string
+          description: A sentence or word with a short flag.
+          required: true
     - name: Second group
-      arguments: [ truth, falsehood, reality ]
       description: Foo
+      arguments:
+        - name: "--truth"
+          type: boolean_true
+          description: A switch flag.
+        - name: "--falsehood"
+          type: boolean_false
+          description: A switch flag which is false when specified.
+        - name: "--reality"
+          type: boolean
+          description: A switch flag without predetermined state.
+    - name: Arguments
+      arguments:
+        - name: "--output"
+          alternatives: [ "-o" ]
+          type: file
+          description: Write the parameters to a json file.
+          direction: output
+        - name: "--log"
+          type: file
+          description: An optional log file.
+          direction: output
+        - name: "--optional"
+          type: string
+          description: An optional string.
+        - name: "--optional_with_default"
+          type: string
+          default: "The default value."
+        - name: "--multiple"
+          type: string
+          multiple: true
+        - name: "multiple_pos"
+          type: string
+          multiple: true
   resources:
     - type: bash_script
       path: ./code.sh
@@ -82,18 +83,19 @@ functionality:
   info:
     foo: bar
     custom_tag: custom_value
+  requirements:
+    n_proc: 2
+    memory: 2GB
 platforms:
   - type: native
   - type: docker
     image: "bash:3.2"
   - type: docker
-    image: "busybox"
-    id: "busybox"
+    image: "bash:3.2"
+    id: "throwawayimage"
+    target_image: "throwawayimage"
+    setup:
+      - type: apk
+        packages:
+          - fortune
   - type: nextflow
-    id: "nextflowlegacy"
-    variant: legacy
-    image: ubuntu
-    publish: true
-    tag: xenial
-  - type: nextflow
-    variant: vdsl3

@@ -4,6 +4,8 @@ include { readConfig; viashChannel; helpMessage } from "${params.rootDir}/workfl
 config = readConfig("${params.rootDir}/workflows/pipeline3/config.vsh.yaml")
 
 workflow base {
+  helpMessage(config)
+
   viashChannel(params, config)
     | view{"DEBUG: $it"}
 }

@@ -1,6 +1,6 @@
 name := "viash"
 
-version := "0.5.15"
+version := "0.6.0"
 
 scalaVersion := "2.12.15"
 
@@ -30,4 +30,4 @@ organization := "Data Intuitive"
 startYear := Some(2020)
 licenses += "GPL-3.0-or-later" -> url("https://www.gnu.org/licenses/gpl-3.0.html")
 
-Test / parallelExecution := false
+// Test / parallelExecution := false
