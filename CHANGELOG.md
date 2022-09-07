@@ -1,5 +1,12 @@
 # Viash 0.6.0
 
+The first (major) release this year! The biggest changes are:
+
+* Nextflow VDSL3 is now the default Nextflow platform, whereas the legacy Nextflow platform has been deprecated.
+* Support for tracking memory and cpu requirements more elegantly
+* Grouping arguments in groups more concisely.
+* The addition of a `viash ns exec` command, to be able to execute commands on Viash components more easily.
+
 ## BREAKING CHANGES
 
 * `NextflowPlatform`: `variant: vdsl3` is now the default NextflowPlatform. `variant: legacy` has been deprecated.
