@@ -1,7 +1,6 @@
 functionality:
   name: viash_test
   namespace: viash
-  version: 0.1
   description: |
     Test a project, usually in the context of a pipeline.
   arguments:
