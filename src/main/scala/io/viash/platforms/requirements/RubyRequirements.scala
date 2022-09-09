@@ -21,6 +21,12 @@ import io.viash.helpers.Circe._
 import io.viash.schemas._
 
 @description("Specify which Ruby packages should be available in order to run the component.")
+@example(
+  """setup:
+    |  - type: ruby
+    |    packages: [ rspec ]
+    |""".stripMargin,
+    "yaml")
 case class RubyRequirements(
   packages: OneOrMore[String] = Nil,
   `type`: String = "ruby"
