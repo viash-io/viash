@@ -106,13 +106,13 @@ case class DockerPlatform(
   @description(
     """A list of requirements for installing the following types of packages:
       |
-      | - apt
-      | - apk
-      | - yum
-      | - R
-      | - Python
-      | - JavaScript
-      | - Docker setup instructions
+      | - @[apt_req](apt)
+      | - @[apk_req](apk)
+      | - @[yum_req](yum)
+      | - @[r_req](R)
+      | - @[python_req](Python)
+      | - @[javascript_req](JavaScript)
+      | - @[docker_req](Docker setup instructions)
       |
       |The order in which these dependencies are specified determines the order in which they will be installed.
       |""".stripMargin)
