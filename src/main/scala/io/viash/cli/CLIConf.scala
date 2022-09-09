@@ -53,18 +53,18 @@ trait ViashNs {
   val query = registerOpt[String](
     name = "query",
     short = Some('q'),
-    descr = "Filter which components get selected by name and @[namespace](namespace). Can be a regex. Example: \"^mynamespace/component1$\".",
+    descr = "Filter which components get selected by component and @[namespace](namespace) name. Can be a regex. Example: \"^mynamespace/component1$\".",
     default = None
   )
   val query_namespace = registerOpt[String](
     name = "query_namespace",
     short = Some('n'),
-    descr = "Filter which namespaces get selected by a @[namespace](namespace). Can be a regex. Example: \"^mynamespace$\".",
+    descr = "Filter which namespaces get selected by @[namespace](namespace) name. Can be a regex. Example: \"^mynamespace$\".",
     default = None
   )
   val query_name = registerOpt[String](
     name = "query_name",
-    descr = "Filter which components get selected by name. Can be a regex. Example: \"^component1\".",
+    descr = "Filter which components get selected by component name. Can be a regex. Example: \"^component1\".",
     default = None
   )
   val src = registerOpt[String](
