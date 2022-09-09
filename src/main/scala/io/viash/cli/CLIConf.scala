@@ -45,7 +45,7 @@ trait ViashCommand {
     short = Some('c'),
     default = Some(Nil),
 
-    descr = "Modify a viash config at runtime using a @[config_mod](custom DSL). For more information, see the online documentation."
+    descr = "Modify a viash config at runtime using a @[config_mod](custom DSL)."
   )
 }
 trait ViashNs {
@@ -94,7 +94,7 @@ trait ViashNs {
     name = "config_mod",
     short = Some('c'),
     default = Some(Nil),
-    descr = "Modify a viash config at runtime using a @[config_mod](custom DSL). For more information, see the online documentation."
+    descr = "Modify a viash config at runtime using a @[config_mod](custom DSL)."
   )
 }
 trait WithTemporary {
