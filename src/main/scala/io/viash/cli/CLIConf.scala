@@ -53,13 +53,13 @@ trait ViashNs {
   val query = registerOpt[String](
     name = "query",
     short = Some('q'),
-    descr = "Filter which components get selected by name and namespace. Can be a regex. Example: \"^mynamespace/component1$\".",
+    descr = "Filter which components get selected by name and @[namespace](namespace). Can be a regex. Example: \"^mynamespace/component1$\".",
     default = None
   )
   val query_namespace = registerOpt[String](
     name = "query_namespace",
     short = Some('n'),
-    descr = "Filter which namespaces get selected by namespace. Can be a regex. Example: \"^mynamespace$\".",
+    descr = "Filter which namespaces get selected by a @[namespace](namespace). Can be a regex. Example: \"^mynamespace$\".",
     default = None
   )
   val query_name = registerOpt[String](
@@ -392,7 +392,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     val cli_schema = new DocumentedSubcommand("cli_schema") {
       banner(
         "viash export cli_schema",
-        """Export tje schema of the Viash CLI as a JSON""".stripMargin,
+        """Export the schema of the Viash CLI as a JSON""".stripMargin,
         """viash export cli_schema [--output file.json]""".stripMargin
       )
       val output = registerOpt[String](
