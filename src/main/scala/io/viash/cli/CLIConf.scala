@@ -188,7 +188,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       name = "setup",
       short = Some('s'),
       default = None,
-      descr = "Which setup strategy for creating the container to use [Docker Platform only]."
+      descr = "Which @[docker_setup_strategy](setup strategy) for creating the container to use [Docker Platform only]."
     )
     val push = registerOpt[Boolean](
       name = "push",
@@ -261,7 +261,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       val setup = registerOpt[String](
         name = "setup",
         default = None,
-        descr = "Which setup strategy for creating the container to use [Docker Platform only]."
+        descr = "Which @[docker_setup_strategy](setup strategy) for creating the container to use [Docker Platform only]."
       )
       val push = registerOpt[Boolean](
         name = "push",
