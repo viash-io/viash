@@ -130,7 +130,8 @@ object Main {
         ViashNamespace.exec(
           configs = configs,
           command = cli.namespace.exec.cmd(),
-          dryrun = cli.namespace.exec.dryrun()
+          dryrun = cli.namespace.exec.dryrun(),
+          parallel = cli.namespace.exec.parallel()
         )
         val errors = configs.flatMap(_.right.toOption).count(status => List(Success, Disabled, TestMissing).contains(status))
         if (errors > 0)

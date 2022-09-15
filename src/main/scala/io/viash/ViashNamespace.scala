@@ -239,7 +239,7 @@ object ViashNamespace {
     printResults(configs.map(_.fold(fa => Success, fb => fb)), false, false)
   }
 
-  def exec(configs: List[Either[Config, BuildStatus]], command: String, dryrun: Boolean) {
+  def exec(configs: List[Either[Config, BuildStatus]], command: String, dryrun: Boolean, parallel: Boolean) {
 
     val goodConfigs = configs.flatMap(_.left.toOption).groupBy(_.info.get.config)
     // Just take first config. More can be available but those have different platforms. Platforms are currently ignored.
@@ -272,7 +272,7 @@ object ViashNamespace {
         configData
     }
 
-    for (data <- collectedData) {
+    for (data <- if (parallel) collectedData.par else collectedData) {
       // remove trailing + or ; mode character
       val commandNoMode = command.replaceFirst(""" \\?[;+]$""", "")
       val replacedCommand = 
@@ -285,7 +285,7 @@ object ViashNamespace {
       } else {
         Console.err.println(s"+ $replacedCommand")
         val (exitcode, output) = runExecCommand(replacedCommand)
-        Console.err.println(s"  Exit code: $exitcode")
+        Console.err.println(s"  Exit code: $exitcode\n")
         Console.err.println(s"  Output:")
         Console.out.println(output)
       }
