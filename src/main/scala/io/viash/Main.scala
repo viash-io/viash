@@ -108,11 +108,8 @@ object Main {
           tsv = cli.namespace.test.tsv.toOption,
           append = cli.namespace.test.append()
         )
-        val errors = testResults.flatMap(_.right.toOption).count(status => List(Success, Disabled, TestMissing).contains(status))
-        if (errors > 0)
-          1
-        else
-          0
+        val errors = testResults.flatMap(_.right.toOption).count(status => List(ParseError, BuildError, TestError).contains(status))
+        if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.list) =>
         val configs = readConfigs(cli.namespace.list, addOptMainScript = false)
         ViashNamespace.list(
@@ -120,11 +117,8 @@ object Main {
           format = cli.namespace.list.format(),
           parseArgumentGroups = cli.namespace.list.parse_argument_groups()
         )
-        val errors = configs.flatMap(_.right.toOption).count(status => List(Success, Disabled, TestMissing).contains(status))
-        if (errors > 0)
-          1
-        else
-          0
+        val errors = configs.flatMap(_.right.toOption).count(status => List(ParseError, BuildError, TestError).contains(status))
+        if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.exec) =>
         val configs = readConfigs(cli.namespace.exec, applyPlatform = false)
         ViashNamespace.exec(
@@ -132,11 +126,8 @@ object Main {
           command = cli.namespace.exec.cmd(),
           dryrun = cli.namespace.exec.dryrun()
         )
-        val errors = configs.flatMap(_.right.toOption).count(status => List(Success, Disabled, TestMissing).contains(status))
-        if (errors > 0)
-          1
-        else
-          0
+        val errors = configs.flatMap(_.right.toOption).count(status => List(ParseError, BuildError, TestError).contains(status))
+        if (errors > 0) 1 else 0
       case List(cli.config, cli.config.view) =>
         val config = Config.read(
           configPath = cli.config.view.config(),
