@@ -281,12 +281,13 @@ object ViashNamespace {
         }
 
       if (dryrun) {
-        Console.println(s"+ $replacedCommand")
+        Console.err.println(s"+ $replacedCommand")
       } else {
-        Console.println(s"+ $replacedCommand")
+        Console.err.println(s"+ $replacedCommand")
         val (exitcode, output) = runExecCommand(replacedCommand)
-        Console.println(s"  Exit code: $exitcode")
-        Console.println(s"  Output: $output")
+        Console.err.println(s"  Exit code: $exitcode")
+        Console.err.println(s"  Output:")
+        Console.out.println(output)
       }
     }
   }
