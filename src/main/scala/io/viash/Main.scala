@@ -28,7 +28,7 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.nio.file.NoSuchFileException
 import io.viash.helpers.MissingResourceFileException
-import io.viash.helpers.BuildStatus._
+import io.viash.helpers.status._
 import io.viash.schemas.CollectedSchemas
 
 object Main {
@@ -108,11 +108,8 @@ object Main {
           tsv = cli.namespace.test.tsv.toOption,
           append = cli.namespace.test.append()
         )
-        val errors = testResults.flatMap(_.right.toOption).count(status => List(Success, Disabled, TestMissing).contains(status))
-        if (errors > 0)
-          1
-        else
-          0
+        val errors = testResults.flatMap(_.right.toOption).count(_.isError)
+        if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.list) =>
         val configs = readConfigs(cli.namespace.list, addOptMainScript = false)
         ViashNamespace.list(
@@ -120,11 +117,8 @@ object Main {
           format = cli.namespace.list.format(),
           parseArgumentGroups = cli.namespace.list.parse_argument_groups()
         )
-        val errors = configs.flatMap(_.right.toOption).count(status => List(Success, Disabled, TestMissing).contains(status))
-        if (errors > 0)
-          1
-        else
-          0
+        val errors = configs.flatMap(_.right.toOption).count(_.isError)
+        if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.exec) =>
         val configs = readConfigs(cli.namespace.exec, applyPlatform = false)
         ViashNamespace.exec(
@@ -133,11 +127,8 @@ object Main {
           dryrun = cli.namespace.exec.dryrun(),
           parallel = cli.namespace.exec.parallel()
         )
-        val errors = configs.flatMap(_.right.toOption).count(status => List(Success, Disabled, TestMissing).contains(status))
-        if (errors > 0)
-          1
-        else
-          0
+        val errors = configs.flatMap(_.right.toOption).count(_.isError)
+        if (errors > 0) 1 else 0
       case List(cli.config, cli.config.view) =>
         val config = Config.read(
           configPath = cli.config.view.config(),
@@ -194,7 +185,7 @@ object Main {
     subcommand: ViashNs,
     addOptMainScript: Boolean = true,
     applyPlatform: Boolean = true
-  ): List[Either[Config, BuildStatus]] = {
+  ): List[Either[Config, Status]] = {
     val source = subcommand.src()
     val query = subcommand.query.toOption
     val queryNamespace = subcommand.query_namespace.toOption
