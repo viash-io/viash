@@ -23,34 +23,36 @@ class MainNSExecNativeSuite extends FunSuite with BeforeAndAfterAll {
   private val tempFolStr = temporaryFolder.toString
 
   test("Check whether ns exec \\; works") {
-    val (stdoutRaw, stderr) =
+    val (stdoutRaw, stderrRaw) =
       TestHelper.testMainWithStdErr(
         "ns", "exec",
         "--src", nsPath,
-        "echo _{functionality-name}_ -{dir}- !{path}! \\;"
+        "echo _{functionality-name}_ -{dir}- !{path}! ~{platform}~ ={namespace}=+\\;"
       )
     val stdout = stdoutRaw.replaceAll(nsPath, "src/")
+    val stderr = stderrRaw.replaceAll(nsPath, "src/")
 
     for (component ← components) {
-      val regexCommand = s"""\\+ echo _${component}_ -src/$component/?- !src/$component/config.vsh.yaml!""".r
-      assert(regexCommand.findFirstIn(stdout).isDefined, s"\nRegex: $regexCommand; text: \n$stdout")
-      val outputCommand = s"""  Output: _${component}_ -src/$component/?- !src/$component/config.vsh.yaml!""".r
+      val regexCommand = s"""\\+ echo _${component}_ -src/$component/?- !src/$component/config.vsh.yaml! ~native~ =testns=""".r
+      assert(regexCommand.findFirstIn(stderr).isDefined, s"\nRegex: $regexCommand; text: \n$stderr")
+      val outputCommand = s"""_${component}_ -src/$component/?- !src/$component/config.vsh.yaml! ~native~ =testns=""".r
       assert(outputCommand.findFirstIn(stdout).isDefined, s"\nRegex: $outputCommand; text: \n$stdout")
     }
   }
 
   test("Check whether ns exec + works") {
-    val (stdoutRaw, stderr) = TestHelper.testMainWithStdErr(
+    val (stdoutRaw, stderrRaw) = TestHelper.testMainWithStdErr(
       "ns", "exec",
       "--src", nsPath,
       "echo {path} +"
     )
     val stdout = stdoutRaw.replaceAll(nsPath, "src/")
+    val stderr = stderrRaw.replaceAll(nsPath, "src/")
 
     // can't guarantee order of components
     val regexCommand = s"""\\+ echo src/[^/]*/config.vsh.yaml src/[^/]*/config.vsh.yaml src/[^/]*/config.vsh.yaml src/[^/]*/config.vsh.yaml""".r
-    assert(regexCommand.findFirstIn(stdout).isDefined, s"\nRegex: $regexCommand; text: \n$stdout")
-    val outputCommand = s"""  Output: src/[^/]*/config.vsh.yaml src/[^/]*/config.vsh.yaml src/[^/]*/config.vsh.yaml src/[^/]*/config.vsh.yaml""".r
+    assert(regexCommand.findFirstIn(stderr).isDefined, s"\nRegex: $regexCommand; text: \n$stderr")
+    val outputCommand = s"""src/[^/]*/config.vsh.yaml src/[^/]*/config.vsh.yaml src/[^/]*/config.vsh.yaml src/[^/]*/config.vsh.yaml""".r
     assert(outputCommand.findFirstIn(stdout).isDefined, s"\nRegex: $outputCommand; text: \n$stdout")
   }
 
