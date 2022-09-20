@@ -20,6 +20,7 @@ package io.viash.functionality
 import arguments._
 import resources._
 import Status._
+import dependencies._
 import io.viash.config.Version
 import io.circe.generic.extras._
 import io.viash.schemas._
@@ -259,6 +260,9 @@ case class Functionality(
       "yaml")
   @since("Viash 0.6.0")
   requirements: ComputationalRequirements = ComputationalRequirements(),
+
+  dependencies: List[Dependency] = Nil,
+  repositories: List[Repository] = Nil,
 
   // The variables below are for internal use and shouldn't be publicly documented
 

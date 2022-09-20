@@ -29,6 +29,7 @@ package object functionality {
   import functionality.arguments._
   import functionality.resources._
   import functionality.Status._
+  import functionality.dependencies._
   import io.viash.helpers.Circe._
 
   // encoder and decoder for Functionality
