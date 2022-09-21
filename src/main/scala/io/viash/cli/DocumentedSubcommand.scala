@@ -35,13 +35,19 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
   var command: Option[String] = None
   var description: Option[String] = None
   var usage: Option[String] = None
+  var footerText: Option[String] = None
 
   def banner(command: String, description: String, usage: String): Unit = {
     this.command = Some(command)
     this.description = Some(description)
     this.usage = Some(usage)
 
-    super.banner(s"$command\n$description\n\nUsage:\n  $usage\n\nArguments:")
+    super.banner(s"$command\n${removeMarkup(description)}\n\nUsage:\n  $usage\n\nArguments:")
+  }
+
+  override def footer(text: String): Unit = {
+    footerText = Some(text)
+    super.footer(removeMarkup(text))
   }
 
 
@@ -50,6 +56,13 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       registeredSubCommands = registeredSubCommands :+ conf.asInstanceOf[DocumentedSubcommand]
     }
     super.addSubcommand(conf)
+  }
+
+  def removeMarkup(text: String): String = {
+    val markupRegex = raw"@\[.*\]\((.*)\)".r
+    val backtickRegex = "`(\"[^`\"]*\")`".r
+    val textWithoutMarkup = markupRegex.replaceAllIn(text, "$1")
+    backtickRegex.replaceAllIn(textWithoutMarkup, "$1")
   }
 
   // We need to get the TypeTag[A], which changes the interface of 'opt', however since we have default values we can't just overload the methods.
@@ -86,7 +99,7 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       optType = "opt"
     )
     registeredOpts = registeredOpts :+ registeredOpt
-    opt(name, short.getOrElse('\u0000'), descr, default, validate, required, argName, hidden, short.isEmpty, group)
+    opt(name, short.getOrElse('\u0000'), removeMarkup(descr), default, validate, required, argName, hidden, short.isEmpty, group)
   }
 
   def registerChoice(
@@ -119,7 +132,7 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       optType = "choice"
     )
     registeredOpts = registeredOpts :+ registeredOpt
-    choice(choices, name, short.getOrElse('\u0000'), descr, default, required, argName, hidden, short.isEmpty, group)
+    choice(choices, name, short.getOrElse('\u0000'), removeMarkup(descr), default, required, argName, hidden, short.isEmpty, group)
   }
 
   def registerTrailArg[A](
@@ -151,7 +164,7 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       optType = "trailArgs"
     )
     registeredOpts = registeredOpts :+ registeredOpt
-    trailArg[A](name, descr, validate, required, default, hidden, group)
+    trailArg[A](name, removeMarkup(descr), validate, required, default, hidden, group)
   }
 
   def toRegisteredCommand: RegisteredCommand = 
@@ -160,7 +173,7 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       bannerCommand = command,
       bannerDescription = description,
       bannerUsage = usage,
-      footer = builder.foot,
+      footer = footerText,
       subcommands = registeredSubCommands.map(_.toRegisteredCommand),
       opts = registeredOpts
     )
