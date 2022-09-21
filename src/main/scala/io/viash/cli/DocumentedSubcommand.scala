@@ -42,7 +42,15 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
     this.description = Some(description)
     this.usage = Some(usage)
 
-    super.banner(s"$command\n${removeMarkup(description)}\n\nUsage:\n  $usage\n\nArguments:")
+    super.banner(
+  s"""$command
+    |${removeMarkup(description)}
+    |
+    |Usage:
+    |  ${usage.split("\n").mkString("\n  ")}
+    |
+    |Arguments:""".stripMargin
+)
   }
 
   override def footer(text: String): Unit = {
