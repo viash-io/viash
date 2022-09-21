@@ -237,7 +237,7 @@ case class Functionality(
       "yaml")
   test_resources: List[Resource] = Nil,
 
-  @description("A map for storing custom annotation.")
+  @description("A map for storing custom annotations.")
   @example("info: {twitter: wizzkid, appId: com.example.myApplication}", "yaml")
   @since("Viash 0.4.0")
   info: Map[String, String] = Map.empty[String, String],
