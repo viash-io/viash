@@ -22,4 +22,14 @@ final case class Repository(
   `type`: String,
   tag: Option[String],
   path: Option[String]
-)
+) {
+
+  def isAlike(obj: Any): Boolean = {
+    obj match {
+      case o if o == this => true
+      case o: Repository => equals(o.copy(name = this.name))
+      case _ => false
+    }
+  }
+
+}

@@ -24,4 +24,20 @@ case class Dependency(
   tag: Option[String],
   repository: Option[String],
   path: Option[String]
-)
+) {
+  var linkedRepository: Option[Repository] = None
+  def workRepository: Repository = {
+    // TODO evaluate required code for 'on the fly' creation of the repo from dependency data
+    if (linkedRepository.isDefined)
+      linkedRepository.get
+    else
+      Repository(name = "", `type` = `type`, tag = tag, path = path)
+  }
+}
+
+object Dependency {
+  def groupByRepository(dependencies: Seq[Dependency]) = {
+    dependencies.groupBy(_.workRepository)
+  }
+
+}
