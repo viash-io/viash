@@ -80,8 +80,26 @@ object IO {
     try {
       Some(read(uri))
     } catch {
-      case _: Exception =>
+      case e: Exception =>
         println(s"File at URI '$uri' not found")
+        println()
+        println("###################")
+        println("Exception:")
+        println(e)
+        println("###################")
+
+        def getListOfFiles(d: File): List[File] = {
+          if (d.exists && d.isDirectory) {
+            d.listFiles.filter(_.isFile).toList
+          } else {
+            List[File]()
+          }
+        }
+        println("Files in directory:")
+        val dir = Paths.get(uri).getParent().toFile()
+        println(getListOfFiles(dir).mkString("  * ", "\n  * ", ""))
+        println("###################")
+
         None
       }
   }
