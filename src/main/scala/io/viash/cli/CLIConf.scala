@@ -327,7 +327,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         """Execute a command for all found Viash components.
           |The syntax of this command is inspired by `find . -exec echo {} \;`.
           |
-          |The following fields are automatically replaced:
+          |The following fields are automatically replaced:  
+          |
           | * `{}` | `{path}`: path to the config file
           | * `{abs-path}`: absolute path to the config file
           | * `{dir}`: path to the parent directory of the config file
