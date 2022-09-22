@@ -30,6 +30,7 @@ import io.viash.functionality.resources.Resource
 
 import java.nio.file.attribute.PosixFilePermission
 import java.util.Comparator
+import scala.collection.JavaConverters
 
 object IO {
   def tempDir: Path = {
@@ -192,5 +193,13 @@ object IO {
       }
       Files.setPosixFilePermissions(path, perms)
     }
+  }
+  
+  /**
+   * Find all files in a directory and filter according to their properties.
+   */
+  def find(sourceDir: Path, filter: (Path, BasicFileAttributes) => Boolean): List[Path] = {
+    val it = Files.find(sourceDir, Integer.MAX_VALUE, (p, b) => filter(p, b)).iterator()
+    JavaConverters.asScalaIterator(it).toList
   }
 }
