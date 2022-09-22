@@ -386,25 +386,6 @@ case class Functionality(
     }
   }
 
-  // perform some dependency operations
-  {
-    // map the repository to the repository class
-    dependencies.foreach(d => {
-      d.linkedRepository = d.repository.flatMap(repoName => repositories.find(_.name == repoName))
-      require(d.repository.isDefined == d.linkedRepository.isDefined, message = s"Could not find repository ${d.repository.get}")
-    })
-
-    val groupedDependencies = Dependency.groupByRepository(dependencies)
-    
-    // TODO get remote repositories, pass to dependency.prepare?
-    // groupedDependencies.foreach(r => r.fetch)
-
-    dependencies.foreach(d => d.prepare())
-
-
-    println(s"grouped dependencies: $groupedDependencies")
-  }
-
   def mainScript: Option[Script] =
     resources.headOption.flatMap {
       case s: Script => Some(s)

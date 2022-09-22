@@ -17,19 +17,48 @@
 
 package io.viash.functionality.dependencies
 
-final case class Repository(
+abstract class Repository {
+  val name: String
+  val `type`: String
+  val tag: Option[String]
+  val path: Option[String]
+  val localPath: String
+
+  def copyRepo(
+    name: String = this.name,
+    `type`: String = this.`type`,
+    tag: Option[String] = this.tag,
+    path: Option[String] = this.path,
+    localPath: String = this.localPath
+  ): Repository
+
+  // def isAlike(obj: Any): Boolean = {
+  //   obj match {
+  //     case o if o == this => true
+  //     case o: Repository => this.equals(o.copy(name = this.name))
+  //     case _ => false
+  //   }
+  // }
+}
+
+
+
+case class GithubRepository(
   name: String,
-  `type`: String,
+  `type`: String = "github",
   tag: Option[String],
-  path: Option[String]
-) {
+  path: Option[String],
+  localPath: String = ""
+) extends Repository {
+  def copyRepo(name: String, `type`: String, tag: Option[String], path: Option[String], localPath: String): Repository = copy(name, `type`, tag, path, localPath)
+}
 
-  def isAlike(obj: Any): Boolean = {
-    obj match {
-      case o if o == this => true
-      case o: Repository => equals(o.copy(name = this.name))
-      case _ => false
-    }
-  }
-
+case class LocalRepository(
+  name: String = "",
+  `type`: String = "local",
+  tag: Option[String] = None,
+  path: Option[String] = None,
+  localPath: String = ""
+) extends Repository {
+  def copyRepo(name: String, `type`: String, tag: Option[String], path: Option[String], localPath: String): Repository = copy(name, `type`, tag, path, localPath)
 }

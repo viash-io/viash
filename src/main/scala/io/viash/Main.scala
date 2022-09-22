@@ -27,6 +27,7 @@ import java.io.FileNotFoundException
 import java.nio.file.NoSuchFileException
 import io.viash.helpers.MissingResourceFileException
 import io.viash.helpers.status._
+import io.viash.helpers.DependencyResolver
 
 object Main {
   private val pkg = getClass.getPackage
@@ -132,8 +133,16 @@ object Main {
           configMods = cli.config.view.config_mods(),
           addOptMainScript = false
         )
+        Console.println("### Base config ###")
         ViashConfig.view(
           config, 
+          format = cli.config.view.format(),
+          parseArgumentGroups = cli.config.view.parse_argument_groups()
+        )
+        Console.println("### Dependency Resolver config ###")
+        val config1 = DependencyResolver.modifyConfig(config)
+        ViashConfig.view(
+          config1, 
           format = cli.config.view.format(),
           parseArgumentGroups = cli.config.view.parse_argument_groups()
         )
