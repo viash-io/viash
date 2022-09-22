@@ -17,11 +17,9 @@
 
 package io.viash.functionality.dependencies
 
-import java.nio.file.Paths
-import java.nio.file.Path
-import java.nio.file.attribute.BasicFileAttributes
-import scala.collection.JavaConverters
-import java.nio.file.Files
+import java.nio.file.{Path, Paths}
+import io.viash.config.Config
+import io.viash.config.Config._
 
 case class Dependency(
   name: String,
@@ -41,6 +39,7 @@ case class Dependency(
   }
 
   private var cachePath: Path = Paths.get("")
+  private var config: Config = null
 
   def prepare() {
     // Remote repositories should have been fetched and cached locally (store location where it is cached).
@@ -51,25 +50,12 @@ case class Dependency(
     println(s"cacheLocation: $cachePath")
 
     // Locate config file
-
-    val configFiles = find(cachePath, (path, attrs) => {
-      path.toString.contains(".vsh.") &&
-        attrs.isRegularFile
-    })
-    println(s"scriptFiles: $configFiles")
-
+    val configs = readConfigs(cachePath.toString, applyPlatform = false)
+    println(s"found configs: $configs")
     
 
 
     // Recursively call prepare on those config files.
-  }
-
-  /**
-   * Find all files in a directory and filter according to their properties.
-   */
-  def find(sourceDir: Path, filter: (Path, BasicFileAttributes) => Boolean): List[Path] = {
-    val it = Files.find(sourceDir, Integer.MAX_VALUE, (p, b) => filter(p, b)).iterator()
-    JavaConverters.asScalaIterator(it).toList
   }
 
 }
