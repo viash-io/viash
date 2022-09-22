@@ -1,3 +1,17 @@
+# Viash 0.6.1
+
+
+## NEW FUNCTIONALITY
+
+* `viash ns exec`: Added two more fields:
+
+  - `{platform}`: the platform name (if applicable)
+  - `{namespace}`: the namespace of the component
+
+## BUG FIXES
+
+* `viash ns`: Reverse exit code outputs, was returning 1 when everything was OK and 0 when errors were detected (#227).
+
 # Viash 0.6.0
 
 The first (major) release this year! The biggest changes are:

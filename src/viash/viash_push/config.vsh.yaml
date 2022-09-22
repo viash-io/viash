@@ -1,7 +1,6 @@
 functionality:
   name: viash_push
   namespace: viash
-  version: 0.1
   description: |
     Push a project, usually in the context of a pipeline.
   arguments:
@@ -33,7 +32,7 @@ functionality:
     alternatives: [ "-t" ]
     type: string
     description: The tag/version to be used.
-    example: "dev"
+    example: "0.1.0"
   - name: "--registry"
     alternatives: [ "-r" ]
     example: ghcr.io
@@ -44,6 +43,11 @@ functionality:
     example: myorganisation
     type: string
     description: Which organisation name to use in the Docker image name.
+  - name: "--target_image_source"
+    alternatives: [ "-tis" ]
+    type: string
+    description: Which image source to specify in the component builds.
+    example: https://github.com/myorganisation/myrepository
   - name: "--namespace_separator"
     example: "_"
     type: string

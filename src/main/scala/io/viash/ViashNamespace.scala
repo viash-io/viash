@@ -22,7 +22,7 @@ import io.viash.ViashTest.{ManyTestOutput, TestOutput}
 import config.Config
 import helpers.IO
 import io.viash.helpers.MissingResourceFileException
-import io.viash.helpers.BuildStatus._
+import io.viash.helpers.status._
 import java.nio.file.Path
 import io.viash.helpers.NsExecData._
 import io.viash.helpers.NsExecData
@@ -31,7 +31,7 @@ import java.io.{ByteArrayOutputStream, File, PrintWriter}
 
 object ViashNamespace {
   def build(
-    configs: List[Either[Config, BuildStatus]],
+    configs: List[Either[Config, Status]],
     target: String,
     setup: Option[String] = None,
     push: Boolean = false,
@@ -64,20 +64,20 @@ object ViashNamespace {
             push = push,
             writeMeta = writeMeta
           )
-          Right(helpers.BuildStatus.Success)
+          Right(Success)
         }
       }
 
-    printResults(results.map(r => r.fold(fa => helpers.BuildStatus.Success, fb => fb)).toList, true, false)
+    printResults(results.map(r => r.fold(fa => Success, fb => fb)).toList, true, false)
   }
 
   def test(
-    configs: List[Either[Config, BuildStatus]],
+    configs: List[Either[Config, Status]],
     parallel: Boolean = false,
     keepFiles: Option[Boolean] = None,
     tsv: Option[String] = None,
     append: Boolean = false
-  ): List[Either[(Config, ManyTestOutput), BuildStatus]] = {
+  ): List[Either[(Config, ManyTestOutput), Status]] = {
     // we can't currently test nextflow platforms, so exclude them from the tests
     val testableConfigs = configs.filter(conf =>
       conf match {
@@ -232,14 +232,14 @@ object ViashNamespace {
     }
   }
 
-  def list(configs: List[Either[Config, BuildStatus]], format: String = "yaml", parseArgumentGroups: Boolean) {
+  def list(configs: List[Either[Config, Status]], format: String = "yaml", parseArgumentGroups: Boolean) {
     val configs2 = configs.flatMap(_.left.toOption)
     ViashConfig.viewMany(configs2, format, parseArgumentGroups)
 
     printResults(configs.map(_.fold(fa => Success, fb => fb)), false, false)
   }
 
-  def exec(configs: List[Either[Config, BuildStatus]], command: String, dryrun: Boolean) {
+  def exec(configs: List[Either[Config, Status]], command: String, dryrun: Boolean, parallel: Boolean) {
 
     val goodConfigs = configs.flatMap(_.left.toOption).groupBy(_.info.get.config)
     // Just take first config. More can be available but those have different platforms. Platforms are currently ignored.
@@ -272,7 +272,7 @@ object ViashNamespace {
         configData
     }
 
-    for (data <- collectedData) {
+    for (data <- if (parallel) collectedData.par else collectedData) {
       // remove trailing + or ; mode character
       val commandNoMode = command.replaceFirst(""" \\?[;+]$""", "")
       val replacedCommand = 
@@ -281,12 +281,13 @@ object ViashNamespace {
         }
 
       if (dryrun) {
-        Console.println(s"+ $replacedCommand")
+        Console.err.println(s"+ $replacedCommand")
       } else {
-        Console.println(s"+ $replacedCommand")
+        Console.err.println(s"+ $replacedCommand")
         val (exitcode, output) = runExecCommand(replacedCommand)
-        Console.println(s"  Exit code: $exitcode")
-        Console.println(s"  Output: $output")
+        Console.err.println(s"  Exit code: $exitcode\n")
+        Console.err.println(s"  Output:")
+        Console.out.println(output)
       }
     }
   }
@@ -314,8 +315,8 @@ object ViashNamespace {
     }
   }
 
-  def printResults(statuses: Seq[BuildStatus], performedBuild: Boolean, performedTest: Boolean) {
-    val successes = statuses.count(_ == helpers.BuildStatus.Success)
+  def printResults(statuses: Seq[Status], performedBuild: Boolean, performedTest: Boolean) {
+    val successes = statuses.count(_ == Success)
 
     val successAction = (performedBuild, performedTest) match {
       case (false, false) => "parsed"
@@ -325,19 +326,19 @@ object ViashNamespace {
     }
 
     val messages = List(
-      (helpers.BuildStatus.ParseError, Console.RED, "configs encountered parse errors"),
-      (helpers.BuildStatus.Disabled, Console.YELLOW, "configs were disabled"),
-      (helpers.BuildStatus.BuildError, Console.RED, "configs built failed"),
-      (helpers.BuildStatus.TestError, Console.RED, "tests failed"),
-      (helpers.BuildStatus.TestMissing, Console.YELLOW, "tests missing"),
-      (helpers.BuildStatus.Success, Console.GREEN, s"configs $successAction successfully"))
+      (ParseError, "configs encountered parse errors"),
+      (Disabled, "configs were disabled"),
+      (BuildError, "configs built failed"),
+      (TestError, "tests failed"),
+      (TestMissing, "tests missing"),
+      (Success, s"configs $successAction successfully"))
 
     if (successes != statuses.length) {
       Console.err.println(s"${Console.YELLOW}Not all configs $successAction successfully${Console.RESET}")
-      for ((status, colour, message) <- messages) {
+      for ((status, message) <- messages) {
         val count = statuses.count(_ == status)
         if (count > 0)
-          Console.err.println(s"  ${colour}$count/${statuses.length} ${message}${Console.RESET}")
+          Console.err.println(s"  ${status.color}$count/${statuses.length} ${message}${Console.RESET}")
       }
     }
     else {

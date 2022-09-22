@@ -21,6 +21,7 @@ import io.viash.config_mods.ConfigModParser
 import io.viash.functionality._
 import io.viash.platforms._
 import io.viash.helpers.{Git, GitInfo, IO}
+import io.viash.helpers.status._
 
 import java.net.URI
 import io.circe.yaml.parser
@@ -30,6 +31,7 @@ import java.io.File
 import io.circe.DecodingFailure
 import io.circe.ParsingFailure
 import io.viash.config_mods.ConfigMods
+import java.nio.file.Paths
 
 case class Config(
   functionality: Functionality,
@@ -245,4 +247,109 @@ object Config {
     )
   }
 
+  def readConfigs(
+    source: String,
+    query: Option[String] = None,
+    queryNamespace: Option[String] = None,
+    queryName: Option[String] = None,
+    platform: Option[String] = None,
+    configMods: List[String] = Nil,
+    addOptMainScript: Boolean = true,
+    applyPlatform: Boolean = true
+  ): List[Either[Config, Status]] = {
+
+    val sourceDir = Paths.get(source)
+
+    // create regex for filtering platform ids
+    val platformStr = platform.getOrElse(".*")
+
+    // find *.vsh.* files and parse as config
+    val scriptFiles = IO.find(sourceDir, (path, attrs) => {
+      path.toString.contains(".vsh.") &&
+        attrs.isRegularFile
+    })
+
+    scriptFiles.flatMap { file =>
+      val conf1 =
+        try {
+          // first read config to get an idea of the available platforms
+          val confTest = Config.read(
+            file.toString, 
+            addOptMainScript = false,
+            applyPlatform = false, 
+            configMods = configMods,
+            displayWarnings = false // warnings will be displayed when reading the second time
+          )
+
+          val funName = confTest.functionality.name
+          val funNs = confTest.functionality.namespace
+
+          // does name & namespace match regex?
+          val queryTest = (query, funNs) match {
+            case (Some(regex), Some(ns)) => regex.r.findFirstIn(ns + "/" + funName).isDefined
+            case (Some(regex), None) => regex.r.findFirstIn(funName).isDefined
+            case (None, _) => true
+          }
+          val nameTest = queryName match {
+            case Some(regex) => regex.r.findFirstIn(funName).isDefined
+            case None => true
+          }
+          val namespaceTest = (queryNamespace, funNs) match {
+            case (Some(regex), Some(ns)) => regex.r.findFirstIn(ns).isDefined
+            case (Some(_), None) => false
+            case (None, _) => true
+          }
+
+          // if config passes regex checks, return it
+          if (queryTest && nameTest && namespaceTest && confTest.functionality.isEnabled) {
+            Left(confTest)
+          } else {
+            Right(Disabled)
+          }
+        } catch {
+          case _: Exception =>
+            Console.err.println(s"${Console.RED}Reading file '$file' failed${Console.RESET}")
+            Right(ParseError)
+        }
+
+      if (conf1.isRight) {
+        List(conf1)
+      } else {
+
+        val configs = if (platformStr.contains(":") || (new File(platformStr)).exists) {
+          // platform is a file
+          List(Config.read(
+            configPath = file.toString,
+            platform = Some(platformStr),
+            applyPlatform = applyPlatform,
+            addOptMainScript = addOptMainScript,
+            configMods = configMods
+          ))
+        } else {
+          // platform is a regex for filtering the ids
+          val platIDs = conf1.left.get.platforms.map(_.id)
+
+          val filteredPlats =
+            if (platIDs.isEmpty) {
+              // config did not contain any platforms, so the native platform should be used
+              List(None)
+            } else {
+              // filter platforms using the regex
+              platIDs.filter(platformStr.r.findFirstIn(_).isDefined).map(Some(_))
+            }
+
+          filteredPlats.map { plat =>
+            Config.read(
+              configPath = file.toString,
+              platform = plat,
+              applyPlatform = applyPlatform,
+              addOptMainScript = addOptMainScript,
+              configMods = configMods
+            )
+          }
+        }
+        configs.map(c => Left(c))
+      }
+    }
+  }
 }
