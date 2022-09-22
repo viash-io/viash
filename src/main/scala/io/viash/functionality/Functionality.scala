@@ -395,6 +395,13 @@ case class Functionality(
     })
 
     val groupedDependencies = Dependency.groupByRepository(dependencies)
+    
+    // TODO get remote repositories, pass to dependency.prepare?
+    // groupedDependencies.foreach(r => r.fetch)
+
+    dependencies.foreach(d => d.prepare())
+
+
     println(s"grouped dependencies: $groupedDependencies")
   }
 
