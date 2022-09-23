@@ -41,29 +41,35 @@ case class DebugPlatform(
     }
 
     // disable required arguments and set defaults for all arguments
-    def mapArgs(args: List[Argument[_]]) = {
-      args.map {
-        case arg if arg.required && arg.default.nonEmpty => 
-          arg.copyArg(required = false)
-        case arg if arg.default.isEmpty && arg.example.nonEmpty => 
-          arg.copyArg(required = false, default = arg.example)
-        case arg: BooleanArgumentBase if arg.default.isEmpty => 
-          arg.copyArg(required = false, default = One(true))
-        case arg: DoubleArgument if arg.default.isEmpty => 
-          arg.copy(required = false, default = One(123.0), min = None, max = None)
-        case arg: FileArgument if arg.default.isEmpty => 
-          arg.copy(required = false, default = One(Paths.get("/path/to/file")), must_exist = false)
-        case arg: IntegerArgument if arg.default.isEmpty =>
-           arg.copy(required = false, default = One(123), choices = Nil, min = None, max = None)
-        case arg: StringArgument if arg.default.isEmpty => 
-          arg.copy(required = false, default = One("value"), choices = Nil)
-        case a => a
+    val newArgumentGroups = functionality.allArgumentGroups.map { argument_group => 
+        argument_group.copy(
+          arguments = argument_group.arguments
+            .flatMap(_.right.toOption) // there shouldn't be any lefts at this stage
+            .map{
+              case arg if arg.required && arg.default.nonEmpty => 
+                arg.copyArg(required = false)
+              case arg if arg.default.isEmpty && arg.example.nonEmpty => 
+                arg.copyArg(required = false, default = arg.example)
+              case arg: BooleanArgumentBase if arg.default.isEmpty => 
+                arg.copyArg(required = false, default = One(true))
+              case arg: DoubleArgument if arg.default.isEmpty => 
+                arg.copy(required = false, default = One(123.0), min = None, max = None)
+              case arg: FileArgument if arg.default.isEmpty => 
+                arg.copy(required = false, default = One(Paths.get("/path/to/file")), must_exist = false)
+              case arg: IntegerArgument if arg.default.isEmpty =>
+                arg.copy(required = false, default = One(123), choices = Nil, min = None, max = None)
+              case arg: StringArgument if arg.default.isEmpty => 
+                arg.copy(required = false, default = One("value"), choices = Nil)
+              case a => a
+            }
+            .map{Right(_)}
+        )
       }
-    }
     val fun0 = functionality.copy(
-      inputs = mapArgs(functionality.inputs),
-      outputs = mapArgs(functionality.outputs),
-      arguments = mapArgs(functionality.arguments)
+      inputs = Nil,
+      outputs = Nil,
+      arguments = Nil,
+      argument_groups = newArgumentGroups
     )
 
     // create new bash script

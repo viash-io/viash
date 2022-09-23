@@ -1,6 +1,5 @@
 # Viash 0.6.1
 
-
 ## NEW FUNCTIONALITY
 
 * `viash ns exec`: Added two more fields:
@@ -11,6 +10,8 @@
 ## BUG FIXES
 
 * `viash ns`: Reverse exit code outputs, was returning 1 when everything was OK and 0 when errors were detected (#227).
+
+* `viash config inject`: Fix processing of arguments when argument groups are defined (#231).
 
 # Viash 0.6.0
 
