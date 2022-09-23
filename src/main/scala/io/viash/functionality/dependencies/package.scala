@@ -47,8 +47,8 @@ package object dependencies {
     cursor =>
       val decoder: Decoder[Repository] =
         cursor.downField("type").as[String] match {
-          case Right("string") => decodeGithubRepository.widen
-          case Right("integer") => decodeLocalRepository.widen
+          case Right("github") => decodeGithubRepository.widen
+          case Right("local") => decodeLocalRepository.widen
           case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised. Valid types are github, ..., ... and local.")
           case Left(exception) => throw exception
         }

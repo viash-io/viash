@@ -19,21 +19,16 @@ package io.viash.functionality.dependencies
 
 import java.nio.file.{Path, Paths}
 import io.viash.config.Config
-import io.viash.config.Config._
 
 case class Dependency(
   name: String,
-  repository: Either[Repository, String]
-) {
-  var linkedRepository: Option[Repository] = None
-  def workRepository: Repository = {
-    // TODO evaluate required code for 'on the fly' creation of the repo from dependency data
-    if (linkedRepository.isDefined)
-      linkedRepository.get
-    else
-      LocalRepository()
-  }
+  repository: Either[String, Repository] = Right(LocalRepository()),
 
+  // internal stuff
+  foundConfigPath: String = "",
+  workConfig: Option[Config] = None
+) {
+  def workRepository: Option[Repository] = repository.right.toOption
 }
 
 object Dependency {

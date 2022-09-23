@@ -41,16 +41,29 @@ abstract class Repository {
   // }
 }
 
+object Repository {
+  def fromSugarSyntax(s: String):Repository = {
+    val repoRegex = raw"(\w+)://([A-Za-z0-9/_\-\.]+)@([A-Za-z0-9]+)".r
+
+    // TODO this match is totally not up to snuff
+    s match {
+      case repoRegex(protocol, repo, tag) if protocol == "github" => GithubRepository("TODO generate name", uri = repo, tag = Some(tag) )
+      case repoRegex(protocol, repo, tag) if protocol == "local" => LocalRepository("TODO generate name")
+    }
+  }
+}
+
 
 
 case class GithubRepository(
   name: String,
   `type`: String = "github",
+  uri: String = "",
   tag: Option[String],
-  path: Option[String],
+  path: Option[String] = None,
   localPath: String = ""
 ) extends Repository {
-  def copyRepo(name: String, `type`: String, tag: Option[String], path: Option[String], localPath: String): Repository = copy(name, `type`, tag, path, localPath)
+  def copyRepo(name: String, `type`: String, tag: Option[String], path: Option[String], localPath: String): Repository = copy(name, `type`, uri, tag, path, localPath)
 }
 
 case class LocalRepository(
