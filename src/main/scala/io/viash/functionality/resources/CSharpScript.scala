@@ -53,6 +53,8 @@ case class CSharpScript(
           s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => bool.Parse(x.ToLower())).ToArray()"""
         case a: IntegerArgument if a.multiple =>
           s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => Convert.ToInt32(x)).ToArray()"""
+        case a: LongArgument if a.multiple =>
+          s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => Convert.ToInt64(x)).ToArray()"""
         case a: DoubleArgument if a.multiple =>
           s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => Convert.ToDouble(x)).ToArray()"""
         case a: FileArgument if a.multiple =>
@@ -61,6 +63,7 @@ case class CSharpScript(
           s"""$env_name.Split($quo${a.multiple_sep}$quo).ToArray()"""
         case _: BooleanArgumentBase => s"""bool.Parse($env_name.ToLower())"""
         case _: IntegerArgument => s"""Convert.ToInt32($env_name)"""
+        case _: LongArgument => s"""Convert.ToInt64($env_name)"""
         case _: DoubleArgument => s"""Convert.ToDouble($env_name)"""
         case _: FileArgument => s"""$env_name"""
         case _: StringArgument => s"""$env_name"""
@@ -69,6 +72,7 @@ case class CSharpScript(
       val class_ = par match {
         case _: BooleanArgumentBase => "bool"
         case _: IntegerArgument => "int"
+        case _: LongArgument => "long"
         case _: DoubleArgument => "double"
         case _: FileArgument => "string"
         case _: StringArgument => "string"

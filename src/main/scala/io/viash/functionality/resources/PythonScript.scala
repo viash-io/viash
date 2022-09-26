@@ -52,6 +52,8 @@ case class PythonScript(
           s"""list(map(lambda x: (x.lower() == 'true'), $env_name.split('${a.multiple_sep}')))"""
         case a: IntegerArgument if a.multiple =>
           s"""list(map(int, $env_name.split('${a.multiple_sep}')))"""
+        case a: LongArgument if a.multiple =>
+          s"""list(map(int, $env_name.split('${a.multiple_sep}')))"""
         case a: DoubleArgument if a.multiple =>
           s"""list(map(float, $env_name.split('${a.multiple_sep}')))"""
         case a: FileArgument if a.multiple =>
@@ -60,6 +62,7 @@ case class PythonScript(
           s"""$env_name.split('${a.multiple_sep}')"""
         case _: BooleanArgumentBase => s"""$env_name.lower() == 'true'"""
         case _: IntegerArgument => s"""int($env_name)"""
+        case _: LongArgument => s"""int($env_name)"""
         case _: DoubleArgument => s"""float($env_name)"""
         case _: FileArgument => s"""$env_name"""
         case _: StringArgument => s"""$env_name"""

@@ -52,6 +52,8 @@ case class RScript(
           s"""as.logical(strsplit(toupper($env_name), split = '${a.multiple_sep}')[[1]])"""
         case a: IntegerArgument if a.multiple =>
           s"""as.integer(strsplit($env_name, split = '${a.multiple_sep}')[[1]])"""
+        case a: LongArgument if a.multiple =>
+          s"""bit64::as.integer64(strsplit($env_name, split = '${a.multiple_sep}')[[1]])"""
         case a: DoubleArgument if a.multiple =>
           s"""as.numeric(strsplit($env_name, split = '${a.multiple_sep}')[[1]])"""
         case a: FileArgument if a.multiple =>
@@ -60,6 +62,7 @@ case class RScript(
           s"""strsplit($env_name, split = '${a.multiple_sep}')[[1]]"""
         case _: BooleanArgumentBase => s"""as.logical(toupper($env_name))"""
         case _: IntegerArgument => s"""as.integer($env_name)"""
+        case _: LongArgument => s"""bit64::as.integer64($env_name)"""
         case _: DoubleArgument => s"""as.numeric($env_name)"""
         case _: FileArgument => s"""$env_name"""
         case _: StringArgument => s"""$env_name"""

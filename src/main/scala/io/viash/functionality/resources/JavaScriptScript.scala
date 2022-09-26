@@ -52,6 +52,8 @@ case class JavaScriptScript(
           s"""$env_name.split('${a.multiple_sep}').map(x => x.toLowerCase() === 'true')"""
         case a: IntegerArgument if a.multiple =>
           s"""$env_name.split('${a.multiple_sep}').map(x => parseInt(x))"""
+        case a: LongArgument if a.multiple =>
+          s"""$env_name.split('${a.multiple_sep}').map(x => parseInt(x))"""
         case a: DoubleArgument if a.multiple =>
           s"""$env_name.split('${a.multiple_sep}').map(x => parseFloat(x))"""
         case a: FileArgument if a.multiple =>
@@ -60,6 +62,7 @@ case class JavaScriptScript(
           s"""$env_name.split('${a.multiple_sep}')"""
         case _: BooleanArgumentBase => s"""$env_name.toLowerCase() === 'true'"""
         case _: IntegerArgument => s"""parseInt($env_name)"""
+        case _: LongArgument => s"""parseInt($env_name)"""
         case _: DoubleArgument => s"""parseFloat($env_name)"""
         case _: FileArgument => s"""$env_name"""
         case _: StringArgument => s"""$env_name"""
