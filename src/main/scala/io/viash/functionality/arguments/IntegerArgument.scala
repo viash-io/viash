@@ -122,7 +122,7 @@ case class IntegerArgument(
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_integer=10:80:152", "bash", "Here's an example of how to use this:")
-  multiple_sep: Char = ':',
+  multiple_sep: String = ":",
 
   `type`: String = "integer"
 ) extends Argument[Int] {
@@ -136,7 +136,8 @@ case class IntegerArgument(
     required: Boolean,
     direction: Direction,
     multiple: Boolean,
-    multiple_sep: Char
+    multiple_sep: String,
+    dest: String
   ): Argument[Int] = {
     copy(name, alternatives, description, example, default, required, this.choices, this.min, this.max, direction, multiple, multiple_sep, `type`)
   }
