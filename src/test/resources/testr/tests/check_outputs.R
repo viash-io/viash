@@ -6,7 +6,7 @@ read_file <- function(file) {
 }
 
 test_that("Checking whether output is correct", {
-  out <- processx::run("./testr", c(
+  out <- processx::run(meta$executable, c(
     "help", "--real_number", "10.5", "--whole_number=10", "-s", "a string with spaces",
     "--truth", "--optional", "foo", "--optional_with_default", "bar",
     "a", "b", "c", "d",
@@ -26,17 +26,17 @@ test_that("Checking whether output is correct", {
   expect_match(output, 'log: \\|.*/log.txt\\|')
   expect_match(output, 'optional: \\|foo\\|')
   expect_match(output, 'optional_with_default: \\|bar\\|')
-  expect_match(output, 'multiple: \\|c\\("one", "two"\\)\\|')
-  expect_match(output, 'multiple_pos: \\|c\\("a", "b", "c", "d", "e", "f"\\)\\|')
+  expect_match(output, 'multiple: \\|one, two\\|')
+  expect_match(output, 'multiple_pos: \\|a, b, c, d, e, f\\|')
   expect_match(output, 'meta_resources_dir: \\|..*\\|')
   expect_match(output, 'meta_functionality_name: \\|testr\\|')
-  expect_match(output, 'meta_n_proc: \\|NULL\\|')
-  expect_match(output, 'meta_memory_b: \\|NULL\\|')
-  expect_match(output, 'meta_memory_kb: \\|NULL\\|')
-  expect_match(output, 'meta_memory_mb: \\|NULL\\|')
-  expect_match(output, 'meta_memory_gb: \\|NULL\\|')
-  expect_match(output, 'meta_memory_tb: \\|NULL\\|')
-  expect_match(output, 'meta_memory_pb: \\|NULL\\|')
+  expect_match(output, 'meta_n_proc: \\|\\|')
+  expect_match(output, 'meta_memory_b: \\|\\|')
+  expect_match(output, 'meta_memory_kb: \\|\\|')
+  expect_match(output, 'meta_memory_mb: \\|\\|')
+  expect_match(output, 'meta_memory_gb: \\|\\|')
+  expect_match(output, 'meta_memory_tb: \\|\\|')
+  expect_match(output, 'meta_memory_pb: \\|\\|')
   
   expect_true(file.exists("log.txt"))
   log <- read_file("log.txt")
@@ -45,7 +45,7 @@ test_that("Checking whether output is correct", {
 
 
 test_that("Checking whether output is correct with minimal parameters", {
-  out <- processx::run("./testr", c(
+  out <- processx::run(meta$executable, c(
     "test", "--real_number", "123.456", "--whole_number=789", 
     "-s", 'my$weird#string"""\'\'\'`@', "---n_proc", "666", "---memory", "100PB"
   ))
@@ -58,8 +58,8 @@ test_that("Checking whether output is correct with minimal parameters", {
   expect_match(output, 'truth: \\|FALSE\\|')
   expect_match(output, 'optional_with_default: \\|The default value.\\|')
   expect_match(output, 'Parsed input arguments')
-  expect_match(output, 'multiple: \\|NULL\\|')
-  expect_match(output, 'multiple_pos: \\|NULL\\|')
+  expect_match(output, 'multiple: \\|\\|')
+  expect_match(output, 'multiple_pos: \\|\\|')
   expect_match(output, 'meta_resources_dir: \\|..*\\|')
   expect_match(output, 'meta_functionality_name: \\|testr\\|')
   expect_match(output, 'meta_n_proc: \\|666\\|')
@@ -72,7 +72,7 @@ test_that("Checking whether output is correct with minimal parameters", {
 })
 
 test_that("Checking whether executable fails when wrong parameters are given", {
-  out <- processx::run("./testr", error_on_status = FALSE, c(
+  out <- processx::run(meta$executable, error_on_status = FALSE, c(
     "test", "--real_number", "abc", "--whole_number=abc",
     "-s", "my weird string", "--derp"
   ))
