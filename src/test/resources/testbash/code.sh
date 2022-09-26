@@ -44,6 +44,7 @@ fi
 output "input: |$par_input|"
 output "real_number: |$par_real_number|"
 output "whole_number: |$par_whole_number|"
+output "long_number: |$par_long_number|"
 output "s: |$par_s|"
 output "truth: |$par_truth|"
 output "falsehood: |$par_falsehood|"

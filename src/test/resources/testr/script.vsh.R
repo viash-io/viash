@@ -17,6 +17,9 @@
 #'     type: integer
 #'     description: A whole number with a standard flag.
 #'     required: true
+#'   - name: "--long_number"
+#'     type: long
+#'     description: A long
 #'   - name: "-s"
 #'     type: string
 #'     description: A sentence or word with a short flag.

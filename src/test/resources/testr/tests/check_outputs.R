@@ -11,8 +11,9 @@ test_that("Checking whether output is correct", {
     "--truth", "--optional", "foo", "--optional_with_default", "bar",
     "a", "b", "c", "d",
     "--output", "./output.txt", "--log", "./log.txt",
-    "--multiple", "one", "--multiple=two", 
-    "e", "f"
+    "--multiple", "one", "--multiple=two",
+    "e", "f",
+    "--long_number", "112589990684262400"
   ))
   expect_true(file.exists("output.txt"))
   
@@ -20,6 +21,7 @@ test_that("Checking whether output is correct", {
   expect_match(output, 'input: \\|help\\|')
   expect_match(output, 'real_number: \\|10.5\\|')
   expect_match(output, 'whole_number: \\|10\\|')
+  expect_match(output, 'long_number: \\|112589990684262400\\|')
   expect_match(output, 's: \\|a string with spaces\\|')
   expect_match(output, 'truth: \\|TRUE\\|')
   expect_match(output, 'output: \\|.*/output.txt\\|')
@@ -54,6 +56,7 @@ test_that("Checking whether output is correct with minimal parameters", {
   expect_match(output, 'input: \\|test\\|')
   expect_match(output, 'real_number: \\|123.456\\|')
   expect_match(output, 'whole_number: \\|789\\|')
+  expect_match(output, 'long_number: \\|\\|')
   expect_match(output, 's: \\|my\\$weird#string"""\'\'\'`@\\|')
   expect_match(output, 'truth: \\|FALSE\\|')
   expect_match(output, 'optional_with_default: \\|The default value.\\|')
