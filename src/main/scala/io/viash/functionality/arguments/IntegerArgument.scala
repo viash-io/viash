@@ -75,7 +75,7 @@ case class IntegerArgument(
 
   @description("Limit the amount of valid values for this argument to those set in this list. When set and a value not present in the list is provided, an error will be produced.")
   @example(
-    """- name: --memory
+    """- name: --values
       |  type: integer
       |  choices: [1024, 2048, 4096]
       |""".stripMargin,
