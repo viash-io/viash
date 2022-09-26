@@ -34,7 +34,6 @@ grep -q 'meta_memory_gb: |2|' output.txt
 grep -q 'meta_memory_tb: |1|' output.txt
 grep -q 'meta_memory_pb: |1|' output.txt
 
-grep -q 'resources_dir: |..*|' output.txt
 grep -q 'head of input: |Scala|' output.txt
 grep -q 'head of resource1: |if you can read this,|' output.txt
 
@@ -76,7 +75,6 @@ grep -q 'meta_memory_gb: |104857600|' output2.txt
 grep -q 'meta_memory_tb: |102400|' output2.txt
 grep -q 'meta_memory_pb: |100|' output2.txt
 
-grep -q 'resources_dir: |..*|' output2.txt
 grep -q 'head of input: |this file is only for testing|' output2.txt
 grep -q 'head of resource1: |if you can read this,|' output2.txt
 

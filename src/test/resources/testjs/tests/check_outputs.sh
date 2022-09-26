@@ -21,7 +21,6 @@ grep -q 'optional: |foo|' output.txt
 grep -q 'optional_with_default: |bar|' output.txt
 grep -q 'multiple: |one,two|' output.txt
 grep -q 'multiple_pos: |a,b,c,d,e,f|' output.txt
-grep -q 'resources_dir: |..*|' output.txt
 grep -q 'meta_resources_dir: |..*|' output.txt
 grep -q 'meta_functionality_name: |testjs|' output.txt
 grep -q 'meta_n_proc: |undefined|' output.txt
@@ -57,7 +56,6 @@ grep -q 'optional: |undefined|' output2.txt
 grep -q 'optional_with_default: |The default value.|' output2.txt
 grep -q 'multiple: |undefined|' output2.txt
 grep -q 'multiple_pos: |undefined|' output2.txt
-grep -q 'resources_dir: |..*|' output2.txt
 grep -q 'meta_resources_dir: |..*|' output2.txt
 grep -q 'meta_functionality_name: |testjs|' output2.txt
 grep -q 'meta_n_proc: |666|' output2.txt

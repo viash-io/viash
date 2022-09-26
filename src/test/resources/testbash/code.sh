@@ -13,7 +13,7 @@ par_log="log.txt"
 par_optional="help"
 par_optional_with_default="me"
 meta_functionality_name="testbash"
-resources_dir="."
+meta_resources_dir="."
 # VIASH END
 
 set -e
@@ -52,10 +52,9 @@ output "output: |$par_output|"
 output "log: |$par_log|"
 output "optional: |$par_optional|"
 output "optional_with_default: |$par_optional_with_default|"
-output "resources_dir: |$resources_dir|"
 INPUT=`head -1 "$par_input"`
 output "head of input: |$INPUT|"
-RESOURCE=`head -1 "$resources_dir/resource1.txt"`
+RESOURCE=`head -1 "$meta_resources_dir/resource1.txt"`
 output "head of resource1: |$RESOURCE|"
 output "multiple: |$par_multiple|"
 output "multiple_pos: |$par_multiple_pos|"

@@ -655,7 +655,6 @@ def processFactory(Map processArgs) {
   |fi
   |
   |# meta synonyms
-  |export VIASH_RESOURCES_DIR="\\\$VIASH_META_RESOURCES_DIR"
   |export VIASH_TEMP="\\\$VIASH_META_TEMP_DIR"
   |export TEMP_DIR="\\\$VIASH_META_TEMP_DIR"
   |

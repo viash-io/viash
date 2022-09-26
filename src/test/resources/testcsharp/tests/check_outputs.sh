@@ -21,7 +21,6 @@ grep -q 'optional: |foo|' output.txt
 grep -q 'optional_with_default: |bar|' output.txt
 grep -q 'multiple: |one, two|' output.txt
 grep -q 'multiple_pos: |a, b, c, d, e, f|' output.txt
-grep -q 'resources_dir: |..*|' output.txt
 grep -q 'meta_resources_dir: |..*|' output.txt
 grep -q 'meta_functionality_name: |testcsharp|' output.txt
 grep -q 'meta_n_proc: ||' output.txt

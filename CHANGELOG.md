@@ -1,5 +1,9 @@
 # Viash 0.6.1
 
+## BREAKING CHANGES
+
+* Deprecated usage `resources_dir` variable inside scripts, use `meta["resources_dir"]` instead. Or `$meta_resources_dir` in Bash, or `meta$resources_dir`.
+
 ## NEW FUNCTIONALITY
 
 * `viash ns exec`: Added two more fields:
@@ -97,8 +101,8 @@ The first (major) release this year! The biggest changes are:
   
   You can override the default requirements at runtime:
 
-  - `./foo ---n_proc 4 ---memory 100pb` (for NativePlatform or DockerPlatform)
-  - By adding `process.cpus = 4` and `process.memory "100 PB"` to a nextflow.config (for NextflowPlatform)
+  - `./foo ---n_proc 4 ---memory 2047TB` (for NativePlatform or DockerPlatform)
+  - By adding `process.cpus = 4` and `process.memory "2047 PB"` to a nextflow.config (for NextflowPlatform)
 
   This results the following meta variables to be injected into a script:
 
@@ -247,7 +251,7 @@ The first (major) release this year! The biggest changes are:
   A csv should have column names which correspond to the different arguments of this pipeline.
   A json or a yaml file should be a list of maps, each of which has keys corresponding to the arguments of the pipeline.
   A yaml blob can also be passed directly as a parameter.
-  Inside the Nextflow pipeline code, params.params_list can also be used to directly a list of parameter sets.
+  Inside the Nextflow pipeline code, params.param_list can also be used to directly a list of parameter sets.
   When passing a csv, json or yaml, relative path names are relativized to the location of the parameter file.
   
   Examples: 
