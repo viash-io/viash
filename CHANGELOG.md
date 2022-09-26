@@ -27,6 +27,8 @@
 
 * `viash config inject`: Fix processing of arguments when argument groups are defined (#231).
 
+* `BashWrapper`: Fix various checks and transformations not working when when `multiple_sep` is set to `";"` (#235).
+
 # Viash 0.6.0
 
 The first (major) release this year! The biggest changes are:
