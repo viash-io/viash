@@ -2,7 +2,7 @@
 
 ## BREAKING CHANGES
 
-* Deprecated usage `resources_dir` variable inside scripts, use `meta["resources_dir"]` instead. Or `$meta_resources_dir` in Bash, or `meta$resources_dir`.
+* Deprecated usage `resources_dir` variable inside scripts, use `meta["resources_dir"]` instead (or `$meta_resources_dir` in Bash, or `meta$resources_dir` in R).
 
 ## NEW FUNCTIONALITY
 
@@ -12,6 +12,14 @@
   - `{namespace}`: the namespace of the component
 
 * `LongArgument`: Added support for 64-bit integers with `type: long` as opposed to `type: integer` which are 32-bit integers.
+
+## MINOR CHANGES
+
+* `meta["n_proc"]` is now an integer, `meta["memory_*"]` are now longs (#224).
+
+## INTERNAL CHANGES
+
+* All `meta[...]` variables are now processed similar to `Argument[_]`s, instead of using custom code to convert object types and detect Docker mounts.
 
 ## BUG FIXES
 
@@ -103,8 +111,8 @@ The first (major) release this year! The biggest changes are:
   
   You can override the default requirements at runtime:
 
-  - `./foo ---n_proc 4 ---memory 2047TB` (for NativePlatform or DockerPlatform)
-  - By adding `process.cpus = 4` and `process.memory "2047 PB"` to a nextflow.config (for NextflowPlatform)
+  - `./foo ---n_proc 4 ---memory 100PB` (for NativePlatform or DockerPlatform)
+  - By adding `process.cpus = 4` and `process.memory "100 PB"` to a nextflow.config (for NextflowPlatform)
 
   This results the following meta variables to be injected into a script:
 
