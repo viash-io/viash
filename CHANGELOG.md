@@ -17,6 +17,8 @@
 
 * `meta["n_proc"]` is now an integer, `meta["memory_*"]` are now longs (#224).
 
+* `Argument[_]`: Turn `multiple_sep` from `Char` into `String`.
+
 ## INTERNAL CHANGES
 
 * All `meta[...]` variables are now processed similar to `Argument[_]`s, instead of using custom code to convert object types and detect Docker mounts.
@@ -27,7 +29,7 @@
 
 * `viash config inject`: Fix processing of arguments when argument groups are defined (#231).
 
-* `BashWrapper`: Fix various checks and transformations not working when when `multiple_sep` is set to `";"` (#235).
+* `BashWrapper`: Escape usage of `multiple_sep`. This fixes various checks and transformations not working when when `multiple_sep` is set to `";"` (#235).
 
 # Viash 0.6.0
 
