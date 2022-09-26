@@ -395,7 +395,7 @@ case class Functionality(
 
     args2
   }
-  def getArgumentsGroupedByDest(includeMeta: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): Map[String, List[Argument[_]]] = {
+  def getArgumentLikesGroupedByDest(includeMeta: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): Map[String, List[Argument[_]]] = {
     val x = getArgumentLikes(includeMeta, filterInputs, filterOutputs).groupBy(_.dest)
     val y = Map("par" -> Nil, "meta" -> Nil)
     (x.toSeq ++ y.toSeq).groupBy(_._1).map { 

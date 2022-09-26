@@ -42,7 +42,7 @@ case class CSharpScript(
   def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
     val quo = "\"'\"'\""
 
-    val argsAndMeta = functionality.getArgumentsGroupedByDest(includeMeta = true, filterInputs = true)
+    val argsAndMeta = functionality.getArgumentLikesGroupedByDest(includeMeta = true, filterInputs = true)
 
     val paramsCode = argsAndMeta.map { case (dest, params) =>
     val parSet = params.map{ par =>
