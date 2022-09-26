@@ -42,9 +42,10 @@ case class ScalaScript(
 
   def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
     val quo = "\"'\"'\""
-    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
+    val argsAndMeta = functionality.getArgumentsGroupedByDest(includeMeta = true, filterInputs = true)
 
-    val parClassTypes = params.map { par =>
+    val paramsCode = argsAndMeta.map { case (dest, params) =>
+      val parClassTypes = params.map { par =>
       val classType = par match {
         case a: BooleanArgumentBase if a.multiple => "List[Boolean]"
         case a: IntegerArgument if a.multiple => "List[Int]"
@@ -65,18 +66,20 @@ case class ScalaScript(
         case _: DoubleArgument => "Double"
         case _: FileArgument => "String"
         case _: StringArgument => "String"
+        }
+        par.plainName + ": " + classType
       }
-      par.plainName + ": " + classType
-    }
-    val parSet = params.map { par =>
-      // val env_name = par.VIASH_PAR
-      val env_name = Bash.getEscapedArgument(par.VIASH_PAR, quo, """\"""", """\\\"""")
+      val parSet = params.map { par =>
+        // val env_name = par.VIASH_PAR
+        val env_name = Bash.getEscapedArgument(par.VIASH_PAR, quo, """\"""", """\\\"""")
 
       val parse = { par match {
         case a: BooleanArgumentBase if a.multiple =>
           s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toLowerCase.toBoolean).toList"""
         case a: IntegerArgument if a.multiple =>
           s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toInt).toList"""
+        case a: LongArgument if a.multiple =>
+          s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toLong).toList"""
         case a: DoubleArgument if a.multiple =>
           s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toDouble).toList"""
         case a: FileArgument if a.multiple =>
@@ -97,50 +100,31 @@ case class ScalaScript(
         case _: StringArgument => s"""$env_name"""
       }}
 
-      val notFound = par match {
-        case a: Argument[_] if a.multiple => Some("Nil")
-        case a: BooleanArgumentBase if a.flagValue.isDefined => None
-        case a: Argument[_] if !a.required => Some("None")
-        case _: Argument[_] => None
+        val notFound = par match {
+          case a: Argument[_] if a.multiple => Some("Nil")
+          case a: BooleanArgumentBase if a.flagValue.isDefined => None
+          case a: Argument[_] if !a.required => Some("None")
+          case _: Argument[_] => None
+        }
+
+        notFound match {
+          case Some(nf) =>
+            s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo "$nf"; fi )"""
+          case None => 
+            parse.replaceAll(quo, "\"") // undo quote escape as string is not part of echo
+        }
       }
 
-      notFound match {
-        case Some(nf) =>
-          s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo "$nf"; fi )"""
-        case None => 
-          parse.replaceAll(quo, "\"") // undo quote escape as string is not part of echo
-      }
+      s"""case class Viash${dest.capitalize}(
+        |  ${parClassTypes.mkString(",\n  ")}
+        |)
+        |val $dest = Viash${dest.capitalize}(
+        |  ${parSet.mkString(",\n  ")}
+        |)
+        """.stripMargin
     }
 
-    val metaClassTypes = BashWrapper.metaFields.map { case BashWrapper.ViashMeta(_, script_name, required) =>
-      val classType = if (required) "String" else "Option[String]"
-      script_name + ": " + classType
-    }
-    val metaSet = BashWrapper.metaFields.map { case BashWrapper.ViashMeta(env_name, script_name, required) =>
-      if (required) {
-        s""""$$$env_name""""
-      } else {
-        val env_name_escaped = Bash.getEscapedArgument(env_name, quo, """\"""", """\\\"""")
-        s"""$$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "Some($env_name_escaped)"; else echo None; fi )"""
-      }
-    }
-    val paramsCode = s"""case class ViashPar(
-       |  ${parClassTypes.mkString(",\n  ")}
-       |)
-       |val par = ViashPar(
-       |  ${parSet.mkString(",\n  ")}
-       |)
-       |
-       |case class ViashMeta(
-       |  ${metaClassTypes.mkString(",\n  ")}
-       |)
-       |val meta = ViashMeta(
-       |  ${metaSet.mkString(",\n  ")}
-       |)
-       |
-       |val resources_dir = "$$VIASH_META_RESOURCES_DIR"
-       |""".stripMargin
-    ScriptInjectionMods(params = paramsCode)
+    ScriptInjectionMods(params = paramsCode.mkString)
   }
 
   def command(script: String): String = {

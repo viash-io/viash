@@ -41,14 +41,16 @@ case class RScript(
   }
 
   def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
-    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
+    val argsAndMeta = functionality.getArgumentsGroupedByDest(includeMeta = true, filterInputs = true)
 
-    val parSet = params.map { par =>
-      // val env_name = par.VIASH_PAR
-      val env_name = Bash.getEscapedArgument(par.VIASH_PAR, "'", """\'""", """\\\'""")
+    val paramsCode = argsAndMeta.map { case (dest, params) =>
 
-      val parse = par match {
-        case a: BooleanArgumentBase if a.multiple =>
+      val parSet = params.map { par =>
+        // val env_name = par.VIASH_PAR
+        val env_name = Bash.getEscapedArgument(par.VIASH_PAR, "'", """\'""", """\\\'""")
+
+        val parse = par match {
+          case a: BooleanArgumentBase if a.multiple =>
           s"""as.logical(strsplit(toupper($env_name), split = '${a.multiple_sep}')[[1]])"""
         case a: IntegerArgument if a.multiple =>
           s"""as.integer(strsplit($env_name, split = '${a.multiple_sep}')[[1]])"""
@@ -66,36 +68,27 @@ case class RScript(
         case _: DoubleArgument => s"""as.numeric($env_name)"""
         case _: FileArgument => s"""$env_name"""
         case _: StringArgument => s"""$env_name"""
+        }
+
+        s""""${par.plainName}" = $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo NULL; fi )"""
       }
 
-      s""""${par.plainName}" = $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo NULL; fi )"""
-    }
-    val metaSet = BashWrapper.metaFields.map{ case BashWrapper.ViashMeta(env_name, script_name, _) =>
-      val env_name_escaped = Bash.getEscapedArgument(env_name, "'", """\'""", """\\\'""")
-      s""""$script_name" = $$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$env_name_escaped"; else echo NULL; fi )"""
+      s"""$dest <- list(
+        |  ${parSet.mkString(",\n  ")}
+        |)
+        |""".stripMargin
     }
 
-    val paramsCode = s"""# treat warnings as errors
-       |viash_orig_warn_ <- options(warn = 2)
+    val outCode = s"""# treat warnings as errors
+       |.viash_orig_warn <- options(warn = 2)
        |
-       |# get parameters from cli
-       |par <- list(
-       |  ${parSet.mkString(",\n  ")}
-       |)
-       |
-       |# get meta parameters
-       |meta <- list(
-       |  ${metaSet.mkString(",\n  ")}
-       |)
-       |
-       |# get resources dir
-       |resources_dir = "$$VIASH_META_RESOURCES_DIR"
+       |${paramsCode.mkString}
        |
        |# restore original warn setting
-       |options(viash_orig_warn_)
-       |rm(viash_orig_warn_)
+       |options(.viash_orig_warn)
+       |rm(.viash_orig_warn)
        |""".stripMargin
-    ScriptInjectionMods(params = paramsCode)
+    ScriptInjectionMods(params = outCode)
   }
 
   def command(script: String): String = {

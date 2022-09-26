@@ -31,14 +31,8 @@ object ViashRun {
     val fun = config.functionality
     val dir = IO.makeTemp("viash_" + fun.name)
 
-    val dirArg = FileArgument(
-      name = "--viash_tempdir_arg",
-      direction = Output,
-      default = One(dir)
-    )
-    val fun2 = fun.copy(
-      dummy_arguments = List(dirArg)
-    )
+    // todo: refactor
+    val fun2 = fun
 
     // execute command, print everything to console
     var code = -1

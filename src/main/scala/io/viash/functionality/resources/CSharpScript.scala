@@ -42,9 +42,10 @@ case class CSharpScript(
   def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
     val quo = "\"'\"'\""
 
-    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
+    val argsAndMeta = functionality.getArgumentsGroupedByDest(includeMeta = true, filterInputs = true)
 
-    val parSet = params.map { par =>
+    val paramsCode = argsAndMeta.map { case (dest, params) =>
+    val parSet = params.map{ par =>
       // val env_name = par.VIASH_PAR
       val env_name = Bash.getEscapedArgument(par.VIASH_PAR, quo, """\"""", """\\\"""")
 
@@ -93,23 +94,15 @@ case class CSharpScript(
       }
 
       s"${par.plainName} = $setter"
-    }
-    val metaSet = BashWrapper.metaFields.map{ case BashWrapper.ViashMeta(env_name, script_name, _) =>
-      val env_name_escaped = Bash.getEscapedArgument(env_name, quo, """\"""", """\\\"""")
-      s"""$script_name = $$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$env_name_escaped"; else echo "(string) null"; fi )"""
-    }
-    
-    val paramsCode = 
-      s"""var par = new {
-       |  ${parSet.mkString(",\n  ")}
-       |};
-       |var meta = new {
-       |  ${metaSet.mkString(",\n  ")}
-       |};
-       |var resources_dir = "$$VIASH_META_RESOURCES_DIR";
-       |""".stripMargin
+      }
 
-    ScriptInjectionMods(params = paramsCode)
+      s"""var $dest = new {
+      |  ${parSet.mkString(",\n  ")}
+      |};
+      """.stripMargin
+    }
+
+    ScriptInjectionMods(params = paramsCode.mkString)
   }
 
   def command(script: String): String = {

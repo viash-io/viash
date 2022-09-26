@@ -23,6 +23,7 @@ import Status._
 import io.viash.config.Version
 import io.circe.generic.extras._
 import io.viash.schemas._
+import io.viash.wrapper.BashWrapper
 
 @description(
   """The functionality-part of the config file describes the behaviour of the script in terms of arguments and resources.
@@ -262,9 +263,6 @@ case class Functionality(
 
   // The variables below are for internal use and shouldn't be publicly documented
 
-  // dummy arguments are used for handling extra directory mounts in docker
-  dummy_arguments: List[Argument[_]] = Nil,
-
   // setting this to true will change the working directory
   // to the resources directory when running the script
   // this is used when running `viash test`.
@@ -382,6 +380,29 @@ case class Functionality(
     }
   }
 
+  def getArgumentLikes(includeMeta: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): List[Argument[_]] = {
+    // start with arguments
+    val args0 = allArguments
+
+    // add meta if need be
+    val args1 = args0 ++ { if (includeMeta) BashWrapper.metaArgs else Nil }
+    
+    // filter input files if need be
+    val args2 = if (filterInputs) args1.filter{d => d.direction == Input || d.isInstanceOf[FileArgument]} else args1
+    
+    // filter output files if need be
+    val args3 = if (filterOutputs) args2.filter{d => d.direction == Output || d.isInstanceOf[FileArgument]} else args2
+
+    args2
+  }
+  def getArgumentsGroupedByDest(includeMeta: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): Map[String, List[Argument[_]]] = {
+    val x = getArgumentLikes(includeMeta, filterInputs, filterOutputs).groupBy(_.dest)
+    val y = Map("par" -> Nil, "meta" -> Nil)
+    (x.toSeq ++ y.toSeq).groupBy(_._1).map { 
+      case (k, li) => (k, li.flatMap(_._2).toList) 
+    }
+  }
+
   def mainScript: Option[Script] =
     resources.headOption.flatMap {
       case s: Script => Some(s)
@@ -393,8 +414,6 @@ case class Functionality(
     case _ :: tail => tail
     case _ => List.empty[Resource]
   }
-
-  def allArgumentsAndDummies: List[Argument[_]] = allArguments ::: dummy_arguments
 
   def isEnabled: Boolean = status != Status.Disabled
 }
