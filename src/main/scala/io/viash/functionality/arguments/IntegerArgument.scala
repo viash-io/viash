@@ -124,6 +124,7 @@ case class IntegerArgument(
   @exampleWithDescription("my_component --my_integer=10:80:152", "bash", "Here's an example of how to use this:")
   multiple_sep: Char = ':',
 
+  dest: String = "par",
   `type`: String = "integer"
 ) extends Argument[Int] {
   def copyArg(
@@ -136,8 +137,9 @@ case class IntegerArgument(
     required: Boolean,
     direction: Direction,
     multiple: Boolean,
-    multiple_sep: Char
+    multiple_sep: Char,
+    dest: String
   ): Argument[Int] = {
-    copy(name, alternatives, description, example, default, required, this.choices, this.min, this.max, direction, multiple, multiple_sep, `type`)
+    copy(name, alternatives, description, example, default, required, this.choices, this.min, this.max, direction, multiple, multiple_sep, dest, `type`)
   }
 }

@@ -105,6 +105,7 @@ case class StringArgument(
   @exampleWithDescription("my_component --my_string=Marc,Susan,Paul", "bash", "Here's an example of how to use this:")
   multiple_sep: Char = ':',
 
+  dest: String = "par",
   `type`: String = "string"
 ) extends Argument[String] {
   def copyArg(
@@ -117,8 +118,9 @@ case class StringArgument(
     required: Boolean,
     direction: Direction,
     multiple: Boolean,
-    multiple_sep: Char
+    multiple_sep: Char,
+    dest: String
   ): Argument[String] = {
-    copy(name, alternatives, description, example, default, required, this.choices, direction, multiple, multiple_sep, `type`)
+    copy(name, alternatives, description, example, default, required, this.choices, direction, multiple, multiple_sep, dest, `type`)
   }
 }
