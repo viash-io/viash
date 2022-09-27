@@ -74,8 +74,11 @@ object Bash {
    * Sidenote: a '\' will be escaped as '\VIASH_SLASH\', so BashWrapper
    * substitutes it back for a '\' instead of escaping it as a '\\'.
    */
-  def getEscapedArgument(env: String, quot: String, from: String, to: String) = {
-    s"$quot$${$env//$from/$to}$quot".replaceAll("\\\\", "\\\\VIASH_SLASH\\\\")
+  def getEscapedArgument(env: String, quot: String, from: String, to: String): String = {
+    getEscapedArgument(env, quot, quot, from, to)
+  }
+  def getEscapedArgument(env: String, left: String, right: String, from: String, to: String): String = {
+    s"$left$${$env//$from/$to}$right".replaceAll("\\\\", "\\\\VIASH_SLASH\\\\")
   }
 
   def escapeString(

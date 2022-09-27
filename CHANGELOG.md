@@ -33,6 +33,8 @@
 
 * `viash config inject`: Fix processing of arguments when argument groups are defined (#231).
 
+* `BashScript`, `CSharpScript`, `JavaScriptScript`, `PythonScript`, `RScript`, `ScalaScript`: Fix quoting issues of certain characters (#113).
+
 ## TESTING
 
 * `BashScript`, `CSharpScript`, `JavaScriptScript`, `PythonScript`, `RScript`, `ScalaScript`: Implement more rigorous testing of which characters are escaped.
