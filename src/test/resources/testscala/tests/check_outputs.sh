@@ -40,7 +40,8 @@ echo ">>> Checking whether output is correct with minimal parameters"
 $meta_executable \
   "resource2.txt" \
   --real_number 123.456 \
-  --whole_number=789 -s "my\$weird#string\"\"\"'''\`@" \
+  --whole_number=789 \
+  -s "a \\ b \$ c \` d \" e ' f \n g # h @ i { j } k \"\"\" l ''' m \$VIASH_TEMP n : o ; p" \
   ---n_proc 666 \
   ---memory 100PB \
   > output2.txt
@@ -50,7 +51,7 @@ grep -q 'input: |Some(resource2.txt)|' output2.txt
 grep -q 'real_number: |123.456|' output2.txt
 grep -q 'whole_number: |789|' output2.txt
 grep -q 'long_number: |None|' output2.txt
-grep -q "s: |my\$weird#string\"\"\"'''\`@|" output2.txt
+grep -q "s: |a \\\\ b \\\$ c \` d \" e ' f \\\\n g # h @ i { j } k \"\"\" l ''' m \\\$VIASH_TEMP n : o ; p" output2.txt
 grep -q 'truth: |false|' output2.txt
 grep -q 'output: |None|' output2.txt
 grep -q 'log: |None|' output2.txt

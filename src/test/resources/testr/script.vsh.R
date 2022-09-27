@@ -49,8 +49,8 @@
 #'     type: string
 #'     multiple: true
 #'   test_resources:
-#'   - type: r_script
-#'     path: tests/check_outputs.R
+#'   - type: bash_script
+#'     path: tests/check_outputs.sh
 #' platforms:
 #' - type: native
 #' - type: docker
@@ -91,11 +91,11 @@ if (length(par$output) > 0) {
 }
 
 str <- sapply(names(par), function(n) {
-  paste0(n, ": |", paste(par[[n]], collapse = ", "), "|\n")
+  paste0(n, ": |", paste(par[[n]], collapse = ","), "|\n")
 })
 write_fun(par$output, str)
 
 str <- sapply(names(meta), function(n) {
-  paste0("meta_", n, ": |", paste(meta[[n]], collapse = ", "), "|\n")
+  paste0("meta_", n, ": |", paste(meta[[n]], collapse = ","), "|\n")
 })
 write_fun(par$output, str)
