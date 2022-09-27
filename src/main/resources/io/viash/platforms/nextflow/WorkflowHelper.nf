@@ -269,25 +269,16 @@ def addGlobalParams(config) {
             ],
             [
               'name': '--param_list',
+              'alternatives': '--params_list',
               'required': false,
               'type': 'string',
               'description': '''Allows inputting multiple parameter sets to initialise a Nextflow channel. Possible formats are csv, json, yaml, or simply a yaml_blob.
-              |A csv should have column names which correspond to the different arguments of this pipeline.
+              |A csv file should have column names which correspond to the different arguments of this pipeline.
               |A json or a yaml file should be a list of maps, each of which has keys corresponding to the arguments of the pipeline.
               |A yaml blob can also be passed directly as a parameter.
               |Inside the Nextflow pipeline code, params.param_list can also be used to directly a list of parameter sets.
               |When passing a csv, json or yaml, relative path names are relativized to the location of the parameter file.'''.stripMargin(),
               'example': 'my_params.yaml',
-              'multiple': false,
-              'hidden': true
-            ],
-            [
-              'name': '--param_list_format',
-              'required': false,
-              'type': 'string',
-              'description': 'Manually specify the param_list_format. Must be one of \'csv\', \'json\', \'yaml\', \'yaml_blob\', \'asis\' or \'none\'.',
-              'example': 'yaml',
-              'choices': ['csv', 'json', 'yaml', 'yaml_blob', 'asis', 'none'],
               'multiple': false,
               'hidden': true
             ],
@@ -463,8 +454,6 @@ def helpMessage(config) {
 def guessMultiParamFormat(params) {
   if (!params.containsKey("param_list") || params.param_list == null) {
     "none"
-  } else if (params.containsKey("multiParamsFormat")) {
-    params.multiParamsFormat
   } else {
     def param_list = params.param_list
 

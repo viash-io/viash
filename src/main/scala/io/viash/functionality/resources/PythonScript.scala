@@ -75,7 +75,7 @@ case class PythonScript(
     s"""$dest = {
       |  ${parSet.mkString(",\n  ")}
       |}
-        |""".stripMargin
+      |""".stripMargin
     }
 
     ScriptInjectionMods(params = paramsCode.mkString)

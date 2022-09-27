@@ -98,7 +98,7 @@ case class CSharpScript(
       s"""var $dest = new {
       |  ${parSet.mkString(",\n  ")}
       |};
-      """.stripMargin
+      |""".stripMargin
     }
 
     ScriptInjectionMods(params = paramsCode.mkString)

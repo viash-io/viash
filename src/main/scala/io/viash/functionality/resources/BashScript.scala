@@ -47,9 +47,7 @@ case class BashScript(
       val parse = par.par + "=" + Bash.getEscapedArgument(par.VIASH_PAR, "'", """\'""", """\'\"\'\"\'""")
       s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; fi )"""
     }
-    val paramsCode = 
-      s"""${parSet.mkString("\n")}
-       |""".stripMargin
+    val paramsCode = parSet.mkString("\n") + "\n"
     ScriptInjectionMods(params = paramsCode)
   }
 

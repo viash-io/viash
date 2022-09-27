@@ -74,7 +74,7 @@ case class JavaScriptScript(
     s"""let $dest = {
       |  ${parSet.mkString(",\n  ")}
       |};
-      """.stripMargin
+      |""".stripMargin
     }
     ScriptInjectionMods(params = paramsCode.mkString)
   }

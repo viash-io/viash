@@ -444,13 +444,13 @@ object BashWrapper {
           |    ViashWarning '${param.name}' specifies a maximum value but the value was not verified as neither \\'bc\\' or \\'awk\\' are present on the system.
           |  fi
           |""".stripMargin
-      def minCheckInt(min: Int) = 
+      def minCheckInt(min: Long) = 
         s"""  if [[ $$${param.VIASH_PAR} -lt $min ]]; then
           |    ViashError '${param.name}' has be more than or equal to $min. Use "--help" to get more information on the parameters.
           |    exit 1
           |  fi
           |""".stripMargin
-      def maxCheckInt(max: Int) = 
+      def maxCheckInt(max: Long) = 
         s"""  if [[ $$${param.VIASH_PAR} -gt $max ]]; then
           |    ViashError '${param.name}' has be less than or equal to $max. Use "--help" to get more information on the parameters.
           |    exit 1

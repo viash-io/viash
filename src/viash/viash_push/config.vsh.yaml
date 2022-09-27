@@ -17,16 +17,16 @@ functionality:
   - name: "--query"
     alternatives: [ "-q" ]
     type: string
-    description: "Filter which components get selected by name and namespace. Can be a regex."
+    description: "Filter which components get selected by component and namespace name. Can be a regex."
     example: "^mynamespace/component1$"
   - name: "--query_namespace"
     alternatives: [ "-n" ]
     type: string
-    description: "Filter which namespaces get selected by namespace. Can be a regex."
+    description: "Filter which namespaces get selected by namespace name. Can be a regex."
     example: "^mynamespace$"
   - name: "--query_name"
     type: string
-    description: "Filter which components get selected by name. Can be a regex."
+    description: "Filter which components get selected by component name. Can be a regex."
     example: "^component1$"
   - name: "--tag"
     alternatives: [ "-t" ]
@@ -64,7 +64,7 @@ functionality:
     type: string
     multiple: true
     multiple_sep: ";"
-    description: "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
+    description: "Modify a viash config at runtime using a custom DSL."
   - name: "--log"
     alternatives: [ "-l" ]
     type: file
