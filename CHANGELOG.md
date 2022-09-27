@@ -21,11 +21,21 @@
 
 * All `meta[...]` variables are now processed similar to `Argument[_]`s, instead of using custom code to convert object types and detect Docker mounts.
 
+## DOCUMENTATION
+
+* Hardcoded URLs pointing to viash.io in the documentation annotations were replaced with a new keyword system.
+
+* Replaced references to "DSL" with "Dynamic Config Modding" in the `--help` output.
+
+* Added an example for Ruby based Docker setups.
+
 ## BUG FIXES
 
 * `viash ns`: Reverse exit code outputs, was returning 1 when everything was OK and 0 when errors were detected (#227).
 
 * `viash config inject`: Fix processing of arguments when argument groups are defined (#231).
+* Fixed a few typos in the CLI
+* Fixed the formatting of `ns exec` documentation
 
 # Viash 0.6.0
 
