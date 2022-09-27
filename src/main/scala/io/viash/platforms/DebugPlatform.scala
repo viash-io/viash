@@ -58,6 +58,8 @@ case class DebugPlatform(
                 arg.copy(required = false, default = One(Paths.get("/path/to/file")), must_exist = false)
               case arg: IntegerArgument if arg.default.isEmpty =>
                 arg.copy(required = false, default = One(123), choices = Nil, min = None, max = None)
+              case arg: LongArgument if arg.default.isEmpty =>
+                arg.copy(required = false, default = One(123), choices = Nil, min = None, max = None)
               case arg: StringArgument if arg.default.isEmpty => 
                 arg.copy(required = false, default = One("value"), choices = Nil)
               case a => a

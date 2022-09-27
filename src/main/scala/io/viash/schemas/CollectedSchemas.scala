@@ -91,6 +91,7 @@ object CollectedSchemas {
         ("double"                 , getSchema[DoubleArgument]),
         ("file"                   , getSchema[FileArgument]),
         ("integer"                , getSchema[IntegerArgument]),
+        ("long"                   , getSchema[LongArgument]),
         ("string"                 , getSchema[StringArgument]),
       ),
     )

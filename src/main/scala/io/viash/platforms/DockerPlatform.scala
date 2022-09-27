@@ -91,6 +91,28 @@ case class DockerPlatform(
   @description("The working directory when starting the container. This doesn’t change the Dockerfile but gets added as a command-line argument at runtime.")
   @example("workdir: /home/user", "yaml")
   workdir: Option[String] = None,
+
+  @description(
+    """The Docker setup strategy to use when building a container.
+      +
+      +| Strategy | Description |
+      +|-----|----------|
+      +| `alwaysbuild` / `build` / `b` | Always build the image from the dockerfile. This is the default setup strategy.
+      +| `alwayscachedbuild` / `cachedbuild` / `cb` | Always build the image from the dockerfile, with caching enabled.
+      +| `ifneedbebuild` |  Build the image if it does not exist locally.
+      +| `ifneedbecachedbuild` | Build the image with caching enabled if it does not exist locally, with caching enabled.
+      +| `alwayspull` / `pull` / `p` |  Try to pull the container from [Docker Hub](https://hub.docker.com) or the @[docker_registry](specified docker registry).
+      +| `alwayspullelsebuild` / `pullelsebuild` |  Try to pull the image from a registry and build it if it doesn't exist.
+      +| `alwayspullelsecachedbuild` / `pullelsecachedbuild` |  Try to pull the image from a registry and build it with caching if it doesn't exist.
+      +| `ifneedbepull` |  If the image does not exist locally, pull the image.
+      +| `ifneedbepullelsebuild` |  If the image does not exist locally, pull the image. If the image does exist, build it.
+      +| `ifneedbepullelsecachedbuild` | If the image does not exist locally, pull the image. If the image does exist, build it with caching enabled.
+      +| `push` | Push the container to [Docker Hub](https://hub.docker.com)  or the @[docker_registry](specified docker registry).
+      +| `pushifnotpresent` | Push the container to [Docker Hub](https://hub.docker.com) or the @[docker_registry](specified docker registry) if the @[docker_tag](tag) does not exist yet.
+      +| `donothing` / `meh` | Do not build or pull anything.
+      +
+      +""".stripMargin('+'))
+  @example("setup_strategy: alwaysbuild", "yaml")
   setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,
   privileged: Boolean = false,
 
@@ -106,13 +128,13 @@ case class DockerPlatform(
   @description(
     """A list of requirements for installing the following types of packages:
       |
-      | - apt
-      | - apk
-      | - yum
-      | - R
-      | - Python
-      | - JavaScript
-      | - Docker setup instructions
+      | - @[apt_req](apt)
+      | - @[apk_req](apk)
+      | - @[yum_req](yum)
+      | - @[r_req](R)
+      | - @[python_req](Python)
+      | - @[javascript_req](JavaScript)
+      | - @[docker_req](Docker setup instructions)
       |
       |The order in which these dependencies are specified determines the order in which they will be installed.
       |""".stripMargin)
@@ -367,7 +389,7 @@ case class DockerPlatform(
 
         val vdb =
           s"""  # create temporary directory to store dockerfile & optional resources in
-             |  tmpdir=$$(mktemp -d "$$VIASH_TEMP/viashsetupdocker-${functionality.name}-XXXXXX")
+             |  tmpdir=$$(mktemp -d "$$VIASH_META_TEMP_DIR/viashsetupdocker-${functionality.name}-XXXXXX")
              |  function clean_up {
              |    rm -rf "$$tmpdir"
              |  }
@@ -375,7 +397,7 @@ case class DockerPlatform(
              |
              |  # store dockerfile and resources
              |  ViashDockerfile > $$tmpdir/Dockerfile
-             |  cp -r $$${BashWrapper.var_resources_dir}/* $$tmpdir
+             |  cp -r $$VIASH_META_RESOURCES_DIR/* $$tmpdir
              |
              |  # Build the container
              |  ViashNotice "Building container '$$1' with Dockerfile"
@@ -462,7 +484,7 @@ case class DockerPlatform(
   private val extraMountsVar = "VIASH_EXTRA_MOUNTS"
 
   private def processDockerVolumes(functionality: Functionality) = {
-    val args = functionality.allArgumentsAndDummies
+    val args = functionality.getArgumentLikes(includeMeta = true)
 
     val preParse =
       s"""
@@ -486,7 +508,7 @@ case class DockerPlatform(
 
     val extraParams = s" $$$extraMountsVar"
 
-    val postParseVolumes =
+    val preRun =
       if (resolve_volume == Automatic) {
         "\n\n# detect volumes from file arguments" +
           args.flatMap {
@@ -516,16 +538,6 @@ case class DockerPlatform(
       } else {
         ""
       }
-
-    val preRun = postParseVolumes + "\n\n" +
-      s"""# Always mount the resource directory
-         |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$${BashWrapper.var_resources_dir}")"
-         |${BashWrapper.var_resources_dir}=$$(ViashAutodetectMount "$$${BashWrapper.var_resources_dir}")
-         |${BashWrapper.var_executable}=$$(ViashAutodetectMount "$$${BashWrapper.var_executable}")
-         |
-         |# Always mount the VIASH_TEMP directory
-         |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$VIASH_TEMP")"
-         |VIASH_TEMP=$$(ViashAutodetectMount "$$VIASH_TEMP")""".stripMargin
 
     BashWrapperMods(
       preParse = preParse,
@@ -573,7 +585,7 @@ case class DockerPlatform(
     volExtraParams: String,
     fullImageID: String,
   ) = {
-    val args = functionality.allArgumentsAndDummies
+    val args = functionality.getArgumentLikes(includeMeta = true)
 
     def chownCommand(value: String): String = {
       s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $fullImageID "$$(id -u):$$(id -g)" --silent --recursive $value"""

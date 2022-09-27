@@ -3,7 +3,6 @@
 # VIASH START
 par_which=""
 par_file=""
-resources_dir="."
 # VIASH END
 
 #set -e

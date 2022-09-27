@@ -1,9 +1,9 @@
 #' functionality:
 #'   name: testr
-#'   description: | 
+#'   description: |
 #'     Prints out the parameter values.
 #'     Checking what happens with multiline descriptions.
-#'   arguments: 
+#'   arguments:
 #'   - name: "input"
 #'     type: file
 #'     description: An input file with positional arguments.
@@ -17,6 +17,9 @@
 #'     type: integer
 #'     description: A whole number with a standard flag.
 #'     required: true
+#'   - name: "--long_number"
+#'     type: long
+#'     description: A long
 #'   - name: "-s"
 #'     type: string
 #'     description: A sentence or word with a short flag.
@@ -61,8 +64,17 @@
 #'       packages: libhdf5-serial-dev
 #' - type: nextflow
 
+## VIASH START
+par <- list(
+  multiple = c("one", "two"),
+  multiple_pos = c("a", "b", "c", "d", "e", "f"),
+  output = character(0),
+  log = character(0)
+)
+## VIASH END
+
 write_fun <- function(file, ...) {
-  str <- paste0(..., sep = "")
+  str <- paste(paste0(..., sep = ""), collapse = "")
   if (length(file) > 0) {
     write(sub("\n$", "", str), file = file, append = TRUE)
   } else {
@@ -78,8 +90,12 @@ if (length(par$output) > 0) {
   write_fun(par$log, 'INFO:Printing output to console\n')
 }
 
-str <- paste0(names(par), ": |", par, "|\n", collapse = "")
+str <- sapply(names(par), function(n) {
+  paste0(n, ": |", paste(par[[n]], collapse = ", "), "|\n")
+})
 write_fun(par$output, str)
 
-str <- paste0("meta_", names(meta), ": |", meta, "|\n", collapse = "")
+str <- sapply(names(meta), function(n) {
+  paste0("meta_", n, ": |", paste(meta[[n]], collapse = ", "), "|\n")
+})
 write_fun(par$output, str)

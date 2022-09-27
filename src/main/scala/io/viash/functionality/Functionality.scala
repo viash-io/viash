@@ -23,6 +23,7 @@ import Status._
 import io.viash.config.Version
 import io.circe.generic.extras._
 import io.viash.schemas._
+import io.viash.wrapper.BashWrapper
 
 @description(
   """The functionality-part of the config file describes the behaviour of the script in terms of arguments and resources.
@@ -33,7 +34,7 @@ case class Functionality(
   @example("name: this_is_my_component", "yaml")
   name: String,
 
-  @description("Namespace this component is a part of. See the [Namespaces guide](/documentation/guide/component/namespaces.html) for more information on namespaces.")
+  @description("Namespace this component is a part of. See the @[namespace](Namespaces guide) for more information on namespaces.")
   @example("namespace: fancy_components", "yaml")
   namespace: Option[String] = None,
 
@@ -115,13 +116,13 @@ case class Functionality(
   @description(
     """A list of arguments for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. See these reference pages per type for more information:  
       |
-      | - [string](/documentation/reference/config/arguments/string.html)
-      | - [file](/documentation/reference/config/arguments/file.html)
-      | - [integer](/documentation/reference/config/arguments/integer.html)
-      | - [double](/documentation/reference/config/arguments/double.html)
-      | - [boolean](/documentation/reference/config/arguments/boolean.html)
-      | - [boolean_true](/documentation/reference/config/arguments/boolean_true.html)
-      | - [boolean_false](/documentation/reference/config/arguments/boolean_false.html)
+      | - @[arg_string](string)
+      | - @[arg_file](file)
+      | - @[arg_integer](integer)
+      | - @[arg_double](double)
+      | - @[arg_boolean](boolean)
+      | - @[arg_boolean_true](boolean_true)
+      | - @[arg_boolean_false](boolean_false)
       |""".stripMargin)
   @example(
     """arguments:
@@ -131,6 +132,7 @@ case class Functionality(
       |    description: Description of foo
       |    default: "/foo/bar"
       |    must_exist: true
+      |    direction: output
       |    required: false
       |    multiple: true
       |    multiple_sep: ","
@@ -192,7 +194,7 @@ case class Functionality(
   argument_groups: List[ArgumentGroup] = Nil,
 
   @description(
-    """[Resources](/documentation/guide/component/resources.html) are files that support the component. The first resource should be [the script](/documentation/guide/component/languages.html) that will be executed when the functionality is run. Additional resources will be copied to the same directory.
+    """@[resources](Resources) are files that support the component. The first resource should be @[scripting_languages](a script) that will be executed when the functionality is run. Additional resources will be copied to the same directory.
       |
       |Common properties:
       |
@@ -225,7 +227,7 @@ case class Functionality(
   @example("usage: Place the executable in a directory containing TSV files and run it", "yaml")
   usage: Option[String] = None,
 
-  @description("""One or more [scripts](/documentation/guide/component/languages.html) to be used to test the component behaviour when `viash test` is invoked. Additional files of type `file` will be made available only during testing. Each test script should expect no command-line inputs, be platform-independent, and return an exit code >0 when unexpected behaviour occurs during testing. See the [Unit Testing guide](/documentation/guide/component/unit-testing.html) for more info.""")
+  @description("""One or more @[scripting_language](scripts) to be used to test the component behaviour when `viash test` is invoked. Additional files of type `file` will be made available only during testing. Each test script should expect no command-line inputs, be platform-independent, and return an exit code >0 when unexpected behaviour occurs during testing. See @[unit_testing](Unit Testing) for more info.""")
   @example(
     """test_resources:
       |  - type: bash_script
@@ -237,7 +239,7 @@ case class Functionality(
       "yaml")
   test_resources: List[Resource] = Nil,
 
-  @description("A map for storing custom annotation.")
+  @description("A map for storing custom annotations.")
   @example("info: {twitter: wizzkid, appId: com.example.myApplication}", "yaml")
   @since("Viash 0.4.0")
   info: Map[String, String] = Map.empty[String, String],
@@ -261,9 +263,6 @@ case class Functionality(
   requirements: ComputationalRequirements = ComputationalRequirements(),
 
   // The variables below are for internal use and shouldn't be publicly documented
-
-  // dummy arguments are used for handling extra directory mounts in docker
-  dummy_arguments: List[Argument[_]] = Nil,
 
   // setting this to true will change the working directory
   // to the resources directory when running the script
@@ -382,6 +381,29 @@ case class Functionality(
     }
   }
 
+  def getArgumentLikes(includeMeta: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): List[Argument[_]] = {
+    // start with arguments
+    val args0 = allArguments
+
+    // add meta if need be
+    val args1 = args0 ++ { if (includeMeta) BashWrapper.metaArgs else Nil }
+    
+    // filter input files if need be
+    val args2 = if (filterInputs) args1.filter{d => d.direction == Input || d.isInstanceOf[FileArgument]} else args1
+    
+    // filter output files if need be
+    val args3 = if (filterOutputs) args2.filter{d => d.direction == Output || d.isInstanceOf[FileArgument]} else args2
+
+    args3
+  }
+  def getArgumentLikesGroupedByDest(includeMeta: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): Map[String, List[Argument[_]]] = {
+    val x = getArgumentLikes(includeMeta, filterInputs, filterOutputs).groupBy(_.dest)
+    val y = Map("par" -> Nil, "meta" -> Nil)
+    (x.toSeq ++ y.toSeq).groupBy(_._1).map { 
+      case (k, li) => (k, li.flatMap(_._2).toList) 
+    }
+  }
+
   def mainScript: Option[Script] =
     resources.headOption.flatMap {
       case s: Script => Some(s)
@@ -393,8 +415,6 @@ case class Functionality(
     case _ :: tail => tail
     case _ => List.empty[Resource]
   }
-
-  def allArgumentsAndDummies: List[Argument[_]] = allArguments ::: dummy_arguments
 
   def isEnabled: Boolean = status != Status.Disabled
 }

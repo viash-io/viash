@@ -42,9 +42,10 @@ case class CSharpScript(
   def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
     val quo = "\"'\"'\""
 
-    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
+    val argsAndMeta = functionality.getArgumentLikesGroupedByDest(includeMeta = true, filterInputs = true)
 
-    val parSet = params.map { par =>
+    val paramsCode = argsAndMeta.map { case (dest, params) =>
+    val parSet = params.map{ par =>
       // val env_name = par.VIASH_PAR
       val env_name = Bash.getEscapedArgument(par.VIASH_PAR, quo, """\"""", """\\\"""")
 
@@ -53,6 +54,8 @@ case class CSharpScript(
           s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => bool.Parse(x.ToLower())).ToArray()"""
         case a: IntegerArgument if a.multiple =>
           s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => Convert.ToInt32(x)).ToArray()"""
+        case a: LongArgument if a.multiple =>
+          s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => Convert.ToInt64(x)).ToArray()"""
         case a: DoubleArgument if a.multiple =>
           s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => Convert.ToDouble(x)).ToArray()"""
         case a: FileArgument if a.multiple =>
@@ -61,6 +64,7 @@ case class CSharpScript(
           s"""$env_name.Split($quo${a.multiple_sep}$quo).ToArray()"""
         case _: BooleanArgumentBase => s"""bool.Parse($env_name.ToLower())"""
         case _: IntegerArgument => s"""Convert.ToInt32($env_name)"""
+        case _: LongArgument => s"""Convert.ToInt64($env_name)"""
         case _: DoubleArgument => s"""Convert.ToDouble($env_name)"""
         case _: FileArgument => s"""$env_name"""
         case _: StringArgument => s"""$env_name"""
@@ -69,6 +73,7 @@ case class CSharpScript(
       val class_ = par match {
         case _: BooleanArgumentBase => "bool"
         case _: IntegerArgument => "int"
+        case _: LongArgument => "long"
         case _: DoubleArgument => "double"
         case _: FileArgument => "string"
         case _: StringArgument => "string"
@@ -89,23 +94,15 @@ case class CSharpScript(
       }
 
       s"${par.plainName} = $setter"
-    }
-    val metaSet = BashWrapper.metaFields.map{ case BashWrapper.ViashMeta(env_name, script_name, _) =>
-      val env_name_escaped = Bash.getEscapedArgument(env_name, quo, """\"""", """\\\"""")
-      s"""$script_name = $$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$env_name_escaped"; else echo "(string) null"; fi )"""
-    }
-    
-    val paramsCode = 
-      s"""var par = new {
-       |  ${parSet.mkString(",\n  ")}
-       |};
-       |var meta = new {
-       |  ${metaSet.mkString(",\n  ")}
-       |};
-       |var resources_dir = "$$VIASH_META_RESOURCES_DIR";
-       |""".stripMargin
+      }
 
-    ScriptInjectionMods(params = paramsCode)
+      s"""var $dest = new {
+      |  ${parSet.mkString(",\n  ")}
+      |};
+      |""".stripMargin
+    }
+
+    ScriptInjectionMods(params = paramsCode.mkString)
   }
 
   def command(script: String): String = {

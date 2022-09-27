@@ -114,7 +114,7 @@ case class DoubleArgument(
   @exampleWithDescription("my_component --my_double=5.8,22.6,200.4", "bash", "Here's an example of how to use this:")
   multiple_sep: Char = ':',
 
-
+  dest: String = "par",
   `type`: String = "double"
 ) extends Argument[Double] {
   def copyArg(
@@ -127,8 +127,9 @@ case class DoubleArgument(
     required: Boolean,
     direction: Direction,
     multiple: Boolean,
-    multiple_sep: Char
+    multiple_sep: Char,
+    dest: String
   ): Argument[Double] = {
-    copy(name, alternatives, description, example, default, required, this.min, this.max, direction, multiple, multiple_sep, `type`)
+    copy(name, alternatives, description, example, default, required, this.min, this.max, direction, multiple, multiple_sep, dest, `type`)
   }
 }
