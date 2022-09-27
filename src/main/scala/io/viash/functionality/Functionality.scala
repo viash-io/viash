@@ -131,6 +131,7 @@ case class Functionality(
       |    description: Description of foo
       |    default: "/foo/bar"
       |    must_exist: true
+      |    direction: output
       |    required: false
       |    multiple: true
       |    multiple_sep: ","
