@@ -5,7 +5,7 @@ functionality:
     Prints out the parameter values.
     Checking what happens with multiline descriptions.
   authors:
-    - name: Bob Cando
+    - name: Bob ''' """ \n ` $ \ Cando
       roles: [maintainer, author]
       email: bob@cando.com
       props: {github: bobcando, orcid: XXXAAABBB}
@@ -17,7 +17,7 @@ functionality:
           description: |
             An input file with positional arguments.
             More checks for multiline descriptions.
-            Testing some characters that should be escaped: ` $ \
+            Testing some characters that should be escaped: ''' """ \n ` $ \
           direction: input
           required: true
           must_exist: true
