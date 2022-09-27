@@ -33,7 +33,7 @@ case class Functionality(
   @example("name: this_is_my_component", "yaml")
   name: String,
 
-  @description("Namespace this component is a part of. See the [Namespaces guide](/documentation/guide/component/namespaces.html) for more information on namespaces.")
+  @description("Namespace this component is a part of. See the @[namespace](Namespaces guide) for more information on namespaces.")
   @example("namespace: fancy_components", "yaml")
   namespace: Option[String] = None,
 
@@ -115,13 +115,13 @@ case class Functionality(
   @description(
     """A list of arguments for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. See these reference pages per type for more information:  
       |
-      | - [string](/documentation/reference/config/arguments/string.html)
-      | - [file](/documentation/reference/config/arguments/file.html)
-      | - [integer](/documentation/reference/config/arguments/integer.html)
-      | - [double](/documentation/reference/config/arguments/double.html)
-      | - [boolean](/documentation/reference/config/arguments/boolean.html)
-      | - [boolean_true](/documentation/reference/config/arguments/boolean_true.html)
-      | - [boolean_false](/documentation/reference/config/arguments/boolean_false.html)
+      | - @[arg_string](string)
+      | - @[arg_file](file)
+      | - @[arg_integer](integer)
+      | - @[arg_double](double)
+      | - @[arg_boolean](boolean)
+      | - @[arg_boolean_true](boolean_true)
+      | - @[arg_boolean_false](boolean_false)
       |""".stripMargin)
   @example(
     """arguments:
@@ -192,7 +192,7 @@ case class Functionality(
   argument_groups: List[ArgumentGroup] = Nil,
 
   @description(
-    """[Resources](/documentation/guide/component/resources.html) are files that support the component. The first resource should be [the script](/documentation/guide/component/languages.html) that will be executed when the functionality is run. Additional resources will be copied to the same directory.
+    """@[resources](Resources) are files that support the component. The first resource should be @[scripting_languages](a script) that will be executed when the functionality is run. Additional resources will be copied to the same directory.
       |
       |Common properties:
       |
@@ -225,7 +225,7 @@ case class Functionality(
   @example("usage: Place the executable in a directory containing TSV files and run it", "yaml")
   usage: Option[String] = None,
 
-  @description("""One or more [scripts](/documentation/guide/component/languages.html) to be used to test the component behaviour when `viash test` is invoked. Additional files of type `file` will be made available only during testing. Each test script should expect no command-line inputs, be platform-independent, and return an exit code >0 when unexpected behaviour occurs during testing. See the [Unit Testing guide](/documentation/guide/component/unit-testing.html) for more info.""")
+  @description("""One or more @[scripting_language](scripts) to be used to test the component behaviour when `viash test` is invoked. Additional files of type `file` will be made available only during testing. Each test script should expect no command-line inputs, be platform-independent, and return an exit code >0 when unexpected behaviour occurs during testing. See @[unit_testing](Unit Testing) for more info.""")
   @example(
     """test_resources:
       |  - type: bash_script
