@@ -13,6 +13,10 @@
 
 * `viash config inject`: Fix processing of arguments when argument groups are defined (#231).
 
+## DEPRECATION
+
+* `NextflowPlatform`: Deprecate `--param_list_format` parameter.
+
 # Viash 0.6.0
 
 The first (major) release this year! The biggest changes are:
@@ -247,7 +251,7 @@ The first (major) release this year! The biggest changes are:
   A csv should have column names which correspond to the different arguments of this pipeline.
   A json or a yaml file should be a list of maps, each of which has keys corresponding to the arguments of the pipeline.
   A yaml blob can also be passed directly as a parameter.
-  Inside the Nextflow pipeline code, params.params_list can also be used to directly a list of parameter sets.
+  Inside the Nextflow pipeline code, params.param_list can also be used to directly a list of parameter sets.
   When passing a csv, json or yaml, relative path names are relativized to the location of the parameter file.
   
   Examples: 
