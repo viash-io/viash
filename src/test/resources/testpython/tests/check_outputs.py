@@ -12,7 +12,8 @@ class TestCheckOutputs(unittest.TestCase):
         "a", "b", "c", "d",
         "--output", "./output.txt", "--log", "./log.txt",
         "--multiple", "one", "--multiple=two", 
-        "e", "f"
+        "e", "f",
+        "--long_number", "112589990684262400"
       ]
     ).decode("utf-8")
     
@@ -24,6 +25,7 @@ class TestCheckOutputs(unittest.TestCase):
     self.assertRegex(output, 'input: \\|help\\|')
     self.assertRegex(output, 'real_number: \\|10.5\\|')
     self.assertRegex(output, 'whole_number: \\|10\\|')
+    self.assertRegex(output, 'long_number: \\|112589990684262400\\|')
     self.assertRegex(output, 's: \\|a string with spaces\\|')
     self.assertRegex(output, 'truth: \\|True\\|')
     self.assertRegex(output, 'output: \\|..*/output.txt\\|')
@@ -60,6 +62,7 @@ class TestCheckOutputs(unittest.TestCase):
     self.assertRegex(output, 'input: \\|test\\|')
     self.assertRegex(output, 'real_number: \\|123.456\\|')
     self.assertRegex(output, 'whole_number: \\|789\\|')
+    self.assertRegex(output, 'long_number: \\|None\\|')
     self.assertRegex(output, 's: \\|my\\$weird#string"""\'\'\'`\\\\@\\|')
     self.assertRegex(output, 'truth: \\|False\\|')
     self.assertRegex(output, 'output: \\|None\\|')

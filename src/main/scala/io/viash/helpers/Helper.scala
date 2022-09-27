@@ -92,6 +92,8 @@ object Helper {
     val min = param match {
         case p: IntegerArgument if p.min.nonEmpty =>
           p.min.map(_.toString)
+        case p: LongArgument if p.min.nonEmpty =>
+          p.min.map(_.toString)
         case p: DoubleArgument if p.min.nonEmpty =>
           p.min.map(_.toString)
         case _ =>
@@ -99,6 +101,8 @@ object Helper {
       }
     val max = param match {
         case p: IntegerArgument if p.max.nonEmpty =>
+          p.max.map(_.toString)
+        case p: LongArgument if p.max.nonEmpty =>
           p.max.map(_.toString)
         case p: DoubleArgument if p.max.nonEmpty =>
           p.max.map(_.toString)
@@ -121,6 +125,8 @@ object Helper {
         case so: StringArgument if so.choices != Nil =>
           Some("[ " + so.choices.map(escapeChoice(_)).mkString(", ") + " ]")
         case so: IntegerArgument if so.choices != Nil =>
+          Some("[ " + so.choices.mkString(", ") + " ]")
+        case so: LongArgument if so.choices != Nil =>
           Some("[ " + so.choices.mkString(", ") + " ]")
         case _ => None
       }

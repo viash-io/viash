@@ -1,5 +1,9 @@
 # Viash 0.6.1
 
+## BREAKING CHANGES
+
+* Deprecated usage `resources_dir` variable inside scripts, use `meta["resources_dir"]` instead (or `$meta_resources_dir` in Bash, or `meta$resources_dir` in R).
+
 ## NEW FUNCTIONALITY
 
 * `viash ns exec`: Added two more fields:
@@ -7,11 +11,23 @@
   - `{platform}`: the platform name (if applicable)
   - `{namespace}`: the namespace of the component
 
+* `LongArgument`: Added support for 64-bit integers with `type: long` as opposed to `type: integer` which are 32-bit integers.
+
 ## MINOR CHANGES
 
-* Hardcoded URLs pointing to viash.io in the documentation annotations were replaced with a new keyword system
-* Replaced references to "DSL" with "Dynamic Config Modding" in the `--help` output
-* Added an example for Ruby based Docker setups
+* `meta["n_proc"]` is now an integer, `meta["memory_*"]` are now longs (#224).
+
+## INTERNAL CHANGES
+
+* All `meta[...]` variables are now processed similar to `Argument[_]`s, instead of using custom code to convert object types and detect Docker mounts.
+
+## DOCUMENTATION
+
+* Hardcoded URLs pointing to viash.io in the documentation annotations were replaced with a new keyword system.
+
+* Replaced references to "DSL" with "Dynamic Config Modding" in the `--help` output.
+
+* Added an example for Ruby based Docker setups.
 
 ## BUG FIXES
 
@@ -105,7 +121,7 @@ The first (major) release this year! The biggest changes are:
   
   You can override the default requirements at runtime:
 
-  - `./foo ---n_proc 4 ---memory 100pb` (for NativePlatform or DockerPlatform)
+  - `./foo ---n_proc 4 ---memory 100PB` (for NativePlatform or DockerPlatform)
   - By adding `process.cpus = 4` and `process.memory "100 PB"` to a nextflow.config (for NextflowPlatform)
 
   This results the following meta variables to be injected into a script:
@@ -255,7 +271,7 @@ The first (major) release this year! The biggest changes are:
   A csv should have column names which correspond to the different arguments of this pipeline.
   A json or a yaml file should be a list of maps, each of which has keys corresponding to the arguments of the pipeline.
   A yaml blob can also be passed directly as a parameter.
-  Inside the Nextflow pipeline code, params.params_list can also be used to directly a list of parameter sets.
+  Inside the Nextflow pipeline code, params.param_list can also be used to directly a list of parameter sets.
   When passing a csv, json or yaml, relative path names are relativized to the location of the parameter file.
   
   Examples: 

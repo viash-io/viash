@@ -389,7 +389,7 @@ case class DockerPlatform(
 
         val vdb =
           s"""  # create temporary directory to store dockerfile & optional resources in
-             |  tmpdir=$$(mktemp -d "$$VIASH_TEMP/viashsetupdocker-${functionality.name}-XXXXXX")
+             |  tmpdir=$$(mktemp -d "$$VIASH_META_TEMP_DIR/viashsetupdocker-${functionality.name}-XXXXXX")
              |  function clean_up {
              |    rm -rf "$$tmpdir"
              |  }
@@ -397,7 +397,7 @@ case class DockerPlatform(
              |
              |  # store dockerfile and resources
              |  ViashDockerfile > $$tmpdir/Dockerfile
-             |  cp -r $$${BashWrapper.var_resources_dir}/* $$tmpdir
+             |  cp -r $$VIASH_META_RESOURCES_DIR/* $$tmpdir
              |
              |  # Build the container
              |  ViashNotice "Building container '$$1' with Dockerfile"
@@ -484,7 +484,7 @@ case class DockerPlatform(
   private val extraMountsVar = "VIASH_EXTRA_MOUNTS"
 
   private def processDockerVolumes(functionality: Functionality) = {
-    val args = functionality.allArgumentsAndDummies
+    val args = functionality.getArgumentLikes(includeMeta = true)
 
     val preParse =
       s"""
@@ -508,7 +508,7 @@ case class DockerPlatform(
 
     val extraParams = s" $$$extraMountsVar"
 
-    val postParseVolumes =
+    val preRun =
       if (resolve_volume == Automatic) {
         "\n\n# detect volumes from file arguments" +
           args.flatMap {
@@ -538,16 +538,6 @@ case class DockerPlatform(
       } else {
         ""
       }
-
-    val preRun = postParseVolumes + "\n\n" +
-      s"""# Always mount the resource directory
-         |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$${BashWrapper.var_resources_dir}")"
-         |${BashWrapper.var_resources_dir}=$$(ViashAutodetectMount "$$${BashWrapper.var_resources_dir}")
-         |${BashWrapper.var_executable}=$$(ViashAutodetectMount "$$${BashWrapper.var_executable}")
-         |
-         |# Always mount the VIASH_TEMP directory
-         |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$VIASH_TEMP")"
-         |VIASH_TEMP=$$(ViashAutodetectMount "$$VIASH_TEMP")""".stripMargin
 
     BashWrapperMods(
       preParse = preParse,
@@ -595,7 +585,7 @@ case class DockerPlatform(
     volExtraParams: String,
     fullImageID: String,
   ) = {
-    val args = functionality.allArgumentsAndDummies
+    val args = functionality.getArgumentLikes(includeMeta = true)
 
     def chownCommand(value: String): String = {
       s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $fullImageID "$$(id -u):$$(id -g)" --silent --recursive $value"""

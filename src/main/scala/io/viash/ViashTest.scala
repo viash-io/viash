@@ -194,8 +194,6 @@ object ViashTest {
               name = config.functionality.name,
               namespace = config.functionality.namespace,
               version = config.functionality.version,
-              // set custom arguments and resources
-              dummy_arguments = List(dirArg),
               resources = List(test),
               set_wd_to_resources_dir = true
             )

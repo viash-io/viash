@@ -23,25 +23,21 @@ import io.viash.functionality.arguments._
 import io.viash.helpers.{Bash, Format, Helper}
 
 object BashWrapper {
-  case class ViashMeta(envName: String, plainName: String, required: Boolean = true)
-  val metaFields: List[ViashMeta] = {
+  val metaArgs: List[Argument[_]] = {
     List(
-      ViashMeta("VIASH_META_FUNCTIONALITY_NAME", "functionality_name"),
-      ViashMeta("VIASH_META_RESOURCES_DIR", "resources_dir"),
-      ViashMeta("VIASH_META_EXECUTABLE", "executable"),
-      ViashMeta("VIASH_TEMP", "temp_dir"),
-      ViashMeta("VIASH_META_N_PROC", "n_proc", required = false),
-      ViashMeta("VIASH_META_MEMORY_B", "memory_b", required = false),
-      ViashMeta("VIASH_META_MEMORY_KB", "memory_kb", required = false),
-      ViashMeta("VIASH_META_MEMORY_MB", "memory_mb", required = false),
-      ViashMeta("VIASH_META_MEMORY_GB", "memory_gb", required = false),
-      ViashMeta("VIASH_META_MEMORY_TB", "memory_tb", required = false),
-      ViashMeta("VIASH_META_MEMORY_PB", "memory_pb", required = false)
-
+      StringArgument("functionality_name", required = true, dest = "meta"),
+      FileArgument("resources_dir", required = true, dest = "meta"),
+      FileArgument("executable", required = true, dest = "meta"),
+      FileArgument("temp_dir", required = true, dest = "meta"),
+      IntegerArgument("n_proc", required = false, dest = "meta"),
+      LongArgument("memory_b", required = false, dest = "meta"),
+      LongArgument("memory_kb", required = false, dest = "meta"),
+      LongArgument("memory_mb", required = false, dest = "meta"),
+      LongArgument("memory_gb", required = false, dest = "meta"),
+      LongArgument("memory_tb", required = false, dest = "meta"),
+      LongArgument("memory_pb", required = false, dest = "meta")
     )
   }
-  val var_resources_dir = "VIASH_META_RESOURCES_DIR"
-  val var_executable = "VIASH_META_EXECUTABLE"
 
   def store(name: String, env: String, value: String, multiple_sep: Option[Char]): Array[String] = {
     if (multiple_sep.isDefined) {
@@ -107,7 +103,7 @@ object BashWrapper {
     val cdToResources =
       if (functionality.set_wd_to_resources_dir) {
         s"""
-          |cd "$$$var_resources_dir"""".stripMargin
+          |cd "$$VIASH_META_RESOURCES_DIR"""".stripMargin
       } else {
         ""
       }
@@ -142,7 +138,7 @@ object BashWrapper {
         // whether it needs to be a specific path
         val scriptSetup =
           s"""
-            |tempscript=\\$$(mktemp "$$VIASH_TEMP/viash-run-${functionality.name}-XXXXXX")
+            |tempscript=\\$$(mktemp "$$VIASH_META_TEMP_DIR/viash-run-${functionality.name}-XXXXXX")
             |function clean_up {
             |  rm "\\$$tempscript"
             |}
@@ -172,12 +168,11 @@ object BashWrapper {
     }
 
     // generate script modifiers
-    val params = functionality.allArguments
-    val paramAndDummies = functionality.allArgumentsAndDummies
+    val params = functionality.getArgumentLikes(includeMeta = true)
 
     val helpMods = generateHelp(functionality)
     val computationalRequirementMods = generateComputationalRequirements(functionality)
-    val parMods = generateParsers(params, paramAndDummies)
+    val parMods = generateParsers(params)
     val execMods = mainResource match {
       case Some(_: Executable) => generateExecutableArgs(params)
       case _ => BashWrapperMods()
@@ -216,14 +211,12 @@ object BashWrapper {
        |${Bash.ViashLogging}
        |
        |# find source folder of this component
-       |$var_resources_dir=`ViashSourceDir $${BASH_SOURCE[0]}`
-       |
-       |# backwards compatibility
-       |VIASH_RESOURCES_DIR="$$$var_resources_dir"
+       |VIASH_META_RESOURCES_DIR=`ViashSourceDir $${BASH_SOURCE[0]}`
        |
        |# define meta fields
        |VIASH_META_FUNCTIONALITY_NAME="${functionality.name}"
        |VIASH_META_EXECUTABLE="$$VIASH_META_RESOURCES_DIR/$$VIASH_META_FUNCTIONALITY_NAME"
+       |VIASH_META_TEMP_DIR="$$VIASH_TEMP"
        |
        |${spaceCode(allMods.preParse)}
        |# initialise array
@@ -284,7 +277,7 @@ object BashWrapper {
     BashWrapperMods(preParse = preParse)
   }
 
-  private def generateParsers(params: List[Argument[_]], paramsAndDummies: List[Argument[_]]) = {
+  private def generateParsers(params: List[Argument[_]]) = {
     // gather parse code for params
     val wrapperParams = params.filterNot(_.flags == "")
     val parseStrs = wrapperParams.map {
@@ -321,7 +314,7 @@ object BashWrapper {
     }.mkString("\n")
 
     // parse positionals
-    val positionals = paramsAndDummies.filter(_.flags == "")
+    val positionals = params.filter(_.flags == "")
     val positionalStr = positionals.map { param =>
       if (param.multiple) {
         s"""while [[ $$# -gt 0 ]]; do
@@ -337,7 +330,7 @@ object BashWrapper {
     }.mkString("\n")
 
     // construct required checks
-    val reqParams = paramsAndDummies.filter(_.required)
+    val reqParams = params.filter(_.required)
     val reqCheckStr =
       if (reqParams.isEmpty) {
         ""
@@ -355,7 +348,7 @@ object BashWrapper {
     // if [ -z "$VIASH_PAR_FOO" ]; then
     //   VIASH_PAR_FOO="defaultvalue"
     // fi
-    val defaultsStrs = paramsAndDummies.flatMap { param =>
+    val defaultsStrs = params.flatMap { param =>
       // if boolean argument has a flagvalue, add the inverse of it as a default value
       val default = param match {
         case p if p.required => None
@@ -372,7 +365,7 @@ object BashWrapper {
     }.mkString("\n")
 
     // construct required file checks
-    val reqFiles = paramsAndDummies.flatMap {
+    val reqFiles = params.flatMap {
       case f: FileArgument if f.must_exist => Some(f)
       case _ => None
     }
@@ -448,13 +441,13 @@ object BashWrapper {
           |    ViashWarning '${param.name}' specifies a maximum value but the value was not verified as neither \\'bc\\' or \\'awk\\' are present on the system.
           |  fi
           |""".stripMargin
-      def minCheckInt(min: Int) = 
+      def minCheckInt(min: Long) = 
         s"""  if [[ $$${param.VIASH_PAR} -lt $min ]]; then
           |    ViashError '${param.name}' has be more than or equal to $min. Use "--help" to get more information on the parameters.
           |    exit 1
           |  fi
           |""".stripMargin
-      def maxCheckInt(max: Int) = 
+      def maxCheckInt(max: Long) = 
         s"""  if [[ $$${param.VIASH_PAR} -gt $max ]]; then
           |    ViashError '${param.name}' has be less than or equal to $max. Use "--help" to get more information on the parameters.
           |    exit 1
@@ -463,11 +456,13 @@ object BashWrapper {
 
       val minCheck = param match {
         case p: IntegerArgument if min.isDefined => minCheckInt(min.get)
+        case p: LongArgument if min.isDefined => minCheckInt(min.get)
         case p: DoubleArgument if min.isDefined => minCheckDouble(min.get)
         case _ => ""
       }
       val maxCheck = param match {
         case p: IntegerArgument if max.isDefined => maxCheckInt(max.get)
+        case p: LongArgument if max.isDefined => maxCheckInt(max.get)
         case p: DoubleArgument if max.isDefined => maxCheckDouble(max.get)
         case _ => ""
       }
@@ -501,13 +496,15 @@ object BashWrapper {
       }
     }
     val typeMinMaxCheckStr =
-      if (paramsAndDummies.isEmpty) {
+      if (params.isEmpty) {
         ""
       } else {
         "\n# check whether parameters values are of the right type\n" +
-          paramsAndDummies.flatMap { param =>
+          params.flatMap { param =>
             param match {
               case io: IntegerArgument =>
+                Some(typeMinMaxCheck(io, "^[-+]?[0-9]+$", io.min, io.max))
+              case io: LongArgument =>
                 Some(typeMinMaxCheck(io, "^[-+]?[0-9]+$", io.min, io.max))
               case dO: DoubleArgument =>
                 Some(typeMinMaxCheck(dO, "^[-+]?(\\.[0-9]+|[0-9]+(\\.[0-9]*)?)([eE][-+]?[0-9]+)?$", dO.min, dO.max))
@@ -554,13 +551,15 @@ object BashWrapper {
       }
     }
     val choiceCheckStr =
-      if (paramsAndDummies.isEmpty) {
+      if (params.isEmpty) {
         ""
       } else {
         "\n# check whether parameters values are of the right type\n" +
-          paramsAndDummies.map { param =>
+          params.map { param =>
             param match {
               case io: IntegerArgument if io.choices != Nil =>
+                checkChoices(io, io.choices)
+              case io: LongArgument if io.choices != Nil =>
                 checkChoices(io, io.choices)
               case so: StringArgument if so.choices != Nil =>
                 checkChoices(so, so.choices)
