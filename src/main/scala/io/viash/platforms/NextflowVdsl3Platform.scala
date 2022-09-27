@@ -161,7 +161,7 @@ case class NextflowVdsl3Platform(
       if (functionality.authors.isEmpty) {
         "" 
       } else {
-        val escAut = escapeSingleQuotedString(functionality.authors.mkString(", "))
+        val escAut = escapeSingleQuotedString(functionality.authors.map(_.name).mkString(", "))
         s"\n  author = '$escAut'"
       }
 

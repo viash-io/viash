@@ -286,7 +286,7 @@ case class DockerPlatform(
     // construct labels from metadata
     val opencontainers_image_authors = functionality.authors match {
       case Nil => None
-      case aut: List[Author] => Some(aut.mkString(", "))
+      case aut: List[Author] => Some(aut.map(_.name).mkString(", "))
     }
     // if no target_image_source is defined,
     // translate git@github.com:viash-io/viash.git -> https://github.com/viash-io/viash.git
