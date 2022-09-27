@@ -1,3 +1,15 @@
+# Viash 0.6.1
+
+## MINOR CHANGES
+
+* Hardcoded URLs pointing to viash.io in the documentation annotations were replaced with a new keyword system
+* Replaced references to "DSL" with "Dynamic Config Modding" in the `--help` output
+* Added an example for Ruby based Docker setups
+## BUG FIXES
+
+* Fixed a few typos in the CLI
+* Fixed the formatting of `ns exec` documentation
+
 # Viash 0.6.0
 
 The first (major) release this year! The biggest changes are:
