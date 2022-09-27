@@ -156,38 +156,6 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(stdout.contains("INFO: Parsed input arguments"))
   }
   
-  // test("Check component works when multiple_sep is set to ;", DockerTest) {
-  //   val newConfigFilePath = configDeriver.derive(
-  //     """.functionality.argument_groups[true].arguments[.name == "real_number"].multiple := true;
-  //     .functionality.argument_groups[true].arguments[.name == "real_number"].multiple_sep := ";"""",
-  //     "multiple_sep"
-  //   )
-    
-  //   val _ = TestHelper.testMainWithStdErr(
-  //     "build",
-  //     "-p", "docker",
-  //     "-o", tempFolStr,
-  //     newConfigFilePath,
-  //     "--setup", "alwaysbuild"
-  //   )
-
-  //   val stdout =
-  //     Exec.run(
-  //       Seq(
-  //         executable.toString,
-  //         executable.toString,
-  //         "--real_number", "123.456;123;789",
-  //         "--whole_number", "789",
-  //         "-s", "my$weird#string"
-  //       )
-  //     )
-      
-  //   assert(executable.exists)
-  //   assert(executable.canExecute)
-
-  //   assert(stdout.contains("""real_number: |123.456, 123, 789|"""))
-  // }
-
   test("viash build with trailing arguments") {
     TestHelper.testMain(
       "build",
@@ -632,6 +600,37 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     )
 
     assert(stderr.contains("The status of the component 'testbash' is set to deprecated."))
+  }
+
+  test("Check component works when multiple_sep is set to ;", DockerTest) {
+    val newConfigFilePath = configDeriver.derive(
+      """.functionality.argument_groups[true].arguments[.name == "--real_number"] := { "type": "double", "name": "--real_number", "multiple": true, "multiple_sep": ";", "min": 10, "max": 1000, "default": [10, 20, 30]}""",
+      "multiple_sep"
+    )
+    
+    val _ = TestHelper.testMainWithStdErr(
+      "build",
+      "-p", "docker",
+      "-o", tempFolStr,
+      newConfigFilePath,
+      "--setup", "alwaysbuild"
+    )
+
+    val stdout =
+      Exec.run(
+        Seq(
+          executable.toString,
+          executable.toString,
+          "--real_number", "123.456;123;789",
+          "--whole_number", "789",
+          "-s", "my$weird#string"
+        )
+      )
+      
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    assert(stdout.contains("""real_number: |123.456;123;789|"""))
   }
 
   def checkDockerImageExists(name: String): Boolean = checkDockerImageExists(name, "latest")
