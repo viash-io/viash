@@ -54,7 +54,7 @@ case class LongArgument(
       |  example: 100
       |""".stripMargin,
       "yaml")
-  example: OneOrMore[Int] = Nil,
+  example: OneOrMore[Long] = Nil,
 
   @description("The default value when no argument value is provided. This will not work if the [`required`](#required) property is enabled.")
   @example(
@@ -63,7 +63,7 @@ case class LongArgument(
       |  default: 100
       |""".stripMargin,
       "yaml")
-  default: OneOrMore[Int] = Nil,
+  default: OneOrMore[Long] = Nil,
 
   @description("Make the value for this argument required. If set to `true`, an error will be produced if no value was provided. `false` by default.")
   @example(
@@ -81,7 +81,7 @@ case class LongArgument(
       |  choices: [1024, 2048, 4096]
       |""".stripMargin,
       "yaml")
-  choices: List[Int] = Nil,
+  choices: List[Long] = Nil,
 
   @description("Minimum allowed value for this argument. If set and the provided value is lower than the minimum, an error will be produced. Can be combined with [`max`](#max) to clamp values.")
   @example(
@@ -90,7 +90,7 @@ case class LongArgument(
       |  min: 50
       |""".stripMargin,
       "yaml")
-  min: Option[Int] = None,
+  min: Option[Long] = None,
 
   @description("Maximum allowed value for this argument. If set and the provided value is higher than the maximum, an error will be produced. Can be combined with [`min`](#min) to clamp values.")
   @example(
@@ -99,7 +99,7 @@ case class LongArgument(
       |  max: 150
       |""".stripMargin,
       "yaml")  
-  max: Option[Int] = None,
+  max: Option[Long] = None,
 
 
   direction: Direction = Input,
@@ -127,20 +127,20 @@ case class LongArgument(
 
   dest: String = "par",
   `type`: String = "long"
-) extends Argument[Int] {
+) extends Argument[Long] {
   def copyArg(
     `type`: String, 
     name: String, 
     alternatives: OneOrMore[String],
     description: Option[String],
-    example: OneOrMore[Int],
-    default: OneOrMore[Int],
+    example: OneOrMore[Long],
+    default: OneOrMore[Long],
     required: Boolean,
     direction: Direction,
     multiple: Boolean,
     multiple_sep: String,
     dest: String
-  ): Argument[Int] = {
+  ): Argument[Long] = {
     copy(name, alternatives, description, example, default, required, this.choices, this.min, this.max, direction, multiple, multiple_sep, dest, `type`)
   }
 }

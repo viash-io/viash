@@ -121,7 +121,7 @@ case class ScalaScript(
         |val $dest = Viash${dest.capitalize}(
         |  ${parSet.mkString(",\n  ")}
         |)
-        """.stripMargin
+        |""".stripMargin
     }
 
     ScriptInjectionMods(params = paramsCode.mkString)
