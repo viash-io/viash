@@ -30,6 +30,7 @@ import io.viash.functionality.resources.Resource
 
 import java.nio.file.attribute.PosixFilePermission
 import java.util.Comparator
+import scala.collection.JavaConverters
 
 object IO {
   def tempDir: Path = {
@@ -82,6 +83,24 @@ object IO {
     } catch {
       case _: Exception =>
         println(s"File at URI '$uri' not found")
+        // println()
+        // println("###################")
+        // println("Exception:")
+        // println(e)
+        // println("###################")
+
+        // def getListOfFiles(d: File): List[File] = {
+        //   if (d.exists && d.isDirectory) {
+        //     d.listFiles.filter(_.isFile).toList
+        //   } else {
+        //     List[File]()
+        //   }
+        // }
+        // println("Files in directory:")
+        // val dir = Paths.get(uri).getParent().toFile()
+        // println(getListOfFiles(dir).mkString("  * ", "\n  * ", ""))
+        // println("###################")
+
         None
       }
   }
@@ -174,5 +193,13 @@ object IO {
       }
       Files.setPosixFilePermissions(path, perms)
     }
+  }
+  
+  /**
+   * Find all files in a directory and filter according to their properties.
+   */
+  def find(sourceDir: Path, filter: (Path, BasicFileAttributes) => Boolean): List[Path] = {
+    val it = Files.find(sourceDir, Integer.MAX_VALUE, (p, b) => filter(p, b)).iterator()
+    JavaConverters.asScalaIterator(it).toList
   }
 }

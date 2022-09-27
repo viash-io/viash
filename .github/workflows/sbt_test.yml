@@ -60,7 +60,6 @@ jobs:
     - name: Set up Scala
       run: |
         if [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
-          brew update
           brew install scala
         else
           sudo apt-get update

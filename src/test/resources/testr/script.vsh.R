@@ -55,7 +55,7 @@
 #'   setup:
 #'     - type: r
 #'       cran: optparse
-#'       github: dynverse/dynutils@devel
+#'       github: tidyverse/dplyr@main
 #'       bioc: limma
 #'     - type: apt
 #'       packages: libhdf5-serial-dev
