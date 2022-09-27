@@ -393,7 +393,7 @@ case class Functionality(
     // filter output files if need be
     val args3 = if (filterOutputs) args2.filter{d => d.direction == Output || d.isInstanceOf[FileArgument]} else args2
 
-    args2
+    args3
   }
   def getArgumentLikesGroupedByDest(includeMeta: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): Map[String, List[Argument[_]]] = {
     val x = getArgumentLikes(includeMeta, filterInputs, filterOutputs).groupBy(_.dest)
