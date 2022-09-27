@@ -21,6 +21,7 @@ import io.viash.functionality._
 import io.viash.functionality.resources._
 import io.viash.functionality.arguments._
 import io.viash.helpers.{Bash, Format, Helper}
+import io.viash.helpers.Escaper
 
 object BashWrapper {
   val metaArgs: List[Argument[_]] = {
@@ -119,7 +120,7 @@ object BashWrapper {
       // if we want to debug our code
       case Some(res) if debugPath.isDefined =>
         val code = res.readWithInjection(functionality).get
-        val escapedCode = Bash.escapeMore(code)
+        val escapedCode = Bash.escapeString(code, allowUnescape = true)
         val deb = debugPath.get
 
         s"""
@@ -132,7 +133,7 @@ object BashWrapper {
       // if mainResource is a script
       case Some(res) =>
         val code = res.readWithInjection(functionality).get
-        val escapedCode = Bash.escapeMore(code)
+        val escapedCode = Bash.escapeString(code, allowUnescape = true)
 
         // check whether the script can be written to a temprorary location or
         // whether it needs to be a specific path
@@ -183,7 +184,7 @@ object BashWrapper {
 
     // generate header
     val header = Helper.generateScriptHeader(functionality)
-      .map(h => Bash.escapeMore(h))
+      .map(h => Escaper(h, newline = true))
       .mkString("# ", "\n# ", "")
 
     /* GENERATE BASH SCRIPT */
@@ -266,7 +267,9 @@ object BashWrapper {
 
   private def generateHelp(functionality: Functionality) = {
     val help = Helper.generateHelp(functionality)
-    val helpStr = help.map(h => Bash.escapeMore(h, quote = true)).mkString("  echo \"", "\"\n  echo \"", "\"")
+    val helpStr = help
+      .map(h => Bash.escapeString(h, quote = true))
+      .mkString("  echo \"", "\"\n  echo \"", "\"")
 
     val preParse =
       s"""# ViashHelp: Display helpful explanation about this executable
@@ -359,7 +362,7 @@ object BashWrapper {
 
       default.map(default => {
         s"""if [ -z $${${param.VIASH_PAR}+x} ]; then
-           |  ${param.VIASH_PAR}="${Bash.escapeMore(default.toString, quote = true, newline = true)}"
+           |  ${param.VIASH_PAR}="${Bash.escapeString(default.toString, quote = true, newline = true, allowUnescape = true)}"
            |fi""".stripMargin
       })
     }.mkString("\n")
@@ -595,7 +598,7 @@ object BashWrapper {
     val defaultsStrs = compArgs.flatMap{ case (_, env, default) =>
       default.map(dflt => {
         s"""if [ -z $${$env+x} ]; then
-           |  $env="${Bash.escapeMore(dflt, quote = true, newline = true)}"
+           |  $env="$dflt"
            |fi""".stripMargin
       })
     }.mkString("\n")

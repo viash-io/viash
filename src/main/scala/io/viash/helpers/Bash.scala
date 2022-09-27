@@ -18,6 +18,7 @@
 package io.viash.helpers
 
 import scala.io.Source
+import Escaper._
 
 object Bash {
   private def readUtils(s: String) = {
@@ -77,33 +78,25 @@ object Bash {
     s"$quot$${$env//$from/$to}$quot".replaceAll("\\\\", "\\\\VIASH_SLASH\\\\")
   }
 
-  case class Escaper(str: String) {
-    def transform(fun: Function[String, String], apply: Boolean = true): Escaper = {
-      Escaper(if (apply) fun(str) else str)
-    }
-  }
-
-  def escape(
-    str: String,
-    backtick: Boolean = true,
-    quote: Boolean = false,
-    singleQuote: Boolean = false,
-    newline: Boolean = false
-  ): String = {
-    val x = Escaper(str)
-      .transform(_.replaceAll("([\\\\$])", "\\\\$1"))
-      .transform(_.replaceAll("`", "\\\\`"), backtick)
-      .transform(_.replaceAll("\"", "\\\\\""), quote)
-      .transform(_.replaceAll("'", "\\\\'"), singleQuote)
-      .transform(_.replaceAll("\n", "\\\\n"), newline)
-    x.str
-  }
-
-  def escapeMore(str: String, quote: Boolean = false, newline: Boolean = false): String = {
-    escape(str, quote = quote, newline = newline)
-      .replaceAll("\\\\\\$VIASH_DOLLAR\\\\\\$", "\\$")
-      .replaceAll("\\\\\\\\VIASH_SLASH\\\\\\\\", "\\\\")
-      .replaceAll("\\\\\\$VIASH_", "\\$VIASH_")
-      .replaceAll("\\\\\\$\\{VIASH_", "\\${VIASH_")
+  def escapeString(
+    str: String, 
+    quote: Boolean = false, 
+    singleQuote: Boolean = false, 
+    newline: Boolean = false,
+    allowUnescape: Boolean = false
+  ) = {
+    Escaper(
+      str,
+      slash = true,
+      dollar = true,
+      backtick = true,
+      quote = quote,
+      singleQuote = singleQuote,
+      newline = newline
+    )
+      .replaceWith("\\\\\\$VIASH_DOLLAR\\\\\\$", "\\$", allowUnescape)
+      .replaceWith("\\\\\\\\VIASH_SLASH\\\\\\\\", "\\\\", allowUnescape)
+      .replaceWith("\\\\\\$VIASH_", "\\$VIASH_", allowUnescape)
+      .replaceWith("\\\\\\$\\{VIASH_", "\\${VIASH_", allowUnescape)
   }
 }

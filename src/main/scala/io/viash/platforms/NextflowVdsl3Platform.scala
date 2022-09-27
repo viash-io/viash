@@ -29,6 +29,7 @@ import io.circe.syntax._
 import io.circe.{Printer => JsonPrinter, Json, JsonObject}
 import shapeless.syntax.singleton
 import io.viash.schemas._
+import io.viash.helpers.Escaper
 
 /**
  * Next-gen Platform class for generating NextFlow (DSL2) modules.
@@ -103,8 +104,8 @@ case class NextflowVdsl3Platform(
   // TODO: solve differently
   container: String = "docker"
 ) extends NextflowPlatform {
-  def escapeText(txt: String): String = {
-    Bash.escape(txt, singleQuote = true, newline = true, backtick = false)
+  def escapeSingleQuotedString(txt: String): String = {
+    Escaper(txt, slash = true, singleQuote = true, newline = true)
   }
 
   def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
@@ -152,7 +153,7 @@ case class NextflowVdsl3Platform(
     val versStr = functionality.version.map(ver => s"\n  version = '$ver'").getOrElse("")
 
     val descStr = functionality.description.map{des => 
-      val escDes = escapeText(des)
+      val escDes = escapeSingleQuotedString(des)
       s"\n  description = '$escDes'"
     }.getOrElse("")
 
@@ -160,7 +161,7 @@ case class NextflowVdsl3Platform(
       if (functionality.authors.isEmpty) {
         "" 
       } else {
-        val escAut = escapeText(functionality.authors.mkString(", "))
+        val escAut = escapeSingleQuotedString(functionality.authors.mkString(", "))
         s"\n  author = '$escAut'"
       }
 
@@ -184,7 +185,7 @@ case class NextflowVdsl3Platform(
     
     /************************* HEADER *************************/
     val header = Helper.generateScriptHeader(functionality)
-      .map(h => Bash.escapeMore(h))
+      .map(h => Escaper(h, newline = true))
       .mkString("// ", "\n// ", "")
 
     /************************* SCRIPT *************************/
@@ -199,7 +200,7 @@ case class NextflowVdsl3Platform(
       // if mainResource is a script
       case Some(res) =>
         val code = res.readWithInjection(functionality).get
-        val escapedCode = Bash.escapeMore(code)
+        val escapedCode = Bash.escapeString(code, allowUnescape = true)
           .replace("\\", "\\\\")
           .replace("'''", "\\'\\'\\'")
 

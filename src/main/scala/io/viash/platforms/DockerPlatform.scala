@@ -32,6 +32,7 @@ import io.viash.platforms.docker._
 import io.viash.helpers.Circe._
 import io.viash.config.Info
 import io.viash.schemas._
+import io.viash.helpers.Escaper
 
 @description(
   """Run a Viash component on a Docker backend platform.
@@ -300,9 +301,9 @@ case class DockerPlatform(
     val opencontainers_image_description = s""""Companion container for running component ${functionality.namespace.map(_ + " ").getOrElse("")}${functionality.name}""""
     val opencontainers_image_created = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date())
 
-    val authors = opencontainers_image_authors.map(aut => s"""org.opencontainers.image.authors="$aut"""").toList
+    val authors = opencontainers_image_authors.map(aut => s"""org.opencontainers.image.authors="${Escaper(aut, quote = true)}"""").toList
     val descr = List(s"org.opencontainers.image.description=$opencontainers_image_description")
-    val imageSource = opencontainers_image_source.map(des => s"""org.opencontainers.image.source="${Bash.escape(des)}"""").toList
+    val imageSource = opencontainers_image_source.map(src => s"""org.opencontainers.image.source="${Escaper(src, quote = true)}"""").toList
     val created = List(s"""org.opencontainers.image.created="$opencontainers_image_created"""")
     val revision = opencontainers_image_revision.map(rev => s"""org.opencontainers.image.revision="$rev"""").toList
     val version = opencontainers_image_version.map(v => s"""org.opencontainers.image.version="$v"""").toList
