@@ -17,9 +17,15 @@
 
 * `meta["n_proc"]` is now an integer, `meta["memory_*"]` are now longs (#224).
 
+* `DockerPlatform`: Only store author names in the authors metadata.
+
+* `NextflowPlatform`: Only store author names in the authors metadata.
+
 ## INTERNAL CHANGES
 
 * All `meta[...]` variables are now processed similar to `Argument[_]`s, instead of using custom code to convert object types and detect Docker mounts.
+
+* `Escaper`: Make more generic Escaper helper class.
 
 ## BUG FIXES
 
