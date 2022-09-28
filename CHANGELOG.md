@@ -36,8 +36,12 @@
 * `viash ns`: Reverse exit code outputs, was returning 1 when everything was OK and 0 when errors were detected (#227).
 
 * `viash config inject`: Fix processing of arguments when argument groups are defined (#231).
-* Fixed a few typos in the CLI
-* Fixed the formatting of `ns exec` documentation
+
+* Fixed a few typos in the CLI.
+
+* Fixed the formatting of `ns exec` documentation.
+
+* `VDSL3`: Fix stub functionality.
 
 ## DEPRECATION
 
