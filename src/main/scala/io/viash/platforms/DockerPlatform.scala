@@ -390,7 +390,8 @@ case class DockerPlatform(
 
         val vdb =
           s"""  # create temporary directory to store dockerfile & optional resources in
-             |  dockerfile=$$(mktemp "$$VIASH_META_TEMP_DIR/Dockerfile-${functionality.name}-XXXXXX")
+             |  tmpdir=$$(mktemp -d "$$VIASH_META_TEMP_DIR/dockerbuild-${functionality.name}-XXXXXX")
+             |  dockerfile="$$tmpdir/Dockerfile"
              |  function clean_up {
              |    rm -rf "$$tmpdir"
              |  }
