@@ -22,9 +22,11 @@ import io.viash.schemas._
 @description("Computational requirements related to running the component.")
 @since("Viash 0.6.0")
 case class ComputationalRequirements(
-  @description("The maximum number of processes a component is allowed to spawn in parallel.")
-  @example("n_proc: 10", "yaml")
-  n_proc: Option[Integer] = None,
+  @description("The maximum number of (logical) cpus a component is allowed to use.")
+  @example("cpus: 10", "yaml")
+  cpus: Option[Int] = None,
+  @deprecated("Use `cpus` instead.", "Viash 0.6.1")
+  n_proc: Option[Int] = None,
   @description("The maximum amount of memory a component is allowed to allocate. Unit must be one of B, KB, MB, GB, TB or PB.")
   @example("memory: 10GB", "yaml")
   memory: Option[String] = None,
@@ -32,6 +34,7 @@ case class ComputationalRequirements(
   @example("commands: [ which, bash, awk, date, grep, egrep, ps, sed, tail, tee ]", "yaml")
   commands: List[String] = Nil
 ) {
+  assert(n_proc.isEmpty, message = "Argument 'n_proc' is deprecated, use 'cpus' instead.")
   def memoryAsBytes: Option[BigInt] = {
     val Regex = "^([0-9]+) *([kmgtp]b?|b)$".r
     val lookup = Map(

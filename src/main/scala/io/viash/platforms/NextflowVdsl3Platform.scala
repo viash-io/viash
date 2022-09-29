@@ -227,7 +227,7 @@ case class NextflowVdsl3Platform(
       // is memory requirements are defined but directives.memory isn't, use that instead
       memory = directives.memory orElse functionality.requirements.memoryAsBytes.map(_.toString + " B"),
       // is cpu requirements are defined but directives.cpus isn't, use that instead
-      cpus = directives.cpus orElse functionality.requirements.n_proc.map(np => Left(np))
+      cpus = directives.cpus orElse functionality.requirements.cpus.map(np => Left(np))
     )
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
     val dirJson = directivesToJson.asJson.dropEmptyRecursively()

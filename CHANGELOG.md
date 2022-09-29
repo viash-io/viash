@@ -4,6 +4,8 @@
 
 * Deprecated usage `resources_dir` variable inside scripts, use `meta["resources_dir"]` instead (or `$meta_resources_dir` in Bash, or `meta$resources_dir` in R).
 
+* Deprecated `meta["n_proc"]` in favour for `meta["cpus"]`.
+
 ## NEW FUNCTIONALITY
 
 * `viash ns exec`: Added two more fields:

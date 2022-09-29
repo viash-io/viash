@@ -269,7 +269,7 @@ case class DockerPlatform(
     // add ---chown flag
     val dmChown = addDockerChown(functionality, dockerArgs, dmVol.extraParams, effectiveID)
 
-    // process n_proc and memory_b
+    // process cpus and memory_b
     val dmReqs = addComputationalRequirements(functionality)
 
     // compile modifications
@@ -649,8 +649,8 @@ case class DockerPlatform(
         |if [ ! -z "$VIASH_META_MEMORY_MB" ]; then
         |  VIASH_EXTRA_DOCKER_ARGS="$VIASH_EXTRA_DOCKER_ARGS --memory=${VIASH_META_MEMORY_MB}m"
         |fi
-        |if [ ! -z "$VIASH_META_N_PROC" ]; then
-        |  VIASH_EXTRA_DOCKER_ARGS="$VIASH_EXTRA_DOCKER_ARGS --cpus=${VIASH_META_N_PROC}"
+        |if [ ! -z "$VIASH_META_CPUS" ]; then
+        |  VIASH_EXTRA_DOCKER_ARGS="$VIASH_EXTRA_DOCKER_ARGS --cpus=${VIASH_META_CPUS}"
         |fi""".stripMargin
 
     // return output

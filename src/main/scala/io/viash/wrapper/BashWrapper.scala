@@ -29,7 +29,7 @@ object BashWrapper {
       FileArgument("resources_dir", required = true, dest = "meta"),
       FileArgument("executable", required = true, dest = "meta"),
       FileArgument("temp_dir", required = true, dest = "meta"),
-      IntegerArgument("n_proc", required = false, dest = "meta"),
+      IntegerArgument("cpus", required = false, dest = "meta"),
       LongArgument("memory_b", required = false, dest = "meta"),
       LongArgument("memory_kb", required = false, dest = "meta"),
       LongArgument("memory_mb", required = false, dest = "meta"),
@@ -578,7 +578,7 @@ object BashWrapper {
 
   private def generateComputationalRequirements(functionality: Functionality) = {
     val compArgs = List(
-      ("---n_proc", "VIASH_META_N_PROC", functionality.requirements.n_proc.map(_.toString)),
+      ("---cpus", "VIASH_META_CPUS", functionality.requirements.cpus.map(_.toString)),
       ("---memory", "VIASH_META_MEMORY", functionality.requirements.memoryAsBytes.map(_.toString + "b"))
     )
 
@@ -637,8 +637,8 @@ object BashWrapper {
       |  fi
       |fi
       |# unset nproc if string is empty
-      |if [ -z "$VIASH_META_N_PROC" ]; then
-      |  unset $VIASH_META_N_PROC
+      |if [ -z "$VIASH_META_CPUS" ]; then
+      |  unset $VIASH_META_CPUS
       |fi""".stripMargin
 
     // return output
