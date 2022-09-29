@@ -19,11 +19,17 @@
 
 * `meta["n_proc"]` is now an integer, `meta["memory_*"]` are now longs (#224).
 
+* `DockerPlatform`: Only store author names in the authors metadata.
+
+* `NextflowPlatform`: Only store author names in the authors metadata.
+
 * `Argument[_]`: Turn `multiple_sep` from `Char` into `String`.
 
 ## INTERNAL CHANGES
 
 * All `meta[...]` variables are now processed similar to `Argument[_]`s, instead of using custom code to convert object types and detect Docker mounts.
+
+* `Escaper`: Make more generic Escaper helper class.
 
 ## DOCUMENTATION
 
@@ -50,6 +56,12 @@
 ## DEPRECATION
 
 * `NextflowPlatform`: Deprecate `--param_list_format` parameter.
+
+* `BashScript`, `CSharpScript`, `JavaScriptScript`, `PythonScript`, `RScript`, `ScalaScript`: Fix quoting issues of certain characters (#113).
+
+## TESTING
+
+* `BashScript`, `CSharpScript`, `JavaScriptScript`, `PythonScript`, `RScript`, `ScalaScript`: Implement more rigorous testing of which characters are escaped.
 
 * `BashWrapper`: Escape usage of `multiple_sep`. This fixes various checks and transformations not working when when `multiple_sep` is set to `";"` (#235).
 

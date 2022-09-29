@@ -40,7 +40,10 @@ def echo(s):
 
 try:
     for key, value in par.items():
-        echo(f"{key}: |{value}|")
+        if type(value) == list:
+            echo(f"{key}: |{','.join(value)}|")
+        else:
+            echo(f"{key}: |{value}|")
 
     for key, value in meta.items():
         echo(f"meta_{key}: |{value}|")

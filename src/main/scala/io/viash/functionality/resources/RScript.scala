@@ -47,7 +47,7 @@ case class RScript(
 
       val parSet = params.map { par =>
         // val env_name = par.VIASH_PAR
-        val env_name = Bash.getEscapedArgument(par.VIASH_PAR, "'", """\'""", """\\\'""")
+        val env_name = Bash.getEscapedArgument(par.VIASH_PAR, "paste0(r'(", ")')", """\'""", """)\', \"\'\", r\'(""")
 
         val parse = par match {
           case a: BooleanArgumentBase if a.multiple =>

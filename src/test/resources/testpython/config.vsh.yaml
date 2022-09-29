@@ -51,8 +51,8 @@ functionality:
     - type: python_script
       path: ./code.py
   test_resources:
-    - type: python_script
-      path: tests/check_outputs.py
+    - type: bash_script
+      path: tests/check_outputs.sh
 platforms:
   - type: native
   - type: docker

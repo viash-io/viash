@@ -512,7 +512,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
         Seq("docker", "inspect", s"${functionality.name}:${functionality.version.get}")
       )
 
-      val regexOciAuthors = raw""""org.opencontainers.image.authors": "Bob Cando <bob@cando.com> \(maintainer, author\) \{github: bobcando, orcid: XXXAAABBB\}"""".r
+      val regexOciAuthors = """"org.opencontainers.image.authors": "Bob ''' \\"\\"\\" \\\\n ` \$ \\\\ Cando"""".r
       val regexOciCreated = raw""""org.opencontainers.image.created": "((?:(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2}(?:\.\d+)?))(Z|[\+-]\d{2}:\d{2})?)"""".r
       val regexOciDescription = """"org.opencontainers.image.description": "Companion container for running component testbash"""".r
       val regexOciRevision = """"org.opencontainers.image.revision": "[0-9a-f]{40}"""".r

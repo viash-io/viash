@@ -41,7 +41,7 @@ case class ScalaScript(
   }
 
   def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
-    val quo = "\"'\"'\""
+    val quo = "\"'\"\"\"'\""
     val argsAndMeta = functionality.getArgumentLikesGroupedByDest(includeMeta = true, filterInputs = true)
 
     val paramsCode = argsAndMeta.map { case (dest, params) =>
@@ -71,7 +71,7 @@ case class ScalaScript(
       }
       val parSet = params.map { par =>
         // val env_name = par.VIASH_PAR
-        val env_name = Bash.getEscapedArgument(par.VIASH_PAR, quo, """\"""", """\\\"""")
+        val env_name = Bash.getEscapedArgument(par.VIASH_PAR, quo, """\"""", """\"\"\"+\"\\\"\"+\"\"\"""")
 
       val parse = { par match {
         case a: BooleanArgumentBase if a.multiple =>
@@ -111,7 +111,7 @@ case class ScalaScript(
           case Some(nf) =>
             s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo "$nf"; fi )"""
           case None => 
-            parse.replaceAll(quo, "\"") // undo quote escape as string is not part of echo
+            parse.replaceAll(quo, "\"\"\"") // undo quote escape as string is not part of echo
         }
       }
 
