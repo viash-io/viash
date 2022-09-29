@@ -180,13 +180,19 @@ object ViashTest {
 
       case test: Script =>
         val startTime = LocalDateTime.now
+
+        // make a new directory
+        val dirName = "test_" + test.filename.replaceAll("\\.[^\\.]*$", "")
+        val newDir = dir.resolve(dirName)
+        Files.createDirectories(newDir)
         val dirArg = FileArgument(
           name = "dir",
           direction = Output,
           default = One(dir)
         )
+
         // generate bash script for test
-       val funOnlyTest = platform.modifyFunctionality(
+        val funOnlyTest = platform.modifyFunctionality(
           config.copy(
             functionality = Functionality(
               // set same name, namespace and version
@@ -194,6 +200,9 @@ object ViashTest {
               name = config.functionality.name,
               namespace = config.functionality.namespace,
               version = config.functionality.version,
+              // set dirArg as argument so that Docker can chown it after execution
+              arguments = List(dirArg),
+              argument_groups = Nil,
               resources = List(test),
               set_wd_to_resources_dir = true
             )
@@ -214,11 +223,6 @@ object ViashTest {
             fun.additionalResources ::: // other resources provided in fun.resources
             tests.filter(!_.isInstanceOf[Script]) // other resources provided in fun.tests
         )
-
-        // make a new directory
-        val dirName = "test_" + test.filename.replaceAll("\\.[^\\.]*$", "")
-        val newDir = dir.resolve(dirName)
-        Files.createDirectories(newDir)
 
         // write resources to dir
         IO.writeResources(funFinal.resources, newDir)

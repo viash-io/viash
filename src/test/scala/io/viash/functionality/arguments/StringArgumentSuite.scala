@@ -25,7 +25,7 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
     assert(arg.choices == Nil)
     assert(arg.direction == Input)
     assert(!arg.multiple)
-    assert(arg.multiple_sep == ':')
+    assert(arg.multiple_sep == ":")
     assert(arg.dest == "par")
   }
 
@@ -40,7 +40,7 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
       choices = List("bar", "zing", "bang"),
       direction = Output,
       multiple = true,
-      multiple_sep = '-',
+      multiple_sep = "-",
       dest = "meta"
     )
 
@@ -59,7 +59,7 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
     assert(arg.choices == List("bar", "zing", "bang"))
     assert(arg.direction == Output)
     assert(arg.multiple)
-    assert(arg.multiple_sep == '-')
+    assert(arg.multiple_sep == "-")
     assert(arg.dest == "meta")
   }
 
@@ -75,7 +75,7 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
       required = true,
       direction = Output,
       multiple = true,
-      multiple_sep = '-',
+      multiple_sep = "-",
       dest = "meta"
     )
 
@@ -91,7 +91,7 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
     assert(arg2.choices == Nil)
     assert(arg2.direction == Output)
     assert(arg2.multiple)
-    assert(arg2.multiple_sep == '-')
+    assert(arg2.multiple_sep == "-")
     assert(arg2.dest == "meta")
   }
 }

@@ -111,7 +111,7 @@ case class FileArgument(
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_files=firstFile.csv,anotherFile.csv,yetAnother.csv", "bash", "Here's an example of how to use this:")
-  multiple_sep: Char = ':',
+  multiple_sep: String = ":",
 
   dest: String = "par",
   `type`: String = "file"
@@ -126,7 +126,7 @@ case class FileArgument(
     required: Boolean,
     direction: Direction,
     multiple: Boolean,
-    multiple_sep: Char,
+    multiple_sep: String,
     dest: String
   ): Argument[Path] = {
     copy(name, alternatives, description, example, default, this.must_exist, required, direction, multiple, multiple_sep, dest, `type`)

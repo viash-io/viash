@@ -21,6 +21,8 @@
 
 * `NextflowPlatform`: Only store author names in the authors metadata.
 
+* `Argument[_]`: Turn `multiple_sep` from `Char` into `String`.
+
 ## INTERNAL CHANGES
 
 * All `meta[...]` variables are now processed similar to `Argument[_]`s, instead of using custom code to convert object types and detect Docker mounts.
@@ -40,8 +42,14 @@
 * `viash ns`: Reverse exit code outputs, was returning 1 when everything was OK and 0 when errors were detected (#227).
 
 * `viash config inject`: Fix processing of arguments when argument groups are defined (#231).
-* Fixed a few typos in the CLI
-* Fixed the formatting of `ns exec` documentation
+
+* Fixed a few typos in the CLI.
+
+* Fixed the formatting of `ns exec` documentation.
+
+* `VDSL3`: Fix stub functionality.
+
+* `VDSL3`: Fix error during error message.
 
 ## DEPRECATION
 
@@ -52,6 +60,8 @@
 ## TESTING
 
 * `BashScript`, `CSharpScript`, `JavaScriptScript`, `PythonScript`, `RScript`, `ScalaScript`: Implement more rigorous testing of which characters are escaped.
+
+* `BashWrapper`: Escape usage of `multiple_sep`. This fixes various checks and transformations not working when when `multiple_sep` is set to `";"` (#235).
 
 # Viash 0.6.0
 

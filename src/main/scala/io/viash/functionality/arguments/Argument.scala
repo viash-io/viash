@@ -29,7 +29,7 @@ abstract class Argument[Type] {
   val required: Boolean
   val direction: Direction
   val multiple: Boolean
-  val multiple_sep: Char
+  val multiple_sep: String
   val dest: String
 
   private val pattern = "^(-*)(.*)$".r
@@ -51,7 +51,7 @@ abstract class Argument[Type] {
     required: Boolean = this.required,
     direction: Direction = this.direction,
     multiple: Boolean = this.multiple,
-    multiple_sep: Char = this.multiple_sep,
+    multiple_sep: String = this.multiple_sep,
     dest: String = this.dest
   ): Argument[Type]
 
