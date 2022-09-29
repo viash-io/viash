@@ -53,6 +53,8 @@
 
 * `VDSL3`: Fix error during error message.
 
+* `viash test`: Fix issue where `VIASH_TEMP` could not be a relative directory when running `viash test` (#242).
+
 ## DEPRECATION
 
 * `NextflowPlatform`: Deprecate `--param_list_format` parameter.
