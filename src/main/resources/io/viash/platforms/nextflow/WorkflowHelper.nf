@@ -570,7 +570,7 @@ def paramsToList(params, config) {
         if (!par.multiple) {
           assert parData.size() == 1 : 
             "Error: argument ${par.plainName} has too many values.\n" +
-            "  Expected amount: 1. Found: ${parData.length}"
+            "  Expected amount: 1. Found: ${parData.size()}"
           parData = parData[0]
         }
 

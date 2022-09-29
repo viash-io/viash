@@ -43,6 +43,8 @@
 
 * `VDSL3`: Fix stub functionality.
 
+* `VDSL3`: Fix error during error message.
+
 ## DEPRECATION
 
 * `NextflowPlatform`: Deprecate `--param_list_format` parameter.
