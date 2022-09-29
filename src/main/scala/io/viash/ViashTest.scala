@@ -44,7 +44,9 @@ object ViashTest {
     setupStrategy: String = "cachedbuild",
     tempVersion: Boolean = true,
     verbosityLevel: Int = 6,
-    parentTempPath: Option[Path] = None
+    parentTempPath: Option[Path] = None, 
+    cpus: Option[Int], 
+    memory: Option[String]
   ): ManyTestOutput = {
     // create temporary directory
     val dir = IO.makeTemp("viash_test_" + config.functionality.name, parentTempPath)
@@ -67,7 +69,9 @@ object ViashTest {
       dir = dir,
       verbose = !quiet,
       setupStrategy = setupStrategy,
-      verbosityLevel = verbosityLevel
+      verbosityLevel = verbosityLevel,
+      cpus = cpus,
+      memory = memory
     )
     val count = results.count(_.exitValue == 0)
     val anyErrors = setupRes.exists(_.exitValue > 0) || count < results.length
@@ -106,14 +110,22 @@ object ViashTest {
     ManyTestOutput(setupRes, results)
   }
 
-  def runTests(config: Config, dir: Path, verbose: Boolean = true, setupStrategy: String, verbosityLevel: Int): ManyTestOutput = {
+  def runTests(config: Config, dir: Path, verbose: Boolean = true, setupStrategy: String, verbosityLevel: Int, cpus: Option[Int], memory: Option[String]): ManyTestOutput = {
     val fun = config.functionality
     val platform = config.platform.get
 
     val consoleLine = "===================================================================="
 
     // build regular executable
-    val buildFun = platform.modifyFunctionality(config, true)
+    val configWithReqs = config.copy(
+      config.functionality.copy(
+        requirements = config.functionality.requirements.copy(
+          cpus = if (cpus.isDefined) cpus else config.functionality.requirements.cpus,
+          memory = if (memory.isDefined) memory else config.functionality.requirements.memory
+        )
+      )
+    )
+    val buildFun = platform.modifyFunctionality(configWithReqs, true)
     val buildDir = dir.resolve("build_executable")
     Files.createDirectories(buildDir)
     try {
@@ -245,8 +257,12 @@ object ViashTest {
         try {
           // run command, collect output
           val executable = Paths.get(newDir.toString, testBash.filename).toString
-          logger(s"+$executable")
-          val exitValue = Process(Seq(executable), cwd = newDir.toFile).!(ProcessLogger(logger, logger))
+          val cmd = Seq(executable) ++ Seq(cpus.map("---cpus=" + _), memory.map("---memory="+_)).flatMap(a => a)
+          logger(s"+${cmd.mkString(" ")}")
+          val exitValue = Process(
+            cmd,
+            cwd = newDir.toFile
+          ).!(ProcessLogger(logger, logger))
 
           printWriter.flush()
 

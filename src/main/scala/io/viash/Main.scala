@@ -68,7 +68,13 @@ object Main {
     cli.subcommands match {
       case List(cli.run) =>
         val config = readConfig(cli.run)
-        ViashRun(config, args = runArgs.dropWhile(_ == "--"), keepFiles = cli.run.keep.toOption.map(_.toBoolean))
+        ViashRun(
+          config, 
+          args = runArgs.dropWhile(_ == "--"), 
+          keepFiles = cli.run.keep.toOption.map(_.toBoolean),
+          cpus = cli.run.cpus.toOption,
+          memory = cli.run.memory.toOption
+        )
       case List(cli.build) =>
         val config = readConfig(cli.build)
         ViashBuild(
@@ -82,7 +88,12 @@ object Main {
         0 // Exceptions are thrown when something bad happens, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.test) =>
         val config = readConfig(cli.test, applyPlatform = false)
-        ViashTest(config, keepFiles = cli.test.keep.toOption.map(_.toBoolean))
+        ViashTest(
+          config, 
+          keepFiles = cli.test.keep.toOption.map(_.toBoolean),
+          cpus = cli.test.cpus.toOption,
+          memory = cli.test.memory.toOption
+        )
         0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
         val configs = readConfigs(cli.namespace.build)
@@ -103,7 +114,9 @@ object Main {
           parallel = cli.namespace.test.parallel(),
           keepFiles = cli.namespace.test.keep.toOption.map(_.toBoolean),
           tsv = cli.namespace.test.tsv.toOption,
-          append = cli.namespace.test.append()
+          append = cli.namespace.test.append(),
+          cpus = cli.namespace.test.cpus.toOption,
+          memory = cli.namespace.test.memory.toOption
         )
         val errors = testResults.flatMap(_.right.toOption).count(_.isError)
         if (errors > 0) 1 else 0
