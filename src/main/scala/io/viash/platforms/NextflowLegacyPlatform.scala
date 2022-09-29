@@ -25,6 +25,7 @@ import io.viash.config.Version
 import io.viash.helpers.{Docker, Bash}
 import io.viash.helpers.Circe._
 import io.viash.schemas._
+import io.viash.helpers.Escaper
 
 /**
  * / * Platform class for generating NextFlow (DSL2) modules.
@@ -259,7 +260,7 @@ case class NextflowLegacyPlatform(
           Some(
             namespacedValueTuple(
               argument.plainName.replace("-", "_"),
-              Bash.escape(li.mkString(argument.multiple_sep.toString), backtick = false, newline = true, quote = true)
+              NextFlowUtils.escapeNextflowString(li.mkString(argument.multiple_sep.toString))
             )(fun)
           )
       }}
@@ -799,6 +800,17 @@ case class NextflowLegacyPlatform(
 object NextFlowUtils {
   import scala.reflect.runtime.universe._
 
+  def escapeNextflowString(s: String): String = {
+    Escaper(
+      s, 
+      slash = true,
+      dollar = true,
+      backtick = false,
+      newline = true,
+      quote = true
+    )
+  }
+
   def quote(str: String): String = '"' + str + '"'
 
   def quoteLong(str: String): String = str.replace("-", "_")
@@ -867,13 +879,13 @@ object NextFlowUtils {
       tupleToConfigTuple("multiple_sep" -> argument.multiple_sep) ::
       tupleToConfigTuple("value" → pointer) ::
       default.map{ x =>
-        List(tupleToConfigTuple("dflt" -> Bash.escape(x.toString, backtick = false, quote = true, newline = true)))
+        List(tupleToConfigTuple("dflt" -> escapeNextflowString(x.toString)))
       }.getOrElse(Nil) :::
       example.map{x =>
-        List(tupleToConfigTuple("example" -> Bash.escape(x.toString, backtick = false, quote = true, newline = true)))
+        List(tupleToConfigTuple("example" -> escapeNextflowString(x.toString)))
       }.getOrElse(Nil) :::
       argument.description.map{x =>
-        List(tupleToConfigTuple("description" → Bash.escape(x, backtick = false, quote = true, newline = true)))
+        List(tupleToConfigTuple("description" → escapeNextflowString(x.toString)))
       }.getOrElse(Nil)
     )
   }
