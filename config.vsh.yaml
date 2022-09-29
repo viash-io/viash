@@ -1,0 +1,19 @@
+functionality:
+  name: foo
+  arguments: 
+    - type: string
+      name: --foo
+  resources:
+    - type: bash_script
+      dest: script.sh
+      text: echo $meta_temp_dir
+  test_resources:
+    - type: bash_script
+      dest: script.sh
+      text: |
+        echo exec $meta_executable
+        echo temp $meta_temp_dir
+        $meta_executable
+platforms:
+  - type: docker
+    image: "bash:3.2"
