@@ -380,7 +380,7 @@ object BashWrapper {
           reqFiles.map { param =>
             if (param.multiple) {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
-                 |  IFS='${Bash.escape(param.multiple_sep, quote = true)}'
+                 |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
                  |  set -f
                  |  for file in $$${param.VIASH_PAR}; do
                  |    unset IFS
@@ -474,7 +474,7 @@ object BashWrapper {
         case param if param.multiple =>
           val checkStart = 
             s"""if [ -n "$$${param.VIASH_PAR}" ]; then
-               |  IFS='${Bash.escape(param.multiple_sep, quote = true)}'
+               |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
                |  set -f
                |  for val in $$${param.VIASH_PAR}; do
                |"""
@@ -526,7 +526,7 @@ object BashWrapper {
         case _ if param.multiple =>
           s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
              |  ${param.VIASH_PAR}_CHOICES=("$allowedChoicesString")
-             |  IFS='${Bash.escape(param.multiple_sep, quote = true)}'
+             |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
              |  set -f
              |  for val in $$${param.VIASH_PAR}; do
              |    if ! [[ "${param.multiple_sep}$${${param.VIASH_PAR}_CHOICES[*]}${param.multiple_sep}" =~ "${param.multiple_sep}$${val}${param.multiple_sep}" ]]; then
@@ -541,7 +541,7 @@ object BashWrapper {
         case _ =>
           s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
              |  ${param.VIASH_PAR}_CHOICES=("$allowedChoicesString")
-             |  IFS='${Bash.escape(param.multiple_sep, quote = true)}'
+             |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
              |  set -f
              |  if ! [[ "${param.multiple_sep}$${${param.VIASH_PAR}_CHOICES[*]}${param.multiple_sep}" =~ "${param.multiple_sep}$$${param.VIASH_PAR}${param.multiple_sep}" ]]; then
              |    ViashError '${param.name}' specified value of \\'$$${param.VIASH_PAR}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
@@ -664,7 +664,7 @@ object BashWrapper {
         if (param.multiple) {
           s"""
              |if [ ! -z "$$${param.VIASH_PAR}" ]; then
-             |  IFS='${Bash.escape(param.multiple_sep, quote = true)}'
+             |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
              |  set -f
              |  for val in $$${param.VIASH_PAR}; do
              |    unset IFS
