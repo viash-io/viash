@@ -25,7 +25,7 @@ grep -q 'multiple: |List(one, two)|' output.txt
 grep -q 'multiple_pos: |List(a, b, c, d, e, f)|' output.txt
 grep -q 'meta_resources_dir: |..*|' output.txt
 grep -q 'meta_functionality_name: |testscala|' output.txt
-grep -q 'meta_n_proc: |None|' output.txt
+grep -q 'meta_cpus: |None|' output.txt
 grep -q 'meta_memory_b: |None|' output.txt
 grep -q 'meta_memory_kb: |None|' output.txt
 grep -q 'meta_memory_mb: |None|' output.txt
@@ -42,7 +42,7 @@ $meta_executable \
   --real_number 123.456 \
   --whole_number=789 \
   -s "a \\ b \$ c \` d \" e ' f \n g # h @ i { j } k \"\"\" l ''' m todo_add_back_DOLLAR_VIASH_TEMP n : o ; p" \
-  ---n_proc 666 \
+  ---cpus 666 \
   ---memory 100PB \
   > output2.txt
 
@@ -61,7 +61,7 @@ grep -q 'multiple: |List()|' output2.txt
 grep -q 'multiple_pos: |List()|' output2.txt
 grep -q 'meta_resources_dir: |..*|' output2.txt
 grep -q 'meta_functionality_name: |testscala|' output2.txt
-grep -q 'meta_n_proc: |Some(666)|' output2.txt
+grep -q 'meta_cpus: |Some(666)|' output2.txt
 grep -q 'meta_memory_b: |Some(112589990684262400)|' output2.txt
 grep -q 'meta_memory_kb: |Some(109951162777600)|' output2.txt
 grep -q 'meta_memory_mb: |Some(107374182400)|' output2.txt

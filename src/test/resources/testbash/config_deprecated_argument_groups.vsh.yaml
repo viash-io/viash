@@ -83,7 +83,7 @@ functionality:
     foo: bar
     custom_tag: custom_value
   requirements:
-    n_proc: 2
+    cpus: 2
     memory: 2GB
 platforms:
   - type: native

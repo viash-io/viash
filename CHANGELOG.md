@@ -17,7 +17,7 @@
 
 ## MINOR CHANGES
 
-* `meta["n_proc"]` is now an integer, `meta["memory_*"]` are now longs (#224).
+* `meta["cpus"]` is now an integer, `meta["memory_*"]` are now longs (#224).
 
 * `DockerPlatform`: Only store author names in the authors metadata.
 
@@ -142,19 +142,19 @@ The first (major) release this year! The biggest changes are:
   functionality:
   name: foo
   requirements:
-    n_proc: 10
+    cpus: 10
     memory: 10G
     commands: [ bash, r, perl ]
   ```
   
   You can override the default requirements at runtime:
 
-  - `./foo ---n_proc 4 ---memory 100PB` (for NativePlatform or DockerPlatform)
+  - `./foo ---cpus 4 ---memory 100PB` (for NativePlatform or DockerPlatform)
   - By adding `process.cpus = 4` and `process.memory "100 PB"` to a nextflow.config (for NextflowPlatform)
 
   This results the following meta variables to be injected into a script:
 
-  - `meta_n_proc` (in Bash) or `meta["n_proc"]` (in any other language): Number of processes the script is allowed to spawn.
+  - `meta_cpus` (in Bash) or `meta["cpus"]` (in any other language): Number of processes the script is allowed to spawn.
   - `meta_memory_b` (in Bash) or `meta["memory_b"]` (in any other language): Amount of memory the script is allowed to allocate, in bytes.
   - `meta_memory_kb` (in Bash) or `meta["memory_kb"]` (in any other language): Same but in kilobytes, rounded up.
   - `meta_memory_mb` (in Bash) or `meta["memory_mb"]` (in any other language): Same but in megabytes, rounded up.
@@ -214,7 +214,7 @@ The first (major) release this year! The biggest changes are:
 
 ## BUG FIXES
 
-* `csharp_script`, `javascript_script`, `python_script`, `r_script`, `scala_script`: Make meta fields for `memory` and `n_proc` optional.
+* `csharp_script`, `javascript_script`, `python_script`, `r_script`, `scala_script`: Make meta fields for `memory` and `cpus` optional.
 
 * `NextflowVdsl3Platform`: Don't generate an error when `--publish_dir` is not defined and `-profile no_publish` is used.
 
