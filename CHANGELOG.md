@@ -143,7 +143,7 @@ The first (major) release this year! The biggest changes are:
   name: foo
   requirements:
     cpus: 10
-    memory: 10G
+    memory: 10GB
     commands: [ bash, r, perl ]
   ```
   
