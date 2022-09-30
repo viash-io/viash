@@ -91,7 +91,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
         "--multiple", "foo",
         "--multiple=bar",
         "d", "e", "f",
-        "---n_proc", "2",
+        "---cpus", "2",
         "---memory", "1gb"
       )
     )

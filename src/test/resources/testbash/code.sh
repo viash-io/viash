@@ -62,7 +62,7 @@ output "multiple_pos: |$par_multiple_pos|"
 
 output "meta_functionality_name: |$meta_functionality_name|"
 output "meta_resources_dir: |$meta_resources_dir|"
-output "meta_n_proc: |$meta_n_proc|"
+output "meta_cpus: |$meta_cpus|"
 output "meta_memory_b: |$meta_memory_b|"
 output "meta_memory_kb: |$meta_memory_kb|"
 output "meta_memory_mb: |$meta_memory_mb|"
