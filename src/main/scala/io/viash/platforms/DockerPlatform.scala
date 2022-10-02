@@ -402,7 +402,7 @@ case class DockerPlatform(
              |
              |  # Build the container
              |  ViashNotice "Building container '$$1' with Dockerfile"
-             |  ViashInfo "Running 'docker build -t $$@$buildArgs $$tmpdir'"
+             |  ViashInfo "Running 'docker build -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile'"
              |  save=$$-; set +e
              |  if [ $$${BashWrapper.var_verbosity} -ge $$VIASH_LOGCODE_INFO ]; then
              |    docker build -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile
