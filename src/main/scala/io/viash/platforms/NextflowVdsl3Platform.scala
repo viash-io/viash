@@ -21,7 +21,6 @@ import io.viash.config.Config
 import io.viash.functionality._
 import io.viash.functionality.resources._
 import io.viash.functionality.arguments._
-import io.viash.config.Version
 import io.viash.helpers.{Docker, Bash, DockerImageInfo, Helper}
 import io.viash.helpers.Circe._
 import io.viash.platforms.nextflow._

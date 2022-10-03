@@ -107,4 +107,9 @@ object Circe {
     }
   }
 
+  implicit val decodeStringLike: Decoder[String] =
+    Decoder.decodeString or
+      Decoder.decodeInt.map(_.toString) or
+      Decoder.decodeFloat.map(_.toString) or
+      Decoder.decodeBoolean.map(_.toString)
 }

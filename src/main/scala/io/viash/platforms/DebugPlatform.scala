@@ -21,7 +21,6 @@ import io.viash.config.Config
 import io.viash.functionality.Functionality
 import io.viash.functionality.resources._
 import io.viash.platforms.requirements._
-import io.viash.config.Version
 import io.viash.helpers.Circe.One
 import io.viash.wrapper.BashWrapper
 import io.viash.functionality.arguments._

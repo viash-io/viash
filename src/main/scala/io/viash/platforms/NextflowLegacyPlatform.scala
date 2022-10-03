@@ -21,7 +21,6 @@ import io.viash.config.Config
 import io.viash.functionality._
 import io.viash.functionality.resources._
 import io.viash.functionality.arguments._
-import io.viash.config.Version
 import io.viash.helpers.{Docker, Bash}
 import io.viash.helpers.Circe._
 import io.viash.schemas._
@@ -64,8 +63,8 @@ case class NextflowLegacyPlatform(
 
   @description("Specify a Docker image based on its tag.")
   @example("tag: 4.0", "yaml")
-  tag: Option[Version] = None,
-  version: Option[Version] = None,
+  tag: Option[String] = None,
+  version: Option[String] = None,
 
   @description("The URL to the a [custom Docker registry](https://docs.docker.com/registry/).")
   @example("registry: https://my-docker-registry.org", "yaml")

@@ -24,13 +24,13 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import scala.util.Random
 
-import config.{Config, Version}
+import config.Config
 import functionality.Functionality
 import functionality.arguments.{FileArgument, Output}
 import functionality.resources.{BashScript, Script}
 import platforms.NativePlatform
 import helpers.IO
-import helpers.Circe.{OneOrMore, One, More}
+import helpers.Circe._
 import io.viash.helpers.MissingResourceFileException
 
 object ViashTest {
@@ -56,7 +56,7 @@ object ViashTest {
     val config2 = if (tempVersion) {
       config.copy(
         functionality = config.functionality.copy(
-          version = Some(Version(Random.alphanumeric.take(12).mkString))
+          version = Some(Random.alphanumeric.take(12).mkString)
         )
       )
     } else {
