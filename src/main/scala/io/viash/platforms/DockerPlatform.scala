@@ -390,24 +390,24 @@ case class DockerPlatform(
 
         val vdb =
           s"""  # create temporary directory to store dockerfile & optional resources in
-             |  tmpdir=$$(mktemp -d "$$VIASH_META_TEMP_DIR/viashsetupdocker-${functionality.name}-XXXXXX")
+             |  tmpdir=$$(mktemp -d "$$VIASH_META_TEMP_DIR/dockerbuild-${functionality.name}-XXXXXX")
+             |  dockerfile="$$tmpdir/Dockerfile"
              |  function clean_up {
              |    rm -rf "$$tmpdir"
              |  }
              |  trap clean_up EXIT
              |
              |  # store dockerfile and resources
-             |  ViashDockerfile > $$tmpdir/Dockerfile
-             |  cp -r $$VIASH_META_RESOURCES_DIR/* $$tmpdir
+             |  ViashDockerfile > $$dockerfile
              |
              |  # Build the container
              |  ViashNotice "Building container '$$1' with Dockerfile"
-             |  ViashInfo "Running 'docker build -t $$@$buildArgs $$tmpdir'"
+             |  ViashInfo "Running 'docker build -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile'"
              |  save=$$-; set +e
              |  if [ $$${BashWrapper.var_verbosity} -ge $$VIASH_LOGCODE_INFO ]; then
-             |    docker build -t $$@$buildArgs $$tmpdir
+             |    docker build -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile
              |  else
-             |    docker build -t $$@$buildArgs $$tmpdir &> $$tmpdir/docker_build.log
+             |    docker build -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile &> $$tmpdir/docker_build.log
              |  fi
              |  out=$$?
              |  [[ $$save =~ e ]] && set -e
