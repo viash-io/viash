@@ -26,7 +26,6 @@ import io.viash.functionality.arguments._
 import io.viash.functionality.resources._
 import io.viash.platforms.requirements._
 import io.viash.helpers.{Bash, Docker}
-import io.viash.config.Version
 import io.viash.wrapper.{BashWrapper, BashWrapperMods}
 import io.viash.platforms.docker._
 import io.viash.helpers.Circe._
@@ -56,7 +55,7 @@ case class DockerPlatform(
 
   @description("Specify a Docker image based on its tag.")
   @example("tag: 4.0", "yaml")
-  tag: Option[Version] = None,
+  tag: Option[String] = None,
   
   @description("If anything is specified in the setup section, running the `---setup` will result in an image with the name of `<target_image>:<version>`. If nothing is specified in the `setup` section, simply `image` will be used.")
   @example("target_image: myfoo", "yaml")
@@ -69,7 +68,7 @@ case class DockerPlatform(
 
   @description("The tag the resulting image gets.")
   @example("target_tag: 0.5.0", "yaml")
-  target_tag: Option[Version] = None,
+  target_tag: Option[String] = None,
 
   @description("The default namespace separator is \"_\".")
   @example("namespace_separator: \"+\"", "yaml")

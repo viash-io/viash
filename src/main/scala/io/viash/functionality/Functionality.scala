@@ -20,7 +20,6 @@ package io.viash.functionality
 import arguments._
 import resources._
 import Status._
-import io.viash.config.Version
 import io.circe.generic.extras._
 import io.viash.schemas._
 import io.viash.wrapper.BashWrapper
@@ -40,7 +39,7 @@ case class Functionality(
 
   @description("Version of the component. This field will be used to version the executable and the Docker container.")
   @example("version: 0.8", "yaml")
-  version: Option[Version] = None,
+  version: Option[String] = None,
 
   @description(
     """A list of authors. An author must at least have a name, but can also have a list of roles, an e-mail address, and a map of custom properties.

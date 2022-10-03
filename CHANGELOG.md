@@ -15,6 +15,10 @@
 
 * `LongArgument`: Added support for 64-bit integers with `type: long` as opposed to `type: integer` which are 32-bit integers.
 
+## MAJOR CHANGES
+
+* Allow passing integers/doubles/booleans to string parameters (#225). Removed the 'Version' helper class.
+
 ## MINOR CHANGES
 
 * `meta["cpus"]` is now an integer, `meta["memory_*"]` are now longs (#224).
