@@ -250,12 +250,12 @@ case class Functionality(
   
   @description(
     """Computational requirements related to running the component. 
-      |`n_proc` specifies the maximum number of processes a component is allowed to spawn in parallel, whereas
+      |`cpus` specifies the maximum number of (logical) cpus a component is allowed to use., whereas
       |`memory` specifies the maximum amount of memory a component is allowed to allicate. Memory units must be
       |in B, KB, MB, GB, TB or PB.""".stripMargin)
   @example(
     """requirements:
-      |  n_proc: 5
+      |  cpus: 5
       |  memory: 10GB
       |""".stripMargin,
       "yaml")

@@ -21,6 +21,7 @@ import io.viash.functionality._
 import io.viash.functionality.resources._
 import io.viash.functionality.arguments._
 import io.viash.helpers.{Bash, Format, Helper}
+import io.viash.helpers.Escaper
 
 object BashWrapper {
   val metaArgs: List[Argument[_]] = {
@@ -29,7 +30,7 @@ object BashWrapper {
       FileArgument("resources_dir", required = true, dest = "meta"),
       FileArgument("executable", required = true, dest = "meta"),
       FileArgument("temp_dir", required = true, dest = "meta"),
-      IntegerArgument("n_proc", required = false, dest = "meta"),
+      IntegerArgument("cpus", required = false, dest = "meta"),
       LongArgument("memory_b", required = false, dest = "meta"),
       LongArgument("memory_kb", required = false, dest = "meta"),
       LongArgument("memory_mb", required = false, dest = "meta"),
@@ -119,7 +120,7 @@ object BashWrapper {
       // if we want to debug our code
       case Some(res) if debugPath.isDefined =>
         val code = res.readWithInjection(functionality).get
-        val escapedCode = Bash.escapeMore(code)
+        val escapedCode = Bash.escapeString(code, allowUnescape = true)
         val deb = debugPath.get
 
         s"""
@@ -132,7 +133,7 @@ object BashWrapper {
       // if mainResource is a script
       case Some(res) =>
         val code = res.readWithInjection(functionality).get
-        val escapedCode = Bash.escapeMore(code)
+        val escapedCode = Bash.escapeString(code, allowUnescape = true)
 
         // check whether the script can be written to a temprorary location or
         // whether it needs to be a specific path
@@ -183,7 +184,7 @@ object BashWrapper {
 
     // generate header
     val header = Helper.generateScriptHeader(functionality)
-      .map(h => Bash.escapeMore(h))
+      .map(h => Escaper(h, newline = true))
       .mkString("# ", "\n# ", "")
 
     /* GENERATE BASH SCRIPT */
@@ -266,7 +267,9 @@ object BashWrapper {
 
   private def generateHelp(functionality: Functionality) = {
     val help = Helper.generateHelp(functionality)
-    val helpStr = help.map(h => Bash.escapeMore(h, quote = true)).mkString("  echo \"", "\"\n  echo \"", "\"")
+    val helpStr = help
+      .map(h => Bash.escapeString(h, quote = true))
+      .mkString("  echo \"", "\"\n  echo \"", "\"")
 
     val preParse =
       s"""# ViashHelp: Display helpful explanation about this executable
@@ -359,7 +362,7 @@ object BashWrapper {
 
       default.map(default => {
         s"""if [ -z $${${param.VIASH_PAR}+x} ]; then
-           |  ${param.VIASH_PAR}="${Bash.escapeMore(default.toString, quote = true, newline = true)}"
+           |  ${param.VIASH_PAR}="${Bash.escapeString(default.toString, quote = true, newline = true, allowUnescape = true)}"
            |fi""".stripMargin
       })
     }.mkString("\n")
@@ -377,7 +380,7 @@ object BashWrapper {
           reqFiles.map { param =>
             if (param.multiple) {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
-                 |  IFS='${Bash.escape(param.multiple_sep, quote = true)}'
+                 |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
                  |  set -f
                  |  for file in $$${param.VIASH_PAR}; do
                  |    unset IFS
@@ -471,7 +474,7 @@ object BashWrapper {
         case param if param.multiple =>
           val checkStart = 
             s"""if [ -n "$$${param.VIASH_PAR}" ]; then
-               |  IFS='${Bash.escape(param.multiple_sep, quote = true)}'
+               |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
                |  set -f
                |  for val in $$${param.VIASH_PAR}; do
                |"""
@@ -523,7 +526,7 @@ object BashWrapper {
         case _ if param.multiple =>
           s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
              |  ${param.VIASH_PAR}_CHOICES=("$allowedChoicesString")
-             |  IFS='${Bash.escape(param.multiple_sep, quote = true)}'
+             |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
              |  set -f
              |  for val in $$${param.VIASH_PAR}; do
              |    if ! [[ "${param.multiple_sep}$${${param.VIASH_PAR}_CHOICES[*]}${param.multiple_sep}" =~ "${param.multiple_sep}$${val}${param.multiple_sep}" ]]; then
@@ -538,7 +541,7 @@ object BashWrapper {
         case _ =>
           s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
              |  ${param.VIASH_PAR}_CHOICES=("$allowedChoicesString")
-             |  IFS='${Bash.escape(param.multiple_sep, quote = true)}'
+             |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
              |  set -f
              |  if ! [[ "${param.multiple_sep}$${${param.VIASH_PAR}_CHOICES[*]}${param.multiple_sep}" =~ "${param.multiple_sep}$$${param.VIASH_PAR}${param.multiple_sep}" ]]; then
              |    ViashError '${param.name}' specified value of \\'$$${param.VIASH_PAR}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
@@ -578,7 +581,7 @@ object BashWrapper {
 
   private def generateComputationalRequirements(functionality: Functionality) = {
     val compArgs = List(
-      ("---n_proc", "VIASH_META_N_PROC", functionality.requirements.n_proc.map(_.toString)),
+      ("---cpus", "VIASH_META_CPUS", functionality.requirements.cpus.map(_.toString)),
       ("---memory", "VIASH_META_MEMORY", functionality.requirements.memoryAsBytes.map(_.toString + "b"))
     )
 
@@ -595,7 +598,7 @@ object BashWrapper {
     val defaultsStrs = compArgs.flatMap{ case (_, env, default) =>
       default.map(dflt => {
         s"""if [ -z $${$env+x} ]; then
-           |  $env="${Bash.escapeMore(dflt, quote = true, newline = true)}"
+           |  $env="$dflt"
            |fi""".stripMargin
       })
     }.mkString("\n")
@@ -637,8 +640,8 @@ object BashWrapper {
       |  fi
       |fi
       |# unset nproc if string is empty
-      |if [ -z "$VIASH_META_N_PROC" ]; then
-      |  unset $VIASH_META_N_PROC
+      |if [ -z "$VIASH_META_CPUS" ]; then
+      |  unset $VIASH_META_CPUS
       |fi""".stripMargin
 
     // return output
@@ -661,7 +664,7 @@ object BashWrapper {
         if (param.multiple) {
           s"""
              |if [ ! -z "$$${param.VIASH_PAR}" ]; then
-             |  IFS='${Bash.escape(param.multiple_sep, quote = true)}'
+             |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
              |  set -f
              |  for val in $$${param.VIASH_PAR}; do
              |    unset IFS

@@ -4,6 +4,8 @@
 
 * Deprecated usage `resources_dir` variable inside scripts, use `meta["resources_dir"]` instead (or `$meta_resources_dir` in Bash, or `meta$resources_dir` in R).
 
+* Deprecated `meta["n_proc"]` in favour for `meta["cpus"]`.
+
 ## NEW FUNCTIONALITY
 
 * `viash ns exec`: Added two more fields:
@@ -15,13 +17,19 @@
 
 ## MINOR CHANGES
 
-* `meta["n_proc"]` is now an integer, `meta["memory_*"]` are now longs (#224).
+* `meta["cpus"]` is now an integer, `meta["memory_*"]` are now longs (#224).
+
+* `DockerPlatform`: Only store author names in the authors metadata.
+
+* `NextflowPlatform`: Only store author names in the authors metadata.
 
 * `Argument[_]`: Turn `multiple_sep` from `Char` into `String`.
 
 ## INTERNAL CHANGES
 
 * All `meta[...]` variables are now processed similar to `Argument[_]`s, instead of using custom code to convert object types and detect Docker mounts.
+
+* `Escaper`: Make more generic Escaper helper class.
 
 ## DOCUMENTATION
 
@@ -50,6 +58,12 @@
 ## DEPRECATION
 
 * `NextflowPlatform`: Deprecate `--param_list_format` parameter.
+
+* `BashScript`, `CSharpScript`, `JavaScriptScript`, `PythonScript`, `RScript`, `ScalaScript`: Fix quoting issues of certain characters (#113).
+
+## TESTING
+
+* `BashScript`, `CSharpScript`, `JavaScriptScript`, `PythonScript`, `RScript`, `ScalaScript`: Implement more rigorous testing of which characters are escaped.
 
 * `BashWrapper`: Escape usage of `multiple_sep`. This fixes various checks and transformations not working when when `multiple_sep` is set to `";"` (#235).
 
@@ -130,19 +144,19 @@ The first (major) release this year! The biggest changes are:
   functionality:
   name: foo
   requirements:
-    n_proc: 10
-    memory: 10G
+    cpus: 10
+    memory: 10GB
     commands: [ bash, r, perl ]
   ```
   
   You can override the default requirements at runtime:
 
-  - `./foo ---n_proc 4 ---memory 100PB` (for NativePlatform or DockerPlatform)
+  - `./foo ---cpus 4 ---memory 100PB` (for NativePlatform or DockerPlatform)
   - By adding `process.cpus = 4` and `process.memory "100 PB"` to a nextflow.config (for NextflowPlatform)
 
   This results the following meta variables to be injected into a script:
 
-  - `meta_n_proc` (in Bash) or `meta["n_proc"]` (in any other language): Number of processes the script is allowed to spawn.
+  - `meta_cpus` (in Bash) or `meta["cpus"]` (in any other language): Number of processes the script is allowed to spawn.
   - `meta_memory_b` (in Bash) or `meta["memory_b"]` (in any other language): Amount of memory the script is allowed to allocate, in bytes.
   - `meta_memory_kb` (in Bash) or `meta["memory_kb"]` (in any other language): Same but in kilobytes, rounded up.
   - `meta_memory_mb` (in Bash) or `meta["memory_mb"]` (in any other language): Same but in megabytes, rounded up.
@@ -202,7 +216,7 @@ The first (major) release this year! The biggest changes are:
 
 ## BUG FIXES
 
-* `csharp_script`, `javascript_script`, `python_script`, `r_script`, `scala_script`: Make meta fields for `memory` and `n_proc` optional.
+* `csharp_script`, `javascript_script`, `python_script`, `r_script`, `scala_script`: Make meta fields for `memory` and `cpus` optional.
 
 * `NextflowVdsl3Platform`: Don't generate an error when `--publish_dir` is not defined and `-profile no_publish` is used.
 

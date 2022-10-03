@@ -32,6 +32,7 @@ import io.viash.platforms.docker._
 import io.viash.helpers.Circe._
 import io.viash.config.Info
 import io.viash.schemas._
+import io.viash.helpers.Escaper
 
 @description(
   """Run a Viash component on a Docker backend platform.
@@ -269,7 +270,7 @@ case class DockerPlatform(
     // add ---chown flag
     val dmChown = addDockerChown(functionality, dockerArgs, dmVol.extraParams, effectiveID)
 
-    // process n_proc and memory_b
+    // process cpus and memory_b
     val dmReqs = addComputationalRequirements(functionality)
 
     // compile modifications
@@ -307,7 +308,7 @@ case class DockerPlatform(
     // construct labels from metadata
     val opencontainers_image_authors = functionality.authors match {
       case Nil => None
-      case aut: List[Author] => Some(aut.mkString(", "))
+      case aut: List[Author] => Some(aut.map(_.name).mkString(", "))
     }
     // if no target_image_source is defined,
     // translate git@github.com:viash-io/viash.git -> https://github.com/viash-io/viash.git
@@ -322,9 +323,9 @@ case class DockerPlatform(
     val opencontainers_image_description = s""""Companion container for running component ${functionality.namespace.map(_ + " ").getOrElse("")}${functionality.name}""""
     val opencontainers_image_created = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date())
 
-    val authors = opencontainers_image_authors.map(aut => s"""org.opencontainers.image.authors="$aut"""").toList
+    val authors = opencontainers_image_authors.map(aut => s"""org.opencontainers.image.authors="${Escaper(aut, quote = true)}"""").toList
     val descr = List(s"org.opencontainers.image.description=$opencontainers_image_description")
-    val imageSource = opencontainers_image_source.map(des => s"""org.opencontainers.image.source="${Bash.escape(des)}"""").toList
+    val imageSource = opencontainers_image_source.map(src => s"""org.opencontainers.image.source="${Escaper(src, quote = true)}"""").toList
     val created = List(s"""org.opencontainers.image.created="$opencontainers_image_created"""")
     val revision = opencontainers_image_revision.map(rev => s"""org.opencontainers.image.revision="$rev"""").toList
     val version = opencontainers_image_version.map(v => s"""org.opencontainers.image.version="$v"""").toList
@@ -401,7 +402,7 @@ case class DockerPlatform(
              |
              |  # Build the container
              |  ViashNotice "Building container '$$1' with Dockerfile"
-             |  ViashInfo "Running 'docker build -t $$@$buildArgs $$tmpdir'"
+             |  ViashInfo "Running 'docker build -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile'"
              |  save=$$-; set +e
              |  if [ $$${BashWrapper.var_verbosity} -ge $$VIASH_LOGCODE_INFO ]; then
              |    docker build -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile
@@ -649,8 +650,8 @@ case class DockerPlatform(
         |if [ ! -z "$VIASH_META_MEMORY_MB" ]; then
         |  VIASH_EXTRA_DOCKER_ARGS="$VIASH_EXTRA_DOCKER_ARGS --memory=${VIASH_META_MEMORY_MB}m"
         |fi
-        |if [ ! -z "$VIASH_META_N_PROC" ]; then
-        |  VIASH_EXTRA_DOCKER_ARGS="$VIASH_EXTRA_DOCKER_ARGS --cpus=${VIASH_META_N_PROC}"
+        |if [ ! -z "$VIASH_META_CPUS" ]; then
+        |  VIASH_EXTRA_DOCKER_ARGS="$VIASH_EXTRA_DOCKER_ARGS --cpus=${VIASH_META_CPUS}"
         |fi""".stripMargin
 
     // return output

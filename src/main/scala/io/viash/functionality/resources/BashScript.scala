@@ -44,8 +44,8 @@ case class BashScript(
     val argsAndMeta = functionality.getArgumentLikes(includeMeta = true, filterInputs = true)
 
     val parSet = argsAndMeta.map { par =>
-      val parse = par.par + "=" + Bash.getEscapedArgument(par.VIASH_PAR, "'", """\'""", """\'\"\'\"\'""")
-      s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; fi )"""
+      val slash = "\\VIASH_SLASH\\"
+      s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$${${par.VIASH_PAR}}" | sed "s#'#'$slash"'$slash"'#g" | sed "s#.*#${par.par}='&'#" ; fi )"""
     }
     val paramsCode = parSet.mkString("\n") + "\n"
     ScriptInjectionMods(params = paramsCode)

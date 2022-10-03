@@ -47,8 +47,7 @@ case class CSharpScript(
     val paramsCode = argsAndMeta.map { case (dest, params) =>
     val parSet = params.map{ par =>
       // val env_name = par.VIASH_PAR
-      val env_name = Bash.getEscapedArgument(par.VIASH_PAR, quo, """\"""", """\\\"""")
-
+      val env_name = Bash.getEscapedArgument(par.VIASH_PAR, "@\"'\"'\"", quo, """\"""", """\"\"""")
       val parse = { par match {
         case a: BooleanArgumentBase if a.multiple =>
           s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => bool.Parse(x.ToLower())).ToArray()"""

@@ -48,6 +48,21 @@ trait ViashCommand {
     descr = "Modify a viash config at runtime using @[config_mod](dynamic config modding)."
   )
 }
+trait ViashRunner {
+  _: DocumentedSubcommand =>
+  val cpus = registerOpt[Int](
+    name = "cpus",
+    default = None,
+    descr = "The maximum number of (logical) cpus a component is allowed to use.",
+    required = false
+  )
+  val memory = registerOpt[String](
+    name = "memory",
+    descr = "The maximum amount of memory a component is allowed to allocate. Unit must be one of B, KB, MB, GB, TB or PB.",
+    default = None,
+    required = false
+  )
+}
 trait ViashNs {
   _: DocumentedSubcommand =>
   val query = registerOpt[String](
@@ -143,7 +158,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
        |
        |Arguments:""".stripMargin)
 
-  val run = new DocumentedSubcommand("run") with ViashCommand with WithTemporary {
+  val run = new DocumentedSubcommand("run") with ViashCommand with WithTemporary with ViashRunner {
     banner(
       "viash run",
       "Executes a viash component from the provided viash config file. viash generates a temporary executable and immediately executes it with the given parameters.",
@@ -197,7 +212,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     )
   }
 
-  val test = new DocumentedSubcommand("test") with ViashCommand with WithTemporary {
+  val test = new DocumentedSubcommand("test") with ViashCommand with WithTemporary with ViashRunner {
     banner(
       "viash test",
       "Test the component using the tests defined in the viash config file.",
@@ -282,7 +297,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
     }
 
-    val test = new DocumentedSubcommand("test") with ViashNs with WithTemporary {
+    val test = new DocumentedSubcommand("test") with ViashNs with WithTemporary with ViashRunner {
       banner(
         "viash ns test",
         "Test a namespace containing many viash config files.",
