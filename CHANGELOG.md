@@ -1,5 +1,15 @@
 # Viash 0.6.1
 
+This release contains mostly minor improvements of functionality released in Viash 0.6.0. Most notably:
+
+* Support was added for `type: long` arguments
+
+* `meta["n_proc"]` has been renamed to `meta["cpus"]`. `meta["cpus"]` is now an integer, whereas `meta["memory_*"]` are now longs.
+
+* `viash ns exec` is able to recognise `{platform}` and `{namespace}` fields.
+
+* And various bug fixes and improvements to documentation and unit testing.
+
 ## BREAKING CHANGES
 
 * Deprecated usage `resources_dir` variable inside scripts, use `meta["resources_dir"]` instead (or `$meta_resources_dir` in Bash, or `meta$resources_dir` in R).
@@ -59,11 +69,11 @@
 
 * `viash test`: Fix issue where `VIASH_TEMP` could not be a relative directory when running `viash test` (#242).
 
+* `BashScript`, `CSharpScript`, `JavaScriptScript`, `PythonScript`, `RScript`, `ScalaScript`: Fix quoting issues of certain characters (#113).
+
 ## DEPRECATION
 
 * `NextflowPlatform`: Deprecate `--param_list_format` parameter.
-
-* `BashScript`, `CSharpScript`, `JavaScriptScript`, `PythonScript`, `RScript`, `ScalaScript`: Fix quoting issues of certain characters (#113).
 
 ## TESTING
 
