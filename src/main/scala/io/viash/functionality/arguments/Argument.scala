@@ -29,16 +29,17 @@ abstract class Argument[Type] {
   val required: Boolean
   val direction: Direction
   val multiple: Boolean
-  val multiple_sep: Char
+  val multiple_sep: String
+  val dest: String
 
   private val pattern = "^(-*)(.*)$".r
   val pattern(flags, plainName) = name
 
   /** Common parameter name for this argument */
-  val par: String = "par_" + plainName
+  val par: String = dest + "_" + plainName
 
   /** Parameter name in bash scripts */
-  val VIASH_PAR: String = "VIASH_PAR_" + plainName.toUpperCase()
+  val VIASH_PAR: String = "VIASH_" + dest.toUpperCase + "_" + plainName.toUpperCase()
 
   def copyArg(
     `type`: String = this.`type`,
@@ -50,7 +51,8 @@ abstract class Argument[Type] {
     required: Boolean = this.required,
     direction: Direction = this.direction,
     multiple: Boolean = this.multiple,
-    multiple_sep: Char = this.multiple_sep
+    multiple_sep: String = this.multiple_sep,
+    dest: String = this.dest
   ): Argument[Type]
 
   assert(example.length <= 1 || multiple, s"Argument $name: 'example' should be length <= 1 if 'multiple' is false")

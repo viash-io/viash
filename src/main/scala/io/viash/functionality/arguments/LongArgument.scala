@@ -17,21 +17,21 @@
 
 package io.viash.functionality.arguments
 
-import java.nio.file.Path
 import io.viash.helpers.Circe.OneOrMore
 import io.viash.schemas._
 
-@description("A `file` type argument has a string value that points to a file or folder path.")
+@description("An `long` type argument has a numeric value without decimal points.")
 @example(
   """arguments:
-    |  - name: --input_csv
-    |    type: file
-    |    must_exist: true
-    |    description: CSV file to read contents from
-    |    alternatives: ["-i"]
+    |  - name: --core_amount
+    |    type: long
+    |    default: 16
+    |    description: Amount of CPU cores to use
+    |    alternatives: ["-c"]
     |""".stripMargin,
     "yaml")
-case class FileArgument(
+@since("Viash 0.6.1")
+case class LongArgument(
   @description(
     """The name of the argument. Can be in the formats `--foo`, `-f` or `foo`. The number of dashes determines how values can be passed:  
       |
@@ -49,86 +49,98 @@ case class FileArgument(
 
   @description("An example value for this argument. If no [`default`](#default) property was specified, this will be used for that purpose.")
   @example(
-    """- name: --my_file
-      |  type: file
-      |  example: data.csv
+    """- name: --my_long
+      |  type: long
+      |  example: 100
       |""".stripMargin,
       "yaml")
-  example: OneOrMore[Path] = Nil,
+  example: OneOrMore[Long] = Nil,
 
   @description("The default value when no argument value is provided. This will not work if the [`required`](#required) property is enabled.")
   @example(
-    """- name: --my_file
-      |  type: file
-      |  default: data.csv
+    """- name: --my_long
+      |  type: long
+      |  default: 100
       |""".stripMargin,
       "yaml")
-  default: OneOrMore[Path] = Nil,
-
-  @description("The file or folder should exist before the start of execution. If set to `true`, an error will be produced if the file or folder wasn't found.")
-  @example(
-    """- name: --my_file
-      |  type: file
-      |  must_exist: true
-      |""".stripMargin,
-      "yaml")
-  must_exist: Boolean = false,
+  default: OneOrMore[Long] = Nil,
 
   @description("Make the value for this argument required. If set to `true`, an error will be produced if no value was provided. `false` by default.")
   @example(
-    """- name: --my_file
-      |  type: file
+    """- name: --my_long
+      |  type: long
       |  required: true
       |""".stripMargin,
       "yaml")
   required: Boolean = false,
 
-  @description("Makes this argument an `input` or an `output`, as in does the file/folder needs to be read or written. `input` by default.")
+  @description("Limit the amount of valid values for this argument to those set in this list. When set and a value not present in the list is provided, an error will be produced.")
   @example(
-    """- name: --my_output_file
-      |  type: file
-      |  direction: output
+    """- name: --values
+      |  type: long
+      |  choices: [1024, 2048, 4096]
       |""".stripMargin,
       "yaml")
+  choices: List[Long] = Nil,
+
+  @description("Minimum allowed value for this argument. If set and the provided value is lower than the minimum, an error will be produced. Can be combined with [`max`](#max) to clamp values.")
+  @example(
+    """- name: --my_long
+      |  type: long
+      |  min: 50
+      |""".stripMargin,
+      "yaml")
+  min: Option[Long] = None,
+
+  @description("Maximum allowed value for this argument. If set and the provided value is higher than the maximum, an error will be produced. Can be combined with [`min`](#min) to clamp values.")
+  @example(
+    """- name: --my_long
+      |  type: long
+      |  max: 150
+      |""".stripMargin,
+      "yaml")  
+  max: Option[Long] = None,
+
+
   direction: Direction = Input,
 
   @description("Treat the argument value as an array. Arrays can be passed using the delimiter `--foo=1:2:3` or by providing the same argument multiple times `--foo 1 --foo 2`. You can use a custom delimiter by using the [`multiple_sep`](#multiple_sep) property. `false` by default.")
   @example(
-    """- name: --my_files
-      |  type: file
+    """- name: --my_long
+      |  type: long
       |  multiple: true
       |""".stripMargin,
       "yaml")
-  @exampleWithDescription("my_component --my_files=firstFile.csv:anotherFile.csv:yetAnother.csv", "bash", "Here's an example of how to use this:")
+  @exampleWithDescription("my_component --my_long=10:80:152", "bash", "Here's an example of how to use this:")
   multiple: Boolean = false,
 
   @description("The delimiter character for providing [`multiple`](#multiple) values. `:` by default.")
   @example(
-    """- name: --my_files
-      |  type: file
+    """- name: --my_long
+      |  type: long
       |  multiple: true
       |  multiple_sep: ","
       |""".stripMargin,
       "yaml")
-  @exampleWithDescription("my_component --my_files=firstFile.csv,anotherFile.csv,yetAnother.csv", "bash", "Here's an example of how to use this:")
+  @exampleWithDescription("my_component --my_long=10:80:152", "bash", "Here's an example of how to use this:")
   multiple_sep: String = ":",
 
   dest: String = "par",
-  `type`: String = "file"
-) extends Argument[Path] {
+  `type`: String = "long"
+) extends Argument[Long] {
   def copyArg(
     `type`: String, 
     name: String, 
     alternatives: OneOrMore[String],
     description: Option[String],
-    example: OneOrMore[Path],
-    default: OneOrMore[Path],
+    example: OneOrMore[Long],
+    default: OneOrMore[Long],
     required: Boolean,
     direction: Direction,
     multiple: Boolean,
     multiple_sep: String,
     dest: String
-  ): Argument[Path] = {
-    copy(name, alternatives, description, example, default, this.must_exist, required, direction, multiple, multiple_sep, dest, `type`)
+  ): Argument[Long] = {
+    copy(name, alternatives, description, example, default, required, this.choices, this.min, this.max, direction, multiple, multiple_sep, dest, `type`)
   }
 }

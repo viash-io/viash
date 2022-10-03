@@ -16,7 +16,9 @@ var par = new {
   optional = "help",
   optional_with_default = "me"
 };
-var resources_dir = ".";
+var meta = new {
+  resources_dir = "."
+};
 // VIASH END
 
 void Log(string log)
@@ -76,8 +78,6 @@ try
             Output(p.Name + ": |" + p.GetValue(par) + "|");
         }
     }
-
-    Output("resources_dir: |" + resources_dir + "|");
 
     t = meta.GetType();
     pi = t.GetProperties();

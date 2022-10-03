@@ -28,25 +28,6 @@ package object config {
   implicit val encodeConfig: Encoder.AsObject[Config] = deriveConfiguredEncoder
   implicit val decodeConfig: Decoder[Config] = deriveConfiguredDecoder
 
-  // encoder and decoder for version
-  implicit val encodeVersion: Encoder[Version] = Encoder.instance {
-    version => Json.fromString(version.toString)
-  }
-  implicit val decodeVersion: Decoder[Version] = Decoder.instance {
-    cursor => {
-
-      // workaround for parsing
-      val y = cursor.value.as[String] match {
-        case Left(_) => cursor.value.as[Double].map(_.toString)
-        case Right(r) => Right(r)
-      }
-
-      y.map(s =>
-        Version(s)
-      )
-    }
-  }
-
   implicit val encodeInfo: Encoder[Info] = deriveConfiguredEncoder
   implicit val decodeInfo: Decoder[Info] = deriveConfiguredDecoder
 }

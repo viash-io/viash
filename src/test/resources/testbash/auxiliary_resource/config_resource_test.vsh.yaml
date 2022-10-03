@@ -21,13 +21,13 @@ functionality:
     - path: /tmp/viash_tmp_resources/resource3.txt
       dest: target_folder/relocated_file_4.txt
 
-#{path: /foo/abc} → $resources_dir/abc
-#{path: foo/abc} → $resources_dir/abc
-#{path: abc} → $resources_dir/abc
-#{path: ../foo/abc} → $resources_dir/abc
-#{path: http://foo.com/abc} → $resources_dir/abc
-#{path: abc, target: foo/abc} → $resources_dir/foo/abc
-#{path: foo/abc, target: bar/def} → $resources_dir/bar/def
+#{path: /foo/abc} → $meta_resources_dir/abc
+#{path: foo/abc} → $meta_resources_dir/abc
+#{path: abc} → $meta_resources_dir/abc
+#{path: ../foo/abc} → $meta_resources_dir/abc
+#{path: http://foo.com/abc} → $meta_resources_dir/abc
+#{path: abc, target: foo/abc} → $meta_resources_dir/foo/abc
+#{path: foo/abc, target: bar/def} → $meta_resources_dir/bar/def
 
 
   arguments:

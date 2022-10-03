@@ -91,7 +91,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
         "--multiple", "foo",
         "--multiple=bar",
         "d", "e", "f",
-        "---n_proc", "2",
+        "---cpus", "2",
         "---memory", "1gb"
       )
     )
@@ -113,7 +113,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       assert(outputLines.contains("""optional_with_default: |bar|"""))
       assert(outputLines.contains("""multiple: |foo:bar|"""))
       assert(outputLines.contains("""multiple_pos: |a:b:c:d:e:f|"""))
-      val regex = s"""resources_dir: \\|/viash_automount.*$tempFolStr/\\|""".r
+      val regex = s"""meta_resources_dir: \\|/viash_automount.*$tempFolStr/\\|""".r
       assert(regex.findFirstIn(outputLines).isDefined)
     } finally {
       outputSrc.close()
@@ -150,12 +150,12 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(stdout.contains("""optional_with_default: |The default value.|"""))
     assert(stdout.contains("""multiple: ||"""))
     assert(stdout.contains("""multiple_pos: ||"""))
-    val regex = s"""resources_dir: \\|/viash_automount.*$tempFolStr/\\|""".r
+    val regex = s"""meta_resources_dir: \\|/viash_automount.*$tempFolStr/\\|""".r
     assert(regex.findFirstIn(stdout).isDefined)
 
     assert(stdout.contains("INFO: Parsed input arguments"))
   }
-
+  
   test("viash build with trailing arguments") {
     TestHelper.testMain(
       "build",
@@ -512,7 +512,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
         Seq("docker", "inspect", s"${functionality.name}:${functionality.version.get}")
       )
 
-      val regexOciAuthors = raw""""org.opencontainers.image.authors": "Bob Cando <bob@cando.com> \(maintainer, author\) \{github: bobcando, orcid: XXXAAABBB\}"""".r
+      val regexOciAuthors = """"org.opencontainers.image.authors": "Bob ''' \\"\\"\\" \\\\n ` \$ \\\\ Cando"""".r
       val regexOciCreated = raw""""org.opencontainers.image.created": "((?:(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2}(?:\.\d+)?))(Z|[\+-]\d{2}:\d{2})?)"""".r
       val regexOciDescription = """"org.opencontainers.image.description": "Companion container for running component testbash"""".r
       val regexOciRevision = """"org.opencontainers.image.revision": "[0-9a-f]{40}"""".r
@@ -600,6 +600,37 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     )
 
     assert(stderr.contains("The status of the component 'testbash' is set to deprecated."))
+  }
+
+  test("Check component works when multiple_sep is set to ;", DockerTest) {
+    val newConfigFilePath = configDeriver.derive(
+      """.functionality.argument_groups[true].arguments[.name == "--real_number"] := { "type": "double", "name": "--real_number", "multiple": true, "multiple_sep": ";", "min": 10, "max": 1000, "default": [10, 20, 30]}""",
+      "multiple_sep"
+    )
+    
+    val _ = TestHelper.testMainWithStdErr(
+      "build",
+      "-p", "docker",
+      "-o", tempFolStr,
+      newConfigFilePath,
+      "--setup", "alwaysbuild"
+    )
+
+    val stdout =
+      Exec.run(
+        Seq(
+          executable.toString,
+          executable.toString,
+          "--real_number", "123.456;123;789",
+          "--whole_number", "789",
+          "-s", "my$weird#string"
+        )
+      )
+      
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    assert(stdout.contains("""real_number: |123.456;123;789|"""))
   }
 
   def checkDockerImageExists(name: String): Boolean = checkDockerImageExists(name, "latest")

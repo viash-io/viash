@@ -26,12 +26,12 @@ import io.viash.functionality.arguments._
 import io.viash.functionality.resources._
 import io.viash.platforms.requirements._
 import io.viash.helpers.{Bash, Docker}
-import io.viash.config.Version
 import io.viash.wrapper.{BashWrapper, BashWrapperMods}
 import io.viash.platforms.docker._
 import io.viash.helpers.Circe._
 import io.viash.config.Info
 import io.viash.schemas._
+import io.viash.helpers.Escaper
 
 @description(
   """Run a Viash component on a Docker backend platform.
@@ -55,7 +55,7 @@ case class DockerPlatform(
 
   @description("Specify a Docker image based on its tag.")
   @example("tag: 4.0", "yaml")
-  tag: Option[Version] = None,
+  tag: Option[String] = None,
   
   @description("If anything is specified in the setup section, running the `---setup` will result in an image with the name of `<target_image>:<version>`. If nothing is specified in the `setup` section, simply `image` will be used.")
   @example("target_image: myfoo", "yaml")
@@ -68,7 +68,7 @@ case class DockerPlatform(
 
   @description("The tag the resulting image gets.")
   @example("target_tag: 0.5.0", "yaml")
-  target_tag: Option[Version] = None,
+  target_tag: Option[String] = None,
 
   @description("The default namespace separator is \"_\".")
   @example("namespace_separator: \"+\"", "yaml")
@@ -91,6 +91,28 @@ case class DockerPlatform(
   @description("The working directory when starting the container. This doesn’t change the Dockerfile but gets added as a command-line argument at runtime.")
   @example("workdir: /home/user", "yaml")
   workdir: Option[String] = None,
+
+  @description(
+    """The Docker setup strategy to use when building a container.
+      +
+      +| Strategy | Description |
+      +|-----|----------|
+      +| `alwaysbuild` / `build` / `b` | Always build the image from the dockerfile. This is the default setup strategy.
+      +| `alwayscachedbuild` / `cachedbuild` / `cb` | Always build the image from the dockerfile, with caching enabled.
+      +| `ifneedbebuild` |  Build the image if it does not exist locally.
+      +| `ifneedbecachedbuild` | Build the image with caching enabled if it does not exist locally, with caching enabled.
+      +| `alwayspull` / `pull` / `p` |  Try to pull the container from [Docker Hub](https://hub.docker.com) or the @[docker_registry](specified docker registry).
+      +| `alwayspullelsebuild` / `pullelsebuild` |  Try to pull the image from a registry and build it if it doesn't exist.
+      +| `alwayspullelsecachedbuild` / `pullelsecachedbuild` |  Try to pull the image from a registry and build it with caching if it doesn't exist.
+      +| `ifneedbepull` |  If the image does not exist locally, pull the image.
+      +| `ifneedbepullelsebuild` |  If the image does not exist locally, pull the image. If the image does exist, build it.
+      +| `ifneedbepullelsecachedbuild` | If the image does not exist locally, pull the image. If the image does exist, build it with caching enabled.
+      +| `push` | Push the container to [Docker Hub](https://hub.docker.com)  or the @[docker_registry](specified docker registry).
+      +| `pushifnotpresent` | Push the container to [Docker Hub](https://hub.docker.com) or the @[docker_registry](specified docker registry) if the @[docker_tag](tag) does not exist yet.
+      +| `donothing` / `meh` | Do not build or pull anything.
+      +
+      +""".stripMargin('+'))
+  @example("setup_strategy: alwaysbuild", "yaml")
   setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,
   privileged: Boolean = false,
 
@@ -106,13 +128,13 @@ case class DockerPlatform(
   @description(
     """A list of requirements for installing the following types of packages:
       |
-      | - apt
-      | - apk
-      | - yum
-      | - R
-      | - Python
-      | - JavaScript
-      | - Docker setup instructions
+      | - @[apt_req](apt)
+      | - @[apk_req](apk)
+      | - @[yum_req](yum)
+      | - @[r_req](R)
+      | - @[python_req](Python)
+      | - @[javascript_req](JavaScript)
+      | - @[docker_req](Docker setup instructions)
       |
       |The order in which these dependencies are specified determines the order in which they will be installed.
       |""".stripMargin)
@@ -247,7 +269,7 @@ case class DockerPlatform(
     // add ---chown flag
     val dmChown = addDockerChown(functionality, dockerArgs, dmVol.extraParams, effectiveID)
 
-    // process n_proc and memory_b
+    // process cpus and memory_b
     val dmReqs = addComputationalRequirements(functionality)
 
     // compile modifications
@@ -285,7 +307,7 @@ case class DockerPlatform(
     // construct labels from metadata
     val opencontainers_image_authors = functionality.authors match {
       case Nil => None
-      case aut: List[Author] => Some(aut.mkString(", "))
+      case aut: List[Author] => Some(aut.map(_.name).mkString(", "))
     }
     // if no target_image_source is defined,
     // translate git@github.com:viash-io/viash.git -> https://github.com/viash-io/viash.git
@@ -300,9 +322,9 @@ case class DockerPlatform(
     val opencontainers_image_description = s""""Companion container for running component ${functionality.namespace.map(_ + " ").getOrElse("")}${functionality.name}""""
     val opencontainers_image_created = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date())
 
-    val authors = opencontainers_image_authors.map(aut => s"""org.opencontainers.image.authors="$aut"""").toList
+    val authors = opencontainers_image_authors.map(aut => s"""org.opencontainers.image.authors="${Escaper(aut, quote = true)}"""").toList
     val descr = List(s"org.opencontainers.image.description=$opencontainers_image_description")
-    val imageSource = opencontainers_image_source.map(des => s"""org.opencontainers.image.source="${Bash.escape(des)}"""").toList
+    val imageSource = opencontainers_image_source.map(src => s"""org.opencontainers.image.source="${Escaper(src, quote = true)}"""").toList
     val created = List(s"""org.opencontainers.image.created="$opencontainers_image_created"""")
     val revision = opencontainers_image_revision.map(rev => s"""org.opencontainers.image.revision="$rev"""").toList
     val version = opencontainers_image_version.map(v => s"""org.opencontainers.image.version="$v"""").toList
@@ -367,24 +389,24 @@ case class DockerPlatform(
 
         val vdb =
           s"""  # create temporary directory to store dockerfile & optional resources in
-             |  tmpdir=$$(mktemp -d "$$VIASH_TEMP/viashsetupdocker-${functionality.name}-XXXXXX")
+             |  tmpdir=$$(mktemp -d "$$VIASH_META_TEMP_DIR/dockerbuild-${functionality.name}-XXXXXX")
+             |  dockerfile="$$tmpdir/Dockerfile"
              |  function clean_up {
              |    rm -rf "$$tmpdir"
              |  }
              |  trap clean_up EXIT
              |
              |  # store dockerfile and resources
-             |  ViashDockerfile > $$tmpdir/Dockerfile
-             |  cp -r $$${BashWrapper.var_resources_dir}/* $$tmpdir
+             |  ViashDockerfile > $$dockerfile
              |
              |  # Build the container
              |  ViashNotice "Building container '$$1' with Dockerfile"
-             |  ViashInfo "Running 'docker build -t $$@$buildArgs $$tmpdir'"
+             |  ViashInfo "Running 'docker build -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile'"
              |  save=$$-; set +e
              |  if [ $$${BashWrapper.var_verbosity} -ge $$VIASH_LOGCODE_INFO ]; then
-             |    docker build -t $$@$buildArgs $$tmpdir
+             |    docker build -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile
              |  else
-             |    docker build -t $$@$buildArgs $$tmpdir &> $$tmpdir/docker_build.log
+             |    docker build -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile &> $$tmpdir/docker_build.log
              |  fi
              |  out=$$?
              |  [[ $$save =~ e ]] && set -e
@@ -462,7 +484,7 @@ case class DockerPlatform(
   private val extraMountsVar = "VIASH_EXTRA_MOUNTS"
 
   private def processDockerVolumes(functionality: Functionality) = {
-    val args = functionality.allArgumentsAndDummies
+    val args = functionality.getArgumentLikes(includeMeta = true)
 
     val preParse =
       s"""
@@ -486,7 +508,7 @@ case class DockerPlatform(
 
     val extraParams = s" $$$extraMountsVar"
 
-    val postParseVolumes =
+    val preRun =
       if (resolve_volume == Automatic) {
         "\n\n# detect volumes from file arguments" +
           args.flatMap {
@@ -516,16 +538,6 @@ case class DockerPlatform(
       } else {
         ""
       }
-
-    val preRun = postParseVolumes + "\n\n" +
-      s"""# Always mount the resource directory
-         |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$${BashWrapper.var_resources_dir}")"
-         |${BashWrapper.var_resources_dir}=$$(ViashAutodetectMount "$$${BashWrapper.var_resources_dir}")
-         |${BashWrapper.var_executable}=$$(ViashAutodetectMount "$$${BashWrapper.var_executable}")
-         |
-         |# Always mount the VIASH_TEMP directory
-         |$extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$VIASH_TEMP")"
-         |VIASH_TEMP=$$(ViashAutodetectMount "$$VIASH_TEMP")""".stripMargin
 
     BashWrapperMods(
       preParse = preParse,
@@ -573,7 +585,7 @@ case class DockerPlatform(
     volExtraParams: String,
     fullImageID: String,
   ) = {
-    val args = functionality.allArgumentsAndDummies
+    val args = functionality.getArgumentLikes(includeMeta = true)
 
     def chownCommand(value: String): String = {
       s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $fullImageID "$$(id -u):$$(id -g)" --silent --recursive $value"""
@@ -637,8 +649,8 @@ case class DockerPlatform(
         |if [ ! -z "$VIASH_META_MEMORY_MB" ]; then
         |  VIASH_EXTRA_DOCKER_ARGS="$VIASH_EXTRA_DOCKER_ARGS --memory=${VIASH_META_MEMORY_MB}m"
         |fi
-        |if [ ! -z "$VIASH_META_N_PROC" ]; then
-        |  VIASH_EXTRA_DOCKER_ARGS="$VIASH_EXTRA_DOCKER_ARGS --cpus=${VIASH_META_N_PROC}"
+        |if [ ! -z "$VIASH_META_CPUS" ]; then
+        |  VIASH_EXTRA_DOCKER_ARGS="$VIASH_EXTRA_DOCKER_ARGS --cpus=${VIASH_META_CPUS}"
         |fi""".stripMargin
 
     // return output

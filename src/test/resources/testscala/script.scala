@@ -35,7 +35,6 @@ try {
   for ((name, value) ← toStringWithFields(meta)) {
     outputFun(s"meta_$name: |$value|")
   }
-  outputFun(s"resources_dir: |$resources_dir|")
   
 } finally {
   logFile.map(_.close())

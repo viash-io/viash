@@ -23,7 +23,6 @@ import io.viash.helpers.IO
 import io.circe.yaml.parser
 import java.net.URI
 import requirements._
-import io.viash.config.Version
 
 trait Platform {
   val `type`: String

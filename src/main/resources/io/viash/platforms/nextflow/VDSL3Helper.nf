@@ -497,8 +497,6 @@ def processProcessArgs(Map args) {
 }
 
 def processFactory(Map processArgs) {
-  def tripQuo = "\"\"\""
-
   // autodetect process key
   def wfKey = processArgs["key"]
   def procKeyPrefix = "${wfKey}_process"
@@ -607,7 +605,7 @@ def processFactory(Map processArgs) {
   def stub = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "output" }
     .collect { par -> 
-      'touch "${viash_par_' + par.plainName + '.join(\'" "\')}"'
+      "\${ args.containsKey(\"${par.plainName}\") ? \"touch \\\"\" + (args[\"${par.plainName}\"] instanceof String ? args[\"${par.plainName}\"].replace(\"_*\", \"_0\") : args[\"${par.plainName}\"].join('\" \"')) + \"\\\"\" : \"\" }"
     }
     .join("\n")
 
@@ -629,22 +627,22 @@ def processFactory(Map processArgs) {
   |output:
   |  tuple val("\$id"), val(passthrough)$outputPaths, optional: true
   |stub:
-  |$tripQuo
+  |\"\"\"
   |$stub
-  |$tripQuo
+  |\"\"\"
   |script:$assertStr
   |def escapeText = { s -> s.toString().replaceAll('([`"])', '\\\\\\\\\$1') }
   |def parInject = args
   |  .findAll{key, value -> value != null}
   |  .collect{key, value -> "export VIASH_PAR_\${key.toUpperCase()}=\\\"\${escapeText(value)}\\\""}
   |  .join("\\n")
-  |$tripQuo
+  |\"\"\"
   |# meta exports
   |export VIASH_META_RESOURCES_DIR="\${resourcesDir.toRealPath().toAbsolutePath()}"
   |export VIASH_META_TEMP_DIR="${['docker', 'podman', 'charliecloud'].any{ it == workflow.containerEngine } ? '/tmp' : tmpDir}"
   |export VIASH_META_FUNCTIONALITY_NAME="${thisConfig.functionality.name}"
   |export VIASH_META_EXECUTABLE="\\\$VIASH_META_RESOURCES_DIR/\\\$VIASH_META_FUNCTIONALITY_NAME"
-  |\${task.cpus ? "export VIASH_META_N_PROC=\$task.cpus" : "" }
+  |\${task.cpus ? "export VIASH_META_CPUS=\$task.cpus" : "" }
   |\${task.memory?.bytes != null ? "export VIASH_META_MEMORY_B=\$task.memory.bytes" : "" }
   |if [ ! -z \\\${VIASH_META_MEMORY_B+x} ]; then
   |  export VIASH_META_MEMORY_KB=\\\$(( (\\\$VIASH_META_MEMORY_B+1023) / 1024 ))
@@ -655,7 +653,6 @@ def processFactory(Map processArgs) {
   |fi
   |
   |# meta synonyms
-  |export VIASH_RESOURCES_DIR="\\\$VIASH_META_RESOURCES_DIR"
   |export VIASH_TEMP="\\\$VIASH_META_TEMP_DIR"
   |export TEMP_DIR="\\\$VIASH_META_TEMP_DIR"
   |
@@ -664,7 +661,7 @@ def processFactory(Map processArgs) {
   |
   |# process script
   |${escapedScript}
-  |$tripQuo
+  |\"\"\"
   |}
   |""".stripMargin()
 

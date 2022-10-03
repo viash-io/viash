@@ -27,28 +27,21 @@ import io.viash.helpers.Circe.{OneOrMore, One, More}
 import scala.sys.process.{Process, ProcessLogger}
 
 object ViashRun {
-  def apply(config: Config, args: Seq[String], keepFiles: Option[Boolean]): Int = {
+  def apply(config: Config, args: Seq[String], keepFiles: Option[Boolean], cpus: Option[Int], memory: Option[String]): Int = {
     val fun = config.functionality
     val dir = IO.makeTemp("viash_" + fun.name)
-
-    val dirArg = FileArgument(
-      name = "--viash_tempdir_arg",
-      direction = Output,
-      default = One(dir)
-    )
-    val fun2 = fun.copy(
-      dummy_arguments = List(dirArg)
-    )
 
     // execute command, print everything to console
     var code = -1
     try {
       // write executable and resources to temporary directory
-      IO.writeResources(fun2.resources, dir)
+      IO.writeResources(fun.resources, dir)
 
       // determine command
       val cmd =
-        Array(Paths.get(dir.toString, fun2.name).toString) ++ args
+        Array(Paths.get(dir.toString, fun.name).toString) ++ 
+        args ++ 
+        Array(cpus.map("---cpus=" + _), memory.map("---memory="+_)).flatMap(a => a)
 
       // execute command, print everything to console
       code = Process(cmd).!(ProcessLogger(println, println))

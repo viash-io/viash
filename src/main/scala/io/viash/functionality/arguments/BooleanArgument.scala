@@ -98,8 +98,9 @@ case class BooleanArgument(
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_boolean=true,true,false", "bash", "Here's an example of how to use this:")
-  multiple_sep: Char = ':',
+  multiple_sep: String = ":",
 
+  dest: String = "par",
   `type`: String = "boolean"
 ) extends BooleanArgumentBase {
 
@@ -115,9 +116,10 @@ case class BooleanArgument(
     required: Boolean,
     direction: Direction,
     multiple: Boolean,
-    multiple_sep: Char
+    multiple_sep: String,
+    dest: String
   ): Argument[Boolean] = {
-    copy(name, alternatives, description, example, default, required, direction, multiple, multiple_sep, `type`)
+    copy(name, alternatives, description, example, default, required, direction, multiple, multiple_sep, dest, `type`)
   }
 }
 
@@ -148,6 +150,7 @@ case class BooleanTrueArgument(
 
   direction: Direction = Input,
 
+  dest: String = "par",
   `type`: String = "boolean_true"
 ) extends BooleanArgumentBase {
 
@@ -155,7 +158,7 @@ case class BooleanTrueArgument(
   val flagValue: Option[Boolean] = Some(true)
   val default: OneOrMore[Boolean] = Nil
   val multiple: Boolean = false
-  val multiple_sep: Char = ':'
+  val multiple_sep: String = ":"
   val example: OneOrMore[Boolean] = Nil
 
   def copyArg(
@@ -168,9 +171,10 @@ case class BooleanTrueArgument(
     required: Boolean,
     direction: Direction,
     multiple: Boolean,
-    multiple_sep: Char
+    multiple_sep: String,
+    dest: String
   ): Argument[Boolean] = {
-    copy(name, alternatives, description, direction, `type`)
+    copy(name, alternatives, description, direction, dest, `type`)
   }
 }
 
@@ -201,6 +205,7 @@ case class BooleanFalseArgument(
 
   direction: Direction = Input,
 
+  dest: String = "par",
   `type`: String = "boolean_false"
 ) extends BooleanArgumentBase {
 
@@ -208,7 +213,7 @@ case class BooleanFalseArgument(
   val flagValue: Option[Boolean] = Some(false)
   val default: OneOrMore[Boolean] = Nil
   val multiple: Boolean = false
-  val multiple_sep: Char = ':'
+  val multiple_sep: String = ":"
   val example: OneOrMore[Boolean] = Nil
 
   def copyArg(
@@ -221,8 +226,9 @@ case class BooleanFalseArgument(
     required: Boolean,
     direction: Direction,
     multiple: Boolean,
-    multiple_sep: Char
+    multiple_sep: String,
+    dest: String
   ): Argument[Boolean] = {
-    copy(name, alternatives, description, direction, `type`)
+    copy(name, alternatives, description, direction, dest, `type`)
   }
 }

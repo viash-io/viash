@@ -11,9 +11,10 @@ let par = {
   'optional': 'help',
   'optional_with_default': 'me'
 }
-let resources_dir = "."
+let meta = {
+	'resources_dir': '.'
+}
 // VIASH END
-par['resources_dir'] = resources_dir
 
 
 // define helper functions

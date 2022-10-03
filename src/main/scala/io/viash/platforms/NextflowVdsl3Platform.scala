@@ -21,7 +21,6 @@ import io.viash.config.Config
 import io.viash.functionality._
 import io.viash.functionality.resources._
 import io.viash.functionality.arguments._
-import io.viash.config.Version
 import io.viash.helpers.{Docker, Bash, DockerImageInfo, Helper}
 import io.viash.helpers.Circe._
 import io.viash.platforms.nextflow._
@@ -29,6 +28,7 @@ import io.circe.syntax._
 import io.circe.{Printer => JsonPrinter, Json, JsonObject}
 import shapeless.syntax.singleton
 import io.viash.schemas._
+import io.viash.helpers.Escaper
 
 /**
  * Next-gen Platform class for generating NextFlow (DSL2) modules.
@@ -85,12 +85,15 @@ case class NextflowVdsl3Platform(
 
   @description(
     """Automated processing flags which can be toggled on or off:  
-      |
-      | - `simplifyInput`: If `true`, an input tuple only containing only a single File (e.g. `["foo", file("in.h5ad")]`) is automatically transformed to a map (i.e. `["foo", [ input: file("in.h5ad") ] ]`). Default is `true`.
-      | - `simplifyOutput`: If `true`, an output tuple containing a map with a File (e.g. `["foo", [ output: file("out.h5ad") ] ]`) is automatically transformed to a map (i.e. `["foo", file("out.h5ad")]`). Default is `true`.
-      | - `transcript`: If `true`, the module's transcripts from `work/` are automatically published to `params.transcriptDir`. If not defined, `params.publishDir + "/_transcripts"` will be used. Will throw an error if neither are defined. Default is `false`.
-      | - `publish`: If `true`, the module's outputs are automatically published to `params.publishDir`.  Will throw an error if `params.publishDir` is not defined. Default is `false`.
-      |""".stripMargin)
+      +
+      +| Flag | Description | Default |
+      +|---|---------|----|
+      +| `simplifyInput` | If `true`, an input tuple only containing only a single File (e.g. `["foo", file("in.h5ad")]`) is automatically transformed to a map (i.e. `["foo", [ input: file("in.h5ad") ] ]`). | `true` |
+      +| `simplifyOutput` | If `true`, an output tuple containing a map with a File (e.g. `["foo", [ output: file("out.h5ad") ] ]`) is automatically transformed to a map (i.e. `["foo", file("out.h5ad")]`). | `true` |
+      +| `transcript` | If `true`, the module's transcripts from `work/` are automatically published to `params.transcriptDir`. If not defined, `params.publishDir + "/_transcripts"` will be used. Will throw an error if neither are defined. | `false` |
+      +| `publish` | If `true`, the module's outputs are automatically published to `params.publishDir`.  Will throw an error if `params.publishDir` is not defined. | `false` |
+      +
+      +""".stripMargin('+'))
   @example(
     """auto:
       |    publish: true""".stripMargin,
@@ -103,8 +106,8 @@ case class NextflowVdsl3Platform(
   // TODO: solve differently
   container: String = "docker"
 ) extends NextflowPlatform {
-  def escapeText(txt: String): String = {
-    Bash.escape(txt, singleQuote = true, newline = true, backtick = false)
+  def escapeSingleQuotedString(txt: String): String = {
+    Escaper(txt, slash = true, singleQuote = true, newline = true)
   }
 
   def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
@@ -152,7 +155,7 @@ case class NextflowVdsl3Platform(
     val versStr = functionality.version.map(ver => s"\n  version = '$ver'").getOrElse("")
 
     val descStr = functionality.description.map{des => 
-      val escDes = escapeText(des)
+      val escDes = escapeSingleQuotedString(des)
       s"\n  description = '$escDes'"
     }.getOrElse("")
 
@@ -160,7 +163,7 @@ case class NextflowVdsl3Platform(
       if (functionality.authors.isEmpty) {
         "" 
       } else {
-        val escAut = escapeText(functionality.authors.mkString(", "))
+        val escAut = escapeSingleQuotedString(functionality.authors.map(_.name).mkString(", "))
         s"\n  author = '$escAut'"
       }
 
@@ -184,7 +187,7 @@ case class NextflowVdsl3Platform(
     
     /************************* HEADER *************************/
     val header = Helper.generateScriptHeader(functionality)
-      .map(h => Bash.escapeMore(h))
+      .map(h => Escaper(h, newline = true))
       .mkString("// ", "\n// ", "")
 
     /************************* SCRIPT *************************/
@@ -199,7 +202,7 @@ case class NextflowVdsl3Platform(
       // if mainResource is a script
       case Some(res) =>
         val code = res.readWithInjection(functionality).get
-        val escapedCode = Bash.escapeMore(code)
+        val escapedCode = Bash.escapeString(code, allowUnescape = true)
           .replace("\\", "\\\\")
           .replace("'''", "\\'\\'\\'")
 
@@ -224,7 +227,7 @@ case class NextflowVdsl3Platform(
       // is memory requirements are defined but directives.memory isn't, use that instead
       memory = directives.memory orElse functionality.requirements.memoryAsBytes.map(_.toString + " B"),
       // is cpu requirements are defined but directives.cpus isn't, use that instead
-      cpus = directives.cpus orElse functionality.requirements.n_proc.map(np => Left(np))
+      cpus = directives.cpus orElse functionality.requirements.cpus.map(np => Left(np))
     )
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
     val dirJson = directivesToJson.asJson.dropEmptyRecursively()

@@ -15,9 +15,38 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.helpers
+package io.viash.helpers.status
 
-object BuildStatus extends Enumeration {
-  type BuildStatus = Value
-  val ParseError, Disabled, BuildError, TestError, TestMissing, Success = Value
+// object BuildStatus extends Enumeration {
+//   type BuildStatus = Value
+//   val ParseError, Disabled, BuildError, TestError, TestMissing, Success = Value
+// }
+
+sealed trait Status {
+  val isError: Boolean
+  val color: String
+}
+case object ParseError extends Status {
+  val isError = true
+  val color = Console.RED
+}
+case object Disabled extends Status {
+  val isError = false
+  val color = Console.YELLOW
+}
+case object BuildError extends Status {
+  val isError = true
+  val color = Console.RED
+}
+case object TestError extends Status {
+  val isError = true
+  val color = Console.RED
+}
+case object TestMissing extends Status {
+  val isError = false
+  val color = Console.YELLOW
+}
+case object Success extends Status {
+  val isError = false
+  val color = Console.GREEN
 }
