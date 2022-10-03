@@ -162,7 +162,8 @@ object ViashTest {
         // run command, collect output
         try {
           val executable = Paths.get(buildDir.toString, fun.name).toString
-          logger(s"+$executable ---verbosity $verbosityLevel ---setup $setupStrategy")
+          val cmd = Seq(executable, "---verbosity", verbosityLevel.toString, "---setup", setupStrategy)
+          logger("+" + cmd.mkString(" "))
           val startTime = LocalDateTime.now
 
           // create tempdir in test
@@ -170,10 +171,10 @@ object ViashTest {
           Files.createDirectories(subTmp)
 
           val exitValue = Process(
-            Seq(executable, "---verbosity", verbosityLevel.toString, "---setup", setupStrategy), 
+            cmd,
             cwd = buildDir.toFile,
             ("VIASH_TEMP", subTmp.toString())
-          ).!
+          ).!(ProcessLogger(logger, logger))
           val endTime = LocalDateTime.now
           val diffTime = ChronoUnit.SECONDS.between(startTime, endTime)
           printWriter.flush()
