@@ -28,6 +28,7 @@ import io.viash.platforms._
 import io.viash.platforms.requirements._
 import io.viash.functionality.arguments._
 import io.circe.Json
+import monocle.function.Cons
 
 final case class CollectedSchemas (
   functionality: List[ParameterSchema],
@@ -44,15 +45,50 @@ object CollectedSchemas {
   private implicit val encodeDeprecatedOrRemoved: Encoder.AsObject[DeprecatedOrRemovedSchema] = deriveConfiguredEncoder
   private implicit val encodeExample: Encoder.AsObject[ExampleSchema] = deriveConfiguredEncoder
 
+  private def getMembers[T: TypeTag]() = {
+    (typeOf[T].members, typeOf[T].typeSymbol)
+  }
+
+  val schemaClassMap = Map(
+    ("functionality", Map(
+      (""                       , getMembers[Functionality]))),
+    ("platforms", Map(
+      ("nativePlatform"         , getMembers[NativePlatform]),
+      ("dockerPlatform"         , getMembers[DockerPlatform]),
+      ("nextflowVdsl3Platform"  , getMembers[NextflowVdsl3Platform]),
+      ("nextflowLegacyPlatform" , getMembers[NextflowLegacyPlatform]),
+    )),
+    ("requirements", Map(
+      ("apkRequirements"        , getMembers[ApkRequirements]),
+      ("aptRequirements"        , getMembers[AptRequirements]),
+      ("dockerRequirements"     , getMembers[DockerRequirements]),
+      ("javascriptRequirements" , getMembers[JavaScriptRequirements]),
+      ("pythonRequirements"     , getMembers[PythonRequirements]),
+      ("rRequirements"          , getMembers[RRequirements]),
+      ("rubyRequirements"       , getMembers[RubyRequirements]),
+      ("yumRequirements"        , getMembers[YumRequirements]),
+    )),
+    ("arguments", Map(
+      ("boolean"                , getMembers[BooleanArgument]),
+      ("boolean_true"           , getMembers[BooleanTrueArgument]),
+      ("boolean_false"          , getMembers[BooleanFalseArgument]),
+      ("double"                 , getMembers[DoubleArgument]),
+      ("file"                   , getMembers[FileArgument]),
+      ("integer"                , getMembers[IntegerArgument]),
+      ("long"                   , getMembers[LongArgument]),
+      ("string"                 , getMembers[StringArgument]),
+    ))
+  )
+
   private def trimTypeName(s: String) = {
     // first: io.viash.helpers.Circe.OneOrMore[String] -> OneOrMore[String]
     // second: List[io.viash.platforms.requirements.Requirements] -> List[Requirements]
     s.replaceAll("^(\\w*\\.)*", "").replaceAll("""(\w*)\[[\w\.]*?([\w,]*)(\[_\])?\]""", "$1 of $2")
   }
 
-  private def annotationsOf[T: TypeTag]() = {
-    val annMembers = typeOf[T].members.map(x => (x.fullName, x.info.toString(), x.annotations)).filter(_._3.length > 0)
-    val annThis = ("__this__", typeOf[T].typeSymbol.name.toString(), typeOf[T].typeSymbol.annotations)
+  private def annotationsOf(members: MemberScope, typeSymbol: Symbol) = {
+    val annMembers = members.map(x => (x.fullName, x.info.toString(), x.annotations)).filter(_._3.length > 0)
+    val annThis = ("__this__", typeSymbol.name.toString(), typeSymbol.annotations)
     val allAnnotations = annThis :: annMembers.toList
     // filter out any information not from our own class and lazy evaluators (we'll use the standard one - otherwise double info and more complex)
     allAnnotations
@@ -61,40 +97,36 @@ object CollectedSchemas {
       .map({case (a, b, c) => (a, trimTypeName(b), c)})
   }
 
-  private def getSchema[T: TypeTag] = {
-      annotationsOf[T].map({case (a, b, c) => ParameterSchema(a, b, c)})
+  private val getSchema_t = (t: (MemberScope, Symbol)) => t match {
+    case (members: MemberScope, typeSymbol: Symbol) => {
+      annotationsOf(members, typeSymbol).map({case (a, b, c) => ParameterSchema(a, b, c)})
+    }
   }
 
   def getJson: Json = {
     val data = CollectedSchemas(
-      functionality = getSchema[Functionality],
-      platforms = Map(
-        ("nativePlatform"        , getSchema[NativePlatform]),
-        ("dockerPlatform"        , getSchema[DockerPlatform]),
-        ("nextflowVdsl3Platform" , getSchema[NextflowVdsl3Platform]),
-        ("nextflowLegacyPlatform", getSchema[NextflowLegacyPlatform]),
-      ),
-      requirements = Map(
-        ("apkRequirements"        , getSchema[ApkRequirements]),
-        ("aptRequirements"        , getSchema[AptRequirements]),
-        ("dockerRequirements"     , getSchema[DockerRequirements]),
-        ("javascriptRequirements" , getSchema[JavaScriptRequirements]),
-        ("pythonRequirements"     , getSchema[PythonRequirements]),
-        ("rRequirements"          , getSchema[RRequirements]),
-        ("rubyRequirements"       , getSchema[RubyRequirements]),
-        ("yumRequirements"        , getSchema[YumRequirements]),
-      ),
-      arguments = Map(
-        ("boolean"                , getSchema[BooleanArgument]),
-        ("boolean_true"           , getSchema[BooleanTrueArgument]),
-        ("boolean_false"          , getSchema[BooleanFalseArgument]),
-        ("double"                 , getSchema[DoubleArgument]),
-        ("file"                   , getSchema[FileArgument]),
-        ("integer"                , getSchema[IntegerArgument]),
-        ("long"                   , getSchema[LongArgument]),
-        ("string"                 , getSchema[StringArgument]),
-      ),
+      functionality = getSchema_t(schemaClassMap.get("functionality").get("")),
+      platforms = schemaClassMap.get("platforms").get.map{ case(k, v) => (k, getSchema_t(v))},
+      requirements = schemaClassMap.get("requirements").get.map{ case(k, v) => (k, getSchema_t(v))},
+      arguments = schemaClassMap.get("arguments").get.map{ case(k, v) => (k, getSchema_t(v))}
     )
     data.asJson
   }
+
+  private def getNonAnnotated(members: MemberScope) = {
+    members
+      .filter(!_.isMethod) // only check values
+      .filter(_.fullName.startsWith("io.viash")) // only check self-defined values, not inherited class members
+      .filter(_.annotations.length == 0)
+      
+      .map(_.fullName)
+  }
+
+  // schemaClassMap.keys.foreach(key =>
+  //   schemaClassMap.get(key).get.map{ 
+  //     case(key2, v) => 
+  //       val warnings = getNonAnnotated(v._1)
+  //       warnings.foreach(w => Console.println(s"$key - $key2 - $w"))
+  //     }
+  // )
 }
