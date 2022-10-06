@@ -97,7 +97,7 @@ object CollectedSchemas {
       .map({case (a, b, c) => (a, trimTypeName(b), c)})
   }
 
-  private val getSchema_t = (t: (MemberScope, Symbol)) => t match {
+  private val getSchema = (t: (MemberScope, Symbol)) => t match {
     case (members: MemberScope, typeSymbol: Symbol) => {
       annotationsOf(members, typeSymbol).map({case (a, b, c) => ParameterSchema(a, b, c)})
     }
@@ -105,10 +105,10 @@ object CollectedSchemas {
 
   def getJson: Json = {
     val data = CollectedSchemas(
-      functionality = getSchema_t(schemaClassMap.get("functionality").get("")),
-      platforms = schemaClassMap.get("platforms").get.map{ case(k, v) => (k, getSchema_t(v))},
-      requirements = schemaClassMap.get("requirements").get.map{ case(k, v) => (k, getSchema_t(v))},
-      arguments = schemaClassMap.get("arguments").get.map{ case(k, v) => (k, getSchema_t(v))}
+      functionality = getSchema(schemaClassMap.get("functionality").get("")),
+      platforms = schemaClassMap.get("platforms").get.map{ case(k, v) => (k, getSchema(v))},
+      requirements = schemaClassMap.get("requirements").get.map{ case(k, v) => (k, getSchema(v))},
+      arguments = schemaClassMap.get("arguments").get.map{ case(k, v) => (k, getSchema(v))}
     )
     data.asJson
   }
@@ -122,11 +122,14 @@ object CollectedSchemas {
       .map(_.fullName)
   }
 
-  // schemaClassMap.keys.foreach(key =>
-  //   schemaClassMap.get(key).get.map{ 
-  //     case(key2, v) => 
-  //       val warnings = getNonAnnotated(v._1)
-  //       warnings.foreach(w => Console.println(s"$key - $key2 - $w"))
-  //     }
-  // )
+  def getAllNonAnnotated = schemaClassMap.flatMap {
+    case (key, v1) => v1.flatMap {
+      case (key2, v2) => getNonAnnotated(v2._1).map((key, key2, _))
+    }
+  }
+
+  // getAllNonAnnotated.foreach {
+  //   case (key, key2, member) => Console.println(s"$key - $key2 - $member")
+  // }
+
 }
