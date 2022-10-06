@@ -43,7 +43,7 @@ object Git {
   }
 
   private val remoteRepoRegex = "(.*)\\s(.*)\\s(.*)".r
-  private val removeCredentialsRegex = """^(\w*://)?(\w*:?\w+@)?([^@]*)$""".r
+  private val removeCredentialsRegex = """^(\w*://|git@)?(\w*:?\w+@)?([^@]*)$""".r
 
   def getRemoteRepo(path: File): Option[String] = {
     Exec.runOpt(
