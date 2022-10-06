@@ -113,23 +113,22 @@ object CollectedSchemas {
     data.asJson
   }
 
-  private def getNonAnnotated(members: MemberScope) = {
-    members
+  private def getNonAnnotated(members: MemberScope, ownClass: Symbol) = {
+    val issueMembers = members
       .filter(!_.isMethod) // only check values
       .filter(_.fullName.startsWith("io.viash")) // only check self-defined values, not inherited class members
       .filter(_.annotations.length == 0)
-      
       .map(_.fullName)
+      .toSeq
+
+    val ownClassArr = if (ownClass.annotations.length == 0) Seq("__this__") else Nil
+    issueMembers ++ ownClassArr
   }
 
   def getAllNonAnnotated = schemaClassMap.flatMap {
     case (key, v1) => v1.flatMap {
-      case (key2, v2) => getNonAnnotated(v2._1).map((key, key2, _))
+      case (key2, v2) => getNonAnnotated(v2._1, v2._2).map((key, key2, _))
     }
   }
-
-  // getAllNonAnnotated.foreach {
-  //   case (key, key2, member) => Console.println(s"$key - $key2 - $member")
-  // }
 
 }
