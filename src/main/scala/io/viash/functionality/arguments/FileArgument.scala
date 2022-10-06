@@ -113,6 +113,7 @@ case class FileArgument(
   @exampleWithDescription("my_component --my_files=firstFile.csv,anotherFile.csv,yetAnother.csv", "bash", "Here's an example of how to use this:")
   multiple_sep: String = ":",
 
+  @internalFunctionality
   dest: String = "par",
   `type`: String = "file"
 ) extends Argument[Path] {

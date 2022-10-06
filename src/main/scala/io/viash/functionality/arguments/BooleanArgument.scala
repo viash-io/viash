@@ -100,10 +100,11 @@ case class BooleanArgument(
   @exampleWithDescription("my_component --my_boolean=true,true,false", "bash", "Here's an example of how to use this:")
   multiple_sep: String = ":",
 
+  @internalFunctionality
   dest: String = "par",
   `type`: String = "boolean"
 ) extends BooleanArgumentBase {
-
+  @internalFunctionality
   val flagValue: Option[Boolean] = None
 
   def copyArg(
@@ -150,15 +151,21 @@ case class BooleanTrueArgument(
 
   direction: Direction = Input,
 
+  @internalFunctionality
   dest: String = "par",
   `type`: String = "boolean_true"
 ) extends BooleanArgumentBase {
-
+  @internalFunctionality
   val required: Boolean = false
+  @internalFunctionality
   val flagValue: Option[Boolean] = Some(true)
+  @internalFunctionality
   val default: OneOrMore[Boolean] = Nil
+  @internalFunctionality
   val multiple: Boolean = false
+  @internalFunctionality
   val multiple_sep: String = ":"
+  @internalFunctionality
   val example: OneOrMore[Boolean] = Nil
 
   def copyArg(
@@ -205,15 +212,22 @@ case class BooleanFalseArgument(
 
   direction: Direction = Input,
 
+  @internalFunctionality
   dest: String = "par",
   `type`: String = "boolean_false"
 ) extends BooleanArgumentBase {
 
+  @internalFunctionality
   val required: Boolean = false
+  @internalFunctionality
   val flagValue: Option[Boolean] = Some(false)
+  @internalFunctionality
   val default: OneOrMore[Boolean] = Nil
+  @internalFunctionality
   val multiple: Boolean = false
+  @internalFunctionality
   val multiple_sep: String = ":"
+  @internalFunctionality
   val example: OneOrMore[Boolean] = Nil
 
   def copyArg(

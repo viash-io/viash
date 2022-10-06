@@ -125,6 +125,7 @@ case class LongArgument(
   @exampleWithDescription("my_component --my_long=10:80:152", "bash", "Here's an example of how to use this:")
   multiple_sep: String = ":",
 
+  @internalFunctionality
   dest: String = "par",
   `type`: String = "long"
 ) extends Argument[Long] {

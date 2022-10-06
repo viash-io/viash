@@ -114,6 +114,7 @@ case class DoubleArgument(
   @exampleWithDescription("my_component --my_double=5.8,22.6,200.4", "bash", "Here's an example of how to use this:")
   multiple_sep: String = ":",
 
+  @internalFunctionality
   dest: String = "par",
   `type`: String = "double"
 ) extends Argument[Double] {

@@ -105,6 +105,7 @@ case class StringArgument(
   @exampleWithDescription("my_component --my_string=Marc,Susan,Paul", "bash", "Here's an example of how to use this:")
   multiple_sep: String = ":",
 
+  @internalFunctionality
   dest: String = "par",
   `type`: String = "string"
 ) extends Argument[String] {

@@ -124,6 +124,7 @@ case class IntegerArgument(
   @exampleWithDescription("my_component --my_integer=10:80:152", "bash", "Here's an example of how to use this:")
   multiple_sep: String = ":",
 
+  @internalFunctionality
   dest: String = "par",
   `type`: String = "integer"
 ) extends Argument[Int] {

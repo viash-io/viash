@@ -37,4 +37,7 @@ package object schemas {
 
   @getter @setter @beanGetter @beanSetter @field
   class removed(message: String = "", since: String = "") extends scala.annotation.StaticAnnotation
+
+  @getter @setter @beanGetter @beanSetter @field
+  class internalFunctionality() extends scala.annotation.StaticAnnotation
 }
