@@ -40,7 +40,8 @@ case class NextflowVdsl3Platform(
   id: String = "nextflow",
 
   `type`: String = "nextflow",
-
+  
+  @internalFunctionality
   variant: String = "vdsl3",
   
   // nxf params

@@ -223,6 +223,7 @@ case class DockerPlatform(
   @since("Viash 0.5.13")
   test_setup: List[Requirements] = Nil
 ) extends Platform {
+  @internalFunctionality
   override val hasSetup = true
 
   override val requirements: List[Requirements] = {
