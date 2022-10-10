@@ -45,8 +45,23 @@ object CollectedSchemas {
   private implicit val encodeDeprecatedOrRemoved: Encoder.AsObject[DeprecatedOrRemovedSchema] = deriveConfiguredEncoder
   private implicit val encodeExample: Encoder.AsObject[ExampleSchema] = deriveConfiguredEncoder
 
-  private def getMembers[T: TypeTag]() = {
-    (typeOf[T].members, typeOf[T].typeSymbol)
+  private def getMembers[T: TypeTag](): (Map[String,List[(String, Symbol, String, Int)]], List[Symbol]) = {
+    val name = typeOf[T].typeSymbol.fullName
+    val members = typeOf[T].members
+
+    val baseClasses = typeOf[T].baseClasses
+      .filter(_.fullName.startsWith("io.viash"))
+
+    val allMembers = baseClasses
+      .zipWithIndex
+      .flatMap(x =>
+        x._1.info.members
+          .filter(_.fullName.startsWith("io.viash"))
+          .map(y => (y.fullName, y, x._1.fullName, x._2)) // member name, member class, class name, inheritance index
+      )
+      .groupBy(k => k._1.split('.').last)
+    
+    (allMembers, baseClasses)
   }
 
   val schemaClassMap = Map(
@@ -86,20 +101,25 @@ object CollectedSchemas {
     s.replaceAll("^(\\w*\\.)*", "").replaceAll("""(\w*)\[[\w\.]*?([\w,]*)(\[_\])?\]""", "$1 of $2")
   }
 
-  private def annotationsOf(members: MemberScope, typeSymbol: Symbol) = {
-    val annMembers = members.map(x => (x.fullName, x.info.toString(), x.annotations)).filter(_._3.length > 0)
-    val annThis = ("__this__", typeSymbol.name.toString(), typeSymbol.annotations)
+  private def annotationsOf(members: (Map[String,List[(String, Symbol, String, Int)]]), classes: List[Symbol]) = {
+    val annMembers = members
+      .map{ case (memberName, memberInfo) => { 
+        val h = memberInfo.head
+        val annotations = memberInfo.flatMap(_._2.annotations)
+        (h._1, h._2.info.toString, annotations, h._3, h._4, Nil) // TODO this ignores where the annotation was defined, ie. top level class or super class
+      } }
+      .filter(_._3.length > 0)
+    val annThis = ("__this__", classes.head.name.toString(), classes.head.annotations, "", 0, classes.map(_.fullName))
     val allAnnotations = annThis :: annMembers.toList
     // filter out any information not from our own class and lazy evaluators (we'll use the standard one - otherwise double info and more complex)
     allAnnotations
-      .filter(a => a._1.startsWith("io.viash") || a._1 == "__this__")
       .filter(!_._2.startsWith("=> "))
-      .map({case (a, b, c) => (a, trimTypeName(b), c)})
+      .map({case (a, b, c, d, e, f) => (a, trimTypeName(b), f, c)})
   }
 
-  private val getSchema = (t: (MemberScope, Symbol)) => t match {
-    case (members: MemberScope, typeSymbol: Symbol) => {
-      annotationsOf(members, typeSymbol).map({case (a, b, c) => ParameterSchema(a, b, c)})
+  private val getSchema = (t: (Map[String,List[(String, Symbol, String, Int)]], List[Symbol])) => t match {
+    case (members, classes) => {
+      annotationsOf(members, classes).flatMap{ case (a, b, c, d) => ParameterSchema(a, b, c, d) }
     }
   }
 
@@ -113,15 +133,15 @@ object CollectedSchemas {
     data.asJson
   }
 
-  private def getNonAnnotated(members: MemberScope, ownClass: Symbol) = {
+  private def getNonAnnotated(members: Map[String,List[(String, Symbol, String, Int)]], classes: List[Symbol]) = {
     val issueMembers = members
-      .filter(!_.isMethod) // only check values
-      .filter(_.fullName.startsWith("io.viash")) // only check self-defined values, not inherited class members
-      .filter(_.annotations.length == 0)
-      .map(_.fullName)
-      .toSeq
+      .toList
+      .flatMap{ case (k, v) => v.map(s => (k,s._2, s._2.annotations))}
+      .filter(!_._2.isMethod)
+      .filter(_._3.length == 0)
+      .map(_._1)
 
-    val ownClassArr = if (ownClass.annotations.length == 0) Seq("__this__") else Nil
+    val ownClassArr = if (classes.head.annotations.length == 0) Seq("__this__") else Nil
     issueMembers ++ ownClassArr
   }
 

@@ -22,6 +22,7 @@ import scala.reflect.runtime.universe._
 final case class ParameterSchema(
   name: String,
   `type`: String,
+  hierarchy: Option[List[String]],
   description: Option[String],
   example: Option[List[ExampleSchema]],
   since: Option[String],
@@ -71,11 +72,15 @@ object ParameterSchema {
     (name, values)
   }
 
-  def apply(name: String, `type`: String, annotations: List[Annotation]): ParameterSchema = {
+  def apply(name: String, `type`: String, hierarchy: List[String], annotations: List[Annotation]): Option[ParameterSchema] = {
     // name is e.g. "io.viash.functionality.Functionality.name", only keep "name"
     // name can also be "__this__"
     val name_ = name.split('.').last
     val annStrings = annotations.map(annotationToStrings(_))
+    val hierarchyOption = hierarchy match {
+      case l if l.length > 0 => Some(l)
+      case _ => None
+    }
 
     val description = annStrings.collectFirst({case (name, value) if name.endsWith("description") => value.head})
     val example = annStrings.collect({case (name, value) if name.endsWith("example") => value}).map(ExampleSchema(_))
@@ -87,7 +92,13 @@ object ParameterSchema {
     val since = annStrings.collectFirst({case (name, value) if name.endsWith("since") => value.head})
     val deprecated = annStrings.collectFirst({case (name, value) if name.endsWith("deprecated") => value}).map(DeprecatedOrRemovedSchema(_))
     val removed = annStrings.collectFirst({case (name, value) if name.endsWith("removed") => value}).map(DeprecatedOrRemovedSchema(_))
-    ParameterSchema(name_, `type`, description, examples, since, deprecated, removed)
+    
+    val internalFunctionality = annStrings.exists{ case (name, value) => name.endsWith("internalFunctionality")}
+    internalFunctionality match {
+      case true => None
+      case _ => Some(ParameterSchema(name_, `type`, hierarchyOption, description, examples, since, deprecated, removed))
+    }
+    
   }
 }
 
