@@ -1,3 +1,9 @@
+# Viash 0.6.2
+
+## BUG FIXES
+
+* `Git`: Strip credentials from remote repositories when retrieving the path. This could cause usernames and Personal Access Tokens to be stored and/or committed.
+
 # Viash 0.6.1
 
 This release contains mostly minor improvements of functionality released in Viash 0.6.0. Most notably:
