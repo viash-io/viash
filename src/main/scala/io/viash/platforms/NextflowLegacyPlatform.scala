@@ -176,10 +176,16 @@ case class NextflowLegacyPlatform(
       |""".stripMargin)
   @example("stageInMode: copy", "yaml")
   stageInMode: Option[String] = None,
+
+  @undocumented
   directive_cpus: Option[Integer] = None,
+  @undocumented
   directive_max_forks: Option[Integer] = None,
+  @undocumented
   directive_time: Option[String] = None,
+  @undocumented
   directive_memory: Option[String] = None,
+  @undocumented
   directive_cache: Option[String] = None,
   `type`: String = "nextflow",
   variant: String = "legacy"

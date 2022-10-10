@@ -101,7 +101,7 @@ case class LongArgument(
       "yaml")  
   max: Option[Long] = None,
 
-
+  @undocumented
   direction: Direction = Input,
 
   @description("Treat the argument value as an array. Arrays can be passed using the delimiter `--foo=1:2:3` or by providing the same argument multiple times `--foo 1 --foo 2`. You can use a custom delimiter by using the [`multiple_sep`](#multiple_sep) property. `false` by default.")
@@ -125,7 +125,6 @@ case class LongArgument(
   @exampleWithDescription("my_component --my_long=10:80:152", "bash", "Here's an example of how to use this:")
   multiple_sep: String = ":",
 
-  @internalFunctionality
   dest: String = "par",
   `type`: String = "long"
 ) extends Argument[Long] {

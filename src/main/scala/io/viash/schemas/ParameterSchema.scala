@@ -93,8 +93,9 @@ object ParameterSchema {
     val deprecated = annStrings.collectFirst({case (name, value) if name.endsWith("deprecated") => value}).map(DeprecatedOrRemovedSchema(_))
     val removed = annStrings.collectFirst({case (name, value) if name.endsWith("removed") => value}).map(DeprecatedOrRemovedSchema(_))
     
+    val undocumented = annStrings.exists{ case (name, value) => name.endsWith("undocumented")}
     val internalFunctionality = annStrings.exists{ case (name, value) => name.endsWith("internalFunctionality")}
-    internalFunctionality match {
+    internalFunctionality || undocumented match {
       case true => None
       case _ => Some(ParameterSchema(name_, `type`, hierarchyOption, description, examples, since, deprecated, removed))
     }

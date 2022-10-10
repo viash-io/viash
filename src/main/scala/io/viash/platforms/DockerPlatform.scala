@@ -482,10 +482,9 @@ case class DockerPlatform(
     (effectiveID, mods)
   }
 
-  private val extraMountsVar = "VIASH_EXTRA_MOUNTS"
-
   private def processDockerVolumes(functionality: Functionality) = {
     val args = functionality.getArgumentLikes(includeMeta = true)
+    val extraMountsVar = "VIASH_EXTRA_MOUNTS"
 
     val preParse =
       s"""
