@@ -43,7 +43,6 @@ object Git {
   }
 
   private val remoteRepoRegex = "(.*)\\s(.*)\\s(.*)".r
-  private val removeCredentialsRegex = """^(\w*://|git@)?(\w*:?\w+@)?([^@]*)$""".r
 
   def getRemoteRepo(path: File): Option[String] = {
     Exec.runOpt(
@@ -57,7 +56,6 @@ object Git {
           case _ => None
         }
         .headOption
-        .map(s => removeCredentialsRegex.replaceFirstIn(s, "$1$3"))
     }
   }
 

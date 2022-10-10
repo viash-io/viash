@@ -48,44 +48,6 @@ class GitTest extends FunSuite with BeforeAndAfterAll {
     assert(Git.getTag(tempDir).isEmpty, "Git.getTag")
   }
 
-  test("Check git metadata after git remote add, but remote definition contains credentials username") {
-    val fakeGitRepo = "https://foobar@github.com/viash/meta-test.git"
-    val tempDir = IO.makeTemp("viash_test_meta_3_").toFile
-
-    val gitInitOut = Exec.runCatch(List("git", "init"), cwd = Some(tempDir))
-    assert(gitInitOut.exitValue == 0, s"git init: ${gitInitOut.output}")
-
-    val gitRemoteAddOut = Exec.runCatch(List("git", "remote", "add", "origin", fakeGitRepo), cwd = Some(tempDir))
-    assert(gitRemoteAddOut.exitValue == 0, s"git remote add: ${gitRemoteAddOut.output}")
-
-    val gitInfo = Git.getInfo(tempDir)
-    assert(Git.isGitRepo(tempDir), "Git.isGitRepo")
-    assert(Git.getCommit(tempDir).isEmpty, "Git.getCommit")
-    val lr = Git.getLocalRepo(tempDir)
-    assert(lr.isDefined && lr.get.contains(tempDir.toString), "Git.getLocalRepo")
-    assert(Git.getRemoteRepo(tempDir) == Some("https://github.com/viash/meta-test.git"), "Git.getRemoteRepo")
-    assert(Git.getTag(tempDir).isEmpty, "Git.getTag")
-  }
-
-  test("Check git metadata after git remote add, but remote definition contains credentials username & password/PAT") {
-    val fakeGitRepo = "https://foobar:ghp_SGFoLCB0aGlzIGlzIG5vdCBhIHJlYWwgUEFU@github.com/viash/meta-test.git"
-    val tempDir = IO.makeTemp("viash_test_meta_3_").toFile
-
-    val gitInitOut = Exec.runCatch(List("git", "init"), cwd = Some(tempDir))
-    assert(gitInitOut.exitValue == 0, s"git init: ${gitInitOut.output}")
-
-    val gitRemoteAddOut = Exec.runCatch(List("git", "remote", "add", "origin", fakeGitRepo), cwd = Some(tempDir))
-    assert(gitRemoteAddOut.exitValue == 0, s"git remote add: ${gitRemoteAddOut.output}")
-
-    val gitInfo = Git.getInfo(tempDir)
-    assert(Git.isGitRepo(tempDir), "Git.isGitRepo")
-    assert(Git.getCommit(tempDir).isEmpty, "Git.getCommit")
-    val lr = Git.getLocalRepo(tempDir)
-    assert(lr.isDefined && lr.get.contains(tempDir.toString), "Git.getLocalRepo")
-    assert(Git.getRemoteRepo(tempDir) == Some("https://github.com/viash/meta-test.git"), "Git.getRemoteRepo")
-    assert(Git.getTag(tempDir).isEmpty, "Git.getTag")
-  }
-
   test("Check git metadata after git commit") {
     val tempDir = IO.makeTemp("viash_test_meta_4_").toFile
 
