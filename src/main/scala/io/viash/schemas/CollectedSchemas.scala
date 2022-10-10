@@ -47,7 +47,10 @@ object CollectedSchemas {
 
   private def getMembers[T: TypeTag](): (Map[String,List[(String, Symbol, String, Int)]], List[Symbol]) = {
     val name = typeOf[T].typeSymbol.fullName
-    val members = typeOf[T].members
+    val memberNames = typeOf[T].members
+      .filter(!_.isMethod)
+      .map(_.fullName.split('.').last)
+      .toSeq
 
     val baseClasses = typeOf[T].baseClasses
       .filter(_.fullName.startsWith("io.viash"))
@@ -57,6 +60,8 @@ object CollectedSchemas {
       .flatMap(x =>
         x._1.info.members
           .filter(_.fullName.startsWith("io.viash"))
+          .filter(m => memberNames.contains(m.fullName.split('.').last))
+          .filter(m => !m.info.toString.startsWith("=> ") || x._2 != 0) // Only regular members if base class, otherwise all members
           .map(y => (y.fullName, y, x._1.fullName, x._2)) // member name, member class, class name, inheritance index
       )
       .groupBy(k => k._1.split('.').last)
@@ -106,15 +111,13 @@ object CollectedSchemas {
       .map{ case (memberName, memberInfo) => { 
         val h = memberInfo.head
         val annotations = memberInfo.flatMap(_._2.annotations)
-        (h._1, h._2.info.toString, annotations, h._3, h._4, Nil) // TODO this ignores where the annotation was defined, ie. top level class or super class
+        (h._1, h._2.info.toString, annotations, h._3, h._4, Nil)
       } }
       .filter(_._3.length > 0)
     val annThis = ("__this__", classes.head.name.toString(), classes.head.annotations, "", 0, classes.map(_.fullName))
     val allAnnotations = annThis :: annMembers.toList
-    // filter out any information not from our own class and lazy evaluators (we'll use the standard one - otherwise double info and more complex)
     allAnnotations
-      .filter(!_._2.startsWith("=> "))
-      .map({case (a, b, c, d, e, f) => (a, trimTypeName(b), f, c)})
+      .map({case (a, b, c, d, e, f) => (a, trimTypeName(b), f, c)})  // TODO this ignores where the annotation was defined, ie. top level class or super class
   }
 
   private val getSchema = (t: (Map[String,List[(String, Symbol, String, Int)]], List[Symbol])) => t match {
@@ -136,9 +139,8 @@ object CollectedSchemas {
   private def getNonAnnotated(members: Map[String,List[(String, Symbol, String, Int)]], classes: List[Symbol]) = {
     val issueMembers = members
       .toList
-      .flatMap{ case (k, v) => v.map(s => (k,s._2, s._2.annotations))}
-      .filter(!_._2.isMethod)
-      .filter(_._3.length == 0)
+      .map{ case (k, v) => (k, v.map(_._2.annotations.length).sum) } // (name, # annotations)
+      .filter(_._2 == 0)
       .map(_._1)
 
     val ownClassArr = if (classes.head.annotations.length == 0) Seq("__this__") else Nil
