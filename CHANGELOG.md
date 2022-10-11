@@ -2,7 +2,7 @@
 
 ## BUG FIXES
 
-* `Git`: Strip credentials from remote repositories when retrieving the path. This could cause usernames and Personal Access Tokens to be stored and/or committed.
+* `Git`: Strip credentials from remote repositories when retrieving the path.
 
 * `VDSL3`: Allow optional output files to be `null`.
 
