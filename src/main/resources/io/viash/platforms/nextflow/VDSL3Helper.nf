@@ -860,7 +860,7 @@ def workflowFactory(Map args) {
 
         // remove input files
         def argsExclInputFiles = thisConfig.functionality.allArguments
-          .findAll { it.type != "file" || it.direction != "input" }
+          .findAll { (it.type != "file" || it.direction != "input") && combinedArgs.containsKey(it.plainName) }
           .collectEntries { par ->
             def parName = par.plainName
             def val = combinedArgs[parName]

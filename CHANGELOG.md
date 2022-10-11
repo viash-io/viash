@@ -1,3 +1,11 @@
+# Viash 0.6.2
+
+## BUG FIXES
+
+* `Git`: Strip credentials from remote repositories when retrieving the path.
+
+* `VDSL3`: Allow optional output files to be `null`.
+
 # Viash 0.6.1
 
 This release contains mostly minor improvements of functionality released in Viash 0.6.0. Most notably:
