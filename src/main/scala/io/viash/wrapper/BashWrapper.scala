@@ -260,7 +260,7 @@ object BashWrapper {
        |eval set -- $$VIASH_POSITIONAL_ARGS
        |${spaceCode(allMods.postParse)}
        |${spaceCode(allMods.preRun)}
-       |ViashDebug "Running command: $$(${executor.replaceAll("^eval", "echo")})"
+       |ViashDebug "Running command: ${executor.replaceAll("^eval (.*)", "\\$(echo $1)")}"
        |$heredocStart$executor$executionCode$heredocEnd
        |${spaceCode(allMods.postRun)}""".stripMargin
   }

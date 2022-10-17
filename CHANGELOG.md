@@ -1,6 +1,13 @@
 # Viash 0.6.3
 
+## MINOR CHANGES
+
+* `BashWrapper`: Allow printing the executor command by adding `---verbose ---verbose` to a `viash run`.
+
+## BUG FIXES
+
 * `DockerPlatform`: Remove duplicate auto-mounts (#257).
+
 
 # Viash 0.6.2
 
