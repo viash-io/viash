@@ -11,7 +11,9 @@ libraryDependencies ++= Seq(
   "com.github.eikek" %% "yamusca-core" % "0.5.1",
   "io.circe" %% "circe-yaml" % "0.12.0",
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2"
+  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2",
+  "com.github.julien-truffaut" %% "monocle-core"  % "2.1.0",
+  "com.github.julien-truffaut" %% "monocle-macro" % "2.1.0"
 )
 
 val circeVersion = "0.12.0"

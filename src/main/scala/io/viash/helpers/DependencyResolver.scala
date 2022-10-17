@@ -20,29 +20,16 @@ package io.viash.helpers
 import java.nio.file.{ Path, Paths }
 import io.viash.functionality.dependencies.Repository
 import io.viash.config.Config
+import io.viash.lenses.ConfigLenses._
+import io.viash.lenses.FunctionalityLenses._
 
 object DependencyResolver {
 
-  // copied from functionality
-  // perform some dependency operations
-  {
-
-    // val groupedDependencies = Dependency.groupByRepository(dependencies)
-    
-    // // TODO get remote repositories, pass to dependency.prepare?
-    // // groupedDependencies.foreach(r => r.fetch)
-
-    // dependencies.foreach(d => d.prepare())
-
-
-    // println(s"grouped dependencies: $groupedDependencies")
-  }
-
-
-
-
   // Download the repo and return the path to the local dir where it is stored
-  def cacheRepo(repo: Repository): Path = { Paths.get("") }
+  def cacheRepo(repo: Repository): Path = {
+    Console.println(s"TODO cache repo $repo")
+    Paths.get("") 
+  }
 
   // Modify the config so all of the dependencies are available locally
   def modifyConfig(config: Config): Config = {
@@ -56,32 +43,28 @@ object DependencyResolver {
     // Convert all fun.dependency.repository with sugar syntax to full repositories
     // val repoRegex = raw"(\w+)://([A-Za-z0-9/_\-\.]+)@([A-Za-z0-9]+)".r  // TODO improve regex
     val repoRegex = raw"(\w+://[A-Za-z0-9/_\-\.]+@[A-Za-z0-9]*)".r
-    val config1 = config.copy(functionality = config.functionality.copy(
-      dependencies = config.functionality.dependencies.map(d => 
-        d.repository match {
-          case Left(repoRegex(s)) => d.copy(repository = Right(Repository.fromSugarSyntax(s)))
-          case _ => d
-        }
-
-    )))
+    val config1 = composedDependenciesLens.modify(_.map(d =>
+      d.repository match {
+        case Left(repoRegex(s)) => d.copy(repository = Right(Repository.fromSugarSyntax(s)))
+        case _ => d
+      }))(config)
 
     // Check all remaining fun.dependency.repository names (Left) refering to fun.repositories can be matched
-    val dependencyRepoNames = config1.functionality.dependencies.flatMap(_.repository.left.toOption)
-    val definedRepoNames = config1.functionality.repositories.map(_.name)
+    val dependencyRepoNames = composedDependenciesLens.get(config1).flatMap(_.repository.left.toOption)
+    val definedRepoNames = composedRepositoriesLens.get(config1).map(_.name)
     dependencyRepoNames.foreach(name =>
       require(definedRepoNames.contains(name), s"Named dependency repositories should exist in the list of repositories. '$name' not found.")
       )
 
     // Match repositories defined in dependencies by name to the list of repositories, fill in repository in dependency
-    val config2 = config1.copy(
-      functionality = config1.functionality.copy(
-        dependencies = config1.functionality.dependencies.map(d => 
-          d.repository match {
-            case Left(name) => d.copy(repository = Right(config1.functionality.repositories.find(r => r.name == name).get))
-            case _ => d
-          }
-        )
-    ))
+    val config2 = composedDependenciesLens.modify(_
+      .map(d => 
+        d.repository match {
+          case Left(name) => d.copy(repository = Right(composedRepositoriesLens.get(config1).find(r => r.name == name).get))
+          case _ => d
+        }
+      )
+      )(config1)
 
     // val actualRepo = 
     //   rawRepo match {
@@ -94,15 +77,12 @@ object DependencyResolver {
     //   }
 
     // get caches and store in repository classes
-    config2.copy(
-      // provide local cache for all repositories
-      functionality = config2.functionality.copy(
-        dependencies = config2.functionality.dependencies.map{ d =>
-          // This should always be Either Right (Repository)
+    composedDependenciesLens.modify(_
+      .map{d =>
           val repo = d.repository.right.get
           val localRepoPath = cacheRepo(repo)
           d.copy(repository = Right(repo.copyRepo(localPath = localRepoPath.toString)))
-        })
-      )
+      }
+      )(config2)
   }
 }
