@@ -1,3 +1,7 @@
+# Viash 0.6.3
+
+* `DockerPlatform`: Remove duplicate auto-mounts (#257).
+
 # Viash 0.6.2
 
 ## BUG FIXES
