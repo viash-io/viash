@@ -12,11 +12,11 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2",
   "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4",
-  "dev.optics" %% "monocle-core"  % "3.1.0",
-  "dev.optics" %% "monocle-macro" % "3.1.0",
+  "com.github.julien-truffaut" %% "monocle-core"  % "2.1.0",
+  "com.github.julien-truffaut" %% "monocle-macro" % "2.1.0"
 )
 
-val circeVersion = "0.12.0"
+val circeVersion = "0.14.1"
 
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-core",
