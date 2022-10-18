@@ -3,12 +3,13 @@ package io.viash
 import java.nio.file.{Files, Paths, StandardCopyOption}
 
 import io.viash.helpers.{IO, Exec}
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.reflect.io.Directory
 import sys.process._
 
-class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
+class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
   // default yaml
   private val configFile = getClass.getResource("/testbash/config.vsh.yaml").getPath
 

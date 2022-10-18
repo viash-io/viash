@@ -1,9 +1,9 @@
 package io.viash
 
 import io.viash.config.Config
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class TestingAllComponentsSuite extends FunSuite {
+class TestingAllComponentsSuite extends AnyFunSuite {
   def getTestResource(path: String) = getClass.getResource(path).toString
 
   val tests = List(

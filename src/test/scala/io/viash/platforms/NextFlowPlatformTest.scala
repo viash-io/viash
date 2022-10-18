@@ -2,7 +2,8 @@ package io.viash.platforms
 
 import io.viash.helpers.IO
 import io.viash.{DockerTest, NextFlowTest, TestHelper}
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
@@ -11,7 +12,7 @@ import scala.io.Source
 import java.io.IOException
 import java.io.UncheckedIOException
 
-class NextFlowPlatformTest extends FunSuite with BeforeAndAfterAll {
+class NextFlowPlatformTest extends AnyFunSuite with BeforeAndAfterAll {
   // temporary folder to work in
   private val temporaryFolder = IO.makeTemp("viash_tester_nextflow")
   private val tempFolStr = temporaryFolder.toString

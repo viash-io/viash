@@ -1,12 +1,13 @@
 package io.viash.config_mods
 
 import io.circe.Json
-import org.scalatest.FunSuite
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import io.circe.syntax._
 
 import io.circe.yaml.parser._
 
-class ConditionSuite extends FunSuite {
+class ConditionSuite extends AnyFunSuite {
   val baseJson: Json = parse(
     """foo: bar
       |baz: 123

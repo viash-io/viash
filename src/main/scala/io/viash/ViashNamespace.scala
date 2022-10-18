@@ -28,6 +28,7 @@ import io.viash.helpers.NsExecData._
 import io.viash.helpers.NsExecData
 import sys.process._
 import java.io.{ByteArrayOutputStream, File, PrintWriter}
+import scala.collection.parallel.CollectionConverters._
 
 object ViashNamespace {
   def build(

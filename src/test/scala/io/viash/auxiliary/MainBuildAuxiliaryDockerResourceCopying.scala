@@ -3,11 +3,12 @@ package io.viash.auxiliary
 import io.viash.{DockerTest, TestHelper}
 import io.viash.config.Config
 import io.viash.helpers.{IO, Exec}
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 
-class MainBuildAuxiliaryDockerResourceCopying extends FunSuite with BeforeAndAfterAll {
+class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAndAfterAll {
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
 

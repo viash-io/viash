@@ -2,12 +2,13 @@ package io.viash.auxiliary
 
 import io.viash.{DockerTest, TestHelper}
 import io.viash.helpers.IO
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.reflect.io.Directory
 
-class MainTestAuxiliaryDockerResourceCopy extends FunSuite with BeforeAndAfterAll {
+class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfterAll {
   private val configResourcesCopyFile = getClass.getResource("/testbash/auxiliary_resource/config_resource_test.vsh.yaml").getPath
   private val configResourcesUnsupportedProtocolFile = getClass.getResource("/testbash/auxiliary_resource/config_resource_unsupported_protocol.vsh.yaml").getPath
 

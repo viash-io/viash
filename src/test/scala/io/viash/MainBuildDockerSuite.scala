@@ -1,6 +1,7 @@
 package io.viash
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import io.viash.helpers.{IO, Exec}
 
@@ -8,7 +9,7 @@ import io.viash.config.Config
 
 import scala.io.Source
 
-class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
+class MainBuildDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
   // which platform to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 

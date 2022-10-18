@@ -2,11 +2,12 @@ package io.viash.platforms
 
 import io.viash.DockerTest
 import io.viash.platforms.NextFlowUtils._
-import org.scalatest.FunSuite
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.util.Try
 
-class NextFlowUtilsTest extends FunSuite {
+class NextFlowUtilsTest extends AnyFunSuite {
 
   val simpleTuple1:ConfigTuple = ("key", "value")
   val simpleTuple2:ConfigTuple = ("key", true)

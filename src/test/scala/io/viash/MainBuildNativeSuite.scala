@@ -1,6 +1,7 @@
 package io.viash
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.Paths
 
 import io.viash.config.Config
@@ -8,7 +9,7 @@ import io.viash.config.Config
 import scala.io.Source
 import io.viash.helpers.{IO, Exec}
 
-class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
+class MainBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   // which platform to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
   private val configNoPlatformFile = getClass.getResource(s"/testbash/config_no_platform.vsh.yaml").getPath

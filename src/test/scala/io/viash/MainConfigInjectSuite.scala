@@ -1,6 +1,7 @@
 package io.viash
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Files, Paths, StandardCopyOption}
 
 import io.viash.config.Config
@@ -8,7 +9,7 @@ import io.viash.config.Config
 import scala.io.Source
 import io.viash.helpers.{IO, Exec}
 
-class MainConfigInjectSuite extends FunSuite with BeforeAndAfterAll {
+class MainConfigInjectSuite extends AnyFunSuite with BeforeAndAfterAll {
   private val temporaryFolder = IO.makeTemp("viash_tester")
 
   //<editor-fold desc="Test whether config inject works">

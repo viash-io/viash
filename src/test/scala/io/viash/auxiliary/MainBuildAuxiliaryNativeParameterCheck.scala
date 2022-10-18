@@ -1,6 +1,7 @@
 package io.viash.auxiliary
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Paths, Files, StandardCopyOption}
 
 import io.viash.config.Config
@@ -9,7 +10,7 @@ import scala.io.Source
 import io.viash.helpers.{IO, Exec}
 import io.viash.TestHelper
 
-class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfterAll {
+class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndAfterAll {
   // which platform to test
   private val configFile = getClass.getResource("/testbash/auxiliary_requirements/parameter_check.vsh.yaml").getPath
 
