@@ -195,7 +195,7 @@ class MainBuildAuxiliaryDockerRequirements extends AnyFunSuite with BeforeAndAft
     )
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

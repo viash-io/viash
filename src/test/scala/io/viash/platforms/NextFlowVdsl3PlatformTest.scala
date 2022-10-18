@@ -34,7 +34,7 @@ class NextFlowVdsl3PlatformTest extends AnyFunSuite with BeforeAndAfterAll {
 
     val src = Source.fromFile(path)
     try {
-      val step3Out = src.getLines.mkString
+      val step3Out = src.getLines().mkString
       assert(step3Out.matches(fileContentMatcher))
     } finally {
       src.close()
@@ -94,7 +94,7 @@ class NextFlowVdsl3PlatformTest extends AnyFunSuite with BeforeAndAfterAll {
       scassert(!args.contains(name), s"$id : args should not contain $name")
     }
   }
-  def checkDebugArgs(id: String, debugPrints: Array[(String, Map[String,String])], expectedValues: List[CheckArg]) {
+  def checkDebugArgs(id: String, debugPrints: Array[(String, Map[String,String])], expectedValues: List[CheckArg]): Unit = {
     val idDebugPrints = debugPrints.find(_._1 == id)
     assert(idDebugPrints.isDefined)
     expectedValues.foreach(_.assert(id, idDebugPrints.get._2))
@@ -406,7 +406,7 @@ class NextFlowVdsl3PlatformTest extends AnyFunSuite with BeforeAndAfterAll {
     
     val src = Source.fromFile(tempFolStr+"/moduleOutput1/run.step2.output1.txt")
     try {
-      val moduleOut = src.getLines.mkString(",")
+      val moduleOut = src.getLines().mkString(",")
       assert(moduleOut.equals("one,two,three"))
     } finally {
       src.close()
@@ -427,7 +427,7 @@ class NextFlowVdsl3PlatformTest extends AnyFunSuite with BeforeAndAfterAll {
     
     val src = Source.fromFile(tempFolStr+"/moduleOutput2/run.step2.output1.txt")
     try {
-      val moduleOut = src.getLines.mkString(",")
+      val moduleOut = src.getLines().mkString(",")
       assert(moduleOut.equals("one,two,three"))
     } finally {
       src.close()
@@ -452,7 +452,7 @@ class NextFlowVdsl3PlatformTest extends AnyFunSuite with BeforeAndAfterAll {
     
     val src = Source.fromFile(tempFolStr+"/moduleOutput3/run.step2.output1.txt")
     try {
-      val moduleOut = src.getLines.mkString(",")
+      val moduleOut = src.getLines().mkString(",")
       assert(moduleOut.equals("one,two,three,1,2,3,4,5"))
     } finally {
       src.close()
@@ -492,7 +492,7 @@ class NextFlowVdsl3PlatformTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(correctedStdOut2 == stdOut2)
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

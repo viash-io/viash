@@ -250,7 +250,7 @@ class MainBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(testRegex.findFirstIn(testText).isDefined, testText)
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

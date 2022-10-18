@@ -103,7 +103,7 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
    * @param expectDirectoryExists expect the directory to be present or not
    * @return
    */
-  def checkTempDirAndRemove(testText: String, expectDirectoryExists: Boolean, folderName: String = "viash_test_testbash") {
+  def checkTempDirAndRemove(testText: String, expectDirectoryExists: Boolean, folderName: String = "viash_test_testbash"): Unit = {
     // Get temporary directory
     val FolderRegex = ".*Running tests in temporary directory: '([^']*)'.*".r
 

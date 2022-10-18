@@ -55,8 +55,8 @@ class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(regexHeader.findFirstIn(stdout).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$stdout")
 
     for (
-      (component, steps) ← components;
-      (step, resultPattern) ← steps
+      (component, steps) <- components;
+      (step, resultPattern) <- steps
     ) {
       val regex = s"""testns\\s*$component\\s*native\\s*$step$resultPattern""".r
       assert(regex.findFirstIn(stdout).isDefined, s"\nRegex: '${regex.toString}'; text: \n$stdout")
@@ -79,8 +79,8 @@ class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(regexHeader.findFirstIn(stdout).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$stdout")
 
     for (
-      (component, steps) ← components;
-      (step, resultPattern) ← steps
+      (component, steps) <- components;
+      (step, resultPattern) <- steps
     ) {
       val regex = s"""testns\\s*$component\\s*native\\s*$step$resultPattern""".r
       assert(regex.findFirstIn(stdout).isDefined, s"\nRegex: '${regex.toString}'; text: \n$stdout")
@@ -108,8 +108,8 @@ class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       assert(regexHeader.findFirstIn(logLines).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$logLines")
 
       for (
-        (component, steps) ← components;
-        (step, resultPattern) ← steps if step != "start"
+        (component, steps) <- components;
+        (step, resultPattern) <- steps if step != "start"
       ) {
         // tsv doesn't output the "start" step, so ignore that
         val regex = s"""testns\\t$component\\tnative\\t$step$resultPattern""".r
@@ -144,8 +144,8 @@ class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       assert(regexHeader2.findFirstIn(logLines).isDefined, s"\rRegex: ${regexHeader2.toString}; text: \r$logLines")
 
       for (
-        (component, steps) ← components;
-        (step, resultPattern) ← steps if step != "start"
+        (component, steps) <- components;
+        (step, resultPattern) <- steps if step != "start"
       ) {
         // tsv doesn't output the "start" step, so ignore that
         val regex = s"""testns\\t$component\\tnative\\t$step$resultPattern""".r
@@ -175,8 +175,8 @@ class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       assert(regexHeader.findFirstIn(logLines).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$logLines")
 
       for (
-        (component, steps) ← components;
-        (step, resultPattern) ← steps if step != "start"
+        (component, steps) <- components;
+        (step, resultPattern) <- steps if step != "start"
       ) {
         // tsv doesn't output the "start" step, so ignore that
         val regex = s"""testns\\t$component\\tnative\\t$step$resultPattern""".r
@@ -187,7 +187,7 @@ class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

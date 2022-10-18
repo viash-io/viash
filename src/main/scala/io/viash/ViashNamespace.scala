@@ -39,7 +39,7 @@ object ViashNamespace {
     parallel: Boolean = false,
     writeMeta: Boolean = true,
     flatten: Boolean = false
-  ) {
+  ): Unit = {
     val configs2 = if (parallel) configs.par else configs
 
     val results = configs2.map { config =>
@@ -171,7 +171,7 @@ object ViashNamespace {
 
             // print messages
             val results = setupRes.toList ::: testResults
-            for (test ← results) {
+            for (test <- results) {
               val (col, msg) = {
                 if (test.exitValue > 0) {
                   (Console.RED, "ERROR")
@@ -233,14 +233,14 @@ object ViashNamespace {
     }
   }
 
-  def list(configs: List[Either[Config, Status]], format: String = "yaml", parseArgumentGroups: Boolean) {
+  def list(configs: List[Either[Config, Status]], format: String = "yaml", parseArgumentGroups: Boolean): Unit = {
     val configs2 = configs.flatMap(_.left.toOption)
     ViashConfig.viewMany(configs2, format, parseArgumentGroups)
 
     printResults(configs.map(_.fold(fa => Success, fb => fb)), false, false)
   }
 
-  def exec(configs: List[Either[Config, Status]], command: String, dryrun: Boolean, parallel: Boolean) {
+  def exec(configs: List[Either[Config, Status]], command: String, dryrun: Boolean, parallel: Boolean): Unit = {
 
     val goodConfigs = configs.flatMap(_.left.toOption).groupBy(_.info.get.config)
     // Just take first config. More can be available but those have different platforms. Platforms are currently ignored.
@@ -278,7 +278,7 @@ object ViashNamespace {
       val commandNoMode = command.replaceFirst(""" \\?[;+]$""", "")
       val replacedCommand = 
         fields.foldRight(commandNoMode){ (field, command) => 
-          command.replaceAllLiterally(s"{$field}", data.getField(field).get)
+          command.replace(s"{$field}", data.getField(field).get)
         }
 
       if (dryrun) {
@@ -316,7 +316,7 @@ object ViashNamespace {
     }
   }
 
-  def printResults(statuses: Seq[Status], performedBuild: Boolean, performedTest: Boolean) {
+  def printResults(statuses: Seq[Status], performedBuild: Boolean, performedTest: Boolean): Unit = {
     val successes = statuses.count(_ == Success)
 
     val successAction = (performedBuild, performedTest) match {

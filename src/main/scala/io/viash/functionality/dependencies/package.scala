@@ -31,7 +31,7 @@ package object dependencies {
   implicit val encodeLocalRepository: Encoder.AsObject[LocalRepository] = deriveConfiguredEncoder
   implicit def encodeRepository[A <: Repository]: Encoder[A] = Encoder.instance {
     par =>
-      val typeJson = Json.obj("type" → Json.fromString(par.`type`))
+      val typeJson = Json.obj("type" -> Json.fromString(par.`type`))
       val objJson = par match {
         case s: GithubRepository => encodeGithubRepository(s)
         case s: LocalRepository => encodeLocalRepository(s)

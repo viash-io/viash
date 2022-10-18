@@ -336,7 +336,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
    * @param expectDirectoryExists expect the directory to be present or not
    * @return
    */
-  def checkTempDirAndRemove(testText: String, expectDirectoryExists: Boolean) {
+  def checkTempDirAndRemove(testText: String, expectDirectoryExists: Boolean): Unit = {
     // Get temporary directory
     val FolderRegex = ".*Running tests in temporary directory: '([^']*)'.*".r
 
@@ -362,7 +362,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(!tempFolder.exists)
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

@@ -96,7 +96,7 @@ class EscapingNativeTest extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

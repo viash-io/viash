@@ -16,7 +16,7 @@ class TestingAllComponentsSuite extends AnyFunSuite {
     ("testexecutable", "config.vsh.yaml")
   )
 
-  for ((name, file) ← tests) {
+  for ((name, file) <- tests) {
     val config = getTestResource(s"/$name/$file")
 
     // only run testbash natively because other requirements might not be available

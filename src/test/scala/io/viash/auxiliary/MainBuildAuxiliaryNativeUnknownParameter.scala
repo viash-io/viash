@@ -126,7 +126,7 @@ class MainBuildAuxiliaryNativeUnknownParameter extends AnyFunSuite with BeforeAn
     assert(unknownArgumentWarning.findFirstIn(out.output).isEmpty)
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

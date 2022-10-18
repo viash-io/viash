@@ -121,7 +121,7 @@ object TestHelper {
 
   // Code based on https://stackoverflow.com/questions/29076439/java-8-copy-directory-recursively/34254130#34254130
   // Copy a folder from source to dest
-  def copyFolder(src: Path, dest: Path) {
+  def copyFolder(src: Path, dest: Path): Unit = {
     val stream = Files.walk(src)
 
     try {
@@ -146,7 +146,7 @@ object TestHelper {
       stream.close()
     }
   }
-  def copyFolder(src: String, dest: String) {
+  def copyFolder(src: String, dest: String): Unit = {
     copyFolder(Paths.get(src), Paths.get(dest))
   }
 }

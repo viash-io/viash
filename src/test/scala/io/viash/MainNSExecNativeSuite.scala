@@ -33,7 +33,7 @@ class MainNSExecNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val stdout = stdoutRaw.replaceAll(nsPath, "src/")
     val stderr = stderrRaw.replaceAll(nsPath, "src/")
 
-    for (component ← components) {
+    for (component <- components) {
       val regexCommand = s"""\\+ echo _${component}_ -src/$component/?- !src/$component/config.vsh.yaml! ~native~ =testns=""".r
       assert(regexCommand.findFirstIn(stderr).isDefined, s"\nRegex: $regexCommand; text: \n$stderr")
       val outputCommand = s"""_${component}_ -src/$component/?- !src/$component/config.vsh.yaml! ~native~ =testns=""".r
@@ -57,7 +57,7 @@ class MainNSExecNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(outputCommand.findFirstIn(stdout).isDefined, s"\nRegex: $outputCommand; text: \n$stdout")
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

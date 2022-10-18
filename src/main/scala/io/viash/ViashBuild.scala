@@ -44,7 +44,7 @@ object ViashBuild {
     namespace: Option[String] = None,
     setup: Option[String] = None,
     push: Boolean = false
-  ) {
+  ): Unit = {
     val fun = config.functionality
 
     // create dir

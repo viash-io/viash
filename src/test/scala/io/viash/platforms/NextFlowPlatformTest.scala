@@ -51,7 +51,7 @@ class NextFlowPlatformTest extends AnyFunSuite with BeforeAndAfterAll {
 
     val src = Source.fromFile(path)
     try {
-      val step3Out = src.getLines.mkString
+      val step3Out = src.getLines().mkString
       assert(step3Out.matches("^11 .*$"))
     } finally {
       src.close()
@@ -61,7 +61,7 @@ class NextFlowPlatformTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }
