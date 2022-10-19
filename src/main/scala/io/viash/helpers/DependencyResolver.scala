@@ -22,6 +22,7 @@ import io.viash.functionality.dependencies.Repository
 import io.viash.config.Config
 import io.viash.lenses.ConfigLenses._
 import io.viash.lenses.FunctionalityLenses._
+import io.viash.lenses.RepositoryLens._
 
 object DependencyResolver {
 
@@ -81,7 +82,8 @@ object DependencyResolver {
       .map{d =>
           val repo = d.repository.right.get
           val localRepoPath = cacheRepo(repo)
-          d.copy(repository = Right(repo.copyRepo(localPath = localRepoPath.toString)))
+          val updatedRepo = localPathLens.set(localRepoPath.toString)(repo)
+          d.copy(repository = Right(updatedRepo))
       }
       )(config2)
   }
