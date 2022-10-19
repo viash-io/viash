@@ -28,7 +28,7 @@ case class Dependency(
   foundConfigPath: String = "",
   workConfig: Option[Config] = None
 ) {
-  def workRepository: Option[Repository] = repository.right.toOption
+  def workRepository: Option[Repository] = repository.toOption
 }
 
 object Dependency {

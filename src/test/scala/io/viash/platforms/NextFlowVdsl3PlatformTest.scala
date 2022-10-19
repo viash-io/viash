@@ -54,14 +54,14 @@ class NextFlowVdsl3PlatformTest extends AnyFunSuite with BeforeAndAfterAll {
 
         val input2 = "{" + argStr.replaceAll(":", ": ") + "}"
 
-        val js = parser.parse(input2).right.get
+        val js = parser.parse(input2).toOption.get
         val js2 = js.mapObject(_.mapValues{v => v match {
           case a if a.isArray => Json.fromString(a.asArray.get.map(_.asString.get).mkString("[", ", ", "]"))
           case a if a.isString => Json.fromString(a.asString.get)
           case _ => Json.fromString(v.toString)
         }})
 
-        val argMap = js2.as[Map[String, String]].right.get
+        val argMap = js2.as[Map[String, String]].toOption.get
 
         Some((id, argMap))
       case _ => None

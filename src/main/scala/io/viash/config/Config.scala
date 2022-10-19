@@ -327,7 +327,7 @@ object Config {
           ))
         } else {
           // platform is a regex for filtering the ids
-          val platIDs = conf1.left.get.platforms.map(_.id)
+          val platIDs = conf1.swap.toOption.get.platforms.map(_.id)
 
           val filteredPlats =
             if (platIDs.isEmpty) {

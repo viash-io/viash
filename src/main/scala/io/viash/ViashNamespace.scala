@@ -40,7 +40,7 @@ object ViashNamespace {
     writeMeta: Boolean = true,
     flatten: Boolean = false
   ): Unit = {
-    val configs2 = if (parallel) configs.par else configs
+    val configs2 = if (parallel) configs.par.iterator else configs
 
     val results = configs2.map { config =>
       config match {
@@ -86,7 +86,7 @@ object ViashNamespace {
         case _ => true
       })
 
-    val configs2 = if (parallel) testableConfigs.par else testableConfigs
+    val configs2 = if (parallel) testableConfigs.par.iterator else testableConfigs
 
     // run all the component tests
     val tsvPath = tsv.map(Paths.get(_))
@@ -273,7 +273,7 @@ object ViashNamespace {
         configData
     }
 
-    for (data <- if (parallel) collectedData.par else collectedData) {
+    for (data <- if (parallel) collectedData.par.iterator else collectedData) {
       // remove trailing + or ; mode character
       val commandNoMode = command.replaceFirst(""" \\?[;+]$""", "")
       val replacedCommand = 

@@ -145,6 +145,7 @@ case class NextflowVdsl3Platform(
           namespaceSeparator = p.namespace_separator
         ))
       case None => None
+      case _ => ???
     }
   }
 

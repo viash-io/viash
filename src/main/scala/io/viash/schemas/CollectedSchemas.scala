@@ -62,7 +62,7 @@ object CollectedSchemas {
   }
 
   private def getSchema[T: TypeTag] = {
-      annotationsOf[T].map({case (a, b, c) => ParameterSchema(a, b, c)})
+      annotationsOf[T]().map({case (a, b, c) => ParameterSchema(a, b, c)})
   }
 
   def getJson: Json = {

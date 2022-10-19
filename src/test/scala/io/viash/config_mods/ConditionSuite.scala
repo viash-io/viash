@@ -12,7 +12,7 @@ class ConditionSuite extends AnyFunSuite {
     """foo: bar
       |baz: 123
       |list_of_stuff: [4, 5, 6]
-      |""".stripMargin).right.get
+      |""".stripMargin).toOption.get
   
   test("test condition true") {
     val cmd1 = ConfigModParser.condition.parse("""true""")

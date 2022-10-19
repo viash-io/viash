@@ -39,7 +39,7 @@ class TestingAllComponentsSuite extends AnyFunSuite {
       val confJson = conf.asJson
 
       // convert back to config
-      val conf2 = confJson.as[Config].right.get
+      val conf2 = confJson.as[Config].toOption.get
 
       // check if equal
       assert(conf == conf2)

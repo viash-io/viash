@@ -80,7 +80,7 @@ object DependencyResolver {
     // get caches and store in repository classes
     composedDependenciesLens.modify(_
       .map{d =>
-          val repo = d.repository.right.get
+          val repo = d.repository.toOption.get
           val localRepoPath = cacheRepo(repo)
           val updatedRepo = localPathLens.set(localRepoPath.toString)(repo)
           d.copy(repository = Right(updatedRepo))

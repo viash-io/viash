@@ -12,14 +12,14 @@ class ConfigModsSuite extends AnyFunSuite {
     """foo: bar
       |baz: 123
       |list_of_stuff: [4, 5, 6]
-      |""".stripMargin).right.get
+      |""".stripMargin).toOption.get
   
   test("test simple assign") {
     val expected1: Json = parse(
       """foo: 6
         |baz: 123
         |list_of_stuff: [4, 5, 6]
-        |""".stripMargin).right.get
+        |""".stripMargin).toOption.get
     val cmd1 = ConfigModParser.block.parse(""".foo := 6""")
     val res1 = cmd1.apply(baseJson, false)
     assert(res1 == expected1)
@@ -30,7 +30,7 @@ class ConfigModsSuite extends AnyFunSuite {
       """foo: [1, 2, 3]
         |baz: 123
         |list_of_stuff: [4, 5, 6]
-        |""".stripMargin).right.get
+        |""".stripMargin).toOption.get
     val cmd2 = ConfigModParser.block.parse(""".foo := [ 1, 2, 3 ]""")
     val res2 = cmd2.apply(baseJson, false)
     assert(res2 == expected2)
@@ -42,7 +42,7 @@ class ConfigModsSuite extends AnyFunSuite {
         |bar: [1, 2, 3]
         |baz: 123
         |list_of_stuff: [4, 5, 6]
-        |""".stripMargin).right.get
+        |""".stripMargin).toOption.get
     val cmd2 = ConfigModParser.block.parse(""".bar := [ 1, 2, 3 ]""")
     val res2 = cmd2.apply(baseJson, false)
     assert(res2 == expected2)
