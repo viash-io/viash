@@ -4,6 +4,8 @@
 
 * `BashWrapper`: Allow printing the executor command by adding `---verbose ---verbose` to a `viash run`.
 
+* `Testbenches`: Split some grouped test benches into slightly smaller test benches that group tested functionality better.
+
 ## BUG FIXES
 
 * `DockerPlatform`: Remove duplicate auto-mounts (#257).
