@@ -1,6 +1,6 @@
 name := "viash"
 
-version := "0.6.1"
+version := "0.6.2"
 
 scalaVersion := "2.12.15"
 
@@ -8,7 +8,6 @@ libraryDependencies ++= Seq(
   "org.scalactic" %% "scalactic" % "3.0.7" % "test",
   "org.scalatest" %% "scalatest" % "3.0.7" % "test",
   "org.rogach" %% "scallop" % "4.0.1",
-  "com.github.eikek" %% "yamusca-core" % "0.5.1",
   "io.circe" %% "circe-yaml" % "0.12.0",
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2"

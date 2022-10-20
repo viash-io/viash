@@ -500,52 +500,63 @@ case class DockerPlatform(
          |${Bash.ViashAutodetectMount}
          |${Bash.ViashExtractFlags}
          |# initialise variables
-         |$extraMountsVar=''""".stripMargin
+         |VIASH_EXTRA_MOUNTS=()""".stripMargin
 
 
     val parsers =
       s"""
          |        ---v|---volume)
-         |            ${Bash.save(extraMountsVar, Seq("-v \"$2\""))}
+         |            VIASH_EXTRA_MOUNTS+=("--volume='$$2'")
          |            shift 2
          |            ;;
          |        ---volume=*)
-         |            ${Bash.save(extraMountsVar, Seq("-v $(ViashRemoveFlags \"$2\")"))}
+         |            VIASH_EXTRA_MOUNTS+=("--volume='$$(ViashRemoveFlags "$$2")'")
          |            shift 1
          |            ;;""".stripMargin
 
-    val extraParams = s" $$$extraMountsVar"
-
     val preRun =
       if (resolve_volume == Automatic) {
-        "\n\n# detect volumes from file arguments" +
-          args.flatMap {
-            case arg: FileArgument if arg.multiple =>
-              // resolve arguments with multiplicity different from singular args
-              val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
-              Some(
-                s"""
-                   |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-                   |  IFS="${arg.multiple_sep}"
-                   |  for var in $$${arg.VIASH_PAR}; do
-                   |    unset IFS
-                   |    $extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$var")"
-                   |    ${BashWrapper.store("ViashAutodetectMountArg", viash_temp, "\"$(ViashAutodetectMount \"$var\")\"", Some(arg.multiple_sep)).mkString("\n    ")}
-                   |  done
-                   |  ${arg.VIASH_PAR}="$$$viash_temp"
-                   |fi""".stripMargin)
-            case arg: FileArgument =>
-              Some(
-                s"""
-                   |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-                   |  $extraMountsVar="$$$extraMountsVar $$(ViashAutodetectMountArg "$$${arg.VIASH_PAR}")"
-                   |  ${arg.VIASH_PAR}=$$(ViashAutodetectMount "$$${arg.VIASH_PAR}")
-                   |fi""".stripMargin)
-            case _ => None
-          }.mkString("")
+        val detectMounts = args.flatMap {
+          case arg: FileArgument if arg.multiple =>
+            // resolve arguments with multiplicity different from singular args
+            val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
+            Some(
+              s"""
+                  |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
+                  |  IFS="${arg.multiple_sep}"
+                  |  for var in $$${arg.VIASH_PAR}; do
+                  |    unset IFS
+                  |    VIASH_EXTRA_MOUNTS+=( $$(ViashAutodetectMountArg "$$var") )
+                  |    ${BashWrapper.store("ViashAutodetectMountArg", viash_temp, "\"$(ViashAutodetectMount \"$var\")\"", Some(arg.multiple_sep)).mkString("\n    ")}
+                  |  done
+                  |  ${arg.VIASH_PAR}="$$$viash_temp"
+                  |fi""".stripMargin)
+          case arg: FileArgument =>
+            Some(
+              s"""
+                  |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
+                  |  VIASH_EXTRA_MOUNTS+=( $$(ViashAutodetectMountArg "$$${arg.VIASH_PAR}") )
+                  |  ${arg.VIASH_PAR}=$$(ViashAutodetectMount "$$${arg.VIASH_PAR}")
+                  |fi""".stripMargin)
+          case _ => None
+        }
+        
+        if (detectMounts.isEmpty) {
+          ""
+        } else {
+          f"""
+          |
+          |# detect volumes from file arguments${detectMounts.mkString("")}
+          |
+          |# get unique mounts
+          |VIASH_UNIQUE_MOUNTS=($$(for val in "$${VIASH_EXTRA_MOUNTS[@]}"; do echo "$$val"; done | sort -u))
+          |""".stripMargin
+        }
       } else {
         ""
       }
+
+    val extraParams = s" $${VIASH_UNIQUE_MOUNTS[@]}"
 
     BashWrapperMods(
       preParse = preParse,
