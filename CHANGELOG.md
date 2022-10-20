@@ -4,6 +4,11 @@
 
 * `BashWrapper`: Allow printing the executor command by adding `---verbose ---verbose` to a `viash run`.
 
+* `Annotations`: Complete the config schema annotations.
+  Make sure all arguments are documented.
+  Added an annotation `internalFunctionality` and `undocumented` for arguments that should not be documented.
+  Added a testbench that verifies that all arguments are in fact annotated, skipping those that are not in the class constructor.
+
 ## BUG FIXES
 
 * `DockerPlatform`: Remove duplicate auto-mounts (#257).
