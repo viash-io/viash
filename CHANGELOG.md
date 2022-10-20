@@ -8,6 +8,7 @@
   Make sure all arguments are documented.
   Added an annotation `internalFunctionality` and `undocumented` for arguments that should not be documented.
   Added a testbench that verifies that all arguments are in fact annotated, skipping those that are not in the class constructor.
+  Adds a hierarchy field in the `__this__` member to list the relation of the own and parent classes.
 
 ## BUG FIXES
 
