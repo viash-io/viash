@@ -64,6 +64,8 @@ case class NextflowLegacyPlatform(
   @description("Specify a Docker image based on its tag.")
   @example("tag: 4.0", "yaml")
   tag: Option[String] = None,
+
+  @deprecated("nextflow platform: attribute 'version' is deprecated and should be left empty.", "Viash 0.4.0")
   version: Option[String] = None,
 
   @description("The URL to the a [custom Docker registry](https://docs.docker.com/registry/).")
@@ -77,6 +79,8 @@ case class NextflowLegacyPlatform(
   @description("The default namespace separator is \"_\".")
   @example("namespace_separator: \"+\"", "yaml")
   namespace_separator: String = "_",
+
+  @deprecated("Undocumented & stale value", "Viash 0.6.3")
   executor: Option[String] = None,
 
   @description(

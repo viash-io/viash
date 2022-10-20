@@ -35,17 +35,39 @@ import io.viash.schemas._
     |""".stripMargin,
     "yaml")
 case class RRequirements(
+  @description("Specifies which packages to install from cran.")
   packages: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install from cran.")
   cran: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install from bioc.")
   bioc: OneOrMore[String] = Nil,
+  
+  @description("Specifies which packages to install using a git uri.")
   git: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install from github.")
   github: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install from gitlab.")
   gitlab: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install from bitbucket.")
   bitbucket: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install using an svn uri.")
   svn: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install using a generic uri.")
   url: OneOrMore[String] = Nil,
+
+  @description("Specifies which scripts to run as part of the build.")
   script: OneOrMore[String] = Nil,
+  
+  @description("Forces packages specified in `bioc` to be installed from BioConductor, even if they are already present in the container.")
   bioc_force_install: Boolean = false,
+  
   `type`: String = "r"
 ) extends Requirements {assert(script.forall(!_.contains("'")))
 

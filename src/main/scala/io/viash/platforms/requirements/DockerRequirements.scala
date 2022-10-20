@@ -33,13 +33,27 @@ import io.viash.schemas._
     |""".stripMargin,
     "yaml")
 case class DockerRequirements(
+  @description("Specifies which `COPY` entries to add to the docker file while building it.")
   resources: OneOrMore[String] = Nil,
+
+  @description("Specifies which `LABEL` entries to add to the docker file while building it.")
   label: OneOrMore[String] = Nil,
+
+  @description("Specifies which `ADD` entries to add to the docker file while building it.")
   add: OneOrMore[String] = Nil,
+
+  @description("Specifies which `COPY` entries to add to the docker file while building it.")
   copy: OneOrMore[String] = Nil,
+
+  @description("Specifies which `RUN` entries to add to the docker file while building it.")
   run: OneOrMore[String] = Nil,
+  
+  @description("Specifies which `ARG` entries to add to the docker file while building it.")
   build_args: OneOrMore[String] = Nil,
+
+  @description("Specifies which `ENV` entries to add to the docker file while building it.")
   env: OneOrMore[String] = Nil,
+
   `type`: String = "docker"
 ) extends Requirements {
   def installCommands: List[String] = Nil

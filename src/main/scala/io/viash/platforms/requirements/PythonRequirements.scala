@@ -35,18 +35,43 @@ import io.viash.schemas._
     |""".stripMargin,
     "yaml")
 case class PythonRequirements(
+  @description("Sets the `--user` flag when set to true. Default: false")
   user: Boolean = false,
+
+  @description("Specifies which packages to install from pip.")
   packages: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install from pip.")
   pip: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install from pip.")
   pypi: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install using a git uri.")
   git: OneOrMore[String] = Nil,
+  
+  @description("Specifies which packages to install from github.")
   github: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install from gitlab.")
   gitlab: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install using a mercurial uri.")
   mercurial: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install using an svn uri.")
   svn: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install using a bazaar uri.")
   bazaar: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install using a generic uri.")
   url: OneOrMore[String] = Nil,
+
+  @description("Specifies which scripts to run as part of the build.")
   script: OneOrMore[String] = Nil,
+
+  @description("Sets the `--upgrade` flag when set to true. Default: true")
   upgrade: Boolean = true,
   `type`: String = "python"
 ) extends Requirements {

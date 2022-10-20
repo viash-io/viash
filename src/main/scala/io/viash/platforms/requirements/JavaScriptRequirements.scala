@@ -31,10 +31,19 @@ import io.viash.schemas._
     |""".stripMargin,
     "yaml")
 case class JavaScriptRequirements(
+  @description("Specifies which packages to install from npm.")
   packages: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install from npm.")
   npm: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install using a git uri.")
   git: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install from github.")
   github: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install using a generic uri.")
   url: OneOrMore[String] = Nil,
   `type`: String = "javascript"
 ) extends Requirements {

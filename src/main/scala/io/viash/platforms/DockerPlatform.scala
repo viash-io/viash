@@ -57,22 +57,27 @@ case class DockerPlatform(
   @example("tag: 4.0", "yaml")
   tag: Option[String] = None,
   
-  @description("If anything is specified in the setup section, running the `---setup` will result in an image with the name of `<target_image>:<version>`. If nothing is specified in the `setup` section, simply `image` will be used.")
+  @description("If anything is specified in the setup section, running the `---setup` will result in an image with the name of `<target_image>:<version>`. If nothing is specified in the `setup` section, simply `image` will be used. Not recommended to be set manually.")
   @example("target_image: myfoo", "yaml")
   target_image: Option[String] = None,
+
+  @description("The organization set in the resulting image. Not recommended to be set manually.")
+  @example("target_organization: viash-io", "yaml")
   target_organization: Option[String] = None,
 
-  @description("The URL where the resulting image will be pushed to.")
+  @description("The URL where the resulting image will be pushed to. Not recommended to be set manually.")
   @example("target_registry: https://my-docker-registry.org", "yaml")
   target_registry: Option[String] = None,
 
-  @description("The tag the resulting image gets.")
+  @description("The tag the resulting image gets. Not recommended to be set manually.")
   @example("target_tag: 0.5.0", "yaml")
   target_tag: Option[String] = None,
 
   @description("The default namespace separator is \"_\".")
   @example("namespace_separator: \"+\"", "yaml")
   namespace_separator: String = "_",
+
+  @description("Enables or disables automatic volume mapping. Enabled when set to `Automatic` or disabled when set to `Manual`. Default: `Automatic`")
   resolve_volume: DockerResolveVolume = Automatic,
 
   @description("In Linux, files created by a Docker container will be owned by `root`. With `chown: true`, Viash will automatically change the ownership of output files (arguments with `type: file` and `direction: output`) to the user running the Viash command after execution of the component. Default value: `true`.")
@@ -114,6 +119,9 @@ case class DockerPlatform(
       +""".stripMargin('+'))
   @example("setup_strategy: alwaysbuild", "yaml")
   setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,
+
+  @description("Adds a `privileged` flag to the docker run.")
+  @deprecated("Add a `privileged` flag in `run_args` instead.", "Viash 0.6.3")
   privileged: Boolean = false,
 
   @description("Add [docker run](https://docs.docker.com/engine/reference/run/) arguments.")

@@ -28,7 +28,10 @@ import io.viash.schemas._
     |""".stripMargin,
     "yaml")
 case class AptRequirements(
+  @description("Specifies which packages to install.")
   packages: OneOrMore[String] = Nil,
+
+  @description("Allows disabling the `noninteractive` flag when set to true.")
   interactive: Boolean = false,
   `type`: String = "apt"
 ) extends Requirements {
