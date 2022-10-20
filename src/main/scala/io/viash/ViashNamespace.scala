@@ -77,7 +77,9 @@ object ViashNamespace {
     parallel: Boolean = false,
     keepFiles: Option[Boolean] = None,
     tsv: Option[String] = None,
-    append: Boolean = false
+    append: Boolean = false,
+    cpus: Option[Int],
+    memory: Option[String]
   ): List[Either[(Config, ManyTestOutput), Status]] = {
     // we can't currently test nextflow platforms, so exclude them from the tests
     val testableConfigs = configs.filter(conf =>
@@ -152,7 +154,9 @@ object ViashNamespace {
                 config = conf,
                 keepFiles = keepFiles,
                 quiet = true,
-                parentTempPath = Some(parentTempPath)
+                parentTempPath = Some(parentTempPath),
+                cpus = cpus,
+                memory = memory
               )
             } catch {
               case e: MissingResourceFileException => 

@@ -24,13 +24,13 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import scala.util.Random
 
-import config.{Config, Version}
+import config.Config
 import functionality.Functionality
 import functionality.arguments.{FileArgument, Output}
 import functionality.resources.{BashScript, Script}
 import platforms.NativePlatform
 import helpers.IO
-import helpers.Circe.{OneOrMore, One, More}
+import helpers.Circe._
 import io.viash.helpers.MissingResourceFileException
 
 object ViashTest {
@@ -44,7 +44,9 @@ object ViashTest {
     setupStrategy: String = "cachedbuild",
     tempVersion: Boolean = true,
     verbosityLevel: Int = 6,
-    parentTempPath: Option[Path] = None
+    parentTempPath: Option[Path] = None, 
+    cpus: Option[Int], 
+    memory: Option[String]
   ): ManyTestOutput = {
     // create temporary directory
     val dir = IO.makeTemp("viash_test_" + config.functionality.name, parentTempPath)
@@ -54,7 +56,7 @@ object ViashTest {
     val config2 = if (tempVersion) {
       config.copy(
         functionality = config.functionality.copy(
-          version = Some(Version(Random.alphanumeric.take(12).mkString))
+          version = Some(Random.alphanumeric.take(12).mkString)
         )
       )
     } else {
@@ -67,7 +69,9 @@ object ViashTest {
       dir = dir,
       verbose = !quiet,
       setupStrategy = setupStrategy,
-      verbosityLevel = verbosityLevel
+      verbosityLevel = verbosityLevel,
+      cpus = cpus,
+      memory = memory
     )
     val count = results.count(_.exitValue == 0)
     val anyErrors = setupRes.exists(_.exitValue > 0) || count < results.length
@@ -106,14 +110,22 @@ object ViashTest {
     ManyTestOutput(setupRes, results)
   }
 
-  def runTests(config: Config, dir: Path, verbose: Boolean = true, setupStrategy: String, verbosityLevel: Int): ManyTestOutput = {
+  def runTests(config: Config, dir: Path, verbose: Boolean = true, setupStrategy: String, verbosityLevel: Int, cpus: Option[Int], memory: Option[String]): ManyTestOutput = {
     val fun = config.functionality
     val platform = config.platform.get
 
     val consoleLine = "===================================================================="
 
     // build regular executable
-    val buildFun = platform.modifyFunctionality(config, true)
+    val configWithReqs = config.copy(
+      config.functionality.copy(
+        requirements = config.functionality.requirements.copy(
+          cpus = if (cpus.isDefined) cpus else config.functionality.requirements.cpus,
+          memory = if (memory.isDefined) memory else config.functionality.requirements.memory
+        )
+      )
+    )
+    val buildFun = platform.modifyFunctionality(configWithReqs, true)
     val buildDir = dir.resolve("build_executable")
     Files.createDirectories(buildDir)
     try {
@@ -150,9 +162,19 @@ object ViashTest {
         // run command, collect output
         try {
           val executable = Paths.get(buildDir.toString, fun.name).toString
-          logger(s"+$executable ---verbosity $verbosityLevel ---setup $setupStrategy")
+          val cmd = Seq(executable, "---verbosity", verbosityLevel.toString, "---setup", setupStrategy)
+          logger("+" + cmd.mkString(" "))
           val startTime = LocalDateTime.now
-          val exitValue = Process(Seq(executable, "---verbosity", verbosityLevel.toString, "---setup", setupStrategy), cwd = buildDir.toFile).!(ProcessLogger(logger, logger))
+
+          // create tempdir in test
+          val subTmp = Paths.get(buildDir.toString, "tmp")
+          Files.createDirectories(subTmp)
+
+          val exitValue = Process(
+            cmd,
+            cwd = buildDir.toFile,
+            ("VIASH_TEMP", subTmp.toString())
+          ).!(ProcessLogger(logger, logger))
           val endTime = LocalDateTime.now
           val diffTime = ChronoUnit.SECONDS.between(startTime, endTime)
           printWriter.flush()
@@ -180,13 +202,19 @@ object ViashTest {
 
       case test: Script =>
         val startTime = LocalDateTime.now
+
+        // make a new directory
+        val dirName = "test_" + test.filename.replaceAll("\\.[^\\.]*$", "")
+        val newDir = dir.resolve(dirName)
+        Files.createDirectories(newDir)
         val dirArg = FileArgument(
           name = "dir",
           direction = Output,
           default = One(dir)
         )
+
         // generate bash script for test
-       val funOnlyTest = platform.modifyFunctionality(
+        val funOnlyTest = platform.modifyFunctionality(
           config.copy(
             functionality = Functionality(
               // set same name, namespace and version
@@ -194,8 +222,9 @@ object ViashTest {
               name = config.functionality.name,
               namespace = config.functionality.namespace,
               version = config.functionality.version,
-              // set custom arguments and resources
-              dummy_arguments = List(dirArg),
+              // set dirArg as argument so that Docker can chown it after execution
+              arguments = List(dirArg),
+              argument_groups = Nil,
               resources = List(test),
               set_wd_to_resources_dir = true
             )
@@ -216,11 +245,6 @@ object ViashTest {
             fun.additionalResources ::: // other resources provided in fun.resources
             tests.filter(!_.isInstanceOf[Script]) // other resources provided in fun.tests
         )
-
-        // make a new directory
-        val dirName = "test_" + test.filename.replaceAll("\\.[^\\.]*$", "")
-        val newDir = dir.resolve(dirName)
-        Files.createDirectories(newDir)
 
         // write resources to dir
         IO.writeResources(funFinal.resources, newDir)
@@ -243,8 +267,18 @@ object ViashTest {
         try {
           // run command, collect output
           val executable = Paths.get(newDir.toString, testBash.filename).toString
-          logger(s"+$executable")
-          val exitValue = Process(Seq(executable), cwd = newDir.toFile).!(ProcessLogger(logger, logger))
+
+          // create tempdir in test
+          val subTmp = Paths.get(newDir.toString, "tmp")
+          Files.createDirectories(subTmp)
+
+          val cmd = Seq(executable) ++ Seq(cpus.map("---cpus=" + _), memory.map("---memory="+_)).flatMap(a => a)
+          logger(s"+${cmd.mkString(" ")}")
+          val exitValue = Process(
+            cmd,
+            cwd = newDir.toFile,
+            "VIASH_TEMP" -> subTmp.toString
+          ).!(ProcessLogger(logger, logger))
 
           printWriter.flush()
 

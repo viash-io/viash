@@ -48,8 +48,8 @@ class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAnd
     // List all expected resources and their md5sum
     val expectedResources = List(
       //("check_bash_version.sh", "0c3c134d4ff0ea3a4a3b32e09fb7c100"),
-      ("code.sh", "efa9e1aa1c5f2a0b91f558ead5917c68"),
-      ("NOTICE", ".*"), // turn off checksum match for notice, as it might change.
+      ("code.sh", ".*"), // turn off checksum match for code.sh, as it changes regularly.
+      ("NOTICE", ".*"), // turn off checksum match for notice, as it changes regularly.
       ("resource1.txt", "bc9171172c4723589a247f99b838732d"),
       ("resource2.txt", "9cd530447200979dbf9e117915cbcc74"),
       ("resource_folder/resource_L1_1.txt", "51954bf10062451e683121e58d858417"),
@@ -69,7 +69,7 @@ class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAnd
       assert(resourceFile.exists, s"Could not find $name")
 
       val hash = TestHelper.computeHash(resourceFile.getPath)
-      assert(md5sum.r.findFirstMatchIn(hash).isDefined, s"Calculated md5sum doesn't match the given md5sum for $name")
+      assert(md5sum.r.findFirstMatchIn(hash).isDefined, s"Calculated md5sum doesn't match the given md5sum for $resourceFile")
     }
   }
 

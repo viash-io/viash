@@ -271,23 +271,15 @@ def addGlobalParams(config) {
               'name': '--param_list',
               'required': false,
               'type': 'string',
-              'description': '''Allows inputting multiple parameter sets to initialise a Nextflow channel. Possible formats are csv, json, yaml, or simply a yaml_blob.
-              |A csv should have column names which correspond to the different arguments of this pipeline.
-              |A json or a yaml file should be a list of maps, each of which has keys corresponding to the arguments of the pipeline.
-              |A yaml blob can also be passed directly as a parameter.
-              |Inside the Nextflow pipeline code, params.params_list can also be used to directly a list of parameter sets.
-              |When passing a csv, json or yaml, relative path names are relativized to the location of the parameter file.'''.stripMargin(),
+              'description': '''Allows inputting multiple parameter sets to initialise a Nextflow channel. A `param_list` can either be a list of maps, a csv file, a json file, a yaml file, or simply a yaml blob.
+              |
+              |* A list of maps (as-is) where the keys of each map corresponds to the arguments of the pipeline. Example: in a `nextflow.config` file: `param_list: [ ['id': 'foo', 'input': 'foo.txt'], ['id': 'bar', 'input': 'bar.txt'] ]`.
+              |* A csv file should have column names which correspond to the different arguments of this pipeline. Example: `--param_list data.csv` with columns `id,input`.
+              |* A json or a yaml file should be a list of maps, each of which has keys corresponding to the arguments of the pipeline. Example: `--param_list data.json` with contents `[ {'id': 'foo', 'input': 'foo.txt'}, {'id': 'bar', 'input': 'bar.txt'} ]`.
+              |* A yaml blob can also be passed directly as a string. Example: `--param_list "[ {'id': 'foo', 'input': 'foo.txt'}, {'id': 'bar', 'input': 'bar.txt'} ]"`.
+              |
+              |When passing a csv, json or yaml file, relative path names are relativized to the location of the parameter file. No relativation is performed when `param_list` is a list of maps (as-is) or a yaml blob.'''.stripMargin(),
               'example': 'my_params.yaml',
-              'multiple': false,
-              'hidden': true
-            ],
-            [
-              'name': '--param_list_format',
-              'required': false,
-              'type': 'string',
-              'description': 'Manually specify the param_list_format. Must be one of \'csv\', \'json\', \'yaml\', \'yaml_blob\', \'asis\' or \'none\'.',
-              'example': 'yaml',
-              'choices': ['csv', 'json', 'yaml', 'yaml_blob', 'asis', 'none'],
               'multiple': false,
               'hidden': true
             ],
@@ -463,8 +455,6 @@ def helpMessage(config) {
 def guessMultiParamFormat(params) {
   if (!params.containsKey("param_list") || params.param_list == null) {
     "none"
-  } else if (params.containsKey("multiParamsFormat")) {
-    params.multiParamsFormat
   } else {
     def param_list = params.param_list
 
@@ -580,7 +570,7 @@ def paramsToList(params, config) {
         if (!par.multiple) {
           assert parData.size() == 1 : 
             "Error: argument ${par.plainName} has too many values.\n" +
-            "  Expected amount: 1. Found: ${parData.length}"
+            "  Expected amount: 1. Found: ${parData.size()}"
           parData = parData[0]
         }
 

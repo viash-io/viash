@@ -45,7 +45,22 @@ trait ViashCommand {
     short = Some('c'),
     default = Some(Nil),
 
-    descr = "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
+    descr = "Modify a viash config at runtime using @[config_mod](dynamic config modding)."
+  )
+}
+trait ViashRunner {
+  _: DocumentedSubcommand =>
+  val cpus = registerOpt[Int](
+    name = "cpus",
+    default = None,
+    descr = "The maximum number of (logical) cpus a component is allowed to use.",
+    required = false
+  )
+  val memory = registerOpt[String](
+    name = "memory",
+    descr = "The maximum amount of memory a component is allowed to allocate. Unit must be one of B, KB, MB, GB, TB or PB.",
+    default = None,
+    required = false
   )
 }
 trait ViashNs {
@@ -53,18 +68,18 @@ trait ViashNs {
   val query = registerOpt[String](
     name = "query",
     short = Some('q'),
-    descr = "Filter which components get selected by name and namespace. Can be a regex. Example: \"^mynamespace/component1$\".",
+    descr = "Filter which components get selected by component and @[namespace](namespace) name. Can be a regex. Example: \"^mynamespace/component1$\".",
     default = None
   )
   val query_namespace = registerOpt[String](
     name = "query_namespace",
     short = Some('n'),
-    descr = "Filter which namespaces get selected by namespace. Can be a regex. Example: \"^mynamespace$\".",
+    descr = "Filter which namespaces get selected by @[namespace](namespace) name. Can be a regex. Example: \"^mynamespace$\".",
     default = None
   )
   val query_name = registerOpt[String](
     name = "query_name",
-    descr = "Filter which components get selected by name. Can be a regex. Example: \"^component1\".",
+    descr = "Filter which components get selected by component name. Can be a regex. Example: \"^component1\".",
     default = None
   )
   val src = registerOpt[String](
@@ -94,7 +109,7 @@ trait ViashNs {
     name = "config_mod",
     short = Some('c'),
     default = Some(Nil),
-    descr = "Modify a viash config at runtime using a custom DSL. For more information, see the online documentation."
+    descr = "Modify a viash config at runtime using @[config_mod](dynamic config modding)."
   )
 }
 trait WithTemporary {
@@ -143,7 +158,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
        |
        |Arguments:""".stripMargin)
 
-  val run = new DocumentedSubcommand("run") with ViashCommand with WithTemporary {
+  val run = new DocumentedSubcommand("run") with ViashCommand with WithTemporary with ViashRunner {
     banner(
       "viash run",
       "Executes a viash component from the provided viash config file. viash generates a temporary executable and immediately executes it with the given parameters.",
@@ -188,7 +203,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       name = "setup",
       short = Some('s'),
       default = None,
-      descr = "Which setup strategy for creating the container to use [Docker Platform only]."
+      descr = "Which @[docker_setup_strategy](setup strategy) for creating the container to use [Docker Platform only]."
     )
     val push = registerOpt[Boolean](
       name = "push",
@@ -197,7 +212,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     )
   }
 
-  val test = new DocumentedSubcommand("test") with ViashCommand with WithTemporary {
+  val test = new DocumentedSubcommand("test") with ViashCommand with WithTemporary with ViashRunner {
     banner(
       "viash test",
       "Test the component using the tests defined in the viash config file.",
@@ -227,7 +242,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       val parse_argument_groups = registerOpt[Boolean](
         name = "parse_argument_groups",
         default = Some(false),
-        descr = "Whether or not to postprocess each component's argument groups."
+        descr = "Whether or not to postprocess each component's @[argument_groups](argument groups)."
       )
     }
     val inject = new DocumentedSubcommand("inject") with ViashCommand {
@@ -261,7 +276,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       val setup = registerOpt[String](
         name = "setup",
         default = None,
-        descr = "Which setup strategy for creating the container to use [Docker Platform only]."
+        descr = "Which @[docker_setup_strategy](setup strategy) for creating the container to use [Docker Platform only]."
       )
       val push = registerOpt[Boolean](
         name = "push",
@@ -282,7 +297,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
     }
 
-    val test = new DocumentedSubcommand("test") with ViashNs with WithTemporary {
+    val test = new DocumentedSubcommand("test") with ViashNs with WithTemporary with ViashRunner {
       banner(
         "viash ns test",
         "Test a namespace containing many viash config files.",
@@ -317,7 +332,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       val parse_argument_groups = registerOpt[Boolean](
         name = "parse_argument_groups",
         default = Some(false),
-        descr = "Whether or not to postprocess each component's argument groups."
+        descr = "Whether or not to postprocess each component's @[argument_groups](argument groups)."
       )
     }
 
@@ -327,7 +342,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         """Execute a command for all found Viash components.
           |The syntax of this command is inspired by `find . -exec echo {} \;`.
           |
-          |The following fields are automatically replaced:
+          |The following fields are automatically replaced:  
+          |
           | * `{}` | `{path}`: path to the config file
           | * `{abs-path}`: absolute path to the config file
           | * `{dir}`: path to the parent directory of the config file
@@ -392,7 +408,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     val cli_schema = new DocumentedSubcommand("cli_schema") {
       banner(
         "viash export cli_schema",
-        """Export tje schema of the Viash CLI as a JSON""".stripMargin,
+        """Export the schema of the Viash CLI as a JSON""".stripMargin,
         """viash export cli_schema [--output file.json]""".stripMargin
       )
       val output = registerOpt[String](

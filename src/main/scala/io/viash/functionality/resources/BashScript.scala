@@ -41,21 +41,13 @@ case class BashScript(
   }
 
   def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
-    val params = functionality.allArguments.filter(d => d.direction == Input || d.isInstanceOf[FileArgument])
+    val argsAndMeta = functionality.getArgumentLikes(includeMeta = true, filterInputs = true)
 
-    val parSet = params.map { par =>
-      val parse = par.par + "=" + Bash.getEscapedArgument(par.VIASH_PAR, "'", """\'""", """\'\"\'\"\'""")
-      s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; fi )"""
+    val parSet = argsAndMeta.map { par =>
+      val slash = "\\VIASH_SLASH\\"
+      s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$${${par.VIASH_PAR}}" | sed "s#'#'$slash"'$slash"'#g" | sed "s#.*#${par.par}='&'#" ; fi )"""
     }
-    val metaSet = BashWrapper.metaFields.map{ case BashWrapper.ViashMeta(env_name, script_name, _) =>
-      val parse = "meta_" + script_name + "=" + Bash.getEscapedArgument(env_name, "'", """\'""", """\'\"\'\"\'""")
-      s"""$$VIASH_DOLLAR$$( if [ ! -z $${$env_name+x} ]; then echo "$parse"; fi )"""
-    }
-    val paramsCode = 
-      s"""${parSet.mkString("\n")}
-       |${metaSet.mkString("\n")}
-       |resources_dir="$$VIASH_META_RESOURCES_DIR"
-       |""".stripMargin
+    val paramsCode = parSet.mkString("\n") + "\n"
     ScriptInjectionMods(params = paramsCode)
   }
 

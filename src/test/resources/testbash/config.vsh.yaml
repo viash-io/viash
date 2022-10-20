@@ -5,7 +5,7 @@ functionality:
     Prints out the parameter values.
     Checking what happens with multiline descriptions.
   authors:
-    - name: Bob Cando
+    - name: Bob ''' """ \n ` $ \ Cando
       roles: [maintainer, author]
       email: bob@cando.com
       props: {github: bobcando, orcid: XXXAAABBB}
@@ -17,7 +17,7 @@ functionality:
           description: |
             An input file with positional arguments.
             More checks for multiline descriptions.
-            Testing some characters that should be escaped: ` $ \
+            Testing some characters that should be escaped: ''' """ \n ` $ \
           direction: input
           required: true
           must_exist: true
@@ -30,6 +30,9 @@ functionality:
           type: integer
           description: A whole number with a standard flag.
           required: true
+        - name: "--long_number"
+          type: long
+          description: A long
         - name: "-s"
           type: string
           description: A sentence or word with a short flag.
@@ -84,7 +87,7 @@ functionality:
     foo: bar
     custom_tag: custom_value
   requirements:
-    n_proc: 2
+    cpus: 2
     memory: 2GB
 platforms:
   - type: native

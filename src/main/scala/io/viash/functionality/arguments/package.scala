@@ -19,9 +19,9 @@ package io.viash.functionality
 
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
-import cats.syntax.functor._
+import cats.syntax.functor._ // for .widen
 
-import java.nio.file.Paths // for .widen
+import java.nio.file.Paths
 
 package object arguments {
 
@@ -79,6 +79,7 @@ package object arguments {
   // encoders and decoders for Argument
   implicit val encodeStringArgument: Encoder.AsObject[StringArgument] = deriveConfiguredEncoder
   implicit val encodeIntegerArgument: Encoder.AsObject[IntegerArgument] = deriveConfiguredEncoder
+  implicit val encodeLongArgument: Encoder.AsObject[LongArgument] = deriveConfiguredEncoder
   implicit val encodeDoubleArgument: Encoder.AsObject[DoubleArgument] = deriveConfiguredEncoder
   implicit val encodeBooleanArgumentR: Encoder.AsObject[BooleanArgument] = deriveConfiguredEncoder
   implicit val encodeBooleanArgumentT: Encoder.AsObject[BooleanTrueArgument] = deriveConfiguredEncoder
@@ -91,6 +92,7 @@ package object arguments {
       val objJson = par match {
         case s: StringArgument => encodeStringArgument(s)
         case s: IntegerArgument => encodeIntegerArgument(s)
+        case s: LongArgument => encodeLongArgument(s)
         case s: DoubleArgument => encodeDoubleArgument(s)
         case s: BooleanArgument => encodeBooleanArgumentR(s)
         case s: BooleanTrueArgument => encodeBooleanArgumentT(s)
@@ -102,6 +104,7 @@ package object arguments {
 
   implicit val decodeStringArgument: Decoder[StringArgument] = deriveConfiguredDecoder
   implicit val decodeIntegerArgument: Decoder[IntegerArgument] = deriveConfiguredDecoder
+  implicit val decodeLongArgument: Decoder[LongArgument] = deriveConfiguredDecoder
   implicit val decodeDoubleArgument: Decoder[DoubleArgument] = deriveConfiguredDecoder
   implicit val decodeBooleanArgumentR: Decoder[BooleanArgument] = deriveConfiguredDecoder
   implicit val decodeBooleanArgumentT: Decoder[BooleanTrueArgument] = deriveConfiguredDecoder
@@ -114,12 +117,13 @@ package object arguments {
         cursor.downField("type").as[String] match {
           case Right("string") => decodeStringArgument.widen
           case Right("integer") => decodeIntegerArgument.widen
+          case Right("long") => decodeLongArgument.widen
           case Right("double") => decodeDoubleArgument.widen
           case Right("boolean") => decodeBooleanArgumentR.widen
           case Right("boolean_true") => decodeBooleanArgumentT.widen
           case Right("boolean_false") => decodeBooleanArgumentF.widen
           case Right("file") => decodeFileArgument.widen
-          case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised. Valid types are string, integer, double, boolean, boolean_true, boolean_false and file.")
+          case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised. Valid types are string, integer, long, double, boolean, boolean_true, boolean_false and file.")
           case Left(exception) => throw exception
         }
 

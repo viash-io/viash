@@ -16,6 +16,9 @@ functionality:
       type: integer
       description: A whole number with a standard flag.
       required: true
+    - name: "--long_number"
+      type: long
+      description: A long
     - name: "-s"
       type: string
       description: A sentence or word with a short flag.
@@ -48,8 +51,8 @@ functionality:
     - type: python_script
       path: ./code.py
   test_resources:
-    - type: python_script
-      path: tests/check_outputs.py
+    - type: bash_script
+      path: tests/check_outputs.sh
 platforms:
   - type: native
   - type: docker

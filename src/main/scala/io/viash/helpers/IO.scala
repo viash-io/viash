@@ -34,7 +34,7 @@ import scala.jdk.CollectionConverters._
 
 object IO {
   def tempDir: Path = {
-    Paths.get(scala.util.Properties.envOrElse("VIASH_TEMP", "/tmp"))
+    Paths.get(scala.util.Properties.envOrElse("VIASH_TEMP", "/tmp")).toAbsolutePath()
   }
   def makeTemp(name: String, parentTempPath: Option[Path] = None): Path = {
     val workTempDir = parentTempPath.getOrElse(tempDir)
