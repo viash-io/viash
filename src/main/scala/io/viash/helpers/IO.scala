@@ -30,7 +30,7 @@ import io.viash.functionality.resources.Resource
 
 import java.nio.file.attribute.PosixFilePermission
 import java.util.Comparator
-import scala.collection.JavaConverters
+import scala.jdk.CollectionConverters._
 
 object IO {
   def tempDir: Path = {
@@ -200,6 +200,6 @@ object IO {
    */
   def find(sourceDir: Path, filter: (Path, BasicFileAttributes) => Boolean): List[Path] = {
     val it = Files.find(sourceDir, Integer.MAX_VALUE, (p, b) => filter(p, b)).iterator()
-    JavaConverters.asScalaIterator(it).toList
+    it.asScala.toList
   }
 }
