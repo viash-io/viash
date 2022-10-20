@@ -37,7 +37,23 @@ final case class CollectedSchemas (
   arguments: Map[String, List[ParameterSchema]],
 )
 
+
 object CollectedSchemas {
+
+  implicit class RichSymbol(s: Symbol) {
+    def shortName = s.fullName.split('.').last
+  }
+
+  case class MemberInfo (
+    symbol: Symbol,
+    inConstructor: Boolean,
+    className: String,
+    inheritanceIndex: Int
+  ) {
+    def fullName = symbol.fullName
+    def shortName = symbol.shortName
+  }
+
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
 
   private implicit val encodeConfigSchema: Encoder.AsObject[CollectedSchemas] = deriveConfiguredEncoder
@@ -45,12 +61,15 @@ object CollectedSchemas {
   private implicit val encodeDeprecatedOrRemoved: Encoder.AsObject[DeprecatedOrRemovedSchema] = deriveConfiguredEncoder
   private implicit val encodeExample: Encoder.AsObject[ExampleSchema] = deriveConfiguredEncoder
 
-  private def getMembers[T: TypeTag](): (Map[String,List[(String, Symbol, String, Int)]], List[Symbol]) = {
+  private def getMembers[T: TypeTag](): (Map[String,List[MemberInfo]], List[Symbol]) = {
+
     val name = typeOf[T].typeSymbol.fullName
     val memberNames = typeOf[T].members
       .filter(!_.isMethod)
-      .map(_.fullName.split('.').last)
+      .map(_.shortName)
       .toSeq
+
+    val constructorMembers = typeOf[T].members.filter(_.isConstructor).head.asMethod.paramLists.head.map(_.shortName)
 
     val baseClasses = typeOf[T].baseClasses
       .filter(_.fullName.startsWith("io.viash"))
@@ -60,11 +79,11 @@ object CollectedSchemas {
       .flatMap(x =>
         x._1.info.members
           .filter(_.fullName.startsWith("io.viash"))
-          .filter(m => memberNames.contains(m.fullName.split('.').last))
+          .filter(m => memberNames.contains(m.shortName))
           .filter(m => !m.info.toString.startsWith("=> ") || x._2 != 0) // Only regular members if base class, otherwise all members
-          .map(y => (y.fullName, y, x._1.fullName, x._2)) // member name, member class, class name, inheritance index
+          .map(y => MemberInfo(y, (constructorMembers.contains(y.shortName)), x._1.fullName, x._2))
       )
-      .groupBy(k => k._1.split('.').last)
+      .groupBy(k => k.shortName)
     
     (allMembers, baseClasses)
   }
@@ -106,12 +125,12 @@ object CollectedSchemas {
     s.replaceAll("^(\\w*\\.)*", "").replaceAll("""(\w*)\[[\w\.]*?([\w,]*)(\[_\])?\]""", "$1 of $2")
   }
 
-  private def annotationsOf(members: (Map[String,List[(String, Symbol, String, Int)]]), classes: List[Symbol]) = {
+  private def annotationsOf(members: (Map[String,List[MemberInfo]]), classes: List[Symbol]) = {
     val annMembers = members
       .map{ case (memberName, memberInfo) => { 
         val h = memberInfo.head
-        val annotations = memberInfo.flatMap(_._2.annotations)
-        (h._1, h._2.info.toString, annotations, h._3, h._4, Nil)
+        val annotations = memberInfo.flatMap(_.symbol.annotations)
+        (h.fullName, h.symbol.info.toString, annotations, h.className, h.inheritanceIndex, Nil)
       } }
       .filter(_._3.length > 0)
     val annThis = ("__this__", classes.head.name.toString(), classes.head.annotations, "", 0, classes.map(_.fullName))
@@ -120,12 +139,13 @@ object CollectedSchemas {
       .map({case (a, b, c, d, e, f) => (a, trimTypeName(b), f, c)})  // TODO this ignores where the annotation was defined, ie. top level class or super class
   }
 
-  private val getSchema = (t: (Map[String,List[(String, Symbol, String, Int)]], List[Symbol])) => t match {
+  private val getSchema = (t: (Map[String,List[MemberInfo]], List[Symbol])) => t match {
     case (members, classes) => {
       annotationsOf(members, classes).flatMap{ case (a, b, c, d) => ParameterSchema(a, b, c, d) }
     }
   }
 
+  // Main call for documentation output
   def getJson: Json = {
     val data = CollectedSchemas(
       functionality = getSchema(schemaClassMap.get("functionality").get("")),
@@ -136,10 +156,11 @@ object CollectedSchemas {
     data.asJson
   }
 
-  private def getNonAnnotated(members: Map[String,List[(String, Symbol, String, Int)]], classes: List[Symbol]) = {
+  private def getNonAnnotated(members: Map[String,List[MemberInfo]], classes: List[Symbol]) = {
     val issueMembers = members
       .toList
-      .map{ case (k, v) => (k, v.map(_._2.annotations.length).sum) } // (name, # annotations)
+      .filter{ case(k, v) => v.map(m => m.inConstructor).contains(true) } // Only check values that are in a constructor. Annotation may occur on private vals but that is not a requirement.
+      .map{ case (k, v) => (k, v.map(_.symbol.annotations.length).sum) } // (name, # annotations)
       .filter(_._2 == 0)
       .map(_._1)
 
@@ -147,6 +168,7 @@ object CollectedSchemas {
     issueMembers ++ ownClassArr
   }
 
+  // Main call for checking whether all arguments are annotated
   def getAllNonAnnotated = schemaClassMap.flatMap {
     case (key, v1) => v1.flatMap {
       case (key2, v2) => getNonAnnotated(v2._1, v2._2).map((key, key2, _))
