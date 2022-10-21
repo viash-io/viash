@@ -20,6 +20,8 @@
 
 * `DockerRequirements`: The `resources:` setting has been deprecated and will be removed in Viash 0.7.0. Please use `copy:` instead.
 
+* `DockerRequirements`: The `privileged:` setting has been deprecated and will be removed in Viash 0.7.0. Please use `run_args: "--privileged"` instead.
+
 # Viash 0.6.2
 
 ## BUG FIXES
