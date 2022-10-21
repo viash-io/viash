@@ -122,7 +122,7 @@ case class DockerPlatform(
 
   @description("Adds a `privileged` flag to the docker run.")
   @deprecated("Add a `privileged` flag in `run_args` instead.", "Viash 0.6.3")
-  privileged: Boolean = false,
+  privileged: Option[Boolean] = None,
 
   @description("Add [docker run](https://docs.docker.com/engine/reference/run/) arguments.")
   run_args: OneOrMore[String] = Nil,
@@ -138,11 +138,12 @@ case class DockerPlatform(
       |
       | - @[apt_req](apt)
       | - @[apk_req](apk)
-      | - @[yum_req](yum)
-      | - @[r_req](R)
-      | - @[python_req](Python)
-      | - @[javascript_req](JavaScript)
       | - @[docker_req](Docker setup instructions)
+      | - @[javascript_req](JavaScript)
+      | - @[python_req](Python)
+      | - @[r_req](R)
+      | - @[ruby_req](Ruby)
+      | - @[yum_req](yum)
       |
       |The order in which these dependencies are specified determines the order in which they will be installed.
       |""".stripMargin)
@@ -227,10 +228,26 @@ case class DockerPlatform(
   @deprecated("Use `setup` instead.", "Viash 0.5.15")
   docker: Option[DockerRequirements] = None,
 
-  @description("")
+  @description("Additional requirements specific for running unit tests.")
   @since("Viash 0.5.13")
   test_setup: List[Requirements] = Nil
 ) extends Platform {
+  private def checkDeprecated(deprecatedArg: Option[Any], name: String): Unit = {
+    if (deprecatedArg.nonEmpty)
+      Console.err.println(
+        s"Warning: Usage of `$name` in `platforms: {type: docker, $name: ...}` is deprecated and will be removed in Viash 0.7.0. Please use `{type: docker, setup: [{ type: ${name}, ... }]}` instead.")
+  }
+  checkDeprecated(apk, "apk")
+  checkDeprecated(apt, "apt")
+  checkDeprecated(yum, "yum")
+  checkDeprecated(r, "r")
+  checkDeprecated(python, "python")
+  checkDeprecated(docker, "docker")
+  if (privileged.nonEmpty)
+      Console.err.println(
+        "Warning: Usage of `privileged` in `platforms: {type: docker, privileged: ...}` is deprecated and will be removed in Viash 0.7.0. Please use `{type: docker, run_args: \"--privileged\"}` instead."
+      )
+
   @internalFunctionality
   override val hasSetup = true
 
@@ -260,7 +277,7 @@ case class DockerPlatform(
     val dockerArgs = "-i --rm" +
       port.map(" -p " + _).mkString +
       run_args.map(" " + _).mkString +
-      { if (privileged) " --privileged" else "" }
+      { if (privileged.getOrElse(false)) " --privileged" else "" }
 
     // create setup
     val (effectiveID, setupMods) = processDockerSetup(functionality, config.info, testing)
