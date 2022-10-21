@@ -17,7 +17,10 @@
 
 package io.viash.platforms.requirements
 
+import io.viash.schemas.description
+
 trait Requirements {
+  @description("Specifies the type of the requirement specification.")
   val `type`: String
 
   def installCommands: List[String]

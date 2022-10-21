@@ -23,9 +23,12 @@ import io.viash.helpers.IO
 import io.circe.yaml.parser
 import java.net.URI
 import requirements._
+import io.viash.schemas.description
 
 trait Platform {
+  @description("Specifies the type of the platform.")
   val `type`: String
+  
   val id: String
 
   val hasSetup: Boolean = false

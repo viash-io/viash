@@ -77,6 +77,7 @@ case class BooleanArgument(
       "yaml")
   required: Boolean = false,
 
+  @undocumented
   direction: Direction = Input,
 
   @description("Treat the argument value as an array. Arrays can be passed using the delimiter `--foo=1:2:3` or by providing the same argument multiple times `--foo 1 --foo 2`. You can use a custom delimiter by using the [`multiple_sep`](#multiple_sep) property. `false` by default.")
@@ -100,10 +101,11 @@ case class BooleanArgument(
   @exampleWithDescription("my_component --my_boolean=true,true,false", "bash", "Here's an example of how to use this:")
   multiple_sep: String = ":",
 
+  @undocumented
   dest: String = "par",
   `type`: String = "boolean"
 ) extends BooleanArgumentBase {
-
+  @internalFunctionality
   val flagValue: Option[Boolean] = None
 
   def copyArg(
@@ -148,17 +150,23 @@ case class BooleanTrueArgument(
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
 
+  @undocumented
   direction: Direction = Input,
 
   dest: String = "par",
   `type`: String = "boolean_true"
 ) extends BooleanArgumentBase {
-
+  @internalFunctionality
   val required: Boolean = false
+  @internalFunctionality
   val flagValue: Option[Boolean] = Some(true)
+  @internalFunctionality
   val default: OneOrMore[Boolean] = Nil
+  @internalFunctionality
   val multiple: Boolean = false
+  @internalFunctionality
   val multiple_sep: String = ":"
+  @internalFunctionality
   val example: OneOrMore[Boolean] = Nil
 
   def copyArg(
@@ -203,17 +211,24 @@ case class BooleanFalseArgument(
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
 
+  @undocumented
   direction: Direction = Input,
 
   dest: String = "par",
   `type`: String = "boolean_false"
 ) extends BooleanArgumentBase {
 
+  @internalFunctionality
   val required: Boolean = false
+  @internalFunctionality
   val flagValue: Option[Boolean] = Some(false)
+  @internalFunctionality
   val default: OneOrMore[Boolean] = Nil
+  @internalFunctionality
   val multiple: Boolean = false
+  @internalFunctionality
   val multiple_sep: String = ":"
+  @internalFunctionality
   val example: OneOrMore[Boolean] = Nil
 
   def copyArg(

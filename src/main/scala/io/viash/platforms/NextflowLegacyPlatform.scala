@@ -41,7 +41,7 @@ case class NextflowLegacyPlatform(
       |```
       |[<namespace>/]<name>:<version>
       |```
-      |It’s possible to specify the container image explicitly with which to run the module in different ways:
+      |It's possible to specify the container image explicitly with which to run the module in different ways:
       |
       |```
       |image: dataintuitive/viash:0.4.0
@@ -64,19 +64,23 @@ case class NextflowLegacyPlatform(
   @description("Specify a Docker image based on its tag.")
   @example("tag: 4.0", "yaml")
   tag: Option[String] = None,
+
+  @deprecated("nextflow platform: attribute 'version' is deprecated and should be left empty.", "Viash 0.4.0")
   version: Option[String] = None,
 
   @description("The URL to the a [custom Docker registry](https://docs.docker.com/registry/).")
   @example("registry: https://my-docker-registry.org", "yaml")
   registry: Option[String] = None,
 
-  @description("Name of a container’s [organization](https://docs.docker.com/docker-hub/orgs/).")
+  @description("Name of a container's [organization](https://docs.docker.com/docker-hub/orgs/).")
   @example("organization: viash-io", "yaml")
   organization: Option[String] = None,
 
   @description("The default namespace separator is \"_\".")
   @example("namespace_separator: \"+\"", "yaml")
   namespace_separator: String = "_",
+
+  @deprecated("Undocumented & stale value", "Viash 0.6.3")
   executor: Option[String] = None,
 
   @description(
@@ -176,10 +180,16 @@ case class NextflowLegacyPlatform(
       |""".stripMargin)
   @example("stageInMode: copy", "yaml")
   stageInMode: Option[String] = None,
+
+  @undocumented
   directive_cpus: Option[Integer] = None,
+  @undocumented
   directive_max_forks: Option[Integer] = None,
+  @undocumented
   directive_time: Option[String] = None,
+  @undocumented
   directive_memory: Option[String] = None,
+  @undocumented
   directive_cache: Option[String] = None,
   `type`: String = "nextflow",
   variant: String = "legacy"
