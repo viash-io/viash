@@ -24,14 +24,9 @@ import io.viash.schemas._
 @example(
   """setup:
     |  - type: python
-    |    pip: [ numpy ]
-    |    git: [ https://some.git.repository/org/repo ]
-    |    github: [ jkbr/httpie ]
-    |    gitlab: [ foo/bar ]
-    |    mercurial: [ https://hg.myproject.org/MyProject/#egg=MyProject ]
-    |    svn: [ http://svn.repo/some_pkg/trunk/#egg=SomePackage ]
-    |    bazaar: [ http://bazaar.launchpad.net/some_pkg/some_pkg/release-0.1 ]
-    |    url: [ https://github.com/some_org/some_pkg/zipball/master ]
+    |    pip: numpy
+    |    github: [ jkbr/httpie, foo/bar ]
+    |    url: "https://github.com/some_org/some_pkg/zipball/master"
     |""".stripMargin,
     "yaml")
 case class PythonRequirements(

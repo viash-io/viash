@@ -24,14 +24,9 @@ import io.viash.schemas._
 @example(
   """setup: 
     |  - type: r
-    |    cran: [ anndata ]
-    |    bioc: [ AnnotationDbi ]
-    |    git: [ https://some.git.repository/org/repo ]
-    |    github: [ rcannood/SCORPIUS ]
-    |    gitlab: [ org/package ]
-    |    svn: [ https://path.to.svn/group/repo ]
-    |    url: [ https://github.com/hadley/stringr/archive/HEAD.zip ]
-    |    script: [ 'devtools::install(".")' ]
+    |    cran: anndata
+    |    bioc: [ AnnotationDbi, SingleCellExperiment ]
+    |    github: rcannood/SCORPIUS
     |""".stripMargin,
     "yaml")
 case class RRequirements(

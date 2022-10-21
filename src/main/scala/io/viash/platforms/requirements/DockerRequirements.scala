@@ -23,14 +23,11 @@ import io.viash.schemas._
 @description("Specify which Docker commands should be run during setup.")
 @example(
   """setup:
-    |  - type: docker
-    |    build_args: [ GITHUB_PAT=hello_world ]
-    |    run: [ git clone ... ]
-    |    add: [ "http://foo.bar ." ]
-    |    copy: [ "http://foo.bar ." ]
-    |    resources: 
-    |      - resource.txt /path/to/resource.txt
-    |""".stripMargin,
+    #  - type: docker
+    #    build_args: "R_VERSION=hello_world"
+    #    run: |
+    #      echo 'Run a custom command'
+    #      echo 'Foo' > /path/to/file.txt""".stripMargin('#'),
     "yaml")
 case class DockerRequirements(
   @description("Specifies which `COPY` entries to add to the Dockerfile while building it.")

@@ -24,10 +24,10 @@ import io.viash.schemas._
 @example(
   """setup:
     |  - type: javascript
-    |    npm: [ packagename ]
-    |    git: [ https://some.git.repository/org/repo ]
-    |    github: [ owner/repository ]
-    |    url: [ https://github.com/org/repo/archive/HEAD.zip ]
+    |    npm: packagename
+    |    git: "https://some.git.repository/org/repo"
+    |    github: "owner/repository"
+    |    url: "https://github.com/org/repo/archive/HEAD.zip"
     |""".stripMargin,
     "yaml")
 case class JavaScriptRequirements(
