@@ -4,6 +4,8 @@
 
 * `BashWrapper`: Allow printing the executor command by adding `---verbose ---verbose` to a `viash run`.
 
+* `Testbenches`: Split some grouped test benches into slightly smaller test benches that group tested functionality better.
+
 * `Annotations`: Complete the config schema annotations.
   Make sure all arguments are documented.
   Added an annotation `internalFunctionality` and `undocumented` for arguments that should not be documented.
