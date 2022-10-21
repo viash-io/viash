@@ -12,7 +12,7 @@ functionality:
       direction: output
       required: true
     - name: --exec_path
-      type: string
+      type: file
       required: true
     - name: --parameter
       type: string
