@@ -64,7 +64,7 @@ case class DockerRequirements(
   `type`: String = "docker"
 ) extends Requirements {
   if (resources.nonEmpty) {
-    Console.err.println("Warning: `resources: ...` will be removed in Viash 0.7.0. Please use `copy: ...` instead.")
+    Console.err.println("Warning: `resources` in `setup: {type: docker, resources: ...}` will be removed in Viash 0.7.0. Please use `copy` instead.")
   }
   def installCommands: List[String] = Nil
 

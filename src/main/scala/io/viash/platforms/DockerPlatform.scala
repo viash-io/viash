@@ -138,11 +138,12 @@ case class DockerPlatform(
       |
       | - @[apt_req](apt)
       | - @[apk_req](apk)
-      | - @[yum_req](yum)
-      | - @[r_req](R)
-      | - @[python_req](Python)
-      | - @[javascript_req](JavaScript)
       | - @[docker_req](Docker setup instructions)
+      | - @[javascript_req](JavaScript)
+      | - @[python_req](Python)
+      | - @[r_req](R)
+      | - @[ruby_req](Ruby)
+      | - @[yum_req](yum)
       |
       |The order in which these dependencies are specified determines the order in which they will be installed.
       |""".stripMargin)
@@ -227,10 +228,22 @@ case class DockerPlatform(
   @deprecated("Use `setup` instead.", "Viash 0.5.15")
   docker: Option[DockerRequirements] = None,
 
-  @description("")
+  @description("Additional requirements specific for running unit tests.")
   @since("Viash 0.5.13")
   test_setup: List[Requirements] = Nil
 ) extends Platform {
+  private def checkDeprecated(deprecatedArg: Option[Any], name: String): Unit = {
+    if (deprecatedArg.nonEmpty)
+      Console.err.println(
+        s"Warning: Usage of `$name` in `platforms: {type: docker, $name: ...}` is deprecated and will be removed in Viash 0.7.0. Please use `{type: docker, setup: [{ type: ${name}, ... }]}` instead.")
+  }
+  checkDeprecated(apk, "apk")
+  checkDeprecated(apt, "apt")
+  checkDeprecated(yum, "yum")
+  checkDeprecated(r, "r")
+  checkDeprecated(python, "python")
+  checkDeprecated(docker, "docker")
+
   @internalFunctionality
   override val hasSetup = true
 
