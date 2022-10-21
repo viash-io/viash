@@ -41,7 +41,7 @@ case class NextflowLegacyPlatform(
       |```
       |[<namespace>/]<name>:<version>
       |```
-      |It’s possible to specify the container image explicitly with which to run the module in different ways:
+      |It's possible to specify the container image explicitly with which to run the module in different ways:
       |
       |```
       |image: dataintuitive/viash:0.4.0
@@ -72,7 +72,7 @@ case class NextflowLegacyPlatform(
   @example("registry: https://my-docker-registry.org", "yaml")
   registry: Option[String] = None,
 
-  @description("Name of a container’s [organization](https://docs.docker.com/docker-hub/orgs/).")
+  @description("Name of a container's [organization](https://docs.docker.com/docker-hub/orgs/).")
   @example("organization: viash-io", "yaml")
   organization: Option[String] = None,
 

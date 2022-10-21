@@ -46,7 +46,7 @@ case class DockerPlatform(
   @example("image: \"bash:4.0\"", "yaml")
   image: String,
 
-  @description("Name of a container’s [organization](https://docs.docker.com/docker-hub/orgs/).")
+  @description("Name of a container's [organization](https://docs.docker.com/docker-hub/orgs/).")
   organization: Option[String],
 
   @description("The URL to the a [custom Docker registry](https://docs.docker.com/registry/)")
@@ -57,19 +57,19 @@ case class DockerPlatform(
   @example("tag: 4.0", "yaml")
   tag: Option[String] = None,
   
-  @description("If anything is specified in the setup section, running the `---setup` will result in an image with the name of `<target_image>:<version>`. If nothing is specified in the `setup` section, simply `image` will be used. Not recommended to be set manually.")
+  @description("If anything is specified in the setup section, running the `---setup` will result in an image with the name of `<target_image>:<version>`. If nothing is specified in the `setup` section, simply `image` will be used. Advanced usage only.")
   @example("target_image: myfoo", "yaml")
   target_image: Option[String] = None,
 
-  @description("The organization set in the resulting image. Not recommended to be set manually.")
+  @description("The organization set in the resulting image. Advanced usage only.")
   @example("target_organization: viash-io", "yaml")
   target_organization: Option[String] = None,
 
-  @description("The URL where the resulting image will be pushed to. Not recommended to be set manually.")
+  @description("The URL where the resulting image will be pushed to. Advanced usage only.")
   @example("target_registry: https://my-docker-registry.org", "yaml")
   target_registry: Option[String] = None,
 
-  @description("The tag the resulting image gets. Not recommended to be set manually.")
+  @description("The tag the resulting image gets. Advanced usage only.")
   @example("target_tag: 0.5.0", "yaml")
   target_tag: Option[String] = None,
 
@@ -84,7 +84,7 @@ case class DockerPlatform(
   @example("chown: false", "yaml")
   chown: Boolean = true,
 
-  @description("A list of enabled ports. This doesn’t change the Dockerfile but gets added as a command-line argument at runtime.")
+  @description("A list of enabled ports. This doesn't change the Dockerfile but gets added as a command-line argument at runtime.")
   @example(
     """port:
       |  - 80
@@ -93,7 +93,7 @@ case class DockerPlatform(
       "yaml")
   port: OneOrMore[String] = Nil,
 
-  @description("The working directory when starting the container. This doesn’t change the Dockerfile but gets added as a command-line argument at runtime.")
+  @description("The working directory when starting the container. This doesn't change the Dockerfile but gets added as a command-line argument at runtime.")
   @example("workdir: /home/user", "yaml")
   workdir: Option[String] = None,
 

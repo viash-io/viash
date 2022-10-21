@@ -29,6 +29,7 @@ import io.viash.schemas._
     "yaml")
 case class ApkRequirements(
   @description("Specifies which packages to install.")
+  @example("packages: [ sl ]", "yaml")
   packages: OneOrMore[String] = Nil,
   
   `type`: String = "apk"

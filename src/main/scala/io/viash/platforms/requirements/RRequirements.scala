@@ -24,7 +24,7 @@ import io.viash.schemas._
 @example(
   """setup: 
     |  - type: r
-    |    cran: [ dynutils ]
+    |    cran: [ anndata ]
     |    bioc: [ AnnotationDbi ]
     |    git: [ https://some.git.repository/org/repo ]
     |    github: [ rcannood/SCORPIUS ]
@@ -35,37 +35,50 @@ import io.viash.schemas._
     |""".stripMargin,
     "yaml")
 case class RRequirements(
-  @description("Specifies which packages to install from cran.")
+  @description("Specifies which packages to install from CRAN.")
+  @example("packages: [ anndata, ggplot2 ]", "yaml")
   packages: OneOrMore[String] = Nil,
 
-  @description("Specifies which packages to install from cran.")
+  @description("Specifies which packages to install from CRAN.")
+  @example("cran: [ anndata, ggplot2 ]", "yaml")
   cran: OneOrMore[String] = Nil,
 
-  @description("Specifies which packages to install from bioc.")
+  @description("Specifies which packages to install from BioConductor.")
+  @example("bioc: [ AnnotationDbi ]", "yaml")
   bioc: OneOrMore[String] = Nil,
   
-  @description("Specifies which packages to install using a git uri.")
+  @description("Specifies which packages to install using a Git URI.")
+  @example("git: [ https://some.git.repository/org/repo ]", "yaml")
   git: OneOrMore[String] = Nil,
 
-  @description("Specifies which packages to install from github.")
+  @description("Specifies which packages to install from GitHub.")
+  @example("github: [ rcannood/SCORPIUS ]", "yaml")
   github: OneOrMore[String] = Nil,
 
-  @description("Specifies which packages to install from gitlab.")
+  @description("Specifies which packages to install from GitLab.")
+  @example("gitlab: [ org/package ]", "yaml")
   gitlab: OneOrMore[String] = Nil,
 
-  @description("Specifies which packages to install from bitbucket.")
+  @description("Specifies which packages to install from Bitbucket.")
+  @example("bitbucket: [ org/package ]", "yaml")
   bitbucket: OneOrMore[String] = Nil,
 
-  @description("Specifies which packages to install using an svn uri.")
+  @description("Specifies which packages to install using an SVN URI.")
+  @example("svn: [ https://path.to.svn/group/repo ]", "yaml")
   svn: OneOrMore[String] = Nil,
 
-  @description("Specifies which packages to install using a generic uri.")
+  @description("Specifies which packages to install using a generic URI.")
+  @example("url: [ https://github.com/hadley/stringr/archive/HEAD.zip ]", "yaml")
   url: OneOrMore[String] = Nil,
 
-  @description("Specifies which scripts to run as part of the build.")
+  @description("Specifies a code block to run as part of the build.")
+  @example("""script: |
+    #  cat("Running custom code\n")
+    #  install.packages("anndata")""".stripMargin('#'), "yaml")
   script: OneOrMore[String] = Nil,
   
-  @description("Forces packages specified in `bioc` to be installed from BioConductor, even if they are already present in the container.")
+  @description("Forces packages specified in `bioc` to be reinstalled, even if they are already present in the container. Default: false.")
+  @example("bioc_force_install: false", "yaml")
   bioc_force_install: Boolean = false,
   
   `type`: String = "r"

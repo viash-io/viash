@@ -29,9 +29,10 @@ import io.viash.schemas._
     "yaml")
 case class AptRequirements(
   @description("Specifies which packages to install.")
+  @example("packages: [ sl ]", "yaml")
   packages: OneOrMore[String] = Nil,
 
-  @description("Allows disabling the `noninteractive` flag when set to true.")
+  @description("If `false`, the Debian frontend is set to non-interactive (recommended). Default: false.")
   interactive: Boolean = false,
   `type`: String = "apt"
 ) extends Requirements {
