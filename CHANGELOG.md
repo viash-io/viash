@@ -4,6 +4,10 @@
 
 * `BashWrapper`: Allow printing the executor command by adding `---verbose ---verbose` to a `viash run`.
 
+* `Testbenches`: Rework `MainBuildAuxiliaryNativeParameterCheck` to create stimulus files and loop over the file from bash instead of looping natively.
+  This prevents creating thousands of new processes which would only test a single parameter.
+  Note this still calls the main script for each stimulus separately, but that was the case anyway, only much much worse.
+
 ## BUG FIXES
 
 * `DockerPlatform`: Remove duplicate auto-mounts (#257).

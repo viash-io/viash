@@ -1,0 +1,31 @@
+functionality:
+  name: parameter_check_loop
+  version: 0.1
+  description: |
+    Loops parameter_check using an input file and writing to an output file
+  arguments:
+    - name: --input
+      type: file
+      required: true
+    - name: --output
+      type: file
+      direction: output
+      required: true
+    - name: --exec_path
+      type: string
+      required: true
+    - name: --parameter
+      type: string
+      required: true
+  resources:
+    - type: bash_script
+      text: |
+        while IFS= read -r line
+        do
+          "$par_exec_path" "--$par_parameter" "$line" >& /dev/null
+          echo "$?" >> "$par_output"
+        done < "$par_input"
+        exit 0
+
+platforms:
+  - type: native
