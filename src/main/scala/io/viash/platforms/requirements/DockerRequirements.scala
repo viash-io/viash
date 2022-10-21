@@ -35,7 +35,7 @@ import io.viash.schemas._
 case class DockerRequirements(
   @description("Specifies which `COPY` entries to add to the Dockerfile while building it.")
   @example("resources: [ \"resource.txt /path/to/resource.txt\" ]", "yaml")
-  @deprecated("Use `copy` instead.", "Viash 0.7.0")
+  @deprecated("Use `copy` instead.", "Viash 0.6.3")
   resources: OneOrMore[String] = Nil,
 
   @description("Specifies which `LABEL` entries to add to the Dockerfile while building it.")
