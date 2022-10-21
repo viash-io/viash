@@ -25,12 +25,12 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libicu-dev make libssl-dev libxml2-dev zlib1g-dev libbibutils6 libghc-pandoc-citeproc-data pandoc-data
 
-    - name: Set up nextflow
+    - name: Set up Nextflow
       if: runner.os == 'Linux'
       run: |
         mkdir -p "$HOME/.local/bin"
         echo "$HOME/.local/bin" >> $GITHUB_PATH
-        curl -s https://get.nextflow.io | bash
+        curl -s https://get.nextflow.io | bash > /dev/null
         mv nextflow "$HOME/.local/bin"
         NXF_VER=21.04.1 nextflow run hello
         nextflow -version
@@ -40,9 +40,10 @@ jobs:
       with:
         use-public-rspm: true
 
-    - uses: r-lib/actions/setup-r-dependencies@v2
+    - name: Set up R dependencies
+      uses: r-lib/actions/setup-r-dependencies@v2
       with:
-        extra-packages: |
+        packages: |
           processx
           testthat
 
