@@ -16,6 +16,9 @@
 
 * `DockerPlatform`: Remove duplicate auto-mounts (#257).
 
+## DEPRECATION
+
+* `DockerRequirements`: The `resources:` setting has been deprecated and will be removed in Viash 0.7.0. Please use `copy:` instead.
 
 # Viash 0.6.2
 
