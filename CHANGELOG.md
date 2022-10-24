@@ -20,6 +20,8 @@
 
 * `DockerPlatform`: Remove duplicate auto-mounts (#257).
 
+* `Underscore component tests`: Fix tests for `viash_skeleton` and `viash_test` components.
+
 ## DEPRECATION
 
 * `DockerRequirements`: The `resources:` setting has been deprecated and will be removed in Viash 0.7.0. Please use `copy:` instead.
