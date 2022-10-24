@@ -7,7 +7,7 @@ set -ex
 ###        TESTING BASH SKELETON        ###
 ###########################################
 
-./skeleton -n testbash -ns test -l bash --src my_src
+./viash_skeleton -n testbash -ns test -l bash --src my_src
 
 
 echo ">>> Checking whether output is generated"
@@ -26,7 +26,7 @@ viash test my_src/test/testbash/config.vsh.yaml
 ###########################################
 ###       TESTING PYTHON SKELETON       ###
 ###########################################
-./skeleton -n testpy -ns test -l py
+./viash_skeleton -n testpy -ns test -l py
 
 [[ ! -f src/test/testpy/config.vsh.yaml ]] && echo "Output file could not be found!" && exit 1
 
@@ -39,7 +39,7 @@ viash test src/test/testpy/config.vsh.yaml
 ###         TESTING R SKELETON          ###
 ###########################################
 
-./skeleton -n testr -ns test -l r
+./viash_skeleton -n testr -ns test -l r
 
 [[ ! -f src/test/testr/config.vsh.yaml ]] && echo "Output file could not be found!" && exit 1
 
