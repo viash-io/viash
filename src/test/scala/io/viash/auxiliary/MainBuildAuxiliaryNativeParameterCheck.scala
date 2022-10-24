@@ -8,19 +8,24 @@ import io.viash.config.Config
 import scala.io.Source
 import io.viash.helpers.{IO, Exec}
 import io.viash.TestHelper
+import java.nio.file.Path
+import scala.annotation.meta.param
 
 class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfterAll {
   // which platform to test
   private val configFile = getClass.getResource("/testbash/auxiliary_requirements/parameter_check.vsh.yaml").getPath
+  private val loopConfigFile = getClass.getResource("/testbash/auxiliary_requirements/parameter_check_loop.vsh.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
 
   // parse functionality from file
   private val functionality = Config.read(configFile, applyPlatform = false).functionality
+  private val loopFunctionality = Config.read(loopConfigFile, applyPlatform = false).functionality
 
   // check whether executable was created
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
+  private val loopExecutable = Paths.get(tempFolStr, loopFunctionality.name).toFile
 
   def generatePassAndFail(passSigns: Seq[String], passValues: Seq[String], failSigns: Seq[String], failValues: Seq[String]) = {
     assert(passSigns.length > 0)
@@ -49,6 +54,31 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
     (passSingles, failSingles, passCombined, failCombined++failMixCombined)
   }
 
+  def testSingleParameter(parameterName: String, valuesAndExpectedResults: Seq[(String, Int)], testName: String) = {
+    val values = valuesAndExpectedResults.map(_._1)
+    val inputFile = Paths.get(tempFolStr, testName + "_input.txt")
+    val outputFile = Paths.get(tempFolStr, testName + "_output.txt")
+    IO.write(values.mkString("\n")+"\n", inputFile, true, None)
+
+    val out = Exec.runCatch(
+      Seq(
+        loopExecutable.toString,
+        "--exec_path", executable.toString,
+        "--input", inputFile.toString,
+        "--output", outputFile.toString,
+        "--parameter", parameterName
+      )
+    )
+
+    val results = Source.fromURI(outputFile.toUri).getLines.toList
+    val combinedResults = valuesAndExpectedResults.zipAll(results, ("no value", -1), -1).map{ case (((a, b), c)) => (a, b, c) }
+
+    combinedResults.foreach{ case (input, expected, result) => 
+      assert(expected.toString == result, s" Test failed for --real_number: $input\n$result")
+    }
+
+  }
+
   // convert testbash
   test("viash can create the executable") {
     TestHelper.testMain(
@@ -65,6 +95,24 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
   test("Check whether the executable can run") {
     Exec.run(
       Seq(executable.toString, "--help")
+    )
+  }
+
+  test("viash can create the loop executable") {
+    TestHelper.testMain(
+      "build",
+      "-p", "native",
+      "-o", tempFolStr,
+      loopConfigFile
+    )
+
+    assert(loopExecutable.exists)
+    assert(loopExecutable.canExecute)
+  }
+
+  test("Check whether the loop executable can run") {
+    Exec.run(
+      Seq(loopExecutable.toString, "--help")
     )
   }
 
@@ -93,26 +141,11 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
 
     val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass, signs, checksFail)
 
-    val tests = Seq(
-      ("--real_number", passSingle, 0),
-      ("--real_number", failSingle, 1),
-      ("--real_number_multiple", passMulti, 0),
-      ("--real_number_multiple", failMulti, 1)
-    )
+    val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+    val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
 
-    for (
-      (param, tests, expected_result) <- tests;
-      value <- tests
-    ) {
-      val out = Exec.runCatch(
-        Seq(
-          executable.toString,
-          param, value,
-        )
-      )
-      assert(out.exitValue == expected_result, s"Test failed for $param: $value\n${out.output}")
-    }
-
+    testSingleParameter("real_number", singleTests, "double_single")
+    testSingleParameter("real_number_multiple", multiTests, "double_multi")
   }
 
   test("Check whether integer values are checked correctly") {
@@ -123,26 +156,11 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
 
     val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass, signs, checksFail)
 
-    val tests = Seq(
-      ("--whole_number", passSingle, 0),
-      ("--whole_number", failSingle, 1),
-      ("--whole_number_multiple", passMulti, 0),
-      ("--whole_number_multiple", failMulti, 1)
-    )
+    val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+    val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
 
-    for (
-      (param, tests, expected_result) <- tests;
-      value <- tests
-    ) {
-      val out = Exec.runCatch(
-        Seq(
-          executable.toString,
-          param, value,
-        )
-      )
-      assert(out.exitValue == expected_result, s"Test failed for $param: $value\n${out.output}")
-    }
-
+    testSingleParameter("whole_number", singleTests, "integer_single")
+    testSingleParameter("whole_number_multiple", multiTests, "integer_multi")
   }
 
   test("Check whether boolean values are checked correctly") {
@@ -153,40 +171,15 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
 
     val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(Seq(""), checksPass, signs, checksFail)
 
-    val tests = Seq(
-      ("--reality", passSingle, 0),
-      ("--reality", failSingle, 1),
-      ("--reality_multiple", passMulti, 0),
-      ("--reality_multiple", failMulti, 1)
-    )
+    val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+    val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
 
-    for (
-      (param, tests, expected_result) <- tests;
-      value <- tests
-    ) {
-      val out = Exec.runCatch(
-        Seq(
-          executable.toString,
-          param, value,
-        )
-      )
-      assert(out.exitValue == expected_result, s"Test failed for $param: $value\n${out.output}")
-    }
+    testSingleParameter("reality", singleTests, "boolean_single")
+    testSingleParameter("reality_multiple", multiTests, "boolean_multi")
 
-    // Signs are never allowed, ie. "+true", "-false", etc
-    for(
-      value <- checksPass;
-      sign <- Seq("+", "-")
-    ) {
-      val param = sign + value
-      val out = Exec.runCatch(
-        Seq(
-          executable.toString,
-          "--reality", param,
-        )
-      )
-      assert(out.exitValue != 0, s"Test reality: $param should fail\n${out.output}")
-    }
+    val singleSignTests = checksPass.map(b => ("+" + b, 1)) ++ checksPass.map(b => ("-" + b, 1))
+
+    testSingleParameter("reality", singleSignTests, "boolean_single_signs")
 
   }
 
@@ -199,26 +192,11 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
 
     val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(Seq(""), checksPass, Seq(""), checksFail)
 
-    val tests = Seq(
-      ("--string", passSingle, 0),
-      ("--string", failSingle, 1),
-      ("--multiple", passMulti, 0),
-      ("--multiple", failMulti, 1)
-    )
+    val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+    val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
 
-    for (
-      (param, tests, expected_result) <- tests;
-      value <- tests
-    ) {
-      val out = Exec.runCatch(
-        Seq(
-          executable.toString,
-          param, value,
-        )
-      )
-      assert(out.exitValue == expected_result, s"Test failed for $param: $value\n${out.output}")
-    }
-
+    testSingleParameter("string", singleTests, "string_single")
+    testSingleParameter("multiple", multiTests, "string_multi")
   }
 
   test("Check whether integer values with allowed values are checked correctly") {
@@ -227,26 +205,11 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
 
     val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(Seq(""), checksPass, Seq(""), checksFail)
 
-    val tests = Seq(
-      ("--whole_number_choice", passSingle, 0),
-      ("--whole_number_choice", failSingle, 1),
-      ("--whole_number_choice_multiple", passMulti, 0),
-      ("--whole_number_choice_multiple", failMulti, 1)
-    )
+    val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+    val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
 
-    for (
-      (param, tests, expected_result) <- tests;
-      value <- tests
-    ) {
-      val out = Exec.runCatch(
-        Seq(
-          executable.toString,
-          param, value,
-        )
-      )
-      assert(out.exitValue == expected_result, s"Test failed for $param: $value\n${out.output}")
-    }
-
+    testSingleParameter("whole_number_choice", singleTests, "whole_number_choice_single")
+    testSingleParameter("whole_number_choice_multiple", multiTests, "whole_number_choice_multi")
   }
 
   test("Check whether integer values with min and/or max specified are checked correctly") {
@@ -262,73 +225,31 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
     {
       val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass ++ checkMax, signs, checksFail ++ checkMin)
 
-      val tests = Seq(
-        ("--whole_number_min", passSingle, 0),
-        ("--whole_number_min", failSingle, 1),
-        ("--whole_number_min_multiple", passMulti, 0),
-        ("--whole_number_min_multiple", failMulti, 1)
-      )
+      val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+      val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
 
-      for (
-        (param, tests, expected_result) <- tests;
-        value <- tests
-      ) {
-        val out = Exec.runCatch(
-          Seq(
-            executable.toString,
-            param, value,
-          )
-        )
-        assert(out.exitValue == expected_result, s"Test failed for min $param: $value\n${out.output}")
-      }
+      testSingleParameter("whole_number_min", singleTests, "whole_number_min_single")
+      testSingleParameter("whole_number_min_multiple", multiTests, "whole_number_min_multi")
     }
 
     {
       val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass ++ checkMin, signs, checksFail ++ checkMax)
 
-      val tests = Seq(
-        ("--whole_number_max", passSingle, 0),
-        ("--whole_number_max", failSingle, 1),
-        ("--whole_number_max_multiple", passMulti, 0),
-        ("--whole_number_max_multiple", failMulti, 1)
-      )
+      val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+      val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
 
-      for (
-        (param, tests, expected_result) <- tests;
-        value <- tests
-      ) {
-        val out = Exec.runCatch(
-          Seq(
-            executable.toString,
-            param, value,
-          )
-        )
-        assert(out.exitValue == expected_result, s"Test failed for max $param: $value\n${out.output}")
-      }
+      testSingleParameter("whole_number_max", singleTests, "whole_number_max_single")
+      testSingleParameter("whole_number_max_multiple", multiTests, "whole_number_max_multi")
     }
 
     {
       val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass, signs, checksFail ++ checkMin ++ checkMax)
 
-      val tests = Seq(
-        ("--whole_number_min_max", passSingle, 0),
-        ("--whole_number_min_max", failSingle, 1),
-        ("--whole_number_min_max_multiple", passMulti, 0),
-        ("--whole_number_min_max_multiple", failMulti, 1)
-      )
+      val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+      val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
 
-      for (
-        (param, tests, expected_result) <- tests;
-        value <- tests
-      ) {
-        val out = Exec.runCatch(
-          Seq(
-            executable.toString,
-            param, value,
-          )
-        )
-        assert(out.exitValue == expected_result, s"Test failed for minmax $param: $value\n${out.output}")
-      }
+      testSingleParameter("whole_number_min_max", singleTests, "whole_number_min_max_single")
+      testSingleParameter("whole_number_min_max_multiple", multiTests, "whole_number_min_max_multi")
     }
 
   }
@@ -346,73 +267,31 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
     {
       val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass ++ checkMax, signs, checksFail ++ checkMin)
 
-      val tests = Seq(
-        ("--real_number_min", passSingle, 0),
-        ("--real_number_min", failSingle, 1),
-        ("--real_number_min_multiple", passMulti, 0),
-        ("--real_number_min_multiple", failMulti, 1)
-      )
+      val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+      val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
 
-      for (
-        (param, tests, expected_result) <- tests;
-        value <- tests
-      ) {
-        val out = Exec.runCatch(
-          Seq(
-            executable.toString,
-            param, value,
-          )
-        )
-        assert(out.exitValue == expected_result, s"Test failed for min $param: $value\n${out.output}")
-      }
+      testSingleParameter("real_number_min", singleTests, "real_number_min_single")
+      testSingleParameter("real_number_min_multiple", multiTests, "real_number_min_multi")
     }
 
     {
       val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass ++ checkMin, signs, checksFail ++ checkMax)
 
-      val tests = Seq(
-        ("--real_number_max", passSingle, 0),
-        ("--real_number_max", failSingle, 1),
-        ("--real_number_max_multiple", passMulti, 0),
-        ("--real_number_max_multiple", failMulti, 1)
-      )
+      val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+      val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
 
-      for (
-        (param, tests, expected_result) <- tests;
-        value <- tests
-      ) {
-        val out = Exec.runCatch(
-          Seq(
-            executable.toString,
-            param, value,
-          )
-        )
-        assert(out.exitValue == expected_result, s"Test failed for max $param: $value\n${out.output}")
-      }
+      testSingleParameter("real_number_max", singleTests, "real_number_max_single")
+      testSingleParameter("real_number_max_multiple", multiTests, "real_number_max_multi")
     }
 
     {
       val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass, signs, checksFail ++ checkMin ++ checkMax)
 
-      val tests = Seq(
-        ("--real_number_min_max", passSingle, 0),
-        ("--real_number_min_max", failSingle, 1),
-        ("--real_number_min_max_multiple", passMulti, 0),
-        ("--real_number_min_max_multiple", failMulti, 1)
-      )
+      val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+      val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
 
-      for (
-        (param, tests, expected_result) <- tests;
-        value <- tests
-      ) {
-        val out = Exec.runCatch(
-          Seq(
-            executable.toString,
-            param, value,
-          )
-        )
-        assert(out.exitValue == expected_result, s"Test failed for minmax $param: $value\n${out.output}")
-      }
+      testSingleParameter("real_number_min_max", singleTests, "real_number_min_max_single")
+      testSingleParameter("real_number_min_max_multiple", multiTests, "real_number_min_max_multi")
     }
 
   }
@@ -437,73 +316,31 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
     {
       val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass ++ checkMax, signs, checksFail ++ checkMin)
 
-      val tests = Seq(
-        ("--real_number_min", passSingle, 0),
-        ("--real_number_min", failSingle, 1),
-        ("--real_number_min_multiple", passMulti, 0),
-        ("--real_number_min_multiple", failMulti, 1)
-      )
+      val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+      val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
 
-      for (
-        (param, tests, expected_result) <- tests;
-        value <- tests
-      ) {
-        val out = Exec.runCatch(
-          Seq(
-            executable.toString,
-            param, value,
-          )
-        )
-        assert(out.exitValue == expected_result, s"Test failed for min $param: $value\n${out.output}")
-      }
+      testSingleParameter("real_number_min", singleTests, "real_number_min_single_awk")
+      testSingleParameter("real_number_min_multiple", multiTests, "real_number_min_multi_awk")
     }
 
     {
       val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass ++ checkMin, signs, checksFail ++ checkMax)
 
-      val tests = Seq(
-        ("--real_number_max", passSingle, 0),
-        ("--real_number_max", failSingle, 1),
-        ("--real_number_max_multiple", passMulti, 0),
-        ("--real_number_max_multiple", failMulti, 1)
-      )
+      val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+      val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
 
-      for (
-        (param, tests, expected_result) <- tests;
-        value <- tests
-      ) {
-        val out = Exec.runCatch(
-          Seq(
-            executable.toString,
-            param, value,
-          )
-        )
-        assert(out.exitValue == expected_result, s"Test failed for max $param: $value\n${out.output}")
-      }
+      testSingleParameter("real_number_max", singleTests, "real_number_max_single_awk")
+      testSingleParameter("real_number_max_multiple", multiTests, "real_number_max_multi_awk")
     }
 
     {
       val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass, signs, checksFail ++ checkMin ++ checkMax)
 
-      val tests = Seq(
-        ("--real_number_min_max", passSingle, 0),
-        ("--real_number_min_max", failSingle, 1),
-        ("--real_number_min_max_multiple", passMulti, 0),
-        ("--real_number_min_max_multiple", failMulti, 1)
-      )
+      val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+      val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
 
-      for (
-        (param, tests, expected_result) <- tests;
-        value <- tests
-      ) {
-        val out = Exec.runCatch(
-          Seq(
-            executable.toString,
-            param, value,
-          )
-        )
-        assert(out.exitValue == expected_result, s"Test failed for minmax $param: $value\n${out.output}")
-      }
+      testSingleParameter("real_number_min_max", singleTests, "real_number_min_max_single_awk")
+      testSingleParameter("real_number_min_max_multiple", multiTests, "real_number_min_max_multi_awk")
     }
 
   }

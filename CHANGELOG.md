@@ -4,6 +4,10 @@
 
 * `BashWrapper`: Allow printing the executor command by adding `---verbose ---verbose` to a `viash run`.
 
+* `Testbenches`: Rework `MainBuildAuxiliaryNativeParameterCheck` to create stimulus files and loop over the file from bash instead of looping natively.
+  This prevents creating thousands of new processes which would only test a single parameter.
+  Note this still calls the main script for each stimulus separately, but that was the case anyway, only much much worse.
+
 * `Testbenches`: Split some grouped test benches into slightly smaller test benches that group tested functionality better.
 
 * `Annotations`: Complete the config schema annotations.
