@@ -40,7 +40,8 @@ case class NextflowVdsl3Platform(
   id: String = "nextflow",
 
   `type`: String = "nextflow",
-
+  
+  @internalFunctionality
   variant: String = "vdsl3",
   
   // nxf params
@@ -104,6 +105,7 @@ case class NextflowVdsl3Platform(
   debug: Boolean = false,
 
   // TODO: solve differently
+  @description("Specifies the Docker platform id to be used to run Nextflow.")
   container: String = "docker"
 ) extends NextflowPlatform {
   def escapeSingleQuotedString(txt: String): String = {

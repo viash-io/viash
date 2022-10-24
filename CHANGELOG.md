@@ -8,10 +8,23 @@
   This prevents creating thousands of new processes which would only test a single parameter.
   Note this still calls the main script for each stimulus separately, but that was the case anyway, only much much worse.
 
+* `Testbenches`: Split some grouped test benches into slightly smaller test benches that group tested functionality better.
+
+* `Annotations`: Complete the config schema annotations.
+  Make sure all arguments are documented.
+  Added an annotation `internalFunctionality` and `undocumented` for arguments that should not be documented.
+  Added a testbench that verifies that all arguments are in fact annotated, skipping those that are not in the class constructor.
+  Adds a hierarchy field in the `__this__` member to list the relation of the own and parent classes.
+
 ## BUG FIXES
 
 * `DockerPlatform`: Remove duplicate auto-mounts (#257).
 
+## DEPRECATION
+
+* `DockerRequirements`: The `resources:` setting has been deprecated and will be removed in Viash 0.7.0. Please use `copy:` instead.
+
+* `DockerRequirements`: The `privileged:` setting has been deprecated and will be removed in Viash 0.7.0. Please use `run_args: "--privileged"` instead.
 
 # Viash 0.6.2
 

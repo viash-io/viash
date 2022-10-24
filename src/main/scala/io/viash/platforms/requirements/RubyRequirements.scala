@@ -28,7 +28,10 @@ import io.viash.schemas._
     |""".stripMargin,
     "yaml")
 case class RubyRequirements(
+  @description("Specifies which packages to install.")
+  @example("packages: [ rspec ]", "yaml")
   packages: OneOrMore[String] = Nil,
+  
   `type`: String = "ruby"
 ) extends Requirements {
 private val installGemCommands =

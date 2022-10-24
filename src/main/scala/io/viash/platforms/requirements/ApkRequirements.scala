@@ -28,7 +28,10 @@ import io.viash.schemas._
     |""".stripMargin,
     "yaml")
 case class ApkRequirements(
+  @description("Specifies which packages to install.")
+  @example("packages: [ sl ]", "yaml")
   packages: OneOrMore[String] = Nil,
+  
   `type`: String = "apk"
 ) extends Requirements {
   val installCommands: List[String] = {

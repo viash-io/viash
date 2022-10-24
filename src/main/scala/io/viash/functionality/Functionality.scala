@@ -266,6 +266,7 @@ case class Functionality(
   // setting this to true will change the working directory
   // to the resources directory when running the script
   // this is used when running `viash test`.
+  @internalFunctionality
   set_wd_to_resources_dir: Boolean = false
 ) {
   // START OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED

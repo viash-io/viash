@@ -11,7 +11,7 @@ import scala.io.Source
 import java.io.IOException
 import java.io.UncheckedIOException
 
-class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
+class NextFlowVdsl3PlatformStandaloneTest extends FunSuite with BeforeAndAfterAll {
   // temporary folder to work in
   private val temporaryFolder = IO.makeTemp("viash_tester_nextflowvdsl3")
   private val tempFolStr = temporaryFolder.toString
@@ -147,120 +147,72 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
       "--setup", "cb"
     )
   }
-  
-  test("Run pipeline", DockerTest, NextFlowTest) {
 
+  test("Run module as standalone", NextFlowTest) {
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "workflows/pipeline1/main.nf",
-      entry = Some("base"),
+      mainScript = "target/nextflow/step2/main.nf",
       args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
+        "--input1", "resources/lines3.txt",
+        "--input2", "resources/lines5.txt",
+        "--publish_dir", "moduleOutput1"
       )
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
+    
+    val src = Source.fromFile(tempFolStr+"/moduleOutput1/run.step2.output1.txt")
+    try {
+      val moduleOut = src.getLines.mkString(",")
+      assert(moduleOut.equals("one,two,three"))
+    } finally {
+      src.close()
+    }
   }
 
-  test("Run pipeline with components using map functionality", DockerTest, NextFlowTest) {
-
+  test("Run module as standalone, yamlblob", NextFlowTest) {
+    val fooArgs = "{input1: resources/lines3.txt, input2: resources/lines5.txt}"
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "workflows/pipeline1/main.nf",
-      entry = Some("map_variant"),
+      mainScript = "target/nextflow/step2/main.nf",
       args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
+        "--param_list", s"[$fooArgs]",
+        "--publish_dir", "moduleOutput2"
       )
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
+    
+    val src = Source.fromFile(tempFolStr+"/moduleOutput2/run.step2.output1.txt")
+    try {
+      val moduleOut = src.getLines.mkString(",")
+      assert(moduleOut.equals("one,two,three"))
+    } finally {
+      src.close()
+    }
   }
 
-  test("Run pipeline with components using mapData functionality", DockerTest, NextFlowTest) {
+  test("Run module as standalone, test optional input", NextFlowTest) {
+
+    Files.copy(Paths.get(resourcesPath, "lines5.txt"), Paths.get(resourcesPath, "lines5-bis.txt"))
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "workflows/pipeline1/main.nf",
-      entry = Some("mapData_variant"),
+      mainScript = "target/nextflow/step2/main.nf",
       args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
+        "--input1", "resources/lines3.txt",
+        "--input2", "resources/lines5.txt",
+        "--optional", "resources/lines5-bis.txt",
+        "--publish_dir", "moduleOutput3"
       )
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
-  }
-
-  test("Run pipeline with debug = false", DockerTest, NextFlowTest) {
-
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "workflows/pipeline1/main.nf",
-      entry = Some("debug_variant"),
-      args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
-        "--displayDebug", "false",
-      )
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
-
-    val lines2 = stdOut.split("\n").find(_.contains("process 'step3' output tuple"))
-    assert(!lines2.isDefined)
-
-  }
-
-  test("Run pipeline with debug = true", DockerTest, NextFlowTest) {
-
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "workflows/pipeline1/main.nf",
-      entry = Some("debug_variant"),
-      args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
-        "--displayDebug", "true",
-      )
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
-    outputFileMatchChecker(stdOut, "process 'step3[^']*' output tuple", "^11 .*$")
-  }
-
-  test("Check whether --help is same as Viash's --help", NextFlowTest) {
-    // except that WorkflowHelper.nf will not print alternatives, and
-    // will always prefix argument names with -- (so --foo, not -f or foo).
-
-    // run WorkflowHelper's --help
-    val (exitCode, stdOut1, stdErr1) = runNextflowProcess(
-      mainScript = "workflows/pipeline3/main.nf",
-      entry = Some("base"),
-      args = List("--help"),
-      quiet = true
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut1\nStd error:\n$stdErr1")
-
-    // explicitly remove defaults set by output files
-    // these defaults make sense in nextflow but not in viash
-    val correctedStdOut1 = stdOut1.replaceAll("        default: \\$id\\.\\$key\\.[^\n]*\n", "")
-    // explicitly remove global arguments
-    // these arguments make sense in nextflow but not in viash
-    import java.util.regex.Pattern
-    val regex = Pattern.compile("\nNextflow input-output arguments:.*", Pattern.DOTALL)
-    val correctedStdOut2 = regex.matcher(correctedStdOut1).replaceAll("")
-
-    // run Viash's --help
-    val (stdOut2, stdErr2) = TestHelper.testMainWithStdErr(
-      "run", workflowsPath + "/pipeline3/config.vsh.yaml",
-      "--", "--help"
-    )
-
-    // check if they are the same
-    assert(correctedStdOut2 == stdOut2)
+    
+    val src = Source.fromFile(tempFolStr+"/moduleOutput3/run.step2.output1.txt")
+    try {
+      val moduleOut = src.getLines.mkString(",")
+      assert(moduleOut.equals("one,two,three,1,2,3,4,5"))
+    } finally {
+      src.close()
+    }
   }
 
   override def afterAll() {

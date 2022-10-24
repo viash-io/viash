@@ -18,8 +18,10 @@
 package io.viash.functionality.arguments
 
 import io.viash.helpers.Circe.OneOrMore
+import io.viash.schemas._
 
 abstract class Argument[Type] {
+  @description("Specifies the type of the argument.")
   val `type`: String
   val name: String
   val alternatives: OneOrMore[String]
@@ -30,6 +32,8 @@ abstract class Argument[Type] {
   val direction: Direction
   val multiple: Boolean
   val multiple_sep: String
+  
+  @internalFunctionality
   val dest: String
 
   private val pattern = "^(-*)(.*)$".r

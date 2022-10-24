@@ -11,7 +11,7 @@ import scala.io.Source
 import java.io.IOException
 import java.io.UncheckedIOException
 
-class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
+class NextFlowVdsl3PlatformInputFormatsTest extends FunSuite with BeforeAndAfterAll {
   // temporary folder to work in
   private val temporaryFolder = IO.makeTemp("viash_tester_nextflowvdsl3")
   private val tempFolStr = temporaryFolder.toString
@@ -148,119 +148,165 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     )
   }
   
-  test("Run pipeline", DockerTest, NextFlowTest) {
+  val expectedFoo: List[CheckArg] = List(
+    MatchCheck("input", ".*/lines3.txt"),
+    EqualsCheck("real_number", "10.5"),
+    EqualsCheck("whole_number", "3"),
+    EqualsCheck("str", "foo"),
+    NotAvailCheck("reality"),
+    NotAvailCheck("optional"),
+    EqualsCheck("optional_with_default", "foo"),
+    EqualsCheck("multiple", "[a, b, c]")
+  )
+  val expectedBar: List[CheckArg] = List(
+    MatchCheck("input", ".*/lines5.txt"),
+    EqualsCheck("real_number", "0.5"),
+    EqualsCheck("whole_number", "10"),
+    EqualsCheck("str", "foo"),
+    EqualsCheck("reality", "true"),
+    EqualsCheck("optional", "bar"),
+    EqualsCheck("optional_with_default", "The default value."),
+    NotAvailCheck("multiple")
+  )
+
+  test("Run config pipeline", NextFlowTest) {
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "workflows/pipeline1/main.nf",
-      entry = Some("base"),
-      args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
-      )
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
-  }
-
-  test("Run pipeline with components using map functionality", DockerTest, NextFlowTest) {
-
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "workflows/pipeline1/main.nf",
-      entry = Some("map_variant"),
-      args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
-      )
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
-  }
-
-  test("Run pipeline with components using mapData functionality", DockerTest, NextFlowTest) {
-
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "workflows/pipeline1/main.nf",
-      entry = Some("mapData_variant"),
-      args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
-      )
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
-  }
-
-  test("Run pipeline with debug = false", DockerTest, NextFlowTest) {
-
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "workflows/pipeline1/main.nf",
-      entry = Some("debug_variant"),
-      args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
-        "--displayDebug", "false",
-      )
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
-
-    val lines2 = stdOut.split("\n").find(_.contains("process 'step3' output tuple"))
-    assert(!lines2.isDefined)
-
-  }
-
-  test("Run pipeline with debug = true", DockerTest, NextFlowTest) {
-
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "workflows/pipeline1/main.nf",
-      entry = Some("debug_variant"),
-      args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
-        "--displayDebug", "true",
-      )
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
-    outputFileMatchChecker(stdOut, "process 'step3[^']*' output tuple", "^11 .*$")
-  }
-
-  test("Check whether --help is same as Viash's --help", NextFlowTest) {
-    // except that WorkflowHelper.nf will not print alternatives, and
-    // will always prefix argument names with -- (so --foo, not -f or foo).
-
-    // run WorkflowHelper's --help
-    val (exitCode, stdOut1, stdErr1) = runNextflowProcess(
       mainScript = "workflows/pipeline3/main.nf",
       entry = Some("base"),
-      args = List("--help"),
-      quiet = true
+      args = List(
+        "--id", "foo",
+        "--input", "resources/lines3.txt",
+        "--real_number", "10.5",
+        "--whole_number", "3",
+        "--str", "foo",
+        "--optional_with_default", "foo",
+        "--multiple", "a:b:c",
+        "--publish_dir", "output",
+      )
     )
 
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut1\nStd error:\n$stdErr1")
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
 
-    // explicitly remove defaults set by output files
-    // these defaults make sense in nextflow but not in viash
-    val correctedStdOut1 = stdOut1.replaceAll("        default: \\$id\\.\\$key\\.[^\n]*\n", "")
-    // explicitly remove global arguments
-    // these arguments make sense in nextflow but not in viash
-    import java.util.regex.Pattern
-    val regex = Pattern.compile("\nNextflow input-output arguments:.*", Pattern.DOTALL)
-    val correctedStdOut2 = regex.matcher(correctedStdOut1).replaceAll("")
+    val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
+    checkDebugArgs("foo", debugPrints, expectedFoo)
+  }
 
-    // run Viash's --help
-    val (stdOut2, stdErr2) = TestHelper.testMainWithStdErr(
-      "run", workflowsPath + "/pipeline3/config.vsh.yaml",
-      "--", "--help"
+  test("Run config pipeline with yamlblob", NextFlowTest) {
+    val fooArgs = "{id: foo, input: resources/lines3.txt, whole_number: 3, optional_with_default: foo, multiple: [a, b, c]}"
+    val barArgs = "{id: bar, input: resources/lines5.txt, real_number: 0.5, optional: bar, reality: true}"
+
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      mainScript = "workflows/pipeline3/main.nf",
+      entry = Some("base"),
+      args = List(
+        "--param_list", s"[$fooArgs, $barArgs]",
+        "--real_number", "10.5",
+        "--whole_number", "10",
+        "--str", "foo",
+        "--publish_dir", "output",
+      )
     )
 
-    // check if they are the same
-    assert(correctedStdOut2 == stdOut2)
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
+    checkDebugArgs("foo", debugPrints, expectedFoo)
+    checkDebugArgs("bar", debugPrints, expectedBar)
+    // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
+    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+  }
+
+  test("Run config pipeline with yaml file", NextFlowTest) {
+    val param_list_file = Paths.get(resourcesPath, "pipeline3.yaml").toFile.toString
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      mainScript = "workflows/pipeline3/main.nf",
+      entry = Some("base"),
+      args = List(
+        "--param_list", param_list_file,
+        "--real_number", "10.5",
+        "--whole_number", "10",
+        "--str", "foo",
+        "--publish_dir", "output",
+        )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
+    checkDebugArgs("foo", debugPrints, expectedFoo)
+    checkDebugArgs("bar", debugPrints, expectedBar)
+    // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
+    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+  }
+
+  test("Run config pipeline with json file", NextFlowTest) {
+    val param_list_file = Paths.get(resourcesPath, "pipeline3.json").toFile.toString
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      mainScript = "workflows/pipeline3/main.nf",
+      entry = Some("base"),
+      args = List(
+        "--param_list", param_list_file,
+        "--real_number", "10.5",
+        "--whole_number", "10",
+        "--str", "foo",
+        "--publish_dir", "output",
+        )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
+    checkDebugArgs("foo", debugPrints, expectedFoo)
+    checkDebugArgs("bar", debugPrints, expectedBar)
+    // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
+    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+  }
+
+  test("Run config pipeline with csv file", NextFlowTest) {
+    val param_list_file = Paths.get(resourcesPath, "pipeline3.csv").toFile.toString
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      mainScript = "workflows/pipeline3/main.nf",
+      entry = Some("base"),
+      args = List(
+        "--param_list", param_list_file,
+        "--real_number", "10.5",
+        "--whole_number", "10",
+        "--str", "foo",
+        "--publish_dir", "output",
+        )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
+    checkDebugArgs("foo", debugPrints, expectedFoo)
+    checkDebugArgs("bar", debugPrints, expectedBar)
+    // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
+    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+  }
+
+  test("Run config pipeline asis, default nextflow implementation", NextFlowTest) {
+    val param_list_file = Paths.get(resourcesPath, "pipeline3.asis.yaml").toFile.toString
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      mainScript = "workflows/pipeline3/main.nf",
+      entry = Some("base"),
+      paramsFile = Some(param_list_file),
+      args = List(
+        "--real_number", "10.5",
+        "--whole_number", "10",
+        "--str", "foo",
+        "--publish_dir", "output",
+      )
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
+    checkDebugArgs("foo", debugPrints, expectedFoo)
+    checkDebugArgs("bar", debugPrints, expectedBar)
+    // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
+    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
   }
 
   override def afterAll() {
