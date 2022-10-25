@@ -28,5 +28,5 @@ package object data_structures {
       oom.toList
     }
   }
-  implicit def listToOneOrMore[A](li: List[A]): OneOrMore[A] = More(li)
+  implicit def listToOneOrMore[A](li: List[A]): OneOrMore[A] = OneOrMore(li: _*)
 }

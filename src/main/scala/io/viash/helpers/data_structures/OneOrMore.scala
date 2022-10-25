@@ -17,21 +17,6 @@
 
 package io.viash.helpers.data_structures
 
-// oneormore helper type
-abstract class OneOrMore[+A] {
-  def toList: List[A]
-  override def equals(that: Any): Boolean = {
-    that match {
-      case that: OneOrMore[_] => {
-        this.toList.equals(that.toList)
-      }
-      case _ => false
-    }
-  }
-}
-case class One[A](element: A) extends OneOrMore[A] {
-  def toList = List(element)
-}
-case class More[A](list: List[A]) extends OneOrMore[A] {
-  def toList = list
+case class OneOrMore[A](list: A*) {
+  def toList = list.toList
 }

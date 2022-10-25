@@ -210,7 +210,7 @@ object ViashTest {
         val dirArg = FileArgument(
           name = "dir",
           direction = Output,
-          default = One(dir)
+          default = OneOrMore(dir)
         )
 
         // generate bash script for test

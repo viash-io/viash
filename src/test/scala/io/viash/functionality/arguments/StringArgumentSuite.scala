@@ -17,10 +17,10 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
     assert(arg.plainName == "foo")
 
     assert(arg.name == "--foo")
-    assert(arg.alternatives == More(Nil))
+    assert(arg.alternatives == OneOrMore())
     assert(arg.description == None)
-    assert(arg.example == More(Nil))
-    assert(arg.default == More(Nil))
+    assert(arg.example == OneOrMore())
+    assert(arg.default == OneOrMore())
     assert(!arg.required)
     assert(arg.choices == Nil)
     assert(arg.direction == Input)
@@ -34,8 +34,8 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
       name = "one_two_three_four",
       alternatives = List("zero", "-one", "--two"),
       description = Some("foo"),
-      example = One("ten"),
-      default = One("bar"),
+      example = OneOrMore("ten"),
+      default = OneOrMore("bar"),
       required = true,
       choices = List("bar", "zing", "bang"),
       direction = Output,
@@ -51,10 +51,10 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
     assert(arg.plainName == "one_two_three_four")
     
     assert(arg.name == "one_two_three_four")
-    assert(arg.alternatives == More(List("zero", "-one", "--two")))
+    assert(arg.alternatives == OneOrMore("zero", "-one", "--two"))
     assert(arg.description == Some("foo"))
-    assert(arg.example == One("ten"))
-    assert(arg.default == One("bar"))
+    assert(arg.example == OneOrMore("ten"))
+    assert(arg.default == OneOrMore("bar"))
     assert(arg.required)
     assert(arg.choices == List("bar", "zing", "bang"))
     assert(arg.direction == Output)
@@ -70,8 +70,8 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
       name = "one_two_three_four",
       alternatives = List("zero", "-one", "--two"),
       description = Some("foo"),
-      example = One("ten"),
-      default = One("bar"),
+      example = OneOrMore("ten"),
+      default = OneOrMore("bar"),
       required = true,
       direction = Output,
       multiple = true,
@@ -83,10 +83,10 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
     val arg2 = arg2generic.asInstanceOf[StringArgument]
 
     assert(arg2.name == "one_two_three_four")
-    assert(arg2.alternatives == More(List("zero", "-one", "--two")))
+    assert(arg2.alternatives == OneOrMore("zero", "-one", "--two"))
     assert(arg2.description == Some("foo"))
-    assert(arg2.example == One("ten"))
-    assert(arg2.default == One("bar"))
+    assert(arg2.example == OneOrMore("ten"))
+    assert(arg2.default == OneOrMore("bar"))
     assert(arg2.required)
     assert(arg2.choices == Nil)
     assert(arg2.direction == Output)
