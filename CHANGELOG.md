@@ -20,6 +20,8 @@
 
 * `DockerPlatform`: Remove duplicate auto-mounts (#257).
 
+* `NextflowVDSL3Platform`: Fix 'Module scriptPath has not been defined yet' error when Nextflow>=22.10 (#269).
+
 ## DEPRECATION
 
 * `DockerRequirements`: The `resources:` setting has been deprecated and will be removed in Viash 0.7.0. Please use `copy:` instead.
