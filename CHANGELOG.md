@@ -18,12 +18,12 @@
   Contents of `src/api/comp_processor.yaml`:
   ```yaml
   functionality:
-  arguments:
-    - name: "--input"
-      type: file
-    - name: "--output"
-      type: file
-      direction: output
+    arguments:
+      - name: "--input"
+        type: file
+      - name: "--output"
+        type: file
+        direction: output
   ```
 
 ## MINOR CHANGES
