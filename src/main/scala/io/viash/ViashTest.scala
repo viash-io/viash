@@ -30,7 +30,7 @@ import functionality.arguments.{FileArgument, Output}
 import functionality.resources.{BashScript, Script}
 import platforms.NativePlatform
 import helpers.IO
-import helpers.Circe._
+import io.viash.helpers.data_structures._
 import io.viash.helpers.MissingResourceFileException
 
 object ViashTest {

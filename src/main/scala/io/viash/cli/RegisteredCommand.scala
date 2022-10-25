@@ -20,7 +20,7 @@ package io.viash.cli
 import org.rogach.scallop.ScallopConfBase
 import io.circe.{Printer => JsonPrinter}
 import io.circe.syntax.EncoderOps
-import io.viash.helpers.Circe._
+import io.viash.helpers.circe._
 
 case class RegisteredCommand (
   name: String,

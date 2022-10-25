@@ -29,7 +29,7 @@ package object functionality {
   import functionality.arguments._
   import functionality.resources._
   import functionality.Status._
-  import io.viash.helpers.Circe._
+  import io.viash.helpers.circe._
 
   // encoder and decoder for Functionality
   implicit val encodeFunctionality: Encoder.AsObject[Functionality] = deriveConfiguredEncoder

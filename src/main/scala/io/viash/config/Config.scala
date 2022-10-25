@@ -21,7 +21,7 @@ import io.viash.config_mods.ConfigModParser
 import io.viash.functionality._
 import io.viash.platforms._
 import io.viash.helpers.{Git, GitInfo, IO}
-import io.viash.helpers.Circe._
+import io.viash.helpers.circe._
 import io.viash.helpers.status._
 
 import java.net.URI

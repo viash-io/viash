@@ -22,7 +22,7 @@ import io.viash.functionality._
 import io.viash.functionality.resources._
 import io.viash.functionality.arguments._
 import io.viash.helpers.{Docker, Bash, DockerImageInfo, Helper}
-import io.viash.helpers.Circe._
+import io.viash.helpers.circe._
 import io.viash.platforms.nextflow._
 import io.circe.syntax._
 import io.circe.{Printer => JsonPrinter, Json, JsonObject}

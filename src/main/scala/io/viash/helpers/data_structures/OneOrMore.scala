@@ -15,15 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash
+package io.viash.helpers.data_structures
 
-import io.circe.Encoder
-import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
-import org.rogach.scallop.CliOption
-
-package object cli {
-  import io.viash.helpers.circe._
-  
-  implicit val encodeRegisteredCommand: Encoder.AsObject[RegisteredCommand] = deriveConfiguredEncoder
-  implicit val encodeRegisteredOpt: Encoder.AsObject[RegisteredOpt] = deriveConfiguredEncoder 
+// oneormore helper type
+abstract class OneOrMore[+A] {
+  def toList: List[A]
+  override def equals(that: Any): Boolean = {
+    that match {
+      case that: OneOrMore[_] => {
+        this.toList.equals(that.toList)
+      }
+      case _ => false
+    }
+  }
+}
+case class One[A](element: A) extends OneOrMore[A] {
+  def toList = List(element)
+}
+case class More[A](list: List[A]) extends OneOrMore[A] {
+  def toList = list
 }

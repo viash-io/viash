@@ -15,15 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash
+package io.viash.helpers
 
-import io.circe.Encoder
-import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
-import org.rogach.scallop.CliOption
+import io.circe.{Decoder, Encoder, Json}
 
-package object cli {
-  import io.viash.helpers.circe._
-  
-  implicit val encodeRegisteredCommand: Encoder.AsObject[RegisteredCommand] = deriveConfiguredEncoder
-  implicit val encodeRegisteredOpt: Encoder.AsObject[RegisteredOpt] = deriveConfiguredEncoder 
+package object data_structures {
+  // allows to pretend a OneOrMore is a list and vice versa
+  implicit def oneOrMoreToList[A](oom: OneOrMore[A]): List[A] = {
+    if (oom == null) {
+      Nil
+    } else {
+      oom.toList
+    }
+  }
+  implicit def listToOneOrMore[A](li: List[A]): OneOrMore[A] = More(li)
 }

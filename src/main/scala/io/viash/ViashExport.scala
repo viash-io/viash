@@ -21,7 +21,7 @@ import helpers._
 import cli._
 import io.circe.{Printer => JsonPrinter}
 import io.circe.syntax.EncoderOps
-import io.viash.helpers.Circe._
+import io.viash.helpers.circe._
 import java.nio.file.{Path, Paths, Files}
 import io.viash.schemas.CollectedSchemas
 

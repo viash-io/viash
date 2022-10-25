@@ -17,7 +17,7 @@
 
 package io.viash.platforms.requirements
 
-import io.viash.helpers.Circe._
+import io.viash.helpers.data_structures._
 import io.viash.schemas._
 
 @description("Specify which apk packages should be available in order to run the component.")

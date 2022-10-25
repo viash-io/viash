@@ -21,7 +21,7 @@ import io.viash.config.Config
 import io.viash.functionality.Functionality
 import io.viash.functionality.resources._
 import io.viash.platforms.requirements._
-import io.viash.helpers.Circe.One
+import io.viash.helpers.data_structures._
 import io.viash.wrapper.BashWrapper
 import io.viash.functionality.arguments._
 import java.nio.file.Path

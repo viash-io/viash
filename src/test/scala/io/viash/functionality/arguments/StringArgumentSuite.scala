@@ -3,7 +3,7 @@ package io.viash.functionality.arguments
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.util.Try
-import io.viash.helpers.Circe.{One, More}
+import io.viash.helpers.data_structures._
 
 class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
 

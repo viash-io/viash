@@ -21,7 +21,6 @@ import scala.reflect.runtime.universe._
 import io.circe.{Encoder, Printer => JsonPrinter}
 import io.circe.syntax.EncoderOps
 import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
-import io.viash.helpers.Circe._
 
 import io.viash.functionality.Functionality
 import io.viash.platforms._
@@ -55,6 +54,8 @@ object CollectedSchemas {
   }
 
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
+
+  import io.viash.helpers.circe._
 
   private implicit val encodeConfigSchema: Encoder.AsObject[CollectedSchemas] = deriveConfiguredEncoder
   private implicit val encodeParameterSchema: Encoder.AsObject[ParameterSchema] = deriveConfiguredEncoder
@@ -120,7 +121,7 @@ object CollectedSchemas {
   )
 
   private def trimTypeName(s: String) = {
-    // first: io.viash.helpers.Circe.OneOrMore[String] -> OneOrMore[String]
+    // first: io.viash.helpers.data_structures.OneOrMore[String] -> OneOrMore[String]
     // second: List[io.viash.platforms.requirements.Requirements] -> List[Requirements]
     s.replaceAll("^(\\w*\\.)*", "").replaceAll("""(\w*)\[[\w\.]*?([\w,]*)(\[_\])?\]""", "$1 of $2")
   }
