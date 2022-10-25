@@ -172,23 +172,41 @@ object Circe {
           case x if x.isObject =>
             val obj1 = x.asObject.get
             val obj2 = obj1.apply("__inherits__") match {
-              case Some(y) if y.isString => 
-                // resolve path
-                val pathStr = y.asString.get
-                val newURI = uri.resolve(pathStr)
+              case Some(y) if y.isString || y.isArray =>
+                // remove inherits field from obj1
+                val obj1rem = Json.fromJsonObject(obj1.remove("__inherits__"))
 
-                // read as string
-                val str = IO.read(newURI)
-
-                // parse as yaml
-                val newJson1 = io.circe.yaml.parser.parse(str).getOrElse(Json.Null)
+                // resolve uri
+                val uriStrs = 
+                  if (y.isString) {
+                    List(y.asString.get)
+                  } else {
+                    // TODO: add decent error message instead of simply .get
+                    y.asArray.get.map(_.asString.get).toList
+                  }
 
                 // recurse through new json as well
-                val newJson2 = newJson1.inherit(newURI, mergeMode = mergeMode)
+                val newJsons = uriStrs.map(uriStr => {
+                  val newURI = uri.resolve(uriStr)
+
+                  // read as string
+                  val str = IO.read(newURI)
+
+                  // parse as yaml
+                  // TODO: add decent error message instead of simply .get
+                  val newJson1 = io.circe.yaml.parser.parse(str).right.get
+
+                  // recurse through new json as well
+                  val newJson2 = newJson1.inherit(newURI, mergeMode = mergeMode)
+
+                  newJson2
+                })
 
                 // merge with orig object
-                val obj1rem = Json.fromJsonObject(obj1.remove("__inherits__"))
-                val jsMerged = obj1rem.customDeepMerge(newJson2, mergeMode = mergeMode)
+                val jsMerged = 
+                  newJsons.foldLeft(obj1rem) { (oldJs, newJs) => 
+                    oldJs.customDeepMerge(newJs, mergeMode = mergeMode)
+                  }
 
                 // return combined object
                 jsMerged.asObject.get
