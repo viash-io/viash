@@ -20,7 +20,7 @@
 
 * `DockerPlatform`: Remove duplicate auto-mounts (#257).
 
-* `NextflowVDSL3Platform`: Fix 'Module scriptPath has not been defined yet' error (#269).
+* `NextflowVDSL3Platform`: Fix 'Module scriptPath has not been defined yet' error when Nextflow>=22.10 (#269).
 
 ## DEPRECATION
 
