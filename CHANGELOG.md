@@ -1,5 +1,31 @@
 # Viash 0.6.3
 
+## NEW FUNCTIONALITY
+
+* `Config`: Any part of a Viash config can use inheritance to fill data (#259). For example:
+  Contents of `src/test/config.vsh.yaml`:
+  ```yaml
+  __inherits__: ../api/comp_processor.yaml
+  functionality:
+    name: test
+    resources:
+      - type: bash_script
+        path: script.sh
+        text: |
+          echo Copying $par_input to $par_output
+          cp $par_input $par_output
+  ```
+  Contents of `src/api/comp_processor.yaml`:
+  ```yaml
+  functionality:
+  arguments:
+    - name: "--input"
+      type: file
+    - name: "--output"
+      type: file
+      direction: output
+  ```
+
 ## MINOR CHANGES
 
 * `BashWrapper`: Allow printing the executor command by adding `---verbose ---verbose` to a `viash run`.

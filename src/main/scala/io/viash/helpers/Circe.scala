@@ -19,6 +19,7 @@ package io.viash.helpers
 
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.Configuration
+import java.net.URI
 
 object Circe {
   implicit val customConfig: Configuration =
@@ -105,6 +106,111 @@ object Circe {
         json
       }
     }
+
+    /**
+     * Perform a deep merge of this JSON value with another JSON value.
+     *
+     * Objects are merged by key, values from the argument JSON take
+     * precedence over values from this JSON. Nested objects are
+     * recursed.
+     *
+     * Null, Boolean, String and Number are treated as values,
+     * and values from the argument JSON completely replace values
+     * from this JSON.
+     *
+     * `mergeMode` controls the behavior when merging two arrays within JSON.
+     * The Default mode treats Array as value, similar to Null, Boolean,
+     * String or Number above. The Index mode will replace the elements in
+     * this JSON array with the elements in the argument JSON at corresponding
+     * position. The Concat mode will concatenate the elements in this JSON array
+     * and the argument JSON array.
+     * 
+     * Implementation borrowed from 
+     * https://github.com/circe/circe/pull/1275/files#diff-29d5b464593242150a323b723877ccad4b5be2c0eedb6772ccdcfb7a3d5059fbR173.
+     * Function was renamed to avoid future naming conflicts.
+     */
+    def customDeepMerge(that: Json, mergeMode: MergeMode = MergeMode.Concat): Json =
+      (json.asObject, that.asObject) match {
+        case (Some(lhs), Some(rhs)) =>
+          Json.fromJsonObject(
+            lhs.toList.foldLeft(rhs) {
+              case (acc, (key, value)) =>
+                rhs(key).fold(acc.add(key, value)) { r =>
+                  acc.add(key, value.customDeepMerge(r, mergeMode))
+                }
+            }
+          )
+        case _ =>
+          mergeMode match {
+            case MergeMode.Default =>
+              that
+            case _ =>
+              (json.asArray, that.asArray) match {
+                case (Some(lhs), Some(rhs)) =>
+                  mergeMode match {
+                    case MergeMode.Concat =>
+                      Json.fromValues(lhs ++ rhs)
+                    case MergeMode.Index if rhs.size < lhs.size =>
+                      Json.fromValues(rhs ++ lhs.slice(rhs.size, lhs.size))
+                    case MergeMode.Index if rhs.size >= lhs.size => 
+                      that
+                    case _ => that
+                  }
+                case _ => that
+              }
+          }
+      }
+
+      /**
+       * Recursively resolve inheritance within Json objects.
+       * 
+       * If an object has a field named "__inherits__", that file will be read
+       * and be deep-merged with the object itself.
+       */
+      def inherit(uri: URI, mergeMode: MergeMode = MergeMode.Concat): Json = {
+        json match {
+          case x if x.isObject =>
+            val obj1 = x.asObject.get
+            val obj2 = obj1.apply("__inherits__") match {
+              case Some(y) if y.isString => 
+                // resolve path
+                val pathStr = y.asString.get
+                val newURI = uri.resolve(pathStr)
+
+                // read as string
+                val str = IO.read(newURI)
+
+                // parse as yaml
+                val newJson1 = io.circe.yaml.parser.parse(str).getOrElse(Json.Null)
+
+                // recurse through new json as well
+                val newJson2 = newJson1.inherit(newURI, mergeMode = mergeMode)
+
+                // merge with orig object
+                val obj1rem = Json.fromJsonObject(obj1.remove("__inherits__"))
+                val jsMerged = obj1rem.customDeepMerge(newJson2, mergeMode = mergeMode)
+
+                // return combined object
+                jsMerged.asObject.get
+                
+              case None => obj1
+            }
+            val obj3 = obj2.mapValues(x => x.inherit(uri, mergeMode = mergeMode))
+            Json.fromJsonObject(obj3)
+          case x if x.isArray => 
+            val arr1 = x.asArray.get
+            val arr2 = arr1.map(y => y.inherit(uri, mergeMode = mergeMode))
+            Json.fromValues(arr2)
+          case _ => json
+        }
+      }
+    }
+  
+  sealed trait MergeMode
+  object MergeMode {
+    case object Default extends MergeMode
+    case object Index extends MergeMode
+    case object Concat extends MergeMode
   }
 
   implicit val decodeStringLike: Decoder[String] =

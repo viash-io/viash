@@ -21,6 +21,7 @@ import io.viash.config_mods.ConfigModParser
 import io.viash.functionality._
 import io.viash.platforms._
 import io.viash.helpers.{Git, GitInfo, IO}
+import io.viash.helpers.Circe._
 import io.viash.helpers.status._
 
 import java.net.URI
@@ -53,16 +54,19 @@ object Config {
     }
 
     // read json
-    val js = parser.parse(yamlText).fold(errorHandler, a => a)
+    val js1 = parser.parse(yamlText).fold(errorHandler, a => a)
+
+    // apply inheritance if need be
+    val js2 = js1.inherit(uri)
 
     // apply preparse config mods
-    val modifiedJs = preparseMods match {
-      case None => js
-      case Some(cmds) => cmds(js, preparse = true)
+    val js3 = preparseMods match {
+      case None => js2
+      case Some(cmds) => cmds(js2, preparse = true)
     }
 
     // parse as config
-    val config = modifiedJs.as[Config].fold(errorHandler, identity)
+    val config = js3.as[Config].fold(errorHandler, identity)
 
     // make paths absolute
     val resources = config.functionality.resources.map(_.copyWithAbsolutePath(uri))
