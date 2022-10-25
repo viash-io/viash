@@ -19,4 +19,5 @@ package io.viash.helpers.data_structures
 
 case class OneOrMore[A](list: A*) {
   def toList = list.toList
+  override def toString = list.toList.toString().replaceFirst("List", "OneOrMore")
 }
