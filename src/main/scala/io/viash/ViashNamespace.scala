@@ -38,7 +38,7 @@ object ViashNamespace {
     parallel: Boolean = false,
     writeMeta: Boolean = true,
     flatten: Boolean = false
-  ) {
+  ): List[Either[Config, Status]] = {
     val configs2 = if (parallel) configs.par else configs
 
     val results = configs2.map { config =>
@@ -56,7 +56,7 @@ object ViashNamespace {
             }
           val namespaceOrNothing = conf.functionality.namespace.map( s => "(" + s + ")").getOrElse("")
           println(s"Exporting $funName $namespaceOrNothing =$platformId=> $out")
-          ViashBuild(
+          val status = ViashBuild(
             config = conf,
             output = out,
             namespace = conf.functionality.namespace,
@@ -64,11 +64,12 @@ object ViashNamespace {
             push = push,
             writeMeta = writeMeta
           )
-          Right(Success)
+          Right(status)
         }
       }
 
     printResults(results.map(r => r.fold(fa => Success, fb => fb)).toList, true, false)
+    results.toList
   }
 
   def test(

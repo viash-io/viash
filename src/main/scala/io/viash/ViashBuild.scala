@@ -24,6 +24,7 @@ import helpers.IO
 
 import java.nio.file.{Files, Paths}
 import scala.sys.process.{Process, ProcessLogger}
+import io.viash.helpers.status._
 
 object ViashBuild {
   // create a yaml printer for writing the viash.yaml file
@@ -44,7 +45,7 @@ object ViashBuild {
     namespace: Option[String] = None,
     setup: Option[String] = None,
     push: Boolean = false
-  ) {
+  ): Status = {
     val fun = config.functionality
 
     // create dir
@@ -114,20 +115,32 @@ object ViashBuild {
     }
 
     // if '--setup <strat>' was passed, run './executable ---setup <strat>'
-    if (setup.isDefined && exec_path.isDefined && config.platform.exists(_.hasSetup)) {
-      val cmd = Array(exec_path.get, "---setup", setup.get)
-      val _ = Process(cmd).!(ProcessLogger(println, println))
-    }
+    val setupResult =
+      if (setup.isDefined && exec_path.isDefined && config.platform.exists(_.hasSetup)) {
+        val cmd = Array(exec_path.get, "---setup", setup.get)
+        val res = Process(cmd).!(ProcessLogger(println, println))
+        res
+      }
+      else 0
 
     // if '--push' was passed, run './executable ---setup push'
-    if (push && exec_path.isDefined && config.platform.exists(_.hasSetup)) {
-      val cmd = Array(exec_path.get, "---setup push")
-      val _ = Process(cmd).!(ProcessLogger(println, println))
-    }
+    val pushResult =
+      if (push && exec_path.isDefined && config.platform.exists(_.hasSetup)) {
+        val cmd = Array(exec_path.get, "---setup push")
+        val res = Process(cmd).!(ProcessLogger(println, println))
+        res
+      }
+      else 0
 
     // if '-m' was passed, print some yaml about the created output fiels
     if (printMeta) {
       println(toWriteConfig.info.get.consoleString)
+    }
+
+    (setupResult, pushResult) match {
+      case (0, 0) => Success
+      case (1, _) => SetupError
+      case (0, 1) => PushError
     }
   }
 }

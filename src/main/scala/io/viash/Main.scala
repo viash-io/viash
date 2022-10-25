@@ -77,7 +77,7 @@ object Main {
         )
       case List(cli.build) =>
         val config = readConfig(cli.build)
-        ViashBuild(
+        val buildResult = ViashBuild(
           config,
           output = cli.build.output(),
           printMeta = cli.build.printMeta(),
@@ -85,7 +85,7 @@ object Main {
           setup = cli.build.setup.toOption,
           push = cli.build.push()
         )
-        0 // Exceptions are thrown when something bad happens, so then the '0' is not returned but a '1'. Can be improved further.
+        if (buildResult.isError) 1 else 0
       case List(cli.test) =>
         val config = readConfig(cli.test, applyPlatform = false)
         ViashTest(
@@ -97,7 +97,7 @@ object Main {
         0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
         val configs = readConfigs(cli.namespace.build)
-        ViashNamespace.build(
+        val buildResults = ViashNamespace.build(
           configs = configs,
           target = cli.namespace.build.target(),
           setup = cli.namespace.build.setup.toOption,
@@ -106,7 +106,10 @@ object Main {
           writeMeta = cli.namespace.build.writeMeta(),
           flatten = cli.namespace.build.flatten()
         )
-        0 // Might be possible to be improved further.
+        val errors = buildResults
+          .map(r => r.fold(fa => Success, fb => fb))
+          .count(_.isError)
+        if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.test) =>
         val configs = readConfigs(cli.namespace.test, applyPlatform = false)
         val testResults = ViashNamespace.test(
