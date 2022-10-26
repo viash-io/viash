@@ -63,6 +63,12 @@ case class DebugPlatform(
                 arg.copy(required = false, default = One("value"), choices = Nil)
               case a => a
             }
+            // also turn off must_exist if it is set to true
+            .map{
+              case arg: FileArgument if arg.must_exist =>
+                arg.copy(must_exist = false)
+              case a => a
+            }
             .map{Right(_)}
         )
       }
