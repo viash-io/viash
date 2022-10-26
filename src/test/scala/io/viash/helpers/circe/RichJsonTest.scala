@@ -8,7 +8,6 @@ import java.nio.file.Files
 
 class RichJsonTest extends FunSuite with BeforeAndAfterAll {
   private val temporaryFolder = IO.makeTemp("richjson")
-  private val tempFolStr = temporaryFolder.toString
 
   test("checking whether withDefault works") {
     val json1 = Json.fromJsonObject(JsonObject("foo" -> Json.fromString("str")))
@@ -103,6 +102,27 @@ class RichJsonTest extends FunSuite with BeforeAndAfterAll {
 
     // check whether filling default works
     val jsonOut = json1.inherit(temporaryFolder.toUri())
+    assert(jsonOut == jsonExpected)
+  }
+
+  test("checking whether inherit without stripping the inherits works") {
+    // write json to file
+    val obj1Path = temporaryFolder.resolve("obj1.yaml")
+    IO.write("a: [3, 4]", obj1Path)
+
+    val json1 = parser.parse("""
+      |__inherits__: obj1.yaml
+      |a: [1, 2]
+      |""".stripMargin
+    ).getOrElse(Json.Null)
+    val jsonExpected = parser.parse(s"""
+      |__inherits__: file:${obj1Path}
+      |a: [1, 2, 3, 4]
+      |""".stripMargin
+    ).getOrElse(Json.Null)
+
+    // check whether filling default works
+    val jsonOut = json1.inherit(temporaryFolder.toUri(), stripInherits = false)
     assert(jsonOut == jsonExpected)
   }
 

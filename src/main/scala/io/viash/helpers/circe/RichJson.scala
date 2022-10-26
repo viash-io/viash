@@ -19,6 +19,7 @@ package io.viash.helpers.circe
 
 import java.net.URI
 import io.circe.Json
+import io.circe.JsonObject
 import io.circe.generic.extras.Configuration
 import io.viash.helpers.IO
 
@@ -107,15 +108,12 @@ class RichJson(json: Json) {
    * If an object has a field named "__inherits__", that file will be read
    * and be deep-merged with the object itself.
    */
-  def inherit(uri: URI): Json = {
+  def inherit(uri: URI, stripInherits: Boolean = true): Json = {
     json match {
       case x if x.isObject =>
         val obj1 = x.asObject.get
         val obj2 = obj1.apply("__inherits__") match {
           case Some(y) if y.isString || y.isArray =>
-            // remove inherits field from obj1
-            val obj1rem = Json.fromJsonObject(obj1.remove("__inherits__"))
-
             // resolve uri
             val uriStrs = 
               if (y.isString) {
@@ -124,11 +122,23 @@ class RichJson(json: Json) {
                 // TODO: add decent error message instead of simply .get
                 y.asArray.get.map(_.asString.get).toList
               }
+            val uris = uriStrs.map(uri.resolve(_))
+            
+            // remove inherits field from obj1
+            val obj1rem = Json.fromJsonObject(
+              if (stripInherits) {
+                obj1.remove("__inherits__")
+              } else {
+                // replace __inherits__ with absolute path using deepMerge
+                val uriJsons = uris.map(uri => Json.fromString(uri.toString))
+                val newInherits = if (y.isString) uriJsons.head else Json.fromValues(uriJsons)
+                val newObj = JsonObject("__inherits__" -> newInherits)
+                obj1 deepMerge newObj
+              }
+            )
 
             // recurse through new json as well
-            val newJsons = uriStrs.map(uriStr => {
-              val newURI = uri.resolve(uriStr)
-
+            val newJsons = uris.map(newURI => {
               // read as string
               val str = IO.read(newURI)
 
