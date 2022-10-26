@@ -77,6 +77,7 @@ case class Config(
   // todo: add info documentation
   info: Option[Info] = None
 ) {
+  
   @description(
     """Argument for inheriting YAML partials. This is useful for defining common APIs in
       |separate files. `__inherits__` can be used in any level of the YAML. For example,
@@ -84,7 +85,9 @@ case class Config(
       |""".stripMargin)
   @example("__inherits__: ../api/common_interface.yaml", "yaml")
   @since("Viash 0.6.2")
+  @undocumented
   val `__inherits__`: Option[File] = None
+  
 }
 
 object Config {

@@ -29,8 +29,10 @@ import io.viash.functionality.arguments._
 import io.circe.Json
 import monocle.function.Cons
 import io.viash.config.Config
+import io.viash.config.Info
 
 final case class CollectedSchemas (
+  config: List[ParameterSchema],
   functionality: List[ParameterSchema],
   platforms: Map[String, List[ParameterSchema]],
   requirements: Map[String, List[ParameterSchema]],
@@ -91,10 +93,12 @@ object CollectedSchemas {
   }
 
   val schemaClassMap = Map(
-    // TODO: how to add this?
-    // "config" -> Map(
-    //   ""                       -> getMembers[Config],
-    // ),
+    "config" -> Map(
+      ""                       -> getMembers[Config],
+    ),
+    "info" -> Map(
+      ""                       -> getMembers[Info],
+    ),
     "functionality" -> Map(
       ""                       -> getMembers[Functionality]
     ),
@@ -155,6 +159,7 @@ object CollectedSchemas {
   // Main call for documentation output
   def getJson: Json = {
     val data = CollectedSchemas(
+      config = getSchema(schemaClassMap.get("config").get("")),
       functionality = getSchema(schemaClassMap.get("functionality").get("")),
       platforms = schemaClassMap.get("platforms").get.map{ case(k, v) => (k, getSchema(v))},
       requirements = schemaClassMap.get("requirements").get.map{ case(k, v) => (k, getSchema(v))},
