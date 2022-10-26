@@ -54,7 +54,7 @@
 #' platforms:
 #' - type: native
 #' - type: docker
-#'   image: rocker/tidyverse
+#'   image: rocker/tidyverse:3.6
 #'   setup:
 #'     - type: r
 #'       cran: optparse
