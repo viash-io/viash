@@ -28,6 +28,7 @@ import io.viash.platforms.requirements._
 import io.viash.functionality.arguments._
 import io.circe.Json
 import monocle.function.Cons
+import io.viash.config.Config
 
 final case class CollectedSchemas (
   functionality: List[ParameterSchema],
@@ -90,34 +91,39 @@ object CollectedSchemas {
   }
 
   val schemaClassMap = Map(
-    ("functionality", Map(
-      (""                       , getMembers[Functionality]))),
-    ("platforms", Map(
-      ("nativePlatform"         , getMembers[NativePlatform]),
-      ("dockerPlatform"         , getMembers[DockerPlatform]),
-      ("nextflowVdsl3Platform"  , getMembers[NextflowVdsl3Platform]),
-      ("nextflowLegacyPlatform" , getMembers[NextflowLegacyPlatform]),
-    )),
-    ("requirements", Map(
-      ("apkRequirements"        , getMembers[ApkRequirements]),
-      ("aptRequirements"        , getMembers[AptRequirements]),
-      ("dockerRequirements"     , getMembers[DockerRequirements]),
-      ("javascriptRequirements" , getMembers[JavaScriptRequirements]),
-      ("pythonRequirements"     , getMembers[PythonRequirements]),
-      ("rRequirements"          , getMembers[RRequirements]),
-      ("rubyRequirements"       , getMembers[RubyRequirements]),
-      ("yumRequirements"        , getMembers[YumRequirements]),
-    )),
-    ("arguments", Map(
-      ("boolean"                , getMembers[BooleanArgument]),
-      ("boolean_true"           , getMembers[BooleanTrueArgument]),
-      ("boolean_false"          , getMembers[BooleanFalseArgument]),
-      ("double"                 , getMembers[DoubleArgument]),
-      ("file"                   , getMembers[FileArgument]),
-      ("integer"                , getMembers[IntegerArgument]),
-      ("long"                   , getMembers[LongArgument]),
-      ("string"                 , getMembers[StringArgument]),
-    ))
+    // TODO: how to add this?
+    // "config" -> Map(
+    //   ""                       -> getMembers[Config],
+    // ),
+    "functionality" -> Map(
+      ""                       -> getMembers[Functionality]
+    ),
+    "platforms" -> Map(
+      "nativePlatform"         -> getMembers[NativePlatform],
+      "dockerPlatform"         -> getMembers[DockerPlatform],
+      "nextflowVdsl3Platform"  -> getMembers[NextflowVdsl3Platform],
+      "nextflowLegacyPlatform" -> getMembers[NextflowLegacyPlatform],
+    ),
+    "requirements" -> Map(
+      "apkRequirements"        -> getMembers[ApkRequirements],
+      "aptRequirements"        -> getMembers[AptRequirements],
+      "dockerRequirements"     -> getMembers[DockerRequirements],
+      "javascriptRequirements" -> getMembers[JavaScriptRequirements],
+      "pythonRequirements"     -> getMembers[PythonRequirements],
+      "rRequirements"          -> getMembers[RRequirements],
+      "rubyRequirements"       -> getMembers[RubyRequirements],
+      "yumRequirements"        -> getMembers[YumRequirements],
+    ),
+    "arguments" -> Map(
+      "boolean"                -> getMembers[BooleanArgument],
+      "boolean_true"           -> getMembers[BooleanTrueArgument],
+      "boolean_false"          -> getMembers[BooleanFalseArgument],
+      "double"                 -> getMembers[DoubleArgument],
+      "file"                   -> getMembers[FileArgument],
+      "integer"                -> getMembers[IntegerArgument],
+      "long"                   -> getMembers[LongArgument],
+      "string"                 -> getMembers[StringArgument],
+    )
   )
 
   private def trimTypeName(s: String) = {

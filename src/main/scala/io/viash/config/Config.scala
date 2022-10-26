@@ -34,12 +34,58 @@ import io.circe.ParsingFailure
 import io.viash.config_mods.ConfigMods
 import java.nio.file.Paths
 
+import io.viash.schemas._
+
+@description(
+  """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
+    |We commonly name this file `config.vsh.yaml` in our examples, but you can name it however you choose.  
+    |""".stripMargin)
+@example(
+  """functionality:
+    |  name: hello_world
+    |  arguments:
+    |    - type: string
+    |      name: --input
+    |      default: "world"
+    |  resources:
+    |    - type: bash_script
+    |      path: script.sh
+    |      text: echo Hello $par_input
+    |platforms:
+    |  - type: docker
+    |    image: "bash:4.0"
+    |""".stripMargin, "yaml")
 case class Config(
+  @description(
+    """The @[functionality](functionality) describes the behaviour of the script in terms of arguments and resources.
+      |By specifying a few restrictions (e.g. mandatory arguments) and adding some descriptions, Viash will automatically generate a stylish command-line interface for you.
+      |""".stripMargin)
   functionality: Functionality,
+
+  @internalFunctionality
   platform: Option[Platform] = None,
+
+  @description(
+    """A list of platforms to generate target artifacts for.
+      |
+      | - @[native_platform](Native)
+      | - @[docker_platform](Docker)
+      | - @[nextflow_platform](Nextflow VDSL3)
+      |""".stripMargin)
   platforms: List[Platform] = Nil,
+
+  // todo: add info documentation
   info: Option[Info] = None
-)
+) {
+  @description(
+    """Argument for inheriting YAML partials. This is useful for defining common APIs in
+      |separate files. `__inherits__` can be used in any level of the YAML. For example,
+      |not just in the config but also in the functionality or any of the platforms.
+      |""".stripMargin)
+  @example("__inherits__: ../api/common_interface.yaml", "yaml")
+  @since("Viash 0.6.2")
+  val `__inherits__`: Option[File] = None
+}
 
 object Config {
   def parse(uri: URI, preparseMods: Option[ConfigMods]): Config = {
