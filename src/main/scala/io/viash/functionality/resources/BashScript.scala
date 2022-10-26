@@ -45,7 +45,7 @@ case class BashScript(
 
     val parSet = argsAndMeta.map { par =>
       val slash = "\\VIASH_SLASH\\"
-      s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$${${par.VIASH_PAR}}" | sed "s#'#'$slash"'$slash"'#g" | sed "s#.*#${par.par}='&'#" ; fi )"""
+      s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$${${par.VIASH_PAR}}" | sed "s#'#'$slash"'$slash"'#g;s#.*#${par.par}='&'#" ; fi )"""
     }
     val paramsCode = parSet.mkString("\n") + "\n"
     ScriptInjectionMods(params = paramsCode)
