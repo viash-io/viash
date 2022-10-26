@@ -77,46 +77,26 @@ class RichJson(json: Json) {
    * and values from the argument JSON completely replace values
    * from this JSON.
    *
-   * `mergeMode` controls the behavior when merging two arrays within JSON.
-   * The Default mode treats Array as value, similar to Null, Boolean,
-   * String or Number above. The Index mode will replace the elements in
-   * this JSON array with the elements in the argument JSON at corresponding
-   * position. The Concat mode will concatenate the elements in this JSON array
-   * and the argument JSON array.
-   * 
    * Implementation borrowed from 
    * https://github.com/circe/circe/pull/1275/files#diff-29d5b464593242150a323b723877ccad4b5be2c0eedb6772ccdcfb7a3d5059fbR173.
    * Function was renamed to avoid future naming conflicts.
    */
-  def customDeepMerge(that: Json, mergeMode: RichJson.Mergemode = RichJson.Mergemode.Concat): Json = {
+  def concatDeepMerge(that: Json): Json = {
     (json.asObject, that.asObject) match {
       case (Some(lhs), Some(rhs)) =>
         Json.fromJsonObject(
           lhs.toList.foldLeft(rhs) {
             case (acc, (key, value)) =>
               rhs(key).fold(acc.add(key, value)) { r =>
-                acc.add(key, value.customDeepMerge(r, mergeMode))
+                acc.add(key, value.concatDeepMerge(r))
               }
           }
         )
       case _ =>
-        mergeMode match {
-          case RichJson.Mergemode.Default =>
-            that
-          case _ =>
-            (json.asArray, that.asArray) match {
-              case (Some(lhs), Some(rhs)) =>
-                mergeMode match {
-                  case RichJson.Mergemode.Concat =>
-                    Json.fromValues(lhs ++ rhs)
-                  case RichJson.Mergemode.Index if rhs.size < lhs.size =>
-                    Json.fromValues(rhs ++ lhs.slice(rhs.size, lhs.size))
-                  case RichJson.Mergemode.Index if rhs.size >= lhs.size => 
-                    that
-                  case _ => that
-                }
-              case _ => that
-            }
+        (json.asArray, that.asArray) match {
+          case (Some(lhs), Some(rhs)) =>
+            Json.fromValues(lhs ++ rhs)
+          case _ => that
         }
     }
   }
@@ -127,7 +107,7 @@ class RichJson(json: Json) {
    * If an object has a field named "__inherits__", that file will be read
    * and be deep-merged with the object itself.
    */
-  def inherit(uri: URI, mergeMode: RichJson.Mergemode = RichJson.Mergemode.Concat): Json = {
+  def inherit(uri: URI): Json = {
     json match {
       case x if x.isObject =>
         val obj1 = x.asObject.get
@@ -157,7 +137,7 @@ class RichJson(json: Json) {
               val newJson1 = io.circe.yaml.parser.parse(str).right.get
 
               // recurse through new json as well
-              val newJson2 = newJson1.inherit(newURI, mergeMode = mergeMode)
+              val newJson2 = newJson1.inherit(newURI)
 
               newJson2
             })
@@ -165,7 +145,7 @@ class RichJson(json: Json) {
             // merge with orig object
             val jsMerged = 
               newJsons.foldLeft(obj1rem) { (oldJs, newJs) => 
-                oldJs.customDeepMerge(newJs, mergeMode = mergeMode)
+                oldJs.concatDeepMerge(newJs)
               }
 
             // return combined object
@@ -173,22 +153,13 @@ class RichJson(json: Json) {
             
           case None => obj1
         }
-        val obj3 = obj2.mapValues(x => x.inherit(uri, mergeMode = mergeMode))
+        val obj3 = obj2.mapValues(x => x.inherit(uri))
         Json.fromJsonObject(obj3)
       case x if x.isArray => 
         val arr1 = x.asArray.get
-        val arr2 = arr1.map(y => y.inherit(uri, mergeMode = mergeMode))
+        val arr2 = arr1.map(y => y.inherit(uri))
         Json.fromValues(arr2)
       case _ => json
     }
-  }
-}
-
-object RichJson {
-  sealed trait Mergemode
-  object Mergemode {
-    case object Default extends Mergemode
-    case object Index extends Mergemode
-    case object Concat extends Mergemode
   }
 }
