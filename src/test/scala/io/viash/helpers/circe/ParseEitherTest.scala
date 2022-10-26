@@ -15,15 +15,15 @@ class ParseEitherTest extends FunSuite with BeforeAndAfterAll {
   implicit val decodeB: Decoder[B] = deriveConfiguredDecoder
   implicit val encodeXXX: Encoder.AsObject[XXX] = deriveConfiguredEncoder
   implicit val decodeXXX: Decoder[XXX] = deriveConfiguredDecoder
-
+  
   test("parsing either works with left element") {
-    val json: Json = parser.parse("ab:\n  foo: str").getOrElse(Json.Null)
+    val json = parser.parse("ab:\n  foo: str").getOrElse(Json.Null)
     val parsed = json.as[XXX].right.get
     assert(parsed == XXX(ab = Left(A("str"))))
   }
 
   test("parsing either works with right element") {
-    val json: Json = parser.parse("ab:\n  bar: 10").getOrElse(Json.Null)
+    val json = parser.parse("ab:\n  bar: 10").getOrElse(Json.Null)
     val parsed = json.as[XXX].right.get
     assert(parsed == XXX(ab = Right(B(10))))
   }
