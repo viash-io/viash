@@ -52,6 +52,6 @@ package object circe {
   implicit val decodeStringLike: Decoder[String] =
     Decoder.decodeString or
       Decoder.decodeInt.map(_.toString) or
-      Decoder.decodeFloat.map(_.toString) or
+      Decoder.decodeDouble.map(_.toString) or
       Decoder.decodeBoolean.map(_.toString)
 }
