@@ -83,22 +83,26 @@ class RichJson(json: Json) {
    * Function was renamed to avoid future naming conflicts.
    */
   def concatDeepMerge(that: Json): Json = {
-    (json.asObject, that.asObject) match {
-      case (Some(lhs), Some(rhs)) =>
-        Json.fromJsonObject(
-          lhs.toList.foldLeft(rhs) {
-            case (acc, (key, value)) =>
-              rhs(key).fold(acc.add(key, value)) { r =>
-                acc.add(key, value.concatDeepMerge(r))
-              }
-          }
-        )
-      case _ =>
-        (json.asArray, that.asArray) match {
-          case (Some(lhs), Some(rhs)) =>
-            Json.fromValues(lhs ++ rhs)
-          case _ => that
+    if (json.isObject && that.isObject) {
+      // if this and that are objects, recursively merge
+      val lhs = json.asObject.get
+      val rhs = that.asObject.get
+      Json.fromJsonObject(
+        lhs.toList.foldLeft(rhs) {
+          case (acc, (key, value)) =>
+            rhs(key).fold(acc.add(key, value)) { r =>
+              acc.add(key, value.concatDeepMerge(r))
+            }
         }
+      )
+    } else if (json.isArray && that.isArray) {
+      // if this and that are both arrays, append
+      val lhs = json.asArray.get
+      val rhs = that.asArray.get
+      Json.fromValues(lhs ++ rhs)
+    } else {
+      // else override this with that
+      that
     }
   }
 
@@ -171,5 +175,15 @@ class RichJson(json: Json) {
         Json.fromValues(arr2)
       case _ => json
     }
+  }
+
+  def stripInherits: Json = {
+    json
+      .mapObject{
+        _.mapValues(_.stripInherits).filter(_._1 != "__inherits__")
+      }
+      .mapArray(
+        _.map(_.stripInherits)
+      )
   }
 }

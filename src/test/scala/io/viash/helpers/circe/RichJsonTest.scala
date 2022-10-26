@@ -166,6 +166,26 @@ class RichJsonTest extends FunSuite with BeforeAndAfterAll {
     assert(jsonOut == jsonExpected)
   }
 
+  test("checking whether stripInherits works") {
+    val json1 = parser.parse("""
+      |__inherits__: foo
+      |a: 1
+      |b:
+      |  __inherits__: bar
+      |  c: zzz
+      |""".stripMargin
+    ).getOrElse(Json.Null)
+
+    val jsonExpected = parser.parse("""
+      |a: 1
+      |b:
+      |  c: zzz
+      |""".stripMargin
+    ).getOrElse(Json.Null)
+    val jsonOut = json1.stripInherits
+    assert(jsonOut == jsonExpected)
+  }
+
   override def afterAll() {
     IO.deleteRecursively(temporaryFolder)
   }
