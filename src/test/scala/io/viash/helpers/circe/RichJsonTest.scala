@@ -29,7 +29,7 @@ class RichJsonTest extends FunSuite with BeforeAndAfterAll {
       |d: []
       |""".stripMargin
     ).getOrElse(Json.Null)
-    assert(json1.dropEmptyRecursively() == Json.Null)
+    assert(json1.dropEmptyRecursively == Json.Null)
 
     val json2 = parser.parse("""
       |a: 10
@@ -39,7 +39,7 @@ class RichJsonTest extends FunSuite with BeforeAndAfterAll {
       |""".stripMargin
     ).getOrElse(Json.Null)
     val json2Expected = Json.fromJsonObject(JsonObject("a" -> Json.fromInt(10)))
-    assert(json2.dropEmptyRecursively() == json2Expected)
+    assert(json2.dropEmptyRecursively == json2Expected)
 
     val json3 = parser.parse("""
       |a: null
@@ -54,7 +54,7 @@ class RichJsonTest extends FunSuite with BeforeAndAfterAll {
         "bar" -> Json.fromString("bb")
       ))
     ))
-    assert(json3.dropEmptyRecursively() == json3Expected)
+    assert(json3.dropEmptyRecursively == json3Expected)
   }
 
   test("checking whether concatDeepMerge works") {
