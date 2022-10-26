@@ -58,8 +58,7 @@
 #'   setup:
 #'     - type: r
 #'       cran: optparse
-#'       github: tidyverse/dplyr@main
-#'       bioc: limma
+#'       github: dynverse/anndata@main
 #'     - type: apt
 #'       packages: libhdf5-serial-dev
 #' - type: nextflow
