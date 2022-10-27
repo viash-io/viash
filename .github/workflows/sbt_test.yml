@@ -50,6 +50,14 @@ jobs:
     - name: Set up sbt
       uses: olafurpg/setup-scala@v13
 
+    - name: Test something
+      run: |
+        if [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
+          ./configure
+          make
+          bin/viash test src/test/resources/testns/src/ns_multiply/config.vsh.yaml
+        fi
+
     - name: Set up Scala
       run: |
         if [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
