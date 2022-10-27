@@ -26,7 +26,7 @@ import io.circe.ACursor
 
 package object resources {
 
-  import io.viash.helpers.Circe._
+  import io.viash.helpers.circe._
 
   implicit val encodeURI: Encoder[URI] = Encoder.instance {
     uri => Json.fromString(uri.toString)

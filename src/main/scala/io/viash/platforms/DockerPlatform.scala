@@ -28,7 +28,7 @@ import io.viash.platforms.requirements._
 import io.viash.helpers.{Bash, Docker}
 import io.viash.wrapper.{BashWrapper, BashWrapperMods}
 import io.viash.platforms.docker._
-import io.viash.helpers.Circe._
+import io.viash.helpers.data_structures._
 import io.viash.config.Info
 import io.viash.schemas._
 import io.viash.helpers.Escaper

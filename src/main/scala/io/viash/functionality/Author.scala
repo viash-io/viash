@@ -17,7 +17,7 @@
 
 package io.viash.functionality
 
-import io.viash.helpers.Circe._
+import io.viash.helpers.data_structures._
 
 case class Author(
   name: String,

@@ -17,7 +17,7 @@
 
 package io.viash.functionality.arguments
 
-import io.viash.helpers.Circe.OneOrMore
+import io.viash.helpers.data_structures._
 import io.viash.schemas._
 
 abstract class BooleanArgumentBase extends Argument[Boolean] {

@@ -21,7 +21,7 @@ import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 
 package object nextflow {
-  import io.viash.helpers.Circe._
+  import io.viash.helpers.circe._
 
   implicit val encodeNextflowDirectives: Encoder.AsObject[NextflowDirectives] = deriveConfiguredEncoder
   implicit val decodeNextflowDirectives: Decoder[NextflowDirectives] = deriveConfiguredDecoder
