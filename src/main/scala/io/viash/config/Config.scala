@@ -74,7 +74,7 @@ case class Config(
       |""".stripMargin)
   platforms: List[Platform] = Nil,
 
-  // todo: add info documentation
+  @internalFunctionality
   info: Option[Info] = None
 ) {
   

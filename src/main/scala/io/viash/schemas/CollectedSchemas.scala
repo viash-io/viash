@@ -96,9 +96,6 @@ object CollectedSchemas {
     "config" -> Map(
       ""                       -> getMembers[Config],
     ),
-    "info" -> Map(
-      ""                       -> getMembers[Info],
-    ),
     "functionality" -> Map(
       ""                       -> getMembers[Functionality]
     ),
