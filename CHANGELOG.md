@@ -24,6 +24,9 @@
 
 * `config inject`: Doesn't work when `must_exist == true` (#273).
 
+* `RScript`: Fix compatibility issue where the new character escaping in `r_script` required R>=4.0 (#275). Escaping is now handled without
+  using the new `r'(foo)'` notation.
+
 ## DEPRECATION
 
 * `DockerRequirements`: The `resources:` setting has been deprecated and will be removed in Viash 0.7.0. Please use `copy:` instead.
