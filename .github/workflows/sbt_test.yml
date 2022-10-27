@@ -11,19 +11,11 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          # - {name: 'ubuntu_latest', os: ubuntu-latest, python: '3.x' }
+          - {name: 'ubuntu_latest', os: ubuntu-latest, python: '3.x' }
           - {name: 'macos_latest', os: macos-latest, python: '3.x' }
 
     steps:
     - uses: actions/checkout@v2
-
-    # - name: Install system dependencies
-    #   if: runner.os == 'Linux'
-    #   env:
-    #     RHUB_PLATFORM: linux-x86_64-ubuntu-gcc
-    #   run: |
-    #     sudo apt-get update
-    #     sudo apt-get install -y libicu-dev make libssl-dev libxml2-dev zlib1g-dev libbibutils6 libghc-pandoc-citeproc-data pandoc-data
 
     - name: Set up Nextflow
       if: runner.os == 'Linux'
@@ -61,17 +53,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10' 
-
-    - name: Test something
-      run: |
-        if [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
-          python --version
-          python3 --version
-          ./configure
-          make
-          bin/viash test src/test/resources/testns/src/ns_multiply/config.vsh.yaml
-        fi
+        python-version: '3.10'
 
     - name: Run tests
       run: |
