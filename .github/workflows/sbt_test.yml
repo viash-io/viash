@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {name: 'ubuntu_latest', os: ubuntu-latest, python: '3.x' }
+          # - {name: 'ubuntu_latest', os: ubuntu-latest, python: '3.x' }
           - {name: 'macos_latest', os: macos-latest, python: '3.x' }
 
     steps:
@@ -64,7 +64,7 @@ jobs:
     - name: Test something
       run: |
         if [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
-          python --vershon
+          python --version
           ./configure
           make
           bin/viash test src/test/resources/testns/src/ns_multiply/config.vsh.yaml
