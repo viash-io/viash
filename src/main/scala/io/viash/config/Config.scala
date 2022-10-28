@@ -224,8 +224,7 @@ object Config {
   def read(
     configPath: String,
     addOptMainScript: Boolean = true,
-    configMods: List[String] = Nil,
-    displayWarnings: Boolean = true
+    configMods: List[String] = Nil
   ): Config = {
 
     // read yaml
@@ -252,10 +251,10 @@ object Config {
       }
     }
 
-    if (conf1.functionality.status == Status.Deprecated && displayWarnings)
+    if (conf1.functionality.status == Status.Deprecated)
       Console.err.println(s"${Console.YELLOW}Warning: The status of the component '${conf1.functionality.name}' is set to deprecated.${Console.RESET}")
     
-    if (conf1.functionality.resources.isEmpty && displayWarnings && optScript.isEmpty)
+    if (conf1.functionality.resources.isEmpty && optScript.isEmpty)
       Console.err.println(s"${Console.YELLOW}Warning: no resources specified!${Console.RESET}")
 
 
@@ -312,6 +311,7 @@ object Config {
     scriptFiles.map { file =>
       try {
         // read config to get an idea of the name and namespaces
+        // warnings will be captured for now, and will be displayed when reading the second time
         val stdout = new ByteArrayOutputStream()
         val stderr = new ByteArrayOutputStream()
         val confTest = 
@@ -319,9 +319,8 @@ object Config {
             Console.withOut(stdout) {
               Config.read(
                 file.toString, 
-                addOptMainScript = false,
-                configMods = configMods,
-                displayWarnings = false // warnings will be displayed when reading the second time
+                addOptMainScript = addOptMainScript,
+                configMods = configMods
               )
             }
           }

@@ -18,6 +18,7 @@
 package io.viash
 
 import config._
+import platforms.Platform
 import functionality.resources.{BashScript, Executable, PlainFile, PythonScript, RScript}
 import io.circe.yaml.Printer
 import helpers.IO
@@ -38,6 +39,7 @@ object ViashBuild {
 
   def apply(
     config: Config,
+    platform: Platform,
     output: String,
     writeMeta: Boolean = false,
     printMeta: Boolean = false,
