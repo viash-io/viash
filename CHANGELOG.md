@@ -26,6 +26,12 @@
         direction: output
   ```
 
+## MAJOR CHANGES
+
+* `Config`: Made major internal changes w.r.t. how config files are read and at which point a platform (native, docker, nextflow)
+  is applied to the functionality script. The only visible side effect is that 
+  `viash ns list` will output each config only once instead of multiple times.
+
 ## MINOR CHANGES
 
 * `BashWrapper`: Allow printing the executor command by adding `---verbose ---verbose` to a `viash run`.
