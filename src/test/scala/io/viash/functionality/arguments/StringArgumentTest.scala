@@ -3,14 +3,14 @@ package io.viash.functionality.arguments
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.util.Try
-import io.circe.Json
-import io.circe.JsonObject
+import io.circe._
+import io.circe.syntax._
 import io.circe.yaml.{parser => YamlParser}
 import io.viash.helpers.circe._
 import io.viash.helpers.data_structures._
 
 
-class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
+class StringArgumentTest extends FunSuite with BeforeAndAfterAll {
   val infoJson = Yaml("""
     |foo:
     |  bar:
@@ -40,6 +40,9 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
     assert(!arg.multiple)
     assert(arg.multiple_sep == ":")
     assert(arg.dest == "par")
+
+    val argParsed = arg.asJson.as[StringArgument].fold(throw _, a => a)
+    assert(argParsed == arg)
   }
 
   test("Simple getters and helper functions on object with many non-default values") {
@@ -76,6 +79,9 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
     assert(arg.multiple)
     assert(arg.multiple_sep == "-")
     assert(arg.dest == "meta")
+
+    val argParsed = arg.asJson.as[StringArgument].fold(throw _, a => a)
+    assert(argParsed == arg)
   }
 
   test("copyArg helper function") {
@@ -95,6 +101,9 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
       dest = "meta"
     )
 
+    val arg2GParsed = arg2generic.asJson.as[Argument[_]].fold(throw _, a => a)
+    assert(arg2GParsed == arg2generic)
+
     assert(arg2generic.isInstanceOf[StringArgument])
     val arg2 = arg2generic.asInstanceOf[StringArgument]
 
@@ -110,5 +119,8 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
     assert(arg2.multiple)
     assert(arg2.multiple_sep == "-")
     assert(arg2.dest == "meta")
+
+    val arg2Parsed = arg2.asJson.as[StringArgument].fold(throw _, a => a)
+    assert(arg2Parsed == arg2)
   }
 }
