@@ -3,9 +3,21 @@ package io.viash.functionality.arguments
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.util.Try
+import io.circe.Json
+import io.circe.JsonObject
+import io.circe.yaml.{parser => YamlParser}
+import io.viash.helpers.circe._
 import io.viash.helpers.data_structures._
 
+
 class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
+  val infoJson = Yaml("""
+    |foo:
+    |  bar:
+    |    baz:
+    |      10
+    |arg: aaa
+    |""".stripMargin)
 
   test("Simple getters and helper functions") {
     val arg = StringArgument(name = "--foo")
@@ -19,6 +31,7 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
     assert(arg.name == "--foo")
     assert(arg.alternatives == OneOrMore())
     assert(arg.description == None)
+    assert(arg.info == Json.Null)
     assert(arg.example == OneOrMore())
     assert(arg.default == OneOrMore())
     assert(!arg.required)
@@ -34,6 +47,7 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
       name = "one_two_three_four",
       alternatives = List("zero", "-one", "--two"),
       description = Some("foo"),
+      info = infoJson,
       example = OneOrMore("ten"),
       default = OneOrMore("bar"),
       required = true,
@@ -53,6 +67,7 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
     assert(arg.name == "one_two_three_four")
     assert(arg.alternatives == OneOrMore("zero", "-one", "--two"))
     assert(arg.description == Some("foo"))
+    assert(arg.info == infoJson)
     assert(arg.example == OneOrMore("ten"))
     assert(arg.default == OneOrMore("bar"))
     assert(arg.required)
@@ -70,6 +85,7 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
       name = "one_two_three_four",
       alternatives = List("zero", "-one", "--two"),
       description = Some("foo"),
+      info = infoJson,
       example = OneOrMore("ten"),
       default = OneOrMore("bar"),
       required = true,
@@ -85,6 +101,7 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
     assert(arg2.name == "one_two_three_four")
     assert(arg2.alternatives == OneOrMore("zero", "-one", "--two"))
     assert(arg2.description == Some("foo"))
+    assert(arg2.info == infoJson)
     assert(arg2.example == OneOrMore("ten"))
     assert(arg2.default == OneOrMore("bar"))
     assert(arg2.required)
