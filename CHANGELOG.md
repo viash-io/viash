@@ -26,9 +26,28 @@
         direction: output
   ```
 
+## MAJOR CHANGES
+
+* `Functionality`: Structured annotation can be added to a functionality and its arguments using the `info` field. Example:
+  ```yaml
+  functionality:
+    name: foo
+    info:
+      site: https://abc.xyz
+      tags: [ one, two, three ]
+    arguments:
+      - name: --foo
+        type: string
+        info:
+          foo: bar
+          a:
+            b:
+              c
+  ```
+
 ## MINOR CHANGES
 
-* `BashWrapper`: Allow printing the executor command by adding `---verbose ---verbose` to a `viash run`.
+* `BashWrapper`: Allow printing the executor command by adding `---verbose ---verbose` to a `viash run` or an executable.
 
 * `Testbenches`: Rework `MainBuildAuxiliaryNativeParameterCheck` to create stimulus files and loop over the file from bash instead of looping natively.
   This prevents creating thousands of new processes which would only test a single parameter.
