@@ -73,6 +73,7 @@ object ViashNamespace {
 
   def test(
     configs: List[Either[Config, Status]],
+    platformStr: Option[String],
     parallel: Boolean = false,
     keepFiles: Option[Boolean] = None,
     tsv: Option[String] = None,
@@ -151,6 +152,7 @@ object ViashNamespace {
             val ManyTestOutput(setupRes, testRes) = try {
               ViashTest(
                 config = conf,
+                platformStr = platformStr,
                 keepFiles = keepFiles,
                 quiet = true,
                 parentTempPath = Some(parentTempPath),

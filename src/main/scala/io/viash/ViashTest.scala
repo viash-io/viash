@@ -39,6 +39,7 @@ object ViashTest {
 
   def apply(
     config: Config,
+    platformStr: Option[String],
     keepFiles: Option[Boolean] = None,
     quiet: Boolean = false,
     setupStrategy: String = "cachedbuild",
@@ -66,6 +67,7 @@ object ViashTest {
     // run tests
     val ManyTestOutput(setupRes, results) = ViashTest.runTests(
       config = config2,
+      platformStr = platformStr,
       dir = dir,
       verbose = !quiet,
       setupStrategy = setupStrategy,
@@ -110,9 +112,18 @@ object ViashTest {
     ManyTestOutput(setupRes, results)
   }
 
-  def runTests(config: Config, dir: Path, verbose: Boolean = true, setupStrategy: String, verbosityLevel: Int, cpus: Option[Int], memory: Option[String]): ManyTestOutput = {
+  def runTests(
+    config: Config,
+    platformStr: Option[String],
+    dir: Path, 
+    verbose: Boolean = true, 
+    setupStrategy: String, 
+    verbosityLevel: Int, 
+    cpus: Option[Int], 
+    memory: Option[String]
+  ): ManyTestOutput = {
     val fun = config.functionality
-    val platform = config.platform.get
+    val platform = config.findPlatform(platformStr)
 
     val consoleLine = "===================================================================="
 

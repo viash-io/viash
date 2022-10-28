@@ -19,7 +19,7 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
   private val tempFolStr = temporaryFolder.toString
 
   // parse functionality from file
-  private val functionality = Config.read(configFile, applyPlatform = false).functionality
+  private val functionality = Config.read(configFile).functionality
 
   // check whether executable was created
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
