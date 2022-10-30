@@ -47,7 +47,7 @@ object ViashBuild {
     setup: Option[String] = None,
     push: Boolean = false
   ) {
-    val fun = config.functionality
+    val fun = platform.modifyFunctionality(config, testing = false)
 
     // create dir
     val dir = Paths.get(output)
