@@ -128,45 +128,6 @@ case class Config(
 }
 
 object Config {
-  def parse(uri: URI, preparseMods: Option[ConfigMods]): Config = {
-    val str = IO.read(uri)
-    parse(str, uri, preparseMods)
-  }
-
-  def parse(yamlText: String, uri: URI, preparseMods: Option[ConfigMods]): Config = {
-    def errorHandler[C](e: Exception): C = {
-      Console.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
-      throw e
-    }
-
-    // read json
-    val js1 = parser.parse(yamlText).fold(errorHandler, a => a)
-
-    // apply inheritance if need be
-    val js2 = js1.inherit(uri)
-
-    // apply preparse config mods
-    val js3 = preparseMods match {
-      case None => js2
-      case Some(cmds) => cmds(js2, preparse = true)
-    }
-
-    // parse as config
-    val config = js3.as[Config].fold(errorHandler, identity)
-
-    // make paths absolute
-    val resources = config.functionality.resources.map(_.copyWithAbsolutePath(uri))
-    val tests = config.functionality.test_resources.map(_.copyWithAbsolutePath(uri))
-
-    // copy resources with updated paths into config and return
-    config.copy(
-      functionality = config.functionality.copy(
-        resources = resources,
-        test_resources = tests
-      )
-    )
-  }
-
   def readYAML(config: String): (String, Option[Script]) = {
     // get config uri
     val configUri = IO.uri(config)
@@ -211,15 +172,6 @@ object Config {
     }
   }
 
-  // parse
-  def parseConfigMods(li: List[String] = Nil): Option[ConfigMods] = {
-    if (li.isEmpty) {
-      None
-    } else {
-      Some(ConfigModParser.block.parse(li.mkString("; ")))
-    }
-  }
-
   // reads and modifies the config based on the current setup
   def read(
     configPath: String,
@@ -227,38 +179,71 @@ object Config {
     configMods: List[String] = Nil
   ): Config = {
 
-    // read yaml
-    val (yaml, optScript) = readYAML(configPath)
+    // make URI
+    val uri = IO.uri(configPath)
 
-    // read config mods
-    val confMods = parseConfigMods(configMods)
+    // read cli config mods
+    val cliConfMods = ConfigMods.parseConfigMods(configMods)
     
-    /* CONFIG 0: read from yaml */
-    // parse yaml as config, incl preparse configmods
-    val conf0 = parse(yaml, IO.uri(configPath), confMods)
+    // read vcm config mods
+    // TODO: do not look for vcm files when uri protocol does not allow listing the directory
+    val vcmConfMods = ConfigMods.findAllVcm(Paths.get(uri).getParent())
 
-    /* CONFIG 1: apply config mods */
-    // parse and apply commands
-    val conf1 = confMods match {
-      case None => conf0
-      case Some(cmds) => {
+    // combine config mods
+    val confMods = vcmConfMods + cliConfMods
+
+    /* STRING */
+    // read yaml as string
+    val (yamlText, optScript) = readYAML(configPath)
+    
+    /* JSON 0: parsed from string */
+    // parse yaml into Json
+    def parsingErrorHandler[C](e: Exception): C = {
+      Console.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
+      throw e
+    }
+    val json0 = parser.parse(yamlText).fold(parsingErrorHandler, identity)
+
+    /* JSON 1: after inheritance */
+    // apply inheritance if need be
+    val json1 = json0.inherit(uri)
+
+    /* JSON 2: after preparse config mods  */
+    // apply preparse config mods if need be
+    val json2 = confMods(json1, preparse = true)
+
+    /* CONFIG 0: converted from json */
+    // convert Json into Config
+    val conf0 = json2.as[Config].fold(parsingErrorHandler, identity)
+
+    /* CONFIG 1: make resources absolute */
+    // make paths absolute
+    val resources = conf0.functionality.resources.map(_.copyWithAbsolutePath(uri))
+    val tests = conf0.functionality.test_resources.map(_.copyWithAbsolutePath(uri))
+
+    // copy resources with updated paths into config and return
+    val conf1 = conf0.copy(
+      functionality = conf0.functionality.copy(
+        resources = resources,
+        test_resources = tests
+      )
+    )
+
+    /* CONFIG 2: apply post-parse config mods */
+    // apply config mods only if need be
+    val conf2 = 
+      if (confMods.postparseCommands.nonEmpty) {
         // turn config back into json
-        val js = encodeConfig(conf0)
+        val js = encodeConfig(conf1)
         // apply config mods
-        val modifiedJs = cmds(js, preparse = false)
+        val modifiedJs = confMods(js, preparse = false)
         // turn json back into a config
         modifiedJs.as[Config].fold(throw _, identity)
+      } else {
+        conf1
       }
-    }
 
-    if (conf1.functionality.status == Status.Deprecated)
-      Console.err.println(s"${Console.YELLOW}Warning: The status of the component '${conf1.functionality.name}' is set to deprecated.${Console.RESET}")
-    
-    if (conf1.functionality.resources.isEmpty && optScript.isEmpty)
-      Console.err.println(s"${Console.YELLOW}Warning: no resources specified!${Console.RESET}")
-
-
-    /* CONFIG 2: add info */
+    /* CONFIG 3: add info */
     // gather git info
     val path = new File(configPath).getParentFile
     val GitInfo(_, rgr, gc, gt) = Git.getInfo(path)
@@ -274,21 +259,30 @@ object Config {
       )
     
     // add info and additional resources
-    val conf2a = conf1.copy(
+    val conf3 = conf2.copy(
       info = Some(info),
     )
+
+    // print warnings if need be
+    if (conf2.functionality.status == Status.Deprecated)
+      Console.err.println(s"${Console.YELLOW}Warning: The status of the component '${conf2.functionality.name}' is set to deprecated.${Console.RESET}")
+    
+    if (conf2.functionality.resources.isEmpty && optScript.isEmpty)
+      Console.err.println(s"${Console.YELLOW}Warning: no resources specified!${Console.RESET}")
+
     if (!addOptMainScript) {
-      return conf2a
+      return conf3
     }
     
+    /* CONFIG 4: add main script if config is stored inside script */
     // add info and additional resources
-    val conf2b = conf2a.copy(
-      functionality = conf2a.functionality.copy(
-        resources = optScript.toList ::: conf2a.functionality.resources
+    val conf4 = conf3.copy(
+      functionality = conf3.functionality.copy(
+        resources = optScript.toList ::: conf3.functionality.resources
       )
     )
 
-    conf2b
+    conf4
   }
 
   def readConfigs(
@@ -314,7 +308,7 @@ object Config {
         // warnings will be captured for now, and will be displayed when reading the second time
         val stdout = new ByteArrayOutputStream()
         val stderr = new ByteArrayOutputStream()
-        val confTest = 
+        val config = 
           Console.withErr(stderr) {
             Console.withOut(stdout) {
               Config.read(
@@ -325,8 +319,8 @@ object Config {
             }
           }
 
-        val funName = confTest.functionality.name
-        val funNs = confTest.functionality.namespace
+        val funName = config.functionality.name
+        val funNs = config.functionality.namespace
 
         // does name & namespace match regex?
         val queryTest = (query, funNs) match {
@@ -345,11 +339,11 @@ object Config {
         }
 
         // if config passes regex checks, show warning and return it
-        if (queryTest && nameTest && namespaceTest && confTest.functionality.isEnabled) {
+        if (queryTest && nameTest && namespaceTest && config.functionality.isEnabled) {
           // TODO: stdout and stderr are no longer in the correct order :/
           Console.out.println(stdout.toString)
           Console.err.println(stderr.toString)
-          Left(confTest)
+          Left(config)
         } else {
           Right(Disabled)
         }
