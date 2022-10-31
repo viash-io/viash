@@ -13,7 +13,7 @@ target_ns_add_yaml="target/native/testns/ns_add/viash.yaml"
 
 # 1. Run component with default arguments
 # Run component
-./$meta_functionality_name \
+$meta_executable \
     --verbose \
     >$defaults_output
 
@@ -34,7 +34,7 @@ rm -r target
 cp -r src $alt_src
 
 # Run component
-./$meta_functionality_name \
+$meta_executable \
     --verbose \
     --src $alt_src \
     --platform native \

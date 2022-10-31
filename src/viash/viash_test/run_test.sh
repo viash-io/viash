@@ -12,7 +12,7 @@ tsv=output.tsv
 # 1. Run component with default arguments
 # Run component
 set +e
-./$meta_functionality_name \
+$meta_executable \
     --verbose \
     >$defaults_output
 
@@ -34,7 +34,7 @@ cp -r src $alt_src
 # Run component
 unset exit_code
 set +e
-./$meta_functionality_name \
+$meta_executable \
     --verbose \
     --src $alt_src \
     --platform native \
