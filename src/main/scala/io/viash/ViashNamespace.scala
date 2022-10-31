@@ -104,7 +104,7 @@ object ViashNamespace {
 
     val parentTempPath = IO.makeTemp("viash_ns_test")
     if (keepFiles.getOrElse(true)) {
-      printf("The working directory for the namespace tests is %s\n", parentTempPath.toString())
+      Console.err.printf("The working directory for the namespace tests is %s\n", parentTempPath.toString())
     }
     
     try {
@@ -262,10 +262,12 @@ object ViashNamespace {
     dryrun: Boolean, 
     parallel: Boolean
   ) {
+    val configData = configs.flatMap(_.left.toOption).map{
+      case (conf, plat) => 
+        NsExecData(conf.info.get.config, conf, plat)
+    }
 
-    val goodConfigs = configs.flatMap(_.left.toOption).map(_._1).groupBy(_.info.get.config)
-    // Just take first config. More can be available but those have different platforms. Platforms are currently ignored.
-    val configData = goodConfigs.map(c => NsExecData(c._1, c._2.head))
+    // check whether is empty
     if (configData.isEmpty) {
       Console.err.println("No config files found to work with.")
       return

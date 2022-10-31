@@ -64,9 +64,6 @@ case class Config(
       |""".stripMargin)
   functionality: Functionality,
 
-  @internalFunctionality
-  platform: Option[Platform] = None,
-
   @description(
     """A list of platforms to generate target artifacts for.
       |
@@ -97,7 +94,6 @@ case class Config(
     * Order of execution:
     *   - if a platform id is passed, look up the platform in the platforms list
     *   - else if a platform yaml is passed, read platform from file
-    *   - else if a platform is already defined in the config, use that
     *   - else if platforms is a non-empty list, use the first platform
     *   - else use the native platform
     *
@@ -117,8 +113,6 @@ case class Config(
       } else {
         throw new RuntimeException("platform must be a platform id specified in the config or a path to a platform yaml file.")
       }
-    } else if (this.platform.isDefined) {
-      this.platform.get
     } else if (this.platforms.nonEmpty) {
       this.platforms.head
     } else {
@@ -341,8 +335,8 @@ object Config {
         // if config passes regex checks, show warning and return it
         if (queryTest && nameTest && namespaceTest && config.functionality.isEnabled) {
           // TODO: stdout and stderr are no longer in the correct order :/
-          Console.out.println(stdout.toString)
-          Console.err.println(stderr.toString)
+          Console.out.print(stdout.toString)
+          Console.err.print(stderr.toString)
           Left(config)
         } else {
           Right(Disabled)
