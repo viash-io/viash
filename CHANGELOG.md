@@ -44,7 +44,9 @@
 
 * `Testbenches`: Add exit code to helper method `testMainWithStdErr`.
 
-* `Testbenches`: Add testbench to verify viash underscore components (viash_build, viash_install, viash_push, viash_skeleton, viash_test)
+* `Testbenches`: Add testbench to verify viash underscore components (viash_build, viash_install, viash_push, viash_skeleton, viash_test).
+
+* `Testbenches`: Update viash underscore component tests to use `$meta_executable`.
 
 ## BUG FIXES
 
