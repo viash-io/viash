@@ -21,6 +21,8 @@ class MainTestUnderscoreComponents extends FunSuite with BeforeAndAfterAll {
       "--src", nsPath,
     )
 
+    assert(!stdout.contains("ERROR"), stdout)
+    assert(!stderr.contains("tests failed"), stderr)
     assert(exitCode == 0, s"stdout: $stdout\nstderr: $stderr")
   }
 
