@@ -136,7 +136,12 @@ object IO {
     path
   }
 
-  def write(text: String, path: Path, overwrite: Boolean, executable: Option[Boolean]): Path = {
+  def write(
+    text: String, 
+    path: Path, 
+    overwrite: Boolean = false,
+    executable: Option[Boolean] = None
+  ): Path = {
     if (overwrite && Files.exists(path)) {
       if (Files.isDirectory(path)) {
         deleteRecursively(path)

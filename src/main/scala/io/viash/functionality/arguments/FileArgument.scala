@@ -18,7 +18,7 @@
 package io.viash.functionality.arguments
 
 import java.nio.file.Path
-import io.viash.helpers.Circe.OneOrMore
+import io.viash.helpers.data_structures._
 import io.viash.schemas._
 
 @description("A `file` type argument has a string value that points to a file or folder path.")

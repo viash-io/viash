@@ -22,7 +22,7 @@ import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfigur
 import cats.syntax.functor._ // for .widen
 
 package object platforms {
-  import io.viash.helpers.Circe._
+  import io.viash.helpers.circe._
 
   implicit val encodeDockerPlatform: Encoder.AsObject[DockerPlatform] = deriveConfiguredEncoder
   implicit val decodeDockerPlatform: Decoder[DockerPlatform] = deriveConfiguredDecoder

@@ -22,7 +22,7 @@ import java.nio.file.Paths
 import io.viash.config._
 import io.viash.functionality.arguments.{FileArgument, Output}
 import io.viash.helpers.IO
-import io.viash.helpers.Circe.{OneOrMore, One, More}
+import io.viash.helpers.data_structures._
 
 import scala.sys.process.{Process, ProcessLogger}
 

@@ -21,9 +21,11 @@ import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import cats.syntax.functor._ // for .widen
-import io.viash.helpers.Circe._
+
 
 package object requirements {
+  import io.viash.helpers.circe._
+
   implicit val encodeRRequirements: Encoder.AsObject[RRequirements] = deriveConfiguredEncoder
   implicit val decodeRRequirements: Decoder[RRequirements] = deriveConfiguredDecoder
 

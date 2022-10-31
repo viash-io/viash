@@ -21,6 +21,7 @@ import io.viash.config_mods.ConfigModParser
 import io.viash.functionality._
 import io.viash.platforms._
 import io.viash.helpers.{Git, GitInfo, IO}
+import io.viash.helpers.circe._
 import io.viash.helpers.status._
 
 import java.net.URI
@@ -33,12 +34,61 @@ import io.circe.ParsingFailure
 import io.viash.config_mods.ConfigMods
 import java.nio.file.Paths
 
+import io.viash.schemas._
+
+@description(
+  """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
+    |We commonly name this file `config.vsh.yaml` in our examples, but you can name it however you choose.  
+    |""".stripMargin)
+@example(
+  """functionality:
+    |  name: hello_world
+    |  arguments:
+    |    - type: string
+    |      name: --input
+    |      default: "world"
+    |  resources:
+    |    - type: bash_script
+    |      path: script.sh
+    |      text: echo Hello $par_input
+    |platforms:
+    |  - type: docker
+    |    image: "bash:4.0"
+    |""".stripMargin, "yaml")
 case class Config(
+  @description(
+    """The @[functionality](functionality) describes the behaviour of the script in terms of arguments and resources.
+      |By specifying a few restrictions (e.g. mandatory arguments) and adding some descriptions, Viash will automatically generate a stylish command-line interface for you.
+      |""".stripMargin)
   functionality: Functionality,
+
+  @internalFunctionality
   platform: Option[Platform] = None,
+
+  @description(
+    """A list of platforms to generate target artifacts for.
+      |
+      | - @[native_platform](Native)
+      | - @[docker_platform](Docker)
+      | - @[nextflow_platform](Nextflow VDSL3)
+      |""".stripMargin)
   platforms: List[Platform] = Nil,
+
+  @internalFunctionality
   info: Option[Info] = None
-)
+) {
+  
+  @description(
+    """Argument for inheriting YAML partials. This is useful for defining common APIs in
+      |separate files. `__inherits__` can be used in any level of the YAML. For example,
+      |not just in the config but also in the functionality or any of the platforms.
+      |""".stripMargin)
+  @example("__inherits__: ../api/common_interface.yaml", "yaml")
+  @since("Viash 0.6.2")
+  @undocumented
+  val `__inherits__`: Option[File] = None
+  
+}
 
 object Config {
   def parse(uri: URI, preparseMods: Option[ConfigMods]): Config = {
@@ -53,16 +103,19 @@ object Config {
     }
 
     // read json
-    val js = parser.parse(yamlText).fold(errorHandler, a => a)
+    val js1 = parser.parse(yamlText).fold(errorHandler, a => a)
+
+    // apply inheritance if need be
+    val js2 = js1.inherit(uri)
 
     // apply preparse config mods
-    val modifiedJs = preparseMods match {
-      case None => js
-      case Some(cmds) => cmds(js, preparse = true)
+    val js3 = preparseMods match {
+      case None => js2
+      case Some(cmds) => cmds(js2, preparse = true)
     }
 
     // parse as config
-    val config = modifiedJs.as[Config].fold(errorHandler, identity)
+    val config = js3.as[Config].fold(errorHandler, identity)
 
     // make paths absolute
     val resources = config.functionality.resources.map(_.copyWithAbsolutePath(uri))

@@ -21,7 +21,6 @@ import scala.reflect.runtime.universe._
 import io.circe.{Encoder, Printer => JsonPrinter}
 import io.circe.syntax.EncoderOps
 import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
-import io.viash.helpers.Circe._
 
 import io.viash.functionality.Functionality
 import io.viash.platforms._
@@ -29,8 +28,11 @@ import io.viash.platforms.requirements._
 import io.viash.functionality.arguments._
 import io.circe.Json
 import monocle.function.Cons
+import io.viash.config.Config
+import io.viash.config.Info
 
 final case class CollectedSchemas (
+  config: List[ParameterSchema],
   functionality: List[ParameterSchema],
   platforms: Map[String, List[ParameterSchema]],
   requirements: Map[String, List[ParameterSchema]],
@@ -55,6 +57,8 @@ object CollectedSchemas {
   }
 
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
+
+  import io.viash.helpers.circe._
 
   private implicit val encodeConfigSchema: Encoder.AsObject[CollectedSchemas] = deriveConfiguredEncoder
   private implicit val encodeParameterSchema: Encoder.AsObject[ParameterSchema] = deriveConfiguredEncoder
@@ -89,38 +93,42 @@ object CollectedSchemas {
   }
 
   val schemaClassMap = Map(
-    ("functionality", Map(
-      (""                       , getMembers[Functionality]))),
-    ("platforms", Map(
-      ("nativePlatform"         , getMembers[NativePlatform]),
-      ("dockerPlatform"         , getMembers[DockerPlatform]),
-      ("nextflowVdsl3Platform"  , getMembers[NextflowVdsl3Platform]),
-      ("nextflowLegacyPlatform" , getMembers[NextflowLegacyPlatform]),
-    )),
-    ("requirements", Map(
-      ("apkRequirements"        , getMembers[ApkRequirements]),
-      ("aptRequirements"        , getMembers[AptRequirements]),
-      ("dockerRequirements"     , getMembers[DockerRequirements]),
-      ("javascriptRequirements" , getMembers[JavaScriptRequirements]),
-      ("pythonRequirements"     , getMembers[PythonRequirements]),
-      ("rRequirements"          , getMembers[RRequirements]),
-      ("rubyRequirements"       , getMembers[RubyRequirements]),
-      ("yumRequirements"        , getMembers[YumRequirements]),
-    )),
-    ("arguments", Map(
-      ("boolean"                , getMembers[BooleanArgument]),
-      ("boolean_true"           , getMembers[BooleanTrueArgument]),
-      ("boolean_false"          , getMembers[BooleanFalseArgument]),
-      ("double"                 , getMembers[DoubleArgument]),
-      ("file"                   , getMembers[FileArgument]),
-      ("integer"                , getMembers[IntegerArgument]),
-      ("long"                   , getMembers[LongArgument]),
-      ("string"                 , getMembers[StringArgument]),
-    ))
+    "config" -> Map(
+      ""                       -> getMembers[Config],
+    ),
+    "functionality" -> Map(
+      ""                       -> getMembers[Functionality]
+    ),
+    "platforms" -> Map(
+      "nativePlatform"         -> getMembers[NativePlatform],
+      "dockerPlatform"         -> getMembers[DockerPlatform],
+      "nextflowVdsl3Platform"  -> getMembers[NextflowVdsl3Platform],
+      "nextflowLegacyPlatform" -> getMembers[NextflowLegacyPlatform],
+    ),
+    "requirements" -> Map(
+      "apkRequirements"        -> getMembers[ApkRequirements],
+      "aptRequirements"        -> getMembers[AptRequirements],
+      "dockerRequirements"     -> getMembers[DockerRequirements],
+      "javascriptRequirements" -> getMembers[JavaScriptRequirements],
+      "pythonRequirements"     -> getMembers[PythonRequirements],
+      "rRequirements"          -> getMembers[RRequirements],
+      "rubyRequirements"       -> getMembers[RubyRequirements],
+      "yumRequirements"        -> getMembers[YumRequirements],
+    ),
+    "arguments" -> Map(
+      "boolean"                -> getMembers[BooleanArgument],
+      "boolean_true"           -> getMembers[BooleanTrueArgument],
+      "boolean_false"          -> getMembers[BooleanFalseArgument],
+      "double"                 -> getMembers[DoubleArgument],
+      "file"                   -> getMembers[FileArgument],
+      "integer"                -> getMembers[IntegerArgument],
+      "long"                   -> getMembers[LongArgument],
+      "string"                 -> getMembers[StringArgument],
+    )
   )
 
   private def trimTypeName(s: String) = {
-    // first: io.viash.helpers.Circe.OneOrMore[String] -> OneOrMore[String]
+    // first: io.viash.helpers.data_structures.OneOrMore[String] -> OneOrMore[String]
     // second: List[io.viash.platforms.requirements.Requirements] -> List[Requirements]
     s.replaceAll("^(\\w*\\.)*", "").replaceAll("""(\w*)\[[\w\.]*?([\w,]*)(\[_\])?\]""", "$1 of $2")
   }
@@ -148,6 +156,7 @@ object CollectedSchemas {
   // Main call for documentation output
   def getJson: Json = {
     val data = CollectedSchemas(
+      config = getSchema(schemaClassMap.get("config").get("")),
       functionality = getSchema(schemaClassMap.get("functionality").get("")),
       platforms = schemaClassMap.get("platforms").get.map{ case(k, v) => (k, getSchema(v))},
       requirements = schemaClassMap.get("requirements").get.map{ case(k, v) => (k, getSchema(v))},
