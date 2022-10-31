@@ -363,7 +363,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
 
       val applyPlatform = registerOpt[Boolean] (
         name = "apply_platform",
-        short = Some('p'),
+        short = Some('a'),
         default = Some(false),
         descr = 
           """Fills in the {platform} field by applying each platform to the config separately.
