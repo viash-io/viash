@@ -138,7 +138,7 @@ object Main {
         val errors = configs.flatMap(_.right.toOption).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.exec) =>
-        val configs = readConfigs(cli.namespace.exec, applyPlatform = false)
+        val configs = readConfigs(cli.namespace.exec, applyPlatform = cli.namespace.exec.applyPlatform())
         ViashNamespace.exec(
           configs = configs,
           command = cli.namespace.exec.cmd(),
@@ -196,12 +196,7 @@ object Main {
       }
     )
 
-    // Order of execution:
-    //   - if a platform id is passed, look up the platform in the platforms list
-    //   - else if a platform yaml is passed, read platform from file
-    //   - else if a platform is already defined in the config, use that
-    //   - else if platforms is a non-empty list, use the first platform
-    //   - else use the native platform
+    // find platform, see javadoc of this function for details on how
     val plat = conf1.findPlatform(platformStr)
 
     (conf1, Some(plat))
