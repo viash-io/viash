@@ -104,7 +104,7 @@ object ViashNamespace {
 
     val parentTempPath = IO.makeTemp("viash_ns_test")
     if (keepFiles.getOrElse(true)) {
-      printf("The working directory for the namespace tests is %s\n", parentTempPath.toString())
+      Console.err.printf("The working directory for the namespace tests is %s\n", parentTempPath.toString())
     }
     
     try {
