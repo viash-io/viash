@@ -10,9 +10,7 @@ import io.viash.helpers.{IO, Exec}
 import io.viash.TestHelper
 
 class MainTestUnderscoreComponents extends FunSuite with BeforeAndAfterAll {
-  private val resourcePath = getClass.getResource("/").getPath
-  private val nsPath = Paths.get(resourcePath).getParent.getParent.resolve("viash").toString
-
+  private val nsPath = Paths.get("src/viash").toString
   
   // convert testbash
   test("Test running viash ns test on the underscore components") {
@@ -25,7 +23,6 @@ class MainTestUnderscoreComponents extends FunSuite with BeforeAndAfterAll {
     assert(!stderr.contains("tests failed"), stderr)
     assert(exitCode == 0, s"stdout: $stdout\nstderr: $stderr")
   }
-
 
   override def afterAll() {
     // IO.deleteRecursively(temporaryFolder)
