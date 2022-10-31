@@ -29,7 +29,7 @@ class NextFlowPlatformTest extends FunSuite with BeforeAndAfterAll {
       TestHelper.copyFolder(Paths.get(rootPath, resource).toString, Paths.get(tempFolStr, resource).toString)
 
     // build the nextflow containers
-    val (_, _) = TestHelper.testMainWithStdErr(
+    val (_, _, _) = TestHelper.testMainWithStdErr(
       "ns", "build",
       "-s", srcPath,
       "-t", targetPath,

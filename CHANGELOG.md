@@ -42,6 +42,10 @@
   Added a testbench that verifies that all arguments are in fact annotated, skipping those that are not in the class constructor.
   Adds a hierarchy field in the `__this__` member to list the relation of the own and parent classes.
 
+* `Testbenches`: Add exit code to helper method `testMainWithStdErr`.
+
+* `Testbenches`: Add testbench to verify viash underscore components (viash_build, viash_install, viash_push, viash_skeleton, viash_test)
+
 ## BUG FIXES
 
 * `DockerPlatform`: Remove duplicate auto-mounts (#257).

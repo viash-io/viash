@@ -24,10 +24,12 @@ class MainNSListNativeSuite extends FunSuite{
 
   // convert testbash
   test("viash ns list") {
-    val (stdout, stderr) = TestHelper.testMainWithStdErr(
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
     "ns", "list",
       "-s", nsPath,
     )
+
+    assert(exitCode == 1)
 
     for (component ← components) {
       val regexName = raw"""name:\s+"$component""""

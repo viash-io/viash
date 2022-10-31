@@ -47,10 +47,10 @@ object TestHelper {
    * @param args all the arguments typically passed to Main.main()
    * @return a tuple of stdout and stderr strings of all the output
    */
-  def testMainWithStdErr(args: String*) : (String, String) = {
+  def testMainWithStdErr(args: String*) : (String, String, Int) = {
     val outStream = new ByteArrayOutputStream()
     val errStream = new ByteArrayOutputStream()
-    Console.withOut(outStream) {
+    val exitCode = Console.withOut(outStream) {
       Console.withErr(errStream) {
         Main.internalMain(args.toArray)
       }
@@ -59,7 +59,7 @@ object TestHelper {
     val stdout = outStream.toString
     val stderr = errStream.toString
     // Console.print(stdout)
-    (stdout, stderr)
+    (stdout, stderr, exitCode)
   }
 
   /**
