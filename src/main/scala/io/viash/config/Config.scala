@@ -341,8 +341,8 @@ object Config {
         // if config passes regex checks, show warning and return it
         if (queryTest && nameTest && namespaceTest && confTest.functionality.isEnabled) {
           // TODO: stdout and stderr are no longer in the correct order :/
-          Console.out.println(stdout.toString)
-          Console.err.println(stderr.toString)
+          Console.out.print(stdout.toString)
+          Console.err.print(stderr.toString)
           Left(confTest)
         } else {
           Right(Disabled)
