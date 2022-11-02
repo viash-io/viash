@@ -10,7 +10,7 @@ import io.viash.helpers.{IO, Exec}
 import io.viash.TestHelper
 
 class MainTestUnderscoreComponents extends FunSuite with BeforeAndAfterAll {
-  private val nsPath = Paths.get("src/viash").toString
+  private val nsPath = System.getProperty("user.dir") + "/src/viash"
   
   // convert testbash
   test("Test running viash ns test on the underscore components") {
