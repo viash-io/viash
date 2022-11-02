@@ -11,12 +11,21 @@ import io.viash.TestHelper
 
 class MainTestUnderscoreComponents extends FunSuite with BeforeAndAfterAll {
   private val nsPath = System.getProperty("user.dir") + "/src/viash"
+
+  private val temporaryFolder = IO.makeTemp("viash_tester")
+  private val tempFolStr = temporaryFolder.toString
+
+  println(s"nsPath: $nsPath")
+  println(s"tempFolStr: $tempFolStr")
   
-  // convert testbash
+  test("Copy underscore components into temporary folder") {
+    TestHelper.copyFolder(nsPath, tempFolStr)
+  }
+
   test("Test running viash ns test on the underscore components") {
     val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
       "ns", "test",
-      "--src", nsPath,
+      "--src", tempFolStr,
     )
 
     assert(!stdout.contains("ERROR"), stdout)
@@ -25,6 +34,6 @@ class MainTestUnderscoreComponents extends FunSuite with BeforeAndAfterAll {
   }
 
   override def afterAll() {
-    // IO.deleteRecursively(temporaryFolder)
+    IO.deleteRecursively(temporaryFolder)
   }
 }
