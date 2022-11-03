@@ -533,10 +533,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     }
   }
 
-  test("Prepare base config derivation and verify", DockerTest) {
-    val rootPath = getClass.getResource(s"/testbash/").getPath
-    TestHelper.copyFolder(rootPath, temporaryConfigFolder.toString)
-
+  test("Verify base config derivation", DockerTest) {
     val newConfigFilePath = configDeriver.derive(
       Nil,
       "commands_default"
