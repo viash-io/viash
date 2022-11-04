@@ -23,13 +23,20 @@ import io.viash.config.Config
 import io.viash.lenses.ConfigLenses._
 import io.viash.lenses.FunctionalityLenses._
 import io.viash.lenses.RepositoryLens._
+import io.viash.functionality.dependencies.GithubRepository
 
 object DependencyResolver {
 
   // Download the repo and return the path to the local dir where it is stored
-  def cacheRepo(repo: Repository): Path = {
-    Console.println(s"TODO cache repo $repo")
-    Paths.get("") 
+  def cacheRepo(repo: Repository): Repository = {
+    if (repo.isInstanceOf[GithubRepository]) {
+      val r = repo.asInstanceOf[GithubRepository].checkoutSparse()
+      r.checkout()
+    }
+    else {
+      repo
+    }
+
   }
 
   // Modify the config so all of the dependencies are available locally
@@ -67,23 +74,12 @@ object DependencyResolver {
       )
       )(config1)
 
-    // val actualRepo = 
-    //   rawRepo match {
-    //     case Left(repoRegex(protocol, repo, tag)) => 
-    //       Repo(protocol, repo, tag)
-    //     case Left(id) if id.matches("\\w+") =>
-    //       throw new NotImplementedError("define lens")
-    //     case Left(s) => throw new RuntimeException("unrecognised repo format " + s)
-    //     case Right(r) => r
-    //   }
-
     // get caches and store in repository classes
     composedDependenciesLens.modify(_
       .map{d =>
           val repo = d.repository.toOption.get
           val localRepoPath = cacheRepo(repo)
-          val updatedRepo = localPathLens.set(localRepoPath.toString)(repo)
-          d.copy(repository = Right(updatedRepo))
+          d.copy(repository = Right(localRepoPath))
       }
       )(config2)
   }

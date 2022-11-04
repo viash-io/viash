@@ -17,6 +17,10 @@
 
 package io.viash.functionality.dependencies
 
+import io.viash.helpers.Exec
+import io.viash.helpers.IO
+import java.nio.file.Paths
+
 abstract class Repository {
   val name: String
   val `type`: String
@@ -64,6 +68,40 @@ case class GithubRepository(
   localPath: String = ""
 ) extends Repository {
   def copyRepo(name: String, `type`: String, tag: Option[String], path: Option[String], localPath: String): Repository = copy(name, `type`, uri, tag, path, localPath)
+
+  lazy val fullUri = s"git@github.com:$uri.git"
+
+  def checkoutSparse(): GithubRepository = {
+    val temporaryFolder = IO.makeTemp("viash_hub_repo")
+    val cwd = Some(temporaryFolder.toFile)
+
+    // Console.println(s"temporaryFolder: $temporaryFolder uri: $uri fullUri: $fullUri")
+
+    val out = Exec.runCatch(
+      List("git", "clone", fullUri, "--no-checkout", "."),
+      cwd = cwd
+    )
+
+    copy(localPath = temporaryFolder.toString)
+  }
+
+  def checkout(): GithubRepository = {
+    val checkoutName = "origin/" + tag.getOrElse("HEAD")
+    val pathStr = path.getOrElse(".")
+    val cwd = Some(Paths.get(localPath).toFile)
+    val out = Exec.runCatch(
+      List("git", "checkout", checkoutName, "--", pathStr),
+      cwd = cwd
+    )
+
+    println(s"checkout out: ${out.command} ${out.exitValue} ${out.output}")
+
+    if (path.isDefined)
+      copy(localPath = Paths.get(localPath, path.get).toString)
+    else
+      // no changes to be made
+      this
+  }
 }
 
 case class LocalRepository(
