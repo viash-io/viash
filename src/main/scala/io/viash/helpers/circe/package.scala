@@ -17,7 +17,7 @@
 
 package io.viash.helpers
 
-import io.circe.{Decoder, Encoder, Json}
+import io.circe._
 import io.circe.generic.extras.Configuration
 import java.net.URI
 import data_structures.OneOrMore
@@ -35,8 +35,7 @@ package object circe {
     a either b
   }
 
-  // NOTE: might not need encoders or decoders for OneOrMore because of the convertors from/to List[A]
-
+  // encoder and decoder for OneOrMore
   implicit def encodeOneOrMore[A](implicit enc: Encoder[List[A]]): Encoder[OneOrMore[A]] = { 
     oom: OneOrMore[A] => if (oom == null) enc(Nil) else enc(oom.toList)
   }
@@ -46,12 +45,26 @@ package object circe {
     val r: Decoder[OneOrMore[A]] = dl.map(OneOrMore(_: _*))
     l or r
   }
-  
-  implicit def enrichJson(json: Json) = new RichJson(json)
 
+  // allow any type of base type to be interpreted as a string
   implicit val decodeStringLike: Decoder[String] =
     Decoder.decodeString or
       Decoder.decodeInt.map(_.toString) or
-      Decoder.decodeDouble.map(_.toString) or
+      Decoder.decodeBigInt.map(_.toString) or
+      Decoder.decodeBigDecimal.map(_.toString) or
       Decoder.decodeBoolean.map(_.toString)
+  
+  // auto convert a json to a RichJson
+  implicit def enrichJson(json: Json) = new RichJson(json)
+
+  // auto convert a JMap to Json
+  def JMap(fields: (String, Json)*): Json = {
+    Json.fromJsonObject(
+      JsonObject(fields: _*)
+    )
+  }
+
+  def Yaml(str: String): Json = {
+    io.circe.yaml.parser.parse(str).fold(throw _, a => a)
+  }
 }
