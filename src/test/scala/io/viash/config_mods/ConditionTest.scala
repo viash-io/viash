@@ -7,6 +7,10 @@ import io.circe.syntax._
 import io.circe.yaml.parser._
 
 class ConditionSuite extends FunSuite {
+  // testing parsers
+  // TODO
+
+  // testing functionality
   val baseJson: Json = parse(
     """foo: bar
       |baz: 123
