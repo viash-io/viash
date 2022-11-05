@@ -36,6 +36,7 @@ import java.nio.file.Paths
 
 import io.viash.schemas._
 import java.io.ByteArrayOutputStream
+import java.nio.file.FileSystemNotFoundException
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -179,8 +180,14 @@ object Config {
     val cliConfMods = ConfigMods.parseConfigMods(configMods)
     
     // read vcm config mods
-    // TODO: do not look for vcm files when uri protocol does not allow listing the directory
-    val vcmConfMods = ConfigMods.findAllVcm(Paths.get(uri).getParent())
+    val vcmConfMods = 
+      try {
+        ConfigMods.findAllVcm(Paths.get(uri).getParent())
+      } catch {
+        case (_: FileSystemNotFoundException) =>
+          Console.err.println(s"WARNING: not looking for .vcm files since URI protocol (${uri.getScheme()}) does not allow listing the directory")
+          ConfigMods()
+      }
 
     // combine config mods
     val confMods = vcmConfMods + cliConfMods
