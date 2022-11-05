@@ -27,17 +27,15 @@ import io.viash.functionality.dependencies.GithubRepository
 
 object DependencyResolver {
 
-  // Download the repo and return the path to the local dir where it is stored
-  def cacheRepo(repo: Repository): Repository = {
-    if (repo.isInstanceOf[GithubRepository]) {
-      val r = repo.asInstanceOf[GithubRepository].checkoutSparse()
-      r.checkout()
+  // Download the repo and return the repo with the local dir where it is stored filled in
+  def cacheRepo(repo: Repository): Repository = 
+    repo match {
+      case r: GithubRepository => {
+        val r2 = r.checkoutSparse()
+        r2.checkout()
+      }
+      case r => r
     }
-    else {
-      repo
-    }
-
-  }
 
   // Modify the config so all of the dependencies are available locally
   def modifyConfig(config: Config): Config = {
