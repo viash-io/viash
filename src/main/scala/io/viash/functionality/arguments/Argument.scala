@@ -17,6 +17,7 @@
 
 package io.viash.functionality.arguments
 
+import io.circe.Json
 import io.viash.helpers.data_structures._
 import io.viash.schemas._
 
@@ -26,6 +27,7 @@ abstract class Argument[Type] {
   val name: String
   val alternatives: OneOrMore[String]
   val description: Option[String]
+  val info: Json
   val example: OneOrMore[Type]
   val default: OneOrMore[Type]
   val required: Boolean
@@ -50,6 +52,7 @@ abstract class Argument[Type] {
     name: String = this.name,
     alternatives: OneOrMore[String] = this.alternatives,
     description: Option[String] = this.description,
+    info: Json = this.info,
     example: OneOrMore[Type] = this.example,
     default: OneOrMore[Type] = this.default,
     required: Boolean = this.required,

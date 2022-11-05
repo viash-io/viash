@@ -36,7 +36,6 @@ import java.nio.file.Paths
 
 import io.viash.schemas._
 import java.io.ByteArrayOutputStream
-import cats.instances.boolean
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
