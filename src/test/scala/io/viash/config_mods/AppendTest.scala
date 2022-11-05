@@ -4,6 +4,8 @@ import io.circe.Json
 import org.scalatest.FunSuite
 import io.circe.syntax._
 
+import io.circe.yaml.parser.parse
+
 class AppendTest extends FunSuite {
   // testing parsing
   test("parse append command") {
