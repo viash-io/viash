@@ -28,6 +28,10 @@
 
 ## MAJOR CHANGES
 
+* `Config`: Made major internal changes w.r.t. how config files are read and at which point a platform (native, docker, nextflow)
+  is applied to the functionality script. The only visible side effect is that 
+  `viash ns list` will output each config only once instead of multiple times.
+
 * `Functionality`: Structured annotation can be added to a functionality and its arguments using the `info` field. Example:
   ```yaml
   functionality:
@@ -60,6 +64,8 @@
   Added an annotation `internalFunctionality` and `undocumented` for arguments that should not be documented.
   Added a testbench that verifies that all arguments are in fact annotated, skipping those that are not in the class constructor.
   Adds a hierarchy field in the `__this__` member to list the relation of the own and parent classes.
+
+* `viash ns exec`: Allow choosing whether the `{platform}` field should be filled in, based on the `--apply_platform` parameter.
 
 ## BUG FIXES
 

@@ -28,10 +28,11 @@ import io.viash.helpers.NsExecData._
 import io.viash.helpers.NsExecData
 import sys.process._
 import java.io.{ByteArrayOutputStream, File, PrintWriter}
+import io.viash.platforms.Platform
 
 object ViashNamespace {
   def build(
-    configs: List[Either[Config, Status]],
+    configs: List[Either[(Config, Option[Platform]), Status]],
     target: String,
     setup: Option[String] = None,
     push: Boolean = false,
@@ -44,9 +45,10 @@ object ViashNamespace {
     val results = configs2.map { config =>
       config match {
         case Right(_) => config
-        case Left(conf) =>
+        case Left((conf, None)) => throw new RuntimeException("This should not occur.")
+        case Left((conf, Some(platform))) =>
           val funName = conf.functionality.name
-          val platformId = conf.platform.get.id
+          val platformId = platform.id
           val out =
             if (!flatten) {
               conf.functionality.namespace
@@ -58,6 +60,7 @@ object ViashNamespace {
           println(s"Exporting $funName $namespaceOrNothing =$platformId=> $out")
           ViashBuild(
             config = conf,
+            platform = platform,
             output = out,
             namespace = conf.functionality.namespace,
             setup = setup,
@@ -72,7 +75,7 @@ object ViashNamespace {
   }
 
   def test(
-    configs: List[Either[Config, Status]],
+    configs: List[Either[(Config, Option[Platform]), Status]],
     parallel: Boolean = false,
     keepFiles: Option[Boolean] = None,
     tsv: Option[String] = None,
@@ -80,14 +83,13 @@ object ViashNamespace {
     cpus: Option[Int],
     memory: Option[String]
   ): List[Either[(Config, ManyTestOutput), Status]] = {
-    // we can't currently test nextflow platforms, so exclude them from the tests
-    val testableConfigs = configs.filter(conf =>
-      conf match {
-        case Left(l) if l.platform.get.`type` == "nextflow" => false
-        case _ => true
-      })
-
-    val configs2 = if (parallel) testableConfigs.par else testableConfigs
+    val configs1 = configs.filter{tup => tup match {
+      // remove nextflow because unit testing nextflow modules
+      // is not yet supported
+      case Left((_, Some(pl))) => pl.`type` != "nextflow"
+      case _ => true
+    }}
+    val configs2 = if (parallel) configs1.par else configs1
 
     // run all the component tests
     val tsvPath = tsv.map(Paths.get(_))
@@ -102,7 +104,7 @@ object ViashNamespace {
 
     val parentTempPath = IO.makeTemp("viash_ns_test")
     if (keepFiles.getOrElse(true)) {
-      printf("The working directory for the namespace tests is %s\n", parentTempPath.toString())
+      Console.err.printf("The working directory for the namespace tests is %s\n", parentTempPath.toString())
     }
     
     try {
@@ -133,14 +135,15 @@ object ViashNamespace {
         Console.RESET
       )
 
-      val results = configs2.map { config =>
-        config match {
+      val results = configs2.map { x =>
+        x match {
           case Right(status) => Right(status)
-          case Left(conf) =>
+          case Left((conf, None)) => throw new RuntimeException("This should not occur")
+          case Left((conf, Some(platform))) =>
             // get attributes
             val namespace = conf.functionality.namespace.getOrElse("")
             val funName = conf.functionality.name
-            val platName = conf.platform.get.id
+            val platName = platform.id
 
             // print start message
             printf(s"%s%20s %20s %20s %20s %9s %8s %20s%s\n", "", namespace, funName, platName, "start", "", "", "", Console.RESET)
@@ -151,6 +154,7 @@ object ViashNamespace {
             val ManyTestOutput(setupRes, testRes) = try {
               ViashTest(
                 config = conf,
+                platform = platform,
                 keepFiles = keepFiles,
                 quiet = true,
                 parentTempPath = Some(parentTempPath),
@@ -187,6 +191,11 @@ object ViashNamespace {
 
               // print message
               printf(s"%s%20s %20s %20s %20s %9s %8s %20s%s\n", col, namespace, funName, platName, test.name, test.exitValue, test.duration, msg, Console.RESET)
+
+              if (test.exitValue != 0) {
+                Console.err.println(test.output)
+                Console.err.println(ViashTest.consoleLine)
+              }
 
               // write to tsv
               tsvWriter.foreach{writer =>
@@ -236,18 +245,29 @@ object ViashNamespace {
     }
   }
 
-  def list(configs: List[Either[Config, Status]], format: String = "yaml", parseArgumentGroups: Boolean) {
-    val configs2 = configs.flatMap(_.left.toOption)
+  def list(
+    configs: List[Either[(Config, Option[Platform]), Status]], 
+    format: String = "yaml", 
+    parseArgumentGroups: Boolean
+  ) {
+    val configs2 = configs.flatMap(_.left.toOption).map(_._1)
     ViashConfig.viewMany(configs2, format, parseArgumentGroups)
 
     printResults(configs.map(_.fold(fa => Success, fb => fb)), false, false)
   }
 
-  def exec(configs: List[Either[Config, Status]], command: String, dryrun: Boolean, parallel: Boolean) {
+  def exec(
+    configs: List[Either[(Config, Option[Platform]), Status]],
+    command: String, 
+    dryrun: Boolean, 
+    parallel: Boolean
+  ) {
+    val configData = configs.flatMap(_.left.toOption).map{
+      case (conf, plat) => 
+        NsExecData(conf.info.get.config, conf, plat)
+    }
 
-    val goodConfigs = configs.flatMap(_.left.toOption).groupBy(_.info.get.config)
-    // Just take first config. More can be available but those have different platforms. Platforms are currently ignored.
-    val configData = goodConfigs.map(c => NsExecData(c._1, c._2.head))
+    // check whether is empty
     if (configData.isEmpty) {
       Console.err.println("No config files found to work with.")
       return

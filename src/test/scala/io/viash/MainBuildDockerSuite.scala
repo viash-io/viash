@@ -12,8 +12,6 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   // which platform to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 
-  private val configPlatformFile = getClass.getResource(s"/testbash/config_platform_docker.vsh.yaml").getPath
-
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
   private val temporaryConfigFolder = IO.makeTemp("viash_tester_configs")
@@ -21,7 +19,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
 
   // parse functionality from file
-  private val functionality = Config.read(configFile, applyPlatform = false).functionality
+  private val functionality = Config.read(configFile).functionality
 
   // check whether executable was created
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
@@ -168,25 +166,6 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
   }
 
-  test("Specify platform (docker) in config yaml", DockerTest) {
-    val testText = TestHelper.testMain(
-      "build",
-      "-o", tempFolStr,
-      "-m",
-      configPlatformFile,
-    )
-
-    assert(executable.exists)
-    assert(executable.canExecute)
-
-    val out = Exec.runCatch(
-      Seq(executable.toString, "---setup", "build")
-    )
-    assert(out.exitValue == 0)
-
-    val regexPlatform = "platform:\\s*<NA>".r
-    assert(regexPlatform.findFirstIn(testText).isDefined, testText)
-  }
   //</editor-fold>
   //<editor-fold desc="Test benches to check building with --meta flag">
   test("Get meta data of a docker", DockerTest) {

@@ -351,12 +351,24 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
           | * `{main-script}`: path to the main script (if any)
           | * `{abs-main-script}`: absolute path to the main script (if any)
           | * `{functionality-name}`: name of the component
+          | * `{namespace}`: namespace of the component
+          | * `{platform}`: selected platform id (only when --apply_platform is used)
           |
           |A command suffixed by `\;` (or nothing) will execute one command for each
           |of the Viash components, whereas a command suffixed by `+` will execute one
           |command for all Viash components.""".stripMargin,
         """viash ns exec 'echo {path} \\;'
           |viash ns exec 'chmod +x {main-script} +'""".stripMargin
+      )
+
+      val applyPlatform = registerOpt[Boolean] (
+        name = "apply_platform",
+        short = Some('a'),
+        default = Some(false),
+        descr = 
+          """Fills in the {platform} field by applying each platform to the config separately.
+            |Note that this results in the provided command being applied once for every platform
+            |that matches the --platform regex.""".stripMargin
       )
 
       val dryrun = registerOpt[Boolean] (

@@ -32,6 +32,7 @@ import platforms.NativePlatform
 import helpers.IO
 import io.viash.helpers.data_structures._
 import io.viash.helpers.MissingResourceFileException
+import io.viash.platforms.Platform
 
 object ViashTest {
   case class TestOutput(name: String, exitValue: Int, output: String, logFile: String, duration: Long)
@@ -39,6 +40,7 @@ object ViashTest {
 
   def apply(
     config: Config,
+    platform: Platform,
     keepFiles: Option[Boolean] = None,
     quiet: Boolean = false,
     setupStrategy: String = "cachedbuild",
@@ -56,7 +58,7 @@ object ViashTest {
     val config2 = if (tempVersion) {
       config.copy(
         functionality = config.functionality.copy(
-          version = Some(Random.alphanumeric.take(12).mkString)
+          version = Some("test_" + Random.alphanumeric.take(6).mkString)
         )
       )
     } else {
@@ -66,6 +68,7 @@ object ViashTest {
     // run tests
     val ManyTestOutput(setupRes, results) = ViashTest.runTests(
       config = config2,
+      platform = platform,
       dir = dir,
       verbose = !quiet,
       setupStrategy = setupStrategy,
@@ -110,11 +113,19 @@ object ViashTest {
     ManyTestOutput(setupRes, results)
   }
 
-  def runTests(config: Config, dir: Path, verbose: Boolean = true, setupStrategy: String, verbosityLevel: Int, cpus: Option[Int], memory: Option[String]): ManyTestOutput = {
-    val fun = config.functionality
-    val platform = config.platform.get
+  val consoleLine = "===================================================================="
 
-    val consoleLine = "===================================================================="
+  def runTests(
+    config: Config,
+    platform: Platform,
+    dir: Path, 
+    verbose: Boolean = true, 
+    setupStrategy: String, 
+    verbosityLevel: Int, 
+    cpus: Option[Int], 
+    memory: Option[String]
+  ): ManyTestOutput = {
+    val fun = config.functionality
 
     // build regular executable
     val configWithReqs = config.copy(
