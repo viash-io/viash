@@ -17,6 +17,7 @@
 
 package io.viash.functionality.arguments
 
+import io.circe.Json
 import io.viash.helpers.data_structures._
 import io.viash.schemas._
 
@@ -45,6 +46,14 @@ case class StringArgument(
 
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
+
+  @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
+  @example(
+    """info:
+      |  category: cat1
+      |  labels: [one, two, three]""".stripMargin, "yaml")
+  @since("Viash 0.6.3")
+  info: Json = Json.Null,
   
   @description("An example value for this argument. If no [`default`](#default) property was specified, this will be used for that purpose.")
   @example(
@@ -114,6 +123,7 @@ case class StringArgument(
     name: String, 
     alternatives: OneOrMore[String],
     description: Option[String],
+    info: Json,
     example: OneOrMore[String],
     default: OneOrMore[String],
     required: Boolean,
@@ -122,6 +132,6 @@ case class StringArgument(
     multiple_sep: String,
     dest: String
   ): Argument[String] = {
-    copy(name, alternatives, description, example, default, required, this.choices, direction, multiple, multiple_sep, dest, `type`)
+    copy(name, alternatives, description, info, example, default, required, this.choices, direction, multiple, multiple_sep, dest, `type`)
   }
 }
