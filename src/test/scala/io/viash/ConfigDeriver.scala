@@ -2,7 +2,6 @@ package io.viash
 
 import java.nio.file.Path
 
-import io.viash.config.Config.parseConfigMods
 import io.circe.yaml.parser
 import io.circe.yaml.{Printer => YamlPrinter}
 import io.viash.helpers.IO
@@ -49,7 +48,7 @@ object ConfigDeriver {
 
     val js = parser.parse(yamlText).fold(errorHandler, a => a)
 
-    val confMods = parseConfigMods(configMods)
+    val confMods = ConfigMods.parseConfigMods(configMods)
 
     val modifiedJs = confMods match {
       case None => js
