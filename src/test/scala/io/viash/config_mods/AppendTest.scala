@@ -32,25 +32,6 @@ class AppendTest extends FunSuite {
     assert(result == expected)
   }
 
-  test("parse multiline commands") {
-    val expected = ConfigMods(List(
-      Append(
-        Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
-        JsonValue(Json.fromFields(List("type" -> "docker".asJson, "image" -> Json.fromString("foo"))))
-      )
-    ))
-    val command = """
-      .platforms[
-        .type == "native"
-      ].setup += { 
-        type: "docker"
-        image: "foo"
-      }
-    """.stripMargin
-    val result = ConfigModParser.block.parse(command)
-    assert(result == expected)
-  }
-
   // testing functionality
   val baseJson: Json = parse(
     """foo: bar
