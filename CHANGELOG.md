@@ -1,5 +1,15 @@
 # Viash 0.6.3
 
+This release features contains mostly quality of life improvements and some experimental functionality. Most notably:
+
+* `viash ns list` now only returns a config just once instead of once per platform.
+
+* A functionality's info field can contain any data structures. An `.info` field was added to arguments as well.
+
+* Bug fixes for using Viash with podman, Nextflow>=22.10 and R<4.0.
+
+* Experimental support for inheriting from config partials.
+
 ## MAJOR CHANGES
 
 * `Config`: Made major internal changes w.r.t. how config files are read and at which point a platform (native, docker, nextflow)
@@ -102,6 +112,8 @@
   ```
 
 # Viash 0.6.2
+
+This is a quick release to push two bug fixes related to security and being able to run Nextflow with optional output files.
 
 ## BUG FIXES
 
