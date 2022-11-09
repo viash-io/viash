@@ -1,31 +1,5 @@
 # Viash 0.6.3
 
-## NEW FUNCTIONALITY
-
-* `Config`: Any part of a Viash config can use inheritance to fill data (#259). For example:
-  Contents of `src/test/config.vsh.yaml`:
-  ```yaml
-  __inherits__: ../api/comp_processor.yaml
-  functionality:
-    name: test
-    resources:
-      - type: bash_script
-        path: script.sh
-        text: |
-          echo Copying $par_input to $par_output
-          cp $par_input $par_output
-  ```
-  Contents of `src/api/comp_processor.yaml`:
-  ```yaml
-  functionality:
-    arguments:
-      - name: "--input"
-        type: file
-      - name: "--output"
-        type: file
-        direction: output
-  ```
-
 ## MAJOR CHANGES
 
 * `Config`: Made major internal changes w.r.t. how config files are read and at which point a platform (native, docker, nextflow)
@@ -83,6 +57,49 @@
 * `DockerRequirements`: The `resources:` setting has been deprecated and will be removed in Viash 0.7.0. Please use `copy:` instead.
 
 * `DockerRequirements`: The `privileged:` setting has been deprecated and will be removed in Viash 0.7.0. Please use `run_args: "--privileged"` instead.
+
+## EXPERIMENTAL FUNCTIONALITY
+
+* `Config`: Any part of a Viash config can use inheritance to fill data (#259). For example:
+  Contents of `src/test/config.vsh.yaml`:
+  ```yaml
+  __inherits__: ../api/base.yaml
+  functionality:
+    name: test
+    resources:
+      - type: bash_script
+        path: script.sh
+        text: |
+          echo Copying $par_input to $par_output
+          cp $par_input $par_output
+  ```
+  Contents of `src/api/base.yaml`:
+  ```yaml
+  functionality:
+    arguments:
+      - name: "--input"
+        type: file
+      - name: "--output"
+        type: file
+        direction: output
+  ```
+  The resulting yaml will be:
+  ```yaml
+  functionality:
+    name: test
+    arguments:
+      - name: "--input"
+        type: file
+      - name: "--output"
+        type: file
+        direction: output
+    resources:
+      - type: bash_script
+        path: script.sh
+        text: |
+          echo Copying $par_input to $par_output
+          cp $par_input $par_output
+  ```
 
 # Viash 0.6.2
 
