@@ -27,6 +27,7 @@ import java.io.FileNotFoundException
 import java.nio.file.NoSuchFileException
 import io.viash.helpers.MissingResourceFileException
 import io.viash.helpers.status._
+import io.viash.platforms.Platform
 
 object Main {
   private val pkg = getClass.getPackage
@@ -67,18 +68,20 @@ object Main {
 
     cli.subcommands match {
       case List(cli.run) =>
-        val config = readConfig(cli.run)
+        val (config, platform) = readConfig(cli.run)
         ViashRun(
-          config, 
+          config = config,
+          platform = platform.get, 
           args = runArgs.dropWhile(_ == "--"), 
           keepFiles = cli.run.keep.toOption.map(_.toBoolean),
           cpus = cli.run.cpus.toOption,
           memory = cli.run.memory.toOption
         )
       case List(cli.build) =>
-        val config = readConfig(cli.build)
+        val (config, platform) = readConfig(cli.build)
         ViashBuild(
-          config,
+          config = config,
+          platform = platform.get,
           output = cli.build.output(),
           printMeta = cli.build.printMeta(),
           writeMeta = cli.build.writeMeta(),
@@ -87,9 +90,10 @@ object Main {
         )
         0 // Exceptions are thrown when something bad happens, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.test) =>
-        val config = readConfig(cli.test, applyPlatform = false)
+        val (config, platform) = readConfig(cli.test)
         ViashTest(
-          config, 
+          config,
+          platform = platform.get,
           keepFiles = cli.test.keep.toOption.map(_.toBoolean),
           cpus = cli.test.cpus.toOption,
           memory = cli.test.memory.toOption
@@ -108,7 +112,7 @@ object Main {
         )
         0 // Might be possible to be improved further.
       case List(cli.namespace, cli.namespace.test) =>
-        val configs = readConfigs(cli.namespace.test, applyPlatform = false)
+        val configs = readConfigs(cli.namespace.test)
         val testResults = ViashNamespace.test(
           configs = configs,
           parallel = cli.namespace.test.parallel(),
@@ -121,7 +125,11 @@ object Main {
         val errors = testResults.flatMap(_.right.toOption).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.list) =>
-        val configs = readConfigs(cli.namespace.list, addOptMainScript = false)
+        val configs = readConfigs(
+          cli.namespace.list, 
+          addOptMainScript = false, 
+          applyPlatform = false
+        )
         ViashNamespace.list(
           configs = configs,
           format = cli.namespace.list.format(),
@@ -130,7 +138,7 @@ object Main {
         val errors = configs.flatMap(_.right.toOption).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.exec) =>
-        val configs = readConfigs(cli.namespace.exec, applyPlatform = false)
+        val configs = readConfigs(cli.namespace.exec, applyPlatform = cli.namespace.exec.applyPlatform())
         ViashNamespace.exec(
           configs = configs,
           command = cli.namespace.exec.cmd(),
@@ -140,10 +148,10 @@ object Main {
         val errors = configs.flatMap(_.right.toOption).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.config, cli.config.view) =>
-        val config = Config.read(
-          configPath = cli.config.view.config(),
-          configMods = cli.config.view.config_mods(),
-          addOptMainScript = false
+        val (config, _) = readConfig(
+          subcommand = cli.config.view,
+          addOptMainScript = false,
+          applyPlatform = false
         )
         ViashConfig.view(
           config, 
@@ -152,10 +160,10 @@ object Main {
         )
         0
       case List(cli.config, cli.config.inject) =>
-        val config = Config.read(
-          configPath = cli.config.inject.config(),
-          configMods = cli.config.inject.config_mods(),
-          addOptMainScript = false
+        val (config, _) = readConfig(
+          subcommand = cli.config.inject,
+          addOptMainScript = false,
+          applyPlatform = false
         )
         ViashConfig.inject(config)
         0
@@ -177,42 +185,101 @@ object Main {
     }
   }
 
+  def processConfigWithPlatform(
+    config: Config, 
+    platformStr: Option[String]
+  ): (Config, Option[Platform]) = {
+    // add platformStr to the info object
+    val conf1 = config.copy(
+      info = config.info.map{
+        _.copy(platform = platformStr)
+      }
+    )
+
+    // find platform, see javadoc of this function for details on how
+    val plat = conf1.findPlatform(platformStr)
+
+    (conf1, Some(plat))
+  }
+
   def readConfig(
     subcommand: ViashCommand,
     addOptMainScript: Boolean = true,
     applyPlatform: Boolean = true
-  ): Config = {
-    Config.read(
+  ): (Config, Option[Platform]) = {
+    val config = Config.read(
       configPath = subcommand.config(),
-      platform = subcommand.platform.toOption,
       addOptMainScript = addOptMainScript,
-      applyPlatform = applyPlatform,
       configMods = subcommand.config_mods()
     )
+    if (applyPlatform) {
+      processConfigWithPlatform(
+        config = config, 
+        platformStr = subcommand.platform.toOption
+      )
+    } else {
+      (config, None)
+    }
   }
   
   def readConfigs(
     subcommand: ViashNs,
     addOptMainScript: Boolean = true,
     applyPlatform: Boolean = true
-  ): List[Either[Config, Status]] = {
+  ): List[Either[(Config, Option[Platform]), Status]] = {
     val source = subcommand.src()
     val query = subcommand.query.toOption
     val queryNamespace = subcommand.query_namespace.toOption
     val queryName = subcommand.query_name.toOption
-    val platform = subcommand.platform.toOption
+    val platformStr = subcommand.platform.toOption
     val configMods = subcommand.config_mods()
 
-    Config.readConfigs(
-      source,
-      query,
-      queryNamespace,
-      queryName,
-      platform,
-      configMods,
-      addOptMainScript,
-      applyPlatform
+    val configs = Config.readConfigs(
+      source = source,
+      query = query,
+      queryNamespace = queryNamespace,
+      queryName = queryName,
+      configMods = configMods,
+      addOptMainScript = addOptMainScript
     )
+
+    if (applyPlatform) {
+      // create regex for filtering platform ids
+      val platformStrVal = platformStr.getOrElse(".*")
+
+      configs.flatMap{config => config match {
+        // passthrough statuses
+        case Right(stat) => List(Right(stat))
+        case Left(conf1) =>
+          val platformStrs = 
+            if (platformStrVal.contains(":") || (new File(platformStrVal)).exists) {
+              // platform is a file
+              List(Some(platformStrVal))
+            } else {
+              // platform is a regex for filtering the ids
+              val platIDs = conf1.platforms.map(_.id)
+
+              if (platIDs.isEmpty) {
+                // config did not contain any platforms, so the native platform should be used
+                List(None)
+              } else {
+                // filter platforms using the regex
+                platIDs.filter(platformStrVal.r.findFirstIn(_).isDefined).map(Some(_))
+              }
+            }
+          platformStrs.map{ platStr =>
+            Left(processConfigWithPlatform(
+              config = conf1,
+              platformStr = platStr
+            ))
+          }
+        }}
+    } else {
+      configs.map{c => c match {
+        case Right(status) => Right(status)
+        case Left(conf) => Left((conf, None: Option[Platform]))
+      }}
+    }
   }
 
   

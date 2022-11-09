@@ -17,10 +17,12 @@
 
 package io.viash.functionality
 
+
+import io.circe.Json
+import io.circe.generic.extras._
 import arguments._
 import resources._
 import Status._
-import io.circe.generic.extras._
 import io.viash.schemas._
 import io.viash.wrapper.BashWrapper
 
@@ -238,10 +240,13 @@ case class Functionality(
       "yaml")
   test_resources: List[Resource] = Nil,
 
-  @description("A map for storing custom annotations.")
-  @example("info: {twitter: wizzkid, appId: com.example.myApplication}", "yaml")
+  @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
+  @example(
+    """info:
+      |  twitter: wizzkid
+      |  classes: [ one, two, three ]""".stripMargin, "yaml")
   @since("Viash 0.4.0")
-  info: Map[String, String] = Map.empty[String, String],
+  info: Json = Json.Null,
 
   @description("Allows setting a component to active, deprecated or disabled.")
   @since("Viash 0.6.0")
@@ -266,6 +271,7 @@ case class Functionality(
   // setting this to true will change the working directory
   // to the resources directory when running the script
   // this is used when running `viash test`.
+  @internalFunctionality
   set_wd_to_resources_dir: Boolean = false
 ) {
   // START OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED

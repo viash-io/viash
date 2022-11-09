@@ -674,10 +674,11 @@ def processFactory(Map processArgs) {
   def ownerParams = new ScriptBinding.ParamsMap()
   def binding = new ScriptBinding().setParams(ownerParams)
   def module = new IncludeDef.Module(name: procKey)
-  def moduleScript = new ScriptParser(session)
+  def scriptParser = new ScriptParser(session)
     .setModule(true)
     .setBinding(binding)
-    .runScript(procStr)
+  scriptParser.scriptPath = ScriptMeta.current().getScriptPath()
+  def moduleScript = scriptParser.runScript(procStr)
     .getScript()
 
   // register module in meta

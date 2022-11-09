@@ -21,7 +21,7 @@ import io.viash.config.Config
 import io.viash.functionality.Functionality
 import io.viash.functionality.resources._
 import io.viash.platforms.requirements._
-import io.viash.helpers.Circe.One
+import io.viash.helpers.data_structures._
 import io.viash.wrapper.BashWrapper
 import io.viash.functionality.arguments._
 import java.nio.file.Path
@@ -50,17 +50,23 @@ case class DebugPlatform(
               case arg if arg.default.isEmpty && arg.example.nonEmpty => 
                 arg.copyArg(required = false, default = arg.example)
               case arg: BooleanArgumentBase if arg.default.isEmpty => 
-                arg.copyArg(required = false, default = One(true))
+                arg.copyArg(required = false, default = OneOrMore(true))
               case arg: DoubleArgument if arg.default.isEmpty => 
-                arg.copy(required = false, default = One(123.0), min = None, max = None)
+                arg.copy(required = false, default = OneOrMore(123.0), min = None, max = None)
               case arg: FileArgument if arg.default.isEmpty => 
-                arg.copy(required = false, default = One(Paths.get("/path/to/file")), must_exist = false)
+                arg.copy(required = false, default = OneOrMore(Paths.get("/path/to/file")), must_exist = false)
               case arg: IntegerArgument if arg.default.isEmpty =>
-                arg.copy(required = false, default = One(123), choices = Nil, min = None, max = None)
+                arg.copy(required = false, default = OneOrMore(123), choices = Nil, min = None, max = None)
               case arg: LongArgument if arg.default.isEmpty =>
-                arg.copy(required = false, default = One(123), choices = Nil, min = None, max = None)
+                arg.copy(required = false, default = OneOrMore(123), choices = Nil, min = None, max = None)
               case arg: StringArgument if arg.default.isEmpty => 
-                arg.copy(required = false, default = One("value"), choices = Nil)
+                arg.copy(required = false, default = OneOrMore("value"), choices = Nil)
+              case a => a
+            }
+            // also turn off must_exist if it is set to true
+            .map{
+              case arg: FileArgument if arg.must_exist =>
+                arg.copy(must_exist = false)
               case a => a
             }
             .map{Right(_)}

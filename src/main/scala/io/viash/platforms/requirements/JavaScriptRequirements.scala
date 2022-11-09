@@ -17,24 +17,38 @@
 
 package io.viash.platforms.requirements
 
-import io.viash.helpers.Circe._
+import io.viash.helpers.data_structures._
 import io.viash.schemas._
 
 @description("Specify which JavaScript packages should be available in order to run the component.")
 @example(
   """setup:
     |  - type: javascript
-    |    npm: [ packagename ]
-    |    git: [ https://... ]
-    |    github: [ owner/repository ]
-    |    url: [ https://... ]
+    |    npm: packagename
+    |    git: "https://some.git.repository/org/repo"
+    |    github: "owner/repository"
+    |    url: "https://github.com/org/repo/archive/HEAD.zip"
     |""".stripMargin,
     "yaml")
 case class JavaScriptRequirements(
+  @description("Specifies which packages to install from npm.")
+  @example("packages: [ packagename ]", "yaml")
   packages: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install from npm.")
+  @example("npm: [ packagename ]", "yaml")
   npm: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install using a Git URI.")
+  @example("git: [ https://some.git.repository/org/repo ]", "yaml")
   git: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install from GitHub.")
+  @example("github: [ owner/repository ]", "yaml")
   github: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install using a generic URI.")
+  @example("url: [ https://github.com/org/repo/archive/HEAD.zip ]", "yaml")
   url: OneOrMore[String] = Nil,
   `type`: String = "javascript"
 ) extends Requirements {

@@ -13,7 +13,7 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
   private val tempFolStr = temporaryFolder.toString
 
   private val configRequirementsFile = getClass.getResource(s"/testbash/auxiliary_requirements/config_requirements.vsh.yaml").getPath
-  private val functionalityRequirements = Config.read(configRequirementsFile, applyPlatform = false).functionality
+  private val functionalityRequirements = Config.read(configRequirementsFile).functionality
   private val executableRequirementsFile = Paths.get(tempFolStr, functionalityRequirements.name).toFile
 
   test("setup; check base image for apk still does not contain the fortune package", DockerTest) {

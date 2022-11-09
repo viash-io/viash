@@ -54,12 +54,11 @@
 #' platforms:
 #' - type: native
 #' - type: docker
-#'   image: rocker/tidyverse
+#'   image: rocker/tidyverse:3.6
 #'   setup:
 #'     - type: r
 #'       cran: optparse
-#'       github: tidyverse/dplyr@main
-#'       bioc: limma
+#'       github: dynverse/anndata@main
 #'     - type: apt
 #'       packages: libhdf5-serial-dev
 #' - type: nextflow

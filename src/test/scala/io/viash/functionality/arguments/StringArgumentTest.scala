@@ -3,9 +3,21 @@ package io.viash.functionality.arguments
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.util.Try
-import io.viash.helpers.Circe.{One, More}
+import io.circe._
+import io.circe.syntax._
+import io.circe.yaml.{parser => YamlParser}
+import io.viash.helpers.circe._
+import io.viash.helpers.data_structures._
 
-class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
+
+class StringArgumentTest extends FunSuite with BeforeAndAfterAll {
+  val infoJson = Yaml("""
+    |foo:
+    |  bar:
+    |    baz:
+    |      10
+    |arg: aaa
+    |""".stripMargin)
 
   test("Simple getters and helper functions") {
     val arg = StringArgument(name = "--foo")
@@ -17,16 +29,20 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
     assert(arg.plainName == "foo")
 
     assert(arg.name == "--foo")
-    assert(arg.alternatives == More(Nil))
+    assert(arg.alternatives == OneOrMore())
     assert(arg.description == None)
-    assert(arg.example == More(Nil))
-    assert(arg.default == More(Nil))
+    assert(arg.info == Json.Null)
+    assert(arg.example == OneOrMore())
+    assert(arg.default == OneOrMore())
     assert(!arg.required)
     assert(arg.choices == Nil)
     assert(arg.direction == Input)
     assert(!arg.multiple)
     assert(arg.multiple_sep == ":")
     assert(arg.dest == "par")
+
+    val argParsed = arg.asJson.as[StringArgument].fold(throw _, a => a)
+    assert(argParsed == arg)
   }
 
   test("Simple getters and helper functions on object with many non-default values") {
@@ -34,8 +50,9 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
       name = "one_two_three_four",
       alternatives = List("zero", "-one", "--two"),
       description = Some("foo"),
-      example = One("ten"),
-      default = One("bar"),
+      info = infoJson,
+      example = OneOrMore("ten"),
+      default = OneOrMore("bar"),
       required = true,
       choices = List("bar", "zing", "bang"),
       direction = Output,
@@ -51,16 +68,20 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
     assert(arg.plainName == "one_two_three_four")
     
     assert(arg.name == "one_two_three_four")
-    assert(arg.alternatives == More(List("zero", "-one", "--two")))
+    assert(arg.alternatives == OneOrMore("zero", "-one", "--two"))
     assert(arg.description == Some("foo"))
-    assert(arg.example == One("ten"))
-    assert(arg.default == One("bar"))
+    assert(arg.info == infoJson)
+    assert(arg.example == OneOrMore("ten"))
+    assert(arg.default == OneOrMore("bar"))
     assert(arg.required)
     assert(arg.choices == List("bar", "zing", "bang"))
     assert(arg.direction == Output)
     assert(arg.multiple)
     assert(arg.multiple_sep == "-")
     assert(arg.dest == "meta")
+
+    val argParsed = arg.asJson.as[StringArgument].fold(throw _, a => a)
+    assert(argParsed == arg)
   }
 
   test("copyArg helper function") {
@@ -70,8 +91,9 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
       name = "one_two_three_four",
       alternatives = List("zero", "-one", "--two"),
       description = Some("foo"),
-      example = One("ten"),
-      default = One("bar"),
+      info = infoJson,
+      example = OneOrMore("ten"),
+      default = OneOrMore("bar"),
       required = true,
       direction = Output,
       multiple = true,
@@ -79,19 +101,26 @@ class StringArgumentSuite extends FunSuite with BeforeAndAfterAll {
       dest = "meta"
     )
 
+    val arg2GParsed = arg2generic.asJson.as[Argument[_]].fold(throw _, a => a)
+    assert(arg2GParsed == arg2generic)
+
     assert(arg2generic.isInstanceOf[StringArgument])
     val arg2 = arg2generic.asInstanceOf[StringArgument]
 
     assert(arg2.name == "one_two_three_four")
-    assert(arg2.alternatives == More(List("zero", "-one", "--two")))
+    assert(arg2.alternatives == OneOrMore("zero", "-one", "--two"))
     assert(arg2.description == Some("foo"))
-    assert(arg2.example == One("ten"))
-    assert(arg2.default == One("bar"))
+    assert(arg2.info == infoJson)
+    assert(arg2.example == OneOrMore("ten"))
+    assert(arg2.default == OneOrMore("bar"))
     assert(arg2.required)
     assert(arg2.choices == Nil)
     assert(arg2.direction == Output)
     assert(arg2.multiple)
     assert(arg2.multiple_sep == "-")
     assert(arg2.dest == "meta")
+
+    val arg2Parsed = arg2.asJson.as[StringArgument].fold(throw _, a => a)
+    assert(arg2Parsed == arg2)
   }
 }

@@ -21,80 +21,167 @@ import scala.reflect.runtime.universe._
 import io.circe.{Encoder, Printer => JsonPrinter}
 import io.circe.syntax.EncoderOps
 import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
-import io.viash.helpers.Circe._
 
 import io.viash.functionality.Functionality
 import io.viash.platforms._
 import io.viash.platforms.requirements._
 import io.viash.functionality.arguments._
 import io.circe.Json
+import monocle.function.Cons
+import io.viash.config.Config
+import io.viash.config.Info
 
 final case class CollectedSchemas (
+  config: List[ParameterSchema],
   functionality: List[ParameterSchema],
   platforms: Map[String, List[ParameterSchema]],
   requirements: Map[String, List[ParameterSchema]],
   arguments: Map[String, List[ParameterSchema]],
 )
 
+
 object CollectedSchemas {
+
+  implicit class RichSymbol(s: Symbol) {
+    def shortName = s.fullName.split('.').last
+  }
+
+  case class MemberInfo (
+    symbol: Symbol,
+    inConstructor: Boolean,
+    className: String,
+    inheritanceIndex: Int
+  ) {
+    def fullName = symbol.fullName
+    def shortName = symbol.shortName
+  }
+
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
+
+  import io.viash.helpers.circe._
 
   private implicit val encodeConfigSchema: Encoder.AsObject[CollectedSchemas] = deriveConfiguredEncoder
   private implicit val encodeParameterSchema: Encoder.AsObject[ParameterSchema] = deriveConfiguredEncoder
   private implicit val encodeDeprecatedOrRemoved: Encoder.AsObject[DeprecatedOrRemovedSchema] = deriveConfiguredEncoder
   private implicit val encodeExample: Encoder.AsObject[ExampleSchema] = deriveConfiguredEncoder
 
+  private def getMembers[T: TypeTag](): (Map[String,List[MemberInfo]], List[Symbol]) = {
+
+    val name = typeOf[T].typeSymbol.fullName
+    val memberNames = typeOf[T].members
+      .filter(!_.isMethod)
+      .map(_.shortName)
+      .toSeq
+
+    val constructorMembers = typeOf[T].members.filter(_.isConstructor).head.asMethod.paramLists.head.map(_.shortName)
+
+    val baseClasses = typeOf[T].baseClasses
+      .filter(_.fullName.startsWith("io.viash"))
+
+    val allMembers = baseClasses
+      .zipWithIndex
+      .flatMap(x =>
+        x._1.info.members
+          .filter(_.fullName.startsWith("io.viash"))
+          .filter(m => memberNames.contains(m.shortName))
+          .filter(m => !m.info.toString.startsWith("=> ") || x._2 != 0) // Only regular members if base class, otherwise all members
+          .map(y => MemberInfo(y, (constructorMembers.contains(y.shortName)), x._1.fullName, x._2))
+      )
+      .groupBy(k => k.shortName)
+    
+    (allMembers, baseClasses)
+  }
+
+  val schemaClassMap = Map(
+    "config" -> Map(
+      ""                       -> getMembers[Config],
+    ),
+    "functionality" -> Map(
+      ""                       -> getMembers[Functionality]
+    ),
+    "platforms" -> Map(
+      "nativePlatform"         -> getMembers[NativePlatform],
+      "dockerPlatform"         -> getMembers[DockerPlatform],
+      "nextflowVdsl3Platform"  -> getMembers[NextflowVdsl3Platform],
+      "nextflowLegacyPlatform" -> getMembers[NextflowLegacyPlatform],
+    ),
+    "requirements" -> Map(
+      "apkRequirements"        -> getMembers[ApkRequirements],
+      "aptRequirements"        -> getMembers[AptRequirements],
+      "dockerRequirements"     -> getMembers[DockerRequirements],
+      "javascriptRequirements" -> getMembers[JavaScriptRequirements],
+      "pythonRequirements"     -> getMembers[PythonRequirements],
+      "rRequirements"          -> getMembers[RRequirements],
+      "rubyRequirements"       -> getMembers[RubyRequirements],
+      "yumRequirements"        -> getMembers[YumRequirements],
+    ),
+    "arguments" -> Map(
+      "boolean"                -> getMembers[BooleanArgument],
+      "boolean_true"           -> getMembers[BooleanTrueArgument],
+      "boolean_false"          -> getMembers[BooleanFalseArgument],
+      "double"                 -> getMembers[DoubleArgument],
+      "file"                   -> getMembers[FileArgument],
+      "integer"                -> getMembers[IntegerArgument],
+      "long"                   -> getMembers[LongArgument],
+      "string"                 -> getMembers[StringArgument],
+    )
+  )
+
   private def trimTypeName(s: String) = {
-    // first: io.viash.helpers.Circe.OneOrMore[String] -> OneOrMore[String]
+    // first: io.viash.helpers.data_structures.OneOrMore[String] -> OneOrMore[String]
     // second: List[io.viash.platforms.requirements.Requirements] -> List[Requirements]
     s.replaceAll("^(\\w*\\.)*", "").replaceAll("""(\w*)\[[\w\.]*?([\w,]*)(\[_\])?\]""", "$1 of $2")
   }
 
-  private def annotationsOf[T: TypeTag]() = {
-    val annMembers = typeOf[T].members.map(x => (x.fullName, x.info.toString(), x.annotations)).filter(_._3.length > 0)
-    val annThis = ("__this__", typeOf[T].typeSymbol.name.toString(), typeOf[T].typeSymbol.annotations)
+  private def annotationsOf(members: (Map[String,List[MemberInfo]]), classes: List[Symbol]) = {
+    val annMembers = members
+      .map{ case (memberName, memberInfo) => { 
+        val h = memberInfo.head
+        val annotations = memberInfo.flatMap(_.symbol.annotations)
+        (h.fullName, h.symbol.info.toString, annotations, h.className, h.inheritanceIndex, Nil)
+      } }
+      .filter(_._3.length > 0)
+    val annThis = ("__this__", classes.head.name.toString(), classes.head.annotations, "", 0, classes.map(_.fullName))
     val allAnnotations = annThis :: annMembers.toList
-    // filter out any information not from our own class and lazy evaluators (we'll use the standard one - otherwise double info and more complex)
     allAnnotations
-      .filter(a => a._1.startsWith("io.viash") || a._1 == "__this__")
-      .filter(!_._2.startsWith("=> "))
-      .map({case (a, b, c) => (a, trimTypeName(b), c)})
+      .map({case (a, b, c, d, e, f) => (a, trimTypeName(b), f, c)})  // TODO this ignores where the annotation was defined, ie. top level class or super class
   }
 
-  private def getSchema[T: TypeTag] = {
-      annotationsOf[T].map({case (a, b, c) => ParameterSchema(a, b, c)})
+  private val getSchema = (t: (Map[String,List[MemberInfo]], List[Symbol])) => t match {
+    case (members, classes) => {
+      annotationsOf(members, classes).flatMap{ case (a, b, c, d) => ParameterSchema(a, b, c, d) }
+    }
   }
 
+  // Main call for documentation output
   def getJson: Json = {
     val data = CollectedSchemas(
-      functionality = getSchema[Functionality],
-      platforms = Map(
-        ("nativePlatform"        , getSchema[NativePlatform]),
-        ("dockerPlatform"        , getSchema[DockerPlatform]),
-        ("nextflowVdsl3Platform" , getSchema[NextflowVdsl3Platform]),
-        ("nextflowLegacyPlatform", getSchema[NextflowLegacyPlatform]),
-      ),
-      requirements = Map(
-        ("apkRequirements"        , getSchema[ApkRequirements]),
-        ("aptRequirements"        , getSchema[AptRequirements]),
-        ("dockerRequirements"     , getSchema[DockerRequirements]),
-        ("javascriptRequirements" , getSchema[JavaScriptRequirements]),
-        ("pythonRequirements"     , getSchema[PythonRequirements]),
-        ("rRequirements"          , getSchema[RRequirements]),
-        ("rubyRequirements"       , getSchema[RubyRequirements]),
-        ("yumRequirements"        , getSchema[YumRequirements]),
-      ),
-      arguments = Map(
-        ("boolean"                , getSchema[BooleanArgument]),
-        ("boolean_true"           , getSchema[BooleanTrueArgument]),
-        ("boolean_false"          , getSchema[BooleanFalseArgument]),
-        ("double"                 , getSchema[DoubleArgument]),
-        ("file"                   , getSchema[FileArgument]),
-        ("integer"                , getSchema[IntegerArgument]),
-        ("long"                   , getSchema[LongArgument]),
-        ("string"                 , getSchema[StringArgument]),
-      ),
+      config = getSchema(schemaClassMap.get("config").get("")),
+      functionality = getSchema(schemaClassMap.get("functionality").get("")),
+      platforms = schemaClassMap.get("platforms").get.map{ case(k, v) => (k, getSchema(v))},
+      requirements = schemaClassMap.get("requirements").get.map{ case(k, v) => (k, getSchema(v))},
+      arguments = schemaClassMap.get("arguments").get.map{ case(k, v) => (k, getSchema(v))}
     )
     data.asJson
   }
+
+  private def getNonAnnotated(members: Map[String,List[MemberInfo]], classes: List[Symbol]) = {
+    val issueMembers = members
+      .toList
+      .filter{ case(k, v) => v.map(m => m.inConstructor).contains(true) } // Only check values that are in a constructor. Annotation may occur on private vals but that is not a requirement.
+      .map{ case (k, v) => (k, v.map(_.symbol.annotations.length).sum) } // (name, # annotations)
+      .filter(_._2 == 0)
+      .map(_._1)
+
+    val ownClassArr = if (classes.head.annotations.length == 0) Seq("__this__") else Nil
+    issueMembers ++ ownClassArr
+  }
+
+  // Main call for checking whether all arguments are annotated
+  def getAllNonAnnotated = schemaClassMap.flatMap {
+    case (key, v1) => v1.flatMap {
+      case (key2, v2) => getNonAnnotated(v2._1, v2._2).map((key, key2, _))
+    }
+  }
+
 }

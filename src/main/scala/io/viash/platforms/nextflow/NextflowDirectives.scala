@@ -17,7 +17,8 @@
 
 package io.viash.platforms.nextflow
 
-import io.viash.helpers.Circe.OneOrMore
+import io.viash.helpers.data_structures._
+
 // todo: assert contents?
 case class NextflowDirectives(
   accelerator: Map[String, String] = Map(),

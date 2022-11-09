@@ -17,7 +17,7 @@
 
 package io.viash.platforms.requirements
 
-import io.viash.helpers.Circe._
+import io.viash.helpers.data_structures._
 import io.viash.schemas._
 
 @description("Specify which apt packages should be available in order to run the component.")
@@ -28,7 +28,11 @@ import io.viash.schemas._
     |""".stripMargin,
     "yaml")
 case class AptRequirements(
+  @description("Specifies which packages to install.")
+  @example("packages: [ sl ]", "yaml")
   packages: OneOrMore[String] = Nil,
+
+  @description("If `false`, the Debian frontend is set to non-interactive (recommended). Default: false.")
   interactive: Boolean = false,
   `type`: String = "apt"
 ) extends Requirements {

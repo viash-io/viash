@@ -17,19 +17,25 @@
 
 package io.viash.functionality.arguments
 
-import io.viash.helpers.Circe.OneOrMore
+import io.circe.Json
+import io.viash.helpers.data_structures._
+import io.viash.schemas._
 
 abstract class Argument[Type] {
+  @description("Specifies the type of the argument.")
   val `type`: String
   val name: String
   val alternatives: OneOrMore[String]
   val description: Option[String]
+  val info: Json
   val example: OneOrMore[Type]
   val default: OneOrMore[Type]
   val required: Boolean
   val direction: Direction
   val multiple: Boolean
   val multiple_sep: String
+  
+  @internalFunctionality
   val dest: String
 
   private val pattern = "^(-*)(.*)$".r
@@ -46,6 +52,7 @@ abstract class Argument[Type] {
     name: String = this.name,
     alternatives: OneOrMore[String] = this.alternatives,
     description: Option[String] = this.description,
+    info: Json = this.info,
     example: OneOrMore[Type] = this.example,
     default: OneOrMore[Type] = this.default,
     required: Boolean = this.required,

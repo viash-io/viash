@@ -22,7 +22,7 @@ import io.viash.functionality._
 import io.viash.functionality.resources._
 import io.viash.functionality.arguments._
 import io.viash.helpers.{Docker, Bash, DockerImageInfo, Helper}
-import io.viash.helpers.Circe._
+import io.viash.helpers.circe._
 import io.viash.platforms.nextflow._
 import io.circe.syntax._
 import io.circe.{Printer => JsonPrinter, Json, JsonObject}
@@ -40,7 +40,8 @@ case class NextflowVdsl3Platform(
   id: String = "nextflow",
 
   `type`: String = "nextflow",
-
+  
+  @internalFunctionality
   variant: String = "vdsl3",
   
   // nxf params
@@ -104,6 +105,7 @@ case class NextflowVdsl3Platform(
   debug: Boolean = false,
 
   // TODO: solve differently
+  @description("Specifies the Docker platform id to be used to run Nextflow.")
   container: String = "docker"
 ) extends NextflowPlatform {
   def escapeSingleQuotedString(txt: String): String = {
@@ -230,14 +232,14 @@ case class NextflowVdsl3Platform(
       cpus = directives.cpus orElse functionality.requirements.cpus.map(np => Left(np))
     )
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
-    val dirJson = directivesToJson.asJson.dropEmptyRecursively()
+    val dirJson = directivesToJson.asJson.dropEmptyRecursively
     val dirJson2 = if (dirJson.isNull) Json.obj() else dirJson
-    val funJson = functionality.asJson.dropEmptyRecursively()
+    val funJson = functionality.asJson.dropEmptyRecursively
     val funJsonStr = jsonPrinter.print(funJson)
       .replace("\\\\", "\\\\\\\\")
       .replace("\\\"", "\\\\\"")
       .replace("'''", "\\'\\'\\'")
-    val autoJson = auto.asJson.dropEmptyRecursively()
+    val autoJson = auto.asJson.dropEmptyRecursively
 
     /************************* MAIN.NF *************************/
     val tripQuo = """""""""

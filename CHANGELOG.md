@@ -1,3 +1,106 @@
+# Viash 0.6.3
+
+## MAJOR CHANGES
+
+* `Config`: Made major internal changes w.r.t. how config files are read and at which point a platform (native, docker, nextflow)
+  is applied to the functionality script. The only visible side effect is that 
+  `viash ns list` will output each config only once instead of multiple times.
+
+* `Functionality`: Structured annotation can be added to a functionality and its arguments using the `info` field. Example:
+  ```yaml
+  functionality:
+    name: foo
+    info:
+      site: https://abc.xyz
+      tags: [ one, two, three ]
+    arguments:
+      - name: --foo
+        type: string
+        info:
+          foo: bar
+          a:
+            b:
+              c
+  ```
+
+## MINOR CHANGES
+
+* `BashWrapper`: Allow printing the executor command by adding `---verbose ---verbose` to a `viash run` or an executable.
+
+* `Testbenches`: Rework `MainBuildAuxiliaryNativeParameterCheck` to create stimulus files and loop over the file from bash instead of looping natively.
+  This prevents creating thousands of new processes which would only test a single parameter.
+  Note this still calls the main script for each stimulus separately, but that was the case anyway, only much much worse.
+
+* `Testbenches`: Split some grouped test benches into slightly smaller test benches that group tested functionality better.
+
+* `Annotations`: Complete the config schema annotations.
+  Make sure all arguments are documented.
+  Added an annotation `internalFunctionality` and `undocumented` for arguments that should not be documented.
+  Added a testbench that verifies that all arguments are in fact annotated, skipping those that are not in the class constructor.
+  Adds a hierarchy field in the `__this__` member to list the relation of the own and parent classes.
+
+* `viash ns exec`: Allow choosing whether the `{platform}` field should be filled in, based on the `--apply_platform` parameter.
+
+## BUG FIXES
+
+* `DockerPlatform`: Remove duplicate auto-mounts (#257).
+
+* `NextflowVDSL3Platform`: Fix 'Module scriptPath has not been defined yet' error when Nextflow>=22.10 (#269).
+
+* `config inject`: Doesn't work when `must_exist == true` (#273).
+
+* `RScript`: Fix compatibility issue where the new character escaping in `r_script` required R>=4.0 (#275). Escaping is now handled without
+  using the new `r'(foo)'` notation.
+
+## DEPRECATION
+
+* `DockerRequirements`: The `resources:` setting has been deprecated and will be removed in Viash 0.7.0. Please use `copy:` instead.
+
+* `DockerRequirements`: The `privileged:` setting has been deprecated and will be removed in Viash 0.7.0. Please use `run_args: "--privileged"` instead.
+
+## EXPERIMENTAL FUNCTIONALITY
+
+* `Config`: Any part of a Viash config can use inheritance to fill data (#259). For example:
+  Contents of `src/test/config.vsh.yaml`:
+  ```yaml
+  __inherits__: ../api/base.yaml
+  functionality:
+    name: test
+    resources:
+      - type: bash_script
+        path: script.sh
+        text: |
+          echo Copying $par_input to $par_output
+          cp $par_input $par_output
+  ```
+  Contents of `src/api/base.yaml`:
+  ```yaml
+  functionality:
+    arguments:
+      - name: "--input"
+        type: file
+      - name: "--output"
+        type: file
+        direction: output
+  ```
+  The resulting yaml will be:
+  ```yaml
+  functionality:
+    name: test
+    arguments:
+      - name: "--input"
+        type: file
+      - name: "--output"
+        type: file
+        direction: output
+    resources:
+      - type: bash_script
+        path: script.sh
+        text: |
+          echo Copying $par_input to $par_output
+          cp $par_input $par_output
+  ```
+
 # Viash 0.6.2
 
 ## BUG FIXES
