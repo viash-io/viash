@@ -2,7 +2,7 @@
 
 ## MINOR CHANGES
 
-* Config inheritance: Allow specifying the order of config inheritance. 
+* Config inheritance: Allow specifying the order of config inheritance (#289).
   If `.` is not in the list of inherited objects, it will be added at the end.
 
   Contents of `config.vsh.yaml`:
