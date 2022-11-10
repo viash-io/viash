@@ -1,3 +1,43 @@
+# Viash 0.6.4
+
+## MINOR CHANGES
+
+* Config inheritance: Allow specifying the order of config inheritance (#289).
+  If `.` is not in the list of inherited objects, it will be added at the end.
+
+  Contents of `config.vsh.yaml`:
+  ```yaml
+  functionality:
+  name: foo
+  arguments:
+    - __inherits__: obj_input.yaml
+      name: "--one"
+    - __inherits__: [., obj_input.yaml]
+      name: "--two"
+    - __inherits__: [obj_input.yaml, .]
+      name: "--three"
+  ```
+  Contents of `obj_input.yaml`:
+  ```yaml
+  type: file
+  name: --input
+  description: A h5ad file
+  ```
+  Output of `viash config view config.vsh.yaml` (stripped irrelevant bits):
+  ```yaml
+  functionality:
+    arguments:
+    - type: "file"
+      name: "--one"
+      description: "A h5ad file"
+    - type: "file"
+      name: "--input"
+      description: "A h5ad file"
+    - type: "file"
+      name: "--three"
+      description: "A h5ad file"
+  ```
+
 # Viash 0.6.3
 
 This release features contains mostly quality of life improvements and some experimental functionality. Most notably:
