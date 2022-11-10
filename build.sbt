@@ -8,7 +8,6 @@ libraryDependencies ++= Seq(
   "org.scalactic" %% "scalactic" % "3.0.7" % "test",
   "org.scalatest" %% "scalatest" % "3.0.7" % "test",
   "org.rogach" %% "scallop" % "4.0.1",
-  "io.circe" %% "circe-yaml" % "0.12.0",
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2"
 )
@@ -20,7 +19,8 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic",
   "io.circe" %% "circe-parser",
   "io.circe" %% "circe-generic-extras",
-  "io.circe" %% "circe-optics"
+  "io.circe" %% "circe-optics",
+  "io.circe" %% "circe-yaml"
 ).map(_ % circeVersion)
 
 scalacOptions ++= Seq("-unchecked", "-deprecation")
