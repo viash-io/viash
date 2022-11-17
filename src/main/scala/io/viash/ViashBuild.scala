@@ -31,7 +31,6 @@ object ViashBuild {
     output: String,
     writeMeta: Boolean = false,
     printMeta: Boolean = false,
-    namespace: Option[String] = None,
     setup: Option[String] = None,
     push: Boolean = false
   ) {
