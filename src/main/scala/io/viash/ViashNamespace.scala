@@ -62,7 +62,6 @@ object ViashNamespace {
             config = conf,
             platform = platform,
             output = out,
-            namespace = conf.functionality.namespace,
             setup = setup,
             push = push,
             writeMeta = writeMeta

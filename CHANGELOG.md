@@ -1,5 +1,9 @@
 # Viash 0.6.4
 
+## NEW FUNCTIONALITY
+
+* Traceability: Running `viash build` and `viash test` creates a `.viash_config.yaml` file by default, which contains the processed config of the component.
+
 ## MINOR CHANGES
 
 * Config inheritance: Allow specifying the order of config inheritance (#289).
