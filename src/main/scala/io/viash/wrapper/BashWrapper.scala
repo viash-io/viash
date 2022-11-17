@@ -22,6 +22,7 @@ import io.viash.functionality.resources._
 import io.viash.functionality.arguments._
 import io.viash.helpers.{Bash, Format, Helper}
 import io.viash.helpers.Escaper
+import io.viash.config.ConfigMeta
 
 object BashWrapper {
   val metaArgs: List[Argument[_]] = {
@@ -29,6 +30,7 @@ object BashWrapper {
       StringArgument("functionality_name", required = true, dest = "meta"),
       FileArgument("resources_dir", required = true, dest = "meta"),
       FileArgument("executable", required = true, dest = "meta"),
+      FileArgument("config", required = true, dest = "meta"),
       FileArgument("temp_dir", required = true, dest = "meta"),
       IntegerArgument("cpus", required = false, dest = "meta"),
       LongArgument("memory_b", required = false, dest = "meta"),
@@ -217,6 +219,7 @@ object BashWrapper {
        |# define meta fields
        |VIASH_META_FUNCTIONALITY_NAME="${functionality.name}"
        |VIASH_META_EXECUTABLE="$$VIASH_META_RESOURCES_DIR/$$VIASH_META_FUNCTIONALITY_NAME"
+       |VIASH_META_CONFIG="$$VIASH_META_RESOURCES_DIR/${ConfigMeta.metaFilename}"
        |VIASH_META_TEMP_DIR="$$VIASH_TEMP"
        |
        |${spaceCode(allMods.preParse)}

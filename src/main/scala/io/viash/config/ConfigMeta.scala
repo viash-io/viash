@@ -32,6 +32,8 @@ object ConfigMeta {
     stringStyle = Printer.StringStyle.DoubleQuoted
   )
 
+  val metaFilename: String = ".viash_config.yaml"
+
   def toMetaFile(config: Config): PlainFile = {
     // get resources
     val placeholderMap = config.functionality.resources.filter(_.text.isDefined).map{ res =>
@@ -72,7 +74,7 @@ object ConfigMeta {
 
     // add to resources
     PlainFile(
-      dest = Some(".viash_config.yaml"),
+      dest = Some(metaFilename),
       text = Some(configYamlStr2)
     )
   }
