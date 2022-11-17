@@ -2,7 +2,7 @@
 
 ## NEW FUNCTIONALITY
 
-* Traceability: Running `viash build` and `viash test` creates a `.viash_config.yaml` file by default, which contains the processed config of the component.
+* Traceability: Running `viash build` and `viash test` creates a `.viash_config.yaml` file by default, which contains the processed config of the component. As a side effect, this allows for reading in the `.viash_config.yaml` from within the component to learn more about the component being tested.
 
 ## MINOR CHANGES
 
