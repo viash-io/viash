@@ -1,5 +1,13 @@
 # Viash 0.6.4
 
+## BREAKING CHANGES
+
+* Config: Viash configs whose paths start with a `.` are ignored.
+
+## NEW FUNCTIONALITY
+
+* Traceability: Running `viash build` and `viash test` creates a `.config.vsh.yaml` file by default, which contains the processed config of the component. As a side effect, this allows for reading in the `.config.vsh.yaml` from within the component to learn more about the component being tested.
+
 ## MINOR CHANGES
 
 * Config inheritance: Allow specifying the order of config inheritance (#289).

@@ -189,8 +189,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     val writeMeta = registerOpt[Boolean](
       name = "write_meta",
       short = Some('w'),
-      default = Some(false),
-      descr = "Write out some meta information to RESOURCES_DIR/viash.yaml at the end."
+      default = Some(true),
+      descr = "Write out some meta information to `<output>/.config.vsh.yaml`."
     )
     val output = registerOpt[String](
       name = "output",
@@ -286,8 +286,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       val writeMeta = registerOpt[Boolean](
         name = "write_meta",
         short = Some('w'),
-        default = Some(false),
-        descr = "Write out some meta information to RESOURCES_DIR/viash.yaml at the end."
+        default = Some(true),
+        descr = "Write out some meta information to `<output>/.config.vsh.yaml`."
       )
       val flatten = registerOpt[Boolean](
         name = "flatten",

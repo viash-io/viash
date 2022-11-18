@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -ex
 
+echo ">>> Checking whether expected resources exist"
+[[ ! -f "$meta_executable" ]] && echo "executable could not be found!" && exit 1
+[[ ! -f "$meta_resources_dir/.config.vsh.yaml" ]] && echo ".config.vsh.yaml could not be found!" && exit 1
+[[ ! -f "$meta_config" ]] && echo ".config.vsh.yaml could not be found!" && exit 1
+
 echo ">>> Checking whether output is correct"
 "$meta_executable" "NOTICE" --real_number 10.5 --whole_number=10 -s "a string with spaces" \
   --truth --falsehood --reality true \
