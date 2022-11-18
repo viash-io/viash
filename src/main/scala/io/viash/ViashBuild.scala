@@ -29,7 +29,6 @@ object ViashBuild {
     config: Config,
     platform: Platform,
     output: String,
-    writeMeta: Boolean = false,
     printMeta: Boolean = false,
     setup: Option[String] = None,
     push: Boolean = false
@@ -47,11 +46,7 @@ object ViashBuild {
     val configYaml = ConfigMeta.toMetaFile(config, Some(dir))
 
     // write resources to output directory
-    if (writeMeta) {
-      IO.writeResources(configYaml :: fun.resources, dir)
-    } else {
-      IO.writeResources(fun.resources, dir)
-    }
+    IO.writeResources(configYaml :: fun.resources, dir)
 
     // if '--setup <strat>' was passed, run './executable ---setup <strat>'
     if (setup.isDefined && exec_path.isDefined && platform.hasSetup) {

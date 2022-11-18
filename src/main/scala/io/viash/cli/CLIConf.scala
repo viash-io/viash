@@ -186,12 +186,6 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       default = Some(false),
       descr = "Print out some meta information at the end."
     )
-    val writeMeta = registerOpt[Boolean](
-      name = "write_meta",
-      short = Some('w'),
-      default = Some(true),
-      descr = "Write out some meta information to `<output>/.config.vsh.yaml`."
-    )
     val output = registerOpt[String](
       name = "output",
       short = Some('o'),
@@ -282,12 +276,6 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         name = "push",
         default = Some(false),
         descr = "Whether or not to push the container to a Docker registry [Docker Platform only]."
-      )
-      val writeMeta = registerOpt[Boolean](
-        name = "write_meta",
-        short = Some('w'),
-        default = Some(true),
-        descr = "Write out some meta information to `<output>/.config.vsh.yaml`."
       )
       val flatten = registerOpt[Boolean](
         name = "flatten",

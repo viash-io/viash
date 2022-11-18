@@ -84,7 +84,6 @@ object Main {
           platform = platform.get,
           output = cli.build.output(),
           printMeta = cli.build.printMeta(),
-          writeMeta = cli.build.writeMeta(),
           setup = cli.build.setup.toOption,
           push = cli.build.push()
         )
@@ -107,7 +106,6 @@ object Main {
           setup = cli.namespace.build.setup.toOption,
           push = cli.namespace.build.push(),
           parallel = cli.namespace.build.parallel(),
-          writeMeta = cli.namespace.build.writeMeta(),
           flatten = cli.namespace.build.flatten()
         )
         0 // Might be possible to be improved further.
