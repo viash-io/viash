@@ -60,7 +60,7 @@ object ConfigMeta {
         }
       ),
       info = config.info.map(_.copy(
-        output = Some(dir.toString),
+        output = dir.map(_.toString),
         executable = dir.map(d => Paths.get(d.toString, config.functionality.name).toString)
       ))
     )

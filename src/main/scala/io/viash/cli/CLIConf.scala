@@ -180,12 +180,6 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       "Build an executable from the provided viash config file.",
       "viash build config.vsh.yaml -o output [-p docker] [-m] [-s]")
 
-    val printMeta = registerOpt[Boolean](
-      name = "meta",
-      short = Some('m'),
-      default = Some(false),
-      descr = "Print out some meta information at the end."
-    )
     val output = registerOpt[String](
       name = "output",
       short = Some('o'),

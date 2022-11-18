@@ -83,7 +83,6 @@ object Main {
           config = config,
           platform = platform.get,
           output = cli.build.output(),
-          printMeta = cli.build.printMeta(),
           setup = cli.build.setup.toOption,
           push = cli.build.push()
         )

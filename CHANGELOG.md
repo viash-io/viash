@@ -4,7 +4,8 @@
 
 * Config: Viash configs whose paths start with a `.` are ignored.
 
-* `viash build`: `--write_meta` argument has been removed. Instead,the `.config.vsh.yaml` file is always created when building Viash components.
+* `viash build`: `--write_meta` and `--print_meta` arguments have been removed. 
+  Instead, the `.config.vsh.yaml` file is always created when building Viash components.
 
 ## NEW FUNCTIONALITY
 

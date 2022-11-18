@@ -29,7 +29,6 @@ object ViashBuild {
     config: Config,
     platform: Platform,
     output: String,
-    printMeta: Boolean = false,
     setup: Option[String] = None,
     push: Boolean = false
   ) {
@@ -58,11 +57,6 @@ object ViashBuild {
     if (push && exec_path.isDefined && platform.hasSetup) {
       val cmd = Array(exec_path.get, "---setup push")
       val _ = Process(cmd).!(ProcessLogger(println, println))
-    }
-
-    // if '-m' was passed, print some yaml about the created output fields
-    if (printMeta) {
-      println(config.info.get.consoleString)
     }
   }
 }
