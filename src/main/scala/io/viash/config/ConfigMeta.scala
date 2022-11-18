@@ -17,6 +17,8 @@
 
 package io.viash.config
 
+import java.nio.file.Path
+import java.nio.file.Paths
 import io.circe.yaml.Printer
 
 import io.viash.functionality.resources.PlainFile
@@ -34,7 +36,7 @@ object ConfigMeta {
 
   val metaFilename: String = ".config.vsh.yaml"
 
-  def toMetaFile(config: Config): PlainFile = {
+  def toMetaFile(config: Config, dir: Option[Path]): PlainFile = {
     // get resources
     val placeholderMap = config.functionality.resources.filter(_.text.isDefined).map{ res =>
       (res, "VIASH_PLACEHOLDER~" + res.filename + "~")
@@ -42,6 +44,7 @@ object ConfigMeta {
 
     // change the config object before writing to yaml:
     // * substitute 'text' fields in resources with placeholders
+    // * add more info variables
     val toWriteConfig = config.copy(
       functionality = config.functionality.copy(
         resources = config.functionality.resources.map{ res =>
@@ -55,7 +58,11 @@ object ConfigMeta {
         test_resources = config.functionality.test_resources.map { res =>
           res.copyResource(parent = None)
         }
-      )
+      ),
+      info = config.info.map(_.copy(
+        output = Some(dir.toString),
+        executable = dir.map(d => Paths.get(d.toString, config.functionality.name).toString)
+      ))
     )
 
     // convert config to yaml

@@ -42,28 +42,15 @@ object ViashRun {
     // execute command, print everything to console
     var code = -1
     try {
-
-      // get the path of where the executable will be written to
-      val exec_path = Paths.get(dir.toString, fun.name)
-
-      // change the config object before writing to yaml:
-      // * add more info variables
-      val toWriteConfig = config.copy(
-        info = config.info.map(_.copy(
-          output = Some(dir.toString),
-          executable = Some(exec_path.toString)
-        ))
-      )
-
       // convert config to a yaml wrapped inside a PlainFile
-      val configYaml = ConfigMeta.toMetaFile(toWriteConfig)
+      val configYaml = ConfigMeta.toMetaFile(config, Some(dir))
 
       // write executable and resources to temporary directory
       IO.writeResources(configYaml :: fun.resources, dir)
 
       // determine command
       val cmd =
-        Array(exec_path.toString) ++ 
+        Array(Paths.get(dir.toString, fun.name).toString) ++ 
         args ++ 
         Array(cpus.map("---cpus=" + _), memory.map("---memory="+_)).flatMap(a => a)
 

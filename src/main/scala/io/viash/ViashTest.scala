@@ -247,7 +247,7 @@ object ViashTest {
           dest = Some("test_executable"),
           text = funOnlyTest.resources.head.text
         )
-        val configYaml = ConfigMeta.toMetaFile(config)
+        val configYaml = ConfigMeta.toMetaFile(config, Some(dir))
 
         // assemble full resources list for test
         val funFinal = fun.copy(resources = 

@@ -43,17 +43,8 @@ object ViashBuild {
     // get the path of where the executable will be written to
     val exec_path = fun.mainScript.map(scr => Paths.get(output, scr.resourcePath).toString)
 
-    // change the config object before writing to yaml:
-    // * add more info variables
-    val toWriteConfig = config.copy(
-      info = config.info.map(_.copy(
-        output = Some(output),
-        executable = exec_path
-      ))
-    )
-
     // convert config to a yaml wrapped inside a PlainFile
-    val configYaml = ConfigMeta.toMetaFile(toWriteConfig)
+    val configYaml = ConfigMeta.toMetaFile(config, Some(dir))
 
     // write resources to output directory
     if (writeMeta) {
@@ -76,7 +67,7 @@ object ViashBuild {
 
     // if '-m' was passed, print some yaml about the created output fields
     if (printMeta) {
-      println(toWriteConfig.info.get.consoleString)
+      println(config.info.get.consoleString)
     }
   }
 }
