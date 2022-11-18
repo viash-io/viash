@@ -20,8 +20,8 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
   private val tempFolStr = temporaryFolder.toString
 
   // parse functionality from file
-  private val functionality = Config.read(configFile, applyPlatform = false).functionality
-  private val loopFunctionality = Config.read(loopConfigFile, applyPlatform = false).functionality
+  private val functionality = Config.read(configFile).functionality
+  private val loopFunctionality = Config.read(loopConfigFile).functionality
 
   // check whether executable was created
   private val executable = Paths.get(tempFolStr, functionality.name).toFile

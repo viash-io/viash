@@ -35,6 +35,7 @@ import io.viash.config_mods.ConfigMods
 import java.nio.file.Paths
 
 import io.viash.schemas._
+import java.io.ByteArrayOutputStream
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -62,9 +63,6 @@ case class Config(
       |""".stripMargin)
   functionality: Functionality,
 
-  @internalFunctionality
-  platform: Option[Platform] = None,
-
   @description(
     """A list of platforms to generate target artifacts for.
       |
@@ -77,17 +75,51 @@ case class Config(
   @internalFunctionality
   info: Option[Info] = None
 ) {
-  
+
   @description(
-    """Argument for inheriting YAML partials. This is useful for defining common APIs in
+    """Config inheritance by including YAML partials. This is useful for defining common APIs in
       |separate files. `__inherits__` can be used in any level of the YAML. For example,
       |not just in the config but also in the functionality or any of the platforms.
+      |
+      |WARNING: this argument is an EXPERIMENTAL feature. Changes to the API are expected.
       |""".stripMargin)
   @example("__inherits__: ../api/common_interface.yaml", "yaml")
-  @since("Viash 0.6.2")
+  @since("Viash 0.6.3")
   @undocumented
   val `__inherits__`: Option[File] = None
   
+
+  /**
+    * Detect a config's platform
+    * 
+    * Order of execution:
+    *   - if a platform id is passed, look up the platform in the platforms list
+    *   - else if a platform yaml is passed, read platform from file
+    *   - else if platforms is a non-empty list, use the first platform
+    *   - else use the native platform
+    *
+    * @param platformStr A platform ID referring to one of the config's platforms, or a path to a YAML file
+    * @return A platform
+    */
+  def findPlatform(platformStr: Option[String]): Platform = {
+    if (platformStr.isDefined) {
+      val pid = platformStr.get
+
+      val platformNames = this.platforms.map(_.id)
+
+      if (platformNames.contains(pid)) {
+        this.platforms(platformNames.indexOf(pid))
+      } else if (pid.endsWith(".yaml") || pid.endsWith(".yml")) {
+        Platform.parse(IO.uri(platformStr.get))
+      } else {
+        throw new RuntimeException("platform must be a platform id specified in the config or a path to a platform yaml file.")
+      }
+    } else if (this.platforms.nonEmpty) {
+      this.platforms.head
+    } else {
+      NativePlatform()
+    }
+  }
 }
 
 object Config {
@@ -107,6 +139,10 @@ object Config {
 
     // apply inheritance if need be
     val js2 = js1.inherit(uri)
+
+    if (js1 != js2) {
+      Console.err.println("Warning: Config inheritance (__inherits__) is an experimental feature. Changes to the API are expected.")
+    }
 
     // apply preparse config mods
     val js3 = preparseMods match {
@@ -186,11 +222,8 @@ object Config {
   // reads and modifies the config based on the current setup
   def read(
     configPath: String,
-    platform: Option[String] = None,
     addOptMainScript: Boolean = true,
-    applyPlatform: Boolean = true,
-    configMods: List[String] = Nil,
-    displayWarnings: Boolean = true
+    configMods: List[String] = Nil
   ): Config = {
 
     // read yaml
@@ -217,10 +250,10 @@ object Config {
       }
     }
 
-    if (conf1.functionality.status == Status.Deprecated && displayWarnings)
+    if (conf1.functionality.status == Status.Deprecated)
       Console.err.println(s"${Console.YELLOW}Warning: The status of the component '${conf1.functionality.name}' is set to deprecated.${Console.RESET}")
     
-    if (conf1.functionality.resources.isEmpty && displayWarnings && optScript.isEmpty)
+    if (conf1.functionality.resources.isEmpty && optScript.isEmpty)
       Console.err.println(s"${Console.YELLOW}Warning: no resources specified!${Console.RESET}")
 
 
@@ -234,7 +267,6 @@ object Config {
       Info(
         viash_version = Some(io.viash.Main.version),
         config = configPath,
-        platform = platform,
         git_commit = gc,
         git_remote = rgr,
         git_tag = gt
@@ -255,49 +287,7 @@ object Config {
       )
     )
 
-    /* CONFIG 3: apply platform wrapper */
-
-    // get the platform
-    // * if a platform id is passed, look up the platform in the platforms list
-    // * else if a platform yaml is passed, read platform from file
-    // * else if a platform is already defined in the config, use that
-    // * else if platforms is a non-empty list, use the first platform
-    // * else use the native platform
-    val pl =
-      if (platform.isDefined) {
-        val pid = platform.get
-
-        val platformNames = conf1.platforms.map(_.id)
-
-        if (platformNames.contains(pid)) {
-          conf1.platforms(platformNames.indexOf(pid))
-        } else if (pid.endsWith(".yaml") || pid.endsWith(".yml")) {
-          Platform.parse(IO.uri(platform.get))
-        } else {
-          throw new RuntimeException("platform must be a platform id specified in the config or a path to a platform yaml file.")
-        }
-      } else if (conf1.platform.isDefined) {
-        conf1.platform.get
-      } else if (conf1.platforms.nonEmpty) {
-        conf1.platforms.head
-      } else {
-        NativePlatform()
-      }
-    
-    // apply platform to functionality if so desired
-    val conf3 = 
-      if (!applyPlatform) {
-        conf2b
-      } else {
-        conf2b.copy(
-          functionality = pl.modifyFunctionality(conf2b, false)
-        )
-      }
-    
-    // insert selected platform
-    conf3.copy(
-      platform = Some(pl)
-    )
+    conf2b
   }
 
   def readConfigs(
@@ -305,16 +295,11 @@ object Config {
     query: Option[String] = None,
     queryNamespace: Option[String] = None,
     queryName: Option[String] = None,
-    platform: Option[String] = None,
     configMods: List[String] = Nil,
-    addOptMainScript: Boolean = true,
-    applyPlatform: Boolean = true
+    addOptMainScript: Boolean = true
   ): List[Either[Config, Status]] = {
 
     val sourceDir = Paths.get(source)
-
-    // create regex for filtering platform ids
-    val platformStr = platform.getOrElse(".*")
 
     // find *.vsh.* files and parse as config
     val scriptFiles = IO.find(sourceDir, (path, attrs) => {
@@ -322,86 +307,55 @@ object Config {
         attrs.isRegularFile
     })
 
-    scriptFiles.flatMap { file =>
-      val conf1 =
-        try {
-          // first read config to get an idea of the available platforms
-          val confTest = Config.read(
-            file.toString, 
-            addOptMainScript = false,
-            applyPlatform = false, 
-            configMods = configMods,
-            displayWarnings = false // warnings will be displayed when reading the second time
-          )
-
-          val funName = confTest.functionality.name
-          val funNs = confTest.functionality.namespace
-
-          // does name & namespace match regex?
-          val queryTest = (query, funNs) match {
-            case (Some(regex), Some(ns)) => regex.r.findFirstIn(ns + "/" + funName).isDefined
-            case (Some(regex), None) => regex.r.findFirstIn(funName).isDefined
-            case (None, _) => true
-          }
-          val nameTest = queryName match {
-            case Some(regex) => regex.r.findFirstIn(funName).isDefined
-            case None => true
-          }
-          val namespaceTest = (queryNamespace, funNs) match {
-            case (Some(regex), Some(ns)) => regex.r.findFirstIn(ns).isDefined
-            case (Some(_), None) => false
-            case (None, _) => true
-          }
-
-          // if config passes regex checks, return it
-          if (queryTest && nameTest && namespaceTest && confTest.functionality.isEnabled) {
-            Left(confTest)
-          } else {
-            Right(Disabled)
-          }
-        } catch {
-          case _: Exception =>
-            Console.err.println(s"${Console.RED}Reading file '$file' failed${Console.RESET}")
-            Right(ParseError)
-        }
-
-      if (conf1.isRight) {
-        List(conf1)
-      } else {
-
-        val configs = if (platformStr.contains(":") || (new File(platformStr)).exists) {
-          // platform is a file
-          List(Config.read(
-            configPath = file.toString,
-            platform = Some(platformStr),
-            applyPlatform = applyPlatform,
-            addOptMainScript = addOptMainScript,
-            configMods = configMods
-          ))
-        } else {
-          // platform is a regex for filtering the ids
-          val platIDs = conf1.left.get.platforms.map(_.id)
-
-          val filteredPlats =
-            if (platIDs.isEmpty) {
-              // config did not contain any platforms, so the native platform should be used
-              List(None)
-            } else {
-              // filter platforms using the regex
-              platIDs.filter(platformStr.r.findFirstIn(_).isDefined).map(Some(_))
+    scriptFiles.map { file =>
+      try {
+        // read config to get an idea of the name and namespaces
+        // warnings will be captured for now, and will be displayed when reading the second time
+        val stdout = new ByteArrayOutputStream()
+        val stderr = new ByteArrayOutputStream()
+        val confTest = 
+          Console.withErr(stderr) {
+            Console.withOut(stdout) {
+              Config.read(
+                file.toString, 
+                addOptMainScript = addOptMainScript,
+                configMods = configMods
+              )
             }
-
-          filteredPlats.map { plat =>
-            Config.read(
-              configPath = file.toString,
-              platform = plat,
-              applyPlatform = applyPlatform,
-              addOptMainScript = addOptMainScript,
-              configMods = configMods
-            )
           }
+
+        val funName = confTest.functionality.name
+        val funNs = confTest.functionality.namespace
+
+        // does name & namespace match regex?
+        val queryTest = (query, funNs) match {
+          case (Some(regex), Some(ns)) => regex.r.findFirstIn(ns + "/" + funName).isDefined
+          case (Some(regex), None) => regex.r.findFirstIn(funName).isDefined
+          case (None, _) => true
         }
-        configs.map(c => Left(c))
+        val nameTest = queryName match {
+          case Some(regex) => regex.r.findFirstIn(funName).isDefined
+          case None => true
+        }
+        val namespaceTest = (queryNamespace, funNs) match {
+          case (Some(regex), Some(ns)) => regex.r.findFirstIn(ns).isDefined
+          case (Some(_), None) => false
+          case (None, _) => true
+        }
+
+        // if config passes regex checks, show warning and return it
+        if (queryTest && nameTest && namespaceTest && confTest.functionality.isEnabled) {
+          // TODO: stdout and stderr are no longer in the correct order :/
+          Console.out.print(stdout.toString)
+          Console.err.print(stderr.toString)
+          Left(confTest)
+        } else {
+          Right(Disabled)
+        }
+      } catch {
+        case _: Exception =>
+          Console.err.println(s"${Console.RED}Reading file '$file' failed${Console.RESET}")
+          Right(ParseError)
       }
     }
   }

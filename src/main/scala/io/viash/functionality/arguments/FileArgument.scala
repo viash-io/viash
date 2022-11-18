@@ -17,6 +17,7 @@
 
 package io.viash.functionality.arguments
 
+import io.circe.Json
 import java.nio.file.Path
 import io.viash.helpers.data_structures._
 import io.viash.schemas._
@@ -46,6 +47,14 @@ case class FileArgument(
 
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
+
+  @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
+  @example(
+    """info:
+      |  category: cat1
+      |  labels: [one, two, three]""".stripMargin, "yaml")
+  @since("Viash 0.6.3")
+  info: Json = Json.Null,
 
   @description("An example value for this argument. If no [`default`](#default) property was specified, this will be used for that purpose.")
   @example(
@@ -121,6 +130,7 @@ case class FileArgument(
     name: String, 
     alternatives: OneOrMore[String],
     description: Option[String],
+    info: Json,
     example: OneOrMore[Path],
     default: OneOrMore[Path],
     required: Boolean,
@@ -129,6 +139,6 @@ case class FileArgument(
     multiple_sep: String,
     dest: String
   ): Argument[Path] = {
-    copy(name, alternatives, description, example, default, this.must_exist, required, direction, multiple, multiple_sep, dest, `type`)
+    copy(name, alternatives, description, info, example, default, this.must_exist, required, direction, multiple, multiple_sep, dest, `type`)
   }
 }

@@ -71,11 +71,15 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
     val (stdout, stderr, _) = TestHelper.testMainWithStdErr(
       "ns", "test",
       "--src", nsPath,
+      "--keep", "true"
     )
 
     // Test inclusion of a header
-    val regexHeader = raw"^The working directory for the namespace tests is [\w/]+[\r\n]{1,2}\s*namespace\s*functionality\s*platform\s*test_name\s*exit_code\s*duration\s*result".r
+    val regexHeader = raw"^\s*namespace\s*functionality\s*platform\s*test_name\s*exit_code\s*duration\s*result".r
     assert(regexHeader.findFirstIn(stdout).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$stdout")
+
+    val regexWdir = raw"The working directory for the namespace tests is [\w/]+[\r\n]{1,2}".r
+    assert(regexWdir.findFirstIn(stderr).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$stderr")
 
     for (
       (component, steps) ← components;

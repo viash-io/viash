@@ -1,34 +1,81 @@
-# Viash 0.6.3
+# Viash 0.6.4
 
-## NEW FUNCTIONALITY
+## MINOR CHANGES
 
-* `Config`: Any part of a Viash config can use inheritance to fill data (#259). For example:
-  Contents of `src/test/config.vsh.yaml`:
+* Config inheritance: Allow specifying the order of config inheritance (#289).
+  If `.` is not in the list of inherited objects, it will be added at the end.
+
+  Contents of `config.vsh.yaml`:
   ```yaml
-  __inherits__: ../api/comp_processor.yaml
   functionality:
-    name: test
-    resources:
-      - type: bash_script
-        path: script.sh
-        text: |
-          echo Copying $par_input to $par_output
-          cp $par_input $par_output
+  name: foo
+  arguments:
+    - __inherits__: obj_input.yaml
+      name: "--one"
+    - __inherits__: [., obj_input.yaml]
+      name: "--two"
+    - __inherits__: [obj_input.yaml, .]
+      name: "--three"
   ```
-  Contents of `src/api/comp_processor.yaml`:
+  Contents of `obj_input.yaml`:
+  ```yaml
+  type: file
+  name: --input
+  description: A h5ad file
+  ```
+  Output of `viash config view config.vsh.yaml` (stripped irrelevant bits):
   ```yaml
   functionality:
     arguments:
-      - name: "--input"
-        type: file
-      - name: "--output"
-        type: file
-        direction: output
+    - type: "file"
+      name: "--one"
+      description: "A h5ad file"
+    - type: "file"
+      name: "--input"
+      description: "A h5ad file"
+    - type: "file"
+      name: "--three"
+      description: "A h5ad file"
+  ```
+
+# Viash 0.6.3
+
+This release features contains mostly quality of life improvements and some experimental functionality. Most notably:
+
+* `viash ns list` now only returns a config just once instead of once per platform.
+
+* A functionality's info field can contain any data structures. An `.info` field was added to arguments as well.
+
+* Bug fixes for using Viash with podman, Nextflow>=22.10 and R<4.0.
+
+* Experimental support for inheriting from config partials.
+
+## MAJOR CHANGES
+
+* `Config`: Made major internal changes w.r.t. how config files are read and at which point a platform (native, docker, nextflow)
+  is applied to the functionality script. The only visible side effect is that 
+  `viash ns list` will output each config only once instead of multiple times.
+
+* `Functionality`: Structured annotation can be added to a functionality and its arguments using the `info` field. Example:
+  ```yaml
+  functionality:
+    name: foo
+    info:
+      site: https://abc.xyz
+      tags: [ one, two, three ]
+    arguments:
+      - name: --foo
+        type: string
+        info:
+          foo: bar
+          a:
+            b:
+              c
   ```
 
 ## MINOR CHANGES
 
-* `BashWrapper`: Allow printing the executor command by adding `---verbose ---verbose` to a `viash run`.
+* `BashWrapper`: Allow printing the executor command by adding `---verbose ---verbose` to a `viash run` or an executable.
 
 * `Testbenches`: Rework `MainBuildAuxiliaryNativeParameterCheck` to create stimulus files and loop over the file from bash instead of looping natively.
   This prevents creating thousands of new processes which would only test a single parameter.
@@ -47,6 +94,9 @@
 * `Testbenches`: Add testbench to verify viash underscore components (viash_build, viash_install, viash_push, viash_skeleton, viash_test).
 
 * `Testbenches`: Update viash underscore component tests to use `$meta_executable`.
+
+* `viash ns exec`: Allow choosing whether the `{platform}` field should be filled in, based on the `--apply_platform` parameter.
+
 
 ## BUG FIXES
 
@@ -67,7 +117,52 @@
 
 * `DockerRequirements`: The `privileged:` setting has been deprecated and will be removed in Viash 0.7.0. Please use `run_args: "--privileged"` instead.
 
+## EXPERIMENTAL FUNCTIONALITY
+
+* `Config`: Any part of a Viash config can use inheritance to fill data (#259). For example:
+  Contents of `src/test/config.vsh.yaml`:
+  ```yaml
+  __inherits__: ../api/base.yaml
+  functionality:
+    name: test
+    resources:
+      - type: bash_script
+        path: script.sh
+        text: |
+          echo Copying $par_input to $par_output
+          cp $par_input $par_output
+  ```
+  Contents of `src/api/base.yaml`:
+  ```yaml
+  functionality:
+    arguments:
+      - name: "--input"
+        type: file
+      - name: "--output"
+        type: file
+        direction: output
+  ```
+  The resulting yaml will be:
+  ```yaml
+  functionality:
+    name: test
+    arguments:
+      - name: "--input"
+        type: file
+      - name: "--output"
+        type: file
+        direction: output
+    resources:
+      - type: bash_script
+        path: script.sh
+        text: |
+          echo Copying $par_input to $par_output
+          cp $par_input $par_output
+  ```
+
 # Viash 0.6.2
+
+This is a quick release to push two bug fixes related to security and being able to run Nextflow with optional output files.
 
 ## BUG FIXES
 

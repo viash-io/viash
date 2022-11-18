@@ -18,6 +18,7 @@
 package io.viash
 
 import config._
+import platforms.Platform
 import functionality.resources.{BashScript, Executable, PlainFile, PythonScript, RScript}
 import io.circe.yaml.Printer
 import helpers.IO
@@ -38,6 +39,7 @@ object ViashBuild {
 
   def apply(
     config: Config,
+    platform: Platform,
     output: String,
     writeMeta: Boolean = false,
     printMeta: Boolean = false,
@@ -45,7 +47,7 @@ object ViashBuild {
     setup: Option[String] = None,
     push: Boolean = false
   ) {
-    val fun = config.functionality
+    val fun = platform.modifyFunctionality(config, testing = false)
 
     // create dir
     val dir = Paths.get(output)
@@ -114,13 +116,13 @@ object ViashBuild {
     }
 
     // if '--setup <strat>' was passed, run './executable ---setup <strat>'
-    if (setup.isDefined && exec_path.isDefined && config.platform.exists(_.hasSetup)) {
+    if (setup.isDefined && exec_path.isDefined && platform.hasSetup) {
       val cmd = Array(exec_path.get, "---setup", setup.get)
       val _ = Process(cmd).!(ProcessLogger(println, println))
     }
 
     // if '--push' was passed, run './executable ---setup push'
-    if (push && exec_path.isDefined && config.platform.exists(_.hasSetup)) {
+    if (push && exec_path.isDefined && platform.hasSetup) {
       val cmd = Array(exec_path.get, "---setup push")
       val _ = Process(cmd).!(ProcessLogger(println, println))
     }
