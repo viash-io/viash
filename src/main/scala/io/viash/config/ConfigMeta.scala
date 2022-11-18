@@ -32,7 +32,7 @@ object ConfigMeta {
     stringStyle = Printer.StringStyle.DoubleQuoted
   )
 
-  val metaFilename: String = ".viash_config.yaml"
+  val metaFilename: String = ".config.vsh.yaml"
 
   def toMetaFile(config: Config): PlainFile = {
     // get resources
