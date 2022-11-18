@@ -304,7 +304,7 @@ object Config {
     // find [^\.]*.vsh.* files and parse as config
     val scriptFiles = IO.find(sourceDir, (path, attrs) => {
       path.toString.contains(".vsh.") &&
-        !path.toString.startsWith(".") &&
+        !path.toFile.getName.startsWith(".") &&
         attrs.isRegularFile
     })
 
