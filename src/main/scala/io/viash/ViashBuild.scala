@@ -29,8 +29,6 @@ object ViashBuild {
     config: Config,
     platform: Platform,
     output: String,
-    writeMeta: Boolean = false,
-    printMeta: Boolean = false,
     setup: Option[String] = None,
     push: Boolean = false
   ) {
@@ -43,24 +41,11 @@ object ViashBuild {
     // get the path of where the executable will be written to
     val exec_path = fun.mainScript.map(scr => Paths.get(output, scr.resourcePath).toString)
 
-    // change the config object before writing to yaml:
-    // * add more info variables
-    val toWriteConfig = config.copy(
-      info = config.info.map(_.copy(
-        output = Some(output),
-        executable = exec_path
-      ))
-    )
-
     // convert config to a yaml wrapped inside a PlainFile
-    val configYaml = ConfigMeta.toMetaFile(toWriteConfig)
+    val configYaml = ConfigMeta.toMetaFile(config, Some(dir))
 
     // write resources to output directory
-    if (writeMeta) {
-      IO.writeResources(configYaml :: fun.resources, dir)
-    } else {
-      IO.writeResources(fun.resources, dir)
-    }
+    IO.writeResources(configYaml :: fun.resources, dir)
 
     // if '--setup <strat>' was passed, run './executable ---setup <strat>'
     if (setup.isDefined && exec_path.isDefined && platform.hasSetup) {
@@ -72,11 +57,6 @@ object ViashBuild {
     if (push && exec_path.isDefined && platform.hasSetup) {
       val cmd = Array(exec_path.get, "---setup push")
       val _ = Process(cmd).!(ProcessLogger(println, println))
-    }
-
-    // if '-m' was passed, print some yaml about the created output fields
-    if (printMeta) {
-      println(toWriteConfig.info.get.consoleString)
     }
   }
 }

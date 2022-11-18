@@ -194,7 +194,6 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
     val testText = TestHelper.testMain(
       "build",
       "-o", tempFolStr,
-      "-m",
       configNoPlatformFile
     )
 
@@ -204,9 +203,6 @@ class MainBuildNativeSuite extends FunSuite with BeforeAndAfterAll {
     Exec.run(
       Seq(executable.toString, "--help")
     )
-
-    val regexPlatform = "platform:\\s*<NA>".r
-    assert(regexPlatform.findFirstIn(testText).isDefined, testText)
   }
 
   test("Test whether defining strings as arguments in argument groups throws a deprecation warning") {

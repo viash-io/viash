@@ -37,7 +37,6 @@ object ViashNamespace {
     setup: Option[String] = None,
     push: Boolean = false,
     parallel: Boolean = false,
-    writeMeta: Boolean = true,
     flatten: Boolean = false
   ) {
     val configs2 = if (parallel) configs.par else configs
@@ -63,8 +62,7 @@ object ViashNamespace {
             platform = platform,
             output = out,
             setup = setup,
-            push = push,
-            writeMeta = writeMeta
+            push = push
           )
           Right(Success)
         }
