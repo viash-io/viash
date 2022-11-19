@@ -353,23 +353,26 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
   //</editor-fold>
   //<editor-fold desc="Test benches to check building with or without --setup flag">
   test("viash without --setup doesn't create docker during build", DockerTest) {
+    val tag = "throwawayimage"
+    
     //remove docker if it exists
-    removeDockerImage("throwawayimage", "0.1")
-    assert(!checkDockerImageExists("throwawayimage", "0.1"))
+    removeDockerImage(tag, "0.1")
+    assert(!checkDockerImageExists(tag, "0.1"))
 
     // build viash wrapper without --setup
     TestHelper.testMain(
       "build",
       "-p", "throwawayimage",
       "-o", tempFolStr,
-      configFile
+      configFile,
+      "--no_vcm"
     )
 
     assert(executable.exists)
     assert(executable.canExecute)
 
     // verify docker still doesn't exist
-    assert(!checkDockerImageExists("throwawayimage", "0.1"))
+    assert(!checkDockerImageExists(tag, "0.1"))
 
     // run viash wrapper with ---setup
     val out = Exec.runCatch(
@@ -378,13 +381,15 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(out.exitValue == 0)
 
     // verify docker now exists
-    assert(checkDockerImageExists("throwawayimage", "0.1"))
+    assert(checkDockerImageExists(tag, "0.1"))
   }
 
   test("viash with --setup creates docker during build", DockerTest) {
+    val tag = "throwawayimage"
+
     // remove docker if it exists
-    removeDockerImage("throwawayimage", "0.1")
-    assert(!checkDockerImageExists("throwawayimage", "0.1"))
+    removeDockerImage(tag, "0.1")
+    assert(!checkDockerImageExists(tag, "0.1"))
 
     // build viash wrapper with --setup
     TestHelper.testMain(
@@ -392,14 +397,15 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       "-p", "throwawayimage",
       "-o", tempFolStr,
       "--setup", "build",
-      configFile
+      configFile,
+      "--no_vcm"
     )
 
     assert(executable.exists)
     assert(executable.canExecute)
 
     // verify docker exists
-    assert(checkDockerImageExists("throwawayimage", "0.1"))
+    assert(checkDockerImageExists(tag, "0.1"))
   }
   //</editor-fold>
 

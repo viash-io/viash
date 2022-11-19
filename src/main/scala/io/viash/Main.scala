@@ -210,7 +210,8 @@ object Main {
     val config = Config.read(
       configPath = subcommand.config(),
       addOptMainScript = addOptMainScript,
-      configMods = subcommand.config_mods()
+      configMods = subcommand.config_mods(),
+      searchVcms = ! subcommand.noVcm()
     )
     if (applyPlatform) {
       processConfigWithPlatform(
@@ -240,7 +241,8 @@ object Main {
       queryNamespace = queryNamespace,
       queryName = queryName,
       configMods = configMods,
-      addOptMainScript = addOptMainScript
+      addOptMainScript = addOptMainScript,
+      searchVcms = ! subcommand.noVcm()
     )
 
     if (applyPlatform) {

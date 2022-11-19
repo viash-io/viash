@@ -47,6 +47,12 @@ trait ViashCommand {
 
     descr = "Modify a viash config at runtime using @[config_mod](dynamic config modding)."
   )
+  val noVcm = registerOpt[Boolean](
+    name = "no_vcm",
+    default = Some(false),
+    descr = "Whether or not to look for @[config_mod](config mods) in .vcm files.",
+    hidden = true
+  )
 }
 trait ViashRunner {
   _: DocumentedSubcommand =>
@@ -110,6 +116,12 @@ trait ViashNs {
     short = Some('c'),
     default = Some(Nil),
     descr = "Modify a viash config at runtime using @[config_mod](dynamic config modding)."
+  )
+  val noVcm = registerOpt[Boolean](
+    name = "no_vcm",
+    default = Some(false),
+    descr = "Whether or not to look for @[config_mod](config mods) in .vcm files.",
+    hidden = true
   )
 }
 trait WithTemporary {

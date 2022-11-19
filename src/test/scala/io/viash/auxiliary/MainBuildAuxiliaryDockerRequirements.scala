@@ -39,9 +39,11 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
   }
 
   test("setup; check docker requirements using apk to add the fortune package", DockerTest) {
+    val tag = "ghcr.io/viash-io/viash_requirement_apk"
+
     // remove docker if it exists
-    removeDockerImage("viash_requirement_apk")
-    assert(!checkDockerImageExists("viash_requirement_apk"))
+    removeDockerImage(tag)
+    assert(!checkDockerImageExists(tag))
 
     // build viash wrapper with --setup
     TestHelper.testMain(
@@ -53,7 +55,7 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
     )
 
     // verify docker exists
-    assert(checkDockerImageExists("viash_requirement_apk"))
+    assert(checkDockerImageExists(tag))
 
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
@@ -68,7 +70,7 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
     assert(output.output == "/usr/bin/fortune\n")
 
     // Tests finished, remove docker image
-    removeDockerImage("viash_requirement_apk")
+    removeDockerImage(tag)
   }
 
   test("setup; check base image for apt still does not contain the cowsay package", DockerTest) {
@@ -94,9 +96,11 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
   }
 
   test("setup; check docker requirements using apt to add the cowsay package", DockerTest) {
+    val tag = "ghcr.io/viash-io/viash_requirement_apt"
+
     // remove docker if it exists
-    removeDockerImage("viash_requirement_apt")
-    assert(!checkDockerImageExists("viash_requirement_apt"))
+    removeDockerImage(tag)
+    assert(!checkDockerImageExists(tag))
 
     // build viash wrapper with --setup
     val _ = TestHelper.testMain(
@@ -108,7 +112,7 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
     )
 
     // verify docker exists
-    assert(checkDockerImageExists("viash_requirement_apt"))
+    assert(checkDockerImageExists(tag))
 
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
@@ -123,7 +127,7 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
     assert(output.output == "/usr/games/cowsay exists.\n")
 
     // Tests finished, remove docker image
-    removeDockerImage("viash_requirement_apt")
+    removeDockerImage(tag)
   }
 
 

@@ -86,7 +86,7 @@ class RichJsonTest extends FunSuite with BeforeAndAfterAll {
     assert(jsonMerge == jsonMergeExpected)
   }
 
-  test("checking whether inherit works") {
+  test("inherit with implicit ordering") {
     // write json to file
     IO.write("a: [3, 4]", temporaryFolder.resolve("obj1.yaml"))
 
@@ -95,17 +95,52 @@ class RichJsonTest extends FunSuite with BeforeAndAfterAll {
       |a: [1, 2]
       |""".stripMargin
     ).getOrElse(Json.Null)
-    val jsonExpected = parser.parse("""
+    val jsonExpected1 = parser.parse("""
+      |a: [3, 4, 1, 2]
+      |""".stripMargin
+    ).getOrElse(Json.Null)
+
+    val jsonOut1 = json1.inherit(temporaryFolder.toUri())
+    assert(jsonOut1 == jsonExpected1)
+  }
+
+  test("inherit with explicit ordering") {
+    // write json to file
+    IO.write("a: [3, 4]", temporaryFolder.resolve("obj1.yaml"))
+
+    val json1 = parser.parse("""
+      |__inherits__: [obj1.yaml, .]
+      |a: [1, 2]
+      |""".stripMargin
+    ).getOrElse(Json.Null)
+    val jsonExpected1 = parser.parse("""
+      |a: [3, 4, 1, 2]
+      |""".stripMargin
+    ).getOrElse(Json.Null)
+
+    val jsonOut1 = json1.inherit(temporaryFolder.toUri())
+    assert(jsonOut1 == jsonExpected1)
+  }
+
+  test("inherit with explicit ordering reversed") {
+    // write json to file
+    IO.write("a: [3, 4]", temporaryFolder.resolve("obj1.yaml"))
+
+    val json1 = parser.parse("""
+      |__inherits__: [., obj1.yaml]
+      |a: [1, 2]
+      |""".stripMargin
+    ).getOrElse(Json.Null)
+    val jsonExpected1 = parser.parse("""
       |a: [1, 2, 3, 4]
       |""".stripMargin
     ).getOrElse(Json.Null)
 
-    // check whether filling default works
-    val jsonOut = json1.inherit(temporaryFolder.toUri())
-    assert(jsonOut == jsonExpected)
+    val jsonOut1 = json1.inherit(temporaryFolder.toUri())
+    assert(jsonOut1 == jsonExpected1)
   }
 
-  test("checking whether inherit without stripping the inherits works") {
+  test("inherit without stripping the inherits") {
     // write json to file
     val obj1Path = temporaryFolder.resolve("obj1.yaml")
     IO.write("a: [3, 4]", obj1Path)
@@ -116,8 +151,8 @@ class RichJsonTest extends FunSuite with BeforeAndAfterAll {
       |""".stripMargin
     ).getOrElse(Json.Null)
     val jsonExpected = parser.parse(s"""
-      |__inherits__: file:${obj1Path}
-      |a: [1, 2, 3, 4]
+      |__inherits__: [ file:${obj1Path}, . ]
+      |a: [3, 4, 1, 2]
       |""".stripMargin
     ).getOrElse(Json.Null)
 
@@ -126,7 +161,7 @@ class RichJsonTest extends FunSuite with BeforeAndAfterAll {
     assert(jsonOut == jsonExpected)
   }
 
-  test("checking whether multiple inheritance works") {
+  test("multiple inheritance") {
     IO.write("a: [3]", temporaryFolder.resolve("obj2.yaml"))
     IO.write("a: [4]", temporaryFolder.resolve("obj3.yaml"))
 
@@ -136,7 +171,7 @@ class RichJsonTest extends FunSuite with BeforeAndAfterAll {
       |""".stripMargin
     ).getOrElse(Json.Null)
     val jsonExpected = parser.parse("""
-      |a: [1, 2, 3, 4]
+      |a: [3, 4, 1, 2]
       |""".stripMargin
     ).getOrElse(Json.Null)
 
@@ -157,7 +192,7 @@ class RichJsonTest extends FunSuite with BeforeAndAfterAll {
       |""".stripMargin
     ).getOrElse(Json.Null)
     val jsonExpected = parser.parse("""
-      |a: [1, 2, 3, 4]
+      |a: [4, 3, 1, 2]
       |""".stripMargin
     ).getOrElse(Json.Null)
 

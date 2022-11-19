@@ -1,30 +1,74 @@
-# Viash 0.6.3
+# Viash 0.6.4
 
 ## NEW FUNCTIONALITY
 
-* `Config`: Any part of a Viash config can use inheritance to fill data (#259). For example:
-  Contents of `src/test/config.vsh.yaml`:
-  ```yaml
-  __inherits__: ../api/comp_processor.yaml
-  functionality:
-    name: test
-    resources:
-      - type: bash_script
-        path: script.sh
-        text: |
-          echo Copying $par_input to $par_output
-          cp $par_input $par_output
+* Config mods: Viash will automatically search for `.vcm` files in the 
+  directory of a component and its parent directories. Any config mods stored 
+  in a `.vcm` file will automatically be applied to the component. 
+  Viash will not recurse through parent directories once a `project.vcm` file 
+  has been found. Example:
+
+  Contents of `project.vcm`:
   ```
-  Contents of `src/api/comp_processor.yaml`:
+  .platforms[.type == 'docker'].target_registry := 'ghcr.io'
+  .platforms[.type == 'docker'].target_organization := 'viash-io'
+  .platforms[.type == 'docker'].namespace_separator := '/'
+  .platforms[.type == 'docker'].target_image_source := 'https://github.com/viash-io/viash'
+  ```
+
+  This behaviour can be bypassed by passing the `--no_vcm` argument to any of 
+  the Viash commands.
+  
+
+## MINOR CHANGES
+
+* Config inheritance: Allow specifying the order of config inheritance (#289).
+  If `.` is not in the list of inherited objects, it will be added at the end.
+
+  Contents of `config.vsh.yaml`:
+  ```yaml
+  functionality:
+  name: foo
+  arguments:
+    - __inherits__: obj_input.yaml
+      name: "--one"
+    - __inherits__: [., obj_input.yaml]
+      name: "--two"
+    - __inherits__: [obj_input.yaml, .]
+      name: "--three"
+  ```
+  Contents of `obj_input.yaml`:
+  ```yaml
+  type: file
+  name: --input
+  description: A h5ad file
+  ```
+  Output of `viash config view config.vsh.yaml` (stripped irrelevant bits):
   ```yaml
   functionality:
     arguments:
-      - name: "--input"
-        type: file
-      - name: "--output"
-        type: file
-        direction: output
+    - type: "file"
+      name: "--one"
+      description: "A h5ad file"
+    - type: "file"
+      name: "--input"
+      description: "A h5ad file"
+    - type: "file"
+      name: "--three"
+      description: "A h5ad file"
   ```
+
+# Viash 0.6.3
+
+This release features contains mostly quality of life improvements and some experimental functionality. Most notably:
+
+* `viash ns list` now only returns a config just once instead of once per platform.
+
+* A functionality's info field can contain any data structures. An `.info` field was added to arguments as well.
+
+* Bug fixes for using Viash with podman, Nextflow>=22.10 and R<4.0.
+
+* Experimental support for inheriting from config partials.
 
 ## MAJOR CHANGES
 
@@ -84,7 +128,52 @@
 
 * `DockerRequirements`: The `privileged:` setting has been deprecated and will be removed in Viash 0.7.0. Please use `run_args: "--privileged"` instead.
 
+## EXPERIMENTAL FUNCTIONALITY
+
+* `Config`: Any part of a Viash config can use inheritance to fill data (#259). For example:
+  Contents of `src/test/config.vsh.yaml`:
+  ```yaml
+  __inherits__: ../api/base.yaml
+  functionality:
+    name: test
+    resources:
+      - type: bash_script
+        path: script.sh
+        text: |
+          echo Copying $par_input to $par_output
+          cp $par_input $par_output
+  ```
+  Contents of `src/api/base.yaml`:
+  ```yaml
+  functionality:
+    arguments:
+      - name: "--input"
+        type: file
+      - name: "--output"
+        type: file
+        direction: output
+  ```
+  The resulting yaml will be:
+  ```yaml
+  functionality:
+    name: test
+    arguments:
+      - name: "--input"
+        type: file
+      - name: "--output"
+        type: file
+        direction: output
+    resources:
+      - type: bash_script
+        path: script.sh
+        text: |
+          echo Copying $par_input to $par_output
+          cp $par_input $par_output
+  ```
+
 # Viash 0.6.2
+
+This is a quick release to push two bug fixes related to security and being able to run Nextflow with optional output files.
 
 ## BUG FIXES
 

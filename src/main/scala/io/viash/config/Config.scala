@@ -37,6 +37,7 @@ import java.nio.file.Paths
 import io.viash.schemas._
 import java.io.ByteArrayOutputStream
 import java.nio.file.FileSystemNotFoundException
+import io.viash.config_mods.VcmFinder
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -76,14 +77,16 @@ case class Config(
   @internalFunctionality
   info: Option[Info] = None
 ) {
-  
+
   @description(
-    """Argument for inheriting YAML partials. This is useful for defining common APIs in
+    """Config inheritance by including YAML partials. This is useful for defining common APIs in
       |separate files. `__inherits__` can be used in any level of the YAML. For example,
       |not just in the config but also in the functionality or any of the platforms.
+      |
+      |WARNING: this argument is an EXPERIMENTAL feature. Changes to the API are expected.
       |""".stripMargin)
   @example("__inherits__: ../api/common_interface.yaml", "yaml")
-  @since("Viash 0.6.2")
+  @since("Viash 0.6.3")
   @undocumented
   val `__inherits__`: Option[File] = None
   
@@ -122,6 +125,49 @@ case class Config(
 }
 
 object Config {
+  def parse(uri: URI, preparseMods: Option[ConfigMods]): Config = {
+    val str = IO.read(uri)
+    parse(str, uri, preparseMods)
+  }
+
+  def parse(yamlText: String, uri: URI, preparseMods: Option[ConfigMods]): Config = {
+    def errorHandler[C](e: Exception): C = {
+      Console.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
+      throw e
+    }
+
+    // read json
+    val js1 = parser.parse(yamlText).fold(errorHandler, a => a)
+
+    // apply inheritance if need be
+    val js2 = js1.inherit(uri)
+
+    if (js1 != js2) {
+      Console.err.println("Warning: Config inheritance (__inherits__) is an experimental feature. Changes to the API are expected.")
+    }
+
+    // apply preparse config mods
+    val js3 = preparseMods match {
+      case None => js2
+      case Some(cmds) => cmds(js2, preparse = true)
+    }
+
+    // parse as config
+    val config = js3.as[Config].fold(errorHandler, identity)
+
+    // make paths absolute
+    val resources = config.functionality.resources.map(_.copyWithAbsolutePath(uri))
+    val tests = config.functionality.test_resources.map(_.copyWithAbsolutePath(uri))
+
+    // copy resources with updated paths into config and return
+    config.copy(
+      functionality = config.functionality.copy(
+        resources = resources,
+        test_resources = tests
+      )
+    )
+  }
+
   def readYAML(config: String): (String, Option[Script]) = {
     // get config uri
     val configUri = IO.uri(config)
@@ -170,7 +216,8 @@ object Config {
   def read(
     configPath: String,
     addOptMainScript: Boolean = true,
-    configMods: List[String] = Nil
+    configMods: List[String] = Nil,
+    searchVcms: Boolean = true
   ): Config = {
 
     // make URI
@@ -179,18 +226,23 @@ object Config {
     // read cli config mods
     val cliConfMods = ConfigMods.parseConfigMods(configMods)
     
-    // read vcm config mods
-    val vcmConfMods = 
-      try {
-        ConfigMods.findAllVcm(Paths.get(uri).getParent())
-      } catch {
-        case (_: FileSystemNotFoundException) =>
-          Console.err.println(s"WARNING: not looking for .vcm files since URI protocol (${uri.getScheme()}) does not allow listing the directory")
-          ConfigMods()
-      }
+    // read vcm config mods if so desired
+    val confMods = 
+      if (searchVcms) {
+        val vcmConfMods = 
+          try {
+            VcmFinder.findAllVcm(Paths.get(uri).getParent())
+          } catch {
+            case (_: FileSystemNotFoundException) =>
+              Console.err.println(s"WARNING: not looking for .vcm files since URI protocol (${uri.getScheme()}) does not allow listing the directory")
+              ConfigMods()
+          }
 
-    // combine config mods
-    val confMods = vcmConfMods + cliConfMods
+        // combine config mods
+        vcmConfMods + cliConfMods
+      } else {
+        cliConfMods
+      }
 
     /* STRING */
     // read yaml as string
@@ -291,7 +343,8 @@ object Config {
     queryNamespace: Option[String] = None,
     queryName: Option[String] = None,
     configMods: List[String] = Nil,
-    addOptMainScript: Boolean = true
+    addOptMainScript: Boolean = true,
+    searchVcms: Boolean = true
   ): List[Either[Config, Status]] = {
 
     val sourceDir = Paths.get(source)
@@ -314,7 +367,8 @@ object Config {
               Config.read(
                 file.toString, 
                 addOptMainScript = addOptMainScript,
-                configMods = configMods
+                configMods = configMods,
+                searchVcms = searchVcms
               )
             }
           }
