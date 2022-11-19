@@ -233,15 +233,7 @@ object Config {
     configMods: List[String] = Nil
   ): Config = {
     // read cli config mods
-    val cliConfMods = ConfigMods.parseConfigMods(configMods)
-    
-    // add project config mods if available
-    val confMods = 
-      // if (...) {
-      //   .... + cliConfMods
-      // } else {
-        cliConfMods
-      // }
+    val confMods = ConfigMods.parseConfigMods(configMods)
 
     /* STRING */
     // read yaml as string
