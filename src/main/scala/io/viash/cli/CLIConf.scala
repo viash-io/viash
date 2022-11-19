@@ -47,12 +47,6 @@ trait ViashCommand {
 
     descr = "Modify a viash config at runtime using @[config_mod](dynamic config modding)."
   )
-  val noVcm = registerOpt[Boolean](
-    name = "no_vcm",
-    default = Some(false),
-    descr = "Whether or not to look for @[config_mod](config mods) in .vcm files.",
-    hidden = true
-  )
 }
 trait ViashRunner {
   _: DocumentedSubcommand =>
@@ -92,7 +86,7 @@ trait ViashNs {
     name = "src",
     short = Some('s'),
     descr = " A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
-    default = Some("src")
+    default = None
   )
   val platform = registerOpt[String](
     name = "platform",
@@ -117,11 +111,15 @@ trait ViashNs {
     default = Some(Nil),
     descr = "Modify a viash config at runtime using @[config_mod](dynamic config modding)."
   )
-  val noVcm = registerOpt[Boolean](
-    name = "no_vcm",
-    default = Some(false),
-    descr = "Whether or not to look for @[config_mod](config mods) in .vcm files.",
-    hidden = true
+}
+
+trait ViashNsBuild {
+  _: DocumentedSubcommand =>
+  val target = registerOpt[String](
+    name = "target",
+    short = Some('t'),
+    descr = "A target directory to build the executables into. Default: target/.",
+    default = None
   )
 }
 trait WithTemporary {
@@ -273,18 +271,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
 
   val namespace = new DocumentedSubcommand("ns") {
 
-    val build = new DocumentedSubcommand("build") with ViashNs{
+    val build = new DocumentedSubcommand("build") with ViashNs with ViashNsBuild {
       banner(
         "viash ns build",
         "Build a namespace from many viash config files.",
         "viash ns build [-n nmspc] [-s src] [-t target] [-p docker] [--setup] [---push] [--parallel] [--flatten]")
 
-      val target = registerOpt[String](
-        name = "target",
-        short = Some('t'),
-        descr = "A target directory to build the executables into. Default: target/.",
-        default = Some("target")
-      )
       val setup = registerOpt[String](
         name = "setup",
         default = None,

@@ -18,9 +18,11 @@
 package io.viash
 
 import java.nio.file.Paths
+import java.nio.file.FileSystemNotFoundException
 import config.Config
+import helpers.IO
 import helpers.Scala._
-import cli.{CLIConf, ViashCommand, ViashNs}
+import cli.{CLIConf, ViashCommand, ViashNs, ViashNsBuild}
 
 import java.io.File
 import java.io.FileNotFoundException
@@ -28,6 +30,8 @@ import java.nio.file.NoSuchFileException
 import io.viash.helpers.MissingResourceFileException
 import io.viash.helpers.status._
 import io.viash.platforms.Platform
+import io.viash.project.ViashProject
+import io.viash.cli.DocumentedSubcommand
 
 object Main {
   private val pkg = getClass.getPackage
@@ -64,11 +68,19 @@ object Main {
         }
     }
 
-    val cli = new CLIConf(viashArgs)
+    val cli = new CLIConf(viashArgs) 
+    
+    // try to find project settings
+    val proj = cli.subcommands.last match {
+      case x: ViashCommand => Some(readProjectFromCommand(x))
+      case x: ViashNs => Some(readProjectFromNs(x))
+      case _ => None
+    }
 
+    // process commands
     cli.subcommands match {
       case List(cli.run) =>
-        val (config, platform) = readConfig(cli.run)
+        val (config, platform) = readConfig(cli.run, project = proj.get)
         ViashRun(
           config = config,
           platform = platform.get, 
@@ -78,7 +90,7 @@ object Main {
           memory = cli.run.memory.toOption
         )
       case List(cli.build) =>
-        val (config, platform) = readConfig(cli.build)
+        val (config, platform) = readConfig(cli.build, project = proj.get)
         ViashBuild(
           config = config,
           platform = platform.get,
@@ -90,7 +102,7 @@ object Main {
         )
         0 // Exceptions are thrown when something bad happens, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.test) =>
-        val (config, platform) = readConfig(cli.test)
+        val (config, platform) = readConfig(cli.test, project = proj.get)
         ViashTest(
           config,
           platform = platform.get,
@@ -100,7 +112,7 @@ object Main {
         )
         0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
-        val configs = readConfigs(cli.namespace.build)
+        val configs = readConfigs(cli.namespace.build, project = proj.get)
         ViashNamespace.build(
           configs = configs,
           target = cli.namespace.build.target(),
@@ -112,7 +124,7 @@ object Main {
         )
         0 // Might be possible to be improved further.
       case List(cli.namespace, cli.namespace.test) =>
-        val configs = readConfigs(cli.namespace.test)
+        val configs = readConfigs(cli.namespace.test, project = proj.get)
         val testResults = ViashNamespace.test(
           configs = configs,
           parallel = cli.namespace.test.parallel(),
@@ -126,7 +138,8 @@ object Main {
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.list) =>
         val configs = readConfigs(
-          cli.namespace.list, 
+          cli.namespace.list,
+          project = proj.get,
           addOptMainScript = false, 
           applyPlatform = false
         )
@@ -138,7 +151,11 @@ object Main {
         val errors = configs.flatMap(_.right.toOption).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.exec) =>
-        val configs = readConfigs(cli.namespace.exec, applyPlatform = cli.namespace.exec.applyPlatform())
+        val configs = readConfigs(
+          cli.namespace.exec, 
+          project = proj.get, 
+          applyPlatform = cli.namespace.exec.applyPlatform()
+        )
         ViashNamespace.exec(
           configs = configs,
           command = cli.namespace.exec.cmd(),
@@ -149,7 +166,8 @@ object Main {
         if (errors > 0) 1 else 0
       case List(cli.config, cli.config.view) =>
         val (config, _) = readConfig(
-          subcommand = cli.config.view,
+          cli.config.view,
+          project = proj.get,
           addOptMainScript = false,
           applyPlatform = false
         )
@@ -161,7 +179,8 @@ object Main {
         0
       case List(cli.config, cli.config.inject) =>
         val (config, _) = readConfig(
-          subcommand = cli.config.inject,
+          cli.config.inject,
+          project = proj.get,
           addOptMainScript = false,
           applyPlatform = false
         )
@@ -204,14 +223,15 @@ object Main {
 
   def readConfig(
     subcommand: ViashCommand,
+    project: ViashProject,
     addOptMainScript: Boolean = true,
     applyPlatform: Boolean = true
   ): (Config, Option[Platform]) = {
+    
     val config = Config.read(
       configPath = subcommand.config(),
       addOptMainScript = addOptMainScript,
-      configMods = subcommand.config_mods(),
-      searchVcms = ! subcommand.noVcm()
+      configMods = project.config_mods
     )
     if (applyPlatform) {
       processConfigWithPlatform(
@@ -225,15 +245,16 @@ object Main {
   
   def readConfigs(
     subcommand: ViashNs,
+    project: ViashProject,
     addOptMainScript: Boolean = true,
     applyPlatform: Boolean = true
   ): List[Either[(Config, Option[Platform]), Status]] = {
-    val source = subcommand.src()
+    val source = project.source.get
     val query = subcommand.query.toOption
     val queryNamespace = subcommand.query_namespace.toOption
     val queryName = subcommand.query_name.toOption
     val platformStr = subcommand.platform.toOption
-    val configMods = subcommand.config_mods()
+    val configMods = project.config_mods
 
     val configs = Config.readConfigs(
       source = source,
@@ -241,8 +262,7 @@ object Main {
       queryNamespace = queryNamespace,
       queryName = queryName,
       configMods = configMods,
-      addOptMainScript = addOptMainScript,
-      searchVcms = ! subcommand.noVcm()
+      addOptMainScript = addOptMainScript
     )
 
     if (applyPlatform) {
@@ -285,5 +305,47 @@ object Main {
   }
 
   
+  def readProjectFromCommand(
+    subcommand: ViashCommand
+  ): ViashProject = {
+    val configPath = subcommand.config()
+    val configUri = IO.uri(configPath)
+    
+    val pc0 =
+      try {
+        val path = Paths.get(configUri)
+        ViashProject.findViashProject(path)
+      } catch {
+        case (_: FileSystemNotFoundException) =>
+          Console.err.println(s"WARNING: project file (_viash.yaml) since URI protocol (${configUri.getScheme()}) does not allow listing the directory")
+          ViashProject()
+      }
+    
+    // add subcommand configmods to ViashProject
+    pc0.copy(
+      config_mods = pc0.config_mods ::: subcommand.config_mods()
+    )
+  }
 
+  def readProjectFromNs(
+    subcommand: ViashNs
+  ): ViashProject = {
+    val lookForProject = Paths.get(subcommand.src.toOption.getOrElse(System.getProperty("user.dir")))
+    
+    val pc0 = ViashProject.findViashProject(lookForProject)
+
+    // in case the subcommand is a viash ns build
+    val target = 
+      subcommand match {
+        case cmd: ViashNsBuild => cmd.target.toOption
+        case _ => None
+      }
+    
+    // add subcommand configmods to ViashProject
+    pc0.copy(
+      source = subcommand.src.toOption orElse pc0.source orElse Some("src"),
+      target = target orElse pc0.target orElse Some("target"),
+      config_mods = pc0.config_mods ::: subcommand.config_mods()
+    )
+  }
 }

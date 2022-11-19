@@ -37,7 +37,6 @@ import java.nio.file.Paths
 import io.viash.schemas._
 import java.io.ByteArrayOutputStream
 import java.nio.file.FileSystemNotFoundException
-import io.viash.config_mods.VcmFinder
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -169,9 +168,11 @@ object Config {
   }
 
   def readYAML(config: String): (String, Option[Script]) = {
-    // get config uri
     val configUri = IO.uri(config)
+    readYAML(configUri)
+  }
 
+  def readYAML(configUri: URI): (String, Option[Script]) = {
     // get config text
     val configStr = IO.read(configUri)
     val configUriStr = configUri.toString
@@ -208,7 +209,7 @@ object Config {
 
       (yaml, Some(script))
     } else {
-      throw new RuntimeException("config file (" + config + ") must be a yaml file containing a viash config.")
+      throw new RuntimeException("config file (" + configUri + ") must be a yaml file containing a viash config.")
     }
   }
 
@@ -216,37 +217,35 @@ object Config {
   def read(
     configPath: String,
     addOptMainScript: Boolean = true,
-    configMods: List[String] = Nil,
-    searchVcms: Boolean = true
+    configMods: List[String] = Nil
   ): Config = {
-
-    // make URI
     val uri = IO.uri(configPath)
+    readFromUri(
+      uri = uri,
+      addOptMainScript = addOptMainScript,
+      configMods = configMods
+    )
+  }
 
+  def readFromUri(
+    uri: URI,
+    addOptMainScript: Boolean = true,
+    configMods: List[String] = Nil
+  ): Config = {
     // read cli config mods
     val cliConfMods = ConfigMods.parseConfigMods(configMods)
     
-    // read vcm config mods if so desired
+    // add project config mods if available
     val confMods = 
-      if (searchVcms) {
-        val vcmConfMods = 
-          try {
-            VcmFinder.findAllVcm(Paths.get(uri).getParent())
-          } catch {
-            case (_: FileSystemNotFoundException) =>
-              Console.err.println(s"WARNING: not looking for .vcm files since URI protocol (${uri.getScheme()}) does not allow listing the directory")
-              ConfigMods()
-          }
-
-        // combine config mods
-        vcmConfMods + cliConfMods
-      } else {
+      // if (...) {
+      //   .... + cliConfMods
+      // } else {
         cliConfMods
-      }
+      // }
 
     /* STRING */
     // read yaml as string
-    val (yamlText, optScript) = readYAML(configPath)
+    val (yamlText, optScript) = readYAML(uri)
     
     /* JSON 0: parsed from string */
     // parse yaml into Json
@@ -297,14 +296,15 @@ object Config {
 
     /* CONFIG 3: add info */
     // gather git info
-    val path = new File(configPath).getParentFile
+    // todo: resolve git in project?
+    val path = Paths.get(uri).toFile().getParentFile
     val GitInfo(_, rgr, gc, gt) = Git.getInfo(path)
 
     // create info object
     val info = 
       Info(
         viash_version = Some(io.viash.Main.version),
-        config = configPath,
+        config = uri.toString.replaceAll("^file:/+", "/"),
         git_commit = gc,
         git_remote = rgr,
         git_tag = gt
@@ -343,8 +343,7 @@ object Config {
     queryNamespace: Option[String] = None,
     queryName: Option[String] = None,
     configMods: List[String] = Nil,
-    addOptMainScript: Boolean = true,
-    searchVcms: Boolean = true
+    addOptMainScript: Boolean = true
   ): List[Either[Config, Status]] = {
 
     val sourceDir = Paths.get(source)
@@ -367,8 +366,7 @@ object Config {
               Config.read(
                 file.toString, 
                 addOptMainScript = addOptMainScript,
-                configMods = configMods,
-                searchVcms = searchVcms
+                configMods = configMods
               )
             }
           }
