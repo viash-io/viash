@@ -192,28 +192,33 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
         "build",
         "-p", "docker",
         "-o", tempFolStr,
-        "-m",
         configMetaFile
       )
-
+      
+      // check exec
       assert(executable.exists)
       assert(executable.canExecute)
 
+      // check meta
+      val meta = temporaryFolder.resolve(".config.vsh.yaml")
+      assert(meta.toFile.exists)
+      val metaStr = scala.io.Source.fromFile(meta.toFile).getLines.mkString("\n")
+
       val viashVersion = io.viash.Main.version
 
-      val regexViashVersion = s"viash version:\\s*$viashVersion".r
-      val regexConfig = s"config:\\s*$configMetaFile".r
-      val regexPlatform = "platform:\\s*docker".r
-      val regexExecutable = s"executable:\\s*$tempFolStr/testbash".r
-      val regexOutput = s"output:\\s*$tempFolStr".r
-      val regexNoRemoteGitRepo = "remote git repo:\\s*<NA>".r
+      val regexViashVersion = s"""viash_version: "${viashVersion}"""".r
+      val regexConfig = s"""config: "${configMetaFile}"""".r
+      val regexPlatform = """platform: "docker"""".r
+      val regexExecutable = s"""executable: "$tempFolStr/testbash"""".r
+      val regexOutput = s"""output: "$tempFolStr"""".r
+      val regexNoRemoteGitRepo = "git_remote:".r
 
-      assert(regexViashVersion.findFirstIn(stdout).isDefined, stdout)
-      assert(regexConfig.findFirstIn(stdout).isDefined, stdout)
-      assert(regexPlatform.findFirstIn(stdout).isDefined, stdout)
-      assert(regexExecutable.findFirstIn(stdout).isDefined, stdout)
-      assert(regexOutput.findFirstIn(stdout).isDefined, stdout)
-      assert(regexNoRemoteGitRepo.findFirstIn(stdout).isDefined, stdout)
+      assert(regexViashVersion.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexConfig.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexPlatform.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexExecutable.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexOutput.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexNoRemoteGitRepo.findFirstIn(metaStr).isEmpty, stdout)
 
     }
     finally {
@@ -261,28 +266,33 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
         "build",
         "-p", "docker",
         "-o", tempFolStr,
-        "-m",
         configMetaFile
       )
-
+      
+      // check exec
       assert(executable.exists)
       assert(executable.canExecute)
 
+      // check meta
+      val meta = temporaryFolder.resolve(".config.vsh.yaml")
+      assert(meta.toFile.exists)
+      val metaStr = scala.io.Source.fromFile(meta.toFile).getLines.mkString("\n")
+
       val viashVersion = io.viash.Main.version
 
-      val regexViashVersion = s"viash version:\\s*$viashVersion".r
-      val regexConfig = s"config:\\s*$configMetaFile".r
-      val regexPlatform = "platform:\\s*docker".r
-      val regexExecutable = s"executable:\\s*$tempFolStr/testbash".r
-      val regexOutput = s"output:\\s*$tempFolStr".r
-      val regexRemoteGitRepo = s"remote git repo:\\s*$fakeGitRepo".r
+      val regexViashVersion = s"""viash_version: "$viashVersion"""".r
+      val regexConfig = s"""config: "$configMetaFile"""".r
+      val regexPlatform = """platform: "docker"""".r
+      val regexExecutable = s"""executable: "$tempFolStr/testbash"""".r
+      val regexOutput = s"""output: "$tempFolStr"""".r
+      val regexRemoteGitRepo = s"""git_remote: "$fakeGitRepo"""".r
 
-      assert(regexViashVersion.findFirstIn(stdout).isDefined, stdout)
-      assert(regexConfig.findFirstIn(stdout).isDefined, stdout)
-      assert(regexPlatform.findFirstIn(stdout).isDefined, stdout)
-      assert(regexExecutable.findFirstIn(stdout).isDefined, stdout)
-      assert(regexOutput.findFirstIn(stdout).isDefined, stdout)
-      assert(regexRemoteGitRepo.findFirstIn(stdout).isDefined, stdout)
+      assert(regexViashVersion.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexConfig.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexPlatform.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexExecutable.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexOutput.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexRemoteGitRepo.findFirstIn(metaStr).isDefined, stdout)
 
     }
     finally {
@@ -321,28 +331,33 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
         "build",
         "-p", "docker",
         "-o", tempFolStr,
-        "-m",
         configMetaFile
       )
-
+      
+      // check exec
       assert(executable.exists)
       assert(executable.canExecute)
 
+      // check meta
+      val meta = temporaryFolder.resolve(".config.vsh.yaml")
+      assert(meta.toFile.exists, meta.toString + " should exist")
+      val metaStr = scala.io.Source.fromFile(meta.toFile).getLines.mkString("\n")
+
       val viashVersion = io.viash.Main.version
 
-      val regexViashVersion = s"viash version:\\s*$viashVersion".r
-      val regexConfig = s"config:\\s*$configMetaFile".r
-      val regexPlatform = "platform:\\s*docker".r
-      val regexExecutable = s"executable:\\s*$tempFolStr/testbash".r
-      val regexOutput = s"output:\\s*$tempFolStr".r
-      val regexRemoteGitRepo = "remote git repo:\\s*<NA>".r
+      val regexViashVersion = s"""viash_version: "$viashVersion"""".r
+      val regexConfig = s"""config: "$configMetaFile"""".r
+      val regexPlatform = """platform: "docker"""".r
+      val regexExecutable = s"""executable: "$tempFolStr/testbash"""".r
+      val regexOutput = s"""output: "$tempFolStr"""".r
+      val regexRemoteGitRepo = """git_remote:"""".r
 
-      assert(regexViashVersion.findFirstIn(stdout).isDefined, stdout)
-      assert(regexConfig.findFirstIn(stdout).isDefined, stdout)
-      assert(regexPlatform.findFirstIn(stdout).isDefined, stdout)
-      assert(regexExecutable.findFirstIn(stdout).isDefined, stdout)
-      assert(regexOutput.findFirstIn(stdout).isDefined, stdout)
-      assert(regexRemoteGitRepo.findFirstIn(stdout).isDefined, stdout)
+      assert(regexViashVersion.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexConfig.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexPlatform.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexExecutable.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexOutput.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexRemoteGitRepo.findFirstIn(metaStr).isEmpty, stdout)
 
     }
     finally {

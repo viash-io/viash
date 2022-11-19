@@ -1,24 +1,31 @@
 # Viash 0.6.4
 
+## BREAKING CHANGES
+
+* Config: Viash configs whose paths start with a `.` are ignored.
+
+* `viash build`: `--write_meta` and `--print_meta` arguments have been removed. 
+  Instead, the `.config.vsh.yaml` file is always created when building Viash components.
+
 ## NEW FUNCTIONALITY
 
-* Config mods: Viash will automatically search for `.vcm` files in the 
-  directory of a component and its parent directories. Any config mods stored 
-  in a `.vcm` file will automatically be applied to the component. 
-  Viash will not recurse through parent directories once a `project.vcm` file 
-  has been found. Example:
+* Traceability: Running `viash build` and `viash test` creates a `.config.vsh.yaml` file by default, which contains the processed config of the component. As a side effect, this allows for reading in the `.config.vsh.yaml` from within the component to learn more about the component being tested.
 
-  Contents of `project.vcm`:
-  ```
-  .platforms[.type == 'docker'].target_registry := 'ghcr.io'
-  .platforms[.type == 'docker'].target_organization := 'viash-io'
-  .platforms[.type == 'docker'].namespace_separator := '/'
-  .platforms[.type == 'docker'].target_image_source := 'https://github.com/viash-io/viash'
-  ```
 
-  This behaviour can be bypassed by passing the `--no_vcm` argument to any of 
-  the Viash commands.
-  
+
+* Viash Project: Viash will automatically search for a `_viash.yaml` file in the directory of 
+  a component and its parent directories.
+
+  Contents of `_viash.yaml`:
+  ```yaml
+  source: src
+  target: target
+  config_mods: |
+    .platforms[.type == 'docker'].target_registry := 'ghcr.io'
+    .platforms[.type == 'docker'].target_organization := 'viash-io'
+    .platforms[.type == 'docker'].namespace_separator := '/'
+    .platforms[.type == 'docker'].target_image_source := 'https://github.com/viash-io/viash'
+  ```
 
 ## MINOR CHANGES
 
@@ -37,6 +44,7 @@
     - __inherits__: [obj_input.yaml, .]
       name: "--three"
   ```
+
   Contents of `obj_input.yaml`:
   ```yaml
   type: file

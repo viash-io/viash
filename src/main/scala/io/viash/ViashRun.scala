@@ -42,8 +42,11 @@ object ViashRun {
     // execute command, print everything to console
     var code = -1
     try {
+      // convert config to a yaml wrapped inside a PlainFile
+      val configYaml = ConfigMeta.toMetaFile(config, Some(dir))
+
       // write executable and resources to temporary directory
-      IO.writeResources(fun.resources, dir)
+      IO.writeResources(configYaml :: fun.resources, dir)
 
       // determine command
       val cmd =

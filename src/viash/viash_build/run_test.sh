@@ -21,7 +21,7 @@ target_ns_add_yaml="target/native/testns/ns_add/viash.yaml"
 [[ ! -f $defaults_output ]] && echo "Default: Test output file could not be found!" && exit 1
 
 # Check if default arguments are as expected
-grep -q "viash ns build --src src --parallel --write_meta --config_mod .functionality.version := 'dev' --setup cachedbuild" $defaults_output
+grep -q "viash ns build --src src --parallel --config_mod .functionality.version := 'dev' --setup cachedbuild" $defaults_output
 
 # Check if target dir hierarchy exists
 [[ ! -d $expected_target_dir ]] && echo "Default: target directory hierarchy could not be found!" && exit 1
