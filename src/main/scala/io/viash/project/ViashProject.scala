@@ -27,6 +27,8 @@ import io.viash.helpers.circe._
 import java.nio.file.Paths
 
 case class ViashProject(
+  // viash_version: Option[String]
+  // todo: turn this into paths
   source: Option[String] = None,
   target: Option[String] = None,
   // TODO: make this a ConfigMods object
