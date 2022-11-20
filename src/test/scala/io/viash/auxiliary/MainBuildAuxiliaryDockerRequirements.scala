@@ -39,7 +39,7 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
   }
 
   test("setup; check docker requirements using apk to add the fortune package", DockerTest) {
-    val tag = "ghcr.io/viash-io/viash_requirement_apk"
+    val tag = "viash_requirement_apk"
 
     // remove docker if it exists
     removeDockerImage(tag)
@@ -96,7 +96,7 @@ class MainBuildAuxiliaryDockerRequirements extends FunSuite with BeforeAndAfterA
   }
 
   test("setup; check docker requirements using apt to add the cowsay package", DockerTest) {
-    val tag = "ghcr.io/viash-io/viash_requirement_apt"
+    val tag = "viash_requirement_apt"
 
     // remove docker if it exists
     removeDockerImage(tag)

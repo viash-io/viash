@@ -379,8 +379,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       "build",
       "-p", "throwawayimage",
       "-o", tempFolStr,
-      configFile,
-      "--no_vcm"
+      configFile
     )
 
     assert(executable.exists)
@@ -412,8 +411,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       "-p", "throwawayimage",
       "-o", tempFolStr,
       "--setup", "build",
-      configFile,
-      "--no_vcm"
+      configFile
     )
 
     assert(executable.exists)

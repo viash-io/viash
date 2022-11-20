@@ -88,8 +88,7 @@ class MainBuildAuxiliaryDockerTag extends FunSuite with BeforeAndAfterAll {
       "build",
       "-p", "testtargetimage1",
       "-o", tempFolStr,
-      configBashTagFile,
-      "--no_vcm"
+      configBashTagFile
     )
 
     assert(executableBashTagFile.exists)
@@ -121,8 +120,7 @@ class MainBuildAuxiliaryDockerTag extends FunSuite with BeforeAndAfterAll {
       "build",
       "-p", "testtargetimage2",
       "-o", tempFolStr,
-      configBashTagFile,
-      "--no_vcm"
+      configBashTagFile
     )
 
     assert(executableBashTagFile.exists)
@@ -154,8 +152,7 @@ class MainBuildAuxiliaryDockerTag extends FunSuite with BeforeAndAfterAll {
       "build",
       "-p", "testtargetimage3",
       "-o", tempFolStr,
-      configBashTagFile,
-      "--no_vcm"
+      configBashTagFile
     )
 
     assert(executableBashTagFile.exists)
