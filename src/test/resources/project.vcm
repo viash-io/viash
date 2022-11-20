@@ -1,4 +1,0 @@
-.platforms[.type == 'docker'].target_registry := 'ghcr.io'
-.platforms[.type == 'docker'].target_organization := 'viash-io'
-.platforms[.type == 'docker'].namespace_separator := '/'
-.platforms[.type == 'docker'].target_image_source := 'https://github.com/viash-io/viash'

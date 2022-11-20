@@ -1,0 +1,4 @@
+source: src
+target: target
+config_mods: |
+  .functionality.info := {"foo": "bar"}

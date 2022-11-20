@@ -24,10 +24,12 @@ import io.circe.yaml.parser
 import io.viash.helpers.data_structures.OneOrMore
 import io.viash.helpers.IO
 import io.viash.helpers.circe._
+import java.nio.file.Paths
 
 case class ViashProject(
   source: Option[String] = None,
   target: Option[String] = None,
+  // TODO: make this a ConfigMods object
   config_mods: OneOrMore[String] = Nil
 )
 // todo: resolve git in project?
@@ -83,7 +85,30 @@ object ViashProject {
 
     /* PROJECT 0: converted from json */
     // convert Json into ViashProject
-    json1.as[ViashProject].fold(parsingErrorHandler, identity)
+    val proj0 = json1.as[ViashProject].fold(parsingErrorHandler, identity)
+
+
+    /* PROJECT 1: make resources absolute */
+    // make paths absolute
+    // todo: move to separate helper function
+    def rela(parent: Path, path: String): String = {
+      val pth = Paths.get(path).toFile
+      if (pth.isAbsolute) {
+        path
+      } else {
+        parent.resolve(path).toString
+      }
+    }
+    val source = proj0.source.map(rela(path.getParent(), _))
+    val target = proj0.target.map(rela(path.getParent(), _))
+
+    // copy resources with updated paths into config and return
+    val proj1 = proj0.copy(
+      source = source,
+      target = target
+    )
+
+    proj1
   }
 
   /**
