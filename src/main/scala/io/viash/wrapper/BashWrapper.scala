@@ -92,6 +92,23 @@ object BashWrapper {
     }
   }
 
+  /**
+    * Joins multiple strings such that there are two spaces between them.
+    *
+    * @param strs The lists of strings to join
+    * @return A joined string
+    */
+  def joinSections(strs: String*): String = {
+    strs.reduce[String]{ 
+      case (left, right) if left != "" && right != "" =>
+        val left2 = left.reverse.dropWhile(_ == '\n').reverse
+        val right2 = right.dropWhile(_ == '\n')
+        val middle = "\n\n"
+        left2 + middle + right2
+      case (left, right) => left + right
+    }
+  }
+
   val var_verbosity = "VIASH_VERBOSITY"
 
   def wrapScript(
@@ -372,16 +389,16 @@ object BashWrapper {
     }.mkString("\n")
 
     // construct required file checks
-    val reqFiles = params.flatMap {
-      case f: FileArgument if f.must_exist => Some(f)
-      case _ => None
-    }
-    val reqFilesStr =
-      if (reqFiles.isEmpty) {
+    def fileChecker(args: List[Argument[_]], direction: Direction): String = {
+      val files = args.flatMap {
+        case f: FileArgument if f.must_exist && f.direction == direction => Some(f)
+        case _ => None
+      }
+      if (files.isEmpty) {
         ""
       } else {
         "\n# check whether required files exist\n" +
-          reqFiles.map { param =>
+          files.map { param =>
             if (param.multiple) {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
                  |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
@@ -389,21 +406,55 @@ object BashWrapper {
                  |  for file in $$${param.VIASH_PAR}; do
                  |    unset IFS
                  |    if [ ! -e "$$file" ]; then
-                 |      ViashError "File '$$file' does not exist."
+                 |      ViashError "$direction file '$$file' does not exist."
                  |      exit 1
                  |    fi
                  |  done
                  |  set +f
                  |fi""".stripMargin
-          } else {
-            s"""if [ ! -z "$$${param.VIASH_PAR}" ] && [ ! -e "$$${param.VIASH_PAR}" ]; then
-               |  ViashError "File '$$${param.VIASH_PAR}' does not exist."
-               |  exit 1
-               |fi""".stripMargin
+            } else {
+              s"""if [ ! -z "$$${param.VIASH_PAR}" ] && [ ! -e "$$${param.VIASH_PAR}" ]; then
+                |  ViashError "$direction file '$$${param.VIASH_PAR}' does not exist."
+                |  exit 1
+                |fi""".stripMargin
             }
           }.mkString("\n")
       }
+    }
+    val reqInputFilesStr = fileChecker(params, Input)
+    val reqOutputFilesStr = fileChecker(params, Output)
 
+    // create dirs for output files
+    val createParentFiles = params.flatMap {
+      case f: FileArgument if f.create_parent && f.direction == Output => Some(f)
+      case _ => None
+    }
+    val createParentStr =
+      if (createParentFiles.isEmpty) {
+        ""
+      } else {
+        "\n# check whether required files exist\n" +
+          createParentFiles.map { param =>
+            if (param.multiple) {
+              s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
+                 |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
+                 |  set -f
+                 |  for file in $$${param.VIASH_PAR}; do
+                 |    unset IFS
+                 |    if [ ! -d "$$(dirname "$$file")" ]; then
+                 |      mkdir -p "$$(dirname "$$file")"
+                 |    fi
+                 |  done
+                 |  set +f
+                 |fi""".stripMargin
+            } else {
+              s"""if [ ! -z "$$${param.VIASH_PAR}" ] && [ ! -d "$$(dirname "$$${param.VIASH_PAR}")" ]; then
+                |  mkdir -p "$$(dirname "$$${param.VIASH_PAR}")"
+                |fi""".stripMargin
+            }
+          }.mkString("\n")
+      }
+      
     // construct type checks
     def typeMinMaxCheck[T](param: Argument[T], regex: String, min: Option[T] = None, max: Option[T] = None) = {
       val typeWithArticle = param match {
@@ -578,7 +629,8 @@ object BashWrapper {
     // return output
     BashWrapperMods(
       parsers = parseStrs,
-      preRun = positionalStr + "\n" + reqCheckStr + "\n" + defaultsStrs + "\n" + reqFilesStr + "\n" + typeMinMaxCheckStr + "\n" + choiceCheckStr
+      preRun = joinSections(positionalStr, reqCheckStr, defaultsStrs, reqInputFilesStr, typeMinMaxCheckStr, choiceCheckStr, createParentStr),
+      postRun = reqOutputFilesStr
     )
   }
 
@@ -651,7 +703,7 @@ object BashWrapper {
     // return output
     BashWrapperMods(
       parsers = parsers,
-      postParse = "\n" + defaultsStrs + "\n" + memoryCalculations
+      postParse = "\n" + BashWrapper.joinSections(defaultsStrs, memoryCalculations)
     )
   }
 

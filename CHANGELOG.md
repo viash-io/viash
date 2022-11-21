@@ -11,6 +11,12 @@
 
 * Traceability: Running `viash build` and `viash test` creates a `.config.vsh.yaml` file by default, which contains the processed config of the component. As a side effect, this allows for reading in the `.config.vsh.yaml` from within the component to learn more about the component being tested.
 
+* `FileArgument`: Added `create_parent` option, which will check if the directory of an output file exists and create it if necessary.
+
+## MAJOR CHANGES
+
+* `FileArgument`: Default setting of `must_exist` was changed from `false` to `true`.
+
 ## MINOR CHANGES
 
 * Config inheritance: Allow specifying the order of config inheritance (#289).
