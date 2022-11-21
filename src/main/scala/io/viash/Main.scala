@@ -136,7 +136,7 @@ object Main {
         val configs = readConfigs(cli.namespace.build, project = proj1)
         ViashNamespace.build(
           configs = configs,
-          target = cli.namespace.build.target(),
+          target = proj1.target.get,
           setup = cli.namespace.build.setup.toOption,
           push = cli.namespace.build.push(),
           parallel = cli.namespace.build.parallel(),
