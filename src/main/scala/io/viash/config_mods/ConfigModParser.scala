@@ -50,10 +50,10 @@ del(.functionality.version)
 
 /* BNF notation
 
-<command>    ::= <path> ":=" <json> | <path>
-               | <path> "+0=" <json>
+<command>    ::= <path> ":=" <value>
+               | <path> "+0=" <value>
                | "del(" <path> ")"
-               | <path> "+=" <json>
+               | <path> "+=" <value>
                | "<preparse>" <command>
 
 <path>       ::= "root" | <path2>
@@ -92,7 +92,7 @@ del(.functionality.version)
 object ConfigModParser extends RegexParsers {
   implicit class RichParser[A](p: Parser[A]) {
     def parse(s: String): A = {
-      ConfigModParser.parse(p, s) match {
+      ConfigModParser.parseAll(p, s) match {
         case Success(result, next) => result
         case _: NoSuccess => 
           throw new IllegalArgumentException("Cound not parse config mod: " + s)
@@ -165,8 +165,8 @@ object ConfigModParser extends RegexParsers {
   def value: Parser[Value] = path | (json ^^ { JsonValue(_) })
 
   // define commands
-  def command: Parser[(Boolean, Command)] = preparse ~ (delete | assign | append | prepend) ^^ {
-    case prep ~ cm => (prep, cm)
+  def command: Parser[(Boolean, Command)] = opt("<preparse>") ~ (delete | assign | append | prepend) ^^ {
+    case maybePreparse ~ cm => (maybePreparse.isDefined, cm)
   }
   def delete: Parser[Command] = "del(" ~> path <~ ")" ^^ { pt => 
     Delete(pt)
@@ -180,15 +180,12 @@ object ConfigModParser extends RegexParsers {
   def prepend: Parser[Command] = path ~ ("+0=" ~> value) ^^ { 
     case lhs ~ rhs => Prepend(lhs, rhs)
   }
-  def block: Parser[ConfigMods] = rep1sep(command, ";") ^^ { cmds =>
+  def block: Parser[ConfigMods] = rep1sep(command, "[;\n]+".r) <~ "[;\n]*".r ^^ { cmds =>
     val preparseCommands = cmds.filter(_._1).map(_._2)
     val postparseCommands = cmds.filter(!_._1).map(_._2)
     ConfigMods(
       postparseCommands = postparseCommands,
       preparseCommands = preparseCommands
     )
-  }
-  def preparse: Parser[Boolean] = opt("<preparse>") ^^ {
-    case found => found.isDefined
   }
 }

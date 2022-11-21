@@ -4,9 +4,13 @@ import io.circe.Json
 import org.scalatest.FunSuite
 import io.circe.syntax._
 
-import io.circe.yaml.parser._
+import io.circe.yaml.parser.parse
 
 class ConditionSuite extends FunSuite {
+  // testing parsers
+  // TODO
+
+  // testing functionality
   val baseJson: Json = parse(
     """foo: bar
       |baz: 123
@@ -100,9 +104,10 @@ class ConditionSuite extends FunSuite {
     val res3 = cmd3.apply(baseJson)
     assert(res3 == false) // true && false
 
-    val cmd4 = ConfigModParser.condition.parse(""".foo == "ping" && false"""")
-    val res4 = cmd4.apply(baseJson)
-    assert(res4 == false) // false && false
+    // disabled until viash-io/viash#292 is resolved
+    // val cmd4 = ConfigModParser.condition.parse(""".foo == "ping" && false"""")
+    // val res4 = cmd4.apply(baseJson)
+    // assert(res4 == false) // false && false
   }
   
   test("test condition or") {
