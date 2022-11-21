@@ -44,28 +44,40 @@ case class DebugPlatform(
         argument_group.copy(
           arguments = argument_group.arguments
             .flatMap(_.right.toOption) // there shouldn't be any lefts at this stage
+            // set required to false
             .map{
-              case arg if arg.required && arg.default.nonEmpty => 
+              case arg =>
                 arg.copyArg(required = false)
-              case arg if arg.default.isEmpty && arg.example.nonEmpty => 
-                arg.copyArg(required = false, default = arg.example)
-              case arg: BooleanArgumentBase if arg.default.isEmpty => 
-                arg.copyArg(required = false, default = OneOrMore(true))
-              case arg: DoubleArgument if arg.default.isEmpty => 
-                arg.copy(required = false, default = OneOrMore(123.0), min = None, max = None)
-              case arg: FileArgument if arg.default.isEmpty => 
-                arg.copy(required = false, default = OneOrMore(Paths.get("/path/to/file")), must_exist = false)
-              case arg: IntegerArgument if arg.default.isEmpty =>
-                arg.copy(required = false, default = OneOrMore(123), choices = Nil, min = None, max = None)
-              case arg: LongArgument if arg.default.isEmpty =>
-                arg.copy(required = false, default = OneOrMore(123), choices = Nil, min = None, max = None)
-              case arg: StringArgument if arg.default.isEmpty => 
-                arg.copy(required = false, default = OneOrMore("value"), choices = Nil)
-              case a => a
             }
-            // also turn off must_exist if it is set to true
+            // make sure the default is set. invent one if necessary.s
             .map{
-              case arg: FileArgument if arg.must_exist =>
+              // if available, use default
+              case arg if arg.default.nonEmpty => 
+                arg
+              // else use example
+              case arg if arg.example.nonEmpty => 
+                arg.copyArg(default = arg.example)
+              // else invent one
+              case arg: BooleanArgumentBase => 
+                arg.copyArg(default = OneOrMore(true))
+              case arg: DoubleArgument => 
+                arg.copy(default = OneOrMore(123.0), min = None, max = None)
+              case arg: FileArgument => 
+                arg.copy(default = OneOrMore(Paths.get("/path/to/file")), must_exist = false)
+              case arg: IntegerArgument =>
+                arg.copy(default = OneOrMore(123), choices = Nil, min = None, max = None)
+              case arg: LongArgument =>
+                arg.copy(default = OneOrMore(123), choices = Nil, min = None, max = None)
+              case arg: StringArgument => 
+                arg.copy(default = OneOrMore("value"), choices = Nil)
+              case arg => 
+                throw new RuntimeException(
+                  f"Viash is missing a default for argument of type ${arg.`type`}. " +
+                    "Please report this error to the maintainers.")
+            }
+            // turn off must_exist and create_parent
+            .map{
+              case arg: FileArgument =>
                 arg.copy(must_exist = false, create_parent = false)
               case a => a
             }
