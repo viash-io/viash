@@ -55,6 +55,10 @@
       description: "A h5ad file"
   ```
 
+## BUG FIXES
+
+* `BashWrapper`: Don't overwrite meta values when additional arguments are provided.
+
 # Viash 0.6.3
 
 This release features contains mostly quality of life improvements and some experimental functionality. Most notably:

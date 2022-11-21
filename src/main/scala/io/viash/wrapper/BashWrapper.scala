@@ -338,7 +338,7 @@ object BashWrapper {
     }.mkString("\n")
 
     // parse positionals
-    val positionals = params.filter(_.flags == "")
+    val positionals = params.filter(arg => arg.flags == "" && arg.dest == "par")
     val positionalStr = positionals.map { param =>
       if (param.multiple) {
         s"""while [[ $$# -gt 0 ]]; do
