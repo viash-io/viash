@@ -28,10 +28,11 @@ object BashWrapper {
   val metaArgs: List[Argument[_]] = {
     List(
       StringArgument("functionality_name", required = true, dest = "meta"),
-      FileArgument("resources_dir", required = true, dest = "meta"),
-      FileArgument("executable", required = true, dest = "meta"),
-      FileArgument("config", required = true, dest = "meta"),
-      FileArgument("temp_dir", required = true, dest = "meta"),
+      // filearguments set to 'must_exist = false, create_parent = false' because of config inject
+      FileArgument("resources_dir", required = true, dest = "meta", must_exist = false, create_parent = false),
+      FileArgument("executable", required = true, dest = "meta", must_exist = false, create_parent = false),
+      FileArgument("config", required = true, dest = "meta", must_exist = false, create_parent = false),
+      FileArgument("temp_dir", required = true, dest = "meta", must_exist = false, create_parent = false),
       IntegerArgument("cpus", required = false, dest = "meta"),
       LongArgument("memory_b", required = false, dest = "meta"),
       LongArgument("memory_kb", required = false, dest = "meta"),
@@ -98,12 +99,11 @@ object BashWrapper {
     * @param strs The lists of strings to join
     * @return A joined string
     */
-  def joinSections(strs: String*): String = {
+  def joinSections(strs: List[String], middle: String = "\n\n"): String = {
     strs.reduce[String]{ 
       case (left, right) if left != "" && right != "" =>
         val left2 = left.reverse.dropWhile(_ == '\n').reverse
         val right2 = right.dropWhile(_ == '\n')
-        val middle = "\n\n"
         left2 + middle + right2
       case (left, right) => left + right
     }
@@ -238,7 +238,6 @@ object BashWrapper {
        |VIASH_META_EXECUTABLE="$$VIASH_META_RESOURCES_DIR/$$VIASH_META_FUNCTIONALITY_NAME"
        |VIASH_META_CONFIG="$$VIASH_META_RESOURCES_DIR/${ConfigMeta.metaFilename}"
        |VIASH_META_TEMP_DIR="$$VIASH_TEMP"
-       |
        |${spaceCode(allMods.preParse)}
        |# initialise array
        |VIASH_POSITIONAL_ARGS=''
@@ -278,8 +277,7 @@ object BashWrapper {
        |
        |# parse positional parameters
        |eval set -- $$VIASH_POSITIONAL_ARGS
-       |${spaceCode(allMods.postParse)}
-       |${spaceCode(allMods.preRun)}
+       |${spaceCode(allMods.postParse)}${spaceCode(allMods.preRun)}
        |ViashDebug "Running command: ${executor.replaceAll("^eval (.*)", "\\$(echo $1)")}"
        |$heredocStart$executor$executionCode$heredocEnd
        |${spaceCode(allMods.postRun)}""".stripMargin
@@ -339,19 +337,25 @@ object BashWrapper {
 
     // parse positionals
     val positionals = params.filter(arg => arg.flags == "" && arg.dest == "par")
-    val positionalStr = positionals.map { param =>
-      if (param.multiple) {
-        s"""while [[ $$# -gt 0 ]]; do
-           |  ${store("positionalArg", param.VIASH_PAR, "\"$1\"", Some(param.multiple_sep)).mkString("\n  ")}
-           |  shift 1
-           |done""".stripMargin
+    val positionalStr =
+      if (positionals.isEmpty) {
+        ""
       } else {
-        s"""if [[ $$# -gt 0 ]]; then
-           |  ${param.VIASH_PAR}="$$1"
-           |  shift 1
-           |fi"""
+        "\n# storing leftover values in positionals\n" +
+        positionals.map { param =>
+          if (param.multiple) {
+            s"""while [[ $$# -gt 0 ]]; do
+              |  ${store("positionalArg", param.VIASH_PAR, "\"$1\"", Some(param.multiple_sep)).mkString("\n  ")}
+              |  shift 1
+              |done""".stripMargin
+          } else {
+            s"""if [[ $$# -gt 0 ]]; then
+              |  ${param.VIASH_PAR}="$$1"
+              |  shift 1
+              |fi"""
+          }
+        }.mkString("\n")
       }
-    }.mkString("\n")
 
     // construct required checks
     val reqParams = params.filter(_.required)
@@ -372,7 +376,7 @@ object BashWrapper {
     // if [ -z "$VIASH_PAR_FOO" ]; then
     //   VIASH_PAR_FOO="defaultvalue"
     // fi
-    val defaultsStrs = params.flatMap { param =>
+    val defaultsStrList = params.flatMap { param =>
       // if boolean argument has a flagvalue, add the inverse of it as a default value
       val default = param match {
         case p if p.required => None
@@ -386,7 +390,14 @@ object BashWrapper {
            |  ${param.VIASH_PAR}="${Bash.escapeString(default.toString, quote = true, newline = true, allowUnescape = true)}"
            |fi""".stripMargin
       })
-    }.mkString("\n")
+    }
+    val defaultsStrs =
+      if (defaultsStrList.isEmpty) {
+        ""
+      } else {
+        "\n# filling in defaults\n" +
+        defaultsStrList.mkString("\n")
+      }
 
     // construct required file checks
     def fileChecker(args: List[Argument[_]], direction: Direction): String = {
@@ -433,7 +444,7 @@ object BashWrapper {
       if (createParentFiles.isEmpty) {
         ""
       } else {
-        "\n# check whether required files exist\n" +
+        "\n# create parent directories of output files, if so desired\n" +
           createParentFiles.map { param =>
             if (param.multiple) {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
@@ -548,8 +559,7 @@ object BashWrapper {
         case _ =>
           val checkStart = s"""if [[ -n "$$${param.VIASH_PAR}" ]]; then
                               |""".stripMargin
-          val checkEnd = """fi
-                           |""".stripMargin
+          val checkEnd = """fi""".stripMargin
           checkStart + typeCheck + minCheck + maxCheck + checkEnd
       }
     }
@@ -608,28 +618,30 @@ object BashWrapper {
              |""".stripMargin
       }
     }
+    val choicesCheckList = 
+      params.flatMap { param =>
+        param match {
+          case io: IntegerArgument if io.choices != Nil =>
+            Some(checkChoices(io, io.choices))
+          case io: LongArgument if io.choices != Nil =>
+            Some(checkChoices(io, io.choices))
+          case so: StringArgument if so.choices != Nil =>
+            Some(checkChoices(so, so.choices))
+          case _ => None
+        }           
+      }
     val choiceCheckStr =
-      if (params.isEmpty) {
+      if (choicesCheckList.isEmpty) {
         ""
       } else {
-        "\n# check whether parameters values are of the right type\n" +
-          params.map { param =>
-            param match {
-              case io: IntegerArgument if io.choices != Nil =>
-                checkChoices(io, io.choices)
-              case io: LongArgument if io.choices != Nil =>
-                checkChoices(io, io.choices)
-              case so: StringArgument if so.choices != Nil =>
-                checkChoices(so, so.choices)
-              case _ => ""
-            }           
-          }.mkString("\n")
+        "\n# check whether value is belongs to a set of choices\n" +
+          choicesCheckList.mkString("\n")
       }
 
     // return output
     BashWrapperMods(
       parsers = parseStrs,
-      preRun = joinSections(positionalStr, reqCheckStr, defaultsStrs, reqInputFilesStr, typeMinMaxCheckStr, choiceCheckStr, createParentStr),
+      preRun = joinSections(List(positionalStr, reqCheckStr, defaultsStrs, reqInputFilesStr, typeMinMaxCheckStr, choiceCheckStr, createParentStr)),
       postRun = reqOutputFilesStr
     )
   }
@@ -651,13 +663,15 @@ object BashWrapper {
       }.map("\n" + _).mkString
 
     // construct default values, e.g.
-    val defaultsStrs = compArgs.flatMap{ case (_, env, default) =>
-      default.map(dflt => {
-        s"""if [ -z $${$env+x} ]; then
-           |  $env="$dflt"
-           |fi""".stripMargin
-      })
-    }.mkString("\n")
+    val defaultsStrs = 
+      "\n# setting computational defaults\n" + 
+      compArgs.flatMap{ case (_, env, default) =>
+        default.map(dflt => {
+          s"""if [ -z $${$env+x} ]; then
+            |  $env="$dflt"
+            |fi""".stripMargin
+        })
+      }.mkString("\n")
 
     // calculators
     val memoryCalculations = 
@@ -703,7 +717,7 @@ object BashWrapper {
     // return output
     BashWrapperMods(
       parsers = parsers,
-      postParse = "\n" + BashWrapper.joinSections(defaultsStrs, memoryCalculations)
+      postParse = BashWrapper.joinSections(List(defaultsStrs, memoryCalculations))
     )
   }
 

@@ -30,13 +30,13 @@ case class BashWrapperMods(
 ) {
   def `++`(other: BashWrapperMods): BashWrapperMods = {
     BashWrapperMods(
-      preParse = BashWrapper.joinSections(preParse, other.preParse),
-      parsers = BashWrapper.joinSections(parsers, other.parsers),
-      postParse = BashWrapper.joinSections(postParse, other.postParse),
-      preRun = BashWrapper.joinSections(preRun, other.preRun),
-      postRun = BashWrapper.joinSections(postRun, other.postRun),
+      preParse = BashWrapper.joinSections(List(preParse, other.preParse)),
+      parsers = BashWrapper.joinSections(List(parsers, other.parsers), middle = "\n"),
+      postParse = BashWrapper.joinSections(List(postParse, other.postParse)),
+      preRun = BashWrapper.joinSections(List(preRun, other.preRun)),
+      postRun = BashWrapper.joinSections(List(postRun, other.postRun)),
       inputs = inputs ::: other.inputs,
-      extraParams = BashWrapper.joinSections(extraParams, other.extraParams)
+      extraParams = extraParams + other.extraParams
     )
   }
 }

@@ -66,7 +66,7 @@ case class DebugPlatform(
             // also turn off must_exist if it is set to true
             .map{
               case arg: FileArgument if arg.must_exist =>
-                arg.copy(must_exist = false)
+                arg.copy(must_exist = false, create_parent = false)
               case a => a
             }
             .map{Right(_)}
@@ -80,13 +80,14 @@ case class DebugPlatform(
     )
 
     // create new bash script
+    val scriptSrc = BashWrapper.wrapScript(
+      executor = "bash",
+      functionality = fun0,
+      debugPath = Some(path)
+    )
     val bashScript = BashScript(
       dest = Some(functionality.name),
-      text = Some(BashWrapper.wrapScript(
-        executor = "bash",
-        functionality = fun0,
-        debugPath = Some(path)
-      ))
+      text = Some(scriptSrc)
     )
     fun0.copy(
       resources = List(bashScript)
