@@ -486,7 +486,7 @@ def processProcessArgs(Map args) {
     }
   }
 
-  for (nam in [ "map", "mapId", "mapData", "mapPassthrough" ]) {
+  for (nam in [ "map", "mapId", "mapData", "mapPassthrough", "filter" ]) {
     if (processArgs.containsKey(nam) && processArgs[nam]) {
       assert processArgs[nam] instanceof Closure : "Expected process argument '$nam' to be null or a Closure. Found: class ${processArgs[nam].getClass()}"
     }
@@ -712,7 +712,7 @@ def workflowFactory(Map args) {
     input_
 
     main:
-    output_ = input_
+    mid1_ = input_
       | debug(processArgs, "input")
       | map { tuple ->
         tuple = tuple.clone()
@@ -794,6 +794,13 @@ def workflowFactory(Map args) {
         }
         tuple
       }
+    if (processArgs.filter) {
+      mid2_ = mid1_
+        | filter{processArgs.filter(it)}
+    } else {
+      mid2_ = mid1_
+    }
+    output_ = mid2_
       | debug(processArgs, "processed")
       | map { tuple ->
         def id = tuple[0]

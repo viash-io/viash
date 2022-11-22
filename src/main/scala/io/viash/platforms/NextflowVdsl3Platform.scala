@@ -285,6 +285,9 @@ case class NextflowVdsl3Platform(
       |  // apply a map over the passthrough elements of a tuple (i.e. the tuple excl. the first two elements)
       |  // example: { pt -> pt.drop(1) }
       |  mapPassthrough: null,
+      |  // filter the channel
+      |  // example: { tup -> tup[0] == "foo" }
+      |  filter: null,
       |  // rename keys in the data field of the tuple (i.e. the second element)
       |  // example: [ "new_key": "old_key" ]
       |  renameKeys: null,
