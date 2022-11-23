@@ -221,8 +221,10 @@ object ViashTest {
         Files.createDirectories(newDir)
         val dirArg = FileArgument(
           name = "dir",
-          direction = Output,
-          default = OneOrMore(dir)
+          direction = Output, // why output?
+          default = OneOrMore(dir),
+          must_exist = false,
+          create_parent = false
         )
 
         // generate bash script for test
