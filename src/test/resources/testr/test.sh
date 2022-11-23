@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -ex
 
+echo foo > NOTICE
+echo foo > resource2.txt
+
 echo ">>> Checking whether output is correct"
 $meta_executable "NOTICE" --real_number 10.5 --whole_number=10 -s "a string with spaces" --truth \
   --optional foo --optional_with_default bar \
