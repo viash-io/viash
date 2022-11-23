@@ -937,6 +937,8 @@ def workflowFactory(Map args) {
   wf.metaClass.run = { runArgs ->
     workflowFactory(runArgs)
   }
+  // add config to module for later introspection
+  wf.metaClass.config = thisConfig
 
   return wf
 }
