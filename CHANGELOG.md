@@ -13,6 +13,20 @@
 
 * `FileArgument`: Added `create_parent` option, which will check if the directory of an output file exists and create it if necessary.
 
+* Viash Project: Viash will automatically search for a `_viash.yaml` file in the directory of 
+  a component and its parent directories.
+
+  Contents of `_viash.yaml`:
+  ```yaml
+  source: src
+  target: target
+  config_mods: |
+    .platforms[.type == 'docker'].target_registry := 'ghcr.io'
+    .platforms[.type == 'docker'].target_organization := 'viash-io'
+    .platforms[.type == 'docker'].namespace_separator := '/'
+    .platforms[.type == 'docker'].target_image_source := 'https://github.com/viash-io/viash'
+  ```
+
 ## MAJOR CHANGES
 
 * `FileArgument`: Default setting of `must_exist` was changed from `false` to `true`.
@@ -34,6 +48,7 @@
     - __inherits__: [obj_input.yaml, .]
       name: "--three"
   ```
+
   Contents of `obj_input.yaml`:
   ```yaml
   type: file

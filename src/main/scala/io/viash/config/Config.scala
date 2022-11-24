@@ -36,6 +36,7 @@ import java.nio.file.Paths
 
 import io.viash.schemas._
 import java.io.ByteArrayOutputStream
+import java.nio.file.FileSystemNotFoundException
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -167,9 +168,11 @@ object Config {
   }
 
   def readYAML(config: String): (String, Option[Script]) = {
-    // get config uri
     val configUri = IO.uri(config)
+    readYAML(configUri)
+  }
 
+  def readYAML(configUri: URI): (String, Option[Script]) = {
     // get config text
     val configStr = IO.read(configUri)
     val configUriStr = configUri.toString
@@ -206,16 +209,7 @@ object Config {
 
       (yaml, Some(script))
     } else {
-      throw new RuntimeException("config file (" + config + ") must be a yaml file containing a viash config.")
-    }
-  }
-
-  // parse
-  def parseConfigMods(li: List[String] = Nil): Option[ConfigMods] = {
-    if (li.isEmpty) {
-      None
-    } else {
-      Some(ConfigModParser.block.parse(li.mkString("; ")))
+      throw new RuntimeException("config file (" + configUri + ") must be a yaml file containing a viash config.")
     }
   }
 
@@ -225,69 +219,114 @@ object Config {
     addOptMainScript: Boolean = true,
     configMods: List[String] = Nil
   ): Config = {
+    val uri = IO.uri(configPath)
+    readFromUri(
+      uri = uri,
+      addOptMainScript = addOptMainScript,
+      configMods = configMods
+    )
+  }
 
-    // read yaml
-    val (yaml, optScript) = readYAML(configPath)
+  def readFromUri(
+    uri: URI,
+    addOptMainScript: Boolean = true,
+    configMods: List[String] = Nil
+  ): Config = {
+    // read cli config mods
+    val confMods = ConfigMods.parseConfigMods(configMods)
 
-    // read config mods
-    val confMods = parseConfigMods(configMods)
+    /* STRING */
+    // read yaml as string
+    val (yamlText, optScript) = readYAML(uri)
     
-    /* CONFIG 0: read from yaml */
-    // parse yaml as config, incl preparse configmods
-    val conf0 = parse(yaml, IO.uri(configPath), confMods)
+    /* JSON 0: parsed from string */
+    // parse yaml into Json
+    def parsingErrorHandler[C](e: Exception): C = {
+      Console.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
+      throw e
+    }
+    val json0 = parser.parse(yamlText).fold(parsingErrorHandler, identity)
 
-    /* CONFIG 1: apply config mods */
-    // parse and apply commands
-    val conf1 = confMods match {
-      case None => conf0
-      case Some(cmds) => {
+    /* JSON 1: after inheritance */
+    // apply inheritance if need be
+    val json1 = json0.inherit(uri)
+
+    /* JSON 2: after preparse config mods  */
+    // apply preparse config mods if need be
+    val json2 = confMods(json1, preparse = true)
+
+    /* CONFIG 0: converted from json */
+    // convert Json into Config
+    val conf0 = json2.as[Config].fold(parsingErrorHandler, identity)
+
+    /* CONFIG 1: make resources absolute */
+    // make paths absolute
+    val resources = conf0.functionality.resources.map(_.copyWithAbsolutePath(uri))
+    val tests = conf0.functionality.test_resources.map(_.copyWithAbsolutePath(uri))
+
+    // copy resources with updated paths into config and return
+    val conf1 = conf0.copy(
+      functionality = conf0.functionality.copy(
+        resources = resources,
+        test_resources = tests
+      )
+    )
+
+    /* CONFIG 2: apply post-parse config mods */
+    // apply config mods only if need be
+    val conf2 = 
+      if (confMods.postparseCommands.nonEmpty) {
         // turn config back into json
-        val js = encodeConfig(conf0)
+        val js = encodeConfig(conf1)
         // apply config mods
-        val modifiedJs = cmds(js, preparse = false)
+        val modifiedJs = confMods(js, preparse = false)
         // turn json back into a config
         modifiedJs.as[Config].fold(throw _, identity)
+      } else {
+        conf1
       }
-    }
 
-    if (conf1.functionality.status == Status.Deprecated)
-      Console.err.println(s"${Console.YELLOW}Warning: The status of the component '${conf1.functionality.name}' is set to deprecated.${Console.RESET}")
-    
-    if (conf1.functionality.resources.isEmpty && optScript.isEmpty)
-      Console.err.println(s"${Console.YELLOW}Warning: no resources specified!${Console.RESET}")
-
-
-    /* CONFIG 2: add info */
+    /* CONFIG 3: add info */
     // gather git info
-    val path = new File(configPath).getParentFile
+    // todo: resolve git in project?
+    val path = Paths.get(uri).toFile().getParentFile
     val GitInfo(_, rgr, gc, gt) = Git.getInfo(path)
 
     // create info object
     val info = 
       Info(
         viash_version = Some(io.viash.Main.version),
-        config = configPath,
+        config = uri.toString.replaceAll("^file:/+", "/"),
         git_commit = gc,
         git_remote = rgr,
         git_tag = gt
       )
     
     // add info and additional resources
-    val conf2a = conf1.copy(
+    val conf3 = conf2.copy(
       info = Some(info),
     )
+
+    // print warnings if need be
+    if (conf2.functionality.status == Status.Deprecated)
+      Console.err.println(s"${Console.YELLOW}Warning: The status of the component '${conf2.functionality.name}' is set to deprecated.${Console.RESET}")
+    
+    if (conf2.functionality.resources.isEmpty && optScript.isEmpty)
+      Console.err.println(s"${Console.YELLOW}Warning: no resources specified!${Console.RESET}")
+
     if (!addOptMainScript) {
-      return conf2a
+      return conf3
     }
     
+    /* CONFIG 4: add main script if config is stored inside script */
     // add info and additional resources
-    val conf2b = conf2a.copy(
-      functionality = conf2a.functionality.copy(
-        resources = optScript.toList ::: conf2a.functionality.resources
+    val conf4 = conf3.copy(
+      functionality = conf3.functionality.copy(
+        resources = optScript.toList ::: conf3.functionality.resources
       )
     )
 
-    conf2b
+    conf4
   }
 
   def readConfigs(
@@ -314,7 +353,7 @@ object Config {
         // warnings will be captured for now, and will be displayed when reading the second time
         val stdout = new ByteArrayOutputStream()
         val stderr = new ByteArrayOutputStream()
-        val confTest = 
+        val config = 
           Console.withErr(stderr) {
             Console.withOut(stdout) {
               Config.read(
@@ -325,8 +364,8 @@ object Config {
             }
           }
 
-        val funName = confTest.functionality.name
-        val funNs = confTest.functionality.namespace
+        val funName = config.functionality.name
+        val funNs = config.functionality.namespace
 
         // does name & namespace match regex?
         val queryTest = (query, funNs) match {
@@ -345,11 +384,11 @@ object Config {
         }
 
         // if config passes regex checks, show warning and return it
-        if (queryTest && nameTest && namespaceTest && confTest.functionality.isEnabled) {
+        if (queryTest && nameTest && namespaceTest && config.functionality.isEnabled) {
           // TODO: stdout and stderr are no longer in the correct order :/
           Console.out.print(stdout.toString)
           Console.err.print(stderr.toString)
-          Left(confTest)
+          Left(config)
         } else {
           Right(Disabled)
         }

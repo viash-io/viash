@@ -4,9 +4,35 @@ import io.circe.Json
 import org.scalatest.FunSuite
 import io.circe.syntax._
 
-import io.circe.yaml.parser._
+import io.circe.yaml.parser.parse
 
-class ConfigModsSuite extends FunSuite {
+class AppendTest extends FunSuite {
+  // testing parsing
+  test("parse append command") {
+    val expected = ConfigMods(List(
+      Append(
+        Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("id"))),
+        JsonValue("test".asJson)
+      )
+    ))
+    val command = """.platforms[.type == "native"].id += "test""""
+    val result = ConfigModParser.block.parse(command)
+    assert(result == expected)
+  }
+
+  test("parse add command with complex json") {
+    val expected = ConfigMods(List(
+      Append(
+        Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
+        JsonValue(Json.fromFields(List(("type", "docker".asJson))))
+      )
+    ))
+    val command = """.platforms[.type == "native"].setup += { type: "docker" }"""
+    val result = ConfigModParser.block.parse(command)
+    assert(result == expected)
+  }
+
+  // testing functionality
   val baseJson: Json = parse(
     """foo: bar
       |baz: 123
@@ -45,11 +71,5 @@ class ConfigModsSuite extends FunSuite {
     val cmd2 = ConfigModParser.block.parse(""".bar := [ 1, 2, 3 ]""")
     val res2 = cmd2.apply(baseJson, false)
     assert(res2 == expected2)
-  }
-  
-  test("test simple path") {
-    val pth = ConfigModParser.parse(ConfigModParser.path, """.foo""").get
-    val res3 = pth.get(baseJson)
-    assert(res3 == Json.fromString("bar"))
   }
 }
