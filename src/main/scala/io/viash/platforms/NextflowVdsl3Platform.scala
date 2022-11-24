@@ -203,7 +203,12 @@ case class NextflowVdsl3Platform(
 
       // if mainResource is a script
       case Some(res) =>
-        val code = res.readWithInjection(functionality).get
+        // todo: also include the bashwrapper checks
+        val argsAndMeta = functionality.getArgumentLikesGroupedByDest(
+          includeMeta = true,
+          filterInputs = true
+        )
+        val code = res.readWithInjection(argsAndMeta).get
         val escapedCode = Bash.escapeString(code, allowUnescape = true)
           .replace("\\", "\\\\")
           .replace("'''", "\\'\\'\\'")

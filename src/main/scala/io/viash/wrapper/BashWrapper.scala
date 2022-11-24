@@ -138,7 +138,14 @@ object BashWrapper {
 
       // if we want to debug our code
       case Some(res) if debugPath.isDefined =>
-        val code = res.readWithInjection(functionality).get
+        // todo: this should be moved higher
+        val argsAndMeta = functionality.getArgumentLikesGroupedByDest(
+          includeMeta = true,
+          filterInputs = true
+        )
+        val argsAndMetaNoChecks = argsAndMeta.mapValues(_.map(_.disableChecks))
+        
+        val code = res.readWithInjection(argsAndMetaNoChecks).get
         val escapedCode = Bash.escapeString(code, allowUnescape = true)
         val deb = debugPath.get
 
@@ -151,7 +158,11 @@ object BashWrapper {
 
       // if mainResource is a script
       case Some(res) =>
-        val code = res.readWithInjection(functionality).get
+        val argsAndMeta = functionality.getArgumentLikesGroupedByDest(
+          includeMeta = true,
+          filterInputs = true
+        )
+        val code = res.readWithInjection(argsAndMeta).get
         val escapedCode = Bash.escapeString(code, allowUnescape = true)
 
         // check whether the script can be written to a temprorary location or

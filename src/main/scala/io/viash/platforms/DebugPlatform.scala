@@ -38,70 +38,19 @@ case class DebugPlatform(
     if (functionality.mainScript.isEmpty) {
       throw new RuntimeException("Can't generate a debug platform when there is no script.")
     }
-
-    // disable required arguments and set defaults for all arguments
-    val newArgumentGroups = functionality.allArgumentGroups.map { argument_group => 
-        argument_group.copy(
-          arguments = argument_group.arguments
-            .flatMap(_.right.toOption) // there shouldn't be any lefts at this stage
-            // set required to false
-            .map{
-              case arg =>
-                arg.copyArg(required = false)
-            }
-            // make sure the default is set. invent one if necessary.s
-            .map{
-              // if available, use default
-              case arg if arg.default.nonEmpty => 
-                arg
-              // else use example
-              case arg if arg.example.nonEmpty => 
-                arg.copyArg(default = arg.example)
-              // else invent one
-              case arg: BooleanArgumentBase => 
-                arg.copyArg(default = OneOrMore(true))
-              case arg: DoubleArgument => 
-                arg.copy(default = OneOrMore(123.0), min = None, max = None)
-              case arg: FileArgument => 
-                arg.copy(default = OneOrMore(Paths.get("/path/to/file")), must_exist = false)
-              case arg: IntegerArgument =>
-                arg.copy(default = OneOrMore(123), choices = Nil, min = None, max = None)
-              case arg: LongArgument =>
-                arg.copy(default = OneOrMore(123), choices = Nil, min = None, max = None)
-              case arg: StringArgument => 
-                arg.copy(default = OneOrMore("value"), choices = Nil)
-              case arg => 
-                throw new RuntimeException(
-                  f"Viash is missing a default for argument of type ${arg.`type`}. " +
-                    "Please report this error to the maintainers.")
-            }
-            // turn off must_exist and create_parent
-            .map{
-              case arg: FileArgument =>
-                arg.copy(must_exist = false, create_parent = false)
-              case a => a
-            }
-            .map{Right(_)}
-        )
-      }
-    val fun0 = functionality.copy(
-      inputs = Nil,
-      outputs = Nil,
-      arguments = Nil,
-      argument_groups = newArgumentGroups
-    )
-
     // create new bash script
+    // by setting debugpath, any checks on the arguments are getting disabled
+    // TODO: enforce this behaviour using a `disableChecks = true` argument?
     val scriptSrc = BashWrapper.wrapScript(
       executor = "bash",
-      functionality = fun0,
+      functionality = functionality,
       debugPath = Some(path)
     )
     val bashScript = BashScript(
       dest = Some(functionality.name),
       text = Some(scriptSrc)
     )
-    fun0.copy(
+    config.functionality.copy(
       resources = List(bashScript)
     )
   }
