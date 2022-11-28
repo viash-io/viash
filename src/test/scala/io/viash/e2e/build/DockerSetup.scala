@@ -9,6 +9,7 @@ import io.viash.helpers.{IO, Exec}
 import io.viash.config.Config
 
 import scala.io.Source
+import io.viash.functionality.resources.PlainFile
 
 class DockerSetup extends FunSuite with BeforeAndAfterAll {
   // which platform to test
@@ -22,6 +23,7 @@ class DockerSetup extends FunSuite with BeforeAndAfterAll {
 
   // parse functionality from file
   private val functionality = Config.read(configFile).functionality
+  private def configAndResources = PlainFile(path = Some(configFile.toString)) :: functionality.resources
 
   // check whether executable was created
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
@@ -88,19 +90,12 @@ class DockerSetup extends FunSuite with BeforeAndAfterAll {
     // Create temporary folder to copy the files to so we can do a git init in that folder
     // This is needed to check the remote git repo value
     val tempMetaFolder = IO.makeTemp("viash_test_meta")
-    val tempMetaFolStr = tempMetaFolder.toString
 
     val fakeGitRepo = "git@non.existing.repo:viash/meta-test"
 
     try {
       // Copy all needed files to a temporary location
-      for (name <- List("config.vsh.yaml", "code.sh", "resource1.txt")) {
-        val originPath = Paths.get(getClass.getResource(s"/testbash/$name").getPath)
-        val destPath = Paths.get(tempMetaFolStr, name)
-
-        //println(s"Copy $originPath to $destPath")
-        Files.copy(originPath, destPath)
-      }
+      IO.writeResources(configAndResources, tempMetaFolder)
 
       assert(
         Exec.runCatchPath(
@@ -153,7 +148,7 @@ class DockerSetup extends FunSuite with BeforeAndAfterAll {
       //   ).exitValue == 0
       //   , "git tag")
 
-      val configMetaFile = Paths.get(tempMetaFolStr, "config.vsh.yaml").toString
+      val configFile = tempMetaFolder.resolve("config.vsh.yaml")
 
       // Run the code
       // prepare the environment
@@ -162,7 +157,7 @@ class DockerSetup extends FunSuite with BeforeAndAfterAll {
         "-p", "docker",
         "-o", tempFolStr,
         "--setup", "alwaysbuild",
-        configMetaFile
+        configFile.toString
       )
 
       assert(executable.exists)

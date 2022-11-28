@@ -36,7 +36,7 @@ object ConfigMeta {
 
   val metaFilename: String = ".config.vsh.yaml"
 
-  def toMetaFile(config: Config, dir: Option[Path]): PlainFile = {
+  def toMetaFile(config: Config, buildDir: Option[Path]): PlainFile = {
     // get resources
     val placeholderMap = config.functionality.resources.filter(_.text.isDefined).map{ res =>
       (res, "VIASH_PLACEHOLDER~" + res.filename + "~")
@@ -60,8 +60,8 @@ object ConfigMeta {
         }
       ),
       info = config.info.map(_.copy(
-        output = dir.map(_.toString),
-        executable = dir.map(d => Paths.get(d.toString, config.functionality.name).toString)
+        output = buildDir.map(_.toString),
+        executable = buildDir.map(d => Paths.get(d.toString, config.functionality.name).toString)
       ))
     )
 

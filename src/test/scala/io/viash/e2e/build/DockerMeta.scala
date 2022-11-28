@@ -9,6 +9,8 @@ import io.viash.helpers.{IO, Exec}
 import io.viash.config.Config
 
 import scala.io.Source
+import cats.instances.function
+import io.viash.functionality.resources.PlainFile
 
 class DockerMeta extends FunSuite with BeforeAndAfterAll {
   // which platform to test
@@ -16,6 +18,7 @@ class DockerMeta extends FunSuite with BeforeAndAfterAll {
 
   // parse functionality from file
   private val functionality = Config.read(configFile).functionality
+  private def configAndResources = PlainFile(path = Some(configFile.toString)) :: functionality.resources
 
 
   //</editor-fold>
@@ -24,19 +27,14 @@ class DockerMeta extends FunSuite with BeforeAndAfterAll {
     // Create temporary folder to copy the files to so we can do a git init in that folder
     // This is needed to check the remote git repo value
     val tempMetaFolder = IO.makeTemp("viash_test_meta")
+    
 
     try {
       // Copy all needed files to a temporary location
-      for (name <- List("config.vsh.yaml", "code.sh", "resource1.txt")) {
-        val originPath = Paths.get(getClass.getResource(s"/testbash/$name").getPath)
-        val destPath = tempMetaFolder.resolve(name)
-
-        //println(s"Copy $originPath to $destPath")
-        Files.copy(originPath, destPath)
-      }
+      IO.writeResources(configAndResources, tempMetaFolder)
 
       val binDir = tempMetaFolder.resolve("bin")
-      val configMetaFile = tempMetaFolder.resolve("config.vsh.yaml")
+      val configFile = tempMetaFolder.resolve("config.vsh.yaml")
       val exec = binDir.resolve(functionality.name)
       val meta = binDir.resolve(".config.vsh.yaml")
 
@@ -46,21 +44,21 @@ class DockerMeta extends FunSuite with BeforeAndAfterAll {
         "build",
         "-p", "docker",
         "-o", binDir.toString,
-        configMetaFile.toString
+        configFile.toString
       )
       
       // check exec
       assert(exec.toFile.exists)
       assert(exec.toFile.canExecute)
-
+      
       // check meta
       assert(meta.toFile.exists)
-      val metaStr = scala.io.Source.fromFile(meta.toFile).getLines.mkString("\n")
+      val metaStr = Source.fromFile(meta.toFile).getLines.mkString("\n")
 
       val viashVersion = io.viash.Main.version
 
       val regexViashVersion = s"""viash_version: "${viashVersion}"""".r
-      val regexConfig = s"""config: "${configMetaFile}"""".r
+      val regexConfig = s"""config: "${configFile}"""".r
       val regexPlatform = """platform: "docker"""".r
       val regexExecutable = s"""executable: "$binDir/testbash"""".r
       val regexOutput = s"""output: "$binDir"""".r
@@ -88,13 +86,7 @@ class DockerMeta extends FunSuite with BeforeAndAfterAll {
 
     try {
       // Copy all needed files to a temporary location
-      for (name <- List("config.vsh.yaml", "code.sh", "resource1.txt")) {
-        val originPath = Paths.get(getClass.getResource(s"/testbash/$name").getPath)
-        val destPath = tempMetaFolder.resolve(name)
-
-        //println(s"Copy $originPath to $destPath")
-        Files.copy(originPath, destPath)
-      }
+      IO.writeResources(configAndResources, tempMetaFolder)
 
       assert(
         Exec.runCatchPath(
@@ -130,7 +122,7 @@ class DockerMeta extends FunSuite with BeforeAndAfterAll {
 
       // check meta
       assert(meta.toFile.exists)
-      val metaStr = scala.io.Source.fromFile(meta.toFile).getLines.mkString("\n")
+      val metaStr = Source.fromFile(meta.toFile).getLines.mkString("\n")
 
       val viashVersion = io.viash.Main.version
 
@@ -161,13 +153,7 @@ class DockerMeta extends FunSuite with BeforeAndAfterAll {
 
     try {
       // Copy all needed files to a temporary location
-      for (name <- List("config.vsh.yaml", "code.sh", "resource1.txt")) {
-        val originPath = Paths.get(getClass.getResource(s"/testbash/$name").getPath)
-        val destPath = tempMetaFolder.resolve(name)
-
-        //println(s"Copy $originPath to $destPath")
-        Files.copy(originPath, destPath)
-      }
+      IO.writeResources(configAndResources, tempMetaFolder)
 
       assert(
         Exec.runCatchPath(
@@ -196,7 +182,7 @@ class DockerMeta extends FunSuite with BeforeAndAfterAll {
 
       // check meta
       assert(meta.toFile.exists, meta.toString + " should exist")
-      val metaStr = scala.io.Source.fromFile(meta.toFile).getLines.mkString("\n")
+      val metaStr = Source.fromFile(meta.toFile).getLines.mkString("\n")
 
       val viashVersion = io.viash.Main.version
 
@@ -219,5 +205,4 @@ class DockerMeta extends FunSuite with BeforeAndAfterAll {
       IO.deleteRecursively(tempMetaFolder)
     }
   }
-
 }

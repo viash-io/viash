@@ -3,16 +3,9 @@ package io.viash
 import java.io.{ByteArrayOutputStream, File, FileInputStream, IOException, UncheckedIOException}
 import java.security.{DigestInputStream, MessageDigest}
 import org.scalatest.Matchers.{assertThrows, intercept}
-import org.scalatest.Tag
 
 import java.nio.file.{Files, Path, Paths}
 import scala.reflect.ClassTag
-
-object DockerTest extends Tag("io.viash.DockerTest")
-
-object NativeTest extends Tag("io.viash.NativeTest")
-
-object NextFlowTest extends Tag("io.viash.NextFlowTest")
 
 object TestHelper {
 
