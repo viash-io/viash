@@ -17,6 +17,7 @@ jobs:
         echo "${HOME}/.local/bin" >> $GITHUB_PATH
         ./configure --prefix "${HOME}/.local/"
         make
+        make install
 
     - name: Run tests
       run: |
