@@ -291,7 +291,7 @@ object BashWrapper {
        |${spaceCode(allMods.postParse)}${spaceCode(allMods.preRun)}
        |ViashDebug "Running command: ${executor.replaceAll("^eval (.*)", "\\$(echo $1)")}"
        |$heredocStart$executor$executionCode$heredocEnd
-       |${spaceCode(allMods.postRun)}
+       |${spaceCode(allMods.postRun)}${spaceCode(allMods.last)}
        |
        |exit 0
        |""".stripMargin
@@ -656,7 +656,7 @@ object BashWrapper {
     BashWrapperMods(
       parsers = parseStrs,
       preRun = joinSections(List(positionalStr, reqCheckStr, defaultsStrs, reqInputFilesStr, typeMinMaxCheckStr, choiceCheckStr, createParentStr)),
-      postRun = reqOutputFilesStr
+      last = reqOutputFilesStr
     )
   }
 

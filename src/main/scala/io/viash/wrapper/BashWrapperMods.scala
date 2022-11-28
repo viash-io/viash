@@ -25,6 +25,7 @@ case class BashWrapperMods(
   postParse: String = "",
   preRun: String = "",
   postRun: String = "",
+  last: String = "",
   inputs: List[Argument[_]] = Nil,
   extraParams: String = ""
 ) {
@@ -35,6 +36,7 @@ case class BashWrapperMods(
       postParse = BashWrapper.joinSections(List(postParse, other.postParse)),
       preRun = BashWrapper.joinSections(List(preRun, other.preRun)),
       postRun = BashWrapper.joinSections(List(postRun, other.postRun)),
+      last = BashWrapper.joinSections(List(last, other.last)),
       inputs = inputs ::: other.inputs,
       extraParams = extraParams + other.extraParams
     )
