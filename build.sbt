@@ -29,4 +29,8 @@ organization := "Data Intuitive"
 startYear := Some(2020)
 licenses += "GPL-3.0-or-later" -> url("https://www.gnu.org/licenses/gpl-3.0.html")
 
+// tried adding viash components to path for testing
+// unmanagedClasspath in Test += baseDirectory.value / "src" / "viash"
+
+
 // Test / parallelExecution := false
