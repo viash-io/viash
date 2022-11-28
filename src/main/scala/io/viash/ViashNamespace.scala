@@ -175,7 +175,7 @@ object ViashNamespace {
 
             // print messages
             val results = setupRes.toList ::: testResults
-            for (test ← results) {
+            for (test <- results) {
               val (col, msg) = {
                 if (test.exitValue > 0) {
                   (Console.RED, "ERROR")

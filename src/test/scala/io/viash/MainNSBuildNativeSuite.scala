@@ -39,7 +39,7 @@ class MainNSBuildNativeSuite extends FunSuite with BeforeAndAfterAll{
     assert(nsFolder.exists)
     assert(nsFolder.isDirectory)
 
-    for ((component, _, _, _) ← components) {
+    for ((component, _, _, _) <- components) {
       val executable = componentExecutableFile(component)
       assert(executable.exists)
       assert(executable.canExecute)
@@ -50,14 +50,14 @@ class MainNSBuildNativeSuite extends FunSuite with BeforeAndAfterAll{
   }
 
   test("Check whether the executable can run") {
-    for ((component, _, _, _) ← components) {
+    for ((component, _, _, _) <- components) {
       Exec.run(
         Seq(componentExecutableFile(component).toString, "--help")
       )
     }
   }
 
-  for ((component, _, _, _) ← components) {
+  for ((component, _, _, _) <- components) {
   test(s"Check whether particular keywords can be found in the usage with component $component") {
       val configFile = getClass.getResource(s"/testns/src/$component/config.vsh.yaml").getPath
       val functionality = Config.read(configFile).functionality
@@ -80,7 +80,7 @@ class MainNSBuildNativeSuite extends FunSuite with BeforeAndAfterAll{
   }
 
   test("Check whether output is correctly created") {
-    for ((component, input1, input2, expectedOutput) ← components) {
+    for ((component, input1, input2, expectedOutput) <- components) {
       val output = Paths.get(tempFolStr, s"output_$component.txt").toFile
 
       Exec.run(

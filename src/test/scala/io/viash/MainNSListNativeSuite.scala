@@ -29,7 +29,7 @@ class MainNSListNativeSuite extends FunSuite{
       "-s", nsPath,
     )
 
-    for (component ← components) {
+    for (component <- components) {
       val regexName = raw"""name:\s+"$component""""
       assert(regexName.r.findFirstIn(stdout).isDefined, s"\nRegex: ${regexName}; text: \n$stdout")
     }

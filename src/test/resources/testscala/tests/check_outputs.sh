@@ -43,7 +43,7 @@ $meta_executable \
   --whole_number=789 \
   -s "a \\ b \$ c \` d \" e ' f \n g # h @ i { j } k \"\"\" l ''' m todo_add_back_DOLLAR_VIASH_TEMP n : o ; p" \
   ---cpus 666 \
-  ---memory 100PB \
+  ---memory 1GB \
   > output2.txt
 
 [[ ! -f output2.txt ]] && echo "Output file could not be found!" && exit 1
