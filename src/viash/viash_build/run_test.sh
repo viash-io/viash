@@ -9,7 +9,7 @@ alt_output=alt_test_output.txt
 alt_src="alt_src"
 log=build_log.txt
 target_ns_add="target/native/testns/ns_add/ns_add"
-target_ns_add_yaml="target/native/testns/ns_add/viash.yaml"
+target_ns_add_yaml="target/native/testns/ns_add/.config.vsh.yaml"
 
 # 1. Run component with default arguments
 # Run component

@@ -70,6 +70,7 @@ functionality:
     type: file
     description: Log file
     example: .viash_push_log.txt
+    direction: output
   - name: "--viash"
     type: file
     description: A path to the viash executable. If not specified, this component will look for 'viash' on the $PATH.
