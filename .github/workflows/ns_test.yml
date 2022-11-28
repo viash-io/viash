@@ -14,9 +14,9 @@ jobs:
 
     - name: Build viash
       run: |
-        ./configure --prefix `pwd`
+        ./configure
         make
 
     - name: Run tests
       run: |
-        bin/viash ns test --src src/viash
+        viash ns test --src src/viash
