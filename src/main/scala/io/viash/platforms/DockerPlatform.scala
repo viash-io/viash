@@ -542,14 +542,14 @@ case class DockerPlatform(
               s"""
                   |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
                   |  $viash_temp=()
-                  |  IFS="${arg.multiple_sep}"
+                  |  IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}'
                   |  for var in $$${arg.VIASH_PAR}; do
                   |    unset IFS
                   |    VIASH_EXTRA_MOUNTS+=( $$(ViashAutodetectMountArg "$$var") )
                   |    var=$$(ViashAutodetectMount "$$var")
                   |    $viash_temp+=( "$$var" )$chownIfOutput
                   |  done
-                  |  ${arg.VIASH_PAR}=$$(IFS=${arg.multiple_sep} ; echo "$${$viash_temp[*]}")
+                  |  ${arg.VIASH_PAR}=$$(IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}' ; echo "$${$viash_temp[*]}")
                   |fi""".stripMargin)
           case arg: FileArgument =>
             val chownIfOutput = if (arg.direction == Output) "\n  VIASH_CHOWN_VARS+=( \"$" + arg.VIASH_PAR + "\" )" else ""
@@ -588,7 +588,7 @@ case class DockerPlatform(
               s"""
                   |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
                   |  unset $viash_temp
-                  |  IFS="${arg.multiple_sep}"
+                  |  IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}'
                   |  for var in $$${arg.VIASH_PAR}; do
                   |    unset IFS
                   |    ${BashWrapper.store("ViashStripAutomount", viash_temp, "\"$(ViashStripAutomount \"$var\")\"", Some(arg.multiple_sep)).mkString("\n    ")}
@@ -683,7 +683,7 @@ case class DockerPlatform(
                  //|    ${chownCommand("\"/viash_automount$var\"")}
               s"""
                  |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-                 |  IFS="${arg.multiple_sep}"
+                 |  IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}'
                  |  for var in $$${arg.VIASH_PAR}; do
                  |    unset IFS
                  |    VIASH_CHOWN_VARS+=("/viash_automount$$var")
