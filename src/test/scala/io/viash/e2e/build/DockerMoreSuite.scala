@@ -86,7 +86,7 @@ class DockerMoreSuite extends FunSuite with BeforeAndAfterAll {
   test("Check deprecated warning", DockerTest) {
     val newConfigFilePath = configDeriver.derive(""".functionality.status := "deprecated"""", "deprecated")
     
-    val (stdout, stderr) = TestHelper.testMainWithStdErr(
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
       "build",
       "-p", "docker",
       "-o", tempFolStr,
@@ -95,6 +95,7 @@ class DockerMoreSuite extends FunSuite with BeforeAndAfterAll {
     )
 
     assert(stderr.contains("The status of the component 'testbash' is set to deprecated."))
+    assert(exitCode == 0)
   }
 
   test("Check component works when multiple_sep is set to ;", DockerTest) {

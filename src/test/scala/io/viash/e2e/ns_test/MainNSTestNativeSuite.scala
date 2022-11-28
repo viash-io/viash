@@ -45,7 +45,7 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
 
 
   test("Check namespace test output without working dir message") {
-    val (stdout, stderr) = TestHelper.testMainWithStdErr(
+    val (stdout, stderr, _) = TestHelper.testMainWithStdErr(
       "ns", "test",
       "--src", nsPath,
       "--keep", "false"
@@ -70,7 +70,7 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check namespace test output with working dir message") {
-    val (stdout, stderr) = TestHelper.testMainWithStdErr(
+    val (stdout, stderr, _) = TestHelper.testMainWithStdErr(
       "ns", "test",
       "--src", nsPath,
       "--keep", "true"
@@ -98,7 +98,7 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
   test("Check namespace test output with tsv option") {
     val log = Paths.get(tempFolStr, "log.tsv").toFile
 
-    val (testText, _) = TestHelper.testMainWithStdErr(
+    val (testText, _, _) = TestHelper.testMainWithStdErr(
       "ns", "test",
       "--tsv", log.toString,
       "--src", nsPath
@@ -131,7 +131,7 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
     val fileHeader = "Test header" + sys.props("line.separator")
     Files.write(log.toPath, fileHeader.getBytes(StandardCharsets.UTF_8))
 
-    val (testText, _) = TestHelper.testMainWithStdErr(
+    val (testText, _, _) = TestHelper.testMainWithStdErr(
       "ns", "test",
       "--tsv", log.toString,
       "--append",
@@ -164,7 +164,7 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
   test("Check namespace test output with tsv and append options without the output file exists") {
     val log = Paths.get(tempFolStr, "log_append_new.tsv").toFile
 
-    val (testText, _) = TestHelper.testMainWithStdErr(
+    val (testText, _, _) = TestHelper.testMainWithStdErr(
       "ns", "test",
       "--tsv", log.toString,
       "--append",

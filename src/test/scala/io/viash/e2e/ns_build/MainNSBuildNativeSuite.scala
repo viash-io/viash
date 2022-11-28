@@ -32,7 +32,7 @@ class MainNSBuildNativeSuite extends FunSuite with BeforeAndAfterAll{
 
   // convert testbash
   test("viash ns can build") {
-    val (stdout, stderr) = TestHelper.testMainWithStdErr(
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
     "ns", "build",
       "-s", nsPath,
       "-t", tempFolStr
@@ -40,6 +40,7 @@ class MainNSBuildNativeSuite extends FunSuite with BeforeAndAfterAll{
 
     assert(nsFolder.exists)
     assert(nsFolder.isDirectory)
+    assert(exitCode == 0)
 
     for ((component, _, _, _) <- components) {
       val executable = componentExecutableFile(component)

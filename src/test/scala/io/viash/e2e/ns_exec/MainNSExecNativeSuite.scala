@@ -25,7 +25,7 @@ class MainNSExecNativeSuite extends FunSuite with BeforeAndAfterAll {
   private val tempFolStr = temporaryFolder.toString
 
   test("Check whether ns exec \\; works") {
-    val (stdoutRaw, stderrRaw) =
+    val (stdoutRaw, stderrRaw, _) =
       TestHelper.testMainWithStdErr(
         "ns", "exec",
         "--src", nsPath,
@@ -44,7 +44,7 @@ class MainNSExecNativeSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check whether ns exec + works") {
-    val (stdoutRaw, stderrRaw) = TestHelper.testMainWithStdErr(
+    val (stdoutRaw, stderrRaw, _) = TestHelper.testMainWithStdErr(
       "ns", "exec",
       "--src", nsPath,
       "echo {path} +"

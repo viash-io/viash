@@ -139,11 +139,20 @@ This release features contains mostly quality of life improvements and some expe
   Added a testbench that verifies that all arguments are in fact annotated, skipping those that are not in the class constructor.
   Adds a hierarchy field in the `__this__` member to list the relation of the own and parent classes.
 
+* `Testbenches`: Add exit code to helper method `testMainWithStdErr`.
+
+* `Testbenches`: Add testbench to verify viash underscore components (viash_build, viash_install, viash_push, viash_skeleton, viash_test).
+
+* `Testbenches`: Update viash underscore component tests to use `$meta_executable`.
+
 * `viash ns exec`: Allow choosing whether the `{platform}` field should be filled in, based on the `--apply_platform` parameter.
+
 
 ## BUG FIXES
 
 * `DockerPlatform`: Remove duplicate auto-mounts (#257).
+
+* `Underscore component tests`: Fix tests for `viash_skeleton` and `viash_test` components.
 
 * `NextflowVDSL3Platform`: Fix 'Module scriptPath has not been defined yet' error when Nextflow>=22.10 (#269).
 

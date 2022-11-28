@@ -140,7 +140,7 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
 
   test("Build pipeline components", DockerTest, NextFlowTest) {
     // build the nextflow containers
-    val (_, _) = TestHelper.testMainWithStdErr(
+    val (_, _, _) = TestHelper.testMainWithStdErr(
       "ns", "build",
       "-s", srcPath,
       "-t", targetPath,
@@ -254,10 +254,12 @@ class NextFlowVdsl3PlatformTest extends FunSuite with BeforeAndAfterAll {
     val correctedStdOut2 = regex.matcher(correctedStdOut1).replaceAll("")
 
     // run Viash's --help
-    val (stdOut2, stdErr2) = TestHelper.testMainWithStdErr(
+    val (stdOut2, stdErr2, exitCode2) = TestHelper.testMainWithStdErr(
       "run", workflowsPath + "/pipeline3/config.vsh.yaml",
       "--", "--help"
     )
+
+    assert(exitCode2 == 0)
 
     // check if they are the same
     assert(correctedStdOut2 == stdOut2)

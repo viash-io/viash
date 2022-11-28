@@ -151,12 +151,13 @@ class MainTestNativeSuite extends FunSuite with BeforeAndAfterAll {
         """.functionality.tests := .functionality.test_resources""",
         """del(.functionality.test_resources)"""
       ) , "legacy")
-    val (stdout, stderr) = TestHelper.testMainWithStdErr(
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
       "test",
       "-p", "native",
       newConfigFilePath
     )
 
+    assert(exitCode == 0)
     assert(stderr.contains("Warning: functionality.tests is deprecated. Please use functionality.test_resources instead."))
 
     assert(stdout.contains("Running tests in temporary directory: "))
@@ -273,12 +274,13 @@ class MainTestNativeSuite extends FunSuite with BeforeAndAfterAll {
 
   test("Check deprecation warning") {
     val newConfigFilePath = configDeriver.derive(""".functionality.status := "deprecated"""", "deprecated")
-    val (testText, stderr) = TestHelper.testMainWithStdErr(
+    val (testText, stderr, exitCode) = TestHelper.testMainWithStdErr(
       "test",
       "-p", "native",
       newConfigFilePath
     )
 
+    assert(exitCode == 0)
     assert(testText.contains("Running tests in temporary directory: "))
     assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
     assert(testText.contains("Cleaning up temporary directory"))
