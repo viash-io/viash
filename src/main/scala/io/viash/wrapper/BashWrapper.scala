@@ -127,6 +127,20 @@ object BashWrapper {
       } else {
         ""
       }
+    
+    val argsAndMeta = 
+      if (debugPath.isDefined) {
+        functionality.getArgumentLikesGroupedByDest(
+          includeMeta = true,
+          filterInputs = true
+        ).mapValues(_.map(_.disableChecks))
+      } else {
+        functionality.getArgumentLikesGroupedByDest(
+          includeMeta = true,
+          filterInputs = true
+        )
+      }
+    val args = argsAndMeta.flatMap(_._2).toList
 
     // DETERMINE HOW TO RUN THE CODE
     val executionCode = mainResource match {
@@ -138,16 +152,8 @@ object BashWrapper {
 
       // if we want to debug our code
       case Some(res) if debugPath.isDefined =>
-        // todo: this should be moved higher
-        val argsAndMeta = functionality.getArgumentLikesGroupedByDest(
-          includeMeta = true,
-          filterInputs = true
-        )
-        val argsAndMetaNoChecks = argsAndMeta.mapValues(_.map(_.disableChecks))
-        
-        val code = res.readWithInjection(argsAndMetaNoChecks).get
+        val code = res.readWithInjection(argsAndMeta).get
         val escapedCode = Bash.escapeString(code, allowUnescape = true)
-        val deb = debugPath.get
 
         s"""
           |set -e
@@ -158,10 +164,6 @@ object BashWrapper {
 
       // if mainResource is a script
       case Some(res) =>
-        val argsAndMeta = functionality.getArgumentLikesGroupedByDest(
-          includeMeta = true,
-          filterInputs = true
-        )
         val code = res.readWithInjection(argsAndMeta).get
         val escapedCode = Bash.escapeString(code, allowUnescape = true)
 
@@ -199,13 +201,11 @@ object BashWrapper {
     }
 
     // generate script modifiers
-    val params = functionality.getArgumentLikes(includeMeta = true)
-
     val helpMods = generateHelp(functionality)
     val computationalRequirementMods = generateComputationalRequirements(functionality)
-    val parMods = generateParsers(params)
+    val parMods = generateParsers(args)
     val execMods = mainResource match {
-      case Some(_: Executable) => generateExecutableArgs(params)
+      case Some(_: Executable) => generateExecutableArgs(args)
       case _ => BashWrapperMods()
     }
 
