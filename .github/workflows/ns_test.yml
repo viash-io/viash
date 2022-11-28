@@ -14,9 +14,11 @@ jobs:
 
     - name: Build viash
       run: |
-        ./configure
+        echo "${HOME}/.local/bin" >> $GITHUB_PATH
+        ./configure --prefix "${HOME}/.local/"
         make
 
     - name: Run tests
       run: |
+        set -e
         viash ns test --src src/viash
