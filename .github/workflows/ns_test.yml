@@ -12,11 +12,11 @@ jobs:
     - name: Set up sbt
       uses: olafurpg/setup-scala@v13
 
-    - name: Build tests
+    - name: Build viash
       run: |
-        ./configure
+        ./configure --prefix `pwd`
         make
 
     - name: Run tests
       run: |
-        bin/viash ns test --src/viash
+        bin/viash ns test --src src/viash
