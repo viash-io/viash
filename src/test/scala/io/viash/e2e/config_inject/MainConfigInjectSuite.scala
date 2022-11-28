@@ -1,4 +1,6 @@
-package io.viash
+package io.viash.e2e.config_inject
+
+import io.viash._
 
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import java.nio.file.{Files, Paths, StandardCopyOption}

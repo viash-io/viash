@@ -1,4 +1,6 @@
-package io.viash
+package io.viash.e2e.ns_list
+
+import io.viash._
 
 import io.viash.config.Config
 import io.viash.helpers.{Exec, IO}
@@ -24,10 +26,12 @@ class MainNSListNativeSuite extends FunSuite{
 
   // convert testbash
   test("viash ns list") {
-    val (stdout, stderr) = TestHelper.testMainWithStdErr(
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
     "ns", "list",
       "-s", nsPath,
     )
+
+    assert(exitCode == 1)
 
     for (component <- components) {
       val regexName = raw"""name:\s+"$component""""

@@ -38,57 +38,19 @@ case class DebugPlatform(
     if (functionality.mainScript.isEmpty) {
       throw new RuntimeException("Can't generate a debug platform when there is no script.")
     }
-
-    // disable required arguments and set defaults for all arguments
-    val newArgumentGroups = functionality.allArgumentGroups.map { argument_group => 
-        argument_group.copy(
-          arguments = argument_group.arguments
-            .flatMap(_.right.toOption) // there shouldn't be any lefts at this stage
-            .map{
-              case arg if arg.required && arg.default.nonEmpty => 
-                arg.copyArg(required = false)
-              case arg if arg.default.isEmpty && arg.example.nonEmpty => 
-                arg.copyArg(required = false, default = arg.example)
-              case arg: BooleanArgumentBase if arg.default.isEmpty => 
-                arg.copyArg(required = false, default = OneOrMore(true))
-              case arg: DoubleArgument if arg.default.isEmpty => 
-                arg.copy(required = false, default = OneOrMore(123.0), min = None, max = None)
-              case arg: FileArgument if arg.default.isEmpty => 
-                arg.copy(required = false, default = OneOrMore(Paths.get("/path/to/file")), must_exist = false)
-              case arg: IntegerArgument if arg.default.isEmpty =>
-                arg.copy(required = false, default = OneOrMore(123), choices = Nil, min = None, max = None)
-              case arg: LongArgument if arg.default.isEmpty =>
-                arg.copy(required = false, default = OneOrMore(123), choices = Nil, min = None, max = None)
-              case arg: StringArgument if arg.default.isEmpty => 
-                arg.copy(required = false, default = OneOrMore("value"), choices = Nil)
-              case a => a
-            }
-            // also turn off must_exist if it is set to true
-            .map{
-              case arg: FileArgument if arg.must_exist =>
-                arg.copy(must_exist = false)
-              case a => a
-            }
-            .map{Right(_)}
-        )
-      }
-    val fun0 = functionality.copy(
-      inputs = Nil,
-      outputs = Nil,
-      arguments = Nil,
-      argument_groups = newArgumentGroups
-    )
-
     // create new bash script
+    // by setting debugpath, any checks on the arguments are getting disabled
+    // TODO: enforce this behaviour using a `disableChecks = true` argument?
+    val scriptSrc = BashWrapper.wrapScript(
+      executor = "bash",
+      functionality = functionality,
+      debugPath = Some(path)
+    )
     val bashScript = BashScript(
       dest = Some(functionality.name),
-      text = Some(BashWrapper.wrapScript(
-        executor = "bash",
-        functionality = fun0,
-        debugPath = Some(path)
-      ))
+      text = Some(scriptSrc)
     )
-    fun0.copy(
+    config.functionality.copy(
       resources = List(bashScript)
     )
   }

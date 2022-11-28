@@ -40,9 +40,7 @@ case class PythonScript(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
-    val argsAndMeta = functionality.getArgumentLikesGroupedByDest(includeMeta = true, filterInputs = true)
-
+  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
     val paramsCode = argsAndMeta.map { case (dest, params) =>
       val parSet = params.map { par =>
       // val env_name = par.VIASH_PAR

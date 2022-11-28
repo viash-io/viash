@@ -40,12 +40,10 @@ case class BashScript(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
-    val argsAndMeta = functionality.getArgumentLikes(includeMeta = true, filterInputs = true)
-
-    val parSet = argsAndMeta.map { par =>
+  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
+    val parSet = argsAndMeta.values.flatten.map { par =>
       val slash = "\\VIASH_SLASH\\"
-      s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$${${par.VIASH_PAR}}" | sed "s#'#'$slash"'$slash"'#g;s#.*#${par.par}='&'#" ; fi )"""
+      s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$${${par.VIASH_PAR}}" | sed "s#'#'$slash"'$slash"'#g;s#.*#${par.par}='&'#" ; else echo "# ${par.par}="; fi )"""
     }
     val paramsCode = parSet.mkString("\n") + "\n"
     ScriptInjectionMods(params = paramsCode)

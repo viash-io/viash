@@ -7,9 +7,15 @@
 * `viash build`: `--write_meta` and `--print_meta` arguments have been removed. 
   Instead, the `.config.vsh.yaml` file is always created when building Viash components.
 
+* `FileArgument`: Default setting of `must_exist` was changed from `false` to `true`. 
+  As such, the component will throw an error by default if an input file or output file
+  is missing.
+
 ## NEW FUNCTIONALITY
 
 * Traceability: Running `viash build` and `viash test` creates a `.config.vsh.yaml` file by default, which contains the processed config of the component. As a side effect, this allows for reading in the `.config.vsh.yaml` from within the component to learn more about the component being tested.
+
+* `FileArgument`: Added `create_parent` option, which will check if the directory of an output file exists and create it if necessary.
 
 * Viash Project: Viash will automatically search for a `_viash.yaml` file in the directory of 
   a component and its parent directories.
@@ -78,6 +84,10 @@
       description: "A h5ad file"
   ```
 
+## BUG FIXES
+
+* `BashWrapper`: Don't overwrite meta values when additional arguments are provided.
+
 # Viash 0.6.3
 
 This release features contains mostly quality of life improvements and some experimental functionality. Most notably:
@@ -129,11 +139,20 @@ This release features contains mostly quality of life improvements and some expe
   Added a testbench that verifies that all arguments are in fact annotated, skipping those that are not in the class constructor.
   Adds a hierarchy field in the `__this__` member to list the relation of the own and parent classes.
 
+* `Testbenches`: Add exit code to helper method `testMainWithStdErr`.
+
+* `Testbenches`: Add testbench to verify viash underscore components (viash_build, viash_install, viash_push, viash_skeleton, viash_test).
+
+* `Testbenches`: Update viash underscore component tests to use `$meta_executable`.
+
 * `viash ns exec`: Allow choosing whether the `{platform}` field should be filled in, based on the `--apply_platform` parameter.
+
 
 ## BUG FIXES
 
 * `DockerPlatform`: Remove duplicate auto-mounts (#257).
+
+* `Underscore component tests`: Fix tests for `viash_skeleton` and `viash_test` components.
 
 * `NextflowVDSL3Platform`: Fix 'Module scriptPath has not been defined yet' error when Nextflow>=22.10 (#269).
 
