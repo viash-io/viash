@@ -23,7 +23,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
 
   // check whether executable was created
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
-  private val execPathInDocker = executable.toString
+  private val execPathInDocker = Paths.get("/viash_automount", executable.getPath).toFile.toString
 
   //<editor-fold desc="Test benches to build a generic script and run various commands to see if the functionality is correct">
   // convert testbash
@@ -105,8 +105,8 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       assert(outputLines.contains("""whole_number: |10|"""))
       assert(outputLines.contains("""s: |a string with a few spaces|"""))
       assert(outputLines.contains("""truth: |true|"""))
-      assert(outputLines.contains(s"""output: |${output.getPath}|"""))
-      assert(outputLines.contains(s"""log: |${log.getPath}|"""))
+      assert(outputLines.contains(s"""output: |/viash_automount${output.getPath}|"""))
+      assert(outputLines.contains(s"""log: |/viash_automount${log.getPath}|"""))
       assert(outputLines.contains("""optional: |foo|"""))
       assert(outputLines.contains("""optional_with_default: |bar|"""))
       assert(outputLines.contains("""multiple: |foo:bar|"""))
@@ -148,7 +148,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(stdout.contains("""optional_with_default: |The default value.|"""))
     assert(stdout.contains("""multiple: ||"""))
     assert(stdout.contains("""multiple_pos: ||"""))
-    val regex = s"""meta_resources_dir: \\|.*$tempFolStr/\\|""".r
+    val regex = s"""meta_resources_dir: \\|/viash_automount.*$tempFolStr/\\|""".r
     assert(regex.findFirstIn(stdout).isDefined)
 
     assert(stdout.contains("INFO: Parsed input arguments"))
