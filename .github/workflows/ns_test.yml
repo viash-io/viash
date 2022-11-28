@@ -1,0 +1,22 @@
+name: ns test
+
+on: [push]
+
+jobs:
+  ns-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up sbt
+      uses: olafurpg/setup-scala@v13
+
+    - name: Build tests
+      run: |
+        ./configure
+        make
+
+    - name: Run tests
+      run: |
+        bin/viash ns test --src/viash
