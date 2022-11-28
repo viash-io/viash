@@ -537,23 +537,27 @@ case class DockerPlatform(
           case arg: FileArgument if arg.multiple =>
             // resolve arguments with multiplicity different from singular args
             val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
+            val chownIfOutput = if (arg.direction == Output) "\n    VIASH_CHOWN_VARS+=( \"$var\" )" else ""
             Some(
               s"""
                   |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-                  |  IFS="${arg.multiple_sep}"
+                  |  $viash_temp=()
+                  |  IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}'
                   |  for var in $$${arg.VIASH_PAR}; do
                   |    unset IFS
                   |    VIASH_EXTRA_MOUNTS+=( $$(ViashAutodetectMountArg "$$var") )
-                  |    ${BashWrapper.store("ViashAutodetectMountArg", viash_temp, "\"$(ViashAutodetectMount \"$var\")\"", Some(arg.multiple_sep)).mkString("\n    ")}
+                  |    var=$$(ViashAutodetectMount "$$var")
+                  |    $viash_temp+=( "$$var" )$chownIfOutput
                   |  done
-                  |  ${arg.VIASH_PAR}="$$$viash_temp"
+                  |  ${arg.VIASH_PAR}=$$(IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}' ; echo "$${$viash_temp[*]}")
                   |fi""".stripMargin)
           case arg: FileArgument =>
+            val chownIfOutput = if (arg.direction == Output) "\n  VIASH_CHOWN_VARS+=( \"$" + arg.VIASH_PAR + "\" )" else ""
             Some(
               s"""
                   |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
                   |  VIASH_EXTRA_MOUNTS+=( $$(ViashAutodetectMountArg "$$${arg.VIASH_PAR}") )
-                  |  ${arg.VIASH_PAR}=$$(ViashAutodetectMount "$$${arg.VIASH_PAR}")
+                  |  ${arg.VIASH_PAR}=$$(ViashAutodetectMount "$$${arg.VIASH_PAR}")$chownIfOutput
                   |fi""".stripMargin)
           case _ => None
         }
@@ -563,11 +567,47 @@ case class DockerPlatform(
         } else {
           f"""
           |
-          |# detect volumes from file arguments${detectMounts.mkString("")}
+          |# detect volumes from file arguments
+          |VIASH_CHOWN_VARS=()${detectMounts.mkString("")}
           |
           |# get unique mounts
           |VIASH_UNIQUE_MOUNTS=($$(for val in "$${VIASH_EXTRA_MOUNTS[@]}"; do echo "$$val"; done | sort -u))
           |""".stripMargin
+        }
+      } else {
+        ""
+      }
+    
+    val postRun =
+      if (resolve_volume == Automatic) {
+        val stripAutomounts = args.flatMap {
+          case arg: FileArgument if arg.multiple =>
+            // resolve arguments with multiplicity different from singular args
+            val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
+            Some(
+              s"""
+                  |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
+                  |  unset $viash_temp
+                  |  IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}'
+                  |  for var in $$${arg.VIASH_PAR}; do
+                  |    unset IFS
+                  |    ${BashWrapper.store("ViashStripAutomount", viash_temp, "\"$(ViashStripAutomount \"$var\")\"", Some(arg.multiple_sep)).mkString("\n    ")}
+                  |  done
+                  |  ${arg.VIASH_PAR}="$$$viash_temp"
+                  |fi""".stripMargin)
+          case arg: FileArgument =>
+            Some(
+              s"""
+                  |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
+                  |  ${arg.VIASH_PAR}=$$(ViashStripAutomount "$$${arg.VIASH_PAR}")
+                  |fi""".stripMargin)
+          case _ => None
+        }
+        
+        if (stripAutomounts.isEmpty) {
+          ""
+        } else {
+          "\n# strip viash automount from file paths" + stripAutomounts.mkString("")
         }
       } else {
         ""
@@ -579,6 +619,7 @@ case class DockerPlatform(
       preParse = preParse,
       parsers = parsers,
       preRun = preRun,
+      postRun = postRun,
       extraParams = extraParams
     )
   }
@@ -621,48 +662,16 @@ case class DockerPlatform(
     volExtraParams: String,
     fullImageID: String,
   ) = {
-    val args = functionality.getArgumentLikes(includeMeta = true)
-
-    def chownCommand(value: String): String = {
-      s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $fullImageID "$$(id -u):$$(id -g)" --silent --recursive $value"""
-    }
-
     val preRun =
       if (chown) {
-        // chown output files/folders
-        val chownPars = args
-          .filter(a => a.isInstanceOf[FileArgument] && a.direction == Output)
-          .map(arg => {
-
-            // resolve arguments with multiplicity different from
-            // singular args
-            if (arg.multiple) {
-              val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
-              s"""
-                 |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-                 |  IFS="${arg.multiple_sep}"
-                 |  for var in $$${arg.VIASH_PAR}; do
-                 |    unset IFS
-                 |    ${chownCommand("\"$var\"")}
-                 |  done
-                 |  ${arg.VIASH_PAR}="$$$viash_temp"
-                 |fi""".stripMargin
-            } else {
-              s"""
-                 |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-                 |  ${chownCommand("\"$" + arg.VIASH_PAR + "\"")}
-                 |fi""".stripMargin
-            }
-          })
-
-        val chownParStr =
-          if (chownPars.isEmpty) ":"
-          else chownPars.mkString("").split("\n").mkString("\n  ")
-
         s"""
            |# change file ownership
            |function ViashPerformChown {
-           |  $chownParStr
+           |  if (( $${#VIASH_CHOWN_VARS[@]} )); then
+           |    set +e
+           |    eval docker run --entrypoint=chown $dockerArgs$volExtraParams $fullImageID "$$(id -u):$$(id -g)" --silent --recursive $${VIASH_CHOWN_VARS[@]}
+           |    set -e
+           |  fi
            |}
            |trap ViashPerformChown EXIT
            |""".stripMargin
