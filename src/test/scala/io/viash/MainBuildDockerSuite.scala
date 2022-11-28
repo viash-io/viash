@@ -111,7 +111,7 @@ class MainBuildDockerSuite extends FunSuite with BeforeAndAfterAll {
       assert(outputLines.contains("""optional_with_default: |bar|"""))
       assert(outputLines.contains("""multiple: |foo:bar|"""))
       assert(outputLines.contains("""multiple_pos: |a:b:c:d:e:f|"""))
-      val regex = s"""meta_resources_dir: \\|/viash_automount.*$tempFolStr/\\|""".r
+      val regex = s"""meta_resources_dir: \\|.*$tempFolStr/\\|""".r
       assert(regex.findFirstIn(outputLines).isDefined)
     } finally {
       outputSrc.close()

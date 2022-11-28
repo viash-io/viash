@@ -265,7 +265,10 @@ object BashWrapper {
        |${spaceCode(allMods.preRun)}
        |ViashDebug "Running command: ${executor.replaceAll("^eval (.*)", "\\$(echo $1)")}"
        |$heredocStart$executor$executionCode$heredocEnd
-       |${spaceCode(allMods.postRun)}""".stripMargin
+       |${spaceCode(allMods.postRun)}
+       |
+       |exit 0
+       |""".stripMargin
   }
 
 
