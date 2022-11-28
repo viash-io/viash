@@ -1,0 +1,25 @@
+name: ns test
+
+on: [push]
+
+jobs:
+  ns-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up sbt
+      uses: olafurpg/setup-scala@v13
+
+    - name: Build viash
+      run: |
+        echo "${HOME}/.local/bin" >> $GITHUB_PATH
+        ./configure --prefix "${HOME}/.local/"
+        make
+        make install
+
+    - name: Run tests
+      run: |
+        set -e
+        viash ns test --src src/viash

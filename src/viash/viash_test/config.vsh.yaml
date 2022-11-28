@@ -74,6 +74,7 @@ functionality:
     type: file
     description: Test results stored as a tabular text file.
     example: .viash_test_log.tsv
+    direction: output
   - name: "--no_cache"
     alternatives: [ "-nc", "--no-cache" ]
     type: boolean_true
@@ -83,6 +84,7 @@ functionality:
     type: file
     description: Test log file
     example: .viash_test_log.txt
+    direction: output
   - name: "--append"
     type: boolean
     default: true
