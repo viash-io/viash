@@ -662,46 +662,8 @@ case class DockerPlatform(
     volExtraParams: String,
     fullImageID: String,
   ) = {
-    val args = functionality.getArgumentLikes(includeMeta = true)
-
-    def chownCommand(value: String): String = {
-      s"""set +e
-         |eval docker run --entrypoint=chown $dockerArgs$volExtraParams $fullImageID "$$(id -u):$$(id -g)" --silent --recursive $value
-         |set -e"""
-    }
-
     val preRun =
       if (chown) {
-        // chown output files/folders
-        val chownPars = args
-          .filter(a => a.isInstanceOf[FileArgument] && a.direction == Output)
-          .map(arg => {
-
-            // resolve arguments with multiplicity different from
-            // singular args
-            if (arg.multiple) {
-                 //|    ${chownCommand("\"/viash_automount$var\"")}
-              s"""
-                 |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-                 |  IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}'
-                 |  for var in $$${arg.VIASH_PAR}; do
-                 |    unset IFS
-                 |    VIASH_CHOWN_VARS+=("/viash_automount$$var")
-                 |  done
-                 |fi""".stripMargin
-            } else {
-              // |  ${chownCommand("\"/viash_automount$" + arg.VIASH_PAR + "\"")}
-              s"""
-                 |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-                 |  VIASH_CHOWN_VARS+=("/viash_automount$$${arg.VIASH_PAR}")
-                 |fi""".stripMargin
-            }
-          })
-
-        val chownParStr =
-          if (chownPars.isEmpty) ":"
-          else chownPars.mkString("").split("\n").mkString("\n  ")
-
         s"""
            |# change file ownership
            |function ViashPerformChown {
