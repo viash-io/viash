@@ -1,4 +1,6 @@
-package io.viash
+package io.viash.e2e.ns_build
+
+import io.viash._
 
 import io.viash.config.Config
 import io.viash.helpers.{Exec, IO}

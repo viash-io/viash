@@ -1,4 +1,6 @@
-package io.viash
+package io.viash.e2e.ns_test
+
+import io.viash._
 
 import io.viash.helpers.IO
 import org.scalatest.{BeforeAndAfterAll, FunSuite}

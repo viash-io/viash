@@ -1,4 +1,6 @@
-package io.viash
+package io.viash.e2e.test
+
+import io.viash._
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 
