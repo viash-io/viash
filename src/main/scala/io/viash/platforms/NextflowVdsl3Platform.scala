@@ -113,23 +113,22 @@ case class NextflowVdsl3Platform(
   }
 
   def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
-    val functionality = config.functionality
     val condir = containerDirective(config)
 
     // create main.nf file
     val mainFile = PlainFile(
       dest = Some("main.nf"),
-      text = Some(renderMainNf(functionality, condir))
+      text = Some(renderMainNf(config, condir))
     )
     val nextflowConfigFile = PlainFile(
       dest = Some("nextflow.config"),
-      text = Some(renderNextflowConfig(functionality, condir))
+      text = Some(renderNextflowConfig(config.functionality, condir))
     )
 
     // remove main
-    val otherResources = functionality.additionalResources
+    val otherResources = config.functionality.additionalResources
 
-    functionality.copy(
+    config.functionality.copy(
       resources = mainFile :: nextflowConfigFile :: otherResources
     )
   }
@@ -185,7 +184,8 @@ case class NextflowVdsl3Platform(
   }
 
   // interpreted from BashWrapper
-  def renderMainNf(functionality: Functionality, containerDirective: Option[DockerImageInfo]): String = {
+  def renderMainNf(config: Config, containerDirective: Option[DockerImageInfo]): String = {
+    val functionality = config.functionality
     
     /************************* HEADER *************************/
     val header = Helper.generateScriptHeader(functionality)
@@ -239,7 +239,7 @@ case class NextflowVdsl3Platform(
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
     val dirJson = directivesToJson.asJson.dropEmptyRecursively
     val dirJson2 = if (dirJson.isNull) Json.obj() else dirJson
-    val funJson = functionality.asJson.dropEmptyRecursively
+    val funJson = config.asJson.dropEmptyRecursively
     val funJsonStr = jsonPrinter.print(funJson)
       .replace("\\\\", "\\\\\\\\")
       .replace("\\\"", "\\\\\"")
@@ -263,9 +263,7 @@ case class NextflowVdsl3Platform(
       |// DEFINE CUSTOM CODE
       |
       |// functionality metadata
-      |thisConfig = processConfig([
-      |  functionality: jsonSlurper.parseText('''$funJsonStr''')
-      |])
+      |thisConfig = processConfig(jsonSlurper.parseText('''$funJsonStr'''))
       |
       |thisScript = '''$executionCode'''
       |
@@ -290,6 +288,9 @@ case class NextflowVdsl3Platform(
       |  // apply a map over the passthrough elements of a tuple (i.e. the tuple excl. the first two elements)
       |  // example: { pt -> pt.drop(1) }
       |  mapPassthrough: null,
+      |  // filter the channel
+      |  // example: { tup -> tup[0] == "foo" }
+      |  filter: null,
       |  // rename keys in the data field of the tuple (i.e. the second element)
       |  // example: [ "new_key": "old_key" ]
       |  renameKeys: null,

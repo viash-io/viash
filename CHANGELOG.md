@@ -31,6 +31,20 @@
     .platforms[.type == 'docker'].target_image_source := 'https://github.com/viash-io/viash'
   ```
 
+* `NextflowPlatform`: Added a `filter` processing argument to filter the incoming channel after 
+  the `map`, `mapData`, `mapId` and `mapPassthrough` have been applied.
+
+* `NextflowPlatform`: Added the Viash config to the Nextflow module for later introspection.
+  For example:
+  ```groovy
+  include { foo } from "$targetDir/path/foo/main.nf"
+
+  foo.run(filter: { tup ->
+    def preferredNormalization = foo.config.functionality.info.preferred_normalization
+    tup.normalization_id == preferredNormalization
+  })
+  ```
+
 ## MINOR CHANGES
 
 * Config inheritance: Allow specifying the order of config inheritance (#289).
