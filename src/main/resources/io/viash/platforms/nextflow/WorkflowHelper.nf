@@ -523,12 +523,17 @@ def paramsToList(params, config) {
     // combine params
     def combinedArgs = defaultArgs + paramArgs + multiParam
 
-    // check whether required arguments exist
-    config.functionality.allArguments
-      .findAll { it.required }
-      .forEach { par ->
-        assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
-      }
+    if (workflow.stubRun) {
+      // if stub run, explicitly add an id if missing
+      combinedArgs = [id: "stub"] + combinedArgs
+    } else {
+      // else check whether required arguments exist
+      config.functionality.allArguments
+        .findAll { it.required }
+        .forEach { par ->
+          assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
+        }
+    }
     
     // process arguments
     def inputs = config.functionality.allArguments
