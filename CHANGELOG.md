@@ -84,6 +84,9 @@
       description: "A h5ad file"
   ```
 
+* `viash run`, `viash test`: When running or testing a component, Viash will add an extension
+  to the temporary file that is created. Before: `/tmp/viash-run-wdckjnce`, now: `/tmp/viash-run-wdckjnce.py`.
+
 ## BUG FIXES
 
 * `BashWrapper`: Don't overwrite meta values when additional arguments are provided.
