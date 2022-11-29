@@ -84,6 +84,12 @@
       description: "A h5ad file"
   ```
 
+* NextflowPlatform: Add `DataflowHelper.nf` as a retrievable resource in Viash.
+
+* NextflowPlatform: During a stubrun, argument requirements are turned off and
+  the `publishDir`, `cpus`, `memory`, and `label` directives are also removed 
+  from the process.
+
 ## BUG FIXES
 
 * `BashWrapper`: Don't overwrite meta values when additional arguments are provided.
