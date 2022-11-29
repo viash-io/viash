@@ -831,13 +831,18 @@ def workflowFactory(Map args) {
         // remove arguments with explicit null values
         combinedArgs.removeAll{it.value == null}
 
-        // check whether required arguments exist
-        thisConfig.functionality.allArguments
-          .forEach { par ->
-            if (par.required) {
-              assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
+        if (workflow.stubRun) {
+          // add id if missing
+          combinedArgs = [id: 'stub'] + combinedArgs
+        } else {
+          // check whether required arguments exist
+          thisConfig.functionality.allArguments
+            .forEach { par ->
+              if (par.required) {
+                assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
+              }
             }
-          }
+        }
 
         // TODO: check whether parameters have the right type
 
