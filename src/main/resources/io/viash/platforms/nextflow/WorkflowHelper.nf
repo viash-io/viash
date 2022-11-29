@@ -238,7 +238,7 @@ def processConfig(config) {
 }
 
 def readConfig(file) {
-  def config = readYaml(file)
+  def config = readYaml(file ?: "$projectDir/config.vsh.yaml")
   processConfig(config)
 }
 
