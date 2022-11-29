@@ -171,7 +171,7 @@ object BashWrapper {
         // whether it needs to be a specific path
         val scriptSetup =
           s"""
-            |tempscript=\\$$(mktemp "$$VIASH_META_TEMP_DIR/viash-run-${functionality.name}-XXXXXX.${res.companion.extension}")
+            |tempscript=\\$$(mktemp "$$VIASH_META_TEMP_DIR/viash-run-${functionality.name}-XXXXXX").${res.companion.extension}
             |function clean_up {
             |  rm "\\$$tempscript"
             |}
