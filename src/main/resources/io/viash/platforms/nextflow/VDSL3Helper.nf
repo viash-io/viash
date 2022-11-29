@@ -486,6 +486,11 @@ def processProcessArgs(Map args) {
     }
   }
 
+  // if this is a stubrun, remove certain directives?
+  if (workflow.stubRun) {
+    processArgs.directives.keySet().removeAll(["publishDir", "cpus", "memory", "label"])
+  }
+
   for (nam in [ "map", "mapId", "mapData", "mapPassthrough", "filter" ]) {
     if (processArgs.containsKey(nam) && processArgs[nam]) {
       assert processArgs[nam] instanceof Closure : "Expected process argument '$nam' to be null or a Closure. Found: class ${processArgs[nam].getClass()}"
@@ -831,13 +836,18 @@ def workflowFactory(Map args) {
         // remove arguments with explicit null values
         combinedArgs.removeAll{it.value == null}
 
-        // check whether required arguments exist
-        thisConfig.functionality.allArguments
-          .forEach { par ->
-            if (par.required) {
-              assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
+        if (workflow.stubRun) {
+          // add id if missing
+          combinedArgs = [id: 'stub'] + combinedArgs
+        } else {
+          // check whether required arguments exist
+          thisConfig.functionality.allArguments
+            .forEach { par ->
+              if (par.required) {
+                assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
+              }
             }
-          }
+        }
 
         // TODO: check whether parameters have the right type
 

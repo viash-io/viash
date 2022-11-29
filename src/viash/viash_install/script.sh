@@ -53,7 +53,7 @@ function clean_up {
 trap clean_up EXIT
 
 
-if [[ "$par_tag" == "develop" || "$par_tag" == ^@.*$ ]]; then
+if [[ "$par_tag" == "develop" || "$par_tag" =~ ^@.*$ ]]; then
   used_tag=${par_tag#@}
 
   # Download Viash helper scripts

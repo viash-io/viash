@@ -84,8 +84,16 @@
       description: "A h5ad file"
   ```
 
+
 * `viash run`, `viash test`: When running or testing a component, Viash will add an extension
   to the temporary file that is created. Before: `/tmp/viash-run-wdckjnce`, now: `/tmp/viash-run-wdckjnce.py`.
+
+* NextflowPlatform: Add `DataflowHelper.nf` as a retrievable resource in Viash.
+
+* NextflowPlatform: During a stubrun, argument requirements are turned off and
+  the `publishDir`, `cpus`, `memory`, and `label` directives are also removed 
+  from the process.
+
 
 ## BUG FIXES
 
