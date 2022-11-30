@@ -5,12 +5,20 @@ allows for better runtime introspection of Nextflow VDSL3 modules.
 
 The most notable changes are:
 
+* You can switch versions of Viash using the `VIASH_VERSION` 
+  environment variable! Example:
+  
+  ```bash
+  VIASH_VERSION=0.6.0 viash --version
+  ```
+
 * Introducing Viash project config files as an experimental feature.
   It allows storing project-related settings in a `_viash.yaml` 
   config file which you should store at the root of your repository.
   Example:
 
   ```yaml
+  viash_version: 0.6.4
   source: src
   target: target
   config_mods: |

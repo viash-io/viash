@@ -21,20 +21,48 @@ import java.nio.file.{Files, Path}
 
 import io.circe.yaml.parser
 
+import io.viash.schemas._
 import io.viash.helpers.data_structures.OneOrMore
 import io.viash.helpers.IO
 import io.viash.helpers.circe._
 import java.nio.file.Paths
+import io.circe.Json
+import java.net.URI
 
+@description("A Viash project configuration file. It's name should be `_viash.yaml`.")
+@example(
+  """viash_version: 0.6.4
+    §source: src
+    §target: target
+    §config_mods: |
+    §  .platforms[.type == 'docker'].target_registry := 'ghcr.io'
+    §  .platforms[.type == 'docker'].target_organization := 'viash-io'
+    §  .platforms[.type == 'docker'].namespace_separator := '/'
+    §  .platforms[.type == 'docker'].target_image_source := 'https://github.com/viash-io/viash'
+    §""".stripMargin('§'), "yaml"
+)
+@since("Viash 0.6.4")
 case class ViashProject(
-  // viash_version: Option[String]
-  // todo: turn this into paths
+  @description("Which version of Viash to use.")
+  @example("viash_versions: 0.6.4", "yaml")
+  viash_version: Option[String] = None,
+
+  // todo: turn this into path
+  @description("Which source directory to use for the `viash ns` commands.")
+  @example("source: src", "yaml")
   source: Option[String] = None,
+
+  // todo: turn this into path
+  @description("Which target directory to use for `viash ns build`.")
+  @example("target: target", "yaml")
   target: Option[String] = None,
-  // TODO: make this a ConfigMods object
+
+  // todo: make this a ConfigMods object
+  // todo: link to config mods docs
+  @description("Which config mods to apply.")
+  @example("config_mods: \".functionality.name := 'foo'\"", "yaml")
   config_mods: OneOrMore[String] = Nil
 )
-// todo: resolve git in project?
 
 object ViashProject {
 
@@ -58,6 +86,35 @@ object ViashProject {
     }
   }
 
+  private def parsingErrorHandler[C](uri: Option[URI]) = {
+    (e: Exception) => {
+      val uriStr = uri.map(u => s" '{u}'").getOrElse("")
+      Console.err.println(s"${Console.RED}Error parsing$uriStr.${Console.RESET}\nDetails:")
+      throw e
+    }
+  }
+
+  /**
+    * Read the text from a Path and convert to a Json
+    *
+    * @param path The path to read out
+    * @return A Json
+    */
+  def readJson(path: Path): Json = {
+    // make URI
+    val uri = path.toUri()
+
+    // read yaml as string
+    val projStr = IO.read(uri)
+    val json0 = parser.parse(projStr).fold(parsingErrorHandler(Some(uri)), identity)
+
+    /* JSON 1: after inheritance */
+    // apply inheritance if need be
+    val json1 = json0.inherit(uri)
+
+    json1
+  }
+
   /**
     * Read the text from a Path and convert to a ViashProject
     *
@@ -67,27 +124,11 @@ object ViashProject {
   def read(
     path: Path
   ): ViashProject = {
-    // make URI
-    val uri = path.toUri()
-
-    // read yaml as string
-    val projStr = IO.read(uri)
-    
-    /* JSON 0: parsed from string */
-    // parse yaml into Json
-    def parsingErrorHandler[C](e: Exception): C = {
-      Console.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
-      throw e
-    }
-    val json0 = parser.parse(projStr).fold(parsingErrorHandler, identity)
-
-    /* JSON 1: after inheritance */
-    // apply inheritance if need be
-    val json1 = json0.inherit(uri)
+    val json = readJson(path)
 
     /* PROJECT 0: converted from json */
     // convert Json into ViashProject
-    val proj0 = json1.as[ViashProject].fold(parsingErrorHandler, identity)
+    val proj0 = json.as[ViashProject].fold(parsingErrorHandler(Some(path.toUri())), identity)
 
 
     /* PROJECT 1: make resources absolute */
