@@ -68,8 +68,12 @@ object Main {
       
       val exitCode = 
         viashVersion match {
-          case Some(version) => runWithVersion(args, Some(workingDir), version)
-          case None => internalMain(args, workingDir = Some(workingDir))
+          // don't use `runWithVersion()` if the version is the same
+          // as this Viash or if the variable is explicitly set to `-`.
+          case Some(version) if version != "-" && version != Main.version =>
+            runWithVersion(args, Some(workingDir), version)
+          case _ =>
+            internalMain(args, workingDir = Some(workingDir))
         }
 
       System.exit(exitCode)
@@ -107,7 +111,12 @@ object Main {
     
     val command = Array(path.toString) ++ args
     
-    val out = Exec.runCatch(command, cwd = workingDir.map(_.toFile), loggers = List(println))
+    val out = Exec.runCatch(
+      command,
+      cwd = workingDir.map(_.toFile),
+      loggers = List(println),
+      extraEnv = List("VIASH_VERSION" -> "-")
+    )
     
     out.exitValue
   }
