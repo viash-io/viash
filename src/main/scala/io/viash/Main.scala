@@ -33,16 +33,45 @@ import io.viash.platforms.Platform
 import io.viash.project.ViashProject
 import io.viash.cli.DocumentedSubcommand
 import java.nio.file.Path
+import io.viash.helpers.Exec
+import java.nio.file.Files
+import java.net.URI
 
 object Main {
   private val pkg = getClass.getPackage
   val name: String = if (pkg.getImplementationTitle != null) pkg.getImplementationTitle else "viash"
   val version: String = if (pkg.getImplementationVersion != null) pkg.getImplementationVersion else "test"
 
+  val viashHome = Paths.get(sys.env.getOrElse("VIASH_HOME", sys.env("HOME") + "/.viash"))
+
+  def detectVersion(workingDir: Option[Path]): Option[String] = {
+    // if VIASH_VERSION is defined, use that
+    if (sys.env.get("VIASH_VERSION").isDefined) {
+      sys.env.get("VIASH_VERSION")
+    } else {
+      // else look for project file in working dir
+      // and try to read as json
+      workingDir
+        .flatMap(ViashProject.findProjectFile)
+        .map(ViashProject.readJson)
+        .flatMap(js => {
+          js.asObject.flatMap(_.apply("viash_version")).flatMap(_.asString)
+        })
+    }
+  }
+
   def main(args: Array[String]): Unit = {
     try {
       val workingDir = Paths.get(System.getProperty("user.dir"))
-      val exitCode = internalMain(args, workingDir = Some(workingDir))
+
+      val viashVersion = detectVersion(Some(workingDir))
+      
+      val exitCode = 
+        viashVersion match {
+          case Some(version) => runWithVersion(args, Some(workingDir), version)
+          case None => internalMain(args, workingDir = Some(workingDir))
+        }
+
       System.exit(exitCode)
     } catch {
       case e @ ( _: FileNotFoundException | _: NoSuchFileException | _: MissingResourceFileException ) =>
@@ -61,11 +90,31 @@ object Main {
         System.exit(1)
     }
   }
+
+  def runWithVersion(args: Array[String], workingDir: Option[Path] = None, version: String): Int = {
+    val path = viashHome.resolve("releases").resolve(version).resolve("viash")
+
+    if (!Files.exists(path)) {
+      // todo: be able to use 0.7.x notation to get the latest 0.7 version?
+      // todo: allow 'latest' and '@branch' notation to build viash?
+      val uri = new URI(s"https://github.com/viash-io/viash/releases/download/$version/viash")
+      val parent = path.getParent()
+      if (!Files.exists(parent)) {
+        Files.createDirectories(parent)
+      }
+      IO.write(uri, path, true, Some(true))
+    }
+    
+    val command = Array(path.toString) ++ args
+    
+    val out = Exec.runCatch(command, cwd = workingDir.map(_.toFile), loggers = List(println))
+    
+    out.exitValue
+  }
+
   def internalMain(args: Array[String], workingDir: Option[Path] = None): Int = {
     // try to find project settings
     val proj0 = workingDir.map(ViashProject.findViashProject(_)).getOrElse(ViashProject())
-    
-    // TODO: switch viash version if need be
 
     // strip arguments meant for viash run
     val (viashArgs, runArgs) = {
@@ -80,7 +129,6 @@ object Main {
     val cli = new CLIConf(viashArgs) 
     
     // see if there are project overrides passed to the viash command
-    // TODO: decide if we ever want to remove the --src and --target parameters from ViashNs
     val proj1 = cli.subcommands.last match {
       case x: ViashCommand => 
         proj0.copy(
