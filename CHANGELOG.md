@@ -20,18 +20,18 @@ The most notable changes are:
     .platforms[.type == 'docker'].target_image_source := 'https://github.com/viash-io/viash'
   ```
 
-* It's now possible to specify in which order Viash will resolve
-  Viash configs with inheritance. Example:
+* It's now possible to specify in which order Viash will merge
+  Viash configs. Example:
 
   ```yaml
   functionality:
     name: foo
     arguments:
-      - __inherits__: obj_input.yaml
+      - __merge__: obj_input.yaml
         name: "--one"
-      - __inherits__: [., obj_input.yaml]
+      - __merge__: [., obj_input.yaml]
         name: "--two"
-      - __inherits__: [obj_input.yaml, .]
+      - __merge__: [obj_input.yaml, .]
        name: "--three"
   ```
 
@@ -56,6 +56,8 @@ Please take note of the following breaking changes:
 * `FileArgument`: Default setting of `must_exist` was changed from `false` to `true`. 
   As such, the component will throw an error by default if an input file or output file
   is missing (#295).
+
+* Config merging: `__inherits__` has been renamed to `__merge__`.
 
 ## NEW FUNCTIONALITY
 
@@ -115,7 +117,7 @@ file exists and create it if necessary (#295).
   ```
 
 
-* Config inheritance: Allow specifying the order of config inheritance (#289).
+* Config merging: Allow specifying the order in which Viash will merge configs (#289).
   If `.` is not in the list of inherited objects, it will be added at the end.
 
   Contents of `config.vsh.yaml`:
@@ -123,11 +125,11 @@ file exists and create it if necessary (#295).
   functionality:
     name: foo
     arguments:
-      - __inherits__: obj_input.yaml
+      - __merge__: obj_input.yaml
         name: "--one"
-      - __inherits__: [., obj_input.yaml]
+      - __merge__: [., obj_input.yaml]
         name: "--two"
-      - __inherits__: [obj_input.yaml, .]
+      - __merge__: [obj_input.yaml, .]
         name: "--three"
   ```
 

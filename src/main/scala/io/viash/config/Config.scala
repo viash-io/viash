@@ -79,15 +79,15 @@ case class Config(
 
   @description(
     """Config inheritance by including YAML partials. This is useful for defining common APIs in
-      |separate files. `__inherits__` can be used in any level of the YAML. For example,
+      |separate files. `__merge__` can be used in any level of the YAML. For example,
       |not just in the config but also in the functionality or any of the platforms.
       |
       |WARNING: this argument is an EXPERIMENTAL feature. Changes to the API are expected.
       |""".stripMargin)
-  @example("__inherits__: ../api/common_interface.yaml", "yaml")
+  @example("__merge__: ../api/common_interface.yaml", "yaml")
   @since("Viash 0.6.3")
   @undocumented
-  val `__inherits__`: Option[File] = None
+  val `__merge__`: Option[File] = None
   
 
   /**
@@ -142,7 +142,7 @@ object Config {
     val js2 = js1.inherit(uri)
 
     if (js1 != js2) {
-      Console.err.println("Warning: Config inheritance (__inherits__) is an experimental feature. Changes to the API are expected.")
+      Console.err.println("Warning: Config inheritance (__merge__) is an experimental feature. Changes to the API are expected.")
     }
 
     // apply preparse config mods
