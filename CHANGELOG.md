@@ -25,14 +25,14 @@ The most notable changes are:
 
   ```yaml
   functionality:
-  name: foo
-  arguments:
-    - __inherits__: obj_input.yaml
-      name: "--one"
-    - __inherits__: [., obj_input.yaml]
-      name: "--two"
-    - __inherits__: [obj_input.yaml, .]
-      name: "--three"
+    name: foo
+    arguments:
+      - __inherits__: obj_input.yaml
+        name: "--one"
+      - __inherits__: [., obj_input.yaml]
+        name: "--two"
+      - __inherits__: [obj_input.yaml, .]
+       name: "--three"
   ```
 
 Please take note of the following breaking changes:
@@ -121,14 +121,14 @@ file exists and create it if necessary (#295).
   Contents of `config.vsh.yaml`:
   ```yaml
   functionality:
-  name: foo
-  arguments:
-    - __inherits__: obj_input.yaml
-      name: "--one"
-    - __inherits__: [., obj_input.yaml]
-      name: "--two"
-    - __inherits__: [obj_input.yaml, .]
-      name: "--three"
+    name: foo
+    arguments:
+      - __inherits__: obj_input.yaml
+        name: "--one"
+      - __inherits__: [., obj_input.yaml]
+        name: "--two"
+      - __inherits__: [obj_input.yaml, .]
+        name: "--three"
   ```
 
   Contents of `obj_input.yaml`:
