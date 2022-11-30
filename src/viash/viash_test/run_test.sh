@@ -11,9 +11,15 @@ tsv=output.tsv
 
 # 1. Run component with default arguments
 # Run component
-./$meta_functionality_name \
+set +e
+$meta_executable \
     --verbose \
     >$defaults_output
+
+exit_code="$?"
+set -e
+
+[ $exit_code -ne 1 ] && echo "Expected exit code 1 but received $exit_code" && exit 1
 
 # Check if defaults output exists
 [[ ! -f $defaults_output ]] && echo "Default: Test output file could not be found!" && exit 1
@@ -26,7 +32,9 @@ grep -q "viash ns test --src src --parallel --config_mod .functionality.version 
 cp -r src $alt_src
 
 # Run component
-./$meta_functionality_name \
+unset exit_code
+set +e
+$meta_executable \
     --verbose \
     --src $alt_src \
     --platform native \
@@ -41,8 +49,12 @@ cp -r src $alt_src
     --max_threads 8 \
     --config_mod '.functionality.version := "5.0"' \
     --log $log \
-    --tsv $tsv
->$alt_output
+    --tsv $tsv \
+    >$alt_output
+
+exit_code="$?"
+set -e
+[ $exit_code -ne 1 ] && echo "Expected exit code 0 but received $exit_code" && exit 1
 
 # Check if alt output exists
 [[ ! -f $alt_output ]] && echo "Alt: Test output file could not be found!" && exit 1

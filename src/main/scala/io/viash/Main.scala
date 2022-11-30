@@ -18,9 +18,11 @@
 package io.viash
 
 import java.nio.file.Paths
+import java.nio.file.FileSystemNotFoundException
 import config.Config
+import helpers.IO
 import helpers.Scala._
-import cli.{CLIConf, ViashCommand, ViashNs}
+import cli.{CLIConf, ViashCommand, ViashNs, ViashNsBuild}
 
 import java.io.File
 import java.io.FileNotFoundException
@@ -28,15 +30,48 @@ import java.nio.file.NoSuchFileException
 import io.viash.helpers.MissingResourceFileException
 import io.viash.helpers.status._
 import io.viash.platforms.Platform
+import io.viash.project.ViashProject
+import io.viash.cli.DocumentedSubcommand
+import java.nio.file.Path
+import io.viash.helpers.Exec
+import java.nio.file.Files
+import java.net.URI
 
 object Main {
   private val pkg = getClass.getPackage
   val name: String = if (pkg.getImplementationTitle != null) pkg.getImplementationTitle else "viash"
   val version: String = if (pkg.getImplementationVersion != null) pkg.getImplementationVersion else "test"
 
+  val viashHome = Paths.get(sys.env.getOrElse("VIASH_HOME", sys.env("HOME") + "/.viash"))
+
+  def detectVersion(workingDir: Option[Path]): Option[String] = {
+    // if VIASH_VERSION is defined, use that
+    if (sys.env.get("VIASH_VERSION").isDefined) {
+      sys.env.get("VIASH_VERSION")
+    } else {
+      // else look for project file in working dir
+      // and try to read as json
+      workingDir
+        .flatMap(ViashProject.findProjectFile)
+        .map(ViashProject.readJson)
+        .flatMap(js => {
+          js.asObject.flatMap(_.apply("viash_version")).flatMap(_.asString)
+        })
+    }
+  }
+
   def main(args: Array[String]): Unit = {
     try {
-      val exitCode = internalMain(args)
+      val workingDir = Paths.get(System.getProperty("user.dir"))
+
+      val viashVersion = detectVersion(Some(workingDir))
+      
+      val exitCode = 
+        viashVersion match {
+          case Some(version) => runWithVersion(args, Some(workingDir), version)
+          case None => internalMain(args, workingDir = Some(workingDir))
+        }
+
       System.exit(exitCode)
     } catch {
       case e @ ( _: FileNotFoundException | _: NoSuchFileException | _: MissingResourceFileException ) =>
@@ -55,7 +90,33 @@ object Main {
         System.exit(1)
     }
   }
-  def internalMain(args: Array[String]): Int = {
+
+  def runWithVersion(args: Array[String], workingDir: Option[Path] = None, version: String): Int = {
+    val path = viashHome.resolve("releases").resolve(version).resolve("viash")
+
+    if (!Files.exists(path)) {
+      // todo: be able to use 0.7.x notation to get the latest 0.7 version?
+      // todo: allow 'latest' and '@branch' notation to build viash?
+      val uri = new URI(s"https://github.com/viash-io/viash/releases/download/$version/viash")
+      val parent = path.getParent()
+      if (!Files.exists(parent)) {
+        Files.createDirectories(parent)
+      }
+      IO.write(uri, path, true, Some(true))
+    }
+    
+    val command = Array(path.toString) ++ args
+    
+    val out = Exec.runCatch(command, cwd = workingDir.map(_.toFile), loggers = List(println))
+    
+    out.exitValue
+  }
+
+  def internalMain(args: Array[String], workingDir: Option[Path] = None): Int = {
+    // try to find project settings
+    val proj0 = workingDir.map(ViashProject.findViashProject(_)).getOrElse(ViashProject())
+
+    // strip arguments meant for viash run
     val (viashArgs, runArgs) = {
         if (args.length > 0 && args(0) == "run") {
           args.span(_ != "--")
@@ -64,11 +125,33 @@ object Main {
         }
     }
 
-    val cli = new CLIConf(viashArgs)
+    // parse arguments
+    val cli = new CLIConf(viashArgs) 
+    
+    // see if there are project overrides passed to the viash command
+    val proj1 = cli.subcommands.last match {
+      case x: ViashCommand => 
+        proj0.copy(
+          config_mods = proj0.config_mods ::: x.config_mods()
+        )
+      case x: ViashNs with ViashNsBuild =>
+        proj0.copy(
+          source = x.src.toOption orElse proj0.source orElse Some("src"),
+          target = x.target.toOption orElse proj0.target orElse Some("target"),
+          config_mods = proj0.config_mods ::: x.config_mods()
+        )
+      case x: ViashNs =>
+        proj0.copy(
+          source = x.src.toOption orElse proj0.source orElse Some("src"),
+          config_mods = proj0.config_mods ::: x.config_mods()
+        )
+      case _ => proj0
+    }
 
+    // process commands
     cli.subcommands match {
       case List(cli.run) =>
-        val (config, platform) = readConfig(cli.run)
+        val (config, platform) = readConfig(cli.run, project = proj1)
         ViashRun(
           config = config,
           platform = platform.get, 
@@ -78,19 +161,17 @@ object Main {
           memory = cli.run.memory.toOption
         )
       case List(cli.build) =>
-        val (config, platform) = readConfig(cli.build)
+        val (config, platform) = readConfig(cli.build, project = proj1)
         ViashBuild(
           config = config,
           platform = platform.get,
           output = cli.build.output(),
-          printMeta = cli.build.printMeta(),
-          writeMeta = cli.build.writeMeta(),
           setup = cli.build.setup.toOption,
           push = cli.build.push()
         )
         0 // Exceptions are thrown when something bad happens, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.test) =>
-        val (config, platform) = readConfig(cli.test)
+        val (config, platform) = readConfig(cli.test, project = proj1)
         ViashTest(
           config,
           platform = platform.get,
@@ -100,19 +181,18 @@ object Main {
         )
         0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
-        val configs = readConfigs(cli.namespace.build)
+        val configs = readConfigs(cli.namespace.build, project = proj1)
         ViashNamespace.build(
           configs = configs,
-          target = cli.namespace.build.target(),
+          target = proj1.target.get,
           setup = cli.namespace.build.setup.toOption,
           push = cli.namespace.build.push(),
           parallel = cli.namespace.build.parallel(),
-          writeMeta = cli.namespace.build.writeMeta(),
           flatten = cli.namespace.build.flatten()
         )
         0 // Might be possible to be improved further.
       case List(cli.namespace, cli.namespace.test) =>
-        val configs = readConfigs(cli.namespace.test)
+        val configs = readConfigs(cli.namespace.test, project = proj1)
         val testResults = ViashNamespace.test(
           configs = configs,
           parallel = cli.namespace.test.parallel(),
@@ -126,7 +206,8 @@ object Main {
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.list) =>
         val configs = readConfigs(
-          cli.namespace.list, 
+          cli.namespace.list,
+          project = proj1,
           addOptMainScript = false, 
           applyPlatform = false
         )
@@ -138,7 +219,11 @@ object Main {
         val errors = configs.flatMap(_.right.toOption).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.exec) =>
-        val configs = readConfigs(cli.namespace.exec, applyPlatform = cli.namespace.exec.applyPlatform())
+        val configs = readConfigs(
+          cli.namespace.exec, 
+          project = proj1, 
+          applyPlatform = cli.namespace.exec.applyPlatform()
+        )
         ViashNamespace.exec(
           configs = configs,
           command = cli.namespace.exec.cmd(),
@@ -149,7 +234,8 @@ object Main {
         if (errors > 0) 1 else 0
       case List(cli.config, cli.config.view) =>
         val (config, _) = readConfig(
-          subcommand = cli.config.view,
+          cli.config.view,
+          project = proj1,
           addOptMainScript = false,
           applyPlatform = false
         )
@@ -161,7 +247,8 @@ object Main {
         0
       case List(cli.config, cli.config.inject) =>
         val (config, _) = readConfig(
-          subcommand = cli.config.inject,
+          cli.config.inject,
+          project = proj1,
           addOptMainScript = false,
           applyPlatform = false
         )
@@ -204,13 +291,15 @@ object Main {
 
   def readConfig(
     subcommand: ViashCommand,
+    project: ViashProject,
     addOptMainScript: Boolean = true,
     applyPlatform: Boolean = true
   ): (Config, Option[Platform]) = {
+    
     val config = Config.read(
       configPath = subcommand.config(),
       addOptMainScript = addOptMainScript,
-      configMods = subcommand.config_mods()
+      configMods = project.config_mods
     )
     if (applyPlatform) {
       processConfigWithPlatform(
@@ -224,15 +313,16 @@ object Main {
   
   def readConfigs(
     subcommand: ViashNs,
+    project: ViashProject,
     addOptMainScript: Boolean = true,
     applyPlatform: Boolean = true
   ): List[Either[(Config, Option[Platform]), Status]] = {
-    val source = subcommand.src()
+    val source = project.source.get
     val query = subcommand.query.toOption
     val queryNamespace = subcommand.query_namespace.toOption
     val queryName = subcommand.query_name.toOption
     val platformStr = subcommand.platform.toOption
-    val configMods = subcommand.config_mods()
+    val configMods = project.config_mods
 
     val configs = Config.readConfigs(
       source = source,
@@ -281,7 +371,5 @@ object Main {
       }}
     }
   }
-
   
-
 }

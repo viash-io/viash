@@ -49,12 +49,12 @@ functionality:
       multiple: true
   resources:
     - type: scala_script
-      path: ./script.scala
+      path: script.scala
   test_resources:
     - type: bash_script
-      path: tests/check_outputs.sh
+      path: test.sh
 platforms:
   - type: native
   - type: docker
-    image: denvazh/scala:2.11.8
+    image: hseeberger/scala-sbt:eclipse-temurin-11.0.14.1_1.6.2_2.13.8
   - type: nextflow

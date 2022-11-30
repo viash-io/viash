@@ -37,7 +37,6 @@ object ViashNamespace {
     setup: Option[String] = None,
     push: Boolean = false,
     parallel: Boolean = false,
-    writeMeta: Boolean = true,
     flatten: Boolean = false
   ) {
     val configs2 = if (parallel) configs.par else configs
@@ -62,10 +61,8 @@ object ViashNamespace {
             config = conf,
             platform = platform,
             output = out,
-            namespace = conf.functionality.namespace,
             setup = setup,
-            push = push,
-            writeMeta = writeMeta
+            push = push
           )
           Right(Success)
         }
@@ -178,7 +175,7 @@ object ViashNamespace {
 
             // print messages
             val results = setupRes.toList ::: testResults
-            for (test ← results) {
+            for (test <- results) {
               val (col, msg) = {
                 if (test.exitValue > 0) {
                   (Console.RED, "ERROR")
