@@ -866,13 +866,15 @@ def workflowFactory(Map args) {
             } else {
               inputFiles = []
             }
-            // throw error when an input file doesn't exist
-            inputFiles.each{ file -> 
-              assert file.exists() :
-                "Error in module '${key}' id '${id}' argument '${par.plainName}'.\n" +
-                "  Required input file does not exist.\n" +
-                "  Path: '$file'.\n" +
-                "  Expected input file to exist"
+            if (!workflow.stubRun) {
+              // throw error when an input file doesn't exist
+              inputFiles.each{ file -> 
+                assert file.exists() :
+                  "Error in module '${key}' id '${id}' argument '${par.plainName}'.\n" +
+                  "  Required input file does not exist.\n" +
+                  "  Path: '$file'.\n" +
+                  "  Expected input file to exist"
+              }
             }
             inputFiles 
           } 
