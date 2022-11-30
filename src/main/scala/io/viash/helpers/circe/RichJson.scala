@@ -106,19 +106,26 @@ class RichJson(json: Json) {
     }
   }
 
-  private val inheritsTag = "__inherits__"
+  private val mergeTag = "__merge__"
 
   /**
    * Recursively resolve inheritance within Json objects.
    * 
-   * If an object has a field named "__inherits__", that file will be read
+   * If an object has a field named "__merge__", that file will be read
    * and be deep-merged with the object itself.
    */
   def inherit(uri: URI, stripInherits: Boolean = true): Json = {
     json match {
       case x if x.isObject =>
         val obj1 = x.asObject.get
-        val obj2 = obj1.apply(inheritsTag) match {
+        
+        // throw removal error
+        assert(
+          !obj1.contains("__includes__"), 
+          "__includes__ has been deprecated and removed. Please use __merge__ instead."
+        )
+
+        val obj2 = obj1.apply(mergeTag) match {
           case Some(y) if y.isString || y.isArray =>
             // get includes
             val inheritStrs0 = 
@@ -149,15 +156,15 @@ class RichJson(json: Json) {
             // remove inherits field from obj1 if so desired, else replace with absolute paths
             val self = Json.fromJsonObject(
               if (stripInherits) {
-                obj1.remove(inheritsTag)
+                obj1.remove(mergeTag)
               } else {
-                // replace __inherits__ with absolute path using deepMerge
+                // replace __merge__ with absolute path using deepMerge
                 val uriJsons = uris.map{
                   case None => Json.fromString(".")
                   case Some(uri) => Json.fromString(uri.toString)
                 }
                 val newInherits = Json.fromValues(uriJsons)
-                val newObj = JsonObject(inheritsTag -> newInherits)
+                val newObj = JsonObject(mergeTag -> newInherits)
                 obj1 deepMerge newObj
               }
             )
@@ -201,7 +208,7 @@ class RichJson(json: Json) {
   def stripInherits: Json = {
     json
       .mapObject{
-        _.mapValues(_.stripInherits).filter(_._1 != inheritsTag)
+        _.mapValues(_.stripInherits).filter(_._1 != mergeTag)
       }
       .mapArray(
         _.map(_.stripInherits)
