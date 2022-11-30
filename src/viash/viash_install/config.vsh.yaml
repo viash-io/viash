@@ -48,8 +48,9 @@ functionality:
     description: "A prefix path or directory for where to store the log files."
     default: ./.viash_log_
   - name: "--tools"
-    type: boolean_true
-    description: "Whether or not to install the latest release of viash-tools."
+    type: boolean
+    default: true
+    description: "Whether or not to install the latest release of the viash tools."
   resources:
     - type: bash_script
       path: script.sh
