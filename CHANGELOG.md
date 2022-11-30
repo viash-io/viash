@@ -12,6 +12,9 @@ The most notable changes are:
   VIASH_VERSION=0.6.0 viash --version
   ```
 
+  More importantly, you can specify the version of Viash you want
+  in a project config. See below for more info.
+
 * Introducing Viash project config files as an experimental feature.
   It allows storing project-related settings in a `_viash.yaml` 
   config file which you should store at the root of your repository.
@@ -68,6 +71,13 @@ Please take note of the following breaking changes:
 * Config merging: `__inherits__` has been renamed to `__merge__`.
 
 ## NEW FUNCTIONALITY
+
+* You can switch versions of Viash using the `VIASH_VERSION` 
+  environment variable (#304)! Example:
+  
+  ```bash
+  VIASH_VERSION=0.6.0 viash --version
+  ```
 
 * Traceability: Running `viash build` and `viash test` creates a `.config.vsh.yaml` file 
   by default, which contains the processed config of the component. As a side effect, 
