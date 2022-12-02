@@ -14,6 +14,7 @@ import scala.io.Source
 class MainNSListNativeSuite extends FunSuite{
   // path to namespace components
   private val nsPath = getClass.getResource("/testns/").getPath
+  private val scalaPath = getClass.getResource("/testscala/").getPath
 
   private val components = List(
     "ns_add",
@@ -43,18 +44,9 @@ class MainNSListNativeSuite extends FunSuite{
 
     val stdout2 = s"(?s)(\u001b.{4})?((Not all configs parsed successfully)|(All \\d+ configs parsed successfully)).*$$".r.replaceAllIn(stdout, "")
 
-    try {
-      val config = parser.parse(stdout2)
-        .fold(throw _, _.as[Array[Config]])
-        .fold(throw _, identity)
-
-      assert(config.isInstanceOf[Array[Config]])
-    }
-    catch {
-      case _: Throwable  => fail("Parsing the output from ns list should be parsable again")
-    }
-
-
+    val config = parser.parse(stdout2)
+      .fold(throw _, _.as[Array[Config]])
+      .fold(throw _, identity)
 
     // Do some sample checks whether relevant information is available. This certainly isn't comprehensive.
     // List of tuples with regex and expected count
@@ -67,6 +59,50 @@ class MainNSListNativeSuite extends FunSuite{
     for ((regex, count) <- samples) {
       assert(regex.r.findAllMatchIn(stdout).size == count, s"Expecting $count hits on stdout of regex [$regex]")
     }
+  }
+
+
+
+  // convert testbash
+  test("viash ns list filter by platform") {
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+    "ns", "list",
+      "-s", nsPath,
+      "-p", "docker"
+    )
+
+    assert(exitCode == 1)
+    val configs = parser.parse(stdout)
+      .fold(throw _, _.as[Array[Config]])
+      .fold(throw _, identity)
+    assert(configs.length == 0)
+  }
+  test("viash ns list filter by platform #2") {
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+    "ns", "list",
+      "-s", scalaPath,
+      "-p", "docker"
+    )
+
+    assert(exitCode == 0)
+
+    val configs = parser.parse(stdout)
+      .fold(throw _, _.as[Array[Config]])
+      .fold(throw _, identity)
+    assert(configs.length == 1)
+  }
+  test("viash ns list filter by platform #3") {
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+    "ns", "list",
+      "-s", scalaPath,
+      "-p", "not_exists"
+    )
+
+    assert(exitCode == 0)
+    val configs = parser.parse(stdout)
+      .fold(throw _, _.as[Array[Config]])
+      .fold(throw _, identity)
+    assert(configs.length == 0)
   }
 
 }

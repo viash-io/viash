@@ -15,7 +15,7 @@ jobs:
           - {name: 'macos_latest', os: macos-latest }
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Set up Nextflow
       if: runner.os == 'Linux'
