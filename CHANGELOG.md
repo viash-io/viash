@@ -1,3 +1,10 @@
+# Viash 0.6.5
+
+## BUG FIXES
+
+* `viash ns list`: When the `-p <platform>` is defined, filter the 
+  output by that platform.
+
 # Viash 0.6.4
 
 This release adds features related to managing Viash projects and 
