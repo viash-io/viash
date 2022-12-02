@@ -1,5 +1,8 @@
 # Viash 0.6.5
 
+A small update which fixes an issue with `viash ns list` that was
+introduced in Viash 0.6.3.
+
 ## BUG FIXES
 
 * `viash ns list`: When the `-p <platform>` is defined, filter the 
