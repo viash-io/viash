@@ -73,9 +73,9 @@ case class DockerPlatform(
   @example("target_tag: 0.5.0", "yaml")
   target_tag: Option[String] = None,
 
-  @description("The default namespace separator is \"_\".")
+  @description("The separator between the namespace and the name of the component, used for determining the image name.")
   @example("namespace_separator: \"+\"", "yaml")
-  namespace_separator: String = "_",
+  namespace_separator: String = "_/,
 
   @description("Enables or disables automatic volume mapping. Enabled when set to `Automatic` or disabled when set to `Manual`. Default: `Automatic`")
   resolve_volume: DockerResolveVolume = Automatic,

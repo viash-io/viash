@@ -1,3 +1,9 @@
+# Viash 0.6.6
+
+## BREAKING CHANGES
+
+* `DockerPlatform`: Change default namespace separator to `/`.
+
 # Viash 0.6.5
 
 A small update which fixes an issue with `viash ns list` that was
