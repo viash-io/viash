@@ -17,16 +17,17 @@
 
 package io.viash
 
+import java.io.File
+import java.io.FileNotFoundException
+import java.nio.file.NoSuchFileException
 import java.nio.file.Paths
 import java.nio.file.FileSystemNotFoundException
+import sys.process.{Process, ProcessLogger}
+
 import config.Config
 import helpers.IO
 import helpers.Scala._
 import cli.{CLIConf, ViashCommand, ViashNs, ViashNsBuild}
-
-import java.io.File
-import java.io.FileNotFoundException
-import java.nio.file.NoSuchFileException
 import io.viash.helpers.MissingResourceFileException
 import io.viash.helpers.status._
 import io.viash.platforms.Platform
@@ -109,16 +110,11 @@ object Main {
       IO.write(uri, path, true, Some(true))
     }
     
-    val command = Array(path.toString) ++ args
-    
-    val out = Exec.runCatch(
-      command,
+    Process(
+      Array(path.toString) ++ args,
       cwd = workingDir.map(_.toFile),
-      loggers = List(println),
-      extraEnv = List("VIASH_VERSION" -> "-")
-    )
-    
-    out.exitValue
+      extraEnv = List("VIASH_VERSION" -> "-"): _*
+    ).!
   }
 
   def internalMain(args: Array[String], workingDir: Option[Path] = None): Int = {
