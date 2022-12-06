@@ -1,3 +1,11 @@
+# Viash 0.6.6
+
+This release fixes an issue where stderr was being redirected to stdout.
+
+## BUG FIXES
+
+* Don't redirect stderr to stdout when switching Viash versions (#312).
+
 # Viash 0.6.5
 
 A small update which fixes an issue with `viash ns list` that was
