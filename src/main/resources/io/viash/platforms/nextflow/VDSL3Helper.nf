@@ -610,7 +610,7 @@ def processFactory(Map processArgs) {
   def stub = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "output" }
     .collect { par -> 
-      "\${ args.containsKey(\"${par.plainName}\") ? \"touch \\\"\" + (args[\"${par.plainName}\"] instanceof String ? args[\"${par.plainName}\"].replace(\"_*\", \"_0\") : args[\"${par.plainName}\"].join('\" \"')) + \"\\\"\" : \"\" }"
+      "\${ args.containsKey(\"${par.plainName}\") ? \"touch2 \\\"\" + (args[\"${par.plainName}\"] instanceof String ? args[\"${par.plainName}\"].replace(\"_*\", \"_0\") : args[\"${par.plainName}\"].join('\" \"')) + \"\\\"\" : \"\" }"
     }
     .join("\n")
 
@@ -633,6 +633,7 @@ def processFactory(Map processArgs) {
   |  tuple val("\$id"), val(passthrough)$outputPaths, optional: true
   |stub:
   |\"\"\"
+  |touch2() { mkdir -p "\\\$(dirname "\\\$1")" && touch "\\\$1" ; }
   |$stub
   |\"\"\"
   |script:$assertStr
