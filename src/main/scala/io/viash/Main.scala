@@ -214,7 +214,7 @@ object Main {
           cli.namespace.list,
           project = proj1,
           addOptMainScript = false, 
-          applyPlatform = false
+          applyPlatform = cli.namespace.list.platform.isDefined
         )
         ViashNamespace.list(
           configs = configs,

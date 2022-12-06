@@ -263,7 +263,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       banner(
         "viash ns build",
         "Build a namespace from many viash config files.",
-        "viash ns build [-n nmspc] [-s src] [-t target] [-p docker] [--setup] [---push] [--parallel] [--flatten]")
+        "viash ns build [-n nmspc] [-s src] [-t target] [-p docker] [--setup] [--push] [--parallel] [--flatten]")
 
       val setup = registerOpt[String](
         name = "setup",

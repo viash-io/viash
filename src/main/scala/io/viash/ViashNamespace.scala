@@ -248,6 +248,15 @@ object ViashNamespace {
     parseArgumentGroups: Boolean
   ) {
     val configs2 = configs.flatMap(_.left.toOption).map(_._1)
+    // val configs2 = configs.flatMap(_.left.toOption).flatMap{
+    //   case (config, Some(platform)) =>
+    //     if (config.platforms.exists(_.id == platform.id)) {
+    //       Some(config)
+    //     } else {
+    //       None
+    //     }
+    //   case (config, None) => Some(config)
+    // }
     ViashConfig.viewMany(configs2, format, parseArgumentGroups)
 
     printResults(configs.map(_.fold(fa => Success, fb => fb)), false, false)
