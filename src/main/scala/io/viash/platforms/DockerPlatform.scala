@@ -75,7 +75,7 @@ case class DockerPlatform(
 
   @description("The separator between the namespace and the name of the component, used for determining the image name.")
   @example("namespace_separator: \"+\"", "yaml")
-  namespace_separator: String = "_/,
+  namespace_separator: String = "/",
 
   @description("Enables or disables automatic volume mapping. Enabled when set to `Automatic` or disabled when set to `Manual`. Default: `Automatic`")
   resolve_volume: DockerResolveVolume = Automatic,
