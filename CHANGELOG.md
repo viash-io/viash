@@ -1,3 +1,9 @@
+# Viash 0.6.7
+
+## MINOR CHANGES
+
+* `NextflowPlatform`: Create directories during a stub run when output path is a nested directory.
+
 # Viash 0.6.6
 
 This release fixes an issue where stderr was being redirected to stdout.
