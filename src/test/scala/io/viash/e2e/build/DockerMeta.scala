@@ -52,7 +52,7 @@ class DockerMeta extends FunSuite with BeforeAndAfterAll {
       assert(exec.toFile.canExecute)
       
       // check meta
-      assert(meta.toFile.exists)
+      assert(meta.toFile.exists, meta.toString + " should exist")
       val metaStr = Source.fromFile(meta.toFile).getLines.mkString("\n")
 
       val viashVersion = io.viash.Main.version
@@ -121,7 +121,7 @@ class DockerMeta extends FunSuite with BeforeAndAfterAll {
       assert(exec.toFile.canExecute)
 
       // check meta
-      assert(meta.toFile.exists)
+      assert(meta.toFile.exists, meta.toString + " should exist")
       val metaStr = Source.fromFile(meta.toFile).getLines.mkString("\n")
 
       val viashVersion = io.viash.Main.version
