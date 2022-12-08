@@ -40,10 +40,8 @@ case class ScalaScript(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
+  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
     val quo = "\"'\"\"\"'\""
-    val argsAndMeta = functionality.getArgumentLikesGroupedByDest(includeMeta = true, filterInputs = true)
-
     val paramsCode = argsAndMeta.map { case (dest, params) =>
       val parClassTypes = params.map { par =>
       val classType = par match {

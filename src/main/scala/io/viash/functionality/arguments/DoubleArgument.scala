@@ -17,7 +17,8 @@
 
 package io.viash.functionality.arguments
 
-import io.viash.helpers.Circe.OneOrMore
+import io.circe.Json
+import io.viash.helpers.data_structures._
 import io.viash.schemas._
 
 @description("A `double` type argument has a numeric value with decimal points")
@@ -45,6 +46,14 @@ case class DoubleArgument(
 
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
+
+  @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
+  @example(
+    """info:
+      |  category: cat1
+      |  labels: [one, two, three]""".stripMargin, "yaml")
+  @since("Viash 0.6.3")
+  info: Json = Json.Null,
 
   @description("An example value for this argument. If no [`default`](#default) property was specified, this will be used for that purpose.")
   @example(
@@ -123,6 +132,7 @@ case class DoubleArgument(
     name: String, 
     alternatives: OneOrMore[String],
     description: Option[String],
+    info: Json,
     example: OneOrMore[Double],
     default: OneOrMore[Double],
     required: Boolean,
@@ -131,6 +141,6 @@ case class DoubleArgument(
     multiple_sep: String,
     dest: String
   ): Argument[Double] = {
-    copy(name, alternatives, description, example, default, required, this.min, this.max, direction, multiple, multiple_sep, dest, `type`)
+    copy(name, alternatives, description, info, example, default, required, this.min, this.max, direction, multiple, multiple_sep, dest, `type`)
   }
 }

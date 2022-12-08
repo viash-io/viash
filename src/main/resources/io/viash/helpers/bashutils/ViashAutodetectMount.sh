@@ -29,3 +29,7 @@ function ViashAutodetectMountArg {
   mount_target="/viash_automount$mount_source"
   echo "--volume=\"$mount_source:$mount_target\""
 }
+function ViashStripAutomount {
+  abs_path=$(ViashAbsolutePath "$1")
+  echo "${abs_path#/viash_automount}"
+}

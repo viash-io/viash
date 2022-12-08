@@ -17,10 +17,12 @@
 
 package io.viash.functionality
 
+
+import io.circe.Json
+import io.circe.generic.extras._
 import arguments._
 import resources._
 import Status._
-import io.circe.generic.extras._
 import io.viash.schemas._
 import io.viash.wrapper.BashWrapper
 
@@ -238,10 +240,13 @@ case class Functionality(
       "yaml")
   test_resources: List[Resource] = Nil,
 
-  @description("A map for storing custom annotations.")
-  @example("info: {twitter: wizzkid, appId: com.example.myApplication}", "yaml")
+  @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
+  @example(
+    """info:
+      |  twitter: wizzkid
+      |  classes: [ one, two, three ]""".stripMargin, "yaml")
   @since("Viash 0.4.0")
-  info: Map[String, String] = Map.empty[String, String],
+  info: Json = Json.Null,
 
   @description("Allows setting a component to active, deprecated or disabled.")
   @since("Viash 0.6.0")
@@ -314,7 +319,7 @@ case class Functionality(
     }
   }
 
-  private def addToArgGroup(argumentGroups: List[ArgumentGroup], name: String, arguments: List[Argument[_]]): List[ArgumentGroup] = {
+  private def addToArgGroup(argumentGroups: List[ArgumentGroup], name: String, arguments: List[Argument[_]]): Option[ArgumentGroup] = {
     val argNamesInGroups = argumentGroups.flatMap(_.stringArguments).toSet
 
     // Check if 'arguments' is in 'argumentGroups'. 
@@ -325,17 +330,17 @@ case class Functionality(
 
     // if there are no arguments missing from the argument group, just return the existing group (if any)
     if (argumentsNotInGroup.isEmpty) {
-      existing.toList
+      existing
 
     // if there are missing arguments and there is an existing group, add the missing arguments to it
     } else if (existing.isDefined) {
-      List(existing.get.copy(
+      Some(existing.get.copy(
         arguments = existing.get.arguments.toList ::: argumentsNotInGroup.map(arg => Right(arg))
       ))
     
     // else create a new group
     } else {
-      List(ArgumentGroup(
+      Some(ArgumentGroup(
         name = name,
         arguments = argumentsNotInGroup.map(arg => Right(arg))
       ))
@@ -343,12 +348,24 @@ case class Functionality(
   }
 
   def allArgumentGroups: List[ArgumentGroup] = {
-    val inputGroup = addToArgGroup(argument_groups, "Inputs", inputs)
-    val outputGroup = addToArgGroup(argument_groups, "Outputs", outputs)
-    val defaultGroup = addToArgGroup(argument_groups, "Arguments", arguments)
-    val groupsFiltered = argument_groups.filter(gr => !List("Inputs", "Outputs", "Arguments").contains(gr.name))
+    val joinGroup = Map("Inputs" -> inputs, "Outputs" -> outputs, "Arguments" -> arguments)
+    val groups = argument_groups.map{gr => 
+      if (List("Inputs", "Outputs", "Arguments") contains (gr.name)) {
+        addToArgGroup(argument_groups, gr.name, joinGroup(gr.name)).get
+      } else {
+        gr
+      }
+    }
+    val missingGroups = joinGroup.flatMap{
+      case (name, args) =>
+        if (!groups.exists(_.name == name)) {
+          addToArgGroup(argument_groups, name, args)
+        } else {
+          None
+        }
+    }.toList
 
-    inputGroup ::: outputGroup ::: defaultGroup ::: groupsFiltered
+    missingGroups ::: groups
   }
     
   // check whether there are not multiple positional arguments with multiplicity >1

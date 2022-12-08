@@ -9,11 +9,11 @@ alt_output=alt_test_output.txt
 alt_src="alt_src"
 log=build_log.txt
 target_ns_add="target/native/testns/ns_add/ns_add"
-target_ns_add_yaml="target/native/testns/ns_add/viash.yaml"
+target_ns_add_yaml="target/native/testns/ns_add/.config.vsh.yaml"
 
 # 1. Run component with default arguments
 # Run component
-./$meta_functionality_name \
+$meta_executable \
     --verbose \
     >$defaults_output
 
@@ -21,7 +21,7 @@ target_ns_add_yaml="target/native/testns/ns_add/viash.yaml"
 [[ ! -f $defaults_output ]] && echo "Default: Test output file could not be found!" && exit 1
 
 # Check if default arguments are as expected
-grep -q "viash ns build --src src --parallel --write_meta --config_mod .functionality.version := 'dev' --setup cachedbuild" $defaults_output
+grep -q "viash ns build --src src --parallel --config_mod .functionality.version := 'dev' --setup cachedbuild" $defaults_output
 
 # Check if target dir hierarchy exists
 [[ ! -d $expected_target_dir ]] && echo "Default: target directory hierarchy could not be found!" && exit 1
@@ -34,7 +34,7 @@ rm -r target
 cp -r src $alt_src
 
 # Run component
-./$meta_functionality_name \
+$meta_executable \
     --verbose \
     --src $alt_src \
     --platform native \

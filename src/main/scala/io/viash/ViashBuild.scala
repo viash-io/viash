@@ -17,36 +17,23 @@
 
 package io.viash
 
-import config._
-import functionality.resources.{BashScript, Executable, PlainFile, PythonScript, RScript}
-import io.circe.yaml.Printer
-import helpers.IO
-
 import java.nio.file.{Files, Paths}
 import scala.sys.process.{Process, ProcessLogger}
 import io.viash.helpers.status._
 
-object ViashBuild {
-  // create a yaml printer for writing the viash.yaml file
-  // Options: https://github.com/circe/circe-yaml/blob/master/src/main/scala/io/circe/yaml/Printer.scala
-  private val printer = Printer(
-    preserveOrder = true,
-    dropNullKeys = true,
-    mappingStyle = Printer.FlowStyle.Block,
-    splitLines = true,
-    stringStyle = Printer.StringStyle.DoubleQuoted
-  )
+import config._
+import platforms.Platform
+import helpers.IO
 
+object ViashBuild {
   def apply(
     config: Config,
+    platform: Platform,
     output: String,
-    writeMeta: Boolean = false,
-    printMeta: Boolean = false,
-    namespace: Option[String] = None,
     setup: Option[String] = None,
     push: Boolean = false
   ): Status = {
-    val fun = config.functionality
+    val fun = platform.modifyFunctionality(config, testing = false)
 
     // create dir
     val dir = Paths.get(output)
@@ -55,68 +42,15 @@ object ViashBuild {
     // get the path of where the executable will be written to
     val exec_path = fun.mainScript.map(scr => Paths.get(output, scr.resourcePath).toString)
 
-    // get resources
-    val placeholderMap = config.functionality.resources.filter(_.text.isDefined).map{ res =>
-      (res, "VIASH_PLACEHOLDER~" + res.filename + "~")
-    }.toMap
-
-    // change the config object before writing to yaml:
-    // * add more info variables
-    // * remove other platforms other than the one finally used
-    // * override namespace in functionality
-    // * substitute 'text' fields in resources with placeholders
-    val toWriteConfig = config.copy(
-      functionality = config.functionality.copy(
-        namespace = namespace,
-        resources = config.functionality.resources.map{ res =>
-          if (res.text.isDefined) {
-            val textVal = Some(placeholderMap(res))
-            res.copyResource(text = textVal, parent = None)
-          } else {
-            res.copyResource(parent = None)
-          }
-        },
-        test_resources = config.functionality.test_resources.map { res =>
-          res.copyResource(parent = None)
-        }
-      ),
-      info = config.info.map(_.copy(
-        output = Some(output),
-        executable = exec_path
-      )),
-      platforms = Nil // drop other platforms
-    )
-
-    // convert config to yaml
-    val configYamlStr = printer.pretty(encodeConfig(toWriteConfig))
-
-    // replace text placeholders with nice multiline string
-    val configYamlStr2 = placeholderMap.foldLeft(configYamlStr) {
-      case (configStr, (res, placeholder)) =>
-        val IndentRegex = ("( *)text: \"" + placeholder + "\"").r
-        val IndentRegex(indent) = IndentRegex.findFirstIn(configStr).getOrElse("")
-        configStr.replace(
-          "\"" + placeholder + "\"",
-          "|\n" + indent + "  " + res.text.get.replace("\n", "\n  " + indent) + "\n"
-        )
-    }
-
-    // add to resources
-    val configYaml = PlainFile(
-      dest = Some("viash.yaml"),
-      text = Some(configYamlStr2)
-    )
+    // convert config to a yaml wrapped inside a PlainFile
+    val configYaml = ConfigMeta.toMetaFile(config, Some(dir))
 
     // write resources to output directory
-    if (writeMeta) {
-      IO.writeResources(configYaml :: fun.resources, dir)
-    } else {
-      IO.writeResources(fun.resources, dir)
-    }
+    IO.writeResources(configYaml :: fun.resources, dir)
 
     // if '--setup <strat>' was passed, run './executable ---setup <strat>'
     val setupResult =
-      if (setup.isDefined && exec_path.isDefined && config.platform.exists(_.hasSetup)) {
+      if (setup.isDefined && exec_path.isDefined && platform.hasSetup) {
         val cmd = Array(exec_path.get, "---setup", setup.get)
         val res = Process(cmd).!(ProcessLogger(println, println))
         res
@@ -125,18 +59,12 @@ object ViashBuild {
 
     // if '--push' was passed, run './executable ---setup push'
     val pushResult =
-      if (push && exec_path.isDefined && config.platform.exists(_.hasSetup)) {
+      if (push && exec_path.isDefined && platform.hasSetup) {
         val cmd = Array(exec_path.get, "---setup push")
-        val res = Process(cmd).!(ProcessLogger(println, println))
-        res
+        val _ = Process(cmd).!(ProcessLogger(println, println))
       }
       else 0
-
-    // if '-m' was passed, print some yaml about the created output fiels
-    if (printMeta) {
-      println(toWriteConfig.info.get.consoleString)
-    }
-
+    
     (setupResult, pushResult) match {
       case (0, 0) => Success
       case (1, _) => SetupError

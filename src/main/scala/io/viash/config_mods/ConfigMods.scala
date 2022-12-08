@@ -17,7 +17,14 @@
 
 package io.viash.config_mods
 
+// will need to be updated in a next version of scala
+// import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
+
+import java.nio.file.{Files, Path => JPath}
+import java.util.stream.Collectors
 import io.circe.{ACursor, HCursor, FailedCursor, Json}
+
 
 // define command
 case class ConfigMods(
@@ -28,6 +35,29 @@ case class ConfigMods(
     val commandsToApply = if (preparse) preparseCommands else postparseCommands
     commandsToApply.foldLeft(json) {
       case (cur, cmd) => cmd.apply(cur)
+    }
+  }
+  def `+`(cm: ConfigMods): ConfigMods = {
+    ConfigMods(
+      postparseCommands = postparseCommands ::: cm.postparseCommands,
+      preparseCommands = preparseCommands ::: cm.preparseCommands
+    )
+  }
+}
+
+object ConfigMods {
+  /**
+    * Convert a string to a config mod
+    *
+    * @param li A list of strings to convert to config mods
+    * @return A ConfigMods object
+    */
+  def parseConfigMods(li: List[String]): ConfigMods = {
+    if (li.isEmpty) {
+      ConfigMods()
+    } else {
+      ConfigModParser.block.parse(li.mkString("; "))
+      // todo: allow for commands to span over multiple lines.
     }
   }
 }

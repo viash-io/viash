@@ -49,10 +49,10 @@ functionality:
       multiple: true
   resources:
     - type: python_script
-      path: ./code.py
+      path: code.py
   test_resources:
     - type: bash_script
-      path: tests/check_outputs.sh
+      path: test.sh
 platforms:
   - type: native
   - type: docker

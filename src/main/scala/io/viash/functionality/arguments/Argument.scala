@@ -17,8 +17,10 @@
 
 package io.viash.functionality.arguments
 
-import io.viash.helpers.Circe.OneOrMore
+import io.circe.Json
+import io.viash.helpers.data_structures._
 import io.viash.schemas._
+import java.nio.file.Paths
 
 abstract class Argument[Type] {
   @description("Specifies the type of the argument.")
@@ -26,6 +28,7 @@ abstract class Argument[Type] {
   val name: String
   val alternatives: OneOrMore[String]
   val description: Option[String]
+  val info: Json
   val example: OneOrMore[Type]
   val default: OneOrMore[Type]
   val required: Boolean
@@ -50,6 +53,7 @@ abstract class Argument[Type] {
     name: String = this.name,
     alternatives: OneOrMore[String] = this.alternatives,
     description: Option[String] = this.description,
+    info: Json = this.info,
     example: OneOrMore[Type] = this.example,
     default: OneOrMore[Type] = this.default,
     required: Boolean = this.required,
@@ -58,6 +62,52 @@ abstract class Argument[Type] {
     multiple_sep: String = this.multiple_sep,
     dest: String = this.dest
   ): Argument[Type]
+
+  def disableChecks: Argument[_] = {
+    // todo: fix such that the output is Argument[Type]
+    Some(this)
+      // set required to false
+      .map{
+        case arg =>
+          arg.copyArg(required = false)
+      }
+      // make sure the default is set. invent one if necessary.
+      .map{
+        // default is not needed
+        case arg: BooleanTrueArgument => arg
+        case arg: BooleanFalseArgument => arg
+        // if available, use default
+        case arg if arg.default.nonEmpty => 
+          arg
+        // else use example
+        case arg if arg.example.nonEmpty => 
+          arg.copyArg(default = arg.example)
+        // else invent one
+        case arg: BooleanArgument => 
+          arg.copy(default = OneOrMore(true))
+        case arg: DoubleArgument => 
+          arg.copy(default = OneOrMore(123.0), min = None, max = None)
+        case arg: FileArgument => 
+          arg.copy(default = OneOrMore(Paths.get("/path/to/file")), must_exist = false)
+        case arg: IntegerArgument =>
+          arg.copy(default = OneOrMore(123), choices = Nil, min = None, max = None)
+        case arg: LongArgument =>
+          arg.copy(default = OneOrMore(123), choices = Nil, min = None, max = None)
+        case arg: StringArgument => 
+          arg.copy(default = OneOrMore("value"), choices = Nil)
+        case arg => 
+          throw new RuntimeException(
+            f"Viash is missing a default for argument of type ${arg.`type`}. " +
+              "Please report this error to the maintainers.")
+      }
+      // turn off must_exist and create_parent for fileargs
+      .map{
+        case arg: FileArgument =>
+          arg.copy(must_exist = false, create_parent = false)
+        case a => a
+      }
+      .get
+  }
 
   assert(example.length <= 1 || multiple, s"Argument $name: 'example' should be length <= 1 if 'multiple' is false")
   assert(default.length <= 1 || multiple, s"Argument $name: 'default' should be length <= 1 if 'multiple' is false")

@@ -1,8 +1,234 @@
-# Viash 0.6.3
+# Viash 0.6.6
+
+This release fixes an issue where stderr was being redirected to stdout.
+
+## BUG FIXES
+
+* Don't redirect stderr to stdout when switching Viash versions (#312).
+
+# Viash 0.6.5
+
+A small update which fixes an issue with `viash ns list` that was
+introduced in Viash 0.6.3.
+
+## BUG FIXES
+
+* `viash ns list`: When the `-p <platform>` is defined, filter the 
+  output by that platform.
+
+# Viash 0.6.4
+
+This release adds features related to managing Viash projects and 
+allows for better runtime introspection of Nextflow VDSL3 modules.
+
+The most notable changes are:
+
+* You can switch versions of Viash using the `VIASH_VERSION` 
+  environment variable! Example:
+  
+  ```bash
+  VIASH_VERSION=0.6.0 viash --version
+  ```
+
+  More importantly, you can specify the version of Viash you want
+  in a project config. See below for more info.
+
+* Introducing Viash project config files as an experimental feature.
+  It allows storing project-related settings in a `_viash.yaml` 
+  config file which you should store at the root of your repository.
+  Example:
+
+  ```yaml
+  viash_version: 0.6.4
+  source: src
+  target: target
+  config_mods: |
+    .platforms[.type == 'docker'].target_registry := 'ghcr.io'
+    .platforms[.type == 'docker'].target_organization := 'viash-io'
+    .platforms[.type == 'docker'].namespace_separator := '/'
+    .platforms[.type == 'docker'].target_image_source := 'https://github.com/viash-io/viash'
+  ```
+
+* It's now possible to specify in which order Viash will merge
+  Viash configs. Example:
+
+  ```yaml
+  functionality:
+    name: foo
+    arguments:
+      - __merge__: obj_input.yaml
+        name: "--one"
+      - __merge__: [., obj_input.yaml]
+        name: "--two"
+      - __merge__: [obj_input.yaml, .]
+       name: "--three"
+  ```
+
+Please take note of the following breaking changes:
+
+* Passing non-existent paths to a Viash component will cause the 
+  component to generate an error when no file or folder is found.
+  Set `must_exist` to `false` to revert to the previous behaviour.
+
+* The arguments `--write_meta/-w` and `--meta/-m` no longer exist,
+  because every `viash build/run/test` run will generate a 
+  `.config.vsh.yaml` meta file.
+
+
+## BREAKING CHANGES
+
+* Config: Viash configs whose filenames start with a `.` are ignored (#291).
+
+* `viash build`: `--write_meta/-m` and `--meta/-m` arguments have been removed. 
+  Instead, the `.config.vsh.yaml` file is always created when building Viash components (#293).
+
+* `FileArgument`: Default setting of `must_exist` was changed from `false` to `true`. 
+  As such, the component will throw an error by default if an input file or output file
+  is missing (#295).
+
+* Config merging: `__inherits__` has been renamed to `__merge__`.
+
+## NEW FUNCTIONALITY
+
+* You can switch versions of Viash using the `VIASH_VERSION` 
+  environment variable (#304)! Example:
+  
+  ```bash
+  VIASH_VERSION=0.6.0 viash --version
+  ```
+
+* Traceability: Running `viash build` and `viash test` creates a `.config.vsh.yaml` file 
+  by default, which contains the processed config of the component. As a side effect, 
+  this allows for reading in the `.config.vsh.yaml` from within the component to learn 
+  more about the component being tested (#291 and #293).
+
+* `FileArgument`: Added `create_parent` option, which will check if the directory of an output
+file exists and create it if necessary (#295).
 
 ## MINOR CHANGES
 
-* `BashWrapper`: Allow printing the executor command by adding `---verbose ---verbose` to a `viash run`.
+* `viash run`, `viash test`: When running or testing a component, Viash will add an extension
+  to the temporary file that is created. Before: `/tmp/viash-run-wdckjnce`, 
+  now: `/tmp/viash-run-wdckjnce.py` (#302).
+
+* NextflowPlatform: Add `DataflowHelper.nf` as a retrievable resource in Viash (#301).
+
+* NextflowPlatform: During a stubrun, argument requirements are turned off and
+  the `publishDir`, `cpus`, `memory`, and `label` directives are also removed 
+  from the process (#301).
+
+* `NextflowPlatform`: Added a `filter` processing argument to filter the incoming channel after 
+  the `map`, `mapData`, `mapId` and `mapPassthrough` have been applied (#296).
+
+* `NextflowPlatform`: Added the Viash config to the Nextflow module for later introspection (#296).
+  For example:
+  ```groovy
+  include { foo } from "$targetDir/path/foo/main.nf"
+
+  foo.run(filter: { tup ->
+    def preferredNormalization = foo.config.functionality.info.preferred_normalization
+    tup.normalization_id == preferredNormalization
+  })
+  ```
+
+## BUG FIXES
+
+* `BashWrapper`: Don't overwrite meta values when trailing arguments are provided (#295).
+
+
+## EXPERIMENTAL FEATURES
+
+* Viash Project: Viash will automatically search for a `_viash.yaml` file in the directory of 
+  a component and its parent directories (#294).
+
+  Contents of `_viash.yaml`:
+  ```yaml
+  source: src
+  target: target
+  config_mods: |
+    .platforms[.type == 'docker'].target_registry := 'ghcr.io'
+    .platforms[.type == 'docker'].target_organization := 'viash-io'
+    .platforms[.type == 'docker'].namespace_separator := '/'
+    .platforms[.type == 'docker'].target_image_source := 'https://github.com/viash-io/viash'
+  ```
+
+
+* Config merging: Allow specifying the order in which Viash will merge configs (#289).
+  If `.` is not in the list of inherited objects, it will be added at the end.
+
+  Contents of `config.vsh.yaml`:
+  ```yaml
+  functionality:
+    name: foo
+    arguments:
+      - __merge__: obj_input.yaml
+        name: "--one"
+      - __merge__: [., obj_input.yaml]
+        name: "--two"
+      - __merge__: [obj_input.yaml, .]
+        name: "--three"
+  ```
+
+  Contents of `obj_input.yaml`:
+  ```yaml
+  type: file
+  name: --input
+  description: A h5ad file
+  ```
+  Output of `viash config view config.vsh.yaml` (stripped irrelevant bits):
+  ```yaml
+  functionality:
+    arguments:
+    - type: "file"
+      name: "--one"
+      description: "A h5ad file"
+    - type: "file"
+      name: "--input"
+      description: "A h5ad file"
+    - type: "file"
+      name: "--three"
+      description: "A h5ad file"
+  ```
+  
+
+# Viash 0.6.3
+
+This release features contains mostly quality of life improvements and some experimental functionality. Most notably:
+
+* `viash ns list` now only returns a config just once instead of once per platform.
+
+* A functionality's info field can contain any data structures. An `.info` field was added to arguments as well.
+
+* Bug fixes for using Viash with podman, Nextflow>=22.10 and R<4.0.
+
+* Experimental support for inheriting from config partials.
+
+## MAJOR CHANGES
+
+* `Config`: Made major internal changes w.r.t. how config files are read and at which point a platform (native, docker, nextflow)
+  is applied to the functionality script. The only visible side effect is that 
+  `viash ns list` will output each config only once instead of multiple times.
+
+* `Functionality`: Structured annotation can be added to a functionality and its arguments using the `info` field. Example:
+  ```yaml
+  functionality:
+    name: foo
+    info:
+      site: https://abc.xyz
+      tags: [ one, two, three ]
+    arguments:
+      - name: --foo
+        type: string
+        info:
+          foo: bar
+          a:
+            b:
+              c
+  ```
+
+## MINOR CHANGES
+
+* `BashWrapper`: Allow printing the executor command by adding `---verbose ---verbose` to a `viash run` or an executable.
 
 * `Testbenches`: Rework `MainBuildAuxiliaryNativeParameterCheck` to create stimulus files and loop over the file from bash instead of looping natively.
   This prevents creating thousands of new processes which would only test a single parameter.
@@ -16,9 +242,27 @@
   Added a testbench that verifies that all arguments are in fact annotated, skipping those that are not in the class constructor.
   Adds a hierarchy field in the `__this__` member to list the relation of the own and parent classes.
 
+* `Testbenches`: Add exit code to helper method `testMainWithStdErr`.
+
+* `Testbenches`: Add testbench to verify viash underscore components (viash_build, viash_install, viash_push, viash_skeleton, viash_test).
+
+* `Testbenches`: Update viash underscore component tests to use `$meta_executable`.
+
+* `viash ns exec`: Allow choosing whether the `{platform}` field should be filled in, based on the `--apply_platform` parameter.
+
+
 ## BUG FIXES
 
 * `DockerPlatform`: Remove duplicate auto-mounts (#257).
+
+* `Underscore component tests`: Fix tests for `viash_skeleton` and `viash_test` components.
+
+* `NextflowVDSL3Platform`: Fix 'Module scriptPath has not been defined yet' error when Nextflow>=22.10 (#269).
+
+* `config inject`: Doesn't work when `must_exist == true` (#273).
+
+* `RScript`: Fix compatibility issue where the new character escaping in `r_script` required R>=4.0 (#275). Escaping is now handled without
+  using the new `r'(foo)'` notation.
 
 ## DEPRECATION
 
@@ -26,7 +270,52 @@
 
 * `DockerRequirements`: The `privileged:` setting has been deprecated and will be removed in Viash 0.7.0. Please use `run_args: "--privileged"` instead.
 
+## EXPERIMENTAL FUNCTIONALITY
+
+* `Config`: Any part of a Viash config can use inheritance to fill data (#271). For example:
+  Contents of `src/test/config.vsh.yaml`:
+  ```yaml
+  __inherits__: ../api/base.yaml
+  functionality:
+    name: test
+    resources:
+      - type: bash_script
+        path: script.sh
+        text: |
+          echo Copying $par_input to $par_output
+          cp $par_input $par_output
+  ```
+  Contents of `src/api/base.yaml`:
+  ```yaml
+  functionality:
+    arguments:
+      - name: "--input"
+        type: file
+      - name: "--output"
+        type: file
+        direction: output
+  ```
+  The resulting yaml will be:
+  ```yaml
+  functionality:
+    name: test
+    arguments:
+      - name: "--input"
+        type: file
+      - name: "--output"
+        type: file
+        direction: output
+    resources:
+      - type: bash_script
+        path: script.sh
+        text: |
+          echo Copying $par_input to $par_output
+          cp $par_input $par_output
+  ```
+
 # Viash 0.6.2
+
+This is a quick release to push two bug fixes related to security and being able to run Nextflow with optional output files.
 
 ## BUG FIXES
 

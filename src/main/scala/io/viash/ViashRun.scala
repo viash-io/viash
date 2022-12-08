@@ -21,21 +21,32 @@ import java.nio.file.Paths
 
 import io.viash.config._
 import io.viash.functionality.arguments.{FileArgument, Output}
+import io.viash.platforms.Platform
 import io.viash.helpers.IO
-import io.viash.helpers.Circe.{OneOrMore, One, More}
+import io.viash.helpers.data_structures._
 
 import scala.sys.process.{Process, ProcessLogger}
 
 object ViashRun {
-  def apply(config: Config, args: Seq[String], keepFiles: Option[Boolean], cpus: Option[Int], memory: Option[String]): Int = {
-    val fun = config.functionality
+  def apply(
+    config: Config,
+    platform: Platform,
+    args: Seq[String],
+    keepFiles: Option[Boolean],
+    cpus: Option[Int],
+    memory: Option[String]
+  ): Int = {
+    val fun = platform.modifyFunctionality(config, testing = false)
     val dir = IO.makeTemp("viash_" + fun.name)
 
     // execute command, print everything to console
     var code = -1
     try {
+      // convert config to a yaml wrapped inside a PlainFile
+      val configYaml = ConfigMeta.toMetaFile(config, Some(dir))
+
       // write executable and resources to temporary directory
-      IO.writeResources(fun.resources, dir)
+      IO.writeResources(configYaml :: fun.resources, dir)
 
       // determine command
       val cmd =

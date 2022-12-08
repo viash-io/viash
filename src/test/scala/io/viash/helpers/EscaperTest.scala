@@ -3,7 +3,7 @@ package io.viash.helpers
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 class EscaperTest extends FunSuite with BeforeAndAfterAll {
-    val s = "a \\ b $ c ` d \" e ' f \n g"
+  val s = "a \\ b $ c ` d \" e ' f \n g"
     
   test("escape with default parameters work") {
     assert(Escaper(s) == s)
