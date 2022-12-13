@@ -121,7 +121,7 @@ case class DockerPlatform(
   setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,
 
   @description("Adds a `privileged` flag to the docker run.")
-  @deprecated("Add a `privileged` flag in `run_args` instead.", "Viash 0.6.3")
+  @deprecated("Add a `privileged` flag in `run_args` instead, e.g. `{type: docker, run_args: \"--privileged\"}`.", "Viash 0.6.3")
   privileged: Option[Boolean] = None,
 
   @description("Add [docker run](https://docs.docker.com/engine/reference/run/) arguments.")
@@ -156,7 +156,7 @@ case class DockerPlatform(
       |    packages: [ sl ]
       |""".stripMargin,
       "yaml")
-  @deprecated("Use `setup` instead.", "Viash 0.5.15")
+  @deprecated("Use `setup` instead, e.g. `{type: docker, setup: [{ type: apk, ... }]}`. Will be removed in Viash 0.7.0.", "Viash 0.5.15")
   apk: Option[ApkRequirements] = None,
 
   @description("Specify which apt packages should be available in order to run the component.")
@@ -166,7 +166,7 @@ case class DockerPlatform(
       |    packages: [ sl ]
       |""".stripMargin,
       "yaml")
-  @deprecated("Use `setup` instead.", "Viash 0.5.15")
+  @deprecated("Use `setup` instead, e.g. `{type: docker, setup: [{ type: apt, ... }]}`. Will be removed in Viash 0.7.0.", "Viash 0.5.15")
   apt: Option[AptRequirements] = None,
 
   @description("Specify which yum packages should be available in order to run the component.")
@@ -176,7 +176,7 @@ case class DockerPlatform(
       |    packages: [ sl ]
       |""".stripMargin,
       "yaml")
-  @deprecated("Use `setup` instead.", "Viash 0.5.15")
+  @deprecated("Use `setup` instead, e.g. `{type: docker, setup: [{ type: yum, ... }]}`. Will be removed in Viash 0.7.0.", "Viash 0.5.15")
   yum: Option[YumRequirements] = None,
 
   @description("Specify which R packages should be available in order to run the component.")
@@ -193,7 +193,7 @@ case class DockerPlatform(
       |    script: [ 'devtools::install(".")' ]
       |""".stripMargin,
       "yaml")
-  @deprecated("Use `setup` instead.", "Viash 0.5.15")
+  @deprecated("Use `setup` instead, e.g. `{type: docker, setup: [{ type: r, ... }]}`. Will be removed in Viash 0.7.0.", "Viash 0.5.15")
   r: Option[RRequirements] = None,
 
   @description("Specify which Python packages should be available in order to run the component.")
@@ -210,7 +210,7 @@ case class DockerPlatform(
       |    url: [ http://... ]
       |""".stripMargin,
       "yaml")
-  @deprecated("Use `setup` instead.", "Viash 0.5.15")
+  @deprecated("Use `setup` instead, e.g. `{type: docker, setup: [{ type: python, ... }]}`. Will be removed in Viash 0.7.0.", "Viash 0.5.15")
   python: Option[PythonRequirements] = None,
 
   @description("Specify which Docker commands should be run during setup.")
@@ -225,28 +225,13 @@ case class DockerPlatform(
       |      - resource.txt /path/to/resource.txt
       |""".stripMargin,
       "yaml")
-  @deprecated("Use `setup` instead.", "Viash 0.5.15")
+  @deprecated("Use `setup` instead, e.g. `{type: docker, setup: [{ type: docker, ... }]}`. Will be removed in Viash 0.7.0.", "Viash 0.5.15")
   docker: Option[DockerRequirements] = None,
 
   @description("Additional requirements specific for running unit tests.")
   @since("Viash 0.5.13")
   test_setup: List[Requirements] = Nil
 ) extends Platform {
-  private def checkDeprecated(deprecatedArg: Option[Any], name: String): Unit = {
-    if (deprecatedArg.nonEmpty)
-      Console.err.println(
-        s"Warning: Usage of `$name` in `platforms: {type: docker, $name: ...}` is deprecated and will be removed in Viash 0.7.0. Please use `{type: docker, setup: [{ type: ${name}, ... }]}` instead.")
-  }
-  checkDeprecated(apk, "apk")
-  checkDeprecated(apt, "apt")
-  checkDeprecated(yum, "yum")
-  checkDeprecated(r, "r")
-  checkDeprecated(python, "python")
-  checkDeprecated(docker, "docker")
-  if (privileged.nonEmpty)
-      Console.err.println(
-        "Warning: Usage of `privileged` in `platforms: {type: docker, privileged: ...}` is deprecated and will be removed in Viash 0.7.0. Please use `{type: docker, run_args: \"--privileged\"}` instead."
-      )
 
   @internalFunctionality
   override val hasSetup = true
