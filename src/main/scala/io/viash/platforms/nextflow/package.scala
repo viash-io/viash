@@ -22,10 +22,11 @@ import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfigur
 
 package object nextflow {
   import io.viash.helpers.circe._
+  import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
 
   implicit val encodeNextflowDirectives: Encoder.AsObject[NextflowDirectives] = deriveConfiguredEncoder
-  implicit val decodeNextflowDirectives: Decoder[NextflowDirectives] = deriveConfiguredDecoder
+  implicit val decodeNextflowDirectives: Decoder[NextflowDirectives] = deriveConfiguredDecoderWithDeprecationCheck
 
   implicit val encodeNextflowAuto: Encoder.AsObject[NextflowAuto] = deriveConfiguredEncoder
-  implicit val decodeNextflowAuto: Decoder[NextflowAuto] = deriveConfiguredDecoder
+  implicit val decodeNextflowAuto: Decoder[NextflowAuto] = deriveConfiguredDecoderWithDeprecationCheck
 }

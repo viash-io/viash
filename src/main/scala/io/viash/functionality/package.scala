@@ -30,12 +30,13 @@ package object functionality {
   import functionality.resources._
   import functionality.Status._
   import io.viash.helpers.circe._
+  import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
 
   // encoder and decoder for Functionality
   implicit val encodeFunctionality: Encoder.AsObject[Functionality] = deriveConfiguredEncoder
 
   // add file & direction defaults for inputs & outputs
-  implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoder[Functionality].prepare {
+  implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoderWithDeprecationCheck[Functionality].prepare {
     _.withFocus(_.mapObject{ fun0 =>
       
       val fun1 = fun0.apply("inputs") match {
@@ -99,15 +100,15 @@ package object functionality {
 
   // encoder and decoder for Author
   implicit val encodeAuthor: Encoder.AsObject[Author] = deriveConfiguredEncoder
-  implicit val decodeAuthor: Decoder[Author] = deriveConfiguredDecoder
+  implicit val decodeAuthor: Decoder[Author] = deriveConfiguredDecoderWithDeprecationCheck
 
   // encoder and decoder for Requirements
   implicit val encodeComputationalRequirements: Encoder.AsObject[ComputationalRequirements] = deriveConfiguredEncoder
-  implicit val decodeComputationalRequirements: Decoder[ComputationalRequirements] = deriveConfiguredDecoder
+  implicit val decodeComputationalRequirements: Decoder[ComputationalRequirements] = deriveConfiguredDecoderWithDeprecationCheck
   
   // encoder and decoder for ArgumentGroup
   implicit val encodeArgumentGroup: Encoder.AsObject[ArgumentGroup] = deriveConfiguredEncoder
-  implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoder
+  implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoderWithDeprecationCheck
 
   // encoder and decoder for Status, make string lowercase before decoding
   implicit val encodeStatus: Encoder[Status] = Encoder.encodeEnumeration(Status)
