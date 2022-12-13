@@ -289,12 +289,6 @@ case class Functionality(
   @deprecated("Use `status` instead.", "Viash 0.6.0")
   private val enabled: Boolean = true
   // END OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
-  if (inputs.nonEmpty) {
-    Console.err.println("Warning: .functionality.inputs is deprecated. Please use .functionality.arguments instead.")
-  }
-  if (outputs.nonEmpty) {
-    Console.err.println("Warning: .functionality.outputs is deprecated. Please use .functionality.arguments instead.")
-  }
 
   // note that in the Functionality companion object, defaults gets added to inputs and outputs *before* actually 
   // parsing the configuration file with Circe. This is done in the .prepare step.

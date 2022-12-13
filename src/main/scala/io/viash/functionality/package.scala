@@ -22,8 +22,6 @@ import io.circe.{Decoder, Encoder, Json}
 import io.circe.ACursor
 
 package object functionality {
-  private var noticeFunTestDeprTests: Boolean = true
-  private var noticeFunTestDeprEnabled: Boolean = true
   // import implicits
 
   import functionality.arguments._
@@ -67,11 +65,6 @@ package object functionality {
           Console.err.println("Backwards compability is provided but not in combination with functionality.test_resources.")
           fun2
         case (true, false) =>
-          if (noticeFunTestDeprTests) {
-            // todo: solve this in a cleaner way
-            Console.err.println("Warning: functionality.tests is deprecated. Please use functionality.test_resources instead.")
-            noticeFunTestDeprTests = false
-          }
           fun2.add("test_resources", fun2.apply("tests").get).remove("tests")
         case (_, _) => fun2
       }
@@ -83,10 +76,6 @@ package object functionality {
           Console.err.println("Backwards compability is provided but not in combination with functionality.status")
           fun3
         case (true, false) =>
-          if (noticeFunTestDeprEnabled) {
-            Console.err.println("Notice: functionality.enabled is deprecated. Please use functionality.status instead.")
-            noticeFunTestDeprEnabled = false
-          }
           fun3.apply("enabled").get.asBoolean match {
             case Some(true) => fun3.add("status", Json.fromString("enabled")).remove("enabled")
             case Some(false) => fun3.add("status", Json.fromString("disabled")).remove("enabled")

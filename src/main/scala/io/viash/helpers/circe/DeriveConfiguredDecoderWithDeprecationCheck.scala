@@ -41,8 +41,21 @@ object DeriveConfiguredDecoderWithDeprecationCheck {
     }
   }
 
+  private def selfDeprecationCheck(T: Type) {
+    val baseClass = T.baseClasses.head
+    val name = baseClass.fullName.split('.').last
+    val schema = ParameterSchema("", "", List.empty, baseClass.annotations)
+    val deprecated = schema.flatMap(_.deprecated)
+    if (deprecated.isDefined) {
+      val d = deprecated.get
+
+      Console.err.println(s"Warning: $name is deprecated: ${d.message} Deprecated since ${d.since}")
+    }
+  }
+
   // 
   def checkDeprecation[A](a: ACursor)(implicit tag: TypeTag[A]) : ACursor = {
+    selfDeprecationCheck(typeOf[A])
     // check each defined 'key' value
     a.keys match {
       case Some(s) => s.foreach(memberDeprecationCheck(_, a.history, typeOf[A]))
