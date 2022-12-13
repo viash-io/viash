@@ -36,8 +36,9 @@ package object functionality {
   implicit val encodeFunctionality: Encoder.AsObject[Functionality] = deriveConfiguredEncoder
 
   // add file & direction defaults for inputs & outputs
-  implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoderWithDeprecationCheck[Functionality].prepare {
-    _.withFocus(_.mapObject{ fun0 =>
+  implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoder[Functionality].prepare {
+    checkDeprecation[Functionality](_) // check for deprecations before altering the structure of the json
+    .withFocus(_.mapObject{ fun0 =>
       
       val fun1 = fun0.apply("inputs") match {
         case Some(inputs) => 

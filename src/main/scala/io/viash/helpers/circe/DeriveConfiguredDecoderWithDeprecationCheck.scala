@@ -25,10 +25,11 @@ import scala.reflect.runtime.universe._
 import shapeless.Lazy
 
 import io.viash.schemas.ParameterSchema
+import io.circe.ACursor
 
 object DeriveConfiguredDecoderWithDeprecationCheck {
 
-  def checkDeprecation(name: String, history: List[CursorOp], T: Type) {
+  private def memberDeprecationCheck(name: String, history: List[CursorOp], T: Type) {
     val m = T.member(TermName(name))
     val schema = ParameterSchema(name, "", List.empty, m.annotations)
     val deprecated = schema.flatMap(_.deprecated)
@@ -40,13 +41,17 @@ object DeriveConfiguredDecoderWithDeprecationCheck {
     }
   }
 
-  // Use prepare to get raw json data to inspect used fields in the json but we're not performing any changes here
-  def deriveConfiguredDecoderWithDeprecationCheck[A: TypeTag](implicit decode: Lazy[ConfiguredDecoder[A]]): Decoder[A] = deriveConfiguredDecoder[A]
-    .prepare { a =>
-      a.keys match {
-        case Some(s) => s.foreach(checkDeprecation(_, a.history, typeOf[A]))
-        case _ => 
-      }
-      a // return unchanged json info
+  // 
+  def checkDeprecation[A](a: ACursor)(implicit tag: TypeTag[A]) : ACursor = {
+    // check each defined 'key' value
+    a.keys match {
+      case Some(s) => s.foreach(memberDeprecationCheck(_, a.history, typeOf[A]))
+      case _ =>
     }
+    a // return unchanged json info
+  }
+
+  // Use prepare to get raw json data to inspect used fields in the json but we're not performing any changes here
+  def deriveConfiguredDecoderWithDeprecationCheck[A](implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Decoder[A] = deriveConfiguredDecoder[A]
+    .prepare( checkDeprecation[A] )
 }
