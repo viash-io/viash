@@ -1,5 +1,7 @@
 # Viash 0.6.7
 
+Another minor release which contains several quality of life improvements for the Nextflow VDSL3 platform, as well as automated warnings for deprecated functionality.
+
 ## MINOR CHANGES
 
 * `NextflowPlatform`: Create directories during a stub run when output path is a nested directory (#314).
