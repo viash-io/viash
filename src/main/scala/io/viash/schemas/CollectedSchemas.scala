@@ -154,14 +154,15 @@ object CollectedSchemas {
   }
 
   // Main call for documentation output
-  def getJson: Json = {
-    val data = CollectedSchemas(
+  private lazy val data = CollectedSchemas(
       config = getSchema(schemaClassMap.get("config").get("")),
       functionality = getSchema(schemaClassMap.get("functionality").get("")),
       platforms = schemaClassMap.get("platforms").get.map{ case(k, v) => (k, getSchema(v))},
       requirements = schemaClassMap.get("requirements").get.map{ case(k, v) => (k, getSchema(v))},
       arguments = schemaClassMap.get("arguments").get.map{ case(k, v) => (k, getSchema(v))}
     )
+
+  def getJson: Json = {
     data.asJson
   }
 
@@ -182,6 +183,17 @@ object CollectedSchemas {
     case (key, v1) => v1.flatMap {
       case (key2, v2) => getNonAnnotated(v2._1, v2._2).map((key, key2, _))
     }
+  }
+
+  def getAllDeprecations = {
+    val arr =
+      data.config.map(c => ("config " + c.name, c.deprecated)) ++
+      data.functionality.map(f => ("functionality " + f.name, f.deprecated)) ++
+      data.platforms.flatMap{ case (key, v) => v.map(v2 => ("platforms " + key + " " + v2.name, v2.deprecated)) } ++ 
+      data.requirements.flatMap{ case (key, v) => v.map(v2 => ("requirements " + key + " " + v2.name, v2.deprecated)) } ++
+      data.arguments.flatMap{ case (key, v) => v.map(v2 => ("arguments " + key + " " + v2.name, v2.deprecated)) }
+    
+    arr.filter(t => t._2.isDefined).map(t => (t._1, t._2.get))
   }
 
 }

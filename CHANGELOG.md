@@ -6,6 +6,8 @@
 
 * Add a "planned removal" field in the deprecation annotations.
 
+* Add testbenches to verify proper formatting of the deprecation versions and compare current version to the planned removal version so no deprecated parameters get to stick around beyond what was planned.
+
 # Viash 0.6.6
 
 This release fixes an issue where stderr was being redirected to stdout.
