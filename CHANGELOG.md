@@ -1,3 +1,10 @@
+# Viash 0.6.7
+
+## BUG FIXES
+
+* `NextflowPlatform`: Automatically split Viash config strings into strings of 
+  length 65000 since the JVM has a limit on the length of string constants (65536).
+
 # Viash 0.6.6
 
 This release fixes an issue where stderr was being redirected to stdout.
