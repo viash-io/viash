@@ -2,12 +2,13 @@
 
 ## MINOR CHANGES
 
-* `NextflowPlatform`: Nextflow processes are created lazily (only when running the workflow).
+* `NextflowPlatform`: Nextflow processes are created lazily; that is, only when running
+  a Nextflow workflow (#321).
 
 ## BUG FIXES
 
 * `NextflowPlatform`: Automatically split Viash config strings into strings of 
-  length 65000 since the JVM has a limit on the length of string constants (65536).
+  length 65000 since the JVM has a limit (65536) on the length of string constants (#323).
 
 # Viash 0.6.6
 
