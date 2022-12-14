@@ -8,6 +8,14 @@
 
 * Add testbenches to verify proper formatting of the deprecation versions and compare current version to the planned removal version so no deprecated parameters get to stick around beyond what was planned.
 
+* `NextflowPlatform`: Nextflow processes are created lazily; that is, only when running
+  a Nextflow workflow (#321).
+
+## BUG FIXES
+
+* `NextflowPlatform`: Automatically split Viash config strings into strings of 
+  length 65000 since the JVM has a limit (65536) on the length of string constants (#323).
+
 # Viash 0.6.6
 
 This release fixes an issue where stderr was being redirected to stdout.
