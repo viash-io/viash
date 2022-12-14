@@ -54,14 +54,22 @@ object DeriveConfiguredDecoderWithDeprecationCheck {
   }
 
   // 
-  def checkDeprecation[A](a: ACursor)(implicit tag: TypeTag[A]) : ACursor = {
+  def checkDeprecation[A](cursor: ACursor)(implicit tag: TypeTag[A]) : ACursor = {
     selfDeprecationCheck(typeOf[A])
     // check each defined 'key' value
-    a.keys match {
-      case Some(s) => s.foreach(memberDeprecationCheck(_, a.history, typeOf[A]))
-      case _ =>
+    for (key <- cursor.keys.getOrElse(Nil)) {
+      val isEmpty = 
+        cursor.downField(key).focus.get match {
+          case value if value.isNull => true
+          case value if value.isArray => value.asArray.get.isEmpty
+          case value if value.isObject => value.asObject.get.isEmpty
+          case _ => false
+        }
+      if (!isEmpty) {
+        memberDeprecationCheck(key, cursor.history, typeOf[A])
+      }
     }
-    a // return unchanged json info
+    cursor // return unchanged json info
   }
 
   // Use prepare to get raw json data to inspect used fields in the json but we're not performing any changes here
