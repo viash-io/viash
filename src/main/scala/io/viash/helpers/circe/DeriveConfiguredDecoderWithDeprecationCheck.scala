@@ -37,7 +37,7 @@ object DeriveConfiguredDecoderWithDeprecationCheck {
       val d = deprecated.get
       val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
 
-      Console.err.println(s"Warning: .$historyString.$name is deprecated: ${d.message} Deprecated since ${d.since}")
+      Console.err.println(s"Warning: .$historyString.$name is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
     }
   }
 
@@ -49,7 +49,7 @@ object DeriveConfiguredDecoderWithDeprecationCheck {
     if (deprecated.isDefined) {
       val d = deprecated.get
 
-      Console.err.println(s"Warning: $name is deprecated: ${d.message} Deprecated since ${d.since}")
+      Console.err.println(s"Warning: $name is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
     }
   }
 

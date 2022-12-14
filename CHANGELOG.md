@@ -1,3 +1,11 @@
+# Viash 0.6.7
+
+## MINOR CHANGES
+
+* Automatically generate a warning for deprecated parameters while parsing a .viash.yaml configuration file using the inline documentation deprecation annotations.
+
+* Add a "planned removal" field in the deprecation annotations.
+
 # Viash 0.6.6
 
 This release fixes an issue where stderr was being redirected to stdout.
