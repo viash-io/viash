@@ -22,12 +22,14 @@ import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 
 package object config {
+  import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
+
   implicit val customConfig: Configuration = Configuration.default.withDefaults
 
   // encoders and decoders for Config
   implicit val encodeConfig: Encoder.AsObject[Config] = deriveConfiguredEncoder
-  implicit val decodeConfig: Decoder[Config] = deriveConfiguredDecoder
+  implicit val decodeConfig: Decoder[Config] = deriveConfiguredDecoderWithDeprecationCheck
 
   implicit val encodeInfo: Encoder[Info] = deriveConfiguredEncoder
-  implicit val decodeInfo: Decoder[Info] = deriveConfiguredDecoder
+  implicit val decodeInfo: Decoder[Info] = deriveConfiguredDecoderWithDeprecationCheck
 }

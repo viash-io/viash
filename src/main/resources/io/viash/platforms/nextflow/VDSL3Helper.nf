@@ -710,14 +710,17 @@ def workflowFactory(Map args) {
 
   def workflowKey = key
 
-  // write process to temporary nf file and parse it in memory
-  def processObj = processFactory(processArgs)
+  def processObj = null
   
   workflow workflowInstance {
     take:
     input_
 
     main:
+    if (processObj == null) {
+      processObj = processFactory(processArgs)
+    }
+
     mid1_ = input_
       | debug(processArgs, "input")
       | map { tuple ->

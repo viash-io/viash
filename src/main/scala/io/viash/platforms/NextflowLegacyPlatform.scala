@@ -30,7 +30,7 @@ import io.viash.helpers.Escaper
  * / * Platform class for generating NextFlow (DSL2) modules.
  */
 @description("Run a Viash component as a Nextflow module.")
-@deprecated("Use VDSL3 Nextflow modules instead", "Viash 0.6.0")
+@deprecated("Nextflow platform with `variant: legacy` is deprecated and will be removed", "0.6.0", "0.7.0")
 case class NextflowLegacyPlatform(
   @description("Every platform can be given a specific id that can later be referred to explicitly when running or building the Viash component.")
   id: String = "nextflow",
@@ -65,7 +65,7 @@ case class NextflowLegacyPlatform(
   @example("tag: 4.0", "yaml")
   tag: Option[String] = None,
 
-  @deprecated("nextflow platform: attribute 'version' is deprecated and should be left empty.", "Viash 0.4.0")
+  @deprecated("nextflow platform: attribute 'version' is deprecated and should be left empty.", "0.4.0", "0.7.0")
   version: Option[String] = None,
 
   @description("The URL to the a [custom Docker registry](https://docs.docker.com/registry/).")
@@ -80,7 +80,7 @@ case class NextflowLegacyPlatform(
   @example("namespace_separator: \"+\"", "yaml")
   namespace_separator: String = "_",
 
-  @deprecated("Undocumented & stale value", "Viash 0.6.3")
+  @deprecated("Undocumented & stale value", "0.6.3", "0.7.0")
   executor: Option[String] = None,
 
   @description(
@@ -194,8 +194,6 @@ case class NextflowLegacyPlatform(
   `type`: String = "nextflow",
   variant: String = "legacy"
 ) extends NextflowPlatform {
-  Console.err.println("Warning: `variant: legacy` is deprecated and will be removed in Viash 0.7.0. Please use `variant: vdsl3` instead.")
-
   assert(version.isEmpty, "nextflow platform: attribute 'version' is deprecated")
 
   private val nativePlatform = NativePlatform(id = id)

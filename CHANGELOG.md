@@ -2,7 +2,22 @@
 
 ## MINOR CHANGES
 
-* `NextflowPlatform`: Create directories during a stub run when output path is a nested directory.
+* `NextflowPlatform`: Create directories during a stub run when output path is a nested directory (#314).
+
+* Automatically generate a warning for deprecated parameters while parsing a .viash.yaml configuration file using the inline documentation deprecation annotations.
+
+* Add a "planned removal" field in the deprecation annotations.
+
+* Add testbenches to verify proper formatting of the deprecation versions and compare current version to the planned removal version so no deprecated parameters get to stick around beyond what was planned.
+
+* `NextflowPlatform`: Nextflow processes are created lazily; that is, only when running
+  a Nextflow workflow (#321).
+
+## BUG FIXES
+
+* `NextflowPlatform`: Automatically split Viash config strings into strings of 
+  length 65000 since the JVM has a limit (65536) on the length of string constants (#323).
+
 
 # Viash 0.6.6
 
