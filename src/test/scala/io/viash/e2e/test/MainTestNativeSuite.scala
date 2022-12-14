@@ -158,7 +158,7 @@ class MainTestNativeSuite extends FunSuite with BeforeAndAfterAll {
     )
 
     assert(exitCode == 0)
-    assert(stderr.contains("Warning: .functionality.tests is deprecated: Use `test_resources` instead. No functional difference. Deprecated since Viash 0.5.13"))
+    assert(stderr.contains("Warning: .functionality.tests is deprecated: Use `test_resources` instead. No functional difference. Deprecated since 0.5.13, planned removal 0.7.0."))
 
     assert(stdout.contains("Running tests in temporary directory: "))
     assert(stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
