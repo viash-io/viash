@@ -1,5 +1,9 @@
 # Viash 0.6.7
 
+## MINOR CHANGES
+
+* `NextflowPlatform`: Nextflow processes are created lazily (only when running the workflow).
+
 ## BUG FIXES
 
 * `NextflowPlatform`: Automatically split Viash config strings into strings of 
