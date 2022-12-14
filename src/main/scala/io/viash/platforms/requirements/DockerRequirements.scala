@@ -32,7 +32,7 @@ import io.viash.schemas._
 case class DockerRequirements(
   @description("Specifies which `COPY` entries to add to the Dockerfile while building it.")
   @example("resources: [ \"resource.txt /path/to/resource.txt\" ]", "yaml")
-  @deprecated("Use `copy` instead.", "Viash 0.6.3")
+  @deprecated("`resources` in `setup: {type: docker, resources: ...}` will be removed. Please use `copy` instead.", "0.6.3", "0.7.0")
   resources: OneOrMore[String] = Nil,
 
   @description("Specifies which `LABEL` entries to add to the Dockerfile while building it.")
@@ -63,9 +63,6 @@ case class DockerRequirements(
 
   `type`: String = "docker"
 ) extends Requirements {
-  if (resources.nonEmpty) {
-    Console.err.println("Warning: `resources` in `setup: {type: docker, resources: ...}` will be removed in Viash 0.7.0. Please use `copy` instead.")
-  }
   def installCommands: List[String] = Nil
 
   override def dockerCommands: Option[String] = {
