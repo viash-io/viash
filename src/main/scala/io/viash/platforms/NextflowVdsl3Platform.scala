@@ -244,6 +244,9 @@ case class NextflowVdsl3Platform(
       .replace("\\\\", "\\\\\\\\")
       .replace("\\\"", "\\\\\"")
       .replace("'''", "\\'\\'\\'")
+      .grouped(65000) // JVM has a maximum string limit of 65535
+      .toList         // see https://stackoverflow.com/a/6856773
+      .mkString("'''", "''' + '''", "'''")
     val autoJson = auto.asJson.dropEmptyRecursively
 
     /************************* MAIN.NF *************************/
@@ -263,7 +266,7 @@ case class NextflowVdsl3Platform(
       |// DEFINE CUSTOM CODE
       |
       |// functionality metadata
-      |thisConfig = processConfig(jsonSlurper.parseText('''$funJsonStr'''))
+      |thisConfig = processConfig(jsonSlurper.parseText($funJsonStr))
       |
       |thisScript = '''$executionCode'''
       |
