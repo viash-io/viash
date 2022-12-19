@@ -22,21 +22,21 @@ import io.circe.{Decoder, Encoder, Json}
 import io.circe.ACursor
 
 package object functionality {
-  private var noticeFunTestDeprTests: Boolean = true
-  private var noticeFunTestDeprEnabled: Boolean = true
   // import implicits
 
   import functionality.arguments._
   import functionality.resources._
   import functionality.Status._
   import io.viash.helpers.circe._
+  import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
 
   // encoder and decoder for Functionality
   implicit val encodeFunctionality: Encoder.AsObject[Functionality] = deriveConfiguredEncoder
 
   // add file & direction defaults for inputs & outputs
   implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoder[Functionality].prepare {
-    _.withFocus(_.mapObject{ fun0 =>
+    checkDeprecation[Functionality](_) // check for deprecations before altering the structure of the json
+    .withFocus(_.mapObject{ fun0 =>
       
       val fun1 = fun0.apply("inputs") match {
         case Some(inputs) => 
@@ -65,11 +65,6 @@ package object functionality {
           Console.err.println("Backwards compability is provided but not in combination with functionality.test_resources.")
           fun2
         case (true, false) =>
-          if (noticeFunTestDeprTests) {
-            // todo: solve this in a cleaner way
-            Console.err.println("Warning: functionality.tests is deprecated. Please use functionality.test_resources instead.")
-            noticeFunTestDeprTests = false
-          }
           fun2.add("test_resources", fun2.apply("tests").get).remove("tests")
         case (_, _) => fun2
       }
@@ -81,10 +76,6 @@ package object functionality {
           Console.err.println("Backwards compability is provided but not in combination with functionality.status")
           fun3
         case (true, false) =>
-          if (noticeFunTestDeprEnabled) {
-            Console.err.println("Notice: functionality.enabled is deprecated. Please use functionality.status instead.")
-            noticeFunTestDeprEnabled = false
-          }
           fun3.apply("enabled").get.asBoolean match {
             case Some(true) => fun3.add("status", Json.fromString("enabled")).remove("enabled")
             case Some(false) => fun3.add("status", Json.fromString("disabled")).remove("enabled")
@@ -99,15 +90,15 @@ package object functionality {
 
   // encoder and decoder for Author
   implicit val encodeAuthor: Encoder.AsObject[Author] = deriveConfiguredEncoder
-  implicit val decodeAuthor: Decoder[Author] = deriveConfiguredDecoder
+  implicit val decodeAuthor: Decoder[Author] = deriveConfiguredDecoderWithDeprecationCheck
 
   // encoder and decoder for Requirements
   implicit val encodeComputationalRequirements: Encoder.AsObject[ComputationalRequirements] = deriveConfiguredEncoder
-  implicit val decodeComputationalRequirements: Decoder[ComputationalRequirements] = deriveConfiguredDecoder
+  implicit val decodeComputationalRequirements: Decoder[ComputationalRequirements] = deriveConfiguredDecoderWithDeprecationCheck
   
   // encoder and decoder for ArgumentGroup
   implicit val encodeArgumentGroup: Encoder.AsObject[ArgumentGroup] = deriveConfiguredEncoder
-  implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoder
+  implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoderWithDeprecationCheck
 
   // encoder and decoder for Status, make string lowercase before decoding
   implicit val encodeStatus: Encoder[Status] = Encoder.encodeEnumeration(Status)

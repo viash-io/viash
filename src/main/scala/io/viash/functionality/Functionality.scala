@@ -17,10 +17,12 @@
 
 package io.viash.functionality
 
+
+import io.circe.Json
+import io.circe.generic.extras._
 import arguments._
 import resources._
 import Status._
-import io.circe.generic.extras._
 import io.viash.schemas._
 import io.viash.wrapper.BashWrapper
 
@@ -88,7 +90,7 @@ case class Functionality(
       "bash",
       "This results in the following output when calling the component with the `--help` argument:")
   @since("Viash 0.5.11")
-  @deprecated("Use `arguments` instead.", "Viash 0.6.0")
+  @deprecated("Use `arguments` instead.", "0.6.0", "0.8.0")
   inputs: List[Argument[_]] = Nil,
 
   @description("A list of output arguments in addition to the `arguments` list. Any arguments specified here will have their `type` set to `file` and thr `direction` set to `output` by default.")
@@ -109,7 +111,7 @@ case class Functionality(
       "bash",
       "This results in the following output when calling the component with the `--help` argument:")
   @since("Viash 0.5.11")
-  @deprecated("Use `arguments` instead.", "Viash 0.6.0")
+  @deprecated("Use `arguments` instead.", "0.6.0", "0.8.0")
   outputs: List[Argument[_]] = Nil,
   
   @description(
@@ -238,10 +240,13 @@ case class Functionality(
       "yaml")
   test_resources: List[Resource] = Nil,
 
-  @description("A map for storing custom annotations.")
-  @example("info: {twitter: wizzkid, appId: com.example.myApplication}", "yaml")
+  @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
+  @example(
+    """info:
+      |  twitter: wizzkid
+      |  classes: [ one, two, three ]""".stripMargin, "yaml")
   @since("Viash 0.4.0")
-  info: Map[String, String] = Map.empty[String, String],
+  info: Json = Json.Null,
 
   @description("Allows setting a component to active, deprecated or disabled.")
   @since("Viash 0.6.0")
@@ -272,24 +277,18 @@ case class Functionality(
   // START OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
   @description("Adds the resources directory to the PATH variable when set to true. This is set to false by default.")
   @since("Viash 0.5.5")
-  @removed("Extending the PATH turned out to be not desirable.", "Viash 0.5.11")
+  @removed("Extending the PATH turned out to be not desirable.", "", "0.5.11")
   private val add_resources_to_path: Boolean = false
 
   @description("One or more Bash/R/Python scripts to be used to test the component behaviour when `viash test` is invoked. Additional files of type `file` will be made available only during testing. Each test script should expect no command-line inputs, be platform-independent, and return an exit code >0 when unexpected behaviour occurs during testing.")
-  @deprecated("Use `test_resources` instead. No functional difference.", "Viash 0.5.13")
+  @deprecated("Use `test_resources` instead. No functional difference.", "0.5.13", "0.7.0")
   private val tests: List[Resource] = Nil
 
   @description("Setting this to false with disable this component when using namespaces.")
   @since("Viash 0.5.13")
-  @deprecated("Use `status` instead.", "Viash 0.6.0")
+  @deprecated("Use `status` instead.", "0.6.0", "0.8.0")
   private val enabled: Boolean = true
   // END OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
-  if (inputs.nonEmpty) {
-    Console.err.println("Warning: .functionality.inputs is deprecated. Please use .functionality.arguments instead.")
-  }
-  if (outputs.nonEmpty) {
-    Console.err.println("Warning: .functionality.outputs is deprecated. Please use .functionality.arguments instead.")
-  }
 
   // note that in the Functionality companion object, defaults gets added to inputs and outputs *before* actually 
   // parsing the configuration file with Circe. This is done in the .prepare step.
@@ -314,7 +313,7 @@ case class Functionality(
     }
   }
 
-  private def addToArgGroup(argumentGroups: List[ArgumentGroup], name: String, arguments: List[Argument[_]]): List[ArgumentGroup] = {
+  private def addToArgGroup(argumentGroups: List[ArgumentGroup], name: String, arguments: List[Argument[_]]): Option[ArgumentGroup] = {
     val argNamesInGroups = argumentGroups.flatMap(_.stringArguments).toSet
 
     // Check if 'arguments' is in 'argumentGroups'. 
@@ -325,17 +324,17 @@ case class Functionality(
 
     // if there are no arguments missing from the argument group, just return the existing group (if any)
     if (argumentsNotInGroup.isEmpty) {
-      existing.toList
+      existing
 
     // if there are missing arguments and there is an existing group, add the missing arguments to it
     } else if (existing.isDefined) {
-      List(existing.get.copy(
+      Some(existing.get.copy(
         arguments = existing.get.arguments.toList ::: argumentsNotInGroup.map(arg => Right(arg))
       ))
     
     // else create a new group
     } else {
-      List(ArgumentGroup(
+      Some(ArgumentGroup(
         name = name,
         arguments = argumentsNotInGroup.map(arg => Right(arg))
       ))
@@ -343,12 +342,24 @@ case class Functionality(
   }
 
   def allArgumentGroups: List[ArgumentGroup] = {
-    val inputGroup = addToArgGroup(argument_groups, "Inputs", inputs)
-    val outputGroup = addToArgGroup(argument_groups, "Outputs", outputs)
-    val defaultGroup = addToArgGroup(argument_groups, "Arguments", arguments)
-    val groupsFiltered = argument_groups.filter(gr => !List("Inputs", "Outputs", "Arguments").contains(gr.name))
+    val joinGroup = Map("Inputs" -> inputs, "Outputs" -> outputs, "Arguments" -> arguments)
+    val groups = argument_groups.map{gr => 
+      if (List("Inputs", "Outputs", "Arguments") contains (gr.name)) {
+        addToArgGroup(argument_groups, gr.name, joinGroup(gr.name)).get
+      } else {
+        gr
+      }
+    }
+    val missingGroups = joinGroup.flatMap{
+      case (name, args) =>
+        if (!groups.exists(_.name == name)) {
+          addToArgGroup(argument_groups, name, args)
+        } else {
+          None
+        }
+    }.toList
 
-    inputGroup ::: outputGroup ::: defaultGroup ::: groupsFiltered
+    missingGroups ::: groups
   }
     
   // check whether there are not multiple positional arguments with multiplicity >1

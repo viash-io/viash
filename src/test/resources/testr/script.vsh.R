@@ -50,7 +50,7 @@
 #'     multiple: true
 #'   test_resources:
 #'   - type: bash_script
-#'     path: tests/check_outputs.sh
+#'     path: test.sh
 #' platforms:
 #' - type: native
 #' - type: docker

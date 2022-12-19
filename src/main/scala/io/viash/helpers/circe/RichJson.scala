@@ -106,61 +106,89 @@ class RichJson(json: Json) {
     }
   }
 
+  private val mergeTag = "__merge__"
+
   /**
    * Recursively resolve inheritance within Json objects.
    * 
-   * If an object has a field named "__inherits__", that file will be read
+   * If an object has a field named "__merge__", that file will be read
    * and be deep-merged with the object itself.
    */
   def inherit(uri: URI, stripInherits: Boolean = true): Json = {
     json match {
       case x if x.isObject =>
         val obj1 = x.asObject.get
-        val obj2 = obj1.apply("__inherits__") match {
+        
+        // throw removal error
+        assert(
+          !obj1.contains("__includes__"), 
+          "__includes__ has been deprecated and removed. Please use __merge__ instead."
+        )
+
+        val obj2 = obj1.apply(mergeTag) match {
           case Some(y) if y.isString || y.isArray =>
-            // resolve uri
-            val uriStrs = 
+            // get includes
+            val inheritStrs0 = 
               if (y.isString) {
                 List(y.asString.get)
               } else {
                 // TODO: add decent error message instead of simply .get
                 y.asArray.get.map(_.asString.get).toList
               }
-            val uris = uriStrs.map(uri.resolve(_))
             
-            // remove inherits field from obj1
-            val obj1rem = Json.fromJsonObject(
-              if (stripInherits) {
-                obj1.remove("__inherits__")
+            // add self as last element if it is not already explicitly defined
+            val inheritStrs1 =
+              if (inheritStrs0.contains(".")) {
+                inheritStrs0
               } else {
-                // replace __inherits__ with absolute path using deepMerge
-                val uriJsons = uris.map(uri => Json.fromString(uri.toString))
-                val newInherits = if (y.isString) uriJsons.head else Json.fromValues(uriJsons)
-                val newObj = JsonObject("__inherits__" -> newInherits)
+                inheritStrs0 ::: List(".")
+              }
+
+            // fetch uris
+            val uris = inheritStrs1.map{str =>
+              if (str == ".") {
+                None
+              } else {
+                Some(uri.resolve(str))
+              }
+            }
+            
+            // remove inherits field from obj1 if so desired, else replace with absolute paths
+            val self = Json.fromJsonObject(
+              if (stripInherits) {
+                obj1.remove(mergeTag)
+              } else {
+                // replace __merge__ with absolute path using deepMerge
+                val uriJsons = uris.map{
+                  case None => Json.fromString(".")
+                  case Some(uri) => Json.fromString(uri.toString)
+                }
+                val newInherits = Json.fromValues(uriJsons)
+                val newObj = JsonObject(mergeTag -> newInherits)
                 obj1 deepMerge newObj
               }
             )
 
-            // recurse through new json as well
-            val newJsons = uris.map(newURI => {
-              // read as string
-              val str = IO.read(newURI)
+            // generate list of jsons to merge
+            // don't forget to resolve inheritance recursively
+            val jsonsToMerge = uris.map{
+              case None => self
+              case Some(newURI) =>
+                // read as string
+                val str = IO.read(newURI)
 
-              // parse as yaml
-              // TODO: add decent error message instead of simply .get
-              val newJson1 = io.circe.yaml.parser.parse(str).right.get
+                // parse as yaml
+                // TODO: add decent error message instead of simply .get
+                val newJson1 = io.circe.yaml.parser.parse(str).right.get
 
-              // recurse through new json as well
-              val newJson2 = newJson1.inherit(newURI)
+                // recurse through new json as well
+                val newJson2 = newJson1.inherit(newURI)
 
-              newJson2
-            })
+                newJson2
+            }
 
-            // merge with orig object
-            val jsMerged = 
-              newJsons.foldLeft(obj1rem) { (oldJs, newJs) => 
-                oldJs.concatDeepMerge(newJs)
-              }
+            // merge jsons
+            val jsMerged = jsonsToMerge.reduce{_ concatDeepMerge _}
 
             // return combined object
             jsMerged.asObject.get
@@ -180,7 +208,7 @@ class RichJson(json: Json) {
   def stripInherits: Json = {
     json
       .mapObject{
-        _.mapValues(_.stripInherits).filter(_._1 != "__inherits__")
+        _.mapValues(_.stripInherits).filter(_._1 != mergeTag)
       }
       .mapArray(
         _.map(_.stripInherits)

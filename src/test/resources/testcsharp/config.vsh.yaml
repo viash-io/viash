@@ -49,10 +49,10 @@ functionality:
       multiple: true
   resources:
     - type: csharp_script
-      path: ./script.csx
+      path: script.csx
   test_resources:
     - type: bash_script
-      path: tests/check_outputs.sh
+      path: test.sh
 platforms:
   - type: native
   - type: docker

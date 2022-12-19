@@ -140,7 +140,7 @@ class NextFlowVdsl3PlatformInputFormatsTest extends FunSuite with BeforeAndAfter
 
   test("Build pipeline components", DockerTest, NextFlowTest) {
     // build the nextflow containers
-    val (_, _) = TestHelper.testMainWithStdErr(
+    val (_, _, _) = TestHelper.testMainWithStdErr(
       "ns", "build",
       "-s", srcPath,
       "-t", targetPath,

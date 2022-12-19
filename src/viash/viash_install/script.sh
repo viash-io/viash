@@ -53,7 +53,7 @@ function clean_up {
 trap clean_up EXIT
 
 
-if [[ "$par_tag" == "develop" || "$par_tag" == ^@.*$ ]]; then
+if [[ "$par_tag" == "develop" || "$par_tag" =~ ^@.*$ ]]; then
   used_tag=${par_tag#@}
 
   # Download Viash helper scripts
@@ -88,46 +88,56 @@ else
   chmod +x "$par_bin/viash"
 
   # Download Viash helper scripts
-  echo "> Downloading source v$par_tag"
-  curl -L -s "https://github.com/viash-io/viash/archive/refs/tags/$par_tag.zip" -o "$build_dir/$par_tag.zip"
-  unzip -q "$build_dir/$par_tag.zip" -d "$build_dir"
+  if [ "$par_tools" == "true" ]; then
+    echo "> Downloading source v$par_tag"
+    curl -L -s "https://github.com/viash-io/viash/archive/refs/tags/$par_tag.zip" -o "$build_dir/$par_tag.zip"
+    unzip -q "$build_dir/$par_tag.zip" -d "$build_dir"
+  fi
 fi
 
-# build components
-extra_args=()
+if [ "$par_tools" == "true" ]; then
+  echo "WARNING: Viash tools such as viash_build and viash_test will be removed in Viash 0.7.0"
+  
+  # build components
+  extra_args=()
 
-if [ ! -z "$par_registry" ]; then
-  extra_args+=( -c ".functionality.arguments[.name == '--registry'].default := '$par_registry'" )
-fi
-if [ ! -z "$par_organization" ]; then
-  extra_args+=( -c ".functionality.arguments[.name == '--organization'].default := '$par_organization'" )
-fi
-if [ ! -z "$par_namespace_separator" ]; then
-  extra_args+=( -c ".functionality.arguments[.name == '--namespace_separator'].default := '$par_namespace_separator'" )
-fi
-if [ ! -z "$par_config_mod" ]; then
-  echo "Warning: Adding config mods to viash install is currently not supported."
-  # extra_args+=( -c ".functionality.arguments[.name == '--config_mod'].default := '${par_config_mod@Q}'" )
-fi
-if [ ! -z "$par_target_image_source" ]; then
-  extra_args+=( -c ".functionality.arguments[.name == '--target_image_source'].default := '$par_target_image_source'" )
-fi
-if [ ! -z "$par_nextflow_variant" ]; then
-  echo "Warning: --nextflow_variant is deprecated and will be removed in future versions."
-fi
+  if [ ! -z "$par_registry" ]; then
+    extra_args+=( -c ".functionality.arguments[.name == '--registry'].default := '$par_registry'" )
+  fi
+  if [ ! -z "$par_organization" ]; then
+    extra_args+=( -c ".functionality.arguments[.name == '--organization'].default := '$par_organization'" )
+  fi
+  if [ ! -z "$par_namespace_separator" ]; then
+    extra_args+=( -c ".functionality.arguments[.name == '--namespace_separator'].default := '$par_namespace_separator'" )
+  fi
+  if [ ! -z "$par_config_mod" ]; then
+    echo "Warning: Adding config mods to viash install is currently not supported."
+    # extra_args+=( -c ".functionality.arguments[.name == '--config_mod'].default := '${par_config_mod@Q}'" )
+  fi
+  if [ ! -z "$par_target_image_source" ]; then
+    extra_args+=( -c ".functionality.arguments[.name == '--target_image_source'].default := '$par_target_image_source'" )
+  fi
+  if [ ! -z "$par_nextflow_variant" ]; then
+    echo "Warning: --nextflow_variant is deprecated and will be removed in future versions."
+  fi
 
+  echo "> Building Viash helper scripts from source"
+  "$par_bin/viash" ns build \
+    -s "$build_dir/viash-$par_tag/src/viash" \
+    -t "$par_bin/" \
+    --flatten \
+    "${extra_args[@]}" \
+    -c ".functionality.arguments[.name == '--viash'].default := '"$par_bin/viash"'" \
+    -c ".functionality.arguments[.name == '--log' && root.functionality.name == 'viash_build'].default := '"${par_log_prefix}build.txt"'" \
+    -c ".functionality.arguments[.name == '--log' && root.functionality.name == 'viash_test'].default := '"${par_log_prefix}test.txt"'" \
+    -c ".functionality.arguments[.name == '--tsv' && root.functionality.name == 'viash_test'].default := '"${par_log_prefix}test.tsv"'" \
+    -c ".functionality.arguments[.name == '--log' && root.functionality.name == 'viash_push'].default := '"${par_log_prefix}push.txt"'" \
+    -c ".functionality.version := '$par_tag'"
 
-echo "> Building Viash helper scripts from source"
-"$par_bin/viash" ns build \
-  -s "$build_dir/viash-$par_tag/src/viash" \
-  -t "$par_bin/" \
-  --flatten \
-  "${extra_args[@]}" \
-  -c ".functionality.arguments[.name == '--viash'].default := '"$par_bin/viash"'" \
-  -c ".functionality.arguments[.name == '--log' && root.functionality.name == 'viash_build'].default := '"${par_log_prefix}build.txt"'" \
-  -c ".functionality.arguments[.name == '--log' && root.functionality.name == 'viash_test'].default := '"${par_log_prefix}test.txt"'" \
-  -c ".functionality.arguments[.name == '--tsv' && root.functionality.name == 'viash_test'].default := '"${par_log_prefix}test.tsv"'" \
-  -c ".functionality.arguments[.name == '--log' && root.functionality.name == 'viash_push'].default := '"${par_log_prefix}push.txt"'" \
-  -c ".functionality.version := '$par_tag'"
+  if [ -f "$par_bin/.config.vsh.yaml" ]; then
+    rm "$par_bin/.config.vsh.yaml"
+  fi
+
+fi
 
 echo "> Done, happy viash-ing!"

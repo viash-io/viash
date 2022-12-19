@@ -86,7 +86,7 @@ trait ViashNs {
     name = "src",
     short = Some('s'),
     descr = " A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
-    default = Some("src")
+    default = None
   )
   val platform = registerOpt[String](
     name = "platform",
@@ -110,6 +110,16 @@ trait ViashNs {
     short = Some('c'),
     default = Some(Nil),
     descr = "Modify a viash config at runtime using @[config_mod](dynamic config modding)."
+  )
+}
+
+trait ViashNsBuild {
+  _: DocumentedSubcommand =>
+  val target = registerOpt[String](
+    name = "target",
+    short = Some('t'),
+    descr = "A target directory to build the executables into. Default: target/.",
+    default = None
   )
 }
 trait WithTemporary {
@@ -180,18 +190,6 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       "Build an executable from the provided viash config file.",
       "viash build config.vsh.yaml -o output [-p docker] [-m] [-s]")
 
-    val printMeta = registerOpt[Boolean](
-      name = "meta",
-      short = Some('m'),
-      default = Some(false),
-      descr = "Print out some meta information at the end."
-    )
-    val writeMeta = registerOpt[Boolean](
-      name = "write_meta",
-      short = Some('w'),
-      default = Some(false),
-      descr = "Write out some meta information to RESOURCES_DIR/viash.yaml at the end."
-    )
     val output = registerOpt[String](
       name = "output",
       short = Some('o'),
@@ -261,18 +259,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
 
   val namespace = new DocumentedSubcommand("ns") {
 
-    val build = new DocumentedSubcommand("build") with ViashNs{
+    val build = new DocumentedSubcommand("build") with ViashNs with ViashNsBuild {
       banner(
         "viash ns build",
         "Build a namespace from many viash config files.",
-        "viash ns build [-n nmspc] [-s src] [-t target] [-p docker] [--setup] [---push] [--parallel] [--flatten]")
+        "viash ns build [-n nmspc] [-s src] [-t target] [-p docker] [--setup] [--push] [--parallel] [--flatten]")
 
-      val target = registerOpt[String](
-        name = "target",
-        short = Some('t'),
-        descr = "A target directory to build the executables into. Default: target/.",
-        default = Some("target")
-      )
       val setup = registerOpt[String](
         name = "setup",
         default = None,
@@ -282,12 +274,6 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         name = "push",
         default = Some(false),
         descr = "Whether or not to push the container to a Docker registry [Docker Platform only]."
-      )
-      val writeMeta = registerOpt[Boolean](
-        name = "write_meta",
-        short = Some('w'),
-        default = Some(false),
-        descr = "Write out some meta information to RESOURCES_DIR/viash.yaml at the end."
       )
       val flatten = registerOpt[Boolean](
         name = "flatten",
@@ -351,12 +337,24 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
           | * `{main-script}`: path to the main script (if any)
           | * `{abs-main-script}`: absolute path to the main script (if any)
           | * `{functionality-name}`: name of the component
+          | * `{namespace}`: namespace of the component
+          | * `{platform}`: selected platform id (only when --apply_platform is used)
           |
           |A command suffixed by `\;` (or nothing) will execute one command for each
           |of the Viash components, whereas a command suffixed by `+` will execute one
           |command for all Viash components.""".stripMargin,
         """viash ns exec 'echo {path} \\;'
           |viash ns exec 'chmod +x {main-script} +'""".stripMargin
+      )
+
+      val applyPlatform = registerOpt[Boolean] (
+        name = "apply_platform",
+        short = Some('a'),
+        default = Some(false),
+        descr = 
+          """Fills in the {platform} field by applying each platform to the config separately.
+            |Note that this results in the provided command being applied once for every platform
+            |that matches the --platform regex.""".stripMargin
       )
 
       val dryrun = registerOpt[Boolean] (

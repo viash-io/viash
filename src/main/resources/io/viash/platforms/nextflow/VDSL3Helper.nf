@@ -486,7 +486,12 @@ def processProcessArgs(Map args) {
     }
   }
 
-  for (nam in [ "map", "mapId", "mapData", "mapPassthrough" ]) {
+  // if this is a stubrun, remove certain directives?
+  if (workflow.stubRun) {
+    processArgs.directives.keySet().removeAll(["publishDir", "cpus", "memory", "label"])
+  }
+
+  for (nam in [ "map", "mapId", "mapData", "mapPassthrough", "filter" ]) {
     if (processArgs.containsKey(nam) && processArgs[nam]) {
       assert processArgs[nam] instanceof Closure : "Expected process argument '$nam' to be null or a Closure. Found: class ${processArgs[nam].getClass()}"
     }
@@ -605,7 +610,7 @@ def processFactory(Map processArgs) {
   def stub = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "output" }
     .collect { par -> 
-      "\${ args.containsKey(\"${par.plainName}\") ? \"touch \\\"\" + (args[\"${par.plainName}\"] instanceof String ? args[\"${par.plainName}\"].replace(\"_*\", \"_0\") : args[\"${par.plainName}\"].join('\" \"')) + \"\\\"\" : \"\" }"
+      "\${ args.containsKey(\"${par.plainName}\") ? \"touch2 \\\"\" + (args[\"${par.plainName}\"] instanceof String ? args[\"${par.plainName}\"].replace(\"_*\", \"_0\") : args[\"${par.plainName}\"].join('\" \"')) + \"\\\"\" : \"\" }"
     }
     .join("\n")
 
@@ -628,6 +633,7 @@ def processFactory(Map processArgs) {
   |  tuple val("\$id"), val(passthrough)$outputPaths, optional: true
   |stub:
   |\"\"\"
+  |touch2() { mkdir -p "\\\$(dirname "\\\$1")" && touch "\\\$1" ; }
   |$stub
   |\"\"\"
   |script:$assertStr
@@ -642,6 +648,7 @@ def processFactory(Map processArgs) {
   |export VIASH_META_TEMP_DIR="${['docker', 'podman', 'charliecloud'].any{ it == workflow.containerEngine } ? '/tmp' : tmpDir}"
   |export VIASH_META_FUNCTIONALITY_NAME="${thisConfig.functionality.name}"
   |export VIASH_META_EXECUTABLE="\\\$VIASH_META_RESOURCES_DIR/\\\$VIASH_META_FUNCTIONALITY_NAME"
+  |export VIASH_META_CONFIG="\\\$VIASH_META_RESOURCES_DIR/.config.vsh.yaml"
   |\${task.cpus ? "export VIASH_META_CPUS=\$task.cpus" : "" }
   |\${task.memory?.bytes != null ? "export VIASH_META_MEMORY_B=\$task.memory.bytes" : "" }
   |if [ ! -z \\\${VIASH_META_MEMORY_B+x} ]; then
@@ -703,15 +710,18 @@ def workflowFactory(Map args) {
 
   def workflowKey = key
 
-  // write process to temporary nf file and parse it in memory
-  def processObj = processFactory(processArgs)
+  def processObj = null
   
   workflow workflowInstance {
     take:
     input_
 
     main:
-    output_ = input_
+    if (processObj == null) {
+      processObj = processFactory(processArgs)
+    }
+
+    mid1_ = input_
       | debug(processArgs, "input")
       | map { tuple ->
         tuple = tuple.clone()
@@ -793,6 +803,13 @@ def workflowFactory(Map args) {
         }
         tuple
       }
+    if (processArgs.filter) {
+      mid2_ = mid1_
+        | filter{processArgs.filter(it)}
+    } else {
+      mid2_ = mid1_
+    }
+    output_ = mid2_
       | debug(processArgs, "processed")
       | map { tuple ->
         def id = tuple[0]
@@ -823,13 +840,18 @@ def workflowFactory(Map args) {
         // remove arguments with explicit null values
         combinedArgs.removeAll{it.value == null}
 
-        // check whether required arguments exist
-        thisConfig.functionality.allArguments
-          .forEach { par ->
-            if (par.required) {
-              assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
+        if (workflow.stubRun) {
+          // add id if missing
+          combinedArgs = [id: 'stub'] + combinedArgs
+        } else {
+          // check whether required arguments exist
+          thisConfig.functionality.allArguments
+            .forEach { par ->
+              if (par.required) {
+                assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
+              }
             }
-          }
+        }
 
         // TODO: check whether parameters have the right type
 
@@ -848,13 +870,15 @@ def workflowFactory(Map args) {
             } else {
               inputFiles = []
             }
-            // throw error when an input file doesn't exist
-            inputFiles.each{ file -> 
-              assert file.exists() :
-                "Error in module '${key}' id '${id}' argument '${par.plainName}'.\n" +
-                "  Required input file does not exist.\n" +
-                "  Path: '$file'.\n" +
-                "  Expected input file to exist"
+            if (!workflow.stubRun) {
+              // throw error when an input file doesn't exist
+              inputFiles.each{ file -> 
+                assert file.exists() :
+                  "Error in module '${key}' id '${id}' argument '${par.plainName}'.\n" +
+                  "  Required input file does not exist.\n" +
+                  "  Path: '$file'.\n" +
+                  "  Expected input file to exist"
+              }
             }
             inputFiles 
           } 
@@ -929,6 +953,8 @@ def workflowFactory(Map args) {
   wf.metaClass.run = { runArgs ->
     workflowFactory(runArgs)
   }
+  // add config to module for later introspection
+  wf.metaClass.config = thisConfig
 
   return wf
 }

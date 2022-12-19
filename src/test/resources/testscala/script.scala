@@ -19,7 +19,7 @@ val (outputFun, outputFile): (String => Unit, Option[FileWriter]) = par.output m
     ((s: String) => println(s), None)
 }
 def toStringWithFields(c: AnyRef): Map[String, Any] = {
-  (Map[String, Any]() /: c.getClass.getDeclaredFields) { (a, f) =>
+  c.getClass.getDeclaredFields.foldLeft(Map.empty[String, Any]) { (a, f) =>
     f.setAccessible(true)
     a + (f.getName -> f.get(c))
   }
@@ -28,11 +28,11 @@ def toStringWithFields(c: AnyRef): Map[String, Any] = {
 try {
   logFun("Parsed input arguments.")
 
-  for ((name, value) ← toStringWithFields(par)) {
+  for ((name, value) <- toStringWithFields(par)) {
     outputFun(s"$name: |$value|")
   }
 
-  for ((name, value) ← toStringWithFields(meta)) {
+  for ((name, value) <- toStringWithFields(meta)) {
     outputFun(s"meta_$name: |$value|")
   }
   

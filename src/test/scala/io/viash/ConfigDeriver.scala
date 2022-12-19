@@ -1,12 +1,10 @@
 package io.viash
 
-import java.nio.file.Path
-
-import io.viash.config.Config.parseConfigMods
+import java.nio.file.{Path, Paths, Files}
 import io.circe.yaml.parser
 import io.circe.yaml.{Printer => YamlPrinter}
 import io.viash.helpers.IO
-import java.nio.file.{Paths, Files}
+import io.viash.config_mods.ConfigMods
 
 final case class ConfigDeriver(
   baseConfigFile: Path,
@@ -55,12 +53,9 @@ object ConfigDeriver {
 
     val js = parser.parse(yamlText).fold(errorHandler, a => a)
 
-    val confMods = parseConfigMods(configMods)
+    val confMods = ConfigMods.parseConfigMods(configMods)
 
-    val modifiedJs = confMods match {
-      case None => js
-      case Some(cmds) => cmds(js, preparse = false)
-    }
+    val modifiedJs = confMods(js, preparse = false)
 
     val yamlPrinter = YamlPrinter(
       preserveOrder = true,

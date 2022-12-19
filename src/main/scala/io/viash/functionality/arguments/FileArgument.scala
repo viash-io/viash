@@ -17,6 +17,7 @@
 
 package io.viash.functionality.arguments
 
+import io.circe.Json
 import java.nio.file.Path
 import io.viash.helpers.data_structures._
 import io.viash.schemas._
@@ -47,6 +48,14 @@ case class FileArgument(
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
 
+  @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
+  @example(
+    """info:
+      |  category: cat1
+      |  labels: [one, two, three]""".stripMargin, "yaml")
+  @since("Viash 0.6.3")
+  info: Json = Json.Null,
+
   @description("An example value for this argument. If no [`default`](#default) property was specified, this will be used for that purpose.")
   @example(
     """- name: --my_file
@@ -65,14 +74,25 @@ case class FileArgument(
       "yaml")
   default: OneOrMore[Path] = Nil,
 
-  @description("The file or folder should exist before the start of execution. If set to `true`, an error will be produced if the file or folder wasn't found.")
+  @description("Checks whether the file or folder exists. For input files, this check will happen " +
+    "before the execution of the script, while for output files the check will happen afterwards.")
   @example(
     """- name: --my_file
       |  type: file
       |  must_exist: true
       |""".stripMargin,
       "yaml")
-  must_exist: Boolean = false,
+  must_exist: Boolean = true,
+
+  @description("If the output filename is a path and it does not exist, create it before executing the script (only for `direction: output`).")
+  @example(
+    """- name: --my_file
+      |  type: file
+      |  direction: output
+      |  create_parent: true
+      |""".stripMargin,
+      "yaml")
+  create_parent: Boolean = true,
 
   @description("Make the value for this argument required. If set to `true`, an error will be produced if no value was provided. `false` by default.")
   @example(
@@ -121,6 +141,7 @@ case class FileArgument(
     name: String, 
     alternatives: OneOrMore[String],
     description: Option[String],
+    info: Json,
     example: OneOrMore[Path],
     default: OneOrMore[Path],
     required: Boolean,
@@ -129,6 +150,10 @@ case class FileArgument(
     multiple_sep: String,
     dest: String
   ): Argument[Path] = {
-    copy(name, alternatives, description, example, default, this.must_exist, required, direction, multiple, multiple_sep, dest, `type`)
+    copy(
+      name, alternatives, description, info, example, default, 
+      this.must_exist, this.create_parent, required, direction, 
+      multiple, multiple_sep, dest, `type`
+    )
   }
 }

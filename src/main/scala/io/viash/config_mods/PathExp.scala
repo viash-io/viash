@@ -76,6 +76,10 @@ case class Attribute(string: String) extends PathExp {
 case class Filter(condition: Condition) extends PathExp {
   def applyCommand(cursor: ACursor, cmd: ACursor => ACursor, remaining: Path): ACursor = {
     var elemCursor = cursor.downArray
+    if (elemCursor.failed) {
+      // cursor doesn't have any children
+      return cursor
+    }
     var lastWorking = elemCursor
     while (!elemCursor.failed) {
       if (condition.apply(elemCursor.focus.get)) {
