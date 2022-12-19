@@ -38,6 +38,14 @@ case object BuildError extends Status {
   val isError = true
   val color = Console.RED
 }
+case object SetupError extends Status {
+  val isError = true
+  val color = Console.RED
+}
+case object PushError extends Status {
+  val isError = true
+  val color = Console.RED
+}
 case object TestError extends Status {
   val isError = true
   val color = Console.RED

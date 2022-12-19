@@ -40,7 +40,7 @@ class MainNSBuildNativeSuite extends FunSuite with BeforeAndAfterAll{
 
     assert(nsFolder.exists)
     assert(nsFolder.isDirectory)
-    assert(exitCode == 0)
+    assert(exitCode == 1)
 
     for ((component, _, _, _) <- components) {
       val executable = componentExecutableFile(component)
