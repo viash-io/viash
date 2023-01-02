@@ -4,6 +4,10 @@
 
 * `Main`: Capture build, setup and push errors and output an exit code.
 
+* `Testbenches`: Add testbenches to verify switching of viash versions.
+
+* `File downloading`: Add check to preemptively catch file errors (e.g. 404).
+
 # Viash 0.6.7
 
 Another minor release which contains several quality of life improvements for the Nextflow VDSL3 platform, as well as automated warnings for deprecated functionality.
