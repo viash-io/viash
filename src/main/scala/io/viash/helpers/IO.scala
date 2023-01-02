@@ -31,6 +31,8 @@ import io.viash.functionality.resources.Resource
 import java.nio.file.attribute.PosixFilePermission
 import java.util.Comparator
 import scala.collection.JavaConverters
+import java.io.FileNotFoundException
+import java.net.HttpURLConnection
 
 object IO {
   def tempDir: Path = {
@@ -126,7 +128,18 @@ object IO {
       }
     } else if (uri.getScheme == "http" || uri.getScheme == "https") {
       val url = new URL(uri.toString)
-      (url #> path.toFile).!!
+
+      // Prevent hanging when resource is not available
+      val connection = url.openConnection().asInstanceOf[HttpURLConnection]
+      connection.setConnectTimeout(5000)
+      connection.setReadTimeout(5000)
+      connection.connect()
+
+      if (connection.getResponseCode >= 400)
+        throw new RuntimeException(s"Could not download file: ${uri.toString} , Response code: ${connection.getResponseCode}")
+      else
+        (url #> path.toFile).!!
+
     } else {
       throw new RuntimeException("Unsupported scheme: " + uri.getScheme)
     }

@@ -63,20 +63,7 @@ object Main {
 
   def main(args: Array[String]): Unit = {
     try {
-      val workingDir = Paths.get(System.getProperty("user.dir"))
-
-      val viashVersion = detectVersion(Some(workingDir))
-      
-      val exitCode = 
-        viashVersion match {
-          // don't use `runWithVersion()` if the version is the same
-          // as this Viash or if the variable is explicitly set to `-`.
-          case Some(version) if version != "-" && version != Main.version =>
-            runWithVersion(args, Some(workingDir), version)
-          case _ =>
-            internalMain(args, workingDir = Some(workingDir))
-        }
-
+      val exitCode = outerMain(args)
       System.exit(exitCode)
     } catch {
       case e @ ( _: FileNotFoundException | _: NoSuchFileException | _: MissingResourceFileException ) =>
@@ -94,6 +81,24 @@ object Main {
         e.printStackTrace()
         System.exit(1)
     }
+  }
+  
+  // Outer logic to switch between versions
+  // Tests require this to be callable as a function so System.exit and exception handling is not done here
+  // Reason for not handling exceptions is that a testbench needs to be able to override the System.exit from Scallop by throwing an exception
+  def outerMain(args: Array[String]): Int = {
+      val workingDir = Paths.get(System.getProperty("user.dir"))
+
+      val viashVersion = detectVersion(Some(workingDir))
+      
+      viashVersion match {
+        // don't use `runWithVersion()` if the version is the same
+        // as this Viash or if the variable is explicitly set to `-`.
+        case Some(version) if version != "-" && version != Main.version =>
+          runWithVersion(args, Some(workingDir), version)
+        case _ =>
+          internalMain(args, workingDir = Some(workingDir))
+        }
   }
 
   def runWithVersion(args: Array[String], workingDir: Option[Path] = None, version: String): Int = {
