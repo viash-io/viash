@@ -73,12 +73,36 @@ object DependencyResolver {
       )(config1)
 
     // get caches and store in repository classes
-    composedDependenciesLens.modify(_
+    val config3 = composedDependenciesLens.modify(_
       .map{d =>
-          val repo = d.repository.toOption.get
-          val localRepoPath = cacheRepo(repo)
-          d.copy(repository = Right(localRepoPath))
+        val repo = d.repository.toOption.get
+        val localRepoPath = cacheRepo(repo)
+        d.copy(repository = Right(localRepoPath))
       }
       )(config2)
+
+    // find the referenced config in the locally cached repository
+    composedDependenciesLens.modify(_
+      .map{dep =>
+        val repo = dep.repository.toOption.get
+        // search for all configs in the repository
+        val configs = Config.readConfigs(
+          source = repo.localPath,
+          query = None,
+          queryNamespace = None,
+          queryName = None,
+          platform = None,
+          configMods = Nil,
+          addOptMainScript = false,
+          applyPlatform = false
+        )
+        // find the matching config by name
+        // TODO match namespace names
+        val validConfigs = configs.flatMap(_.swap.toOption)
+        val dependencyConfig = validConfigs.find(c => c.functionality.name == dep.name)
+        val configPath = dependencyConfig.flatMap(_.info).map(_.config).getOrElse("")
+        dep.copy(foundConfigPath = configPath)
+      }
+      )(config3)
   }
 }
