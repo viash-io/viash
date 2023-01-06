@@ -25,7 +25,7 @@ case class Dependency(
   repository: Either[String, Repository] = Right(LocalRepository()),
 
   // internal stuff
-  foundConfigPath: String = "",
+  foundConfigPath: Option[String] = None,
   workConfig: Option[Config] = None
 ) {
   def workRepository: Option[Repository] = repository.toOption

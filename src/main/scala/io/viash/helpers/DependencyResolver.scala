@@ -38,7 +38,10 @@ object DependencyResolver {
     }
 
   // Modify the config so all of the dependencies are available locally
-  def modifyConfig(config: Config): Config = {
+  def modifyConfig(config: Config, ttl: Integer = 10): Config = {
+
+    // Check recursion level
+    require(ttl >= 0, "Not all dependencies evaluated as the recursion is too deep")
 
     // Check all fun.repositories have valid names
     val repositories = config.functionality.repositories
@@ -82,7 +85,7 @@ object DependencyResolver {
       )(config2)
 
     // find the referenced config in the locally cached repository
-    composedDependenciesLens.modify(_
+    val config4 = composedDependenciesLens.modify(_
       .map{dep =>
         val repo = dep.repository.toOption.get
         // search for all configs in the repository
@@ -100,9 +103,21 @@ object DependencyResolver {
         // TODO match namespace names
         val validConfigs = configs.flatMap(_.swap.toOption)
         val dependencyConfig = validConfigs.find(c => c.functionality.name == dep.name)
-        val configPath = dependencyConfig.flatMap(_.info).map(_.config).getOrElse("")
-        dep.copy(foundConfigPath = configPath)
+        val configPath = dependencyConfig.flatMap(_.info).map(_.config)
+        dep.copy(foundConfigPath = configPath, workConfig = dependencyConfig)
       }
       )(config3)
+    
+    // recurse through our dependencies to solve their dependencies
+    composedDependenciesLens.modify(_
+      .map{dep =>
+        dep.workConfig match {
+          case Some(depConf) =>
+            dep.copy(workConfig = Some(modifyConfig(depConf, ttl - 1)))
+          case _ =>
+            dep
+        }
+      }
+      )(config4)
   }
 }
