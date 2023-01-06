@@ -40,37 +40,35 @@ case class RScript(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
-    val argsAndMeta = functionality.getArgumentLikesGroupedByDest(includeMeta = true, filterInputs = true)
-
+  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
     val paramsCode = argsAndMeta.map { case (dest, params) =>
 
       val parSet = params.map { par =>
-        // val env_name = par.VIASH_PAR
-        val env_name = Bash.getEscapedArgument(par.VIASH_PAR, "paste0(r'(", ")')", """\'""", """)\', \"\'\", r\'(""")
 
-        val parse = par match {
+        // todo: escape multiple_sep?
+        val (lhs, rhs) = par match {
           case a: BooleanArgumentBase if a.multiple =>
-          s"""as.logical(strsplit(toupper($env_name), split = '${a.multiple_sep}')[[1]])"""
-        case a: IntegerArgument if a.multiple =>
-          s"""as.integer(strsplit($env_name, split = '${a.multiple_sep}')[[1]])"""
-        case a: LongArgument if a.multiple =>
-          s"""bit64::as.integer64(strsplit($env_name, split = '${a.multiple_sep}')[[1]])"""
-        case a: DoubleArgument if a.multiple =>
-          s"""as.numeric(strsplit($env_name, split = '${a.multiple_sep}')[[1]])"""
-        case a: FileArgument if a.multiple =>
-          s"""strsplit($env_name, split = '${a.multiple_sep}')[[1]]"""
-        case a: StringArgument if a.multiple =>
-          s"""strsplit($env_name, split = '${a.multiple_sep}')[[1]]"""
-        case _: BooleanArgumentBase => s"""as.logical(toupper($env_name))"""
-        case _: IntegerArgument => s"""as.integer($env_name)"""
-        case _: LongArgument => s"""bit64::as.integer64($env_name)"""
-        case _: DoubleArgument => s"""as.numeric($env_name)"""
-        case _: FileArgument => s"""$env_name"""
-        case _: StringArgument => s"""$env_name"""
+            ("as.logical(strsplit(toupper(", s"), split = '${a.multiple_sep}')[[1]])")
+          case a: IntegerArgument if a.multiple =>
+            ("as.integer(strsplit(", s", split = '${a.multiple_sep}')[[1]])")
+          case a: LongArgument if a.multiple =>
+            ("bit64::as.integer64(strsplit(", s", split = '${a.multiple_sep}')[[1]])")
+          case a: DoubleArgument if a.multiple =>
+            ("as.numeric(strsplit(", s", split = '${a.multiple_sep}')[[1]])")
+          case a: FileArgument if a.multiple =>
+            ("strsplit(", s", split = '${a.multiple_sep}')[[1]]")
+          case a: StringArgument if a.multiple =>
+            ("strsplit(", s", split = '${a.multiple_sep}')[[1]]")
+          case _: BooleanArgumentBase => ("as.logical(toupper(", "))")
+          case _: IntegerArgument => ("as.integer(", ")")
+          case _: LongArgument => ("bit64::as.integer64(", ")")
+          case _: DoubleArgument => ("as.numeric(", ")")
+          case _: FileArgument => ("", "")
+          case _: StringArgument => ("", "")
         }
-
-        s""""${par.plainName}" = $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo NULL; fi )"""
+        val sl = "\\VIASH_SLASH\\" // used instead of "\\", as otherwise the slash gets escaped automatically.
+        
+        s""""${par.plainName}" = $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo -n "$lhs'"; echo -n "$$${par.VIASH_PAR}" | sed "s#['$sl$sl]#$sl$sl$sl$sl&#g"; echo "'$rhs"; else echo NULL; fi )"""
       }
 
       s"""$dest <- list(

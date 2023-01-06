@@ -22,7 +22,7 @@ import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
 import org.rogach.scallop.CliOption
 
 package object cli {
-  import io.viash.helpers.Circe._
+  import io.viash.helpers.circe._
   
   implicit val encodeRegisteredCommand: Encoder.AsObject[RegisteredCommand] = deriveConfiguredEncoder
   implicit val encodeRegisteredOpt: Encoder.AsObject[RegisteredOpt] = deriveConfiguredEncoder 

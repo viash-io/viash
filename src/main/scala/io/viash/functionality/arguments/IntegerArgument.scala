@@ -17,7 +17,8 @@
 
 package io.viash.functionality.arguments
 
-import io.viash.helpers.Circe.OneOrMore
+import io.circe.Json
+import io.viash.helpers.data_structures._
 import io.viash.schemas._
 
 @description("An `integer` type argument has a numeric value without decimal points.")
@@ -45,6 +46,14 @@ case class IntegerArgument(
 
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
+
+  @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
+  @example(
+    """info:
+      |  category: cat1
+      |  labels: [one, two, three]""".stripMargin, "yaml")
+  @since("Viash 0.6.3")
+  info: Json = Json.Null,
 
   @description("An example value for this argument. If no [`default`](#default) property was specified, this will be used for that purpose.")
   @example(
@@ -100,7 +109,7 @@ case class IntegerArgument(
       "yaml")  
   max: Option[Int] = None,
 
-
+  @undocumented
   direction: Direction = Input,
 
   @description("Treat the argument value as an array. Arrays can be passed using the delimiter `--foo=1:2:3` or by providing the same argument multiple times `--foo 1 --foo 2`. You can use a custom delimiter by using the [`multiple_sep`](#multiple_sep) property. `false` by default.")
@@ -132,6 +141,7 @@ case class IntegerArgument(
     name: String, 
     alternatives: OneOrMore[String],
     description: Option[String],
+    info: Json,
     example: OneOrMore[Int],
     default: OneOrMore[Int],
     required: Boolean,
@@ -140,6 +150,6 @@ case class IntegerArgument(
     multiple_sep: String,
     dest: String
   ): Argument[Int] = {
-    copy(name, alternatives, description, example, default, required, this.choices, this.min, this.max, direction, multiple, multiple_sep, dest, `type`)
+    copy(name, alternatives, description, info, example, default, required, this.choices, this.min, this.max, direction, multiple, multiple_sep, dest, `type`)
   }
 }

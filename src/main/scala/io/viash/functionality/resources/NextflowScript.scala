@@ -20,6 +20,7 @@ package io.viash.functionality.resources
 import io.viash.functionality._
 
 import java.net.URI
+import io.viash.functionality.arguments.Argument
 
 case class NextflowScript(
   path: Option[String] = None,
@@ -37,7 +38,7 @@ case class NextflowScript(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(functionality: Functionality): ScriptInjectionMods = {
+  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
     ScriptInjectionMods()
   }
 

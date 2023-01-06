@@ -23,7 +23,7 @@ import cats.syntax.functor._
 
 package object dependencies {
 
-  import io.viash.helpers.Circe._
+  import io.viash.helpers.circe._
 
   // encoders and decoders for Argument
   implicit val encodeDependency: Encoder.AsObject[Dependency] = deriveConfiguredEncoder

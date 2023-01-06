@@ -14,7 +14,7 @@ functionality:
     - path: resource1.txt
   test_resources:
     - type: bash_script
-      path: tests/check_outputs.sh
+      path: test.sh
     - path: resource2.txt
 platforms:
   - type: native

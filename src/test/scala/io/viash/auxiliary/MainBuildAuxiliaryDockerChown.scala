@@ -20,7 +20,7 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll {
 
   def dockerChownGetOwner(dockerId: String): String = {
     val localConfig = configDockerOptionsChownFile
-    val localFunctionality = Config.read(localConfig, applyPlatform = false).functionality
+    val localFunctionality = Config.read(localConfig).functionality
     val localExecutable = Paths.get(tempFolStr, localFunctionality.name).toFile
 
     // prepare the environment
@@ -57,7 +57,7 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll {
 
   def dockerChownGetOwnerTwoOutputs(dockerId: String): (String,String) = {
     val localConfig = configDockerOptionsChownTwoOutputFile
-    val localFunctionality = Config.read(localConfig, applyPlatform = false).functionality
+    val localFunctionality = Config.read(localConfig).functionality
     val localExecutable = Paths.get(tempFolStr, localFunctionality.name).toFile
 
     // prepare the environment
@@ -98,7 +98,7 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll {
 
   def dockerChownGetOwnerMultipleOutputs(dockerId: String): (String,String,String) = {
     val localConfig = configDockerOptionsChownMultipleOutputFile
-    val localFunctionality = Config.read(localConfig, applyPlatform = false).functionality
+    val localFunctionality = Config.read(localConfig).functionality
     val localExecutable = Paths.get(tempFolStr, localFunctionality.name).toFile
 
     // prepare the environment

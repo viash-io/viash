@@ -94,10 +94,8 @@ object DependencyResolver {
           query = None,
           queryNamespace = None,
           queryName = None,
-          platform = None,
           configMods = Nil,
-          addOptMainScript = false,
-          applyPlatform = false
+          addOptMainScript = false
         )
         // find the matching config by name
         // TODO match namespace names

@@ -28,7 +28,7 @@ import io.viash.platforms.requirements._
 import io.viash.helpers.{Bash, Docker}
 import io.viash.wrapper.{BashWrapper, BashWrapperMods}
 import io.viash.platforms.docker._
-import io.viash.helpers.Circe._
+import io.viash.helpers.data_structures._
 import io.viash.config.Info
 import io.viash.schemas._
 import io.viash.helpers.Escaper
@@ -46,7 +46,7 @@ case class DockerPlatform(
   @example("image: \"bash:4.0\"", "yaml")
   image: String,
 
-  @description("Name of a container’s [organization](https://docs.docker.com/docker-hub/orgs/).")
+  @description("Name of a container's [organization](https://docs.docker.com/docker-hub/orgs/).")
   organization: Option[String],
 
   @description("The URL to the a [custom Docker registry](https://docs.docker.com/registry/)")
@@ -57,29 +57,34 @@ case class DockerPlatform(
   @example("tag: 4.0", "yaml")
   tag: Option[String] = None,
   
-  @description("If anything is specified in the setup section, running the `---setup` will result in an image with the name of `<target_image>:<version>`. If nothing is specified in the `setup` section, simply `image` will be used.")
+  @description("If anything is specified in the setup section, running the `---setup` will result in an image with the name of `<target_image>:<version>`. If nothing is specified in the `setup` section, simply `image` will be used. Advanced usage only.")
   @example("target_image: myfoo", "yaml")
   target_image: Option[String] = None,
+
+  @description("The organization set in the resulting image. Advanced usage only.")
+  @example("target_organization: viash-io", "yaml")
   target_organization: Option[String] = None,
 
-  @description("The URL where the resulting image will be pushed to.")
+  @description("The URL where the resulting image will be pushed to. Advanced usage only.")
   @example("target_registry: https://my-docker-registry.org", "yaml")
   target_registry: Option[String] = None,
 
-  @description("The tag the resulting image gets.")
+  @description("The tag the resulting image gets. Advanced usage only.")
   @example("target_tag: 0.5.0", "yaml")
   target_tag: Option[String] = None,
 
   @description("The default namespace separator is \"_\".")
   @example("namespace_separator: \"+\"", "yaml")
   namespace_separator: String = "_",
+
+  @description("Enables or disables automatic volume mapping. Enabled when set to `Automatic` or disabled when set to `Manual`. Default: `Automatic`")
   resolve_volume: DockerResolveVolume = Automatic,
 
   @description("In Linux, files created by a Docker container will be owned by `root`. With `chown: true`, Viash will automatically change the ownership of output files (arguments with `type: file` and `direction: output`) to the user running the Viash command after execution of the component. Default value: `true`.")
   @example("chown: false", "yaml")
   chown: Boolean = true,
 
-  @description("A list of enabled ports. This doesn’t change the Dockerfile but gets added as a command-line argument at runtime.")
+  @description("A list of enabled ports. This doesn't change the Dockerfile but gets added as a command-line argument at runtime.")
   @example(
     """port:
       |  - 80
@@ -88,7 +93,7 @@ case class DockerPlatform(
       "yaml")
   port: OneOrMore[String] = Nil,
 
-  @description("The working directory when starting the container. This doesn’t change the Dockerfile but gets added as a command-line argument at runtime.")
+  @description("The working directory when starting the container. This doesn't change the Dockerfile but gets added as a command-line argument at runtime.")
   @example("workdir: /home/user", "yaml")
   workdir: Option[String] = None,
 
@@ -114,7 +119,10 @@ case class DockerPlatform(
       +""".stripMargin('+'))
   @example("setup_strategy: alwaysbuild", "yaml")
   setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,
-  privileged: Boolean = false,
+
+  @description("Adds a `privileged` flag to the docker run.")
+  @deprecated("Add a `privileged` flag in `run_args` instead, e.g. `{type: docker, run_args: \"--privileged\"}`.", "0.6.3", "0.8.0")
+  privileged: Option[Boolean] = None,
 
   @description("Add [docker run](https://docs.docker.com/engine/reference/run/) arguments.")
   run_args: OneOrMore[String] = Nil,
@@ -130,11 +138,12 @@ case class DockerPlatform(
       |
       | - @[apt_req](apt)
       | - @[apk_req](apk)
-      | - @[yum_req](yum)
-      | - @[r_req](R)
-      | - @[python_req](Python)
-      | - @[javascript_req](JavaScript)
       | - @[docker_req](Docker setup instructions)
+      | - @[javascript_req](JavaScript)
+      | - @[python_req](Python)
+      | - @[r_req](R)
+      | - @[ruby_req](Ruby)
+      | - @[yum_req](yum)
       |
       |The order in which these dependencies are specified determines the order in which they will be installed.
       |""".stripMargin)
@@ -147,7 +156,7 @@ case class DockerPlatform(
       |    packages: [ sl ]
       |""".stripMargin,
       "yaml")
-  @deprecated("Use `setup` instead.", "Viash 0.5.15")
+  @deprecated("Use `setup` instead, e.g. `{type: docker, setup: [{ type: apk, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
   apk: Option[ApkRequirements] = None,
 
   @description("Specify which apt packages should be available in order to run the component.")
@@ -157,7 +166,7 @@ case class DockerPlatform(
       |    packages: [ sl ]
       |""".stripMargin,
       "yaml")
-  @deprecated("Use `setup` instead.", "Viash 0.5.15")
+  @deprecated("Use `setup` instead, e.g. `{type: docker, setup: [{ type: apt, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
   apt: Option[AptRequirements] = None,
 
   @description("Specify which yum packages should be available in order to run the component.")
@@ -167,7 +176,7 @@ case class DockerPlatform(
       |    packages: [ sl ]
       |""".stripMargin,
       "yaml")
-  @deprecated("Use `setup` instead.", "Viash 0.5.15")
+  @deprecated("Use `setup` instead, e.g. `{type: docker, setup: [{ type: yum, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
   yum: Option[YumRequirements] = None,
 
   @description("Specify which R packages should be available in order to run the component.")
@@ -184,7 +193,7 @@ case class DockerPlatform(
       |    script: [ 'devtools::install(".")' ]
       |""".stripMargin,
       "yaml")
-  @deprecated("Use `setup` instead.", "Viash 0.5.15")
+  @deprecated("Use `setup` instead, e.g. `{type: docker, setup: [{ type: r, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
   r: Option[RRequirements] = None,
 
   @description("Specify which Python packages should be available in order to run the component.")
@@ -201,7 +210,7 @@ case class DockerPlatform(
       |    url: [ http://... ]
       |""".stripMargin,
       "yaml")
-  @deprecated("Use `setup` instead.", "Viash 0.5.15")
+  @deprecated("Use `setup` instead, e.g. `{type: docker, setup: [{ type: python, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
   python: Option[PythonRequirements] = None,
 
   @description("Specify which Docker commands should be run during setup.")
@@ -216,13 +225,15 @@ case class DockerPlatform(
       |      - resource.txt /path/to/resource.txt
       |""".stripMargin,
       "yaml")
-  @deprecated("Use `setup` instead.", "Viash 0.5.15")
+  @deprecated("Use `setup` instead, e.g. `{type: docker, setup: [{ type: docker, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
   docker: Option[DockerRequirements] = None,
 
-  @description("")
+  @description("Additional requirements specific for running unit tests.")
   @since("Viash 0.5.13")
   test_setup: List[Requirements] = Nil
 ) extends Platform {
+
+  @internalFunctionality
   override val hasSetup = true
 
   override val requirements: List[Requirements] = {
@@ -251,7 +262,7 @@ case class DockerPlatform(
     val dockerArgs = "-i --rm" +
       port.map(" -p " + _).mkString +
       run_args.map(" " + _).mkString +
-      { if (privileged) " --privileged" else "" }
+      { if (privileged.getOrElse(false)) " --privileged" else "" }
 
     // create setup
     val (effectiveID, setupMods) = processDockerSetup(functionality, config.info, testing)
@@ -483,6 +494,7 @@ case class DockerPlatform(
 
   private def processDockerVolumes(functionality: Functionality) = {
     val args = functionality.getArgumentLikes(includeMeta = true)
+    val extraMountsVar = "VIASH_EXTRA_MOUNTS"
 
     val preParse =
       s"""
@@ -510,23 +522,27 @@ case class DockerPlatform(
           case arg: FileArgument if arg.multiple =>
             // resolve arguments with multiplicity different from singular args
             val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
+            val chownIfOutput = if (arg.direction == Output) "\n    VIASH_CHOWN_VARS+=( \"$var\" )" else ""
             Some(
               s"""
                   |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-                  |  IFS="${arg.multiple_sep}"
+                  |  $viash_temp=()
+                  |  IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}'
                   |  for var in $$${arg.VIASH_PAR}; do
                   |    unset IFS
                   |    VIASH_EXTRA_MOUNTS+=( $$(ViashAutodetectMountArg "$$var") )
-                  |    ${BashWrapper.store("ViashAutodetectMountArg", viash_temp, "\"$(ViashAutodetectMount \"$var\")\"", Some(arg.multiple_sep)).mkString("\n    ")}
+                  |    var=$$(ViashAutodetectMount "$$var")
+                  |    $viash_temp+=( "$$var" )$chownIfOutput
                   |  done
-                  |  ${arg.VIASH_PAR}="$$$viash_temp"
+                  |  ${arg.VIASH_PAR}=$$(IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}' ; echo "$${$viash_temp[*]}")
                   |fi""".stripMargin)
           case arg: FileArgument =>
+            val chownIfOutput = if (arg.direction == Output) "\n  VIASH_CHOWN_VARS+=( \"$" + arg.VIASH_PAR + "\" )" else ""
             Some(
               s"""
                   |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
                   |  VIASH_EXTRA_MOUNTS+=( $$(ViashAutodetectMountArg "$$${arg.VIASH_PAR}") )
-                  |  ${arg.VIASH_PAR}=$$(ViashAutodetectMount "$$${arg.VIASH_PAR}")
+                  |  ${arg.VIASH_PAR}=$$(ViashAutodetectMount "$$${arg.VIASH_PAR}")$chownIfOutput
                   |fi""".stripMargin)
           case _ => None
         }
@@ -536,11 +552,47 @@ case class DockerPlatform(
         } else {
           f"""
           |
-          |# detect volumes from file arguments${detectMounts.mkString("")}
+          |# detect volumes from file arguments
+          |VIASH_CHOWN_VARS=()${detectMounts.mkString("")}
           |
           |# get unique mounts
           |VIASH_UNIQUE_MOUNTS=($$(for val in "$${VIASH_EXTRA_MOUNTS[@]}"; do echo "$$val"; done | sort -u))
           |""".stripMargin
+        }
+      } else {
+        ""
+      }
+    
+    val postRun =
+      if (resolve_volume == Automatic) {
+        val stripAutomounts = args.flatMap {
+          case arg: FileArgument if arg.multiple =>
+            // resolve arguments with multiplicity different from singular args
+            val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
+            Some(
+              s"""
+                  |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
+                  |  unset $viash_temp
+                  |  IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}'
+                  |  for var in $$${arg.VIASH_PAR}; do
+                  |    unset IFS
+                  |    ${BashWrapper.store("ViashStripAutomount", viash_temp, "\"$(ViashStripAutomount \"$var\")\"", Some(arg.multiple_sep)).mkString("\n    ")}
+                  |  done
+                  |  ${arg.VIASH_PAR}="$$$viash_temp"
+                  |fi""".stripMargin)
+          case arg: FileArgument =>
+            Some(
+              s"""
+                  |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
+                  |  ${arg.VIASH_PAR}=$$(ViashStripAutomount "$$${arg.VIASH_PAR}")
+                  |fi""".stripMargin)
+          case _ => None
+        }
+        
+        if (stripAutomounts.isEmpty) {
+          ""
+        } else {
+          "\n# strip viash automount from file paths" + stripAutomounts.mkString("")
         }
       } else {
         ""
@@ -552,6 +604,7 @@ case class DockerPlatform(
       preParse = preParse,
       parsers = parsers,
       preRun = preRun,
+      postRun = postRun,
       extraParams = extraParams
     )
   }
@@ -594,48 +647,16 @@ case class DockerPlatform(
     volExtraParams: String,
     fullImageID: String,
   ) = {
-    val args = functionality.getArgumentLikes(includeMeta = true)
-
-    def chownCommand(value: String): String = {
-      s"""eval docker run --entrypoint=chown $dockerArgs$volExtraParams $fullImageID "$$(id -u):$$(id -g)" --silent --recursive $value"""
-    }
-
     val preRun =
       if (chown) {
-        // chown output files/folders
-        val chownPars = args
-          .filter(a => a.isInstanceOf[FileArgument] && a.direction == Output)
-          .map(arg => {
-
-            // resolve arguments with multiplicity different from
-            // singular args
-            if (arg.multiple) {
-              val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
-              s"""
-                 |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-                 |  IFS="${arg.multiple_sep}"
-                 |  for var in $$${arg.VIASH_PAR}; do
-                 |    unset IFS
-                 |    ${chownCommand("\"$var\"")}
-                 |  done
-                 |  ${arg.VIASH_PAR}="$$$viash_temp"
-                 |fi""".stripMargin
-            } else {
-              s"""
-                 |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-                 |  ${chownCommand("\"$" + arg.VIASH_PAR + "\"")}
-                 |fi""".stripMargin
-            }
-          })
-
-        val chownParStr =
-          if (chownPars.isEmpty) ":"
-          else chownPars.mkString("").split("\n").mkString("\n  ")
-
         s"""
            |# change file ownership
            |function ViashPerformChown {
-           |  $chownParStr
+           |  if (( $${#VIASH_CHOWN_VARS[@]} )); then
+           |    set +e
+           |    eval docker run --entrypoint=chown $dockerArgs$volExtraParams $fullImageID "$$(id -u):$$(id -g)" --silent --recursive $${VIASH_CHOWN_VARS[@]}
+           |    set -e
+           |  fi
            |}
            |trap ViashPerformChown EXIT
            |""".stripMargin

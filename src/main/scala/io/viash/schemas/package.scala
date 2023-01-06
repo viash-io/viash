@@ -33,8 +33,14 @@ package object schemas {
   class description(example: String) extends scala.annotation.StaticAnnotation
 
   @getter @setter @beanGetter @beanSetter @field
-  class deprecated(message: String = "", since: String = "") extends scala.annotation.StaticAnnotation
+  class deprecated(message: String, since: String, plannedRemoval: String) extends scala.annotation.StaticAnnotation
 
   @getter @setter @beanGetter @beanSetter @field
-  class removed(message: String = "", since: String = "") extends scala.annotation.StaticAnnotation
+  class removed(message: String, deprecatedSince: String, since: String) extends scala.annotation.StaticAnnotation
+
+  @getter @setter @beanGetter @beanSetter @field
+  class internalFunctionality() extends scala.annotation.StaticAnnotation
+
+  @getter @setter @beanGetter @beanSetter @field
+  class undocumented() extends scala.annotation.StaticAnnotation
 }

@@ -25,7 +25,7 @@ import java.nio.file.Paths
 
 package object arguments {
 
-  import io.viash.helpers.Circe._
+  import io.viash.helpers.circe._
 
   implicit val encodeDouble: Encoder[Double] = Encoder.instance {
       value => 

@@ -21,7 +21,7 @@ import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 
 package object docker {
-  import io.viash.helpers.Circe._
+  import io.viash.helpers.circe._
 
   // encoder and decoder for resolvevolume
   implicit val encodeResolveVolume: Encoder[DockerResolveVolume] = Encoder.instance {

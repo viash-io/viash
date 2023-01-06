@@ -22,7 +22,7 @@ import io.viash.functionality._
 import io.viash.functionality.resources._
 import io.viash.functionality.arguments._
 import io.viash.helpers.{Docker, Bash, DockerImageInfo, Helper}
-import io.viash.helpers.Circe._
+import io.viash.helpers.circe._
 import io.viash.platforms.nextflow._
 import io.circe.syntax._
 import io.circe.{Printer => JsonPrinter, Json, JsonObject}
@@ -40,7 +40,8 @@ case class NextflowVdsl3Platform(
   id: String = "nextflow",
 
   `type`: String = "nextflow",
-
+  
+  @internalFunctionality
   variant: String = "vdsl3",
   
   // nxf params
@@ -104,6 +105,7 @@ case class NextflowVdsl3Platform(
   debug: Boolean = false,
 
   // TODO: solve differently
+  @description("Specifies the Docker platform id to be used to run Nextflow.")
   container: String = "docker"
 ) extends NextflowPlatform {
   def escapeSingleQuotedString(txt: String): String = {
@@ -111,23 +113,22 @@ case class NextflowVdsl3Platform(
   }
 
   def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
-    val functionality = config.functionality
     val condir = containerDirective(config)
 
     // create main.nf file
     val mainFile = PlainFile(
       dest = Some("main.nf"),
-      text = Some(renderMainNf(functionality, condir))
+      text = Some(renderMainNf(config, condir))
     )
     val nextflowConfigFile = PlainFile(
       dest = Some("nextflow.config"),
-      text = Some(renderNextflowConfig(functionality, condir))
+      text = Some(renderNextflowConfig(config.functionality, condir))
     )
 
     // remove main
-    val otherResources = functionality.additionalResources
+    val otherResources = config.functionality.additionalResources
 
-    functionality.copy(
+    config.functionality.copy(
       resources = mainFile :: nextflowConfigFile :: otherResources
     )
   }
@@ -184,7 +185,8 @@ case class NextflowVdsl3Platform(
   }
 
   // interpreted from BashWrapper
-  def renderMainNf(functionality: Functionality, containerDirective: Option[DockerImageInfo]): String = {
+  def renderMainNf(config: Config, containerDirective: Option[DockerImageInfo]): String = {
+    val functionality = config.functionality
     
     /************************* HEADER *************************/
     val header = Helper.generateScriptHeader(functionality)
@@ -202,7 +204,12 @@ case class NextflowVdsl3Platform(
 
       // if mainResource is a script
       case Some(res) =>
-        val code = res.readWithInjection(functionality).get
+        // todo: also include the bashwrapper checks
+        val argsAndMeta = functionality.getArgumentLikesGroupedByDest(
+          includeMeta = true,
+          filterInputs = true
+        )
+        val code = res.readWithInjection(argsAndMeta).get
         val escapedCode = Bash.escapeString(code, allowUnescape = true)
           .replace("\\", "\\\\")
           .replace("'''", "\\'\\'\\'")
@@ -231,14 +238,17 @@ case class NextflowVdsl3Platform(
       cpus = directives.cpus orElse functionality.requirements.cpus.map(np => Left(np))
     )
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
-    val dirJson = directivesToJson.asJson.dropEmptyRecursively()
+    val dirJson = directivesToJson.asJson.dropEmptyRecursively
     val dirJson2 = if (dirJson.isNull) Json.obj() else dirJson
-    val funJson = functionality.asJson.dropEmptyRecursively()
+    val funJson = config.asJson.dropEmptyRecursively
     val funJsonStr = jsonPrinter.print(funJson)
       .replace("\\\\", "\\\\\\\\")
       .replace("\\\"", "\\\\\"")
       .replace("'''", "\\'\\'\\'")
-    val autoJson = auto.asJson.dropEmptyRecursively()
+      .grouped(65000) // JVM has a maximum string limit of 65535
+      .toList         // see https://stackoverflow.com/a/6856773
+      .mkString("'''", "''' + '''", "'''")
+    val autoJson = auto.asJson.dropEmptyRecursively
 
     /************************* MAIN.NF *************************/
     val tripQuo = """""""""
@@ -257,9 +267,7 @@ case class NextflowVdsl3Platform(
       |// DEFINE CUSTOM CODE
       |
       |// functionality metadata
-      |thisConfig = processConfig([
-      |  functionality: jsonSlurper.parseText('''$funJsonStr''')
-      |])
+      |thisConfig = processConfig(jsonSlurper.parseText($funJsonStr))
       |
       |thisScript = '''$executionCode'''
       |
@@ -284,6 +292,9 @@ case class NextflowVdsl3Platform(
       |  // apply a map over the passthrough elements of a tuple (i.e. the tuple excl. the first two elements)
       |  // example: { pt -> pt.drop(1) }
       |  mapPassthrough: null,
+      |  // filter the channel
+      |  // example: { tup -> tup[0] == "foo" }
+      |  filter: null,
       |  // rename keys in the data field of the tuple (i.e. the second element)
       |  // example: [ "new_key": "old_key" ]
       |  renameKeys: null,

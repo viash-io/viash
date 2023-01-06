@@ -17,6 +17,9 @@
 
 package io.viash.platforms
 
+import io.viash.schemas.internalFunctionality
+
 trait NextflowPlatform extends Platform {
+  @internalFunctionality
   val variant: String
 }

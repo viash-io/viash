@@ -17,7 +17,8 @@
 
 package io.viash.functionality.arguments
 
-import io.viash.helpers.Circe.OneOrMore
+import io.circe.Json
+import io.viash.helpers.data_structures._
 import io.viash.schemas._
 
 abstract class BooleanArgumentBase extends Argument[Boolean] {
@@ -49,6 +50,14 @@ case class BooleanArgument(
 
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
+
+  @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
+  @example(
+    """info:
+      |  category: cat1
+      |  labels: [one, two, three]""".stripMargin, "yaml")
+  @since("Viash 0.6.3")
+  info: Json = Json.Null,
   
   @description("An example value for this argument. If no [`default`](#default) property was specified, this will be used for that purpose.")
   @example(
@@ -77,6 +86,7 @@ case class BooleanArgument(
       "yaml")
   required: Boolean = false,
 
+  @undocumented
   direction: Direction = Input,
 
   @description("Treat the argument value as an array. Arrays can be passed using the delimiter `--foo=1:2:3` or by providing the same argument multiple times `--foo 1 --foo 2`. You can use a custom delimiter by using the [`multiple_sep`](#multiple_sep) property. `false` by default.")
@@ -100,10 +110,11 @@ case class BooleanArgument(
   @exampleWithDescription("my_component --my_boolean=true,true,false", "bash", "Here's an example of how to use this:")
   multiple_sep: String = ":",
 
+  @undocumented
   dest: String = "par",
   `type`: String = "boolean"
 ) extends BooleanArgumentBase {
-
+  @internalFunctionality
   val flagValue: Option[Boolean] = None
 
   def copyArg(
@@ -111,6 +122,7 @@ case class BooleanArgument(
     name: String, 
     alternatives: OneOrMore[String],
     description: Option[String],
+    info: Json,
     example: OneOrMore[Boolean],
     default: OneOrMore[Boolean],
     required: Boolean,
@@ -119,7 +131,7 @@ case class BooleanArgument(
     multiple_sep: String,
     dest: String
   ): Argument[Boolean] = {
-    copy(name, alternatives, description, example, default, required, direction, multiple, multiple_sep, dest, `type`)
+    copy(name, alternatives, description, info, example, default, required, direction, multiple, multiple_sep, dest, `type`)
   }
 }
 
@@ -148,17 +160,31 @@ case class BooleanTrueArgument(
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
 
+  @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
+  @example(
+    """info:
+      |  category: cat1
+      |  labels: [one, two, three]""".stripMargin, "yaml")
+  @since("Viash 0.6.3")
+  info: Json = Json.Null,
+
+  @undocumented
   direction: Direction = Input,
 
   dest: String = "par",
   `type`: String = "boolean_true"
 ) extends BooleanArgumentBase {
-
+  @internalFunctionality
   val required: Boolean = false
+  @internalFunctionality
   val flagValue: Option[Boolean] = Some(true)
+  @internalFunctionality
   val default: OneOrMore[Boolean] = Nil
+  @internalFunctionality
   val multiple: Boolean = false
+  @internalFunctionality
   val multiple_sep: String = ":"
+  @internalFunctionality
   val example: OneOrMore[Boolean] = Nil
 
   def copyArg(
@@ -166,6 +192,7 @@ case class BooleanTrueArgument(
     name: String, 
     alternatives: OneOrMore[String],
     description: Option[String],
+    info: Json,
     default: OneOrMore[Boolean],
     example: OneOrMore[Boolean],
     required: Boolean,
@@ -174,7 +201,7 @@ case class BooleanTrueArgument(
     multiple_sep: String,
     dest: String
   ): Argument[Boolean] = {
-    copy(name, alternatives, description, direction, dest, `type`)
+    copy(name, alternatives, description, info, direction, dest, `type`)
   }
 }
 
@@ -203,17 +230,32 @@ case class BooleanFalseArgument(
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
 
+  @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
+  @example(
+    """info:
+      |  category: cat1
+      |  labels: [one, two, three]""".stripMargin, "yaml")
+  @since("Viash 0.6.3")
+  info: Json = Json.Null,
+
+  @undocumented
   direction: Direction = Input,
 
   dest: String = "par",
   `type`: String = "boolean_false"
 ) extends BooleanArgumentBase {
 
+  @internalFunctionality
   val required: Boolean = false
+  @internalFunctionality
   val flagValue: Option[Boolean] = Some(false)
+  @internalFunctionality
   val default: OneOrMore[Boolean] = Nil
+  @internalFunctionality
   val multiple: Boolean = false
+  @internalFunctionality
   val multiple_sep: String = ":"
+  @internalFunctionality
   val example: OneOrMore[Boolean] = Nil
 
   def copyArg(
@@ -221,6 +263,7 @@ case class BooleanFalseArgument(
     name: String, 
     alternatives: OneOrMore[String],
     description: Option[String],
+    info: Json,
     default: OneOrMore[Boolean],
     example: OneOrMore[Boolean],
     required: Boolean,
@@ -229,6 +272,6 @@ case class BooleanFalseArgument(
     multiple_sep: String,
     dest: String
   ): Argument[Boolean] = {
-    copy(name, alternatives, description, direction, dest, `type`)
+    copy(name, alternatives, description, info, direction, dest, `type`)
   }
 }

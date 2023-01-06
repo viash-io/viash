@@ -18,7 +18,7 @@ class MainBuildAuxiliaryNativeUnknownParameter extends AnyFunSuite with BeforeAn
   private val tempFolStr = temporaryFolder.toString
 
   // parse functionality from file
-  private val functionality = Config.read(configFile, applyPlatform = false).functionality
+  private val functionality = Config.read(configFile).functionality
 
   // built script that we'll be running
   private val executable = Paths.get(tempFolStr, functionality.name).toFile

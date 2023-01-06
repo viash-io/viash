@@ -19,6 +19,7 @@ package io.viash.functionality.dependencies
 
 import java.nio.file.{Path, Paths}
 import io.viash.config.Config
+import io.viash.schemas.description
 
 case class Dependency(
   name: String,

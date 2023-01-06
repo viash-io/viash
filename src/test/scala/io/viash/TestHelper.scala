@@ -8,12 +8,6 @@ import org.scalatest.Tag
 import java.nio.file.{Files, Path, Paths}
 import scala.reflect.ClassTag
 
-object DockerTest extends Tag("io.viash.DockerTest")
-
-object NativeTest extends Tag("io.viash.NativeTest")
-
-object NextFlowTest extends Tag("io.viash.NextFlowTest")
-
 object TestHelper {
 
   case class ExceptionOutput(
@@ -47,10 +41,10 @@ object TestHelper {
    * @param args all the arguments typically passed to Main.main()
    * @return a tuple of stdout and stderr strings of all the output
    */
-  def testMainWithStdErr(args: String*) : (String, String) = {
+  def testMainWithStdErr(args: String*) : (String, String, Int) = {
     val outStream = new ByteArrayOutputStream()
     val errStream = new ByteArrayOutputStream()
-    Console.withOut(outStream) {
+    val exitCode = Console.withOut(outStream) {
       Console.withErr(errStream) {
         Main.internalMain(args.toArray)
       }
@@ -59,7 +53,7 @@ object TestHelper {
     val stdout = outStream.toString
     val stderr = errStream.toString
     // Console.print(stdout)
-    (stdout, stderr)
+    (stdout, stderr, exitCode)
   }
 
   /**

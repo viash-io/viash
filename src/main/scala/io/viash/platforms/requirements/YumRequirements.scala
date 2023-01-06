@@ -17,7 +17,7 @@
 
 package io.viash.platforms.requirements
 
-import io.viash.helpers.Circe._
+import io.viash.helpers.data_structures._
 import io.viash.schemas._
 
 @description("Specify which yum packages should be available in order to run the component.")
@@ -28,7 +28,10 @@ import io.viash.schemas._
     |""".stripMargin,
     "yaml")
 case class YumRequirements(
+  @description("Specifies which packages to install.")
+  @example("packages: [ sl ]", "yaml")
   packages: OneOrMore[String] = Nil,
+  
   `type`: String = "yum"
 ) extends Requirements {
   def installCommands: List[String] = {

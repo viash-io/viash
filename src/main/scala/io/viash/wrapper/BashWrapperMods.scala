@@ -25,16 +25,18 @@ case class BashWrapperMods(
   postParse: String = "",
   preRun: String = "",
   postRun: String = "",
+  last: String = "",
   inputs: List[Argument[_]] = Nil,
   extraParams: String = ""
 ) {
   def `++`(other: BashWrapperMods): BashWrapperMods = {
     BashWrapperMods(
-      preParse = preParse + other.preParse,
-      parsers = parsers + other.parsers,
-      postParse = postParse + other.postParse,
-      preRun = preRun + other.preRun,
-      postRun = postRun + other.postRun,
+      preParse = BashWrapper.joinSections(List(preParse, other.preParse)),
+      parsers = BashWrapper.joinSections(List(parsers, other.parsers), middle = "\n"),
+      postParse = BashWrapper.joinSections(List(postParse, other.postParse)),
+      preRun = BashWrapper.joinSections(List(preRun, other.preRun)),
+      postRun = BashWrapper.joinSections(List(postRun, other.postRun)),
+      last = BashWrapper.joinSections(List(last, other.last)),
       inputs = inputs ::: other.inputs,
       extraParams = extraParams + other.extraParams
     )

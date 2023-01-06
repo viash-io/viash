@@ -19,6 +19,7 @@ package io.viash.helpers
 
 import io.viash.config.Config
 import java.nio.file.Paths
+import io.viash.platforms.Platform
 
 final case class NsExecData(
   configFullPath: String,
@@ -28,8 +29,8 @@ final case class NsExecData(
   mainScript: String,
   absoluteMainScript: String,
   functionalityName: String,
-  platformId: Option[String],
-  namespace: Option[String]
+  namespace: Option[String],
+  platformId: Option[String]
 ) {
   def getField(name: String) = {
     name match {
@@ -40,15 +41,15 @@ final case class NsExecData(
       case "main-script" => Some(this.mainScript)
       case "abs-main-script" => Some(this.absoluteMainScript)
       case "functionality-name" => Some(this.functionalityName)
-      case "platform" => this.platformId
       case "namespace" => this.namespace
+      case "platform" => this.platformId
       case _ => None
     }
   }
 }
 
 object NsExecData {
-  def apply(configPath: String, config: Config): NsExecData = {
+  def apply(configPath: String, config: Config, platform: Option[Platform]): NsExecData = {
     val configPath_ = Paths.get(configPath)
     val dirPath = configPath_.getParent()
     val mainScript = config.functionality.mainScript.flatMap(s => s.path).map(dirPath.resolve(_))
@@ -60,8 +61,8 @@ object NsExecData {
       mainScript = mainScript.map(_.toString).getOrElse(""),
       absoluteMainScript = mainScript.map(_.toAbsolutePath.toString).getOrElse(""),
       functionalityName = config.functionality.name,
-      platformId = config.platform.map(_.id),
-      namespace = config.functionality.namespace
+      namespace = config.functionality.namespace,
+      platformId = platform.map(_.id)
     )
   }
 
@@ -74,8 +75,8 @@ object NsExecData {
       mainScript = data.map(_.mainScript).mkString(" "),
       absoluteMainScript = data.map(_.absoluteMainScript).mkString(" "),
       functionalityName = data.map(_.functionalityName).mkString(" "),
-      platformId = Some(data.flatMap(_.platformId).mkString(" ")),
-      namespace = Some(data.flatMap(_.namespace).mkString(" "))
+      namespace = Some(data.flatMap(_.namespace).mkString(" ")),
+      platformId = Some(data.flatMap(_.platformId).mkString(" "))
     )
   }
 }

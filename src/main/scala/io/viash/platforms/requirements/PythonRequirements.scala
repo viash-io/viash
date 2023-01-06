@@ -17,36 +17,69 @@
 
 package io.viash.platforms.requirements
 
-import io.viash.helpers.Circe._
+import io.viash.helpers.data_structures._
 import io.viash.schemas._
 
 @description("Specify which Python packages should be available in order to run the component.")
 @example(
   """setup:
     |  - type: python
-    |    pip: [ numpy ]
-    |    git: [ https://some.git.repository/org/repo ]
-    |    github: [ jkbr/httpie ]
-    |    gitlab: [ foo/bar ]
-    |    mercurial: [ http://... ]
-    |    svn: [ http://...]
-    |    bazaar: [ http://... ]
-    |    url: [ http://... ]
+    |    pip: numpy
+    |    github: [ jkbr/httpie, foo/bar ]
+    |    url: "https://github.com/some_org/some_pkg/zipball/master"
     |""".stripMargin,
     "yaml")
 case class PythonRequirements(
+  @description("Sets the `--user` flag when set to true. Default: false.")
   user: Boolean = false,
+
+  @description("Specifies which packages to install from pip.")
+  @example("packages: [ numpy ]", "yaml")
   packages: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install from pip.")
+  @example("pip: [ numpy ]", "yaml")
   pip: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install from PyPI using pip.")
+  @example("pypi: [ numpy ]", "yaml")
   pypi: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install using a Git URI.")
+  @example("git: [ https://some.git.repository/org/repo ]", "yaml")
   git: OneOrMore[String] = Nil,
+  
+  @description("Specifies which packages to install from GitHub.")
+  @example("github: [ jkbr/httpie ]", "yaml")
   github: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install from GitLab.")
+  @example("gitlab: [ foo/bar ]", "yaml")
   gitlab: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install using a Mercurial URI.")
+  @example("mercurial: [ https://hg.myproject.org/MyProject/#egg=MyProject ]", "yaml")
   mercurial: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install using an SVN URI.")
+  @example("svn: [ http://svn.repo/some_pkg/trunk/#egg=SomePackage ]", "yaml")
   svn: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install using a Bazaar URI.")
+  @example("bazaar: [ http://bazaar.launchpad.net/some_pkg/some_pkg/release-0.1 ]", "yaml")
   bazaar: OneOrMore[String] = Nil,
+
+  @description("Specifies which packages to install using a generic URI.")
+  @example("url: [ https://github.com/some_org/some_pkg/zipball/master ]", "yaml")
   url: OneOrMore[String] = Nil,
+
+  @description("Specifies a code block to run as part of the build.")
+  @example("""script: |
+    #  print("Running custom code")
+    #  x = 1 + 1 == 2""".stripMargin('#'), "yaml")
   script: OneOrMore[String] = Nil,
+
+  @description("Sets the `--upgrade` flag when set to true. Default: true.")
   upgrade: Boolean = true,
   `type`: String = "python"
 ) extends Requirements {

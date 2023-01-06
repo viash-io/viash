@@ -13,9 +13,6 @@
 <a href="https://github.com/viash-io/viash/actions?query=workflow%3A%22Scala+CI%22">
 <img src="https://img.shields.io/github/workflow/status/viash-io/viash/Scala%20CI/master?style=flat-square" alt="CI Status">
 </a>
-<a href="https://github.com/viash-io/viash_web/actions?query=workflow%3A%22GitHub+Pages%22">
-<img src="https://img.shields.io/github/workflow/status/viash-io/viash_web/GitHub%20Pages?label=deploy&style=flat-square" alt="GitHub Pages Status">
-</a>
 </p>
 
 viash helps you turn a script (Bash/R/Python/Scala/JavaScript) into a

@@ -4,7 +4,7 @@
 command_builder=(
   ns build
   --src "$par_src"
-  --parallel --write_meta
+  --parallel
 )
 
 # check par mode
