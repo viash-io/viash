@@ -4,6 +4,10 @@
 
 * `Main`: Capture build, setup and push errors and output an exit code.
 
+## BUG FIXES
+
+* `Testbenches`: Fix GitTest testbench to correctly increment temporary folder naming and dispose them after the test finishes.
+
 # Viash 0.6.7
 
 Another minor release which contains several quality of life improvements for the Nextflow VDSL3 platform, as well as automated warnings for deprecated functionality.
