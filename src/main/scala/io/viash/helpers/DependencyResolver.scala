@@ -88,19 +88,16 @@ object DependencyResolver {
     val config4 = composedDependenciesLens.modify(_
       .map{dep =>
         val repo = dep.repository.toOption.get
-        // search for all configs in the repository
+        // search for configs in the repository and filter by namespace/name
         val configs = Config.readConfigs(
           source = repo.localPath,
-          query = None,
+          query = Some(s"^${dep.name}$$"),
           queryNamespace = None,
           queryName = None,
           configMods = Nil,
           addOptMainScript = false
         )
-        // find the matching config by name
-        // TODO match namespace names
-        val validConfigs = configs.flatMap(_.swap.toOption)
-        val dependencyConfig = validConfigs.find(c => c.functionality.name == dep.name)
+        val dependencyConfig = configs.flatMap(_.swap.toOption).headOption
         val configPath = dependencyConfig.flatMap(_.info).map(_.config)
         dep.copy(foundConfigPath = configPath, workConfig = dependencyConfig)
       }
