@@ -325,7 +325,7 @@ case class DockerPlatform(
     val opencontainers_image_source = (target_image_source, info) match {
       case (Some(tis), _) => Some(tis)
       case (None, Some(i)) =>
-        i.git_remote.map(url => url.replaceAll(":([^/])", "/$1").replaceAllLiterally("ssh//", "").replaceAllLiterally("git@", "https://"))
+        i.git_remote.map(url => url.replaceAll(":([^/])", "/$1").replace("ssh//", "").replace("git@", "https://"))
       case _ => None
     }
     val opencontainers_image_revision = info.flatMap(_.git_commit)

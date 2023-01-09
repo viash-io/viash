@@ -126,6 +126,7 @@ object ExampleSchema {
     l match {
       case _ if l.length == 2 => ExampleSchema(l(0), l(1), None)
       case _ if l.length == 3 => ExampleSchema(l(0), l(1), Some(l(2)))
+      case _ => ???
     }
     
   }

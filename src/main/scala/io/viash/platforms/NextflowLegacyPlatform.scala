@@ -818,7 +818,7 @@ object NextFlowUtils {
     )
   }
 
-  def quote(str: String): String = '"' + str + '"'
+  def quote(str: String): String = s"\"$str\""
 
   def quoteLong(str: String): String = str.replace("-", "_")
 

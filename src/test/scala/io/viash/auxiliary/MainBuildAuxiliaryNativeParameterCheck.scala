@@ -299,7 +299,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
 
   test("Check whether double values with min and/or max specified are checked correctly using the awk fallback") {
     // change the tests so it won't find 'bc'
-    val executableAwk = Paths.get(executable + "_awk").toFile()
+    val executableAwk = Paths.get(executable.toString + "_awk").toFile()
     Files.copy(executable.toPath(), executableAwk.toPath(), StandardCopyOption.REPLACE_EXISTING)
     Exec.run(
       Seq("sed", "-i'.original'", "s/command -v bc/command -v bcfoo/g", executableAwk.toString)
