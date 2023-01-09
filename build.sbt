@@ -9,7 +9,8 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.2.15" % "test",
   "org.rogach" %% "scallop" % "4.1.0",
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-  "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.1"
+  "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.1",
+  "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4"
 )
 
 val circeVersion = "0.14.1"

@@ -380,7 +380,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     shortSubcommandsHelp(true)
   }
 
-  val export = new DocumentedSubcommand("export") {
+  val `export` = new DocumentedSubcommand("export") {
     hidden = true
 
     val resource = new DocumentedSubcommand("resource") {

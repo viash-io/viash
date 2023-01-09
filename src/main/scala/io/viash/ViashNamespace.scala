@@ -29,6 +29,7 @@ import io.viash.helpers.NsExecData
 import sys.process._
 import java.io.{ByteArrayOutputStream, File, PrintWriter}
 import io.viash.platforms.Platform
+import scala.collection.parallel.CollectionConverters._
 
 object ViashNamespace {
   def build(
@@ -247,7 +248,7 @@ object ViashNamespace {
     configs: List[Either[(Config, Option[Platform]), Status]], 
     format: String = "yaml", 
     parseArgumentGroups: Boolean
-  ) {
+  ): Unit = {
     val configs2 = configs.flatMap(_.left.toOption).map(_._1)
     // val configs2 = configs.flatMap(_.left.toOption).flatMap{
     //   case (config, Some(platform)) =>
@@ -268,7 +269,7 @@ object ViashNamespace {
     command: String, 
     dryrun: Boolean, 
     parallel: Boolean
-  ) {
+  ): Unit = {
     val configData = configs.flatMap(_.left.toOption).map{
       case (conf, plat) => 
         NsExecData(conf.info.get.config, conf, plat)
@@ -346,7 +347,7 @@ object ViashNamespace {
     }
   }
 
-  def printResults(statuses: Seq[Status], performedBuild: Boolean, performedTest: Boolean) {
+  def printResults(statuses: Seq[Status], performedBuild: Boolean, performedTest: Boolean): Unit = {
     val successes = statuses.count(_ == Success)
 
     val successAction = (performedBuild, performedTest) match {

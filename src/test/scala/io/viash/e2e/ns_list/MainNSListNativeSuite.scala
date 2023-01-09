@@ -5,13 +5,14 @@ import io.viash._
 import io.viash.config.Config
 import io.viash.helpers.{Exec, IO}
 import io.circe.yaml.parser
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.io.File
 import java.nio.file.Paths
 import scala.io.Source
 
-class MainNSListNativeSuite extends FunSuite{
+class MainNSListNativeSuite extends AnyFunSuite{
   // path to namespace components
   private val nsPath = getClass.getResource("/testns/").getPath
   private val scalaPath = getClass.getResource("/testscala/").getPath

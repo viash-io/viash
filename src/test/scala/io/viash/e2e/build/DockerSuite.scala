@@ -2,7 +2,8 @@ package io.viash.e2e.build
 
 import io.viash._
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import io.viash.helpers.{IO, Exec}
 
@@ -10,7 +11,7 @@ import io.viash.config.Config
 
 import scala.io.Source
 
-class DockerSuite extends FunSuite with BeforeAndAfterAll {
+class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
   // which platform to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 
@@ -153,7 +154,7 @@ class DockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(stdout.contains("INFO: Parsed input arguments"))
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

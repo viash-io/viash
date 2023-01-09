@@ -1,6 +1,7 @@
 package io.viash.auxiliary
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Paths, Files, StandardCopyOption}
 
 import io.viash.config.Config
@@ -11,7 +12,7 @@ import io.viash.TestHelper
 import java.nio.file.Path
 import scala.annotation.meta.param
 
-class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfterAll {
+class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndAfterAll {
   // which platform to test
   private val configFile = getClass.getResource("/testbash/auxiliary_requirements/parameter_check.vsh.yaml").getPath
   private val loopConfigFile = getClass.getResource("/testbash/auxiliary_requirements/parameter_check_loop.vsh.yaml").getPath
@@ -70,7 +71,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
       )
     )
 
-    val results = Source.fromURI(outputFile.toUri).getLines.toList
+    val results = Source.fromURI(outputFile.toUri).getLines().toList
     val combinedResults = valuesAndExpectedResults.zipAll(results, ("no value", -1), -1).map{ case (((a, b), c)) => (a, b, c) }
 
     combinedResults.foreach{ case (input, expected, result) => 
@@ -345,7 +346,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends FunSuite with BeforeAndAfte
 
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

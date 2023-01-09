@@ -1,6 +1,7 @@
 package io.viash.functionality.arguments
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.util.Try
 import io.circe._
@@ -10,7 +11,7 @@ import io.viash.helpers.circe._
 import io.viash.helpers.data_structures._
 
 
-class StringArgumentTest extends FunSuite with BeforeAndAfterAll {
+class StringArgumentTest extends AnyFunSuite with BeforeAndAfterAll {
   val infoJson = Yaml("""
     |foo:
     |  bar:
