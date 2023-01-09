@@ -5,11 +5,11 @@ version := "0.6.7-sandbox"
 scalaVersion := "2.13.10"
 
 libraryDependencies ++= Seq(
-  "org.scalactic" %% "scalactic" % "3.2.14" % "test",
-  "org.scalatest" %% "scalatest" % "3.2.14" % "test",
-  "org.rogach" %% "scallop" % "4.0.1",
+  "org.scalactic" %% "scalactic" % "3.2.15" % "test",
+  "org.scalatest" %% "scalatest" % "3.2.15" % "test",
+  "org.rogach" %% "scallop" % "4.1.0",
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2",
+  "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.1",
   "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4",
   "com.github.julien-truffaut" %% "monocle-core"  % "2.1.0",
   "com.github.julien-truffaut" %% "monocle-macro" % "2.1.0"
