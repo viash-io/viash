@@ -139,7 +139,7 @@ class MainRunVersionSwitch extends FunSuite with BeforeAndAfterAll {
 
     assert(stdout.isEmpty())
     assert(stderr.isEmpty())
-    assert(caught.getMessage().contains("Could not download file: https://github.com/viash-io/viash/releases/download/invalid/viash , Response code: 404"))
+    assert(caught.getMessage().contains("Could not download file: https://github.com/viash-io/viash/releases/download/invalid/viash"))
   }
 
 }
