@@ -19,8 +19,6 @@ class DockerSetup extends FunSuite with BeforeAndAfterAll {
   private val tempFolStr = temporaryFolder.toString
   private val temporaryConfigFolder = IO.makeTemp("viash_tester_configs")
 
-  private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
-
   // parse functionality from file
   private val functionality = Config.read(configFile).functionality
   private def configAndResources = PlainFile(path = Some(configFile.toString)) :: functionality.resources
