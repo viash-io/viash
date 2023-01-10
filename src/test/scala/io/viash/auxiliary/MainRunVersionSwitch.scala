@@ -7,12 +7,9 @@ import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.reflect.io.Directory
 import java.io.ByteArrayOutputStream
-
-
 import java.security.Permission
-import java.security.InvalidKeyException
-import java.nio.file.Path
 
+// Use SecurityManager to capture System.exit codes set by Scallop as this would cancel our testbench
 sealed case class ExitException(status: Int) extends SecurityException("System.exit() is not allowed") {
 }
 
