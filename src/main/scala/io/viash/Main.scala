@@ -97,7 +97,7 @@ object Main {
     * function.
     *
     * @param args The command line arguments
-    * @return
+    * @return An exit code
     */
   def mainCLIOrVersioned(args: Array[String]): Int = {
       val workingDir = Paths.get(System.getProperty("user.dir"))
