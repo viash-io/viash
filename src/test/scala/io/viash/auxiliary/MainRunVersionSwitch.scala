@@ -52,7 +52,7 @@ class MainRunVersionSwitch extends FunSuite with BeforeAndAfterAll {
     Console.withOut(outStream) {
       Console.withErr(errStream) {
         assertThrows[ExitException] {
-          Main.outerMain(arguments.toArray)
+          Main.mainCLIOrVersioned(arguments.toArray)
         }
       }
     }
@@ -76,7 +76,7 @@ class MainRunVersionSwitch extends FunSuite with BeforeAndAfterAll {
     val errStream = new ByteArrayOutputStream()
     Console.withOut(outStream) {
       Console.withErr(errStream) {
-        Main.outerMain(arguments.toArray)
+        Main.mainCLIOrVersioned(arguments.toArray)
       }
     }
     
@@ -102,7 +102,7 @@ class MainRunVersionSwitch extends FunSuite with BeforeAndAfterAll {
     Console.withOut(outStream) {
       Console.withErr(errStream) {
         assertThrows[ExitException] {
-          Main.outerMain(arguments.toArray)
+          Main.mainCLIOrVersioned(arguments.toArray)
         }
       }
     }
@@ -131,7 +131,7 @@ class MainRunVersionSwitch extends FunSuite with BeforeAndAfterAll {
     val caught = intercept[RuntimeException] {
       Console.withOut(outStream) {
         Console.withErr(errStream) {
-          Main.outerMain(arguments.toArray)
+          Main.mainCLIOrVersioned(arguments.toArray)
         }
       }
     }
