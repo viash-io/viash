@@ -83,9 +83,7 @@ class MainRunVersionSwitch extends FunSuite with BeforeAndAfterAll {
     val stdout = outStream.toString
     val stderr = errStream.toString
 
-    // any output to the console is handled in a separate process where we don't have access to anymore
-    // so we expect empty outputs
-    assert(stdout.isEmpty())
+    assert(stdout.contains("viash 0.6.6 (c) 2020 Data Intuitive"))
     assert(stderr.isEmpty())
   }
 

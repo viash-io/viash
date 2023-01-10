@@ -136,12 +136,12 @@ object Main {
       }
       IO.write(uri, path, true, Some(true))
     }
-    
+   
     Process(
       Array(path.toString) ++ args,
       cwd = workingDir.map(_.toFile),
       extraEnv = List("VIASH_VERSION" -> "-"): _*
-    ).!
+    ).!(ProcessLogger(Console.out.println, Console.err.println))
   }
 
   /**
