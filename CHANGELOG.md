@@ -6,6 +6,8 @@
 
 * `Testbenches`: Prepare ConfigDeriver by copying base resources to the targetFolder. Use cases so far showed that it's always required and it simplifies the usage.
 
+* `Testbenches`: Add 2 testbenches for computational requirements when running `viash run` or `viash test`.
+
 # Viash 0.6.7
 
 Another minor release which contains several quality of life improvements for the Nextflow VDSL3 platform, as well as automated warnings for deprecated functionality.
