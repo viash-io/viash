@@ -13,7 +13,6 @@ import io.viash.helpers.{IO, Exec}
 class MainConfigInjectSuite extends FunSuite with BeforeAndAfterAll {
   private val temporaryFolder = IO.makeTemp("viash_tester")
 
-  //<editor-fold desc="Test whether config inject works">
   test("config inject works") {
     val srcPath = Paths.get(getClass.getResource(s"/testpython/").getPath())
     val destPath = temporaryFolder.resolve("inject_test")
