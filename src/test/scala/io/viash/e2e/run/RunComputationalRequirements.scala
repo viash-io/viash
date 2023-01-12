@@ -1,4 +1,4 @@
-package io.viash.auxiliary
+package io.viash.e2e.run
 
 import io.viash.{ConfigDeriver, TestHelper}
 import io.viash.helpers.IO
@@ -6,9 +6,9 @@ import java.nio.file.Paths
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 
-class MainRunAuxiliaryComputationalRequirements extends FunSuite with BeforeAndAfterAll {
+class RunComputationalRequirements extends FunSuite with BeforeAndAfterAll {
 
-  private val configFile = getClass.getResource("/testbash/auxiliary_computational_requirements/check_computational_requirements.vsh.yaml").getPath
+  private val configFile = getClass.getResource("/testbash/check_computational_requirements.vsh.yaml").getPath
   private val temporaryFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
   private val tempFolStr = temporaryFolder.toString
 
@@ -43,7 +43,7 @@ class MainRunAuxiliaryComputationalRequirements extends FunSuite with BeforeAndA
     )
 
     assert(output.contains("cpus unset"))
-    assert(output.contains("memory: 2mb"))
+    assert(output.contains("memory: 2048"))
   }
 
   test("Check set cpus in config") {
@@ -65,7 +65,7 @@ class MainRunAuxiliaryComputationalRequirements extends FunSuite with BeforeAndA
     )
 
     assert(output.contains("cpus unset"))
-    assert(output.contains("memory: 3145728b"))
+    assert(output.contains("memory: 3072"))
   }
 
   test("Check set cpus and memory in config") {
@@ -76,7 +76,7 @@ class MainRunAuxiliaryComputationalRequirements extends FunSuite with BeforeAndA
     )
 
     assert(output.contains("cpus: 3"))
-    assert(output.contains("memory: 3145728b"))
+    assert(output.contains("memory: 3072"))
   }
 
   test("Check set cpus in config and CLI") {
@@ -100,7 +100,7 @@ class MainRunAuxiliaryComputationalRequirements extends FunSuite with BeforeAndA
     )
 
     assert(output.contains("cpus unset"))
-    assert(output.contains("memory: 2mb"))
+    assert(output.contains("memory: 2048"))
   }
 
   test("Check set cpus and memory in config and CLI") {
@@ -113,7 +113,7 @@ class MainRunAuxiliaryComputationalRequirements extends FunSuite with BeforeAndA
     )
 
     assert(output.contains("cpus: 2"))
-    assert(output.contains("memory: 2mb"))
+    assert(output.contains("memory: 2048"))
   }
 
   override def afterAll() {

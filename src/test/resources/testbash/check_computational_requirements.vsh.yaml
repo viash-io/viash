@@ -1,0 +1,34 @@
+functionality:
+  name: auxiliary_computational_requirements
+  version: 0.1
+  description: |
+    Check setting of computational requirements
+  resources:
+    - type: bash_script
+      text: |
+        if [ -n "$VIASH_META_CPUS" ]; then
+          echo "cpus: $VIASH_META_CPUS"
+        else
+          echo "cpus unset"
+        fi
+
+        if [ -n "$VIASH_META_MEMORY_KB" ]; then
+          echo "memory: $VIASH_META_MEMORY_KB"
+        else
+          echo "memory unset"
+        fi
+  test_resources:
+    - type: bash_script
+      path: "test_script.sh"
+      text: |
+        if [ -n "$VIASH_META_CPUS" ] && [ -n "$VIASH_META_MEMORY" ]; then
+          VIASH_META_CPUS=$VIASH_META_CPUS VIASH_META_MEMORY=$VIASH_META_MEMORY sh auxiliary_computational_requirements
+        elif [ -z "$VIASH_META_CPUS" ] && [ -n "$VIASH_META_MEMORY" ]; then
+          VIASH_META_MEMORY=$VIASH_META_MEMORY sh auxiliary_computational_requirements
+        elif [ -n "$VIASH_META_CPUS" ] && [ -z "$VIASH_META_MEMORY" ]; then
+          VIASH_META_CPUS=$VIASH_META_CPUS sh auxiliary_computational_requirements
+        else
+          sh auxiliary_computational_requirements
+        fi
+platforms:
+  - type: native
