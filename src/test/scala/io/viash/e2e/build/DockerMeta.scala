@@ -21,9 +21,6 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
   private val functionality = Config.read(configFile).functionality
   private def configAndResources = PlainFile(path = Some(configFile.toString)) :: functionality.resources
 
-
-  //</editor-fold>
-  //<editor-fold desc="Test benches to check building with --meta flag">
   test("Get meta data of a docker", DockerTest) {
     // Create temporary folder to copy the files to so we can do a git init in that folder
     // This is needed to check the remote git repo value

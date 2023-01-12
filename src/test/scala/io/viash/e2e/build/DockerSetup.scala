@@ -20,8 +20,6 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
   private val tempFolStr = temporaryFolder.toString
   private val temporaryConfigFolder = IO.makeTemp("viash_tester_configs")
 
-  private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
-
   // parse functionality from file
   private val functionality = Config.read(configFile).functionality
   private def configAndResources = PlainFile(path = Some(configFile.toString)) :: functionality.resources
@@ -30,8 +28,6 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
   private val execPathInDocker = Paths.get("/viash_automount", executable.getPath).toFile.toString
 
-  //</editor-fold>
-  //<editor-fold desc="Test benches to check building with or without --setup flag">
   test("viash without --setup doesn't create docker during build", DockerTest) {
     val tag = "throwawayimage"
     
@@ -85,7 +81,6 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     // verify docker exists
     assert(checkDockerImageExists(tag, "0.1"))
   }
-  //</editor-fold>
 
   test("Get info of a docker image using docker inspect", DockerTest) {
     // Create temporary folder to copy the files to so we can do a git init in that folder
