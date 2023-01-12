@@ -48,7 +48,7 @@ package object resources {
 
   implicit def encodeResource[A <: Resource]: Encoder[A] = Encoder.instance {
     par =>
-      val typeJson = Json.obj("type" → Json.fromString(par.`type`))
+      val typeJson = Json.obj("type" -> Json.fromString(par.`type`))
       val objJson = par match {
         case s: BashScript => encodeBashScript(s)
         case s: PythonScript => encodePythonScript(s)

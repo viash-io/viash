@@ -1,6 +1,7 @@
 // package io.viash.auxiliary
 
-// import org.scalatest.{BeforeAndAfterAll, FunSuite}
+// import org.scalatest.BeforeAndAfterAll
+// import org.scalatest.funsuite.AnyFunSuite
 // import java.nio.file.{Paths, Files}
 
 // import io.viash.config.Config
@@ -9,7 +10,7 @@
 // import io.viash.helpers.{IO, Exec}
 // import io.viash.TestHelper
 // import scala.sys.process.{Process, ProcessLogger}
-// class MainTestUnderscoreComponents extends FunSuite with BeforeAndAfterAll {
+// class MainTestUnderscoreComponents extends AnyFunSuite with BeforeAndAfterAll {
 
 //   private val resourcePath = getClass.getResource("/").getPath
 //   private val nsPath = Paths.get(resourcePath).toString
@@ -46,7 +47,7 @@
 //     assert(exitCode == 0, s"stdout: $stdout\nstderr: $stderr")
 //   }
 
-//   override def afterAll() {
+//   override def afterAll(): Unit = {
 //     IO.deleteRecursively(temporaryFolder)
 //   }
 // }

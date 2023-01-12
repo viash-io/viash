@@ -1,10 +1,10 @@
 package io.viash.config_mods
 
 import io.circe.Json
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import io.circe.syntax._
 
-class AssignTest extends FunSuite {
+class AssignTest extends AnyFunSuite {
   // testing parsing
   test("parse assign command with only attributes") {
     val expected = ConfigMods(List(

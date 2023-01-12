@@ -88,7 +88,7 @@ package object arguments {
 
   implicit def encodeArgument[A <: Argument[_]]: Encoder[A] = Encoder.instance {
     par =>
-      val typeJson = Json.obj("type" → Json.fromString(par.`type`))
+      val typeJson = Json.obj("type" -> Json.fromString(par.`type`))
       val objJson = par match {
         case s: StringArgument => encodeStringArgument(s)
         case s: IntegerArgument => encodeIntegerArgument(s)

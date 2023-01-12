@@ -133,7 +133,7 @@ object BashWrapper {
         functionality.getArgumentLikesGroupedByDest(
           includeMeta = true,
           filterInputs = true
-        ).mapValues(_.map(_.disableChecks))
+        ).view.mapValues(_.map(_.disableChecks)).toMap
       } else {
         functionality.getArgumentLikesGroupedByDest(
           includeMeta = true,

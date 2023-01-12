@@ -1,8 +1,9 @@
 package io.viash.helpers.data_structures
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
-class OneOrMoreTest extends FunSuite with BeforeAndAfterAll {
+class OneOrMoreTest extends AnyFunSuite with BeforeAndAfterAll {
   test("works with one element") {
     val oom = OneOrMore("foo")
     assert(oom.toList == List("foo"))

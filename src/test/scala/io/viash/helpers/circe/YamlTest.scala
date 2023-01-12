@@ -1,10 +1,11 @@
 package io.viash.helpers.circe
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import io.circe._
 import io.circe.yaml.{parser => YamlParser}
 
-class YamlTest extends FunSuite with BeforeAndAfterAll {
+class YamlTest extends AnyFunSuite with BeforeAndAfterAll {
   test("checking whether Yaml works") {
     val out = Yaml("""
       |foo:

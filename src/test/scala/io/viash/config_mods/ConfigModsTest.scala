@@ -1,10 +1,10 @@
 package io.viash.config_mods
 
 import io.circe.Json
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import io.circe.syntax._
 
-class ConfigModsTest extends FunSuite {
+class ConfigModsTest extends AnyFunSuite {
   // testing parsers
   test("parsing multiple commands in one go") {
     val expected = ConfigMods(
