@@ -359,7 +359,7 @@ This is a quick release to push two bug fixes related to security and being able
 
 * `VDSL3`: Allow optional output files to be `null`.
 
-# Viash 0.6.1 (2022-10-03): Mostly minor improvements of functionality released in Viash 0.6.0
+# Viash 0.6.1 (2022-10-03): Minor improvements in functionality
 
 This release contains mostly minor improvements of functionality released in Viash 0.6.0. Most notably:
 
@@ -442,13 +442,16 @@ This release contains mostly minor improvements of functionality released in Via
 
 * `BashWrapper`: Escape usage of `multiple_sep`. This fixes various checks and transformations not working when when `multiple_sep` is set to `";"` (#235).
 
-# Viash 0.6.0 (2022-09-07): Major release that includes functionality improvements, testing options and several bug fixes
+# Viash 0.6.0 (2022-09-07): Nextflow VDSL3 is now the default, support for tracking memory and cpu requirements more elegantly
 
 The first (major) release this year! The biggest changes are:
 
 * Nextflow VDSL3 is now the default Nextflow platform, whereas the legacy Nextflow platform has been deprecated.
-* Support for tracking memory and cpu requirements more elegantly
+
+* Support for tracking memory and cpu requirements more elegantly.
+
 * Grouping arguments in groups more concisely.
+
 * The addition of a `viash ns exec` command, to be able to execute commands on Viash components more easily.
 
 ## BREAKING CHANGES
@@ -617,7 +620,7 @@ This release introduces testbenches and new default argument groups: `Inputs`, `
 
 * `Testbenches::vdsl3`: Add testbenches to verify functionality:
   - Vdsl3's `param_list` (`yamlblob`, `yaml`, `json`, `csv`).
-  - NextFlow's own `params-file`.
+  - Nextflow's own `params-file`.
   - Vdsl3's recalculating resource file paths to be relative to the `param_list` file instead of the workflow file (only available for `yaml`, `json`, `csv`).
   - Vdsl3's wrapping of modules to run these as a separate workflow automagically out of the box.
 
@@ -910,7 +913,7 @@ This quick release fixes a bug that prevented the correct passthrough of the new
 
 * `NextflowPlatform`: Fix passthrough of `organization` field.
 
-# Viash 0.5.10 (2022-03-15): The viash_install, viash_build, viash_test and viash_push components have been reworked
+# Viash 0.5.10 (2022-03-15): Rework of the Viash helper components
 
 The `viash_install`, `viash_build`, `viash_test` and `viash_push` components have been reworked.
 
@@ -949,7 +952,7 @@ The `viash_install`, `viash_build`, `viash_test` and `viash_push` components hav
 
 * `NextflowPlatform`: Added the `organization` field to the nextflow platform as well.
 
-# Viash 0.5.9 (2022-03-12): A long running Viash component can be interrupted by pressing CTRL-C or by sending it an INT or SIGINT signal
+# Viash 0.5.9 (2022-03-12): Allow interrupting Viash components
 
 The biggest change in this release is that long running Viash components (VS Code server or R Studio server for example) can now be interrupted by pressing CTRL-C or by sending it an `INT` or `SIGINT` signal. Before this release, you had to manually stop the Docker container to get the component to terminate.
 
@@ -983,7 +986,7 @@ The biggest change in this release is that long running Viash components (VS Cod
 
 * `DockerPlatform`: Deprecated `version` value.
 
-# Viash 0.5.8 (2022-02-28): You can now define a container's organization for the Docker platform and single values can be used in place of lists
+# Viash 0.5.8 (2022-02-28): Allow defining a Docker image organization, and single values can be used in place of lists
 
 ## NEW FUNCTIONALITY
 
@@ -1174,21 +1177,21 @@ cache: deep
 
 ## BREAKING CHANGES
 
-* `NextFlowPlatform`: The default caching mechanism is now what NextFlow uses as default. In order to replicate earlier
+* `NextflowPlatform`: The default caching mechanism is now what Nextflow uses as default. In order to replicate earlier
   caching, `cache: deep` should be specified in the Viash config file.
 
 ## NEW FEATURES
 
-* `NextFlowPlatform`: Added `cache` directive to specify the typing of caching to be performed.
+* `NextflowPlatform`: Added `cache` directive to specify the typing of caching to be performed.
 
-# Viash 0.5.3 (2021-09-02): New meta data list for scripts, VIASH_TEMP environment variable for NextFlow, fixed output formatting with separate outputs
+# Viash 0.5.3 (2021-09-02): New meta data list for scripts, VIASH_TEMP environment variable for Nextflow, fixed output formatting with separate outputs
 
 This release provides more information to scripts with the new `meta` list. This list contains two values for now:
 
   - `meta["resources_dir"]`: Path to the directory containing the resources
   - `meta["functionality_name"]`: Name of the component
 
-A new environment variable is now available for export when working with the NextFlow platform: `VIASH_TEMP`.
+A new environment variable is now available for export when working with the Nextflow platform: `VIASH_TEMP`.
 
 ## Resources directory
 
@@ -1243,13 +1246,13 @@ cat(meta$functionality_name)
   - `meta["resources_dir"]`: Path to the directory containing the resources
   - `meta["functionality_name"]`: Name of the component
 
-* `NextFlowPlatform`: Export `VIASH_TEMP` environment variable. 
+* `NextflowPlatform`: Export `VIASH_TEMP` environment variable. 
 
 ## BUG FIXES
 
-* `NextFlowPlatform`: Fix output formatting when `separate_multiple_outputs` is `false`.
+* `NextflowPlatform`: Fix output formatting when `separate_multiple_outputs` is `false`.
 
-# Viash 0.5.2 (2021-08-13): This is a small release containing two small features and a bug fix
+# Viash 0.5.2 (2021-08-13): More settings for Docker and Nextflow platform, and a bug fixes for components with resources
 
 This is a small release containing two small features and a bug fix.
 The new `run_args` field allows you to add [docker run](https://docs.docker.com/engine/reference/commandline/run/) arguments to the [Docker platform](/reference/config/platforms/DockerPlatform.html) section of a [config file](/reference/config/index.html). For example:
@@ -1257,8 +1260,8 @@ The new `run_args` field allows you to add [docker run](https://docs.docker.com/
 ```yaml
 platforms:
   - type: docker
-  image: bash:4.0
-  run_args: "--expose 127.0.0.1:80:8080/tcp --env MY_ENV_VAR=foo"
+    image: bash:4.0
+    run_args: "--expose 127.0.0.1:80:8080/tcp --env MY_ENV_VAR=foo"
 ```
 
 There's also a new field for the [Nextflow platform](/reference/config/platforms/NextflowVdsl3Platform.html): `separate_multiple_outputs`. By default, this is set to `true` and separates the outputs generated by a Nextflow component with multiple outputs as separate events on the channel. You can now choose to disable this behaviour:
@@ -1274,7 +1277,7 @@ platforms:
 
 * `DockerPlatform`: Added `run_args` field to allow setting `docker run` arguments.
 
-* `NextFlowPlatform`: Added argument `separate_multiple_outputs` to allow not separating the outputs generated by a 
+* `NextflowPlatform`: Added argument `separate_multiple_outputs` to allow not separating the outputs generated by a 
   component with multiple outputs as separate events on the channel.
 
 ## BUG FIX
@@ -1361,17 +1364,17 @@ ___
 
 ## MINOR CHANGES
 
-* `NextFlowPlatform`: Added `directive_cpus`, `directive_max_forks`, `directive_memory` and `directive_time` parameters.
+* `NextflowPlatform`: Added `directive_cpus`, `directive_max_forks`, `directive_memory` and `directive_time` parameters.
 
 ## BUG FIXES
 
 * `BashWrapper`: Refactor escaping descriptions, usages, defaults, and examples (#34).
 
-* `NextFlowPlatform`: Refactor escaping descriptions, usages, defaults and examples (#75).
+* `NextflowPlatform`: Refactor escaping descriptions, usages, defaults and examples (#75).
 
-* `NextFlowPlatform`: Add argument to output path to avoid naming conflicts for components with multiple output files (#76).
+* `NextflowPlatform`: Add argument to output path to avoid naming conflicts for components with multiple output files (#76).
 
-* `NextFlowPlatform`, `renderCLI()`: Only add flag to rendered command when boolean_true is actually true (#78).
+* `NextflowPlatform`, `renderCLI()`: Only add flag to rendered command when boolean_true is actually true (#78).
 
 * `DockerPlatform`: Only chown when output file exists.
 
@@ -1383,61 +1386,54 @@ ___
 
 * `TestingAllComponentsSuite`: Only testing bash natively, because other dependencies might not be available.
 
-# Viash 0.5.0 (2021-08-16): We're proud to announce that we have released Viash 0.5.0. This new version has some improvements to the way components with a Docker backend can be ran and the Nextflow platform has some argument changes
+# Viash 0.5.0 (2021-08-16): Improvements to running Docker executables, and Nextflow platform argument changes
 
+Here are the most important changes:
 
-Viash 0.5.0 has some improvements to the way components with a Docker backend can be ran and the Nextflow platform has some argument changes.
+* **Improvements to Docker backend**: In the past, you needed to perform `--setup` on your Docker-based components and executables in order for the image to be built before you could run the component or executable. Now you can simply run your component or executable and Viash will do the image building automatically by default if it detects an image isn't present yet. This behaviour can be changed by using a Docker setup strategy. For example:
 
-## Improvements to Docker backend
+  ```bash
+  viash build config.vsh.yaml -p docker --setup alwayscachedbuild
+  ```
 
-In the past, you needed to perform `--setup` on your Docker-based components and executables in order for the image to be built before you could run the component or executable. Now you can simply run your component or executable and Viash will do the image building automatically by default if it detects an image isn't present yet. This behaviour can be changed by using a Docker setup strategy. For example:
+* **Nextflow gets some argument changes**: Arguments for the Nextflow platform now have optional `required` and `default` values, just like their native and Docker counterparts. For example:
 
-```bash
-viash build config.vsh.yaml -p docker --setup alwayscachedbuild
-```
+  ```yaml
+    arguments:
+      - name: --name
+        type: string
+        description: Input name
+        required: true
+      - name: --repeat
+        type: integer
+        description: Times to repeat the name
+        default: 100
+  ```
 
-## Nextflow gets some argument changes
+  Take a look at the Functionality page for more information on arguments and their properties.  
+  As long as you use long-option arguments (e.g. `--my-option`) in the config file for required arguments, the way of specifying argument values for the Nextflow platform is identical to the Docker platform. You still access non-required arguments via this syntax: `--<component_name>__<argument_name> <value>`. For example:
 
-Arguments for the Nextflow platform now have optional `required` and `default` values, just like their native and Docker counterparts. For example:
+  ```bash
+  my_component -- --my_component__input Hello!
+  ```
 
-```yaml
-  arguments:
-    - name: --name
-      type: string
-      description: Input name
-      required: true
-    - name: --repeat
-      type: integer
-      description: Times to repeat the name
-      default: 100
-```
+* **Verbosity levels for viash run**: Executables now have 8 levels of verbosity
 
-Take a look at the Functionality page for more information on arguments and their properties.  
-As long as you use long-option arguments (e.g. `--my-option`) in the config file for required arguments, the way of specifying argument values for the Nextflow platform is identical to the Docker platform. You still access non-required arguments via this syntax: `--<component_name>__<argument_name> <value>`. For example:
+  0. emergency
+  1. alert
+  2. critical
+  3. error
+  4. warning
+  5. notice
+  6. info
+  7. debug
 
-```bash
-my_component -- --my_component__input Hello!
-```
+  The default verbosity level is **notice**.
+  You can pass the `-v` or `--verbose` option to bump up the verbosity by one level. By passing `-vv` the verbosity goes up by two levels. You can manually set the verbosity by using the `--verbosity <int_level>` option. For example, if you wanted to only show errors or worse:
 
-## Verbosity levels for viash run
-
-Executables now have 8 levels of verbosity:
-
-0. emergency
-1. alert
-2. critical
-3. error
-4. warning
-5. notice
-6. info
-7. debug
-
-The default verbosity level is **notice**.
-You can pass the `-v` or `--verbose` option to bump up the verbosity by one level. By passing `-vv` the verbosity goes up by two levels. You can manually set the verbosity by using the `--verbosity <int_level>` option. For example, if you wanted to only show errors or worse:
-
-```bash
-viash run config.vsh.yaml -- --verbosity 3
-```
+  ```bash
+  viash run config.vsh.yaml -- --verbosity 3
+  ```
 
 ## BREAKING CHANGES
 
@@ -1451,7 +1447,7 @@ viash run config.vsh.yaml -- --verbosity 3
 
 * `NXF`: This version changes the handling logic for arguments. An argument can be either `required` or not and can have a `default: ...` value or not. Checks are implemented to verify that required arguments are effectively provided _during_ pipeline running.
 
-* `NXF`: If one sticks to long-option argments in the viash config, for all arguments that are _required_, the way of specifying the arguments on the CLI is identical for the Docker and NextFlow platforms. Non-required arguments can still be accessed from CLI using `--<component_name>__<argument_name> ...`.
+* `NXF`: If one sticks to long-option argments in the viash config, for all arguments that are _required_, the way of specifying the arguments on the CLI is identical for the Docker and Nextflow platforms. Non-required arguments can still be accessed from CLI using `--<component_name>__<argument_name> ...`.
 
 * `NXF`: Running a module as a standalone pipeline has become easier.
 
@@ -1487,7 +1483,7 @@ viash run config.vsh.yaml -- --verbosity 3
 * `viash ns`: Added a basic testbench for namespace tests.
 
 
-# Viash 0.4.0.1 (2021-05-12): This release contains three bug fixes
+# Viash 0.4.0.1 (2021-05-12): Three small bug fixes.
 
 ## BUG FIX
 
@@ -1497,7 +1493,9 @@ viash run config.vsh.yaml -- --verbosity 3
 
 * `viash ns test`: print header when `--tsv foo.tsv --append true` but foo.tsv doesn't exist yet. Fixes #45.
 
-# Viash 0.4.0 (2021-04-14): The viash ns command's --namespace argument has been renamed to --query_namespace, introduction of custom DSL for overriding config properties at runtime, ...
+# Viash 0.4.0 (2021-04-14): Config mod DSL and renames to viash ns arguments
+
+The viash ns command's --namespace argument has been renamed to --query_namespace, introduction of custom DSL for overriding config properties at runtime.
 
 ## NEW FEATURES
 
@@ -1565,7 +1563,9 @@ The generation of Nextflow modules has been refactored thoroughly.
 * `NXF`: Providing a `default: ...` value for output file arguments is no longer necessary.
 
 
-# Viash 0.3.2 (2021-02-04): The viash build command doesn't generate a viash.yaml automatically anymore, added beta functionality for running tests in Nextflow, ...
+# Viash 0.3.2 (2021-02-04): Don't auto-generate viash.yaml and add beta unit testing in Nextflow
+
+The viash build command doesn't generate a viash.yaml automatically anymore, added beta functionality for running tests in Nextflow.
 
 ## BREAKING CHANGES
 
@@ -1591,7 +1591,9 @@ The generation of Nextflow modules has been refactored thoroughly.
 
 * `NXF`: Accept multiple inputs when component is running as standalone.
 
-# Viash 0.3.1 (2021-01-26): Add authors field to config, added registry fields to Docker platform config, ...
+# Viash 0.3.1 (2021-01-26): Add fields for specifying authors and the Docker registry
+
+Add authors field to config, added registry fields to Docker platform config.
 
 ## NEW FEATURES
 
@@ -1675,7 +1677,9 @@ functionality:
 * YAML: Test invertibility of parsing/unparsing config objects.
 
 
-# Viash 0.3.0 (2020-11-24): config.vsh.yaml is the new standard format, temporary files are removed when using run and test commands, ...
+# Viash 0.3.0 (2020-11-24): Combine functionality and platform into one config, remove temporary files
+
+`config.vsh.yaml` is the new standard format, temporary files are removed when using run and test commands.
 
 ## BREAKING CHANGES
 
@@ -1850,7 +1854,7 @@ This will ensure that the setup instructions are installed in the given order.
 
 * Issue trying to parse positional arguments even when none is provided.
 
-# Viash 0.2.0 (2020-09-01): Autoresolve of docker paths
+# Viash 0.2.0 (2020-09-01): Autoresolve docker paths
 
 ## Changes to functionality metadata
 
