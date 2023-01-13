@@ -210,7 +210,7 @@ object Main {
           cpus = cli.namespace.test.cpus.toOption,
           memory = cli.namespace.test.memory.toOption
         )
-        val errors = testResults.flatMap(_.right.toOption).count(_.isError)
+        val errors = testResults.flatMap(_.toOption).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.list) =>
         val configs = readConfigs(
@@ -224,7 +224,7 @@ object Main {
           format = cli.namespace.list.format(),
           parseArgumentGroups = cli.namespace.list.parse_argument_groups()
         )
-        val errors = configs.flatMap(_.right.toOption).count(_.isError)
+        val errors = configs.flatMap(_.toOption).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.exec) =>
         val configs = readConfigs(
@@ -238,7 +238,7 @@ object Main {
           dryrun = cli.namespace.exec.dryrun(),
           parallel = cli.namespace.exec.parallel()
         )
-        val errors = configs.flatMap(_.right.toOption).count(_.isError)
+        val errors = configs.flatMap(_.toOption).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.config, cli.config.view) =>
         val (config, _) = readConfig(

@@ -5,12 +5,13 @@ import io.viash._
 import java.nio.file.{Files, Paths, StandardCopyOption}
 
 import io.viash.helpers.{IO, Exec}
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.reflect.io.Directory
 import sys.process._
 
-class MainTestNativeSuite extends FunSuite with BeforeAndAfterAll {
+class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   // default yaml
   private val configFile = getClass.getResource("/testbash/config.vsh.yaml").getPath
 
@@ -305,7 +306,7 @@ class MainTestNativeSuite extends FunSuite with BeforeAndAfterAll {
    * @param expectDirectoryExists expect the directory to be present or not
    * @return
    */
-  def checkTempDirAndRemove(testText: String, expectDirectoryExists: Boolean) {
+  def checkTempDirAndRemove(testText: String, expectDirectoryExists: Boolean): Unit = {
     // Get temporary directory
     val FolderRegex = ".*Running tests in temporary directory: '([^']*)'.*".r
 
@@ -331,7 +332,7 @@ class MainTestNativeSuite extends FunSuite with BeforeAndAfterAll {
     assert(!tempFolder.exists)
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

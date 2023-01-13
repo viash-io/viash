@@ -2,7 +2,8 @@ package io.viash.platforms
 
 import io.viash.helpers.IO
 import io.viash.{DockerTest, NextFlowTest, TestHelper}
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
@@ -11,7 +12,7 @@ import scala.io.Source
 import java.io.IOException
 import java.io.UncheckedIOException
 
-class NextFlowPlatformTest extends FunSuite with BeforeAndAfterAll {
+class NextFlowPlatformTest extends AnyFunSuite with BeforeAndAfterAll {
   // temporary folder to work in
   private val temporaryFolder = IO.makeTemp("viash_tester_nextflow")
   private val tempFolStr = temporaryFolder.toString
@@ -50,7 +51,7 @@ class NextFlowPlatformTest extends FunSuite with BeforeAndAfterAll {
 
     val src = Source.fromFile(path)
     try {
-      val step3Out = src.getLines.mkString
+      val step3Out = src.getLines().mkString
       assert(step3Out.matches("^11 .*$"))
     } finally {
       src.close()
@@ -60,7 +61,7 @@ class NextFlowPlatformTest extends FunSuite with BeforeAndAfterAll {
   }
 
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

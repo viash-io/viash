@@ -1,10 +1,11 @@
 package io.viash.helpers
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.util.Try
 
-class ExecTest extends FunSuite with BeforeAndAfterAll {
+class ExecTest extends AnyFunSuite with BeforeAndAfterAll {
   test("Check exec.run") {
     val execRun = Exec.run(List("echo", "hi"))
     assert(execRun.trim == "hi")

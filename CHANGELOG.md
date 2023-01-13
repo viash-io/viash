@@ -4,7 +4,11 @@
 
 * `Main`: Capture build, setup and push errors and output an exit code.
 
+* `Scala`: Updated to Scala 2.13 and updated several dependencies.
+
 * `Testbenches`: Prepare ConfigDeriver by copying base resources to the targetFolder. Use cases so far showed that it's always required and it simplifies the usage.
+
+* `Testbenches`: Remove some old & unmaintained IntelliJ Idea `editor-fold` tags. Given that the testbenches were split up, these were broken but also no longer needed.
 
 * `Testbenches`: Add 2 testbenches for computational requirements when running `viash run` or `viash test`.
 

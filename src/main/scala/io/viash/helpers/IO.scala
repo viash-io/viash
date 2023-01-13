@@ -30,7 +30,7 @@ import io.viash.functionality.resources.Resource
 
 import java.nio.file.attribute.PosixFilePermission
 import java.util.Comparator
-import scala.collection.JavaConverters
+import scala.jdk.CollectionConverters._
 
 object IO {
   def tempDir: Path = {
@@ -44,7 +44,7 @@ object IO {
     temp
   }
 
-  def deleteRecursively(dir: Path) {
+  def deleteRecursively(dir: Path): Unit = {
     Files.walkFileTree(dir, new SimpleFileVisitor[Path] {
       override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
         Files.delete(file)
@@ -71,7 +71,7 @@ object IO {
         Source.fromURL(uri.toURL)
       }
     try {
-      txtSource.getLines.mkString("\n")
+      txtSource.getLines().mkString("\n")
     } finally {
       txtSource.close()
     }
@@ -166,7 +166,7 @@ object IO {
     resources: Seq[Resource],
     outputDir: Path,
     overwrite: Boolean = true
-  ) {
+  ): Unit = {
     // copy all files
     resources.foreach { resource =>
       // determine destination path
@@ -205,6 +205,6 @@ object IO {
    */
   def find(sourceDir: Path, filter: (Path, BasicFileAttributes) => Boolean): List[Path] = {
     val it = Files.find(sourceDir, Integer.MAX_VALUE, (p, b) => filter(p, b)).iterator()
-    JavaConverters.asScalaIterator(it).toList
+    it.asScala.toList
   }
 }

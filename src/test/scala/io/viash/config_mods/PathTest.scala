@@ -1,12 +1,12 @@
 package io.viash.config_mods
 
 import io.circe.Json
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import io.circe.syntax._
 
 import io.circe.yaml.parser.parse
 
-class PathTest extends FunSuite {
+class PathTest extends AnyFunSuite {
   // testing parsing
   // TODO
 
@@ -15,7 +15,7 @@ class PathTest extends FunSuite {
     """foo: bar
       |baz: 123
       |list_of_stuff: [4, 5, 6]
-      |""".stripMargin).right.get
+      |""".stripMargin).toOption.get
   
   test("test simple path") {
     val pth = ConfigModParser.parse(ConfigModParser.path, """.foo""").get

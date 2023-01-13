@@ -1,10 +1,11 @@
 package io.viash.schema
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import io.viash.schemas.CollectedSchemas
 import scala.sys.process.Process
 
-class SchemaTest extends FunSuite with BeforeAndAfterAll {
+class SchemaTest extends AnyFunSuite with BeforeAndAfterAll {
     
   test("All schema class val members should be annotated") {
     val nonAnnotated = CollectedSchemas.getAllNonAnnotated

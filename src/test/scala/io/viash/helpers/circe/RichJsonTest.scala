@@ -1,12 +1,13 @@
 package io.viash.helpers.circe
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import io.circe._
 import io.circe.yaml.parser
 import io.viash.helpers.IO
 import java.nio.file.Files
 
-class RichJsonTest extends FunSuite with BeforeAndAfterAll {
+class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
   private val temporaryFolder = IO.makeTemp("richjson")
 
   test("checking whether withDefault works") {
@@ -221,7 +222,7 @@ class RichJsonTest extends FunSuite with BeforeAndAfterAll {
     assert(jsonOut == jsonExpected)
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

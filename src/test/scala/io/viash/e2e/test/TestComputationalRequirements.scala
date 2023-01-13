@@ -3,9 +3,10 @@ package io.viash.e2e.test
 import io.viash.{ConfigDeriver, TestHelper}
 import io.viash.helpers.IO
 import java.nio.file.Paths
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
-class TestComputationalRequirements extends FunSuite with BeforeAndAfterAll {
+class TestComputationalRequirements extends AnyFunSuite with BeforeAndAfterAll {
 
   private val configFile = getClass.getResource("/testbash/check_computational_requirements.vsh.yaml").getPath
   private val temporaryFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
@@ -115,7 +116,7 @@ class TestComputationalRequirements extends FunSuite with BeforeAndAfterAll {
     assert(output.contains("memory: 2"))
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 
