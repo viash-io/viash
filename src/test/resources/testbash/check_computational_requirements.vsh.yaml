@@ -6,14 +6,14 @@ functionality:
   resources:
     - type: bash_script
       text: |
-        if [ -n "$VIASH_META_CPUS" ]; then
-          echo "cpus: $VIASH_META_CPUS"
+        if [ -n "$meta_cpus" ]; then
+          echo "cpus: $meta_cpus"
         else
           echo "cpus unset"
         fi
 
-        if [ -n "$VIASH_META_MEMORY_KB" ]; then
-          echo "memory: $VIASH_META_MEMORY_KB"
+        if [ -n "$meta_memory_mb" ]; then
+          echo "memory: $meta_memory_mb"
         else
           echo "memory unset"
         fi

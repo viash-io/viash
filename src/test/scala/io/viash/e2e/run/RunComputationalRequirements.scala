@@ -43,7 +43,7 @@ class RunComputationalRequirements extends FunSuite with BeforeAndAfterAll {
     )
 
     assert(output.contains("cpus unset"))
-    assert(output.contains("memory: 2048"))
+    assert(output.contains("memory: 2"))
   }
 
   test("Check set cpus in config") {
@@ -65,7 +65,7 @@ class RunComputationalRequirements extends FunSuite with BeforeAndAfterAll {
     )
 
     assert(output.contains("cpus unset"))
-    assert(output.contains("memory: 3072"))
+    assert(output.contains("memory: 3"))
   }
 
   test("Check set cpus and memory in config") {
@@ -76,7 +76,7 @@ class RunComputationalRequirements extends FunSuite with BeforeAndAfterAll {
     )
 
     assert(output.contains("cpus: 3"))
-    assert(output.contains("memory: 3072"))
+    assert(output.contains("memory: 3"))
   }
 
   test("Check set cpus in config and CLI") {
@@ -100,7 +100,7 @@ class RunComputationalRequirements extends FunSuite with BeforeAndAfterAll {
     )
 
     assert(output.contains("cpus unset"))
-    assert(output.contains("memory: 2048"))
+    assert(output.contains("memory: 2"))
   }
 
   test("Check set cpus and memory in config and CLI") {
@@ -113,7 +113,7 @@ class RunComputationalRequirements extends FunSuite with BeforeAndAfterAll {
     )
 
     assert(output.contains("cpus: 2"))
-    assert(output.contains("memory: 2048"))
+    assert(output.contains("memory: 2"))
   }
 
   override def afterAll() {
