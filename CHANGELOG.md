@@ -6,7 +6,11 @@
 
 * `Main`: Capture build, setup and push errors and output an exit code.
 
+* `Scala`: Updated to Scala 2.13 and updated several dependencies.
+
 * `Testbenches`: Prepare ConfigDeriver by copying base resources to the targetFolder. Use cases so far showed that it's always required and it simplifies the usage.
+
+* `Testbenches`: Remove some old & unmaintained IntelliJ Idea `editor-fold` tags. Given that the testbenches were split up, these were broken but also no longer needed.
 
 * `Changelog`: Contain Viash dates, titles and a summary in the changelog itself.
   This both improves the changelog itself but can then also be used to generate website posts automagically.

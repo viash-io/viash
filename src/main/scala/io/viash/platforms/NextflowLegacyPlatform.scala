@@ -276,19 +276,19 @@ case class NextflowLegacyPlatform(
     val argumentsAsTuple: List[ConfigTuple] =
       if (functionality.allArguments.nonEmpty) {
         List(
-          "arguments" → NestedValue(functionality.allArguments.map(argumentToConfigTuple(_)))
+          "arguments" -> NestedValue(functionality.allArguments.map(argumentToConfigTuple(_)))
         )
       } else {
         Nil
       }
 
     val mainParams: List[ConfigTuple] = List(
-      "name" → functionality.name,
-      "container" → imageInfo.name,
+      "name" -> functionality.name,
+      "container" -> imageInfo.name,
       "containerTag" -> imageInfo.tag,
       "containerRegistry" -> imageInfo.registry.getOrElse(""),
       "containerOrganization" -> imageInfo.organization.getOrElse(""),
-      "command" → executionCode
+      "command" -> executionCode
     )
 
     // fetch test information
@@ -316,16 +316,16 @@ case class NextflowLegacyPlatform(
      * 2. id is initialized as empty string, which makes sense in test scenarios.
      */
     val asNestedTuples: List[ConfigTuple] = List(
-      "docker.enabled" → true,
-      "def viash_temp = System.getenv(\"VIASH_TEMP\") ?: \"/tmp/\"\n  docker.runOptions" → "-i -v ${baseDir}:${baseDir} -v $viash_temp:$viash_temp",
-      "process.container" → "dataintuitive/viash",
-      "params" → NestedValue(
+      "docker.enabled" -> true,
+      "def viash_temp = System.getenv(\"VIASH_TEMP\") ?: \"/tmp/\"\n  docker.runOptions" -> "-i -v ${baseDir}:${baseDir} -v $viash_temp:$viash_temp",
+      "process.container" -> "dataintuitive/viash",
+      "params" -> NestedValue(
         namespacedParameters :::
         List(
-          tupleToConfigTuple("id" → ""),
+          tupleToConfigTuple("id" -> ""),
           tupleToConfigTuple("testScript" -> testScript.headOption.getOrElse("")), // TODO: what about when there are multiple tests?
           tupleToConfigTuple("testResources" -> testPaths),
-          tupleToConfigTuple(functionality.name → NestedValue(
+          tupleToConfigTuple(functionality.name -> NestedValue(
             mainParams :::
             testConfig :::
             argumentsAsTuple
@@ -818,7 +818,7 @@ object NextFlowUtils {
     )
   }
 
-  def quote(str: String): String = '"' + str + '"'
+  def quote(str: String): String = s"\"$str\""
 
   def quoteLong(str: String): String = str.replace("-", "_")
 
@@ -876,15 +876,15 @@ object NextFlowUtils {
     // TODO: Should this not be converted from the json?
     val default = if (argument.default.isEmpty) None else Some(argument.default.mkString(argument.multiple_sep.toString))
     val example = if (argument.example.isEmpty) None else Some(argument.example.mkString(argument.multiple_sep.toString))
-    quoteLong(argument.plainName) → NestedValue(
-      tupleToConfigTuple("name" → argument.plainName) ::
-      tupleToConfigTuple("flags" → argument.flags) ::
-      tupleToConfigTuple("required" → argument.required) ::
-      tupleToConfigTuple("type" → argument.`type`) ::
-      tupleToConfigTuple("direction" → argument.direction.toString) ::
-      tupleToConfigTuple("multiple" → argument.multiple) ::
+    quoteLong(argument.plainName) -> NestedValue(
+      tupleToConfigTuple("name" -> argument.plainName) ::
+      tupleToConfigTuple("flags" -> argument.flags) ::
+      tupleToConfigTuple("required" -> argument.required) ::
+      tupleToConfigTuple("type" -> argument.`type`) ::
+      tupleToConfigTuple("direction" -> argument.direction.toString) ::
+      tupleToConfigTuple("multiple" -> argument.multiple) ::
       tupleToConfigTuple("multiple_sep" -> argument.multiple_sep) ::
-      tupleToConfigTuple("value" → pointer) ::
+      tupleToConfigTuple("value" -> pointer) ::
       default.map{ x =>
         List(tupleToConfigTuple("dflt" -> escapeNextflowString(x.toString)))
       }.getOrElse(Nil) :::
@@ -892,7 +892,7 @@ object NextFlowUtils {
         List(tupleToConfigTuple("example" -> escapeNextflowString(x.toString)))
       }.getOrElse(Nil) :::
       argument.description.map{x =>
-        List(tupleToConfigTuple("description" → escapeNextflowString(x.toString)))
+        List(tupleToConfigTuple("description" -> escapeNextflowString(x.toString)))
       }.getOrElse(Nil)
     )
   }

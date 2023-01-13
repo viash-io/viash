@@ -1,10 +1,10 @@
 package io.viash.config_mods
 
 import io.circe.Json
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import io.circe.syntax._
 
-class DeleteTest extends FunSuite {
+class DeleteTest extends AnyFunSuite {
   // testing parsing
   test("parsing delete command") {
     val expected = ConfigMods(List(

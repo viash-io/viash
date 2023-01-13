@@ -86,7 +86,7 @@ trait Resource {
     }
   }
 
-  def write(path: Path, overwrite: Boolean) {
+  def write(path: Path, overwrite: Boolean): Unit = {
     try {
       if (text.isDefined) {
         IO.write(text.get, path, overwrite, executable = is_executable)

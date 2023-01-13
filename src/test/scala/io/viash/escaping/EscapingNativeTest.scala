@@ -2,14 +2,15 @@ package io.viash.escaping
 
 import io.viash.TestHelper
 import io.viash.config.Config
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.io.{IOException, UncheckedIOException}
 import java.nio.file.{Files, Path, Paths}
 import scala.io.Source
 import io.viash.helpers.{IO, Exec}
 
-class EscapingNativeTest extends FunSuite with BeforeAndAfterAll {
+class EscapingNativeTest extends AnyFunSuite with BeforeAndAfterAll {
   // which platform to test
   private val rootPath = getClass.getResource(s"/test_escaping/").getPath
   private val configFile = getClass.getResource(s"/test_escaping/config.vsh.yaml").getPath
@@ -44,7 +45,7 @@ class EscapingNativeTest extends FunSuite with BeforeAndAfterAll {
   }
 
   val singleChars = Seq("$", raw"\n")
-  val repeatingChars = for (c <- Seq(raw"\", "\"", "'", "`"); r <- 1 to 4) yield c * r
+  val repeatingChars = for (c <- Seq("\\", "\"", "'", "`"); r <- 1 to 4) yield c * r
   
   for ((chars, i) <- (singleChars ++ repeatingChars).zipWithIndex) {
 
@@ -95,7 +96,7 @@ class EscapingNativeTest extends FunSuite with BeforeAndAfterAll {
     }
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

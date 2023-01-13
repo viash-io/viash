@@ -3,12 +3,13 @@ package io.viash.auxiliary
 import io.viash.{DockerTest, TestHelper}
 import io.viash.helpers.{IO, Exec}
 import io.viash.config.Config
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.io.Source
 
-class MainBuildAuxiliaryDockerChown extends FunSuite with BeforeAndAfterAll {
+class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll {
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
 
@@ -204,7 +205,7 @@ class MainBuildAuxiliaryDockerChown extends FunSuite with BeforeAndAfterAll {
     assert(owner._3 == "root")
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

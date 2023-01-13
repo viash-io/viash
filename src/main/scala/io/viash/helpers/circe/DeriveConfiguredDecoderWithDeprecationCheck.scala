@@ -29,7 +29,7 @@ import io.circe.ACursor
 
 object DeriveConfiguredDecoderWithDeprecationCheck {
 
-  private def memberDeprecationCheck(name: String, history: List[CursorOp], T: Type) {
+  private def memberDeprecationCheck(name: String, history: List[CursorOp], T: Type): Unit = {
     val m = T.member(TermName(name))
     val schema = ParameterSchema(name, "", List.empty, m.annotations)
     val deprecated = schema.flatMap(_.deprecated)
@@ -41,7 +41,7 @@ object DeriveConfiguredDecoderWithDeprecationCheck {
     }
   }
 
-  private def selfDeprecationCheck(T: Type) {
+  private def selfDeprecationCheck(T: Type): Unit = {
     val baseClass = T.baseClasses.head
     val name = baseClass.fullName.split('.').last
     val schema = ParameterSchema("", "", List.empty, baseClass.annotations)

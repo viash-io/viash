@@ -1,12 +1,12 @@
 package io.viash.config_mods
 
 import io.circe.Json
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import io.circe.syntax._
 
 import io.circe.yaml.parser.parse
 
-class AppendTest extends FunSuite {
+class AppendTest extends AnyFunSuite {
   // testing parsing
   test("parse append command") {
     val expected = ConfigMods(List(
@@ -37,14 +37,14 @@ class AppendTest extends FunSuite {
     """foo: bar
       |baz: 123
       |list_of_stuff: [4, 5, 6]
-      |""".stripMargin).right.get
+      |""".stripMargin).toOption.get
   
   test("test simple assign") {
     val expected1: Json = parse(
       """foo: 6
         |baz: 123
         |list_of_stuff: [4, 5, 6]
-        |""".stripMargin).right.get
+        |""".stripMargin).toOption.get
     val cmd1 = ConfigModParser.block.parse(""".foo := 6""")
     val res1 = cmd1.apply(baseJson, false)
     assert(res1 == expected1)
@@ -55,7 +55,7 @@ class AppendTest extends FunSuite {
       """foo: [1, 2, 3]
         |baz: 123
         |list_of_stuff: [4, 5, 6]
-        |""".stripMargin).right.get
+        |""".stripMargin).toOption.get
     val cmd2 = ConfigModParser.block.parse(""".foo := [ 1, 2, 3 ]""")
     val res2 = cmd2.apply(baseJson, false)
     assert(res2 == expected2)
@@ -67,7 +67,7 @@ class AppendTest extends FunSuite {
         |bar: [1, 2, 3]
         |baz: 123
         |list_of_stuff: [4, 5, 6]
-        |""".stripMargin).right.get
+        |""".stripMargin).toOption.get
     val cmd2 = ConfigModParser.block.parse(""".bar := [ 1, 2, 3 ]""")
     val res2 = cmd2.apply(baseJson, false)
     assert(res2 == expected2)
