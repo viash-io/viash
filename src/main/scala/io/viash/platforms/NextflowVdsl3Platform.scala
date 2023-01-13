@@ -136,10 +136,7 @@ case class NextflowVdsl3Platform(
   def containerDirective(config: Config): Option[DockerImageInfo] = {
     val plat = config.platforms.find(p => p.id == container)
     plat match {
-      case Some(p) if !p.isInstanceOf[DockerPlatform] => 
-        throw new RuntimeException(s"NextflowPlatform 'container' variable: Platform $container is not a Docker Platform")
-      case Some(pp) if pp.isInstanceOf[DockerPlatform] => 
-        val p = pp.asInstanceOf[DockerPlatform]
+      case Some(p: DockerPlatform) => 
         Some(Docker.getImageInfo(
           functionality = Some(config.functionality),
           registry = p.target_registry,
@@ -148,6 +145,8 @@ case class NextflowVdsl3Platform(
           tag = p.target_tag.map(_.toString),
           namespaceSeparator = p.namespace_separator
         ))
+      case Some(_) => 
+        throw new RuntimeException(s"NextflowPlatform 'container' variable: Platform $container is not a Docker Platform")
       case None => None
     }
   }
