@@ -6,6 +6,9 @@
 
 * `Main`: Capture build, setup and push errors and output an exit code.
 
+* `Testbenches`: Add testbenches to verify switching of viash versions.
+
+* `File downloading`: Add check to preemptively catch file errors (e.g. 404).
 
 * `Scala`: Updated to Scala 2.13 and updated several dependencies.
 
