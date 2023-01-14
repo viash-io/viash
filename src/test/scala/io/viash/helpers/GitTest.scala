@@ -1,11 +1,12 @@
 package io.viash.helpers
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import java.nio.file.Path
 import scala.collection.mutable.ListBuffer
 
-class GitTest extends FunSuite with BeforeAndAfterAll {
+class GitTest extends AnyFunSuite with BeforeAndAfterAll {
   val fakeGitRepo = "git@non.existing.repo:viash/meta-test"
 
   val tempPaths = ListBuffer[Path]()

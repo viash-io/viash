@@ -38,6 +38,6 @@ case class ArgumentGroup(
   }
 
   def argumentArguments: List[Argument[_]] = {
-    arguments.flatMap{_.right.toOption}
+    arguments.flatMap{_.toOption}
   }
 }

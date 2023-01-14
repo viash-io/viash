@@ -58,9 +58,7 @@
 #'   setup:
 #'     - type: r
 #'       cran: optparse
-#'       github: dynverse/anndata@main
-#'     - type: apt
-#'       packages: libhdf5-serial-dev
+#'       github: tidyverse/glue@main
 #' - type: nextflow
 
 ## VIASH START
