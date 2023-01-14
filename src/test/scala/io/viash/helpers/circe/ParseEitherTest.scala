@@ -1,11 +1,12 @@
 package io.viash.helpers.circe
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import io.circe._
 import io.circe.yaml.parser
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 
-class ParseEitherTest extends FunSuite with BeforeAndAfterAll {
+class ParseEitherTest extends AnyFunSuite with BeforeAndAfterAll {
   case class A(foo: String)
   case class B(bar: Int)
   case class XXX(ab: Either[A, B])
@@ -18,13 +19,13 @@ class ParseEitherTest extends FunSuite with BeforeAndAfterAll {
   
   test("parsing either works with left element") {
     val json = parser.parse("ab:\n  foo: str").getOrElse(Json.Null)
-    val parsed = json.as[XXX].right.get
+    val parsed = json.as[XXX].toOption.get
     assert(parsed == XXX(ab = Left(A("str"))))
   }
 
   test("parsing either works with right element") {
     val json = parser.parse("ab:\n  bar: 10").getOrElse(Json.Null)
-    val parsed = json.as[XXX].right.get
+    val parsed = json.as[XXX].toOption.get
     assert(parsed == XXX(ab = Right(B(10))))
   }
 }

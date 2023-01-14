@@ -1,12 +1,12 @@
 package io.viash.config_mods
 
 import io.circe.Json
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import io.circe.syntax._
 
 import io.circe.yaml.parser.parse
 
-class ConditionSuite extends FunSuite {
+class ConditionSuite extends AnyFunSuite {
   // testing parsers
   // TODO
 
@@ -15,7 +15,7 @@ class ConditionSuite extends FunSuite {
     """foo: bar
       |baz: 123
       |list_of_stuff: [4, 5, 6]
-      |""".stripMargin).right.get
+      |""".stripMargin).toOption.get
   
   test("test condition true") {
     val cmd1 = ConfigModParser.condition.parse("""true""")

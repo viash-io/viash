@@ -11,6 +11,12 @@ final case class ConfigDeriver(
   targetFolder: Path
 ) {
 
+  // Prepare ConfigDeriver by copying base resources to the targetFolder
+  {
+    val rootPath = baseConfigFile.getParent
+    TestHelper.copyFolder(rootPath, targetFolder)
+  }
+
   def derive(configMod: String, name: String): String = {
     ConfigDeriver.deriveNewConfig(baseConfigFile, targetFolder, configMod, name)
   }

@@ -94,36 +94,36 @@ object CollectedSchemas {
 
   val schemaClassMap = Map(
     "config" -> Map(
-      ""                       -> getMembers[Config],
+      ""                       -> getMembers[Config](),
     ),
     "functionality" -> Map(
-      ""                       -> getMembers[Functionality]
+      ""                       -> getMembers[Functionality]()
     ),
     "platforms" -> Map(
-      "nativePlatform"         -> getMembers[NativePlatform],
-      "dockerPlatform"         -> getMembers[DockerPlatform],
-      "nextflowVdsl3Platform"  -> getMembers[NextflowVdsl3Platform],
-      "nextflowLegacyPlatform" -> getMembers[NextflowLegacyPlatform],
+      "nativePlatform"         -> getMembers[NativePlatform](),
+      "dockerPlatform"         -> getMembers[DockerPlatform](),
+      "nextflowVdsl3Platform"  -> getMembers[NextflowVdsl3Platform](),
+      "nextflowLegacyPlatform" -> getMembers[NextflowLegacyPlatform](),
     ),
     "requirements" -> Map(
-      "apkRequirements"        -> getMembers[ApkRequirements],
-      "aptRequirements"        -> getMembers[AptRequirements],
-      "dockerRequirements"     -> getMembers[DockerRequirements],
-      "javascriptRequirements" -> getMembers[JavaScriptRequirements],
-      "pythonRequirements"     -> getMembers[PythonRequirements],
-      "rRequirements"          -> getMembers[RRequirements],
-      "rubyRequirements"       -> getMembers[RubyRequirements],
-      "yumRequirements"        -> getMembers[YumRequirements],
+      "apkRequirements"        -> getMembers[ApkRequirements](),
+      "aptRequirements"        -> getMembers[AptRequirements](),
+      "dockerRequirements"     -> getMembers[DockerRequirements](),
+      "javascriptRequirements" -> getMembers[JavaScriptRequirements](),
+      "pythonRequirements"     -> getMembers[PythonRequirements](),
+      "rRequirements"          -> getMembers[RRequirements](),
+      "rubyRequirements"       -> getMembers[RubyRequirements](),
+      "yumRequirements"        -> getMembers[YumRequirements](),
     ),
     "arguments" -> Map(
-      "boolean"                -> getMembers[BooleanArgument],
-      "boolean_true"           -> getMembers[BooleanTrueArgument],
-      "boolean_false"          -> getMembers[BooleanFalseArgument],
-      "double"                 -> getMembers[DoubleArgument],
-      "file"                   -> getMembers[FileArgument],
-      "integer"                -> getMembers[IntegerArgument],
-      "long"                   -> getMembers[LongArgument],
-      "string"                 -> getMembers[StringArgument],
+      "boolean"                -> getMembers[BooleanArgument](),
+      "boolean_true"           -> getMembers[BooleanTrueArgument](),
+      "boolean_false"          -> getMembers[BooleanFalseArgument](),
+      "double"                 -> getMembers[DoubleArgument](),
+      "file"                   -> getMembers[FileArgument](),
+      "integer"                -> getMembers[IntegerArgument](),
+      "long"                   -> getMembers[LongArgument](),
+      "string"                 -> getMembers[StringArgument](),
     )
   )
 

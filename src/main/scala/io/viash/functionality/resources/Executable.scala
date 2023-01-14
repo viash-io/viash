@@ -43,7 +43,7 @@ case class Executable(
 
   override def read: Option[String] = None
 
-  override def write(path: Path, overwrite: Boolean) {}
+  override def write(path: Path, overwrite: Boolean): Unit = {}
 
   def command(script: String): String = {
     script
