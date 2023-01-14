@@ -12,8 +12,13 @@
 
 * `Testbenches`: Remove some old & unmaintained IntelliJ Idea `editor-fold` tags. Given that the testbenches were split up, these were broken but also no longer needed.
 
-* `Changelog`: Contain Viash dates, titles and a summary in the changelog itself.
-  This both improves the changelog itself but can then also be used to generate website posts automagically.
+* `Changelog`: Reformat the changelog to a more structured format.
+  For every release, there is now a date, title, and summary.
+  This both improves the changelog itself but can then also be used to postprocess the CHANGELOG programmatically.
+
+## BUG FIXES
+
+* `Testbenches`: Simplify `testr` container.
 
 # Viash 0.6.7 (2022-12-14): A minor release with several QoL improvements
 
