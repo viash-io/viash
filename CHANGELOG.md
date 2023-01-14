@@ -13,6 +13,8 @@
 
 * `Testbenches`: Remove some old & unmaintained IntelliJ Idea `editor-fold` tags. Given that the testbenches were split up, these were broken but also no longer needed.
 
+* `Main`: Improve `match` completeness in some edge cases and throw exceptions where needed.
+
 * `Changelog`: Reformat the changelog to a more structured format.
   For every release, there is now a date, title, and summary.
   This both improves the changelog itself but can then also be used to postprocess the CHANGELOG programmatically.
