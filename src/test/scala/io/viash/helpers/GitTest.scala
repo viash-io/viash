@@ -3,12 +3,21 @@ package io.viash.helpers
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Files, Paths, StandardCopyOption}
+import java.nio.file.Path
+import scala.collection.mutable.ListBuffer
 
 class GitTest extends AnyFunSuite with BeforeAndAfterAll {
   val fakeGitRepo = "git@non.existing.repo:viash/meta-test"
 
+  val tempPaths = ListBuffer[Path]()
+  def makeTemp(name: String): Path = {
+    val tempPath = IO.makeTemp(name)
+    tempPaths += tempPath
+    tempPath
+  }
+
   test("Check git metadata of empty dir") {
-    val tempDir = IO.makeTemp("viash_test_meta_1_").toFile
+    val tempDir = makeTemp("viash_test_meta_1_").toFile
     assert(!Git.isGitRepo(tempDir), "Git.isGitRepo")
     assert(Git.getCommit(tempDir).isEmpty, "Git.getCommit")
     assert(Git.getLocalRepo(tempDir).isEmpty, "Git.getLocalRepo")
@@ -17,7 +26,7 @@ class GitTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check git metadata after git init") {
-    val tempDir = IO.makeTemp("viash_test_meta_2_").toFile
+    val tempDir = makeTemp("viash_test_meta_2_").toFile
 
     val gitInitOut = Exec.runCatch(List("git", "init"), cwd = Some(tempDir))
     assert(gitInitOut.exitValue == 0, s"git init: ${gitInitOut.output}")
@@ -32,7 +41,7 @@ class GitTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check git metadata after git remote add") {
-    val tempDir = IO.makeTemp("viash_test_meta_3_").toFile
+    val tempDir = makeTemp("viash_test_meta_3_").toFile
 
     val gitInitOut = Exec.runCatch(List("git", "init"), cwd = Some(tempDir))
     assert(gitInitOut.exitValue == 0, s"git init: ${gitInitOut.output}")
@@ -51,7 +60,7 @@ class GitTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Check git metadata after git remote add, but remote definition contains credentials username") {
     val fakeGitRepo = "https://foobar@github.com/viash/meta-test.git"
-    val tempDir = IO.makeTemp("viash_test_meta_3_").toFile
+    val tempDir = makeTemp("viash_test_meta_4_").toFile
 
     val gitInitOut = Exec.runCatch(List("git", "init"), cwd = Some(tempDir))
     assert(gitInitOut.exitValue == 0, s"git init: ${gitInitOut.output}")
@@ -70,7 +79,7 @@ class GitTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Check git metadata after git remote add, but remote definition contains credentials username & password/PAT") {
     val fakeGitRepo = "https://foobar:ghp_SGFoLCB0aGlzIGlzIG5vdCBhIHJlYWwgUEFU@github.com/viash/meta-test.git"
-    val tempDir = IO.makeTemp("viash_test_meta_3_").toFile
+    val tempDir = makeTemp("viash_test_meta_5_").toFile
 
     val gitInitOut = Exec.runCatch(List("git", "init"), cwd = Some(tempDir))
     assert(gitInitOut.exitValue == 0, s"git init: ${gitInitOut.output}")
@@ -88,7 +97,7 @@ class GitTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check git metadata after git commit") {
-    val tempDir = IO.makeTemp("viash_test_meta_4_").toFile
+    val tempDir = makeTemp("viash_test_meta_6_").toFile
 
     val gitInitOut = Exec.runCatch(List("git", "init"), cwd = Some(tempDir))
     assert(gitInitOut.exitValue == 0, s"git init: ${gitInitOut.output}")
@@ -121,7 +130,7 @@ class GitTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check git metadata after git tag") {
-    val tempDir = IO.makeTemp("viash_test_meta_5_").toFile
+    val tempDir = makeTemp("viash_test_meta_7_").toFile
 
     val gitInitOut = Exec.runCatch(List("git", "init"), cwd = Some(tempDir))
     assert(gitInitOut.exitValue == 0, s"git init: ${gitInitOut.output}")
@@ -154,5 +163,9 @@ class GitTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(lr.isDefined && lr.get.contains(tempDir.toString), "Git.getLocalRepo")
     assert(Git.getRemoteRepo(tempDir) == Some(fakeGitRepo), "Git.getRemoteRepo")
     assert(Git.getTag(tempDir) == Some("0.1.1"), "Git.getTag")
+  }
+
+  override def afterAll() {
+    tempPaths.foreach(tempDir => IO.deleteRecursively(tempDir))
   }
 }
