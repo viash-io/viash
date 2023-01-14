@@ -11,6 +11,9 @@
 * `Testbenches`: Remove some old & unmaintained IntelliJ Idea `editor-fold` tags. Given that the testbenches were split up, these were broken but also no longer needed.
 
 * `Testbenches`: Add 2 testbenches for computational requirements when running `viash run` or `viash test`.
+## BUG FIXES
+
+* `Testbenches`: Simplify `testr` container.
 
 # Viash 0.6.7
 
