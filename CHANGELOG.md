@@ -14,6 +14,8 @@
 
 * `viash xxx url`: Fix passing a url to viash as the config file to process. Add a short testbench to test principle functionality.
 
+* `Testbenches`: Simplify `testr` container.
+
 # Viash 0.6.7
 
 Another minor release which contains several quality of life improvements for the Nextflow VDSL3 platform, as well as automated warnings for deprecated functionality.
