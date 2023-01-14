@@ -2,7 +2,8 @@ package io.viash.auxiliary
 
 import io.viash.{NativeTest, TestHelper, Main}
 import io.viash.helpers.IO
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.reflect.io.Directory
@@ -24,7 +25,7 @@ sealed class NoExitSecurityManager extends SecurityManager {
   }
 }
 
-class MainRunVersionSwitch extends FunSuite with BeforeAndAfterAll {
+class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
 
   override def beforeAll(): Unit = System.setSecurityManager(new NoExitSecurityManager())
 
