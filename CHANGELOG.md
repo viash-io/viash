@@ -6,6 +6,7 @@
 
 * `Main`: Capture build, setup and push errors and output an exit code.
 
+
 * `Scala`: Updated to Scala 2.13 and updated several dependencies.
 
 * `Testbenches`: Prepare ConfigDeriver by copying base resources to the targetFolder. Use cases so far showed that it's always required and it simplifies the usage.
@@ -17,6 +18,8 @@
   This both improves the changelog itself but can then also be used to postprocess the CHANGELOG programmatically.
 
 ## BUG FIXES
+
+* `Testbenches`: Fix GitTest testbench to correctly increment temporary folder naming and dispose them after the test finishes.
 
 * `viash xxx url`: Fix passing a url to viash as the config file to process. Add a short testbench to test principle functionality.
 
