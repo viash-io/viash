@@ -11,6 +11,9 @@
 * `Testbenches`: Remove some old & unmaintained IntelliJ Idea `editor-fold` tags. Given that the testbenches were split up, these were broken but also no longer needed.
 
 * `Main`: Improve `match` completeness in some edge cases and throw exceptions where needed.
+## BUG FIXES
+
+* `Testbenches`: Simplify `testr` container.
 
 # Viash 0.6.7
 
