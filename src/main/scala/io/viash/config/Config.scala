@@ -289,23 +289,26 @@ object Config {
     /* CONFIG 3: add info */
     // gather git info
     // todo: resolve git in project?
-    val path = Paths.get(uri).toFile().getParentFile
-    val GitInfo(_, rgr, gc, gt) = Git.getInfo(path)
+    val conf3 = uri.getScheme() match {
+      case "file" =>
+        val path = Paths.get(uri).toFile().getParentFile
+        val GitInfo(_, rgr, gc, gt) = Git.getInfo(path)
 
-    // create info object
-    val info = 
-      Info(
-        viash_version = Some(io.viash.Main.version),
-        config = uri.toString.replaceAll("^file:/+", "/"),
-        git_commit = gc,
-        git_remote = rgr,
-        git_tag = gt
-      )
-    
-    // add info and additional resources
-    val conf3 = conf2.copy(
-      info = Some(info),
-    )
+        // create info object
+        val info = 
+          Info(
+            viash_version = Some(io.viash.Main.version),
+            config = uri.toString.replaceAll("^file:/+", "/"),
+            git_commit = gc,
+            git_remote = rgr,
+            git_tag = gt
+          )
+        // add info and additional resources
+        conf2.copy(
+          info = Some(info),
+        )
+      case _ => conf2
+    }
 
     // print warnings if need be
     if (conf2.functionality.status == Status.Deprecated)
