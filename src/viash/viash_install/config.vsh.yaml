@@ -2,15 +2,9 @@ functionality:
   name: viash_install
   namespace: viash
   description: |
-    Bootstrap or update a viash project's CI/CD artefacts
+    Bootstrap the Viash executable
   arguments:
-  - name: "--destination"
-    alternatives: [ "-d" ]
-    type: file
-    description: Target dir for viash scripts and tools
-    direction: output
-    default: ./
-  - name: "--name"
+  - name: "--output"
     alternatives: [ "-n" ]
     type: file
     description: The name to give to the Viash executable
@@ -24,5 +18,8 @@ functionality:
   resources:
     - type: bash_script
       path: script.sh
+  test_resources:
+    - type: bash_script
+      path: test.sh
 platforms:
 - type: native

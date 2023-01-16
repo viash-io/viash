@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## VIASH START
-par_destination="testdir/"
+par_output="/tmp/my_viash_executable"
 par_tag="latest"
 ## VIASH END
 
@@ -19,9 +19,12 @@ set -e
 # get the root of the repository
 REPO_ROOT=`pwd`
 
-if [ ! -d "$par_destination" ]; then
-  echo "> Creating $par_destination"
-  mkdir "$par_destination"
+destination=`dirname $par_output`
+name=`basename $par_output`
+
+if [ ! -d "$destination" ]; then
+  echo "> Creating $destination"
+  mkdir "$destination"
 fi
 
 if [ "$par_tag" == "latest" ]; then
@@ -34,9 +37,9 @@ echo "> Using tag $par_tag"
 
 # remove previous binaries
 echo "> Cleanup"
-if [ -f "$par_destination/$par_name" ]; then
+if [ -f "$destination/$name" ]; then
   echo "> Removing previous versions of Viash and recent project binaries"
-  rm "$par_destination/$par_name"
+  rm "$destination/$name"
 fi
 
 # make temporary dir for building things
@@ -73,12 +76,12 @@ if [[ "$par_tag" == "develop" || "$par_tag" =~ ^@.*$ ]]; then
   fi
   
   cd "$REPO_ROOT"
-  cp "$build_dir/viash-$used_tag/bin/viash" "$par_destination/$par_name"
+  cp "$build_dir/viash-$used_tag/bin/viash" "$destination/$name"
 else
   # Download Viash
-  echo "> Downloading Viash v$par_tag under $par_destination and naming it $par_name"
-  curl -L -s "https://github.com/viash-io/viash/releases/download/$par_tag/viash" -o "$par_destination/$par_name"
-  chmod +x "$par_destination/$par_name"
+  echo "> Downloading Viash v$par_tag under $destination and naming it $name"
+  curl -L -s "https://github.com/viash-io/viash/releases/download/$par_tag/viash" -o "$destination/$name"
+  chmod +x "$destination/$name"
 fi
 
 echo "> Done, happy viash-ing!"
