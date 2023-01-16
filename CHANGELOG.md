@@ -6,6 +6,9 @@
 
 * `Main`: Capture build, setup and push errors and output an exit code.
 
+* `Testbenches`: Add testbenches to verify switching of viash versions.
+
+* `File downloading`: Add check to preemptively catch file errors (e.g. 404).
 
 * `Scala`: Updated to Scala 2.13 and updated several dependencies.
 
@@ -14,6 +17,8 @@
 * `Testbenches`: Remove some old & unmaintained IntelliJ Idea `editor-fold` tags. Given that the testbenches were split up, these were broken but also no longer needed.
 
 * `Testbenches`: Add 2 testbenches for computational requirements when running `viash run` or `viash test`.
+
+* `Main`: Improve `match` completeness in some edge cases and throw exceptions where needed.
 
 * `Changelog`: Reformat the changelog to a more structured format.
   For every release, there is now a date, title, and summary.

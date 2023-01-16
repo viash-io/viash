@@ -192,7 +192,9 @@ class RichJson(json: Json) {
 
             // return combined object
             jsMerged.asObject.get
-            
+          
+          case Some(_) =>
+            throw new RuntimeException("Invalid merge tag type. Must be a String or Array.")
           case None => obj1
         }
         val obj3 = obj2.mapValues(x => x.inherit(uri))

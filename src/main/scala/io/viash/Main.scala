@@ -45,38 +45,23 @@ object Main {
 
   val viashHome = Paths.get(sys.env.getOrElse("VIASH_HOME", sys.env("HOME") + "/.viash"))
 
-  def detectVersion(workingDir: Option[Path]): Option[String] = {
-    // if VIASH_VERSION is defined, use that
-    if (sys.env.get("VIASH_VERSION").isDefined) {
-      sys.env.get("VIASH_VERSION")
-    } else {
-      // else look for project file in working dir
-      // and try to read as json
-      workingDir
-        .flatMap(ViashProject.findProjectFile)
-        .map(ViashProject.readJson)
-        .flatMap(js => {
-          js.asObject.flatMap(_.apply("viash_version")).flatMap(_.asString)
-        })
-    }
-  }
-
+  /**
+    * Viash main
+    * 
+    * This function will process the command-line
+    * arguments and run the desired Viash command.
+    * 
+    * Internally, a different version of Viash may be
+    * used if the user so desires.
+    * 
+    * This function should not throw exceptions but instead
+    * exit with exit code > 0 if an exception has occurred.
+    *
+    * @param args The command line arguments
+    */
   def main(args: Array[String]): Unit = {
     try {
-      val workingDir = Paths.get(System.getProperty("user.dir"))
-
-      val viashVersion = detectVersion(Some(workingDir))
-      
-      val exitCode = 
-        viashVersion match {
-          // don't use `runWithVersion()` if the version is the same
-          // as this Viash or if the variable is explicitly set to `-`.
-          case Some(version) if version != "-" && version != Main.version =>
-            runWithVersion(args, Some(workingDir), version)
-          case _ =>
-            internalMain(args, workingDir = Some(workingDir))
-        }
-
+      val exitCode = mainCLIOrVersioned(args)
       System.exit(exitCode)
     } catch {
       case e @ ( _: FileNotFoundException | _: NoSuchFileException | _: MissingResourceFileException ) =>
@@ -96,12 +81,54 @@ object Main {
     }
   }
 
-  def runWithVersion(args: Array[String], workingDir: Option[Path] = None, version: String): Int = {
+  /**
+    * Detect Viash version and run
+    * 
+    * Detect which Viash version the user wants to run
+    * and either run the function that will process the 
+    * command-line arguments internally or pass them to
+    * a different version of Viash.
+    * 
+    * If the version is set to "-", the internal CLI will
+    * be used.
+    * 
+    * For testing purposes, exceptions are not handled by
+    * this function but are instead handled by the `main()`
+    * function.
+    *
+    * @param args The command line arguments
+    * @return An exit code
+    */
+  def mainCLIOrVersioned(args: Array[String]): Int = {
+      val workingDir = Paths.get(System.getProperty("user.dir"))
+
+      val viashVersion = detectVersion(Some(workingDir))
+      
+      viashVersion match {
+        // don't use `mainVersioned()` if the version is the same
+        // as this Viash or if the variable is explicitly set to `-`.
+        case Some(version) if version != "-" && version != Main.version =>
+          mainVersioned(args, Some(workingDir), version)
+        case _ =>
+          mainCLI(args, workingDir = Some(workingDir))
+        }
+  }
+
+  /**
+    * Run a specific version of Viash
+    *
+    * @param args The command line arguments
+    * @param workingDir The directory in which Viash was called
+    * @param version Which versions of Viash to run
+    * @return An exit code
+    */
+  def mainVersioned(args: Array[String], workingDir: Option[Path] = None, version: String): Int = {
     val path = viashHome.resolve("releases").resolve(version).resolve("viash")
 
     if (!Files.exists(path)) {
       // todo: be able to use 0.7.x notation to get the latest 0.7 version?
       // todo: allow 'latest' and '@branch' notation to build viash?
+      // todo: throw nicer error when release does not exist
       val uri = new URI(s"https://github.com/viash-io/viash/releases/download/$version/viash")
       val parent = path.getParent()
       if (!Files.exists(parent)) {
@@ -109,15 +136,25 @@ object Main {
       }
       IO.write(uri, path, true, Some(true))
     }
-    
+   
     Process(
       Array(path.toString) ++ args,
       cwd = workingDir.map(_.toFile),
       extraEnv = List("VIASH_VERSION" -> "-"): _*
-    ).!
+    ).!(ProcessLogger(Console.out.println, Console.err.println))
   }
 
-  def internalMain(args: Array[String], workingDir: Option[Path] = None): Int = {
+  /**
+    * Viash CLI handler
+    * 
+    * This function processes the command-line arguments using a scallop CLI and
+    * passes the right values to the Viash command objects.
+    *
+    * @param args The command line arguments
+    * @param workingDir The directory in which Viash was called
+    * @return An exit code
+    */
+  def mainCLI(args: Array[String], workingDir: Option[Path] = None): Int = {
     // try to find project settings
     val proj0 = workingDir.map(ViashProject.findViashProject(_)).getOrElse(ViashProject())
 
@@ -377,6 +414,34 @@ object Main {
         case Right(status) => Right(status)
         case Left(conf) => Left((conf, None: Option[Platform]))
       }}
+    }
+  }
+
+  /**
+    * Detect the desired Viash version
+    * 
+    * If an environment variable `VIASH_VERSION` is
+    * defined, return its value. Else if a project file
+    * is found in the working directory, check whether
+    * it contains a `viash_version` field. Otherwise
+    * return None. 
+    *
+    * @param workingDir The directory in which Viash was called
+    * @return The desired version of Viash (if specified)
+    */
+  def detectVersion(workingDir: Option[Path]): Option[String] = {
+    // if VIASH_VERSION is defined, use that
+    if (sys.env.get("VIASH_VERSION").isDefined) {
+      sys.env.get("VIASH_VERSION")
+    } else {
+      // else look for project file in working dir
+      // and try to read as json
+      workingDir
+        .flatMap(ViashProject.findProjectFile)
+        .map(ViashProject.readJson)
+        .flatMap(js => {
+          js.asObject.flatMap(_.apply("viash_version")).flatMap(_.asString)
+        })
     }
   }
   
