@@ -16,6 +16,8 @@
 
 * `Testbenches`: Remove some old & unmaintained IntelliJ Idea `editor-fold` tags. Given that the testbenches were split up, these were broken but also no longer needed.
 
+* `Testbenches`: Add 2 testbenches for computational requirements when running `viash run` or `viash test`.
+
 * `Main`: Improve `match` completeness in some edge cases and throw exceptions where needed.
 
 * `Changelog`: Reformat the changelog to a more structured format.
