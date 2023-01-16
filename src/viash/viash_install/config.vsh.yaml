@@ -5,9 +5,11 @@ functionality:
     Bootstrap the Viash executable
   arguments:
   - name: "--output"
-    alternatives: [ "-n" ]
+    alternatives: [ "-o" ]
     type: file
-    description: The name to give to the Viash executable
+    description: |
+      The output path (absolute or relative) of the Viash executable.
+      Examples are: viash, ./viash, /tmp/viash-latest, ./latest/viash
     direction: output
     default: viash
   - name: "--tag"

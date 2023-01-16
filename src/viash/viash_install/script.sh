@@ -1,10 +1,5 @@
 #!/bin/bash
 
-## VIASH START
-par_output="/tmp/my_viash_executable"
-par_tag="latest"
-## VIASH END
-
 if ! command -v unzip &> /dev/null; then
     echo "unzip needs to be installed"
     exit
