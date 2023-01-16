@@ -2,6 +2,21 @@
 
 [TODO] A nice summary.
 
+## BREAKING CHANGES
+
+* `viash_install`: The bootstrap script has been reworked in line with the project config introduced in 0.6.4:
+
+    * The default location for installing the Viash executable is now `./viash` (was: `bin/viash`).
+    * The new `viash_install` support `--output` and `--tag`.
+    * The various settings that existed in `viash_install` (organisation, tag, ...) are moved to the project config.
+
+  Please note that this new `viash_install` bootstrap script can be run from the CLI using:
+
+    ```
+    curl -fsSL dl.viash.io | bash
+    ```
+  The old `get.viash.io` is still available but points to the version 0.6.7 version of this component and is deprecated.
+
 ## MINOR CHANGES
 
 * `Main`: Capture build, setup and push errors and output an exit code.
