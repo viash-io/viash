@@ -22,13 +22,13 @@ functionality:
       path: "test_script.sh"
       text: |
         if [ -n "$VIASH_META_CPUS" ] && [ -n "$VIASH_META_MEMORY" ]; then
-          VIASH_META_CPUS=$VIASH_META_CPUS VIASH_META_MEMORY=$VIASH_META_MEMORY sh auxiliary_computational_requirements
+          VIASH_META_CPUS=$VIASH_META_CPUS VIASH_META_MEMORY=$VIASH_META_MEMORY "$meta_executable"
         elif [ -z "$VIASH_META_CPUS" ] && [ -n "$VIASH_META_MEMORY" ]; then
-          VIASH_META_MEMORY=$VIASH_META_MEMORY sh auxiliary_computational_requirements
+          VIASH_META_MEMORY=$VIASH_META_MEMORY "$meta_executable"
         elif [ -n "$VIASH_META_CPUS" ] && [ -z "$VIASH_META_MEMORY" ]; then
-          VIASH_META_CPUS=$VIASH_META_CPUS sh auxiliary_computational_requirements
+          VIASH_META_CPUS=$VIASH_META_CPUS "$meta_executable"
         else
-          sh auxiliary_computational_requirements
+          "$meta_executable"
         fi
 platforms:
   - type: native
