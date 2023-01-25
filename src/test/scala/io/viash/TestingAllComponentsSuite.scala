@@ -1,9 +1,9 @@
 package io.viash
 
 import io.viash.config.Config
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class TestingAllComponentsSuite extends FunSuite {
+class TestingAllComponentsSuite extends AnyFunSuite {
   def getTestResource(path: String) = getClass.getResource(path).toString
 
   val tests = List(
@@ -39,7 +39,7 @@ class TestingAllComponentsSuite extends FunSuite {
       val confJson = conf.asJson
 
       // convert back to config
-      val conf2 = confJson.as[Config].right.get
+      val conf2 = confJson.as[Config].toOption.get
 
       // check if equal
       assert(conf == conf2)
