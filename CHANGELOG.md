@@ -69,7 +69,6 @@ Another minor release which contains several quality of life improvements for th
 * `NextflowPlatform`: Automatically split Viash config strings into strings of 
   length 65000 since the JVM has a limit (65536) on the length of string constants (#323).
 
-
 # Viash 0.6.6 (2022-12-06): A small bugfix releaes
 
 This release fixes an issue where stderr was being redirected to stdout.
@@ -146,7 +145,6 @@ Please take note of the following breaking changes:
   because every `viash build/run/test` run will generate a 
   `.config.vsh.yaml` meta file.
 
-
 ## BREAKING CHANGES
 
 * Config: Viash configs whose filenames start with a `.` are ignored (#291).
@@ -202,11 +200,9 @@ file exists and create it if necessary (#295).
     tup.normalization_id == preferredNormalization
   })
   ```
-
 ## BUG FIXES
 
 * `BashWrapper`: Don't overwrite meta values when trailing arguments are provided (#295).
-
 
 ## EXPERIMENTAL FEATURES
 
@@ -223,7 +219,6 @@ file exists and create it if necessary (#295).
     .platforms[.type == 'docker'].namespace_separator := '/'
     .platforms[.type == 'docker'].target_image_source := 'https://github.com/viash-io/viash'
   ```
-
 
 * Config merging: Allow specifying the order in which Viash will merge configs (#289).
   If `.` is not in the list of inherited objects, it will be added at the end.
@@ -321,7 +316,6 @@ This release features contains mostly quality of life improvements and some expe
 * `Testbenches`: Update viash underscore component tests to use `$meta_executable`.
 
 * `viash ns exec`: Allow choosing whether the `{platform}` field should be filled in, based on the `--apply_platform` parameter.
-
 
 ## BUG FIXES
 
@@ -711,7 +705,6 @@ Argument groups allow for grouping arguments together by function or category, m
         description: Description
   ```
 
-
 * Addition of the `viash_nxf_schema` component for converting a Viash config (for a workflow) into a nextflow schema file.
 
 * `NextflowVdsl3Platform`: Use `--param_list` to initialise a Nextflow channel with multiple parameter sets.
@@ -734,7 +727,6 @@ Argument groups allow for grouping arguments together by function or category, m
   taking care of the formatting in Groovy.
 
 * `NextflowVdsl3Platform`: The `--help` is auto-generated from the config.
-
 
 ## MINOR CHANGES
 
@@ -778,7 +770,6 @@ Argument groups allow for grouping arguments together by function or category, m
 * `Testbenches`: Better capture expected error messages while running testbenches. Having these show on the console could be confusing.
 
 * `NextflowVdsl3Platform`: Fix issue when running multiple VDSL3 modules concurrently on the same channel.
-
 
 # Viash 0.5.13 (2022-06-10): Added overriding of the container registry for the VDSL3 + VDSL3 bug fixes
 
@@ -1088,7 +1079,6 @@ The biggest change in this release is that long running Viash components (VS Cod
   Unexpected field: [package]; valid fields: packages, interactive, type: DownField(apt),DownArray,DownField(platforms)
   ```
 
-
 # Viash 0.5.7 (2022-02-16): Argument examples need to be of the same type as the argument itself
 
 Examples for arguments now need to be of the same type as the argument itself. You can't provide an `integer` for a `string`-based argument for example.  
@@ -1097,25 +1087,25 @@ A handy new command has been added: `viash config inject`. This can be used to i
 There have been some improvements to the Docker platform as well.  
 You can now add yum packages as a requirement:
 
-```yaml
-platforms:
-  - type: docker
-    image: bash:latest
-    setup:
-      - type: yum
-        packages: [ wget ]
-```
+  ```yaml
+  platforms:
+    - type: docker
+      image: bash:latest
+      setup:
+        - type: yum
+          packages: [ wget ]
+  ```
 
 You can now include ADD and COPY instructions in the config file:
 
-```yaml
-platforms:
-  - type: docker
-    image: bash:latest
-    setup:
-      - type: docker
-        add: [ "http://foo.bar ." ]
-```
+  ```yaml
+  platforms:
+    - type: docker
+      image: bash:latest
+      setup:
+        - type: docker
+          add: [ "http://foo.bar ." ]
+  ```
 
 ## BREAKING CHANGES
 
@@ -1175,13 +1165,13 @@ platforms:
 The resources directory is no longer added to the PATH variable by default. You can re-enable this behaviour by setting add_resources_to_path to `true` in the functionality part of the config file.  
 Here's a snippet of a config file to illustrate this:
 
-```yaml
-functionality:
-  name: example_component
-  description: Serve as a simple example.
-  add_resources_to_path: true
-  ...
-```
+  ```yaml
+  functionality:
+    name: example_component
+    description: Serve as a simple example.
+    add_resources_to_path: true
+    ...
+  ```
 
 ## BREAKING CHANGES
 
@@ -1207,9 +1197,9 @@ functionality:
 A cache type can now be specified in the config file for the Nextflow platform. Previously this was hardcoded to be `deep`, but the default caching method is now `default`.  
 To use deep caching again, add this to your config file:
 
-```yaml
-cache: deep
-```
+  ```yaml
+  cache: deep
+  ```
 
 ## BREAKING CHANGES
 
@@ -1236,21 +1226,21 @@ Here are some examples in different scripting languages on how to access the met
 
 Bash:  
 
-```bash
-echo $meta_resources_dir 
-```
+  ```bash
+  echo $meta_resources_dir 
+  ```
 
 Python:  
 
-```python
-print(meta["resources_dir"])
-```
+  ```python
+  print(meta["resources_dir"])
+  ```
 
 R:
 
-```r
-cat(meta$resources_dir)
-```
+  ```r
+  cat(meta$resources_dir)
+  ```
 
 ## Functionality name
 
@@ -1259,21 +1249,21 @@ Here's how to access this data in different scripting languages:
 
 Bash:
 
-```bash
-echo $meta_functionality_name
-```
+  ```bash
+  echo $meta_functionality_name
+  ```
 
 Python:  
 
-```python
-print(meta["functionality_name"])
-```
+  ```python
+  print(meta["functionality_name"])
+  ```
 
 R:
 
-```r
-cat(meta$functionality_name)
-```
+  ```r
+  cat(meta$functionality_name)
+  ```
 
 ## NEW FEATURES
 
@@ -1293,21 +1283,21 @@ cat(meta$functionality_name)
 This is a small release containing two small features and a bug fix.
 The new `run_args` field allows you to add [docker run](https://docs.docker.com/engine/reference/commandline/run/) arguments to the [Docker platform](/reference/config/platforms/DockerPlatform.html) section of a [config file](/reference/config/index.html). For example:
 
-```yaml
-platforms:
-  - type: docker
-    image: bash:4.0
-    run_args: "--expose 127.0.0.1:80:8080/tcp --env MY_ENV_VAR=foo"
-```
+  ```yaml
+  platforms:
+    - type: docker
+      image: bash:4.0
+      run_args: "--expose 127.0.0.1:80:8080/tcp --env MY_ENV_VAR=foo"
+  ```
 
 There's also a new field for the [Nextflow platform](/reference/config/platforms/NextflowVdsl3Platform.html): `separate_multiple_outputs`. By default, this is set to `true` and separates the outputs generated by a Nextflow component with multiple outputs as separate events on the channel. You can now choose to disable this behaviour:
 
-```yaml
-platforms:
-  - type: nextflow
-    publish: true
-    separate_multiple_outputs: false
-```
+  ```yaml
+  platforms:
+    - type: nextflow
+      publish: true
+      separate_multiple_outputs: false
+  ```
 
 ## MINOR CHANGES
 
@@ -1327,36 +1317,36 @@ platforms:
 We've added C# scripts (.csx) as a supported language using **dotnet-script**.  
 To run C# scripts natively, you'll need to install .NET Core and execute the following command in a terminal:
 
-```bash
-dotnet tool install -g dotnet-script
-```
+  ```bash
+  dotnet tool install -g dotnet-script
+  ```
 
 You can now run C# scripts like this:
 
-```bash
-dotnet script hello_viash.csx
-```
+  ```bash
+  dotnet script hello_viash.csx
+  ```
 
 To use C# scripts as components, use the new `csharp_script` type in the functionality section of your config file:
 
-```yaml
-  resources:
-  - type: csharp_script
-    path: script.csx
-```
+  ```yaml
+    resources:
+    - type: csharp_script
+      path: script.csx
+  ```
 
 Here's an example of a simple C# script with Viash in mind:
 
-```csharp
-// VIASH START
-var par = new {
-  input = "Hello World",
-  name = "Mike"
-};
-// VIASH END
+  ```csharp
+  // VIASH START
+  var par = new {
+    input = "Hello World",
+    name = "Mike"
+  };
+  // VIASH END
 
-System.Console.WriteLine(input + ", " + name + "!");
-```
+  System.Console.WriteLine(input + ", " + name + "!");
+  ```
 
 The language-specific guide for creating C# script components will be added in the near future.
 
@@ -1372,24 +1362,24 @@ First off, these special characters  can now be used in the description, usage, 
 
 Nextflow output files with the same extension won't overwrite each other any more, like it was the case for arguments like this:
 
-```yaml
-functionality:
-  name: bar
-  arguments:
-    - name: "--input"
-      type: file
-      example: input.txt
-    - name: "--output1"
-      type: file
-      direction: output
-      required: true
-      example: output.txt
-    - name: "--output2"
-      type: file
-      direction: output
-      required: true
-      example: optional.txt
-```
+  ```yaml
+  functionality:
+    name: bar
+    arguments:
+      - name: "--input"
+        type: file
+        example: input.txt
+      - name: "--output1"
+        type: file
+        direction: output
+        required: true
+        example: output.txt
+      - name: "--output2"
+        type: file
+        direction: output
+        required: true
+        example: optional.txt
+  ```
 
 In this case, the two output files would have been identical in the past.
 ___
@@ -1518,7 +1508,6 @@ Here are the most important changes:
 
 * `viash ns`: Added a basic testbench for namespace tests.
 
-
 # Viash 0.4.0.1 (2021-05-12): Three small bug fixes.
 
 ## BUG FIX
@@ -1537,14 +1526,14 @@ The viash ns command's --namespace argument has been renamed to --query_namespac
 
 * Config modding: A custom viash DSL allows overriding viash config properties at runtime. See online documentation for more information. Example:
 
-```
- viash ns test \
-  -p docker \
-  -c '.functionality.version := "1.0.0"' \
-  -c '.platforms[.type == "docker"].target_registry := "my.docker-registry.com"' \
-  -c '.platforms[.type == "docker"].setup_strategy := "pull"' \
-  -l
-```
+  ```
+  viash ns test \
+    -p docker \
+    -c '.functionality.version := "1.0.0"' \
+    -c '.platforms[.type == "docker"].target_registry := "my.docker-registry.com"' \
+    -c '.platforms[.type == "docker"].setup_strategy := "pull"' \
+    -l
+  ```
 
 * `viash build`: The image can be pushed with `--push`. The same can be done by passing `---push` to 
   a viash executable.
@@ -1598,7 +1587,6 @@ The generation of Nextflow modules has been refactored thoroughly.
 
 * `NXF`: Providing a `default: ...` value for output file arguments is no longer necessary.
 
-
 # Viash 0.3.2 (2021-02-04): Don't auto-generate viash.yaml and add beta unit testing in Nextflow
 
 The viash build command doesn't generate a viash.yaml automatically anymore, added beta functionality for running tests in Nextflow.
@@ -1635,24 +1623,24 @@ Add authors field to config, added registry fields to Docker platform config.
 
 * Functionality: Added list of authors field. Example:
 
-```yaml
-functionality:
-  authors:
-    - name: Bob Cando
-      roles: [maintainer, author]
-      email: bob@cando.com
-      props: {github: bobcando, orcid: XXXAAABBB}
-```
+  ```yaml
+  functionality:
+    authors:
+      - name: Bob Cando
+        roles: [maintainer, author]
+        email: bob@cando.com
+        props: {github: bobcando, orcid: XXXAAABBB}
+  ```
 
 * `Docker`: Allow specifying the registry with `target_registry`. Example:
 
-```yaml
-- type: docker
-  image: bash:4.0
-  target_registry: foo.io
-  target_image: bar
-  target_tag: 0.1
-```
+  ```yaml
+  - type: docker
+    image: bash:4.0
+    target_registry: foo.io
+    target_image: bar
+    target_tag: 0.1
+  ```
 
 * `Docker`: `version` is now a synonym for `target_tag`.
   If both `version` and `target_tag` are not defined, `functionality.version` will
@@ -1712,7 +1700,6 @@ functionality:
 
 * YAML: Test invertibility of parsing/unparsing config objects.
 
-
 # Viash 0.3.0 (2020-11-24): Combine functionality and platform into one config, remove temporary files
 
 `config.vsh.yaml` is the new standard format, temporary files are removed when using run and test commands.
@@ -1761,7 +1748,6 @@ functionality:
 
 * `viash test`: Add tests for `viash test` functionality.
 
-
 # Viash 0.2.2 (2020-09-22): Generation of placeholder code now possible without VIASH START and VIASH END
 
 Allow generating placeholder without VIASH START/VIASH END blocks.
@@ -1770,14 +1756,14 @@ A script does not need to contain a `VIASH START`/`VIASH END` block in order to 
 
 Previously, each script had to contain a codeblock as follows:
 
-```r
-## VIASH START
-par <- list(
-  input = "foo",
-  output = "bar
-)
-## VIASH END
-```
+  ```r
+  ## VIASH START
+  par <- list(
+    input = "foo",
+    output = "bar
+  )
+  ## VIASH END
+  ```
 
 ## MINOR CHANGES
 
@@ -1804,18 +1790,18 @@ Data references in Map form can now have values being lists. In other words, we 
 
 To build a docker container, you can run either of the following:
 
-```bash
-viash run -f path/to/config.yaml -P docker -- ---setup
-viash build -f path/to/functionality.yaml -P docker -o target/docker/path/to --setup
-```
+  ```bash
+  viash run -f path/to/config.yaml -P docker -- ---setup
+  viash build -f path/to/functionality.yaml -P docker -o target/docker/path/to --setup
+  ```
 
 Note that the first will only build the docker container, whereas the second will build the executable and then build the docker container.
 
 To build a lot of them all at once, run:
 
-```bash
-viash ns build -P docker --parallel --setup
-```
+  ```bash
+  viash ns build -P docker --parallel --setup
+  ```
 
 ## Custom order of platform requirements
 
@@ -1823,53 +1809,53 @@ You can now choose the order in which platform requirements are installed!
 
 Before:
 
-```yaml
-type: docker
-image: rocker/tidyverse
-target_image: "viash_test/r"
-r:
-  cran:
-  - optparse
-  github:
-  - dynverse/dynutils@devel
-  bioc:
-  - limma
-apt:
-  packages:
-  - libhdf5-serial-dev
-docker:
-  build_arg:
-  - GITHUB_PAT="$GITHUB_PAT"
-  run:
-  - git clone --depth 1 https://github.com/data-intuitive/viash_docs.git && rm -r viash_docs/.git
-↑ in which order will these three components be run? Who knows!
-```
+  ```yaml
+  type: docker
+  image: rocker/tidyverse
+  target_image: "viash_test/r"
+  r:
+    cran:
+    - optparse
+    github:
+    - dynverse/dynutils@devel
+    bioc:
+    - limma
+  apt:
+    packages:
+    - libhdf5-serial-dev
+  docker:
+    build_arg:
+    - GITHUB_PAT="$GITHUB_PAT"
+    run:
+    - git clone --depth 1 https://github.com/data-intuitive/viash_docs.git && rm -r viash_docs/.git
+  ↑ in which order will these three components be run? Who knows!
+  ```
 
 Now:
 
-```yaml
-type: docker
-image: rocker/tidyverse
-target_image: "viash_test/r"
-setup:
-- type: docker
-  build_arg:
-  - GITHUB_PAT="$GITHUB_PAT"
-- type: apt
-  packages:
-  - libhdf5-serial-dev
-- type: r
-  cran:
-  - optparse
-  - dynutils
-  github:
-  - rcannood/princurve@devel
-  bioc:
-  - limma
-- type: docker
-  run:
-  - git clone --depth 1 https://github.com/data-intuitive/viash_docs.git && rm -r viash_docs/.git
-```
+  ```yaml
+  type: docker
+  image: rocker/tidyverse
+  target_image: "viash_test/r"
+  setup:
+  - type: docker
+    build_arg:
+    - GITHUB_PAT="$GITHUB_PAT"
+  - type: apt
+    packages:
+    - libhdf5-serial-dev
+  - type: r
+    cran:
+    - optparse
+    - dynutils
+    github:
+    - rcannood/princurve@devel
+    bioc:
+    - limma
+  - type: docker
+    run:
+    - git clone --depth 1 https://github.com/data-intuitive/viash_docs.git && rm -r viash_docs/.git
+  ```
 
 This will ensure that the setup instructions are installed in the given order.
 
@@ -1900,9 +1886,9 @@ This will ensure that the setup instructions are installed in the given order.
 
 Arguments of type: file are processed to automatically create a mount in docker. More specifically, when you pass an argument value: `--input /path/to/file`, this will be processed such that the following parameters are passed to docker:
 
-```bash
-docker run -v /path/to:/viash_automount/path/to ... --input /viash_automount/path/to/file
-```
+  ```bash
+  docker run -v /path/to:/viash_automount/path/to ... --input /viash_automount/path/to/file
+  ```
 
 If, for some reason, you need to manually specify a mount, you can do this with `---mount /path/to/mount:/mymount`.
 
@@ -1916,33 +1902,33 @@ The default separator is `:` but this can be overridden by changing the separato
 
 Viash now supports placing the functionality.yaml, platform*.yaml(s) and script into a single file. For example, this could be a merged script.R:
 
-```r
-#' functionality:
-#'   name: r-estimate
-#'   arguments: ...
-#' platforms:
-#' - type: native
-#' - type: docker
-#'   image: rocker/tidyverse
-library(tidyverse)
-cat("Hello world!\n")
-```
+  ```r
+  #' functionality:
+  #'   name: r-estimate
+  #'   arguments: ...
+  #' platforms:
+  #' - type: native
+  #' - type: docker
+  #'   image: rocker/tidyverse
+  library(tidyverse)
+  cat("Hello world!\n")
+  ```
 
 Instead of running:
 
-```bash
-viash run -f functionality.yaml -p platform_docker.yaml -- arg1
-```
+  ```bash
+  viash run -f functionality.yaml -p platform_docker.yaml -- arg1
+  ```
 
 With this format, you can now run:
 
-```bash
-viash run script.R                     # run script.R with the first platform
-viash run -P docker script.R           # run script.R with the platform called 'docker' with the large P argument
-# use small p to override the platform with a custom yaml:
-viash run -p common_resources/platform_docker.yaml script.R
-# note that any arguments for the run command (e.g. -p or -P) should come before the script.R, as script.R is considered a trailing argument.
-```
+  ```bash
+  viash run script.R                     # run script.R with the first platform
+  viash run -P docker script.R           # run script.R with the platform called 'docker' with the large P argument
+  # use small p to override the platform with a custom yaml:
+  viash run -p common_resources/platform_docker.yaml script.R
+  # note that any arguments for the run command (e.g. -p or -P) should come before the script.R, as script.R is considered a trailing argument.
+  ```
 
 ## NEW FEATURES
 
