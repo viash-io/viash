@@ -80,13 +80,13 @@ object CollectedSchemas {
 
     val allMembers = baseClasses
       .zipWithIndex
-      .flatMap(x =>
-        x._1.info.members
+      .flatMap{ case (baseClass, index) =>
+        baseClass.info.members
           .filter(_.fullName.startsWith("io.viash"))
           .filter(m => memberNames.contains(m.shortName))
-          .filter(m => !m.info.toString.startsWith("=> ") || x._2 != 0) // Only regular members if base class, otherwise all members
-          .map(y => MemberInfo(y, (constructorMembers.contains(y.shortName)), x._1.fullName, x._2))
-      )
+           .filter(m => !m.info.getClass.toString.endsWith("NullaryMethodType") || index != 0) // Only regular members if base class, otherwise all members
+          .map(y => MemberInfo(y, (constructorMembers.contains(y.shortName)), baseClass.fullName, index))
+        }
       .groupBy(k => k.shortName)
     
     (allMembers, baseClasses)
