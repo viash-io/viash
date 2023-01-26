@@ -16,7 +16,7 @@ output: github_document
     <img src="https://img.shields.io/github/v/release/viash-io/viash?include_prereleases&style=flat-square"alt="GitHub release (latest SemVer including pre-releases)">
   </a>
   <a href="https://github.com/viash-io/viash/actions?query=workflow%3A%22Scala+CI%22">
-    <img src="https://img.shields.io/github/workflow/status/viash-io/viash/Scala%20CI/master?style=flat-square" alt="CI Status">
+    <img src="https://img.shields.io/github/actions/workflow/status/viash-io/viash/sbt_test.yml?branch=main&style=flat-square" alt="CI Status">
   </a>
 </p>
 
