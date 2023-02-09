@@ -661,10 +661,10 @@ def _resolvePathsRelativeTo(Map paramList, List<Map<String, String>> inputFileSe
     if (isInputFile) {
       if (parValue instanceof List) {
         parValue = parValue.collect({path -> 
-          path !instanceof String ? path : file(getChild(multiFile, path))
+          path !instanceof String ? path : file(getChild(relativeTo, path))
         })
       } else {
-        parValue = parValue !instanceof String ? path : file(getChild(multiFile, path))
+        parValue = parValue !instanceof String ? path : file(getChild(relativeTo, parValue))
       }
     }
   [parName, parValue]
@@ -714,7 +714,7 @@ def _parseMultiArguments(Map params, List<Map> multiArguments, List<Map> inputfi
   // The paths of input files inside a param_list file may have been specified relatively to the
   // location of the param_list file. These paths must be made absolute.
   if (multiFile){
-    multiParam = inputfileArguments.collect({ paramList ->
+    multiParam = multiParam.collect({ paramList ->
       _resolvePathsRelativeTo(paramList, inputfileArguments, multiFile)
     })
   }
