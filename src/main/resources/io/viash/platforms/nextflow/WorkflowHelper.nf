@@ -792,8 +792,10 @@ def channelFromParams(Map params, Map config) {
 }
 
 
-def preprocessInputs(Map config) {
-  workflow preprocworkflow {
+def preprocessInputs(Map args) {
+  wfKey = args.key ?: "preprocessInputs"
+  config = args.config
+  workflow preprocessInputsInstance {
     take: 
     input_ch
 
@@ -879,5 +881,5 @@ def preprocessInputs(Map config) {
     output_ch
   }
 
-  return preprocworkflow
+  return preprocessInputsInstance.cloneWithName(wfKey)
 }
