@@ -13,7 +13,7 @@ workflow base {
     | view {"DEBUG: $it"}
 
   viash_ch 
-    | preprocessInputs
+    | preprocessInputs(["config": config])
     | view {"DEBUG: $it"}
 
 }
