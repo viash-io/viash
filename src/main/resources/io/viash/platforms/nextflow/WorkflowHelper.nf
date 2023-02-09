@@ -671,13 +671,15 @@ def _resolvePathsRelativeTo(Map paramList, List<Map<String, String>> inputFileSe
   }
 }
 
-def _parseMultiArguments(Map params, List<Map> multiArguments){
+def _parseMultiArguments(Map params, List<Map> multiArguments, List<Map> inputfileArguments){
   /*
    *   Parse multiple parameter sets passed using param_list into a list of parameter sets.
    *
    *   params: input parameters from nextflow.
    *   multiArgumentsSettings: a List of the viash configuration argument entries 
    *                           that have the property 'multiple: true'
+   *   inputfileArguments: a List of the viash configuration argument entries 
+   *                       that specify the input files
    */
 
   // first try to guess the format (if not set in params)
@@ -712,7 +714,7 @@ def _parseMultiArguments(Map params, List<Map> multiArguments){
   // The paths of input files inside a param_list file may have been specified relatively to the
   // location of the param_list file. These paths must be made absolute.
   if (multiFile){
-    multiParam = inputfileArguments.collect({
+    multiParam = inputfileArguments.collect({ paramList ->
       _resolvePathsRelativeTo(paramList, inputfileArguments, multiFile)
     })
   }
@@ -759,7 +761,7 @@ def channelFromParams(Map params, Map config) {
 
   /* process params_list arguments */
   /*********************************/
-  multiParam = _parseMultiArguments(params, multiArguments)
+  multiParam = _parseMultiArguments(params, multiArguments, inputfileArguments)
 
   /* combine arguments into channel */
   /**********************************/
