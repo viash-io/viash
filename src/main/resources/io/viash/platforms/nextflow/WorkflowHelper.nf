@@ -838,7 +838,15 @@ def preprocessInputs(Map config) {
           if (! (parValue instanceof Collection)) {
             parValue = [parValue]
           }
-          if (parType == "integer") {
+          if (parType == "file" && ((paramSettings.direction ?: "input") == "input")) {
+            parValue = parValue.collect{ path ->
+              if (path !instanceof String) {
+                path
+              } else {
+                file(path)
+              }
+            }
+          } else if (parType == "integer") {
             parValue = parValue.collect{it as Integer}
           } else if (parType == "double") {
             parValue = parValue.collect{it as Double}
