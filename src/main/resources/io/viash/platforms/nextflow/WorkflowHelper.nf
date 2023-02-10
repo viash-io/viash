@@ -611,14 +611,17 @@ def viashChannel(params, config) {
     | map{tup -> [tup.id, tup]}
 }
 
-def _splitParams(Map paramList, List<Map> multiArgumentsSettings){
-  /*
-   *   Split parameters for arguments that accept multiple values using their seperator
-   *
-   *   paramList: a Map containing parameters to split
-   *   multiArgumentsSettings: a List of the viash configuration argument entries 
-   *                           that have the property 'multiple: true'
-   */
+/**
+ * Split parameters for arguments that accept multiple values using their seperator
+ *
+ * @param paramList A Map containing parameters to split.
+ * @param multiArgumentsSettings A List of the viash configuration argument entries 
+ *                               that have the property 'multiple: true'
+ *
+ * @return A Map of parameters where the parameter values have been split into a list using
+ *         their seperator.
+ */
+Map _splitParams(Map paramList, List<Map> multiArgumentsSettings){
   paramList.collectEntries { parName, parValue ->
     parameterSettings = multiArgumentsSettings.find({it.plainName == parName})
     if (parameterSettings) { // Check if parameter can accept multiple values
@@ -637,25 +640,30 @@ def _splitParams(Map paramList, List<Map> multiArgumentsSettings){
   }
 }
 
-def _checkUniqueIds(List<Map> multiParam) {
-  /*
-   *  Check if the ids are unique acorss parameter sets
-   */
+/**
+ * Check if the ids are unique across parameter sets
+ *
+ * @param multiParam a list of parameter sets.
+ */
+void _checkUniqueIds(List<Map> multiParam) {
   def ppIds = multiParam.collect{it[0]}
   assert ppIds.size() == ppIds.unique().size() : "All argument sets should have unique ids. Detected ids: $ppIds"
 }
 
-def _resolvePathsRelativeTo(Map paramList, List<Map<String, String>> inputFileSetttings, String relativeTo) {
-  /*
-   *   Resolve the file paths in the parameters relative to given path
-   *
-   *   paramList: a Map containing parameters to process.
-   *              This function assumes that files are still of type String.
-   *   inputFileSetttings: a Map of the viash configuration argument entries 
-   *                       that are considered input files (i.e. with 'direction: input'
-   *                       and 'type: file')
-   *   relativeTo: path of a file to resolve the parameters values to.
-   */
+/**
+ * Resolve the file paths in the parameters relative to given path
+ *
+ * @param paramList A Map containing parameters to process.
+ *                  This function assumes that files are still of type String.
+ * @param inputFileSetttings A Map of the viash configuration argument entries 
+ *                           that are considered input files (i.e. with 'direction: input'
+ *                           and 'type: file').
+ * @param relativeTo path of a file to resolve the parameters values to.
+ *
+ * @return A map of parameters where the location of the input file parameters have been resolved
+ *         resolved relatively to the provided path.
+ */
+Map _resolvePathsRelativeTo(Map paramList, List<Map<String, String>> inputFileSetttings, String relativeTo) {
   paramList.collectEntries { parName, parValue ->
     isInputFile = inputFileSetttings.find({it.plainName == parName})
     if (isInputFile) {
@@ -671,17 +679,18 @@ def _resolvePathsRelativeTo(Map paramList, List<Map<String, String>> inputFileSe
   }
 }
 
-def _parseMultiArguments(Map params, List<Map> multiArguments, List<Map> inputfileArguments){
-  /*
-   *   Parse multiple parameter sets passed using param_list into a list of parameter sets.
-   *
-   *   params: input parameters from nextflow.
-   *   multiArgumentsSettings: a List of the viash configuration argument entries 
-   *                           that have the property 'multiple: true'
-   *   inputfileArguments: a List of the viash configuration argument entries 
-   *                       that specify the input files
-   */
-
+/**
+ * Parse multiple parameter sets passed using param_list into a list of parameter sets.
+ *
+ * @param params Input parameters from nextflow.
+ * @param multiArgumentsSettings A List of the viash configuration argument entries 
+ *                               that have the property 'multiple: true'.
+ * @param inputfileArguments A List of the viash configuration argument entries 
+ *                           that specify the input files.
+ *
+ * @return A list of parameter sets that were parsed from the 'param_list' argument value.
+ */
+List<Map> _parseMultiArguments(Map params, List<Map> multiArguments, List<Map> inputfileArguments){
   // first try to guess the format (if not set in params)
   def multiParamFormat = guessMultiParamFormat(params)
 
@@ -728,29 +737,31 @@ def _parseMultiArguments(Map params, List<Map> multiArguments, List<Map> inputfi
   return multiParam
 }
 
+/**
+ * Parse nextflow parameters based on settings defined in a viash config.
+ * The config file should have been preparsed using the readConfig() function,
+ * which can also be found in this module. 
+ *
+ * This function performs:
+ *   - A filtering of the params which can be found in the config file.
+ *   - Process the params_list argument which allows a user to to initialise 
+ *     a Vsdl3 channel with multiple parameter sets. Possible formats are 
+ *     csv, json, yaml, or simply a yaml_blob. A csv should have column names 
+ *     which correspond to the different arguments of this pipeline. A json or a yaml
+ *     file should be a list of maps, each of which has keys corresponding to the
+ *     arguments of the pipeline. A yaml blob can also be passed directly as a parameter.
+ *     When passing a csv, json or yaml, relative path names are relativized to the
+ *     location of the parameter file.
+ *   - Combine the parameter sets into a vdsl3 Channel.
+ *
+ * @param params Input parameters from nextflow.
+ * @param config a Map of the viash configuration.
+ * 
+ * @return A nextflow channel containing events with the first element of the event being
+ *         the event ID and the second element containing a map of the parsed parameters.
+ */
+
 def channelFromParams(Map params, Map config) {
-  /*
-   *   Parse nextflow parameters based on settings defined in a viash config.
-   *   The config file should have been preparsed using the readConfig() function,
-   *   which can also be found in this module. 
-   *
-   *   This function performs:
-   *      - A filtering of the params which can be found in the config file.
-   *      - Process the params_list argument which allows a user to to initialise 
-   *        a Vsdl3 channel with multiple parameter sets. Possible formats are 
-   *        csv, json, yaml, or simply a yaml_blob. A csv should have column names 
-   *        which correspond to the different arguments of this pipeline. A json or a yaml
-   *        file should be a list of maps, each of which has keys corresponding to the
-   *        arguments of the pipeline. A yaml blob can also be passed directly as a parameter.
-   *        When passing a csv, json or yaml, relative path names are relativized to the
-   *        location of the parameter file.
-   *      - Combine the parameter sets into a vdsl3 Channel.
-   *
-   *   params: input parameters from nextflow.
-   *   config: a Map of the viash configuration.
-   * 
-   */
-  
   /* Get different parameter types */
   /*********************************/
   def configArguments = config.functionality.allArguments // List[Map]
