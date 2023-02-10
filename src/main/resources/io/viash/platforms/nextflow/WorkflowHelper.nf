@@ -675,7 +675,7 @@ Map _resolvePathsRelativeTo(Map paramList, List<Map<String, String>> inputFileSe
         parValue = parValue !instanceof String ? path : file(getChild(relativeTo, parValue))
       }
     }
-  [parName, parValue]
+    [parName, parValue]
   }
 }
 
