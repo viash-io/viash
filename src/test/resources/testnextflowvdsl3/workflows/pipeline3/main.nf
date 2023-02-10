@@ -6,8 +6,14 @@ config = readConfig("${params.rootDir}/workflows/pipeline3/config.vsh.yaml")
 workflow base {
   helpMessage(config)
 
-  viash_ch = channelFromParams(params, config)
+  channelFromParams(params, config)
     | preprocessInputs(["config": config])
     | view {"DEBUG: $it"}    
+}
 
+workflow deprecated {
+  helpMessage(config)
+
+  viashChannel(params, config)
+    | view{"DEBUG: $it"}
 }
