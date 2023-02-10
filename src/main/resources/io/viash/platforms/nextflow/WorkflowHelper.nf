@@ -804,6 +804,79 @@ def channelFromParams(Map params, Map config) {
   return Channel.fromList(processedParams)
 }
 
+def _preprocessInputsList(List<Map> params, Map config) {
+  // Get different parameter types (used throughout this function)
+  def configArguments = config.functionality.allArguments
+  def defaultArgs = configArguments
+    .findAll { it.containsKey("default") }
+    .collectEntries { [ it.plainName, it.default ] }
+  def multiArguments = configArguments
+    .findAll({it.containsKey("plainName") && it.multiple})
+
+  params.collect({ tuple -> 
+    tuple = tuple.clone()
+
+    id = tuple[0]
+    arguments = tuple[1]
+    passthrough = tuple.drop(2)        
+
+    // Take care that manual overrides are 
+    // not overridden by the default value!
+    arguments = defaultArgs + arguments
+
+    // Split parameters with 'multiple: true'
+    arguments = _splitParams(arguments, multiArguments)
+
+    // Cast the input to the correct type according to viash config
+    arguments = arguments.collectEntries({ parName, parValue ->
+      paramSettings = configArguments.find({it.plainName == parName})
+      // dont parse parameters like publish_dir ( in which case paramSettings = null)
+      parType = paramSettings ? paramSettings.get("type", null) : null
+      if (! (parValue instanceof Collection)) {
+        parValue = [parValue]
+      }
+      if (parType == "file" && ((paramSettings.direction ?: "input") == "input")) {
+        parValue = parValue.collect{ path ->
+          if (path !instanceof String) {
+            path
+          } else {
+            file(path)
+          }
+        }
+      } else if (parType == "integer") {
+        parValue = parValue.collect{it as Integer}
+      } else if (parType == "double") {
+        parValue = parValue.collect{it as Double}
+      } else if (parType == "boolean" || 
+                  parType == "boolean_true" || 
+                  parType == "boolean_false") {
+        parValue = parValue.collect{it as Boolean}
+      }
+
+      // simplify list to value if need be
+      if (paramSettings && !paramSettings.multiple) {
+        assert parValue.size() == 1 : 
+          "Error: argument ${parName} has too many values.\n" +
+          "  Expected amount: 1. Found: ${parValue.size()}"
+        parValue = parValue[0]
+      }
+      [parName, parValue]
+    })
+
+    // Check if any unexpected arguments were passed
+    def knownParams = configArguments.collect({it.plainName}) + ["publishDir", "publish_dir"]
+    arguments.each({parName, parValue ->
+      assert parName in knownParams: "Unknown parameter. Parameter $parName should be in $knownParams"
+    })
+
+    // Return with passthrough
+    [id, arguments] + passthrough
+  })
+
+  _checkUniqueIds(params)
+
+  return params
+}
 
 def preprocessInputs(Map args) {
   wfKey = args.key ?: "preprocessInputs"
@@ -813,86 +886,14 @@ def preprocessInputs(Map args) {
     input_ch
 
     main:
-    
     assert config instanceof Map : 
       "Error in preprocessInputs: config must be a map. " +
       "Expected class: Map. Found: config.getClass() is ${config.getClass()}"
 
-    // Get different parameter types (used throughout this function)
-    def configArguments = config.functionality.allArguments
-    def defaultArgs = configArguments
-      .findAll { it.containsKey("default") }
-      .collectEntries { [ it.plainName, it.default ] }
-    def multiArguments = configArguments
-      .findAll({it.containsKey("plainName") && it.multiple})
-
     output_ch = input_ch
       | view {"Start of preprocess: $it"}
-      // split on multi_sep
-
-      // add defaults
-      | map { tuple -> 
-        tuple = tuple.clone()
-
-        id = tuple[0]
-        arguments = tuple[1]
-        passthrough = tuple.drop(2)        
-
-        // Take care that manual overrides are 
-        // not overridden by the default value!
-        arguments = defaultArgs + arguments
-
-        // Split parameters with 'multiple: true'
-        arguments = _splitParams(arguments, multiArguments)
-
-        // Cast the input to the correct type according to viash config
-        arguments = arguments.collectEntries({ parName, parValue ->
-          paramSettings = configArguments.find({it.plainName == parName})
-          // dont parse parameters like publish_dir ( in which case paramSettings = null)
-          parType = paramSettings ? paramSettings.get("type", null) : null
-          if (! (parValue instanceof Collection)) {
-            parValue = [parValue]
-          }
-          if (parType == "file" && ((paramSettings.direction ?: "input") == "input")) {
-            parValue = parValue.collect{ path ->
-              if (path !instanceof String) {
-                path
-              } else {
-                file(path)
-              }
-            }
-          } else if (parType == "integer") {
-            parValue = parValue.collect{it as Integer}
-          } else if (parType == "double") {
-            parValue = parValue.collect{it as Double}
-          } else if (parType == "boolean" || 
-                     parType == "boolean_true" || 
-                     parType == "boolean_false") {
-            parValue = parValue.collect{it as Boolean}
-          }
-
-          // simplify list to value if need be
-          if (paramSettings && !paramSettings.multiple) {
-            assert parValue.size() == 1 : 
-              "Error: argument ${parName} has too many values.\n" +
-              "  Expected amount: 1. Found: ${parValue.size()}"
-            parValue = parValue[0]
-          }
-          [parName, parValue]
-        })
-
-        // Check if any unexpected arguments were passed
-        def knownParams = configArguments.collect({it.plainName}) + ["publishDir", "publish_dir"]
-        arguments.each({parName, parValue ->
-          assert parName in knownParams: "Unknown parameter. Parameter $parName should be in $knownParams"
-        })
-
-        // Return with passthrough
-        [id, arguments] + passthrough
-      }
-      // apply _checkUniqueIds
-      | toSortedList()
-      | map { list -> _checkUniqueIds(list); list}
+      | toSortedList
+      | map { paramList -> _preprocessInputsList(paramList, config) }
       | flatten()
     emit:
     output_ch
