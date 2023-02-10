@@ -478,7 +478,7 @@ def guessMultiParamFormat(params) {
 }
 
 def paramsToList(params, config) {
-  System.Warning.println("Warning: paramsToList has deprecated in Viash 0.7.0. " +
+  System.err.println("Warning: paramsToList has deprecated in Viash 0.7.0. " +
                          "Please use a combination of channelFromParams and preprocessInputs.")
   processedParams = _paramsToParamList(params, config)
   return _preprocessInputsList(processedParams)
