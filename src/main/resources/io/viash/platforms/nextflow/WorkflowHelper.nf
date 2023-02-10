@@ -645,7 +645,7 @@ Map _splitParams(Map paramList, List<Map> multiArgumentsSettings){
  *
  * @param multiParam a list of parameter sets.
  */
-void _checkUniqueIds(List<Map> multiParam) {
+private void _checkUniqueIds(List<Map> multiParam) {
   def ppIds = multiParam.collect{it[0]}
   assert ppIds.size() == ppIds.unique().size() : "All argument sets should have unique ids. Detected ids: $ppIds"
 }
@@ -663,7 +663,7 @@ void _checkUniqueIds(List<Map> multiParam) {
  * @return A map of parameters where the location of the input file parameters have been resolved
  *         resolved relatively to the provided path.
  */
-Map _resolvePathsRelativeTo(Map paramList, List<Map<String, String>> inputFileSetttings, String relativeTo) {
+private Map _resolvePathsRelativeTo(Map paramList, List<Map<String, String>> inputFileSetttings, String relativeTo) {
   paramList.collectEntries { parName, parValue ->
     isInputFile = inputFileSetttings.find({it.plainName == parName})
     if (isInputFile) {
@@ -690,7 +690,7 @@ Map _resolvePathsRelativeTo(Map paramList, List<Map<String, String>> inputFileSe
  *
  * @return A list of parameter sets that were parsed from the 'param_list' argument value.
  */
-List<Map> _parseMultiArguments(Map params, List<Map> multiArguments, List<Map> inputfileArguments){
+private List<Map> _parseMultiArguments(Map params, List<Map> multiArguments, List<Map> inputfileArguments){
   // first try to guess the format (if not set in params)
   def multiParamFormat = guessMultiParamFormat(params)
 
@@ -890,6 +890,10 @@ def preprocessInputs(Map args) {
         // Return with passthrough
         [id, arguments] + passthrough
       }
+      // apply _checkUniqueIds
+      | toSortedList()
+      | map { list -> _checkUniqueIds(list); list}
+      | flatten()
     emit:
     output_ch
   }
