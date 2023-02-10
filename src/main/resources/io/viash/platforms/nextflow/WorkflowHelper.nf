@@ -706,7 +706,7 @@ def _preprocessInputsList(List<Map> params, Map config) {
   def multiArguments = configArguments
     .findAll({it.containsKey("plainName") && it.multiple})
 
-  params.collect({ tuple -> 
+  def parsed_params = params.collect({ tuple -> 
     tuple = tuple.clone()
 
     id = tuple[0]
@@ -763,12 +763,12 @@ def _preprocessInputsList(List<Map> params, Map config) {
     })
 
     // Return with passthrough
-    [id, arguments] + passthrough
+    return [id, arguments] + passthrough
   })
 
-  _checkUniqueIds(params)
+  _checkUniqueIds(parsed_params)
 
-  return params
+  return parsed_params
 }
 
 def preprocessInputs(Map args) {
@@ -784,10 +784,9 @@ def preprocessInputs(Map args) {
       "Expected class: Map. Found: config.getClass() is ${config.getClass()}"
 
     output_ch = input_ch
-      | view {"Start of preprocess: $it"}
       | toSortedList
       | map { paramList -> _preprocessInputsList(paramList, config) }
-      | flatten()
+      | flatMap
     emit:
     output_ch
   }
