@@ -633,8 +633,11 @@ private List<Tuple2<String, Map>> _parseParamListArguments(Map params, List<Map>
   // The paths of input files inside a param_list file may have been specified relatively to the
   // location of the param_list file. These paths must be made absolute.
   if (paramListFile){
-    paramSets = paramSets.collect({ paramList ->
-      _resolvePathsRelativeTo(paramList, inputfileArguments, paramListFile)
+    paramSets = paramSets.collect({ paramSet ->
+      def id = paramSet[0]
+      def paramValues = paramSet[1]
+      def relativeParamValues = _resolvePathsRelativeTo(paramValues, inputfileArguments, paramListFile)
+      [id, relativeParamValues]
     })
   }
 
