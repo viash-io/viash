@@ -153,6 +153,7 @@ class NextFlowVdsl3PlatformStandaloneTest extends AnyFunSuite with BeforeAndAfte
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
       mainScript = "target/nextflow/step2/main.nf",
       args = List(
+        "--id", "step2"
         "--input1", "resources/lines3.txt",
         "--input2", "resources/lines5.txt",
         "--publish_dir", "moduleOutput1"
@@ -171,7 +172,7 @@ class NextFlowVdsl3PlatformStandaloneTest extends AnyFunSuite with BeforeAndAfte
   }
 
   test("Run module as standalone, yamlblob", NextFlowTest) {
-    val fooArgs = "{input1: resources/lines3.txt, input2: resources/lines5.txt}"
+    val fooArgs = "{id: step2, input1: resources/lines3.txt, input2: resources/lines5.txt}"
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
       mainScript = "target/nextflow/step2/main.nf",
       args = List(
@@ -198,6 +199,7 @@ class NextFlowVdsl3PlatformStandaloneTest extends AnyFunSuite with BeforeAndAfte
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
       mainScript = "target/nextflow/step2/main.nf",
       args = List(
+        "--id", "step2"
         "--input1", "resources/lines3.txt",
         "--input2", "resources/lines5.txt",
         "--optional", "resources/lines5-bis.txt",
