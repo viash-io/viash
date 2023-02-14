@@ -480,17 +480,19 @@ def _guessParamListFormat(params) {
 def paramsToList(params, config) {
   System.err.println("Warning: paramsToList has deprecated in Viash 0.7.0. " +
                          "Please use a combination of channelFromParams and preprocessInputs.")
-  processedParams = _paramsToParamSets(params, config)
-  return _preprocessInputsList(processedParams)
+  return _paramsToParamSets(params, config)
 }
 
 def paramsToChannel(params, config) {
-  Channel.fromList(paramsToList(params, config))
+  System.err.println("Warning: paramsToChannel has deprecated in Viash 0.7.0. " +
+                     "Please use a combination of channelFromParams and preprocessInputs.")
+  Channel.fromList(paramsToList(params, config)) | preprocessInputs("config": config)
 }
 
 def viashChannel(params, config) {
+  System.err.println("Warning: viashChannel has deprecated in Viash 0.7.0. " +
+                     "Please use a combination of channelFromParams and preprocessInputs.")
   paramsToChannel(params, config)
-    | map{tup -> [tup.id, tup]}
 }
 
 def _getMultiParameterSettings(Map config) {
@@ -541,7 +543,7 @@ Map<String, Object> _splitParams(Map<String, Object> parValues, List<Map> multiA
  *
  * @param multiParam a list of parameter sets.
  */
-private void _checkUniqueIds(List<Tuple2<String, Map>> parameterSets) {
+private void _checkUniqueIds(List<Tuple2<String, Map<String, Object>>> parameterSets) {
   def ppIds = parameterSets.collect{it[0]}
   assert ppIds.size() == ppIds.unique().size() : "All argument sets should have unique ids. Detected ids: $ppIds"
 }
@@ -801,7 +803,7 @@ def channelFromParams(Map params, Map config) {
   return Channel.fromList(processedParams)
 }
 
-def _preprocessArgumentsList(List<Collection<Object>> params, Map config) {
+def _preprocessInputsList(List<Collection<Object>> params, Map config) {
   // Get different parameter types (used throughout this function)
   def configArguments = config.functionality.allArguments
   def defaultArgs = configArguments
@@ -843,7 +845,7 @@ def preprocessInputs(Map args) {
 
     output_ch = input_ch
       | toSortedList
-      | map { paramList -> _preprocessArgumentsList(paramList, config) }
+      | map { paramList -> _preprocessInputsList(paramList, config) }
       | flatMap
     emit:
     output_ch
