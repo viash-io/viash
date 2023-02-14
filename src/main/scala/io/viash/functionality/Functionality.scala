@@ -90,7 +90,7 @@ case class Functionality(
       "bash",
       "This results in the following output when calling the component with the `--help` argument:")
   @since("Viash 0.5.11")
-  @deprecated("Use `arguments` instead.", "0.6.0", "0.8.0")
+  @deprecated("Use `arguments` instead.", "0.6.0", "0.7.0")
   inputs: List[Argument[_]] = Nil,
 
   @description("A list of output arguments in addition to the `arguments` list. Any arguments specified here will have their `type` set to `file` and thr `direction` set to `output` by default.")
@@ -111,7 +111,7 @@ case class Functionality(
       "bash",
       "This results in the following output when calling the component with the `--help` argument:")
   @since("Viash 0.5.11")
-  @deprecated("Use `arguments` instead.", "0.6.0", "0.8.0")
+  @deprecated("Use `arguments` instead.", "0.6.0", "0.7.0")
   outputs: List[Argument[_]] = Nil,
   
   @description(
@@ -286,7 +286,7 @@ case class Functionality(
 
   @description("Setting this to false with disable this component when using namespaces.")
   @since("Viash 0.5.13")
-  @deprecated("Use `status` instead.", "0.6.0", "0.8.0")
+  @deprecated("Use `status` instead.", "0.6.0", "0.7.0")
   private val enabled: Boolean = true
   // END OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
 
