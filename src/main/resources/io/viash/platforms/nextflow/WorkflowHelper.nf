@@ -509,35 +509,31 @@ def _getMultiParameterSettings(Map config) {
  * @return A Map of parameters where the parameter values have been split into a list using
  *         their seperator.
  */
-List<Tuple2<String, Map>> _splitParams(List<Tuple2<String, Map>> paramSets, List<Map> multiArgumentsSettings){
-  paramSets.collect({ paramSet ->
-    id = paramSet[0]
-    parValues = paramSet[1]
-    parValues = parValues.collectEntries { parName, parValue ->
-      parameterSettings = multiArgumentsSettings.find({it.plainName == parName})
-      if (parameterSettings) { // Check if parameter can accept multiple values
-        if (parValue instanceof List) {
-            parValue = parValue.collect{it instanceof String ? it.split(parameterSettings.multiple_sep) : it }
-        } else if (parValue instanceof String) {
-            parValue = parValue.split(parameterSettings.multiple_sep)
-        } else if (parValue == null) {
-            parValue = []
-        } else {
-            parValue = [ parValue ]
-        }
-        parValue = parValue.flatten()
+Map<String, Object> _splitParams(Map<String, Object> parValues, List<Map> multiArgumentsSettings){
+  def parsedParamValues = parValues.collectEntries { parName, parValue ->
+    parameterSettings = multiArgumentsSettings.find({it.plainName == parName})
+    if (parameterSettings) { // Check if parameter can accept multiple values
+      if (parValue instanceof List) {
+          parValue = parValue.collect{it instanceof String ? it.split(parameterSettings.multiple_sep) : it }
+      } else if (parValue instanceof String) {
+          parValue = parValue.split(parameterSettings.multiple_sep)
+      } else if (parValue == null) {
+          parValue = []
+      } else {
+          parValue = [ parValue ]
       }
-      // For all parameters check if there 
-      if (parValue instanceof Collection && !parameterSettings.multiple ) {
-        assert parValue.size() == 1 : 
-        "Error: argument ${parName} has too many values.\n" +
-        "  Expected amount: 1. Found: ${parValue.size()}"
-        parValue = parValue[0]
-      }
-      [parName, parValue]
+      parValue = parValue.flatten()
     }
-    [id, parValues]
-  })
+    // For all parameters check if there 
+    if (parValue instanceof Collection && !parameterSettings.multiple ) {
+      assert parValue.size() == 1 : 
+      "Error: argument ${parName} has too many values.\n" +
+      "  Expected amount: 1. Found: ${parValue.size()}"
+      parValue = parValue[0]
+    }
+    [parName, parValue]
+  }
+  return parsedParamValues
 }
 
 /**
@@ -563,7 +559,7 @@ private void _checkUniqueIds(List<Tuple2<String, Map>> parameterSets) {
  * @return A map of parameters where the location of the input file parameters have been resolved
  *         resolved relatively to the provided path.
  */
-private Map _resolvePathsRelativeTo(Map paramList, List<Map<String, String>> inputFileSetttings, String relativeTo) {
+private Map<String, Object> _resolvePathsRelativeTo(Map paramList, List<Map<String, String>> inputFileSetttings, String relativeTo) {
   paramList.collectEntries { parName, parValue ->
     isInputFile = inputFileSetttings.find({it.plainName == parName})
     if (isInputFile) {
@@ -628,7 +624,12 @@ private List<Tuple2<String, Map>> _parseParamListArguments(Map params, List<Map>
     [paramValues.get("id", null), paramValues.findAll{it.key != 'id'}]
   })
   // Split parameters with 'multiple: true'
-  paramSets = _splitParams(paramSets, multiArguments)
+  paramSets = paramSets.collect({ paramSet ->
+    def id = paramSet[0]
+    def paramValues = paramSet[1]
+    def splitParamValues = _splitParams(paramValues, multiArguments)
+    [id, splitParamValues]
+  })
   
   // The paths of input files inside a param_list file may have been specified relatively to the
   // location of the param_list file. These paths must be made absolute.
@@ -644,70 +645,74 @@ private List<Tuple2<String, Map>> _parseParamListArguments(Map params, List<Map>
   return paramSets
 }
 
-List<Tuple2<String, Map>> _castParamTypes(List<Tuple2<String, Map>> parameterSets, Map config) {
+Map<String, Object> _castParamTypes(Map parValues, Map config) {
   def configArguments = config.functionality.allArguments
-  def castParameterSets = parameterSets.collect({parameterSet -> 
-    id = parameterSet[0]
-    parValues = parameterSet[1]
     // Cast the input to the correct type according to viash config
-    def castParValues = parValues.collectEntries({ parName, parValue ->
-      paramSettings = configArguments.find({it.plainName == parName})
-      // dont parse parameters like publish_dir ( in which case paramSettings = null)
-      parType = paramSettings ? paramSettings.get("type", null) : null
-      if (! (parValue instanceof Collection)) {
-        parValue = [parValue]
-      }
-      if (parType == "file" && ((paramSettings.direction ?: "input") == "input")) {
-        parValue = parValue.collect{ path ->
-          if (path !instanceof String) {
-            path
-          } else {
-            file(path)
-          }
+  def castParValues = parValues.collectEntries({ parName, parValue ->
+    paramSettings = configArguments.find({it.plainName == parName})
+    // dont parse parameters like publish_dir ( in which case paramSettings = null)
+    parType = paramSettings ? paramSettings.get("type", null) : null
+    if (! (parValue instanceof Collection)) {
+      parValue = [parValue]
+    }
+    if (parType == "file" && ((paramSettings.direction ?: "input") == "input")) {
+      parValue = parValue.collect{ path ->
+        if (path !instanceof String) {
+          path
+        } else {
+          file(path)
         }
-      } else if (parType == "integer") {
-        parValue = parValue.collect{it as Integer}
-      } else if (parType == "double") {
-        parValue = parValue.collect{it as Double}
-      } else if (parType == "boolean" || 
-                  parType == "boolean_true" || 
-                  parType == "boolean_false") {
-        parValue = parValue.collect{it as Boolean}
       }
+    } else if (parType == "integer") {
+      parValue = parValue.collect{it as Integer}
+    } else if (parType == "double") {
+      parValue = parValue.collect{it as Double}
+    } else if (parType == "boolean" || 
+                parType == "boolean_true" || 
+                parType == "boolean_false") {
+      parValue = parValue.collect{it as Boolean}
+    }
 
-      // simplify list to value if need be
-      if (paramSettings && !paramSettings.multiple) {
-        assert parValue.size() == 1 : 
-          "Error: argument ${parName} has too many values.\n" +
-          "  Expected amount: 1. Found: ${parValue.size()}"
-        parValue = parValue[0]
-      }
-      [parName, parValue]
-    })
-    [id, castParValues]
+    // simplify list to value if need be
+    if (paramSettings && !paramSettings.multiple) {
+      assert parValue.size() == 1 : 
+        "Error: argument ${parName} has too many values.\n" +
+        "  Expected amount: 1. Found: ${parValue.size()}"
+      parValue = parValue[0]
+    }
+    [parName, parValue]
   })
-  return castParameterSets
+  return castParValues
 }
 
 
-def _applyConfig(List<Tuple2<String, Map>> parameterSets, Map config){
+Map<String, Object> _applyConfigToOneParameterSet(Map<String, Object> paramValues, Map config){
   def configArguments = config.functionality.allArguments
   def plainNameArguments = configArguments.findAll{it.containsKey("plainName")}
   def multiArguments = plainNameArguments.findAll({it.multiple})
 
-  def splitParameters = _splitParams(parameterSets, multiArguments)
-  def castParameters = _castParamTypes(splitParameters, config)
-  castParameters.each({ parameterSet ->
-    id = parameterSet[0]
-    parValues = parameterSet[1]
-    // Check if any unexpected arguments were passed
-    def knownParams = plainNameArguments.collect({it.plainName}) + ["publishDir", "publish_dir"]
-    parValues.each({parName, parValue ->
-        assert parName in knownParams: "Unknown parameter. Parameter $parName should be in $knownParams"
-    })
+  def splitParamValues = _splitParams(paramValues, multiArguments)
+  def castParameValues = _castParamTypes(paramValues, config)
+
+  // Check if any unexpected arguments were passed
+  def knownParams = plainNameArguments.collect({it.plainName}) + ["publishDir", "publish_dir"]
+  castParameValues.each({parName, parValue ->
+      assert parName in knownParams: "Unknown parameter. Parameter $parName should be in $knownParams"
   })
-  _checkUniqueIds(castParameters)
-  return castParameters
+  return castParameValues
+}
+
+
+List<Tuple2<String, Map>> _applyConfig(List<Tuple2<String, Map>> parameterSets, Map config){
+  processedparameterSets = parameterSets.collect({ parameterSet ->
+    def id = parameterSet[0]
+    def paramValues = parameterSet[1]
+    def processedSet = _applyConfigToOneParameterSet(paramValues, config)
+    [id, processedSet]
+  })
+
+  _checkUniqueIds(processedparameterSets)
+  return processedparameterSets
 }
 
 /**
@@ -748,10 +753,7 @@ def _paramsToParamSets(Map params, Map config){
     .findAll { params.containsKey(it.plainName) }
     .collectEntries { [ it.plainName, params[it.plainName] ] }
   def globalID = params.get("id", null)
-  def globalParamsValues = globalParams.findAll{it.key != 'id'}
-  def globalParamsSet = _applyConfig([[globalID, globalParamsValues]], config)
-  globalParamsValues = globalParamsSet[0][1]
-
+  def globalParamsValues = _applyConfigToOneParameterSet(globalParams.findAll{it.key != 'id'}, config)
 
   /* process params_list arguments */
   /*********************************/
@@ -809,8 +811,7 @@ def _preprocessArgumentsList(List<Collection<Object>> params, Map config) {
     .findAll({it.containsKey("plainName") && it.multiple})
 
   // Apply config to default parameters
-  def parsedDefaultArgs = _applyConfig([[null, defaultArgs]], config)[0]
-  def parsedDefaultValues = parsedDefaultArgs[1]
+  def parsedDefaultValues = _applyConfigToOneParameterSet(defaultArgs, config)
 
   // Apply config to input parameters
   def parsedInputParamSets = _applyConfig(params, config)
