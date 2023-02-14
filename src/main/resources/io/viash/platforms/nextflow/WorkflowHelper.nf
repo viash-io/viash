@@ -694,7 +694,7 @@ Map<String, Object> _applyConfigToOneParameterSet(Map<String, Object> paramValue
   def multiArguments = plainNameArguments.findAll({it.multiple})
 
   def splitParamValues = _splitParams(paramValues, multiArguments)
-  def castParameValues = _castParamTypes(paramValues, config)
+  def castParameValues = _castParamTypes(splitParamValues, config)
 
   // Check if any unexpected arguments were passed
   def knownParams = plainNameArguments.collect({it.plainName}) + ["publishDir", "publish_dir"]
