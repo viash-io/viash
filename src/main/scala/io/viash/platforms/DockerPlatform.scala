@@ -121,7 +121,7 @@ case class DockerPlatform(
   setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,
 
   @description("Adds a `privileged` flag to the docker run.")
-  @deprecated("Add a `privileged` flag in `run_args` instead, e.g. `{type: docker, run_args: \"--privileged\"}`.", "0.6.3", "0.8.0")
+  @deprecated("Add a `privileged` flag in `run_args` instead, e.g. `{type: docker, run_args: \"--privileged\"}`.", "0.6.3", "0.7.0")
   privileged: Option[Boolean] = None,
 
   @description("Add [docker run](https://docs.docker.com/engine/reference/run/) arguments.")
