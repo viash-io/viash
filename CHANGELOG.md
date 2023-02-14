@@ -39,7 +39,7 @@
   For every release, there is now a date, title, and summary.
   This both improves the changelog itself but can then also be used to postprocess the CHANGELOG programmatically.
 
-* `VDSL3`: Add default to the anonymous workflow of a VDSL3 component without adding it to the functionality resources.
+* `VDSL3`: Add a default value for `id` when running a VDSL3 module as a standalone pipeline.
 
 ## BUG FIXES
 
