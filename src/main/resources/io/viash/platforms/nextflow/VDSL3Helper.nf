@@ -968,6 +968,7 @@ ScriptMeta.current().addDefinition(myWfInstance)
 // anonymous workflow for running this module as a standalone
 workflow {
   def mergedConfig = thisConfig
+  def mergedParams = [:] + params
 
   // add id argument if it's not already in the config
   if (mergedConfig.functionality.arguments.every{it.plainName != "id"}) {
@@ -976,16 +977,18 @@ workflow {
       'required': false,
       'type': 'string',
       'description': 'A unique id for every entry.',
-      'default': 'run',
       'multiple': false
     ]
     mergedConfig.functionality.arguments.add(0, idArg)
     mergedConfig = processConfig(mergedConfig)
   }
+  if (!mergedParams.containsKey("id")) {
+    mergedParams.id = "run"
+  }
 
   helpMessage(mergedConfig)
 
-  viashChannel(params, mergedConfig)
+  viashChannel(mergedParams, mergedConfig)
     | view { "input: $it" }
     | myWfInstance.run(
       auto: [ publish: true ]
