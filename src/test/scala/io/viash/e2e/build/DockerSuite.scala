@@ -24,7 +24,6 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
   private val executable = temporaryFolder.resolve(functionality.name).toFile
   private val execPathInDocker = Paths.get("/viash_automount", executable.getPath).toString
 
-  //<editor-fold desc="Test benches to build a generic script and run various commands to see if the functionality is correct">
   // convert testbash
   test("viash can create an executable") {
     TestHelper.testMain(

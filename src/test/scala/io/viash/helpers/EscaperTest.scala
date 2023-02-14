@@ -4,7 +4,7 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
 class EscaperTest extends AnyFunSuite with BeforeAndAfterAll {
-    val s = "a \\ b $ c ` d \" e ' f \n g"
+  val s = "a \\ b $ c ` d \" e ' f \n g"
     
   test("escape with default parameters work") {
     assert(Escaper(s) == s)

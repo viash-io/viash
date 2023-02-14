@@ -26,7 +26,7 @@ object TestHelper {
     val os = new ByteArrayOutputStream()
     Console.withErr(os) {
       Console.withOut(os) {
-        Main.internalMain(args.toArray)
+        Main.mainCLI(args.toArray)
       }
     }
 
@@ -46,7 +46,7 @@ object TestHelper {
     val errStream = new ByteArrayOutputStream()
     val exitCode = Console.withOut(outStream) {
       Console.withErr(errStream) {
-        Main.internalMain(args.toArray)
+        Main.mainCLI(args.toArray)
       }
     }
 
@@ -67,7 +67,7 @@ object TestHelper {
     val os = new ByteArrayOutputStream()
     assertThrows[T] {
       Console.withOut(os) {
-        Main.internalMain(args.toArray)
+        Main.mainCLI(args.toArray)
       }
     }
 
@@ -89,7 +89,7 @@ object TestHelper {
     val caught = intercept[Exception] {
       Console.withOut(outStream) {
         Console.withErr(errStream) {
-          Main.internalMain(args.toArray)
+          Main.mainCLI(args.toArray)
         }
       }
     }

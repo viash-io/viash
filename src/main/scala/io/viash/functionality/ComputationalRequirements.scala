@@ -51,6 +51,8 @@ case class ComputationalRequirements(
         val multiplier = BigInt(1024)
         val exp = lookup(unit)
         Some(amntBigInt * multiplier.pow(exp))
+      case Some(m) =>
+        throw new RuntimeException(s"Invalid value \"$m\" as memory computational requirement.")
       case None => None
       case _ => ???
     }

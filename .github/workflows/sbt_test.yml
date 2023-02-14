@@ -24,7 +24,6 @@ jobs:
         echo "$HOME/.local/bin" >> $GITHUB_PATH
         curl -s https://get.nextflow.io 2> /dev/null | bash > /dev/null
         mv nextflow "$HOME/.local/bin"
-        NXF_VER=21.04.1 nextflow run hello
         nextflow -version
 
     - name: Set up R

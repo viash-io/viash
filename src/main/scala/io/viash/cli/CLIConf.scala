@@ -85,7 +85,7 @@ trait ViashNs {
   val src = registerOpt[String](
     name = "src",
     short = Some('s'),
-    descr = " A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
+    descr = "A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
     default = None
   )
   val platform = registerOpt[String](
