@@ -622,13 +622,15 @@ def viashChannel(params, config) {
  * Split parameters for arguments that accept multiple values using their separator
  *
  * @param paramList A Map containing parameters to split.
- * @param multiArgumentsSettings A List of the viash configuration argument entries 
- *                               that have the property 'multiple: true'
+ * @param config: A Map of the Viash configuration. This Map can be generated from the config file
+ *                using the readConfig() function.
  *
  * @return A Map of parameters where the parameter values have been split into a list using
  *         their seperator.
  */
-Map<String, Object> _splitParams(Map<String, Object> parValues, List<Map> multiArgumentsSettings){
+Map<String, Object> _splitParams(Map<String, Object> parValues, Map config){
+  def multiArgumentsSettings = config.functionality.allArguments.findAll{it.multiple}
+
   def parsedParamValues = parValues.collectEntries { parName, parValue ->
     parameterSettings = multiArgumentsSettings.find({it.plainName == parName})
     if (parameterSettings) { // Check if parameter can accept multiple values
@@ -671,16 +673,17 @@ private void _checkUniqueIds(List<Tuple2<String, Map<String, Object>>> parameter
  *
  * @param paramList A Map containing parameters to process.
  *                  This function assumes that files are still of type String.
- * @param inputFileSettings A Map of the viash configuration argument entries
- *                           that are considered input files (i.e. with 'direction: input'
- *                           and 'type: file').
+ * @param config: A Map of the Viash configuration. This Map can be generated from the config file
+ *                using the readConfig() function.
  * @param relativeTo path of a file to resolve the parameters values to.
  *
  * @return A map of parameters where the location of the input file parameters have been resolved
  *         resolved relatively to the provided path.
  */
-private Map<String, Object> _resolvePathsRelativeTo(Map paramList, 
-  List<Map<String, String>> inputFileSettings, String relativeTo) {
+private Map<String, Object> _resolvePathsRelativeTo(Map paramList, Map config, String relativeTo) {
+  def inputFileSettings = config.functionality.allArguments
+    .findAll({it.type == "file" && ((it.direction ?: "input") == "input")})
+
   paramList.collectEntries { parName, parValue ->
     isInputFile = inputFileSettings.find({it.plainName == parName})
     if (isInputFile) {
@@ -701,15 +704,12 @@ private Map<String, Object> _resolvePathsRelativeTo(Map paramList,
  * and return a nextflow channel.
  *
  * @param params Input parameters from nextflow.
- * @param multiArgumentsSettings A List of the viash configuration argument entries 
- *                               that have the property 'multiple: true'.
- * @param inputfileArguments A List of the viash configuration argument entries 
- *                           that specify the input files.
+ * @param config: A Map of the Viash configuration. This Map can be generated from the config file
+ *                using the readConfig() function.
  *
  * @return A list of parameter sets that were parsed from the 'param_list' argument value.
  */
-private List<Tuple2<String, Map>> _parseParamListArguments(Map params, 
-  List<Map> multiArguments, List<Map> inputfileArguments){
+private List<Tuple2<String, Map>> _parseParamListArguments(Map params, Map config){
   // first try to guess the format (if not set in params)
   def paramListFormat = _guessParamListFormat(params)
 
@@ -748,7 +748,7 @@ private List<Tuple2<String, Map>> _parseParamListArguments(Map params,
   })
   // Split parameters with 'multiple: true'
   paramSets = paramSets.collect({ id, paramValues ->
-    def splitParamValues = _splitParams(paramValues, multiArguments)
+    def splitParamValues = _splitParams(paramValues, config)
     [id, splitParamValues]
   })
   
@@ -756,7 +756,7 @@ private List<Tuple2<String, Map>> _parseParamListArguments(Map params,
   // location of the param_list file. These paths must be made absolute.
   if (paramListFile){
     paramSets = paramSets.collect({ id, paramValues ->
-      def relativeParamValues = _resolvePathsRelativeTo(paramValues, inputfileArguments, paramListFile)
+      def relativeParamValues = _resolvePathsRelativeTo(paramValues, config)
       [id, relativeParamValues]
     })
   }
@@ -816,15 +816,11 @@ private Map<String, Object> _castParamTypes(Map<String, Object> parValues, Map c
  * @return The input parameters that have been processed.
  */
 private Map<String, Object> applyConfigToOneParameterSet(Map<String, Object> paramValues, Map config){
-  def configArguments = config.functionality.allArguments
-  def plainNameArguments = configArguments.findAll{it.containsKey("plainName")}
-  def multiArguments = plainNameArguments.findAll({it.multiple})
-
-  def splitParamValues = _splitParams(paramValues, multiArguments)
+  def splitParamValues = _splitParams(paramValues, config)
   def castParameValues = _castParamTypes(splitParamValues, config)
 
   // Check if any unexpected arguments were passed
-  def knownParams = plainNameArguments.collect({it.plainName}) + ["publishDir", "publish_dir"]
+  def knownParams = config.functionality.allArguments.collect({it.plainName}) + ["publishDir", "publish_dir"]
   castParameValues.each({parName, parValue ->
       assert parName in knownParams: "Unknown parameter. Parameter $parName should be in $knownParams"
   })
@@ -880,7 +876,7 @@ List<Tuple> applyConfig(List<Tuple> parameterSets, Map config){
  *                in the output channel possible formats of param_lists are: a csv file, 
  *                json file, a yaml file or a yaml blob. Each parameters set (event) must
  *                have a unique ID.
- * @param config: A Map of the Viash configuration. This Map can be generated from the config file 
+ * @param config: A Map of the Viash configuration. This Map can be generated from the config file
  *                using the readConfig() function.
  * 
  * @return A list of parameters with the first element of the event being
@@ -905,7 +901,7 @@ private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params,
 
   /* process params_list arguments */
   /*********************************/
-  def paramSets = _parseParamListArguments(params, multiArguments, inputfileArguments)
+  def paramSets = _parseParamListArguments(params, config)
   def parameterSetsWithConfigApplied = applyConfig(paramSets, config)
 
   /* combine arguments into channel */
@@ -947,7 +943,7 @@ private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params,
  *                in the output channel possible formats of param_lists are: a csv file, 
  *                json file, a yaml file or a yaml blob. Each parameters set (event) must
  *                have a unique ID.
- * @param config: A Map of the Viash configuration. This Map can be generated from the config file 
+ * @param config: A Map of the Viash configuration. This Map can be generated from the config file
  *                using the readConfig() function.
  * 
  * @return A nextflow Channel with events. Events are formatted as a tuple that contains 
@@ -985,8 +981,6 @@ private List<Tuple> _preprocessInputsList(List<Tuple> params, Map config) {
   def defaultArgs = configArguments
     .findAll { it.containsKey("default") }
     .collectEntries { [ it.plainName, it.default ] }
-  def multiArguments = configArguments
-    .findAll({it.containsKey("plainName") && it.multiple})
 
   // Apply config to default parameters
   def parsedDefaultValues = applyConfigToOneParameterSet(defaultArgs, config)
