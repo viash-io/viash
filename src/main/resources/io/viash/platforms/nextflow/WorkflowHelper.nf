@@ -643,8 +643,12 @@ Map<String, Object> _splitParams(Map<String, Object> parValues, Map config){
 
   def parsedParamValues = parValues.collectEntries { parName, parValue ->
     parameterSettings = multiArgumentsSettings.find({it.plainName == parName})
-    if (parameterSettings) { // Check if parameter can accept multiple values
-      if (parValue instanceof List) {
+    if (!parameterSettings) {
+      // if argument is not found, do not alter 
+      return [parName, parValue]
+    }
+    if (parameterSettings.multiple) { // Check if parameter can accept multiple values
+      if (parValue instanceof Collection) {
           parValue = parValue.collect{it instanceof String ? it.split(parameterSettings.multiple_sep) : it }
       } else if (parValue instanceof String) {
           parValue = parValue.split(parameterSettings.multiple_sep)
@@ -656,8 +660,8 @@ Map<String, Object> _splitParams(Map<String, Object> parValues, Map config){
       parValue = parValue.flatten()
     }
     // For all parameters check if multiple values are only passed for
-    // arguments that allow it
-    if (parValue instanceof Collection && !parameterSettings ) {
+    // arguments that allow it. Quietly simplify lists of length 1.
+    if (!parameterSettings.multiple && parValue instanceof Collection) {
       assert parValue.size() == 1 : 
       "Error: argument ${parName} has too many values.\n" +
       "  Expected amount: 1. Found: ${parValue.size()}"
@@ -691,13 +695,9 @@ private void _checkUniqueIds(List<Tuple2<String, Map<String, Object>>> parameter
  *         resolved relatively to the provided path.
  */
 private Map<String, Object> _resolvePathsRelativeTo(Map paramList, Map config, String relativeTo) {
-  def inputFileSettings = config.functionality.allArguments
-    .findAll({it.type == "file" && ((it.direction ?: "input") == "input")})
-
   paramList.collectEntries { parName, parValue ->
-    isInputFile = inputFileSettings.find({it.plainName == parName})
-    if (isInputFile) {
-      if (parValue instanceof List) {
+    if (argSettings && argSettings.type == "file" && argSettings.direction == "input") {
+      if (parValue instanceof Collection) {
         parValue = parValue.collect({path -> 
           path !instanceof String ? path : file(getChild(relativeTo, path))
         })
@@ -783,10 +783,9 @@ private List<Tuple2<String, Map>> _parseParamListArguments(Map params, Map confi
  */
 
 private Map<String, Object> _castParamTypes(Map<String, Object> parValues, Map config) {
-  def configArguments = config.functionality.allArguments
   // Cast the input to the correct type according to viash config
   def castParValues = parValues.collectEntries({ parName, parValue ->
-    paramSettings = configArguments.find({it.plainName == parName})
+    paramSettings = config.functionality.allArguments.find({it.plainName == parName})
     // dont parse parameters like publish_dir ( in which case paramSettings = null)
     parType = paramSettings ? paramSettings.get("type", null) : null
     if (parValue !instanceof Collection) {
@@ -987,8 +986,7 @@ def channelFromParams(Map params, Map config) {
 
 private List<Tuple> _preprocessInputsList(List<Tuple> params, Map config) {
   // Get different parameter types (used throughout this function)
-  def configArguments = config.functionality.allArguments
-  def defaultArgs = configArguments
+  def defaultArgs = config.functionality.allArguments
     .findAll { it.containsKey("default") }
     .collectEntries { [ it.plainName, it.default ] }
 
