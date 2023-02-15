@@ -800,6 +800,13 @@ private Map<String, Object> _castParamTypes(Map<String, Object> parValues, Map c
       parValue = parValue.collect{it as Boolean}
     }
 
+    // simplify list to value if need be
+    if (paramSettings && !paramSettings.multiple) {
+      assert parValue.size() == 1 : 
+        "Error: argument ${parName} has too many values.\n" +
+        "  Expected amount: 1. Found: ${parValue.size()}"
+      parValue = parValue[0]
+    }
     [parName, parValue]
   })
   return castParValues
