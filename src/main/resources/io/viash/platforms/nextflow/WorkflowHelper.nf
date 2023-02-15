@@ -884,16 +884,9 @@ List<Tuple> applyConfig(List<Tuple> parameterSets, Map config){
  */
  
 private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params, Map config){
-  /* Get different parameter types */
-  /*********************************/
-  def configArguments = config.functionality.allArguments // List[Map]
-  def plainNameArguments = configArguments.findAll{it.containsKey("plainName")}
-  def inputfileArguments = plainNameArguments.findAll({it.type == "file" && ((it.direction ?: "input") == "input")})
-  def multiArguments = plainNameArguments.findAll({it.multiple})
-
   /* parse regular parameters (not in param_list)  */
   /*************************************************/
-  def globalParams = plainNameArguments
+  def globalParams = config.functionality.allArguments
     .findAll { params.containsKey(it.plainName) }
     .collectEntries { [ it.plainName, params[it.plainName] ] }
   def globalID = params.get("id", null)
@@ -921,7 +914,7 @@ private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params,
 
     // Remove parameters which are null, if the default is also null
     combinedArgsValues = combinedArgsValues.collectEntries{paramName, paramValue ->
-      parameterSettings = plainNameArguments.find({it.plainName == paramName})
+      parameterSettings = config.functionality.allArguments.find({it.plainName == paramName})
       if ( paramValue != null || parameterSettings.get("default", null) != null ) {
         [paramName, paramValue]
       }
