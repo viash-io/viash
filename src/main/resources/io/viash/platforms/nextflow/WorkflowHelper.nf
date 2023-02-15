@@ -694,8 +694,8 @@ private void _checkUniqueIds(List<Tuple2<String, Map<String, Object>>> parameter
  *         resolved relatively to the provided path.
  */
 private Map<String, Object> _resolvePathsRelativeTo(Map paramList, Map config, String relativeTo) {
-  argSettings = config.functionality.allArguments.find{it.plainName == parName}
   paramList.collectEntries { parName, parValue ->
+    argSettings = config.functionality.allArguments.find{it.plainName == parName}
     if (argSettings && argSettings.type == "file" && argSettings.direction == "input") {
       if (parValue instanceof Collection) {
         parValue = parValue.collect({path -> 
