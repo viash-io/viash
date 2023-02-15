@@ -988,7 +988,8 @@ workflow {
 
   helpMessage(mergedConfig)
 
-  viashChannel(mergedParams, mergedConfig)
+  channelFromParams(mergedParams, mergedConfig)
+    | preprocessInputs("config": mergedConfig)
     | view { "input: $it" }
     | myWfInstance.run(
       auto: [ publish: true ]

@@ -19,6 +19,10 @@
 
 * `WorkflowHelper`: `paramsToList`, `paramsToChannel` and `viashChannel` are now deprecated and will be removed in a future release.
 
+## MAJOR CHANGES
+
+* `VDSL3`: now uses the newly implemented `channelFromParams` and `preprocessInputs` instead of `viashChannel`.
+
 ## NEW FEATURES
 
 * `WorkflowHelper`: Added `preprocessInputs` and `channelFromParams` to replace `paramsToList`, `paramsToChannel` and `viashChannel`. This refactor allows processing parameters that are already in a Channel using `preprocessInputs`, which is necessary when passing parameters from a workflow to a subworkflow in a Nextflow pipeline.
