@@ -765,12 +765,16 @@ private List<Tuple2<String, Map>> _parseParamListArguments(Map params,
 }
 
 /**
- * Cast parameters to the correct type as defined in the Viash config.
+ * Cast parameters to the correct type as defined in the Viash config
+ *
+ * @param parValues: a Map of input arguments.
+ *
+ * @return the input arguments that have been cast to the type from the viash config.
  */
 
 private Map<String, Object> _castParamTypes(Map<String, Object> parValues, Map config) {
   def configArguments = config.functionality.allArguments
-    // Cast the input to the correct type according to viash config
+  // Cast the input to the correct type according to viash config
   def castParValues = parValues.collectEntries({ parName, parValue ->
     paramSettings = configArguments.find({it.plainName == parName})
     // dont parse parameters like publish_dir ( in which case paramSettings = null)
