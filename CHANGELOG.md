@@ -17,6 +17,12 @@
     ```
   The old `get.viash.io` is still available but points to the version 0.6.7 version of this component and is deprecated.
 
+* `WorkflowHelper`: `paramsToList`, `paramsToChannel` and `viashChannel` are now deprecated and will be removed in a future release.
+
+## NEW FEATURES
+
+* `WorkflowHelper`: Added `preprocessInputs` and `channelFromParams` to replace `paramsToList`, `paramsToChannel` and `viashChannel`. This refactor allows processing parameters after a Channel has been created using `preprocessInputs`, which is necessary when passing parameters from a workflow to a subworkflow in a Nextflow pipeline.
+
 ## MINOR CHANGES
 
 * `Main`: Capture build, setup and push errors and output an exit code.
@@ -39,7 +45,7 @@
   For every release, there is now a date, title, and summary.
   This both improves the changelog itself but can then also be used to postprocess the CHANGELOG programmatically.
 
-* `VDSL3`: Add a default value for `id` when running a VDSL3 module as a standalone pipeline.
+* `VDSL3`: Add default to the anonymous workflow of a VDSL3 component without adding it to the functionality resources.
 
 ## BUG FIXES
 
