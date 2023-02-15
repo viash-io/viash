@@ -671,7 +671,7 @@ private void _checkUniqueIds(List<Tuple2<String, Map<String, Object>>> parameter
  *
  * @param paramList A Map containing parameters to process.
  *                  This function assumes that files are still of type String.
- * @param inputFileSetttings A Map of the viash configuration argument entries 
+ * @param inputFileSettings A Map of the viash configuration argument entries
  *                           that are considered input files (i.e. with 'direction: input'
  *                           and 'type: file').
  * @param relativeTo path of a file to resolve the parameters values to.
@@ -680,9 +680,9 @@ private void _checkUniqueIds(List<Tuple2<String, Map<String, Object>>> parameter
  *         resolved relatively to the provided path.
  */
 private Map<String, Object> _resolvePathsRelativeTo(Map paramList, 
-  List<Map<String, String>> inputFileSetttings, String relativeTo) {
+  List<Map<String, String>> inputFileSettings, String relativeTo) {
   paramList.collectEntries { parName, parValue ->
-    isInputFile = inputFileSetttings.find({it.plainName == parName})
+    isInputFile = inputFileSettings.find({it.plainName == parName})
     if (isInputFile) {
       if (parValue instanceof List) {
         parValue = parValue.collect({path -> 
