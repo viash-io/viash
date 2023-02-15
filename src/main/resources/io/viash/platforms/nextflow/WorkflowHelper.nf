@@ -833,7 +833,7 @@ private Map<String, Object> _castParamTypes(Map<String, Object> parValues, Map c
  * 
  * @return The input parameters that have been processed.
  */
-Map<String, Object> applyConfigToOneParameterSet(Map<String, Object> paramValues, Map config){
+private Map<String, Object> applyConfigToOneParameterSet(Map<String, Object> paramValues, Map config){
   def configArguments = config.functionality.allArguments
   def plainNameArguments = configArguments.findAll{it.containsKey("plainName")}
   def multiArguments = plainNameArguments.findAll({it.multiple})
