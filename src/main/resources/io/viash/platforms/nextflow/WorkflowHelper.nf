@@ -654,8 +654,9 @@ Map<String, Object> _splitParams(Map<String, Object> parValues, List<Map> multiA
       }
       parValue = parValue.flatten()
     }
-    // For all parameters check if there 
-    if (parValue instanceof Collection && !parameterSettings.multiple ) {
+    // For all parameters check if multiple values are only passed for
+    // arguments that allow it
+    if (parValue instanceof Collection && !parameterSettings ) {
       assert parValue.size() == 1 : 
       "Error: argument ${parName} has too many values.\n" +
       "  Expected amount: 1. Found: ${parValue.size()}"
