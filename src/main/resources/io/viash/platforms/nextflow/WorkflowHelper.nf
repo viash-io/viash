@@ -619,17 +619,6 @@ def viashChannel(params, config) {
 }
 
 /**
- * From a viash config, gather the config entries 
- * for arguments that have property 'multiple: true'
- */
-
-private List<Map> _getMultiParameterSettings(Map config) {
-  def configArguments = config.functionality.allArguments
-  def plainNameArguments = configArguments.findAll{it.containsKey("plainName")}
-  return plainNameArguments.findAll({it.multiple})
-}
-
-/**
  * Split parameters for arguments that accept multiple values using their seperator
  *
  * @param paramList A Map containing parameters to split.
