@@ -779,7 +779,7 @@ private Map<String, Object> _castParamTypes(Map<String, Object> parValues, Map c
     paramSettings = configArguments.find({it.plainName == parName})
     // dont parse parameters like publish_dir ( in which case paramSettings = null)
     parType = paramSettings ? paramSettings.get("type", null) : null
-    if (! (parValue instanceof Collection)) {
+    if (parValue !instanceof Collection) {
       parValue = [parValue]
     }
     if (parType == "file" && ((paramSettings.direction ?: "input") == "input")) {
