@@ -747,9 +747,7 @@ private List<Tuple2<String, Map>> _parseParamListArguments(Map params,
     [paramValues.get("id", null), paramValues.findAll{it.key != 'id'}]
   })
   // Split parameters with 'multiple: true'
-  paramSets = paramSets.collect({ paramSet ->
-    def id = paramSet[0]
-    def paramValues = paramSet[1]
+  paramSets = paramSets.collect({ id, paramValues ->
     def splitParamValues = _splitParams(paramValues, multiArguments)
     [id, splitParamValues]
   })
