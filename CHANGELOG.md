@@ -21,7 +21,7 @@
 
 ## NEW FEATURES
 
-* `WorkflowHelper`: Added `preprocessInputs` and `channelFromParams` to replace `paramsToList`, `paramsToChannel` and `viashChannel`. This refactor allows processing parameters after a Channel has been created using `preprocessInputs`, which is necessary when passing parameters from a workflow to a subworkflow in a Nextflow pipeline.
+* `WorkflowHelper`: Added `preprocessInputs` and `channelFromParams` to replace `paramsToList`, `paramsToChannel` and `viashChannel`. This refactor allows processing parameters that are already in a Channel using `preprocessInputs`, which is necessary when passing parameters from a workflow to a subworkflow in a Nextflow pipeline.
 
 ## MINOR CHANGES
 
