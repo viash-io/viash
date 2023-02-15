@@ -477,10 +477,14 @@ def _guessParamListFormat(params) {
   }
 }
 
-def paramsToList(params, config) {
-  System.err.println("Warning: paramsToList has deprecated in Viash 0.7.0. " +
-                    "Please use a combination of channelFromParams and preprocessInputs.")
+viashChannelDeprecationWarningPrinted = false
 
+def paramsToList(params, config) {
+  if (!viashChannelDeprecationWarningPrinted) {
+    viashChannelDeprecationWarningPrinted = true
+    System.err.println("Warning: paramsToList has deprecated in Viash 0.7.0. " +
+                      "Please use a combination of channelFromParams and preprocessInputs.")
+  }
   // fetch default params from functionality
   def defaultArgs = config.functionality.allArguments
     .findAll { it.containsKey("default") }
@@ -606,14 +610,20 @@ def paramsToList(params, config) {
 }
 
 def paramsToChannel(params, config) {
-  System.err.println("Warning: paramsToChannel has deprecated in Viash 0.7.0. " +
-                     "Please use a combination of channelFromParams and preprocessInputs.")
+  if (!viashChannelDeprecationWarningPrinted) {
+    viashChannelDeprecationWarningPrinted = true
+    System.err.println("Warning: paramsToChannel has deprecated in Viash 0.7.0. " +
+                      "Please use a combination of channelFromParams and preprocessInputs.")
+  }
   Channel.fromList(paramsToList(params, config))
 }
 
 def viashChannel(params, config) {
-  System.err.println("Warning: viashChannel has deprecated in Viash 0.7.0. " +
-                     "Please use a combination of channelFromParams and preprocessInputs.")
+  if (!viashChannelDeprecationWarningPrinted) {
+    viashChannelDeprecationWarningPrinted = true
+    System.err.println("Warning: viashChannel has deprecated in Viash 0.7.0. " +
+                      "Please use a combination of channelFromParams and preprocessInputs.")
+  }
   paramsToChannel(params, config)
     | map{tup -> [tup.id, tup]}
 }
