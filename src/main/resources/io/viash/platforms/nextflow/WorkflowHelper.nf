@@ -618,7 +618,12 @@ def viashChannel(params, config) {
     | map{tup -> [tup.id, tup]}
 }
 
-def _getMultiParameterSettings(Map config) {
+/**
+ * From a viash config, gather the config entries 
+ * for arguments that have property 'multiple: true'
+ */
+
+private List<Map> _getMultiParameterSettings(Map config) {
   def configArguments = config.functionality.allArguments
   def plainNameArguments = configArguments.findAll{it.containsKey("plainName")}
   return plainNameArguments.findAll({it.multiple})
@@ -664,7 +669,7 @@ Map<String, Object> _splitParams(Map<String, Object> parValues, List<Map> multiA
 /**
  * Check if the ids are unique across parameter sets
  *
- * @param multiParam a list of parameter sets.
+ * @param parameterSets a list of parameter sets.
  */
 private void _checkUniqueIds(List<Tuple2<String, Map<String, Object>>> parameterSets) {
   def ppIds = parameterSets.collect{it[0]}
@@ -684,7 +689,8 @@ private void _checkUniqueIds(List<Tuple2<String, Map<String, Object>>> parameter
  * @return A map of parameters where the location of the input file parameters have been resolved
  *         resolved relatively to the provided path.
  */
-private Map<String, Object> _resolvePathsRelativeTo(Map paramList, List<Map<String, String>> inputFileSetttings, String relativeTo) {
+private Map<String, Object> _resolvePathsRelativeTo(Map paramList, 
+  List<Map<String, String>> inputFileSetttings, String relativeTo) {
   paramList.collectEntries { parName, parValue ->
     isInputFile = inputFileSetttings.find({it.plainName == parName})
     if (isInputFile) {
@@ -701,7 +707,8 @@ private Map<String, Object> _resolvePathsRelativeTo(Map paramList, List<Map<Stri
 }
 
 /**
- * Parse multiple parameter sets passed using param_list into a list of parameter sets.
+ * Parse nextflow parameters based on settings defined in a viash config 
+ * and return a nextflow channel.
  *
  * @param params Input parameters from nextflow.
  * @param multiArgumentsSettings A List of the viash configuration argument entries 
@@ -711,7 +718,8 @@ private Map<String, Object> _resolvePathsRelativeTo(Map paramList, List<Map<Stri
  *
  * @return A list of parameter sets that were parsed from the 'param_list' argument value.
  */
-private List<Tuple2<String, Map>> _parseParamListArguments(Map params, List<Map> multiArguments, List<Map> inputfileArguments){
+private List<Tuple2<String, Map>> _parseParamListArguments(Map params, 
+  List<Map> multiArguments, List<Map> inputfileArguments){
   // first try to guess the format (if not set in params)
   def paramListFormat = _guessParamListFormat(params)
 
@@ -770,7 +778,11 @@ private List<Tuple2<String, Map>> _parseParamListArguments(Map params, List<Map>
   return paramSets
 }
 
-Map<String, Object> _castParamTypes(Map parValues, Map config) {
+/**
+ * Cast parameters to the correct type as defined in the Viash config.
+ */
+
+private Map<String, Object> _castParamTypes(Map<String, Object> parValues, Map config) {
   def configArguments = config.functionality.allArguments
     // Cast the input to the correct type according to viash config
   def castParValues = parValues.collectEntries({ parName, parValue ->
@@ -810,8 +822,17 @@ Map<String, Object> _castParamTypes(Map parValues, Map config) {
   return castParValues
 }
 
-
-Map<String, Object> _applyConfigToOneParameterSet(Map<String, Object> paramValues, Map config){
+/**
+ * Apply the argument settings specified in a Viash config to a single parameter set.
+ *    - Split the parameter values according to their seperator if 
+ *       the parameter accepts multiple values
+ *    - Cast the parameters to their corect types.
+ *    - Assertions:
+ *        ~ Check if any unknown parameters are found
+ * 
+ * @return The input parameters that have been processed.
+ */
+Map<String, Object> applyConfigToOneParameterSet(Map<String, Object> paramValues, Map config){
   def configArguments = config.functionality.allArguments
   def plainNameArguments = configArguments.findAll{it.containsKey("plainName")}
   def multiArguments = plainNameArguments.findAll({it.multiple})
@@ -827,13 +848,25 @@ Map<String, Object> _applyConfigToOneParameterSet(Map<String, Object> paramValue
   return castParameValues
 }
 
+/**
+ * Apply the argument settings specified in a Viash config to a list of parameter sets.
+ *    - Split the parameter values according to their seperator if 
+ *       the parameter accepts multiple values
+ *    - Cast the parameters to their corect types.
+ *    - Assertions:
+ *        ~ Check if any unknown parameters are found
+ *        ~ Check if the ID of the parameter set is unique across all sets.
+ * 
+ * @return The input parameters that have been processed.
+ */
 
-List<Tuple2<String, Map>> _applyConfig(List<Tuple2<String, Map>> parameterSets, Map config){
-  processedparameterSets = parameterSets.collect({ parameterSet ->
+List<Tuple> applyConfig(List<Tuple> parameterSets, Map config){
+  def processedparameterSets = parameterSets.collect({ parameterSet ->
     def id = parameterSet[0]
     def paramValues = parameterSet[1]
-    def processedSet = _applyConfigToOneParameterSet(paramValues, config)
-    [id, processedSet]
+    def passthrough = parameterSet.drop(2)
+    def processedSet = applyConfigToOneParameterSet(paramValues, config)
+    [id, processedSet] + passthrough
   })
 
   _checkUniqueIds(processedparameterSets)
@@ -842,8 +875,10 @@ List<Tuple2<String, Map>> _applyConfig(List<Tuple2<String, Map>> parameterSets, 
 
 /**
  * Parse nextflow parameters based on settings defined in a viash config.
- * The config file should have been preparsed using the readConfig() function,
- * which can also be found in this module. 
+ * Return a list of parameter sets, each parameter set corresponding to 
+ * an event in a nextflow channel. The output from this function can be used
+ * with Channel.fromList to create a nextflow channel with Vdsl3 formatted 
+ * events.
  *
  * This function performs:
  *   - A filtering of the params which can be found in the config file.
@@ -857,14 +892,19 @@ List<Tuple2<String, Map>> _applyConfig(List<Tuple2<String, Map>> parameterSets, 
  *     location of the parameter file.
  *   - Combine the parameter sets into a vdsl3 Channel.
  *
- * @param params Input parameters from nextflow.
- * @param config a Map of the viash configuration.
+ * @param params: input parameters. Can optionaly contain a 'param_list' key that
+ *                provides a list of arguments that can be split up into multiple events
+ *                in the output channel possible formats of param_lists are: a csv file, 
+ *                json file, a yaml file or a yaml blob. Each parameters set (event) must
+ *                have a unique ID.
+ * @param config: A Map of the Viash configuration. This Map can be generated from the config file 
+ *                using the readConfig() function.
  * 
  * @return A list of parameters with the first element of the event being
  *         the event ID and the second element containing a map of the parsed parameters.
  */
  
-def _paramsToParamSets(Map params, Map config){
+private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params, Map config){
   /* Get different parameter types */
   /*********************************/
   def configArguments = config.functionality.allArguments // List[Map]
@@ -878,12 +918,12 @@ def _paramsToParamSets(Map params, Map config){
     .findAll { params.containsKey(it.plainName) }
     .collectEntries { [ it.plainName, params[it.plainName] ] }
   def globalID = params.get("id", null)
-  def globalParamsValues = _applyConfigToOneParameterSet(globalParams.findAll{it.key != 'id'}, config)
+  def globalParamsValues = applyConfigToOneParameterSet(globalParams.findAll{it.key != 'id'}, config)
 
   /* process params_list arguments */
   /*********************************/
   def paramSets = _parseParamListArguments(params, multiArguments, inputfileArguments)
-  def parameterSetsWithConfigApplied = _applyConfig(paramSets, config)
+  def parameterSetsWithConfigApplied = applyConfig(paramSets, config)
 
   /* combine arguments into channel */
   /**********************************/
@@ -918,15 +958,45 @@ def _paramsToParamSets(Map params, Map config){
 /**
  * Parse nextflow parameters based on settings defined in a viash config 
  * and return a nextflow channel.
- * The config file should have been preparsed using the readConfig() function,
- * which can also be found in this module. 
+ * 
+ * @param params: input parameters. Can optionaly contain a 'param_list' key that
+ *                provides a list of arguments that can be split up into multiple events
+ *                in the output channel possible formats of param_lists are: a csv file, 
+ *                json file, a yaml file or a yaml blob. Each parameters set (event) must
+ *                have a unique ID.
+ * @param config: A Map of the Viash configuration. This Map can be generated from the config file 
+ *                using the readConfig() function.
+ * 
+ * @return A nextflow Channel with events. Events are formatted as a tuple that contains 
+ *         first contains the ID of the event and as second element holds a parameter map.
+ *       
+ *
  */
 def channelFromParams(Map params, Map config) {
   processedParams = _paramsToParamSets(params, config)
   return Channel.fromList(processedParams)
 }
 
-def _preprocessInputsList(List<Collection<Object>> params, Map config) {
+/**
+ * Process a list of Vdsl3 formatted parameters and apply a Viash config to them:
+ *    - Gather default parameters from the Viash config and make 
+ *      sure that they are correctly formatted (see applyConfig method).
+ *    - Format the input parameters (also using the applyConfig method).
+ *    - Apply the default parameter to the input parameters.
+ *    - Do some assertions:
+ *        ~ Check if the event IDs in the channel are unique.
+ *  
+ * @param params: A list of parameter sets as Tuples. The first element of the tuples
+ *                must be a unique id of the parameter set, and the second element 
+ *                must contain the parameters themselves. Optional extra elements 
+ *                of the tuples will be passed to the output as is.
+ * @param config: A Map of the Viash configuration. This Map can be generated from 
+ *                the config file using the readConfig() function.           
+ *
+ * @return: A list of processed parameters sets as tuples.
+ */
+
+private List<Tuple> _preprocessInputsList(List<Tuple> params, Map config) {
   // Get different parameter types (used throughout this function)
   def configArguments = config.functionality.allArguments
   def defaultArgs = configArguments
@@ -936,10 +1006,10 @@ def _preprocessInputsList(List<Collection<Object>> params, Map config) {
     .findAll({it.containsKey("plainName") && it.multiple})
 
   // Apply config to default parameters
-  def parsedDefaultValues = _applyConfigToOneParameterSet(defaultArgs, config)
+  def parsedDefaultValues = applyConfigToOneParameterSet(defaultArgs, config)
 
   // Apply config to input parameters
-  def parsedInputParamSets = _applyConfig(params, config)
+  def parsedInputParamSets = applyConfig(params, config)
 
   // Merge two parameter sets together
   def parsedArgs = parsedInputParamSets.collect({ parsedInputParamSet ->
@@ -954,6 +1024,29 @@ def _preprocessInputsList(List<Collection<Object>> params, Map config) {
   return parsedArgs
 }
 
+/**
+ * Generate a nextflow Workflow that allows processing a channel of 
+ * Vdsl3 formatted events and apply a Viash config to them:
+ *    - Gather default parameters from the Viash config and make 
+ *      sure that they are correctly formatted (see applyConfig method).
+ *    - Format the input parameters (also using the applyConfig method).
+ *    - Apply the default parameter to the input parameters.
+ *    - Do some assertions:
+ *        ~ Check if the event IDs in the channel are unique.
+ * 
+ * The events in the channel are formatted as tuples, with the 
+ * first element of the tuples being a unique id of the parameter set, 
+ * and the second element containg the the parameters themselves.
+ * Optional extra elements of the tuples will be passed to the output as is.
+ *
+ * @param args: A map that must contain a 'config' key that points
+ *              to a parsed config (see readConfig()). Optionally, a
+ *              'key' key can be provided which can be used to create a unique
+ *              name for the workflow process.
+ *
+ * @return: A workflow that allows processing a channel of Vdsl3 formatted events
+ * and apply a Viash config to them.
+ */
 def preprocessInputs(Map args) {
   wfKey = args.key ?: "preprocessInputs"
   config = args.config
