@@ -756,7 +756,7 @@ private List<Tuple2<String, Map>> _parseParamListArguments(Map params, Map confi
   // location of the param_list file. These paths must be made absolute.
   if (paramListFile){
     paramSets = paramSets.collect({ id, paramValues ->
-      def relativeParamValues = _resolvePathsRelativeTo(paramValues, config)
+      def relativeParamValues = _resolvePathsRelativeTo(paramValues, config, paramListFile)
       [id, relativeParamValues]
     })
   }
