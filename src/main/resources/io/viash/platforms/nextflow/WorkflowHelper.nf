@@ -619,7 +619,7 @@ def viashChannel(params, config) {
 }
 
 /**
- * Split parameters for arguments that accept multiple values using their seperator
+ * Split parameters for arguments that accept multiple values using their separator
  *
  * @param paramList A Map containing parameters to split.
  * @param multiArgumentsSettings A List of the viash configuration argument entries 
