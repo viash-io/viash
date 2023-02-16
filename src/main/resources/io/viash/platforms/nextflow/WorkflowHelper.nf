@@ -835,7 +835,7 @@ private Map<String, Object> _castParamTypes(Map<String, Object> parValues, Map c
  *                the config file using the readConfig() function.
  * @return The input parameters that have been processed.
  */
-private Map<String, Object> applyConfigToOneParameterSet(Map<String, Object> paramValues, Map config){
+Map<String, Object> applyConfigToOneParameterSet(Map<String, Object> paramValues, Map config){
   def splitParamValues = _splitParams(paramValues, config)
   def castParamValues = _castParamTypes(splitParamValues, config)
 
