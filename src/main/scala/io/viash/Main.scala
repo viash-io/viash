@@ -178,13 +178,13 @@ object Main {
         )
       case x: ViashNs with ViashNsBuild =>
         proj0.copy(
-          source = x.src.toOption orElse proj0.source orElse Some("src"),
+          source = x.src.toOption orElse proj0.source orElse Some("."),
           target = x.target.toOption orElse proj0.target orElse Some("target"),
           config_mods = proj0.config_mods ::: x.config_mods()
         )
       case x: ViashNs =>
         proj0.copy(
-          source = x.src.toOption orElse proj0.source orElse Some("src"),
+          source = x.src.toOption orElse proj0.source orElse Some("."),
           config_mods = proj0.config_mods ::: x.config_mods()
         )
       case _ => proj0
