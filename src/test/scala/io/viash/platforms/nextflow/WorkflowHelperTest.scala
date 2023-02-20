@@ -1,4 +1,4 @@
-package io.viash.platforms
+package io.viash.platforms.nextflow
 
 import io.viash.helpers.IO
 import io.viash.{DockerTest, NextFlowTest, TestHelper}
@@ -12,7 +12,7 @@ import scala.io.Source
 import java.io.IOException
 import java.io.UncheckedIOException
 
-class NextFlowVdsl3PlatformInputFormatsTest extends AnyFunSuite with BeforeAndAfterAll {
+class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
   // temporary folder to work in
   private val temporaryFolder = IO.makeTemp("viash_tester_nextflowvdsl3")
   private val tempFolStr = temporaryFolder.toString
