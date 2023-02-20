@@ -53,6 +53,8 @@
 
 ## BUG FIXES
 
+* `WorkflowHelper`: fixed where passing a relative path as `-param_list` would cause incorrect resolving of input files.
+
 * `Testbenches`: Fix GitTest testbench to correctly increment temporary folder naming and dispose them after the test finishes.
 
 * `viash xxx url`: Fix passing a url to viash as the config file to process. Add a short testbench to test principle functionality.
