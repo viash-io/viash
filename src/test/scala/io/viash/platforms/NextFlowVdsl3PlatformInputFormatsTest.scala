@@ -215,7 +215,7 @@ class NextFlowVdsl3PlatformInputFormatsTest extends AnyFunSuite with BeforeAndAf
     checkDebugArgs("foo", debugPrints, expectedFoo)
     checkDebugArgs("bar", debugPrints, expectedBar)
     // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
-    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+    assert(debugPrints.find(_._1 == "foo").get._2("input").endsWith(resourcesPath+"/lines3.txt"))
   }
 
   test("Run config pipeline with yaml file", NextFlowTest) {
@@ -238,8 +238,31 @@ class NextFlowVdsl3PlatformInputFormatsTest extends AnyFunSuite with BeforeAndAf
     checkDebugArgs("foo", debugPrints, expectedFoo)
     checkDebugArgs("bar", debugPrints, expectedBar)
     // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
-    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+    assert(debugPrints.find(_._1 == "foo").get._2("input").endsWith(resourcesPath+"/lines3.txt"))
   }
+
+test("Run config pipeline with yaml file passed as a relative path", NextFlowTest) {
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      mainScript = "../workflows/pipeline3/main.nf",
+      entry = Some("base"),
+      args = List(
+        "--param_list", "pipeline3.yaml",
+        "--real_number", "10.5",
+        "--whole_number", "10",
+        "--str", "foo",
+        "--publish_dir", "output",
+        ),
+      cwd = Paths.get(resourcesPath).toFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
+    checkDebugArgs("foo", debugPrints, expectedFoo)
+    checkDebugArgs("bar", debugPrints, expectedBar)
+    // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
+    assert(debugPrints.find(_._1 == "foo").get._2("input").endsWith(resourcesPath+"/lines3.txt"))
+  }
+
 
   test("Run config pipeline with json file", NextFlowTest) {
     val param_list_file = Paths.get(resourcesPath, "pipeline3.json").toFile.toString
@@ -261,7 +284,7 @@ class NextFlowVdsl3PlatformInputFormatsTest extends AnyFunSuite with BeforeAndAf
     checkDebugArgs("foo", debugPrints, expectedFoo)
     checkDebugArgs("bar", debugPrints, expectedBar)
     // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
-    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+    assert(debugPrints.find(_._1 == "foo").get._2("input").endsWith(resourcesPath+"/lines3.txt"))
   }
 
   test("Run config pipeline with csv file", NextFlowTest) {
@@ -284,7 +307,7 @@ class NextFlowVdsl3PlatformInputFormatsTest extends AnyFunSuite with BeforeAndAf
     checkDebugArgs("foo", debugPrints, expectedFoo)
     checkDebugArgs("bar", debugPrints, expectedBar)
     // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
-    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+    assert(debugPrints.find(_._1 == "foo").get._2("input").endsWith(resourcesPath+"/lines3.txt"))
   }
 
   test("Run config pipeline asis, default nextflow implementation", NextFlowTest) {
@@ -307,7 +330,7 @@ class NextFlowVdsl3PlatformInputFormatsTest extends AnyFunSuite with BeforeAndAf
     checkDebugArgs("foo", debugPrints, expectedFoo)
     checkDebugArgs("bar", debugPrints, expectedBar)
     // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
-    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+    assert(debugPrints.find(_._1 == "foo").get._2("input").endsWith(resourcesPath+"/lines3.txt"))
   }
 
   override def afterAll(): Unit = {

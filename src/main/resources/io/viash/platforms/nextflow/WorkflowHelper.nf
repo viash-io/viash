@@ -26,7 +26,8 @@ def getChild(parent, child) {
   if (child.contains("://") || Paths.get(child).isAbsolute()) {
     child
   } else {
-    parent.replaceAll('/[^/]*$', "/") + child
+    def parentAbsolute = Paths.get(parent).toAbsolutePath().toString()
+    parentAbsolute.replaceAll('/[^/]*$', "/") + child
   }
 }
 
