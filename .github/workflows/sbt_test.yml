@@ -40,7 +40,7 @@ jobs:
           testthat
 
     - name: Set up sbt
-      uses: olafurpg/setup-scala@v13
+      uses: olafurpg/setup-scala@v14
 
     - name: Set up Scala
       run: |
