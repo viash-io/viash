@@ -84,7 +84,7 @@ object CollectedSchemas {
         baseClass.info.members
           .filter(_.fullName.startsWith("io.viash"))
           .filter(m => memberNames.contains(m.shortName))
-           .filter(m => !m.info.getClass.toString.endsWith("NullaryMethodType") || index != 0) // Only regular members if base class, otherwise all members
+          .filter(m => !m.info.getClass.toString.endsWith("NullaryMethodType") || index != 0) // Only regular members if base class, otherwise all members
           .map(y => MemberInfo(y, (constructorMembers.contains(y.shortName)), baseClass.fullName, index))
         }
       .groupBy(k => k.shortName)
