@@ -17,6 +17,9 @@
     ```
   The old `get.viash.io` is still available but points to the version 0.6.7 version of this component and is deprecated.
 
+* `viash ns`: Change the default value of `--src` from `src/` to `./`. Add `src: src/` to 
+  the project config `_viash.yaml` to revert to the previous behaviour.
+
 ## MINOR CHANGES
 
 * `Main`: Capture build, setup and push errors and output an exit code.
