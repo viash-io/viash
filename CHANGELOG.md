@@ -61,6 +61,8 @@
 
 * `Testbenches`: Simplify `testr` container.
 
+* `Main`: Improve error reporting to the user in some cases where files or folders can't be found. Depending on the thrown exception, more or less context was given.
+
 # Viash 0.6.7 (2022-12-14): A minor release with several QoL improvements
 
 Another minor release which contains several quality of life improvements for the Nextflow VDSL3 platform, as well as automated warnings for deprecated functionality.
