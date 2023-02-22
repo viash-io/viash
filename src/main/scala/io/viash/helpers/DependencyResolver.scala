@@ -24,6 +24,9 @@ import io.viash.lenses.ConfigLenses._
 import io.viash.lenses.FunctionalityLenses._
 import io.viash.lenses.RepositoryLens._
 import io.viash.functionality.dependencies.GithubRepository
+import java.nio.file.Files
+import java.io.IOException
+import java.io.UncheckedIOException
 
 object DependencyResolver {
 
@@ -115,4 +118,46 @@ object DependencyResolver {
       }
       )(config4)
   }
+
+  def copyDependencies(config: Config, output: String): Unit = {
+    for (dep <- composedDependenciesLens.get(config)) {
+      // copy the dependency to the output folder
+      val dependencyPath = Paths.get(output, dep.name)
+      if (dependencyPath.toFile().exists())
+        IO.deleteRecursively(dependencyPath)
+      Files.createDirectories(dependencyPath)
+
+      copyFolder(Paths.get(dep.repository.toOption.get.localPath), dependencyPath)
+
+      // more recursion for the dependencies of dependencies
+      copyDependencies(dep.workConfig.get, output)
+    }
+  }
+
+  def copyFolder(src: Path, dest: Path): Unit = {
+    val stream = Files.walk(src)
+
+    try {
+      stream.forEachOrdered((sourcePath: Path) => {
+
+        try {
+          val newPath = dest.resolve(src.relativize(sourcePath))
+          if (sourcePath.toFile.isFile) {
+            Files.copy(sourcePath, newPath)
+          } else if (sourcePath.toFile.isDirectory) {
+            newPath.toFile.mkdir()
+          }
+
+        } catch {
+          case e: IOException =>
+            throw new UncheckedIOException(e)
+        }
+
+      })
+
+    } finally {
+      stream.close()
+    }
+  }
+
 }

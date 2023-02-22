@@ -75,11 +75,14 @@ case class GithubRepository(
     val temporaryFolder = IO.makeTemp("viash_hub_repo")
     val cwd = Some(temporaryFolder.toFile)
 
-    // Console.println(s"temporaryFolder: $temporaryFolder uri: $uri fullUri: $fullUri")
+    Console.println(s"temporaryFolder: $temporaryFolder uri: $uri fullUri: $fullUri")
+
+    val loggers = Seq[String => Unit] { (str: String) => {println(str)} }
 
     val out = Exec.runCatch(
       List("git", "clone", fullUri, "--no-checkout", "."),
-      cwd = cwd
+      cwd = cwd,
+      loggers = loggers,
     )
 
     copy(localPath = temporaryFolder.toString)
