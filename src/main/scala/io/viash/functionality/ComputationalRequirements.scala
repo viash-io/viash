@@ -25,7 +25,7 @@ case class ComputationalRequirements(
   @description("The maximum number of (logical) cpus a component is allowed to use.")
   @example("cpus: 10", "yaml")
   cpus: Option[Int] = None,
-  @deprecated("Use `cpus` instead.", "Viash 0.6.1")
+  @deprecated("Use `cpus` instead.", "0.6.1", "0.7.0")
   n_proc: Option[Int] = None,
   @description("The maximum amount of memory a component is allowed to allocate. Unit must be one of B, KB, MB, GB, TB or PB.")
   @example("memory: 10GB", "yaml")
@@ -51,6 +51,8 @@ case class ComputationalRequirements(
         val multiplier = BigInt(1024)
         val exp = lookup(unit)
         Some(amntBigInt * multiplier.pow(exp))
+      case Some(m) =>
+        throw new RuntimeException(s"Invalid value \"$m\" as memory computational requirement.")
       case None => None
     }
   }

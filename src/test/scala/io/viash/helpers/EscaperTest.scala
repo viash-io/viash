@@ -1,8 +1,9 @@
 package io.viash.helpers
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
-class EscaperTest extends FunSuite with BeforeAndAfterAll {
+class EscaperTest extends AnyFunSuite with BeforeAndAfterAll {
   val s = "a \\ b $ c ` d \" e ' f \n g"
     
   test("escape with default parameters work") {

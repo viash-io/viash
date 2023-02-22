@@ -1,18 +1,19 @@
 name := "viash"
 
-version := "0.6.5"
+version := "0.6.7"
 
-scalaVersion := "2.12.15"
+scalaVersion := "2.13.10"
 
 libraryDependencies ++= Seq(
-  "org.scalactic" %% "scalactic" % "3.0.7" % "test",
-  "org.scalatest" %% "scalatest" % "3.0.7" % "test",
-  "org.rogach" %% "scallop" % "4.0.1",
+  "org.scalactic" %% "scalactic" % "3.2.15" % "test",
+  "org.scalatest" %% "scalatest" % "3.2.15" % "test",
+  "org.rogach" %% "scallop" % "4.1.0",
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2"
+  "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.1",
+  "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4"
 )
 
-val circeVersion = "0.12.0"
+val circeVersion = "0.14.1"
 
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-core",

@@ -31,3 +31,6 @@ out/*
 # nextflow related
 .nextflow*
 work
+
+# MacOS
+.DS_Store

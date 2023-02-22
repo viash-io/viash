@@ -80,13 +80,13 @@ object CollectedSchemas {
 
     val allMembers = baseClasses
       .zipWithIndex
-      .flatMap(x =>
-        x._1.info.members
+      .flatMap{ case (baseClass, index) =>
+        baseClass.info.members
           .filter(_.fullName.startsWith("io.viash"))
           .filter(m => memberNames.contains(m.shortName))
-          .filter(m => !m.info.toString.startsWith("=> ") || x._2 != 0) // Only regular members if base class, otherwise all members
-          .map(y => MemberInfo(y, (constructorMembers.contains(y.shortName)), x._1.fullName, x._2))
-      )
+          .filter(m => !m.info.getClass.toString.endsWith("NullaryMethodType") || index != 0) // Only regular members if base class, otherwise all members
+          .map(y => MemberInfo(y, (constructorMembers.contains(y.shortName)), baseClass.fullName, index))
+        }
       .groupBy(k => k.shortName)
     
     (allMembers, baseClasses)
@@ -94,36 +94,36 @@ object CollectedSchemas {
 
   val schemaClassMap = Map(
     "config" -> Map(
-      ""                       -> getMembers[Config],
+      ""                       -> getMembers[Config](),
     ),
     "functionality" -> Map(
-      ""                       -> getMembers[Functionality]
+      ""                       -> getMembers[Functionality]()
     ),
     "platforms" -> Map(
-      "nativePlatform"         -> getMembers[NativePlatform],
-      "dockerPlatform"         -> getMembers[DockerPlatform],
-      "nextflowVdsl3Platform"  -> getMembers[NextflowVdsl3Platform],
-      "nextflowLegacyPlatform" -> getMembers[NextflowLegacyPlatform],
+      "nativePlatform"         -> getMembers[NativePlatform](),
+      "dockerPlatform"         -> getMembers[DockerPlatform](),
+      "nextflowVdsl3Platform"  -> getMembers[NextflowVdsl3Platform](),
+      "nextflowLegacyPlatform" -> getMembers[NextflowLegacyPlatform](),
     ),
     "requirements" -> Map(
-      "apkRequirements"        -> getMembers[ApkRequirements],
-      "aptRequirements"        -> getMembers[AptRequirements],
-      "dockerRequirements"     -> getMembers[DockerRequirements],
-      "javascriptRequirements" -> getMembers[JavaScriptRequirements],
-      "pythonRequirements"     -> getMembers[PythonRequirements],
-      "rRequirements"          -> getMembers[RRequirements],
-      "rubyRequirements"       -> getMembers[RubyRequirements],
-      "yumRequirements"        -> getMembers[YumRequirements],
+      "apkRequirements"        -> getMembers[ApkRequirements](),
+      "aptRequirements"        -> getMembers[AptRequirements](),
+      "dockerRequirements"     -> getMembers[DockerRequirements](),
+      "javascriptRequirements" -> getMembers[JavaScriptRequirements](),
+      "pythonRequirements"     -> getMembers[PythonRequirements](),
+      "rRequirements"          -> getMembers[RRequirements](),
+      "rubyRequirements"       -> getMembers[RubyRequirements](),
+      "yumRequirements"        -> getMembers[YumRequirements](),
     ),
     "arguments" -> Map(
-      "boolean"                -> getMembers[BooleanArgument],
-      "boolean_true"           -> getMembers[BooleanTrueArgument],
-      "boolean_false"          -> getMembers[BooleanFalseArgument],
-      "double"                 -> getMembers[DoubleArgument],
-      "file"                   -> getMembers[FileArgument],
-      "integer"                -> getMembers[IntegerArgument],
-      "long"                   -> getMembers[LongArgument],
-      "string"                 -> getMembers[StringArgument],
+      "boolean"                -> getMembers[BooleanArgument](),
+      "boolean_true"           -> getMembers[BooleanTrueArgument](),
+      "boolean_false"          -> getMembers[BooleanFalseArgument](),
+      "double"                 -> getMembers[DoubleArgument](),
+      "file"                   -> getMembers[FileArgument](),
+      "integer"                -> getMembers[IntegerArgument](),
+      "long"                   -> getMembers[LongArgument](),
+      "string"                 -> getMembers[StringArgument](),
     )
   )
 
@@ -154,14 +154,15 @@ object CollectedSchemas {
   }
 
   // Main call for documentation output
-  def getJson: Json = {
-    val data = CollectedSchemas(
+  private lazy val data = CollectedSchemas(
       config = getSchema(schemaClassMap.get("config").get("")),
       functionality = getSchema(schemaClassMap.get("functionality").get("")),
       platforms = schemaClassMap.get("platforms").get.map{ case(k, v) => (k, getSchema(v))},
       requirements = schemaClassMap.get("requirements").get.map{ case(k, v) => (k, getSchema(v))},
       arguments = schemaClassMap.get("arguments").get.map{ case(k, v) => (k, getSchema(v))}
     )
+
+  def getJson: Json = {
     data.asJson
   }
 
@@ -182,6 +183,17 @@ object CollectedSchemas {
     case (key, v1) => v1.flatMap {
       case (key2, v2) => getNonAnnotated(v2._1, v2._2).map((key, key2, _))
     }
+  }
+
+  def getAllDeprecations = {
+    val arr =
+      data.config.map(c => ("config " + c.name, c.deprecated)) ++
+      data.functionality.map(f => ("functionality " + f.name, f.deprecated)) ++
+      data.platforms.flatMap{ case (key, v) => v.map(v2 => ("platforms " + key + " " + v2.name, v2.deprecated)) } ++ 
+      data.requirements.flatMap{ case (key, v) => v.map(v2 => ("requirements " + key + " " + v2.name, v2.deprecated)) } ++
+      data.arguments.flatMap{ case (key, v) => v.map(v2 => ("arguments " + key + " " + v2.name, v2.deprecated)) }
+    
+    arr.filter(t => t._2.isDefined).map(t => (t._1, t._2.get))
   }
 
 }

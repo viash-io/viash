@@ -105,12 +105,13 @@ object ParameterSchema {
 
 final case class DeprecatedOrRemovedSchema(
   message: String,
-  since: String,
+  deprecation: String,
+  removal: String,
 )
 
 object DeprecatedOrRemovedSchema {
   def apply(l: List[String]): DeprecatedOrRemovedSchema = {
-    DeprecatedOrRemovedSchema(l(0), l(1))
+    DeprecatedOrRemovedSchema(l(0), l(1), l(2))
   }
 }
 
@@ -125,6 +126,7 @@ object ExampleSchema {
     l match {
       case _ if l.length == 2 => ExampleSchema(l(0), l(1), None)
       case _ if l.length == 3 => ExampleSchema(l(0), l(1), Some(l(2)))
+      case _ => ???
     }
     
   }

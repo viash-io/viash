@@ -17,12 +17,12 @@
 
 package io.viash.helpers
 
-import java.io.{File, IOException}
+import java.io.{BufferedOutputStream, FileOutputStream, File, IOException}
 import java.nio.file.{FileVisitResult, Files, Path, Paths, SimpleFileVisitor}
 import java.nio.file.attribute.BasicFileAttributes
 import scala.reflect.io.Directory
 import java.net.URI
-import scala.io.Source
+import scala.io.{Codec, Source}
 import java.net.URL
 import sys.process._
 import java.nio.charset.StandardCharsets
@@ -30,7 +30,8 @@ import io.viash.functionality.resources.Resource
 
 import java.nio.file.attribute.PosixFilePermission
 import java.util.Comparator
-import scala.collection.JavaConverters
+import java.io.FileNotFoundException
+import scala.jdk.CollectionConverters._
 
 object IO {
   def tempDir: Path = {
@@ -44,7 +45,7 @@ object IO {
     temp
   }
 
-  def deleteRecursively(dir: Path) {
+  def deleteRecursively(dir: Path): Unit = {
     Files.walkFileTree(dir, new SimpleFileVisitor[Path] {
       override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
         Files.delete(file)
@@ -71,7 +72,7 @@ object IO {
         Source.fromURL(uri.toURL)
       }
     try {
-      txtSource.getLines.mkString("\n")
+      txtSource.getLines().mkString("\n")
     } finally {
       txtSource.close()
     }
@@ -125,8 +126,18 @@ object IO {
         Files.copy(from, path)
       }
     } else if (uri.getScheme == "http" || uri.getScheme == "https") {
-      val url = new URL(uri.toString)
-      (url #> path.toFile).!!
+      // Download the file in a safe-ish way that will throw exceptions
+      // when the file can't be downloaded (vs. using e.g. `#>`)
+      try {
+        val out = new BufferedOutputStream(new FileOutputStream(path.toFile))
+        val bytes = Source.fromURL(uri.toString)(Codec.ISO8859).map(_.toByte).toArray
+        out.write(bytes)
+        out.close()
+      }
+      catch {
+        case e: FileNotFoundException =>
+          throw new RuntimeException("Could not download file: " + uri.toString)
+      }
     } else {
       throw new RuntimeException("Unsupported scheme: " + uri.getScheme)
     }
@@ -166,7 +177,7 @@ object IO {
     resources: Seq[Resource],
     outputDir: Path,
     overwrite: Boolean = true
-  ) {
+  ): Unit = {
     // copy all files
     resources.foreach { resource =>
       // determine destination path
@@ -205,6 +216,6 @@ object IO {
    */
   def find(sourceDir: Path, filter: (Path, BasicFileAttributes) => Boolean): List[Path] = {
     val it = Files.find(sourceDir, Integer.MAX_VALUE, (p, b) => filter(p, b)).iterator()
-    JavaConverters.asScalaIterator(it).toList
+    it.asScala.toList
   }
 }

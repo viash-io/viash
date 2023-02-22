@@ -23,22 +23,23 @@ import cats.syntax.functor._ // for .widen
 
 package object platforms {
   import io.viash.helpers.circe._
+  import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
 
   implicit val encodeDockerPlatform: Encoder.AsObject[DockerPlatform] = deriveConfiguredEncoder
-  implicit val decodeDockerPlatform: Decoder[DockerPlatform] = deriveConfiguredDecoder
+  implicit val decodeDockerPlatform: Decoder[DockerPlatform] = deriveConfiguredDecoderWithDeprecationCheck
 
   implicit val encodeNextflowLegacyPlatform: Encoder.AsObject[NextflowLegacyPlatform] = deriveConfiguredEncoder
-  implicit val decodeNextflowLegacyPlatform: Decoder[NextflowLegacyPlatform] = deriveConfiguredDecoder
+  implicit val decodeNextflowLegacyPlatform: Decoder[NextflowLegacyPlatform] = deriveConfiguredDecoderWithDeprecationCheck
 
   implicit val encodeNextflowVdsl3Platform: Encoder.AsObject[NextflowVdsl3Platform] = deriveConfiguredEncoder
-  implicit val decodeNextflowVdsl3Platform: Decoder[NextflowVdsl3Platform] = deriveConfiguredDecoder
+  implicit val decodeNextflowVdsl3Platform: Decoder[NextflowVdsl3Platform] = deriveConfiguredDecoderWithDeprecationCheck
 
   implicit val encodeNativePlatform: Encoder.AsObject[NativePlatform] = deriveConfiguredEncoder
-  implicit val decodeNativePlatform: Decoder[NativePlatform] = deriveConfiguredDecoder
+  implicit val decodeNativePlatform: Decoder[NativePlatform] = deriveConfiguredDecoderWithDeprecationCheck
 
   implicit def encodePlatform[A <: Platform]: Encoder[A] = Encoder.instance {
     platform =>
-      val typeJson = Json.obj("type" → Json.fromString(platform.`type`))
+      val typeJson = Json.obj("type" -> Json.fromString(platform.`type`))
       val objJson = platform match {
         case s: DockerPlatform => encodeDockerPlatform(s)
         case s: NextflowLegacyPlatform => encodeNextflowLegacyPlatform(s)

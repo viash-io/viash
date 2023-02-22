@@ -610,7 +610,7 @@ def processFactory(Map processArgs) {
   def stub = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "output" }
     .collect { par -> 
-      "\${ args.containsKey(\"${par.plainName}\") ? \"touch \\\"\" + (args[\"${par.plainName}\"] instanceof String ? args[\"${par.plainName}\"].replace(\"_*\", \"_0\") : args[\"${par.plainName}\"].join('\" \"')) + \"\\\"\" : \"\" }"
+      "\${ args.containsKey(\"${par.plainName}\") ? \"touch2 \\\"\" + (args[\"${par.plainName}\"] instanceof String ? args[\"${par.plainName}\"].replace(\"_*\", \"_0\") : args[\"${par.plainName}\"].join('\" \"')) + \"\\\"\" : \"\" }"
     }
     .join("\n")
 
@@ -633,6 +633,7 @@ def processFactory(Map processArgs) {
   |  tuple val("\$id"), val(passthrough)$outputPaths, optional: true
   |stub:
   |\"\"\"
+  |touch2() { mkdir -p "\\\$(dirname "\\\$1")" && touch "\\\$1" ; }
   |$stub
   |\"\"\"
   |script:$assertStr
@@ -709,14 +710,17 @@ def workflowFactory(Map args) {
 
   def workflowKey = key
 
-  // write process to temporary nf file and parse it in memory
-  def processObj = processFactory(processArgs)
+  def processObj = null
   
   workflow workflowInstance {
     take:
     input_
 
     main:
+    if (processObj == null) {
+      processObj = processFactory(processArgs)
+    }
+
     mid1_ = input_
       | debug(processArgs, "input")
       | map { tuple ->
@@ -964,6 +968,7 @@ ScriptMeta.current().addDefinition(myWfInstance)
 // anonymous workflow for running this module as a standalone
 workflow {
   def mergedConfig = thisConfig
+  def mergedParams = [:] + params
 
   // add id argument if it's not already in the config
   if (mergedConfig.functionality.arguments.every{it.plainName != "id"}) {
@@ -972,16 +977,19 @@ workflow {
       'required': false,
       'type': 'string',
       'description': 'A unique id for every entry.',
-      'default': 'run',
       'multiple': false
     ]
     mergedConfig.functionality.arguments.add(0, idArg)
     mergedConfig = processConfig(mergedConfig)
   }
+  if (!mergedParams.containsKey("id")) {
+    mergedParams.id = "run"
+  }
 
   helpMessage(mergedConfig)
 
-  viashChannel(params, mergedConfig)
+  channelFromParams(mergedParams, mergedConfig)
+    | preprocessInputs("config": mergedConfig)
     | view { "input: $it" }
     | myWfInstance.run(
       auto: [ publish: true ]
