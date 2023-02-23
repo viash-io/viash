@@ -34,59 +34,7 @@ package object functionality {
   implicit val encodeFunctionality: Encoder.AsObject[Functionality] = deriveConfiguredEncoder
 
   // add file & direction defaults for inputs & outputs
-  implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoder[Functionality].prepare {
-    checkDeprecation[Functionality](_) // check for deprecations before altering the structure of the json
-    .withFocus(_.mapObject{ fun0 =>
-      
-      val fun1 = fun0.apply("inputs") match {
-        case Some(inputs) => 
-          val newInputs = inputs.mapArray(_.map{ js =>
-            js.withDefault("type", Json.fromString("file"))
-              .withDefault("direction", Json.fromString("input"))
-          })
-          fun0.add("inputs", newInputs)
-        case None => fun0
-      }
-
-      val fun2 = fun1.apply("outputs") match {
-        case Some(outputs) => 
-          val newOutputs = outputs.mapArray(_.map{ js =>
-            js.withDefault("type", Json.fromString("file"))
-              .withDefault("direction", Json.fromString("output"))
-          })
-          fun1.add("outputs", newOutputs)
-        case None => fun1
-      }
-
-      // provide backwards compability for tests -> test_resources
-      val fun3 = (fun2.contains("tests"), fun2.contains("test_resources")) match {
-        case (true, true) => 
-          Console.err.println("Error: functionality.tests is deprecated. Please use functionality.test_resources instead.")
-          Console.err.println("Backwards compability is provided but not in combination with functionality.test_resources.")
-          fun2
-        case (true, false) =>
-          fun2.add("test_resources", fun2.apply("tests").get).remove("tests")
-        case (_, _) => fun2
-      }
-
-      // provide backwards compability for enabled -> status
-      val fun4 = (fun3.contains("enabled"), fun3.contains("status")) match {
-        case (true, true) =>
-          Console.err.println("Error: functionality.enabled is deprecated. Please use functionality.status instead.")
-          Console.err.println("Backwards compability is provided but not in combination with functionality.status")
-          fun3
-        case (true, false) =>
-          fun3.apply("enabled").get.asBoolean match {
-            case Some(true) => fun3.add("status", Json.fromString("enabled")).remove("enabled")
-            case Some(false) => fun3.add("status", Json.fromString("disabled")).remove("enabled")
-            case None => fun3
-          }
-        case (_, _) => fun3
-      }
-
-      fun4
-    })
-  }
+  implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoderWithDeprecationCheck
 
   // encoder and decoder for Author
   implicit val encodeAuthor: Encoder.AsObject[Author] = deriveConfiguredEncoder

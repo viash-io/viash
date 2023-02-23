@@ -1,3 +1,22 @@
+# Viash 0.7.0 (yyyy-MM-dd): [TODO] A nice title
+
+## BREAKING CHANGES
+
+* `deprecated arguments`: These previously deprecated arguments are now removed:
+  - functionality.inputs: Use `arguments` instead.
+  - functionality.outputs: Use `arguments` instead.
+  - functionality.tests: Use `test_resources` instead. No functional difference.
+  - functionality.enabled: Use `status` instead.
+  - functionality.requirements.n_proc: Use `cpus` instead.
+  - platforms.DockerPlatform.privileged: Add a `privileged` flag in `run_args` instead.
+  - platforms.DockerPlatform.apk: Use `setup` instead.
+  - platforms.DockerPlatform.apt: Use `setup` instead.
+  - platforms.DockerPlatform.yum: Use `setup` instead.
+  - platforms.DockerPlatform.r: Use `setup` instead.
+  - platforms.DockerPlatform.python: Use `setup` instead.
+  - platforms.DockerPlatform.docker: Use `setup` instead.
+  - platforms.DockerPlatform.docker.setup.resources: Use `copy` instead.
+
 # Viash 0.6.8 (yyyy-MM-dd): [TODO] A nice title
 
 [TODO] A nice summary.
