@@ -22,13 +22,25 @@ import java.net.URI
 import io.viash.helpers.{IO, MissingResourceFileException}
 import java.nio.file.{Path, Paths}
 import java.nio.file.NoSuchFileException
+import io.viash.schemas._
 
 trait Resource {
+  @description("Specifies the type of the resource. The first resource cannot be of type `file`. When the type is not specified, the default type is simply `file`.")
   val `type`: String
+
+  @description("Filename, the resulting name of the resource.")
   val dest: Option[String]
+
+  @description("The folder from where to get the resource.")
   val parent: Option[URI]
+
+  @description("The path of the input file. Can be a relative or an absolute path, or a URI.")
   val path: Option[String]
+
+  @description("The raw content of the input file. Exactly one of path or text must be defined, the other undefined.")
   val text: Option[String]
+
+  @description("Whether the resulting file is made executable.")
   val is_executable: Option[Boolean]
 
   require(
