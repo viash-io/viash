@@ -291,43 +291,27 @@ case class Functionality(
   // END OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
 
   // Combine inputs, outputs and arguments into one combined list
-  def allArguments = inputs ::: outputs ::: arguments ::: argument_groups.flatMap(_.argumentArguments)
-
-  // check argument groups
-  {
-    val allArgumentNames = allArguments.map(_.plainName)
-    for (group <- argument_groups; argument <- group.stringArguments) {
-      require(allArgumentNames.contains(argument), s"group '${group.name}' has unknown argument '$argument'")
-    }
-    argument_groups.flatMap(_.stringArguments).groupBy(identity).foreach { case (arg, args) => 
-      require(args.length == 1, s"argument '${arg}' can be in at most one argument group")
-    }
-  }
+  def allArguments = arguments ::: argument_groups.flatMap(arg => arg.arguments)
 
   private def addToArgGroup(argumentGroups: List[ArgumentGroup], name: String, arguments: List[Argument[_]]): Option[ArgumentGroup] = {
-    val argNamesInGroups = argumentGroups.flatMap(_.stringArguments).toSet
-
-    // Check if 'arguments' is in 'argumentGroups'. 
-    val argumentsNotInGroup = arguments.filter(arg => !argNamesInGroups.contains(arg.plainName))
-
     // Check whether an argument group of 'name' exists.
     val existing = argumentGroups.find(gr => name == gr.name)
 
     // if there are no arguments missing from the argument group, just return the existing group (if any)
-    if (argumentsNotInGroup.isEmpty) {
+    if (arguments.isEmpty) {
       existing
 
     // if there are missing arguments and there is an existing group, add the missing arguments to it
     } else if (existing.isDefined) {
       Some(existing.get.copy(
-        arguments = existing.get.arguments.toList ::: argumentsNotInGroup.map(arg => Right(arg))
+        arguments = existing.get.arguments.toList ::: arguments
       ))
     
     // else create a new group
     } else {
       Some(ArgumentGroup(
         name = name,
-        arguments = argumentsNotInGroup.map(arg => Right(arg))
+        arguments = arguments
       ))
     }
   }

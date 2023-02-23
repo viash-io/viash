@@ -16,6 +16,8 @@
   - platforms.DockerPlatform.python: Use `setup` instead.
   - platforms.DockerPlatform.docker: Use `setup` instead.
   - platforms.DockerPlatform.docker.setup.resources: Use `copy` instead.
+  - platforms.NextflowLegacy
+  - functionality.ArgumentGroups only support full arguments now. The option to list the arguments defined under `arguments` was removed.
 
 # Viash 0.6.8 (yyyy-MM-dd): [TODO] A nice title
 
