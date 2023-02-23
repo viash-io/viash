@@ -19,6 +19,9 @@
 
 * `WorkflowHelper`: `paramsToList`, `paramsToChannel` and `viashChannel` are now deprecated and will be removed in a future release.
 
+* `viash (ns) build`: Change the default value of the namespace separator in a Docker platform from `_` to `/`. 
+  Add `".platforms[.type == 'docker'].namespace_separator := '_'"` to the project config `_viash.yaml` to revert to the previous behaviour.
+
 ## MAJOR CHANGES
 
 * `VDSL3`: now uses the newly implemented `channelFromParams` and `preprocessInputs` instead of `viashChannel`.
