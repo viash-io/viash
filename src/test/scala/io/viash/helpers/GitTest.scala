@@ -165,7 +165,7 @@ class GitTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(Git.getTag(tempDir) == Some("0.1.1"), "Git.getTag")
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     tempPaths.foreach(tempDir => IO.deleteRecursively(tempDir))
   }
 }
