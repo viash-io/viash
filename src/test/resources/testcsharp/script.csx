@@ -70,8 +70,10 @@ try
         if (p.PropertyType.IsArray)
         {
             object[] array = (object[])p.GetValue(par);
-
-            Output(p.Name + ": |" + string.Join(", ", array) + "|");
+            if (array.Length == 0)
+                Output(p.Name + ": |empty array|");
+            else
+                Output(p.Name + ": |" + string.Join(", ", array) + "|");
         }
         else
         {

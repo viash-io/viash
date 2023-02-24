@@ -67,7 +67,12 @@ case class PythonScript(
         case _: StringArgument => s"""$env_name"""
       }
 
-      s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo None; fi )"""
+      val notFound = par match {
+        case a if a.multiple => "[]"
+        case _ => "None"
+      }
+
+      s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo $notFound; fi )"""
     }
 
     s"""$dest = {
