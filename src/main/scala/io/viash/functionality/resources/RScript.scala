@@ -67,8 +67,23 @@ case class RScript(
           case _: StringArgument => ("", "")
         }
         val sl = "\\VIASH_SLASH\\" // used instead of "\\", as otherwise the slash gets escaped automatically.
+
+        val class_ = par match {
+          case _: BooleanArgumentBase => "logical"
+          case _: IntegerArgument => "integer"
+          case _: LongArgument => "bit64::integer64"
+          case _: DoubleArgument => "numeric"
+          case _: FileArgument => "character"
+          case _: StringArgument => "character"
+        }
+
+        val notFound = par match {
+          case a if a.multiple =>
+            s"\"$class_(0)\""
+          case _ => "NULL"
+        }
         
-        s""""${par.plainName}" = $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo -n "$lhs'"; echo -n "$$${par.VIASH_PAR}" | sed "s#['$sl$sl]#$sl$sl$sl$sl&#g"; echo "'$rhs"; else echo NULL; fi )"""
+        s""""${par.plainName}" = $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo -n "$lhs'"; echo -n "$$${par.VIASH_PAR}" | sed "s#['$sl$sl]#$sl$sl$sl$sl&#g"; echo "'$rhs"; else echo $notFound; fi )"""
       }
 
       s"""$dest <- list(

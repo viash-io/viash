@@ -40,8 +40,11 @@ def echo(s):
 
 try:
     for key, value in par.items():
-        if type(value) == list:
-            echo(f"{key}: |{','.join(value)}|")
+        if isinstance(value, list):
+            if not value:
+                echo(f"{key}: |empty array|")
+            else:
+                echo(f"{key}: |{','.join(value)}|")
         else:
             echo(f"{key}: |{value}|")
 

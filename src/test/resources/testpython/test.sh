@@ -14,6 +14,7 @@ $meta_executable "NOTICE" --real_number 10.5 --whole_number=10 -s "a string with
   --long_number 112589990684262400
 
 [[ ! -f output.txt ]] && echo "Output file could not be found!" && exit 1
+cat output.txt
 grep -q 'input: |NOTICE|' output.txt
 grep -q 'real_number: |10.5|' output.txt
 grep -q 'whole_number: |10|' output.txt
@@ -50,6 +51,7 @@ $meta_executable \
   > output2.txt
 
 [[ ! -f output2.txt ]] && echo "Output file could not be found!" && exit 1
+cat output2.txt
 grep -q 'input: |resource2.txt|' output2.txt
 grep -q 'real_number: |123.456|' output2.txt
 grep -q 'whole_number: |789|' output2.txt
@@ -60,8 +62,8 @@ grep -q 'output: |None|' output2.txt
 grep -q 'log: |None|' output2.txt
 grep -q 'optional: |None|' output2.txt
 grep -q 'optional_with_default: |The default value.|' output2.txt
-grep -q 'multiple: |None|' output2.txt
-grep -q 'multiple_pos: |None|' output2.txt
+grep -q 'multiple: |empty array|' output2.txt
+grep -q 'multiple_pos: |empty array|' output2.txt
 grep -q 'meta_resources_dir: |..*|' output2.txt
 grep -q 'meta_functionality_name: |testpython|' output2.txt
 grep -q 'meta_cpus: |666|' output2.txt

@@ -19,6 +19,11 @@
 
 * `WorkflowHelper`: `paramsToList`, `paramsToChannel` and `viashChannel` are now deprecated and will be removed in a future release.
 
+* `viash (ns) build`: Change the default value of the namespace separator in a Docker platform from `_` to `/`. 
+  Add `".platforms[.type == 'docker'].namespace_separator := '_'"` to the project config `_viash.yaml` to revert to the previous behaviour.
+
+* `bash wrapper`: In python, javascript and R scripts, parameters with multiple set to `true` but without given values now have an empty array as default instead of respectively `None`, `undefined` and `NULL`.
+
 ## MAJOR CHANGES
 
 * `VDSL3`: now uses the newly implemented `channelFromParams` and `preprocessInputs` instead of `viashChannel`.
@@ -60,6 +65,8 @@
 * `viash xxx url`: Fix passing a url to viash as the config file to process. Add a short testbench to test principle functionality.
 
 * `Testbenches`: Simplify `testr` container.
+
+* `Main`: Improve error reporting to the user in some cases where files or folders can't be found. Depending on the thrown exception, more or less context was given.
 
 * `VDSL3`: Create parent directory of output files before starting the script.
 
