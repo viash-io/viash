@@ -120,10 +120,6 @@ case class DockerPlatform(
   @example("setup_strategy: alwaysbuild", "yaml")
   setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,
 
-  @description("Adds a `privileged` flag to the docker run.")
-  @deprecated("Add a `privileged` flag in `run_args` instead, e.g. `{type: docker, run_args: \"--privileged\"}`.", "0.6.3", "0.7.0")
-  privileged: Option[Boolean] = None,
-
   @description("Add [docker run](https://docs.docker.com/engine/reference/run/) arguments.")
   run_args: OneOrMore[String] = Nil,
 
@@ -149,6 +145,15 @@ case class DockerPlatform(
       |""".stripMargin)
   setup: List[Requirements] = Nil,
 
+  @description("Additional requirements specific for running unit tests.")
+  @since("Viash 0.5.13")
+  test_setup: List[Requirements] = Nil
+) extends Platform {
+  // START OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
+  @description("Adds a `privileged` flag to the docker run.")
+  @removed("Add a `privileged` flag in `run_args` instead, e.g. `{type: docker, run_args: \"--privileged\"}`.", "0.6.3", "0.7.0")
+  private val privileged: Option[Boolean] = None
+
   @description("Specify which apk packages should be available in order to run the component.")
   @example(
     """setup:
@@ -156,8 +161,8 @@ case class DockerPlatform(
       |    packages: [ sl ]
       |""".stripMargin,
       "yaml")
-  @deprecated("Use `setup` instead, e.g. `{type: docker, setup: [{ type: apk, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
-  apk: Option[ApkRequirements] = None,
+  @removed("Use `setup` instead, e.g. `{type: docker, setup: [{ type: apk, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
+  private val apk: Option[ApkRequirements] = None
 
   @description("Specify which apt packages should be available in order to run the component.")
   @example(
@@ -166,8 +171,8 @@ case class DockerPlatform(
       |    packages: [ sl ]
       |""".stripMargin,
       "yaml")
-  @deprecated("Use `setup` instead, e.g. `{type: docker, setup: [{ type: apt, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
-  apt: Option[AptRequirements] = None,
+  @removed("Use `setup` instead, e.g. `{type: docker, setup: [{ type: apt, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
+  private val apt: Option[AptRequirements] = None
 
   @description("Specify which yum packages should be available in order to run the component.")
   @example(
@@ -176,8 +181,8 @@ case class DockerPlatform(
       |    packages: [ sl ]
       |""".stripMargin,
       "yaml")
-  @deprecated("Use `setup` instead, e.g. `{type: docker, setup: [{ type: yum, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
-  yum: Option[YumRequirements] = None,
+  @removed("Use `setup` instead, e.g. `{type: docker, setup: [{ type: yum, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
+  private val yum: Option[YumRequirements] = None
 
   @description("Specify which R packages should be available in order to run the component.")
   @example(
@@ -193,8 +198,8 @@ case class DockerPlatform(
       |    script: [ 'devtools::install(".")' ]
       |""".stripMargin,
       "yaml")
-  @deprecated("Use `setup` instead, e.g. `{type: docker, setup: [{ type: r, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
-  r: Option[RRequirements] = None,
+  @removed("Use `setup` instead, e.g. `{type: docker, setup: [{ type: r, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
+  private val r: Option[RRequirements] = None
 
   @description("Specify which Python packages should be available in order to run the component.")
   @example(
@@ -210,8 +215,8 @@ case class DockerPlatform(
       |    url: [ http://... ]
       |""".stripMargin,
       "yaml")
-  @deprecated("Use `setup` instead, e.g. `{type: docker, setup: [{ type: python, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
-  python: Option[PythonRequirements] = None,
+  @removed("Use `setup` instead, e.g. `{type: docker, setup: [{ type: python, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
+  private val python: Option[PythonRequirements] = None
 
   @description("Specify which Docker commands should be run during setup.")
   @example(
@@ -225,33 +230,22 @@ case class DockerPlatform(
       |      - resource.txt /path/to/resource.txt
       |""".stripMargin,
       "yaml")
-  @deprecated("Use `setup` instead, e.g. `{type: docker, setup: [{ type: docker, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
-  docker: Option[DockerRequirements] = None,
-
-  @description("Additional requirements specific for running unit tests.")
-  @since("Viash 0.5.13")
-  test_setup: List[Requirements] = Nil
-) extends Platform {
+  @removed("Use `setup` instead, e.g. `{type: docker, setup: [{ type: docker, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
+  private val docker: Option[DockerRequirements] = None
+  
+  // END OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
 
   @internalFunctionality
   override val hasSetup = true
 
   override val requirements: List[Requirements] = {
-    val x =
-      setup :::
-        apk.toList :::
-        apt.toList :::
-        yum.toList :::
-        r.toList :::
-        python.toList :::
-        docker.toList
     // workaround for making sure that every docker platform creates a new container
-    if (x.isEmpty) {
+    if (setup.isEmpty) {
       List(DockerRequirements(
         run = List(":")
       ))
     } else {
-      x
+      setup
     }
   }
 
@@ -261,8 +255,7 @@ case class DockerPlatform(
     // collect docker args
     val dockerArgs = "-i --rm" +
       port.map(" -p " + _).mkString +
-      run_args.map(" " + _).mkString +
-      { if (privileged.getOrElse(false)) " --privileged" else "" }
+      run_args.map(" " + _).mkString
 
     // create setup
     val (effectiveID, setupMods) = processDockerSetup(functionality, config.info, testing)
