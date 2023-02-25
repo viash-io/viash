@@ -108,15 +108,15 @@ def readYaml(file) {
 
 // based on how Functionality.scala is implemented
 def processArgument(arg) {
-  arg.multiple = arg.multiple ?: false
-  arg.required = arg.required ?: false
-  arg.direction = arg.direction ?: "input"
-  arg.multiple_sep = arg.multiple_sep ?: ":"
+  arg.multiple = arg.multiple != null ? arg.multiple : false
+  arg.required = arg.required != null ? arg.required : false
+  arg.direction = arg.direction != null ? arg.direction : "input"
+  arg.multiple_sep = arg.multiple_sep != null ? arg.multiple_sep : ":"
   arg.plainName = arg.name.replaceAll("^-*", "")
 
   if (arg.type == "file") {
-    arg.must_exist = arg.must_exist ?: true
-    arg.create_parent = arg.create_parent ?: true
+    arg.must_exist = arg.must_exist != null ? arg.must_exist : true
+    arg.create_parent = arg.create_parent != null ? arg.create_parent : true
   }
 
   if (arg.type == "file" && arg.direction == "output") {
@@ -130,7 +130,8 @@ def processArgument(arg) {
     if (extSearch instanceof List) {
       extSearch = extSearch[0]
     }
-    def ext = extSearch.find("\\.[^\\.]+\$") ?: ""
+    def extSearchResult = extSearch.find("\\.[^\\.]+\$")
+    def ext = extSearchResult != null ? extSearchResult : ""
     arg.default = "\$id.\$key.${arg.plainName}${mult}${ext}"
   }
 
@@ -192,27 +193,27 @@ def processConfig(config) {
 
   // set defaults for inputs
   config.functionality.inputs = 
-    (config.functionality.inputs ?: []).collect{arg ->
-      arg.type = arg.type ?: "file"
+    (config.functionality.inputs != null ? config.functionality.inputs : []).collect{arg ->
+      arg.type = arg.type != null ? arg.type : "file"
       arg.direction = "input"
       processArgument(arg)
     }
   // set defaults for outputs
   config.functionality.outputs = 
-    (config.functionality.outputs ?: []).collect{arg ->
-      arg.type = arg.type ?: "file"
+    (config.functionality.outputs != null ? config.functionality.outputs : []).collect{arg ->
+      arg.type = arg.type != null ? arg.type : "file"
       arg.direction = "output"
       processArgument(arg)
     }
   // set defaults for arguments
   config.functionality.arguments = 
-    (config.functionality.arguments ?: []).collect{arg ->
+    (config.functionality.arguments != null ? config.functionality.arguments : []).collect{arg ->
       processArgument(arg)
     }
   // set defaults for argument_group arguments
   config.functionality.argument_groups =
-    (config.functionality.argument_groups ?: []).collect{grp ->
-      grp.arguments = (grp.arguments ?: []).collect{arg ->
+    (config.functionality.argument_groups != null ? config.functionality.argument_groups : []).collect{grp ->
+      grp.arguments = (grp.arguments != null ? grp.arguments : []).collect{arg ->
         arg instanceof String ? arg.replaceAll("^-*", "") : processArgument(arg)
       }
       grp
@@ -239,7 +240,7 @@ def processConfig(config) {
 }
 
 def readConfig(file) {
-  def config = readYaml(file ?: "$projectDir/config.vsh.yaml")
+  def config = readYaml(file != null ? file : "$projectDir/config.vsh.yaml")
   processConfig(config)
 }
 
@@ -360,7 +361,7 @@ def generateArgumentHelp(param) {
   def dflt = null
   if (param.default != null) {
     if (param.default instanceof List) {
-      dflt = param.default.join(param.multiple_sep ?: ", ")
+      dflt = param.default.join(param.multiple_sep != null ? param.multiple_sep : ", ")
     } else {
       dflt = param.default.toString()
     }
@@ -368,7 +369,7 @@ def generateArgumentHelp(param) {
   def example = null
   if (param.example != null) {
     if (param.example instanceof List) {
-      example = param.example.join(param.multiple_sep ?: ", ")
+      example = param.example.join(param.multiple_sep != null ? param.multiple_sep : ", ")
     } else {
       example = param.example.toString()
     }
@@ -567,7 +568,7 @@ def paramsToList(params, config) {
         parData = parData.flatten()
 
         // cast types
-        if (par.type == "file" && ((par.direction ?: "input") == "input")) {
+        if (par.type == "file" && ((par.direction != null ? par.direction : "input") == "input")) {
           parData = parData.collect{path ->
             if (path !instanceof String) {
               path
@@ -792,7 +793,7 @@ private Map<String, Object> _castParamTypes(Map<String, Object> parValues, Map c
     if (parValue !instanceof Collection) {
       parValue = [parValue]
     }
-    if (parType == "file" && ((paramSettings.direction ?: "input") == "input")) {
+    if (parType == "file" && ((paramSettings.direction != null ? paramSettings.direction : "input") == "input")) {
       parValue = parValue.collect{ path ->
         if (path !instanceof String) {
           path
@@ -1038,7 +1039,7 @@ private List<Tuple> _preprocessInputsList(List<Tuple> params, Map config) {
  * and apply a Viash config to them.
  */
 def preprocessInputs(Map args) {
-  wfKey = args.key ?: "preprocessInputs"
+  wfKey = args.key != null ? args.key : "preprocessInputs"
   config = args.config
   workflow preprocessInputsInstance {
     take: 

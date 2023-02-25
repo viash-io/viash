@@ -54,17 +54,9 @@
 
 * `Main`: Capture build, setup and push errors and output an exit code.
 
-* `Testbenches`: Add testbenches to verify switching of viash versions.
-
 * `File downloading`: Add check to preemptively catch file errors (e.g. 404).
 
 * `Scala`: Updated to Scala 2.13 and updated several dependencies.
-
-* `Testbenches`: Prepare ConfigDeriver by copying base resources to the targetFolder. Use cases so far showed that it's always required and it simplifies the usage.
-
-* `Testbenches`: Remove some old & unmaintained IntelliJ Idea `editor-fold` tags. Given that the testbenches were split up, these were broken but also no longer needed.
-
-* `Testbenches`: Add 2 testbenches for computational requirements when running `viash run` or `viash test`.
 
 * `Main`: Improve `match` completeness in some edge cases and throw exceptions where needed.
 
@@ -73,6 +65,13 @@
   This both improves the changelog itself but can then also be used to postprocess the CHANGELOG programmatically.
 
 * `VDSL3`: Add a default value for `id` when running a VDSL3 module as a standalone pipeline.
+
+* `TestBenches`:
+  - Verify switching of Viash versions
+  - Prepare ConfigDeriver by copying base resources to the targetFolder. Use cases so far showed that it's always required and it simplifies the usage.
+  - Remove some old & unmaintained IntelliJ Idea `editor-fold` tags. Given that the testbenches were split up, these were broken but also no longer needed.
+  - Add 2 testbenches for computational requirements when running `viash run` or `viash test`.
+  - Added tests for different values for the `--id` and `--param_list` parameters of VDSL3 modules.
 
 ## BUG FIXES
 
@@ -85,6 +84,8 @@
 * `Testbenches`: Simplify `testr` container.
 
 * `Main`: Improve error reporting to the user in some cases where files or folders can't be found. Depending on the thrown exception, more or less context was given.
+
+* `VDSL3`: Create parent directory of output files before starting the script.
 
 # Viash 0.6.7 (2022-12-14): A minor release with several QoL improvements
 

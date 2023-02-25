@@ -443,7 +443,7 @@ def processProcessArgs(Map args) {
   processArgs["auto"] = processAuto(thisDefaultProcessArgs.auto + processArgs["auto"])
 
   // auto define publish, if so desired
-  if (processArgs.auto.publish == true && (processArgs.directives.publishDir ?: [:]).isEmpty()) {
+  if (processArgs.auto.publish == true && (processArgs.directives.publishDir != null ? processArgs.directives.publishDir : [:]).isEmpty()) {
     // can't assert at this level thanks to the no_publish profile
     // assert params.containsKey("publishDir") || params.containsKey("publish_dir") : 
     //   "Error in module '${processArgs['key']}': if auto.publish is true, params.publish_dir needs to be defined.\n" +
@@ -481,7 +481,7 @@ def processProcessArgs(Map args) {
         saveAs: "{ it.startsWith('.') ? it.replaceAll('^.', '') : null }", 
         mode: "copy"
       ]
-      def publishDirs = processArgs.directives.publishDir ?: []
+      def publishDirs = processArgs.directives.publishDir != null ? processArgs.directives.publishDir : null ? processArgs.directives.publishDir : []
       processArgs.directives.publishDir = publishDirs + transcriptsPublishDir
     }
   }
@@ -584,6 +584,14 @@ def processFactory(Map processArgs) {
     outputPaths = outputPaths + ', path{[".exitcode"]}'
   }
 
+  // create dirs for output files (based on BashWrapper.createParentFiles)
+  def createParentStr = thisConfig.functionality.allArguments
+    .findAll { it.type == "file" && it.direction == "output" && it.create_parent }
+    .collect { par -> 
+      "\${ args.containsKey(\"${par.plainName}\") ? \"mkdir_parent \\\"\" + (args[\"${par.plainName}\"] instanceof String ? args[\"${par.plainName}\"] : args[\"${par.plainName}\"].join('\" \"')) + \"\\\"\" : \"\" }"
+    }
+    .join("\n")
+
   // construct inputFileExports
   def inputFileExports = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
@@ -662,6 +670,14 @@ def processFactory(Map processArgs) {
   |# meta synonyms
   |export VIASH_TEMP="\\\$VIASH_META_TEMP_DIR"
   |export TEMP_DIR="\\\$VIASH_META_TEMP_DIR"
+  |
+  |# create output dirs if need be
+  |function mkdir_parent {
+  |  for file in "\\\$@"; do 
+  |    mkdir -p "\\\$(dirname "\\\$file")"
+  |  done
+  |}
+  |$createParentStr
   |
   |# argument exports${inputFileExports.join()}
   |\$parInject
