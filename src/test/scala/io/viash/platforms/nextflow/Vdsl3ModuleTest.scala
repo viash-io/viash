@@ -1,20 +1,23 @@
 package io.viash.platforms.nextflow
 
-import io.viash.helpers.IO
-import io.viash.{DockerTest, NextFlowTest, TestHelper}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
-import scala.io.Source
-
 import java.io.IOException
 import java.io.UncheckedIOException
+
+import scala.io.Source
+
+import io.viash.helpers.IO
+import io.viash.{DockerTest, NextFlowTest, TestHelper}
+import io.viash.NextflowTestHelper
 
 class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
   // temporary folder to work in
   private val temporaryFolder = IO.makeTemp("viash_tester_nextflowvdsl3")
+  private val tempFolFile = temporaryFolder.toFile
   private val tempFolStr = temporaryFolder.toString
 
   // path to namespace components
@@ -100,39 +103,6 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
     expectedValues.foreach(_.assert(id, idDebugPrints.get._2))
   }
 
-  // Wrapper function to make logging of processes easier, provide default command to run nextflow from . directory
-  // TODO: consider reading nextflow dot files and provide extra info of which workflow step fails and how
-  def runNextflowProcess(
-    mainScript: String,
-    args: List[String],
-    entry: Option[String] = None,
-    paramsFile: Option[String] = None,
-    cwd: File = new File(tempFolStr), 
-    extraEnv: Seq[(String, String)] = Nil,
-    quiet: Boolean = false
-  ): (Int, String, String) = {
-
-    import sys.process._
-
-    val stdOut = new StringBuilder
-    val stdErr = new StringBuilder
-
-    val command = 
-      "nextflow" :: 
-        { if (quiet) List("-q") else Nil } ::: 
-        "run" :: "." ::
-        "-main-script" :: mainScript ::
-        { if (entry.isDefined) List("-entry", entry.get) else Nil } :::
-        { if (paramsFile.isDefined) List("-params-file", paramsFile.get) else Nil } :::
-        args
-
-    val extraEnv_ = extraEnv :+ ( "NXF_VER" -> "22.04.5")
-
-    val exitCode = Process(command, cwd, extraEnv_ : _*).!(ProcessLogger(str => stdOut ++= s"$str\n", str => stdErr ++= s"$str\n"))
-
-    (exitCode, stdOut.toString, stdErr.toString)
-  }
-
   // convert testbash
 
   // copy resources to temporary folder so we can build in a clean environment
@@ -151,13 +121,14 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
   
   test("Run pipeline", DockerTest, NextFlowTest) {
 
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "workflows/pipeline1/main.nf",
       entry = Some("base"),
       args = List(
         "--input", "resources/*",
         "--publish_dir", "output",
-      )
+      ),
+      cwd = tempFolFile
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -166,13 +137,14 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Run pipeline with components using map functionality", DockerTest, NextFlowTest) {
 
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "workflows/pipeline1/main.nf",
       entry = Some("map_variant"),
       args = List(
         "--input", "resources/*",
         "--publish_dir", "output",
-      )
+      ),
+      cwd = tempFolFile
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -181,13 +153,14 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Run pipeline with components using mapData functionality", DockerTest, NextFlowTest) {
 
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "workflows/pipeline1/main.nf",
       entry = Some("mapData_variant"),
       args = List(
         "--input", "resources/*",
         "--publish_dir", "output",
-      )
+      ),
+      cwd = tempFolFile
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -196,14 +169,15 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Run pipeline with debug = false", DockerTest, NextFlowTest) {
 
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "workflows/pipeline1/main.nf",
       entry = Some("debug_variant"),
       args = List(
         "--input", "resources/*",
         "--publish_dir", "output",
         "--displayDebug", "false",
-      )
+      ),
+      cwd = tempFolFile
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -216,14 +190,15 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Run pipeline with debug = true", DockerTest, NextFlowTest) {
 
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "workflows/pipeline1/main.nf",
       entry = Some("debug_variant"),
       args = List(
         "--input", "resources/*",
         "--publish_dir", "output",
         "--displayDebug", "true",
-      )
+      ),
+      cwd = tempFolFile
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -236,11 +211,12 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
     // will always prefix argument names with -- (so --foo, not -f or foo).
 
     // run WorkflowHelper's --help
-    val (exitCode, stdOut1, stdErr1) = runNextflowProcess(
+    val (exitCode, stdOut1, stdErr1) = NextflowTestHelper.run(
       mainScript = "workflows/pipeline3/main.nf",
       entry = Some("base"),
       args = List("--help"),
-      quiet = true
+      quiet = true,
+      cwd = tempFolFile
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut1\nStd error:\n$stdErr1")

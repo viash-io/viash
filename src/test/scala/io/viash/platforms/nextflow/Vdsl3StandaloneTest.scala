@@ -1,20 +1,22 @@
 package io.viash.platforms.nextflow
 
-import io.viash.helpers.IO
-import io.viash.{DockerTest, NextFlowTest, TestHelper}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
+import java.io.IOException
+import java.io.UncheckedIOException
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
 import scala.io.Source
 
-import java.io.IOException
-import java.io.UncheckedIOException
+import io.viash.helpers.IO
+import io.viash.{DockerTest, NextFlowTest, TestHelper}
+import io.viash.NextflowTestHelper
 
 class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
   // temporary folder to work in
   private val temporaryFolder = IO.makeTemp("viash_tester_nextflowvdsl3")
+  private val tempFolFile = temporaryFolder.toFile
   private val tempFolStr = temporaryFolder.toString
 
   // path to namespace components
@@ -24,38 +26,6 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
   private val resourcesPath = Paths.get(tempFolStr, "resources").toFile.toString
   private val workflowsPath = Paths.get(tempFolStr, "workflows").toFile.toString
 
-  // Wrapper function to make logging of processes easier, provide default command to run nextflow from . directory
-  // TODO: consider reading nextflow dot files and provide extra info of which workflow step fails and how
-  def runNextflowProcess(
-    mainScript: String,
-    args: List[String],
-    entry: Option[String] = None,
-    paramsFile: Option[String] = None,
-    cwd: File = new File(tempFolStr), 
-    extraEnv: Seq[(String, String)] = Nil,
-    quiet: Boolean = false
-  ): (Int, String, String) = {
-
-    import sys.process._
-
-    val stdOut = new StringBuilder
-    val stdErr = new StringBuilder
-
-    val command = 
-      "nextflow" :: 
-        { if (quiet) List("-q") else Nil } ::: 
-        "run" :: "." ::
-        "-main-script" :: mainScript ::
-        { if (entry.isDefined) List("-entry", entry.get) else Nil } :::
-        { if (paramsFile.isDefined) List("-params-file", paramsFile.get) else Nil } :::
-        args
-
-    val extraEnv_ = extraEnv :+ ( "NXF_VER" -> "22.04.5")
-
-    val exitCode = Process(command, cwd, extraEnv_ : _*).!(ProcessLogger(str => stdOut ++= s"$str\n", str => stdErr ++= s"$str\n"))
-
-    (exitCode, stdOut.toString, stdErr.toString)
-  }
 
   // convert testbash
 
@@ -74,13 +44,14 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Run module as standalone", NextFlowTest) {
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "target/nextflow/step2/main.nf",
       args = List(
         "--input1", "resources/lines3.txt",
         "--input2", "resources/lines5.txt",
         "--publish_dir", "moduleOutput1"
-      )
+      ),
+      cwd = tempFolFile
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -96,12 +67,13 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Run module as standalone, yamlblob", NextFlowTest) {
     val fooArgs = "{input1: resources/lines3.txt, input2: resources/lines5.txt}"
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "target/nextflow/step2/main.nf",
       args = List(
         "--param_list", s"[$fooArgs]",
         "--publish_dir", "moduleOutput2"
-      )
+      ),
+      cwd = tempFolFile
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -119,14 +91,15 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
 
     Files.copy(Paths.get(resourcesPath, "lines5.txt"), Paths.get(resourcesPath, "lines5-bis.txt"))
 
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "target/nextflow/step2/main.nf",
       args = List(
         "--input1", "resources/lines3.txt",
         "--input2", "resources/lines5.txt",
         "--optional", "resources/lines5-bis.txt",
         "--publish_dir", "moduleOutput3"
-      )
+      ),
+      cwd = tempFolFile
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
