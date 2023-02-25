@@ -1,8 +1,26 @@
-# Viash 0.6.8 (yyyy-MM-dd): [TODO] A nice title
+# Viash 0.7.0 (yyyy-MM-dd): [TODO] A nice title
 
 [TODO] A nice summary.
 
 ## BREAKING CHANGES
+
+* Viash config: Previously deprecated fields are now removed.
+  - `functionality.inputs`: Use `arguments` or `argument_groups` instead.
+  - `functionality.outputs`: Use `arguments` or `argument_groups` instead.
+  - `functionality.tests`: Use `test_resources` instead. No functional difference.
+  - `functionality.enabled`: Use `status: enabled` instead.
+  - `functionality.requirements.n_proc`: Use `cpus` instead.
+  - `platforms.DockerPlatform.privileged`: Add a `--privileged` flag in `run_args` instead.
+  - `platforms.DockerPlatform.apk`: Use `setup: [{ type: apk, packages: ... }]` instead.
+  - `platforms.DockerPlatform.apt`: Use `setup: [{ type: apt, packages: ... }]` instead.
+  - `platforms.DockerPlatform.yum`: Use `setup: [{ type: yum, packages: ... }]` instead.
+  - `platforms.DockerPlatform.r`: Use `setup: [{ type: r, packages: ... }]` instead.
+  - `platforms.DockerPlatform.python`: Use `setup: [{ type: python, packages: ... }]` instead.
+  - `platforms.DockerPlatform.docker`: Use `setup: [{ type: docker, run: ... }]` instead.
+  - `platforms.DockerPlatform.docker.setup.resources`: Use `setup: [{ type: docker, copy: ... }]` instead.
+  - `platforms.NextflowLegacy`: Use the Nextflow VDSL3 platform instead.
+  - `functionality.ArgumentGroups`: No longer supports strings referring to arguments in the `arguments:` section.
+    Instead directly put the arguments inside the argument groups.
 
 * `viash_install`: The bootstrap script has been reworked in line with the project config introduced in 0.6.4:
 

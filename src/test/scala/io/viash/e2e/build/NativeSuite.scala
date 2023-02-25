@@ -208,8 +208,8 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
   }
 
-  test("Test whether defining strings as arguments in argument groups throws a deprecation warning") {
-    val testText = TestHelper.testMain(
+  test("Test whether defining strings as arguments in argument groups throws a removed error") {
+    val testOutput = TestHelper.testMainException2[Exception](
       "build",
       "-o", tempFolStr,
       configDeprecatedArgumentGroups
@@ -223,8 +223,8 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
     assert(out.exitValue == 0)
 
-    val testRegex = "Warning: specifying strings in the .argument field of argument group 'First group' is deprecated.".r
-    assert(testRegex.findFirstIn(testText).isDefined, testText)
+    val testRegex = "Error: specifying strings in the .argument field of argument group 'First group' was removed.".r
+    assert(testRegex.findFirstIn(testOutput.error).isDefined, testOutput.error)
   }
 
   override def afterAll(): Unit = {

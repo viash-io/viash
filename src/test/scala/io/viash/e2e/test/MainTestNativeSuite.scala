@@ -149,20 +149,13 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
         """.functionality.tests := .functionality.test_resources""",
         """del(.functionality.test_resources)"""
       ) , "legacy")
-    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+    val testOutput = TestHelper.testMainException2[Exception](
       "test",
       "-p", "native",
       newConfigFilePath
     )
 
-    assert(exitCode == 0)
-    assert(stderr.contains("Warning: .functionality.tests is deprecated: Use `test_resources` instead. No functional difference. Deprecated since 0.5.13, planned removal 0.7.0."))
-
-    assert(stdout.contains("Running tests in temporary directory: "))
-    assert(stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(stdout.contains("Cleaning up temporary directory"))
-
-    checkTempDirAndRemove(stdout, false)
+    assert(testOutput.error.contains("Error: .functionality.tests was removed: Use `test_resources` instead. No functional difference. Initially deprecated 0.5.13, removed 0.7.0."))
   }
 
   test("Check config file without 'functionality' specified") {

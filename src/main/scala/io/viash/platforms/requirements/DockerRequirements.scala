@@ -30,11 +30,6 @@ import io.viash.schemas._
     #      echo 'Foo' > /path/to/file.txt""".stripMargin('#'),
     "yaml")
 case class DockerRequirements(
-  @description("Specifies which `COPY` entries to add to the Dockerfile while building it.")
-  @example("resources: [ \"resource.txt /path/to/resource.txt\" ]", "yaml")
-  @deprecated("`resources` in `setup: {type: docker, resources: ...}` will be removed. Please use `copy` instead.", "0.6.3", "0.7.0")
-  resources: OneOrMore[String] = Nil,
-
   @description("Specifies which `LABEL` entries to add to the Dockerfile while building it.")
   @example("label: [ component=\"foo\" ]", "yaml")
   label: OneOrMore[String] = Nil,
@@ -63,6 +58,13 @@ case class DockerRequirements(
 
   `type`: String = "docker"
 ) extends Requirements {
+// START OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
+  @description("Specifies which `COPY` entries to add to the Dockerfile while building it.")
+  @example("resources: [ \"resource.txt /path/to/resource.txt\" ]", "yaml")
+  @removed("`resources` in `setup: {type: docker, resources: ...}` was removed. Please use `copy` instead.", "0.6.3", "0.7.0")
+  private val resources: OneOrMore[String] = Nil
+  // END OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
+
   def installCommands: List[String] = Nil
 
   override def dockerCommands: Option[String] = {

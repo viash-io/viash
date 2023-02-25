@@ -25,8 +25,6 @@ case class ComputationalRequirements(
   @description("The maximum number of (logical) cpus a component is allowed to use.")
   @example("cpus: 10", "yaml")
   cpus: Option[Int] = None,
-  @deprecated("Use `cpus` instead.", "0.6.1", "0.7.0")
-  n_proc: Option[Int] = None,
   @description("The maximum amount of memory a component is allowed to allocate. Unit must be one of B, KB, MB, GB, TB or PB.")
   @example("memory: 10GB", "yaml")
   memory: Option[String] = None,
@@ -34,7 +32,11 @@ case class ComputationalRequirements(
   @example("commands: [ which, bash, awk, date, grep, egrep, ps, sed, tail, tee ]", "yaml")
   commands: List[String] = Nil
 ) {
-  assert(n_proc.isEmpty, message = "Argument 'n_proc' is deprecated, use 'cpus' instead.")
+  // START OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
+  @removed("Use `cpus` instead.", "0.6.1", "0.7.0")
+  private val n_proc: Option[Int] = None
+  // END OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
+
   def memoryAsBytes: Option[BigInt] = {
     val Regex = "^([0-9]+) *([kmgtp]b?|b)$".r
     val lookup = Map(
