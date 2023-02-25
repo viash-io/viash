@@ -12,6 +12,7 @@ import scala.io.Source
 import io.viash.helpers.IO
 import io.viash.{DockerTest, NextFlowTest, TestHelper}
 import io.viash.NextflowTestHelper
+import java.nio.charset.StandardCharsets
 
 class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
   // temporary folder to work in
@@ -43,7 +44,7 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
     )
   }
 
-  test("Run module as standalone", NextFlowTest) {
+  test("Simple run", NextFlowTest) {
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "target/nextflow/step2/main.nf",
       args = List(
@@ -65,12 +66,35 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
-  test("Run module as standalone, yamlblob", NextFlowTest) {
-    val fooArgs = "{input1: resources/lines3.txt, input2: resources/lines5.txt}"
+  test("With id containing spaces and slashes", NextFlowTest) {
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "target/nextflow/step2/main.nf",
       args = List(
-        "--param_list", s"[$fooArgs]",
+        "--id", "one two three/four five six/seven eight nine",
+        "--input1", "resources/lines3.txt",
+        "--input2", "resources/lines5.txt",
+        "--publish_dir", "moduleOutput2"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val src = Source.fromFile(tempFolStr+"/moduleOutput2/one two three/four five six/seven eight nine.step2.output1.txt")
+    try {
+      val moduleOut = src.getLines().mkString(",")
+      assert(moduleOut.equals("one,two,three"))
+    } finally {
+      src.close()
+    }
+  }
+
+  test("With yamlblob param_list", NextFlowTest) {
+    val paramListStr = "[{input1: resources/lines3.txt, input2: resources/lines5.txt}]"
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/step2/main.nf",
+      args = List(
+        "--param_list", paramListStr,
         "--publish_dir", "moduleOutput2"
       ),
       cwd = tempFolFile
@@ -87,7 +111,34 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
-  test("Run module as standalone, test optional input", NextFlowTest) {
+  test("With yaml param_list", NextFlowTest) {
+    val paramListPath = temporaryFolder.resolve("resources/param_list.yaml")
+    val paramListStr = "- input1: lines3.txt\n  input2: lines5.txt"
+
+    // create param list yaml file
+    Files.write(paramListPath, paramListStr.getBytes(StandardCharsets.UTF_8))
+    
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/step2/main.nf",
+      args = List(
+        "--param_list", paramListPath.toString(),
+        "--publish_dir", "moduleOutput2"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val src = Source.fromFile(tempFolStr+"/moduleOutput2/run.step2.output1.txt")
+    try {
+      val moduleOut = src.getLines().mkString(",")
+      assert(moduleOut.equals("one,two,three"))
+    } finally {
+      src.close()
+    }
+  }
+
+  test("With optional inputs", NextFlowTest) {
 
     Files.copy(Paths.get(resourcesPath, "lines5.txt"), Paths.get(resourcesPath, "lines5-bis.txt"))
 
