@@ -674,7 +674,7 @@ def processFactory(Map processArgs) {
   |# create output dirs if need be
   |function mkdir_parent {
   |  for file in "\\\$@"; do 
-  |    mkdir -p "\\\$(dirname \\\$file)"
+  |    mkdir -p "\\\$(dirname "\\\$file")"
   |  done
   |}
   |$createParentStr
