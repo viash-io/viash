@@ -1,6 +1,19 @@
-# Viash 0.7.0 (yyyy-MM-dd): [TODO] A nice title
+# Viash 0.7.0 (2022-02-26): Major code cleanup and minor improvements to VDSL3
 
-[TODO] A nice summary.
+* Default namespace separator has been changed from `_` to `/`. This means 
+  Docker images will be named `<Registry>/<Organization>/<Namespace>/<Name>`
+  by default. For example, `ghcr.io/openpipelines-bio/mapping/cellranger_count`
+  instead of `ghcr.io/openpipelines-bio/mapping_cellranger_count`.
+
+* Removed deprecated code of unused functionality to simplify code.
+  - Shorthand notation for specitying input/output arguments
+  - Shorthand notation for specifying Docker requirements
+  - Legacy Nextflow platform
+
+* Improvements in VDSL3 and the Nextflow Workflow Helper to make behaviour
+  more predictable and fixing some bugs in the meantime.
+
+* Improvements to test benches and several bug fixes.
 
 ## BREAKING CHANGES
 
@@ -40,7 +53,7 @@
 * `viash (ns) build`: Change the default value of the namespace separator in a Docker platform from `_` to `/`. 
   Add `".platforms[.type == 'docker'].namespace_separator := '_'"` to the project config `_viash.yaml` to revert to the previous behaviour.
 
-* `bash wrapper`: In python, javascript and R scripts, parameters with multiple set to `true` but without given values now have an empty array as default instead of respectively `None`, `undefined` and `NULL`.
+* `BashWrapper`: In Python, JavaScript and R scripts, parameters with multiple set to `true` but without given values now have an empty array as default instead of respectively `None`, `undefined` and `NULL`.
 
 ## MAJOR CHANGES
 
@@ -54,7 +67,7 @@
 
 * `Main`: Capture build, setup and push errors and output an exit code.
 
-* `File downloading`: Add check to preemptively catch file errors (e.g. 404).
+* `File downloading`: Add check to pre-emptively catch file errors (e.g. 404).
 
 * `Scala`: Updated to Scala 2.13 and updated several dependencies.
 
@@ -73,9 +86,11 @@
   - Add 2 testbenches for computational requirements when running `viash run` or `viash test`.
   - Added tests for different values for the `--id` and `--param_list` parameters of VDSL3 modules.
 
+* `viash test`: Use `test` as a random tag during testing, instead of `test` plus a random string.
+
 ## BUG FIXES
 
-* `WorkflowHelper`: fixed where passing a relative path as `-param_list` would cause incorrect resolving of input files.
+* `WorkflowHelper`: fixed where passing a relative path as `--param_list` would cause incorrect resolving of input files.
 
 * `Testbenches`: Fix GitTest testbench to correctly increment temporary folder naming and dispose them after the test finishes.
 
@@ -109,7 +124,7 @@ Another minor release which contains several quality of life improvements for th
 * `NextflowPlatform`: Automatically split Viash config strings into strings of 
   length 65000 since the JVM has a limit (65536) on the length of string constants (#323).
 
-# Viash 0.6.6 (2022-12-06): A small bugfix releaes
+# Viash 0.6.6 (2022-12-06): A small bugfix release
 
 This release fixes an issue where stderr was being redirected to stdout.
 
