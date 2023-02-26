@@ -39,6 +39,23 @@ object ViashTest {
   case class TestOutput(name: String, exitValue: Int, output: String, logFile: String, duration: Long)
   case class ManyTestOutput(setup: Option[TestOutput], tests: List[TestOutput])
 
+  /**
+    * Run a component's unit tests
+    *
+    * @param config A Viash config
+    * @param platform Which platform to use
+    * @param keepFiles Whether to keep temporary files after completion or remove them. 
+    *   `Some(true)` means all files will be kept. `Some(false)` means they will be removed. 
+    *   `None` means they will be kept if any of the unit tests errored, otherwise removed.
+    * @param quiet Whether to output additional information during testing.
+    * @param setupStrategy Which Docker setup strategy to use during the executable build (if applicable).
+    * @param tempVersion Whether to use a random tag for the temporary Docker image.
+    * @param verbosityLevel The verbosity level of the unit test.
+    * @param parentTempPath A parent temporary directory.
+    * @param cpus How many logical CPUs to use during testing.
+    * @param memory How much memory to use during testing.
+    * @return A ManyTestOutput containing the results of the unit tests.
+    */
   def apply(
     config: Config,
     platform: Platform,
