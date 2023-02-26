@@ -73,6 +73,8 @@
   - Add 2 testbenches for computational requirements when running `viash run` or `viash test`.
   - Added tests for different values for the `--id` and `--param_list` parameters of VDSL3 modules.
 
+* `viash test`: Use `test` as a random tag during testing, instead of `test` plus a random string.
+
 ## BUG FIXES
 
 * `WorkflowHelper`: fixed where passing a relative path as `-param_list` would cause incorrect resolving of input files.
