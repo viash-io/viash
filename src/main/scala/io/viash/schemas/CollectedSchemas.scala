@@ -30,6 +30,7 @@ import io.circe.Json
 import monocle.function.Cons
 import io.viash.config.Config
 import io.viash.config.Info
+import io.viash.functionality.resources._
 
 final case class CollectedSchemas (
   config: List[ParameterSchema],
@@ -37,6 +38,7 @@ final case class CollectedSchemas (
   platforms: Map[String, List[ParameterSchema]],
   requirements: Map[String, List[ParameterSchema]],
   arguments: Map[String, List[ParameterSchema]],
+  resources: Map[String, List[ParameterSchema]]
 )
 
 
@@ -124,6 +126,17 @@ object CollectedSchemas {
       "integer"                -> getMembers[IntegerArgument](),
       "long"                   -> getMembers[LongArgument](),
       "string"                 -> getMembers[StringArgument](),
+    ),
+    "resources" -> Map(
+      "bashScript"             -> getMembers[BashScript](),
+      "cSharpScript"           -> getMembers[CSharpScript](),
+      "executable"             -> getMembers[Executable](),
+      "javaScriptScript"       -> getMembers[JavaScriptScript](),
+      "nextflowScript"         -> getMembers[NextflowScript](),
+      "plainFile"              -> getMembers[PlainFile](),
+      "pythonScript"           -> getMembers[PythonScript](),
+      "rScript"                -> getMembers[RScript](),
+      "scalaScript"            -> getMembers[ScalaScript](),
     )
   )
 
@@ -159,7 +172,8 @@ object CollectedSchemas {
       functionality = getSchema(schemaClassMap.get("functionality").get("")),
       platforms = schemaClassMap.get("platforms").get.map{ case(k, v) => (k, getSchema(v))},
       requirements = schemaClassMap.get("requirements").get.map{ case(k, v) => (k, getSchema(v))},
-      arguments = schemaClassMap.get("arguments").get.map{ case(k, v) => (k, getSchema(v))}
+      arguments = schemaClassMap.get("arguments").get.map{ case(k, v) => (k, getSchema(v))},
+      resources = schemaClassMap.get("resources").get.map{ case(k, v) => (k, getSchema(v))},
     )
 
   def getJson: Json = {

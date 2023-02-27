@@ -20,16 +20,22 @@ package io.viash.functionality.resources
 import io.viash.functionality._
 import io.viash.functionality.arguments._
 import io.viash.wrapper.BashWrapper
+import io.viash.schemas._
 
 import java.net.URI
 import io.viash.helpers.Bash
 
+@description("""An executable C# script.
+               |When defined in functionality.resources, only the first entry will be executed when running the built component or when running `viash run`.
+               |When defined in functionality.test_resources, all entries will be executed during `viash test`.""".stripMargin)
 case class CSharpScript(
   path: Option[String] = None,
   text: Option[String] = None,
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
+
+  @undocumented
   entrypoint: Option[String] = None,
   `type`: String = CSharpScript.`type`
 ) extends Script {
