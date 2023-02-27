@@ -33,20 +33,22 @@ import scala.collection.parallel.CollectionConverters._
 
 object ViashNamespace {
 
-  case class MaybeParList[T](
-    list: List[T],
-    parallel: Boolean
-  ) {
-    def map[B](f: T => B): List[B] = 
+  implicit class MaybeParList[T](list: List[T]) {
+    def pmap[B](f: T => B)(implicit parallel: Boolean): List[B] = 
       if (parallel)
         list.par.map(f).toList
       else
         list.map(f)
-    def foreach[U](f: T => U): Unit = 
+    def pforeach[U](f: T => U)(implicit parallel: Boolean): Unit = 
       if (parallel)
         list.par.foreach(f)
       else
         list.foreach(f)
+    def pfilter(f: T => Boolean)(implicit parallel: Boolean): List[T] = 
+      if (parallel)
+        list.par.filter(f).toList
+      else
+        list.filter(f)
   }
 
   def build(
@@ -57,9 +59,9 @@ object ViashNamespace {
     parallel: Boolean = false,
     flatten: Boolean = false
   ): List[Either[(Config, Option[Platform]), Status]] = {
-    val configs2 = MaybeParList(configs, parallel)
+    implicit val parallel2 = parallel
 
-    val results = configs2.map { config =>
+    val results = configs.pmap { config =>
       config match {
         case Right(_) => config
         case Left((conf, None)) => throw new RuntimeException("This should not occur.")
@@ -99,13 +101,13 @@ object ViashNamespace {
     cpus: Option[Int],
     memory: Option[String]
   ): List[Either[(Config, ManyTestOutput), Status]] = {
+    implicit val parallel2 = parallel
     val configs1 = configs.filter{tup => tup match {
       // remove nextflow because unit testing nextflow modules
       // is not yet supported
       case Left((_, Some(pl))) => pl.`type` != "nextflow"
       case _ => true
     }}
-    val configs2 = MaybeParList(configs1, parallel)
 
     // run all the component tests
     val tsvPath = tsv.map(Paths.get(_))
@@ -151,7 +153,7 @@ object ViashNamespace {
         Console.RESET
       )
 
-      val results = configs2.map { x =>
+      val results = configs1.pmap { x =>
         x match {
           case Right(status) => Right(status)
           case Left((conf, None)) => throw new RuntimeException("This should not occur")
@@ -287,6 +289,7 @@ object ViashNamespace {
     dryrun: Boolean, 
     parallel: Boolean
   ): Unit = {
+    implicit val parallel2 = parallel
     val configData = configs.flatMap(_.left.toOption).map{
       case (conf, plat) => 
         NsExecData(conf.info.get.config, conf, plat)
@@ -321,8 +324,7 @@ object ViashNamespace {
         configData
     }
 
-    for (data <- MaybeParList(collectedData, parallel)) {
-      // remove trailing + or ; mode character
+    collectedData.pforeach{ data =>
       val commandNoMode = command.replaceFirst(""" \\?[;+]$""", "")
       val replacedCommand = 
         fields.foldRight(commandNoMode){ (field, command) => 
