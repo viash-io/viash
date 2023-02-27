@@ -34,17 +34,17 @@ import scala.collection.parallel.CollectionConverters._
 object ViashNamespace {
 
   implicit class MaybeParList[T](list: List[T]) {
-    def pmap[B](f: T => B)(implicit parallel: Boolean): List[B] = 
+    def pmap[B](parallel: Boolean)(f: T => B): List[B] = 
       if (parallel)
         list.par.map(f).toList
       else
         list.map(f)
-    def pforeach[U](f: T => U)(implicit parallel: Boolean): Unit = 
+    def pforeach[U](parallel: Boolean)(f: T => U): Unit = 
       if (parallel)
         list.par.foreach(f)
       else
         list.foreach(f)
-    def pfilter(f: T => Boolean)(implicit parallel: Boolean): List[T] = 
+    def pfilter(parallel: Boolean)(f: T => Boolean): List[T] = 
       if (parallel)
         list.par.filter(f).toList
       else
@@ -59,9 +59,7 @@ object ViashNamespace {
     parallel: Boolean = false,
     flatten: Boolean = false
   ): List[Either[(Config, Option[Platform]), Status]] = {
-    implicit val parallel2 = parallel
-
-    val results = configs.pmap { config =>
+    val results = configs.pmap(parallel) { config =>
       config match {
         case Right(_) => config
         case Left((conf, None)) => throw new RuntimeException("This should not occur.")
@@ -101,7 +99,6 @@ object ViashNamespace {
     cpus: Option[Int],
     memory: Option[String]
   ): List[Either[(Config, ManyTestOutput), Status]] = {
-    implicit val parallel2 = parallel
     val configs1 = configs.filter{tup => tup match {
       // remove nextflow because unit testing nextflow modules
       // is not yet supported
@@ -153,7 +150,7 @@ object ViashNamespace {
         Console.RESET
       )
 
-      val results = configs1.pmap { x =>
+      val results = configs1.pmap(parallel: Boolean) { x =>
         x match {
           case Right(status) => Right(status)
           case Left((conf, None)) => throw new RuntimeException("This should not occur")
@@ -289,7 +286,6 @@ object ViashNamespace {
     dryrun: Boolean, 
     parallel: Boolean
   ): Unit = {
-    implicit val parallel2 = parallel
     val configData = configs.flatMap(_.left.toOption).map{
       case (conf, plat) => 
         NsExecData(conf.info.get.config, conf, plat)
@@ -324,7 +320,7 @@ object ViashNamespace {
         configData
     }
 
-    collectedData.pforeach{ data =>
+    collectedData.pforeach(parallel: Boolean) { data =>
       val commandNoMode = command.replaceFirst(""" \\?[;+]$""", "")
       val replacedCommand = 
         fields.foldRight(commandNoMode){ (field, command) => 
