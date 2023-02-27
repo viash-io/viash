@@ -62,7 +62,7 @@ object ViashTest {
     keepFiles: Option[Boolean] = None,
     quiet: Boolean = false,
     setupStrategy: String = "cachedbuild",
-    tempVersion: Boolean = true,
+    tempVersion: Option[String] = Some("test"),
     verbosityLevel: Int = 6,
     parentTempPath: Option[Path] = None, 
     cpus: Option[Int], 
@@ -73,15 +73,16 @@ object ViashTest {
     if (!quiet) println(s"Running tests in temporary directory: '$dir'")
 
     // set version to temporary value
-    val config2 = if (tempVersion) {
-      config.copy(
-        functionality = config.functionality.copy(
-          version = Some("test_" + Random.alphanumeric.take(6).mkString)
+    val config2 = 
+      if (tempVersion.isDefined) {
+        config.copy(
+          functionality = config.functionality.copy(
+            version = tempVersion
+          )
         )
-      )
-    } else {
-      config
-    }
+      } else {
+        config
+      }
 
     // run tests
     val ManyTestOutput(setupRes, results) = ViashTest.runTests(
