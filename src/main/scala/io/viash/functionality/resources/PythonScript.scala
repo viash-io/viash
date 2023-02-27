@@ -23,13 +23,19 @@ import io.viash.wrapper.BashWrapper
 
 import java.net.URI
 import _root_.io.viash.helpers.Bash
+import io.viash.schemas._
 
+@description("""An executable Python script.
+               |When defined in functionality.resources, only the first entry will be executed when running the built component or when running `viash run`.
+               |When defined in functionality.test_resources, all entries will be executed during `viash test`.""".stripMargin)
 case class PythonScript(
   path: Option[String] = None,
   text: Option[String] = None,
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
+
+  @undocumented
   entrypoint: Option[String] = None,
   `type`: String = PythonScript.`type`
 ) extends Script {

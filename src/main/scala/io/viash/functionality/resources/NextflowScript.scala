@@ -18,17 +18,21 @@
 package io.viash.functionality.resources
 
 import io.viash.functionality._
+import io.viash.schemas._
 
 import java.net.URI
 import io.viash.functionality.arguments.Argument
 
+@description("""A Nextflow script. Work in progress; added mainly for annotation at the moment.""".stripMargin)
 case class NextflowScript(
   path: Option[String] = None,
   text: Option[String] = None,
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
-   entrypoint: Option[String] = None,
+
+  @description("The name of the workflow to be executed.")
+  entrypoint: Option[String] = None,
   `type`: String = NextflowScript.`type`
 ) extends Script {
   
