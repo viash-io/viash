@@ -1,12 +1,12 @@
-# Viash 0.7.1 (XXXX-XX-XX): <todo: add description>
+# Viash 0.7.1 (2023-XX-XX): TODO add description
 
-<todo: add summary>
+TODO: add summary>
 
-## Minor changes
+## MINOR CHANGES
 
 * `DataflowHelper`: Add assertions and `def`s.
 
-# Viash 0.7.0 (2022-02-28): Major code cleanup and minor improvements to VDSL3
+# Viash 0.7.0 (2023-02-28): Major code cleanup and minor improvements to VDSL3
 
 * Default namespace separator has been changed from `_` to `/`. This means 
   Docker images will be named `<Registry>/<Organization>/<Namespace>/<Name>`
