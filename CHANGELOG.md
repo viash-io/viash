@@ -1,4 +1,4 @@
-# Viash 0.7.0 (2022-02-26): Major code cleanup and minor improvements to VDSL3
+# Viash 0.7.0 (2022-02-28): Major code cleanup and minor improvements to VDSL3
 
 * Default namespace separator has been changed from `_` to `/`. This means 
   Docker images will be named `<Registry>/<Organization>/<Namespace>/<Name>`
@@ -13,7 +13,7 @@
 * Improvements in VDSL3 and the Nextflow Workflow Helper to make behaviour
   more predictable and fixing some bugs in the meantime. Run the following
   to get access to the updated helpers:
-  
+
   ```bash
   WF_DIR="src/wf_utils"
   [[ -d $WF_DIR ]] || mkdir -p $WF_DIR
