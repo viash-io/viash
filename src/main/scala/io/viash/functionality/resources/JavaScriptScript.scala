@@ -73,10 +73,7 @@ case class JavaScriptScript(
         case _: StringArgument => s"""$env_name"""
       }
 
-      val notFound = par match {
-        case a if a.multiple => "[]"
-        case _ => "undefined"
-      }
+      val notFound = "undefined"
 
       s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo $notFound; fi )"""
     }

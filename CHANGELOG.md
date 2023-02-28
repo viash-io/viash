@@ -53,8 +53,6 @@
 * `viash (ns) build`: Change the default value of the namespace separator in a Docker platform from `_` to `/`. 
   Add `".platforms[.type == 'docker'].namespace_separator := '_'"` to the project config `_viash.yaml` to revert to the previous behaviour.
 
-* `BashWrapper`: In Python, JavaScript and R scripts, parameters with multiple set to `true` but without given values now have an empty array as default instead of respectively `None`, `undefined` and `NULL`.
-
 ## MAJOR CHANGES
 
 * `VDSL3`: now uses the newly implemented `channelFromParams` and `preprocessInputs` instead of `viashChannel`.
