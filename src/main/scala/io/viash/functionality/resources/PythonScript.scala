@@ -23,14 +23,22 @@ import io.viash.wrapper.BashWrapper
 
 import java.net.URI
 import _root_.io.viash.helpers.Bash
+import io.viash.schemas._
 
+@description("""An executable Python script.
+               |When defined in functionality.resources, only the first entry will be executed when running the built component or when running `viash run`.
+               |When defined in functionality.test_resources, all entries will be executed during `viash test`.""".stripMargin)
 case class PythonScript(
   path: Option[String] = None,
   text: Option[String] = None,
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
+
+  @undocumented
   entrypoint: Option[String] = None,
+
+  @description("Specifies the resource as a Python script.")
   `type`: String = PythonScript.`type`
 ) extends Script {
   assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")
@@ -67,7 +75,9 @@ case class PythonScript(
         case _: StringArgument => s"""$env_name"""
       }
 
-      s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo None; fi )"""
+      val notFound = "None"
+
+      s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo $notFound; fi )"""
     }
 
     s"""$dest = {

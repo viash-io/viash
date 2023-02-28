@@ -29,27 +29,36 @@ import io.circe.ACursor
 
 object DeriveConfiguredDecoderWithDeprecationCheck {
 
-  private def memberDeprecationCheck(name: String, history: List[CursorOp], T: Type) {
+  private def memberDeprecationCheck(name: String, history: List[CursorOp], T: Type): Unit = {
     val m = T.member(TermName(name))
     val schema = ParameterSchema(name, "", List.empty, m.annotations)
     val deprecated = schema.flatMap(_.deprecated)
+    val removed = schema.flatMap(_.removed)
     if (deprecated.isDefined) {
       val d = deprecated.get
       val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
-
       Console.err.println(s"Warning: .$historyString.$name is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+    }
+    if (removed.isDefined) {
+      val r = removed.get
+      val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
+      Console.err.println(s"Error: .$historyString.$name was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
     }
   }
 
-  private def selfDeprecationCheck(T: Type) {
+  private def selfDeprecationCheck(T: Type): Unit = {
     val baseClass = T.baseClasses.head
     val name = baseClass.fullName.split('.').last
     val schema = ParameterSchema("", "", List.empty, baseClass.annotations)
     val deprecated = schema.flatMap(_.deprecated)
+    val removed = schema.flatMap(_.removed)
     if (deprecated.isDefined) {
       val d = deprecated.get
-
       Console.err.println(s"Warning: $name is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+    }
+    if (removed.isDefined) {
+      val r = removed.get
+      Console.err.println(s"Error: $name was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}")
     }
   }
 

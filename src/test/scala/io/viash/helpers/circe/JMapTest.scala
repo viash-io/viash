@@ -1,10 +1,11 @@
 package io.viash.helpers.circe
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import io.circe._
 import io.circe.yaml.{parser => YamlParser}
 
-class JMapTest extends FunSuite with BeforeAndAfterAll {
+class JMapTest extends AnyFunSuite with BeforeAndAfterAll {
   test("checking whether JMap works") {
     val out = JMap(
       "foo" -> JMap(

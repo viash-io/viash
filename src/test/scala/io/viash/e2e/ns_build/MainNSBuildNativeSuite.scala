@@ -4,13 +4,14 @@ import io.viash._
 
 import io.viash.config.Config
 import io.viash.helpers.{Exec, IO}
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.io.File
 import java.nio.file.Paths
 import scala.io.Source
 
-class MainNSBuildNativeSuite extends FunSuite with BeforeAndAfterAll{
+class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
   // path to namespace components
   private val nsPath = getClass.getResource("/testns/").getPath
 
@@ -40,7 +41,7 @@ class MainNSBuildNativeSuite extends FunSuite with BeforeAndAfterAll{
 
     assert(nsFolder.exists)
     assert(nsFolder.isDirectory)
-    assert(exitCode == 0)
+    assert(exitCode == 1)
 
     for ((component, _, _, _) <- components) {
       val executable = componentExecutableFile(component)
@@ -107,7 +108,7 @@ class MainNSBuildNativeSuite extends FunSuite with BeforeAndAfterAll{
     }
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

@@ -5,12 +5,13 @@ import io.viash._
 import java.nio.file.{Files, Paths, StandardCopyOption}
 
 import io.viash.helpers.{IO, Exec}
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.reflect.io.Directory
 import sys.process._
 
-class MainTestNativeSuite extends FunSuite with BeforeAndAfterAll {
+class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   // default yaml
   private val configFile = getClass.getResource("/testbash/config.vsh.yaml").getPath
 
@@ -63,10 +64,7 @@ class MainTestNativeSuite extends FunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, false)
   }
 
-  test("Prepare tests with derived configs, copy resources to temporary folder") {
-    val rootPath = getClass.getResource(s"/testbash/").getPath
-    TestHelper.copyFolder(rootPath, tempFolStr)
-    
+  test("Verify base config derivation") {
     val newConfigFilePath = configDeriver.derive(Nil, "default_config")
 
     val testText = TestHelper.testMain(
@@ -151,20 +149,13 @@ class MainTestNativeSuite extends FunSuite with BeforeAndAfterAll {
         """.functionality.tests := .functionality.test_resources""",
         """del(.functionality.test_resources)"""
       ) , "legacy")
-    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+    val testOutput = TestHelper.testMainException2[Exception](
       "test",
       "-p", "native",
       newConfigFilePath
     )
 
-    assert(exitCode == 0)
-    assert(stderr.contains("Warning: .functionality.tests is deprecated: Use `test_resources` instead. No functional difference. Deprecated since 0.5.13, planned removal 0.7.0."))
-
-    assert(stdout.contains("Running tests in temporary directory: "))
-    assert(stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(stdout.contains("Cleaning up temporary directory"))
-
-    checkTempDirAndRemove(stdout, false)
+    assert(testOutput.error.contains("Error: .functionality.tests was removed: Use `test_resources` instead. No functional difference. Initially deprecated 0.5.13, removed 0.7.0."))
   }
 
   test("Check config file without 'functionality' specified") {
@@ -308,7 +299,7 @@ class MainTestNativeSuite extends FunSuite with BeforeAndAfterAll {
    * @param expectDirectoryExists expect the directory to be present or not
    * @return
    */
-  def checkTempDirAndRemove(testText: String, expectDirectoryExists: Boolean) {
+  def checkTempDirAndRemove(testText: String, expectDirectoryExists: Boolean): Unit = {
     // Get temporary directory
     val FolderRegex = ".*Running tests in temporary directory: '([^']*)'.*".r
 
@@ -334,7 +325,7 @@ class MainTestNativeSuite extends FunSuite with BeforeAndAfterAll {
     assert(!tempFolder.exists)
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

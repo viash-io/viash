@@ -3,13 +3,14 @@ package io.viash.e2e.ns_test
 import io.viash._
 
 import io.viash.helpers.IO
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, OpenOption, Paths}
 import scala.io.Source
 
-class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
+class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   // path to namespace components
   private val nsPath = getClass.getResource("/testns/").getPath
 
@@ -192,7 +193,7 @@ class MainNSTestNativeSuite extends FunSuite with BeforeAndAfterAll {
     }
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

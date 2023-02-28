@@ -2,7 +2,8 @@ package io.viash.e2e.build
 
 import io.viash._
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import io.viash.helpers.{IO, Exec}
 
@@ -10,7 +11,7 @@ import io.viash.config.Config
 
 import scala.io.Source
 
-class DockerMoreSuite extends FunSuite with BeforeAndAfterAll {
+class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
   // which platform to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 
@@ -29,9 +30,6 @@ class DockerMoreSuite extends FunSuite with BeforeAndAfterAll {
 
 
   test("Prepare base config derivation and verify", DockerTest) {
-    val rootPath = getClass.getResource(s"/testbash/").getPath
-    TestHelper.copyFolder(rootPath, temporaryConfigFolder.toString)
-
     val newConfigFilePath = configDeriver.derive(
       Nil,
       "commands_default"
@@ -130,7 +128,7 @@ class DockerMoreSuite extends FunSuite with BeforeAndAfterAll {
   }
 
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
     IO.deleteRecursively(temporaryConfigFolder)
   }

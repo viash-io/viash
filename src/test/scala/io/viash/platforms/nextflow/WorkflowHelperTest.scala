@@ -1,8 +1,9 @@
-package io.viash.platforms
+package io.viash.platforms.nextflow
 
 import io.viash.helpers.IO
 import io.viash.{DockerTest, NextFlowTest, TestHelper}
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
@@ -11,7 +12,7 @@ import scala.io.Source
 import java.io.IOException
 import java.io.UncheckedIOException
 
-class NextFlowVdsl3PlatformInputFormatsTest extends FunSuite with BeforeAndAfterAll {
+class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
   // temporary folder to work in
   private val temporaryFolder = IO.makeTemp("viash_tester_nextflowvdsl3")
   private val tempFolStr = temporaryFolder.toString
@@ -33,7 +34,7 @@ class NextFlowVdsl3PlatformInputFormatsTest extends FunSuite with BeforeAndAfter
 
     val src = Source.fromFile(path)
     try {
-      val step3Out = src.getLines.mkString
+      val step3Out = src.getLines().mkString
       assert(step3Out.matches(fileContentMatcher))
     } finally {
       src.close()
@@ -53,14 +54,14 @@ class NextFlowVdsl3PlatformInputFormatsTest extends FunSuite with BeforeAndAfter
 
         val input2 = "{" + argStr.replaceAll(":", ": ") + "}"
 
-        val js = parser.parse(input2).right.get
+        val js = parser.parse(input2).toOption.get
         val js2 = js.mapObject(_.mapValues{v => v match {
           case a if a.isArray => Json.fromString(a.asArray.get.map(_.asString.get).mkString("[", ", ", "]"))
           case a if a.isString => Json.fromString(a.asString.get)
           case _ => Json.fromString(v.toString)
         }})
 
-        val argMap = js2.as[Map[String, String]].right.get
+        val argMap = js2.as[Map[String, String]].toOption.get
 
         Some((id, argMap))
       case _ => None
@@ -93,7 +94,7 @@ class NextFlowVdsl3PlatformInputFormatsTest extends FunSuite with BeforeAndAfter
       scassert(!args.contains(name), s"$id : args should not contain $name")
     }
   }
-  def checkDebugArgs(id: String, debugPrints: Array[(String, Map[String,String])], expectedValues: List[CheckArg]) {
+  def checkDebugArgs(id: String, debugPrints: Array[(String, Map[String,String])], expectedValues: List[CheckArg]): Unit = {
     val idDebugPrints = debugPrints.find(_._1 == id)
     assert(idDebugPrints.isDefined)
     expectedValues.foreach(_.assert(id, idDebugPrints.get._2))
@@ -214,7 +215,7 @@ class NextFlowVdsl3PlatformInputFormatsTest extends FunSuite with BeforeAndAfter
     checkDebugArgs("foo", debugPrints, expectedFoo)
     checkDebugArgs("bar", debugPrints, expectedBar)
     // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
-    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+    assert(debugPrints.find(_._1 == "foo").get._2("input").endsWith(resourcesPath+"/lines3.txt"))
   }
 
   test("Run config pipeline with yaml file", NextFlowTest) {
@@ -237,8 +238,31 @@ class NextFlowVdsl3PlatformInputFormatsTest extends FunSuite with BeforeAndAfter
     checkDebugArgs("foo", debugPrints, expectedFoo)
     checkDebugArgs("bar", debugPrints, expectedBar)
     // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
-    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+    assert(debugPrints.find(_._1 == "foo").get._2("input").endsWith(resourcesPath+"/lines3.txt"))
   }
+
+test("Run config pipeline with yaml file passed as a relative path", NextFlowTest) {
+    val (exitCode, stdOut, stdErr) = runNextflowProcess(
+      mainScript = "../workflows/pipeline3/main.nf",
+      entry = Some("base"),
+      args = List(
+        "--param_list", "pipeline3.yaml",
+        "--real_number", "10.5",
+        "--whole_number", "10",
+        "--str", "foo",
+        "--publish_dir", "output",
+        ),
+      cwd = Paths.get(resourcesPath).toFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
+    checkDebugArgs("foo", debugPrints, expectedFoo)
+    checkDebugArgs("bar", debugPrints, expectedBar)
+    // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
+    assert(debugPrints.find(_._1 == "foo").get._2("input").endsWith(resourcesPath+"/lines3.txt"))
+  }
+
 
   test("Run config pipeline with json file", NextFlowTest) {
     val param_list_file = Paths.get(resourcesPath, "pipeline3.json").toFile.toString
@@ -260,7 +284,7 @@ class NextFlowVdsl3PlatformInputFormatsTest extends FunSuite with BeforeAndAfter
     checkDebugArgs("foo", debugPrints, expectedFoo)
     checkDebugArgs("bar", debugPrints, expectedBar)
     // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
-    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+    assert(debugPrints.find(_._1 == "foo").get._2("input").endsWith(resourcesPath+"/lines3.txt"))
   }
 
   test("Run config pipeline with csv file", NextFlowTest) {
@@ -283,7 +307,7 @@ class NextFlowVdsl3PlatformInputFormatsTest extends FunSuite with BeforeAndAfter
     checkDebugArgs("foo", debugPrints, expectedFoo)
     checkDebugArgs("bar", debugPrints, expectedBar)
     // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
-    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+    assert(debugPrints.find(_._1 == "foo").get._2("input").endsWith(resourcesPath+"/lines3.txt"))
   }
 
   test("Run config pipeline asis, default nextflow implementation", NextFlowTest) {
@@ -306,10 +330,10 @@ class NextFlowVdsl3PlatformInputFormatsTest extends FunSuite with BeforeAndAfter
     checkDebugArgs("foo", debugPrints, expectedFoo)
     checkDebugArgs("bar", debugPrints, expectedBar)
     // Check location of resource file, vdsl3 makes it relative to the param_list file, yamlblob or asis can't do that so there it must be relative to the workflow
-    assert(debugPrints.find(_._1 == "foo").get._2("input").equals(resourcesPath+"/lines3.txt"))
+    assert(debugPrints.find(_._1 == "foo").get._2("input").endsWith(resourcesPath+"/lines3.txt"))
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

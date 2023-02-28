@@ -52,6 +52,6 @@ object DockerSetupStrategy {
 
   val map: Map[String, DockerSetupStrategy] =
     objs.flatMap{obj =>
-      (obj.id → obj) :: obj.synonyms.map(_ → obj)
+      (obj.id -> obj) :: obj.synonyms.map(_ -> obj)
     }.toMap
 }

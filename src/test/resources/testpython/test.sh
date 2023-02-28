@@ -14,6 +14,7 @@ $meta_executable "NOTICE" --real_number 10.5 --whole_number=10 -s "a string with
   --long_number 112589990684262400
 
 [[ ! -f output.txt ]] && echo "Output file could not be found!" && exit 1
+cat output.txt
 grep -q 'input: |NOTICE|' output.txt
 grep -q 'real_number: |10.5|' output.txt
 grep -q 'whole_number: |10|' output.txt
@@ -50,6 +51,7 @@ $meta_executable \
   > output2.txt
 
 [[ ! -f output2.txt ]] && echo "Output file could not be found!" && exit 1
+cat output2.txt
 grep -q 'input: |resource2.txt|' output2.txt
 grep -q 'real_number: |123.456|' output2.txt
 grep -q 'whole_number: |789|' output2.txt

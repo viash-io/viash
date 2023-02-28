@@ -58,9 +58,7 @@
 #'   setup:
 #'     - type: r
 #'       cran: optparse
-#'       github: dynverse/anndata@main
-#'     - type: apt
-#'       packages: libhdf5-serial-dev
+#'       github: tidyverse/glue@main
 #' - type: nextflow
 
 ## VIASH START
@@ -90,7 +88,11 @@ if (length(par$output) > 0) {
 }
 
 str <- sapply(names(par), function(n) {
-  paste0(n, ": |", paste(par[[n]], collapse = ","), "|\n")
+  if(typeof(par[[n]]) == "character" && length(par[[n]]) == 0) {
+    paste0(n, ": |empty array|\n")
+  } else {
+    paste0(n, ": |", paste(par[[n]], collapse = ","), "|\n")
+  }
 })
 write_fun(par$output, str)
 

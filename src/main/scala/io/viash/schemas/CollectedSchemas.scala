@@ -30,6 +30,7 @@ import io.circe.Json
 import monocle.function.Cons
 import io.viash.config.Config
 import io.viash.config.Info
+import io.viash.functionality.resources._
 
 final case class CollectedSchemas (
   config: List[ParameterSchema],
@@ -37,6 +38,7 @@ final case class CollectedSchemas (
   platforms: Map[String, List[ParameterSchema]],
   requirements: Map[String, List[ParameterSchema]],
   arguments: Map[String, List[ParameterSchema]],
+  resources: Map[String, List[ParameterSchema]]
 )
 
 
@@ -80,13 +82,13 @@ object CollectedSchemas {
 
     val allMembers = baseClasses
       .zipWithIndex
-      .flatMap(x =>
-        x._1.info.members
+      .flatMap{ case (baseClass, index) =>
+        baseClass.info.members
           .filter(_.fullName.startsWith("io.viash"))
           .filter(m => memberNames.contains(m.shortName))
-          .filter(m => !m.info.toString.startsWith("=> ") || x._2 != 0) // Only regular members if base class, otherwise all members
-          .map(y => MemberInfo(y, (constructorMembers.contains(y.shortName)), x._1.fullName, x._2))
-      )
+          .filter(m => !m.info.getClass.toString.endsWith("NullaryMethodType") || index != 0) // Only regular members if base class, otherwise all members
+          .map(y => MemberInfo(y, (constructorMembers.contains(y.shortName)), baseClass.fullName, index))
+        }
       .groupBy(k => k.shortName)
     
     (allMembers, baseClasses)
@@ -94,36 +96,47 @@ object CollectedSchemas {
 
   val schemaClassMap = Map(
     "config" -> Map(
-      ""                       -> getMembers[Config],
+      ""                       -> getMembers[Config](),
     ),
     "functionality" -> Map(
-      ""                       -> getMembers[Functionality]
+      ""                       -> getMembers[Functionality]()
     ),
     "platforms" -> Map(
-      "nativePlatform"         -> getMembers[NativePlatform],
-      "dockerPlatform"         -> getMembers[DockerPlatform],
-      "nextflowVdsl3Platform"  -> getMembers[NextflowVdsl3Platform],
-      "nextflowLegacyPlatform" -> getMembers[NextflowLegacyPlatform],
+      "nativePlatform"         -> getMembers[NativePlatform](),
+      "dockerPlatform"         -> getMembers[DockerPlatform](),
+      "nextflowVdsl3Platform"  -> getMembers[NextflowVdsl3Platform](),
+      "nextflowLegacyPlatform" -> getMembers[NextflowLegacyPlatform](),
     ),
     "requirements" -> Map(
-      "apkRequirements"        -> getMembers[ApkRequirements],
-      "aptRequirements"        -> getMembers[AptRequirements],
-      "dockerRequirements"     -> getMembers[DockerRequirements],
-      "javascriptRequirements" -> getMembers[JavaScriptRequirements],
-      "pythonRequirements"     -> getMembers[PythonRequirements],
-      "rRequirements"          -> getMembers[RRequirements],
-      "rubyRequirements"       -> getMembers[RubyRequirements],
-      "yumRequirements"        -> getMembers[YumRequirements],
+      "apkRequirements"        -> getMembers[ApkRequirements](),
+      "aptRequirements"        -> getMembers[AptRequirements](),
+      "dockerRequirements"     -> getMembers[DockerRequirements](),
+      "javascriptRequirements" -> getMembers[JavaScriptRequirements](),
+      "pythonRequirements"     -> getMembers[PythonRequirements](),
+      "rRequirements"          -> getMembers[RRequirements](),
+      "rubyRequirements"       -> getMembers[RubyRequirements](),
+      "yumRequirements"        -> getMembers[YumRequirements](),
     ),
     "arguments" -> Map(
-      "boolean"                -> getMembers[BooleanArgument],
-      "boolean_true"           -> getMembers[BooleanTrueArgument],
-      "boolean_false"          -> getMembers[BooleanFalseArgument],
-      "double"                 -> getMembers[DoubleArgument],
-      "file"                   -> getMembers[FileArgument],
-      "integer"                -> getMembers[IntegerArgument],
-      "long"                   -> getMembers[LongArgument],
-      "string"                 -> getMembers[StringArgument],
+      "boolean"                -> getMembers[BooleanArgument](),
+      "boolean_true"           -> getMembers[BooleanTrueArgument](),
+      "boolean_false"          -> getMembers[BooleanFalseArgument](),
+      "double"                 -> getMembers[DoubleArgument](),
+      "file"                   -> getMembers[FileArgument](),
+      "integer"                -> getMembers[IntegerArgument](),
+      "long"                   -> getMembers[LongArgument](),
+      "string"                 -> getMembers[StringArgument](),
+    ),
+    "resources" -> Map(
+      "bashScript"             -> getMembers[BashScript](),
+      "cSharpScript"           -> getMembers[CSharpScript](),
+      "executable"             -> getMembers[Executable](),
+      "javaScriptScript"       -> getMembers[JavaScriptScript](),
+      "nextflowScript"         -> getMembers[NextflowScript](),
+      "plainFile"              -> getMembers[PlainFile](),
+      "pythonScript"           -> getMembers[PythonScript](),
+      "rScript"                -> getMembers[RScript](),
+      "scalaScript"            -> getMembers[ScalaScript](),
     )
   )
 
@@ -159,7 +172,8 @@ object CollectedSchemas {
       functionality = getSchema(schemaClassMap.get("functionality").get("")),
       platforms = schemaClassMap.get("platforms").get.map{ case(k, v) => (k, getSchema(v))},
       requirements = schemaClassMap.get("requirements").get.map{ case(k, v) => (k, getSchema(v))},
-      arguments = schemaClassMap.get("arguments").get.map{ case(k, v) => (k, getSchema(v))}
+      arguments = schemaClassMap.get("arguments").get.map{ case(k, v) => (k, getSchema(v))},
+      resources = schemaClassMap.get("resources").get.map{ case(k, v) => (k, getSchema(v))},
     )
 
   def getJson: Json = {

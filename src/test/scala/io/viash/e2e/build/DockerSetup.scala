@@ -2,7 +2,8 @@ package io.viash.e2e.build
 
 import io.viash._
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import io.viash.helpers.{IO, Exec}
 
@@ -11,15 +12,13 @@ import io.viash.config.Config
 import scala.io.Source
 import io.viash.functionality.resources.PlainFile
 
-class DockerSetup extends FunSuite with BeforeAndAfterAll {
+class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
   // which platform to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
   private val temporaryConfigFolder = IO.makeTemp("viash_tester_configs")
-
-  private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
 
   // parse functionality from file
   private val functionality = Config.read(configFile).functionality
@@ -29,8 +28,6 @@ class DockerSetup extends FunSuite with BeforeAndAfterAll {
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
   private val execPathInDocker = Paths.get("/viash_automount", executable.getPath).toFile.toString
 
-  //</editor-fold>
-  //<editor-fold desc="Test benches to check building with or without --setup flag">
   test("viash without --setup doesn't create docker during build", DockerTest) {
     val tag = "throwawayimage"
     
@@ -84,7 +81,6 @@ class DockerSetup extends FunSuite with BeforeAndAfterAll {
     // verify docker exists
     assert(checkDockerImageExists(tag, "0.1"))
   }
-  //</editor-fold>
 
   test("Get info of a docker image using docker inspect", DockerTest) {
     // Create temporary folder to copy the files to so we can do a git init in that folder
@@ -214,7 +210,7 @@ class DockerSetup extends FunSuite with BeforeAndAfterAll {
     )
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
     IO.deleteRecursively(temporaryConfigFolder)
   }

@@ -17,14 +17,19 @@
 
 package io.viash.functionality.resources
 
+import io.viash.schemas._
+
 import java.net.URI
 
+@description("""A plain file. This can only be used as a supporting resource for the main script or unit tests.""")
 case class PlainFile(
   path: Option[String] = None,
   text: Option[String] = None,
   dest: Option[String] = None,
   is_executable: Option[Boolean] = None,
   parent: Option[URI] = None,
+
+  @description("Specifies the resource as a plain file.")
   `type`: String = "file"
 ) extends Resource {
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {

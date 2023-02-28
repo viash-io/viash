@@ -2,7 +2,8 @@ package io.viash.e2e.build
 
 import io.viash._
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.Paths
 
 import io.viash.config.Config
@@ -10,7 +11,7 @@ import io.viash.config.Config
 import scala.io.Source
 import io.viash.helpers.{IO, Exec}
 
-class NativeSuite extends FunSuite with BeforeAndAfterAll {
+class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   // which platform to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
   private val configNoPlatformFile = getClass.getResource(s"/testbash/config_no_platform.vsh.yaml").getPath
@@ -207,8 +208,8 @@ class NativeSuite extends FunSuite with BeforeAndAfterAll {
     )
   }
 
-  test("Test whether defining strings as arguments in argument groups throws a deprecation warning") {
-    val testText = TestHelper.testMain(
+  test("Test whether defining strings as arguments in argument groups throws a removed error") {
+    val testOutput = TestHelper.testMainException2[Exception](
       "build",
       "-o", tempFolStr,
       configDeprecatedArgumentGroups
@@ -222,11 +223,11 @@ class NativeSuite extends FunSuite with BeforeAndAfterAll {
     )
     assert(out.exitValue == 0)
 
-    val testRegex = "Warning: specifying strings in the .argument field of argument group 'First group' is deprecated.".r
-    assert(testRegex.findFirstIn(testText).isDefined, testText)
+    val testRegex = "Error: specifying strings in the .argument field of argument group 'First group' was removed.".r
+    assert(testRegex.findFirstIn(testOutput.error).isDefined, testOutput.error)
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

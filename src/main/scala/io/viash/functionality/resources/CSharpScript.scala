@@ -20,17 +20,25 @@ package io.viash.functionality.resources
 import io.viash.functionality._
 import io.viash.functionality.arguments._
 import io.viash.wrapper.BashWrapper
+import io.viash.schemas._
 
 import java.net.URI
 import io.viash.helpers.Bash
 
+@description("""An executable C# script.
+               |When defined in functionality.resources, only the first entry will be executed when running the built component or when running `viash run`.
+               |When defined in functionality.test_resources, all entries will be executed during `viash test`.""".stripMargin)
 case class CSharpScript(
   path: Option[String] = None,
   text: Option[String] = None,
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
+
+  @undocumented
   entrypoint: Option[String] = None,
+
+  @description("Specifies the resource as a C# script.")
   `type`: String = CSharpScript.`type`
 ) extends Script {
   assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")
@@ -76,8 +84,10 @@ case class CSharpScript(
         case _: StringArgument => "string"
       }
 
+      // TODO: set as null if not found, not an empty array
       val notFound = par match {
-        case a: Argument[_] if a.multiple => Some(s"new $class_[0]")
+        //case a: Argument[_] if a.multiple => Some(s"new $class_[0]")
+        case a: Argument[_] if a.multiple => Some(s"(${class_}) null")
         case a: StringArgument if !a.required => Some(s"(${class_}) null")
         case a: FileArgument if !a.required => Some(s"(${class_}) null")
         case a: Argument[_] if !a.required => Some(s"(${class_}?) null")
