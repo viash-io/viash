@@ -32,29 +32,29 @@ import io.viash.schemas._
 case class DockerRequirements(
   @description("Specifies which `LABEL` entries to add to the Dockerfile while building it.")
   @example("label: [ component=\"foo\" ]", "yaml")
-  label: OneOrMore[String] = Nil,
+  label: OneOrMore[String] = Zero,
 
   @description("Specifies which `ADD` entries to add to the Dockerfile while building it.")
   @example("add: [ \"http://foo/bar .\" ]", "yaml")
-  add: OneOrMore[String] = Nil,
+  add: OneOrMore[String] = Zero,
 
   @description("Specifies which `COPY` entries to add to the Dockerfile while building it.")
   @example("copy: [ \"resource.txt /path/to/resource.txt\" ]", "yaml")
-  copy: OneOrMore[String] = Nil,
+  copy: OneOrMore[String] = Zero,
 
   @description("Specifies which `RUN` entries to add to the Dockerfile while building it.")
   @example("""run: |
     #  echo 'Run a custom command'
     #  echo 'Foo' > /path/to/file.txt""".stripMargin('#'), "yaml")
-  run: OneOrMore[String] = Nil,
+  run: OneOrMore[String] = Zero,
   
   @description("Specifies which `ARG` entries to add to the Dockerfile while building it.")
   @example("build_args: [ \"R_VERSION=4.2\" ]", "yaml")
-  build_args: OneOrMore[String] = Nil,
+  build_args: OneOrMore[String] = Zero,
 
   @description("Specifies which `ENV` entries to add to the Dockerfile while building it. Unlike `ARG`, `ENV` entries are also accessible from inside the container.")
   @example("env: [ \"R_VERSION=4.2\" ]", "yaml")
-  env: OneOrMore[String] = Nil,
+  env: OneOrMore[String] = Zero,
 
   `type`: String = "docker"
 ) extends Requirements {
@@ -62,7 +62,7 @@ case class DockerRequirements(
   @description("Specifies which `COPY` entries to add to the Dockerfile while building it.")
   @example("resources: [ \"resource.txt /path/to/resource.txt\" ]", "yaml")
   @removed("`resources` in `setup: {type: docker, resources: ...}` was removed. Please use `copy` instead.", "0.6.3", "0.7.0")
-  private val resources: OneOrMore[String] = Nil
+  private val resources: OneOrMore[String] = Zero
   // END OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
 
   def installCommands: List[String] = Nil

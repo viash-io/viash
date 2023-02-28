@@ -32,45 +32,45 @@ import io.viash.schemas._
 case class RRequirements(
   @description("Specifies which packages to install from CRAN.")
   @example("packages: [ anndata, ggplot2 ]", "yaml")
-  packages: OneOrMore[String] = Nil,
+  packages: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install from CRAN.")
   @example("cran: [ anndata, ggplot2 ]", "yaml")
-  cran: OneOrMore[String] = Nil,
+  cran: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install from BioConductor.")
   @example("bioc: [ AnnotationDbi ]", "yaml")
-  bioc: OneOrMore[String] = Nil,
+  bioc: OneOrMore[String] = Zero,
   
   @description("Specifies which packages to install using a Git URI.")
   @example("git: [ https://some.git.repository/org/repo ]", "yaml")
-  git: OneOrMore[String] = Nil,
+  git: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install from GitHub.")
   @example("github: [ rcannood/SCORPIUS ]", "yaml")
-  github: OneOrMore[String] = Nil,
+  github: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install from GitLab.")
   @example("gitlab: [ org/package ]", "yaml")
-  gitlab: OneOrMore[String] = Nil,
+  gitlab: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install from Bitbucket.")
   @example("bitbucket: [ org/package ]", "yaml")
-  bitbucket: OneOrMore[String] = Nil,
+  bitbucket: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install using an SVN URI.")
   @example("svn: [ https://path.to.svn/group/repo ]", "yaml")
-  svn: OneOrMore[String] = Nil,
+  svn: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install using a generic URI.")
   @example("url: [ https://github.com/hadley/stringr/archive/HEAD.zip ]", "yaml")
-  url: OneOrMore[String] = Nil,
+  url: OneOrMore[String] = Zero,
 
   @description("Specifies a code block to run as part of the build.")
   @example("""script: |
     #  cat("Running custom code\n")
     #  install.packages("anndata")""".stripMargin('#'), "yaml")
-  script: OneOrMore[String] = Nil,
+  script: OneOrMore[String] = Zero,
   
   @description("Forces packages specified in `bioc` to be reinstalled, even if they are already present in the container. Default: false.")
   @example("bioc_force_install: false", "yaml")

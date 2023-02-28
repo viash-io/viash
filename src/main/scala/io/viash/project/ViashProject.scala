@@ -22,7 +22,7 @@ import java.nio.file.{Files, Path}
 import io.circe.yaml.parser
 
 import io.viash.schemas._
-import io.viash.helpers.data_structures.OneOrMore
+import io.viash.helpers.data_structures.{Zero, OneOrMore}
 import io.viash.helpers.IO
 import io.viash.helpers.circe._
 import java.nio.file.Paths
@@ -61,7 +61,7 @@ case class ViashProject(
   // todo: link to config mods docs
   @description("Which config mods to apply.")
   @example("config_mods: \".functionality.name := 'foo'\"", "yaml")
-  config_mods: OneOrMore[String] = Nil
+  config_mods: OneOrMore[String] = Zero
 )
 
 object ViashProject {

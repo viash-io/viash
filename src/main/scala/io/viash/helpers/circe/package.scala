@@ -20,7 +20,7 @@ package io.viash.helpers
 import io.circe._
 import io.circe.generic.extras.Configuration
 import java.net.URI
-import data_structures.OneOrMore
+import data_structures.{One, More, OneOrMore, Zero}
 
 package object circe {
   implicit val customConfig: Configuration =
@@ -37,11 +37,11 @@ package object circe {
 
   // encoder and decoder for OneOrMore
   implicit def encodeOneOrMore[A](implicit enc: Encoder[List[A]]): Encoder[OneOrMore[A]] = { 
-    oom: OneOrMore[A] => if (oom == null) enc(Nil) else enc(oom.toList)
+    oom: OneOrMore[A] => if (oom == null || !oom.isDefined) Json.Null else enc(oom.toList)
   }
 
-  implicit def decodeOneOrMore[A](implicit da: Decoder[A], dl: Decoder[List[A]]): Decoder[OneOrMore[A]] = {
-    val l: Decoder[OneOrMore[A]] = da.map(OneOrMore(_))
+  implicit def decodeOneOrMore[A](implicit da: Decoder[Option[A]], dl: Decoder[List[A]]): Decoder[OneOrMore[A]] = {
+    val l: Decoder[OneOrMore[A]] = da.map{opt => if (opt.isEmpty) Zero else One(opt.get)}
     val r: Decoder[OneOrMore[A]] = dl.map(OneOrMore(_: _*))
     l or r
   }

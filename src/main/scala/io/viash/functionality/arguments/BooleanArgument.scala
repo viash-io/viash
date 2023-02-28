@@ -46,7 +46,7 @@ case class BooleanArgument(
   name: String,
 
   @description("List of alternative format variations for this argument.")
-  alternatives: OneOrMore[String] = Nil,
+  alternatives: OneOrMore[String] = Zero,
 
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
@@ -66,7 +66,7 @@ case class BooleanArgument(
       |  example: true
       |""".stripMargin,
       "yaml")
-  example: OneOrMore[Boolean] = Nil,
+  example: OneOrMore[Boolean] = Zero,
 
   @description("The default value when no argument value is provided. This will not work if the [`required`](#required) property is enabled.")
   @example(
@@ -75,7 +75,7 @@ case class BooleanArgument(
       |  default: true
       |""".stripMargin,
       "yaml") 
-  default: OneOrMore[Boolean] = Nil,
+  default: OneOrMore[Boolean] = Zero,
 
   @description("Make the value for this argument required. If set to `true`, an error will be produced if no value was provided. `false` by default.")
   @example(
@@ -155,7 +155,7 @@ case class BooleanTrueArgument(
   name: String,
 
   @description("List of alternative format variations for this argument.")
-  alternatives: OneOrMore[String] = Nil,
+  alternatives: OneOrMore[String] = Zero,
 
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
@@ -179,13 +179,13 @@ case class BooleanTrueArgument(
   @internalFunctionality
   val flagValue: Option[Boolean] = Some(true)
   @internalFunctionality
-  val default: OneOrMore[Boolean] = Nil
+  val default: OneOrMore[Boolean] = Zero
   @internalFunctionality
   val multiple: Boolean = false
   @internalFunctionality
   val multiple_sep: String = ":"
   @internalFunctionality
-  val example: OneOrMore[Boolean] = Nil
+  val example: OneOrMore[Boolean] = Zero
 
   def copyArg(
     `type`: String, 
@@ -225,7 +225,7 @@ case class BooleanFalseArgument(
   name: String,
 
   @description("List of alternative format variations for this argument.")
-  alternatives: OneOrMore[String] = Nil,
+  alternatives: OneOrMore[String] = Zero,
 
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
@@ -250,13 +250,13 @@ case class BooleanFalseArgument(
   @internalFunctionality
   val flagValue: Option[Boolean] = Some(false)
   @internalFunctionality
-  val default: OneOrMore[Boolean] = Nil
+  val default: OneOrMore[Boolean] = Zero
   @internalFunctionality
   val multiple: Boolean = false
   @internalFunctionality
   val multiple_sep: String = ":"
   @internalFunctionality
-  val example: OneOrMore[Boolean] = Nil
+  val example: OneOrMore[Boolean] = Zero
 
   def copyArg(
     `type`: String, 

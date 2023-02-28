@@ -17,7 +17,37 @@
 
 package io.viash.helpers.data_structures
 
-case class OneOrMore[A](list: A*) {
-  def toList = list.toList
-  override def toString = list.toList.toString().replaceFirst("List", "OneOrMore")
+// case class OneOrMore[A](list: A*) {
+//   def toList = list.toList
+//   override def toString = list.toList.toString().replaceFirst("List", "OneOrMore")
+// }
+
+// oneormore helper type
+abstract class OneOrMore[+A] {
+  def toList: List[A]
+  override def equals(that: Any): Boolean = {
+    that match {
+      case that: OneOrMore[_] => {
+        this.toList.equals(that.toList)
+      }
+      case _ => false
+    }
+  }
+  override def toString = this.toList.toString.replaceFirst("List", "OneOrMore")
+  val isDefined: Boolean
+}
+object OneOrMore {
+  def apply[A](list: A*) = More(list.toList)
+}
+case object Zero extends OneOrMore[Nothing] {
+  def toList = Nil
+  val isDefined = false
+}
+case class One[A](element: A) extends OneOrMore[A] {
+  def toList = List(element)
+  val isDefined = true
+}
+case class More[A](list: List[A]) extends OneOrMore[A] {
+  def toList = list
+  val isDefined = true
 }

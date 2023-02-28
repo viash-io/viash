@@ -35,49 +35,49 @@ case class PythonRequirements(
 
   @description("Specifies which packages to install from pip.")
   @example("packages: [ numpy ]", "yaml")
-  packages: OneOrMore[String] = Nil,
+  packages: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install from pip.")
   @example("pip: [ numpy ]", "yaml")
-  pip: OneOrMore[String] = Nil,
+  pip: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install from PyPI using pip.")
   @example("pypi: [ numpy ]", "yaml")
-  pypi: OneOrMore[String] = Nil,
+  pypi: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install using a Git URI.")
   @example("git: [ https://some.git.repository/org/repo ]", "yaml")
-  git: OneOrMore[String] = Nil,
+  git: OneOrMore[String] = Zero,
   
   @description("Specifies which packages to install from GitHub.")
   @example("github: [ jkbr/httpie ]", "yaml")
-  github: OneOrMore[String] = Nil,
+  github: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install from GitLab.")
   @example("gitlab: [ foo/bar ]", "yaml")
-  gitlab: OneOrMore[String] = Nil,
+  gitlab: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install using a Mercurial URI.")
   @example("mercurial: [ https://hg.myproject.org/MyProject/#egg=MyProject ]", "yaml")
-  mercurial: OneOrMore[String] = Nil,
+  mercurial: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install using an SVN URI.")
   @example("svn: [ http://svn.repo/some_pkg/trunk/#egg=SomePackage ]", "yaml")
-  svn: OneOrMore[String] = Nil,
+  svn: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install using a Bazaar URI.")
   @example("bazaar: [ http://bazaar.launchpad.net/some_pkg/some_pkg/release-0.1 ]", "yaml")
-  bazaar: OneOrMore[String] = Nil,
+  bazaar: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install using a generic URI.")
   @example("url: [ https://github.com/some_org/some_pkg/zipball/master ]", "yaml")
-  url: OneOrMore[String] = Nil,
+  url: OneOrMore[String] = Zero,
 
   @description("Specifies a code block to run as part of the build.")
   @example("""script: |
     #  print("Running custom code")
     #  x = 1 + 1 == 2""".stripMargin('#'), "yaml")
-  script: OneOrMore[String] = Nil,
+  script: OneOrMore[String] = Zero,
 
   @description("Sets the `--upgrade` flag when set to true. Default: true.")
   upgrade: Boolean = true,

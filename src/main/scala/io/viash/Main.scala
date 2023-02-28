@@ -37,6 +37,7 @@ import java.nio.file.Path
 import io.viash.helpers.Exec
 import java.nio.file.Files
 import java.net.URI
+import io.viash.helpers.data_structures.More
 
 object Main {
   private val pkg = getClass.getPackage
@@ -178,18 +179,18 @@ object Main {
     val proj1 = cli.subcommands.last match {
       case x: ViashCommand => 
         proj0.copy(
-          config_mods = proj0.config_mods ::: x.config_mods()
+          config_mods = More(proj0.config_mods ::: x.config_mods())
         )
       case x: ViashNs with ViashNsBuild =>
         proj0.copy(
           source = x.src.toOption orElse proj0.source orElse Some("src"),
           target = x.target.toOption orElse proj0.target orElse Some("target"),
-          config_mods = proj0.config_mods ::: x.config_mods()
+          config_mods = More(proj0.config_mods ::: x.config_mods())
         )
       case x: ViashNs =>
         proj0.copy(
           source = x.src.toOption orElse proj0.source orElse Some("src"),
-          config_mods = proj0.config_mods ::: x.config_mods()
+          config_mods = More(proj0.config_mods ::: x.config_mods())
         )
       case _ => proj0
     }

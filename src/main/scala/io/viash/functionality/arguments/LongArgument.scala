@@ -43,7 +43,7 @@ case class LongArgument(
   name: String,
 
   @description("List of alternative format variations for this argument.")
-  alternatives: OneOrMore[String] = Nil,
+  alternatives: OneOrMore[String] = Zero,
 
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
@@ -63,7 +63,7 @@ case class LongArgument(
       |  example: 100
       |""".stripMargin,
       "yaml")
-  example: OneOrMore[Long] = Nil,
+  example: OneOrMore[Long] = Zero,
 
   @description("The default value when no argument value is provided. This will not work if the [`required`](#required) property is enabled.")
   @example(
@@ -72,7 +72,7 @@ case class LongArgument(
       |  default: 100
       |""".stripMargin,
       "yaml")
-  default: OneOrMore[Long] = Nil,
+  default: OneOrMore[Long] = Zero,
 
   @description("Make the value for this argument required. If set to `true`, an error will be produced if no value was provided. `false` by default.")
   @example(

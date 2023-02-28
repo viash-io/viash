@@ -42,7 +42,7 @@ case class DoubleArgument(
   name: String,
 
   @description("List of alternative format variations for this argument.")
-  alternatives: OneOrMore[String] = Nil,
+  alternatives: OneOrMore[String] = Zero,
 
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
@@ -62,7 +62,7 @@ case class DoubleArgument(
       |  example: 5.8
       |""".stripMargin,
       "yaml")
-  example: OneOrMore[Double] = Nil,
+  example: OneOrMore[Double] = Zero,
 
   @description("The default value when no argument value is provided. This will not work if the [`required`](#required) property is enabled.")
   @example(
@@ -71,7 +71,7 @@ case class DoubleArgument(
       |  default: 5.8
       |""".stripMargin,
       "yaml")
-  default: OneOrMore[Double] = Nil,
+  default: OneOrMore[Double] = Zero,
 
   @description("Make the value for this argument required. If set to `true`, an error will be produced if no value was provided. `false` by default.")
   @example(

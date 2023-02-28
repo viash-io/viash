@@ -30,7 +30,7 @@ import io.viash.schemas._
 case class RubyRequirements(
   @description("Specifies which packages to install.")
   @example("packages: [ rspec ]", "yaml")
-  packages: OneOrMore[String] = Nil,
+  packages: OneOrMore[String] = Zero,
   
   `type`: String = "ruby"
 ) extends Requirements {

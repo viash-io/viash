@@ -91,7 +91,7 @@ case class DockerPlatform(
       |  - 8080
       |""".stripMargin,
       "yaml")
-  port: OneOrMore[String] = Nil,
+  port: OneOrMore[String] = Zero,
 
   @description("The working directory when starting the container. This doesn't change the Dockerfile but gets added as a command-line argument at runtime.")
   @example("workdir: /home/user", "yaml")
@@ -121,7 +121,7 @@ case class DockerPlatform(
   setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,
 
   @description("Add [docker run](https://docs.docker.com/engine/reference/run/) arguments.")
-  run_args: OneOrMore[String] = Nil,
+  run_args: OneOrMore[String] = Zero,
 
   @description("The source of the target image. This is used for defining labels in the dockerfile.")
   @example("target_image_source: https://github.com/foo/bar", "yaml")
@@ -242,7 +242,7 @@ case class DockerPlatform(
     // workaround for making sure that every docker platform creates a new container
     if (setup.isEmpty) {
       List(DockerRequirements(
-        run = List(":")
+        run = One(":")
       ))
     } else {
       setup
@@ -332,7 +332,7 @@ case class DockerPlatform(
     val created = List(s"""org.opencontainers.image.created="$opencontainers_image_created"""")
     val revision = opencontainers_image_revision.map(rev => s"""org.opencontainers.image.revision="$rev"""").toList
     val version = opencontainers_image_version.map(v => s"""org.opencontainers.image.version="$v"""").toList
-    val labelReq = DockerRequirements(label = authors ::: descr ::: created ::: imageSource ::: revision ::: version)
+    val labelReq = DockerRequirements(label = More(authors ::: descr ::: created ::: imageSource ::: revision ::: version))
 
     val setupRequirements = testing match {
       case true => test_setup

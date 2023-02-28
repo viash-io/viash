@@ -395,8 +395,8 @@ object BashWrapper {
       val default = param match {
         case p if p.required => None
         case bo: BooleanArgumentBase if bo.flagValue.isDefined => bo.flagValue.map(!_)
-        case p if p.default.nonEmpty => Some(p.default.map(_.toString).mkString(p.multiple_sep.toString))
-        case p if p.default.isEmpty => None
+        case p if p.default.isDefined => Some(p.default.map(_.toString).mkString(p.multiple_sep.toString))
+        case p => None
       }
 
       default.map(default => {

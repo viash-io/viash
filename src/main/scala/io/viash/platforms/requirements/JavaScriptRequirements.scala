@@ -33,23 +33,23 @@ import io.viash.schemas._
 case class JavaScriptRequirements(
   @description("Specifies which packages to install from npm.")
   @example("packages: [ packagename ]", "yaml")
-  packages: OneOrMore[String] = Nil,
+  packages: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install from npm.")
   @example("npm: [ packagename ]", "yaml")
-  npm: OneOrMore[String] = Nil,
+  npm: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install using a Git URI.")
   @example("git: [ https://some.git.repository/org/repo ]", "yaml")
-  git: OneOrMore[String] = Nil,
+  git: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install from GitHub.")
   @example("github: [ owner/repository ]", "yaml")
-  github: OneOrMore[String] = Nil,
+  github: OneOrMore[String] = Zero,
 
   @description("Specifies which packages to install using a generic URI.")
   @example("url: [ https://github.com/org/repo/archive/HEAD.zip ]", "yaml")
-  url: OneOrMore[String] = Nil,
+  url: OneOrMore[String] = Zero,
   `type`: String = "javascript"
 ) extends Requirements {
   private def generateCommands(prefix: String, values: List[String]) = {

@@ -22,7 +22,7 @@ import io.viash.helpers.data_structures._
 case class Author(
   name: String,
   email: Option[String] = None,
-  roles: OneOrMore[String] = Nil,
+  roles: OneOrMore[String] = Zero,
   props: Map[String, String] = Map.empty[String, String]
 ) {
   override def toString: String = {

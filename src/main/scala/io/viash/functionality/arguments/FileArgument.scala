@@ -43,7 +43,7 @@ case class FileArgument(
   name: String,
 
   @description("List of alternative format variations for this argument.")
-  alternatives: OneOrMore[String] = Nil,
+  alternatives: OneOrMore[String] = Zero,
 
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
@@ -63,7 +63,7 @@ case class FileArgument(
       |  example: data.csv
       |""".stripMargin,
       "yaml")
-  example: OneOrMore[Path] = Nil,
+  example: OneOrMore[Path] = Zero,
 
   @description("The default value when no argument value is provided. This will not work if the [`required`](#required) property is enabled.")
   @example(
@@ -72,7 +72,7 @@ case class FileArgument(
       |  default: data.csv
       |""".stripMargin,
       "yaml")
-  default: OneOrMore[Path] = Nil,
+  default: OneOrMore[Path] = Zero,
 
   @description("Checks whether the file or folder exists. For input files, this check will happen " +
     "before the execution of the script, while for output files the check will happen afterwards.")

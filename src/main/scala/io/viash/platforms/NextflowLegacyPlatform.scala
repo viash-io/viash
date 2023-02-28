@@ -166,7 +166,7 @@ case class NextflowLegacyPlatform(
       |}
       |""".stripMargin)
   @example("label: highmem labels: [ highmem, highcpu ]", "yaml")
-  labels: OneOrMore[String] = Nil,
+  labels: OneOrMore[String] = Zero,
 
   @description(
     """By default NextFlow will create a symbolic link to the inputs for a process/module and run the tool at hand using those symbolic links. Some applications do not cope well with this strategy, in that case the files should effectively be copied rather than linked to. This can be achieved by using `stageInMode: copy`.

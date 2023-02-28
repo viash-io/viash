@@ -30,7 +30,7 @@ import io.viash.schemas._
 case class YumRequirements(
   @description("Specifies which packages to install.")
   @example("packages: [ sl ]", "yaml")
-  packages: OneOrMore[String] = Nil,
+  packages: OneOrMore[String] = Zero,
   
   `type`: String = "yum"
 ) extends Requirements {
