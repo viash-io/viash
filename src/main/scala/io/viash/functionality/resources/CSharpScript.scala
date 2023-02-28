@@ -82,6 +82,7 @@ case class CSharpScript(
         case _: StringArgument => "string"
       }
 
+      // TODO: set as null if not found, not an empty array
       val notFound = par match {
         case a: Argument[_] if a.multiple => Some(s"new $class_[0]")
         case a: StringArgument if !a.required => Some(s"(${class_}) null")

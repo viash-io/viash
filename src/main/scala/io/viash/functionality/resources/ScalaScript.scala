@@ -50,60 +50,61 @@ case class ScalaScript(
     val quo = "\"'\"\"\"'\""
     val paramsCode = argsAndMeta.map { case (dest, params) =>
       val parClassTypes = params.map { par =>
-      val classType = par match {
-        case a: BooleanArgumentBase if a.multiple => "List[Boolean]"
-        case a: IntegerArgument if a.multiple => "List[Int]"
-        case a: LongArgument if a.multiple => "List[Long]"
-        case a: DoubleArgument if a.multiple => "List[Double]"
-        case a: FileArgument if a.multiple => "List[String]"
-        case a: StringArgument if a.multiple => "List[String]"
-        // we could argue about whether these should be options or not
-        case a: BooleanArgumentBase if !a.required && a.flagValue.isEmpty => "Option[Boolean]"
-        case a: IntegerArgument if !a.required => "Option[Int]"
-        case a: LongArgument if !a.required => "Option[Long]"
-        case a: DoubleArgument if !a.required => "Option[Double]"
-        case a: FileArgument if !a.required => "Option[String]"
-        case a: StringArgument if !a.required => "Option[String]"
-        case _: BooleanArgumentBase => "Boolean"
-        case _: IntegerArgument => "Int"
-        case _: LongArgument => "Long"
-        case _: DoubleArgument => "Double"
-        case _: FileArgument => "String"
-        case _: StringArgument => "String"
+        val classType = par match {
+          case a: BooleanArgumentBase if a.multiple => "List[Boolean]"
+          case a: IntegerArgument if a.multiple => "List[Int]"
+          case a: LongArgument if a.multiple => "List[Long]"
+          case a: DoubleArgument if a.multiple => "List[Double]"
+          case a: FileArgument if a.multiple => "List[String]"
+          case a: StringArgument if a.multiple => "List[String]"
+          // we could argue about whether these should be options or not
+          case a: BooleanArgumentBase if !a.required && a.flagValue.isEmpty => "Option[Boolean]"
+          case a: IntegerArgument if !a.required => "Option[Int]"
+          case a: LongArgument if !a.required => "Option[Long]"
+          case a: DoubleArgument if !a.required => "Option[Double]"
+          case a: FileArgument if !a.required => "Option[String]"
+          case a: StringArgument if !a.required => "Option[String]"
+          case _: BooleanArgumentBase => "Boolean"
+          case _: IntegerArgument => "Int"
+          case _: LongArgument => "Long"
+          case _: DoubleArgument => "Double"
+          case _: FileArgument => "String"
+          case _: StringArgument => "String"
+          }
+          par.plainName + ": " + classType
         }
-        par.plainName + ": " + classType
-      }
-      val parSet = params.map { par =>
-        // val env_name = par.VIASH_PAR
-        val env_name = Bash.getEscapedArgument(par.VIASH_PAR, quo, """\"""", """\"\"\"+\"\\\"\"+\"\"\"""")
+        val parSet = params.map { par =>
+          // val env_name = par.VIASH_PAR
+          val env_name = Bash.getEscapedArgument(par.VIASH_PAR, quo, """\"""", """\"\"\"+\"\\\"\"+\"\"\"""")
 
-      val parse = { par match {
-        case a: BooleanArgumentBase if a.multiple =>
-          s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toLowerCase.toBoolean).toList"""
-        case a: IntegerArgument if a.multiple =>
-          s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toInt).toList"""
-        case a: LongArgument if a.multiple =>
-          s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toLong).toList"""
-        case a: DoubleArgument if a.multiple =>
-          s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toDouble).toList"""
-        case a: FileArgument if a.multiple =>
-          s"""$env_name.split($quo${a.multiple_sep}$quo).toList"""
-        case a: StringArgument if a.multiple =>
-          s"""$env_name.split($quo${a.multiple_sep}$quo).toList"""
-        case a: BooleanArgumentBase if !a.required && a.flagValue.isEmpty => s"""Some($env_name.toLowerCase.toBoolean)"""
-        case a: IntegerArgument if !a.required => s"""Some($env_name.toInt)"""
-        case a: LongArgument if !a.required => s"""Some($env_name.toLong)"""
-        case a: DoubleArgument if !a.required => s"""Some($env_name.toDouble)"""
-        case a: FileArgument if !a.required => s"""Some($env_name)"""
-        case a: StringArgument if !a.required => s"""Some($env_name)"""
-        case _: BooleanArgumentBase => s"""$env_name.toLowerCase.toBoolean"""
-        case _: IntegerArgument => s"""$env_name.toInt"""
-        case _: LongArgument => s"""$env_name.toLong"""
-        case _: DoubleArgument => s"""$env_name.toDouble"""
-        case _: FileArgument => s"""$env_name"""
-        case _: StringArgument => s"""$env_name"""
-      }}
-
+        val parse = { par match {
+          case a: BooleanArgumentBase if a.multiple =>
+            s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toLowerCase.toBoolean).toList"""
+          case a: IntegerArgument if a.multiple =>
+            s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toInt).toList"""
+          case a: LongArgument if a.multiple =>
+            s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toLong).toList"""
+          case a: DoubleArgument if a.multiple =>
+            s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toDouble).toList"""
+          case a: FileArgument if a.multiple =>
+            s"""$env_name.split($quo${a.multiple_sep}$quo).toList"""
+          case a: StringArgument if a.multiple =>
+            s"""$env_name.split($quo${a.multiple_sep}$quo).toList"""
+          case a: BooleanArgumentBase if !a.required && a.flagValue.isEmpty => s"""Some($env_name.toLowerCase.toBoolean)"""
+          case a: IntegerArgument if !a.required => s"""Some($env_name.toInt)"""
+          case a: LongArgument if !a.required => s"""Some($env_name.toLong)"""
+          case a: DoubleArgument if !a.required => s"""Some($env_name.toDouble)"""
+          case a: FileArgument if !a.required => s"""Some($env_name)"""
+          case a: StringArgument if !a.required => s"""Some($env_name)"""
+          case _: BooleanArgumentBase => s"""$env_name.toLowerCase.toBoolean"""
+          case _: IntegerArgument => s"""$env_name.toInt"""
+          case _: LongArgument => s"""$env_name.toLong"""
+          case _: DoubleArgument => s"""$env_name.toDouble"""
+          case _: FileArgument => s"""$env_name"""
+          case _: StringArgument => s"""$env_name"""
+        }}
+        
+        // Todo: set as None if multiple is undefined
         val notFound = par match {
           case a: Argument[_] if a.multiple => Some("Nil")
           case a: BooleanArgumentBase if a.flagValue.isDefined => None

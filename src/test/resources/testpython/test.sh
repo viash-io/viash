@@ -62,8 +62,8 @@ grep -q 'output: |None|' output2.txt
 grep -q 'log: |None|' output2.txt
 grep -q 'optional: |None|' output2.txt
 grep -q 'optional_with_default: |The default value.|' output2.txt
-grep -q 'multiple: |empty array|' output2.txt
-grep -q 'multiple_pos: |empty array|' output2.txt
+grep -q 'multiple: ||' output2.txt
+grep -q 'multiple_pos: ||' output2.txt
 grep -q 'meta_resources_dir: |..*|' output2.txt
 grep -q 'meta_functionality_name: |testpython|' output2.txt
 grep -q 'meta_cpus: |666|' output2.txt
