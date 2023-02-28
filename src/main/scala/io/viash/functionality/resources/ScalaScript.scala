@@ -37,6 +37,8 @@ case class ScalaScript(
 
   @undocumented
   entrypoint: Option[String] = None,
+
+  @description("Specifies the resource as a Scala script.")
   `type`: String = ScalaScript.`type`
 ) extends Script {
   assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")

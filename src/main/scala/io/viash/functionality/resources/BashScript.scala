@@ -37,6 +37,8 @@ case class BashScript(
 
   @undocumented
   entrypoint: Option[String] = None,
+
+  @description("Specifies the resource as a Bash script.")
   `type`: String = BashScript.`type`
 ) extends Script {
   assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")
