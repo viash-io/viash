@@ -11,7 +11,16 @@
   - Legacy Nextflow platform
 
 * Improvements in VDSL3 and the Nextflow Workflow Helper to make behaviour
-  more predictable and fixing some bugs in the meantime.
+  more predictable and fixing some bugs in the meantime. Run the following
+  to get access to the updated helpers:
+  
+  ```bash
+  WF_DIR="src/wf_utils"
+  [[ -d $WF_DIR ]] || mkdir -p $WF_DIR
+  viash export resource platforms/nextflow/ProfilesHelper.config > $WF_DIR/ProfilesHelper.config
+  viash export resource platforms/nextflow/WorkflowHelper.nf > $WF_DIR/WorkflowHelper.nf
+  viash export resource platforms/nextflow/DataflowHelper.nf > $WF_DIR/DataflowHelper.nf
+  ```
 
 * Improvements to test benches and several bug fixes.
 
