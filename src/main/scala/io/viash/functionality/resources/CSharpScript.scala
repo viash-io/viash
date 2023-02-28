@@ -37,6 +37,8 @@ case class CSharpScript(
 
   @undocumented
   entrypoint: Option[String] = None,
+
+  @description("Specifies the resource as a C# script.")
   `type`: String = CSharpScript.`type`
 ) extends Script {
   assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")
@@ -84,7 +86,8 @@ case class CSharpScript(
 
       // TODO: set as null if not found, not an empty array
       val notFound = par match {
-        case a: Argument[_] if a.multiple => Some(s"new $class_[0]")
+        //case a: Argument[_] if a.multiple => Some(s"new $class_[0]")
+        case a: Argument[_] if a.multiple => Some(s"(${class_}) null")
         case a: StringArgument if !a.required => Some(s"(${class_}) null")
         case a: FileArgument if !a.required => Some(s"(${class_}) null")
         case a: Argument[_] if !a.required => Some(s"(${class_}?) null")

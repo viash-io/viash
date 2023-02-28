@@ -34,6 +34,8 @@ case class Executable(
 
   @undocumented
   entrypoint: Option[String] = None,
+
+  @description("Specifies the resource as an executable.")
   `type`: String = "executable"
 ) extends Script {
   assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")

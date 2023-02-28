@@ -157,11 +157,11 @@ case class Functionality(
       |
       |Common properties:
       |
-      | * type: `file` / `r_script` / `python_script` / `bash_script` / `javascript_script` / `scala_script` / `csharp_script`, the type of resource. The first resource cannot be of type `file`. When the type is not specified, the default type is simply `file`.
-      | * name: filename, the resulting name of the resource.
-      | * path: `path/to/file`, the path of the input file. Can be a relative or an absolute path, or a URI.
-      | * text: ...multiline text..., the raw content of the input file. Exactly one of path or text must be defined, the other undefined.
-      | * is_executable: `true` / `false`, whether the resulting file is made executable.
+      | * type: `file` / `r_script` / `python_script` / `bash_script` / `javascript_script` / `scala_script` / `csharp_script`, specifies the type of the resource. The first resource cannot be of type `file`. When the type is not specified, the default type is simply `file`.
+      | * dest: filename, the resulting name of the resource.  From within a script, the file can be accessed at `meta["resources_dir"] + "/" + dest`. If unspecified, `dest` will be set to the basename of the `path` parameter.
+      | * path: `path/to/file`, the path of the input file. Can be a relative or an absolute path, or a URI. Mutually exclusive with `text`.
+      | * text: ...multiline text..., the content of the resulting file specified as a string. Mutually exclusive with `path`.
+      | * is_executable: `true` / `false`, whether the resulting resource file should be made executable.
       |""".stripMargin)
   @example(
     """resources:

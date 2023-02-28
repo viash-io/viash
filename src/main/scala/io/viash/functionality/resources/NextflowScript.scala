@@ -33,6 +33,8 @@ case class NextflowScript(
 
   @description("The name of the workflow to be executed.")
   entrypoint: Option[String] = None,
+
+  @description("Specifies the resource as a Nextflow script.")
   `type`: String = NextflowScript.`type`
 ) extends Script {
   
