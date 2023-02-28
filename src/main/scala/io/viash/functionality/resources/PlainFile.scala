@@ -28,6 +28,8 @@ case class PlainFile(
   dest: Option[String] = None,
   is_executable: Option[Boolean] = None,
   parent: Option[URI] = None,
+
+  @description("Specifies the resource as a plain file.")
   `type`: String = "file"
 ) extends Resource {
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {

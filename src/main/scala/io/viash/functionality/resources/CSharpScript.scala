@@ -37,6 +37,8 @@ case class CSharpScript(
 
   @undocumented
   entrypoint: Option[String] = None,
+
+  @description("Specifies the resource as a C# script.")
   `type`: String = CSharpScript.`type`
 ) extends Script {
   assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")
