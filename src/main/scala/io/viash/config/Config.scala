@@ -67,9 +67,9 @@ case class Config(
   @description(
     """A list of platforms to generate target artifacts for.
       |
-      | - @[native_platform](Native)
-      | - @[docker_platform](Docker)
-      | - @[nextflow_platform](Nextflow VDSL3)
+      | - @[Native](native_platform)
+      | - @[Docker](docker_platform)
+      | - @[Nextflow VDSL3](nextflow_platform)
       |""".stripMargin)
   platforms: List[Platform] = Nil,
 

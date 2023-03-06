@@ -35,7 +35,7 @@ case class Functionality(
   @example("name: this_is_my_component", "yaml")
   name: String,
 
-  @description("Namespace this component is a part of. See the @[namespace](Namespaces guide) for more information on namespaces.")
+  @description("Namespace this component is a part of. See the @[Namespaces guide](namespace) for more information on namespaces.")
   @example("namespace: fancy_components", "yaml")
   namespace: Option[String] = None,
 
@@ -75,13 +75,13 @@ case class Functionality(
   @description(
     """A list of arguments for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. See these reference pages per type for more information:  
       |
-      | - @[arg_string](string)
-      | - @[arg_file](file)
-      | - @[arg_integer](integer)
-      | - @[arg_double](double)
-      | - @[arg_boolean](boolean)
-      | - @[arg_boolean_true](boolean_true)
-      | - @[arg_boolean_false](boolean_false)
+      | - @[string](arg_string)
+      | - @[file](arg_file)
+      | - @[integer](arg_integer)
+      | - @[double](arg_double)
+      | - @[boolean](arg_boolean)
+      | - @[boolean_true](arg_boolean_true)
+      | - @[boolean_false](arg_boolean_false)
       |""".stripMargin)
   @example(
     """arguments:
@@ -153,7 +153,7 @@ case class Functionality(
   argument_groups: List[ArgumentGroup] = Nil,
 
   @description(
-    """@[resources](Resources) are files that support the component. The first resource should be @[scripting_languages](a script) that will be executed when the functionality is run. Additional resources will be copied to the same directory.
+    """@[Resources](resources) are files that support the component. The first resource should be @[a script](scripting_languages) that will be executed when the functionality is run. Additional resources will be copied to the same directory.
       |
       |Common properties:
       |
@@ -186,7 +186,7 @@ case class Functionality(
   @example("usage: Place the executable in a directory containing TSV files and run it", "yaml")
   usage: Option[String] = None,
 
-  @description("""One or more @[scripting_language](scripts) to be used to test the component behaviour when `viash test` is invoked. Additional files of type `file` will be made available only during testing. Each test script should expect no command-line inputs, be platform-independent, and return an exit code >0 when unexpected behaviour occurs during testing. See @[unit_testing](Unit Testing) for more info.""")
+  @description("""One or more @[scripts](scripting_language) to be used to test the component behaviour when `viash test` is invoked. Additional files of type `file` will be made available only during testing. Each test script should expect no command-line inputs, be platform-independent, and return an exit code >0 when unexpected behaviour occurs during testing. See @[Unit Testing](unit_testing) for more info.""")
   @example(
     """test_resources:
       |  - type: bash_script

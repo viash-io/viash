@@ -6,6 +6,13 @@ TODO: add summary>
 
 * `DataflowHelper`: Add assertions and `def`s.
 
+* `config_schema`:
+  - Correct some incorrect markdown tags
+  - Add project config
+  - Correct documentation/markdown tags to the correct order
+
+* `cli_schema`: Correct documentation/markdown tags to the correct order
+
 # Viash 0.7.0 (2023-02-28): Major code cleanup and minor improvements to VDSL3
 
 * Default namespace separator has been changed from `_` to `/`. This means 
