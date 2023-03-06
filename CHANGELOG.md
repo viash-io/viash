@@ -8,7 +8,7 @@ TODO: add summary>
 
 ## BUG FIXES
 
-* `VDSL3`: Only the first two elements from an event in a channel are now passed to the process. This avoids calculating cache entries based on arguments that are not used by the process, causing false-negative cache misses.
+* `VDSL3`: Only the first two elements from an event in a channel are now passed to a process. This avoids calculating cache entries based on arguments that are not used by the process, causing false-negative cache misses.
 
 # Viash 0.7.0 (2023-02-28): Major code cleanup and minor improvements to VDSL3
 

@@ -829,7 +829,6 @@ def workflowFactory(Map args) {
     output_passthrough = mid2_
       | map { tuple ->
         def id = tuple[0]
-        def data = tuple[1]
         def passthrough = tuple.drop(2)
         [id] + passthrough
       }
