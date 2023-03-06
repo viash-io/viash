@@ -961,7 +961,7 @@ def workflowFactory(Map args) {
         out
       }
 
-    output_ = output_process.join(output_passthrough)
+    output_ = output_process.join(output_passthrough, failOnDuplicate: true)
       | debug(processArgs, "output")
 
     emit:
