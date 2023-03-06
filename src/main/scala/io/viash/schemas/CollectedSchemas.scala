@@ -31,6 +31,7 @@ import monocle.function.Cons
 import io.viash.config.Config
 import io.viash.config.Info
 import io.viash.functionality.resources._
+import io.viash.project.ViashProject
 
 final case class CollectedSchemas (
   config: List[ParameterSchema],
@@ -38,7 +39,8 @@ final case class CollectedSchemas (
   platforms: Map[String, List[ParameterSchema]],
   requirements: Map[String, List[ParameterSchema]],
   arguments: Map[String, List[ParameterSchema]],
-  resources: Map[String, List[ParameterSchema]]
+  resources: Map[String, List[ParameterSchema]],
+  project: List[ParameterSchema],
 )
 
 
@@ -137,6 +139,9 @@ object CollectedSchemas {
       "pythonScript"           -> getMembers[PythonScript](),
       "rScript"                -> getMembers[RScript](),
       "scalaScript"            -> getMembers[ScalaScript](),
+    ),
+    "project" -> Map(
+      ""                       -> getMembers[ViashProject](),
     )
   )
 
@@ -174,6 +179,7 @@ object CollectedSchemas {
       requirements = schemaClassMap.get("requirements").get.map{ case(k, v) => (k, getSchema(v))},
       arguments = schemaClassMap.get("arguments").get.map{ case(k, v) => (k, getSchema(v))},
       resources = schemaClassMap.get("resources").get.map{ case(k, v) => (k, getSchema(v))},
+      project = getSchema(schemaClassMap.get("project").get("")),
     )
 
   def getJson: Json = {
