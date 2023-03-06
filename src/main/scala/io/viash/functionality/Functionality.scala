@@ -186,7 +186,7 @@ case class Functionality(
   @example("usage: Place the executable in a directory containing TSV files and run it", "yaml")
   usage: Option[String] = None,
 
-  @description("""One or more @[scripts](scripting_language) to be used to test the component behaviour when `viash test` is invoked. Additional files of type `file` will be made available only during testing. Each test script should expect no command-line inputs, be platform-independent, and return an exit code >0 when unexpected behaviour occurs during testing. See @[Unit Testing](unit_testing) for more info.""")
+  @description("""One or more @[scripts](scripting_languages) to be used to test the component behaviour when `viash test` is invoked. Additional files of type `file` will be made available only during testing. Each test script should expect no command-line inputs, be platform-independent, and return an exit code >0 when unexpected behaviour occurs during testing. See @[Unit Testing](unit_testing) for more info.""")
   @example(
     """test_resources:
       |  - type: bash_script
