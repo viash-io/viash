@@ -106,14 +106,14 @@ case class DockerPlatform(
       +| `alwayscachedbuild` / `cachedbuild` / `cb` | Always build the image from the dockerfile, with caching enabled.
       +| `ifneedbebuild` |  Build the image if it does not exist locally.
       +| `ifneedbecachedbuild` | Build the image with caching enabled if it does not exist locally, with caching enabled.
-      +| `alwayspull` / `pull` / `p` |  Try to pull the container from [Docker Hub](https://hub.docker.com) or the @[docker_registry](specified docker registry).
+      +| `alwayspull` / `pull` / `p` |  Try to pull the container from [Docker Hub](https://hub.docker.com) or the @[specified docker registry](docker_registry).
       +| `alwayspullelsebuild` / `pullelsebuild` |  Try to pull the image from a registry and build it if it doesn't exist.
       +| `alwayspullelsecachedbuild` / `pullelsecachedbuild` |  Try to pull the image from a registry and build it with caching if it doesn't exist.
       +| `ifneedbepull` |  If the image does not exist locally, pull the image.
       +| `ifneedbepullelsebuild` |  If the image does not exist locally, pull the image. If the image does exist, build it.
       +| `ifneedbepullelsecachedbuild` | If the image does not exist locally, pull the image. If the image does exist, build it with caching enabled.
-      +| `push` | Push the container to [Docker Hub](https://hub.docker.com)  or the @[docker_registry](specified docker registry).
-      +| `pushifnotpresent` | Push the container to [Docker Hub](https://hub.docker.com) or the @[docker_registry](specified docker registry) if the @[docker_tag](tag) does not exist yet.
+      +| `push` | Push the container to [Docker Hub](https://hub.docker.com)  or the @[specified docker registry](docker_registry).
+      +| `pushifnotpresent` | Push the container to [Docker Hub](https://hub.docker.com) or the @[specified docker registry](docker_registry) if the @[tag](docker_tag) does not exist yet.
       +| `donothing` / `meh` | Do not build or pull anything.
       +
       +""".stripMargin('+'))
@@ -132,14 +132,14 @@ case class DockerPlatform(
   @description(
     """A list of requirements for installing the following types of packages:
       |
-      | - @[apt_req](apt)
-      | - @[apk_req](apk)
-      | - @[docker_req](Docker setup instructions)
-      | - @[javascript_req](JavaScript)
-      | - @[python_req](Python)
-      | - @[r_req](R)
-      | - @[ruby_req](Ruby)
-      | - @[yum_req](yum)
+      | - @[apt](apt_req)
+      | - @[apk](apk_req)
+      | - @[Docker setup instructions](docker_req)
+      | - @[JavaScript](javascript_req)
+      | - @[Python](python_req)
+      | - @[R](r_req)
+      | - @[Ruby](ruby_req)
+      | - @[yum](yum_req)
       |
       |The order in which these dependencies are specified determines the order in which they will be installed.
       |""".stripMargin)
