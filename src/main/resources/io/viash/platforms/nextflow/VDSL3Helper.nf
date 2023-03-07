@@ -828,9 +828,7 @@ def workflowFactory(Map args) {
 
     output_passthrough = mid2_
       | map { tuple ->
-        def id = tuple[0]
-        def passthrough = tuple.drop(2)
-        [id] + passthrough
+        [tuple[0]] + tuple.drop(2)
       }
 
     output_process = mid2_
@@ -956,9 +954,7 @@ def workflowFactory(Map args) {
           outputFiles = outputFiles.values()[0]
         }
 
-        def out = [ output[0], outputFiles ]
-
-        out
+        [ output[0], outputFiles ]
       }
 
     output_ = output_process.join(output_passthrough, failOnDuplicate: true)
