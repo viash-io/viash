@@ -85,7 +85,7 @@ case class Functionality(
       |""".stripMargin)
   @example(
     """arguments:
-      |   - name: --foo
+      |  - name: --foo
       |    type: file
       |    alternatives: [-f]
       |    description: Description of foo
@@ -95,7 +95,7 @@ case class Functionality(
       |    required: false
       |    multiple: true
       |    multiple_sep: ","
-      |   - name: --bar
+      |  - name: --bar
       |    type: string
       |""".stripMargin,
       "yaml")

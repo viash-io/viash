@@ -24,6 +24,25 @@ import java.nio.file.{Path, Paths}
 import java.nio.file.NoSuchFileException
 import io.viash.schemas._
 
+@description(
+  """@[Resources](resources) are files that support the component. The first resource should be @[a script](scripting_languages) that will be executed when the functionality is run. Additional resources will be copied to the same directory.
+    |
+    |Common properties:
+    |
+    | * type: `file` / `r_script` / `python_script` / `bash_script` / `javascript_script` / `scala_script` / `csharp_script`, specifies the type of the resource. The first resource cannot be of type `file`. When the type is not specified, the default type is simply `file`.
+    | * dest: filename, the resulting name of the resource.  From within a script, the file can be accessed at `meta["resources_dir"] + "/" + dest`. If unspecified, `dest` will be set to the basename of the `path` parameter.
+    | * path: `path/to/file`, the path of the input file. Can be a relative or an absolute path, or a URI. Mutually exclusive with `text`.
+    | * text: ...multiline text..., the content of the resulting file specified as a string. Mutually exclusive with `path`.
+    | * is_executable: `true` / `false`, whether the resulting resource file should be made executable.
+    |""".stripMargin)
+@example(
+  """resources:
+    |  - type: r_script
+    |    path: script.R
+    |  - type: file
+    |    path: resource1.txt
+    |""".stripMargin,
+    "yaml")
 trait Resource {
   @description("Specifies the type of the resource. The first resource cannot be of type `file`. When the type is not specified, the default type is simply `file`.")
   val `type`: String
