@@ -22,6 +22,33 @@ import io.viash.helpers.data_structures._
 import io.viash.schemas._
 import java.nio.file.Paths
 
+@description(
+  """For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. See these reference pages per type for more information:  
+    |
+    | - @[string](arg_string)
+    | - @[file](arg_file)
+    | - @[integer](arg_integer)
+    | - @[double](arg_double)
+    | - @[boolean](arg_boolean)
+    | - @[boolean_true](arg_boolean_true)
+    | - @[boolean_false](arg_boolean_false)
+    |""".stripMargin)
+@example(
+  """arguments:
+    |   - name: --foo
+    |    type: file
+    |    alternatives: [-f]
+    |    description: Description of foo
+    |    default: "/foo/bar"
+    |    must_exist: true
+    |    direction: output
+    |    required: false
+    |    multiple: true
+    |    multiple_sep: ","
+    |   - name: --bar
+    |    type: string
+    |""".stripMargin,
+    "yaml")
 abstract class Argument[Type] {
   @description("Specifies the type of the argument.")
   val `type`: String

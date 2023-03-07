@@ -120,6 +120,7 @@ object CollectedSchemas {
       "yumRequirements"        -> getMembers[YumRequirements](),
     ),
     "arguments" -> Map(
+      "argument"               -> getMembers[Argument[_]](),
       "boolean"                -> getMembers[BooleanArgument](),
       "boolean_true"           -> getMembers[BooleanTrueArgument](),
       "boolean_false"          -> getMembers[BooleanFalseArgument](),
@@ -130,6 +131,7 @@ object CollectedSchemas {
       "string"                 -> getMembers[StringArgument](),
     ),
     "resources" -> Map(
+      "resource"               -> getMembers[Resource](),
       "bashScript"             -> getMembers[BashScript](),
       "cSharpScript"           -> getMembers[CSharpScript](),
       "executable"             -> getMembers[Executable](),
