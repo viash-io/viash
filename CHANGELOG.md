@@ -6,6 +6,10 @@ TODO: add summary>
 
 * `DataflowHelper`: Add assertions and `def`s.
 
+## BUG FIXES
+
+* `VDSL3`: Only the first two elements from an event in a channel are now passed to a process. This avoids calculating cache entries based on arguments that are not used by the process, causing false-negative cache misses.
+
 * `config_schema`:
   - Correct some incorrect markdown tags
   - Add project config
