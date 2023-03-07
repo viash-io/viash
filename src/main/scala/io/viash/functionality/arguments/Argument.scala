@@ -35,7 +35,7 @@ import java.nio.file.Paths
     |""".stripMargin)
 @example(
   """arguments:
-    |   - name: --foo
+    |  - name: --foo
     |    type: file
     |    alternatives: [-f]
     |    description: Description of foo
@@ -45,7 +45,7 @@ import java.nio.file.Paths
     |    required: false
     |    multiple: true
     |    multiple_sep: ","
-    |   - name: --bar
+    |  - name: --bar
     |    type: string
     |""".stripMargin,
     "yaml")
