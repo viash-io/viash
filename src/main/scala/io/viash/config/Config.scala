@@ -84,7 +84,7 @@ case class Config(
       |""".stripMargin)
   @example("__merge__: ../api/common_interface.yaml", "yaml")
   @since("Viash 0.6.3")
-  val `__merge__`: Option[File] = None
+  private val `__merge__`: Option[File] = None
   
 
   /**
