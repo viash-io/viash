@@ -1,6 +1,6 @@
-# Viash 0.7.1 (2023-MM-dd): TODO add description
+# Viash 0.7.1 (2023-MM-dd): Minor improvements to VDSL3 and schema functionality.
 
-TODO: add summary>
+This is a minor release which improves caching in VDSL3 components and changes the formats of the schema files for the Viash config and CLI.
 
 ## MINOR CHANGES
 
@@ -11,13 +11,13 @@ TODO: add summary>
 * `VDSL3`: Only the first two elements from an event in a channel are now passed to a process. This avoids calculating cache entries based on arguments that are not used by the process, causing false-negative cache misses.
 
 * `config_schema`:
-  - Correct some incorrect markdown tags
-  - Add project config
-  - Correct documentation/markdown tags to the correct order
-  - Add summary description and example for 'resource' and 'argument', to be used on the reference website
-  - Add documentation for the Nextflow directives
+  - Correct some incorrect markdown tags.
+  - Add project config.
+  - Correct documentation/markdown tags to the correct order.
+  - Add summary description and example for 'resource' and 'argument', to be used on the reference website.
+  - Add documentation for the Nextflow directives.
 
-* `cli_schema`: Correct documentation/markdown tags to the correct order
+* `cli_schema`: Correct documentation/markdown tags to the correct order.
 
 # Viash 0.7.0 (2023-02-28): Major code cleanup and minor improvements to VDSL3
 
