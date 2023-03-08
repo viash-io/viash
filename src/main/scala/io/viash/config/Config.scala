@@ -81,12 +81,9 @@ case class Config(
     """Config inheritance by including YAML partials. This is useful for defining common APIs in
       |separate files. `__merge__` can be used in any level of the YAML. For example,
       |not just in the config but also in the functionality or any of the platforms.
-      |
-      |WARNING: this argument is an EXPERIMENTAL feature. Changes to the API are expected.
       |""".stripMargin)
   @example("__merge__: ../api/common_interface.yaml", "yaml")
   @since("Viash 0.6.3")
-  @undocumented
   val `__merge__`: Option[File] = None
   
 
