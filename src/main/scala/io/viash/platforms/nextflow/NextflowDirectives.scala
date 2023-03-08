@@ -39,6 +39,7 @@ case class NextflowDirectives(
       |
       |See [`accelerator`](https://www.nextflow.io/docs/latest/process.html#accelerator).
       |""".stripMargin)
+  @example("""[ limit: 4, type: "nvidia-tesla-k80" ]""", "yaml")
   accelerator: Map[String, String] = Map(),
 
   @description(
@@ -46,6 +47,7 @@ case class NextflowDirectives(
       |
       |See [`afterScript`](https://www.nextflow.io/docs/latest/process.html#afterscript).
       |""".stripMargin)
+  @example("""source /cluster/bin/cleanup""", "yaml")
   afterScript: Option[String] = None,
   
   @description(
@@ -53,6 +55,7 @@ case class NextflowDirectives(
       |
       |See [`beforeScript`](https://www.nextflow.io/docs/latest/process.html#beforeScript).
       |""".stripMargin)
+  @example("""source /cluster/bin/setup""", "yaml")
   beforeScript: Option[String] = None,
   
   @description(
@@ -65,7 +68,11 @@ case class NextflowDirectives(
       |Accepted values are: `true`, `false`, `"deep"`, and `"lenient"`.
       |
       |See [`cache`](https://www.nextflow.io/docs/latest/process.html#cache).
-      |""")
+      |""".stripMargin)
+  @example("true", "yaml")
+  @example("false", "yaml")
+  @example(""""deep"""", "yaml")
+  @example(""""lenient"""", "yaml")
   cache: Option[Either[Boolean, String]] = None,
   
   @description(
@@ -75,6 +82,9 @@ case class NextflowDirectives(
       |
       |See [`conda`](https://www.nextflow.io/docs/latest/process.html#conda).
       |""".stripMargin)
+  @example(""""bwa=0.7.15"""", "yaml")
+  @example(""""bwa=0.7.15 fastqc=0.11.5"""", "yaml")
+  @example("""["bwa=0.7.15", "fastqc=0.11.5"]""", "yaml")
   conda: OneOrMore[String] = Nil,
   
   @description(
@@ -86,6 +96,9 @@ case class NextflowDirectives(
       |
       |See [`container`](https://www.nextflow.io/docs/latest/process.html#container).
       |""".stripMargin)
+  @example(""""foo/bar:tag"""", "yaml")
+  @exampleWithDescription("""[ registry: "reg", image: "im", tag: "ta" ]""", "yaml", """This is transformed to `"reg/im:ta"`:""")
+  @exampleWithDescription("""[ image: "im" ]""", "yaml", """This is transformed to `"im:latest"`:""")
   container: Option[Either[Map[String, String], String]] = None, // TODO: need to implement container class?
   
   @description(
@@ -93,6 +106,8 @@ case class NextflowDirectives(
       |
       |See [`containerOptions`](https://www.nextflow.io/docs/latest/process.html#containeroptions).
       |""".stripMargin)
+  @example(""""--foo bar"""", "yaml")
+  @example("""["--foo bar", "-f b"]""", "yaml")
   containerOptions: OneOrMore[String] = Nil,
   
   @description(
@@ -100,6 +115,8 @@ case class NextflowDirectives(
       |
       |See [`cpus`](https://www.nextflow.io/docs/latest/process.html#cpus).
       |""".stripMargin)
+  @example("1", "yaml")
+  @example("10", "yaml")
   cpus: Option[Either[Int, String]] = None,
   
   @description(
@@ -107,6 +124,10 @@ case class NextflowDirectives(
       |
       |See [`disk`](https://www.nextflow.io/docs/latest/process.html#disk).
       |""".stripMargin)
+  @example(""""1 GB"""", "yaml")
+  @example(""""2TB"""", "yaml")
+  @example(""""3.2KB"""", "yaml")
+  @example(""""10.B"""", "yaml")
   disk: Option[String] = None,
   
   @description(
@@ -114,6 +135,8 @@ case class NextflowDirectives(
       | 
       |See [`echo`](https://www.nextflow.io/docs/latest/process.html#echo).
       |""".stripMargin)
+  @example("true", "yaml")
+  @example("false", "yaml")
   echo: Option[Either[Boolean, String]] = None,
   
   @description(
@@ -129,6 +152,8 @@ case class NextflowDirectives(
       |
       |See [`errorStrategy`](https://www.nextflow.io/docs/latest/process.html#errorstrategy).
       |""".stripMargin)
+  @example(""""terminate"""", "yaml")
+  @example(""""finish"""", "yaml")
   errorStrategy: Option[String] = None,
   
   @description(
@@ -158,6 +183,8 @@ case class NextflowDirectives(
       |
       |See [`executor`](https://www.nextflow.io/docs/latest/process.html#executor).
       |""".stripMargin)
+  @example(""""local"""", "yaml")
+  @example(""""sge"""", "yaml")
   executor: Option[String] = None,
   
   @description(
@@ -165,6 +192,9 @@ case class NextflowDirectives(
       |
       |See [`label`](https://www.nextflow.io/docs/latest/process.html#label).
       |""".stripMargin)
+  @example(""""big_mem"""", "yaml")
+  @example(""""big_cpu"""", "yaml")
+  @example("""["big_mem", "big_cpu"]""", "yaml")
   label: OneOrMore[String] = Nil,
   
   @description(
@@ -172,6 +202,7 @@ case class NextflowDirectives(
       |
       |See [`machineType`](https://www.nextflow.io/docs/latest/process.html#machinetype).
       |""".stripMargin)
+  @example(""""n1-highmem-8"""", "yaml")
   machineType: Option[String] = None,
   
   @description(
@@ -179,6 +210,8 @@ case class NextflowDirectives(
       |
       |See [`maxErrors`](https://www.nextflow.io/docs/latest/process.html#maxerrors).
       |""".stripMargin)
+  @example("1", "yaml")
+  @example("3", "yaml")
   maxErrors: Option[Either[String, Int]] = None,
   
   @description(
@@ -188,6 +221,8 @@ case class NextflowDirectives(
       |
       |See [`maxForks`](https://www.nextflow.io/docs/latest/process.html#maxforks).
       |""".stripMargin)
+  @example("1", "yaml")
+  @example("3", "yaml")
   maxForks: Option[Either[String, Int]] = None,
   
   @description(
@@ -195,6 +230,8 @@ case class NextflowDirectives(
       |
       |See [`maxRetries`](https://www.nextflow.io/docs/latest/process.html#maxretries).
       |""".stripMargin)
+  @example("1", "yaml")
+  @example("3", "yaml")
   maxRetries: Option[Either[String, Int]] = None,
   
   @description(
@@ -202,6 +239,10 @@ case class NextflowDirectives(
       |
       |See [`memory`](https://www.nextflow.io/docs/latest/process.html#memory).
       |""".stripMargin)
+  @example(""""1 GB"""", "yaml")
+  @example(""""2TB"""", "yaml")
+  @example(""""3.2KB"""", "yaml")
+  @example(""""10.B"""", "yaml")
   memory: Option[String] = None,
   
   @description(
@@ -213,6 +254,9 @@ case class NextflowDirectives(
       |
       |See [`module`](https://www.nextflow.io/docs/latest/process.html#module).
       |""".stripMargin)
+  @example(""""ncbi-blast/2.2.27"""", "yaml")
+  @example(""""ncbi-blast/2.2.27:t_coffee/10.0"""", "yaml")
+  @example("""["ncbi-blast/2.2.27", "t_coffee/10.0"]""", "yaml")
   module: OneOrMore[String] = Nil,
   
   @description(
@@ -220,6 +264,7 @@ case class NextflowDirectives(
       |
       |See [`penv`](https://www.nextflow.io/docs/latest/process.html#penv).
       |""".stripMargin)
+  @example(""""smp"""", "yaml")
   penv: Option[String] = None,
   
   @description(
@@ -227,6 +272,10 @@ case class NextflowDirectives(
       |
       |See [`pod`](https://www.nextflow.io/docs/latest/process.html#pod).
       |""".stripMargin)
+  @example("""[ label: "key", value: "val" ]""", "yaml")
+  @example("""[ annotation: "key", value: "val" ]""", "yaml")
+  @example("""[ env: "key", value: "val" ]""", "yaml")
+  @example("""[ [label: "l", value: "v"], [env: "e", value: "v"]]""", "yaml")
   pod: OneOrMore[Map[String, String]] = Nil,
   
   @description(
@@ -237,6 +286,10 @@ case class NextflowDirectives(
       |
       |See [`publishDir`](https://www.nextflow.io/docs/latest/process.html#publishdir).
       |""".stripMargin)
+  @example("[]", "yaml")
+  @example("""[ [ path: "foo", enabled: true ], [ path: "bar", enabled: false ] ]""", "yaml")
+  @exampleWithDescription(""""/path/to/dir"""", "yaml", """This is transformed to `[[ path: "/path/to/dir" ]]`:""")
+  @exampleWithDescription("""[ path: "/path/to/dir", mode: "cache" ]""", "yaml", """This is transformed to `[[ path: "/path/to/dir", mode: "cache" ]]`:""")
   publishDir: OneOrMore[Either[String, Map[String, String]]] = Nil, // TODO: need to implement publishdir class?
   
   @description(
@@ -244,6 +297,9 @@ case class NextflowDirectives(
       |
       |See [`queue`](https://www.nextflow.io/docs/latest/process.html#queue).
       |""".stripMargin)
+  @example(""""long"""", "yaml")
+  @example(""""short,long"""", "yaml")
+  @example("""["short", "long"]""", "yaml")
   queue: OneOrMore[String] = Nil,
   
   @description(
@@ -251,6 +307,10 @@ case class NextflowDirectives(
       |
       |See [`scratch`](https://www.nextflow.io/docs/latest/process.html#scratch).
       |""".stripMargin)
+  @example("true", "yaml")
+  @example(""""/path/to/scratch"""", "yaml")
+  @example("""'$MY_PATH_TO_SCRATCH'""", "yaml")
+  @example(""""ram-disk"""", "yaml")
   scratch: Option[Either[Boolean, String]] = None,
   
   @description(
@@ -258,6 +318,7 @@ case class NextflowDirectives(
       |
       |See [`storeDir`](https://www.nextflow.io/docs/latest/process.html#storeDir).
       |""".stripMargin)
+  @example(""""/path/to/storeDir"""", "yaml")
   storeDir: Option[String] = None,
   
   @description(
@@ -272,6 +333,8 @@ case class NextflowDirectives(
       |
       |See [`stageInMode`](https://www.nextflow.io/docs/latest/process.html#stageinmode).
       |""".stripMargin)
+  @example(""""copy"""", "yaml")
+  @example(""""link"""", "yaml")
   stageInMode: Option[String] = None,
   
   @description(
@@ -285,6 +348,8 @@ case class NextflowDirectives(
       |
       |See [`stageOutMode`](https://www.nextflow.io/docs/latest/process.html#stageoutmode).
       |""".stripMargin)
+  @example(""""copy"""", "yaml")
+  @example(""""link"""", "yaml")
   stageOutMode: Option[String] = None,
   
   @description(
@@ -292,6 +357,8 @@ case class NextflowDirectives(
       |
       |See [`tag`](https://www.nextflow.io/docs/latest/process.html#tag).
       |""".stripMargin)
+  @example(""""foo"""", "yaml")
+  @example("""'$id'""", "yaml")
   tag: Option[String] = None,
   
   @description(
@@ -299,5 +366,8 @@ case class NextflowDirectives(
       |
       |See [`time`](https://www.nextflow.io/docs/latest/process.html#time).
       |""".stripMargin)
+  @example(""""1h"""", "yaml")
+  @example(""""2days"""", "yaml")
+  @example(""""1day 6hours 3minutes 30seconds"""", "yaml")
   time: Option[String] = None
 )
