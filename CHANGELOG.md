@@ -15,6 +15,7 @@ TODO: add summary>
   - Add project config
   - Correct documentation/markdown tags to the correct order
   - Add summary description and example for 'resource' and 'argument', to be used on the reference website
+  - Add documentation for the Nextflow directives
 
 * `cli_schema`: Correct documentation/markdown tags to the correct order
 

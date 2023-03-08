@@ -32,6 +32,7 @@ import io.viash.config.Config
 import io.viash.config.Info
 import io.viash.functionality.resources._
 import io.viash.project.ViashProject
+import io.viash.platforms.nextflow.NextflowDirectives
 
 final case class CollectedSchemas (
   config: List[ParameterSchema],
@@ -41,6 +42,7 @@ final case class CollectedSchemas (
   arguments: Map[String, List[ParameterSchema]],
   resources: Map[String, List[ParameterSchema]],
   project: List[ParameterSchema],
+  nextflowDirectives: List[ParameterSchema],
 )
 
 
@@ -144,6 +146,9 @@ object CollectedSchemas {
     ),
     "project" -> Map(
       ""                       -> getMembers[ViashProject](),
+    ),
+    "nextflowDirectives" -> Map(
+      ""                       -> getMembers[NextflowDirectives](),
     )
   )
 
@@ -182,6 +187,7 @@ object CollectedSchemas {
       arguments = schemaClassMap.get("arguments").get.map{ case(k, v) => (k, getSchema(v))},
       resources = schemaClassMap.get("resources").get.map{ case(k, v) => (k, getSchema(v))},
       project = getSchema(schemaClassMap.get("project").get("")),
+      nextflowDirectives = getSchema(schemaClassMap.get("nextflowDirectives").get("")),
     )
 
   def getJson: Json = {
