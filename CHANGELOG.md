@@ -1,4 +1,4 @@
-# Viash 0.7.1 (2023-MM-dd): Minor improvements to VDSL3 and schema functionality.
+# Viash 0.7.1 (2023-03-08): Minor improvements to VDSL3 and schema functionality.
 
 This is a minor release which improves caching in VDSL3 components and changes the formats of the schema files for the Viash config and CLI.
 
