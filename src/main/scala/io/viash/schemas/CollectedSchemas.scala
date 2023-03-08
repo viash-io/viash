@@ -31,6 +31,8 @@ import monocle.function.Cons
 import io.viash.config.Config
 import io.viash.config.Info
 import io.viash.functionality.resources._
+import io.viash.project.ViashProject
+import io.viash.platforms.nextflow.NextflowDirectives
 
 final case class CollectedSchemas (
   config: List[ParameterSchema],
@@ -38,7 +40,9 @@ final case class CollectedSchemas (
   platforms: Map[String, List[ParameterSchema]],
   requirements: Map[String, List[ParameterSchema]],
   arguments: Map[String, List[ParameterSchema]],
-  resources: Map[String, List[ParameterSchema]]
+  resources: Map[String, List[ParameterSchema]],
+  project: List[ParameterSchema],
+  nextflowDirectives: List[ParameterSchema],
 )
 
 
@@ -118,6 +122,7 @@ object CollectedSchemas {
       "yumRequirements"        -> getMembers[YumRequirements](),
     ),
     "arguments" -> Map(
+      "argument"               -> getMembers[Argument[_]](),
       "boolean"                -> getMembers[BooleanArgument](),
       "boolean_true"           -> getMembers[BooleanTrueArgument](),
       "boolean_false"          -> getMembers[BooleanFalseArgument](),
@@ -128,6 +133,7 @@ object CollectedSchemas {
       "string"                 -> getMembers[StringArgument](),
     ),
     "resources" -> Map(
+      "resource"               -> getMembers[Resource](),
       "bashScript"             -> getMembers[BashScript](),
       "cSharpScript"           -> getMembers[CSharpScript](),
       "executable"             -> getMembers[Executable](),
@@ -137,6 +143,12 @@ object CollectedSchemas {
       "pythonScript"           -> getMembers[PythonScript](),
       "rScript"                -> getMembers[RScript](),
       "scalaScript"            -> getMembers[ScalaScript](),
+    ),
+    "project" -> Map(
+      ""                       -> getMembers[ViashProject](),
+    ),
+    "nextflowDirectives" -> Map(
+      ""                       -> getMembers[NextflowDirectives](),
     )
   )
 
@@ -174,6 +186,8 @@ object CollectedSchemas {
       requirements = schemaClassMap.get("requirements").get.map{ case(k, v) => (k, getSchema(v))},
       arguments = schemaClassMap.get("arguments").get.map{ case(k, v) => (k, getSchema(v))},
       resources = schemaClassMap.get("resources").get.map{ case(k, v) => (k, getSchema(v))},
+      project = getSchema(schemaClassMap.get("project").get("")),
+      nextflowDirectives = getSchema(schemaClassMap.get("nextflowDirectives").get("")),
     )
 
   def getJson: Json = {

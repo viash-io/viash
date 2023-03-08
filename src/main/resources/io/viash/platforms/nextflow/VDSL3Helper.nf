@@ -636,9 +636,9 @@ def processFactory(Map processArgs) {
   |
   |process $procKey {$drctvStrs
   |input:
-  |  tuple val(id)$inputPaths, val(args), val(passthrough), path(resourcesDir)
+  |  tuple val(id)$inputPaths, val(args), path(resourcesDir)
   |output:
-  |  tuple val("\$id"), val(passthrough)$outputPaths, optional: true
+  |  tuple val("\$id")$outputPaths, optional: true
   |stub:
   |\"\"\"
   |touch2() { mkdir -p "\\\$(dirname "\\\$1")" && touch "\\\$1" ; }
@@ -825,7 +825,13 @@ def workflowFactory(Map args) {
     } else {
       mid2_ = mid1_
     }
-    output_ = mid2_
+
+    output_passthrough = mid2_
+      | map { tuple ->
+        [tuple[0]] + tuple.drop(2)
+      }
+
+    output_process = mid2_
       | debug(processArgs, "processed")
       | map { tuple ->
         def id = tuple[0]
@@ -914,7 +920,7 @@ def workflowFactory(Map args) {
             [parName, val]
           }
 
-        [ id ] + inputPaths + [ argsExclInputFiles, passthrough, resourcesDir ]
+        [ id ] + inputPaths + [ argsExclInputFiles, resourcesDir ]
       }
       | processObj
       | map { output ->
@@ -922,7 +928,7 @@ def workflowFactory(Map args) {
           .findAll { it.type == "file" && it.direction == "output" }
           .indexed()
           .collectEntries{ index, par ->
-            out = output[index + 2]
+            out = output[index + 1]
             // strip dummy '.exitcode' file from output (see nextflow-io/nextflow#2678)
             if (!out instanceof List || out.size() <= 1) {
               if (par.multiple) {
@@ -948,15 +954,10 @@ def workflowFactory(Map args) {
           outputFiles = outputFiles.values()[0]
         }
 
-        def out = [ output[0], outputFiles ]
-
-        // passthrough additional items
-        if (output[1]) {
-          out.addAll(output[1])
-        }
-
-        out
+        [ output[0], outputFiles ]
       }
+
+    output_ = output_process.join(output_passthrough, failOnDuplicate: true)
       | debug(processArgs, "output")
 
     emit:
