@@ -17,7 +17,7 @@ class TestingAllComponentsSuite extends AnyFunSuite {
   )
 
   for ((name, file) <- tests) {
-    val config = getTestResource(s"/$name/$file")
+    val config = getTestResource(s"/test_languages/$name/$file")
 
     // only run testbash natively because other requirements might not be available
     if (name == "testbash") {
