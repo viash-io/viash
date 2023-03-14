@@ -1,1 +1,0 @@
-This resource file has a space in the name.

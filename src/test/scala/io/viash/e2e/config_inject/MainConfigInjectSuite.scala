@@ -15,7 +15,7 @@ class MainConfigInjectSuite extends AnyFunSuite with BeforeAndAfterAll {
   private val temporaryFolder = IO.makeTemp("viash_tester")
 
   test("config inject works") {
-    val srcPath = Paths.get(getClass.getResource(s"/testpython/").getPath())
+    val srcPath = Paths.get(getClass.getResource(s"/test_languages/python/").getPath())
     val destPath = temporaryFolder.resolve("inject_test")
     destPath.toFile().mkdirs()
     

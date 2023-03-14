@@ -7,7 +7,7 @@ echo ">>> Checking whether expected resources exist"
 [[ ! -f "$meta_config" ]] && echo ".config.vsh.yaml could not be found!" && exit 1
 
 echo ">>> Checking whether output is correct"
-"$meta_executable" "NOTICE" --real_number 10.5 --whole_number=10 -s "a string with spaces" \
+"$meta_executable" "resource1.txt" --real_number 10.5 --whole_number=10 -s "a string with spaces" \
   --truth --falsehood --reality true \
   --optional foo --optional_with_default bar \
   a b c d \
@@ -17,7 +17,7 @@ echo ">>> Checking whether output is correct"
   --long_number 112589990684262400
 
 [[ ! -f output.txt ]] && echo "Output file could not be found!" && exit 1
-grep -q 'input: |NOTICE|' output.txt
+grep -q 'input: |resource1.txt|' output.txt
 grep -q 'real_number: |10.5|' output.txt
 grep -q 'whole_number: |10|' output.txt
 grep -q 'long_number: |112589990684262400|' output.txt
@@ -41,7 +41,7 @@ grep -q 'meta_memory_gb: |2|' output.txt
 grep -q 'meta_memory_tb: |1|' output.txt
 grep -q 'meta_memory_pb: |1|' output.txt
 
-grep -q 'head of input: |Scala|' output.txt
+grep -q 'head of input: |if you can read this,|' output.txt
 grep -q 'head of resource1: |if you can read this,|' output.txt
 
 [[ ! -f log.txt ]] && echo "Log file could not be found!" && exit 1
