@@ -31,7 +31,7 @@ grep -q 'optional: |foo|' output.txt
 grep -q 'optional_with_default: |bar|' output.txt
 grep -q 'multiple: |one:two|' output.txt
 grep -q 'multiple_pos: |a:b:c:d:e:f|' output.txt
-grep -q 'meta_functionality_name: |testbash|' output.txt
+grep -q 'meta_functionality_name: |test_languages|' output.txt
 grep -q 'meta_resources_dir: |..*|' output.txt
 grep -q 'meta_cpus: |2|' output.txt
 grep -q 'meta_memory_b: |2147483648|' output.txt
@@ -73,7 +73,7 @@ grep -q 'optional_with_default: |The default value.|' output2.txt
 grep -q 'multiple: ||' output2.txt
 grep -q 'multiple_pos: ||' output2.txt
 
-grep -q 'meta_functionality_name: |testbash|' output2.txt
+grep -q 'meta_functionality_name: |test_languages|' output2.txt
 grep -q 'meta_resources_dir: |..*|' output2.txt
 grep -q 'meta_cpus: |666|' output2.txt
 grep -q 'meta_memory_b: |112589990684262400|' output2.txt

@@ -1,56 +1,5 @@
 #' functionality:
-#'   name: testr
-#'   description: |
-#'     Prints out the parameter values.
-#'     Checking what happens with multiline descriptions.
-#'   arguments:
-#'   - name: "input"
-#'     type: file
-#'     description: An input file with positional arguments.
-#'     direction: input
-#'     required: true
-#'   - name: "--real_number"
-#'     type: double
-#'     description: A real number with positional arguments.
-#'     required: true
-#'   - name: "--whole_number"
-#'     type: integer
-#'     description: A whole number with a standard flag.
-#'     required: true
-#'   - name: "--long_number"
-#'     type: long
-#'     description: A long
-#'   - name: "-s"
-#'     type: string
-#'     description: A sentence or word with a short flag.
-#'     required: true
-#'   - name: "--truth"
-#'     type: boolean_true
-#'     description: A switch flag.
-#'   - name: "--output"
-#'     alternatives: ["-o"]
-#'     type: file
-#'     description: Write the parameters to a json file.
-#'     direction: output
-#'   - name: "--log"
-#'     type: file
-#'     description: An optional log file.
-#'     direction: output
-#'   - name: "--optional"
-#'     type: string
-#'     description: An optional string.
-#'   - name: "--optional_with_default"
-#'     type: string
-#'     default: "The default value."
-#'   - name: "--multiple"
-#'     type: string
-#'     multiple: true
-#'   - name: "multiple_pos"
-#'     type: string
-#'     multiple: true
-#'   test_resources:
-#'   - type: bash_script
-#'     path: test.sh
+#'   __merge__: [., ../common.yaml]
 #' platforms:
 #' - type: native
 #' - type: docker
