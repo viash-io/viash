@@ -39,13 +39,23 @@ if (length(par$output) > 0) {
 str <- sapply(names(par), function(n) {
   if(typeof(par[[n]]) == "character" && length(par[[n]]) == 0) {
     paste0(n, ": |empty array|\n")
+  } else if (is.logical(par[[n]])) {
+    paste0(n, ": |", tolower(paste(par[[n]], collapse = ":")), "|\n")
   } else {
-    paste0(n, ": |", paste(par[[n]], collapse = ","), "|\n")
+    paste0(n, ": |", paste(par[[n]], collapse = ":"), "|\n")
   }
 })
 write_fun(par$output, str)
 
+con = file(par[["input"]], "r")
+str = paste0("head of input: |", readLines(con, n = 1), "|\n")
+write_fun(par$output, str)
+
+con = file("resource1.txt", "r")
+str = paste0("head of resource1: |", readLines(con, n = 1), "|\n")
+write_fun(par$output, str)
+
 str <- sapply(names(meta), function(n) {
-  paste0("meta_", n, ": |", paste(meta[[n]], collapse = ","), "|\n")
+  paste0("meta_", n, ": |", paste(meta[[n]], collapse = ":"), "|\n")
 })
 write_fun(par$output, str)

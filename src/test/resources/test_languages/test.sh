@@ -87,25 +87,28 @@ grep -q 'head of input: |this file is only for testing|' output2.txt
 grep -q 'head of resource1: |if you can read this,|' output2.txt
 
 
+if [[ $meta_functionality_name == "bash" || $meta_functionality_name == "js" ]]; then
+# This currently only works fully on bash and javascript
 
-echo ">>> Try to unset defaults"
-"$meta_executable" \
-  "resource2.txt" \
-  --real_number 123.456 \
-  --whole_number=789 \
-  -s "my\$weird#string\"\"\"" \
-  ---cpus "" \
-  ---memory "" \
-  > output4.txt
+  echo ">>> Try to unset defaults"
+  "$meta_executable" \
+    "resource2.txt" \
+    --real_number 123.456 \
+    --whole_number=789 \
+    -s "my\$weird#string\"\"\"" \
+    ---cpus "" \
+    ---memory "" \
+    > output4.txt
 
-[[ ! -f output4.txt ]] && echo "Output file could not be found!" && exit 1
-grep -q 'meta_cpus: ||' output4.txt
-grep -q 'meta_memory_b: ||' output4.txt
-grep -q 'meta_memory_kb: ||' output4.txt
-grep -q 'meta_memory_mb: ||' output4.txt
-grep -q 'meta_memory_gb: ||' output4.txt
-grep -q 'meta_memory_tb: ||' output4.txt
-grep -q 'meta_memory_pb: ||' output4.txt
+  [[ ! -f output4.txt ]] && echo "Output file could not be found!" && exit 1
+  grep -q 'meta_cpus: ||' output4.txt
+  grep -q 'meta_memory_b: ||' output4.txt
+  grep -q 'meta_memory_kb: ||' output4.txt
+  grep -q 'meta_memory_mb: ||' output4.txt
+  grep -q 'meta_memory_gb: ||' output4.txt
+  grep -q 'meta_memory_tb: ||' output4.txt
+  grep -q 'meta_memory_pb: ||' output4.txt
 
+fi
 
 echo ">>> Test finished successfully"

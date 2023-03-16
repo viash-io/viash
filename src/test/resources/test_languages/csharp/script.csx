@@ -71,14 +71,27 @@ try
         {
             object[] array = (object[])p.GetValue(par);
             if (array.Length == 0)
-                Output(p.Name + ": |empty array|");
+                Output($"{p.Name}: |empty array|");
             else
-                Output(p.Name + ": |" + string.Join(", ", array) + "|");
+                Output($"{p.Name}: |{string.Join(":", array)}|");
         }
         else
         {
-            Output(p.Name + ": |" + p.GetValue(par) + "|");
+            var value = p.GetValue(par);
+            if (value is bool)
+                Output($"{p.Name}: |{value.ToString().ToLower()}|");
+            else
+                Output($"{p.Name}: |{value}|");
         }
+    }
+
+    using(StreamReader input = new StreamReader(par.input))
+    {
+        Output($"head of input: |{input.ReadLine()}|");
+    }
+    using(StreamReader input = new StreamReader("resource1.txt"))
+    {
+        Output($"head of resource1: |{input.ReadLine()}|");
     }
 
     t = meta.GetType();
@@ -90,11 +103,11 @@ try
         {
             object[] array = (object[])p.GetValue(meta);
 
-            Output("meta_" + p.Name + ": |" + string.Join(", ", array) + "|");
+            Output($"meta_{p.Name}: |{string.Join(", ", array)}|");
         }
         else
         {
-            Output("meta_" + p.Name + ": |" + p.GetValue(meta) + "|");
+            Output($"meta_{p.Name}: |{p.GetValue(meta)}|");
         }
     }
 }
