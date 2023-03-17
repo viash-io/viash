@@ -1,3 +1,13 @@
+# Viash 0.7.2 (yyyy-MM-dd): TODO add title
+
+TODO add summary
+
+## MINOR CHANGES
+
+* `testbenches`:
+  - Reworked language tests to be grouped in their own subfolder and split off the bash language test from the general `testbash` folder.
+  - Add additional language tests for `viash config inject`.
+
 # Viash 0.7.1 (2023-03-08): Minor improvements to VDSL3 and schema functionality.
 
 This is a minor release which improves caching in VDSL3 components and changes the formats of the schema files for the Viash config and CLI.
