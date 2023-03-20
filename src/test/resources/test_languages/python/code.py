@@ -44,12 +44,24 @@ try:
             if not value:
                 echo(f"{key}: |empty array|")
             else:
-                echo(f"{key}: |{','.join(value)}|")
+                echo(f"{key}: |{':'.join(value)}|")
+        elif value is None:
+            echo(f"{key}: ||")
+        elif isinstance(value, bool):
+            echo(f"{key}: |{str(value).lower()}|")
         else:
             echo(f"{key}: |{value}|")
 
     for key, value in meta.items():
         echo(f"meta_{key}: |{value}|")
+
+    with open(par['input'], 'r') as infile:
+        input = infile.readline().strip()
+        echo(f"head of input: |{input}|")
+    with open(meta['resources_dir'] + '/resource1.txt', 'r') as infile:
+        resource = infile.readline().strip()
+        echo(f"head of resource1: |{resource}|")
+        
 finally:
     if par['output'] is not None:
         output_file.close()

@@ -1,6 +1,7 @@
 // helper functions
 
 import java.io.FileWriter
+import scala.io.Source
 
 val (logFun, logFile): (String => Unit, Option[FileWriter]) = par.log match {
   case Some(logPath) => 
@@ -29,12 +30,27 @@ try {
   logFun("Parsed input arguments.")
 
   for ((name, value) <- toStringWithFields(par)) {
-    outputFun(s"$name: |$value|")
+    value match {
+      case Some(some) => outputFun(s"$name: |$some|")
+      case None => outputFun(s"$name: ||")
+      case list: List[_] => outputFun(s"""$name: |${list.mkString(":")}|""")
+      case _ => outputFun(s"$name: |$value|")
+    }
   }
 
   for ((name, value) <- toStringWithFields(meta)) {
-    outputFun(s"meta_$name: |$value|")
+    value match {
+      case Some(some) => outputFun(s"meta_$name: |$some|")
+      case None => outputFun(s"meta_$name: ||")
+      case list: List[_] => outputFun(s"""meta_$name: |${list.mkString(":")}|""")
+      case _ => outputFun(s"meta_$name: |$value|")
+    }
   }
+
+  val input = Source.fromFile(par.input).getLines().toArray
+  outputFun(s"head of input: |${input(0)}|")
+  val resource1 = Source.fromFile("resource1.txt").getLines().toArray
+  outputFun(s"head of resource1: |${resource1(0)}|")
   
 } finally {
   logFile.map(_.close())
