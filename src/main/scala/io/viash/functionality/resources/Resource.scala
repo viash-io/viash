@@ -23,7 +23,6 @@ import io.viash.helpers.{IO, MissingResourceFileException}
 import java.nio.file.{Path, Paths}
 import java.nio.file.NoSuchFileException
 import io.viash.schemas._
-import java.io.File
 
 @description(
   """@[Resources](resources) are files that support the component. The first resource should be @[a script](scripting_languages) that will be executed when the functionality is run. Additional resources will be copied to the same directory.
