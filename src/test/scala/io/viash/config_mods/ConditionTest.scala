@@ -1,6 +1,7 @@
 package io.viash.config_mods
 
 import io.circe.Json
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 import io.circe.syntax._
 

@@ -23,6 +23,7 @@ import io.circe.generic.extras._
 import arguments._
 import resources._
 import Status._
+import dependencies._
 import io.viash.schemas._
 import io.viash.wrapper.BashWrapper
 
@@ -224,6 +225,13 @@ case class Functionality(
   @since("Viash 0.6.0")
   requirements: ComputationalRequirements = ComputationalRequirements(),
 
+  @description("Allows listing Viash components required by this Viash component")
+  dependencies: List[Dependency] = Nil,
+
+  @description(
+    """(Pre-)defines repositories that can be used as repository in dependencies.
+      |Allows reusing repository definitions in case it is used in multiple dependencies.""".stripMargin)
+  repositories: List[Repository] = Nil,
   // The variables below are for internal use and shouldn't be publicly documented
 
   // setting this to true will change the working directory

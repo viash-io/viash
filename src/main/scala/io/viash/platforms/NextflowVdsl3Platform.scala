@@ -128,6 +128,7 @@ case class NextflowVdsl3Platform(
       case Some(_) => 
         throw new RuntimeException(s"NextflowPlatform 'container' variable: Platform $container is not a Docker Platform")
       case None => None
+      case _ => ???
     }
   }
 

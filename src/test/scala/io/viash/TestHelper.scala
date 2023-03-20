@@ -3,6 +3,7 @@ package io.viash
 import java.io.{ByteArrayOutputStream, File, FileInputStream, IOException, UncheckedIOException}
 import java.security.{DigestInputStream, MessageDigest}
 import org.scalatest.matchers.must.Matchers.{assertThrows, intercept}
+import org.scalatest.Tag
 
 import java.nio.file.{Files, Path, Paths}
 import scala.reflect.ClassTag

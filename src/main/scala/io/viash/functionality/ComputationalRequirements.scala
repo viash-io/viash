@@ -56,6 +56,7 @@ case class ComputationalRequirements(
       case Some(m) =>
         throw new RuntimeException(s"Invalid value \"$m\" as memory computational requirement.")
       case None => None
+      case _ => ???
     }
   }
 }

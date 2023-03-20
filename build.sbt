@@ -10,7 +10,9 @@ libraryDependencies ++= Seq(
   "org.rogach" %% "scallop" % "4.1.0",
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.1",
-  "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4"
+  "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4",
+  "com.github.julien-truffaut" %% "monocle-core"  % "2.1.0",
+  "com.github.julien-truffaut" %% "monocle-macro" % "2.1.0"
 )
 
 val circeVersion = "0.14.1"
