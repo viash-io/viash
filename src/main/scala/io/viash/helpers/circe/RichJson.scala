@@ -22,7 +22,6 @@ import io.circe.Json
 import io.circe.JsonObject
 import io.circe.generic.extras.Configuration
 import io.viash.helpers.IO
-import java.nio.file.Path
 
 class RichJson(json: Json) {
   /**
