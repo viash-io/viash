@@ -55,9 +55,24 @@ if (typeof par['output'] === 'undefined') {
 for (const key in par) {
 	if (Array.isArray(par[key]) && par[key].length == 0)
 		outFun(`${key}: |empty array|`)
+	else if (Array.isArray(par[key]))
+		outFun(`${key}: |${par[key].join(':')}|`)
+	else if (par[key] == undefined)
+		outFun(`${key}: ||`)
 	else
 		outFun(`${key}: |${par[key]}|`)
 }
+
+fs.readFile(par['input'], 'utf8', function(err, data){
+    outFun(`head of input: |${data.split('\n')[0]}|`)
+})
+fs.readFile(meta['resources_dir'] + '/resource1.txt', 'utf8', function(err, data){
+    outFun(`head of resource1: |${data.split('\n')[0]}|`)
+})
+
 for (const key in meta) {
-	outFun(`meta_${key}: |${meta[key]}|`)
+	if (meta[key] == undefined || String(meta[key]) == 'NaN')
+		outFun(`meta_${key}: ||`)
+	else
+		outFun(`meta_${key}: |${meta[key]}|`)
 }

@@ -1,0 +1,18 @@
+functionality:
+  __merge__: [., ../common.yaml]
+  resources:
+    - type: bash_script
+      path: ./code.sh
+platforms:
+  - type: native
+  - type: docker
+    image: "bash:3.2"
+  - type: docker
+    image: "bash:3.2"
+    id: "throwawayimage"
+    target_image: "throwawayimage"
+    setup:
+      - type: apk
+        packages:
+          - fortune
+  - type: nextflow

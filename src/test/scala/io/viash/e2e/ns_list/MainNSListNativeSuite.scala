@@ -15,7 +15,7 @@ import scala.io.Source
 class MainNSListNativeSuite extends AnyFunSuite{
   // path to namespace components
   private val nsPath = getClass.getResource("/testns/").getPath
-  private val scalaPath = getClass.getResource("/testscala/").getPath
+  private val scalaPath = getClass.getResource("/test_languages/scala/").getPath
 
   private val components = List(
     "ns_add",

@@ -7,20 +7,20 @@ class TestingAllComponentsSuite extends AnyFunSuite {
   def getTestResource(path: String) = getClass.getResource(path).toString
 
   val tests = List(
-    ("testbash", "config.vsh.yaml"),
-    ("testpython", "config.vsh.yaml"),
-    ("testr", "script.vsh.R"),
-    ("testjs", "config.vsh.yaml"),
-    ("testscala", "config.vsh.yaml"),
-    ("testcsharp", "config.vsh.yaml"),
-    ("testexecutable", "config.vsh.yaml")
+    ("bash", "config.vsh.yaml"),
+    ("python", "config.vsh.yaml"),
+    ("r", "script.vsh.R"),
+    ("js", "config.vsh.yaml"),
+    ("scala", "config.vsh.yaml"),
+    ("csharp", "config.vsh.yaml"),
+    ("executable", "config.vsh.yaml")
   )
 
   for ((name, file) <- tests) {
-    val config = getTestResource(s"/$name/$file")
+    val config = getTestResource(s"/test_languages/$name/$file")
 
     // only run testbash natively because other requirements might not be available
-    if (name == "testbash") {
+    if (name == "bash") {
       test(s"Testing $name platform native", NativeTest) {
         TestHelper.testMain("test", "-p", "native", config)
       }
