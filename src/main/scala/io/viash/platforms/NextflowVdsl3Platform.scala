@@ -46,35 +46,8 @@ case class NextflowVdsl3Platform(
   
   // nxf params
   @description(
-    """Directives are optional settings that affect the execution of the process. These mostly match up with the Nextflow counterparts that are linked below:  
-      |
-      | - [`accelerator`](https://www.nextflow.io/docs/latest/process.html#accelerator)
-      | - [`afterScript`](https://www.nextflow.io/docs/latest/process.html#afterscript)
-      | - [`beforeScript`](https://www.nextflow.io/docs/latest/process.html#beforeScript)
-      | - [`cache`](https://www.nextflow.io/docs/latest/process.html#cache)
-      | - [`conda`](https://www.nextflow.io/docs/latest/process.html#conda)
-      | - [`container`](https://www.nextflow.io/docs/latest/process.html#container)
-      | - [`containerOptions`](https://www.nextflow.io/docs/latest/process.html#containeroptions)
-      | - [`cpus`](https://www.nextflow.io/docs/latest/process.html#cpus)
-      | - [`disk`](https://www.nextflow.io/docs/latest/process.html#disk)
-      | - [`echo`](https://www.nextflow.io/docs/latest/process.html#echo)
-      | - [`errorStrategy`](https://www.nextflow.io/docs/latest/process.html#errorstrategy)
-      | - [`executor`](https://www.nextflow.io/docs/latest/process.html#executor)
-      | - [`machineType`](https://www.nextflow.io/docs/latest/process.html#machinetype)
-      | - [`maxErrors`](https://www.nextflow.io/docs/latest/process.html#maxerrors)
-      | - [`maxForks`](https://www.nextflow.io/docs/latest/process.html#maxforks)
-      | - [`maxRetries`](https://www.nextflow.io/docs/latest/process.html#maxretries)
-      | - [`memory`](https://www.nextflow.io/docs/latest/process.html#memory)
-      | - [`module`](https://www.nextflow.io/docs/latest/process.html#module)
-      | - [`penv`](https://www.nextflow.io/docs/latest/process.html#penv)
-      | - [`publishDir`](https://www.nextflow.io/docs/latest/process.html#publishdir)
-      | - [`queue`](https://www.nextflow.io/docs/latest/process.html#queue)
-      | - [`scratch`](https://www.nextflow.io/docs/latest/process.html#scratch)
-      | - [`storeDir`](https://www.nextflow.io/docs/latest/process.html#storeDir)
-      | - [`stageInMode`](https://www.nextflow.io/docs/latest/process.html#stageinmode)
-      | - [`stageOutMode`](https://www.nextflow.io/docs/latest/process.html#stageoutmode)
-      | - [`tag`](https://www.nextflow.io/docs/latest/process.html#tag)
-      | - [`time`](https://www.nextflow.io/docs/latest/process.html#time)""".stripMargin)
+    """@[Directives](nextflow_directives) are optional settings that affect the execution of the process. These mostly match up with the Nextflow counterparts.  
+      |""".stripMargin)
   @example(
     """directives:
       |    container: rocker/r-ver:4.1

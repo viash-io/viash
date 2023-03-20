@@ -67,7 +67,7 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
   }
 
   def removeMarkup(text: String): String = {
-    val markupRegex = raw"@\[.*\]\((.*)\)".r
+    val markupRegex = raw"@\[(.*)\]\(.*\)".r
     val backtickRegex = "`(\"[^`\"]*\")`".r
     val textWithoutMarkup = markupRegex.replaceAllIn(text, "$1")
     backtickRegex.replaceAllIn(textWithoutMarkup, "$1")

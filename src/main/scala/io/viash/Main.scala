@@ -65,8 +65,12 @@ object Main {
       val exitCode = mainCLIOrVersioned(args)
       System.exit(exitCode)
     } catch {
-      case e @ ( _: FileNotFoundException | _: NoSuchFileException | _: MissingResourceFileException ) =>
+      case e @ ( _: FileNotFoundException | _: MissingResourceFileException ) =>
         Console.err.println(s"viash: ${e.getMessage()}")
+        System.exit(1)
+      case e: NoSuchFileException =>
+        // This exception only returns the file/path that can't be found. Add a bit more feedback to the user.
+        Console.err.println(s"viash: ${e.getMessage()} (No such file or directory)")
         System.exit(1)
       case e: Exception =>
         Console.err.println(

@@ -20,17 +20,25 @@ package io.viash.functionality.resources
 import io.viash.functionality._
 import io.viash.functionality.arguments._
 import io.viash.wrapper.BashWrapper
+import io.viash.schemas._
 
 import java.net.URI
 import io.viash.helpers.Bash
 
+@description("""An executable Bash script.
+               |When defined in functionality.resources, only the first entry will be executed when running the built component or when running `viash run`.
+               |When defined in functionality.test_resources, all entries will be executed during `viash test`.""".stripMargin)
 case class BashScript(
   path: Option[String] = None,
   text: Option[String] = None,
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
+
+  @undocumented
   entrypoint: Option[String] = None,
+
+  @description("Specifies the resource as a Bash script.")
   `type`: String = BashScript.`type`
 ) extends Script {
   assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")

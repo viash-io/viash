@@ -1,20 +1,23 @@
-package io.viash.platforms
+package io.viash.platforms.nextflow
 
-import io.viash.helpers.IO
-import io.viash.{DockerTest, NextFlowTest, TestHelper}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
-import scala.io.Source
-
 import java.io.IOException
 import java.io.UncheckedIOException
 
-class NextFlowVdsl3PlatformStandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
+import scala.io.Source
+
+import io.viash.helpers.IO
+import io.viash.{DockerTest, NextFlowTest, TestHelper}
+import io.viash.NextflowTestHelper
+
+class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
   // temporary folder to work in
   private val temporaryFolder = IO.makeTemp("viash_tester_nextflowvdsl3")
+  private val tempFolFile = temporaryFolder.toFile
   private val tempFolStr = temporaryFolder.toString
 
   // path to namespace components
@@ -100,39 +103,6 @@ class NextFlowVdsl3PlatformStandaloneTest extends AnyFunSuite with BeforeAndAfte
     expectedValues.foreach(_.assert(id, idDebugPrints.get._2))
   }
 
-  // Wrapper function to make logging of processes easier, provide default command to run nextflow from . directory
-  // TODO: consider reading nextflow dot files and provide extra info of which workflow step fails and how
-  def runNextflowProcess(
-    mainScript: String,
-    args: List[String],
-    entry: Option[String] = None,
-    paramsFile: Option[String] = None,
-    cwd: File = new File(tempFolStr), 
-    extraEnv: Seq[(String, String)] = Nil,
-    quiet: Boolean = false
-  ): (Int, String, String) = {
-
-    import sys.process._
-
-    val stdOut = new StringBuilder
-    val stdErr = new StringBuilder
-
-    val command = 
-      "nextflow" :: 
-        { if (quiet) List("-q") else Nil } ::: 
-        "run" :: "." ::
-        "-main-script" :: mainScript ::
-        { if (entry.isDefined) List("-entry", entry.get) else Nil } :::
-        { if (paramsFile.isDefined) List("-params-file", paramsFile.get) else Nil } :::
-        args
-
-    val extraEnv_ = extraEnv :+ ( "NXF_VER" -> "22.04.5")
-
-    val exitCode = Process(command, cwd, extraEnv_ : _*).!(ProcessLogger(str => stdOut ++= s"$str\n", str => stdErr ++= s"$str\n"))
-
-    (exitCode, stdOut.toString, stdErr.toString)
-  }
-
   // convert testbash
 
   // copy resources to temporary folder so we can build in a clean environment
@@ -148,72 +118,128 @@ class NextFlowVdsl3PlatformStandaloneTest extends AnyFunSuite with BeforeAndAfte
       "--setup", "cb"
     )
   }
+  
+  test("Run pipeline", DockerTest, NextFlowTest) {
 
-  test("Run module as standalone", NextFlowTest) {
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "target/nextflow/step2/main.nf",
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "workflows/pipeline1/main.nf",
+      entry = Some("base"),
       args = List(
-        "--input1", "resources/lines3.txt",
-        "--input2", "resources/lines5.txt",
-        "--publish_dir", "moduleOutput1"
-      )
+        "--input", "resources/*",
+        "--publish_dir", "output",
+      ),
+      cwd = tempFolFile
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    
-    val src = Source.fromFile(tempFolStr+"/moduleOutput1/run.step2.output1.txt")
-    try {
-      val moduleOut = src.getLines().mkString(",")
-      assert(moduleOut.equals("one,two,three"))
-    } finally {
-      src.close()
-    }
+    outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
   }
 
-  test("Run module as standalone, yamlblob", NextFlowTest) {
-    val fooArgs = "{input1: resources/lines3.txt, input2: resources/lines5.txt}"
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "target/nextflow/step2/main.nf",
+  test("Run pipeline with components using map functionality", DockerTest, NextFlowTest) {
+
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "workflows/pipeline1/main.nf",
+      entry = Some("map_variant"),
       args = List(
-        "--param_list", s"[$fooArgs]",
-        "--publish_dir", "moduleOutput2"
-      )
+        "--input", "resources/*",
+        "--publish_dir", "output",
+      ),
+      cwd = tempFolFile
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    
-    val src = Source.fromFile(tempFolStr+"/moduleOutput2/run.step2.output1.txt")
-    try {
-      val moduleOut = src.getLines().mkString(",")
-      assert(moduleOut.equals("one,two,three"))
-    } finally {
-      src.close()
-    }
+    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
   }
 
-  test("Run module as standalone, test optional input", NextFlowTest) {
+  test("Run pipeline with components using mapData functionality", DockerTest, NextFlowTest) {
 
-    Files.copy(Paths.get(resourcesPath, "lines5.txt"), Paths.get(resourcesPath, "lines5-bis.txt"))
-
-    val (exitCode, stdOut, stdErr) = runNextflowProcess(
-      mainScript = "target/nextflow/step2/main.nf",
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "workflows/pipeline1/main.nf",
+      entry = Some("mapData_variant"),
       args = List(
-        "--input1", "resources/lines3.txt",
-        "--input2", "resources/lines5.txt",
-        "--optional", "resources/lines5-bis.txt",
-        "--publish_dir", "moduleOutput3"
-      )
+        "--input", "resources/*",
+        "--publish_dir", "output",
+      ),
+      cwd = tempFolFile
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    
-    val src = Source.fromFile(tempFolStr+"/moduleOutput3/run.step2.output1.txt")
-    try {
-      val moduleOut = src.getLines().mkString(",")
-      assert(moduleOut.equals("one,two,three,1,2,3,4,5"))
-    } finally {
-      src.close()
-    }
+    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
+  }
+
+  test("Run pipeline with debug = false", DockerTest, NextFlowTest) {
+
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "workflows/pipeline1/main.nf",
+      entry = Some("debug_variant"),
+      args = List(
+        "--input", "resources/*",
+        "--publish_dir", "output",
+        "--displayDebug", "false",
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
+
+    val lines2 = stdOut.split("\n").find(_.contains("process 'step3' output tuple"))
+    assert(!lines2.isDefined)
+
+  }
+
+  test("Run pipeline with debug = true", DockerTest, NextFlowTest) {
+
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "workflows/pipeline1/main.nf",
+      entry = Some("debug_variant"),
+      args = List(
+        "--input", "resources/*",
+        "--publish_dir", "output",
+        "--displayDebug", "true",
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
+    outputFileMatchChecker(stdOut, "process 'step3[^']*' output tuple", "^11 .*$")
+  }
+
+  test("Check whether --help is same as Viash's --help", NextFlowTest) {
+    // except that WorkflowHelper.nf will not print alternatives, and
+    // will always prefix argument names with -- (so --foo, not -f or foo).
+
+    // run WorkflowHelper's --help
+    val (exitCode, stdOut1, stdErr1) = NextflowTestHelper.run(
+      mainScript = "workflows/pipeline3/main.nf",
+      entry = Some("base"),
+      args = List("--help"),
+      quiet = true,
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut1\nStd error:\n$stdErr1")
+
+    // explicitly remove defaults set by output files
+    // these defaults make sense in nextflow but not in viash
+    val correctedStdOut1 = stdOut1.replaceAll("        default: \\$id\\.\\$key\\.[^\n]*\n", "")
+    // explicitly remove global arguments
+    // these arguments make sense in nextflow but not in viash
+    import java.util.regex.Pattern
+    val regex = Pattern.compile("\nNextflow input-output arguments:.*", Pattern.DOTALL)
+    val correctedStdOut2 = regex.matcher(correctedStdOut1).replaceAll("")
+
+    // run Viash's --help
+    val (stdOut2, stdErr2, exitCode2) = TestHelper.testMainWithStdErr(
+      "run", workflowsPath + "/pipeline3/config.vsh.yaml",
+      "--", "--help"
+    )
+
+    assert(exitCode2 == 0)
+
+    // check if they are the same
+    assert(correctedStdOut2 == stdOut2)
   }
 
   override def afterAll(): Unit = {

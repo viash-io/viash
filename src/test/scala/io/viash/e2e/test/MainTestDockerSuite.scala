@@ -80,7 +80,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check failing build", DockerTest) {
-    val newConfigFilePath = configDeriver.derive(""".platforms[.type == "docker" && !has(.id) ].apt := { packages: ["get_the_machine_that_goes_ping"] }""", "failed_build")
+    val newConfigFilePath = configDeriver.derive(""".platforms[.type == "docker" && !has(.id) ].setup := [{ type: "apt", packages: ["get_the_machine_that_goes_ping"] }]""", "failed_build")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "-p", "docker",

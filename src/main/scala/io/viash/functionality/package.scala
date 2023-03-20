@@ -35,59 +35,7 @@ package object functionality {
   implicit val encodeFunctionality: Encoder.AsObject[Functionality] = deriveConfiguredEncoder
 
   // add file & direction defaults for inputs & outputs
-  implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoder[Functionality].prepare {
-    checkDeprecation[Functionality](_) // check for deprecations before altering the structure of the json
-    .withFocus(_.mapObject{ fun0 =>
-      
-      val fun1 = fun0.apply("inputs") match {
-        case Some(inputs) => 
-          val newInputs = inputs.mapArray(_.map{ js =>
-            js.withDefault("type", Json.fromString("file"))
-              .withDefault("direction", Json.fromString("input"))
-          })
-          fun0.add("inputs", newInputs)
-        case None => fun0
-      }
-
-      val fun2 = fun1.apply("outputs") match {
-        case Some(outputs) => 
-          val newOutputs = outputs.mapArray(_.map{ js =>
-            js.withDefault("type", Json.fromString("file"))
-              .withDefault("direction", Json.fromString("output"))
-          })
-          fun1.add("outputs", newOutputs)
-        case None => fun1
-      }
-
-      // provide backwards compability for tests -> test_resources
-      val fun3 = (fun2.contains("tests"), fun2.contains("test_resources")) match {
-        case (true, true) => 
-          Console.err.println("Error: functionality.tests is deprecated. Please use functionality.test_resources instead.")
-          Console.err.println("Backwards compability is provided but not in combination with functionality.test_resources.")
-          fun2
-        case (true, false) =>
-          fun2.add("test_resources", fun2.apply("tests").get).remove("tests")
-        case (_, _) => fun2
-      }
-
-      // provide backwards compability for enabled -> status
-      val fun4 = (fun3.contains("enabled"), fun3.contains("status")) match {
-        case (true, true) =>
-          Console.err.println("Error: functionality.enabled is deprecated. Please use functionality.status instead.")
-          Console.err.println("Backwards compability is provided but not in combination with functionality.status")
-          fun3
-        case (true, false) =>
-          fun3.apply("enabled").get.asBoolean match {
-            case Some(true) => fun3.add("status", Json.fromString("enabled")).remove("enabled")
-            case Some(false) => fun3.add("status", Json.fromString("disabled")).remove("enabled")
-            case None => fun3
-          }
-        case (_, _) => fun3
-      }
-
-      fun4
-    })
-  }
+  implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoderWithDeprecationCheck
 
   // encoder and decoder for Author
   implicit val encodeAuthor: Encoder.AsObject[Author] = deriveConfiguredEncoder
@@ -99,7 +47,32 @@ package object functionality {
   
   // encoder and decoder for ArgumentGroup
   implicit val encodeArgumentGroup: Encoder.AsObject[ArgumentGroup] = deriveConfiguredEncoder
-  implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoderWithDeprecationCheck
+  implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoder[ArgumentGroup].prepare {
+    checkDeprecation[ArgumentGroup](_) // check for deprecations
+    .withFocus(_.mapObject{ ag0 =>
+
+      // Check whether arguments contains a string value instead of an object. The support for this was removed in Viash 0.7.0
+      ag0.apply("arguments") match {
+        case Some(args) =>
+          args.mapArray(argVector => {
+            for (arg <- argVector) {
+              if (arg.isString) {
+                Console.err.println(
+                  s"""Error: specifying strings in the .argument field of argument group '${ag0.apply("name").get.asString.get}' was removed.
+                     |The .arguments field of an argument group should only contain arguments.
+                     |To solve this issue, copy the argument ${arg} directly into the argument group.""".stripMargin)
+              }
+            }
+            argVector
+          })
+        case _ => None
+      }
+
+      ag0
+    }
+    )
+  }
+
 
   // encoder and decoder for Status, make string lowercase before decoding
   implicit val encodeStatus: Encoder[Status] = Encoder.encodeEnumeration(Status)

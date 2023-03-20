@@ -30,6 +30,9 @@ import io.circe.Json
 import monocle.function.Cons
 import io.viash.config.Config
 import io.viash.config.Info
+import io.viash.functionality.resources._
+import io.viash.project.ViashProject
+import io.viash.platforms.nextflow.NextflowDirectives
 
 final case class CollectedSchemas (
   config: List[ParameterSchema],
@@ -37,6 +40,9 @@ final case class CollectedSchemas (
   platforms: Map[String, List[ParameterSchema]],
   requirements: Map[String, List[ParameterSchema]],
   arguments: Map[String, List[ParameterSchema]],
+  resources: Map[String, List[ParameterSchema]],
+  project: List[ParameterSchema],
+  nextflowDirectives: List[ParameterSchema],
 )
 
 
@@ -80,13 +86,13 @@ object CollectedSchemas {
 
     val allMembers = baseClasses
       .zipWithIndex
-      .flatMap(x =>
-        x._1.info.members
+      .flatMap{ case (baseClass, index) =>
+        baseClass.info.members
           .filter(_.fullName.startsWith("io.viash"))
           .filter(m => memberNames.contains(m.shortName))
-          .filter(m => !m.info.toString.startsWith("=> ") || x._2 != 0) // Only regular members if base class, otherwise all members
-          .map(y => MemberInfo(y, (constructorMembers.contains(y.shortName)), x._1.fullName, x._2))
-      )
+          .filter(m => !m.info.getClass.toString.endsWith("NullaryMethodType") || index != 0) // Only regular members if base class, otherwise all members
+          .map(y => MemberInfo(y, (constructorMembers.contains(y.shortName)), baseClass.fullName, index))
+        }
       .groupBy(k => k.shortName)
     
     (allMembers, baseClasses)
@@ -116,6 +122,7 @@ object CollectedSchemas {
       "yumRequirements"        -> getMembers[YumRequirements](),
     ),
     "arguments" -> Map(
+      "argument"               -> getMembers[Argument[_]](),
       "boolean"                -> getMembers[BooleanArgument](),
       "boolean_true"           -> getMembers[BooleanTrueArgument](),
       "boolean_false"          -> getMembers[BooleanFalseArgument](),
@@ -124,6 +131,24 @@ object CollectedSchemas {
       "integer"                -> getMembers[IntegerArgument](),
       "long"                   -> getMembers[LongArgument](),
       "string"                 -> getMembers[StringArgument](),
+    ),
+    "resources" -> Map(
+      "resource"               -> getMembers[Resource](),
+      "bashScript"             -> getMembers[BashScript](),
+      "cSharpScript"           -> getMembers[CSharpScript](),
+      "executable"             -> getMembers[Executable](),
+      "javaScriptScript"       -> getMembers[JavaScriptScript](),
+      "nextflowScript"         -> getMembers[NextflowScript](),
+      "plainFile"              -> getMembers[PlainFile](),
+      "pythonScript"           -> getMembers[PythonScript](),
+      "rScript"                -> getMembers[RScript](),
+      "scalaScript"            -> getMembers[ScalaScript](),
+    ),
+    "project" -> Map(
+      ""                       -> getMembers[ViashProject](),
+    ),
+    "nextflowDirectives" -> Map(
+      ""                       -> getMembers[NextflowDirectives](),
     )
   )
 
@@ -159,7 +184,10 @@ object CollectedSchemas {
       functionality = getSchema(schemaClassMap.get("functionality").get("")),
       platforms = schemaClassMap.get("platforms").get.map{ case(k, v) => (k, getSchema(v))},
       requirements = schemaClassMap.get("requirements").get.map{ case(k, v) => (k, getSchema(v))},
-      arguments = schemaClassMap.get("arguments").get.map{ case(k, v) => (k, getSchema(v))}
+      arguments = schemaClassMap.get("arguments").get.map{ case(k, v) => (k, getSchema(v))},
+      resources = schemaClassMap.get("resources").get.map{ case(k, v) => (k, getSchema(v))},
+      project = getSchema(schemaClassMap.get("project").get("")),
+      nextflowDirectives = getSchema(schemaClassMap.get("nextflowDirectives").get("")),
     )
 
   def getJson: Json = {

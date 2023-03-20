@@ -21,16 +21,24 @@ import io.viash.functionality._
 import io.viash.helpers.Bash
 import io.viash.functionality.arguments._
 import io.viash.wrapper.BashWrapper
+import io.viash.schemas._
 
 import java.net.URI
 
+@description("""An executable R script.
+               |When defined in functionality.resources, only the first entry will be executed when running the built component or when running `viash run`.
+               |When defined in functionality.test_resources, all entries will be executed during `viash test`.""".stripMargin)
 case class RScript(
   path: Option[String] = None,
   text: Option[String] = None,
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
+
+  @undocumented
   entrypoint: Option[String] = None,
+
+  @description("Specifies the resource as a R script.")
   `type`: String = RScript.`type`
 ) extends Script {
   assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")
@@ -67,8 +75,10 @@ case class RScript(
           case _: StringArgument => ("", "")
         }
         val sl = "\\VIASH_SLASH\\" // used instead of "\\", as otherwise the slash gets escaped automatically.
+
+        val notFound = "NULL"
         
-        s""""${par.plainName}" = $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo -n "$lhs'"; echo -n "$$${par.VIASH_PAR}" | sed "s#['$sl$sl]#$sl$sl$sl$sl&#g"; echo "'$rhs"; else echo NULL; fi )"""
+        s""""${par.plainName}" = $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo -n "$lhs'"; echo -n "$$${par.VIASH_PAR}" | sed "s#['$sl$sl]#$sl$sl$sl$sl&#g"; echo "'$rhs"; else echo $notFound; fi )"""
       }
 
       s"""$dest <- list(

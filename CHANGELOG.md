@@ -1,8 +1,69 @@
-# Viash 0.6.8 (yyyy-MM-dd): [TODO] A nice title
+# Viash 0.7.1 (2023-03-08): Minor improvements to VDSL3 and schema functionality.
 
-[TODO] A nice summary.
+This is a minor release which improves caching in VDSL3 components and changes the formats of the schema files for the Viash config and CLI.
+
+## MINOR CHANGES
+
+* `DataflowHelper`: Add assertions and `def`s.
+
+## BUG FIXES
+
+* `VDSL3`: Only the first two elements from an event in a channel are now passed to a process. This avoids calculating cache entries based on arguments that are not used by the process, causing false-negative cache misses.
+
+* `config_schema`:
+  - Correct some incorrect markdown tags.
+  - Add project config.
+  - Correct documentation/markdown tags to the correct order.
+  - Add summary description and example for 'resource' and 'argument', to be used on the reference website.
+  - Add documentation for the Nextflow directives.
+
+* `cli_schema`: Correct documentation/markdown tags to the correct order.
+
+# Viash 0.7.0 (2023-02-28): Major code cleanup and minor improvements to VDSL3
+
+* Default namespace separator has been changed from `_` to `/`. This means 
+  Docker images will be named `<Registry>/<Organization>/<Namespace>/<Name>`
+  by default. For example, `ghcr.io/openpipelines-bio/mapping/cellranger_count`
+  instead of `ghcr.io/openpipelines-bio/mapping_cellranger_count`.
+
+* Removed deprecated code of unused functionality to simplify code.
+  - Shorthand notation for specitying input/output arguments
+  - Shorthand notation for specifying Docker requirements
+  - Legacy Nextflow platform
+
+* Improvements in VDSL3 and the Nextflow Workflow Helper to make behaviour
+  more predictable and fixing some bugs in the meantime. Run the following
+  to get access to the updated helpers:
+
+  ```bash
+  WF_DIR="src/wf_utils"
+  [[ -d $WF_DIR ]] || mkdir -p $WF_DIR
+  viash export resource platforms/nextflow/ProfilesHelper.config > $WF_DIR/ProfilesHelper.config
+  viash export resource platforms/nextflow/WorkflowHelper.nf > $WF_DIR/WorkflowHelper.nf
+  viash export resource platforms/nextflow/DataflowHelper.nf > $WF_DIR/DataflowHelper.nf
+  ```
+
+* Improvements to test benches and several bug fixes.
 
 ## BREAKING CHANGES
+
+* Viash config: Previously deprecated fields are now removed.
+  - `functionality.inputs`: Use `arguments` or `argument_groups` instead.
+  - `functionality.outputs`: Use `arguments` or `argument_groups` instead.
+  - `functionality.tests`: Use `test_resources` instead. No functional difference.
+  - `functionality.enabled`: Use `status: enabled` instead.
+  - `functionality.requirements.n_proc`: Use `cpus` instead.
+  - `platforms.DockerPlatform.privileged`: Add a `--privileged` flag in `run_args` instead.
+  - `platforms.DockerPlatform.apk`: Use `setup: [{ type: apk, packages: ... }]` instead.
+  - `platforms.DockerPlatform.apt`: Use `setup: [{ type: apt, packages: ... }]` instead.
+  - `platforms.DockerPlatform.yum`: Use `setup: [{ type: yum, packages: ... }]` instead.
+  - `platforms.DockerPlatform.r`: Use `setup: [{ type: r, packages: ... }]` instead.
+  - `platforms.DockerPlatform.python`: Use `setup: [{ type: python, packages: ... }]` instead.
+  - `platforms.DockerPlatform.docker`: Use `setup: [{ type: docker, run: ... }]` instead.
+  - `platforms.DockerPlatform.docker.setup.resources`: Use `setup: [{ type: docker, copy: ... }]` instead.
+  - `platforms.NextflowLegacy`: Use the Nextflow VDSL3 platform instead.
+  - `functionality.ArgumentGroups`: No longer supports strings referring to arguments in the `arguments:` section.
+    Instead directly put the arguments inside the argument groups.
 
 * `viash_install`: The bootstrap script has been reworked in line with the project config introduced in 0.6.4:
 
@@ -17,21 +78,26 @@
     ```
   The old `get.viash.io` is still available but points to the version 0.6.7 version of this component and is deprecated.
 
+* `WorkflowHelper`: `paramsToList`, `paramsToChannel` and `viashChannel` are now deprecated and will be removed in a future release.
+
+* `viash (ns) build`: Change the default value of the namespace separator in a Docker platform from `_` to `/`. 
+  Add `".platforms[.type == 'docker'].namespace_separator := '_'"` to the project config `_viash.yaml` to revert to the previous behaviour.
+
+## MAJOR CHANGES
+
+* `VDSL3`: now uses the newly implemented `channelFromParams` and `preprocessInputs` instead of `viashChannel`.
+
+## NEW FEATURES
+
+* `WorkflowHelper`: Added `preprocessInputs` and `channelFromParams` to replace `paramsToList`, `paramsToChannel` and `viashChannel`. This refactor allows processing parameters that are already in a Channel using `preprocessInputs`, which is necessary when passing parameters from a workflow to a subworkflow in a Nextflow pipeline.
+
 ## MINOR CHANGES
 
 * `Main`: Capture build, setup and push errors and output an exit code.
 
-* `Testbenches`: Add testbenches to verify switching of viash versions.
-
-* `File downloading`: Add check to preemptively catch file errors (e.g. 404).
+* `File downloading`: Add check to pre-emptively catch file errors (e.g. 404).
 
 * `Scala`: Updated to Scala 2.13 and updated several dependencies.
-
-* `Testbenches`: Prepare ConfigDeriver by copying base resources to the targetFolder. Use cases so far showed that it's always required and it simplifies the usage.
-
-* `Testbenches`: Remove some old & unmaintained IntelliJ Idea `editor-fold` tags. Given that the testbenches were split up, these were broken but also no longer needed.
-
-* `Testbenches`: Add 2 testbenches for computational requirements when running `viash run` or `viash test`.
 
 * `Main`: Improve `match` completeness in some edge cases and throw exceptions where needed.
 
@@ -39,13 +105,30 @@
   For every release, there is now a date, title, and summary.
   This both improves the changelog itself but can then also be used to postprocess the CHANGELOG programmatically.
 
+* `VDSL3`: Add a default value for `id` when running a VDSL3 module as a standalone pipeline.
+
+* `TestBenches`:
+  - Verify switching of Viash versions
+  - Prepare ConfigDeriver by copying base resources to the targetFolder. Use cases so far showed that it's always required and it simplifies the usage.
+  - Remove some old & unmaintained IntelliJ Idea `editor-fold` tags. Given that the testbenches were split up, these were broken but also no longer needed.
+  - Add 2 testbenches for computational requirements when running `viash run` or `viash test`.
+  - Added tests for different values for the `--id` and `--param_list` parameters of VDSL3 modules.
+
+* `viash test`: Use `test` as a random tag during testing, instead of `test` plus a random string.
+
 ## BUG FIXES
+
+* `WorkflowHelper`: fixed where passing a relative path as `--param_list` would cause incorrect resolving of input files.
 
 * `Testbenches`: Fix GitTest testbench to correctly increment temporary folder naming and dispose them after the test finishes.
 
 * `viash xxx url`: Fix passing a url to viash as the config file to process. Add a short testbench to test principle functionality.
 
 * `Testbenches`: Simplify `testr` container.
+
+* `Main`: Improve error reporting to the user in some cases where files or folders can't be found. Depending on the thrown exception, more or less context was given.
+
+* `VDSL3`: Create parent directory of output files before starting the script.
 
 # Viash 0.6.7 (2022-12-14): A minor release with several QoL improvements
 
@@ -69,7 +152,7 @@ Another minor release which contains several quality of life improvements for th
 * `NextflowPlatform`: Automatically split Viash config strings into strings of 
   length 65000 since the JVM has a limit (65536) on the length of string constants (#323).
 
-# Viash 0.6.6 (2022-12-06): A small bugfix releaes
+# Viash 0.6.6 (2022-12-06): A small bugfix release
 
 This release fixes an issue where stderr was being redirected to stdout.
 
@@ -1281,7 +1364,7 @@ R:
 # Viash 0.5.2 (2021-08-13): More settings for Docker and Nextflow platform, and a bug fixes for components with resources
 
 This is a small release containing two small features and a bug fix.
-The new `run_args` field allows you to add [docker run](https://docs.docker.com/engine/reference/commandline/run/) arguments to the [Docker platform](/reference/config/platforms/DockerPlatform.html) section of a [config file](/reference/config/index.html). For example:
+The new `run_args` field allows you to add [docker run](https://docs.docker.com/engine/reference/commandline/run/) arguments to the [Docker platform](/reference/config/platforms/docker/#) section of a [config file](/reference/config/index.html). For example:
 
   ```yaml
   platforms:
@@ -1290,7 +1373,7 @@ The new `run_args` field allows you to add [docker run](https://docs.docker.com/
       run_args: "--expose 127.0.0.1:80:8080/tcp --env MY_ENV_VAR=foo"
   ```
 
-There's also a new field for the [Nextflow platform](/reference/config/platforms/NextflowVdsl3Platform.html): `separate_multiple_outputs`. By default, this is set to `true` and separates the outputs generated by a Nextflow component with multiple outputs as separate events on the channel. You can now choose to disable this behaviour:
+There's also a new field for the [Nextflow platform](/reference/config/platforms/nextflow/#): `separate_multiple_outputs`. By default, this is set to `true` and separates the outputs generated by a Nextflow component with multiple outputs as separate events on the channel. You can now choose to disable this behaviour:
 
   ```yaml
   platforms:
@@ -1573,7 +1656,7 @@ The generation of Nextflow modules has been refactored thoroughly.
   
 * `NXF`: The implicitly generated names for output files/directories have been improved leading to less clashes.
 
-* `NXF`: Allow for multiple output files/directories from a module while keeping compatibility for single output. Please [refer to the docs](http://www.data-intuitive.com/viash_docs/config/platform-nextflow/#multiple-outputs).
+* `NXF`: Allow for multiple output files/directories from a module while keeping compatibility for single output. Please [refer to the docs](/reference/config/platforms/nextflow/#multiple-outputs).
 
 * `NXF`: Allow for zero input files by means of passing an empty list `[]` in the triplet
 

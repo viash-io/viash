@@ -32,6 +32,23 @@ import io.viash.platforms.Platform
 import scala.collection.parallel.CollectionConverters._
 
 object ViashNamespace {
+
+  case class MaybeParList[T](
+    list: List[T],
+    parallel: Boolean
+  ) {
+    def map[B](f: T => B): List[B] = 
+      if (parallel)
+        list.par.map(f).toList
+      else
+        list.map(f)
+    def foreach[U](f: T => U): Unit = 
+      if (parallel)
+        list.par.foreach(f)
+      else
+        list.foreach(f)
+  }
+
   def build(
     configs: List[Either[(Config, Option[Platform]), Status]],
     target: String,
@@ -40,7 +57,7 @@ object ViashNamespace {
     parallel: Boolean = false,
     flatten: Boolean = false
   ): List[Either[(Config, Option[Platform]), Status]] = {
-    val configs2 = if (parallel) configs.par.iterator else configs
+    val configs2 = MaybeParList(configs, parallel)
 
     val results = configs2.map { config =>
       config match {
@@ -88,7 +105,7 @@ object ViashNamespace {
       case Left((_, Some(pl))) => pl.`type` != "nextflow"
       case _ => true
     }}
-    val configs2 = if (parallel) configs1.par.iterator else configs1
+    val configs2 = MaybeParList(configs1, parallel)
 
     // run all the component tests
     val tsvPath = tsv.map(Paths.get(_))
@@ -304,7 +321,7 @@ object ViashNamespace {
         configData
     }
 
-    for (data <- if (parallel) collectedData.par.iterator else collectedData) {
+    for (data <- MaybeParList(collectedData, parallel)) {
       // remove trailing + or ; mode character
       val commandNoMode = command.replaceFirst(""" \\?[;+]$""", "")
       val replacedCommand = 
