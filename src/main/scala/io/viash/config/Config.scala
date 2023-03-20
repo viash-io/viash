@@ -121,49 +121,6 @@ case class Config(
 }
 
 object Config {
-  def parse(uri: URI, preparseMods: Option[ConfigMods]): Config = {
-    val str = IO.read(uri)
-    parse(str, uri, preparseMods)
-  }
-
-  def parse(yamlText: String, uri: URI, preparseMods: Option[ConfigMods]): Config = {
-    def errorHandler[C](e: Exception): C = {
-      Console.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
-      throw e
-    }
-
-    // read json
-    val js1 = parser.parse(yamlText).fold(errorHandler, a => a)
-
-    // apply inheritance if need be
-    val js2 = js1.inherit(uri)
-
-    if (js1 != js2) {
-      Console.err.println("Warning: Config inheritance (__merge__) is an experimental feature. Changes to the API are expected.")
-    }
-
-    // apply preparse config mods
-    val js3 = preparseMods match {
-      case None => js2
-      case Some(cmds) => cmds(js2, preparse = true)
-    }
-
-    // parse as config
-    val config = js3.as[Config].fold(errorHandler, identity)
-
-    // make paths absolute
-    val resources = config.functionality.resources.map(_.copyWithAbsolutePath(uri))
-    val tests = config.functionality.test_resources.map(_.copyWithAbsolutePath(uri))
-
-    // copy resources with updated paths into config and return
-    config.copy(
-      functionality = config.functionality.copy(
-        resources = resources,
-        test_resources = tests
-      )
-    )
-  }
-
   def readYAML(config: String): (String, Option[Script]) = {
     val configUri = IO.uri(config)
     readYAML(configUri)
