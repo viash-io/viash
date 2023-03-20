@@ -101,7 +101,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
       |""".stripMargin
     ).getOrElse(Json.Null)
 
-    val jsonOut1 = json1.inherit(temporaryFolder.toUri())
+    val jsonOut1 = json1.inherit(temporaryFolder.toUri(), projectDir = None)
     assert(jsonOut1 == jsonExpected1)
   }
 
@@ -119,7 +119,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
       |""".stripMargin
     ).getOrElse(Json.Null)
 
-    val jsonOut1 = json1.inherit(temporaryFolder.toUri())
+    val jsonOut1 = json1.inherit(temporaryFolder.toUri(), projectDir = None)
     assert(jsonOut1 == jsonExpected1)
   }
 
@@ -137,7 +137,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
       |""".stripMargin
     ).getOrElse(Json.Null)
 
-    val jsonOut1 = json1.inherit(temporaryFolder.toUri())
+    val jsonOut1 = json1.inherit(temporaryFolder.toUri(), projectDir = None)
     assert(jsonOut1 == jsonExpected1)
   }
 
@@ -158,7 +158,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
     ).getOrElse(Json.Null)
 
     // check whether filling default works
-    val jsonOut = json1.inherit(temporaryFolder.toUri(), stripInherits = false)
+    val jsonOut = json1.inherit(temporaryFolder.toUri(), projectDir = None, stripInherits = false)
     assert(jsonOut == jsonExpected)
   }
 
@@ -177,7 +177,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
     ).getOrElse(Json.Null)
 
     // check whether filling default works
-    val jsonOut = json1.inherit(temporaryFolder.toUri())
+    val jsonOut = json1.inherit(temporaryFolder.toUri(), projectDir = None)
     assert(jsonOut == jsonExpected)
   }
 
@@ -198,7 +198,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
     ).getOrElse(Json.Null)
 
     // check whether filling default works
-    val jsonOut = json1.inherit(temporaryFolder.toUri())
+    val jsonOut = json1.inherit(temporaryFolder.toUri(), projectDir = None)
     assert(jsonOut == jsonExpected)
   }
 
