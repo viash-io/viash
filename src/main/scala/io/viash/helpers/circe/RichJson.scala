@@ -22,6 +22,7 @@ import io.circe.Json
 import io.circe.JsonObject
 import io.circe.generic.extras.Configuration
 import io.viash.helpers.IO
+import java.nio.file.Path
 
 class RichJson(json: Json) {
   /**
@@ -114,7 +115,7 @@ class RichJson(json: Json) {
    * If an object has a field named "__merge__", that file will be read
    * and be deep-merged with the object itself.
    */
-  def inherit(uri: URI, stripInherits: Boolean = true): Json = {
+  def inherit(uri: URI, projectDir: Option[URI], stripInherits: Boolean = true): Json = {
     json match {
       case x if x.isObject =>
         val obj1 = x.asObject.get
@@ -148,6 +149,8 @@ class RichJson(json: Json) {
             val uris = inheritStrs1.map{str =>
               if (str == ".") {
                 None
+              } else if (str.startsWith("/")) {
+                Some(IO.resolveProject(str, projectDir))
               } else {
                 Some(uri.resolve(str))
               }
@@ -182,7 +185,7 @@ class RichJson(json: Json) {
                 val newJson1 = io.circe.yaml.parser.parse(str).toOption.get
 
                 // recurse through new json as well
-                val newJson2 = newJson1.inherit(newURI)
+                val newJson2 = newJson1.inherit(newURI, projectDir = projectDir, stripInherits = stripInherits)
 
                 newJson2
             }
@@ -197,11 +200,11 @@ class RichJson(json: Json) {
             throw new RuntimeException("Invalid merge tag type. Must be a String or Array.")
           case None => obj1
         }
-        val obj3 = obj2.mapValues(x => x.inherit(uri))
+        val obj3 = obj2.mapValues(x => x.inherit(uri, projectDir = projectDir, stripInherits = stripInherits))
         Json.fromJsonObject(obj3)
       case x if x.isArray => 
         val arr1 = x.asArray.get
-        val arr2 = arr1.map(y => y.inherit(uri))
+        val arr2 = arr1.map(y => y.inherit(uri, projectDir = projectDir, stripInherits = stripInherits))
         Json.fromValues(arr2)
       case _ => json
     }

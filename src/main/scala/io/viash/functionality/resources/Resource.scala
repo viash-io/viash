@@ -23,6 +23,7 @@ import io.viash.helpers.{IO, MissingResourceFileException}
 import java.nio.file.{Path, Paths}
 import java.nio.file.NoSuchFileException
 import io.viash.schemas._
+import java.io.File
 
 @description(
   """@[Resources](resources) are files that support the component. The first resource should be @[a script](scripting_languages) that will be executed when the functionality is run. Additional resources will be copied to the same directory.
@@ -134,17 +135,24 @@ trait Resource {
     }
   }
 
-  def copyWithAbsolutePath(parent: URI): Resource = {
+  def copyWithAbsolutePath(parent: URI, projectDir: Option[URI]): Resource = {
     if (this.isInstanceOf[Executable] || path.isEmpty || path.get.contains("://")) {
-      this
-    } else {
-      val p = Paths.get(path.get).toFile
-      if (p.isAbsolute) {
-        this
-      } else {
-        this.copyResource(parent = Some(parent))
-      }
+      return this
     }
+    val pathStr = path.get
+    if (pathStr.startsWith("/")) {
+      val (pathStr1, projectURI) = IO.preResolveProject(pathStr, projectDir)
+      return this.copyResource(
+        path = Some(pathStr1),
+        parent = Some(projectURI)
+      )
+    }
+    
+    if (!Paths.get(pathStr).isAbsolute) {
+      return this.copyResource(parent = Some(parent))
+    }
+
+    return this
   }
 
   // TODO: This can probably be solved much nicer.
