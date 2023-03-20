@@ -89,9 +89,16 @@ case class NextflowVdsl3Platform(
     val condir = containerDirective(config)
 
     // create main.nf file
+    val mainNfStr = 
+      if (config.functionality.mainScript.exists(_.isInstanceOf[NextflowScript])) {
+        renderPipelineMainNf(config, condir)
+      } else {
+        renderMainNf(config, condir)
+      }
+
     val mainFile = PlainFile(
       dest = Some("main.nf"),
-      text = Some(renderMainNf(config, condir))
+      text = Some(mainNfStr)
     )
     val nextflowConfigFile = PlainFile(
       dest = Some("nextflow.config"),
@@ -153,6 +160,14 @@ case class NextflowVdsl3Platform(
     |  mainScript = 'main.nf'
     |  nextflowVersion = '!>=20.12.1-edge'$versStr$descStr$authStr
     |}$dockerTemp""".stripMargin
+  }
+
+  def renderPipelineMainNf(config: Config, containerDirective: Option[DockerImageInfo]): String = {
+    // TODO: do something with
+    // config.functionality.mainScript.get.readWithInjection()
+    // TODO: implement NextflowScript::readWithInjection
+    
+    ""
   }
 
   // interpreted from BashWrapper
