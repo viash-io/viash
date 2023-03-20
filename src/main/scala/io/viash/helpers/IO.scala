@@ -220,9 +220,10 @@ object IO {
   }
 
   /**
-    * 
+    * TODO: write doc string
     */
   def preResolveProject(path: String, projectURI: Option[URI]): (String, URI) = {
+    assert(path.startsWith("/"), "prePresolveProject() should only be called when path starts with a '/'.")
     if (projectURI.isEmpty) {
       throw new RuntimeException(s"One of the resources is relative to the project root ($path), but no project config file (_viash.yaml) could be found.")
     }
