@@ -58,14 +58,12 @@ case class NextflowScript(
         ScriptInjectionMods()
 
       case Some(c) =>
-        val dirName = "openpipelineDir"
-
         val configPath = s"$$targetDir/${c.functionality.namespace.getOrElse("namespace")}/${c.functionality.name}/.config.vsh.yaml"
 
-        val dirString = s"""$dirName = params.rootDir + "/module_openpipeline/target/nextflow""""
-        println(s"Script -> path: $path, dest: $dest, parent: $parent")
+        val dependenciesAndDirNames = c.functionality.dependencies.map(d => (d, d.repository.toOption.get.name))
 
-        val depStrings = config.get.functionality.dependencies.map(d => s"include { ${d.workConfig.get.functionality.name} } from $dirName + '/${d.name}/main.nf'").mkString("\n|")
+        val dirStrings =  dependenciesAndDirNames.map(_._2).distinct.map(name => s"""${name}Dir = params.rootDir + "/module_${name}/target/nextflow"""")       
+        val depStrings = dependenciesAndDirNames.map{ case(dep, dir) => s"include { ${dep.workConfig.get.functionality.name} } from ${dir}Dir + '/${dep.name}/main.nf'" }
 
         val str = 
           s"""// Generate Dependency InjectionMods
@@ -80,9 +78,9 @@ case class NextflowScript(
             |config = readYaml("$configPath")
             |
             |// import dependencies
-            |$dirString
+            |${dirStrings.mkString("\n|")}
             |
-            |$depStrings
+            |${depStrings.mkString("\n|")}
             |
             |workflow {
             |  helpMessage(config)
