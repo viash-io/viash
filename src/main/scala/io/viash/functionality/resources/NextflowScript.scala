@@ -86,11 +86,11 @@ case class NextflowScript(
             |  helpMessage(config)
             |
             |  channelFromParams(params, config)
-            |    | integration
+            |    | ${c.functionality.name}
             |    // todo: publish
             |}
             |
-            |workflow integration {
+            |workflow ${c.functionality.name} {
             |  take:
             |  input_ch
             |
