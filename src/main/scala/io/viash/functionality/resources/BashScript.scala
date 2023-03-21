@@ -24,6 +24,7 @@ import io.viash.schemas._
 
 import java.net.URI
 import io.viash.helpers.Bash
+import io.viash.config.Config
 
 @description("""An executable Bash script.
                |When defined in functionality.resources, only the first entry will be executed when running the built component or when running `viash run`.
@@ -48,13 +49,17 @@ case class BashScript(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
+  def generateArgsAndMetaInjectionMods(argsAndMeta: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
     val parSet = argsAndMeta.values.flatten.map { par =>
       val slash = "\\VIASH_SLASH\\"
       s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$${${par.VIASH_PAR}}" | sed "s#'#'$slash"'$slash"'#g;s#.*#${par.par}='&'#" ; else echo "# ${par.par}="; fi )"""
     }
     val paramsCode = parSet.mkString("\n") + "\n"
     ScriptInjectionMods(params = paramsCode)
+  }
+
+  def generateDependencyInjectionMods(config: Option[Config]): ScriptInjectionMods = {
+    ScriptInjectionMods()
   }
 
   def command(script: String): String = {

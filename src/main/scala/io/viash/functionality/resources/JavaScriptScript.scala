@@ -24,6 +24,7 @@ import io.viash.schemas._
 
 import java.net.URI
 import io.viash.helpers.Bash
+import io.viash.config.Config
 
 @description("""An executable JavaScript script.
                |When defined in functionality.resources, only the first entry will be executed when running the built component or when running `viash run`.
@@ -48,7 +49,7 @@ case class JavaScriptScript(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
+  def generateArgsAndMetaInjectionMods(argsAndMeta: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
     val paramsCode = argsAndMeta.map { case (dest, params) =>
     val parSet = params.map { par =>
       // val env_name = par.VIASH_PAR
@@ -85,6 +86,10 @@ case class JavaScriptScript(
       |""".stripMargin
     }
     ScriptInjectionMods(params = paramsCode.mkString)
+  }
+
+  def generateDependencyInjectionMods(config: Option[Config]): ScriptInjectionMods = {
+    ScriptInjectionMods()
   }
 
   def command(script: String): String = {

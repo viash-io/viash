@@ -164,11 +164,17 @@ case class NextflowVdsl3Platform(
   }
 
   def renderPipelineMainNf(config: Config, containerDirective: Option[DockerImageInfo]): String = {
-    // TODO: do something with
-    // config.functionality.mainScript.get.readWithInjection()
-    // TODO: implement NextflowScript::readWithInjection
-    
-    ""
+    config.functionality.mainScript match {
+      // if mainResource is empty (shouldn't be the case)
+      case None => ""
+
+      // if mainResource is simply an executable
+      case Some(e: Executable) => //" " + e.path.get + " $VIASH_EXECUTABLE_ARGS"
+        throw new NotImplementedError("Running executables through a NextflowPlatform is not yet implemented. Create a support ticket to request this functionality if necessary.")
+
+      case Some(res) =>
+        res.readWithInjection(Map.empty, Some(config)).get
+    }
   }
 
   // interpreted from BashWrapper
@@ -196,7 +202,7 @@ case class NextflowVdsl3Platform(
           includeMeta = true,
           filterInputs = true
         )
-        val code = res.readWithInjection(argsAndMeta).get
+        val code = res.readWithInjection(argsAndMeta, None).get
         val escapedCode = Bash.escapeString(code, allowUnescape = true)
           .replace("\\", "\\\\")
           .replace("'''", "\\'\\'\\'")

@@ -152,7 +152,7 @@ object BashWrapper {
 
       // if we want to debug our code
       case Some(res) if debugPath.isDefined =>
-        val code = res.readWithInjection(argsAndMeta).get
+        val code = res.readWithInjection(argsAndMeta, None).get
         val escapedCode = Bash.escapeString(code, allowUnescape = true)
 
         s"""
@@ -164,7 +164,7 @@ object BashWrapper {
 
       // if mainResource is a script
       case Some(res) =>
-        val code = res.readWithInjection(argsAndMeta).get
+        val code = res.readWithInjection(argsAndMeta, None).get
         val escapedCode = Bash.escapeString(code, allowUnescape = true)
 
         // check whether the script can be written to a temprorary location or

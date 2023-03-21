@@ -22,6 +22,7 @@ import io.viash.schemas._
 
 import java.net.URI
 import io.viash.functionality.arguments.Argument
+import io.viash.config.Config
 
 @description("""A Nextflow script. Work in progress; added mainly for annotation at the moment.""".stripMargin)
 case class NextflowScript(
@@ -44,8 +45,70 @@ case class NextflowScript(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
-    ScriptInjectionMods()
+  def generateArgsAndMetaInjectionMods(argsAndMeta: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
+    val str = """// Generate Args and Meta InjectionMods
+                |""".stripMargin
+    ScriptInjectionMods(params = str)
+  }
+
+  def generateDependencyInjectionMods(config: Option[Config]): ScriptInjectionMods = {
+
+    config match {
+      case None =>
+        ScriptInjectionMods()
+
+      case Some(c) =>
+        val dirName = "openpipelineDir"
+
+        val configPath = s"$$targetDir/${c.functionality.namespace.getOrElse("namespace")}/${c.functionality.name}/.config.vsh.yaml"
+
+        val dirString = s"""$dirName = params.rootDir + "/module_openpipeline/target/nextflow""""
+        println(s"Script -> path: $path, dest: $dest, parent: $parent")
+
+        val depStrings = config.get.functionality.dependencies.map(d => s"include { ${d.workConfig.get.functionality.name} } from $dirName + '/${d.name}/main.nf'").mkString("\n|")
+
+        val str = 
+          s"""// Generate Dependency InjectionMods
+            |nextflow.enable.dsl=2
+            |
+            |// or include these in the file itself?
+            |targetDir = params.rootDir + "/target/nextflow"
+            |
+            |include { readYaml; channelFromParams; preprocessInputs; helpMessage } from targetDir + "/helpers/WorkflowHelper.nf"
+            |include { setWorkflowArguments; getWorkflowArguments } from targetDir + "/helpers/DataflowHelper.nf"
+            |
+            |config = readYaml("$configPath")
+            |
+            |// import dependencies
+            |$dirString
+            |
+            |$depStrings
+            |
+            |workflow {
+            |  helpMessage(config)
+            |
+            |  channelFromParams(params, config)
+            |    | integration
+            |    // todo: publish
+            |}
+            |
+            |workflow integration {
+            |  take:
+            |  input_ch
+            |
+            |  main:
+            |  output_ch = input_ch
+            |    | preprocessInputs(config: config)
+            |    | main
+            |
+            |  emit:
+            |    output_ch
+            |}
+            |""".stripMargin
+        ScriptInjectionMods(params = str)
+    }
+
+    
   }
 
   def command(script: String): String = {

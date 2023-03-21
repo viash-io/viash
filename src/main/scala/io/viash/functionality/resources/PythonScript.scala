@@ -24,6 +24,7 @@ import io.viash.wrapper.BashWrapper
 import java.net.URI
 import _root_.io.viash.helpers.Bash
 import io.viash.schemas._
+import io.viash.config.Config
 
 @description("""An executable Python script.
                |When defined in functionality.resources, only the first entry will be executed when running the built component or when running `viash run`.
@@ -48,7 +49,7 @@ case class PythonScript(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
+  def generateArgsAndMetaInjectionMods(argsAndMeta: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
     val paramsCode = argsAndMeta.map { case (dest, params) =>
       val parSet = params.map { par =>
       // val env_name = par.VIASH_PAR
@@ -87,6 +88,10 @@ case class PythonScript(
     }
 
     ScriptInjectionMods(params = paramsCode.mkString)
+  }
+
+  def generateDependencyInjectionMods(config: Option[Config]): ScriptInjectionMods = {
+    ScriptInjectionMods()
   }
 
   def command(script: String): String = {
