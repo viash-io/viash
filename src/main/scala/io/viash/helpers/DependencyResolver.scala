@@ -27,6 +27,7 @@ import io.viash.functionality.dependencies.GithubRepository
 import java.nio.file.Files
 import java.io.IOException
 import java.io.UncheckedIOException
+import io.viash.platforms.Platform
 
 object DependencyResolver {
 
@@ -81,7 +82,7 @@ object DependencyResolver {
     // get caches and store in repository classes
     val config3 = composedDependenciesLens.modify(_
       .map{d =>
-        val repo = d.repository.toOption.get
+        val repo = d.workRepository.get
         val localRepoPath = cacheRepo(repo)
         d.copy(repository = Right(localRepoPath))
       }
@@ -90,7 +91,7 @@ object DependencyResolver {
     // find the referenced config in the locally cached repository
     val config4 = composedDependenciesLens.modify(_
       .map{dep =>
-        val repo = dep.repository.toOption.get
+        val repo = dep.workRepository.get
         // search for configs in the repository and filter by namespace/name
         val configs = Config.readConfigs(
           source = repo.localPath,
@@ -119,24 +120,21 @@ object DependencyResolver {
       )(config4)
   }
 
-  def copyDependencies(config: Config, output: String): Unit = {
+  def copyDependencies(config: Config, output: String, platform: Option[Platform]): Unit = {
     for (dep <- composedDependenciesLens.get(config)) {
       // copy the dependency to the output folder
-      val dependencyPath = Paths.get(output, dep.name)
-      if (dependencyPath.toFile().exists())
-        IO.deleteRecursively(dependencyPath)
-      Files.createDirectories(dependencyPath)
+      val dependencyOutputPath = Paths.get(output, dep.name)
+      if (dependencyOutputPath.toFile().exists())
+        IO.deleteRecursively(dependencyOutputPath)
+      Files.createDirectories(dependencyOutputPath)
+      
+      val platformId = platform.map(_.id).getOrElse("")
+      val dependencyRepoPath = Paths.get(dep.workRepository.get.localPath.stripPrefix("/"), dep.workRepository.get.path.getOrElse("").stripPrefix("/"), "target", platformId, dep.name)
 
-      // For now only copy the viash config file and main script.
-      // In certain cases copying the whole structure can lead to circular references and thus keep copying files until oblivion (or disk full / path too long).
-      // Also, with bigger repositories, the whole repository would get copied which isn't what would be desired either.
-      // Resolving for the folder containing the viash config isn't a perfect solution either as the viash config may contain references to sources outside the folder thus resulting in an incomplete copy.
-      // copyFolder(Paths.get(dep.repository.toOption.get.localPath), dependencyPath)
-      Files.copy(Paths.get(dep.foundConfigPath.get), dependencyPath.resolve(".config.vsh.yaml"))
-      IO.writeResources(dep.workConfig.flatMap(_.functionality.mainScript).toList, dependencyPath)
+      copyFolder(dependencyRepoPath, dependencyOutputPath)
 
       // more recursion for the dependencies of dependencies
-      copyDependencies(dep.workConfig.get, output)
+      copyDependencies(dep.workConfig.get, output, platform)
     }
   }
 
