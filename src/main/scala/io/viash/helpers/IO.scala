@@ -227,7 +227,7 @@ object IO {
     if (projectURI.isEmpty) {
       throw new RuntimeException(s"One of the resources is relative to the project root ($path), but no project config file (_viash.yaml) could be found.")
     }
-    (path.replaceFirst("/", ""), projectURI.get)
+    (path.stripPrefix("/"), projectURI.get)
   }
   def resolveProject(path: String, projectURI: Option[URI]): URI = {
     val (path1, proj) = preResolveProject(path, projectURI)
