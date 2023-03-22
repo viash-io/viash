@@ -49,6 +49,24 @@ object ViashNamespace {
         list.foreach(f)
   }
 
+  def targetOutputPath(
+    targetDir: String,
+    platformId: String,
+    namespace: Option[String],
+    functionalityName: String,
+    flatten: Boolean
+  ): String = {
+    if (!flatten) {
+      val nsStr = namespace match {
+        case Some(ns) => ns + "/"
+        case None => ""
+      }
+      s"$targetDir/$platformId/$nsStr$functionalityName"
+    } else {
+      targetDir
+    }
+  }
+
   def build(
     configs: List[Either[(Config, Option[Platform]), Status]],
     target: String,
@@ -66,13 +84,7 @@ object ViashNamespace {
         case Left((conf, Some(platform))) =>
           val funName = conf.functionality.name
           val platformId = platform.id
-          val out =
-            if (!flatten) {
-              conf.functionality.namespace
-                .map( ns => target + s"/$platformId/$ns/$funName").getOrElse(target + s"/$platformId/$funName")
-            } else {
-              target
-            }
+          val out = targetOutputPath(target, platformId, conf.functionality.namespace, funName, flatten)
           val namespaceOrNothing = conf.functionality.namespace.map( s => "(" + s + ")").getOrElse("")
           println(s"Exporting $funName $namespaceOrNothing =$platformId=> $out")
           val status = ViashBuild(
