@@ -82,9 +82,9 @@ object ViashNamespace {
           val platformId = platform.id
           val out = 
             if (flatten) {
-              targetOutputPath(target, platformId, ns, funName)
-            } else {
               target
+            } else {
+              targetOutputPath(target, platformId, ns, funName)
             }
           val nsStr = ns.map(" (" + _ + ")").getOrElse("")
           println(s"Exporting $funName$nsStr =$platformId=> $out")
