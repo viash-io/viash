@@ -336,20 +336,28 @@ object ViashNamespace {
 
     for (data <- MaybeParList(collectedData, parallel)) {
       // remove trailing + or ; mode character
-      val commandNoMode = command.replaceFirst(""" \\?[;+]$""", "")
-      val replacedCommand = 
+      val commandNoMode: Either[String, String] = Right(command.replaceFirst(""" \\?[;+]$""", ""))
+      val errorOrCmd = 
         fields.foldRight(commandNoMode){ (field, command) => 
-          command.replace(s"{$field}", data.getField(field).get)
+          (command, data.getField(field)) match {
+            case (Right(cmd), Some(dataField)) => Right(cmd.replace(s"{$field}", dataField))
+            case (Right(_), None) => Left(s"Missing field $field for config at '${data.configFullPath}'")
+            case (Left(reason), _) => Left(reason)
+          }
         }
-
-      if (dryrun) {
-        Console.err.println(s"+ $replacedCommand")
-      } else {
-        Console.err.println(s"+ $replacedCommand")
-        val (exitcode, output) = runExecCommand(replacedCommand)
-        Console.err.println(s"  Exit code: $exitcode\n")
-        Console.err.println(s"  Output:")
-        Console.out.println(output)
+      
+      errorOrCmd match {
+        case Left(error) => 
+          Console.err.println(s"+ $command")
+          Console.err.println(s"  Error: $error")
+        case Right(cmd) if dryrun =>
+          Console.err.println(s"+ $cmd")
+        case Right(cmd) =>
+          Console.err.println(s"+ $cmd")
+          val (exitcode, output) = runExecCommand(cmd)
+          Console.err.println(s"  Exit code: $exitcode\n")
+          Console.err.println(s"  Output:")
+          Console.out.println(output)
       }
     }
   }

@@ -2,6 +2,15 @@
 
 TODO add summary
 
+## NEW FUNCTIONALITY
+
+* `viash config view` and `viash ns list`: Set the `.info.output` path when a platform argument is provided.
+
+* `viash ns exec`: Added two more fields:
+
+  - `{output}`: path to the destination directory when building the component
+  - `{abs-output}`: absolute path to the destination directory when building the component
+
 ## MINOR CHANGES
 
 * `testbenches`:
@@ -200,7 +209,7 @@ The most notable changes are:
 * Introducing Viash project config files as an experimental feature.
   It allows storing project-related settings in a `_viash.yaml` 
   config file which you should store at the root of your repository.
-  Example:
+  Example:{platform}
 
   ```yaml
   viash_version: 0.6.4
