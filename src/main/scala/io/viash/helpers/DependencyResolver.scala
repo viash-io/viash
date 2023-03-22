@@ -127,7 +127,13 @@ object DependencyResolver {
         IO.deleteRecursively(dependencyPath)
       Files.createDirectories(dependencyPath)
 
-      copyFolder(Paths.get(dep.repository.toOption.get.localPath), dependencyPath)
+      // For now only copy the viash config file and main script.
+      // In certain cases copying the whole structure can lead to circular references and thus keep copying files until oblivion (or disk full / path too long).
+      // Also, with bigger repositories, the whole repository would get copied which isn't what would be desired either.
+      // Resolving for the folder containing the viash config isn't a perfect solution either as the viash config may contain references to sources outside the folder thus resulting in an incomplete copy.
+      // copyFolder(Paths.get(dep.repository.toOption.get.localPath), dependencyPath)
+      Files.copy(Paths.get(dep.foundConfigPath.get), dependencyPath.resolve(".config.vsh.yaml"))
+      IO.writeResources(dep.workConfig.flatMap(_.functionality.mainScript).toList, dependencyPath)
 
       // more recursion for the dependencies of dependencies
       copyDependencies(dep.workConfig.get, output)
