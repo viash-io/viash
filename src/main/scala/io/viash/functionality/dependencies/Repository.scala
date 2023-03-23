@@ -95,7 +95,7 @@ case class GithubRepository(
     val temporaryFolder = IO.makeTemp("viash_hub_repo")
     val cwd = Some(temporaryFolder.toFile)
 
-    Console.println(s"temporaryFolder: $temporaryFolder uri: $uri fullUri: $fullUri")
+    Console.err.println(s"temporaryFolder: $temporaryFolder uri: $uri fullUri: $fullUri")
 
     val loggers = Seq[String => Unit] { (str: String) => {println(str)} }
 
@@ -117,7 +117,7 @@ case class GithubRepository(
       cwd = cwd
     )
 
-    println(s"checkout out: ${out.command} ${out.exitValue} ${out.output}")
+    Console.err.println(s"checkout out: ${out.command} ${out.exitValue} ${out.output}")
 
     if (path.isDefined)
       copy(localPath = Paths.get(localPath, path.get).toString)
