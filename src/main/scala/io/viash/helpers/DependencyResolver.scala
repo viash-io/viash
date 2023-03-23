@@ -71,7 +71,7 @@ object DependencyResolver {
     val definedRepoNames = composedRepositoriesLens.get(config1).map(_.name)
     dependencyRepoNames.foreach(name =>
       require(definedRepoNames.contains(name), s"Named dependency repositories should exist in the list of repositories. '$name' not found.")
-      )
+    )
 
     // Match repositories defined in dependencies by name to the list of repositories, fill in repository in dependency
     val config2 = composedDependenciesLens.modify(_
