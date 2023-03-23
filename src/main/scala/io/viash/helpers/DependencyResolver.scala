@@ -41,10 +41,10 @@ object DependencyResolver {
     }
 
   // Modify the config so all of the dependencies are available locally
-  def modifyConfig(config: Config, ttl: Integer = 10): Config = {
+  def modifyConfig(config: Config, maxRecursionDepth: Integer = 10): Config = {
 
     // Check recursion level
-    require(ttl >= 0, "Not all dependencies evaluated as the recursion is too deep")
+    require(maxRecursionDepth >= 0, "Not all dependencies evaluated as the recursion is too deep")
 
     // Check all fun.repositories have valid names
     val repositories = config.functionality.repositories
@@ -112,7 +112,7 @@ object DependencyResolver {
       .map{dep =>
         dep.workConfig match {
           case Some(depConf) =>
-            dep.copy(workConfig = Some(modifyConfig(depConf, ttl - 1)))
+            dep.copy(workConfig = Some(modifyConfig(depConf, maxRecursionDepth - 1)))
           case _ =>
             dep
         }
