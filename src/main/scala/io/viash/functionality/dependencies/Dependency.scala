@@ -45,10 +45,3 @@ case class Dependency(
 ) {
   def workRepository: Option[Repository] = repository.toOption
 }
-
-object Dependency {
-  def groupByRepository(dependencies: Seq[Dependency]) = {
-    dependencies.groupBy(_.workRepository)
-  }
-
-}
