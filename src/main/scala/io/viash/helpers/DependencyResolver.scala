@@ -59,7 +59,12 @@ object DependencyResolver {
       d.repository match {
         case Left(repoRegex(s)) => d.copy(repository = Right(Repository.fromSugarSyntax(s)))
         case _ => d
-      }))(config)
+    val config1 = composedDependenciesLens.modify(_.map(d =>
+        d.repository match {
+          case Left(repoRegex(s)) => d.copy(repository = Right(Repository.fromSugarSyntax(s)))
+          case _ => d
+        }
+      ))(config)
 
     // Check all remaining fun.dependency.repository names (Left) refering to fun.repositories can be matched
     val dependencyRepoNames = composedDependenciesLens.get(config1).flatMap(_.repository.left.toOption)
