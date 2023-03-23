@@ -56,10 +56,6 @@ object DependencyResolver {
     // val repoRegex = raw"(\w+)://([A-Za-z0-9/_\-\.]+)@([A-Za-z0-9]+)".r  // TODO improve regex
     val repoRegex = raw"(\w+://[A-Za-z0-9/_\-\.]+@[A-Za-z0-9]*)".r
     val config1 = composedDependenciesLens.modify(_.map(d =>
-      d.repository match {
-        case Left(repoRegex(s)) => d.copy(repository = Right(Repository.fromSugarSyntax(s)))
-        case _ => d
-    val config1 = composedDependenciesLens.modify(_.map(d =>
         d.repository match {
           case Left(repoRegex(s)) => d.copy(repository = Right(Repository.fromSugarSyntax(s)))
           case _ => d
