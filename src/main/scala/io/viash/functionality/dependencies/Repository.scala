@@ -74,7 +74,7 @@ object Repository {
 case class GithubRepository(
   name: String,
   `type`: String = "github",
-  uri: String = "",
+  uri: String,
   tag: Option[String],
   path: Option[String] = None,
   localPath: String = ""
