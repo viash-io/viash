@@ -59,14 +59,19 @@ object DependencyResolver {
       d.repository match {
         case Left(repoRegex(s)) => d.copy(repository = Right(Repository.fromSugarSyntax(s)))
         case _ => d
-      }))(config)
+    val config1 = composedDependenciesLens.modify(_.map(d =>
+        d.repository match {
+          case Left(repoRegex(s)) => d.copy(repository = Right(Repository.fromSugarSyntax(s)))
+          case _ => d
+        }
+      ))(config)
 
     // Check all remaining fun.dependency.repository names (Left) refering to fun.repositories can be matched
     val dependencyRepoNames = composedDependenciesLens.get(config1).flatMap(_.repository.left.toOption)
     val definedRepoNames = composedRepositoriesLens.get(config1).map(_.name)
     dependencyRepoNames.foreach(name =>
       require(definedRepoNames.contains(name), s"Named dependency repositories should exist in the list of repositories. '$name' not found.")
-      )
+    )
 
     // Match repositories defined in dependencies by name to the list of repositories, fill in repository in dependency
     val config2 = composedDependenciesLens.modify(_
