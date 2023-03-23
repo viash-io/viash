@@ -20,12 +20,24 @@ package io.viash.functionality.dependencies
 import io.viash.helpers.Exec
 import io.viash.helpers.IO
 import java.nio.file.Paths
+import io.viash.schemas._
 
+@description("Specifies a repository where dependency components can be found.")
 abstract class Repository {
+  @description("The identifier used to refer to this repository from dependencies.")
   val name: String
+
+  @description("Defines the repository type. This determines how the repository will be fetched and handled.")
   val `type`: String
+
+  @description("Defines which version of the dependency component to use. Typically this can be a specific tag, branch or commit hash.")
   val tag: Option[String]
+
+  @description("Defines a subfolder of the repository to use as base to look for the dependency components.")
   val path: Option[String]
+
+  @internalFunctionality
+  @description("Local path to the repository files.")
   val localPath: String
 
   def copyRepo(

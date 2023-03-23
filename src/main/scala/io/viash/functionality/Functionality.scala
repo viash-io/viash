@@ -226,6 +226,27 @@ case class Functionality(
   requirements: ComputationalRequirements = ComputationalRequirements(),
 
   @description("Allows listing Viash components required by this Viash component")
+  @exampleWithDescription(
+    """name: qc/multiqc
+      |repository: 
+      |type: github
+      |uri: openpipelines-bio/modules
+      |tag: 0.3.0
+      |""".stripMargin,
+    "yaml",
+    "Full specification of a repository")
+  @exampleWithDescription(
+    """name: qc/multiqc
+      |repository: "github://openpipelines-bio/modules:0.3.0"
+      |""".stripMargin,
+    "yaml",
+    "Full specification of a repository using sugar syntax")
+  @exampleWithDescription(
+    """name: qc/multiqc
+      |repository: "openpipelines-bio"
+      |""".stripMargin,
+    "yaml",
+    "Reference to a repository fully specified under 'repositories'")
   dependencies: List[Dependency] = Nil,
 
   @description(
