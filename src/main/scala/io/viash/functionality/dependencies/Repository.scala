@@ -79,7 +79,15 @@ case class GithubRepository(
   path: Option[String] = None,
   localPath: String = ""
 ) extends Repository {
-  def copyRepo(name: String, `type`: String, tag: Option[String], path: Option[String], localPath: String): Repository = copy(name, `type`, uri, tag, path, localPath)
+  def copyRepo(
+    name: String,
+   `type`: String,
+    tag: Option[String],
+    path: Option[String],
+    localPath: String
+  ): Repository = {
+    copy(name, `type`, uri, tag, path, localPath)
+  }
 
   lazy val fullUri = s"git@github.com:$uri.git"
 
