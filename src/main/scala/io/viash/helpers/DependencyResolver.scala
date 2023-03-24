@@ -31,21 +31,11 @@ import io.viash.platforms.Platform
 
 object DependencyResolver {
 
-  // Download the repo and return the repo with the local dir where it is stored filled in
-  def cacheRepo(repo: Repository): Repository = 
-    repo match {
-      case r: GithubRepository => {
-        val r2 = r.checkoutSparse()
-        r2.checkout()
-      }
-      case r => r
-    }
-
   // Modify the config so all of the dependencies are available locally
-  def modifyConfig(config: Config, ttl: Integer = 10): Config = {
+  def modifyConfig(config: Config, maxRecursionDepth: Integer = 10): Config = {
 
     // Check recursion level
-    require(ttl >= 0, "Not all dependencies evaluated as the recursion is too deep")
+    require(maxRecursionDepth >= 0, "Not all dependencies evaluated as the recursion is too deep")
 
     // Check all fun.repositories have valid names
     val repositories = config.functionality.repositories
@@ -57,17 +47,18 @@ object DependencyResolver {
     // val repoRegex = raw"(\w+)://([A-Za-z0-9/_\-\.]+)@([A-Za-z0-9]+)".r  // TODO improve regex
     val repoRegex = raw"(\w+://[A-Za-z0-9/_\-\.]+@[A-Za-z0-9]*)".r
     val config1 = composedDependenciesLens.modify(_.map(d =>
-      d.repository match {
-        case Left(repoRegex(s)) => d.copy(repository = Right(Repository.fromSugarSyntax(s)))
-        case _ => d
-      }))(config)
+        d.repository match {
+          case Left(repoRegex(s)) => d.copy(repository = Right(Repository.fromSugarSyntax(s)))
+          case _ => d
+        }
+      ))(config)
 
     // Check all remaining fun.dependency.repository names (Left) refering to fun.repositories can be matched
     val dependencyRepoNames = composedDependenciesLens.get(config1).flatMap(_.repository.left.toOption)
     val definedRepoNames = composedRepositoriesLens.get(config1).map(_.name)
     dependencyRepoNames.foreach(name =>
       require(definedRepoNames.contains(name), s"Named dependency repositories should exist in the list of repositories. '$name' not found.")
-      )
+    )
 
     // Match repositories defined in dependencies by name to the list of repositories, fill in repository in dependency
     val config2 = composedDependenciesLens.modify(_
@@ -82,8 +73,8 @@ object DependencyResolver {
     // get caches and store in repository classes
     val config3 = composedDependenciesLens.modify(_
       .map{d =>
-        val repo = d.workRepository.get
-        val localRepoPath = cacheRepo(repo)
+        val repo = d.repository.toOption.get
+        val localRepoPath = Repository.cache(repo)
         d.copy(repository = Right(localRepoPath))
       }
       )(config2)
@@ -112,7 +103,7 @@ object DependencyResolver {
       .map{dep =>
         dep.workConfig match {
           case Some(depConf) =>
-            dep.copy(workConfig = Some(modifyConfig(depConf, ttl - 1)))
+            dep.copy(workConfig = Some(modifyConfig(depConf, maxRecursionDepth - 1)))
           case _ =>
             dep
         }

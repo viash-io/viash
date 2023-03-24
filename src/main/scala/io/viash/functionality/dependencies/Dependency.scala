@@ -19,22 +19,29 @@ package io.viash.functionality.dependencies
 
 import java.nio.file.{Path, Paths}
 import io.viash.config.Config
-import io.viash.schemas.description
+import io.viash.schemas._
 
+@description(
+  """Specifies a Viash component (script or executable) that should be made available for the code defined in the functionality.
+    |The dependency components are collected and copied to the output folder during the Viash build step.
+    |""".stripMargin)
 case class Dependency(
+  @description("The full name of the dependency component. This should include the namespace.")
+  @example("name: \"my_namespace\"component", "yaml")
   name: String,
+  
+  @description(
+    """Specifies the location where the dependency component can be found.
+      |This must either be a full definition of the repository or the name of a repository refenced as it is defined under functionality.repositories.
+      |Additionally, the full definition can be specified as a single string where all parameters such as repository type, url, branch or tag are specified.
+      |""".stripMargin)
   repository: Either[String, Repository] = Right(LocalRepository()),
 
   // internal stuff
+  @internalFunctionality
   foundConfigPath: Option[String] = None,
+  @internalFunctionality
   workConfig: Option[Config] = None
 ) {
   def workRepository: Option[Repository] = repository.toOption
-}
-
-object Dependency {
-  def groupByRepository(dependencies: Seq[Dependency]) = {
-    dependencies.groupBy(_.workRepository)
-  }
-
 }

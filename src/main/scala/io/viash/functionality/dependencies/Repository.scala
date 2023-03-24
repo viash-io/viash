@@ -20,12 +20,24 @@ package io.viash.functionality.dependencies
 import io.viash.helpers.Exec
 import io.viash.helpers.IO
 import java.nio.file.Paths
+import io.viash.schemas._
 
+@description("Specifies a repository where dependency components can be found.")
 abstract class Repository {
+  @description("The identifier used to refer to this repository from dependencies.")
   val name: String
+
+  @description("Defines the repository type. This determines how the repository will be fetched and handled.")
   val `type`: String
+
+  @description("Defines which version of the dependency component to use. Typically this can be a specific tag, branch or commit hash.")
   val tag: Option[String]
+
+  @description("Defines a subfolder of the repository to use as base to look for the dependency components.")
   val path: Option[String]
+
+  @internalFunctionality
+  @description("Local path to the repository files.")
   val localPath: String
 
   def copyRepo(
@@ -55,19 +67,35 @@ object Repository {
       case repoRegex(protocol, repo, tag) if protocol == "local" => LocalRepository("TODO generate name")
     }
   }
+
+  def cache(repo: Repository): Repository = 
+    repo match {
+      case r: GithubRepository => {
+        val r2 = r.checkoutSparse()
+        r2.checkout()
+      }
+      case r => r
+    }
 }
-
-
 
 case class GithubRepository(
   name: String,
   `type`: String = "github",
-  uri: String = "",
+  uri: String,
   tag: Option[String],
   path: Option[String] = None,
   localPath: String = ""
 ) extends Repository {
-  def copyRepo(name: String, `type`: String, tag: Option[String], path: Option[String], localPath: String): Repository = copy(name, `type`, uri, tag, path, localPath)
+  
+  def copyRepo(
+    name: String,
+   `type`: String,
+    tag: Option[String],
+    path: Option[String],
+    localPath: String
+  ): Repository = {
+    copy(name, `type`, uri, tag, path, localPath)
+  }
 
   lazy val fullUri = s"git@github.com:$uri.git"
 
@@ -75,12 +103,17 @@ case class GithubRepository(
     val temporaryFolder = IO.makeTemp("viash_hub_repo")
     val cwd = Some(temporaryFolder.toFile)
 
-    Console.println(s"temporaryFolder: $temporaryFolder uri: $uri fullUri: $fullUri")
+    Console.err.println(s"temporaryFolder: $temporaryFolder uri: $uri fullUri: $fullUri")
 
-    val loggers = Seq[String => Unit] { (str: String) => {println(str)} }
+    val singleBranch = tag match {
+      case None => List("--single-branch")
+      case Some(value) => List("--single-branch", "--branch", value)
+    }
+
+    val loggers = Seq[String => Unit] { (str: String) => {Console.err.println(str)} }
 
     val out = Exec.runCatch(
-      List("git", "clone", fullUri, "--no-checkout", "."),
+      List("git", "clone", fullUri, "--no-checkout", "--depth", "1") ++ singleBranch :+ ".",
       cwd = cwd,
       loggers = loggers,
     )
@@ -97,7 +130,7 @@ case class GithubRepository(
       cwd = cwd
     )
 
-    println(s"checkout out: ${out.command} ${out.exitValue} ${out.output}")
+    Console.err.println(s"checkout out: ${out.command} ${out.exitValue} ${out.output}")
 
     if (path.isDefined)
       copy(localPath = Paths.get(localPath, path.get).toString)
@@ -114,5 +147,15 @@ case class LocalRepository(
   path: Option[String] = None,
   localPath: String = ""
 ) extends Repository {
-  def copyRepo(name: String, `type`: String, tag: Option[String], path: Option[String], localPath: String): Repository = copy(name, `type`, tag, path, localPath)
+
+  def copyRepo(
+    name: String,
+    `type`: String,
+    tag: Option[String],
+    path: Option[String],
+    localPath: String
+  ): Repository = {
+    copy(name, `type`, tag, path, localPath)
+  }
+
 }
