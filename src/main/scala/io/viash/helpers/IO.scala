@@ -58,6 +58,25 @@ object IO {
     })
   }
 
+  def copyFolder(src: Path, dest: Path): Unit = {
+    Files.walkFileTree(src, new SimpleFileVisitor[Path] {
+      override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult = {
+        val newPath = dest.resolve(src.relativize(dir))
+        newPath.toFile.mkdir()
+        FileVisitResult.CONTINUE
+      }
+      override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+        val newPath = dest.resolve(src.relativize(file))
+        Files.copy(file, newPath)
+        FileVisitResult.CONTINUE
+      }
+    })
+  }
+
+  def copyFolder(src: String, dest: String): Unit = {
+    copyFolder(Paths.get(src), Paths.get(dest))
+  }
+
   private val uriRegex = "^[a-zA-Z0-9]*:".r
 
   def uri(path: String): URI = {

@@ -118,36 +118,10 @@ object DependencyResolver {
         IO.deleteRecursively(dependencyPath)
       Files.createDirectories(dependencyPath)
 
-      copyFolder(Paths.get(dep.repository.toOption.get.localPath), dependencyPath)
+      IO.copyFolder(Paths.get(dep.repository.toOption.get.localPath), dependencyPath)
 
       // more recursion for the dependencies of dependencies
       copyDependencies(dep.workConfig.get, output)
-    }
-  }
-
-  def copyFolder(src: Path, dest: Path): Unit = {
-    val stream = Files.walk(src)
-
-    try {
-      stream.forEachOrdered((sourcePath: Path) => {
-
-        try {
-          val newPath = dest.resolve(src.relativize(sourcePath))
-          if (sourcePath.toFile.isFile) {
-            Files.copy(sourcePath, newPath)
-          } else if (sourcePath.toFile.isDirectory) {
-            newPath.toFile.mkdir()
-          }
-
-        } catch {
-          case e: IOException =>
-            throw new UncheckedIOException(e)
-        }
-
-      })
-
-    } finally {
-      stream.close()
     }
   }
 
