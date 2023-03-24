@@ -45,14 +45,7 @@ case class NextflowScript(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateArgsAndMetaInjectionMods(argsAndMeta: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
-    val str = """// Generate Args and Meta InjectionMods
-                |""".stripMargin
-    ScriptInjectionMods(params = str)
-  }
-
-  def generateDependencyInjectionMods(config: Option[Config]): ScriptInjectionMods = {
-
+  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]], config: Option[Config]): ScriptInjectionMods = {
     config match {
       case None =>
         ScriptInjectionMods()
@@ -62,47 +55,46 @@ case class NextflowScript(
 
         val dependenciesAndDirNames = c.functionality.dependencies.map(d => (d, d.repository.toOption.get.name))
 
-        val dirStrings =  dependenciesAndDirNames.map(_._2).distinct.map(name => s"""${name}Dir = params.rootDir + "/module_${name}/target/nextflow"""")       
+        val dirStrings = dependenciesAndDirNames.map(_._2).distinct.map(name => s"""${name}Dir = params.rootDir + "/module_${name}/target/nextflow"""")       
         val depStrings = dependenciesAndDirNames.map{ case(dep, dir) => s"include { ${dep.workConfig.get.functionality.name} } from ${dir}Dir + '/${dep.name}/main.nf'" }
 
         val str = 
-          s"""// Generate Dependency InjectionMods
-            |nextflow.enable.dsl=2
-            |
-            |// or include these in the file itself?
-            |targetDir = params.rootDir + "/target/nextflow"
-            |
-            |include { readYaml; channelFromParams; preprocessInputs; helpMessage } from targetDir + "/helpers/WorkflowHelper.nf"
-            |include { setWorkflowArguments; getWorkflowArguments } from targetDir + "/helpers/DataflowHelper.nf"
-            |
-            |config = readYaml("$configPath")
-            |
-            |// import dependencies
-            |${dirStrings.mkString("\n|")}
-            |
-            |${depStrings.mkString("\n|")}
-            |
-            |workflow {
-            |  helpMessage(config)
-            |
-            |  channelFromParams(params, config)
-            |    | ${c.functionality.name}
-            |    // todo: publish
-            |}
-            |
-            |workflow ${c.functionality.name} {
-            |  take:
-            |  input_ch
-            |
-            |  main:
-            |  output_ch = input_ch
-            |    | preprocessInputs(config: config)
-            |    | main
-            |
-            |  emit:
-            |    output_ch
-            |}
-            |""".stripMargin
+          s"""nextflow.enable.dsl=2
+             |
+             |// or include these in the file itself?
+             |targetDir = params.rootDir + "/target/nextflow"
+             |
+             |include { readYaml; channelFromParams; preprocessInputs; helpMessage } from targetDir + "/helpers/WorkflowHelper.nf"
+             |include { setWorkflowArguments; getWorkflowArguments } from targetDir + "/helpers/DataflowHelper.nf"
+             |
+             |config = readYaml("$configPath")
+             |
+             |// import dependencies
+             |${dirStrings.mkString("\n|")}
+             |
+             |${depStrings.mkString("\n|")}
+             |
+             |workflow {
+             |  helpMessage(config)
+             |
+             |  channelFromParams(params, config)
+             |    | ${c.functionality.name}
+             |    // todo: publish
+             |}
+             |
+             |workflow ${c.functionality.name} {
+             |  take:
+             |  input_ch
+             |
+             |  main:
+             |  output_ch = input_ch
+             |    | preprocessInputs(config: config)
+             |    | main
+             |
+             |  emit:
+             |    output_ch
+             |}
+             |""".stripMargin
         ScriptInjectionMods(params = str)
     }
 

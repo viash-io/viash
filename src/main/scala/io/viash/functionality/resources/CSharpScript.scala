@@ -48,7 +48,7 @@ case class CSharpScript(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateArgsAndMetaInjectionMods(argsAndMeta: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
+  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]], config: Option[Config]): ScriptInjectionMods = {
     val quo = "\"'\"'\""
     
     val paramsCode = argsAndMeta.map { case (dest, params) =>
@@ -111,10 +111,6 @@ case class CSharpScript(
     }
 
     ScriptInjectionMods(params = paramsCode.mkString)
-  }
-
-  def generateDependencyInjectionMods(config: Option[Config]): ScriptInjectionMods = {
-    ScriptInjectionMods()
   }
 
   def command(script: String): String = {
