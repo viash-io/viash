@@ -227,23 +227,26 @@ case class Functionality(
 
   @description("Allows listing Viash components required by this Viash component")
   @exampleWithDescription(
-    """name: qc/multiqc
-      |repository: 
-      |type: github
-      |uri: openpipelines-bio/modules
-      |tag: 0.3.0
+    """dependencies:
+      |  - name: qc/multiqc
+      |    repository: 
+      |      type: github
+      |      uri: openpipelines-bio/modules
+      |      tag: 0.3.0
       |""".stripMargin,
     "yaml",
     "Full specification of a repository")
   @exampleWithDescription(
-    """name: qc/multiqc
-      |repository: "github://openpipelines-bio/modules:0.3.0"
+    """dependencies:
+      |  - name: qc/multiqc
+      |    repository: "github://openpipelines-bio/modules:0.3.0"
       |""".stripMargin,
     "yaml",
     "Full specification of a repository using sugar syntax")
   @exampleWithDescription(
-    """name: qc/multiqc
-      |repository: "openpipelines-bio"
+    """dependencies:
+      |  - name: qc/multiqc
+      |    repository: "openpipelines-bio"
       |""".stripMargin,
     "yaml",
     "Reference to a repository fully specified under 'repositories'")
@@ -252,6 +255,14 @@ case class Functionality(
   @description(
     """(Pre-)defines repositories that can be used as repository in dependencies.
       |Allows reusing repository definitions in case it is used in multiple dependencies.""".stripMargin)
+  @example(
+    """repositories:
+      |  - name: openpipelines-bio
+      |    type: github
+      |    uri: openpipelines-bio/modules
+      |    tag: 0.3.0
+      |""".stripMargin,
+      "yaml")
   repositories: List[Repository] = Nil,
   // The variables below are for internal use and shouldn't be publicly documented
 
