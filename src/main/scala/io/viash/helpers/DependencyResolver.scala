@@ -28,6 +28,7 @@ import java.nio.file.Files
 import java.io.IOException
 import java.io.UncheckedIOException
 import io.viash.platforms.Platform
+import io.viash.helpers.IO
 
 object DependencyResolver {
 
@@ -122,36 +123,10 @@ object DependencyResolver {
       val platformId = platform.map(_.id).getOrElse("")
       val dependencyRepoPath = Paths.get(dep.workRepository.get.localPath.stripPrefix("/"), dep.workRepository.get.path.getOrElse("").stripPrefix("/"), "target", platformId, dep.name)
 
-      copyFolder(dependencyRepoPath, dependencyOutputPath)
+      IO.copyFolder(Paths.get(dep.repository.toOption.get.localPath), dependencyOutputPath)
 
       // more recursion for the dependencies of dependencies
       copyDependencies(dep.workConfig.get, output, platform)
-    }
-  }
-
-  def copyFolder(src: Path, dest: Path): Unit = {
-    val stream = Files.walk(src)
-
-    try {
-      stream.forEachOrdered((sourcePath: Path) => {
-
-        try {
-          val newPath = dest.resolve(src.relativize(sourcePath))
-          if (sourcePath.toFile.isFile) {
-            Files.copy(sourcePath, newPath)
-          } else if (sourcePath.toFile.isDirectory) {
-            newPath.toFile.mkdir()
-          }
-
-        } catch {
-          case e: IOException =>
-            throw new UncheckedIOException(e)
-        }
-
-      })
-
-    } finally {
-      stream.close()
     }
   }
 
