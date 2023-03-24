@@ -67,9 +67,16 @@ object Repository {
       case repoRegex(protocol, repo, tag) if protocol == "local" => LocalRepository("TODO generate name")
     }
   }
+
+  def cache(repo: Repository): Repository = 
+    repo match {
+      case r: GithubRepository => {
+        val r2 = r.checkoutSparse()
+        r2.checkout()
+      }
+      case r => r
+    }
 }
-
-
 
 case class GithubRepository(
   name: String,
@@ -79,6 +86,7 @@ case class GithubRepository(
   path: Option[String] = None,
   localPath: String = ""
 ) extends Repository {
+  
   def copyRepo(
     name: String,
    `type`: String,
@@ -97,10 +105,15 @@ case class GithubRepository(
 
     Console.err.println(s"temporaryFolder: $temporaryFolder uri: $uri fullUri: $fullUri")
 
-    val loggers = Seq[String => Unit] { (str: String) => {println(str)} }
+    val singleBranch = tag match {
+      case None => List("--single-branch")
+      case Some(value) => List("--single-branch", "--branch", value)
+    }
+
+    val loggers = Seq[String => Unit] { (str: String) => {Console.err.println(str)} }
 
     val out = Exec.runCatch(
-      List("git", "clone", fullUri, "--no-checkout", "."),
+      List("git", "clone", fullUri, "--no-checkout", "--depth", "1") ++ singleBranch :+ ".",
       cwd = cwd,
       loggers = loggers,
     )
@@ -134,5 +147,15 @@ case class LocalRepository(
   path: Option[String] = None,
   localPath: String = ""
 ) extends Repository {
-  def copyRepo(name: String, `type`: String, tag: Option[String], path: Option[String], localPath: String): Repository = copy(name, `type`, tag, path, localPath)
+
+  def copyRepo(
+    name: String,
+    `type`: String,
+    tag: Option[String],
+    path: Option[String],
+    localPath: String
+  ): Repository = {
+    copy(name, `type`, tag, path, localPath)
+  }
+
 }

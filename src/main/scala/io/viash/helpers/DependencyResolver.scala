@@ -30,16 +30,6 @@ import java.io.UncheckedIOException
 
 object DependencyResolver {
 
-  // Download the repo and return the repo with the local dir where it is stored filled in
-  def cacheRepo(repo: Repository): Repository = 
-    repo match {
-      case r: GithubRepository => {
-        val r2 = r.checkoutSparse()
-        r2.checkout()
-      }
-      case r => r
-    }
-
   // Modify the config so all of the dependencies are available locally
   def modifyConfig(config: Config, maxRecursionDepth: Integer = 10): Config = {
 
@@ -83,7 +73,7 @@ object DependencyResolver {
     val config3 = composedDependenciesLens.modify(_
       .map{d =>
         val repo = d.repository.toOption.get
-        val localRepoPath = cacheRepo(repo)
+        val localRepoPath = Repository.cache(repo)
         d.copy(repository = Right(localRepoPath))
       }
       )(config2)
