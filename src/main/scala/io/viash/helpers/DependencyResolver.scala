@@ -84,32 +84,29 @@ object DependencyResolver {
     val config4 = composedDependenciesLens.modify(_
       .map{dep =>
         val repo = dep.workRepository.get
-        // search for configs in the repository and filter by namespace/name
-        val configs = Config.readConfigs(
-          source = repo.localPath,
-          query = Some(s"^${dep.name}$$"),
-          queryNamespace = None,
-          queryName = None,
-          configMods = Nil,
-          addOptMainScript = false
-        )
-        val dependencyConfig = configs.flatMap(_.swap.toOption).headOption
-        val configPath = dependencyConfig.flatMap(_.info).map(_.config)
-        dep.copy(foundConfigPath = configPath, workConfig = dependencyConfig)
+        // val dependencyConfig = findConfig(repo.localPath, dep.name)
+        // val configPath = dependencyConfig.flatMap(_.info).map(_.config)
+        // dep.copy(foundConfigPath = configPath, workConfig = dependencyConfig)
+        // TODO match platform
+        val targetPath = Paths.get(repo.localPath.stripPrefix("/"), repo.path.getOrElse("").stripPrefix("/"))
+        val configPath = findConfig2(targetPath.toString(), dep.name)
+        dep.copy(foundConfigPath = configPath)
       }
       )(config3)
+
+    config4
     
     // recurse through our dependencies to solve their dependencies
-    composedDependenciesLens.modify(_
-      .map{dep =>
-        dep.workConfig match {
-          case Some(depConf) =>
-            dep.copy(workConfig = Some(modifyConfig(depConf, maxRecursionDepth - 1)))
-          case _ =>
-            dep
-        }
-      }
-      )(config4)
+    // composedDependenciesLens.modify(_
+    //   .map{dep =>
+    //     dep.workConfig match {
+    //       case Some(depConf) =>
+    //         dep.copy(workConfig = Some(modifyConfig(depConf, maxRecursionDepth - 1)))
+    //       case _ =>
+    //         dep
+    //     }
+    //   }
+    //   )(config4)
   }
 
   def copyDependencies(config: Config, output: String, platform: Option[Platform]): Config = {
@@ -121,15 +118,97 @@ object DependencyResolver {
       Files.createDirectories(dependencyOutputPath)
       
       val platformId = platform.map(_.id).getOrElse("")
-      val dependencyRepoPath = Paths.get(dep.workRepository.get.localPath.stripPrefix("/"), dep.workRepository.get.path.getOrElse("").stripPrefix("/"), "target", platformId, dep.name)
+      // val dependencyRepoPath = Paths.get(dep.workRepository.get.localPath.stripPrefix("/"), dep.workRepository.get.path.getOrElse("").stripPrefix("/"), "target", platformId, dep.name)
+      val dependencyRepoPath = Paths.get(dep.foundConfigPath.get).getParent()
 
       IO.copyFolder(dependencyRepoPath, dependencyOutputPath)
 
       // more recursion for the dependencies of dependencies
-      copyDependencies(dep.workConfig.get, output, platform)
+      // copyDependencies(dep.workConfig.get, output, platform)
 
       // Store location of the copied files
       dep.copy(writtenPath = Some(dependencyOutputPath.toString()))
     }))(config)
+  }
+
+  def findConfig(path: String, name: String): Option[Config] = {
+    // search for configs in the repository and filter by namespace/name
+    val configs = Config.readConfigs(
+          source = path,
+          query = Some(s"^$name$$"),
+          queryNamespace = None,
+          queryName = None,
+          configMods = Nil,
+          addOptMainScript = false
+        )
+    configs.flatMap(_.swap.toOption).headOption
+  }
+
+  def findConfig2(path: String, name: String): Option[String] = {
+    val scriptFiles = IO.find(Paths.get(path), (path, attrs) => {
+      path.toString.contains(".vsh.") &&
+        path.toFile.getName.startsWith(".") &&
+        attrs.isRegularFile
+    })
+
+    val scriptInfo = scriptFiles.map(scriptPath => {
+      val info = getSparseConfigInfo(scriptPath.toString())
+      (scriptPath, info)
+    })
+
+    val script = scriptInfo.filter{
+        case(scriptPath, info) => 
+          (info("functionalityNamespace"), info("functionalityName")) match {
+            case (ns, n) if !ns.isEmpty() => s"$ns/$n" == name
+            case (_, n) => n == name
+          }
+      }.headOption
+
+    script.map(_._1.toString())
+  }
+
+  def getSparseConfigInfo(configPath: String): Map[String, String] = {
+
+    import io.circe.yaml.parser
+    import io.circe.Json
+    import io.viash.helpers.circe._
+
+    /* STRING */
+    // read yaml as string
+    val (yamlText, _) = Config.readYAML(configPath)
+    
+    /* JSON 0: parsed from string */
+    // parse yaml into Json
+    def parsingErrorHandler[C](e: Exception): C = {
+      Console.err.println(s"${Console.RED}Error parsing '${configPath}'.${Console.RESET}\nDetails:")
+      throw e
+    }
+    val json0 = parser.parse(yamlText).fold(parsingErrorHandler, identity)
+
+    /* JSON 1: after inheritance */
+    // apply inheritance if need be
+    val json1 = json0.inherit(IO.uri(configPath))
+
+
+    def getFunctionalityName(json: Json): Option[String] = {
+      json.hcursor.downField("functionality").downField("name").as[String].toOption
+    }
+    def getFunctionalityNamespace(json: Json): Option[String] = {
+      json.hcursor.downField("functionality").downField("namespace").as[String].toOption
+    }
+    def getInfo(json: Json): Option[Map[String, String]] = {
+      json.hcursor.downField("info").as[Map[String, String]].toOption
+    }
+
+    val functionalityName = getFunctionalityName(json1)
+    val functonalityNamespace = getFunctionalityNamespace(json1)
+    val info = getInfo(json1).getOrElse(Map.empty) +
+      ("functionalityName" -> functionalityName.getOrElse("")) +
+      ("functionalityNamespace" -> functonalityNamespace.getOrElse(""))
+
+    println(s"name: $functionalityName, namespace: $functonalityNamespace, info:")
+    info.foreach{ case (k, v) => println(s"  $k -> $v")}
+
+    info
   }
 }
