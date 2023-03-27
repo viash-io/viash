@@ -210,9 +210,9 @@ object Main {
       case List(cli.build) =>
         val (config, platform) = readConfig(cli.build, project = proj1)
         val config1 = DependencyResolver.modifyConfig(config)
-        DependencyResolver.copyDependencies(config1, cli.build.output(), platform)
+        val config2 = DependencyResolver.copyDependencies(config1, cli.build.output(), platform)
         val buildResult = ViashBuild(
-          config = config1,
+          config = config2,
           platform = platform.get,
           output = cli.build.output(),
           setup = cli.build.setup.toOption,

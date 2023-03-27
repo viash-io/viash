@@ -112,8 +112,8 @@ object DependencyResolver {
       )(config4)
   }
 
-  def copyDependencies(config: Config, output: String, platform: Option[Platform]): Unit = {
-    for (dep <- composedDependenciesLens.get(config)) {
+  def copyDependencies(config: Config, output: String, platform: Option[Platform]): Config = {
+    composedDependenciesLens.modify(_.map(dep => {
       // copy the dependency to the output folder
       val dependencyOutputPath = Paths.get(output, dep.name)
       if (dependencyOutputPath.toFile().exists())
@@ -123,11 +123,13 @@ object DependencyResolver {
       val platformId = platform.map(_.id).getOrElse("")
       val dependencyRepoPath = Paths.get(dep.workRepository.get.localPath.stripPrefix("/"), dep.workRepository.get.path.getOrElse("").stripPrefix("/"), "target", platformId, dep.name)
 
-      IO.copyFolder(Paths.get(dep.repository.toOption.get.localPath), dependencyOutputPath)
+      IO.copyFolder(dependencyRepoPath, dependencyOutputPath)
 
       // more recursion for the dependencies of dependencies
       copyDependencies(dep.workConfig.get, output, platform)
-    }
-  }
 
+      // Store location of the copied files
+      dep.copy(writtenPath = Some(dependencyOutputPath.toString()))
+    }))(config)
+  }
 }

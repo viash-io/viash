@@ -39,9 +39,16 @@ case class Dependency(
 
   // internal stuff
   @internalFunctionality
+  @description("Location of the config of this dependency component.")
   foundConfigPath: Option[String] = None,
+
   @internalFunctionality
-  workConfig: Option[Config] = None
+  @description("Content of the config of this dependency component.")
+  workConfig: Option[Config] = None,
+
+  @internalFunctionality
+  @description("Location of the dependency component artifacts are written ready to be used.")
+  writtenPath: Option[String] = None,
 ) {
   def workRepository: Option[Repository] = repository.toOption
 }
