@@ -56,7 +56,7 @@ case class NextflowScript(
         val dependenciesAndDirNames = c.functionality.dependencies.map(d => (d, d.repository.toOption.get.name))
 
         val dirStrings = dependenciesAndDirNames.map(_._2).distinct.map(name => s"""${name}Dir = params.rootDir + "/module_${name}/target/nextflow"""")       
-        val depStrings = dependenciesAndDirNames.map{ case(dep, dir) => s"include { ${dep.workConfig.get.functionality.name} } from ${dir}Dir + '/${dep.name}/main.nf'" }
+        val depStrings = dependenciesAndDirNames.map{ case(dep, dir) => s"include { ${dep.configInfo("functionalityName")} } from ${dir}Dir + '/${dep.name}/main.nf'" }
 
         val str = 
           s"""nextflow.enable.dsl=2

@@ -89,8 +89,8 @@ object DependencyResolver {
         // dep.copy(foundConfigPath = configPath, workConfig = dependencyConfig)
         // TODO match platform
         val targetPath = Paths.get(repo.localPath.stripPrefix("/"), repo.path.getOrElse("").stripPrefix("/"))
-        val configPath = findConfig2(targetPath.toString(), dep.name)
-        dep.copy(foundConfigPath = configPath)
+        val config = findConfig2(targetPath.toString(), dep.name)
+        dep.copy(foundConfigPath = config.map(_._1), configInfo = config.map(_._2).getOrElse(Map.empty))
       }
       )(config3)
 
@@ -144,7 +144,7 @@ object DependencyResolver {
     configs.flatMap(_.swap.toOption).headOption
   }
 
-  def findConfig2(path: String, name: String): Option[String] = {
+  def findConfig2(path: String, name: String): Option[(String, Map[String, String])] = {
     val scriptFiles = IO.find(Paths.get(path), (path, attrs) => {
       path.toString.contains(".vsh.") &&
         path.toFile.getName.startsWith(".") &&
@@ -164,7 +164,7 @@ object DependencyResolver {
           }
       }.headOption
 
-    script.map(_._1.toString())
+    script.map(t => (t._1.toString(), t._2))
   }
 
   def getSparseConfigInfo(configPath: String): Map[String, String] = {

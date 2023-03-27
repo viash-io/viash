@@ -45,6 +45,7 @@ case class Dependency(
   @internalFunctionality
   @description("Content of the config of this dependency component.")
   workConfig: Option[Config] = None,
+  configInfo: Map[String, String] = Map.empty,
 
   @internalFunctionality
   @description("Location of the dependency component artifacts are written ready to be used.")
