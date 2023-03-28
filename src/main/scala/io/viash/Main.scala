@@ -259,7 +259,6 @@ object Main {
         val configs = readConfigs(cli.namespace.test, project = proj1)
         val configs2 = configs.map{
           case Left((c0: Config, platform: Option[Platform])) => {
-            println(s"viash ns test target ${proj1.target} platform ${platform}")
             // val output = ViashNamespace.targetOutputPath(proj1.target.get, platform.get.id, c0.functionality.namespace, c0.functionality.name)
             val c1 = DependencyResolver.modifyConfig(c0, platform)
             Left((c1, platform))
