@@ -33,10 +33,7 @@ import io.viash.helpers.IO
 object DependencyResolver {
 
   // Modify the config so all of the dependencies are available locally
-  def modifyConfig(config: Config, platform: Option[Platform], maxRecursionDepth: Integer = 10): Config = {
-
-    // Check recursion level
-    require(maxRecursionDepth >= 0, "Not all dependencies evaluated as the recursion is too deep")
+  def modifyConfig(config: Config, platform: Option[Platform]): Config = {
 
     // Check all fun.repositories have valid names
     val repositories = config.functionality.repositories
@@ -84,28 +81,13 @@ object DependencyResolver {
     val config4 = composedDependenciesLens.modify(_
       .map{dep =>
         val repo = dep.workRepository.get
-        // val dependencyConfig = findConfig(repo.localPath, dep.name)
-        // val configPath = dependencyConfig.flatMap(_.info).map(_.config)
-        // dep.copy(foundConfigPath = configPath, workConfig = dependencyConfig)
         val targetPath = Paths.get(repo.localPath.stripPrefix("/"), repo.path.getOrElse("").stripPrefix("/"))
-        val config = findConfig2(targetPath.toString(), dep.name, platform)
+        val config = findConfig(targetPath.toString(), dep.name, platform)
         dep.copy(foundConfigPath = config.map(_._1), configInfo = config.map(_._2).getOrElse(Map.empty))
       }
       )(config3)
 
-    config4
-    
-    // recurse through our dependencies to solve their dependencies
-    // composedDependenciesLens.modify(_
-    //   .map{dep =>
-    //     dep.workConfig match {
-    //       case Some(depConf) =>
-    //         dep.copy(workConfig = Some(modifyConfig(depConf, maxRecursionDepth - 1)))
-    //       case _ =>
-    //         dep
-    //     }
-    //   }
-    //   )(config4)
+    config4    
   }
 
   def copyDependencies(config: Config, output: String, platform: Option[Platform]): Config = {
@@ -117,33 +99,16 @@ object DependencyResolver {
       Files.createDirectories(dependencyOutputPath)
       
       val platformId = platform.map(_.id).getOrElse("")
-      // val dependencyRepoPath = Paths.get(dep.workRepository.get.localPath.stripPrefix("/"), dep.workRepository.get.path.getOrElse("").stripPrefix("/"), "target", platformId, dep.name)
       val dependencyRepoPath = Paths.get(dep.foundConfigPath.get).getParent()
 
       IO.copyFolder(dependencyRepoPath, dependencyOutputPath)
-
-      // more recursion for the dependencies of dependencies
-      // copyDependencies(dep.workConfig.get, output, platform)
 
       // Store location of the copied files
       dep.copy(writtenPath = Some(dependencyOutputPath.toString()))
     }))(config)
   }
 
-  def findConfig(path: String, name: String): Option[Config] = {
-    // search for configs in the repository and filter by namespace/name
-    val configs = Config.readConfigs(
-          source = path,
-          query = Some(s"^$name$$"),
-          queryNamespace = None,
-          queryName = None,
-          configMods = Nil,
-          addOptMainScript = false
-        )
-    configs.flatMap(_.swap.toOption).headOption
-  }
-
-  def findConfig2(path: String, name: String, platform: Option[Platform]): Option[(String, Map[String, String])] = {
+  def findConfig(path: String, name: String, platform: Option[Platform]): Option[(String, Map[String, String])] = {
     val scriptFiles = IO.find(Paths.get(path), (path, attrs) => {
       path.toString.contains(".vsh.") &&
         path.toFile.getName.startsWith(".") &&
@@ -213,9 +178,6 @@ object DependencyResolver {
     val info = getInfo(json1).getOrElse(Map.empty) +
       ("functionalityName" -> functionalityName.getOrElse("")) +
       ("functionalityNamespace" -> functonalityNamespace.getOrElse(""))
-
-    println(s"name: $functionalityName, namespace: $functonalityNamespace, info:")
-    info.foreach{ case (k, v) => println(s"  $k -> $v")}
 
     info
   }
