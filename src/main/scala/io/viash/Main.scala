@@ -221,8 +221,11 @@ object Main {
         if (buildResult.isError) 1 else 0
       case List(cli.test) =>
         val (config, platform) = readConfig(cli.test, project = proj1)
+        val config1 = DependencyResolver.modifyConfig(config, platform)
+        // TODO
+        // val config2 = DependencyResolver.copyDependencies(config1, cli.build.output(), platform)
         ViashTest(
-          config,
+          config1,
           platform = platform.get,
           keepFiles = cli.test.keep.toOption.map(_.toBoolean),
           cpus = cli.test.cpus.toOption,
@@ -231,8 +234,17 @@ object Main {
         0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
         val configs = readConfigs(cli.namespace.build, project = proj1)
+        val configs2 = configs.map{
+          case Left((c0: Config, platform: Option[Platform])) => {
+            val output = ViashNamespace.targetOutputPath(proj1.target.get, platform.get.id, c0.functionality.namespace, c0.functionality.name)
+            val c1 = DependencyResolver.modifyConfig(c0, platform)
+            val c2 = DependencyResolver.copyDependencies(c1, output, platform)
+            Left((c2, platform))
+          }
+          case Right(c) => Right(c)
+        }
         var buildResults = ViashNamespace.build(
-          configs = configs,
+          configs = configs2,
           target = proj1.target.get,
           setup = cli.namespace.build.setup.toOption,
           push = cli.namespace.build.push(),
@@ -245,8 +257,20 @@ object Main {
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.test) =>
         val configs = readConfigs(cli.namespace.test, project = proj1)
+        val configs2 = configs.map{
+          case Left((c0: Config, platform: Option[Platform])) => {
+            println(s"viash ns test target ${proj1.target} platform ${platform}")
+            // val output = ViashNamespace.targetOutputPath(proj1.target.get, platform.get.id, c0.functionality.namespace, c0.functionality.name)
+            val c1 = DependencyResolver.modifyConfig(c0, platform)
+            Left((c1, platform))
+            // TODO
+            // val c2 = DependencyResolver.copyDependencies(c1, output, platform)
+            // Left((c2, platform))
+          }
+          case Right(c) => Right(c)
+        }
         val testResults = ViashNamespace.test(
-          configs = configs,
+          configs = configs2,
           parallel = cli.namespace.test.parallel(),
           keepFiles = cli.namespace.test.keep.toOption.map(_.toBoolean),
           tsv = cli.namespace.test.tsv.toOption,
@@ -263,8 +287,15 @@ object Main {
           addOptMainScript = false, 
           applyPlatform = cli.namespace.list.platform.isDefined
         )
+        val configs2 = configs.map{
+          case Left((c0: Config, platform: Option[Platform])) => {
+            val c1 = DependencyResolver.modifyConfig(c0, platform)
+            Left((c1, platform))
+          }
+          case Right(c) => Right(c)
+        }
         ViashNamespace.list(
-          configs = configs,
+          configs = configs2,
           format = cli.namespace.list.format(),
           parseArgumentGroups = cli.namespace.list.parse_argument_groups()
         )
