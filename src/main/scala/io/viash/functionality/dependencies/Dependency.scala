@@ -43,8 +43,7 @@ case class Dependency(
   foundConfigPath: Option[String] = None,
 
   @internalFunctionality
-  @description("Content of the config of this dependency component.")
-  workConfig: Option[Config] = None,
+  @description("Meta info of this dependency component.")
   configInfo: Map[String, String] = Map.empty,
 
   @internalFunctionality

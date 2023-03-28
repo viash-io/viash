@@ -209,7 +209,7 @@ object Main {
         )
       case List(cli.build) =>
         val (config, platform) = readConfig(cli.build, project = proj1)
-        val config1 = DependencyResolver.modifyConfig(config)
+        val config1 = DependencyResolver.modifyConfig(config, platform)
         val config2 = DependencyResolver.copyDependencies(config1, cli.build.output(), platform)
         val buildResult = ViashBuild(
           config = config2,
@@ -291,7 +291,7 @@ object Main {
           addOptMainScript = false,
           applyPlatform = false
         )
-        val config1 = DependencyResolver.modifyConfig(config)
+        val config1 = DependencyResolver.modifyConfig(config, None)
         ViashConfig.view(
           config1, 
           format = cli.config.view.format(),

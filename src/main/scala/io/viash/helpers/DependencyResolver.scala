@@ -33,7 +33,7 @@ import io.viash.helpers.IO
 object DependencyResolver {
 
   // Modify the config so all of the dependencies are available locally
-  def modifyConfig(config: Config, maxRecursionDepth: Integer = 10): Config = {
+  def modifyConfig(config: Config, platform: Option[Platform], maxRecursionDepth: Integer = 10): Config = {
 
     // Check recursion level
     require(maxRecursionDepth >= 0, "Not all dependencies evaluated as the recursion is too deep")
@@ -87,9 +87,8 @@ object DependencyResolver {
         // val dependencyConfig = findConfig(repo.localPath, dep.name)
         // val configPath = dependencyConfig.flatMap(_.info).map(_.config)
         // dep.copy(foundConfigPath = configPath, workConfig = dependencyConfig)
-        // TODO match platform
         val targetPath = Paths.get(repo.localPath.stripPrefix("/"), repo.path.getOrElse("").stripPrefix("/"))
-        val config = findConfig2(targetPath.toString(), dep.name)
+        val config = findConfig2(targetPath.toString(), dep.name, platform)
         dep.copy(foundConfigPath = config.map(_._1), configInfo = config.map(_._2).getOrElse(Map.empty))
       }
       )(config3)
@@ -144,7 +143,7 @@ object DependencyResolver {
     configs.flatMap(_.swap.toOption).headOption
   }
 
-  def findConfig2(path: String, name: String): Option[(String, Map[String, String])] = {
+  def findConfig2(path: String, name: String, platform: Option[Platform]): Option[(String, Map[String, String])] = {
     val scriptFiles = IO.find(Paths.get(path), (path, attrs) => {
       path.toString.contains(".vsh.") &&
         path.toFile.getName.startsWith(".") &&
@@ -156,13 +155,22 @@ object DependencyResolver {
       (scriptPath, info)
     })
 
-    val script = scriptInfo.filter{
+    val script = scriptInfo
+      .filter{
         case(scriptPath, info) => 
           (info("functionalityNamespace"), info("functionalityName")) match {
             case (ns, n) if !ns.isEmpty() => s"$ns/$n" == name
             case (_, n) => n == name
           }
-      }.headOption
+      }
+      .filter{
+        case(scriptPath, info) =>
+          platform match {
+            case None => true
+            case Some(p) => info("platform") == p.id
+          }
+      }
+      .headOption
 
     script.map(t => (t._1.toString(), t._2))
   }
