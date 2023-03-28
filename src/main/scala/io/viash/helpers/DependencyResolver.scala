@@ -29,6 +29,9 @@ import java.io.IOException
 import java.io.UncheckedIOException
 import io.viash.platforms.Platform
 import io.viash.helpers.IO
+import io.circe.yaml.parser
+import io.circe.Json
+
 
 object DependencyResolver {
 
@@ -140,45 +143,35 @@ object DependencyResolver {
     script.map(t => (t._1.toString(), t._2))
   }
 
+  // Read a config file from a built target. Get meta info, functionality name & namespace
   def getSparseConfigInfo(configPath: String): Map[String, String] = {
+    try {
+      // No support for project configs, config mods, ...
+      // The yaml file in the target folder should be final
+      // We're also assuming that the file will be proper yaml and an actual viash config file
+      val yamlText = IO.read(IO.uri(configPath))
+      val json = parser.parse(yamlText).toOption.get
 
-    import io.circe.yaml.parser
-    import io.circe.Json
-    import io.viash.helpers.circe._
+      def getFunctionalityName(json: Json): Option[String] = {
+        json.hcursor.downField("functionality").downField("name").as[String].toOption
+      }
+      def getFunctionalityNamespace(json: Json): Option[String] = {
+        json.hcursor.downField("functionality").downField("namespace").as[String].toOption
+      }
+      def getInfo(json: Json): Option[Map[String, String]] = {
+        json.hcursor.downField("info").as[Map[String, String]].toOption
+      }
 
-    /* STRING */
-    // read yaml as string
-    val (yamlText, _) = Config.readYAML(configPath)
-    
-    /* JSON 0: parsed from string */
-    // parse yaml into Json
-    def parsingErrorHandler[C](e: Exception): C = {
-      Console.err.println(s"${Console.RED}Error parsing '${configPath}'.${Console.RESET}\nDetails:")
-      throw e
+      val functionalityName = getFunctionalityName(json)
+      val functonalityNamespace = getFunctionalityNamespace(json)
+      val info = getInfo(json).getOrElse(Map.empty) +
+        ("functionalityName" -> functionalityName.getOrElse("")) +
+        ("functionalityNamespace" -> functonalityNamespace.getOrElse(""))
+
+      info
     }
-    val json0 = parser.parse(yamlText).fold(parsingErrorHandler, identity)
-
-    /* JSON 1: after inheritance */
-    // apply inheritance if need be
-    val json1 = json0.inherit(IO.uri(configPath))
-
-
-    def getFunctionalityName(json: Json): Option[String] = {
-      json.hcursor.downField("functionality").downField("name").as[String].toOption
+    catch {
+      case _: Throwable => Map.empty
     }
-    def getFunctionalityNamespace(json: Json): Option[String] = {
-      json.hcursor.downField("functionality").downField("namespace").as[String].toOption
-    }
-    def getInfo(json: Json): Option[Map[String, String]] = {
-      json.hcursor.downField("info").as[Map[String, String]].toOption
-    }
-
-    val functionalityName = getFunctionalityName(json1)
-    val functonalityNamespace = getFunctionalityNamespace(json1)
-    val info = getInfo(json1).getOrElse(Map.empty) +
-      ("functionalityName" -> functionalityName.getOrElse("")) +
-      ("functionalityNamespace" -> functonalityNamespace.getOrElse(""))
-
-    info
   }
 }
