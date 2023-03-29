@@ -102,9 +102,13 @@ object DependencyResolver {
       Files.createDirectories(dependencyOutputPath)
       
       val platformId = platform.map(_.id).getOrElse("")
-      val dependencyRepoPath = Paths.get(dep.foundConfigPath.get).getParent()
-
-      IO.copyFolder(dependencyRepoPath, dependencyOutputPath)
+      if (dep.foundConfigPath.isDefined) {
+        val dependencyRepoPath = Paths.get(dep.foundConfigPath.get).getParent()
+        IO.copyFolder(dependencyRepoPath, dependencyOutputPath)
+      }
+      else {
+        Console.err.println(s"Could not find dependency artifacts for ${dep.name}. Skipping copying dependency artifacts.")
+      }
 
       // Store location of the copied files
       dep.copy(writtenPath = Some(dependencyOutputPath.toString()))
@@ -112,6 +116,9 @@ object DependencyResolver {
   }
 
   def findConfig(path: String, name: String, platform: Option[Platform]): Option[(String, Map[String, String])] = {
+    if (!Files.exists(Paths.get(path)))
+      return None
+
     val scriptFiles = IO.find(Paths.get(path), (path, attrs) => {
       path.toString.contains(".vsh.") &&
         path.toFile.getName.startsWith(".") &&
