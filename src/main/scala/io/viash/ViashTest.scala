@@ -34,6 +34,7 @@ import io.viash.helpers.data_structures._
 import io.viash.helpers.MissingResourceFileException
 import io.viash.platforms.Platform
 import io.viash.config.ConfigMeta
+import io.viash.helpers.DependencyResolver
 
 object ViashTest {
   case class TestOutput(name: String, exitValue: Int, output: String, logFile: String, duration: Long)
@@ -84,9 +85,12 @@ object ViashTest {
         config
       }
 
+    // Make dependencies available for the tests
+    val config3 = DependencyResolver.copyDependencies(config2, dir.toString(), Some(platform))
+
     // run tests
     val ManyTestOutput(setupRes, results) = ViashTest.runTests(
-      config = config2,
+      config = config3,
       platform = platform,
       dir = dir,
       verbose = !quiet,
