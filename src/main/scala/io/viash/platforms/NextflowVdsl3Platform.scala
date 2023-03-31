@@ -173,7 +173,7 @@ case class NextflowVdsl3Platform(
         throw new NotImplementedError("Running executables through a NextflowPlatform is not yet implemented. Create a support ticket to request this functionality if necessary.")
 
       case Some(res) =>
-        res.readWithInjection(Map.empty, Some(config)).get
+        res.readWithInjection(Map.empty, config).get
     }
   }
 
@@ -202,7 +202,7 @@ case class NextflowVdsl3Platform(
           includeMeta = true,
           filterInputs = true
         )
-        val code = res.readWithInjection(argsAndMeta, None).get
+        val code = res.readWithInjection(argsAndMeta, config).get
         val escapedCode = Bash.escapeString(code, allowUnescape = true)
           .replace("\\", "\\\\")
           .replace("'''", "\\'\\'\\'")

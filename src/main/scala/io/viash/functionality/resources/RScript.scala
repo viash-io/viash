@@ -49,7 +49,7 @@ case class RScript(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]], config: Option[Config]): ScriptInjectionMods = {
+  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
     val paramsCode = argsAndMeta.map { case (dest, params) =>
 
       val parSet = params.map { par =>

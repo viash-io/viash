@@ -26,9 +26,9 @@ import io.viash.config.Config
 trait Script extends Resource {
   val companion: ScriptCompanion
 
-  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]], config: Option[Config]): ScriptInjectionMods
+  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods
 
-  def readWithInjection(argsAndMeta: Map[String, List[Argument[_]]], config: Option[Config]): Option[String] = {
+  def readWithInjection(argsAndMeta: Map[String, List[Argument[_]]], config: Config): Option[String] = {
     read.map(code => {
       val lines = code.split("\n")
       val startIndex = lines.indexWhere(_.contains("VIASH START"))

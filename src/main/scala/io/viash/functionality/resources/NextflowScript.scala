@@ -45,60 +45,52 @@ case class NextflowScript(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]], config: Option[Config]): ScriptInjectionMods = {
-    config match {
-      case None =>
-        ScriptInjectionMods()
+  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+    val configPath = s"$$targetDir/${config.functionality.namespace.getOrElse("namespace")}/${config.functionality.name}/.config.vsh.yaml"
 
-      case Some(c) =>
-        val configPath = s"$$targetDir/${c.functionality.namespace.getOrElse("namespace")}/${c.functionality.name}/.config.vsh.yaml"
+    val dependenciesAndDirNames = config.functionality.dependencies.map(d => (d, d.repository.toOption.get.name))
 
-        val dependenciesAndDirNames = c.functionality.dependencies.map(d => (d, d.repository.toOption.get.name))
+    val dirStrings = dependenciesAndDirNames.map(_._2).distinct.map(name => s"""${name}Dir = params.rootDir + "/module_${name}/target/nextflow"""")       
+    val depStrings = dependenciesAndDirNames.map{ case(dep, dir) => s"include { ${dep.configInfo("functionalityName")} } from ${dir}Dir + '/${dep.name}/main.nf'" }
 
-        val dirStrings = dependenciesAndDirNames.map(_._2).distinct.map(name => s"""${name}Dir = params.rootDir + "/module_${name}/target/nextflow"""")       
-        val depStrings = dependenciesAndDirNames.map{ case(dep, dir) => s"include { ${dep.configInfo("functionalityName")} } from ${dir}Dir + '/${dep.name}/main.nf'" }
-
-        val str = 
-          s"""nextflow.enable.dsl=2
-             |
-             |// or include these in the file itself?
-             |targetDir = params.rootDir + "/target/nextflow"
-             |
-             |include { readYaml; channelFromParams; preprocessInputs; helpMessage } from targetDir + "/helpers/WorkflowHelper.nf"
-             |include { setWorkflowArguments; getWorkflowArguments } from targetDir + "/helpers/DataflowHelper.nf"
-             |
-             |config = readYaml("$configPath")
-             |
-             |// import dependencies
-             |${dirStrings.mkString("\n|")}
-             |
-             |${depStrings.mkString("\n|")}
-             |
-             |workflow {
-             |  helpMessage(config)
-             |
-             |  channelFromParams(params, config)
-             |    | ${c.functionality.name}
-             |    // todo: publish
-             |}
-             |
-             |workflow ${c.functionality.name} {
-             |  take:
-             |  input_ch
-             |
-             |  main:
-             |  output_ch = input_ch
-             |    | preprocessInputs(config: config)
-             |    | main
-             |
-             |  emit:
-             |    output_ch
-             |}
-             |""".stripMargin
-        ScriptInjectionMods(params = str)
-    }
-
-    
+    val str = 
+      s"""nextflow.enable.dsl=2
+          |
+          |// or include these in the file itself?
+          |targetDir = params.rootDir + "/target/nextflow"
+          |
+          |include { readYaml; channelFromParams; preprocessInputs; helpMessage } from targetDir + "/helpers/WorkflowHelper.nf"
+          |include { setWorkflowArguments; getWorkflowArguments } from targetDir + "/helpers/DataflowHelper.nf"
+          |
+          |config = readYaml("$configPath")
+          |
+          |// import dependencies
+          |${dirStrings.mkString("\n|")}
+          |
+          |${depStrings.mkString("\n|")}
+          |
+          |workflow {
+          |  helpMessage(config)
+          |
+          |  channelFromParams(params, config)
+          |    | ${config.functionality.name}
+          |    // todo: publish
+          |}
+          |
+          |workflow ${config.functionality.name} {
+          |  take:
+          |  input_ch
+          |
+          |  main:
+          |  output_ch = input_ch
+          |    | preprocessInputs(config: config)
+          |    | main
+          |
+          |  emit:
+          |    output_ch
+          |}
+          |""".stripMargin
+    ScriptInjectionMods(params = str)    
   }
 
   def command(script: String): String = {
