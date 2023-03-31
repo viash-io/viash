@@ -407,24 +407,27 @@ case class Functionality(
     }
   }
 
-  def getArgumentLikes(includeMeta: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): List[Argument[_]] = {
+  def getArgumentLikes(includeMeta: Boolean = false, includeDependencies: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): List[Argument[_]] = {
     // start with arguments
     val args0 = allArguments
 
     // add meta if need be
     val args1 = args0 ++ { if (includeMeta) BashWrapper.metaArgs else Nil }
+
+    // add dependencies if need be
+    val args2 = args1 ++ { if (includeDependencies) dependencies.map( d => StringArgument(d.scriptName, required = false, dest = "dep") ) else Nil }
     
     // filter input files if need be
-    val args2 = if (filterInputs) args1.filter{d => d.direction == Input || d.isInstanceOf[FileArgument]} else args1
+    val args3 = if (filterInputs) args2.filter{d => d.direction == Input || d.isInstanceOf[FileArgument]} else args2
     
     // filter output files if need be
-    val args3 = if (filterOutputs) args2.filter{d => d.direction == Output || d.isInstanceOf[FileArgument]} else args2
+    val args4 = if (filterOutputs) args3.filter{d => d.direction == Output || d.isInstanceOf[FileArgument]} else args3
 
-    args3
+    args4
   }
-  def getArgumentLikesGroupedByDest(includeMeta: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): Map[String, List[Argument[_]]] = {
-    val x = getArgumentLikes(includeMeta, filterInputs, filterOutputs).groupBy(_.dest)
-    val y = Map("par" -> Nil, "meta" -> Nil)
+  def getArgumentLikesGroupedByDest(includeMeta: Boolean = false, includeDependencies: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): Map[String, List[Argument[_]]] = {
+    val x = getArgumentLikes(includeMeta, includeDependencies, filterInputs, filterOutputs).groupBy(_.dest)
+    val y = Map("par" -> Nil, "meta" -> Nil, "dep" -> Nil)
     (x.toSeq ++ y.toSeq).groupBy(_._1).map { 
       case (k, li) => (k, li.flatMap(_._2).toList) 
     }

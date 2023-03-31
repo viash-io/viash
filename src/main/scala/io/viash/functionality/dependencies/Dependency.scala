@@ -55,5 +55,5 @@ case class Dependency(
   // Name in BashWrapper
   def VIASH_DEP: String = s"VIASH_DEP_${name.replace("/", "_").toUpperCase()}"
   // Name to be used in scripts
-  def scriptName: String = s"dep_${name.replace("/", "_")}"
+  def scriptName: String = name.replace("/", "_")
 }

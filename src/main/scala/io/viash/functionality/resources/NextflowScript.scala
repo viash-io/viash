@@ -45,7 +45,7 @@ case class NextflowScript(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
     val configPath = s"$$targetDir/${config.functionality.namespace.getOrElse("namespace")}/${config.functionality.name}/.config.vsh.yaml"
 
     val dependenciesAndDirNames = config.functionality.dependencies.map(d => (d, d.repository.toOption.get.name))

@@ -49,9 +49,9 @@ case class ScalaScript(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
     val quo = "\"'\"\"\"'\""
-    val paramsCode = argsAndMeta.map { case (dest, params) =>
+    val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
       val parClassTypes = params.map { par =>
         val classType = par match {
           case a: BooleanArgumentBase if a.multiple => "List[Boolean]"
