@@ -50,11 +50,15 @@ case class BashScript(
   }
 
   def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+    val slash = "\\VIASH_SLASH\\"
     val parSet = argsAndMeta.values.flatten.map { par =>
-      val slash = "\\VIASH_SLASH\\"
       s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$${${par.VIASH_PAR}}" | sed "s#'#'$slash"'$slash"'#g;s#.*#${par.par}='&'#" ; else echo "# ${par.par}="; fi )"""
     }
-    val paramsCode = parSet.mkString("\n") + "\n"
+    val dependencies = config.functionality.dependencies.map{ d =>
+      s"""$$VIASH_DOLLAR$$( if [ ! -z $${${d.VIASH_DEP}+x} ]; then echo "$${${d.VIASH_DEP}}" | sed "s#'#'$slash"'$slash"'#g;s#.*#${d.scriptName}='&'#" ; else echo "# ${d.scriptName}="; fi )"""
+    }
+
+    val paramsCode = (parSet ++ dependencies).mkString("", "\n", "\n")
     ScriptInjectionMods(params = paramsCode)
   }
 

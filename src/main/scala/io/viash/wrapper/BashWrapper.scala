@@ -23,6 +23,8 @@ import io.viash.functionality.arguments._
 import io.viash.helpers.{Bash, Format, Helper}
 import io.viash.helpers.Escaper
 import io.viash.config.ConfigMeta
+import io.viash.config.Config
+import java.nio.file.Paths
 
 object BashWrapper {
   val metaArgs: List[Argument[_]] = {
@@ -218,6 +220,10 @@ object BashWrapper {
       .map(h => Escaper(h, newline = true))
       .mkString("# ", "\n# ", "")
 
+    // if the dependency namespace/name is foo/bar, then the variable will be called VIASH_DEP_FOO_BAR
+    val dependencies = config.functionality.dependencies.map(d => s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR/${d.name}/${Paths.get(d.configInfo("executable")).getFileName()}\"")
+    val dependenciesStr = dependencies.mkString("\n")
+
     /* GENERATE BASH SCRIPT */
     s"""#!/usr/bin/env bash
        |
@@ -290,6 +296,10 @@ object BashWrapper {
        |# parse positional parameters
        |eval set -- $$VIASH_POSITIONAL_ARGS
        |${spaceCode(allMods.postParse)}${spaceCode(allMods.preRun)}
+       |
+       |# set dependency paths
+       |$dependenciesStr
+       |
        |ViashDebug "Running command: ${executor.replaceAll("^eval (.*)", "\\$(echo $1)")}"
        |$heredocStart$executor$executionCode$heredocEnd
        |${spaceCode(allMods.postRun)}${spaceCode(allMods.last)}

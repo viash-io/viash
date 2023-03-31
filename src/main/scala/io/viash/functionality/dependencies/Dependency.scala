@@ -51,4 +51,9 @@ case class Dependency(
   writtenPath: Option[String] = None,
 ) {
   def workRepository: Option[Repository] = repository.toOption
+
+  // Name in BashWrapper
+  def VIASH_DEP: String = s"VIASH_DEP_${name.replace("/", "_").toUpperCase()}"
+  // Name to be used in scripts
+  def scriptName: String = s"dep_${name.replace("/", "_")}"
 }
