@@ -221,7 +221,7 @@ object BashWrapper {
       .mkString("# ", "\n# ", "")
 
     // if the dependency namespace/name is foo/bar, then the variable will be called VIASH_DEP_FOO_BAR
-    val dependencies = config.functionality.dependencies.map(d => s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR/${d.name}/${Paths.get(d.configInfo("executable")).getFileName()}\"")
+    val dependencies = config.functionality.dependencies.map(d => s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR/${d.name}/${Paths.get(d.configInfo.getOrElse("executable", "not_found")).getFileName()}\"")
     val dependenciesStr = dependencies.mkString("\n")
 
     /* GENERATE BASH SCRIPT */
