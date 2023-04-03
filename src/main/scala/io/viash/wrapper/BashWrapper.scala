@@ -222,8 +222,9 @@ object BashWrapper {
       .map(h => Escaper(h, newline = true))
       .mkString("# ", "\n# ", "")
 
+    val dependencyDirStr = "$$VIASH_META_RESOURCES_DIR/dependencies"
     // if the dependency namespace/name is foo/bar, then the variable will be called VIASH_DEP_FOO_BAR
-    val dependencies = config.functionality.dependencies.map(d => s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR/${d.name}/${Paths.get(d.configInfo.getOrElse("executable", "not_found")).getFileName()}\"")
+    val dependencies = config.functionality.dependencies.map(d => s"${d.VIASH_DEP}=\"$$VIASH_DEPENDENCY_DIR/${d.subOutputPath.get}/${Paths.get(d.configInfo.getOrElse("executable", "not_found")).getFileName()}\"")
     val dependenciesStr = dependencies.mkString("\n")
 
     /* GENERATE BASH SCRIPT */
@@ -258,6 +259,9 @@ object BashWrapper {
        |VIASH_META_EXECUTABLE="$$VIASH_META_RESOURCES_DIR/$$VIASH_META_FUNCTIONALITY_NAME"
        |VIASH_META_CONFIG="$$VIASH_META_RESOURCES_DIR/${ConfigMeta.metaFilename}"
        |VIASH_META_TEMP_DIR="$$VIASH_TEMP"
+       |
+       |# define dependencies folder
+       |VIASH_DEPENDENCY_DIR="$dependencyDirStr"
        |${spaceCode(allMods.preParse)}
        |# initialise array
        |VIASH_POSITIONAL_ARGS=''

@@ -56,4 +56,6 @@ case class Dependency(
   def VIASH_DEP: String = s"VIASH_DEP_${name.replace("/", "_").toUpperCase()}"
   // Name to be used in scripts
   def scriptName: String = name.replace("/", "_")
+  // Part of the folder structure where dependencies should be written to
+  def subOutputPath = workRepository.map(r => Paths.get(r.subOutputPath, name).toString())
 }

@@ -48,13 +48,7 @@ abstract class Repository {
     localPath: String = this.localPath
   ): Repository
 
-  // def isAlike(obj: Any): Boolean = {
-  //   obj match {
-  //     case o if o == this => true
-  //     case o: Repository => this.equals(o.copy(name = this.name))
-  //     case _ => false
-  //   }
-  // }
+  def subOutputPath: String
 }
 
 object Repository {
@@ -138,6 +132,8 @@ case class GithubRepository(
       // no changes to be made
       this
   }
+
+  def subOutputPath: String = Paths.get(`type`, uri, tag.getOrElse("")).toString()
 }
 
 case class LocalRepository(
@@ -158,4 +154,5 @@ case class LocalRepository(
     copy(name, `type`, tag, path, localPath)
   }
 
+  def subOutputPath: String = Paths.get(`type`, tag.getOrElse("")).toString()
 }
