@@ -26,6 +26,7 @@ import Status._
 import dependencies._
 import io.viash.schemas._
 import io.viash.wrapper.BashWrapper
+import scala.collection.immutable.ListMap
 
 @description(
   """The functionality-part of the config file describes the behaviour of the script in terms of arguments and resources.
@@ -425,12 +426,10 @@ case class Functionality(
 
     args4
   }
-  def getArgumentLikesGroupedByDest(includeMeta: Boolean = false, includeDependencies: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): Map[String, List[Argument[_]]] = {
+  def getArgumentLikesGroupedByDest(includeMeta: Boolean = false, includeDependencies: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): ListMap[String, List[Argument[_]]] = {
     val x = getArgumentLikes(includeMeta, includeDependencies, filterInputs, filterOutputs).groupBy(_.dest)
-    val y = Map("par" -> Nil, "meta" -> Nil, "dep" -> Nil)
-    (x.toSeq ++ y.toSeq).groupBy(_._1).map { 
-      case (k, li) => (k, li.flatMap(_._2).toList) 
-    }
+    val y = Seq("par", "meta", "dep").map(k => (k, x.getOrElse(k, Nil)))
+    ListMap(y: _*)
   }
 
   def mainScript: Option[Script] =
