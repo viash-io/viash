@@ -347,6 +347,7 @@ object Main {
     
     val config = Config.read(
       configPath = subcommand.config(),
+      projectDir = project.rootDir.map(_.toUri()),
       addOptMainScript = addOptMainScript,
       configMods = project.config_mods
     )
@@ -375,6 +376,7 @@ object Main {
 
     val configs = Config.readConfigs(
       source = source,
+      projectDir = project.rootDir.map(_.toUri()),
       query = query,
       queryNamespace = queryNamespace,
       queryName = queryName,
