@@ -11,11 +11,11 @@ functionality:
   resources:
     - type: executable
       path: ls
-    - path: resource1.txt
+    - path: ../resource1.txt
   test_resources:
     - type: bash_script
       path: test.sh
-    - path: resource2.txt
+    - path: ../resource2.txt
 platforms:
   - type: native
   - type: docker
