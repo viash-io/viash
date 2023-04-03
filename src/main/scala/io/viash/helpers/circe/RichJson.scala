@@ -149,7 +149,7 @@ class RichJson(json: Json) {
               if (str == ".") {
                 None
               } else if (str.startsWith("/")) {
-                Some(IO.resolveProject(str, projectDir))
+                Some(IO.resolveProjectPath(str, projectDir))
               } else {
                 Some(uri.resolve(str))
               }

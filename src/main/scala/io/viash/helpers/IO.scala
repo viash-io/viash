@@ -83,7 +83,7 @@ object IO {
       Some(read(uri))
     } catch {
       case _: Exception =>
-        println(s"File at URI '$uri' not found")
+        Console.err.println(s"File at URI '$uri' not found")
         // println()
         // println("###################")
         // println("Exception:")
@@ -220,17 +220,30 @@ object IO {
   }
 
   /**
-    * TODO: write doc string
+    * Resolve a path with respect to a URI.
+    *
+    * @param path A string containing an absolute path
+    * @param uri The URI to resolve to.
+    * @return A modified path.
     */
-  def preResolveProject(path: String, projectURI: Option[URI]): (String, URI) = {
-    assert(path.startsWith("/"), "prePresolveProject() should only be called when path starts with a '/'.")
+  def resolvePathWrtURI(path: String, uri: URI): String = {
+    assert(path.startsWith("/"), "resolvePathWrtURI() should only be called when path starts with a '/'.")
+    path.stripPrefix("/")
+  }
+
+  /**
+    * Resolve a project-relative path w.r.t. the project uri
+    * 
+    * @param path A string containing an absolute path
+    * @param projectURI The project URI to resolve to
+    * @return A modified path as a URI.
+    */
+  def resolveProjectPath(path: String, projectURI: Option[URI]): URI = {
     if (projectURI.isEmpty) {
       throw new RuntimeException(s"One of the resources is relative to the project root ($path), but no project config file (_viash.yaml) could be found.")
     }
-    (path.stripPrefix("/"), projectURI.get)
-  }
-  def resolveProject(path: String, projectURI: Option[URI]): URI = {
-    val (path1, proj) = preResolveProject(path, projectURI)
-    proj.resolve(path1)
+    val uri = projectURI.get
+    val newPath = resolvePathWrtURI(path, uri)
+    uri.resolve(newPath)
   }
 }
