@@ -8,21 +8,19 @@ TODO add summary
   * `/foo` is a file or directory called `foo` in the current project directory.
   * `file:/foo` is a file or directory called `foo` in the system root.
 
-## MINOR CHANGES
-
-* `testbenches`:
-  - Reworked language tests to be grouped in their own subfolder and split off the bash language test from the general `testbash` folder.
-  - Add additional language tests for `viash config inject`.
-
 ## INTERNAL CHANGES
 
-* Clean up unused code (#380)
+* Clean up unused code (#380).
 
 * Move circe encoders/decoders for File and Path from `io.viash.functionality.arguments` to `io.viash.helpers.circe` (#380).
 
 * Store the project root directory (that is, the directory of the `_viash.yaml`) in a ViashProject object (#380).
 
+* Tests: Reworked language tests to be grouped in their own subfolder and split off the bash language test from the general `testbash` folder (#381).
 
+* Tests: Add additional language tests for `viash config inject` (#381).
+
+* Tests: Added test for `io.viash.helpers.IO` (#380).
 
 
 # Viash 0.7.1 (2023-03-08): Minor improvements to VDSL3 and schema functionality.
