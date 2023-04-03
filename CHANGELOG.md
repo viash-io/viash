@@ -1185,7 +1185,7 @@ The biggest change in this release is that long running Viash components (VS Cod
   After:
   ```
   $ viash test src/test/resources/testbash/config_failed_build.vsh.yaml 
-  Error parsing 'file:///path/to/viash/src/test/resources/testbash/config_failed_build.vsh.yaml'. Details:
+  Error parsing 'file:/path/to/viash/src/test/resources/testbash/config_failed_build.vsh.yaml'. Details:
   Unexpected field: [package]; valid fields: packages, interactive, type: DownField(apt),DownArray,DownField(platforms)
   ```
 
