@@ -27,11 +27,11 @@ import io.circe.yaml.{Printer => YamlPrinter}
 
 import scala.sys.process.Process
 import io.viash.platforms.DebugPlatform
+import io.viash.config.ConfigMeta
 
 object ViashConfig {
   private val yamlPrinter = YamlPrinter(
     preserveOrder = true,
-    dropNullKeys = true,
     mappingStyle = YamlPrinter.FlowStyle.Block,
     splitLines = true,
     stringStyle = YamlPrinter.StringStyle.DoubleQuoted
@@ -58,7 +58,8 @@ object ViashConfig {
       } else {
         config
       }
-    printJson(conf0.asJson, format)
+    val json = ConfigMeta.configToCleanJson(conf0)
+    printJson(json, format)
   }
 
   def viewMany(configs: List[Config], format: String, parseArgumentGroups: Boolean): Unit = {
@@ -74,7 +75,8 @@ object ViashConfig {
         config
       }
     }
-    printJson(confs0.asJson, format)
+    val jsons = confs0.map(c => ConfigMeta.configToCleanJson(c))
+    printJson(jsons.asJson, format)
   }
 
   def inject(config: Config): Unit = {

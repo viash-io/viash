@@ -68,6 +68,39 @@ class RichJson(json: Json) {
   }
 
   /**
+    * Removes all empty lines / objects from the Json unless the key is found in the exclusions list
+    *
+    * @param exclusions The list of key names for which the values should remain untouched
+    * @return A modified Json
+    */
+  def dropEmptyRecursivelyExcept(exclusions: Seq[String]): Json = {
+    if (json.isObject) {
+      val jo = json.asObject.get
+      val filteredJo = jo.toList.map{ case (k, v) => 
+        if (exclusions.contains(k)) {
+          (k, v)
+        } else {
+          (k, v.dropEmptyRecursivelyExcept(exclusions))
+        }
+      }
+      val newJo = JsonObject.apply(filteredJo: _*).filter(!_._2.isNull)
+      if (newJo.nonEmpty) 
+        Json.fromJsonObject(newJo)
+      else
+        Json.Null
+    } else if (json.isArray) {
+      val ja = json.asArray.get
+      val newJa = ja.map(_.dropEmptyRecursivelyExcept(exclusions)).filter(!_.isNull)      
+      if (newJa.nonEmpty) 
+        Json.fromValues(newJa)
+      else
+        Json.Null
+    } else {
+      json
+    }
+  }
+
+  /**
    * Perform a deep merge of this JSON value with another JSON value.
    *
    * Objects are merged by key, values from the argument JSON take
