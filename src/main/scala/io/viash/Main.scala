@@ -236,7 +236,7 @@ object Main {
         val configs = readConfigs(cli.namespace.build, project = proj1)
         val configs2 = configs.map{
           case Left((c0: Config, platform: Option[Platform])) => {
-            val output = ViashNamespace.targetOutputPath(proj1.target.get, platform.get.id, c0.functionality.namespace, c0.functionality.name)
+            val output = ViashNamespace.dependenciesOutputPath(proj1.target.get, platform.get.id)
             val c1 = DependencyResolver.modifyConfig(c0, platform)
             val c2 = DependencyResolver.copyDependencies(c1, output, platform)
             Left((c2, platform))

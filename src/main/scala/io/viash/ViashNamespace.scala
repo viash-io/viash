@@ -62,6 +62,13 @@ object ViashNamespace {
     s"$targetDir/$platformId/$nsStr$functionalityName"
   }
 
+  def dependenciesOutputPath(
+    targetDir: String,
+    platformId: String
+  ): String = {
+    s"$targetDir/$platformId"
+  }
+
   def build(
     configs: List[Either[(Config, Option[Platform]), Status]],
     target: String,
