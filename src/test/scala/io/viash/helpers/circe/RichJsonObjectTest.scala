@@ -7,13 +7,19 @@ import org.scalatest.funsuite.AnyFunSuite
 class RichJsonObjectTest extends AnyFunSuite {
 
   test("RichJsonObject.map should apply function to all key-value pairs") {
-    val inputJson = JsonObject("key1" -> Json.fromString("value1"), "key2" -> Json.fromInt(42))
+    val inputJson = JsonObject(
+      "key1" -> Json.fromString("value1"),
+      "key2" -> Json.fromInt(42)
+    )
 
     val modifiedJson = inputJson.map {
       case (key, value) => (key.toUpperCase, value.mapString(_.toUpperCase()))
     }
 
-    val expectedJson = JsonObject("KEY1" -> Json.fromString("VALUE1"), "KEY2" -> Json.fromInt(42))
+    val expectedJson = JsonObject(
+      "KEY1" -> Json.fromString("VALUE1"),
+      "KEY2" -> Json.fromInt(42)
+    )
 
     assert(modifiedJson == expectedJson)
   }
