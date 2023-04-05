@@ -23,7 +23,6 @@ import java.net.URI
 import data_structures.OneOrMore
 import java.nio.file.Paths
 
-import io.viash.helpers.circe.RichJson
 package object circe {
   implicit val customConfig: Configuration =
     Configuration.default.withDefaults.withStrictDecoding
