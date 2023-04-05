@@ -58,4 +58,9 @@ case class Dependency(
   def scriptName: String = name.replace("/", "_")
   // Part of the folder structure where dependencies should be written to
   def subOutputPath = workRepository.map(r => Paths.get(r.subOutputPath, name).toString())
+
+  def isLocalDependency: Boolean = workRepository.map{
+    case r: LocalRepository => (r.path == None || r.path == Some(".")) && r.tag == None
+    case _ => false
+  }.getOrElse(false)
 }
