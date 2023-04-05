@@ -1,10 +1,10 @@
 package io.viash.config_mods
 
 import io.circe.Json
-import org.scalatest.funsuite.AnyFunSuite
 import io.circe.syntax._
-
 import io.circe.yaml.parser.parse
+
+import org.scalatest.funsuite.AnyFunSuite
 
 class ConditionSuite extends AnyFunSuite {
   // testing parsers
@@ -135,5 +135,47 @@ class ConditionSuite extends AnyFunSuite {
     val cmd2 = ConfigModParser.condition.parse("""! false""")
     val res2 = cmd2.apply(baseJson)
     assert(res2 == true)
+  }
+
+  test("test condition complex and") {
+    val cmd1 = ConfigModParser.condition.parse(""".foo == "bar" && has(.baz) && .baz == 123""")
+    val res1 = cmd1.apply(baseJson)
+    assert(res1 == true)
+
+    val cmd2 = ConfigModParser.condition.parse(""".foo == "bar" && !has(.fang) && .baz != 456""")
+    val res2 = cmd2.apply(baseJson)
+    assert(res2 == true)
+
+    val cmd3 = ConfigModParser.condition.parse(""".foo == "bar" && has(.baz) && .baz == 456""")
+    val res3 = cmd3.apply(baseJson)
+    assert(res3 == false)
+  }
+
+  test("test condition complex or") {
+    val cmd1 = ConfigModParser.condition.parse(""".foo == "bar" || has(.baz) || .baz == 123""")
+    val res1 = cmd1.apply(baseJson)
+    assert(res1 == true)
+
+    val cmd2 = ConfigModParser.condition.parse(""".foo != "bar" || !has(.fang) || .baz != 123""")
+    val res2 = cmd2.apply(baseJson)
+    assert(res2 == true)
+
+    val cmd3 = ConfigModParser.condition.parse(""".foo != "bar" || has(.fang) || .baz != 123""")
+    val res3 = cmd3.apply(baseJson)
+    assert(res3 == false)
+  }
+
+  test("test condition complex combinations") {
+    val cmd1 = ConfigModParser.condition.parse("""(.foo == "bar" && has(.baz)) || .baz == 123""")
+    val res1 = cmd1.apply(baseJson)
+    assert(res1 == true)
+
+    val cmd2 = ConfigModParser.condition.parse(""".foo != "bar" || (has(.fang) && .baz != 123)""")
+    val res2 = cmd2.apply(baseJson)
+    assert(res2 == false)
+
+    val cmd3 = ConfigModParser.condition.parse("""(.foo != "bar" && has(.fang)) || (.baz == 123 && !has(.fizz))""")
+    val res3 = cmd3.apply(baseJson)
+    assert(res3 == true)
   }
 }
