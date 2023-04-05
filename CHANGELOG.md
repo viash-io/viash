@@ -12,6 +12,10 @@ TODO add summary
 
 * `config yaml`: Don't remove empty fields in the functionality & arguments .info fields. If empty fields are added by the user, they are probably there for a reason. (#386)
 
+## BUG FIXES
+
+* `ConfigMods`: Fix precedence issues with conditions in the config mod parsers (#390).
+
 ## INTERNAL CHANGES
 
 * Clean up unused code (#380).
