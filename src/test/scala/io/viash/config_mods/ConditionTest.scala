@@ -178,4 +178,22 @@ class ConditionSuite extends AnyFunSuite {
     val res3 = cmd3.apply(baseJson)
     assert(res3 == true)
   }
+
+  test("test condition operator precedence") {
+    val input = ConfigModParser.condition.parse("true || false && !has(.foo) || has(.bar) && true")
+    val expectedResult = Or(
+      Or(
+        True,
+        And(
+          False,
+          Not(Has(Path(List(Attribute("foo")))))
+        )
+      ),
+      And(
+        Has(Path(List(Attribute("bar")))),
+        True
+      )
+    )
+    assert(input == expectedResult)
+  }
 }
