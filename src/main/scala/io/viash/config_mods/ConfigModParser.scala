@@ -68,23 +68,6 @@ del(.functionality.version)
                | "(" <condition> ")"
 <value>      ::= <path> | <string> | <number> | <json>
 
-<identifier> ::= <letter> (<letter> | <digit> | "_")
-<string>    ::= "'" <text1> "'" | '"' <text2> '"'
-<text1>      ::= "" | <character1> <text1>
-<text2>      ::= '' | <character2> <text2>
-
-<letter>     ::= [a-zA-Z]
-<digit>      ::= [0-9]
-<character1> ::= [^\"] | '\"' | "\"
-<character2> ::= [^\'] | "\'" | "\"
-<number>     ::= # todo, support whole and real numbers, also scientific notation
-
-<json>       ::= <jarray> | <jobject>
-<jvalue>     ::= <string> | <number> | <json>
-<jarray>     ::= "[" (<json> ("," <json>)*))? "]"
-<jobject>    ::= "{" (<jprop> ("," <jprop>)*))? "}"
-<jprop>      ::= <jname> ":" <jvalue>
-<jprop>      ::= <identifier> | <string>
 
 */
 
@@ -104,7 +87,29 @@ object ConfigModParser extends RegexParsers {
 
   override val whiteSpace = "[ \t\r\f]+".r
 
-  // basic types
+  /**
+    * A collection of basic value parsers
+    * 
+    * Examples of 'whole':
+    *   "42" => 42
+    *   "-10" => -10
+    * 
+    * Examples of 'real': 
+    *   "3.14" => 3.14
+    *   "-1.5E-2" => -0.015
+    * 
+    * Examples of 'string': 
+    *   "\"hello\"" => "hello"
+    *   "'world'" => "world"
+    * 
+    * Examples 'boolean': 
+    *   "true" => true
+    *   "false" => false
+    * 
+    * Examples of 'identifier': 
+    *   "myVariable" => "myVariable"
+    *   "item_2" => "item_2"
+    */
   def whole: Parser[Integer] = """[+-]?[0-9]+""".r ^^ { _.toInt }
   def real: Parser[Double] = """[+-]?[0-9]+(((\.[0-9]+)?[eE][+-]?[0-9]+[Ff]?)|(\.[0-9]+[Ff]?)|([Ff]))""".r ^^ { _.toDouble }
   def string: Parser[String] = """"([^"]|\\")*"|'([^']|\\')*'""".r ^^ { str =>
@@ -112,24 +117,90 @@ object ConfigModParser extends RegexParsers {
     str.substring(1, str.length - 1).replaceAll("\\" + quoteChar, quoteChar)
   }
   def boolean: Parser[Boolean] = "true" ^^^ true | "false" ^^^ false
-
   def identifier: Parser[String] = """[a-zA-Z][a-zA-Z0-9_]*""".r
 
-  // json parsers
+  /**
+    * A collection of basic Json parsers
+    * 
+    * BNF notation:
+    *   <json> ::= <objJson> | <arrayJson> | <realJson> | <wholeJson> | <stringJson> | <booleanJson> | <nullJson>
+    *   <objJson> ::= "{" <fieldJsonList> "}"
+    *   <arrayJson> ::= "[" <jsonList> "]"
+    *   <fieldJson> ::= (<identifier> | <string>) ":" <json>
+    *   <wholeJson> ::= <whole>
+    *   <realJson> ::= <real>
+    *   <stringJson> ::= <string>
+    *   <booleanJson> ::= <boolean>
+    *   <nullJson> ::= "null"
+    *   <fieldJsonList> ::= <fieldJson> ("," <fieldJson>)*
+    *   <jsonList> ::= <json> ("," <json>)*
+    * 
+    * Examples of 'json':
+    *   "{}" => Json object
+    *   "[1, 2, 3]" => Json array
+    * 
+    * Examples of 'objJson':
+    *   "{}" => empty Json object
+    *   "{\"key\": 42}" => Json object with key "key" and value 42
+    * 
+    * Examples of 'arrayJson':
+    *   "[]" => empty Json array
+    *   "[1, 2, 3]" => Json array with values 1, 2, and 3
+    * 
+    * Examples of 'fieldJson':
+    *   "key: 42" => ("key", 42)
+    *   "\"stringKey\": \"value\"" => ("stringKey", "value")
+    * 
+    * Examples of 'wholeJson':
+    *   "42" => Json.fromInt(42)
+    *   "-10" => -10
+    * 
+    * Examples of 'realJson':
+    *   "3.14" => 3.14.asJson
+    *   "-1.5E-2" => -0.015.asJson
+    * 
+    * Examples of 'stringJson':
+    *   "\"hello\"" => Json.fromString("hello")
+    *   "'world'" => Json.fromString("world")
+    * 
+    * Examples of 'booleanJson':
+    *   "true" => true
+    *   "false" => false
+    * 
+    * Example of 'nullJson':
+    *   "null" => Json.Null
+    */
   def json: Parser[Json] = objJson | arrayJson | realJson | wholeJson | stringJson | booleanJson | nullJson
   def objJson: Parser[Json] = "{" ~> repsep(fieldJson, ",") <~ "}" ^^ { Json.fromFields(_) }
   def arrayJson: Parser[Json] = "[" ~> repsep(json, ",") <~ "]" ^^ { Json.fromValues(_) }
   def fieldJson: Parser[(String, Json)] = (identifier | string) ~ ( ":" ~> json) ^^ {
     case id ~ va => (id, va)
   }
-  def wholeJson: Parser[Json] = whole ^^ { _.asJson }
+  def wholeJson: Parser[Json] = whole ^^ { Json.fromInt(_) }
   def realJson: Parser[Json] = real ^^ { _.asJson }
-  def stringJson: Parser[Json] = string ^^ { _.asJson }
-  def booleanJson: Parser[Json] = boolean ^^ { _.asJson }
-  def nullJson: Parser[Json] = "null" ^^^ None.asJson
+  def stringJson: Parser[Json] = string ^^ { Json.fromString(_) }
+  def booleanJson: Parser[Json] = boolean ^^ { Json.fromBoolean(_)}
+  def nullJson: Parser[Json] = "null" ^^^ Json.Null
 
 
-  // define paths
+  /**
+    * A collection of path parsers
+    * 
+    * Example of 'root':
+    *   "root" => Root
+    * 
+    * Examples of 'path':
+    *   "root.key"
+    *   ".key"
+    *   ".key[condition]"
+    * 
+    * Examples of 'down':
+    *   ".key"
+    * 
+    * Examples of 'filter':
+    *   "[true]"
+    *   "[.key != 'test']"
+    */
   def root: Parser[PathExp] = "root" ^^^ Root
   def path: Parser[Path] = (root | down | filter) ~ rep(down | filter) ^^ {
     case head ~ tail => {
@@ -138,8 +209,49 @@ object ConfigModParser extends RegexParsers {
   }
   def down: Parser[PathExp] = "." ~> identifier ^^ { Attribute(_) }
   def filter: Parser[PathExp] = "[" ~> condition <~ "]" ^^ { Filter(_) }
-
-  // define condition operations
+  
+  /**
+    * A collection of condition parsers
+    * 
+    * Examples of 'brackets':
+    *   "(value == 42)"
+    *   "(key != 'test')"
+    * 
+    * Examples of 'condition':
+    *   ".value == 42"
+    *   ".key != 'test' && has(root.array)"
+    * 
+    * Examples of 'or':
+    *   "true || false"
+    *   "has(.array) || .array == 'hello'"
+    * 
+    * Examples of 'and':
+    *   "true && false"
+    *   "has(.array) && .array == 'hello'"
+    * 
+    * Examples of 'comparison':
+    *   "value == 42"
+    *   "has(.array)"
+    *   "true"
+    * 
+    * Examples of 'equals':
+    *   ".value == 42"
+    *   ".key == 'test'"
+    * 
+    * Examples of 'notEquals':
+    *   ".value != 42"
+    *   ".key != 'test'"
+    * 
+    * Examples of 'not':
+    *   "!.value
+    *   "!has(.array)"
+    *   "!(has(.value) || .value == "foo")"
+    * 
+    * Examples of 'has':
+    *   "has(.array)"
+    *   "has(root.key.subkey)"
+    */
+  def brackets: Parser[Condition] = "(" ~> condition <~ ")"
   def condition: Parser[Condition] = or
   def or: Parser[Condition] = rep1sep(and, "||") ^^ {
     case comps => comps.reduceLeft(Or)
@@ -147,22 +259,56 @@ object ConfigModParser extends RegexParsers {
   def and: Parser[Condition] = rep1sep(comparison, "&&") ^^ {
     case comps => comps.reduceLeft(And)
   }
-  def comparison: Parser[Condition] = brackets | equals | notEquals | not | has | ("true" ^^^ True) | ("false" ^^^ False)
-  def brackets: Parser[Condition] = "(" ~> condition <~ ")"
+  def comparison: Parser[Condition] = brackets | equals | notEquals | not | has | trueCond | falseCond
+  def trueCond: Parser[Condition] = "true" ^^^ True
+  def falseCond: Parser[Condition] = "false" ^^^ False
   def equals: Parser[Equals] = value ~ ("==" ~> value) ^^ {
     case left ~ right => Equals(left, right)
   }
   def notEquals: Parser[NotEquals] = value ~ ("!=" ~> value) ^^ {
     case left ~ right => NotEquals(left, right)
   }
-  def not: Parser[Not] = "!" ~> comparison ^^ { Not(_) }
-
+  def not: Parser[Not] = "!" ~> (brackets | not | has | trueCond | falseCond) ^^ { Not(_) }
   def has: Parser[Has] = "has(" ~> path <~ ")" ^^ { Has(_) }
 
-  // define condition values
+
+  /**
+    * A collection of condition value parsers
+    * 
+    * Examples of 'value':
+    *   "root.key"
+    *   "42"
+    *   "'string'"
+    */
   def value: Parser[Value] = path | (json ^^ { JsonValue(_) })
 
-  // define commands
+
+  /**
+    * A collection of command parsers
+    * 
+    * Examples of 'command':
+    *   "del(.key)"
+    *   ".foo := 10"
+    *   "<preparse> .array += 'item'"
+    * 
+    * Examples of 'delete':
+    *   "del(.key)"
+    *   "del(root.array)"
+    * 
+    * Examples of 'assign':
+    *   ".key := 'value'"
+    *   ".array[.type == 'docker'] := 42"
+    * 
+    * Examples of 'append':
+    *   ".array += 'value'"
+    * 
+    * Examples of 'prepend':
+    *   ".array +0= 'value'"
+    * 
+    * Examples of 'block':
+    *   "del(.key); .foo := 'bar'"
+    *   "<preparse> .platforms[.type == 'nextflow'].variant := 'vdsl3'"
+    */
   def command: Parser[(Boolean, Command)] = opt("<preparse>") ~ (delete | assign | append | prepend) ^^ {
     case maybePreparse ~ cm => (maybePreparse.isDefined, cm)
   }
