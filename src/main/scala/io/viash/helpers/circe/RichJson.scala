@@ -47,25 +47,7 @@ class RichJson(json: Json) {
     *
     * @return A modified Json
     */
-  def dropEmptyRecursively: Json = {
-    if (json.isObject) {
-      val jo = json.asObject.get
-      val newJo = jo.mapValues(_.dropEmptyRecursively).filter(!_._2.isNull)
-      if (newJo.nonEmpty) 
-        Json.fromJsonObject(newJo)
-      else
-        Json.Null
-    } else if (json.isArray) {
-      val ja = json.asArray.get
-      val newJa = ja.map(_.dropEmptyRecursively).filter(!_.isNull)
-      if (newJa.nonEmpty) 
-        Json.fromValues(newJa)
-      else
-        Json.Null
-    } else {
-      json
-    }
-  }
+  def dropEmptyRecursively: Json = dropEmptyRecursivelyExcept(Nil)
 
   /**
     * Removes all empty lines / objects from the Json unless the key is found in the exclusions list
