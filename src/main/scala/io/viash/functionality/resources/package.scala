@@ -64,20 +64,20 @@ package object resources {
   }
 
   val setDestToPathOrDefault = (default: String) => (aCursor: ACursor) => {aCursor.withFocus(js => {
-        js.mapObject{ obj =>	
-          // when json defines 'text' but no 'dest' set
-          // if has 'path' -> switch 'path' to 'dest'
-          // else if no 'path' or 'dest' -> set 'dest' to default value
-          if (obj.contains("text") && !obj.contains("dest")) {
-            if (obj.contains("path"))
-              obj.add("dest", obj("path").get).remove("path")
-            else 
-              obj.add("dest", Json.fromString(default))
-          } else {
-            obj
-          }
-        }
-      })}
+    js.mapObject{ obj =>
+      // when json defines 'text' but no 'dest' set
+      // if has 'path' -> switch 'path' to 'dest'
+      // else if no 'path' or 'dest' -> set 'dest' to default value
+      if (obj.contains("text") && !obj.contains("dest")) {
+        if (obj.contains("path"))
+          obj.add("dest", obj("path").get).remove("path")
+        else
+          obj.add("dest", Json.fromString(default))
+      } else {
+        obj
+      }
+    }
+  })}
 
   implicit val decodeBashScript: Decoder[BashScript] = deriveConfiguredDecoder[BashScript].prepare { setDestToPathOrDefault("./script.sh") }
   implicit val decodePythonScript: Decoder[PythonScript] = deriveConfiguredDecoder[PythonScript].prepare { setDestToPathOrDefault("./script.py") }
