@@ -8,6 +8,10 @@ TODO add summary
   * `/foo` is a file or directory called `foo` in the current project directory.
   * `file:/foo` is a file or directory called `foo` in the system root.
 
+## MINOR CHANGES
+
+* `config yaml`: Don't remove empty fields in the functionality & arguments .info fields. If empty fields are added by the user, they are probably there for a reason. (#386)
+
 ## INTERNAL CHANGES
 
 * Clean up unused code (#380).
