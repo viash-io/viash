@@ -140,24 +140,22 @@ object ConfigModParser extends RegexParsers {
   def filter: Parser[PathExp] = "[" ~> condition <~ "]" ^^ { Filter(_) }
 
   // define condition operations
-  def condition: Parser[Condition] = and | or | not | condAvoidRecursion
-  def condAvoidRecursion: Parser[Condition] = brackets | equals | notEquals | has | ("true" ^^^ True) | ("false" ^^^ False)
+  def condition: Parser[Condition] = or
+  def or: Parser[Condition] = rep1sep(and, "||") ^^ {
+    case comps => comps.reduceLeft(Or)
+  }
+  def and: Parser[Condition] = rep1sep(comparison, "&&") ^^ {
+    case comps => comps.reduceLeft(And)
+  }
+  def comparison: Parser[Condition] = brackets | equals | notEquals | not | has | ("true" ^^^ True) | ("false" ^^^ False)
   def brackets: Parser[Condition] = "(" ~> condition <~ ")"
-  def and: Parser[And] = condAvoidRecursion ~ ("&&" ~> condition) ^^ {
-    case left ~  right => And(left, right)
-  }
-  def or: Parser[Or] = condAvoidRecursion ~ ("||" ~> condition) ^^ {
-    case left ~ right => Or(left, right)
-  }
-  def not: Parser[Not] = "!" ~> condition ^^ { Not(_) }
-
   def equals: Parser[Equals] = value ~ ("==" ~> value) ^^ {
     case left ~ right => Equals(left, right)
   }
-
   def notEquals: Parser[NotEquals] = value ~ ("!=" ~> value) ^^ {
     case left ~ right => NotEquals(left, right)
   }
+  def not: Parser[Not] = "!" ~> comparison ^^ { Not(_) }
 
   def has: Parser[Has] = "has(" ~> path <~ ")" ^^ { Has(_) }
 
