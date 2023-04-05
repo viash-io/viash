@@ -58,20 +58,21 @@ class RichJson(json: Json) {
   def dropEmptyRecursivelyExcept(exclusions: Seq[String]): Json = {
     if (json.isObject) {
       val jo = json.asObject.get
-      val filteredJo = jo.toList.map{
-        case (k, v) if exclusions.contains(k) => (k, v)
-        case (k, v) => (k, v.dropEmptyRecursivelyExcept(exclusions))
-      }
-      val newJo = JsonObject.apply(filteredJo: _*).filter(!_._2.isNull)
-      if (newJo.nonEmpty) 
-        Json.fromJsonObject(newJo)
+        .map{
+          case (k, v) if exclusions.contains(k) => (k, v)
+          case (k, v) => (k, v.dropEmptyRecursivelyExcept(exclusions))
+        }
+        .filter(!_._2.isNull)
+      if (jo.nonEmpty) 
+        Json.fromJsonObject(jo)
       else
         Json.Null
     } else if (json.isArray) {
       val ja = json.asArray.get
-      val newJa = ja.map(_.dropEmptyRecursivelyExcept(exclusions)).filter(!_.isNull)      
-      if (newJa.nonEmpty) 
-        Json.fromValues(newJa)
+        .map(_.dropEmptyRecursivelyExcept(exclusions))
+        .filter(!_.isNull)      
+      if (ja.nonEmpty) 
+        Json.fromValues(ja)
       else
         Json.Null
     } else {

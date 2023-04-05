@@ -23,6 +23,7 @@ import java.net.URI
 import data_structures.OneOrMore
 import java.nio.file.Paths
 
+import io.viash.helpers.circe.RichJson
 package object circe {
   implicit val customConfig: Configuration =
     Configuration.default.withDefaults.withStrictDecoding
@@ -73,6 +74,7 @@ package object circe {
   
   // auto convert a json to a RichJson
   implicit def enrichJson(json: Json) = new RichJson(json)
+  implicit def enrichJsonObject(jo: JsonObject) = new RichJsonObject(jo)
 
   // auto convert a JMap to Json
   def JMap(fields: (String, Json)*): Json = {

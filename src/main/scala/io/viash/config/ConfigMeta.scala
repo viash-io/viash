@@ -43,12 +43,10 @@ object ConfigMeta {
     // drop empty & null values recursively except all "info" fields
     val cleanEncodedConfig = encodedConfig.dropEmptyRecursivelyExcept(Seq("info"))
     // get config.info and *do* clean it
-    cleanEncodedConfig.mapObject(jo =>
-      JsonObject(jo.toList.map{
-        case ("info", v) => ("info", v.dropEmptyRecursively)
-        case other => other
-      }: _*)
-    )
+    cleanEncodedConfig.mapObject(_.map{
+      case ("info", v) => ("info", v.dropEmptyRecursively)
+      case other => other
+    })
   }
 
   def toMetaFile(config: Config, buildDir: Option[Path]): PlainFile = {
