@@ -222,17 +222,16 @@ object BashWrapper {
       .map(h => Escaper(h, newline = true))
       .mkString("# ", "\n# ", "")
 
-    // if the dependency namespace/name is foo/bar, then the variable will be called VIASH_DEP_FOO_BAR
-    // component dependencies as a local adjecent components
-    val localDependencies = config.functionality.dependencies
-      .filter(_.isLocalDependency)
-      .map(d => s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR/TODO\"")
-    // val localDependencies = config.functionality
-    // component dependencies from remote locations
-    val remoteDependencies = config.functionality.dependencies
-      .filter(!_.isLocalDependency)
-      .map(d => s"${d.VIASH_DEP}=\"$$VIASH_TARGET_DIR/dependencies/${d.subOutputPath.get}/${Paths.get(d.configInfo.getOrElse("executable", "not_found")).getFileName()}\"")
-    val dependenciesStr = (localDependencies ++ remoteDependencies).mkString("\n")
+    val (localDependencies, remoteDependencies) = config.functionality.dependencies
+      .partition(d => d.isLocalDependency && d.writtenPath.isEmpty)
+    val localDependenciesStrings = localDependencies.map{d =>
+        val up = config.functionality.namespace.fold("..")(nonEmpty => "../..")
+        s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR/$up/${d.name}\""
+    }
+    val remoteDependenciesStrings = remoteDependencies.map(d => 
+      s"${d.VIASH_DEP}=\"$$VIASH_TARGET_DIR/dependencies/${d.subOutputPath.get}/${Paths.get(d.configInfo.getOrElse("executable", "not_found")).getFileName()}\""
+    )
+    val dependenciesStr = (localDependenciesStrings ++ remoteDependenciesStrings).mkString("\n")
 
     /* GENERATE BASH SCRIPT */
     s"""#!/usr/bin/env bash

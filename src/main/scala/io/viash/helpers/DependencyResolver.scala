@@ -93,26 +93,31 @@ object DependencyResolver {
     config4    
   }
 
-  def copyDependencies(config: Config, output: String, platform: Option[Platform]): Config = {
+  def copyDependencies(config: Config, output: String, platform: Option[Platform], buildingNamespace: Boolean = false): Config = {
     composedDependenciesLens.modify(_.map(dep => {
-      // copy the dependency to the output folder
-      val dependencyOutputPath = Paths.get(output, "dependencies", dep.subOutputPath.get)
-      if (dependencyOutputPath.toFile().exists())
-        IO.deleteRecursively(dependencyOutputPath)
-      Files.createDirectories(dependencyOutputPath)
-      
-      val platformId = platform.map(_.id).getOrElse("")
-      if (dep.foundConfigPath.isDefined) {
-        val dependencyRepoPath = Paths.get(dep.foundConfigPath.get).getParent()
-        IO.copyFolder(dependencyRepoPath, dependencyOutputPath)
-        // TODO copy the right subselection of 'dependencies' folders from the dependency repository into the main 'dependencies' folder
-      }
-      else {
-        Console.err.println(s"Could not find dependency artifacts for ${dep.name}. Skipping copying dependency artifacts.")
-      }
 
-      // Store location of the copied files
-      dep.copy(writtenPath = Some(dependencyOutputPath.toString()))
+      if (dep.isLocalDependency && buildingNamespace) {
+        dep
+      } else {
+        // copy the dependency to the output folder
+        val dependencyOutputPath = Paths.get(output, "dependencies", dep.subOutputPath.get)
+        if (dependencyOutputPath.toFile().exists())
+          IO.deleteRecursively(dependencyOutputPath)
+        Files.createDirectories(dependencyOutputPath)
+        
+        val platformId = platform.map(_.id).getOrElse("")
+        if (dep.foundConfigPath.isDefined) {
+          val dependencyRepoPath = Paths.get(dep.foundConfigPath.get).getParent()
+          IO.copyFolder(dependencyRepoPath, dependencyOutputPath)
+          // TODO copy the right subselection of 'dependencies' folders from the dependency repository into the main 'dependencies' folder
+        }
+        else {
+          Console.err.println(s"Could not find dependency artifacts for ${dep.name}. Skipping copying dependency artifacts.")
+        }
+
+        // Store location of the copied files
+        dep.copy(writtenPath = Some(dependencyOutputPath.toString()))
+      }
     }))(config)
   }
 
