@@ -25,6 +25,30 @@ import io.viash.schemas._
   """Specifies a Viash component (script or executable) that should be made available for the code defined in the functionality.
     |The dependency components are collected and copied to the output folder during the Viash build step.
     |""".stripMargin)
+@exampleWithDescription(
+  """name: qc/multiqc
+    |  repository: 
+    |    type: github
+    |    uri: openpipelines-bio/modules
+    |    tag: 0.3.0
+    |""".stripMargin,
+  "yaml",
+  "Definition of dependency with a fully defined repository"
+)
+@exampleWithDescription(
+  """name: qc/multiqc
+    |repository: "github://openpipelines-bio/modules:0.3.0"
+    |""".stripMargin,
+  "yaml",
+  "Definition of a dependency with a repository using sugar syntax."
+)
+@exampleWithDescription(
+  """name: qc/multiqc
+    |  repository: "openpipelines-bio"
+    |""".stripMargin,
+  "yaml",
+  "Definition of a dependency with a repository defined as 'openpipelines-bio' under `.functionality.repositories`."
+)
 case class Dependency(
   @description("The full name of the dependency component. This should include the namespace.")
   @example("name: \"my_namespace\"component", "yaml")

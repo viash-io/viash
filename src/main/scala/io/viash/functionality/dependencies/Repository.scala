@@ -72,9 +72,31 @@ object Repository {
     }
 }
 
+@description("A GitHub repository where remote dependency components can be found.")
+@example(
+  """type: github
+    |uri: openpipelines-bio/modules
+    |tag: 0.3.0
+    |""".stripMargin,
+  "yaml"
+)
+@example(
+  """name: viash-testns
+    |type: github
+    |uri: viash-io/viash
+    |tag: 0.7.1
+    |path: src/test/resources/testns
+    |""".stripMargin,
+  "yaml"
+  )
 case class GithubRepository(
   name: String,
+
+  @description("Defines the repository as a GitHub repository.")
   `type`: String = "github",
+
+  @description("The GitHub `organization/repository_name` of the repository.")
+  @example("uri: viash-io/viash", "yaml")
   uri: String,
   tag: Option[String],
   path: Option[String] = None,
@@ -136,8 +158,16 @@ case class GithubRepository(
   def subOutputPath: String = Paths.get(`type`, uri, tag.getOrElse("")).toString()
 }
 
+@description(
+  """Defines a locally present and available repository.
+    |This can be used to define components from the same code base as the current component.
+    |Alternatively, this can be used to refer to a code repository present on the local hard-drive instead of fetchable remotely, for example during development.
+    |""".stripMargin
+)
 case class LocalRepository(
   name: String = "",
+
+  @description("Defines the repository as a locally present and available repository.")
   `type`: String = "local",
   tag: Option[String] = None,
   path: Option[String] = None,
