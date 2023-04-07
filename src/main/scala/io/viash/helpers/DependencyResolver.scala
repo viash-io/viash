@@ -84,7 +84,7 @@ object DependencyResolver {
     val config4 = composedDependenciesLens.modify(_
       .map{dep =>
         val repo = dep.workRepository.get
-        val targetPath = Paths.get(repo.localPath, repo.path.getOrElse("").stripPrefix("/"))
+        val targetPath = Paths.get(repo.localPath, repo.path.getOrElse("")/*.stripPrefix("/")*/)
         val config = findConfig(targetPath.toString(), dep.name, platform)
         dep.copy(foundConfigPath = config.map(_._1), configInfo = config.map(_._2).getOrElse(Map.empty))
       }
@@ -186,5 +186,12 @@ object DependencyResolver {
     catch {
       case _: Throwable => Map.empty
     }
+  }
+
+  def createBuildYaml(output: String): Unit = {
+    Files.createDirectories(Paths.get(output))
+    val filePath = Paths.get(output, ".build.yaml")
+    if (Files.notExists(filePath))
+      Files.createFile(filePath)
   }
 }

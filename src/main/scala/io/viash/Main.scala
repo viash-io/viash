@@ -209,6 +209,7 @@ object Main {
         )
       case List(cli.build) =>
         val (config, platform) = readConfig(cli.build, project = proj1)
+        DependencyResolver.createBuildYaml(cli.build.output())
         val config1 = DependencyResolver.modifyConfig(config, platform)
         val config2 = DependencyResolver.copyDependencies(config1, cli.build.output(), platform)
         val buildResult = ViashBuild(
@@ -236,9 +237,9 @@ object Main {
         val configs = readConfigs(cli.namespace.build, project = proj1)
         val configs2 = configs.map{
           case Left((c0: Config, platform: Option[Platform])) => {
-            val output = ViashNamespace.dependenciesOutputPath(proj1.target.get, platform.get.id)
+            DependencyResolver.createBuildYaml(proj1.target.get)
             val c1 = DependencyResolver.modifyConfig(c0, platform)
-            val c2 = DependencyResolver.copyDependencies(c1, output, platform, true)
+            val c2 = DependencyResolver.copyDependencies(c1, proj1.target.get, platform, true)
             Left((c2, platform))
           }
           case Right(c) => Right(c)
