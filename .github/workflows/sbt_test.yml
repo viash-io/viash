@@ -40,6 +40,9 @@ jobs:
 
     - name: Set up sbt
       uses: actions/setup-java@v3
+      with:
+        distribution: temurin
+        version: '11'
 
     - name: Set up Scala
       run: |
