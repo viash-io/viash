@@ -1,20 +1,21 @@
-# Viash 0.7.2 (yyyy-MM-dd): TODO add title
+# Viash 0.7.2 (2023-04-07): Project-relative paths and improved metadata handling
 
-TODO add summary
+This update adds functionality to resolve paths starting with a slash as relative to the project directory, improves handling of info metadata in the config, and fixes to the operator precedence of config mods.
 
 ## NEW FUNCTIONALITY
 
 * Resolve resource and merge paths starting with a slash (`/`) as relative to the project directory (#380). To define absolute paths (which is not recommended anyway), prefix the path with the `file://` protocol. Examples:
-  * `/foo` is a file or directory called `foo` in the current project directory.
-  * `file:/foo` is a file or directory called `foo` in the system root.
+
+  - `/foo` is a file or directory called `foo` in the current project directory.
+  - `file:/foo` is a file or directory called `foo` in the system root.
 
 ## MINOR CHANGES
 
-* `config yaml`: Don't remove empty fields in the functionality & arguments .info fields. If empty fields are added by the user, they are probably there for a reason. (#386)
+* `config yaml`: Do not modify (e.g. strip empty fields) of the `.functionality.info` and `.functionality.arguments[].info` fields (#386).
 
 ## BUG FIXES
 
-* `ConfigMods`: Fix precedence issues with conditions in the config mod parsers (#390).
+* `ConfigMods`: Fix operator precedence issues with conditions in the config mod parsers (#390).
 
 ## INTERNAL CHANGES
 
