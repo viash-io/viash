@@ -3,12 +3,13 @@ package io.viash.auxiliary
 import io.viash.{DockerTest, TestHelper}
 import io.viash.config.Config
 import io.viash.helpers.{IO, Exec}
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.file.{Files, Paths}
 import scala.io.Source
 
-class MainBuildAuxiliaryDockerTag extends FunSuite with BeforeAndAfterAll {
+class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
 
@@ -178,7 +179,7 @@ class MainBuildAuxiliaryDockerTag extends FunSuite with BeforeAndAfterAll {
     assert(content.exists(_.matches("cat << VIASHEOF \\| eval docker run .* bar:0\\.0\\.2")))
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

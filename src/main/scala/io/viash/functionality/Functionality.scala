@@ -35,7 +35,7 @@ case class Functionality(
   @example("name: this_is_my_component", "yaml")
   name: String,
 
-  @description("Namespace this component is a part of. See the @[namespace](Namespaces guide) for more information on namespaces.")
+  @description("Namespace this component is a part of. See the @[Namespaces guide](namespace) for more information on namespaces.")
   @example("namespace: fancy_components", "yaml")
   namespace: Option[String] = None,
 
@@ -71,63 +71,21 @@ case class Functionality(
       "yaml")
   @since("Viash 0.3.1")
   authors: List[Author] = Nil,
-
-  @description("A list of input arguments in addition to the `arguments` list. Any arguments specified here will have their `type` set to `file` and the `direction` set to `input` by default.")
-  @example(
-    """inputs:
-      |  - name: input_file
-      |  - name: another_input""".stripMargin,
-      "yaml")
-  @exampleWithDescription(
-    """component_with_inputs
-      |  
-      |  Inputs:
-      |      input_file
-      |          type: file
-      |  
-      |      another_input
-      |          type: file""".stripMargin,
-      "bash",
-      "This results in the following output when calling the component with the `--help` argument:")
-  @since("Viash 0.5.11")
-  @deprecated("Use `arguments` instead.", "0.6.0", "0.8.0")
-  inputs: List[Argument[_]] = Nil,
-
-  @description("A list of output arguments in addition to the `arguments` list. Any arguments specified here will have their `type` set to `file` and thr `direction` set to `output` by default.")
-  @example(
-    """outputs:
-      |  - name: output_file
-      |  - name: another_output""".stripMargin,
-      "yaml")
-  @exampleWithDescription(
-    """component_with_outputs
-      |  
-      |  Outputs:
-      |      output_file
-      |          type: file, output
-      |  
-      |      another_output
-      |          type: file, output""".stripMargin,
-      "bash",
-      "This results in the following output when calling the component with the `--help` argument:")
-  @since("Viash 0.5.11")
-  @deprecated("Use `arguments` instead.", "0.6.0", "0.8.0")
-  outputs: List[Argument[_]] = Nil,
   
   @description(
     """A list of arguments for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. See these reference pages per type for more information:  
       |
-      | - @[arg_string](string)
-      | - @[arg_file](file)
-      | - @[arg_integer](integer)
-      | - @[arg_double](double)
-      | - @[arg_boolean](boolean)
-      | - @[arg_boolean_true](boolean_true)
-      | - @[arg_boolean_false](boolean_false)
+      | - @[string](arg_string)
+      | - @[file](arg_file)
+      | - @[integer](arg_integer)
+      | - @[double](arg_double)
+      | - @[boolean](arg_boolean)
+      | - @[boolean_true](arg_boolean_true)
+      | - @[boolean_false](arg_boolean_false)
       |""".stripMargin)
   @example(
     """arguments:
-      |   - name: --foo
+      |  - name: --foo
       |    type: file
       |    alternatives: [-f]
       |    description: Description of foo
@@ -137,7 +95,7 @@ case class Functionality(
       |    required: false
       |    multiple: true
       |    multiple_sep: ","
-      |   - name: --bar
+      |  - name: --bar
       |    type: string
       |""".stripMargin,
       "yaml")
@@ -195,15 +153,15 @@ case class Functionality(
   argument_groups: List[ArgumentGroup] = Nil,
 
   @description(
-    """@[resources](Resources) are files that support the component. The first resource should be @[scripting_languages](a script) that will be executed when the functionality is run. Additional resources will be copied to the same directory.
+    """@[Resources](resources) are files that support the component. The first resource should be @[a script](scripting_languages) that will be executed when the functionality is run. Additional resources will be copied to the same directory.
       |
       |Common properties:
       |
-      | * type: `file` / `r_script` / `python_script` / `bash_script` / `javascript_script` / `scala_script` / `csharp_script`, the type of resource. The first resource cannot be of type `file`. When the type is not specified, the default type is simply `file`.
-      | * name: filename, the resulting name of the resource.
-      | * path: `path/to/file`, the path of the input file. Can be a relative or an absolute path, or a URI.
-      | * text: ...multiline text..., the raw content of the input file. Exactly one of path or text must be defined, the other undefined.
-      | * is_executable: `true` / `false`, whether the resulting file is made executable.
+      | * type: `file` / `r_script` / `python_script` / `bash_script` / `javascript_script` / `scala_script` / `csharp_script`, specifies the type of the resource. The first resource cannot be of type `file`. When the type is not specified, the default type is simply `file`.
+      | * dest: filename, the resulting name of the resource.  From within a script, the file can be accessed at `meta["resources_dir"] + "/" + dest`. If unspecified, `dest` will be set to the basename of the `path` parameter.
+      | * path: `path/to/file`, the path of the input file. Can be a relative or an absolute path, or a URI. Mutually exclusive with `text`.
+      | * text: ...multiline text..., the content of the resulting file specified as a string. Mutually exclusive with `path`.
+      | * is_executable: `true` / `false`, whether the resulting resource file should be made executable.
       |""".stripMargin)
   @example(
     """resources:
@@ -228,7 +186,7 @@ case class Functionality(
   @example("usage: Place the executable in a directory containing TSV files and run it", "yaml")
   usage: Option[String] = None,
 
-  @description("""One or more @[scripting_language](scripts) to be used to test the component behaviour when `viash test` is invoked. Additional files of type `file` will be made available only during testing. Each test script should expect no command-line inputs, be platform-independent, and return an exit code >0 when unexpected behaviour occurs during testing. See @[unit_testing](Unit Testing) for more info.""")
+  @description("""One or more @[scripts](scripting_languages) to be used to test the component behaviour when `viash test` is invoked. Additional files of type `file` will be made available only during testing. Each test script should expect no command-line inputs, be platform-independent, and return an exit code >0 when unexpected behaviour occurs during testing. See @[Unit Testing](unit_testing) for more info.""")
   @example(
     """test_resources:
       |  - type: bash_script
@@ -281,62 +239,79 @@ case class Functionality(
   private val add_resources_to_path: Boolean = false
 
   @description("One or more Bash/R/Python scripts to be used to test the component behaviour when `viash test` is invoked. Additional files of type `file` will be made available only during testing. Each test script should expect no command-line inputs, be platform-independent, and return an exit code >0 when unexpected behaviour occurs during testing.")
-  @deprecated("Use `test_resources` instead. No functional difference.", "0.5.13", "0.7.0")
+  @removed("Use `test_resources` instead. No functional difference.", "0.5.13", "0.7.0")
   private val tests: List[Resource] = Nil
 
   @description("Setting this to false with disable this component when using namespaces.")
   @since("Viash 0.5.13")
-  @deprecated("Use `status` instead.", "0.6.0", "0.8.0")
+  @removed("Use `status` instead.", "0.6.0", "0.7.0")
   private val enabled: Boolean = true
+
+  @description("A list of input arguments in addition to the `arguments` list. Any arguments specified here will have their `type` set to `file` and the `direction` set to `input` by default.")
+  @example(
+    """inputs:
+      |  - name: input_file
+      |  - name: another_input""".stripMargin,
+      "yaml")
+  @exampleWithDescription(
+    """component_with_inputs
+      |  
+      |  Inputs:
+      |      input_file
+      |          type: file
+      |  
+      |      another_input
+      |          type: file""".stripMargin,
+      "bash",
+      "This results in the following output when calling the component with the `--help` argument:")
+  @since("Viash 0.5.11")
+  @removed("Use `arguments` instead.", "0.6.0", "0.7.0")
+  private val inputs: List[Argument[_]] = Nil
+
+  @description("A list of output arguments in addition to the `arguments` list. Any arguments specified here will have their `type` set to `file` and thr `direction` set to `output` by default.")
+  @example(
+    """outputs:
+      |  - name: output_file
+      |  - name: another_output""".stripMargin,
+      "yaml")
+  @exampleWithDescription(
+    """component_with_outputs
+      |  
+      |  Outputs:
+      |      output_file
+      |          type: file, output
+      |  
+      |      another_output
+      |          type: file, output""".stripMargin,
+      "bash",
+      "This results in the following output when calling the component with the `--help` argument:")
+  @since("Viash 0.5.11")
+  @removed("Use `arguments` instead.", "0.6.0", "0.7.0")
+  private val outputs: List[Argument[_]] = Nil
   // END OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
 
-  // note that in the Functionality companion object, defaults gets added to inputs and outputs *before* actually 
-  // parsing the configuration file with Circe. This is done in the .prepare step.
-  inputs.foreach { input =>
-    require(input.direction == Input, s"input ${input.name} can only have input as direction")
-  }
-  outputs.foreach { output =>
-    require(output.direction == Output, s"input ${output.name} can only have output as direction")
-  }
-
   // Combine inputs, outputs and arguments into one combined list
-  def allArguments = inputs ::: outputs ::: arguments ::: argument_groups.flatMap(_.argumentArguments)
-
-  // check argument groups
-  {
-    val allArgumentNames = allArguments.map(_.plainName)
-    for (group <- argument_groups; argument <- group.stringArguments) {
-      require(allArgumentNames.contains(argument), s"group '${group.name}' has unknown argument '$argument'")
-    }
-    argument_groups.flatMap(_.stringArguments).groupBy(identity).foreach { case (arg, args) => 
-      require(args.length == 1, s"argument '${arg}' can be in at most one argument group")
-    }
-  }
+  def allArguments = arguments ::: argument_groups.flatMap(arg => arg.arguments)
 
   private def addToArgGroup(argumentGroups: List[ArgumentGroup], name: String, arguments: List[Argument[_]]): Option[ArgumentGroup] = {
-    val argNamesInGroups = argumentGroups.flatMap(_.stringArguments).toSet
-
-    // Check if 'arguments' is in 'argumentGroups'. 
-    val argumentsNotInGroup = arguments.filter(arg => !argNamesInGroups.contains(arg.plainName))
-
     // Check whether an argument group of 'name' exists.
     val existing = argumentGroups.find(gr => name == gr.name)
 
     // if there are no arguments missing from the argument group, just return the existing group (if any)
-    if (argumentsNotInGroup.isEmpty) {
+    if (arguments.isEmpty) {
       existing
 
     // if there are missing arguments and there is an existing group, add the missing arguments to it
     } else if (existing.isDefined) {
       Some(existing.get.copy(
-        arguments = existing.get.arguments.toList ::: argumentsNotInGroup.map(arg => Right(arg))
+        arguments = existing.get.arguments.toList ::: arguments
       ))
     
     // else create a new group
     } else {
       Some(ArgumentGroup(
         name = name,
-        arguments = argumentsNotInGroup.map(arg => Right(arg))
+        arguments = arguments
       ))
     }
   }

@@ -5,12 +5,13 @@ import io.viash._
 import java.nio.file.{Files, Paths, StandardCopyOption}
 
 import io.viash.helpers.{IO, Exec}
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.reflect.io.Directory
 import sys.process._
 
-class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
+class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
   // default yaml
   private val configFile = getClass.getResource("/testbash/config.vsh.yaml").getPath
 
@@ -63,12 +64,8 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, false)
   }
 
-  test("Prepare tests with derived configs, copy resources to temporary folder", NativeTest) {
-    val rootPath = getClass.getResource(s"/testbash/").getPath
-    TestHelper.copyFolder(rootPath, tempFolStr)
-    
+  test("Verify base config derivation", NativeTest) {
     val newConfigFilePath = configDeriver.derive(Nil, "default_config")
-
     val testText = TestHelper.testMain(
       "test",
       "-p", "native",
@@ -83,7 +80,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Check failing build", DockerTest) {
-    val newConfigFilePath = configDeriver.derive(""".platforms[.type == "docker" && !has(.id) ].apt := { packages: ["get_the_machine_that_goes_ping"] }""", "failed_build")
+    val newConfigFilePath = configDeriver.derive(""".platforms[.type == "docker" && !has(.id) ].setup := [{ type: "apt", packages: ["get_the_machine_that_goes_ping"] }]""", "failed_build")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "-p", "docker",
@@ -135,7 +132,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
    * @param expectDirectoryExists expect the directory to be present or not
    * @return
    */
-  def checkTempDirAndRemove(testText: String, expectDirectoryExists: Boolean) {
+  def checkTempDirAndRemove(testText: String, expectDirectoryExists: Boolean): Unit = {
     // Get temporary directory
     val FolderRegex = ".*Running tests in temporary directory: '([^']*)'.*".r
 
@@ -161,7 +158,7 @@ class MainTestDockerSuite extends FunSuite with BeforeAndAfterAll {
     assert(!tempFolder.exists)
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
 }

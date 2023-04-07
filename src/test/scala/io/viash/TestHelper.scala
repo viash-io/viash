@@ -2,7 +2,7 @@ package io.viash
 
 import java.io.{ByteArrayOutputStream, File, FileInputStream, IOException, UncheckedIOException}
 import java.security.{DigestInputStream, MessageDigest}
-import org.scalatest.Matchers.{assertThrows, intercept}
+import org.scalatest.matchers.must.Matchers.{assertThrows, intercept}
 
 import java.nio.file.{Files, Path, Paths}
 import scala.reflect.ClassTag
@@ -25,7 +25,7 @@ object TestHelper {
     val os = new ByteArrayOutputStream()
     Console.withErr(os) {
       Console.withOut(os) {
-        Main.internalMain(args.toArray)
+        Main.mainCLI(args.toArray)
       }
     }
 
@@ -45,7 +45,7 @@ object TestHelper {
     val errStream = new ByteArrayOutputStream()
     val exitCode = Console.withOut(outStream) {
       Console.withErr(errStream) {
-        Main.internalMain(args.toArray)
+        Main.mainCLI(args.toArray)
       }
     }
 
@@ -66,7 +66,7 @@ object TestHelper {
     val os = new ByteArrayOutputStream()
     assertThrows[T] {
       Console.withOut(os) {
-        Main.internalMain(args.toArray)
+        Main.mainCLI(args.toArray)
       }
     }
 
@@ -88,7 +88,7 @@ object TestHelper {
     val caught = intercept[Exception] {
       Console.withOut(outStream) {
         Console.withErr(errStream) {
-          Main.internalMain(args.toArray)
+          Main.mainCLI(args.toArray)
         }
       }
     }
@@ -114,7 +114,7 @@ object TestHelper {
 
   // Code based on https://stackoverflow.com/questions/29076439/java-8-copy-directory-recursively/34254130#34254130
   // Copy a folder from source to dest
-  def copyFolder(src: Path, dest: Path) {
+  def copyFolder(src: Path, dest: Path): Unit = {
     val stream = Files.walk(src)
 
     try {
@@ -139,7 +139,7 @@ object TestHelper {
       stream.close()
     }
   }
-  def copyFolder(src: String, dest: String) {
+  def copyFolder(src: String, dest: String): Unit = {
     copyFolder(Paths.get(src), Paths.get(dest))
   }
 }

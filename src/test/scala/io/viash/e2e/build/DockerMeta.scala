@@ -2,7 +2,8 @@ package io.viash.e2e.build
 
 import io.viash._
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import io.viash.helpers.{IO, Exec}
 
@@ -12,7 +13,7 @@ import scala.io.Source
 import cats.instances.function
 import io.viash.functionality.resources.PlainFile
 
-class DockerMeta extends FunSuite with BeforeAndAfterAll {
+class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
   // which platform to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 
@@ -20,9 +21,6 @@ class DockerMeta extends FunSuite with BeforeAndAfterAll {
   private val functionality = Config.read(configFile).functionality
   private def configAndResources = PlainFile(path = Some(configFile.toString)) :: functionality.resources
 
-
-  //</editor-fold>
-  //<editor-fold desc="Test benches to check building with --meta flag">
   test("Get meta data of a docker", DockerTest) {
     // Create temporary folder to copy the files to so we can do a git init in that folder
     // This is needed to check the remote git repo value
@@ -52,8 +50,8 @@ class DockerMeta extends FunSuite with BeforeAndAfterAll {
       assert(exec.toFile.canExecute)
       
       // check meta
-      assert(meta.toFile.exists)
-      val metaStr = Source.fromFile(meta.toFile).getLines.mkString("\n")
+      assert(meta.toFile.exists, meta.toString + " should exist")
+      val metaStr = Source.fromFile(meta.toFile).getLines().mkString("\n")
 
       val viashVersion = io.viash.Main.version
 
@@ -121,8 +119,8 @@ class DockerMeta extends FunSuite with BeforeAndAfterAll {
       assert(exec.toFile.canExecute)
 
       // check meta
-      assert(meta.toFile.exists)
-      val metaStr = Source.fromFile(meta.toFile).getLines.mkString("\n")
+      assert(meta.toFile.exists, meta.toString + " should exist")
+      val metaStr = Source.fromFile(meta.toFile).getLines().mkString("\n")
 
       val viashVersion = io.viash.Main.version
 
@@ -182,7 +180,7 @@ class DockerMeta extends FunSuite with BeforeAndAfterAll {
 
       // check meta
       assert(meta.toFile.exists, meta.toString + " should exist")
-      val metaStr = Source.fromFile(meta.toFile).getLines.mkString("\n")
+      val metaStr = Source.fromFile(meta.toFile).getLines().mkString("\n")
 
       val viashVersion = io.viash.Main.version
 

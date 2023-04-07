@@ -29,8 +29,39 @@ import io.viash.helpers.NsExecData
 import sys.process._
 import java.io.{ByteArrayOutputStream, File, PrintWriter}
 import io.viash.platforms.Platform
+import scala.collection.parallel.CollectionConverters._
 
 object ViashNamespace {
+
+  case class MaybeParList[T](
+    list: List[T],
+    parallel: Boolean
+  ) {
+    def map[B](f: T => B): List[B] = 
+      if (parallel)
+        list.par.map(f).toList
+      else
+        list.map(f)
+    def foreach[U](f: T => U): Unit = 
+      if (parallel)
+        list.par.foreach(f)
+      else
+        list.foreach(f)
+  }
+
+  def targetOutputPath(
+    targetDir: String,
+    platformId: String,
+    namespace: Option[String],
+    functionalityName: String
+  ): String = {
+    val nsStr = namespace match {
+      case Some(ns) => ns + "/"
+      case None => ""
+    }
+    s"$targetDir/$platformId/$nsStr$functionalityName"
+  }
+
   def build(
     configs: List[Either[(Config, Option[Platform]), Status]],
     target: String,
@@ -38,8 +69,8 @@ object ViashNamespace {
     push: Boolean = false,
     parallel: Boolean = false,
     flatten: Boolean = false
-  ) {
-    val configs2 = if (parallel) configs.par else configs
+  ): List[Either[(Config, Option[Platform]), Status]] = {
+    val configs2 = MaybeParList(configs, parallel)
 
     val results = configs2.map { config =>
       config match {
@@ -47,28 +78,29 @@ object ViashNamespace {
         case Left((conf, None)) => throw new RuntimeException("This should not occur.")
         case Left((conf, Some(platform))) =>
           val funName = conf.functionality.name
+          val ns = conf.functionality.namespace
           val platformId = platform.id
-          val out =
-            if (!flatten) {
-              conf.functionality.namespace
-                .map( ns => target + s"/$platformId/$ns/$funName").getOrElse(target + s"/$platformId/$funName")
-            } else {
+          val out = 
+            if (flatten) {
               target
+            } else {
+              targetOutputPath(target, platformId, ns, funName)
             }
-          val namespaceOrNothing = conf.functionality.namespace.map( s => "(" + s + ")").getOrElse("")
-          println(s"Exporting $funName $namespaceOrNothing =$platformId=> $out")
-          ViashBuild(
+          val nsStr = ns.map(" (" + _ + ")").getOrElse("")
+          println(s"Exporting $funName$nsStr =$platformId=> $out")
+          val status = ViashBuild(
             config = conf,
             platform = platform,
             output = out,
             setup = setup,
             push = push
           )
-          Right(Success)
+          Right(status)
         }
       }
 
     printResults(results.map(r => r.fold(fa => Success, fb => fb)).toList, true, false)
+    results.toList
   }
 
   def test(
@@ -86,7 +118,7 @@ object ViashNamespace {
       case Left((_, Some(pl))) => pl.`type` != "nextflow"
       case _ => true
     }}
-    val configs2 = if (parallel) configs1.par else configs1
+    val configs2 = MaybeParList(configs1, parallel)
 
     // run all the component tests
     val tsvPath = tsv.map(Paths.get(_))
@@ -246,7 +278,7 @@ object ViashNamespace {
     configs: List[Either[(Config, Option[Platform]), Status]], 
     format: String = "yaml", 
     parseArgumentGroups: Boolean
-  ) {
+  ): Unit = {
     val configs2 = configs.flatMap(_.left.toOption).map(_._1)
     // val configs2 = configs.flatMap(_.left.toOption).flatMap{
     //   case (config, Some(platform)) =>
@@ -267,7 +299,7 @@ object ViashNamespace {
     command: String, 
     dryrun: Boolean, 
     parallel: Boolean
-  ) {
+  ): Unit = {
     val configData = configs.flatMap(_.left.toOption).map{
       case (conf, plat) => 
         NsExecData(conf.info.get.config, conf, plat)
@@ -302,12 +334,12 @@ object ViashNamespace {
         configData
     }
 
-    for (data <- if (parallel) collectedData.par else collectedData) {
+    for (data <- MaybeParList(collectedData, parallel)) {
       // remove trailing + or ; mode character
       val commandNoMode = command.replaceFirst(""" \\?[;+]$""", "")
       val replacedCommand = 
         fields.foldRight(commandNoMode){ (field, command) => 
-          command.replaceAllLiterally(s"{$field}", data.getField(field).get)
+          command.replace(s"{$field}", data.getField(field).get)
         }
 
       if (dryrun) {
@@ -345,7 +377,7 @@ object ViashNamespace {
     }
   }
 
-  def printResults(statuses: Seq[Status], performedBuild: Boolean, performedTest: Boolean) {
+  def printResults(statuses: Seq[Status], performedBuild: Boolean, performedTest: Boolean): Unit = {
     val successes = statuses.count(_ == Success)
 
     val successAction = (performedBuild, performedTest) match {

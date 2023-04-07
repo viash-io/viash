@@ -23,21 +23,5 @@ import io.viash.functionality.arguments.Argument
 case class ArgumentGroup(
   name: String,
   description: Option[String] = None,
-  arguments: List[Either[String, Argument[_]]] = Nil
-) {
-  if (arguments.exists(_.isLeft)) {
-    Console.err.println(
-      f"""Warning: specifying strings in the .argument field of argument group '$name' is deprecated. The .arguments field of an argument group should only contain arguments.
-         |To solve this issue, copy the arguments ${arguments.flatMap(_.left.toOption).mkString("'", "', '", "'")} directly into the argument group.""".stripMargin
-    )
-
-  }
-
-  def stringArguments: List[String] = {
-    arguments.flatMap{_.left.toOption}
-  }
-
-  def argumentArguments: List[Argument[_]] = {
-    arguments.flatMap{_.right.toOption}
-  }
-}
+  arguments: List[Argument[_]] = Nil
+)

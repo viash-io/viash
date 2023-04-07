@@ -20,17 +20,25 @@ package io.viash.functionality.resources
 import io.viash.functionality._
 import io.viash.functionality.arguments._
 import io.viash.wrapper.BashWrapper
+import io.viash.schemas._
 
 import java.net.URI
 import io.viash.helpers.Bash
 
+@description("""An executable JavaScript script.
+               |When defined in functionality.resources, only the first entry will be executed when running the built component or when running `viash run`.
+               |When defined in functionality.test_resources, all entries will be executed during `viash test`.""".stripMargin)
 case class JavaScriptScript(
   path: Option[String] = None,
   text: Option[String] = None,
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
+
+  @undocumented
   entrypoint: Option[String] = None,
+
+  @description("Specifies the resource as a JavaScript script.")
   `type`: String = JavaScriptScript.`type`
 ) extends Script {
   assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")
@@ -67,7 +75,9 @@ case class JavaScriptScript(
         case _: StringArgument => s"""$env_name"""
       }
 
-      s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo undefined; fi )"""
+      val notFound = "undefined"
+
+      s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo $notFound; fi )"""
     }
     s"""let $dest = {
       |  ${parSet.mkString(",\n  ")}

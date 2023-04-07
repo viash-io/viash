@@ -15,19 +15,19 @@ functionality:
       dest: target_folder/relocated_file_1.txt
     - path: resource_folder/resource_L1_1.txt
       dest: target_folder/relocated_file_2.txt
-    - path: ../../testexecutable/config.vsh.yaml
+    - path: ../../test_languages/executable/config.vsh.yaml
       dest: target_folder/relocated_file_3.txt
-    - path: /tmp/viash_tmp_resources/resource3.txt
-    - path: /tmp/viash_tmp_resources/resource3.txt
+    - path: file:/tmp/viash_tmp_resources/resource3.txt
+    - path: file:/tmp/viash_tmp_resources/resource3.txt
       dest: target_folder/relocated_file_4.txt
 
-#{path: /foo/abc} → $meta_resources_dir/abc
-#{path: foo/abc} → $meta_resources_dir/abc
-#{path: abc} → $meta_resources_dir/abc
-#{path: ../foo/abc} → $meta_resources_dir/abc
-#{path: http://foo.com/abc} → $meta_resources_dir/abc
-#{path: abc, target: foo/abc} → $meta_resources_dir/foo/abc
-#{path: foo/abc, target: bar/def} → $meta_resources_dir/bar/def
+#{path: /foo/abc} -> $meta_resources_dir/abc
+#{path: foo/abc} -> $meta_resources_dir/abc
+#{path: abc} -> $meta_resources_dir/abc
+#{path: ../foo/abc} -> $meta_resources_dir/abc
+#{path: http://foo.com/abc} -> $meta_resources_dir/abc
+#{path: abc, target: foo/abc} -> $meta_resources_dir/foo/abc
+#{path: foo/abc, target: bar/def} -> $meta_resources_dir/bar/def
 
 
   arguments:

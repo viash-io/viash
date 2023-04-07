@@ -67,9 +67,9 @@ case class Config(
   @description(
     """A list of platforms to generate target artifacts for.
       |
-      | - @[native_platform](Native)
-      | - @[docker_platform](Docker)
-      | - @[nextflow_platform](Nextflow VDSL3)
+      | - @[Native](platform_native)
+      | - @[Docker](platform_docker)
+      | - @[Nextflow VDSL3](platform_nextflow)
       |""".stripMargin)
   platforms: List[Platform] = Nil,
 
@@ -81,13 +81,10 @@ case class Config(
     """Config inheritance by including YAML partials. This is useful for defining common APIs in
       |separate files. `__merge__` can be used in any level of the YAML. For example,
       |not just in the config but also in the functionality or any of the platforms.
-      |
-      |WARNING: this argument is an EXPERIMENTAL feature. Changes to the API are expected.
       |""".stripMargin)
   @example("__merge__: ../api/common_interface.yaml", "yaml")
   @since("Viash 0.6.3")
-  @undocumented
-  val `__merge__`: Option[File] = None
+  private val `__merge__`: Option[File] = None
   
 
   /**
@@ -124,49 +121,6 @@ case class Config(
 }
 
 object Config {
-  def parse(uri: URI, preparseMods: Option[ConfigMods]): Config = {
-    val str = IO.read(uri)
-    parse(str, uri, preparseMods)
-  }
-
-  def parse(yamlText: String, uri: URI, preparseMods: Option[ConfigMods]): Config = {
-    def errorHandler[C](e: Exception): C = {
-      Console.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
-      throw e
-    }
-
-    // read json
-    val js1 = parser.parse(yamlText).fold(errorHandler, a => a)
-
-    // apply inheritance if need be
-    val js2 = js1.inherit(uri)
-
-    if (js1 != js2) {
-      Console.err.println("Warning: Config inheritance (__merge__) is an experimental feature. Changes to the API are expected.")
-    }
-
-    // apply preparse config mods
-    val js3 = preparseMods match {
-      case None => js2
-      case Some(cmds) => cmds(js2, preparse = true)
-    }
-
-    // parse as config
-    val config = js3.as[Config].fold(errorHandler, identity)
-
-    // make paths absolute
-    val resources = config.functionality.resources.map(_.copyWithAbsolutePath(uri))
-    val tests = config.functionality.test_resources.map(_.copyWithAbsolutePath(uri))
-
-    // copy resources with updated paths into config and return
-    config.copy(
-      functionality = config.functionality.copy(
-        resources = resources,
-        test_resources = tests
-      )
-    )
-  }
-
   def readYAML(config: String): (String, Option[Script]) = {
     val configUri = IO.uri(config)
     readYAML(configUri)
@@ -216,12 +170,14 @@ object Config {
   // reads and modifies the config based on the current setup
   def read(
     configPath: String,
+    projectDir: Option[URI] = None,
     addOptMainScript: Boolean = true,
     configMods: List[String] = Nil
   ): Config = {
     val uri = IO.uri(configPath)
     readFromUri(
       uri = uri,
+      projectDir = projectDir,
       addOptMainScript = addOptMainScript,
       configMods = configMods
     )
@@ -229,6 +185,7 @@ object Config {
 
   def readFromUri(
     uri: URI,
+    projectDir: Option[URI] = None,
     addOptMainScript: Boolean = true,
     configMods: List[String] = Nil
   ): Config = {
@@ -249,7 +206,7 @@ object Config {
 
     /* JSON 1: after inheritance */
     // apply inheritance if need be
-    val json1 = json0.inherit(uri)
+    val json1 = json0.inherit(uri, projectDir)
 
     /* JSON 2: after preparse config mods  */
     // apply preparse config mods if need be
@@ -261,8 +218,8 @@ object Config {
 
     /* CONFIG 1: make resources absolute */
     // make paths absolute
-    val resources = conf0.functionality.resources.map(_.copyWithAbsolutePath(uri))
-    val tests = conf0.functionality.test_resources.map(_.copyWithAbsolutePath(uri))
+    val resources = conf0.functionality.resources.map(_.copyWithAbsolutePath(uri, projectDir))
+    val tests = conf0.functionality.test_resources.map(_.copyWithAbsolutePath(uri, projectDir))
 
     // copy resources with updated paths into config and return
     val conf1 = conf0.copy(
@@ -289,23 +246,26 @@ object Config {
     /* CONFIG 3: add info */
     // gather git info
     // todo: resolve git in project?
-    val path = Paths.get(uri).toFile().getParentFile
-    val GitInfo(_, rgr, gc, gt) = Git.getInfo(path)
+    val conf3 = uri.getScheme() match {
+      case "file" =>
+        val path = Paths.get(uri).toFile().getParentFile
+        val GitInfo(_, rgr, gc, gt) = Git.getInfo(path)
 
-    // create info object
-    val info = 
-      Info(
-        viash_version = Some(io.viash.Main.version),
-        config = uri.toString.replaceAll("^file:/+", "/"),
-        git_commit = gc,
-        git_remote = rgr,
-        git_tag = gt
-      )
-    
-    // add info and additional resources
-    val conf3 = conf2.copy(
-      info = Some(info),
-    )
+        // create info object
+        val info = 
+          Info(
+            viash_version = Some(io.viash.Main.version),
+            config = uri.toString.replaceAll("^file:/+", "/"),
+            git_commit = gc,
+            git_remote = rgr,
+            git_tag = gt
+          )
+        // add info and additional resources
+        conf2.copy(
+          info = Some(info),
+        )
+      case _ => conf2
+    }
 
     // print warnings if need be
     if (conf2.functionality.status == Status.Deprecated)
@@ -331,6 +291,7 @@ object Config {
 
   def readConfigs(
     source: String,
+    projectDir: Option[URI] = None,
     query: Option[String] = None,
     queryNamespace: Option[String] = None,
     queryName: Option[String] = None,
@@ -357,7 +318,8 @@ object Config {
           Console.withErr(stderr) {
             Console.withOut(stdout) {
               Config.read(
-                file.toString, 
+                file.toString,
+                projectDir = projectDir,
                 addOptMainScript = addOptMainScript,
                 configMods = configMods
               )

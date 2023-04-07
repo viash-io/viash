@@ -1,26 +1,26 @@
 package io.viash
 
 import io.viash.config.Config
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class TestingAllComponentsSuite extends FunSuite {
+class TestingAllComponentsSuite extends AnyFunSuite {
   def getTestResource(path: String) = getClass.getResource(path).toString
 
   val tests = List(
-    ("testbash", "config.vsh.yaml"),
-    ("testpython", "config.vsh.yaml"),
-    ("testr", "script.vsh.R"),
-    ("testjs", "config.vsh.yaml"),
-    ("testscala", "config.vsh.yaml"),
-    ("testcsharp", "config.vsh.yaml"),
-    ("testexecutable", "config.vsh.yaml")
+    ("bash", "config.vsh.yaml"),
+    ("python", "config.vsh.yaml"),
+    ("r", "script.vsh.R"),
+    ("js", "config.vsh.yaml"),
+    ("scala", "config.vsh.yaml"),
+    ("csharp", "config.vsh.yaml"),
+    ("executable", "config.vsh.yaml")
   )
 
   for ((name, file) <- tests) {
-    val config = getTestResource(s"/$name/$file")
+    val config = getTestResource(s"/test_languages/$name/$file")
 
     // only run testbash natively because other requirements might not be available
-    if (name == "testbash") {
+    if (name == "bash") {
       test(s"Testing $name platform native", NativeTest) {
         TestHelper.testMain("test", "-p", "native", config)
       }
@@ -39,7 +39,7 @@ class TestingAllComponentsSuite extends FunSuite {
       val confJson = conf.asJson
 
       // convert back to config
-      val conf2 = confJson.as[Config].right.get
+      val conf2 = confJson.as[Config].toOption.get
 
       // check if equal
       assert(conf == conf2)

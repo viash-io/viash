@@ -45,7 +45,7 @@ trait ViashCommand {
     short = Some('c'),
     default = Some(Nil),
 
-    descr = "Modify a viash config at runtime using @[config_mod](dynamic config modding)."
+    descr = "Modify a viash config at runtime using @[dynamic config modding](config_mod)."
   )
 }
 trait ViashRunner {
@@ -85,7 +85,7 @@ trait ViashNs {
   val src = registerOpt[String](
     name = "src",
     short = Some('s'),
-    descr = " A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
+    descr = "A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
     default = None
   )
   val platform = registerOpt[String](
@@ -109,7 +109,7 @@ trait ViashNs {
     name = "config_mod",
     short = Some('c'),
     default = Some(Nil),
-    descr = "Modify a viash config at runtime using @[config_mod](dynamic config modding)."
+    descr = "Modify a viash config at runtime using @[dynamic config modding](config_mod)."
   )
 }
 
@@ -201,7 +201,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       name = "setup",
       short = Some('s'),
       default = None,
-      descr = "Which @[docker_setup_strategy](setup strategy) for creating the container to use [Docker Platform only]."
+      descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Platform only]."
     )
     val push = registerOpt[Boolean](
       name = "push",
@@ -240,7 +240,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       val parse_argument_groups = registerOpt[Boolean](
         name = "parse_argument_groups",
         default = Some(false),
-        descr = "Whether or not to postprocess each component's @[argument_groups](argument groups)."
+        descr = "Whether or not to postprocess each component's @[argument groups](argument_groups)."
       )
     }
     val inject = new DocumentedSubcommand("inject") with ViashCommand {
@@ -268,7 +268,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       val setup = registerOpt[String](
         name = "setup",
         default = None,
-        descr = "Which @[docker_setup_strategy](setup strategy) for creating the container to use [Docker Platform only]."
+        descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Platform only]."
       )
       val push = registerOpt[Boolean](
         name = "push",
@@ -318,7 +318,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       val parse_argument_groups = registerOpt[Boolean](
         name = "parse_argument_groups",
         default = Some(false),
-        descr = "Whether or not to postprocess each component's @[argument_groups](argument groups)."
+        descr = "Whether or not to postprocess each component's @[argument groups](argument_groups)."
       )
     }
 
@@ -380,7 +380,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     shortSubcommandsHelp(true)
   }
 
-  val export = new DocumentedSubcommand("export") {
+  val `export` = new DocumentedSubcommand("export") {
     hidden = true
 
     val resource = new DocumentedSubcommand("resource") {

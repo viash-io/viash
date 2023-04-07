@@ -22,14 +22,20 @@ import io.viash.functionality._
 import java.net.URI
 import java.nio.file.Path
 import io.viash.functionality.arguments.Argument
+import io.viash.schemas._
 
+@description("An executable file.")
 case class Executable(
   path: Option[String] = None,
   text: Option[String] = None,
   dest: Option[String] = None,
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
+
+  @undocumented
   entrypoint: Option[String] = None,
+
+  @description("Specifies the resource as an executable.")
   `type`: String = "executable"
 ) extends Script {
   assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")
@@ -43,7 +49,7 @@ case class Executable(
 
   override def read: Option[String] = None
 
-  override def write(path: Path, overwrite: Boolean) {}
+  override def write(path: Path, overwrite: Boolean): Unit = {}
 
   def command(script: String): String = {
     script
