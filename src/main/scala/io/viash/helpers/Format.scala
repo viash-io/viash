@@ -31,7 +31,7 @@ object Format {
   }
 
   def paragraphWrap(s: String, n: Int): Seq[String] = {
-    s.split("\n").flatMap(t => Format.wordWrap(t, n))
+    s.split("\n").toIndexedSeq.flatMap(t => Format.wordWrap(t, n))
   }
 }
 
