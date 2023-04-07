@@ -15,6 +15,7 @@ class ConditionSuite extends AnyFunSuite {
     """foo: bar
       |baz: 123
       |list_of_stuff: [4, 5, 6]
+      |ping: true
       |""".stripMargin).toOption.get
   
   test("test condition true") {
@@ -128,13 +129,18 @@ class ConditionSuite extends AnyFunSuite {
   }
   
   test("test condition not") {
-    val cmd1 = ConfigModParser.condition.parse("""! .foo == "bar"""")
+    val cmd1 = ConfigModParser.condition.parse("""!(.foo == "bar")""")
     val res1 = cmd1.apply(baseJson)
     assert(res1 == false)
 
     val cmd2 = ConfigModParser.condition.parse("""! false""")
     val res2 = cmd2.apply(baseJson)
     assert(res2 == true)
+
+    // TODO: this format is not supported yet, but I feel like it should be
+    // val cmd3 = ConfigModParser.condition.parse("""!.ping""")
+    // val res3 = cmd3.apply(baseJson)
+    // assert(res3 == false)
   }
 
   test("test condition complex and") {
