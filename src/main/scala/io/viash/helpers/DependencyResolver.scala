@@ -31,12 +31,14 @@ import io.viash.platforms.Platform
 import io.viash.helpers.IO
 import io.circe.yaml.parser
 import io.circe.Json
+import io.viash.config.Config._
+import io.viash.ViashNamespace
 
 
 object DependencyResolver {
 
   // Modify the config so all of the dependencies are available locally
-  def modifyConfig(config: Config, platform: Option[Platform]): Config = {
+  def modifyConfig(config: Config, platform: Option[Platform], namespaceConfigs: List[Config] = Nil): Config = {
 
     // Check all fun.repositories have valid names
     val repositories = config.functionality.repositories
@@ -85,7 +87,12 @@ object DependencyResolver {
       .map{dep =>
         val repo = dep.workRepository.get
         val targetPath = Paths.get(repo.localPath, repo.path.getOrElse("")/*.stripPrefix("/")*/)
-        val config = findConfig(targetPath.toString(), dep.name, platform)
+          
+        val config = dep.isLocalDependency match {
+          case true => findLocalConfig(targetPath.toString(), namespaceConfigs, dep.name, platform)
+          case false => findRemoteConfig(targetPath.toString(), dep.name, platform)
+        }
+
         dep.copy(foundConfigPath = config.map(_._1), configInfo = config.map(_._2).getOrElse(Map.empty))
       }
       )(config3)
@@ -121,7 +128,29 @@ object DependencyResolver {
     }))(config)
   }
 
-  def findConfig(path: String, name: String, platform: Option[Platform]): Option[(String, Map[String, String])] = {
+  def findLocalConfig(targetDir: String, namespaceConfigs: List[Config], name: String, platform: Option[Platform]): Option[(String, Map[String, String])] = {
+
+    val config = namespaceConfigs.filter{ c => 
+        val fullName = c.functionality.namespace.fold("")(n => n + "/") + c.functionality.name
+        fullName == name
+      }
+      .headOption
+
+    config.map{ c =>
+      val path = c.info.get.config
+      // fill in the location of the executable where it will be located
+      val executable = ViashNamespace.targetOutputPath("", platform.get.id, c.functionality.namespace, c.functionality.name)
+      val info = c.info.get.copy(executable = Some(executable))
+      val map = (info.productElementNames zip info.productIterator).map{
+          case (k, s: String) => (k, s)
+          case (k, Some(s: String)) => (k, s)
+          case (k, None) => (k, "")
+        }.toMap
+      (path, map)
+    }
+  }
+
+  def findRemoteConfig(path: String, name: String, platform: Option[Platform]): Option[(String, Map[String, String])] = {
     if (!Files.exists(Paths.get(path)))
       return None
 

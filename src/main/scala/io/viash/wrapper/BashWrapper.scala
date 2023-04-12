@@ -25,6 +25,7 @@ import io.viash.helpers.Escaper
 import io.viash.config.ConfigMeta
 import io.viash.config.Config
 import java.nio.file.Paths
+import io.viash.ViashNamespace
 
 object BashWrapper {
   val metaArgs: List[Argument[_]] = {
@@ -225,8 +226,8 @@ object BashWrapper {
     val (localDependencies, remoteDependencies) = config.functionality.dependencies
       .partition(d => d.isLocalDependency && d.writtenPath.isEmpty)
     val localDependenciesStrings = localDependencies.map{d =>
-        val up = config.functionality.namespace.fold("..")(nonEmpty => "../..")
-        s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR/$up/${d.name}\""
+        val up = ViashNamespace.targetOutputPath("", "..", config.functionality.namespace.map(ns => ".."), "..")
+        s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR$up${d.configInfo.getOrElse("executable", "")}/${d.name.split("/").last}\""
     }
     val remoteDependenciesStrings = remoteDependencies.map(d => 
       s"${d.VIASH_DEP}=\"$$VIASH_TARGET_DIR/dependencies/${d.subOutputPath.get}/${Paths.get(d.configInfo.getOrElse("executable", "not_found")).getFileName()}\""

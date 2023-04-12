@@ -238,7 +238,7 @@ object Main {
         val configs2 = configs.map{
           case Left((c0: Config, platform: Option[Platform])) => {
             DependencyResolver.createBuildYaml(proj1.target.get)
-            val c1 = DependencyResolver.modifyConfig(c0, platform)
+            val c1 = DependencyResolver.modifyConfig(c0, platform, configs.map(e => e.swap.toOption.filter(o => o._2 == platform).map(_._1)).flatten )
             val c2 = DependencyResolver.copyDependencies(c1, proj1.target.get, platform, true)
             Left((c2, platform))
           }
