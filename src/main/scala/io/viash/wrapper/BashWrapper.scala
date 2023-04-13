@@ -226,8 +226,9 @@ object BashWrapper {
     val (localDependencies, remoteDependencies) = config.functionality.dependencies
       .partition(d => d.isLocalDependency && d.writtenPath.isEmpty)
     val localDependenciesStrings = localDependencies.map{d =>
-        val up = ViashNamespace.targetOutputPath("", "..", config.functionality.namespace.map(ns => ".."), "..")
-        s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR$up${d.configInfo.getOrElse("executable", "")}/${d.name.split("/").last}\""
+      // Go up the same amount of times that the namespace strategy specifies during the build step so we can go down to the local dependency folder
+      val up = ViashNamespace.targetOutputPath("", "..", config.functionality.namespace.map(ns => ".."), "..")
+      s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR$up${d.configInfo.getOrElse("executable", "")}/${d.name.split("/").last}\""
     }
     val remoteDependenciesStrings = remoteDependencies.map(d => 
       s"${d.VIASH_DEP}=\"$$VIASH_TARGET_DIR/dependencies/${d.subOutputPath.get}/${Paths.get(d.configInfo.getOrElse("executable", "not_found")).getFileName()}\""

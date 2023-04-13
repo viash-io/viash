@@ -128,6 +128,7 @@ object DependencyResolver {
     }))(config)
   }
 
+  // Find configs from the local repository. These still need to be built so we have to deduce the information we want.
   def findLocalConfig(targetDir: String, namespaceConfigs: List[Config], name: String, platform: Option[Platform]): Option[(String, Map[String, String])] = {
 
     val config = namespaceConfigs.filter{ c => 
@@ -150,6 +151,7 @@ object DependencyResolver {
     }
   }
 
+  // Read built config artifact in a minimalistic way. This prevents minor schema changes breaking things.
   def findRemoteConfig(path: String, name: String, platform: Option[Platform]): Option[(String, Map[String, String])] = {
     if (!Files.exists(Paths.get(path)))
       return None
