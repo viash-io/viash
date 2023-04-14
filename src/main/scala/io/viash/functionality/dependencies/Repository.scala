@@ -68,6 +68,9 @@ object Repository {
         val r2 = r.checkoutSparse()
         r2.checkout()
       }
+      case r: LocalRepository if r.path.isDefined => {
+        r.copyRepo(localPath = r.path.get)
+      }
       case r => r
     }
 }
