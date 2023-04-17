@@ -172,7 +172,7 @@ object Main {
     }
 
     // parse arguments
-    val cli = new CLIConf(viashArgs) 
+    val cli = new CLIConf(viashArgs.toIndexedSeq) 
     
     // see if there are project overrides passed to the viash command
     val proj1 = cli.subcommands.last match {
@@ -201,7 +201,7 @@ object Main {
         ViashRun(
           config = config,
           platform = platform.get, 
-          args = runArgs.dropWhile(_ == "--"), 
+          args = runArgs.toIndexedSeq.dropWhile(_ == "--"), 
           keepFiles = cli.run.keep.toOption.map(_.toBoolean),
           cpus = cli.run.cpus.toOption,
           memory = cli.run.memory.toOption
@@ -347,6 +347,7 @@ object Main {
     
     val config = Config.read(
       configPath = subcommand.config(),
+      projectDir = project.rootDir.map(_.toUri()),
       addOptMainScript = addOptMainScript,
       configMods = project.config_mods
     )
@@ -375,6 +376,7 @@ object Main {
 
     val configs = Config.readConfigs(
       source = source,
+      projectDir = project.rootDir.map(_.toUri()),
       query = query,
       queryNamespace = queryNamespace,
       queryName = queryName,

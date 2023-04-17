@@ -15,23 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.helpers
+package io.viash.helpers.circe
 
-object Format {
-  private def wordWrap(s: String, n: Int): Seq[String] = {
-    val words = s.split("\\s")
-    if (words.isEmpty) Nil
-    else
-      words.tail.foldLeft(List[String](words.head)){ (lines, word) =>
-        if (lines.head.length + word.length + 1 > n)
-          word :: lines
-        else
-          (lines.head + " " + word) :: lines.tail
-      }.reverse
+import io.circe.Json
+import io.circe.JsonObject
+
+class RichJsonObject(jsonObject: JsonObject) {
+  /**
+    * If the Json is a JsonObject, apply f on all key-value pairs.
+    *
+    * @param fun A method to apply over key-value pairs in a JsonObject
+    * @return A modified Json
+    */
+  def map(f: ((String, Json)) => (String, Json)): JsonObject = {
+    JsonObject(jsonObject.toList.map(f): _*)
   }
 
-  def paragraphWrap(s: String, n: Int): Seq[String] = {
-    s.split("\n").toIndexedSeq.flatMap(t => Format.wordWrap(t, n))
-  }
 }
-

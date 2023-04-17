@@ -58,6 +58,48 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(json3.dropEmptyRecursively == json3Expected)
   }
 
+  test("checking whether dropEmptyRecursivelyExcept works") {
+    val json1 = parser.parse("""
+      |a: null
+      |b: []
+      |c: {}
+      |d: []
+      |foo: {}
+      |""".stripMargin
+    ).getOrElse(Json.Null)
+    val json1Expected = Json.fromJsonObject(JsonObject(
+      "foo" -> Json.fromJsonObject(JsonObject())
+    ))
+    assert(json1.dropEmptyRecursivelyExcept(Seq("foo")) == json1Expected)
+
+    val json2 = parser.parse("""
+      |a: null
+      |b: []
+      |c: {}
+      |d: []
+      |foo:
+      |  bar: null
+      |""".stripMargin
+    ).getOrElse(Json.Null)
+    val json2Expected = Json.fromJsonObject(JsonObject(
+      "foo" -> Json.fromJsonObject(JsonObject(
+        "bar" -> Json.Null
+      ))
+    ))
+    assert(json2.dropEmptyRecursivelyExcept(Seq("foo")) == json2Expected)
+
+    val json3 = parser.parse("""
+      |a: null
+      |b: []
+      |c: {}
+      |d: []
+      |foo:
+      |  bar: null
+      |""".stripMargin
+    ).getOrElse(Json.Null)
+    assert(json3.dropEmptyRecursivelyExcept(Seq("fooz")) == Json.Null)
+  }
+
   test("checking whether concatDeepMerge works") {
     val json1 = parser.parse("""
       |a: [1, 2]
@@ -101,7 +143,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
       |""".stripMargin
     ).getOrElse(Json.Null)
 
-    val jsonOut1 = json1.inherit(temporaryFolder.toUri())
+    val jsonOut1 = json1.inherit(temporaryFolder.toUri(), projectDir = None)
     assert(jsonOut1 == jsonExpected1)
   }
 
@@ -119,7 +161,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
       |""".stripMargin
     ).getOrElse(Json.Null)
 
-    val jsonOut1 = json1.inherit(temporaryFolder.toUri())
+    val jsonOut1 = json1.inherit(temporaryFolder.toUri(), projectDir = None)
     assert(jsonOut1 == jsonExpected1)
   }
 
@@ -137,7 +179,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
       |""".stripMargin
     ).getOrElse(Json.Null)
 
-    val jsonOut1 = json1.inherit(temporaryFolder.toUri())
+    val jsonOut1 = json1.inherit(temporaryFolder.toUri(), projectDir = None)
     assert(jsonOut1 == jsonExpected1)
   }
 
@@ -158,7 +200,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
     ).getOrElse(Json.Null)
 
     // check whether filling default works
-    val jsonOut = json1.inherit(temporaryFolder.toUri(), stripInherits = false)
+    val jsonOut = json1.inherit(temporaryFolder.toUri(), projectDir = None, stripInherits = false)
     assert(jsonOut == jsonExpected)
   }
 
@@ -177,7 +219,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
     ).getOrElse(Json.Null)
 
     // check whether filling default works
-    val jsonOut = json1.inherit(temporaryFolder.toUri())
+    val jsonOut = json1.inherit(temporaryFolder.toUri(), projectDir = None)
     assert(jsonOut == jsonExpected)
   }
 
@@ -198,7 +240,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
     ).getOrElse(Json.Null)
 
     // check whether filling default works
-    val jsonOut = json1.inherit(temporaryFolder.toUri())
+    val jsonOut = json1.inherit(temporaryFolder.toUri(), projectDir = None)
     assert(jsonOut == jsonExpected)
   }
 

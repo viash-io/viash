@@ -1,3 +1,37 @@
+# Viash 0.7.2 (2023-04-17): Project-relative paths and improved metadata handling
+
+This update adds functionality to resolve paths starting with a slash as relative to the project directory, improves handling of info metadata in the config, and fixes to the operator precedence of config mods.
+
+## NEW FUNCTIONALITY
+
+* Resolve resource and merge paths starting with a slash (`/`) as relative to the project directory (#380). To define absolute paths (which is not recommended anyway), prefix the path with the `file://` protocol. Examples:
+
+  - `/foo` is a file or directory called `foo` in the current project directory.
+  - `file:/foo` is a file or directory called `foo` in the system root.
+
+## MINOR CHANGES
+
+* `config yaml`: Do not modify (e.g. strip empty fields) of the `.functionality.info` and `.functionality.arguments[].info` fields (#386).
+
+## BUG FIXES
+
+* `ConfigMods`: Fix operator precedence issues with conditions in the config mod parsers (#390).
+
+## INTERNAL CHANGES
+
+* Clean up unused code (#380).
+
+* Move circe encoders/decoders for File and Path from `io.viash.functionality.arguments` to `io.viash.helpers.circe` (#380).
+
+* Store the project root directory (that is, the directory of the `_viash.yaml`) in a ViashProject object (#380).
+
+* Tests: Reworked language tests to be grouped in their own subfolder and split off the bash language test from the general `testbash` folder (#381).
+
+* Tests: Add additional language tests for `viash config inject` (#381).
+
+* Tests: Added test for `io.viash.helpers.IO` (#380).
+
+
 # Viash 0.7.1 (2023-03-08): Minor improvements to VDSL3 and schema functionality.
 
 This is a minor release which improves caching in VDSL3 components and changes the formats of the schema files for the Viash config and CLI.
@@ -1158,7 +1192,7 @@ The biggest change in this release is that long running Viash components (VS Cod
   After:
   ```
   $ viash test src/test/resources/testbash/config_failed_build.vsh.yaml 
-  Error parsing 'file:///path/to/viash/src/test/resources/testbash/config_failed_build.vsh.yaml'. Details:
+  Error parsing 'file:/path/to/viash/src/test/resources/testbash/config_failed_build.vsh.yaml'. Details:
   Unexpected field: [package]; valid fields: packages, interactive, type: DownField(apt),DownArray,DownField(platforms)
   ```
 

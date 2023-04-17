@@ -1,0 +1,13 @@
+functionality:
+  __merge__: [., ../common.yaml]
+  resources:
+    - type: javascript_script
+      path: ./code.js
+platforms:
+  - type: native
+  - type: docker
+    image: node:15-buster
+    setup:
+      - type: javascript
+        npm: [ plot ]
+  - type: nextflow

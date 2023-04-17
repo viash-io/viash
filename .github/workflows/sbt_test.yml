@@ -39,7 +39,10 @@ jobs:
           testthat
 
     - name: Set up sbt
-      uses: olafurpg/setup-scala@v13
+      uses: actions/setup-java@v3
+      with:
+        distribution: temurin
+        java-version: '11'
 
     - name: Set up Scala
       run: |

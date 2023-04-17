@@ -134,17 +134,38 @@ trait Resource {
     }
   }
 
-  def copyWithAbsolutePath(parent: URI): Resource = {
-    if (this.isInstanceOf[Executable] || path.isEmpty || path.get.contains("://")) {
-      this
-    } else {
-      val p = Paths.get(path.get).toFile
-      if (p.isAbsolute) {
-        this
-      } else {
-        this.copyResource(parent = Some(parent))
-      }
+  def copyWithAbsolutePath(parent: URI, projectDir: Option[URI]): Resource = {
+    // don't modify if the resource represents a command that should be available in the PATH
+    if (this.isInstanceOf[Executable]) {
+      return this
     }
+    // don't modify if the resource doesn't have a PATH or contains a URI
+    if (path.isEmpty || path.get.contains(":")) {
+      return this
+    }
+
+    // if the path starts with a /, resolve it w.r.t. to the project dir
+    val pathStr = path.get
+    if (pathStr.startsWith("/")) {
+      if (projectDir.isEmpty) {
+        throw new RuntimeException(s"One of the resources is relative to the project root ($path), but no project config file (_viash.yaml) could be found.")
+      }
+      val pathStr1 = IO.resolvePathWrtURI(pathStr, projectDir.get)
+      return this.copyResource(
+        path = Some(pathStr1),
+        parent = projectDir
+      )
+    }
+    
+    // if the path is relative (which it probably should be),
+    // set the directory of the config as the parent of this file.
+    if (!Paths.get(pathStr).isAbsolute) {
+      return this.copyResource(
+        parent = Some(parent)
+      )
+    }
+
+    return this
   }
 
   // TODO: This can probably be solved much nicer.
