@@ -1,3 +1,7 @@
+# Viash 0.7.3 (yyyy-MM-dd): TODO Add title
+
+TODO add summary
+
 # Viash 0.7.2 (2023-04-17): Project-relative paths and improved metadata handling
 
 This update adds functionality to resolve paths starting with a slash as relative to the project directory, improves handling of info metadata in the config, and fixes to the operator precedence of config mods.
