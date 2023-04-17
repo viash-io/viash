@@ -81,6 +81,7 @@ case class Dependency(
   // Name to be used in scripts
   def scriptName: String = name.replace("/", "_")
   // Part of the folder structure where dependencies should be written to
+  // TODO Fix this. This logic is wrong as it rewrites the folder structure instead of maintaining it. Also it neglects the Platform Id, so it's doubly wrong.
   def subOutputPath = workRepository.map(r => Paths.get(r.subOutputPath, name).toString())
 
   def isLocalDependency: Boolean = workRepository.map{

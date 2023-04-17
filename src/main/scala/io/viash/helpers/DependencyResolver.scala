@@ -105,7 +105,10 @@ object DependencyResolver {
     composedDependenciesLens.modify(_.map(dep => {
 
       if (dep.isLocalDependency && buildingNamespace) {
-        dep
+        // Dependency solving will be done by building the component and dependencies of that component will be handled there.
+        // However, we have to fill in writtenPath. This will be needed when this built component is used as a dependency and we have to resolve dependencies of dependencies.
+        val writtenPath = ViashNamespace.targetOutputPath(output, platform.get.id, None, dep.name)
+        dep.copy(writtenPath = Some(writtenPath))
       } else {
         // copy the dependency to the output folder
         val dependencyOutputPath = Paths.get(output, "dependencies", dep.subOutputPath.get)
@@ -116,10 +119,12 @@ object DependencyResolver {
         val platformId = platform.map(_.id).getOrElse("")
         if (dep.foundConfigPath.isDefined) {
           val dependencyRepoPath = Paths.get(dep.foundConfigPath.get).getParent()
-          // copy dependencies
+          // Copy dependencies
           IO.copyFolder(dependencyRepoPath, dependencyOutputPath)
-          // copy dependencies of dependencies, all the way down
-          recurseBuiltDependencies(output, dep.workRepository.get.localPath, dep.foundConfigPath.get)
+          println(s"Copying $dependencyRepoPath -> $dependencyOutputPath")
+          // Copy dependencies of dependencies, all the way down
+          // Parse new location of the copied dependency. That way that path can be used to determine the new location of namespace dependencies
+          recurseBuiltDependencies(output, dep.workRepository.get.localPath, dependencyOutputPath.toString())
         }
         else {
           Console.err.println(s"Could not find dependency artifacts for ${dep.name}. Skipping copying dependency artifacts.")
@@ -225,12 +230,15 @@ object DependencyResolver {
   // Read a config file from a built target. Extract dependencies 'writtenPath'.
   // TODO local namespace dependencies currently don't have a writtenPath filled in. Either fill in in a build step or deduce the path some other way.
   def getSparseDependencyInfo(configPath: String): List[String] = {
+    println(s"- Reading config $configPath for dependency information")
     try {
       val yamlText = IO.read(IO.uri(configPath))
       val json = parser.parse(yamlText).toOption.get
 
       val dependencies = json.hcursor.downField("functionality").downField("dependencies").focus.flatMap(_.asArray).get
-      dependencies.flatMap(_.hcursor.downField("writtenPath").as[String].toOption).toList
+      val deps = dependencies.flatMap(_.hcursor.downField("writtenPath").as[String].toOption).toList
+      deps.foreach(d => println(s"\tfound dependency $d"))
+      deps
     } catch {
       case _: Throwable => Nil
     }
@@ -248,13 +256,24 @@ object DependencyResolver {
     if (depth > 10)
       throw new RuntimeException("Copying dependencies traces too deep. Possibibly caused by a cross dependency.")
 
+    println(s"Solving dependencies of $builtDependencyPath")
     // this returns paths relative to `repoPath` of dependencies to be copied to `output`
-    val dependencyPaths = getSparseDependencyInfo(builtDependencyPath)
+    val dependencyPaths = getSparseDependencyInfo(builtDependencyPath + "/.config.vsh.yaml")
 
     for(dp <- dependencyPaths) {
       val sourcePath = Paths.get(repoPath, dp)
-      // Drop the other "target" folder from the found path. This can be multiple folders too
-      val destPath = Paths.get(output, "^.*?dependencies".r.replaceFirstIn(dp, "dependencies"))
+      // Split the path into chunks so we can manipulate them more easily
+      val pathParts = Paths.get(dp).iterator().asScala.toList.map(p => p.toString())
+      val destPath = if (pathParts.contains("dependencies")) {
+        // Drop the other "target" folder from the found path. This can be multiple folders too
+        Paths.get(output, pathParts.dropWhile(s => s != "dependencies"):_*)
+      } else {
+        // TODO rely on builtDependencyPath to create the new folder structere.
+        // Right now this doesn't take into account that the 'output' folder could have been multiple levels deep
+        // And we're also missing the repo portion of the folder 
+        val newPath = "dependencies" +: pathParts.drop(1)
+        Paths.get(output, newPath: _*)
+      }
 
       // Make sure the destination is clean so first remove the destination folder if it exists
       if (destPath.toFile().exists())
@@ -263,9 +282,10 @@ object DependencyResolver {
       Files.createDirectories(destPath)
       // Then copy files to it
       IO.copyFolder(sourcePath, destPath)
+      println(s"- Copying $sourcePath -> $destPath")
 
-      // TODO verify this actually works
-      recurseBuiltDependencies(output, repoPath, Paths.get(dp, ".config.vsh.yaml").toString(), depth + 1)
+      // Check for more dependencies
+      recurseBuiltDependencies(output, repoPath, destPath.toString(), depth + 1)
     }
 
   }
