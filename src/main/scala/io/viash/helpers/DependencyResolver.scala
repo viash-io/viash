@@ -34,6 +34,7 @@ import io.circe.Json
 import io.viash.config.Config._
 import io.viash.ViashNamespace
 import scala.jdk.CollectionConverters._
+import io.viash.functionality.dependencies.Dependency
 
 
 object DependencyResolver {
@@ -119,10 +120,9 @@ object DependencyResolver {
           val dependencyRepoPath = Paths.get(dep.foundConfigPath.get).getParent()
           // Copy dependencies
           IO.copyFolder(dependencyRepoPath, dependencyOutputPath)
-          println(s"Copying $dependencyRepoPath -> $dependencyOutputPath")
           // Copy dependencies of dependencies, all the way down
           // Parse new location of the copied dependency. That way that path can be used to determine the new location of namespace dependencies
-          recurseBuiltDependencies(output, dep.workRepository.get.localPath, dependencyOutputPath.toString())
+          recurseBuiltDependencies(output, dep.workRepository.get.localPath, dependencyOutputPath.toString(), dep)
         }
         else {
           Console.err.println(s"Could not find dependency artifacts for ${dep.name}. Skipping copying dependency artifacts.")
@@ -228,15 +228,12 @@ object DependencyResolver {
   // Read a config file from a built target. Extract dependencies 'writtenPath'.
   // TODO local namespace dependencies currently don't have a writtenPath filled in. Either fill in in a build step or deduce the path some other way.
   def getSparseDependencyInfo(configPath: String): List[String] = {
-    println(s"- Reading config $configPath for dependency information")
     try {
       val yamlText = IO.read(IO.uri(configPath))
       val json = parser.parse(yamlText).toOption.get
 
       val dependencies = json.hcursor.downField("functionality").downField("dependencies").focus.flatMap(_.asArray).get
-      val deps = dependencies.flatMap(_.hcursor.downField("writtenPath").as[String].toOption).toList
-      deps.foreach(d => println(s"\tfound dependency $d"))
-      deps
+      dependencies.flatMap(_.hcursor.downField("writtenPath").as[String].toOption).toList
     } catch {
       case _: Throwable => Nil
     }
@@ -249,12 +246,11 @@ object DependencyResolver {
       Files.createFile(filePath)
   }
 
-  def recurseBuiltDependencies(output: String, repoPath: String, builtDependencyPath: String, depth: Int = 0): Unit = {
+  def recurseBuiltDependencies(output: String, repoPath: String, builtDependencyPath: String, dependency: Dependency, depth: Int = 0): Unit = {
 
     if (depth > 10)
       throw new RuntimeException("Copying dependencies traces too deep. Possibibly caused by a cross dependency.")
 
-    println(s"Solving dependencies of $builtDependencyPath")
     // this returns paths relative to `repoPath` of dependencies to be copied to `output`
     val dependencyPaths = getSparseDependencyInfo(builtDependencyPath + "/.config.vsh.yaml")
 
@@ -266,11 +262,8 @@ object DependencyResolver {
         // Drop the other "target" folder from the found path. This can be multiple folders too
         Paths.get(output, pathParts.dropWhile(s => s != "dependencies"):_*)
       } else {
-        // TODO rely on builtDependencyPath to create the new folder structere.
-        // Right now this doesn't take into account that the 'output' folder could have been multiple levels deep
-        // And we're also missing the repo portion of the folder 
-        val newPath = "dependencies" +: pathParts.drop(1)
-        Paths.get(output, newPath: _*)
+        val subPath = dependency.getRelativePath(Paths.get(dp))
+        Paths.get(output, "dependencies", subPath.get)
       }
 
       // Make sure the destination is clean so first remove the destination folder if it exists
@@ -280,10 +273,9 @@ object DependencyResolver {
       Files.createDirectories(destPath)
       // Then copy files to it
       IO.copyFolder(sourcePath, destPath)
-      println(s"- Copying $sourcePath -> $destPath")
 
       // Check for more dependencies
-      recurseBuiltDependencies(output, repoPath, destPath.toString(), depth + 1)
+      recurseBuiltDependencies(output, repoPath, destPath.toString(), dependency, depth + 1)
     }
 
   }

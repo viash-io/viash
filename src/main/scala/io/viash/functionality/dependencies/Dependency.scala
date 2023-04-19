@@ -20,6 +20,8 @@ package io.viash.functionality.dependencies
 import java.nio.file.{Path, Paths}
 import io.viash.config.Config
 import io.viash.schemas._
+import java.nio.file.Files
+import io.viash.ViashNamespace
 
 @description(
   """Specifies a Viash component (script or executable) that should be made available for the code defined in the functionality.
@@ -81,11 +83,42 @@ case class Dependency(
   // Name to be used in scripts
   def scriptName: String = name.replace("/", "_")
   // Part of the folder structure where dependencies should be written to
-  // TODO Fix this. This logic is wrong as it rewrites the folder structure instead of maintaining it. Also it neglects the Platform Id, so it's doubly wrong.
-  def subOutputPath = workRepository.map(r => Paths.get(r.subOutputPath, name).toString())
+  def subOutputPath = foundConfigPath.flatMap(fcp => getRelativePath(Paths.get(fcp).getParent()))
+  // Method to get a relative sub path for this dependency or a local dependency of this dependency
+  def getRelativePath(fullPath: Path): Option[String] = {
+    if (isLocalDependency) {
+      // TODO improve this, for one, the platform id should be dynamic
+      workRepository.map(r => ViashNamespace.targetOutputPath(r.subOutputPath, "native", None, name))
+    } else {
+      val pathRoot = findBuildYamlFile(fullPath, Paths.get(workRepository.get.localPath)).map(_.getParent())
+      val relativePath = pathRoot.map(pr => fullPath.toString().stripPrefix(pr.toString()))
+      relativePath.flatMap(rp => workRepository.map(r => Paths.get(r.subOutputPath, rp).toString()))
+    }
+  }
 
   def isLocalDependency: Boolean = workRepository.map{
     case r: LocalRepository => (r.path == None || r.path == Some(".")) && r.tag == None
     case _ => false
   }.getOrElse(false)
+
+  def buildYamlPath = {
+    if (foundConfigPath.isDefined && workRepository.isDefined)
+      findBuildYamlFile(Paths.get(foundConfigPath.get), Paths.get(workRepository.get.localPath)).map(_.getParent())
+    else
+      None
+  }
+
+  def findBuildYamlFile(path: Path, repoPath: Path): Option[Path] = {
+    val child = path.resolve(".build.yaml")
+    if (Files.isDirectory(path) && Files.exists(child)) {
+      Some(child)
+    } else {
+      val parent = path.getParent()
+      if ((parent == null) || (parent == repoPath)) {
+        None
+      } else {
+        findBuildYamlFile(path.getParent(), repoPath)
+      }
+    }
+  }
 }
