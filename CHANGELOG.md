@@ -1,12 +1,13 @@
-# Viash 0.7.3 (yyyy-MM-dd): TODO Add title
+# Viash 0.7.3 (2023-04-19): Minor bug fixes in documentation and config view
 
-TODO add summary
+Fix minor issues in the documentation and with the way parent paths of resources are printed a config view.
 
 ## BUG FIXES
 
 * `DockerPlatform`: Fixed example in documentation for the `namespace_separator` parameter (#396).
 
 * `viash config view`: Resource parent paths should be directories and not file (#398).
+
 
 # Viash 0.7.2 (2023-04-17): Project-relative paths and improved metadata handling
 
