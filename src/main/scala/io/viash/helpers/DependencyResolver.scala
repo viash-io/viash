@@ -87,18 +87,16 @@ object DependencyResolver {
     val config4 = composedDependenciesLens.modify(_
       .map{dep =>
         val repo = dep.workRepository.get
-        val targetPath = Paths.get(repo.localPath, repo.path.getOrElse("")/*.stripPrefix("/")*/)
-          
         val config = dep.isLocalDependency match {
-          case true => findLocalConfig(targetPath.toString(), namespaceConfigs, dep.name, platform)
-          case false => findRemoteConfig(targetPath.toString(), dep.name, platform)
+          case true => findLocalConfig(repo.localPath.toString(), namespaceConfigs, dep.name, platform)
+          case false => findRemoteConfig(repo.localPath.toString(), dep.name, platform)
         }
 
         dep.copy(foundConfigPath = config.map(_._1), configInfo = config.map(_._2).getOrElse(Map.empty))
       }
       )(config3)
 
-    config4    
+    config4
   }
 
   def copyDependencies(config: Config, output: String, platform: Option[Platform], buildingNamespace: Boolean = false): Config = {
