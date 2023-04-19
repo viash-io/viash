@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## BUG FIXES
+
+* `DockerPlatform`: Fixed example in documentation for the `namespace_separator` parameter.
+
 # Viash 0.7.2 (2023-04-17): Project-relative paths and improved metadata handling
 
 This update adds functionality to resolve paths starting with a slash as relative to the project directory, improves handling of info metadata in the config, and fixes to the operator precedence of config mods.
