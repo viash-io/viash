@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## BUG FIXES
+
+* `viash config view`: Resource parent paths should be directories and not file (#398).
+
 # Viash 0.7.2 (2023-04-17): Project-relative paths and improved metadata handling
 
 This update adds functionality to resolve paths starting with a slash as relative to the project directory, improves handling of info metadata in the config, and fixes to the operator precedence of config mods.
@@ -15,7 +19,7 @@ This update adds functionality to resolve paths starting with a slash as relativ
 
 ## MINOR CHANGES
 
-* `config yaml`: Do not modify (e.g. strip empty fields) of the `.functionality.info` and `.functionality.arguments[].info` fields (#386).
+* `viash config view`: Do not modify (e.g. strip empty fields) of the `.functionality.info` and `.functionality.arguments[].info` fields (#386).
 
 ## BUG FIXES
 
