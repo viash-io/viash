@@ -4,6 +4,8 @@ TODO add summary
 
 ## BUG FIXES
 
+* `DockerPlatform`: Fixed example in documentation for the `namespace_separator` parameter (#396).
+
 * `viash config view`: Resource parent paths should be directories and not file (#398).
 
 # Viash 0.7.2 (2023-04-17): Project-relative paths and improved metadata handling
