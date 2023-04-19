@@ -73,11 +73,11 @@ case class DockerPlatform(
   @example("target_tag: 0.5.0", "yaml")
   target_tag: Option[String] = None,
 
-  @description("The separator between the namespace and the name of the component, used for determining the image name.")
-  @example("namespace_separator: \"+\"", "yaml")
+  @description("The separator between the namespace and the name of the component, used for determining the image name. Default: `\"/\"`.")
+  @example("namespace_separator: \"_\"", "yaml")
   namespace_separator: String = "/",
 
-  @description("Enables or disables automatic volume mapping. Enabled when set to `Automatic` or disabled when set to `Manual`. Default: `Automatic`")
+  @description("Enables or disables automatic volume mapping. Enabled when set to `Automatic` or disabled when set to `Manual`. Default: `Automatic`.")
   resolve_volume: DockerResolveVolume = Automatic,
 
   @description("In Linux, files created by a Docker container will be owned by `root`. With `chown: true`, Viash will automatically change the ownership of output files (arguments with `type: file` and `direction: output`) to the user running the Viash command after execution of the component. Default value: `true`.")
