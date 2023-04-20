@@ -61,7 +61,11 @@ case class ViashProject(
   // todo: link to config mods docs
   @description("Which config mods to apply.")
   @example("config_mods: \".functionality.name := 'foo'\"", "yaml")
-  config_mods: OneOrMore[String] = Nil
+  config_mods: OneOrMore[String] = Nil,
+
+  @description("Directory in which the _viash.yaml resides.")
+  @internalFunctionality
+  rootDir: Option[Path] = None
 )
 
 object ViashProject {
@@ -110,7 +114,7 @@ object ViashProject {
 
     /* JSON 1: after inheritance */
     // apply inheritance if need be
-    val json1 = json0.inherit(uri)
+    val json1 = json0.inherit(uri, projectDir = Some(uri))
 
     json1
   }
@@ -148,7 +152,8 @@ object ViashProject {
     // copy resources with updated paths into config and return
     val proj1 = proj0.copy(
       source = source,
-      target = target
+      target = target,
+      rootDir = Some(path.getParent())
     )
 
     proj1

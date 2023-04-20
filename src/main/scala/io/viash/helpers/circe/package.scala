@@ -21,6 +21,7 @@ import io.circe._
 import io.circe.generic.extras.Configuration
 import java.net.URI
 import data_structures.OneOrMore
+import java.nio.file.Paths
 
 package object circe {
   implicit val customConfig: Configuration =
@@ -46,6 +47,22 @@ package object circe {
     l or r
   }
 
+  // encoder and decoder for java.io.File
+  implicit val encodeFile: Encoder[java.io.File] = Encoder.instance {
+    file => Json.fromString(file.getPath)
+  }
+  implicit val decodeFile: Decoder[java.io.File] = Decoder.instance {
+    cursor => cursor.value.as[String].map(new java.io.File(_))
+  }
+
+  // encoder and decoder for java.nio.file.Path
+  implicit val encodePath: Encoder[java.nio.file.Path] = Encoder.instance {
+    file => Json.fromString(file.toString)
+  }
+  implicit val decodePath: Decoder[java.nio.file.Path] = Decoder.instance {
+    cursor => cursor.value.as[String].map(Paths.get(_))
+  }
+
   // allow any type of base type to be interpreted as a string
   implicit val decodeStringLike: Decoder[String] =
     Decoder.decodeString or
@@ -56,6 +73,7 @@ package object circe {
   
   // auto convert a json to a RichJson
   implicit def enrichJson(json: Json) = new RichJson(json)
+  implicit def enrichJsonObject(jo: JsonObject) = new RichJsonObject(jo)
 
   // auto convert a JMap to Json
   def JMap(fields: (String, Json)*): Json = {

@@ -1,11 +1,10 @@
 package io.viash.config_mods
 
 import io.circe.Json
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.funsuite.AnyFunSuite
 import io.circe.syntax._
-
 import io.circe.yaml.parser.parse
+
+import org.scalatest.funsuite.AnyFunSuite
 
 class ConditionSuite extends AnyFunSuite {
   // testing parsers
@@ -16,6 +15,7 @@ class ConditionSuite extends AnyFunSuite {
     """foo: bar
       |baz: 123
       |list_of_stuff: [4, 5, 6]
+      |ping: true
       |""".stripMargin).toOption.get
   
   test("test condition true") {
@@ -105,10 +105,9 @@ class ConditionSuite extends AnyFunSuite {
     val res3 = cmd3.apply(baseJson)
     assert(res3 == false) // true && false
 
-    // disabled until viash-io/viash#292 is resolved
-    // val cmd4 = ConfigModParser.condition.parse(""".foo == "ping" && false"""")
-    // val res4 = cmd4.apply(baseJson)
-    // assert(res4 == false) // false && false
+    val cmd4 = ConfigModParser.condition.parse(""".foo == "ping" && false""")
+    val res4 = cmd4.apply(baseJson)
+    assert(res4 == false) // false && false
   }
   
   test("test condition or") {
@@ -130,12 +129,77 @@ class ConditionSuite extends AnyFunSuite {
   }
   
   test("test condition not") {
-    val cmd1 = ConfigModParser.condition.parse("""! .foo == "bar"""")
+    val cmd1 = ConfigModParser.condition.parse("""!(.foo == "bar")""")
     val res1 = cmd1.apply(baseJson)
     assert(res1 == false)
 
     val cmd2 = ConfigModParser.condition.parse("""! false""")
     val res2 = cmd2.apply(baseJson)
     assert(res2 == true)
+
+    // TODO: this format is not supported yet, but I feel like it should be
+    // val cmd3 = ConfigModParser.condition.parse("""!.ping""")
+    // val res3 = cmd3.apply(baseJson)
+    // assert(res3 == false)
+  }
+
+  test("test condition complex and") {
+    val cmd1 = ConfigModParser.condition.parse(""".foo == "bar" && has(.baz) && .baz == 123""")
+    val res1 = cmd1.apply(baseJson)
+    assert(res1 == true)
+
+    val cmd2 = ConfigModParser.condition.parse(""".foo == "bar" && !has(.fang) && .baz != 456""")
+    val res2 = cmd2.apply(baseJson)
+    assert(res2 == true)
+
+    val cmd3 = ConfigModParser.condition.parse(""".foo == "bar" && has(.baz) && .baz == 456""")
+    val res3 = cmd3.apply(baseJson)
+    assert(res3 == false)
+  }
+
+  test("test condition complex or") {
+    val cmd1 = ConfigModParser.condition.parse(""".foo == "bar" || has(.baz) || .baz == 123""")
+    val res1 = cmd1.apply(baseJson)
+    assert(res1 == true)
+
+    val cmd2 = ConfigModParser.condition.parse(""".foo != "bar" || !has(.fang) || .baz != 123""")
+    val res2 = cmd2.apply(baseJson)
+    assert(res2 == true)
+
+    val cmd3 = ConfigModParser.condition.parse(""".foo != "bar" || has(.fang) || .baz != 123""")
+    val res3 = cmd3.apply(baseJson)
+    assert(res3 == false)
+  }
+
+  test("test condition complex combinations") {
+    val cmd1 = ConfigModParser.condition.parse("""(.foo == "bar" && has(.baz)) || .baz == 123""")
+    val res1 = cmd1.apply(baseJson)
+    assert(res1 == true)
+
+    val cmd2 = ConfigModParser.condition.parse(""".foo != "bar" || (has(.fang) && .baz != 123)""")
+    val res2 = cmd2.apply(baseJson)
+    assert(res2 == false)
+
+    val cmd3 = ConfigModParser.condition.parse("""(.foo != "bar" && has(.fang)) || (.baz == 123 && !has(.fizz))""")
+    val res3 = cmd3.apply(baseJson)
+    assert(res3 == true)
+  }
+
+  test("test condition operator precedence") {
+    val input = ConfigModParser.condition.parse("true || false && !has(.foo) || has(.bar) && true")
+    val expectedResult = Or(
+      Or(
+        True,
+        And(
+          False,
+          Not(Has(Path(List(Attribute("foo")))))
+        )
+      ),
+      And(
+        Has(Path(List(Attribute("bar")))),
+        True
+      )
+    )
+    assert(input == expectedResult)
   }
 }

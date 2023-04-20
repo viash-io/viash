@@ -17,8 +17,8 @@ functionality:
       dest: target_folder/relocated_file_2.txt
     - path: ../../test_languages/executable/config.vsh.yaml
       dest: target_folder/relocated_file_3.txt
-    - path: /tmp/viash_tmp_resources/resource3.txt
-    - path: /tmp/viash_tmp_resources/resource3.txt
+    - path: file:/tmp/viash_tmp_resources/resource3.txt
+    - path: file:/tmp/viash_tmp_resources/resource3.txt
       dest: target_folder/relocated_file_4.txt
 
 #{path: /foo/abc} -> $meta_resources_dir/abc

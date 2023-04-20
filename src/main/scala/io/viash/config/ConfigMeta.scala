@@ -22,19 +22,32 @@ import java.nio.file.Paths
 import io.circe.yaml.Printer
 
 import io.viash.functionality.resources.PlainFile
+import io.viash.helpers.circe._
+import io.circe.Json
+import io.circe.JsonObject
 
 object ConfigMeta {
   // create a yaml printer for writing the viash.yaml file
   // Options: https://github.com/circe/circe-yaml/blob/master/src/main/scala/io/circe/yaml/Printer.scala
   private val printer = Printer(
     preserveOrder = true,
-    dropNullKeys = true,
     mappingStyle = Printer.FlowStyle.Block,
     splitLines = true,
     stringStyle = Printer.StringStyle.DoubleQuoted
   )
 
   val metaFilename: String = ".config.vsh.yaml"
+
+  def configToCleanJson(config: Config): Json = {
+    val encodedConfig: Json = encodeConfig(config)
+    // drop empty & null values recursively except all "info" fields
+    val cleanEncodedConfig = encodedConfig.dropEmptyRecursivelyExcept(Seq("info"))
+    // get config.info and *do* clean it
+    cleanEncodedConfig.mapObject(_.map{
+      case ("info", v) => ("info", v.dropEmptyRecursively)
+      case other => other
+    })
+  }
 
   def toMetaFile(config: Config, buildDir: Option[Path]): PlainFile = {
     // get resources
@@ -66,7 +79,7 @@ object ConfigMeta {
     )
 
     // convert config to yaml
-    val configYamlStr = printer.pretty(encodeConfig(toWriteConfig))
+    val configYamlStr = printer.pretty(configToCleanJson(toWriteConfig))
 
     // replace text placeholders with nice multiline string
     val configYamlStr2 = placeholderMap.foldLeft(configYamlStr) {

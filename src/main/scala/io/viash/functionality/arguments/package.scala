@@ -21,8 +21,6 @@ import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import cats.syntax.functor._ // for .widen
 
-import java.nio.file.Paths
-
 package object arguments {
 
   import io.viash.helpers.circe._
@@ -45,22 +43,6 @@ package object arguments {
         case a => a.map(_.toDouble)
       }
     }
-
-  // encoder and decoder for java.io.File
-  implicit val encodeFile: Encoder[java.io.File] = Encoder.instance {
-    file => Json.fromString(file.getPath)
-  }
-  implicit val decodeFile: Decoder[java.io.File] = Decoder.instance {
-    cursor => cursor.value.as[String].map(new java.io.File(_))
-  }
-
-  // encoder and decoder for java.nio.file.Path
-  implicit val encodePath: Encoder[java.nio.file.Path] = Encoder.instance {
-    file => Json.fromString(file.toString)
-  }
-  implicit val decodePath: Decoder[java.nio.file.Path] = Decoder.instance {
-    cursor => cursor.value.as[String].map(Paths.get(_))
-  }
 
   // encoder and decoder for direction
   implicit val encodeDirection: Encoder[Direction] = Encoder.instance {

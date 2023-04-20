@@ -33,18 +33,40 @@ import java.util.Comparator
 import java.io.FileNotFoundException
 import scala.jdk.CollectionConverters._
 
+/**
+ * IO helper object for handling various file and directory operations.
+ */
 object IO {
+
+  /**
+   * Returns the temporary directory path.
+   *
+   * @return a Path representing the temporary directory
+   */
   def tempDir: Path = {
     Paths.get(scala.util.Properties.envOrElse("VIASH_TEMP", "/tmp")).toAbsolutePath()
   }
+
+  /**
+   * Creates a temporary directory with the specified name in the parent directory.
+   *
+   * @param name the name of the temporary directory
+   * @param parentTempPath the optional parent directory for the temporary directory
+   * @return the temporary directory path
+   */
   def makeTemp(name: String, parentTempPath: Option[Path] = None): Path = {
-    val workTempDir = parentTempPath.getOrElse(tempDir)
+    val workTempDir = parentTempPath.getOrElse(this.tempDir)
     if (!Files.exists(workTempDir)) Files.createDirectories(workTempDir)
     val temp = Files.createTempDirectory(workTempDir, name)
     Files.createDirectories(temp)
     temp
   }
 
+  /**
+   * Deletes a directory and its contents recursively.
+   *
+   * @param dir the path of the directory to be deleted
+   */
   def deleteRecursively(dir: Path): Unit = {
     Files.walkFileTree(dir, new SimpleFileVisitor[Path] {
       override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
@@ -79,10 +101,22 @@ object IO {
 
   private val uriRegex = "^[a-zA-Z0-9]*:".r
 
+  /**
+   * Creates a URI object from a given path.
+   *
+   * @param path the path to create the URI from
+   * @return a URI object
+   */
   def uri(path: String): URI = {
     if (uriRegex.findFirstIn(path).isDefined) new URI(path) else new File(path).toURI()
   }
 
+  /**
+   * Reads the content of a URI.
+   *
+   * @param uri the URI to read from
+   * @return a String containing the content of the URI
+   */
   def read(uri: URI): String = {
     val txtSource =
       if (uri.getScheme == "file") {
@@ -97,34 +131,31 @@ object IO {
     }
   }
 
+  /**
+   * Reads the content of a URI and returns an Option.
+   *
+   * @param uri the URI to read from
+   * @return an Option containing the content of the URI or None if an exception occurs
+   */
   def readSome(uri: URI): Option[String] = {
     try {
       Some(read(uri))
     } catch {
       case _: Exception =>
-        println(s"File at URI '$uri' not found")
-        // println()
-        // println("###################")
-        // println("Exception:")
-        // println(e)
-        // println("###################")
-
-        // def getListOfFiles(d: File): List[File] = {
-        //   if (d.exists && d.isDirectory) {
-        //     d.listFiles.filter(_.isFile).toList
-        //   } else {
-        //     List[File]()
-        //   }
-        // }
-        // println("Files in directory:")
-        // val dir = Paths.get(uri).getParent().toFile()
-        // println(getListOfFiles(dir).mkString("  * ", "\n  * ", ""))
-        // println("###################")
-
+        Console.err.println(s"File at URI '$uri' not found")
         None
-      }
+    }
   }
 
+  /**
+   * Writes content from a URI to a path.
+   *
+   * @param uri the URI containing the content to be written
+   * @param path the path to write the content to
+   * @param overwrite flag to indicate whether to overwrite existing content
+   * @param executable an optional flag to set the file as executable
+   * @return the destination path
+   */
   def write(uri: URI, path: Path, overwrite: Boolean, executable: Option[Boolean]): Path = {
     if (overwrite && Files.exists(path)) {
       if (Files.isDirectory(path)) {
@@ -166,6 +197,15 @@ object IO {
     path
   }
 
+  /**
+   * Writes a string to a specified path.
+   *
+   * @param text the content to be written
+   * @param path the destination path
+   * @param overwrite flag to indicate whether to overwrite existing content
+   * @param executable an optional flag to set the file as executable
+   * @return the destination path
+   */
   def write(
     text: String, 
     path: Path, 
@@ -192,6 +232,13 @@ object IO {
     path
   }
 
+  /**
+   * Writes resources to an output directory.
+   *
+   * @param resources a sequence of resources to be written
+   * @param outputDir the output directory path
+   * @param overwrite flag to indicate whether to overwrite existing content
+   */
   def writeResources(
     resources: Seq[Resource],
     outputDir: Path,
@@ -214,6 +261,12 @@ object IO {
     }
   }
 
+  /**
+   * Sets file permissions for a given path.
+   *
+   * @param path the file path
+   * @param executable an optional flag to set the file as executable
+   */
   def setPerms(path: Path, executable: Option[Boolean]): Unit = {
     if (executable.isDefined) {
       val perms = Files.getPosixFilePermissions(path)
@@ -230,11 +283,44 @@ object IO {
     }
   }
   
+  
   /**
-   * Find all files in a directory and filter according to their properties.
+   * Finds files in a directory based on the specified filter.
+   *
+   * @param sourceDir the source directory path
+   * @param filter a function to filter the files based on their attributes
+   * @return a list of paths that match the filter
    */
   def find(sourceDir: Path, filter: (Path, BasicFileAttributes) => Boolean): List[Path] = {
     val it = Files.find(sourceDir, Integer.MAX_VALUE, (p, b) => filter(p, b)).iterator()
     it.asScala.toList
+  }
+
+  /**
+    * Resolve a path with respect to a URI.
+    *
+    * @param path A string containing an absolute path
+    * @param uri The URI to resolve to.
+    * @return A modified path.
+    */
+  def resolvePathWrtURI(path: String, uri: URI): String = {
+    assert(path.startsWith("/"), "resolvePathWrtURI() should only be called when path starts with a '/'.")
+    path.stripPrefix("/")
+  }
+
+  /**
+    * Resolve a project-relative path w.r.t. the project uri
+    * 
+    * @param path A string containing an absolute path
+    * @param projectURI The project URI to resolve to
+    * @return A modified path as a URI.
+    */
+  def resolveProjectPath(path: String, projectURI: Option[URI]): URI = {
+    if (projectURI.isEmpty) {
+      throw new RuntimeException(s"One of the resources is relative to the project root ($path), but no project config file (_viash.yaml) could be found.")
+    }
+    val uri = projectURI.get
+    val newPath = resolvePathWrtURI(path, uri)
+    uri.resolve(newPath)
   }
 }
