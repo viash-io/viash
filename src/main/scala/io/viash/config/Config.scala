@@ -216,10 +216,10 @@ object Config {
     // convert Json into Config
     val conf0 = json2.as[Config].fold(parsingErrorHandler, identity)
 
-    /* CONFIG 1: make resources absolute */
-    // make paths absolute
-    val resources = conf0.functionality.resources.map(_.copyWithAbsolutePath(uri, projectDir))
-    val tests = conf0.functionality.test_resources.map(_.copyWithAbsolutePath(uri, projectDir))
+    /* CONFIG 1: store parent path in resource to be able to access them in the future */
+    val parentURI = uri.resolve("")
+    val resources = conf0.functionality.resources.map(_.copyWithAbsolutePath(parentURI, projectDir))
+    val tests = conf0.functionality.test_resources.map(_.copyWithAbsolutePath(parentURI, projectDir))
 
     // copy resources with updated paths into config and return
     val conf1 = conf0.copy(
