@@ -1,3 +1,7 @@
+# Viash 0.7.4 (yyyy-MM-dd): TODO Add title
+
+TODO add summary
+
 # Viash 0.7.3 (2023-04-19): Minor bug fixes in documentation and config view
 
 Fix minor issues in the documentation and with the way parent paths of resources are printed a config view.
