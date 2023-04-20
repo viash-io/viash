@@ -224,7 +224,7 @@ object BashWrapper {
       .mkString("# ", "\n# ", "")
 
     val (localDependencies, remoteDependencies) = config.functionality.dependencies
-      .partition(d => d.isLocalDependency && d.writtenPath.isEmpty)
+      .partition(d => d.isLocalDependency)
     val localDependenciesStrings = localDependencies.map{d =>
       // Go up the same amount of times that the namespace strategy specifies during the build step so we can go down to the local dependency folder
       val up = ViashNamespace.targetOutputPath("", "..", config.functionality.namespace.map(ns => ".."), "..")
