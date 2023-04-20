@@ -118,6 +118,7 @@ case class GithubRepository(
 
   lazy val fullUri = s"git@github.com:$uri.git"
 
+  // Clone of single branch with depth 1 but without checking out files
   def checkoutSparse(): GithubRepository = {
     val temporaryFolder = IO.makeTemp("viash_hub_repo")
     val cwd = Some(temporaryFolder.toFile)
@@ -140,6 +141,7 @@ case class GithubRepository(
     copy(localPath = temporaryFolder.toString)
   }
 
+  // Checkout of files from already cloned repository. Limit file checkout to the path that was specified
   def checkout(): GithubRepository = {
     val checkoutName = "origin/" + tag.getOrElse("HEAD")
     val pathStr = path.getOrElse(".")
@@ -158,6 +160,7 @@ case class GithubRepository(
       this
   }
 
+  // Get the repository part of where dependencies should be located in the target/dependencies folder
   def subOutputPath: String = Paths.get(`type`, uri, tag.getOrElse("")).toString()
 }
 

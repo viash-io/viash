@@ -76,38 +76,38 @@ case class Dependency(
   @description("Location of the dependency component artifacts are written ready to be used.")
   writtenPath: Option[String] = None,
 ) {
+  // Shorthand for getting the actual repository from 'repository'.
+  // The lefthand string notation is converted to the righthand object during dependency resolution.
+  // So after that step we must always use the righthand object. This makes that much easier.
   def workRepository: Option[Repository] = repository.toOption
 
   // Name in BashWrapper
   def VIASH_DEP: String = s"VIASH_DEP_${name.replace("/", "_").toUpperCase()}"
   // Name to be used in scripts
   def scriptName: String = name.replace("/", "_")
-  // Part of the folder structure where dependencies should be written to
+  // Part of the folder structure where dependencies should be written to, contains the repository & dependency name
   def subOutputPath = foundConfigPath.flatMap(fcp => getRelativePath(Paths.get(fcp).getParent()))
   // Method to get a relative sub path for this dependency or a local dependency of this dependency
   def getRelativePath(fullPath: Path): Option[String] = {
     if (isLocalDependency) {
+      // Local dependency so it will only exist once the component is built.
       // TODO improve this, for one, the platform id should be dynamic
       workRepository.map(r => ViashNamespace.targetOutputPath(r.subOutputPath, "native", None, name))
     } else {
+      // Previous existing dependency. Use the location of the '.build.yaml' to determine the relative location.
       val pathRoot = findBuildYamlFile(fullPath, Paths.get(workRepository.get.localPath)).map(_.getParent())
       val relativePath = pathRoot.map(pr => fullPath.toString().stripPrefix(pr.toString()))
       relativePath.flatMap(rp => workRepository.map(r => Paths.get(r.subOutputPath, rp).toString()))
     }
   }
 
+  // Is this a dependency that will be built when `viash ns build` is run?
   def isLocalDependency: Boolean = workRepository.map{
     case r: LocalRepository => (r.path == None || r.path == Some(".")) && r.tag == None
     case _ => false
   }.getOrElse(false)
 
-  def buildYamlPath = {
-    if (foundConfigPath.isDefined && workRepository.isDefined)
-      findBuildYamlFile(Paths.get(foundConfigPath.get), Paths.get(workRepository.get.localPath)).map(_.getParent())
-    else
-      None
-  }
-
+  // Traverse the folder upwards until a `.build.yaml` is found but do not traverse beyond `repoPath`.
   def findBuildYamlFile(path: Path, repoPath: Path): Option[Path] = {
     val child = path.resolve(".build.yaml")
     if (Files.isDirectory(path) && Files.exists(child)) {

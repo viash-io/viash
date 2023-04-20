@@ -226,7 +226,6 @@ object DependencyResolver {
   }
 
   // Read a config file from a built target. Extract dependencies 'writtenPath'.
-  // TODO local namespace dependencies currently don't have a writtenPath filled in. Either fill in in a build step or deduce the path some other way.
   def getSparseDependencyInfo(configPath: String): List[String] = {
     try {
       val yamlText = IO.read(IO.uri(configPath))
@@ -239,6 +238,7 @@ object DependencyResolver {
     }
   }
 
+  // Add the '.build.yaml' file as relative root marker. File content to be decided.
   def createBuildYaml(output: String): Unit = {
     Files.createDirectories(Paths.get(output))
     val filePath = Paths.get(output, ".build.yaml")
@@ -246,8 +246,10 @@ object DependencyResolver {
       Files.createFile(filePath)
   }
 
+  // Handle dependencies of dependencies. For a given already built component, get their dependencies, copy them to our new target folder and recurse into these.
   def recurseBuiltDependencies(output: String, repoPath: String, builtDependencyPath: String, dependency: Dependency, depth: Int = 0): Unit = {
 
+    // Limit recursion depth to prevent infinite loops in e.g. cross dependencies (TODO)
     if (depth > 10)
       throw new RuntimeException("Copying dependencies traces too deep. Possibibly caused by a cross dependency.")
 
@@ -258,9 +260,12 @@ object DependencyResolver {
       val sourcePath = Paths.get(repoPath, dp)
       // Split the path into chunks so we can manipulate them more easily
       val pathParts = Paths.get(dp).iterator().asScala.toList.map(p => p.toString())
+
+      // If we're copying a dependency that was already a dependency, we need to copy from the dependency folder
       val destPath = if (pathParts.contains("dependencies")) {
+        // TODO can we use the new dependency.getRelativePath method to do this in a smarter way?
         // Drop the other "target" folder from the found path. This can be multiple folders too
-        Paths.get(output, pathParts.dropWhile(s => s != "dependencies"):_*)
+        Paths.get(output, pathParts.dropWhile(s => s != "dependencies"): _*)
       } else {
         val subPath = dependency.getRelativePath(Paths.get(dp))
         Paths.get(output, "dependencies", subPath.get)
