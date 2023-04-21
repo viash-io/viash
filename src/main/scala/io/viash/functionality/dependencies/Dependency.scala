@@ -92,7 +92,7 @@ case class Dependency(
     if (isLocalDependency) {
       // Local dependency so it will only exist once the component is built.
       // TODO improve this, for one, the platform id should be dynamic
-      workRepository.map(r => ViashNamespace.targetOutputPath("", "native", None, name))
+      Some(ViashNamespace.targetOutputPath("", "native", None, name))
     } else {
       // Previous existing dependency. Use the location of the '.build.yaml' to determine the relative location.
       val pathRoot = findBuildYamlFile(fullPath, Paths.get(workRepository.get.localPath)).map(_.getParent())
