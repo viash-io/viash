@@ -33,14 +33,14 @@ def getChild(parent, child) {
 
 def readCsv(file_path) {
   def output = []
-  def inputFile = file_path !instanceof File ? file(file_path) : file_path
+  def inputFile = file_path !instanceof Path ? file(file_path) : file_path
 
   // todo: allow escaped quotes in string
   // todo: allow single quotes?
   def splitRegex = Pattern.compile(''',(?=(?:[^"]*"[^"]*")*[^"]*$)''')
   def removeQuote = Pattern.compile('''"(.*)"''')
 
-  def br = new BufferedReader(new FileReader(inputFile))
+  def br = new BufferedReader(new FileReader(inputFile.toFile()))
 
   def row = -1
   def header = null
@@ -88,7 +88,7 @@ def readJsonBlob(str) {
 }
 
 def readJson(file_path) {
-  def inputFile = file_path !instanceof File ? file(file_path) : file_path
+  def inputFile = file_path !instanceof Path ? file(file_path) : file_path
   def jsonSlurper = new JsonSlurper()
   jsonSlurper.parse(inputFile)
 }
@@ -99,7 +99,7 @@ def readYamlBlob(str) {
 }
 
 def readYaml(file_path) {
-  def inputFile = file_path !instanceof File ? file(file_path) : file_path
+  def inputFile = file_path !instanceof Path ? file(file_path) : file_path
   def yamlSlurper = new Yaml()
   yamlSlurper.load(inputFile)
 }
