@@ -267,7 +267,7 @@ object DependencyResolver {
         // Drop the other "target" folder from the found path. This can be multiple folders too
         Paths.get(output, pathParts.dropWhile(s => s != "dependencies"): _*)
       } else {
-        val subPath = dependency.getRelativePath(Paths.get(dp))
+        val subPath = dependency.getRelativePath(sourcePath)
         Paths.get(output, "dependencies", subPath.get)
       }
 

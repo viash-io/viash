@@ -95,7 +95,7 @@ case class Dependency(
       Some(ViashNamespace.targetOutputPath("", "native", None, name))
     } else {
       // Previous existing dependency. Use the location of the '.build.yaml' to determine the relative location.
-      val pathRoot = findBuildYamlFile(fullPath, Paths.get(workRepository.get.localPath)).map(_.getParent())
+      val pathRoot = Dependency.findBuildYamlFile(fullPath, Paths.get(workRepository.get.localPath)).map(_.getParent())
       val relativePath = pathRoot.map(pr => fullPath.toString().stripPrefix(pr.toString()))
       relativePath.flatMap(rp => workRepository.map(r => Paths.get(r.subOutputPath, rp).toString()))
     }
@@ -106,6 +106,9 @@ case class Dependency(
     case r: LocalRepository => (r.path == None || r.path == Some(".")) && r.tag == None
     case _ => false
   }.getOrElse(false)
+}
+
+object Dependency {
 
   // Traverse the folder upwards until a `.build.yaml` is found but do not traverse beyond `repoPath`.
   def findBuildYamlFile(path: Path, repoPath: Path): Option[Path] = {
@@ -121,4 +124,5 @@ case class Dependency(
       }
     }
   }
+
 }
