@@ -95,8 +95,7 @@ case class Dependency(
       Some(ViashNamespace.targetOutputPath("", "native", None, name))
     } else {
       // Previous existing dependency. Use the location of the '.build.yaml' to determine the relative location.
-      val pathRoot = Dependency.findBuildYamlFile(fullPath, Paths.get(workRepository.get.localPath)).map(_.getParent())
-      val relativePath = pathRoot.map(pr => fullPath.toString().stripPrefix(pr.toString()))
+      val relativePath = Dependency.getRelativePath(fullPath, Paths.get(workRepository.get.localPath))
       relativePath.flatMap(rp => workRepository.map(r => Paths.get(r.subOutputPath, rp).toString()))
     }
   }
@@ -109,6 +108,12 @@ case class Dependency(
 }
 
 object Dependency {
+
+  // From a built dependency's writtenPath, strip the target folder. Uses `.build.yaml` as reference.
+  def getRelativePath(sourcePath: Path, repoPath: Path): Option[String] = {
+    val pathRoot = findBuildYamlFile(sourcePath, repoPath).map(_.getParent)
+    pathRoot.map(pr => sourcePath.toString().stripPrefix(pr.toString()).stripPrefix("/"))
+  }
 
   // Traverse the folder upwards until a `.build.yaml` is found but do not traverse beyond `repoPath`.
   def findBuildYamlFile(path: Path, repoPath: Path): Option[Path] = {

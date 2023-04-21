@@ -122,7 +122,7 @@ object DependencyResolver {
           IO.copyFolder(dependencyRepoPath, dependencyOutputPath)
           // Copy dependencies of dependencies, all the way down
           // Parse new location of the copied dependency. That way that path can be used to determine the new location of namespace dependencies
-          recurseBuiltDependencies(output, dep.workRepository.get.localPath, dependencyOutputPath.toString(), dep)
+          recurseBuiltDependencies(Paths.get(output), Paths.get(dep.workRepository.get.localPath), dependencyOutputPath.toString(), dep)
         }
         else {
           Console.err.println(s"Could not find dependency artifacts for ${dep.name}. Skipping copying dependency artifacts.")
@@ -247,7 +247,7 @@ object DependencyResolver {
   }
 
   // Handle dependencies of dependencies. For a given already built component, get their dependencies, copy them to our new target folder and recurse into these.
-  def recurseBuiltDependencies(output: String, repoPath: String, builtDependencyPath: String, dependency: Dependency, depth: Int = 0): Unit = {
+  def recurseBuiltDependencies(output: Path, repoPath: Path, builtDependencyPath: String, dependency: Dependency, depth: Int = 0): Unit = {
 
     // Limit recursion depth to prevent infinite loops in e.g. cross dependencies (TODO)
     if (depth > 10)
@@ -257,18 +257,19 @@ object DependencyResolver {
     val dependencyPaths = getSparseDependencyInfo(builtDependencyPath + "/.config.vsh.yaml")
 
     for(dp <- dependencyPaths) {
-      val sourcePath = Paths.get(repoPath, dp)
+      val sourcePath = repoPath.resolve(dp)
       // Split the path into chunks so we can manipulate them more easily
       val pathParts = Paths.get(dp).iterator().asScala.toList.map(p => p.toString())
 
       // If we're copying a dependency that was already a dependency, we need to copy from the dependency folder
+      // TODO find other way to handle this in a bit cleaner way. What if a dependency is called 'dependencies'?
       val destPath = if (pathParts.contains("dependencies")) {
-        // TODO can we use the new dependency.getRelativePath method to do this in a smarter way?
         // Drop the other "target" folder from the found path. This can be multiple folders too
-        Paths.get(output, pathParts.dropWhile(s => s != "dependencies"): _*)
+        val relativePath = Dependency.getRelativePath(sourcePath,repoPath)
+        output.resolve(relativePath.get)
       } else {
         val subPath = dependency.getRelativePath(sourcePath)
-        Paths.get(output, "dependencies", subPath.get)
+        output.resolve("dependencies").resolve(subPath.get)
       }
 
       // Make sure the destination is clean so first remove the destination folder if it exists
