@@ -31,9 +31,9 @@ def getChild(parent, child) {
   }
 }
 
-def readCsv(file) {
+def readCsv(file_path) {
   def output = []
-  def inputFile = file !instanceof File ? new File(file) : file
+  def inputFile = file_path !instanceof File ? file(file_path) : file_path
 
   // todo: allow escaped quotes in string
   // todo: allow single quotes?
@@ -87,8 +87,8 @@ def readJsonBlob(str) {
   jsonSlurper.parseText(str)
 }
 
-def readJson(file) {
-  def inputFile = file !instanceof File ? new File(file) : file
+def readJson(file_path) {
+  def inputFile = file_path !instanceof File ? file(file_path) : file_path
   def jsonSlurper = new JsonSlurper()
   jsonSlurper.parse(inputFile)
 }
@@ -98,8 +98,8 @@ def readYamlBlob(str) {
   yamlSlurper.load(str)
 }
 
-def readYaml(file) {
-  def inputFile = file !instanceof File ? new File(file) : file
+def readYaml(file_path) {
+  def inputFile = file_path !instanceof File ? file(file_path) : file_path
   def yamlSlurper = new Yaml()
   yamlSlurper.load(inputFile)
 }
