@@ -265,7 +265,7 @@ object DependencyResolver {
       // TODO find other way to handle this in a bit cleaner way. What if a dependency is called 'dependencies'?
       val destPath = if (pathParts.contains("dependencies")) {
         // Drop the other "target" folder from the found path. This can be multiple folders too
-        val relativePath = Dependency.getRelativePath(sourcePath,repoPath)
+        val relativePath = Dependency.getRelativePath(sourcePath, repoPath)
         output.resolve(relativePath.get)
       } else {
         val subPath = dependency.getRelativePath(sourcePath)
