@@ -146,7 +146,7 @@ object DependencyResolver {
     config.map{ c =>
       val path = c.info.get.config
       // fill in the location of the executable where it will be located
-      val executable = ViashNamespace.targetOutputPath("", platform.get.id, c.functionality.namespace, c.functionality.name)
+      val executable = Paths.get(ViashNamespace.targetOutputPath("", platform.get.id, c.functionality.namespace, c.functionality.name), c.functionality.name).toString()
       val info = c.info.get.copy(executable = Some(executable))
       val map = (info.productElementNames zip info.productIterator).map{
           case (k, s: String) => (k, s)
