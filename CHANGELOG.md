@@ -209,7 +209,7 @@ The most notable changes are:
 * Introducing Viash project config files as an experimental feature.
   It allows storing project-related settings in a `_viash.yaml` 
   config file which you should store at the root of your repository.
-  Example:{platform}
+  Example:
 
   ```yaml
   viash_version: 0.6.4
