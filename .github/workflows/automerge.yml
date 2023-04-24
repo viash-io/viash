@@ -21,4 +21,5 @@ jobs:
           body: "This PR is automatically generated to keep `develop-hub` up-to-date with `develop`."
           base: develop
           branch: develop-hub
-          labels: automerge
+          # labels: automerge
+          # yay or nay?
