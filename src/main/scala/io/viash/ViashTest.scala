@@ -87,7 +87,7 @@ object ViashTest {
 
     // Make dependencies available for the tests
     DependencyResolver.createBuildYaml(dir.toString())
-    val config3 = DependencyResolver.copyDependencies(config2, dir.toString(), Some(platform))
+    val config3 = DependencyResolver.copyDependencies(config2, dir.toString(), platform.id)
 
     // run tests
     val ManyTestOutput(setupRes, results) = ViashTest.runTests(

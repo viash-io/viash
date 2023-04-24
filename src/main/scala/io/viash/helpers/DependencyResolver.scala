@@ -27,7 +27,6 @@ import io.viash.functionality.dependencies.GithubRepository
 import java.nio.file.Files
 import java.io.IOException
 import java.io.UncheckedIOException
-import io.viash.platforms.Platform
 import io.viash.helpers.IO
 import io.circe.yaml.parser
 import io.circe.Json
@@ -40,7 +39,7 @@ import io.viash.functionality.dependencies.Dependency
 object DependencyResolver {
 
   // Modify the config so all of the dependencies are available locally
-  def modifyConfig(config: Config, platform: Option[Platform], namespaceConfigs: List[Config] = Nil): Config = {
+  def modifyConfig(config: Config, platformId: Option[String], namespaceConfigs: List[Config] = Nil): Config = {
 
     // Check all fun.repositories have valid names
     val repositories = config.functionality.repositories
@@ -89,8 +88,8 @@ object DependencyResolver {
       .map{dep =>
         val repo = dep.workRepository.get
         val config = dep.isLocalDependency match {
-          case true => findLocalConfig(repo.localPath.toString(), namespaceConfigs, dep.name, platform)
-          case false => findRemoteConfig(repo.localPath.toString(), dep.name, platform)
+          case true => findLocalConfig(repo.localPath.toString(), namespaceConfigs, dep.name, platformId)
+          case false => findRemoteConfig(repo.localPath.toString(), dep.name, platformId)
         }
 
         dep.copy(foundConfigPath = config.map(_._1), configInfo = config.map(_._2).getOrElse(Map.empty))
@@ -100,13 +99,13 @@ object DependencyResolver {
     config4
   }
 
-  def copyDependencies(config: Config, output: String, platform: Option[Platform], buildingNamespace: Boolean = false): Config = {
+  def copyDependencies(config: Config, output: String, platformId: String, buildingNamespace: Boolean = false): Config = {
     composedDependenciesLens.modify(_.map(dep => {
 
       if (dep.isLocalDependency && buildingNamespace) {
         // Dependency solving will be done by building the component and dependencies of that component will be handled there.
         // However, we have to fill in writtenPath. This will be needed when this built component is used as a dependency and we have to resolve dependencies of dependencies.
-        val writtenPath = ViashNamespace.targetOutputPath(output, platform.get.id, None, dep.name)
+        val writtenPath = ViashNamespace.targetOutputPath(output, platformId, None, dep.name)
         dep.copy(writtenPath = Some(writtenPath))
       } else {
         // copy the dependency to the output folder
@@ -115,7 +114,6 @@ object DependencyResolver {
           IO.deleteRecursively(dependencyOutputPath)
         Files.createDirectories(dependencyOutputPath)
         
-        val platformId = platform.map(_.id).getOrElse("")
         if (dep.foundConfigPath.isDefined) {
           val dependencyRepoPath = Paths.get(dep.foundConfigPath.get).getParent()
           // Copy dependencies
@@ -135,7 +133,7 @@ object DependencyResolver {
   }
 
   // Find configs from the local repository. These still need to be built so we have to deduce the information we want.
-  def findLocalConfig(targetDir: String, namespaceConfigs: List[Config], name: String, platform: Option[Platform]): Option[(String, Map[String, String])] = {
+  def findLocalConfig(targetDir: String, namespaceConfigs: List[Config], name: String, platformId: Option[String]): Option[(String, Map[String, String])] = {
 
     val config = namespaceConfigs.filter{ c => 
         val fullName = c.functionality.namespace.fold("")(n => n + "/") + c.functionality.name
@@ -146,7 +144,7 @@ object DependencyResolver {
     config.map{ c =>
       val path = c.info.get.config
       // fill in the location of the executable where it will be located
-      val executable = Paths.get(ViashNamespace.targetOutputPath("", platform.get.id, c.functionality.namespace, c.functionality.name), c.functionality.name).toString()
+      val executable = Paths.get(ViashNamespace.targetOutputPath("", platformId.get, c.functionality.namespace, c.functionality.name), c.functionality.name).toString()
       val info = c.info.get.copy(executable = Some(executable))
       val map = (info.productElementNames zip info.productIterator).map{
           case (k, s: String) => (k, s)
@@ -158,7 +156,7 @@ object DependencyResolver {
   }
 
   // Read built config artifact in a minimalistic way. This prevents minor schema changes breaking things.
-  def findRemoteConfig(path: String, name: String, platform: Option[Platform]): Option[(String, Map[String, String])] = {
+  def findRemoteConfig(path: String, name: String, platformId: Option[String]): Option[(String, Map[String, String])] = {
     if (!Files.exists(Paths.get(path)))
       return None
 
@@ -183,9 +181,9 @@ object DependencyResolver {
       }
       .filter{
         case(scriptPath, info) =>
-          platform match {
+          platformId match {
             case None => true
-            case Some(p) => info("platform") == p.id
+            case Some(p) => info("platform") == p
           }
       }
       .headOption
