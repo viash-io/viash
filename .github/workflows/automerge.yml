@@ -1,0 +1,26 @@
+name: Create PR from develop-hub to develop branch
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  create_pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "Merge develop into develop-hub"
+          body: "This PR is automatically generated to keep `develop-hub` up-to-date with `develop`."
+          source: develop
+          target: develop-hub
+          labels: automerge
+          draft: false
