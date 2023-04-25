@@ -12,12 +12,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Get latest changes
+        run: |
+          git fetch origin develop-hub:develop-hub
+          git reset --hard develop-hub
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
           title: "Merge develop into develop-hub"
           body: "This PR is automatically generated to keep `develop-hub` up-to-date with `develop`."
-          base: develop
           branch: develop-hub
-          # labels: automerge
-          # yay or nay?
+          reviewers: Grifs
