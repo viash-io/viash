@@ -32,7 +32,6 @@ import io.circe.yaml.parser
 import io.circe.Json
 import io.viash.config.Config._
 import io.viash.ViashNamespace
-import scala.jdk.CollectionConverters._
 import io.viash.functionality.dependencies.Dependency
 import io.viash.functionality.resources.NextflowScript
 
@@ -255,20 +254,9 @@ object DependencyResolver {
     val dependencyPaths = getSparseDependencyInfo(builtDependencyPath + "/.config.vsh.yaml")
 
     for(dp <- dependencyPaths) {
-      val sourcePath = repoPath.resolve(dp)
-      // Split the path into chunks so we can manipulate them more easily
-      val pathParts = Paths.get(dp).iterator().asScala.toList.map(p => p.toString())
-
-      // If we're copying a dependency that was already a dependency, we need to copy from the dependency folder
-      // TODO find other way to handle this in a bit cleaner way. What if a dependency is called 'dependencies'?
-      val destPath = if (pathParts.contains("dependencies")) {
-        // Drop the other "target" folder from the found path. This can be multiple folders too
-        val relativePath = Dependency.getRelativePath(sourcePath, repoPath)
-        output.resolve(relativePath.get)
-      } else {
-        val subPath = dependency.getRelativePath(sourcePath)
-        output.resolve("dependencies").resolve(subPath.get)
-      }
+      // Get the source & destination path for the dependency, functionality depends whether it was a previous dependency or not.
+      // Paths are relativized depending the original dependency.
+      val (sourcePath, destPath) = Dependency.getSourceAndDestinationFromWrittenPath(dp, output, repoPath, dependency)
 
       // Make sure the destination is clean so first remove the destination folder if it exists
       if (destPath.toFile().exists())

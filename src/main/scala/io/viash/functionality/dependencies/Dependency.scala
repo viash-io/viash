@@ -109,6 +109,26 @@ case class Dependency(
 
 object Dependency {
 
+  // Relativize the writtenPath info from a dependency to a source and destination path so it can be copied.
+  def getSourceAndDestinationFromWrittenPath(dependencyPath: String, output: Path, repoPath: Path, mainDependency: Dependency): (Path, Path) = {
+    import scala.jdk.CollectionConverters._
+
+    val sourcePath = repoPath.resolve(dependencyPath)
+    // Split the path into chunks so we can manipulate them more easily
+    val pathParts = Paths.get(dependencyPath).iterator().asScala.toList.map(p => p.toString())
+
+    val destinationPath = if (pathParts.contains("dependencies")) {
+      // Drop the other "target" folder from the found path. This can be multiple folders too
+      val relativePath = Dependency.getRelativePath(sourcePath, repoPath)
+      output.resolve(relativePath.get)
+    } else {
+      val subPath = mainDependency.getRelativePath(sourcePath)
+      output.resolve("dependencies").resolve(subPath.get)
+    }
+
+    (sourcePath, destinationPath)
+  }
+
   // From a built dependency's writtenPath, strip the target folder. Uses `.build.yaml` as reference.
   def getRelativePath(sourcePath: Path, repoPath: Path): Option[Path] = {
     val pathRoot = findBuildYamlFile(sourcePath, repoPath).map(_.getParent)
