@@ -34,7 +34,7 @@ import io.viash.config.Config._
 import io.viash.ViashNamespace
 import scala.jdk.CollectionConverters._
 import io.viash.functionality.dependencies.Dependency
-
+import io.viash.functionality.resources.NextflowScript
 
 object DependencyResolver {
 
@@ -281,6 +281,16 @@ object DependencyResolver {
       // Check for more dependencies
       recurseBuiltDependencies(output, repoPath, destPath.toString(), dependency, depth + 1)
     }
+  }
 
+  // Get the platform to be used for dependencies. If the main script is a Nextflow script, use 'nextflow', otherwise use 'native'.
+  // Exception is when there is no platform set for the config, then we must return 'None' too.
+  def getDependencyPlatformId(config: Config, platform: Option[String]): Option[String] = {
+    (config.functionality.mainScript, platform) match {
+      case (_, None) => None
+      case (None, _) => None
+      case (Some(n: NextflowScript), _) => Some("nextflow")
+      case _ => Some("native")
+    }
   }
 }
