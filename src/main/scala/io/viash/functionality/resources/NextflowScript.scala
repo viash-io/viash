@@ -21,12 +21,14 @@ import io.viash.functionality._
 import io.viash.schemas._
 
 import java.net.URI
+import java.nio.file.Paths
 import io.viash.functionality.arguments.Argument
 import io.viash.config.Config
 import io.viash.platforms.nextflow.NextflowHelper
 import io.viash.helpers.circe._
 import io.circe.syntax._
 import io.circe.{Printer => JsonPrinter}
+import io.viash.ViashNamespace
 
 @description("""A Nextflow script. Work in progress; added mainly for annotation at the moment.""".stripMargin)
 case class NextflowScript(
@@ -52,10 +54,17 @@ case class NextflowScript(
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
     val configPath = s"$$targetDir/${config.functionality.namespace.getOrElse("namespace")}/${config.functionality.name}/.config.vsh.yaml"
 
-    val dependenciesAndDirNames = config.functionality.dependencies.map(d => (d, d.repository.toOption.get.name))
-
-    val dirStrings = dependenciesAndDirNames.map(_._2).distinct.map(name => s"""${name}Dir = params.rootDir + "/module_${name}/target/nextflow"""")       
-    val depStrings = dependenciesAndDirNames.map{ case(dep, dir) => s"include { ${dep.configInfo("functionalityName")} } from ${dir}Dir + '/${dep.name}/main.nf'" }
+    val (localDependencies, remoteDependencies) = config.functionality.dependencies
+      .partition(d => d.isLocalDependency)
+    val localDependenciesStrings = localDependencies.map{ d =>
+      // Go up the same amount of times that the namespace strategy specifies during the build step so we can go down to the local dependency folder
+      val up = ViashNamespace.targetOutputPath("", "..", config.functionality.namespace.map(ns => ".."), "..")
+      val dependencyName = d.name.replaceFirst(".*/", "")
+      s"include { ${dependencyName} } from \"$$projectDir$up${d.configInfo.getOrElse("executable", "")}\""
+    }
+    val remoteDependenciesStrings = remoteDependencies.map{ d => 
+      s"include { ${d.configInfo("functionalityName")} } from \"$$rootDir/dependencies/${d.subOutputPath.get}/main.nf\""
+    }
 
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
     val funJson = config.asJson.dropEmptyRecursively
@@ -73,9 +82,9 @@ case class NextflowScript(
           |config = readJsonBlob($funJsonStr)
           |
           |// import dependencies
-          |${dirStrings.mkString("\n|")}
-          |
-          |${depStrings.mkString("\n|")}
+          |rootDir = getRootDir()
+          |${localDependenciesStrings.mkString("\n|")}
+          |${remoteDependenciesStrings.mkString("\n|")}
           |
           |workflow {
           |  helpMessage(config)
