@@ -23,6 +23,10 @@ import io.viash.schemas._
 import java.net.URI
 import io.viash.functionality.arguments.Argument
 import io.viash.config.Config
+import io.viash.platforms.nextflow.NextflowHelper
+import io.viash.helpers.circe._
+import io.circe.syntax._
+import io.circe.{Printer => JsonPrinter}
 
 @description("""A Nextflow script. Work in progress; added mainly for annotation at the moment.""".stripMargin)
 case class NextflowScript(
@@ -53,16 +57,20 @@ case class NextflowScript(
     val dirStrings = dependenciesAndDirNames.map(_._2).distinct.map(name => s"""${name}Dir = params.rootDir + "/module_${name}/target/nextflow"""")       
     val depStrings = dependenciesAndDirNames.map{ case(dep, dir) => s"include { ${dep.configInfo("functionalityName")} } from ${dir}Dir + '/${dep.name}/main.nf'" }
 
+    val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
+    val funJson = config.asJson.dropEmptyRecursively
+    val funJsonStr = jsonPrinter.print(funJson)
+      .replace("\\\\", "\\\\\\\\")
+      .replace("\\\"", "\\\\\"")
+      .replace("'''", "\\'\\'\\'")
+      .grouped(65000) // JVM has a maximum string limit of 65535
+      .toList         // see https://stackoverflow.com/a/6856773
+      .mkString("'''", "''' + '''", "'''")
+
     val str = 
       s"""nextflow.enable.dsl=2
           |
-          |// or include these in the file itself?
-          |targetDir = params.rootDir + "/target/nextflow"
-          |
-          |include { readYaml; channelFromParams; preprocessInputs; helpMessage } from targetDir + "/helpers/WorkflowHelper.nf"
-          |include { setWorkflowArguments; getWorkflowArguments } from targetDir + "/helpers/DataflowHelper.nf"
-          |
-          |config = readYaml("$configPath")
+          |config = readJsonBlob($funJsonStr)
           |
           |// import dependencies
           |${dirStrings.mkString("\n|")}
@@ -84,13 +92,15 @@ case class NextflowScript(
           |  main:
           |  output_ch = input_ch
           |    | preprocessInputs(config: config)
-          |    | main
+          |    | main_wf
           |
           |  emit:
           |    output_ch
           |}
           |""".stripMargin
-    ScriptInjectionMods(params = str)    
+
+    val footer = Seq("// END CUSTOM CODE", NextflowHelper.workflowHelper, NextflowHelper.dataflowHelper).mkString("\n\n", "\n\n", "")
+    ScriptInjectionMods(params = str, footer = footer)
   }
 
   def command(script: String): String = {
