@@ -45,6 +45,8 @@ case class NextflowScript(
   `type`: String = NextflowScript.`type`
 ) extends Script {
   
+  assert(entrypoint.isDefined, "In a Nextflow script, the 'entrypoint' argument needs to be specified.")
+
   val companion = NextflowScript
 
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
@@ -100,7 +102,7 @@ case class NextflowScript(
           |  main:
           |  output_ch = input_ch
           |    | preprocessInputs(config: config)
-          |    | main_wf
+          |    | ${entrypoint.get}
           |
           |  emit:
           |    output_ch
