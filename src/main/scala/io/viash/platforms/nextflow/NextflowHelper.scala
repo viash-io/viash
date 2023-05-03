@@ -28,4 +28,5 @@ object NextflowHelper {
   lazy val vdsl3Helper: String = readSource("VDSL3Helper.nf")
   lazy val workflowHelper: String = readSource("WorkflowHelper.nf")
   lazy val profilesHelper: String = readSource("ProfilesHelper.config")
+  lazy val dataflowHelper: String = readSource("DataflowHelper.nf")
 }

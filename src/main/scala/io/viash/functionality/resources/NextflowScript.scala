@@ -21,8 +21,14 @@ import io.viash.functionality._
 import io.viash.schemas._
 
 import java.net.URI
+import java.nio.file.Paths
 import io.viash.functionality.arguments.Argument
 import io.viash.config.Config
+import io.viash.platforms.nextflow.NextflowHelper
+import io.viash.helpers.circe._
+import io.circe.syntax._
+import io.circe.{Printer => JsonPrinter}
+import io.viash.ViashNamespace
 
 @description("""A Nextflow script. Work in progress; added mainly for annotation at the moment.""".stripMargin)
 case class NextflowScript(
@@ -39,6 +45,8 @@ case class NextflowScript(
   `type`: String = NextflowScript.`type`
 ) extends Script {
   
+  assert(entrypoint.isDefined, "In a Nextflow script, the 'entrypoint' argument needs to be specified.")
+
   val companion = NextflowScript
 
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
@@ -48,26 +56,38 @@ case class NextflowScript(
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
     val configPath = s"$$targetDir/${config.functionality.namespace.getOrElse("namespace")}/${config.functionality.name}/.config.vsh.yaml"
 
-    val dependenciesAndDirNames = config.functionality.dependencies.map(d => (d, d.repository.toOption.get.name))
+    val (localDependencies, remoteDependencies) = config.functionality.dependencies
+      .partition(d => d.isLocalDependency)
+    val localDependenciesStrings = localDependencies.map{ d =>
+      // relativize the path of the main component to the local dependency
+      // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
+      val thisPath = ViashNamespace.targetOutputPath("", "invalid_platform_name", config.functionality.namespace, config.functionality.name)
+      val relativePath = Paths.get(thisPath).relativize(Paths.get(d.configInfo.getOrElse("executable", "")))
+      s"include { ${d.configInfo{"functionalityName"}} } from \"$$projectDir/$relativePath\""
+    }
+    val remoteDependenciesStrings = remoteDependencies.map{ d => 
+      s"include { ${d.configInfo("functionalityName")} } from \"$$rootDir/dependencies/${d.subOutputPath.get}/main.nf\""
+    }
 
-    val dirStrings = dependenciesAndDirNames.map(_._2).distinct.map(name => s"""${name}Dir = params.rootDir + "/module_${name}/target/nextflow"""")       
-    val depStrings = dependenciesAndDirNames.map{ case(dep, dir) => s"include { ${dep.configInfo("functionalityName")} } from ${dir}Dir + '/${dep.name}/main.nf'" }
+    val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
+    val funJson = config.asJson.dropEmptyRecursively
+    val funJsonStr = jsonPrinter.print(funJson)
+      .replace("\\\\", "\\\\\\\\")
+      .replace("\\\"", "\\\\\"")
+      .replace("'''", "\\'\\'\\'")
+      .grouped(65000) // JVM has a maximum string limit of 65535
+      .toList         // see https://stackoverflow.com/a/6856773
+      .mkString("'''", "''' + '''", "'''")
 
     val str = 
       s"""nextflow.enable.dsl=2
           |
-          |// or include these in the file itself?
-          |targetDir = params.rootDir + "/target/nextflow"
-          |
-          |include { readYaml; channelFromParams; preprocessInputs; helpMessage } from targetDir + "/helpers/WorkflowHelper.nf"
-          |include { setWorkflowArguments; getWorkflowArguments } from targetDir + "/helpers/DataflowHelper.nf"
-          |
-          |config = readYaml("$configPath")
+          |config = readJsonBlob($funJsonStr)
           |
           |// import dependencies
-          |${dirStrings.mkString("\n|")}
-          |
-          |${depStrings.mkString("\n|")}
+          |rootDir = getRootDir()
+          |${localDependenciesStrings.mkString("\n|")}
+          |${remoteDependenciesStrings.mkString("\n|")}
           |
           |workflow {
           |  helpMessage(config)
@@ -84,13 +104,15 @@ case class NextflowScript(
           |  main:
           |  output_ch = input_ch
           |    | preprocessInputs(config: config)
-          |    | main
+          |    | ${entrypoint.get}
           |
           |  emit:
           |    output_ch
           |}
           |""".stripMargin
-    ScriptInjectionMods(params = str)    
+
+    val footer = Seq("// END CUSTOM CODE", NextflowHelper.workflowHelper, NextflowHelper.dataflowHelper).mkString("\n\n", "\n\n", "")
+    ScriptInjectionMods(params = str, footer = footer)
   }
 
   def command(script: String): String = {

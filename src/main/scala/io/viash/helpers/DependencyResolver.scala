@@ -144,14 +144,21 @@ object DependencyResolver {
     config.map{ c =>
       val path = c.info.get.config
       // fill in the location of the executable where it will be located
-      val executable = Paths.get(ViashNamespace.targetOutputPath("", platformId.get, c.functionality.namespace, c.functionality.name), c.functionality.name).toString()
+      val executableName = platformId match {
+        case Some("nextflow") => "main.nf"
+        case _ => c.functionality.name
+      }
+      val executable = Paths.get(ViashNamespace.targetOutputPath("", platformId.get, c.functionality.namespace, c.functionality.name), executableName).toString()
       val info = c.info.get.copy(executable = Some(executable))
+      // Convert case class to map, do some extra conversions of Options while we're at it
       val map = (info.productElementNames zip info.productIterator).map{
           case (k, s: String) => (k, s)
           case (k, Some(s: String)) => (k, s)
           case (k, None) => (k, "")
         }.toMap
-      (path, map)
+      // Add the functionality name and namespace to it
+      val map2 = Map(("functionalityName" -> c.functionality.name), ("functionalityNamespace" -> c.functionality.namespace.getOrElse("")))
+      (path, map ++ map2)
     }
   }
 
@@ -166,12 +173,11 @@ object DependencyResolver {
         attrs.isRegularFile
     })
 
-    val scriptInfo = scriptFiles.map(scriptPath => {
-      val info = getSparseConfigInfo(scriptPath.toString())
-      (scriptPath, info)
-    })
+    val scriptInfo = scriptFiles
+      .map(_.toString())
+      .map(scriptPath => (scriptPath, getSparseConfigInfo(scriptPath)))
 
-    val script = scriptInfo
+    scriptInfo
       .filter{
         case(scriptPath, info) => 
           (info("functionalityNamespace"), info("functionalityName")) match {
@@ -187,8 +193,6 @@ object DependencyResolver {
           }
       }
       .headOption
-
-    script.map(t => (t._1.toString(), t._2))
   }
 
   // Read a config file from a built target. Get meta info, functionality name & namespace
