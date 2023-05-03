@@ -109,7 +109,17 @@ case class Dependency(
 
 object Dependency {
 
-  // Relativize the writtenPath info from a dependency to a source and destination path so it can be copied.
+  /**
+    * Relativize the writtenPath info from a dependency to a source and destination path so it can be copied.
+    * 
+    * This method is somewhat of a stopgap solution as this and the 'getRelativePath' functions in the case class and companion object should be revised.
+    *
+    * @param dependencyPath Path of the dependency as they are found in .config.vsh.yaml, relative to the original build location
+    * @param output Output / target path as root for where the build artifacts should be located
+    * @param repoPath Path of the repository where the dependency is found
+    * @param mainDependency Top level dependency for which optionally dependencies of dependencies are being resolved. Used to relativize paths
+    * @return Tuple with source and destination paths, relativized to current repository locations, ready to be copied
+    */
   def getSourceAndDestinationFromWrittenPath(dependencyPath: String, output: Path, repoPath: Path, mainDependency: Dependency): (Path, Path) = {
     import scala.jdk.CollectionConverters._
 
