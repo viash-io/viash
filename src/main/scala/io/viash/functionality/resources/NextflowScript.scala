@@ -59,8 +59,7 @@ case class NextflowScript(
     val localDependenciesStrings = localDependencies.map{ d =>
       // Go up the same amount of times that the namespace strategy specifies during the build step so we can go down to the local dependency folder
       val up = ViashNamespace.targetOutputPath("", "..", config.functionality.namespace.map(ns => ".."), "..")
-      val dependencyName = d.name.replaceFirst(".*/", "")
-      s"include { ${dependencyName} } from \"$$projectDir$up${d.configInfo.getOrElse("executable", "")}\""
+      s"include { ${d.configInfo{"functionalityName"}} } from \"$$projectDir$up${d.configInfo.getOrElse("executable", "")}\""
     }
     val remoteDependenciesStrings = remoteDependencies.map{ d => 
       s"include { ${d.configInfo("functionalityName")} } from \"$$rootDir/dependencies/${d.subOutputPath.get}/main.nf\""
