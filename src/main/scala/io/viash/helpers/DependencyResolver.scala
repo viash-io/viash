@@ -253,7 +253,7 @@ object DependencyResolver {
     // this returns paths relative to `repoPath` of dependencies to be copied to `output`
     val dependencyPaths = getSparseDependencyInfo(builtDependencyPath + "/.config.vsh.yaml")
 
-    for(dp <- dependencyPaths) {
+    for (dp <- dependencyPaths) {
       // Get the source & destination path for the dependency, functionality depends whether it was a previous dependency or not.
       // Paths are relativized depending the original dependency.
       val (sourcePath, destPath) = Dependency.getSourceAndDestinationFromWrittenPath(dp, output, repoPath, dependency)
