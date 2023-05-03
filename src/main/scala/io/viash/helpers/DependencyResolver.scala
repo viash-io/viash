@@ -144,10 +144,11 @@ object DependencyResolver {
     config.map{ c =>
       val path = c.info.get.config
       // fill in the location of the executable where it will be located
-      val executable = platformId match {
-        case Some("nextflow") => Paths.get(ViashNamespace.targetOutputPath("", platformId.get, c.functionality.namespace, c.functionality.name), "main.nf").toString()
-        case _ => Paths.get(ViashNamespace.targetOutputPath("", platformId.get, c.functionality.namespace, c.functionality.name), c.functionality.name).toString()
+      val executableName = platformId match {
+        case Some("nextflow") => "main.nf"
+        case _ => c.functionality.name
       }
+      val executable = Paths.get(ViashNamespace.targetOutputPath("", platformId.get, c.functionality.namespace, c.functionality.name), executableName).toString()
       val info = c.info.get.copy(executable = Some(executable))
       // Convert case class to map, do some extra conversions of Options while we're at it
       val map = (info.productElementNames zip info.productIterator).map{

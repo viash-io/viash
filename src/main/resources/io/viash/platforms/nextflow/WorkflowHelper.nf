@@ -13,11 +13,11 @@ import org.yaml.snakeyaml.Yaml
 
 // Recurse upwards until we find a '.build.yaml' file
 def findBuildYamlFile(path) {
-  child = path.resolve(".build.yaml")
+  def child = path.resolve(".build.yaml")
   if (Files.isDirectory(path) && Files.exists(child)) {
-  	return child
+    return child
   } else {
-    parent = path.getParent()
+    def parent = path.getParent()
     if (parent == null) {
       return null
     } else {
@@ -28,7 +28,7 @@ def findBuildYamlFile(path) {
 
 // get the root of the target folder
 def getRootDir() {
-  dir = findBuildYamlFile(projectDir.toAbsolutePath())
+  def dir = findBuildYamlFile(projectDir.toAbsolutePath())
   assert dir != null: "Could not find .build.yaml in the folder structure"
   dir.getParent()
 }
