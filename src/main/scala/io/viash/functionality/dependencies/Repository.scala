@@ -21,6 +21,7 @@ import io.viash.helpers.Exec
 import io.viash.helpers.IO
 import java.nio.file.Paths
 import io.viash.schemas._
+import java.nio.file.Path
 
 @description("Specifies a repository where dependency components can be found.")
 abstract class Repository {
@@ -62,14 +63,22 @@ object Repository {
     }
   }
 
-  def cache(repo: Repository): Repository = 
+  def cache(repo: Repository, configDir: Path, projectRootDir: Option[Path]): Repository = 
     repo match {
       case r: GithubRepository => {
         val r2 = r.checkoutSparse()
         r2.checkout()
       }
       case r: LocalRepository if r.path.isDefined => {
-        r.copyRepo(localPath = r.path.get)
+        val localPath = r.path.get match {
+          case s if s.startsWith("/") => 
+            // resolve path relative to the project root
+            IO.resolveProjectPath(s, projectRootDir.map(p => p.toUri())).getPath()
+          case s =>
+            // resolve path relative to the config file
+            configDir.resolve(s).toString()
+        }
+        r.copyRepo(localPath = localPath)
       }
       case r => r
     }

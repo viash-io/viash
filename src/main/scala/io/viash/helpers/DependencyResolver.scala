@@ -38,7 +38,7 @@ import io.viash.functionality.resources.NextflowScript
 object DependencyResolver {
 
   // Modify the config so all of the dependencies are available locally
-  def modifyConfig(config: Config, platformId: Option[String], namespaceConfigs: List[Config] = Nil): Config = {
+  def modifyConfig(config: Config, platformId: Option[String], projectRootDir: Option[Path], namespaceConfigs: List[Config] = Nil): Config = {
 
     // Check all fun.repositories have valid names
     val repositories = config.functionality.repositories
@@ -77,7 +77,8 @@ object DependencyResolver {
     val config3 = composedDependenciesLens.modify(_
       .map{d =>
         val repo = d.repository.toOption.get
-        val localRepoPath = Repository.cache(repo)
+        val configDir = Paths.get(config2.info.get.config).getParent()
+        val localRepoPath = Repository.cache(repo, configDir, projectRootDir)
         d.copy(repository = Right(localRepoPath))
       }
       )(config2)
