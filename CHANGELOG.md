@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## MINOR CHANGES
+
+* `Nextflow VDSL3`: Add profiles to the Nextflow Config file when the main script is a `NextflowScript` (#408).
+
 # Viash 0.7.3 (2023-04-19): Minor bug fixes in documentation and config view
 
 Fix minor issues in the documentation and with the way parent paths of resources are printed a config view.
