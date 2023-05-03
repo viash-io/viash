@@ -70,7 +70,7 @@ object Repository {
         r2.checkout()
       }
       case r: LocalRepository if r.path.isDefined => {
-        var localPath = r.path.get match {
+        val localPath = r.path.get match {
           case s if s.startsWith("/") => 
             // resolve path relative to the project root
             IO.resolveProjectPath(s, projectRootDir.map(p => p.toUri())).getPath()
