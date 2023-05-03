@@ -8,7 +8,7 @@
 */
 
 def setWorkflowArguments(Map args) {
-  wfKey = args.key != null ? args.key : "setWorkflowArguments"
+  def wfKey = args.key != null ? args.key : "setWorkflowArguments"
   args.keySet().removeAll(["key"])
 
   
