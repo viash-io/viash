@@ -78,7 +78,8 @@ object DependencyResolver {
     val config3 = composedDependenciesLens.modify(_
       .map{d =>
         val repo = d.repository.toOption.get
-        val localRepoPath = Repository.cache(repo, Paths.get(config2.info.get.config).getParent(), projectRootDir)
+        val configDir = Paths.get(config2.info.get.config).getParent()
+        val localRepoPath = Repository.cache(repo, configDir, projectRootDir)
         d.copy(repository = Right(localRepoPath))
       }
       )(config2)

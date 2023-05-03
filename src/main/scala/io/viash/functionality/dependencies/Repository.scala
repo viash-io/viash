@@ -63,7 +63,7 @@ object Repository {
     }
   }
 
-  def cache(repo: Repository, configPath: Path, projectRootDir: Option[Path]): Repository = 
+  def cache(repo: Repository, configDir: Path, projectRootDir: Option[Path]): Repository = 
     repo match {
       case r: GithubRepository => {
         val r2 = r.checkoutSparse()
@@ -76,7 +76,7 @@ object Repository {
             IO.resolveProjectPath(s, projectRootDir.map(p => p.toUri())).getPath()
           case s =>
             // resolve path relative to the config file
-            configPath.resolve(s).toString()
+            configDir.resolve(s).toString()
         }
         r.copyRepo(localPath = localPath)
       }
