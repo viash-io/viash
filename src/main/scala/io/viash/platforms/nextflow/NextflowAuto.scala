@@ -21,5 +21,8 @@ case class NextflowAuto(
   simplifyInput: Boolean = true,
   simplifyOutput: Boolean = true,
   transcript: Boolean = false,
-  publish: Boolean = false
+  publish: Boolean = false,
+  labels: Map[String, String] =
+    Seq(1, 2, 5, 10, 20, 50, 100, 200, 500).view.map(s => (s"mem${s}gb", s"memory = ${s}.Gb")).toMap ++
+    Seq(1, 2, 5, 10, 20, 50, 100).view.map(s => (s"cpu$s", s"cpus = $s"))
 )
