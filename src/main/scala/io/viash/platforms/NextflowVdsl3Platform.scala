@@ -143,7 +143,7 @@ case class NextflowVdsl3Platform(
 
     // TODO: define profiles
     val profileStr = 
-      if (containerDirective.isDefined || functionality.mainScript.map(_.`type`).getOrElse("") == NextflowScript.`type`) {
+      if (containerDirective.isDefined || functionality.mainScript.map(_.`type`) == Some(NextflowScript.`type`)) {
         "\n\n" + NextflowHelper.profilesHelper
       } else {
         ""
