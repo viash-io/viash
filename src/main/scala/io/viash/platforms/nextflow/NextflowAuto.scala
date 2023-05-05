@@ -17,12 +17,24 @@
 
 package io.viash.platforms.nextflow
 
+import scala.math.pow
+import scala.collection.immutable.ListMap
+
 case class NextflowAuto(
   simplifyInput: Boolean = true,
   simplifyOutput: Boolean = true,
   transcript: Boolean = false,
   publish: Boolean = false,
-  labels: Map[String, String] =
-    Seq(1, 2, 5, 10, 20, 50, 100, 200, 500).map(s => (s"mem${s}gb", s"memory = ${s}.Gb")).toMap ++
-    Seq(1, 2, 5, 10, 20, 50, 100).map(s => (s"cpu$s", s"cpus = $s"))
+  labels: ListMap[String, String] = ListMap(
+    NextflowAuto.labelIterator.take(9).map(s => (s"mem${s}gb", s"memory = ${s}.Gb")) ++
+    NextflowAuto.labelIterator.take(7).map(s => (s"cpu$s", s"cpus = $s")) : _*
+  )
 )
+
+object NextflowAuto {
+  // Returns 1, 2, 5, 10, 20, 50, 100 ...
+  // Stops after 9th power as Ints overflow at the 10th power (we'd actually still get 2 proper values)
+  def labelIterator: Seq[Int] = 
+    for (i <- Seq.range(0, 9); j <- Seq(1, 2, 5) )
+      yield j * pow(10, i).intValue()
+}

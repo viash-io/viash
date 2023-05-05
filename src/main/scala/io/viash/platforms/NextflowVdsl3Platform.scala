@@ -148,8 +148,7 @@ case class NextflowVdsl3Platform(
         "\n\n" + NextflowHelper.profilesHelper
       }
 
-    val labels = auto.labels.toList.sortBy(_._1).map{ case (k, v) => s"withLabel: $k { $v }"}
-    val processLabels = labels.mkString("process{\n  ","\n  ","\n}")
+    val processLabels = auto.labels.map{ case (k, v) => s"withLabel: $k { $v }"}
 
     s"""manifest {
     |  name = '${functionality.name}'
@@ -157,7 +156,9 @@ case class NextflowVdsl3Platform(
     |  nextflowVersion = '!>=20.12.1-edge'$versStr$descStr$authStr
     |}$dockerTemp
     |
-    |$processLabels""".stripMargin
+    |process{
+    |  ${processLabels.mkString("\n  ")}
+    |}""".stripMargin
   }
 
   // interpreted from BashWrapper
