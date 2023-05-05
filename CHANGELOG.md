@@ -4,7 +4,7 @@ TODO add summary
 
 ## NEW FUNCTIONALITY
 
-* Add default labels in Nextflow config files that set default values for cpu and memory settings. Values are more or less logarithmically spaced (1, 2, 5, 10, ...).
+* Add default labels in Nextflow config files that set default values for cpu and memory settings. Values are more or less logarithmically spaced (1, 2, 5, 10, ...). (#410)
 
 # Viash 0.7.3 (2023-04-19): Minor bug fixes in documentation and config view
 
