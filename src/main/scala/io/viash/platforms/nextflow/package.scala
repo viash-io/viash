@@ -29,4 +29,7 @@ package object nextflow {
 
   implicit val encodeNextflowAuto: Encoder.AsObject[NextflowAuto] = deriveConfiguredEncoder
   implicit val decodeNextflowAuto: Decoder[NextflowAuto] = deriveConfiguredDecoderWithDeprecationCheck
+
+  implicit val encodeNextflowConfig: Encoder.AsObject[NextflowConfig] = deriveConfiguredEncoder
+  implicit val decodeNextflowConfig: Decoder[NextflowConfig] = deriveConfiguredDecoderWithDeprecationCheck
 }

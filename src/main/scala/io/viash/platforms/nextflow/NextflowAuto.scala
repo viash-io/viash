@@ -17,24 +17,37 @@
 
 package io.viash.platforms.nextflow
 
-import scala.math.pow
-import scala.collection.immutable.ListMap
+import io.viash.schemas.description
 
 case class NextflowAuto(
+  @description(
+    """If `true`, an input tuple only containing only a single File (e.g. `["foo", file("in.h5ad")]`) is automatically transformed to a map (i.e. `["foo", [ input: file("in.h5ad") ] ]`).
+      |
+      |Default: `true`.
+      |""".stripMargin)
   simplifyInput: Boolean = true,
-  simplifyOutput: Boolean = true,
-  transcript: Boolean = false,
-  publish: Boolean = false,
-  labels: ListMap[String, String] = ListMap(
-    NextflowAuto.labelIterator.take(9).map(s => (s"mem${s}gb", s"memory = ${s}.Gb")) ++
-    NextflowAuto.labelIterator.take(7).map(s => (s"cpu$s", s"cpus = $s")) : _*
-  )
-)
 
-object NextflowAuto {
-  // Returns 1, 2, 5, 10, 20, 50, 100 ...
-  // Stops after 9th power as Ints overflow at the 10th power (we'd actually still get 2 proper values)
-  def labelIterator: Seq[Int] = 
-    for (i <- Seq.range(0, 9); j <- Seq(1, 2, 5) )
-      yield j * pow(10, i).intValue()
-}
+  @description(
+    """If `true`, an output tuple containing a map with a File (e.g. `["foo", [ output: file("out.h5ad") ] ]`) is automatically transformed to a map (i.e. `["foo", file("out.h5ad")]`).
+      |
+      |Default: `true`.
+      |""".stripMargin)
+  simplifyOutput: Boolean = true,
+
+  @description(
+    """If `true`, the module's transcripts from `work/` are automatically published to `params.transcriptDir`.
+      |If not defined, `params.publishDir + "/_transcripts"` will be used.
+      |Will throw an error if neither are defined.
+      |
+      |Default: `false`.
+      |""".stripMargin)
+  transcript: Boolean = false,
+
+  @description(
+    """If `true`, the module's outputs are automatically published to `params.publishDir`.
+      |Will throw an error if `params.publishDir` is not defined.
+      |
+      |Default: `false`.
+      |""".stripMargin)
+  publish: Boolean = false,
+)
