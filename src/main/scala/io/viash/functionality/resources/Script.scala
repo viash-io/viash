@@ -106,21 +106,25 @@ object Script {
     entrypoint: Option[String] = None,
     `type`: String
   ): Script = {
+
+    if (`type` != NextflowScript.`type`)
+      assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")
+
     `type` match {
       case BashScript.`type` =>
-        BashScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint)
+        BashScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
       case CSharpScript.`type` =>
-        CSharpScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint)
+        CSharpScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
       case JavaScriptScript.`type` =>
-        JavaScriptScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint)
+        JavaScriptScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
       case NextflowScript.`type` =>
         NextflowScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint)
       case PythonScript.`type` =>
-        PythonScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint)
+        PythonScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
       case RScript.`type` =>
-        RScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint)
+        RScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
       case ScalaScript.`type` =>
-        ScalaScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint)
+        ScalaScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
     }
   }
 }

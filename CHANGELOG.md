@@ -2,6 +2,12 @@
 
 TODO add summary
 
+## MINOR CHANGES
+
+* `Nextflow VDSL3`: Add profiles to the Nextflow Config file when the main script is a `NextflowScript` (#408).
+
+* `Scripts`: Remove the `entrypoint` parameter for all script types except `NextflowScript`. All these scripts had to check individually whether the parameter was unset, now it can be done in the `Script` apply method. (#409)
+
 # Viash 0.7.3 (2023-04-19): Minor bug fixes in documentation and config view
 
 Fix minor issues in the documentation and with the way parent paths of resources are printed a config view.
