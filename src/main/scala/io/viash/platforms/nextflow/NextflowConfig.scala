@@ -42,9 +42,9 @@ object NextflowConfig {
   val KB = 1024L
   val MB = 1024L*1024
   val GB = 1024L*1024*1024
-  val TB = 1024L*1024*1024
-  val PB = 1024L*1024*1024*1024
-  val EB = 1024L*1024*1024*1024*1024
+  val TB = 1024L*1024*1024*1024
+  val PB = 1024L*1024*1024*1024*1024
+  val EB = 1024L*1024*1024*1024*1024*1024
 
   // Returns 1, 2, 5, 10, 20, 50, 100 ...
   def logarithmicIterator: Seq[Int] = 
