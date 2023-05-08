@@ -28,8 +28,7 @@ case class NextflowConfig(
       .takeWhile(_ <= 512 * NextflowConfig.TB)
       .map{i =>
       val kSize = NextflowConfig.humanReadableByteSize(i, "%1.0f", s => s.stripLeading().toLowerCase()) // "1gb"
-      // val vSize = NextflowConfig.humanReadableByteSize(s, "%1.0f.", s => s.stripLeading().toLowerCase().capitalize) // "1.Gb"
-      val vSize = NextflowConfig.humanReadableByteSize(i, "%1.0f") // "1 GB"
+      val vSize = NextflowConfig.humanReadableByteSize(i, "%1.0f.", s => s.stripLeading()) // "1.GB"
       (s"mem$kSize", s"memory = $vSize")
      } ++
     NextflowConfig.logarithmicIterator
