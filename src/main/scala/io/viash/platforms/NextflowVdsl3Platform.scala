@@ -141,18 +141,18 @@ case class NextflowVdsl3Platform(
       }
 
     // TODO: define profiles
-    val dockerTemp = 
-      if (containerDirective.isEmpty) {
-        "" 
-      } else {
+    val profileStr = 
+      if (containerDirective.isDefined || functionality.mainScript.map(_.`type`) == Some(NextflowScript.`type`)) {
         "\n\n" + NextflowHelper.profilesHelper
+      } else {
+        ""
       }
 
     s"""manifest {
     |  name = '${functionality.name}'
     |  mainScript = 'main.nf'
     |  nextflowVersion = '!>=20.12.1-edge'$versStr$descStr$authStr
-    |}$dockerTemp""".stripMargin
+    |}$profileStr""".stripMargin
   }
 
   // interpreted from BashWrapper
