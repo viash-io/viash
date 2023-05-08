@@ -35,14 +35,9 @@ case class BashScript(
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
 
-  @undocumented
-  entrypoint: Option[String] = None,
-
   @description("Specifies the resource as a Bash script.")
   `type`: String = BashScript.`type`
 ) extends Script {
-  assert(entrypoint.isEmpty, message = s"Entrypoints are not (yet) supported for resources of type ${`type`}.")
-
   val companion = BashScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
