@@ -23,18 +23,30 @@ import io.viash.schemas.description
 case class NextflowConfig(
   @description("A series of default labels to specify memory and cpu constraints.")
   labels: ListMap[String, String] = ListMap(
-    // from 1 GB to 1TB
-    NextflowConfig.binaryIterator.drop(30).take(11).map{i =>
+    NextflowConfig.binaryIterator
+      .dropWhile(_ < 1 * NextflowConfig.GB)
+      .takeWhile(_ <= 512 * NextflowConfig.TB)
+      .map{i =>
       val kSize = NextflowConfig.humanReadableByteSize(i, "%1.0f", s => s.stripLeading().toLowerCase()) // "1gb"
       // val vSize = NextflowConfig.humanReadableByteSize(s, "%1.0f.", s => s.stripLeading().toLowerCase().capitalize) // "1.Gb"
       val vSize = NextflowConfig.humanReadableByteSize(i, "%1.0f") // "1 GB"
       (s"mem$kSize", s"memory = $vSize")
      } ++
-    NextflowConfig.logarithmicIterator.take(10).map(i => (s"cpu$i", s"cpus = $i")) : _*
+    NextflowConfig.logarithmicIterator
+      .takeWhile(_ <= 1000)
+      .map(i => (s"cpu$i", s"cpus = $i")) : _*
   )
 )
 
 object NextflowConfig {
+
+  val KB = 1024L
+  val MB = 1024L*1024
+  val GB = 1024L*1024*1024
+  val TB = 1024L*1024*1024
+  val PB = 1024L*1024*1024*1024
+  val EB = 1024L*1024*1024*1024*1024
+
   // Returns 1, 2, 5, 10, 20, 50, 100 ...
   def logarithmicIterator: Seq[Int] = 
     for (i <- Seq.range(0, 9); j <- Seq(1, 2, 5) )
