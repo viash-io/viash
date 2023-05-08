@@ -22,6 +22,7 @@ import io.viash.helpers.IO
 import java.nio.file.Paths
 import io.viash.schemas._
 import java.nio.file.Path
+import java.io.File
 
 @description("Specifies a repository where dependency components can be found.")
 abstract class Repository {
@@ -150,11 +151,32 @@ case class GithubRepository(
     copy(localPath = temporaryFolder.toString)
   }
 
+  def hasBranch(name: String, cwd: Option[File]): Boolean = {
+    val out = Exec.runCatch(
+      List("git", "show-ref", "--verify", "--quiet", s"refs/heads/$name"),
+      cwd = cwd
+    )
+    out.exitValue == 0
+  }
+
+  def hasTag(name: String, cwd: Option[File]): Boolean = {
+    val out = Exec.runCatch(
+      List("git", "show-ref", "--verify", "--quiet", s"refs/tags/$name"),
+      cwd = cwd
+    )
+    out.exitValue == 0
+  }
+
   // Checkout of files from already cloned repository. Limit file checkout to the path that was specified
   def checkout(): GithubRepository = {
-    val checkoutName = "origin/" + tag.getOrElse("HEAD")
     val pathStr = path.getOrElse(".")
     val cwd = Some(Paths.get(localPath).toFile)
+    val checkoutName = tag match {
+      case Some(name) if hasBranch(name, cwd) => s"origin/$name"
+      case Some(name) if hasTag(name, cwd) => s"tags/$name"
+      case _ => "origin/HEAD"
+    }
+
     val out = Exec.runCatch(
       List("git", "checkout", checkoutName, "--", pathStr),
       cwd = cwd
