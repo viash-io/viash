@@ -141,11 +141,11 @@ case class NextflowVdsl3Platform(
       }
 
     // TODO: define profiles
-    val dockerTemp = 
-      if (containerDirective.isEmpty) {
-        "" 
-      } else {
+    val profileStr = 
+      if (containerDirective.isDefined || functionality.mainScript.map(_.`type`) == Some(NextflowScript.`type`)) {
         "\n\n" + NextflowHelper.profilesHelper
+      } else {
+        ""
       }
 
     val processLabels = auto.labels.map{ case (k, v) => s"withLabel: $k { $v }"}
@@ -154,7 +154,7 @@ case class NextflowVdsl3Platform(
     |  name = '${functionality.name}'
     |  mainScript = 'main.nf'
     |  nextflowVersion = '!>=20.12.1-edge'$versStr$descStr$authStr
-    |}$dockerTemp
+    |}$profileStr
     |
     |process{
     |  ${processLabels.mkString("\n  ")}
