@@ -54,7 +54,7 @@ case class NextflowConfig(
       |  .platforms[.type == "nextflow"].config.labels.lowcpu := "cpus = 4
       |"""".stripMargin,
     "Viash Project File",
-    "Add 'lowmem' and 'lowcpu' to teh default labels by using the Viash Project file"
+    "Add 'lowmem' and 'lowcpu' to the default labels by using the Viash Project file"
   )
   @exampleWithDescription(
     """config_mods: |
