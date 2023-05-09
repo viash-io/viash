@@ -23,6 +23,7 @@ import java.nio.file.Paths
 import io.viash.schemas._
 import java.nio.file.Path
 import java.io.File
+import java.nio.file.Files
 
 @description("Specifies a repository where dependency components can be found.")
 abstract class Repository {
@@ -68,7 +69,14 @@ object Repository {
     repo match {
       case r: GithubRepository => {
         val r2 = r.checkoutSparse()
-        r2.checkout()
+        val r3 = r2.checkout()
+        // Stopgap solution to be able to use built repositories which were not built with dependency aware Viash version.
+        // TODO remove this section once it's deemed no longer necessary
+        if (Paths.get(r3.localPath, "target").toFile().exists() && !Paths.get(r3.localPath, "target", ".build.yaml").toFile().exists()) {
+          Console.err.println(s"${Console.YELLOW}Creating temporary 'target/.build.yaml' file for ${r3.name} as this file seems to be missing.${Console.RESET}")
+          Files.createFile(Paths.get(r3.localPath, "target", ".build.yaml"))
+        }
+        r3
       }
       case r: LocalRepository if r.path.isDefined => {
         val localPath = r.path.get match {
