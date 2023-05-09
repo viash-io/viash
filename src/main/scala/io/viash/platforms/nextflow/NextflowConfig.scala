@@ -18,10 +18,51 @@
 package io.viash.platforms.nextflow
 
 import scala.collection.immutable.ListMap
-import io.viash.schemas.description
+import io.viash.schemas._
 
+@description("Allows tweaking how the Nextflow Config file is generated.")
 case class NextflowConfig(
-  @description("A series of default labels to specify memory and cpu constraints.")
+  @description(
+    """A series of default labels to specify memory and cpu constraints.
+      |
+      |The default memory labels are defined as "mem1gb", "mem2gb", "mem4gb", ... upto "mem512tb" and follows powers of 2.
+      |The default cpu labels are defined as "cpu1", "cpu2", "cpu5", "cpu10", ... upto "cpu1000" and follows a semi logarithmic scale (1, 2, 5 per decade).
+      |
+      |Conceptually it is possible for a Viash Config to overwrite the full labels parameter, however likely it is more efficient to add additional labels
+      |in the Viash Project with a config mod.
+      |""".stripMargin)
+  @exampleWithDescription(
+    """labels:
+      |  lowmem: "memory = 4.GB"
+      |  lowcpu: "cpus = 4"
+      |  midmem: "memory = 25.GB"
+      |  midcpu: "cpus = 10"
+      |  highmem: "memory = 50.GB"
+      |  highcpu: "cpus = 20"
+      |  vhighmem: "memory = 100.GB"
+      |  vhighcpu: "cpus = 40"
+      |""".stripMargin,
+    "yaml",
+    "Replace the default labels with a different set of labels")
+  @exampleWithDescription(
+    """-c '.platforms[.type == "nextflow"].config.labels.lowmem := "memory = 4.GB";.platforms[.type == "nextflow"].config.labels.lowcpu := "cpus = 4"'""",
+    "Viash Config Mod",
+    "Add 'lowmem' and 'lowcpu' to the default labels by using a config mod")
+  @exampleWithDescription(
+    """config_mods: |
+      |  .platforms[.type == "nextflow"].config.labels.lowmem := "memory = 4.GB"
+      |  .platforms[.type == "nextflow"].config.labels.lowcpu := "cpus = 4
+      |"""".stripMargin,
+    "Viash Project File",
+    "Add 'lowmem' and 'lowcpu' to teh default labels by using the Viash Project file"
+  )
+  @exampleWithDescription(
+    """config_mods: |
+      |.platforms[.type == "nextflow"].config.labels := { lowmem: "memory = 4.GB", lowcpu: "cpus = 4", midmem: "memory = 25.GB", midcpu: "cpus = 10", highmem: "memory = 50.GB", highcpu: "cpus = 20", vhighmem: "memory = 100.GB", vhighcpu: "cpus = 40" }
+      |""".stripMargin,
+    "Viash Project File",
+    "Replace the default labels with a different set of labels by using the Viash Project file"
+  )
   labels: ListMap[String, String] = ListMap(
     NextflowConfig.binaryIterator
       .dropWhile(_ < 1 * NextflowConfig.GB)

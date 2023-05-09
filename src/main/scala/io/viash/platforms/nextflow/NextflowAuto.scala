@@ -19,6 +19,7 @@ package io.viash.platforms.nextflow
 
 import io.viash.schemas.description
 
+@description("Automated processing flags which can be toggled on or off.")
 case class NextflowAuto(
   @description(
     """If `true`, an input tuple only containing only a single File (e.g. `["foo", file("in.h5ad")]`) is automatically transformed to a map (i.e. `["foo", [ input: file("in.h5ad") ] ]`).

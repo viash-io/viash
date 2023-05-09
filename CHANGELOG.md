@@ -12,6 +12,8 @@ TODO add summary
 
 * `Scripts`: Remove the `entrypoint` parameter for all script types except `NextflowScript`. All these scripts had to check individually whether the parameter was unset, now it can be done in the `Script` apply method. (#409)
 
+* `schema export`: Restructured Nextflow-Directives, -Auto and -Config into a `nextflowParameters` group. Previously only NextflowDirectives was exposed.
+
 # Viash 0.7.3 (2023-04-19): Minor bug fixes in documentation and config view
 
 Fix minor issues in the documentation and with the way parent paths of resources are printed a config view.
