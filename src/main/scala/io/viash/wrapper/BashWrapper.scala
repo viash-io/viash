@@ -225,16 +225,19 @@ object BashWrapper {
 
     val (localDependencies, remoteDependencies) = config.functionality.dependencies
       .partition(d => d.isLocalDependency)
-    val localDependenciesStrings = localDependencies.map{d =>
+    val localDependenciesStrings = localDependencies.map{ d =>
       // relativize the path of the main component to the local dependency
       // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
       val thisPath = ViashNamespace.targetOutputPath("", "invalid_platform_name", config.functionality.namespace, config.functionality.name)
       val relativePath = Paths.get(thisPath).relativize(Paths.get(d.configInfo.getOrElse("executable", "")))
       s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR/$relativePath\""
     }
-    val remoteDependenciesStrings = remoteDependencies.map(d => 
-      s"${d.VIASH_DEP}=\"$$VIASH_TARGET_DIR/dependencies/${d.subOutputPath.get}/${Paths.get(d.configInfo.getOrElse("executable", "not_found")).getFileName()}\""
-    )
+    val remoteDependenciesStrings = remoteDependencies.map{ d =>
+      if (d.foundConfigPath.isDefined)
+        s"${d.VIASH_DEP}=\"$$VIASH_TARGET_DIR/dependencies/${d.subOutputPath.get}/${Paths.get(d.configInfo.getOrElse("executable", "not_found")).getFileName()}\""
+      else
+        s"# ${d.VIASH_DEP} not found!"
+    }
     val dependenciesStr = (localDependenciesStrings ++ remoteDependenciesStrings).mkString("\n")
 
     /* GENERATE BASH SCRIPT */

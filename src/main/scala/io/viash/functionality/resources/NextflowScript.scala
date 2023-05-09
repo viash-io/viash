@@ -66,7 +66,10 @@ case class NextflowScript(
       s"include { ${d.configInfo{"functionalityName"}} } from \"$$projectDir/$relativePath\""
     }
     val remoteDependenciesStrings = remoteDependencies.map{ d => 
-      s"include { ${d.configInfo("functionalityName")} } from \"$$rootDir/dependencies/${d.subOutputPath.get}/main.nf\""
+      if (d.foundConfigPath.isDefined)
+        s"include { ${d.configInfo("functionalityName")} } from \"$$rootDir/dependencies/${d.subOutputPath.get}/main.nf\""
+      else
+        s"// ${d.name} not found!"
     }
 
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
