@@ -107,28 +107,26 @@ object DependencyResolver {
         // However, we have to fill in writtenPath. This will be needed when this built component is used as a dependency and we have to resolve dependencies of dependencies.
         val writtenPath = ViashNamespace.targetOutputPath(output, platformId, None, dep.name)
         dep.copy(writtenPath = Some(writtenPath))
-      } else {
+      } else if (dep.foundConfigPath.isDefined) {
         // copy the dependency to the output folder
         val dependencyOutputPath = Paths.get(output, "dependencies", dep.subOutputPath.get)
         if (dependencyOutputPath.toFile().exists())
           IO.deleteRecursively(dependencyOutputPath)
-        Files.createDirectories(dependencyOutputPath)
-        
-        if (dep.foundConfigPath.isDefined) {
-          val dependencyRepoPath = Paths.get(dep.foundConfigPath.get).getParent()
-          // Copy dependencies
-          IO.copyFolder(dependencyRepoPath, dependencyOutputPath)
-          // Copy dependencies of dependencies, all the way down
-          // Parse new location of the copied dependency. That way that path can be used to determine the new location of namespace dependencies
-          recurseBuiltDependencies(Paths.get(output), Paths.get(dep.workRepository.get.localPath), dependencyOutputPath.toString(), dep)
-        }
-        else {
-          Console.err.println(s"Could not find dependency artifacts for ${dep.name}. Skipping copying dependency artifacts.")
-        }
+        Files.createDirectories(dependencyOutputPath)          
 
+        val dependencyRepoPath = Paths.get(dep.foundConfigPath.get).getParent()
+        // Copy dependencies
+        IO.copyFolder(dependencyRepoPath, dependencyOutputPath)
+        // Copy dependencies of dependencies, all the way down
+        // Parse new location of the copied dependency. That way that path can be used to determine the new location of namespace dependencies
+        recurseBuiltDependencies(Paths.get(output), Paths.get(dep.workRepository.get.localPath), dependencyOutputPath.toString(), dep)
         // Store location of the copied files
-        dep.copy(writtenPath = Some(dependencyOutputPath.toString()))
+          dep.copy(writtenPath = Some(dependencyOutputPath.toString()))
+      } else {
+        Console.err.println(s"${Console.RED}Could not find dependency artifacts for ${dep.name}. Skipping copying dependency artifacts.${Console.RESET}")
+        dep
       }
+
     }))(config)
   }
 
