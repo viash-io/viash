@@ -60,10 +60,10 @@ trait Script extends Resource {
           Array(companion.commentStr + companion.commentStr + " VIASH END") ++
           lines
         }
-      val li2 = mods.header match {
-          case "" => li :+ mods.footer
-          case _ => mods.header +: li :+ mods.footer
-        }
+      val li2 = 
+        { if (mods.header.isEmpty()) Array.empty[String] else Array(mods.header) } ++
+        li ++
+        { if (mods.footer.isEmpty()) Array.empty[String] else Array(mods.footer) }
 
       li2.mkString("\n")
     })
