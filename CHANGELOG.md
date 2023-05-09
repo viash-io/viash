@@ -14,6 +14,10 @@ TODO add summary
 
 * `schema export`: Restructured Nextflow-Directives, -Auto and -Config into a `nextflowParameters` group. Previously only NextflowDirectives was exposed.
 
+## BUG FIXES
+
+* `viash config inject`: Fix an empty line being added at the script start for each time `viash config inject` was run (#377).
+
 # Viash 0.7.3 (2023-04-19): Minor bug fixes in documentation and config view
 
 Fix minor issues in the documentation and with the way parent paths of resources are printed a config view.
