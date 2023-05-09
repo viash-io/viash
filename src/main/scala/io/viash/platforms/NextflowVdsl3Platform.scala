@@ -50,29 +50,32 @@ case class NextflowVdsl3Platform(
       |""".stripMargin)
   @example(
     """directives:
-      |    container: rocker/r-ver:4.1
-      |    label: highcpu
-      |    cpus: 4
-      |    memory: 16 GB""".stripMargin,
+      |  container: rocker/r-ver:4.1
+      |  label: highcpu
+      |  cpus: 4
+      |  memory: 16 GB""".stripMargin,
       "yaml")
   directives: NextflowDirectives = NextflowDirectives(),
 
   @description(
-    """Automated processing flags which can be toggled on or off:  
-      +
-      +| Flag | Description | Default |
-      +|---|---------|----|
-      +| `simplifyInput` | If `true`, an input tuple only containing only a single File (e.g. `["foo", file("in.h5ad")]`) is automatically transformed to a map (i.e. `["foo", [ input: file("in.h5ad") ] ]`). | `true` |
-      +| `simplifyOutput` | If `true`, an output tuple containing a map with a File (e.g. `["foo", [ output: file("out.h5ad") ] ]`) is automatically transformed to a map (i.e. `["foo", file("out.h5ad")]`). | `true` |
-      +| `transcript` | If `true`, the module's transcripts from `work/` are automatically published to `params.transcriptDir`. If not defined, `params.publishDir + "/_transcripts"` will be used. Will throw an error if neither are defined. | `false` |
-      +| `publish` | If `true`, the module's outputs are automatically published to `params.publishDir`.  Will throw an error if `params.publishDir` is not defined. | `false` |
-      +
-      +""".stripMargin('+'))
+    """Automated processing flags which can be toggled on or off:
+      |
+      || Flag | Description | Default |
+      ||---|---------|----|
+      || `simplifyInput` | If `true`, an input tuple only containing only a single File (e.g. `["foo", file("in.h5ad")]`) is automatically transformed to a map (i.e. `["foo", [ input: file("in.h5ad") ] ]`). | `true` |
+      || `simplifyOutput` | If `true`, an output tuple containing a map with a File (e.g. `["foo", [ output: file("out.h5ad") ] ]`) is automatically transformed to a map (i.e. `["foo", file("out.h5ad")]`). | `true` |
+      || `transcript` | If `true`, the module's transcripts from `work/` are automatically published to `params.transcriptDir`. If not defined, `params.publishDir + "/_transcripts"` will be used. Will throw an error if neither are defined. | `false` |
+      || `publish` | If `true`, the module's outputs are automatically published to `params.publishDir`.  Will throw an error if `params.publishDir` is not defined. | `false` |
+      |
+      |""".stripMargin)
   @example(
     """auto:
-      |    publish: true""".stripMargin,
+      |  publish: true""".stripMargin,
       "yaml")
   auto: NextflowAuto = NextflowAuto(),
+
+  @description("Allows tweaking how the Nextflow Config file is generated.")
+  config: NextflowConfig = NextflowConfig(),
 
   @description("Whether or not to print debug messages.")
   debug: Boolean = false,
@@ -149,11 +152,17 @@ case class NextflowVdsl3Platform(
         ""
       }
 
+    val processLabels = config.labels.map{ case (k, v) => s"withLabel: $k { $v }"}
+
     s"""manifest {
     |  name = '${functionality.name}'
     |  mainScript = 'main.nf'
     |  nextflowVersion = '!>=20.12.1-edge'$versStr$descStr$authStr
-    |}$profileStr""".stripMargin
+    |}$profileStr
+    |
+    |process{
+    |  ${processLabels.mkString("\n  ")}
+    |}""".stripMargin
   }
 
 

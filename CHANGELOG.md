@@ -2,11 +2,21 @@
 
 TODO add summary
 
+## NEW FUNCTIONALITY
+
+* Add default labels in Nextflow config files that set default values for cpu and memory settings. Values are more or less logarithmically spaced (1, 2, 5, 10, ...). (#410)
+
 ## MINOR CHANGES
 
 * `Nextflow VDSL3`: Add profiles to the Nextflow Config file when the main script is a `NextflowScript` (#408).
 
 * `Scripts`: Remove the `entrypoint` parameter for all script types except `NextflowScript`. All these scripts had to check individually whether the parameter was unset, now it can be done in the `Script` apply method. (#409)
+
+* `schema export`: Restructured Nextflow-Directives, -Auto and -Config into a `nextflowParameters` group. Previously only NextflowDirectives was exposed.
+
+## BUG FIXES
+
+* `viash config inject`: Fix an empty line being added at the script start for each time `viash config inject` was run (#377).
 
 # Viash 0.7.3 (2023-04-19): Minor bug fixes in documentation and config view
 
