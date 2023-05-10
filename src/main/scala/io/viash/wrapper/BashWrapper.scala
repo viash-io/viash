@@ -117,8 +117,10 @@ object BashWrapper {
     mods: BashWrapperMods = BashWrapperMods(),
     debugPath: Option[String] = None
   ): String = {
-    // escape substrings with pipe characters, meant to be used when using stripMargin
-    def escapePipes(s: String) = s.split("\n").map(_.replaceFirst("^(\\s*\\|)", "|$1")).mkString("\n")
+    // Escape substrings with pipe characters, meant to be used when using stripMargin.
+    // If the very first substring also starts with a pipe, strip the escaping off again as it will either become part of a previous string
+    // or would have its own | from the multiline string, and we don't want double pipes.
+    def escapePipes(s: String) = s.split("\n").map(_.replaceFirst("^(\\s*\\|)", "|$1")).mkString("\n").stripPrefix("|")
 
     val mainResource = functionality.mainScript
 
