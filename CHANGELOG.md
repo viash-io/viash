@@ -18,6 +18,9 @@ TODO add summary
 
 * `viash config inject`: Fix an empty line being added at the script start for each time `viash config inject` was run (#377).
 
+* `BashWrapper`: Fix escaping of the included script where a line starting with a pipe character with optional leading spaces is stripped of the leading spaces and pipe character.
+  This was quite unlikely to happen except when `viash config inject` was called on a Nextflow Script, which lead to no real config code being injected however workflows were getting corrupted. (#421)
+
 # Viash 0.7.3 (2023-04-19): Minor bug fixes in documentation and config view
 
 Fix minor issues in the documentation and with the way parent paths of resources are printed a config view.

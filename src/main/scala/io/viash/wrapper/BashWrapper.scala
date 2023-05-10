@@ -117,6 +117,9 @@ object BashWrapper {
     mods: BashWrapperMods = BashWrapperMods(),
     debugPath: Option[String] = None
   ): String = {
+    // escape substrings with pipe characters, meant to be used when using stripMargin
+    def escapePipes(s: String) = s.split("\n").map(_.replaceFirst("^(\\s*\\|)", "|$1")).mkString("\n")
+
     val mainResource = functionality.mainScript
 
     // check whether the wd needs to be set to the resources dir
@@ -158,7 +161,7 @@ object BashWrapper {
         s"""
           |set -e
           |cat > "${debugPath.get}" << 'VIASHMAIN'
-          |$escapedCode
+          |${escapePipes(escapedCode)}
           |VIASHMAIN
           |""".stripMargin
 
@@ -186,7 +189,7 @@ object BashWrapper {
         s"""
           |set -e$scriptSetup
           |cat > "$scriptPath" << 'VIASHMAIN'
-          |$escapedCode
+          |${escapePipes(escapedCode)}
           |VIASHMAIN$cdToResources
           |${res.command(scriptPath)} &
           |wait "\\$$!"
@@ -290,7 +293,7 @@ object BashWrapper {
        |eval set -- $$VIASH_POSITIONAL_ARGS
        |${spaceCode(allMods.postParse)}${spaceCode(allMods.preRun)}
        |ViashDebug "Running command: ${executor.replaceAll("^eval (.*)", "\\$(echo $1)")}"
-       |$heredocStart$executor$executionCode$heredocEnd
+       |$heredocStart$executor${escapePipes(executionCode)}$heredocEnd
        |${spaceCode(allMods.postRun)}${spaceCode(allMods.last)}
        |
        |exit 0
