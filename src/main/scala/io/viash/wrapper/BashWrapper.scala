@@ -121,6 +121,9 @@ object BashWrapper {
     debugPath: Option[String] = None,
     config: Config
   ): String = {
+    // Add pipes after each newline. Prevents pipes being stripped when a string starts with a pipe (with optional leading spaces).
+    def escapePipes(s: String) = s.replaceAll("\n", "\n|")
+
     val mainResource = functionality.mainScript
 
     // check whether the wd needs to be set to the resources dir
@@ -164,7 +167,7 @@ object BashWrapper {
         s"""
           |set -e
           |cat > "${debugPath.get}" << 'VIASHMAIN'
-          |$escapedCode
+          |${escapePipes(escapedCode)}
           |VIASHMAIN
           |""".stripMargin
 
@@ -192,7 +195,7 @@ object BashWrapper {
         s"""
           |set -e$scriptSetup
           |cat > "$scriptPath" << 'VIASHMAIN'
-          |$escapedCode
+          |${escapePipes(escapedCode)}
           |VIASHMAIN$cdToResources
           |${res.command(scriptPath)} &
           |wait "\\$$!"
@@ -322,7 +325,7 @@ object BashWrapper {
        |$dependenciesStr
        |
        |ViashDebug "Running command: ${executor.replaceAll("^eval (.*)", "\\$(echo $1)")}"
-       |$heredocStart$executor$executionCode$heredocEnd
+       |$heredocStart$executor${escapePipes(executionCode)}$heredocEnd
        |${spaceCode(allMods.postRun)}${spaceCode(allMods.last)}
        |
        |exit 0

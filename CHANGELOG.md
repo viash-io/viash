@@ -6,6 +6,8 @@ TODO add summary
 
 * Add default labels in Nextflow config files that set default values for cpu and memory settings. Values are more or less logarithmically spaced (1, 2, 5, 10, ...). (#410)
 
+* `Author`: Added `info` field to authors. Deprecated `props` field.
+
 ## MINOR CHANGES
 
 * `Nextflow VDSL3`: Add profiles to the Nextflow Config file when the main script is a `NextflowScript` (#408).
@@ -17,6 +19,9 @@ TODO add summary
 ## BUG FIXES
 
 * `viash config inject`: Fix an empty line being added at the script start for each time `viash config inject` was run (#377).
+
+* `BashWrapper`: Fix escaping of the included script where a line starting with a pipe character with optional leading spaces is stripped of the leading spaces and pipe character.
+  This was quite unlikely to happen except when `viash config inject` was called on a Nextflow Script, which lead to no real config code being injected however workflows were getting corrupted. (#421)
 
 # Viash 0.7.3 (2023-04-19): Minor bug fixes in documentation and config view
 
