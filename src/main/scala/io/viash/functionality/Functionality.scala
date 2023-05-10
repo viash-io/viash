@@ -61,14 +61,18 @@ case class Functionality(
       +""".stripMargin('+'))
   @example(
     """authors:
-      |  - name: Bob Cando
-      |    roles: [maintainer, author]
-      |    email: bob@can.do
-      |    props: {github: bobcando, orcid: 0000-0001-0002-0003}
+      |  - name: Jane Doe
+      |    role: [author, maintainer]
+      |    email: jane@doe.com
+      |    info:
+      |      github: janedoe
+      |      twitter: janedoe
+      |      orcid: XXAABBCCXX
+      |      groups: [ one, two, three ]
       |  - name: Tim Farbe
       |    roles: [author]
-      |    email: tim@far.be""".stripMargin,
-      "yaml")
+      |    email: tim@far.be
+      |""".stripMargin, "yaml")
   @since("Viash 0.3.1")
   authors: List[Author] = Nil,
   

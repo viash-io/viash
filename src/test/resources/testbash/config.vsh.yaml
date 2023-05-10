@@ -8,7 +8,7 @@ functionality:
     - name: Bob ''' """ \n ` $ \ Cando
       roles: [maintainer, author]
       email: bob@cando.com
-      props: {github: bobcando, orcid: XXXAAABBB}
+      info: {github: bobcando, orcid: XXXAAABBB}
   argument_groups:
     - name: First group
       arguments:
