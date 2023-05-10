@@ -53,10 +53,6 @@ case class Author(
   props: Map[String, String] = Map.empty[String, String],
 
   @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
-  @example(
-    """info:
-      |  twitter: wizzkid
-      |  roles: [ one, two, three ]""".stripMargin, "yaml")
   @since("Viash 0.7.4")
   info: Json = Json.Null
 ) {
