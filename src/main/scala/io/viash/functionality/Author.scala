@@ -32,7 +32,8 @@ import io.viash.schemas._
     |  github: janedoe
     |  twitter: janedoe
     |  orcid: XXAABBCCXX
-    |  groups: [ one, two, three ]""".stripMargin, "yaml")
+    |  groups: [ one, two, three ]
+    |""".stripMargin, "yaml")
 case class Author(
   @description("Full name of the author, usually in the name of FirstName MiddleName LastName.")
   name: String,
@@ -45,7 +46,8 @@ case class Author(
       |
       |* `"author"`: Authors who have made substantial contributions to the component.
       |* `"maintainer"`: The maintainer of the component.
-      |* `"contributor"`: Authors who have made smaller contributions (such as code patches etc.).""".stripMargin)
+      |* `"contributor"`: Authors who have made smaller contributions (such as code patches etc.).
+      |""".stripMargin)
   roles: OneOrMore[String] = Nil,
 
   @description("Author properties. Must be a map of strings.")
