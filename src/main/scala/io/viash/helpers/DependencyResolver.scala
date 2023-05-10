@@ -121,7 +121,7 @@ object DependencyResolver {
         // Parse new location of the copied dependency. That way that path can be used to determine the new location of namespace dependencies
         recurseBuiltDependencies(Paths.get(output), Paths.get(dep.workRepository.get.localPath), dependencyOutputPath.toString(), dep)
         // Store location of the copied files
-          dep.copy(writtenPath = Some(dependencyOutputPath.toString()))
+        dep.copy(writtenPath = Some(dependencyOutputPath.toString()))
       } else {
         Console.err.println(s"${Console.RED}Could not find dependency artifacts for ${dep.name}. Skipping copying dependency artifacts.${Console.RESET}")
         dep
