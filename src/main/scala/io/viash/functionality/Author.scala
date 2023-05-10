@@ -27,9 +27,12 @@ import io.viash.schemas._
 @example(
   """name: Jane Doe
     |role: [author, maintainer]
+    |email: jane@doe.com
     |info:
+    |  github: janedoe
     |  twitter: janedoe
-    |  roles: [ one, two, three ]""".stripMargin, "yaml")
+    |  orcid: XXAABBCCXX
+    |  groups: [ one, two, three ]""".stripMargin, "yaml")
 case class Author(
   @description("Full name of the author, usually in the name of FirstName MiddleName LastName.")
   name: String,
