@@ -19,16 +19,47 @@ package io.viash.functionality
 
 import io.viash.helpers.data_structures._
 
+import io.circe.Json
+import io.viash.schemas._
+
+@description("Author metadata.")
+@since("Viash 0.3.2")
+@example(
+  """name: Jane Doe
+    |role: [author, maintainer]
+    |info:
+    |  twitter: janedoe
+    |  roles: [ one, two, three ]""".stripMargin, "yaml")
 case class Author(
+  @description("Full name of the author, usually in the name of FirstName MiddleName LastName.")
   name: String,
+
+  @description("E-mail of the author.")
   email: Option[String] = None,
+
+  @description(
+    """Role of the author. Suggested items:
+      |
+      |* `"author"`: Authors who have made substantial contributions to the component.
+      |* `"maintainer"`: The maintainer of the component.
+      |* `"contributor"`: Authors who have made smaller contributions (such as code patches etc.).""".stripMargin)
   roles: OneOrMore[String] = Nil,
-  props: Map[String, String] = Map.empty[String, String]
+
+  @description("Author properties. Must be a map of strings.")
+  @deprecated("Use `info` instead.", "0.7.4", "0.8.0")
+  props: Map[String, String] = Map.empty[String, String],
+
+  @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
+  @example(
+    """info:
+      |  twitter: wizzkid
+      |  roles: [ one, two, three ]""".stripMargin, "yaml")
+  @since("Viash 0.7.4")
+  info: Json = Json.Null
 ) {
   override def toString: String = {
     name +
       email.map(" <" + _ + ">").getOrElse("") +
-      { if (roles.isEmpty) "" else " (" + roles.mkString(", ") + ")"} +
-      { if (props.isEmpty) "" else " {" + props.map(a => a._1 + ": " + a._2).mkString(", ") + "}"}
+      { if (roles.isEmpty) "" else " (" + roles.mkString(", ") + ")"}
   }
 }

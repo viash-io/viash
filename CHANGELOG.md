@@ -6,6 +6,8 @@ TODO add summary
 
 * Add default labels in Nextflow config files that set default values for cpu and memory settings. Values are more or less logarithmically spaced (1, 2, 5, 10, ...). (#410)
 
+* `Author`: Added `info` field to authors. Deprecated `props` field.
+
 ## MINOR CHANGES
 
 * `Nextflow VDSL3`: Add profiles to the Nextflow Config file when the main script is a `NextflowScript` (#408).
