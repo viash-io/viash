@@ -4,17 +4,17 @@ TODO add summary
 
 ## NEW FUNCTIONALITY
 
-* Add default labels in Nextflow config files that set default values for cpu and memory settings. Values are more or less logarithmically spaced (1, 2, 5, 10, ...). (#410)
+* Add default labels in Nextflow config files that set default values for cpu and memory settings (#412). Values are more or less logarithmically spaced (1, 2, 5, 10, ...).
 
-* `Author`: Added `info` field to authors. Deprecated `props` field.
+* `Author`: Added `info` field to authors. Deprecated `props` field (#423).
 
 ## MINOR CHANGES
 
 * `Nextflow VDSL3`: Add profiles to the Nextflow Config file when the main script is a `NextflowScript` (#408).
 
-* `Scripts`: Remove the `entrypoint` parameter for all script types except `NextflowScript`. All these scripts had to check individually whether the parameter was unset, now it can be done in the `Script` apply method. (#409)
+* `Scripts`: Remove the `entrypoint` parameter for all script types except `NextflowScript` (#409). All these scripts had to check individually whether the parameter was unset, now it can be done in the `Script` apply method.
 
-* `schema export`: Restructured Nextflow-Directives, -Auto and -Config into a `nextflowParameters` group. Previously only NextflowDirectives was exposed.
+* `schema export`: Restructured Nextflow-Directives, -Auto and -Config into a `nextflowParameters` group (#412). Previously only NextflowDirectives was exposed.
 
 ## BUG FIXES
 
