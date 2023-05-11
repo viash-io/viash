@@ -7,6 +7,15 @@
 
 * `Author`: Added `info` field to authors. Deprecated `props` field (PR #423).
 
+## NEW FUNCTIONALITY
+
+* `viash config view` and `viash ns list`: Set the `.info.output` path when a platform argument is provided.
+
+* `viash ns exec`: Added two more fields:
+
+  - `{output}`: path to the destination directory when building the component
+  - `{abs-output}`: absolute path to the destination directory when building the component
+
 ## MINOR CHANGES
 
 * `Nextflow VDSL3`: Add profiles to the Nextflow Config file when the main script is a `NextflowScript` (#408).
