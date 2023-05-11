@@ -108,12 +108,14 @@ object CollectedSchemas {
       "computationalRequirements" -> getMembers[ComputationalRequirements](),
     ),
     "platforms" -> Map(
+      "platform"                  -> getMembers[Platform](),
       "nativePlatform"            -> getMembers[NativePlatform](),
       "dockerPlatform"            -> getMembers[DockerPlatform](),
       "nextflowVdsl3Platform"     -> getMembers[NextflowVdsl3Platform](),
       "nextflowLegacyPlatform"    -> getMembers[NextflowLegacyPlatform](),
     ),
     "requirements" -> Map(
+      "requirements"              -> getMembers[Requirements](),
       "apkRequirements"           -> getMembers[ApkRequirements](),
       "aptRequirements"           -> getMembers[AptRequirements](),
       "dockerRequirements"        -> getMembers[DockerRequirements](),
