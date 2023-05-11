@@ -23,8 +23,25 @@ import io.viash.helpers.IO
 import io.circe.yaml.parser
 import java.net.URI
 import requirements._
-import io.viash.schemas.description
+import io.viash.schemas._
 
+@description(
+  """A list of platforms to generate target artifacts for.
+    |
+    | * @[Native](platform_native)
+    | * @[Docker](platform_docker)
+    | * @[Nextflow VDSL3](platform_nextflow)
+    |""".stripMargin)
+@example(
+  """platforms:
+    |  - type: docker
+    |    image: "bash:4.0"
+    |  - type: native
+    |  - type: nextflow
+    |    directives:
+    |      label: [lowcpu, midmem]
+    |""".stripMargin,
+  "yaml")
 trait Platform {
   @description("Specifies the type of the platform.")
   val `type`: String

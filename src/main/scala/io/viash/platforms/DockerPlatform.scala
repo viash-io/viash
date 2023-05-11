@@ -37,6 +37,15 @@ import io.viash.helpers.Escaper
   """Run a Viash component on a Docker backend platform.
     |By specifying which dependencies your component needs, users will be able to build a docker container from scratch using the setup flag, or pull it from a docker repository.
     |""".stripMargin)
+@example(
+  """platforms:
+    |  - type: docker
+    |    image: "bash:4.0"
+    |    setup:
+    |      - type: apt
+    |        packages: [ curl ]
+    |""".stripMargin,
+  "yaml")
 case class DockerPlatform(
   @description("As with all platforms, you can give a platform a different name. By specifying `id: foo`, you can target this platform (only) by specifying `-p foo` in any of the Viash commands.")
   @example("id: foo", "yaml")

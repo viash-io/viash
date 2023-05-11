@@ -34,6 +34,13 @@ import io.viash.helpers.Escaper
  * Next-gen Platform class for generating NextFlow (DSL2) modules.
  */
 @description("Next-gen platform for generating NextFlow VDSL3 modules.")
+@example(
+  """platforms:
+    |  - type: nextflow
+    |    directives:
+    |      label: [lowcpu, midmem]
+    |""".stripMargin,
+  "yaml")
 case class NextflowVdsl3Platform(
   @description("Every platform can be given a specific id that can later be referred to explicitly when running or building the Viash component.")
   @example("id: foo", "yaml")

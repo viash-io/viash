@@ -18,6 +18,7 @@
   - Restructure the format to group authors & computational requirements together with functionality (PR #426).
   - Restructure the Viash Config and Project Config pages under a `config` category (PR #426).
   - Add references in Functionality and Nextflow VDSL3 to the new documentation pages (PR #426).
+  - Add description and/or examples for platforms and requirements (PR #428).
 
 ## BUG FIXES
 
