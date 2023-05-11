@@ -1,6 +1,8 @@
 # Viash 0.7.4 (yyyy-MM-dd): TODO Add title
 
-TODO add summary
+## BUG FIXES
+
+* `WorkflowHelper`: Fixed an issue where passing a remote file URI (for example `http://` or `s3://`) as `param_list` caused `No such file` errors.
 
 ## NEW FUNCTIONALITY
 
