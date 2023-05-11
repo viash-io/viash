@@ -46,21 +46,21 @@ case class NextflowConfig(
     "Replace the default labels with a different set of labels")
   @exampleWithDescription(
     """-c '.platforms[.type == "nextflow"].config.labels.lowmem := "memory = 4.GB";.platforms[.type == "nextflow"].config.labels.lowcpu := "cpus = 4"'""",
-    "Viash Config Mod",
+    "viash_config_mod",
     "Add 'lowmem' and 'lowcpu' to the default labels by using a config mod")
   @exampleWithDescription(
     """config_mods: |
       |  .platforms[.type == "nextflow"].config.labels.lowmem := "memory = 4.GB"
-      |  .platforms[.type == "nextflow"].config.labels.lowcpu := "cpus = 4
-      |"""".stripMargin,
-    "Viash Project File",
+      |  .platforms[.type == "nextflow"].config.labels.lowcpu := "cpus = 4"
+      |""".stripMargin,
+    "viash_project_file",
     "Add 'lowmem' and 'lowcpu' to the default labels by using the Viash Project file"
   )
   @exampleWithDescription(
     """config_mods: |
-      |.platforms[.type == "nextflow"].config.labels := { lowmem: "memory = 4.GB", lowcpu: "cpus = 4", midmem: "memory = 25.GB", midcpu: "cpus = 10", highmem: "memory = 50.GB", highcpu: "cpus = 20", vhighmem: "memory = 100.GB", vhighcpu: "cpus = 40" }
+      |  .platforms[.type == "nextflow"].config.labels := { lowmem: "memory = 4.GB", lowcpu: "cpus = 4", midmem: "memory = 25.GB", midcpu: "cpus = 10", highmem: "memory = 50.GB", highcpu: "cpus = 20", vhighmem: "memory = 100.GB", vhighcpu: "cpus = 40" }
       |""".stripMargin,
-    "Viash Project File",
+    "viash_project_file",
     "Replace the default labels with a different set of labels by using the Viash Project file"
   )
   labels: ListMap[String, String] = ListMap(
