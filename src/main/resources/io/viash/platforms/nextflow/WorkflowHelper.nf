@@ -6,6 +6,7 @@ import java.util.regex.Pattern
 import java.io.BufferedReader
 import java.io.FileReader
 import java.nio.file.Paths
+import java.nio.file.Files
 import groovy.json.JsonSlurper
 import groovy.text.SimpleTemplateEngine
 import org.yaml.snakeyaml.Yaml
@@ -40,7 +41,7 @@ def readCsv(file_path) {
   def splitRegex = Pattern.compile(''',(?=(?:[^"]*"[^"]*")*[^"]*$)''')
   def removeQuote = Pattern.compile('''"(.*)"''')
 
-  def br = new BufferedReader(new FileReader(inputFile.toFile()))
+  def br = Files.newBufferedReader(inputFile)
 
   def row = -1
   def header = null
@@ -59,6 +60,11 @@ def readCsv(file_path) {
   while (br.ready()) {
     def line = br.readLine()
     row++
+    if (line == null) {
+      br.close()
+      break
+    }
+
     if (!line.startsWith("#")) {
       def predata = splitRegex.split(line, -1)
       def data = predata.collect{field ->
