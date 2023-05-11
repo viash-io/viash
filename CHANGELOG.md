@@ -1,8 +1,5 @@
 # Viash 0.7.4 (yyyy-MM-dd): TODO Add title
 
-## BUG FIXES
-
-* `WorkflowHelper`: Fixed an issue where passing a remote file URI (for example `http://` or `s3://`) as `param_list` caused `No such file` errors.
 
 ## NEW FUNCTIONALITY
 
@@ -16,14 +13,22 @@
 
 * `Scripts`: Remove the `entrypoint` parameter for all script types except `NextflowScript` (#409). All these scripts had to check individually whether the parameter was unset, now it can be done in the `Script` apply method.
 
-* `schema export`: Restructured Nextflow-Directives, -Auto and -Config into a `nextflowParameters` group (PR #412). Previously only NextflowDirectives was exposed.
+* `schema export`:
+  - Restructure Nextflow-Directives, -Auto and -Config into a `nextflowParameters` group (PR #412). Previously only NextflowDirectives was exposed.
+  - Restructure the format to group authors & computational requirements together with functionality (PR #426).
+  - Restructure the Viash Config and Project Config pages under a `config` category (PR #426).
+  - Add references in Functionality and Nextflow VDSL3 to the new documentation pages (PR #426).
 
 ## BUG FIXES
 
 * `viash config inject`: Fix an empty line being added at the script start for each time `viash config inject` was run (#377).
 
+* `WorkflowHelper`: Fixed an issue where passing a remote file URI (for example `http://` or `s3://`) as `param_list` caused `No such file` errors.
+
 * `BashWrapper`: Fix escaping of the included script where a line starting with a pipe character with optional leading spaces is stripped of the leading spaces and pipe character.
   This was quite unlikely to happen except when `viash config inject` was called on a Nextflow Script, which lead to no real config code being injected however workflows were getting corrupted. (#421)
+
+* `Deprecation testbench`: Add missing classes to be checked (PR #426).
 
 # Viash 0.7.3 (2023-04-19): Minor bug fixes in documentation and config view
 
