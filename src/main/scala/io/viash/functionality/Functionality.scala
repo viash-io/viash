@@ -44,7 +44,7 @@ case class Functionality(
   version: Option[String] = None,
 
   @description(
-    """A list of authors. An author must at least have a name, but can also have a list of roles, an e-mail address, and a map of custom properties.
+    """A list of @[authors](author). An author must at least have a name, but can also have a list of roles, an e-mail address, and a map of custom properties.
       +
       +Suggested values for roles are:
       + 
@@ -77,7 +77,7 @@ case class Functionality(
   authors: List[Author] = Nil,
   
   @description(
-    """A list of arguments for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. See these reference pages per type for more information:  
+    """A list of @[arguments](argument) for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. See these reference pages per type for more information:  
       |
       | - @[string](arg_string)
       | - @[file](arg_file)
@@ -106,7 +106,7 @@ case class Functionality(
   arguments: List[Argument[_]] = Nil,
 
   @description(
-    """A grouping of the arguments, used to display the help message.
+    """A grouping of the @[arguments](argument), used to display the help message.
       |
       | - `name: foo`, the name of the argument group. 
       | - `description: Description of foo`, a description of the argument group. Multiline descriptions are supported.
@@ -215,7 +215,7 @@ case class Functionality(
   status: Status = Status.Enabled,
   
   @description(
-    """Computational requirements related to running the component. 
+    """@[Computational requirements](computational_requirements) related to running the component. 
       |`cpus` specifies the maximum number of (logical) cpus a component is allowed to use., whereas
       |`memory` specifies the maximum amount of memory a component is allowed to allicate. Memory units must be
       |in B, KB, MB, GB, TB or PB.""".stripMargin)

@@ -14,7 +14,11 @@ TODO add summary
 
 * `Scripts`: Remove the `entrypoint` parameter for all script types except `NextflowScript` (#409). All these scripts had to check individually whether the parameter was unset, now it can be done in the `Script` apply method.
 
-* `schema export`: Restructured Nextflow-Directives, -Auto and -Config into a `nextflowParameters` group (#412). Previously only NextflowDirectives was exposed.
+* `schema export`:
+  - Restructure Nextflow-Directives, -Auto and -Config into a `nextflowParameters` group (#412). Previously only NextflowDirectives was exposed.
+  - Restructure the format to group authors & computational requirements together with functionality.
+  - Restructure the Viash Config and Project Config pages under a `config` category.
+  - Add references in Functionality and Nextflow VDSL3 to the new documentation pages.
 
 ## BUG FIXES
 
