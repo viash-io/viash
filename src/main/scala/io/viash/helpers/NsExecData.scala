@@ -30,7 +30,9 @@ final case class NsExecData(
   absoluteMainScript: String,
   functionalityName: String,
   namespace: Option[String],
-  platformId: Option[String]
+  platformId: Option[String],
+  output: Option[String],
+  absoluteOutput: Option[String]
 ) {
   def getField(name: String) = {
     name match {
@@ -43,6 +45,8 @@ final case class NsExecData(
       case "functionality-name" => Some(this.functionalityName)
       case "namespace" => this.namespace
       case "platform" => this.platformId
+      case "output" => this.output
+      case "abs-output" => this.absoluteOutput
       case _ => None
     }
   }
@@ -62,7 +66,9 @@ object NsExecData {
       absoluteMainScript = mainScript.map(_.toAbsolutePath.toString).getOrElse(""),
       functionalityName = config.functionality.name,
       namespace = config.functionality.namespace,
-      platformId = platform.map(_.id)
+      platformId = platform.map(_.id),
+      output = config.info.flatMap(_.output),
+      absoluteOutput = config.info.flatMap(info => info.output.map(Paths.get(_).toAbsolutePath.toString))
     )
   }
 
@@ -76,7 +82,9 @@ object NsExecData {
       absoluteMainScript = data.map(_.absoluteMainScript).mkString(" "),
       functionalityName = data.map(_.functionalityName).mkString(" "),
       namespace = Some(data.flatMap(_.namespace).mkString(" ")),
-      platformId = Some(data.flatMap(_.platformId).mkString(" "))
+      platformId = Some(data.flatMap(_.platformId).mkString(" ")),
+      output = Some(data.flatMap(_.output).mkString(" ")),
+      absoluteOutput = Some(data.flatMap(_.absoluteOutput).mkString(" "))
     )
   }
 }

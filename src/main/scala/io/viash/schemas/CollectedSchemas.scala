@@ -22,7 +22,7 @@ import io.circe.{Encoder, Printer => JsonPrinter}
 import io.circe.syntax.EncoderOps
 import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
 
-import io.viash.functionality.Functionality
+import io.viash.functionality._
 import io.viash.platforms._
 import io.viash.platforms.requirements._
 import io.viash.functionality.arguments._
@@ -35,13 +35,12 @@ import io.viash.project.ViashProject
 import io.viash.platforms.nextflow._
 
 final case class CollectedSchemas (
-  config: List[ParameterSchema],
-  functionality: List[ParameterSchema],
+  config: Map[String, List[ParameterSchema]],
+  functionality: Map[String, List[ParameterSchema]],
   platforms: Map[String, List[ParameterSchema]],
   requirements: Map[String, List[ParameterSchema]],
   arguments: Map[String, List[ParameterSchema]],
   resources: Map[String, List[ParameterSchema]],
-  project: List[ParameterSchema],
   nextflowParameters: Map[String, List[ParameterSchema]],
 )
 
@@ -100,57 +99,59 @@ object CollectedSchemas {
 
   val schemaClassMap = Map(
     "config" -> Map(
-      ""                       -> getMembers[Config](),
+      "config"                    -> getMembers[Config](),
+      "project"                   -> getMembers[ViashProject](),
     ),
     "functionality" -> Map(
-      ""                       -> getMembers[Functionality]()
+      "functionality"             -> getMembers[Functionality](),
+      "author"                    -> getMembers[Author](),
+      "computationalRequirements" -> getMembers[ComputationalRequirements](),
     ),
     "platforms" -> Map(
-      "nativePlatform"         -> getMembers[NativePlatform](),
-      "dockerPlatform"         -> getMembers[DockerPlatform](),
-      "nextflowVdsl3Platform"  -> getMembers[NextflowVdsl3Platform](),
-      "nextflowLegacyPlatform" -> getMembers[NextflowLegacyPlatform](),
+      "platform"                  -> getMembers[Platform](),
+      "nativePlatform"            -> getMembers[NativePlatform](),
+      "dockerPlatform"            -> getMembers[DockerPlatform](),
+      "nextflowVdsl3Platform"     -> getMembers[NextflowVdsl3Platform](),
+      "nextflowLegacyPlatform"    -> getMembers[NextflowLegacyPlatform](),
     ),
     "requirements" -> Map(
-      "apkRequirements"        -> getMembers[ApkRequirements](),
-      "aptRequirements"        -> getMembers[AptRequirements](),
-      "dockerRequirements"     -> getMembers[DockerRequirements](),
-      "javascriptRequirements" -> getMembers[JavaScriptRequirements](),
-      "pythonRequirements"     -> getMembers[PythonRequirements](),
-      "rRequirements"          -> getMembers[RRequirements](),
-      "rubyRequirements"       -> getMembers[RubyRequirements](),
-      "yumRequirements"        -> getMembers[YumRequirements](),
+      "requirements"              -> getMembers[Requirements](),
+      "apkRequirements"           -> getMembers[ApkRequirements](),
+      "aptRequirements"           -> getMembers[AptRequirements](),
+      "dockerRequirements"        -> getMembers[DockerRequirements](),
+      "javascriptRequirements"    -> getMembers[JavaScriptRequirements](),
+      "pythonRequirements"        -> getMembers[PythonRequirements](),
+      "rRequirements"             -> getMembers[RRequirements](),
+      "rubyRequirements"          -> getMembers[RubyRequirements](),
+      "yumRequirements"           -> getMembers[YumRequirements](),
     ),
     "arguments" -> Map(
-      "argument"               -> getMembers[Argument[_]](),
-      "boolean"                -> getMembers[BooleanArgument](),
-      "boolean_true"           -> getMembers[BooleanTrueArgument](),
-      "boolean_false"          -> getMembers[BooleanFalseArgument](),
-      "double"                 -> getMembers[DoubleArgument](),
-      "file"                   -> getMembers[FileArgument](),
-      "integer"                -> getMembers[IntegerArgument](),
-      "long"                   -> getMembers[LongArgument](),
-      "string"                 -> getMembers[StringArgument](),
+      "argument"                  -> getMembers[Argument[_]](),
+      "boolean"                   -> getMembers[BooleanArgument](),
+      "boolean_true"              -> getMembers[BooleanTrueArgument](),
+      "boolean_false"             -> getMembers[BooleanFalseArgument](),
+      "double"                    -> getMembers[DoubleArgument](),
+      "file"                      -> getMembers[FileArgument](),
+      "integer"                   -> getMembers[IntegerArgument](),
+      "long"                      -> getMembers[LongArgument](),
+      "string"                    -> getMembers[StringArgument](),
     ),
     "resources" -> Map(
-      "resource"               -> getMembers[Resource](),
-      "bashScript"             -> getMembers[BashScript](),
-      "cSharpScript"           -> getMembers[CSharpScript](),
-      "executable"             -> getMembers[Executable](),
-      "javaScriptScript"       -> getMembers[JavaScriptScript](),
-      "nextflowScript"         -> getMembers[NextflowScript](),
-      "plainFile"              -> getMembers[PlainFile](),
-      "pythonScript"           -> getMembers[PythonScript](),
-      "rScript"                -> getMembers[RScript](),
-      "scalaScript"            -> getMembers[ScalaScript](),
-    ),
-    "project" -> Map(
-      ""                       -> getMembers[ViashProject](),
+      "resource"                  -> getMembers[Resource](),
+      "bashScript"                -> getMembers[BashScript](),
+      "cSharpScript"              -> getMembers[CSharpScript](),
+      "executable"                -> getMembers[Executable](),
+      "javaScriptScript"          -> getMembers[JavaScriptScript](),
+      "nextflowScript"            -> getMembers[NextflowScript](),
+      "plainFile"                 -> getMembers[PlainFile](),
+      "pythonScript"              -> getMembers[PythonScript](),
+      "rScript"                   -> getMembers[RScript](),
+      "scalaScript"               -> getMembers[ScalaScript](),
     ),
     "nextflowParameters" -> Map(
-      "nextflowDirectives"     -> getMembers[NextflowDirectives](),
-      "nextflowAuto"           -> getMembers[NextflowAuto](),
-      "nextflowConfig"         -> getMembers[NextflowConfig](),
+      "nextflowDirectives"        -> getMembers[NextflowDirectives](),
+      "nextflowAuto"              -> getMembers[NextflowAuto](),
+      "nextflowConfig"            -> getMembers[NextflowConfig](),
     )
   )
 
@@ -182,13 +183,12 @@ object CollectedSchemas {
 
   // Main call for documentation output
   private lazy val data = CollectedSchemas(
-      config = getSchema(schemaClassMap.get("config").get("")),
-      functionality = getSchema(schemaClassMap.get("functionality").get("")),
+      config = schemaClassMap.get("config").get.map{ case(k, v) => (k, getSchema(v))},
+      functionality = schemaClassMap.get("functionality").get.map{ case(k, v) => (k, getSchema(v))},
       platforms = schemaClassMap.get("platforms").get.map{ case(k, v) => (k, getSchema(v))},
       requirements = schemaClassMap.get("requirements").get.map{ case(k, v) => (k, getSchema(v))},
       arguments = schemaClassMap.get("arguments").get.map{ case(k, v) => (k, getSchema(v))},
       resources = schemaClassMap.get("resources").get.map{ case(k, v) => (k, getSchema(v))},
-      project = getSchema(schemaClassMap.get("project").get("")),
       nextflowParameters = schemaClassMap.get("nextflowParameters").get.map{ case(k, v) => (k, getSchema(v))},
     )
 
@@ -217,11 +217,13 @@ object CollectedSchemas {
 
   def getAllDeprecations = {
     val arr =
-      data.config.map(c => ("config " + c.name, c.deprecated)) ++
-      data.functionality.map(f => ("functionality " + f.name, f.deprecated)) ++
+      data.config.flatMap{ case (key, v) => v.map(v2 => ("config " + key + " " + v2.name, v2.deprecated)) } ++ 
+      data.functionality.flatMap{ case (key, v) => v.map(v2 => ("functionality " + key + " " + v2.name, v2.deprecated)) } ++ 
       data.platforms.flatMap{ case (key, v) => v.map(v2 => ("platforms " + key + " " + v2.name, v2.deprecated)) } ++ 
       data.requirements.flatMap{ case (key, v) => v.map(v2 => ("requirements " + key + " " + v2.name, v2.deprecated)) } ++
-      data.arguments.flatMap{ case (key, v) => v.map(v2 => ("arguments " + key + " " + v2.name, v2.deprecated)) }
+      data.arguments.flatMap{ case (key, v) => v.map(v2 => ("arguments " + key + " " + v2.name, v2.deprecated)) } ++
+      data.resources.flatMap{ case (key, v) => v.map(v2 => ("resources " + key + " " + v2.name, v2.deprecated)) } ++ 
+      data.nextflowParameters.flatMap{ case (key, v) => v.map(v2 => ("nextflowParameters " + key + " " + v2.name, v2.deprecated)) }
     
     arr.filter(t => t._2.isDefined).map(t => (t._1, t._2.get))
   }

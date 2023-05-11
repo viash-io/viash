@@ -28,6 +28,11 @@ import io.viash.schemas._
   """Running a Viash component on a native platform means that the script will be executed in your current environment.
     |Any dependencies are assumed to have been installed by the user, so the native platform is meant for developers (who know what they're doing) or for simple bash scripts (which have no extra dependencies).
     |""".stripMargin)
+@example(
+  """platforms:
+    |  - type: native
+    |""".stripMargin,
+  "yaml")
 case class NativePlatform(
   @description("As with all platforms, you can give a platform a different name. By specifying `id: foo`, you can target this platform (only) by specifying `-p foo` in any of the Viash commands.")
   @example("id: foo", "yaml")

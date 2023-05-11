@@ -34,6 +34,13 @@ import io.viash.helpers.Escaper
  * Next-gen Platform class for generating NextFlow (DSL2) modules.
  */
 @description("Next-gen platform for generating NextFlow VDSL3 modules.")
+@example(
+  """platforms:
+    |  - type: nextflow
+    |    directives:
+    |      label: [lowcpu, midmem]
+    |""".stripMargin,
+  "yaml")
 case class NextflowVdsl3Platform(
   @description("Every platform can be given a specific id that can later be referred to explicitly when running or building the Viash component.")
   @example("id: foo", "yaml")
@@ -58,7 +65,7 @@ case class NextflowVdsl3Platform(
   directives: NextflowDirectives = NextflowDirectives(),
 
   @description(
-    """Automated processing flags which can be toggled on or off:
+    """@[Automated processing flags](nextflow_auto) which can be toggled on or off:
       |
       || Flag | Description | Default |
       ||---|---------|----|
@@ -74,7 +81,7 @@ case class NextflowVdsl3Platform(
       "yaml")
   auto: NextflowAuto = NextflowAuto(),
 
-  @description("Allows tweaking how the Nextflow Config file is generated.")
+  @description("Allows tweaking how the @[Nextflow Config](nextflow_config) file is generated.")
   config: NextflowConfig = NextflowConfig(),
 
   @description("Whether or not to print debug messages.")

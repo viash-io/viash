@@ -19,6 +19,18 @@ package io.viash.platforms.requirements
 
 import io.viash.schemas.description
 
+@description(
+  """Requirements for installing the following types of packages:
+    |
+    | - @[apt](apt_req)
+    | - @[apk](apk_req)
+    | - @[Docker setup instructions](docker_req)
+    | - @[JavaScript](javascript_req)
+    | - @[Python](python_req)
+    | - @[R](r_req)
+    | - @[Ruby](ruby_req)
+    | - @[yum](yum_req)
+    |""".stripMargin)
 trait Requirements {
   @description("Specifies the type of the requirement specification.")
   val `type`: String

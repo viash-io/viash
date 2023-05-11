@@ -25,7 +25,7 @@ import java.nio.file.NoSuchFileException
 import io.viash.schemas._
 
 @description(
-  """@[Resources](resources) are files that support the component. The first resource should be @[a script](scripting_languages) that will be executed when the functionality is run. Additional resources will be copied to the same directory.
+  """Resources are files that support the component. The first resource should be @[a script](scripting_languages) that will be executed when the functionality is run. Additional resources will be copied to the same directory.
     |
     |Common properties:
     |
