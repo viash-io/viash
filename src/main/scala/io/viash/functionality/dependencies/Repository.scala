@@ -65,8 +65,38 @@ object Repository {
     }
   }
 
-  def cache(repo: Repository, configDir: Path, projectRootDir: Option[Path]): Repository = 
+  // A poor man's approach to caching. The cache is only valid within this run of Viash.
+  // However, it solves the issue of having to fetch the same repository over and over again, now we just do it once per run.
+  // When proper multi-session caching would need to check for changed code bases, now we get this virtually for free.
+  // We just fetched a code base and we have to assume it will not change within this session.
+  private val cachedRepos = scala.collection.mutable.ListBuffer[Repository]()
+  private def getCachedRepository(repo: Repository): Option[Repository] = {
+    // We can't compare names because they don't hold actual information and can change between configs but still point to the same code base.
+    val anonymizedRepo = repo.copyRepo(name = "")
+    // Compare anonymized repos. Don't compare localPath as that is the information we're looking for.
+    val foundRepo = cachedRepos.find(p => p.copyRepo(localPath = "").equals(anonymizedRepo))
+    // Map Some(foundRepo) to original repo but with localPath filled in, returns None if no cache found.
+    foundRepo.map(r => repo.copyRepo(localPath = r.localPath))
+  }
+  private def storeRepositoryInCache(repo: Repository) = {
+    // don't cache local repositories with a path relative to the config. Identical paths but to different configs *might* result in different resolved paths.
     repo match {
+      case r: LocalRepository if r.path.isDefined && !r.path.get.startsWith("/") =>
+        // don't do anything, this repo is not reliably cacheable
+      case _ =>
+        cachedRepos.append(repo.copyRepo(name = ""))
+    }
+  }
+
+  def cache(repo: Repository, configDir: Path, projectRootDir: Option[Path]): Repository = {
+
+    // Check if we can get a locally cached version of the repo
+    val existingRepo = getCachedRepository(repo)
+    if (existingRepo.isDefined)
+      return existingRepo.get
+
+    // No cache found so fetch it
+    val newRepo = repo match {
       case r: GithubRepository => {
         val r2 = r.checkoutSparse()
         val r3 = r2.checkout()
@@ -91,6 +121,11 @@ object Repository {
       }
       case r => r
     }
+
+    // Store the newly fetched repo in the cache
+    storeRepositoryInCache(newRepo)
+    newRepo
+  }
 }
 
 @description("A GitHub repository where remote dependency components can be found.")
