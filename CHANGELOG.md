@@ -20,7 +20,7 @@
 
 * `Nextflow VDSL3`:
   - Add profiles to the Nextflow Config file when the main script is a `NextflowScript` (#408).
-  - Add a `script` parameter in Nextflow Config file to add a single string or list of strings to the `nextflow.config` (PR #???).
+  - Add a `script` parameter in Nextflow Config file to add a single string or list of strings to the `nextflow.config` (PR #430).
 
 * `Scripts`: Remove the `entrypoint` parameter for all script types except `NextflowScript` (#409). All these scripts had to check individually whether the parameter was unset, now it can be done in the `Script` apply method.
 
