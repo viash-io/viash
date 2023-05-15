@@ -347,11 +347,11 @@ case class DockerPlatform(
       case true => test_setup
       case _ => Nil
     }
+
     val requirements2 = requirements ::: setupRequirements ::: List(labelReq)
 
     // get dependencies
     val runCommands = requirements2.flatMap(_.dockerCommands)
-
 
     // don't draw defaults from functionality for the from image
     val fromImageInfo = Docker.getImageInfo(
@@ -386,6 +386,7 @@ case class DockerPlatform(
       } else {
         val dockerFile =
           s"FROM ${fromImageInfo.toString}\n\n" +
+            "ENTRYPOINT []\n\n" +
             runCommands.mkString("\n")
 
         val dockerRequirements =
