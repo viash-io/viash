@@ -160,11 +160,11 @@ case class DockerPlatform(
 
   @description("Override the entrypoint of the base container. Default set `ENTRYPOINT []`.")
   @since("Viash 0.7.4")
-  entrypoint: Option[String] = Some("[]"),
+  entrypoint: Option[Either[String, List[String]]] = Some(Right(Nil)),
 
   @description("Set the default command being executed when running the Docker container.")
   @since("Viash 0.7.4")
-  cmd: Option[String] = None,
+  cmd: Option[Either[String, List[String]]] = None
 
 ) extends Platform {
   // START OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
@@ -387,8 +387,16 @@ case class DockerPlatform(
         targetImageInfo.toString
       }
 
-    val entrypointStr = entrypoint.map(s => s"ENTRYPOINT $s\n").getOrElse("")
-    val cmdStr = cmd.map(s => s"CMD $s\n").getOrElse("")
+    def entrypointCmdMap(values: Option[Either[String, List[String]]]): Option[String] =
+      values match {
+        case None => None
+        case Some(Left(s)) => Some(s)
+        case Some(Right(list)) if list.isEmpty => Some("[]")
+        case Some(Right(list)) => Some(list.mkString("[\"", "\",\"", "\"]"))
+      }
+
+    val entrypointStr = entrypointCmdMap(entrypoint).map(s => s"ENTRYPOINT $s\n").getOrElse("")
+    val cmdStr = entrypointCmdMap(cmd).map(s => s"CMD $s\n").getOrElse("")
 
     // if no extra dependencies are needed, the provided image can just be used,
     // otherwise need to construct a separate docker container
