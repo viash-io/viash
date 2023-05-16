@@ -29,6 +29,7 @@ import io.viash.helpers.circe._
 import io.circe.syntax._
 import io.circe.{Printer => JsonPrinter}
 import io.viash.ViashNamespace
+import io.viash.functionality.dependencies.Dependency
 
 @description("""A Nextflow script. Work in progress; added mainly for annotation at the moment.""".stripMargin)
 case class NextflowScript(
@@ -56,6 +57,10 @@ case class NextflowScript(
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
     val configPath = s"$$targetDir/${config.functionality.namespace.getOrElse("namespace")}/${config.functionality.name}/.config.vsh.yaml"
 
+    def nextflowInclude(d: Dependency): String = d.alias match {
+      case None => d.configInfo("functionalityName")
+      case Some(alias) => s"${d.configInfo{"functionalityName"}} as ${alias.toLowerCase().replaceAll("/", "_")}"
+    }
     val (localDependencies, remoteDependencies) = config.functionality.dependencies
       .partition(d => d.isLocalDependency)
     val localDependenciesStrings = localDependencies.map{ d =>
@@ -63,11 +68,11 @@ case class NextflowScript(
       // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
       val thisPath = ViashNamespace.targetOutputPath("", "invalid_platform_name", config.functionality.namespace, config.functionality.name)
       val relativePath = Paths.get(thisPath).relativize(Paths.get(d.configInfo.getOrElse("executable", "")))
-      s"include { ${d.configInfo{"functionalityName"}} } from \"$$projectDir/$relativePath\""
+      s"include { ${nextflowInclude(d)} } from \"$$projectDir/$relativePath\""
     }
     val remoteDependenciesStrings = remoteDependencies.map{ d => 
       if (d.foundConfigPath.isDefined)
-        s"include { ${d.configInfo("functionalityName")} } from \"$$rootDir/dependencies/${d.subOutputPath.get}/main.nf\""
+        s"include { ${nextflowInclude(d)} } from \"$$rootDir/dependencies/${d.subOutputPath.get}/main.nf\""
       else
         s"// ${d.name} not found!"
     }

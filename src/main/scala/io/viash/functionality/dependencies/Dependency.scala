@@ -55,6 +55,10 @@ case class Dependency(
   @description("The full name of the dependency component. This should include the namespace.")
   @example("name: \"my_namespace\"component", "yaml")
   name: String,
+
+  @description("An alternative name for the dependency component. This can include a namespace if so needed.")
+  @example("alias: my_alias", "yaml")
+  alias: Option[String] = None,
   
   @description(
     """Specifies the location where the dependency component can be found.
@@ -82,9 +86,9 @@ case class Dependency(
   def workRepository: Option[Repository] = repository.toOption
 
   // Name in BashWrapper
-  def VIASH_DEP: String = s"VIASH_DEP_${name.replace("/", "_").toUpperCase()}"
+  def VIASH_DEP: String = s"VIASH_DEP_${alias.getOrElse(name).replace("/", "_").toUpperCase()}"
   // Name to be used in scripts
-  def scriptName: String = name.replace("/", "_")
+  def scriptName: String = alias.getOrElse(name).replace("/", "_")
   // Part of the folder structure where dependencies should be written to, contains the repository & dependency name
   def subOutputPath = foundConfigPath.flatMap(fcp => getRelativePath(Paths.get(fcp).getParent()))
   // Method to get a relative sub path for this dependency or a local dependency of this dependency
