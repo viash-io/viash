@@ -156,7 +156,16 @@ case class DockerPlatform(
 
   @description("Additional requirements specific for running unit tests.")
   @since("Viash 0.5.13")
-  test_setup: List[Requirements] = Nil
+  test_setup: List[Requirements] = Nil,
+
+  @description("Override the entrypoint of the base container. Default set `ENTRYPOINT []`.")
+  @since("Viash 0.7.4")
+  entrypoint: Option[String] = Some("[]"),
+
+  @description("Set the default command being executed when running the Docker container.")
+  @since("Viash 0.7.4")
+  cmd: Option[String] = None,
+
 ) extends Platform {
   // START OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
   @description("Adds a `privileged` flag to the docker run.")
@@ -378,6 +387,9 @@ case class DockerPlatform(
         targetImageInfo.toString
       }
 
+    val entrypointStr = entrypoint.map(s => s"ENTRYPOINT $s\n").getOrElse("")
+    val cmdStr = cmd.map(s => s"CMD $s\n").getOrElse("")
+
     // if no extra dependencies are needed, the provided image can just be used,
     // otherwise need to construct a separate docker container
     val (viashDockerFile, viashDockerBuild) =
@@ -385,9 +397,12 @@ case class DockerPlatform(
         ("  :", "  ViashDockerPull $1")
       } else {
         val dockerFile =
-          s"FROM ${fromImageInfo.toString}\n\n" +
-            "ENTRYPOINT []\n\n" +
-            runCommands.mkString("\n")
+          s"""FROM ${fromImageInfo.toString}
+             |
+             |$entrypointStr
+             |$cmdStr 
+             |${runCommands.mkString("\n")}
+             |""".stripMargin           
 
         val dockerRequirements =
           requirements.flatMap {

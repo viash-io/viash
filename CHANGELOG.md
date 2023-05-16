@@ -16,6 +16,8 @@
   - `{output}`: path to the destination directory when building the component
   - `{abs-output}`: absolute path to the destination directory when building the component
 
+* `docker platform`: Add `entrypoint` and `cmd` parameters to the docker platform config that allows overriding the default docker container settings.
+
 ## MINOR CHANGES
 
 * `Nextflow VDSL3`: Add profiles to the Nextflow Config file when the main script is a `NextflowScript` (#408).
