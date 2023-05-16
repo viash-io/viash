@@ -82,6 +82,7 @@ case class NextflowVdsl3Platform(
   auto: NextflowAuto = NextflowAuto(),
 
   @description("Allows tweaking how the @[Nextflow Config](nextflow_config) file is generated.")
+  @since("Viash 0.7.4")
   config: NextflowConfig = NextflowConfig(),
 
   @description("Whether or not to print debug messages.")
