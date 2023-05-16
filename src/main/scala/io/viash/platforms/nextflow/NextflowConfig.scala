@@ -22,6 +22,7 @@ import io.viash.schemas._
 import io.viash.helpers.data_structures.OneOrMore
 
 @description("Allows tweaking how the Nextflow Config file is generated.")
+@since("Viash 0.7.4")
 case class NextflowConfig(
   @description(
     """A series of default labels to specify memory and cpu constraints.
