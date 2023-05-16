@@ -159,6 +159,7 @@ case class NextflowVdsl3Platform(
       }
 
     val processLabels = config.labels.map{ case (k, v) => s"withLabel: $k { $v }"}
+    val inlineScript = config.script.toList
 
     s"""manifest {
     |  name = '${functionality.name}'
@@ -168,7 +169,10 @@ case class NextflowVdsl3Platform(
     |
     |process{
     |  ${processLabels.mkString("\n  ")}
-    |}""".stripMargin
+    |}
+    |
+    |${inlineScript.mkString("\n")}
+    |""".stripMargin
   }
 
   // interpreted from BashWrapper
