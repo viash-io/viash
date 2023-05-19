@@ -159,10 +159,15 @@ case class DockerPlatform(
   test_setup: List[Requirements] = Nil,
 
   @description("Override the entrypoint of the base container. Default set `ENTRYPOINT []`.")
+  @exampleWithDescription("entrypoint: ", "yaml", "Disable the default override.")
+  @exampleWithDescription("""entrypoint: ["top", "-b"]""", "yaml", "Entrypoint of the container in the exec format, which is the prefered form.")
+  @exampleWithDescription("""entrypoint: "top -b"""", "yaml", "Entrypoint of the container in the shell format.")
   @since("Viash 0.7.4")
   entrypoint: Option[Either[String, List[String]]] = Some(Right(Nil)),
 
   @description("Set the default command being executed when running the Docker container.")
+  @exampleWithDescription("""cmd: ["echo", "$HOME"]""", "yaml", "Set CMD using the exec format, which is the prefered form.")
+  @exampleWithDescription("""cmd: "echo $HOME"""", "yaml", "Set CMD using the shell format.")
   @since("Viash 0.7.4")
   cmd: Option[Either[String, List[String]]] = None
 
