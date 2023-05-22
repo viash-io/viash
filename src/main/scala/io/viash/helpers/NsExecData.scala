@@ -20,6 +20,7 @@ package io.viash.helpers
 import io.viash.config.Config
 import java.nio.file.Paths
 import io.viash.platforms.Platform
+import io.viash.schemas.since
 
 final case class NsExecData(
   configFullPath: String,
@@ -31,7 +32,11 @@ final case class NsExecData(
   functionalityName: String,
   namespace: Option[String],
   platformId: Option[String],
+
+  @since("Viash 0.7.4")
   output: Option[String],
+  
+  @since("Viash 0.7.4")
   absoluteOutput: Option[String]
 ) {
   def getField(name: String) = {

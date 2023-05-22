@@ -19,8 +19,10 @@ package io.viash.platforms.nextflow
 
 import scala.collection.immutable.ListMap
 import io.viash.schemas._
+import io.viash.helpers.data_structures.OneOrMore
 
 @description("Allows tweaking how the Nextflow Config file is generated.")
+@since("Viash 0.7.4")
 case class NextflowConfig(
   @description(
     """A series of default labels to specify memory and cpu constraints.
@@ -75,7 +77,22 @@ case class NextflowConfig(
     NextflowConfig.logarithmicIterator
       .takeWhile(_ <= 1000)
       .map(i => (s"cpu$i", s"cpus = $i")) : _*
-  )
+  ),
+
+  @description(
+    """Includes a single string or list of strings into the nextflow.config file.
+      |This can be used to add custom profiles or include an additional config file.
+      |""".stripMargin)
+  @example(
+    """script:
+      |  - |
+      |    profiles {
+      |    ...
+      |    }
+      |""".stripMargin,
+    "yaml")
+  @example("""script: includeConfig("config.config")""", "yaml")
+  script: OneOrMore[String] = Nil
 )
 
 object NextflowConfig {

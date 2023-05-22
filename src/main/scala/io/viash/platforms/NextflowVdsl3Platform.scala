@@ -82,6 +82,7 @@ case class NextflowVdsl3Platform(
   auto: NextflowAuto = NextflowAuto(),
 
   @description("Allows tweaking how the @[Nextflow Config](nextflow_config) file is generated.")
+  @since("Viash 0.7.4")
   config: NextflowConfig = NextflowConfig(),
 
   @description("Whether or not to print debug messages.")
@@ -160,6 +161,7 @@ case class NextflowVdsl3Platform(
       }
 
     val processLabels = config.labels.map{ case (k, v) => s"withLabel: $k { $v }"}
+    val inlineScript = config.script.toList
 
     s"""manifest {
     |  name = '${functionality.name}'
@@ -169,7 +171,10 @@ case class NextflowVdsl3Platform(
     |
     |process{
     |  ${processLabels.mkString("\n  ")}
-    |}""".stripMargin
+    |}
+    |
+    |${inlineScript.mkString("\n")}
+    |""".stripMargin
   }
 
 
