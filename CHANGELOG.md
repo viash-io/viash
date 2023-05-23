@@ -16,7 +16,7 @@
   - `{output}`: path to the destination directory when building the component
   - `{abs-output}`: absolute path to the destination directory when building the component
 
-* `docker platform`: Add `entrypoint` and `cmd` parameters to the docker platform config that allows overriding the default docker container settings.
+* `DockerPlatform`: Add `entrypoint` and `cmd` parameters to the docker platform config that allows overriding the default docker container settings (PR #432).
 
 ## MINOR CHANGES
 
