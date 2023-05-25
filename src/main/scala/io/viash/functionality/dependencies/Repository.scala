@@ -60,7 +60,7 @@ object Repository {
 
     // TODO this match is totally not up to snuff
     s match {
-      case repoRegex(protocol, repo, tag) if protocol == "github" => GithubRepository("TODO generate name", uri = repo, tag = Some(tag) )
+      case repoRegex(protocol, repo, tag) if protocol == "github" => GitRepository("TODO generate name", uri = repo, tag = Some(tag) )
       case repoRegex(protocol, repo, tag) if protocol == "local" => LocalRepository("TODO generate name")
     }
   }
@@ -97,7 +97,7 @@ object Repository {
 
     // No cache found so fetch it
     val newRepo = repo match {
-      case r: GithubRepository => {
+      case r: GitRepository => {
         val r2 = r.checkoutSparse()
         val r3 = r2.checkout()
         // Stopgap solution to be able to use built repositories which were not built with dependency aware Viash version.
@@ -128,7 +128,7 @@ object Repository {
   }
 }
 
-@description("A GitHub repository where remote dependency components can be found.")
+@description("A generic Git or GitHub repository where remote dependency components can be found.")
 @example(
   """type: github
     |uri: openpipelines-bio/modules
@@ -145,14 +145,17 @@ object Repository {
     |""".stripMargin,
   "yaml"
   )
-case class GithubRepository(
+case class GitRepository(
   name: String,
 
-  @description("Defines the repository as a GitHub repository.")
+  @description("Defines the repository as a Git repository.")
   `type`: String = "github",
 
-  @description("The GitHub `organization/repository_name` of the repository.")
-  @example("uri: viash-io/viash", "yaml")
+  @description(
+    """For github: The GitHub `organization/repository_name` of the repository.
+      |For git: The Git `url:organization/reporistory_name` of the repository.
+      |""".stripMargin)
+  @exampleWithDescription("uri: viash-io/viash", "yaml", "A Github repository uri")
   uri: String,
   tag: Option[String],
   path: Option[String] = None,
@@ -169,10 +172,13 @@ case class GithubRepository(
     copy(name, `type`, uri, tag, path, localPath)
   }
 
-  lazy val fullUri = s"git@github.com:$uri.git"
+  lazy val fullUri = `type` match {
+    case "github" => s"git@github.com:$uri.git"
+    case "git" => s"ssh://git@$uri.git"
+  }
 
   // Clone of single branch with depth 1 but without checking out files
-  def checkoutSparse(): GithubRepository = {
+  def checkoutSparse(): GitRepository = {
     val temporaryFolder = IO.makeTemp("viash_hub_repo")
     val cwd = Some(temporaryFolder.toFile)
 
@@ -211,7 +217,7 @@ case class GithubRepository(
   }
 
   // Checkout of files from already cloned repository. Limit file checkout to the path that was specified
-  def checkout(): GithubRepository = {
+  def checkout(): GitRepository = {
     val pathStr = path.getOrElse(".")
     val cwd = Some(Paths.get(localPath).toFile)
     val checkoutName = tag match {

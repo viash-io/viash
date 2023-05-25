@@ -23,7 +23,7 @@ import io.viash.config.Config
 import io.viash.lenses.ConfigLenses._
 import io.viash.lenses.FunctionalityLenses._
 import io.viash.lenses.RepositoryLens._
-import io.viash.functionality.dependencies.GithubRepository
+import io.viash.functionality.dependencies.GitRepository
 import java.nio.file.Files
 import java.io.IOException
 import java.io.UncheckedIOException

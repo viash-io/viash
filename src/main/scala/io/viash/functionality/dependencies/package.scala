@@ -27,13 +27,13 @@ package object dependencies {
 
   // encoders and decoders for Argument
   implicit val encodeDependency: Encoder.AsObject[Dependency] = deriveConfiguredEncoder
-  implicit val encodeGithubRepository: Encoder.AsObject[GithubRepository] = deriveConfiguredEncoder
+  implicit val encodeGitRepository: Encoder.AsObject[GitRepository] = deriveConfiguredEncoder
   implicit val encodeLocalRepository: Encoder.AsObject[LocalRepository] = deriveConfiguredEncoder
   implicit def encodeRepository[A <: Repository]: Encoder[A] = Encoder.instance {
     par =>
       val typeJson = Json.obj("type" -> Json.fromString(par.`type`))
       val objJson = par match {
-        case s: GithubRepository => encodeGithubRepository(s)
+        case s: GitRepository => encodeGitRepository(s)
         case s: LocalRepository => encodeLocalRepository(s)
       }
       objJson deepMerge typeJson
@@ -41,13 +41,14 @@ package object dependencies {
 
 
   implicit val decodeDependency: Decoder[Dependency] = deriveConfiguredDecoder
-  implicit val decodeGithubRepository: Decoder[GithubRepository] = deriveConfiguredDecoder
+  implicit val decodeGitRepository: Decoder[GitRepository] = deriveConfiguredDecoder
   implicit val decodeLocalRepository: Decoder[LocalRepository] = deriveConfiguredDecoder
   implicit def decodeRepository: Decoder[Repository] = Decoder.instance {
     cursor =>
       val decoder: Decoder[Repository] =
         cursor.downField("type").as[String] match {
-          case Right("github") => decodeGithubRepository.widen
+          case Right("github") => decodeGitRepository.widen
+          case Right("git") => decodeGitRepository.widen
           case Right("local") => decodeLocalRepository.widen
           case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised. Valid types are github, ..., ... and local.")
           case Left(exception) => throw exception
