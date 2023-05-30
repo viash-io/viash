@@ -60,56 +60,9 @@ case class GitRepository(
     tag: Option[String],
     path: Option[String],
     localPath: String
-  ): Repository = {
+  ): GitRepository = {
     copy(name, `type`, uri, tag, path, localPath)
   }
 
   lazy val fullUri = s"ssh://git@$uri.git"
-
-    // Clone of single branch with depth 1 but without checking out files
-  def checkoutSparse(): GitRepository = {
-    val temporaryFolder = IO.makeTemp("viash_hub_repo")
-    val cwd = Some(temporaryFolder.toFile)
-
-    Console.err.println(s"temporaryFolder: $temporaryFolder uri: $uri fullUri: $fullUri")
-
-    val singleBranch = tag match {
-      case None => List("--single-branch")
-      case Some(value) => List("--single-branch", "--branch", value)
-    }
-
-    val loggers = Seq[String => Unit] { (str: String) => {Console.err.println(str)} }
-
-    val out = Exec.runCatch(
-      List("git", "clone", fullUri, "--no-checkout", "--depth", "1") ++ singleBranch :+ ".",
-      cwd = cwd,
-      loggers = loggers,
-    )
-
-    copy(localPath = temporaryFolder.toString)
-  }
-
-  // Checkout of files from already cloned repository. Limit file checkout to the path that was specified
-  def checkout(): GitRepository = {
-    val pathStr = path.getOrElse(".")
-    val cwd = Some(Paths.get(localPath).toFile)
-    val checkoutName = tag match {
-      case Some(name) if hasBranch(name, cwd) => s"origin/$name"
-      case Some(name) if hasTag(name, cwd) => s"tags/$name"
-      case _ => "origin/HEAD"
-    }
-
-    val out = Exec.runCatch(
-      List("git", "checkout", checkoutName, "--", pathStr),
-      cwd = cwd
-    )
-
-    Console.err.println(s"checkout out: ${out.command} ${out.exitValue} ${out.output}")
-
-    if (path.isDefined)
-      copy(localPath = Paths.get(localPath, path.get).toString)
-    else
-      // no changes to be made
-      this
-  }
 }
