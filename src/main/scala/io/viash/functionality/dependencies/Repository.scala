@@ -18,9 +18,9 @@
 package io.viash.functionality.dependencies
 
 import io.viash.helpers.IO
-import java.nio.file.Paths
 import io.viash.schemas._
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.nio.file.Files
 
 @description("Specifies a repository where dependency components can be found.")
@@ -58,8 +58,9 @@ object Repository {
 
     // TODO this match is totally not up to snuff
     s match {
-      case repoRegex(protocol, repo, tag) if protocol == "github" => GithubRepository("TODO generate name", uri = repo, tag = Some(tag) )
-      case repoRegex(protocol, repo, tag) if protocol == "local" => LocalRepository("TODO generate name")
+      case repoRegex("git", repo, tag)    => GitRepository("TODO generate name", uri = repo, tag = Some(tag) )
+      case repoRegex("github", repo, tag) => GithubRepository("TODO generate name", uri = repo, tag = Some(tag) )
+      case repoRegex("local", repo, tag)  => LocalRepository("TODO generate name")
     }
   }
 

@@ -23,31 +23,31 @@ import io.viash.helpers.Exec
 import java.io.File
 import java.nio.file.Paths
 
-@description("A GitHub repository where remote dependency components can be found.")
+@description("A Git repository where remote dependency components can be found.")
 @example(
-  """type: github
-    |uri: openpipelines-bio/modules
+  """type: git
+    |uri: my_uri:openpipelines-bio/modules
     |tag: 0.3.0
     |""".stripMargin,
   "yaml"
 )
 @example(
   """name: viash-testns
-    |type: github
-    |uri: viash-io/viash
+    |type: git
+    |uri: my_uri:viash-io/viash
     |tag: 0.7.1
     |path: src/test/resources/testns
     |""".stripMargin,
   "yaml"
   )
-case class GithubRepository(
+case class GitRepository(
   name: String,
 
-  @description("Defines the repository as a GitHub repository.")
-  `type`: String = "github",
+  @description("Defines the repository as a Git repository.")
+  `type`: String = "git",
 
-  @description("The GitHub `organization/repository_name` of the repository.")
-  @example("uri: viash-io/viash", "yaml")
+  @description("The Git `uri:organization/repository` of the repository.")
+  @example("uri: my_uri:viash-io/viash", "yaml")
   uri: String,
   tag: Option[String],
   path: Option[String] = None,
@@ -64,10 +64,10 @@ case class GithubRepository(
     copy(name, `type`, uri, tag, path, localPath)
   }
 
-  lazy val fullUri = s"git@github.com:$uri.git"
+  lazy val fullUri = s"ssh://git@$uri.git"
 
-  // Clone of single branch with depth 1 but without checking out files
-  def checkoutSparse(): GithubRepository = {
+    // Clone of single branch with depth 1 but without checking out files
+  def checkoutSparse(): GitRepository = {
     val temporaryFolder = IO.makeTemp("viash_hub_repo")
     val cwd = Some(temporaryFolder.toFile)
 
@@ -90,7 +90,7 @@ case class GithubRepository(
   }
 
   // Checkout of files from already cloned repository. Limit file checkout to the path that was specified
-  def checkout(): GithubRepository = {
+  def checkout(): GitRepository = {
     val pathStr = path.getOrElse(".")
     val cwd = Some(Paths.get(localPath).toFile)
     val checkoutName = tag match {
