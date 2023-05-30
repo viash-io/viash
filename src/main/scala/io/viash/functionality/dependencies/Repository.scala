@@ -53,15 +53,18 @@ abstract class Repository {
 }
 
 object Repository {
-  def fromSugarSyntax(s: String):Repository = {
-    val repoRegex = raw"(\w+)://([A-Za-z0-9/_\-\.:]+)(@[A-Za-z0-9][\w\./]*)".r
 
-    // TODO this match is totally not up to snuff
+  def fromSugarSyntax(s: String):Repository = {
+    val repoRegex = raw"(\w+)://([\w/\-\.:]+)(@[A-Za-z0-9][\w\./]*)?".r
+
+    def getGitTag(tag: String): Option[String] = tag match {
+      case null => None
+      case s => Some(s.stripPrefix("@"))
+    }
+
     s match {
-      case repoRegex("git", repo, null)    => GitRepository("TODO generate name", uri = repo, tag = None )
-      case repoRegex("git", repo, tag)     => GitRepository("TODO generate name", uri = repo, tag = Some(tag.stripPrefix("@")) )
-      case repoRegex("github", repo, null) => GithubRepository("TODO generate name", uri = repo, tag = None )
-      case repoRegex("github", repo, tag)  => GithubRepository("TODO generate name", uri = repo, tag = Some(tag.stripPrefix("@")) )
+      case repoRegex("git", repo, tag)     => GitRepository("TODO generate name", uri = repo, tag = getGitTag(tag) )
+      case repoRegex("github", repo, tag)  => GithubRepository("TODO generate name", uri = repo, tag = getGitTag(tag) )
       case repoRegex("local", repo, tag)   => LocalRepository("TODO generate name")
     }
   }
