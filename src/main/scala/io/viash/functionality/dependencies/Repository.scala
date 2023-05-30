@@ -53,7 +53,7 @@ abstract class Repository extends CopyableRepo[Repository] {
 }
 
 object Repository {
-  def fromSugarSyntax(s: String):Repository = {
+  def fromSugarSyntax(s: String): Repository = {
     val repoRegex = raw"(\w+)://([A-Za-z0-9/_\-\.:]+)(@[A-Za-z0-9][\w\./]*)".r
 
     // TODO this match is totally not up to snuff
