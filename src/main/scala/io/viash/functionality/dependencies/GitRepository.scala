@@ -26,15 +26,15 @@ import java.nio.file.Paths
 @description("A Git repository where remote dependency components can be found.")
 @example(
   """type: git
-    |uri: my_uri:openpipelines-bio/modules
-    |tag: 0.3.0
+    |uri: git+https://github.com/openpipelines-bio/openpipeline.git
+    |tag: 0.8.0
     |""".stripMargin,
   "yaml"
 )
 @example(
   """name: viash-testns
     |type: git
-    |uri: my_uri:viash-io/viash
+    |uri: git+https://gitlab.com/viash-io/viash.git
     |tag: 0.7.1
     |path: src/test/resources/testns
     |""".stripMargin,
@@ -46,8 +46,8 @@ case class GitRepository(
   @description("Defines the repository as a Git repository.")
   `type`: String = "git",
 
-  @description("The Git `uri:organization/repository` of the repository.")
-  @example("uri: my_uri:viash-io/viash", "yaml")
+  @description("The URI of the Git repository.")
+  @example("uri: \"git+https://github.com/openpipelines-bio/openpipeline.git\"", "yaml")
   uri: String,
   tag: Option[String],
   path: Option[String] = None,
@@ -63,6 +63,4 @@ case class GitRepository(
   ): GitRepository = {
     copy(name, `type`, uri, tag, path, localPath)
   }
-
-  lazy val fullUri = s"ssh://git@$uri.git"
 }

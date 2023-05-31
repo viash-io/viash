@@ -26,15 +26,15 @@ import java.nio.file.Paths
 @description("A GitHub repository where remote dependency components can be found.")
 @example(
   """type: github
-    |uri: openpipelines-bio/modules
-    |tag: 0.3.0
+    |repo: openpipelines-bio/openpipeline
+    |tag: 0.8.0
     |""".stripMargin,
   "yaml"
 )
 @example(
   """name: viash-testns
     |type: github
-    |uri: viash-io/viash
+    |repo: viash-io/viash
     |tag: 0.7.1
     |path: src/test/resources/testns
     |""".stripMargin,
@@ -46,9 +46,9 @@ case class GithubRepository(
   @description("Defines the repository as a GitHub repository.")
   `type`: String = "github",
 
-  @description("The GitHub `organization/repository_name` of the repository.")
-  @example("uri: viash-io/viash", "yaml")
-  uri: String,
+  @description("The name of the GitHub repository.")
+  @example("repo: viash-io/viash", "yaml")
+  repo: String,
   tag: Option[String],
   path: Option[String] = None,
   localPath: String = ""
@@ -61,8 +61,8 @@ case class GithubRepository(
     path: Option[String],
     localPath: String
   ): GithubRepository = {
-    copy(name, `type`, uri, tag, path, localPath)
+    copy(name, `type`, this.repo, tag, path, localPath)
   }
 
-  lazy val fullUri = s"git@github.com:$uri.git"
+  lazy val uri = s"https://github.com/$repo.git"
 }
