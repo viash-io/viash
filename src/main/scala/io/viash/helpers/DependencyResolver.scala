@@ -47,14 +47,12 @@ object DependencyResolver {
 
 
     // Convert all fun.dependency.repository with sugar syntax to full repositories
-    // val repoRegex = raw"(\w+)://([A-Za-z0-9/_\-\.]+)@([A-Za-z0-9]+)".r  // TODO improve regex
-    val repoRegex = raw"(\w+://[A-Za-z0-9/_\-\.]+@[A-Za-z0-9]*)".r
     val config1 = composedDependenciesLens.modify(_.map(d =>
-        d.repository match {
-          case Left(repoRegex(s)) => d.copy(repository = Right(Repository.fromSugarSyntax(s)))
-          case _ => d
-        }
-      ))(config)
+      d.repository match {
+        case Left(Repository(repo)) => d.copy(repository = Right(repo))
+        case _ => d
+      }
+    ))(config)
 
     // Check all remaining fun.dependency.repository names (Left) refering to fun.repositories can be matched
     val dependencyRepoNames = composedDependenciesLens.get(config1).flatMap(_.repository.left.toOption)
