@@ -1,13 +1,13 @@
-# Viash 0.7.4 (yyyy-MM-dd): TODO Add title
+# Viash 0.7.4 (2023-05-31): Minor bug fixes and minor improvements to VDSL3
 
+Some small fixes and consistency improvements.
+A few Quality of Life improvements were made e.g. to override the Docker `entrypoint` when working with Nextflow and providing default labels when building a Nextflow workflow.
 
 ## NEW FUNCTIONALITY
 
 * Add default labels in Nextflow config files that set default values for cpu and memory settings (PR #412). Values are more or less logarithmically spaced (1, 2, 5, 10, ...).
 
 * `Author`: Added `info` field to authors. Deprecated `props` field (PR #423).
-
-## NEW FUNCTIONALITY
 
 * `viash config view` and `viash ns list`: Set the `.info.output` path when a platform argument is provided.
 
