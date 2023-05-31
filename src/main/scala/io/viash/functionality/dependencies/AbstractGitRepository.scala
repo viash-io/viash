@@ -24,7 +24,6 @@ import java.nio.file.Paths
 
 abstract class AbstractGitRepository extends Repository {
   val uri: String
-  val fullUri: String
 
   def copyRepo(
     name: String,
@@ -59,7 +58,7 @@ abstract class AbstractGitRepository extends Repository {
     val temporaryFolder = IO.makeTemp("viash_hub_repo")
     val cwd = Some(temporaryFolder.toFile)
 
-    Console.err.println(s"temporaryFolder: $temporaryFolder uri: $uri fullUri: $fullUri")
+    Console.err.println(s"temporaryFolder: $temporaryFolder uri: $uri")
 
     val singleBranch = tag match {
       case None => List("--single-branch")
@@ -69,7 +68,7 @@ abstract class AbstractGitRepository extends Repository {
     val loggers = Seq[String => Unit] { (str: String) => {Console.err.println(str)} }
 
     val out = Exec.runCatch(
-      List("git", "clone", fullUri, "--no-checkout", "--depth", "1") ++ singleBranch :+ ".",
+      List("git", "clone", uri, "--no-checkout", "--depth", "1") ++ singleBranch :+ ".",
       cwd = cwd,
       loggers = loggers,
     )

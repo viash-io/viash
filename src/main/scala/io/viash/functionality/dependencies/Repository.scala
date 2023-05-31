@@ -62,8 +62,8 @@ object Repository {
     }
 
     s match {
-      case repoRegex("git", repo, tag)     => GitRepository("TODO generate name", uri = repo, tag = getGitTag(tag) )
-      case repoRegex("github", repo, tag)  => GithubRepository("TODO generate name", uri = repo, tag = getGitTag(tag) )
+      case repoRegex("git", uri, tag)     => GitRepository("TODO generate name", uri = uri, tag = getGitTag(tag) )
+      case repoRegex("github", repo, tag)  => GithubRepository("TODO generate name", repo = repo, tag = getGitTag(tag) )
       case repoRegex("local", repo, tag)   => LocalRepository("TODO generate name")
     }
   }
