@@ -64,7 +64,7 @@ object Repository {
       case sugarSyntaxRegex("git+https", uri, tag) =>
         Some(GitRepository(
           "TODO generate name",
-          uri = uri.stripPrefix("git+"),
+          uri = "https://" + uri,
           tag = getGitTag(tag)
         ))
       case sugarSyntaxRegex("github", repo, tag) =>
