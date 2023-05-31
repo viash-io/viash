@@ -3,7 +3,7 @@ package io.viash.functionality.dependencies
 import org.scalatest.funsuite.AnyFunSuite
 
 class RepositoryTest extends AnyFunSuite {
-  test("fromSugarSyntax: handles git+https syntax") {
+  test("Repository.unapply: handles git+https syntax") {
     val repo = Repository.unapply("git+https://github.com/viash-io/viash@v1.0.0")
     assert(repo.isDefined)
     assert(repo.get.isInstanceOf[GitRepository])
@@ -12,7 +12,7 @@ class RepositoryTest extends AnyFunSuite {
     assert(gitRepo.tag == Some("v1.0.0"))
   }
 
-  test("fromSugarSyntax: handles github syntax") {
+  test("Repository.unapply: handles github syntax") {
     val repo = Repository.unapply("github://viash-io/viash@v2.0.0")
     assert(repo.isDefined)
     assert(repo.get.isInstanceOf[GithubRepository])
@@ -21,13 +21,13 @@ class RepositoryTest extends AnyFunSuite {
     assert(githubRepo.tag == Some("v2.0.0"))
   }
 
-  test("fromSugarSyntax: handles local syntax") {
+  test("Repository.unapply: handles local syntax") {
     val repo = Repository.unapply("local://path/to/repo")
     assert(repo.isDefined)
     assert(repo.get.isInstanceOf[LocalRepository])
   }
 
-  test("fromSugarSyntax: returns None for unrecognized syntax") {
+  test("Repository.unapply: returns None for unrecognized syntax") {
     val repo = Repository.unapply("unknown://foo.bar")
     assert(repo.isEmpty)
   }
