@@ -26,7 +26,7 @@ import java.nio.file.Paths
 @description("A Git repository where remote dependency components can be found.")
 @example(
   """type: git
-    |uri: https://github.com/openpipelines-bio/openpipeline.git
+    |uri: git+https://github.com/openpipelines-bio/openpipeline.git
     |tag: 0.8.0
     |""".stripMargin,
   "yaml"
@@ -34,7 +34,7 @@ import java.nio.file.Paths
 @example(
   """name: viash-testns
     |type: git
-    |uri: https://gitlab.com/viash-io/viash.git
+    |uri: git+https://gitlab.com/viash-io/viash.git
     |tag: 0.7.1
     |path: src/test/resources/testns
     |""".stripMargin,
@@ -47,7 +47,7 @@ case class GitRepository(
   `type`: String = "git",
 
   @description("The URI of the Git repository.")
-  @example("uri: \"https://github.com/openpipelines-bio/openpipeline.git\"", "yaml")
+  @example("uri: \"git+https://github.com/openpipelines-bio/openpipeline.git\"", "yaml")
   uri: String,
   tag: Option[String],
   path: Option[String] = None,
