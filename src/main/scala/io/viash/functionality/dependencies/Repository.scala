@@ -53,7 +53,7 @@ abstract class Repository extends CopyableRepo[Repository] {
 }
 
 object Repository {
-  private val sugarSyntaxRegex = raw"(\w+)://([\w/\-\.:]+)(@[A-Za-z0-9][\w\./]*)?".r
+  private val sugarSyntaxRegex = raw"([a-zA-Z_0-9\+]+)://([\w/\-\.:]+)(@[A-Za-z0-9][\w\./]*)?".r
   private def getGitTag(tag: String): Option[String] = tag match {
     case null => None
     case s => Some(s.stripPrefix("@"))
