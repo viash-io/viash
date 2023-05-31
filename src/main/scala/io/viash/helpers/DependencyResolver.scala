@@ -48,9 +48,9 @@ object DependencyResolver {
 
     // Convert all fun.dependency.repository with sugar syntax to full repositories
     val config1 = composedDependenciesLens.modify(_.map(d =>
-      Repository.fromSugarSyntax(d.repository) match {
-        case Some(repo) => Right(repo)
-        case None => d
+      d.repository match {
+        case Left(Repository(repo)) => d.copy(repository = Right(repo))
+        case _ => d
       }
     ))(config)
 

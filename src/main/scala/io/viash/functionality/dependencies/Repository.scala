@@ -59,7 +59,7 @@ object Repository {
     case s => Some(s.stripPrefix("@"))
   }
 
-  def fromSugarSyntax(str: String): Option[Repository] = {
+  def unapply(str: String): Option[Repository] = {
     str match {
       case sugarSyntaxRegex("git+https", uri, tag) =>
         Some(GitRepository(
