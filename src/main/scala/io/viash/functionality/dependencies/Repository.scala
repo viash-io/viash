@@ -24,7 +24,7 @@ import java.nio.file.Paths
 import java.nio.file.Files
 
 @description("Specifies a repository where dependency components can be found.")
-abstract class Repository {
+abstract class Repository extends CopyableRepo[Repository] {
   @description("The identifier used to refer to this repository from dependencies.")
   val name: String
 
@@ -53,8 +53,7 @@ abstract class Repository {
 }
 
 object Repository {
-
-  def fromSugarSyntax(s: String):Repository = {
+  def fromSugarSyntax(s: String): Repository = {
     val repoRegex = raw"(\w+)://([\w/\-\.:]+)(@[A-Za-z0-9][\w\./]*)?".r
 
     def getGitTag(tag: String): Option[String] = tag match {

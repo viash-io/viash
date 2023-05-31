@@ -42,7 +42,7 @@ case class LocalRepository(
     tag: Option[String],
     path: Option[String],
     localPath: String
-  ): Repository = {
+  ): LocalRepository = {
     copy(name, `type`, tag, path, localPath)
   }
 
