@@ -6,6 +6,7 @@ import java.util.regex.Pattern
 import java.io.BufferedReader
 import java.io.FileReader
 import java.nio.file.Paths
+import java.nio.file.Files
 import groovy.json.JsonSlurper
 import groovy.text.SimpleTemplateEngine
 import org.yaml.snakeyaml.Yaml
@@ -31,16 +32,16 @@ def getChild(parent, child) {
   }
 }
 
-def readCsv(file) {
+def readCsv(file_path) {
   def output = []
-  def inputFile = file !instanceof File ? new File(file) : file
+  def inputFile = file_path !instanceof Path ? file(file_path) : file_path
 
   // todo: allow escaped quotes in string
   // todo: allow single quotes?
   def splitRegex = Pattern.compile(''',(?=(?:[^"]*"[^"]*")*[^"]*$)''')
   def removeQuote = Pattern.compile('''"(.*)"''')
 
-  def br = new BufferedReader(new FileReader(inputFile))
+  def br = Files.newBufferedReader(inputFile)
 
   def row = -1
   def header = null
@@ -59,6 +60,11 @@ def readCsv(file) {
   while (br.ready()) {
     def line = br.readLine()
     row++
+    if (line == null) {
+      br.close()
+      break
+    }
+
     if (!line.startsWith("#")) {
       def predata = splitRegex.split(line, -1)
       def data = predata.collect{field ->
@@ -87,8 +93,8 @@ def readJsonBlob(str) {
   jsonSlurper.parseText(str)
 }
 
-def readJson(file) {
-  def inputFile = file !instanceof File ? new File(file) : file
+def readJson(file_path) {
+  def inputFile = file_path !instanceof Path ? file(file_path) : file_path
   def jsonSlurper = new JsonSlurper()
   jsonSlurper.parse(inputFile)
 }
@@ -98,8 +104,8 @@ def readYamlBlob(str) {
   yamlSlurper.load(str)
 }
 
-def readYaml(file) {
-  def inputFile = file !instanceof File ? new File(file) : file
+def readYaml(file_path) {
+  def inputFile = file_path !instanceof Path ? file(file_path) : file_path
   def yamlSlurper = new Yaml()
   yamlSlurper.load(inputFile)
 }

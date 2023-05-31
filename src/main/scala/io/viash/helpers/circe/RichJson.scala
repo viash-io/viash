@@ -55,22 +55,22 @@ class RichJson(json: Json) {
     * @param exclusions The list of key names for which the values should remain untouched
     * @return A modified Json
     */
-  def dropEmptyRecursivelyExcept(exclusions: Seq[String]): Json = {
+  def dropEmptyRecursivelyExcept(exclusions: Seq[String], nestedKey: String = "", key: String = ""): Json = {
     if (json.isObject) {
       val jo = json.asObject.get
         .map{
-          case (k, v) if exclusions.contains(k) => (k, v)
-          case (k, v) => (k, v.dropEmptyRecursivelyExcept(exclusions))
+          case (k, v) if exclusions.contains(k) || exclusions.contains(s"$nestedKey.$k") => (k, v)
+          case (k, v) => (k, v.dropEmptyRecursivelyExcept(exclusions, s"$nestedKey.$k", k))
         }
-        .filter(!_._2.isNull)
+        .filter{ case (k, v) => !v.isNull || exclusions.contains(k) || exclusions.contains(s"$nestedKey.$k") }
       if (jo.nonEmpty) 
         Json.fromJsonObject(jo)
       else
         Json.Null
     } else if (json.isArray) {
       val ja = json.asArray.get
-        .map(_.dropEmptyRecursivelyExcept(exclusions))
-        .filter(!_.isNull)      
+        .map(_.dropEmptyRecursivelyExcept(exclusions, s"$nestedKey", key))
+        .filter(!_.isNull || exclusions.contains(key) || exclusions.contains(nestedKey))
       if (ja.nonEmpty) 
         Json.fromValues(ja)
       else

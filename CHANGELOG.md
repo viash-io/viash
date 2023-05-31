@@ -1,12 +1,58 @@
+# Viash 0.7.4 (2023-05-31): Minor bug fixes and minor improvements to VDSL3
+
+Some small fixes and consistency improvements.
+A few Quality of Life improvements were made e.g. to override the Docker `entrypoint` when working with Nextflow and providing default labels when building a Nextflow workflow.
+
+## NEW FUNCTIONALITY
+
+* Add default labels in Nextflow config files that set default values for cpu and memory settings (PR #412). Values are more or less logarithmically spaced (1, 2, 5, 10, ...).
+
+* `Author`: Added `info` field to authors. Deprecated `props` field (PR #423).
+
+* `viash config view` and `viash ns list`: Set the `.info.output` path when a platform argument is provided.
+
+* `viash ns exec`: Added two more fields:
+
+  - `{output}`: path to the destination directory when building the component
+  - `{abs-output}`: absolute path to the destination directory when building the component
+
+* `DockerPlatform`: Add `entrypoint` and `cmd` parameters to the docker platform config that allows overriding the default docker container settings (PR #432).
+
+## MINOR CHANGES
+
+* `Nextflow VDSL3`:
+  - Add profiles to the Nextflow Config file when the main script is a `NextflowScript` (#408).
+  - Add a `script` parameter in Nextflow Config file to add a single string or list of strings to the `nextflow.config` (PR #430).
+
+* `Scripts`: Remove the `entrypoint` parameter for all script types except `NextflowScript` (#409). All these scripts had to check individually whether the parameter was unset, now it can be done in the `Script` apply method.
+
+* `schema export`:
+  - Restructure Nextflow-Directives, -Auto and -Config into a `nextflowParameters` group (PR #412). Previously only NextflowDirectives was exposed.
+  - Restructure the format to group authors & computational requirements together with functionality (PR #426).
+  - Restructure the Viash Config and Project Config pages under a `config` category (PR #426).
+  - Add references in Functionality and Nextflow VDSL3 to the new documentation pages (PR #426).
+  - Add description and/or examples for platforms and requirements (PR #428).
+
+## BUG FIXES
+
+* `viash config inject`: Fix an empty line being added at the script start for each time `viash config inject` was run (#377).
+
+* `WorkflowHelper`: Fixed an issue where passing a remote file URI (for example `http://` or `s3://`) as `param_list` caused `No such file` errors.
+
+* `BashWrapper`: Fix escaping of the included script where a line starting with a pipe character with optional leading spaces is stripped of the leading spaces and pipe character.
+  This was quite unlikely to happen except when `viash config inject` was called on a Nextflow Script, which lead to no real config code being injected however workflows were getting corrupted. (#421)
+
+* `Deprecation testbench`: Add missing classes to be checked (PR #426).
+
 # Viash 0.7.3 (2023-04-19): Minor bug fixes in documentation and config view
 
 Fix minor issues in the documentation and with the way parent paths of resources are printed a config view.
 
 ## BUG FIXES
 
-* `DockerPlatform`: Fixed example in documentation for the `namespace_separator` parameter (#396).
+* `DockerPlatform`: Fixed example in documentation for the `namespace_separator` parameter (PR #396).
 
-* `viash config view`: Resource parent paths should be directories and not file (#398).
+* `viash config view`: Resource parent paths should be directories and not file (PR #398).
 
 
 # Viash 0.7.2 (2023-04-17): Project-relative paths and improved metadata handling
@@ -15,7 +61,7 @@ This update adds functionality to resolve paths starting with a slash as relativ
 
 ## NEW FUNCTIONALITY
 
-* Resolve resource and merge paths starting with a slash (`/`) as relative to the project directory (#380). To define absolute paths (which is not recommended anyway), prefix the path with the `file://` protocol. Examples:
+* Resolve resource and merge paths starting with a slash (`/`) as relative to the project directory (PR #380). To define absolute paths (which is not recommended anyway), prefix the path with the `file://` protocol. Examples:
 
   - `/foo` is a file or directory called `foo` in the current project directory.
   - `file:/foo` is a file or directory called `foo` in the system root.
@@ -26,21 +72,21 @@ This update adds functionality to resolve paths starting with a slash as relativ
 
 ## BUG FIXES
 
-* `ConfigMods`: Fix operator precedence issues with conditions in the config mod parsers (#390).
+* `ConfigMods`: Fix operator precedence issues with conditions in the config mod parsers (PR #390).
 
 ## INTERNAL CHANGES
 
-* Clean up unused code (#380).
+* Clean up unused code (PR #380).
 
-* Move circe encoders/decoders for File and Path from `io.viash.functionality.arguments` to `io.viash.helpers.circe` (#380).
+* Move circe encoders/decoders for File and Path from `io.viash.functionality.arguments` to `io.viash.helpers.circe` (PR #380).
 
-* Store the project root directory (that is, the directory of the `_viash.yaml`) in a ViashProject object (#380).
+* Store the project root directory (that is, the directory of the `_viash.yaml`) in a ViashProject object (PR #380).
 
-* Tests: Reworked language tests to be grouped in their own subfolder and split off the bash language test from the general `testbash` folder (#381).
+* Tests: Reworked language tests to be grouped in their own subfolder and split off the bash language test from the general `testbash` folder (PR #381).
 
-* Tests: Add additional language tests for `viash config inject` (#381).
+* Tests: Add additional language tests for `viash config inject` (PR #381).
 
-* Tests: Added test for `io.viash.helpers.IO` (#380).
+* Tests: Added test for `io.viash.helpers.IO` (PR #380).
 
 
 # Viash 0.7.1 (2023-03-08): Minor improvements to VDSL3 and schema functionality.
@@ -181,7 +227,7 @@ Another minor release which contains several quality of life improvements for th
 
 ## MINOR CHANGES
 
-* `NextflowPlatform`: Create directories during a stub run when output path is a nested directory (#314).
+* `NextflowPlatform`: Create directories during a stub run when output path is a nested directory (PR #314).
 
 * Automatically generate a warning for deprecated parameters while parsing a .viash.yaml configuration file using the inline documentation deprecation annotations.
 
@@ -190,12 +236,12 @@ Another minor release which contains several quality of life improvements for th
 * Add testbenches to verify proper formatting of the deprecation versions and compare current version to the planned removal version so no deprecated parameters get to stick around beyond what was planned.
 
 * `NextflowPlatform`: Nextflow processes are created lazily; that is, only when running
-  a Nextflow workflow (#321).
+  a Nextflow workflow (PR #321).
 
 ## BUG FIXES
 
 * `NextflowPlatform`: Automatically split Viash config strings into strings of 
-  length 65000 since the JVM has a limit (65536) on the length of string constants (#323).
+  length 65000 since the JVM has a limit (65536) on the length of string constants (PR #323).
 
 # Viash 0.6.6 (2022-12-06): A small bugfix release
 
@@ -275,21 +321,21 @@ Please take note of the following breaking changes:
 
 ## BREAKING CHANGES
 
-* Config: Viash configs whose filenames start with a `.` are ignored (#291).
+* Config: Viash configs whose filenames start with a `.` are ignored (PR #291).
 
 * `viash build`: `--write_meta/-m` and `--meta/-m` arguments have been removed. 
-  Instead, the `.config.vsh.yaml` file is always created when building Viash components (#293).
+  Instead, the `.config.vsh.yaml` file is always created when building Viash components (PR #293).
 
 * `FileArgument`: Default setting of `must_exist` was changed from `false` to `true`. 
   As such, the component will throw an error by default if an input file or output file
-  is missing (#295).
+  is missing (PR #295).
 
 * Config merging: `__inherits__` has been renamed to `__merge__`.
 
 ## NEW FUNCTIONALITY
 
 * You can switch versions of Viash using the `VIASH_VERSION` 
-  environment variable (#304)! Example:
+  environment variable (PR #304)! Example:
   
   ```bash
   VIASH_VERSION=0.6.0 viash --version
@@ -298,27 +344,27 @@ Please take note of the following breaking changes:
 * Traceability: Running `viash build` and `viash test` creates a `.config.vsh.yaml` file 
   by default, which contains the processed config of the component. As a side effect, 
   this allows for reading in the `.config.vsh.yaml` from within the component to learn 
-  more about the component being tested (#291 and #293).
+  more about the component being tested (PR #291 and PR #293).
 
 * `FileArgument`: Added `create_parent` option, which will check if the directory of an output
-file exists and create it if necessary (#295).
+file exists and create it if necessary (PR #295).
 
 ## MINOR CHANGES
 
 * `viash run`, `viash test`: When running or testing a component, Viash will add an extension
   to the temporary file that is created. Before: `/tmp/viash-run-wdckjnce`, 
-  now: `/tmp/viash-run-wdckjnce.py` (#302).
+  now: `/tmp/viash-run-wdckjnce.py` (PR #302).
 
-* NextflowPlatform: Add `DataflowHelper.nf` as a retrievable resource in Viash (#301).
+* NextflowPlatform: Add `DataflowHelper.nf` as a retrievable resource in Viash (PR #301).
 
 * NextflowPlatform: During a stubrun, argument requirements are turned off and
   the `publishDir`, `cpus`, `memory`, and `label` directives are also removed 
-  from the process (#301).
+  from the process (PR #301).
 
 * `NextflowPlatform`: Added a `filter` processing argument to filter the incoming channel after 
-  the `map`, `mapData`, `mapId` and `mapPassthrough` have been applied (#296).
+  the `map`, `mapData`, `mapId` and `mapPassthrough` have been applied (PR #296).
 
-* `NextflowPlatform`: Added the Viash config to the Nextflow module for later introspection (#296).
+* `NextflowPlatform`: Added the Viash config to the Nextflow module for later introspection (PR #296).
   For example:
   ```groovy
   include { foo } from "$targetDir/path/foo/main.nf"
@@ -330,12 +376,12 @@ file exists and create it if necessary (#295).
   ```
 ## BUG FIXES
 
-* `BashWrapper`: Don't overwrite meta values when trailing arguments are provided (#295).
+* `BashWrapper`: Don't overwrite meta values when trailing arguments are provided (PR #295).
 
 ## EXPERIMENTAL FEATURES
 
 * Viash Project: Viash will automatically search for a `_viash.yaml` file in the directory of 
-  a component and its parent directories (#294).
+  a component and its parent directories (PR #294).
 
   Contents of `_viash.yaml`:
   ```yaml
@@ -348,7 +394,7 @@ file exists and create it if necessary (#295).
     .platforms[.type == 'docker'].target_image_source := 'https://github.com/viash-io/viash'
   ```
 
-* Config merging: Allow specifying the order in which Viash will merge configs (#289).
+* Config merging: Allow specifying the order in which Viash will merge configs (PR #289).
   If `.` is not in the list of inherited objects, it will be added at the end.
 
   Contents of `config.vsh.yaml`:
@@ -466,7 +512,7 @@ This release features contains mostly quality of life improvements and some expe
 
 ## EXPERIMENTAL FUNCTIONALITY
 
-* `Config`: Any part of a Viash config can use inheritance to fill data (#271). For example:
+* `Config`: Any part of a Viash config can use inheritance to fill data (PR #271). For example:
   Contents of `src/test/config.vsh.yaml`:
   ```yaml
   __inherits__: ../api/base.yaml
@@ -574,7 +620,7 @@ This release contains mostly minor improvements of functionality released in Via
 
 ## BUG FIXES
 
-* `viash ns`: Reverse exit code outputs, was returning 1 when everything was OK and 0 when errors were detected (#227).
+* `viash ns`: Reverse exit code outputs, was returning 1 when everything was OK and 0 when errors were detected (PR #227).
 
 * `viash config inject`: Fix processing of arguments when argument groups are defined (#231).
 
@@ -748,7 +794,7 @@ The first (major) release this year! The biggest changes are:
 * `MainTestDockerSuite`: Derive config alternatives from the base `vsh.yaml` instead of adding the changes in separate files.
   This both reduces file clutter and prevents having to change several files when there are updates in the config format.
 
-* `GitTest`: Added unit tests for Git helper (#216).
+* `GitTest`: Added unit tests for Git helper (PR #216).
 
 ## BUG FIXES
 
@@ -758,7 +804,7 @@ The first (major) release this year! The biggest changes are:
 
 * `Viash run`: Viash now properly returns the exit code from the executed script.
 
-* `Git`: Fix incorrect metadata when git repository is empty (#216).
+* `Git`: Fix incorrect metadata when git repository is empty (PR #216).
 
 # Viash 0.5.15 (2022-07-14): Added testbenches, default argument groups and bugfixes for VDSL3
 

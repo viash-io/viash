@@ -8,7 +8,7 @@ functionality:
     - name: Bob Cando
       roles: [maintainer, author]
       email: bob@cando.com
-      props: {github: bobcando, orcid: XXXAAABBB}
+      info: {github: bobcando, orcid: XXXAAABBB}
   arguments:
     - name: "input"
       type: file

@@ -339,6 +339,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
           | * `{functionality-name}`: name of the component
           | * `{namespace}`: namespace of the component
           | * `{platform}`: selected platform id (only when --apply_platform is used)
+          | * `{output}`: path to the destination directory when building the component
+          | * `{abs-output}`: absolute path to the destination directory when building the component
           |
           |A command suffixed by `\;` (or nothing) will execute one command for each
           |of the Viash components, whereas a command suffixed by `+` will execute one
@@ -352,9 +354,9 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         short = Some('a'),
         default = Some(false),
         descr = 
-          """Fills in the {platform} field by applying each platform to the config separately.
-            |Note that this results in the provided command being applied once for every platform
-            |that matches the --platform regex.""".stripMargin
+          """Fills in the {platform} and {output} field by applying each platform to the 
+            |config separately. Note that this results in the provided command being applied
+            |once for every platform that matches the --platform regex.""".stripMargin
       )
 
       val dryrun = registerOpt[Boolean] (

@@ -175,24 +175,25 @@ object Main {
     val cli = new CLIConf(viashArgs.toIndexedSeq) 
     
     // see if there are project overrides passed to the viash command
-    val proj1 = cli.subcommands.last match {
-      case x: ViashCommand => 
-        proj0.copy(
-          config_mods = proj0.config_mods ::: x.config_mods()
-        )
-      case x: ViashNs with ViashNsBuild =>
-        proj0.copy(
-          source = x.src.toOption orElse proj0.source orElse Some("src"),
-          target = x.target.toOption orElse proj0.target orElse Some("target"),
-          config_mods = proj0.config_mods ::: x.config_mods()
-        )
-      case x: ViashNs =>
-        proj0.copy(
-          source = x.src.toOption orElse proj0.source orElse Some("src"),
-          config_mods = proj0.config_mods ::: x.config_mods()
-        )
-      case _ => proj0
+    val projSrc = cli.subcommands.last match {
+      case x: ViashNs => x.src.toOption
+      case _ => None
     }
+    val projTarg = cli.subcommands.last match {
+      case x: ViashNsBuild => x.target.toOption
+      case _ => None
+    }
+    val projCm = cli.subcommands.last match {
+      case x: ViashNs => x.config_mods()
+      case x: ViashCommand => x.config_mods()
+      case _ => Nil
+    }
+
+    val proj1 = proj0.copy(
+      source = projSrc orElse proj0.source orElse Some("src"),
+      target = projTarg orElse proj0.target orElse Some("target"),
+      config_mods = proj0.config_mods ::: projCm
+    )
 
     // process commands
     cli.subcommands match {
@@ -286,7 +287,7 @@ object Main {
           cli.config.view,
           project = proj1,
           addOptMainScript = false,
-          applyPlatform = false
+          applyPlatform = cli.config.view.platform.isDefined
         )
         ViashConfig.view(
           config, 
@@ -323,13 +324,25 @@ object Main {
 
   def processConfigWithPlatform(
     config: Config, 
-    platformStr: Option[String]
+    platformStr: Option[String],
+    targetDir: Option[String]
   ): (Config, Option[Platform]) = {
     // add platformStr to the info object
     val conf1 = config.copy(
-      info = config.info.map{
-        _.copy(platform = platformStr)
-      }
+      info = config.info.map{_.copy(
+        platform = platformStr,
+        output = (targetDir, platformStr) match {
+          case (Some(td), Some(pl)) => 
+            Some(ViashNamespace.targetOutputPath(
+              targetDir = td,
+              platformId = pl,
+              namespace = config.functionality.namespace,
+              functionalityName = config.functionality.name
+            ))
+          case _ => None
+        }
+        // TODO: add executable?
+      )}
     )
 
     // find platform, see javadoc of this function for details on how
@@ -353,8 +366,9 @@ object Main {
     )
     if (applyPlatform) {
       processConfigWithPlatform(
-        config = config, 
-        platformStr = subcommand.platform.toOption
+        config = config,
+        platformStr = subcommand.platform.toOption,
+        targetDir = project.target
       )
     } else {
       (config, None)
@@ -411,7 +425,8 @@ object Main {
           platformStrs.map{ platStr =>
             Left(processConfigWithPlatform(
               config = conf1,
-              platformStr = platStr
+              platformStr = platStr,
+              targetDir = project.target
             ))
           }
         }}

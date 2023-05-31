@@ -23,7 +23,7 @@ class MainConfigViewSuite extends AnyFunSuite{
   test("viash config view remote") {
     val stdout = TestHelper.testMain(
       "config", "view",
-      "https://raw.githubusercontent.com/viash-io/viash/main/src/test/resources/testbash/config.vsh.yaml"
+      "https://raw.githubusercontent.com/viash-io/viash/develop/src/test/resources/testbash/config.vsh.yaml"
     )
 
     assert(stdout.startsWith("functionality:"))
