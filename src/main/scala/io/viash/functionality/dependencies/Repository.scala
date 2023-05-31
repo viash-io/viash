@@ -53,18 +53,29 @@ abstract class Repository extends CopyableRepo[Repository] {
 }
 
 object Repository {
-  def fromSugarSyntax(s: String): Repository = {
-    val repoRegex = raw"(\w+)://([\w/\-\.:]+)(@[A-Za-z0-9][\w\./]*)?".r
+  private val sugarSyntaxRegex = raw"(\w+)://([\w/\-\.:]+)(@[A-Za-z0-9][\w\./]*)?".r
+  private def getGitTag(tag: String): Option[String] = tag match {
+    case null => None
+    case s => Some(s.stripPrefix("@"))
+  }
 
-    def getGitTag(tag: String): Option[String] = tag match {
-      case null => None
-      case s => Some(s.stripPrefix("@"))
-    }
-
-    s match {
-      case repoRegex("git", uri, tag)     => GitRepository("TODO generate name", uri = uri, tag = getGitTag(tag) )
-      case repoRegex("github", repo, tag)  => GithubRepository("TODO generate name", repo = repo, tag = getGitTag(tag) )
-      case repoRegex("local", repo, tag)   => LocalRepository("TODO generate name")
+  def fromSugarSyntax(str: String): Option[Repository] = {
+    str match {
+      case sugarSyntaxRegex("git+https", uri, tag) =>
+        Some(GitRepository(
+          "TODO generate name",
+          uri = uri.stripPrefix("git+"),
+          tag = getGitTag(tag)
+        ))
+      case sugarSyntaxRegex("github", repo, tag) =>
+        Some(GithubRepository(
+          "TODO generate name",
+          repo = repo,
+          tag = getGitTag(tag)
+        ))
+      case sugarSyntaxRegex("local", repo, tag) =>
+        Some(LocalRepository("TODO generate name"))
+      case _ => None
     }
   }
 
