@@ -2,7 +2,7 @@
 
 ## MINOR CHANGES
 
-* `PythonScript`: Pass `-B` to Python to avoid creating *.pyc and *.pyo files on importing helper functions.
+* `PythonScript`: Pass `-B` to Python to avoid creating *.pyc and *.pyo files on importing helper functions (PR #442).
 
 # Viash 0.7.4 (2023-05-31): Minor bug fixes and minor improvements to VDSL3
 
