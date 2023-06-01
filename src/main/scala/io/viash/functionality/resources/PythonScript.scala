@@ -84,12 +84,14 @@ case class PythonScript(
     ScriptInjectionMods(params = paramsCode.mkString)
   }
 
+  // The -B argument stops Python from creating .pyc or .pyo files
+  // on importing functions from other files.
   def command(script: String): String = {
-    "python \"" + script + "\""
+    "python -B \"" + script + "\""
   }
 
   def commandSeq(script: String): Seq[String] = {
-    Seq("python", script)
+    Seq("python", "-B", script)
   }
 }
 
