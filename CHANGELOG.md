@@ -1,6 +1,8 @@
 # Viash 0.x.x (yyyy-MM-dd): TODO Add title
 
-TODO add summary
+## MINOR CHANGES
+
+* `PythonScript`: Pass `-B` to Python to avoid creating *.pyc and *.pyo files on importing helper functions.
 
 # Viash 0.7.4 (2023-05-31): Minor bug fixes and minor improvements to VDSL3
 
