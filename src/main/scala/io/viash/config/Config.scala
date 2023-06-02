@@ -37,6 +37,7 @@ import java.nio.file.Paths
 import io.viash.schemas._
 import java.io.ByteArrayOutputStream
 import java.nio.file.FileSystemNotFoundException
+import io.viash.config.{ConfigYamlException, ConfigParserException}
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -198,11 +199,17 @@ object Config {
     
     /* JSON 0: parsed from string */
     // parse yaml into Json
-    def parsingErrorHandler[C](e: Exception): C = {
-      Console.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
-      throw e
+    def parsingYamlErrorHandler[C](e: Exception): C = {
+      // Console.err.println(s"${Console.RED}Error parsing, invalid Yaml structure '${uri}'.${Console.RESET}\nDetails:")
+      // throw e
+      throw new ConfigYamlException(uri.toString(), e)
     }
-    val json0 = parser.parse(yamlText).fold(parsingErrorHandler, identity)
+    def parsingErrorHandler[C](e: Exception): C = {
+      // Console.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
+      // throw e
+      throw new ConfigParserException(uri.toString(), e)
+    }
+    val json0 = parser.parse(yamlText).fold(parsingYamlErrorHandler, identity)
 
     /* JSON 1: after inheritance */
     // apply inheritance if need be

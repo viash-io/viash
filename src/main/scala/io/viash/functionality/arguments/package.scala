@@ -20,6 +20,8 @@ package io.viash.functionality
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import cats.syntax.functor._ // for .widen
+import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
+import io.viash.config.ConfigParserSubTypeException
 
 package object arguments {
 
@@ -84,14 +86,14 @@ package object arguments {
       objJson deepMerge typeJson
   }
 
-  implicit val decodeStringArgument: Decoder[StringArgument] = deriveConfiguredDecoder
-  implicit val decodeIntegerArgument: Decoder[IntegerArgument] = deriveConfiguredDecoder
-  implicit val decodeLongArgument: Decoder[LongArgument] = deriveConfiguredDecoder
-  implicit val decodeDoubleArgument: Decoder[DoubleArgument] = deriveConfiguredDecoder
-  implicit val decodeBooleanArgumentR: Decoder[BooleanArgument] = deriveConfiguredDecoder
-  implicit val decodeBooleanArgumentT: Decoder[BooleanTrueArgument] = deriveConfiguredDecoder
-  implicit val decodeBooleanArgumentF: Decoder[BooleanFalseArgument] = deriveConfiguredDecoder
-  implicit val decodeFileArgument: Decoder[FileArgument] = deriveConfiguredDecoder
+  implicit val decodeStringArgument: Decoder[StringArgument] = deriveConfiguredDecoderWithValidationCheck
+  implicit val decodeIntegerArgument: Decoder[IntegerArgument] = deriveConfiguredDecoderWithValidationCheck
+  implicit val decodeLongArgument: Decoder[LongArgument] = deriveConfiguredDecoderWithValidationCheck
+  implicit val decodeDoubleArgument: Decoder[DoubleArgument] = deriveConfiguredDecoderWithValidationCheck
+  implicit val decodeBooleanArgumentR: Decoder[BooleanArgument] = deriveConfiguredDecoderWithValidationCheck
+  implicit val decodeBooleanArgumentT: Decoder[BooleanTrueArgument] = deriveConfiguredDecoderWithValidationCheck
+  implicit val decodeBooleanArgumentF: Decoder[BooleanFalseArgument] = deriveConfiguredDecoderWithValidationCheck
+  implicit val decodeFileArgument: Decoder[FileArgument] = deriveConfiguredDecoderWithValidationCheck
 
   implicit def decodeDataArgument: Decoder[Argument[_]] = Decoder.instance {
     cursor =>
@@ -105,7 +107,8 @@ package object arguments {
           case Right("boolean_true") => decodeBooleanArgumentT.widen
           case Right("boolean_false") => decodeBooleanArgumentF.widen
           case Right("file") => decodeFileArgument.widen
-          case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised. Valid types are string, integer, long, double, boolean, boolean_true, boolean_false and file.")
+          // case Right(typ) => throw new ConfigParserSubTypeException("Type " + typ + " is not recognised. Valid types are string, integer, long, double, boolean, boolean_true, boolean_false and file.")
+          case Right(typ) => invalidSubTypeDecoder[StringArgument](typ, "string, integer, long, double, boolean, boolean_true, boolean_false and file").widen
           case Left(exception) => throw exception
         }
 
