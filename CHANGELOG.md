@@ -4,6 +4,10 @@
 
 * `PythonScript`: Pass `-B` to Python to avoid creating *.pyc and *.pyo files on importing helper functions (PR #442).
 
+## BUG FIXES
+
+* `viash config`: Validate Viash config Yaml files better and try to give a more informative error message back to the user instead of a stack trace (PR #443).
+
 # Viash 0.7.4 (2023-05-31): Minor bug fixes and minor improvements to VDSL3
 
 Some small fixes and consistency improvements.
