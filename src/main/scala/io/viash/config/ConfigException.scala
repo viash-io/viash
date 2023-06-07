@@ -36,7 +36,7 @@ case class ConfigYamlException(uri: String, e: Throwable) extends AbstractConfig
 
 case class ConfigParserSubTypeException(tpe: String, validTypes: List[String], json: String) extends Exception {
 
-  private val validTypesStr = validTypes.dropRight(1).mkString("'", "', '", "'") + s", or '${validTypes.last}'"
+  private val validTypesStr = validTypes.dropRight(1).mkString("'", "', '", "'") + s", and '${validTypes.last}'"
   override def getMessage(): String = s"Type '$tpe' is not recognised. Valid types are $validTypesStr.\n$json"
 }
 

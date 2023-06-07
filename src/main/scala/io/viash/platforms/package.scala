@@ -23,19 +23,19 @@ import cats.syntax.functor._ // for .widen
 
 package object platforms {
   import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
+  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
 
   implicit val encodeDockerPlatform: Encoder.AsObject[DockerPlatform] = deriveConfiguredEncoder
-  implicit val decodeDockerPlatform: Decoder[DockerPlatform] = deriveConfiguredDecoderWithDeprecationCheck
+  implicit val decodeDockerPlatform: Decoder[DockerPlatform] = deriveConfiguredDecoderFullChecks
 
   implicit val encodeNextflowLegacyPlatform: Encoder.AsObject[NextflowLegacyPlatform] = deriveConfiguredEncoder
-  implicit val decodeNextflowLegacyPlatform: Decoder[NextflowLegacyPlatform] = deriveConfiguredDecoderWithDeprecationCheck
+  implicit val decodeNextflowLegacyPlatform: Decoder[NextflowLegacyPlatform] = deriveConfiguredDecoderFullChecks
 
   implicit val encodeNextflowVdsl3Platform: Encoder.AsObject[NextflowVdsl3Platform] = deriveConfiguredEncoder
-  implicit val decodeNextflowVdsl3Platform: Decoder[NextflowVdsl3Platform] = deriveConfiguredDecoderWithDeprecationCheck
+  implicit val decodeNextflowVdsl3Platform: Decoder[NextflowVdsl3Platform] = deriveConfiguredDecoderFullChecks
 
   implicit val encodeNativePlatform: Encoder.AsObject[NativePlatform] = deriveConfiguredEncoder
-  implicit val decodeNativePlatform: Decoder[NativePlatform] = deriveConfiguredDecoderWithDeprecationCheck
+  implicit val decodeNativePlatform: Decoder[NativePlatform] = deriveConfiguredDecoderFullChecks
 
   implicit def encodePlatform[A <: Platform]: Encoder[A] = Encoder.instance {
     platform =>

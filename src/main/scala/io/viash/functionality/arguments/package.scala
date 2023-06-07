@@ -20,6 +20,7 @@ package io.viash.functionality
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import cats.syntax.functor._ // for .widen
+import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
 import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
 import io.viash.config.ConfigParserSubTypeException
 
@@ -86,14 +87,14 @@ package object arguments {
       objJson deepMerge typeJson
   }
 
-  implicit val decodeStringArgument: Decoder[StringArgument] = deriveConfiguredDecoderWithValidationCheck
-  implicit val decodeIntegerArgument: Decoder[IntegerArgument] = deriveConfiguredDecoderWithValidationCheck
-  implicit val decodeLongArgument: Decoder[LongArgument] = deriveConfiguredDecoderWithValidationCheck
-  implicit val decodeDoubleArgument: Decoder[DoubleArgument] = deriveConfiguredDecoderWithValidationCheck
-  implicit val decodeBooleanArgumentR: Decoder[BooleanArgument] = deriveConfiguredDecoderWithValidationCheck
-  implicit val decodeBooleanArgumentT: Decoder[BooleanTrueArgument] = deriveConfiguredDecoderWithValidationCheck
-  implicit val decodeBooleanArgumentF: Decoder[BooleanFalseArgument] = deriveConfiguredDecoderWithValidationCheck
-  implicit val decodeFileArgument: Decoder[FileArgument] = deriveConfiguredDecoderWithValidationCheck
+  implicit val decodeStringArgument: Decoder[StringArgument] = deriveConfiguredDecoderFullChecks
+  implicit val decodeIntegerArgument: Decoder[IntegerArgument] = deriveConfiguredDecoderFullChecks
+  implicit val decodeLongArgument: Decoder[LongArgument] = deriveConfiguredDecoderFullChecks
+  implicit val decodeDoubleArgument: Decoder[DoubleArgument] = deriveConfiguredDecoderFullChecks
+  implicit val decodeBooleanArgumentR: Decoder[BooleanArgument] = deriveConfiguredDecoderFullChecks
+  implicit val decodeBooleanArgumentT: Decoder[BooleanTrueArgument] = deriveConfiguredDecoderFullChecks
+  implicit val decodeBooleanArgumentF: Decoder[BooleanFalseArgument] = deriveConfiguredDecoderFullChecks
+  implicit val decodeFileArgument: Decoder[FileArgument] = deriveConfiguredDecoderFullChecks
 
   implicit def decodeDataArgument: Decoder[Argument[_]] = Decoder.instance {
     cursor =>

@@ -28,23 +28,26 @@ import io.viash.schemas.ParameterSchema
 import io.circe.ACursor
 import io.viash.config.ConfigParserSubTypeException
 import io.viash.config.ConfigParserValidationException
+import io.circe.HCursor
 
 object DeriveConfiguredDecoderWithValidationCheck {
 
-  // final def validate(pred: HCursor => Boolean, message: => String): Decoder[A] = validate
+  // Validate the json can correctly converted to the required type by actually converting it.
+  // Throw an exception when the conversion fails.
+  def validator[A](pred: HCursor)(implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Boolean = {
+    val d = deriveConfiguredDecoder[A]
+    val v = d(pred)
+
+    v.fold(_ => {
+      throw new ConfigParserValidationException(typeOf[A].baseClasses.head.fullName, pred.value.toString())
+      false
+    }, _ => true)
+  }
 
   // Attempts to convert the json to the desired class. Throw an exception if the conversion fails.
   def deriveConfiguredDecoderWithValidationCheck[A](implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Decoder[A] = deriveConfiguredDecoder[A]
     .validate(
-      pred => {
-        val d = deriveConfiguredDecoder[A]
-        val v = d(pred)
-
-        v.fold(_ => {
-          throw new ConfigParserValidationException(typeOf[A].baseClasses.head.fullName, pred.value.toString())
-          false
-        }, _ => true)
-      },
+      validator[A],
       s"Could not convert json to ${typeOf[A].baseClasses.head.fullName}."
     )
 
