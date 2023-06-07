@@ -19,19 +19,25 @@ package io.viash.config
 
 abstract class AbstractConfigException extends Exception {
   val uri: String
-  val e: Exception
+  val e: Throwable
   val innerMessage: String
   
   override def getMessage(): String = e.getMessage()
 }
 
 
-case class ConfigParserException(uri: String, e: Exception) extends AbstractConfigException {
+case class ConfigParserException(uri: String, e: Throwable) extends AbstractConfigException {
   val innerMessage: String = "invalid Viash Config content"
 }
 
-case class ConfigYamlException(uri: String, e: Exception) extends AbstractConfigException {
+case class ConfigYamlException(uri: String, e: Throwable) extends AbstractConfigException {
   val innerMessage: String = "invalid Yaml structure"
 }
 
-class ConfigParserSubTypeException(name: String) extends Exception
+case class ConfigParserSubTypeException(tpe: String, validTypes: String, json: String) extends Exception {
+  override def getMessage(): String = s"Type $tpe is not recognised. Valid types are $validTypes.\n$json"
+}
+
+case class ConfigParserValidationException(tpe: String, json: String) extends Exception {
+  override def getMessage(): String = s"Invalid data fields for $tpe.\n$json"
+}

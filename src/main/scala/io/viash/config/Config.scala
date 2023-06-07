@@ -38,6 +38,7 @@ import io.viash.schemas._
 import java.io.ByteArrayOutputStream
 import java.nio.file.FileSystemNotFoundException
 import io.viash.config.{ConfigYamlException, ConfigParserException}
+import scala.util.{Try, Success, Failure}
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -221,7 +222,10 @@ object Config {
 
     /* CONFIG 0: converted from json */
     // convert Json into Config
-    val conf0 = json2.as[Config].fold(parsingErrorHandler, identity)
+    val conf0 = Try(json2.as[Config]) match {
+      case Success(res) => res.fold(parsingErrorHandler, identity)
+      case Failure(e) => throw new ConfigParserException(uri.toString(), e)
+    }
 
     /* CONFIG 1: store parent path in resource to be able to access them in the future */
     val parentURI = uri.resolve("")

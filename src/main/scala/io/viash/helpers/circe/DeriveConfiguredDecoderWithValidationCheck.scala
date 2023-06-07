@@ -26,6 +26,8 @@ import shapeless.Lazy
 
 import io.viash.schemas.ParameterSchema
 import io.circe.ACursor
+import io.viash.config.ConfigParserSubTypeException
+import io.viash.config.ConfigParserValidationException
 
 object DeriveConfiguredDecoderWithValidationCheck {
 
@@ -35,15 +37,23 @@ object DeriveConfiguredDecoderWithValidationCheck {
       pred => {
         val d = deriveConfiguredDecoder[A]
         val v = d(pred)
-        
-        val res = v.fold(_ => false, _ => true)
-        Console.println(s"Testing parsing of ${pred.value} -> $res")
-        res
+
+        v.fold(_ => {
+          throw new ConfigParserValidationException(typeOf[A].baseClasses.head.fullName, pred.value.toString())
+          false
+        }, _ => true)
       },
-      s"Big booboo for ${typeOf[A].baseClasses.head.fullName}"
+      s"Could not convert json to ${typeOf[A].baseClasses.head.fullName.split(".").last}."
     )
 
   def invalidSubTypeDecoder[A](tpe: String, validTypes: String)(implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Decoder[A] = deriveConfiguredDecoder[A]
-    .validate(_ => false, s"Type $tpe is not recognised. Valid types are $validTypes.")
+    .validate(
+      pred => {
+        // Console.println(s"Pred Invalid SubType $tpe. ${pred.value}.")
+        throw new ConfigParserSubTypeException(tpe, validTypes, pred.value.toString())
+        false
+      },
+      s"Type $tpe is not recognised. Valid types are $validTypes."
+    )
 
 }
