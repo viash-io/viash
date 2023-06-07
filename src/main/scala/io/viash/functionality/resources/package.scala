@@ -102,11 +102,8 @@ package object resources {
           case Right("csharp_script") => decodeCSharpScript.widen
           case Right("executable") => decodeExecutable.widen
           case Right("file") => decodePlainFile.widen
-          case Right(typ) => throw new RuntimeException(
-            "File type " + typ + " is not recognised. Should be one of " +
-              Script.companions.mkString("'", "', '", "'") +
-              ", or 'file'."
-          )
+          case Right(typ) => 
+            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[BashScript](typ, Script.companions.map(c => c.`type`) ++ List("executable", "file")).widen
           case Left(_) => decodePlainFile.widen // default is a simple file
         }
 

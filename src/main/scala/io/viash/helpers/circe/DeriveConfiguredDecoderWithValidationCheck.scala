@@ -32,6 +32,8 @@ import io.viash.config.ConfigParserValidationException
 object DeriveConfiguredDecoderWithValidationCheck {
 
   // final def validate(pred: HCursor => Boolean, message: => String): Decoder[A] = validate
+
+  // Attempts to convert the json to the desired class. Throw an exception if the conversion fails.
   def deriveConfiguredDecoderWithValidationCheck[A](implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Decoder[A] = deriveConfiguredDecoder[A]
     .validate(
       pred => {
@@ -43,17 +45,18 @@ object DeriveConfiguredDecoderWithValidationCheck {
           false
         }, _ => true)
       },
-      s"Could not convert json to ${typeOf[A].baseClasses.head.fullName.split(".").last}."
+      s"Could not convert json to ${typeOf[A].baseClasses.head.fullName}."
     )
 
-  def invalidSubTypeDecoder[A](tpe: String, validTypes: String)(implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Decoder[A] = deriveConfiguredDecoder[A]
+  // Dummy decoder to generate exceptions when an invalid type is specified
+  // We need a valid class type to be specified
+  def invalidSubTypeDecoder[A](tpe: String, validTypes: List[String])(implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Decoder[A] = deriveConfiguredDecoder[A]
     .validate(
       pred => {
-        // Console.println(s"Pred Invalid SubType $tpe. ${pred.value}.")
         throw new ConfigParserSubTypeException(tpe, validTypes, pred.value.toString())
         false
       },
-      s"Type $tpe is not recognised. Valid types are $validTypes."
+      s"Type '$tpe 'is not recognised. Valid types are ${validTypes.mkString("'", "', '", ",")}."
     )
 
 }

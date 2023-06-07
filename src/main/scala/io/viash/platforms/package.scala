@@ -69,7 +69,9 @@ package object platforms {
           case Right("docker") => decodeDockerPlatform.widen
           case Right("native") => decodeNativePlatform.widen
           case Right("nextflow") => decodeNextflowPlatform.widen
-          case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised.")
+          case Right(typ) => 
+            //throw new RuntimeException("Type " + typ + " is not recognised.")
+            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[NativePlatform](typ, List("docker", "native", "nextflow")).widen
           case Left(exception) => throw exception
         }
 

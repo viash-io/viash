@@ -34,10 +34,13 @@ case class ConfigYamlException(uri: String, e: Throwable) extends AbstractConfig
   val innerMessage: String = "invalid Yaml structure"
 }
 
-case class ConfigParserSubTypeException(tpe: String, validTypes: String, json: String) extends Exception {
-  override def getMessage(): String = s"Type $tpe is not recognised. Valid types are $validTypes.\n$json"
+case class ConfigParserSubTypeException(tpe: String, validTypes: List[String], json: String) extends Exception {
+
+  private val validTypesStr = validTypes.dropRight(1).mkString("'", "', '", "'") + s", or '${validTypes.last}'"
+  override def getMessage(): String = s"Type '$tpe' is not recognised. Valid types are $validTypesStr.\n$json"
 }
 
 case class ConfigParserValidationException(tpe: String, json: String) extends Exception {
-  override def getMessage(): String = s"Invalid data fields for $tpe.\n$json"
+  val shortType = tpe.split("\\.").last
+  override def getMessage(): String = s"Invalid data fields for $shortType.\n$json"
 }

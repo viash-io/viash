@@ -107,8 +107,7 @@ package object arguments {
           case Right("boolean_true") => decodeBooleanArgumentT.widen
           case Right("boolean_false") => decodeBooleanArgumentF.widen
           case Right("file") => decodeFileArgument.widen
-          // case Right(typ) => throw new ConfigParserSubTypeException("Type " + typ + " is not recognised. Valid types are string, integer, long, double, boolean, boolean_true, boolean_false and file.")
-          case Right(typ) => invalidSubTypeDecoder[StringArgument](typ, "string, integer, long, double, boolean, boolean_true, boolean_false and file").widen
+          case Right(typ) => invalidSubTypeDecoder[StringArgument](typ, List("string", "integer", "long", "double", "boolean", "boolean_true", "boolean_false", "file")).widen
           case Left(exception) => throw exception
         }
 
