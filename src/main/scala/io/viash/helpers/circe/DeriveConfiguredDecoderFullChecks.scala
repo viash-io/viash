@@ -29,9 +29,9 @@ object DeriveConfiguredDecoderFullChecks {
   import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
 
   def deriveConfiguredDecoderFullChecks[A](implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Decoder[A] = deriveConfiguredDecoder[A]
-    .prepare( DeriveConfiguredDecoderWithDeprecationCheck.checkDeprecation[A] )
     .validate(
       validator[A],
       s"Could not convert json to ${typeOf[A].baseClasses.head.fullName}."
     )
+    .prepare( DeriveConfiguredDecoderWithDeprecationCheck.checkDeprecation[A] )
 }
