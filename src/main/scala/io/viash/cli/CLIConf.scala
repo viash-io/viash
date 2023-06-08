@@ -431,9 +431,24 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
     }
 
+    val json_schema = new DocumentedSubcommand("json_schema") {
+      banner(
+        "viash export json_schema",
+        """Export the json schema to validate a Viash config""".stripMargin,
+        """viash export json_schema [--output file.json]""".stripMargin
+      )
+      val output = registerOpt[String](
+        name = "output",
+        default = None,
+        descr = "Destination path"
+      )
+    }
+
+
     addSubcommand(resource)
     addSubcommand(cli_schema)
     addSubcommand(config_schema)
+    addSubcommand(json_schema)
 
     requireSubcommand()
 

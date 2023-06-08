@@ -196,6 +196,10 @@ object CollectedSchemas {
     data.asJson
   }
 
+  def getJsonSchema: Json = {
+    data.asJson // TODO :)
+  }
+
   private def getNonAnnotated(members: Map[String,List[MemberInfo]], classes: List[Symbol]) = {
     val issueMembers = members
       .toList

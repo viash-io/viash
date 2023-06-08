@@ -49,6 +49,16 @@ object ViashExport {
     }
   }
 
+  def exportJsonSchema(output: Option[Path]): Unit = {
+    val data = CollectedSchemas.getJsonSchema
+    val str = jsonPrinter.print(data.asJson)
+    if (output.isDefined) {
+      Files.write(output.get, str.getBytes())
+    } else {
+      println(str)
+    }
+  }
+
   def exportResource(input: String, output: Option[Path]): Unit = {
     val pth = getClass.getResource(s"/io/viash/$input")
     val str = IO.read(pth.toURI())
