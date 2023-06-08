@@ -170,6 +170,39 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(testOutput.output.isEmpty)
   }
 
+  test("Check invalid platform type") {
+    val newConfigFilePath = configDeriver.derive(""".platforms += { type: "foo" }""", "invalid_platform_type")
+    val testOutput = TestHelper.testMainException2[RuntimeException](
+      "test",
+      "-p", "native",
+      newConfigFilePath
+    )
+
+    assert(testOutput.exceptionText.contains("Type 'foo' is not recognised. Valid types are 'docker', 'native', and 'nextflow'."))
+    assert(testOutput.exceptionText.contains(
+      """{
+        |  "type" : "foo"
+        |}""".stripMargin))
+    assert(testOutput.output.isEmpty)
+  }
+
+  test("Check invalid field in platform") {
+    val newConfigFilePath = configDeriver.derive(""".platforms += { type: "native", foo: "bar" }""", "invalid_platform_field")
+    val testOutput = TestHelper.testMainException2[RuntimeException](
+      "test",
+      "-p", "native",
+      newConfigFilePath
+    )
+
+    assert(testOutput.exceptionText.contains("Invalid data fields for NativePlatform."))
+    assert(testOutput.exceptionText.contains(
+      """{
+        |  "type" : "native",
+        |  "foo" : "bar"
+        |}""".stripMargin))
+    assert(testOutput.output.isEmpty)
+  }
+
   test("Check valid viash config yaml but with wrong file extension") {
     val newConfigFilePath = Paths.get(tempFolStr, "config.txt")
     Files.copy(Paths.get(configFile), newConfigFilePath)
