@@ -76,7 +76,7 @@ object JsonSchema {
     )
   }
 
-  def createSchema(info: List[ParameterSchema]): Json = {
+  def createSchema(info: List[ParameterSchema], fixedTypeString: Option[String] = None): Json = {
     val description = info.find(p => p.name == "__this__").get.description.get
     val properties = info.filter(p => !p.name.startsWith("__"))
     val propertiesJson = properties.map(p => {
@@ -142,6 +142,12 @@ object JsonSchema {
         case mapRegex(_, s) => 
           (p.name, mapJson(pDescription, s))
 
+        case s if p.name == "type" && fixedTypeString.isDefined =>
+          ("type", Json.obj(
+            "description" -> Json.fromString(description), // not pDescription! We want to show the description of the main class
+            "const" -> Json.fromString(fixedTypeString.get)
+          ))
+        
         case s =>
           (p.name, valueJson(pDescription, s))
       }
@@ -166,9 +172,18 @@ object JsonSchema {
       "description" -> Json.fromString("A schema for Viash config files"),
       "definitions" -> Json.obj(
         "Functionality" -> createSchema(data.functionality.get("functionality").get),
-        "NativePlatform" -> createSchema(data.platforms.get("nativePlatform").get),
-        "DockerPlatform" -> createSchema(data.platforms.get("dockerPlatform").get),
-        "NextflowVdsl3Platform" -> createSchema(data.platforms.get("nextflowVdsl3Platform").get),
+        "NativePlatform" -> createSchema(data.platforms.get("nativePlatform").get, Some("native")),
+        "DockerPlatform" -> createSchema(data.platforms.get("dockerPlatform").get, Some("docker")),
+        "NextflowVdsl3Platform" -> createSchema(data.platforms.get("nextflowVdsl3Platform").get, Some("nextflow")),
+
+        "Platforms" -> Json.obj(
+          "anyOf" -> Json.arr(
+            Json.obj("$ref" -> Json.fromString("#/definitions/NativePlatform")),
+            Json.obj("$ref" -> Json.fromString("#/definitions/DockerPlatform")),
+            Json.obj("$ref" -> Json.fromString("#/definitions/NextflowVdsl3Platform"))
+          )
+        ),
+
         "Info" -> Json.obj(
             "description" -> Json.fromString("Definition of meta data"),
             "type" -> Json.fromString("object"),
@@ -188,14 +203,14 @@ object JsonSchema {
         "Author" -> createSchema(data.functionality.get("author").get),
         "ComputationalRequirements" -> createSchema(data.functionality.get("computationalRequirements").get),
 
-        "ApkRequirements" -> createSchema(data.requirements.get("apkRequirements").get),
-        "AptRequirements" -> createSchema(data.requirements.get("aptRequirements").get),
-        "DockerRequirements" -> createSchema(data.requirements.get("dockerRequirements").get),
-        "JavascriptRequirements" -> createSchema(data.requirements.get("javascriptRequirements").get),
-        "PythonRequirements" -> createSchema(data.requirements.get("pythonRequirements").get),
-        "RRequirements" -> createSchema(data.requirements.get("rRequirements").get),
-        "RubyRequirements" -> createSchema(data.requirements.get("rubyRequirements").get),
-        "YumRequirements" -> createSchema(data.requirements.get("yumRequirements").get),
+        "ApkRequirements" -> createSchema(data.requirements.get("apkRequirements").get, Some("apk")),
+        "AptRequirements" -> createSchema(data.requirements.get("aptRequirements").get, Some("apt")),
+        "DockerRequirements" -> createSchema(data.requirements.get("dockerRequirements").get, Some("docker")),
+        "JavascriptRequirements" -> createSchema(data.requirements.get("javascriptRequirements").get, Some("javascript")),
+        "PythonRequirements" -> createSchema(data.requirements.get("pythonRequirements").get, Some("python")),
+        "RRequirements" -> createSchema(data.requirements.get("rRequirements").get, Some("r")),
+        "RubyRequirements" -> createSchema(data.requirements.get("rubyRequirements").get, Some("ruby")),
+        "YumRequirements" -> createSchema(data.requirements.get("yumRequirements").get, Some("yum")),
         "Requirements" -> Json.obj(
           "anyOf" -> Json.arr(
             Json.obj("$ref" -> Json.fromString("#/definitions/ApkRequirements")),
@@ -209,14 +224,14 @@ object JsonSchema {
           )
         ),
 
-        "BooleanArgument" -> createSchema(data.arguments.get("boolean").get),
-        "BooleanTrueArgument" -> createSchema(data.arguments.get("boolean_true").get),
-        "BooleanFalseArgument" -> createSchema(data.arguments.get("boolean_false").get),
-        "DoubleArgument" -> createSchema(data.arguments.get("double").get),
-        "FileArgument" -> createSchema(data.arguments.get("file").get),
-        "IntegerArgument" -> createSchema(data.arguments.get("integer").get),
-        "LongArgument" -> createSchema(data.arguments.get("long").get),
-        "StringArgument" -> createSchema(data.arguments.get("string").get),
+        "BooleanArgument" -> createSchema(data.arguments.get("boolean").get, Some("boolean")),
+        "BooleanTrueArgument" -> createSchema(data.arguments.get("boolean_true").get, Some("boolean_true")),
+        "BooleanFalseArgument" -> createSchema(data.arguments.get("boolean_false").get, Some("boolean_false")),
+        "DoubleArgument" -> createSchema(data.arguments.get("double").get, Some("double")),
+        "FileArgument" -> createSchema(data.arguments.get("file").get, Some("file")),
+        "IntegerArgument" -> createSchema(data.arguments.get("integer").get, Some("integer")),
+        "LongArgument" -> createSchema(data.arguments.get("long").get, Some("long")),
+        "StringArgument" -> createSchema(data.arguments.get("string").get, Some("string")),
         "Argument" -> Json.obj(
           "anyOf" -> Json.arr(
             Json.obj("$ref" -> Json.fromString("#/definitions/BooleanArgument")),
@@ -240,15 +255,15 @@ object JsonSchema {
           "additionalProperties" -> Json.False
         ),
 
-        "BashScript" -> createSchema(data.resources.get("bashScript").get),
-        "CSharpScript" -> createSchema(data.resources.get("cSharpScript").get),
-        "Executable" -> createSchema(data.resources.get("executable").get),
-        "JavaScriptScript" -> createSchema(data.resources.get("javaScriptScript").get),
-        "NextflowScript" -> createSchema(data.resources.get("nextflowScript").get),
-        "PlainFile" -> createSchema(data.resources.get("plainFile").get),
-        "PythonScript" -> createSchema(data.resources.get("pythonScript").get),
-        "RScript" -> createSchema(data.resources.get("rScript").get),
-        "ScalaScript" -> createSchema(data.resources.get("scalaScript").get),
+        "BashScript" -> createSchema(data.resources.get("bashScript").get, Some("bash_script")),
+        "CSharpScript" -> createSchema(data.resources.get("cSharpScript").get, Some("csharp_script")),
+        "Executable" -> createSchema(data.resources.get("executable").get, Some("executable")),
+        "JavaScriptScript" -> createSchema(data.resources.get("javaScriptScript").get, Some("javascript_script")),
+        "NextflowScript" -> createSchema(data.resources.get("nextflowScript").get, Some("nextflow_script")),
+        "PlainFile" -> createSchema(data.resources.get("plainFile").get, Some("file")),
+        "PythonScript" -> createSchema(data.resources.get("pythonScript").get, Some("python_script")),
+        "RScript" -> createSchema(data.resources.get("rScript").get, Some("r_script")),
+        "ScalaScript" -> createSchema(data.resources.get("scalaScript").get, Some("scala_script")),
         "Resource" -> Json.obj(
           "anyOf" -> Json.arr(
             Json.obj("$ref" -> Json.fromString("#/definitions/BashScript")),
@@ -313,13 +328,7 @@ object JsonSchema {
       ),
       "properties" -> Json.obj(
         "functionality" -> valueJson(data.functionality.get("functionality").get.head.description.get, "Functionality"),
-        "platforms" -> Json.obj(
-          "anyOf" -> Json.arr(
-            Json.obj("$ref" -> Json.fromString("#/definitions/NativePlatform")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/DockerPlatform")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/NextflowVdsl3Platform"))
-          )
-        ),
+        "platforms" -> arrayJson("Definition of the platforms", "Platforms"),
         "info" -> valueJson("Definition of meta data", "Info")
       ),
       "required" -> Json.arr(Json.fromString("functionality")),
