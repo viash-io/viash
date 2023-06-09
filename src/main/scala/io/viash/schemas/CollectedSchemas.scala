@@ -182,7 +182,7 @@ object CollectedSchemas {
   }
 
   // Main call for documentation output
-  private lazy val data = CollectedSchemas(
+  lazy val data = CollectedSchemas(
       config = schemaClassMap.get("config").get.map{ case(k, v) => (k, getSchema(v))},
       functionality = schemaClassMap.get("functionality").get.map{ case(k, v) => (k, getSchema(v))},
       platforms = schemaClassMap.get("platforms").get.map{ case(k, v) => (k, getSchema(v))},
@@ -194,10 +194,6 @@ object CollectedSchemas {
 
   def getJson: Json = {
     data.asJson
-  }
-
-  def getJsonSchema: Json = {
-    data.asJson // TODO :)
   }
 
   private def getNonAnnotated(members: Map[String,List[MemberInfo]], classes: List[Symbol]) = {

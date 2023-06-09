@@ -23,7 +23,7 @@ import io.circe.{Printer => JsonPrinter}
 import io.circe.syntax.EncoderOps
 import io.viash.helpers.circe._
 import java.nio.file.{Path, Paths, Files}
-import io.viash.schemas.CollectedSchemas
+import io.viash.schemas.{CollectedSchemas, JsonSchema}
 
 object ViashExport {
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
@@ -50,7 +50,7 @@ object ViashExport {
   }
 
   def exportJsonSchema(output: Option[Path]): Unit = {
-    val data = CollectedSchemas.getJsonSchema
+    val data = JsonSchema.getJsonSchema
     val str = jsonPrinter.print(data.asJson)
     if (output.isDefined) {
       Files.write(output.get, str.getBytes())
