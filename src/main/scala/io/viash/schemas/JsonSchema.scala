@@ -164,74 +164,111 @@ object JsonSchema {
     )
   }
 
+  def createVariantSchemas(data: Map[String, List[ParameterSchema]], groupName: String, translationMap: Map[String, String]): Seq[(String, Json)] = {
+    
+    val group = groupName -> Json.obj(
+      "anyOf" -> Json.arr(
+        translationMap.map{ case (k, v) => Json.obj("$ref" -> Json.fromString(s"#definitions/$k")) }.toSeq: _*
+      )
+    )
+
+    def firstLower(s: String): String = s.head.toLower.toString + s.tail
+
+    val variants = translationMap.map {
+      case (k, v) =>
+        k -> createSchema(data.get(firstLower(k)).get, Some(v))
+    }
+
+    variants.toSeq :+ group
+  }
+
+  def createVariantSchemasAlt(data: Map[String, List[ParameterSchema]], groupName: String, translationMap: Map[String, String]): Seq[(String, Json)] = {
+    
+    val group = groupName -> Json.obj(
+      "anyOf" -> Json.arr(
+        translationMap.map{ case (k, v) => Json.obj("$ref" -> Json.fromString(s"#definitions/$k")) }.toSeq: _*
+      )
+    )
+
+    val variants = translationMap.map {
+      case (k, v) =>
+        k -> createSchema(data.get(v).get, Some(v))
+    }
+
+    variants.toSeq :+ group
+  }
+
+  def createEnum(values: Seq[String], description: String, comment: Option[String]): Json = {
+    comment match {
+      case Some(s) =>
+        Json.obj(
+          "$comment" -> Json.fromString(s),
+          "enum" -> Json.arr(
+            values.map(s => Json.fromString(s)): _*
+          ),
+          "description" -> Json.fromString(description)
+        )
+      case None =>
+        Json.obj(
+          "enum" -> Json.arr(
+            values.map(s => Json.fromString(s)): _*
+          ),
+          "description" -> Json.fromString(description)
+        )
+    }
+  }
+
   def getJsonSchema: Json = {
     val configData = data.config.get("config").get
     val configDescription = configData.find(p => p.name == "__this__").get.description.get
 
-    val schema = Json.obj(
-      "$schema" -> Json.fromString("https://json-schema.org/draft-07/schema#"),
-      "description" -> Json.fromString("A schema for Viash config files"),
-      "definitions" -> Json.obj(
-        "Functionality" -> createSchema(data.functionality.get("functionality").get),
-        "NativePlatform" -> createSchema(data.platforms.get("nativePlatform").get, Some("native")),
-        "DockerPlatform" -> createSchema(data.platforms.get("dockerPlatform").get, Some("docker")),
-        "NextflowVdsl3Platform" -> createSchema(data.platforms.get("nextflowVdsl3Platform").get, Some("nextflow")),
 
-        "Platforms" -> Json.obj(
-          "anyOf" -> Json.arr(
-            Json.obj("$ref" -> Json.fromString("#/definitions/NativePlatform")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/DockerPlatform")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/NextflowVdsl3Platform"))
-          )
-        ),
+    val platformMap = Map("NativePlatform" -> "native", "DockerPlatform" -> "docker", "NextflowVdsl3Platform" -> "nextflow")
+    val requirementsMap = Map(
+      "ApkRequirements" -> "apk",
+      "AptRequirements" -> "apt",
+      "DockerRequirements" -> "docker",
+      "JavascriptRequirements" -> "javascript",
+      "PythonRequirements" -> "python",
+      "RRequirements" -> "r",
+      "RubyRequirements" -> "ruby",
+      "YumRequirements" -> "yum"
+    )
 
+    val argumentsMap = Map(
+      "BooleanArgument" -> "boolean",
+      "BooleanTrueArgument" -> "boolean_true",
+      "BooleanFalseArgument" -> "boolean_false",
+      "DoubleArgument" -> "double",
+      "FileArgument" -> "file",
+      "IntegerArgument" -> "integer",
+      "LongArgument" -> "long",
+      "StringArgument" -> "string",
+    )
+
+    val resourceMap = Map(
+      "BashScript" -> "bash_script",
+      "CSharpScript" -> "csharp_script",
+      "Executable" -> "executable",
+      "JavaScriptScript" -> "javascript_script",
+      "NextflowScript" -> "nextflow_script",
+      "PlainFile" -> "file",
+      "PythonScript" -> "python_script",
+      "RScript" -> "r_script",
+      "ScalaScript" -> "scala_script"
+    )
+
+    val definitions = 
+      createVariantSchemas(data.platforms, "Platforms", platformMap) ++
+      Seq(
         "Info" -> createSchema(data.config.get("info").get),
-
+        "Functionality" -> createSchema(data.functionality.get("functionality").get),
         "Author" -> createSchema(data.functionality.get("author").get),
-        "ComputationalRequirements" -> createSchema(data.functionality.get("computationalRequirements").get),
-
-        "ApkRequirements" -> createSchema(data.requirements.get("apkRequirements").get, Some("apk")),
-        "AptRequirements" -> createSchema(data.requirements.get("aptRequirements").get, Some("apt")),
-        "DockerRequirements" -> createSchema(data.requirements.get("dockerRequirements").get, Some("docker")),
-        "JavascriptRequirements" -> createSchema(data.requirements.get("javascriptRequirements").get, Some("javascript")),
-        "PythonRequirements" -> createSchema(data.requirements.get("pythonRequirements").get, Some("python")),
-        "RRequirements" -> createSchema(data.requirements.get("rRequirements").get, Some("r")),
-        "RubyRequirements" -> createSchema(data.requirements.get("rubyRequirements").get, Some("ruby")),
-        "YumRequirements" -> createSchema(data.requirements.get("yumRequirements").get, Some("yum")),
-        "Requirements" -> Json.obj(
-          "anyOf" -> Json.arr(
-            Json.obj("$ref" -> Json.fromString("#/definitions/ApkRequirements")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/AptRequirements")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/DockerRequirements")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/JavascriptRequirements")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/PythonRequirements")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/RRequirements")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/RubyRequirements")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/YumRequirements")),            
-          )
-        ),
-
-        "BooleanArgument" -> createSchema(data.arguments.get("boolean").get, Some("boolean")),
-        "BooleanTrueArgument" -> createSchema(data.arguments.get("boolean_true").get, Some("boolean_true")),
-        "BooleanFalseArgument" -> createSchema(data.arguments.get("boolean_false").get, Some("boolean_false")),
-        "DoubleArgument" -> createSchema(data.arguments.get("double").get, Some("double")),
-        "FileArgument" -> createSchema(data.arguments.get("file").get, Some("file")),
-        "IntegerArgument" -> createSchema(data.arguments.get("integer").get, Some("integer")),
-        "LongArgument" -> createSchema(data.arguments.get("long").get, Some("long")),
-        "StringArgument" -> createSchema(data.arguments.get("string").get, Some("string")),
-        "Argument" -> Json.obj(
-          "anyOf" -> Json.arr(
-            Json.obj("$ref" -> Json.fromString("#/definitions/BooleanArgument")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/BooleanTrueArgument")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/BooleanFalseArgument")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/DoubleArgument")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/FileArgument")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/IntegerArgument")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/LongArgument")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/StringArgument")),
-          )
-        ),
-        "ArgumentGroup" -> Json.obj(
+        "ComputationalRequirements" -> createSchema(data.functionality.get("computationalRequirements").get)
+      ) ++
+      createVariantSchemas(data.requirements, "Requirements", requirementsMap) ++
+      createVariantSchemasAlt(data.arguments, "Argument", argumentsMap) ++
+      Seq("ArgumentGroup" -> Json.obj(
           "type" -> Json.fromString("object"),
           "properties" -> Json.obj(
             "name" -> valueJson("The name of the argument group.", "String"),
@@ -240,66 +277,25 @@ object JsonSchema {
           ),
           "required" -> Json.arr(Json.fromString("name"), Json.fromString("arguments")),
           "additionalProperties" -> Json.False
-        ),
-
-        "BashScript" -> createSchema(data.resources.get("bashScript").get, Some("bash_script")),
-        "CSharpScript" -> createSchema(data.resources.get("cSharpScript").get, Some("csharp_script")),
-        "Executable" -> createSchema(data.resources.get("executable").get, Some("executable")),
-        "JavaScriptScript" -> createSchema(data.resources.get("javaScriptScript").get, Some("javascript_script")),
-        "NextflowScript" -> createSchema(data.resources.get("nextflowScript").get, Some("nextflow_script")),
-        "PlainFile" -> createSchema(data.resources.get("plainFile").get, Some("file")),
-        "PythonScript" -> createSchema(data.resources.get("pythonScript").get, Some("python_script")),
-        "RScript" -> createSchema(data.resources.get("rScript").get, Some("r_script")),
-        "ScalaScript" -> createSchema(data.resources.get("scalaScript").get, Some("scala_script")),
-        "Resource" -> Json.obj(
-          "anyOf" -> Json.arr(
-            Json.obj("$ref" -> Json.fromString("#/definitions/BashScript")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/CSharpScript")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/Executable")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/JavaScriptScript")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/NextflowScript")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/PlainFile")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/PythonScript")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/RScript")),
-            Json.obj("$ref" -> Json.fromString("#/definitions/ScalaScript")),
-          )
-        ),
-
+      )) ++
+      createVariantSchemas(data.resources, "Resource", resourceMap) ++
+      Seq(
         "NextflowDirectives" -> createSchema(data.nextflowParameters.get("nextflowDirectives").get),
         "NextflowAuto" -> createSchema(data.nextflowParameters.get("nextflowAuto").get),
-        "NextflowConfig" -> createSchema(data.nextflowParameters.get("nextflowConfig").get),
+        "NextflowConfig" -> createSchema(data.nextflowParameters.get("nextflowConfig").get)
+      ) ++
+      Seq(
+        "DockerSetupStrategy" -> createEnum(DockerSetupStrategy.map.keys.toSeq, "The Docker setup strategy to use when building a container.", Some("TODO add descriptions to different strategies")),
+        "Direction" -> createEnum(Seq("input", "output"), "Makes this argument an `input` or an `output`, as in does the file/folder needs to be read or written. `input` by default.", None),
+        "Status" -> createEnum(Seq("enabled", "disabled", "deprecated"), "Allows setting a component to active, deprecated or disabled.", None),
+        "DockerResolveVolume" -> createEnum(Seq("manual", "automatic", "auto", "Manual", "Automatic", "Auto"), "Enables or disables automatic volume mapping. Enabled when set to `Automatic` or disabled when set to `Manual`. Default: `Automatic`", Some("TODO make fully case insensitive"))
+      )
 
-
-        "DockerSetupStrategy" -> Json.obj(
-          "$comment" -> Json.fromString("TODO add descriptions to different strategies"),
-          "enum" -> Json.arr(
-            DockerSetupStrategy.map.keys.toSeq.map(s => Json.fromString(s)): _*
-          ),
-          "description" -> Json.fromString("The Docker setup strategy to use when building a container.")
-        ),
-
-        "Direction" -> Json.obj(
-          "enum" -> Json.arr(
-            Seq("input", "output").map(s => Json.fromString(s)): _*
-          ),
-          "description" -> Json.fromString("Makes this argument an `input` or an `output`, as in does the file/folder needs to be read or written. `input` by default.")
-        ),
-
-        "Status" -> Json.obj(
-          "enum" -> Json.arr(
-            Seq("enabled", "disabled", "deprecated").map(s => Json.fromString(s)): _*
-          ),
-          "description" -> Json.fromString("Allows setting a component to active, deprecated or disabled.")
-        ),
-
-        "DockerResolveVolume" -> Json.obj(
-          "$comment" -> Json.fromString("TODO make fully case insensitive"),
-          "enum" -> Json.arr(
-            Seq("manual", "automatic", "auto", "Manual", "Automatic", "Auto").map(s => Json.fromString(s)): _*
-          ),
-          "description" -> Json.fromString("Enables or disables automatic volume mapping. Enabled when set to `Automatic` or disabled when set to `Manual`. Default: `Automatic`")
-        )
-
+    val schema = Json.obj(
+      "$schema" -> Json.fromString("https://json-schema.org/draft-07/schema#"),
+      "description" -> Json.fromString("A schema for Viash config files"),
+      "definitions" -> Json.obj(
+        definitions: _*
       ),
       "properties" -> Json.obj(
         "functionality" -> valueJson(data.functionality.get("functionality").get.head.description.get, "Functionality"),
