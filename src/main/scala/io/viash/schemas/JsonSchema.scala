@@ -18,6 +18,7 @@
 package io.viash.schemas
 
 import io.circe.Json
+import io.viash.platforms.docker.DockerSetupStrategy
 
 object JsonSchema {
 
@@ -184,21 +185,7 @@ object JsonSchema {
           )
         ),
 
-        "Info" -> Json.obj(
-            "description" -> Json.fromString("Definition of meta data"),
-            "type" -> Json.fromString("object"),
-            "properties" -> Json.obj(
-              "config" -> valueJson("String"),
-              "platform" -> valueJson("String"),
-              "output" -> valueJson("String"),
-              "executable" -> valueJson("String"),
-              "viash_version" -> valueJson("String"),
-              "git_commit" -> valueJson("String"),
-              "git_remote" -> valueJson("String"),
-              "git_tag" -> valueJson("String")
-            ),
-            "additionalProperties" -> Json.False
-        ),
+        "Info" -> createSchema(data.config.get("info").get),
 
         "Author" -> createSchema(data.functionality.get("author").get),
         "ComputationalRequirements" -> createSchema(data.functionality.get("computationalRequirements").get),
@@ -286,19 +273,7 @@ object JsonSchema {
         "DockerSetupStrategy" -> Json.obj(
           "$comment" -> Json.fromString("TODO add descriptions to different strategies"),
           "enum" -> Json.arr(
-            Seq("alwaysbuild", "build", "b", 
-            "alwayspull", "pull", "p",
-            "alwayspullelsebuild", "pullelsebuild",
-            "alwayspullelsecachedbuild", "pullelsecachedbuild",
-            "alwayscachedbuild", "cachedbuild", "cb",
-            "ifneedbebuild",
-            "ifneedbecachedbuild",
-            "ifneedbepull",
-            "ifneedbepullelsebuild",
-            "ifneedbepullelsecachedbuild",
-            "donothing", "meh",
-            "push", "forcepush", "alwayspush",
-            "pushifnotpresent", "gentlepush", "maybepush").map(s => Json.fromString(s)): _*
+            DockerSetupStrategy.map.keys.toSeq.map(s => Json.fromString(s)): _*
           ),
           "description" -> Json.fromString("The Docker setup strategy to use when building a container.")
         ),

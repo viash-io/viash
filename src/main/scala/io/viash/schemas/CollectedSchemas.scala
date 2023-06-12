@@ -101,6 +101,7 @@ object CollectedSchemas {
     "config" -> Map(
       "config"                    -> getMembers[Config](),
       "project"                   -> getMembers[ViashProject](),
+      "info"                      -> getMembers[Info](),
     ),
     "functionality" -> Map(
       "functionality"             -> getMembers[Functionality](),
