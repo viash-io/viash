@@ -28,49 +28,56 @@ package object functionality {
   import functionality.resources._
   import functionality.Status._
   import io.viash.helpers.circe._
+  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
   import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
+  import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
 
   // encoder and decoder for Functionality
   implicit val encodeFunctionality: Encoder.AsObject[Functionality] = deriveConfiguredEncoder
 
   // add file & direction defaults for inputs & outputs
-  implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoderWithDeprecationCheck
+  implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoderFullChecks
 
   // encoder and decoder for Author
   implicit val encodeAuthor: Encoder.AsObject[Author] = deriveConfiguredEncoder
-  implicit val decodeAuthor: Decoder[Author] = deriveConfiguredDecoderWithDeprecationCheck
+  implicit val decodeAuthor: Decoder[Author] = deriveConfiguredDecoderFullChecks
 
   // encoder and decoder for Requirements
   implicit val encodeComputationalRequirements: Encoder.AsObject[ComputationalRequirements] = deriveConfiguredEncoder
-  implicit val decodeComputationalRequirements: Decoder[ComputationalRequirements] = deriveConfiguredDecoderWithDeprecationCheck
+  implicit val decodeComputationalRequirements: Decoder[ComputationalRequirements] = deriveConfiguredDecoderFullChecks
   
   // encoder and decoder for ArgumentGroup
   implicit val encodeArgumentGroup: Encoder.AsObject[ArgumentGroup] = deriveConfiguredEncoder
-  implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoder[ArgumentGroup].prepare {
-    checkDeprecation[ArgumentGroup](_) // check for deprecations
-    .withFocus(_.mapObject{ ag0 =>
-
-      // Check whether arguments contains a string value instead of an object. The support for this was removed in Viash 0.7.0
-      ag0.apply("arguments") match {
-        case Some(args) =>
-          args.mapArray(argVector => {
-            for (arg <- argVector) {
-              if (arg.isString) {
-                Console.err.println(
-                  s"""Error: specifying strings in the .argument field of argument group '${ag0.apply("name").get.asString.get}' was removed.
-                     |The .arguments field of an argument group should only contain arguments.
-                     |To solve this issue, copy the argument ${arg} directly into the argument group.""".stripMargin)
-              }
-            }
-            argVector
-          })
-        case _ => None
-      }
-
-      ag0
-    }
+  implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoder[ArgumentGroup]
+    .validate(
+      validator[ArgumentGroup],
+      s"Could not convert json to ArgumentGroup."
     )
-  }
+    .prepare {
+      checkDeprecation[ArgumentGroup](_) // check for deprecations
+      .withFocus(_.mapObject{ ag0 =>
+
+        // Check whether arguments contains a string value instead of an object. The support for this was removed in Viash 0.7.0
+        ag0.apply("arguments") match {
+          case Some(args) =>
+            args.mapArray(argVector => {
+              for (arg <- argVector) {
+                if (arg.isString) {
+                  Console.err.println(
+                    s"""Error: specifying strings in the .argument field of argument group '${ag0.apply("name").get.asString.get}' was removed.
+                      |The .arguments field of an argument group should only contain arguments.
+                      |To solve this issue, copy the argument ${arg} directly into the argument group.""".stripMargin)
+                }
+              }
+              argVector
+            })
+          case _ => None
+        }
+
+        ag0
+      }
+      )
+    }
 
 
   // encoder and decoder for Status, make string lowercase before decoding
