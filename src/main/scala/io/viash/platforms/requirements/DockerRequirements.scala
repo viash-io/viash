@@ -32,28 +32,34 @@ import io.viash.schemas._
 case class DockerRequirements(
   @description("Specifies which `LABEL` entries to add to the Dockerfile while building it.")
   @example("label: [ component=\"foo\" ]", "yaml")
+  @default("Empty")
   label: OneOrMore[String] = Nil,
 
   @description("Specifies which `ADD` entries to add to the Dockerfile while building it.")
   @example("add: [ \"http://foo/bar .\" ]", "yaml")
+  @default("Empty")
   add: OneOrMore[String] = Nil,
 
   @description("Specifies which `COPY` entries to add to the Dockerfile while building it.")
   @example("copy: [ \"resource.txt /path/to/resource.txt\" ]", "yaml")
+  @default("Empty")
   copy: OneOrMore[String] = Nil,
 
   @description("Specifies which `RUN` entries to add to the Dockerfile while building it.")
   @example("""run: |
     #  echo 'Run a custom command'
     #  echo 'Foo' > /path/to/file.txt""".stripMargin('#'), "yaml")
+  @default("Empty")
   run: OneOrMore[String] = Nil,
   
   @description("Specifies which `ARG` entries to add to the Dockerfile while building it.")
   @example("build_args: [ \"R_VERSION=4.2\" ]", "yaml")
+  @default("Empty")
   build_args: OneOrMore[String] = Nil,
 
   @description("Specifies which `ENV` entries to add to the Dockerfile while building it. Unlike `ARG`, `ENV` entries are also accessible from inside the container.")
   @example("env: [ \"R_VERSION=4.2\" ]", "yaml")
+  @default("Empty")
   env: OneOrMore[String] = Nil,
 
   `type`: String = "docker"

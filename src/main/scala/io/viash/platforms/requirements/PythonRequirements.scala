@@ -31,55 +31,68 @@ import io.viash.schemas._
     "yaml")
 case class PythonRequirements(
   @description("Sets the `--user` flag when set to true. Default: false.")
+  @default("False")
   user: Boolean = false,
 
   @description("Specifies which packages to install from pip.")
   @example("packages: [ numpy ]", "yaml")
+  @default("Empty")
   packages: OneOrMore[String] = Nil,
 
   @description("Specifies which packages to install from pip.")
   @example("pip: [ numpy ]", "yaml")
+  @default("Empty")
   pip: OneOrMore[String] = Nil,
 
   @description("Specifies which packages to install from PyPI using pip.")
   @example("pypi: [ numpy ]", "yaml")
+  @default("Empty")
   pypi: OneOrMore[String] = Nil,
 
   @description("Specifies which packages to install using a Git URI.")
   @example("git: [ https://some.git.repository/org/repo ]", "yaml")
+  @default("Empty")
   git: OneOrMore[String] = Nil,
   
   @description("Specifies which packages to install from GitHub.")
   @example("github: [ jkbr/httpie ]", "yaml")
+  @default("Empty")
   github: OneOrMore[String] = Nil,
 
   @description("Specifies which packages to install from GitLab.")
   @example("gitlab: [ foo/bar ]", "yaml")
+  @default("Empty")
   gitlab: OneOrMore[String] = Nil,
 
   @description("Specifies which packages to install using a Mercurial URI.")
   @example("mercurial: [ https://hg.myproject.org/MyProject/#egg=MyProject ]", "yaml")
+  @default("Empty")
   mercurial: OneOrMore[String] = Nil,
 
   @description("Specifies which packages to install using an SVN URI.")
   @example("svn: [ http://svn.repo/some_pkg/trunk/#egg=SomePackage ]", "yaml")
+  @default("Empty")
   svn: OneOrMore[String] = Nil,
 
   @description("Specifies which packages to install using a Bazaar URI.")
   @example("bazaar: [ http://bazaar.launchpad.net/some_pkg/some_pkg/release-0.1 ]", "yaml")
+  @default("Empty")
   bazaar: OneOrMore[String] = Nil,
 
   @description("Specifies which packages to install using a generic URI.")
   @example("url: [ https://github.com/some_org/some_pkg/zipball/master ]", "yaml")
+  @default("Empty")
   url: OneOrMore[String] = Nil,
 
   @description("Specifies a code block to run as part of the build.")
   @example("""script: |
     #  print("Running custom code")
     #  x = 1 + 1 == 2""".stripMargin('#'), "yaml")
+  @default("Empty")
   script: OneOrMore[String] = Nil,
 
   @description("Sets the `--upgrade` flag when set to true. Default: true.")
+  @default("True")
   upgrade: Boolean = true,
   `type`: String = "python"
 ) extends Requirements {

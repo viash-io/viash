@@ -28,6 +28,7 @@ final case class ParameterSchema(
   since: Option[String],
   deprecated: Option[DeprecatedOrRemovedSchema],
   removed: Option[DeprecatedOrRemovedSchema],
+  default: Option[String],
 )
 
 object ParameterSchema {
@@ -92,12 +93,15 @@ object ParameterSchema {
     val since = annStrings.collectFirst({case (name, value) if name.endsWith("since") => value.head})
     val deprecated = annStrings.collectFirst({case (name, value) if name.endsWith("deprecated") => value}).map(DeprecatedOrRemovedSchema(_))
     val removed = annStrings.collectFirst({case (name, value) if name.endsWith("removed") => value}).map(DeprecatedOrRemovedSchema(_))
+    val defaultFromAnnotation = annStrings.collectFirst({case (name, value) if name.endsWith("default") => value.head})
+    val defaultFromType = Option.when(`type`.startsWith("Option of ") || `type`.startsWith("Option["))("Empty")
+    val default = defaultFromAnnotation orElse defaultFromType
     
     val undocumented = annStrings.exists{ case (name, value) => name.endsWith("undocumented")}
     val internalFunctionality = annStrings.exists{ case (name, value) => name.endsWith("internalFunctionality")}
     internalFunctionality || undocumented match {
       case true => None
-      case _ => Some(ParameterSchema(name_, `type`, hierarchyOption, description, examples, since, deprecated, removed))
+      case _ => Some(ParameterSchema(name_, `type`, hierarchyOption, description, examples, since, deprecated, removed, default))
     }
     
   }

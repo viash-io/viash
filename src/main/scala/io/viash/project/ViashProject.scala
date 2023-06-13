@@ -61,6 +61,7 @@ case class ViashProject(
   // todo: link to config mods docs
   @description("Which config mods to apply.")
   @example("config_mods: \".functionality.name := 'foo'\"", "yaml")
+  @default("Empty")
   config_mods: OneOrMore[String] = Nil,
 
   @description("Directory in which the _viash.yaml resides.")

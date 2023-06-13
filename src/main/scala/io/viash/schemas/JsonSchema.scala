@@ -79,7 +79,7 @@ object JsonSchema {
 
   def createSchema(info: List[ParameterSchema], fixedTypeString: Option[String] = None): Json = {
     val description = info.find(p => p.name == "__this__").get.description.get
-    val properties = info.filter(p => !p.name.startsWith("__"))
+    val properties = info.filter(p => !p.name.startsWith("__")).filter(p => !p.removed.isDefined)
     val propertiesJson = properties.map(p => {
       val pDescription = p.description.getOrElse("")
       val trimmedType = p.`type`.stripPrefix("Option of ")
@@ -155,11 +155,15 @@ object JsonSchema {
 
     })
 
+    val required = properties.filter(p => !(p.`type`.startsWith("Option of ") || p.`type`.startsWith("Option[") || p.default.isDefined))
+    val requiredJson = required.map(p => Json.fromString(p.name))
+
     // TODO figure out `required` (not "Option of" or has default value)
     Json.obj(
       "description" -> Json.fromString(description),
       "type" -> Json.fromString("object"),
       "properties" -> Json.obj(propertiesJson: _*),
+      "required" -> Json.arr(requiredJson: _*),
       "additionalProperties" -> Json.False
     )
   }
