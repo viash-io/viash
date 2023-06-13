@@ -172,7 +172,7 @@ object JsonSchema {
     
     val group = groupName -> Json.obj(
       "anyOf" -> Json.arr(
-        translationMap.map{ case (k, v) => Json.obj("$ref" -> Json.fromString(s"#definitions/$k")) }.toSeq: _*
+        translationMap.map{ case (k, v) => Json.obj("$ref" -> Json.fromString(s"#/definitions/$k")) }.toSeq: _*
       )
     )
 
@@ -190,7 +190,7 @@ object JsonSchema {
     
     val group = groupName -> Json.obj(
       "anyOf" -> Json.arr(
-        translationMap.map{ case (k, v) => Json.obj("$ref" -> Json.fromString(s"#definitions/$k")) }.toSeq: _*
+        translationMap.map{ case (k, v) => Json.obj("$ref" -> Json.fromString(s"#/definitions/$k")) }.toSeq: _*
       )
     )
 
