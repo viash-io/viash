@@ -442,6 +442,13 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         default = None,
         descr = "Destination path"
       )
+      val format = registerChoice(
+        name = "format",
+        short = Some('f'),
+        default = Some("json"),
+        choices = List("yaml", "json"),
+        descr = "Which output format to use."
+      )
     }
 
 

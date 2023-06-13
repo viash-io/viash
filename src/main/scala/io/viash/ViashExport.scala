@@ -20,13 +20,28 @@ package io.viash
 import helpers._
 import cli._
 import io.circe.{Printer => JsonPrinter}
+import io.circe.yaml.{Printer => YamlPrinter}
 import io.circe.syntax.EncoderOps
 import io.viash.helpers.circe._
 import java.nio.file.{Path, Paths, Files}
 import io.viash.schemas.{CollectedSchemas, JsonSchema}
+import io.circe.Json
 
 object ViashExport {
+  private val yamlPrinter = YamlPrinter(
+    preserveOrder = true,
+    mappingStyle = YamlPrinter.FlowStyle.Block,
+    splitLines = true,
+    stringStyle = YamlPrinter.StringStyle.DoubleQuoted
+  )
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
+
+  private def stringifyJson(json: Json, format: String): String = {
+    format match {
+      case "yaml" => yamlPrinter.pretty(json)
+      case "json" => jsonPrinter.print(json)
+    }
+  }
 
   def exportCLISchema(output: Option[Path]): Unit = {
     val cli = new CLIConf(Nil)
@@ -49,9 +64,9 @@ object ViashExport {
     }
   }
 
-  def exportJsonSchema(output: Option[Path]): Unit = {
+  def exportJsonSchema(output: Option[Path], format: String = "json"): Unit = {
     val data = JsonSchema.getJsonSchema
-    val str = jsonPrinter.print(data.asJson)
+    val str = stringifyJson(data, format)
     if (output.isDefined) {
       Files.write(output.get, str.getBytes())
     } else {

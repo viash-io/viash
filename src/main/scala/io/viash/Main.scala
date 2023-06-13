@@ -314,7 +314,8 @@ object Main {
         0
       case List(cli.export, cli.export.json_schema) =>
         val output = cli.export.json_schema.output.toOption.map(Paths.get(_))
-        ViashExport.exportJsonSchema(output)
+        val format = cli.export.json_schema.format()
+        ViashExport.exportJsonSchema(output, format)
         0
       case List(cli.export, cli.export.resource) =>
         val output = cli.export.resource.output.toOption.map(Paths.get(_))
