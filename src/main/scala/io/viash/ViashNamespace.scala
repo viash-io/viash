@@ -411,7 +411,7 @@ object ViashNamespace {
       for ((status, message) <- messages) {
         val count = statuses.count(_ == status)
         if (count > 0)
-          Console.err.println(s"  ${status.color}${s"%${indentSize}s".formatted(count)}/${statuses.length} ${message}${Console.RESET}")
+          Console.err.println(s"  ${status.color}${String.format(s"%${indentSize}s",count)}/${statuses.length} ${message}${Console.RESET}")
       }
     }
     else {
