@@ -1,8 +1,14 @@
 # Viash 0.x.x (yyyy-MM-dd): TODO Add title
 
+## NEW FUNCTIONALITY
+
+* `viash export json_schema`: Export a json schema derived from the class reflections and annotations already used by the `config_schema` (PR #446).
+
+* `viash export config_schema`: Output `default` values of member fields.
+
 ## MINOR CHANGES
 
-* `PythonScript`: Pass `-B` to Python to avoid creating *.pyc and *.pyo files on importing helper functions (PR #442).
+* `PythonScript`: Pass `-B` to Python to avoid creating `*.pyc` and `*.pyo` files on importing helper functions (PR #442).
 
 # Viash 0.7.4 (2023-05-31): Minor bug fixes and minor improvements to VDSL3
 
