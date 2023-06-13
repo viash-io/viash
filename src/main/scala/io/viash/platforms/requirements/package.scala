@@ -25,31 +25,31 @@ import cats.syntax.functor._ // for .widen
 
 package object requirements {
   import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
+  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
 
   implicit val encodeRRequirements: Encoder.AsObject[RRequirements] = deriveConfiguredEncoder
-  implicit val decodeRRequirements: Decoder[RRequirements] = deriveConfiguredDecoderWithDeprecationCheck
+  implicit val decodeRRequirements: Decoder[RRequirements] = deriveConfiguredDecoderFullChecks
 
   implicit val encodePythonRequirements: Encoder.AsObject[PythonRequirements] = deriveConfiguredEncoder
-  implicit val decodePythonRequirements: Decoder[PythonRequirements] = deriveConfiguredDecoderWithDeprecationCheck
+  implicit val decodePythonRequirements: Decoder[PythonRequirements] = deriveConfiguredDecoderFullChecks
 
   implicit val encodeRubyRequirements: Encoder.AsObject[RubyRequirements] = deriveConfiguredEncoder
-  implicit val decodeRubyRequirements: Decoder[RubyRequirements] = deriveConfiguredDecoderWithDeprecationCheck
+  implicit val decodeRubyRequirements: Decoder[RubyRequirements] = deriveConfiguredDecoderFullChecks
 
   implicit val encodeJavaScriptRequirements: Encoder.AsObject[JavaScriptRequirements] = deriveConfiguredEncoder
-  implicit val decodeJavaScriptRequirements: Decoder[JavaScriptRequirements] = deriveConfiguredDecoderWithDeprecationCheck
+  implicit val decodeJavaScriptRequirements: Decoder[JavaScriptRequirements] = deriveConfiguredDecoderFullChecks
 
   implicit val encodeAptRequirements: Encoder.AsObject[AptRequirements] = deriveConfiguredEncoder
-  implicit val decodeAptRequirements: Decoder[AptRequirements] = deriveConfiguredDecoderWithDeprecationCheck
+  implicit val decodeAptRequirements: Decoder[AptRequirements] = deriveConfiguredDecoderFullChecks
 
   implicit val encodeYumRequirements: Encoder.AsObject[YumRequirements] = deriveConfiguredEncoder
-  implicit val decodeYumRequirements: Decoder[YumRequirements] = deriveConfiguredDecoderWithDeprecationCheck
+  implicit val decodeYumRequirements: Decoder[YumRequirements] = deriveConfiguredDecoderFullChecks
 
   implicit val encodeApkRequirements: Encoder.AsObject[ApkRequirements] = deriveConfiguredEncoder
-  implicit val decodeApkRequirements: Decoder[ApkRequirements] = deriveConfiguredDecoderWithDeprecationCheck
+  implicit val decodeApkRequirements: Decoder[ApkRequirements] = deriveConfiguredDecoderFullChecks
 
   implicit val encodeDockerRequirements: Encoder.AsObject[DockerRequirements] = deriveConfiguredEncoder
-  implicit val decodeDockerRequirements: Decoder[DockerRequirements] = deriveConfiguredDecoderWithDeprecationCheck
+  implicit val decodeDockerRequirements: Decoder[DockerRequirements] = deriveConfiguredDecoderFullChecks
 
   implicit def encodeRequirements[A <: Requirements]: Encoder[A] = Encoder.instance {
     reqs =>
@@ -79,7 +79,8 @@ package object requirements {
           case Right("r") => decodeRRequirements.widen
           case Right("javascript") => decodeJavaScriptRequirements.widen
           case Right("ruby") => decodeRubyRequirements.widen
-          case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised.")
+          case Right(typ) =>
+            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[ApkRequirements](typ, List("apk", "apt", "yum", "docker", "python", "r", "javascript", "ruby")).widen
           case Left(exception) => throw exception
         }
 

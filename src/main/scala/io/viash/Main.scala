@@ -38,6 +38,7 @@ import io.viash.helpers.Exec
 import java.nio.file.Files
 import java.net.URI
 import io.viash.helpers.DependencyResolver
+import io.viash.config.AbstractConfigException
 
 object Main {
   private val pkg = getClass.getPackage
@@ -71,6 +72,9 @@ object Main {
       case e: NoSuchFileException =>
         // This exception only returns the file/path that can't be found. Add a bit more feedback to the user.
         Console.err.println(s"viash: ${e.getMessage()} (No such file or directory)")
+        System.exit(1)
+      case e: AbstractConfigException =>
+        Console.err.println(s"viash: ${Console.RED}Error parsing, ${e.innerMessage} in file '${e.uri}'.${Console.RESET}\nDetails:\n${e.getMessage()}")
         System.exit(1)
       case e: Exception =>
         Console.err.println(

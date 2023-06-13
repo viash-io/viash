@@ -156,7 +156,21 @@ case class DockerPlatform(
 
   @description("Additional requirements specific for running unit tests.")
   @since("Viash 0.5.13")
-  test_setup: List[Requirements] = Nil
+  test_setup: List[Requirements] = Nil,
+
+  @description("Override the entrypoint of the base container. Default set `ENTRYPOINT []`.")
+  @exampleWithDescription("entrypoint: ", "yaml", "Disable the default override.")
+  @exampleWithDescription("""entrypoint: ["top", "-b"]""", "yaml", "Entrypoint of the container in the exec format, which is the prefered form.")
+  @exampleWithDescription("""entrypoint: "top -b"""", "yaml", "Entrypoint of the container in the shell format.")
+  @since("Viash 0.7.4")
+  entrypoint: Option[Either[String, List[String]]] = Some(Right(Nil)),
+
+  @description("Set the default command being executed when running the Docker container.")
+  @exampleWithDescription("""cmd: ["echo", "$HOME"]""", "yaml", "Set CMD using the exec format, which is the prefered form.")
+  @exampleWithDescription("""cmd: "echo $HOME"""", "yaml", "Set CMD using the shell format.")
+  @since("Viash 0.7.4")
+  cmd: Option[Either[String, List[String]]] = None
+
 ) extends Platform {
   // START OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
   @description("Adds a `privileged` flag to the docker run.")
@@ -348,11 +362,11 @@ case class DockerPlatform(
       case true => test_setup
       case _ => Nil
     }
+
     val requirements2 = requirements ::: setupRequirements ::: List(labelReq)
 
     // get dependencies
     val runCommands = requirements2.flatMap(_.dockerCommands)
-
 
     // don't draw defaults from functionality for the from image
     val fromImageInfo = Docker.getImageInfo(
@@ -379,6 +393,17 @@ case class DockerPlatform(
         targetImageInfo.toString
       }
 
+    def entrypointCmdMap(values: Option[Either[String, List[String]]]): Option[String] =
+      values match {
+        case None => None
+        case Some(Left(s)) => Some(s)
+        case Some(Right(list)) if list.isEmpty => Some("[]")
+        case Some(Right(list)) => Some(list.mkString("[\"", "\",\"", "\"]"))
+      }
+
+    val entrypointStr = entrypointCmdMap(entrypoint).map(s => s"ENTRYPOINT $s\n").getOrElse("")
+    val cmdStr = entrypointCmdMap(cmd).map(s => s"CMD $s\n").getOrElse("")
+
     // if no extra dependencies are needed, the provided image can just be used,
     // otherwise need to construct a separate docker container
     val (viashDockerFile, viashDockerBuild) =
@@ -386,8 +411,12 @@ case class DockerPlatform(
         ("  :", "  ViashDockerPull $1")
       } else {
         val dockerFile =
-          s"FROM ${fromImageInfo.toString}\n\n" +
-            runCommands.mkString("\n")
+          s"""FROM ${fromImageInfo.toString}
+             |
+             |$entrypointStr
+             |$cmdStr 
+             |${runCommands.mkString("\n")}
+             |""".stripMargin           
 
         val dockerRequirements =
           requirements.flatMap {

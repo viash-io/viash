@@ -1,5 +1,17 @@
-# Viash 0.7.4 (yyyy-MM-dd): TODO Add title
+# Viash 0.x.x (yyyy-MM-dd): TODO Add title
 
+## MINOR CHANGES
+
+* `PythonScript`: Pass `-B` to Python to avoid creating *.pyc and *.pyo files on importing helper functions (PR #442).
+
+## BUG FIXES
+
+* `viash config`: Validate Viash config Yaml files better and try to give a more informative error message back to the user instead of a stack trace (PR #443).
+
+# Viash 0.7.4 (2023-05-31): Minor bug fixes and minor improvements to VDSL3
+
+Some small fixes and consistency improvements.
+A few Quality of Life improvements were made e.g. to override the Docker `entrypoint` when working with Nextflow and providing default labels when building a Nextflow workflow.
 
 ## NEW FUNCTIONALITY
 
@@ -7,14 +19,14 @@
 
 * `Author`: Added `info` field to authors. Deprecated `props` field (PR #423).
 
-## NEW FUNCTIONALITY
-
 * `viash config view` and `viash ns list`: Set the `.info.output` path when a platform argument is provided.
 
 * `viash ns exec`: Added two more fields:
 
   - `{output}`: path to the destination directory when building the component
   - `{abs-output}`: absolute path to the destination directory when building the component
+
+* `DockerPlatform`: Add `entrypoint` and `cmd` parameters to the docker platform config that allows overriding the default docker container settings (PR #432).
 
 ## MINOR CHANGES
 

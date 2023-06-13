@@ -22,8 +22,8 @@ import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfigur
 
 package object project {
   import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
+  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
 
   implicit val encodeViashProject: Encoder.AsObject[ViashProject] = deriveConfiguredEncoder
-  implicit val decodeViashProject: Decoder[ViashProject] = deriveConfiguredDecoderWithDeprecationCheck
+  implicit val decodeViashProject: Decoder[ViashProject] = deriveConfiguredDecoderFullChecks
 }
