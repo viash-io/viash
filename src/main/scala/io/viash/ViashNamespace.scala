@@ -406,12 +406,18 @@ object ViashNamespace {
       (Success, s"configs $successAction successfully"))
 
     if (successes != statuses.length) {
+      val disabledStatusesCount = statuses.count(_ == Disabled)
+      val nonDisabledStatuses = statuses.filter(_ != Disabled)
+      val indentSize = nonDisabledStatuses.length.toString().size
+
       Console.err.println(s"${Console.YELLOW}Not all configs $successAction successfully${Console.RESET}")
-      val indentSize = statuses.length.toString().size
+      if (disabledStatusesCount > 0)
+        Console.err.println(s"  ${Console.YELLOW}$disabledStatusesCount configs were disabled${Console.RESET}")
+      
       for ((status, message) <- messages) {
-        val count = statuses.count(_ == status)
+        val count = nonDisabledStatuses.count(_ == status)
         if (count > 0)
-          Console.err.println(s"  ${status.color}${String.format(s"%${indentSize}s",count)}/${statuses.length} ${message}${Console.RESET}")
+          Console.err.println(s"  ${status.color}${String.format(s"%${indentSize}s",count)}/${nonDisabledStatuses.length} ${message}${Console.RESET}")
       }
     }
     else {
