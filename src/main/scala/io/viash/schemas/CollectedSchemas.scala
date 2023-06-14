@@ -159,7 +159,7 @@ object CollectedSchemas {
   private def trimTypeName(s: String) = {
     // first: io.viash.helpers.data_structures.OneOrMore[String] -> OneOrMore[String]
     // second: List[io.viash.platforms.requirements.Requirements] -> List[Requirements]
-    s.replaceAll("^(\\w*\\.)*", "").replaceAll("""(\w*)\[[\w\.]*?([\w,]*)(\[_\])?\]""", "$1 of $2")
+    s.replaceAll("^(\\w*\\.)*", "").replaceAll("""(\w*)\[[\w\.]*?([\w,]*)(\[_\])?\]""", "$1[$2]")
   }
 
   private def annotationsOf(members: (Map[String,List[MemberInfo]]), classes: List[Symbol]) = {
@@ -173,12 +173,12 @@ object CollectedSchemas {
     val annThis = ("__this__", classes.head.name.toString(), classes.head.annotations, "", 0, classes.map(_.fullName))
     val allAnnotations = annThis :: annMembers.toList
     allAnnotations
-      .map({case (a, b, c, d, e, f) => (a, trimTypeName(b), f, c)})  // TODO this ignores where the annotation was defined, ie. top level class or super class
+      .map({case (name, tpe, annotations, d, e, hierarchy) => (name, trimTypeName(tpe), hierarchy, annotations)})  // TODO this ignores where the annotation was defined, ie. top level class or super class
   }
 
   private val getSchema = (t: (Map[String,List[MemberInfo]], List[Symbol])) => t match {
     case (members, classes) => {
-      annotationsOf(members, classes).flatMap{ case (a, b, c, d) => ParameterSchema(a, b, c, d) }
+      annotationsOf(members, classes).flatMap{ case (name, tpe, hierarchy, annotations) => ParameterSchema(name, tpe, hierarchy, annotations) }
     }
   }
 

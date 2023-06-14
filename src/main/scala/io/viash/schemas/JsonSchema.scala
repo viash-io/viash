@@ -41,107 +41,122 @@ object JsonSchema {
     }
   }
 
-  def valueJson(`type`: String): Json = {
-    Json.obj(
-      typeOrRefJson(`type`)
-    )
+  def valueType(`type`: String, description: Option[String] = None): Json = {
+    description match {
+      case None => Json.obj(typeOrRefJson(`type`))
+      case Some(desc) => Json.obj(
+        "description" -> Json.fromString(desc),
+        typeOrRefJson(`type`)
+      )
+    }
   }
 
-  def valueJson(description: String, `type`: String): Json = {
-    Json.obj(
-      "description" -> Json.fromString(description),
-      typeOrRefJson(`type`)
-    )
+  def arrayType(`type`: String, description: Option[String] = None): Json = {
+    arrayJson(valueType(`type`), description)
   }
 
-  def arrayJson(description: String, `type`: String): Json = {
-    Json.obj(
-      "description" -> Json.fromString(description),
-      "type" -> Json.fromString("array"),
-      "items" -> Json.obj(typeOrRefJson(`type`))
-    )
+  def mapType(`type`: String, description: Option[String] = None): Json = {
+    mapJson(valueType(`type`), description)
   }
 
-  def mapJson(description: String, `type`: String): Json = {
-    Json.obj(
-      "description" -> Json.fromString(description),
-      "type" -> Json.fromString("object"),
-      "additionalProperties" -> valueJson(description, `type`)
-    )
+  def oneOrMoreType(`type`: String): Json = {
+    oneOrMoreJson(valueType(`type`))
   }
 
-  def mapJson(`type`: String): Json = {
-    Json.obj(
-      "type" -> Json.fromString("object"),
-      "additionalProperties" -> valueJson(`type`)
+  def arrayJson(json: Json, description: Option[String] = None): Json = {
+    description match {
+      case None =>
+        Json.obj(
+          "type" -> Json.fromString("array"),
+          "items" -> json
+        )
+      case Some(desc) => 
+        Json.obj(
+        "description" -> Json.fromString(desc),
+        "type" -> Json.fromString("array"),
+        "items" -> json
+      )
+    }
+  }
+
+  def mapJson(json: Json, description: Option[String] = None) = {
+    description match {
+      case None =>
+        Json.obj(
+        "type" -> Json.fromString("object"),
+        "additionalProperties" -> json
+      )
+      case Some(desc) =>
+        Json.obj(
+        "description" -> Json.fromString(desc),
+        "type" -> Json.fromString("object"),
+        "additionalProperties" -> json
+      )
+    }
+  }
+
+  def oneOrMoreJson(json: Json): Json = {
+    eitherJson(
+      json,
+      arrayJson(json)
     )
+  }
+  def eitherJson(a: Json, b: Json): Json = {
+    Json.obj("oneOf" -> Json.arr(a, b))
   }
 
   def createSchema(info: List[ParameterSchema], fixedTypeString: Option[String] = None): Json = {
     val description = info.find(p => p.name == "__this__").get.description.get
     val properties = info.filter(p => !p.name.startsWith("__")).filter(p => !p.removed.isDefined)
     val propertiesJson = properties.map(p => {
-      val pDescription = p.description.getOrElse("")
-      val trimmedType = p.`type`.stripPrefix("Option of ")
+      val pDescription = p.description
+      val trimmedType = p.`type` match {
+        case s if s.startsWith("Option[") => s.stripPrefix("Option[").stripSuffix("]")
+        case s => s
+      }
 
-      val mapRegex = "(List)?Map of String,(\\w*)".r
+      val mapRegex = "(List)?Map\\[String,(\\w*)\\]".r
 
       trimmedType match {
-        case s"List of $s" => 
-          (p.name, arrayJson(pDescription, s))
+        case s"List[$s]" => 
+          (p.name, arrayType(s, pDescription))
 
-        case s"OneOrMore of $s" =>
-          (p.name, Json.obj("anyOf" -> Json.arr(
-            valueJson(pDescription, s),
-            arrayJson(pDescription, s)
-          )))
+        case "Either[String,List[String]]" =>
+          (p.name, eitherJson(
+            valueType("String", pDescription),
+            arrayType("String", pDescription)
+          ))
 
-        case "Option[Either[String,List of String]]" =>
-          (p.name, Json.obj("anyOf" -> Json.arr(
-            valueJson(pDescription, "String"),
-            arrayJson(pDescription, "String")
-          )))
+        case "Either[Map[String,String],String]" =>
+          (p.name, eitherJson(
+            mapType("String", pDescription),
+            valueType("String", pDescription)
+          ))
 
-        case s"Option[Either of $s,$t]" =>
-          (p.name, Json.obj("anyOf" -> Json.arr(
-            valueJson(pDescription, s),
-            valueJson(pDescription, t)
-          )))
+        case s"Either[$s,$t]" =>
+          (p.name, eitherJson(
+            valueType(s, pDescription),
+            valueType(t, pDescription)
+          ))
 
-        case "OneOrMore[Map of String,String]" =>
-          (p.name, Json.obj("anyOf" -> Json.arr(
-            mapJson(pDescription, "String"),
-            Json.obj(
-              "description" -> Json.fromString(pDescription),
-              "type" -> Json.fromString("array"),
-              "items" -> mapJson("String")
+        case "OneOrMore[Map[String,String]]" =>
+          (p.name, oneOrMoreJson(
+            mapType("String", pDescription)
+          ))
+
+        case "OneOrMore[Either[String,Map[String,String]]]" =>
+          (p.name, oneOrMoreJson(
+            eitherJson(
+              valueType("String", pDescription),
+              mapType("String", pDescription)
             )
-          )))
+          ))
 
-        case "Option[Either[Map of String,String,String]]" =>
-          (p.name, Json.obj("anyOf" -> Json.arr(
-            mapJson(pDescription, "String"),
-            valueJson(pDescription, "String")
-          )))
-
-        case "OneOrMore[Either[String,Map of String,String]]" =>
-          (p.name, Json.obj("anyOf" -> Json.arr(
-            Json.obj("anyOf" -> Json.arr(
-              valueJson(pDescription, "String"),
-              mapJson(pDescription, "String")
-            )),
-            Json.obj(
-              "description" -> Json.fromString(pDescription),
-              "type" -> Json.fromString("array"),
-              "items" -> Json.obj("anyOf" -> Json.arr(
-                valueJson(pDescription, "String"),
-                mapJson(pDescription, "String")
-            ))
-            )
-          )))
+        case s"OneOrMore[$s]" =>
+          (p.name, oneOrMoreType(s))
 
         case mapRegex(_, s) => 
-          (p.name, mapJson(pDescription, s))
+          (p.name, mapType(s, pDescription))
 
         case s if p.name == "type" && fixedTypeString.isDefined =>
           ("type", Json.obj(
@@ -150,7 +165,7 @@ object JsonSchema {
           ))
         
         case s =>
-          (p.name, valueJson(pDescription, s))
+          (p.name, valueType(s, pDescription))
       }
 
     })
@@ -275,9 +290,9 @@ object JsonSchema {
       Seq("ArgumentGroup" -> Json.obj(
           "type" -> Json.fromString("object"),
           "properties" -> Json.obj(
-            "name" -> valueJson("The name of the argument group.", "String"),
-            "description" -> valueJson("A description of the argument group. Multiline descriptions are supported.", "String"),
-            "arguments" -> arrayJson("List of the arguments names.", "Argument")
+            "name" -> valueType("String", Some("The name of the argument group.")),
+            "description" -> valueType("String", Some("A description of the argument group. Multiline descriptions are supported.")),
+            "arguments" -> arrayType("Argument", Some("List of the arguments names."))
           ),
           "required" -> Json.arr(Json.fromString("name"), Json.fromString("arguments")),
           "additionalProperties" -> Json.False
@@ -302,9 +317,9 @@ object JsonSchema {
         definitions: _*
       ),
       "properties" -> Json.obj(
-        "functionality" -> valueJson(data.functionality.get("functionality").get.head.description.get, "Functionality"),
-        "platforms" -> arrayJson("Definition of the platforms", "Platforms"),
-        "info" -> valueJson("Definition of meta data", "Info")
+        "functionality" -> valueType("Functionality", Some(data.functionality.get("functionality").get.head.description.get)),
+        "platforms" -> arrayType("Platforms", Some("Definition of the platforms")),
+        "info" -> valueType("Info", Some("Definition of meta data"))
       ),
       "required" -> Json.arr(Json.fromString("functionality")),
       "additionalProperties" -> Json.False,
