@@ -59,8 +59,8 @@ object JsonSchema {
     mapJson(valueType(`type`), description)
   }
 
-  def oneOrMoreType(`type`: String): Json = {
-    oneOrMoreJson(valueType(`type`))
+  def oneOrMoreType(`type`: String, description: Option[String] = None): Json = {
+    oneOrMoreJson(valueType(`type`, description))
   }
 
   def arrayJson(json: Json, description: Option[String] = None): Json = {
@@ -153,7 +153,7 @@ object JsonSchema {
           ))
 
         case s"OneOrMore[$s]" =>
-          (p.name, oneOrMoreType(s))
+          (p.name, oneOrMoreType(s, pDescription))
 
         case mapRegex(_, s) => 
           (p.name, mapType(s, pDescription))
@@ -170,10 +170,9 @@ object JsonSchema {
 
     })
 
-    val required = properties.filter(p => !(p.`type`.startsWith("Option of ") || p.`type`.startsWith("Option[") || p.default.isDefined))
+    val required = properties.filter(p => !(p.`type`.startsWith("Option[") || p.default.isDefined))
     val requiredJson = required.map(p => Json.fromString(p.name))
 
-    // TODO figure out `required` (not "Option of" or has default value)
     Json.obj(
       "description" -> Json.fromString(description),
       "type" -> Json.fromString("object"),
