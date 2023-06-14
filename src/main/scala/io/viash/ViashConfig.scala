@@ -43,7 +43,7 @@ object ViashConfig {
         config
       }
     val json = ConfigMeta.configToCleanJson(conf0)
-    json.toFormattedString(format)
+    println(json.toFormattedString(format))
   }
 
   def viewMany(configs: List[Config], format: String, parseArgumentGroups: Boolean): Unit = {
@@ -60,7 +60,7 @@ object ViashConfig {
       }
     }
     val jsons = confs0.map(c => ConfigMeta.configToCleanJson(c))
-    jsons.asJson.toFormattedString(format)
+    println(jsons.asJson.toFormattedString(format))
   }
 
   def inject(config: Config): Unit = {
