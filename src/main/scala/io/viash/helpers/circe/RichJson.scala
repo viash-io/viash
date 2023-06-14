@@ -248,7 +248,7 @@ class RichJson(json: Json) {
     * Convert to a pretty String.
     *
     * @param format Must be either 'yaml' or 'json'
-    * @return A 
+    * @return The YAML or JSON String representation.
     */
   def toFormattedString(format: String): String = {
     format match {
