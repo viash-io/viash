@@ -112,7 +112,7 @@ case class Functionality(
       |
       | - `name: foo`, the name of the argument group. 
       | - `description: Description of foo`, a description of the argument group. Multiline descriptions are supported.
-      | - `arguments: [arg1, arg2, ...]`, list of the arguments names.
+      | - `arguments: [arg1, arg2, ...]`, list of the arguments.
       |
       |""".stripMargin)
   @example(

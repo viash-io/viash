@@ -107,6 +107,7 @@ object CollectedSchemas {
       "functionality"             -> getMembers[Functionality](),
       "author"                    -> getMembers[Author](),
       "computationalRequirements" -> getMembers[ComputationalRequirements](),
+      "argumentGroup"             -> getMembers[ArgumentGroup](),
     ),
     "platforms" -> Map(
       "platform"                  -> getMembers[Platform](),

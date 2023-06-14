@@ -183,10 +183,12 @@ object JsonSchema {
     )
   }
 
+  
+
   def createVariantSchemas(data: Map[String, List[ParameterSchema]], groupName: String, translationMap: Map[String, String]): Seq[(String, Json)] = {
     
     val group = groupName -> Json.obj(
-      "anyOf" -> Json.arr(
+      "oneOf" -> Json.arr(
         translationMap.map{ case (k, v) => Json.obj("$ref" -> Json.fromString(s"#/definitions/$k")) }.toSeq: _*
       )
     )
@@ -204,7 +206,7 @@ object JsonSchema {
   def createVariantSchemasAlt(data: Map[String, List[ParameterSchema]], groupName: String, translationMap: Map[String, String]): Seq[(String, Json)] = {
     
     val group = groupName -> Json.obj(
-      "anyOf" -> Json.arr(
+      "oneOf" -> Json.arr(
         translationMap.map{ case (k, v) => Json.obj("$ref" -> Json.fromString(s"#/definitions/$k")) }.toSeq: _*
       )
     )
@@ -215,6 +217,12 @@ object JsonSchema {
     }
 
     variants.toSeq :+ group
+  }
+
+  def createGroupedSchemas(data: Map[String, List[ParameterSchema]]) : Seq[(String, Json)] = {
+    data.toList.map{
+      case (k, v) => k.capitalize -> createSchema(v, None)
+    }
   }
 
   def createEnum(values: Seq[String], description: String, comment: Option[String]): Json = {
@@ -240,7 +248,6 @@ object JsonSchema {
   def getJsonSchema: Json = {
     val configData = data.config.get("config").get
     val configDescription = configData.find(p => p.name == "__this__").get.description.get
-
 
     val platformMap = Map("NativePlatform" -> "native", "DockerPlatform" -> "docker", "NextflowVdsl3Platform" -> "nextflow")
     val requirementsMap = Map(
@@ -277,32 +284,14 @@ object JsonSchema {
       "ScalaScript" -> "scala_script"
     )
 
-    val definitions = 
-      createVariantSchemas(data.platforms, "Platforms", platformMap) ++
-      Seq(
-        "Info" -> createSchema(data.config.get("info").get),
-        "Functionality" -> createSchema(data.functionality.get("functionality").get),
-        "Author" -> createSchema(data.functionality.get("author").get),
-        "ComputationalRequirements" -> createSchema(data.functionality.get("computationalRequirements").get)
-      ) ++
+    val definitions =
+      createGroupedSchemas(data.config) ++
+      createGroupedSchemas(data.functionality) ++
+      createVariantSchemas(data.platforms, "Platform", platformMap) ++
       createVariantSchemas(data.requirements, "Requirements", requirementsMap) ++
       createVariantSchemasAlt(data.arguments, "Argument", argumentsMap) ++
-      Seq("ArgumentGroup" -> Json.obj(
-          "type" -> Json.fromString("object"),
-          "properties" -> Json.obj(
-            "name" -> valueType("String", Some("The name of the argument group.")),
-            "description" -> valueType("String", Some("A description of the argument group. Multiline descriptions are supported.")),
-            "arguments" -> arrayType("Argument", Some("List of the arguments names."))
-          ),
-          "required" -> Json.arr(Json.fromString("name"), Json.fromString("arguments")),
-          "additionalProperties" -> Json.False
-      )) ++
       createVariantSchemas(data.resources, "Resource", resourceMap) ++
-      Seq(
-        "NextflowDirectives" -> createSchema(data.nextflowParameters.get("nextflowDirectives").get),
-        "NextflowAuto" -> createSchema(data.nextflowParameters.get("nextflowAuto").get),
-        "NextflowConfig" -> createSchema(data.nextflowParameters.get("nextflowConfig").get)
-      ) ++
+      createGroupedSchemas(data.nextflowParameters) ++
       Seq(
         "DockerSetupStrategy" -> createEnum(DockerSetupStrategy.map.keys.toSeq, "The Docker setup strategy to use when building a container.", Some("TODO add descriptions to different strategies")),
         "Direction" -> createEnum(Seq("input", "output"), "Makes this argument an `input` or an `output`, as in does the file/folder needs to be read or written. `input` by default.", None),
@@ -312,17 +301,10 @@ object JsonSchema {
 
     val schema = Json.obj(
       "$schema" -> Json.fromString("https://json-schema.org/draft-07/schema#"),
-      "description" -> Json.fromString("A schema for Viash config files"),
       "definitions" -> Json.obj(
         definitions: _*
       ),
-      "properties" -> Json.obj(
-        "functionality" -> valueType("Functionality", Some(data.functionality.get("functionality").get.head.description.get)),
-        "platforms" -> arrayType("Platforms", Some("Definition of the platforms")),
-        "info" -> valueType("Info", Some("Definition of meta data"))
-      ),
-      "required" -> Json.arr(Json.fromString("functionality")),
-      "additionalProperties" -> Json.False,
+      "oneOf" -> Json.arr(valueType("Config"))
     )
 
     schema
