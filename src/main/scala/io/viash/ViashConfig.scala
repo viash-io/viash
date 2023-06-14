@@ -17,34 +17,18 @@
 
 package io.viash
 
+import java.nio.file.{Files, Paths}
+import scala.sys.process.Process
+
+import io.circe.syntax.EncoderOps
+
 import io.viash.config.Config
 import io.viash.helpers.IO
-
-import java.nio.file.{Files, Paths}
-import io.circe.syntax.EncoderOps
-import io.circe.{Json, Printer => JsonPrinter}
-import io.circe.yaml.{Printer => YamlPrinter}
-
-import scala.sys.process.Process
+import io.viash.helpers.circe._
 import io.viash.platforms.DebugPlatform
 import io.viash.config.ConfigMeta
 
 object ViashConfig {
-  private val yamlPrinter = YamlPrinter(
-    preserveOrder = true,
-    mappingStyle = YamlPrinter.FlowStyle.Block,
-    splitLines = true,
-    stringStyle = YamlPrinter.StringStyle.DoubleQuoted
-  )
-  private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
-
-  private def printJson(json: Json, format: String): Unit = {
-    val str = format match {
-      case "yaml" => yamlPrinter.pretty(json)
-      case "json" => jsonPrinter.print(json)
-    }
-    println(str)
-  }
 
   def view(config: Config, format: String, parseArgumentGroups: Boolean): Unit = {
     val conf0 = 
@@ -59,7 +43,7 @@ object ViashConfig {
         config
       }
     val json = ConfigMeta.configToCleanJson(conf0)
-    printJson(json, format)
+    json.toFormattedString(format)
   }
 
   def viewMany(configs: List[Config], format: String, parseArgumentGroups: Boolean): Unit = {
@@ -76,7 +60,7 @@ object ViashConfig {
       }
     }
     val jsons = confs0.map(c => ConfigMeta.configToCleanJson(c))
-    printJson(jsons.asJson, format)
+    jsons.asJson.toFormattedString(format)
   }
 
   def inject(config: Config): Unit = {
