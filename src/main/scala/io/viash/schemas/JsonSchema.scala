@@ -42,13 +42,10 @@ object JsonSchema {
   }
 
   def valueType(`type`: String, description: Option[String] = None): Json = {
-    description match {
-      case None => Json.obj(typeOrRefJson(`type`))
-      case Some(desc) => Json.obj(
-        "description" -> Json.fromString(desc),
-        typeOrRefJson(`type`)
-      )
-    }
+    Json.obj(
+      description.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
+      Seq(typeOrRefJson(`type`)): _*
+    )
   }
 
   def arrayType(`type`: String, description: Option[String] = None): Json = {
@@ -64,35 +61,23 @@ object JsonSchema {
   }
 
   def arrayJson(json: Json, description: Option[String] = None): Json = {
-    description match {
-      case None =>
-        Json.obj(
-          "type" -> Json.fromString("array"),
-          "items" -> json
-        )
-      case Some(desc) => 
-        Json.obj(
-        "description" -> Json.fromString(desc),
+    Json.obj(
+      description.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
+      Seq(
         "type" -> Json.fromString("array"),
         "items" -> json
-      )
-    }
+      ): _*
+    )
   }
 
   def mapJson(json: Json, description: Option[String] = None) = {
-    description match {
-      case None =>
-        Json.obj(
+    Json.obj(
+      description.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
+      Seq(
         "type" -> Json.fromString("object"),
         "additionalProperties" -> json
-      )
-      case Some(desc) =>
-        Json.obj(
-        "description" -> Json.fromString(desc),
-        "type" -> Json.fromString("object"),
-        "additionalProperties" -> json
-      )
-    }
+      ): _*
+    )
   }
 
   def oneOrMoreJson(json: Json): Json = {
@@ -101,8 +86,8 @@ object JsonSchema {
       arrayJson(json)
     )
   }
-  def eitherJson(a: Json, b: Json): Json = {
-    Json.obj("oneOf" -> Json.arr(a, b))
+  def eitherJson(jsons: Json*): Json = {
+    Json.obj("oneOf" -> Json.arr(jsons: _*))
   }
 
   def createSchema(info: List[ParameterSchema], fixedTypeString: Option[String] = None): Json = {
@@ -153,7 +138,19 @@ object JsonSchema {
           ))
 
         case s"OneOrMore[$s]" =>
-          (p.name, oneOrMoreType(s, pDescription))
+          if (s == "String" && p.name == "port" && fixedTypeString == Some("docker")) {
+            // Custom exception
+            // This is the port field for a docker platform.
+            // We want to allow a Strings or Ints.
+            (p.name, eitherJson(
+              valueType("String", pDescription),
+              valueType("Int", pDescription),
+              arrayType("String", pDescription),
+              arrayType("Int", pDescription)
+            ))
+          } else {
+            (p.name, oneOrMoreType(s, pDescription))
+          }
 
         case mapRegex(_, s) => 
           (p.name, mapType(s, pDescription))
@@ -170,7 +167,12 @@ object JsonSchema {
 
     })
 
-    val required = properties.filter(p => !(p.`type`.startsWith("Option[") || p.default.isDefined))
+    val required = properties.filter(p => 
+      !(
+        p.`type`.startsWith("Option[") ||
+        p.default.isDefined ||
+        (p.name == "type" && fixedTypeString == Some("file")) // Custom exception, file resources are "kind of" default
+      ))
     val requiredJson = required.map(p => Json.fromString(p.name))
 
     Json.obj(
@@ -182,14 +184,9 @@ object JsonSchema {
     )
   }
 
-  
-
   def createVariantSchemas(data: Map[String, List[ParameterSchema]], groupName: String, translationMap: Map[String, String]): Seq[(String, Json)] = {
-    
-    val group = groupName -> Json.obj(
-      "oneOf" -> Json.arr(
-        translationMap.map{ case (k, v) => Json.obj("$ref" -> Json.fromString(s"#/definitions/$k")) }.toSeq: _*
-      )
+    val group = groupName -> eitherJson(
+      translationMap.map{ case (k, v) => Json.obj("$ref" -> Json.fromString(s"#/definitions/$k")) }.toSeq: _*
     )
 
     def firstLower(s: String): String = s.head.toLower.toString + s.tail
@@ -203,11 +200,8 @@ object JsonSchema {
   }
 
   def createVariantSchemasAlt(data: Map[String, List[ParameterSchema]], groupName: String, translationMap: Map[String, String]): Seq[(String, Json)] = {
-    
-    val group = groupName -> Json.obj(
-      "oneOf" -> Json.arr(
-        translationMap.map{ case (k, v) => Json.obj("$ref" -> Json.fromString(s"#/definitions/$k")) }.toSeq: _*
-      )
+    val group = groupName -> eitherJson(
+      translationMap.map{ case (k, v) => Json.obj("$ref" -> Json.fromString(s"#/definitions/$k")) }.toSeq: _*
     )
 
     val variants = translationMap.map {
@@ -298,14 +292,12 @@ object JsonSchema {
         "DockerResolveVolume" -> createEnum(Seq("manual", "automatic", "auto", "Manual", "Automatic", "Auto"), "Enables or disables automatic volume mapping. Enabled when set to `Automatic` or disabled when set to `Manual`. Default: `Automatic`", Some("TODO make fully case insensitive"))
       )
 
-    val schema = Json.obj(
+    Json.obj(
       "$schema" -> Json.fromString("https://json-schema.org/draft-07/schema#"),
       "definitions" -> Json.obj(
         definitions: _*
       ),
       "oneOf" -> Json.arr(valueType("Config"))
     )
-
-    schema
   }
 }
