@@ -91,10 +91,18 @@ object JsonSchema {
   }
 
   def createSchema(info: List[ParameterSchema], fixedTypeString: Option[String] = None): Json = {
-    val description = info.find(p => p.name == "__this__").get.description.get
+
+    def removeMarkup(text: String): String = {
+      val markupRegex = raw"@\[(.*?)\]\(.*?\)".r
+      val backtickRegex = "`(\"[^`\"]*?\")`".r
+      val textWithoutMarkup = markupRegex.replaceAllIn(text, "$1")
+      backtickRegex.replaceAllIn(textWithoutMarkup, "$1")
+    }
+
+    val description = removeMarkup(info.find(p => p.name == "__this__").get.description.get)
     val properties = info.filter(p => !p.name.startsWith("__")).filter(p => !p.removed.isDefined)
     val propertiesJson = properties.map(p => {
-      val pDescription = p.description
+      val pDescription = p.description.map(s => removeMarkup(s))
       val trimmedType = p.`type` match {
         case s if s.startsWith("Option[") => s.stripPrefix("Option[").stripSuffix("]")
         case s => s
@@ -239,9 +247,6 @@ object JsonSchema {
   }
 
   def getJsonSchema: Json = {
-    val configData = data.config.get("config").get
-    val configDescription = configData.find(p => p.name == "__this__").get.description.get
-
     val platformMap = Map("NativePlatform" -> "native", "DockerPlatform" -> "docker", "NextflowVdsl3Platform" -> "nextflow")
     val requirementsMap = Map(
       "ApkRequirements" -> "apk",
