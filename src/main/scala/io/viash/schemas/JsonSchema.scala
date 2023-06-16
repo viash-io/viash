@@ -30,8 +30,12 @@ object JsonSchema {
         "type" -> Json.fromString("boolean")
       case "Int" | "Long" =>
         "type" -> Json.fromString("integer")
-      case "Double" =>
+      // Basic double value, still needed to compose the either (double or infinity strings)
+      case "Double_" =>
         "type" -> Json.fromString("number")
+      // Custom exception. Used to add infinity or nan values to the double type
+      case "Double" =>
+        "$ref" -> Json.fromString("#/definitions/DoubleWithInf")
       case "String" | "Path" =>
         "type" -> Json.fromString("string")
       case "Json" =>
@@ -226,24 +230,12 @@ object JsonSchema {
     }
   }
 
-  def createEnum(values: Seq[String], description: String, comment: Option[String]): Json = {
-    comment match {
-      case Some(s) =>
-        Json.obj(
-          "$comment" -> Json.fromString(s),
-          "enum" -> Json.arr(
-            values.map(s => Json.fromString(s)): _*
-          ),
-          "description" -> Json.fromString(description)
-        )
-      case None =>
-        Json.obj(
-          "enum" -> Json.arr(
-            values.map(s => Json.fromString(s)): _*
-          ),
-          "description" -> Json.fromString(description)
-        )
-    }
+  def createEnum(values: Seq[String], description: Option[String], comment: Option[String]): Json = {
+    Json.obj(
+      Seq("enum" -> Json.arr(values.map(s => Json.fromString(s)): _*)) ++
+      comment.map(s => Seq("$comment" -> Json.fromString(s))).getOrElse(Nil) ++
+      description.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil): _*
+    )
   }
 
   def getJsonSchema: Json = {
@@ -291,11 +283,13 @@ object JsonSchema {
       createVariantSchemas(data.resources, "Resource", resourceMap) ++
       createGroupedSchemas(data.nextflowParameters) ++
       Seq(
-        "DockerSetupStrategy" -> createEnum(DockerSetupStrategy.map.keys.toSeq, "The Docker setup strategy to use when building a container.", Some("TODO add descriptions to different strategies")),
-        "Direction" -> createEnum(Seq("input", "output"), "Makes this argument an `input` or an `output`, as in does the file/folder needs to be read or written. `input` by default.", None),
-        "Status" -> createEnum(Seq("enabled", "disabled", "deprecated"), "Allows setting a component to active, deprecated or disabled.", None),
-        "DockerResolveVolume" -> createEnum(Seq("manual", "automatic", "auto", "Manual", "Automatic", "Auto"), "Enables or disables automatic volume mapping. Enabled when set to `Automatic` or disabled when set to `Manual`. Default: `Automatic`", Some("TODO make fully case insensitive"))
-      )
+        "DockerSetupStrategy" -> createEnum(DockerSetupStrategy.map.keys.toSeq, Some("The Docker setup strategy to use when building a container."), Some("TODO add descriptions to different strategies")),
+        "Direction" -> createEnum(Seq("input", "output"), Some("Makes this argument an `input` or an `output`, as in does the file/folder needs to be read or written. `input` by default."), None),
+        "Status" -> createEnum(Seq("enabled", "disabled", "deprecated"), Some("Allows setting a component to active, deprecated or disabled."), None),
+        "DockerResolveVolume" -> createEnum(Seq("manual", "automatic", "auto", "Manual", "Automatic", "Auto"), Some("Enables or disables automatic volume mapping. Enabled when set to `Automatic` or disabled when set to `Manual`. Default: `Automatic`"), Some("TODO make fully case insensitive")),
+        "DoubleStrings" -> createEnum(Seq("+.inf", "+inf", "+infinity", "positiveinfinity", "positiveinf", "-.inf", "-inf", "-infinity", "negativeinfinity", "negativeinf", ".nan", "nan"), None, None)
+      ) ++
+      Seq("DoubleWithInf" -> eitherJson(valueType("Double_"), valueType("DoubleStrings")))
 
     Json.obj(
       "$schema" -> Json.fromString("https://json-schema.org/draft-07/schema#"),

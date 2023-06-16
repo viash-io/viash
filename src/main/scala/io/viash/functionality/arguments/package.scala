@@ -37,9 +37,9 @@ package object arguments {
     io.circe.Decoder.decodeDouble or
     Decoder.instance {
       cursor => cursor.value.as[String].map(_.toLowerCase()) match {
-        case Right("+inf" | "+infinity" | "positiveinfinity" | "positiveinf") => Right(Double.PositiveInfinity)
-        case Right("-inf" | "-infinity" | "negativeinfinity" | "negativeinf") => Right(Double.NegativeInfinity)
-        case Right("nan") => Right(Double.NaN)
+        case Right("+.inf" | "+inf" | "+infinity" | "positiveinfinity" | "positiveinf") => Right(Double.PositiveInfinity)
+        case Right("-.inf" | "-inf" | "-infinity" | "negativeinfinity" | "negativeinf") => Right(Double.NegativeInfinity)
+        case Right(".nan" | "nan") => Right(Double.NaN)
         case a => a.map(_.toDouble)
       }
     }
