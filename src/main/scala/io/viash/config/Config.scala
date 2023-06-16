@@ -38,6 +38,9 @@ import io.viash.schemas._
 import java.io.ByteArrayOutputStream
 import java.nio.file.FileSystemNotFoundException
 
+import org.yaml.snakeyaml.nodes._
+import scala.jdk.CollectionConverters._
+
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
     |We commonly name this file `config.vsh.yaml` in our examples, but you can name it however you choose.  
@@ -183,6 +186,53 @@ object Config {
     )
   }
 
+  def replaceInfinities(data: String): String = {
+    import org.yaml.snakeyaml.Yaml
+    import org.yaml.snakeyaml.serializer.Serializer
+    import org.yaml.snakeyaml.emitter.Emitter
+    import org.yaml.snakeyaml.resolver.Resolver
+    import org.yaml.snakeyaml.DumperOptions
+
+    import java.io.{StringReader, StringWriter}
+
+    // Convert yaml text to Node tree
+    val input = new Yaml().compose(new StringReader(data))
+
+    // Search for number values of "+.inf" and replace them
+    val output = replaceInfinities(input)
+
+    // Save Yaml back to string
+    val writer = new StringWriter()
+    val options = new DumperOptions()
+    val serializer = new Serializer(new Emitter(writer, options), new Resolver, options, Tag.MAP)
+    serializer.open()
+    serializer.serialize(output)
+    serializer.close()
+    writer.toString
+  }
+
+  def replaceInfinities(node: Node): Node = node match {
+  
+    case mapNode: MappingNode =>
+      val updatedMap = mapNode.getValue().asScala.map { tup => new NodeTuple(tup.getKeyNode(), replaceInfinities(tup.getValueNode())) }
+      mapNode.setValue(updatedMap.asJava)
+      mapNode
+
+    case seqNode: SequenceNode =>
+      val updatedSeq = seqNode.getValue().asScala.map { node => replaceInfinities(node) }
+      new SequenceNode(seqNode.getTag(), updatedSeq.asJava, seqNode.getFlowStyle())
+
+    case scalar: ScalarNode if scalar.getTag == Tag.FLOAT => 
+      val value = scalar.getValue()
+      if ("([-+]?\\.(inf|Inf|INF))|\\.(nan|NaN|NAN)".r matches value) {
+        new ScalarNode(Tag.STR, value, scalar.getStartMark(), scalar.getEndMark(), scalar.getScalarStyle())
+      } else {
+        scalar
+      }
+
+    case _ => node
+  }
+
   def readFromUri(
     uri: URI,
     projectDir: Option[URI] = None,
@@ -195,6 +245,9 @@ object Config {
     /* STRING */
     // read yaml as string
     val (yamlText, optScript) = readYAML(uri)
+
+    // replace valid yaml definitions for +.inf with "+.inf" so that circe doesn't trip over its toes
+    val replacedYamlText = replaceInfinities(yamlText)
     
     /* JSON 0: parsed from string */
     // parse yaml into Json
@@ -202,7 +255,7 @@ object Config {
       Console.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
       throw e
     }
-    val json0 = parser.parse(yamlText).fold(parsingErrorHandler, identity)
+    val json0 = parser.parse(replacedYamlText).fold(parsingErrorHandler, identity)
 
     /* JSON 1: after inheritance */
     // apply inheritance if need be
