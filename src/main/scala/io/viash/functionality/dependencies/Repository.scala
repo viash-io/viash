@@ -111,7 +111,7 @@ object Repository {
 
     // No cache found so fetch it
     val newRepo = repo match {
-      case r: GithubRepository => {
+      case r: AbstractGitRepository => {
         val r2 = r.checkoutSparse()
         val r3 = r2.checkout()
         // Stopgap solution to be able to use built repositories which were not built with dependency aware Viash version.

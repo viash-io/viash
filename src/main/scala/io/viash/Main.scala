@@ -39,6 +39,7 @@ import java.nio.file.Files
 import java.net.URI
 import io.viash.helpers.DependencyResolver
 import io.viash.config.AbstractConfigException
+import io.viash.functionality.dependencies.AbstractDependencyException
 
 object Main {
   private val pkg = getClass.getPackage
@@ -75,6 +76,9 @@ object Main {
         System.exit(1)
       case e: AbstractConfigException =>
         Console.err.println(s"viash: ${Console.RED}Error parsing, ${e.innerMessage} in file '${e.uri}'.${Console.RESET}\nDetails:\n${e.getMessage()}")
+        System.exit(1)
+      case e: AbstractDependencyException =>
+        Console.err.println(s"viash: ${e.getMessage()}")
         System.exit(1)
       case e: Exception =>
         Console.err.println(
