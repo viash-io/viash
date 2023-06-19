@@ -15,7 +15,7 @@
 
 * `PythonScript`: Pass `-B` to Python to avoid creating `*.pyc` and `*.pyo` files on importing helper functions (PR #442).
 
-* `viash config`: Double values can now have `"+.inf"`, `"-.inf"` or `".nan"` values as well. This is more in line with the yaml spec (related to #445) (PR #446).
+* `viash config`: Special double values now support `+.inf`, `-.inf` or `.nan` values (PR #446 and PR #450). The stringified versions `"+.inf"`, `"-.inf"` or `".nan"` are supported as well. This is in line with the yaml spec.
 
 # Viash 0.7.4 (2023-05-31): Minor bug fixes and minor improvements to VDSL3
 
