@@ -94,6 +94,9 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
     assert(regexBuildCache.findFirstIn(testTextCaching).isDefined, "Expected to find caching.")
     checkTempDirAndRemove(testText, false)
+    checkTempDirAndRemove(testTextCaching, false)
+    checkTempDirAndRemove(testTextNoCaching, false)
+
   }
 
   test("Verify base config derivation", NativeTest) {
