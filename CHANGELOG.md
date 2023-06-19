@@ -10,6 +10,8 @@
 
 * `viash ns build`: Fix the error summary when a setup or push failure occurs. These conditions were not displayed and could cause confusion (PR #447).
 
+* `testbench`: Fix the viash version switch test bench not working for newer Java versions (PR #).
+
 # Viash 0.7.4 (2023-05-31): Minor bug fixes and minor improvements to VDSL3
 
 Some small fixes and consistency improvements.

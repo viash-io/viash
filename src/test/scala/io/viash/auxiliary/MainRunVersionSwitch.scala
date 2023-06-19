@@ -32,10 +32,7 @@ class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
   override def afterAll(): Unit = System.setSecurityManager(null)
 
   def setEnv(key: String, value: String) = {
-    val field = System.getenv().getClass.getDeclaredField("m")
-    field.setAccessible(true)
-    val map = field.get(System.getenv()).asInstanceOf[java.util.Map[java.lang.String, java.lang.String]]
-    map.put(key, value)
+    Main.sysEnvOverride.addOne(key -> value)
   }
 
   test("Verify VIASH_VERSION is undefined by default", NativeTest) {
@@ -66,7 +63,7 @@ class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
 
     setEnv("VIASH_VERSION", "0.6.6")
 
-    val version = sys.env.get("VIASH_VERSION")
+    val version = Main.sysEnvGet("VIASH_VERSION")
     assert(version == Some("0.6.6"))
 
     val arguments = Seq("--version")
@@ -89,7 +86,7 @@ class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
 
     setEnv("VIASH_VERSION", "-")
 
-    val version = sys.env.get("VIASH_VERSION")
+    val version = Main.sysEnvGet("VIASH_VERSION")
     assert(version == Some("-"))
 
     val arguments = Seq("--version")
@@ -118,7 +115,7 @@ class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
 
     setEnv("VIASH_VERSION", "invalid")
 
-    val version = sys.env.get("VIASH_VERSION")
+    val version = Main.sysEnvGet("VIASH_VERSION")
     assert(version == Some("invalid"))
 
     val arguments = Seq("--version")
