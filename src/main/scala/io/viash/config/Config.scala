@@ -196,41 +196,33 @@ object Config {
     import java.io.{StringReader, StringWriter}
 
     // Convert yaml text to Node tree
-    val input = new Yaml().compose(new StringReader(data))
+    val yaml = new Yaml().compose(new StringReader(data))
 
     // Search for number values of "+.inf" and replace them
-    val output = replaceInfinities(input)
+    replaceInfinities(yaml)
 
     // Save Yaml back to string
     val writer = new StringWriter()
     val options = new DumperOptions()
     val serializer = new Serializer(new Emitter(writer, options), new Resolver, options, Tag.MAP)
     serializer.open()
-    serializer.serialize(output)
+    serializer.serialize(yaml)
     serializer.close()
     writer.toString
   }
 
-  def replaceInfinities(node: Node): Node = node match {
-  
-    case mapNode: MappingNode =>
-      val updatedMap = mapNode.getValue().asScala.map { tup => new NodeTuple(tup.getKeyNode(), replaceInfinities(tup.getValueNode())) }
-      mapNode.setValue(updatedMap.asJava)
-      mapNode
-
-    case seqNode: SequenceNode =>
-      val updatedSeq = seqNode.getValue().asScala.map { node => replaceInfinities(node) }
-      new SequenceNode(seqNode.getTag(), updatedSeq.asJava, seqNode.getFlowStyle())
-
-    case scalar: ScalarNode if scalar.getTag == Tag.FLOAT => 
-      val value = scalar.getValue()
-      if ("([-+]?\\.(inf|Inf|INF))|\\.(nan|NaN|NAN)".r matches value) {
-        new ScalarNode(Tag.STR, value, scalar.getStartMark(), scalar.getEndMark(), scalar.getScalarStyle())
-      } else {
-        scalar
-      }
-
-    case _ => node
+  def replaceInfinities(node: Node): Unit = node match {
+    // Traverse maps
+    case mapNode: MappingNode => mapNode.getValue().forEach(t => replaceInfinities(t.getValueNode()))
+    // Traverse arrays
+    case seqNode: SequenceNode => seqNode.getValue().forEach(n => replaceInfinities(n))
+    // If double and string matches, change type from float to string.
+    // The value can stay the same and instead will get escaped during serialization.
+    case scalar: ScalarNode if scalar.getTag == Tag.FLOAT =>
+      if ("([-+]?\\.(inf|Inf|INF))|\\.(nan|NaN|NAN)".r matches scalar.getValue())
+        scalar.setTag(Tag.STR)
+    // No changes required
+    case _ =>
   }
 
   def readFromUri(
