@@ -23,6 +23,7 @@ import io.viash.platforms._
 import io.viash.helpers.{Git, GitInfo, IO}
 import io.viash.helpers.circe._
 import io.viash.helpers.status._
+import io.viash.helpers.Yaml
 
 import java.net.URI
 import io.circe.yaml.parser
@@ -37,9 +38,6 @@ import java.nio.file.Paths
 import io.viash.schemas._
 import java.io.ByteArrayOutputStream
 import java.nio.file.FileSystemNotFoundException
-
-import org.yaml.snakeyaml.nodes._
-import scala.jdk.CollectionConverters._
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -186,45 +184,6 @@ object Config {
     )
   }
 
-  def replaceInfinities(data: String): String = {
-    import org.yaml.snakeyaml.Yaml
-    import org.yaml.snakeyaml.serializer.Serializer
-    import org.yaml.snakeyaml.emitter.Emitter
-    import org.yaml.snakeyaml.resolver.Resolver
-    import org.yaml.snakeyaml.DumperOptions
-
-    import java.io.{StringReader, StringWriter}
-
-    // Convert yaml text to Node tree
-    val yaml = new Yaml().compose(new StringReader(data))
-
-    // Search for number values of "+.inf" and replace them
-    replaceInfinities(yaml)
-
-    // Save Yaml back to string
-    val writer = new StringWriter()
-    val options = new DumperOptions()
-    val serializer = new Serializer(new Emitter(writer, options), new Resolver, options, Tag.MAP)
-    serializer.open()
-    serializer.serialize(yaml)
-    serializer.close()
-    writer.toString
-  }
-
-  def replaceInfinities(node: Node): Unit = node match {
-    // Traverse maps
-    case mapNode: MappingNode => mapNode.getValue().forEach(t => replaceInfinities(t.getValueNode()))
-    // Traverse arrays
-    case seqNode: SequenceNode => seqNode.getValue().forEach(n => replaceInfinities(n))
-    // If double and string matches, change type from float to string.
-    // The value can stay the same and instead will get escaped during serialization.
-    case scalar: ScalarNode if scalar.getTag == Tag.FLOAT =>
-      if ("([-+]?\\.(inf|Inf|INF))|\\.(nan|NaN|NAN)".r matches scalar.getValue())
-        scalar.setTag(Tag.STR)
-    // No changes required
-    case _ =>
-  }
-
   def readFromUri(
     uri: URI,
     projectDir: Option[URI] = None,
@@ -239,7 +198,7 @@ object Config {
     val (yamlText, optScript) = readYAML(uri)
 
     // replace valid yaml definitions for +.inf with "+.inf" so that circe doesn't trip over its toes
-    val replacedYamlText = replaceInfinities(yamlText)
+    val replacedYamlText = Yaml.replaceInfinities(yamlText)
     
     /* JSON 0: parsed from string */
     // parse yaml into Json
