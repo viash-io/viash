@@ -65,6 +65,12 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check setup strategy", DockerTest) {
+
+    // docker info
+    val cmd = "docker info"
+    val output = cmd.!!
+    printf(output)
+
     // first run to create cache entries
     val testText = TestHelper.testMain(
       "test",
