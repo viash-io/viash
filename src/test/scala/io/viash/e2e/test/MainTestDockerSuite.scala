@@ -81,6 +81,8 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
       "--setup", "build",
       "--keep", "false"
     )
+    printf(testTextNoCaching)
+
     val regexBuildCache = raw"RUN.*:\n.*CACHED".r
     assert(!regexBuildCache.findFirstIn(testTextNoCaching).isDefined, "Expected to not find caching.")
 
