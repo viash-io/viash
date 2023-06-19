@@ -399,16 +399,25 @@ object ViashNamespace {
       (ParseError, "configs encountered parse errors"),
       (Disabled, "configs were disabled"),
       (BuildError, "configs built failed"),
+      (SetupError, "setups failed"),
+      (PushError, "pushes failed"),
       (TestError, "tests failed"),
       (TestMissing, "tests missing"),
       (Success, s"configs $successAction successfully"))
 
     if (successes != statuses.length) {
+      val disabledStatusesCount = statuses.count(_ == Disabled)
+      val nonDisabledStatuses = statuses.filter(_ != Disabled)
+      val indentSize = nonDisabledStatuses.length.toString().size
+
       Console.err.println(s"${Console.YELLOW}Not all configs $successAction successfully${Console.RESET}")
+      if (disabledStatusesCount > 0)
+        Console.err.println(s"  ${Console.YELLOW}$disabledStatusesCount configs were disabled${Console.RESET}")
+      
       for ((status, message) <- messages) {
-        val count = statuses.count(_ == status)
+        val count = nonDisabledStatuses.count(_ == status)
         if (count > 0)
-          Console.err.println(s"  ${status.color}$count/${statuses.length} ${message}${Console.RESET}")
+          Console.err.println(s"  ${status.color}${String.format(s"%${indentSize}s",count)}/${nonDisabledStatuses.length} ${message}${Console.RESET}")
       }
     }
     else {
