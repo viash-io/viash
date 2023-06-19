@@ -92,7 +92,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
       "--setup", "cb",
       "--keep", "false"
     )
-    assert(regexBuildCache.findFirstIn(testTextNoCaching).isDefined, "Expected to find caching.")
+    assert(regexBuildCache.findFirstIn(testTextCaching).isDefined, "Expected to find caching.")
     checkTempDirAndRemove(testText, false)
   }
 
