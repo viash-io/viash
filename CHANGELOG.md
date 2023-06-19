@@ -2,7 +2,7 @@
 
 ## NEW FUNCTIONALITY
 
-* `viash test` and `viash ns test`: add `--setup` argument to determine the docker build strategy before a component is tested.
+* `viash test` and `viash ns test`: add `--setup` argument to determine the docker build strategy before a component is tested (PR #451).
 
 ## MINOR CHANGES
 
