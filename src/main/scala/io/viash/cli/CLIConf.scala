@@ -214,7 +214,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     banner(
       "viash test",
       "Test the component using the tests defined in the viash config file.",
-      "viash test config.vsh.yaml [-p docker] [-k true/false] [--setup]")
+      "viash test config.vsh.yaml [-p docker] [-k true/false] [--setup cachedbuild]")
     
     val setup = registerOpt[String](
       name = "setup",
@@ -294,7 +294,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       banner(
         "viash ns test",
         "Test a namespace containing many viash config files.",
-        "viash ns test [-n nmspc] [-s src] [-p docker] [--parallel] [--tsv file.tsv] [--setup] [--append]")
+        "viash ns test [-n nmspc] [-s src] [-p docker] [--parallel] [--tsv file.tsv] [--setup cachedbuild] [--append]")
 
       val setup = registerOpt[String](
         name = "setup",
