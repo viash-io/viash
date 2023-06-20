@@ -65,12 +65,6 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check setup strategy", DockerTest) {
-
-    // docker info
-    val cmd = "docker info"
-    val output = cmd.!!
-    printf(output)
-
     // first run to create cache entries
     val testText = TestHelper.testMain(
       "test",
@@ -87,7 +81,6 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
       "--setup", "build",
       "--keep", "false"
     )
-    printf(testTextNoCaching)
 
     val regexBuildCache = raw"RUN.*:\n.*CACHED".r
     assert(!regexBuildCache.findFirstIn(testTextNoCaching).isDefined, "Expected to not find caching.")
@@ -100,7 +93,6 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
       "--setup", "cb",
       "--keep", "false"
     )
-    printf(testTextCaching)
     assert(regexBuildCache.findFirstIn(testTextCaching).isDefined, "Expected to find caching.")
     checkTempDirAndRemove(testText, false)
     checkTempDirAndRemove(testTextCaching, false)
