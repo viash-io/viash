@@ -15,7 +15,7 @@ jobs:
           - { name: 'macos_latest', os: macos-latest }
         java:
           - { ver: '11', run_nextflow: true, run_coverage: false }
-          - { ver: '17', run_nextflow: true, run_coverage: false }
+          - { ver: '17', run_nextflow: true, run_coverage: true }
           - { ver: '19', run_nextflow: true, run_coverage: false }
           - { ver: '20', run_nextflow: false, run_coverage: false }
 
