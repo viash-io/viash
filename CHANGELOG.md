@@ -18,6 +18,12 @@
 
 * `viash config`: Special double values now support `+.inf`, `-.inf` or `.nan` values (PR #446 and PR #450). The stringified versions `"+.inf"`, `"-.inf"` or `".nan"` are supported as well. This is in line with the yaml spec.
 
+## BUG FIXES
+
+* `viash config`: Validate Viash config Yaml files better and try to give a more informative error message back to the user instead of a stack trace (PR #443).
+
+* `viash ns build`: Fix the error summary when a setup or push failure occurs. These conditions were not displayed and could cause confusion (PR #447).
+
 # Viash 0.7.4 (2023-05-31): Minor bug fixes and minor improvements to VDSL3
 
 Some small fixes and consistency improvements.

@@ -26,6 +26,7 @@ import io.circe.ACursor
 
 package object resources {
 
+  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
   import io.viash.helpers.circe._
 
   implicit val encodeURI: Encoder[URI] = Encoder.instance {
@@ -79,15 +80,15 @@ package object resources {
     }
   })}
 
-  implicit val decodeBashScript: Decoder[BashScript] = deriveConfiguredDecoder[BashScript].prepare { setDestToPathOrDefault("./script.sh") }
-  implicit val decodePythonScript: Decoder[PythonScript] = deriveConfiguredDecoder[PythonScript].prepare { setDestToPathOrDefault("./script.py") }
-  implicit val decodeRScript: Decoder[RScript] = deriveConfiguredDecoder[RScript].prepare { setDestToPathOrDefault("./script.R") }
-  implicit val decodeJavaScriptScript: Decoder[JavaScriptScript] = deriveConfiguredDecoder[JavaScriptScript].prepare { setDestToPathOrDefault("./script.js") }
-  implicit val decodeNextflowScript: Decoder[NextflowScript] = deriveConfiguredDecoder[NextflowScript].prepare { setDestToPathOrDefault("./script.nf") }
-  implicit val decodeScalaScript: Decoder[ScalaScript] = deriveConfiguredDecoder[ScalaScript].prepare { setDestToPathOrDefault("./script.scala") }
-  implicit val decodeCSharpScript: Decoder[CSharpScript] = deriveConfiguredDecoder[CSharpScript].prepare { setDestToPathOrDefault("./script.csx") }
-  implicit val decodeExecutable: Decoder[Executable] = deriveConfiguredDecoder
-  implicit val decodePlainFile: Decoder[PlainFile] = deriveConfiguredDecoder[PlainFile].prepare { setDestToPathOrDefault("./text.txt") }
+  implicit val decodeBashScript: Decoder[BashScript] = deriveConfiguredDecoderFullChecks[BashScript].prepare { setDestToPathOrDefault("./script.sh") }
+  implicit val decodePythonScript: Decoder[PythonScript] = deriveConfiguredDecoderFullChecks[PythonScript].prepare { setDestToPathOrDefault("./script.py") }
+  implicit val decodeRScript: Decoder[RScript] = deriveConfiguredDecoderFullChecks[RScript].prepare { setDestToPathOrDefault("./script.R") }
+  implicit val decodeJavaScriptScript: Decoder[JavaScriptScript] = deriveConfiguredDecoderFullChecks[JavaScriptScript].prepare { setDestToPathOrDefault("./script.js") }
+  implicit val decodeNextflowScript: Decoder[NextflowScript] = deriveConfiguredDecoderFullChecks[NextflowScript].prepare { setDestToPathOrDefault("./script.nf") }
+  implicit val decodeScalaScript: Decoder[ScalaScript] = deriveConfiguredDecoderFullChecks[ScalaScript].prepare { setDestToPathOrDefault("./script.scala") }
+  implicit val decodeCSharpScript: Decoder[CSharpScript] = deriveConfiguredDecoderFullChecks[CSharpScript].prepare { setDestToPathOrDefault("./script.csx") }
+  implicit val decodeExecutable: Decoder[Executable] = deriveConfiguredDecoderFullChecks
+  implicit val decodePlainFile: Decoder[PlainFile] = deriveConfiguredDecoderFullChecks[PlainFile].prepare { setDestToPathOrDefault("./text.txt") }
 
   implicit def decodeResource: Decoder[Resource] = Decoder.instance {
     cursor =>
@@ -102,11 +103,8 @@ package object resources {
           case Right("csharp_script") => decodeCSharpScript.widen
           case Right("executable") => decodeExecutable.widen
           case Right("file") => decodePlainFile.widen
-          case Right(typ) => throw new RuntimeException(
-            "File type " + typ + " is not recognised. Should be one of " +
-              Script.companions.mkString("'", "', '", "'") +
-              ", or 'file'."
-          )
+          case Right(typ) => 
+            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[BashScript](typ, Script.companions.map(c => c.`type`) ++ List("executable", "file")).widen
           case Left(_) => decodePlainFile.widen // default is a simple file
         }
 
