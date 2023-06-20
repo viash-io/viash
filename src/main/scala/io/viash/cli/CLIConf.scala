@@ -214,8 +214,15 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     banner(
       "viash test",
       "Test the component using the tests defined in the viash config file.",
-      "viash test config.vsh.yaml [-p docker] [-k true/false]")
-
+      "viash test config.vsh.yaml [-p docker] [-k true/false] [--setup cachedbuild]")
+    
+    val setup = registerOpt[String](
+      name = "setup",
+      short = Some('s'),
+      default = None,
+      descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Platform only]."
+    )
+    
     footer(
       s"""
          |The temporary directory can be altered by setting the VIASH_TEMP directory. Example:
@@ -287,7 +294,13 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       banner(
         "viash ns test",
         "Test a namespace containing many viash config files.",
-        "viash ns test [-n nmspc] [-s src] [-p docker] [--parallel] [--tsv file.tsv] [--append]")
+        "viash ns test [-n nmspc] [-s src] [-p docker] [--parallel] [--tsv file.tsv] [--setup cachedbuild] [--append]")
+
+      val setup = registerOpt[String](
+        name = "setup",
+        default = None,
+        descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Platform only]."
+      )
 
       val tsv = registerOpt[String](
         name = "tsv",
