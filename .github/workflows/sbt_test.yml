@@ -14,10 +14,10 @@ jobs:
           - { name: 'ubuntu_latest', os: ubuntu-latest }
           - { name: 'macos_latest', os: macos-latest }
         java:
-          - { ver: '11', run_nextflow: true }
-          - { ver: '17', run_nextflow: true }
-          - { ver: '19', run_nextflow: true }
-          - { ver: '20', run_nextflow: false }
+          - { ver: '11', run_nextflow: true, main_runner: true }
+          - { ver: '17', run_nextflow: true, main_runner: false }
+          - { ver: '19', run_nextflow: true, main_runner: false }
+          - { ver: '20', run_nextflow: false, main_runner: false }
 
     steps:
     - uses: actions/checkout@v3
@@ -64,10 +64,10 @@ jobs:
 
     - name: Run tests
       run: |
-        if [[ "${{ matrix.config.name }}" == ^ubuntu_latest$ ]] && [[ "${{ matrix.java.run_nextflow }}" == "true" ]]; then
+        if [[ "${{ matrix.config.name }}" =~ ^ubuntu.*$ ]] && [[ "${{ matrix.java.main_runner }}" == "true" ]]; then
           # only run coverage on main runner
           sbt clean coverage test coverageReport
-        elif [[ "${{ matrix.config.name }}" == ^ubuntu_latest$ ]]; then
+        elif [[ "${{ matrix.config.name }}" =~ ^ubuntu.*$ ]] && [[ "${{ matrix.java.run_nextflow }}" == "false" ]]; then
           sbt 'testOnly -- -l io.viash.NextFlowTest'
         elif [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
           # macOS on github actions does not have Docker, so skip those
