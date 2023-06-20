@@ -13,6 +13,11 @@ jobs:
         config:
           - {name: 'ubuntu_latest', os: ubuntu-latest }
           - {name: 'macos_latest', os: macos-latest }
+        java_ver:
+          - '8'
+          - '11'
+          - '17'
+          - 'latest'
 
     steps:
     - uses: actions/checkout@v3
@@ -42,7 +47,7 @@ jobs:
       uses: actions/setup-java@v3
       with:
         distribution: temurin
-        java-version: '11'
+        java-version: ${{ matrix.java_ver }}
 
     - name: Set up Scala
       run: |
