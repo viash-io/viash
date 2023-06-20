@@ -219,7 +219,7 @@ object Main {
         )
       case List(cli.build) =>
         val (config, platform) = readConfig(cli.build, project = proj1)
-        val config2 = singleOperationDependencies(config, platform, cli.build.output.toOption, proj1.rootDir)
+        val config2 = singleConfigDependencies(config, platform, cli.build.output.toOption, proj1.rootDir)
         val buildResult = ViashBuild(
           config = config2,
           platform = platform.get,
@@ -230,7 +230,7 @@ object Main {
         if (buildResult.isError) 1 else 0
       case List(cli.test) =>
         val (config, platform) = readConfig(cli.test, project = proj1)
-        val config2 = singleOperationDependencies(config, platform, None, proj1.rootDir)
+        val config2 = singleConfigDependencies(config, platform, None, proj1.rootDir)
         ViashTest(
           config2,
           platform = platform.get,
@@ -454,45 +454,45 @@ object Main {
     }
   }
 
-  def singleOperationDependencies(config: Config, platform: Option[Platform], output: Option[String], rootDir: Option[Path]) = {
+  // Handle dependencies operations for a single config
+  def singleConfigDependencies(config: Config, platform: Option[Platform], output: Option[String], rootDir: Option[Path]): Config = {
     if (output.isDefined)
       DependencyResolver.createBuildYaml(output.get)
 
+    handleSingleConfigDependency(config, platform, output, rootDir)
+  }
+
+  // Handle dependency operations for namespaces
+  def namespaceDependencies(configs: List[Either[(Config, Option[Platform]), Status]], target: Option[String], rootDir: Option[Path]): List[Either[(Config, Option[Platform]), Status]] = {
+    if (target.isDefined)
+      DependencyResolver.createBuildYaml(target.get)
+    
+    configs.map{
+      case Left((config: Config, platform: Option[Platform])) => {
+        Try(
+          handleSingleConfigDependency(config, platform, target, rootDir)
+        ).fold(
+          e => e match {
+            case de: AbstractDependencyException =>
+              Console.err.println(e.getMessage)
+              Right(DependencyError)
+            case _ => throw e
+          },
+          c => Left((c, platform))
+        )
+      }
+      case Right(c) => Right(c)
+    }
+  }
+
+  // Actual handling of the dependency logic, to be used for single and namespace configs
+  def handleSingleConfigDependency(config: Config, platform: Option[Platform], output: Option[String], rootDir: Option[Path]) = {
     val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config, platform.map(_.id))
     val config1 = DependencyResolver.modifyConfig(config, dependencyPlatformId, rootDir)
     if (output.isDefined) {
       DependencyResolver.copyDependencies(config1, output.get, dependencyPlatformId.get)
     } else {
       config1
-    }
-  }
-
-  // Wrap dependency operations for namespaces into a bundle
-  def namespaceDependencies(configs: List[Either[(Config, Option[Platform]), Status]], target: Option[String], rootDir: Option[Path]) = {
-    if (target.isDefined)
-      DependencyResolver.createBuildYaml(target.get)
-    
-    configs.map{
-      case Left((config0: Config, platform: Option[Platform])) => {
-        val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config0, platform.map(_.id))
-        val config1 = DependencyResolver.modifyConfig(config0, dependencyPlatformId, rootDir, configs.map(e => e.swap.toOption.filter(o => o._2 == platform).map(_._1)).flatten )
-        Try{
-          if (target.isDefined) {
-            val config2 = DependencyResolver.copyDependencies(config1, target.get, dependencyPlatformId.get, true)
-            (config2, platform)
-          }
-          else {
-            (config1, platform)
-          }
-        }.fold(
-          e => {
-            Console.err.println(e.getMessage)
-            Right(DependencyError)
-          },
-          t => Left(t)
-        )
-      }
-      case Right(c) => Right(c)
     }
   }
 
