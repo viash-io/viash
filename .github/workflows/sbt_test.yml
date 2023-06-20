@@ -14,10 +14,10 @@ jobs:
           - { name: 'ubuntu_latest', os: ubuntu-latest }
           - { name: 'macos_latest', os: macos-latest }
         java:
-          - { ver: '11', run_nextflow: true, main_runner: true }
-          - { ver: '17', run_nextflow: true, main_runner: false }
-          - { ver: '19', run_nextflow: true, main_runner: false }
-          - { ver: '20', run_nextflow: false, main_runner: false }
+          - { ver: '11', run_nextflow: true, run_coverage: false }
+          - { ver: '17', run_nextflow: true, run_coverage: false }
+          - { ver: '19', run_nextflow: true, run_coverage: false }
+          - { ver: '20', run_nextflow: false, run_coverage: false }
 
     steps:
     - uses: actions/checkout@v3
@@ -64,7 +64,7 @@ jobs:
 
     - name: Run tests
       run: |
-        if [[ "${{ matrix.config.name }}" =~ ^ubuntu.*$ ]] && [[ "${{ matrix.java.main_runner }}" == "true" ]]; then
+        if [[ "${{ matrix.config.name }}" =~ ^ubuntu.*$ ]] && [[ "${{ matrix.java.run_coverage }}" == "true" ]]; then
           # only run coverage on main runner
           sbt clean coverage test coverageReport
         elif [[ "${{ matrix.config.name }}" =~ ^ubuntu.*$ ]] && [[ "${{ matrix.java.run_nextflow }}" == "false" ]]; then
