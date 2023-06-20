@@ -45,6 +45,8 @@ object Main {
   val version: String = if (pkg.getImplementationVersion != null) pkg.getImplementationVersion else "test"
 
   val viashHome = Paths.get(sys.env.getOrElse("VIASH_HOME", sys.env("HOME") + "/.viash"))
+  val sysEnvOverride = scala.collection.mutable.Map.empty[String, String]
+  def sysEnvGet(key: String): Option[String] = sysEnvOverride.get(key) orElse sys.env.get(key)
 
   /**
     * Viash main
@@ -469,8 +471,8 @@ object Main {
     */
   def detectVersion(workingDir: Option[Path]): Option[String] = {
     // if VIASH_VERSION is defined, use that
-    if (sys.env.get("VIASH_VERSION").isDefined) {
-      sys.env.get("VIASH_VERSION")
+    if (sysEnvGet("VIASH_VERSION").isDefined) {
+      sysEnvGet("VIASH_VERSION")
     } else {
       // else look for project file in working dir
       // and try to read as json
