@@ -33,22 +33,27 @@ import io.viash.schemas._
 case class JavaScriptRequirements(
   @description("Specifies which packages to install from npm.")
   @example("packages: [ packagename ]", "yaml")
+  @default("Empty")
   packages: OneOrMore[String] = Nil,
 
   @description("Specifies which packages to install from npm.")
   @example("npm: [ packagename ]", "yaml")
+  @default("Empty")
   npm: OneOrMore[String] = Nil,
 
   @description("Specifies which packages to install using a Git URI.")
   @example("git: [ https://some.git.repository/org/repo ]", "yaml")
+  @default("Empty")
   git: OneOrMore[String] = Nil,
 
   @description("Specifies which packages to install from GitHub.")
   @example("github: [ owner/repository ]", "yaml")
+  @default("Empty")
   github: OneOrMore[String] = Nil,
 
   @description("Specifies which packages to install using a generic URI.")
   @example("url: [ https://github.com/org/repo/archive/HEAD.zip ]", "yaml")
+  @default("Empty")
   url: OneOrMore[String] = Nil,
   `type`: String = "javascript"
 ) extends Requirements {

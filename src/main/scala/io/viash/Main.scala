@@ -310,11 +310,24 @@ object Main {
         0
       case List(cli.export, cli.export.cli_schema) =>
         val output = cli.export.cli_schema.output.toOption.map(Paths.get(_))
-        ViashExport.exportCLISchema(output)
+        ViashExport.exportCLISchema(
+          output,
+          format = cli.export.cli_schema.format()
+        )
         0
       case List(cli.export, cli.export.config_schema) =>
         val output = cli.export.config_schema.output.toOption.map(Paths.get(_))
-        ViashExport.exportConfigSchema(output)
+        ViashExport.exportConfigSchema(
+          output,
+          format = cli.export.config_schema.format()
+        )
+        0
+      case List(cli.export, cli.export.json_schema) =>
+        val output = cli.export.json_schema.output.toOption.map(Paths.get(_))
+        ViashExport.exportJsonSchema(
+          output,
+          format = cli.export.json_schema.format()
+        )
         0
       case List(cli.export, cli.export.resource) =>
         val output = cli.export.resource.output.toOption.map(Paths.get(_))

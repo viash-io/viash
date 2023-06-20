@@ -1,8 +1,22 @@
 # Viash 0.x.x (yyyy-MM-dd): TODO Add title
 
+
+## BREAKING CHANGES
+
+* `viash export cli_schema`: Added `--format yaml/json` argument, default format is now a YAML (PR #448).
+* `viash export config_schema`: Added `--format yaml/json` argument, default format is now a YAML (PR #448).
+
+## NEW FUNCTIONALITY
+
+* `viash export json_schema`: Export a json schema derived from the class reflections and annotations already used by the `config_schema` (PR #446).
+
+* `viash export config_schema`: Output `default` values of member fields (PR #446).
+
 ## MINOR CHANGES
 
-* `PythonScript`: Pass `-B` to Python to avoid creating *.pyc and *.pyo files on importing helper functions (PR #442).
+* `PythonScript`: Pass `-B` to Python to avoid creating `*.pyc` and `*.pyo` files on importing helper functions (PR #442).
+
+* `viash config`: Special double values now support `+.inf`, `-.inf` or `.nan` values (PR #446 and PR #450). The stringified versions `"+.inf"`, `"-.inf"` or `".nan"` are supported as well. This is in line with the yaml spec.
 
 ## BUG FIXES
 

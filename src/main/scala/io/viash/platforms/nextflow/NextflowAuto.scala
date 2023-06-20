@@ -17,7 +17,7 @@
 
 package io.viash.platforms.nextflow
 
-import io.viash.schemas.description
+import io.viash.schemas._
 
 @description("Automated processing flags which can be toggled on or off.")
 case class NextflowAuto(
@@ -26,6 +26,7 @@ case class NextflowAuto(
       |
       |Default: `true`.
       |""".stripMargin)
+  @default("True")
   simplifyInput: Boolean = true,
 
   @description(
@@ -33,6 +34,7 @@ case class NextflowAuto(
       |
       |Default: `true`.
       |""".stripMargin)
+  @default("True")
   simplifyOutput: Boolean = true,
 
   @description(
@@ -42,6 +44,7 @@ case class NextflowAuto(
       |
       |Default: `false`.
       |""".stripMargin)
+  @default("False")
   transcript: Boolean = false,
 
   @description(
@@ -50,5 +53,6 @@ case class NextflowAuto(
       |
       |Default: `false`.
       |""".stripMargin)
+  @default("False")
   publish: Boolean = false,
 )

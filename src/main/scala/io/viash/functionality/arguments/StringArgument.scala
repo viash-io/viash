@@ -42,9 +42,11 @@ case class StringArgument(
   name: String,
 
   @description("List of alternative format variations for this argument.")
+  @default("Empty")
   alternatives: OneOrMore[String] = Nil,
 
   @description("A description of the argument. This will be displayed with `--help`.")
+  @default("Empty")
   description: Option[String] = None,
 
   @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
@@ -53,6 +55,7 @@ case class StringArgument(
       |  category: cat1
       |  labels: [one, two, three]""".stripMargin, "yaml")
   @since("Viash 0.6.3")
+  @default("Empty")
   info: Json = Json.Null,
   
   @description("An example value for this argument. If no [`default`](#default) property was specified, this will be used for that purpose.")
@@ -62,6 +65,7 @@ case class StringArgument(
       |  example: "Hello World"
       |""".stripMargin,
       "yaml")
+  @default("Empty")
   example: OneOrMore[String] = Nil,
 
   @description("The default value when no argument value is provided. This will not work if the [`required`](#required) property is enabled.")
@@ -71,6 +75,7 @@ case class StringArgument(
       |  default: "The answer is 42"
       |""".stripMargin,
       "yaml")
+  @default("Empty")
   default: OneOrMore[String] = Nil,
 
   @description("Make the value for this argument required. If set to `true`, an error will be produced if no value was provided. `false` by default.")
@@ -80,6 +85,7 @@ case class StringArgument(
       |  required: true
       |""".stripMargin,
       "yaml")
+  @default("Empty")
   required: Boolean = false,
 
   @description("Limit the amount of valid values for this argument to those set in this list. When set and a value not present in the list is provided, an error will be produced.")
@@ -89,6 +95,7 @@ case class StringArgument(
       |  choices: ["python", "r", "javascript"]
       |""".stripMargin,
       "yaml")
+  @default("Empty")
   choices: List[String] = Nil,
 
   @undocumented
@@ -102,6 +109,7 @@ case class StringArgument(
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_string=Marc:Susan:Paul", "bash", "Here's an example of how to use this:")
+  @default("False")
   multiple: Boolean = false,
 
   @description("The delimiter character for providing [`multiple`](#multiple) values. `:` by default.")
@@ -113,6 +121,7 @@ case class StringArgument(
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_string=Marc,Susan,Paul", "bash", "Here's an example of how to use this:")
+  @default(":")
   multiple_sep: String = ":",
 
   dest: String = "par",
