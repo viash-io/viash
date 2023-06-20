@@ -14,10 +14,9 @@ jobs:
           - {name: 'ubuntu_latest', os: ubuntu-latest }
           - {name: 'macos_latest', os: macos-latest }
         java_ver:
-          - '8'
           - '11'
           - '17'
-          - 'latest'
+          - '20'
 
     steps:
     - uses: actions/checkout@v3

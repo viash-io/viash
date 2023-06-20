@@ -12,6 +12,8 @@
 
 * `viash export config_schema`: Output `default` values of member fields (PR #446).
 
+* `CI`: Test support for different Java versions on GitHub Actions (PR #xxx). Focussing on LTS releases starting from 11, so this is 11 and 17. Also test latest Java version, currently 20.
+
 ## MINOR CHANGES
 
 * `PythonScript`: Pass `-B` to Python to avoid creating `*.pyc` and `*.pyo` files on importing helper functions (PR #442).
