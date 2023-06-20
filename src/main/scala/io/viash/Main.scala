@@ -256,7 +256,7 @@ object Main {
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.test) =>
         val configs = readConfigs(cli.namespace.test, project = proj1)
-        val configs2 = namespaceDependencies(configs, proj1.target, proj1.rootDir)
+        val configs2 = namespaceDependencies(configs, None, proj1.rootDir)
         val testResults = ViashNamespace.test(
           configs = configs2,
           parallel = cli.namespace.test.parallel(),
@@ -275,7 +275,7 @@ object Main {
           addOptMainScript = false, 
           applyPlatform = cli.namespace.list.platform.isDefined
         )
-        val configs2 = namespaceDependencies(configs, proj1.target, proj1.rootDir)
+        val configs2 = namespaceDependencies(configs, None, proj1.rootDir)
         ViashNamespace.list(
           configs = configs2,
           format = cli.namespace.list.format(),
