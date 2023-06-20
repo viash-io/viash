@@ -64,7 +64,7 @@ jobs:
 
     - name: Run tests
       run: |
-        if [[ "${{ matrix.config.name }}" == ^ubuntu_latest$ && ${{ matrix.java.run_nextflow }} ]]; then
+        if [[ "${{ matrix.config.name }}" == ^ubuntu_latest$ ]] && [[ "${{ matrix.java.run_nextflow }}" == "true" ]]; then
           # only run coverage on main runner
           sbt clean coverage test coverageReport
         elif [[ "${{ matrix.config.name }}" == ^ubuntu_latest$ ]]; then
