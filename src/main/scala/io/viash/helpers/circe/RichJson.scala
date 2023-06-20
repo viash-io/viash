@@ -18,9 +18,13 @@
 package io.viash.helpers.circe
 
 import java.net.URI
+
 import io.circe.Json
 import io.circe.JsonObject
 import io.circe.generic.extras.Configuration
+import io.circe.{Json, Printer => JsonPrinter}
+import io.circe.yaml.{Printer => YamlPrinter}
+
 import io.viash.helpers.IO
 
 class RichJson(json: Json) {
@@ -230,5 +234,27 @@ class RichJson(json: Json) {
       .mapArray(
         _.map(_.stripInherits)
       )
+  }
+
+  private val yamlPrinter = YamlPrinter(
+    preserveOrder = true,
+    mappingStyle = YamlPrinter.FlowStyle.Block,
+    splitLines = true,
+    stringStyle = YamlPrinter.StringStyle.DoubleQuoted
+  )
+  private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
+
+  /**
+    * Convert to a pretty String.
+    *
+    * @param format Must be either 'yaml' or 'json'
+    * @return The YAML or JSON String representation.
+    */
+  def toFormattedString(format: String): String = {
+    format match {
+      case "yaml" => yamlPrinter.pretty(json)
+      case "json" => jsonPrinter.print(json)
+      case _ => throw new IllegalArgumentException("'format' must be either 'json' or 'yaml'.")
+    }
   }
 }

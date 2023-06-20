@@ -49,6 +49,7 @@ import io.viash.helpers.Escaper
 case class DockerPlatform(
   @description("As with all platforms, you can give a platform a different name. By specifying `id: foo`, you can target this platform (only) by specifying `-p foo` in any of the Viash commands.")
   @example("id: foo", "yaml")
+  @default("docker")
   id: String = "docker",
 
   @description("The base container to start from. You can also add the tag here if you wish.")
@@ -84,13 +85,16 @@ case class DockerPlatform(
 
   @description("The separator between the namespace and the name of the component, used for determining the image name. Default: `\"/\"`.")
   @example("namespace_separator: \"_\"", "yaml")
+  @default("/")
   namespace_separator: String = "/",
 
   @description("Enables or disables automatic volume mapping. Enabled when set to `Automatic` or disabled when set to `Manual`. Default: `Automatic`.")
+  @default("Automatic")
   resolve_volume: DockerResolveVolume = Automatic,
 
   @description("In Linux, files created by a Docker container will be owned by `root`. With `chown: true`, Viash will automatically change the ownership of output files (arguments with `type: file` and `direction: output`) to the user running the Viash command after execution of the component. Default value: `true`.")
   @example("chown: false", "yaml")
+  @default("True")
   chown: Boolean = true,
 
   @description("A list of enabled ports. This doesn't change the Dockerfile but gets added as a command-line argument at runtime.")
@@ -100,6 +104,7 @@ case class DockerPlatform(
       |  - 8080
       |""".stripMargin,
       "yaml")
+  @default("Empty")
   port: OneOrMore[String] = Nil,
 
   @description("The working directory when starting the container. This doesn't change the Dockerfile but gets added as a command-line argument at runtime.")
@@ -127,9 +132,11 @@ case class DockerPlatform(
       +
       +""".stripMargin('+'))
   @example("setup_strategy: alwaysbuild", "yaml")
+  @default("ifneedbepullelsecachedbuild")
   setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,
 
   @description("Add [docker run](https://docs.docker.com/engine/reference/run/) arguments.")
+  @default("Empty")
   run_args: OneOrMore[String] = Nil,
 
   @description("The source of the target image. This is used for defining labels in the dockerfile.")
@@ -152,10 +159,12 @@ case class DockerPlatform(
       |
       |The order in which these dependencies are specified determines the order in which they will be installed.
       |""".stripMargin)
+  @default("Empty")
   setup: List[Requirements] = Nil,
 
   @description("Additional requirements specific for running unit tests.")
   @since("Viash 0.5.13")
+  @default("Empty")
   test_setup: List[Requirements] = Nil,
 
   @description("Override the entrypoint of the base container. Default set `ENTRYPOINT []`.")
@@ -163,6 +172,7 @@ case class DockerPlatform(
   @exampleWithDescription("""entrypoint: ["top", "-b"]""", "yaml", "Entrypoint of the container in the exec format, which is the prefered form.")
   @exampleWithDescription("""entrypoint: "top -b"""", "yaml", "Entrypoint of the container in the shell format.")
   @since("Viash 0.7.4")
+  @default("[]")
   entrypoint: Option[Either[String, List[String]]] = Some(Right(Nil)),
 
   @description("Set the default command being executed when running the Docker container.")

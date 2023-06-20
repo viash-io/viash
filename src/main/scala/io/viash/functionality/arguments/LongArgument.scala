@@ -43,6 +43,7 @@ case class LongArgument(
   name: String,
 
   @description("List of alternative format variations for this argument.")
+  @default("Empty")
   alternatives: OneOrMore[String] = Nil,
 
   @description("A description of the argument. This will be displayed with `--help`.")
@@ -54,6 +55,7 @@ case class LongArgument(
       |  category: cat1
       |  labels: [one, two, three]""".stripMargin, "yaml")
   @since("Viash 0.6.3")
+  @default("Empty")
   info: Json = Json.Null,
 
   @description("An example value for this argument. If no [`default`](#default) property was specified, this will be used for that purpose.")
@@ -63,6 +65,7 @@ case class LongArgument(
       |  example: 100
       |""".stripMargin,
       "yaml")
+  @default("Empty")
   example: OneOrMore[Long] = Nil,
 
   @description("The default value when no argument value is provided. This will not work if the [`required`](#required) property is enabled.")
@@ -72,6 +75,7 @@ case class LongArgument(
       |  default: 100
       |""".stripMargin,
       "yaml")
+  @default("Empty")
   default: OneOrMore[Long] = Nil,
 
   @description("Make the value for this argument required. If set to `true`, an error will be produced if no value was provided. `false` by default.")
@@ -81,6 +85,7 @@ case class LongArgument(
       |  required: true
       |""".stripMargin,
       "yaml")
+  @default("False")
   required: Boolean = false,
 
   @description("Limit the amount of valid values for this argument to those set in this list. When set and a value not present in the list is provided, an error will be produced.")
@@ -90,6 +95,7 @@ case class LongArgument(
       |  choices: [1024, 2048, 4096]
       |""".stripMargin,
       "yaml")
+  @default("Empty")
   choices: List[Long] = Nil,
 
   @description("Minimum allowed value for this argument. If set and the provided value is lower than the minimum, an error will be produced. Can be combined with [`max`](#max) to clamp values.")
@@ -121,6 +127,7 @@ case class LongArgument(
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_long=10:80:152", "bash", "Here's an example of how to use this:")
+  @default("False")
   multiple: Boolean = false,
 
   @description("The delimiter character for providing [`multiple`](#multiple) values. `:` by default.")
@@ -132,6 +139,7 @@ case class LongArgument(
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_long=10:80:152", "bash", "Here's an example of how to use this:")
+  @default(":")
   multiple_sep: String = ":",
 
   dest: String = "par",

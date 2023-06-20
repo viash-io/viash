@@ -39,6 +39,9 @@ package object schemas {
   class removed(message: String, deprecatedSince: String, since: String) extends scala.annotation.StaticAnnotation
 
   @getter @setter @beanGetter @beanSetter @field
+  class default(default: String) extends scala.annotation.StaticAnnotation
+
+  @getter @setter @beanGetter @beanSetter @field
   class internalFunctionality() extends scala.annotation.StaticAnnotation
 
   @getter @setter @beanGetter @beanSetter @field

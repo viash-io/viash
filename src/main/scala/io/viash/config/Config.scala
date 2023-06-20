@@ -23,6 +23,7 @@ import io.viash.platforms._
 import io.viash.helpers.{Git, GitInfo, IO}
 import io.viash.helpers.circe._
 import io.viash.helpers.status._
+import io.viash.helpers.Yaml
 
 import java.net.URI
 import io.circe.yaml.parser
@@ -197,6 +198,9 @@ object Config {
     /* STRING */
     // read yaml as string
     val (yamlText, optScript) = readYAML(uri)
+
+    // replace valid yaml definitions for +.inf with "+.inf" so that circe doesn't trip over its toes
+    val replacedYamlText = Yaml.replaceInfinities(yamlText)
     
     /* JSON 0: parsed from string */
     // parse yaml into Json
@@ -210,7 +214,8 @@ object Config {
       // throw e
       throw new ConfigParserException(uri.toString(), e)
     }
-    val json0 = parser.parse(yamlText).fold(parsingYamlErrorHandler, identity)
+
+    val json0 = parser.parse(replacedYamlText).fold(parsingErrorHandler, identity)
 
     /* JSON 1: after inheritance */
     // apply inheritance if need be

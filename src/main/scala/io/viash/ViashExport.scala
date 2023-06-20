@@ -20,18 +20,18 @@ package io.viash
 import helpers._
 import cli._
 import io.circe.{Printer => JsonPrinter}
+import io.circe.yaml.{Printer => YamlPrinter}
 import io.circe.syntax.EncoderOps
 import io.viash.helpers.circe._
 import java.nio.file.{Path, Paths, Files}
-import io.viash.schemas.CollectedSchemas
+import io.viash.schemas.{CollectedSchemas, JsonSchema}
+import io.circe.Json
 
 object ViashExport {
-  private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
-
-  def exportCLISchema(output: Option[Path]): Unit = {
+  def exportCLISchema(output: Option[Path], format: String): Unit = {
     val cli = new CLIConf(Nil)
-    val data = cli.getRegisteredCommands
-    val str = jsonPrinter.print(data.asJson)
+    val data = cli.getRegisteredCommands.asJson
+    val str = data.toFormattedString(format)
     if (output.isDefined) {
       Files.write(output.get, str.getBytes())
     } else {
@@ -39,9 +39,20 @@ object ViashExport {
     }
   }
 
-  def exportConfigSchema(output: Option[Path]): Unit = {
-    val data = CollectedSchemas.getJson
-    val str = jsonPrinter.print(data.asJson)
+  def exportConfigSchema(output: Option[Path], format: String): Unit = {
+    val data = CollectedSchemas.getJson.asJson
+    val str = data.toFormattedString(format)
+    if (output.isDefined) {
+      Files.write(output.get, str.getBytes())
+    } else {
+      println(str)
+    }
+  }
+
+
+  def exportJsonSchema(output: Option[Path], format: String): Unit = {
+    val data = JsonSchema.getJsonSchema
+    val str = data.toFormattedString(format)
     if (output.isDefined) {
       Files.write(output.get, str.getBytes())
     } else {
