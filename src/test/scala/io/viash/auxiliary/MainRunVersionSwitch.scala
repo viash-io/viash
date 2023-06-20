@@ -8,28 +8,9 @@ import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.reflect.io.Directory
 import java.io.ByteArrayOutputStream
-import java.security.Permission
-
-// Use SecurityManager to capture System.exit codes set by Scallop as this would cancel our testbench
-sealed case class ExitException(status: Int) extends SecurityException("System.exit() is not allowed") {
-}
-
-sealed class NoExitSecurityManager extends SecurityManager {
-  override def checkPermission(perm: Permission): Unit = {}
-
-  override def checkPermission(perm: Permission, context: Object): Unit = {}
-
-  override def checkExit(status: Int): Unit = {
-    super.checkExit(status)
-    throw ExitException(status)
-  }
-}
+import io.viash.helpers.ExitException
 
 class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
-
-  override def beforeAll(): Unit = System.setSecurityManager(new NoExitSecurityManager())
-
-  override def afterAll(): Unit = System.setSecurityManager(null)
 
   def setEnv(key: String, value: String) = {
     Main.sysEnvOverride.addOne(key -> value)

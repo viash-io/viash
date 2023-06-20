@@ -19,7 +19,8 @@ package io.viash.cli
 
 import org.rogach.scallop._
 import io.viash.Main
-
+import org.rogach.scallop.exceptions.Version
+import io.viash.helpers.ExitException
 
 trait ViashCommand {
   _: DocumentedSubcommand =>
@@ -140,6 +141,15 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       case ds: DocumentedSubcommand if !ds.hidden => Some(ds.toRegisteredCommand)
       case _ => None
     }
+  }
+
+  // Override onError from Scallop. Goal is to have Scallop *not* call the exit(0) and instead allow us to do so.
+  // This is required for testing. Calling system.exit() aborts all testing.
+  override def onError(e: Throwable): Unit = e match {
+    case Version =>
+      builder.vers.foreach(println)
+      throw new ExitException(0)
+    case e => super.onError(e)
   }
  
   version(s"${Main.name} ${Main.version} (c) 2020 Data Intuitive")
