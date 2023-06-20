@@ -40,6 +40,7 @@ import java.net.URI
 import io.viash.helpers.DependencyResolver
 import io.viash.config.AbstractConfigException
 import io.viash.functionality.dependencies.AbstractDependencyException
+import scala.util.Try
 
 object Main {
   private val pkg = getClass.getPackage
@@ -217,11 +218,8 @@ object Main {
           memory = cli.run.memory.toOption
         )
       case List(cli.build) =>
-        val (config0, platform) = readConfig(cli.build, project = proj1)
-        DependencyResolver.createBuildYaml(cli.build.output())
-        val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config0, platform.map(_.id))
-        val config1 = DependencyResolver.modifyConfig(config0, dependencyPlatformId, proj1.rootDir)
-        val config2 = DependencyResolver.copyDependencies(config1, cli.build.output(), dependencyPlatformId.get)
+        val (config, platform) = readConfig(cli.build, project = proj1)
+        val config2 = singleOperationDependencies(config, platform, cli.build.output.toOption, proj1.rootDir)
         val buildResult = ViashBuild(
           config = config2,
           platform = platform.get,
@@ -231,13 +229,10 @@ object Main {
         )
         if (buildResult.isError) 1 else 0
       case List(cli.test) =>
-        val (config0, platform) = readConfig(cli.test, project = proj1)
-        val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config0, platform.map(_.id))
-        val config1 = DependencyResolver.modifyConfig(config0, dependencyPlatformId, proj1.rootDir)
-        // TODO
-        // val config2 = DependencyResolver.copyDependencies(config1, cli.build.output(), platform)
+        val (config, platform) = readConfig(cli.test, project = proj1)
+        val config2 = singleOperationDependencies(config, platform, None, proj1.rootDir)
         ViashTest(
-          config1,
+          config2,
           platform = platform.get,
           keepFiles = cli.test.keep.toOption.map(_.toBoolean),
           cpus = cli.test.cpus.toOption,
@@ -246,16 +241,7 @@ object Main {
         0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
         val configs = readConfigs(cli.namespace.build, project = proj1)
-        DependencyResolver.createBuildYaml(proj1.target.get)
-        val configs2 = configs.map{
-          case Left((config0: Config, platform: Option[Platform])) => {
-            val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config0, platform.map(_.id))
-            val config1 = DependencyResolver.modifyConfig(config0, dependencyPlatformId, proj1.rootDir, configs.map(e => e.swap.toOption.filter(o => o._2 == platform).map(_._1)).flatten )
-            val config2 = DependencyResolver.copyDependencies(config1, proj1.target.get, dependencyPlatformId.get, true)
-            Left((config2, platform))
-          }
-          case Right(c) => Right(c)
-        }
+        val configs2 = namespaceDependencies(configs, proj1.target, proj1.rootDir)
         var buildResults = ViashNamespace.build(
           configs = configs2,
           target = proj1.target.get,
@@ -270,18 +256,7 @@ object Main {
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.test) =>
         val configs = readConfigs(cli.namespace.test, project = proj1)
-        val configs2 = configs.map{
-          case Left((config0: Config, platform: Option[Platform])) => {
-            val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config0, platform.map(_.id))
-            // val output = ViashNamespace.targetOutputPath(proj1.target.get, platform.get.id, c0.functionality.namespace, c0.functionality.name)
-            val config1 = DependencyResolver.modifyConfig(config0, dependencyPlatformId, proj1.rootDir)
-            Left((config1, platform))
-            // TODO
-            // val c2 = DependencyResolver.copyDependencies(c1, output, platform)
-            // Left((c2, platform))
-          }
-          case Right(c) => Right(c)
-        }
+        val configs2 = namespaceDependencies(configs, proj1.target, proj1.rootDir)
         val testResults = ViashNamespace.test(
           configs = configs2,
           parallel = cli.namespace.test.parallel(),
@@ -300,14 +275,7 @@ object Main {
           addOptMainScript = false, 
           applyPlatform = cli.namespace.list.platform.isDefined
         )
-        val configs2 = configs.map{
-          case Left((config0: Config, platform: Option[Platform])) => {
-            val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config0, platform.map(_.id))
-            val config1 = DependencyResolver.modifyConfig(config0, dependencyPlatformId, proj1.rootDir)
-            Left((config1, platform))
-          }
-          case Right(c) => Right(c)
-        }
+        val configs2 = namespaceDependencies(configs, proj1.target, proj1.rootDir)
         ViashNamespace.list(
           configs = configs2,
           format = cli.namespace.list.format(),
@@ -483,6 +451,48 @@ object Main {
         case Right(status) => Right(status)
         case Left(conf) => Left((conf, None: Option[Platform]))
       }}
+    }
+  }
+
+  def singleOperationDependencies(config: Config, platform: Option[Platform], output: Option[String], rootDir: Option[Path]) = {
+    if (output.isDefined)
+      DependencyResolver.createBuildYaml(output.get)
+
+    val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config, platform.map(_.id))
+    val config1 = DependencyResolver.modifyConfig(config, dependencyPlatformId, rootDir)
+    if (output.isDefined) {
+      DependencyResolver.copyDependencies(config1, output.get, dependencyPlatformId.get)
+    } else {
+      config1
+    }
+  }
+
+  // Wrap dependency operations for namespaces into a bundle
+  def namespaceDependencies(configs: List[Either[(Config, Option[Platform]), Status]], target: Option[String], rootDir: Option[Path]) = {
+    if (target.isDefined)
+      DependencyResolver.createBuildYaml(target.get)
+    
+    configs.map{
+      case Left((config0: Config, platform: Option[Platform])) => {
+        val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config0, platform.map(_.id))
+        val config1 = DependencyResolver.modifyConfig(config0, dependencyPlatformId, rootDir, configs.map(e => e.swap.toOption.filter(o => o._2 == platform).map(_._1)).flatten )
+        Try{
+          if (target.isDefined) {
+            val config2 = DependencyResolver.copyDependencies(config1, target.get, dependencyPlatformId.get, true)
+            (config2, platform)
+          }
+          else {
+            (config1, platform)
+          }
+        }.fold(
+          e => {
+            Console.err.println(e.getMessage)
+            Right(DependencyError)
+          },
+          t => Left(t)
+        )
+      }
+      case Right(c) => Right(c)
     }
   }
 
