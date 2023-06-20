@@ -1,15 +1,16 @@
 # Viash 0.x.x (yyyy-MM-dd): TODO Add title
 
+
 ## BREAKING CHANGES
 
-* `viash export cli_schema`: Added `--format yaml/json` argument, default format is now a YAML (#448).
-* `viash export config_schema`: Added `--format yaml/json` argument, default format is now a YAML (#448).
+* `viash export cli_schema`: Added `--format yaml/json` argument, default format is now a YAML (PR #448).
+* `viash export config_schema`: Added `--format yaml/json` argument, default format is now a YAML (PR #448).
 
 ## NEW FUNCTIONALITY
 
 * `viash export json_schema`: Export a json schema derived from the class reflections and annotations already used by the `config_schema` (PR #446).
 
-* `viash export config_schema`: Output `default` values of member fields.
+* `viash export config_schema`: Output `default` values of member fields (PR #446).
 
 ## MINOR CHANGES
 
