@@ -18,6 +18,7 @@ jobs:
     - uses: actions/checkout@v3
 
     - uses: viash-io/viash-actions/update-docker-engine@update-docker-engine
+      if: runner.os == 'Linux'
 
     - name: Set up Nextflow
       if: runner.os == 'Linux'
