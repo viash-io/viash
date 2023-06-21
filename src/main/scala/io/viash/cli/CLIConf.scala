@@ -20,7 +20,7 @@ package io.viash.cli
 import org.rogach.scallop._
 import io.viash.Main
 import org.rogach.scallop.exceptions.Version
-import io.viash.helpers.ExitException
+import io.viash.exceptions.ExitException
 
 trait ViashCommand {
   _: DocumentedSubcommand =>

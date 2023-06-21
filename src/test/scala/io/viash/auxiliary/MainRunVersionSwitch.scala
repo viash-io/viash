@@ -8,7 +8,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.reflect.io.Directory
 import java.io.ByteArrayOutputStream
-import io.viash.helpers.ExitException
+import io.viash.exceptions.ExitException
 
 class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
 

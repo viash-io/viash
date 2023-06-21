@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.helpers
+package io.viash.exceptions
 
-case class ExitException(code: Int) extends Throwable
+case class MalformedInputException(uri: String, innerException: Throwable) extends Exception(innerException) {
+    override def getMessage(): String = s"Could not read config file at '$uri'.\n\tThis is likely due to a bug in the current version of Java with non-ASCII characters."
+}

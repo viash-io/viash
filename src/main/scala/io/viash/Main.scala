@@ -28,7 +28,7 @@ import config.Config
 import helpers.IO
 import helpers.Scala._
 import cli.{CLIConf, ViashCommand, ViashNs, ViashNsBuild}
-import io.viash.helpers.MissingResourceFileException
+import io.viash.exceptions.{MissingResourceFileException, ExitException, MalformedInputException}
 import io.viash.helpers.status._
 import io.viash.platforms.Platform
 import io.viash.project.ViashProject
@@ -38,7 +38,6 @@ import io.viash.helpers.Exec
 import java.nio.file.Files
 import java.net.URI
 import io.viash.config.AbstractConfigException
-import io.viash.helpers.ExitException
 
 object Main {
   private val pkg = getClass.getPackage
@@ -77,6 +76,9 @@ object Main {
         System.exit(1)
       case e: AbstractConfigException =>
         Console.err.println(s"viash: ${Console.RED}Error parsing, ${e.innerMessage} in file '${e.uri}'.${Console.RESET}\nDetails:\n${e.getMessage()}")
+        System.exit(1)
+      case e: MalformedInputException =>
+        Console.err.println(s"viash: ${e.getMessage()}")
         System.exit(1)
       case ee: ExitException =>
         System.exit(ee.code)

@@ -21,7 +21,7 @@ import java.nio.file.{Paths, Files, StandardOpenOption}
 import io.viash.ViashTest.{ManyTestOutput, TestOutput}
 import config.Config
 import helpers.IO
-import io.viash.helpers.MissingResourceFileException
+import io.viash.exceptions.MissingResourceFileException
 import io.viash.helpers.status._
 import java.nio.file.Path
 import io.viash.helpers.NsExecData._

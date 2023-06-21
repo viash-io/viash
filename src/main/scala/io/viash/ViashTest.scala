@@ -31,7 +31,7 @@ import functionality.resources.{BashScript, Script}
 import platforms.NativePlatform
 import helpers.IO
 import io.viash.helpers.data_structures._
-import io.viash.helpers.MissingResourceFileException
+import io.viash.exceptions.MissingResourceFileException
 import io.viash.platforms.Platform
 import io.viash.config.ConfigMeta
 
