@@ -26,6 +26,7 @@ import io.viash.helpers.data_structures._
 import io.viash.schemas._
 import io.viash.helpers.Escaper
 
+// $COVERAGE-OFF$Disabling coverage of removed code
 /**
  * / * Platform class for generating NextFlow (DSL2) modules.
  */
@@ -805,6 +806,7 @@ case class NextflowLegacyPlatform(
     )
   }
 }
+// $COVERAGE-ON
 
 object NextFlowUtils {
   import scala.reflect.runtime.universe._

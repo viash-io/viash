@@ -33,6 +33,13 @@ platforms:
         packages:
           - fortune
   - type: docker
+    image: "bash:3.2"
+    target_image: "viash_requirement_apk_empty"
+    id: "viash_requirement_apk_empty"
+    setup:
+      - type: apk
+        packages:
+  - type: docker
     image: debian:bullseye-slim
     target_image: "viash_requirement_apt_base"
     id: "viash_requirement_apt_base"

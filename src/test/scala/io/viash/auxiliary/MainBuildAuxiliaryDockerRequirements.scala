@@ -74,6 +74,41 @@ class MainBuildAuxiliaryDockerRequirements extends AnyFunSuite with BeforeAndAft
     removeDockerImage(tag)
   }
 
+    test("setup; check docker requirements using apk but with an empty list", DockerTest) {
+    val tag = "viash_requirement_apk_empty"
+
+    // remove docker if it exists
+    removeDockerImage(tag)
+    assert(!checkDockerImageExists(tag))
+
+    // build viash wrapper with --setup
+    TestHelper.testMain(
+      "build",
+      "-p", "viash_requirement_apk_empty",
+      "-o", tempFolStr,
+      "--setup", "build",
+      configRequirementsFile
+    )
+
+    // verify docker exists
+    assert(checkDockerImageExists(tag))
+
+    assert(executableRequirementsFile.exists)
+    assert(executableRequirementsFile.canExecute)
+
+    val output = Exec.runCatch(
+      Seq(
+        executableRequirementsFile.toString,
+        "--which", "fortune"
+      )
+    )
+
+    assert(output.output == "")
+
+    // Tests finished, remove docker image
+    removeDockerImage(tag)
+  }
+
   test("setup; check base image for apt still does not contain the cowsay package", DockerTest) {
     TestHelper.testMain(
       "build",
