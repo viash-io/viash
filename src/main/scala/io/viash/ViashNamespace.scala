@@ -106,6 +106,7 @@ object ViashNamespace {
   def test(
     configs: List[Either[(Config, Option[Platform]), Status]],
     parallel: Boolean = false,
+    setup: Option[String] = None,
     keepFiles: Option[Boolean] = None,
     tsv: Option[String] = None,
     append: Boolean = false,
@@ -184,6 +185,7 @@ object ViashNamespace {
               ViashTest(
                 config = conf,
                 platform = platform,
+                setupStrategy = setup,
                 keepFiles = keepFiles,
                 quiet = true,
                 parentTempPath = Some(parentTempPath),

@@ -232,6 +232,7 @@ object Main {
           config,
           platform = platform.get,
           keepFiles = cli.test.keep.toOption.map(_.toBoolean),
+          setupStrategy = cli.test.setup.toOption,
           cpus = cli.test.cpus.toOption,
           memory = cli.test.memory.toOption
         )
@@ -259,7 +260,8 @@ object Main {
           tsv = cli.namespace.test.tsv.toOption,
           append = cli.namespace.test.append(),
           cpus = cli.namespace.test.cpus.toOption,
-          memory = cli.namespace.test.memory.toOption
+          memory = cli.namespace.test.memory.toOption,
+          setup = cli.namespace.test.setup.toOption,
         )
         val errors = testResults.flatMap(_.toOption).count(_.isError)
         if (errors > 0) 1 else 0

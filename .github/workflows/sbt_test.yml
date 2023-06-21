@@ -21,6 +21,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - uses: viash-io/viash-actions/update-docker-engine@v3
+      if: runner.os == 'Linux'
+
     - name: Set up Nextflow
       if: ${{ runner.os == 'Linux' && matrix.java.run_nextflow }}
       run: |

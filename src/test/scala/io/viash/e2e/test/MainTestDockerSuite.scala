@@ -64,6 +64,42 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, false)
   }
 
+  test("Check setup strategy", DockerTest) {
+    // first run to create cache entries
+    val testText = TestHelper.testMain(
+      "test",
+      "-p", "docker",
+      configFile,
+      "--keep", "false"
+    )
+
+    // Do a second run to check if forcing a docker build using setup works
+    val testTextNoCaching = TestHelper.testMain(
+      "test",
+      "-p", "docker",
+      configFile,
+      "--setup", "build",
+      "--keep", "false"
+    )
+
+    val regexBuildCache = raw"RUN.*:\n.*CACHED".r
+    assert(!regexBuildCache.findFirstIn(testTextNoCaching).isDefined, "Expected to not find caching.")
+
+    // Do a third run to check caching
+    val testTextCaching = TestHelper.testMain(
+      "test",
+      "-p", "docker",
+      configFile,
+      "--setup", "cb",
+      "--keep", "false"
+    )
+    assert(regexBuildCache.findFirstIn(testTextCaching).isDefined, "Expected to find caching.")
+    checkTempDirAndRemove(testText, false)
+    checkTempDirAndRemove(testTextCaching, false)
+    checkTempDirAndRemove(testTextNoCaching, false)
+
+  }
+
   test("Verify base config derivation", NativeTest) {
     val newConfigFilePath = configDeriver.derive(Nil, "default_config")
     val testText = TestHelper.testMain(

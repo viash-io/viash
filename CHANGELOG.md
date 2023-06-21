@@ -1,6 +1,5 @@
 # Viash 0.x.x (yyyy-MM-dd): TODO Add title
 
-
 ## BREAKING CHANGES
 
 * `viash export cli_schema`: Added `--format yaml/json` argument, default format is now a YAML (PR #448).
@@ -13,6 +12,8 @@
 * `viash export config_schema`: Output `default` values of member fields (PR #446).
 
 * `CI`: Test support for different Java versions on GitHub Actions (PR #xxx). Focussing on LTS releases starting from 11, so this is 11 and 17. Also test latest Java version, currently 20.
+
+* `viash test` and `viash ns test`: add `--setup` argument to determine the docker build strategy before a component is tested (PR #451).
 
 ## MINOR CHANGES
 
