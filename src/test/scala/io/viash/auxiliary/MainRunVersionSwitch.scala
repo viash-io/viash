@@ -115,4 +115,8 @@ class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
     assert(caught.getMessage().contains("Could not download file: https://github.com/viash-io/viash/releases/download/invalid/viash"))
   }
 
+  override def afterAll(): Unit = {
+    SysEnv.remove("VIASH_VERSION")
+  }
+
 }
