@@ -9,15 +9,12 @@ import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.reflect.io.Directory
 import java.io.ByteArrayOutputStream
 import io.viash.helpers.ExitException
+import io.viash.helpers.SysEnv
 
 class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
 
-  def setEnv(key: String, value: String) = {
-    Main.sysEnvOverride.addOne(key -> value)
-  }
-
   test("Verify VIASH_VERSION is undefined by default", NativeTest) {
-    assert(sys.env.get("VIASH_VERSION").isDefined == false)
+    assert(SysEnv.viashVersion.isDefined == false)
   }
 
   test("Check version without specifying the version to run", NativeTest) {
@@ -42,9 +39,9 @@ class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Check version with specifying the version to run", NativeTest) {
 
-    setEnv("VIASH_VERSION", "0.6.6")
+    SysEnv.set("VIASH_VERSION", "0.6.6")
 
-    val version = Main.sysEnvGet("VIASH_VERSION")
+    val version = SysEnv.viashVersion
     assert(version == Some("0.6.6"))
 
     val arguments = Seq("--version")
@@ -65,9 +62,9 @@ class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Check version with specifying '-' as the version to run", NativeTest) {
 
-    setEnv("VIASH_VERSION", "-")
+    SysEnv.set("VIASH_VERSION", "-")
 
-    val version = Main.sysEnvGet("VIASH_VERSION")
+    val version = SysEnv.viashVersion
     assert(version == Some("-"))
 
     val arguments = Seq("--version")
@@ -91,12 +88,12 @@ class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
   test("Check version with specifying an invalid version", NativeTest) {
 
     // remove the 'invalid' viash version if it already exists
-    val path = Main.viashHome.resolve("releases").resolve("invalid").resolve("viash")
+    val path = Paths.get(SysEnv.viashHome).resolve("releases").resolve("invalid").resolve("viash")
     Files.deleteIfExists(path)
 
-    setEnv("VIASH_VERSION", "invalid")
+    SysEnv.set("VIASH_VERSION", "invalid")
 
-    val version = Main.sysEnvGet("VIASH_VERSION")
+    val version = SysEnv.viashVersion
     assert(version == Some("invalid"))
 
     val arguments = Seq("--version")
