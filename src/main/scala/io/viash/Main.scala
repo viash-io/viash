@@ -38,6 +38,7 @@ import io.viash.helpers.Exec
 import java.nio.file.Files
 import java.net.URI
 import io.viash.config.AbstractConfigException
+import io.viash.helpers.ExitException
 
 object Main {
   private val pkg = getClass.getPackage
@@ -77,6 +78,8 @@ object Main {
       case e: AbstractConfigException =>
         Console.err.println(s"viash: ${Console.RED}Error parsing, ${e.innerMessage} in file '${e.uri}'.${Console.RESET}\nDetails:\n${e.getMessage()}")
         System.exit(1)
+      case ee: ExitException =>
+        System.exit(ee.code)
       case e: Exception =>
         Console.err.println(
           s"""Unexpected error occurred! If you think this is a bug, please post

@@ -11,8 +11,12 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {name: 'ubuntu_latest', os: ubuntu-latest }
-          - {name: 'macos_latest', os: macos-latest }
+          - { name: 'ubuntu_latest', os: ubuntu-latest }
+          - { name: 'macos_latest', os: macos-latest }
+        java:
+          - { ver: '11', run_nextflow: true, run_coverage: false }
+          - { ver: '17', run_nextflow: true, run_coverage: true }
+          - { ver: '20', run_nextflow: false, run_coverage: false }
 
     steps:
     - uses: actions/checkout@v3
@@ -21,7 +25,7 @@ jobs:
       if: runner.os == 'Linux'
 
     - name: Set up Nextflow
-      if: runner.os == 'Linux'
+      if: ${{ runner.os == 'Linux' && matrix.java.run_nextflow }}
       run: |
         mkdir -p "$HOME/.local/bin"
         echo "$HOME/.local/bin" >> $GITHUB_PATH
@@ -45,7 +49,7 @@ jobs:
       uses: actions/setup-java@v3
       with:
         distribution: temurin
-        java-version: '11'
+        java-version: ${{ matrix.java.ver }}
 
     - name: Set up Scala
       run: |
@@ -55,6 +59,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y scala
         fi
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -62,9 +67,11 @@ jobs:
 
     - name: Run tests
       run: |
-        if [[ "${{ matrix.config.name }}" == ^ubuntu_latest$ ]]; then
+        if [[ "${{ matrix.config.name }}" =~ ^ubuntu.*$ ]] && [[ "${{ matrix.java.run_coverage }}" == "true" ]]; then
           # only run coverage on main runner
           sbt clean coverage test coverageReport
+        elif [[ "${{ matrix.config.name }}" =~ ^ubuntu.*$ ]] && [[ "${{ matrix.java.run_nextflow }}" == "false" ]]; then
+          sbt 'testOnly -- -l io.viash.NextFlowTest'
         elif [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
           # macOS on github actions does not have Docker, so skip those
           sbt 'testOnly -- -l io.viash.DockerTest -l io.viash.NextFlowTest'
