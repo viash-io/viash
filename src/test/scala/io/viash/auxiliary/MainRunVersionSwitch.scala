@@ -13,8 +13,22 @@ import io.viash.helpers.SysEnv
 
 class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
 
+  test("Verify VIASH_VERSION is unset") {
+    assert(SysEnv.viashVersion.isEmpty)
+  }
+
+  test("Can override variables") {
+    SysEnv.set("VIASH_VERSION", "foo")
+    assert(SysEnv.viashVersion == Some("foo"))
+  }
+
+  test("Can erase variables") {
+    SysEnv.remove("VIASH_VERSION")
+    assert(SysEnv.viashVersion.isEmpty)
+  }
+
   test("Verify VIASH_VERSION is undefined by default", NativeTest) {
-    assert(SysEnv.viashVersion.isDefined == false)
+    assert(SysEnv.viashVersion.isEmpty)
   }
 
   test("Check version without specifying the version to run", NativeTest) {
