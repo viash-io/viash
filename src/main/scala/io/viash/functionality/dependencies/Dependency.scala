@@ -100,6 +100,8 @@ case class Dependency(
     } else {
       // Previous existing dependency. Use the location of the '.build.yaml' to determine the relative location.
       val relativePath = Dependency.getRelativePath(fullPath, Paths.get(workRepository.get.localPath))
+      if (relativePath.isEmpty)
+        throw new MissingBuildYamlException(fullPath, this)
       relativePath.flatMap(rp => workRepository.map(r => Paths.get(r.subOutputPath).resolve(rp).toString()))
     }
   }
@@ -134,10 +136,12 @@ object Dependency {
     val destinationPath = if (pathParts.contains("dependencies")) {
       // Drop the other "target" folder from the found path. This can be multiple folders too
       val relativePath = Dependency.getRelativePath(sourcePath, repoPath)
-      output.resolve(relativePath.get)
+        .fold(throw new MissingBuildYamlException(sourcePath, mainDependency))(identity)
+      output.resolve(relativePath)
     } else {
       val subPath = mainDependency.getRelativePath(sourcePath)
-      output.resolve("dependencies").resolve(subPath.get)
+        .fold(throw new MissingBuildYamlException(sourcePath, mainDependency))(identity)
+      output.resolve("dependencies").resolve(subPath)
     }
 
     (sourcePath, destinationPath)
