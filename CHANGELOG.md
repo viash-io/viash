@@ -30,6 +30,8 @@
 
 * `testbench`: Fix the viash version switch test bench not working for newer Java versions (PR #452).
 
+* `malformed input exception`: Capture MalformedInputExceptions when thrown by reading files with invalid Ascii characters when unsupported by Java (PR #458).
+
 # Viash 0.7.4 (2023-05-31): Minor bug fixes and minor improvements to VDSL3
 
 Some small fixes and consistency improvements.
