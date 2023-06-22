@@ -210,6 +210,87 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
     assert(output.output == "")
   }
 
+  test("setup; check base image for yum still does not contain the which package", DockerTest) { f =>
+    val newConfigFilePath = configDeriver.derive(
+      s""".platforms := [{ "type": "docker", "image": "centos:centos7", "target_image": "$dockerTag" }]""",
+      "yum_base"
+    )
+
+    TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(executableRequirementsFile.exists)
+    assert(executableRequirementsFile.canExecute)
+
+    val output = Exec.runCatch(
+      Seq(
+        executableRequirementsFile.toString,
+        "--which", "which"
+      )
+    )
+
+    assert(output.output.contains("line 25: which: command not found"))
+  }
+
+  test("setup; check docker requirements using yum to add the which package", DockerTest) { f =>
+    val newConfigFilePath = configDeriver.derive(
+      s""".platforms := [{ "type": "docker", "image": "centos:centos7", "target_image": "$dockerTag", "setup": [{ "type": "yum", "packages": ["which"] }] }]""",
+      "yum_which"
+    )
+
+    // build viash wrapper with --setup
+    val _ = TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    // verify docker exists
+    assert(checkDockerImageExists(dockerTag))
+
+    assert(executableRequirementsFile.exists)
+    assert(executableRequirementsFile.canExecute)
+
+    val output = Exec.runCatch(
+      Seq(
+        executableRequirementsFile.toString,
+        "--which", "which"
+      )
+    )
+
+    assert(output.output == "/usr/bin/which\n")
+  }
+
+  test("setup; check docker requirements using yum but with an empty list", DockerTest) { f =>
+    val newConfigFilePath = configDeriver.derive(
+      s""".platforms := [{ "type": "docker", "image": "centos:centos7", "target_image": "$dockerTag", "setup": [{ "type": "yum", "packages": [] }] }]""",
+      "apt_empty"
+    )
+
+    TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(executableRequirementsFile.exists)
+    assert(executableRequirementsFile.canExecute)
+
+    val output = Exec.runCatch(
+      Seq(
+        executableRequirementsFile.toString,
+        "--which", "which"
+      )
+    )
+
+    assert(output.output.contains("line 25: which: command not found"))
+  }
 
   test("test_setup; check the fortune package isn't added for the build option", DockerTest) { f =>
     val newConfigFilePath = configDeriver.derive(
