@@ -113,7 +113,7 @@ object CollectedSchemas {
       "config"                    -> getMembers[Config](),
       "project"                   -> getMembers[ViashProject](),
       "info"                      -> getMembers[Info](),
-      "sysEnv"                    -> getMembers[SysEnvTrait](),
+      "environmentVariables"      -> getMembers[SysEnvTrait](),
     ),
     "functionality" -> Map(
       "functionality"             -> getMembers[Functionality](),

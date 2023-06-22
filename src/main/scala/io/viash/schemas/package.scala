@@ -50,4 +50,7 @@ package object schemas {
   // In case of abstract classes; don't filter members
   @getter @setter @beanGetter @beanSetter @field
   class documentFully() extends scala.annotation.StaticAnnotation
+
+  @getter @setter @beanGetter @beanSetter @field
+  class nameOverride(name: String) extends scala.annotation.StaticAnnotation
 }
