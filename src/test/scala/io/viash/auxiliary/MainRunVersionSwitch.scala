@@ -26,10 +26,6 @@ class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
     assert(SysEnv.viashVersion.isEmpty)
   }
 
-  test("Verify VIASH_VERSION is undefined by default", NativeTest) {
-    assert(SysEnv.viashVersion.isEmpty)
-  }
-
   test("Check version without specifying the version to run", NativeTest) {
 
     val arguments = Seq("--version")
