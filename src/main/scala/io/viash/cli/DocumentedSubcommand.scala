@@ -37,6 +37,8 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
   var usage: Option[String] = None
   var footerText: Option[String] = None
 
+  val help = toggle("wat", noshort = true, hidden = true)
+
   def banner(command: String, description: String, usage: String): Unit = {
     this.command = Some(command)
     this.description = Some(description)

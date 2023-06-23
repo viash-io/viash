@@ -194,6 +194,18 @@ object Main {
       config_mods = proj0.config_mods ::: projCm
     )
 
+    // We defined a 'wat' parameter so it is not required to have `--help` as the first argument.
+    // This means we must handle the 'wat' help ourselves now.
+    // We could have checked for '--help' (or '-h') manually, but then we couldn't pass '--help' as an argument value.
+    // Not entirely sure this is much better.
+    {
+      val sub = cli.subcommands.last
+      if (sub.builder.get("wat") == Some(true)) {
+        sub.printHelp()
+        throw new ExitException(0)
+      }
+    }
+
     // process commands
     cli.subcommands match {
       case List(cli.run) =>
