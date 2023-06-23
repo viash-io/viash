@@ -1,7 +1,7 @@
 package io.viash.auxiliary
 
 import io.viash.{NativeTest, TestHelper, Main}
-import io.viash.helpers.{IO, ExitException, SysEnv}
+import io.viash.helpers.{IO, SysEnv}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
