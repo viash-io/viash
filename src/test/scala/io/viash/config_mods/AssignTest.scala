@@ -4,6 +4,8 @@ import io.circe.Json
 import org.scalatest.funsuite.AnyFunSuite
 import io.circe.syntax._
 
+import io.circe.yaml.parser.parse
+
 class AssignTest extends AnyFunSuite {
   // testing parsing
   test("parse assign command with only attributes") {
@@ -111,5 +113,20 @@ class AssignTest extends AnyFunSuite {
   }
 
   // testing functionality
-  // TODO
+  val baseJson: Json = parse(
+    """foo: 
+      |  bar: baz
+      |  qux: quux
+      |""".stripMargin).toOption.get
+  
+  test("test simple assign") {
+    val expected1: Json = parse(
+      """foo:
+        |  bar: baz
+        |  qux: baz
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse(""".foo.qux := .foo.bar""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
 }
