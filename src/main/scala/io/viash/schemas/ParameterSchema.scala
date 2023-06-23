@@ -115,15 +115,23 @@ object ParameterSchema {
       }
     }
 
-    // name is e.g. "io.viash.functionality.Functionality.name", only keep "name"
-    // name can also be "__this__"
-    val name_ = name.split('.').last
     val annStrings = annotations.map(annotationToStrings(_))
     val hierarchyOption = hierarchy match {
       case l if l.length > 0 => Some(l)
       case _ => None
     }
 
+    // name is e.g. "io.viash.functionality.Functionality.name", only keep "name"
+    // name can also be "__this__"
+    // Use the name defined from the class, *unless* the 'nameOverride' annotation is set. Then use the override, unless the name is '__this__'.
+    val nameAnnotation = annStrings.collectFirst({case (name, value) if name.endsWith("nameOverride") => value.head})
+    val nameFromClass = name.split('.').last
+    val name_ = (nameAnnotation, nameFromClass) match {
+      case (Some(_), "__this__") => "__this__"
+      case (Some(ann), _) => ann
+      case (None, name) => name
+    }
+    
     val description = annStrings.collectFirst({case (name, value) if name.endsWith("description") => value.head})
     val example = annStrings.collect({case (name, value) if name.endsWith("example") => value}).map(ExampleSchema(_))
     val exampleWithDescription = annStrings.collect({case (name, value) if name.endsWith("exampleWithDescription") => value}).map(ExampleSchema(_))
