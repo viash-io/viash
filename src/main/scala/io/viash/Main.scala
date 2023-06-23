@@ -39,15 +39,12 @@ import java.nio.file.Files
 import java.net.URI
 import io.viash.config.AbstractConfigException
 import io.viash.helpers.ExitException
+import io.viash.helpers.SysEnv
 
 object Main {
   private val pkg = getClass.getPackage
   val name: String = if (pkg.getImplementationTitle != null) pkg.getImplementationTitle else "viash"
   val version: String = if (pkg.getImplementationVersion != null) pkg.getImplementationVersion else "test"
-
-  val viashHome = Paths.get(sys.env.getOrElse("VIASH_HOME", sys.env("HOME") + "/.viash"))
-  val sysEnvOverride = scala.collection.mutable.Map.empty[String, String]
-  def sysEnvGet(key: String): Option[String] = sysEnvOverride.get(key) orElse sys.env.get(key)
 
   /**
     * Viash main
@@ -136,7 +133,7 @@ object Main {
     * @return An exit code
     */
   def mainVersioned(args: Array[String], workingDir: Option[Path] = None, version: String): Int = {
-    val path = viashHome.resolve("releases").resolve(version).resolve("viash")
+    val path = Paths.get(SysEnv.viashHome).resolve("releases").resolve(version).resolve("viash")
 
     if (!Files.exists(path)) {
       // todo: be able to use 0.7.x notation to get the latest 0.7 version?
@@ -476,9 +473,7 @@ object Main {
     */
   def detectVersion(workingDir: Option[Path]): Option[String] = {
     // if VIASH_VERSION is defined, use that
-    if (sysEnvGet("VIASH_VERSION").isDefined) {
-      sysEnvGet("VIASH_VERSION")
-    } else {
+    SysEnv.viashVersion orElse {
       // else look for project file in working dir
       // and try to read as json
       workingDir

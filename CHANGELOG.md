@@ -22,6 +22,8 @@
 
 * `viash config`: Special double values now support `+.inf`, `-.inf` or `.nan` values (PR #446 and PR #450). The stringified versions `"+.inf"`, `"-.inf"` or `".nan"` are supported as well. This is in line with the yaml spec.
 
+* `system environment variables`: Add wrapper around `sys.env` and provide access to specific variables (PR #457). Has advantages for documentation output and testbenches.
+
 * `testbench`: Added some minor testbenches to tackle missing coverage (PR #459).
 
 ## BUG FIXES
