@@ -33,6 +33,7 @@ import io.viash.config.Info
 import io.viash.functionality.resources._
 import io.viash.project.ViashProject
 import io.viash.platforms.nextflow._
+import io.viash.helpers._
 
 final case class CollectedSchemas (
   config: Map[String, List[ParameterSchema]],
@@ -73,15 +74,25 @@ object CollectedSchemas {
   private def getMembers[T: TypeTag](): (Map[String,List[MemberInfo]], List[Symbol]) = {
 
     val name = typeOf[T].typeSymbol.fullName
-    val memberNames = typeOf[T].members
-      .filter(!_.isMethod)
-      .map(_.shortName)
-      .toSeq
 
-    val constructorMembers = typeOf[T].members.filter(_.isConstructor).head.asMethod.paramLists.head.map(_.shortName)
+    // Get all members and filter for constructors, first one should be the best (most complete) one
+    // Traits don't have constructors
+    // Get all parameters and store their short name
+    val constructorMembers = typeOf[T].members.filter(_.isConstructor).headOption.map(_.asMethod.paramLists.head.map(_.shortName)).getOrElse(List.empty[String])
 
     val baseClasses = typeOf[T].baseClasses
       .filter(_.fullName.startsWith("io.viash"))
+
+    // If we're only getting a abstract class/trait, not a final implementation, use these definitions (otherwise we're left with nothing).
+    val documentFully = 
+      baseClasses.length == 1 && 
+      baseClasses.head.isAbstract &&
+      baseClasses.head.annotations.exists(a => a.tree.tpe =:= typeOf[documentFully])
+
+    val memberNames = typeOf[T].members
+      .filter(!_.isMethod || documentFully)
+      .map(_.shortName)
+      .toSeq
 
     val allMembers = baseClasses
       .zipWithIndex
@@ -89,7 +100,7 @@ object CollectedSchemas {
         baseClass.info.members
           .filter(_.fullName.startsWith("io.viash"))
           .filter(m => memberNames.contains(m.shortName))
-          .filter(m => !m.info.getClass.toString.endsWith("NullaryMethodType") || index != 0) // Only regular members if base class, otherwise all members
+          .filter(m => !m.info.getClass.toString.endsWith("NullaryMethodType") || index != 0 || documentFully) // Only regular members if base class, otherwise all members
           .map(y => MemberInfo(y, (constructorMembers.contains(y.shortName)), baseClass.fullName, index))
         }
       .groupBy(k => k.shortName)
@@ -102,6 +113,7 @@ object CollectedSchemas {
       "config"                    -> getMembers[Config](),
       "project"                   -> getMembers[ViashProject](),
       "info"                      -> getMembers[Info](),
+      "environmentVariables"      -> getMembers[SysEnvTrait](),
     ),
     "functionality" -> Map(
       "functionality"             -> getMembers[Functionality](),

@@ -46,4 +46,11 @@ package object schemas {
 
   @getter @setter @beanGetter @beanSetter @field
   class undocumented() extends scala.annotation.StaticAnnotation
+
+  // In case of abstract classes; don't filter members
+  @getter @setter @beanGetter @beanSetter @field
+  class documentFully() extends scala.annotation.StaticAnnotation
+
+  @getter @setter @beanGetter @beanSetter @field
+  class nameOverride(name: String) extends scala.annotation.StaticAnnotation
 }

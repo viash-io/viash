@@ -1,7 +1,7 @@
 package io.viash.auxiliary
 
 import io.viash.{NativeTest, TestHelper, Main}
-import io.viash.helpers.IO
+import io.viash.helpers.{IO, ExitException, SysEnv}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -12,12 +12,22 @@ import io.viash.exceptions.ExitException
 
 class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
 
-  def setEnv(key: String, value: String) = {
-    Main.sysEnvOverride.addOne(key -> value)
+  test("Verify VIASH_VERSION is unset") {
+    assert(SysEnv.viashVersion.isEmpty)
+  }
+
+  test("Can override variables") {
+    SysEnv.set("VIASH_VERSION", "foo")
+    assert(SysEnv.viashVersion == Some("foo"))
+  }
+
+  test("Can erase variables") {
+    SysEnv.remove("VIASH_VERSION")
+    assert(SysEnv.viashVersion.isEmpty)
   }
 
   test("Verify VIASH_VERSION is undefined by default", NativeTest) {
-    assert(sys.env.get("VIASH_VERSION").isDefined == false)
+    assert(SysEnv.viashVersion.isEmpty)
   }
 
   test("Check version without specifying the version to run", NativeTest) {
@@ -42,9 +52,9 @@ class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Check version with specifying the version to run", NativeTest) {
 
-    setEnv("VIASH_VERSION", "0.6.6")
+    SysEnv.set("VIASH_VERSION", "0.6.6")
 
-    val version = Main.sysEnvGet("VIASH_VERSION")
+    val version = SysEnv.viashVersion
     assert(version == Some("0.6.6"))
 
     val arguments = Seq("--version")
@@ -65,9 +75,9 @@ class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Check version with specifying '-' as the version to run", NativeTest) {
 
-    setEnv("VIASH_VERSION", "-")
+    SysEnv.set("VIASH_VERSION", "-")
 
-    val version = Main.sysEnvGet("VIASH_VERSION")
+    val version = SysEnv.viashVersion
     assert(version == Some("-"))
 
     val arguments = Seq("--version")
@@ -91,12 +101,12 @@ class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
   test("Check version with specifying an invalid version", NativeTest) {
 
     // remove the 'invalid' viash version if it already exists
-    val path = Main.viashHome.resolve("releases").resolve("invalid").resolve("viash")
+    val path = Paths.get(SysEnv.viashHome).resolve("releases").resolve("invalid").resolve("viash")
     Files.deleteIfExists(path)
 
-    setEnv("VIASH_VERSION", "invalid")
+    SysEnv.set("VIASH_VERSION", "invalid")
 
-    val version = Main.sysEnvGet("VIASH_VERSION")
+    val version = SysEnv.viashVersion
     assert(version == Some("invalid"))
 
     val arguments = Seq("--version")
@@ -116,6 +126,10 @@ class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
     assert(stdout.isEmpty())
     assert(stderr.isEmpty())
     assert(caught.getMessage().contains("Could not download file: https://github.com/viash-io/viash/releases/download/invalid/viash"))
+  }
+
+  override def afterAll(): Unit = {
+    SysEnv.remove("VIASH_VERSION")
   }
 
 }
