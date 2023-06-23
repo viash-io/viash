@@ -1,15 +1,14 @@
 package io.viash.auxiliary
 
 import io.viash.{NativeTest, TestHelper, Main}
-import io.viash.helpers.IO
+import io.viash.helpers.{IO, SysEnv}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.reflect.io.Directory
 import java.io.ByteArrayOutputStream
-import io.viash.helpers.ExitException
-import io.viash.helpers.SysEnv
+import io.viash.exceptions.ExitException
 
 class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
 

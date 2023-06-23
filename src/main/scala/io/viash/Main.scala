@@ -17,29 +17,19 @@
 
 package io.viash
 
-import java.io.File
-import java.io.FileNotFoundException
-import java.nio.file.NoSuchFileException
-import java.nio.file.Paths
-import java.nio.file.FileSystemNotFoundException
+import java.io.{File, FileNotFoundException}
+import java.nio.file.{Path, Paths, Files, NoSuchFileException, FileSystemNotFoundException}
+import java.net.URI
 import sys.process.{Process, ProcessLogger}
 
 import config.Config
-import helpers.IO
+import helpers.{IO, Exec, SysEnv}
 import helpers.Scala._
-import cli.{CLIConf, ViashCommand, ViashNs, ViashNsBuild}
-import io.viash.helpers.MissingResourceFileException
-import io.viash.helpers.status._
-import io.viash.platforms.Platform
-import io.viash.project.ViashProject
-import io.viash.cli.DocumentedSubcommand
-import java.nio.file.Path
-import io.viash.helpers.Exec
-import java.nio.file.Files
-import java.net.URI
-import io.viash.config.AbstractConfigException
-import io.viash.helpers.ExitException
-import io.viash.helpers.SysEnv
+import helpers.status._
+import platforms.Platform
+import project.ViashProject
+import cli.{CLIConf, ViashCommand, DocumentedSubcommand, ViashNs, ViashNsBuild}
+import exceptions._
 
 object Main {
   private val pkg = getClass.getPackage
@@ -74,6 +64,9 @@ object Main {
         System.exit(1)
       case e: AbstractConfigException =>
         Console.err.println(s"viash: ${Console.RED}Error parsing, ${e.innerMessage} in file '${e.uri}'.${Console.RESET}\nDetails:\n${e.getMessage()}")
+        System.exit(1)
+      case e: MalformedInputException =>
+        Console.err.println(s"viash: ${e.getMessage()}")
         System.exit(1)
       case ee: ExitException =>
         System.exit(ee.code)

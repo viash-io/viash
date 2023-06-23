@@ -15,21 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.helpers
+package io.viash.exceptions
 
-case class MissingResourceFileException(
-    val resource: String,
-    val config: String,
-    val message: String,
-    val cause: Throwable)
-    extends Exception(message, cause)
-
-object MissingResourceFileException {
-    def apply(resource: String, config: Option[String], cause: Throwable): MissingResourceFileException = {
-        val message = config match {
-            case None => s"Missing resource $resource"
-            case _ => s"Missing resource $resource as specified in ${config.get}"
-        }
-        MissingResourceFileException(resource, config.getOrElse(""), message, cause)
-    }
-}
+case class ExitException(code: Int) extends Throwable

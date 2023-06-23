@@ -26,8 +26,8 @@ import shapeless.Lazy
 
 import io.viash.schemas.ParameterSchema
 import io.circe.ACursor
-import io.viash.config.ConfigParserSubTypeException
-import io.viash.config.ConfigParserValidationException
+import io.viash.exceptions.ConfigParserSubTypeException
+import io.viash.exceptions.ConfigParserValidationException
 import io.circe.HCursor
 
 object DeriveConfiguredDecoderWithValidationCheck {

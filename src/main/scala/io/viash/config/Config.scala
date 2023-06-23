@@ -38,7 +38,7 @@ import java.nio.file.Paths
 import io.viash.schemas._
 import java.io.ByteArrayOutputStream
 import java.nio.file.FileSystemNotFoundException
-import io.viash.config.{ConfigYamlException, ConfigParserException}
+import io.viash.exceptions.{ConfigYamlException, ConfigParserException}
 import scala.util.{Try, Success, Failure}
 
 @description(
