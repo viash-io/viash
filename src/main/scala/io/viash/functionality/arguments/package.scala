@@ -22,7 +22,7 @@ import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfigur
 import cats.syntax.functor._ // for .widen
 import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
 import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
-import io.viash.config.ConfigParserSubTypeException
+import io.viash.exceptions.ConfigParserSubTypeException
 
 package object arguments {
 

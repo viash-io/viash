@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.config
+package io.viash.exceptions
 
 abstract class AbstractConfigException extends Exception {
   val uri: String
