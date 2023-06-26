@@ -22,6 +22,7 @@ import io.viash.config.Config
 import io.viash.schemas._
 import java.nio.file.Files
 import io.viash.ViashNamespace
+import io.viash.exceptions.MissingBuildYamlException
 
 @description(
   """Specifies a Viash component (script or executable) that should be made available for the code defined in the functionality.

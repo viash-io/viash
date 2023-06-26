@@ -15,9 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.functionality.dependencies
+package io.viash.exceptions
 
 import java.nio.file.Path
+import io.viash.functionality.dependencies.Dependency
 
 abstract class AbstractDependencyException extends Exception
 
