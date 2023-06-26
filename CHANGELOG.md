@@ -8,7 +8,7 @@
 
 ## NEW FUNCTIONALITY
 
-* `DockerPlatform`: add `target_platform` parameters to the docker platform config to enable multi-plaform builds.
+* `DockerPlatform`: add `target_platform` parameter to the docker platform config to enable multi-plaform builds.
 
 * `viash export json_schema`: Export a json schema derived from the class reflections and annotations already used by the `config_schema` (PR #446).
 

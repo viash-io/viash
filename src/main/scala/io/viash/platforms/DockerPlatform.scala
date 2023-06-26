@@ -84,7 +84,7 @@ case class DockerPlatform(
   target_tag: Option[String] = None,
 
   @description(
-    """The OS and/or CPU archtecture to target. Will default to the OS and CPU architecture of the 
+    """The OS and/or CPU architecture to target. Will default to the OS and CPU architecture of the 
        machine that is used to build the docker containers. In some cases might require you to setup or reset
        the BuildKit builder instance using `docker buildx create --use default`.
     """.stripMargin)
