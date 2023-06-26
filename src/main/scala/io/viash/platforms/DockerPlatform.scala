@@ -83,6 +83,19 @@ case class DockerPlatform(
   @example("target_tag: 0.5.0", "yaml")
   target_tag: Option[String] = None,
 
+  @description(
+    """The OS and/or CPU archtecture to target. Will default to the OS and CPU architecture of the 
+       machine that is used to build the docker containers. In some cases might require you to setup or reset
+       the BuildKit builder instance using `docker buildx create --use default`.
+    """.stripMargin)
+  @example(
+    """target_platform:
+       |  - "linux/amd64"
+       |  - "linux/aarch64"
+       |""".stripMargin, "yaml")
+  @default("Empty")
+  target_platform: OneOrMore[String] = Nil,
+
   @description("The separator between the namespace and the name of the component, used for determining the image name. Default: `\"/\"`.")
   @example("namespace_separator: \"_\"", "yaml")
   @default("/")
@@ -377,6 +390,12 @@ case class DockerPlatform(
     // get dependencies
     val runCommands = requirements2.flatMap(_.dockerCommands)
 
+    // get target OS/CPU archetecture
+    val architectureArgs = target_platform match {
+      case l if l.isEmpty => ""
+      case l => s"--platform ${target_platform.mkString(",")}"
+    }
+
     // don't draw defaults from functionality for the from image
     val fromImageInfo = Docker.getImageInfo(
       name = Some(image),
@@ -453,12 +472,12 @@ case class DockerPlatform(
              |
              |  # Build the container
              |  ViashNotice "Building container '$$1' with Dockerfile"
-             |  ViashInfo "Running 'docker build -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile'"
+             |  ViashInfo "Running 'docker buildx $architectureArgs -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile'"
              |  save=$$-; set +e
              |  if [ $$${BashWrapper.var_verbosity} -ge $$VIASH_LOGCODE_INFO ]; then
-             |    docker build -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile
+             |    docker buildx build $architectureArgs -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile
              |  else
-             |    docker build -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile &> $$tmpdir/docker_build.log
+             |    docker buildx build $architectureArgs -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile &> $$tmpdir/docker_build.log
              |  fi
              |  out=$$?
              |  [[ $$save =~ e ]] && set -e
