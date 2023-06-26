@@ -15,20 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.functionality
+package io.viash.exceptions
 
-import io.viash.helpers.data_structures._
-import io.viash.functionality.arguments.Argument
-import io.viash.schemas._
+case class MissingResourceFileException(
+    val resource: String,
+    val config: String,
+    val message: String,
+    val cause: Throwable)
+    extends Exception(message, cause)
 
-@description("A grouping of the @[arguments](argument), used to display the help message.")
-case class ArgumentGroup(
-  @description("The name of the argument group.")
-  name: String,
-
-  @description("Description of foo`, a description of the argument group. Multiline descriptions are supported.")
-  description: Option[String] = None,
-
-  @description("List of arguments.")
-  arguments: List[Argument[_]] = Nil
-)
+object MissingResourceFileException {
+    def apply(resource: String, config: Option[String], cause: Throwable): MissingResourceFileException = {
+        val message = config match {
+            case None => s"Missing resource $resource"
+            case _ => s"Missing resource $resource as specified in ${config.get}"
+        }
+        MissingResourceFileException(resource, config.getOrElse(""), message, cause)
+    }
+}

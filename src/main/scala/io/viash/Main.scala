@@ -17,37 +17,24 @@
 
 package io.viash
 
-import java.io.File
-import java.io.FileNotFoundException
-import java.nio.file.NoSuchFileException
-import java.nio.file.Paths
-import java.nio.file.FileSystemNotFoundException
+import java.io.{File, FileNotFoundException}
+import java.nio.file.{Path, Paths, Files, NoSuchFileException, FileSystemNotFoundException}
+import java.net.URI
 import sys.process.{Process, ProcessLogger}
 
 import config.Config
-import helpers.IO
+import helpers.{IO, Exec, SysEnv}
 import helpers.Scala._
-import cli.{CLIConf, ViashCommand, ViashNs, ViashNsBuild}
-import io.viash.helpers.MissingResourceFileException
-import io.viash.helpers.status._
-import io.viash.platforms.Platform
-import io.viash.project.ViashProject
-import io.viash.cli.DocumentedSubcommand
-import java.nio.file.Path
-import io.viash.helpers.Exec
-import java.nio.file.Files
-import java.net.URI
-import io.viash.helpers.DependencyResolver
-import io.viash.config.AbstractConfigException
-import io.viash.functionality.dependencies.AbstractDependencyException
-import scala.util.Try
+import helpers.status._
+import platforms.Platform
+import project.ViashProject
+import cli.{CLIConf, ViashCommand, DocumentedSubcommand, ViashNs, ViashNsBuild}
+import exceptions._
 
 object Main {
   private val pkg = getClass.getPackage
   val name: String = if (pkg.getImplementationTitle != null) pkg.getImplementationTitle else "viash"
   val version: String = if (pkg.getImplementationVersion != null) pkg.getImplementationVersion else "test"
-
-  val viashHome = Paths.get(sys.env.getOrElse("VIASH_HOME", sys.env("HOME") + "/.viash"))
 
   /**
     * Viash main
@@ -78,9 +65,11 @@ object Main {
       case e: AbstractConfigException =>
         Console.err.println(s"viash: ${Console.RED}Error parsing, ${e.innerMessage} in file '${e.uri}'.${Console.RESET}\nDetails:\n${e.getMessage()}")
         System.exit(1)
-      case e: AbstractDependencyException =>
+      case e: MalformedInputException =>
         Console.err.println(s"viash: ${e.getMessage()}")
         System.exit(1)
+      case ee: ExitException =>
+        System.exit(ee.code)
       case e: Exception =>
         Console.err.println(
           s"""Unexpected error occurred! If you think this is a bug, please post
@@ -137,7 +126,7 @@ object Main {
     * @return An exit code
     */
   def mainVersioned(args: Array[String], workingDir: Option[Path] = None, version: String): Int = {
-    val path = viashHome.resolve("releases").resolve(version).resolve("viash")
+    val path = Paths.get(SysEnv.viashHome).resolve("releases").resolve(version).resolve("viash")
 
     if (!Files.exists(path)) {
       // todo: be able to use 0.7.x notation to get the latest 0.7 version?
@@ -219,9 +208,8 @@ object Main {
         )
       case List(cli.build) =>
         val (config, platform) = readConfig(cli.build, project = proj1)
-        val config2 = singleConfigDependencies(config, platform, cli.build.output.toOption, proj1.rootDir)
         val buildResult = ViashBuild(
-          config = config2,
+          config = config,
           platform = platform.get,
           output = cli.build.output(),
           setup = cli.build.setup.toOption,
@@ -230,20 +218,19 @@ object Main {
         if (buildResult.isError) 1 else 0
       case List(cli.test) =>
         val (config, platform) = readConfig(cli.test, project = proj1)
-        val config2 = singleConfigDependencies(config, platform, None, proj1.rootDir)
         ViashTest(
-          config2,
+          config,
           platform = platform.get,
           keepFiles = cli.test.keep.toOption.map(_.toBoolean),
+          setupStrategy = cli.test.setup.toOption,
           cpus = cli.test.cpus.toOption,
           memory = cli.test.memory.toOption
         )
         0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
         val configs = readConfigs(cli.namespace.build, project = proj1)
-        val configs2 = namespaceDependencies(configs, proj1.target, proj1.rootDir)
         var buildResults = ViashNamespace.build(
-          configs = configs2,
+          configs = configs,
           target = proj1.target.get,
           setup = cli.namespace.build.setup.toOption,
           push = cli.namespace.build.push(),
@@ -256,15 +243,15 @@ object Main {
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.test) =>
         val configs = readConfigs(cli.namespace.test, project = proj1)
-        val configs2 = namespaceDependencies(configs, None, proj1.rootDir)
         val testResults = ViashNamespace.test(
-          configs = configs2,
+          configs = configs,
           parallel = cli.namespace.test.parallel(),
           keepFiles = cli.namespace.test.keep.toOption.map(_.toBoolean),
           tsv = cli.namespace.test.tsv.toOption,
           append = cli.namespace.test.append(),
           cpus = cli.namespace.test.cpus.toOption,
-          memory = cli.namespace.test.memory.toOption
+          memory = cli.namespace.test.memory.toOption,
+          setup = cli.namespace.test.setup.toOption,
         )
         val errors = testResults.flatMap(_.toOption).count(_.isError)
         if (errors > 0) 1 else 0
@@ -275,9 +262,8 @@ object Main {
           addOptMainScript = false, 
           applyPlatform = cli.namespace.list.platform.isDefined
         )
-        val configs2 = namespaceDependencies(configs, None, proj1.rootDir)
         ViashNamespace.list(
-          configs = configs2,
+          configs = configs,
           format = cli.namespace.list.format(),
           parseArgumentGroups = cli.namespace.list.parse_argument_groups()
         )
@@ -304,9 +290,8 @@ object Main {
           addOptMainScript = false,
           applyPlatform = cli.config.view.platform.isDefined
         )
-        val config1 = DependencyResolver.modifyConfig(config, None, proj1.rootDir)
         ViashConfig.view(
-          config1, 
+          config, 
           format = cli.config.view.format(),
           parseArgumentGroups = cli.config.view.parse_argument_groups()
         )
@@ -322,11 +307,24 @@ object Main {
         0
       case List(cli.export, cli.export.cli_schema) =>
         val output = cli.export.cli_schema.output.toOption.map(Paths.get(_))
-        ViashExport.exportCLISchema(output)
+        ViashExport.exportCLISchema(
+          output,
+          format = cli.export.cli_schema.format()
+        )
         0
       case List(cli.export, cli.export.config_schema) =>
         val output = cli.export.config_schema.output.toOption.map(Paths.get(_))
-        ViashExport.exportConfigSchema(output)
+        ViashExport.exportConfigSchema(
+          output,
+          format = cli.export.config_schema.format()
+        )
+        0
+      case List(cli.export, cli.export.json_schema) =>
+        val output = cli.export.json_schema.output.toOption.map(Paths.get(_))
+        ViashExport.exportJsonSchema(
+          output,
+          format = cli.export.json_schema.format()
+        )
         0
       case List(cli.export, cli.export.resource) =>
         val output = cli.export.resource.output.toOption.map(Paths.get(_))
@@ -454,48 +452,6 @@ object Main {
     }
   }
 
-  // Handle dependencies operations for a single config
-  def singleConfigDependencies(config: Config, platform: Option[Platform], output: Option[String], rootDir: Option[Path]): Config = {
-    if (output.isDefined)
-      DependencyResolver.createBuildYaml(output.get)
-
-    handleSingleConfigDependency(config, platform, output, rootDir)
-  }
-
-  // Handle dependency operations for namespaces
-  def namespaceDependencies(configs: List[Either[(Config, Option[Platform]), Status]], target: Option[String], rootDir: Option[Path]): List[Either[(Config, Option[Platform]), Status]] = {
-    if (target.isDefined)
-      DependencyResolver.createBuildYaml(target.get)
-    
-    configs.map{
-      case Left((config: Config, platform: Option[Platform])) => {
-        Try(
-          handleSingleConfigDependency(config, platform, target, rootDir)
-        ).fold(
-          e => e match {
-            case de: AbstractDependencyException =>
-              Console.err.println(e.getMessage)
-              Right(DependencyError)
-            case _ => throw e
-          },
-          c => Left((c, platform))
-        )
-      }
-      case Right(c) => Right(c)
-    }
-  }
-
-  // Actual handling of the dependency logic, to be used for single and namespace configs
-  def handleSingleConfigDependency(config: Config, platform: Option[Platform], output: Option[String], rootDir: Option[Path]) = {
-    val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config, platform.map(_.id))
-    val config1 = DependencyResolver.modifyConfig(config, dependencyPlatformId, rootDir)
-    if (output.isDefined) {
-      DependencyResolver.copyDependencies(config1, output.get, dependencyPlatformId.get)
-    } else {
-      config1
-    }
-  }
-
   /**
     * Detect the desired Viash version
     * 
@@ -510,9 +466,7 @@ object Main {
     */
   def detectVersion(workingDir: Option[Path]): Option[String] = {
     // if VIASH_VERSION is defined, use that
-    if (sys.env.get("VIASH_VERSION").isDefined) {
-      sys.env.get("VIASH_VERSION")
-    } else {
+    SysEnv.viashVersion orElse {
       // else look for project file in working dir
       // and try to read as json
       workingDir

@@ -1,7 +1,6 @@
 package io.viash.config_mods
 
 import io.circe.Json
-import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 import io.circe.syntax._
 
@@ -70,6 +69,28 @@ class AppendTest extends AnyFunSuite {
         |list_of_stuff: [4, 5, 6]
         |""".stripMargin).toOption.get
     val cmd2 = ConfigModParser.block.parse(""".bar := [ 1, 2, 3 ]""")
+    val res2 = cmd2.apply(baseJson, false)
+    assert(res2 == expected2)
+  }
+
+  test("test append array") {
+    val expected2: Json = parse(
+      """foo: bar
+        |baz: 123
+        |list_of_stuff: [4, 5, 6, 1, 2, 3]
+        |""".stripMargin).toOption.get
+    val cmd2 = ConfigModParser.block.parse(""".list_of_stuff += [ 1, 2, 3 ]""")
+    val res2 = cmd2.apply(baseJson, false)
+    assert(res2 == expected2)
+  }
+
+  test("test prepend array") {
+    val expected2: Json = parse(
+      """foo: bar
+        |baz: 123
+        |list_of_stuff: [1, 2, 3, 4, 5, 6]
+        |""".stripMargin).toOption.get
+    val cmd2 = ConfigModParser.block.parse(""".list_of_stuff +0= [ 1, 2, 3 ]""")
     val res2 = cmd2.apply(baseJson, false)
     assert(res2 == expected2)
   }

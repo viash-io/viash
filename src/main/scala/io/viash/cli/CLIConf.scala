@@ -19,7 +19,8 @@ package io.viash.cli
 
 import org.rogach.scallop._
 import io.viash.Main
-
+import org.rogach.scallop.exceptions.Version
+import io.viash.exceptions.ExitException
 
 trait ViashCommand {
   _: DocumentedSubcommand =>
@@ -141,6 +142,15 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       case _ => None
     }
   }
+
+  // Override onError from Scallop. Goal is to have Scallop *not* call the exit(0) and instead allow us to do so.
+  // This is required for testing. Calling system.exit() aborts all testing.
+  override def onError(e: Throwable): Unit = e match {
+    case Version =>
+      builder.vers.foreach(println)
+      throw new ExitException(0)
+    case e => super.onError(e)
+  }
  
   version(s"${Main.name} ${Main.version} (c) 2020 Data Intuitive")
 
@@ -214,8 +224,15 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     banner(
       "viash test",
       "Test the component using the tests defined in the viash config file.",
-      "viash test config.vsh.yaml [-p docker] [-k true/false]")
-
+      "viash test config.vsh.yaml [-p docker] [-k true/false] [--setup cachedbuild]")
+    
+    val setup = registerOpt[String](
+      name = "setup",
+      short = Some('s'),
+      default = None,
+      descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Platform only]."
+    )
+    
     footer(
       s"""
          |The temporary directory can be altered by setting the VIASH_TEMP directory. Example:
@@ -287,7 +304,13 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       banner(
         "viash ns test",
         "Test a namespace containing many viash config files.",
-        "viash ns test [-n nmspc] [-s src] [-p docker] [--parallel] [--tsv file.tsv] [--append]")
+        "viash ns test [-n nmspc] [-s src] [-p docker] [--parallel] [--tsv file.tsv] [--setup cachedbuild] [--append]")
+
+      val setup = registerOpt[String](
+        name = "setup",
+        default = None,
+        descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Platform only]."
+      )
 
       val tsv = registerOpt[String](
         name = "tsv",
@@ -409,12 +432,19 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       banner(
         "viash export cli_schema",
         """Export the schema of the Viash CLI as a JSON""".stripMargin,
-        """viash export cli_schema [--output file.json]""".stripMargin
+        """viash export cli_schema [--output file.json] [--format json]""".stripMargin
       )
       val output = registerOpt[String](
         name = "output",
         default = None,
         descr = "Destination path"
+      )
+      val format = registerChoice(
+        name = "format",
+        short = Some('f'),
+        default = Some("yaml"),
+        choices = List("yaml", "json"),
+        descr = "Which output format to use."
       )
     }
 
@@ -422,18 +452,47 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       banner(
         "viash export config_schema",
         """Export the schema of a Viash config as a JSON""".stripMargin,
-        """viash export config_schema [--output file.json]""".stripMargin
+        """viash export config_schema [--output file.json] [--format json]""".stripMargin
       )
       val output = registerOpt[String](
         name = "output",
         default = None,
         descr = "Destination path"
       )
+      val format = registerChoice(
+        name = "format",
+        short = Some('f'),
+        default = Some("yaml"),
+        choices = List("yaml", "json"),
+        descr = "Which output format to use."
+      )
     }
+
+    val json_schema = new DocumentedSubcommand("json_schema") {
+      banner(
+        "viash export json_schema",
+        """Export the json schema to validate a Viash config""".stripMargin,
+        """viash export json_schema [--output file.json] [--format json]""".stripMargin
+      )
+      val output = registerOpt[String](
+        name = "output",
+        default = None,
+        descr = "Destination path"
+      )
+      val format = registerChoice(
+        name = "format",
+        short = Some('f'),
+        default = Some("yaml"),
+        choices = List("yaml", "json"),
+        descr = "Which output format to use."
+      )
+    }
+
 
     addSubcommand(resource)
     addSubcommand(cli_schema)
     addSubcommand(config_schema)
+    addSubcommand(json_schema)
 
     requireSubcommand()
 

@@ -44,6 +44,7 @@ import io.viash.helpers.Escaper
 case class NextflowVdsl3Platform(
   @description("Every platform can be given a specific id that can later be referred to explicitly when running or building the Viash component.")
   @example("id: foo", "yaml")
+  @default("nextflow")
   id: String = "nextflow",
 
   `type`: String = "nextflow",
@@ -62,6 +63,7 @@ case class NextflowVdsl3Platform(
       |  cpus: 4
       |  memory: 16 GB""".stripMargin,
       "yaml")
+  @default("Empty")
   directives: NextflowDirectives = NextflowDirectives(),
 
   @description(
@@ -79,17 +81,26 @@ case class NextflowVdsl3Platform(
     """auto:
       |  publish: true""".stripMargin,
       "yaml")
+  @default(
+    """simplifyInput: true
+      |simplifyOutput: true
+      |transcript: false
+      |publish: false
+      |""".stripMargin)
   auto: NextflowAuto = NextflowAuto(),
 
   @description("Allows tweaking how the @[Nextflow Config](nextflow_config) file is generated.")
   @since("Viash 0.7.4")
+  @default("A series of default labels to specify memory and cpu constraints")
   config: NextflowConfig = NextflowConfig(),
 
   @description("Whether or not to print debug messages.")
+  @default("False")
   debug: Boolean = false,
 
   // TODO: solve differently
   @description("Specifies the Docker platform id to be used to run Nextflow.")
+  @default("docker")
   container: String = "docker"
 ) extends NextflowPlatform {
   def escapeSingleQuotedString(txt: String): String = {

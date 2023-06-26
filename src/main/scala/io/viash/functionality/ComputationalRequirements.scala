@@ -30,6 +30,7 @@ case class ComputationalRequirements(
   memory: Option[String] = None,
   @description("A list of commands which should be present on the system for the script to function.")
   @example("commands: [ which, bash, awk, date, grep, egrep, ps, sed, tail, tee ]", "yaml")
+  @default("Empty")
   commands: List[String] = Nil
 ) {
   // START OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED

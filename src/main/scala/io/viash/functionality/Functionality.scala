@@ -76,6 +76,7 @@ case class Functionality(
       |    email: tim@far.be
       |""".stripMargin, "yaml")
   @since("Viash 0.3.1")
+  @default("Empty")
   authors: List[Author] = Nil,
   
   @description(
@@ -105,6 +106,7 @@ case class Functionality(
       |    type: string
       |""".stripMargin,
       "yaml")
+  @default("Empty")
   arguments: List[Argument[_]] = Nil,
 
   @description(
@@ -112,7 +114,7 @@ case class Functionality(
       |
       | - `name: foo`, the name of the argument group. 
       | - `description: Description of foo`, a description of the argument group. Multiline descriptions are supported.
-      | - `arguments: [arg1, arg2, ...]`, list of the arguments names.
+      | - `arguments: [arg1, arg2, ...]`, list of the arguments.
       |
       |""".stripMargin)
   @example(
@@ -156,6 +158,7 @@ case class Functionality(
       "bash",
       "This results in the following output when calling the component with the `--help` argument:")
   @since("Viash 0.5.14")
+  @default("Empty")
   argument_groups: List[ArgumentGroup] = Nil,
 
   @description(
@@ -177,6 +180,7 @@ case class Functionality(
       |    path: resource1.txt
       |""".stripMargin,
       "yaml")
+  @default("Empty")
   resources: List[Resource] = Nil,
 
   @description("A description of the component. This will be displayed with `--help`.")
@@ -202,6 +206,7 @@ case class Functionality(
       |  - path: resource1.txt
       |""".stripMargin,
       "yaml")
+  @default("Empty")
   test_resources: List[Resource] = Nil,
 
   @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
@@ -210,10 +215,12 @@ case class Functionality(
       |  twitter: wizzkid
       |  classes: [ one, two, three ]""".stripMargin, "yaml")
   @since("Viash 0.4.0")
+  @default("Empty")
   info: Json = Json.Null,
 
   @description("Allows setting a component to active, deprecated or disabled.")
   @since("Viash 0.6.0")
+  @default("Enabled")
   status: Status = Status.Enabled,
   
   @description(
@@ -228,6 +235,7 @@ case class Functionality(
       |""".stripMargin,
       "yaml")
   @since("Viash 0.6.0")
+  @default("Empty")
   requirements: ComputationalRequirements = ComputationalRequirements(),
 
   @description("Allows listing Viash components required by this Viash component")

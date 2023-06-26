@@ -22,12 +22,14 @@ import scala.reflect.runtime.universe._
 final case class ParameterSchema(
   name: String,
   `type`: String,
+  niceType: String,
   hierarchy: Option[List[String]],
   description: Option[String],
   example: Option[List[ExampleSchema]],
   since: Option[String],
   deprecated: Option[DeprecatedOrRemovedSchema],
   removed: Option[DeprecatedOrRemovedSchema],
+  default: Option[String],
 )
 
 object ParameterSchema {
@@ -73,15 +75,63 @@ object ParameterSchema {
   }
 
   def apply(name: String, `type`: String, hierarchy: List[String], annotations: List[Annotation]): Option[ParameterSchema] = {
-    // name is e.g. "io.viash.functionality.Functionality.name", only keep "name"
-    // name can also be "__this__"
-    val name_ = name.split('.').last
+
+    def beautifyTypeName(s: String): String = {
+
+      // "tpe[a]" -> "(\w*)\[(\w*)\]"
+      def regexify(s: String) = s.replace("[", "\\[").replace("]", "\\]").replaceAll("\\w+", "(\\\\w+)").r
+
+      val regex0 = regexify("tpe")
+      val regex1 = regexify("tpe[a]")
+      val regex2 = regexify("tpe[a,b]")
+      val regexNested1 = regexify("tpe[a[b,c]]")
+      val regexNested2 = regexify("tpe[a[b,c[d,e]]]")
+      val regexNested3 = regexify("tpe[a,b[c,d]]")
+      val regexNested4 = regexify("tpe[a[b[c,d],e]]")
+      val regexNested5 = regexify("tpe[a[b,c[d]]]")
+      val regexNested6 = regexify("tpe[a[b,c],d]")
+      val regexNested7 = regexify("tpe[a,b[c]]")
+
+      def map(a: String, b: String): String = s"Map of $a to $b"
+      def either(a: String, b: String): String = 
+        s"""Either
+          |  - $a
+          |  - $b""".stripMargin
+      
+      s match {
+        case regex0(tpe) => s"$tpe"
+        case regex1(tpe, subtpe) => s"$tpe of $subtpe"
+        case regex2("Map", subtpe1, subtpe2) => map(subtpe1,subtpe2)
+        case regex2("ListMap", subtpe1, subtpe2) => map(subtpe1, subtpe2)
+        case regex2("Either", subtpe1, subtpe2) => either(subtpe1, subtpe2)
+        case regexNested1(tpe, a, b, c) => s"$tpe of ${beautifyTypeName(s"$a[$b,$c]")}"
+        case regexNested2(tpe, a, b ,c ,d, e) => s"$tpe of ${beautifyTypeName(s"$a[$b,$c[$d,$e]]")}"
+        case regexNested3("Either", a, b, c, d) => either(beautifyTypeName(a), beautifyTypeName(s"$b[$c,$d]"))
+        case regexNested4(tpe, a, b, c, d, e) => s"$tpe of ${beautifyTypeName(s"$a[$b[$c,$d],$e]")}"
+        case regexNested5(tpe, a, b, c, d) => s"$tpe of ${beautifyTypeName(s"$a[$b,$c[$d]]")}"
+        case regexNested6("Either", a, b, c, d) => either(beautifyTypeName(s"$a[$b,$c]"), beautifyTypeName(d))
+        case regexNested7("Either", a, b, c) => either(beautifyTypeName(a), beautifyTypeName(s"$b[$c]"))
+        case _ => s
+      }
+    }
+
     val annStrings = annotations.map(annotationToStrings(_))
     val hierarchyOption = hierarchy match {
       case l if l.length > 0 => Some(l)
       case _ => None
     }
 
+    // name is e.g. "io.viash.functionality.Functionality.name", only keep "name"
+    // name can also be "__this__"
+    // Use the name defined from the class, *unless* the 'nameOverride' annotation is set. Then use the override, unless the name is '__this__'.
+    val nameAnnotation = annStrings.collectFirst({case (name, value) if name.endsWith("nameOverride") => value.head})
+    val nameFromClass = name.split('.').last
+    val name_ = (nameAnnotation, nameFromClass) match {
+      case (Some(_), "__this__") => "__this__"
+      case (Some(ann), _) => ann
+      case (None, name) => name
+    }
+    
     val description = annStrings.collectFirst({case (name, value) if name.endsWith("description") => value.head})
     val example = annStrings.collect({case (name, value) if name.endsWith("example") => value}).map(ExampleSchema(_))
     val exampleWithDescription = annStrings.collect({case (name, value) if name.endsWith("exampleWithDescription") => value}).map(ExampleSchema(_))
@@ -92,12 +142,15 @@ object ParameterSchema {
     val since = annStrings.collectFirst({case (name, value) if name.endsWith("since") => value.head})
     val deprecated = annStrings.collectFirst({case (name, value) if name.endsWith("deprecated") => value}).map(DeprecatedOrRemovedSchema(_))
     val removed = annStrings.collectFirst({case (name, value) if name.endsWith("removed") => value}).map(DeprecatedOrRemovedSchema(_))
+    val defaultFromAnnotation = annStrings.collectFirst({case (name, value) if name.endsWith("default") => value.head})
+    val defaultFromType = Option.when(`type`.startsWith("Option["))("Empty")
+    val default = defaultFromAnnotation orElse defaultFromType
     
     val undocumented = annStrings.exists{ case (name, value) => name.endsWith("undocumented")}
     val internalFunctionality = annStrings.exists{ case (name, value) => name.endsWith("internalFunctionality")}
     internalFunctionality || undocumented match {
       case true => None
-      case _ => Some(ParameterSchema(name_, `type`, hierarchyOption, description, examples, since, deprecated, removed))
+      case _ => Some(ParameterSchema(name_, `type`, beautifyTypeName(`type`), hierarchyOption, description, examples, since, deprecated, removed, default))
     }
     
   }

@@ -15,20 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.functionality
+package io.viash.exceptions
 
-import io.viash.helpers.data_structures._
-import io.viash.functionality.arguments.Argument
-import io.viash.schemas._
-
-@description("A grouping of the @[arguments](argument), used to display the help message.")
-case class ArgumentGroup(
-  @description("The name of the argument group.")
-  name: String,
-
-  @description("Description of foo`, a description of the argument group. Multiline descriptions are supported.")
-  description: Option[String] = None,
-
-  @description("List of arguments.")
-  arguments: List[Argument[_]] = Nil
-)
+case class ExitException(code: Int) extends Throwable

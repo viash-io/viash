@@ -19,7 +19,8 @@ package io.viash.functionality.resources
 
 import java.net.URI
 
-import io.viash.helpers.{IO, MissingResourceFileException}
+import io.viash.helpers.IO
+import io.viash.exceptions.MissingResourceFileException
 import java.nio.file.{Path, Paths}
 import java.nio.file.NoSuchFileException
 import io.viash.schemas._

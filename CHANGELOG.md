@@ -1,14 +1,40 @@
 # Viash 0.x.x (yyyy-MM-dd): TODO Add title
 
+## BREAKING CHANGES
+
+* `viash export cli_schema`: Added `--format yaml/json` argument, default format is now a YAML (PR #448).
+
+* `viash export config_schema`: Added `--format yaml/json` argument, default format is now a YAML (PR #448).
+
+## NEW FUNCTIONALITY
+
+* `viash export json_schema`: Export a json schema derived from the class reflections and annotations already used by the `config_schema` (PR #446).
+
+* `viash export config_schema`: Output `default` values of member fields (PR #446).
+
+* `CI`: Test support for different Java versions on GitHub Actions (PR #456). Focussing on LTS releases starting from 11, so this is 11 and 17. Also test latest Java version, currently 20.
+
+* `viash test` and `viash ns test`: add `--setup` argument to determine the docker build strategy before a component is tested (PR #451).
+
 ## MINOR CHANGES
 
-* `PythonScript`: Pass `-B` to Python to avoid creating *.pyc and *.pyo files on importing helper functions (PR #442).
+* `PythonScript`: Pass `-B` to Python to avoid creating `*.pyc` and `*.pyo` files on importing helper functions (PR #442).
+
+* `viash config`: Special double values now support `+.inf`, `-.inf` or `.nan` values (PR #446 and PR #450). The stringified versions `"+.inf"`, `"-.inf"` or `".nan"` are supported as well. This is in line with the yaml spec.
+
+* `system environment variables`: Add wrapper around `sys.env` and provide access to specific variables (PR #457). Has advantages for documentation output and testbenches.
+
+* `testbench`: Added some minor testbenches to tackle missing coverage (PR #459).
 
 ## BUG FIXES
 
 * `viash config`: Validate Viash config Yaml files better and try to give a more informative error message back to the user instead of a stack trace (PR #443).
 
 * `viash ns build`: Fix the error summary when a setup or push failure occurs. These conditions were not displayed and could cause confusion (PR #447).
+
+* `testbench`: Fix the viash version switch test bench not working for newer Java versions (PR #452).
+
+* `malformed input exception`: Capture MalformedInputExceptions when thrown by reading files with invalid Ascii characters when unsupported by Java (PR #458).
 
 # Viash 0.7.4 (2023-05-31): Minor bug fixes and minor improvements to VDSL3
 

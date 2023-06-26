@@ -32,6 +32,8 @@ import java.nio.file.attribute.PosixFilePermission
 import java.util.Comparator
 import java.io.FileNotFoundException
 import scala.jdk.CollectionConverters._
+import java.nio.charset.MalformedInputException
+import io.viash.exceptions.{MalformedInputException => ViashMalformedInputException}
 
 /**
  * IO helper object for handling various file and directory operations.
@@ -126,6 +128,9 @@ object IO {
       }
     try {
       txtSource.getLines().mkString("\n")
+    } catch {
+      case e: MalformedInputException => throw new ViashMalformedInputException(uri.toString(), e)
+      case e: Throwable => throw e
     } finally {
       txtSource.close()
     }

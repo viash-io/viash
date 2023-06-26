@@ -31,7 +31,7 @@ import functionality.resources.{BashScript, Script}
 import platforms.NativePlatform
 import helpers.IO
 import io.viash.helpers.data_structures._
-import io.viash.helpers.MissingResourceFileException
+import io.viash.exceptions.MissingResourceFileException
 import io.viash.platforms.Platform
 import io.viash.config.ConfigMeta
 import io.viash.helpers.DependencyResolver
@@ -62,7 +62,7 @@ object ViashTest {
     platform: Platform,
     keepFiles: Option[Boolean] = None,
     quiet: Boolean = false,
-    setupStrategy: String = "cachedbuild",
+    setupStrategy: Option[String] = None,
     tempVersion: Option[String] = Some("test"),
     verbosityLevel: Int = 6,
     parentTempPath: Option[Path] = None, 
@@ -95,7 +95,7 @@ object ViashTest {
       platform = platform,
       dir = dir,
       verbose = !quiet,
-      setupStrategy = setupStrategy,
+      setupStrategy = setupStrategy.getOrElse("cachedbuild"),
       verbosityLevel = verbosityLevel,
       cpus = cpus,
       memory = memory

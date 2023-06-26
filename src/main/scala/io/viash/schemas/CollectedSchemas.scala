@@ -33,6 +33,7 @@ import io.viash.config.Info
 import io.viash.functionality.resources._
 import io.viash.project.ViashProject
 import io.viash.platforms.nextflow._
+import io.viash.helpers._
 
 final case class CollectedSchemas (
   config: Map[String, List[ParameterSchema]],
@@ -73,15 +74,25 @@ object CollectedSchemas {
   private def getMembers[T: TypeTag](): (Map[String,List[MemberInfo]], List[Symbol]) = {
 
     val name = typeOf[T].typeSymbol.fullName
-    val memberNames = typeOf[T].members
-      .filter(!_.isMethod)
-      .map(_.shortName)
-      .toSeq
 
-    val constructorMembers = typeOf[T].members.filter(_.isConstructor).head.asMethod.paramLists.head.map(_.shortName)
+    // Get all members and filter for constructors, first one should be the best (most complete) one
+    // Traits don't have constructors
+    // Get all parameters and store their short name
+    val constructorMembers = typeOf[T].members.filter(_.isConstructor).headOption.map(_.asMethod.paramLists.head.map(_.shortName)).getOrElse(List.empty[String])
 
     val baseClasses = typeOf[T].baseClasses
       .filter(_.fullName.startsWith("io.viash"))
+
+    // If we're only getting a abstract class/trait, not a final implementation, use these definitions (otherwise we're left with nothing).
+    val documentFully = 
+      baseClasses.length == 1 && 
+      baseClasses.head.isAbstract &&
+      baseClasses.head.annotations.exists(a => a.tree.tpe =:= typeOf[documentFully])
+
+    val memberNames = typeOf[T].members
+      .filter(!_.isMethod || documentFully)
+      .map(_.shortName)
+      .toSeq
 
     val allMembers = baseClasses
       .zipWithIndex
@@ -89,7 +100,7 @@ object CollectedSchemas {
         baseClass.info.members
           .filter(_.fullName.startsWith("io.viash"))
           .filter(m => memberNames.contains(m.shortName))
-          .filter(m => !m.info.getClass.toString.endsWith("NullaryMethodType") || index != 0) // Only regular members if base class, otherwise all members
+          .filter(m => !m.info.getClass.toString.endsWith("NullaryMethodType") || index != 0 || documentFully) // Only regular members if base class, otherwise all members
           .map(y => MemberInfo(y, (constructorMembers.contains(y.shortName)), baseClass.fullName, index))
         }
       .groupBy(k => k.shortName)
@@ -101,11 +112,14 @@ object CollectedSchemas {
     "config" -> Map(
       "config"                    -> getMembers[Config](),
       "project"                   -> getMembers[ViashProject](),
+      "info"                      -> getMembers[Info](),
+      "environmentVariables"      -> getMembers[SysEnvTrait](),
     ),
     "functionality" -> Map(
       "functionality"             -> getMembers[Functionality](),
       "author"                    -> getMembers[Author](),
       "computationalRequirements" -> getMembers[ComputationalRequirements](),
+      "argumentGroup"             -> getMembers[ArgumentGroup](),
     ),
     "platforms" -> Map(
       "platform"                  -> getMembers[Platform](),
@@ -158,7 +172,7 @@ object CollectedSchemas {
   private def trimTypeName(s: String) = {
     // first: io.viash.helpers.data_structures.OneOrMore[String] -> OneOrMore[String]
     // second: List[io.viash.platforms.requirements.Requirements] -> List[Requirements]
-    s.replaceAll("^(\\w*\\.)*", "").replaceAll("""(\w*)\[[\w\.]*?([\w,]*)(\[_\])?\]""", "$1 of $2")
+    s.replaceAll("^(\\w*\\.)*", "").replaceAll("""(\w*)\[[\w\.]*?([\w,]*)(\[_\])?\]""", "$1[$2]")
   }
 
   private def annotationsOf(members: (Map[String,List[MemberInfo]]), classes: List[Symbol]) = {
@@ -172,17 +186,17 @@ object CollectedSchemas {
     val annThis = ("__this__", classes.head.name.toString(), classes.head.annotations, "", 0, classes.map(_.fullName))
     val allAnnotations = annThis :: annMembers.toList
     allAnnotations
-      .map({case (a, b, c, d, e, f) => (a, trimTypeName(b), f, c)})  // TODO this ignores where the annotation was defined, ie. top level class or super class
+      .map({case (name, tpe, annotations, d, e, hierarchy) => (name, trimTypeName(tpe), hierarchy, annotations)})  // TODO this ignores where the annotation was defined, ie. top level class or super class
   }
 
   private val getSchema = (t: (Map[String,List[MemberInfo]], List[Symbol])) => t match {
     case (members, classes) => {
-      annotationsOf(members, classes).flatMap{ case (a, b, c, d) => ParameterSchema(a, b, c, d) }
+      annotationsOf(members, classes).flatMap{ case (name, tpe, hierarchy, annotations) => ParameterSchema(name, tpe, hierarchy, annotations) }
     }
   }
 
   // Main call for documentation output
-  private lazy val data = CollectedSchemas(
+  lazy val data = CollectedSchemas(
       config = schemaClassMap.get("config").get.map{ case(k, v) => (k, getSchema(v))},
       functionality = schemaClassMap.get("functionality").get.map{ case(k, v) => (k, getSchema(v))},
       platforms = schemaClassMap.get("platforms").get.map{ case(k, v) => (k, getSchema(v))},
