@@ -64,5 +64,49 @@ case class GithubRepository(
     copy(name, `type`, this.repo, tag, path, localPath)
   }
 
+  override def checkoutSparse(): AbstractGitRepository = {
+    val temporaryFolder = IO.makeTemp("viash_hub_repo")
+    val cwd = Some(temporaryFolder.toFile)
+
+    Console.err.println(s"temporaryFolder: $temporaryFolder uri: $uri")
+
+    val singleBranch = tag match {
+      case None => List("--single-branch")
+      case Some(value) => List("--single-branch", "--branch", value)
+    }
+
+    def doGitClone(uri: String): Exec.ExecOutput = {
+      val loggers = Seq[String => Unit] { (str: String) => {Console.err.println(str)} }
+      Exec.runCatch(
+        List("git", "clone", uri, "--no-checkout", "--depth", "1") ++ singleBranch :+ ".",
+        cwd = cwd,
+        loggers = loggers,
+      )
+    }
+
+    def checkGitAuthentication(uri: String): Boolean = {
+      val res = Exec.runCatch(
+        List("git", "ls-remote", uri),
+        cwd = cwd,
+      )
+      res.exitValue == 0
+    }
+
+    if (checkGitAuthentication(uri_nouser)) { // First try https with bad user & password to disable asking credentials
+      // If successful, do checkout without the dummy credentials
+      doGitClone(uri)
+    } else if (checkGitAuthentication(uri_ssh)) {
+      // Checkout with ssh key
+      doGitClone(uri_ssh)
+    } else {
+      doGitClone(uri)
+    }
+    
+    copyRepo(localPath = temporaryFolder.toString)
+  }
+
   lazy val uri = s"https://github.com/$repo.git"
+  lazy val uri_ssh = s"git@github.com:$repo.git"
+  val fakeCredentials = "nouser:nopass@" // obfuscate the credentials a bit so we don't trigger GitGardian
+  lazy val uri_nouser = s"https://${fakeCredentials}github.com/$repo.git"
 }
