@@ -477,9 +477,10 @@ object Main {
     
     configs.map{
       case Left((config: Config, platform: Option[Platform])) => {
-        Try(
-          handleSingleConfigDependency(config, platform, target, rootDir)
-        ).fold(
+        Try{
+          val validConfigs = configs.flatMap(_.swap.toOption).map(_._1)
+          handleSingleConfigDependency(config, platform, target, rootDir, validConfigs)
+        }.fold(
           e => e match {
             case de: AbstractDependencyException =>
               Console.err.println(e.getMessage)
@@ -494,11 +495,11 @@ object Main {
   }
 
   // Actual handling of the dependency logic, to be used for single and namespace configs
-  def handleSingleConfigDependency(config: Config, platform: Option[Platform], output: Option[String], rootDir: Option[Path]) = {
+  def handleSingleConfigDependency(config: Config, platform: Option[Platform], output: Option[String], rootDir: Option[Path], namespaceConfigs: List[Config] = Nil) = {
     val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config, platform.map(_.id))
-    val config1 = DependencyResolver.modifyConfig(config, dependencyPlatformId, rootDir)
+    val config1 = DependencyResolver.modifyConfig(config, dependencyPlatformId, rootDir, namespaceConfigs)
     if (output.isDefined) {
-      DependencyResolver.copyDependencies(config1, output.get, dependencyPlatformId.get)
+      DependencyResolver.copyDependencies(config1, output.get, dependencyPlatformId.get, namespaceConfigs.nonEmpty)
     } else {
       config1
     }
