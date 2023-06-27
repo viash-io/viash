@@ -22,6 +22,7 @@ import io.viash.helpers.IO
 import io.viash.helpers.Exec
 import java.io.File
 import java.nio.file.Paths
+import io.viash.exceptions.CheckoutException
 
 @description("A GitHub repository where remote dependency components can be found.")
 @example(
@@ -92,15 +93,20 @@ case class GithubRepository(
       res.exitValue == 0
     }
 
-    if (checkGitAuthentication(uri_nouser)) { // First try https with bad user & password to disable asking credentials
-      // If successful, do checkout without the dummy credentials
-      doGitClone(uri)
+    val uriToUse = if (checkGitAuthentication(uri_nouser)) { 
+      // First try https with bad user & password to disable asking credentials
+      // If successful, do checkout without the dummy credentials, don't want to store them in the repo remote address
+      uri
     } else if (checkGitAuthentication(uri_ssh)) {
       // Checkout with ssh key
-      doGitClone(uri_ssh)
+      uri_ssh
     } else {
-      doGitClone(uri)
+      uri
     }
+
+    val out = doGitClone(uriToUse)
+    if (out.exitValue != 0)
+      throw new CheckoutException(this)
     
     copyRepo(localPath = temporaryFolder.toString)
   }

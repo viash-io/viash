@@ -19,9 +19,14 @@ package io.viash.exceptions
 
 import java.nio.file.Path
 import io.viash.functionality.dependencies.Dependency
+import io.viash.functionality.dependencies.Repository
 
 abstract class AbstractDependencyException extends Exception
 
 case class MissingBuildYamlException(sourcePath: Path, dependency: Dependency) extends AbstractDependencyException {
   override def getMessage() = s"Could not find '.build.yaml' when traversing up from '${sourcePath.toString()}' for '${dependency.name}'"
+}
+
+case class CheckoutException(repo: Repository) extends AbstractDependencyException {
+  override def getMessage(): String = s"Could not checkout remote repository ${repo.name} of type ${repo.`type`}"
 }
