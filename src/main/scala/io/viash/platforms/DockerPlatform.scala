@@ -390,7 +390,10 @@ case class DockerPlatform(
     // get dependencies
     val runCommands = requirements2.flatMap(_.dockerCommands)
 
-    // get target OS/CPU architecture
+    // Get arguments OS/Architecture arguments for docker build.
+    // DOCKER_BUILDKIT=1 is needed to tell docker to enable BuildKit for
+    // Docker Engine versions earlier than 23.0. BuildKit is required for multi-architecture
+    // builds.
     val (architectureArgs, buildkitEnvVariable) = target_platform match {
       case l if l.isEmpty => ("", "")
       case l => (s"--platform ${target_platform.mkString(",")}", "DOCKER_BUILDKIT=1")
