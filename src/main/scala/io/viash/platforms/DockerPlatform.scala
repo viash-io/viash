@@ -84,9 +84,9 @@ case class DockerPlatform(
   target_tag: Option[String] = None,
 
   @description(
-    """The OS and/or CPU architecture to target. Will default to the OS and CPU architecture of the 
-       machine that is used to build the docker containers. In some cases might require you to setup or reset
-       the BuildKit builder instance using `docker buildx create --use default`.
+    """The OS and/or CPU architecture to target. Will default to the OS and CPU architecture of the
+       machine that is used to build the docker containers. In some cases might require you to setup BuildKit
+       using `docker buildx install`.
     """.stripMargin)
   @example(
     """target_platform:
@@ -390,10 +390,10 @@ case class DockerPlatform(
     // get dependencies
     val runCommands = requirements2.flatMap(_.dockerCommands)
 
-    // get target OS/CPU archetecture
-    val architectureArgs = target_platform match {
-      case l if l.isEmpty => ""
-      case l => s"--platform ${target_platform.mkString(",")}"
+    // get target OS/CPU architecture
+    val (architectureArgs, buildkitEnvVariable) = target_platform match {
+      case l if l.isEmpty => ("", "")
+      case l => (s"--platform ${target_platform.mkString(",")}", "DOCKER_BUILDKIT=1")
     }
 
     // don't draw defaults from functionality for the from image
@@ -472,12 +472,12 @@ case class DockerPlatform(
              |
              |  # Build the container
              |  ViashNotice "Building container '$$1' with Dockerfile"
-             |  ViashInfo "Running 'docker buildx $architectureArgs -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile'"
+             |  ViashInfo "Running 'docker build $architectureArgs -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile'"
              |  save=$$-; set +e
              |  if [ $$${BashWrapper.var_verbosity} -ge $$VIASH_LOGCODE_INFO ]; then
-             |    docker buildx build $architectureArgs -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile
+             |    $buildkitEnvVariable docker build $architectureArgs -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile
              |  else
-             |    docker buildx build $architectureArgs -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile &> $$tmpdir/docker_build.log
+             |    $buildkitEnvVariable docker build $architectureArgs -t $$@$buildArgs $$VIASH_META_RESOURCES_DIR -f $$dockerfile &> $$tmpdir/docker_build.log
              |  fi
              |  out=$$?
              |  [[ $$save =~ e ]] && set -e
