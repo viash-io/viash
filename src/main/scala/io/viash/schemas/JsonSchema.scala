@@ -22,7 +22,7 @@ import io.viash.platforms.docker.DockerSetupStrategy
 
 object JsonSchema {
 
-  lazy val data = CollectedSchemas.data.toList.map(_._2)
+  lazy val data = CollectedSchemas.data
 
   def typeOrRefJson(`type`: String): (String, Json) = {
     `type` match {

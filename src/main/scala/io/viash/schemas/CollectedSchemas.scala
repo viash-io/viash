@@ -72,7 +72,7 @@ object CollectedSchemas {
   private implicit val encodeDeprecatedOrRemoved: Encoder.AsObject[DeprecatedOrRemovedSchema] = deriveConfiguredEncoder
   private implicit val encodeExample: Encoder.AsObject[ExampleSchema] = deriveConfiguredEncoder
 
-  private def getMembers[T: TypeTag](): (String, (Map[String,List[MemberInfo]], List[Symbol])) = {
+  private def getMembers[T: TypeTag](): (Map[String,List[MemberInfo]], List[Symbol]) = {
 
     val name = typeOf[T].typeSymbol.shortName
 
@@ -106,10 +106,10 @@ object CollectedSchemas {
         }
       .groupBy(k => k.shortName)
     
-    name -> (allMembers, baseClasses)
+    (allMembers, baseClasses)
   }
 
-  val schemaClassMap = ListMap(
+  val schemaClasses = List(
     getMembers[Config](),
     getMembers[ViashProject](),
     getMembers[Info](),
@@ -189,13 +189,16 @@ object CollectedSchemas {
   }
 
   // Main call for documentation output
-  lazy val data: Map[String, List[ParameterSchema]] = schemaClassMap.map{ case(k, v) => (k, getSchema(v))}
+  lazy val data: List[List[ParameterSchema]] = schemaClasses.map{ v => getSchema(v)}
+
+  def getKeyFromParamList(data: List[ParameterSchema]): String = data.find(p => p.name == "__this__").get.`type`
 
   def getJson: Json = {
-    data.asJson
+    val dataWithKeys: ListMap[String, List[ParameterSchema]] = ListMap(data.map(v => (getKeyFromParamList(v), v)).toSeq: _*)
+    dataWithKeys.asJson
   }
 
-  private def getNonAnnotated(members: Map[String,List[MemberInfo]], classes: List[Symbol]) = {
+  private def getNonAnnotated(members: Map[String,List[MemberInfo]], classes: List[Symbol]): List[String] = {
     val issueMembers = members
       .toList
       .filter{ case(k, v) => v.map(m => m.inConstructor).contains(true) } // Only check values that are in a constructor. Annotation may occur on private vals but that is not a requirement.
@@ -207,14 +210,15 @@ object CollectedSchemas {
     issueMembers ++ ownClassArr
   }
 
-  // Main call for checking whether all arguments are annotated
-  def getAllNonAnnotated = schemaClassMap.flatMap {
-    case (k, v) => getNonAnnotated(v._1, v._2).map((k, _))
-  }
+  def getMemberName(members: Map[String,List[MemberInfo]], classes: List[Symbol]): String = classes.head.shortName
 
-  def getAllDeprecations = {
-    val arr = data.flatMap{ case (key, v) => v.map(v2 => ("config " + key + " " + v2.name, v2.deprecated)) }
-    
+  // Main call for checking whether all arguments are annotated
+  def getAllNonAnnotated: Map[String, String] = schemaClasses.flatMap {
+    v => getNonAnnotated(v._1, v._2).map((getMemberName(v._1, v._2), _))
+  }.toMap
+
+  def getAllDeprecations: Map[String, DeprecatedOrRemovedSchema] = {
+    val arr = data.flatMap(v => v.map(p => (s"config ${getKeyFromParamList(v)} ${p.name}", p.deprecated))).toMap    
     arr.filter(t => t._2.isDefined).map(t => (t._1, t._2.get))
   }
 
