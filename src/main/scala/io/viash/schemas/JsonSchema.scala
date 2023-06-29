@@ -22,7 +22,7 @@ import io.viash.platforms.docker.DockerSetupStrategy
 
 object JsonSchema {
 
-  lazy val data = CollectedSchemas.data
+  lazy val data = CollectedSchemas.data.toList.map(_._2)
 
   def typeOrRefJson(`type`: String): (String, Json) = {
     `type` match {
@@ -94,7 +94,7 @@ object JsonSchema {
     Json.obj("oneOf" -> Json.arr(jsons: _*))
   }
 
-  def createSchema(info: List[ParameterSchema]): Json = {
+  def createSchema(info: List[ParameterSchema]): (String, Json) = {
 
     def removeMarkup(text: String): String = {
       val markupRegex = raw"@\[(.*?)\]\(.*?\)".r
@@ -189,31 +189,33 @@ object JsonSchema {
       ))
     val requiredJson = required.map(p => Json.fromString(p.name))
 
-    Json.obj(
+    val k = thisParameter.`type`
+    val v = Json.obj(
       "description" -> Json.fromString(description),
       "type" -> Json.fromString("object"),
       "properties" -> Json.obj(propertiesJson: _*),
       "required" -> Json.arr(requiredJson: _*),
       "additionalProperties" -> Json.False
     )
+    k -> v
   }
 
-    def createSuperClassSchema(info: List[ParameterSchema]): Json = {
+  def createSuperClassSchema(info: List[ParameterSchema]): (String, Json) = {
     val thisParameter = info.find(p => p.name == "__this__").get
-    eitherJson(
+    val k = thisParameter.`type`
+    val v = eitherJson(
       thisParameter.subclass.get.map(s => Json.obj("$ref" -> Json.fromString(s"#/definitions/$s"))): _*
-    )    
+    )
+    k -> v
   }
 
-  def createSchemas(data: Map[String, List[ParameterSchema]]) : Seq[(String, Json)] = {
-    val withoutRemoved = data.toList.filter(t => t._2.find(p => p.name == "__this__").get.removed.isEmpty)
+  def createSchemas(data: List[List[ParameterSchema]]) : Seq[(String, Json)] = {
+    val withoutRemoved = data.toList.filter(v => v.find(p => p.name == "__this__").get.removed.isEmpty)
     withoutRemoved.map{
-      case (k, v) if (v.find(p => p.name == "__this__").get.subclass.map(l => l.length).getOrElse(0) > 1) => k -> createSuperClassSchema(v)
-      case (k, v) => k -> createSchema(v)
+      case v if (v.find(p => p.name == "__this__").get.subclass.map(l => l.length).getOrElse(0) > 1) => createSuperClassSchema(v)
+      case v => createSchema(v)
     }
   }
-
-
 
   def createEnum(values: Seq[String], description: Option[String], comment: Option[String]): Json = {
     Json.obj(
