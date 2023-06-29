@@ -36,8 +36,9 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
       "--target", temporaryFolder.resolve("target").toString()
     )
 
-    // Multiline & working around console control characters. Regex is not completely written as I would have wanted.
-    assert(out._2.matches("(?s).*2/\\d+ configs built successfully.*"), "check build was successful")
+    val cleanOut = TestHelper.cleanConsoleControls(out._2)
+    // Output is supposed to be have control characters removed but somehow matching for `(?s)\\s*2/\\d+` or `(?s)\\D*2/\\d+` still doesn't work
+    assert(cleanOut.matches("(?s).*2/\\d+ configs built successfully.*"), "check build was successful")
 
     val outputPath = temporaryFolder.resolve("target/native/dependencyTest/testbash/testbash")
     val outputText = IO.read(outputPath.toUri())

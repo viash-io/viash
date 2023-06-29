@@ -100,6 +100,11 @@ object TestHelper {
     ExceptionOutput(caught.getMessage, stdout, stderr)
   }
 
+
+  // Removes console control sequences (e.g. colors) from a string
+  def cleanConsoleControls(str: String): String = 
+    str.replaceAll("(?:(?:\\x{001b}\\[)|\\x{009b})(?:(?:[0-9]{1,3})?(?:(?:;[0-9]{0,3})*)?[A-M|f-m])|\\x{001b}[A-M]", "")
+
   // Code borrowed from https://stackoverflow.com/questions/41642595/scala-file-hashing
   // Compute a hash of a file
   // The output of this function should match the output of running "md5 -q <file>"
