@@ -94,7 +94,7 @@ object JsonSchema {
     Json.obj("oneOf" -> Json.arr(jsons: _*))
   }
 
-  def createSchema(info: List[ParameterSchema], fixedTypeString: Option[String] = None): Json = {
+  def createSchema(info: List[ParameterSchema]): Json = {
 
     def removeMarkup(text: String): String = {
       val markupRegex = raw"@\[(.*?)\]\(.*?\)".r
@@ -103,7 +103,9 @@ object JsonSchema {
       backtickRegex.replaceAllIn(textWithoutMarkup, "$1")
     }
 
-    val description = removeMarkup(info.find(p => p.name == "__this__").get.description.get)
+    val thisParameter = info.find(p => p.name == "__this__").get
+    val description = removeMarkup(thisParameter.description.get)
+    val subclass = thisParameter.subclass.map(l => l.head)
     val properties = info.filter(p => !p.name.startsWith("__")).filter(p => !p.removed.isDefined)
     val propertiesJson = properties.map(p => {
       val pDescription = p.description.map(s => removeMarkup(s))
@@ -150,7 +152,7 @@ object JsonSchema {
           ))
 
         case s"OneOrMore[$s]" =>
-          if (s == "String" && p.name == "port" && fixedTypeString == Some("docker")) {
+          if (s == "String" && p.name == "port" && subclass == Some("docker")) {
             // Custom exception
             // This is the port field for a docker platform.
             // We want to allow a Strings or Ints.
@@ -167,10 +169,10 @@ object JsonSchema {
         case mapRegex(_, s) => 
           (p.name, mapType(s, pDescription))
 
-        case s if p.name == "type" && fixedTypeString.isDefined =>
+        case s if p.name == "type" && subclass.isDefined =>
           ("type", Json.obj(
             "description" -> Json.fromString(description), // not pDescription! We want to show the description of the main class
-            "const" -> Json.fromString(fixedTypeString.get)
+            "const" -> Json.fromString(subclass.get)
           ))
         
         case s =>
@@ -183,7 +185,7 @@ object JsonSchema {
       !(
         p.`type`.startsWith("Option[") ||
         p.default.isDefined ||
-        (p.name == "type" && fixedTypeString == Some("file")) // Custom exception, file resources are "kind of" default
+        (p.name == "type" && subclass == Some("file")) // Custom exception, file resources are "kind of" default
       ))
     val requiredJson = required.map(p => Json.fromString(p.name))
 
@@ -196,39 +198,22 @@ object JsonSchema {
     )
   }
 
-  def createVariantSchemas(data: Map[String, List[ParameterSchema]], groupName: String, translationMap: Map[String, String]): Seq[(String, Json)] = {
-    val group = groupName -> eitherJson(
-      translationMap.map{ case (k, v) => Json.obj("$ref" -> Json.fromString(s"#/definitions/$k")) }.toSeq: _*
-    )
-
-    def firstLower(s: String): String = s.head.toLower.toString + s.tail
-
-    val variants = translationMap.map {
-      case (k, v) =>
-        k -> createSchema(data.get(firstLower(k)).get, Some(v))
-    }
-
-    variants.toSeq :+ group
+    def createSuperClassSchema(info: List[ParameterSchema]): Json = {
+    val thisParameter = info.find(p => p.name == "__this__").get
+    eitherJson(
+      thisParameter.subclass.get.map(s => Json.obj("$ref" -> Json.fromString(s"#/definitions/$s"))): _*
+    )    
   }
 
-  def createVariantSchemasAlt(data: Map[String, List[ParameterSchema]], groupName: String, translationMap: Map[String, String]): Seq[(String, Json)] = {
-    val group = groupName -> eitherJson(
-      translationMap.map{ case (k, v) => Json.obj("$ref" -> Json.fromString(s"#/definitions/$k")) }.toSeq: _*
-    )
-
-    val variants = translationMap.map {
-      case (k, v) =>
-        k -> createSchema(data.get(v).get, Some(v))
-    }
-
-    variants.toSeq :+ group
-  }
-
-  def createGroupedSchemas(data: Map[String, List[ParameterSchema]]) : Seq[(String, Json)] = {
-    data.toList.map{
-      case (k, v) => k.capitalize -> createSchema(v, None)
+  def createSchemas(data: Map[String, List[ParameterSchema]]) : Seq[(String, Json)] = {
+    val withoutRemoved = data.toList.filter(t => t._2.find(p => p.name == "__this__").get.removed.isEmpty)
+    withoutRemoved.map{
+      case (k, v) if (v.find(p => p.name == "__this__").get.subclass.map(l => l.length).getOrElse(0) > 1) => k -> createSuperClassSchema(v)
+      case (k, v) => k -> createSchema(v)
     }
   }
+
+
 
   def createEnum(values: Seq[String], description: Option[String], comment: Option[String]): Json = {
     Json.obj(
@@ -239,49 +224,8 @@ object JsonSchema {
   }
 
   def getJsonSchema: Json = {
-    val platformMap = Map("NativePlatform" -> "native", "DockerPlatform" -> "docker", "NextflowVdsl3Platform" -> "nextflow")
-    val requirementsMap = Map(
-      "ApkRequirements" -> "apk",
-      "AptRequirements" -> "apt",
-      "DockerRequirements" -> "docker",
-      "JavascriptRequirements" -> "javascript",
-      "PythonRequirements" -> "python",
-      "RRequirements" -> "r",
-      "RubyRequirements" -> "ruby",
-      "YumRequirements" -> "yum"
-    )
-
-    val argumentsMap = Map(
-      "BooleanArgument" -> "boolean",
-      "BooleanTrueArgument" -> "boolean_true",
-      "BooleanFalseArgument" -> "boolean_false",
-      "DoubleArgument" -> "double",
-      "FileArgument" -> "file",
-      "IntegerArgument" -> "integer",
-      "LongArgument" -> "long",
-      "StringArgument" -> "string",
-    )
-
-    val resourceMap = Map(
-      "BashScript" -> "bash_script",
-      "CSharpScript" -> "csharp_script",
-      "Executable" -> "executable",
-      "JavaScriptScript" -> "javascript_script",
-      "NextflowScript" -> "nextflow_script",
-      "PlainFile" -> "file",
-      "PythonScript" -> "python_script",
-      "RScript" -> "r_script",
-      "ScalaScript" -> "scala_script"
-    )
-
     val definitions =
-      createGroupedSchemas(data.config) ++
-      createGroupedSchemas(data.functionality) ++
-      createVariantSchemas(data.platforms, "Platform", platformMap) ++
-      createVariantSchemas(data.requirements, "Requirements", requirementsMap) ++
-      createVariantSchemasAlt(data.arguments, "Argument", argumentsMap) ++
-      createVariantSchemas(data.resources, "Resource", resourceMap) ++
-      createGroupedSchemas(data.nextflowParameters) ++
+      createSchemas(data) ++
       Seq(
         "DockerSetupStrategy" -> createEnum(DockerSetupStrategy.map.keys.toSeq, Some("The Docker setup strategy to use when building a container."), Some("TODO add descriptions to different strategies")),
         "Direction" -> createEnum(Seq("input", "output"), Some("Makes this argument an `input` or an `output`, as in does the file/folder needs to be read or written. `input` by default."), None),

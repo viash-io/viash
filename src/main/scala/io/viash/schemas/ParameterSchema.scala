@@ -30,6 +30,7 @@ final case class ParameterSchema(
   deprecated: Option[DeprecatedOrRemovedSchema],
   removed: Option[DeprecatedOrRemovedSchema],
   default: Option[String],
+  subclass: Option[List[String]],
 )
 
 object ParameterSchema {
@@ -145,12 +146,16 @@ object ParameterSchema {
     val defaultFromAnnotation = annStrings.collectFirst({case (name, value) if name.endsWith("default") => value.head})
     val defaultFromType = Option.when(`type`.startsWith("Option["))("Empty")
     val default = defaultFromAnnotation orElse defaultFromType
+    val subclass = annStrings.collect{ case (name, value) if name.endsWith("subclass") => value.head } match {
+      case l if l.nonEmpty => Some(l)
+      case _ => None
+    }
     
     val undocumented = annStrings.exists{ case (name, value) => name.endsWith("undocumented")}
     val internalFunctionality = annStrings.exists{ case (name, value) => name.endsWith("internalFunctionality")}
     internalFunctionality || undocumented match {
       case true => None
-      case _ => Some(ParameterSchema(name_, `type`, beautifyTypeName(`type`), hierarchyOption, description, examples, since, deprecated, removed, default))
+      case _ => Some(ParameterSchema(name_, `type`, beautifyTypeName(`type`), hierarchyOption, description, examples, since, deprecated, removed, default, subclass))
     }
     
   }
