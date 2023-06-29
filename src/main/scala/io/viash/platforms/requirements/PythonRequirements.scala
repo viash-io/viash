@@ -29,6 +29,7 @@ import io.viash.schemas._
     |    url: "https://github.com/some_org/some_pkg/zipball/master"
     |""".stripMargin,
     "yaml")
+@subclass("python")
 case class PythonRequirements(
   @description("Sets the `--user` flag when set to true. Default: false.")
   @default("False")

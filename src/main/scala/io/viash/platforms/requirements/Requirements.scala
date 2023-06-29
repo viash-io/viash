@@ -17,7 +17,7 @@
 
 package io.viash.platforms.requirements
 
-import io.viash.schemas.description
+import io.viash.schemas._
 
 @description(
   """Requirements for installing the following types of packages:
@@ -31,6 +31,14 @@ import io.viash.schemas.description
     | - @[Ruby](ruby_req)
     | - @[yum](yum_req)
     |""".stripMargin)
+@subclass("ApkRequirements")
+@subclass("AptRequirements")
+@subclass("DockerRequirements")
+@subclass("JavaScriptRequirements")
+@subclass("PythonRequirements")
+@subclass("RRequirements")
+@subclass("RubyRequirements")
+@subclass("YumRequirements")
 trait Requirements {
   @description("Specifies the type of the requirement specification.")
   val `type`: String

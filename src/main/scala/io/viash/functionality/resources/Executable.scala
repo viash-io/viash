@@ -25,6 +25,7 @@ import io.viash.functionality.arguments.Argument
 import io.viash.schemas._
 
 @description("An executable file.")
+@subclass("executable")
 case class Executable(
   path: Option[String] = None,
   text: Option[String] = None,

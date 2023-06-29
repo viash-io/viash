@@ -30,6 +30,7 @@ import io.viash.schemas._
     |    url: "https://github.com/org/repo/archive/HEAD.zip"
     |""".stripMargin,
     "yaml")
+@subclass("javascript")
 case class JavaScriptRequirements(
   @description("Specifies which packages to install from npm.")
   @example("packages: [ packagename ]", "yaml")

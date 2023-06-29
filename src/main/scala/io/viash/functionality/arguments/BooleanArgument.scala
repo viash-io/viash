@@ -35,6 +35,7 @@ abstract class BooleanArgumentBase extends Argument[Boolean] {
     |    alternatives: ["-t"]
     |""".stripMargin,
     "yaml")
+@subclass("boolean")
 case class BooleanArgument(
   @description(
     """The name of the argument. Can be in the formats `--trim`, `-t` or `trim`. The number of dashes determines how values can be passed:  
@@ -151,6 +152,7 @@ case class BooleanArgument(
     |    alternatives: ["-s"]
     |""".stripMargin,
     "yaml")
+@subclass("boolean_true")
 case class BooleanTrueArgument(
   @description(
     """The name of the argument. Can be in the formats `--silent`, `-s` or `silent`. The number of dashes determines how values can be passed:  
@@ -223,6 +225,7 @@ case class BooleanTrueArgument(
     |    alternatives: ["-nl"]
     |""".stripMargin,
     "yaml")
+@subclass("boolean_false")
 case class BooleanFalseArgument(
   @description(
     """The name of the argument. Can be in the formats `--no-log`, `-n` or `no-log`. The number of dashes determines how values can be passed:  

@@ -49,6 +49,14 @@ import java.nio.file.Paths
     |    type: string
     |""".stripMargin,
     "yaml")
+@subclass("BooleanArgument")
+@subclass("BooleanTrueArgument")
+@subclass("BooleanFalseArgument")
+@subclass("DoubleArgument")
+@subclass("FileArument")
+@subclass("IntegerArgument")
+@subclass("LongArgument")
+@subclass("StringArgument")
 abstract class Argument[Type] {
   @description("Specifies the type of the argument.")
   val `type`: String
