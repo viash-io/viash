@@ -53,7 +53,7 @@ import java.nio.file.Paths
 @subclass("BooleanTrueArgument")
 @subclass("BooleanFalseArgument")
 @subclass("DoubleArgument")
-@subclass("FileArument")
+@subclass("FileArgument")
 @subclass("IntegerArgument")
 @subclass("LongArgument")
 @subclass("StringArgument")
