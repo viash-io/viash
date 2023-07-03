@@ -210,7 +210,7 @@ object CollectedSchemas {
   def getMemberName(members: Map[String,List[MemberInfo]], classes: List[Symbol]): String = classes.head.shortName
 
   // Main call for checking whether all arguments are annotated
-  def getAllNonAnnotated: Map[String, String] = schemaClasses.flatMap {
+  def getAllNonAnnotated: Map[String, String] = (schemaClasses :+ getMembers[CollectedSchemas]()).flatMap {
     v => getNonAnnotated(v._1, v._2).map((getMemberName(v._1, v._2), _))
   }.toMap
 
