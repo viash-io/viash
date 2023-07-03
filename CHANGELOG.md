@@ -26,6 +26,8 @@
 
 * `testbench`: Added some minor testbenches to tackle missing coverage (PR #459).
 
+* `viash export config_schema`: Simplify file structure (PR #464).
+
 ## BUG FIXES
 
 * `viash config`: Validate Viash config Yaml files better and try to give a more informative error message back to the user instead of a stack trace (PR #443).
