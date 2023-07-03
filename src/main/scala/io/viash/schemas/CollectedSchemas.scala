@@ -109,7 +109,7 @@ object CollectedSchemas {
     (allMembers, baseClasses)
   }
 
-  val schemaClasses = List(
+  lazy val schemaClasses = List(
     getMembers[Config](),
     getMembers[ViashProject](),
     getMembers[Info](),
@@ -193,9 +193,7 @@ object CollectedSchemas {
 
   def getKeyFromParamList(data: List[ParameterSchema]): String = data.find(p => p.name == "__this__").get.`type`
 
-  def getJson: Json = {
-    data.asJson
-  }
+  def getJson: Json = data.asJson
 
   private def getNonAnnotated(members: Map[String,List[MemberInfo]], classes: List[Symbol]): List[String] = {
     val issueMembers = members

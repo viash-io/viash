@@ -189,7 +189,7 @@ object JsonSchema {
       !(
         p.`type`.startsWith("Option[") ||
         p.default.isDefined ||
-        (p.name == "type" && subclass == Some("file")) // Custom exception, file resources are "kind of" default
+        (p.name == "type" && thisParameter.`type` == "PlainFile") // Custom exception, file resources are "kind of" default
       ))
     val requiredJson = required.map(p => Json.fromString(p.name))
 
