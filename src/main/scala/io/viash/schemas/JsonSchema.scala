@@ -94,6 +94,10 @@ object JsonSchema {
     Json.obj("oneOf" -> Json.arr(jsons: _*))
   }
 
+
+  def getThisParameter(data: List[ParameterSchema]): ParameterSchema = 
+    data.find(_.name == "__this__").get
+
   def createSchema(info: List[ParameterSchema]): (String, Json) = {
 
     def removeMarkup(text: String): String = {
@@ -103,7 +107,7 @@ object JsonSchema {
       backtickRegex.replaceAllIn(textWithoutMarkup, "$1")
     }
 
-    val thisParameter = info.find(p => p.name == "__this__").get
+    val thisParameter = getThisParameter(info)
     val description = removeMarkup(thisParameter.description.get)
     val subclass = thisParameter.subclass.map(l => l.head)
     val properties = info.filter(p => !p.name.startsWith("__")).filter(p => !p.removed.isDefined)
@@ -201,7 +205,7 @@ object JsonSchema {
   }
 
   def createSuperClassSchema(info: List[ParameterSchema]): (String, Json) = {
-    val thisParameter = info.find(p => p.name == "__this__").get
+    val thisParameter = getThisParameter(info)
     val k = thisParameter.`type`
     val v = eitherJson(
       thisParameter.subclass.get.map(s => Json.obj("$ref" -> Json.fromString(s"#/definitions/$s"))): _*
@@ -210,10 +214,10 @@ object JsonSchema {
   }
 
   def createSchemas(data: List[List[ParameterSchema]]) : Seq[(String, Json)] = {
-    val withoutRemoved = data.toList.filter(v => v.find(p => p.name == "__this__").get.removed.isEmpty)
-    withoutRemoved.map{
-      case v if (v.find(p => p.name == "__this__").get.subclass.map(l => l.length).getOrElse(0) > 1) => createSuperClassSchema(v)
-      case v => createSchema(v)
+    data.flatMap{
+      case v if getThisParameter(v).removed.isDefined => None
+      case v if getThisParameter(v).subclass.map(_.length).getOrElse(0) > 1 => Some(createSuperClassSchema(v))
+      case v => Some(createSchema(v))
     }
   }
 
