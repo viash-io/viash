@@ -44,6 +44,15 @@ import io.viash.schemas._
     |    path: resource1.txt
     |""".stripMargin,
     "yaml")
+@subclass("BashScript")
+@subclass("CSharpScript")
+@subclass("Executable")
+@subclass("JavaScriptScript")
+@subclass("NextflowScript")
+@subclass("PlainFile")
+@subclass("PythonScript")
+@subclass("RScript")
+@subclass("ScalaScript")
 trait Resource {
   @description("Specifies the type of the resource. The first resource cannot be of type `file`. When the type is not specified, the default type is simply `file`.")
   val `type`: String

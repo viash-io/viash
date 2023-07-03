@@ -27,6 +27,7 @@ import io.viash.schemas._
     |    packages: [ sl ]
     |""".stripMargin,
     "yaml")
+@subclass("apt")
 case class AptRequirements(
   @description("Specifies which packages to install.")
   @example("packages: [ sl ]", "yaml")

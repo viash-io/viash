@@ -31,7 +31,7 @@ class MainExportSuite extends AnyFunSuite{
       "export", "config_schema"
     )
 
-    assert(stdout.startsWith("config:"))
+    assert(stdout.startsWith("""- - name: "__this__""""))
     assert(stdout.contains("""type: "OneOrMore[String]""""))
   }
 

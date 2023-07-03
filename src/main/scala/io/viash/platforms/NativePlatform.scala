@@ -33,6 +33,7 @@ import io.viash.schemas._
     |  - type: native
     |""".stripMargin,
   "yaml")
+@subclass("native")
 case class NativePlatform(
   @description("As with all platforms, you can give a platform a different name. By specifying `id: foo`, you can target this platform (only) by specifying `-p foo` in any of the Viash commands.")
   @example("id: foo", "yaml")

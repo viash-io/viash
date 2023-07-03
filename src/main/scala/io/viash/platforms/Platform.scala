@@ -42,6 +42,9 @@ import io.viash.schemas._
     |      label: [lowcpu, midmem]
     |""".stripMargin,
   "yaml")
+@subclass("NativePlatform")
+@subclass("DockerPlatform")
+@subclass("NextflowVdsl3Platform")
 trait Platform {
   @description("Specifies the type of the platform.")
   val `type`: String

@@ -42,6 +42,7 @@ import java.net.URI
     §""".stripMargin('§'), "yaml"
 )
 @since("Viash 0.6.4")
+@nameOverride("Project")
 case class ViashProject(
   @description("Which version of Viash to use.")
   @example("viash_versions: 0.6.4", "yaml")

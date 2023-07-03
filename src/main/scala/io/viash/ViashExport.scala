@@ -40,7 +40,7 @@ object ViashExport {
   }
 
   def exportConfigSchema(output: Option[Path], format: String): Unit = {
-    val data = CollectedSchemas.getJson.asJson
+    val data = CollectedSchemas.getJson
     val str = data.toFormattedString(format)
     if (output.isDefined) {
       Files.write(output.get, str.getBytes())
