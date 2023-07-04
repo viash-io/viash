@@ -26,6 +26,15 @@ class MainExportSuite extends AnyFunSuite{
     assert(stdout.contains("viash config inject"))
   }
 
+  test("viash export cli_autocomplete") {
+    val stdout = TestHelper.testMain(
+      "export", "cli_autocomplete"
+    )
+
+    assert(stdout.startsWith("""# bash completion for viash"""))
+    assert(stdout.contains("COMPREPLY=($(compgen -W 'run build test ns config' -- \"$cur\"))"))
+  }
+
   test("viash export config_schema") {
     val stdout = TestHelper.testMain(
       "export", "config_schema"
