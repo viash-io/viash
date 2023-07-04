@@ -115,7 +115,8 @@ object BashWrapper {
     executor: String,
     functionality: Functionality,
     mods: BashWrapperMods = BashWrapperMods(),
-    debugPath: Option[String] = None
+    debugPath: Option[String] = None,
+    warnFlag: Boolean = true
   ): String = {
     // Add pipes after each newline. Prevents pipes being stripped when a string starts with a pipe (with optional leading spaces).
     def escapePipes(s: String) = s.replaceAll("\n", "\n|")
@@ -220,6 +221,14 @@ object BashWrapper {
       .map(h => Escaper(h, newline = true))
       .mkString("# ", "\n# ", "")
 
+    val flagWarningStr = 
+      if (warnFlag) {
+        s"""
+          |            [[ $$1 == -* ]] && ViashWarning $$1 looks like a parameter but is not a defined parameter and will instead be treated as a positional argument. Use "--help" to get more information on the parameters.""".stripMargin
+      } else {
+        ""
+      }
+
     /* GENERATE BASH SCRIPT */
     s"""#!/usr/bin/env bash
        |
@@ -282,8 +291,7 @@ object BashWrapper {
        |${allMods.parsers}
        |        *)  # positional arg or unknown option
        |            # since the positional args will be eval'd, can we always quote, instead of using ViashQuote
-       |            VIASH_POSITIONAL_ARGS="$$VIASH_POSITIONAL_ARGS '$$1'"
-       |            [[ $$1 == -* ]] && ViashWarning $$1 looks like a parameter but is not a defined parameter and will instead be treated as a positional argument. Use "--help" to get more information on the parameters.
+       |            VIASH_POSITIONAL_ARGS="$$VIASH_POSITIONAL_ARGS '$$1'"$flagWarningStr
        |            shift # past argument
        |            ;;
        |    esac
