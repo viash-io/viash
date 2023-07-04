@@ -28,11 +28,8 @@ package object platforms {
   implicit val encodeDockerPlatform: Encoder.AsObject[DockerPlatform] = deriveConfiguredEncoder
   implicit val decodeDockerPlatform: Decoder[DockerPlatform] = deriveConfiguredDecoderFullChecks
 
-  implicit val encodeNextflowLegacyPlatform: Encoder.AsObject[NextflowLegacyPlatform] = deriveConfiguredEncoder
-  implicit val decodeNextflowLegacyPlatform: Decoder[NextflowLegacyPlatform] = deriveConfiguredDecoderFullChecks
-
-  implicit val encodeNextflowVdsl3Platform: Encoder.AsObject[NextflowVdsl3Platform] = deriveConfiguredEncoder
-  implicit val decodeNextflowVdsl3Platform: Decoder[NextflowVdsl3Platform] = deriveConfiguredDecoderFullChecks
+  implicit val encodeNextflowPlatform: Encoder.AsObject[NextflowPlatform] = deriveConfiguredEncoder
+  implicit val decodeNextflowPlatform: Decoder[NextflowPlatform] = deriveConfiguredDecoderFullChecks
 
   implicit val encodeNativePlatform: Encoder.AsObject[NativePlatform] = deriveConfiguredEncoder
   implicit val decodeNativePlatform: Decoder[NativePlatform] = deriveConfiguredDecoderFullChecks
@@ -42,24 +39,10 @@ package object platforms {
       val typeJson = Json.obj("type" -> Json.fromString(platform.`type`))
       val objJson = platform match {
         case s: DockerPlatform => encodeDockerPlatform(s)
-        // case s: NextflowLegacyPlatform => encodeNextflowLegacyPlatform(s)
-        case s: NextflowVdsl3Platform => encodeNextflowVdsl3Platform(s)
+        case s: NextflowPlatform => encodeNextflowPlatform(s)
         case s: NativePlatform => encodeNativePlatform(s)
       }
       objJson deepMerge typeJson
-  }
-
-  implicit def decodeNextflowPlatform: Decoder[NextflowPlatform] = Decoder.instance {
-    cursor =>
-      val decoder: Decoder[NextflowPlatform] =
-        cursor.downField("variant").as[String] match {
-          // case Right("legacy") => decodeNextflowLegacyPlatform.widen
-          case Right("vdsl3") => decodeNextflowVdsl3Platform.widen
-          case Right(typ) => throw new RuntimeException("Variant " + typ + " is not recognised.")
-          case Left(exception) => decodeNextflowVdsl3Platform.widen
-        }
-
-      decoder(cursor)
   }
 
   implicit def decodePlatform: Decoder[Platform] = Decoder.instance {

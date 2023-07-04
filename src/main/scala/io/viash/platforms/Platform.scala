@@ -44,7 +44,7 @@ import io.viash.schemas._
   "yaml")
 @subclass("NativePlatform")
 @subclass("DockerPlatform")
-@subclass("NextflowVdsl3Platform")
+@subclass("NextflowPlatform")
 trait Platform {
   @description("Specifies the type of the platform.")
   val `type`: String
