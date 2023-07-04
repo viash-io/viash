@@ -16,6 +16,8 @@
 
 * `viash test` and `viash ns test`: add `--setup` argument to determine the docker build strategy before a component is tested (PR #451).
 
+* `viash export cli_autocomplete`: Export a Bash autocomplete script (PR #465).
+
 ## MINOR CHANGES
 
 * `PythonScript`: Pass `-B` to Python to avoid creating `*.pyc` and `*.pyo` files on importing helper functions (PR #442).
