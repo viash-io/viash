@@ -6,6 +6,8 @@
 
 * `viash export config_schema`: Added `--format yaml/json` argument, default format is now a YAML (PR #448).
 
+* `viash_*`: Remove legacy viash_build, viash_test and viash_push components (PR #470).
+
 ## NEW FUNCTIONALITY
 
 * `viash export json_schema`: Export a json schema derived from the class reflections and annotations already used by the `config_schema` (PR #446).
