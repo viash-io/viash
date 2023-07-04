@@ -112,10 +112,15 @@ case class NextflowVdsl3Platform(
     val condir = containerDirective(config)
 
     // create main.nf file
+    val runScript = BashScript(
+      dest = Some(config.functionality.name),
+      text = Some(renderExecutable(config, condir))
+    )
     val mainFile = PlainFile(
       dest = Some("main.nf"),
       text = Some(renderMainNf(config, condir))
     )
+
     val nextflowConfigFile = PlainFile(
       dest = Some("nextflow.config"),
       text = Some(renderNextflowConfig(config.functionality, condir))
@@ -125,8 +130,23 @@ case class NextflowVdsl3Platform(
     val otherResources = config.functionality.additionalResources
 
     config.functionality.copy(
-      resources = mainFile :: nextflowConfigFile :: otherResources
+      resources = runScript :: mainFile :: nextflowConfigFile :: otherResources
     )
+  }
+
+  def renderExecutable(config: Config, containerDirective: Option[DockerImageInfo]): String = {
+    s"""#!/bin/bash
+      |set -e
+      |
+      |# define helper functions
+      |${Bash.ViashSourceDir}
+      |
+      |# find source folder of this component
+      |VIASH_META_RESOURCES_DIR=`ViashSourceDir $${BASH_SOURCE[0]}`
+      |
+      |# pass arguments to nextflow
+      |nextflow run "$${VIASH_META_RESOURCES_DIR}/main.nf" $$@ --publish_dir .${if (containerDirective.isDefined) " -profile docker" else ""}
+      |""".stripMargin
   }
 
   def containerDirective(config: Config): Option[DockerImageInfo] = {
