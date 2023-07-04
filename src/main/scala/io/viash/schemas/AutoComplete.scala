@@ -17,10 +17,7 @@
 
 package io.viash.schemas
 
-import io.viash.cli.CLIConf
-import io.viash.cli.DocumentedSubcommand
-import cats.syntax.nested
-import io.viash.cli.RegisteredCommand
+import io.viash.cli._
 
 object AutoComplete {
 
@@ -49,15 +46,13 @@ object AutoComplete {
 
   }
   def nestedCommand(cmd: RegisteredCommand): String = {
-    val cmdStr = cmd.subcommands
-      .map(subCmd => commandArguments(subCmd))
-      .map(s => s.replace("\n", "\n|    "))
-    
+    val cmdStr = cmd.subcommands.map(subCmd => commandArguments(subCmd))
     val cmdName = cmd.name
 
     s"""_viash_$cmdName()
+       |{
        |  case $${words[2]} in
-       |    ${cmdStr.mkString("\n|    ")}
+       |    ${cmdStr.flatMap(s => s.split("\n")).mkString("\n|    ")}
        |  esac
        |}
        |""".stripMargin
@@ -68,16 +63,57 @@ object AutoComplete {
 
     val (commands, nestedCommands) = cli.getRegisteredCommands(true).partition(_.subcommands.isEmpty)
 
-    for(c <- commands) {
-      println(s"command: ${commandArguments(c)}")
+    val topLevelCommandNames = cli.getRegisteredCommands().map(_.name)
+
+    val nestedCommandsSwitch = nestedCommands.map{nc =>
+      val ncn = nc.name
+      s"""$ncn)
+         |  _viash_$ncn
+         |  return
+         |  ;;
+         |""".stripMargin
     }
 
-    for(nc <- nestedCommands) {
-      println(s"nestedCommands: ${nestedCommand(nc)}")
+    val nestedCommandsSwitch2 = nestedCommands.map{nc =>
+      val ncn = nc.name
+      val subcommands = nc.subcommands.map(_.name)
+      s"""$ncn)
+         |  COMPREPLY=($$(compgen -W '${subcommands.mkString(" ")}' -- "$$cur"))
+         |  return
+         |  ;;
+         |""".stripMargin
     }
-   
-    ""
+
+    s"""# bash completion for viash
+       |
+       |${nestedCommands.map(nc => nestedCommand(nc)).mkString("\n")}
+       |_viash()
+       |{
+       |  local cur prev words cword
+       |  _init_completion || return
+       |  if [[ $$cword -ge 3 ]]; then
+       |    case $${words[1]} in
+       |      ${nestedCommandsSwitch.flatMap(_.split("\n")).mkString("\n|      ")}
+       |    esac
+       |  fi
+       |
+       |  case $$prev in
+       |    --version | --help | -!(-*)[hV])
+       |      return
+       |      ;;
+       |    ${commands.flatMap(c => commandArguments(c).split("\n")).mkString("\n|    ")}
+       |    ${nestedCommandsSwitch2.flatMap(_.split("\n")).mkString("\n|    ")}
+       |  esac
+       |
+       |  if [[ $$cur == -* ]]; then
+       |    COMPREPLY=($$(compgen -W '-h -v' -- "$$cur"))
+       |  elif [[ $$cword == 1 ]]; then
+       |    COMPREPLY=($$(compgen -W '${topLevelCommandNames.mkString(" ")}' -- "$$cur"))
+       |  fi
+       |
+       |} &&
+       |  complete -F _viash viash
+       |""".stripMargin
   }
-
 
 }
