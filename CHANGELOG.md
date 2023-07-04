@@ -28,6 +28,8 @@
 
 * `viash export config_schema`: Simplify file structure (PR #464).
 
+* `helpers.Format`: Add a helper for the Format helper object (PR #466).
+
 ## BUG FIXES
 
 * `viash config`: Validate Viash config Yaml files better and try to give a more informative error message back to the user instead of a stack trace (PR #443).
