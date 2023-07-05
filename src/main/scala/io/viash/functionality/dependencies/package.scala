@@ -30,12 +30,15 @@ package object dependencies {
   implicit val encodeDependency: Encoder.AsObject[Dependency] = deriveConfiguredEncoder
   implicit val encodeGitRepository: Encoder.AsObject[GitRepository] = deriveConfiguredEncoder
   implicit val encodeGithubRepository: Encoder.AsObject[GithubRepository] = deriveConfiguredEncoder
+  implicit val encodeViashhubRepository: Encoder.AsObject[ViashhubRepository] = deriveConfiguredEncoder
   implicit val encodeLocalRepository: Encoder.AsObject[LocalRepository] = deriveConfiguredEncoder
   implicit def encodeRepository[A <: Repository]: Encoder[A] = Encoder.instance {
     par =>
       val typeJson = Json.obj("type" -> Json.fromString(par.`type`))
       val objJson = par match {
+        case s: GitRepository => encodeGitRepository(s)
         case s: GithubRepository => encodeGithubRepository(s)
+        case s: ViashhubRepository => encodeViashhubRepository(s)
         case s: LocalRepository => encodeLocalRepository(s)
       }
       objJson deepMerge typeJson
