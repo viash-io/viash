@@ -238,6 +238,7 @@ class RichJson(json: Json) {
 
   private val yamlPrinter = YamlPrinter(
     preserveOrder = true,
+    dropNullKeys = true,
     mappingStyle = YamlPrinter.FlowStyle.Block,
     splitLines = true,
     stringStyle = YamlPrinter.StringStyle.DoubleQuoted

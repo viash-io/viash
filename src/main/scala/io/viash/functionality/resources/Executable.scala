@@ -26,6 +26,7 @@ import io.viash.schemas._
 import io.viash.config.Config
 
 @description("An executable file.")
+@subclass("executable")
 case class Executable(
   path: Option[String] = None,
   text: Option[String] = None,

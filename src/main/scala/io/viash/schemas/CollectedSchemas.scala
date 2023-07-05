@@ -34,6 +34,7 @@ import io.viash.functionality.resources._
 import io.viash.project.ViashProject
 import io.viash.platforms.nextflow._
 import io.viash.helpers._
+import scala.collection.immutable.ListMap
 
 final case class CollectedSchemas (
   config: Map[String, List[ParameterSchema]],
@@ -73,7 +74,7 @@ object CollectedSchemas {
 
   private def getMembers[T: TypeTag](): (Map[String,List[MemberInfo]], List[Symbol]) = {
 
-    val name = typeOf[T].typeSymbol.fullName
+    val name = typeOf[T].typeSymbol.shortName
 
     // Get all members and filter for constructors, first one should be the best (most complete) one
     // Traits don't have constructors
@@ -108,65 +109,57 @@ object CollectedSchemas {
     (allMembers, baseClasses)
   }
 
-  val schemaClassMap = Map(
-    "config" -> Map(
-      "config"                    -> getMembers[Config](),
-      "project"                   -> getMembers[ViashProject](),
-      "info"                      -> getMembers[Info](),
-      "environmentVariables"      -> getMembers[SysEnvTrait](),
-    ),
-    "functionality" -> Map(
-      "functionality"             -> getMembers[Functionality](),
-      "author"                    -> getMembers[Author](),
-      "computationalRequirements" -> getMembers[ComputationalRequirements](),
-      "argumentGroup"             -> getMembers[ArgumentGroup](),
-    ),
-    "platforms" -> Map(
-      "platform"                  -> getMembers[Platform](),
-      "nativePlatform"            -> getMembers[NativePlatform](),
-      "dockerPlatform"            -> getMembers[DockerPlatform](),
-      "nextflowVdsl3Platform"     -> getMembers[NextflowVdsl3Platform](),
-      "nextflowLegacyPlatform"    -> getMembers[NextflowLegacyPlatform](),
-    ),
-    "requirements" -> Map(
-      "requirements"              -> getMembers[Requirements](),
-      "apkRequirements"           -> getMembers[ApkRequirements](),
-      "aptRequirements"           -> getMembers[AptRequirements](),
-      "dockerRequirements"        -> getMembers[DockerRequirements](),
-      "javascriptRequirements"    -> getMembers[JavaScriptRequirements](),
-      "pythonRequirements"        -> getMembers[PythonRequirements](),
-      "rRequirements"             -> getMembers[RRequirements](),
-      "rubyRequirements"          -> getMembers[RubyRequirements](),
-      "yumRequirements"           -> getMembers[YumRequirements](),
-    ),
-    "arguments" -> Map(
-      "argument"                  -> getMembers[Argument[_]](),
-      "boolean"                   -> getMembers[BooleanArgument](),
-      "boolean_true"              -> getMembers[BooleanTrueArgument](),
-      "boolean_false"             -> getMembers[BooleanFalseArgument](),
-      "double"                    -> getMembers[DoubleArgument](),
-      "file"                      -> getMembers[FileArgument](),
-      "integer"                   -> getMembers[IntegerArgument](),
-      "long"                      -> getMembers[LongArgument](),
-      "string"                    -> getMembers[StringArgument](),
-    ),
-    "resources" -> Map(
-      "resource"                  -> getMembers[Resource](),
-      "bashScript"                -> getMembers[BashScript](),
-      "cSharpScript"              -> getMembers[CSharpScript](),
-      "executable"                -> getMembers[Executable](),
-      "javaScriptScript"          -> getMembers[JavaScriptScript](),
-      "nextflowScript"            -> getMembers[NextflowScript](),
-      "plainFile"                 -> getMembers[PlainFile](),
-      "pythonScript"              -> getMembers[PythonScript](),
-      "rScript"                   -> getMembers[RScript](),
-      "scalaScript"               -> getMembers[ScalaScript](),
-    ),
-    "nextflowParameters" -> Map(
-      "nextflowDirectives"        -> getMembers[NextflowDirectives](),
-      "nextflowAuto"              -> getMembers[NextflowAuto](),
-      "nextflowConfig"            -> getMembers[NextflowConfig](),
-    )
+  lazy val schemaClasses = List(
+    getMembers[Config](),
+    getMembers[ViashProject](),
+    getMembers[Info](),
+    getMembers[SysEnvTrait](),
+
+    getMembers[Functionality](),
+    getMembers[Author](),
+    getMembers[ComputationalRequirements](),
+    getMembers[ArgumentGroup](),
+
+    getMembers[Platform](),
+    getMembers[NativePlatform](),
+    getMembers[DockerPlatform](),
+    getMembers[NextflowVdsl3Platform](),
+    getMembers[NextflowLegacyPlatform](),
+
+    getMembers[Requirements](),
+    getMembers[ApkRequirements](),
+    getMembers[AptRequirements](),
+    getMembers[DockerRequirements](),
+    getMembers[JavaScriptRequirements](),
+    getMembers[PythonRequirements](),
+    getMembers[RRequirements](),
+    getMembers[RubyRequirements](),
+    getMembers[YumRequirements](),
+
+    getMembers[Argument[_]](),
+    getMembers[BooleanArgument](),
+    getMembers[BooleanTrueArgument](),
+    getMembers[BooleanFalseArgument](),
+    getMembers[DoubleArgument](),
+    getMembers[FileArgument](),
+    getMembers[IntegerArgument](),
+    getMembers[LongArgument](),
+    getMembers[StringArgument](),
+
+    getMembers[Resource](),
+    getMembers[BashScript](),
+    getMembers[CSharpScript](),
+    getMembers[Executable](),
+    getMembers[JavaScriptScript](),
+    getMembers[NextflowScript](),
+    getMembers[PlainFile](),
+    getMembers[PythonScript](),
+    getMembers[RScript](),
+    getMembers[ScalaScript](),
+
+    getMembers[NextflowDirectives](),
+    getMembers[NextflowAuto](),
+    getMembers[NextflowConfig](),
   )
 
   private def trimTypeName(s: String) = {
@@ -196,21 +189,13 @@ object CollectedSchemas {
   }
 
   // Main call for documentation output
-  lazy val data = CollectedSchemas(
-      config = schemaClassMap.get("config").get.map{ case(k, v) => (k, getSchema(v))},
-      functionality = schemaClassMap.get("functionality").get.map{ case(k, v) => (k, getSchema(v))},
-      platforms = schemaClassMap.get("platforms").get.map{ case(k, v) => (k, getSchema(v))},
-      requirements = schemaClassMap.get("requirements").get.map{ case(k, v) => (k, getSchema(v))},
-      arguments = schemaClassMap.get("arguments").get.map{ case(k, v) => (k, getSchema(v))},
-      resources = schemaClassMap.get("resources").get.map{ case(k, v) => (k, getSchema(v))},
-      nextflowParameters = schemaClassMap.get("nextflowParameters").get.map{ case(k, v) => (k, getSchema(v))},
-    )
+  lazy val data: List[List[ParameterSchema]] = schemaClasses.map{ v => getSchema(v)}
 
-  def getJson: Json = {
-    data.asJson
-  }
+  def getKeyFromParamList(data: List[ParameterSchema]): String = data.find(p => p.name == "__this__").get.`type`
 
-  private def getNonAnnotated(members: Map[String,List[MemberInfo]], classes: List[Symbol]) = {
+  def getJson: Json = data.asJson
+
+  private def getNonAnnotated(members: Map[String,List[MemberInfo]], classes: List[Symbol]): List[String] = {
     val issueMembers = members
       .toList
       .filter{ case(k, v) => v.map(m => m.inConstructor).contains(true) } // Only check values that are in a constructor. Annotation may occur on private vals but that is not a requirement.
@@ -222,23 +207,16 @@ object CollectedSchemas {
     issueMembers ++ ownClassArr
   }
 
-  // Main call for checking whether all arguments are annotated
-  def getAllNonAnnotated = schemaClassMap.flatMap {
-    case (key, v1) => v1.flatMap {
-      case (key2, v2) => getNonAnnotated(v2._1, v2._2).map((key, key2, _))
-    }
-  }
+  def getMemberName(members: Map[String,List[MemberInfo]], classes: List[Symbol]): String = classes.head.shortName
 
-  def getAllDeprecations = {
-    val arr =
-      data.config.flatMap{ case (key, v) => v.map(v2 => ("config " + key + " " + v2.name, v2.deprecated)) } ++ 
-      data.functionality.flatMap{ case (key, v) => v.map(v2 => ("functionality " + key + " " + v2.name, v2.deprecated)) } ++ 
-      data.platforms.flatMap{ case (key, v) => v.map(v2 => ("platforms " + key + " " + v2.name, v2.deprecated)) } ++ 
-      data.requirements.flatMap{ case (key, v) => v.map(v2 => ("requirements " + key + " " + v2.name, v2.deprecated)) } ++
-      data.arguments.flatMap{ case (key, v) => v.map(v2 => ("arguments " + key + " " + v2.name, v2.deprecated)) } ++
-      data.resources.flatMap{ case (key, v) => v.map(v2 => ("resources " + key + " " + v2.name, v2.deprecated)) } ++ 
-      data.nextflowParameters.flatMap{ case (key, v) => v.map(v2 => ("nextflowParameters " + key + " " + v2.name, v2.deprecated)) }
-    
+  // Main call for checking whether all arguments are annotated
+  // Add extra non-annotated value so we can always somewhat check the code is functional
+  def getAllNonAnnotated: Map[String, String] = (schemaClasses :+ getMembers[CollectedSchemas]()).flatMap {
+    v => getNonAnnotated(v._1, v._2).map((getMemberName(v._1, v._2), _))
+  }.toMap
+
+  def getAllDeprecations: Map[String, DeprecatedOrRemovedSchema] = {
+    val arr = data.flatMap(v => v.map(p => (s"config ${getKeyFromParamList(v)} ${p.name}", p.deprecated))).toMap    
     arr.filter(t => t._2.isDefined).map(t => (t._1, t._2.get))
   }
 

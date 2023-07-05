@@ -30,6 +30,7 @@ final case class ParameterSchema(
   deprecated: Option[DeprecatedOrRemovedSchema],
   removed: Option[DeprecatedOrRemovedSchema],
   default: Option[String],
+  subclass: Option[List[String]],
 )
 
 object ParameterSchema {
@@ -124,12 +125,17 @@ object ParameterSchema {
     // name is e.g. "io.viash.functionality.Functionality.name", only keep "name"
     // name can also be "__this__"
     // Use the name defined from the class, *unless* the 'nameOverride' annotation is set. Then use the override, unless the name is '__this__'.
-    val nameAnnotation = annStrings.collectFirst({case (name, value) if name.endsWith("nameOverride") => value.head})
+    val nameOverride = annStrings.collectFirst({case (name, value) if name.endsWith("nameOverride") => value.head})
     val nameFromClass = name.split('.').last
-    val name_ = (nameAnnotation, nameFromClass) match {
+    val name_ = (nameOverride, nameFromClass) match {
       case (Some(_), "__this__") => "__this__"
       case (Some(ann), _) => ann
       case (None, name) => name
+    }
+
+    val typeName = (`type`, nameOverride, nameFromClass) match {
+      case (_, Some(newTypeName), "__this__") => newTypeName
+      case (typeName, _, _) => typeName
     }
     
     val description = annStrings.collectFirst({case (name, value) if name.endsWith("description") => value.head})
@@ -143,14 +149,18 @@ object ParameterSchema {
     val deprecated = annStrings.collectFirst({case (name, value) if name.endsWith("deprecated") => value}).map(DeprecatedOrRemovedSchema(_))
     val removed = annStrings.collectFirst({case (name, value) if name.endsWith("removed") => value}).map(DeprecatedOrRemovedSchema(_))
     val defaultFromAnnotation = annStrings.collectFirst({case (name, value) if name.endsWith("default") => value.head})
-    val defaultFromType = Option.when(`type`.startsWith("Option["))("Empty")
+    val defaultFromType = Option.when(typeName.startsWith("Option["))("Empty")
     val default = defaultFromAnnotation orElse defaultFromType
+    val subclass = annStrings.collect{ case (name, value) if name.endsWith("subclass") => value.head } match {
+      case l if l.nonEmpty => Some(l)
+      case _ => None
+    }
     
     val undocumented = annStrings.exists{ case (name, value) => name.endsWith("undocumented")}
     val internalFunctionality = annStrings.exists{ case (name, value) => name.endsWith("internalFunctionality")}
     internalFunctionality || undocumented match {
       case true => None
-      case _ => Some(ParameterSchema(name_, `type`, beautifyTypeName(`type`), hierarchyOption, description, examples, since, deprecated, removed, default))
+      case _ => Some(ParameterSchema(name_, typeName, beautifyTypeName(typeName), hierarchyOption, description, examples, since, deprecated, removed, default, subclass))
     }
     
   }

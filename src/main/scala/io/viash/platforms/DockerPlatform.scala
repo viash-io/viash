@@ -46,6 +46,7 @@ import io.viash.helpers.Escaper
     |        packages: [ curl ]
     |""".stripMargin,
   "yaml")
+@subclass("docker")
 case class DockerPlatform(
   @description("As with all platforms, you can give a platform a different name. By specifying `id: foo`, you can target this platform (only) by specifying `-p foo` in any of the Viash commands.")
   @example("id: foo", "yaml")

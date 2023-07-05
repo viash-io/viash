@@ -29,6 +29,7 @@ import io.viash.schemas._
     |    github: rcannood/SCORPIUS
     |""".stripMargin,
     "yaml")
+@subclass("r")
 case class RRequirements(
   @description("Specifies which packages to install from CRAN.")
   @example("packages: [ anndata, ggplot2 ]", "yaml")

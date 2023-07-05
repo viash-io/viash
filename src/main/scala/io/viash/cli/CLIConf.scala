@@ -136,9 +136,9 @@ trait WithTemporary {
 }
 
 class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
-  def getRegisteredCommands = subconfigs.flatMap{ sc =>
+  def getRegisteredCommands(includeHidden: Boolean = false) = subconfigs.flatMap{ sc =>
     sc match {
-      case ds: DocumentedSubcommand if !ds.hidden => Some(ds.toRegisteredCommand)
+      case ds: DocumentedSubcommand if !ds.hidden || includeHidden => Some(ds.toRegisteredCommand)
       case _ => None
     }
   }
@@ -448,6 +448,19 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
     }
 
+    val cli_autocomplete = new DocumentedSubcommand("cli_autocomplete") {
+      banner(
+        "viash export bash_autocomplete",
+        """Export the autocomplete script as to be used in Bash""".stripMargin,
+        """viash export bash_autocomplete [--output viash_autocomplete_bash]""".stripMargin
+      )
+      val output = registerOpt[String](
+        name = "output",
+        default = None,
+        descr = "Destination path"
+      )
+    }
+
     val config_schema = new DocumentedSubcommand("config_schema") {
       banner(
         "viash export config_schema",
@@ -491,6 +504,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
 
     addSubcommand(resource)
     addSubcommand(cli_schema)
+    addSubcommand(cli_autocomplete)
     addSubcommand(config_schema)
     addSubcommand(json_schema)
 

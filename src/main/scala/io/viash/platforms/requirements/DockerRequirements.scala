@@ -29,6 +29,7 @@ import io.viash.schemas._
     #      echo 'Run a custom command'
     #      echo 'Foo' > /path/to/file.txt""".stripMargin('#'),
     "yaml")
+@subclass("docker")
 case class DockerRequirements(
   @description("Specifies which `LABEL` entries to add to the Dockerfile while building it.")
   @example("label: [ component=\"foo\" ]", "yaml")

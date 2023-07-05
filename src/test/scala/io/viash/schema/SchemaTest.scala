@@ -9,10 +9,15 @@ class SchemaTest extends AnyFunSuite with BeforeAndAfterAll {
     
   test("All schema class val members should be annotated") {
     val nonAnnotated = CollectedSchemas.getAllNonAnnotated
-    nonAnnotated.foreach {
-     case (key, key2, member) => Console.err.println(s"$key - $key2 - $member")
+
+    assert(nonAnnotated.contains("CollectedSchemas"))
+    assert(nonAnnotated("CollectedSchemas") == "__this__")
+
+    nonAnnotated.removed("CollectedSchemas").foreach {
+     case (key, member) => Console.err.println(s"$key - $member")
     }
-    assert(nonAnnotated.size == 0)
+    
+    assert(nonAnnotated.size == 1)
   }
 
   test("Check formatting of deprecation annotations") {

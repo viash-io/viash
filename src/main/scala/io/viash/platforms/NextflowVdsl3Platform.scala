@@ -41,6 +41,7 @@ import io.viash.helpers.Escaper
     |      label: [lowcpu, midmem]
     |""".stripMargin,
   "yaml")
+@subclass("nextflow")
 case class NextflowVdsl3Platform(
   @description("Every platform can be given a specific id that can later be referred to explicitly when running or building the Viash component.")
   @example("id: foo", "yaml")
