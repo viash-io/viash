@@ -19,6 +19,7 @@ package io.viash.functionality
 
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
+import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
 import cats.syntax.functor._
 
 package object dependencies {
@@ -41,18 +42,21 @@ package object dependencies {
   }
 
 
-  implicit val decodeDependency: Decoder[Dependency] = deriveConfiguredDecoder
-  implicit val decodeGitRepository: Decoder[GitRepository] = deriveConfiguredDecoder
-  implicit val decodeGithubRepository: Decoder[GithubRepository] = deriveConfiguredDecoder
-  implicit val decodeLocalRepository: Decoder[LocalRepository] = deriveConfiguredDecoder
+  implicit val decodeDependency: Decoder[Dependency] = deriveConfiguredDecoderFullChecks
+  implicit val decodeGitRepository: Decoder[GitRepository] = deriveConfiguredDecoderFullChecks
+  implicit val decodeGithubRepository: Decoder[GithubRepository] = deriveConfiguredDecoderFullChecks
+  implicit val decodeViashhubRepository: Decoder[ViashhubRepository] = deriveConfiguredDecoderFullChecks
+  implicit val decodeLocalRepository: Decoder[LocalRepository] = deriveConfiguredDecoderFullChecks
   implicit def decodeRepository: Decoder[Repository] = Decoder.instance {
     cursor =>
       val decoder: Decoder[Repository] =
         cursor.downField("type").as[String] match {
           case Right("git") => decodeGitRepository.widen
           case Right("github") => decodeGithubRepository.widen
+          case Right("viashhub") | Right("viash") | Right("viash-hub") => decodeViashhubRepository.widen
           case Right("local") => decodeLocalRepository.widen
-          case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised. Valid types are github, ..., ... and local.")
+          case Right(typ) =>
+            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[LocalRepository](typ, List("git", "github", "viashhub", "local")).widen
           case Left(exception) => throw exception
         }
 
