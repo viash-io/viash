@@ -4,8 +4,29 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 import io.viash.schemas.CollectedSchemas
 import scala.sys.process.Process
+import org.scalatest.PrivateMethodTester
 
-class SchemaTest extends AnyFunSuite with BeforeAndAfterAll {
+class SchemaTest extends AnyFunSuite with BeforeAndAfterAll with PrivateMethodTester{
+
+  test("Check type name trimming") {
+    val checks = Map (
+      "foo" -> "foo",
+      "foo.bar" -> "bar",
+      "foo.bar.baz" -> "baz",
+      "foo.bar[baz]" -> "bar[baz]",
+      "foo[bar.baz]" -> "foo[baz]",
+      "foo[bar,baz]" -> "foo[bar,baz]",
+      "foo[bar.baz,quux]" -> "foo[baz,quux]",
+      "foo[bar,baz.quux]" -> "foo[bar,quux]"
+    )
+
+    val trimTypeName = PrivateMethod[String](Symbol("trimTypeName"))
+
+    for ((k, v) <- checks) {
+      val res = CollectedSchemas invokePrivate trimTypeName(k)
+      assert(res == v, s"$k -> $v != $res")
+    }
+  }
     
   test("All schema class val members should be annotated") {
     val nonAnnotated = CollectedSchemas.getAllNonAnnotated

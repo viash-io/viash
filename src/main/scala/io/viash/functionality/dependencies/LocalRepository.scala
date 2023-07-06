@@ -26,6 +26,7 @@ import java.nio.file.Paths
     |Alternatively, this can be used to refer to a code repository present on the local hard-drive instead of fetchable remotely, for example during development.
     |""".stripMargin
 )
+@subclass("local")
 case class LocalRepository(
   name: String = "",
 

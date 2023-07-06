@@ -40,6 +40,7 @@ import java.nio.file.Paths
     |""".stripMargin,
   "yaml"
   )
+@subclass("viashhub")
 case class ViashhubRepository(
   name: String,
 

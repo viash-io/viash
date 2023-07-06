@@ -40,6 +40,7 @@ import java.nio.file.Paths
     |""".stripMargin,
   "yaml"
   )
+@subclass("git")
 case class GitRepository(
   name: String,
 
