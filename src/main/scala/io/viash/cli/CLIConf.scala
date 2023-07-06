@@ -538,4 +538,32 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   }
 
   verify()
+
+  // Check for trailing --help arguments and print the help message when found.
+  // Currently Scallop only actually prints the help message if it is the first argument.
+  // We're not simply checking for the occurence of a --help value as it could be used as a value for another argument.
+  // So let Scallop do the argument checking & matching of arguments with values, then afterwards go check if an argument was found.
+  {
+    val lastSubcommandOption = subcommands.lastOption
+    if (lastSubcommandOption.isDefined) {
+      val lastSubcommand = lastSubcommandOption.get
+      val builder = lastSubcommand.builder
+
+      val privateParsedField = builder.getClass().getDeclaredField("parsed")
+      privateParsedField.setAccessible(true)
+      val privateParsedValue = privateParsedField.get(lastSubcommand.builder)
+      
+      val privateParsedOptsField = privateParsedValue.getClass().getDeclaredField("opts")
+      privateParsedOptsField.setAccessible(true)
+      val privateParsedOptsValue = privateParsedOptsField.get(privateParsedValue).asInstanceOf[List[(CliOption, (String, List[String]))]]
+
+      if (privateParsedOptsValue.find(t => t._1.name == "help" && 
+          (t._2 == ("help", List.empty) || t._2 == ("h", List.empty))
+        ).isDefined) {
+        lastSubcommand.printHelp()
+        throw new ExitException(0)
+      }
+    }
+    
+  }
 }

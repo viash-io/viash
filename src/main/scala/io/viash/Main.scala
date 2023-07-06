@@ -30,6 +30,7 @@ import platforms.Platform
 import project.ViashProject
 import cli.{CLIConf, ViashCommand, DocumentedSubcommand, ViashNs, ViashNsBuild}
 import exceptions._
+import org.rogach.scallop._
 
 object Main {
   private val pkg = getClass.getPackage
