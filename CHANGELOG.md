@@ -20,7 +20,7 @@
 
 * `viash export cli_autocomplete`: Export a Bash autocomplete script (PR #465).
 
-* `help message`: Print the relevant help message of (sub-)command when `--help` is given as an argument instead of only printing the help message when it is the leading argument and otherwise silently disregarding it (PR #xxx). This overrides Scallop's default behaviour in a roundabout way.
+* `help message`: Print the relevant help message of (sub-)command when `--help` is given as an argument instead of only printing the help message when it is the leading argument and otherwise silently disregarding it (PR #472). This overrides Scallop's default behaviour in a roundabout way.
 
 ## MINOR CHANGES
 
