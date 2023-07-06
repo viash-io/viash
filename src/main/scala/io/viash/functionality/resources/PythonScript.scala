@@ -28,6 +28,7 @@ import io.viash.schemas._
 @description("""An executable Python script.
                |When defined in functionality.resources, only the first entry will be executed when running the built component or when running `viash run`.
                |When defined in functionality.test_resources, all entries will be executed during `viash test`.""".stripMargin)
+@subclass("python_script")
 case class PythonScript(
   path: Option[String] = None,
   text: Option[String] = None,

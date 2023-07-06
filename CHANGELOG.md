@@ -6,6 +6,8 @@
 
 * `viash export config_schema`: Added `--format yaml/json` argument, default format is now a YAML (PR #448).
 
+* `viash_*`: Remove legacy viash_build, viash_test and viash_push components (PR #470).
+
 ## NEW FUNCTIONALITY
 
 * `viash export json_schema`: Export a json schema derived from the class reflections and annotations already used by the `config_schema` (PR #446).
@@ -16,6 +18,8 @@
 
 * `viash test` and `viash ns test`: add `--setup` argument to determine the docker build strategy before a component is tested (PR #451).
 
+* `viash export cli_autocomplete`: Export a Bash autocomplete script (PR #465).
+
 ## MINOR CHANGES
 
 * `PythonScript`: Pass `-B` to Python to avoid creating `*.pyc` and `*.pyo` files on importing helper functions (PR #442).
@@ -25,6 +29,10 @@
 * `system environment variables`: Add wrapper around `sys.env` and provide access to specific variables (PR #457). Has advantages for documentation output and testbenches.
 
 * `testbench`: Added some minor testbenches to tackle missing coverage (PR #459).
+
+* `viash export config_schema`: Simplify file structure (PR #464).
+
+* `helpers.Format`: Add a helper for the Format helper object (PR #466).
 
 ## BUG FIXES
 

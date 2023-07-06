@@ -19,7 +19,7 @@ package io.viash.helpers
 
 import io.viash.schemas._
 
-@nameOverride("environmentVariables")
+@nameOverride("EnvironmentVariables")
 @description("Viash checks several environment variables during operation.")
 @documentFully
 trait SysEnvTrait {

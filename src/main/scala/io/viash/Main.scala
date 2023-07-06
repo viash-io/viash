@@ -313,6 +313,12 @@ object Main {
           format = cli.export.cli_schema.format()
         )
         0
+      case List(cli.export, cli.export.cli_autocomplete) =>
+        val output = cli.export.cli_schema.output.toOption.map(Paths.get(_))
+        ViashExport.exportAutocomplete(
+          output
+        )
+        0
       case List(cli.export, cli.export.config_schema) =>
         val output = cli.export.config_schema.output.toOption.map(Paths.get(_))
         ViashExport.exportConfigSchema(
@@ -329,7 +335,10 @@ object Main {
         0
       case List(cli.export, cli.export.resource) =>
         val output = cli.export.resource.output.toOption.map(Paths.get(_))
-        ViashExport.exportResource(cli.export.resource.path.toOption.get, output)
+        ViashExport.exportResource(
+          cli.export.resource.path.toOption.get,
+          output
+        )
         0
       case _ =>
         Console.err.println("No subcommand was specified. See `viash --help` for more information.")

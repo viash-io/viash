@@ -22,6 +22,7 @@ import io.viash.schemas._
 import java.net.URI
 
 @description("""A plain file. This can only be used as a supporting resource for the main script or unit tests.""")
+@subclass("file")
 case class PlainFile(
   path: Option[String] = None,
   text: Option[String] = None,

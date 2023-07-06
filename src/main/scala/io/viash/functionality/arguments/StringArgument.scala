@@ -31,6 +31,7 @@ import io.viash.schemas._
     |    alternatives: ["-q"]
     |""".stripMargin,
     "yaml")
+@subclass("string")
 case class StringArgument(
   @description(
     """The name of the argument. Can be in the formats `--foo`, `-f` or `foo`. The number of dashes determines how values can be passed:  
