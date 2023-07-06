@@ -22,25 +22,7 @@ class RepositoryTest extends AnyFunSuite {
   }
 
   test("Repository.unapply: handles viashhub syntax") {
-    val repo = Repository.unapply("viashhub://viash-io/viash@v2.0.0")
-    assert(repo.isDefined)
-    assert(repo.get.isInstanceOf[ViashhubRepository])
-    val viashhubRepo = repo.get.asInstanceOf[ViashhubRepository]
-    assert(viashhubRepo.repo == "viash-io/viash")
-    assert(viashhubRepo.tag == Some("v2.0.0"))
-  }
-
-  test("Repository.unapply: handles viash-hub fallback syntax") {
-    val repo = Repository.unapply("viash-hub://viash-io/viash@v2.0.0")
-    assert(repo.isDefined)
-    assert(repo.get.isInstanceOf[ViashhubRepository])
-    val viashhubRepo = repo.get.asInstanceOf[ViashhubRepository]
-    assert(viashhubRepo.repo == "viash-io/viash")
-    assert(viashhubRepo.tag == Some("v2.0.0"))
-  }
-
-  test("Repository.unapply: handles viash fallback syntax") {
-    val repo = Repository.unapply("viash://viash-io/viash@v2.0.0")
+    val repo = Repository.unapply("vsh://viash-io/viash@v2.0.0")
     assert(repo.isDefined)
     assert(repo.get.isInstanceOf[ViashhubRepository])
     val viashhubRepo = repo.get.asInstanceOf[ViashhubRepository]

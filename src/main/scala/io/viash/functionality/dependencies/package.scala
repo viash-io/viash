@@ -56,10 +56,10 @@ package object dependencies {
         cursor.downField("type").as[String] match {
           case Right("git") => decodeGitRepository.widen
           case Right("github") => decodeGithubRepository.widen
-          case Right("viashhub") | Right("viash") | Right("viash-hub") => decodeViashhubRepository.widen
+          case Right("vsh") => decodeViashhubRepository.widen
           case Right("local") => decodeLocalRepository.widen
           case Right(typ) =>
-            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[LocalRepository](typ, List("git", "github", "viashhub", "local")).widen
+            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[LocalRepository](typ, List("git", "github", "vsh", "local")).widen
           case Left(exception) => throw exception
         }
 

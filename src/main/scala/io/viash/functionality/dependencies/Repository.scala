@@ -73,7 +73,7 @@ object Repository {
           repo = repo,
           tag = getGitTag(tag)
         ))
-      case sugarSyntaxRegex("viashhub" | "viash-hub" | "viash", repo, tag) =>
+      case sugarSyntaxRegex("vsh", repo, tag) =>
         Some(ViashhubRepository(
           "TODO generate name",
           repo = repo,

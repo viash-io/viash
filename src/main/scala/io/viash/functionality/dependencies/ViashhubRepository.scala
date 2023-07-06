@@ -44,7 +44,7 @@ case class ViashhubRepository(
   name: String,
 
   @description("Defines the repository as a Viash-Hub repository.")
-  `type`: String = "viashhub",
+  `type`: String = "vsh",
 
   @description("The name of the Viash-Hub repository.")
   @example("repo: openpipelines-bio/openpipeline", "yaml")
