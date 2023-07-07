@@ -8,6 +8,8 @@
 
 * `NextflowLegacyPlatform`: Removed deprecated code (PR #469).
 
+* `viash_*`: Remove legacy viash_build, viash_test and viash_push components (PR #470).
+
 ## NEW FUNCTIONALITY
 
 * `viash export json_schema`: Export a json schema derived from the class reflections and annotations already used by the `config_schema` (PR #446).
@@ -17,6 +19,10 @@
 * `CI`: Test support for different Java versions on GitHub Actions (PR #456). Focussing on LTS releases starting from 11, so this is 11 and 17. Also test latest Java version, currently 20.
 
 * `viash test` and `viash ns test`: add `--setup` argument to determine the docker build strategy before a component is tested (PR #451).
+
+* `viash export cli_autocomplete`: Export a Bash autocomplete script (PR #465).
+
+* `help message`: Print the relevant help message of (sub-)command when `--help` is given as an argument instead of only printing the help message when it is the leading argument and otherwise silently disregarding it (PR #472). This overrides Scallop's default behaviour in a roundabout way.
 
 ## MINOR CHANGES
 
@@ -29,6 +35,8 @@
 * `testbench`: Added some minor testbenches to tackle missing coverage (PR #459).
 
 * `viash export config_schema`: Simplify file structure (PR #464).
+
+* `helpers.Format`: Add a helper for the Format helper object (PR #466).
 
 ## BUG FIXES
 
