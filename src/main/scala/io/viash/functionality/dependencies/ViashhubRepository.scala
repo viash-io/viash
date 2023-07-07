@@ -79,6 +79,6 @@ case class ViashhubRepository(
 
   lazy val uri = s"https://viash-hub.com/$repo.git"
   lazy val uri_ssh = s"git@viash-hub.com:$repo.git"
-  val fakeCredentials = "nouser:nopass@" // obfuscate the credentials a bit so we don't trigger GitGardian
+  val fakeCredentials = "nouser:nopass@" // obfuscate the credentials a bit so we don't trigger GitGuardian
   lazy val uri_nouser = s"https://${fakeCredentials}viash-hub.com/$repo.git"
 }
