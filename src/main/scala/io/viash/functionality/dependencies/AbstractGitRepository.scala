@@ -21,6 +21,7 @@ import io.viash.helpers.IO
 import io.viash.helpers.Exec
 import java.io.File
 import java.nio.file.Paths
+import io.viash.exceptions.CheckoutException
 
 abstract class AbstractGitRepository extends Repository {
   val uri: String
@@ -53,25 +54,41 @@ abstract class AbstractGitRepository extends Repository {
   // Get the repository part of where dependencies should be located in the target/dependencies folder
   def subOutputPath: String = Paths.get(`type`, uri, tag.getOrElse("")).toString()
 
-  // Clone of single branch with depth 1 but without checking out files
-  def checkoutSparse(): AbstractGitRepository = {
-    val temporaryFolder = IO.makeTemp("viash_hub_repo")
-    val cwd = Some(temporaryFolder.toFile)
-
-    Console.err.println(s"temporaryFolder: $temporaryFolder uri: $uri")
-
+  protected def doGitClone(uri: String, cwd: Option[File]): Exec.ExecOutput = {
     val singleBranch = tag match {
       case None => List("--single-branch")
       case Some(value) => List("--single-branch", "--branch", value)
     }
 
     val loggers = Seq[String => Unit] { (str: String) => {Console.err.println(str)} }
-
-    val out = Exec.runCatch(
+    Exec.runCatch(
       List("git", "clone", uri, "--no-checkout", "--depth", "1") ++ singleBranch :+ ".",
       cwd = cwd,
       loggers = loggers,
     )
+  }
+
+  protected def checkGitAuthentication(uri: String): Boolean = {
+    val res = Exec.runCatch(
+      List("git", "ls-remote", uri),
+    )
+    res.exitValue == 0
+  }
+
+  def getCheckoutUri(): String
+
+  // Clone of single branch with depth 1 but without checking out files
+  def checkoutSparse(): AbstractGitRepository = {
+    val temporaryFolder = IO.makeTemp("viash_hub_repo")
+    val cwd = Some(temporaryFolder.toFile)
+
+    val uri = getCheckoutUri()
+
+    Console.err.println(s"temporaryFolder: $temporaryFolder uri: $uri")
+
+    val out = doGitClone(uri, cwd)
+    if (out.exitValue != 0)
+      throw new CheckoutException(this)
 
     copyRepo(localPath = temporaryFolder.toString)
   }

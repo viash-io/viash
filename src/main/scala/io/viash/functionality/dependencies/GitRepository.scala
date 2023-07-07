@@ -64,4 +64,7 @@ case class GitRepository(
   ): GitRepository = {
     copy(name, `type`, uri, tag, path, localPath)
   }
+
+  def getCheckoutUri(): String = uri
+
 }
