@@ -64,5 +64,21 @@ case class ViashhubRepository(
     copy(name, `type`, this.repo, tag, path, localPath)
   }
 
+  override def getCheckoutUri(): String = {
+    if (checkGitAuthentication(uri_nouser)) { 
+      // First try https with bad user & password to disable asking credentials
+      // If successful, do checkout without the dummy credentials, don't want to store them in the repo remote address
+      uri
+    } else if (checkGitAuthentication(uri_ssh)) {
+      // Checkout with ssh key
+      uri_ssh
+    } else {
+      uri
+    }
+  }
+
   lazy val uri = s"https://viash-hub.com/$repo.git"
+  lazy val uri_ssh = s"git@viash-hub.com:$repo.git"
+  val fakeCredentials = "nouser:nopass@" // obfuscate the credentials a bit so we don't trigger GitGardian
+  lazy val uri_nouser = s"https://${fakeCredentials}viash-hub.com/$repo.git"
 }

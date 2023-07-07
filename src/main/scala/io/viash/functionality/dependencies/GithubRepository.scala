@@ -22,7 +22,6 @@ import io.viash.helpers.IO
 import io.viash.helpers.Exec
 import java.io.File
 import java.nio.file.Paths
-import io.viash.exceptions.CheckoutException
 
 @description("A GitHub repository where remote dependency components can be found.")
 @example(
@@ -65,35 +64,8 @@ case class GithubRepository(
     copy(name, `type`, this.repo, tag, path, localPath)
   }
 
-  override def checkoutSparse(): AbstractGitRepository = {
-    val temporaryFolder = IO.makeTemp("viash_hub_repo")
-    val cwd = Some(temporaryFolder.toFile)
-
-    Console.err.println(s"temporaryFolder: $temporaryFolder uri: $uri")
-
-    val singleBranch = tag match {
-      case None => List("--single-branch")
-      case Some(value) => List("--single-branch", "--branch", value)
-    }
-
-    def doGitClone(uri: String): Exec.ExecOutput = {
-      val loggers = Seq[String => Unit] { (str: String) => {Console.err.println(str)} }
-      Exec.runCatch(
-        List("git", "clone", uri, "--no-checkout", "--depth", "1") ++ singleBranch :+ ".",
-        cwd = cwd,
-        loggers = loggers,
-      )
-    }
-
-    def checkGitAuthentication(uri: String): Boolean = {
-      val res = Exec.runCatch(
-        List("git", "ls-remote", uri),
-        cwd = cwd,
-      )
-      res.exitValue == 0
-    }
-
-    val uriToUse = if (checkGitAuthentication(uri_nouser)) { 
+  override def getCheckoutUri(): String = {
+    if (checkGitAuthentication(uri_nouser)) { 
       // First try https with bad user & password to disable asking credentials
       // If successful, do checkout without the dummy credentials, don't want to store them in the repo remote address
       uri
@@ -103,12 +75,6 @@ case class GithubRepository(
     } else {
       uri
     }
-
-    val out = doGitClone(uriToUse)
-    if (out.exitValue != 0)
-      throw new CheckoutException(this)
-    
-    copyRepo(localPath = temporaryFolder.toString)
   }
 
   lazy val uri = s"https://github.com/$repo.git"
