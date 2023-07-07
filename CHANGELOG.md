@@ -6,6 +6,8 @@
 
 * `viash export config_schema`: Added `--format yaml/json` argument, default format is now a YAML (PR #448).
 
+* `NextflowLegacyPlatform`: Removed deprecated code (PR #469).
+
 * `viash_*`: Remove legacy viash_build, viash_test and viash_push components (PR #470).
 
 ## NEW FUNCTIONALITY
@@ -45,6 +47,10 @@
 * `testbench`: Fix the viash version switch test bench not working for newer Java versions (PR #452).
 
 * `malformed input exception`: Capture MalformedInputExceptions when thrown by reading files with invalid Ascii characters when unsupported by Java (PR #458).
+
+## INTERNAL CHANGES
+
+* `NextflowVDSL3Platform`: Renamed to `NextflowPlatform` (PR #469).
 
 # Viash 0.7.4 (2023-05-31): Minor bug fixes and minor improvements to VDSL3
 
