@@ -66,6 +66,7 @@ case class Dependency(
       |This must either be a full definition of the repository or the name of a repository refenced as it is defined under functionality.repositories.
       |Additionally, the full definition can be specified as a single string where all parameters such as repository type, url, branch or tag are specified.
       |""".stripMargin)
+  @default("Empty")
   repository: Either[String, Repository] = Right(LocalRepository()),
 
   // internal stuff

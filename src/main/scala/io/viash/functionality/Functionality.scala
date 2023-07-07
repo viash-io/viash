@@ -263,6 +263,7 @@ case class Functionality(
       |""".stripMargin,
     "yaml",
     "Reference to a repository fully specified under 'repositories'")
+  @default("Empty")
   dependencies: List[Dependency] = Nil,
 
   @description(
@@ -276,6 +277,7 @@ case class Functionality(
       |    tag: 0.3.0
       |""".stripMargin,
       "yaml")
+  @default("Empty")
   repositories: List[Repository] = Nil,
   // The variables below are for internal use and shouldn't be publicly documented
 
