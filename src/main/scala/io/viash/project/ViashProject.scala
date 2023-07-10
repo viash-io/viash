@@ -17,19 +17,14 @@
 
 package io.viash.project
 
-import java.nio.file.{Files, Path}
-
-import io.circe.yaml.parser
+import java.nio.file.{Files, Path, Paths}
 
 import io.viash.schemas._
 import io.viash.helpers.data_structures.OneOrMore
 import io.viash.helpers.IO
 import io.viash.helpers.circe._
-import java.nio.file.Paths
 import io.circe.Json
 import java.net.URI
-import scala.util.{Try, Success, Failure}
-import io.viash.exceptions.ConfigParserException
 
 @description("A Viash project configuration file. It's name should be `_viash.yaml`.")
 @example(
@@ -94,14 +89,6 @@ object ViashProject {
     }
   }
 
-  private def parsingErrorHandler[C](uri: Option[URI]) = {
-    (e: Exception) => {
-      val uriStr = uri.map(u => s" '$u'").getOrElse("")
-      Console.err.println(s"${Console.RED}Error parsing$uriStr.${Console.RESET}\nDetails:")
-      throw e
-    }
-  }
-
   /**
     * Read the text from a Path and convert to a Json
     *
@@ -114,7 +101,7 @@ object ViashProject {
 
     // read yaml as string
     val projStr = IO.read(uri)
-    val json0 = parser.parse(projStr).fold(parsingErrorHandler(Some(uri)), identity)
+    val json0 = Convert.textToJson(projStr, path.toString())
 
     /* JSON 1: after inheritance */
     // apply inheritance if need be
@@ -136,10 +123,7 @@ object ViashProject {
 
     /* PROJECT 0: converted from json */
     // convert Json into ViashProject
-    val proj0 = Try(json.as[ViashProject]) match {
-      case Success(res) => res.fold(parsingErrorHandler(Some(path.toUri())), identity)
-      case Failure(e) => throw new ConfigParserException(path.toString(), e)
-    }
+    val proj0 = Convert.jsonToClass[ViashProject](json, path.toString())
 
     /* PROJECT 1: make resources absolute */
     // make paths absolute
