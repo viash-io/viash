@@ -244,63 +244,6 @@ case class Functionality(
   @internalFunctionality
   set_wd_to_resources_dir: Boolean = false
 ) {
-  // START OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
-  @description("Adds the resources directory to the PATH variable when set to true. This is set to false by default.")
-  @since("Viash 0.5.5")
-  @removed("Extending the PATH turned out to be not desirable.", "", "0.5.11")
-  private val add_resources_to_path: Boolean = false
-
-  @description("One or more Bash/R/Python scripts to be used to test the component behaviour when `viash test` is invoked. Additional files of type `file` will be made available only during testing. Each test script should expect no command-line inputs, be platform-independent, and return an exit code >0 when unexpected behaviour occurs during testing.")
-  @removed("Use `test_resources` instead. No functional difference.", "0.5.13", "0.7.0")
-  private val tests: List[Resource] = Nil
-
-  @description("Setting this to false with disable this component when using namespaces.")
-  @since("Viash 0.5.13")
-  @removed("Use `status` instead.", "0.6.0", "0.7.0")
-  private val enabled: Boolean = true
-
-  @description("A list of input arguments in addition to the `arguments` list. Any arguments specified here will have their `type` set to `file` and the `direction` set to `input` by default.")
-  @example(
-    """inputs:
-      |  - name: input_file
-      |  - name: another_input""".stripMargin,
-      "yaml")
-  @exampleWithDescription(
-    """component_with_inputs
-      |  
-      |  Inputs:
-      |      input_file
-      |          type: file
-      |  
-      |      another_input
-      |          type: file""".stripMargin,
-      "bash",
-      "This results in the following output when calling the component with the `--help` argument:")
-  @since("Viash 0.5.11")
-  @removed("Use `arguments` instead.", "0.6.0", "0.7.0")
-  private val inputs: List[Argument[_]] = Nil
-
-  @description("A list of output arguments in addition to the `arguments` list. Any arguments specified here will have their `type` set to `file` and thr `direction` set to `output` by default.")
-  @example(
-    """outputs:
-      |  - name: output_file
-      |  - name: another_output""".stripMargin,
-      "yaml")
-  @exampleWithDescription(
-    """component_with_outputs
-      |  
-      |  Outputs:
-      |      output_file
-      |          type: file, output
-      |  
-      |      another_output
-      |          type: file, output""".stripMargin,
-      "bash",
-      "This results in the following output when calling the component with the `--help` argument:")
-  @since("Viash 0.5.11")
-  @removed("Use `arguments` instead.", "0.6.0", "0.7.0")
-  private val outputs: List[Argument[_]] = Nil
-  // END OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
 
   // Combine inputs, outputs and arguments into one combined list
   def allArguments = arguments ::: argument_groups.flatMap(arg => arg.arguments)
