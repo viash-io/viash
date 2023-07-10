@@ -26,20 +26,15 @@ import io.viash.helpers.status._
 import io.viash.helpers.Yaml
 
 import java.net.URI
-import io.circe.yaml.parser
 import io.viash.functionality.resources._
 
 import java.io.File
-import io.circe.DecodingFailure
-import io.circe.ParsingFailure
 import io.viash.config_mods.ConfigMods
 import java.nio.file.Paths
 
 import io.viash.schemas._
 import java.io.ByteArrayOutputStream
 import java.nio.file.FileSystemNotFoundException
-import io.viash.exceptions.{ConfigYamlException, ConfigParserException}
-import scala.util.{Try, Success, Failure}
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -204,18 +199,7 @@ object Config {
     
     /* JSON 0: parsed from string */
     // parse yaml into Json
-    def parsingYamlErrorHandler[C](e: Exception): C = {
-      // Console.err.println(s"${Console.RED}Error parsing, invalid Yaml structure '${uri}'.${Console.RESET}\nDetails:")
-      // throw e
-      throw new ConfigYamlException(uri.toString(), e)
-    }
-    def parsingErrorHandler[C](e: Exception): C = {
-      // Console.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
-      // throw e
-      throw new ConfigParserException(uri.toString(), e)
-    }
-
-    val json0 = parser.parse(replacedYamlText).fold(parsingErrorHandler, identity)
+    val json0 = Convert.textToJson(replacedYamlText, uri.toString())
 
     /* JSON 1: after inheritance */
     // apply inheritance if need be
@@ -227,10 +211,7 @@ object Config {
 
     /* CONFIG 0: converted from json */
     // convert Json into Config
-    val conf0 = Try(json2.as[Config]) match {
-      case Success(res) => res.fold(parsingErrorHandler, identity)
-      case Failure(e) => throw new ConfigParserException(uri.toString(), e)
-    }
+    val conf0 = Convert.jsonToClass[Config](json2, uri.toString())
 
     /* CONFIG 1: store parent path in resource to be able to access them in the future */
     val parentURI = uri.resolve("")
