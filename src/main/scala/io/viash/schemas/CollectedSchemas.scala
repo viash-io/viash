@@ -124,8 +124,7 @@ object CollectedSchemas {
     getMembers[Platform](),
     getMembers[NativePlatform](),
     getMembers[DockerPlatform](),
-    getMembers[NextflowVdsl3Platform](),
-    getMembers[NextflowLegacyPlatform](),
+    getMembers[NextflowPlatform](),
 
     getMembers[Requirements](),
     getMembers[ApkRequirements](),

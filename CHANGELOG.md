@@ -6,6 +6,8 @@
 
 * `viash export config_schema`: Added `--format yaml/json` argument, default format is now a YAML (PR #448).
 
+* `NextflowLegacyPlatform`: Removed deprecated code (PR #469).
+
 * `viash_*`: Remove legacy viash_build, viash_test and viash_push components (PR #470).
 
 ## NEW FUNCTIONALITY
@@ -19,6 +21,8 @@
 * `viash test` and `viash ns test`: add `--setup` argument to determine the docker build strategy before a component is tested (PR #451).
 
 * `viash export cli_autocomplete`: Export a Bash autocomplete script (PR #465).
+
+* `help message`: Print the relevant help message of (sub-)command when `--help` is given as an argument instead of only printing the help message when it is the leading argument and otherwise silently disregarding it (PR #472). This overrides Scallop's default behaviour in a roundabout way.
 
 ## MINOR CHANGES
 
@@ -43,6 +47,14 @@
 * `testbench`: Fix the viash version switch test bench not working for newer Java versions (PR #452).
 
 * `malformed input exception`: Capture MalformedInputExceptions when thrown by reading files with invalid Ascii characters when unsupported by Java (PR #458).
+
+* `viash project file parsing`: Give a more informative message when the viash project file fails to parse correctly (PR #475).
+
+## INTERNAL CHANGES
+
+* `NextflowVDSL3Platform`: Renamed to `NextflowPlatform` (PR #469).
+
+* Rename mentions of `NextFlow` to `Nextflow` (PR #476).
 
 # Viash 0.7.4 (2023-05-31): Minor bug fixes and minor improvements to VDSL3
 

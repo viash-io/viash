@@ -10,7 +10,7 @@ import java.nio.file.{Files, Path, Paths}
 import scala.io.Source
 
 import io.viash.helpers.IO
-import io.viash.{DockerTest, NextFlowTest, TestHelper}
+import io.viash.{DockerTest, NextflowTest, TestHelper}
 import io.viash.NextflowTestHelper
 import java.nio.charset.StandardCharsets
 
@@ -34,7 +34,7 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
   for (resource <- List("src", "workflows", "resources"))
     IO.copyFolder(Paths.get(rootPath, resource).toString, Paths.get(tempFolStr, resource).toString)
 
-  test("Build pipeline components", DockerTest, NextFlowTest) {
+  test("Build pipeline components", DockerTest, NextflowTest) {
     // build the nextflow containers
     val (_, _, _) = TestHelper.testMainWithStdErr(
       "ns", "build",
@@ -44,7 +44,7 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
     )
   }
 
-  test("Simple run", NextFlowTest) {
+  test("Simple run", NextflowTest) {
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "target/nextflow/step2/main.nf",
       args = List(
@@ -66,7 +66,7 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
-  test("With id containing spaces and slashes", NextFlowTest) {
+  test("With id containing spaces and slashes", NextflowTest) {
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "target/nextflow/step2/main.nf",
       args = List(
@@ -89,7 +89,7 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
-  test("With yamlblob param_list", NextFlowTest) {
+  test("With yamlblob param_list", NextflowTest) {
     val paramListStr = "[{input1: resources/lines3.txt, input2: resources/lines5.txt}]"
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "target/nextflow/step2/main.nf",
@@ -111,7 +111,7 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
-  test("With yaml param_list", NextFlowTest) {
+  test("With yaml param_list", NextflowTest) {
     val paramListPath = temporaryFolder.resolve("resources/param_list.yaml")
     val paramListStr = "- input1: lines3.txt\n  input2: lines5.txt"
 
@@ -138,7 +138,7 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
-  test("With optional inputs", NextFlowTest) {
+  test("With optional inputs", NextflowTest) {
 
     Files.copy(Paths.get(resourcesPath, "lines5.txt"), Paths.get(resourcesPath, "lines5-bis.txt"))
 

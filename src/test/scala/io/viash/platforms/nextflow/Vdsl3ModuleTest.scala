@@ -11,7 +11,7 @@ import java.io.UncheckedIOException
 import scala.io.Source
 
 import io.viash.helpers.IO
-import io.viash.{DockerTest, NextFlowTest, TestHelper}
+import io.viash.{DockerTest, NextflowTest, TestHelper}
 import io.viash.NextflowTestHelper
 
 class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
@@ -109,7 +109,7 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
   for (resource <- List("src", "workflows", "resources"))
     IO.copyFolder(Paths.get(rootPath, resource).toString, Paths.get(tempFolStr, resource).toString)
 
-  test("Build pipeline components", DockerTest, NextFlowTest) {
+  test("Build pipeline components", DockerTest, NextflowTest) {
     // build the nextflow containers
     val (_, _, _) = TestHelper.testMainWithStdErr(
       "ns", "build",
@@ -119,7 +119,7 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
     )
   }
   
-  test("Run pipeline", DockerTest, NextFlowTest) {
+  test("Run pipeline", DockerTest, NextflowTest) {
 
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "workflows/pipeline1/main.nf",
@@ -135,7 +135,7 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
     outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
   }
 
-  test("Run pipeline with components using map functionality", DockerTest, NextFlowTest) {
+  test("Run pipeline with components using map functionality", DockerTest, NextflowTest) {
 
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "workflows/pipeline1/main.nf",
@@ -151,7 +151,7 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
     outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
   }
 
-  test("Run pipeline with components using mapData functionality", DockerTest, NextFlowTest) {
+  test("Run pipeline with components using mapData functionality", DockerTest, NextflowTest) {
 
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "workflows/pipeline1/main.nf",
@@ -167,7 +167,7 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
     outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
   }
 
-  test("Run pipeline with debug = false", DockerTest, NextFlowTest) {
+  test("Run pipeline with debug = false", DockerTest, NextflowTest) {
 
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "workflows/pipeline1/main.nf",
@@ -188,7 +188,7 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
 
   }
 
-  test("Run pipeline with debug = true", DockerTest, NextFlowTest) {
+  test("Run pipeline with debug = true", DockerTest, NextflowTest) {
 
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "workflows/pipeline1/main.nf",
@@ -206,7 +206,7 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
     outputFileMatchChecker(stdOut, "process 'step3[^']*' output tuple", "^11 .*$")
   }
 
-  test("Check whether --help is same as Viash's --help", NextFlowTest) {
+  test("Check whether --help is same as Viash's --help", NextflowTest) {
     // except that WorkflowHelper.nf will not print alternatives, and
     // will always prefix argument names with -- (so --foo, not -f or foo).
 
