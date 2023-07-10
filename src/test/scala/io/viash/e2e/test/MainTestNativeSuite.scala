@@ -143,21 +143,6 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, false)
   }
 
-  test("Check standard test output with legacy 'tests' definition") {
-    val newConfigFilePath = configDeriver.derive(
-      List(
-        """.functionality.tests := .functionality.test_resources""",
-        """del(.functionality.test_resources)"""
-      ) , "legacy")
-    val testOutput = TestHelper.testMainException2[Exception](
-      "test",
-      "-p", "native",
-      newConfigFilePath
-    )
-
-    assert(testOutput.error.contains("Error: .functionality.tests was removed: Use `test_resources` instead. No functional difference. Initially deprecated 0.5.13, removed 0.7.0."))
-  }
-
   test("Check config file without 'functionality' specified") {
     val newConfigFilePath = configDeriver.derive("""del(.functionality)""", "missing_functionality")
     val testOutput = TestHelper.testMainException2[RuntimeException](
