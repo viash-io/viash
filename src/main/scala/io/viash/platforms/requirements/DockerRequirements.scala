@@ -97,13 +97,6 @@ case class DockerRequirements(
         Nil
       }
 
-    val resourcess =
-      if (resources.nonEmpty) {
-        resources.map(c => s"""COPY $c""")
-      } else {
-        Nil
-      }
-
     val envs =
       if (env.nonEmpty) {
         env.map(c => s"""ENV $c""")
@@ -118,7 +111,7 @@ case class DockerRequirements(
         Nil
       }
 
-    val li = args ::: labels ::: envs ::: copys ::: resourcess ::: adds ::: runCommands
+    val li = args ::: labels ::: envs ::: copys ::: adds ::: runCommands
 
     if (li.isEmpty) None else Some(li.mkString("\n"))
   }

@@ -248,48 +248,24 @@ case class Functionality(
   // Combine inputs, outputs and arguments into one combined list
   def allArguments = arguments ::: argument_groups.flatMap(arg => arg.arguments)
 
-  private def addToArgGroup(argumentGroups: List[ArgumentGroup], name: String, arguments: List[Argument[_]]): Option[ArgumentGroup] = {
-    // Check whether an argument group of 'name' exists.
-    val existing = argumentGroups.find(gr => name == gr.name)
-
-    // if there are no arguments missing from the argument group, just return the existing group (if any)
+  def allArgumentGroups: List[ArgumentGroup] = {
     if (arguments.isEmpty) {
-      existing
-
-    // if there are missing arguments and there is an existing group, add the missing arguments to it
-    } else if (existing.isDefined) {
-      Some(existing.get.copy(
-        arguments = existing.get.arguments.toList ::: arguments
-      ))
-    
-    // else create a new group
+      // if there are no arguments, just return the argument groups as is
+      argument_groups
+    } else if (argument_groups.exists(_.name == "Arguments")) {
+      // if there is already an argument group named 'Arguments', extend it with the arguments
+      argument_groups.map{
+        case gr if gr.name == "Arguments" =>
+          gr.copy(arguments = gr.arguments ::: arguments)
+        case gr => gr
+      }
     } else {
-      Some(ArgumentGroup(
-        name = name,
+      // else create a new argument group
+      argument_groups ::: List(ArgumentGroup(
+        name = "Arguments",
         arguments = arguments
       ))
     }
-  }
-
-  def allArgumentGroups: List[ArgumentGroup] = {
-    val joinGroup = Map("Inputs" -> inputs, "Outputs" -> outputs, "Arguments" -> arguments)
-    val groups = argument_groups.map{gr => 
-      if (List("Inputs", "Outputs", "Arguments") contains (gr.name)) {
-        addToArgGroup(argument_groups, gr.name, joinGroup(gr.name)).get
-      } else {
-        gr
-      }
-    }
-    val missingGroups = joinGroup.flatMap{
-      case (name, args) =>
-        if (!groups.exists(_.name == name)) {
-          addToArgGroup(argument_groups, name, args)
-        } else {
-          None
-        }
-    }.toList
-
-    missingGroups ::: groups
   }
     
   // check whether there are not multiple positional arguments with multiplicity >1
