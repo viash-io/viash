@@ -48,7 +48,7 @@
 
 * `malformed input exception`: Capture MalformedInputExceptions when thrown by reading files with invalid Ascii characters when unsupported by Java (PR #458).
 
-* `viash project file parsing`: Give a more informative message when the viash project file fails to parse correctly (PR #...).
+* `viash project file parsing`: Give a more informative message when the viash project file fails to parse correctly (PR #475).
 
 ## INTERNAL CHANGES
 
