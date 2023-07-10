@@ -54,6 +54,8 @@
 
 * `NextflowVDSL3Platform`: Renamed to `NextflowPlatform` (PR #469).
 
+* Rename mentions of `NextFlow` to `Nextflow` (PR #476).
+
 # Viash 0.7.4 (2023-05-31): Minor bug fixes and minor improvements to VDSL3
 
 Some small fixes and consistency improvements.

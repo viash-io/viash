@@ -31,9 +31,9 @@ import io.viash.schemas._
 import io.viash.helpers.Escaper
 
 /**
- * Next-gen Platform class for generating NextFlow (DSL2) modules.
+ * Next-gen Platform class for generating Nextflow (DSL2) modules.
  */
-@description("Next-gen platform for generating NextFlow VDSL3 modules.")
+@description("Next-gen platform for generating Nextflow VDSL3 modules.")
 @example(
   """platforms:
     |  - type: nextflow
