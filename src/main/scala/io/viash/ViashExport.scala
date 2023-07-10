@@ -26,12 +26,23 @@ import io.viash.helpers.circe._
 import java.nio.file.{Path, Paths, Files}
 import io.viash.schemas.{CollectedSchemas, JsonSchema}
 import io.circe.Json
+import io.viash.schemas.AutoComplete
 
 object ViashExport {
   def exportCLISchema(output: Option[Path], format: String): Unit = {
     val cli = new CLIConf(Nil)
-    val data = cli.getRegisteredCommands.asJson
+    val data = cli.getRegisteredCommands().asJson
     val str = data.toFormattedString(format)
+    if (output.isDefined) {
+      Files.write(output.get, str.getBytes())
+    } else {
+      println(str)
+    }
+  }
+
+  def exportAutocomplete(output: Option[Path]): Unit = {
+    val cli = new CLIConf(Nil)
+    val str = AutoComplete.generateForBash(cli)
     if (output.isDefined) {
       Files.write(output.get, str.getBytes())
     } else {
