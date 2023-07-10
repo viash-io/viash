@@ -28,6 +28,8 @@ import io.viash.helpers.circe._
 import java.nio.file.Paths
 import io.circe.Json
 import java.net.URI
+import scala.util.{Try, Success, Failure}
+import io.viash.exceptions.ConfigParserException
 
 @description("A Viash project configuration file. It's name should be `_viash.yaml`.")
 @example(
@@ -94,7 +96,7 @@ object ViashProject {
 
   private def parsingErrorHandler[C](uri: Option[URI]) = {
     (e: Exception) => {
-      val uriStr = uri.map(u => s" '{u}'").getOrElse("")
+      val uriStr = uri.map(u => s" '$u'").getOrElse("")
       Console.err.println(s"${Console.RED}Error parsing$uriStr.${Console.RESET}\nDetails:")
       throw e
     }
@@ -134,8 +136,10 @@ object ViashProject {
 
     /* PROJECT 0: converted from json */
     // convert Json into ViashProject
-    val proj0 = json.as[ViashProject].fold(parsingErrorHandler(Some(path.toUri())), identity)
-
+    val proj0 = Try(json.as[ViashProject]) match {
+      case Success(res) => res.fold(parsingErrorHandler(Some(path.toUri())), identity)
+      case Failure(e) => throw new ConfigParserException(path.toString(), e)
+    }
 
     /* PROJECT 1: make resources absolute */
     // make paths absolute
