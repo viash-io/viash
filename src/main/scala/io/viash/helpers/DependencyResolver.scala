@@ -85,12 +85,18 @@ object DependencyResolver {
     val config4 = composedDependenciesLens.modify(_
       .map{dep =>
         val repo = dep.workRepository.get
-        val config = dep.isLocalDependency match {
-          case true => findLocalConfig(repo.localPath.toString(), namespaceConfigs, dep.name, platformId)
-          case false => findRemoteConfig(repo.localPath.toString(), dep.name, platformId)
-        }
 
-        dep.copy(foundConfigPath = config.map(_._1), configInfo = config.map(_._2).getOrElse(Map.empty))
+        val config =
+          if (dep.isLocalDependency) {
+            findLocalConfig(repo.localPath.toString(), namespaceConfigs, dep.name, platformId)
+          } else {
+            findRemoteConfig(repo.localPath.toString(), dep.name, platformId)
+          }
+
+        dep.copy(
+          foundConfigPath = config.map(_._1),
+          configInfo = config.map(_._2).getOrElse(Map.empty)
+        )
       }
       )(config3)
 
