@@ -21,13 +21,13 @@ import io.viash.functionality._
 import io.viash.schemas._
 
 import java.net.URI
+import java.nio.file.Path
 import java.nio.file.Paths
-import io.viash.functionality.arguments.Argument
 import io.viash.config.Config
+import io.viash.functionality.arguments.Argument
 import io.viash.platforms.nextflow.NextflowHelper
-import io.viash.helpers.circe._
 import io.circe.syntax._
-import io.circe.{Printer => JsonPrinter}
+import io.viash.helpers.circe._
 import io.viash.ViashNamespace
 import io.viash.functionality.dependencies.Dependency
 
@@ -56,31 +56,14 @@ case class NextflowScript(
   }
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
-    val configPath = s"$$targetDir/${config.functionality.namespace.getOrElse("namespace")}/${config.functionality.name}/.config.vsh.yaml"
+    // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
+    val thisPath = Paths.get(ViashNamespace.targetOutputPath("", "invalid_platform_name", config.functionality.namespace, config.functionality.name))
 
-    def nextflowInclude(d: Dependency): String = d.alias match {
-      case None => d.configInfo("functionalityName")
-      case Some(alias) => s"${d.configInfo{"functionalityName"}} as ${alias.toLowerCase().replaceAll("/", "_")}"
-    }
-    val (localDependencies, remoteDependencies) = config.functionality.dependencies
-      .partition(d => d.isLocalDependency)
-    val localDependenciesStrings = localDependencies.map{ d =>
-      // relativize the path of the main component to the local dependency
-      // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
-      val thisPath = ViashNamespace.targetOutputPath("", "invalid_platform_name", config.functionality.namespace, config.functionality.name)
-      val relativePath = Paths.get(thisPath).relativize(Paths.get(d.configInfo.getOrElse("executable", "")))
-      s"include { ${nextflowInclude(d)} } from \"$$projectDir/$relativePath\""
-    }
-    val remoteDependenciesStrings = remoteDependencies.map{ d => 
-      if (d.foundConfigPath.isDefined)
-        s"include { ${nextflowInclude(d)} } from \"$$rootDir/dependencies/${d.subOutputPath.get}/main.nf\""
-      else
-        s"// ${d.name} not found!"
-    }
+    val depStrs = config.functionality.dependencies.map(NextflowScript.renderInclude(_, thisPath))
 
-    val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
     val funJson = config.asJson.dropEmptyRecursively
-    val funJsonStr = jsonPrinter.print(funJson)
+    val funJsonStr = funJson
+      .toFormattedString("json")
       .replace("\\\\", "\\\\\\\\")
       .replace("\\\"", "\\\\\"")
       .replace("'''", "\\'\\'\\'")
@@ -95,8 +78,7 @@ case class NextflowScript(
           |
           |// import dependencies
           |rootDir = getRootDir()
-          |${localDependenciesStrings.mkString("\n|")}
-          |${remoteDependenciesStrings.mkString("\n|")}
+          |${depStrs.mkString("\n|")}
           |
           |workflow {
           |  helpMessage(config)
@@ -146,4 +128,42 @@ object NextflowScript extends ScriptCompanion {
   val commentStr = "//"
   val extension = "nf"
   val `type` = "nextflow_script"
+
+  /**
+    * Renders the include statement for a dependency.
+    *
+    * @param dependency The dependency to render
+    * @param parentPath The path of the current output folder
+    * @return The include statement for the dependency. Expected format:
+    * 
+    *   - For local dependencies (i.e. the dependency's source code is defined in the same project as the current repository):
+    *     ```
+    *     include { my_dep as my_alias } from "$projectDir/../../../target/nextflow/my_namespace/my_dep/main.nf"
+    *     ```
+    *   - For remote dependencies (i.e. the dependency is fetched from a different project -- either a local folder or a remote repository):
+    *     ```
+    *     include { my_dep as my_alias } from "$rootDir/dependencies/my_namespace/my_dep/main.nf"
+    *     ```
+    */
+  def renderInclude(dependency: Dependency, parentPath: Path): String = {
+    if (dependency.subOutputPath.isEmpty) {
+      return s"// dependency '${dependency.name}' not found!"
+    }
+
+    val depName = dependency.configInfo("functionalityName")
+    val aliasStr = dependency.alias.map(" as " + _).getOrElse("")
+
+    val source =
+      if (dependency.isLocalDependency) {
+        val dependencyPath = Paths.get(dependency.configInfo.getOrElse("executable", ""))
+        // can we use suboutputpath here?
+        //val dependencyPath = Paths.get(dependency.subOutputPath.get)
+        val relativePath = parentPath.relativize(dependencyPath)
+        s"\"$$projectDir/$relativePath\""
+      } else {
+        s"\"$$rootDir/dependencies/${dependency.subOutputPath.get}/main.nf\""
+      }
+
+    s"include { $depName$aliasStr } from ${source}"
+  }
 }
