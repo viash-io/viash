@@ -24,9 +24,8 @@ import io.circe.yaml.{Printer => YamlPrinter}
 import io.circe.syntax.EncoderOps
 import io.viash.helpers.circe._
 import java.nio.file.{Path, Paths, Files}
-import io.viash.schemas.{CollectedSchemas, JsonSchema}
+import io.viash.schemas._
 import io.circe.Json
-import io.viash.schemas.AutoComplete
 
 object ViashExport {
   def exportCLISchema(output: Option[Path], format: String): Unit = {
@@ -42,7 +41,12 @@ object ViashExport {
 
   def exportAutocomplete(output: Option[Path], zsh: Boolean): Unit = {
     val cli = new CLIConf(Nil)
-    val str = AutoComplete.generate(cli, zsh)
+    val str = 
+      if (zsh) {
+        AutoCompleteZsh.generate(cli)
+      } else {
+        AutoCompleteBash.generate(cli)
+      }
     if (output.isDefined) {
       Files.write(output.get, str.getBytes())
     } else {

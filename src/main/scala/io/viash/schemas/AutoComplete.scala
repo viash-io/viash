@@ -19,9 +19,8 @@ package io.viash.schemas
 
 import io.viash.cli._
 
-object AutoComplete {
-
-  def commandArgumentsBash(cmd: RegisteredCommand): String = {
+object AutoCompleteBash {
+  def commandArguments(cmd: RegisteredCommand): String = {
     val (opts, trailOpts) = cmd.opts.partition(_.optType != "trailArgs")
     val optNames = opts.map(_.name) ++ Seq("help")
     val cmdName = cmd.name
@@ -45,8 +44,8 @@ object AutoComplete {
     }
 
   }
-  def nestedCommandBash(cmd: RegisteredCommand): String = {
-    val cmdStr = cmd.subcommands.map(subCmd => commandArgumentsBash(subCmd))
+  def nestedCommand(cmd: RegisteredCommand): String = {
+    val cmdStr = cmd.subcommands.map(subCmd => commandArguments(subCmd))
     val cmdName = cmd.name
 
     s"""_viash_$cmdName()
@@ -59,7 +58,7 @@ object AutoComplete {
 
   }
   
-  def generateForBash(cli: CLIConf): String = {
+  def generate(cli: CLIConf): String = {
 
     val (commands, nestedCommands) = cli.getRegisteredCommands(true).partition(_.subcommands.isEmpty)
 
@@ -86,7 +85,7 @@ object AutoComplete {
 
     s"""# bash completion for viash
        |
-       |${nestedCommands.map(nc => nestedCommandBash(nc)).mkString("\n")}
+       |${nestedCommands.map(nc => nestedCommand(nc)).mkString("\n")}
        |_viash()
        |{
        |  local cur prev words cword
@@ -101,7 +100,7 @@ object AutoComplete {
        |    --version | --help | -!(-*)[hV])
        |      return
        |      ;;
-       |    ${commands.flatMap(c => commandArgumentsBash(c).split("\n")).mkString("\n|    ")}
+       |    ${commands.flatMap(c => commandArguments(c).split("\n")).mkString("\n|    ")}
        |    ${nestedCommandsSwitch2.flatMap(_.split("\n")).mkString("\n|    ")}
        |  esac
        |
@@ -115,11 +114,10 @@ object AutoComplete {
        |  complete -F _viash viash
        |""".stripMargin
   }
+}
 
-  /////////////////////////////////
-
-  def commandArgumentsZsh(cmd: RegisteredCommand): String = {
-
+object AutoCompleteZsh {
+  def commandArguments(cmd: RegisteredCommand): String = {
     def removeMarkup(text: String): String = {
       val markupRegex = raw"@\[(.*?)\]\(.*?\)".r
       val backtickRegex = "`(\"[^`\"]*?\")`".r
@@ -168,10 +166,9 @@ object AutoComplete {
   }
 
 
-  def nestedCommandZsh(cmd: RegisteredCommand): String = {
-    val cmdStr = cmd.subcommands.map(subCmd => commandArgumentsZsh(subCmd))
+  def nestedCommand(cmd: RegisteredCommand): String = {
+    val cmdStr = cmd.subcommands.map(subCmd => commandArguments(subCmd))
     val cmdName = cmd.name
-
     val subCmds = cmd.subcommands.map(subCmd => s""""${subCmd.name}:${subCmd.bannerDescription.get.split("\n").head}"""")
 
     s"""_viash_${cmdName}_commands() {
@@ -198,7 +195,7 @@ object AutoComplete {
        |""".stripMargin
   }
 
-  def generateForZsh(cli: CLIConf) = {
+  def generate(cli: CLIConf) = {
 
     val (commands, nestedCommands) = cli.getRegisteredCommands(true).partition(_.subcommands.isEmpty)
 
@@ -236,7 +233,7 @@ object AutoComplete {
        |  _describe -t commands "viash subcommands" top_commands
        |}
        |
-       |${nestedCommands.map(nc => nestedCommandZsh(nc)).mkString("\n")}
+       |${nestedCommands.map(nc => nestedCommand(nc)).mkString("\n")}
        |
        |_viash() {
        |  local lastParam
@@ -246,7 +243,7 @@ object AutoComplete {
        |    _viash_top_commands
        |  elif [[ CURRENT -ge 3 ]]; then
        |    case "$$words[2]" in
-       |      ${commands.flatMap(c => commandArgumentsZsh(c).split("\n")).mkString("\n|      ")}
+       |      ${commands.flatMap(c => commandArguments(c).split("\n")).mkString("\n|      ")}
        |      ${nestedCommandsSwitch.flatMap(_.split("\n")).mkString("\n|      ")}
        |    esac
        |  fi
@@ -259,17 +256,4 @@ object AutoComplete {
        |# ex: filetype=sh
        |""".stripMargin
   }
-
-
-  /////////////////////////////////
-
-  def generate(cli: CLIConf, zsh: Boolean) = {
-    if (zsh) {
-      generateForZsh(cli)
-    } else {
-      generateForBash(cli)
-    }
-
-  }
-
 }
