@@ -22,7 +22,7 @@
 
 * `viash test` and `viash ns test`: add `--setup` argument to determine the docker build strategy before a component is tested (PR #451).
 
-* `viash export cli_autocomplete`: Export a Bash autocomplete script (PR #465).
+* `viash export cli_autocomplete`: Export a Bash or Zsh autocomplete script (PR #465 & #482).
 
 * `help message`: Print the relevant help message of (sub-)command when `--help` is given as an argument instead of only printing the help message when it is the leading argument and otherwise silently disregarding it (PR #472). This overrides Scallop's default behaviour in a roundabout way.
 
