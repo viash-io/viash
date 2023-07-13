@@ -314,9 +314,10 @@ object Main {
         )
         0
       case List(cli.export, cli.export.cli_autocomplete) =>
-        val output = cli.export.cli_schema.output.toOption.map(Paths.get(_))
+        val output = cli.export.cli_autocomplete.output.toOption.map(Paths.get(_))
         ViashExport.exportAutocomplete(
-          output
+          output,
+          zsh = cli.export.cli_autocomplete.zsh()
         )
         0
       case List(cli.export, cli.export.config_schema) =>

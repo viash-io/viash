@@ -40,9 +40,9 @@ object ViashExport {
     }
   }
 
-  def exportAutocomplete(output: Option[Path]): Unit = {
+  def exportAutocomplete(output: Option[Path], zsh: Boolean): Unit = {
     val cli = new CLIConf(Nil)
-    val str = AutoComplete.generateForBash(cli)
+    val str = AutoComplete.generate(cli, zsh)
     if (output.isDefined) {
       Files.write(output.get, str.getBytes())
     } else {

@@ -21,7 +21,7 @@ import io.viash.cli._
 
 object AutoComplete {
 
-  def commandArguments(cmd: RegisteredCommand): String = {
+  def commandArgumentsBash(cmd: RegisteredCommand): String = {
     val (opts, trailOpts) = cmd.opts.partition(_.optType != "trailArgs")
     val optNames = opts.map(_.name) ++ Seq("help")
     val cmdName = cmd.name
@@ -29,24 +29,24 @@ object AutoComplete {
     trailOpts match {
       case Nil =>
         s"""$cmdName)
-            |  COMPREPLY=($$(compgen -W ${optNames.mkString("'--", " --", "'")} -- "$$cur"))
-            |  return
-            |  ;;
-            |""".stripMargin
+           |  COMPREPLY=($$(compgen -W ${optNames.mkString("'--", " --", "'")} -- "$$cur"))
+           |  return
+           |  ;;
+           |""".stripMargin
       case _ =>
         s"""$cmdName)
-            |  if [[ $$cur == -* ]]; then
-            |    COMPREPLY=($$(compgen -W ${optNames.mkString("'--", " --", "'")} -- "$$cur"))
-            |    return
-            |  fi
-            |  _filedir
-            |  ;;
-            |""".stripMargin
+           |  if [[ $$cur == -* ]]; then
+           |    COMPREPLY=($$(compgen -W ${optNames.mkString("'--", " --", "'")} -- "$$cur"))
+           |    return
+           |  fi
+           |  _filedir
+           |  ;;
+           |""".stripMargin
     }
 
   }
-  def nestedCommand(cmd: RegisteredCommand): String = {
-    val cmdStr = cmd.subcommands.map(subCmd => commandArguments(subCmd))
+  def nestedCommandBash(cmd: RegisteredCommand): String = {
+    val cmdStr = cmd.subcommands.map(subCmd => commandArgumentsBash(subCmd))
     val cmdName = cmd.name
 
     s"""_viash_$cmdName()
@@ -86,7 +86,7 @@ object AutoComplete {
 
     s"""# bash completion for viash
        |
-       |${nestedCommands.map(nc => nestedCommand(nc)).mkString("\n")}
+       |${nestedCommands.map(nc => nestedCommandBash(nc)).mkString("\n")}
        |_viash()
        |{
        |  local cur prev words cword
@@ -101,7 +101,7 @@ object AutoComplete {
        |    --version | --help | -!(-*)[hV])
        |      return
        |      ;;
-       |    ${commands.flatMap(c => commandArguments(c).split("\n")).mkString("\n|    ")}
+       |    ${commands.flatMap(c => commandArgumentsBash(c).split("\n")).mkString("\n|    ")}
        |    ${nestedCommandsSwitch2.flatMap(_.split("\n")).mkString("\n|    ")}
        |  esac
        |
@@ -114,6 +114,105 @@ object AutoComplete {
        |} &&
        |  complete -F _viash viash
        |""".stripMargin
+  }
+
+  /////////////////////////////////
+
+  def commandArgumentsZsh(cmd: RegisteredCommand): String = {
+
+    def removeMarkup(text: String): String = {
+      val markupRegex = raw"@\[(.*?)\]\(.*?\)".r
+      val backtickRegex = "`(\"[^`\"]*?\")`".r
+      val textWithoutMarkup = markupRegex.replaceAllIn(text, "$1")
+      backtickRegex.replaceAllIn(textWithoutMarkup, "$1")
+    }
+
+    val (opts, trailOpts) = cmd.opts.partition(_.optType != "trailArgs")
+    val cmdArgs = opts.map(o => 
+      if (o.short.isEmpty) {
+        s""""${o.name}:${removeMarkup(o.descr)}""""
+      } else {
+        s""""(-${o.short.get} --${o.name})"{-${o.short.get},--${o.name}}"[${removeMarkup(o.descr)}]""""
+      }
+      )
+    val cmdName = cmd.name
+
+    trailOpts match {
+      case Nil =>
+        s"""$cmdName)
+            |  local -a cmd_args
+            |  cmd_args=(
+            |    ${cmdArgs.mkString("\n|    ")}
+            |  )
+            |  _arguments $$cmd_args $$_viash_help $$_viash_id_comp
+            |  ;;
+            |""".stripMargin
+      case _ =>
+        s"""$cmdName)
+            |  if [[ $${lastParam} == -* ]]; then
+            |    local -a cmd_args
+            |    cmd_args=(
+            |      ${cmdArgs.mkString("\n|      ")}
+            |    )
+            |    _arguments $$cmd_args $$_viash_help $$_viash_id_comp
+            |  else
+            |    _files
+            |  fi
+            |  ;;
+            |""".stripMargin
+    }
+  }
+
+
+  def generateForZsh(cli: CLIConf) = {
+
+    val (commands, nestedCommands) = cli.getRegisteredCommands(true).partition(_.subcommands.isEmpty)
+
+    commands.foreach(c => println(s"command ${commandArgumentsZsh(c)}"))
+
+
+    s"""#compdef viash
+       |
+       |local -a _viash_id_comp
+       |_viash_id_comp=('1: :->id_comp')
+       |
+       |local -a _viash_help
+       |_viash_help('(-h --help)'{-h,--help}'[Show help message]')
+       |
+       |#TODO
+       |
+       |_viash() {
+       |  local lastParam
+       |  lastParam=$${words[-1]}
+       |
+       |  if [[ CURRENT -eq 2 ]]; then
+       |    _viash_top_commands
+       |    return
+       |  elif [[ CURRENT -ge 3 ]]; then
+       |
+       |    #TODO
+       |
+       |  fi
+       |
+       |  return
+       |}
+       |
+       |_viash
+       |
+       |# ex: filetype=sh
+       |""".stripMargin
+  }
+
+
+  /////////////////////////////////
+
+  def generate(cli: CLIConf, zsh: Boolean) = {
+    if (zsh) {
+      generateForZsh(cli)
+    } else {
+      generateForBash(cli)
+    }
+
   }
 
 }

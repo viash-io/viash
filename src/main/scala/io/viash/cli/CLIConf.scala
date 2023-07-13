@@ -451,13 +451,18 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     val cli_autocomplete = new DocumentedSubcommand("cli_autocomplete") {
       banner(
         "viash export bash_autocomplete",
-        """Export the autocomplete script as to be used in Bash""".stripMargin,
-        """viash export bash_autocomplete [--output viash_autocomplete_bash]""".stripMargin
+        """Export the autocomplete script as to be used in Bash or Zsh""".stripMargin,
+        """viash export bash_autocomplete [--output viash_autocomplete_bash] [--zsh]""".stripMargin
       )
       val output = registerOpt[String](
         name = "output",
         default = None,
         descr = "Destination path"
+      )
+      val zsh = registerOpt[Boolean](
+        name = "zsh",
+        default = Some(false),
+        descr = "Export as a zsh autocompletion script"
       )
     }
 
