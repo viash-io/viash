@@ -106,7 +106,7 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
   test("viash export cli_autocomplete Zsh") {
     val stdout = TestHelper.testMain(
       "export", "cli_autocomplete",
-      "--zsh"
+      "--format", "zsh"
     )
 
     assert(stdout.startsWith("""#compdef viash"""))
@@ -116,7 +116,7 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
   test("viash export cli_autocomplete Zsh to file") {
     val stdout = TestHelper.testMain(
       "export", "cli_autocomplete",
-      "--zsh",
+      "--format", "zsh",
       "--output", tempFile.toString
     )
 
