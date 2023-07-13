@@ -61,7 +61,7 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
     assert(lines.contains("viash config inject"))
   }
 
-  test("viash export cli_autocomplete") {
+  test("viash export cli_autocomplete Bash") {
     val stdout = TestHelper.testMain(
       "export", "cli_autocomplete"
     )
@@ -70,7 +70,7 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
     assert(stdout.contains("COMPREPLY=($(compgen -W 'run build test ns config' -- \"$cur\"))"))
   }
 
-  test("viash export cli_autocomplete to file") {
+  test("viash export cli_autocomplete Bash to file") {
     val stdout = TestHelper.testMain(
       "export", "cli_autocomplete",
       "--output", tempFile.toString
@@ -79,6 +79,28 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
     val lines = helpers.IO.read(tempFile.toUri())
     assert(lines.startsWith("""# bash completion for viash"""))
     assert(lines.contains("COMPREPLY=($(compgen -W"))
+  }
+
+  test("viash export cli_autocomplete Zsh") {
+    val stdout = TestHelper.testMain(
+      "export", "cli_autocomplete",
+      "--zsh"
+    )
+
+    assert(stdout.startsWith("""#compdef viash"""))
+    assert(stdout.contains("_viash_export_commands"))
+  }
+
+  test("viash export cli_autocomplete Zsh to file") {
+    val stdout = TestHelper.testMain(
+      "export", "cli_autocomplete",
+      "--zsh",
+      "--output", tempFile.toString
+    )
+
+    val lines = helpers.IO.read(tempFile.toUri())
+    assert(lines.startsWith("""#compdef viash"""))
+    assert(lines.contains("_viash_export_commands"))
   }
 
   test("viash export config_schema") {
