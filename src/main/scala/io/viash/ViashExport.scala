@@ -39,13 +39,13 @@ object ViashExport {
     }
   }
 
-  def exportAutocomplete(output: Option[Path], zsh: Boolean): Unit = {
+  def exportAutocomplete(output: Option[Path], format: String): Unit = {
     val cli = new CLIConf(Nil)
     val str = 
-      if (zsh) {
-        AutoCompleteZsh.generate(cli)
-      } else {
-        AutoCompleteBash.generate(cli)
+      format match {
+        case "bash" => AutoCompleteBash.generate(cli)
+        case "zsh" => AutoCompleteZsh.generate(cli)
+        case _ => throw new IllegalArgumentException("'format' must be either 'bash' or 'zsh'.")
       }
     if (output.isDefined) {
       Files.write(output.get, str.getBytes())

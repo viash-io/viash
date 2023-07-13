@@ -317,7 +317,7 @@ object Main {
         val output = cli.export.cli_autocomplete.output.toOption.map(Paths.get(_))
         ViashExport.exportAutocomplete(
           output,
-          zsh = cli.export.cli_autocomplete.zsh()
+          format = cli.export.cli_autocomplete.format()
         )
         0
       case List(cli.export, cli.export.config_schema) =>

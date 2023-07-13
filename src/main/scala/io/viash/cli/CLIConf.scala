@@ -459,10 +459,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         default = None,
         descr = "Destination path"
       )
-      val zsh = registerOpt[Boolean](
-        name = "zsh",
-        default = Some(false),
-        descr = "Export as a zsh autocompletion script"
+      val format = registerChoice(
+        name = "format",
+        short = Some('f'),
+        default = Some("bash"),
+        choices = List("bash", "zsh"),
+        descr = "Which autocomplete format to use."
       )
     }
 
