@@ -486,7 +486,7 @@ case class DockerPlatform(
                   |  IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}'
                   |  for var in $$${arg.VIASH_PAR}; do
                   |    unset IFS
-                  |    VIASH_EXTRA_MOUNTS+=( $$(ViashAutodetectMountArg "$$var") )
+                  |    VIASH_EXTRA_MOUNTS+=( "$$(ViashAutodetectMountArg "$$var")" )
                   |    var=$$(ViashAutodetectMount "$$var")
                   |    $viash_temp+=( "$$var" )$chownIfOutput
                   |  done
@@ -497,7 +497,7 @@ case class DockerPlatform(
             Some(
               s"""
                   |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-                  |  VIASH_EXTRA_MOUNTS+=( $$(ViashAutodetectMountArg "$$${arg.VIASH_PAR}") )
+                  |  VIASH_EXTRA_MOUNTS+=( "$$(ViashAutodetectMountArg "$$${arg.VIASH_PAR}")" )
                   |  ${arg.VIASH_PAR}=$$(ViashAutodetectMount "$$${arg.VIASH_PAR}")$chownIfOutput
                   |fi""".stripMargin)
           case _ => None

@@ -52,6 +52,8 @@
 
 * `viash project file parsing`: Give a more informative message when the viash project file fails to parse correctly (PR #475).
 
+* `docker platform`: Fix issue when mounting an input or output folder containing spaces (PR #...).
+
 ## INTERNAL CHANGES
 
 * `NextflowVDSL3Platform`: Renamed to `NextflowPlatform` (PR #469).
