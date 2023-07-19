@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream
 import scala.io.AnsiColor
 
 class LoggerTest extends AnyFunSuite {
+  Logger.UseColorOverride.value = Some(false)
 
   test("Check basic log print") {
     val logger = Logger.apply("Tester")
@@ -49,8 +50,7 @@ class LoggerTest extends AnyFunSuite {
   }
 
   test("Check printing in color") {
-    Logger.UseColorOverride.value = Some(true)
-    val logger = Logger.apply("Tester_color")
+    val logger = Logger.apply("Tester_color", LoggerLevel.Info, true)
 
     assert(logger.name == "Tester_color")
     assert(logger.useColor == true)
@@ -71,8 +71,7 @@ class LoggerTest extends AnyFunSuite {
   }
 
   test("Check printing without color") {
-    Logger.UseColorOverride.value = Some(false)
-    val logger = Logger.apply("Tester_no_color")
+    val logger = Logger.apply("Tester_no_color", LoggerLevel.Info, false)
 
     assert(logger.name == "Tester_no_color")
     assert(logger.useColor == false)
@@ -92,18 +91,38 @@ class LoggerTest extends AnyFunSuite {
     assert(stderr == "foo\n")
   }
 
-  test("Check printing auto color") {
-    Logger.UseColorOverride.value = Some(false)
-    val logger = Logger.apply("Tester_auto_color")
+  test("Check error log print") {
+    val logger = Logger.apply("Tester_error")
 
-    assert(logger.name == "Tester_auto_color")
+    assert(logger.name == "Tester_error")
     assert(logger.useColor == false)
 
     val outStream = new ByteArrayOutputStream()
     val errStream = new ByteArrayOutputStream()
     Console.withOut(outStream) {
       Console.withErr(errStream) {
-        logger.info("foo")
+        logger.error("foo")
+      }
+    }
+
+    val stdout = outStream.toString
+    val stderr = errStream.toString
+
+    assert(stdout.isEmpty())
+    assert(stderr == "foo\n")
+  }
+
+  test("Check warn log print") {
+    val logger = Logger.apply("Tester_warn")
+
+    assert(logger.name == "Tester_warn")
+    assert(logger.useColor == false)
+
+    val outStream = new ByteArrayOutputStream()
+    val errStream = new ByteArrayOutputStream()
+    Console.withOut(outStream) {
+      Console.withErr(errStream) {
+        logger.warn("foo")
       }
     }
 
@@ -136,8 +155,7 @@ class LoggerTest extends AnyFunSuite {
   }
 
   test("Check debug log print while minimum level is debug") {
-    Logger.UseLevelOverride.value = LoggerLevel.Debug
-    val logger = Logger.apply("Tester_debug2")
+    val logger = Logger.apply("Tester_debug2", LoggerLevel.Debug, false)
 
     assert(logger.name == "Tester_debug2")
     assert(logger.useColor == false)

@@ -1,11 +1,12 @@
 package io.viash.e2e.help
 
 import io.viash._
-
+import io.viash.helpers.Logger
 import org.scalatest.funsuite.AnyFunSuite
 import io.viash.exceptions.ExitException
 
 class MainHelpSuite extends AnyFunSuite{
+  Logger.UseColorOverride.value = Some(false)
   // path to namespace components
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 

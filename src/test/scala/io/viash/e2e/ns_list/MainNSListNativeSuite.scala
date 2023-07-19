@@ -3,7 +3,7 @@ package io.viash.e2e.ns_list
 import io.viash._
 
 import io.viash.config.Config
-import io.viash.helpers.{Exec, IO}
+import io.viash.helpers.{Exec, IO, Logger}
 import io.circe.yaml.parser
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
@@ -13,6 +13,7 @@ import java.nio.file.Paths
 import scala.io.Source
 
 class MainNSListNativeSuite extends AnyFunSuite{
+  Logger.UseColorOverride.value = Some(false)
   // path to namespace components
   private val nsPath = getClass.getResource("/testns/").getPath
   private val scalaPath = getClass.getResource("/test_languages/scala/").getPath

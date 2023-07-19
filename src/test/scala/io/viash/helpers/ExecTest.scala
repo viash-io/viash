@@ -4,8 +4,10 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.util.Try
+import io.viash.helpers.Logger
 
 class ExecTest extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   test("Check exec.run") {
     val execRun = Exec.run(List("echo", "hi"))
     assert(execRun.trim == "hi")

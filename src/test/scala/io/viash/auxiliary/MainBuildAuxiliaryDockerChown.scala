@@ -1,7 +1,7 @@
 package io.viash.auxiliary
 
 import io.viash.{DockerTest, TestHelper}
-import io.viash.helpers.{IO, Exec}
+import io.viash.helpers.{IO, Exec, Logger}
 import io.viash.config.Config
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
@@ -10,6 +10,7 @@ import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.io.Source
 
 class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
 

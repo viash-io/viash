@@ -5,8 +5,10 @@ import org.scalatest.funsuite.AnyFunSuite
 import io.circe.syntax._
 
 import io.circe.yaml.parser.parse
+import io.viash.helpers.Logger
 
 class PathTest extends AnyFunSuite {
+  Logger.UseColorOverride.value = Some(false)
   // testing parsing
   // TODO
 

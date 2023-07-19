@@ -1,7 +1,7 @@
 package io.viash.e2e.export
 
 import io.viash._
-
+import io.viash.helpers.Logger
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.BeforeAndAfter
 
@@ -9,6 +9,7 @@ import java.nio.file.{Files, Path}
 import scala.io.Source
 
 class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
+  Logger.UseColorOverride.value = Some(false)
   var tempFile: Path = _
 
   before {

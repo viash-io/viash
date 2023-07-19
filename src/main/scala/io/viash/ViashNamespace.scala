@@ -361,7 +361,7 @@ object ViashNamespace extends Logging {
           val (exitcode, output) = runExecCommand(cmd)
           info(s"  Exit code: $exitcode\n")
           info(s"  Output:")
-          info(output)
+          infoOut(output)
       }
     }
   }

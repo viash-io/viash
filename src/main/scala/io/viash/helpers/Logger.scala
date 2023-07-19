@@ -48,12 +48,9 @@ object LoggerOutput extends Enumeration {
 /** Partial logging facade styled alike SLF4J.
   * Used Grizzled slf4j as further inspiration and basis.
   */
-class Logger(val name: String) {
+class Logger(val name: String, val level: LoggerLevel.Level, val useColor: Boolean) {
   import LoggerOutput._
   import LoggerLevel._
-
-  val level: Level = Logger.getLoggerLevel(name)
-  val useColor: Boolean = Logger.useColor
 
   @inline final def isErrorEnabled = isEnabled(Error)
   @inline final def isWarnEnabled = isEnabled(Warn)
@@ -166,7 +163,8 @@ object Logger {
 
   val rootLoggerName = "Viash-root-logger"
 
-  def apply(name: String): Logger = new Logger(name)
+  def apply(name: String, level: LoggerLevel.Level, useColor: Boolean): Logger = new Logger(name, level, useColor)
+  def apply(name: String): Logger = new Logger(name, getLoggerLevel(name), useColor)
   def apply(cls: Class[_]): Logger = apply(cls.getName)
   def apply[C: ClassTag](): Logger = apply(classTag[C].runtimeClass.getName)
 

@@ -7,8 +7,11 @@ import io.circe.yaml.parser
 import io.viash.helpers.circe._
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import io.viash.helpers.data_structures._
+import io.viash.helpers.Logger
 
 class ParseOneOrMoreTest extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
+  
   case class XXX(str: OneOrMore[String])
   implicit val encodeXXX: Encoder.AsObject[XXX] = deriveConfiguredEncoder
   implicit val decodeXXX: Decoder[XXX] = deriveConfiguredDecoder
