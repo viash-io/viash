@@ -28,7 +28,7 @@ import io.viash.schemas.{CollectedSchemas, JsonSchema}
 import io.circe.Json
 import io.viash.schemas.AutoComplete
 
-object ViashExport {
+object ViashExport extends Logging {
   def exportCLISchema(output: Option[Path], format: String): Unit = {
     val cli = new CLIConf(Nil)
     val data = cli.getRegisteredCommands().asJson
@@ -36,7 +36,7 @@ object ViashExport {
     if (output.isDefined) {
       Files.write(output.get, str.getBytes())
     } else {
-      println(str)
+      infoOut(str)
     }
   }
 
@@ -46,7 +46,7 @@ object ViashExport {
     if (output.isDefined) {
       Files.write(output.get, str.getBytes())
     } else {
-      println(str)
+      infoOut(str)
     }
   }
 
@@ -56,7 +56,7 @@ object ViashExport {
     if (output.isDefined) {
       Files.write(output.get, str.getBytes())
     } else {
-      println(str)
+      infoOut(str)
     }
   }
 
@@ -67,7 +67,7 @@ object ViashExport {
     if (output.isDefined) {
       Files.write(output.get, str.getBytes())
     } else {
-      println(str)
+      infoOut(str)
     }
   }
 
@@ -77,7 +77,7 @@ object ViashExport {
     if (output.isDefined) {
       Files.write(output.get, str.getBytes())
     } else {
-      println(str)
+      infoOut(str)
     }
   }
 }

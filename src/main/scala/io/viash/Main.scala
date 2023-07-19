@@ -23,16 +23,17 @@ import java.net.URI
 import sys.process.{Process, ProcessLogger}
 
 import config.Config
-import helpers.{IO, Exec, SysEnv}
+import helpers.{IO, Exec, SysEnv, Logger, Logging}
 import helpers.Scala._
 import helpers.status._
 import platforms.Platform
 import project.ViashProject
-import cli.{CLIConf, ViashCommand, DocumentedSubcommand, ViashNs, ViashNsBuild}
+import cli.{CLIConf, ViashCommand, DocumentedSubcommand, ViashNs, ViashNsBuild, ViashLogger}
 import exceptions._
 import org.rogach.scallop._
+import io.viash.helpers.LoggerLevel
 
-object Main {
+object Main extends Logging {
   private val pkg = getClass.getPackage
   val name: String = if (pkg.getImplementationTitle != null) pkg.getImplementationTitle else "viash"
   val version: String = if (pkg.getImplementationVersion != null) pkg.getImplementationVersion else "test"
@@ -57,22 +58,23 @@ object Main {
       System.exit(exitCode)
     } catch {
       case e @ ( _: FileNotFoundException | _: MissingResourceFileException ) =>
-        Console.err.println(s"viash: ${e.getMessage()}")
+        info(s"viash: ${e.getMessage()}")
         System.exit(1)
       case e: NoSuchFileException =>
         // This exception only returns the file/path that can't be found. Add a bit more feedback to the user.
-        Console.err.println(s"viash: ${e.getMessage()} (No such file or directory)")
+        info(s"viash: ${e.getMessage()} (No such file or directory)")
         System.exit(1)
       case e: AbstractConfigException =>
-        Console.err.println(s"viash: ${Console.RED}Error parsing, ${e.innerMessage} in file '${e.uri}'.${Console.RESET}\nDetails:\n${e.getMessage()}")
+        info(s"viash: Error parsing, ${e.innerMessage} in file '${e.uri}'.")
+        info(s"Details:\n${e.getMessage()}")
         System.exit(1)
       case e: MalformedInputException =>
-        Console.err.println(s"viash: ${e.getMessage()}")
+        info(s"viash: ${e.getMessage()}")
         System.exit(1)
       case ee: ExitException =>
         System.exit(ee.code)
       case e: Exception =>
-        Console.err.println(
+        info(
           s"""Unexpected error occurred! If you think this is a bug, please post
             |create an issue at https://github.com/viash-io/viash/issues containing
             |a reproducible example and the stack trace below.
@@ -145,7 +147,7 @@ object Main {
       Array(path.toString) ++ args,
       cwd = workingDir.map(_.toFile),
       extraEnv = List("VIASH_VERSION" -> "-"): _*
-    ).!(ProcessLogger(Console.out.println, Console.err.println))
+    ).!(ProcessLogger(s => infoOut(s), s => info(s)))
   }
 
   /**
@@ -173,6 +175,23 @@ object Main {
 
     // parse arguments
     val cli = new CLIConf(viashArgs.toIndexedSeq) 
+
+    // Set Logger paramters
+    cli.subcommands.last match {
+      case x: ViashLogger => 
+        if (x.colorize.isDefined) {
+          val colorize = x.colorize() match {
+            case "auto" => None
+            case "true" => Some(true)
+            case "false" => Some(false)
+          }
+          Logger.UseColorOverride.value = colorize
+        }
+        if (x.loglevel.isDefined) {
+          Logger.UseLevelOverride.value = LoggerLevel.fromString(x.loglevel())
+        }
+      case _ => 
+    }
     
     // see if there are project overrides passed to the viash command
     val projSrc = cli.subcommands.last match {
@@ -341,7 +360,7 @@ object Main {
         )
         0
       case _ =>
-        Console.err.println("No subcommand was specified. See `viash --help` for more information.")
+        info("No subcommand was specified. See `viash --help` for more information.")
         1
     }
   }
