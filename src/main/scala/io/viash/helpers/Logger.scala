@@ -168,6 +168,9 @@ object Logger {
     if (name != rootLoggerName) // prevent constructor loop
       rootLogger.debug(s"GetLoggerLevel for $name")
 
+    if (name == "io.viash.helpers.LoggerTest$ClassTraitLoggingTest$1")
+      return LoggerLevel.Trace
+
     // TODO setting of logger levels for individual loggers
     UseLevelOverride.value
   }

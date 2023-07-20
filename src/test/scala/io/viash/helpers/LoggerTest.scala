@@ -249,4 +249,107 @@ class LoggerTest extends AnyFunSuite {
     assert(stderr == expectErr)
   }
 
+  test("Check logger as a class trait") {
+
+    class ClassTraitLoggingTest extends Logging {
+      def bar(): Unit = {
+        error(s"err: error $isErrorEnabled")
+        warn(s"err: warn $isWarnEnabled")
+        info(s"err: info $isInfoEnabled")
+        debug(s"err: debug $isDebugEnabled")
+        trace(s"err: trace $isTraceEnabled")
+        success(s"err: success")
+
+        errorOut(s"out: error")
+        warnOut(s"out: warn")
+        infoOut(s"out: info")
+        debugOut(s"out: debug")
+        traceOut(s"out: trace")
+        successOut(s"out: success")
+
+        log(LoggerOutput.StdErr, LoggerLevel.Error, AnsiColor.MAGENTA, "err: foo")
+        log(LoggerOutput.StdOut, LoggerLevel.Error, AnsiColor.BLUE, "out: foo")
+      }
+
+      def name(): String = logger.name
+      def level(): String = logger.level.toString()
+    }
+
+    val testClass = new ClassTraitLoggingTest()
+
+    assert(testClass.name() == "io.viash.helpers.LoggerTest$ClassTraitLoggingTest$1")
+    assert(testClass.level() == "Trace")
+
+    val outStream = new ByteArrayOutputStream()
+    val errStream = new ByteArrayOutputStream()
+    Console.withOut(outStream) {
+      Console.withErr(errStream) {
+        testClass.bar()
+      }
+    }
+
+    val stdout = outStream.toString
+    val stderr = errStream.toString
+
+    val expectOut =
+      s"""out: error
+         |out: warn
+         |out: info
+         |out: debug
+         |out: trace
+         |out: success
+         |out: foo
+         |""".stripMargin
+
+    val expectErr =
+      s"""err: error true
+         |err: warn true
+         |err: info true
+         |err: debug true
+         |err: trace true
+         |err: success
+         |err: foo
+         |""".stripMargin
+
+    assert(stdout == expectOut)
+    assert(stderr == expectErr)
+
+    // Tack on tests for a variant class
+    class ClassTraitLoggingTest2 extends ClassTraitLoggingTest
+    val testClass2 = new ClassTraitLoggingTest2()
+
+    assert(testClass2.name() == "io.viash.helpers.LoggerTest$ClassTraitLoggingTest2$1")
+    assert(testClass2.level() == "Info")
+
+    val outStream2 = new ByteArrayOutputStream()
+    val errStream2 = new ByteArrayOutputStream()
+    Console.withOut(outStream2) {
+      Console.withErr(errStream2) {
+        testClass2.bar()
+      }
+    }
+
+    val stdout2 = outStream2.toString
+    val stderr2 = errStream2.toString
+
+    val expectOut2 =
+      s"""out: error
+         |out: warn
+         |out: info
+         |out: success
+         |out: foo
+         |""".stripMargin
+
+    val expectErr2 =
+      s"""err: error true
+         |err: warn true
+         |err: info true
+         |err: success
+         |err: foo
+         |""".stripMargin
+
+    assert(stdout2 == expectOut2)
+    assert(stderr2 == expectErr2)
+  }
+
 }
