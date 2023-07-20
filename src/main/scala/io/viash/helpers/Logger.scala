@@ -105,7 +105,7 @@ class Logger(val name: String, val level: LoggerLevel.Level, val useColor: Boole
       Console.out.println(msg.toString())
   }
 
-  @inline private def _log(out: Output, level: Level, color: String, msg: => Any): Unit = {
+  @inline def log(out: Output, level: Level, color: String, msg: => Any): Unit = {
     if (!isEnabled(level)) return
 
     val printer = 
@@ -119,21 +119,6 @@ class Logger(val name: String, val level: LoggerLevel.Level, val useColor: Boole
     else
       printer.println(msg.toString())
   }
-
-  final def log(out: Output, level: Level, color: String, msg: => Any): Unit = _log(out, level, color, msg)
-
-  /** Converts any type to a String. In case the object is null, a null
-    * String is returned. Otherwise the method `toString()` is called.
-    *
-    * @param msg  the message object to be converted to String
-    *
-    * @return the String representation of the message.
-    */
-  private implicit def _any2String(msg: Any): String =
-    msg match {
-      case null => "<null>"
-      case _    => msg.toString
-    }
 }
 
 trait Logging {
