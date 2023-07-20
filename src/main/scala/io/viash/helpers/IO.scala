@@ -34,11 +34,12 @@ import java.io.FileNotFoundException
 import scala.jdk.CollectionConverters._
 import java.nio.charset.MalformedInputException
 import io.viash.exceptions.{MalformedInputException => ViashMalformedInputException}
+import io.viash.helpers.Logging
 
 /**
  * IO helper object for handling various file and directory operations.
  */
-object IO {
+object IO extends Logging {
 
   /**
    * Returns the temporary directory path.
@@ -128,7 +129,7 @@ object IO {
       Some(read(uri))
     } catch {
       case _: Exception =>
-        Console.err.println(s"File at URI '$uri' not found")
+        info(s"File at URI '$uri' not found")
         None
     }
   }

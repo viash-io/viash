@@ -26,6 +26,8 @@ object LoggerLevel extends Enumeration {
   val Info = Value(6)
   val Debug = Value(7)
   val Trace = Value(8)
+  
+  val Success = Value(5) // Should have been 6, same as Info. Luckely we had a spare spot between 4 and 6
 
   def fromString(level: String): Value = {
     level match {
@@ -63,12 +65,14 @@ class Logger(val name: String, val level: LoggerLevel.Level, val useColor: Boole
   @inline final def info(msg: => Any): Unit = _log(Info, msg)
   @inline final def debug(msg: => Any): Unit = _log(Debug, msg)
   @inline final def trace(msg: => Any): Unit = _log(Trace, msg)
+  @inline final def success(msg: => Any): Unit = _log(Success, msg)
 
   @inline final def errorOut(msg: => Any): Unit = _logOut(Error, msg)
   @inline final def warnOut(msg: => Any): Unit = _logOut(Warn, msg)
   @inline final def infoOut(msg: => Any): Unit = _logOut(Info, msg)
   @inline final def debugOut(msg: => Any): Unit = _logOut(Debug, msg)
   @inline final def traceOut(msg: => Any): Unit = _logOut(Trace, msg)
+  @inline final def successOut(msg: => Any): Unit = _logOut(Success, msg)
 
   @inline final def isEnabled(level: Level): Boolean = this.level >= level
 
@@ -79,6 +83,8 @@ class Logger(val name: String, val level: LoggerLevel.Level, val useColor: Boole
       case Info => AnsiColor.WHITE
       case Debug => AnsiColor.GREEN
       case Trace => AnsiColor.CYAN
+
+      case Success => AnsiColor.GREEN
     }
 
   @inline private def _log(level: Level, msg: => Any): Unit = {
@@ -148,12 +154,14 @@ trait Logging {
   protected def info(msg: => Any): Unit = logger.info(msg)
   protected def debug(msg: => Any): Unit = logger.debug(msg)
   protected def trace(msg: => Any): Unit = logger.trace(msg)
+  protected def success(msg: => Any): Unit = logger.success(msg)
 
   protected def errorOut(msg: => Any): Unit = logger.errorOut(msg)
   protected def warnOut(msg: => Any): Unit = logger.warnOut(msg)
   protected def infoOut(msg: => Any): Unit = logger.infoOut(msg)
   protected def debugOut(msg: => Any): Unit = logger.debugOut(msg)
   protected def traceOut(msg: => Any): Unit = logger.traceOut(msg)
+  protected def successOut(msg: => Any): Unit = logger.successOut(msg)
 
   protected def log(out: LoggerOutput.Output, level: LoggerLevel.Level, color: String, msg: => Any): Unit = logger.log(out, level, color, msg)
 }

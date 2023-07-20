@@ -27,7 +27,9 @@ import shapeless.Lazy
 import io.viash.schemas.ParameterSchema
 import io.circe.ACursor
 
-object DeriveConfiguredDecoderWithDeprecationCheck {
+import io.viash.helpers.Logging
+
+object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
 
   private def memberDeprecationCheck(name: String, history: List[CursorOp], T: Type): Unit = {
     val m = T.member(TermName(name))
@@ -37,12 +39,12 @@ object DeriveConfiguredDecoderWithDeprecationCheck {
     if (deprecated.isDefined) {
       val d = deprecated.get
       val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
-      Console.err.println(s"Warning: .$historyString.$name is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+      info(s"Warning: .$historyString.$name is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
     }
     if (removed.isDefined) {
       val r = removed.get
       val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
-      Console.err.println(s"Error: .$historyString.$name was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
+      info(s"Error: .$historyString.$name was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
     }
   }
 
@@ -54,11 +56,11 @@ object DeriveConfiguredDecoderWithDeprecationCheck {
     val removed = schema.flatMap(_.removed)
     if (deprecated.isDefined) {
       val d = deprecated.get
-      Console.err.println(s"Warning: $name is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+      info(s"Warning: $name is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
     }
     if (removed.isDefined) {
       val r = removed.get
-      Console.err.println(s"Error: $name was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}")
+      info(s"Error: $name was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}")
     }
   }
 

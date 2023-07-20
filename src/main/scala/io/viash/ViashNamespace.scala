@@ -136,7 +136,7 @@ object ViashNamespace extends Logging {
 
     val parentTempPath = IO.makeTemp("viash_ns_test")
     if (keepFiles.getOrElse(true)) {
-      Console.err.printf("The working directory for the namespace tests is %s\n", parentTempPath.toString())
+      info(s"The working directory for the namespace tests is ${parentTempPath.toString()}")
     }
     
     try {
@@ -154,18 +154,15 @@ object ViashNamespace extends Logging {
           ).mkString("\t") + sys.props("line.separator"))
         writer.flush()
       }
-      printf(
-        s"%s%20s %20s %20s %20s %9s %8s %20s%s\n",
-        "",
-        "namespace",
-        "functionality",
-        "platform",
-        "test_name",
-        "exit_code",
-        "duration",
-        "result",
-        Console.RESET
-      )
+      infoOut("%20s %20s %20s %20s %9s %8s %20s".
+        format("namespace",
+          "functionality",
+          "platform",
+          "test_name",
+          "exit_code",
+          "duration",
+          "result"
+        ))
 
       val results = configs2.map { x =>
         x match {
@@ -178,7 +175,7 @@ object ViashNamespace extends Logging {
             val platName = platform.id
 
             // print start message
-            printf(s"%s%20s %20s %20s %20s %9s %8s %20s%s\n", "", namespace, funName, platName, "start", "", "", "", Console.RESET)
+            infoOut("%20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, platName, "start", "", "", ""))
 
             // run tests
             // TODO: it would actually be great if this component could subscribe to testresults messages
@@ -223,7 +220,7 @@ object ViashNamespace extends Logging {
               }
 
               // print message
-              log(LoggerOutput.StdOut, LoggerLevel.Info, col, String.format("%20s %20s %20s %20s %9s %8s %20s", namespace, funName, platName, test.name, test.exitValue, test.duration, msg))
+              log(LoggerOutput.StdOut, LoggerLevel.Info, col, "%20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, platName, test.name, test.exitValue, test.duration, msg))
 
               if (test.exitValue != 0) {
                 info(test.output)
