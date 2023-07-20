@@ -271,7 +271,7 @@ class LoggerTest extends AnyFunSuite {
         log(LoggerOutput.StdOut, LoggerLevel.Error, AnsiColor.BLUE, "out: foo")
       }
 
-      def name(): String = logger.name
+      def name(): String = loggerName
       def level(): String = logger.level.toString()
     }
 
