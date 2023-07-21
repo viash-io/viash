@@ -30,7 +30,7 @@ import io.viash.schemas._
     |
     | * @[Native](platform_native)
     | * @[Docker](platform_docker)
-    | * @[Nextflow VDSL3](platform_nextflow)
+    | * @[Nextflow](platform_nextflow)
     |""".stripMargin)
 @example(
   """platforms:
