@@ -2,8 +2,10 @@ package io.viash.helpers
 
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
+import io.viash.helpers.Logger
 
 class FormatTest extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   test("A paragraph that contains no newlines that is longer than the wrap column is wrapped at the wrap column") {
     val paragraph = "A paragraph that contains no newlines that is longer than the wrap column is wrapped at the wrap column"
     val wrapColumn = 80

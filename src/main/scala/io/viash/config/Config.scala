@@ -20,7 +20,7 @@ package io.viash.config
 import io.viash.config_mods.ConfigModParser
 import io.viash.functionality._
 import io.viash.platforms._
-import io.viash.helpers.{Git, GitInfo, IO}
+import io.viash.helpers.{Git, GitInfo, IO, Logging}
 import io.viash.helpers.circe._
 import io.viash.helpers.status._
 import io.viash.helpers.Yaml
@@ -118,7 +118,7 @@ case class Config(
   }
 }
 
-object Config {
+object Config extends Logging {
   def readYAML(config: String): (String, Option[Script]) = {
     val configUri = IO.uri(config)
     readYAML(configUri)
@@ -266,10 +266,10 @@ object Config {
 
     // print warnings if need be
     if (conf2.functionality.status == Status.Deprecated)
-      Console.err.println(s"${Console.YELLOW}Warning: The status of the component '${conf2.functionality.name}' is set to deprecated.${Console.RESET}")
+      warn(s"Warning: The status of the component '${conf2.functionality.name}' is set to deprecated.")
     
     if (conf2.functionality.resources.isEmpty && optScript.isEmpty)
-      Console.err.println(s"${Console.YELLOW}Warning: no resources specified!${Console.RESET}")
+      warn(s"Warning: no resources specified!")
 
     if (!addOptMainScript) {
       return conf3
@@ -353,7 +353,7 @@ object Config {
         }
       } catch {
         case _: Exception =>
-          Console.err.println(s"${Console.RED}Reading file '$file' failed${Console.RESET}")
+          error(s"Reading file '$file' failed")
           Right(ParseError)
       }
     }

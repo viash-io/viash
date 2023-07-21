@@ -7,10 +7,11 @@ import java.nio.file.Paths
 import io.viash.config.Config
 
 import scala.io.Source
-import io.viash.helpers.{IO, Exec}
+import io.viash.helpers.{IO, Exec, Logger}
 import io.viash.TestHelper
 
 class MainBuildAuxiliaryNativeUnknownParameter extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   // which platform to test
   private val configFile = getClass.getResource("/testbash/config.vsh.yaml").getPath
 

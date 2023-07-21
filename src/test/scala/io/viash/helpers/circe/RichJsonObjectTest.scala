@@ -3,8 +3,10 @@ package io.viash.helpers.circe
 import io.circe.Json
 import io.circe.JsonObject
 import org.scalatest.funsuite.AnyFunSuite
+import io.viash.helpers.Logger
 
 class RichJsonObjectTest extends AnyFunSuite {
+  Logger.UseColorOverride.value = Some(false)
 
   test("RichJsonObject.map should apply function to all key-value pairs") {
     val inputJson = JsonObject(

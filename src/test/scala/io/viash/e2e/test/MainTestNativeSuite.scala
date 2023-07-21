@@ -4,7 +4,7 @@ import io.viash._
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 
-import io.viash.helpers.{IO, Exec}
+import io.viash.helpers.{IO, Exec, Logger}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -12,6 +12,7 @@ import scala.reflect.io.Directory
 import sys.process._
 
 class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   // default yaml
   private val configFile = getClass.getResource("/testbash/config.vsh.yaml").getPath
 

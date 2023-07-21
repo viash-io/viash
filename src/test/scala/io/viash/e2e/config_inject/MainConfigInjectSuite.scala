@@ -9,9 +9,10 @@ import java.nio.file.{Files, Paths, StandardCopyOption}
 import io.viash.config.Config
 
 import scala.io.Source
-import io.viash.helpers.{IO, Exec}
+import io.viash.helpers.{IO, Exec, Logger}
 
 class MainConfigInjectSuite extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   private val temporaryFolder = IO.makeTemp("viash_tester")
 
   val srcPath = Paths.get(getClass.getResource(s"/test_languages/").getPath())

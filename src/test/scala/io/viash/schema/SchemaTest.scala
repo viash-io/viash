@@ -4,8 +4,10 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 import io.viash.schemas.CollectedSchemas
 import scala.sys.process.Process
+import io.viash.helpers.Logger
 
 class SchemaTest extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
     
   test("All schema class val members should be annotated") {
     val nonAnnotated = CollectedSchemas.getAllNonAnnotated

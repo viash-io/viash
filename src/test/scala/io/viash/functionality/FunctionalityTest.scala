@@ -9,9 +9,10 @@ import io.circe.yaml.{parser => YamlParser}
 import io.circe.syntax._
 import io.viash.helpers.circe._
 import io.viash.helpers.data_structures._
-
+import io.viash.helpers.Logger
 
 class FunctionalityTest extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   val infoJson = Yaml("""
     |foo:
     |  bar:

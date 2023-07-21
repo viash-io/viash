@@ -1,6 +1,6 @@
 package io.viash.platforms.nextflow
 
-import io.viash.helpers.IO
+import io.viash.helpers.{IO, Logger}
 import io.viash.{DockerTest, NextflowTest, TestHelper}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
@@ -13,6 +13,7 @@ import java.io.IOException
 import java.io.UncheckedIOException
 
 class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   // temporary folder to work in
   private val temporaryFolder = IO.makeTemp("viash_tester_nextflowvdsl3")
   private val tempFolStr = temporaryFolder.toString

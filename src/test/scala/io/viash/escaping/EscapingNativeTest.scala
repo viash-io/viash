@@ -8,9 +8,10 @@ import org.scalatest.funsuite.AnyFunSuite
 import java.io.{IOException, UncheckedIOException}
 import java.nio.file.{Files, Path, Paths}
 import scala.io.Source
-import io.viash.helpers.{IO, Exec}
+import io.viash.helpers.{IO, Exec, Logger}
 
 class EscapingNativeTest extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   // which platform to test
   private val rootPath = getClass.getResource(s"/test_escaping/").getPath
   private val configFile = getClass.getResource(s"/test_escaping/config.vsh.yaml").getPath
