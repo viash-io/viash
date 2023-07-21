@@ -333,9 +333,10 @@ object Main extends Logging {
         )
         0
       case List(cli.export, cli.export.cli_autocomplete) =>
-        val output = cli.export.cli_schema.output.toOption.map(Paths.get(_))
+        val output = cli.export.cli_autocomplete.output.toOption.map(Paths.get(_))
         ViashExport.exportAutocomplete(
-          output
+          output,
+          format = cli.export.cli_autocomplete.format()
         )
         0
       case List(cli.export, cli.export.config_schema) =>
