@@ -386,7 +386,7 @@ class MainBuildAuxiliaryDockerRequirementsR extends AbstractMainBuildAuxiliaryDo
   override val dockerTag = "viash_requirements_testbench_r"
   override val image = "r-base:4.3.1"
 
-  test("setup; check base image for r still does not contain the which package", DockerTest) { f =>
+  test("setup; check base image for r still does not contain the glue package", DockerTest) { f =>
     val newConfigFilePath = derivePlatformConfig(None, None, "r_base")
 
     TestHelper.testMain(
@@ -456,6 +456,83 @@ class MainBuildAuxiliaryDockerRequirementsR extends AbstractMainBuildAuxiliaryDo
     )
 
     assert(output.output.contains("/usr/local/lib/R/site-library/glue/R/glue doesn't exist."))
+  }
+}
+
+class MainBuildAuxiliaryDockerRequirementsRBioc extends AbstractMainBuildAuxiliaryDockerRequirements{
+  override val dockerTag = "viash_requirements_testbench_rbioc"
+  override val image = "r-base:4.3.1"
+
+  test("setup; check base image for r-bioc still does not contain the S4Vectors package", DockerTest) { f =>
+    val newConfigFilePath = derivePlatformConfig(None, None, "rbioc_base")
+
+    TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(checkDockerImageExists(dockerTag))
+    assert(executableRequirementsFile.exists)
+    assert(executableRequirementsFile.canExecute)
+
+    val output = Exec.runCatch(
+      Seq(
+        executableRequirementsFile.toString,
+        "--file", "/usr/local/lib/R/site-library/S4Vectors/R/S4Vectors"
+      )
+    )
+
+    assert(output.output.contains("/usr/local/lib/R/site-library/S4Vectors/R/S4Vectors doesn't exist."))
+  }
+
+  test("setup; check docker requirements using r to add the S4Vectors package", DockerTest) { f =>
+    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "r", "bioc": ["S4Vectors"] }]"""), None, "rbioc_glue")
+
+    TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(checkDockerImageExists(dockerTag))
+    assert(executableRequirementsFile.exists)
+    assert(executableRequirementsFile.canExecute)
+
+    val output = Exec.runCatch(
+      Seq(
+        executableRequirementsFile.toString,
+        "--file", "/usr/local/lib/R/site-library/S4Vectors/R/S4Vectors"
+      )
+    )
+
+    assert(output.output.contains("/usr/local/lib/R/site-library/S4Vectors/R/S4Vectors exists."))
+  }
+
+  test("setup; check docker requirements using r but with an empty list", DockerTest) { f =>
+    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "r", "bioc": [] }]"""), None, "rbioc_empty")
+
+    TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(checkDockerImageExists(dockerTag))
+    assert(executableRequirementsFile.exists)
+    assert(executableRequirementsFile.canExecute)
+
+    val output = Exec.runCatch(
+      Seq(
+        executableRequirementsFile.toString,
+        "--file", "/usr/local/lib/R/site-library/S4Vectors/R/S4Vectors"
+      )
+    )
+
+    assert(output.output.contains("/usr/local/lib/R/site-library/S4Vectors/R/S4Vectors doesn't exist."))
   }
 }
 
