@@ -141,6 +141,7 @@ case class NextflowPlatform(
       case Some(_) => 
         throw new RuntimeException(s"NextflowPlatform 'container' variable: Platform $container is not a Docker Platform")
       case None => None
+      case _ => ???
     }
   }
 
@@ -193,41 +194,7 @@ case class NextflowPlatform(
     val header = Helper.generateScriptHeader(functionality)
       .map(h => Escaper(h, newline = true))
       .mkString("// ", "\n// ", "")
-
-    /************************* SCRIPT *************************/
-    val executionCode = functionality.mainScript match {
-      // if mainResource is empty (shouldn't be the case)
-      case None => ""
-
-      // if mainResource is simply an executable
-      case Some(e: Executable) => //" " + e.path.get + " $VIASH_EXECUTABLE_ARGS"
-        throw new NotImplementedError("Running executables through a NextflowPlatform is not yet implemented. Create a support ticket to request this functionality if necessary.")
-
-      // if mainResource is a script
-      case Some(res) =>
-        // todo: also include the bashwrapper checks
-        val argsAndMeta = functionality.getArgumentLikesGroupedByDest(
-          includeMeta = true,
-          filterInputs = true
-        )
-        val code = res.readWithInjection(argsAndMeta, config).get
-        val escapedCode = Bash.escapeString(code, allowUnescape = true)
-          .replace("\\", "\\\\")
-          .replace("'''", "\\'\\'\\'")
-
-        // IMPORTANT! difference between code below and BashWrapper:
-        // script is stored as `.viash_script.sh`.
-        val scriptPath = "$tempscript"
-
-        s"""set -e
-          |tempscript=".viash_script.sh"
-          |cat > "$scriptPath" << VIASHMAIN
-          |$escapedCode
-          |VIASHMAIN
-          |${res.command(scriptPath)}
-          |""".stripMargin
-    }
-
+    
     /************************* JSONS *************************/
     // override container
     val directivesToJson = directives.copy(
@@ -252,60 +219,96 @@ case class NextflowPlatform(
     val autoJson = auto.asJson.dropEmptyRecursively
 
     /************************* MAIN.NF *************************/
-    val tripQuo = """""""""
+    functionality.mainScript match {
+      // if mainResource is empty (shouldn't be the case)
+      case None => throw new RuntimeException("there should be a main script here")
 
+      // if mainResource is simply an executable
+      case Some(e: Executable) => //" " + e.path.get + " $VIASH_EXECUTABLE_ARGS"
+        throw new NotImplementedError(
+          "Running executables through a NextflowPlatform is not (yet) implemented. " +
+            "Create a support ticket to request this functionality if necessary."
+        )
+      
+      case Some(res: NextflowScript) =>
+        res.readWithInjection(Map.empty, config).get
+        // TODO: change this such that it contains helper code instead of
+        // importing non-existent helper files
 
-    s"""$header
-      |
-      |nextflow.enable.dsl=2
-      |
-      |// Required imports
-      |import groovy.json.JsonSlurper
-      |
-      |// initialise slurper
-      |def jsonSlurper = new JsonSlurper()
-      |
-      |// DEFINE CUSTOM CODE
-      |
-      |// functionality metadata
-      |thisConfig = processConfig(jsonSlurper.parseText($funJsonStr))
-      |
-      |thisScript = '''$executionCode'''
-      |
-      |thisDefaultProcessArgs = [
-      |  // key to be used to trace the process and determine output names
-      |  key: thisConfig.functionality.name,
-      |  // fixed arguments to be passed to script
-      |  args: [:],
-      |  // default directives
-      |  directives: jsonSlurper.parseText('''${jsonPrinter.print(dirJson2)}'''),
-      |  // auto settings
-      |  auto: jsonSlurper.parseText('''${jsonPrinter.print(autoJson)}'''),
-      |  // apply a map over the incoming tuple
-      |  // example: { tup -> [ tup[0], [input: tup[1].output], tup[2] ] }
-      |  map: null,
-      |  // apply a map over the ID element of a tuple (i.e. the first element)
-      |  // example: { id -> id + "_foo" }
-      |  mapId: null,
-      |  // apply a map over the data element of a tuple (i.e. the second element)
-      |  // example: { data -> [ input: data.output ] }
-      |  mapData: null,
-      |  // apply a map over the passthrough elements of a tuple (i.e. the tuple excl. the first two elements)
-      |  // example: { pt -> pt.drop(1) }
-      |  mapPassthrough: null,
-      |  // filter the channel
-      |  // example: { tup -> tup[0] == "foo" }
-      |  filter: null,
-      |  // rename keys in the data field of the tuple (i.e. the second element)
-      |  // example: [ "new_key": "old_key" ]
-      |  renameKeys: null,
-      |  // whether or not to print debug messages
-      |  debug: $debug
-      |]
-      |
-      |// END CUSTOM CODE""".stripMargin + 
-      "\n\n" + NextflowHelper.workflowHelper + 
-      "\n\n" + NextflowHelper.vdsl3Helper
+      // if mainResource is a script
+      case Some(res) =>
+        // todo: also include the bashwrapper checks
+        val argsAndMeta = functionality.getArgumentLikesGroupedByDest(
+          includeMeta = true,
+          filterInputs = true
+        )
+        val code = res.readWithInjection(argsAndMeta, config).get
+        val escapedCode = Bash.escapeString(code, allowUnescape = true)
+          .replace("\\", "\\\\")
+          .replace("'''", "\\'\\'\\'")
+
+        // IMPORTANT! difference between code below and BashWrapper:
+        // script is stored as `.viash_script.sh`.
+        val scriptPath = "$tempscript"
+
+        val executionCode = 
+          s"""set -e
+            |tempscript=".viash_script.sh"
+            |cat > "$scriptPath" << VIASHMAIN
+            |$escapedCode
+            |VIASHMAIN
+            |${res.command(scriptPath)}
+            |""".stripMargin
+        
+        s"""$header
+          |
+          |nextflow.enable.dsl=2
+          |
+          |// initialise slurper
+          |def jsonSlurper = new groovy.json.JsonSlurper()
+          |
+          |// DEFINE CUSTOM CODE
+          |
+          |// functionality metadata
+          |thisConfig = processConfig(jsonSlurper.parseText($funJsonStr))
+          |
+          |thisScript = '''$executionCode'''
+          |
+          |thisDefaultProcessArgs = [
+          |  // key to be used to trace the process and determine output names
+          |  key: thisConfig.functionality.name,
+          |  // fixed arguments to be passed to script
+          |  args: [:],
+          |  // default directives
+          |  directives: jsonSlurper.parseText('''${jsonPrinter.print(dirJson2)}'''),
+          |  // auto settings
+          |  auto: jsonSlurper.parseText('''${jsonPrinter.print(autoJson)}'''),
+          |  // apply a map over the incoming tuple
+          |  // example: { tup -> [ tup[0], [input: tup[1].output], tup[2] ] }
+          |  map: null,
+          |  // apply a map over the ID element of a tuple (i.e. the first element)
+          |  // example: { id -> id + "_foo" }
+          |  mapId: null,
+          |  // apply a map over the data element of a tuple (i.e. the second element)
+          |  // example: { data -> [ input: data.output ] }
+          |  mapData: null,
+          |  // apply a map over the passthrough elements of a tuple (i.e. the tuple excl. the first two elements)
+          |  // example: { pt -> pt.drop(1) }
+          |  mapPassthrough: null,
+          |  // filter the channel
+          |  // example: { tup -> tup[0] == "foo" }
+          |  filter: null,
+          |  // rename keys in the data field of the tuple (i.e. the second element)
+          |  // example: [ "new_key": "old_key" ]
+          |  renameKeys: null,
+          |  // whether or not to print debug messages
+          |  debug: $debug
+          |]
+          |
+          |// END CUSTOM CODE""".stripMargin + 
+          "\n\n" + NextflowHelper.workflowHelper + 
+          "\n\n" + NextflowHelper.vdsl3Helper
+    }
   }
 }
 
