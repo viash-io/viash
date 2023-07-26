@@ -463,7 +463,7 @@ class MainBuildAuxiliaryDockerRequirementsRBioc extends AbstractMainBuildAuxilia
   override val dockerTag = "viash_requirements_testbench_rbioc"
   override val image = "r-base:4.3.1"
 
-  test("setup; check base image for r-bioc still does not contain the S4Vectors package", DockerTest) { f =>
+  test("setup; check base image for r-bioc still does not contain the BiocGenerics package", DockerTest) { f =>
     val newConfigFilePath = derivePlatformConfig(None, None, "rbioc_base")
 
     TestHelper.testMain(
@@ -480,15 +480,15 @@ class MainBuildAuxiliaryDockerRequirementsRBioc extends AbstractMainBuildAuxilia
     val output = Exec.runCatch(
       Seq(
         executableRequirementsFile.toString,
-        "--file", "/usr/local/lib/R/site-library/S4Vectors/R/S4Vectors"
+        "--file", "/usr/local/lib/R/site-library/BiocGenerics/R/BiocGenerics"
       )
     )
 
-    assert(output.output.contains("/usr/local/lib/R/site-library/S4Vectors/R/S4Vectors doesn't exist."))
+    assert(output.output.contains("/usr/local/lib/R/site-library/BiocGenerics/R/BiocGenerics doesn't exist."))
   }
 
-  test("setup; check docker requirements using r to add the S4Vectors package", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "r", "bioc": ["S4Vectors"] }]"""), None, "rbioc_glue")
+  test("setup; check docker requirements using r to add the BiocGenerics package", DockerTest) { f =>
+    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "r", "bioc": ["BiocGenerics"] }]"""), None, "rbioc_biocgenerics")
 
     TestHelper.testMain(
       "build",
@@ -504,11 +504,11 @@ class MainBuildAuxiliaryDockerRequirementsRBioc extends AbstractMainBuildAuxilia
     val output = Exec.runCatch(
       Seq(
         executableRequirementsFile.toString,
-        "--file", "/usr/local/lib/R/site-library/S4Vectors/R/S4Vectors"
+        "--file", "/usr/local/lib/R/site-library/BiocGenerics/R/BiocGenerics"
       )
     )
 
-    assert(output.output.contains("/usr/local/lib/R/site-library/S4Vectors/R/S4Vectors exists."))
+    assert(output.output.contains("/usr/local/lib/R/site-library/BiocGenerics/R/BiocGenerics exists."))
   }
 
   test("setup; check docker requirements using r but with an empty list", DockerTest) { f =>
@@ -528,11 +528,11 @@ class MainBuildAuxiliaryDockerRequirementsRBioc extends AbstractMainBuildAuxilia
     val output = Exec.runCatch(
       Seq(
         executableRequirementsFile.toString,
-        "--file", "/usr/local/lib/R/site-library/S4Vectors/R/S4Vectors"
+        "--file", "/usr/local/lib/R/site-library/BiocGenerics/R/BiocGenerics"
       )
     )
 
-    assert(output.output.contains("/usr/local/lib/R/site-library/S4Vectors/R/S4Vectors doesn't exist."))
+    assert(output.output.contains("/usr/local/lib/R/site-library/BiocGenerics/R/BiocGenerics doesn't exist."))
   }
 }
 
