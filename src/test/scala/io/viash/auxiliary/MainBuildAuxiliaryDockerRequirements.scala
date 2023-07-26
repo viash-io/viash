@@ -105,7 +105,6 @@ class MainBuildAuxiliaryDockerRequirementsApk extends AbstractMainBuildAuxiliary
   test("setup; check docker requirements using apk to add the fortune package", DockerTest) { f =>
     val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "apk", "packages": ["fortune"] }]"""), None, "apk_fortune")
 
-    // build viash wrapper with --setup
     TestHelper.testMain(
       "build",
       "-o", tempFolStr,
@@ -130,7 +129,6 @@ class MainBuildAuxiliaryDockerRequirementsApk extends AbstractMainBuildAuxiliary
   test("setup; check docker requirements using apk but with an empty list", DockerTest) { f =>
     val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "apk", "packages": [] }]"""), None, "apk_empty")
 
-    // build viash wrapper with --setup
     TestHelper.testMain(
       "build",
       "-o", tempFolStr,
@@ -174,17 +172,16 @@ class MainBuildAuxiliaryDockerRequirementsApt extends AbstractMainBuildAuxiliary
     val output = Exec.runCatch(
       Seq(
         executableRequirementsFile.toString,
-        "--which", "cowsay"
+        "--file", "/usr/games/cowsay"
       )
     )
 
-    assert(output.output == "")
+    assert(output.output.contains("/usr/games/cowsay doesn't exist."))
   }
 
   test("setup; check docker requirements using apt to add the cowsay package", DockerTest) { f =>
     val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "apt", "packages": ["cowsay"] }]"""), None, "apt_cowsay")
 
-    // build viash wrapper with --setup
     TestHelper.testMain(
       "build",
       "-o", tempFolStr,
@@ -203,7 +200,7 @@ class MainBuildAuxiliaryDockerRequirementsApt extends AbstractMainBuildAuxiliary
       )
     )
 
-    assert(output.output == "/usr/games/cowsay exists.\n")
+    assert(output.output.contains("/usr/games/cowsay exists."))
   }
 
   test("setup; check docker requirements using apt but with an empty list", DockerTest) { f =>
@@ -223,11 +220,11 @@ class MainBuildAuxiliaryDockerRequirementsApt extends AbstractMainBuildAuxiliary
     val output = Exec.runCatch(
       Seq(
         executableRequirementsFile.toString,
-        "--which", "cowsay"
+        "--file", "/usr/games/cowsay"
       )
     )
 
-    assert(output.output == "")
+    assert(output.output.contains("/usr/games/cowsay doesn't exist."))
   }
 }
 
@@ -252,17 +249,16 @@ class MainBuildAuxiliaryDockerRequirementsYum extends AbstractMainBuildAuxiliary
     val output = Exec.runCatch(
       Seq(
         executableRequirementsFile.toString,
-        "--which", "which"
+        "--file", "/usr/bin/which"
       )
     )
 
-    assert(output.output.contains("line 25: which: command not found"))
+    assert(output.output.contains("/usr/bin/which doesn't exist."))
   }
 
   test("setup; check docker requirements using yum to add the which package", DockerTest) { f =>
     val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "yum", "packages": ["which"] }]"""), None, "yum_which")
 
-    // build viash wrapper with --setup
     TestHelper.testMain(
       "build",
       "-o", tempFolStr,
@@ -277,11 +273,11 @@ class MainBuildAuxiliaryDockerRequirementsYum extends AbstractMainBuildAuxiliary
     val output = Exec.runCatch(
       Seq(
         executableRequirementsFile.toString,
-        "--which", "which"
+        "--file", "/usr/bin/which"
       )
     )
 
-    assert(output.output == "/usr/bin/which\n")
+    assert(output.output.contains("/usr/bin/which exists."))
   }
 
   test("setup; check docker requirements using yum but with an empty list", DockerTest) { f =>
@@ -301,13 +297,168 @@ class MainBuildAuxiliaryDockerRequirementsYum extends AbstractMainBuildAuxiliary
     val output = Exec.runCatch(
       Seq(
         executableRequirementsFile.toString,
-        "--which", "which"
+        "--file", "/usr/bin/which"
       )
     )
 
-    assert(output.output.contains("line 25: which: command not found"))
+    assert(output.output.contains("/usr/bin/which doesn't exist."))
   }
 }
+
+class MainBuildAuxiliaryDockerRequirementsRuby extends AbstractMainBuildAuxiliaryDockerRequirements{
+  override val dockerTag = "viash_requirements_testbench_ruby"
+  override val image = "ruby:slim-bullseye"
+
+  test("setup; check base image for yum still does not contain the which package", DockerTest) { f =>
+    val newConfigFilePath = derivePlatformConfig(None, None, "ruby_base")
+
+    TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(checkDockerImageExists(dockerTag))
+    assert(executableRequirementsFile.exists)
+    assert(executableRequirementsFile.canExecute)
+
+    val output = Exec.runCatch(
+      Seq(
+        executableRequirementsFile.toString,
+        "--file", "/usr/local/bundle/gems/tzinfo-2.0.4/lib/tzinfo.rb"
+      )
+    )
+
+    assert(output.output.contains("/usr/local/bundle/gems/tzinfo-2.0.4/lib/tzinfo.rb doesn't exist."))
+  }
+
+  test("setup; check docker requirements using yum to add the tzinfo package", DockerTest) { f =>
+    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "ruby", "packages": ["tzinfo:2.0.4"] }]"""), None, "ruby_tzinfo")
+
+    TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(checkDockerImageExists(dockerTag))
+    assert(executableRequirementsFile.exists)
+    assert(executableRequirementsFile.canExecute)
+
+    val output = Exec.runCatch(
+      Seq(
+        executableRequirementsFile.toString,
+        "--file", "/usr/local/bundle/gems/tzinfo-2.0.4/lib/tzinfo.rb"
+      )
+    )
+
+    assert(output.output.contains("/usr/local/bundle/gems/tzinfo-2.0.4/lib/tzinfo.rb exists."))
+  }
+
+  test("setup; check docker requirements using yum but with an empty list", DockerTest) { f =>
+    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "ruby", "packages": [] }]"""), None, "ruby_empty")
+
+    TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(checkDockerImageExists(dockerTag))
+    assert(executableRequirementsFile.exists)
+    assert(executableRequirementsFile.canExecute)
+
+    val output = Exec.runCatch(
+      Seq(
+        executableRequirementsFile.toString,
+        "--file", "/usr/local/bundle/gems/tzinfo-2.0.4/lib/tzinfo.rb"
+      )
+    )
+
+    assert(output.output.contains("/usr/local/bundle/gems/tzinfo-2.0.4/lib/tzinfo.rb doesn't exist."))
+  }
+}
+
+class MainBuildAuxiliaryDockerRequirementsR extends AbstractMainBuildAuxiliaryDockerRequirements{
+  override val dockerTag = "viash_requirements_testbench_r"
+  override val image = "r-base:4.3.1"
+
+  test("setup; check base image for r still does not contain the which package", DockerTest) { f =>
+    val newConfigFilePath = derivePlatformConfig(None, None, "r_base")
+
+    TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(checkDockerImageExists(dockerTag))
+    assert(executableRequirementsFile.exists)
+    assert(executableRequirementsFile.canExecute)
+
+    val output = Exec.runCatch(
+      Seq(
+        executableRequirementsFile.toString,
+        "--file", "/usr/local/lib/R/site-library/glue/R/glue"
+      )
+    )
+
+    assert(output.output.contains("/usr/local/lib/R/site-library/glue/R/glue doesn't exist."))
+  }
+
+  test("setup; check docker requirements using r to add the glue package", DockerTest) { f =>
+    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "r", "packages": ["glue"] }]"""), None, "r_glue")
+
+    TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(checkDockerImageExists(dockerTag))
+    assert(executableRequirementsFile.exists)
+    assert(executableRequirementsFile.canExecute)
+
+    val output = Exec.runCatch(
+      Seq(
+        executableRequirementsFile.toString,
+        "--file", "/usr/local/lib/R/site-library/glue/R/glue"
+      )
+    )
+
+    assert(output.output.contains("/usr/local/lib/R/site-library/glue/R/glue exists."))
+  }
+
+  test("setup; check docker requirements using r but with an empty list", DockerTest) { f =>
+    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "r", "packages": [] }]"""), None, "r_empty")
+
+    TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(checkDockerImageExists(dockerTag))
+    assert(executableRequirementsFile.exists)
+    assert(executableRequirementsFile.canExecute)
+
+    val output = Exec.runCatch(
+      Seq(
+        executableRequirementsFile.toString,
+        "--file", "/usr/local/lib/R/site-library/glue/R/glue"
+      )
+    )
+
+    assert(output.output.contains("/usr/local/lib/R/site-library/glue/R/glue doesn't exist."))
+  }
+}
+
 
 class MainBuildAuxiliaryDockerRequirementsApkTest extends AbstractMainBuildAuxiliaryDockerRequirements {
   override val dockerTag = "viash_requirements_testbench_apktest"
