@@ -5,8 +5,11 @@ import org.scalatest.funsuite.AnyFunSuite
 import io.circe._
 import io.circe.yaml.parser
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
+import io.viash.helpers.Logger
 
 class ParseEitherTest extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
+  
   case class A(foo: String)
   case class B(bar: Int)
   case class XXX(ab: Either[A, B])

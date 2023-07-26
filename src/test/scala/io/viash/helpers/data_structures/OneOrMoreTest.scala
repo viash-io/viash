@@ -2,8 +2,11 @@ package io.viash.helpers.data_structures
 
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
+import io.viash.helpers.Logger
 
 class OneOrMoreTest extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
+  
   test("works with one element") {
     val oom = OneOrMore("foo")
     assert(oom.toList == List("foo"))

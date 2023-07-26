@@ -23,12 +23,13 @@ import scala.sys.process.Process
 import io.circe.syntax.EncoderOps
 
 import io.viash.config.Config
-import io.viash.helpers.IO
+import io.viash.helpers.{IO, Logging}
 import io.viash.helpers.circe._
 import io.viash.platforms.DebugPlatform
 import io.viash.config.ConfigMeta
+import io.viash.exceptions.ExitException
 
-object ViashConfig {
+object ViashConfig extends Logging{
 
   def view(config: Config, format: String, parseArgumentGroups: Boolean): Unit = {
     val conf0 = 
@@ -43,7 +44,7 @@ object ViashConfig {
         config
       }
     val json = ConfigMeta.configToCleanJson(conf0)
-    println(json.toFormattedString(format))
+    infoOut(json.toFormattedString(format))
   }
 
   def viewMany(configs: List[Config], format: String, parseArgumentGroups: Boolean): Unit = {
@@ -60,7 +61,7 @@ object ViashConfig {
       }
     }
     val jsons = confs0.map(c => ConfigMeta.configToCleanJson(c))
-    println(jsons.asJson.toFormattedString(format))
+    infoOut(jsons.asJson.toFormattedString(format))
   }
 
   def inject(config: Config): Unit = {
@@ -68,25 +69,25 @@ object ViashConfig {
 
     // check if config has a main script
     if (fun.mainScript.isEmpty) {
-      println("Could not find a main script in the Viash config.")
-      System.exit(1)
+      infoOut("Could not find a main script in the Viash config.")
+      throw new ExitException(1)
     }
     // check if we can read code
     if (fun.mainScript.get.read.isEmpty) {
-      println("Could not read main script in the Viash config.")
-      System.exit(1)
+      infoOut("Could not read main script in the Viash config.")
+      throw new ExitException(1)
     }
     // check if main script has a path
     if (fun.mainScript.get.uri.isEmpty) {
-      println("Main script should have a path.")
-      System.exit(1)
+      infoOut("Main script should have a path.")
+      throw new ExitException(1)
     }
     val uri = fun.mainScript.get.uri.get
 
     // check if main script is a local file
     if (uri.getScheme != "file") {
-      println("Config inject only works for local Viash configs.")
-      System.exit(1)
+      infoOut("Config inject only works for local Viash configs.")
+      throw new ExitException(1)
     }
     val path = Paths.get(uri.getPath())
 

@@ -4,8 +4,10 @@ import io.circe.Json
 import org.scalatest.funsuite.AnyFunSuite
 import io.circe.syntax._
 import java.nio.file.Paths
+import io.viash.helpers.Logger
 
 class ProjectTest extends AnyFunSuite {
+  Logger.UseColorOverride.value = Some(false)
   private val rootPath = Paths.get(getClass.getResource("/").getPath)
   private val testBashPath = rootPath.resolve("testbash")
   private val testNsPath = rootPath.resolve("testns")

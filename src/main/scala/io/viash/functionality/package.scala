@@ -21,7 +21,9 @@ import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfigur
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.ACursor
 
-package object functionality {
+import io.viash.helpers.Logging
+
+package object functionality extends Logging {
   // import implicits
 
   import functionality.arguments._
@@ -64,7 +66,7 @@ package object functionality {
             args.mapArray(argVector => {
               for (arg <- argVector) {
                 if (arg.isString) {
-                  Console.err.println(
+                  info(
                     s"""Error: specifying strings in the .argument field of argument group '${ag0.apply("name").get.asString.get}' was removed.
                       |The .arguments field of an argument group should only contain arguments.
                       |To solve this issue, copy the argument ${arg} directly into the argument group.""".stripMargin)

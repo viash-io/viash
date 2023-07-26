@@ -22,12 +22,12 @@ import java.nio.file.Paths
 import io.viash.config._
 import io.viash.functionality.arguments.{FileArgument, Output}
 import io.viash.platforms.Platform
-import io.viash.helpers.IO
+import io.viash.helpers.{IO, Logging}
 import io.viash.helpers.data_structures._
 
 import scala.sys.process.{Process, ProcessLogger}
 
-object ViashRun {
+object ViashRun extends Logging {
   def apply(
     config: Config,
     platform: Platform,
@@ -55,7 +55,7 @@ object ViashRun {
         Array(cpus.map("---cpus=" + _), memory.map("---memory="+_)).flatMap(a => a)
 
       // execute command, print everything to console
-      code = Process(cmd).!(ProcessLogger(println, println))
+      code = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
       // System.exit(code)
       code 
     } finally {
@@ -63,7 +63,7 @@ object ViashRun {
       if (!keepFiles.getOrElse(code != 0)) {
         IO.deleteRecursively(dir)
       } else {
-        println(s"Files and logs are stored at '$dir'")
+        infoOut(s"Files and logs are stored at '$dir'")
       }
     }
   }

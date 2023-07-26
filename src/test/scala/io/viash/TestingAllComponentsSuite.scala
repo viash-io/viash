@@ -2,8 +2,10 @@ package io.viash
 
 import io.viash.config.Config
 import org.scalatest.funsuite.AnyFunSuite
+import io.viash.helpers.Logger
 
 class TestingAllComponentsSuite extends AnyFunSuite {
+  Logger.UseColorOverride.value = Some(false)
   def getTestResource(path: String) = getClass.getResource(path).toString
 
   val tests = List(

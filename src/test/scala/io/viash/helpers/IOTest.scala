@@ -4,10 +4,11 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.BeforeAndAfter
 import java.nio.file.{Files, Path}
 import java.net.URI
-import io.viash.helpers.IO
+import io.viash.helpers.{IO, Logger}
 import scala.util.Try
 
 class IOTest extends AnyFunSuite with BeforeAndAfter {
+  Logger.UseColorOverride.value = Some(false)
   var tempDir: Path = _
 
   before {
