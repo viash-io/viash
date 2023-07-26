@@ -233,7 +233,7 @@ class MainBuildAuxiliaryDockerRequirementsApt extends AbstractMainBuildAuxiliary
 
 class MainBuildAuxiliaryDockerRequirementsYum extends AbstractMainBuildAuxiliaryDockerRequirements{
   override val dockerTag = "viash_requirements_testbench_yum"
-  override val image = "centos:centos7"
+  override val image = "fedora:38"
 
   test("setup; check base image for yum still does not contain the which package", DockerTest) { f =>
     val newConfigFilePath = derivePlatformConfig(None, None, "yum_base")
