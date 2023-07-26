@@ -10,19 +10,20 @@ import java.nio.file.{Files, Paths}
 import scala.io.Source
 import io.viash.ConfigDeriver
 
-class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with BeforeAndAfterAll {
+abstract class AbstractMainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
   private val temporaryFolder = IO.makeTemp("viash_tester")
-  private val tempFolStr = temporaryFolder.toString
+  protected val tempFolStr = temporaryFolder.toString
   private val temporaryConfigFolder = IO.makeTemp("viash_tester_configs")
 
   private val configRequirementsFile = getClass.getResource(s"/testbash/auxiliary_requirements/config_requirements.vsh.yaml").getPath
   private val functionalityRequirements = Config.read(configRequirementsFile).functionality
-  private val executableRequirementsFile = Paths.get(tempFolStr, functionalityRequirements.name).toFile
+  protected val executableRequirementsFile = Paths.get(tempFolStr, functionalityRequirements.name).toFile
 
-  private val configDeriver = ConfigDeriver(Paths.get(configRequirementsFile), temporaryConfigFolder)
+  protected val configDeriver = ConfigDeriver(Paths.get(configRequirementsFile), temporaryConfigFolder)
 
-  private val dockerTag = "viash_requirements_testbench"
+  protected val image = "bash:3.2"
+  protected val dockerTag = "viash_requirements_testbench"
 
   case class FixtureParam()
 
@@ -42,11 +43,42 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
     outcome
   }
 
-  test("setup; check base image for apk still does not contain the fortune package", DockerTest) { f =>
-    val newConfigFilePath = configDeriver.derive(
-      s""".platforms := [{ "type": "docker", "image": "bash:3.2", "target_image": "$dockerTag" }]""",
-      "apk_base"
+  def checkDockerImageExists(name: String): Boolean = {
+    val out = Exec.runCatch(
+      Seq("docker", "images", name)
     )
+    val regex = s"$name\\s*latest".r
+    regex.findFirstIn(out.output).isDefined
+  }
+
+  def removeDockerImage(name: String): Unit = {
+    Exec.runCatch(
+      Seq("docker", "rmi", name, "-f")
+    )
+  }
+
+  def derivePlatformConfig(setup: Option[String], test_setup: Option[String], name: String): String = {
+    val setupStr = setup.map(s => s""", "setup": $s""").getOrElse("")
+    val testSetupStr = test_setup.map(s => s""", "test_setup": $s""").getOrElse("")
+
+    configDeriver.derive(
+      s""".platforms := [{ "type": "docker", "image": "$image", "target_image": "$dockerTag" $setupStr $testSetupStr }]""",
+      name
+    )
+  }
+
+  override def afterAll(): Unit = {
+    IO.deleteRecursively(temporaryFolder)
+    IO.deleteRecursively(temporaryConfigFolder)
+  }
+}
+
+class MainBuildAuxiliaryDockerRequirementsApk extends AbstractMainBuildAuxiliaryDockerRequirements {
+  override val dockerTag = "viash_requirements_testbench_apk"
+  override val image = "bash:3.2"
+
+  test("setup; check base image for apk still does not contain the fortune package", DockerTest) { f =>
+    val newConfigFilePath = derivePlatformConfig(None, None, "apk_base")
 
     TestHelper.testMain(
       "build",
@@ -56,6 +88,7 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
       newConfigFilePath
     )
 
+    assert(checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -70,10 +103,7 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
   }
 
   test("setup; check docker requirements using apk to add the fortune package", DockerTest) { f =>
-    val newConfigFilePath = configDeriver.derive(
-      s""".platforms := [{ "type": "docker", "image": "bash:3.2", "target_image": "$dockerTag", "setup": [{ "type": "apk", "packages": ["fortune"] }] }]""",
-      "apk_fortune"
-    )
+    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "apk", "packages": ["fortune"] }]"""), None, "apk_fortune")
 
     // build viash wrapper with --setup
     TestHelper.testMain(
@@ -83,9 +113,7 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
       newConfigFilePath
     )
 
-    // verify docker exists
     assert(checkDockerImageExists(dockerTag))
-
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -100,10 +128,7 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
   }
 
   test("setup; check docker requirements using apk but with an empty list", DockerTest) { f =>
-    val newConfigFilePath = configDeriver.derive(
-      s""".platforms := [{ "type": "docker", "image": "bash:3.2", "target_image": "$dockerTag", "setup": [{ "type": "apk", "packages": [] }] }]""",
-      "apk_empty"
-    )
+    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "apk", "packages": [] }]"""), None, "apk_empty")
 
     // build viash wrapper with --setup
     TestHelper.testMain(
@@ -113,9 +138,7 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
       newConfigFilePath
     )
 
-    // verify docker exists
     assert(checkDockerImageExists(dockerTag))
-
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -128,12 +151,14 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
 
     assert(output.output == "")
   }
+}
+
+class MainBuildAuxiliaryDockerRequirementsApt extends AbstractMainBuildAuxiliaryDockerRequirements {
+  override val dockerTag = "viash_requirements_testbench_apt"
+  override val image = "debian:bullseye-slim"
 
   test("setup; check base image for apt still does not contain the cowsay package", DockerTest) { f =>
-    val newConfigFilePath = configDeriver.derive(
-      s""".platforms := [{ "type": "docker", "image": "debian:bullseye-slim", "target_image": "$dockerTag" }]""",
-      "apt_base"
-    )
+    val newConfigFilePath = derivePlatformConfig(None, None, "apt_base")
 
     TestHelper.testMain(
       "build",
@@ -142,6 +167,7 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
       newConfigFilePath
     )
 
+    assert(checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -156,22 +182,17 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
   }
 
   test("setup; check docker requirements using apt to add the cowsay package", DockerTest) { f =>
-    val newConfigFilePath = configDeriver.derive(
-      s""".platforms := [{ "type": "docker", "image": "debian:bullseye-slim", "target_image": "$dockerTag", "setup": [{ "type": "apt", "packages": ["cowsay"] }] }]""",
-      "apt_cowsay"
-    )
+    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "apt", "packages": ["cowsay"] }]"""), None, "apt_cowsay")
 
     // build viash wrapper with --setup
-    val _ = TestHelper.testMain(
+    TestHelper.testMain(
       "build",
       "-o", tempFolStr,
       "--setup", "build",
       newConfigFilePath
     )
 
-    // verify docker exists
     assert(checkDockerImageExists(dockerTag))
-
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -186,10 +207,7 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
   }
 
   test("setup; check docker requirements using apt but with an empty list", DockerTest) { f =>
-    val newConfigFilePath = configDeriver.derive(
-      s""".platforms := [{ "type": "docker", "image": "debian:bullseye-slim", "target_image": "$dockerTag", "setup": [{ "type": "apt", "packages": [] }] }]""",
-      "apt_empty"
-    )
+    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "apt", "packages": [] }]"""), None, "apt_empty")
 
     TestHelper.testMain(
       "build",
@@ -198,6 +216,7 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
       newConfigFilePath
     )
 
+    assert(checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -210,12 +229,14 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
 
     assert(output.output == "")
   }
+}
+
+class MainBuildAuxiliaryDockerRequirementsYum extends AbstractMainBuildAuxiliaryDockerRequirements{
+  override val dockerTag = "viash_requirements_testbench_yum"
+  override val image = "centos:centos7"
 
   test("setup; check base image for yum still does not contain the which package", DockerTest) { f =>
-    val newConfigFilePath = configDeriver.derive(
-      s""".platforms := [{ "type": "docker", "image": "centos:centos7", "target_image": "$dockerTag" }]""",
-      "yum_base"
-    )
+    val newConfigFilePath = derivePlatformConfig(None, None, "yum_base")
 
     TestHelper.testMain(
       "build",
@@ -224,6 +245,7 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
       newConfigFilePath
     )
 
+    assert(checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -238,22 +260,17 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
   }
 
   test("setup; check docker requirements using yum to add the which package", DockerTest) { f =>
-    val newConfigFilePath = configDeriver.derive(
-      s""".platforms := [{ "type": "docker", "image": "centos:centos7", "target_image": "$dockerTag", "setup": [{ "type": "yum", "packages": ["which"] }] }]""",
-      "yum_which"
-    )
+    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "yum", "packages": ["which"] }]"""), None, "yum_which")
 
     // build viash wrapper with --setup
-    val _ = TestHelper.testMain(
+    TestHelper.testMain(
       "build",
       "-o", tempFolStr,
       "--setup", "build",
       newConfigFilePath
     )
 
-    // verify docker exists
     assert(checkDockerImageExists(dockerTag))
-
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -268,10 +285,7 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
   }
 
   test("setup; check docker requirements using yum but with an empty list", DockerTest) { f =>
-    val newConfigFilePath = configDeriver.derive(
-      s""".platforms := [{ "type": "docker", "image": "centos:centos7", "target_image": "$dockerTag", "setup": [{ "type": "yum", "packages": [] }] }]""",
-      "apt_empty"
-    )
+    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "yum", "packages": [] }]"""), None, "yum_empty")
 
     TestHelper.testMain(
       "build",
@@ -280,6 +294,7 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
       newConfigFilePath
     )
 
+    assert(checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -292,12 +307,14 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
 
     assert(output.output.contains("line 25: which: command not found"))
   }
+}
+
+class MainBuildAuxiliaryDockerRequirementsApkTest extends AbstractMainBuildAuxiliaryDockerRequirements {
+  override val dockerTag = "viash_requirements_testbench_apktest"
+  override val image = "bash:3.2"
 
   test("test_setup; check the fortune package isn't added for the build option", DockerTest) { f =>
-    val newConfigFilePath = configDeriver.derive(
-      s""".platforms := [{ "type": "docker", "image": "bash:3.2", "target_image": "$dockerTag", "test_setup": [{ "type": "apk", "packages": ["fortune"] }] }]""",
-      "apk_test_fortune_build"
-    )
+    val newConfigFilePath = derivePlatformConfig(None, Some("""[{ "type": "apk", "packages": ["fortune"] }]"""), "apk_test_fortune_build")
 
     TestHelper.testMain(
       "build",
@@ -320,10 +337,7 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
   }
 
   test("test_setup; check the fortune package is added for the test option", DockerTest) { f =>
-    val newConfigFilePath = configDeriver.derive(
-      s""".platforms := [{ "type": "docker", "image": "bash:3.2", "target_image": "$dockerTag", "test_setup": [{ "type": "apk", "packages": ["fortune"] }] }]""",
-      "apk_test_fortune_test"
-    )
+    val newConfigFilePath = derivePlatformConfig(None, Some("""[{ "type": "apk", "packages": ["fortune"] }]"""), "apk_test_fortune_test")
 
     val testText = TestHelper.testMain(
       "test",
@@ -336,10 +350,7 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
   }
 
   test("test_setup; check the fortune package is not added for the test option when not specified", DockerTest) { f =>
-    val newConfigFilePath = configDeriver.derive(
-      s""".platforms := [{ "type": "docker", "image": "bash:3.2", "target_image": "$dockerTag" }]""",
-      "apk_base_test"
-    )
+    val newConfigFilePath = derivePlatformConfig(None, None, "apk_base_test")
 
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
@@ -352,27 +363,5 @@ class MainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with Befor
     assert(testOutput.output.contains("Running tests in temporary directory: "))
     assert(testOutput.output.contains("ERROR! Only 0 out of 1 test scripts succeeded!"))
     assert(testOutput.output.contains("Cleaning up temporary directory"))
-  }
-
-  def checkDockerImageExists(name: String): Boolean = {
-    val out = Exec.runCatch(
-      Seq("docker", "images", name)
-    )
-
-    // print(out)
-    val regex = s"$name\\s*latest".r
-
-    regex.findFirstIn(out.output).isDefined
-  }
-
-  def removeDockerImage(name: String): Unit = {
-    Exec.runCatch(
-      Seq("docker", "rmi", name, "-f")
-    )
-  }
-
-  override def afterAll(): Unit = {
-    IO.deleteRecursively(temporaryFolder)
-    IO.deleteRecursively(temporaryConfigFolder)
   }
 }
