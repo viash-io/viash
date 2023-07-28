@@ -1,5 +1,6 @@
 functionality:
   __merge__: [., ../common.yaml]
+  name: test_languages_js
   resources:
     - type: javascript_script
       path: ./code.js

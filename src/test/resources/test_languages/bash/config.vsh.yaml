@@ -1,5 +1,6 @@
 functionality:
   __merge__: [., ../common.yaml]
+  name: test_languages_bash
   resources:
     - type: bash_script
       path: ./code.sh

@@ -8,8 +8,9 @@ import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.io.Source
+import org.scalatest.ParallelTestExecution
 
-class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll {
+class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll with ParallelTestExecution {
   Logger.UseColorOverride.value = Some(false)
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
