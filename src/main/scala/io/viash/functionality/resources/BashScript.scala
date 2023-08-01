@@ -52,18 +52,11 @@ case class BashScript(
     val paramsCode = parSet.mkString("\n") + "\n"
     ScriptInjectionMods(params = paramsCode)
   }
-
-  def command(script: String): String = {
-    "bash \"" + script + "\""
-  }
-
-  def commandSeq(script: String): Seq[String] = {
-    Seq("bash", script)
-  }
 }
 
 object BashScript extends ScriptCompanion {
   val commentStr = "#"
   val extension = "sh"
   val `type` = "bash_script"
+  val executor = Seq("bash")
 }
