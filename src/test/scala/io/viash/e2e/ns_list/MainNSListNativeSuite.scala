@@ -29,8 +29,8 @@ class MainNSListNativeSuite extends AnyFunSuite{
 
   // convert testbash
   test("viash ns list") {
-    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
-    "ns", "list",
+   val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+      "ns", "list",
       "-s", nsPath,
     )
 
@@ -68,7 +68,7 @@ class MainNSListNativeSuite extends AnyFunSuite{
   // convert testbash
   test("viash ns list filter by platform") {
     val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
-    "ns", "list",
+      "ns", "list",
       "-s", nsPath,
       "-p", "docker"
     )
@@ -81,7 +81,7 @@ class MainNSListNativeSuite extends AnyFunSuite{
   }
   test("viash ns list filter by platform #2") {
     val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
-    "ns", "list",
+      "ns", "list",
       "-s", scalaPath,
       "-p", "docker"
     )
@@ -95,7 +95,7 @@ class MainNSListNativeSuite extends AnyFunSuite{
   }
   test("viash ns list filter by platform #3") {
     val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
-    "ns", "list",
+     "ns", "list",
       "-s", scalaPath,
       "-p", "not_exists"
     )
@@ -105,6 +105,204 @@ class MainNSListNativeSuite extends AnyFunSuite{
       .fold(throw _, _.as[Array[Config]])
       .fold(throw _, identity)
     assert(configs.length == 0)
+  }
+
+  // test query_name
+  test("viash ns list query_name") {
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+     "ns", "list",
+      "-s", nsPath,
+      "--query_name", "ns_add"
+    )
+
+    assert(exitCode == 1)
+    val configs = parser.parse(stdout)
+      .fold(throw _, _.as[Array[Config]])
+      .fold(throw _, identity)
+    assert(configs.length == 1)
+    assert(stdout.contains("name: \"ns_add\""))
+  }
+
+  test("viash ns list query_name full match") {
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+     "ns", "list",
+      "-s", nsPath,
+      "--query_name", "^ns_add$"
+    )
+
+    assert(exitCode == 1)
+    val configs = parser.parse(stdout)
+      .fold(throw _, _.as[Array[Config]])
+      .fold(throw _, identity)
+    assert(configs.length == 1)
+    assert(stdout.contains("name: \"ns_add\""))
+  }
+
+  test("viash ns list query_name partial match") {
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+      "ns", "list",
+      "-s", nsPath,
+      "--query_name", "add"
+    )
+
+    assert(exitCode == 1)
+    val configs = parser.parse(stdout)
+      .fold(throw _, _.as[Array[Config]])
+      .fold(throw _, identity)
+    assert(configs.length == 1)
+    assert(stdout.contains("name: \"ns_add\""))
+  }
+
+  test("viash ns list query_name no match") {
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+      "ns", "list",
+      "-s", nsPath,
+      "--query_name", "foo"
+    )
+
+    assert(exitCode == 1)
+    assert(stdout.trim() == "[]")
+  }
+
+  // test query
+  test("viash ns list query") {
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+      "ns", "list",
+      "-s", nsPath,
+      "-q", "testns/ns_add"
+    )
+
+    assert(exitCode == 1)
+    val configs = parser.parse(stdout)
+      .fold(throw _, _.as[Array[Config]])
+      .fold(throw _, identity)
+    assert(configs.length == 1)
+    assert(stdout.contains("name: \"ns_add\""))
+  }
+
+  test("viash ns list query full match") {
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+      "ns", "list",
+      "-s", nsPath,
+      "-q", "^testns/ns_add$"
+    )
+
+    assert(exitCode == 1)
+    val configs = parser.parse(stdout)
+      .fold(throw _, _.as[Array[Config]])
+      .fold(throw _, identity)
+    assert(configs.length == 1)
+    assert(stdout.contains("name: \"ns_add\""))
+  }
+
+  test("viash ns list query partial match") {
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+      "ns", "list",
+      "-s", nsPath,
+      "-q", "test.*/.*add"
+    )
+
+    assert(exitCode == 1)
+    val configs = parser.parse(stdout)
+      .fold(throw _, _.as[Array[Config]])
+      .fold(throw _, identity)
+    assert(configs.length == 1)
+    assert(stdout.contains("name: \"ns_add\""))
+  }
+
+  test("viash ns list query only partial name") {
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+      "ns", "list",
+      "-s", nsPath,
+      "-q", "add"
+    )
+
+    assert(exitCode == 1)
+    val configs = parser.parse(stdout)
+      .fold(throw _, _.as[Array[Config]])
+      .fold(throw _, identity)
+    assert(configs.length == 1)
+    assert(stdout.contains("name: \"ns_add\""))
+  }
+
+  test("viash ns list query no match") {
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+      "ns", "list",
+      "-s", nsPath,
+      "-q", "foo"
+    )
+
+    assert(exitCode == 1)
+    assert(stdout.trim() == "[]")
+  }
+
+  // test query_namespace
+  test("viash ns list query_namespace") {
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+     "ns", "list",
+      "-s", nsPath,
+      "--query_namespace", "testns"
+    )
+
+    assert(exitCode == 1)
+    val configs = parser.parse(stdout)
+      .fold(throw _, _.as[Array[Config]])
+      .fold(throw _, identity)
+
+    assert(configs.length == components.length)
+    assert(stdout.contains("name: \"ns_add\""))
+    assert(stdout.contains("name: \"ns_subtract\""))
+    assert(!stdout.contains("name: \"ns_error\""))
+    assert(!stdout.contains("name: \"ns_disabled\""))
+  }
+
+  test("viash ns list query_namespace full match") {
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+     "ns", "list",
+      "-s", nsPath,
+      "--query_namespace", "^testns$"
+    )
+
+    assert(exitCode == 1)
+    val configs = parser.parse(stdout)
+      .fold(throw _, _.as[Array[Config]])
+      .fold(throw _, identity)
+
+    assert(configs.length == components.length)
+    assert(stdout.contains("name: \"ns_add\""))
+    assert(stdout.contains("name: \"ns_subtract\""))
+    assert(!stdout.contains("name: \"ns_error\""))
+    assert(!stdout.contains("name: \"ns_disabled\""))
+  }
+
+  test("viash ns list query_namespace partial match") {
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+      "ns", "list",
+      "-s", nsPath,
+      "--query_namespace", "test"
+    )
+
+    assert(exitCode == 1)
+    val configs = parser.parse(stdout)
+      .fold(throw _, _.as[Array[Config]])
+      .fold(throw _, identity)
+
+    assert(configs.length == components.length)
+    assert(stdout.contains("name: \"ns_add\""))
+    assert(stdout.contains("name: \"ns_subtract\""))
+    assert(!stdout.contains("name: \"ns_error\""))
+    assert(!stdout.contains("name: \"ns_disabled\""))
+  }
+
+  test("viash ns list query_namespace no match") {
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+      "ns", "list",
+      "-s", nsPath,
+      "--query_namespace", "foo"
+    )
+
+    assert(exitCode == 1)
+    assert(stdout.trim() == "[]")
   }
 
 }
