@@ -7,7 +7,7 @@ scalaVersion := "2.13.10"
 libraryDependencies ++= Seq(
   "org.scalactic" %% "scalactic" % "3.2.15" % "test",
   "org.scalatest" %% "scalatest" % "3.2.15" % "test",
-  "org.rogach" %% "scallop" % "4.1.0",
+  "org.rogach" %% "scallop" % "5.0.0",
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.1",
   "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4"
