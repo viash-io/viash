@@ -42,6 +42,8 @@
 
 * `helpers.Format`: Add a helper for the Format helper object (PR #466).
 
+* `testbench`: Use config deriver to create config variants for testing (PR #498). This reduces the amount of config files that need to be maintained.
+
 ## BUG FIXES
 
 * `viash config`: Validate Viash config Yaml files better and try to give a more informative error message back to the user instead of a stack trace (PR #443).
