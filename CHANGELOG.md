@@ -36,7 +36,7 @@
 
 * `system environment variables`: Add wrapper around `sys.env` and provide access to specific variables (PR #457). Has advantages for documentation output and testbenches.
 
-* `testbench`: Added some minor testbenches to tackle missing coverage (PR #459, #488, #489 & #492).
+* `testbench`: Added some minor testbenches to tackle missing coverage (PR #459, #486, #488, #489 & #492).
 
 * `viash export config_schema`: Simplify file structure (PR #464).
 
