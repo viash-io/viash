@@ -26,7 +26,7 @@
 
 * `help message`: Print the relevant help message of (sub-)command when `--help` is given as an argument instead of only printing the help message when it is the leading argument and otherwise silently disregarding it (PR #472). This overrides Scallop's default behaviour in a roundabout way.
 
-* `Logging`: Add a Logger helper class (PR #485). Allows manually enabling or disabling colorizing TTY output by using `--colorize`. Add provisions for adding debugging or trace code which is not outputted by default. Changing logging level can be changed with `--loglevel`. These CLI arguments are currently hidden.
+* `Logging`: Add a Logger helper class (PR #485 & #490). Allows manually enabling or disabling colorizing TTY output by using `--colorize`. Add provisions for adding debugging or trace code which is not outputted by default. Changing logging level can be changed with `--loglevel`. These CLI arguments are currently hidden.
 
 ## MINOR CHANGES
 
@@ -36,7 +36,7 @@
 
 * `system environment variables`: Add wrapper around `sys.env` and provide access to specific variables (PR #457). Has advantages for documentation output and testbenches.
 
-* `testbench`: Added some minor testbenches to tackle missing coverage (PR #459 & #488).
+* `testbench`: Added some minor testbenches to tackle missing coverage (PR #459, #488, #489 & #492).
 
 * `viash export config_schema`: Simplify file structure (PR #464).
 

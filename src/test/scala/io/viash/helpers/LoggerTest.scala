@@ -3,6 +3,8 @@ package io.viash.helpers
 import org.scalatest.funsuite.AnyFunSuite
 import java.io.ByteArrayOutputStream
 import scala.io.AnsiColor
+import io.viash.TestHelper
+import java.io.FileNotFoundException
 
 class LoggerTest extends AnyFunSuite {
   Logger.UseColorOverride.value = Some(false)
@@ -350,6 +352,71 @@ class LoggerTest extends AnyFunSuite {
 
     assert(stdout2 == expectOut2)
     assert(stderr2 == expectErr2)
+  }
+
+  // We can't really test the colorize or loglevel options as the singletons would need to be recreated.
+  // However we can verify that the parsing happened correctly and set the inner logger values correctly.
+
+  test("Check without --colorize option") {
+    Logger.UseColorOverride.value = Some(false)
+    TestHelper.testMainException[FileNotFoundException](
+      "config", "view", "missing.vsh.yaml",
+    )
+    assert(Logger.UseColorOverride.value == Some(false))
+
+    Logger.UseColorOverride.value = Some(true)
+    TestHelper.testMainException[FileNotFoundException](
+      "config", "view", "missing.vsh.yaml",
+    )
+    assert(Logger.UseColorOverride.value == Some(true))
+
+    Logger.UseColorOverride.value = Some(false)
+  }
+
+  test("Check --colorize true option") {
+    TestHelper.testMainException[FileNotFoundException](
+      "config", "view", "missing.vsh.yaml",
+      "--colorize", "true"
+    )
+    assert(Logger.UseColorOverride.value == Some(true))
+    Logger.UseColorOverride.value = Some(false)
+  }
+
+  test("Check --colorize false option") {
+    TestHelper.testMainException[FileNotFoundException](
+      "config", "view", "missing.vsh.yaml",
+      "--colorize", "false"
+    )
+    assert(Logger.UseColorOverride.value == Some(false))
+    Logger.UseColorOverride.value = Some(false)
+  }
+
+  test("Check --colorize auto option") {
+    TestHelper.testMainException[FileNotFoundException](
+      "config", "view", "missing.vsh.yaml",
+      "--colorize", "auto"
+    )
+    assert(Logger.UseColorOverride.value == None)
+    Logger.UseColorOverride.value = Some(false)
+  }
+
+  test("Check --loglevel debug") {
+    assert(Logger.UseLevelOverride.value == LoggerLevel.Info)
+    TestHelper.testMainException[FileNotFoundException](
+      "config", "view", "missing.vsh.yaml",
+      "--loglevel", "debug"
+    )
+    assert(Logger.UseLevelOverride.value == LoggerLevel.Debug)
+    Logger.UseLevelOverride.value = LoggerLevel.Info
+  }
+
+  test("Check without --loglevel set") {
+    assert(Logger.UseLevelOverride.value == LoggerLevel.Info)
+    TestHelper.testMainException[FileNotFoundException](
+      "config", "view", "missing.vsh.yaml",
+    )
+    assert(Logger.UseLevelOverride.value == LoggerLevel.Info)
+    Logger.UseLevelOverride.value = LoggerLevel.Info
   }
 
 }
