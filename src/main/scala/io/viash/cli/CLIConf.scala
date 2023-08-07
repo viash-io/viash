@@ -19,8 +19,8 @@ package io.viash.cli
 
 import org.rogach.scallop._
 import io.viash.Main
-import org.rogach.scallop.exceptions.Version
 import io.viash.exceptions.ExitException
+import io.viash.helpers.Logging
 
 trait ViashCommand {
   _: DocumentedSubcommand =>
@@ -153,7 +153,7 @@ trait ViashLogger {
   )
 }
 
-class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
+class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Logging {
   def getRegisteredCommands(includeHidden: Boolean = false) = subconfigs.flatMap{ sc =>
     sc match {
       case ds: DocumentedSubcommand if !ds.hidden || includeHidden => Some(ds.toRegisteredCommand)
@@ -161,14 +161,9 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     }
   }
 
-  // Override onError from Scallop. Goal is to have Scallop *not* call the exit(0) and instead allow us to do so.
-  // This is required for testing. Calling system.exit() aborts all testing.
-  override def onError(e: Throwable): Unit = e match {
-    case Version =>
-      builder.vers.foreach(println)
-      throw new ExitException(0)
-    case e => super.onError(e)
-  }
+  exitHandler = (i: Int) => throw new ExitException(i)
+  stderrPrintln = (s: String) => logger.info(s)
+  stdoutPrintln = (s: String) => logger.infoOut(s)
  
   version(s"${Main.name} ${Main.version} (c) 2020 Data Intuitive")
 
@@ -526,13 +521,11 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
     }
 
-
     addSubcommand(resource)
     addSubcommand(cli_schema)
     addSubcommand(cli_autocomplete)
     addSubcommand(config_schema)
     addSubcommand(json_schema)
-
     requireSubcommand()
 
     shortSubcommandsHelp(true)
@@ -563,32 +556,4 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   }
 
   verify()
-
-  // Check for trailing --help arguments and print the help message when found.
-  // Currently Scallop only actually prints the help message if it is the first argument.
-  // We're not simply checking for the occurence of a --help value as it could be used as a value for another argument.
-  // So let Scallop do the argument checking & matching of arguments with values, then afterwards go check if an argument was found.
-  {
-    val lastSubcommandOption = subcommands.lastOption
-    if (lastSubcommandOption.isDefined) {
-      val lastSubcommand = lastSubcommandOption.get
-      val builder = lastSubcommand.builder
-
-      val privateParsedField = builder.getClass().getDeclaredField("parsed")
-      privateParsedField.setAccessible(true)
-      val privateParsedValue = privateParsedField.get(lastSubcommand.builder)
-      
-      val privateParsedOptsField = privateParsedValue.getClass().getDeclaredField("opts")
-      privateParsedOptsField.setAccessible(true)
-      val privateParsedOptsValue = privateParsedOptsField.get(privateParsedValue).asInstanceOf[List[(CliOption, (String, List[String]))]]
-
-      if (privateParsedOptsValue.find(t => t._1.name == "help" && 
-          (t._2 == ("help", List.empty) || t._2 == ("h", List.empty))
-        ).isDefined) {
-        lastSubcommand.printHelp()
-        throw new ExitException(0)
-      }
-    }
-    
-  }
 }

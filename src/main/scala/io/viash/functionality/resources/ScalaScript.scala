@@ -130,18 +130,11 @@ case class ScalaScript(
 
     ScriptInjectionMods(params = paramsCode.mkString)
   }
-
-  def command(script: String): String = {
-    "scala -nc \"" + script + "\""
-  }
-
-  def commandSeq(script: String): Seq[String] = {
-    Seq("scala", "-nc", script)
-  }
 }
 
 object ScalaScript extends ScriptCompanion {
   val commentStr = "//"
   val extension = "scala"
   val `type` = "scala_script"
+  val executor = Seq("scala", "-nc")
 }
