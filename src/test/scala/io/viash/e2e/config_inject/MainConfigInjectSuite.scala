@@ -70,13 +70,13 @@ class MainConfigInjectSuite extends AnyFunSuite with BeforeAndAfterAll {
       // meta_config='/tmp/viash_inject_test_languages15183647856847957861/.config.vsh.yaml'
 
       // assume number is a Long, so between 1 and 20 decimal characters
-      val code_replacements = code.replaceAll("inject_test_languages\\d*", "")
-      val code2_replacements = code2.replaceAll("inject_test_languages\\d*", "")
+      val code_replacements = code.replaceAll(s"inject_test_languages_$name\\d*", "")
+      val code2_replacements = code2.replaceAll(s"inject_test_languages_$name\\d*", "")
 
-      assert(code.length - code_replacements.length <= 126, "Stripping the paths should not cause very big differences")
-      assert(code.length - code_replacements.length >= 66, "Stripping the paths should not cause very big differences, but at least some")
-      assert(code2.length - code2_replacements.length <= 126, "Stripping the paths should not cause very big differences")
-      assert(code2.length - code2_replacements.length >= 66, "Stripping the paths should not cause very big differences, but at least some")
+      assert(code.length - code_replacements.length <= 126 + (name.length+1)*3, "Stripping the paths should not cause very big differences")
+      assert(code.length - code_replacements.length >= 66 + (name.length+1)*3, "Stripping the paths should not cause very big differences, but at least some")
+      assert(code2.length - code2_replacements.length <= 126 + (name.length+1)*3, "Stripping the paths should not cause very big differences")
+      assert(code2.length - code2_replacements.length >= 66 + (name.length+1)*3, "Stripping the paths should not cause very big differences, but at least some")
 
       assert(code_replacements.length == code2_replacements.length, "Running config inject multiple times should not result in substantial code differences. Only the placeholder folder is different.")
     }
