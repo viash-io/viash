@@ -60,7 +60,7 @@ object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
     }
     if (removed.isDefined) {
       val r = removed.get
-      info(s"Error: $name was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}")
+      info(s"Error: $name was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
     }
   }
 

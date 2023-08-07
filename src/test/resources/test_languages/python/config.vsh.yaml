@@ -1,5 +1,6 @@
 functionality:
   __merge__: [., ../common.yaml]
+  name: test_languages_python
   resources:
     - type: python_script
       path: code.py

@@ -231,6 +231,17 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(testRegex.findFirstIn(testOutput.error).isDefined, testOutput.error)
   }
 
+  test("Test config without a main script") {
+    val testOutput = TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      configFile,
+      "-c", ".functionality.resources := []"
+    )
+
+    assert(testOutput.contains("Warning: no resources specified!"))
+  }
+
   override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
     IO.deleteRecursively(temporaryConfigFolder)

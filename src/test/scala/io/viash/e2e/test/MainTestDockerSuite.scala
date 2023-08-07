@@ -10,8 +10,9 @@ import org.scalatest.funsuite.AnyFunSuite
 
 import scala.reflect.io.Directory
 import sys.process._
+import org.scalatest.ParallelTestExecution
 
-class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
+class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with ParallelTestExecution{
   Logger.UseColorOverride.value = Some(false)
   // default yaml
   private val configFile = getClass.getResource("/testbash/config.vsh.yaml").getPath
