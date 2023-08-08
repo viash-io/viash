@@ -109,19 +109,12 @@ case class CSharpScript(
 
     ScriptInjectionMods(params = paramsCode.mkString)
   }
-
-  def command(script: String): String = {
-    "dotnet script \"" + script + "\""
-  }
-
-  def commandSeq(script: String): Seq[String] = {
-    Seq("dotnet", "script", script)
-  }
 }
 
 object CSharpScript extends ScriptCompanion {
   val commentStr = "//"
   val extension = "csx"
   val `type` = "csharp_script"
+  val executor = Seq("dotnet", "script")
 }
 

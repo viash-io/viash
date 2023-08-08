@@ -106,21 +106,20 @@ case class NextflowScript(
     ScriptInjectionMods(params = str, footer = footer)
   }
 
-  def command(script: String): String = {
+  override def command(script: String): String = {
     val entryStr = entrypoint match {
       case Some(entry) => " -entry " + entry
       case None => ""
     }
-    "nextflow run . -main-script \"" + script + "\"" + entryStr
+    super.command(script) + entryStr
   }
 
-  def commandSeq(script: String): Seq[String] = {
+  override def commandSeq(script: String): Seq[String] = {
     val entrySeq = entrypoint match {
       case Some(entry) => Seq("-entry", entry)
       case None => Seq()
     }
-    // Seq("nextflow", "run", script) ++ entrySeq
-    Seq("nextflow", "run", ".", "-main-script", script) ++ entrySeq
+    super.commandSeq(script) ++ entrySeq
   }
 }
 
@@ -128,6 +127,7 @@ object NextflowScript extends ScriptCompanion {
   val commentStr = "//"
   val extension = "nf"
   val `type` = "nextflow_script"
+  val executor = Seq("nextflow", "run", ".", "-main-script")
 
   /**
     * Renders the include statement for a dependency.

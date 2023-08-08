@@ -95,18 +95,11 @@ case class RScript(
        |""".stripMargin
     ScriptInjectionMods(params = outCode)
   }
-
-  def command(script: String): String = {
-    "Rscript \"" + script + "\""
-  }
-
-  def commandSeq(script: String): Seq[String] = {
-    Seq("Rscript", script)
-  }
 }
 
 object RScript extends ScriptCompanion {
   val commentStr = "#"
   val extension = "R"
   val `type` = "r_script"
+  val executor = Seq("Rscript")
 }

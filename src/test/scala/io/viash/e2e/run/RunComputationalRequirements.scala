@@ -1,13 +1,13 @@
 package io.viash.e2e.run
 
 import io.viash.{ConfigDeriver, TestHelper}
-import io.viash.helpers.IO
+import io.viash.helpers.{IO, Logger}
 import java.nio.file.Paths
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
 class RunComputationalRequirements extends AnyFunSuite with BeforeAndAfterAll {
-
+  Logger.UseColorOverride.value = Some(false)
   private val configFile = getClass.getResource("/testbash/check_computational_requirements.vsh.yaml").getPath
   private val temporaryFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
   private val tempFolStr = temporaryFolder.toString

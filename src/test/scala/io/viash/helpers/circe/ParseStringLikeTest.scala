@@ -5,8 +5,11 @@ import org.scalatest.funsuite.AnyFunSuite
 import io.circe._
 import io.circe.yaml.parser
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
+import io.viash.helpers.Logger
 
 class ParseStringLikeTest extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
+  
   case class XXX(str: String)
   implicit val encodeXXX: Encoder.AsObject[XXX] = deriveConfiguredEncoder
   implicit val decodeXXX: Decoder[XXX] = deriveConfiguredDecoder

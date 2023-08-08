@@ -83,18 +83,11 @@ case class JavaScriptScript(
     }
     ScriptInjectionMods(params = paramsCode.mkString)
   }
-
-  def command(script: String): String = {
-    "node \"" + script + "\""
-  }
-
-  def commandSeq(script: String): Seq[String] = {
-    Seq("node", script)
-  }
 }
 
 object JavaScriptScript extends ScriptCompanion {
   val commentStr = "//"
   val extension = "js"
   val `type` = "javascript_script"
+  val executor = Seq("node")
 }

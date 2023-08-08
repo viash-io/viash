@@ -5,13 +5,14 @@ import io.viash._
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Files, Paths, StandardCopyOption}
-import io.viash.helpers.{IO, Exec}
+import io.viash.helpers.{IO, Exec, Logger}
 
 import io.viash.config.Config
 
 import scala.io.Source
 
 class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   // which platform to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 

@@ -10,6 +10,8 @@
 
 * `viash_*`: Remove legacy viash_build, viash_test and viash_push components (PR #470).
 
+* `ComputationalRequirements`, `Functionality`, `DockerPlatform`, `DockerRequirements`: Remove documentation of removed fields (PR #477).
+
 ## NEW FUNCTIONALITY
 
 * `viash export json_schema`: Export a json schema derived from the class reflections and annotations already used by the `config_schema` (PR #446).
@@ -20,9 +22,11 @@
 
 * `viash test` and `viash ns test`: add `--setup` argument to determine the docker build strategy before a component is tested (PR #451).
 
-* `viash export cli_autocomplete`: Export a Bash autocomplete script (PR #465).
+* `viash export cli_autocomplete`: Export a Bash or Zsh autocomplete script (PR #465 & #482).
 
-* `help message`: Print the relevant help message of (sub-)command when `--help` is given as an argument instead of only printing the help message when it is the leading argument and otherwise silently disregarding it (PR #472). This overrides Scallop's default behaviour in a roundabout way.
+* `help message`: Print the relevant help message of (sub-)command when `--help` is given as an argument instead of only printing the help message when it is the leading argument and otherwise silently disregarding it (initially added in PR #472, replaced by PR #496). This is a new feature implemented in Scallop 5.0.0.
+
+* `Logging`: Add a Logger helper class (PR #485 & #490). Allows manually enabling or disabling colorizing TTY output by using `--colorize`. Add provisions for adding debugging or trace code which is not outputted by default. Changing logging level can be changed with `--loglevel`. These CLI arguments are currently hidden.
 
 ## MINOR CHANGES
 
@@ -32,11 +36,13 @@
 
 * `system environment variables`: Add wrapper around `sys.env` and provide access to specific variables (PR #457). Has advantages for documentation output and testbenches.
 
-* `testbench`: Added some minor testbenches to tackle missing coverage (PR #459).
+* `testbench`: Added some minor testbenches to tackle missing coverage (PR #459, #486, #488, #489, #492 & #494).
 
 * `viash export config_schema`: Simplify file structure (PR #464).
 
 * `helpers.Format`: Add a helper for the Format helper object (PR #466).
+
+* `testbench`: Use config deriver to create config variants for testing (PR #498). This reduces the amount of config files that need to be maintained.
 
 ## BUG FIXES
 
@@ -49,6 +55,8 @@
 * `malformed input exception`: Capture MalformedInputExceptions when thrown by reading files with invalid Ascii characters when unsupported by Java (PR #458).
 
 * `viash project file parsing`: Give a more informative message when the viash project file fails to parse correctly (PR #475).
+
+* `docker platform`: Fix issue when mounting an input or output folder containing spaces (PR #...).
 
 ## INTERNAL CHANGES
 

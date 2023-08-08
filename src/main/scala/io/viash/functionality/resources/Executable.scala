@@ -48,17 +48,12 @@ case class Executable(
 
   override def write(path: Path, overwrite: Boolean): Unit = {}
 
-  def command(script: String): String = {
-    script
-  }
-
-  def commandSeq(script: String): Seq[String] = {
-    Seq(script)
-  }
+  override def command(script: String): String = script
 }
 
 object Executable extends ScriptCompanion {
   val commentStr = "#"
   val extension = "*"
   val `type` = "executable"
+  val executor = Nil
 }

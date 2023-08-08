@@ -5,8 +5,10 @@ import org.scalatest.funsuite.AnyFunSuite
 import io.viash.schemas.CollectedSchemas
 import scala.sys.process.Process
 import org.scalatest.PrivateMethodTester
+import io.viash.helpers.Logger
 
 class SchemaTest extends AnyFunSuite with BeforeAndAfterAll with PrivateMethodTester{
+  Logger.UseColorOverride.value = Some(false)
 
   test("Check type name trimming") {
     val checks = Map (

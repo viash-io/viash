@@ -2,13 +2,15 @@ package io.viash.auxiliary
 
 import io.viash.{DockerTest, TestHelper}
 import io.viash.config.Config
-import io.viash.helpers.{IO, Exec}
+import io.viash.helpers.{IO, Exec, Logger}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
+import io.viash.ConfigDeriver
 
 class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
 
@@ -17,9 +19,8 @@ class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAnd
   private val functionality = Config.read(configFile).functionality
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
 
-  private val configResourcesUnsupportedProtocolFile = getClass.getResource("/testbash/auxiliary_resource/config_resource_unsupported_protocol.vsh.yaml").getPath
-
-
+  private val temporaryConfigFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
+  private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
 
   test("Check resources are copied from and to the correct location") {
 
@@ -74,6 +75,7 @@ class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAnd
   }
 
   test("Check resources with unsupported format") {
+    val configResourcesUnsupportedProtocolFile = configDeriver.derive(""".functionality.resources := [{type: "bash_script", path: "./check_bash_version.sh"}, {path: "ftp://ftp.ubuntu.com/releases/robots.txt"}]""", "config_resource_unsupported_protocol").toString
     // generate viash script
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "build",
@@ -87,5 +89,6 @@ class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAnd
 
   override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
+    IO.deleteRecursively(temporaryConfigFolder)
   }
 }

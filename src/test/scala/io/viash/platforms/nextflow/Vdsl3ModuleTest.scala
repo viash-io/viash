@@ -10,11 +10,12 @@ import java.io.UncheckedIOException
 
 import scala.io.Source
 
-import io.viash.helpers.IO
+import io.viash.helpers.{IO, Logger}
 import io.viash.{DockerTest, NextflowTest, TestHelper}
 import io.viash.NextflowTestHelper
 
 class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   // temporary folder to work in
   private val temporaryFolder = IO.makeTemp("viash_tester_nextflowvdsl3")
   private val tempFolFile = temporaryFolder.toFile

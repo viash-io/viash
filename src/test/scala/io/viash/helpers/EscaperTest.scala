@@ -2,8 +2,10 @@ package io.viash.helpers
 
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
+import io.viash.helpers.Logger
 
 class EscaperTest extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   val s = "a \\ b $ c ` d \" e ' f \n g"
     
   test("escape with default parameters work") {

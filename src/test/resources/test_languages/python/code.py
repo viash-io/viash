@@ -44,7 +44,11 @@ try:
             if not value:
                 echo(f"{key}: |empty array|")
             else:
-                echo(f"{key}: |{':'.join(value)}|")
+                if isinstance(value[0] , bool):
+                    value2 = map(lambda v: str(v).lower(), value)
+                else:
+                    value2 = map(lambda v: str(v), value)
+                echo(f"{key}: |{':'.join(value2)}|")
         elif value is None:
             echo(f"{key}: ||")
         elif isinstance(value, bool):

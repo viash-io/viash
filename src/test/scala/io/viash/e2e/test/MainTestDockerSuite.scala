@@ -4,14 +4,16 @@ import io.viash._
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 
-import io.viash.helpers.{IO, Exec}
+import io.viash.helpers.{IO, Exec, Logger}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
 import scala.reflect.io.Directory
 import sys.process._
+import org.scalatest.ParallelTestExecution
 
-class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
+class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with ParallelTestExecution{
+  Logger.UseColorOverride.value = Some(false)
   // default yaml
   private val configFile = getClass.getResource("/testbash/config.vsh.yaml").getPath
 

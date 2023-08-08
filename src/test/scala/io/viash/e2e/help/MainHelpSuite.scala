@@ -1,11 +1,12 @@
 package io.viash.e2e.help
 
 import io.viash._
-
+import io.viash.helpers.Logger
 import org.scalatest.funsuite.AnyFunSuite
 import io.viash.exceptions.ExitException
 
 class MainHelpSuite extends AnyFunSuite{
+  Logger.UseColorOverride.value = Some(false)
   // path to namespace components
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 
@@ -19,16 +20,15 @@ class MainHelpSuite extends AnyFunSuite{
     assert(stdout.contains("testbash"))
   }
 
-  // We still can't test this properly as Scallop just exits hard
-  // test("viash config view default functionality leading help") {
-  //   val res = TestHelper.testMainException2[ExitException](
-  //     "config", "view",
-  //     "--help"
-  //   )
+  test("viash config view default functionality leading help") {
+    val output = TestHelper.testMainException[ExitException](
+      "config", "view",
+      "--help"
+    )
 
-  //   assert(res.output.startsWith("viash config view"))
-  //   assert(!res.output.contains("testbash"))
-  // }
+    assert(output.startsWith("viash config view"))
+    assert(!output.contains("testbash"))
+  }
 
   test("viash config view default functionality trailing help") {
     val output = TestHelper.testMainException[ExitException](
