@@ -819,6 +819,7 @@ def workflowFactory(Map args) {
         }
         tuple
       }
+
     if (processArgs.filter) {
       mid2_ = mid1_
         | filter{processArgs.filter(it)}
@@ -826,17 +827,25 @@ def workflowFactory(Map args) {
       mid2_ = mid1_
     }
 
-    output_passthrough = mid2_
-      | map { tuple ->
-        [tuple[0]] + tuple.drop(2)
-      }
+    if (processArgs.fromState) {
+      // TODO: allow `fromState` to be a list[string] or map[string, string]
+      // TODO: if `fromState` is a closure, check if it has exactly two arguments?
+      mid3_ = mid2_
+        | map{
+          def id = it[0]
+          def state = it[1]
+          def data = processArgs.fromState(id, state)
+          [id, data]
+        }
+    } else {
+      mid3_ = mid2_
+    }
 
-    output_process = mid2_
+    out0_ = mid3_
       | debug(processArgs, "processed")
       | map { tuple ->
         def id = tuple[0]
         def data = tuple[1]
-        def passthrough = tuple.drop(2)
 
         // fetch default params from functionality
         def defaultArgs = thisConfig.functionality.allArguments
@@ -957,11 +966,21 @@ def workflowFactory(Map args) {
         [ output[0], outputFiles ]
       }
 
-    output_ = output_process.join(output_passthrough, failOnDuplicate: true)
+    // join the output [id, output] with the previous state [id, state, ...]
+    out1_ = out0_.join(mid2_, failOnDuplicate: true)
+      // input tuple format: [id, output, prev_state, ...]
+      // output tuple format: [id, new_state, ...]
+      | map{
+        // TODO: allow `toState` to be a list[string] or map[string, string]
+        // TODO: if `toState` is a closure, check if it has exactly two arguments?
+        def new_state = processArgs.toState(it)
+        [it[0], new_state] + it.drop(3)
+      }
       | debug(processArgs, "output")
 
+
     emit:
-    output_
+    out1_
   }
 
   def wf = workflowInstance.cloneWithName(workflowKey)

@@ -281,25 +281,43 @@ case class NextflowPlatform(
       |  directives: jsonSlurper.parseText('''${jsonPrinter.print(dirJson2)}'''),
       |  // auto settings
       |  auto: jsonSlurper.parseText('''${jsonPrinter.print(autoJson)}'''),
-      |  // apply a map over the incoming tuple
-      |  // example: { tup -> [ tup[0], [input: tup[1].output], tup[2] ] }
+      |
+      |  // Apply a map over the incoming tuple
+      |  // Example: `{ tup -> [ tup[0], [input: tup[1].output] ] + tup.drop(2) }`
       |  map: null,
-      |  // apply a map over the ID element of a tuple (i.e. the first element)
-      |  // example: { id -> id + "_foo" }
+      |
+      |  // Apply a map over the ID element of a tuple (i.e. the first element)
+      |  // Example: `{ id -> id + "_foo" }`
       |  mapId: null,
-      |  // apply a map over the data element of a tuple (i.e. the second element)
-      |  // example: { data -> [ input: data.output ] }
+      |
+      |  // Apply a map over the data element of a tuple (i.e. the second element)
+      |  // Example: `{ data -> [ input: data.output ] }`
       |  mapData: null,
-      |  // apply a map over the passthrough elements of a tuple (i.e. the tuple excl. the first two elements)
-      |  // example: { pt -> pt.drop(1) }
+      |
+      |  // Apply a map over the passthrough elements of a tuple (i.e. the tuple excl. the first two elements)
+      |  // Example: `{ pt -> pt.drop(1) }`
       |  mapPassthrough: null,
-      |  // filter the channel
-      |  // example: { tup -> tup[0] == "foo" }
+      |
+      |  // Filter the channel
+      |  // Example: `{ tup -> tup[0] == "foo" }`
       |  filter: null,
-      |  // rename keys in the data field of the tuple (i.e. the second element)
-      |  // example: [ "new_key": "old_key" ]
+      |
+      |  // Rename keys in the data field of the tuple (i.e. the second element)
+      |  // Will likely be deprecated in favour of `fromState`.
+      |  // Example: `[ "new_key": "old_key" ]`
       |  renameKeys: null,
-      |  // whether or not to print debug messages
+      |
+      |  // Fetch the input data from the state (i.e. the second element)
+      |  // Example: `{ id, state -> [input: state.fastq_file] }`
+      |  fromState: null,
+      |
+      |  // How to create a new state from the old state and the output data
+      |  // Example: `{ id, output, state -> state + [counts: state.output] }`
+      |  // Default: `{ id, output, state -> output }`
+      |  toState: { tup -> tup[1] },
+      |
+      |  // Whether or not to print debug messages
+      |  // Default: `$debug`
       |  debug: $debug
       |]
       |
