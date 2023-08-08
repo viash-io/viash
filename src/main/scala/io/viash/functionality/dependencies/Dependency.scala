@@ -82,6 +82,11 @@ case class Dependency(
   @description("Location of the dependency component artifacts are written ready to be used.")
   writtenPath: Option[String] = None,
 ) {
+  if (alias.isDefined) {
+    // check functionality name
+    require(alias.get.matches("^[A-Za-z][A-Za-z0-9_]*$"), message = f"alias '${alias.get}' must begin with a letter and consist only of alphanumeric characters or underscores.")
+  }
+
   // Shorthand for getting the actual repository from 'repository'.
   // The lefthand string notation is converted to the righthand object during dependency resolution.
   // So after that step we must always use the righthand object. This makes that much easier.
