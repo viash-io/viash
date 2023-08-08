@@ -529,7 +529,7 @@ object Main extends Logging {
     val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config, platform.map(_.id))
     val config1 = DependencyResolver.modifyConfig(config, dependencyPlatformId, rootDir, namespaceConfigs)
     if (output.isDefined) {
-      DependencyResolver.copyDependencies(config1, output.get, dependencyPlatformId.get, namespaceConfigs.nonEmpty)
+      DependencyResolver.copyDependencies(config1, output.get, dependencyPlatformId.getOrElse("native"), namespaceConfigs.nonEmpty)
     } else {
       config1
     }
