@@ -28,7 +28,7 @@
 
 * `Logging`: Add a Logger helper class (PR #485 & #490). Allows manually enabling or disabling colorizing TTY output by using `--colorize`. Add provisions for adding debugging or trace code which is not outputted by default. Changing logging level can be changed with `--loglevel`. These CLI arguments are currently hidden.
 
-* `NextflowPlatform`: Nextflow VDSL3 modules now have a `fromState` and `toState` argument to allow for better control of the data that gets passed to the module and how the state is managed in a Nextflow workflow.
+* `NextflowPlatform`: Nextflow VDSL3 modules now have a `fromState` and `toState` argument to allow for better control of the data that gets passed to the module and how the state is managed in a Nextflow workflow (#479, PR #501).
 
 ## MINOR CHANGES
 
