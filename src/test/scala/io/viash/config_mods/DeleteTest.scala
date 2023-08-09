@@ -5,6 +5,8 @@ import org.scalatest.funsuite.AnyFunSuite
 import io.circe.syntax._
 import io.viash.helpers.Logger
 
+import io.circe.yaml.parser.parse
+
 class DeleteTest extends AnyFunSuite {
   Logger.UseColorOverride.value = Some(false)
   // testing parsing
@@ -20,5 +22,38 @@ class DeleteTest extends AnyFunSuite {
   }
 
   // testing functionality
-  // TODO
+  val baseJson: Json = parse(
+    """foo:
+      |  - name: bar
+      |    a: 1
+      |  - name: baz
+      |    a: 1
+      |  - name: qux
+      |    a: 2
+      |""".stripMargin).toOption.get
+  
+  test("test delete single entry from a list") {
+    val expected1: Json = parse(
+      """foo:
+        |  - name: bar
+        |    a: 1
+        |  - name: baz
+        |    a: 1
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse("""del(.foo[.a == 2])""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+
+  test("test delete multiple entries from a list") {
+    val expected1: Json = parse(
+      """foo:
+        |  - name: qux
+        |    a: 2
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse("""del(.foo[.a == 1])""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+  
 }
