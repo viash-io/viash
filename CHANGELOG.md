@@ -58,7 +58,11 @@
 
 * `viash project file parsing`: Give a more informative message when the viash project file fails to parse correctly (PR #475).
 
-* `docker platform`: Fix issue when mounting an input or output folder containing spaces (PR #...).
+* `DockerPlatform`: Fix issue when mounting an input or output folder containing spaces (PR #484).
+
+## DOCUMENTATION
+
+* `NextflowPlatform`: Add documentation for the usage and arguments of a VDSL3 module (PR #501).
 
 ## INTERNAL CHANGES
 
