@@ -31,9 +31,112 @@ import io.viash.schemas._
 import io.viash.helpers.Escaper
 
 /**
- * Next-gen Platform class for generating Nextflow (DSL2) modules.
+ * A Platform class for generating Nextflow (DSL2) modules.
  */
-@description("Next-gen platform for generating Nextflow modules.")
+@description(
+  """Platform for generating Nextflow VDSL3 modules.
+  |
+  |A VDSL3 module can be imported just like any other Nextflow module. Example:
+  |
+  |```groovy
+  |include { mymodule } from 'target/nextflow/mymodule/main.nf'
+  |```
+  |
+  |The module expects a channel to contain a tuple containing an 'id' and a 'state': `[id, state]`, where `id` is a unique String and `state` is a `Map[String, Object]`. 
+  |After running the module, the result is also a tuple `[id, new_state]`. Example:
+  |
+  |```groovy
+  |Channel.fromList([
+  |  ["myid", [input: file("in.txt")]]
+  |])
+  |  | mymodule
+  |```
+  |
+  |If the input tuple has more than two elements, the elements after the second element are passed through to the output tuple.
+  |That is, an input tuple `[id, input, ...]` will result in a tuple `[id, output, ...]` after running the module.
+  |For example, an input tuple `["foo", [input: file("in.txt")], "bar"]` will result in an output tuple `["foo", [output: file("out.txt")], "bar"]`.
+  |
+  |A feature unique to VDSL3 modules is that each module can be customized on-the-fly using the `mymodule.run()` function. Example:
+  |
+  |```groovy
+  |Channel.fromList([
+  |  ["myid", [input: file("in.txt")]]
+  |])
+  |  | mymodule.run(
+  |    args: [k: 10],
+  |    directives: [cpus: 4, memory: "16 GB"]
+  |  )
+  |```
+  |
+  |Possible arguments for `.run()`: 
+  |
+  |- `key` (`String`): A unique key used to trace the process and help make names of output files unique. Default: the name of the module.
+  |
+  |- `args` (`Map[String, Object]`): Argument overrides to be passed to the module.
+  |
+  |- `directives` (`Map[String, Object]`): Custom directives overrides. See the Nextflow documentation for a list of available directives.
+  |
+  |- `auto` (`Map[String, Boolean]`): Whether to apply certain automated processing steps. Possible settings are:
+  |  * `simplifyInput`: If true, if the input tuple is a single file and if the module only has a single input file, the input file will be passed the module accordingly. Default: `true`.
+  |  * `simplifyOutput`: If true, if the output tuple is a single file and if the module only has a single output file, the output map will be transformed into a single file. Default: `true`.
+  |  * `publish`: If true, the output files will be published to the `params.publishDir` folder. Default: `false`.
+  |  * `transcript`: If true, the module's transcript will be published to the `params.transcriptDir` folder. Default: `false`.
+  |
+  |- `map` (`Function`): Apply a map over the incoming tuple. Example: `{ tup -> [ tup[0], [input: tup[1].output] ] + tup.drop(2) }`. Default: `null`.
+  |
+  |- `mapId` (`Function`): Apply a map over the ID element of a tuple (i.e. the first element). Example: `{ id -> id + "_foo" }`. Default: `null`.
+  |
+  |- `mapData` (`Function`): Apply a map over the data element of a tuple (i.e. the second element). Example: `{ data -> [ input: data.output ] }`. Default: `null`.
+  |
+  |- `mapPassthrough` (`Function`): Apply a map over the passthrough elements of a tuple (i.e. the tuple excl. the first two elements). Example: `{ pt -> pt.drop(1) }`. Default: `null`.
+  |
+  |- `filter` (`Function`): Filter the channel. Example: `{ tup -> tup[0] == "foo" }`. Default: `null`.
+  |
+  |- `fromState`: Fetch data from the state and pass it to the module without altering the current state. `fromState` should be `null`, `List[String]`, `Map[String, String]` or a function. 
+  |  
+  |    - If it is `null`, the state will be passed to the module as is.
+  |    - If it is a `List[String]`, the data will be the values of the state at the given keys.
+  |    - If it is a `Map[String, String]`, the data will be the values of the state at the given keys, with the keys renamed according to the map.
+  |    - If it is a function, the tuple (`[id, state]`) in the channel will be passed to the function, and the result will be used as the data.
+  |  
+  |  Example: `{ id, state -> [input: state.fastq_file] }`
+  |  Default: `null`
+  |
+  |- `toState`: Determine how the state should be updated after the module has been run. `toState` should be `List[String]`, `Map[String, String]` or a function.
+  |  
+  |    - If it is a `List[String]`, the state will be updated with the values of the data at the given keys.
+  |    - If it is a `Map[String, String]`, the state will be updated with the values of the data at the given keys, with the keys renamed according to the map.
+  |    - If it is a function, a tuple (`[id, output, state]`) will be passed to the function, and the result will be used as the new state.
+  |  
+  |  Example: `{ id, output, state -> state + [counts: state.output] }`
+  |  Default: `{ id, output, state -> output }`
+  |
+  |- `debug`: Whether or not to print debug messages. Default: `false`.
+  |
+  |An example of a Nextflow workflow using multiple VDSL3 modules:
+  |
+  |```groovy
+  |include { mymodule1 } from 'target/nextflow/mymodule1/main.nf'
+  |include { mymodule2 } from 'target/nextflow/mymodule2/main.nf'
+  |
+  |Channel.fromList([
+  |  ["myid", [input: file("in.txt")]]
+  |])
+  |  | mymodule1.run(
+  |    args: [k: 10],
+  |    directives: [cpus: 4, memory: "16 GB"]
+  |    fromState: [input: "input"],
+  |    toState: [module1_output: "output"]
+  |  )
+  |  | mymodule2.run(
+  |    fromState: { id, state -> 
+  |      [input: state.module1_output, k: 4]
+  |    },
+  |    auto: [publish: true]
+  |  )
+  |```
+  |""".stripMargin
+)
 @example(
   """platforms:
     |  - type: nextflow
@@ -307,11 +410,27 @@ case class NextflowPlatform(
       |  // Example: `[ "new_key": "old_key" ]`
       |  renameKeys: null,
       |
-      |  // Fetch the input data from the state (i.e. the second element)
+      |  // Fetch data from the state and pass it to the module without altering the current state.
+      |  // 
+      |  // `fromState` should be `null`, `List[String]`, `Map[String, String]` or a function. 
+      |  // 
+      |  // - If it is `null`, the state will be passed to the module as is.
+      |  // - If it is a `List[String]`, the data will be the values of the state at the given keys.
+      |  // - If it is a `Map[String, String]`, the data will be the values of the state at the given keys, with the keys renamed according to the map.
+      |  // - If it is a function, the tuple (`[id, state]`) in the channel will be passed to the function, and the result will be used as the data.
+      |  // 
       |  // Example: `{ id, state -> [input: state.fastq_file] }`
+      |  // Default: `null`
       |  fromState: null,
       |
-      |  // How to create a new state from the old state and the output data
+      |  // Determine how the state should be updated after the module has been run.
+      |  // 
+      |  // `toState` should be `List[String]`, `Map[String, String]` or a function.
+      |  //
+      |  // - If it is a `List[String]`, the state will be updated with the values of the data at the given keys.
+      |  // - If it is a `Map[String, String]`, the state will be updated with the values of the data at the given keys, with the keys renamed according to the map.
+      |  // - If it is a function, a tuple (`[id, output, state]`) will be passed to the function, and the result will be used as the new state.
+      |  //
       |  // Example: `{ id, output, state -> state + [counts: state.output] }`
       |  // Default: `{ id, output, state -> output }`
       |  toState: { tup -> tup[1] },
