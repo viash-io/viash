@@ -423,23 +423,24 @@ def processProcessArgs(Map args) {
   def processArgs = thisDefaultProcessArgs + args
 
   // check whether 'key' exists
-  assert processArgs.containsKey("key")
+  assert processArgs.containsKey("key") : "Error in module '${thisConfig.functionality.name}': key is a required argument"
 
   // if 'key' is a closure, apply it to the original key
   if (processArgs["key"] instanceof Closure) {
     processArgs["key"] = processArgs["key"](thisConfig.functionality.name)
   }
-  assert processArgs["key"] instanceof CharSequence
-  assert processArgs["key"] ==~ /^[a-zA-Z_][a-zA-Z0-9_]*$/
+  def key = processArgs["key"]
+  assert key instanceof CharSequence : "Expected process argument 'key' to be a String. Found: class ${key.getClass()}"
+  assert key ==~ /^[a-zA-Z_][a-zA-Z0-9_]*$/ : "Error in module '$key': Expected process argument 'key' to consist of only letters, digits or underscores. Found: ${key}"
 
   // check whether directives exists and apply defaults
-  assert processArgs.containsKey("directives")
-  assert processArgs["directives"] instanceof Map
+  assert processArgs.containsKey("directives") : "Error in module '$key': directives is a required argument"
+  assert processArgs["directives"] instanceof Map : "Error in module '$key': Expected process argument 'directives' to be a Map. Found: class ${processArgs['directives'].getClass()}"
   processArgs["directives"] = processDirectives(thisDefaultProcessArgs.directives + processArgs["directives"])
 
   // check whether directives exists and apply defaults
-  assert processArgs.containsKey("auto")
-  assert processArgs["auto"] instanceof Map
+  assert processArgs.containsKey("auto") : "Error in module '$key': auto is a required argument"
+  assert processArgs["auto"] instanceof Map : "Error in module '$key': Expected process argument 'auto' to be a Map. Found: class ${processArgs['auto'].getClass()}"
   processArgs["auto"] = processAuto(thisDefaultProcessArgs.auto + processArgs["auto"])
 
   // auto define publish, if so desired
@@ -491,11 +492,81 @@ def processProcessArgs(Map args) {
     processArgs.directives.keySet().removeAll(["publishDir", "cpus", "memory", "label"])
   }
 
-  for (nam in [ "map", "mapId", "mapData", "mapPassthrough", "filter" ]) {
+  for (nam in [ "map", "mapId", "mapData", "mapPassthrough", "filter"]) {
     if (processArgs.containsKey(nam) && processArgs[nam]) {
-      assert processArgs[nam] instanceof Closure : "Expected process argument '$nam' to be null or a Closure. Found: class ${processArgs[nam].getClass()}"
+      assert processArgs[nam] instanceof Closure : "Error in module '$key': Expected process argument '$nam' to be null or a Closure. Found: class ${processArgs[nam].getClass()}"
     }
   }
+
+  // check fromState
+  assert processArgs.containsKey("fromState") : "Error in module '$key': fromState is a required argument"
+  def fromState = processArgs["fromState"]
+  assert fromState == null || fromState instanceof Closure || fromState instanceof Map || fromState instanceof List :
+    "Error in module '$key': Expected process argument 'fromState' to be null, a Closure, a Map, or a List. Found: class ${fromState.getClass()}"
+  if (fromState) {
+    // if fromState is a List, convert to map
+    if (fromState instanceof List) {
+      // check whether fromstate is a list[string]
+      assert fromState.every{it instanceof CharSequence} : "Error in module '$key': fromState is a List, but not all elements are Strings"
+      fromState = fromState.collectEntries{[it, it]}
+    }
+
+    // if fromState is a map, convert to closure
+    if (fromState instanceof Map) {
+      // check whether fromstate is a map[string, string]
+      assert fromState.values().every{it instanceof CharSequence} : "Error in module '$key': fromState is a Map, but not all values are Strings"
+      assert fromState.keySet().every{it instanceof CharSequence} : "Error in module '$key': fromState is a Map, but not all keys are Strings"
+      def fromStateMap = fromState.clone()
+      fromState = { it ->
+        def state = it[1] 
+        assert state instanceof Map : "Error in module '$key': the state is not a Map"
+        def data = fromStateMap.collectEntries{newkey, origkey ->
+          // check whether all values of fromState are in state
+          assert state.containsKey(origkey) : "Error in module '$key': fromState key '$origkey' not found in current state"
+          [newkey, state[origkey]]
+        }
+        data
+      }
+    }
+
+    processArgs["fromState"] = fromState
+  }
+
+  // check toState
+  def toState = processArgs["toState"]
+
+  // toState should be a closure, map[string, string], or list[string]
+  assert toState instanceof Closure || toState instanceof Map || toState instanceof List :
+    "Error in module '$key': Expected process argument 'toState' to be a Closure, a Map, or a List. Found: class ${toState.getClass()}"
+
+  // if toState is a List, convert to map
+  if (toState instanceof List) {
+    // check whether toState is a list[string]
+    assert toState.every{it instanceof CharSequence} : "Error in module '$key': toState is a List, but not all elements are Strings"
+    toState = toState.collectEntries{[it, it]}
+  }
+
+  // if toState is a map, convert to closure
+  if (toState instanceof Map) {
+    // check whether toState is a map[string, string]
+    assert toState.values().every{it instanceof CharSequence} : "Error in module '$key': toState is a Map, but not all values are Strings"
+    assert toState.keySet().every{it instanceof CharSequence} : "Error in module '$key': toState is a Map, but not all keys are Strings"
+    def toStateMap = toState.clone()
+    toState = { it ->
+      def output = it[1]
+      def state = it[2]
+      assert output instanceof Map : "Error in module '$key': the output is not a Map"
+      assert state instanceof Map : "Error in module '$key': the state is not a Map"
+      def extraEntries = toStateMap.collectEntries{newkey, origkey ->
+        // check whether all values of toState are in output
+        assert output.containsKey(origkey) : "Error in module '$key': toState key '$origkey' not found in current output"
+        [newkey, output[origkey]]
+      }
+      state + extraEntries
+    }
+  }
+
+  processArgs["toState"] = toState
 
   // return output
   return processArgs
@@ -828,14 +899,10 @@ def workflowFactory(Map args) {
     }
 
     if (processArgs.fromState) {
-      // TODO: allow `fromState` to be a list[string] or map[string, string]
-      // TODO: if `fromState` is a closure, check if it has exactly two arguments?
       mid3_ = mid2_
         | map{
-          def id = it[0]
-          def state = it[1]
-          def data = processArgs.fromState(id, state)
-          [id, data]
+          def new_data = processArgs["fromState"](it.take(2))
+          [it[0], new_data]
         }
     } else {
       mid3_ = mid2_
@@ -971,9 +1038,7 @@ def workflowFactory(Map args) {
       // input tuple format: [id, output, prev_state, ...]
       // output tuple format: [id, new_state, ...]
       | map{
-        // TODO: allow `toState` to be a list[string] or map[string, string]
-        // TODO: if `toState` is a closure, check if it has exactly two arguments?
-        def new_state = processArgs.toState(it)
+        def new_state = processArgs["toState"](it)
         [it[0], new_state] + it.drop(3)
       }
       | debug(processArgs, "output")
