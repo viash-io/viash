@@ -102,8 +102,9 @@ import io.viash.helpers.Escaper
   |  Example: `{ id, state -> [input: state.fastq_file] }`
   |  Default: `null`
   |
-  |- `toState`: Determine how the state should be updated after the module has been run. `toState` should be `List[String]`, `Map[String, String]` or a function.
-  |  
+  |- `toState`: Determine how the state should be updated after the module has been run. `toState` should be `null`, `List[String]`, `Map[String, String]` or a function.
+  |
+  |    - If it is `null`, the state will be replaced with the output of the module.
   |    - If it is a `List[String]`, the state will be updated with the values of the data at the given keys.
   |    - If it is a `Map[String, String]`, the state will be updated with the values of the data at the given keys, with the keys renamed according to the map.
   |    - If it is a function, a tuple (`[id, output, state]`) will be passed to the function, and the result will be used as the new state.
@@ -425,15 +426,16 @@ case class NextflowPlatform(
       |
       |  // Determine how the state should be updated after the module has been run.
       |  // 
-      |  // `toState` should be `List[String]`, `Map[String, String]` or a function.
-      |  //
+      |  // `toState` should be `null`, `List[String]`, `Map[String, String]` or a function.
+      |  // 
+      |  // - If it is `null`, the state will be replaced with the output of the module.
       |  // - If it is a `List[String]`, the state will be updated with the values of the data at the given keys.
       |  // - If it is a `Map[String, String]`, the state will be updated with the values of the data at the given keys, with the keys renamed according to the map.
       |  // - If it is a function, a tuple (`[id, output, state]`) will be passed to the function, and the result will be used as the new state.
       |  //
       |  // Example: `{ id, output, state -> state + [counts: state.output] }`
       |  // Default: `{ id, output, state -> output }`
-      |  toState: { tup -> tup[1] },
+      |  toState: null,
       |
       |  // Whether or not to print debug messages
       |  // Default: `$debug`

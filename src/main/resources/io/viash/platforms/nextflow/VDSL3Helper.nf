@@ -535,6 +535,10 @@ def processProcessArgs(Map args) {
   // check toState
   def toState = processArgs["toState"]
 
+  if (toState == null) {
+    toState = { tup -> tup[1] }
+  }
+
   // toState should be a closure, map[string, string], or list[string]
   assert toState instanceof Closure || toState instanceof Map || toState instanceof List :
     "Error in module '$key': Expected process argument 'toState' to be a Closure, a Map, or a List. Found: class ${toState.getClass()}"
