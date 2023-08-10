@@ -186,7 +186,7 @@ class DeleteTest extends AnyFunSuite {
 
   test("test delete all entries from a list") {
     val expected1: Json = parse(
-      """foo:
+      """foo: []
         |""".stripMargin).toOption.get
     val cmd1 = ConfigModParser.block.parse("""del(.foo[true])""")
     val res1 = cmd1.apply(baseJson, false)

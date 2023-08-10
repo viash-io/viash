@@ -81,16 +81,32 @@ case class Filter(condition: Condition) extends PathExp {
       return cursor
     }
     var lastWorking = elemCursor
-    while (!elemCursor.failed) {
+    var isLast = false
+    while (!elemCursor.failed && !isLast) {
+      isLast = elemCursor.right.failed
       if (condition.apply(elemCursor.focus.get)) {
         val elemModified = remaining.applyCommand(elemCursor, cmd)
         // replay history of elemCursor on elemModified to make sure we're at the right position
         // elemCursor = elemModified.top.get.hcursor.replay(elemCursor.history)
         // todo: does this need to be re-enabled?
-        elemCursor = elemModified
+        // elemCursor = elemModified
+        if (!isLast)
+          elemCursor = elemModified.top.get.hcursor.replay(elemCursor.history)
+        else
+          elemCursor = elemModified
+
+        lastWorking = elemCursor
+        elemCursor = if (remaining.path.isEmpty || isLast)
+            elemCursor
+          else
+            elemCursor.right
       }
-      lastWorking = elemCursor
-      elemCursor = elemCursor.right
+      else {
+        lastWorking = elemCursor
+        if (!isLast)
+          elemCursor = elemCursor.right
+      }
+
     }
     val tryGoingUp = lastWorking.up
     if (tryGoingUp.failed) { // try to go back up
