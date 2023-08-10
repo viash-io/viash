@@ -64,6 +64,8 @@
 
 * Rename mentions of `NextFlow` to `Nextflow` (PR #476).
 
+* `Reference static pages`: Move `.qmd` files from the website to a local folder here; `static_reference_pages` (PR #504). This way we can track behaviour changes that need to be documented locally.
+
 # Viash 0.7.4 (2023-05-31): Minor bug fixes and minor improvements to VDSL3
 
 Some small fixes and consistency improvements.
