@@ -431,7 +431,7 @@ def processProcessArgs(Map args) {
   }
   def key = processArgs["key"]
   assert key instanceof CharSequence : "Expected process argument 'key' to be a String. Found: class ${key.getClass()}"
-  assert key ==~ /^[a-zA-Z_][a-zA-Z0-9_]*$/ : "Error in module '$key': Expected process argument 'key' to consist of only letters, digits or underscores. Found: ${key}"
+  assert key ==~ /^[a-zA-Z_]\w*$/ : "Error in module '$key': Expected process argument 'key' to consist of only letters, digits or underscores. Found: ${key}"
 
   // check whether directives exists and apply defaults
   assert processArgs.containsKey("directives") : "Error in module '$key': directives is a required argument"
@@ -492,7 +492,7 @@ def processProcessArgs(Map args) {
     processArgs.directives.keySet().removeAll(["publishDir", "cpus", "memory", "label"])
   }
 
-  for (nam in [ "map", "mapId", "mapData", "mapPassthrough", "filter"]) {
+  for (nam in ["map", "mapId", "mapData", "mapPassthrough", "filter"]) {
     if (processArgs.containsKey(nam) && processArgs[nam]) {
       assert processArgs[nam] instanceof Closure : "Error in module '$key': Expected process argument '$nam' to be null or a Closure. Found: class ${processArgs[nam].getClass()}"
     }
@@ -517,6 +517,7 @@ def processProcessArgs(Map args) {
       assert fromState.values().every{it instanceof CharSequence} : "Error in module '$key': fromState is a Map, but not all values are Strings"
       assert fromState.keySet().every{it instanceof CharSequence} : "Error in module '$key': fromState is a Map, but not all keys are Strings"
       def fromStateMap = fromState.clone()
+      // turn the map into a closure to be used later on
       fromState = { it ->
         def state = it[1] 
         assert state instanceof Map : "Error in module '$key': the state is not a Map"
@@ -556,6 +557,7 @@ def processProcessArgs(Map args) {
     assert toState.values().every{it instanceof CharSequence} : "Error in module '$key': toState is a Map, but not all values are Strings"
     assert toState.keySet().every{it instanceof CharSequence} : "Error in module '$key': toState is a Map, but not all keys are Strings"
     def toStateMap = toState.clone()
+    // turn the map into a closure to be used later on
     toState = { it ->
       def output = it[1]
       def state = it[2]

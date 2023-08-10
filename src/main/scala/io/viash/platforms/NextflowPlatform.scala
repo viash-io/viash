@@ -42,7 +42,7 @@ import io.viash.helpers.Escaper
   |include { mymodule } from 'target/nextflow/mymodule/main.nf'
   |```
   |
-  |The module expects a channel to contain a tuple containing an 'id' and a 'state': `[id, state]`, where `id` is a unique String and `state` is a `Map[String, Object]`. 
+  |The module expects the channel events to be tuples containing an 'id' and a 'state': `[id, state]`, where `id` is a unique String and `state` is a `Map[String, Object]`. 
   |After running the module, the result is also a tuple `[id, new_state]`. Example:
   |
   |```groovy
