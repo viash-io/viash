@@ -27,9 +27,9 @@ class DeleteTest extends AnyFunSuite {
       |  - name: bar
       |    a: 1
       |  - name: baz
-      |    a: 1
-      |  - name: qux
       |    a: 2
+      |  - name: qux
+      |    a: 3
       |""".stripMargin).toOption.get
   
   test("test delete single entry from a list") {
@@ -37,10 +37,24 @@ class DeleteTest extends AnyFunSuite {
       """foo:
         |  - name: bar
         |    a: 1
-        |  - name: baz
-        |    a: 1
+        |  - name: qux
+        |    a: 3
         |""".stripMargin).toOption.get
     val cmd1 = ConfigModParser.block.parse("""del(.foo[.a == 2])""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+
+  test("test delete field from a single list entry") {
+    val expected1: Json = parse(
+      """foo:
+        |  - name: bar
+        |    a: 1
+        |  - name: baz
+        |  - name: qux
+        |    a: 3
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse("""del(.foo[.a == 2].a)""")
     val res1 = cmd1.apply(baseJson, false)
     assert(res1 == expected1)
   }
@@ -48,10 +62,44 @@ class DeleteTest extends AnyFunSuite {
   test("test delete multiple entries from a list") {
     val expected1: Json = parse(
       """foo:
-        |  - name: qux
-        |    a: 2
+        |  - name: bar
+        |    a: 1
         |""".stripMargin).toOption.get
-    val cmd1 = ConfigModParser.block.parse("""del(.foo[.a == 1])""")
+    val cmd1 = ConfigModParser.block.parse("""del(.foo[.a != 2])""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+
+  test("test delete field from multiple list entries") {
+    val expected1: Json = parse(
+      """foo:
+        |  - name: bar
+        |    a: 1
+        |  - name: baz
+        |  - name: qux
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse("""del(.foo[.a != 1].a)""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+
+  test("test delete all entries from a list") {
+    val expected1: Json = parse(
+      """foo:
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse("""del(.foo[true])""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+
+  test("test delete field from all list entries") {
+    val expected1: Json = parse(
+      """foo:
+        |  - name: bar
+        |  - name: baz
+        |  - name: qux
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse("""del(.foo[true].a)""")
     val res1 = cmd1.apply(baseJson, false)
     assert(res1 == expected1)
   }
