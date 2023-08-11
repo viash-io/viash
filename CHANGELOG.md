@@ -28,6 +28,8 @@
 
 * `Logging`: Add a Logger helper class (PR #485 & #490). Allows manually enabling or disabling colorizing TTY output by using `--colorize`. Add provisions for adding debugging or trace code which is not outputted by default. Changing logging level can be changed with `--loglevel`. These CLI arguments are currently hidden.
 
+* `NextflowPlatform`: Nextflow VDSL3 modules now have a `fromState` and `toState` argument to allow for better control of the data that gets passed to the module and how the state is managed in a Nextflow workflow (#479, PR #501).
+
 ## MINOR CHANGES
 
 * `PythonScript`: Pass `-B` to Python to avoid creating `*.pyc` and `*.pyo` files on importing helper functions (PR #442).
@@ -56,15 +58,21 @@
 
 * `viash project file parsing`: Give a more informative message when the viash project file fails to parse correctly (PR #475).
 
-* `docker platform`: Fix issue when mounting an input or output folder containing spaces (PR #484).
+* `DockerPlatform`: Fix issue when mounting an input or output folder containing spaces (PR #484).
 
 * `Config mod`: Fix a config mod where the filter should execute multiple deletes (PR #503).
+
+## DOCUMENTATION
+
+* `NextflowPlatform`: Add documentation for the usage and arguments of a VDSL3 module (PR #501).
 
 ## INTERNAL CHANGES
 
 * `NextflowVDSL3Platform`: Renamed to `NextflowPlatform` (PR #469).
 
 * Rename mentions of `NextFlow` to `Nextflow` (PR #476).
+
+* `Reference static pages`: Move `.qmd` files from the website to a local folder here; `docs/reference` (PR #504). This way we can track behaviour changes that need to be documented locally.
 
 # Viash 0.7.4 (2023-05-31): Minor bug fixes and minor improvements to VDSL3
 

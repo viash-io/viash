@@ -1,0 +1,10 @@
+---
+title: Nextflow VDSL3
+order: 35
+---
+
+Viash supports creating Nextflow workflows in multiple ways.
+
+* [Run a module as a standaline pipeline](run_module.qmd)
+* [Import a VDSL3 module](import_module.qmd)
+* Create a Nextflow workflow with dependencies

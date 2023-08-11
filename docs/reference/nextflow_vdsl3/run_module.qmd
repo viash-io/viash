@@ -1,0 +1,63 @@
+---
+title: Run a VDSL3 module
+---
+
+
+Unlike typical Nextflow modules, VDSL3 modules can actually be used as a standalone pipeline.
+
+To run a VDSL3 module as a standalone pipeline, you need to specify the input parameters and a `--publish_dir` parameter, as Nextflow will automatically choose the parameter names of the output files.
+
+## Viewing the help message
+
+More information regarding a modules arguments can be shown by passing the `--help`
+parameter.
+
+**Example:**
+
+```bash
+nextflow run target/nextflow/mycomponent/main.nf --help
+```
+
+
+## Running a module as a standalone pipeline
+You can run the executable by providing a value for each of the required arguments and `--publish_dir` (where output files are published).
+
+**Example:**
+
+```bash
+nextflow run target/nextflow/mycomponent/main.nf \
+  --input config.vsh.yaml \
+  --publish_dir output/
+```
+
+
+## Passing a parameter list
+
+Every VDSL3 can accept a list of parameters to populate a Nextflow channel with. Assuming we want to process a set of input files in parallel, we can create a yaml file `params.yaml` containing the following information.
+
+
+```yaml
+param_list:
+  - id: sample1
+    input: data/sample1.txt
+  - id: sample2
+    input: data/sample2.txt
+  - id: sample3
+    input: data/sample3.txt
+  - id: sample4
+    input: data/sample4.txt
+arg1: 10
+arg2: 5
+```
+
+You can run the pipeline on the list of parameters using the `-params-file`
+parameter.
+ 
+```{bash}
+nextflow run target/main.nf -params-file params.yaml --publish_dir output2
+```
+
+
+:::{.callout-tip}
+You can also pass a YAML, CSV or JSON file to the `param_list` parameter.
+:::

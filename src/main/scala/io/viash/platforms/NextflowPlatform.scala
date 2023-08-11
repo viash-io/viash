@@ -31,9 +31,10 @@ import io.viash.schemas._
 import io.viash.helpers.Escaper
 
 /**
- * Next-gen Platform class for generating Nextflow (DSL2) modules.
+ * A Platform class for generating Nextflow (DSL2) modules.
  */
-@description("Next-gen platform for generating Nextflow modules.")
+@description("""Platform for generating Nextflow VDSL3 modules.""".stripMargin)
+// todo: add link to guide
 @example(
   """platforms:
     |  - type: nextflow
@@ -281,25 +282,60 @@ case class NextflowPlatform(
       |  directives: jsonSlurper.parseText('''${jsonPrinter.print(dirJson2)}'''),
       |  // auto settings
       |  auto: jsonSlurper.parseText('''${jsonPrinter.print(autoJson)}'''),
-      |  // apply a map over the incoming tuple
-      |  // example: { tup -> [ tup[0], [input: tup[1].output], tup[2] ] }
+      |
+      |  // Apply a map over the incoming tuple
+      |  // Example: `{ tup -> [ tup[0], [input: tup[1].output] ] + tup.drop(2) }`
       |  map: null,
-      |  // apply a map over the ID element of a tuple (i.e. the first element)
-      |  // example: { id -> id + "_foo" }
+      |
+      |  // Apply a map over the ID element of a tuple (i.e. the first element)
+      |  // Example: `{ id -> id + "_foo" }`
       |  mapId: null,
-      |  // apply a map over the data element of a tuple (i.e. the second element)
-      |  // example: { data -> [ input: data.output ] }
+      |
+      |  // Apply a map over the data element of a tuple (i.e. the second element)
+      |  // Example: `{ data -> [ input: data.output ] }`
       |  mapData: null,
-      |  // apply a map over the passthrough elements of a tuple (i.e. the tuple excl. the first two elements)
-      |  // example: { pt -> pt.drop(1) }
+      |
+      |  // Apply a map over the passthrough elements of a tuple (i.e. the tuple excl. the first two elements)
+      |  // Example: `{ pt -> pt.drop(1) }`
       |  mapPassthrough: null,
-      |  // filter the channel
-      |  // example: { tup -> tup[0] == "foo" }
+      |
+      |  // Filter the channel
+      |  // Example: `{ tup -> tup[0] == "foo" }`
       |  filter: null,
-      |  // rename keys in the data field of the tuple (i.e. the second element)
-      |  // example: [ "new_key": "old_key" ]
+      |
+      |  // Rename keys in the data field of the tuple (i.e. the second element)
+      |  // Will likely be deprecated in favour of `fromState`.
+      |  // Example: `[ "new_key": "old_key" ]`
       |  renameKeys: null,
-      |  // whether or not to print debug messages
+      |
+      |  // Fetch data from the state and pass it to the module without altering the current state.
+      |  // 
+      |  // `fromState` should be `null`, `List[String]`, `Map[String, String]` or a function. 
+      |  // 
+      |  // - If it is `null`, the state will be passed to the module as is.
+      |  // - If it is a `List[String]`, the data will be the values of the state at the given keys.
+      |  // - If it is a `Map[String, String]`, the data will be the values of the state at the given keys, with the keys renamed according to the map.
+      |  // - If it is a function, the tuple (`[id, state]`) in the channel will be passed to the function, and the result will be used as the data.
+      |  // 
+      |  // Example: `{ id, state -> [input: state.fastq_file] }`
+      |  // Default: `null`
+      |  fromState: null,
+      |
+      |  // Determine how the state should be updated after the module has been run.
+      |  // 
+      |  // `toState` should be `null`, `List[String]`, `Map[String, String]` or a function.
+      |  // 
+      |  // - If it is `null`, the state will be replaced with the output of the module.
+      |  // - If it is a `List[String]`, the state will be updated with the values of the data at the given keys.
+      |  // - If it is a `Map[String, String]`, the state will be updated with the values of the data at the given keys, with the keys renamed according to the map.
+      |  // - If it is a function, a tuple (`[id, output, state]`) will be passed to the function, and the result will be used as the new state.
+      |  //
+      |  // Example: `{ id, output, state -> state + [counts: state.output] }`
+      |  // Default: `{ id, output, state -> output }`
+      |  toState: null,
+      |
+      |  // Whether or not to print debug messages
+      |  // Default: `$debug`
       |  debug: $debug
       |]
       |
