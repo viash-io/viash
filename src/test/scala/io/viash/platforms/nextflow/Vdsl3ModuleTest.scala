@@ -121,90 +121,46 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
   }
   
   test("Run pipeline", DockerTest, NextflowTest) {
-
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "workflows/pipeline1/main.nf",
       entry = Some("base"),
-      args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
-      ),
+      args = List("--publish_dir", "output"),
       cwd = tempFolFile
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
     outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
-  }
 
-  test("Run pipeline with components using map functionality", DockerTest, NextflowTest) {
-
-    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-      mainScript = "workflows/pipeline1/main.nf",
-      entry = Some("map_variant"),
-      args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
-      ),
-      cwd = tempFolFile
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
-  }
-
-  test("Run pipeline with components using mapData functionality", DockerTest, NextflowTest) {
-
-    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-      mainScript = "workflows/pipeline1/main.nf",
-      entry = Some("mapData_variant"),
-      args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
-      ),
-      cwd = tempFolFile
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
-  }
-
-  test("Run pipeline with debug = false", DockerTest, NextflowTest) {
-
-    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-      mainScript = "workflows/pipeline1/main.nf",
-      entry = Some("debug_variant"),
-      args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
-        "--displayDebug", "false",
-      ),
-      cwd = tempFolFile
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
-
-    val lines2 = stdOut.split("\n").find(_.contains("process 'step3' output tuple"))
-    assert(!lines2.isDefined)
-
-  }
-
-  test("Run pipeline with debug = true", DockerTest, NextflowTest) {
-
-    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-      mainScript = "workflows/pipeline1/main.nf",
-      entry = Some("debug_variant"),
-      args = List(
-        "--input", "resources/*",
-        "--publish_dir", "output",
-        "--displayDebug", "true",
-      ),
-      cwd = tempFolFile
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    outputFileMatchChecker(stdOut, "DEBUG4", "^11 .*$")
+    // check whether step3's debug printing was triggered
     outputFileMatchChecker(stdOut, "process 'step3[^']*' output tuple", "^11 .*$")
+
+    // check whether step2's debug printing was not triggered
+    val lines2 = stdOut.split("\n").find(_.contains("process 'step2' output tuple"))
+    assert(!lines2.isDefined)
+  }
+
+  test("Test map/mapData/id arguments", DockerTest, NextflowTest) {
+
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "workflows/pipeline1/main.nf",
+      entry = Some("test_map_mapdata_mapid_arguments"),
+      args = List("--publish_dir", "output"),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+  }
+
+  test("Test fromState/toState arguments", DockerTest, NextflowTest) {
+
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "workflows/pipeline1/main.nf",
+      entry = Some("test_fromstate_tostate_arguments"),
+      args = List("--publish_dir", "output"),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
   }
 
   test("Check whether --help is same as Viash's --help", NextflowTest) {

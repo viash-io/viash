@@ -116,18 +116,220 @@ class AssignTest extends AnyFunSuite {
 
   // testing functionality
   val baseJson: Json = parse(
-    """foo: 
-      |  bar: baz
-      |  qux: quux
+    """foo:
+      |  - name: bar
+      |    a: 1
+      |  - name: baz
+      |    a: 2
+      |  - name: qux
+      |    a: 3
       |""".stripMargin).toOption.get
-  
-  test("test simple assign") {
+
+  test("test assign single entry from a list #1") {
     val expected1: Json = parse(
       """foo:
-        |  bar: baz
-        |  qux: baz
+        |  - name: quux
+        |    a: 5
+        |  - name: baz
+        |    a: 2
+        |  - name: qux
+        |    a: 3
         |""".stripMargin).toOption.get
-    val cmd1 = ConfigModParser.block.parse(""".foo.qux := .foo.bar""")
+    val cmd1 = ConfigModParser.block.parse(""".foo[.a == 1] := { name: "quux", a: 5 }""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+  
+  test("test assign single entry from a list #2") {
+    val expected1: Json = parse(
+      """foo:
+        |  - name: bar
+        |    a: 1
+        |  - name: quux
+        |    a: 6
+        |  - name: qux
+        |    a: 3
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse(""".foo[.a == 2] := { name: "quux", a: 6 }""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+
+  test("test assign single entry from a list #3") {
+    val expected1: Json = parse(
+      """foo:
+        |  - name: bar
+        |    a: 1
+        |  - name: baz
+        |    a: 2
+        |  - name: quux
+        |    a: 7
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse(""".foo[.a == 3] := { name: "quux", a: 7 }""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+
+  test("test assign field from a single list entry #1") {
+    val expected1: Json = parse(
+      """foo:
+        |  - name: bar
+        |    a: 5
+        |  - name: baz
+        |    a: 2
+        |  - name: qux
+        |    a: 3
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse(""".foo[.a == 1].a := 5""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+
+  test("test assign field from a single list entry #2") {
+    val expected1: Json = parse(
+      """foo:
+        |  - name: bar
+        |    a: 1
+        |  - name: baz
+        |    a: 6
+        |  - name: qux
+        |    a: 3
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse(""".foo[.a == 2].a := 6""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+
+  test("test assign field from a single list entry #3") {
+    val expected1: Json = parse(
+      """foo:
+        |  - name: bar
+        |    a: 1
+        |  - name: baz
+        |    a: 2
+        |  - name: qux
+        |    a: 7
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse(""".foo[.a == 3].a := 7""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+
+  test("test assign multiple entries from a list #1") {
+    val expected1: Json = parse(
+      """foo:
+        |  - name: bar
+        |    a: 1
+        |  - name: quux
+        |    a: 5
+        |  - name: quux
+        |    a: 5
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse(""".foo[.a != 1] := { name: "quux", a: 5 }""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+
+  test("test assign multiple entries from a list #2") {
+    val expected1: Json = parse(
+      """foo:
+        |  - name: quux
+        |    a: 6
+        |  - name: baz
+        |    a: 2
+        |  - name: quux
+        |    a: 6
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse(""".foo[.a != 2] := { name: "quux", a: 6 }""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+
+  test("test assign multiple entries from a list #3") {
+    val expected1: Json = parse(
+      """foo:
+        |  - name: quux
+        |    a: 7
+        |  - name: quux
+        |    a: 7
+        |  - name: qux
+        |    a: 3
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse(""".foo[.a != 3] := { name: "quux", a: 7 }""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+
+  test("test assign field from multiple list entries #1") {
+    val expected1: Json = parse(
+      """foo:
+        |  - name: bar
+        |    a: 1
+        |  - name: baz
+        |    a: 5
+        |  - name: qux
+        |    a: 5
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse(""".foo[.a != 1].a := 5""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+
+  test("test assign field from multiple list entries #2") {
+    val expected1: Json = parse(
+      """foo:
+        |  - name: bar
+        |    a: 6
+        |  - name: baz
+        |    a: 2
+        |  - name: qux
+        |    a: 6
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse(""".foo[.a != 2].a := 6""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+  test("test assign field from multiple list entries #3") {
+    val expected1: Json = parse(
+      """foo:
+        |  - name: bar
+        |    a: 7
+        |  - name: baz
+        |    a: 7
+        |  - name: qux
+        |    a: 3
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse(""".foo[.a != 3].a := 7""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+
+  test("test assign all entries from a list") {
+    val expected1: Json = parse(
+      """foo:
+        |  - name: quux
+        |    a: 5
+        |  - name: quux
+        |    a: 5
+        |  - name: quux
+        |    a: 5
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse(""".foo[true] := { name: "quux", a: 5 }""")
+    val res1 = cmd1.apply(baseJson, false)
+    assert(res1 == expected1)
+  }
+
+  test("test assign field from all list entries") {
+    val expected1: Json = parse(
+      """foo:
+        |  - name: bar
+        |    a: 5
+        |  - name: baz
+        |    a: 5
+        |  - name: qux
+        |    a: 5
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse(""".foo[true].a := 5""")
     val res1 = cmd1.apply(baseJson, false)
     assert(res1 == expected1)
   }

@@ -1,0 +1,275 @@
+---
+title: Viash Code Block
+order: 40
+---
+
+{{< include ../../_includes/_language_chooser.qmd >}}
+
+**Example:**
+
+```{r setup, include=FALSE}
+repo_path <- system("git rev-parse --show-toplevel", intern = TRUE)
+source(paste0(repo_path, "/_includes/_r_helper.R"))
+source(paste0(repo_path, "/guide/component/_language_examples.R"))
+# escape languages
+langs <- langs %>%
+  mutate(label = gsub("#", "\\\\#", label))
+```
+
+
+When running a Viash component with `viash run`, Viash will wrap your script into a Bash executable. In doing so, it strips away the "Viash placeholder" code block and replaces it by a bit of code to your script for reading any parameter values at runtime.
+
+## Recognizing the Viash placeholder code block
+
+```{r setup-config-inject, include=FALSE}
+temp_dir <- tempfile("config_inject")
+dir.create(temp_dir, recursive = TRUE, showWarnings = FALSE)
+on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
+langs <- langs %>%
+  mutate(
+    config_path = paste0(temp_dir, "/", id, "/", basename(example_config)),
+    script_path = paste0(temp_dir, "/", id, "/", basename(example_script))
+  )
+pwalk(langs, function(id, label, example_config, example_script, config_path, script_path, ...) {
+  dir.create(paste0(temp_dir, "/", id), recursive = TRUE, showWarnings = FALSE)
+  file.copy(example_config, config_path)
+  file.copy(example_script, script_path)
+})
+```
+
+::: {.panel-tabset}
+```{r show-placeholder, echo=FALSE, output="asis"}
+pwalk(langs, function(id, label, config_path, script_path, ...) {
+  qrt(
+    "## {% label %}
+    |
+    |```{embed, lang='{%id%}'}
+    |{%script_path%}
+    |```
+    |")
+})
+```
+:::
+
+A "Viash placeholder" code block is the section between the `VIASH START` and `VIASH END` comments.
+
+## What happens at runtime
+By passing arguments to the component, Viash will add your parameter values to your script by replacing the Viash placeholder code block. If no such code block exists yet, the parameters are inserted at the top of the file.
+
+The resulting code block will contain two maps (or dictionaries): `par` and `meta`. The `par` map contains the parameter values specified by the user, and `meta` contains additional information on the current runtime environment. Note that for Bash scripts, the `par` and `meta` maps are flattened into separate environment variables.
+
+## Previewing the `par` and `meta` objects
+To get insight into how `par` and `meta` are defined, you can run [`viash config inject`](/reference/cli/config_inject.qmd) to replace the current parameter placeholder with an auto-generated parameter placeholder.
+
+::: {.callout-warning}
+This will change the contents of your script!
+:::
+
+::: {.panel-tabset}
+```{r config-inject, echo=FALSE, output="asis"}
+pwalk(langs, function(id, label, config_path, script_path, ...) {
+  qrt(
+    "## {% label %}
+    |
+    |Running `viash config inject` effectively changes the contents of the script.
+    |
+    |```{bash config-inject}
+    |viash config inject {%basename(config_path)%}
+    |```
+    |
+    |The updated `{%basename(script_path)%}` now contains the following code:
+    |
+    |```{embed, lang='{%id%}'}
+    |{%script_path%}
+    |```
+    |", .dir = paste0(temp_dir, "/", id))
+})
+```
+:::
+
+## Runtime parameters in `par`
+
+The `par` object (or `par_` environment variables in Bash) will contain argument values passed at runtime. For example, passing `--input foo.txt` will result in a `par["input"]` being equal to `"foo.txt"`.
+
+:::{.callout-tip}
+Try adding more [arguments]({{< var reference.arguments >}}) with different file types to see what effect this has on the resulting placeholder.
+:::
+
+## Meta variables in `meta`
+
+Meta-variables offer information on the runtime environment which you can use from within your script.
+
+* `cpus` (integer): The maximum number of (logical) cpus a component is allowed to use. By default, this value will be undefined.
+
+* `config` (string): Path to the processed Viash config YAML. This file is usually called `.config.vsh.yaml` and resides next to the wrapped executable (see below). This YAML file is useful for doing some runtime introspection of the component for writing generic unit tests.
+
+* `executable` (string): The executable being used at runtime; that is, the wrapped script. This variable is used in unit tests.
+
+* `functionality_name` (string): The name of the component, useful for logging.
+
+* `memory_*` (long): The maximum amount of memory a component is allowed to allocate. The following denominations are provided: `memory_b`, `memory_kb`, `memory_mb`, `memory_gb`, `memory_tb`, `memory_pb`. By default, this value will be undefined.
+
+* `resources_dir` (string): Path to where the resources are stored.
+
+* `temp_dir` (string): A temporary directory in which your script is allowed to create new temporary files / directories. By default, this will be set to the `VIASH_TEMP` environment variable. When the `VIASH_TEMP` variable is undefined, POSIX `TMPDIR` or `/tmp` is used instead.
+
+
+### `cpus` (integer)
+
+
+This field specifies the maximum number of (logical) cpus a component is allowed to use. This is useful when parallellizing your component in such a way that integrates very nicely with pipeline frameworks such as Nextflow. Below is an example usage of the `cpus` meta-variable.
+
+::: {.panel-tabset}
+## Bash
+```bash
+#!/bin/bash
+
+## VIASH START
+par_input="path/to/file.txt"
+par_output="output.txt"
+meta_cpus=10
+## VIASH END
+
+# Pass number of cores to the popular_software_tool. Set the default to 1.
+./popular_software_tool --ncores ${meta_cpus:-1}
+```
+## C\#
+
+No example available yet.
+
+## JavaScript
+
+No example available yet.
+
+## Python
+
+```python
+from multiprocessing import Pool
+
+## VIASH START
+par = {}
+meta = {"cpus": 1}
+## VIASH END
+
+def my_fun(x):
+    return x + "!"
+my_data = ["hello", "world"]
+
+with Pool(processes=meta.get("cpus", 1)) as pool:
+    out = pool.map(my_fun, my_data)
+```
+
+## R
+
+```r
+library(furrr)
+
+## VIASH START
+par <- list()
+meta <- list(
+  cpus = 1L
+)
+## VIASH END
+
+if (is.null(meta$cpus)) meta$cpus <- 1
+plan(multisession, workers = meta$cpus)
+
+my_data <- c("hello", "world")
+out = future_map(
+  my_data, 
+  function(x) {
+    paste0(x, "!")
+  }
+)
+```
+
+## Scala
+
+```scala
+import scala.collection.parallel._
+import java.util.concurrent.ForkJoinPool
+
+// VIASH START
+// ...
+// VIASH END
+
+val pc = mutable.ParArray(1, 2, 3)
+val numCores = meta.cores.getOrElse(1)
+pc.tasksupport = new ForkJoinTaskSupport(new ForkJoinPool(numCores))
+pc map { _ + 1 }
+```
+:::
+
+You can set the number of cores in your component using any of the following approaches:
+
+```bash
+# as a parameter of viash run
+viash run config.vsh.yaml --cpus 10 -- <my component arguments>
+
+# as a parameter of viash test
+viash test config.vsh.yaml --cpus 10
+
+# or as a parameter of the executable
+viash build config.vsh.yaml -o output
+output/my_executable ---cpus 10
+#                     ↑ notice the triple dash
+```
+
+### `config` (string)
+
+Path to the processed Viash config YAML.
+This file is usually called `.config.vsh.yaml` and resides next to the wrapped executable (see below).
+This YAML file is useful for doing some runtime introspection of the component for writing generic unit tests.
+
+### `executable` (string)
+
+The executable being used at runtime; that is, the wrapped script. This variable is used in unit tests.
+
+```bash
+#!/usr/bin/env bash
+set -x
+
+"$meta_executable" --input input.txt > output.txt
+
+[[ ! -f output.txt ]] && echo "Output file could not be found!" && exit 1
+cat output.txt
+grep -q 'expected output' output.txt
+
+echo Done
+```
+
+### `functionality_name` (string)
+
+The name of the component, useful for logging.
+
+### `memory_*` (long)
+
+The maximum amount of memory a component is allowed to allocate.
+The following denominations are provided: `memory_b`, `memory_kb`, `memory_mb`, `memory_gb`, `memory_tb`, `memory_pb`.
+By default, this value will be undefined.
+
+You can set the amount of memory in your component using any of the following approaches:
+
+```bash
+# as a parameter of viash run
+viash run config.vsh.yaml --memory 2GB -- <my component arguments>
+
+# as a parameter of viash test
+viash test config.vsh.yaml --memory 2GB
+
+# or as a parameter of the executable
+viash build config.vsh.yaml -o output
+output/my_executable ---memory 2GB
+#                     ↑ notice the triple dash
+```
+
+### `resources_dir` (string)
+
+This field specifies the absolute path to where the resources are stored.
+During the build phase resources are copied or fetched into this directory so they are ready to be read during execution of the script or test scripts.
+
+### `temp_dir` (string)
+
+A temporary directory in which your script is allowed to create new temporary files / directories.
+By default, this will be set to the `VIASH_TEMP` environment variable.
+When the `VIASH_TEMP` variable is undefined, the POSIX `TMPDIR` and other common misspellings will be checked and ultimately `/tmp` is used as fallback.

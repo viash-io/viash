@@ -28,12 +28,13 @@ abstract class Command {
 case class Assign(lhs: Path, rhs: Value) extends Command {
   def apply(json: Json): Json = {
     val result = rhs.get(json)
-    lhs.applyCommand(json, { _.set(result) })
+    lhs.applyCommand(json, { _.set(result) }, false)
   }
 }
 case class Delete(path: Path) extends Command {
   def apply(json: Json): Json = {
-    path.applyCommand(json, { _.delete })
+    // delete is destructive to the applied path, so we might need to rewrite the history
+    path.applyCommand(json, { _.delete }, true)
   }
 }
 case class Append(lhs: Path, rhs: Value) extends Command {
@@ -49,7 +50,7 @@ case class Append(lhs: Path, rhs: Value) extends Command {
       cursor.withFocus { cursorJson => 
         cursorJson.mapArray(_ ++ resultVector)
       }
-    })
+    }, false)
   }
 }
 case class Prepend(lhs: Path, rhs: Value) extends Command {
@@ -65,7 +66,7 @@ case class Prepend(lhs: Path, rhs: Value) extends Command {
       cursor.withFocus { cursorJson => 
         cursorJson.mapArray(resultVector ++ _)
       }
-    })
+    }, false)
   }
 }
 

@@ -1,0 +1,13 @@
+---
+title: CLI
+listing:
+  - id: cli
+    contents: .
+    template: template.ejs
+order: 10
+---
+
+These are the available commands available on the Command Line Interface:
+
+:::{#cli}
+:::
