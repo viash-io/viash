@@ -60,6 +60,8 @@
 
 * `DockerPlatform`: Fix issue when mounting an input or output folder containing spaces (PR #484).
 
+* `Config mod`: Fix a config mod where the filter should execute multiple deletes (PR #503).
+
 ## DOCUMENTATION
 
 * `NextflowPlatform`: Add documentation for the usage and arguments of a VDSL3 module (PR #501).
