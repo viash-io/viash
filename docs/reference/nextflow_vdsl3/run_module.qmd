@@ -9,8 +9,7 @@ To run a VDSL3 module as a standalone pipeline, you need to specify the input pa
 
 ## Viewing the help message
 
-More information regarding a modules arguments can be shown by passing the `--help`
-parameter.
+More information regarding a modules arguments can be shown by passing the `--help` parameter.
 
 **Example:**
 
@@ -50,8 +49,7 @@ arg1: 10
 arg2: 5
 ```
 
-You can run the pipeline on the list of parameters using the `-params-file`
-parameter.
+You can run the pipeline on the list of parameters using the `-params-file` parameter.
  
 ```{bash}
 nextflow run target/main.nf -params-file params.yaml --publish_dir output2
