@@ -7,12 +7,13 @@ import java.nio.file.{Paths, Files, StandardCopyOption}
 import io.viash.config.Config
 
 import scala.io.Source
-import io.viash.helpers.{IO, Exec}
+import io.viash.helpers.{IO, Exec, Logger}
 import io.viash.TestHelper
 import java.nio.file.Path
 import scala.annotation.meta.param
 
 class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   // which platform to test
   private val configFile = getClass.getResource("/testbash/auxiliary_requirements/parameter_check.vsh.yaml").getPath
   private val loopConfigFile = getClass.getResource("/testbash/auxiliary_requirements/parameter_check_loop.vsh.yaml").getPath

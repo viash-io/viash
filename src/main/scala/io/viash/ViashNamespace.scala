@@ -20,7 +20,7 @@ package io.viash
 import java.nio.file.{Paths, Files, StandardOpenOption}
 import io.viash.ViashTest.{ManyTestOutput, TestOutput}
 import config.Config
-import helpers.IO
+import helpers.{IO, Logging}
 import io.viash.exceptions.MissingResourceFileException
 import io.viash.helpers.status._
 import java.nio.file.Path
@@ -30,8 +30,10 @@ import sys.process._
 import java.io.{ByteArrayOutputStream, File, PrintWriter}
 import io.viash.platforms.Platform
 import scala.collection.parallel.CollectionConverters._
+import io.viash.helpers.LoggerOutput
+import io.viash.helpers.LoggerLevel
 
-object ViashNamespace {
+object ViashNamespace extends Logging {
 
   case class MaybeParList[T](
     list: List[T],
@@ -87,7 +89,7 @@ object ViashNamespace {
               targetOutputPath(target, platformId, ns, funName)
             }
           val nsStr = ns.map(" (" + _ + ")").getOrElse("")
-          println(s"Exporting $funName$nsStr =$platformId=> $out")
+          infoOut(s"Exporting $funName$nsStr =$platformId=> $out")
           val status = ViashBuild(
             config = conf,
             platform = platform,
@@ -134,7 +136,7 @@ object ViashNamespace {
 
     val parentTempPath = IO.makeTemp("viash_ns_test")
     if (keepFiles.getOrElse(true)) {
-      Console.err.printf("The working directory for the namespace tests is %s\n", parentTempPath.toString())
+      info(s"The working directory for the namespace tests is ${parentTempPath.toString()}")
     }
     
     try {
@@ -152,18 +154,15 @@ object ViashNamespace {
           ).mkString("\t") + sys.props("line.separator"))
         writer.flush()
       }
-      printf(
-        s"%s%20s %20s %20s %20s %9s %8s %20s%s\n",
-        "",
-        "namespace",
-        "functionality",
-        "platform",
-        "test_name",
-        "exit_code",
-        "duration",
-        "result",
-        Console.RESET
-      )
+      infoOut("%20s %20s %20s %20s %9s %8s %20s".
+        format("namespace",
+          "functionality",
+          "platform",
+          "test_name",
+          "exit_code",
+          "duration",
+          "result"
+        ))
 
       val results = configs2.map { x =>
         x match {
@@ -176,7 +175,7 @@ object ViashNamespace {
             val platName = platform.id
 
             // print start message
-            printf(s"%s%20s %20s %20s %20s %9s %8s %20s%s\n", "", namespace, funName, platName, "start", "", "", "", Console.RESET)
+            infoOut("%20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, platName, "start", "", "", ""))
 
             // run tests
             // TODO: it would actually be great if this component could subscribe to testresults messages
@@ -194,7 +193,7 @@ object ViashNamespace {
               )
             } catch {
               case e: MissingResourceFileException => 
-                Console.err.println(s"${Console.YELLOW}viash ns: ${e.getMessage}${Console.RESET}")
+                warn(s"viash ns: ${e.getMessage}")
                 ManyTestOutput(None, List())
             }
 
@@ -221,11 +220,11 @@ object ViashNamespace {
               }
 
               // print message
-              printf(s"%s%20s %20s %20s %20s %9s %8s %20s%s\n", col, namespace, funName, platName, test.name, test.exitValue, test.duration, msg, Console.RESET)
+              log(LoggerOutput.StdOut, LoggerLevel.Info, col, "%20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, platName, test.name, test.exitValue, test.duration, msg))
 
               if (test.exitValue != 0) {
-                Console.err.println(test.output)
-                Console.err.println(ViashTest.consoleLine)
+                info(test.output)
+                info(ViashTest.consoleLine)
               }
 
               // write to tsv
@@ -262,7 +261,7 @@ object ViashNamespace {
       results
     } catch {
       case e: Exception => 
-        println(e.getMessage())
+        infoOut(e.getMessage())
         Nil
     } finally {
       tsvWriter.foreach(_.close())
@@ -309,7 +308,7 @@ object ViashNamespace {
 
     // check whether is empty
     if (configData.isEmpty) {
-      Console.err.println("No config files found to work with.")
+      info("No config files found to work with.")
       return
     }
 
@@ -317,7 +316,7 @@ object ViashNamespace {
     // Slashes for ';' or '+' are not needed here, but let's allow it anyway
     val matchChecker = """([^{}]*\{[\w-]*\})*[^{}]*(\\?[;+])?$"""
     if (!command.matches(matchChecker)) {
-      Console.err.println("Invalid command syntax.")
+      info("Invalid command syntax.")
       return
     }
 
@@ -325,7 +324,7 @@ object ViashNamespace {
     val fields = """\{[^\{\}]*\}""".r.findAllIn(command).map(_.replaceAll("^.|.$", "")).toList
     val unfoundFields = fields.filter(configData.head.getField(_).isEmpty)
     if (!unfoundFields.isEmpty) {
-      Console.err.println(s"Not all substitution fields are supported fields: ${unfoundFields.mkString(" ")}.")
+      info(s"Not all substitution fields are supported fields: ${unfoundFields.mkString(" ")}.")
       return
     }
 
@@ -350,16 +349,16 @@ object ViashNamespace {
       
       errorOrCmd match {
         case Left(error) => 
-          Console.err.println(s"+ $command")
-          Console.err.println(s"  Error: $error")
+          info(s"+ $command")
+          info(s"  Error: $error")
         case Right(cmd) if dryrun =>
-          Console.err.println(s"+ $cmd")
+          info(s"+ $cmd")
         case Right(cmd) =>
-          Console.err.println(s"+ $cmd")
+          info(s"+ $cmd")
           val (exitcode, output) = runExecCommand(cmd)
-          Console.err.println(s"  Exit code: $exitcode\n")
-          Console.err.println(s"  Output:")
-          Console.out.println(output)
+          info(s"  Exit code: $exitcode\n")
+          info(s"  Output:")
+          infoOut(output)
       }
     }
   }
@@ -380,7 +379,7 @@ object ViashNamespace {
       (exitValue, stream.toString)
     } catch {
       case e: Throwable =>
-        Console.err.println(s"  Exception: $e")
+        info(s"  Exception: $e")
         (-1, e.getMessage())
     } finally {
       printwriter.close()
@@ -412,18 +411,18 @@ object ViashNamespace {
       val nonDisabledStatuses = statuses.filter(_ != Disabled)
       val indentSize = nonDisabledStatuses.length.toString().size
 
-      Console.err.println(s"${Console.YELLOW}Not all configs $successAction successfully${Console.RESET}")
+      warn(s"Not all configs $successAction successfully")
       if (disabledStatusesCount > 0)
-        Console.err.println(s"  ${Console.YELLOW}$disabledStatusesCount configs were disabled${Console.RESET}")
+        warn(s"  $disabledStatusesCount configs were disabled")
       
       for ((status, message) <- messages) {
         val count = nonDisabledStatuses.count(_ == status)
         if (count > 0)
-          Console.err.println(s"  ${status.color}${String.format(s"%${indentSize}s",count)}/${nonDisabledStatuses.length} ${message}${Console.RESET}")
+          log(LoggerOutput.StdErr, LoggerLevel.Info, status.color, s"  ${String.format(s"%${indentSize}s",count)}/${nonDisabledStatuses.length} ${message}")
       }
     }
     else {
-      Console.err.println(s"${Console.GREEN}All ${successes} configs $successAction successfully${Console.RESET}")
+      log(LoggerOutput.StdErr, LoggerLevel.Info, Console.GREEN, s"All ${successes} configs $successAction successfully")
     }
   }
 }

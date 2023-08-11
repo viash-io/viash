@@ -20,7 +20,7 @@ function ViashLog {
   local display_tag="$2"
   shift 2
   if [ $VIASH_VERBOSITY -ge $required_level ]; then
-    echo "[$display_tag]" "$@"
+    >&2 echo "[$display_tag]" "$@"
   fi
 }
 

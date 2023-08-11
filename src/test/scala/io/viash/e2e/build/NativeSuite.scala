@@ -9,16 +9,19 @@ import java.nio.file.Paths
 import io.viash.config.Config
 
 import scala.io.Source
-import io.viash.helpers.{IO, Exec}
+import io.viash.helpers.{IO, Exec, Logger}
 
 class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   // which platform to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
-  private val configNoPlatformFile = getClass.getResource(s"/testbash/config_no_platform.vsh.yaml").getPath
   private val configDeprecatedArgumentGroups = getClass.getResource(s"/testbash/config_deprecated_argument_groups.vsh.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
+
+  private val temporaryConfigFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
+  private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
 
   // parse functionality from file
   private val functionality = Config.read(configFile).functionality
@@ -194,10 +197,11 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("when -p is omitted, the system should run as native") {
+    val newConfigFilePath = configDeriver.derive("""del(.platforms)""", "no_platform")
     val testText = TestHelper.testMain(
       "build",
       "-o", tempFolStr,
-      configNoPlatformFile
+      newConfigFilePath
     )
 
     assert(executable.exists)
@@ -227,7 +231,19 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(testRegex.findFirstIn(testOutput.error).isDefined, testOutput.error)
   }
 
+  test("Test config without a main script") {
+    val testOutput = TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      configFile,
+      "-c", ".functionality.resources := []"
+    )
+
+    assert(testOutput.contains("Warning: no resources specified!"))
+  }
+
   override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
+    IO.deleteRecursively(temporaryConfigFolder)
   }
 }

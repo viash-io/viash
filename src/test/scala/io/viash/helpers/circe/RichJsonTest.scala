@@ -4,10 +4,11 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 import io.circe._
 import io.circe.yaml.parser
-import io.viash.helpers.IO
+import io.viash.helpers.{IO, Logger}
 import java.nio.file.Files
 
 class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   private val temporaryFolder = IO.makeTemp("richjson")
 
   test("checking whether withDefault works") {

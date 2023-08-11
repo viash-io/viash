@@ -2,7 +2,7 @@ package io.viash.e2e.ns_test
 
 import io.viash._
 
-import io.viash.helpers.IO
+import io.viash.helpers.{IO, Logger}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -11,6 +11,7 @@ import java.nio.file.{Files, OpenOption, Paths}
 import scala.io.Source
 
 class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   // path to namespace components
   private val nsPath = getClass.getResource("/testns/").getPath
 

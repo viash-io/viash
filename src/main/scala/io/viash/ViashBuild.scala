@@ -23,9 +23,9 @@ import io.viash.helpers.status._
 
 import config._
 import platforms.Platform
-import helpers.IO
+import helpers.{IO, Logging}
 
-object ViashBuild {
+object ViashBuild extends Logging {
   def apply(
     config: Config,
     platform: Platform,
@@ -52,7 +52,7 @@ object ViashBuild {
     val setupResult =
       if (setup.isDefined && exec_path.isDefined && platform.hasSetup) {
         val cmd = Array(exec_path.get, "---setup", setup.get)
-        val res = Process(cmd).!(ProcessLogger(println, println))
+        val res = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
         res
       }
       else 0
@@ -61,7 +61,7 @@ object ViashBuild {
     val pushResult =
       if (push && exec_path.isDefined && platform.hasSetup) {
         val cmd = Array(exec_path.get, "---setup push")
-        val _ = Process(cmd).!(ProcessLogger(println, println))
+        val _ = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
       }
       else 0
     

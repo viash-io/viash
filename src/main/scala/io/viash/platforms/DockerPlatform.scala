@@ -183,92 +183,6 @@ case class DockerPlatform(
   cmd: Option[Either[String, List[String]]] = None
 
 ) extends Platform {
-  // START OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
-  @description("Adds a `privileged` flag to the docker run.")
-  @removed("Add a `privileged` flag in `run_args` instead, e.g. `{type: docker, run_args: \"--privileged\"}`.", "0.6.3", "0.7.0")
-  private val privileged: Option[Boolean] = None
-
-  @description("Specify which apk packages should be available in order to run the component.")
-  @example(
-    """setup:
-      |  - type: apk
-      |    packages: [ sl ]
-      |""".stripMargin,
-      "yaml")
-  @removed("Use `setup` instead, e.g. `{type: docker, setup: [{ type: apk, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
-  private val apk: Option[ApkRequirements] = None
-
-  @description("Specify which apt packages should be available in order to run the component.")
-  @example(
-    """setup:
-      |  - type: apt
-      |    packages: [ sl ]
-      |""".stripMargin,
-      "yaml")
-  @removed("Use `setup` instead, e.g. `{type: docker, setup: [{ type: apt, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
-  private val apt: Option[AptRequirements] = None
-
-  @description("Specify which yum packages should be available in order to run the component.")
-  @example(
-    """setup:
-      |  - type: yum
-      |    packages: [ sl ]
-      |""".stripMargin,
-      "yaml")
-  @removed("Use `setup` instead, e.g. `{type: docker, setup: [{ type: yum, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
-  private val yum: Option[YumRequirements] = None
-
-  @description("Specify which R packages should be available in order to run the component.")
-  @example(
-    """setup: 
-      |  - type: r
-      |    cran: [ dynutils ]
-      |    bioc: [ AnnotationDbi ]
-      |    git: [ https://some.git.repository/org/repo ]
-      |    github: [ rcannood/SCORPIUS ]
-      |    gitlab: [ org/package ]
-      |    svn: [ https://path.to.svn/group/repo ]
-      |    url: [ https://github.com/hadley/stringr/archive/HEAD.zip ]
-      |    script: [ 'devtools::install(".")' ]
-      |""".stripMargin,
-      "yaml")
-  @removed("Use `setup` instead, e.g. `{type: docker, setup: [{ type: r, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
-  private val r: Option[RRequirements] = None
-
-  @description("Specify which Python packages should be available in order to run the component.")
-  @example(
-    """setup:
-      |  - type: python
-      |    pip: [ numpy ]
-      |    git: [ https://some.git.repository/org/repo ]
-      |    github: [ jkbr/httpie ]
-      |    gitlab: [ foo/bar ]
-      |    mercurial: [ http://... ]
-      |    svn: [ http://...]
-      |    bazaar: [ http://... ]
-      |    url: [ http://... ]
-      |""".stripMargin,
-      "yaml")
-  @removed("Use `setup` instead, e.g. `{type: docker, setup: [{ type: python, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
-  private val python: Option[PythonRequirements] = None
-
-  @description("Specify which Docker commands should be run during setup.")
-  @example(
-    """setup:
-      |  - type: docker
-      |    build_args: [ GITHUB_PAT=hello_world ]
-      |    run: [ git clone ... ]
-      |    add: [ "http://foo.bar ." ]
-      |    copy: [ "http://foo.bar ." ]
-      |    resources: 
-      |      - resource.txt /path/to/resource.txt
-      |""".stripMargin,
-      "yaml")
-  @removed("Use `setup` instead, e.g. `{type: docker, setup: [{ type: docker, ... }]}`. Will be removed.", "0.5.15", "0.7.0")
-  private val docker: Option[DockerRequirements] = None
-  
-  // END OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
-
   @internalFunctionality
   override val hasSetup = true
 
@@ -572,7 +486,7 @@ case class DockerPlatform(
                   |  IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}'
                   |  for var in $$${arg.VIASH_PAR}; do
                   |    unset IFS
-                  |    VIASH_EXTRA_MOUNTS+=( $$(ViashAutodetectMountArg "$$var") )
+                  |    VIASH_EXTRA_MOUNTS+=( "$$(ViashAutodetectMountArg "$$var")" )
                   |    var=$$(ViashAutodetectMount "$$var")
                   |    $viash_temp+=( "$$var" )$chownIfOutput
                   |  done
@@ -583,7 +497,7 @@ case class DockerPlatform(
             Some(
               s"""
                   |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-                  |  VIASH_EXTRA_MOUNTS+=( $$(ViashAutodetectMountArg "$$${arg.VIASH_PAR}") )
+                  |  VIASH_EXTRA_MOUNTS+=( "$$(ViashAutodetectMountArg "$$${arg.VIASH_PAR}")" )
                   |  ${arg.VIASH_PAR}=$$(ViashAutodetectMount "$$${arg.VIASH_PAR}")$chownIfOutput
                   |fi""".stripMargin)
           case _ => None

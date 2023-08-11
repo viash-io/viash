@@ -27,6 +27,7 @@ function ViashAutodetectMountArg {
     base_name=`basename "$abs_path"`
   fi
   mount_target="/viash_automount$mount_source"
+  ViashDebug "ViashAutodetectMountArg $1 -> $mount_source -> $mount_target"
   echo "--volume=\"$mount_source:$mount_target\""
 }
 function ViashStripAutomount {

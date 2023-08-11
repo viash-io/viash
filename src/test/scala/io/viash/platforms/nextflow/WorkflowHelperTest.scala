@@ -1,7 +1,7 @@
 package io.viash.platforms.nextflow
 
-import io.viash.helpers.IO
-import io.viash.{DockerTest, NextFlowTest, TestHelper}
+import io.viash.helpers.{IO, Logger}
+import io.viash.{DockerTest, NextflowTest, TestHelper}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -13,6 +13,7 @@ import java.io.IOException
 import java.io.UncheckedIOException
 
 class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   // temporary folder to work in
   private val temporaryFolder = IO.makeTemp("viash_tester_nextflowvdsl3")
   private val tempFolStr = temporaryFolder.toString
@@ -139,7 +140,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
   for (resource <- List("src", "workflows", "resources"))
     TestHelper.copyFolder(Paths.get(rootPath, resource).toString, Paths.get(tempFolStr, resource).toString)
 
-  test("Build pipeline components", DockerTest, NextFlowTest) {
+  test("Build pipeline components", DockerTest, NextflowTest) {
     // build the nextflow containers
     val (_, _, _) = TestHelper.testMainWithStdErr(
       "ns", "build",
@@ -170,7 +171,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
     NotAvailCheck("multiple")
   )
 
-  test("Run config pipeline", NextFlowTest) {
+  test("Run config pipeline", NextflowTest) {
 
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
       mainScript = "workflows/pipeline3/main.nf",
@@ -193,7 +194,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
     checkDebugArgs("foo", debugPrints, expectedFoo)
   }
 
-  test("Run config pipeline with yamlblob", NextFlowTest) {
+  test("Run config pipeline with yamlblob", NextflowTest) {
     val fooArgs = "{id: foo, input: resources/lines3.txt, whole_number: 3, optional_with_default: foo, multiple: [a, b, c]}"
     val barArgs = "{id: bar, input: resources/lines5.txt, real_number: 0.5, optional: bar, reality: true}"
 
@@ -218,7 +219,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(debugPrints.find(_._1 == "foo").get._2("input").endsWith(resourcesPath+"/lines3.txt"))
   }
 
-  test("Run config pipeline with yaml file", NextFlowTest) {
+  test("Run config pipeline with yaml file", NextflowTest) {
     val param_list_file = Paths.get(resourcesPath, "pipeline3.yaml").toFile.toString
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
       mainScript = "workflows/pipeline3/main.nf",
@@ -241,7 +242,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(debugPrints.find(_._1 == "foo").get._2("input").endsWith(resourcesPath+"/lines3.txt"))
   }
 
-test("Run config pipeline with yaml file passed as a relative path", NextFlowTest) {
+test("Run config pipeline with yaml file passed as a relative path", NextflowTest) {
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
       mainScript = "../workflows/pipeline3/main.nf",
       entry = Some("base"),
@@ -264,7 +265,7 @@ test("Run config pipeline with yaml file passed as a relative path", NextFlowTes
   }
 
 
-  test("Run config pipeline with json file", NextFlowTest) {
+  test("Run config pipeline with json file", NextflowTest) {
     val param_list_file = Paths.get(resourcesPath, "pipeline3.json").toFile.toString
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
       mainScript = "workflows/pipeline3/main.nf",
@@ -287,7 +288,7 @@ test("Run config pipeline with yaml file passed as a relative path", NextFlowTes
     assert(debugPrints.find(_._1 == "foo").get._2("input").endsWith(resourcesPath+"/lines3.txt"))
   }
 
-  test("Run config pipeline with csv file", NextFlowTest) {
+  test("Run config pipeline with csv file", NextflowTest) {
     val param_list_file = Paths.get(resourcesPath, "pipeline3.csv").toFile.toString
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
       mainScript = "workflows/pipeline3/main.nf",
@@ -310,7 +311,7 @@ test("Run config pipeline with yaml file passed as a relative path", NextFlowTes
     assert(debugPrints.find(_._1 == "foo").get._2("input").endsWith(resourcesPath+"/lines3.txt"))
   }
 
-  test("Run config pipeline asis, default nextflow implementation", NextFlowTest) {
+  test("Run config pipeline asis, default nextflow implementation", NextflowTest) {
     val param_list_file = Paths.get(resourcesPath, "pipeline3.asis.yaml").toFile.toString
     val (exitCode, stdOut, stdErr) = runNextflowProcess(
       mainScript = "workflows/pipeline3/main.nf",

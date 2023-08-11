@@ -69,14 +69,15 @@ trait Script extends Resource {
     })
   }
 
-  def command(script: String): String
-  def commandSeq(script: String): Seq[String]
+  def command(script: String): String = (companion.executor :+ s"\"$script\"").mkString(" ")
+  def commandSeq(script: String): Seq[String] = companion.executor ++ Seq(script)
 }
 
 trait ScriptCompanion {
   val commentStr: String
   val extension: String
   val `type`: String
+  val executor: Seq[String]
   // def apply(
   //   path: Option[String] = None,
   //   text: Option[String] = None,

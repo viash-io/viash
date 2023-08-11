@@ -11,8 +11,10 @@ import scala.reflect.runtime.universe._
 import io.circe.Decoder
 import io.circe.generic.extras.decoding.ConfiguredDecoder
 import io.circe.generic.extras.semiauto.deriveConfiguredDecoder
+import io.viash.helpers.Logger
 
 class ConvertTest extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
 
   case class Foo (
     a: String,

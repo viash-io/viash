@@ -1,5 +1,6 @@
 #' functionality:
 #'   __merge__: [., ../common.yaml]
+#'   name: test_languages_r
 #' platforms:
 #' - type: native
 #' - type: docker

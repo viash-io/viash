@@ -5,8 +5,10 @@ import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import java.nio.file.Path
 import scala.collection.mutable.ListBuffer
+import io.viash.helpers.Logger
 
 class GitTest extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   val fakeGitRepo = "git@non.existing.repo:viash/meta-test"
 
   val tempPaths = ListBuffer[Path]()

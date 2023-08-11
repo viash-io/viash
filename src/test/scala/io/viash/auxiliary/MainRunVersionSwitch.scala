@@ -1,7 +1,7 @@
 package io.viash.auxiliary
 
 import io.viash.{NativeTest, TestHelper, Main}
-import io.viash.helpers.{IO, SysEnv}
+import io.viash.helpers.{IO, SysEnv, Logger}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -11,6 +11,7 @@ import java.io.ByteArrayOutputStream
 import io.viash.exceptions.ExitException
 
 class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
 
   test("Verify VIASH_VERSION is unset") {
     assert(SysEnv.viashVersion.isEmpty)
