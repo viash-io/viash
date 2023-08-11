@@ -100,7 +100,7 @@ case class NextflowPlatform(
   @description("Specifies the Docker platform id to be used to run Nextflow.")
   @default("docker")
   container: String = "docker"
-) {
+) extends Platform {
   def escapeSingleQuotedString(txt: String): String = {
     Escaper(txt, slash = true, singleQuote = true, newline = true)
   }
