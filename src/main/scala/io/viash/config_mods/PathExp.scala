@@ -20,17 +20,17 @@ package io.viash.config_mods
 import io.circe.{ACursor, Json}
 
 abstract class PathExp {
-  def applyCommand(cursor: ACursor, cmd: ACursor => ACursor, remaining: Path): ACursor
+  def applyCommand(cursor: ACursor, cmd: ACursor => ACursor, remaining: Path, rewriteHistory: Boolean): ACursor
   def get(cursor: ACursor, remaining: Path): Json
 }
 case object Root extends PathExp {
-  def applyCommand(cursor: ACursor, cmd: ACursor => ACursor, remaining: Path): ACursor = {
+  def applyCommand(cursor: ACursor, cmd: ACursor => ACursor, remaining: Path, rewriteHistory: Boolean): ACursor = {
     val parent = cursor.up
     if (parent.failed) {
-      remaining.applyCommand(cursor, cmd)
+      remaining.applyCommand(cursor, cmd, rewriteHistory)
       // todo: go back down again?
     } else {
-      applyCommand(parent, cmd, remaining)
+      applyCommand(parent, cmd, remaining, rewriteHistory)
     }
   }
   def get(cursor: ACursor, remaining: Path): Json = {
@@ -43,7 +43,7 @@ case object Root extends PathExp {
   }
 }
 case class Attribute(string: String) extends PathExp {
-  def applyCommand(cursor: ACursor, cmd: ACursor => ACursor, remaining: Path): ACursor = {
+  def applyCommand(cursor: ACursor, cmd: ACursor => ACursor, remaining: Path, rewriteHistory: Boolean): ACursor = {
     val down = cursor.downField(string)
     val newCursor = 
       if (down.failed) {
@@ -55,14 +55,8 @@ case class Attribute(string: String) extends PathExp {
       } else {
         down
       }
-    val result = remaining.applyCommand(newCursor, cmd)
-    val tryGoingUp = result.up
-    if (tryGoingUp.failed) {
-      // todo: going up should always work, so throw an error if it doesn't?
-      result
-    } else {
-      tryGoingUp
-    }
+    val result = remaining.applyCommand(newCursor, cmd, rewriteHistory)
+    result.up.success.getOrElse(result)
   }
   def get(cursor: ACursor, remaining: Path): Json = {
     val down = cursor.downField(string)
@@ -74,46 +68,43 @@ case class Attribute(string: String) extends PathExp {
   }
 }
 case class Filter(condition: Condition) extends PathExp {
-  def applyCommand(cursor: ACursor, cmd: ACursor => ACursor, remaining: Path): ACursor = {
-    var elemCursor = cursor.downArray
+  def applyCommand(cursor: ACursor, cmd: ACursor => ACursor, remaining: Path, rewriteHistory: Boolean): ACursor = {
+    def recurseApply(cursor: ACursor, cmd: ACursor => ACursor, remaining: Path, rewriteHistory: Boolean): ACursor = {
+      val isLast = cursor.right.failed
+      val (modifiedCursor, moveRight) =
+        if (condition.apply(cursor.focus.get)) {
+          val modified = remaining.applyCommand(cursor, cmd, rewriteHistory)
+          val modifiedWithCorrectHistory = 
+            if (rewriteHistory && !isLast) {
+              // replay history of the original cursor on the modified cursor to make sure we're at the right position
+              modified.top.get.hcursor.replay(cursor.history)
+            } else {
+              modified
+            }
+          (modifiedWithCorrectHistory, !remaining.path.isEmpty || !rewriteHistory)
+        } else {
+          (cursor, true)
+        }
+      
+      val newCursor = 
+        if (moveRight && !isLast)
+          modifiedCursor.right
+        else
+          modifiedCursor
+
+      if (!isLast)
+        recurseApply(newCursor, cmd, remaining, rewriteHistory)
+      else
+        newCursor
+    }
+
+    val elemCursor = cursor.downArray
     if (elemCursor.failed) {
       // cursor doesn't have any children
       return cursor
     }
-    var lastWorking = elemCursor
-    var isLast = false
-    while (!elemCursor.failed && !isLast) {
-      isLast = elemCursor.right.failed
-      if (condition.apply(elemCursor.focus.get)) {
-        val elemModified = remaining.applyCommand(elemCursor, cmd)
-        // replay history of elemCursor on elemModified to make sure we're at the right position
-        // elemCursor = elemModified.top.get.hcursor.replay(elemCursor.history)
-        // todo: does this need to be re-enabled?
-        // elemCursor = elemModified
-        if (!isLast)
-          elemCursor = elemModified.top.get.hcursor.replay(elemCursor.history)
-        else
-          elemCursor = elemModified
-
-        lastWorking = elemCursor
-        elemCursor = if (remaining.path.isEmpty || isLast)
-            elemCursor
-          else
-            elemCursor.right
-      }
-      else {
-        lastWorking = elemCursor
-        if (!isLast)
-          elemCursor = elemCursor.right
-      }
-
-    }
-    val tryGoingUp = lastWorking.up
-    if (tryGoingUp.failed) { // try to go back up
-      lastWorking
-    } else {
-      tryGoingUp
-    }
+    val elemCursor2 = recurseApply(elemCursor, cmd, remaining, rewriteHistory)
+    elemCursor2.up.success.getOrElse(elemCursor2)
   }
 
   def get(cursor: ACursor, remaining: Path): Json = {
