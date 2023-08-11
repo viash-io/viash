@@ -56,7 +56,9 @@
 
 * `viash project file parsing`: Give a more informative message when the viash project file fails to parse correctly (PR #475).
 
-* `docker platform`: Fix issue when mounting an input or output folder containing spaces (PR #...).
+* `docker platform`: Fix issue when mounting an input or output folder containing spaces (PR #484).
+
+* `Config mod`: Fix a config mod where the filter should execute multiple deletes (PR #503).
 
 ## INTERNAL CHANGES
 
