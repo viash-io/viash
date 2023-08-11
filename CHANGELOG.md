@@ -1,4 +1,14 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.7.5 (2023-08-11): Minor breaking changes and new features
+
+This release contains minor breaking change due to deprecated or outdated functionality being removed.
+
+New functionality includes:
+
+  - Export a JSON schema for the Viash config with `viash export json_schema`
+
+  - Export a Bash or Zsh autocomplete script with `viash export cli_autocomplete`
+
+  - Nextflow VDSL3 modules now have a `fromState` and `toState` argument to allow for better control of the data that gets passed to the module and how the state is managed in a Nextflow workflow.
 
 ## BREAKING CHANGES
 
