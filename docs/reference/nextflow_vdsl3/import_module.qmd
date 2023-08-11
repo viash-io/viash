@@ -40,7 +40,7 @@ For example, an input tuple `["foo", [input: file("in.txt")], "bar"]` will resul
 
 Usually, Nextflow processes are quite static objects. For example, changing its directives can be quite tricky.
 
-The `run()` function is a unique feature for every VDSL3 module which allows dynamically altering the behaviour of a module from within the pipeline. For example, we use it to set the `publishDir` directive to `"output/"` so the output of that step in the pipeline will be stored as output.
+The `.run()` function is a unique feature for every VDSL3 module which allows dynamically altering the behaviour of a module from within the pipeline. For example, we use it to set the `publishDir` directive to `"output/"` so the output of that step in the pipeline will be stored as output.
 
 **Example:**
 
