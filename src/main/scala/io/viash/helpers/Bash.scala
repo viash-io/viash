@@ -32,6 +32,7 @@ object Bash {
   lazy val ViashAbsolutePath: String = readUtils("ViashAbsolutePath")
   lazy val ViashAutodetectMount: String = readUtils("ViashAutodetectMount")
   lazy val ViashSourceDir: String = readUtils("ViashSourceDir")
+  lazy val ViashFindTargetDir: String = readUtils("ViashFindTargetDir")
   lazy val ViashDockerFuns: String = readUtils("ViashDockerFuns")
   lazy val ViashLogging: String = readUtils("ViashLogging")
 

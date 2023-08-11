@@ -108,7 +108,7 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
 
   // copy resources to temporary folder so we can build in a clean environment
   for (resource <- List("src", "workflows", "resources"))
-    TestHelper.copyFolder(Paths.get(rootPath, resource).toString, Paths.get(tempFolStr, resource).toString)
+    IO.copyFolder(Paths.get(rootPath, resource).toString, Paths.get(tempFolStr, resource).toString)
 
   test("Build pipeline components", DockerTest, NextflowTest) {
     // build the nextflow containers

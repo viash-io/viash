@@ -25,6 +25,7 @@ import io.viash.functionality.resources.PlainFile
 import io.viash.helpers.circe._
 import io.circe.Json
 import io.circe.JsonObject
+import io.viash.functionality.resources.NextflowScript
 
 object ConfigMeta {
   // create a yaml printer for writing the viash.yaml file
@@ -55,6 +56,11 @@ object ConfigMeta {
       (res, "VIASH_PLACEHOLDER~" + res.filename + "~")
     }.toMap
 
+    val executableName = config.functionality.mainScript match {
+      case Some(n: NextflowScript) => "main.nf"
+      case _ => config.functionality.name
+    }
+
     // change the config object before writing to yaml:
     // * substitute 'text' fields in resources with placeholders
     // * add more info variables
@@ -74,7 +80,7 @@ object ConfigMeta {
       ),
       info = config.info.map(_.copy(
         output = buildDir.map(_.toString),
-        executable = buildDir.map(d => Paths.get(d.toString, config.functionality.name).toString)
+        executable = buildDir.map(d => Paths.get(d.toString, executableName).toString)
       ))
     )
 

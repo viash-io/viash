@@ -23,6 +23,7 @@ import java.net.URI
 import java.nio.file.Path
 import io.viash.functionality.arguments.Argument
 import io.viash.schemas._
+import io.viash.config.Config
 
 @description("An executable file.")
 @subclass("executable")
@@ -41,7 +42,7 @@ case class Executable(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]]): ScriptInjectionMods = ScriptInjectionMods()
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = ScriptInjectionMods()
 
   override def read: Option[String] = None
 

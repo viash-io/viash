@@ -56,5 +56,6 @@ functionality:
   resources:
     - type: nextflow_script
       path: main.nf
+      entrypoint: base
 platforms:
   - type: native

@@ -15,18 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.platforms.nextflow
+package io.viash.functionality.dependencies
 
-import scala.io.Source
-
-object NextflowHelper {
-  private def readSource(s: String) = {
-    val path = s"io/viash/platforms/nextflow/$s"
-    Source.fromResource(path).getLines().mkString("\n")
-  }
-
-  lazy val vdsl3Helper: String = readSource("VDSL3Helper.nf")
-  lazy val workflowHelper: String = readSource("WorkflowHelper.nf")
-  lazy val profilesHelper: String = readSource("ProfilesHelper.config")
-  lazy val dataflowHelper: String = readSource("DataflowHelper.nf")
+trait CopyableRepo[A <: CopyableRepo[A]] {
+  self: A =>
+  def copyRepo(
+    name: String,
+   `type`: String,
+    tag: Option[String],
+    path: Option[String],
+    localPath: String
+  ): A
 }
+

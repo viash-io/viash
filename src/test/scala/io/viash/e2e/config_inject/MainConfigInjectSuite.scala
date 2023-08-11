@@ -29,7 +29,7 @@ class MainConfigInjectSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Prepare temporary folder") {
     destPath.toFile().mkdirs()
-    TestHelper.copyFolder(srcPath, destPath)
+    IO.copyFolder(srcPath, destPath)
   }
 
   for ((name, file, comment, expectedInputString) <- tests) {

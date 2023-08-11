@@ -399,6 +399,7 @@ object ViashNamespace extends Logging {
     val messages = List(
       (ParseError, "configs encountered parse errors"),
       (Disabled, "configs were disabled"),
+      (DependencyError, "dependency resolutions failed"),
       (BuildError, "configs built failed"),
       (SetupError, "setups failed"),
       (PushError, "pushes failed"),

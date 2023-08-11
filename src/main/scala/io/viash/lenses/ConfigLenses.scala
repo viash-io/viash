@@ -15,18 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.platforms.nextflow
+package io.viash.lenses
 
-import scala.io.Source
+import io.viash.config.Config
+import io.viash.functionality.Functionality
+import monocle.Lens
+import monocle.macros.GenLens
 
-object NextflowHelper {
-  private def readSource(s: String) = {
-    val path = s"io/viash/platforms/nextflow/$s"
-    Source.fromResource(path).getLines().mkString("\n")
-  }
+import FunctionalityLenses._
 
-  lazy val vdsl3Helper: String = readSource("VDSL3Helper.nf")
-  lazy val workflowHelper: String = readSource("WorkflowHelper.nf")
-  lazy val profilesHelper: String = readSource("ProfilesHelper.config")
-  lazy val dataflowHelper: String = readSource("DataflowHelper.nf")
+
+object ConfigLenses {
+  val functionalityLens = GenLens[Config](_.functionality)
+
+  val composedDependenciesLens = functionalityLens ^|-> dependenciesLens
+  val composedRepositoriesLens = functionalityLens ^|-> repositoriesLens
 }

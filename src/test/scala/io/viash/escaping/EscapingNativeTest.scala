@@ -53,7 +53,7 @@ class EscapingNativeTest extends AnyFunSuite with BeforeAndAfterAll {
     // make a subfolder for each character to test
     val tempSubFolder = Paths.get(tempFolStr, s"test_$i")
     tempSubFolder.toFile.mkdir
-    TestHelper.copyFolder(rootPath, tempSubFolder.toString)
+    IO.copyFolder(rootPath, tempSubFolder.toString)
 
     val configSubFile = Paths.get(tempSubFolder.toString, s"config.vsh.yaml")
     val sedEscaped = chars.replaceAll(raw"\\", raw"\\\\")

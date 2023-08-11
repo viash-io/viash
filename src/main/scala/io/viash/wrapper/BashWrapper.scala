@@ -23,6 +23,9 @@ import io.viash.functionality.arguments._
 import io.viash.helpers.{Bash, Format, Helper}
 import io.viash.helpers.Escaper
 import io.viash.config.ConfigMeta
+import io.viash.config.Config
+import java.nio.file.Paths
+import io.viash.ViashNamespace
 
 object BashWrapper {
   val metaArgs: List[Argument[_]] = {
@@ -116,6 +119,7 @@ object BashWrapper {
     functionality: Functionality,
     mods: BashWrapperMods = BashWrapperMods(),
     debugPath: Option[String] = None,
+    config: Config,
     warnFlag: Boolean = true
   ): String = {
     // Add pipes after each newline. Prevents pipes being stripped when a string starts with a pipe (with optional leading spaces).
@@ -132,19 +136,21 @@ object BashWrapper {
         ""
       }
     
-    val argsAndMeta = 
+    val argsMetaAndDeps = 
       if (debugPath.isDefined) {
         functionality.getArgumentLikesGroupedByDest(
           includeMeta = true,
+          includeDependencies = true,
           filterInputs = true
         ).view.mapValues(_.map(_.disableChecks)).toMap
       } else {
         functionality.getArgumentLikesGroupedByDest(
           includeMeta = true,
+          includeDependencies = true,
           filterInputs = true
         )
       }
-    val args = argsAndMeta.flatMap(_._2).toList
+    val args = argsMetaAndDeps.flatMap(_._2).toList
 
     // DETERMINE HOW TO RUN THE CODE
     val executionCode = mainResource match {
@@ -156,7 +162,7 @@ object BashWrapper {
 
       // if we want to debug our code
       case Some(res) if debugPath.isDefined =>
-        val code = res.readWithInjection(argsAndMeta).get
+        val code = res.readWithInjection(argsMetaAndDeps, config).get
         val escapedCode = Bash.escapeString(code, allowUnescape = true)
 
         s"""
@@ -168,7 +174,7 @@ object BashWrapper {
 
       // if mainResource is a script
       case Some(res) =>
-        val code = res.readWithInjection(argsAndMeta).get
+        val code = res.readWithInjection(argsMetaAndDeps, config).get
         val escapedCode = Bash.escapeString(code, allowUnescape = true)
 
         // check whether the script can be written to a temprorary location or
@@ -229,6 +235,23 @@ object BashWrapper {
         ""
       }
 
+    val (localDependencies, remoteDependencies) = config.functionality.dependencies
+      .partition(d => d.isLocalDependency)
+    val localDependenciesStrings = localDependencies.map{ d =>
+      // relativize the path of the main component to the local dependency
+      // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
+      val thisPath = ViashNamespace.targetOutputPath("", "invalid_platform_name", config.functionality.namespace, config.functionality.name)
+      val relativePath = Paths.get(thisPath).relativize(Paths.get(d.configInfo.getOrElse("executable", "")))
+      s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR/$relativePath\""
+    }
+    val remoteDependenciesStrings = remoteDependencies.map{ d =>
+      if (d.foundConfigPath.isDefined)
+        s"${d.VIASH_DEP}=\"$$VIASH_TARGET_DIR/dependencies/${d.subOutputPath.get}/${Paths.get(d.configInfo.getOrElse("executable", "not_found")).getFileName()}\""
+      else
+        s"# ${d.VIASH_DEP} not found!"
+    }
+    val dependenciesStr = (localDependenciesStrings ++ remoteDependenciesStrings).mkString("\n")
+
     /* GENERATE BASH SCRIPT */
     s"""#!/usr/bin/env bash
        |
@@ -251,16 +274,21 @@ object BashWrapper {
        |${Bash.ViashQuote}
        |${Bash.ViashRemoveFlags}
        |${Bash.ViashSourceDir}
+       |${Bash.ViashFindTargetDir}
        |${Bash.ViashLogging}
        |
        |# find source folder of this component
        |VIASH_META_RESOURCES_DIR=`ViashSourceDir $${BASH_SOURCE[0]}`
+       |
+       |# find the root of the built components & dependencies
+       |VIASH_TARGET_DIR=`ViashFindTargetDir $$VIASH_META_RESOURCES_DIR`
        |
        |# define meta fields
        |VIASH_META_FUNCTIONALITY_NAME="${functionality.name}"
        |VIASH_META_EXECUTABLE="$$VIASH_META_RESOURCES_DIR/$$VIASH_META_FUNCTIONALITY_NAME"
        |VIASH_META_CONFIG="$$VIASH_META_RESOURCES_DIR/${ConfigMeta.metaFilename}"
        |VIASH_META_TEMP_DIR="$$VIASH_TEMP"
+       |
        |${spaceCode(allMods.preParse)}
        |# initialise array
        |VIASH_POSITIONAL_ARGS=''
@@ -300,6 +328,10 @@ object BashWrapper {
        |# parse positional parameters
        |eval set -- $$VIASH_POSITIONAL_ARGS
        |${spaceCode(allMods.postParse)}${spaceCode(allMods.preRun)}
+       |
+       |# set dependency paths
+       |$dependenciesStr
+       |
        |ViashDebug "Running command: ${executor.replaceAll("^eval (.*)", "\\$(echo $1)")}"
        |$heredocStart$executor${escapePipes(executionCode)}$heredocEnd
        |${spaceCode(allMods.postRun)}${spaceCode(allMods.last)}
