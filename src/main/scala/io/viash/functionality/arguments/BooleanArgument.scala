@@ -35,6 +35,7 @@ abstract class BooleanArgumentBase extends Argument[Boolean] {
     |    alternatives: ["-t"]
     |""".stripMargin,
     "yaml")
+@subclass("boolean")
 case class BooleanArgument(
   @description(
     """The name of the argument. Can be in the formats `--trim`, `-t` or `trim`. The number of dashes determines how values can be passed:  
@@ -46,6 +47,7 @@ case class BooleanArgument(
   name: String,
 
   @description("List of alternative format variations for this argument.")
+  @default("Empty")
   alternatives: OneOrMore[String] = Nil,
 
   @description("A description of the argument. This will be displayed with `--help`.")
@@ -57,6 +59,7 @@ case class BooleanArgument(
       |  category: cat1
       |  labels: [one, two, three]""".stripMargin, "yaml")
   @since("Viash 0.6.3")
+  @default("Empty")
   info: Json = Json.Null,
   
   @description("An example value for this argument. If no [`default`](#default) property was specified, this will be used for that purpose.")
@@ -66,6 +69,7 @@ case class BooleanArgument(
       |  example: true
       |""".stripMargin,
       "yaml")
+  @default("Empty")
   example: OneOrMore[Boolean] = Nil,
 
   @description("The default value when no argument value is provided. This will not work if the [`required`](#required) property is enabled.")
@@ -74,7 +78,8 @@ case class BooleanArgument(
       |  type: boolean
       |  default: true
       |""".stripMargin,
-      "yaml") 
+      "yaml")
+  @default("Empty")
   default: OneOrMore[Boolean] = Nil,
 
   @description("Make the value for this argument required. If set to `true`, an error will be produced if no value was provided. `false` by default.")
@@ -84,6 +89,7 @@ case class BooleanArgument(
       |  required: true
       |""".stripMargin,
       "yaml")
+  @default("False")
   required: Boolean = false,
 
   @undocumented
@@ -97,6 +103,7 @@ case class BooleanArgument(
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_boolean=true:true:false", "bash", "Here's an example of how to use this:")
+  @default("False")
   multiple: Boolean = false,
 
   @description("The delimiter character for providing [`multiple`](#multiple) values. `:` by default.")
@@ -108,6 +115,7 @@ case class BooleanArgument(
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_boolean=true,true,false", "bash", "Here's an example of how to use this:")
+  @default(":")
   multiple_sep: String = ":",
 
   @undocumented
@@ -144,6 +152,7 @@ case class BooleanArgument(
     |    alternatives: ["-s"]
     |""".stripMargin,
     "yaml")
+@subclass("boolean_true")
 case class BooleanTrueArgument(
   @description(
     """The name of the argument. Can be in the formats `--silent`, `-s` or `silent`. The number of dashes determines how values can be passed:  
@@ -155,6 +164,7 @@ case class BooleanTrueArgument(
   name: String,
 
   @description("List of alternative format variations for this argument.")
+  @default("Empty")
   alternatives: OneOrMore[String] = Nil,
 
   @description("A description of the argument. This will be displayed with `--help`.")
@@ -166,6 +176,7 @@ case class BooleanTrueArgument(
       |  category: cat1
       |  labels: [one, two, three]""".stripMargin, "yaml")
   @since("Viash 0.6.3")
+  @default("Empty")
   info: Json = Json.Null,
 
   @undocumented
@@ -214,6 +225,7 @@ case class BooleanTrueArgument(
     |    alternatives: ["-nl"]
     |""".stripMargin,
     "yaml")
+@subclass("boolean_false")
 case class BooleanFalseArgument(
   @description(
     """The name of the argument. Can be in the formats `--no-log`, `-n` or `no-log`. The number of dashes determines how values can be passed:  
@@ -225,6 +237,7 @@ case class BooleanFalseArgument(
   name: String,
 
   @description("List of alternative format variations for this argument.")
+  @default("Empty")
   alternatives: OneOrMore[String] = Nil,
 
   @description("A description of the argument. This will be displayed with `--help`.")
@@ -236,6 +249,7 @@ case class BooleanFalseArgument(
       |  category: cat1
       |  labels: [one, two, three]""".stripMargin, "yaml")
   @since("Viash 0.6.3")
+  @default("Empty")
   info: Json = Json.Null,
 
   @undocumented

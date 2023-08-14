@@ -19,7 +19,8 @@ package io.viash.cli
 
 import org.rogach.scallop._
 import io.viash.Main
-
+import io.viash.exceptions.ExitException
+import io.viash.helpers.Logging
 
 trait ViashCommand {
   _: DocumentedSubcommand =>
@@ -134,13 +135,35 @@ trait WithTemporary {
   )
 }
 
-class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
-  def getRegisteredCommands = subconfigs.flatMap{ sc =>
+trait ViashLogger {
+  _: DocumentedSubcommand =>
+  val colorize = registerChoice(
+    name = "colorize",
+    short = None,
+    descr = "Specify whether the console output should be colorized. If not specified, we attempt to detect this automatically.",
+    choices = List("true", "false", "auto"),
+    hidden = true
+  )
+  val loglevel = registerChoice(
+    name = "loglevel",
+    short = None,
+    descr = "Specify the log level in use",
+    choices = List("error", "warn", "info", "debug", "trace"),
+    hidden = true
+  )
+}
+
+class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Logging {
+  def getRegisteredCommands(includeHidden: Boolean = false) = subconfigs.flatMap{ sc =>
     sc match {
-      case ds: DocumentedSubcommand if !ds.hidden => Some(ds.toRegisteredCommand)
+      case ds: DocumentedSubcommand if !ds.hidden || includeHidden => Some(ds.toRegisteredCommand)
       case _ => None
     }
   }
+
+  exitHandler = (i: Int) => throw new ExitException(i)
+  stderrPrintln = (s: String) => logger.info(s)
+  stdoutPrintln = (s: String) => logger.infoOut(s)
  
   version(s"${Main.name} ${Main.version} (c) 2020 Data Intuitive")
 
@@ -168,7 +191,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
        |
        |Arguments:""".stripMargin)
 
-  val run = new DocumentedSubcommand("run") with ViashCommand with WithTemporary with ViashRunner {
+  val run = new DocumentedSubcommand("run") with ViashCommand with WithTemporary with ViashRunner with ViashLogger {
     banner(
       "viash run",
       "Executes a viash component from the provided viash config file. viash generates a temporary executable and immediately executes it with the given parameters.",
@@ -184,7 +207,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
          |  viash run config.vsh.yaml""".stripMargin)
   }
 
-  val build = new DocumentedSubcommand("build") with ViashCommand {
+  val build = new DocumentedSubcommand("build") with ViashCommand with ViashLogger {
     banner(
       "viash build",
       "Build an executable from the provided viash config file.",
@@ -210,12 +233,19 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     )
   }
 
-  val test = new DocumentedSubcommand("test") with ViashCommand with WithTemporary with ViashRunner {
+  val test = new DocumentedSubcommand("test") with ViashCommand with WithTemporary with ViashRunner with ViashLogger {
     banner(
       "viash test",
       "Test the component using the tests defined in the viash config file.",
-      "viash test config.vsh.yaml [-p docker] [-k true/false]")
-
+      "viash test config.vsh.yaml [-p docker] [-k true/false] [--setup cachedbuild]")
+    
+    val setup = registerOpt[String](
+      name = "setup",
+      short = Some('s'),
+      default = None,
+      descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Platform only]."
+    )
+    
     footer(
       s"""
          |The temporary directory can be altered by setting the VIASH_TEMP directory. Example:
@@ -224,7 +254,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   }
 
   val config = new DocumentedSubcommand("config") {
-    val view = new DocumentedSubcommand("view") with ViashCommand {
+    val view = new DocumentedSubcommand("view") with ViashCommand with ViashLogger {
       banner(
         "viash config view",
         "View the config file after parsing.",
@@ -243,7 +273,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         descr = "Whether or not to postprocess each component's @[argument groups](argument_groups)."
       )
     }
-    val inject = new DocumentedSubcommand("inject") with ViashCommand {
+    val inject = new DocumentedSubcommand("inject") with ViashCommand with ViashLogger {
       banner(
         "viash config inject",
         "Inject a Viash header into the main script of a Viash component.",
@@ -259,7 +289,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
 
   val namespace = new DocumentedSubcommand("ns") {
 
-    val build = new DocumentedSubcommand("build") with ViashNs with ViashNsBuild {
+    val build = new DocumentedSubcommand("build") with ViashNs with ViashNsBuild with ViashLogger {
       banner(
         "viash ns build",
         "Build a namespace from many viash config files.",
@@ -283,11 +313,17 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
     }
 
-    val test = new DocumentedSubcommand("test") with ViashNs with WithTemporary with ViashRunner {
+    val test = new DocumentedSubcommand("test") with ViashNs with WithTemporary with ViashRunner with ViashLogger {
       banner(
         "viash ns test",
         "Test a namespace containing many viash config files.",
-        "viash ns test [-n nmspc] [-s src] [-p docker] [--parallel] [--tsv file.tsv] [--append]")
+        "viash ns test [-n nmspc] [-s src] [-p docker] [--parallel] [--tsv file.tsv] [--setup cachedbuild] [--append]")
+
+      val setup = registerOpt[String](
+        name = "setup",
+        default = None,
+        descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Platform only]."
+      )
 
       val tsv = registerOpt[String](
         name = "tsv",
@@ -302,7 +338,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
     }
 
-    val list = new DocumentedSubcommand("list") with ViashNs {
+    val list = new DocumentedSubcommand("list") with ViashNs with ViashLogger {
       banner(
         "viash ns list",
         "List a namespace containing many viash config files.",
@@ -322,7 +358,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
     }
 
-    val exec = new DocumentedSubcommand("exec") with ViashNs {
+    val exec = new DocumentedSubcommand("exec") with ViashNs with ViashLogger {
       banner(
         "viash ns exec",
         """Execute a command for all found Viash components.
@@ -385,7 +421,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   val `export` = new DocumentedSubcommand("export") {
     hidden = true
 
-    val resource = new DocumentedSubcommand("resource") {
+    val resource = new DocumentedSubcommand("resource") with ViashLogger {
       banner(
         "viash export resource",
         """Export an internal resource file""".stripMargin,
@@ -405,36 +441,91 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       )
     }
 
-    val cli_schema = new DocumentedSubcommand("cli_schema") {
+    val cli_schema = new DocumentedSubcommand("cli_schema") with ViashLogger {
       banner(
         "viash export cli_schema",
         """Export the schema of the Viash CLI as a JSON""".stripMargin,
-        """viash export cli_schema [--output file.json]""".stripMargin
+        """viash export cli_schema [--output file.json] [--format json]""".stripMargin
       )
       val output = registerOpt[String](
         name = "output",
         default = None,
         descr = "Destination path"
+      )
+      val format = registerChoice(
+        name = "format",
+        short = Some('f'),
+        default = Some("yaml"),
+        choices = List("yaml", "json"),
+        descr = "Which output format to use."
       )
     }
 
-    val config_schema = new DocumentedSubcommand("config_schema") {
+    val cli_autocomplete = new DocumentedSubcommand("cli_autocomplete") with ViashLogger {
       banner(
-        "viash export config_schema",
-        """Export the schema of a Viash config as a JSON""".stripMargin,
-        """viash export config_schema [--output file.json]""".stripMargin
+        "viash export bash_autocomplete",
+        """Export the autocomplete script as to be used in Bash or Zsh""".stripMargin,
+        """viash export bash_autocomplete [--output viash_autocomplete_bash] [--zsh]""".stripMargin
       )
       val output = registerOpt[String](
         name = "output",
         default = None,
         descr = "Destination path"
+      )
+      val format = registerChoice(
+        name = "format",
+        short = Some('f'),
+        default = Some("bash"),
+        choices = List("bash", "zsh"),
+        descr = "Which autocomplete format to use."
+      )
+    }
+
+    val config_schema = new DocumentedSubcommand("config_schema") with ViashLogger {
+      banner(
+        "viash export config_schema",
+        """Export the schema of a Viash config as a JSON""".stripMargin,
+        """viash export config_schema [--output file.json] [--format json]""".stripMargin
+      )
+      val output = registerOpt[String](
+        name = "output",
+        default = None,
+        descr = "Destination path"
+      )
+      val format = registerChoice(
+        name = "format",
+        short = Some('f'),
+        default = Some("yaml"),
+        choices = List("yaml", "json"),
+        descr = "Which output format to use."
+      )
+    }
+
+    val json_schema = new DocumentedSubcommand("json_schema") with ViashLogger {
+      banner(
+        "viash export json_schema",
+        """Export the json schema to validate a Viash config""".stripMargin,
+        """viash export json_schema [--output file.json] [--format json]""".stripMargin
+      )
+      val output = registerOpt[String](
+        name = "output",
+        default = None,
+        descr = "Destination path"
+      )
+      val format = registerChoice(
+        name = "format",
+        short = Some('f'),
+        default = Some("yaml"),
+        choices = List("yaml", "json"),
+        descr = "Which output format to use."
       )
     }
 
     addSubcommand(resource)
     addSubcommand(cli_schema)
+    addSubcommand(cli_autocomplete)
     addSubcommand(config_schema)
-
+    addSubcommand(json_schema)
     requireSubcommand()
 
     shortSubcommandsHelp(true)

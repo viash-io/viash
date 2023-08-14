@@ -17,13 +17,24 @@
 
 package io.viash.config
 
+import io.viash.schemas.description
+
+@description("Meta information fields filled in by Viash during build.")
 case class Info(
+  @description("Path to the config used during build.")
   config: String,
+  @description("The platform id used during build.")
   platform: Option[String] = None,
+  @description("Folder path to the build artifacts.")
   output: Option[String] = None,
+  @description("Output folder with main executable path.")
   executable: Option[String] = None,
+  @description("The Viash version that was used to build the component.")
   viash_version: Option[String] = None,
+  @description("Git commit hash.")
   git_commit: Option[String] = None,
+  @description("Git remote name.")
   git_remote: Option[String] = None,
+  @description("Git tag.")
   git_tag: Option[String] = None
 )

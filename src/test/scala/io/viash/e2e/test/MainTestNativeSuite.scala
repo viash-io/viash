@@ -4,7 +4,7 @@ import io.viash._
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 
-import io.viash.helpers.{IO, Exec}
+import io.viash.helpers.{IO, Exec, Logger}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -12,6 +12,7 @@ import scala.reflect.io.Directory
 import sys.process._
 
 class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
   // default yaml
   private val configFile = getClass.getResource("/testbash/config.vsh.yaml").getPath
 
@@ -143,21 +144,6 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, false)
   }
 
-  test("Check standard test output with legacy 'tests' definition") {
-    val newConfigFilePath = configDeriver.derive(
-      List(
-        """.functionality.tests := .functionality.test_resources""",
-        """del(.functionality.test_resources)"""
-      ) , "legacy")
-    val testOutput = TestHelper.testMainException2[Exception](
-      "test",
-      "-p", "native",
-      newConfigFilePath
-    )
-
-    assert(testOutput.error.contains("Error: .functionality.tests was removed: Use `test_resources` instead. No functional difference. Initially deprecated 0.5.13, removed 0.7.0."))
-  }
-
   test("Check config file without 'functionality' specified") {
     val newConfigFilePath = configDeriver.derive("""del(.functionality)""", "missing_functionality")
     val testOutput = TestHelper.testMainException2[RuntimeException](
@@ -167,6 +153,39 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     assert(testOutput.exceptionText.contains("must be a yaml file containing a viash config."))
+    assert(testOutput.output.isEmpty)
+  }
+
+  test("Check invalid platform type") {
+    val newConfigFilePath = configDeriver.derive(""".platforms += { type: "foo" }""", "invalid_platform_type")
+    val testOutput = TestHelper.testMainException2[RuntimeException](
+      "test",
+      "-p", "native",
+      newConfigFilePath
+    )
+
+    assert(testOutput.exceptionText.contains("Type 'foo' is not recognised. Valid types are 'docker', 'native', and 'nextflow'."))
+    assert(testOutput.exceptionText.contains(
+      """{
+        |  "type" : "foo"
+        |}""".stripMargin))
+    assert(testOutput.output.isEmpty)
+  }
+
+  test("Check invalid field in platform") {
+    val newConfigFilePath = configDeriver.derive(""".platforms += { type: "native", foo: "bar" }""", "invalid_platform_field")
+    val testOutput = TestHelper.testMainException2[RuntimeException](
+      "test",
+      "-p", "native",
+      newConfigFilePath
+    )
+
+    assert(testOutput.exceptionText.contains("Invalid data fields for NativePlatform."))
+    assert(testOutput.exceptionText.contains(
+      """{
+        |  "type" : "native",
+        |  "foo" : "bar"
+        |}""".stripMargin))
     assert(testOutput.output.isEmpty)
   }
 

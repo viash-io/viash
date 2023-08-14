@@ -69,11 +69,38 @@ try
     {
         if (p.PropertyType.IsArray)
         {
-            object[] array = (object[])p.GetValue(par);
+            var array = p.GetValue(par) as Array;
+
             if (array.Length == 0)
                 Output($"{p.Name}: |empty array|");
-            else
+            else if (array is bool[])
+            {
+                var array2 = (array as bool[]).Select(x => x.ToString().ToLower());
+                Output($"{p.Name}: |{string.Join(":", array2)}|");
+            }
+            else if (array is System.Int32[])
+            {
+                var array2 = array as System.Int32[];
+                Output($"{p.Name}: |{string.Join(":", array2)}|");
+            }
+            else if (array is System.Int64[])
+            {
+                var array2 = array as System.Int64[];
+                Output($"{p.Name}: |{string.Join(":", array2)}|");
+            }
+            else if (array is System.Double[])
+            {
+                var array2 = array as System.Double[];
+                Output($"{p.Name}: |{string.Join(":", array2)}|");
+            }
+            else if (array is System.String[])
+            {
+                var array2 = array as System.String[];
+                Output($"{p.Name}: |{string.Join(":", array2)}|");
+            }
+            else {
                 Output($"{p.Name}: |{string.Join(":", array)}|");
+            }
         }
         else
         {

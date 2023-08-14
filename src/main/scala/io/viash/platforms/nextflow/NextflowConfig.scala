@@ -65,6 +65,7 @@ case class NextflowConfig(
     "viash_project_file",
     "Replace the default labels with a different set of labels by using the Viash Project file"
   )
+  @default("A series of default labels to specify memory and cpu constraints")
   labels: ListMap[String, String] = ListMap(
     NextflowConfig.binaryIterator
       .dropWhile(_ < 1 * NextflowConfig.GB)
@@ -92,6 +93,7 @@ case class NextflowConfig(
       |""".stripMargin,
     "yaml")
   @example("""script: includeConfig("config.config")""", "yaml")
+  @default("Empty")
   script: OneOrMore[String] = Nil
 )
 

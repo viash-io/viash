@@ -25,6 +25,7 @@ import io.viash.functionality.arguments.Argument
 import io.viash.schemas._
 
 @description("An executable file.")
+@subclass("executable")
 case class Executable(
   path: Option[String] = None,
   text: Option[String] = None,
@@ -46,17 +47,12 @@ case class Executable(
 
   override def write(path: Path, overwrite: Boolean): Unit = {}
 
-  def command(script: String): String = {
-    script
-  }
-
-  def commandSeq(script: String): Seq[String] = {
-    Seq(script)
-  }
+  override def command(script: String): String = script
 }
 
 object Executable extends ScriptCompanion {
   val commentStr = "#"
   val extension = "*"
   val `type` = "executable"
+  val executor = Nil
 }

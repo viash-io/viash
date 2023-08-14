@@ -32,6 +32,7 @@ import io.viash.schemas._
     |    alternatives: ["-i"]
     |""".stripMargin,
     "yaml")
+@subclass("file")
 case class FileArgument(
   @description(
     """The name of the argument. Can be in the formats `--foo`, `-f` or `foo`. The number of dashes determines how values can be passed:  
@@ -43,6 +44,7 @@ case class FileArgument(
   name: String,
 
   @description("List of alternative format variations for this argument.")
+  @default("Empty")
   alternatives: OneOrMore[String] = Nil,
 
   @description("A description of the argument. This will be displayed with `--help`.")
@@ -54,6 +56,7 @@ case class FileArgument(
       |  category: cat1
       |  labels: [one, two, three]""".stripMargin, "yaml")
   @since("Viash 0.6.3")
+  @default("Empty")
   info: Json = Json.Null,
 
   @description("An example value for this argument. If no [`default`](#default) property was specified, this will be used for that purpose.")
@@ -63,6 +66,7 @@ case class FileArgument(
       |  example: data.csv
       |""".stripMargin,
       "yaml")
+  @default("Empty")
   example: OneOrMore[Path] = Nil,
 
   @description("The default value when no argument value is provided. This will not work if the [`required`](#required) property is enabled.")
@@ -72,6 +76,7 @@ case class FileArgument(
       |  default: data.csv
       |""".stripMargin,
       "yaml")
+  @default("Empty")
   default: OneOrMore[Path] = Nil,
 
   @description("Checks whether the file or folder exists. For input files, this check will happen " +
@@ -82,6 +87,7 @@ case class FileArgument(
       |  must_exist: true
       |""".stripMargin,
       "yaml")
+  @default("True")
   must_exist: Boolean = true,
 
   @description("If the output filename is a path and it does not exist, create it before executing the script (only for `direction: output`).")
@@ -92,6 +98,7 @@ case class FileArgument(
       |  create_parent: true
       |""".stripMargin,
       "yaml")
+  @default("True")
   create_parent: Boolean = true,
 
   @description("Make the value for this argument required. If set to `true`, an error will be produced if no value was provided. `false` by default.")
@@ -101,6 +108,7 @@ case class FileArgument(
       |  required: true
       |""".stripMargin,
       "yaml")
+  @default("False")
   required: Boolean = false,
 
   @description("Makes this argument an `input` or an `output`, as in does the file/folder needs to be read or written. `input` by default.")
@@ -110,6 +118,7 @@ case class FileArgument(
       |  direction: output
       |""".stripMargin,
       "yaml")
+  @default("Input")
   direction: Direction = Input,
 
   @description("Treat the argument value as an array. Arrays can be passed using the delimiter `--foo=1:2:3` or by providing the same argument multiple times `--foo 1 --foo 2`. You can use a custom delimiter by using the [`multiple_sep`](#multiple_sep) property. `false` by default.")
@@ -120,6 +129,7 @@ case class FileArgument(
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_files=firstFile.csv:anotherFile.csv:yetAnother.csv", "bash", "Here's an example of how to use this:")
+  @default("False")
   multiple: Boolean = false,
 
   @description("The delimiter character for providing [`multiple`](#multiple) values. `:` by default.")
@@ -131,6 +141,7 @@ case class FileArgument(
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_files=firstFile.csv,anotherFile.csv,yetAnother.csv", "bash", "Here's an example of how to use this:")
+  @default(":")
   multiple_sep: String = ":",
 
   dest: String = "par",

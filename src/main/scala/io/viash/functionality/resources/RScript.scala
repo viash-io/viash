@@ -28,6 +28,7 @@ import java.net.URI
 @description("""An executable R script.
                |When defined in functionality.resources, only the first entry will be executed when running the built component or when running `viash run`.
                |When defined in functionality.test_resources, all entries will be executed during `viash test`.""".stripMargin)
+@subclass("r_script")
 case class RScript(
   path: Option[String] = None,
   text: Option[String] = None,
@@ -93,18 +94,11 @@ case class RScript(
        |""".stripMargin
     ScriptInjectionMods(params = outCode)
   }
-
-  def command(script: String): String = {
-    "Rscript \"" + script + "\""
-  }
-
-  def commandSeq(script: String): Seq[String] = {
-    Seq("Rscript", script)
-  }
 }
 
 object RScript extends ScriptCompanion {
   val commentStr = "#"
   val extension = "R"
   val `type` = "r_script"
+  val executor = Seq("Rscript")
 }

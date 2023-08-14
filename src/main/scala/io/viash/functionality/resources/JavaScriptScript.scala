@@ -28,6 +28,7 @@ import io.viash.helpers.Bash
 @description("""An executable JavaScript script.
                |When defined in functionality.resources, only the first entry will be executed when running the built component or when running `viash run`.
                |When defined in functionality.test_resources, all entries will be executed during `viash test`.""".stripMargin)
+@subclass("javascript_script")
 case class JavaScriptScript(
   path: Option[String] = None,
   text: Option[String] = None,
@@ -81,18 +82,11 @@ case class JavaScriptScript(
     }
     ScriptInjectionMods(params = paramsCode.mkString)
   }
-
-  def command(script: String): String = {
-    "node \"" + script + "\""
-  }
-
-  def commandSeq(script: String): Seq[String] = {
-    Seq("node", script)
-  }
 }
 
 object JavaScriptScript extends ScriptCompanion {
   val commentStr = "//"
   val extension = "js"
   val `type` = "javascript_script"
+  val executor = Seq("node")
 }

@@ -35,13 +35,13 @@ case class JsonValue(value: Json) extends Value {
 
 // define paths
 case class Path(path: List[PathExp]) extends Value {
-  def applyCommand(json: Json, cmd: ACursor => ACursor): Json = {
-    applyCommand(json.hcursor, cmd).top.get
+  def applyCommand(json: Json, cmd: ACursor => ACursor, rewriteHistory: Boolean): Json = {
+    applyCommand(json.hcursor, cmd, rewriteHistory).top.get
   }
-  def applyCommand(cursor: ACursor, cmd: ACursor => ACursor): ACursor = {
+  def applyCommand(cursor: ACursor, cmd: ACursor => ACursor, rewriteHistory: Boolean): ACursor = {
     path match {
       case head :: tail => {
-        head.applyCommand(cursor, cmd, Path(tail))
+        head.applyCommand(cursor, cmd, Path(tail), rewriteHistory)
       }
       case Nil => cmd(cursor) // or throw error?
     }

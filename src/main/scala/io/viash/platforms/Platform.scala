@@ -30,7 +30,7 @@ import io.viash.schemas._
     |
     | * @[Native](platform_native)
     | * @[Docker](platform_docker)
-    | * @[Nextflow VDSL3](platform_nextflow)
+    | * @[Nextflow](platform_nextflow)
     |""".stripMargin)
 @example(
   """platforms:
@@ -42,6 +42,9 @@ import io.viash.schemas._
     |      label: [lowcpu, midmem]
     |""".stripMargin,
   "yaml")
+@subclass("NativePlatform")
+@subclass("DockerPlatform")
+@subclass("NextflowPlatform")
 trait Platform {
   @description("Specifies the type of the platform.")
   val `type`: String

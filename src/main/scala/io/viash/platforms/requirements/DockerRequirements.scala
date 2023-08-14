@@ -29,41 +29,42 @@ import io.viash.schemas._
     #      echo 'Run a custom command'
     #      echo 'Foo' > /path/to/file.txt""".stripMargin('#'),
     "yaml")
+@subclass("docker")
 case class DockerRequirements(
   @description("Specifies which `LABEL` entries to add to the Dockerfile while building it.")
   @example("label: [ component=\"foo\" ]", "yaml")
+  @default("Empty")
   label: OneOrMore[String] = Nil,
 
   @description("Specifies which `ADD` entries to add to the Dockerfile while building it.")
   @example("add: [ \"http://foo/bar .\" ]", "yaml")
+  @default("Empty")
   add: OneOrMore[String] = Nil,
 
   @description("Specifies which `COPY` entries to add to the Dockerfile while building it.")
   @example("copy: [ \"resource.txt /path/to/resource.txt\" ]", "yaml")
+  @default("Empty")
   copy: OneOrMore[String] = Nil,
 
   @description("Specifies which `RUN` entries to add to the Dockerfile while building it.")
   @example("""run: |
     #  echo 'Run a custom command'
     #  echo 'Foo' > /path/to/file.txt""".stripMargin('#'), "yaml")
+  @default("Empty")
   run: OneOrMore[String] = Nil,
   
   @description("Specifies which `ARG` entries to add to the Dockerfile while building it.")
   @example("build_args: [ \"R_VERSION=4.2\" ]", "yaml")
+  @default("Empty")
   build_args: OneOrMore[String] = Nil,
 
   @description("Specifies which `ENV` entries to add to the Dockerfile while building it. Unlike `ARG`, `ENV` entries are also accessible from inside the container.")
   @example("env: [ \"R_VERSION=4.2\" ]", "yaml")
+  @default("Empty")
   env: OneOrMore[String] = Nil,
 
   `type`: String = "docker"
 ) extends Requirements {
-// START OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
-  @description("Specifies which `COPY` entries to add to the Dockerfile while building it.")
-  @example("resources: [ \"resource.txt /path/to/resource.txt\" ]", "yaml")
-  @removed("`resources` in `setup: {type: docker, resources: ...}` was removed. Please use `copy` instead.", "0.6.3", "0.7.0")
-  private val resources: OneOrMore[String] = Nil
-  // END OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
 
   def installCommands: List[String] = Nil
 
@@ -96,13 +97,6 @@ case class DockerRequirements(
         Nil
       }
 
-    val resourcess =
-      if (resources.nonEmpty) {
-        resources.map(c => s"""COPY $c""")
-      } else {
-        Nil
-      }
-
     val envs =
       if (env.nonEmpty) {
         env.map(c => s"""ENV $c""")
@@ -117,7 +111,7 @@ case class DockerRequirements(
         Nil
       }
 
-    val li = args ::: labels ::: envs ::: copys ::: resourcess ::: adds ::: runCommands
+    val li = args ::: labels ::: envs ::: copys ::: adds ::: runCommands
 
     if (li.isEmpty) None else Some(li.mkString("\n"))
   }

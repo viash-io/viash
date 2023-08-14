@@ -28,6 +28,7 @@ import io.viash.schemas._
 @description("""An executable Python script.
                |When defined in functionality.resources, only the first entry will be executed when running the built component or when running `viash run`.
                |When defined in functionality.test_resources, all entries will be executed during `viash test`.""".stripMargin)
+@subclass("python_script")
 case class PythonScript(
   path: Option[String] = None,
   text: Option[String] = None,
@@ -83,18 +84,13 @@ case class PythonScript(
 
     ScriptInjectionMods(params = paramsCode.mkString)
   }
-
-  def command(script: String): String = {
-    "python \"" + script + "\""
-  }
-
-  def commandSeq(script: String): Seq[String] = {
-    Seq("python", script)
-  }
 }
 
 object PythonScript extends ScriptCompanion {
   val commentStr = "#"
   val extension = "py"
   val `type` = "python_script"
+  // The -B argument stops Python from creating .pyc or .pyo files
+  // on importing functions from other files.
+  val executor = Seq("python", "-B")
 }

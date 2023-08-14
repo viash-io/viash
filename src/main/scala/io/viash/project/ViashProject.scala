@@ -17,15 +17,12 @@
 
 package io.viash.project
 
-import java.nio.file.{Files, Path}
-
-import io.circe.yaml.parser
+import java.nio.file.{Files, Path, Paths}
 
 import io.viash.schemas._
 import io.viash.helpers.data_structures.OneOrMore
 import io.viash.helpers.IO
 import io.viash.helpers.circe._
-import java.nio.file.Paths
 import io.circe.Json
 import java.net.URI
 
@@ -42,6 +39,7 @@ import java.net.URI
     §""".stripMargin('§'), "yaml"
 )
 @since("Viash 0.6.4")
+@nameOverride("Project")
 case class ViashProject(
   @description("Which version of Viash to use.")
   @example("viash_versions: 0.6.4", "yaml")
@@ -61,6 +59,7 @@ case class ViashProject(
   // todo: link to config mods docs
   @description("Which config mods to apply.")
   @example("config_mods: \".functionality.name := 'foo'\"", "yaml")
+  @default("Empty")
   config_mods: OneOrMore[String] = Nil,
 
   @description("Directory in which the _viash.yaml resides.")
@@ -90,14 +89,6 @@ object ViashProject {
     }
   }
 
-  private def parsingErrorHandler[C](uri: Option[URI]) = {
-    (e: Exception) => {
-      val uriStr = uri.map(u => s" '{u}'").getOrElse("")
-      Console.err.println(s"${Console.RED}Error parsing$uriStr.${Console.RESET}\nDetails:")
-      throw e
-    }
-  }
-
   /**
     * Read the text from a Path and convert to a Json
     *
@@ -110,7 +101,7 @@ object ViashProject {
 
     // read yaml as string
     val projStr = IO.read(uri)
-    val json0 = parser.parse(projStr).fold(parsingErrorHandler(Some(uri)), identity)
+    val json0 = Convert.textToJson(projStr, path.toString())
 
     /* JSON 1: after inheritance */
     // apply inheritance if need be
@@ -132,8 +123,7 @@ object ViashProject {
 
     /* PROJECT 0: converted from json */
     // convert Json into ViashProject
-    val proj0 = json.as[ViashProject].fold(parsingErrorHandler(Some(path.toUri())), identity)
-
+    val proj0 = Convert.jsonToClass[ViashProject](json, path.toString())
 
     /* PROJECT 1: make resources absolute */
     // make paths absolute

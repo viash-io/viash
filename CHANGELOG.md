@@ -1,3 +1,89 @@
+# Viash 0.7.5 (2023-08-11): Minor breaking changes and new features
+
+This release contains minor breaking change due to deprecated or outdated functionality being removed.
+
+New functionality includes:
+
+  - Export a JSON schema for the Viash config with `viash export json_schema`
+
+  - Export a Bash or Zsh autocomplete script with `viash export cli_autocomplete`
+
+  - Nextflow VDSL3 modules now have a `fromState` and `toState` argument to allow for better control of the data that gets passed to the module and how the state is managed in a Nextflow workflow.
+
+## BREAKING CHANGES
+
+* `viash export cli_schema`: Added `--format yaml/json` argument, default format is now a YAML (PR #448).
+
+* `viash export config_schema`: Added `--format yaml/json` argument, default format is now a YAML (PR #448).
+
+* `NextflowLegacyPlatform`: Removed deprecated code (PR #469).
+
+* `viash_*`: Remove legacy viash_build, viash_test and viash_push components (PR #470).
+
+* `ComputationalRequirements`, `Functionality`, `DockerPlatform`, `DockerRequirements`: Remove documentation of removed fields (PR #477).
+
+## NEW FUNCTIONALITY
+
+* `viash export json_schema`: Export a json schema derived from the class reflections and annotations already used by the `config_schema` (PR #446).
+
+* `viash export config_schema`: Output `default` values of member fields (PR #446).
+
+* `CI`: Test support for different Java versions on GitHub Actions (PR #456). Focussing on LTS releases starting from 11, so this is 11 and 17. Also test latest Java version, currently 20.
+
+* `viash test` and `viash ns test`: add `--setup` argument to determine the docker build strategy before a component is tested (PR #451).
+
+* `viash export cli_autocomplete`: Export a Bash or Zsh autocomplete script (PR #465 & #482).
+
+* `help message`: Print the relevant help message of (sub-)command when `--help` is given as an argument instead of only printing the help message when it is the leading argument and otherwise silently disregarding it (initially added in PR #472, replaced by PR #496). This is a new feature implemented in Scallop 5.0.0.
+
+* `Logging`: Add a Logger helper class (PR #485 & #490). Allows manually enabling or disabling colorizing TTY output by using `--colorize`. Add provisions for adding debugging or trace code which is not outputted by default. Changing logging level can be changed with `--loglevel`. These CLI arguments are currently hidden.
+
+* `NextflowPlatform`: Nextflow VDSL3 modules now have a `fromState` and `toState` argument to allow for better control of the data that gets passed to the module and how the state is managed in a Nextflow workflow (#479, PR #501).
+
+## MINOR CHANGES
+
+* `PythonScript`: Pass `-B` to Python to avoid creating `*.pyc` and `*.pyo` files on importing helper functions (PR #442).
+
+* `viash config`: Special double values now support `+.inf`, `-.inf` or `.nan` values (PR #446 and PR #450). The stringified versions `"+.inf"`, `"-.inf"` or `".nan"` are supported as well. This is in line with the yaml spec.
+
+* `system environment variables`: Add wrapper around `sys.env` and provide access to specific variables (PR #457). Has advantages for documentation output and testbenches.
+
+* `testbench`: Added some minor testbenches to tackle missing coverage (PR #459, #486, #488, #489, #492 & #494).
+
+* `viash export config_schema`: Simplify file structure (PR #464).
+
+* `helpers.Format`: Add a helper for the Format helper object (PR #466).
+
+* `testbench`: Use config deriver to create config variants for testing (PR #498). This reduces the amount of config files that need to be maintained.
+
+## BUG FIXES
+
+* `viash config`: Validate Viash config Yaml files better and try to give a more informative error message back to the user instead of a stack trace (PR #443).
+
+* `viash ns build`: Fix the error summary when a setup or push failure occurs. These conditions were not displayed and could cause confusion (PR #447).
+
+* `testbench`: Fix the viash version switch test bench not working for newer Java versions (PR #452).
+
+* `malformed input exception`: Capture MalformedInputExceptions when thrown by reading files with invalid Ascii characters when unsupported by Java (PR #458).
+
+* `viash project file parsing`: Give a more informative message when the viash project file fails to parse correctly (PR #475).
+
+* `DockerPlatform`: Fix issue when mounting an input or output folder containing spaces (PR #484).
+
+* `Config mod`: Fix a config mod where the filter should execute multiple deletes (PR #503).
+
+## DOCUMENTATION
+
+* `NextflowPlatform`: Add documentation for the usage and arguments of a VDSL3 module (PR #501).
+
+## INTERNAL CHANGES
+
+* `NextflowVDSL3Platform`: Renamed to `NextflowPlatform` (PR #469).
+
+* Rename mentions of `NextFlow` to `Nextflow` (PR #476).
+
+* `Reference static pages`: Move `.qmd` files from the website to a local folder here; `docs/reference` (PR #504). This way we can track behaviour changes that need to be documented locally.
+
 # Viash 0.7.4 (2023-05-31): Minor bug fixes and minor improvements to VDSL3
 
 Some small fixes and consistency improvements.

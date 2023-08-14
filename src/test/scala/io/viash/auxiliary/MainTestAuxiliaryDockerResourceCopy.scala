@@ -1,16 +1,19 @@
 package io.viash.auxiliary
 
 import io.viash.{DockerTest, TestHelper}
-import io.viash.helpers.IO
+import io.viash.helpers.{IO, Logger}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.reflect.io.Directory
+import io.viash.ConfigDeriver
 
 class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfterAll {
-  private val configResourcesCopyFile = getClass.getResource("/testbash/auxiliary_resource/config_resource_test.vsh.yaml").getPath
-  private val configResourcesUnsupportedProtocolFile = getClass.getResource("/testbash/auxiliary_resource/config_resource_unsupported_protocol.vsh.yaml").getPath
+  Logger.UseColorOverride.value = Some(false)
+  private val configFile = getClass.getResource("/testbash/auxiliary_resource/config_resource_test.vsh.yaml").getPath
+  private val temporaryConfigFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
+  private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
 
   test("Check resources are copied from and to the correct location", DockerTest) {
 
@@ -30,7 +33,7 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
       "test",
       "-p", "docker",
       "-k", "true",
-      configResourcesCopyFile
+      configFile
     )
 
     // basic checks to see if standard test/build was correct
@@ -78,6 +81,7 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
   }
 
   test("Check resources with unsupported format", DockerTest) {
+    val configResourcesUnsupportedProtocolFile = configDeriver.derive(""".functionality.resources := [{type: "bash_script", path: "./check_bash_version.sh"}, {path: "ftp://ftp.ubuntu.com/releases/robots.txt"}]""", "config_resource_unsupported_protocol").toString
     // generate viash script
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
@@ -93,7 +97,7 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
     assert(!testOutput.output.contains("WARNING! No tests found!"))
     assert(!testOutput.output.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testOutput.output, true)
+    checkTempDirAndRemove(testOutput.output, true, "viash_test_auxiliary_resources")
   }
 
   /**
@@ -127,5 +131,9 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
 
     // folder should always have been removed at this stage
     assert(!tempFolder.exists)
+  }
+
+  override def afterAll(): Unit = {
+    IO.deleteRecursively(temporaryConfigFolder)
   }
 }

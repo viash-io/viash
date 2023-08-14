@@ -17,33 +17,26 @@
 
 package io.viash
 
-import java.io.File
-import java.io.FileNotFoundException
-import java.nio.file.NoSuchFileException
-import java.nio.file.Paths
-import java.nio.file.FileSystemNotFoundException
+import java.io.{File, FileNotFoundException}
+import java.nio.file.{Path, Paths, Files, NoSuchFileException, FileSystemNotFoundException}
+import java.net.URI
 import sys.process.{Process, ProcessLogger}
 
 import config.Config
-import helpers.IO
+import helpers.{IO, Exec, SysEnv, Logger, Logging}
 import helpers.Scala._
-import cli.{CLIConf, ViashCommand, ViashNs, ViashNsBuild}
-import io.viash.helpers.MissingResourceFileException
-import io.viash.helpers.status._
-import io.viash.platforms.Platform
-import io.viash.project.ViashProject
-import io.viash.cli.DocumentedSubcommand
-import java.nio.file.Path
-import io.viash.helpers.Exec
-import java.nio.file.Files
-import java.net.URI
+import helpers.status._
+import platforms.Platform
+import project.ViashProject
+import cli.{CLIConf, ViashCommand, DocumentedSubcommand, ViashNs, ViashNsBuild, ViashLogger}
+import exceptions._
+import org.rogach.scallop._
+import io.viash.helpers.LoggerLevel
 
-object Main {
+object Main extends Logging {
   private val pkg = getClass.getPackage
   val name: String = if (pkg.getImplementationTitle != null) pkg.getImplementationTitle else "viash"
   val version: String = if (pkg.getImplementationVersion != null) pkg.getImplementationVersion else "test"
-
-  val viashHome = Paths.get(sys.env.getOrElse("VIASH_HOME", sys.env("HOME") + "/.viash"))
 
   /**
     * Viash main
@@ -65,14 +58,23 @@ object Main {
       System.exit(exitCode)
     } catch {
       case e @ ( _: FileNotFoundException | _: MissingResourceFileException ) =>
-        Console.err.println(s"viash: ${e.getMessage()}")
+        info(s"viash: ${e.getMessage()}")
         System.exit(1)
       case e: NoSuchFileException =>
         // This exception only returns the file/path that can't be found. Add a bit more feedback to the user.
-        Console.err.println(s"viash: ${e.getMessage()} (No such file or directory)")
+        info(s"viash: ${e.getMessage()} (No such file or directory)")
         System.exit(1)
+      case e: AbstractConfigException =>
+        info(s"viash: Error parsing, ${e.innerMessage} in file '${e.uri}'.")
+        info(s"Details:\n${e.getMessage()}")
+        System.exit(1)
+      case e: MalformedInputException =>
+        info(s"viash: ${e.getMessage()}")
+        System.exit(1)
+      case ee: ExitException =>
+        System.exit(ee.code)
       case e: Exception =>
-        Console.err.println(
+        info(
           s"""Unexpected error occurred! If you think this is a bug, please post
             |create an issue at https://github.com/viash-io/viash/issues containing
             |a reproducible example and the stack trace below.
@@ -127,7 +129,7 @@ object Main {
     * @return An exit code
     */
   def mainVersioned(args: Array[String], workingDir: Option[Path] = None, version: String): Int = {
-    val path = viashHome.resolve("releases").resolve(version).resolve("viash")
+    val path = Paths.get(SysEnv.viashHome).resolve("releases").resolve(version).resolve("viash")
 
     if (!Files.exists(path)) {
       // todo: be able to use 0.7.x notation to get the latest 0.7 version?
@@ -145,7 +147,7 @@ object Main {
       Array(path.toString) ++ args,
       cwd = workingDir.map(_.toFile),
       extraEnv = List("VIASH_VERSION" -> "-"): _*
-    ).!(ProcessLogger(Console.out.println, Console.err.println))
+    ).!(ProcessLogger(s => infoOut(s), s => info(s)))
   }
 
   /**
@@ -173,6 +175,23 @@ object Main {
 
     // parse arguments
     val cli = new CLIConf(viashArgs.toIndexedSeq) 
+
+    // Set Logger paramters
+    cli.subcommands.last match {
+      case x: ViashLogger => 
+        if (x.colorize.isDefined) {
+          val colorize = x.colorize() match {
+            case "auto" => None
+            case "true" => Some(true)
+            case "false" => Some(false)
+          }
+          Logger.UseColorOverride.value = colorize
+        }
+        if (x.loglevel.isDefined) {
+          Logger.UseLevelOverride.value = LoggerLevel.fromString(x.loglevel())
+        }
+      case _ => 
+    }
     
     // see if there are project overrides passed to the viash command
     val projSrc = cli.subcommands.last match {
@@ -223,6 +242,7 @@ object Main {
           config,
           platform = platform.get,
           keepFiles = cli.test.keep.toOption.map(_.toBoolean),
+          setupStrategy = cli.test.setup.toOption,
           cpus = cli.test.cpus.toOption,
           memory = cli.test.memory.toOption
         )
@@ -250,7 +270,8 @@ object Main {
           tsv = cli.namespace.test.tsv.toOption,
           append = cli.namespace.test.append(),
           cpus = cli.namespace.test.cpus.toOption,
-          memory = cli.namespace.test.memory.toOption
+          memory = cli.namespace.test.memory.toOption,
+          setup = cli.namespace.test.setup.toOption,
         )
         val errors = testResults.flatMap(_.toOption).count(_.isError)
         if (errors > 0) 1 else 0
@@ -306,18 +327,41 @@ object Main {
         0
       case List(cli.export, cli.export.cli_schema) =>
         val output = cli.export.cli_schema.output.toOption.map(Paths.get(_))
-        ViashExport.exportCLISchema(output)
+        ViashExport.exportCLISchema(
+          output,
+          format = cli.export.cli_schema.format()
+        )
+        0
+      case List(cli.export, cli.export.cli_autocomplete) =>
+        val output = cli.export.cli_autocomplete.output.toOption.map(Paths.get(_))
+        ViashExport.exportAutocomplete(
+          output,
+          format = cli.export.cli_autocomplete.format()
+        )
         0
       case List(cli.export, cli.export.config_schema) =>
         val output = cli.export.config_schema.output.toOption.map(Paths.get(_))
-        ViashExport.exportConfigSchema(output)
+        ViashExport.exportConfigSchema(
+          output,
+          format = cli.export.config_schema.format()
+        )
+        0
+      case List(cli.export, cli.export.json_schema) =>
+        val output = cli.export.json_schema.output.toOption.map(Paths.get(_))
+        ViashExport.exportJsonSchema(
+          output,
+          format = cli.export.json_schema.format()
+        )
         0
       case List(cli.export, cli.export.resource) =>
         val output = cli.export.resource.output.toOption.map(Paths.get(_))
-        ViashExport.exportResource(cli.export.resource.path.toOption.get, output)
+        ViashExport.exportResource(
+          cli.export.resource.path.toOption.get,
+          output
+        )
         0
       case _ =>
-        Console.err.println("No subcommand was specified. See `viash --help` for more information.")
+        info("No subcommand was specified. See `viash --help` for more information.")
         1
     }
   }
@@ -452,9 +496,7 @@ object Main {
     */
   def detectVersion(workingDir: Option[Path]): Option[String] = {
     // if VIASH_VERSION is defined, use that
-    if (sys.env.get("VIASH_VERSION").isDefined) {
-      sys.env.get("VIASH_VERSION")
-    } else {
+    SysEnv.viashVersion orElse {
       // else look for project file in working dir
       // and try to read as json
       workingDir

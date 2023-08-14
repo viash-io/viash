@@ -40,6 +40,7 @@ case class NextflowDirectives(
       |See [`accelerator`](https://www.nextflow.io/docs/latest/process.html#accelerator).
       |""".stripMargin)
   @example("""[ limit: 4, type: "nvidia-tesla-k80" ]""", "yaml")
+  @default("Empty")
   accelerator: Map[String, String] = Map(),
 
   @description(
@@ -85,6 +86,7 @@ case class NextflowDirectives(
   @example(""""bwa=0.7.15"""", "yaml")
   @example(""""bwa=0.7.15 fastqc=0.11.5"""", "yaml")
   @example("""["bwa=0.7.15", "fastqc=0.11.5"]""", "yaml")
+  @default("Empty")
   conda: OneOrMore[String] = Nil,
   
   @description(
@@ -108,6 +110,7 @@ case class NextflowDirectives(
       |""".stripMargin)
   @example(""""--foo bar"""", "yaml")
   @example("""["--foo bar", "-f b"]""", "yaml")
+  @default("Empty")
   containerOptions: OneOrMore[String] = Nil,
   
   @description(
@@ -195,6 +198,7 @@ case class NextflowDirectives(
   @example(""""big_mem"""", "yaml")
   @example(""""big_cpu"""", "yaml")
   @example("""["big_mem", "big_cpu"]""", "yaml")
+  @default("Empty")
   label: OneOrMore[String] = Nil,
   
   @description(
@@ -257,6 +261,7 @@ case class NextflowDirectives(
   @example(""""ncbi-blast/2.2.27"""", "yaml")
   @example(""""ncbi-blast/2.2.27:t_coffee/10.0"""", "yaml")
   @example("""["ncbi-blast/2.2.27", "t_coffee/10.0"]""", "yaml")
+  @default("Empty")
   module: OneOrMore[String] = Nil,
   
   @description(
@@ -276,6 +281,7 @@ case class NextflowDirectives(
   @example("""[ annotation: "key", value: "val" ]""", "yaml")
   @example("""[ env: "key", value: "val" ]""", "yaml")
   @example("""[ [label: "l", value: "v"], [env: "e", value: "v"]]""", "yaml")
+  @default("Empty")
   pod: OneOrMore[Map[String, String]] = Nil,
   
   @description(
@@ -290,6 +296,7 @@ case class NextflowDirectives(
   @example("""[ [ path: "foo", enabled: true ], [ path: "bar", enabled: false ] ]""", "yaml")
   @exampleWithDescription(""""/path/to/dir"""", "yaml", """This is transformed to `[[ path: "/path/to/dir" ]]`:""")
   @exampleWithDescription("""[ path: "/path/to/dir", mode: "cache" ]""", "yaml", """This is transformed to `[[ path: "/path/to/dir", mode: "cache" ]]`:""")
+  @default("Empty")
   publishDir: OneOrMore[Either[String, Map[String, String]]] = Nil, // TODO: need to implement publishdir class?
   
   @description(
@@ -300,6 +307,7 @@ case class NextflowDirectives(
   @example(""""long"""", "yaml")
   @example(""""short,long"""", "yaml")
   @example("""["short", "long"]""", "yaml")
+  @default("Empty")
   queue: OneOrMore[String] = Nil,
   
   @description(

@@ -1,45 +1,30 @@
 package io.viash.auxiliary
 
 import io.viash.{NativeTest, TestHelper, Main}
-import io.viash.helpers.IO
+import io.viash.helpers.{IO, SysEnv, Logger}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.reflect.io.Directory
 import java.io.ByteArrayOutputStream
-import java.security.Permission
-
-// Use SecurityManager to capture System.exit codes set by Scallop as this would cancel our testbench
-sealed case class ExitException(status: Int) extends SecurityException("System.exit() is not allowed") {
-}
-
-sealed class NoExitSecurityManager extends SecurityManager {
-  override def checkPermission(perm: Permission): Unit = {}
-
-  override def checkPermission(perm: Permission, context: Object): Unit = {}
-
-  override def checkExit(status: Int): Unit = {
-    super.checkExit(status)
-    throw ExitException(status)
-  }
-}
+import io.viash.exceptions.ExitException
 
 class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
+  Logger.UseColorOverride.value = Some(false)
 
-  override def beforeAll(): Unit = System.setSecurityManager(new NoExitSecurityManager())
-
-  override def afterAll(): Unit = System.setSecurityManager(null)
-
-  def setEnv(key: String, value: String) = {
-    val field = System.getenv().getClass.getDeclaredField("m")
-    field.setAccessible(true)
-    val map = field.get(System.getenv()).asInstanceOf[java.util.Map[java.lang.String, java.lang.String]]
-    map.put(key, value)
+  test("Verify VIASH_VERSION is unset") {
+    assert(SysEnv.viashVersion.isEmpty)
   }
 
-  test("Verify VIASH_VERSION is undefined by default", NativeTest) {
-    assert(sys.env.get("VIASH_VERSION").isDefined == false)
+  test("Can override variables") {
+    SysEnv.set("VIASH_VERSION", "foo")
+    assert(SysEnv.viashVersion == Some("foo"))
+  }
+
+  test("Can erase variables") {
+    SysEnv.remove("VIASH_VERSION")
+    assert(SysEnv.viashVersion.isEmpty)
   }
 
   test("Check version without specifying the version to run", NativeTest) {
@@ -64,9 +49,9 @@ class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Check version with specifying the version to run", NativeTest) {
 
-    setEnv("VIASH_VERSION", "0.6.6")
+    SysEnv.set("VIASH_VERSION", "0.6.6")
 
-    val version = sys.env.get("VIASH_VERSION")
+    val version = SysEnv.viashVersion
     assert(version == Some("0.6.6"))
 
     val arguments = Seq("--version")
@@ -87,9 +72,9 @@ class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Check version with specifying '-' as the version to run", NativeTest) {
 
-    setEnv("VIASH_VERSION", "-")
+    SysEnv.set("VIASH_VERSION", "-")
 
-    val version = sys.env.get("VIASH_VERSION")
+    val version = SysEnv.viashVersion
     assert(version == Some("-"))
 
     val arguments = Seq("--version")
@@ -113,12 +98,12 @@ class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
   test("Check version with specifying an invalid version", NativeTest) {
 
     // remove the 'invalid' viash version if it already exists
-    val path = Main.viashHome.resolve("releases").resolve("invalid").resolve("viash")
+    val path = Paths.get(SysEnv.viashHome).resolve("releases").resolve("invalid").resolve("viash")
     Files.deleteIfExists(path)
 
-    setEnv("VIASH_VERSION", "invalid")
+    SysEnv.set("VIASH_VERSION", "invalid")
 
-    val version = sys.env.get("VIASH_VERSION")
+    val version = SysEnv.viashVersion
     assert(version == Some("invalid"))
 
     val arguments = Seq("--version")
@@ -138,6 +123,10 @@ class MainRunVersionSwitch extends AnyFunSuite with BeforeAndAfterAll {
     assert(stdout.isEmpty())
     assert(stderr.isEmpty())
     assert(caught.getMessage().contains("Could not download file: https://github.com/viash-io/viash/releases/download/invalid/viash"))
+  }
+
+  override def afterAll(): Unit = {
+    SysEnv.remove("VIASH_VERSION")
   }
 
 }

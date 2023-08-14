@@ -39,8 +39,23 @@ package object schemas {
   class removed(message: String, deprecatedSince: String, since: String) extends scala.annotation.StaticAnnotation
 
   @getter @setter @beanGetter @beanSetter @field
+  class default(default: String) extends scala.annotation.StaticAnnotation
+
+  @getter @setter @beanGetter @beanSetter @field
   class internalFunctionality() extends scala.annotation.StaticAnnotation
 
   @getter @setter @beanGetter @beanSetter @field
   class undocumented() extends scala.annotation.StaticAnnotation
+
+  // In case of abstract classes; don't filter members
+  @getter @setter @beanGetter @beanSetter @field
+  class documentFully() extends scala.annotation.StaticAnnotation
+
+  @getter @setter @beanGetter @beanSetter @field
+  class nameOverride(name: String) extends scala.annotation.StaticAnnotation
+
+  // Used in either child classes or the super class.
+  // If used in the child class then use the yaml value, or used in the super class and then use the class name
+  @getter @setter @beanGetter @beanSetter @field
+  class subclass(name: String) extends scala.annotation.StaticAnnotation
 }

@@ -5,8 +5,10 @@ import io.circe.syntax._
 import io.circe.yaml.parser.parse
 
 import org.scalatest.funsuite.AnyFunSuite
+import io.viash.helpers.Logger
 
 class ConditionSuite extends AnyFunSuite {
+  Logger.UseColorOverride.value = Some(false)
   // testing parsers
   // TODO
 

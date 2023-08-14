@@ -29,13 +29,13 @@ import functionality.Functionality
 import functionality.arguments.{FileArgument, Output}
 import functionality.resources.{BashScript, Script}
 import platforms.NativePlatform
-import helpers.IO
+import helpers.{IO, Logging, LoggerOutput, LoggerLevel}
 import io.viash.helpers.data_structures._
-import io.viash.helpers.MissingResourceFileException
+import io.viash.exceptions.MissingResourceFileException
 import io.viash.platforms.Platform
 import io.viash.config.ConfigMeta
 
-object ViashTest {
+object ViashTest extends Logging {
   case class TestOutput(name: String, exitValue: Int, output: String, logFile: String, duration: Long)
   case class ManyTestOutput(setup: Option[TestOutput], tests: List[TestOutput])
 
@@ -61,7 +61,7 @@ object ViashTest {
     platform: Platform,
     keepFiles: Option[Boolean] = None,
     quiet: Boolean = false,
-    setupStrategy: String = "cachedbuild",
+    setupStrategy: Option[String] = None,
     tempVersion: Option[String] = Some("test"),
     verbosityLevel: Int = 6,
     parentTempPath: Option[Path] = None, 
@@ -70,7 +70,7 @@ object ViashTest {
   ): ManyTestOutput = {
     // create temporary directory
     val dir = IO.makeTemp("viash_test_" + config.functionality.name, parentTempPath)
-    if (!quiet) println(s"Running tests in temporary directory: '$dir'")
+    if (!quiet) infoOut(s"Running tests in temporary directory: '$dir'")
 
     // set version to temporary value
     val config2 = 
@@ -90,7 +90,7 @@ object ViashTest {
       platform = platform,
       dir = dir,
       verbose = !quiet,
-      setupStrategy = setupStrategy,
+      setupStrategy = setupStrategy.getOrElse("cachedbuild"),
       verbosityLevel = verbosityLevel,
       cpus = cpus,
       memory = memory
@@ -109,18 +109,18 @@ object ViashTest {
 
     if (!quiet) {
       if (results.isEmpty && !anyErrors) {
-        println(s"${Console.RED}WARNING! No tests found!${Console.RESET}")
+        warnOut(s"WARNING! No tests found!")
       } else if (anyErrors) {
-        println(s"${Console.RED}ERROR! $errorMessage${Console.RESET}")
+        errorOut(s"ERROR! $errorMessage")
       } else {
-        println(s"${Console.GREEN}SUCCESS! All $count out of ${results.length} test scripts succeeded!${Console.RESET}")
+        successOut(s"SUCCESS! All $count out of ${results.length} test scripts succeeded!")
       }
     }
 
     // keep temp files if user asks or any errors are encountered
 
     if (!keepFiles.getOrElse(anyErrors)) {
-      if (!quiet) println("Cleaning up temporary directory")
+      if (!quiet) infoOut("Cleaning up temporary directory")
       IO.deleteRecursively(dir)
     }
     // TODO: remove container
@@ -182,7 +182,7 @@ object ViashTest {
 
         val logger: String => Unit =
           (s: String) => {
-            if (verbose) println(s)
+            if (verbose) infoOut(s)
             printWriter.println(s)
             logWriter.append(s + sys.props("line.separator"))
           }
@@ -297,7 +297,7 @@ object ViashTest {
 
         val logger: String => Unit =
           (s: String) => {
-            if (verbose) println(s)
+            if (verbose) infoOut(s)
             printWriter.println(s)
             logWriter.append(s + sys.props("line.separator"))
           }
@@ -331,7 +331,7 @@ object ViashTest {
         }
     }
 
-    if (verbose) println(consoleLine)
+    if (verbose) infoOut(consoleLine)
 
     ManyTestOutput(buildResult, testResults)
   }

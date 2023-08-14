@@ -20,6 +20,9 @@ package io.viash.functionality
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import cats.syntax.functor._ // for .widen
+import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
+import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
+import io.viash.exceptions.ConfigParserSubTypeException
 
 package object arguments {
 
@@ -37,9 +40,9 @@ package object arguments {
     io.circe.Decoder.decodeDouble or
     Decoder.instance {
       cursor => cursor.value.as[String].map(_.toLowerCase()) match {
-        case Right("+inf" | "+infinity" | "positiveinfinity" | "positiveinf") => Right(Double.PositiveInfinity)
-        case Right("-inf" | "-infinity" | "negativeinfinity" | "negativeinf") => Right(Double.NegativeInfinity)
-        case Right("nan") => Right(Double.NaN)
+        case Right(".inf" | "+.inf" | "+inf" | "+infinity" | "positiveinfinity" | "positiveinf") => Right(Double.PositiveInfinity)
+        case Right("-.inf" | "-inf" | "-infinity" | "negativeinfinity" | "negativeinf") => Right(Double.NegativeInfinity)
+        case Right(".nan" | "nan") => Right(Double.NaN)
         case a => a.map(_.toDouble)
       }
     }
@@ -84,14 +87,14 @@ package object arguments {
       objJson deepMerge typeJson
   }
 
-  implicit val decodeStringArgument: Decoder[StringArgument] = deriveConfiguredDecoder
-  implicit val decodeIntegerArgument: Decoder[IntegerArgument] = deriveConfiguredDecoder
-  implicit val decodeLongArgument: Decoder[LongArgument] = deriveConfiguredDecoder
-  implicit val decodeDoubleArgument: Decoder[DoubleArgument] = deriveConfiguredDecoder
-  implicit val decodeBooleanArgumentR: Decoder[BooleanArgument] = deriveConfiguredDecoder
-  implicit val decodeBooleanArgumentT: Decoder[BooleanTrueArgument] = deriveConfiguredDecoder
-  implicit val decodeBooleanArgumentF: Decoder[BooleanFalseArgument] = deriveConfiguredDecoder
-  implicit val decodeFileArgument: Decoder[FileArgument] = deriveConfiguredDecoder
+  implicit val decodeStringArgument: Decoder[StringArgument] = deriveConfiguredDecoderFullChecks
+  implicit val decodeIntegerArgument: Decoder[IntegerArgument] = deriveConfiguredDecoderFullChecks
+  implicit val decodeLongArgument: Decoder[LongArgument] = deriveConfiguredDecoderFullChecks
+  implicit val decodeDoubleArgument: Decoder[DoubleArgument] = deriveConfiguredDecoderFullChecks
+  implicit val decodeBooleanArgumentR: Decoder[BooleanArgument] = deriveConfiguredDecoderFullChecks
+  implicit val decodeBooleanArgumentT: Decoder[BooleanTrueArgument] = deriveConfiguredDecoderFullChecks
+  implicit val decodeBooleanArgumentF: Decoder[BooleanFalseArgument] = deriveConfiguredDecoderFullChecks
+  implicit val decodeFileArgument: Decoder[FileArgument] = deriveConfiguredDecoderFullChecks
 
   implicit def decodeDataArgument: Decoder[Argument[_]] = Decoder.instance {
     cursor =>
@@ -105,7 +108,7 @@ package object arguments {
           case Right("boolean_true") => decodeBooleanArgumentT.widen
           case Right("boolean_false") => decodeBooleanArgumentF.widen
           case Right("file") => decodeFileArgument.widen
-          case Right(typ) => throw new RuntimeException("Type " + typ + " is not recognised. Valid types are string, integer, long, double, boolean, boolean_true, boolean_false and file.")
+          case Right(typ) => invalidSubTypeDecoder[StringArgument](typ, List("string", "integer", "long", "double", "boolean", "boolean_true", "boolean_false", "file")).widen
           case Left(exception) => throw exception
         }
 

@@ -30,12 +30,9 @@ case class ComputationalRequirements(
   memory: Option[String] = None,
   @description("A list of commands which should be present on the system for the script to function.")
   @example("commands: [ which, bash, awk, date, grep, egrep, ps, sed, tail, tee ]", "yaml")
+  @default("Empty")
   commands: List[String] = Nil
 ) {
-  // START OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
-  @removed("Use `cpus` instead.", "0.6.1", "0.7.0")
-  private val n_proc: Option[Int] = None
-  // END OF REMOVED PARAMETERS THAT ARE STILL DOCUMENTED
 
   def memoryAsBytes: Option[BigInt] = {
     val Regex = "^([0-9]+) *([kmgtp]b?|b)$".r

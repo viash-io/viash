@@ -20,17 +20,15 @@ package io.viash.config
 import io.viash.config_mods.ConfigModParser
 import io.viash.functionality._
 import io.viash.platforms._
-import io.viash.helpers.{Git, GitInfo, IO}
+import io.viash.helpers.{Git, GitInfo, IO, Logging}
 import io.viash.helpers.circe._
 import io.viash.helpers.status._
+import io.viash.helpers.Yaml
 
 import java.net.URI
-import io.circe.yaml.parser
 import io.viash.functionality.resources._
 
 import java.io.File
-import io.circe.DecodingFailure
-import io.circe.ParsingFailure
 import io.viash.config_mods.ConfigMods
 import java.nio.file.Paths
 
@@ -69,7 +67,7 @@ case class Config(
       |
       | - @[Native](platform_native)
       | - @[Docker](platform_docker)
-      | - @[Nextflow VDSL3](platform_nextflow)
+      | - @[Nextflow](platform_nextflow)
       |""".stripMargin)
   platforms: List[Platform] = Nil,
 
@@ -120,7 +118,7 @@ case class Config(
   }
 }
 
-object Config {
+object Config extends Logging {
   def readYAML(config: String): (String, Option[Script]) = {
     val configUri = IO.uri(config)
     readYAML(configUri)
@@ -195,14 +193,13 @@ object Config {
     /* STRING */
     // read yaml as string
     val (yamlText, optScript) = readYAML(uri)
+
+    // replace valid yaml definitions for +.inf with "+.inf" so that circe doesn't trip over its toes
+    val replacedYamlText = Yaml.replaceInfinities(yamlText)
     
     /* JSON 0: parsed from string */
     // parse yaml into Json
-    def parsingErrorHandler[C](e: Exception): C = {
-      Console.err.println(s"${Console.RED}Error parsing '${uri}'.${Console.RESET}\nDetails:")
-      throw e
-    }
-    val json0 = parser.parse(yamlText).fold(parsingErrorHandler, identity)
+    val json0 = Convert.textToJson(replacedYamlText, uri.toString())
 
     /* JSON 1: after inheritance */
     // apply inheritance if need be
@@ -214,7 +211,7 @@ object Config {
 
     /* CONFIG 0: converted from json */
     // convert Json into Config
-    val conf0 = json2.as[Config].fold(parsingErrorHandler, identity)
+    val conf0 = Convert.jsonToClass[Config](json2, uri.toString())
 
     /* CONFIG 1: store parent path in resource to be able to access them in the future */
     val parentURI = uri.resolve("")
@@ -269,10 +266,10 @@ object Config {
 
     // print warnings if need be
     if (conf2.functionality.status == Status.Deprecated)
-      Console.err.println(s"${Console.YELLOW}Warning: The status of the component '${conf2.functionality.name}' is set to deprecated.${Console.RESET}")
+      warn(s"Warning: The status of the component '${conf2.functionality.name}' is set to deprecated.")
     
     if (conf2.functionality.resources.isEmpty && optScript.isEmpty)
-      Console.err.println(s"${Console.YELLOW}Warning: no resources specified!${Console.RESET}")
+      warn(s"Warning: no resources specified!")
 
     if (!addOptMainScript) {
       return conf3
@@ -356,7 +353,7 @@ object Config {
         }
       } catch {
         case _: Exception =>
-          Console.err.println(s"${Console.RED}Reading file '$file' failed${Console.RESET}")
+          error(s"Reading file '$file' failed")
           Right(ParseError)
       }
     }
