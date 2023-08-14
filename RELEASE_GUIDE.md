@@ -32,6 +32,11 @@ Add the files `bin/viash` and `bin/viash_install`.
 The source repository is [here](https://github.com/viash-io/website).
 Follow the information in the README.md to get up and running if needed.
 
+## Update _viash.yaml
+
+Update the viash version to the latest Viash version.
+This is needed to get updated information about the CLI and JSON schema.
+
 ## Rerender Website
 
 Short summary if you already have an operational envirionment:
