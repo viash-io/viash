@@ -4,7 +4,7 @@ TODO add summary
 
 ## DOCUMENTATION
 
-* Minor fixes to VDSL3 reference documentation.
+* Minor fixes to VDSL3 reference documentation (PR #508).
 
 # Viash 0.7.5 (2023-08-11): Minor breaking changes and new features
 
