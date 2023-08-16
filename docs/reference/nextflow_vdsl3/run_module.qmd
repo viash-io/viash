@@ -51,7 +51,7 @@ arg2: 5
 
 You can run the pipeline on the list of parameters using the `-params-file` parameter.
  
-```{bash}
+```bash
 nextflow run target/main.nf -params-file params.yaml --publish_dir output2
 ```
 
