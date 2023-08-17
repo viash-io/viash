@@ -40,7 +40,7 @@ case class NativePlatform(
   @default("native")
   id: String = "native",
   `type`: String = "native"
-) extends Platform {
+) extends Executor {
   def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
     val functionality = config.functionality
     val executor = functionality.mainScript match {

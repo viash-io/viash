@@ -116,6 +116,9 @@ case class Config(
       NativePlatform()
     }
   }
+
+  def getContainers: List[Container] = platforms.collect{ case c: Container => c }
+  def getExecutors: List[Executor] = platforms.collect{ case e: Executor => e } // should we add an executor for docker if specified? If so, just one or a specific one for each docker platform?
 }
 
 object Config extends Logging {

@@ -57,6 +57,9 @@ trait Platform {
   def modifyFunctionality(config: Config, testing: Boolean): Functionality
 }
 
+trait Executor extends Platform
+trait Container extends Platform
+
 object Platform {
   def parse(uri: URI): Platform = {
     val str = IO.read(uri)

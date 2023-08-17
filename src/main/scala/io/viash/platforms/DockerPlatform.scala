@@ -182,7 +182,7 @@ case class DockerPlatform(
   @since("Viash 0.7.4")
   cmd: Option[Either[String, List[String]]] = None
 
-) extends Platform {
+) extends Container {
   @internalFunctionality
   override val hasSetup = true
 
