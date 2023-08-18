@@ -25,6 +25,7 @@ import io.viash.exceptions.CheckoutException
 
 abstract class AbstractGitRepository extends Repository {
   val uri: String
+  val storePath: String
 
   def copyRepo(
     name: String,
@@ -52,7 +53,7 @@ abstract class AbstractGitRepository extends Repository {
   
   
   // Get the repository part of where dependencies should be located in the target/dependencies folder
-  def subOutputPath: String = Paths.get(`type`, uri, tag.getOrElse("")).toString()
+  def subOutputPath: String = Paths.get(`type`, storePath, tag.getOrElse("")).toString()
 
   protected def doGitClone(uri: String, cwd: Option[File]): Exec.ExecOutput = {
     val singleBranch = tag match {

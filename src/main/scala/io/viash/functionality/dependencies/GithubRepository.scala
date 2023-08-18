@@ -82,4 +82,6 @@ case class GithubRepository(
   lazy val uri_ssh = s"git@github.com:$repo.git"
   val fakeCredentials = "nouser:nopass@" // obfuscate the credentials a bit so we don't trigger GitGuardian
   lazy val uri_nouser = s"https://${fakeCredentials}github.com/$repo.git"
+
+  val storePath = repo // no need to add 'github.com' to the store path as 'type' (github) will be added
 }
