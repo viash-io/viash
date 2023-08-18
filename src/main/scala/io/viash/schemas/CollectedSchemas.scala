@@ -35,6 +35,7 @@ import io.viash.project.ViashProject
 import io.viash.platforms.nextflow._
 import io.viash.helpers._
 import scala.collection.immutable.ListMap
+import io.viash.functionality.dependencies._
 
 final case class CollectedSchemas (
   config: Map[String, List[ParameterSchema]],
@@ -159,12 +160,23 @@ object CollectedSchemas {
     getMembers[NextflowDirectives](),
     getMembers[NextflowAuto](),
     getMembers[NextflowConfig](),
+
+    getMembers[Dependency](),
+    getMembers[Repository](),
+    getMembers[LocalRepository](),
+    getMembers[GitRepository](),
+    getMembers[GithubRepository](),
+    getMembers[ViashhubRepository](),
   )
 
   private def trimTypeName(s: String) = {
     // first: io.viash.helpers.data_structures.OneOrMore[String] -> OneOrMore[String]
     // second: List[io.viash.platforms.requirements.Requirements] -> List[Requirements]
-    s.replaceAll("^(\\w*\\.)*", "").replaceAll("""(\w*)\[[\w\.]*?([\w,]*)(\[_\])?\]""", "$1[$2]")
+    // third: Either[String,io.viash.functionality.dependencies.Repository] -> Either[String,Repository]
+    s
+      .replaceAll("""^(\w*\.)*""", "")
+      .replaceAll("""(\w*)\[[\w\.]*?(\w*)(\[_\])?\]""", "$1[$2]")
+      .replaceAll("""(\w*)\[[\w\.]*?(\w*),[\w\.]*?(\w*)\]""", "$1[$2,$3]")
   }
 
   private def annotationsOf(members: (Map[String,List[MemberInfo]]), classes: List[Symbol]) = {

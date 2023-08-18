@@ -15,18 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.platforms.nextflow
+package io.viash.exceptions
 
-import scala.io.Source
+import java.nio.file.Path
+import io.viash.functionality.dependencies.Dependency
+import io.viash.functionality.dependencies.Repository
 
-object NextflowHelper {
-  private def readSource(s: String) = {
-    val path = s"io/viash/platforms/nextflow/$s"
-    Source.fromResource(path).getLines().mkString("\n")
-  }
+abstract class AbstractDependencyException extends Exception
 
-  lazy val vdsl3Helper: String = readSource("VDSL3Helper.nf")
-  lazy val workflowHelper: String = readSource("WorkflowHelper.nf")
-  lazy val profilesHelper: String = readSource("ProfilesHelper.config")
-  lazy val dataflowHelper: String = readSource("DataflowHelper.nf")
+case class MissingBuildYamlException(sourcePath: Path, dependency: Dependency) extends AbstractDependencyException {
+  override def getMessage() = s"Could not find '.build.yaml' when traversing up from '${sourcePath.toString()}' for '${dependency.name}'"
+}
+
+case class CheckoutException(repo: Repository) extends AbstractDependencyException {
+  override def getMessage(): String = s"Could not checkout remote repository ${repo.name} of type ${repo.`type`}"
 }

@@ -2,6 +2,12 @@
 
 TODO add summary
 
+## NEW FUNCTIONALITY
+
+* `dependencies`: Add `dependencies` and `repositories` to `functionality` (PR #509). 
+  The new functionality allows specifying dependencies and where to retrieve (repositories) them in a component, and subsequentially allows advanced functionality to be offloaded and re-used in scripts and projects. This is alike e.g. `npm`, `pip` and many others. A big difference is that we aim to provide the needed boilerplate code to ease the usage of the dependencies in scripts, workflows and pipelines.
+  Note that the dependency is required to be a built Viash component or project and not a random file or code project found externally. This is needed to provide the necessary background information to correctly link dependencies into a component.
+
 ## DOCUMENTATION
 
 * Minor fixes to VDSL3 reference documentation (PR #508).
