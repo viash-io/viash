@@ -23,8 +23,10 @@ import io.circe.generic.extras._
 import arguments._
 import resources._
 import Status._
+import dependencies._
 import io.viash.schemas._
 import io.viash.wrapper.BashWrapper
+import scala.collection.immutable.ListMap
 
 @description(
   """The functionality-part of the config file describes the behaviour of the script in terms of arguments and resources.
@@ -236,6 +238,47 @@ case class Functionality(
   @default("Empty")
   requirements: ComputationalRequirements = ComputationalRequirements(),
 
+  @description("Allows listing Viash components required by this Viash component")
+  @exampleWithDescription(
+    """dependencies:
+      |  - name: qc/multiqc
+      |    repository: 
+      |      type: github
+      |      uri: openpipelines-bio/modules
+      |      tag: 0.3.0
+      |""".stripMargin,
+    "yaml",
+    "Full specification of a repository")
+  @exampleWithDescription(
+    """dependencies:
+      |  - name: qc/multiqc
+      |    repository: "github://openpipelines-bio/modules:0.3.0"
+      |""".stripMargin,
+    "yaml",
+    "Full specification of a repository using sugar syntax")
+  @exampleWithDescription(
+    """dependencies:
+      |  - name: qc/multiqc
+      |    repository: "openpipelines-bio"
+      |""".stripMargin,
+    "yaml",
+    "Reference to a repository fully specified under 'repositories'")
+  @default("Empty")
+  dependencies: List[Dependency] = Nil,
+
+  @description(
+    """(Pre-)defines repositories that can be used as repository in dependencies.
+      |Allows reusing repository definitions in case it is used in multiple dependencies.""".stripMargin)
+  @example(
+    """repositories:
+      |  - name: openpipelines-bio
+      |    type: github
+      |    uri: openpipelines-bio/modules
+      |    tag: 0.3.0
+      |""".stripMargin,
+      "yaml")
+  @default("Empty")
+  repositories: List[Repository] = Nil,
   // The variables below are for internal use and shouldn't be publicly documented
 
   // setting this to true will change the working directory
@@ -298,27 +341,28 @@ case class Functionality(
     }
   }
 
-  def getArgumentLikes(includeMeta: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): List[Argument[_]] = {
+  def getArgumentLikes(includeMeta: Boolean = false, includeDependencies: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): List[Argument[_]] = {
     // start with arguments
     val args0 = allArguments
 
     // add meta if need be
     val args1 = args0 ++ { if (includeMeta) BashWrapper.metaArgs else Nil }
+
+    // add dependencies if need be
+    val args2 = args1 ++ { if (includeDependencies) dependencies.map( d => StringArgument(d.scriptName, required = false, dest = "dep") ) else Nil }
     
     // filter input files if need be
-    val args2 = if (filterInputs) args1.filter{d => d.direction == Input || d.isInstanceOf[FileArgument]} else args1
+    val args3 = if (filterInputs) args2.filter{d => d.direction == Input || d.isInstanceOf[FileArgument]} else args2
     
     // filter output files if need be
-    val args3 = if (filterOutputs) args2.filter{d => d.direction == Output || d.isInstanceOf[FileArgument]} else args2
+    val args4 = if (filterOutputs) args3.filter{d => d.direction == Output || d.isInstanceOf[FileArgument]} else args3
 
-    args3
+    args4
   }
-  def getArgumentLikesGroupedByDest(includeMeta: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): Map[String, List[Argument[_]]] = {
-    val x = getArgumentLikes(includeMeta, filterInputs, filterOutputs).groupBy(_.dest)
-    val y = Map("par" -> Nil, "meta" -> Nil)
-    (x.toSeq ++ y.toSeq).groupBy(_._1).map { 
-      case (k, li) => (k, li.flatMap(_._2).toList) 
-    }
+  def getArgumentLikesGroupedByDest(includeMeta: Boolean = false, includeDependencies: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): ListMap[String, List[Argument[_]]] = {
+    val x = getArgumentLikes(includeMeta, includeDependencies, filterInputs, filterOutputs).groupBy(_.dest)
+    val y = Seq("par", "meta", "dep").map(k => (k, x.getOrElse(k, Nil)))
+    ListMap(y: _*)
   }
 
   def mainScript: Option[Script] =

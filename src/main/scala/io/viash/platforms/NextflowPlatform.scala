@@ -143,6 +143,7 @@ case class NextflowPlatform(
       case Some(_) => 
         throw new RuntimeException(s"NextflowPlatform 'container' variable: Platform $container is not a Docker Platform")
       case None => None
+      case _ => ???
     }
   }
 
@@ -195,41 +196,7 @@ case class NextflowPlatform(
     val header = Helper.generateScriptHeader(functionality)
       .map(h => Escaper(h, newline = true))
       .mkString("// ", "\n// ", "")
-
-    /************************* SCRIPT *************************/
-    val executionCode = functionality.mainScript match {
-      // if mainResource is empty (shouldn't be the case)
-      case None => ""
-
-      // if mainResource is simply an executable
-      case Some(e: Executable) => //" " + e.path.get + " $VIASH_EXECUTABLE_ARGS"
-        throw new NotImplementedError("Running executables through a NextflowPlatform is not yet implemented. Create a support ticket to request this functionality if necessary.")
-
-      // if mainResource is a script
-      case Some(res) =>
-        // todo: also include the bashwrapper checks
-        val argsAndMeta = functionality.getArgumentLikesGroupedByDest(
-          includeMeta = true,
-          filterInputs = true
-        )
-        val code = res.readWithInjection(argsAndMeta).get
-        val escapedCode = Bash.escapeString(code, allowUnescape = true)
-          .replace("\\", "\\\\")
-          .replace("'''", "\\'\\'\\'")
-
-        // IMPORTANT! difference between code below and BashWrapper:
-        // script is stored as `.viash_script.sh`.
-        val scriptPath = "$tempscript"
-
-        s"""set -e
-          |tempscript=".viash_script.sh"
-          |cat > "$scriptPath" << VIASHMAIN
-          |$escapedCode
-          |VIASHMAIN
-          |${res.command(scriptPath)}
-          |""".stripMargin
-    }
-
+    
     /************************* JSONS *************************/
     // override container
     val directivesToJson = directives.copy(
@@ -254,95 +221,131 @@ case class NextflowPlatform(
     val autoJson = auto.asJson.dropEmptyRecursively
 
     /************************* MAIN.NF *************************/
-    val tripQuo = """""""""
+    functionality.mainScript match {
+      // if mainResource is empty (shouldn't be the case)
+      case None => throw new RuntimeException("there should be a main script here")
 
+      // if mainResource is simply an executable
+      case Some(e: Executable) => //" " + e.path.get + " $VIASH_EXECUTABLE_ARGS"
+        throw new NotImplementedError(
+          "Running executables through a NextflowPlatform is not (yet) implemented. " +
+            "Create a support ticket to request this functionality if necessary."
+        )
+      
+      case Some(res: NextflowScript) =>
+        res.readWithInjection(Map.empty, config).get
+        // TODO: change this such that it contains helper code instead of
+        // importing non-existent helper files
 
-    s"""$header
-      |
-      |nextflow.enable.dsl=2
-      |
-      |// Required imports
-      |import groovy.json.JsonSlurper
-      |
-      |// initialise slurper
-      |def jsonSlurper = new JsonSlurper()
-      |
-      |// DEFINE CUSTOM CODE
-      |
-      |// functionality metadata
-      |thisConfig = processConfig(jsonSlurper.parseText($funJsonStr))
-      |
-      |thisScript = '''$executionCode'''
-      |
-      |thisDefaultProcessArgs = [
-      |  // key to be used to trace the process and determine output names
-      |  key: thisConfig.functionality.name,
-      |  // fixed arguments to be passed to script
-      |  args: [:],
-      |  // default directives
-      |  directives: jsonSlurper.parseText('''${jsonPrinter.print(dirJson2)}'''),
-      |  // auto settings
-      |  auto: jsonSlurper.parseText('''${jsonPrinter.print(autoJson)}'''),
-      |
-      |  // Apply a map over the incoming tuple
-      |  // Example: `{ tup -> [ tup[0], [input: tup[1].output] ] + tup.drop(2) }`
-      |  map: null,
-      |
-      |  // Apply a map over the ID element of a tuple (i.e. the first element)
-      |  // Example: `{ id -> id + "_foo" }`
-      |  mapId: null,
-      |
-      |  // Apply a map over the data element of a tuple (i.e. the second element)
-      |  // Example: `{ data -> [ input: data.output ] }`
-      |  mapData: null,
-      |
-      |  // Apply a map over the passthrough elements of a tuple (i.e. the tuple excl. the first two elements)
-      |  // Example: `{ pt -> pt.drop(1) }`
-      |  mapPassthrough: null,
-      |
-      |  // Filter the channel
-      |  // Example: `{ tup -> tup[0] == "foo" }`
-      |  filter: null,
-      |
-      |  // Rename keys in the data field of the tuple (i.e. the second element)
-      |  // Will likely be deprecated in favour of `fromState`.
-      |  // Example: `[ "new_key": "old_key" ]`
-      |  renameKeys: null,
-      |
-      |  // Fetch data from the state and pass it to the module without altering the current state.
-      |  // 
-      |  // `fromState` should be `null`, `List[String]`, `Map[String, String]` or a function. 
-      |  // 
-      |  // - If it is `null`, the state will be passed to the module as is.
-      |  // - If it is a `List[String]`, the data will be the values of the state at the given keys.
-      |  // - If it is a `Map[String, String]`, the data will be the values of the state at the given keys, with the keys renamed according to the map.
-      |  // - If it is a function, the tuple (`[id, state]`) in the channel will be passed to the function, and the result will be used as the data.
-      |  // 
-      |  // Example: `{ id, state -> [input: state.fastq_file] }`
-      |  // Default: `null`
-      |  fromState: null,
-      |
-      |  // Determine how the state should be updated after the module has been run.
-      |  // 
-      |  // `toState` should be `null`, `List[String]`, `Map[String, String]` or a function.
-      |  // 
-      |  // - If it is `null`, the state will be replaced with the output of the module.
-      |  // - If it is a `List[String]`, the state will be updated with the values of the data at the given keys.
-      |  // - If it is a `Map[String, String]`, the state will be updated with the values of the data at the given keys, with the keys renamed according to the map.
-      |  // - If it is a function, a tuple (`[id, output, state]`) will be passed to the function, and the result will be used as the new state.
-      |  //
-      |  // Example: `{ id, output, state -> state + [counts: state.output] }`
-      |  // Default: `{ id, output, state -> output }`
-      |  toState: null,
-      |
-      |  // Whether or not to print debug messages
-      |  // Default: `$debug`
-      |  debug: $debug
-      |]
-      |
-      |// END CUSTOM CODE""".stripMargin + 
-      "\n\n" + NextflowHelper.workflowHelper + 
-      "\n\n" + NextflowHelper.vdsl3Helper
+      // if mainResource is a script
+      case Some(res) =>
+        // todo: also include the bashwrapper checks
+        val argsAndMeta = functionality.getArgumentLikesGroupedByDest(
+          includeMeta = true,
+          filterInputs = true
+        )
+        val code = res.readWithInjection(argsAndMeta, config).get
+        val escapedCode = Bash.escapeString(code, allowUnescape = true)
+          .replace("\\", "\\\\")
+          .replace("'''", "\\'\\'\\'")
+
+        // IMPORTANT! difference between code below and BashWrapper:
+        // script is stored as `.viash_script.sh`.
+        val scriptPath = "$tempscript"
+
+        val executionCode = 
+          s"""set -e
+            |tempscript=".viash_script.sh"
+            |cat > "$scriptPath" << VIASHMAIN
+            |$escapedCode
+            |VIASHMAIN
+            |${res.command(scriptPath)}
+            |""".stripMargin
+        
+        s"""$header
+          |
+          |nextflow.enable.dsl=2
+          |
+          |// initialise slurper
+          |def jsonSlurper = new groovy.json.JsonSlurper()
+          |
+          |// DEFINE CUSTOM CODE
+          |
+          |// functionality metadata
+          |thisConfig = processConfig(jsonSlurper.parseText($funJsonStr))
+          |
+          |thisScript = '''$executionCode'''
+          |
+          |thisDefaultProcessArgs = [
+          |  // key to be used to trace the process and determine output names
+          |  key: thisConfig.functionality.name,
+          |  // fixed arguments to be passed to script
+          |  args: [:],
+          |  // default directives
+          |  directives: jsonSlurper.parseText('''${jsonPrinter.print(dirJson2)}'''),
+          |  // auto settings
+          |  auto: jsonSlurper.parseText('''${jsonPrinter.print(autoJson)}'''),
+          |
+          |  // Apply a map over the incoming tuple
+          |  // Example: `{ tup -> [ tup[0], [input: tup[1].output] ] + tup.drop(2) }`
+          |  map: null,
+          |
+          |  // Apply a map over the ID element of a tuple (i.e. the first element)
+          |  // Example: `{ id -> id + "_foo" }`
+          |  mapId: null,
+          |
+          |  // Apply a map over the data element of a tuple (i.e. the second element)
+          |  // Example: `{ data -> [ input: data.output ] }`
+          |  mapData: null,
+          |
+          |  // Apply a map over the passthrough elements of a tuple (i.e. the tuple excl. the first two elements)
+          |  // Example: `{ pt -> pt.drop(1) }`
+          |  mapPassthrough: null,
+          |
+          |  // Filter the channel
+          |  // Example: `{ tup -> tup[0] == "foo" }`
+          |  filter: null,
+          |
+          |  // Rename keys in the data field of the tuple (i.e. the second element)
+          |  // Will likely be deprecated in favour of `fromState`.
+          |  // Example: `[ "new_key": "old_key" ]`
+          |  renameKeys: null,
+          |
+          |  // Fetch data from the state and pass it to the module without altering the current state.
+          |  // 
+          |  // `fromState` should be `null`, `List[String]`, `Map[String, String]` or a function. 
+          |  // 
+          |  // - If it is `null`, the state will be passed to the module as is.
+          |  // - If it is a `List[String]`, the data will be the values of the state at the given keys.
+          |  // - If it is a `Map[String, String]`, the data will be the values of the state at the given keys, with the keys renamed according to the map.
+          |  // - If it is a function, the tuple (`[id, state]`) in the channel will be passed to the function, and the result will be used as the data.
+          |  // 
+          |  // Example: `{ id, state -> [input: state.fastq_file] }`
+          |  // Default: `null`
+          |  fromState: null,
+          |
+          |  // Determine how the state should be updated after the module has been run.
+          |  // 
+          |  // `toState` should be `null`, `List[String]`, `Map[String, String]` or a function.
+          |  // 
+          |  // - If it is `null`, the state will be replaced with the output of the module.
+          |  // - If it is a `List[String]`, the state will be updated with the values of the data at the given keys.
+          |  // - If it is a `Map[String, String]`, the state will be updated with the values of the data at the given keys, with the keys renamed according to the map.
+          |  // - If it is a function, a tuple (`[id, output, state]`) will be passed to the function, and the result will be used as the new state.
+          |  //
+          |  // Example: `{ id, output, state -> state + [counts: state.output] }`
+          |  // Default: `{ id, output, state -> output }`
+          |  toState: null,
+          |
+          |  // Whether or not to print debug messages
+          |  // Default: `$debug`
+          |  debug: $debug
+          |]
+          |
+          |// END CUSTOM CODE""".stripMargin + 
+          "\n\n" + NextflowHelper.workflowHelper + 
+          "\n\n" + NextflowHelper.vdsl3Helper
+    }
   }
 }
 

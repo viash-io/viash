@@ -3,6 +3,7 @@ package io.viash
 import java.io.{ByteArrayOutputStream, File, FileInputStream, IOException, UncheckedIOException}
 import java.security.{DigestInputStream, MessageDigest}
 import org.scalatest.matchers.must.Matchers.{assertThrows, intercept}
+import org.scalatest.Tag
 
 import java.nio.file.{Files, Path, Paths}
 import scala.reflect.ClassTag
@@ -99,6 +100,11 @@ object TestHelper {
     ExceptionOutput(caught.getMessage, stdout, stderr)
   }
 
+
+  // Removes console control sequences (e.g. colors) from a string
+  def cleanConsoleControls(str: String): String = 
+    str.replaceAll("(?:(?:\\x{001b}\\[)|\\x{009b})(?:(?:[0-9]{1,3})?(?:(?:;[0-9]{0,3})*)?[A-M|f-m])|\\x{001b}[A-M]", "")
+
   // Code borrowed from https://stackoverflow.com/questions/41642595/scala-file-hashing
   // Compute a hash of a file
   // The output of this function should match the output of running "md5 -q <file>"
@@ -112,34 +118,4 @@ object TestHelper {
     md5.digest.map("%02x".format(_)).mkString
   }
 
-  // Code based on https://stackoverflow.com/questions/29076439/java-8-copy-directory-recursively/34254130#34254130
-  // Copy a folder from source to dest
-  def copyFolder(src: Path, dest: Path): Unit = {
-    val stream = Files.walk(src)
-
-    try {
-      stream.forEachOrdered((sourcePath: Path) => {
-
-        try {
-          val newPath = dest.resolve(src.relativize(sourcePath))
-          if (sourcePath.toFile.isFile) {
-            Files.copy(sourcePath, newPath)
-          } else if (sourcePath.toFile.isDirectory) {
-            newPath.toFile.mkdir()
-          }
-
-        } catch {
-          case e: IOException =>
-            throw new UncheckedIOException(e)
-        }
-
-      })
-
-    } finally {
-      stream.close()
-    }
-  }
-  def copyFolder(src: String, dest: String): Unit = {
-    copyFolder(Paths.get(src), Paths.get(dest))
-  }
 }

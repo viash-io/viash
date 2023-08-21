@@ -24,6 +24,7 @@ import io.viash.schemas._
 
 import java.net.URI
 import io.viash.helpers.Bash
+import io.viash.config.Config
 
 @description("""An executable C# script.
                |When defined in functionality.resources, only the first entry will be executed when running the built component or when running `viash run`.
@@ -44,10 +45,10 @@ case class CSharpScript(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
     val quo = "\"'\"'\""
     
-    val paramsCode = argsAndMeta.map { case (dest, params) =>
+    val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
     val parSet = params.map{ par =>
       // val env_name = par.VIASH_PAR
       val env_name = Bash.getEscapedArgument(par.VIASH_PAR, "@\"'\"'\"", quo, """\"""", """\"\"""")

@@ -55,7 +55,8 @@ case class NativePlatform(
       dest = Some(functionality.name),
       text = Some(BashWrapper.wrapScript(
         executor = executor,
-        functionality = functionality
+        functionality = functionality,
+        config = config
       ))
     )
 

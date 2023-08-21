@@ -23,13 +23,14 @@ import java.net.URI
 import sys.process.{Process, ProcessLogger}
 
 import config.Config
-import helpers.{IO, Exec, SysEnv, Logger, Logging}
+import helpers.{IO, Exec, SysEnv, DependencyResolver, Logger, Logging}
 import helpers.Scala._
 import helpers.status._
 import platforms.Platform
 import project.ViashProject
 import cli.{CLIConf, ViashCommand, DocumentedSubcommand, ViashNs, ViashNsBuild, ViashLogger}
 import exceptions._
+import scala.util.Try
 import org.rogach.scallop._
 import io.viash.helpers.LoggerLevel
 
@@ -70,6 +71,9 @@ object Main extends Logging {
         System.exit(1)
       case e: MalformedInputException =>
         info(s"viash: ${e.getMessage()}")
+        System.exit(1)
+      case e: AbstractDependencyException =>
+        Console.err.println(s"viash: ${e.getMessage()}")
         System.exit(1)
       case ee: ExitException =>
         System.exit(ee.code)
@@ -228,8 +232,9 @@ object Main extends Logging {
         )
       case List(cli.build) =>
         val (config, platform) = readConfig(cli.build, project = proj1)
+        val config2 = singleConfigDependencies(config, platform, cli.build.output.toOption, proj1.rootDir)
         val buildResult = ViashBuild(
-          config = config,
+          config = config2,
           platform = platform.get,
           output = cli.build.output(),
           setup = cli.build.setup.toOption,
@@ -238,8 +243,9 @@ object Main extends Logging {
         if (buildResult.isError) 1 else 0
       case List(cli.test) =>
         val (config, platform) = readConfig(cli.test, project = proj1)
+        val config2 = singleConfigDependencies(config, platform, None, proj1.rootDir)
         ViashTest(
-          config,
+          config2,
           platform = platform.get,
           keepFiles = cli.test.keep.toOption.map(_.toBoolean),
           setupStrategy = cli.test.setup.toOption,
@@ -249,8 +255,9 @@ object Main extends Logging {
         0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
         val configs = readConfigs(cli.namespace.build, project = proj1)
+        val configs2 = namespaceDependencies(configs, proj1.target, proj1.rootDir)
         var buildResults = ViashNamespace.build(
-          configs = configs,
+          configs = configs2,
           target = proj1.target.get,
           setup = cli.namespace.build.setup.toOption,
           push = cli.namespace.build.push(),
@@ -263,8 +270,9 @@ object Main extends Logging {
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.test) =>
         val configs = readConfigs(cli.namespace.test, project = proj1)
+        val configs2 = namespaceDependencies(configs, None, proj1.rootDir)
         val testResults = ViashNamespace.test(
-          configs = configs,
+          configs = configs2,
           parallel = cli.namespace.test.parallel(),
           keepFiles = cli.namespace.test.keep.toOption.map(_.toBoolean),
           tsv = cli.namespace.test.tsv.toOption,
@@ -282,8 +290,9 @@ object Main extends Logging {
           addOptMainScript = false, 
           applyPlatform = cli.namespace.list.platform.isDefined
         )
+        val configs2 = namespaceDependencies(configs, None, proj1.rootDir)
         ViashNamespace.list(
-          configs = configs,
+          configs = configs2,
           format = cli.namespace.list.format(),
           parseArgumentGroups = cli.namespace.list.parse_argument_groups()
         )
@@ -310,8 +319,9 @@ object Main extends Logging {
           addOptMainScript = false,
           applyPlatform = cli.config.view.platform.isDefined
         )
+        val config2 = DependencyResolver.modifyConfig(config, None, proj1.rootDir)
         ViashConfig.view(
-          config, 
+          config2, 
           format = cli.config.view.format(),
           parseArgumentGroups = cli.config.view.parse_argument_groups()
         )
@@ -481,6 +491,50 @@ object Main extends Logging {
       }}
     }
   }
+
+  // Handle dependencies operations for a single config
+  def singleConfigDependencies(config: Config, platform: Option[Platform], output: Option[String], rootDir: Option[Path]): Config = {
+    if (output.isDefined)
+      DependencyResolver.createBuildYaml(output.get)
+
+    handleSingleConfigDependency(config, platform, output, rootDir)
+  }
+
+  // Handle dependency operations for namespaces
+  def namespaceDependencies(configs: List[Either[(Config, Option[Platform]), Status]], target: Option[String], rootDir: Option[Path]): List[Either[(Config, Option[Platform]), Status]] = {
+    if (target.isDefined)
+      DependencyResolver.createBuildYaml(target.get)
+    
+    configs.map{
+      case Left((config: Config, platform: Option[Platform])) => {
+        Try{
+          val validConfigs = configs.flatMap(_.swap.toOption).map(_._1)
+          handleSingleConfigDependency(config, platform, target, rootDir, validConfigs)
+        }.fold(
+          e => e match {
+            case de: AbstractDependencyException =>
+              Console.err.println(e.getMessage)
+              Right(DependencyError)
+            case _ => throw e
+          },
+          c => Left((c, platform))
+        )
+      }
+      case Right(c) => Right(c)
+    }
+  }
+
+  // Actual handling of the dependency logic, to be used for single and namespace configs
+  def handleSingleConfigDependency(config: Config, platform: Option[Platform], output: Option[String], rootDir: Option[Path], namespaceConfigs: List[Config] = Nil) = {
+    val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config, platform.map(_.id))
+    val config1 = DependencyResolver.modifyConfig(config, dependencyPlatformId, rootDir, namespaceConfigs)
+    if (output.isDefined) {
+      DependencyResolver.copyDependencies(config1, output.get, dependencyPlatformId.getOrElse("native"), namespaceConfigs.nonEmpty)
+    } else {
+      config1
+    }
+  }
+
 
   /**
     * Detect the desired Viash version
