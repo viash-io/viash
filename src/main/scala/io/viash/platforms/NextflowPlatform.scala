@@ -29,6 +29,7 @@ import io.circe.{Printer => JsonPrinter, Json, JsonObject}
 import shapeless.syntax.singleton
 import io.viash.schemas._
 import io.viash.helpers.Escaper
+import io.viash.executors.Executor
 
 /**
  * A Platform class for generating Nextflow (DSL2) modules.
@@ -101,7 +102,7 @@ case class NextflowPlatform(
   @description("Specifies the Docker platform id to be used to run Nextflow.")
   @default("docker")
   container: String = "docker"
-) extends Executor {
+) extends Platform with Executor {
   def escapeSingleQuotedString(txt: String): String = {
     Escaper(txt, slash = true, singleQuote = true, newline = true)
   }

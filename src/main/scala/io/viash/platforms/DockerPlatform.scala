@@ -32,6 +32,8 @@ import io.viash.helpers.data_structures._
 import io.viash.config.Info
 import io.viash.schemas._
 import io.viash.helpers.Escaper
+import io.viash.executors.Executor
+import io.viash.containers.Container
 
 @description(
   """Run a Viash component on a Docker backend platform.
@@ -182,7 +184,7 @@ case class DockerPlatform(
   @since("Viash 0.7.4")
   cmd: Option[Either[String, List[String]]] = None
 
-) extends Container {
+) extends Platform with Executor with Container {
   @internalFunctionality
   override val hasSetup = true
 

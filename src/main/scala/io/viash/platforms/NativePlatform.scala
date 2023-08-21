@@ -23,6 +23,7 @@ import io.viash.functionality.resources._
 import io.viash.platforms.requirements._
 import io.viash.wrapper.BashWrapper
 import io.viash.schemas._
+import io.viash.executors.Executor
 
 @description(
   """Running a Viash component on a native platform means that the script will be executed in your current environment.
@@ -40,7 +41,7 @@ case class NativePlatform(
   @default("native")
   id: String = "native",
   `type`: String = "native"
-) extends Executor {
+) extends Platform with Executor {
   def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
     val functionality = config.functionality
     val executor = functionality.mainScript match {

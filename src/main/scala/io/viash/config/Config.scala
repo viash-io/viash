@@ -24,6 +24,8 @@ import io.viash.helpers.{Git, GitInfo, IO, Logging}
 import io.viash.helpers.circe._
 import io.viash.helpers.status._
 import io.viash.helpers.Yaml
+import io.viash.executors.Executor
+import io.viash.containers.Container
 
 import java.net.URI
 import io.viash.functionality.resources._
@@ -118,7 +120,7 @@ case class Config(
   }
 
   def getContainers: List[Container] = platforms.collect{ case c: Container => c }
-  def getExecutors: List[Executor] = platforms.collect{ case e: Executor => e } // should we add an executor for docker if specified? If so, just one or a specific one for each docker platform?
+  def getExecutors: List[Executor] = platforms.collect{ case e: Executor => e }
 }
 
 object Config extends Logging {
