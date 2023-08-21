@@ -50,7 +50,7 @@ object ViashRun extends Logging {
 
       // determine command
       val cmd =
-        Array(Paths.get(dir.toString, fun.name).toString) ++ 
+        Array(Paths.get(dir.toString, config.functionality.name).toString) ++ 
         args ++ 
         Array(cpus.map("---cpus=" + _), memory.map("---memory="+_)).flatMap(a => a)
 
