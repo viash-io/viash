@@ -29,12 +29,12 @@ import io.viash.executors.Executor
 object ViashBuild extends Logging {
   def apply(
     config: Config,
+    executor: Executor,
     platform: Platform,
     output: String,
     setup: Option[String] = None,
     push: Boolean = false
   ): Status = {
-    val executor = Executor.get(platform)
     val resources = executor.generateExecutor(config, testing = false)
 
     // create dir

@@ -32,6 +32,7 @@ import io.viash.platforms.Platform
 import scala.collection.parallel.CollectionConverters._
 import io.viash.helpers.LoggerOutput
 import io.viash.helpers.LoggerLevel
+import io.viash.executors.Executor
 
 object ViashNamespace extends Logging {
 
@@ -65,20 +66,21 @@ object ViashNamespace extends Logging {
   }
 
   def build(
-    configs: List[Either[(Config, Option[Platform]), Status]],
+    configs: List[Either[(Config, Option[Executor], Option[Platform]), Status]],
     target: String,
     setup: Option[String] = None,
     push: Boolean = false,
     parallel: Boolean = false,
     flatten: Boolean = false
-  ): List[Either[(Config, Option[Platform]), Status]] = {
+  ): List[Either[(Config, Option[Executor], Option[Platform]), Status]] = {
     val configs2 = MaybeParList(configs, parallel)
 
     val results = configs2.map { config =>
       config match {
         case Right(_) => config
-        case Left((conf, None)) => throw new RuntimeException("This should not occur.")
-        case Left((conf, Some(platform))) =>
+        case Left((conf, _, None)) => throw new RuntimeException("This should not occur.")
+        case Left((conf, None, _)) => throw new RuntimeException("This should not occur.")
+        case Left((conf, Some(executor), Some(platform))) =>
           val funName = conf.functionality.name
           val ns = conf.functionality.namespace
           val platformId = platform.id
@@ -92,6 +94,7 @@ object ViashNamespace extends Logging {
           infoOut(s"Exporting $funName$nsStr =$platformId=> $out")
           val status = ViashBuild(
             config = conf,
+            executor = executor,
             platform = platform,
             output = out,
             setup = setup,
@@ -106,7 +109,7 @@ object ViashNamespace extends Logging {
   }
 
   def test(
-    configs: List[Either[(Config, Option[Platform]), Status]],
+    configs: List[Either[(Config, Option[Executor], Option[Platform]), Status]],
     parallel: Boolean = false,
     setup: Option[String] = None,
     keepFiles: Option[Boolean] = None,
@@ -118,7 +121,7 @@ object ViashNamespace extends Logging {
     val configs1 = configs.filter{tup => tup match {
       // remove nextflow because unit testing nextflow modules
       // is not yet supported
-      case Left((_, Some(pl))) => pl.`type` != "nextflow"
+      case Left((_, _, Some(pl))) => pl.`type` != "nextflow"
       case _ => true
     }}
     val configs2 = MaybeParList(configs1, parallel)
@@ -167,8 +170,9 @@ object ViashNamespace extends Logging {
       val results = configs2.map { x =>
         x match {
           case Right(status) => Right(status)
-          case Left((conf, None)) => throw new RuntimeException("This should not occur")
-          case Left((conf, Some(platform))) =>
+          case Left((conf, _, None)) => throw new RuntimeException("This should not occur")
+          case Left((conf, None, _)) => throw new RuntimeException("This should not occur")
+          case Left((conf, Some(executor), Some(platform))) =>
             // get attributes
             val namespace = conf.functionality.namespace.getOrElse("")
             val funName = conf.functionality.name
@@ -183,6 +187,7 @@ object ViashNamespace extends Logging {
             val ManyTestOutput(setupRes, testRes) = try {
               ViashTest(
                 config = conf,
+                executor = executor,
                 platform = platform,
                 setupStrategy = setup,
                 keepFiles = keepFiles,
@@ -276,7 +281,7 @@ object ViashNamespace extends Logging {
   }
 
   def list(
-    configs: List[Either[(Config, Option[Platform]), Status]], 
+    configs: List[Either[(Config, Option[Executor], Option[Platform]), Status]], 
     format: String = "yaml", 
     parseArgumentGroups: Boolean
   ): Unit = {
@@ -296,13 +301,13 @@ object ViashNamespace extends Logging {
   }
 
   def exec(
-    configs: List[Either[(Config, Option[Platform]), Status]],
+    configs: List[Either[(Config, Option[Executor], Option[Platform]), Status]],
     command: String, 
     dryrun: Boolean, 
     parallel: Boolean
   ): Unit = {
     val configData = configs.flatMap(_.left.toOption).map{
-      case (conf, plat) => 
+      case (conf, executor, plat) => 
         NsExecData(conf.info.get.config, conf, plat)
     }
 

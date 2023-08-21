@@ -21,7 +21,6 @@ import java.nio.file.Paths
 
 import io.viash.config._
 import io.viash.functionality.arguments.{FileArgument, Output}
-import io.viash.platforms.Platform
 import io.viash.helpers.{IO, Logging}
 import io.viash.helpers.data_structures._
 
@@ -31,13 +30,12 @@ import io.viash.executors.Executor
 object ViashRun extends Logging {
   def apply(
     config: Config,
-    platform: Platform,
+    executor: Executor,
     args: Seq[String],
     keepFiles: Option[Boolean],
     cpus: Option[Int],
     memory: Option[String]
   ): Int = {
-    val executor = Executor.get(platform)
     val resources = executor.generateExecutor(config, testing = false)
     val dir = IO.makeTemp("viash_" + config.functionality.name)
 

@@ -15,26 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.platforms
+package io.viash.executors
 
 import io.viash.config.Config
-import io.viash.functionality.Functionality
-import io.viash.functionality.resources._
-import io.viash.platforms.requirements._
-import io.viash.helpers.data_structures._
+import io.viash.functionality.resources.BashScript
 import io.viash.wrapper.BashWrapper
-import io.viash.functionality.arguments._
-import java.nio.file.Path
-import java.nio.file.Paths
-import io.viash.executors.Executor
-import io.viash.executors.ExecutorResources
+import io.viash.executors.{Executor, ExecutorResources}
 
-// A platform solely for running `viash config inject` with.
-case class DebugPlatform(
+// An executor solely for running `viash config inject` with.
+case class DebugExecutor(
   id: String = "debug",
   `type`: String = "debug",
   path: String
-) extends Platform with Executor {
+) extends Executor {
   def generateExecutor(config: Config, testing: Boolean): ExecutorResources = {
     val functionality = config.functionality
     if (functionality.mainScript.isEmpty) {

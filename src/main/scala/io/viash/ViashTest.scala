@@ -60,6 +60,7 @@ object ViashTest extends Logging {
     */
   def apply(
     config: Config,
+    executor: Executor,
     platform: Platform,
     keepFiles: Option[Boolean] = None,
     quiet: Boolean = false,
@@ -93,6 +94,7 @@ object ViashTest extends Logging {
     // run tests
     val ManyTestOutput(setupRes, results) = ViashTest.runTests(
       config = config3,
+      executor = executor,
       platform = platform,
       dir = dir,
       verbose = !quiet,
@@ -142,6 +144,7 @@ object ViashTest extends Logging {
 
   def runTests(
     config: Config,
+    executor: Executor,
     platform: Platform,
     dir: Path, 
     verbose: Boolean = true, 
@@ -161,7 +164,6 @@ object ViashTest extends Logging {
         )
       )
     )
-    val executor = Executor.get(platform)
     val resources = executor.generateExecutor(configWithReqs, testing = true)
     val buildDir = dir.resolve("build_executable")
     Files.createDirectories(buildDir)
