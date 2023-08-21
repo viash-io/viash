@@ -67,4 +67,7 @@ case class GitRepository(
 
   def getCheckoutUri(): String = uri
 
+  // Strip the protocol and user credentials
+  val storePath = uri.replaceFirst("^.+://", "").replaceFirst(".+@", "")
+
 }
