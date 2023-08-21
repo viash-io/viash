@@ -26,14 +26,24 @@ import io.viash.wrapper.BashWrapper
 import io.viash.functionality.arguments._
 import java.nio.file.Path
 import java.nio.file.Paths
+import io.viash.executors.Executor
+import io.viash.executors.ExecutorResources
 
 // A platform solely for running `viash config inject` with.
 case class DebugPlatform(
   id: String = "debug",
   `type`: String = "debug",
   path: String
-) extends Platform {
+) extends Platform with Executor {
+  // TODO eliminate usage of modifyFunctionality
   def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
+    val resources = generateExecutor(config, testing)
+    config.functionality.copy(
+      resources = resources.resources
+    )    
+  }
+
+  def generateExecutor(config: Config, testing: Boolean): ExecutorResources = {
     val functionality = config.functionality
     if (functionality.mainScript.isEmpty) {
       throw new RuntimeException("Can't generate a debug platform when there is no script.")
@@ -51,8 +61,9 @@ case class DebugPlatform(
       dest = Some(functionality.name),
       text = Some(scriptSrc)
     )
-    config.functionality.copy(
-      resources = List(bashScript)
+    ExecutorResources(
+      Some(bashScript),
+      Nil
     )
   }
 }
