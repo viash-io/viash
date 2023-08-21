@@ -129,7 +129,7 @@ case class NextflowPlatform(
   }
 
   def containerDirective(config: Config): Option[DockerImageInfo] = {
-    val plat = config.platforms.find(p => p.id == container)
+    val plat = config.getContainers.find(p => p.id == container)
     plat match {
       case Some(p: DockerPlatform) => 
         Some(Docker.getImageInfo(
