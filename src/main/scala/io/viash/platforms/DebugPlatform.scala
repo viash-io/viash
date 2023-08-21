@@ -35,14 +35,6 @@ case class DebugPlatform(
   `type`: String = "debug",
   path: String
 ) extends Platform with Executor {
-  // TODO eliminate usage of modifyFunctionality
-  def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
-    val resources = generateExecutor(config, testing)
-    config.functionality.copy(
-      resources = resources.resources
-    )    
-  }
-
   def generateExecutor(config: Config, testing: Boolean): ExecutorResources = {
     val functionality = config.functionality
     if (functionality.mainScript.isEmpty) {

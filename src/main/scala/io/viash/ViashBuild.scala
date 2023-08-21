@@ -24,6 +24,7 @@ import io.viash.helpers.status._
 import config._
 import platforms.Platform
 import helpers.{IO, Logging}
+import io.viash.executors.Executor
 
 object ViashBuild extends Logging {
   def apply(
@@ -33,20 +34,21 @@ object ViashBuild extends Logging {
     setup: Option[String] = None,
     push: Boolean = false
   ): Status = {
-    val fun = platform.modifyFunctionality(config, testing = false)
+    val executor = Executor.get(platform)
+    val resources = executor.generateExecutor(config, testing = false)
 
     // create dir
     val dir = Paths.get(output)
     Files.createDirectories(dir)
 
     // get the path of where the executable will be written to
-    val exec_path = fun.mainScript.map(scr => Paths.get(output, scr.resourcePath).toString)
+    val exec_path = resources.mainScript.map(scr => Paths.get(output, scr.resourcePath).toString)
 
     // convert config to a yaml wrapped inside a PlainFile
     val configYaml = ConfigMeta.toMetaFile(config, Some(dir))
 
     // write resources to output directory
-    IO.writeResources(configYaml :: fun.resources, dir)
+    IO.writeResources(configYaml :: resources.resources, dir)
 
     // if '--setup <strat>' was passed, run './executable ---setup <strat>'
     val setupResult =

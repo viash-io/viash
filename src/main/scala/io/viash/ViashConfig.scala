@@ -28,6 +28,7 @@ import io.viash.helpers.circe._
 import io.viash.platforms.DebugPlatform
 import io.viash.config.ConfigMeta
 import io.viash.exceptions.ExitException
+import io.viash.executors.Executor
 
 object ViashConfig extends Logging{
 
@@ -93,14 +94,14 @@ object ViashConfig extends Logging{
 
     // debugFun
     val debugPlatform = DebugPlatform(path = uri.getPath())
-    val debugFun = debugPlatform.modifyFunctionality(config, false)
+    val resources = debugPlatform.generateExecutor(config, testing = false)
 
     // create temporary directory
     val dir = IO.makeTemp("viash_inject_" + config.functionality.name)
 
     // build regular executable
     Files.createDirectories(dir)
-    IO.writeResources(debugFun.resources, dir)
+    IO.writeResources(resources.resources, dir)
 
     // run command, collect output
     val executable = Paths.get(dir.toString, fun.name).toString

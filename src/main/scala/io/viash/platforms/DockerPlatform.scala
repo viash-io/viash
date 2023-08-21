@@ -200,14 +200,6 @@ case class DockerPlatform(
     }
   }
 
-  // TODO eliminate usage of modifyFunctionality
-  def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
-    val resources = generateExecutor(config, testing)
-    config.functionality.copy(
-      resources = resources.resources
-    )
-  }
-
   def generateExecutor(config: Config, testing: Boolean): ExecutorResources = {
     val functionality = config.functionality
     // collect docker args
