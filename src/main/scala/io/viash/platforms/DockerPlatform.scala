@@ -245,17 +245,12 @@ case class DockerPlatform(
     val workdirStr = workdir.map("--workdir " + _ + " ").getOrElse("")
     val executor = s"""eval docker run $entrypointStr$workdirStr$dockerArgs${dm.extraParams} $effectiveID"""
 
-    // add extra arguments to the functionality file for each of the volumes
-    val fun2 = functionality.copy(
-      arguments = functionality.arguments ::: dm.inputs
-    )
-
     // create new bash script
     val bashScript = BashScript(
       dest = Some(functionality.name),
       text = Some(BashWrapper.wrapScript(
         executor = executor,
-        functionality = fun2,
+        functionality = functionality,
         mods = dm,
         config = config
       ))
@@ -263,7 +258,7 @@ case class DockerPlatform(
 
     ExecutorResources(
       Some(bashScript),
-      fun2.additionalResources
+      functionality.additionalResources
     )
   }
 
