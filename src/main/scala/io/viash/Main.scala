@@ -233,24 +233,24 @@ object Main extends Logging {
           memory = cli.run.memory.toOption
         )
       case List(cli.build) =>
-        val AppliedConfig(config, executor, platform) = readConfig(cli.build, project = proj1)
-        val config2 = singleConfigDependencies(config, platform, cli.build.output.toOption, proj1.rootDir)
+        val config = readConfig(cli.build, project = proj1)
+        val config2 = singleConfigDependencies(config, cli.build.output.toOption, proj1.rootDir)
         val buildResult = ViashBuild(
-          config = config2,
-          executor = executor.get,
-          platform = platform.get,
+          config = config2.config,
+          executor = config2.executor.get,
+          platform = config2.platform.get,
           output = cli.build.output(),
           setup = cli.build.setup.toOption,
           push = cli.build.push()
         )
         if (buildResult.isError) 1 else 0
       case List(cli.test) =>
-        val AppliedConfig(config, executor, platform) = readConfig(cli.test, project = proj1)
-        val config2 = singleConfigDependencies(config, platform, None, proj1.rootDir)
+        val config = readConfig(cli.test, project = proj1)
+        val config2 = singleConfigDependencies(config, None, proj1.rootDir)
         ViashTest(
-          config2,
-          executor = executor.get,
-          platform = platform.get,
+          config2.config,
+          executor = config2.executor.get,
+          platform = config2.platform.get,
           keepFiles = cli.test.keep.toOption.map(_.toBoolean),
           setupStrategy = cli.test.setup.toOption,
           cpus = cli.test.cpus.toOption,
@@ -498,11 +498,13 @@ object Main extends Logging {
   }
 
   // Handle dependencies operations for a single config
-  def singleConfigDependencies(config: Config, platform: Option[Platform], output: Option[String], rootDir: Option[Path]): Config = {
+  def singleConfigDependencies(appliedConfig: AppliedConfig, output: Option[String], rootDir: Option[Path]): AppliedConfig = {
     if (output.isDefined)
       DependencyResolver.createBuildYaml(output.get)
 
-    handleSingleConfigDependency(config, platform, output, rootDir)
+    appliedConfig.copy(
+      config = handleSingleConfigDependency(appliedConfig.config, appliedConfig.platform, output, rootDir)
+    )
   }
 
   // Handle dependency operations for namespaces
@@ -511,10 +513,10 @@ object Main extends Logging {
       DependencyResolver.createBuildYaml(target.get)
     
     configs.map{
-      case Left(AppliedConfig(config: Config, executor: Option[Executor], platform: Option[Platform])) => {
+      case Left(appliedConfig) => {
         Try{
           val validConfigs = configs.flatMap(_.swap.toOption).map(_.config)
-          handleSingleConfigDependency(config, platform, target, rootDir, validConfigs)
+          handleSingleConfigDependency(appliedConfig.config, appliedConfig.platform, target, rootDir, validConfigs)
         }.fold(
           e => e match {
             case de: AbstractDependencyException =>
@@ -522,7 +524,7 @@ object Main extends Logging {
               Right(DependencyError)
             case _ => throw e
           },
-          c => Left(AppliedConfig(c, executor, platform))
+          c => Left(appliedConfig.copy(config = c))
         )
       }
       case Right(c) => Right(c)

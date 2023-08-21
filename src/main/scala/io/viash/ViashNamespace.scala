@@ -79,8 +79,6 @@ object ViashNamespace extends Logging {
     val results = configs2.map { config =>
       config match {
         case Right(_) => config
-        case Left(AppliedConfig(conf, _, None)) => throw new RuntimeException("This should not occur.")
-        case Left(AppliedConfig(conf, None, _)) => throw new RuntimeException("This should not occur.")
         case Left(AppliedConfig(conf, Some(executor), Some(platform))) =>
           val funName = conf.functionality.name
           val ns = conf.functionality.namespace
@@ -102,6 +100,7 @@ object ViashNamespace extends Logging {
             push = push
           )
           Right(status)
+        case Left(_) => throw new RuntimeException("This should not occur.") 
         }
       }
 
@@ -171,8 +170,6 @@ object ViashNamespace extends Logging {
       val results = configs2.map { x =>
         x match {
           case Right(status) => Right(status)
-          case Left(AppliedConfig(conf, _, None)) => throw new RuntimeException("This should not occur")
-          case Left(AppliedConfig(conf, None, _)) => throw new RuntimeException("This should not occur")
           case Left(AppliedConfig(conf, Some(executor), Some(platform))) =>
             // get attributes
             val namespace = conf.functionality.namespace.getOrElse("")
@@ -242,6 +239,7 @@ object ViashNamespace extends Logging {
 
             // return output
             Left((conf, ManyTestOutput(setupRes, testRes)))
+          case Left(_) => throw new RuntimeException("This should not occur.") 
           }
 
       }.toList
