@@ -34,6 +34,7 @@ import io.viash.schemas._
 import io.viash.helpers.Escaper
 import io.viash.executors.Executor
 import io.viash.containers.Container
+import io.viash.executors.ExecutorResources
 
 @description(
   """Run a Viash component on a Docker backend platform.
@@ -255,6 +256,16 @@ case class DockerPlatform(
 
     fun2.copy(
       resources = bashScript :: fun2.additionalResources
+    )
+  }
+
+  // Placeholder until code is rewritten
+  // TODO: rewrite code
+  def generateExecutor(config: Config, testing: Boolean): ExecutorResources = {
+    val fun = modifyFunctionality(config, testing)
+    ExecutorResources(
+      fun.mainScript,
+      fun.additionalResources
     )
   }
 

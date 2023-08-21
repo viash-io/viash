@@ -29,7 +29,7 @@ import io.circe.{Printer => JsonPrinter, Json, JsonObject}
 import shapeless.syntax.singleton
 import io.viash.schemas._
 import io.viash.helpers.Escaper
-import io.viash.executors.Executor
+import io.viash.executors.{Executor, ExecutorResources}
 
 /**
  * A Platform class for generating Nextflow (DSL2) modules.
@@ -125,6 +125,16 @@ case class NextflowPlatform(
 
     config.functionality.copy(
       resources = mainFile :: nextflowConfigFile :: otherResources
+    )
+  }
+
+  // Placeholder until code is rewritten
+  // TODO: rewrite code
+  def generateExecutor(config: Config, testing: Boolean): ExecutorResources = {
+    val fun = modifyFunctionality(config, testing)
+    ExecutorResources(
+      fun.mainScript,
+      fun.additionalResources
     )
   }
 
