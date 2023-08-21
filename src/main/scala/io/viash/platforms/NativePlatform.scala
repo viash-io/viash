@@ -42,7 +42,16 @@ case class NativePlatform(
   id: String = "native",
   `type`: String = "native"
 ) extends Platform with Executor {
+
+  // TODO eliminate usage of modifyFunctionality
   def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
+    val resources = generateExecutor(config, testing)
+    config.functionality.copy(
+      resources = resources.resources
+    )    
+  }
+
+  def generateExecutor(config: Config, testing: Boolean): ExecutorResources = {
     val functionality = config.functionality
     val executor = functionality.mainScript match {
       case None => "eval"
@@ -60,18 +69,9 @@ case class NativePlatform(
       ))
     )
 
-    functionality.copy(
-      resources = bashScript :: functionality.additionalResources
-    )
-  }
-
-  // Placeholder until code is rewritten
-  // TODO: rewrite code
-  def generateExecutor(config: Config, testing: Boolean): ExecutorResources = {
-    val fun = modifyFunctionality(config, testing)
     ExecutorResources(
-      fun.mainScript,
-      fun.additionalResources
+      Some(bashScript),
+      functionality.additionalResources
     )
   }
 }

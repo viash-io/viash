@@ -107,7 +107,15 @@ case class NextflowPlatform(
     Escaper(txt, slash = true, singleQuote = true, newline = true)
   }
 
+  // TODO eliminate usage of modifyFunctionality
   def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
+    val resources = generateExecutor(config, testing)
+    config.functionality.copy(
+      resources = resources.resources
+    )
+  }
+
+  def generateExecutor(config: Config, testing: Boolean): ExecutorResources = {
     val condir = containerDirective(config)
 
     // create main.nf file
@@ -123,18 +131,9 @@ case class NextflowPlatform(
     // remove main
     val otherResources = config.functionality.additionalResources
 
-    config.functionality.copy(
-      resources = mainFile :: nextflowConfigFile :: otherResources
-    )
-  }
-
-  // Placeholder until code is rewritten
-  // TODO: rewrite code
-  def generateExecutor(config: Config, testing: Boolean): ExecutorResources = {
-    val fun = modifyFunctionality(config, testing)
     ExecutorResources(
-      fun.mainScript,
-      fun.additionalResources
+      None,
+      mainFile :: nextflowConfigFile :: otherResources
     )
   }
 
