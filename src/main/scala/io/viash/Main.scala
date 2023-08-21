@@ -34,6 +34,7 @@ import scala.util.Try
 import org.rogach.scallop._
 import io.viash.helpers.LoggerLevel
 import io.viash.executors.Executor
+import io.viash.config.AppliedConfig
 
 object Main extends Logging {
   private val pkg = getClass.getPackage
@@ -222,7 +223,7 @@ object Main extends Logging {
     // process commands
     cli.subcommands match {
       case List(cli.run) =>
-        val (config, executor, platform) = readConfig(cli.run, project = proj1)
+        val AppliedConfig(config, executor, platform) = readConfig(cli.run, project = proj1)
         ViashRun(
           config = config,
           executor = executor.get, 
@@ -232,7 +233,7 @@ object Main extends Logging {
           memory = cli.run.memory.toOption
         )
       case List(cli.build) =>
-        val (config, executor, platform) = readConfig(cli.build, project = proj1)
+        val AppliedConfig(config, executor, platform) = readConfig(cli.build, project = proj1)
         val config2 = singleConfigDependencies(config, platform, cli.build.output.toOption, proj1.rootDir)
         val buildResult = ViashBuild(
           config = config2,
@@ -244,7 +245,7 @@ object Main extends Logging {
         )
         if (buildResult.isError) 1 else 0
       case List(cli.test) =>
-        val (config, executor, platform) = readConfig(cli.test, project = proj1)
+        val AppliedConfig(config, executor, platform) = readConfig(cli.test, project = proj1)
         val config2 = singleConfigDependencies(config, platform, None, proj1.rootDir)
         ViashTest(
           config2,
@@ -316,13 +317,13 @@ object Main extends Logging {
         val errors = configs.flatMap(_.toOption).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.config, cli.config.view) =>
-        val (config, _, _) = readConfig(
+        val appliedConfig = readConfig(
           cli.config.view,
           project = proj1,
           addOptMainScript = false,
           applyPlatform = cli.config.view.platform.isDefined
         )
-        val config2 = DependencyResolver.modifyConfig(config, None, proj1.rootDir)
+        val config2 = DependencyResolver.modifyConfig(appliedConfig.config, None, proj1.rootDir)
         ViashConfig.view(
           config2, 
           format = cli.config.view.format(),
@@ -330,13 +331,13 @@ object Main extends Logging {
         )
         0
       case List(cli.config, cli.config.inject) =>
-        val (config, _, _) = readConfig(
+        val appliedConfig = readConfig(
           cli.config.inject,
           project = proj1,
           addOptMainScript = false,
           applyPlatform = false
         )
-        ViashConfig.inject(config)
+        ViashConfig.inject(appliedConfig.config)
         0
       case List(cli.export, cli.export.cli_schema) =>
         val output = cli.export.cli_schema.output.toOption.map(Paths.get(_))
@@ -383,7 +384,7 @@ object Main extends Logging {
     config: Config, 
     platformStr: Option[String],
     targetDir: Option[String]
-  ): (Config, Option[Executor], Option[Platform]) = {
+  ): AppliedConfig = {
     // add platformStr to the info object
     val conf1 = config.copy(
       info = config.info.map{_.copy(
@@ -406,7 +407,7 @@ object Main extends Logging {
     val plat = conf1.findPlatform(platformStr)
     val executor = Executor.get(plat)
 
-    (conf1, Some(executor), Some(plat))
+    AppliedConfig(conf1, Some(executor), Some(plat))
   }
 
   def readConfig(
@@ -414,7 +415,7 @@ object Main extends Logging {
     project: ViashProject,
     addOptMainScript: Boolean = true,
     applyPlatform: Boolean = true
-  ): (Config, Option[Executor], Option[Platform]) = {
+  ): AppliedConfig = {
     
     val config = Config.read(
       configPath = subcommand.config(),
@@ -429,7 +430,7 @@ object Main extends Logging {
         targetDir = project.target
       )
     } else {
-      (config, None, None)
+      AppliedConfig(config, None, None)
     }
   }
   
@@ -438,7 +439,7 @@ object Main extends Logging {
     project: ViashProject,
     addOptMainScript: Boolean = true,
     applyPlatform: Boolean = true
-  ): List[Either[(Config, Option[Executor], Option[Platform]), Status]] = {
+  ): List[Either[AppliedConfig, Status]] = {
     val source = project.source.get
     val query = subcommand.query.toOption
     val queryNamespace = subcommand.query_namespace.toOption
@@ -491,7 +492,7 @@ object Main extends Logging {
     } else {
       configs.map{c => c match {
         case Right(status) => Right(status)
-        case Left(conf) => Left((conf, None, None))
+        case Left(conf) => Left(AppliedConfig(conf, None, None))
       }}
     }
   }
@@ -505,14 +506,14 @@ object Main extends Logging {
   }
 
   // Handle dependency operations for namespaces
-  def namespaceDependencies(configs: List[Either[(Config, Option[Executor], Option[Platform]), Status]], target: Option[String], rootDir: Option[Path]): List[Either[(Config, Option[Executor], Option[Platform]), Status]] = {
+  def namespaceDependencies(configs: List[Either[AppliedConfig, Status]], target: Option[String], rootDir: Option[Path]): List[Either[AppliedConfig, Status]] = {
     if (target.isDefined)
       DependencyResolver.createBuildYaml(target.get)
     
     configs.map{
-      case Left((config: Config, executor: Option[Executor], platform: Option[Platform])) => {
+      case Left(AppliedConfig(config: Config, executor: Option[Executor], platform: Option[Platform])) => {
         Try{
-          val validConfigs = configs.flatMap(_.swap.toOption).map(_._1)
+          val validConfigs = configs.flatMap(_.swap.toOption).map(_.config)
           handleSingleConfigDependency(config, platform, target, rootDir, validConfigs)
         }.fold(
           e => e match {
@@ -521,7 +522,7 @@ object Main extends Logging {
               Right(DependencyError)
             case _ => throw e
           },
-          c => Left((c, executor, platform))
+          c => Left(AppliedConfig(c, executor, platform))
         )
       }
       case Right(c) => Right(c)

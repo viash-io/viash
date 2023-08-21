@@ -33,6 +33,7 @@ import scala.collection.parallel.CollectionConverters._
 import io.viash.helpers.LoggerOutput
 import io.viash.helpers.LoggerLevel
 import io.viash.executors.Executor
+import io.viash.config.AppliedConfig
 
 object ViashNamespace extends Logging {
 
@@ -66,21 +67,21 @@ object ViashNamespace extends Logging {
   }
 
   def build(
-    configs: List[Either[(Config, Option[Executor], Option[Platform]), Status]],
+    configs: List[Either[AppliedConfig, Status]],
     target: String,
     setup: Option[String] = None,
     push: Boolean = false,
     parallel: Boolean = false,
     flatten: Boolean = false
-  ): List[Either[(Config, Option[Executor], Option[Platform]), Status]] = {
+  ): List[Either[AppliedConfig, Status]] = {
     val configs2 = MaybeParList(configs, parallel)
 
     val results = configs2.map { config =>
       config match {
         case Right(_) => config
-        case Left((conf, _, None)) => throw new RuntimeException("This should not occur.")
-        case Left((conf, None, _)) => throw new RuntimeException("This should not occur.")
-        case Left((conf, Some(executor), Some(platform))) =>
+        case Left(AppliedConfig(conf, _, None)) => throw new RuntimeException("This should not occur.")
+        case Left(AppliedConfig(conf, None, _)) => throw new RuntimeException("This should not occur.")
+        case Left(AppliedConfig(conf, Some(executor), Some(platform))) =>
           val funName = conf.functionality.name
           val ns = conf.functionality.namespace
           val platformId = platform.id
@@ -109,7 +110,7 @@ object ViashNamespace extends Logging {
   }
 
   def test(
-    configs: List[Either[(Config, Option[Executor], Option[Platform]), Status]],
+    configs: List[Either[AppliedConfig, Status]],
     parallel: Boolean = false,
     setup: Option[String] = None,
     keepFiles: Option[Boolean] = None,
@@ -121,7 +122,7 @@ object ViashNamespace extends Logging {
     val configs1 = configs.filter{tup => tup match {
       // remove nextflow because unit testing nextflow modules
       // is not yet supported
-      case Left((_, _, Some(pl))) => pl.`type` != "nextflow"
+      case Left(AppliedConfig(_, _, Some(pl))) => pl.`type` != "nextflow"
       case _ => true
     }}
     val configs2 = MaybeParList(configs1, parallel)
@@ -170,9 +171,9 @@ object ViashNamespace extends Logging {
       val results = configs2.map { x =>
         x match {
           case Right(status) => Right(status)
-          case Left((conf, _, None)) => throw new RuntimeException("This should not occur")
-          case Left((conf, None, _)) => throw new RuntimeException("This should not occur")
-          case Left((conf, Some(executor), Some(platform))) =>
+          case Left(AppliedConfig(conf, _, None)) => throw new RuntimeException("This should not occur")
+          case Left(AppliedConfig(conf, None, _)) => throw new RuntimeException("This should not occur")
+          case Left(AppliedConfig(conf, Some(executor), Some(platform))) =>
             // get attributes
             val namespace = conf.functionality.namespace.getOrElse("")
             val funName = conf.functionality.name
@@ -281,11 +282,11 @@ object ViashNamespace extends Logging {
   }
 
   def list(
-    configs: List[Either[(Config, Option[Executor], Option[Platform]), Status]], 
+    configs: List[Either[AppliedConfig, Status]], 
     format: String = "yaml", 
     parseArgumentGroups: Boolean
   ): Unit = {
-    val configs2 = configs.flatMap(_.left.toOption).map(_._1)
+    val configs2 = configs.flatMap(_.left.toOption).map(_.config)
     // val configs2 = configs.flatMap(_.left.toOption).flatMap{
     //   case (config, Some(platform)) =>
     //     if (config.platforms.exists(_.id == platform.id)) {
@@ -301,13 +302,13 @@ object ViashNamespace extends Logging {
   }
 
   def exec(
-    configs: List[Either[(Config, Option[Executor], Option[Platform]), Status]],
+    configs: List[Either[AppliedConfig, Status]],
     command: String, 
     dryrun: Boolean, 
     parallel: Boolean
   ): Unit = {
     val configData = configs.flatMap(_.left.toOption).map{
-      case (conf, executor, plat) => 
+      case AppliedConfig(conf, executor, plat) => 
         NsExecData(conf.info.get.config, conf, plat)
     }
 
