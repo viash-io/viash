@@ -455,7 +455,6 @@ case class DockerPlatform(
       s"""
          |${Bash.ViashAbsolutePath}
          |${Bash.ViashAutodetectMount}
-         |${Bash.ViashExtractFlags}
          |# initialise variables
          |VIASH_EXTRA_MOUNTS=()""".stripMargin
 

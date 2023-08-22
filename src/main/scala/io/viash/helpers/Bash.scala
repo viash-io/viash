@@ -27,7 +27,6 @@ object Bash {
   }
 
   lazy val ViashQuote: String = readUtils("ViashQuote")
-  lazy val ViashExtractFlags: String = readUtils("ViashExtractFlags")
   lazy val ViashRemoveFlags: String = readUtils("ViashRemoveFlags")
   lazy val ViashAbsolutePath: String = readUtils("ViashAbsolutePath")
   lazy val ViashAutodetectMount: String = readUtils("ViashAutodetectMount")
