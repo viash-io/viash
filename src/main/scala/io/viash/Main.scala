@@ -35,6 +35,7 @@ import org.rogach.scallop._
 import io.viash.helpers.LoggerLevel
 import io.viash.executors.Executor
 import io.viash.config.AppliedConfig
+import io.viash.functionality.Functionality
 
 object Main extends Logging {
   private val pkg = getClass.getPackage
@@ -264,7 +265,7 @@ object Main extends Logging {
           flatten = cli.namespace.build.flatten()
         )
         val errors = buildResults
-          .map(r => r.fold(fa => Success, fb => fb))
+          .map(_.status.getOrElse(Success))
           .count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.test) =>
@@ -280,7 +281,7 @@ object Main extends Logging {
           memory = cli.namespace.test.memory.toOption,
           setup = cli.namespace.test.setup.toOption,
         )
-        val errors = testResults.flatMap(_.toOption).count(_.isError)
+        val errors = testResults.map(_._1).flatMap(_.status).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.list) =>
         val configs = readConfigs(
@@ -295,7 +296,7 @@ object Main extends Logging {
           format = cli.namespace.list.format(),
           parseArgumentGroups = cli.namespace.list.parse_argument_groups()
         )
-        val errors = configs.flatMap(_.toOption).count(_.isError)
+        val errors = configs.flatMap(_.status).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.exec) =>
         val configs = readConfigs(
@@ -309,7 +310,7 @@ object Main extends Logging {
           dryrun = cli.namespace.exec.dryrun(),
           parallel = cli.namespace.exec.parallel()
         )
-        val errors = configs.flatMap(_.toOption).count(_.isError)
+        val errors = configs.flatMap(_.status).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.config, cli.config.view) =>
         val config = readConfig(
@@ -402,7 +403,7 @@ object Main extends Logging {
     val plat = conf1.findPlatform(platformStr)
     val executor = Executor.get(plat)
 
-    AppliedConfig(conf1, Some(executor), Some(plat))
+    AppliedConfig(conf1, Some(executor), Some(plat), None)
   }
 
   def readConfig(
@@ -425,7 +426,7 @@ object Main extends Logging {
         targetDir = project.target
       )
     } else {
-      AppliedConfig(config, None, None)
+      AppliedConfig(config, None, None, None)
     }
   }
   
@@ -434,7 +435,7 @@ object Main extends Logging {
     project: ViashProject,
     addOptMainScript: Boolean = true,
     applyPlatform: Boolean = true
-  ): List[Either[AppliedConfig, Status]] = {
+  ): List[AppliedConfig] = {
     val source = project.source.get
     val query = subcommand.query.toOption
     val queryNamespace = subcommand.query_namespace.toOption
@@ -458,7 +459,7 @@ object Main extends Logging {
 
       configs.flatMap{config => config match {
         // passthrough statuses
-        case Right(stat) => List(Right(stat))
+        case Right(stat) => List(AppliedConfig(Config(Functionality("failed")), None, None, Some(stat)))
         case Left(conf1) =>
           val platformStrs = 
             if (platformStrVal.contains(":") || (new File(platformStrVal)).exists) {
@@ -477,17 +478,17 @@ object Main extends Logging {
               }
             }
           platformStrs.map{ platStr =>
-            Left(processConfigWithPlatform(
+            processConfigWithPlatform(
               config = conf1,
               platformStr = platStr,
               targetDir = project.target
-            ))
+            )
           }
         }}
     } else {
       configs.map{c => c match {
-        case Right(status) => Right(status)
-        case Left(conf) => Left(AppliedConfig(conf, None, None))
+        case Right(status) => AppliedConfig(Config(Functionality("failed")), None, None, Some(status))
+        case Left(conf) => AppliedConfig(conf, None, None, None)
       }}
     }
   }
@@ -501,26 +502,26 @@ object Main extends Logging {
   }
 
   // Handle dependency operations for namespaces
-  def namespaceDependencies(configs: List[Either[AppliedConfig, Status]], target: Option[String], rootDir: Option[Path]): List[Either[AppliedConfig, Status]] = {
+  def namespaceDependencies(configs: List[AppliedConfig], target: Option[String], rootDir: Option[Path]): List[AppliedConfig] = {
     if (target.isDefined)
       DependencyResolver.createBuildYaml(target.get)
     
     configs.map{
-      case Left(appliedConfig) => {
+      case ac if ac.status.isDefined => ac
+      case appliedConfig => {
         Try{
-          val validConfigs = configs.flatMap(_.swap.toOption).map(_.config)
+          val validConfigs = configs.map(_.config)
           handleSingleConfigDependency(appliedConfig, target, rootDir, validConfigs)
         }.fold(
           e => e match {
             case de: AbstractDependencyException =>
               info(e.getMessage)
-              Right(DependencyError)
+              appliedConfig.setStatus(DependencyError)
             case _ => throw e
           },
-          ac => Left(ac)
+          ac => ac
         )
       }
-      case Right(c) => Right(c)
     }
   }
 

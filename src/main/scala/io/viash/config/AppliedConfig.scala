@@ -19,15 +19,17 @@ package io.viash.config
 
 import io.viash.executors.Executor
 import io.viash.platforms.Platform
+import io.viash.helpers.status.Status
 
 final case class AppliedConfig(
   config: Config,
   executor: Option[Executor],
-  platform: Option[Platform]
+  platform: Option[Platform],
 
-  // Should we add BuildStatus in here too?
+  status: Option[Status] // None if still processing, Some if failed or fully finished building, running, ...
 ) {
   def validForBuild = executor.isDefined && platform.isDefined
   def generateExecutor(testing: Boolean) = executor.get.generateExecutor(config, testing)
+  def setStatus(status: Status) = copy(status = Some(status))
 }
 
