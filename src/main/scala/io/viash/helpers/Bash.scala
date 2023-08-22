@@ -29,7 +29,9 @@ object Bash {
   lazy val ViashQuote: String = readUtils("ViashQuote")
   lazy val ViashRemoveFlags: String = readUtils("ViashRemoveFlags")
   lazy val ViashAbsolutePath: String = readUtils("ViashAbsolutePath")
-  lazy val ViashAutodetectMount: String = readUtils("ViashAutodetectMount")
+  lazy val ViashDockerAutodetectMount: String = readUtils("ViashDockerAutodetectMount")
+  // backwards compatibility, for now
+  lazy val ViashAutodetectMount: String = ViashDockerAutodetectMount.replace("ViashDocker", "Viash")
   lazy val ViashSourceDir: String = readUtils("ViashSourceDir")
   lazy val ViashFindTargetDir: String = readUtils("ViashFindTargetDir")
   lazy val ViashDockerFuns: String = readUtils("ViashDockerFuns")
