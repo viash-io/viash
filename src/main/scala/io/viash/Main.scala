@@ -223,10 +223,9 @@ object Main extends Logging {
     // process commands
     cli.subcommands match {
       case List(cli.run) =>
-        val AppliedConfig(config, executor, platform) = readConfig(cli.run, project = proj1)
+        val config = readConfig(cli.run, project = proj1)
         ViashRun(
           config = config,
-          executor = executor.get, 
           args = runArgs.toIndexedSeq.dropWhile(_ == "--"), 
           keepFiles = cli.run.keep.toOption.map(_.toBoolean),
           cpus = cli.run.cpus.toOption,
@@ -236,9 +235,7 @@ object Main extends Logging {
         val config = readConfig(cli.build, project = proj1)
         val config2 = singleConfigDependencies(config, cli.build.output.toOption, proj1.rootDir)
         val buildResult = ViashBuild(
-          config = config2.config,
-          executor = config2.executor.get,
-          platform = config2.platform.get,
+          config = config2,
           output = cli.build.output(),
           setup = cli.build.setup.toOption,
           push = cli.build.push()
@@ -248,9 +245,7 @@ object Main extends Logging {
         val config = readConfig(cli.test, project = proj1)
         val config2 = singleConfigDependencies(config, None, proj1.rootDir)
         ViashTest(
-          config2.config,
-          executor = config2.executor.get,
-          platform = config2.platform.get,
+          config2,
           keepFiles = cli.test.keep.toOption.map(_.toBoolean),
           setupStrategy = cli.test.setup.toOption,
           cpus = cli.test.cpus.toOption,
@@ -317,13 +312,13 @@ object Main extends Logging {
         val errors = configs.flatMap(_.toOption).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.config, cli.config.view) =>
-        val appliedConfig = readConfig(
+        val config = readConfig(
           cli.config.view,
           project = proj1,
           addOptMainScript = false,
           applyPlatform = cli.config.view.platform.isDefined
         )
-        val config2 = DependencyResolver.modifyConfig(appliedConfig.config, None, proj1.rootDir)
+        val config2 = DependencyResolver.modifyConfig(config.config, None, proj1.rootDir)
         ViashConfig.view(
           config2, 
           format = cli.config.view.format(),
@@ -331,13 +326,13 @@ object Main extends Logging {
         )
         0
       case List(cli.config, cli.config.inject) =>
-        val appliedConfig = readConfig(
+        val config = readConfig(
           cli.config.inject,
           project = proj1,
           addOptMainScript = false,
           applyPlatform = false
         )
-        ViashConfig.inject(appliedConfig.config)
+        ViashConfig.inject(config.config)
         0
       case List(cli.export, cli.export.cli_schema) =>
         val output = cli.export.cli_schema.output.toOption.map(Paths.get(_))

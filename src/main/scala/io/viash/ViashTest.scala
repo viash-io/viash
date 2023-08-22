@@ -36,6 +36,8 @@ import io.viash.platforms.Platform
 import io.viash.config.ConfigMeta
 import io.viash.helpers.DependencyResolver
 import io.viash.executors.Executor
+import io.viash.config.AppliedConfig
+import io.viash.lenses.AppliedConfigLenses._
 
 object ViashTest extends Logging {
   case class TestOutput(name: String, exitValue: Int, output: String, logFile: String, duration: Long)
@@ -59,9 +61,7 @@ object ViashTest extends Logging {
     * @return A ManyTestOutput containing the results of the unit tests.
     */
   def apply(
-    config: Config,
-    executor: Executor,
-    platform: Platform,
+    config: AppliedConfig,
     keepFiles: Option[Boolean] = None,
     quiet: Boolean = false,
     setupStrategy: Option[String] = None,
@@ -72,30 +72,19 @@ object ViashTest extends Logging {
     memory: Option[String]
   ): ManyTestOutput = {
     // create temporary directory
-    val dir = IO.makeTemp("viash_test_" + config.functionality.name, parentTempPath)
+    val dir = IO.makeTemp("viash_test_" + functionalityNameLens.get(config), parentTempPath)
     if (!quiet) infoOut(s"Running tests in temporary directory: '$dir'")
 
     // set version to temporary value
-    val config2 = 
-      if (tempVersion.isDefined) {
-        config.copy(
-          functionality = config.functionality.copy(
-            version = tempVersion
-          )
-        )
-      } else {
-        config
-      }
+    val config2 = functionalityVersionLens.modify(version => tempVersion orElse version)(config)
 
     // Make dependencies available for the tests
     DependencyResolver.createBuildYaml(dir.toString())
-    val config3 = DependencyResolver.copyDependencies(config2, dir.toString(), platform.id)
+    val config3 = configLens.modify(conf => DependencyResolver.copyDependencies(conf, dir.toString(), config2.platform.get.id))(config2)
 
     // run tests
     val ManyTestOutput(setupRes, results) = ViashTest.runTests(
       config = config3,
-      executor = executor,
-      platform = platform,
       dir = dir,
       verbose = !quiet,
       setupStrategy = setupStrategy.getOrElse("cachedbuild"),
@@ -143,9 +132,7 @@ object ViashTest extends Logging {
   val consoleLine = "===================================================================="
 
   def runTests(
-    config: Config,
-    executor: Executor,
-    platform: Platform,
+    config: AppliedConfig,
     dir: Path, 
     verbose: Boolean = true, 
     setupStrategy: String, 
@@ -153,18 +140,14 @@ object ViashTest extends Logging {
     cpus: Option[Int], 
     memory: Option[String]
   ): ManyTestOutput = {
-    val fun = config.functionality
+    val fun = config.config.functionality
 
     // build regular executable
-    val configWithReqs = config.copy(
-      config.functionality.copy(
-        requirements = config.functionality.requirements.copy(
-          cpus = if (cpus.isDefined) cpus else config.functionality.requirements.cpus,
-          memory = if (memory.isDefined) memory else config.functionality.requirements.memory
-        )
-      )
-    )
-    val resources = executor.generateExecutor(configWithReqs, testing = true)
+    val configWithReqs = functionalityRequirementsLens.modify(req => req.copy(
+      cpus = cpus orElse req.cpus,
+      memory = memory orElse req.memory
+    ))(config)
+    val resources = configWithReqs.generateExecutor(true)
     val buildDir = dir.resolve("build_executable")
     Files.createDirectories(buildDir)
     try {
@@ -172,15 +155,15 @@ object ViashTest extends Logging {
     } catch {
       case e: MissingResourceFileException =>
         // add config file name to the exception and throw again
-        if (config.info.isDefined && e.config == "") {
-          throw MissingResourceFileException(e.resource, Some(config.info.get.config), cause= e.cause)
+        if (config.config.info.isDefined && e.config == "") {
+          throw MissingResourceFileException(e.resource, Some(config.config.info.get.config), cause= e.cause)
         }
         throw e
     }
 
     // run command, collect output
     val buildResult =
-      if (!platform.hasSetup) {
+      if (!config.platform.get.hasSetup) {
         None
       } else {
         // todo: setupStrategy will have to be handled differently when non-docker platforms need setting up.
@@ -230,7 +213,7 @@ object ViashTest extends Logging {
     }
 
     // generate executable for native platform
-    val exe = NativePlatform().generateExecutor(config, true).resources.head
+    val exe = NativePlatform().generateExecutor(config.config, true).resources.head
 
     // fetch tests
     val tests = fun.test_resources
@@ -254,29 +237,27 @@ object ViashTest extends Logging {
           create_parent = false
         )
 
+        val testFunConfig = functionalityLens.modify(
+          fun => Functionality(
+            // set same name, namespace and version
+            // to be able to reuse same docker container
+            name = fun.name,
+            namespace = fun.namespace,
+            version = fun.version,
+            // set dirArg as argument so that Docker can chown it after execution
+            arguments = List(dirArg),
+            argument_groups = Nil,
+            resources = List(test),
+            set_wd_to_resources_dir = true
+          ))(config)
+
         // generate bash script for test
-        val resourcesOnlyTest = executor.generateExecutor(
-          config.copy(
-            functionality = Functionality(
-              // set same name, namespace and version
-              // to be able to reuse same docker container
-              name = config.functionality.name,
-              namespace = config.functionality.namespace,
-              version = config.functionality.version,
-              // set dirArg as argument so that Docker can chown it after execution
-              arguments = List(dirArg),
-              argument_groups = Nil,
-              resources = List(test),
-              set_wd_to_resources_dir = true
-            )
-          ), 
-          testing = true
-        )
+        val resourcesOnlyTest = testFunConfig.generateExecutor(true)
         val testBash = BashScript(
           dest = Some("test_executable"),
           text = resourcesOnlyTest.resources.head.text
         )
-        val configYaml = ConfigMeta.toMetaFile(config, Some(dir))
+        val configYaml = ConfigMeta.toMetaFile(config.config, Some(dir))
 
         // assemble full resources list for test
         val funFinal = fun.copy(resources = 

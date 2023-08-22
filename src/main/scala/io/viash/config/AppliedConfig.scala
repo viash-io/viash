@@ -26,4 +26,8 @@ final case class AppliedConfig(
   platform: Option[Platform]
 
   // Should we add BuildStatus in here too?
-)
+) {
+  def validForBuild = executor.isDefined && platform.isDefined
+  def generateExecutor(testing: Boolean) = executor.get.generateExecutor(config, testing)
+}
+

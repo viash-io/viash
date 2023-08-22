@@ -28,14 +28,12 @@ import io.viash.executors.Executor
 
 object ViashBuild extends Logging {
   def apply(
-    config: Config,
-    executor: Executor,
-    platform: Platform,
+    config: AppliedConfig,
     output: String,
     setup: Option[String] = None,
     push: Boolean = false
   ): Status = {
-    val resources = executor.generateExecutor(config, testing = false)
+    val resources = config.generateExecutor(false)
 
     // create dir
     val dir = Paths.get(output)
@@ -45,14 +43,14 @@ object ViashBuild extends Logging {
     val exec_path = resources.mainScript.map(scr => Paths.get(output, scr.resourcePath).toString)
 
     // convert config to a yaml wrapped inside a PlainFile
-    val configYaml = ConfigMeta.toMetaFile(config, Some(dir))
+    val configYaml = ConfigMeta.toMetaFile(config.config, Some(dir))
 
     // write resources to output directory
     IO.writeResources(configYaml :: resources.resources, dir)
 
     // if '--setup <strat>' was passed, run './executable ---setup <strat>'
     val setupResult =
-      if (setup.isDefined && exec_path.isDefined && platform.hasSetup) {
+      if (setup.isDefined && exec_path.isDefined && config.platform.get.hasSetup) {
         val cmd = Array(exec_path.get, "---setup", setup.get)
         val res = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
         res
@@ -61,7 +59,7 @@ object ViashBuild extends Logging {
 
     // if '--push' was passed, run './executable ---setup push'
     val pushResult =
-      if (push && exec_path.isDefined && platform.hasSetup) {
+      if (push && exec_path.isDefined && config.platform.get.hasSetup) {
         val cmd = Array(exec_path.get, "---setup push")
         val _ = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
       }

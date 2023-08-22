@@ -79,7 +79,9 @@ object ViashNamespace extends Logging {
     val results = configs2.map { config =>
       config match {
         case Right(_) => config
-        case Left(AppliedConfig(conf, Some(executor), Some(platform))) =>
+        case Left(ac) if !ac.validForBuild => throw new RuntimeException("This should not occur.")
+        case Left(ac) =>
+          val AppliedConfig(conf, Some(executor), Some(platform)) = ac
           val funName = conf.functionality.name
           val ns = conf.functionality.namespace
           val platformId = platform.id
@@ -92,15 +94,12 @@ object ViashNamespace extends Logging {
           val nsStr = ns.map(" (" + _ + ")").getOrElse("")
           infoOut(s"Exporting $funName$nsStr =$platformId=> $out")
           val status = ViashBuild(
-            config = conf,
-            executor = executor,
-            platform = platform,
+            config = ac,
             output = out,
             setup = setup,
             push = push
           )
           Right(status)
-        case Left(_) => throw new RuntimeException("This should not occur.") 
         }
       }
 
@@ -170,7 +169,9 @@ object ViashNamespace extends Logging {
       val results = configs2.map { x =>
         x match {
           case Right(status) => Right(status)
-          case Left(AppliedConfig(conf, Some(executor), Some(platform))) =>
+          case Left(ac) if !ac.validForBuild => throw new RuntimeException("This should not occur.")
+          case Left(ac) =>
+            val AppliedConfig(conf, Some(executor), Some(platform)) = ac
             // get attributes
             val namespace = conf.functionality.namespace.getOrElse("")
             val funName = conf.functionality.name
@@ -184,9 +185,7 @@ object ViashNamespace extends Logging {
 
             val ManyTestOutput(setupRes, testRes) = try {
               ViashTest(
-                config = conf,
-                executor = executor,
-                platform = platform,
+                config = ac,
                 setupStrategy = setup,
                 keepFiles = keepFiles,
                 quiet = true,
@@ -239,7 +238,6 @@ object ViashNamespace extends Logging {
 
             // return output
             Left((conf, ManyTestOutput(setupRes, testRes)))
-          case Left(_) => throw new RuntimeException("This should not occur.") 
           }
 
       }.toList
