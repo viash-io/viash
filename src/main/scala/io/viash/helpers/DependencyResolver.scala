@@ -37,7 +37,15 @@ import io.viash.functionality.resources.NextflowScript
 
 object DependencyResolver {
 
-  // Modify the config so all of the dependencies are available locally
+  /**
+    * Modify the config so all of the dependencies are available locally 
+    *
+    * @param config Component configuration
+    * @param platformId Used to create the path where to store retrieved dependencies
+    * @param projectRootDir Location of the Project Config, used for relative referencing
+    * @param namespaceConfigs Needed for local dependencies
+    * @return A config with dependency information added
+    */
   def modifyConfig(config: Config, platformId: Option[String], projectRootDir: Option[Path], namespaceConfigs: List[Config] = Nil): Config = {
 
     // Check all fun.repositories have valid names

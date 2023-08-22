@@ -75,7 +75,7 @@ object Main extends Logging {
         info(s"viash: ${e.getMessage()}")
         System.exit(1)
       case e: AbstractDependencyException =>
-        Console.err.println(s"viash: ${e.getMessage()}")
+        info(s"viash: ${e.getMessage()}")
         System.exit(1)
       case ee: ExitException =>
         System.exit(ee.code)
@@ -497,9 +497,7 @@ object Main extends Logging {
     if (output.isDefined)
       DependencyResolver.createBuildYaml(output.get)
 
-    appliedConfig.copy(
-      config = handleSingleConfigDependency(appliedConfig.config, appliedConfig.platform, output, rootDir)
-    )
+    handleSingleConfigDependency(appliedConfig, output, rootDir)
   }
 
   // Handle dependency operations for namespaces
@@ -511,15 +509,15 @@ object Main extends Logging {
       case Left(appliedConfig) => {
         Try{
           val validConfigs = configs.flatMap(_.swap.toOption).map(_.config)
-          handleSingleConfigDependency(appliedConfig.config, appliedConfig.platform, target, rootDir, validConfigs)
+          handleSingleConfigDependency(appliedConfig, target, rootDir, validConfigs)
         }.fold(
           e => e match {
             case de: AbstractDependencyException =>
-              Console.err.println(e.getMessage)
+              info(e.getMessage)
               Right(DependencyError)
             case _ => throw e
           },
-          c => Left(appliedConfig.copy(config = c))
+          ac => Left(ac)
         )
       }
       case Right(c) => Right(c)
@@ -527,14 +525,15 @@ object Main extends Logging {
   }
 
   // Actual handling of the dependency logic, to be used for single and namespace configs
-  def handleSingleConfigDependency(config: Config, platform: Option[Platform], output: Option[String], rootDir: Option[Path], namespaceConfigs: List[Config] = Nil) = {
-    val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config, platform.map(_.id))
-    val config1 = DependencyResolver.modifyConfig(config, dependencyPlatformId, rootDir, namespaceConfigs)
-    if (output.isDefined) {
+  def handleSingleConfigDependency(config: AppliedConfig, output: Option[String], rootDir: Option[Path], namespaceConfigs: List[Config] = Nil) = {
+    val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config.config, config.platform.map(_.id))
+    val config1 = DependencyResolver.modifyConfig(config.config, dependencyPlatformId, rootDir, namespaceConfigs)
+    val config2 = if (output.isDefined) {
       DependencyResolver.copyDependencies(config1, output.get, dependencyPlatformId.getOrElse("native"), namespaceConfigs.nonEmpty)
     } else {
       config1
     }
+    config.copy(config = config2)
   }
 
 
