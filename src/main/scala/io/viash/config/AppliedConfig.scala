@@ -33,3 +33,7 @@ final case class AppliedConfig(
   def setStatus(status: Status) = copy(status = Some(status))
 }
 
+object AppliedConfig {
+  implicit def fromConfig(config: Config) = AppliedConfig(config, None, None, None)
+}
+

@@ -377,21 +377,21 @@ object Main extends Logging {
   }
 
   def processConfigWithPlatform(
-    config: Config, 
+    config: AppliedConfig, 
     platformStr: Option[String],
     targetDir: Option[String]
   ): AppliedConfig = {
     // add platformStr to the info object
-    val conf1 = config.copy(
-      info = config.info.map{_.copy(
+    val conf1 = config.config.copy(
+      info = config.config.info.map{_.copy(
         platform = platformStr,
         output = (targetDir, platformStr) match {
           case (Some(td), Some(pl)) => 
             Some(ViashNamespace.targetOutputPath(
               targetDir = td,
               platformId = pl,
-              namespace = config.functionality.namespace,
-              functionalityName = config.functionality.name
+              namespace = config.config.functionality.namespace,
+              functionalityName = config.config.functionality.name
             ))
           case _ => None
         }
@@ -426,7 +426,7 @@ object Main extends Logging {
         targetDir = project.target
       )
     } else {
-      AppliedConfig(config, None, None, None)
+      config
     }
   }
   
@@ -459,15 +459,15 @@ object Main extends Logging {
 
       configs.flatMap{config => config match {
         // passthrough statuses
-        case Right(stat) => List(AppliedConfig(Config(Functionality("failed")), None, None, Some(stat)))
-        case Left(conf1) =>
+        case ac if ac.status.isDefined => List(ac)
+        case ac =>
           val platformStrs = 
             if (platformStrVal.contains(":") || (new File(platformStrVal)).exists) {
               // platform is a file
               List(Some(platformStrVal))
             } else {
               // platform is a regex for filtering the ids
-              val platIDs = conf1.platforms.map(_.id)
+              val platIDs = ac.config.platforms.map(_.id)
 
               if (platIDs.isEmpty) {
                 // config did not contain any platforms, so the native platform should be used
@@ -479,17 +479,14 @@ object Main extends Logging {
             }
           platformStrs.map{ platStr =>
             processConfigWithPlatform(
-              config = conf1,
+              config = ac,
               platformStr = platStr,
               targetDir = project.target
             )
           }
         }}
     } else {
-      configs.map{c => c match {
-        case Right(status) => AppliedConfig(Config(Functionality("failed")), None, None, Some(status))
-        case Left(conf) => AppliedConfig(conf, None, None, None)
-      }}
+      configs
     }
   }
 

@@ -299,7 +299,7 @@ object Config extends Logging {
     queryName: Option[String] = None,
     configMods: List[String] = Nil,
     addOptMainScript: Boolean = true
-  ): List[Either[Config, Status]] = {
+  ): List[AppliedConfig] = {
 
     val sourceDir = Paths.get(source)
 
@@ -316,7 +316,7 @@ object Config extends Logging {
         // warnings will be captured for now, and will be displayed when reading the second time
         val stdout = new ByteArrayOutputStream()
         val stderr = new ByteArrayOutputStream()
-        val config = 
+        val config: AppliedConfig = 
           Console.withErr(stderr) {
             Console.withOut(stdout) {
               Config.read(
@@ -328,8 +328,9 @@ object Config extends Logging {
             }
           }
 
-        val funName = config.functionality.name
-        val funNs = config.functionality.namespace
+        val funName = config.config.functionality.name
+        val funNs = config.config.functionality.namespace
+        val isEnabled = config.config.functionality.isEnabled
 
         // does name & namespace match regex?
         val queryTest = (query, funNs) match {
@@ -348,18 +349,18 @@ object Config extends Logging {
         }
 
         // if config passes regex checks, show warning and return it
-        if (queryTest && nameTest && namespaceTest && config.functionality.isEnabled) {
+        if (queryTest && nameTest && namespaceTest && isEnabled) {
           // TODO: stdout and stderr are no longer in the correct order :/
-          Console.out.print(stdout.toString)
-          Console.err.print(stderr.toString)
-          Left(config)
+          infoOut(stdout.toString)
+          info(stderr.toString)
+          config
         } else {
-          Right(Disabled)
+          config.setStatus(Disabled)
         }
       } catch {
         case _: Exception =>
           error(s"Reading file '$file' failed")
-          Right(ParseError)
+          AppliedConfig(Config(Functionality("failed")), None, None, Some(ParseError))
       }
     }
   }

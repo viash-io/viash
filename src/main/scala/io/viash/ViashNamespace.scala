@@ -81,10 +81,9 @@ object ViashNamespace extends Logging {
         case conf if conf.status.isDefined => config
         case ac if !ac.validForBuild => throw new RuntimeException("This should not occur.")
         case ac =>
-          val AppliedConfig(conf, Some(executor), Some(platform), _) = ac
-          val funName = conf.functionality.name
-          val ns = conf.functionality.namespace
-          val platformId = platform.id
+          val funName = ac.config.functionality.name
+          val ns = ac.config.functionality.namespace
+          val platformId = ac.platform.get.id
           val out = 
             if (flatten) {
               target
@@ -171,11 +170,10 @@ object ViashNamespace extends Logging {
           case ac if ac.status.isDefined => (ac, ManyTestOutput(None, List()))
           case ac if !ac.validForBuild => throw new RuntimeException("This should not occur.")
           case ac =>
-            val AppliedConfig(conf, Some(executor), Some(platform), _) = ac
             // get attributes
-            val namespace = conf.functionality.namespace.getOrElse("")
-            val funName = conf.functionality.name
-            val platName = platform.id
+            val namespace = ac.config.functionality.namespace.getOrElse("")
+            val funName = ac.config.functionality.name
+            val platName = ac.platform.get.id
 
             // print start message
             infoOut("%20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, platName, "start", "", "", ""))
