@@ -87,4 +87,13 @@ object Docker {
       organization = organization
     )
   }
+
+  def listifyOneOrMore(values: Option[Either[String, List[String]]]): Option[String] = {
+    values match {
+      case None => None
+      case Some(Left(s)) => Some(s)
+      case Some(Right(list)) if list.isEmpty => Some("[]")
+      case Some(Right(list)) => Some(list.mkString("[\"", "\",\"", "\"]"))
+    }
+  }
 }
