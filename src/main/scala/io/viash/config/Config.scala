@@ -73,6 +73,9 @@ case class Config(
       |""".stripMargin)
   platforms: List[Platform] = Nil,
 
+  executors: List[Executor] = Nil,
+  containers: List[Container] = Nil,
+
   @internalFunctionality
   info: Option[Info] = None
 ) {
@@ -119,8 +122,8 @@ case class Config(
     }
   }
 
-  def getContainers: List[Container] = platforms.collect{ case c: Container => c }
-  def getExecutors: List[Executor] = platforms.collect{ case e: Executor => e }
+  def getContainers: List[Container] = platforms.collect{ case c: Container => c } ::: containers
+  def getExecutors: List[Executor] = platforms.collect{ case e: Executor => e } ::: executors
 }
 
 object Config extends Logging {
