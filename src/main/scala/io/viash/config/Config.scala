@@ -351,8 +351,12 @@ object Config extends Logging {
         // if config passes regex checks, show warning and return it
         if (queryTest && nameTest && namespaceTest && isEnabled) {
           // TODO: stdout and stderr are no longer in the correct order :/
-          infoOut(stdout.toString)
-          info(stderr.toString)
+          val stdout_s = stdout.toString()
+          val stderr_s = stderr.toString()
+          if (!stdout_s.isEmpty())
+            infoOut(stdout_s)
+          if (!stderr_s.isEmpty())
+            info(stderr_s)
           config
         } else {
           config.setStatus(Disabled)
