@@ -29,7 +29,7 @@ final case class NextflowExecutor(
   val `type` = "nextflow"
 
   def generateExecutor(config: Config, testing: Boolean): ExecutorResources = {
-    val containers = config.getContainers
+    val engines = config.getEngines
     
     // todo: do something with containers
 

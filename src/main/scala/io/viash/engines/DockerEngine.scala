@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.containers
+package io.viash.engines
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -24,7 +24,7 @@ import io.viash.config.{Info => ConfigInfo}
 import io.viash.functionality.Functionality
 import io.viash.functionality.Author
 
-// todo: move these requirements to .containers
+// todo: move these requirements to .engines
 import io.viash.platforms.requirements.Requirements
 import io.viash.platforms.requirements.DockerRequirements
 
@@ -34,8 +34,8 @@ import io.viash.wrapper.BashWrapper
 
 import io.viash.schemas._
 
-final case class DockerContainer(
-  @description("Name of the container. As with all containers, you can give a container a different name. By specifying `id: foo`, you can target this container (only) by specifying `...` in any of the Viash commands.")
+final case class DockerEngine(
+  @description("Name of the engine. As with all engines, you can give a engine a different name. By specifying `id: foo`, you can target this engine (only) by specifying `...` in any of the Viash commands.")
   @example("id: foo", "yaml")
   @default("docker")
   id: String = "docker",
@@ -115,7 +115,8 @@ final case class DockerContainer(
   @exampleWithDescription("""cmd: "echo $HOME"""", "yaml", "Set CMD using the shell format.")
   @since("Viash 0.7.4")
   cmd: Option[Either[String, List[String]]] = None
-) extends Container {
+) extends Engine {
+  val `type` = "docker"
 
   /**
    * Generate a Dockerfile for the container

@@ -33,7 +33,7 @@ import io.viash.config.Info
 import io.viash.schemas._
 import io.viash.helpers.Escaper
 import io.viash.executors.Executor
-import io.viash.containers.Container
+import io.viash.engines.Engine
 import io.viash.executors.ExecutorResources
 
 @description(
@@ -185,7 +185,7 @@ case class DockerPlatform(
   @since("Viash 0.7.4")
   cmd: Option[Either[String, List[String]]] = None
 
-) extends Platform with Executor with Container {
+) extends Platform with Executor with Engine {
   @internalFunctionality
   override val hasSetup = true
 

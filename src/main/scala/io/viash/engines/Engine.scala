@@ -15,12 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.containers
+package io.viash.engines
 
 import io.viash.schemas._
 
-trait Container {
-  @description("Id of the container.")
+trait Engine {
+  @description("Specifies the type of the platform.")
+  val `type`: String
+
+  @description("Id of the engine.")
   @example("id: foo", "yaml")
   val id: String
 }

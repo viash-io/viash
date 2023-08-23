@@ -25,7 +25,7 @@ import io.viash.helpers.circe._
 import io.viash.helpers.status._
 import io.viash.helpers.Yaml
 import io.viash.executors.Executor
-import io.viash.containers.Container
+import io.viash.engines.Engine
 
 import java.net.URI
 import io.viash.functionality.resources._
@@ -73,8 +73,10 @@ case class Config(
       |""".stripMargin)
   platforms: List[Platform] = Nil,
 
+  @description("A list of executors to execute target artifacts.")
   executors: List[Executor] = Nil,
-  containers: List[Container] = Nil,
+  @description("A list of engine environments to execute target artifacts in.")
+  engines: List[Engine] = Nil,
 
   @internalFunctionality
   info: Option[Info] = None
@@ -122,7 +124,7 @@ case class Config(
     }
   }
 
-  def getContainers: List[Container] = platforms.collect{ case c: Container => c } ::: containers
+  def getEngines: List[Engine] = platforms.collect{ case c: Engine => c } ::: engines
   def getExecutors: List[Executor] = platforms.collect{ case e: Executor => e } ::: executors
 }
 

@@ -31,7 +31,7 @@ import io.viash.functionality.arguments.FileArgument
 import io.viash.functionality.arguments.Output
 import io.viash.functionality.resources.BashScript
 
-import io.viash.containers._
+import io.viash.engines._
 
 import io.viash.wrapper.BashWrapper
 import io.viash.wrapper.BashWrapperMods
@@ -41,6 +41,8 @@ import io.viash.helpers.Bash
 import io.viash.helpers.data_structures._
 
 import io.viash.schemas._
+import io.viash.engines.DockerEngine
+import io.viash.engines.NativeEngine
 final case class ExecutableExecutor(
   @description("Name of the executor. As with all executors, you can give an executor a different name. By specifying `id: foo`, you can target this executor (only) by specifying `...` in any of the Viash commands.")
   @example("id: foo", "yaml")
@@ -57,12 +59,12 @@ final case class ExecutableExecutor(
   @default("Empty")
   port: OneOrMore[String] = Nil,
 
-  @description("The working directory when starting the container. This doesn't change the Dockerfile but gets added as a command-line argument at runtime.")
+  @description("The working directory when starting the engine. This doesn't change the Dockerfile but gets added as a command-line argument at runtime.")
   @example("workdir: /home/user", "yaml")
   workdir: Option[String] = None,
 
   @description(
-    """The Docker setup strategy to use when building a container.
+    """The Docker setup strategy to use when building a docker engine enrivonment.
       +
       +| Strategy | Description |
       +|-----|----------|
@@ -93,22 +95,22 @@ final case class ExecutableExecutor(
   val `type` = "executable"
 
   def generateExecutor(config: Config, testing: Boolean): ExecutorResources = {
-    val containers = config.getContainers
+    val engines = config.getEngines
 
     /*
      * Construct bashwrappermods
      */
-    val profileMods = containers.map{
-      case d: DockerContainer => 
+    val profileMods = engines.map{
+      case d: DockerEngine => 
         dockerConfigMods(d, config, testing)
-      case n: NativeContainer =>
+      case n: NativeEngine =>
         nativeConfigMods()
       case _ =>
         BashWrapperMods()
     }
     
 
-    val profilesDm = generateProfiles(config.functionality, containers)
+    val profilesDm = generateProfiles(config.functionality, engines)
 
     // create new bash script
     val mainScript = Some(BashScript(
@@ -129,7 +131,7 @@ final case class ExecutableExecutor(
   }
 
   // todo: support multiple containers
-  private def generateProfiles(functionality: Functionality, containers: List[Container]): BashWrapperMods = {
+  private def generateProfiles(functionality: Functionality, containers: List[Engine]): BashWrapperMods = {
 
     // todo: allow setting the default profile
     val preParse = 
@@ -155,11 +157,11 @@ final case class ExecutableExecutor(
     )
   }
 
-  private def dockerConfigMods(dockerContainer: DockerContainer, config: Config, testing: Boolean): BashWrapperMods = {
-    val effectiveID = dockerContainer.getTargetIdentifier(config.functionality)
+  private def dockerConfigMods(dockerEngine: DockerEngine, config: Config, testing: Boolean): BashWrapperMods = {
+    val effectiveID = dockerEngine.getTargetIdentifier(config.functionality)
 
     // generate docker container setup code
-    val dmSetup = dockerGenerateSetup(config.functionality, config.info, testing, dockerContainer, effectiveID)
+    val dmSetup = dockerGenerateSetup(config.functionality, config.info, testing, dockerEngine, effectiveID)
 
     // generate automount code
     val dmVol = dockerDetectMounts(config.functionality)
@@ -226,7 +228,7 @@ final case class ExecutableExecutor(
     functionality: Functionality,
     info: Option[ConfigInfo],
     testing: Boolean,
-    dockerImage: DockerContainer,
+    dockerImage: DockerEngine,
     effectiveID: String
   ): BashWrapperMods = {
     

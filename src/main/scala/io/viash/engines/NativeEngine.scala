@@ -15,13 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.containers
+package io.viash.engines
 
 import io.viash.schemas._
 
-final case class NativeContainer(
-  @description("Name of the container. As with all containers, you can give a container a different name. By specifying `id: foo`, you can target this container (only) by specifying `...` in any of the Viash commands.")
+final case class NativeEngine(
+  @description("Name of the engine. As with all engines, you can give a engine a different name. By specifying `id: foo`, you can target this engine (only) by specifying `...` in any of the Viash commands.")
   @example("id: foo", "yaml")
   @default("native")
   id: String = "native"
-) extends Container
+) extends Engine {
+  val `type` = "native"
+}
