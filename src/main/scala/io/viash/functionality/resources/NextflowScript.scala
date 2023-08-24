@@ -61,8 +61,8 @@ case class NextflowScript(
 
     val depStrs = config.functionality.dependencies.map(NextflowScript.renderInclude(_, thisPath))
 
-    val funJson = config.asJson.dropEmptyRecursively
-    val funJsonStr = funJson
+    val configJson = config.asJson.dropEmptyRecursively
+    val configJsonStr = configJson
       .toFormattedString("json")
       .replace("\\\\", "\\\\\\\\")
       .replace("\\\"", "\\\\\"")
@@ -73,34 +73,34 @@ case class NextflowScript(
 
     val str = 
       s"""nextflow.enable.dsl=2
-          |
-          |config = readJsonBlob($funJsonStr)
-          |
-          |// import dependencies
-          |rootDir = getRootDir()
-          |${depStrs.mkString("\n|")}
-          |
-          |workflow {
-          |  helpMessage(config)
-          |
-          |  channelFromParams(params, config)
-          |    | ${config.functionality.name}
-          |    // todo: publish
-          |}
-          |
-          |workflow ${config.functionality.name} {
-          |  take:
-          |  input_ch
-          |
-          |  main:
-          |  output_ch = input_ch
-          |    | preprocessInputs(config: config)
-          |    | ${entrypoint.get}
-          |
-          |  emit:
-          |    output_ch
-          |}
-          |""".stripMargin
+        |
+        |config = processConfig(readJsonBlob($configJsonStr))
+        |
+        |// import dependencies
+        |rootDir = getRootDir()
+        |${depStrs.mkString("\n|")}
+        |
+        |workflow {
+        |  helpMessage(config)
+        |
+        |  channelFromParams(params, config)
+        |    | ${config.functionality.name}
+        |    // todo: publish
+        |}
+        |
+        |workflow ${config.functionality.name} {
+        |  take:
+        |  input_ch
+        |
+        |  main:
+        |  output_ch = input_ch
+        |    | preprocessInputs(config: config)
+        |    | ${entrypoint.get}
+        |
+        |  emit:
+        |    output_ch
+        |}
+        |""".stripMargin
 
     val footer = Seq("// END CUSTOM CODE", NextflowHelper.workflowHelper, NextflowHelper.dataflowHelper).mkString("\n\n", "\n\n", "")
     ScriptInjectionMods(params = str, footer = footer)
