@@ -74,7 +74,7 @@ case class NextflowScript(
     val str = 
       s"""nextflow.enable.dsl=2
           |
-          |config = readJsonBlob($funJsonStr)
+          |config = processConfig(readJsonBlob($funJsonStr))
           |
           |// import dependencies
           |rootDir = getRootDir()
