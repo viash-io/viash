@@ -283,7 +283,6 @@ object BashWrapper {
        |${spaceCode(allMods.preParse)}
        |# initialise array
        |VIASH_POSITIONAL_ARGS=''
-       |VIASH_MODE='run'
        |
        |while [[ $$# -gt 0 ]]; do
        |    case "$$1" in

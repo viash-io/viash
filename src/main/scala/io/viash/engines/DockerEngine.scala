@@ -206,6 +206,7 @@ final case class DockerEngine(
   def getTargetIdentifier(functionality: Functionality): String = {
     val targetImageInfo = Docker.getImageInfo(
       functionality = Some(functionality),
+      engineId = Some(id),
       registry = target_registry,
       organization = target_organization,
       name = target_image,
@@ -214,58 +215,5 @@ final case class DockerEngine(
     )
 
     targetImageInfo.toString
-  }
-
-  /* TODO: Move this to ExecutableExecutor? */
-  def buildDockerContainerInBash(
-    functionality: Functionality,
-    testing: Boolean
-  ): String = {
-    val requirements = setup ::: { if (testing) test_setup else Nil }
-
-    val dockerRequirements =
-      requirements.flatMap {
-        case d: DockerRequirements => Some(d)
-        case _ => None
-      }
-    val buildArgs =
-      requirements.flatMap {
-        case d: DockerRequirements =>
-          d.build_args.map(" --build-arg " + _).mkString
-        case _ => None
-      }
-
-    s"""  # create temporary directory to store dockerfile & optional resources in
-      |  tmpdir=$$(mktemp -d "$$VIASH_META_TEMP_DIR/dockerbuild-${functionality.name}-XXXXXX")
-      |  dockerfile="$$tmpdir/Dockerfile"
-      |  function clean_up {
-      |    rm -rf "$$tmpdir"
-      |  }
-      |  trap clean_up EXIT
-      |
-      |  # store dockerfile and resources
-      |  ViashDockerfile > $$dockerfile
-      |
-      |  # Build the container
-      |  ViashNotice "Building container '$$1' with Dockerfile"
-      |  DOCKER_BUILD_CMD="docker build -t $$@${buildArgs.mkString("")} '$$VIASH_META_RESOURCES_DIR' -f '$$dockerfile'"
-      |  ViashInfo "$$DOCKER_BUILD_CMD"
-      |  save=$$-; set +e
-      |  if [ $$${BashWrapper.var_verbosity} -ge $$VIASH_LOGCODE_INFO ]; then
-      |    eval $$DOCKER_BUILD_CMD
-      |  else
-      |    eval $$DOCKER_BUILD_CMD &> $$tmpdir/docker_build.log
-      |  fi
-      |  out=$$?
-      |  [[ $$save =~ e ]] && set -e
-      |  if [ $$out -ne 0 ]; then
-      |    ViashError "Error occurred while building container '$$1'"
-      |    if [ $$${BashWrapper.var_verbosity} -lt $$VIASH_LOGCODE_INFO ]; then
-      |      ViashError "Transcript: --------------------------------"
-      |      cat "$$tmpdir/docker_build.log"
-      |      ViashError "End of transcript --------------------------"
-      |    fi
-      |    exit 1
-      |  fi""".stripMargin
   }
 }

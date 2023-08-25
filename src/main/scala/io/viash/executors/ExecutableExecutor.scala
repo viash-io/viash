@@ -43,6 +43,8 @@ import io.viash.helpers.data_structures._
 import io.viash.schemas._
 import io.viash.engines.DockerEngine
 import io.viash.engines.NativeEngine
+import io.viash.platforms.requirements.DockerRequirements
+
 final case class ExecutableExecutor(
   @description("Name of the executor. As with all executors, you can give an executor a different name. By specifying `id: foo`, you can target this executor (only) by specifying `...` in any of the Viash commands.")
   @example("id: foo", "yaml")
@@ -91,26 +93,19 @@ final case class ExecutableExecutor(
   @default("Empty")
   docker_run_args: OneOrMore[String] = Nil,
 
+  `type`: String = "executable"
 ) extends Executor {
-  val `type` = "executable"
 
   def generateExecutor(config: Config, testing: Boolean): ExecutorResources = {
     val engines = config.getEngines
-
+    
     /*
      * Construct bashwrappermods
      */
-    val profileMods = engines.map{
-      case d: DockerEngine => 
-        dockerConfigMods(d, config, testing)
-      case n: NativeEngine =>
-        nativeConfigMods()
-      case _ =>
-        BashWrapperMods()
-    }
-    
-
-    val profilesDm = generateProfiles(config.functionality, engines)
+    val mods =
+      generateEngineVariable(config) ++
+      nativeConfigMods(config) ++
+      dockerConfigMods(config, testing)
 
     // create new bash script
     val mainScript = Some(BashScript(
@@ -118,7 +113,7 @@ final case class ExecutableExecutor(
       text = Some(BashWrapper.wrapScript(
         executor = "eval $VIASH_CMD",
         functionality = config.functionality,
-        mods = profileMods.foldLeft(profilesDm)(_ ++ _),
+        mods = mods,
         config = config
       ))
     ))
@@ -130,26 +125,77 @@ final case class ExecutableExecutor(
     )
   }
 
-  // todo: support multiple containers
-  private def generateProfiles(functionality: Functionality, containers: List[Engine]): BashWrapperMods = {
+  private def oneOfEngines(engines: List[Engine]): String = {
+    engines
+      .map(engine => s""""$$VIASH_ENGINE_ID" == "${engine.id}"""")
+      .mkString(" || ")
+  }
 
-    // todo: allow setting the default profile
+  private def noneOfEngines(engines: List[Engine]): String = {
+    engines
+      .map(engine => s""""$$VIASH_ENGINE_ID" != "${engine.id}"""")
+      .mkString(" && ")
+  }
+
+  private def generateEngineVariable(config: Config): BashWrapperMods = {
+    val engines = config.getEngines
+
+    // TODO: allow setting the default engine
     val preParse = 
       s"""
         |# initialise variables
-        |VIASH_PROFILE="${containers.head.id}"""".stripMargin
+        |VIASH_MODE='run'
+        |VIASH_ENGINE_ID='${engines.head.id}'""".stripMargin
+
+    val parsers =
+      s"""
+        |        ---engine)
+        |            VIASH_ENGINE_ID="$$2"
+        |            shift 1
+        |            ;;
+        |        ---engine=*)
+        |            VIASH_ENGINE_ID="$$(ViashRemoveFlags "$$1")"
+        |            shift 2
+        |            ;;""".stripMargin
+
+    val typeSetterStrs = engines.groupBy(_.`type`).map{ case (engineType, engineList) => 
+      s"""[[ ${oneOfEngines(engineList)} ]]; then
+        |  VIASH_ENGINE_TYPE='${engineType}'""".stripMargin
+    }
+    val postParse =
+      s"""
+        |if ${typeSetterStrs.mkString("\nelif ")}
+        |else
+        |  ViashError "Engine '$$VIASH_ENGINE_ID' is not recognized. Options are: ${engines.map(_.id).mkString(", ")}."
+        |  exit 1
+        |fi""".stripMargin
 
     BashWrapperMods(
-      preParse = preParse
+      preParse = preParse,
+      parsers = parsers,
+      postParse = postParse
     )
   }
 
-  // todo: support multiple containers
-  private def nativeConfigMods(): BashWrapperMods = {
+  private def nativeConfigMods(config: Config): BashWrapperMods = {
+    val engines = config.getEngines.flatMap{
+      case e: NativeEngine => Some(e)
+      case _ => None
+    }
+
+    if (engines.isEmpty) {
+      return BashWrapperMods()
+    }
+
     val preRun =
       s"""
-        |if [ "$$VIASH_PROFILE" == "native" ]; then
-        |  VIASH_CMD="bash"
+        |if [ ${oneOfEngines(engines)} ]; then
+        |  if [ "$$VIASH_MODE" == "run" ]; then
+        |    VIASH_CMD="bash"
+        |  else
+        |    ViashError "Engine '$$VIASH_ENGINE_ID' does not support mode '$$VIASH_MODE'."
+        |    exit 1
+        |  fi
         |fi""".stripMargin
       
     BashWrapperMods(
@@ -157,60 +203,36 @@ final case class ExecutableExecutor(
     )
   }
 
-  private def dockerConfigMods(dockerEngine: DockerEngine, config: Config, testing: Boolean): BashWrapperMods = {
-    val effectiveID = dockerEngine.getTargetIdentifier(config.functionality)
+  /*
+   * DOCKER MODS
+   */
+  private def dockerConfigMods(config: Config, testing: Boolean): BashWrapperMods = {
+    val engines = config.getEngines.flatMap{
+      case e: DockerEngine => Some(e)
+      case _ => None
+    }
 
+    if (engines.isEmpty) {
+      return BashWrapperMods()
+    }
+    
     // generate docker container setup code
-    val dmSetup = dockerGenerateSetup(config.functionality, config.info, testing, dockerEngine, effectiveID)
+    val dmSetup = dockerGenerateSetup(config.functionality, config.info, testing, engines)
 
     // generate automount code
     val dmVol = dockerDetectMounts(config.functionality)
 
-    // generate installationcheck code
-    val dmDockerCheck = dockerAddInstallationCheck()
-
-    // add ---debug flag
-    val debuggor = s"""docker run --entrypoint=bash $dockerArgs -v "$$(pwd)":/pwd --workdir /pwd -t '$effectiveID'"""
-    val dmDebug = addDebug(debuggor)
-
     // add ---chown flag
-    val dmChown = dockerAddChown(config.functionality, dockerArgs, dmVol.extraParams, effectiveID)
+    val dmChown = dockerAddChown(config.functionality)
 
     // process cpus and memory_b
-    val dmReqs = dockerAddComputationalRequirements(config.functionality)
+    val dmReqs = dockerAddComputationalRequirements()
 
-    val dmCmd = dockerGenerateCommand(config.functionality, effectiveID)
+    // generate docker command
+    val dmCmd = dockerGenerateCommand(config.functionality)
 
     // compile bashwrappermods for Docker
-    dmDockerCheck ++ dmSetup ++ dmVol ++ dmDebug ++ dmChown ++ dmReqs ++ dmCmd
-  }
-
-  private def dockerGenerateCommand(functionality: Functionality, dockerContainer: String): BashWrapperMods = {
-
-    // collect runtime docker arguments
-    val dockerEntrypoint = functionality.mainScript match {
-      case Some(_: Executable) => " --entrypoint=''"
-      case _ => " --entrypoint=bash"
-    }
-
-    val workdirStr = workdir.map(" --workdir '" + _ + "'").getOrElse("")
-
-    // todo: allow setting the default profile
-    val preParse = 
-      s"""
-        |# initialise variables
-        |VIASH_DOCKER_RUN_ARGS=($dockerArgs$workdirStr)""".stripMargin
-
-    val preRun =
-      s"""
-        |if [ "$$VIASH_PROFILE" == "docker" ]; then
-        |  VIASH_CMD="docker run$dockerEntrypoint $${VIASH_DOCKER_RUN_ARGS[@]} $${VIASH_UNIQUE_MOUNTS[@]} $dockerContainer
-        |fi""".stripMargin
-      
-    BashWrapperMods(
-      preParse = preParse,
-      preRun = preRun
-    )
+    dmSetup ++ dmVol ++ dmChown ++ dmReqs ++ dmCmd
   }
 
   private def dockerArgs: String = {
@@ -219,42 +241,60 @@ final case class ExecutableExecutor(
       docker_run_args.map(" " + _).mkString
   }
 
-
-
-  /*
-   * DOCKER MODS
-   */
   private def dockerGenerateSetup(
     functionality: Functionality,
     info: Option[ConfigInfo],
     testing: Boolean,
-    dockerImage: DockerEngine,
-    effectiveID: String
+    engines: List[DockerEngine]
   ): BashWrapperMods = {
     
     // get list of all the commands that should be available in the container
     val commandsToCheck = functionality.requirements.commands ::: List("bash")
     val commandsToCheckStr = commandsToCheck.mkString("'", "' '", "'")
+
+    val dockerFiles = engines.map { engine =>
+      s"""
+        |  if [[ "$$engine_id" == "${engine.id}" ]]; then
+        |    cat << 'VIASHDOCKER'
+        |${engine.dockerFile(functionality, info, testing)}
+        |VIASHDOCKER
+        |  fi""".stripMargin
+    }
+
+    val dockerBuildArgs = engines.map { engine =>
+      val setups = engine.setup ::: { if (testing) engine.test_setup else Nil }
+      val dockerRequirements = 
+        setups.flatMap{
+          case d: DockerRequirements => d.build_args
+          case _ => Nil
+        }
+      val buildArgs = dockerRequirements.map("--build-arg '" + _ + "'").mkString(" ")
+
+      s"""
+        |  if [[ "$$engine_id" == "${engine.id}" ]]; then
+        |    echo "${buildArgs}"
+        |  fi""".stripMargin
+    }
     
     val preParse =
       s"""${Bash.ViashDockerFuns}
         |
         |# ViashDockerFile: print the dockerfile to stdout
+        |# $$1    : engine identifier
         |# return : dockerfile required to run this component
         |# examples:
         |#   ViashDockerFile
         |function ViashDockerfile {
-        |  cat << 'VIASHDOCKER'
-        |${dockerImage.dockerFile(functionality, info, testing)}
-        |VIASHDOCKER
+        |  local engine_id="$$1"
+        |${dockerFiles.mkString}
         |}
         |
-        |# ViashDockerBuild: build a docker container
-        |# $$1              : image identifier with format `[registry/]image[:tag]`
-        |# exit code $$?    : whether or not the image was built
-        |function ViashDockerBuild {
-        |${dockerImage.buildDockerContainerInBash(functionality, testing)}
-        |  ViashDockerCheckCommands "$$1" $commandsToCheckStr
+        |# ViashDockerBuildArgs: return the arguments to pass to docker build
+        |# $$1    : engine identifier
+        |# return : arguments to pass to docker build
+        |function ViashDockerBuildArgs {
+        |  local engine_id="$$1"
+        |${dockerBuildArgs.mkString}
         |}""".stripMargin
 
     val parsers =
@@ -270,25 +310,53 @@ final case class ExecutableExecutor(
         |            shift 2
         |            ;;
         |        ---dockerfile)
-        |            ViashDockerfile
-        |            exit 0
+        |            VIASH_MODE='dockerfile'
+        |            shift 1
+        |            ;;
+        |        ---debug)
+        |            VIASH_MODE='debug'
+        |            shift 1
         |            ;;""".stripMargin
+
+    val setDockerImageId = engines.map { engine => 
+      s"""[[ "$$VIASH_ENGINE_ID" == '${engine.id}' ]]; then
+        |    VIASH_DOCKER_IMAGE_ID='${engine.getTargetIdentifier(functionality)}'""".stripMargin  
+    }.mkString("if ", "\n  elif ", "\n  fi")
 
     val postParse =
       s"""
-         |if [ $$VIASH_MODE == "setup" ]; then
-         |  if [ "$$VIASH_PROFILE" == "docker" ]; then
-         |    ViashDockerSetup '$effectiveID' "$$VIASH_DOCKER_SETUP_STRATEGY"
-         |    exit 0
-         |  else
-         |    ViashError "Profile '$$VIASH_PROFILE' does not support setup mode."
-         |    exit 1
-         |  fi
-         |fi
-         |if [ "$$VIASH_PROFILE" == "docker" ]; then
-         |  ViashDockerSetup '$effectiveID' ${IfNeedBePullElseCachedBuild.id}
-         |fi""".stripMargin
+        |if [[ "$$VIASH_ENGINE_TYPE" == "docker" ]]; then
+        |  # check if docker is installed properly
+        |  ViashDockerInstallationCheck
+        |
+        |  # determine docker image id
+        |  $setDockerImageId
+        |
+        |  # print dockerfile
+        |  if [ "$$VIASH_MODE" == "dockerfile" ]; then
+        |    ViashDockerfile "$$VIASH_ENGINE_ID"
+        |    exit 0
+        |  
+        |  # enter docker container
+        |  elif [[ "$$VIASH_MODE" == "debug" ]]; then
+        |    VIASH_CMD="docker run --entrypoint=bash $${VIASH_DOCKER_RUN_ARGS[@]} -v '$$(pwd)':/pwd --workdir /pwd -t $$VIASH_DOCKER_IMAGE_ID"
+        |    ViashNotice "+ $$VIASH_CMD"
+        |    eval $$VIASH_CMD
+        |    exit 
+        |
+        |  # build docker image
+        |  elif [ "$$VIASH_MODE" == "setup" ]; then
+        |    ViashDockerSetup "$$VIASH_DOCKER_IMAGE_ID" "$$VIASH_SETUP_STRATEGY"
+        |    ViashDockerCheckCommands "$$VIASH_DOCKER_IMAGE_ID" $commandsToCheckStr
+        |    exit 0
+        |  fi
+        |
+        |  # check if docker image exists
+        |  ViashDockerSetup "$$VIASH_DOCKER_IMAGE_ID" ${docker_setup_strategy.id}
+        |  ViashDockerCheckCommands "$$VIASH_DOCKER_IMAGE_ID" $commandsToCheckStr
+        |fi""".stripMargin
 
+          
     BashWrapperMods(
       preParse = preParse,
       parsers = parsers,
@@ -346,7 +414,7 @@ final case class ExecutableExecutor(
     
     val preRun =
       f"""
-        |if [ "$$VIASH_PROFILE" == "docker" ]; then
+        |if [[ "$$VIASH_ENGINE_TYPE" == "docker" ]]; then
         |  # detect volumes from file arguments
         |  VIASH_CHOWN_VARS=()${detectMounts.mkString("")}
         |  
@@ -384,7 +452,7 @@ final case class ExecutableExecutor(
     
     val postRun =
       s"""
-        |if [ "$$VIASH_PROFILE" == "docker" ]; then
+        |if [[ "$$VIASH_ENGINE_TYPE" == "docker" ]]; then
         |  # strip viash automount from file paths
         |  ${stripAutomounts.mkString("")}
         |fi""".stripMargin
@@ -397,57 +465,20 @@ final case class ExecutableExecutor(
   }
 
 
-  private def dockerAddInstallationCheck() = {
-    val postParse =
-      s"""
-         |ViashDockerInstallationCheck""".stripMargin
 
-    BashWrapperMods(
-      postParse = postParse
-    )
-  }
 
-  private def addDebug(dockerDebugCommand: String) = {
-    val parsers =
-      s"""
-         |        ---debug)
-         |            VIASH_MODE='debug'
-         |            shift 1
-         |            ;;""".stripMargin
-
-    val postParse =
-      s"""
-         |if [ $$VIASH_MODE == "debug" ]; 
-         |  if [ $$VIASH_PROFILE == "docker" ]; then
-         |    ViashNotice "+ $dockerDebugCommand"
-         |    $dockerDebugCommand
-         |    exit 0
-         |  else
-         |    ViashError "Profile '$$VIASH_PROFILE' does not support debug mode."
-         |    exit 1
-         |  fi
-         |fi""".stripMargin
-
-    BashWrapperMods(
-      parsers = parsers,
-      postParse = postParse
-    )
-  }
-
-  private def dockerAddChown(
-    functionality: Functionality,
-    dockerArgs: String,
-    volExtraParams: String,
-    fullImageID: String,
-  ) = {
+  private def dockerAddChown(functionality: Functionality): BashWrapperMods = {
+    // TODO: how are mounts added to this section?
     val preRun =
       s"""
-        |if [ "$$VIASH_PROFILE" == "docker" ]; then
+        |if [[ "$$VIASH_ENGINE_TYPE" == "docker" ]]; then
         |  # change file ownership
         |  function ViashPerformChown {
         |    if (( $${#VIASH_CHOWN_VARS[@]} )); then
         |      set +e
-        |      eval docker run --entrypoint=chown $dockerArgs$volExtraParams $fullImageID "$$(id -u):$$(id -g)" --silent --recursive $${VIASH_CHOWN_VARS[@]}
+        |      VIASH_CMD="docker run --entrypoint=chown --rm $${VIASH_UNIQUE_MOUNTS[@]} $$VIASH_DOCKER_IMAGE_ID $$(id -u):$$(id -g) --silent --recursive $${VIASH_CHOWN_VARS[@]}"
+        |      ViashDebug "+ $$VIASH_CMD"
+        |      eval $$VIASH_CMD
         |      set -e
         |    fi
         |  }
@@ -459,24 +490,50 @@ final case class ExecutableExecutor(
     )
   }
 
-  private def dockerAddComputationalRequirements(
-    functionality: Functionality
-  ): BashWrapperMods = {
+  private def dockerAddComputationalRequirements(): BashWrapperMods = {
     // add requirements to parameters
     val preRun = 
-      """
-        |if [ "$$VIASH_PROFILE" == "docker" ]; then
+      s"""
+        |if [[ "$$VIASH_ENGINE_TYPE" == "docker" ]]; then
         |  # helper function for filling in extra docker args
-        |  if [ ! -z "$VIASH_META_MEMORY_MB" ]; then
-        |    VIASH_DOCKER_RUN_ARGS+=("--memory=${VIASH_META_MEMORY_MB}m")
+        |  if [ ! -z "$$VIASH_META_MEMORY_MB" ]; then
+        |    VIASH_DOCKER_RUN_ARGS+=("--memory=$${VIASH_META_MEMORY_MB}m")
         |  fi
-        |  if [ ! -z "$VIASH_META_CPUS" ]; then
-        |    VIASH_DOCKER_RUN_ARGS+=("--cpus=${VIASH_META_CPUS}")
+        |  if [ ! -z "$$VIASH_META_CPUS" ]; then
+        |    VIASH_DOCKER_RUN_ARGS+=("--cpus=$${VIASH_META_CPUS}")
         |  fi
         |fi""".stripMargin
 
     // return output
     BashWrapperMods(
+      preRun = preRun
+    )
+  }
+
+
+  private def dockerGenerateCommand(functionality: Functionality): BashWrapperMods = {
+
+    // collect runtime docker arguments
+    val entrypointStr = functionality.mainScript match {
+      case Some(_: Executable) => " --entrypoint=''"
+      case _ => " --entrypoint=bash"
+    }
+
+    val workdirStr = workdir.map(" --workdir '" + _ + "'").getOrElse("")
+
+    val preParse = 
+      s"""
+        |# initialise docker variables
+        |VIASH_DOCKER_RUN_ARGS=($dockerArgs)""".stripMargin
+
+    val preRun =
+      s"""
+        |if [[ "$$VIASH_ENGINE_TYPE" == "docker" ]]; then
+        |  VIASH_CMD="docker run$entrypointStr$workdirStr $${VIASH_DOCKER_RUN_ARGS[@]} $${VIASH_UNIQUE_MOUNTS[@]} $$VIASH_DOCKER_IMAGE_ID"
+        |fi""".stripMargin
+      
+    BashWrapperMods(
+      preParse = preParse,
       preRun = preRun
     )
   }

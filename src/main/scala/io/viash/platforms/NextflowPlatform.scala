@@ -30,6 +30,7 @@ import shapeless.syntax.singleton
 import io.viash.schemas._
 import io.viash.helpers.Escaper
 import io.viash.executors.{Executor, ExecutorResources}
+import io.viash.engines.DockerEngine
 
 /**
  * A Platform class for generating Nextflow (DSL2) modules.
@@ -132,9 +133,10 @@ case class NextflowPlatform(
   def containerDirective(config: Config): Option[DockerImageInfo] = {
     val plat = config.getEngines.find(p => p.id == container)
     plat match {
-      case Some(p: DockerPlatform) => 
+      case Some(p: DockerEngine) => 
         Some(Docker.getImageInfo(
           functionality = Some(config.functionality),
+          engineId = Some(p.id),
           registry = p.target_registry,
           organization = p.target_organization,
           name = p.target_image,

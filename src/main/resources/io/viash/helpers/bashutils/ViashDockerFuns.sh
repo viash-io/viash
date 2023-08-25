@@ -99,9 +99,9 @@ function ViashDockerPush {
   fi
   [[ $save =~ e ]] && set -e
   if [ $out -eq 0 ]; then
-    ViashNotice "Container '$VSHD_ID' push succeeded."
+    ViashNotice "Container '$1' push succeeded."
   else
-    ViashError "Container '$VSHD_ID' push errored. You might not be logged in or have the necessary permissions."
+    ViashError "Container '$1' push errored. You might not be logged in or have the necessary permissions."
   fi
   return $out
 }
@@ -124,62 +124,61 @@ function ViashDockerPullElseBuild {
 
 # ViashDockerSetup: create a Docker image, according to specified docker setup strategy
 #
-# $1                  : image identifier with format `[registry/]image[:tag]`
-# $2                  : docker setup strategy, see DockerSetupStrategy.scala
-# ViashDockerBuild    : a Bash function which builds a docker image, takes image identifier as argument.
+# $1          : image identifier with format `[registry/]image[:tag]`
+# $2          : docker setup strategy, see DockerSetupStrategy.scala
 # examples:
 #   ViashDockerSetup mynewcomponent alwaysbuild
 function ViashDockerSetup {
-  VSHD_ID="$1"
-  VSHD_STRAT="$2"
-  if [ "$VSHD_STRAT" == "alwaysbuild" -o "$VSHD_STRAT" == "build" -o "$VSHD_STRAT" == "b" ]; then
-    ViashDockerBuild $VSHD_ID --no-cache
-  elif [ "$VSHD_STRAT" == "alwayspull" -o "$VSHD_STRAT" == "pull" -o "$VSHD_STRAT" == "p" ]; then
-    ViashDockerPull $VSHD_ID
-  elif [ "$VSHD_STRAT" == "alwayspullelsebuild" -o "$VSHD_STRAT" == "pullelsebuild" ]; then
-    ViashDockerPullElseBuild $VSHD_ID --no-cache
-  elif [ "$VSHD_STRAT" == "alwayspullelsecachedbuild" -o "$VSHD_STRAT" == "pullelsecachedbuild" ]; then
-    ViashDockerPullElseBuild $VSHD_ID
-  elif [ "$VSHD_STRAT" == "alwayscachedbuild" -o "$VSHD_STRAT" == "cachedbuild" -o "$VSHD_STRAT" == "cb" ]; then
-    ViashDockerBuild $VSHD_ID
-  elif [[ "$VSHD_STRAT" =~ ^ifneedbe ]]; then
-    save=$-; set +e
-    ViashDockerLocalTagCheck $VSHD_ID
-    outCheck=$?
+  local image_id="$1"
+  local setup_strategy="$2"
+  if [ "$setup_strategy" == "alwaysbuild" -o "$setup_strategy" == "build" -o "$setup_strategy" == "b" ]; then
+    ViashDockerBuild $image_id --no-cache $(ViashDockerBuildArgs "$engine_id")
+  elif [ "$setup_strategy" == "alwayspull" -o "$setup_strategy" == "pull" -o "$setup_strategy" == "p" ]; then
+    ViashDockerPull $image_id
+  elif [ "$setup_strategy" == "alwayspullelsebuild" -o "$setup_strategy" == "pullelsebuild" ]; then
+    ViashDockerPullElseBuild $image_id --no-cache $(ViashDockerBuildArgs "$engine_id")
+  elif [ "$setup_strategy" == "alwayspullelsecachedbuild" -o "$setup_strategy" == "pullelsecachedbuild" ]; then
+    ViashDockerPullElseBuild $image_id $(ViashDockerBuildArgs "$engine_id")
+  elif [ "$setup_strategy" == "alwayscachedbuild" -o "$setup_strategy" == "cachedbuild" -o "$setup_strategy" == "cb" ]; then
+    ViashDockerBuild $image_id $(ViashDockerBuildArgs "$engine_id")
+  elif [[ "$setup_strategy" =~ ^ifneedbe ]]; then
+    local save=$-; set +e
+    ViashDockerLocalTagCheck $image_id
+    local outCheck=$?
     [[ $save =~ e ]] && set -e
     if [ $outCheck -eq 0 ]; then
-      ViashInfo "Image $VSHD_ID already exists"
-    elif [ "$VSHD_STRAT" == "ifneedbebuild" ]; then
-      ViashDockerBuild $VSHD_ID --no-cache
-    elif [ "$VSHD_STRAT" == "ifneedbecachedbuild" ]; then
-      ViashDockerBuild $VSHD_ID
-    elif [ "$VSHD_STRAT" == "ifneedbepull" ]; then
-      ViashDockerPull $VSHD_ID
-    elif [ "$VSHD_STRAT" == "ifneedbepullelsebuild" ]; then
-      ViashDockerPullElseBuild $VSHD_ID --no-cache
-    elif [ "$VSHD_STRAT" == "ifneedbepullelsecachedbuild" ]; then
-      ViashDockerPullElseBuild $VSHD_ID
+      ViashInfo "Image $image_id already exists"
+    elif [ "$setup_strategy" == "ifneedbebuild" ]; then
+      ViashDockerBuild $image_id --no-cache $(ViashDockerBuildArgs "$engine_id")
+    elif [ "$setup_strategy" == "ifneedbecachedbuild" ]; then
+      ViashDockerBuild $image_id $(ViashDockerBuildArgs "$engine_id")
+    elif [ "$setup_strategy" == "ifneedbepull" ]; then
+      ViashDockerPull $image_id
+    elif [ "$setup_strategy" == "ifneedbepullelsebuild" ]; then
+      ViashDockerPullElseBuild $image_id --no-cache $(ViashDockerBuildArgs "$engine_id")
+    elif [ "$setup_strategy" == "ifneedbepullelsecachedbuild" ]; then
+      ViashDockerPullElseBuild $image_id $(ViashDockerBuildArgs "$engine_id")
     else
-      ViashError "Unrecognised Docker strategy: $VSHD_STRAT"
+      ViashError "Unrecognised Docker strategy: $setup_strategy"
       exit 1
     fi
-  elif [ "$VSHD_STRAT" == "push" -o "$VSHD_STRAT" == "forcepush" -o "$VSHD_STRAT" == "alwayspush" ]; then
-    ViashDockerPush "$VSHD_ID"
-  elif [ "$VSHD_STRAT" == "pushifnotpresent" -o "$VSHD_STRAT" == "gentlepush" -o "$VSHD_STRAT" == "maybepush" ]; then
-    save=$-; set +e
-    ViashDockerRemoteTagCheck $VSHD_ID
-    outCheck=$?
+  elif [ "$setup_strategy" == "push" -o "$setup_strategy" == "forcepush" -o "$setup_strategy" == "alwayspush" ]; then
+    ViashDockerPush "$image_id"
+  elif [ "$setup_strategy" == "pushifnotpresent" -o "$setup_strategy" == "gentlepush" -o "$setup_strategy" == "maybepush" ]; then
+    local save=$-; set +e
+    ViashDockerRemoteTagCheck $image_id
+    local outCheck=$?
     [[ $save =~ e ]] && set -e
     if [ $outCheck -eq 0 ]; then
-      ViashNotice "Container '$VSHD_ID' exists, doing nothing."
+      ViashNotice "Container '$image_id' exists, doing nothing."
     else
-      ViashNotice "Container '$VSHD_ID' does not yet exist."
-      ViashDockerPush "$VSHD_ID"
+      ViashNotice "Container '$image_id' does not yet exist."
+      ViashDockerPush "$image_id"
     fi
-  elif [ "$VSHD_STRAT" == "donothing" -o "$VSHD_STRAT" == "meh" ]; then
+  elif [ "$setup_strategy" == "donothing" -o "$setup_strategy" == "meh" ]; then
     ViashNotice "Skipping setup."
   else
-    ViashError "Unrecognised Docker strategy: $VSHD_STRAT"
+    ViashError "Unrecognised Docker strategy: $setup_strategy"
     exit 1
   fi
 }
@@ -191,18 +190,67 @@ function ViashDockerSetup {
 # examples:
 #   ViashDockerCheckCommands bash:4.0 bash ps foo
 function ViashDockerCheckCommands {
-  tag=$1
+  local image_id="$1"
   shift 1
-  commands="$@"
-  save=$-; set +e
-  missing=$(docker run --rm --entrypoint=sh $tag -c "for command in $commands; do command -v \$command >/dev/null 2>&1; if [ \$? -ne 0 ]; then echo \$command; exit 1; fi; done")
-  outCheck=$?
+  local commands="$@"
+  local save=$-; set +e
+  local missing=$(docker run --rm --entrypoint=sh "$image_id" -c "for command in $commands; do command -v \$command >/dev/null 2>&1; if [ \$? -ne 0 ]; then echo \$command; exit 1; fi; done")
+  local outCheck=$?
   [[ $save =~ e ]] && set -e
   if [ $outCheck -ne 0 ]; then
-  	ViashError "Docker container '$tag' does not contain command '$missing'."
+  	ViashError "Docker container '$image_id' does not contain command '$missing'."
   	exit 1
   fi
 }
 
+# ViashDockerBuild: build a docker image
+# $1                               : image identifier with format `[registry/]image[:tag]`
+# $...                             : additional arguments to pass to docker build
+# $VIASH_META_TEMP_DIR             : temporary directory to store dockerfile & optional resources in
+# $VIASH_META_FUNCTIONALITY_NAME   : name of the component
+# $VIASH_META_RESOURCES_DIR        : directory containing the resources
+# $VIASH_VERBOSITY                 : verbosity level
+# exit code $?                     : whether or not the image was built successfully
+function ViashDockerBuild {
+  local image_id="$1"
+  shift 1
+
+  # create temporary directory to store dockerfile & optional resources in
+  local tmpdir=$(mktemp -d "$VIASH_META_TEMP_DIR/dockerbuild-$VIASH_META_FUNCTIONALITY_NAME-XXXXXX")
+  local dockerfile="$tmpdir/Dockerfile"
+  function clean_up {
+    rm -rf "$tmpdir"
+  }
+  trap clean_up EXIT
+
+  # store dockerfile and resources
+  ViashDockerfile "$VIASH_ENGINE_ID" > "$dockerfile"
+
+  # generate the build command
+  local docker_build_cmd="docker build -t '$image_id' $@ '$VIASH_META_RESOURCES_DIR' -f '$dockerfile'"
+
+  # build the container
+  ViashNotice "Building container '$image_id' with Dockerfile"
+  ViashInfo "$docker_build_cmd"
+  local save=$-; set +e
+  if [ $VIASH_VERBOSITY -ge $VIASH_LOGCODE_INFO ]; then
+    eval $docker_build_cmd
+  else
+    eval $docker_build_cmd &> "$tmpdir/docker_build.log"
+  fi
+
+  # check exit code
+  local out=$?
+  [[ $save =~ e ]] && set -e
+  if [ $out -ne 0 ]; then
+    ViashError "Error occurred while building container '$image_id'"
+    if [ $VIASH_VERBOSITY -lt $VIASH_LOGCODE_INFO ]; then
+      ViashError "Transcript: --------------------------------"
+      cat "$tmpdir/docker_build.log"
+      ViashError "End of transcript --------------------------"
+    fi
+    exit 1
+  fi
+}
 
 ######## End of helper functions for setting up Docker images for viash ########

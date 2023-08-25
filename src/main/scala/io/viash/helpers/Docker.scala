@@ -51,6 +51,7 @@ object Docker {
     registry: Option[String] = None,
     organization: Option[String] = None,
     tag: Option[String] = None,
+    engineId: Option[String] = None,
     namespaceSeparator: String
   ): DockerImageInfo = {
 
@@ -70,14 +71,19 @@ object Docker {
       functionality.map(fun => fun.name)
     }
 
+    val tagSuffix = engineId match {
+      case Some(id) if id != "docker" => s"-$id"
+      case _ => ""
+    }
+
     val actualTag = {
       derivedTag
     } orElse {
       tag
     } orElse {
-      functionality.flatMap(fun => fun.version.map(_.toString))
+      functionality.flatMap(fun => fun.version.map(_.toString + tagSuffix))
     } orElse {
-      Some("latest")
+      Some("latest" + tagSuffix)
     }
 
     DockerImageInfo(
