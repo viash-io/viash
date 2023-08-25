@@ -41,28 +41,4 @@ case class NativePlatform(
   @default("native")
   id: String = "native",
   `type`: String = "native"
-) extends Platform with Executor {
-  def generateExecutor(config: Config, testing: Boolean): ExecutorResources = {
-    val functionality = config.functionality
-    val executor = functionality.mainScript match {
-      case None => "eval"
-      case Some(_: Executable) => "eval"
-      case Some(_) => "bash"
-    }
-
-    // create new bash script
-    val bashScript = BashScript(
-      dest = Some(functionality.name),
-      text = Some(BashWrapper.wrapScript(
-        executor = executor,
-        functionality = functionality,
-        config = config
-      ))
-    )
-
-    ExecutorResources(
-      Some(bashScript),
-      functionality.additionalResources
-    )
-  }
-}
+) extends Platform

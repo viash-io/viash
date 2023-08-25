@@ -51,19 +51,5 @@ trait Platform {
   
   val id: String
 
-  val hasSetup: Boolean = false
   val requirements: List[Requirements] = Nil
-}
-
-object Platform {
-  def parse(uri: URI): Platform = {
-    val str = IO.read(uri)
-    parser.parse(str)
-      .fold(throw _, _.as[Platform])
-      .fold(throw _, identity)
-  }
-
-  def read(path: String): Platform = {
-    parse(IO.uri(path))
-  }
 }

@@ -222,7 +222,7 @@ object ViashTest extends Logging {
     }
 
     // generate executable for native platform
-    val exe = NativePlatform().generateExecutor(appliedConfig.config, true).resources.head
+    val exe = ExecutableExecutor().generateExecutor(appliedConfig.config, true).resources.head
 
     // fetch tests
     val tests = fun.test_resources

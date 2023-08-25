@@ -94,40 +94,7 @@ case class Config(
   private val `__merge__`: Option[File] = None
   
 
-  /**
-    * Detect a config's platform
-    * 
-    * TODO: to be deprecated
-    * 
-    * Order of execution:
-    *   - if a platform id is passed, look up the platform in the platforms list
-    *   - else if a platform yaml is passed, read platform from file
-    *   - else if platforms is a non-empty list, use the first platform
-    *   - else use the native platform
-    *
-    * @param platformStr A platform ID referring to one of the config's platforms, or a path to a YAML file
-    * @return A platform
-    */
-  def findPlatform(platformStr: Option[String]): Platform = {
-    if (platformStr.isDefined) {
-      val pid = platformStr.get
-
-      val platformNames = this.platforms.map(_.id)
-
-      if (platformNames.contains(pid)) {
-        this.platforms(platformNames.indexOf(pid))
-      } else if (pid.endsWith(".yaml") || pid.endsWith(".yml")) {
-        Platform.parse(IO.uri(platformStr.get))
-      } else {
-        throw new RuntimeException("platform must be a platform id specified in the config or a path to a platform yaml file.")
-      }
-    } else if (this.platforms.nonEmpty) {
-      this.platforms.head
-    } else {
-      NativePlatform()
-    }
-  }
-
+  
   /**
     * Find the executor
     * 
