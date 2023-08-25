@@ -24,20 +24,38 @@ import io.viash.helpers.Logging
 
 trait ViashCommand {
   _: DocumentedSubcommand =>
-  val platform = registerOpt[String](
-    name = "platform",
-    short = Some('p'),
+  // val platform = registerOpt[String](
+  //   name = "platform",
+  //   short = Some('p'),
+  //   default = None,
+  //   descr =
+  //     "Specifies which platform amongst those specified in the config to use. " +
+  //     "If this is not provided, the first platform will be used. " +
+  //     "If no platforms are defined in the config, the native platform will be used. " +
+  //     "In addition, the path to a platform yaml file can also be specified.",
+  //   required = false
+  // )
+  val executor = registerOpt[String](
+    name = "executor",
     default = None,
     descr =
-      "Specifies which platform amongst those specified in the config to use. " +
-      "If this is not provided, the first platform will be used. " +
-      "If no platforms are defined in the config, the native platform will be used. " +
-      "In addition, the path to a platform yaml file can also be specified.",
+      "Specifies which executor amongst those specified in the config to use. " +
+      "If this is not provided, the first executor will be used. " +
+      "If no executors are defined in the config, the executable executor will be used.",
+    required = false
+  )
+  val engine = registerOpt[String](
+    name = "engine",
+    default = None,
+    descr =
+      "A regex to determine which engines amongst those specified in the config to use. " +
+      "If this is not provided, all engines will be used. " +
+      "If no engines are defined in the config, the native engine will be used.",
     required = false
   )
   val config = registerTrailArg[String](
     name = "config",
-    descr = "A viash config file (example: config.vsh.yaml). This argument can also be a script with the config as a header.",
+    descr = "A viash config file (example: `config.vsh.yaml`). This argument can also be a script with the config as a header.",
     default = Some("config.vsh.yaml"),
     required = true
   )
@@ -89,15 +107,33 @@ trait ViashNs {
     descr = "A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
     default = None
   )
-  val platform = registerOpt[String](
-    name = "platform",
-    short = Some('p'),
-    descr =
-      "Acts as a regular expression to filter the platform ids specified in the found config files. " +
-        "If this is not provided, all platforms will be used. " +
-        "If no platforms are defined in a config, the native platform will be used. " +
-        "In addition, the path to a platform yaml file can also be specified.",
+  // val platform = registerOpt[String](
+  //   name = "platform",
+  //   short = Some('p'),
+  //   descr =
+  //     "Acts as a regular expression to filter the platform ids specified in the found config files. " +
+  //       "If this is not provided, all platforms will be used. " +
+  //       "If no platforms are defined in a config, the native platform will be used. " +
+  //       "In addition, the path to a platform yaml file can also be specified.",
+  //   default = None,
+  //   required = false
+  // )
+  val executor = registerOpt[String](
+    name = "executor",
     default = None,
+    descr =
+      "Acts as a regular expression to filter the executor ids specified in the found config files. " +
+        "If this is not provided, all executors will be used. " +
+        "If no executors are defined in a config, the executable executor will be used.",
+    required = false
+  )
+  val engine = registerOpt[String](
+    name = "engine",
+    default = None,
+    descr =
+      "Acts as a regular expression to filter the engine ids specified in the found config files. " +
+        "If this is not provided, all engines will be used. " +
+        "If no engines are defined in a config, the native engine will be used.",
     required = false
   )
   val parallel = registerOpt[Boolean](
@@ -384,7 +420,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
         """viash ns exec 'echo {path} \\;'
           |viash ns exec 'chmod +x {main-script} +'""".stripMargin
       )
-
+      // TODO: update this to applyEngine and applyExecutor??
       val applyPlatform = registerOpt[Boolean] (
         name = "apply_platform",
         short = Some('a'),

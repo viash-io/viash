@@ -55,7 +55,7 @@ object ViashNamespace extends Logging {
 
   def targetOutputPath(
     targetDir: String,
-    platformId: String,
+    executorId: String,
     namespace: Option[String],
     functionalityName: String
   ): String = {
@@ -63,7 +63,7 @@ object ViashNamespace extends Logging {
       case Some(ns) => ns + "/"
       case None => ""
     }
-    s"$targetDir/$platformId/$nsStr$functionalityName"
+    s"$targetDir/$executorId/$nsStr$functionalityName"
   }
 
   def build(
@@ -83,17 +83,18 @@ object ViashNamespace extends Logging {
         case ac =>
           val funName = ac.config.functionality.name
           val ns = ac.config.functionality.namespace
-          val platformId = ac.platform.get.id
+          val executorId = ac.executor.get.id
+          // val engineId = ac.platform.get.id
           val out = 
             if (flatten) {
               target
             } else {
-              targetOutputPath(target, platformId, ns, funName)
+              targetOutputPath(target, executorId, ns, funName)
             }
           val nsStr = ns.map(" (" + _ + ")").getOrElse("")
-          infoOut(s"Exporting $funName$nsStr =$platformId=> $out")
+          infoOut(s"Exporting $funName$nsStr =$executorId=> $out")
           val status = ViashBuild(
-            config = ac,
+            appliedConfig = ac,
             output = out,
             setup = setup,
             push = push
@@ -119,7 +120,8 @@ object ViashNamespace extends Logging {
     val configs1 = configs.filter{tup => tup match {
       // remove nextflow because unit testing nextflow modules
       // is not yet supported
-      case AppliedConfig(_, _, Some(pl), None) => pl.`type` != "nextflow"
+      // TODO: Soon they might be!
+      case AppliedConfig(_, Some(ex), _, None) => ex.`type` != "nextflow"
       case _ => true
     }}
     val configs2 = MaybeParList(configs1, parallel)
@@ -147,7 +149,8 @@ object ViashNamespace extends Logging {
           List(
             "namespace",
             "functionality",
-            "platform",
+            "executor",
+            "engine",
             "test_name",
             "exit_code",
             "duration",
@@ -155,10 +158,12 @@ object ViashNamespace extends Logging {
           ).mkString("\t") + sys.props("line.separator"))
         writer.flush()
       }
-      infoOut("%20s %20s %20s %20s %9s %8s %20s".
-        format("namespace",
+      infoOut("%20s %20s %20s %20s %20s %9s %8s %20s".
+        format(
+          "namespace",
           "functionality",
-          "platform",
+          "executor",
+          "engine",
           "test_name",
           "exit_code",
           "duration",
@@ -173,17 +178,18 @@ object ViashNamespace extends Logging {
             // get attributes
             val namespace = ac.config.functionality.namespace.getOrElse("")
             val funName = ac.config.functionality.name
-            val platName = ac.platform.get.id
+            val executorName = ac.executor.get.id
+            val engineName = ac.engines.head.id
 
             // print start message
-            infoOut("%20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, platName, "start", "", "", ""))
+            infoOut("%20s %20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, executorName, engineName, "start", "", "", ""))
 
             // run tests
             // TODO: it would actually be great if this component could subscribe to testresults messages
 
             val ManyTestOutput(setupRes, testRes) = try {
               ViashTest(
-                config = ac,
+                appliedConfig = ac,
                 setupStrategy = setup,
                 keepFiles = keepFiles,
                 quiet = true,
@@ -220,7 +226,7 @@ object ViashNamespace extends Logging {
               }
 
               // print message
-              log(LoggerOutput.StdOut, LoggerLevel.Info, col, "%20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, platName, test.name, test.exitValue, test.duration, msg))
+              log(LoggerOutput.StdOut, LoggerLevel.Info, col, "%20s %20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, executorName, engineName, test.name, test.exitValue, test.duration, msg))
 
               if (test.exitValue != 0) {
                 info(test.output)
@@ -229,7 +235,7 @@ object ViashNamespace extends Logging {
 
               // write to tsv
               tsvWriter.foreach{writer =>
-                writer.append(List(namespace, funName, platName, test.name, test.exitValue, test.duration, msg).mkString("\t") + sys.props("line.separator"))
+                writer.append(List(namespace, funName, executorName, engineName, test.name, test.exitValue, test.duration, msg).mkString("\t") + sys.props("line.separator"))
                 writer.flush()
               }
             }
@@ -290,9 +296,11 @@ object ViashNamespace extends Logging {
     dryrun: Boolean, 
     parallel: Boolean
   ): Unit = {
-    val configData = configs.filter(_.status.isEmpty).map{
-      case AppliedConfig(conf, executor, plat, _) => 
-        NsExecData(conf.info.get.config, conf, plat)
+    val configData = configs.filter(_.status.isEmpty).flatMap{ ac =>
+      // TODO: Should we iterate over the engines here?
+      ac.engines.map(engine => {
+        NsExecData(ac.config.info.get.config, ac.config, ac.executor, Some(engine))
+      })
     }
 
     // check whether is empty

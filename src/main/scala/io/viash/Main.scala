@@ -36,6 +36,7 @@ import io.viash.helpers.LoggerLevel
 import io.viash.executors.Executor
 import io.viash.config.AppliedConfig
 import io.viash.functionality.Functionality
+import io.viash.engines.Engine
 
 object Main extends Logging {
   private val pkg = getClass.getPackage
@@ -226,7 +227,7 @@ object Main extends Logging {
       case List(cli.run) =>
         val config = readConfig(cli.run, project = proj1)
         ViashRun(
-          config = config,
+          appliedConfig = config,
           args = runArgs.toIndexedSeq.dropWhile(_ == "--"), 
           keepFiles = cli.run.keep.toOption.map(_.toBoolean),
           cpus = cli.run.cpus.toOption,
@@ -236,7 +237,7 @@ object Main extends Logging {
         val config = readConfig(cli.build, project = proj1)
         val config2 = singleConfigDependencies(config, cli.build.output.toOption, proj1.rootDir)
         val buildResult = ViashBuild(
-          config = config2,
+          appliedConfig = config2,
           output = cli.build.output(),
           setup = cli.build.setup.toOption,
           push = cli.build.push()
@@ -270,9 +271,16 @@ object Main extends Logging {
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.test) =>
         val configs = readConfigs(cli.namespace.test, project = proj1)
+        // resolve dependencies
         val configs2 = namespaceDependencies(configs, None, proj1.rootDir)
+        // flatten engines
+        val configs3 = configs2.flatMap{ ac => 
+          ac.engines.map{ engine => 
+            ac.copy(engines = List(engine))
+          }
+        }
         val testResults = ViashNamespace.test(
-          configs = configs2,
+          configs = configs3,
           parallel = cli.namespace.test.parallel(),
           keepFiles = cli.namespace.test.keep.toOption.map(_.toBoolean),
           tsv = cli.namespace.test.tsv.toOption,
@@ -288,7 +296,8 @@ object Main extends Logging {
           cli.namespace.list,
           project = proj1,
           addOptMainScript = false, 
-          applyPlatform = cli.namespace.list.platform.isDefined
+          applyExecutor = cli.namespace.list.executor.isDefined,
+          applyEngine = cli.namespace.list.engine.isDefined
         )
         val configs2 = namespaceDependencies(configs, None, proj1.rootDir)
         ViashNamespace.list(
@@ -302,7 +311,8 @@ object Main extends Logging {
         val configs = readConfigs(
           cli.namespace.exec, 
           project = proj1, 
-          applyPlatform = cli.namespace.exec.applyPlatform()
+          applyExecutor = cli.namespace.exec.applyPlatform(),
+          applyEngine = cli.namespace.exec.applyPlatform()
         )
         ViashNamespace.exec(
           configs = configs,
@@ -317,7 +327,7 @@ object Main extends Logging {
           cli.config.view,
           project = proj1,
           addOptMainScript = false,
-          applyPlatform = cli.config.view.platform.isDefined
+          applyExecutorAndEngine = cli.config.view.executor.isDefined || cli.config.view.engine.isDefined
         )
         val config2 = DependencyResolver.modifyConfig(config.config, None, proj1.rootDir)
         ViashConfig.view(
@@ -331,7 +341,7 @@ object Main extends Logging {
           cli.config.inject,
           project = proj1,
           addOptMainScript = false,
-          applyPlatform = false
+          applyExecutorAndEngine = false
         )
         ViashConfig.inject(config.config)
         0
@@ -376,41 +386,48 @@ object Main extends Logging {
     }
   }
 
-  def processConfigWithPlatform(
-    config: AppliedConfig, 
-    platformStr: Option[String],
+
+  def processConfigWithExecutorAndEngine(
+    appliedConfig: AppliedConfig, 
+    executor: Option[Executor],
+    engines: List[Engine],
     targetDir: Option[String]
   ): AppliedConfig = {
-    // add platformStr to the info object
-    val conf1 = config.config.copy(
-      info = config.config.info.map{_.copy(
-        platform = platformStr,
-        output = (targetDir, platformStr) match {
-          case (Some(td), Some(pl)) => 
-            Some(ViashNamespace.targetOutputPath(
-              targetDir = td,
-              platformId = pl,
-              namespace = config.config.functionality.namespace,
-              functionalityName = config.config.functionality.name
-            ))
-          case _ => None
-        }
-        // TODO: add executable?
-      )}
+    // determine output path
+    val outputPath = (targetDir, executor) match {
+      case (Some(td), Some(ex)) => 
+        Some(ViashNamespace.targetOutputPath(
+          targetDir = td,
+          executorId = ex.id,
+          namespace = appliedConfig.config.functionality.namespace,
+          functionalityName = appliedConfig.config.functionality.name
+        ))
+      case _ => None
+    }
+
+    // add executor and engine ids to the info object
+    val configInfo = appliedConfig.config.info.map{_.copy(
+      executor = executor.map(_.id),
+      engine = Some(engines.map(_.id).mkString("|")),
+      output = outputPath
+    )}
+
+    // update info, and add executor and engine to the config
+    appliedConfig.copy(
+      config = appliedConfig.config.copy(
+        info = configInfo
+      ),
+      executor = executor,
+      engines = engines,
+      status = None
     )
-
-    // find platform, see javadoc of this function for details on how
-    val plat = conf1.findPlatform(platformStr)
-    val executor = Executor.get(plat)
-
-    AppliedConfig(conf1, Some(executor), Some(plat), None)
   }
 
   def readConfig(
     subcommand: ViashCommand,
     project: ViashProject,
     addOptMainScript: Boolean = true,
-    applyPlatform: Boolean = true
+    applyExecutorAndEngine: Boolean = true
   ): AppliedConfig = {
     
     val config = Config.read(
@@ -419,10 +436,17 @@ object Main extends Logging {
       addOptMainScript = addOptMainScript,
       configMods = project.config_mods
     )
-    if (applyPlatform) {
-      processConfigWithPlatform(
-        config = config,
-        platformStr = subcommand.platform.toOption,
+    if (applyExecutorAndEngine) {
+      val executorStr = subcommand.executor.toOption
+      val engineStr = subcommand.engine.toOption
+      
+      val executor = config.findExecutor(executorStr)
+      val engines = config.findEngines(engineStr)
+
+      processConfigWithExecutorAndEngine(
+        appliedConfig = config,
+        executor = Some(executor), // TODO: fix? should findExecutor return an option?
+        engines = engines,
         targetDir = project.target
       )
     } else {
@@ -434,16 +458,18 @@ object Main extends Logging {
     subcommand: ViashNs,
     project: ViashProject,
     addOptMainScript: Boolean = true,
-    applyPlatform: Boolean = true
+    applyExecutor: Boolean = true,
+    applyEngine: Boolean = true
   ): List[AppliedConfig] = {
     val source = project.source.get
     val query = subcommand.query.toOption
     val queryNamespace = subcommand.query_namespace.toOption
     val queryName = subcommand.query_name.toOption
-    val platformStr = subcommand.platform.toOption
+    val executorStr = subcommand.executor.toOption
+    val engineStr = subcommand.engine.toOption
     val configMods = project.config_mods
 
-    val configs = Config.readConfigs(
+    val configs0 = Config.readConfigs(
       source = source,
       projectDir = project.rootDir.map(_.toUri()),
       query = query,
@@ -452,42 +478,31 @@ object Main extends Logging {
       configMods = configMods,
       addOptMainScript = addOptMainScript
     )
+    
+    // TODO: apply engine and executor should probably be split into two Y_Y
+    val configs1 = 
+      if (applyExecutor || applyEngine) {
+        configs0.flatMap {
+          // passthrough statuses
+          case ac if ac.status.isDefined => List(ac)
+          case ac =>
+            val executors = ac.config.findExecutors(executorStr)
+            val engines = ac.config.findEngines(engineStr)
 
-    if (applyPlatform) {
-      // create regex for filtering platform ids
-      val platformStrVal = platformStr.getOrElse(".*")
-
-      configs.flatMap{config => config match {
-        // passthrough statuses
-        case ac if ac.status.isDefined => List(ac)
-        case ac =>
-          val platformStrs = 
-            if (platformStrVal.contains(":") || (new File(platformStrVal)).exists) {
-              // platform is a file
-              List(Some(platformStrVal))
-            } else {
-              // platform is a regex for filtering the ids
-              val platIDs = ac.config.platforms.map(_.id)
-
-              if (platIDs.isEmpty) {
-                // config did not contain any platforms, so the native platform should be used
-                List(None)
-              } else {
-                // filter platforms using the regex
-                platIDs.filter(platformStrVal.r.findFirstIn(_).isDefined).map(Some(_))
-              }
+            executors.map{ executor =>
+              processConfigWithExecutorAndEngine(
+                appliedConfig = ac,
+                executor = Some(executor),
+                engines = engines,
+                targetDir = project.target
+              )
             }
-          platformStrs.map{ platStr =>
-            processConfigWithPlatform(
-              config = ac,
-              platformStr = platStr,
-              targetDir = project.target
-            )
           }
-        }}
-    } else {
-      configs
-    }
+      } else {
+        configs0
+      }
+    
+      configs1
   }
 
   // Handle dependencies operations for a single config
@@ -524,7 +539,7 @@ object Main extends Logging {
 
   // Actual handling of the dependency logic, to be used for single and namespace configs
   def handleSingleConfigDependency(config: AppliedConfig, output: Option[String], rootDir: Option[Path], namespaceConfigs: List[Config] = Nil) = {
-    val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config.config, config.platform.map(_.id))
+    val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config.config, config.executor.map(_.id))
     val config1 = DependencyResolver.modifyConfig(config.config, dependencyPlatformId, rootDir, namespaceConfigs)
     val config2 = if (output.isDefined) {
       DependencyResolver.copyDependencies(config1, output.get, dependencyPlatformId.getOrElse("native"), namespaceConfigs.nonEmpty)

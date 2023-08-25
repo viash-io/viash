@@ -111,13 +111,13 @@ object DependencyResolver {
     config4
   }
 
-  def copyDependencies(config: Config, output: String, platformId: String, buildingNamespace: Boolean = false): Config = {
+  def copyDependencies(config: Config, output: String, executorId: String, buildingNamespace: Boolean = false): Config = {
     composedDependenciesLens.modify(_.map(dep => {
 
       if (dep.isLocalDependency && buildingNamespace) {
         // Dependency solving will be done by building the component and dependencies of that component will be handled there.
         // However, we have to fill in writtenPath. This will be needed when this built component is used as a dependency and we have to resolve dependencies of dependencies.
-        val writtenPath = ViashNamespace.targetOutputPath(output, platformId, None, dep.name)
+        val writtenPath = ViashNamespace.targetOutputPath(output, executorId, None, dep.name)
         dep.copy(writtenPath = Some(writtenPath))
       } else if (dep.foundConfigPath.isDefined) {
         // copy the dependency to the output folder
@@ -286,10 +286,10 @@ object DependencyResolver {
     }
   }
 
-  // Get the platform to be used for dependencies. If the main script is a Nextflow script, use 'nextflow', otherwise use 'native'.
-  // Exception is when there is no platform set for the config, then we must return 'None' too.
-  def getDependencyPlatformId(config: Config, platform: Option[String]): Option[String] = {
-    (config.functionality.mainScript, platform) match {
+  // Get the executor to be used for dependencies. If the main script is a Nextflow script, use 'nextflow', otherwise use 'native'.
+  // Exception is when there is no executor set for the config, then we must return 'None' too.
+  def getDependencyPlatformId(config: Config, executor: Option[String]): Option[String] = {
+    (config.functionality.mainScript, executor) match {
       case (_, None) => None
       case (None, _) => None
       case (Some(n: NextflowScript), _) => Some("nextflow")

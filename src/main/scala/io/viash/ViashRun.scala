@@ -29,27 +29,27 @@ import io.viash.executors.Executor
 
 object ViashRun extends Logging {
   def apply(
-    config: AppliedConfig,
+    appliedConfig: AppliedConfig,
     args: Seq[String],
     keepFiles: Option[Boolean],
     cpus: Option[Int],
     memory: Option[String]
   ): Int = {
-    val resources = config.generateExecutor(false)
-    val dir = IO.makeTemp("viash_" + config.config.functionality.name)
+    val resources = appliedConfig.generateExecutor(false)
+    val dir = IO.makeTemp("viash_" + appliedConfig.config.functionality.name)
 
     // execute command, print everything to console
     var code = -1
     try {
       // convert config to a yaml wrapped inside a PlainFile
-      val configYaml = ConfigMeta.toMetaFile(config.config, Some(dir))
+      val configYaml = ConfigMeta.toMetaFile(appliedConfig.config, Some(dir))
 
       // write executable and resources to temporary directory
       IO.writeResources(configYaml :: resources.resources, dir)
 
       // determine command
       val cmd =
-        Array(Paths.get(dir.toString, config.config.functionality.name).toString) ++ 
+        Array(Paths.get(dir.toString, appliedConfig.config.functionality.name).toString) ++ 
         args ++ 
         Array(cpus.map("---cpus=" + _), memory.map("---memory="+_)).flatMap(a => a)
 

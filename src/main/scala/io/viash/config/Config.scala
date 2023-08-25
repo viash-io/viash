@@ -37,6 +37,8 @@ import java.nio.file.Paths
 import io.viash.schemas._
 import java.io.ByteArrayOutputStream
 import java.nio.file.FileSystemNotFoundException
+import io.viash.executors.ExecutableExecutor
+import io.viash.engines.NativeEngine
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -95,6 +97,8 @@ case class Config(
   /**
     * Detect a config's platform
     * 
+    * TODO: to be deprecated
+    * 
     * Order of execution:
     *   - if a platform id is passed, look up the platform in the platforms list
     *   - else if a platform yaml is passed, read platform from file
@@ -124,8 +128,83 @@ case class Config(
     }
   }
 
-  def getEngines: List[Engine] = platforms.collect{ case c: Engine => c } ::: engines
-  def getExecutors: List[Executor] = platforms.collect{ case e: Executor => e } ::: executors
+  /**
+    * Find the executor
+    * 
+    * Order of execution:
+    *   - if an executor id is passed, look up the executor in the executors list
+    *   - else if executors is a non-empty list, use the first executor
+    *   - else use the executable executor
+    *
+    * @param executorStr An executor ID referring to one of the config's executors
+    * @return An executor
+    */
+  def findExecutor(query: Option[String]): Executor = {
+    findExecutors(query).head
+  }
+
+  /**
+    * Find the executors
+    * 
+    * Order of execution:
+    *   - if an executor id is passed, look up the executor in the executors list
+    *   - else if executors is a non-empty list, use the first executor
+    *   - else use the executable executor
+    *
+    * @param query An executor ID referring to one of the config's executors
+    * @return An executor
+    */
+  def findExecutors(query: Option[String]): List[Executor] = {
+    // TODO: match on query, there's no need to do a .* if query is None
+    val regex = query.getOrElse(".*").r
+
+    val foundMatches = getExecutors.filter{ e =>
+      regex.findFirstIn(e.id).isDefined
+    }
+    
+    foundMatches match {
+      case li if li.nonEmpty =>
+        li
+      case Nil if query.isDefined =>
+        throw new RuntimeException(s"no executor id matching regex '$regex' could not be found in the config.")
+      case _ =>
+        // TODO: switch to the getExecutors.head ?
+        List(ExecutableExecutor())
+    }
+  }
+
+  /**
+    * Find the engines
+    * 
+    * Order of execution:
+    *   - if an engine id is passed, look up the engine in the engines list
+    *   - else if engines is a non-empty list, use the first engine
+    *   - else use the executable engine
+    *
+    * @param query An engine ID referring to one of the config's engines
+    * @return An engine
+    */
+  def findEngines(query: Option[String]): List[Engine] = {
+    // TODO: match on query, there's no need to do a .* if query is None
+    val regex = query.getOrElse(".*").r
+
+    val foundMatches = getEngines.filter{ e =>
+      regex.findFirstIn(e.id).isDefined
+    }
+    
+    foundMatches match {
+      case li if li.nonEmpty =>
+        li
+      case Nil if query.isDefined =>
+        throw new RuntimeException(s"no engine id matching regex '$regex' could not be found in the config.")
+      case _ =>
+        // TODO: switch to the getEngines.head ?
+        List(NativeEngine())
+    }
+  }
+
+  lazy val getEngines: List[Engine] = platforms.collect{ case c: Engine => c } ::: engines
+  lazy val getExecutors: List[Executor] = platforms.collect{ case e: Executor => e } ::: executors
 }
 
 object Config extends Logging {
@@ -321,7 +400,7 @@ object Config extends Logging {
         // warnings will be captured for now, and will be displayed when reading the second time
         val stdout = new ByteArrayOutputStream()
         val stderr = new ByteArrayOutputStream()
-        val config: AppliedConfig = 
+        val appliedConfig: AppliedConfig = 
           Console.withErr(stderr) {
             Console.withOut(stdout) {
               Config.read(
@@ -333,9 +412,9 @@ object Config extends Logging {
             }
           }
 
-        val funName = config.config.functionality.name
-        val funNs = config.config.functionality.namespace
-        val isEnabled = config.config.functionality.isEnabled
+        val funName = appliedConfig.config.functionality.name
+        val funNs = appliedConfig.config.functionality.namespace
+        val isEnabled = appliedConfig.config.functionality.isEnabled
 
         // does name & namespace match regex?
         val queryTest = (query, funNs) match {
@@ -362,14 +441,14 @@ object Config extends Logging {
             infoOut(stdout_s)
           if (!stderr_s.isEmpty())
             info(stderr_s)
-          config
+          appliedConfig
         } else {
-          config.setStatus(Disabled)
+          appliedConfig.setStatus(Disabled)
         }
       } catch {
         case _: Exception =>
           error(s"Reading file '$file' failed")
-          AppliedConfig(Config(Functionality("failed")), None, None, Some(ParseError))
+          AppliedConfig(Config(Functionality("failed")), None, Nil, Some(ParseError))
       }
     }
   }

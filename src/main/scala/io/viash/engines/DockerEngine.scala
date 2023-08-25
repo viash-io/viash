@@ -114,9 +114,11 @@ final case class DockerEngine(
   @exampleWithDescription("""cmd: ["echo", "$HOME"]""", "yaml", "Set CMD using the exec format, which is the prefered form.")
   @exampleWithDescription("""cmd: "echo $HOME"""", "yaml", "Set CMD using the shell format.")
   @since("Viash 0.7.4")
-  cmd: Option[Either[String, List[String]]] = None
+  cmd: Option[Either[String, List[String]]] = None,
+
+  `type`: String = "docker"
 ) extends Engine {
-  val `type` = "docker"
+  val hasSetup = true
 
   /**
    * Generate a Dockerfile for the container

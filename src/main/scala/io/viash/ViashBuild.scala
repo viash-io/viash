@@ -28,12 +28,12 @@ import io.viash.executors.Executor
 
 object ViashBuild extends Logging {
   def apply(
-    config: AppliedConfig,
+    appliedConfig: AppliedConfig,
     output: String,
     setup: Option[String] = None,
     push: Boolean = false
   ): Status = {
-    val resources = config.generateExecutor(false)
+    val resources = appliedConfig.generateExecutor(false)
 
     // create dir
     val dir = Paths.get(output)
@@ -43,32 +43,48 @@ object ViashBuild extends Logging {
     val exec_path = resources.mainScript.map(scr => Paths.get(output, scr.resourcePath).toString)
 
     // convert config to a yaml wrapped inside a PlainFile
-    val configYaml = ConfigMeta.toMetaFile(config.config, Some(dir))
+    val configYaml = ConfigMeta.toMetaFile(appliedConfig.config, Some(dir))
 
     // write resources to output directory
     IO.writeResources(configYaml :: resources.resources, dir)
 
-    // if '--setup <strat>' was passed, run './executable ---setup <strat>'
-    val setupResult =
-      if (setup.isDefined && exec_path.isDefined && config.platform.get.hasSetup) {
-        val cmd = Array(exec_path.get, "---setup", setup.get)
-        val res = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
-        res
-      }
-      else 0
-
-    // if '--push' was passed, run './executable ---setup push'
-    val pushResult =
-      if (push && exec_path.isDefined && config.platform.get.hasSetup) {
-        val cmd = Array(exec_path.get, "---setup push")
-        val _ = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
-      }
-      else 0
-    
-    (setupResult, pushResult) match {
-      case (0, 0) => Success
-      case (1, _) => SetupError
-      case (0, 1) => PushError
+    // todo: should setup be deprecated?
+    // todo: should push be deprecated?
+    if (setup.isEmpty || exec_path.isEmpty) {
+      return Success
     }
+
+    // if '--setup <strat>' was passed, run './executable ---setup <strat> ---engine <engine>'
+    if (setup.isDefined && exec_path.isDefined) {
+      val exitCodes = appliedConfig.engines.map{ engine => 
+        if (engine.hasSetup) {
+          val cmd = Array(exec_path.get, "---setup", setup.get, "---engine", engine.id)
+          val res = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
+          res
+        } else {
+          0
+        }
+      }
+      if (exitCodes.exists(_ != 0)) {
+        return SetupError
+      }
+    }
+
+    if (push && exec_path.isDefined) {
+      val exitCodes = appliedConfig.engines.map{ engine => 
+        if (engine.hasSetup) {
+          val cmd = Array(exec_path.get, "---setup", "push", "---engine", engine.id)
+          val res = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
+          res
+        } else {
+          0
+        }
+      }
+      if (exitCodes.exists(_ != 0)) {
+        return PushError
+      }
+    }
+
+    return Success
   }
 }

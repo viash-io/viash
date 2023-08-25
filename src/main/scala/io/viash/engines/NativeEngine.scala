@@ -23,7 +23,9 @@ final case class NativeEngine(
   @description("Name of the engine. As with all engines, you can give a engine a different name. By specifying `id: foo`, you can target this engine (only) by specifying `...` in any of the Viash commands.")
   @example("id: foo", "yaml")
   @default("native")
-  id: String = "native"
+  id: String = "native",
+
+  `type`: String = "native"
 ) extends Engine {
-  val `type` = "native"
+  val hasSetup = false
 }

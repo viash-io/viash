@@ -26,4 +26,7 @@ trait Engine {
   @description("Id of the engine.")
   @example("id: foo", "yaml")
   val id: String
+
+  @internalFunctionality
+  val hasSetup: Boolean
 }

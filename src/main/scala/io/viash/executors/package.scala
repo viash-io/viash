@@ -31,7 +31,7 @@ package object executors {
   implicit val encodeNextflowExecutor: Encoder.AsObject[NextflowExecutor] = deriveConfiguredEncoder
   implicit val decodeNextflowExecutor: Decoder[NextflowExecutor] = deriveConfiguredDecoderFullChecks
 
-  implicit def encodePlatform[A <: Executor]: Encoder[A] = Encoder.instance {
+  implicit def encodeExecutor[A <: Executor]: Encoder[A] = Encoder.instance {
     platform =>
       val typeJson = Json.obj("type" -> Json.fromString(platform.`type`))
       val objJson = platform match {
@@ -41,7 +41,7 @@ package object executors {
       objJson deepMerge typeJson
   }
 
-  implicit def decodePlatform: Decoder[Executor] = Decoder.instance {
+  implicit def decodeExecutor: Decoder[Executor] = Decoder.instance {
     cursor =>
       val decoder: Decoder[Executor] =
         cursor.downField("type").as[String] match {

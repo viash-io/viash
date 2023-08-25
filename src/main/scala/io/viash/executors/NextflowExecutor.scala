@@ -25,9 +25,9 @@ final case class NextflowExecutor(
   @example("id: foo", "yaml")
   @default("nextflow")
   id: String = "nextflow",
-) extends Executor {
-  val `type` = "nextflow"
 
+  `type`: String = "nextflow"
+) extends Executor {
   def generateExecutor(config: Config, testing: Boolean): ExecutorResources = {
     val engines = config.getEngines
     
