@@ -14,7 +14,7 @@ TODO add summary
 
 ## BUG FIXES
 
-* `NextflowPlatform`: When using `fromState` and `toState`, do not throw an error when the state or output is missing an optional argument.
+* `NextflowPlatform`: When using `fromState` and `toState`, do not throw an error when the state or output is missing an optional argument (PR #515).
 
 # Viash 0.7.5 (2023-08-11): Minor breaking changes and new features
 
