@@ -32,7 +32,7 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
     // only run testbash natively because other requirements might not be available
     if (name == "bash") {
       test(s"Testing $name platform native", NativeTest) {
-        TestHelper.testMain("test", "-p", "native", config)
+        TestHelper.testMain("test", "--engine", "native", "--executor", "native", config)
       }
 
       for (multiType <- multiples) {
@@ -47,7 +47,7 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
     }
 
     test(s"Testing $name platform docker", DockerTest) {
-      TestHelper.testMain("test", "-p", "docker", config)
+      TestHelper.testMain("test", "--engine", "docker", "--executor", "docker", config)
     }
 
     if (name != "executable") {
