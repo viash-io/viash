@@ -127,13 +127,13 @@ final case class ExecutableExecutor(
 
   private def oneOfEngines(engines: List[Engine]): String = {
     engines
-      .map(engine => s""""$$VIASH_ENGINE_ID" == "${engine.id}"""")
+      .map(engine => s""" [ "$$VIASH_ENGINE_ID" == "${engine.id}" ] """)
       .mkString(" || ")
   }
 
   private def noneOfEngines(engines: List[Engine]): String = {
     engines
-      .map(engine => s""""$$VIASH_ENGINE_ID" != "${engine.id}"""")
+      .map(engine => s"""" [ $$VIASH_ENGINE_ID" != "${engine.id}" ] """)
       .mkString(" && ")
   }
 
@@ -159,7 +159,7 @@ final case class ExecutableExecutor(
         |            ;;""".stripMargin
 
     val typeSetterStrs = engines.groupBy(_.`type`).map{ case (engineType, engineList) => 
-      s"""[[ ${oneOfEngines(engineList)} ]]; then
+      s""" ${oneOfEngines(engineList)} ; then
         |  VIASH_ENGINE_TYPE='${engineType}'""".stripMargin
     }
     val postParse =
@@ -189,7 +189,7 @@ final case class ExecutableExecutor(
 
     val preRun =
       s"""
-        |if [ ${oneOfEngines(engines)} ]; then
+        |if ${oneOfEngines(engines)} ; then
         |  if [ "$$VIASH_MODE" == "run" ]; then
         |    VIASH_CMD="bash"
         |  else
