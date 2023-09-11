@@ -38,7 +38,8 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
     
     val stdout = TestHelper.testMain(
       "build",
-      "-p", "docker",
+      "--engine", "docker",
+      "--executor", "docker",
       "-o", tempFolStr,
       newConfigFilePath,
       "--setup", "alwaysbuild"
@@ -55,7 +56,8 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
     
     val stdout = TestHelper.testMain(
       "build",
-      "-p", "docker",
+      "--engine", "docker",
+      "--executor", "docker",
       "-o", tempFolStr,
       newConfigFilePath,
       "--setup", "alwaysbuild"
@@ -72,7 +74,8 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
     
     val stdout = TestHelper.testMain(
       "build",
-      "-p", "docker",
+      "--engine", "docker",
+      "--executor", "docker",
       "-o", tempFolStr,
       newConfigFilePath,
       "--setup", "alwaysbuild"
@@ -87,7 +90,8 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
     
     val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
       "build",
-      "-p", "docker",
+      "--engine", "docker",
+      "--executor", "docker",
       "-o", tempFolStr,
       newConfigFilePath,
       "--setup", "alwaysbuild"
@@ -105,7 +109,8 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
     
     val _ = TestHelper.testMainWithStdErr(
       "build",
-      "-p", "docker",
+      "--engine", "docker",
+      "--executor", "docker",
       "-o", tempFolStr,
       newConfigFilePath,
       "--setup", "alwaysbuild"

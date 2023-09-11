@@ -33,7 +33,8 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("viash can create an executable") {
     TestHelper.testMain(
       "build",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       "-o", tempFolStr,
       configFile
     )

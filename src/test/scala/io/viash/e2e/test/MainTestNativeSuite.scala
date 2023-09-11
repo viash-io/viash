@@ -25,7 +25,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("Check standard test output for typical outputs") {
     val testText = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       configFile
     )
 
@@ -40,7 +41,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testText = TestHelper.testMain(
       "test",
       configFile,
-      "-p", "native"
+      "--engine", "native",
+      "--executor", "native"
     )
 
     assert(testText.contains("Running tests in temporary directory: "))
@@ -53,7 +55,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("Check standard test output with leading and trailing arguments") {
     val testText = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       configFile,
       "-k", "false"
     )
@@ -70,7 +73,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val testText = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       newConfigFilePath
     )
 
@@ -85,7 +89,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val newConfigFilePath = configDeriver.derive("del(.functionality.test_resources)", "no_tests")
     val testText = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       newConfigFilePath
     )
 
@@ -100,7 +105,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val newConfigFilePath = configDeriver.derive(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""", "failed_test")
     val testText = TestHelper.testMainException[RuntimeException](
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       newConfigFilePath
     )
 
@@ -115,7 +121,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val newConfigFilePath = configDeriver.derive(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/nonexistent_test.sh"""", "nonexisting_test")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       newConfigFilePath
     )
 
@@ -133,7 +140,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     Files.copy(Paths.get(configFile), newConfigFilePath)
     val testText = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       newConfigFilePath.toString()
     )
 
@@ -148,7 +156,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val newConfigFilePath = configDeriver.derive("""del(.functionality)""", "missing_functionality")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       newConfigFilePath
     )
 
@@ -160,7 +169,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val newConfigFilePath = configDeriver.derive(""".platforms += { type: "foo" }""", "invalid_platform_type")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       newConfigFilePath
     )
 
@@ -176,7 +186,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val newConfigFilePath = configDeriver.derive(""".platforms += { type: "native", foo: "bar" }""", "invalid_platform_field")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       newConfigFilePath
     )
 
@@ -194,7 +205,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     Files.copy(Paths.get(configFile), newConfigFilePath)
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       newConfigFilePath.toString()
     )
 
@@ -205,7 +217,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("Check invalid viash config yaml") {
     val testOutput = TestHelper.testMainException2[io.circe.ParsingFailure](
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       configInvalidYamlFile
     )
 
@@ -216,7 +229,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("Check output in case --keep true is specified") {
     val testText = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       "-k", "true",
       configFile
     )
@@ -231,7 +245,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("Check output in case --keep false is specified") {
     val testText = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       "--keep", "false",
       configFile
     )
@@ -247,7 +262,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val newConfigFilePath = configDeriver.derive(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""", "failed_test_keep_true")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       "-k", "true",
       newConfigFilePath
     )
@@ -268,7 +284,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       "-k", "false",
       newConfigFilePath
     )
@@ -286,7 +303,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val newConfigFilePath = configDeriver.derive(""".functionality.status := "deprecated"""", "deprecated")
     val (testText, stderr, exitCode) = TestHelper.testMainWithStdErr(
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       newConfigFilePath
     )
 
@@ -303,7 +321,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("Check standard test output with bad platform name") {
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
-      "-p", "non_existing_platform",
+      "--engine", "non_existing_platform",
+      "--executor", "non_existing_platform",
       configFile
     )
 

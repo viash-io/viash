@@ -51,7 +51,8 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
     // prepare the environment
     TestHelper.testMain(
       "build",
-      "-p", dockerId,
+      "--engine", dockerId,
+      "--executor", dockerId,
       "-o", tempFolStr,
       "--setup", "build",
       localConfig

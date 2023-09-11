@@ -30,7 +30,8 @@ class MainBuildAuxiliaryNativeUnknownParameter extends AnyFunSuite with BeforeAn
   test("viash can create the executable") {
     TestHelper.testMain(
       "build",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       "-o", tempFolStr,
       configFile
     )

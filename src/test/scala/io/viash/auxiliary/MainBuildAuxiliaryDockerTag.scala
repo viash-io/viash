@@ -22,7 +22,8 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
     // prepare the environment
     TestHelper.testMain(
       "build",
-      "-p", "testtag1",
+      "--engine", "testtag1",
+      "--executor", "testtag1",
       "-o", tempFolStr,
       configBashTagFile
     )
@@ -55,7 +56,8 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
     // prepare the environment
     TestHelper.testMain(
       "build",
-      "-p", "testtag2",
+      "--engine", "testtag2",
+      "--executor", "testtag2",
       "-o", tempFolStr,
       configBashTagFile
     )
@@ -88,7 +90,8 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
     // prepare the environment
     TestHelper.testMain(
       "build",
-      "-p", "testtargetimage1",
+      "--engine", "testtargetimage1",
+      "--executor", "testtargetimage1",
       "-o", tempFolStr,
       configBashTagFile
     )
@@ -120,7 +123,8 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
     // prepare the environment
     TestHelper.testMain(
       "build",
-      "-p", "testtargetimage2",
+      "--engine", "testtargetimage2",
+      "--executor", "testtargetimage2",
       "-o", tempFolStr,
       configBashTagFile
     )
@@ -152,7 +156,8 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
     // prepare the environment
     TestHelper.testMain(
       "build",
-      "-p", "testtargetimage3",
+      "--engine", "testtargetimage3",
+      "--executor", "testtargetimage3",
       "-o", tempFolStr,
       configBashTagFile
     )

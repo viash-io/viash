@@ -85,7 +85,8 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
   test("viash can create the executable") {
     TestHelper.testMain(
       "build",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       "-o", tempFolStr,
       configFile
     )
@@ -103,7 +104,8 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
   test("viash can create the loop executable") {
     TestHelper.testMain(
       "build",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       "-o", tempFolStr,
       loopConfigFile
     )

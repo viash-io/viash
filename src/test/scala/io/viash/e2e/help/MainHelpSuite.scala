@@ -66,11 +66,11 @@ class MainHelpSuite extends AnyFunSuite{
   }
 
 
-  test("viash config view default functionality with --help as platform argument") {
+  test("viash config view default functionality with --help as executor argument") {
     val output = TestHelper.testMainException[RuntimeException](
       "config", "view",
       configFile,
-      "--platform", "--help"
+      "--executor", "--help"
     )
 
     assert(!output.contains("viash config view"))

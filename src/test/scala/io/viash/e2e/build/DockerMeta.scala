@@ -41,7 +41,8 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
       // prepare the environment
       val stdout = TestHelper.testMain(
         "build",
-        "-p", "docker",
+        "--engine", "docker",
+        "--executor", "docker",
         "-o", binDir.toString,
         configFile.toString
       )
@@ -110,7 +111,8 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
       // prepare the environment
       val stdout = TestHelper.testMain(
         "build",
-        "-p", "docker",
+        "--engine", "docker",
+        "--executor", "docker",
         "-o", binDir.toString,
         configMetaFile.toString
       )
@@ -170,7 +172,8 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
       // prepare the environment
       val stdout = TestHelper.testMain(
         "build",
-        "-p", "docker",
+        "--engine", "docker",
+        "--executor", "docker",
         "-o", binDir.toString,
         configMetaFile.toString
       )

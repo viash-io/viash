@@ -38,7 +38,7 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
       for (multiType <- multiples) {
         test(s"Testing $name platform native, multiple $multiType", NativeTest) {
           TestHelper.testMain(
-            "test", "-p", "native", config,
+            "test", "--engine", "native", "--executor", "native", config,
             "-c", s"""<preparse>.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].type := "$multiType"""",
             "-c", s""".functionality.test_resources[.type == "bash_script"].path := "../multi-$multiType.sh""""
           )
@@ -54,7 +54,7 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
       for (multiple <- multiples) {
         test(s"Testing $name platform docker, multiple $multiple", DockerTest) {
           TestHelper.testMain(
-            "test", "-p", "docker", config,
+            "test", "--engine", "docker", "--executor", "docker", config,
             "-c", s"""<preparse>.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].type := "$multiple"""",
             "-c", s""".functionality.test_resources[.type == "bash_script"].path := "../multi-$multiple.sh""""
           )
@@ -63,7 +63,7 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
 
       test(s"Testing $name platform docker, multiple file", DockerTest) {
         TestHelper.testMain(
-          "test", "-p", "docker", config,
+          "test", "--engine", "docker", "--executor", "docker", config,
           "-c", s"""<preparse>.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].type := "file"""",
           "-c", s"""<preparse>.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].must_exist := false""",
           "-c", s""".functionality.test_resources[.type == "bash_script"].path := "../multi-file.sh""""

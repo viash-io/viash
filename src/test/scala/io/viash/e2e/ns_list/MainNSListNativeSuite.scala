@@ -70,7 +70,8 @@ class MainNSListNativeSuite extends AnyFunSuite{
     val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
       "ns", "list",
       "-s", nsPath,
-      "-p", "docker"
+      "--engine", "docker",
+      "--executor", "docker"
     )
 
     assert(exitCode == 1)
@@ -83,7 +84,8 @@ class MainNSListNativeSuite extends AnyFunSuite{
     val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
       "ns", "list",
       "-s", scalaPath,
-      "-p", "docker"
+      "--engine", "docker",
+      "--executor", "docker"
     )
 
     assert(exitCode == 0)
@@ -97,7 +99,8 @@ class MainNSListNativeSuite extends AnyFunSuite{
     val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
      "ns", "list",
       "-s", scalaPath,
-      "-p", "not_exists"
+      "--engine", "not_exists",
+      "--executor", "not_exists"
     )
 
     assert(exitCode == 0)

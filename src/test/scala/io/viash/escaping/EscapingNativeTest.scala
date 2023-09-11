@@ -29,7 +29,8 @@ class EscapingNativeTest extends AnyFunSuite with BeforeAndAfterAll {
   test("viash can build the config file without special 'to-escape-characters'") {
     TestHelper.testMain(
       "build",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       "-o", tempFolStr,
       configFile
     )
@@ -71,7 +72,8 @@ class EscapingNativeTest extends AnyFunSuite with BeforeAndAfterAll {
       // build the script
       TestHelper.testMain(
         "build",
-        "-p", "native",
+        "--engine", "native",
+        "--executor", "native",
         "-o", Paths.get(tempSubFolder.toString, "output").toString,
         configSubFile.toString
       )

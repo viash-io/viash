@@ -26,7 +26,8 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
   test("Check standard test output for typical outputs", DockerTest) {
     val testText = TestHelper.testMain(
       "test",
-      "-p", "docker",
+      "--engine", "docker",
+      "--executor", "docker",
       configFile
     )
 
@@ -41,7 +42,8 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     val testText = TestHelper.testMain(
       "test",
       configFile,
-      "-p", "docker"
+      "--engine", "docker",
+      "--executor", "docker"
     )
 
     assert(testText.contains("Running tests in temporary directory: "))
@@ -54,7 +56,8 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
   test("Check standard test output with leading and trailing arguments", DockerTest) {
     val testText = TestHelper.testMain(
       "test",
-      "-p", "docker",
+      "--engine", "docker",
+      "--executor", "docker",
       configFile,
       "-k", "false"
     )
@@ -70,7 +73,8 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     // first run to create cache entries
     val testText = TestHelper.testMain(
       "test",
-      "-p", "docker",
+      "--engine", "docker",
+      "--executor", "docker",
       configFile,
       "--keep", "false"
     )
@@ -78,7 +82,8 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     // Do a second run to check if forcing a docker build using setup works
     val testTextNoCaching = TestHelper.testMain(
       "test",
-      "-p", "docker",
+      "--engine", "docker",
+      "--executor", "docker",
       configFile,
       "--setup", "build",
       "--keep", "false"
@@ -90,7 +95,8 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     // Do a third run to check caching
     val testTextCaching = TestHelper.testMain(
       "test",
-      "-p", "docker",
+      "--engine", "docker",
+      "--executor", "docker",
       configFile,
       "--setup", "cb",
       "--keep", "false"
@@ -106,7 +112,8 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     val newConfigFilePath = configDeriver.derive(Nil, "default_config")
     val testText = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       newConfigFilePath
     )
 
@@ -121,7 +128,8 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     val newConfigFilePath = configDeriver.derive(""".platforms[.type == "docker" && !has(.id) ].setup := [{ type: "apt", packages: ["get_the_machine_that_goes_ping"] }]""", "failed_build")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
-      "-p", "docker",
+      "--engine", "docker",
+      "--executor", "docker",
       newConfigFilePath
     )
 
@@ -139,7 +147,8 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     Files.copy(Paths.get(configFile), newConfigFilePath)
     val testText = TestHelper.testMain(
       "test",
-      "-p", "docker",
+      "--engine", "docker",
+      "--executor", "docker",
       newConfigFilePath.toString()
     )
 
@@ -151,6 +160,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
   }
 
   test("Check standard test output with custom platform file", DockerTest) {
+    // TODO is this functionality completely broken with the new engine/executor system?
     val testText = TestHelper.testMain(
       "test",
       "-p", customPlatformFile,

@@ -31,7 +31,8 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
     // generate viash script
     val testText = TestHelper.testMain(
       "test",
-      "-p", "docker",
+      "--engine", "docker",
+      "--executor", "docker",
       "-k", "true",
       configFile
     )
@@ -85,7 +86,8 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
     // generate viash script
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
-      "-p", "docker",
+      "--engine", "docker",
+      "--executor", "docker",
       "-k", "true",
       configResourcesUnsupportedProtocolFile
     )

@@ -39,6 +39,7 @@ import java.io.ByteArrayOutputStream
 import java.nio.file.FileSystemNotFoundException
 import io.viash.executors.ExecutableExecutor
 import io.viash.engines.NativeEngine
+import io.viash.engines.DockerEngine
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -170,8 +171,44 @@ case class Config(
     }
   }
 
-  lazy val getEngines: List[Engine] = platforms.collect{ case c: Engine => c } ::: engines
-  lazy val getExecutors: List[Executor] = platforms.collect{ case e: Executor => e } ::: executors
+  lazy val getEngines: List[Engine] = platforms.collect{
+    case p: NativePlatform =>
+      NativeEngine(
+        id = p.id
+      )
+    case p: DockerPlatform => 
+      DockerEngine(
+        id = p.id,
+        image = p.image, 
+        organization = p.organization,
+        registry = p.registry,
+        tag = p.tag,
+        target_image = p.target_image,
+        target_organization = p.target_organization,
+        target_registry = p.target_registry,
+        target_tag = p.target_tag,
+        namespace_separator = p.namespace_separator,
+        target_image_source = p.target_image_source,
+        setup = p.setup,
+        test_setup = p.test_setup,
+        entrypoint = p.entrypoint,
+        cmd = p.cmd
+      )
+    } ::: engines
+  lazy val getExecutors: List[Executor] = platforms.collect{
+    case p: NativePlatform =>
+      ExecutableExecutor(
+        id = p.id
+      )
+    case p: DockerPlatform => 
+      ExecutableExecutor(
+        id = p.id,
+        port = p.port,
+        workdir = p.workdir,
+        docker_setup_strategy = p.setup_strategy,
+        docker_run_args = p.run_args
+      )
+    } ::: executors
 }
 
 object Config extends Logging {

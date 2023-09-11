@@ -31,7 +31,8 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     val out = TestHelper.testMainWithStdErr(
       "ns", "build",
       "-n", "dependencyTest",
-      "-p", "native",
+      "--engine", "native",
+      "--executor", "native",
       "--src", temporaryConfigFolder.toString(),
       "--target", temporaryFolder.resolve("target").toString()
     )

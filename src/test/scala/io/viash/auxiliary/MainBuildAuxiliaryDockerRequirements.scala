@@ -82,7 +82,8 @@ class MainBuildAuxiliaryDockerRequirementsApk extends AbstractMainBuildAuxiliary
 
     TestHelper.testMain(
       "build",
-      "-p", "docker",
+      "--engine", "docker",
+      "--executor", "docker",
       "-o", tempFolStr,
       "--setup", "build",
       newConfigFilePath

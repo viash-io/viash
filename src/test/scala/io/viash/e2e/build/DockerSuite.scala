@@ -30,7 +30,8 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
     TestHelper.testMain(
       "build",
       configFile,
-      "-p", "docker",
+      "--engine", "docker",
+      "--executor", "docker",
       "-o", temporaryFolder.toString,
     )
 

@@ -39,7 +39,8 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     // build viash wrapper without --setup
     TestHelper.testMain(
       "build",
-      "-p", "throwawayimage",
+      "--engine", "throwawayimage",
+      "--executor", "throwawayimage",
       "-o", tempFolStr,
       configFile
     )
@@ -70,7 +71,8 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     // build viash wrapper with --setup
     TestHelper.testMain(
       "build",
-      "-p", "throwawayimage",
+      "--engine", "throwawayimage",
+      "--executor", "throwawayimage",
       "-o", tempFolStr,
       "--setup", "build",
       configFile
@@ -151,7 +153,8 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
       // prepare the environment
       val stdout = TestHelper.testMain(
         "build",
-        "-p", "docker",
+        "--engine", "docker",
+        "--executor", "docker",
         "-o", tempFolStr,
         "--setup", "alwaysbuild",
         configFile.toString
