@@ -37,7 +37,7 @@ import java.nio.file.Paths
 import io.viash.schemas._
 import java.io.ByteArrayOutputStream
 import java.nio.file.FileSystemNotFoundException
-import io.viash.executors.ExecutableExecutor
+import io.viash.executors.{ExecutableExecutor, NextflowExecutor}
 import io.viash.engines.NativeEngine
 import io.viash.engines.DockerEngine
 
@@ -171,13 +171,13 @@ case class Config(
     }
   }
 
-  lazy val getEngines: List[Engine] = platforms.collect{
+  lazy val getEngines: List[Engine] = platforms.flatMap{
     case p: NativePlatform =>
-      NativeEngine(
+      Some(NativeEngine(
         id = p.id
-      )
+      ))
     case p: DockerPlatform => 
-      DockerEngine(
+      Some(DockerEngine(
         id = p.id,
         image = p.image, 
         organization = p.organization,
@@ -193,7 +193,13 @@ case class Config(
         test_setup = p.test_setup,
         entrypoint = p.entrypoint,
         cmd = p.cmd
-      )
+      ))
+    case p: NextflowPlatform =>
+      if (platforms.exists(!_.isInstanceOf[NativePlatform])) {
+        None
+      } else {
+        Some(NativeEngine())
+      }
     } ::: engines
   lazy val getExecutors: List[Executor] = platforms.collect{
     case p: NativePlatform =>
@@ -207,6 +213,15 @@ case class Config(
         workdir = p.workdir,
         docker_setup_strategy = p.setup_strategy,
         docker_run_args = p.run_args
+      )
+    case p: NextflowPlatform =>
+      NextflowExecutor(
+        id = p.id,
+        directives = p.directives,
+        auto = p.auto,
+        config = p.config,
+        debug = p.debug,
+        container = p.container
       )
     } ::: executors
 }
