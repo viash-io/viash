@@ -318,15 +318,27 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, false)
   }
 
-  test("Check standard test output with bad platform name") {
+  test("Check standard test output with bad engine name") {
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "--engine", "non_existing_platform",
+      "--executor", "native",
+      configFile
+    )
+
+    assert(testOutput.exceptionText == "no engine id matching regex 'non_existing_platform' could not be found in the config.")
+    assert(testOutput.output.isEmpty)
+  }
+
+  test("Check standard test output with bad executor name") {
+    val testOutput = TestHelper.testMainException2[RuntimeException](
+      "test",
+      "--engine", "native",
       "--executor", "non_existing_platform",
       configFile
     )
 
-    assert(testOutput.exceptionText == "platform must be a platform id specified in the config or a path to a platform yaml file.")
+    assert(testOutput.exceptionText == "no executor id matching regex 'non_existing_platform' could not be found in the config.")
     assert(testOutput.output.isEmpty)
   }
 

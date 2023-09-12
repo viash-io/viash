@@ -59,14 +59,16 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
 
       val regexViashVersion = s"""viash_version: "${viashVersion}"""".r
       val regexConfig = s"""config: "${configFile}"""".r
-      val regexPlatform = """platform: "docker"""".r
+      val regexEngine = """engine: "docker"""".r
+      val regexExecutor = """engine: "docker"""".r
       val regexExecutable = s"""executable: "$binDir/testbash"""".r
       val regexOutput = s"""output: "$binDir"""".r
       val regexNoRemoteGitRepo = "git_remote:".r
 
       assert(regexViashVersion.findFirstIn(metaStr).isDefined, stdout)
       assert(regexConfig.findFirstIn(metaStr).isDefined, stdout)
-      assert(regexPlatform.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexEngine.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexExecutor.findFirstIn(metaStr).isDefined, stdout)
       assert(regexExecutable.findFirstIn(metaStr).isDefined, stdout)
       assert(regexOutput.findFirstIn(metaStr).isDefined, stdout)
       assert(regexNoRemoteGitRepo.findFirstIn(metaStr).isEmpty, stdout)
@@ -129,14 +131,16 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
 
       val regexViashVersion = s"""viash_version: "$viashVersion"""".r
       val regexConfig = s"""config: "$configMetaFile"""".r
-      val regexPlatform = """platform: "docker"""".r
+      val regexEngine = """engine: "docker"""".r
+      val regexExecutor = """engine: "docker"""".r
       val regexExecutable = s"""executable: "$binDir/testbash"""".r
       val regexOutput = s"""output: "$binDir"""".r
       val regexRemoteGitRepo = s"""git_remote: "$fakeGitRepo"""".r
 
       assert(regexViashVersion.findFirstIn(metaStr).isDefined, stdout)
       assert(regexConfig.findFirstIn(metaStr).isDefined, stdout)
-      assert(regexPlatform.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexEngine.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexExecutor.findFirstIn(metaStr).isDefined, stdout)
       assert(regexExecutable.findFirstIn(metaStr).isDefined, stdout)
       assert(regexOutput.findFirstIn(metaStr).isDefined, stdout)
       assert(regexRemoteGitRepo.findFirstIn(metaStr).isDefined, stdout)
@@ -190,14 +194,16 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
 
       val regexViashVersion = s"""viash_version: "$viashVersion"""".r
       val regexConfig = s"""config: "$configMetaFile"""".r
-      val regexPlatform = """platform: "docker"""".r
+      val regexEngine = """engine: "docker"""".r
+      val regexExecutor = """engine: "docker"""".r
       val regexExecutable = s"""executable: "$binDir/testbash"""".r
       val regexOutput = s"""output: "$binDir"""".r
       val regexRemoteGitRepo = """git_remote:"""".r
 
       assert(regexViashVersion.findFirstIn(metaStr).isDefined, stdout)
       assert(regexConfig.findFirstIn(metaStr).isDefined, stdout)
-      assert(regexPlatform.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexEngine.findFirstIn(metaStr).isDefined, stdout)
+      assert(regexExecutor.findFirstIn(metaStr).isDefined, stdout)
       assert(regexExecutable.findFirstIn(metaStr).isDefined, stdout)
       assert(regexOutput.findFirstIn(metaStr).isDefined, stdout)
       assert(regexRemoteGitRepo.findFirstIn(metaStr).isEmpty, stdout)
