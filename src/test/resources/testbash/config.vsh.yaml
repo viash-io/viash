@@ -96,7 +96,7 @@ platforms:
   - type: docker
     image: "bash:3.2"
     id: "throwawayimage"
-    target_image: "throwawayimage"
+    target_image: "mytestbash"
     setup:
       - type: apk
         packages:

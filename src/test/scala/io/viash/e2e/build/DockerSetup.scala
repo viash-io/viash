@@ -30,11 +30,11 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
   private val execPathInDocker = Paths.get("/viash_automount", executable.getPath).toFile.toString
 
   test("viash without --setup doesn't create docker during build", DockerTest) {
-    val tag = "throwawayimage"
+    val tag = "mytestbash"
     
     //remove docker if it exists
-    removeDockerImage(tag, "0.1")
-    assert(!checkDockerImageExists(tag, "0.1"))
+    removeDockerImage(tag, "0.1-throwawayimage")
+    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
 
     // build viash wrapper without --setup
     TestHelper.testMain(
@@ -49,7 +49,7 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     // verify docker still doesn't exist
-    assert(!checkDockerImageExists(tag, "0.1"))
+    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
 
     // run viash wrapper with ---setup
     val out = Exec.runCatch(
@@ -58,15 +58,15 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     assert(out.exitValue == 0)
 
     // verify docker now exists
-    assert(checkDockerImageExists(tag, "0.1"))
+    assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
   }
 
   test("viash with --setup creates docker during build", DockerTest) {
-    val tag = "throwawayimage"
+    val tag = "mytestbash"
 
     // remove docker if it exists
-    removeDockerImage(tag, "0.1")
-    assert(!checkDockerImageExists(tag, "0.1"))
+    removeDockerImage(tag, "0.1-throwawayimage")
+    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
 
     // build viash wrapper with --setup
     TestHelper.testMain(
@@ -82,7 +82,7 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     // verify docker exists
-    assert(checkDockerImageExists(tag, "0.1"))
+    assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
   }
 
   test("Get info of a docker image using docker inspect", DockerTest) {
