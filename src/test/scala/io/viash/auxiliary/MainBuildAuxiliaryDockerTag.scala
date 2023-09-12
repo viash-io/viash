@@ -116,7 +116,7 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
     } finally {
       contentSource.close()
     }
-    assert(content.exists(_.matches("cat << VIASHEOF \\| eval docker run .* testbash_tag:latest")))
+    assert(content.exists(_.matches("    VIASH_DOCKER_IMAGE_ID='testbash_tag:latest-testtargetimage1'")))
   }
 
   test("Check whether target image name is well formed with target_image, version, and registry", DockerTest) {
@@ -149,7 +149,7 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
     } finally {
       contentSource.close()
     }
-    assert(content.exists(_.matches("cat << VIASHEOF \\| eval docker run .* foo.io/bar:0\\.0\\.1")))
+    assert(content.exists(_.matches("    VIASH_DOCKER_IMAGE_ID='foo.io/bar:0.0.1'")))
   }
 
   test("Check whether target image name is well formed with target_image, target_tag", DockerTest) {
@@ -182,7 +182,7 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
     } finally {
       contentSource.close()
     }
-    assert(content.exists(_.matches("cat << VIASHEOF \\| eval docker run .* bar:0\\.0\\.2")))
+    assert(content.exists(_.matches("    VIASH_DOCKER_IMAGE_ID='bar:0.0.2'")))
   }
 
   override def afterAll(): Unit = {

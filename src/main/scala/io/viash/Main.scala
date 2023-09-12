@@ -415,6 +415,9 @@ object Main extends Logging {
     // update info, and add executor and engine to the config
     appliedConfig.copy(
       config = appliedConfig.config.copy(
+        platforms = Nil,
+        engines = appliedConfig.config.getEngines,
+        executors = appliedConfig.config.getExecutors,
         info = configInfo
       ),
       executor = executor,
@@ -486,16 +489,22 @@ object Main extends Logging {
           // passthrough statuses
           case ac if ac.status.isDefined => List(ac)
           case ac =>
-            val executors = ac.config.findExecutors(executorStr)
-            val engines = ac.config.findEngines(engineStr)
+            try {
+              val executors = ac.config.findExecutors(executorStr)
+              val engines = ac.config.findEngines(engineStr)
 
-            executors.map{ executor =>
-              processConfigWithExecutorAndEngine(
-                appliedConfig = ac,
-                executor = Some(executor),
-                engines = engines,
-                targetDir = project.target
-              )
+              executors.map{ executor =>
+                processConfigWithExecutorAndEngine(
+                  appliedConfig = ac,
+                  executor = Some(executor),
+                  engines = engines,
+                  targetDir = project.target
+                )
+              }
+            } catch {
+              case e: Exception =>
+                error(e.getMessage())
+                List(ac.setStatus(BuildError))
             }
           }
       } else {

@@ -32,7 +32,7 @@ class MainNSExecNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
         "ns", "exec",
         "--src", nsPath,
         "--apply_platform",
-        "echo _{functionality-name}_ -{dir}- !{path}! ~{platform}~ ={namespace}=+\\;"
+        "echo _{functionality-name}_ -{dir}- !{path}! ~{engine}~ ={namespace}=+\\;"
       )
     val stdout = stdoutRaw.replaceAll(nsPath, "src/")
     val stderr = stderrRaw.replaceAll(nsPath, "src/")
