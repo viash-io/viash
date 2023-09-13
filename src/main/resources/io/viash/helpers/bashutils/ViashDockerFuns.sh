@@ -194,7 +194,8 @@ function ViashDockerCheckCommands {
   shift 1
   local commands="$@"
   local save=$-; set +e
-  local missing=$(docker run --rm --entrypoint=sh "$image_id" -c "for command in $commands; do command -v \$command >/dev/null 2>&1; if [ \$? -ne 0 ]; then echo \$command; exit 1; fi; done")
+  local missing
+  missing=$(docker run --rm --entrypoint=sh "$image_id" -c "for command in $commands; do command -v \$command >/dev/null 2>&1; if [ \$? -ne 0 ]; then echo \$command; exit 1; fi; done")
   local outCheck=$?
   [[ $save =~ e ]] && set -e
   if [ $outCheck -ne 0 ]; then
