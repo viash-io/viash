@@ -10,6 +10,7 @@ import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.io.Source
 import io.viash.ConfigDeriver
 import org.scalatest.ParallelTestExecution
+import io.viash.exceptions.ConfigParserException
 
 class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll with ParallelTestExecution {
   Logger.UseColorOverride.value = Some(false)
@@ -87,7 +88,7 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
     outputList.map(file => Files.getOwner(file.toPath).toString)
   }
 
-  test("Test default behaviour when chown is not specified", DockerTest) {
+  test("Test when chown is not specified", DockerTest) {
     val owners = dockerChownGetOwner(singleOutputmods, 1, "chown_default", None)
     assert(owners.length == 1)
     owners.foreach(owner => {
@@ -96,7 +97,7 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
     })
   }
 
-  test("Test default behaviour when chown is set to true", DockerTest) {
+  test("Test when chown is set to true", DockerTest) {
     val owners = dockerChownGetOwner(singleOutputmods, 1, "chown_true", Some(true))
     assert(owners.length == 1)
     owners.foreach(owner => {
@@ -105,15 +106,14 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
     })
   }
 
-  test("Test default behaviour when chown is set to false", DockerTest) {
-    val owners = dockerChownGetOwner(singleOutputmods, 1, "chown_false", Some(false))
-    assert(owners.length == 1)
-    owners.foreach(owner => {
-      assert(owner == "root")
-    })
+  test("Test when chown is set to false", DockerTest) {
+    // functionality not provided in executor, should throw exception
+    assertThrows[ConfigParserException] {
+      dockerChownGetOwner(singleOutputmods, 1, "chown_false", Some(false))
+    }
   }
 
-  test("Test default behaviour when chown is not specified with two output files", DockerTest) {
+  test("Test behaviour with two output files", DockerTest) {
     val owners = dockerChownGetOwner(twoOutputsmods, 2, "two_chown_default", None)
     assert(owners.length == 2)
     owners.foreach(owner => {
@@ -122,46 +122,12 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
     })
   }
 
-  test("Test default behaviour when chown is set to true with two output files", DockerTest) {
-    val owners = dockerChownGetOwner(twoOutputsmods, 2, "two_chown_true", Some(true))
-    assert(owners.length == 2)
-    owners.foreach(owner => {
-      assert(owner.nonEmpty)
-      assert(owner != "root")
-    })
-  }
-
-  test("Test default behaviour when chown is set to false with two output files", DockerTest) {
-    val owners = dockerChownGetOwner(twoOutputsmods, 2, "two_chown_false", Some(false))
-    assert(owners.length == 2)
-    owners.foreach(owner => {
-      assert(owner == "root")
-    })
-  }
-
-  test("Test default behaviour when chown is not specified with multiple output files", DockerTest) {
+  test("Test behaviour with multiple output files", DockerTest) {
     val owners = dockerChownGetOwner(multipleOutputsMods, 3, "multiple_chown_default", None)
     assert(owners.length == 3)
     owners.foreach(owner => {
       assert(owner.nonEmpty)
       assert(owner != "root")
-    })
-  }
-
-  test("Test default behaviour when chown is set to true with multiple output files", DockerTest) {
-    val owners = dockerChownGetOwner(multipleOutputsMods, 3, "multiple_chown_true", Some(true))
-    assert(owners.length == 3)
-    owners.foreach(owner => {
-      assert(owner.nonEmpty)
-      assert(owner != "root")
-    })
-  }
-
-  test("Test default behaviour when chown is set to false with multiple output files", DockerTest) {
-    val owners = dockerChownGetOwner(multipleOutputsMods, 3, "multiple_chown_false", Some(false))
-    assert(owners.length == 3)
-    owners.foreach(owner => {
-      assert(owner == "root")
     })
   }
 
