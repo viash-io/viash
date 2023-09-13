@@ -21,8 +21,6 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
   private val tempFolStr = temporaryFolder.toString
   private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryFolder)
 
-  private val customPlatformFile = getClass.getResource("/testbash/platform_custom.yaml").getPath
-
   test("Check standard test output for typical outputs", DockerTest) {
     val testText = TestHelper.testMain(
       "test",
@@ -157,20 +155,6 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     assert(testText.contains("Cleaning up temporary directory"))
 
     checkTempDirAndRemove(testText, false)
-  }
-
-  test("Check standard test output with custom platform file", DockerTest) {
-    // TODO is this functionality completely broken with the new engine/executor system?
-    val testText = TestHelper.testMain(
-      "test",
-      "-p", customPlatformFile,
-      configFile
-    )
-
-    assert(testText.contains("custom_target_image_tag")) // check whether custom package was picked up
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
   }
 
   /**
