@@ -397,6 +397,7 @@ object ViashNamespace extends Logging {
       (ParseError, "configs encountered parse errors"),
       (Disabled, "configs were disabled"),
       (DependencyError, "dependency resolutions failed"),
+      (MissingExecutorOrEngine, "configs could not apply an executor or engine"),
       (BuildError, "configs built failed"),
       (SetupError, "setups failed"),
       (PushError, "pushes failed"),

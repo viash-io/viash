@@ -38,6 +38,10 @@ case object DependencyError extends Status {
   val isError = true
   val color = Console.RED
 }
+case object MissingExecutorOrEngine extends Status {
+  val isError = false
+  val color = Console.YELLOW
+}
 case object BuildError extends Status {
   val isError = true
   val color = Console.RED

@@ -504,7 +504,7 @@ object Main extends Logging {
             } catch {
               case e: Exception =>
                 error(e.getMessage())
-                List(ac.setStatus(BuildError))
+                List(ac.setStatus(MissingExecutorOrEngine))
             }
           }
       } else {
