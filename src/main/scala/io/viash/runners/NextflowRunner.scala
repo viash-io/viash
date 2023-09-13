@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.executors
+package io.viash.runners
 
 import io.viash.config.Config
 import io.viash.functionality._
@@ -29,11 +29,11 @@ import io.circe.{Printer => JsonPrinter, Json, JsonObject}
 import shapeless.syntax.singleton
 import io.viash.schemas._
 import io.viash.helpers.Escaper
-import io.viash.executors.{Executor, ExecutorResources}
+import io.viash.runners.{Runner, RunnerResources}
 import io.viash.engines.DockerEngine
 
-final case class NextflowExecutor(
-  @description("Name of the executor. As with all executors, you can give an executor a different name. By specifying `id: foo`, you can target this executor (only) by specifying `...` in any of the Viash commands.")
+final case class NextflowRunner(
+  @description("Name of the runner. As with all runners, you can give an runner a different name. By specifying `id: foo`, you can target this runner (only) by specifying `...` in any of the Viash commands.")
   @example("id: foo", "yaml")
   @default("nextflow")
   id: String = "nextflow",
@@ -90,12 +90,12 @@ final case class NextflowExecutor(
   @description("Specifies the Docker platform id to be used to run Nextflow.")
   @default("docker")
   container: String = "docker"
-) extends Executor {
+) extends Runner {
   def escapeSingleQuotedString(txt: String): String = {
     Escaper(txt, slash = true, singleQuote = true, newline = true)
   }
 
-  def generateExecutor(config: Config, testing: Boolean): ExecutorResources = {
+  def generateRunner(config: Config, testing: Boolean): RunnerResources = {
     val condir = containerDirective(config)
 
     // create main.nf file
@@ -111,7 +111,7 @@ final case class NextflowExecutor(
     // remove main
     val otherResources = config.functionality.additionalResources
 
-    ExecutorResources(
+    RunnerResources(
       None,
       mainFile :: nextflowConfigFile :: otherResources
     )

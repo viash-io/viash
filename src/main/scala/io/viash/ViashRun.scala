@@ -25,7 +25,7 @@ import io.viash.helpers.{IO, Logging}
 import io.viash.helpers.data_structures._
 
 import scala.sys.process.{Process, ProcessLogger}
-import io.viash.executors.Executor
+import io.viash.runners.Runner
 
 object ViashRun extends Logging {
   def apply(
@@ -35,7 +35,7 @@ object ViashRun extends Logging {
     cpus: Option[Int],
     memory: Option[String]
   ): Int = {
-    val resources = appliedConfig.generateExecutor(false)
+    val resources = appliedConfig.generateRunner(false)
     val dir = IO.makeTemp("viash_" + appliedConfig.config.functionality.name)
 
     // execute command, print everything to console

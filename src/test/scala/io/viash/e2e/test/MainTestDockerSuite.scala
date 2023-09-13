@@ -25,7 +25,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     val testText = TestHelper.testMain(
       "test",
       "--engine", "docker",
-      "--executor", "docker",
+      "--runner", "docker",
       configFile
     )
 
@@ -41,7 +41,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
       "test",
       configFile,
       "--engine", "docker",
-      "--executor", "docker"
+      "--runner", "docker"
     )
 
     assert(testText.contains("Running tests in temporary directory: "))
@@ -55,7 +55,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     val testText = TestHelper.testMain(
       "test",
       "--engine", "docker",
-      "--executor", "docker",
+      "--runner", "docker",
       configFile,
       "-k", "false"
     )
@@ -72,7 +72,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     val testText = TestHelper.testMain(
       "test",
       "--engine", "docker",
-      "--executor", "docker",
+      "--runner", "docker",
       configFile,
       "--keep", "false"
     )
@@ -81,7 +81,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     val testTextNoCaching = TestHelper.testMain(
       "test",
       "--engine", "docker",
-      "--executor", "docker",
+      "--runner", "docker",
       configFile,
       "--setup", "build",
       "--keep", "false"
@@ -94,7 +94,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     val testTextCaching = TestHelper.testMain(
       "test",
       "--engine", "docker",
-      "--executor", "docker",
+      "--runner", "docker",
       configFile,
       "--setup", "cb",
       "--keep", "false"
@@ -111,7 +111,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     val testText = TestHelper.testMain(
       "test",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       newConfigFilePath
     )
 
@@ -127,7 +127,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "--engine", "docker",
-      "--executor", "docker",
+      "--runner", "docker",
       newConfigFilePath
     )
 
@@ -146,7 +146,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     val testText = TestHelper.testMain(
       "test",
       "--engine", "docker",
-      "--executor", "docker",
+      "--runner", "docker",
       newConfigFilePath.toString()
     )
 

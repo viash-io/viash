@@ -15,20 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.executors
+package io.viash.runners
 
 import io.viash.config.Config
 import io.viash.functionality.resources.BashScript
 import io.viash.wrapper.BashWrapper
-import io.viash.executors.{Executor, ExecutorResources}
+import io.viash.runners.{Runner, RunnerResources}
 
-// An executor solely for running `viash config inject` with.
-case class DebugExecutor(
+// An runner solely for running `viash config inject` with.
+case class DebugRunner(
   id: String = "debug",
   `type`: String = "debug",
   path: String
-) extends Executor {
-  def generateExecutor(config: Config, testing: Boolean): ExecutorResources = {
+) extends Runner {
+  def generateRunner(config: Config, testing: Boolean): RunnerResources = {
     val functionality = config.functionality
     if (functionality.mainScript.isEmpty) {
       throw new RuntimeException("Can't generate a debug platform when there is no script.")
@@ -46,7 +46,7 @@ case class DebugExecutor(
       dest = Some(functionality.name),
       text = Some(scriptSrc)
     )
-    ExecutorResources(
+    RunnerResources(
       Some(bashScript),
       Nil
     )

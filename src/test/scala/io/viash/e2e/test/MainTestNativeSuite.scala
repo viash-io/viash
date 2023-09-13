@@ -26,7 +26,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testText = TestHelper.testMain(
       "test",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       configFile
     )
 
@@ -42,7 +42,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       "test",
       configFile,
       "--engine", "native",
-      "--executor", "native"
+      "--runner", "native"
     )
 
     assert(testText.contains("Running tests in temporary directory: "))
@@ -56,7 +56,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testText = TestHelper.testMain(
       "test",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       configFile,
       "-k", "false"
     )
@@ -74,7 +74,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testText = TestHelper.testMain(
       "test",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       newConfigFilePath
     )
 
@@ -90,7 +90,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testText = TestHelper.testMain(
       "test",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       newConfigFilePath
     )
 
@@ -106,7 +106,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testText = TestHelper.testMainException[RuntimeException](
       "test",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       newConfigFilePath
     )
 
@@ -122,7 +122,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       newConfigFilePath
     )
 
@@ -141,7 +141,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testText = TestHelper.testMain(
       "test",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       newConfigFilePath.toString()
     )
 
@@ -157,7 +157,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       newConfigFilePath
     )
 
@@ -170,7 +170,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       newConfigFilePath
     )
 
@@ -187,7 +187,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       newConfigFilePath
     )
 
@@ -206,7 +206,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       newConfigFilePath.toString()
     )
 
@@ -218,7 +218,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException2[io.circe.ParsingFailure](
       "test",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       configInvalidYamlFile
     )
 
@@ -230,7 +230,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testText = TestHelper.testMain(
       "test",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       "-k", "true",
       configFile
     )
@@ -246,7 +246,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testText = TestHelper.testMain(
       "test",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       "--keep", "false",
       configFile
     )
@@ -263,7 +263,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       "-k", "true",
       newConfigFilePath
     )
@@ -285,7 +285,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       "-k", "false",
       newConfigFilePath
     )
@@ -304,7 +304,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val (testText, stderr, exitCode) = TestHelper.testMainWithStdErr(
       "test",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       newConfigFilePath
     )
 
@@ -322,7 +322,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "--engine", "non_existing_platform",
-      "--executor", "native",
+      "--runner", "native",
       configFile
     )
 
@@ -330,15 +330,15 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(testOutput.output.isEmpty)
   }
 
-  test("Check standard test output with bad executor name") {
+  test("Check standard test output with bad runner name") {
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "--engine", "native",
-      "--executor", "non_existing_platform",
+      "--runner", "non_existing_platform",
       configFile
     )
 
-    assert(testOutput.exceptionText == "no executor id matching regex 'non_existing_platform' could not be found in the config.")
+    assert(testOutput.exceptionText == "no runner id matching regex 'non_existing_platform' could not be found in the config.")
     assert(testOutput.output.isEmpty)
   }
 

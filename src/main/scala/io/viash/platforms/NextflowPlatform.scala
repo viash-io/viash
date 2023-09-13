@@ -29,8 +29,6 @@ import io.circe.{Printer => JsonPrinter, Json, JsonObject}
 import shapeless.syntax.singleton
 import io.viash.schemas._
 import io.viash.helpers.Escaper
-import io.viash.executors.{Executor, ExecutorResources}
-import io.viash.engines.DockerEngine
 
 /**
  * A Platform class for generating Nextflow (DSL2) modules.

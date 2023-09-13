@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.executors
+package io.viash.runners
 
 
 
@@ -45,8 +45,8 @@ import io.viash.engines.DockerEngine
 import io.viash.engines.NativeEngine
 import io.viash.platforms.requirements.DockerRequirements
 
-final case class ExecutableExecutor(
-  @description("Name of the executor. As with all executors, you can give an executor a different name. By specifying `id: foo`, you can target this executor (only) by specifying `...` in any of the Viash commands.")
+final case class ExecutableRunner(
+  @description("Name of the runner. As with all runners, you can give an runner a different name. By specifying `id: foo`, you can target this executor (only) by specifying `...` in any of the Viash commands.")
   @example("id: foo", "yaml")
   @default("executable")
   id: String = "executable",
@@ -94,9 +94,9 @@ final case class ExecutableExecutor(
   docker_run_args: OneOrMore[String] = Nil,
 
   `type`: String = "executable"
-) extends Executor {
+) extends Runner {
 
-  def generateExecutor(config: Config, testing: Boolean): ExecutorResources = {
+  def generateRunner(config: Config, testing: Boolean): RunnerResources = {
     val engines = config.getEngines
     
     /*
@@ -119,7 +119,7 @@ final case class ExecutableExecutor(
     ))
 
     // return output
-    ExecutorResources(
+    RunnerResources(
       mainScript = mainScript,
       additionalResources = config.functionality.additionalResources
     )

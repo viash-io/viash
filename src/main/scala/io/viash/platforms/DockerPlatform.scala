@@ -32,9 +32,7 @@ import io.viash.helpers.data_structures._
 import io.viash.config.Info
 import io.viash.schemas._
 import io.viash.helpers.Escaper
-import io.viash.executors.Executor
-import io.viash.engines.Engine
-import io.viash.executors.ExecutorResources
+
 
 @description(
   """Run a Viash component on a Docker backend platform.

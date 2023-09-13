@@ -20,7 +20,7 @@ package io.viash.helpers
 import io.viash.config.Config
 import java.nio.file.Paths
 import io.viash.schemas.since
-import io.viash.executors.Executor
+import io.viash.runners.Runner
 import io.viash.engines.Engine
 
 final case class NsExecData(
@@ -32,7 +32,7 @@ final case class NsExecData(
   absoluteMainScript: String,
   functionalityName: String,
   namespace: Option[String],
-  executorId: Option[String],
+  runnerId: Option[String],
   engineId: Option[String],
 
   @since("Viash 0.7.4")
@@ -51,7 +51,7 @@ final case class NsExecData(
       case "abs-main-script" => Some(this.absoluteMainScript)
       case "functionality-name" => Some(this.functionalityName)
       case "namespace" => this.namespace
-      case "executor" => this.executorId
+      case "runner" => this.runnerId
       case "engine" => this.engineId
       case "output" => this.output
       case "abs-output" => this.absoluteOutput
@@ -61,7 +61,7 @@ final case class NsExecData(
 }
 
 object NsExecData {
-  def apply(configPath: String, config: Config, executor: Option[Executor], engine: Option[Engine]): NsExecData = {
+  def apply(configPath: String, config: Config, runner: Option[Runner], engine: Option[Engine]): NsExecData = {
     val configPath_ = Paths.get(configPath)
     val dirPath = configPath_.getParent()
     val mainScript = config.functionality.mainScript.flatMap(s => s.path).map(dirPath.resolve(_))
@@ -74,7 +74,7 @@ object NsExecData {
       absoluteMainScript = mainScript.map(_.toAbsolutePath.toString).getOrElse(""),
       functionalityName = config.functionality.name,
       namespace = config.functionality.namespace,
-      executorId = executor.map(_.id),
+      runnerId = runner.map(_.id),
       engineId = engine.map(_.id),
       output = config.info.flatMap(_.output),
       absoluteOutput = config.info.flatMap(info => info.output.map(Paths.get(_).toAbsolutePath.toString))
@@ -91,7 +91,7 @@ object NsExecData {
       absoluteMainScript = data.map(_.absoluteMainScript).mkString(" "),
       functionalityName = data.map(_.functionalityName).mkString(" "),
       namespace = Some(data.flatMap(_.namespace).mkString(" ")),
-      executorId = Some(data.flatMap(_.executorId).mkString(" ")),
+      runnerId = Some(data.flatMap(_.runnerId).mkString(" ")),
       engineId = Some(data.flatMap(_.engineId).mkString(" ")),
       output = Some(data.flatMap(_.output).mkString(" ")),
       absoluteOutput = Some(data.flatMap(_.absoluteOutput).mkString(" "))

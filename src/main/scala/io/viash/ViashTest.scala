@@ -35,10 +35,10 @@ import io.viash.exceptions.MissingResourceFileException
 import io.viash.platforms.Platform
 import io.viash.config.ConfigMeta
 import io.viash.helpers.DependencyResolver
-import io.viash.executors.Executor
+import io.viash.runners.Runner
 import io.viash.config.AppliedConfig
 import io.viash.lenses.AppliedConfigLenses._
-import io.viash.executors.ExecutableExecutor
+import io.viash.runners.ExecutableRunner
 
 object ViashTest extends Logging {
   case class TestOutput(name: String, exitValue: Int, output: String, logFile: String, duration: Long)
@@ -82,7 +82,7 @@ object ViashTest extends Logging {
     // Make dependencies available for the tests
     DependencyResolver.createBuildYaml(dir.toString())
     val config3 = configLens.modify{ conf =>
-      DependencyResolver.copyDependencies(conf, dir.toString(), config2.executor.get.id)
+      DependencyResolver.copyDependencies(conf, dir.toString(), config2.runner.get.id)
     }(config2)
 
     // run tests
@@ -153,11 +153,11 @@ object ViashTest extends Logging {
       if (engine.hasSetup) {
         // use an executable to set up the engine environments
         val ac1 = appliedConfig.copy(
-          executor = Some(ExecutableExecutor())
+          runner = Some(ExecutableRunner())
         )
 
-        // generate executor for engine environments
-        val resources = ac1.generateExecutor(true)
+        // generate runner for engine environments
+        val resources = ac1.generateRunner(true)
         val buildDir = dir.resolve("build_engine_environment")
         Files.createDirectories(buildDir)
         try {
@@ -222,7 +222,7 @@ object ViashTest extends Logging {
     }
 
     // generate executable for native platform
-    val exe = ExecutableExecutor().generateExecutor(appliedConfig.config, true).resources.head
+    val exe = ExecutableRunner().generateRunner(appliedConfig.config, true).resources.head
 
     // fetch tests
     val tests = fun.test_resources
@@ -261,7 +261,7 @@ object ViashTest extends Logging {
           ))(appliedConfig)
 
         // generate bash script for test
-        val resourcesOnlyTest = testFunConfig.generateExecutor(true)
+        val resourcesOnlyTest = testFunConfig.generateRunner(true)
         val testBash = BashScript(
           dest = Some("test_executable"),
           text = resourcesOnlyTest.resources.head.text

@@ -23,7 +23,6 @@ import io.viash.functionality.resources._
 import io.viash.platforms.requirements._
 import io.viash.wrapper.BashWrapper
 import io.viash.schemas._
-import io.viash.executors.{Executor, ExecutorResources}
 
 @description(
   """Running a Viash component on a native platform means that the script will be executed in your current environment.

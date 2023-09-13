@@ -24,8 +24,6 @@ import io.viash.helpers.{Git, GitInfo, IO, Logging}
 import io.viash.helpers.circe._
 import io.viash.helpers.status._
 import io.viash.helpers.Yaml
-import io.viash.executors.Executor
-import io.viash.engines.Engine
 
 import java.net.URI
 import io.viash.functionality.resources._
@@ -37,9 +35,8 @@ import java.nio.file.Paths
 import io.viash.schemas._
 import java.io.ByteArrayOutputStream
 import java.nio.file.FileSystemNotFoundException
-import io.viash.executors.{ExecutableExecutor, NextflowExecutor}
-import io.viash.engines.NativeEngine
-import io.viash.engines.DockerEngine
+import io.viash.runners.{Runner, ExecutableRunner, NextflowRunner}
+import io.viash.engines.{Engine, NativeEngine, DockerEngine}
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -76,8 +73,8 @@ case class Config(
       |""".stripMargin)
   platforms: List[Platform] = Nil,
 
-  @description("A list of executors to execute target artifacts.")
-  executors: List[Executor] = Nil,
+  @description("A list of runners to execute target artifacts.")
+  runners: List[Runner] = Nil,
   @description("A list of engine environments to execute target artifacts in.")
   engines: List[Engine] = Nil,
 
@@ -97,36 +94,36 @@ case class Config(
   assert(platforms.collect{ case p: DockerPlatform => p }.forall(p => p.chown), "DockerPlatform chown: false is not supported in backwards compability.")
   
   /**
-    * Find the executor
+    * Find the runner
     * 
     * Order of execution:
-    *   - if an executor id is passed, look up the executor in the executors list
-    *   - else if executors is a non-empty list, use the first executor
-    *   - else use the executable executor
+    *   - if an runner id is passed, look up the runner in the runners list
+    *   - else if runners is a non-empty list, use the first runner
+    *   - else use the executable runner
     *
-    * @param executorStr An executor ID referring to one of the config's executors
-    * @return An executor
+    * @param runnerStr An runner ID referring to one of the config's runners
+    * @return An runner
     */
-  def findExecutor(query: Option[String]): Executor = {
-    findExecutors(query).head
+  def findRunner(query: Option[String]): Runner = {
+    findRunners(query).head
   }
 
   /**
-    * Find the executors
+    * Find the runners
     * 
     * Order of execution:
-    *   - if an executor id is passed, look up the executor in the executors list
-    *   - else if executors is a non-empty list, use the first executor
-    *   - else use the executable executor
+    *   - if an runner id is passed, look up the runner in the runners list
+    *   - else if runners is a non-empty list, use the first runner
+    *   - else use the executable runner
     *
-    * @param query An executor ID referring to one of the config's executors
-    * @return An executor
+    * @param query An runner ID referring to one of the config's runners
+    * @return An runner
     */
-  def findExecutors(query: Option[String]): List[Executor] = {
+  def findRunners(query: Option[String]): List[Runner] = {
     // TODO: match on query, there's no need to do a .* if query is None
     val regex = query.getOrElse(".*").r
 
-    val foundMatches = getExecutors.filter{ e =>
+    val foundMatches = getRunners.filter{ e =>
       regex.findFirstIn(e.id).isDefined
     }
     
@@ -134,10 +131,10 @@ case class Config(
       case li if li.nonEmpty =>
         li
       case Nil if query.isDefined =>
-        throw new RuntimeException(s"no executor id matching regex '$regex' could not be found in the config.")
+        throw new RuntimeException(s"no runner id matching regex '$regex' could not be found in the config.")
       case _ =>
-        // TODO: switch to the getExecutors.head ?
-        List(ExecutableExecutor())
+        // TODO: switch to the getRunners.head ?
+        List(ExecutableRunner())
     }
   }
 
@@ -201,13 +198,13 @@ case class Config(
         Some(NativeEngine())
       }
     } ::: engines
-  lazy val getExecutors: List[Executor] = platforms.collect{
+  lazy val getRunners: List[Runner] = platforms.collect{
     case p: NativePlatform =>
-      ExecutableExecutor(
+      ExecutableRunner(
         id = p.id
       )
     case p: DockerPlatform =>
-      ExecutableExecutor(
+      ExecutableRunner(
         id = p.id,
         port = p.port,
         workdir = p.workdir,
@@ -215,7 +212,7 @@ case class Config(
         docker_run_args = p.run_args
       )
     case p: NextflowPlatform =>
-      NextflowExecutor(
+      NextflowRunner(
         id = p.id,
         directives = p.directives,
         auto = p.auto,
@@ -223,7 +220,7 @@ case class Config(
         debug = p.debug,
         container = p.container
       )
-    } ::: executors
+    } ::: runners
 }
 
 object Config extends Logging {

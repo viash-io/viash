@@ -27,8 +27,8 @@ case class Info(
   config: String,
   @description("The platform id used during build.")
   platform: Option[String] = None,
-  @description("The executor id used during build.")
-  executor: Option[String] = None,
+  @description("The runner id used during build.")
+  runner: Option[String] = None,
   @description("The engine id used during build.")
   engine: Option[String] = None,
   @description("Folder path to the build artifacts.")

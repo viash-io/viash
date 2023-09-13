@@ -31,7 +31,7 @@ class MainBuildAuxiliaryNativeUnknownParameter extends AnyFunSuite with BeforeAn
     TestHelper.testMain(
       "build",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       "-o", tempFolStr,
       configFile
     )

@@ -33,7 +33,7 @@ import exceptions._
 import scala.util.Try
 import org.rogach.scallop._
 import io.viash.helpers.LoggerLevel
-import io.viash.executors.Executor
+import io.viash.runners.Runner
 import io.viash.config.AppliedConfig
 import io.viash.functionality.Functionality
 import io.viash.engines.Engine
@@ -296,7 +296,7 @@ object Main extends Logging {
           cli.namespace.list,
           project = proj1,
           addOptMainScript = false, 
-          applyExecutor = cli.namespace.list.executor.isDefined,
+          applyRunner = cli.namespace.list.runner.isDefined,
           applyEngine = cli.namespace.list.engine.isDefined
         )
         val configs2 = namespaceDependencies(configs, None, proj1.rootDir)
@@ -311,7 +311,7 @@ object Main extends Logging {
         val configs = readConfigs(
           cli.namespace.exec, 
           project = proj1, 
-          applyExecutor = cli.namespace.exec.applyPlatform(),
+          applyRunner = cli.namespace.exec.applyPlatform(),
           applyEngine = cli.namespace.exec.applyPlatform()
         )
         ViashNamespace.exec(
@@ -327,7 +327,7 @@ object Main extends Logging {
           cli.config.view,
           project = proj1,
           addOptMainScript = false,
-          applyExecutorAndEngine = cli.config.view.executor.isDefined || cli.config.view.engine.isDefined
+          applyRunnerAndEngine = cli.config.view.runner.isDefined || cli.config.view.engine.isDefined
         )
         val config2 = DependencyResolver.modifyConfig(config.config, None, proj1.rootDir)
         ViashConfig.view(
@@ -341,7 +341,7 @@ object Main extends Logging {
           cli.config.inject,
           project = proj1,
           addOptMainScript = false,
-          applyExecutorAndEngine = false
+          applyRunnerAndEngine = false
         )
         ViashConfig.inject(config.config)
         0
@@ -387,40 +387,40 @@ object Main extends Logging {
   }
 
 
-  def processConfigWithExecutorAndEngine(
+  def processConfigWithRunnerAndEngine(
     appliedConfig: AppliedConfig, 
-    executor: Option[Executor],
+    runner: Option[Runner],
     engines: List[Engine],
     targetDir: Option[String]
   ): AppliedConfig = {
     // determine output path
-    val outputPath = (targetDir, executor) match {
+    val outputPath = (targetDir, runner) match {
       case (Some(td), Some(ex)) => 
         Some(ViashNamespace.targetOutputPath(
           targetDir = td,
-          executorId = ex.id,
+          runnerId = ex.id,
           namespace = appliedConfig.config.functionality.namespace,
           functionalityName = appliedConfig.config.functionality.name
         ))
       case _ => None
     }
 
-    // add executor and engine ids to the info object
+    // add runner and engine ids to the info object
     val configInfo = appliedConfig.config.info.map{_.copy(
-      executor = executor.map(_.id),
+      runner = runner.map(_.id),
       engine = Some(engines.map(_.id).mkString("|")),
       output = outputPath
     )}
 
-    // update info, and add executor and engine to the config
+    // update info, and add runner and engine to the config
     appliedConfig.copy(
       config = appliedConfig.config.copy(
         platforms = Nil,
         engines = appliedConfig.config.getEngines,
-        executors = appliedConfig.config.getExecutors,
+        runners = appliedConfig.config.getRunners,
         info = configInfo
       ),
-      executor = executor,
+      runner = runner,
       engines = engines,
       status = None
     )
@@ -430,7 +430,7 @@ object Main extends Logging {
     subcommand: ViashCommand,
     project: ViashProject,
     addOptMainScript: Boolean = true,
-    applyExecutorAndEngine: Boolean = true
+    applyRunnerAndEngine: Boolean = true
   ): AppliedConfig = {
     
     val config = Config.read(
@@ -439,16 +439,16 @@ object Main extends Logging {
       addOptMainScript = addOptMainScript,
       configMods = project.config_mods
     )
-    if (applyExecutorAndEngine) {
-      val executorStr = subcommand.executor.toOption
+    if (applyRunnerAndEngine) {
+      val runnerStr = subcommand.runner.toOption
       val engineStr = subcommand.engine.toOption
       
-      val executor = config.findExecutor(executorStr)
+      val runner = config.findRunner(runnerStr)
       val engines = config.findEngines(engineStr)
 
-      processConfigWithExecutorAndEngine(
+      processConfigWithRunnerAndEngine(
         appliedConfig = config,
-        executor = Some(executor), // TODO: fix? should findExecutor return an option?
+        runner = Some(runner), // TODO: fix? should findRunner return an option?
         engines = engines,
         targetDir = project.target
       )
@@ -461,14 +461,14 @@ object Main extends Logging {
     subcommand: ViashNs,
     project: ViashProject,
     addOptMainScript: Boolean = true,
-    applyExecutor: Boolean = true,
+    applyRunner: Boolean = true,
     applyEngine: Boolean = true
   ): List[AppliedConfig] = {
     val source = project.source.get
     val query = subcommand.query.toOption
     val queryNamespace = subcommand.query_namespace.toOption
     val queryName = subcommand.query_name.toOption
-    val executorStr = subcommand.executor.toOption
+    val runnerStr = subcommand.runner.toOption
     val engineStr = subcommand.engine.toOption
     val configMods = project.config_mods
 
@@ -482,21 +482,21 @@ object Main extends Logging {
       addOptMainScript = addOptMainScript
     )
     
-    // TODO: apply engine and executor should probably be split into two Y_Y
+    // TODO: apply engine and runner should probably be split into two Y_Y
     val configs1 = 
-      if (applyExecutor || applyEngine) {
+      if (applyRunner || applyEngine) {
         configs0.flatMap {
           // passthrough statuses
           case ac if ac.status.isDefined => List(ac)
           case ac =>
             try {
-              val executors = ac.config.findExecutors(executorStr)
+              val runners = ac.config.findRunners(runnerStr)
               val engines = ac.config.findEngines(engineStr)
 
-              executors.map{ executor =>
-                processConfigWithExecutorAndEngine(
+              runners.map{ runner =>
+                processConfigWithRunnerAndEngine(
                   appliedConfig = ac,
-                  executor = Some(executor),
+                  runner = Some(runner),
                   engines = engines,
                   targetDir = project.target
                 )
@@ -504,7 +504,7 @@ object Main extends Logging {
             } catch {
               case e: Exception =>
                 error(e.getMessage())
-                List(ac.setStatus(MissingExecutorOrEngine))
+                List(ac.setStatus(MissingRunnerOrEngine))
             }
           }
       } else {
@@ -548,7 +548,7 @@ object Main extends Logging {
 
   // Actual handling of the dependency logic, to be used for single and namespace configs
   def handleSingleConfigDependency(config: AppliedConfig, output: Option[String], rootDir: Option[Path], namespaceConfigs: List[Config] = Nil) = {
-    val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config.config, config.executor.map(_.id))
+    val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config.config, config.runner.map(_.id))
     val config1 = DependencyResolver.modifyConfig(config.config, dependencyPlatformId, rootDir, namespaceConfigs)
     val config2 = if (output.isDefined) {
       DependencyResolver.copyDependencies(config1, output.get, dependencyPlatformId.getOrElse("native"), namespaceConfigs.nonEmpty)

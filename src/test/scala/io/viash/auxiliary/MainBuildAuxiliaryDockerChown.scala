@@ -53,7 +53,7 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
     TestHelper.testMain(
       "build",
       "--engine", dockerId,
-      "--executor", dockerId,
+      "--runner", dockerId,
       "-o", tempFolStr,
       "--setup", "build",
       localConfig
@@ -107,7 +107,7 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
   }
 
   test("Test when chown is set to false", DockerTest) {
-    // functionality not provided in executor, should throw exception
+    // functionality not provided in runner, should throw exception
     assertThrows[ConfigParserException] {
       dockerChownGetOwner(singleOutputmods, 1, "chown_false", Some(false))
     }

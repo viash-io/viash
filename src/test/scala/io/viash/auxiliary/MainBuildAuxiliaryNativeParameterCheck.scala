@@ -86,7 +86,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
     TestHelper.testMain(
       "build",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       "-o", tempFolStr,
       configFile
     )
@@ -105,7 +105,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
     TestHelper.testMain(
       "build",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       "-o", tempFolStr,
       loopConfigFile
     )

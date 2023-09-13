@@ -32,13 +32,13 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
     // only run testbash natively because other requirements might not be available
     if (name == "bash") {
       test(s"Testing $name platform native", NativeTest) {
-        TestHelper.testMain("test", "--engine", "native", "--executor", "native", config)
+        TestHelper.testMain("test", "--engine", "native", "--runner", "native", config)
       }
 
       for (multiType <- multiples) {
         test(s"Testing $name platform native, multiple $multiType", NativeTest) {
           TestHelper.testMain(
-            "test", "--engine", "native", "--executor", "native", config,
+            "test", "--engine", "native", "--runner", "native", config,
             "-c", s"""<preparse>.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].type := "$multiType"""",
             "-c", s""".functionality.test_resources[.type == "bash_script"].path := "../multi-$multiType.sh""""
           )
@@ -47,14 +47,14 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
     }
 
     test(s"Testing $name platform docker", DockerTest) {
-      TestHelper.testMain("test", "--engine", "docker", "--executor", "docker", config)
+      TestHelper.testMain("test", "--engine", "docker", "--runner", "docker", config)
     }
 
     if (name != "executable") {
       for (multiple <- multiples) {
         test(s"Testing $name platform docker, multiple $multiple", DockerTest) {
           TestHelper.testMain(
-            "test", "--engine", "docker", "--executor", "docker", config,
+            "test", "--engine", "docker", "--runner", "docker", config,
             "-c", s"""<preparse>.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].type := "$multiple"""",
             "-c", s""".functionality.test_resources[.type == "bash_script"].path := "../multi-$multiple.sh""""
           )
@@ -63,7 +63,7 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
 
       test(s"Testing $name platform docker, multiple file", DockerTest) {
         TestHelper.testMain(
-          "test", "--engine", "docker", "--executor", "docker", config,
+          "test", "--engine", "docker", "--runner", "docker", config,
           "-c", s"""<preparse>.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].type := "file"""",
           "-c", s"""<preparse>.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].must_exist := false""",
           "-c", s""".functionality.test_resources[.type == "bash_script"].path := "../multi-file.sh""""

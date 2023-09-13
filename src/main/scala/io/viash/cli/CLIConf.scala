@@ -35,13 +35,13 @@ trait ViashCommand {
   //     "In addition, the path to a platform yaml file can also be specified.",
   //   required = false
   // )
-  val executor = registerOpt[String](
-    name = "executor",
+  val runner = registerOpt[String](
+    name = "runner",
     default = None,
     descr =
-      "Specifies which executor amongst those specified in the config to use. " +
-      "If this is not provided, the first executor will be used. " +
-      "If no executors are defined in the config, the executable executor will be used.",
+      "Specifies which runner amongst those specified in the config to use. " +
+      "If this is not provided, the first runner will be used. " +
+      "If no runners are defined in the config, the executable runner will be used.",
     required = false
   )
   val engine = registerOpt[String](
@@ -118,13 +118,13 @@ trait ViashNs {
   //   default = None,
   //   required = false
   // )
-  val executor = registerOpt[String](
-    name = "executor",
+  val runner = registerOpt[String](
+    name = "runner",
     default = None,
     descr =
-      "Acts as a regular expression to filter the executor ids specified in the found config files. " +
-        "If this is not provided, all executors will be used. " +
-        "If no executors are defined in a config, the executable executor will be used.",
+      "Acts as a regular expression to filter the runner ids specified in the found config files. " +
+        "If this is not provided, all runners will be used. " +
+        "If no runners are defined in a config, the executable runner will be used.",
     required = false
   )
   val engine = registerOpt[String](
@@ -420,7 +420,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
         """viash ns exec 'echo {path} \\;'
           |viash ns exec 'chmod +x {main-script} +'""".stripMargin
       )
-      // TODO: update this to applyEngine and applyExecutor??
+      // TODO: update this to applyEngine and applyRunner??
       val applyPlatform = registerOpt[Boolean] (
         name = "apply_platform",
         short = Some('a'),

@@ -40,7 +40,7 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     TestHelper.testMain(
       "build",
       "--engine", "throwawayimage",
-      "--executor", "throwawayimage",
+      "--runner", "throwawayimage",
       "-o", tempFolStr,
       configFile
     )
@@ -72,7 +72,7 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     TestHelper.testMain(
       "build",
       "--engine", "throwawayimage",
-      "--executor", "throwawayimage",
+      "--runner", "throwawayimage",
       "-o", tempFolStr,
       "--setup", "build",
       configFile
@@ -154,7 +154,7 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
       val stdout = TestHelper.testMain(
         "build",
         "--engine", "docker",
-        "--executor", "docker",
+        "--runner", "docker",
         "-o", tempFolStr,
         "--setup", "alwaysbuild",
         configFile.toString

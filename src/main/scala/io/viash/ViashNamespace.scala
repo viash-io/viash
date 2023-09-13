@@ -32,7 +32,7 @@ import io.viash.platforms.Platform
 import scala.collection.parallel.CollectionConverters._
 import io.viash.helpers.LoggerOutput
 import io.viash.helpers.LoggerLevel
-import io.viash.executors.Executor
+import io.viash.runners.Runner
 import io.viash.config.AppliedConfig
 
 object ViashNamespace extends Logging {
@@ -55,7 +55,7 @@ object ViashNamespace extends Logging {
 
   def targetOutputPath(
     targetDir: String,
-    executorId: String,
+    runnerId: String,
     namespace: Option[String],
     functionalityName: String
   ): String = {
@@ -63,7 +63,7 @@ object ViashNamespace extends Logging {
       case Some(ns) => ns + "/"
       case None => ""
     }
-    s"$targetDir/$executorId/$nsStr$functionalityName"
+    s"$targetDir/$runnerId/$nsStr$functionalityName"
   }
 
   def build(
@@ -83,16 +83,16 @@ object ViashNamespace extends Logging {
         case ac =>
           val funName = ac.config.functionality.name
           val ns = ac.config.functionality.namespace
-          val executorId = ac.executor.get.id
+          val runnerId = ac.runner.get.id
           // val engineId = ac.platform.get.id
           val out = 
             if (flatten) {
               target
             } else {
-              targetOutputPath(target, executorId, ns, funName)
+              targetOutputPath(target, runnerId, ns, funName)
             }
           val nsStr = ns.map(" (" + _ + ")").getOrElse("")
-          infoOut(s"Exporting $funName$nsStr =$executorId=> $out")
+          infoOut(s"Exporting $funName$nsStr =$runnerId=> $out")
           val status = ViashBuild(
             appliedConfig = ac,
             output = out,
@@ -149,7 +149,7 @@ object ViashNamespace extends Logging {
           List(
             "namespace",
             "functionality",
-            "executor",
+            "runner",
             "engine",
             "test_name",
             "exit_code",
@@ -162,7 +162,7 @@ object ViashNamespace extends Logging {
         format(
           "namespace",
           "functionality",
-          "executor",
+          "runner",
           "engine",
           "test_name",
           "exit_code",
@@ -178,11 +178,11 @@ object ViashNamespace extends Logging {
             // get attributes
             val namespace = ac.config.functionality.namespace.getOrElse("")
             val funName = ac.config.functionality.name
-            val executorName = ac.executor.get.id
+            val runnerName = ac.runner.get.id
             val engineName = ac.engines.head.id
 
             // print start message
-            infoOut("%20s %20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, executorName, engineName, "start", "", "", ""))
+            infoOut("%20s %20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, runnerName, engineName, "start", "", "", ""))
 
             // run tests
             // TODO: it would actually be great if this component could subscribe to testresults messages
@@ -226,7 +226,7 @@ object ViashNamespace extends Logging {
               }
 
               // print message
-              log(LoggerOutput.StdOut, LoggerLevel.Info, col, "%20s %20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, executorName, engineName, test.name, test.exitValue, test.duration, msg))
+              log(LoggerOutput.StdOut, LoggerLevel.Info, col, "%20s %20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, runnerName, engineName, test.name, test.exitValue, test.duration, msg))
 
               if (test.exitValue != 0) {
                 info(test.output)
@@ -235,7 +235,7 @@ object ViashNamespace extends Logging {
 
               // write to tsv
               tsvWriter.foreach{writer =>
-                writer.append(List(namespace, funName, executorName, engineName, test.name, test.exitValue, test.duration, msg).mkString("\t") + sys.props("line.separator"))
+                writer.append(List(namespace, funName, runnerName, engineName, test.name, test.exitValue, test.duration, msg).mkString("\t") + sys.props("line.separator"))
                 writer.flush()
               }
             }
@@ -299,7 +299,7 @@ object ViashNamespace extends Logging {
     val configData = configs.filter(_.status.isEmpty).flatMap{ ac =>
       // TODO: Should we iterate over the engines here?
       ac.engines.map(engine => {
-        NsExecData(ac.config.info.get.config, ac.config, ac.executor, Some(engine))
+        NsExecData(ac.config.info.get.config, ac.config, ac.runner, Some(engine))
       })
     }
 
@@ -397,7 +397,7 @@ object ViashNamespace extends Logging {
       (ParseError, "configs encountered parse errors"),
       (Disabled, "configs were disabled"),
       (DependencyError, "dependency resolutions failed"),
-      (MissingExecutorOrEngine, "configs could not apply an executor or engine"),
+      (MissingRunnerOrEngine, "configs could not apply an runner or engine"),
       (BuildError, "configs built failed"),
       (SetupError, "setups failed"),
       (PushError, "pushes failed"),

@@ -24,7 +24,7 @@ import io.viash.helpers.status._
 import config._
 import platforms.Platform
 import helpers.{IO, Logging}
-import io.viash.executors.Executor
+import io.viash.runners.Runner
 
 object ViashBuild extends Logging {
   def apply(
@@ -33,7 +33,7 @@ object ViashBuild extends Logging {
     setup: Option[String] = None,
     push: Boolean = false
   ): Status = {
-    val resources = appliedConfig.generateExecutor(false)
+    val resources = appliedConfig.generateRunner(false)
 
     // create dir
     val dir = Paths.get(output)

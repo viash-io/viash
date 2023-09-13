@@ -15,13 +15,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.executors
+package io.viash.runners
 
-import io.viash.functionality.resources.{Resource, Script}
+import io.viash.schemas._
+import io.viash.functionality.Functionality
+import io.viash.config.Config
+import io.viash.platforms.Platform
 
-final case class ExecutorResources(
-  mainScript: Option[Script],
-  additionalResources: List[Resource]
-) {
-  def resources: List[Resource] = mainScript.toList ++ additionalResources
+trait Runner {
+  @description("Specifies the type of the platform.")
+  val `type`: String
+
+  @description("Id of the runner.")
+  @example("id: foo", "yaml")
+  val id: String
+
+  def generateRunner(config: Config, testing: Boolean): RunnerResources
 }
+
+object Runner{
+  // Helper method to fascilitate conversion of legacy code to the new methods
+  def get(platform: Platform) = {
+    platform match {
+      case p: Runner => p
+      case _ => throw new RuntimeException("Expected all legacy platforms to be runners")
+    }
+  }
+}
+

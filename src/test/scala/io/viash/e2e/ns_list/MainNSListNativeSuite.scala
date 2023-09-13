@@ -71,7 +71,7 @@ class MainNSListNativeSuite extends AnyFunSuite{
       "ns", "list",
       "-s", nsPath,
       "--engine", "docker",
-      "--executor", "docker"
+      "--runner", "docker"
     )
 
     assert(exitCode == 1)
@@ -85,7 +85,7 @@ class MainNSListNativeSuite extends AnyFunSuite{
       "ns", "list",
       "-s", scalaPath,
       "--engine", "docker",
-      "--executor", "docker"
+      "--runner", "docker"
     )
 
     assert(exitCode == 0)
@@ -100,7 +100,7 @@ class MainNSListNativeSuite extends AnyFunSuite{
      "ns", "list",
       "-s", scalaPath,
       "--engine", "not_exists",
-      "--executor", "not_exists"
+      "--runner", "not_exists"
     )
 
     assert(exitCode == 0)

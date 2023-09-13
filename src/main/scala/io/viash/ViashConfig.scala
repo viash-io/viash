@@ -25,10 +25,10 @@ import io.circe.syntax.EncoderOps
 import io.viash.config.Config
 import io.viash.helpers.{IO, Logging}
 import io.viash.helpers.circe._
-import io.viash.executors.DebugExecutor
+import io.viash.runners.DebugRunner
 import io.viash.config.ConfigMeta
 import io.viash.exceptions.ExitException
-import io.viash.executors.Executor
+import io.viash.runners.Runner
 
 object ViashConfig extends Logging{
 
@@ -93,8 +93,8 @@ object ViashConfig extends Logging{
     val path = Paths.get(uri.getPath())
 
     // debugFun
-    val debugPlatform = DebugExecutor(path = uri.getPath())
-    val resources = debugPlatform.generateExecutor(config, testing = false)
+    val debugPlatform = DebugRunner(path = uri.getPath())
+    val resources = debugPlatform.generateRunner(config, testing = false)
 
     // create temporary directory
     val dir = IO.makeTemp("viash_inject_" + config.functionality.name)

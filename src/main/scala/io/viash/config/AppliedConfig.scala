@@ -17,25 +17,25 @@
 
 package io.viash.config
 
-import io.viash.executors.Executor
+import io.viash.runners.Runner
 import io.viash.helpers.status.Status
 import io.viash.engines.Engine
 
 final case class AppliedConfig(
   config: Config,
-  executor: Option[Executor],
+  runner: Option[Runner],
   engines: List[Engine],
 
   status: Option[Status] // None if still processing, Some if failed or fully finished building, running, ...
 ) {
-  def validForBuild = executor.isDefined && engines.nonEmpty
-  def generateExecutor(testing: Boolean) = {
+  def validForBuild = runner.isDefined && engines.nonEmpty
+  def generateRunner(testing: Boolean) = {
     // override the config engines with the selected engines
     // TODO: is this ok?
     val config2 = config.copy(engines = engines)
 
-    // TODO: check if executor is defined, and fail gracefully if it isn't
-    executor.get.generateExecutor(config2, testing)
+    // TODO: check if runner is defined, and fail gracefully if it isn't
+    runner.get.generateRunner(config2, testing)
   }
   def setStatus(status: Status) = copy(status = Some(status))
 }

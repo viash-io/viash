@@ -32,7 +32,7 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
       "ns", "build",
       "-n", "dependencyTest",
       "--engine", "native",
-      "--executor", "native",
+      "--runner", "native",
       "--src", temporaryConfigFolder.toString(),
       "--target", temporaryFolder.resolve("target").toString()
     )

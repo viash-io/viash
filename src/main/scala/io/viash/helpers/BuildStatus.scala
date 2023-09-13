@@ -38,7 +38,7 @@ case object DependencyError extends Status {
   val isError = true
   val color = Console.RED
 }
-case object MissingExecutorOrEngine extends Status {
+case object MissingRunnerOrEngine extends Status {
   val isError = false
   val color = Console.YELLOW
 }
