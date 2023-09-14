@@ -14,7 +14,7 @@ TODO add summary
 
 ## BUG FIXES
 
-* `WorkflowHelper.nf`: Only set default values of output files which are **not already set**, and if the output file argument is **not required**.
+* `WorkflowHelper.nf`: Only set default values of output files which are **not already set**, and if the output file argument is **not required** (PR #514).
 
 # Viash 0.7.5 (2023-08-11): Minor breaking changes and new features
 
