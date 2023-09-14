@@ -12,6 +12,10 @@ TODO add summary
 
 * Minor fixes to VDSL3 reference documentation (PR #508).
 
+## BUG FIXES
+
+* `WorkflowHelper.nf`: Only set default values of output files which are **not already set**, and if the output file argument is **not required**.
+
 # Viash 0.7.5 (2023-08-11): Minor breaking changes and new features
 
 This release contains minor breaking change due to deprecated or outdated functionality being removed.
