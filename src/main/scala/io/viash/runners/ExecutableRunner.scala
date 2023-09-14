@@ -151,11 +151,11 @@ final case class ExecutableRunner(
       s"""
         |        ---engine)
         |            VIASH_ENGINE_ID="$$2"
-        |            shift 1
+        |            shift 2
         |            ;;
         |        ---engine=*)
         |            VIASH_ENGINE_ID="$$(ViashRemoveFlags "$$1")"
-        |            shift 2
+        |            shift 1
         |            ;;""".stripMargin
 
     val typeSetterStrs = engines.groupBy(_.`type`).map{ case (engineType, engineList) => 
@@ -187,11 +187,17 @@ final case class ExecutableRunner(
       return BashWrapperMods()
     }
 
+    // eval already present, so an executable runs with `eval x` while scripts run with `eval bash x`
+    val cmd = config.functionality.mainScript match {
+      case Some(_: Executable) => ""
+      case _ => "bash"
+    }
+
     val preRun =
       s"""
         |if ${oneOfEngines(engines)} ; then
         |  if [ "$$VIASH_MODE" == "run" ]; then
-        |    VIASH_CMD="bash"
+        |    VIASH_CMD="$cmd"
         |  else
         |    ViashError "Engine '$$VIASH_ENGINE_ID' does not support mode '$$VIASH_MODE'."
         |    exit 1
@@ -302,12 +308,12 @@ final case class ExecutableRunner(
         |        ---setup)
         |            VIASH_MODE='setup'
         |            VIASH_SETUP_STRATEGY="$$2"
-        |            shift 1
+        |            shift 2
         |            ;;
         |        ---setup=*)
         |            VIASH_MODE='setup'
         |            VIASH_SETUP_STRATEGY="$$(ViashRemoveFlags "$$1")"
-        |            shift 2
+        |            shift 1
         |            ;;
         |        ---dockerfile)
         |            VIASH_MODE='dockerfile'
