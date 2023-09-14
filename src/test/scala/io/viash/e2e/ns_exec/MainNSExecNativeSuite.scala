@@ -31,7 +31,8 @@ class MainNSExecNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       TestHelper.testMainWithStdErr(
         "ns", "exec",
         "--src", nsPath,
-        "--apply_platform",
+        "--apply_runner",
+        "--apply_engine",
         "echo _{functionality-name}_ -{dir}- !{path}! ~{engine}~ ={namespace}=+\\;"
       )
     val stdout = stdoutRaw.replaceAll(nsPath, "src/")

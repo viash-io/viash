@@ -410,7 +410,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
           | * `{abs-main-script}`: absolute path to the main script (if any)
           | * `{functionality-name}`: name of the component
           | * `{namespace}`: namespace of the component
-          | * `{platform}`: selected platform id (only when --apply_platform is used)
+          | * `{runner}`: selected runner id (only when --apply_runner is used)
+          | * `{engine}`: selected engine id (only when --apply_engine is used)
           | * `{output}`: path to the destination directory when building the component
           | * `{abs-output}`: absolute path to the destination directory when building the component
           |
@@ -420,15 +421,23 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
         """viash ns exec 'echo {path} \\;'
           |viash ns exec 'chmod +x {main-script} +'""".stripMargin
       )
-      // TODO: update this to applyEngine and applyRunner??
-      val applyPlatform = registerOpt[Boolean] (
-        name = "apply_platform",
-        short = Some('a'),
+      val applyRunner = registerOpt[Boolean] (
+        name = "apply_runner",
+        // short = Some('a'),
         default = Some(false),
         descr = 
-          """Fills in the {platform} and {output} field by applying each platform to the 
+          """Fills in the {runner} and {output} field by applying each runner to the 
             |config separately. Note that this results in the provided command being applied
-            |once for every platform that matches the --platform regex.""".stripMargin
+            |once for every runner that matches the --runner regex.""".stripMargin
+      )
+      val applyEngine = registerOpt[Boolean] (
+        name = "apply_engine",
+        // short = Some('a'),
+        default = Some(false),
+        descr = 
+          """Fills in the {engine} and {output} field by applying each engine to the 
+            |config separately. Note that this results in the provided command being applied
+            |once for every engine that matches the --engine regex.""".stripMargin
       )
 
       val dryrun = registerOpt[Boolean] (

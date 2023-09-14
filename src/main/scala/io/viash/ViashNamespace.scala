@@ -298,8 +298,12 @@ object ViashNamespace extends Logging {
   ): Unit = {
     val configData = configs.filter(_.status.isEmpty).flatMap{ ac =>
       // TODO: Should we iterate over the engines here?
-      ac.engines.map(engine => {
-        NsExecData(ac.config.info.get.config, ac.config, ac.runner, Some(engine))
+      val engineOptionList = ac.engines match {
+        case Nil => List(None)
+        case list => list.map(Some(_))
+      }
+      engineOptionList.map(eo => {
+        NsExecData(ac.config.info.get.config, ac.config, ac.runner, eo)
       })
     }
 

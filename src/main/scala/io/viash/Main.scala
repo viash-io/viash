@@ -311,8 +311,8 @@ object Main extends Logging {
         val configs = readConfigs(
           cli.namespace.exec, 
           project = proj1, 
-          applyRunner = cli.namespace.exec.applyPlatform(),
-          applyEngine = cli.namespace.exec.applyPlatform()
+          applyRunner = cli.namespace.exec.applyRunner(),
+          applyEngine = cli.namespace.exec.applyEngine()
         )
         ViashNamespace.exec(
           configs = configs,
