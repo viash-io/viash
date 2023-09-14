@@ -68,12 +68,13 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
   }
 
   test("Check setup strategy", DockerTest) {
+    val newConfigFilePath = configDeriver.derive(""".platforms[.type == "docker" && !has(.id) ].setup := [{ type: "docker", run: "echo 'Hello world!'" }]""", "cache_config")
     // first run to create cache entries
     val testText = TestHelper.testMain(
       "test",
       "--engine", "docker",
       "--runner", "docker",
-      configFile,
+      newConfigFilePath,
       "--keep", "false"
     )
 
@@ -82,12 +83,12 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
       "test",
       "--engine", "docker",
       "--runner", "docker",
-      configFile,
+      newConfigFilePath,
       "--setup", "build",
       "--keep", "false"
     )
 
-    val regexBuildCache = raw"RUN.*:\n.*CACHED".r
+    val regexBuildCache = raw"\n#\d \[\d/\d\] RUN echo 'Hello world!'\n#\d CACHED\n".r
     assert(!regexBuildCache.findFirstIn(testTextNoCaching).isDefined, "Expected to not find caching.")
 
     // Do a third run to check caching
@@ -95,15 +96,16 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
       "test",
       "--engine", "docker",
       "--runner", "docker",
-      configFile,
+      newConfigFilePath,
       "--setup", "cb",
       "--keep", "false"
     )
+    
     assert(regexBuildCache.findFirstIn(testTextCaching).isDefined, "Expected to find caching.")
+
     checkTempDirAndRemove(testText, false)
     checkTempDirAndRemove(testTextCaching, false)
     checkTempDirAndRemove(testTextNoCaching, false)
-
   }
 
   test("Verify base config derivation", NativeTest) {
