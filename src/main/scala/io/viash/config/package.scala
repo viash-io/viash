@@ -17,21 +17,27 @@
 
 package io.viash
 
-import io.circe.{Decoder, Encoder, Json}
+import io.circe.{Decoder, Encoder, Json, HCursor}
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
+import io.viash.platforms.decodePlatform
+import io.viash.exceptions.ConfigParserValidationException
 
 package object config {
   import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
+  import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
+  import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
 
   implicit val customConfig: Configuration = Configuration.default.withDefaults
 
   // encoders and decoders for Config
   implicit val encodeConfig: Encoder.AsObject[Config] = deriveConfiguredEncoder
-  implicit val decodeConfig: Decoder[Config] = deriveConfiguredDecoderFullChecks[Config].prepare{
+  implicit val decodeConfig: Decoder[Config] = deriveConfiguredDecoderWithValidationCheck[Config].prepare{
+    checkDeprecation[Config](_)
     // map platforms to runners and engines
-    _.withFocus{
+    .withFocus{
       _.mapObject{ conf =>
+        // Transform platforms to runners and engines
         val runners = conf.apply("platforms").map {
           platforms => 
             platforms.mapArray(platformVector => {
@@ -65,8 +71,6 @@ package object config {
                       "debug" -> pObj.apply("debug").getOrElse(Json.Null),
                       "container" -> pObj.apply("container").getOrElse(Json.Null)
                     )
-                  case s =>
-                    throw new RuntimeException(s"Platform compability error. Type '$s' is not recognised. Valid types are 'docker', 'native', and 'nextflow'.\n$platform.")
                 }
               }
             })
@@ -104,8 +108,6 @@ package object config {
                     ))
                   case "nextflow" =>
                     None
-                  case s =>
-                    throw new RuntimeException(s"Platform compability error. Type '$s' is not recognised. Valid types are 'docker', 'native', and 'nextflow'.\n$platform")
                 }
               }
             })
@@ -151,7 +153,23 @@ package object config {
         conf3
       }
     }
-  }
+  }.validate(
+    // Validate platforms only. Will get stripped in the next prepare step.
+    (pred: HCursor) => {
+      val platforms = pred.downField("platforms")
+      if (platforms.succeeded) {
+        platforms.values.get.foreach{ p =>
+          val validate = decodePlatform(p.hcursor)
+          validate.fold(_ => {
+            throw new ConfigParserValidationException("Platform", p.toString())
+            false
+          }, _ => true)
+        }
+      }
+      true
+    },
+    "Could not convert json to Config."
+  )
 
   implicit val encodeInfo: Encoder[Info] = deriveConfiguredEncoder
   implicit val decodeInfo: Decoder[Info] = deriveConfiguredDecoderFullChecks
