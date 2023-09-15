@@ -36,7 +36,7 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
       "commands_default"
     )
     
-    val stdout = TestHelper.testMain(
+    val (stdout, _, _) = TestHelper.testMainWithStdErr(
       "build",
       "--engine", "docker",
       "--runner", "docker",
@@ -54,7 +54,7 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
       "commands_extra"
     )
     
-    val stdout = TestHelper.testMain(
+    val (stdout, _, _) = TestHelper.testMainWithStdErr(
       "build",
       "--engine", "docker",
       "--runner", "docker",
