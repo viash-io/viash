@@ -213,6 +213,17 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
   }
 
+  test("Test whether a config with a platform specified gives a deprecation warning") {
+    val testOutput = TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      configFile
+    )
+
+    val testRegex = "Warning: ..platforms is deprecated: Use 'engines' and 'runners' instead.".r
+    assert(testRegex.findFirstIn(testOutput).isDefined, testOutput)
+  }
+
   test("Test whether defining strings as arguments in argument groups throws a removed error") {
     val testOutput = TestHelper.testMainException2[Exception](
       "build",

@@ -42,7 +42,7 @@ import io.viash.helpers.Escaper
     |      label: [lowcpu, midmem]
     |""".stripMargin,
   "yaml")
-@deprecated("Use 'engines' and 'runners' instead", "0.8.0", "0.9.0")
+@deprecated("Use 'engines' and 'runners' instead.", "0.8.0", "0.9.0")
 @subclass("nextflow")
 case class NextflowPlatform(
   @description("Every platform can be given a specific id that can later be referred to explicitly when running or building the Viash component.")
