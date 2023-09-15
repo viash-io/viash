@@ -64,18 +64,11 @@ case class Config(
       |""".stripMargin)
   functionality: Functionality,
 
-  @description(
-    """A list of platforms to generate target artifacts for.
-      |
-      | - @[Native](platform_native)
-      | - @[Docker](platform_docker)
-      | - @[Nextflow](platform_nextflow)
-      |""".stripMargin)
-  platforms: List[Platform] = Nil,
-
   @description("A list of runners to execute target artifacts.")
+  @since("Viash 0.8.0")
   runners: List[Runner] = Nil,
   @description("A list of engine environments to execute target artifacts in.")
+  @since("Viash 0.8.0")
   engines: List[Engine] = Nil,
 
   @internalFunctionality
@@ -90,6 +83,16 @@ case class Config(
   @example("__merge__: ../api/common_interface.yaml", "yaml")
   @since("Viash 0.6.3")
   private val `__merge__`: Option[File] = None
+
+  @description(
+  """A list of platforms to generate target artifacts for.
+    |
+    | - @[Native](platform_native)
+    | - @[Docker](platform_docker)
+    | - @[Nextflow](platform_nextflow)
+    |""".stripMargin)
+  @deprecated("Use 'engines' and 'runners' instead", "Viash 0.8.0", "Viash 0.9.0")
+  private val platforms: List[Platform] = Nil
   
   /**
     * Find the runner
@@ -121,7 +124,7 @@ case class Config(
     // TODO: match on query, there's no need to do a .* if query is None
     val regex = query.getOrElse(".*").r
 
-    val foundMatches = getRunners.filter{ e =>
+    val foundMatches = runners.filter{ e =>
       regex.findFirstIn(e.id).isDefined
     }
     
@@ -151,7 +154,7 @@ case class Config(
     // TODO: match on query, there's no need to do a .* if query is None
     val regex = query.getOrElse(".*").r
 
-    val foundMatches = getEngines.filter{ e =>
+    val foundMatches = engines.filter{ e =>
       regex.findFirstIn(e.id).isDefined
     }
     
@@ -165,60 +168,6 @@ case class Config(
         List(NativeEngine())
     }
   }
-
-  lazy val getEngines: List[Engine] = platforms.flatMap{
-    case p: NativePlatform =>
-      Some(NativeEngine(
-        id = p.id
-      ))
-    case p: DockerPlatform => 
-      Some(DockerEngine(
-        id = p.id,
-        image = p.image, 
-        organization = p.organization,
-        registry = p.registry,
-        tag = p.tag,
-        target_image = p.target_image,
-        target_organization = p.target_organization,
-        target_registry = p.target_registry,
-        target_tag = p.target_tag,
-        namespace_separator = p.namespace_separator,
-        target_image_source = p.target_image_source,
-        setup = p.setup,
-        test_setup = p.test_setup,
-        entrypoint = p.entrypoint,
-        cmd = p.cmd
-      ))
-    case p: NextflowPlatform =>
-      if (platforms.exists(!_.isInstanceOf[NativePlatform])) {
-        None
-      } else {
-        Some(NativeEngine())
-      }
-    } ::: engines
-  lazy val getRunners: List[Runner] = platforms.collect{
-    case p: NativePlatform =>
-      ExecutableRunner(
-        id = p.id
-      )
-    case p: DockerPlatform =>
-      ExecutableRunner(
-        id = p.id,
-        port = p.port,
-        workdir = p.workdir,
-        docker_setup_strategy = p.setup_strategy,
-        docker_run_args = p.run_args
-      )
-    case p: NextflowPlatform =>
-      NextflowRunner(
-        id = p.id,
-        directives = p.directives,
-        auto = p.auto,
-        config = p.config,
-        debug = p.debug,
-        container = p.container
-      )
-    } ::: runners
 }
 
 object Config extends Logging {

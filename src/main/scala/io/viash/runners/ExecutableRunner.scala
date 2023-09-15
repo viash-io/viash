@@ -97,7 +97,7 @@ final case class ExecutableRunner(
 ) extends Runner {
 
   def generateRunner(config: Config, testing: Boolean): RunnerResources = {
-    val engines = config.getEngines
+    val engines = config.engines
     
     /*
      * Construct bashwrappermods
@@ -138,7 +138,7 @@ final case class ExecutableRunner(
   }
 
   private def generateEngineVariable(config: Config): BashWrapperMods = {
-    val engines = config.getEngines
+    val engines = config.engines
 
     // TODO: allow setting the default engine
     val preParse = 
@@ -178,7 +178,7 @@ final case class ExecutableRunner(
   }
 
   private def nativeConfigMods(config: Config): BashWrapperMods = {
-    val engines = config.getEngines.flatMap{
+    val engines = config.engines.flatMap{
       case e: NativeEngine => Some(e)
       case _ => None
     }
@@ -213,7 +213,7 @@ final case class ExecutableRunner(
    * DOCKER MODS
    */
   private def dockerConfigMods(config: Config, testing: Boolean): BashWrapperMods = {
-    val engines = config.getEngines.flatMap{
+    val engines = config.engines.flatMap{
       case e: DockerEngine => Some(e)
       case _ => None
     }

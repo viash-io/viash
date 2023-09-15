@@ -47,6 +47,7 @@ import io.viash.helpers.Escaper
     |        packages: [ curl ]
     |""".stripMargin,
   "yaml")
+@deprecated("Use 'engines' and 'runners' instead", "Viash 0.8.0", "Viash 0.9.0")
 @subclass("docker")
 case class DockerPlatform(
   @description("As with all platforms, you can give a platform a different name. By specifying `id: foo`, you can target this platform (only) by specifying `-p foo` in any of the Viash commands.")
@@ -97,6 +98,7 @@ case class DockerPlatform(
   @description("In Linux, files created by a Docker container will be owned by `root`. With `chown: true`, Viash will automatically change the ownership of output files (arguments with `type: file` and `direction: output`) to the user running the Viash command after execution of the component. Default value: `true`.")
   @example("chown: false", "yaml")
   @default("True")
+  @removed("Compability not provided with the Runners functionality.", "Viash 0.8.0", "Viash 0.8.0")
   chown: Boolean = true,
 
   @description("A list of enabled ports. This doesn't change the Dockerfile but gets added as a command-line argument at runtime.")
@@ -183,6 +185,4 @@ case class DockerPlatform(
   @since("Viash 0.7.4")
   cmd: Option[Either[String, List[String]]] = None
 
-) extends Platform {
-  assert(chown == true, "DockerPlatform chown: false is not supported in backwards compability.")
-}
+) extends Platform

@@ -415,9 +415,6 @@ object Main extends Logging {
     // update info, and add runner and engine to the config
     appliedConfig.copy(
       config = appliedConfig.config.copy(
-        platforms = Nil,
-        engines = appliedConfig.config.getEngines,
-        runners = appliedConfig.config.getRunners,
         info = configInfo
       ),
       runner = runner,
