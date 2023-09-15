@@ -183,4 +183,6 @@ case class DockerPlatform(
   @since("Viash 0.7.4")
   cmd: Option[Either[String, List[String]]] = None
 
-) extends Platform
+) extends Platform {
+  assert(chown == true, "DockerPlatform chown: false is not supported in backwards compability.")
+}

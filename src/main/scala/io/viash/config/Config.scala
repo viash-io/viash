@@ -91,8 +91,6 @@ case class Config(
   @since("Viash 0.6.3")
   private val `__merge__`: Option[File] = None
   
-  assert(platforms.collect{ case p: DockerPlatform => p }.forall(p => p.chown), "DockerPlatform chown: false is not supported in backwards compability.")
-  
   /**
     * Find the runner
     * 
