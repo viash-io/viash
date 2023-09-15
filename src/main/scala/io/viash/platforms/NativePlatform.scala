@@ -33,7 +33,7 @@ import io.viash.schemas._
     |  - type: native
     |""".stripMargin,
   "yaml")
-@deprecated("Use 'engines' and 'runners' instead", "Viash 0.8.0", "Viash 0.9.0")
+@deprecated("Use 'engines' and 'runners' instead", "0.8.0", "0.9.0")
 @subclass("native")
 case class NativePlatform(
   @description("As with all platforms, you can give a platform a different name. By specifying `id: foo`, you can target this platform (only) by specifying `-p foo` in any of the Viash commands.")
