@@ -122,6 +122,7 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
       "-o", tempFolStr,
       newConfigFile
     )
+    assert(output.error.contains("Error: ..chown was removed: Compability not provided with the Runners functionality."))
   }
 
   override def afterAll(): Unit = {

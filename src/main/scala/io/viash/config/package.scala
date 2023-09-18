@@ -50,9 +50,6 @@ package object config {
                       "id" -> pObj.apply("id").getOrElse(Json.fromString("native")),
                     )
                   case "docker" =>
-                    if (pObj.apply("chown") == Some(Json.False)) {
-                      throw new RuntimeException("DockerPlatform.chown: false is not supported in backwards compatibility mode")
-                    }
                     Json.obj(
                       "type" -> Json.fromString("executable"),
                       "id" -> pObj.apply("id").getOrElse(Json.fromString("docker")),
