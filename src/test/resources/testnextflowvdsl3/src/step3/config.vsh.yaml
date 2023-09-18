@@ -14,8 +14,9 @@ functionality:
   resources:
     - type: bash_script
       path: script.sh
-platforms:
+engines:
   - type: native
   - type: docker
     image: nextflow/bash:latest
+runners:
   - type: nextflow

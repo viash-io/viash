@@ -25,5 +25,5 @@ functionality:
       path: test.sh
     - type: bash_script
       path: test_div0.sh
-platforms:
+engines:
   - type: native

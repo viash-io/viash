@@ -85,11 +85,11 @@ functionality:
   requirements:
     cpus: 2
     memory: 2GB
-platforms:
+engines:
   - type: native
   - type: docker
     image: "bash:3.2"
   - type: docker
     image: "busybox"
     id: "busybox"
-  - type: nextflow
+  # - type: nextflow

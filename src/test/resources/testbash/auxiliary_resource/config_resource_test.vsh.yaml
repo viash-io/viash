@@ -34,7 +34,7 @@ functionality:
     - name: "--optional"
       type: string
       description: An optional string.
-platforms:
+engines:
   - type: native
   - type: docker
     image: "bash:3.2"

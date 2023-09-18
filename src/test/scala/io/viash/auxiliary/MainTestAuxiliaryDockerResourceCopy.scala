@@ -32,7 +32,6 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
     val testText = TestHelper.testMain(
       "test",
       "--engine", "docker",
-      "--runner", "docker",
       "-k", "true",
       configFile
     )
@@ -87,7 +86,6 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "--engine", "docker",
-      "--runner", "docker",
       "-k", "true",
       configResourcesUnsupportedProtocolFile
     )

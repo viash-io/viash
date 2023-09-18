@@ -20,6 +20,6 @@ functionality:
     - type: bash_script
       path: ./check_requirements_test.sh
 
-platforms:
+engines:
   - type: docker
     image: "bash:3.2"

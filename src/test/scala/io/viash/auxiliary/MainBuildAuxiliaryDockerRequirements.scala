@@ -57,12 +57,12 @@ abstract class AbstractMainBuildAuxiliaryDockerRequirements extends FixtureAnyFu
     )
   }
 
-  def derivePlatformConfig(setup: Option[String], test_setup: Option[String], name: String): String = {
+  def deriveEngineConfig(setup: Option[String], test_setup: Option[String], name: String): String = {
     val setupStr = setup.map(s => s""", "setup": $s""").getOrElse("")
     val testSetupStr = test_setup.map(s => s""", "test_setup": $s""").getOrElse("")
 
     configDeriver.derive(
-      s""".platforms := [{ "type": "docker", "image": "$image", "target_image": "$dockerTag" $setupStr $testSetupStr }]""",
+      s""".engines := [{ "type": "docker", "image": "$image", "target_image": "$dockerTag" $setupStr $testSetupStr }]""",
       name
     )
   }
@@ -78,12 +78,12 @@ class MainBuildAuxiliaryDockerRequirementsApk extends AbstractMainBuildAuxiliary
   override val image = "bash:3.2"
 
   test("setup; check base image for apk still does not contain the fortune package", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(None, None, "apk_base")
+    val newConfigFilePath = deriveEngineConfig(None, None, "apk_base")
 
     TestHelper.testMain(
       "build",
       "--engine", "docker",
-      "--runner", "docker",
+      // "--runner", "docker",
       "-o", tempFolStr,
       "--setup", "build",
       newConfigFilePath
@@ -104,7 +104,7 @@ class MainBuildAuxiliaryDockerRequirementsApk extends AbstractMainBuildAuxiliary
   }
 
   test("setup; check docker requirements using apk to add the fortune package", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "apk", "packages": ["fortune"] }]"""), None, "apk_fortune")
+    val newConfigFilePath = deriveEngineConfig(Some("""[{ "type": "apk", "packages": ["fortune"] }]"""), None, "apk_fortune")
 
     TestHelper.testMain(
       "build",
@@ -128,7 +128,7 @@ class MainBuildAuxiliaryDockerRequirementsApk extends AbstractMainBuildAuxiliary
   }
 
   test("setup; check docker requirements using apk but with an empty list", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "apk", "packages": [] }]"""), None, "apk_empty")
+    val newConfigFilePath = deriveEngineConfig(Some("""[{ "type": "apk", "packages": [] }]"""), None, "apk_empty")
 
     TestHelper.testMain(
       "build",
@@ -157,7 +157,7 @@ class MainBuildAuxiliaryDockerRequirementsApt extends AbstractMainBuildAuxiliary
   override val image = "debian:bullseye-slim"
 
   test("setup; check base image for apt still does not contain the cowsay package", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(None, None, "apt_base")
+    val newConfigFilePath = deriveEngineConfig(None, None, "apt_base")
 
     TestHelper.testMain(
       "build",
@@ -181,7 +181,7 @@ class MainBuildAuxiliaryDockerRequirementsApt extends AbstractMainBuildAuxiliary
   }
 
   test("setup; check docker requirements using apt to add the cowsay package", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "apt", "packages": ["cowsay"] }]"""), None, "apt_cowsay")
+    val newConfigFilePath = deriveEngineConfig(Some("""[{ "type": "apt", "packages": ["cowsay"] }]"""), None, "apt_cowsay")
 
     TestHelper.testMain(
       "build",
@@ -205,7 +205,7 @@ class MainBuildAuxiliaryDockerRequirementsApt extends AbstractMainBuildAuxiliary
   }
 
   test("setup; check docker requirements using apt but with an empty list", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "apt", "packages": [] }]"""), None, "apt_empty")
+    val newConfigFilePath = deriveEngineConfig(Some("""[{ "type": "apt", "packages": [] }]"""), None, "apt_empty")
 
     TestHelper.testMain(
       "build",
@@ -234,7 +234,7 @@ class MainBuildAuxiliaryDockerRequirementsYum extends AbstractMainBuildAuxiliary
   override val image = "fedora:38"
 
   test("setup; check base image for yum still does not contain the which package", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(None, None, "yum_base")
+    val newConfigFilePath = deriveEngineConfig(None, None, "yum_base")
 
     TestHelper.testMain(
       "build",
@@ -258,7 +258,7 @@ class MainBuildAuxiliaryDockerRequirementsYum extends AbstractMainBuildAuxiliary
   }
 
   test("setup; check docker requirements using yum to add the which package", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "yum", "packages": ["which"] }]"""), None, "yum_which")
+    val newConfigFilePath = deriveEngineConfig(Some("""[{ "type": "yum", "packages": ["which"] }]"""), None, "yum_which")
 
     TestHelper.testMain(
       "build",
@@ -282,7 +282,7 @@ class MainBuildAuxiliaryDockerRequirementsYum extends AbstractMainBuildAuxiliary
   }
 
   test("setup; check docker requirements using yum but with an empty list", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "yum", "packages": [] }]"""), None, "yum_empty")
+    val newConfigFilePath = deriveEngineConfig(Some("""[{ "type": "yum", "packages": [] }]"""), None, "yum_empty")
 
     TestHelper.testMain(
       "build",
@@ -311,7 +311,7 @@ class MainBuildAuxiliaryDockerRequirementsRuby extends AbstractMainBuildAuxiliar
   override val image = "ruby:slim-bullseye"
 
   test("setup; check base image for yum still does not contain the which package", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(None, None, "ruby_base")
+    val newConfigFilePath = deriveEngineConfig(None, None, "ruby_base")
 
     TestHelper.testMain(
       "build",
@@ -335,7 +335,7 @@ class MainBuildAuxiliaryDockerRequirementsRuby extends AbstractMainBuildAuxiliar
   }
 
   test("setup; check docker requirements using yum to add the tzinfo package", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "ruby", "packages": ["tzinfo:2.0.4"] }]"""), None, "ruby_tzinfo")
+    val newConfigFilePath = deriveEngineConfig(Some("""[{ "type": "ruby", "packages": ["tzinfo:2.0.4"] }]"""), None, "ruby_tzinfo")
 
     TestHelper.testMain(
       "build",
@@ -359,7 +359,7 @@ class MainBuildAuxiliaryDockerRequirementsRuby extends AbstractMainBuildAuxiliar
   }
 
   test("setup; check docker requirements using yum but with an empty list", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "ruby", "packages": [] }]"""), None, "ruby_empty")
+    val newConfigFilePath = deriveEngineConfig(Some("""[{ "type": "ruby", "packages": [] }]"""), None, "ruby_empty")
 
     TestHelper.testMain(
       "build",
@@ -388,7 +388,7 @@ class MainBuildAuxiliaryDockerRequirementsR extends AbstractMainBuildAuxiliaryDo
   override val image = "r-base:4.3.1"
 
   test("setup; check base image for r still does not contain the glue package", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(None, None, "r_base")
+    val newConfigFilePath = deriveEngineConfig(None, None, "r_base")
 
     TestHelper.testMain(
       "build",
@@ -412,7 +412,7 @@ class MainBuildAuxiliaryDockerRequirementsR extends AbstractMainBuildAuxiliaryDo
   }
 
   test("setup; check docker requirements using r to add the glue package", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "r", "packages": ["glue"] }]"""), None, "r_glue")
+    val newConfigFilePath = deriveEngineConfig(Some("""[{ "type": "r", "packages": ["glue"] }]"""), None, "r_glue")
 
     TestHelper.testMain(
       "build",
@@ -436,7 +436,7 @@ class MainBuildAuxiliaryDockerRequirementsR extends AbstractMainBuildAuxiliaryDo
   }
 
   test("setup; check docker requirements using r but with an empty list", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "r", "packages": [] }]"""), None, "r_empty")
+    val newConfigFilePath = deriveEngineConfig(Some("""[{ "type": "r", "packages": [] }]"""), None, "r_empty")
 
     TestHelper.testMain(
       "build",
@@ -465,7 +465,7 @@ class MainBuildAuxiliaryDockerRequirementsRBioc extends AbstractMainBuildAuxilia
   override val image = "r-base:4.3.1"
 
   test("setup; check base image for r-bioc still does not contain the BiocGenerics package", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(None, None, "rbioc_base")
+    val newConfigFilePath = deriveEngineConfig(None, None, "rbioc_base")
 
     TestHelper.testMain(
       "build",
@@ -489,7 +489,7 @@ class MainBuildAuxiliaryDockerRequirementsRBioc extends AbstractMainBuildAuxilia
   }
 
   test("setup; check docker requirements using r to add the BiocGenerics package", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "r", "bioc": ["BiocGenerics"] }]"""), None, "rbioc_biocgenerics")
+    val newConfigFilePath = deriveEngineConfig(Some("""[{ "type": "r", "bioc": ["BiocGenerics"] }]"""), None, "rbioc_biocgenerics")
 
     TestHelper.testMain(
       "build",
@@ -513,7 +513,7 @@ class MainBuildAuxiliaryDockerRequirementsRBioc extends AbstractMainBuildAuxilia
   }
 
   test("setup; check docker requirements using r but with an empty list", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(Some("""[{ "type": "r", "bioc": [] }]"""), None, "rbioc_empty")
+    val newConfigFilePath = deriveEngineConfig(Some("""[{ "type": "r", "bioc": [] }]"""), None, "rbioc_empty")
 
     TestHelper.testMain(
       "build",
@@ -543,7 +543,7 @@ class MainBuildAuxiliaryDockerRequirementsApkTest extends AbstractMainBuildAuxil
   override val image = "bash:3.2"
 
   test("test_setup; check the fortune package isn't added for the build option", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(None, Some("""[{ "type": "apk", "packages": ["fortune"] }]"""), "apk_test_fortune_build")
+    val newConfigFilePath = deriveEngineConfig(None, Some("""[{ "type": "apk", "packages": ["fortune"] }]"""), "apk_test_fortune_build")
 
     TestHelper.testMain(
       "build",
@@ -566,7 +566,7 @@ class MainBuildAuxiliaryDockerRequirementsApkTest extends AbstractMainBuildAuxil
   }
 
   test("test_setup; check the fortune package is added for the test option", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(None, Some("""[{ "type": "apk", "packages": ["fortune"] }]"""), "apk_test_fortune_test")
+    val newConfigFilePath = deriveEngineConfig(None, Some("""[{ "type": "apk", "packages": ["fortune"] }]"""), "apk_test_fortune_test")
 
     val testText = TestHelper.testMain(
       "test",
@@ -579,7 +579,7 @@ class MainBuildAuxiliaryDockerRequirementsApkTest extends AbstractMainBuildAuxil
   }
 
   test("test_setup; check the fortune package is not added for the test option when not specified", DockerTest) { f =>
-    val newConfigFilePath = derivePlatformConfig(None, None, "apk_base_test")
+    val newConfigFilePath = deriveEngineConfig(None, None, "apk_base_test")
 
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",

@@ -25,16 +25,16 @@ class AssignTest extends AnyFunSuite {
   test("parse assign command with both attribute and filter") {
     val expected = ConfigMods(List(
       Assign(
-        Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("id"))),
+        Path(List(Attribute("engines"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("id"))),
         JsonValue("test".asJson)
       )
     ))
-    val command = """.platforms[.type == "native"].id := "test""""
+    val command = """.engines[.type == "native"].id := "test""""
     val result = ConfigModParser.block.parse(command)
     assert(result == expected)
 
     // funky whitespacing also works
-    val commandWs = """    .  platforms   [   . type   ==    "native"    ]  .  id   :=    "test"    """
+    val commandWs = """    .  engines   [   . type   ==    "native"    ]  .  id   :=    "test"    """
     val resultWs = ConfigModParser.block.parse(commandWs)
     assert(resultWs == expected)
   }

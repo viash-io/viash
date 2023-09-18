@@ -69,7 +69,7 @@ functionality: {
         path: ../tests/fail.sh
       - path: ../resource2.txt
 }
-platforms: {
+engines: {
              - type: native
                  - type: docker
                    image: "bash:3.2"
@@ -77,6 +77,4 @@ platforms: {
                  - type: docker
                    image: "hello-world"
                    id: "hello-world"
-                 - type: nextflow
-                   image: viash_test_bash
 }

@@ -30,5 +30,5 @@ functionality:
         else
           "$meta_executable"
         fi
-platforms:
+engines:
   - type: native

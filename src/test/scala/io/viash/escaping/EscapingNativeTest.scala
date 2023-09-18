@@ -30,7 +30,6 @@ class EscapingNativeTest extends AnyFunSuite with BeforeAndAfterAll {
     TestHelper.testMain(
       "build",
       "--engine", "native",
-      "--runner", "native",
       "-o", tempFolStr,
       configFile
     )
@@ -73,7 +72,6 @@ class EscapingNativeTest extends AnyFunSuite with BeforeAndAfterAll {
       TestHelper.testMain(
         "build",
         "--engine", "native",
-        "--runner", "native",
         "-o", Paths.get(tempSubFolder.toString, "output").toString,
         configSubFile.toString
       )

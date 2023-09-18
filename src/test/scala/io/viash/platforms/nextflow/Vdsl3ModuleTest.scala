@@ -114,6 +114,7 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
     // build the nextflow containers
     val (_, _, _) = TestHelper.testMainWithStdErr(
       "ns", "build",
+      "--runner", "nextflow",
       "-s", srcPath,
       "-t", targetPath,
       "--setup", "cb"

@@ -38,13 +38,12 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
     """.functionality.resources[.type == "bash_script"].path := "docker_options/code_multiple_output.sh"""",
   )
 
-  def dockerChownGetOwner(mods: List[String], amount: Int, dockerId: String, chown: Option[Boolean]): List[String] = {
+  def dockerChownGetOwner(mods: List[String], amount: Int, dockerId: String): List[String] = {
     assert(amount > 0)
     assert(amount < 4)
 
-    val extra = chown.map(b => s""", "chown": $b""" ).getOrElse("")
-    val platformMod = s""".platforms := [{"type": "docker", "image": "bash:3.2", "id": "$dockerId"$extra}]"""
-    val modsWithPlatform = mods :+ platformMod
+    val engineMod = s""".engines := [{"type": "docker", "image": "bash:3.2", "id": "$dockerId"}]"""
+    val modsWithPlatform = mods :+ engineMod
     val localConfig = configDeriver.derive(modsWithPlatform, dockerId)
     val localFunctionality = Config.read(localConfig).functionality
     val localExecutable = Paths.get(tempFolStr, localFunctionality.name).toFile
@@ -53,7 +52,6 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
     TestHelper.testMain(
       "build",
       "--engine", dockerId,
-      "--runner", dockerId,
       "-o", tempFolStr,
       "--setup", "build",
       localConfig
@@ -88,33 +86,17 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
     outputList.map(file => Files.getOwner(file.toPath).toString)
   }
 
-  test("Test when chown is not specified", DockerTest) {
-    val owners = dockerChownGetOwner(singleOutputmods, 1, "chown_default", None)
+  test("Test behaviour with one output file", DockerTest) {
+    val owners = dockerChownGetOwner(singleOutputmods, 1, "chown_default")
     assert(owners.length == 1)
     owners.foreach(owner => {
       assert(owner.nonEmpty)
       assert(owner != "root")
     })
-  }
-
-  test("Test when chown is set to true", DockerTest) {
-    val owners = dockerChownGetOwner(singleOutputmods, 1, "chown_true", Some(true))
-    assert(owners.length == 1)
-    owners.foreach(owner => {
-      assert(owner.nonEmpty)
-      assert(owner != "root")
-    })
-  }
-
-  test("Test when chown is set to false", DockerTest) {
-    // functionality not provided in runner, should throw exception
-    assertThrows[ConfigParserException] {
-      dockerChownGetOwner(singleOutputmods, 1, "chown_false", Some(false))
-    }
   }
 
   test("Test behaviour with two output files", DockerTest) {
-    val owners = dockerChownGetOwner(twoOutputsmods, 2, "two_chown_default", None)
+    val owners = dockerChownGetOwner(twoOutputsmods, 2, "two_chown_default")
     assert(owners.length == 2)
     owners.foreach(owner => {
       assert(owner.nonEmpty)
@@ -123,12 +105,23 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
   }
 
   test("Test behaviour with multiple output files", DockerTest) {
-    val owners = dockerChownGetOwner(multipleOutputsMods, 3, "multiple_chown_default", None)
+    val owners = dockerChownGetOwner(multipleOutputsMods, 3, "multiple_chown_default")
     assert(owners.length == 3)
     owners.foreach(owner => {
       assert(owner.nonEmpty)
       assert(owner != "root")
     })
+  }
+
+  test("Test with platform and chown is set to false", DockerTest) {
+    val newConfigFile = configDeriver.derive(""".platforms := [{type: "docker", chown: false }]""", "docker_chown_false")
+    // functionality not provided in runner, should throw exception
+    val output = TestHelper.testMainException2[ConfigParserException](
+      "build",
+      "--engine", "docker_chown",
+      "-o", tempFolStr,
+      newConfigFile
+    )
   }
 
   override def afterAll(): Unit = {

@@ -121,5 +121,5 @@ functionality:
   info:
     foo: bar
     custom_tag: custom_value
-platforms:
+engines:
   - type: native

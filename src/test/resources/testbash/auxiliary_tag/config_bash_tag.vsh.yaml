@@ -9,7 +9,7 @@ functionality:
     - name: "--optional"
       type: string
       description: An optional string.
-platforms:
+engines:
   - id: "testtag1"
     type: docker
     image: "bash:5.0"

@@ -33,6 +33,6 @@ functionality:
   resources:
     - type: bash_script
       path: ./code.sh
-platforms:
+engines:
   - type: native
 

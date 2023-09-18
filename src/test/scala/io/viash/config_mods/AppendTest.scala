@@ -13,11 +13,11 @@ class AppendTest extends AnyFunSuite {
   test("parse append command") {
     val expected = ConfigMods(List(
       Append(
-        Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("id"))),
+        Path(List(Attribute("engines"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("id"))),
         JsonValue("test".asJson)
       )
     ))
-    val command = """.platforms[.type == "native"].id += "test""""
+    val command = """.engines[.type == "native"].id += "test""""
     val result = ConfigModParser.block.parse(command)
     assert(result == expected)
   }
@@ -25,11 +25,11 @@ class AppendTest extends AnyFunSuite {
   test("parse add command with complex json") {
     val expected = ConfigMods(List(
       Append(
-        Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
+        Path(List(Attribute("engines"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
         JsonValue(Json.fromFields(List(("type", "docker".asJson))))
       )
     ))
-    val command = """.platforms[.type == "native"].setup += { type: "docker" }"""
+    val command = """.engines[.type == "native"].setup += { type: "docker" }"""
     val result = ConfigModParser.block.parse(command)
     assert(result == expected)
   }

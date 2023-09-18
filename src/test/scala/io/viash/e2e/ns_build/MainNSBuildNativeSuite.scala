@@ -18,7 +18,7 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
   private val temporaryFolder = IO.makeTemp("viash_ns_build")
   private val tempFolStr = temporaryFolder.toString
-  private val nsFolder = Paths.get(tempFolStr, "native/testns/").toFile
+  private val nsFolder = Paths.get(tempFolStr, "executable/testns/").toFile
 
   def componentExecutableFile(componentName: String): File = {
     Paths.get(nsFolder.toString, s"$componentName/$componentName").toFile
