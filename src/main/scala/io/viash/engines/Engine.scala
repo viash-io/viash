@@ -19,8 +19,23 @@ package io.viash.engines
 
 import io.viash.schemas._
 
+@description(
+  """A list of engines to generate target artifacts for.
+    |
+    | * @[Docker](docker_engine)
+    | * @[Native](native_engine)
+    |""".stripMargin)
+@example(
+  """engines:
+    |  - type: docker
+    |    image: "bash:4.0"
+    |  - type: native
+    |""".stripMargin,
+  "yaml")
+@subclass("DockerEngine")
+@subclass("NativeEngine")
 trait Engine {
-  @description("Specifies the type of the platform.")
+  @description("Specifies the type of the engine.")
   val `type`: String
 
   @description("Id of the engine.")

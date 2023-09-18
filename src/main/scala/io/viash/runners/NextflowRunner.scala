@@ -32,6 +32,15 @@ import io.viash.helpers.Escaper
 import io.viash.runners.{Runner, RunnerResources}
 import io.viash.engines.DockerEngine
 
+@description(
+  """Run a Viash component on a Nextflow backend engine.
+    |""".stripMargin)
+@example(
+  """runners:
+    |  - type: nextflow
+    |""".stripMargin,
+  "yaml")
+@subclass("nextflow")
 final case class NextflowRunner(
   @description("Name of the runner. As with all runners, you can give an runner a different name. By specifying `id: foo`, you can target this runner (only) by specifying `...` in any of the Viash commands.")
   @example("id: foo", "yaml")

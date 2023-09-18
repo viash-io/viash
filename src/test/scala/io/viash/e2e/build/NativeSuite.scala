@@ -197,8 +197,8 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(out.output.contains("multiple: |foo:bar|"))
   }
 
-  test("when -p is omitted, the system should run as native") {
-    val newConfigFilePath = configDeriver.derive("""del(.platforms)""", "no_platform")
+  test("when --runner is omitted, the system should run as native") {
+    val newConfigFilePath = configDeriver.derive("""del(.runners)""", "no_runner")
     val testText = TestHelper.testMain(
       "build",
       "-o", tempFolStr,
@@ -214,10 +214,11 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Test whether a config with a platform specified gives a deprecation warning") {
+    val newConfigFilePath = configDeriver.derive(""".platforms := [{ type: "native" }]""", "deprecated_platform")
     val testOutput = TestHelper.testMain(
       "build",
       "-o", tempFolStr,
-      configFile
+      newConfigFilePath
     )
 
     val testRegex = "Warning: ..platforms is deprecated: Use 'engines' and 'runners' instead.".r

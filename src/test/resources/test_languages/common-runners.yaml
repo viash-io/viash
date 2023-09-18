@@ -1,0 +1,3 @@
+runners:
+  - type: executable
+  - type: nextflow

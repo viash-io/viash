@@ -16,8 +16,8 @@ functionality:
     - type: bash_script
       path: test.sh
     - path: ../resource2.txt
-platforms:
+__merge__: [../common-runners.yaml]
+engines:
   - type: native
   - type: docker
     image: "bash"
-  - type: nextflow

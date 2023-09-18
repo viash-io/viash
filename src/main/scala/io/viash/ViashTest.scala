@@ -28,11 +28,9 @@ import config.Config
 import functionality.Functionality
 import functionality.arguments.{FileArgument, Output}
 import functionality.resources.{BashScript, Script}
-import platforms.NativePlatform
 import helpers.{IO, Logging, LoggerOutput, LoggerLevel}
 import io.viash.helpers.data_structures._
 import io.viash.exceptions.MissingResourceFileException
-import io.viash.platforms.Platform
 import io.viash.config.ConfigMeta
 import io.viash.helpers.DependencyResolver
 import io.viash.runners.Runner
@@ -172,7 +170,7 @@ object ViashTest extends Logging {
         }
 
         // run engine setup commands, collect output
-        // todo: setupStrategy might need to be handled differently when non-docker platforms need setting up.
+        // todo: setupStrategy might need to be handled differently when non-docker engines need setting up.
         val stream = new ByteArrayOutputStream
         val printWriter = new PrintWriter(stream)
         val logPath = Paths.get(buildDir.toString, "_viash_build_log.txt").toString

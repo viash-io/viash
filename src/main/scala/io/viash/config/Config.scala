@@ -19,7 +19,7 @@ package io.viash.config
 
 import io.viash.config_mods.ConfigModParser
 import io.viash.functionality._
-import io.viash.platforms._
+import io.viash.platforms.Platform
 import io.viash.helpers.{Git, GitInfo, IO, Logging}
 import io.viash.helpers.circe._
 import io.viash.helpers.status._
@@ -53,7 +53,9 @@ import io.viash.engines.{Engine, NativeEngine, DockerEngine}
     |    - type: bash_script
     |      path: script.sh
     |      text: echo Hello $par_input
-    |platforms:
+    |runners:
+    |  - type: executable
+    |engines:
     |  - type: docker
     |    image: "bash:4.0"
     |""".stripMargin, "yaml")
@@ -78,7 +80,7 @@ case class Config(
   @description(
     """Config inheritance by including YAML partials. This is useful for defining common APIs in
       |separate files. `__merge__` can be used in any level of the YAML. For example,
-      |not just in the config but also in the functionality or any of the platforms.
+      |not just in the config but also in the functionality or any of the engines.
       |""".stripMargin)
   @example("__merge__: ../api/common_interface.yaml", "yaml")
   @since("Viash 0.6.3")

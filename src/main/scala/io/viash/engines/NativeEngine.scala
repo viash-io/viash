@@ -19,6 +19,16 @@ package io.viash.engines
 
 import io.viash.schemas._
 
+@description(
+  """Running a Viash component on a native engine means that the script will be executed in your current environment.
+    |Any dependencies are assumed to have been installed by the user, so the native engine is meant for developers (who know what they're doing) or for simple bash scripts (which have no extra dependencies).
+    |""".stripMargin)
+@example(
+  """engines:
+    |  - type: native
+    |""".stripMargin,
+  "yaml")
+@subclass("native")
 final case class NativeEngine(
   @description("Name of the engine. As with all engines, you can give a engine a different name. By specifying `id: foo`, you can target this engine (only) by specifying `...` in any of the Viash commands.")
   @example("id: foo", "yaml")

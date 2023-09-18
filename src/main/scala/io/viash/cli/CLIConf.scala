@@ -24,17 +24,6 @@ import io.viash.helpers.Logging
 
 trait ViashCommand {
   _: DocumentedSubcommand =>
-  // val platform = registerOpt[String](
-  //   name = "platform",
-  //   short = Some('p'),
-  //   default = None,
-  //   descr =
-  //     "Specifies which platform amongst those specified in the config to use. " +
-  //     "If this is not provided, the first platform will be used. " +
-  //     "If no platforms are defined in the config, the native platform will be used. " +
-  //     "In addition, the path to a platform yaml file can also be specified.",
-  //   required = false
-  // )
   val runner = registerOpt[String](
     name = "runner",
     default = None,
@@ -107,17 +96,6 @@ trait ViashNs {
     descr = "A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
     default = None
   )
-  // val platform = registerOpt[String](
-  //   name = "platform",
-  //   short = Some('p'),
-  //   descr =
-  //     "Acts as a regular expression to filter the platform ids specified in the found config files. " +
-  //       "If this is not provided, all platforms will be used. " +
-  //       "If no platforms are defined in a config, the native platform will be used. " +
-  //       "In addition, the path to a platform yaml file can also be specified.",
-  //   default = None,
-  //   required = false
-  // )
   val runner = registerOpt[String](
     name = "runner",
     default = None,

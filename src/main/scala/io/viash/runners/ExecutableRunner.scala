@@ -45,6 +45,22 @@ import io.viash.engines.DockerEngine
 import io.viash.engines.NativeEngine
 import io.viash.platforms.requirements.DockerRequirements
 
+@description(
+  """Run code as an executable.
+    |
+    |This runner is the default runner. It will generate a bash script that can be run directly.
+    |
+    |This runner is also used for the @[native](native_engine) engine.
+    |
+    |This runner is also used for the @[docker](docker_engine) engine.
+    |""".stripMargin)
+@example(
+  """runners:
+    |  - type: executable
+    |    port: 8080
+    |""".stripMargin,
+  "yaml")
+@subclass("executable")
 final case class ExecutableRunner(
   @description("Name of the runner. As with all runners, you can give an runner a different name. By specifying `id: foo`, you can target this executor (only) by specifying `...` in any of the Viash commands.")
   @example("id: foo", "yaml")

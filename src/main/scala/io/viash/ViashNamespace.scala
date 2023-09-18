@@ -28,7 +28,6 @@ import io.viash.helpers.NsExecData._
 import io.viash.helpers.NsExecData
 import sys.process._
 import java.io.{ByteArrayOutputStream, File, PrintWriter}
-import io.viash.platforms.Platform
 import scala.collection.parallel.CollectionConverters._
 import io.viash.helpers.LoggerOutput
 import io.viash.helpers.LoggerLevel

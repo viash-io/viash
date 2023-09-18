@@ -11,11 +11,11 @@ class PrependSuite extends AnyFunSuite {
   test("prepend command") {
     val expected = ConfigMods(List(
       Prepend(
-        Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
+        Path(List(Attribute("engines"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
         JsonValue("foo".asJson)
       )
     ))
-    val command = """.platforms[.type == "native"].setup +0= "foo""""
+    val command = """.engines[.type == "native"].setup +0= "foo""""
     val result = ConfigModParser.block.parse(command)
     assert(result == expected)
   }
@@ -23,11 +23,11 @@ class PrependSuite extends AnyFunSuite {
   test("preparse prepend command") {
     val expected = ConfigMods(preparseCommands = List(
       Prepend(
-        Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
+        Path(List(Attribute("engines"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
         JsonValue("foo".asJson)
       )
     ))
-    val command = """<preparse> .platforms[.type == "native"].setup +0= "foo""""
+    val command = """<preparse> .engines[.type == "native"].setup +0= "foo""""
     val result = ConfigModParser.block.parse(command)
     assert(result == expected)
   }

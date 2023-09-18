@@ -68,7 +68,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
   }
 
   test("Check setup strategy", DockerTest) {
-    val newConfigFilePath = configDeriver.derive(""".platforms[.type == "docker" && !has(.id) ].setup := [{ type: "docker", run: "echo 'Hello world!'" }]""", "cache_config")
+    val newConfigFilePath = configDeriver.derive(""".engines[.type == "docker" && !has(.id) ].setup := [{ type: "docker", run: "echo 'Hello world!'" }]""", "cache_config")
     // first run to create cache entries
     val testText = TestHelper.testMain(
       "test",
@@ -125,7 +125,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
   }
 
   test("Check failing build", DockerTest) {
-    val newConfigFilePath = configDeriver.derive(""".platforms[.type == "docker" && !has(.id) ].setup := [{ type: "apt", packages: ["get_the_machine_that_goes_ping"] }]""", "failed_build")
+    val newConfigFilePath = configDeriver.derive(""".engines[.type == "docker" && !has(.id) ].setup := [{ type: "apt", packages: ["get_the_machine_that_goes_ping"] }]""", "failed_build")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "--engine", "docker",

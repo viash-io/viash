@@ -165,8 +165,42 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(testOutput.output.isEmpty)
   }
 
+  test("Check invalid runner type") {
+    val newConfigFilePath = configDeriver.derive(""".runners += { type: "foo" }""", "invalid_runner_type")
+    val testOutput = TestHelper.testMainException2[RuntimeException](
+      "test",
+      "--engine", "native",
+      "--runner", "native",
+      newConfigFilePath
+    )
+
+    assert(testOutput.exceptionText.contains("Type 'foo' is not recognised. Valid types are 'executable', and 'nextflow'."))
+    assert(testOutput.exceptionText.contains(
+      """{
+        |  "type" : "foo"
+        |}""".stripMargin))
+    assert(testOutput.output.isEmpty)
+  }
+
+  test("Check invalid engine type") {
+    val newConfigFilePath = configDeriver.derive(""".engines += { type: "foo" }""", "invalid_engine_type")
+    val testOutput = TestHelper.testMainException2[RuntimeException](
+      "test",
+      "--engine", "native",
+      "--runner", "native",
+      newConfigFilePath
+    )
+
+    assert(testOutput.exceptionText.contains("Type 'foo' is not recognised. Valid types are 'docker', and 'native'."))
+    assert(testOutput.exceptionText.contains(
+      """{
+        |  "type" : "foo"
+        |}""".stripMargin))
+    assert(testOutput.output.isEmpty)
+  }
+
   test("Check invalid platform type") {
-    val newConfigFilePath = configDeriver.derive(""".platforms += { type: "foo" }""", "invalid_platform_type")
+    val newConfigFilePath = configDeriver.derive(""".platforms := [{ type: "foo" }]""", "invalid_platform_type")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "--engine", "native",
@@ -182,8 +216,44 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(testOutput.output.isEmpty)
   }
 
+  test("Check invalid field in runner") {
+    val newConfigFilePath = configDeriver.derive(""".runners += { type: "executable", foo: "bar" }""", "invalid_runner_field")
+    val testOutput = TestHelper.testMainException2[RuntimeException](
+      "test",
+      "--engine", "native",
+      "--runner", "native",
+      newConfigFilePath
+    )
+
+    assert(testOutput.exceptionText.contains("Invalid data fields for ExecutableRunner."))
+    assert(testOutput.exceptionText.contains(
+      """{
+        |  "type" : "executable",
+        |  "foo" : "bar"
+        |}""".stripMargin))
+    assert(testOutput.output.isEmpty)
+  }
+
+  test("Check invalid field in engine") {
+    val newConfigFilePath = configDeriver.derive(""".engines += { type: "native", foo: "bar" }""", "invalid_engine_field")
+    val testOutput = TestHelper.testMainException2[RuntimeException](
+      "test",
+      "--engine", "native",
+      "--runner", "native",
+      newConfigFilePath
+    )
+
+    assert(testOutput.exceptionText.contains("Invalid data fields for NativeEngine."))
+    assert(testOutput.exceptionText.contains(
+      """{
+        |  "type" : "native",
+        |  "foo" : "bar"
+        |}""".stripMargin))
+    assert(testOutput.output.isEmpty)
+  }
+
   test("Check invalid field in platform") {
-    val newConfigFilePath = configDeriver.derive(""".platforms += { type: "native", foo: "bar" }""", "invalid_platform_field")
+    val newConfigFilePath = configDeriver.derive(""".platforms := [{ type: "native", foo: "bar" }]""", "invalid_platform_field")
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "--engine", "native",

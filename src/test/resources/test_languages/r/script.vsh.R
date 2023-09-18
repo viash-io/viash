@@ -1,7 +1,8 @@
 #' functionality:
 #'   __merge__: [., ../common.yaml]
 #'   name: test_languages_r
-#' platforms:
+#' __merge__: [../common-runners.yaml]
+#' engines:
 #' - type: native
 #' - type: docker
 #'   image: rocker/tidyverse:3.6
@@ -9,7 +10,6 @@
 #'     - type: r
 #'       cran: optparse
 #'       github: tidyverse/glue@main
-#' - type: nextflow
 
 ## VIASH START
 par <- list(

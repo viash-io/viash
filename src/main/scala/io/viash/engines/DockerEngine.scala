@@ -34,6 +34,20 @@ import io.viash.wrapper.BashWrapper
 
 import io.viash.schemas._
 
+@description(
+  """Run a Viash component on a Docker backend engine.
+    |By specifying which dependencies your component needs, users will be able to build a docker container from scratch using the setup flag, or pull it from a docker repository.
+    |""".stripMargin)
+@example(
+  """engines:
+    |  - type: docker
+    |    image: "bash:4.0"
+    |    setup:
+    |      - type: apt
+    |        packages: [ curl ]
+    |""".stripMargin,
+  "yaml")
+@subclass("docker")
 final case class DockerEngine(
   @description("Name of the engine. As with all engines, you can give a engine a different name. By specifying `id: foo`, you can target this engine (only) by specifying `...` in any of the Viash commands.")
   @example("id: foo", "yaml")

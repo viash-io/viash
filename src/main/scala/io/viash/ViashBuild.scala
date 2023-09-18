@@ -22,7 +22,6 @@ import scala.sys.process.{Process, ProcessLogger}
 import io.viash.helpers.status._
 
 import config._
-import platforms.Platform
 import helpers.{IO, Logging}
 import io.viash.runners.Runner
 

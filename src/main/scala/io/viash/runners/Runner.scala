@@ -22,6 +22,20 @@ import io.viash.functionality.Functionality
 import io.viash.config.Config
 import io.viash.platforms.Platform
 
+@description(
+  """A list of runners to generate target artifacts for.
+    |
+    | * @[Executable](executable_runner)
+    | * @[Nextflow](nextflow_runner)
+    |""".stripMargin)
+@example(
+  """runners:
+    |  - type: executable
+    |  - type: nextflow
+    |""".stripMargin,
+  "yaml")
+@subclass("ExecutableRunner")
+@subclass("NextflowRunner")
 trait Runner {
   @description("Specifies the type of the platform.")
   val `type`: String
@@ -32,14 +46,3 @@ trait Runner {
 
   def generateRunner(config: Config, testing: Boolean): RunnerResources
 }
-
-object Runner{
-  // Helper method to fascilitate conversion of legacy code to the new methods
-  def get(platform: Platform) = {
-    platform match {
-      case p: Runner => p
-      case _ => throw new RuntimeException("Expected all legacy platforms to be runners")
-    }
-  }
-}
-

@@ -23,6 +23,8 @@ import io.circe.syntax.EncoderOps
 import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
 
 import io.viash.functionality._
+import io.viash.runners._
+import io.viash.engines._
 import io.viash.platforms._
 import io.viash.platforms.requirements._
 import io.viash.functionality.arguments._
@@ -40,6 +42,8 @@ import io.viash.functionality.dependencies._
 final case class CollectedSchemas (
   config: Map[String, List[ParameterSchema]],
   functionality: Map[String, List[ParameterSchema]],
+  runners: Map[String, List[ParameterSchema]],
+  engines: Map[String, List[ParameterSchema]],
   platforms: Map[String, List[ParameterSchema]],
   requirements: Map[String, List[ParameterSchema]],
   arguments: Map[String, List[ParameterSchema]],
@@ -120,6 +124,14 @@ object CollectedSchemas {
     getMembers[Author](),
     getMembers[ComputationalRequirements](),
     getMembers[ArgumentGroup](),
+
+    getMembers[Runner](),
+    getMembers[ExecutableRunner](),
+    getMembers[NextflowRunner](),
+
+    getMembers[Engine](),
+    getMembers[NativeEngine](),
+    getMembers[DockerEngine](),
 
     getMembers[Platform](),
     getMembers[NativePlatform](),
