@@ -15,45 +15,48 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.platforms.requirements
+package io.viash.engines.requirements
 
 import io.viash.helpers.data_structures._
 import io.viash.schemas._
 
-@description("Specify which yum packages should be available in order to run the component.")
+@description("Specify which apt packages should be available in order to run the component.")
 @example(
   """setup:
-    |  - type: yum
+    |  - type: apt
     |    packages: [ sl ]
     |""".stripMargin,
     "yaml")
-@subclass("yum")
-case class YumRequirements(
+@subclass("apt")
+case class AptRequirements(
   @description("Specifies which packages to install.")
   @example("packages: [ sl ]", "yaml")
   @default("Empty")
   packages: OneOrMore[String] = Nil,
-  
-  `type`: String = "yum"
+
+  @description("If `false`, the Debian frontend is set to non-interactive (recommended). Default: false.")
+  @default("False")
+  interactive: Boolean = false,
+  `type`: String = "apt"
 ) extends Requirements {
   def installCommands: List[String] = {
-    val update =
-      """yum -y upgrade"""
+    val aptUpdate =
+      """apt-get update"""
 
+    val interactiveEnv = if (!interactive) "DEBIAN_FRONTEND=noninteractive " else ""
     val installPackages =
       packages.toList match {
         case Nil => Nil
         case packs =>
           List(packs.mkString(
-            "yum install -y ",
+            s"${interactiveEnv}apt-get install -y ",
             " ",
             ""
           ))
       }
 
-    val clean = List("yum clean all", "rm -rf /var/cache/yum")
+    val clean = "rm -rf /var/lib/apt/lists/*"
 
-    //update :: 
-    installPackages ::: clean
+    aptUpdate :: installPackages ::: List(clean)
   }
 }

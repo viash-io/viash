@@ -22,8 +22,8 @@ import io.viash.config.Config
 import io.viash.helpers.IO
 import io.circe.yaml.parser
 import java.net.URI
-import requirements._
 import io.viash.schemas._
+import io.viash.engines.requirements.Requirements
 
 @description(
   """A list of platforms to generate target artifacts for.

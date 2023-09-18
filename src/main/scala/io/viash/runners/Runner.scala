@@ -20,7 +20,6 @@ package io.viash.runners
 import io.viash.schemas._
 import io.viash.functionality.Functionality
 import io.viash.config.Config
-import io.viash.platforms.Platform
 
 @description(
   """A list of runners to generate target artifacts for.

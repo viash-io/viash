@@ -15,36 +15,45 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.platforms.requirements
+package io.viash.engines.requirements
 
 import io.viash.helpers.data_structures._
 import io.viash.schemas._
 
-@description("Specify which apk packages should be available in order to run the component.")
+@description("Specify which yum packages should be available in order to run the component.")
 @example(
   """setup:
-    |  - type: apk
+    |  - type: yum
     |    packages: [ sl ]
     |""".stripMargin,
     "yaml")
-@subclass("apk")
-case class ApkRequirements(
+@subclass("yum")
+case class YumRequirements(
   @description("Specifies which packages to install.")
   @example("packages: [ sl ]", "yaml")
   @default("Empty")
   packages: OneOrMore[String] = Nil,
   
-  `type`: String = "apk"
+  `type`: String = "yum"
 ) extends Requirements {
-  val installCommands: List[String] = {
-    packages.toList match {
-      case Nil => Nil
-      case packs =>
-        List(packs.mkString(
-          "apk add --no-cache ",
-          " ",
-          ""
-        ))
-    }
+  def installCommands: List[String] = {
+    val update =
+      """yum -y upgrade"""
+
+    val installPackages =
+      packages.toList match {
+        case Nil => Nil
+        case packs =>
+          List(packs.mkString(
+            "yum install -y ",
+            " ",
+            ""
+          ))
+      }
+
+    val clean = List("yum clean all", "rm -rf /var/cache/yum")
+
+    //update :: 
+    installPackages ::: clean
   }
 }

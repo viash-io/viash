@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.platforms.nextflow
+package io.viash.runners.nextflow
 
 import scala.collection.immutable.ListMap
 import io.viash.schemas._

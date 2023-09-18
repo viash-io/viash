@@ -26,7 +26,6 @@ import io.viash.functionality._
 import io.viash.runners._
 import io.viash.engines._
 import io.viash.platforms._
-import io.viash.platforms.requirements._
 import io.viash.functionality.arguments._
 import io.circe.Json
 import monocle.function.Cons
@@ -34,10 +33,11 @@ import io.viash.config.Config
 import io.viash.config.Info
 import io.viash.functionality.resources._
 import io.viash.project.ViashProject
-import io.viash.platforms.nextflow._
 import io.viash.helpers._
 import scala.collection.immutable.ListMap
 import io.viash.functionality.dependencies._
+import io.viash.runners.nextflow.{NextflowConfig, NextflowAuto, NextflowDirectives}
+import io.viash.engines.requirements._
 
 final case class CollectedSchemas (
   config: Map[String, List[ParameterSchema]],

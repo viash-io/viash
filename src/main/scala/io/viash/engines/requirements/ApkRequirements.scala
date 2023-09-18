@@ -15,48 +15,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.platforms.requirements
+package io.viash.engines.requirements
 
 import io.viash.helpers.data_structures._
 import io.viash.schemas._
 
-@description("Specify which apt packages should be available in order to run the component.")
+@description("Specify which apk packages should be available in order to run the component.")
 @example(
   """setup:
-    |  - type: apt
+    |  - type: apk
     |    packages: [ sl ]
     |""".stripMargin,
     "yaml")
-@subclass("apt")
-case class AptRequirements(
+@subclass("apk")
+case class ApkRequirements(
   @description("Specifies which packages to install.")
   @example("packages: [ sl ]", "yaml")
   @default("Empty")
   packages: OneOrMore[String] = Nil,
-
-  @description("If `false`, the Debian frontend is set to non-interactive (recommended). Default: false.")
-  @default("False")
-  interactive: Boolean = false,
-  `type`: String = "apt"
+  
+  `type`: String = "apk"
 ) extends Requirements {
-  def installCommands: List[String] = {
-    val aptUpdate =
-      """apt-get update"""
-
-    val interactiveEnv = if (!interactive) "DEBIAN_FRONTEND=noninteractive " else ""
-    val installPackages =
-      packages.toList match {
-        case Nil => Nil
-        case packs =>
-          List(packs.mkString(
-            s"${interactiveEnv}apt-get install -y ",
-            " ",
-            ""
-          ))
-      }
-
-    val clean = "rm -rf /var/lib/apt/lists/*"
-
-    aptUpdate :: installPackages ::: List(clean)
+  val installCommands: List[String] = {
+    packages.toList match {
+      case Nil => Nil
+      case packs =>
+        List(packs.mkString(
+          "apk add --no-cache ",
+          " ",
+          ""
+        ))
+    }
   }
 }

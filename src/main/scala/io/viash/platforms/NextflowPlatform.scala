@@ -23,12 +23,12 @@ import io.viash.functionality.resources._
 import io.viash.functionality.arguments._
 import io.viash.helpers.{Docker, Bash, DockerImageInfo, Helper}
 import io.viash.helpers.circe._
-import io.viash.platforms.nextflow._
 import io.circe.syntax._
 import io.circe.{Printer => JsonPrinter, Json, JsonObject}
 import shapeless.syntax.singleton
 import io.viash.schemas._
 import io.viash.helpers.Escaper
+import io.viash.runners.nextflow._
 
 /**
  * A Platform class for generating Nextflow (DSL2) modules.

@@ -18,7 +18,7 @@
 package io.viash.schemas
 
 import io.circe.Json
-import io.viash.platforms.docker.DockerSetupStrategy
+import io.viash.runners.executable.DockerSetupStrategy
 
 object JsonSchema {
 

@@ -25,7 +25,6 @@ import io.viash.config.{Info => ConfigInfo}
 import io.viash.functionality.Functionality
 
 // todo: remove
-import io.viash.platforms.docker._
 import io.viash.functionality.resources.Executable
 import io.viash.functionality.arguments.FileArgument
 import io.viash.functionality.arguments.Output
@@ -43,7 +42,8 @@ import io.viash.helpers.data_structures._
 import io.viash.schemas._
 import io.viash.engines.DockerEngine
 import io.viash.engines.NativeEngine
-import io.viash.platforms.requirements.DockerRequirements
+import io.viash.runners.executable._
+import io.viash.engines.requirements.DockerRequirements
 
 @description(
   """Run code as an executable.

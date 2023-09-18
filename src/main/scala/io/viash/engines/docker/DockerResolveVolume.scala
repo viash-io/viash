@@ -15,18 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.platforms.nextflow
+package io.viash.engines.docker
 
-import scala.io.Source
+sealed trait DockerResolveVolume
 
-object NextflowHelper {
-  private def readSource(s: String) = {
-    val path = s"io/viash/platforms/nextflow/$s"
-    Source.fromResource(path).getLines().mkString("\n")
-  }
+case object Manual extends DockerResolveVolume
 
-  lazy val vdsl3Helper: String = readSource("VDSL3Helper.nf")
-  lazy val workflowHelper: String = readSource("WorkflowHelper.nf")
-  lazy val profilesHelper: String = readSource("ProfilesHelper.config")
-  lazy val dataflowHelper: String = readSource("DataflowHelper.nf")
-}
+case object Automatic extends DockerResolveVolume

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.platforms.requirements
+package io.viash.engines.requirements
 
 import io.viash.schemas._
 

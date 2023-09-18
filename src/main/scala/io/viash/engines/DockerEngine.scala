@@ -24,9 +24,8 @@ import io.viash.config.{Info => ConfigInfo}
 import io.viash.functionality.Functionality
 import io.viash.functionality.Author
 
-// todo: move these requirements to .engines
-import io.viash.platforms.requirements.Requirements
-import io.viash.platforms.requirements.DockerRequirements
+import io.viash.engines.requirements.Requirements
+import io.viash.engines.requirements.DockerRequirements
 
 import io.viash.helpers.Escaper
 import io.viash.helpers.Docker

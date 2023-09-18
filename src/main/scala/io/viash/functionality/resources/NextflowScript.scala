@@ -25,7 +25,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import io.viash.config.Config
 import io.viash.functionality.arguments.Argument
-import io.viash.platforms.nextflow.NextflowHelper
+import io.viash.runners.nextflow.NextflowHelper
 import io.circe.syntax._
 import io.viash.helpers.circe._
 import io.viash.ViashNamespace

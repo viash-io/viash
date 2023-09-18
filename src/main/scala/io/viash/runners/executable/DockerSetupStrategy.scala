@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.platforms.docker
+package io.viash.runners.executable
 
 sealed class DockerSetupStrategy(val id: String, val synonyms: List[String] = Nil)
 
