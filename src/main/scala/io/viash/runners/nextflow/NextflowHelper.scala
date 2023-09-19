@@ -21,7 +21,7 @@ import scala.io.Source
 
 object NextflowHelper {
   private def readSource(s: String) = {
-    val path = s"io/viash/platforms/nextflow/$s"
+    val path = s"io/viash/runners/nextflow/$s"
     Source.fromResource(path).getLines().mkString("\n")
   }
 

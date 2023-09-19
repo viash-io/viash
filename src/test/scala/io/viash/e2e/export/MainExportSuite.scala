@@ -24,7 +24,7 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
 
   test("viash export resource") {
     val stdout = TestHelper.testMain(
-      "export", "resource", "platforms/nextflow/WorkflowHelper.nf"
+      "export", "resource", "runners/nextflow/WorkflowHelper.nf"
     )
 
     assert(stdout.startsWith("/////////////////////////////////////\n// Viash Workflow helper functions //"))
@@ -33,7 +33,7 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
 
   test("viash export resource to file") {
     val stdout = TestHelper.testMain(
-      "export", "resource", "platforms/nextflow/WorkflowHelper.nf",
+      "export", "resource", "runners/nextflow/WorkflowHelper.nf",
       "--output", tempFile.toString
     )
 

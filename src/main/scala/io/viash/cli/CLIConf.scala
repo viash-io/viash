@@ -448,7 +448,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       banner(
         "viash export resource",
         """Export an internal resource file""".stripMargin,
-        """viash export resource platforms/nextflow/WorkflowHelper.nf [--output foo.nf]""".stripMargin
+        """viash export resource runners/nextflow/WorkflowHelper.nf [--output foo.nf]""".stripMargin
       )
 
       val path = registerTrailArg[String](
