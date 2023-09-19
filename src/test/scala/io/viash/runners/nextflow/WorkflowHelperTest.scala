@@ -1,4 +1,4 @@
-package io.viash.platforms.nextflow
+package io.viash.runners.nextflow
 
 import io.viash.helpers.{IO, Logger}
 import io.viash.{DockerTest, NextflowTest, TestHelper}

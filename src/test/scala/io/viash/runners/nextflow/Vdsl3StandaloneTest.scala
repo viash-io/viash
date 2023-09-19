@@ -1,4 +1,4 @@
-package io.viash.platforms.nextflow
+package io.viash.runners.nextflow
 
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite

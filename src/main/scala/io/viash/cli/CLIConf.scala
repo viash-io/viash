@@ -401,7 +401,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       )
       val applyRunner = registerOpt[Boolean] (
         name = "apply_runner",
-        // short = Some('a'),
+        short = Some('r'),
         default = Some(false),
         descr = 
           """Fills in the {runner} and {output} field by applying each runner to the 
@@ -410,7 +410,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       )
       val applyEngine = registerOpt[Boolean] (
         name = "apply_engine",
-        // short = Some('a'),
+        short = Some('e'),
         default = Some(false),
         descr = 
           """Fills in the {engine} and {output} field by applying each engine to the 
