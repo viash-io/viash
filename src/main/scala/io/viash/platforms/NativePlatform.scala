@@ -17,10 +17,6 @@
 
 package io.viash.platforms
 
-import io.viash.config.Config
-import io.viash.functionality.Functionality
-import io.viash.functionality.resources._
-import io.viash.wrapper.BashWrapper
 import io.viash.schemas._
 
 @description(

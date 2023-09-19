@@ -17,11 +17,6 @@
 
 package io.viash.platforms
 
-import io.viash.functionality.Functionality
-import io.viash.config.Config
-import io.viash.helpers.IO
-import io.circe.yaml.parser
-import java.net.URI
 import io.viash.schemas._
 import io.viash.engines.requirements.Requirements
 

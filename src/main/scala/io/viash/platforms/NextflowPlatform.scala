@@ -17,17 +17,7 @@
 
 package io.viash.platforms
 
-import io.viash.config.Config
-import io.viash.functionality._
-import io.viash.functionality.resources._
-import io.viash.functionality.arguments._
-import io.viash.helpers.{Docker, Bash, DockerImageInfo, Helper}
-import io.viash.helpers.circe._
-import io.circe.syntax._
-import io.circe.{Printer => JsonPrinter, Json, JsonObject}
-import shapeless.syntax.singleton
 import io.viash.schemas._
-import io.viash.helpers.Escaper
 import io.viash.runners.nextflow._
 
 /**

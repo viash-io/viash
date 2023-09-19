@@ -17,19 +17,8 @@
 
 package io.viash.platforms
 
-import java.util.Date
-import java.text.SimpleDateFormat
-
-import io.viash.config.Config
-import io.viash.functionality._
-import io.viash.functionality.arguments._
-import io.viash.functionality.resources._
-import io.viash.helpers.{Bash, Docker}
-import io.viash.wrapper.{BashWrapper, BashWrapperMods}
-import io.viash.helpers.data_structures._
-import io.viash.config.Info
 import io.viash.schemas._
-import io.viash.helpers.Escaper
+import io.viash.helpers.data_structures._
 import io.viash.runners.executable.{IfNeedBePullElseCachedBuild, DockerSetupStrategy}
 import io.viash.engines.requirements.Requirements
 import io.viash.engines.docker.{DockerResolveVolume, Automatic}
