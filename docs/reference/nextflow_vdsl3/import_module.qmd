@@ -64,7 +64,7 @@ workflow {
 
 - `directives` (`Map[String, Object]`): Custom directives overrides. See the Nextflow documentation for a list of available directives.
 
-- `auto` (`Map[String, Boolean]`): Whether to apply certain automated processing steps. Default values are inherited from the [Viash config](/reference/config/platforms/nextflow/auto.qmd).
+- `auto` (`Map[String, Boolean]`): Whether to apply certain automated processing steps. Default values are inherited from the [Viash config](/reference/config/runners/nextflow/auto.qmd).
 
 - `auto.simplifyInput`: If `true`, if the input tuple is a single file and if the module only has a single input file, the input file will be passed the module accordingly. Default: `true` (inherited from Viash config).
 

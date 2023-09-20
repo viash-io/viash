@@ -66,10 +66,20 @@ case class Config(
       |""".stripMargin)
   functionality: Functionality,
 
-  @description("A list of runners to execute target artifacts.")
+  @description(
+    """A list of runners to execute target artifacts.
+      |
+      | - @[ExecutableRunner](executable_runner)
+      | - @[NextflowRunner](nextflow_runner)
+      |""".stripMargin)
   @since("Viash 0.8.0")
   runners: List[Runner] = Nil,
-  @description("A list of engine environments to execute target artifacts in.")
+  @description(
+    """A list of engine environments to execute target artifacts in.
+      |
+      | - @[NativeEngine](native_engine)
+      | - @[DockerEngine](docker_engine)
+      |""".stripMargin)
   @since("Viash 0.8.0")
   engines: List[Engine] = Nil,
 
