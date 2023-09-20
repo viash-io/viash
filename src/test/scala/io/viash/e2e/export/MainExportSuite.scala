@@ -41,6 +41,30 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
     assert(lines.startsWith("/////////////////////////////////////\n// Viash Workflow helper functions //"))
     assert(lines.contains("preprocessInputs"))
   }
+
+  test("viash export resource legacy") {
+    val (stdout, stderr, code) = TestHelper.testMainWithStdErr(
+      "export", "resource", "platforms/nextflow/WorkflowHelper.nf"
+    )
+
+    assert(stderr.contains("WARNING: The 'platforms/' prefix is deprecated. Please use 'runners/' instead."))
+
+    assert(stdout.startsWith("/////////////////////////////////////\n// Viash Workflow helper functions //"))
+    assert(stdout.contains("preprocessInputs"))
+  }
+
+  test("viash export resource to file legacy") {
+    val (stdout, stderr, code) = TestHelper.testMainWithStdErr(
+      "export", "resource", "platforms/nextflow/WorkflowHelper.nf",
+      "--output", tempFile.toString
+    )
+
+    assert(stderr.contains("WARNING: The 'platforms/' prefix is deprecated. Please use 'runners/' instead."))
+
+    val lines = helpers.IO.read(tempFile.toUri())
+    assert(lines.startsWith("/////////////////////////////////////\n// Viash Workflow helper functions //"))
+    assert(lines.contains("preprocessInputs"))
+  }
   
   test("viash export cli_schema") {
     val stdout = TestHelper.testMain(
