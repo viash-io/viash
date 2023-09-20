@@ -12,7 +12,7 @@ import io.viash.helpers.{IO, Exec, Logger}
 
 class EscapingNativeTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
-  // which platform to test
+  // which config to test
   private val rootPath = getClass.getResource(s"/test_escaping/").getPath
   private val configFile = getClass.getResource(s"/test_escaping/config.vsh.yaml").getPath
 

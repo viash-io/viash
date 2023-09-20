@@ -12,7 +12,7 @@ import io.viash.TestHelper
 
 class MainBuildAuxiliaryNativeUnknownParameter extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
-  // which platform to test
+  // which config to test
   private val configFile = getClass.getResource("/testbash/config.vsh.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp("viash_tester")

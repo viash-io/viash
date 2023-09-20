@@ -544,10 +544,10 @@ object Main extends Logging {
 
   // Actual handling of the dependency logic, to be used for single and namespace configs
   def handleSingleConfigDependency(config: AppliedConfig, output: Option[String], rootDir: Option[Path], namespaceConfigs: List[Config] = Nil) = {
-    val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config.config, config.runner.map(_.id))
-    val config1 = DependencyResolver.modifyConfig(config.config, dependencyPlatformId, rootDir, namespaceConfigs)
+    val dependencyRunnerId = DependencyResolver.getDependencyRunnerId(config.config, config.runner.map(_.id))
+    val config1 = DependencyResolver.modifyConfig(config.config, dependencyRunnerId, rootDir, namespaceConfigs)
     val config2 = if (output.isDefined) {
-      DependencyResolver.copyDependencies(config1, output.get, dependencyPlatformId.getOrElse("native"), namespaceConfigs.nonEmpty)
+      DependencyResolver.copyDependencies(config1, output.get, dependencyRunnerId.getOrElse("native"), namespaceConfigs.nonEmpty)
     } else {
       config1
     }

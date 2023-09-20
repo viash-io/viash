@@ -25,25 +25,25 @@ package object platforms {
   import io.viash.helpers.circe._
   import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
 
-  implicit val encodeDockerPlatform: Encoder.AsObject[DockerPlatform] = deriveConfiguredEncoder
+  // implicit val encodeDockerPlatform: Encoder.AsObject[DockerPlatform] = deriveConfiguredEncoder
   implicit val decodeDockerPlatform: Decoder[DockerPlatform] = deriveConfiguredDecoderFullChecks
 
-  implicit val encodeNextflowPlatform: Encoder.AsObject[NextflowPlatform] = deriveConfiguredEncoder
+  // implicit val encodeNextflowPlatform: Encoder.AsObject[NextflowPlatform] = deriveConfiguredEncoder
   implicit val decodeNextflowPlatform: Decoder[NextflowPlatform] = deriveConfiguredDecoderFullChecks
 
-  implicit val encodeNativePlatform: Encoder.AsObject[NativePlatform] = deriveConfiguredEncoder
+  // implicit val encodeNativePlatform: Encoder.AsObject[NativePlatform] = deriveConfiguredEncoder
   implicit val decodeNativePlatform: Decoder[NativePlatform] = deriveConfiguredDecoderFullChecks
 
-  implicit def encodePlatform[A <: Platform]: Encoder[A] = Encoder.instance {
-    platform =>
-      val typeJson = Json.obj("type" -> Json.fromString(platform.`type`))
-      val objJson = platform match {
-        case s: DockerPlatform => encodeDockerPlatform(s)
-        case s: NextflowPlatform => encodeNextflowPlatform(s)
-        case s: NativePlatform => encodeNativePlatform(s)
-      }
-      objJson deepMerge typeJson
-  }
+  // implicit def encodePlatform[A <: Platform]: Encoder[A] = Encoder.instance {
+  //   platform =>
+  //     val typeJson = Json.obj("type" -> Json.fromString(platform.`type`))
+  //     val objJson = platform match {
+  //       case s: DockerPlatform => encodeDockerPlatform(s)
+  //       case s: NextflowPlatform => encodeNextflowPlatform(s)
+  //       case s: NativePlatform => encodeNativePlatform(s)
+  //     }
+  //     objJson deepMerge typeJson
+  // }
 
   implicit def decodePlatform: Decoder[Platform] = Decoder.instance {
     cursor =>

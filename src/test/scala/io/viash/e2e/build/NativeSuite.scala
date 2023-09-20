@@ -13,7 +13,7 @@ import io.viash.helpers.{IO, Exec, Logger}
 
 class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
-  // which platform to test
+  // which configs to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
   private val configDeprecatedArgumentGroups = getClass.getResource(s"/testbash/config_deprecated_argument_groups.vsh.yaml").getPath
 

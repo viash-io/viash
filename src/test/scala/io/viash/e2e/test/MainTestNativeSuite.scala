@@ -391,12 +391,12 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("Check standard test output with bad engine name") {
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
-      "--engine", "non_existing_platform",
+      "--engine", "non_existing_engine",
       "--runner", "native",
       configFile
     )
 
-    assert(testOutput.exceptionText == "no engine id matching regex 'non_existing_platform' could not be found in the config.")
+    assert(testOutput.exceptionText == "no engine id matching regex 'non_existing_engine' could not be found in the config.")
     assert(testOutput.output.isEmpty)
   }
 
@@ -404,11 +404,11 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "--engine", "native",
-      "--runner", "non_existing_platform",
+      "--runner", "non_existing_runner",
       configFile
     )
 
-    assert(testOutput.exceptionText == "no runner id matching regex 'non_existing_platform' could not be found in the config.")
+    assert(testOutput.exceptionText == "no runner id matching regex 'non_existing_runner' could not be found in the config.")
     assert(testOutput.output.isEmpty)
   }
 

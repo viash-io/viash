@@ -96,7 +96,7 @@ final case class NextflowRunner(
   debug: Boolean = false,
 
   // TODO: solve differently
-  @description("Specifies the Docker platform id to be used to run Nextflow.")
+  @description("Specifies the Docker engine id to be used to run Nextflow.")
   @default("docker")
   container: String = "docker"
 ) extends Runner {
@@ -140,7 +140,7 @@ final case class NextflowRunner(
           namespaceSeparator = p.namespace_separator
         ))
       case Some(_) => 
-        throw new RuntimeException(s"NextflowPlatform 'container' variable: Platform $container is not a Docker Platform")
+        throw new RuntimeException(s"NextflowRunner 'container' variable: Engine $container is not a Docker Engine")
       case None => None
       case _ => ???
     }
@@ -199,7 +199,7 @@ final case class NextflowRunner(
     /************************* JSONS *************************/
     // override container
     val directivesToJson = directives.copy(
-      // if a docker platform is defined but the directives.container isn't, use the image of the dockerplatform as default
+      // if a docker engine is defined but the directives.container isn't, use the image of the docker engine as default
       container = directives.container orElse containerDirective.map(cd => Left(cd.toMap)),
       // is memory requirements are defined but directives.memory isn't, use that instead
       memory = directives.memory orElse functionality.requirements.memoryAsBytes.map(_.toString + " B"),
@@ -227,7 +227,7 @@ final case class NextflowRunner(
       // if mainResource is simply an executable
       case Some(e: Executable) => //" " + e.path.get + " $VIASH_EXECUTABLE_ARGS"
         throw new NotImplementedError(
-          "Running executables through a NextflowPlatform is not (yet) implemented. " +
+          "Running executables through a NextflowRunner is not (yet) implemented. " +
             "Create a support ticket to request this functionality if necessary."
         )
       

@@ -31,7 +31,7 @@ case class DebugRunner(
   def generateRunner(config: Config, testing: Boolean): RunnerResources = {
     val functionality = config.functionality
     if (functionality.mainScript.isEmpty) {
-      throw new RuntimeException("Can't generate a debug platform when there is no script.")
+      throw new RuntimeException("Can't generate a debug runner when there is no script.")
     }
     // create new bash script
     // by setting debugpath, any checks on the arguments are getting disabled

@@ -32,9 +32,9 @@ package object runners {
   implicit val decodeNextflowRunner: Decoder[NextflowRunner] = deriveConfiguredDecoderFullChecks
 
   implicit def encodeRunner[A <: Runner]: Encoder[A] = Encoder.instance {
-    platform =>
-      val typeJson = Json.obj("type" -> Json.fromString(platform.`type`))
-      val objJson = platform match {
+    runner =>
+      val typeJson = Json.obj("type" -> Json.fromString(runner.`type`))
+      val objJson = runner match {
         case s: ExecutableRunner => encodeExecutableRunner(s)
         case s: NextflowRunner => encodeNextflowRunner(s)
       }

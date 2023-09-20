@@ -15,7 +15,7 @@ import io.viash.functionality.resources.PlainFile
 
 class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
-  // which platform to test
+  // which config to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 
   // parse functionality from file

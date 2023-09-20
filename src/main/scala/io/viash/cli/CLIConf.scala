@@ -238,12 +238,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       name = "setup",
       short = Some('s'),
       default = None,
-      descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Platform only]."
+      descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Engine only]."
     )
     val push = registerOpt[Boolean](
       name = "push",
       default = Some(false),
-      descr = "Whether or not to push the container to a Docker registry [Docker Platform only]."
+      descr = "Whether or not to push the container to a Docker registry [Docker Engine only]."
     )
   }
 
@@ -257,7 +257,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       name = "setup",
       short = Some('s'),
       default = None,
-      descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Platform only]."
+      descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Engine only]."
     )
     
     footer(
@@ -312,18 +312,18 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       val setup = registerOpt[String](
         name = "setup",
         default = None,
-        descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Platform only]."
+        descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Engine only]."
       )
       val push = registerOpt[Boolean](
         name = "push",
         default = Some(false),
-        descr = "Whether or not to push the container to a Docker registry [Docker Platform only]."
+        descr = "Whether or not to push the container to a Docker registry [Docker Engine only]."
       )
       val flatten = registerOpt[Boolean](
         name = "flatten",
         short = Some('f'),
         default = Some(false),
-        descr = "Flatten the target builds, handy for building one platform to a bin directory."
+        descr = "Flatten the target builds, handy for building one runner/engine to a bin directory."
       )
     }
 
@@ -336,7 +336,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       val setup = registerOpt[String](
         name = "setup",
         default = None,
-        descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Platform only]."
+        descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Engine only]."
       )
 
       val tsv = registerOpt[String](

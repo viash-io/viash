@@ -31,12 +31,12 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
 
     // only run testbash natively because other requirements might not be available
     if (name == "bash") {
-      test(s"Testing $name platform native", NativeTest) {
+      test(s"Testing $name engine native", NativeTest) {
         TestHelper.testMain("test", "--engine", "native", "--runner", "executable", config)
       }
 
       for (multiType <- multiples) {
-        test(s"Testing $name platform native, multiple $multiType", NativeTest) {
+        test(s"Testing $name engine native, multiple $multiType", NativeTest) {
           TestHelper.testMain(
             "test", "--engine", "native", "--runner", "executable", config,
             "-c", s"""<preparse>.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].type := "$multiType"""",
@@ -46,13 +46,13 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
       }
     }
 
-    test(s"Testing $name platform docker", DockerTest) {
+    test(s"Testing $name engine docker", DockerTest) {
       TestHelper.testMain("test", "--engine", "docker", "--runner", "executable", config)
     }
 
     if (name != "executable") {
       for (multiple <- multiples) {
-        test(s"Testing $name platform docker, multiple $multiple", DockerTest) {
+        test(s"Testing $name engine docker, multiple $multiple", DockerTest) {
           TestHelper.testMain(
             "test", "--engine", "docker", "--runner", "executable", config,
             "-c", s"""<preparse>.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].type := "$multiple"""",
@@ -61,7 +61,7 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
         }
       }
 
-      test(s"Testing $name platform docker, multiple file", DockerTest) {
+      test(s"Testing $name engine docker, multiple file", DockerTest) {
         TestHelper.testMain(
           "test", "--engine", "docker", "--runner", "executable", config,
           "-c", s"""<preparse>.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].type := "file"""",

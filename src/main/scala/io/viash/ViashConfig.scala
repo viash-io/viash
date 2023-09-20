@@ -93,8 +93,8 @@ object ViashConfig extends Logging{
     val path = Paths.get(uri.getPath())
 
     // debugFun
-    val debugPlatform = DebugRunner(path = uri.getPath())
-    val resources = debugPlatform.generateRunner(config, testing = false)
+    val debugRunner = DebugRunner(path = uri.getPath())
+    val resources = debugRunner.generateRunner(config, testing = false)
 
     // create temporary directory
     val dir = IO.makeTemp("viash_inject_" + config.functionality.name)

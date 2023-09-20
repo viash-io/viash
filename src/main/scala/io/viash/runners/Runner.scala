@@ -36,7 +36,7 @@ import io.viash.config.Config
 @subclass("ExecutableRunner")
 @subclass("NextflowRunner")
 trait Runner {
-  @description("Specifies the type of the platform.")
+  @description("Specifies the type of the runner.")
   val `type`: String
 
   @description("Id of the runner.")

@@ -14,7 +14,7 @@ import scala.annotation.meta.param
 
 class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
-  // which platform to test
+  // which configs to test
   private val configFile = getClass.getResource("/testbash/auxiliary_requirements/parameter_check.vsh.yaml").getPath
   private val loopConfigFile = getClass.getResource("/testbash/auxiliary_requirements/parameter_check_loop.vsh.yaml").getPath
 

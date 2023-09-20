@@ -17,7 +17,7 @@
 
 viash helps you turn a script (Bash/R/Python/Scala/JavaScript) into a
 reusable component. By providing some meta-data regarding its
-functionality and the platform on which you want to run the software,
+functionality, a runner and an engine on which you want to run the software,
 viash can help you:
 
 -   wrap your script in an executable with a CLI and –help

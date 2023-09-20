@@ -45,8 +45,7 @@ object ViashTest extends Logging {
   /**
     * Run a component's unit tests
     *
-    * @param config A Viash config
-    * @param platform Which platform to use
+    * @param appliedConfig A Viash config with runners and engines applied.
     * @param keepFiles Whether to keep temporary files after completion or remove them. 
     *   `Some(true)` means all files will be kept. `Some(false)` means they will be removed. 
     *   `None` means they will be kept if any of the unit tests errored, otherwise removed.
@@ -219,7 +218,7 @@ object ViashTest extends Logging {
       return ManyTestOutput(buildResult, Nil)
     }
 
-    // generate executable for native platform
+    // generate executable runner
     val exe = ExecutableRunner().generateRunner(appliedConfig.config, true).resources.head
 
     // fetch tests
@@ -270,8 +269,8 @@ object ViashTest extends Logging {
         val funFinal = fun.copy(resources = 
           // the test, wrapped in a bash script
           testBash ::
-            // the executable, wrapped with a native platform,
-            // to be run inside of the platform of the test
+            // the executable, wrapped with an executable runner,
+            // to be run inside of the runner of the test
             exe :: 
             // the config file information
             configYaml ::

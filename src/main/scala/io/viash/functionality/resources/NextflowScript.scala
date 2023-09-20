@@ -57,7 +57,7 @@ case class NextflowScript(
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
     // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
-    val thisPath = Paths.get(ViashNamespace.targetOutputPath("", "invalid_platform_name", config.functionality.namespace, config.functionality.name))
+    val thisPath = Paths.get(ViashNamespace.targetOutputPath("", "invalid_runner_name", config.functionality.namespace, config.functionality.name))
 
     val depStrs = config.functionality.dependencies.map(NextflowScript.renderInclude(_, thisPath))
 

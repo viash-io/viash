@@ -41,12 +41,12 @@ object DependencyResolver {
     * Modify the config so all of the dependencies are available locally 
     *
     * @param config Component configuration
-    * @param platformId Used to create the path where to store retrieved dependencies
+    * @param runnerId Used to create the path where to store retrieved dependencies
     * @param projectRootDir Location of the Project Config, used for relative referencing
     * @param namespaceConfigs Needed for local dependencies
     * @return A config with dependency information added
     */
-  def modifyConfig(config: Config, platformId: Option[String], projectRootDir: Option[Path], namespaceConfigs: List[Config] = Nil): Config = {
+  def modifyConfig(config: Config, runnerId: Option[String], projectRootDir: Option[Path], namespaceConfigs: List[Config] = Nil): Config = {
 
     // Check all fun.repositories have valid names
     val repositories = config.functionality.repositories
@@ -96,9 +96,9 @@ object DependencyResolver {
 
         val config =
           if (dep.isLocalDependency) {
-            findLocalConfig(repo.localPath.toString(), namespaceConfigs, dep.name, platformId)
+            findLocalConfig(repo.localPath.toString(), namespaceConfigs, dep.name, runnerId)
           } else {
-            findRemoteConfig(repo.localPath.toString(), dep.name, platformId)
+            findRemoteConfig(repo.localPath.toString(), dep.name, runnerId)
           }
 
         dep.copy(
@@ -143,7 +143,7 @@ object DependencyResolver {
   }
 
   // Find configs from the local repository. These still need to be built so we have to deduce the information we want.
-  def findLocalConfig(targetDir: String, namespaceConfigs: List[Config], name: String, platformId: Option[String]): Option[(String, Map[String, String])] = {
+  def findLocalConfig(targetDir: String, namespaceConfigs: List[Config], name: String, runnerId: Option[String]): Option[(String, Map[String, String])] = {
 
     val config = namespaceConfigs.filter{ c => 
         val fullName = c.functionality.namespace.fold("")(n => n + "/") + c.functionality.name
@@ -154,11 +154,11 @@ object DependencyResolver {
     config.map{ c =>
       val path = c.info.get.config
       // fill in the location of the executable where it will be located
-      val executableName = platformId match {
+      val executableName = runnerId match {
         case Some("nextflow") => "main.nf"
         case _ => c.functionality.name
       }
-      val executable = Paths.get(ViashNamespace.targetOutputPath("", platformId.get, c.functionality.namespace, c.functionality.name), executableName).toString()
+      val executable = Paths.get(ViashNamespace.targetOutputPath("", runnerId.get, c.functionality.namespace, c.functionality.name), executableName).toString()
       val info = c.info.get.copy(executable = Some(executable))
       // Convert case class to map, do some extra conversions of Options while we're at it
       val map = (info.productElementNames zip info.productIterator).map{
@@ -173,7 +173,7 @@ object DependencyResolver {
   }
 
   // Read built config artifact in a minimalistic way. This prevents minor schema changes breaking things.
-  def findRemoteConfig(path: String, name: String, platformId: Option[String]): Option[(String, Map[String, String])] = {
+  def findRemoteConfig(path: String, name: String, runnerId: Option[String]): Option[(String, Map[String, String])] = {
     if (!Files.exists(Paths.get(path)))
       return None
 
@@ -197,9 +197,9 @@ object DependencyResolver {
       }
       .filter{
         case(scriptPath, info) =>
-          platformId match {
+          runnerId match {
             case None => true
-            case Some(p) => info("platform") == p
+            case Some(r) => info("runner") == r
           }
       }
       .headOption
@@ -288,7 +288,7 @@ object DependencyResolver {
 
   // Get the runner to be used for dependencies. If the main script is a Nextflow script, use 'nextflow', otherwise use 'native'.
   // Exception is when there is no runner set for the config, then we must return 'None' too.
-  def getDependencyPlatformId(config: Config, runner: Option[String]): Option[String] = {
+  def getDependencyRunnerId(config: Config, runner: Option[String]): Option[String] = {
     (config.functionality.mainScript, runner) match {
       case (_, None) => None
       case (None, _) => None
