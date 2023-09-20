@@ -96,4 +96,26 @@ class AppendTest extends AnyFunSuite {
     val res2 = cmd2.apply(baseJson, false)
     assert(res2 == expected2)
   }
+
+  test("test append element") {
+    val expected2: Json = parse(
+      """foo: bar
+        |baz: 123
+        |list_of_stuff: [4, 5, 6, 1]
+        |""".stripMargin).toOption.get
+    val cmd2 = ConfigModParser.block.parse(""".list_of_stuff += 1""")
+    val res2 = cmd2.apply(baseJson, false)
+    assert(res2 == expected2)
+  }
+
+  test("test prepend element") {
+    val expected2: Json = parse(
+      """foo: bar
+        |baz: 123
+        |list_of_stuff: [1, 4, 5, 6]
+        |""".stripMargin).toOption.get
+    val cmd2 = ConfigModParser.block.parse(""".list_of_stuff +0= 1""")
+    val res2 = cmd2.apply(baseJson, false)
+    assert(res2 == expected2)
+  }
 }
