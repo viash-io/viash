@@ -16,6 +16,8 @@ TODO add summary
 
 * `WorkflowHelper.nf`: Only set default values of output files which are **not already set**, and if the output file argument is **not required** (PR #514).
 
+* `NextflowPlatform`: When using `fromState` and `toState`, do not throw an error when the state or output is missing an optional argument (PR #515).
+
 # Viash 0.7.5 (2023-08-11): Minor breaking changes and new features
 
 This release contains minor breaking change due to deprecated or outdated functionality being removed.

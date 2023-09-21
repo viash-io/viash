@@ -517,15 +517,21 @@ def processProcessArgs(Map args) {
       assert fromState.values().every{it instanceof CharSequence} : "Error in module '$key': fromState is a Map, but not all values are Strings"
       assert fromState.keySet().every{it instanceof CharSequence} : "Error in module '$key': fromState is a Map, but not all keys are Strings"
       def fromStateMap = fromState.clone()
+      def requiredInputNames = thisConfig.functionality.allArguments.findAll{it.required && it.direction == "Input"}.collect{it.plainName}
       // turn the map into a closure to be used later on
       fromState = { it ->
-        def state = it[1] 
+        def state = it[1]
         assert state instanceof Map : "Error in module '$key': the state is not a Map"
-        def data = fromStateMap.collectEntries{newkey, origkey ->
-          // check whether all values of fromState are in state
-          assert state.containsKey(origkey) : "Error in module '$key': fromState key '$origkey' not found in current state"
-          [newkey, state[origkey]]
-        }
+        def data = fromStateMap.collectMany{newkey, origkey ->
+          // check whether newkey corresponds to a required argument
+          if (state.containsKey(origkey)) {
+            [[newkey, state[origkey]]]
+          } else if (!requiredInputNames.contains(origkey)) {
+            []
+          } else {
+            throw new Exception("Error in module '$key': fromState key '$origkey' not found in current state")
+          }
+        }.collectEntries()
         data
       }
     }
@@ -557,17 +563,23 @@ def processProcessArgs(Map args) {
     assert toState.values().every{it instanceof CharSequence} : "Error in module '$key': toState is a Map, but not all values are Strings"
     assert toState.keySet().every{it instanceof CharSequence} : "Error in module '$key': toState is a Map, but not all keys are Strings"
     def toStateMap = toState.clone()
+    def requiredOutputNames = thisConfig.functionality.allArguments.findAll{it.required && it.direction == "Output"}.collect{it.plainName}
     // turn the map into a closure to be used later on
     toState = { it ->
       def output = it[1]
       def state = it[2]
       assert output instanceof Map : "Error in module '$key': the output is not a Map"
       assert state instanceof Map : "Error in module '$key': the state is not a Map"
-      def extraEntries = toStateMap.collectEntries{newkey, origkey ->
-        // check whether all values of toState are in output
-        assert output.containsKey(origkey) : "Error in module '$key': toState key '$origkey' not found in current output"
-        [newkey, output[origkey]]
-      }
+      def extraEntries = toStateMap.collectMany{newkey, origkey ->
+        // check whether newkey corresponds to a required argument
+        if (output.containsKey(origkey)) {
+          [[newkey, output[origkey]]]
+        } else if (!requiredOutputNames.contains(origkey)) {
+          []
+        } else {
+          throw new Exception("Error in module '$key': toState key '$origkey' not found in current output")
+        }
+      }.collectEntries()
       state + extraEntries
     }
   }
