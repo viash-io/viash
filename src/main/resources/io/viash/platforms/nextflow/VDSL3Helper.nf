@@ -2,14 +2,8 @@
 // VDSL3 helper functions //
 ////////////////////////////
 
-import nextflow.Nextflow
-import nextflow.script.IncludeDef
-import nextflow.script.ScriptBinding
-import nextflow.script.ScriptMeta
-import nextflow.script.ScriptParser
-
 // retrieve resourcesDir here to make sure the correct path is found
-resourcesDir = ScriptMeta.current().getScriptPath().getParent()
+resourcesDir = nextflow.script.ScriptMeta.current().getScriptPath().getParent()
 
 def assertMapKeys(map, expectedKeys, requiredKeys, mapName) {
   assert map instanceof Map : "Expected argument '$mapName' to be a Map. Found: class ${map.getClass()}"
@@ -479,7 +473,7 @@ def processProcessArgs(Map args) {
       params.containsKey("publishDir") ? params.publishDir + "/_transcripts" : 
       null
     if (transcriptsDir != null) {
-      def timestamp = Nextflow.getSession().getWorkflowMetadata().start.format('yyyy-MM-dd_HH-mm-ss')
+      def timestamp = nextflow.Nextflow.getSession().getWorkflowMetadata().start.format('yyyy-MM-dd_HH-mm-ss')
       def transcriptsPublishDir = [ 
         path: "$transcriptsDir/$timestamp/\${task.process.replaceAll(':', '-')}/\${id}/",
         saveAs: "{ it.startsWith('.') ? it.replaceAll('^.', '') : null }", 
@@ -597,7 +591,7 @@ def processFactory(Map processArgs) {
   // autodetect process key
   def wfKey = processArgs["key"]
   def procKeyPrefix = "${wfKey}_process"
-  def meta = ScriptMeta.current()
+  def meta = nextflow.script.ScriptMeta.current()
   def existing = meta.getProcessNames().findAll{it.startsWith(procKeyPrefix)}
   def numbers = existing.collect{it.replace(procKeyPrefix, "0").toInteger()}
   def newNumber = (numbers + [-1]).max() + 1
@@ -786,13 +780,13 @@ def processFactory(Map processArgs) {
   // }
 
   // create runtime process
-  def ownerParams = new ScriptBinding.ParamsMap()
-  def binding = new ScriptBinding().setParams(ownerParams)
-  def module = new IncludeDef.Module(name: procKey)
-  def scriptParser = new ScriptParser(session)
+  def ownerParams = new nextflow.script.ScriptBinding.ParamsMap()
+  def binding = new nextflow.script.ScriptBinding().setParams(ownerParams)
+  def module = new nextflow.script.IncludeDef.Module(name: procKey)
+  def scriptParser = new nextflow.script.ScriptParser(session)
     .setModule(true)
     .setBinding(binding)
-  scriptParser.scriptPath = ScriptMeta.current().getScriptPath()
+  scriptParser.scriptPath = nextflow.script.ScriptMeta.current().getScriptPath()
   def moduleScript = scriptParser.runScript(procStr)
     .getScript()
 
@@ -811,10 +805,139 @@ def debug(processArgs, debugKey) {
   }
 }
 
+workflow processWf {
+  take: input_
+  main:
+  output_ = input_
+    | map { tuple ->
+      def id = tuple[0]
+      def data = tuple[1]
+
+      // fetch default params from functionality
+      def defaultArgs = thisConfig.functionality.allArguments
+        .findAll { it.containsKey("default") }
+        .collectEntries { [ it.plainName, it.default ] }
+
+      // fetch overrides in params
+      def paramArgs = thisConfig.functionality.allArguments
+        .findAll { par ->
+          def argKey = key + "__" + par.plainName
+          params.containsKey(argKey) && params[argKey] != "viash_no_value"
+        }
+        .collectEntries { [ it.plainName, params[key + "__" + it.plainName] ] }
+      
+      // fetch overrides in data
+      def dataArgs = thisConfig.functionality.allArguments
+        .findAll { data.containsKey(it.plainName) }
+        .collectEntries { [ it.plainName, data[it.plainName] ] }
+      
+      // combine params
+      def combinedArgs = defaultArgs + paramArgs + processArgs.args + dataArgs
+
+      // remove arguments with explicit null values
+      combinedArgs.removeAll{it.value == null}
+
+      if (workflow.stubRun) {
+        // add id if missing
+        combinedArgs = [id: 'stub'] + combinedArgs
+      } else {
+        // check whether required arguments exist
+        thisConfig.functionality.allArguments
+          .forEach { par ->
+            if (par.required) {
+              assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
+            }
+          }
+      }
+
+      // TODO: check whether parameters have the right type
+
+      // process input files separately
+      def inputPaths = thisConfig.functionality.allArguments
+        .findAll { it.type == "file" && it.direction == "input" }
+        .collect { par ->
+          def val = combinedArgs.containsKey(par.plainName) ? combinedArgs[par.plainName] : []
+          def inputFiles = []
+          if (val == null) {
+            inputFiles = []
+          } else if (val instanceof List) {
+            inputFiles = val
+          } else if (val instanceof Path) {
+            inputFiles = [ val ]
+          } else {
+            inputFiles = []
+          }
+          if (!workflow.stubRun) {
+            // throw error when an input file doesn't exist
+            inputFiles.each{ file -> 
+              assert file.exists() :
+                "Error in module '${key}' id '${id}' argument '${par.plainName}'.\n" +
+                "  Required input file does not exist.\n" +
+                "  Path: '$file'.\n" +
+                "  Expected input file to exist"
+            }
+          }
+          inputFiles 
+        } 
+
+      // remove input files
+      def argsExclInputFiles = thisConfig.functionality.allArguments
+        .findAll { (it.type != "file" || it.direction != "input") && combinedArgs.containsKey(it.plainName) }
+        .collectEntries { par ->
+          def parName = par.plainName
+          def val = combinedArgs[parName]
+          if (par.multiple && val instanceof Collection) {
+            val = val.join(par.multiple_sep)
+          }
+          if (par.direction == "output" && par.type == "file") {
+            val = val.replaceAll('\\$id', id).replaceAll('\\$key', key)
+          }
+          [parName, val]
+        }
+
+      [ id ] + inputPaths + [ argsExclInputFiles, resourcesDir ]
+    }
+    | processObj
+    | map { output ->
+      def outputFiles = thisConfig.functionality.allArguments
+        .findAll { it.type == "file" && it.direction == "output" }
+        .indexed()
+        .collectEntries{ index, par ->
+          out = output[index + 1]
+          // strip dummy '.exitcode' file from output (see nextflow-io/nextflow#2678)
+          if (!out instanceof List || out.size() <= 1) {
+            if (par.multiple) {
+              out = []
+            } else {
+              assert !par.required :
+                  "Error in module '${key}' id '${output[0]}' argument '${par.plainName}'.\n" +
+                  "  Required output file is missing"
+              out = null
+            }
+          } else if (out.size() == 2 && !par.multiple) {
+            out = out[1]
+          } else {
+            out = out.drop(1)
+          }
+          [ par.plainName, out ]
+        }
+      
+      // drop null outputs
+      outputFiles.removeAll{it.value == null}
+
+      if (processArgs.auto.simplifyOutput && outputFiles.size() == 1) {
+        outputFiles = outputFiles.values()[0]
+      }
+
+      [ output[0], outputFiles ]
+    }
+  emit: output_
+}
+
 def workflowFactory(Map args) {
   def processArgs = processProcessArgs(args)
   def key = processArgs["key"]
-  def meta = ScriptMeta.current()
+  def meta = nextflow.script.ScriptMeta.current()
 
   def workflowKey = key
 
@@ -931,128 +1054,7 @@ def workflowFactory(Map args) {
 
     out0_ = mid3_
       | debug(processArgs, "processed")
-      | map { tuple ->
-        def id = tuple[0]
-        def data = tuple[1]
-
-        // fetch default params from functionality
-        def defaultArgs = thisConfig.functionality.allArguments
-          .findAll { it.containsKey("default") }
-          .collectEntries { [ it.plainName, it.default ] }
-
-        // fetch overrides in params
-        def paramArgs = thisConfig.functionality.allArguments
-          .findAll { par ->
-            def argKey = key + "__" + par.plainName
-            params.containsKey(argKey) && params[argKey] != "viash_no_value"
-          }
-          .collectEntries { [ it.plainName, params[key + "__" + it.plainName] ] }
-        
-        // fetch overrides in data
-        def dataArgs = thisConfig.functionality.allArguments
-          .findAll { data.containsKey(it.plainName) }
-          .collectEntries { [ it.plainName, data[it.plainName] ] }
-        
-        // combine params
-        def combinedArgs = defaultArgs + paramArgs + processArgs.args + dataArgs
-
-        // remove arguments with explicit null values
-        combinedArgs.removeAll{it.value == null}
-
-        if (workflow.stubRun) {
-          // add id if missing
-          combinedArgs = [id: 'stub'] + combinedArgs
-        } else {
-          // check whether required arguments exist
-          thisConfig.functionality.allArguments
-            .forEach { par ->
-              if (par.required) {
-                assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
-              }
-            }
-        }
-
-        // TODO: check whether parameters have the right type
-
-        // process input files separately
-        def inputPaths = thisConfig.functionality.allArguments
-          .findAll { it.type == "file" && it.direction == "input" }
-          .collect { par ->
-            def val = combinedArgs.containsKey(par.plainName) ? combinedArgs[par.plainName] : []
-            def inputFiles = []
-            if (val == null) {
-              inputFiles = []
-            } else if (val instanceof List) {
-              inputFiles = val
-            } else if (val instanceof Path) {
-              inputFiles = [ val ]
-            } else {
-              inputFiles = []
-            }
-            if (!workflow.stubRun) {
-              // throw error when an input file doesn't exist
-              inputFiles.each{ file -> 
-                assert file.exists() :
-                  "Error in module '${key}' id '${id}' argument '${par.plainName}'.\n" +
-                  "  Required input file does not exist.\n" +
-                  "  Path: '$file'.\n" +
-                  "  Expected input file to exist"
-              }
-            }
-            inputFiles 
-          } 
-
-        // remove input files
-        def argsExclInputFiles = thisConfig.functionality.allArguments
-          .findAll { (it.type != "file" || it.direction != "input") && combinedArgs.containsKey(it.plainName) }
-          .collectEntries { par ->
-            def parName = par.plainName
-            def val = combinedArgs[parName]
-            if (par.multiple && val instanceof Collection) {
-              val = val.join(par.multiple_sep)
-            }
-            if (par.direction == "output" && par.type == "file") {
-              val = val.replaceAll('\\$id', id).replaceAll('\\$key', key)
-            }
-            [parName, val]
-          }
-
-        [ id ] + inputPaths + [ argsExclInputFiles, resourcesDir ]
-      }
-      | processObj
-      | map { output ->
-        def outputFiles = thisConfig.functionality.allArguments
-          .findAll { it.type == "file" && it.direction == "output" }
-          .indexed()
-          .collectEntries{ index, par ->
-            out = output[index + 1]
-            // strip dummy '.exitcode' file from output (see nextflow-io/nextflow#2678)
-            if (!out instanceof List || out.size() <= 1) {
-              if (par.multiple) {
-                out = []
-              } else {
-                assert !par.required :
-                    "Error in module '${key}' id '${output[0]}' argument '${par.plainName}'.\n" +
-                    "  Required output file is missing"
-                out = null
-              }
-            } else if (out.size() == 2 && !par.multiple) {
-              out = out[1]
-            } else {
-              out = out.drop(1)
-            }
-            [ par.plainName, out ]
-          }
-        
-        // drop null outputs
-        outputFiles.removeAll{it.value == null}
-
-        if (processArgs.auto.simplifyOutput && outputFiles.size() == 1) {
-          outputFiles = outputFiles.values()[0]
-        }
-
-        [ output[0], outputFiles ]
-      }
+      | processWf
 
     // join the output [id, output] with the previous state [id, state, ...]
     out1_ = out0_.join(mid2_, failOnDuplicate: true)
@@ -1085,7 +1087,7 @@ def workflowFactory(Map args) {
 myWfInstance = workflowFactory([:])
 
 // add workflow to environment
-ScriptMeta.current().addDefinition(myWfInstance)
+nextflow.script.ScriptMeta.current().addDefinition(myWfInstance)
 
 // anonymous workflow for running this module as a standalone
 workflow {
