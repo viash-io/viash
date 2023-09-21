@@ -21,6 +21,12 @@ def assertMapKeys(map, expectedKeys, requiredKeys, mapName) {
   }
 }
 
+def getPublishDir() {
+  return params.containsKey("publish_dir") ? params.publish_dir : 
+    params.containsKey("publishDir") ? params.publishDir : 
+    null
+}
+
 // TODO: unit test processDirectives
 def processDirectives(Map drctv) {
   // remove null values
@@ -449,10 +455,7 @@ def processProcessArgs(Map args) {
     // assert params.containsKey("publishDir") || params.containsKey("publish_dir") : 
     //   "Error in module '${processArgs['key']}': if auto.publish is true, params.publish_dir needs to be defined.\n" +
     //   "  Example: params.publish_dir = \"./output/\""
-    def publishDir = 
-      params.containsKey("publish_dir") ? params.publish_dir : 
-      params.containsKey("publishDir") ? params.publishDir : 
-      null
+    def publishDir = getPublishDir()
     
     if (publishDir != null) {
       processArgs.directives.publishDir = [[ 
