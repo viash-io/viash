@@ -199,7 +199,7 @@ object DependencyResolver {
         case(scriptPath, info) =>
           runnerId match {
             case None => true
-            case Some(r) => info("runner") == r
+            case Some(r) => (info.get("runner") orElse info.get("platform")) == Some(r)
           }
       }
       .headOption
