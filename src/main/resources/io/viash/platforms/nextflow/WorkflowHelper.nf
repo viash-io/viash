@@ -959,7 +959,7 @@ private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params,
       // if stub run, explicitly add an id if missing
       id = id ? id : "stub" + index
     }
-    assert id != null: "Each parameter set should have at least an ID."
+    assert id != null: "Each parameter set should have at least an 'id'"
     // Add regular parameters together with parameters passed with 'param_list'
     def combinedArgsValues = globalParamsValues + parValues
 
