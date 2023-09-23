@@ -29,4 +29,6 @@ object NextflowHelper {
   lazy val workflowHelper: String = readSource("WorkflowHelper.nf")
   lazy val profilesHelper: String = readSource("ProfilesHelper.config")
   lazy val dataflowHelper: String = readSource("DataflowHelper.nf")
+
+  // cat src/main/resources/io/viash/platforms/nextflow/*/*.nf > src/main/resources/io/viash/platforms/nextflow/WorkflowHelper.nf
 }

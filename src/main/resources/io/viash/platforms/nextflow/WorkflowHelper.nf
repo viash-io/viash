@@ -1,141 +1,29 @@
-/////////////////////////////////////
-// Viash Workflow helper functions //
-/////////////////////////////////////
+def _processArgumentGroup(argumentGroups, name, arguments) {
+  def argNamesInGroups = argumentGroups.collectMany{it.arguments.findAll{it instanceof String}}.toSet()
 
-import java.util.regex.Pattern
-import java.io.BufferedReader
-import java.io.FileReader
-import java.nio.file.Paths
-import java.nio.file.Files
-import groovy.json.JsonSlurper
-import groovy.text.SimpleTemplateEngine
-import org.yaml.snakeyaml.Yaml
+  // Check if 'arguments' is in 'argumentGroups'. 
+  def argumentsNotInGroup = arguments.findAll{arg -> !(argNamesInGroups.contains(arg.plainName))}
 
-// Recurse upwards until we find a '.build.yaml' file
-def findBuildYamlFile(path) {
-  def child = path.resolve(".build.yaml")
-  if (Files.isDirectory(path) && Files.exists(child)) {
-    return child
+  // Check whether an argument group of 'name' exists.
+  def existing = argumentGroups.find{gr -> name == gr.name}
+
+  // if there are no arguments missing from the argument group, just return the existing group (if any)
+  if (argumentsNotInGroup.isEmpty()) {
+    return existing == null ? [] : [existing]
+  
+  // if there are missing arguments and there is an existing group, add the missing arguments to it
+  } else if (existing != null) {
+    def newEx = existing.clone()
+    newEx.arguments.addAll(argumentsNotInGroup.findAll{it !instanceof String})
+    return [newEx]
+
+  // else create a new group
   } else {
-    def parent = path.getParent()
-    if (parent == null) {
-      return null
-    } else {
-      return findBuildYamlFile(parent)
-    }
+    def newEx = [name: name, arguments: argumentsNotInGroup.findAll{it !instanceof String}]
+    return [newEx]
   }
 }
-
-// get the root of the target folder
-def getRootDir() {
-  def dir = findBuildYamlFile(projectDir.toAbsolutePath())
-  assert dir != null: "Could not find .build.yaml in the folder structure"
-  dir.getParent()
-}
-
-// param helpers //
-def paramExists(name) {
-  return params.containsKey(name) && params[name] != ""
-}
-
-def assertParamExists(name, description) {
-  if (!paramExists(name)) {
-    exit 1, "ERROR: Please provide a --${name} parameter ${description}"
-  }
-}
-
-// helper functions for reading params from file //
-def getChild(parent, child) {
-  if (child.contains("://") || Paths.get(child).isAbsolute()) {
-    child
-  } else {
-    def parentAbsolute = Paths.get(parent).toAbsolutePath().toString()
-    parentAbsolute.replaceAll('/[^/]*$', "/") + child
-  }
-}
-
-def readCsv(file_path) {
-  def output = []
-  def inputFile = file_path !instanceof Path ? file(file_path) : file_path
-
-  // todo: allow escaped quotes in string
-  // todo: allow single quotes?
-  def splitRegex = Pattern.compile(''',(?=(?:[^"]*"[^"]*")*[^"]*$)''')
-  def removeQuote = Pattern.compile('''"(.*)"''')
-
-  def br = Files.newBufferedReader(inputFile)
-
-  def row = -1
-  def header = null
-  while (br.ready() && header == null) {
-    def line = br.readLine()
-    row++
-    if (!line.startsWith("#")) {
-      header = splitRegex.split(line, -1).collect{field ->
-        m = removeQuote.matcher(field)
-        m.find() ? m.replaceFirst('$1') : field
-      }
-    }
-  }
-  assert header != null: "CSV file should contain a header"
-
-  while (br.ready()) {
-    def line = br.readLine()
-    row++
-    if (line == null) {
-      br.close()
-      break
-    }
-
-    if (!line.startsWith("#")) {
-      def predata = splitRegex.split(line, -1)
-      def data = predata.collect{field ->
-        if (field == "") {
-          return null
-        }
-        m = removeQuote.matcher(field)
-        if (m.find()) {
-          return m.replaceFirst('$1')
-        } else {
-          return field
-        }
-      }
-      assert header.size() == data.size(): "Row $row should contain the same number as fields as the header"
-      
-      def dataMap = [header, data].transpose().collectEntries().findAll{it.value != null}
-      output.add(dataMap)
-    }
-  }
-
-  output
-}
-
-def readJsonBlob(str) {
-  def jsonSlurper = new JsonSlurper()
-  jsonSlurper.parseText(str)
-}
-
-def readJson(file_path) {
-  def inputFile = file_path !instanceof Path ? file(file_path) : file_path
-  def jsonSlurper = new JsonSlurper()
-  jsonSlurper.parse(inputFile)
-}
-
-def readYamlBlob(str) {
-  def yamlSlurper = new Yaml()
-  yamlSlurper.load(str)
-}
-
-def readYaml(file_path) {
-  def inputFile = file_path !instanceof Path ? file(file_path) : file_path
-  def yamlSlurper = new Yaml()
-  yamlSlurper.load(inputFile)
-}
-
-// helper functions for reading a viash config in groovy //
-
-// based on how Functionality.scala is implemented
-def processArgument(arg) {
+def _processArgument(arg) {
   arg.multiple = arg.multiple != null ? arg.multiple : false
   arg.required = arg.required != null ? arg.required : false
   arg.direction = arg.direction != null ? arg.direction : "input"
@@ -183,535 +71,101 @@ def processArgument(arg) {
   arg
 }
 
-// based on how Functionality.scala is implemented
-def processArgumentGroup(argumentGroups, name, arguments) {
-  def argNamesInGroups = argumentGroups.collectMany{it.arguments.findAll{it instanceof String}}.toSet()
-
-  // Check if 'arguments' is in 'argumentGroups'. 
-  def argumentsNotInGroup = arguments.findAll{arg -> !(argNamesInGroups.contains(arg.plainName))}
-
-  // Check whether an argument group of 'name' exists.
-  def existing = argumentGroups.find{gr -> name == gr.name}
-
-  // if there are no arguments missing from the argument group, just return the existing group (if any)
-  if (argumentsNotInGroup.isEmpty()) {
-    return existing == null ? [] : [existing]
-  
-  // if there are missing arguments and there is an existing group, add the missing arguments to it
-  } else if (existing != null) {
-    def newEx = existing.clone()
-    newEx.arguments.addAll(argumentsNotInGroup.findAll{it !instanceof String})
-    return [newEx]
-
-  // else create a new group
-  } else {
-    def newEx = [name: name, arguments: argumentsNotInGroup.findAll{it !instanceof String}]
-    return [newEx]
-  }
-}
-
-// based on how Functionality.scala is implemented
-def processConfig(config) {
-  // TODO: assert .functionality etc.
-  if (config.functionality.inputs) {
-    System.err.println("Warning: .functionality.inputs is deprecated. Please use .functionality.arguments instead.")
-  }
-  if (config.functionality.outputs) {
-    System.err.println("Warning: .functionality.outputs is deprecated. Please use .functionality.arguments instead.")
-  }
-
-  // set defaults for inputs
-  config.functionality.inputs = 
-    (config.functionality.inputs != null ? config.functionality.inputs : []).collect{arg ->
-      arg.type = arg.type != null ? arg.type : "file"
-      arg.direction = "input"
-      processArgument(arg)
-    }
-  // set defaults for outputs
-  config.functionality.outputs = 
-    (config.functionality.outputs != null ? config.functionality.outputs : []).collect{arg ->
-      arg.type = arg.type != null ? arg.type : "file"
-      arg.direction = "output"
-      processArgument(arg)
-    }
-  // set defaults for arguments
-  config.functionality.arguments = 
-    (config.functionality.arguments != null ? config.functionality.arguments : []).collect{arg ->
-      processArgument(arg)
-    }
-  // set defaults for argument_group arguments
-  config.functionality.argument_groups =
-    (config.functionality.argument_groups != null ? config.functionality.argument_groups : []).collect{grp ->
-      grp.arguments = (grp.arguments != null ? grp.arguments : []).collect{arg ->
-        arg instanceof String ? arg.replaceAll("^-*", "") : processArgument(arg)
-      }
-      grp
-    }
-
-  // create combined arguments list
-  config.functionality.allArguments = 
-    config.functionality.inputs +
-    config.functionality.outputs +
-    config.functionality.arguments +
-    config.functionality.argument_groups.collectMany{ group ->
-      group.arguments.findAll{ it !instanceof String }
-    }
-  
-  // add missing argument groups (based on Functionality::allArgumentGroups())
-  def argGroups = config.functionality.argument_groups
-  def inputGroup = processArgumentGroup(argGroups, "Inputs", config.functionality.inputs)
-  def outputGroup = processArgumentGroup(argGroups, "Outputs", config.functionality.outputs)
-  def defaultGroup = processArgumentGroup(argGroups, "Arguments", config.functionality.arguments)
-  def groupsFiltered = argGroups.findAll(gr -> !(["Inputs", "Outputs", "Arguments"].contains(gr.name)))
-  config.functionality.allArgumentGroups = inputGroup + outputGroup + defaultGroup + groupsFiltered
-
-  config
-}
-
-def readConfig(file) {
-  def config = readYaml(file != null ? file : "$projectDir/config.vsh.yaml")
-  processConfig(config)
-}
-
-// recursively merge two maps
-def mergeMap(Map lhs, Map rhs) {
-  return rhs.inject(lhs.clone()) { map, entry ->
-    if (map[entry.key] instanceof Map && entry.value instanceof Map) {
-      map[entry.key] = mergeMap(map[entry.key], entry.value)
-    } else if (map[entry.key] instanceof Collection && entry.value instanceof Collection) {
-      map[entry.key] += entry.value
-    } else {
-      map[entry.key] = entry.value
-    }
-    return map
-  }
-}
-
-def addGlobalParams(config) {
-  def localConfig = [
-    "functionality" : [
-      "argument_groups": [
-        [
-          "name": "Nextflow input-output arguments",
-          "description": "Input/output parameters for Nextflow itself. Please note that both publishDir and publish_dir are supported but at least one has to be configured.",
-          "arguments" : [
-            [
-              'name': '--publish_dir',
-              'required': true,
-              'type': 'string',
-              'description': 'Path to an output directory.',
-              'example': 'output/',
-              'multiple': false
-            ],
-            [
-              'name': '--param_list',
-              'required': false,
-              'type': 'string',
-              'description': '''Allows inputting multiple parameter sets to initialise a Nextflow channel. A `param_list` can either be a list of maps, a csv file, a json file, a yaml file, or simply a yaml blob.
-              |
-              |* A list of maps (as-is) where the keys of each map corresponds to the arguments of the pipeline. Example: in a `nextflow.config` file: `param_list: [ ['id': 'foo', 'input': 'foo.txt'], ['id': 'bar', 'input': 'bar.txt'] ]`.
-              |* A csv file should have column names which correspond to the different arguments of this pipeline. Example: `--param_list data.csv` with columns `id,input`.
-              |* A json or a yaml file should be a list of maps, each of which has keys corresponding to the arguments of the pipeline. Example: `--param_list data.json` with contents `[ {'id': 'foo', 'input': 'foo.txt'}, {'id': 'bar', 'input': 'bar.txt'} ]`.
-              |* A yaml blob can also be passed directly as a string. Example: `--param_list "[ {'id': 'foo', 'input': 'foo.txt'}, {'id': 'bar', 'input': 'bar.txt'} ]"`.
-              |
-              |When passing a csv, json or yaml file, relative path names are relativized to the location of the parameter file. No relativation is performed when `param_list` is a list of maps (as-is) or a yaml blob.'''.stripMargin(),
-              'example': 'my_params.yaml',
-              'multiple': false,
-              'hidden': true
-            ],
-          ]
-        ]
-      ]
-    ]
-  ]
-
-  return processConfig(mergeMap(config, localConfig))
-}
-
-// helper functions for generating help // 
-
-// based on io.viash.helpers.Format.wordWrap
-def formatWordWrap(str, maxLength) {
-  def words = str.split("\\s").toList()
-
-  def word = null
-  def line = ""
-  def lines = []
-  while(!words.isEmpty()) {
-    word = words.pop()
-    if (line.length() + word.length() + 1 <= maxLength) {
-      line = line + " " + word
-    } else {
-      lines.add(line)
-      line = word
-    }
-    if (words.isEmpty()) {
-      lines.add(line)
-    }
-  }
-  return lines
-}
-
-// based on Format.paragraphWrap
-def paragraphWrap(str, maxLength) {
-  def outLines = []
-  str.split("\n").each{par ->
-    def words = par.split("\\s").toList()
-
-    def word = null
-    def line = words.pop()
-    while(!words.isEmpty()) {
-      word = words.pop()
-      if (line.length() + word.length() + 1 <= maxLength) {
-        line = line + " " + word
-      } else {
-        outLines.add(line)
-        line = word
-      }
-    }
-    if (words.isEmpty()) {
-      outLines.add(line)
-    }
-  }
-  return outLines
-}
-
-def generateArgumentHelp(param) {
-  // alternatives are not supported
-  // def names = param.alternatives ::: List(param.name)
-
-  def unnamedProps = [
-    ["required parameter", param.required],
-    ["multiple values allowed", param.multiple],
-    ["output", param.direction.toLowerCase() == "output"],
-    ["file must exist", param.type == "file" && param.must_exist]
-  ].findAll{it[1]}.collect{it[0]}
-  
-  def dflt = null
-  if (param.default != null) {
-    if (param.default instanceof List) {
-      dflt = param.default.join(param.multiple_sep != null ? param.multiple_sep : ", ")
-    } else {
-      dflt = param.default.toString()
-    }
-  }
-  def example = null
-  if (param.example != null) {
-    if (param.example instanceof List) {
-      example = param.example.join(param.multiple_sep != null ? param.multiple_sep : ", ")
-    } else {
-      example = param.example.toString()
-    }
-  }
-  def min = param.min?.toString()
-  def max = param.max?.toString()
-
-  def escapeChoice = { choice ->
-    def s1 = choice.replaceAll("\\n", "\\\\n")
-    def s2 = s1.replaceAll("\"", """\\\"""")
-    s2.contains(",") || s2 != choice ? "\"" + s2 + "\"" : s2
-  }
-  def choices = param.choices == null ? 
-    null : 
-    "[ " + param.choices.collect{escapeChoice(it.toString())}.join(", ") + " ]"
-
-  def namedPropsStr = [
-    ["type", ([param.type] + unnamedProps).join(", ")],
-    ["default", dflt],
-    ["example", example],
-    ["choices", choices],
-    ["min", min],
-    ["max", max]
-  ]
-    .findAll{it[1]}
-    .collect{"\n        " + it[0] + ": " + it[1].replaceAll("\n", "\\n")}
-    .join("")
-  
-  def descStr = param.description == null ?
-    "" :
-    paragraphWrap("\n" + param.description.trim(), 80 - 8).join("\n        ")
-  
-  "\n    --" + param.plainName +
-    namedPropsStr +
-    descStr
-}
-
-// Based on Helper.generateHelp() in Helper.scala
-def generateHelp(config) {
-  def fun = config.functionality
-
-  // PART 1: NAME AND VERSION
-  def nameStr = fun.name + 
-    (fun.version == null ? "" : " " + fun.version)
-
-  // PART 2: DESCRIPTION
-  def descrStr = fun.description == null ? 
-    "" :
-    "\n\n" + paragraphWrap(fun.description.trim(), 80).join("\n")
-
-  // PART 3: Usage
-  def usageStr = fun.usage == null ? 
-    "" :
-    "\n\nUsage:\n" + fun.usage.trim()
-
-  // PART 4: Options
-  def argGroupStrs = fun.allArgumentGroups.collect{argGroup ->
-    def name = argGroup.name
-    def descriptionStr = argGroup.description == null ?
-      "" :
-      "\n    " + paragraphWrap(argGroup.description.trim(), 80-4).join("\n    ") + "\n"
-    def arguments = argGroup.arguments.collect{arg -> 
-      arg instanceof String ? fun.allArguments.find{it.plainName == arg} : arg
-    }.findAll{it != null}
-    def argumentStrs = arguments.collect{param -> generateArgumentHelp(param)}
-    
-    "\n\n$name:" +
-      descriptionStr +
-      argumentStrs.join("\n")
-  }
-
-  // FINAL: combine
-  def out = nameStr + 
-    descrStr +
-    usageStr + 
-    argGroupStrs.join("")
-
-  return out
-}
-
-def helpMessage(config) {
-  if (paramExists("help")) {
-    def mergedConfig = addGlobalParams(config)
-    def helpStr = generateHelp(mergedConfig)
-    println(helpStr)
-    exit 0
-  }
-}
-
-def _guessParamListFormat(params) {
-  if (!params.containsKey("param_list") || params.param_list == null) {
-    "none"
-  } else {
-    def param_list = params.param_list
-
-    if (param_list !instanceof String) {
-      "asis"
-    } else if (param_list.endsWith(".csv")) {
-      "csv"
-    } else if (param_list.endsWith(".json") || param_list.endsWith(".jsn")) {
-      "json"
-    } else if (param_list.endsWith(".yaml") || param_list.endsWith(".yml")) {
-      "yaml"
-    } else {
-      "yaml_blob"
-    }
-  }
-}
-
-viashChannelDeprecationWarningPrinted = false
-
-def paramsToList(params, config) {
-  if (!viashChannelDeprecationWarningPrinted) {
-    viashChannelDeprecationWarningPrinted = true
-    System.err.println("Warning: paramsToList has deprecated in Viash 0.7.0. " +
-                      "Please use a combination of channelFromParams and preprocessInputs.")
-  }
-  // fetch default params from functionality
-  def defaultArgs = config.functionality.allArguments
-    .findAll { it.containsKey("default") }
-    .collectEntries { [ it.plainName, it.default ] }
-
-  // fetch overrides in params
-  def paramArgs = config.functionality.allArguments
-    .findAll { params.containsKey(it.plainName) }
-    .collectEntries { [ it.plainName, params[it.plainName] ] }
-  
-  // check multi input params
-  // objects should be closures and not functions, thanks to FunctionDef
-  def multiParamFormat = _guessParamListFormat(params)
-
-  def multiOptionFunctions = [ 
-    "csv": {[it, readCsv(it)]},
-    "json": {[it, readJson(it)]},
-    "yaml": {[it, readYaml(it)]},
-    "yaml_blob": {[null, readYamlBlob(it)]},
-    "asis": {[null, it]},
-    "none": {[null, [[:]]]}
-  ]
-  assert multiOptionFunctions.containsKey(multiParamFormat): 
-    "Format of provided --param_list not recognised.\n" +
-    "You can use '--param_list_format' to manually specify the format.\n" +
-    "Found: '$multiParamFormat'. Expected: one of 'csv', 'json', 'yaml', 'yaml_blob', 'asis' or 'none'"
-
-  // fetch multi param inputs
-  def multiOptionFun = multiOptionFunctions.get(multiParamFormat)
-  // todo: add try catch
-  def multiOptionOut = multiOptionFun(params.containsKey("param_list") ? params.param_list : "")
-  def paramList = multiOptionOut[1]
-  def multiFile = multiOptionOut[0]
-
-  // data checks
-  assert paramList instanceof List: "--param_list should contain a list of maps"
-  for (value in paramList) {
-    assert value instanceof Map: "--param_list should contain a list of maps"
-  }
-  
-  // combine parameters
-  def processedParams = paramList.collect{ multiParam ->
-    // combine params
-    def combinedArgs = defaultArgs + paramArgs + multiParam
-
-    if (workflow.stubRun) {
-      // if stub run, explicitly add an id if missing
-      combinedArgs = [id: "stub"] + combinedArgs
-    } else {
-      // else check whether required arguments exist
-      config.functionality.allArguments
-        .findAll { it.required }
-        .forEach { par ->
-          assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
-        }
-    }
-    
-    // process arguments
-    def inputs = config.functionality.allArguments
-      .findAll{ par -> combinedArgs.containsKey(par.plainName) }
-      .collectEntries { par ->
-        // split on 'multiple_sep'
-        if (par.multiple) {
-          parData = combinedArgs[par.plainName]
-          if (parData instanceof List) {
-            parData = parData.collect{it instanceof String ? it.split(par.multiple_sep) : it }
-          } else if (parData instanceof String) {
-            parData = parData.split(par.multiple_sep)
-          } else if (parData == null) {
-            parData = []
-          } else {
-            parData = [ parData ]
-          }
-        } else {
-          parData = [ combinedArgs[par.plainName] ]
-        }
-
-        // flatten
-        parData = parData.flatten()
-
-        // cast types
-        if (par.type == "file" && ((par.direction != null ? par.direction : "input") == "input")) {
-          parData = parData.collect{path ->
-            if (path !instanceof String) {
-              path
-            } else if (multiFile) {
-              file(getChild(multiFile, path))
-            } else {
-              file(path)
-            }
-          }.flatten()
-        } else if (par.type == "integer") {
-          parData = parData.collect{it as Integer}
-        } else if (par.type == "double") {
-          parData = parData.collect{it as Double}
-        } else if (par.type == "boolean" || par.type == "boolean_true" || par.type == "boolean_false") {
-          parData = parData.collect{it as Boolean}
-        }
-        // simplify list to value if need be
-        if (!par.multiple) {
-          assert parData.size() == 1 : 
-            "Error: argument ${par.plainName} has too many values.\n" +
-            "  Expected amount: 1. Found: ${parData.size()}"
-          parData = parData[0]
-        }
-
-        // return pair
-        [ par.plainName, parData ]
-      }
-      // remove parameters which were explicitly set to null
-      .findAll{ par -> par != null }
-    }
-    
-  
-  // check processed params
-  processedParams.forEach { args ->
-    assert args.containsKey("id"): "Each argument set should have an 'id'. Argument set: $args"
-  }
-  def ppIds = processedParams.collect{it.id}
-  assert ppIds.size() == ppIds.unique().size() : "All argument sets should have unique ids. Detected ids: $ppIds"
-
-  processedParams
-}
-
-def paramsToChannel(params, config) {
-  if (!viashChannelDeprecationWarningPrinted) {
-    viashChannelDeprecationWarningPrinted = true
-    System.err.println("Warning: paramsToChannel has deprecated in Viash 0.7.0. " +
-                      "Please use a combination of channelFromParams and preprocessInputs.")
-  }
-  Channel.fromList(paramsToList(params, config))
-}
-
-def viashChannel(params, config) {
-  if (!viashChannelDeprecationWarningPrinted) {
-    viashChannelDeprecationWarningPrinted = true
-    System.err.println("Warning: viashChannel has deprecated in Viash 0.7.0. " +
-                      "Please use a combination of channelFromParams and preprocessInputs.")
-  }
-  paramsToChannel(params, config)
-    | map{tup -> [tup.id, tup]}
-}
-
 /**
- * Split parameters for arguments that accept multiple values using their separator
- *
- * @param paramList A Map containing parameters to split.
- * @param config A Map of the Viash configuration. This Map can be generated from the config file
- *               using the readConfig() function.
- *
- * @return A Map of parameters where the parameter values have been split into a list using
- *         their seperator.
+ * Apply the argument settings specified in a Viash config to a list of parameter sets.
+ *    - Split the parameter values according to their seperator if 
+ *       the parameter accepts multiple values
+ *    - Cast the parameters to their corect types.
+ *    - Assertions:
+ *        ~ Check if any unknown parameters are found
+ *        ~ Check if the ID of the parameter set is unique across all sets.
+ * 
+ * @return The input parameters that have been processed.
  */
-Map<String, Object> _splitParams(Map<String, Object> parValues, Map config){
-  def parsedParamValues = parValues.collectEntries { parName, parValue ->
-    def parameterSettings = config.functionality.allArguments.find({it.plainName == parName})
 
-    if (!parameterSettings) {
-      // if argument is not found, do not alter 
-      return [parName, parValue]
+List<Tuple> applyConfig(List<Tuple> parameterSets, Map config){
+  def processedparameterSets = parameterSets.collect({ parameterSet ->
+    def id = parameterSet[0]
+    def paramValues = parameterSet[1]
+    def passthrough = parameterSet.drop(2)
+    def processedSet = applyConfigToOneParameterSet(paramValues, config)
+    [id, processedSet] + passthrough
+  })
+
+  _checkUniqueIds(processedparameterSets)
+  return processedparameterSets
+}
+/**
+ * Cast parameters to the correct type as defined in the Viash config
+ *
+ * @param parValues A Map of input arguments.
+ *
+ * @return The input arguments that have been cast to the type from the viash config.
+ */
+private Map<String, Object> _castParamTypes(Map<String, Object> parValues, Map config) {
+  // Cast the input to the correct type according to viash config
+  def castParValues = parValues.collectEntries({ parName, parValue ->
+    paramSettings = config.functionality.allArguments.find({it.plainName == parName})
+    // dont parse parameters like publish_dir ( in which case paramSettings = null)
+    parType = paramSettings ? paramSettings.get("type", null) : null
+    if (parValue !instanceof Collection) {
+      parValue = [parValue]
     }
-    if (parameterSettings.multiple) { // Check if parameter can accept multiple values
-      if (parValue instanceof Collection) {
-          parValue = parValue.collect{it instanceof String ? it.split(parameterSettings.multiple_sep) : it }
-      } else if (parValue instanceof String) {
-          parValue = parValue.split(parameterSettings.multiple_sep)
-      } else if (parValue == null) {
-          parValue = []
-      } else {
-          parValue = [ parValue ]
+    if (parType == "file" && ((paramSettings.direction != null ? paramSettings.direction : "input") == "input")) {
+      parValue = parValue.collect{ path ->
+        if (path !instanceof String) {
+          path
+        } else {
+          file(path)
+        }
       }
-      parValue = parValue.flatten()
+    } else if (parType == "integer") {
+      parValue = parValue.collect{it as Integer}
+    } else if (parType == "double") {
+      parValue = parValue.collect{it as Double}
+    } else if (parType == "boolean" || 
+                parType == "boolean_true" || 
+                parType == "boolean_false") {
+      parValue = parValue.collect{it as Boolean}
     }
-    // For all parameters check if multiple values are only passed for
-    // arguments that allow it. Quietly simplify lists of length 1.
-    if (!parameterSettings.multiple && parValue instanceof Collection) {
+
+    // simplify list to value if need be
+    if (paramSettings && !paramSettings.multiple) {
       assert parValue.size() == 1 : 
-      "Error: argument ${parName} has too many values.\n" +
-      "  Expected amount: 1. Found: ${parValue.size()}"
+        "Error: argument ${parName} has too many values.\n" +
+        "  Expected amount: 1. Found: ${parValue.size()}"
       parValue = parValue[0]
     }
     [parName, parValue]
-  }
-  return parsedParamValues
+  })
+  return castParValues
 }
 
 /**
- * Check if the ids are unique across parameter sets
- *
- * @param parameterSets a list of parameter sets.
+ * Apply the argument settings specified in a Viash config to a single parameter set.
+ *    - Split the parameter values according to their seperator if 
+ *       the parameter accepts multiple values
+ *    - Cast the parameters to their corect types.
+ *    - Assertions:
+ *        ~ Check if any unknown parameters are found
+ * 
+ * @param paramValues A Map of parameter to be processed. All parameters must 
+ *                    also be specified in the Viash config.
+ * @param config: A Map of the Viash configuration. This Map can be generated from 
+ *                the config file using the readConfig() function.
+ * @return The input parameters that have been processed.
  */
-private void _checkUniqueIds(List<Tuple2<String, Map<String, Object>>> parameterSets) {
-  def ppIds = parameterSets.collect{it[0]}
-  assert ppIds.size() == ppIds.unique().size() : "All argument sets should have unique ids. Detected ids: $ppIds"
-}
+Map<String, Object> applyConfigToOneParameterSet(Map<String, Object> paramValues, Map config){
+  def splitParamValues = _splitParams(paramValues, config)
+  def castParamValues = _castParamTypes(splitParamValues, config)
 
+  // Check if any unexpected arguments were passed
+  def knownParams = config.functionality.allArguments.collect({it.plainName}) + ["publishDir", "publish_dir"]
+  castParamValues.each({parName, parValue ->
+      assert parName in knownParams: "Unknown parameter. Parameter $parName should be in $knownParams"
+  })
+  return castParamValues
+}
 /**
  * Resolve the file paths in the parameters relative to given path
  *
@@ -730,10 +184,10 @@ private Map<String, Object> _resolvePathsRelativeTo(Map paramList, Map config, S
     if (argSettings && argSettings.type == "file" && argSettings.direction == "input") {
       if (parValue instanceof Collection) {
         parValue = parValue.collect({path -> 
-          path !instanceof String ? path : file(getChild(relativeTo, path))
+          path !instanceof String ? path : file(_getChild(relativeTo, path))
         })
       } else {
-        parValue = parValue !instanceof String ? path : file(getChild(relativeTo, parValue))
+        parValue = parValue !instanceof String ? path : file(_getChild(relativeTo, parValue))
       }
     }
     [parName, parValue]
@@ -803,104 +257,6 @@ private List<Tuple2<String, Map>> _parseParamListArguments(Map params, Map confi
   }
 
   return paramSets
-}
-
-/**
- * Cast parameters to the correct type as defined in the Viash config
- *
- * @param parValues A Map of input arguments.
- *
- * @return The input arguments that have been cast to the type from the viash config.
- */
-
-private Map<String, Object> _castParamTypes(Map<String, Object> parValues, Map config) {
-  // Cast the input to the correct type according to viash config
-  def castParValues = parValues.collectEntries({ parName, parValue ->
-    paramSettings = config.functionality.allArguments.find({it.plainName == parName})
-    // dont parse parameters like publish_dir ( in which case paramSettings = null)
-    parType = paramSettings ? paramSettings.get("type", null) : null
-    if (parValue !instanceof Collection) {
-      parValue = [parValue]
-    }
-    if (parType == "file" && ((paramSettings.direction != null ? paramSettings.direction : "input") == "input")) {
-      parValue = parValue.collect{ path ->
-        if (path !instanceof String) {
-          path
-        } else {
-          file(path)
-        }
-      }
-    } else if (parType == "integer") {
-      parValue = parValue.collect{it as Integer}
-    } else if (parType == "double") {
-      parValue = parValue.collect{it as Double}
-    } else if (parType == "boolean" || 
-                parType == "boolean_true" || 
-                parType == "boolean_false") {
-      parValue = parValue.collect{it as Boolean}
-    }
-
-    // simplify list to value if need be
-    if (paramSettings && !paramSettings.multiple) {
-      assert parValue.size() == 1 : 
-        "Error: argument ${parName} has too many values.\n" +
-        "  Expected amount: 1. Found: ${parValue.size()}"
-      parValue = parValue[0]
-    }
-    [parName, parValue]
-  })
-  return castParValues
-}
-
-/**
- * Apply the argument settings specified in a Viash config to a single parameter set.
- *    - Split the parameter values according to their seperator if 
- *       the parameter accepts multiple values
- *    - Cast the parameters to their corect types.
- *    - Assertions:
- *        ~ Check if any unknown parameters are found
- * 
- * @param paramValues A Map of parameter to be processed. All parameters must 
- *                    also be specified in the Viash config.
- * @param config: A Map of the Viash configuration. This Map can be generated from 
- *                the config file using the readConfig() function.
- * @return The input parameters that have been processed.
- */
-Map<String, Object> applyConfigToOneParameterSet(Map<String, Object> paramValues, Map config){
-  def splitParamValues = _splitParams(paramValues, config)
-  def castParamValues = _castParamTypes(splitParamValues, config)
-
-  // Check if any unexpected arguments were passed
-  def knownParams = config.functionality.allArguments.collect({it.plainName}) + ["publishDir", "publish_dir"]
-  castParamValues.each({parName, parValue ->
-      assert parName in knownParams: "Unknown parameter. Parameter $parName should be in $knownParams"
-  })
-  return castParamValues
-}
-
-/**
- * Apply the argument settings specified in a Viash config to a list of parameter sets.
- *    - Split the parameter values according to their seperator if 
- *       the parameter accepts multiple values
- *    - Cast the parameters to their corect types.
- *    - Assertions:
- *        ~ Check if any unknown parameters are found
- *        ~ Check if the ID of the parameter set is unique across all sets.
- * 
- * @return The input parameters that have been processed.
- */
-
-List<Tuple> applyConfig(List<Tuple> parameterSets, Map config){
-  def processedparameterSets = parameterSets.collect({ parameterSet ->
-    def id = parameterSet[0]
-    def paramValues = parameterSet[1]
-    def passthrough = parameterSet.drop(2)
-    def processedSet = applyConfigToOneParameterSet(paramValues, config)
-    [id, processedSet] + passthrough
-  })
-
-  _checkUniqueIds(processedparameterSets)
-  return processedparameterSets
 }
 
 /**
@@ -1001,6 +357,185 @@ def channelFromParams(Map params, Map config) {
 }
 
 /**
+ * Check if the ids are unique across parameter sets
+ *
+ * @param parameterSets a list of parameter sets.
+ */
+private void _checkUniqueIds(List<Tuple2<String, Map<String, Object>>> parameterSets) {
+  def ppIds = parameterSets.collect{it[0]}
+  assert ppIds.size() == ppIds.unique().size() : "All argument sets should have unique ids. Detected ids: $ppIds"
+}
+
+// helper functions for reading params from file //
+def _getChild(parent, child) {
+  if (child.contains("://") || java.nio.file.Paths.get(child).isAbsolute()) {
+    child
+  } else {
+    def parentAbsolute = java.nio.file.Paths.get(parent).toAbsolutePath().toString()
+    parentAbsolute.replaceAll('/[^/]*$', "/") + child
+  }
+}
+
+def _guessParamListFormat(params) {
+  if (!params.containsKey("param_list") || params.param_list == null) {
+    "none"
+  } else {
+    def param_list = params.param_list
+
+    if (param_list !instanceof String) {
+      "asis"
+    } else if (param_list.endsWith(".csv")) {
+      "csv"
+    } else if (param_list.endsWith(".json") || param_list.endsWith(".jsn")) {
+      "json"
+    } else if (param_list.endsWith(".yaml") || param_list.endsWith(".yml")) {
+      "yaml"
+    } else {
+      "yaml_blob"
+    }
+  }
+}
+def paramsToChannel(params, config) {
+  if (!viashChannelDeprecationWarningPrinted) {
+    viashChannelDeprecationWarningPrinted = true
+    System.err.println("Warning: paramsToChannel has deprecated in Viash 0.7.0. " +
+                      "Please use a combination of channelFromParams and preprocessInputs.")
+  }
+  Channel.fromList(paramsToList(params, config))
+}
+viashChannelDeprecationWarningPrinted = false
+
+def paramsToList(params, config) {
+  if (!viashChannelDeprecationWarningPrinted) {
+    viashChannelDeprecationWarningPrinted = true
+    System.err.println("Warning: paramsToList has deprecated in Viash 0.7.0. " +
+                      "Please use a combination of channelFromParams and preprocessInputs.")
+  }
+  // fetch default params from functionality
+  def defaultArgs = config.functionality.allArguments
+    .findAll { it.containsKey("default") }
+    .collectEntries { [ it.plainName, it.default ] }
+
+  // fetch overrides in params
+  def paramArgs = config.functionality.allArguments
+    .findAll { params.containsKey(it.plainName) }
+    .collectEntries { [ it.plainName, params[it.plainName] ] }
+  
+  // check multi input params
+  // objects should be closures and not functions, thanks to FunctionDef
+  def multiParamFormat = _guessParamListFormat(params)
+
+  def multiOptionFunctions = [ 
+    "csv": {[it, readCsv(it)]},
+    "json": {[it, readJson(it)]},
+    "yaml": {[it, readYaml(it)]},
+    "yaml_blob": {[null, readYamlBlob(it)]},
+    "asis": {[null, it]},
+    "none": {[null, [[:]]]}
+  ]
+  assert multiOptionFunctions.containsKey(multiParamFormat): 
+    "Format of provided --param_list not recognised.\n" +
+    "You can use '--param_list_format' to manually specify the format.\n" +
+    "Found: '$multiParamFormat'. Expected: one of 'csv', 'json', 'yaml', 'yaml_blob', 'asis' or 'none'"
+
+  // fetch multi param inputs
+  def multiOptionFun = multiOptionFunctions.get(multiParamFormat)
+  // todo: add try catch
+  def multiOptionOut = multiOptionFun(params.containsKey("param_list") ? params.param_list : "")
+  def paramList = multiOptionOut[1]
+  def multiFile = multiOptionOut[0]
+
+  // data checks
+  assert paramList instanceof List: "--param_list should contain a list of maps"
+  for (value in paramList) {
+    assert value instanceof Map: "--param_list should contain a list of maps"
+  }
+  
+  // combine parameters
+  def processedParams = paramList.collect{ multiParam ->
+    // combine params
+    def combinedArgs = defaultArgs + paramArgs + multiParam
+
+    if (workflow.stubRun) {
+      // if stub run, explicitly add an id if missing
+      combinedArgs = [id: "stub"] + combinedArgs
+    } else {
+      // else check whether required arguments exist
+      config.functionality.allArguments
+        .findAll { it.required }
+        .forEach { par ->
+          assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
+        }
+    }
+    
+    // process arguments
+    def inputs = config.functionality.allArguments
+      .findAll{ par -> combinedArgs.containsKey(par.plainName) }
+      .collectEntries { par ->
+        // split on 'multiple_sep'
+        if (par.multiple) {
+          parData = combinedArgs[par.plainName]
+          if (parData instanceof List) {
+            parData = parData.collect{it instanceof String ? it.split(par.multiple_sep) : it }
+          } else if (parData instanceof String) {
+            parData = parData.split(par.multiple_sep)
+          } else if (parData == null) {
+            parData = []
+          } else {
+            parData = [ parData ]
+          }
+        } else {
+          parData = [ combinedArgs[par.plainName] ]
+        }
+
+        // flatten
+        parData = parData.flatten()
+
+        // cast types
+        if (par.type == "file" && ((par.direction != null ? par.direction : "input") == "input")) {
+          parData = parData.collect{path ->
+            if (path !instanceof String) {
+              path
+            } else if (multiFile) {
+              file(_getChild(multiFile, path))
+            } else {
+              file(path)
+            }
+          }.flatten()
+        } else if (par.type == "integer") {
+          parData = parData.collect{it as Integer}
+        } else if (par.type == "double") {
+          parData = parData.collect{it as Double}
+        } else if (par.type == "boolean" || par.type == "boolean_true" || par.type == "boolean_false") {
+          parData = parData.collect{it as Boolean}
+        }
+        // simplify list to value if need be
+        if (!par.multiple) {
+          assert parData.size() == 1 : 
+            "Error: argument ${par.plainName} has too many values.\n" +
+            "  Expected amount: 1. Found: ${parData.size()}"
+          parData = parData[0]
+        }
+
+        // return pair
+        [ par.plainName, parData ]
+      }
+      // remove parameters which were explicitly set to null
+      .findAll{ par -> par != null }
+    }
+    
+  
+  // check processed params
+  processedParams.forEach { args ->
+    assert args.containsKey("id"): "Each argument set should have an 'id'. Argument set: $args"
+  }
+  def ppIds = processedParams.collect{it.id}
+  assert ppIds.size() == ppIds.unique().size() : "All argument sets should have unique ids. Detected ids: $ppIds"
+
+  processedParams
+}
+
+/**
  * Process a list of Vdsl3 formatted parameters and apply a Viash config to them:
  *    - Gather default parameters from the Viash config and make 
  *      sure that they are correctly formatted (see applyConfig method).
@@ -1088,4 +623,1880 @@ def preprocessInputs(Map args) {
   }
 
   return preprocessInputsInstance.cloneWithName(wfKey)
+}
+/**
+ * Split parameters for arguments that accept multiple values using their separator
+ *
+ * @param paramList A Map containing parameters to split.
+ * @param config A Map of the Viash configuration. This Map can be generated from the config file
+ *               using the readConfig() function.
+ *
+ * @return A Map of parameters where the parameter values have been split into a list using
+ *         their seperator.
+ */
+Map<String, Object> _splitParams(Map<String, Object> parValues, Map config){
+  def parsedParamValues = parValues.collectEntries { parName, parValue ->
+    def parameterSettings = config.functionality.allArguments.find({it.plainName == parName})
+
+    if (!parameterSettings) {
+      // if argument is not found, do not alter 
+      return [parName, parValue]
+    }
+    if (parameterSettings.multiple) { // Check if parameter can accept multiple values
+      if (parValue instanceof Collection) {
+          parValue = parValue.collect{it instanceof String ? it.split(parameterSettings.multiple_sep) : it }
+      } else if (parValue instanceof String) {
+          parValue = parValue.split(parameterSettings.multiple_sep)
+      } else if (parValue == null) {
+          parValue = []
+      } else {
+          parValue = [ parValue ]
+      }
+      parValue = parValue.flatten()
+    }
+    // For all parameters check if multiple values are only passed for
+    // arguments that allow it. Quietly simplify lists of length 1.
+    if (!parameterSettings.multiple && parValue instanceof Collection) {
+      assert parValue.size() == 1 : 
+      "Error: argument ${parName} has too many values.\n" +
+      "  Expected amount: 1. Found: ${parValue.size()}"
+      parValue = parValue[0]
+    }
+    [parName, parValue]
+  }
+  return parsedParamValues
+}
+
+def viashChannel(params, config) {
+  if (!viashChannelDeprecationWarningPrinted) {
+    viashChannelDeprecationWarningPrinted = true
+    System.err.println("Warning: viashChannel has deprecated in Viash 0.7.0. " +
+                      "Please use a combination of channelFromParams and preprocessInputs.")
+  }
+  paramsToChannel(params, config)
+    | map{tup -> [tup.id, tup]}
+}
+// TODO: rename this to 'addGlobalArguments'
+def addGlobalParams(config) {
+  def localConfig = [
+    "functionality" : [
+      "argument_groups": [
+        [
+          "name": "Nextflow input-output arguments",
+          "description": "Input/output parameters for Nextflow itself. Please note that both publishDir and publish_dir are supported but at least one has to be configured.",
+          "arguments" : [
+            [
+              'name': '--publish_dir',
+              'required': true,
+              'type': 'string',
+              'description': 'Path to an output directory.',
+              'example': 'output/',
+              'multiple': false
+            ],
+            [
+              'name': '--param_list',
+              'required': false,
+              'type': 'string',
+              'description': '''Allows inputting multiple parameter sets to initialise a Nextflow channel. A `param_list` can either be a list of maps, a csv file, a json file, a yaml file, or simply a yaml blob.
+              |
+              |* A list of maps (as-is) where the keys of each map corresponds to the arguments of the pipeline. Example: in a `nextflow.config` file: `param_list: [ ['id': 'foo', 'input': 'foo.txt'], ['id': 'bar', 'input': 'bar.txt'] ]`.
+              |* A csv file should have column names which correspond to the different arguments of this pipeline. Example: `--param_list data.csv` with columns `id,input`.
+              |* A json or a yaml file should be a list of maps, each of which has keys corresponding to the arguments of the pipeline. Example: `--param_list data.json` with contents `[ {'id': 'foo', 'input': 'foo.txt'}, {'id': 'bar', 'input': 'bar.txt'} ]`.
+              |* A yaml blob can also be passed directly as a string. Example: `--param_list "[ {'id': 'foo', 'input': 'foo.txt'}, {'id': 'bar', 'input': 'bar.txt'} ]"`.
+              |
+              |When passing a csv, json or yaml file, relative path names are relativized to the location of the parameter file. No relativation is performed when `param_list` is a list of maps (as-is) or a yaml blob.'''.stripMargin(),
+              'example': 'my_params.yaml',
+              'multiple': false,
+              'hidden': true
+            ],
+          ]
+        ]
+      ]
+    ]
+  ]
+
+  return processConfig(_mergeMap(config, localConfig))
+}
+
+def _mergeMap(Map lhs, Map rhs) {
+  return rhs.inject(lhs.clone()) { map, entry ->
+    if (map[entry.key] instanceof Map && entry.value instanceof Map) {
+      map[entry.key] = _mergeMap(map[entry.key], entry.value)
+    } else if (map[entry.key] instanceof Collection && entry.value instanceof Collection) {
+      map[entry.key] += entry.value
+    } else {
+      map[entry.key] = entry.value
+    }
+    return map
+  }
+}
+def _generateArgumentHelp(param) {
+  // alternatives are not supported
+  // def names = param.alternatives ::: List(param.name)
+
+  def unnamedProps = [
+    ["required parameter", param.required],
+    ["multiple values allowed", param.multiple],
+    ["output", param.direction.toLowerCase() == "output"],
+    ["file must exist", param.type == "file" && param.must_exist]
+  ].findAll{it[1]}.collect{it[0]}
+  
+  def dflt = null
+  if (param.default != null) {
+    if (param.default instanceof List) {
+      dflt = param.default.join(param.multiple_sep != null ? param.multiple_sep : ", ")
+    } else {
+      dflt = param.default.toString()
+    }
+  }
+  def example = null
+  if (param.example != null) {
+    if (param.example instanceof List) {
+      example = param.example.join(param.multiple_sep != null ? param.multiple_sep : ", ")
+    } else {
+      example = param.example.toString()
+    }
+  }
+  def min = param.min?.toString()
+  def max = param.max?.toString()
+
+  def escapeChoice = { choice ->
+    def s1 = choice.replaceAll("\\n", "\\\\n")
+    def s2 = s1.replaceAll("\"", """\\\"""")
+    s2.contains(",") || s2 != choice ? "\"" + s2 + "\"" : s2
+  }
+  def choices = param.choices == null ? 
+    null : 
+    "[ " + param.choices.collect{escapeChoice(it.toString())}.join(", ") + " ]"
+
+  def namedPropsStr = [
+    ["type", ([param.type] + unnamedProps).join(", ")],
+    ["default", dflt],
+    ["example", example],
+    ["choices", choices],
+    ["min", min],
+    ["max", max]
+  ]
+    .findAll{it[1]}
+    .collect{"\n        " + it[0] + ": " + it[1].replaceAll("\n", "\\n")}
+    .join("")
+  
+  def descStr = param.description == null ?
+    "" :
+    _paragraphWrap("\n" + param.description.trim(), 80 - 8).join("\n        ")
+  
+  "\n    --" + param.plainName +
+    namedPropsStr +
+    descStr
+}
+
+// Based on Helper.generateHelp() in Helper.scala
+def _generateHelp(config) {
+  def fun = config.functionality
+
+  // PART 1: NAME AND VERSION
+  def nameStr = fun.name + 
+    (fun.version == null ? "" : " " + fun.version)
+
+  // PART 2: DESCRIPTION
+  def descrStr = fun.description == null ? 
+    "" :
+    "\n\n" + _paragraphWrap(fun.description.trim(), 80).join("\n")
+
+  // PART 3: Usage
+  def usageStr = fun.usage == null ? 
+    "" :
+    "\n\nUsage:\n" + fun.usage.trim()
+
+  // PART 4: Options
+  def argGroupStrs = fun.allArgumentGroups.collect{argGroup ->
+    def name = argGroup.name
+    def descriptionStr = argGroup.description == null ?
+      "" :
+      "\n    " + _paragraphWrap(argGroup.description.trim(), 80-4).join("\n    ") + "\n"
+    def arguments = argGroup.arguments.collect{arg -> 
+      arg instanceof String ? fun.allArguments.find{it.plainName == arg} : arg
+    }.findAll{it != null}
+    def argumentStrs = arguments.collect{param -> _generateArgumentHelp(param)}
+    
+    "\n\n$name:" +
+      descriptionStr +
+      argumentStrs.join("\n")
+  }
+
+  // FINAL: combine
+  def out = nameStr + 
+    descrStr +
+    usageStr + 
+    argGroupStrs.join("")
+
+  return out
+}
+
+// based on Format._paragraphWrap
+def _paragraphWrap(str, maxLength) {
+  def outLines = []
+  str.split("\n").each{par ->
+    def words = par.split("\\s").toList()
+
+    def word = null
+    def line = words.pop()
+    while(!words.isEmpty()) {
+      word = words.pop()
+      if (line.length() + word.length() + 1 <= maxLength) {
+        line = line + " " + word
+      } else {
+        outLines.add(line)
+        line = word
+      }
+    }
+    if (words.isEmpty()) {
+      outLines.add(line)
+    }
+  }
+  return outLines
+}
+
+def helpMessage(config) {
+  if (params.containsKey("help") && params.help) {
+    def mergedConfig = addGlobalParams(config)
+    def helpStr = _generateHelp(mergedConfig)
+    println(helpStr)
+    exit 0
+  }
+}
+def processConfig(config) {
+  // TODO: assert .functionality etc.
+  if (config.functionality.inputs) {
+    System.err.println("Warning: .functionality.inputs is deprecated. Please use .functionality.arguments instead.")
+  }
+  if (config.functionality.outputs) {
+    System.err.println("Warning: .functionality.outputs is deprecated. Please use .functionality.arguments instead.")
+  }
+
+  // set defaults for inputs
+  config.functionality.inputs = 
+    (config.functionality.inputs != null ? config.functionality.inputs : []).collect{arg ->
+      arg.type = arg.type != null ? arg.type : "file"
+      arg.direction = "input"
+      _processArgument(arg)
+    }
+  // set defaults for outputs
+  config.functionality.outputs = 
+    (config.functionality.outputs != null ? config.functionality.outputs : []).collect{arg ->
+      arg.type = arg.type != null ? arg.type : "file"
+      arg.direction = "output"
+      _processArgument(arg)
+    }
+  // set defaults for arguments
+  config.functionality.arguments = 
+    (config.functionality.arguments != null ? config.functionality.arguments : []).collect{arg ->
+      _processArgument(arg)
+    }
+  // set defaults for argument_group arguments
+  config.functionality.argument_groups =
+    (config.functionality.argument_groups != null ? config.functionality.argument_groups : []).collect{grp ->
+      grp.arguments = (grp.arguments != null ? grp.arguments : []).collect{arg ->
+        arg instanceof String ? arg.replaceAll("^-*", "") : _processArgument(arg)
+      }
+      grp
+    }
+
+  // create combined arguments list
+  config.functionality.allArguments = 
+    config.functionality.inputs +
+    config.functionality.outputs +
+    config.functionality.arguments +
+    config.functionality.argument_groups.collectMany{ group ->
+      group.arguments.findAll{ it !instanceof String }
+    }
+  
+  // add missing argument groups (based on Functionality::allArgumentGroups())
+  def argGroups = config.functionality.argument_groups
+  def inputGroup = _processArgumentGroup(argGroups, "Inputs", config.functionality.inputs)
+  def outputGroup = _processArgumentGroup(argGroups, "Outputs", config.functionality.outputs)
+  def defaultGroup = _processArgumentGroup(argGroups, "Arguments", config.functionality.arguments)
+  def groupsFiltered = argGroups.findAll(gr -> !(["Inputs", "Outputs", "Arguments"].contains(gr.name)))
+  config.functionality.allArgumentGroups = inputGroup + outputGroup + defaultGroup + groupsFiltered
+
+  config
+}
+
+def readConfig(file) {
+  def config = readYaml(file != null ? file : "$projectDir/config.vsh.yaml")
+  processConfig(config)
+}
+class CustomTraceObserver implements nextflow.trace.TraceObserver {
+  List traces
+
+  CustomTraceObserver(List traces) {
+    this.traces = traces
+  }
+
+  @Override
+  void onProcessComplete(nextflow.processor.TaskHandler handler, nextflow.trace.TraceRecord trace) {
+    def trace2 = trace.store.clone()
+    trace2.script = null
+    traces.add(trace2)
+  }
+
+  @Override
+  void onProcessCached(nextflow.processor.TaskHandler handler, nextflow.trace.TraceRecord trace) {
+    def trace2 = trace.store.clone()
+    trace2.script = null
+    traces.add(trace2)
+  }
+}
+
+def collectTraces() {
+  def traces = Collections.synchronizedList([])
+
+  // add custom trace observer which stores traces in the traces object
+  session.observers.add(new CustomTraceObserver(traces))
+
+  traces
+}
+def getPublishDir() {
+  return params.containsKey("publish_dir") ? params.publish_dir : 
+    params.containsKey("publishDir") ? params.publishDir : 
+    null
+}
+
+// Recurse upwards until we find a '.build.yaml' file
+def _findBuildYamlFile(path) {
+  def child = path.resolve(".build.yaml")
+  if (java.nio.file.Files.isDirectory(path) && java.nio.file.Files.exists(child)) {
+    return child
+  } else {
+    def parent = path.getParent()
+    if (parent == null) {
+      return null
+    } else {
+      return _findBuildYamlFile(parent)
+    }
+  }
+}
+
+// get the root of the target folder
+def getRootDir() {
+  def dir = _findBuildYamlFile(projectDir.toAbsolutePath())
+  assert dir != null: "Could not find .build.yaml in the folder structure"
+  dir.getParent()
+}
+/**
+ * Run a list of components on a stream of data.
+ * 
+ * @param components: list of Viash VDSL3 modules to run
+ * @param fromState: a closure, a map or a list of keys to extract from the input data.
+ *   If a closure, it will be called with the id, the data and the component config.
+ * @param toState: a closure, a map or a list of keys to extract from the output data
+ *   If a closure, it will be called with the id, the output data, the old state and the component config.
+ * @param filter: filter function to apply to the input.
+ *   It will be called with the id, the data and the component config.
+ * @param id: id to use for the output data
+ *   If a closure, it will be called with the id, the data and the component config.
+ * @param auto: auto options to pass to the components
+ *
+ * @return: a workflow that runs the components
+ **/
+def runComponents(Map args) {
+  assert args.components: "runComponents should be passed a list of components to run"
+
+  def components_ = args.components
+  if (components_ !instanceof List) {
+    components_ = [ components_ ]
+  }
+  assert components_.size() > 0: "pass at least one component to runComponents"
+
+  def fromState_ = args.fromState
+  def toState_ = args.toState
+  def filter_ = args.filter
+  def id_ = args.id
+
+  workflow runComponentsWf {
+    take: input_ch
+    main:
+
+    // generate one channel per method
+    out_chs = components_.collect{ comp_ ->
+      def comp_config = comp_.config
+
+      filter_ch = filter_
+        ? input_ch | filter{tup ->
+          filter_(tup[0], tup[1], comp_config)
+        }
+        : input_ch
+      id_ch = id_
+        ? filter_ch | map{tup ->
+          // def new_id = id_(tup[0], tup[1], comp_config)
+          def new_id = tup[0]
+          if (id_ instanceof String) {
+            new_id = id_
+          } else if (id_ instanceof Closure) {
+            new_id = id_(new_id, tup[1], comp_config)
+          }
+          [new_id] + tup.drop(1)
+        }
+        : filter_ch
+      data_ch = id_ch | map{tup ->
+          def new_data = tup[1]
+          if (fromState_ instanceof Map) {
+            new_data = fromState_.collectEntries{ key0, key1 ->
+              [key0, new_data[key1]]
+            }
+          } else if (fromState_ instanceof List) {
+            new_data = fromState_.collectEntries{ key ->
+              [key, new_data[key]]
+            }
+          } else if (fromState_ instanceof Closure) {
+            new_data = fromState_(tup[0], new_data, comp_config)
+          }
+          tup.take(1) + [new_data] + tup.drop(1)
+        }
+      out_ch = data_ch
+        | comp_.run(
+          auto: (args.auto ?: [:]) + [simplifyInput: false, simplifyOutput: false]
+        )
+      post_ch = toState_
+        ? out_ch | map{tup ->
+          def output = tup[1]
+          def old_state = tup[2]
+          if (toState_ instanceofRunCompoMap) {
+            new_state = old_state + toState_.collectEntries{ key0, key1 ->
+              [key0, output[key1]]
+            }
+          } else if (toState_ instanceof List) {
+            new_state = old_state + toState_.collectEntries{ key ->
+              [key, output[key]]
+            }
+          } else if (toState_ instanceof Closure) {
+            new_state = toState_(tup[0], output, old_state, comp_config)
+          }
+          [tup[0], new_state] + tup.drop(3)
+        }
+        : out_ch
+      
+      post_ch
+    }
+
+    // mix all results
+    output_ch =
+      (out_chs.size == 1)
+        ? out_chs[0]
+        : out_chs[0].mix(*out_chs.drop(1))
+
+    emit: output_ch
+  }
+
+  return runComponentsWf
+}
+
+def readCsv(file_path) {
+  def output = []
+  def inputFile = file_path !instanceof Path ? file(file_path) : file_path
+
+  // todo: allow escaped quotes in string
+  // todo: allow single quotes?
+  def splitRegex = java.util.regex.Pattern.compile(''',(?=(?:[^"]*"[^"]*")*[^"]*$)''')
+  def removeQuote = java.util.regex.Pattern.compile('''"(.*)"''')
+
+  def br = java.nio.file.Files.newBufferedReader(inputFile)
+
+  def row = -1
+  def header = null
+  while (br.ready() && header == null) {
+    def line = br.readLine()
+    row++
+    if (!line.startsWith("#")) {
+      header = splitRegex.split(line, -1).collect{field ->
+        m = removeQuote.matcher(field)
+        m.find() ? m.replaceFirst('$1') : field
+      }
+    }
+  }
+  assert header != null: "CSV file should contain a header"
+
+  while (br.ready()) {
+    def line = br.readLine()
+    row++
+    if (line == null) {
+      br.close()
+      break
+    }
+
+    if (!line.startsWith("#")) {
+      def predata = splitRegex.split(line, -1)
+      def data = predata.collect{field ->
+        if (field == "") {
+          return null
+        }
+        m = removeQuote.matcher(field)
+        if (m.find()) {
+          return m.replaceFirst('$1')
+        } else {
+          return field
+        }
+      }
+      assert header.size() == data.size(): "Row $row should contain the same number as fields as the header"
+      
+      def dataMap = [header, data].transpose().collectEntries().findAll{it.value != null}
+      output.add(dataMap)
+    }
+  }
+
+  output
+}
+def readJsonBlob(str) {
+  def jsonSlurper = new groovy.json.JsonSlurper()
+  jsonSlurper.parseText(str)
+}
+def readJson(file_path) {
+  def inputFile = file_path !instanceof Path ? file(file_path) : file_path
+  def jsonSlurper = new groovy.json.JsonSlurper()
+  jsonSlurper.parse(inputFile)
+}
+// Custom constructor to modify how certain objects are parsed from YAML
+class CustomConstructor extends org.yaml.snakeyaml.constructor.Constructor {
+  File root
+
+  class ConstructFile extends org.yaml.snakeyaml.constructor.AbstractConstruct {
+    public Object construct(org.yaml.snakeyaml.nodes.Node node) {
+      String filename = (String) constructScalar(node);
+      if (root != null) {
+        return new File(root, filename);
+      }
+      return new File(filename);
+    }
+  }
+
+  CustomConstructor(File root = null) {
+    super()
+    this.root = root
+    // Handling !file tag and parse it back to a File type
+    this.yamlConstructors.put(new org.yaml.snakeyaml.nodes.Tag("!file"), new ConstructFile())
+  }
+}
+
+def readTaggedYaml(File file) {
+  def constructor = new CustomConstructor(file.absoluteFile.parentFile)
+  def yaml = new org.yaml.snakeyaml.Yaml(constructor)
+  return yaml.load(file.text)
+}
+def readYamlBlob(str) {
+  def yamlSlurper = new org.yaml.snakeyaml.Yaml()
+  yamlSlurper.load(str)
+}
+def readYaml(file_path) {
+  def inputFile = file_path !instanceof Path ? file(file_path) : file_path
+  def yamlSlurper = new org.yaml.snakeyaml.Yaml()
+  yamlSlurper.load(inputFile)
+}
+// Custom representer to modify how certain objects are represented in YAML
+class CustomRepresenter extends org.yaml.snakeyaml.representer.Representer {
+  class RepresentFile implements org.yaml.snakeyaml.representer.Represent {
+    public org.yaml.snakeyaml.nodes.Node representData(Object data) {
+      File file = (File) data;
+      def value = file.name;
+      def tag = new org.yaml.snakeyaml.nodes.Tag("!file");
+      return representScalar(tag, value);
+    }
+  }
+  CustomRepresenter(org.yaml.snakeyaml.DumperOptions options) {
+    super(options)
+    this.representers.put(File, new RepresentFile())
+  }
+}
+
+String toTaggedYamlBlob(Map data) {
+  def options = new org.yaml.snakeyaml.DumperOptions()
+  options.setDefaultFlowStyle(org.yaml.snakeyaml.DumperOptions.FlowStyle.BLOCK)
+  def representer = new CustomRepresenter(options)
+  def yaml = new org.yaml.snakeyaml.Yaml(representer, options)
+  return yaml.dump(data)
+}
+def findStates(Map params, Map config) {
+  // TODO: do a deep clone of config
+  def auto_config = config.clone()
+  auto_config.functionality = auto_config.functionality.clone()
+  // override arguments
+  auto_config.functionality.argument_groups = []
+  auto_config.functionality.arguments = [
+    [
+      type: "file",
+      name: "--input_dir",
+      example: "/path/to/input/directory",
+      description: "Path to input directory containing the datasets to be integrated.",
+      required: true
+    ],
+    [
+      type: "string",
+      name: "--filter",
+      example: "foo/.*/state.yaml",
+      description: "Regex to filter state files by path.",
+      required: false
+    ],
+    // to do: make this a yaml blob?
+    [
+      type: "string",
+      name: "--rename_keys",
+      example: ["newKey1:oldKey1", "newKey2:oldKey2"],
+      description: "Rename keys in the detected input files. This is useful if the input files do not match the set of input arguments of the workflow.",
+      required: false,
+      multiple: true,
+      multiple_sep: ","
+    ],
+    [
+      type: "string",
+      name: "--settings",
+      example: '{"output_dataset": "dataset.h5ad", "k": 10}',
+      description: "Global arguments as a JSON glob to be passed to all components.",
+      required: false
+    ]
+  ]
+
+  // run auto config through processConfig once more
+  auto_config = processConfig(auto_config)
+
+  workflow findStatesWf {
+    helpMessage(auto_config)
+
+    output_ch = 
+      channelFromParams(params, auto_config)
+        | flatMap { autoId, args ->
+
+          def globalSettings = args.settings ? readYamlBlob(args.settings) : [:]
+
+          // look for state files in input dir
+          def stateFiles = file("${args.input_dir}/**/state.yaml")
+
+          // filter state files by regex
+          if (args.filter) {
+            stateFiles = stateFiles.findAll{ stateFile ->
+              def stateFileStr = stateFile.toString()
+              def matcher = stateFileStr =~ args.filter
+              matcher.matches()}
+          }
+
+          // read in states
+          def states = stateFiles.collect { stateFile ->
+            def state_ = convertFilesToPath(readTaggedYaml(stateFile.toFile()))
+            [state_.id, state_]
+          }
+
+          // construct renameMap
+          if (args.rename_keys) {
+            def renameMap = args.rename_keys.collectEntries{renameString ->
+              def split = renameString.split(":")
+              assert split.size() == 2: "Argument 'rename' should be of the form 'newKey:oldKey,newKey:oldKey'"
+              split
+            }
+
+            // rename keys in state, only let states through which have all keys
+            // also add global settings
+            states = states.collectMany{id, state ->
+              def newState = [:]
+
+              for (key in renameMap.keySet()) {
+                def origKey = renameMap[key]
+                if (!(state.containsKey(origKey))) {
+                  return []
+                }
+                newState[key] = state[origKey]
+              }
+
+              [[id, globalSettings + newState]]
+            }
+          }
+
+          states
+        }
+    emit:
+    output_ch
+  }
+
+  return findStatesWf
+}
+process publishStatesProc {
+  // todo: check publishpath?
+  publishDir path: "${getPublishDir()}/${id}/", mode: "copy"
+  tag "$id"
+  input:
+    tuple val(id), val(yamlBlob), path(inputFiles)
+  output:
+    tuple val(id), path{["state.yaml"] + inputFiles}
+  script:
+  """
+  echo '${yamlBlob}' > state.yaml
+  """
+}
+
+def collectFiles(obj) {
+  if (obj instanceof java.io.File || obj instanceof Path)  {
+    return [obj]
+  } else if (obj instanceof List && obj !instanceof String) {
+    return obj.collectMany{item ->
+      collectFiles(item)
+    }
+  } else if (obj instanceof Map) {
+    return obj.collectMany{key, item ->
+      collectFiles(item)
+    }
+  } else {
+    return []
+  }
+}
+
+
+def iterateMap(obj, fun) {
+  if (obj instanceof List && obj !instanceof String) {
+    return obj.collect{item ->
+      iterateMap(item, fun)
+    }
+  } else if (obj instanceof Map) {
+    return obj.collectEntries{key, item ->
+      [key.toString(), iterateMap(item, fun)]
+    }
+  } else {
+    return fun(obj)
+  }
+}
+
+def convertPathsToFile(obj) {
+  iterateMap(obj, {x ->
+    if (x instanceof File) {
+      return x
+    } else if (x instanceof Path)  {
+      return x.toFile()
+    } else {
+      return x
+    }
+  })
+}
+def convertFilesToPath(obj) {
+  iterateMap(obj, {x ->
+    if (x instanceof Path) {
+      return x
+    } else if (x instanceof File)  {
+      return x.toPath()
+    } else {
+      return x
+    }
+  })
+}
+
+def publishStates(Map args) {
+  workflow publishStatesWf {
+    take: input_ch
+    main:
+      input_ch
+        | map { tup ->
+          def id = tup[0]
+          def state = tup[1]
+          def files = collectFiles(state)
+          def convertedState = [id: id] + convertPathsToFile(state)
+          def yamlBlob = toTaggedYamlBlob(convertedState)
+          [id, yamlBlob, files]
+        }
+        | publishStatesProc
+    emit: input_ch
+  }
+  return publishStatesWf
+}
+def setState(fun) {
+  workflow setStateWf {
+    take: input_ch
+    main:
+      output_ch = input_ch
+        | map { tup ->
+          def id = tup[0]
+          def state = tup[1]
+          def unfilteredState = fun(id, state)
+          def newState = unfilteredState.findAll{key, val -> val != null}
+          [id, newState] + tup.drop(2)
+        }
+    emit: output_ch
+  }
+  return setStateWf
+}
+// TODO: unit test processAuto
+def processAuto(Map auto) {
+  // remove null values
+  auto = auto.findAll{k, v -> v != null}
+
+  expectedKeys = ["simplifyInput", "simplifyOutput", "transcript", "publish"]
+
+  // check whether expected keys are all booleans (for now)
+  for (key in expectedKeys) {
+    assert auto.containsKey(key)
+    assert auto[key] instanceof Boolean
+  }
+
+  return auto.subMap(expectedKeys)
+}
+def assertMapKeys(map, expectedKeys, requiredKeys, mapName) {
+  assert map instanceof Map : "Expected argument '$mapName' to be a Map. Found: class ${map.getClass()}"
+  map.forEach { key, val -> 
+    assert key in expectedKeys : "Unexpected key '$key' in ${mapName ? mapName + " " : ""}map"
+  }
+  requiredKeys.forEach { requiredKey -> 
+    assert map.containsKey(requiredKey) : "Missing required key '$key' in ${mapName ? mapName + " " : ""}map"
+  }
+}
+
+// TODO: unit test processDirectives
+def processDirectives(Map drctv) {
+  // remove null values
+  drctv = drctv.findAll{k, v -> v != null}
+
+  /* DIRECTIVE accelerator
+    accepted examples:
+    - [ limit: 4, type: "nvidia-tesla-k80" ]
+  */
+  if (drctv.containsKey("accelerator")) {
+    assertMapKeys(drctv["accelerator"], ["type", "limit", "request", "runtime"], [], "accelerator")
+  }
+
+  /* DIRECTIVE afterScript
+    accepted examples:
+    - "source /cluster/bin/cleanup"
+  */
+  if (drctv.containsKey("afterScript")) {
+    assert drctv["afterScript"] instanceof CharSequence
+  }
+
+  /* DIRECTIVE beforeScript
+    accepted examples:
+    - "source /cluster/bin/setup"
+  */
+  if (drctv.containsKey("beforeScript")) {
+    assert drctv["beforeScript"] instanceof CharSequence
+  }
+
+  /* DIRECTIVE cache
+    accepted examples:
+    - true
+    - false
+    - "deep"
+    - "lenient"
+  */
+  if (drctv.containsKey("cache")) {
+    assert drctv["cache"] instanceof CharSequence || drctv["cache"] instanceof Boolean
+    if (drctv["cache"] instanceof CharSequence) {
+      assert drctv["cache"] in ["deep", "lenient"] : "Unexpected value for cache"
+    }
+  }
+
+  /* DIRECTIVE conda
+    accepted examples:
+    - "bwa=0.7.15"
+    - "bwa=0.7.15 fastqc=0.11.5"
+    - ["bwa=0.7.15", "fastqc=0.11.5"]
+  */
+  if (drctv.containsKey("conda")) {
+    if (drctv["conda"] instanceof List) {
+      drctv["conda"] = drctv["conda"].join(" ")
+    }
+    assert drctv["conda"] instanceof CharSequence
+  }
+
+  /* DIRECTIVE container
+    accepted examples:
+    - "foo/bar:tag"
+    - [ registry: "reg", image: "im", tag: "ta" ]
+      is transformed to "reg/im:ta"
+    - [ image: "im" ] 
+      is transformed to "im:latest"
+  */
+  if (drctv.containsKey("container")) {
+    assert drctv["container"] instanceof Map || drctv["container"] instanceof CharSequence
+    if (drctv["container"] instanceof Map) {
+      def m = drctv["container"]
+      assertMapKeys(m, [ "registry", "image", "tag" ], ["image"], "container")
+      def part1 = 
+        System.getenv('OVERRIDE_CONTAINER_REGISTRY') ? System.getenv('OVERRIDE_CONTAINER_REGISTRY') + "/" : 
+        params.containsKey("override_container_registry") ? params["override_container_registry"] + "/" : // todo: remove?
+        m.registry ? m.registry + "/" : 
+        ""
+      def part2 = m.image
+      def part3 = m.tag ? ":" + m.tag : ":latest"
+      drctv["container"] = part1 + part2 + part3
+    }
+  }
+
+  /* DIRECTIVE containerOptions
+    accepted examples:
+    - "--foo bar"
+    - ["--foo bar", "-f b"]
+  */
+  if (drctv.containsKey("containerOptions")) {
+    if (drctv["containerOptions"] instanceof List) {
+      drctv["containerOptions"] = drctv["containerOptions"].join(" ")
+    }
+    assert drctv["containerOptions"] instanceof CharSequence
+  }
+
+  /* DIRECTIVE cpus
+    accepted examples:
+    - 1
+    - 10
+  */
+  if (drctv.containsKey("cpus")) {
+    assert drctv["cpus"] instanceof Integer
+  }
+
+  /* DIRECTIVE disk
+    accepted examples:
+    - "1 GB"
+    - "2TB"
+    - "3.2KB"
+    - "10.B"
+  */
+  if (drctv.containsKey("disk")) {
+    assert drctv["disk"] instanceof CharSequence
+    // assert drctv["disk"].matches("[0-9]+(\\.[0-9]*)? *[KMGTPEZY]?B")
+    // ^ does not allow closures
+  }
+
+  /* DIRECTIVE echo
+    accepted examples:
+    - true
+    - false
+  */
+  if (drctv.containsKey("echo")) {
+    assert drctv["echo"] instanceof Boolean
+  }
+
+  /* DIRECTIVE errorStrategy
+    accepted examples:
+    - "terminate"
+    - "finish"
+  */
+  if (drctv.containsKey("errorStrategy")) {
+    assert drctv["errorStrategy"] instanceof CharSequence
+    assert drctv["errorStrategy"] in ["terminate", "finish", "ignore", "retry"] : "Unexpected value for errorStrategy"
+  }
+
+  /* DIRECTIVE executor
+    accepted examples:
+    - "local"
+    - "sge"
+  */
+  if (drctv.containsKey("executor")) {
+    assert drctv["executor"] instanceof CharSequence
+    assert drctv["executor"] in ["local", "sge", "uge", "lsf", "slurm", "pbs", "pbspro", "moab", "condor", "nqsii", "ignite", "k8s", "awsbatch", "google-pipelines"] : "Unexpected value for executor"
+  }
+
+  /* DIRECTIVE machineType
+    accepted examples:
+    - "n1-highmem-8"
+  */
+  if (drctv.containsKey("machineType")) {
+    assert drctv["machineType"] instanceof CharSequence
+  }
+
+  /* DIRECTIVE maxErrors
+    accepted examples:
+    - 1
+    - 3
+  */
+  if (drctv.containsKey("maxErrors")) {
+    assert drctv["maxErrors"] instanceof Integer
+  }
+
+  /* DIRECTIVE maxForks
+    accepted examples:
+    - 1
+    - 3
+  */
+  if (drctv.containsKey("maxForks")) {
+    assert drctv["maxForks"] instanceof Integer
+  }
+
+  /* DIRECTIVE maxRetries
+    accepted examples:
+    - 1
+    - 3
+  */
+  if (drctv.containsKey("maxRetries")) {
+    assert drctv["maxRetries"] instanceof Integer
+  }
+
+  /* DIRECTIVE memory
+    accepted examples:
+    - "1 GB"
+    - "2TB"
+    - "3.2KB"
+    - "10.B"
+  */
+  if (drctv.containsKey("memory")) {
+    assert drctv["memory"] instanceof CharSequence
+    // assert drctv["memory"].matches("[0-9]+(\\.[0-9]*)? *[KMGTPEZY]?B")
+    // ^ does not allow closures
+  }
+
+  /* DIRECTIVE module
+    accepted examples:
+    - "ncbi-blast/2.2.27"
+    - "ncbi-blast/2.2.27:t_coffee/10.0"
+    - ["ncbi-blast/2.2.27", "t_coffee/10.0"]
+  */
+  if (drctv.containsKey("module")) {
+    if (drctv["module"] instanceof List) {
+      drctv["module"] = drctv["module"].join(":")
+    }
+    assert drctv["module"] instanceof CharSequence
+  }
+
+  /* DIRECTIVE penv
+    accepted examples:
+    - "smp"
+  */
+  if (drctv.containsKey("penv")) {
+    assert drctv["penv"] instanceof CharSequence
+  }
+
+  /* DIRECTIVE pod
+    accepted examples:
+    - [ label: "key", value: "val" ]
+    - [ annotation: "key", value: "val" ]
+    - [ env: "key", value: "val" ]
+    - [ [label: "l", value: "v"], [env: "e", value: "v"]]
+  */
+  if (drctv.containsKey("pod")) {
+    if (drctv["pod"] instanceof Map) {
+      drctv["pod"] = [ drctv["pod"] ]
+    }
+    assert drctv["pod"] instanceof List
+    drctv["pod"].forEach { pod ->
+      assert pod instanceof Map
+      // TODO: should more checks be added?
+      // See https://www.nextflow.io/docs/latest/process.html?highlight=directives#pod
+      // e.g. does it contain 'label' and 'value', or 'annotation' and 'value', or ...?
+    }
+  }
+
+  /* DIRECTIVE publishDir
+    accepted examples:
+    - []
+    - [ [ path: "foo", enabled: true ], [ path: "bar", enabled: false ] ]
+    - "/path/to/dir" 
+      is transformed to [[ path: "/path/to/dir" ]]
+    - [ path: "/path/to/dir", mode: "cache" ]
+      is transformed to [[ path: "/path/to/dir", mode: "cache" ]]
+  */
+  // TODO: should we also look at params["publishDir"]?
+  if (drctv.containsKey("publishDir")) {
+    def pblsh = drctv["publishDir"]
+    
+    // check different options
+    assert pblsh instanceof List || pblsh instanceof Map || pblsh instanceof CharSequence
+    
+    // turn into list if not already so
+    // for some reason, 'if (!pblsh instanceof List) pblsh = [ pblsh ]' doesn't work.
+    pblsh = pblsh instanceof List ? pblsh : [ pblsh ]
+
+    // check elements of publishDir
+    pblsh = pblsh.collect{ elem ->
+      // turn into map if not already so
+      elem = elem instanceof CharSequence ? [ path: elem ] : elem
+
+      // check types and keys
+      assert elem instanceof Map : "Expected publish argument '$elem' to be a String or a Map. Found: class ${elem.getClass()}"
+      assertMapKeys(elem, [ "path", "mode", "overwrite", "pattern", "saveAs", "enabled" ], ["path"], "publishDir")
+
+      // check elements in map
+      assert elem.containsKey("path")
+      assert elem["path"] instanceof CharSequence
+      if (elem.containsKey("mode")) {
+        assert elem["mode"] instanceof CharSequence
+        assert elem["mode"] in [ "symlink", "rellink", "link", "copy", "copyNoFollow", "move" ]
+      }
+      if (elem.containsKey("overwrite")) {
+        assert elem["overwrite"] instanceof Boolean
+      }
+      if (elem.containsKey("pattern")) {
+        assert elem["pattern"] instanceof CharSequence
+      }
+      if (elem.containsKey("saveAs")) {
+        assert elem["saveAs"] instanceof CharSequence //: "saveAs as a Closure is currently not supported. Surround your closure with single quotes to get the desired effect. Example: '\{ foo \}'"
+      }
+      if (elem.containsKey("enabled")) {
+        assert elem["enabled"] instanceof Boolean
+      }
+
+      // return final result
+      elem
+    }
+    // store final directive
+    drctv["publishDir"] = pblsh
+  }
+
+  /* DIRECTIVE queue
+    accepted examples:
+    - "long"
+    - "short,long"
+    - ["short", "long"]
+  */
+  if (drctv.containsKey("queue")) {
+    if (drctv["queue"] instanceof List) {
+      drctv["queue"] = drctv["queue"].join(",")
+    }
+    assert drctv["queue"] instanceof CharSequence
+  }
+
+  /* DIRECTIVE label
+    accepted examples:
+    - "big_mem"
+    - "big_cpu"
+    - ["big_mem", "big_cpu"]
+  */
+  if (drctv.containsKey("label")) {
+    if (drctv["label"] instanceof CharSequence) {
+      drctv["label"] = [ drctv["label"] ]
+    }
+    assert drctv["label"] instanceof List
+    drctv["label"].forEach { label ->
+      assert label instanceof CharSequence
+      // assert label.matches("[a-zA-Z0-9]([a-zA-Z0-9_]*[a-zA-Z0-9])?")
+      // ^ does not allow closures
+    }
+  }
+
+  /* DIRECTIVE scratch
+    accepted examples:
+    - true
+    - "/path/to/scratch"
+    - '$MY_PATH_TO_SCRATCH'
+    - "ram-disk"
+  */
+  if (drctv.containsKey("scratch")) {
+    assert drctv["scratch"] == true || drctv["scratch"] instanceof CharSequence
+  }
+
+  /* DIRECTIVE storeDir
+    accepted examples:
+    - "/path/to/storeDir"
+  */
+  if (drctv.containsKey("storeDir")) {
+    assert drctv["storeDir"] instanceof CharSequence
+  }
+
+  /* DIRECTIVE stageInMode
+    accepted examples:
+    - "copy"
+    - "link"
+  */
+  if (drctv.containsKey("stageInMode")) {
+    assert drctv["stageInMode"] instanceof CharSequence
+    assert drctv["stageInMode"] in ["copy", "link", "symlink", "rellink"]
+  }
+
+  /* DIRECTIVE stageOutMode
+    accepted examples:
+    - "copy"
+    - "link"
+  */
+  if (drctv.containsKey("stageOutMode")) {
+    assert drctv["stageOutMode"] instanceof CharSequence
+    assert drctv["stageOutMode"] in ["copy", "move", "rsync"]
+  }
+
+  /* DIRECTIVE tag
+    accepted examples:
+    - "foo"
+    - '$id'
+  */
+  if (drctv.containsKey("tag")) {
+    assert drctv["tag"] instanceof CharSequence
+  }
+
+  /* DIRECTIVE time
+    accepted examples:
+    - "1h"
+    - "2days"
+    - "1day 6hours 3minutes 30seconds"
+  */
+  if (drctv.containsKey("time")) {
+    assert drctv["time"] instanceof CharSequence
+    // todo: validation regex?
+  }
+
+  return drctv
+}
+// depends on: thisConfig, thisScript, session?
+def processFactory(Map processArgs) {
+  // autodetect process key
+  def wfKey = processArgs["key"]
+  def procKeyPrefix = "${wfKey}_process"
+  def meta = nextflow.script.ScriptMeta.current()
+  def existing = meta.getProcessNames().findAll{it.startsWith(procKeyPrefix)}
+  def numbers = existing.collect{it.replace(procKeyPrefix, "0").toInteger()}
+  def newNumber = (numbers + [-1]).max() + 1
+
+  def procKey = newNumber == 0 ? procKeyPrefix : "$procKeyPrefix$newNumber"
+
+  if (newNumber > 0) {
+    log.warn "Key for module '${wfKey}' is duplicated.\n",
+      "If you run a component multiple times in the same workflow,\n" +
+      "it's recommended you set a unique key for every call,\n" +
+      "for example: ${wfKey}.run(key: \"foo\")."
+  }
+
+  // subset directives and convert to list of tuples
+  def drctv = processArgs.directives
+
+  // TODO: unit test the two commands below
+  // convert publish array into tags
+  def valueToStr = { val ->
+    // ignore closures
+    if (val instanceof CharSequence) {
+      if (!val.matches('^[{].*[}]$')) {
+        '"' + val + '"'
+      } else {
+        val
+      }
+    } else if (val instanceof List) {
+      "[" + val.collect{valueToStr(it)}.join(", ") + "]"
+    } else if (val instanceof Map) {
+      "[" + val.collect{k, v -> k + ": " + valueToStr(v)}.join(", ") + "]"
+    } else {
+      val.inspect()
+    }
+  }
+
+  // multiple entries allowed: label, publishdir
+  def drctvStrs = drctv.collect { key, value ->
+    if (key in ["label", "publishDir"]) {
+      value.collect{ val ->
+        if (val instanceof Map) {
+          "\n$key " + val.collect{ k, v -> k + ": " + valueToStr(v) }.join(", ")
+        } else if (val == null) {
+          ""
+        } else {
+          "\n$key " + valueToStr(val)
+        }
+      }.join()
+    } else if (value instanceof Map) {
+      "\n$key " + value.collect{ k, v -> k + ": " + valueToStr(v) }.join(", ")
+    } else {
+      "\n$key " + valueToStr(value)
+    }
+  }.join()
+
+  def inputPaths = thisConfig.functionality.allArguments
+    .findAll { it.type == "file" && it.direction == "input" }
+    .collect { ', path(viash_par_' + it.plainName + ')' }
+    .join()
+
+  def outputPaths = thisConfig.functionality.allArguments
+    .findAll { it.type == "file" && it.direction == "output" }
+    .collect { par ->
+      // insert dummy into every output (see nextflow-io/nextflow#2678)
+      if (!par.multiple) {
+        ', path{[".exitcode", args.' + par.plainName + ']}'
+      } else {
+        ', path{[".exitcode"] + args.' + par.plainName + '}'
+      }
+    }
+    .join()
+
+  // TODO: move this functionality somewhere else?
+  if (processArgs.auto.transcript) {
+    outputPaths = outputPaths + ', path{[".exitcode", ".command*"]}'
+  } else {
+    outputPaths = outputPaths + ', path{[".exitcode"]}'
+  }
+
+  // create dirs for output files (based on BashWrapper.createParentFiles)
+  def createParentStr = thisConfig.functionality.allArguments
+    .findAll { it.type == "file" && it.direction == "output" && it.create_parent }
+    .collect { par -> 
+      "\${ args.containsKey(\"${par.plainName}\") ? \"mkdir_parent \\\"\" + (args[\"${par.plainName}\"] instanceof String ? args[\"${par.plainName}\"] : args[\"${par.plainName}\"].join('\" \"')) + \"\\\"\" : \"\" }"
+    }
+    .join("\n")
+
+  // construct inputFileExports
+  def inputFileExports = thisConfig.functionality.allArguments
+    .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
+    .collect { par ->
+      viash_par_contents = !par.required && !par.multiple ? "viash_par_${par.plainName}[0]" : "viash_par_${par.plainName}.join(\"${par.multiple_sep}\")"
+      "\n\${viash_par_${par.plainName}.empty ? \"\" : \"export VIASH_PAR_${par.plainName.toUpperCase()}=\\\"\" + ${viash_par_contents} + \"\\\"\"}"
+    }
+
+  // NOTE: if using docker, use /tmp instead of tmpDir!
+  def tmpDir = java.nio.file.Paths.get(
+    System.getenv('NXF_TEMP') ?: 
+    System.getenv('VIASH_TEMP') ?: 
+    System.getenv('VIASH_TMPDIR') ?: 
+    System.getenv('VIASH_TEMPDIR') ?: 
+    System.getenv('VIASH_TMP') ?: 
+    System.getenv('TEMP') ?: 
+    System.getenv('TMPDIR') ?: 
+    System.getenv('TEMPDIR') ?:
+    System.getenv('TMP') ?: 
+    '/tmp'
+  ).toAbsolutePath()
+
+  // construct stub
+  def stub = thisConfig.functionality.allArguments
+    .findAll { it.type == "file" && it.direction == "output" }
+    .collect { par -> 
+      "\${ args.containsKey(\"${par.plainName}\") ? \"touch2 \\\"\" + (args[\"${par.plainName}\"] instanceof String ? args[\"${par.plainName}\"].replace(\"_*\", \"_0\") : args[\"${par.plainName}\"].join('\" \"')) + \"\\\"\" : \"\" }"
+    }
+    .join("\n")
+
+  // escape script
+  def escapedScript = thisScript.replace('\\', '\\\\').replace('$', '\\$').replace('"""', '\\"\\"\\"')
+
+  // publishdir assert
+  def assertStr = processArgs.auto.publish || processArgs.auto.transcript ? 
+    """\nassert task.publishDir.size() > 0: "if auto.publish is true, params.publish_dir needs to be defined.\\n  Example: --publish_dir './output/'" """ :
+    ""
+
+  // generate process string
+  def procStr = 
+  """nextflow.enable.dsl=2
+  |
+  |process $procKey {$drctvStrs
+  |input:
+  |  tuple val(id)$inputPaths, val(args), path(resourcesDir)
+  |output:
+  |  tuple val("\$id")$outputPaths, optional: true
+  |stub:
+  |\"\"\"
+  |touch2() { mkdir -p "\\\$(dirname "\\\$1")" && touch "\\\$1" ; }
+  |$stub
+  |\"\"\"
+  |script:$assertStr
+  |def escapeText = { s -> s.toString().replaceAll('([`"])', '\\\\\\\\\$1') }
+  |def parInject = args
+  |  .findAll{key, value -> value != null}
+  |  .collect{key, value -> "export VIASH_PAR_\${key.toUpperCase()}=\\\"\${escapeText(value)}\\\""}
+  |  .join("\\n")
+  |\"\"\"
+  |# meta exports
+  |export VIASH_META_RESOURCES_DIR="\${resourcesDir.toRealPath().toAbsolutePath()}"
+  |export VIASH_META_TEMP_DIR="${['docker', 'podman', 'charliecloud'].any{ it == workflow.containerEngine } ? '/tmp' : tmpDir}"
+  |export VIASH_META_FUNCTIONALITY_NAME="${thisConfig.functionality.name}"
+  |export VIASH_META_EXECUTABLE="\\\$VIASH_META_RESOURCES_DIR/\\\$VIASH_META_FUNCTIONALITY_NAME"
+  |export VIASH_META_CONFIG="\\\$VIASH_META_RESOURCES_DIR/.config.vsh.yaml"
+  |\${task.cpus ? "export VIASH_META_CPUS=\$task.cpus" : "" }
+  |\${task.memory?.bytes != null ? "export VIASH_META_MEMORY_B=\$task.memory.bytes" : "" }
+  |if [ ! -z \\\${VIASH_META_MEMORY_B+x} ]; then
+  |  export VIASH_META_MEMORY_KB=\\\$(( (\\\$VIASH_META_MEMORY_B+1023) / 1024 ))
+  |  export VIASH_META_MEMORY_MB=\\\$(( (\\\$VIASH_META_MEMORY_KB+1023) / 1024 ))
+  |  export VIASH_META_MEMORY_GB=\\\$(( (\\\$VIASH_META_MEMORY_MB+1023) / 1024 ))
+  |  export VIASH_META_MEMORY_TB=\\\$(( (\\\$VIASH_META_MEMORY_GB+1023) / 1024 ))
+  |  export VIASH_META_MEMORY_PB=\\\$(( (\\\$VIASH_META_MEMORY_TB+1023) / 1024 ))
+  |fi
+  |
+  |# meta synonyms
+  |export VIASH_TEMP="\\\$VIASH_META_TEMP_DIR"
+  |export TEMP_DIR="\\\$VIASH_META_TEMP_DIR"
+  |
+  |# create output dirs if need be
+  |function mkdir_parent {
+  |  for file in "\\\$@"; do 
+  |    mkdir -p "\\\$(dirname "\\\$file")"
+  |  done
+  |}
+  |$createParentStr
+  |
+  |# argument exports${inputFileExports.join()}
+  |\$parInject
+  |
+  |# process script
+  |${escapedScript}
+  |\"\"\"
+  |}
+  |""".stripMargin()
+
+  // TODO: print on debug
+  // if (processArgs.debug == true) {
+  //   println("######################\n$procStr\n######################")
+  // }
+
+  // create runtime process
+  def ownerParams = new nextflow.script.ScriptBinding.ParamsMap()
+  def binding = new nextflow.script.ScriptBinding().setParams(ownerParams)
+  def module = new nextflow.script.IncludeDef.Module(name: procKey)
+  def scriptParser = new nextflow.script.ScriptParser(session)
+    .setModule(true)
+    .setBinding(binding)
+  scriptParser.scriptPath = nextflow.script.ScriptMeta.current().getScriptPath()
+  def moduleScript = scriptParser.runScript(procStr)
+    .getScript()
+
+  // register module in meta
+  meta.addModule(moduleScript, module.name, module.alias)
+
+  // retrieve and return process from meta
+  return meta.getProcess(procKey)
+}
+// depends on: thisConfig, thisDefaultProcessArgs
+def processProcessArgs(Map args) {
+  // override defaults with args
+  def processArgs = thisDefaultProcessArgs + args
+
+  // check whether 'key' exists
+  assert processArgs.containsKey("key") : "Error in module '${thisConfig.functionality.name}': key is a required argument"
+
+  // if 'key' is a closure, apply it to the original key
+  if (processArgs["key"] instanceof Closure) {
+    processArgs["key"] = processArgs["key"](thisConfig.functionality.name)
+  }
+  def key = processArgs["key"]
+  assert key instanceof CharSequence : "Expected process argument 'key' to be a String. Found: class ${key.getClass()}"
+  assert key ==~ /^[a-zA-Z_]\w*$/ : "Error in module '$key': Expected process argument 'key' to consist of only letters, digits or underscores. Found: ${key}"
+
+  // check whether directives exists and apply defaults
+  assert processArgs.containsKey("directives") : "Error in module '$key': directives is a required argument"
+  assert processArgs["directives"] instanceof Map : "Error in module '$key': Expected process argument 'directives' to be a Map. Found: class ${processArgs['directives'].getClass()}"
+  processArgs["directives"] = processDirectives(thisDefaultProcessArgs.directives + processArgs["directives"])
+
+  // check whether directives exists and apply defaults
+  assert processArgs.containsKey("auto") : "Error in module '$key': auto is a required argument"
+  assert processArgs["auto"] instanceof Map : "Error in module '$key': Expected process argument 'auto' to be a Map. Found: class ${processArgs['auto'].getClass()}"
+  processArgs["auto"] = processAuto(thisDefaultProcessArgs.auto + processArgs["auto"])
+
+  // auto define publish, if so desired
+  if (processArgs.auto.publish == true && (processArgs.directives.publishDir != null ? processArgs.directives.publishDir : [:]).isEmpty()) {
+    // can't assert at this level thanks to the no_publish profile
+    // assert params.containsKey("publishDir") || params.containsKey("publish_dir") : 
+    //   "Error in module '${processArgs['key']}': if auto.publish is true, params.publish_dir needs to be defined.\n" +
+    //   "  Example: params.publish_dir = \"./output/\""
+    def publishDir = getPublishDir()
+    
+    if (publishDir != null) {
+      processArgs.directives.publishDir = [[ 
+        path: publishDir, 
+        saveAs: "{ it.startsWith('.') ? null : it }", // don't publish hidden files, by default
+        mode: "copy"
+      ]]
+    }
+  }
+
+  // auto define transcript, if so desired
+  if (processArgs.auto.transcript == true) {
+    // can't assert at this level thanks to the no_publish profile
+    // assert params.containsKey("transcriptsDir") || params.containsKey("transcripts_dir") || params.containsKey("publishDir") || params.containsKey("publish_dir") : 
+    //   "Error in module '${processArgs['key']}': if auto.transcript is true, either params.transcripts_dir or params.publish_dir needs to be defined.\n" +
+    //   "  Example: params.transcripts_dir = \"./transcripts/\""
+    def transcriptsDir = 
+      params.containsKey("transcripts_dir") ? params.transcripts_dir : 
+      params.containsKey("transcriptsDir") ? params.transcriptsDir : 
+      params.containsKey("publish_dir") ? params.publish_dir + "/_transcripts" :
+      params.containsKey("publishDir") ? params.publishDir + "/_transcripts" : 
+      null
+    if (transcriptsDir != null) {
+      def timestamp = nextflow.Nextflow.getSession().getWorkflowMetadata().start.format('yyyy-MM-dd_HH-mm-ss')
+      def transcriptsPublishDir = [ 
+        path: "$transcriptsDir/$timestamp/\${task.process.replaceAll(':', '-')}/\${id}/",
+        saveAs: "{ it.startsWith('.') ? it.replaceAll('^.', '') : null }", 
+        mode: "copy"
+      ]
+      def publishDirs = processArgs.directives.publishDir != null ? processArgs.directives.publishDir : null ? processArgs.directives.publishDir : []
+      processArgs.directives.publishDir = publishDirs + transcriptsPublishDir
+    }
+  }
+
+  // if this is a stubrun, remove certain directives?
+  if (workflow.stubRun) {
+    processArgs.directives.keySet().removeAll(["publishDir", "cpus", "memory", "label"])
+  }
+
+  for (nam in ["map", "mapId", "mapData", "mapPassthrough", "filter"]) {
+    if (processArgs.containsKey(nam) && processArgs[nam]) {
+      assert processArgs[nam] instanceof Closure : "Error in module '$key': Expected process argument '$nam' to be null or a Closure. Found: class ${processArgs[nam].getClass()}"
+    }
+  }
+
+  // check fromState
+  assert processArgs.containsKey("fromState") : "Error in module '$key': fromState is a required argument"
+  def fromState = processArgs["fromState"]
+  assert fromState == null || fromState instanceof Closure || fromState instanceof Map || fromState instanceof List :
+    "Error in module '$key': Expected process argument 'fromState' to be null, a Closure, a Map, or a List. Found: class ${fromState.getClass()}"
+  if (fromState) {
+    // if fromState is a List, convert to map
+    if (fromState instanceof List) {
+      // check whether fromstate is a list[string]
+      assert fromState.every{it instanceof CharSequence} : "Error in module '$key': fromState is a List, but not all elements are Strings"
+      fromState = fromState.collectEntries{[it, it]}
+    }
+
+    // if fromState is a map, convert to closure
+    if (fromState instanceof Map) {
+      // check whether fromstate is a map[string, string]
+      assert fromState.values().every{it instanceof CharSequence} : "Error in module '$key': fromState is a Map, but not all values are Strings"
+      assert fromState.keySet().every{it instanceof CharSequence} : "Error in module '$key': fromState is a Map, but not all keys are Strings"
+      def fromStateMap = fromState.clone()
+      def requiredInputNames = thisConfig.functionality.allArguments.findAll{it.required && it.direction == "Input"}.collect{it.plainName}
+      // turn the map into a closure to be used later on
+      fromState = { it ->
+        def state = it[1]
+        assert state instanceof Map : "Error in module '$key': the state is not a Map"
+        def data = fromStateMap.collectMany{newkey, origkey ->
+          // check whether newkey corresponds to a required argument
+          if (state.containsKey(origkey)) {
+            [[newkey, state[origkey]]]
+          } else if (!requiredInputNames.contains(origkey)) {
+            []
+          } else {
+            throw new Exception("Error in module '$key': fromState key '$origkey' not found in current state")
+          }
+        }.collectEntries()
+        data
+      }
+    }
+
+    processArgs["fromState"] = fromState
+  }
+
+  // check toState
+  def toState = processArgs["toState"]
+
+  if (toState == null) {
+    toState = { tup -> tup[1] }
+  }
+
+  // toState should be a closure, map[string, string], or list[string]
+  assert toState instanceof Closure || toState instanceof Map || toState instanceof List :
+    "Error in module '$key': Expected process argument 'toState' to be a Closure, a Map, or a List. Found: class ${toState.getClass()}"
+
+  // if toState is a List, convert to map
+  if (toState instanceof List) {
+    // check whether toState is a list[string]
+    assert toState.every{it instanceof CharSequence} : "Error in module '$key': toState is a List, but not all elements are Strings"
+    toState = toState.collectEntries{[it, it]}
+  }
+
+  // if toState is a map, convert to closure
+  if (toState instanceof Map) {
+    // check whether toState is a map[string, string]
+    assert toState.values().every{it instanceof CharSequence} : "Error in module '$key': toState is a Map, but not all values are Strings"
+    assert toState.keySet().every{it instanceof CharSequence} : "Error in module '$key': toState is a Map, but not all keys are Strings"
+    def toStateMap = toState.clone()
+    def requiredOutputNames = thisConfig.functionality.allArguments.findAll{it.required && it.direction == "Output"}.collect{it.plainName}
+    // turn the map into a closure to be used later on
+    toState = { it ->
+      def output = it[1]
+      def state = it[2]
+      assert output instanceof Map : "Error in module '$key': the output is not a Map"
+      assert state instanceof Map : "Error in module '$key': the state is not a Map"
+      def extraEntries = toStateMap.collectMany{newkey, origkey ->
+        // check whether newkey corresponds to a required argument
+        if (output.containsKey(origkey)) {
+          [[newkey, output[origkey]]]
+        } else if (!requiredOutputNames.contains(origkey)) {
+          []
+        } else {
+          throw new Exception("Error in module '$key': toState key '$origkey' not found in current output")
+        }
+      }.collectEntries()
+      state + extraEntries
+    }
+  }
+
+  processArgs["toState"] = toState
+
+  // return output
+  return processArgs
+}
+// depends on: thisConfig, params, resourcesDir
+// TODO: do the defaultArgs, paramArgs and args.args need to be merged somewhere else?
+def vdsl3RunWorkflowFactory(Map args) {
+  def key = args["key"]
+  def processObj = null
+
+  workflow processWf {
+    take: input_
+    main:
+
+    if (processObj == null) {
+      processObj = processFactory(args)
+    }
+    
+    output_ = input_
+      | map { tuple ->
+        def id = tuple[0]
+        def data = tuple[1]
+
+        // fetch default params from functionality
+        def defaultArgs = thisConfig.functionality.allArguments
+          .findAll { it.containsKey("default") }
+          .collectEntries { [ it.plainName, it.default ] }
+
+        // fetch overrides in params
+        def paramArgs = thisConfig.functionality.allArguments
+          .findAll { par ->
+            def argKey = key + "__" + par.plainName
+            params.containsKey(argKey) && params[argKey] != "viash_no_value"
+          }
+          .collectEntries { [ it.plainName, params[key + "__" + it.plainName] ] }
+        
+        // fetch overrides in data
+        def dataArgs = thisConfig.functionality.allArguments
+          .findAll { data.containsKey(it.plainName) }
+          .collectEntries { [ it.plainName, data[it.plainName] ] }
+        
+        // combine params
+        def combinedArgs = defaultArgs + paramArgs + args.args + dataArgs
+
+        // remove arguments with explicit null values
+        combinedArgs.removeAll{it.value == null}
+
+        if (workflow.stubRun) {
+          // add id if missing
+          combinedArgs = [id: 'stub'] + combinedArgs
+        } else {
+          // check whether required arguments exist
+          thisConfig.functionality.allArguments
+            .forEach { par ->
+              if (par.required) {
+                assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
+              }
+            }
+        }
+
+        // TODO: check whether parameters have the right type
+
+        // process input files separately
+        def inputPaths = thisConfig.functionality.allArguments
+          .findAll { it.type == "file" && it.direction == "input" }
+          .collect { par ->
+            def val = combinedArgs.containsKey(par.plainName) ? combinedArgs[par.plainName] : []
+            def inputFiles = []
+            if (val == null) {
+              inputFiles = []
+            } else if (val instanceof List) {
+              inputFiles = val
+            } else if (val instanceof Path) {
+              inputFiles = [ val ]
+            } else {
+              inputFiles = []
+            }
+            if (!workflow.stubRun) {
+              // throw error when an input file doesn't exist
+              inputFiles.each{ file -> 
+                assert file.exists() :
+                  "Error in module '${key}' id '${id}' argument '${par.plainName}'.\n" +
+                  "  Required input file does not exist.\n" +
+                  "  Path: '$file'.\n" +
+                  "  Expected input file to exist"
+              }
+            }
+            inputFiles 
+          } 
+
+        // remove input files
+        def argsExclInputFiles = thisConfig.functionality.allArguments
+          .findAll { (it.type != "file" || it.direction != "input") && combinedArgs.containsKey(it.plainName) }
+          .collectEntries { par ->
+            def parName = par.plainName
+            def val = combinedArgs[parName]
+            if (par.multiple && val instanceof Collection) {
+              val = val.join(par.multiple_sep)
+            }
+            if (par.direction == "output" && par.type == "file") {
+              val = val.replaceAll('\\$id', id).replaceAll('\\$key', key)
+            }
+            [parName, val]
+          }
+
+        [ id ] + inputPaths + [ argsExclInputFiles, resourcesDir ]
+      }
+      | processObj
+      | map { output ->
+        def outputFiles = thisConfig.functionality.allArguments
+          .findAll { it.type == "file" && it.direction == "output" }
+          .indexed()
+          .collectEntries{ index, par ->
+            out = output[index + 1]
+            // strip dummy '.exitcode' file from output (see nextflow-io/nextflow#2678)
+            if (!out instanceof List || out.size() <= 1) {
+              if (par.multiple) {
+                out = []
+              } else {
+                assert !par.required :
+                    "Error in module '${key}' id '${output[0]}' argument '${par.plainName}'.\n" +
+                    "  Required output file is missing"
+                out = null
+              }
+            } else if (out.size() == 2 && !par.multiple) {
+              out = out[1]
+            } else {
+              out = out.drop(1)
+            }
+            [ par.plainName, out ]
+          }
+        
+        // drop null outputs
+        outputFiles.removeAll{it.value == null}
+
+        [ output[0], outputFiles ]
+      }
+    emit: output_
+  }
+
+  return processWf
+}
+def _debug(processArgs, debugKey) {
+  if (processArgs.debug) {
+    view { "process '${processArgs.key}' $debugKey tuple: $it"  }
+  } else {
+    map { it }
+  }
+}
+
+// depends on: thisConfig, innerWorkflowFactory
+def workflowFactory(Map args) {
+  def processArgs = processProcessArgs(args)
+  def key = processArgs["key"]
+  def meta = nextflow.script.ScriptMeta.current()
+
+  def workflowKey = key
+  
+  workflow workflowInstance {
+    take:
+    input_
+
+    main:
+
+    mid1_ = input_
+      | _debug(processArgs, "input")
+      | map { tuple ->
+        tuple = tuple.clone()
+        
+        if (processArgs.map) {
+          tuple = processArgs.map(tuple)
+        }
+        if (processArgs.mapId) {
+          tuple[0] = processArgs.mapId(tuple[0])
+        }
+        if (processArgs.mapData) {
+          tuple[1] = processArgs.mapData(tuple[1])
+        }
+        if (processArgs.mapPassthrough) {
+          tuple = tuple.take(2) + processArgs.mapPassthrough(tuple.drop(2))
+        }
+
+        // check tuple
+        assert tuple instanceof List : 
+          "Error in module '${key}': element in channel should be a tuple [id, data, ...otherargs...]\n" +
+          "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
+          "  Expected class: List. Found: tuple.getClass() is ${tuple.getClass()}"
+        assert tuple.size() >= 2 : 
+          "Error in module '${key}': expected length of tuple in input channel to be two or greater.\n" +
+          "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
+          "  Found: tuple.size() == ${tuple.size()}"
+        
+        // check id field
+        assert tuple[0] instanceof CharSequence : 
+          "Error in module '${key}': first element of tuple in channel should be a String\n" +
+          "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
+          "  Found: ${tuple[0]}"
+        
+        // match file to input file
+        if (processArgs.auto.simplifyInput && (tuple[1] instanceof Path || tuple[1] instanceof List)) {
+          def inputFiles = thisConfig.functionality.allArguments
+            .findAll { it.type == "file" && it.direction == "input" }
+          
+          assert inputFiles.size() == 1 : 
+              "Error in module '${key}' id '${tuple[0]}'.\n" +
+              "  Anonymous file inputs are only allowed when the process has exactly one file input.\n" +
+              "  Expected: inputFiles.size() == 1. Found: inputFiles.size() is ${inputFiles.size()}"
+
+          tuple[1] = [[ inputFiles[0].plainName, tuple[1] ]].collectEntries()
+        }
+
+        // check data field
+        assert tuple[1] instanceof Map : 
+          "Error in module '${key}' id '${tuple[0]}': second element of tuple in channel should be a Map\n" +
+          "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
+          "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
+
+        // rename keys of data field in tuple
+        if (processArgs.renameKeys) {
+          assert processArgs.renameKeys instanceof Map : 
+              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
+              "  Example: renameKeys: ['new_key': 'old_key'].\n" +
+              "  Expected class: Map. Found: renameKeys.getClass() is ${processArgs.renameKeys.getClass()}"
+          assert tuple[1] instanceof Map : 
+              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
+              "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
+
+          // TODO: allow renameKeys to be a function?
+          processArgs.renameKeys.each { newKey, oldKey ->
+            assert newKey instanceof CharSequence : 
+              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
+              "  Example: renameKeys: ['new_key': 'old_key'].\n" +
+              "  Expected class of newKey: String. Found: newKey.getClass() is ${newKey.getClass()}"
+            assert oldKey instanceof CharSequence : 
+              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
+              "  Example: renameKeys: ['new_key': 'old_key'].\n" +
+              "  Expected class of oldKey: String. Found: oldKey.getClass() is ${oldKey.getClass()}"
+            assert tuple[1].containsKey(oldKey) : 
+              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
+              "  Key '$oldKey' is missing in the data map. tuple[1].keySet() is '${tuple[1].keySet()}'"
+            tuple[1].put(newKey, tuple[1][oldKey])
+          }
+          tuple[1].keySet().removeAll(processArgs.renameKeys.collect{ newKey, oldKey -> oldKey })
+        }
+        tuple
+      }
+
+    if (processArgs.filter) {
+      mid2_ = mid1_
+        | filter{processArgs.filter(it)}
+    } else {
+      mid2_ = mid1_
+    }
+
+    if (processArgs.fromState) {
+      mid3_ = mid2_
+        | map{
+          def new_data = processArgs["fromState"](it.take(2))
+          [it[0], new_data]
+        }
+    } else {
+      mid3_ = mid2_
+    }
+
+    out0_ = mid3_
+      | _debug(processArgs, "processed")
+      | preprocessInputs(config: thisConfig) // todo: do we need this here?
+      | innerWorkflowFactory(processArgs)
+      // todo: can we have a postprocessOutputs here?
+      | map { id, output ->
+        if (processArgs.auto.simplifyOutput && output.size() == 1) {
+          output = output.values()[0]
+        }
+        [id, output]
+      }
+
+    // join the output [id, output] with the previous state [id, state, ...]
+    out1_ = out0_.join(mid2_, failOnDuplicate: true)
+      // input tuple format: [id, output, prev_state, ...]
+      // output tuple format: [id, new_state, ...]
+      | map{
+        def new_state = processArgs["toState"](it)
+        [it[0], new_state] + it.drop(3)
+      }
+      | _debug(processArgs, "output")
+
+
+    emit:
+    out1_
+  }
+
+  def wf = workflowInstance.cloneWithName(workflowKey)
+
+  // add factory function
+  wf.metaClass.run = { runArgs ->
+    workflowFactory(runArgs)
+  }
+  // add config to module for later introspection
+  wf.metaClass.config = thisConfig
+
+  return wf
 }

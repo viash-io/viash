@@ -1,3 +1,5 @@
+// This helper file will be deprecated soon
+
 /* usage:
 | setWorkflowArguments(
   pca: [ "input": "input", "obsm_output": "obsm_pca" ]
