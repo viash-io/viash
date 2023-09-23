@@ -26,3 +26,45 @@ workflow base {
     )
   emit: output
 }
+
+workflow test_base {
+  // todo: fix how `test_base` is able to access the test resources
+  Channel.value([ 
+    "foo",
+    [
+      "input1": file("${params.rootDir}/resources/lines*.txt"),
+      "input2": file("${params.rootDir}/resources/lines3.txt")
+    ]
+  ])
+    | view{ "DEBUG1: $it" }
+    | wf
+    /* TESTING */
+    | view{ "DEBUG4: $it"}
+    | toList()
+    | view { output_list ->
+      assert output_list.size() == 1 : "output channel should contain 1 event"
+
+      def event = output_list[0]
+      assert event.size() == 2 : "outputs should contain two elements; [id, state]"
+      def id = event[0]
+
+      // check id
+      assert id == "foo" : "id should be foo"
+
+      // check state
+      def state = event[1]
+      assert state instanceof Map : "state should be a map"
+      assert "output" in state : "state should contain key 'output'"
+
+      // check final output file
+      def output = state.output
+      assert output instanceof Path: "output should be a file"
+      assert output.toFile().exists() : "output file should exist"
+
+      def output_str = output.readLines().join("\n")
+      assert output_str.matches('^11 .*$') : 'output should match ^11 .*$'
+
+      // return something to print
+      "DEBUG5: $event"
+    }
+}

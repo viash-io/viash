@@ -39,3 +39,5 @@ functionality:
       type: local
 platforms:
   - type: nextflow
+    auto:
+      simplifyOutput: false
