@@ -27,5 +27,15 @@ functionality:
     - type: nextflow_script
       path: main.nf
       entrypoint: base
+  dependencies:
+    - name: step1
+      repository: local
+    - name: step2
+      repository: local
+    - name: step3
+      repository: local
+  repositories:
+    - name: local
+      type: local
 platforms:
   - type: nextflow
