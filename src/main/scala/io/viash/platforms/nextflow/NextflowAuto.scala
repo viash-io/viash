@@ -36,6 +36,7 @@ case class NextflowAuto(
       |""".stripMargin)
   @default("True")
   simplifyOutput: Boolean = true,
+  // TODO: change the default to false
 
   @description(
     """If `true`, the module's transcripts from `work/` are automatically published to `params.transcriptDir`.
@@ -55,4 +56,6 @@ case class NextflowAuto(
       |""".stripMargin)
   @default("False")
   publish: Boolean = false,
+
+  // TODO: add a 'publishState' option
 )
