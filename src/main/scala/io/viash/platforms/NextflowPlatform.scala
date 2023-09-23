@@ -223,9 +223,13 @@ case class NextflowPlatform(
           |rootDir = getRootDir()
           |${depStrs.mkString("\n|")}
           |
+          |// inner workflow hook
           |def innerWorkflowFactory(args) {
           |  return ${res.entrypoint.get}
           |}
+          |
+          |// component settings
+          |thisDefaultProcessArgs = ${NextflowHelper.generateDefaultProcessArgs(config, directives, auto, debug)}
           |
           |// initialise default workflow
           |myWfInstance = workflowFactory([:])
@@ -241,7 +245,7 @@ case class NextflowPlatform(
           |    // todo: publish
           |}
           |
-          |${res.readWithInjection(Map.empty, config).get}
+          |${res.readWithInjection(Map.empty, config).get.split("\n").mkString("\n|")}
           |
           |// END CUSTOM CODE
           |
@@ -276,6 +280,7 @@ case class NextflowPlatform(
           |// process script
           |thisScript = ${NextflowHelper.generateScriptStr(config)}
           |
+          |// inner workflow hook
           |def innerWorkflowFactory(args) {
           |  return vdsl3RunWorkflowFactory(args)
           |}
