@@ -40,7 +40,7 @@ case class NextflowScript(
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
 
-  @description("The name of the workflow to be executed.")
+  @description("The name of the workflow to be wrapped.")
   entrypoint: String,
 
   @description("Specifies the resource as a Nextflow script.")
@@ -55,14 +55,6 @@ case class NextflowScript(
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
     ScriptInjectionMods()
-  }
-
-  override def command(script: String): String = {
-    super.command(script) + " -entry " + entrypoint
-  }
-
-  override def commandSeq(script: String): Seq[String] = {
-    super.commandSeq(script) ++ Seq("-entry", entrypoint)
   }
 }
 
