@@ -1,6 +1,6 @@
 process publishStatesProc {
   // todo: check publishpath?
-  publishDir path: "${getPublishDir()}/${id}/", mode: "copy"
+  publishDir path: "${getPublishDir()}/", mode: "copy"
   tag "$id"
   input:
     tuple val(id), val(yamlFile), val(yamlBlob), path(inputFiles)
@@ -65,11 +65,11 @@ def publishStates(Map args) {
           def files_ = collectFiles(state_)
           def convertedState_ = [id: id_] + convertPathsToFile(state_)
           def yamlBlob_ = toTaggedYamlBlob(convertedState_)
-          // adds a leading dot
+          // adds a leading dot to the id (after any folder names)
           // example: foo -> .foo, foo/bar -> foo/.bar
           def idWithDot_ = id_.replaceAll("^(.+/)?([^/]+)", "\$1.\$2")
           def yamlFile = '$id.$key.state.yaml'
-            .replaceAll('\\$id', id_)
+            .replaceAll('\\$id', idWithDot_)
             .replaceAll('\\$key', key_)
 
           [id_, yamlFile, yamlBlob_, files_]
