@@ -2523,7 +2523,7 @@ def workflowFactory(Map args) {
             }
         }
 
-        [id_, combinedArgs] + tup.drop(2)
+        [id_, combinedArgs] + tuple.drop(2)
       }
 
     out0_ = mid4_
