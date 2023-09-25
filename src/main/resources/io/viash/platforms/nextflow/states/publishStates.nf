@@ -28,21 +28,6 @@ def collectFiles(obj) {
   }
 }
 
-
-def iterateMap(obj, fun) {
-  if (obj instanceof List && obj !instanceof String) {
-    return obj.collect{item ->
-      iterateMap(item, fun)
-    }
-  } else if (obj instanceof Map) {
-    return obj.collectEntries{key, item ->
-      [key.toString(), iterateMap(item, fun)]
-    }
-  } else {
-    return fun(obj)
-  }
-}
-
 def convertPathsToFile(obj) {
   iterateMap(obj, {x ->
     if (x instanceof File) {
