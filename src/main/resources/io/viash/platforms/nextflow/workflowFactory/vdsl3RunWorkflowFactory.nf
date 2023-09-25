@@ -15,52 +15,18 @@ def vdsl3RunWorkflowFactory(Map args) {
     output_ = input_
       | map { tuple ->
         def id = tuple[0]
-        def data = tuple[1]
-
-        // fetch default params from functionality
-        def defaultArgs = thisConfig.functionality.allArguments
-          .findAll { it.containsKey("default") }
-          .collectEntries { [ it.plainName, it.default ] }
-
-        // fetch overrides in params
-        def paramArgs = thisConfig.functionality.allArguments
-          .findAll { par ->
-            def argKey = key + "__" + par.plainName
-            params.containsKey(argKey) && params[argKey] != "viash_no_value"
-          }
-          .collectEntries { [ it.plainName, params[key + "__" + it.plainName] ] }
-        
-        // fetch overrides in data
-        def dataArgs = thisConfig.functionality.allArguments
-          .findAll { data.containsKey(it.plainName) }
-          .collectEntries { [ it.plainName, data[it.plainName] ] }
-        
-        // combine params
-        def combinedArgs = defaultArgs + paramArgs + args.args + dataArgs
-
-        // remove arguments with explicit null values
-        combinedArgs.removeAll{it.value == null}
+        def data_ = tuple[1]
 
         if (workflow.stubRun) {
           // add id if missing
-          combinedArgs = [id: 'stub'] + combinedArgs
-        } else {
-          // check whether required arguments exist
-          thisConfig.functionality.allArguments
-            .forEach { par ->
-              if (par.required) {
-                assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
-              }
-            }
+          data_ = [id: 'stub'] + data_
         }
-
-        // TODO: check whether parameters have the right type
 
         // process input files separately
         def inputPaths = thisConfig.functionality.allArguments
           .findAll { it.type == "file" && it.direction == "input" }
           .collect { par ->
-            def val = combinedArgs.containsKey(par.plainName) ? combinedArgs[par.plainName] : []
+            def val = data_.containsKey(par.plainName) ? data_[par.plainName] : []
             def inputFiles = []
             if (val == null) {
               inputFiles = []
@@ -86,10 +52,10 @@ def vdsl3RunWorkflowFactory(Map args) {
 
         // remove input files
         def argsExclInputFiles = thisConfig.functionality.allArguments
-          .findAll { (it.type != "file" || it.direction != "input") && combinedArgs.containsKey(it.plainName) }
+          .findAll { (it.type != "file" || it.direction != "input") && data_.containsKey(it.plainName) }
           .collectEntries { par ->
             def parName = par.plainName
-            def val = combinedArgs[parName]
+            def val = data_[parName]
             if (par.multiple && val instanceof Collection) {
               val = val.join(par.multiple_sep)
             }

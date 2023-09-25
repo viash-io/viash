@@ -113,16 +113,63 @@ def workflowFactory(Map args) {
     if (processArgs.fromState) {
       mid3_ = mid2_
         | map{
-          def new_data = processArgs["fromState"](it.take(2))
+          def new_data = processArgs.fromState(it.take(2))
           [it[0], new_data]
         }
     } else {
       mid3_ = mid2_
     }
 
-    out0_ = mid3_
+    // fill in defaults
+    mid4_ = mid3_
+      | map { tuple ->
+        def id_ = tuple[0]
+        def data_ = tuple[1]
+
+        // TODO: could move fromState to here
+
+        // fetch default params from functionality
+        def defaultArgs = thisConfig.functionality.allArguments
+          .findAll { it.containsKey("default") }
+          .collectEntries { [ it.plainName, it.default ] }
+
+        // fetch overrides in params
+        def paramArgs = thisConfig.functionality.allArguments
+          .findAll { par ->
+            def argKey = key + "__" + par.plainName
+            params.containsKey(argKey) && params[argKey] != "viash_no_value"
+          }
+          .collectEntries { [ it.plainName, params[key + "__" + it.plainName] ] }
+        
+        // fetch overrides in data
+        def dataArgs = thisConfig.functionality.allArguments
+          .findAll { data_.containsKey(it.plainName) }
+          .collectEntries { [ it.plainName, data_[it.plainName] ] }
+        
+        // combine params
+        def combinedArgs = defaultArgs + paramArgs + processArgs.args + dataArgs
+
+        // remove arguments with explicit null values
+        combinedArgs.removeAll{it.value == null}
+
+        if (!workflow.stubRun) {
+          // check whether required arguments exist
+          thisConfig.functionality.allArguments
+            .forEach { par ->
+              if (par.required) {
+                assert combinedArgs.containsKey(par.plainName) : 
+                  "Error in module '${key}' id '${id_}': required argument '${par.plainName}' is missing"
+              }
+
+              // TODO: check whether parameters have the right type
+            }
+        }
+
+        [id_, combinedArgs] + tup.drop(2)
+      }
+
+    out0_ = mid4_
       | _debug(processArgs, "processed")
-      | preprocessInputs(config: thisConfig) // todo: do we need this here?
       | innerWorkflowFactory(processArgs)
       // todo: can we have a postprocessOutputs here?
       | map { id, output ->
@@ -137,11 +184,15 @@ def workflowFactory(Map args) {
       // input tuple format: [id, output, prev_state, ...]
       // output tuple format: [id, new_state, ...]
       | map{
-        def new_state = processArgs["toState"](it)
+        def new_state = processArgs.toState(it)
         [it[0], new_state] + it.drop(3)
       }
       | _debug(processArgs, "output")
-
+    
+    if (processArgs.auto.publish == "state") {
+      out1_
+        | publishStates(key: key)
+    }
 
     emit:
     out1_
