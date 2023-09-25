@@ -197,9 +197,12 @@ object DependencyResolver {
       }
       .filter{
         case(scriptPath, info) =>
-          runnerId match {
-            case None => true
-            case Some(r) => (info.get("runner") orElse info.get("platform")) == Some(r)
+          (runnerId, info.get("runner"), info.get("platform")) match { // also try matching on platform as fallback, fetch it already
+            case (None, _, _) => true // if we don't filter for the incoming runnerId, we want all the output runners
+            case (Some(id), Some(runner), _) => runner == id // default behaviour, filter for the incoming runnerId
+            case (Some("executable"), _, Some("native")) => true // legacy code for platform, match executable runner to native platform
+            case (Some(id), _, Some(plat)) => plat == id // legacy code for platform, filter for the incoming runnerId matching platform id
+            case _ => false
           }
       }
       .headOption
@@ -293,7 +296,7 @@ object DependencyResolver {
       case (_, None) => None
       case (None, _) => None
       case (Some(n: NextflowScript), _) => Some("nextflow")
-      case _ => Some("native")
+      case _ => Some("executable")
     }
   }
 }

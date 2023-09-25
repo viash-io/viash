@@ -547,7 +547,7 @@ object Main extends Logging {
     val dependencyRunnerId = DependencyResolver.getDependencyRunnerId(config.config, config.runner.map(_.id))
     val config1 = DependencyResolver.modifyConfig(config.config, dependencyRunnerId, rootDir, namespaceConfigs)
     val config2 = if (output.isDefined) {
-      DependencyResolver.copyDependencies(config1, output.get, dependencyRunnerId.getOrElse("native"), namespaceConfigs.nonEmpty)
+      DependencyResolver.copyDependencies(config1, output.get, dependencyRunnerId.getOrElse("executable"), namespaceConfigs.nonEmpty)
     } else {
       config1
     }

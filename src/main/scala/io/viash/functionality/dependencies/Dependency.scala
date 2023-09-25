@@ -103,7 +103,7 @@ case class Dependency(
     if (isLocalDependency) {
       // Local dependency so it will only exist once the component is built.
       // TODO improve this, for one, the runner id should be dynamic
-      Some(ViashNamespace.targetOutputPath("", "native", None, name))
+      Some(ViashNamespace.targetOutputPath("", "executable", None, name))
     } else {
       // Previous existing dependency. Use the location of the '.build.yaml' to determine the relative location.
       val relativePath = Dependency.getRelativePath(fullPath, Paths.get(workRepository.get.localPath))
