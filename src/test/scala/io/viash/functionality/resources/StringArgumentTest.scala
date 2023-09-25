@@ -47,8 +47,8 @@ class CommandsTest extends AnyFunSuite {
     val command = script.command("foo")
     val commandSeq = script.commandSeq("foo")
 
-    assert(command == "nextflow run . -main-script \"foo\" -entry baz")
-    assert(commandSeq == Seq("nextflow", "run", ".", "-main-script", "foo", "-entry", "baz"))
+    assert(command == "nextflow run . -main-script \"foo\"")
+    assert(commandSeq == Seq("nextflow", "run", ".", "-main-script", "foo"))
   }
 
   test("Test Python script") {
