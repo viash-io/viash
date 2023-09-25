@@ -221,9 +221,8 @@ case class NextflowPlatform(
       cpus = directives.cpus orElse config.functionality.requirements.cpus.map(np => Left(np))
     )
 
-    val isWf = mainScript.isInstanceOf[NextflowScript]
-
     val innerWorkflowFactory = mainScript match {
+      // if mainscript is a nextflow workflow
       case scr: NextflowScript =>
         s"""// user-provided workflow
           |${scr.readWithoutInjection.get.split("\n").mkString("\n|")}
@@ -232,6 +231,7 @@ case class NextflowPlatform(
           |def innerWorkflowFactory(args) {
           |  return ${scr.entrypoint.get}
           |}""".stripMargin
+      // else if it is a vdsl3 module
       case _ => 
         s"""// process script
           |thisScript = ${NextflowHelper.generateScriptStr(config)}
