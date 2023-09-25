@@ -1499,7 +1499,8 @@ process publishStatesProc {
   echo "Copying output files to destination folder"
   ${cmds.join("\n  ")}
   """
-}def setState(fun) {
+}
+def setState(fun) {
   workflow setStateWf {
     take: input_ch
     main:
