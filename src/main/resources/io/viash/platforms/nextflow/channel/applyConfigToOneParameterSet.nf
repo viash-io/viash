@@ -8,20 +8,33 @@
 private Map<String, Object> _castParamTypes(Map<String, Object> parValues, Map config) {
   // Cast the input to the correct type according to viash config
   def castParValues = parValues.collectEntries({ parName, parValue ->
-    paramSettings = config.functionality.allArguments.find({it.plainName == parName})
+    def paramSettings = config.functionality.allArguments.find({it.plainName == parName})
     // dont parse parameters like publish_dir ( in which case paramSettings = null)
-    parType = paramSettings ? paramSettings.get("type", null) : null
+    def parType = paramSettings ? paramSettings.get("type", null) : null
+
+    // turn parValue into a list, if it isn't one already
     if (parValue !instanceof Collection) {
       parValue = [parValue]
     }
-    if (parType == "file" && ((paramSettings.direction != null ? paramSettings.direction : "input") == "input")) {
-      parValue = parValue.collect{ path ->
-        if (path !instanceof String) {
-          path
-        } else {
-          file(path)
+
+    if (parType == "file" && paramSettings.get("direction", "input") == "input") {
+      parValue = parValue.collectMany{ parValueItem ->
+        if (parValueItem instanceof String) {
+          parValueItem = file(parValueItem)
         }
+        if (parValueItem !instanceof Collection) {
+          parValueItem = [parValueItem]
+        }
+        parValueItem
       }
+      // cast Paths to File? Or vice versa?
+      // parValue = parValue.collect{
+      //   if (path instanceof Path) {
+      //     [path.toFile()]
+      //   } else {
+      //     [path]
+      //   }
+      // }
     } else if (parType == "integer") {
       parValue = parValue.collect{it as Integer}
     } else if (parType == "double") {
@@ -39,6 +52,7 @@ private Map<String, Object> _castParamTypes(Map<String, Object> parValues, Map c
         "  Expected amount: 1. Found: ${parValue.size()}"
       parValue = parValue[0]
     }
+
     [parName, parValue]
   })
   return castParValues
