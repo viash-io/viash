@@ -137,7 +137,7 @@ private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params,
     .findAll { params.containsKey(it.plainName) }
     .collectEntries { [ it.plainName, params[it.plainName] ] }
   def globalID = params.get("id", null)
-  def globalParamsValues = applyConfigToOneParameterSet(globalParams.findAll{it.key != 'id'}, config)
+  def globalParamsValues = applyConfigToOneParameterSet(globalParams, config)
 
   /* process params_list arguments */
   /*********************************/
