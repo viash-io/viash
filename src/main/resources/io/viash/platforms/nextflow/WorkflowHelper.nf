@@ -1379,21 +1379,6 @@ def findStates(Map params, Map config) {
 
   return findStatesWf
 }
-process publishStatesProc {
-  // todo: check publishpath?
-  publishDir path: "${getPublishDir()}/", mode: "copy"
-  tag "$id"
-  input:
-    tuple val(id), val(yamlFile), val(yamlBlob), path(inputFiles)
-  output:
-    tuple val(id), path{[yamlFile] + inputFiles}
-  script:
-  """
-  mkdir -p "\$(dirname '${yamlFile}')"
-  echo '${yamlBlob}' > '${yamlFile}'
-  """
-}
-
 def collectFiles(obj) {
   if (obj instanceof java.io.File || obj instanceof Path)  {
     return [obj]
@@ -1433,6 +1418,31 @@ def convertFilesToPath(obj) {
   })
 }
 
+/**
+ * Recurse through a state and collect all input files and their target output filenames.
+ * @param obj The state to recurse through.
+ * @param prefix The prefix to prepend to the output filenames.
+ */
+def collectInputOutputPaths(obj, prefix) {
+  println("collectInputOutputPaths: $prefix: $obj")
+  if (obj instanceof java.io.File || obj instanceof Path)  {
+    def file = obj instanceof File ? obj : obj.toFile()
+    def ext = file.name.find("\\.[^\\.]+\$") ?: ""
+    def newFilename = prefix + ext
+    return [[obj, newFilename]]
+  } else if (obj instanceof List && obj !instanceof String) {
+    return obj.withIndex().collectMany{item, ix ->
+      collectInputOutputPaths(item, prefix + "_" + ix)
+    }
+  } else if (obj instanceof Map) {
+    return obj.collectMany{key, item ->
+      collectInputOutputPaths(item, prefix + "." + key)
+    }
+  } else {
+    return []
+  }
+}
+
 def publishStates(Map args) {
   def key_ = args.get("key")
   
@@ -1443,9 +1453,18 @@ def publishStates(Map args) {
         | map { tup ->
           def id_ = tup[0]
           def state_ = tup[1]
-          def files_ = collectFiles(state_)
+
+          // the input files and the target output filenames
+          def inputOutputFiles_ = collectInputOutputPaths(state_, id_ + "." + key_).transpose()
+          def inputFiles_ = inputOutputFiles_[0]
+          def outputFiles_ = inputOutputFiles_[1]
+
+          // convert all paths to files before converting it to a yaml blob
           def convertedState_ = [id: id_] + convertPathsToFile(state_)
+
+          // convert state to yaml blob
           def yamlBlob_ = toTaggedYamlBlob(convertedState_)
+
           // adds a leading dot to the id (after any folder names)
           // example: foo -> .foo, foo/bar -> foo/.bar
           def idWithDot_ = id_.replaceAll("^(.+/)?([^/]+)", "\$1.\$2")
@@ -1453,12 +1472,30 @@ def publishStates(Map args) {
             .replaceAll('\\$id', idWithDot_)
             .replaceAll('\\$key', key_)
 
-          [id_, yamlFile, yamlBlob_, files_]
+          [id_, yamlBlob_, yamlFile, inputFiles_, outputFiles_]
         }
         | publishStatesProc
     emit: input_ch
   }
   return publishStatesWf
+}
+process publishStatesProc {
+  // todo: check publishpath?
+  publishDir path: "${getPublishDir()}/", mode: "copy"
+  tag "$id"
+  input:
+    tuple val(id), val(yamlBlob), val(yamlFile), path(inputFiles), val(outputFiles)
+  output:
+    tuple val(id), path{[yamlFile] + outputFiles}
+  script:
+  def cmds = [inputFiles, outputFiles].transpose().collect{infile, outfile ->
+    "cp -r '${infile.toString()}' '${outfile}'"
+  }
+  """
+  mkdir -p "\$(dirname '${yamlFile}')"
+  echo '${yamlBlob}' > '${yamlFile}'
+  ${cmds.join("\n  ")}
+  """
 }
 def setState(fun) {
   workflow setStateWf {
