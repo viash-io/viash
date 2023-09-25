@@ -625,6 +625,113 @@ def preprocessInputs(Map args) {
   return preprocessInputsInstance.cloneWithName(wfKey)
 }
 /**
+ * Run a list of components on a stream of data.
+ * 
+ * @param components: list of Viash VDSL3 modules to run
+ * @param fromState: a closure, a map or a list of keys to extract from the input data.
+ *   If a closure, it will be called with the id, the data and the component config.
+ * @param toState: a closure, a map or a list of keys to extract from the output data
+ *   If a closure, it will be called with the id, the output data, the old state and the component config.
+ * @param filter: filter function to apply to the input.
+ *   It will be called with the id, the data and the component config.
+ * @param id: id to use for the output data
+ *   If a closure, it will be called with the id, the data and the component config.
+ * @param auto: auto options to pass to the components
+ *
+ * @return: a workflow that runs the components
+ **/
+def runComponents(Map args) {
+  assert args.components: "runComponents should be passed a list of components to run"
+
+  def components_ = args.components
+  if (components_ !instanceof List) {
+    components_ = [ components_ ]
+  }
+  assert components_.size() > 0: "pass at least one component to runComponents"
+
+  def fromState_ = args.fromState
+  def toState_ = args.toState
+  def filter_ = args.filter
+  def id_ = args.id
+
+  workflow runComponentsWf {
+    take: input_ch
+    main:
+
+    // generate one channel per method
+    out_chs = components_.collect{ comp_ ->
+      def comp_config = comp_.config
+
+      filter_ch = filter_
+        ? input_ch | filter{tup ->
+          filter_(tup[0], tup[1], comp_config)
+        }
+        : input_ch
+      id_ch = id_
+        ? filter_ch | map{tup ->
+          // def new_id = id_(tup[0], tup[1], comp_config)
+          def new_id = tup[0]
+          if (id_ instanceof String) {
+            new_id = id_
+          } else if (id_ instanceof Closure) {
+            new_id = id_(new_id, tup[1], comp_config)
+          }
+          [new_id] + tup.drop(1)
+        }
+        : filter_ch
+      data_ch = id_ch | map{tup ->
+          def new_data = tup[1]
+          if (fromState_ instanceof Map) {
+            new_data = fromState_.collectEntries{ key0, key1 ->
+              [key0, new_data[key1]]
+            }
+          } else if (fromState_ instanceof List) {
+            new_data = fromState_.collectEntries{ key ->
+              [key, new_data[key]]
+            }
+          } else if (fromState_ instanceof Closure) {
+            new_data = fromState_(tup[0], new_data, comp_config)
+          }
+          tup.take(1) + [new_data] + tup.drop(1)
+        }
+      out_ch = data_ch
+        | comp_.run(
+          auto: (args.auto ?: [:]) + [simplifyInput: false, simplifyOutput: false]
+        )
+      post_ch = toState_
+        ? out_ch | map{tup ->
+          def output = tup[1]
+          def old_state = tup[2]
+          if (toState_ instanceofRunCompoMap) {
+            new_state = old_state + toState_.collectEntries{ key0, key1 ->
+              [key0, output[key1]]
+            }
+          } else if (toState_ instanceof List) {
+            new_state = old_state + toState_.collectEntries{ key ->
+              [key, output[key]]
+            }
+          } else if (toState_ instanceof Closure) {
+            new_state = toState_(tup[0], output, old_state, comp_config)
+          }
+          [tup[0], new_state] + tup.drop(3)
+        }
+        : out_ch
+      
+      post_ch
+    }
+
+    // mix all results
+    output_ch =
+      (out_chs.size == 1)
+        ? out_chs[0]
+        : out_chs[0].mix(*out_chs.drop(1))
+
+    emit: output_ch
+  }
+
+  return runComponentsWf
+}
+/**
  * Split parameters for arguments that accept multiple values using their separator
  *
  * @param paramList A Map containing parameters to split.
@@ -984,111 +1091,37 @@ def getRootDir() {
   dir.getParent()
 }
 /**
- * Run a list of components on a stream of data.
- * 
- * @param components: list of Viash VDSL3 modules to run
- * @param fromState: a closure, a map or a list of keys to extract from the input data.
- *   If a closure, it will be called with the id, the data and the component config.
- * @param toState: a closure, a map or a list of keys to extract from the output data
- *   If a closure, it will be called with the id, the output data, the old state and the component config.
- * @param filter: filter function to apply to the input.
- *   It will be called with the id, the data and the component config.
- * @param id: id to use for the output data
- *   If a closure, it will be called with the id, the data and the component config.
- * @param auto: auto options to pass to the components
- *
- * @return: a workflow that runs the components
- **/
-def runComponents(Map args) {
-  assert args.components: "runComponents should be passed a list of components to run"
-
-  def components_ = args.components
-  if (components_ !instanceof List) {
-    components_ = [ components_ ]
-  }
-  assert components_.size() > 0: "pass at least one component to runComponents"
-
-  def fromState_ = args.fromState
-  def toState_ = args.toState
-  def filter_ = args.filter
-  def id_ = args.id
-
-  workflow runComponentsWf {
-    take: input_ch
-    main:
-
-    // generate one channel per method
-    out_chs = components_.collect{ comp_ ->
-      def comp_config = comp_.config
-
-      filter_ch = filter_
-        ? input_ch | filter{tup ->
-          filter_(tup[0], tup[1], comp_config)
-        }
-        : input_ch
-      id_ch = id_
-        ? filter_ch | map{tup ->
-          // def new_id = id_(tup[0], tup[1], comp_config)
-          def new_id = tup[0]
-          if (id_ instanceof String) {
-            new_id = id_
-          } else if (id_ instanceof Closure) {
-            new_id = id_(new_id, tup[1], comp_config)
-          }
-          [new_id] + tup.drop(1)
-        }
-        : filter_ch
-      data_ch = id_ch | map{tup ->
-          def new_data = tup[1]
-          if (fromState_ instanceof Map) {
-            new_data = fromState_.collectEntries{ key0, key1 ->
-              [key0, new_data[key1]]
-            }
-          } else if (fromState_ instanceof List) {
-            new_data = fromState_.collectEntries{ key ->
-              [key, new_data[key]]
-            }
-          } else if (fromState_ instanceof Closure) {
-            new_data = fromState_(tup[0], new_data, comp_config)
-          }
-          tup.take(1) + [new_data] + tup.drop(1)
-        }
-      out_ch = data_ch
-        | comp_.run(
-          auto: (args.auto ?: [:]) + [simplifyInput: false, simplifyOutput: false]
-        )
-      post_ch = toState_
-        ? out_ch | map{tup ->
-          def output = tup[1]
-          def old_state = tup[2]
-          if (toState_ instanceofRunCompoMap) {
-            new_state = old_state + toState_.collectEntries{ key0, key1 ->
-              [key0, output[key1]]
-            }
-          } else if (toState_ instanceof List) {
-            new_state = old_state + toState_.collectEntries{ key ->
-              [key, output[key]]
-            }
-          } else if (toState_ instanceof Closure) {
-            new_state = toState_(tup[0], output, old_state, comp_config)
-          }
-          [tup[0], new_state] + tup.drop(3)
-        }
-        : out_ch
-      
-      post_ch
+  * Recursively apply a function over the leaves of an object.
+  * @param obj The object to iterate over.
+  * @param fun The function to apply to each value.
+  * @return The object with the function applied to each value.
+  */
+def iterateMap(obj, fun) {
+  if (obj instanceof List && obj !instanceof String) {
+    return obj.collect{item ->
+      iterateMap(item, fun)
     }
-
-    // mix all results
-    output_ch =
-      (out_chs.size == 1)
-        ? out_chs[0]
-        : out_chs[0].mix(*out_chs.drop(1))
-
-    emit: output_ch
+  } else if (obj instanceof Map) {
+    return obj.collectEntries{key, item ->
+      [key.toString(), iterateMap(item, fun)]
+    }
+  } else {
+    return fun(obj)
   }
-
-  return runComponentsWf
+}
+/**
+  * A view for printing the event of each channel as a YAML blob.
+  * This is useful for debugging.
+  */
+def niceView() {
+  workflow niceViewWf {
+    take: input
+    main:
+      output = input
+        | view{toYamlBlob(it)}
+    emit: output
+  }
+  return niceViewWf
 }
 
 def readCsv(file_path) {
@@ -1214,6 +1247,14 @@ String toTaggedYamlBlob(Map data) {
   def yaml = new org.yaml.snakeyaml.Yaml(representer, options)
   return yaml.dump(data)
 }
+String toYamlBlob(Map data) {
+  def options = new org.yaml.snakeyaml.DumperOptions()
+  options.setDefaultFlowStyle(org.yaml.snakeyaml.DumperOptions.FlowStyle.BLOCK)
+  options.setPrettyFlow(true)
+  def yaml = new org.yaml.snakeyaml.Yaml(options)
+  def cleanData = iterateMap(data, {it.toString})
+  return yaml.dump(data)
+}
 def findStates(Map params, Map config) {
   // TODO: do a deep clone of config
   def auto_config = config.clone()
@@ -1321,12 +1362,13 @@ process publishStatesProc {
   publishDir path: "${getPublishDir()}/${id}/", mode: "copy"
   tag "$id"
   input:
-    tuple val(id), val(yamlBlob), path(inputFiles)
+    tuple val(id), val(yamlFile), val(yamlBlob), path(inputFiles)
   output:
-    tuple val(id), path{["state.yaml"] + inputFiles}
+    tuple val(id), path{[yamlFile] + inputFiles}
   script:
   """
-  echo '${yamlBlob}' > state.yaml
+  mkdir -p "\$(dirname '${yamlFile}')"
+  echo '${yamlBlob}' > '${yamlFile}'
   """
 }
 
@@ -1343,21 +1385,6 @@ def collectFiles(obj) {
     }
   } else {
     return []
-  }
-}
-
-
-def iterateMap(obj, fun) {
-  if (obj instanceof List && obj !instanceof String) {
-    return obj.collect{item ->
-      iterateMap(item, fun)
-    }
-  } else if (obj instanceof Map) {
-    return obj.collectEntries{key, item ->
-      [key.toString(), iterateMap(item, fun)]
-    }
-  } else {
-    return fun(obj)
   }
 }
 
@@ -1385,17 +1412,26 @@ def convertFilesToPath(obj) {
 }
 
 def publishStates(Map args) {
+  def key_ = args.get("key")
+  
   workflow publishStatesWf {
     take: input_ch
     main:
       input_ch
         | map { tup ->
-          def id = tup[0]
-          def state = tup[1]
-          def files = collectFiles(state)
-          def convertedState = [id: id] + convertPathsToFile(state)
-          def yamlBlob = toTaggedYamlBlob(convertedState)
-          [id, yamlBlob, files]
+          def id_ = tup[0]
+          def state_ = tup[1]
+          def files_ = collectFiles(state_)
+          def convertedState_ = [id: id_] + convertPathsToFile(state_)
+          def yamlBlob_ = toTaggedYamlBlob(convertedState_)
+          // adds a leading dot
+          // example: foo -> .foo, foo/bar -> foo/.bar
+          def idWithDot_ = id_.replaceAll("^(.+/)?([^/]+)", "\$1.\$2")
+          def yamlFile = '$id.$key.state.yaml'
+            .replaceAll('\\$id', id_)
+            .replaceAll('\\$key', key_)
+
+          [id_, yamlFile, yamlBlob_, files_]
         }
         | publishStatesProc
     emit: input_ch
@@ -1423,13 +1459,21 @@ def processAuto(Map auto) {
   // remove null values
   auto = auto.findAll{k, v -> v != null}
 
-  expectedKeys = ["simplifyInput", "simplifyOutput", "transcript", "publish"]
+  expectedKeys = ["simplifyInput", "simplifyOutput", "transcript", "publish"] as Set
+  // check whether all expected keys are in auto
+  assert auto.keySet() == expectedKeys
 
-  // check whether expected keys are all booleans (for now)
-  for (key in expectedKeys) {
-    assert auto.containsKey(key)
-    assert auto[key] instanceof Boolean
-  }
+  // check auto.simplifyInput
+  assert auto.simplifyInput instanceof Boolean, "auto.simplifyInput must be a boolean"
+
+  // check auto.simplifyOutput
+  assert auto.simplifyOutput instanceof Boolean, "auto.simplifyOutput must be a boolean"
+
+  // check auto.transcript
+  assert auto.transcript instanceof Boolean, "auto.transcript must be a boolean"
+
+  // check auto.publish
+  assert auto.publish instanceof Boolean || auto.publish == "state", "auto.publish must be a boolean or 'state'"
 
   return auto.subMap(expectedKeys)
 }
@@ -1447,6 +1491,12 @@ def assertMapKeys(map, expectedKeys, requiredKeys, mapName) {
 def processDirectives(Map drctv) {
   // remove null values
   drctv = drctv.findAll{k, v -> v != null}
+
+  def expectedKeys = [
+    "accelerator", "afterScript", "beforeScript", "cache", "conda", "container", "containerOptions", "cpus", "disk", "echo", "errorStrategy", "executor", "machineType", "maxErrors", "maxForks", "maxRetries", "memory", "module", "penv", "pod", "publishDir", "queue", "label", "scratch", "storeDir", "stageInMode", "stageOutMode", "tag", "time"
+  ] as Set
+  // all keys in drctv are in expectedKeys
+  assert expectedKeys.containsAll(drctv.keySet()) : "Unexpected key(s) in directives: ${drctv.keySet() - expectedKeys}"
 
   /* DIRECTIVE accelerator
     accepted examples:
@@ -2219,52 +2269,18 @@ def vdsl3RunWorkflowFactory(Map args) {
     output_ = input_
       | map { tuple ->
         def id = tuple[0]
-        def data = tuple[1]
-
-        // fetch default params from functionality
-        def defaultArgs = thisConfig.functionality.allArguments
-          .findAll { it.containsKey("default") }
-          .collectEntries { [ it.plainName, it.default ] }
-
-        // fetch overrides in params
-        def paramArgs = thisConfig.functionality.allArguments
-          .findAll { par ->
-            def argKey = key + "__" + par.plainName
-            params.containsKey(argKey) && params[argKey] != "viash_no_value"
-          }
-          .collectEntries { [ it.plainName, params[key + "__" + it.plainName] ] }
-        
-        // fetch overrides in data
-        def dataArgs = thisConfig.functionality.allArguments
-          .findAll { data.containsKey(it.plainName) }
-          .collectEntries { [ it.plainName, data[it.plainName] ] }
-        
-        // combine params
-        def combinedArgs = defaultArgs + paramArgs + args.args + dataArgs
-
-        // remove arguments with explicit null values
-        combinedArgs.removeAll{it.value == null}
+        def data_ = tuple[1]
 
         if (workflow.stubRun) {
           // add id if missing
-          combinedArgs = [id: 'stub'] + combinedArgs
-        } else {
-          // check whether required arguments exist
-          thisConfig.functionality.allArguments
-            .forEach { par ->
-              if (par.required) {
-                assert combinedArgs.containsKey(par.plainName): "Argument ${par.plainName} is required but does not have a value"
-              }
-            }
+          data_ = [id: 'stub'] + data_
         }
-
-        // TODO: check whether parameters have the right type
 
         // process input files separately
         def inputPaths = thisConfig.functionality.allArguments
           .findAll { it.type == "file" && it.direction == "input" }
           .collect { par ->
-            def val = combinedArgs.containsKey(par.plainName) ? combinedArgs[par.plainName] : []
+            def val = data_.containsKey(par.plainName) ? data_[par.plainName] : []
             def inputFiles = []
             if (val == null) {
               inputFiles = []
@@ -2290,10 +2306,10 @@ def vdsl3RunWorkflowFactory(Map args) {
 
         // remove input files
         def argsExclInputFiles = thisConfig.functionality.allArguments
-          .findAll { (it.type != "file" || it.direction != "input") && combinedArgs.containsKey(it.plainName) }
+          .findAll { (it.type != "file" || it.direction != "input") && data_.containsKey(it.plainName) }
           .collectEntries { par ->
             def parName = par.plainName
-            def val = combinedArgs[parName]
+            def val = data_[parName]
             if (par.multiple && val instanceof Collection) {
               val = val.join(par.multiple_sep)
             }
@@ -2455,16 +2471,63 @@ def workflowFactory(Map args) {
     if (processArgs.fromState) {
       mid3_ = mid2_
         | map{
-          def new_data = processArgs["fromState"](it.take(2))
+          def new_data = processArgs.fromState(it.take(2))
           [it[0], new_data]
         }
     } else {
       mid3_ = mid2_
     }
 
-    out0_ = mid3_
+    // fill in defaults
+    mid4_ = mid3_
+      | map { tuple ->
+        def id_ = tuple[0]
+        def data_ = tuple[1]
+
+        // TODO: could move fromState to here
+
+        // fetch default params from functionality
+        def defaultArgs = thisConfig.functionality.allArguments
+          .findAll { it.containsKey("default") }
+          .collectEntries { [ it.plainName, it.default ] }
+
+        // fetch overrides in params
+        def paramArgs = thisConfig.functionality.allArguments
+          .findAll { par ->
+            def argKey = key + "__" + par.plainName
+            params.containsKey(argKey) && params[argKey] != "viash_no_value"
+          }
+          .collectEntries { [ it.plainName, params[key + "__" + it.plainName] ] }
+        
+        // fetch overrides in data
+        def dataArgs = thisConfig.functionality.allArguments
+          .findAll { data_.containsKey(it.plainName) }
+          .collectEntries { [ it.plainName, data_[it.plainName] ] }
+        
+        // combine params
+        def combinedArgs = defaultArgs + paramArgs + processArgs.args + dataArgs
+
+        // remove arguments with explicit null values
+        combinedArgs.removeAll{it.value == null}
+
+        if (!workflow.stubRun) {
+          // check whether required arguments exist
+          thisConfig.functionality.allArguments
+            .forEach { par ->
+              if (par.required) {
+                assert combinedArgs.containsKey(par.plainName) : 
+                  "Error in module '${key}' id '${id_}': required argument '${par.plainName}' is missing"
+              }
+
+              // TODO: check whether parameters have the right type
+            }
+        }
+
+        [id_, combinedArgs] + tup.drop(2)
+      }
+
+    out0_ = mid4_
       | _debug(processArgs, "processed")
-      | preprocessInputs(config: thisConfig) // todo: do we need this here?
       | innerWorkflowFactory(processArgs)
       // todo: can we have a postprocessOutputs here?
       | map { id, output ->
@@ -2479,11 +2542,15 @@ def workflowFactory(Map args) {
       // input tuple format: [id, output, prev_state, ...]
       // output tuple format: [id, new_state, ...]
       | map{
-        def new_state = processArgs["toState"](it)
+        def new_state = processArgs.toState(it)
         [it[0], new_state] + it.drop(3)
       }
       | _debug(processArgs, "output")
-
+    
+    if (processArgs.auto.publish == "state") {
+      out1_
+        | publishStates(key: key)
+    }
 
     emit:
     out1_
