@@ -69,10 +69,18 @@ private List<Tuple2<String, Map>> _parseParamListArguments(Map params, Map confi
     assert value instanceof Map: "--param_list should contain a list of maps"
   }
 
+  // id is argument
+  def idIsArgument = config.functionality.allArguments.find({it.plainName == "id"}) != null
+
   // Reformat from List<Map> to List<Tuple2<String, Map>> by adding the ID as first element of a Tuple2
   paramSets = paramSets.collect({ paramValues ->
-    [paramValues.get("id", null), paramValues.findAll{it.key != 'id'}]
+    def paramId = paramValues.id
+    if (!idIsArgument) {
+      paramValues = paramValues.findAll{k, v -> k != "id"}
+    }
+    [paramId, paramValues]
   })
+
   // Split parameters with 'multiple: true'
   paramSets = paramSets.collect({ id, paramValues ->
     def splitParamValues = _splitParams(paramValues, config)
