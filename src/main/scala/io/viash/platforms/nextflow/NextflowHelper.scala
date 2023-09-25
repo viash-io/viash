@@ -30,6 +30,7 @@ import io.circe.{Printer => JsonPrinter, Json, JsonObject}
 import io.viash.functionality.dependencies.Dependency
 import java.nio.file.Path
 import java.nio.file.Paths
+import io.viash.ViashNamespace
 
 object NextflowHelper {
   private def readSource(s: String) = {
@@ -204,5 +205,24 @@ object NextflowHelper {
       }
 
     s"include { $depName$aliasStr } from ${source}"
+  }
+
+  def renderDependencies(config: Config): String = {
+    // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
+    val thisPath = Paths.get(ViashNamespace.targetOutputPath("", "invalid_platform_name", config.functionality.namespace, config.functionality.name))
+
+    val depStrs = config.functionality.dependencies.map{ dep =>
+      NextflowHelper.renderInclude(dep, thisPath)
+    }
+
+    if (depStrs.isEmpty) {
+      return ""
+    }
+
+    s"""
+      |// import dependencies
+      |rootDir = getRootDir()
+      |${depStrs.mkString("\n|")}
+      |""".stripMargin
   }
 }

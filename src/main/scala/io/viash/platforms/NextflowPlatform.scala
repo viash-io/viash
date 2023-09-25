@@ -197,150 +197,112 @@ case class NextflowPlatform(
   // interpreted from BashWrapper
   def renderMainNf(config: Config, containerDirective: Option[DockerImageInfo]): String = {
 
+    if (config.functionality.mainScript.isEmpty) {
+      throw new RuntimeException("No main script defined")
+    }
+
+    val mainScript = config.functionality.mainScript.get
+
+    if (mainScript.isInstanceOf[Executable]) {
+      throw new NotImplementedError(
+        "Running executables through a NextflowPlatform is not (yet) implemented. " +
+          "Create a support ticket to request this functionality if necessary."
+      )
+    }
+
     /************************* MAIN.NF *************************/
-    config.functionality.mainScript match {
-      // if mainResource is empty (shouldn't be the case)
-      case None => throw new RuntimeException("there should be a main script here")
 
-      // if mainResource is simply an executable
-      case Some(e: Executable) => //" " + e.path.get + " $VIASH_EXECUTABLE_ARGS"
-        throw new NotImplementedError(
-          "Running executables through a NextflowPlatform is not (yet) implemented. " +
-            "Create a support ticket to request this functionality if necessary."
-        )
-      
-      case Some(res: NextflowScript) =>
-        // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
-        val thisPath = Paths.get(ViashNamespace.targetOutputPath("", "invalid_platform_name", config.functionality.namespace, config.functionality.name))
+    val directivesToJson = directives.copy(
+      // if a docker platform is defined but the directives.container isn't, use the image of the dockerplatform as default
+      container = directives.container orElse containerDirective.map(cd => Left(cd.toMap)),
+      // is memory requirements are defined but directives.memory isn't, use that instead
+      memory = directives.memory orElse config.functionality.requirements.memoryAsBytes.map(_.toString + " B"),
+      // is cpu requirements are defined but directives.cpus isn't, use that instead
+      cpus = directives.cpus orElse config.functionality.requirements.cpus.map(np => Left(np))
+    )
 
-        val depStrs = config.functionality.dependencies.map{ dep =>
-          NextflowHelper.renderInclude(dep, thisPath)
-        }
+    val isWf = mainScript.isInstanceOf[NextflowScript]
 
-        s"""nextflow.enable.dsl=2
-          |
-          |// DEFINE CUSTOM CODE
-          |
-          |// component metadata
-          |thisConfig = ${NextflowHelper.generateConfigStr(config)}
-          |
-          |// import dependencies
-          |rootDir = getRootDir()
-          |${depStrs.mkString("\n|")}
+    val innerWorkflowFactory = mainScript match {
+      case scr: NextflowScript =>
+        s"""// user-provided workflow
+          |${scr.readWithoutInjection.get.split("\n").mkString("\n|")}
           |
           |// inner workflow hook
           |def innerWorkflowFactory(args) {
-          |  return ${res.entrypoint.get}
-          |}
-          |
-          |// component settings
-          |thisDefaultProcessArgs = ${NextflowHelper.generateDefaultProcessArgs(config, directives, auto, debug)}
-          |
-          |// initialise default workflow
-          |myWfInstance = workflowFactory([:])
-          |
-          |// add workflow to environment
-          |nextflow.script.ScriptMeta.current().addDefinition(myWfInstance)
-          |
-          |workflow {
-          |  helpMessage(thisConfig)
-          |
-          |  channelFromParams(params, thisConfig)
-          |    | myWfInstance
-          |    // todo: publish
-          |}
-          |
-          |${res.readWithInjection(Map.empty, config).get.split("\n").mkString("\n|")}
-          |
-          |// END CUSTOM CODE
-          |
-          |////////////////////////////
-          |// VDSL3 helper functions //
-          |////////////////////////////
-          |
-          |""".stripMargin +
-          NextflowHelper.workflowHelper
-
-      // if mainResource is a script
-      case Some(res) =>
-        val directivesToJson = directives.copy(
-          // if a docker platform is defined but the directives.container isn't, use the image of the dockerplatform as default
-          container = directives.container orElse containerDirective.map(cd => Left(cd.toMap)),
-          // is memory requirements are defined but directives.memory isn't, use that instead
-          memory = directives.memory orElse config.functionality.requirements.memoryAsBytes.map(_.toString + " B"),
-          // is cpu requirements are defined but directives.cpus isn't, use that instead
-          cpus = directives.cpus orElse config.functionality.requirements.cpus.map(np => Left(np))
-        )
-
-        
-        s"""${NextflowHelper.generateHeader(config)}
-          |
-          |nextflow.enable.dsl=2
-          |
-          |// DEFINE CUSTOM CODE
-          |
-          |// component metadata
-          |thisConfig = ${NextflowHelper.generateConfigStr(config)}
-          |
-          |// process script
+          |  return ${scr.entrypoint.get}
+          |}""".stripMargin
+      case _ => 
+        s"""// process script
           |thisScript = ${NextflowHelper.generateScriptStr(config)}
           |
           |// inner workflow hook
           |def innerWorkflowFactory(args) {
           |  return vdsl3RunWorkflowFactory(args)
-          |}
-          |
-          |// component settings
-          |thisDefaultProcessArgs = ${NextflowHelper.generateDefaultProcessArgs(config, directivesToJson, auto, debug)}
-          |
-          |// retrieve resourcesDir here to make sure the correct path is found
-          |resourcesDir = nextflow.script.ScriptMeta.current().getScriptPath().getParent()
-          |
-          |// initialise default workflow
-          |myWfInstance = workflowFactory([:])
-          |
-          |// add workflow to environment
-          |nextflow.script.ScriptMeta.current().addDefinition(myWfInstance)
-          |
-          |// anonymous workflow for running this module as a standalone
-          |workflow {
-          |  def mergedConfig = thisConfig
-          |  def mergedParams = [:] + params
-          |
-          |  // add id argument if it's not already in the config
-          |  if (mergedConfig.functionality.arguments.every{it.plainName != "id"}) {
-          |    def idArg = [
-          |      'name': '--id',
-          |      'required': false,
-          |      'type': 'string',
-          |      'description': 'A unique id for every entry.',
-          |      'multiple': false
-          |    ]
-          |    mergedConfig.functionality.arguments.add(0, idArg)
-          |    mergedConfig = processConfig(mergedConfig)
-          |  }
-          |  if (!mergedParams.containsKey("id")) {
-          |    mergedParams.id = "run"
-          |  }
-          |
-          |  helpMessage(mergedConfig)
-          |
-          |  channelFromParams(mergedParams, mergedConfig)
-          |    | preprocessInputs("config": mergedConfig)
-          |    | myWfInstance.run(
-          |      auto: [ publish: true ]
-          |    ) // todo: allow publishStates publishing
-          |}
-          |
-          |// END CUSTOM CODE
-          |
-          |////////////////////////////
-          |// VDSL3 helper functions //
-          |////////////////////////////
-          |
-          |""".stripMargin +
-          NextflowHelper.workflowHelper
+          |}""".stripMargin
     }
+
+    // TODO: resourceDir likely doesn't work when using Nextflow Fusion
+    // TODO: rootDir likely doesn't work when using Nextflow Fusion
+
+    s"""${NextflowHelper.generateHeader(config)}
+      |
+      |nextflow.enable.dsl=2
+      |
+      |// START COMPONENT-SPECIFIC CODE
+      |
+      |// retrieve resourcesDir here to make sure the correct path is found
+      |resourcesDir = nextflow.script.ScriptMeta.current().getScriptPath().getParent()
+      |
+      |// component metadata
+      |thisConfig = ${NextflowHelper.generateConfigStr(config)}
+      |
+      |${innerWorkflowFactory.split("\n").mkString("\n|")}
+      |
+      |// component settings
+      |thisDefaultProcessArgs = ${NextflowHelper.generateDefaultProcessArgs(config, directivesToJson, auto, debug)}
+      |${NextflowHelper.renderDependencies(config).split("\n").mkString("\n|")}
+      |// initialise default workflow
+      |myWfInstance = workflowFactory([:])
+      |
+      |// add workflow to environment
+      |nextflow.script.ScriptMeta.current().addDefinition(myWfInstance)
+      |
+      |// anonymous workflow for running this module as a standalone
+      |workflow {
+      |  // add id argument if it's not already in the config
+      |  if (thisConfig.functionality.arguments.every{it.plainName != "id"}) {
+      |    def idArg = [
+      |      'name': '--id',
+      |      'required': false,
+      |      'type': 'string',
+      |      'description': 'A unique id for every entry.',
+      |      'multiple': false
+      |    ]
+      |    thisConfig.functionality.arguments.add(0, idArg)
+      |    thisConfig = processConfig(thisConfig)
+      |  }
+      |  if (!params.containsKey("id")) {
+      |    params.id = "run"
+      |  }
+      |
+      |  helpMessage(thisConfig)
+      |
+      |  channelFromParams(params, thisConfig)
+      |    | preprocessInputs("config": thisConfig)
+      |    | myWfInstance.run(
+      |      auto: [ publish: true ]
+      |    ) // todo: allow publishStates publishing
+      |}
+      |
+      |// END COMPONENT-SPECIFIC CODE
+      |
+      |////////////////////////////
+      |// VDSL3 helper functions //
+      |////////////////////////////
+      |
+      |""".stripMargin +
+      NextflowHelper.workflowHelper
   }
 }
 

@@ -70,6 +70,21 @@ trait Script extends Resource {
     })
   }
 
+  def readWithoutInjection = {
+    read.map(code => {
+      val lines = code.split("\n")
+      val startIndex = lines.indexWhere(_.contains("VIASH START"))
+      val endIndex = lines.indexWhere(_.contains("VIASH END"))
+      val li = 
+        if (startIndex >= 0 && endIndex >= 0) {
+          lines.slice(0, startIndex + 1) ++ lines.slice(endIndex, lines.length)
+        } else {
+          lines
+        }
+      li.mkString("\n")
+    })
+  }
+
   def command(script: String): String = (companion.executor :+ s"\"$script\"").mkString(" ")
   def commandSeq(script: String): Seq[String] = companion.executor ++ Seq(script)
 }
