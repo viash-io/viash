@@ -105,20 +105,33 @@ List<Tuple> applyConfig(List<Tuple> parameterSets, Map config){
 private Map<String, Object> _castParamTypes(Map<String, Object> parValues, Map config) {
   // Cast the input to the correct type according to viash config
   def castParValues = parValues.collectEntries({ parName, parValue ->
-    paramSettings = config.functionality.allArguments.find({it.plainName == parName})
+    def paramSettings = config.functionality.allArguments.find({it.plainName == parName})
     // dont parse parameters like publish_dir ( in which case paramSettings = null)
-    parType = paramSettings ? paramSettings.get("type", null) : null
+    def parType = paramSettings ? paramSettings.get("type", null) : null
+
+    // turn parValue into a list, if it isn't one already
     if (parValue !instanceof Collection) {
       parValue = [parValue]
     }
-    if (parType == "file" && ((paramSettings.direction != null ? paramSettings.direction : "input") == "input")) {
-      parValue = parValue.collect{ path ->
-        if (path !instanceof String) {
-          path
-        } else {
-          file(path)
+
+    if (parType == "file" && paramSettings.get("direction", "input") == "input") {
+      parValue = parValue.collectMany{ parValueItem ->
+        if (parValueItem instanceof String) {
+          parValueItem = file(parValueItem)
         }
+        if (parValueItem !instanceof Collection) {
+          parValueItem = [parValueItem]
+        }
+        parValueItem
       }
+      // cast Paths to File? Or vice versa?
+      // parValue = parValue.collect{
+      //   if (path instanceof Path) {
+      //     [path.toFile()]
+      //   } else {
+      //     [path]
+      //   }
+      // }
     } else if (parType == "integer") {
       parValue = parValue.collect{it as Integer}
     } else if (parType == "double") {
@@ -136,6 +149,7 @@ private Map<String, Object> _castParamTypes(Map<String, Object> parValues, Map c
         "  Expected amount: 1. Found: ${parValue.size()}"
       parValue = parValue[0]
     }
+
     [parName, parValue]
   })
   return castParValues
@@ -305,7 +319,7 @@ private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params,
     .findAll { params.containsKey(it.plainName) }
     .collectEntries { [ it.plainName, params[it.plainName] ] }
   def globalID = params.get("id", null)
-  def globalParamsValues = applyConfigToOneParameterSet(globalParams.findAll{it.key != 'id'}, config)
+  def globalParamsValues = applyConfigToOneParameterSet(globalParams, config)
 
   /* process params_list arguments */
   /*********************************/
@@ -1367,7 +1381,7 @@ def findStates(Map params, Map config) {
 }
 process publishStatesProc {
   // todo: check publishpath?
-  publishDir path: "${getPublishDir()}/${id}/", mode: "copy"
+  publishDir path: "${getPublishDir()}/", mode: "copy"
   tag "$id"
   input:
     tuple val(id), val(yamlFile), val(yamlBlob), path(inputFiles)
@@ -1432,11 +1446,11 @@ def publishStates(Map args) {
           def files_ = collectFiles(state_)
           def convertedState_ = [id: id_] + convertPathsToFile(state_)
           def yamlBlob_ = toTaggedYamlBlob(convertedState_)
-          // adds a leading dot
+          // adds a leading dot to the id (after any folder names)
           // example: foo -> .foo, foo/bar -> foo/.bar
           def idWithDot_ = id_.replaceAll("^(.+/)?([^/]+)", "\$1.\$2")
           def yamlFile = '$id.$key.state.yaml'
-            .replaceAll('\\$id', id_)
+            .replaceAll('\\$id', idWithDot_)
             .replaceAll('\\$key', key_)
 
           [id_, yamlFile, yamlBlob_, files_]
@@ -2007,7 +2021,7 @@ def processFactory(Map processArgs) {
   def escapedScript = thisScript.replace('\\', '\\\\').replace('$', '\\$').replace('"""', '\\"\\"\\"')
 
   // publishdir assert
-  def assertStr = processArgs.auto.publish || processArgs.auto.transcript ? 
+  def assertStr = (processArgs.auto.publish == true) || processArgs.auto.transcript ? 
     """\nassert task.publishDir.size() > 0: "if auto.publish is true, params.publish_dir needs to be defined.\\n  Example: --publish_dir './output/'" """ :
     ""
 
