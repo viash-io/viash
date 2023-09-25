@@ -124,7 +124,7 @@ def processFactory(Map processArgs) {
   def escapedScript = thisScript.replace('\\', '\\\\').replace('$', '\\$').replace('"""', '\\"\\"\\"')
 
   // publishdir assert
-  def assertStr = processArgs.auto.publish || processArgs.auto.transcript ? 
+  def assertStr = (processArgs.auto.publish == true) || processArgs.auto.transcript ? 
     """\nassert task.publishDir.size() > 0: "if auto.publish is true, params.publish_dir needs to be defined.\\n  Example: --publish_dir './output/'" """ :
     ""
 
