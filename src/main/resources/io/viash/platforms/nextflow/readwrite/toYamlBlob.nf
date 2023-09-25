@@ -3,6 +3,6 @@ String toYamlBlob(Map data) {
   options.setDefaultFlowStyle(org.yaml.snakeyaml.DumperOptions.FlowStyle.BLOCK)
   options.setPrettyFlow(true)
   def yaml = new org.yaml.snakeyaml.Yaml(options)
-  def cleanData = iterateMap(data, {it.toString})
+  def cleanData = iterateMap(data, {it.toString()})
   return yaml.dump(data)
 }
