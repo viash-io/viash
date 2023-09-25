@@ -3,12 +3,13 @@ process publishStatesProc {
   publishDir path: "${getPublishDir()}/${id}/", mode: "copy"
   tag "$id"
   input:
-    tuple val(id), val(yamlBlob), path(inputFiles)
+    tuple val(id), val(yamlFile), val(yamlBlob), path(inputFiles)
   output:
-    tuple val(id), path{["state.yaml"] + inputFiles}
+    tuple val(id), path{[yamlFile] + inputFiles}
   script:
   """
-  echo '${yamlBlob}' > state.yaml
+  mkdir -p "\$(dirname '${yamlFile}')"
+  echo '${yamlBlob}' > '${yamlFile}'
   """
 }
 
@@ -52,17 +53,26 @@ def convertFilesToPath(obj) {
 }
 
 def publishStates(Map args) {
+  def key_ = args.get("key")
+  
   workflow publishStatesWf {
     take: input_ch
     main:
       input_ch
         | map { tup ->
-          def id = tup[0]
-          def state = tup[1]
-          def files = collectFiles(state)
-          def convertedState = [id: id] + convertPathsToFile(state)
-          def yamlBlob = toTaggedYamlBlob(convertedState)
-          [id, yamlBlob, files]
+          def id_ = tup[0]
+          def state_ = tup[1]
+          def files_ = collectFiles(state_)
+          def convertedState_ = [id: id_] + convertPathsToFile(state_)
+          def yamlBlob_ = toTaggedYamlBlob(convertedState_)
+          // adds a leading dot
+          // example: foo -> .foo, foo/bar -> foo/.bar
+          def idWithDot_ = id_.replaceAll("^(.+/)?([^/]+)", "\$1.\$2")
+          def yamlFile = '$id.$key.state.yaml'
+            .replaceAll('\\$id', id_)
+            .replaceAll('\\$key', key_)
+
+          [id_, yamlFile, yamlBlob_, files_]
         }
         | publishStatesProc
     emit: input_ch
