@@ -13,6 +13,12 @@ def processDirectives(Map drctv) {
   // remove null values
   drctv = drctv.findAll{k, v -> v != null}
 
+  def expectedKeys = [
+    "accelerator", "afterScript", "beforeScript", "cache", "conda", "container", "containerOptions", "cpus", "disk", "echo", "errorStrategy", "executor", "machineType", "maxErrors", "maxForks", "maxRetries", "memory", "module", "penv", "pod", "publishDir", "queue", "label", "scratch", "storeDir", "stageInMode", "stageOutMode", "tag", "time"
+  ] as Set
+  // all keys in drctv are in expectedKeys
+  assert expectedKeys.containsAll(drctv.keySet()) : "Unexpected key(s) in directives: ${drctv.keySet() - expectedKeys}"
+
   /* DIRECTIVE accelerator
     accepted examples:
     - [ limit: 4, type: "nvidia-tesla-k80" ]
