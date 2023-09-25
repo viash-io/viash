@@ -289,7 +289,6 @@ case class NextflowPlatform(
       |  helpMessage(thisConfig)
       |
       |  channelFromParams(params, thisConfig)
-      |    | preprocessInputs("config": thisConfig)
       |    | myWfInstance.run(
       |      auto: [ publish: true ]
       |    ) // todo: allow publishStates publishing
