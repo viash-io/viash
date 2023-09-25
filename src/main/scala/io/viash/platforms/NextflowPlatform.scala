@@ -120,6 +120,11 @@ case class NextflowPlatform(
       dest = Some("nextflow.config"),
       text = Some(renderNextflowConfig(config.functionality, condir))
     )
+    // TODO: create and write dockerfile when #518 is merged into main
+    // val dockerfile = PlainFile(
+    //   dest = Some("Dockerfile"),
+    //   text = Some(dockerEngine.dockerFile(...))
+    // )
 
     // remove main
     val otherResources = config.functionality.additionalResources
