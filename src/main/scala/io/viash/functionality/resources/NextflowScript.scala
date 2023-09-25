@@ -41,13 +41,11 @@ case class NextflowScript(
   parent: Option[URI] = None,
 
   @description("The name of the workflow to be executed.")
-  entrypoint: Option[String] = None,
+  entrypoint: String,
 
   @description("Specifies the resource as a Nextflow script.")
   `type`: String = NextflowScript.`type`
 ) extends Script {
-  
-  assert(entrypoint.isDefined, "In a Nextflow script, the 'entrypoint' argument needs to be specified.")
 
   val companion = NextflowScript
 
@@ -60,19 +58,11 @@ case class NextflowScript(
   }
 
   override def command(script: String): String = {
-    val entryStr = entrypoint match {
-      case Some(entry) => " -entry " + entry
-      case None => ""
-    }
-    super.command(script) + entryStr
+    super.command(script) + " -entry " + entrypoint
   }
 
   override def commandSeq(script: String): Seq[String] = {
-    val entrySeq = entrypoint match {
-      case Some(entry) => Seq("-entry", entry)
-      case None => Seq()
-    }
-    super.commandSeq(script) ++ entrySeq
+    super.commandSeq(script) ++ Seq("-entry", entrypoint)
   }
 }
 

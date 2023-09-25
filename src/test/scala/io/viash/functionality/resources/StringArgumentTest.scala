@@ -43,16 +43,7 @@ class CommandsTest extends AnyFunSuite {
   }
 
   test("Test Nextflow script") {
-    val script = NextflowScript(path = Some("bar"), entrypoint = Some("baz"))
-    val command = script.command("foo")
-    val commandSeq = script.commandSeq("foo")
-
-    assert(command == "nextflow run . -main-script \"foo\" -entry baz")
-    assert(commandSeq == Seq("nextflow", "run", ".", "-main-script", "foo", "-entry", "baz"))
-  }
-
-  test("Test Nextflow script with entrypoint") {
-    val script = NextflowScript(path = Some("bar"), entrypoint = Some("baz"))
+    val script = NextflowScript(path = Some("bar"), entrypoint = "baz")
     val command = script.command("foo")
     val commandSeq = script.commandSeq("foo")
 

@@ -229,7 +229,7 @@ case class NextflowPlatform(
           |
           |// inner workflow hook
           |def innerWorkflowFactory(args) {
-          |  return ${scr.entrypoint.get}
+          |  return ${scr.entrypoint}
           |}""".stripMargin
       // else if it is a vdsl3 module
       case _ => 

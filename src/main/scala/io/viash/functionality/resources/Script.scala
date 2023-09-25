@@ -137,7 +137,8 @@ object Script {
       case JavaScriptScript.`type` =>
         JavaScriptScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
       case NextflowScript.`type` =>
-        NextflowScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint)
+        assert(entrypoint.isDefined, "In a Nextflow script, the 'entrypoint' argument needs to be specified.")
+        NextflowScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent, entrypoint = entrypoint.get)
       case PythonScript.`type` =>
         PythonScript(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
       case RScript.`type` =>
