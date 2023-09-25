@@ -290,8 +290,8 @@ case class NextflowPlatform(
       |
       |  channelFromParams(params, thisConfig)
       |    | myWfInstance.run(
-      |      auto: [ publish: true ]
-      |    ) // todo: allow publishStates publishing
+      |      auto: [ publish: "state" ]
+      |    )
       |}
       |
       |// END COMPONENT-SPECIFIC CODE
