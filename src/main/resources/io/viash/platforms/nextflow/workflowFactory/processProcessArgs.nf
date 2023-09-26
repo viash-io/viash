@@ -14,6 +14,11 @@ def processProcessArgs(Map args) {
   assert key instanceof CharSequence : "Expected process argument 'key' to be a String. Found: class ${key.getClass()}"
   assert key ==~ /^[a-zA-Z_]\w*$/ : "Error in module '$key': Expected process argument 'key' to consist of only letters, digits or underscores. Found: ${key}"
 
+  // check for any unexpected keys
+  def expectedKeys = ["key", "directives", "auto", "map", "mapId", "mapData", "mapPassthrough", "filter", "fromState", "toState", "args", "renameKeys", "debug"]
+  def unexpectedKeys = processArgs.keySet() - expectedKeys
+  assert unexpectedKeys.isEmpty() : "Error in module '$key': unexpected arguments to the '.run()' function: '${unexpectedKeys.join("', '")}'"
+
   // check whether directives exists and apply defaults
   assert processArgs.containsKey("directives") : "Error in module '$key': directives is a required argument"
   assert processArgs["directives"] instanceof Map : "Error in module '$key': Expected process argument 'directives' to be a Map. Found: class ${processArgs['directives'].getClass()}"

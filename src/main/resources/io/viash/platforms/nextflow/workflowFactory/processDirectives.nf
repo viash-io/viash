@@ -13,11 +13,12 @@ def processDirectives(Map drctv) {
   // remove null values
   drctv = drctv.findAll{k, v -> v != null}
 
+  // check for unexpected keys
   def expectedKeys = [
     "accelerator", "afterScript", "beforeScript", "cache", "conda", "container", "containerOptions", "cpus", "disk", "echo", "errorStrategy", "executor", "machineType", "maxErrors", "maxForks", "maxRetries", "memory", "module", "penv", "pod", "publishDir", "queue", "label", "scratch", "storeDir", "stageInMode", "stageOutMode", "tag", "time"
-  ] as Set
-  // all keys in drctv are in expectedKeys
-  assert expectedKeys.containsAll(drctv.keySet()) : "Unexpected key(s) in directives: ${drctv.keySet() - expectedKeys}"
+  ]
+  def unexpectedKeys = drctv.keySet() - expectedKeys
+  assert unexpectedKeys.isEmpty() : "Unexpected keys in process directive: '${unexpectedKeys.join("', '")}'"
 
   /* DIRECTIVE accelerator
     accepted examples:

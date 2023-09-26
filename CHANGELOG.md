@@ -4,16 +4,14 @@ TODO add summary
 
 ## BREAKING CHANGES
 
-* Removed `src/main/resources/io/viash/platforms/nextflow/VDSL3Helper.nf` from the Viash jar file (PR #518).
-
-* `NextflowPlatform`: Changed the default value of `auto.simplifyOutput` from `true` to `false` (#522). This ensures that the output of a VDSL3 component is always `[id: String, state: Map]`. If you want to use the old behaviour where the second element of the tuple can also be a File, add the following config mod to `_viash.yaml`:
+* `NextflowPlatform`: Changed the default value of `auto.simplifyOutput` from `true` to `false` (#522, PR #518). This ensures that the output of a VDSL3 component is always `[id: String, state: Map]`. If you want to use the old behaviour where the second element of the tuple can also be a File, add the following config mod to `_viash.yaml`:
 
   ```yaml
   config_mods: |
     .platforms[.type == 'nextflow'].auto.simplifyOutput := true
   ```
 
-* `VDSL3Helper.nf`: Removed from the Viash jar file (PR #518). It's functions have been moved to `WorkflowHelper.nf`.
+* `VDSL3Helper.nf`: Removed from the Viash jar file (PR #518). Its functions have been moved to `WorkflowHelper.nf`.
 
 * `DataflowHelper.nf`: Added deprecation warning to functions from this file (PR #518).
 
@@ -41,10 +39,11 @@ TODO add summary
 * `WorkflowHelper.nf`: The workflow helper was split into different helper files for each of the helper functions (PR #518).
   For now, these helper files are pasted together to recreate the `WorkflowHelper.nf`.
 
-* `NextflowPlatform`: Set default tag to `"$id"` (#521).
+* `NextflowPlatform`: Set default tag to `"$id"` (#521, PR #518).
 
-* `WorkflowHelper.nf`: Was split into different helper files for each of the helper functions (PR #518). For now, these helper files are pasted together to recreate the `WorkflowHelper.nf`.
+## MINOR CHANGES
 
+* `NextflowPlatform`: Throw error when unexpected keys are passed to the `.run()` method (#512, PR #518).
 
 ## DOCUMENTATION
 

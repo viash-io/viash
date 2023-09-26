@@ -3,9 +3,10 @@ def processAuto(Map auto) {
   // remove null values
   auto = auto.findAll{k, v -> v != null}
 
-  expectedKeys = ["simplifyInput", "simplifyOutput", "transcript", "publish"] as Set
-  // check whether all expected keys are in auto
-  assert auto.keySet() == expectedKeys
+  // check for unexpected keys
+  def expectedKeys = ["simplifyInput", "simplifyOutput", "transcript", "publish"]
+  def unexpectedKeys = auto.keySet() - expectedKeys
+  assert unexpectedKeys.isEmpty(), "unexpected keys in auto: '${unexpectedKeys.join("', '"))}'"
 
   // check auto.simplifyInput
   assert auto.simplifyInput instanceof Boolean, "auto.simplifyInput must be a boolean"

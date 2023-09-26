@@ -1692,9 +1692,10 @@ def processAuto(Map auto) {
   // remove null values
   auto = auto.findAll{k, v -> v != null}
 
-  expectedKeys = ["simplifyInput", "simplifyOutput", "transcript", "publish"] as Set
-  // check whether all expected keys are in auto
-  assert auto.keySet() == expectedKeys
+  // check for unexpected keys
+  def expectedKeys = ["simplifyInput", "simplifyOutput", "transcript", "publish"]
+  def unexpectedKeys = auto.keySet() - expectedKeys
+  assert unexpectedKeys.isEmpty(), "unexpected keys in auto: '${unexpectedKeys.join("', '"))}'"
 
   // check auto.simplifyInput
   assert auto.simplifyInput instanceof Boolean, "auto.simplifyInput must be a boolean"
@@ -1727,11 +1728,12 @@ def processDirectives(Map drctv) {
   // remove null values
   drctv = drctv.findAll{k, v -> v != null}
 
+  // check for unexpected keys
   def expectedKeys = [
     "accelerator", "afterScript", "beforeScript", "cache", "conda", "container", "containerOptions", "cpus", "disk", "echo", "errorStrategy", "executor", "machineType", "maxErrors", "maxForks", "maxRetries", "memory", "module", "penv", "pod", "publishDir", "queue", "label", "scratch", "storeDir", "stageInMode", "stageOutMode", "tag", "time"
-  ] as Set
-  // all keys in drctv are in expectedKeys
-  assert expectedKeys.containsAll(drctv.keySet()) : "Unexpected key(s) in directives: ${drctv.keySet() - expectedKeys}"
+  ]
+  def unexpectedKeys = drctv.keySet() - expectedKeys
+  assert unexpectedKeys.isEmpty() : "Unexpected keys in process directive: '${unexpectedKeys.join("', '")}'"
 
   /* DIRECTIVE accelerator
     accepted examples:
@@ -2337,6 +2339,11 @@ def processProcessArgs(Map args) {
   def key = processArgs["key"]
   assert key instanceof CharSequence : "Expected process argument 'key' to be a String. Found: class ${key.getClass()}"
   assert key ==~ /^[a-zA-Z_]\w*$/ : "Error in module '$key': Expected process argument 'key' to consist of only letters, digits or underscores. Found: ${key}"
+
+  // check for any unexpected keys
+  def expectedKeys = ["key", "directives", "auto", "map", "mapId", "mapData", "mapPassthrough", "filter", "fromState", "toState", "args", "renameKeys", "debug"]
+  def unexpectedKeys = processArgs.keySet() - expectedKeys
+  assert unexpectedKeys.isEmpty() : "Error in module '$key': unexpected arguments to the '.run()' function: '${unexpectedKeys.join("', '")}'"
 
   // check whether directives exists and apply defaults
   assert processArgs.containsKey("directives") : "Error in module '$key': directives is a required argument"
