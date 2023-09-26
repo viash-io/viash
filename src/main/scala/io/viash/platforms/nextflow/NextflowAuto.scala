@@ -54,7 +54,5 @@ case class NextflowAuto(
       |Default: `false`.
       |""".stripMargin)
   @default("False")
-  publish: Boolean = false,
-
-  // TODO: add a 'publishState' option
+  publish: Either[Boolean, String] = Left(false)
 )
