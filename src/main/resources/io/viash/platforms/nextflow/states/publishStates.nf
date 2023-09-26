@@ -89,13 +89,8 @@ def publishStates(Map args) {
           def yamlFile = '$id.$key.state.yaml'
             .replaceAll('\\$id', idWithDot_)
             .replaceAll('\\$key', key_)
-          
-          // construct path apriori
-          def cmds_ = [inputFiles_, outputFiles_].transpose().collect{infile, outfile ->
-            "cp -r '${infile.toString()}' '${outfile}'"
-          }
 
-          [id_, yamlBlob_, yamlFile, inputFiles_, cmds_, outputFiles_]
+          [id_, yamlBlob_, yamlFile, inputFiles_, outputFiles_]
         }
         | publishStatesProc
     emit: input_ch
@@ -107,10 +102,16 @@ process publishStatesProc {
   publishDir path: "${getPublishDir()}/", mode: "copy"
   tag "$id"
   input:
-    tuple val(id), val(yamlBlob), val(yamlFile), path(inputFiles), val(cmds), val(outputFiles)
+    tuple val(id), val(yamlBlob), val(yamlFile), path(inputFiles), val(outputFiles)
   output:
     tuple val(id), path{[yamlFile] + outputFiles}
   script:
+  def cmds = [
+    inputFiles instanceof List ? inputFiles : [inputFiles],
+    outputFiles instanceof List ? outputFiles : [outputFiles]
+  ].transpose().collect{infile, outfile ->
+    "cp -r '${infile.toString()}' '${outfile.toString()}'"
+  }
   """
   mkdir -p "\$(dirname '${yamlFile}')"
   echo "Storing state as yaml"
