@@ -152,31 +152,24 @@ def workflowFactory(Map args) {
         // remove arguments with explicit null values
         combinedArgs.removeAll{it.value == null}
 
-        if (!workflow.stubRun) {
-          // check whether required arguments exist
-          thisConfig.functionality.allArguments
-            .forEach { par ->
-              if (par.required) {
-                assert combinedArgs.containsKey(par.plainName) : 
-                  "Error in module '${key}' id '${id_}': required argument '${par.plainName}' is missing"
-              }
-
-              // TODO: check whether parameters have the right type
-            }
-        }
+        combinedArgs = processInputs(combinedArgs, thisConfig, id_, key)
 
         [id_, combinedArgs] + tuple.drop(2)
       }
 
     out0_ = mid4_
       | _debug(processArgs, "processed")
+      // run workflow
       | innerWorkflowFactory(processArgs)
-      // todo: can we have a postprocessOutputs here?
-      | map { id, output ->
-        if (processArgs.auto.simplifyOutput && output.size() == 1) {
-          output = output.values()[0]
+      // check output tuple
+      | map { id_, output_ ->
+        output_ = processOutputs(output_, thisConfig, id_, key)
+
+        if (processArgs.auto.simplifyOutput && output_.size() == 1) {
+          output_ = output_.values()[0]
         }
-        [id, output]
+
+        [id_, output_]
       }
 
     // join the output [id, output] with the previous state [id, state, ...]

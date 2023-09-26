@@ -34,6 +34,8 @@ TODO add summary
 
   In a next PR, each of the dependencies will have their values overridden by the arguments of the `.run`.
 
+* `NextflowPlatform`: The data passed to the input of a component and produced as output by the component are now validated against the arguments defined in the Viash config (PR #518).
+
 ## MAJOR CHANGES
 
 * `WorkflowHelper.nf`: The workflow helper was split into different helper files for each of the helper functions (PR #518).

@@ -1,28 +1,8 @@
-def _processArgumentGroup(argumentGroups, name, arguments) {
-  def argNamesInGroups = argumentGroups.collectMany{it.arguments.findAll{it instanceof String}}.toSet()
+////////////////////////////
+// VDSL3 helper functions //
+////////////////////////////
 
-  // Check if 'arguments' is in 'argumentGroups'. 
-  def argumentsNotInGroup = arguments.findAll{arg -> !(argNamesInGroups.contains(arg.plainName))}
-
-  // Check whether an argument group of 'name' exists.
-  def existing = argumentGroups.find{gr -> name == gr.name}
-
-  // if there are no arguments missing from the argument group, just return the existing group (if any)
-  if (argumentsNotInGroup.isEmpty()) {
-    return existing == null ? [] : [existing]
-  
-  // if there are missing arguments and there is an existing group, add the missing arguments to it
-  } else if (existing != null) {
-    def newEx = existing.clone()
-    newEx.arguments.addAll(argumentsNotInGroup.findAll{it !instanceof String})
-    return [newEx]
-
-  // else create a new group
-  } else {
-    def newEx = [name: name, arguments: argumentsNotInGroup.findAll{it !instanceof String}]
-    return [newEx]
-  }
-}
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/arguments/_processArgument.nf'
 def _processArgument(arg) {
   arg.multiple = arg.multiple != null ? arg.multiple : false
   arg.required = arg.required != null ? arg.required : false
@@ -71,6 +51,206 @@ def _processArgument(arg) {
   arg
 }
 
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/arguments/_processArgumentGroup.nf'
+def _processArgumentGroup(argumentGroups, name, arguments) {
+  def argNamesInGroups = argumentGroups.collectMany{it.arguments.findAll{it instanceof String}}.toSet()
+
+  // Check if 'arguments' is in 'argumentGroups'. 
+  def argumentsNotInGroup = arguments.findAll{arg -> !(argNamesInGroups.contains(arg.plainName))}
+
+  // Check whether an argument group of 'name' exists.
+  def existing = argumentGroups.find{gr -> name == gr.name}
+
+  // if there are no arguments missing from the argument group, just return the existing group (if any)
+  if (argumentsNotInGroup.isEmpty()) {
+    return existing == null ? [] : [existing]
+  
+  // if there are missing arguments and there is an existing group, add the missing arguments to it
+  } else if (existing != null) {
+    def newEx = existing.clone()
+    newEx.arguments.addAll(argumentsNotInGroup.findAll{it !instanceof String})
+    return [newEx]
+
+  // else create a new group
+  } else {
+    def newEx = [name: name, arguments: argumentsNotInGroup.findAll{it !instanceof String}]
+    return [newEx]
+  }
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/arguments/processInputsOutputs.nf'
+boolean typeCheck(String stage, Map par, Object x) {
+  if (!par.required && x == null) {
+    return true
+  } else if (par.multiple) {
+    x instanceof List && x.every { typeCheck(stage, par + [multiple: false], it) }
+  } else if (par.type == "string") {
+    x instanceof CharSequence
+  } else if (par.type == "integer") {
+    x instanceof Integer
+  } else if (par.type == "long") {
+    x instanceof Integer || x instanceof Long
+  } else if (par.type == "boolean") {
+    x instanceof Boolean
+  } else if (par.type == "file") {
+    if (stage == "output") {
+      x instanceof File || x instanceof Path
+    } else if (par.direction == "input") {
+      x instanceof File || x instanceof Path
+    } else if (par.direction == "output") {
+      x instanceof String
+    }
+  }
+}
+
+Map processInputs(Map inputs, Map config, String id, String key) {
+  if (!workflow.stubRun) {
+    config.functionality.allArguments.each { arg ->
+      if (arg.required) {
+        assert inputs.containsKey(arg.plainName) && inputs.get(arg.plainName) != null : 
+          "Error in module '${key}' id '${id}': required input argument '${arg.plainName}' is missing"
+      }
+    }
+
+    inputs = inputs.collectEntries { name, value ->
+      def par = config.functionality.allArguments.find { it.plainName == name && (it.direction == "input" || it.type == "file") }
+      assert par != null : "Error in module '${key}' id '${id}': '${name}' is not a valid input argument"
+      
+      // if value is a gstring, turn it into a regular string
+      if (value instanceof GString) {
+        value = value.toString()
+      }
+
+      assert typeCheck("input", par, value) : 
+        "Error in module '${key}' id '${id}': input argument '${name}' has the wrong type. " +
+        "Expected type: ${par.multiple ? "List[${par.type}]" : par.type}. Found type: ${value.getClass()}"
+
+      [ name, value ]
+    }
+  }
+  return inputs
+}
+
+Map processOutputs(Map outputs, Map config, String id, String key) {
+  if (!workflow.stubRun) {
+    config.functionality.allArguments.each { arg ->
+      if (arg.direction == "output" && arg.required) {
+        assert outputs.containsKey(arg.plainName) && outputs.get(arg.plainName) != null : 
+          "Error in module '${key}' id '${id}': required output argument '${arg.plainName}' is missing"
+      }
+    }
+
+    outputs = outputs.collectEntries { name, value ->
+      def par = config.functionality.allArguments.find { it.plainName == name && it.direction == "output" }
+      assert par != null : "Error in module '${key}' id '${id}': '${name}' is not a valid output argument"
+      
+      // if value is a gstring, turn it into a regular string
+      if (value instanceof GString) {
+        value = value.toString()
+      }
+
+      assert typeCheck("output", par, value) : 
+        "Error in module '${key}' id '${id}': output argument '${name}' has the wrong type. " +
+        "Expected type: ${par.multiple ? "List[${par.type}]" : par.type}. Found type: ${value.getClass()}"
+      
+      [ name, value ]
+    }
+  }
+  return outputs
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/_checkUniqueIds.nf'
+
+/**
+ * Check if the ids are unique across parameter sets
+ *
+ * @param parameterSets a list of parameter sets.
+ */
+private void _checkUniqueIds(List<Tuple2<String, Map<String, Object>>> parameterSets) {
+  def ppIds = parameterSets.collect{it[0]}
+  assert ppIds.size() == ppIds.unique().size() : "All argument sets should have unique ids. Detected ids: $ppIds"
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/_getChild.nf'
+
+// helper functions for reading params from file //
+def _getChild(parent, child) {
+  if (child.contains("://") || java.nio.file.Paths.get(child).isAbsolute()) {
+    child
+  } else {
+    def parentAbsolute = java.nio.file.Paths.get(parent).toAbsolutePath().toString()
+    parentAbsolute.replaceAll('/[^/]*$', "/") + child
+  }
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/_guessParamListFormat.nf'
+
+def _guessParamListFormat(params) {
+  if (!params.containsKey("param_list") || params.param_list == null) {
+    "none"
+  } else {
+    def param_list = params.param_list
+
+    if (param_list !instanceof String) {
+      "asis"
+    } else if (param_list.endsWith(".csv")) {
+      "csv"
+    } else if (param_list.endsWith(".json") || param_list.endsWith(".jsn")) {
+      "json"
+    } else if (param_list.endsWith(".yaml") || param_list.endsWith(".yml")) {
+      "yaml"
+    } else {
+      "yaml_blob"
+    }
+  }
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/_splitParams.nf'
+/**
+ * Split parameters for arguments that accept multiple values using their separator
+ *
+ * @param paramList A Map containing parameters to split.
+ * @param config A Map of the Viash configuration. This Map can be generated from the config file
+ *               using the readConfig() function.
+ *
+ * @return A Map of parameters where the parameter values have been split into a list using
+ *         their seperator.
+ */
+Map<String, Object> _splitParams(Map<String, Object> parValues, Map config){
+  def parsedParamValues = parValues.collectEntries { parName, parValue ->
+    def parameterSettings = config.functionality.allArguments.find({it.plainName == parName})
+
+    if (!parameterSettings) {
+      // if argument is not found, do not alter 
+      return [parName, parValue]
+    }
+    if (parameterSettings.multiple) { // Check if parameter can accept multiple values
+      if (parValue instanceof Collection) {
+          parValue = parValue.collect{it instanceof String ? it.split(parameterSettings.multiple_sep) : it }
+      } else if (parValue instanceof String) {
+          parValue = parValue.split(parameterSettings.multiple_sep)
+      } else if (parValue == null) {
+          parValue = []
+      } else {
+          parValue = [ parValue ]
+      }
+      parValue = parValue.flatten()
+    }
+    // For all parameters check if multiple values are only passed for
+    // arguments that allow it. Quietly simplify lists of length 1.
+    if (!parameterSettings.multiple && parValue instanceof Collection) {
+      assert parValue.size() == 1 : 
+      "Error: argument ${parName} has too many values.\n" +
+      "  Expected amount: 1. Found: ${parValue.size()}"
+      parValue = parValue[0]
+    }
+    [parName, parValue]
+  }
+  return parsedParamValues
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/applyConfig.nf'
+
 /**
  * Apply the argument settings specified in a Viash config to a list of parameter sets.
  *    - Split the parameter values according to their seperator if 
@@ -95,6 +275,8 @@ List<Tuple> applyConfig(List<Tuple> parameterSets, Map config){
   _checkUniqueIds(processedparameterSets)
   return processedparameterSets
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/applyConfigToOneParameterSet.nf'
 /**
  * Cast parameters to the correct type as defined in the Viash config
  *
@@ -180,6 +362,8 @@ Map<String, Object> applyConfigToOneParameterSet(Map<String, Object> paramValues
   })
   return castParamValues
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/channelFromParams.nf'
 /**
  * Resolve the file paths in the parameters relative to given path
  *
@@ -378,53 +562,7 @@ def channelFromParams(Map params, Map config) {
   return Channel.fromList(processedParams)
 }
 
-/**
- * Check if the ids are unique across parameter sets
- *
- * @param parameterSets a list of parameter sets.
- */
-private void _checkUniqueIds(List<Tuple2<String, Map<String, Object>>> parameterSets) {
-  def ppIds = parameterSets.collect{it[0]}
-  assert ppIds.size() == ppIds.unique().size() : "All argument sets should have unique ids. Detected ids: $ppIds"
-}
-
-// helper functions for reading params from file //
-def _getChild(parent, child) {
-  if (child.contains("://") || java.nio.file.Paths.get(child).isAbsolute()) {
-    child
-  } else {
-    def parentAbsolute = java.nio.file.Paths.get(parent).toAbsolutePath().toString()
-    parentAbsolute.replaceAll('/[^/]*$', "/") + child
-  }
-}
-
-def _guessParamListFormat(params) {
-  if (!params.containsKey("param_list") || params.param_list == null) {
-    "none"
-  } else {
-    def param_list = params.param_list
-
-    if (param_list !instanceof String) {
-      "asis"
-    } else if (param_list.endsWith(".csv")) {
-      "csv"
-    } else if (param_list.endsWith(".json") || param_list.endsWith(".jsn")) {
-      "json"
-    } else if (param_list.endsWith(".yaml") || param_list.endsWith(".yml")) {
-      "yaml"
-    } else {
-      "yaml_blob"
-    }
-  }
-}
-def paramsToChannel(params, config) {
-  if (!viashChannelDeprecationWarningPrinted) {
-    viashChannelDeprecationWarningPrinted = true
-    System.err.println("Warning: paramsToChannel has deprecated in Viash 0.7.0. " +
-                      "Please use a combination of channelFromParams and preprocessInputs.")
-  }
-  Channel.fromList(paramsToList(params, config))
-}
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/paramToList.nf'
 viashChannelDeprecationWarningPrinted = false
 
 def paramsToList(params, config) {
@@ -557,95 +695,29 @@ def paramsToList(params, config) {
   processedParams
 }
 
-/**
- * Process a list of Vdsl3 formatted parameters and apply a Viash config to them:
- *    - Gather default parameters from the Viash config and make 
- *      sure that they are correctly formatted (see applyConfig method).
- *    - Format the input parameters (also using the applyConfig method).
- *    - Apply the default parameter to the input parameters.
- *    - Do some assertions:
- *        ~ Check if the event IDs in the channel are unique.
- *  
- * @param params A list of parameter sets as Tuples. The first element of the tuples
- *                must be a unique id of the parameter set, and the second element 
- *                must contain the parameters themselves. Optional extra elements 
- *                of the tuples will be passed to the output as is.
- * @param config A Map of the Viash configuration. This Map can be generated from 
- *                the config file using the readConfig() function.           
- *
- * @return A list of processed parameters sets as tuples.
- */
-
-private List<Tuple> _preprocessInputsList(List<Tuple> params, Map config) {
-  // Get different parameter types (used throughout this function)
-  def defaultArgs = config.functionality.allArguments
-    .findAll { it.containsKey("default") }
-    .collectEntries { [ it.plainName, it.default ] }
-
-  // Apply config to default parameters
-  def parsedDefaultValues = applyConfigToOneParameterSet(defaultArgs, config)
-
-  // Apply config to input parameters
-  def parsedInputParamSets = applyConfig(params, config)
-
-  // Merge two parameter sets together
-  def parsedArgs = parsedInputParamSets.collect({ parsedInputParamSet ->
-    def id = parsedInputParamSet[0]
-    def parValues = parsedInputParamSet[1]
-    def passthrough = parsedInputParamSet.drop(2)
-    def parValuesWithDefault = parsedDefaultValues + parValues
-    [id, parValuesWithDefault] + passthrough
-  })
-  _checkUniqueIds(parsedArgs)
-
-  return parsedArgs
-}
-
-/**
- * Generate a nextflow Workflow that allows processing a channel of 
- * Vdsl3 formatted events and apply a Viash config to them:
- *    - Gather default parameters from the Viash config and make 
- *      sure that they are correctly formatted (see applyConfig method).
- *    - Format the input parameters (also using the applyConfig method).
- *    - Apply the default parameter to the input parameters.
- *    - Do some assertions:
- *        ~ Check if the event IDs in the channel are unique.
- * 
- * The events in the channel are formatted as tuples, with the 
- * first element of the tuples being a unique id of the parameter set, 
- * and the second element containg the the parameters themselves.
- * Optional extra elements of the tuples will be passed to the output as is.
- *
- * @param args A map that must contain a 'config' key that points
- *              to a parsed config (see readConfig()). Optionally, a
- *              'key' key can be provided which can be used to create a unique
- *              name for the workflow process.
- *
- * @return A workflow that allows processing a channel of Vdsl3 formatted events
- * and apply a Viash config to them.
- */
-def preprocessInputs(Map args) {
-  wfKey = args.key != null ? args.key : "preprocessInputs"
-  config = args.config
-  workflow preprocessInputsInstance {
-    take: 
-    input_ch
-
-    main:
-    assert config instanceof Map : 
-      "Error in preprocessInputs: config must be a map. " +
-      "Expected class: Map. Found: config.getClass() is ${config.getClass()}"
-
-    output_ch = input_ch
-      | toSortedList
-      | map { paramList -> _preprocessInputsList(paramList, config) }
-      | flatMap
-    emit:
-    output_ch
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/paramsToChannel.nf'
+def paramsToChannel(params, config) {
+  if (!viashChannelDeprecationWarningPrinted) {
+    viashChannelDeprecationWarningPrinted = true
+    System.err.println("Warning: paramsToChannel has deprecated in Viash 0.7.0. " +
+                      "Please use a combination of channelFromParams and preprocessInputs.")
   }
-
-  return preprocessInputsInstance.cloneWithName(wfKey)
+  Channel.fromList(paramsToList(params, config))
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/viashChannel.nf'
+
+def viashChannel(params, config) {
+  if (!viashChannelDeprecationWarningPrinted) {
+    viashChannelDeprecationWarningPrinted = true
+    System.err.println("Warning: viashChannel has deprecated in Viash 0.7.0. " +
+                      "Please use a combination of channelFromParams and preprocessInputs.")
+  }
+  paramsToChannel(params, config)
+    | map{tup -> [tup.id, tup]}
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/runComponents.nf'
 /**
  * Run a list of components on a stream of data.
  * 
@@ -753,58 +825,111 @@ def runComponents(Map args) {
 
   return runComponentsWf
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/preprocessInputs.nf'
+// This helper file will be deprecated soon
+preprocessInputsDeprecationWarningPrinted = false
+
+def preprocessInputsDeprecationWarning() {
+  if (!preprocessInputsDeprecationWarningPrinted) {
+    preprocessInputsDeprecationWarningPrinted = true
+    System.err.println("Warning: preprocessInputs() will be deprecated Viash 0.9.0.")
+  }
+}
+
 /**
- * Split parameters for arguments that accept multiple values using their separator
+ * Process a list of Vdsl3 formatted parameters and apply a Viash config to them:
+ *    - Gather default parameters from the Viash config and make 
+ *      sure that they are correctly formatted (see applyConfig method).
+ *    - Format the input parameters (also using the applyConfig method).
+ *    - Apply the default parameter to the input parameters.
+ *    - Do some assertions:
+ *        ~ Check if the event IDs in the channel are unique.
+ *  
+ * @param params A list of parameter sets as Tuples. The first element of the tuples
+ *                must be a unique id of the parameter set, and the second element 
+ *                must contain the parameters themselves. Optional extra elements 
+ *                of the tuples will be passed to the output as is.
+ * @param config A Map of the Viash configuration. This Map can be generated from 
+ *                the config file using the readConfig() function.           
  *
- * @param paramList A Map containing parameters to split.
- * @param config A Map of the Viash configuration. This Map can be generated from the config file
- *               using the readConfig() function.
- *
- * @return A Map of parameters where the parameter values have been split into a list using
- *         their seperator.
+ * @return A list of processed parameters sets as tuples.
  */
-Map<String, Object> _splitParams(Map<String, Object> parValues, Map config){
-  def parsedParamValues = parValues.collectEntries { parName, parValue ->
-    def parameterSettings = config.functionality.allArguments.find({it.plainName == parName})
 
-    if (!parameterSettings) {
-      // if argument is not found, do not alter 
-      return [parName, parValue]
-    }
-    if (parameterSettings.multiple) { // Check if parameter can accept multiple values
-      if (parValue instanceof Collection) {
-          parValue = parValue.collect{it instanceof String ? it.split(parameterSettings.multiple_sep) : it }
-      } else if (parValue instanceof String) {
-          parValue = parValue.split(parameterSettings.multiple_sep)
-      } else if (parValue == null) {
-          parValue = []
-      } else {
-          parValue = [ parValue ]
-      }
-      parValue = parValue.flatten()
-    }
-    // For all parameters check if multiple values are only passed for
-    // arguments that allow it. Quietly simplify lists of length 1.
-    if (!parameterSettings.multiple && parValue instanceof Collection) {
-      assert parValue.size() == 1 : 
-      "Error: argument ${parName} has too many values.\n" +
-      "  Expected amount: 1. Found: ${parValue.size()}"
-      parValue = parValue[0]
-    }
-    [parName, parValue]
-  }
-  return parsedParamValues
+private List<Tuple> _preprocessInputsList(List<Tuple> params, Map config) {
+  // Get different parameter types (used throughout this function)
+  def defaultArgs = config.functionality.allArguments
+    .findAll { it.containsKey("default") }
+    .collectEntries { [ it.plainName, it.default ] }
+
+  // Apply config to default parameters
+  def parsedDefaultValues = applyConfigToOneParameterSet(defaultArgs, config)
+
+  // Apply config to input parameters
+  def parsedInputParamSets = applyConfig(params, config)
+
+  // Merge two parameter sets together
+  def parsedArgs = parsedInputParamSets.collect({ parsedInputParamSet ->
+    def id = parsedInputParamSet[0]
+    def parValues = parsedInputParamSet[1]
+    def passthrough = parsedInputParamSet.drop(2)
+    def parValuesWithDefault = parsedDefaultValues + parValues
+    [id, parValuesWithDefault] + passthrough
+  })
+  _checkUniqueIds(parsedArgs)
+
+  return parsedArgs
 }
 
-def viashChannel(params, config) {
-  if (!viashChannelDeprecationWarningPrinted) {
-    viashChannelDeprecationWarningPrinted = true
-    System.err.println("Warning: viashChannel has deprecated in Viash 0.7.0. " +
-                      "Please use a combination of channelFromParams and preprocessInputs.")
+/**
+ * Generate a nextflow Workflow that allows processing a channel of 
+ * Vdsl3 formatted events and apply a Viash config to them:
+ *    - Gather default parameters from the Viash config and make 
+ *      sure that they are correctly formatted (see applyConfig method).
+ *    - Format the input parameters (also using the applyConfig method).
+ *    - Apply the default parameter to the input parameters.
+ *    - Do some assertions:
+ *        ~ Check if the event IDs in the channel are unique.
+ * 
+ * The events in the channel are formatted as tuples, with the 
+ * first element of the tuples being a unique id of the parameter set, 
+ * and the second element containg the the parameters themselves.
+ * Optional extra elements of the tuples will be passed to the output as is.
+ *
+ * @param args A map that must contain a 'config' key that points
+ *              to a parsed config (see readConfig()). Optionally, a
+ *              'key' key can be provided which can be used to create a unique
+ *              name for the workflow process.
+ *
+ * @return A workflow that allows processing a channel of Vdsl3 formatted events
+ * and apply a Viash config to them.
+ */
+def preprocessInputs(Map args) {
+  preprocessInputsDeprecationWarning()
+  
+  wfKey = args.key != null ? args.key : "preprocessInputs"
+  config = args.config
+  workflow preprocessInputsInstance {
+    take: 
+    input_ch
+
+    main:
+    assert config instanceof Map : 
+      "Error in preprocessInputs: config must be a map. " +
+      "Expected class: Map. Found: config.getClass() is ${config.getClass()}"
+
+    output_ch = input_ch
+      | toSortedList
+      | map { paramList -> _preprocessInputsList(paramList, config) }
+      | flatMap
+    emit:
+    output_ch
   }
-  paramsToChannel(params, config)
-    | map{tup -> [tup.id, tup]}
+
+  return preprocessInputsInstance.cloneWithName(wfKey)
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/config/addGlobalParams.nf'
 // TODO: rename this to 'addGlobalArguments'
 def addGlobalParams(config) {
   def localConfig = [
@@ -859,6 +984,8 @@ def _mergeMap(Map lhs, Map rhs) {
     return map
   }
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/config/generateHelp.nf'
 def _generateArgumentHelp(param) {
   // alternatives are not supported
   // def names = param.alternatives ::: List(param.name)
@@ -994,6 +1121,8 @@ def helpMessage(config) {
     exit 0
   }
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/config/processConfig.nf'
 def processConfig(config) {
   // TODO: assert .functionality etc.
   if (config.functionality.inputs) {
@@ -1051,10 +1180,14 @@ def processConfig(config) {
   config
 }
 
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/config/readConfig.nf'
+
 def readConfig(file) {
   def config = readYaml(file != null ? file : "$projectDir/config.vsh.yaml")
   processConfig(config)
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/functions/collectTraces.nf'
 class CustomTraceObserver implements nextflow.trace.TraceObserver {
   List traces
 
@@ -1085,11 +1218,15 @@ def collectTraces() {
 
   traces
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/functions/getPublishDir.nf'
 def getPublishDir() {
   return params.containsKey("publish_dir") ? params.publish_dir : 
     params.containsKey("publishDir") ? params.publishDir : 
     null
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/functions/getRootDir.nf'
 
 // Recurse upwards until we find a '.build.yaml' file
 def _findBuildYamlFile(path) {
@@ -1112,6 +1249,8 @@ def getRootDir() {
   assert dir != null: "Could not find .build.yaml in the folder structure"
   dir.getParent()
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/functions/iterateMap.nf'
 /**
   * Recursively apply a function over the leaves of an object.
   * @param obj The object to iterate over.
@@ -1131,6 +1270,8 @@ def iterateMap(obj, fun) {
     return fun(obj)
   }
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/functions/niceView.nf'
 /**
   * A view for printing the event of each channel as a YAML blob.
   * This is useful for debugging.
@@ -1145,6 +1286,8 @@ def niceView() {
   }
   return niceViewWf
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readCsv.nf'
 
 def readCsv(file_path) {
   def output = []
@@ -1201,15 +1344,21 @@ def readCsv(file_path) {
 
   output
 }
-def readJsonBlob(str) {
-  def jsonSlurper = new groovy.json.JsonSlurper()
-  jsonSlurper.parseText(str)
-}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readJson.nf'
 def readJson(file_path) {
   def inputFile = file_path !instanceof Path ? file(file_path) : file_path
   def jsonSlurper = new groovy.json.JsonSlurper()
   jsonSlurper.parse(inputFile)
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readJsonBlob.nf'
+def readJsonBlob(str) {
+  def jsonSlurper = new groovy.json.JsonSlurper()
+  jsonSlurper.parseText(str)
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readTaggedYaml.nf'
 // Custom constructor to modify how certain objects are parsed from YAML
 class CustomConstructor extends org.yaml.snakeyaml.constructor.Constructor {
   File root
@@ -1237,15 +1386,21 @@ def readTaggedYaml(File file) {
   def yaml = new org.yaml.snakeyaml.Yaml(constructor)
   return yaml.load(file.text)
 }
-def readYamlBlob(str) {
-  def yamlSlurper = new org.yaml.snakeyaml.Yaml()
-  yamlSlurper.load(str)
-}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readYaml.nf'
 def readYaml(file_path) {
   def inputFile = file_path !instanceof Path ? file(file_path) : file_path
   def yamlSlurper = new org.yaml.snakeyaml.Yaml()
   yamlSlurper.load(inputFile)
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readYamlBlob.nf'
+def readYamlBlob(str) {
+  def yamlSlurper = new org.yaml.snakeyaml.Yaml()
+  yamlSlurper.load(str)
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/toTaggedYamlBlob.nf'
 // Custom representer to modify how certain objects are represented in YAML
 class CustomRepresenter extends org.yaml.snakeyaml.representer.Representer {
   class RepresentFile implements org.yaml.snakeyaml.representer.Represent {
@@ -1269,6 +1424,8 @@ String toTaggedYamlBlob(Map data) {
   def yaml = new org.yaml.snakeyaml.Yaml(representer, options)
   return yaml.dump(data)
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/toYamlBlob.nf'
 String toYamlBlob(Map data) {
   def options = new org.yaml.snakeyaml.DumperOptions()
   options.setDefaultFlowStyle(org.yaml.snakeyaml.DumperOptions.FlowStyle.BLOCK)
@@ -1277,6 +1434,8 @@ String toYamlBlob(Map data) {
   def cleanData = iterateMap(data, {it.toString()})
   return yaml.dump(data)
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/states/findStates.nf'
 def findStates(Map params, Map config) {
   // TODO: do a deep clone of config
   def auto_config = config.clone()
@@ -1379,6 +1538,8 @@ def findStates(Map params, Map config) {
 
   return findStatesWf
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/states/publishStates.nf'
 def collectFiles(obj) {
   if (obj instanceof java.io.File || obj instanceof Path)  {
     return [obj]
@@ -1506,6 +1667,8 @@ process publishStatesProc {
   ${copyCommands.join("\n  ")}
   """
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/states/setState.nf'
 def setState(fun) {
   workflow setStateWf {
     take: input_ch
@@ -1522,6 +1685,8 @@ def setState(fun) {
   }
   return setStateWf
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/processAuto.nf'
 // TODO: unit test processAuto
 def processAuto(Map auto) {
   // remove null values
@@ -1545,6 +1710,8 @@ def processAuto(Map auto) {
 
   return auto.subMap(expectedKeys)
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/processDirectives.nf'
 def assertMapKeys(map, expectedKeys, requiredKeys, mapName) {
   assert map instanceof Map : "Expected argument '$mapName' to be a Map. Found: class ${map.getClass()}"
   map.forEach { key, val -> 
@@ -1941,6 +2108,8 @@ def processDirectives(Map drctv) {
 
   return drctv
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/processFactory.nf'
 // depends on: thisConfig, thisScript, session?
 def processFactory(Map processArgs) {
   // autodetect process key
@@ -2151,6 +2320,8 @@ def processFactory(Map processArgs) {
   // retrieve and return process from meta
   return meta.getProcess(procKey)
 }
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/processProcessArgs.nf'
 // depends on: thisConfig, thisDefaultProcessArgs
 def processProcessArgs(Map args) {
   // override defaults with args
@@ -2320,110 +2491,8 @@ def processProcessArgs(Map args) {
   // return output
   return processArgs
 }
-// depends on: thisConfig, params, resourcesDir
-// TODO: do the defaultArgs, paramArgs and args.args need to be merged somewhere else?
-def vdsl3RunWorkflowFactory(Map args) {
-  def key = args["key"]
-  def processObj = null
 
-  workflow processWf {
-    take: input_
-    main:
-
-    if (processObj == null) {
-      processObj = processFactory(args)
-    }
-    
-    output_ = input_
-      | map { tuple ->
-        def id = tuple[0]
-        def data_ = tuple[1]
-
-        if (workflow.stubRun) {
-          // add id if missing
-          data_ = [id: 'stub'] + data_
-        }
-
-        // process input files separately
-        def inputPaths = thisConfig.functionality.allArguments
-          .findAll { it.type == "file" && it.direction == "input" }
-          .collect { par ->
-            def val = data_.containsKey(par.plainName) ? data_[par.plainName] : []
-            def inputFiles = []
-            if (val == null) {
-              inputFiles = []
-            } else if (val instanceof List) {
-              inputFiles = val
-            } else if (val instanceof Path) {
-              inputFiles = [ val ]
-            } else {
-              inputFiles = []
-            }
-            if (!workflow.stubRun) {
-              // throw error when an input file doesn't exist
-              inputFiles.each{ file -> 
-                assert file.exists() :
-                  "Error in module '${key}' id '${id}' argument '${par.plainName}'.\n" +
-                  "  Required input file does not exist.\n" +
-                  "  Path: '$file'.\n" +
-                  "  Expected input file to exist"
-              }
-            }
-            inputFiles 
-          } 
-
-        // remove input files
-        def argsExclInputFiles = thisConfig.functionality.allArguments
-          .findAll { (it.type != "file" || it.direction != "input") && data_.containsKey(it.plainName) }
-          .collectEntries { par ->
-            def parName = par.plainName
-            def val = data_[parName]
-            if (par.multiple && val instanceof Collection) {
-              val = val.join(par.multiple_sep)
-            }
-            if (par.direction == "output" && par.type == "file") {
-              val = val.replaceAll('\\$id', id).replaceAll('\\$key', key)
-            }
-            [parName, val]
-          }
-
-        [ id ] + inputPaths + [ argsExclInputFiles, resourcesDir ]
-      }
-      | processObj
-      | map { output ->
-        def outputFiles = thisConfig.functionality.allArguments
-          .findAll { it.type == "file" && it.direction == "output" }
-          .indexed()
-          .collectEntries{ index, par ->
-            out = output[index + 1]
-            // strip dummy '.exitcode' file from output (see nextflow-io/nextflow#2678)
-            if (!out instanceof List || out.size() <= 1) {
-              if (par.multiple) {
-                out = []
-              } else {
-                assert !par.required :
-                    "Error in module '${key}' id '${output[0]}' argument '${par.plainName}'.\n" +
-                    "  Required output file is missing"
-                out = null
-              }
-            } else if (out.size() == 2 && !par.multiple) {
-              out = out[1]
-            } else {
-              out = out.drop(1)
-            }
-            [ par.plainName, out ]
-          }
-        
-        // drop null outputs
-        outputFiles.removeAll{it.value == null}
-
-        [ output[0], outputFiles ]
-      }
-    emit: output_
-  }
-
-  return processWf
-}
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/workflowFactory.nf'
 def _debug(processArgs, debugKey) {
   if (processArgs.debug) {
     view { "process '${processArgs.key}' $debugKey tuple: $it"  }
@@ -2578,31 +2647,24 @@ def workflowFactory(Map args) {
         // remove arguments with explicit null values
         combinedArgs.removeAll{it.value == null}
 
-        if (!workflow.stubRun) {
-          // check whether required arguments exist
-          thisConfig.functionality.allArguments
-            .forEach { par ->
-              if (par.required) {
-                assert combinedArgs.containsKey(par.plainName) : 
-                  "Error in module '${key}' id '${id_}': required argument '${par.plainName}' is missing"
-              }
-
-              // TODO: check whether parameters have the right type
-            }
-        }
+        combinedArgs = processInputs(combinedArgs, thisConfig, id_, key)
 
         [id_, combinedArgs] + tuple.drop(2)
       }
 
     out0_ = mid4_
       | _debug(processArgs, "processed")
+      // run workflow
       | innerWorkflowFactory(processArgs)
-      // todo: can we have a postprocessOutputs here?
-      | map { id, output ->
-        if (processArgs.auto.simplifyOutput && output.size() == 1) {
-          output = output.values()[0]
+      // check output tuple
+      | map { id_, output_ ->
+        output_ = processOutputs(output_, thisConfig, id_, key)
+
+        if (processArgs.auto.simplifyOutput && output_.size() == 1) {
+          output_ = output_.values()[0]
         }
-        [id, output]
+
+        [id_, output_]
       }
 
     // join the output [id, output] with the previous state [id, state, ...]
@@ -2634,4 +2696,110 @@ def workflowFactory(Map args) {
   wf.metaClass.config = thisConfig
 
   return wf
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/vdsl3RunWorkflowFactory.nf'
+// depends on: thisConfig, params, resourcesDir
+// TODO: do the defaultArgs, paramArgs and args.args need to be merged somewhere else?
+def vdsl3RunWorkflowFactory(Map args) {
+  def key = args["key"]
+  def processObj = null
+
+  workflow processWf {
+    take: input_
+    main:
+
+    if (processObj == null) {
+      processObj = processFactory(args)
+    }
+    
+    output_ = input_
+      | map { tuple ->
+        def id = tuple[0]
+        def data_ = tuple[1]
+
+        if (workflow.stubRun) {
+          // add id if missing
+          data_ = [id: 'stub'] + data_
+        }
+
+        // process input files separately
+        def inputPaths = thisConfig.functionality.allArguments
+          .findAll { it.type == "file" && it.direction == "input" }
+          .collect { par ->
+            def val = data_.containsKey(par.plainName) ? data_[par.plainName] : []
+            def inputFiles = []
+            if (val == null) {
+              inputFiles = []
+            } else if (val instanceof List) {
+              inputFiles = val
+            } else if (val instanceof Path) {
+              inputFiles = [ val ]
+            } else {
+              inputFiles = []
+            }
+            if (!workflow.stubRun) {
+              // throw error when an input file doesn't exist
+              inputFiles.each{ file -> 
+                assert file.exists() :
+                  "Error in module '${key}' id '${id}' argument '${par.plainName}'.\n" +
+                  "  Required input file does not exist.\n" +
+                  "  Path: '$file'.\n" +
+                  "  Expected input file to exist"
+              }
+            }
+            inputFiles 
+          } 
+
+        // remove input files
+        def argsExclInputFiles = thisConfig.functionality.allArguments
+          .findAll { (it.type != "file" || it.direction != "input") && data_.containsKey(it.plainName) }
+          .collectEntries { par ->
+            def parName = par.plainName
+            def val = data_[parName]
+            if (par.multiple && val instanceof Collection) {
+              val = val.join(par.multiple_sep)
+            }
+            if (par.direction == "output" && par.type == "file") {
+              val = val.replaceAll('\\$id', id).replaceAll('\\$key', key)
+            }
+            [parName, val]
+          }
+
+        [ id ] + inputPaths + [ argsExclInputFiles, resourcesDir ]
+      }
+      | processObj
+      | map { output ->
+        def outputFiles = thisConfig.functionality.allArguments
+          .findAll { it.type == "file" && it.direction == "output" }
+          .indexed()
+          .collectEntries{ index, par ->
+            out = output[index + 1]
+            // strip dummy '.exitcode' file from output (see nextflow-io/nextflow#2678)
+            if (!out instanceof List || out.size() <= 1) {
+              if (par.multiple) {
+                out = []
+              } else {
+                assert !par.required :
+                    "Error in module '${key}' id '${output[0]}' argument '${par.plainName}'.\n" +
+                    "  Required output file is missing"
+                out = null
+              }
+            } else if (out.size() == 2 && !par.multiple) {
+              out = out[1]
+            } else {
+              out = out.drop(1)
+            }
+            [ par.plainName, out ]
+          }
+        
+        // drop null outputs
+        outputFiles.removeAll{it.value == null}
+
+        [ output[0], outputFiles ]
+      }
+    emit: output_
+  }
+
+  return processWf
 }
