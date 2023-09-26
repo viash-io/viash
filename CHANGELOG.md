@@ -13,13 +13,24 @@ TODO add summary
     .platforms[.type == 'nextflow'].auto.simplifyOutput := true
   ```
 
+* `VDSL3Helper.nf`: Removed from the Viash jar file (PR #518). It's functions have been moved to `WorkflowHelper.nf`.
+
+* `DataflowHelper.nf`: Added warning when using functions from this file.
+
 ## NEW FUNCTIONALITY
 
 * `dependencies`: Add `dependencies` and `repositories` to `functionality` (PR #509). 
   The new functionality allows specifying dependencies and where to retrieve (repositories) them in a component, and subsequentially allows advanced functionality to be offloaded and re-used in scripts and projects. This is alike e.g. `npm`, `pip` and many others. A big difference is that we aim to provide the needed boilerplate code to ease the usage of the dependencies in scripts, workflows and pipelines.
   Note that the dependency is required to be a built Viash component or project and not a random file or code project found externally. This is needed to provide the necessary background information to correctly link dependencies into a component.
 
-* `NextflowScript` & `NextflowPlatform`: Wrapped workflows now also have a `.run()` method (PR #518).
+* `NextflowScript` & `NextflowPlatform`: Merged code for merging the `main.nf` files for VDSL3 components and wrapped Nextflow workflows (PR #518).
+  By aligning the codebase for these two, wrapped Nextflow workflows are more similar to VDSL3 components. For example, you can override the behaviour of a
+  wrapped Nextflow workflow using the `.run()` method. Status of a workflows `.run()` arguments:
+
+  - Works as intended: `auto.simplifyInput`, `auto.simplifyOutput`, `fromState`, `toState`, `map`, `mapData`, `mapPassthrough`, `filter`, `auto.publish = "state"`
+  - Does not work (yet): `auto.transcript`, `auto.publish = true`, `directives`, `debug`.
+
+  In a next PR, each of the dependencies will have their values overridden by the arguments of the `.run`.
 
 ## MAJOR CHANGES
 
@@ -27,6 +38,9 @@ TODO add summary
   For now, these helper files are pasted together to recreate the `WorkflowHelper.nf`.
 
 * `NextflowPlatform`: Set default tag to `"$id"` (#521).
+
+* `WorkflowHelper.nf`: Was split into different helper files for each of the helper functions (PR #518). For now, these helper files are pasted together to recreate the `WorkflowHelper.nf`.
+
 
 ## DOCUMENTATION
 
