@@ -1,5 +1,4 @@
-// TODO: rename this to 'addGlobalArguments'
-def addGlobalParams(config) {
+def addGlobalArguments(config) {
   def localConfig = [
     "functionality" : [
       "argument_groups": [

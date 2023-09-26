@@ -127,7 +127,7 @@ def _paragraphWrap(str, maxLength) {
 
 def helpMessage(config) {
   if (params.containsKey("help") && params.help) {
-    def mergedConfig = addGlobalParams(config)
+    def mergedConfig = addGlobalArguments(config)
     def helpStr = _generateHelp(mergedConfig)
     println(helpStr)
     exit 0

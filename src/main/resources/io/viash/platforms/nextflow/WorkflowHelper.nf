@@ -79,26 +79,26 @@ def _processArgumentGroup(argumentGroups, name, arguments) {
 }
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/arguments/processInputsOutputs.nf'
-boolean typeCheck(String stage, Map par, Object value) {
-  if (!par.required && value == null) {
+boolean typeCheck(String stage, Map par, Object x) {
+  if (!par.required && x == null) {
     return true
   } else if (par.multiple) {
-    value instanceof List && value.every { typeCheck(stage, par + [multiple: false], it) }
+    x instanceof List && x.every { typeCheck(stage, par + [multiple: false], it) }
   } else if (par.type == "string") {
-    value instanceof CharSequence
+    x instanceof CharSequence
   } else if (par.type == "integer") {
-    value instanceof Integer
+    x instanceof Integer
   } else if (par.type == "long") {
-    value instanceof Integer || value instanceof Long
+    x instanceof Integer || x instanceof Long
   } else if (par.type == "boolean") {
-    value instanceof Boolean
+    x instanceof Boolean
   } else if (par.type == "file") {
     if (stage == "output") {
-      value instanceof File || value instanceof Path
+      x instanceof File || x instanceof Path
     } else if (par.direction == "input") {
-      value instanceof File || value instanceof Path
+      x instanceof File || x instanceof Path
     } else if (par.direction == "output") {
-      value instanceof String
+      x instanceof String
     }
   }
 }
@@ -962,8 +962,7 @@ def preprocessInputs(Map args) {
 }
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/config/addGlobalParams.nf'
-// TODO: rename this to 'addGlobalArguments'
-def addGlobalParams(config) {
+def addGlobalArguments(config) {
   def localConfig = [
     "functionality" : [
       "argument_groups": [
@@ -1147,7 +1146,7 @@ def _paragraphWrap(str, maxLength) {
 
 def helpMessage(config) {
   if (params.containsKey("help") && params.help) {
-    def mergedConfig = addGlobalParams(config)
+    def mergedConfig = addGlobalArguments(config)
     def helpStr = _generateHelp(mergedConfig)
     println(helpStr)
     exit 0
