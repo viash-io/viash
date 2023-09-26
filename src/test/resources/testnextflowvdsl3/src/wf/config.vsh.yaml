@@ -30,11 +30,11 @@ functionality:
   dependencies:
     - name: step1 # local is implicit
     - name: step2
-      repository: local # this should also work
+      # repository: local # TODO: this should also work
     - name: step3
-      repository: local_synonym
+      repository: mylocal
   repositories:
-    - name: local_synonym
+    - name: mylocal
       type: local
 platforms:
   - type: nextflow
