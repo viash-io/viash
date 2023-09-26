@@ -4,10 +4,26 @@ workflow base {
   output = input
     | step1.run(
       fromState: ["input": "input1"],
-      toState: ["step1_output": "output"]
+      toState: ["step1a_output": "output"],
+      key: "step1a"
+    )
+    | step1.run(
+      fromState: { id, state -> ["input": [state.step1a_output]]},
+      toState: ["step1b_output": "output"],
+      key: "step1b"
+    )
+    | step1.run(
+      fromState: { id, state -> ["input": [state.step1b_output]]},
+      toState: ["step1c_output": "output"],
+      key: "step1c"
+    )
+    | step1.run(
+      fromState: { id, state -> ["input": [state.step1c_output]]},
+      toState: ["step1d_output": "output"],
+      key: "step1d"
     )
     | step2.run(
-      fromState: ["input1": "step1_output", "input2": "input2"],
+      fromState: ["input1": "step1d_output", "input2": "input2"],
       toState: ["step2_output1": "output1", "step2_output2": "output2"]
     )
     | step3.run(
@@ -23,6 +39,8 @@ workflow base {
     )
   emit: output
 }
+
+// TODO: add workflow which uses one component multiple times
 
 workflow test_base {
   // todo: fix how `test_base` is able to access the test resources
