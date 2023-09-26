@@ -6,6 +6,13 @@ TODO add summary
 
 * Removed `src/main/resources/io/viash/platforms/nextflow/VDSL3Helper.nf` from the Viash jar file (PR #518).
 
+* `NextflowPlatform`: Changed the default value of `auto.simplifyOutput` from `true` to `false` (#522). This ensures that the output of a VDSL3 component is always `[id: String, state: Map]`. If you want to use the old behaviour where the second element of the tuple can also be a File, add the following config mod to `_viash.yaml`:
+
+  ```yaml
+  config_mods: |
+    .platforms[.type == 'nextflow'].auto.simplifyOutput := true
+  ```
+
 ## NEW FUNCTIONALITY
 
 * `dependencies`: Add `dependencies` and `repositories` to `functionality` (PR #509). 
