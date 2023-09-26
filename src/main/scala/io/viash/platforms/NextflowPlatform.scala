@@ -296,10 +296,6 @@ case class NextflowPlatform(
       |
       |// END COMPONENT-SPECIFIC CODE
       |
-      |////////////////////////////
-      |// VDSL3 helper functions //
-      |////////////////////////////
-      |
       |""".stripMargin +
       NextflowHelper.workflowHelper
   }
