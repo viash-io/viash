@@ -79,26 +79,26 @@ def _processArgumentGroup(argumentGroups, name, arguments) {
 }
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/arguments/processInputsOutputs.nf'
-boolean typeCheck(String stage, Map par, Object x) {
-  if (!par.required && x == null) {
+boolean typeCheck(String stage, Map par, Object value) {
+  if (!par.required && value == null) {
     return true
   } else if (par.multiple) {
-    x instanceof List && x.every { typeCheck(stage, par + [multiple: false], it) }
+    value instanceof List && value.every { typeCheck(stage, par + [multiple: false], it) }
   } else if (par.type == "string") {
-    x instanceof CharSequence
+    value instanceof CharSequence
   } else if (par.type == "integer") {
-    x instanceof Integer
+    value instanceof Integer
   } else if (par.type == "long") {
-    x instanceof Integer || x instanceof Long
+    value instanceof Integer || value instanceof Long
   } else if (par.type == "boolean") {
-    x instanceof Boolean
+    value instanceof Boolean
   } else if (par.type == "file") {
     if (stage == "output") {
-      x instanceof File || x instanceof Path
+      value instanceof File || value instanceof Path
     } else if (par.direction == "input") {
-      x instanceof File || x instanceof Path
+      value instanceof File || value instanceof Path
     } else if (par.direction == "output") {
-      x instanceof String
+      value instanceof String
     }
   }
 }
