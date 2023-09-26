@@ -60,7 +60,7 @@ def processFactory(Map processArgs) {
 
   def inputPaths = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "input" }
-    .collect { ', path(viash_par_' + it.plainName + ', stageAs: "_' + it.plainName + '_?/*")' }
+    .collect { ', path(viash_par_' + it.plainName + ', stageAs: "_inputs/par_' + it.plainName + '_?/*")' }
     .join()
 
   def outputPaths = thisConfig.functionality.allArguments
