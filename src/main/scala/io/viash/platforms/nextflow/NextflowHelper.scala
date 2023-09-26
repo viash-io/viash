@@ -43,8 +43,6 @@ object NextflowHelper {
   lazy val profilesHelper: String = readSource("ProfilesHelper.config")
   lazy val dataflowHelper: String = readSource("DataflowHelper.nf")
 
-  // cat src/main/resources/io/viash/platforms/nextflow/*/*.nf > src/main/resources/io/viash/platforms/nextflow/WorkflowHelper.nf
-
   def generateConfigStr(config: Config): String = {
     val configJson = config.asJson.dropEmptyRecursively
     val configJsonStr = configJson
