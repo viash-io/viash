@@ -1,25 +1,57 @@
-boolean typeCheck(String stage, Map par, Object x) {
-  if (!par.required && x == null) {
-    return true
+def typeCheck(String stage, Map par, Object value, String id, String key) {
+  // expectedClass will only be != null if value is not of the expected type
+  def expectedClass = null
+  
+  if (!par.required && value == null) {
+    expectedClass = null
   } else if (par.multiple) {
-    x instanceof List && x.every { typeCheck(stage, par + [multiple: false], it) }
-  } else if (par.type == "string") {
-    x instanceof CharSequence
-  } else if (par.type == "integer") {
-    x instanceof Integer
-  } else if (par.type == "long") {
-    x instanceof Integer || x instanceof Long
-  } else if (par.type == "boolean") {
-    x instanceof Boolean
-  } else if (par.type == "file") {
-    if (stage == "output") {
-      x instanceof File || x instanceof Path
-    } else if (par.direction == "input") {
-      x instanceof File || x instanceof Path
-    } else if (par.direction == "output") {
-      x instanceof String
+    if (value instanceof List) {
+      try {
+        value = value.collect { listVal ->
+          typeCheck(stage, par + [multiple: false], listVal, id, key)
+        }
+      } catch (Exception e) {
+        expectedClass = "List[${par.type}]"
+      }
+    } else {
+      expectedClass = "List[${par.type}]"
     }
+  } else if (par.type == "string") {
+    if (value instanceof GString) {
+      value = value.toString()
+    }
+    expectedClass = value instanceof String ? null : "String"
+  } else if (par.type == "integer") {
+    expectedClass = value instanceof Integer ? null : "Integer"
+  } else if (par.type == "long") {
+    if (value instanceof Integer) {
+      value = value.toLong()
+    }
+    expectedClass = value instanceof Long ? null : "Long"
+  } else if (par.type == "boolean") {
+    expectedClass = value instanceof Boolean ? null : "Boolean"
+  } else if (par.type == "file") {
+    if (stage == "output" || par.direction == "input") {
+      if (value instanceof File) {
+        value = value.toPath()
+      }
+      expectedClass = value instanceof Path ? null : "Path"
+    } else { // stage == "input" && par.direction == "output"
+      if (value instanceof GString) {
+        value = value.toString()
+      }
+      expectedClass = value instanceof String ? null : "String"
+    }
+  } else {
+    expectedClass = par.type
   }
+
+  if (expectedClass != null) {
+    error "Error in module '${key}' id '${id}': ${stage} argument '${par.plainName}' has the wrong type. " +
+      "Expected type: ${expectedClass}. Found type: ${value.getClass()}"
+  }
+  
+  return value
 }
 
 Map processInputs(Map inputs, Map config, String id, String key) {
@@ -34,15 +66,8 @@ Map processInputs(Map inputs, Map config, String id, String key) {
     inputs = inputs.collectEntries { name, value ->
       def par = config.functionality.allArguments.find { it.plainName == name && (it.direction == "input" || it.type == "file") }
       assert par != null : "Error in module '${key}' id '${id}': '${name}' is not a valid input argument"
-      
-      // if value is a gstring, turn it into a regular string
-      if (value instanceof GString) {
-        value = value.toString()
-      }
 
-      assert typeCheck("input", par, value) : 
-        "Error in module '${key}' id '${id}': input argument '${name}' has the wrong type. " +
-        "Expected type: ${par.multiple ? "List[${par.type}]" : par.type}. Found type: ${value.getClass()}"
+      value = typeCheck("input", par, value, id, key)
 
       [ name, value ]
     }
@@ -63,14 +88,7 @@ Map processOutputs(Map outputs, Map config, String id, String key) {
       def par = config.functionality.allArguments.find { it.plainName == name && it.direction == "output" }
       assert par != null : "Error in module '${key}' id '${id}': '${name}' is not a valid output argument"
       
-      // if value is a gstring, turn it into a regular string
-      if (value instanceof GString) {
-        value = value.toString()
-      }
-
-      assert typeCheck("output", par, value) : 
-        "Error in module '${key}' id '${id}': output argument '${name}' has the wrong type. " +
-        "Expected type: ${par.multiple ? "List[${par.type}]" : par.type}. Found type: ${value.getClass()}"
+      value = typeCheck("output", par, value, id, key)
       
       [ name, value ]
     }

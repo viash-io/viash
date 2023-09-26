@@ -10,8 +10,8 @@ def _processArgument(arg) {
     arg.create_parent = arg.create_parent != null ? arg.create_parent : true
   }
 
-  // add default values to required output files which haven't already got a default
-  if (arg.type == "file" && arg.direction == "output" && arg.default == null && arg.required) {
+  // add default values to output files which haven't already got a default
+  if (arg.type == "file" && arg.direction == "output" && arg.default == null) {
     def mult = arg.multiple ? "_*" : ""
     def extSearch = ""
     if (arg.default != null) {
@@ -25,6 +25,9 @@ def _processArgument(arg) {
     def extSearchResult = extSearch.find("\\.[^\\.]+\$")
     def ext = extSearchResult != null ? extSearchResult : ""
     arg.default = "\$id.\$key.${arg.plainName}${mult}${ext}"
+    if (arg.multiple) {
+      arg.default = [arg.default]
+    }
   }
 
   if (!arg.multiple) {

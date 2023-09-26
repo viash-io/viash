@@ -15,11 +15,9 @@ def workflowFactory(Map args) {
   def workflowKey = key
   
   workflow workflowInstance {
-    take:
-    input_
+    take: input_
 
     main:
-
     mid1_ = input_
       | checkUniqueIds([:])
       | _debug(processArgs, "input")
@@ -173,6 +171,7 @@ def workflowFactory(Map args) {
         [id_, output_]
       }
 
+    // TODO: this join will fail if the keys changed during the innerWorkflowFactory
     // join the output [id, output] with the previous state [id, state, ...]
     out1_ = out0_.join(mid2_, failOnDuplicate: true)
       // input tuple format: [id, output, prev_state, ...]
@@ -182,14 +181,16 @@ def workflowFactory(Map args) {
         [it[0], new_state] + it.drop(3)
       }
       | _debug(processArgs, "output")
-    
+
     if (processArgs.auto.publish == "state") {
-      out1_
-        | publishStates(key: key)
+      // TODO: this join will fail if the keys changed during the innerWorkflowFactory
+      mid4_
+        | map { tup -> tup.take(2) }
+        | join(out1_, failOnDuplicate: true)
+        | publishStatesByConfig(key: key, config: thisConfig)
     }
 
-    emit:
-    out1_
+    emit: out1_
   }
 
   def wf = workflowInstance.cloneWithName(workflowKey)
