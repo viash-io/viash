@@ -27,7 +27,6 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
       "export", "resource", "platforms/nextflow/WorkflowHelper.nf"
     )
 
-    assert(stdout.contains("def preprocessInputs("))
     assert(stdout.contains("def readConfig("))
   }
 
@@ -38,7 +37,7 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
     )
 
     val lines = helpers.IO.read(tempFile.toUri())
-    assert(lines.contains("def preprocessInputs("))
+    assert(lines.contains("def readConfig("))
   }
   
   test("viash export cli_schema") {
