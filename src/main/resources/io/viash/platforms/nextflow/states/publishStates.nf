@@ -106,17 +106,22 @@ process publishStatesProc {
   output:
     tuple val(id), path{[yamlFile] + outputFiles}
   script:
-  def cmds = [
+  def copyCommands = [
     inputFiles instanceof List ? inputFiles : [inputFiles],
     outputFiles instanceof List ? outputFiles : [outputFiles]
-  ].transpose().collect{infile, outfile ->
-    "cp -r '${infile.toString()}' '${outfile.toString()}'"
+  ].transpose().collectMany{infile, outfile ->
+    if (infile.toString() != outfile.toString()) {
+      ["cp -r '${infile.toString()}' '${outfile.toString()}'"]
+    } else {
+      // no need to copy if infile is the same as outfile
+      []
+    }
   }
   """
   mkdir -p "\$(dirname '${yamlFile}')"
   echo "Storing state as yaml"
   echo '${yamlBlob}' > '${yamlFile}'
   echo "Copying output files to destination folder"
-  ${cmds.join("\n  ")}
+  ${copyCommands.join("\n  ")}
   """
 }
