@@ -73,6 +73,7 @@ case class Config(
       | - @[NextflowRunner](nextflow_runner)
       |""".stripMargin)
   @since("Viash 0.8.0")
+  @default("Empty")
   runners: List[Runner] = Nil,
   @description(
     """A list of engine environments to execute target artifacts in.
@@ -81,6 +82,7 @@ case class Config(
       | - @[DockerEngine](docker_engine)
       |""".stripMargin)
   @since("Viash 0.8.0")
+  @default("Empty")
   engines: List[Engine] = Nil,
 
   @internalFunctionality
@@ -103,6 +105,7 @@ case class Config(
     | - @[Docker](platform_docker)
     | - @[Nextflow](platform_nextflow)
     |""".stripMargin)
+  @default("Empty")
   @deprecated("Use 'engines' and 'runners' instead.", "0.8.0", "0.9.0")
   private val platforms: List[Platform] = Nil
   
