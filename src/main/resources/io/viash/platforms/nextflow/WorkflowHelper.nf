@@ -1695,7 +1695,7 @@ def processAuto(Map auto) {
   // check for unexpected keys
   def expectedKeys = ["simplifyInput", "simplifyOutput", "transcript", "publish"]
   def unexpectedKeys = auto.keySet() - expectedKeys
-  assert unexpectedKeys.isEmpty(), "unexpected keys in auto: '${unexpectedKeys.join("', '"))}'"
+  assert unexpectedKeys.isEmpty(), "unexpected keys in auto: '${unexpectedKeys.join("', '")}'"
 
   // check auto.simplifyInput
   assert auto.simplifyInput instanceof Boolean, "auto.simplifyInput must be a boolean"
