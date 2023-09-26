@@ -1,3 +1,12 @@
+// This helper file will be deprecated soon
+preprocessInputsDeprecationWarningPrinted = false
+
+def preprocessInputsDeprecationWarning() {
+  if (!preprocessInputsDeprecationWarningPrinted) {
+    preprocessInputsDeprecationWarningPrinted = true
+    System.err.println("Warning: preprocessInputs() will be deprecated Viash 0.9.0.")
+  }
+}
 
 /**
  * Process a list of Vdsl3 formatted parameters and apply a Viash config to them:
@@ -67,6 +76,8 @@ private List<Tuple> _preprocessInputsList(List<Tuple> params, Map config) {
  * and apply a Viash config to them.
  */
 def preprocessInputs(Map args) {
+  preprocessInputsDeprecationWarning()
+  
   wfKey = args.key != null ? args.key : "preprocessInputs"
   config = args.config
   workflow preprocessInputsInstance {

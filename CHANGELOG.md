@@ -15,7 +15,9 @@ TODO add summary
 
 * `VDSL3Helper.nf`: Removed from the Viash jar file (PR #518). It's functions have been moved to `WorkflowHelper.nf`.
 
-* `DataflowHelper.nf`: Added warning when using functions from this file.
+* `DataflowHelper.nf`: Added deprecation warning to functions from this file (PR #518).
+
+* `preprocessInputs()` in `WorkflowHelper.nf`: Added deprecation warning to `preprocessInputs()` because this function causes a synchronisation event (PR #518).
 
 ## NEW FUNCTIONALITY
 
