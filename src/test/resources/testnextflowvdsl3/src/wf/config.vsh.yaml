@@ -28,16 +28,13 @@ functionality:
       path: main.nf
       entrypoint: base
   dependencies:
-    - name: step1
-      repository: local
+    - name: step1 # local is implicit
     - name: step2
-      repository: local
+      repository: local # this should also work
     - name: step3
-      repository: local
+      repository: local_synonym
   repositories:
-    - name: local
+    - name: local_synonym
       type: local
 platforms:
   - type: nextflow
-    auto:
-      simplifyOutput: false

@@ -4,13 +4,11 @@ workflow base {
   output = input
     | step1.run(
       fromState: ["input": "input1"],
-      toState: ["step1_output": "output"],
-      auto: [simplifyOutput: false]
+      toState: ["step1_output": "output"]
     )
     | step2.run(
       fromState: ["input1": "step1_output", "input2": "input2"],
-      toState: ["step2_output1": "output1", "step2_output2": "output2"],
-      auto: [simplifyOutput: false]
+      toState: ["step2_output1": "output1", "step2_output2": "output2"]
     )
     | step3.run(
       fromState: { id, state ->
@@ -21,8 +19,7 @@ workflow base {
       },
       toState: { id, output, state ->
         output
-      },
-      auto: [simplifyOutput: false]
+      }
     )
   emit: output
 }
