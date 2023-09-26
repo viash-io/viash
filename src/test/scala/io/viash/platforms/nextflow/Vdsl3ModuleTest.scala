@@ -21,7 +21,6 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
   private val temporaryFolder = IO.makeTemp("viash_tester_nextflowvdsl3")
   private val tempFolFile = temporaryFolder.toFile
   private val tempFolStr = temporaryFolder.toString
-  private val cwd = tempFolFile
 
   // path to namespace components
   private val rootPath = getClass.getResource("/testnextflowvdsl3/").getPath
@@ -49,7 +48,7 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
       mainScript = "workflows/pipeline1/main.nf",
       entry = Some("base"),
       args = List("--publish_dir", "output"),
-      cwd = cwd
+      cwd = tempFolFile
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")

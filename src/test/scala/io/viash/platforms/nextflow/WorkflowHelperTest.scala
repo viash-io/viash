@@ -18,8 +18,8 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
   // temporary folder to work in
   private val temporaryFolder = IO.makeTemp("viash_tester_nextflowvdsl3")
+  private val tempFolFile = temporaryFolder.toFile
   private val tempFolStr = temporaryFolder.toString
-  private val cwd = temporaryFolder.toFile
 
   // path to namespace components
   private val rootPath = getClass.getResource("/testnextflowvdsl3/").getPath
@@ -81,7 +81,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
         "--multiple", "a:b:c",
         "--publish_dir", "output"
       ),
-      cwd = cwd
+      cwd = tempFolFile
     )
 
     assert(
@@ -109,7 +109,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
         "--str", "foo",
         "--publish_dir", "output",
       ),
-      cwd = cwd
+      cwd = tempFolFile
     )
 
     assert(
@@ -143,7 +143,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
         "--str", "foo",
         "--publish_dir", "output",
       ),
-      cwd = cwd
+      cwd = tempFolFile
     )
 
     assert(
@@ -211,7 +211,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
         "--str", "foo",
         "--publish_dir", "output"
       ),
-      cwd = cwd
+      cwd = tempFolFile
     )
 
     assert(
@@ -245,7 +245,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
         "--str", "foo",
         "--publish_dir", "output"
       ),
-      cwd = cwd
+      cwd = tempFolFile
     )
 
     assert(
@@ -282,7 +282,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
         "--str", "foo",
         "--publish_dir", "output",
       ),
-      cwd = cwd
+      cwd = tempFolFile
     )
 
     assert(

@@ -19,7 +19,7 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
   // temporary folder to work in
   private val temporaryFolder = IO.makeTemp("viash_tester_nextflowvdsl3")
   private val tempFolStr = temporaryFolder.toString
-  private val cwd = temporaryFolder.toFile
+  private val tempFolFile = temporaryFolder.toFile
 
   // path to namespace components
   private val rootPath = getClass.getResource("/testnextflowvdsl3/").getPath
@@ -53,7 +53,7 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
         "--input2", "resources/lines3.txt",
         "--publish_dir", "output"
       ),
-      cwd = cwd
+      cwd = tempFolFile
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -80,7 +80,7 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
         "--rootDir", tempFolStr,
         "--publish_dir", "output"
       ),
-      cwd = cwd
+      cwd = tempFolFile
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
@@ -96,7 +96,7 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
       mainScript = "target/nextflow/wf/main.nf",
       args = List("--help"),
       quiet = true,
-      cwd = cwd
+      cwd = tempFolFile
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut1\nStd error:\n$stdErr1")
