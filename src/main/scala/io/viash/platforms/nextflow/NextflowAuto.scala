@@ -49,6 +49,7 @@ case class NextflowAuto(
 
   @description(
     """If `true`, the module's outputs are automatically published to `params.publishDir`.
+      |If equal to `"state"`, also a `.state.yaml` file will be published in the publish dir.
       |Will throw an error if `params.publishDir` is not defined.
       |
       |Default: `false`.
