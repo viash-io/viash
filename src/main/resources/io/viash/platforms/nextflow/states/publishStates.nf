@@ -102,7 +102,7 @@ process publishStatesProc {
   publishDir path: "${getPublishDir()}/", mode: "copy"
   tag "$id"
   input:
-    tuple val(id), val(yamlBlob), val(yamlFile), path(inputFiles, stageAs: "?/*"), val(outputFiles)
+    tuple val(id), val(yamlBlob), val(yamlFile), path(inputFiles, stageAs: "_inputfile?/*"), val(outputFiles)
   output:
     tuple val(id), path{[yamlFile] + outputFiles}
   script:

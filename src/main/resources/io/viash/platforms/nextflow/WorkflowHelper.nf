@@ -1696,7 +1696,7 @@ process publishStatesProc {
   publishDir path: "${getPublishDir()}/", mode: "copy"
   tag "$id"
   input:
-    tuple val(id), val(yamlBlob), val(yamlFile), path(inputFiles, stageAs: "?/*"), val(outputFiles)
+    tuple val(id), val(yamlBlob), val(yamlFile), path(inputFiles, stageAs: "_inputfile?/*"), val(outputFiles)
   output:
     tuple val(id), path{[yamlFile] + outputFiles}
   script:
@@ -2666,11 +2666,9 @@ def workflowFactory(Map args) {
   def workflowKey = key
   
   workflow workflowInstance {
-    take:
-    input_
+    take: input_
 
     main:
-
     mid1_ = input_
       | checkUniqueIds([:])
       | _debug(processArgs, "input")
