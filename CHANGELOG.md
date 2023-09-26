@@ -19,6 +19,8 @@ TODO add summary
 * `WorkflowHelper.nf`: The workflow helper was split into different helper files for each of the helper functions (PR #518).
   For now, these helper files are pasted together to recreate the `WorkflowHelper.nf`.
 
+* `NextflowPlatform`: Set default tag to `"$id"` (#521).
+
 ## DOCUMENTATION
 
 * Minor fixes to VDSL3 reference documentation (PR #508).
