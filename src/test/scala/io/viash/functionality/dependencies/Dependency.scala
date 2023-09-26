@@ -92,7 +92,7 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
       dependencies = List(Dependency("viash_hub/dep", repository = Left("vsh://hendrik/dependency_test@main_build")))
     )
 
-    writeTestConfig(testFolder.resolve("src/dep/config.vsh.yaml"), fun)
+    writeTestConfig(testFolder.resolve("src/dep3/config.vsh.yaml"), fun)
 
     // build
     val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
@@ -117,9 +117,46 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
       Seq(executable.toString)
     )
 
-    println(s"out.output: ${out.output}")
-
     assert(out.output == "This is a component in the viash_hub repository.\nHello from dep3\n")
+    assert(out.exitValue == 0)
+  }
+
+  test("Use a remote dependency with nested dependencies") {
+    val testFolder = createViashSubFolder(temporaryFolder, "nested_remote_test")
+    
+    // write test files
+    val fun = Functionality(
+      name = "dep4",
+      resources = textBashScript("$dep_viash_hub_test_tree\necho \"Hello from dep4\""),
+      dependencies = List(Dependency("viash_hub_test/tree", repository = Left("vsh://hendrik/dependency_test2@main_build")))
+    )
+
+    writeTestConfig(testFolder.resolve("src/dep4/config.vsh.yaml"), fun)
+
+    // build
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+        "ns", "build",
+        "-s", testFolder.resolve("src").toString(),
+        "-t", testFolder.resolve("target").toString()
+      )
+
+    assert(stderr.strip.contains("All 1 configs built successfully"), "check build was successful")
+
+    // check file & file content
+    val outputPath = testFolder.resolve("target/executable/dep4/dep4")
+    val executable = outputPath.toFile
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    val outputText = IO.read(outputPath.toUri())
+    assert(outputText.contains("VIASH_DEP_VIASH_HUB_TEST_TREE="), "check the dependency is set in the output script")
+
+    // check output when running
+    val out = Exec.runCatch(
+      Seq(executable.toString)
+    )
+
+    assert(out.output == "This is tree.\nThis is bar 1.\nHello from dep4\n")
     assert(out.exitValue == 0)
   }
 
