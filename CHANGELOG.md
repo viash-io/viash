@@ -4,7 +4,7 @@ TODO add summary
 
 ## BREAKING CHANGES
 
-* `NextflowPlatform`: Changed the default value of `auto.simplifyOutput` from `true` to `false` (#522, PR #518). This ensures that the output of a VDSL3 component is always `[id: String, state: Map]`. If you want to use the old behaviour where the second element of the tuple can also be a File, add the following config mod to `_viash.yaml`:
+* `NextflowPlatform`: Changed the default value of `auto.simplifyOutput` from `true` to `false` (#522, PR #518). With `simplifyOutput` set to `true`, the resulting Map could be simplified into a `File` or a `List[File]` depending on the number of outputs. To replicate the previous behaviour, add the following config mod to `_viash.yaml`:
 
   ```yaml
   config_mods: |
@@ -38,6 +38,7 @@ TODO add summary
 
 * `WorkflowHelper.nf`: The workflow helper was split into different helper files for each of the helper functions (PR #518).
   For now, these helper files are pasted together to recreate the `WorkflowHelper.nf`.
+  In Viash development environments, don't forget to run `./configure` to start using the updated Makefile.
 
 * `NextflowPlatform`: Set default tag to `"$id"` (#521, PR #518).
 

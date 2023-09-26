@@ -21,6 +21,7 @@ def workflowFactory(Map args) {
     main:
 
     mid1_ = input_
+      | checkUniqueIds([:])
       | _debug(processArgs, "input")
       | map { tuple ->
         tuple = tuple.clone()
