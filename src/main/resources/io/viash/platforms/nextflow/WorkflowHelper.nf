@@ -1557,11 +1557,13 @@ def findStates(Map params, Map config) {
   auto_config.functionality.argument_groups = []
   auto_config.functionality.arguments = [
     [
-      type: "string",
-      name: "--input_dir",
-      example: "/path/to/input/directory",
+      type: "file",
+      name: "--input_states",
+      example: "/path/to/input/directory/**/state.yaml",
       description: "Path to input directory containing the datasets to be integrated.",
-      required: true
+      required: true,
+      multiple: true,
+      multiple_sep: ";"
     ],
     [
       type: "string",
@@ -1602,7 +1604,7 @@ def findStates(Map params, Map config) {
           def globalSettings = args.settings ? readYamlBlob(args.settings) : [:]
 
           // look for state files in input dir
-          def stateFiles = file("${args.input_dir}/**/state.yaml")
+          def stateFiles = args.input_states
 
           // filter state files by regex
           if (args.filter) {
