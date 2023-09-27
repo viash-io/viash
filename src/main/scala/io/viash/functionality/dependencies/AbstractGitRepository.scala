@@ -17,13 +17,12 @@
 
 package io.viash.functionality.dependencies
 
-import io.viash.helpers.IO
-import io.viash.helpers.Exec
+import io.viash.helpers.{IO, Exec, Logging}
 import java.io.File
 import java.nio.file.Paths
 import io.viash.exceptions.CheckoutException
 
-abstract class AbstractGitRepository extends Repository {
+abstract class AbstractGitRepository extends Repository with Logging {
   val uri: String
   val storePath: String
 
@@ -61,7 +60,7 @@ abstract class AbstractGitRepository extends Repository {
       case Some(value) => List("--single-branch", "--branch", value)
     }
 
-    val loggers = Seq[String => Unit] { (str: String) => {Console.err.println(str)} }
+    val loggers = Seq[String => Unit] { (str: String) => {info(str)} }
     Exec.runCatch(
       List("git", "clone", uri, "--no-checkout", "--depth", "1") ++ singleBranch :+ ".",
       cwd = cwd,
@@ -85,7 +84,7 @@ abstract class AbstractGitRepository extends Repository {
 
     val uri = getCheckoutUri()
 
-    Console.err.println(s"temporaryFolder: $temporaryFolder uri: $uri")
+    info(s"temporaryFolder: $temporaryFolder uri: $uri")
 
     val out = doGitClone(uri, cwd)
     if (out.exitValue != 0)
@@ -109,7 +108,7 @@ abstract class AbstractGitRepository extends Repository {
       cwd = cwd
     )
 
-    Console.err.println(s"checkout out: ${out.command} ${out.exitValue} ${out.output}")
+    info(s"checkout out: ${out.command} ${out.exitValue} ${out.output}")
 
     if (path.isDefined)
       copyRepo(localPath = Paths.get(localPath, path.get).toString)
