@@ -81,30 +81,48 @@ def processWorkflowArgs(Map args) {
     }
   }
 
+  // TODO: should functions like 'map', 'mapId', 'mapData', 'mapPassthrough' be deprecated as well?
+  for (nam in ["renameKeys"]) {
+    if (workflowArgs.containsKey(nam) && workflowArgs[nam] != null) {
+      log.warn "module '$key': workflow argument '$nam' will be deprecated in Viash 0.9.0. Please use 'fromState' and 'toState' instead."
+    }
+  }
+
   // check fromState
-  assert workflowArgs.containsKey("fromState") : "Error in module '$key': fromState is a required argument"
-  def fromState = workflowArgs["fromState"]
+  workflowArgs["fromState"] = _processFromState(workflowArgs.get("fromState"), key, thisConfig)
+
+  // check toState
+  workflowArgs["toState"] = _processToState(workflowArgs.get("toState"), key, thisConfig)
+
+  // return output
+  return workflowArgs
+}
+
+def _processFromState(fromState, key_, config_) {
   assert fromState == null || fromState instanceof Closure || fromState instanceof Map || fromState instanceof List :
-    "Error in module '$key': Expected process argument 'fromState' to be null, a Closure, a Map, or a List. Found: class ${fromState.getClass()}"
-  if (fromState) {
+    "Error in module '$key_': Expected process argument 'fromState' to be null, a Closure, a Map, or a List. Found: class ${fromState.getClass()}"
+  if (fromState == null) {
+    return null
+  }
+  
     // if fromState is a List, convert to map
     if (fromState instanceof List) {
       // check whether fromstate is a list[string]
-      assert fromState.every{it instanceof CharSequence} : "Error in module '$key': fromState is a List, but not all elements are Strings"
+    assert fromState.every{it instanceof CharSequence} : "Error in module '$key_': fromState is a List, but not all elements are Strings"
       fromState = fromState.collectEntries{[it, it]}
     }
 
     // if fromState is a map, convert to closure
     if (fromState instanceof Map) {
       // check whether fromstate is a map[string, string]
-      assert fromState.values().every{it instanceof CharSequence} : "Error in module '$key': fromState is a Map, but not all values are Strings"
-      assert fromState.keySet().every{it instanceof CharSequence} : "Error in module '$key': fromState is a Map, but not all keys are Strings"
+    assert fromState.values().every{it instanceof CharSequence} : "Error in module '$key_': fromState is a Map, but not all values are Strings"
+    assert fromState.keySet().every{it instanceof CharSequence} : "Error in module '$key_': fromState is a Map, but not all keys are Strings"
       def fromStateMap = fromState.clone()
       def requiredInputNames = thisConfig.functionality.allArguments.findAll{it.required && it.direction == "Input"}.collect{it.plainName}
       // turn the map into a closure to be used later on
       fromState = { it ->
         def state = it[1]
-        assert state instanceof Map : "Error in module '$key': the state is not a Map"
+      assert state instanceof Map : "Error in module '$key_': the state is not a Map"
         def data = fromStateMap.collectMany{newkey, origkey ->
           // check whether newkey corresponds to a required argument
           if (state.containsKey(origkey)) {
@@ -112,47 +130,45 @@ def processWorkflowArgs(Map args) {
           } else if (!requiredInputNames.contains(origkey)) {
             []
           } else {
-            throw new Exception("Error in module '$key': fromState key '$origkey' not found in current state")
+          throw new Exception("Error in module '$key_': fromState key '$origkey' not found in current state")
           }
         }.collectEntries()
         data
       }
     }
 
-    workflowArgs["fromState"] = fromState
+  return fromState
   }
 
-  // check toState
-  def toState = workflowArgs["toState"]
-
+def _processToState(toState, key_, config_) {
   if (toState == null) {
     toState = { tup -> tup[1] }
   }
 
   // toState should be a closure, map[string, string], or list[string]
   assert toState instanceof Closure || toState instanceof Map || toState instanceof List :
-    "Error in module '$key': Expected process argument 'toState' to be a Closure, a Map, or a List. Found: class ${toState.getClass()}"
+    "Error in module '$key_': Expected process argument 'toState' to be a Closure, a Map, or a List. Found: class ${toState.getClass()}"
 
   // if toState is a List, convert to map
   if (toState instanceof List) {
     // check whether toState is a list[string]
-    assert toState.every{it instanceof CharSequence} : "Error in module '$key': toState is a List, but not all elements are Strings"
+    assert toState.every{it instanceof CharSequence} : "Error in module '$key_': toState is a List, but not all elements are Strings"
     toState = toState.collectEntries{[it, it]}
   }
 
   // if toState is a map, convert to closure
   if (toState instanceof Map) {
     // check whether toState is a map[string, string]
-    assert toState.values().every{it instanceof CharSequence} : "Error in module '$key': toState is a Map, but not all values are Strings"
-    assert toState.keySet().every{it instanceof CharSequence} : "Error in module '$key': toState is a Map, but not all keys are Strings"
+    assert toState.values().every{it instanceof CharSequence} : "Error in module '$key_': toState is a Map, but not all values are Strings"
+    assert toState.keySet().every{it instanceof CharSequence} : "Error in module '$key_': toState is a Map, but not all keys are Strings"
     def toStateMap = toState.clone()
-    def requiredOutputNames = thisConfig.functionality.allArguments.findAll{it.required && it.direction == "Output"}.collect{it.plainName}
+    def requiredOutputNames = config_.functionality.allArguments.findAll{it.required && it.direction == "Output"}.collect{it.plainName}
     // turn the map into a closure to be used later on
     toState = { it ->
       def output = it[1]
       def state = it[2]
-      assert output instanceof Map : "Error in module '$key': the output is not a Map"
-      assert state instanceof Map : "Error in module '$key': the state is not a Map"
+      assert output instanceof Map : "Error in module '$key_': the output is not a Map"
+      assert state instanceof Map : "Error in module '$key_': the state is not a Map"
       def extraEntries = toStateMap.collectMany{newkey, origkey ->
         // check whether newkey corresponds to a required argument
         if (output.containsKey(origkey)) {
@@ -160,15 +176,12 @@ def processWorkflowArgs(Map args) {
         } else if (!requiredOutputNames.contains(origkey)) {
           []
         } else {
-          throw new Exception("Error in module '$key': toState key '$origkey' not found in current output")
+          throw new Exception("Error in module '$key_': toState key '$origkey' not found in current output")
         }
       }.collectEntries()
       state + extraEntries
     }
   }
 
-  workflowArgs["toState"] = toState
-
-  // return output
-  return workflowArgs
+  return toState
 }
