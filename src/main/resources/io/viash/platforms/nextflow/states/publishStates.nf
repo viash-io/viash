@@ -14,38 +14,15 @@ def collectFiles(obj) {
   }
 }
 
-def convertPathsToFile(obj) {
-  iterateMap(obj, {x ->
-    if (x instanceof File) {
-      return x
-    } else if (x instanceof Path)  {
-      return x.toFile()
-    } else {
-      return x
-    }
-  })
-}
-def convertFilesToPath(obj) {
-  iterateMap(obj, {x ->
-    if (x instanceof Path) {
-      return x
-    } else if (x instanceof File)  {
-      return x.toPath()
-    } else {
-      return x
-    }
-  })
-}
-
 /**
  * Recurse through a state and collect all input files and their target output filenames.
  * @param obj The state to recurse through.
  * @param prefix The prefix to prepend to the output filenames.
  */
 def collectInputOutputPaths(obj, prefix) {
-  if (obj instanceof java.io.File || obj instanceof Path)  {
-    def file = obj instanceof File ? obj : obj.toFile()
-    def ext = file.name.find("\\.[^\\.]+\$") ?: ""
+  if (obj instanceof File || obj instanceof Path)  {
+    def path = obj instanceof Path ? obj : obj.toPath()
+    def ext = path.getFileName().find("\\.[^\\.]+\$") ?: ""
     def newFilename = prefix + ext
     return [[obj, newFilename]]
   } else if (obj instanceof List && obj !instanceof String) {
@@ -77,11 +54,8 @@ def publishStates(Map args) {
           def inputFiles_ = inputOutputFiles_[0]
           def outputFiles_ = inputOutputFiles_[1]
 
-          // convert all paths to files before converting it to a yaml blob
-          def convertedState_ = [id: id_] + convertPathsToFile(state_)
-
           // convert state to yaml blob
-          def yamlBlob_ = toTaggedYamlBlob(convertedState_)
+          def yamlBlob_ = toTaggedYamlBlob([id: id_] + state_)
 
           // adds a leading dot to the id (after any folder names)
           // example: foo -> .foo, foo/bar -> foo/.bar
@@ -186,7 +160,7 @@ def publishStatesByConfig(Map args) {
                   assert filename.contains("*") : "Module '${key_}' id '${id_}': Multiple output files specified, but no wildcard '*' in the filename: ${filename}"
                   def outputPerFile = value.withIndex().collect{ val, ix ->
                     def destPath = filename.replace("*", ix.toString())
-                    def destFile = new File(destPath)
+                    def destFile = java.nio.file.Paths.get(destPath)
                     def srcPath = val instanceof File ? val.toPath() : val
                     [value: destFile, srcPath: srcPath, destPath: destPath]
                   }
@@ -195,7 +169,7 @@ def publishStatesByConfig(Map args) {
                   }
                   return [[key: plainName_] + transposedOutputs]
                 } else {
-                  def destFile = new File(filename)
+                  def destFile = java.nio.file.Paths.get(filename)
                   def srcPath = value instanceof File ? value.toPath() : value
                   return [[key: plainName_, value: destFile, srcPath: [srcPath], destPath: [filename]]]
                 }

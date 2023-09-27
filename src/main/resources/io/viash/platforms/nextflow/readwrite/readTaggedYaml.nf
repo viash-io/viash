@@ -1,18 +1,18 @@
 // Custom constructor to modify how certain objects are parsed from YAML
 class CustomConstructor extends org.yaml.snakeyaml.constructor.Constructor {
-  File root
+  Path root
 
   class ConstructFile extends org.yaml.snakeyaml.constructor.AbstractConstruct {
     public Object construct(org.yaml.snakeyaml.nodes.Node node) {
       String filename = (String) constructScalar(node);
       if (root != null) {
-        return new File(root, filename);
+        return root.resolve(filename);
       }
-      return new File(filename);
+      return java.nio.file.Paths.get(filename);
     }
   }
 
-  CustomConstructor(File root = null) {
+  CustomConstructor(Path root = null) {
     super()
     this.root = root
     // Handling !file tag and parse it back to a File type
@@ -20,8 +20,8 @@ class CustomConstructor extends org.yaml.snakeyaml.constructor.Constructor {
   }
 }
 
-def readTaggedYaml(File file) {
-  def constructor = new CustomConstructor(file.absoluteFile.parentFile)
+def readTaggedYaml(Path path) {
+  def constructor = new CustomConstructor(path.getParent())
   def yaml = new org.yaml.snakeyaml.Yaml(constructor)
-  return yaml.load(file.text)
+  return yaml.load(path.text)
 }

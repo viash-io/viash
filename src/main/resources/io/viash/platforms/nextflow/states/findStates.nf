@@ -6,7 +6,7 @@ def findStates(Map params, Map config) {
   auto_config.functionality.argument_groups = []
   auto_config.functionality.arguments = [
     [
-      type: "file",
+      type: "string",
       name: "--input_dir",
       example: "/path/to/input/directory",
       description: "Path to input directory containing the datasets to be integrated.",
@@ -63,7 +63,7 @@ def findStates(Map params, Map config) {
 
           // read in states
           def states = stateFiles.collect { stateFile ->
-            def state_ = convertFilesToPath(readTaggedYaml(stateFile.toFile()))
+            def state_ = readTaggedYaml(stateFile)
             [state_.id, state_]
           }
 

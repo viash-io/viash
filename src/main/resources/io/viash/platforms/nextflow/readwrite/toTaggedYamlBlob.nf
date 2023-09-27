@@ -2,8 +2,8 @@
 class CustomRepresenter extends org.yaml.snakeyaml.representer.Representer {
   class RepresentFile implements org.yaml.snakeyaml.representer.Represent {
     public org.yaml.snakeyaml.nodes.Node representData(Object data) {
-      File file = (File) data;
-      def value = file.name;
+      Path file = (Path) data;
+      String value = file.getFileName();
       def tag = new org.yaml.snakeyaml.nodes.Tag("!file");
       return representScalar(tag, value);
     }

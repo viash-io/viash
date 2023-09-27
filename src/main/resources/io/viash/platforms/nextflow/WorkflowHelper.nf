@@ -1454,19 +1454,19 @@ def readJson(file_path) {
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readTaggedYaml.nf'
 // Custom constructor to modify how certain objects are parsed from YAML
 class CustomConstructor extends org.yaml.snakeyaml.constructor.Constructor {
-  File root
+  Path root
 
   class ConstructFile extends org.yaml.snakeyaml.constructor.AbstractConstruct {
     public Object construct(org.yaml.snakeyaml.nodes.Node node) {
       String filename = (String) constructScalar(node);
       if (root != null) {
-        return new File(root, filename);
+        return root.resolve(filename);
       }
-      return new File(filename);
+      return java.nio.file.Paths.get(filename);
     }
   }
 
-  CustomConstructor(File root = null) {
+  CustomConstructor(Path root = null) {
     super()
     this.root = root
     // Handling !file tag and parse it back to a File type
@@ -1474,10 +1474,10 @@ class CustomConstructor extends org.yaml.snakeyaml.constructor.Constructor {
   }
 }
 
-def readTaggedYaml(File file) {
-  def constructor = new CustomConstructor(file.absoluteFile.parentFile)
+def readTaggedYaml(Path path) {
+  def constructor = new CustomConstructor(path.getParent())
   def yaml = new org.yaml.snakeyaml.Yaml(constructor)
-  return yaml.load(file.text)
+  return yaml.load(path.text)
 }
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readYamlBlob.nf'
@@ -1498,8 +1498,8 @@ def readYaml(file_path) {
 class CustomRepresenter extends org.yaml.snakeyaml.representer.Representer {
   class RepresentFile implements org.yaml.snakeyaml.representer.Represent {
     public org.yaml.snakeyaml.nodes.Node representData(Object data) {
-      File file = (File) data;
-      def value = file.name;
+      Path file = (Path) data;
+      String value = file.getFileName();
       def tag = new org.yaml.snakeyaml.nodes.Tag("!file");
       return representScalar(tag, value);
     }
@@ -1537,7 +1537,7 @@ def findStates(Map params, Map config) {
   auto_config.functionality.argument_groups = []
   auto_config.functionality.arguments = [
     [
-      type: "file",
+      type: "string",
       name: "--input_dir",
       example: "/path/to/input/directory",
       description: "Path to input directory containing the datasets to be integrated.",
@@ -1594,7 +1594,7 @@ def findStates(Map params, Map config) {
 
           // read in states
           def states = stateFiles.collect { stateFile ->
-            def state_ = convertFilesToPath(readTaggedYaml(stateFile.toFile()))
+            def state_ = readTaggedYaml(stateFile)
             [state_.id, state_]
           }
 
@@ -1649,38 +1649,15 @@ def collectFiles(obj) {
   }
 }
 
-def convertPathsToFile(obj) {
-  iterateMap(obj, {x ->
-    if (x instanceof File) {
-      return x
-    } else if (x instanceof Path)  {
-      return x.toFile()
-    } else {
-      return x
-    }
-  })
-}
-def convertFilesToPath(obj) {
-  iterateMap(obj, {x ->
-    if (x instanceof Path) {
-      return x
-    } else if (x instanceof File)  {
-      return x.toPath()
-    } else {
-      return x
-    }
-  })
-}
-
 /**
  * Recurse through a state and collect all input files and their target output filenames.
  * @param obj The state to recurse through.
  * @param prefix The prefix to prepend to the output filenames.
  */
 def collectInputOutputPaths(obj, prefix) {
-  if (obj instanceof java.io.File || obj instanceof Path)  {
-    def file = obj instanceof File ? obj : obj.toFile()
-    def ext = file.name.find("\\.[^\\.]+\$") ?: ""
+  if (obj instanceof File || obj instanceof Path)  {
+    def path = obj instanceof Path ? obj : obj.toPath()
+    def ext = path.getFileName().find("\\.[^\\.]+\$") ?: ""
     def newFilename = prefix + ext
     return [[obj, newFilename]]
   } else if (obj instanceof List && obj !instanceof String) {
@@ -1712,11 +1689,8 @@ def publishStates(Map args) {
           def inputFiles_ = inputOutputFiles_[0]
           def outputFiles_ = inputOutputFiles_[1]
 
-          // convert all paths to files before converting it to a yaml blob
-          def convertedState_ = [id: id_] + convertPathsToFile(state_)
-
           // convert state to yaml blob
-          def yamlBlob_ = toTaggedYamlBlob(convertedState_)
+          def yamlBlob_ = toTaggedYamlBlob([id: id_] + state_)
 
           // adds a leading dot to the id (after any folder names)
           // example: foo -> .foo, foo/bar -> foo/.bar
@@ -1821,7 +1795,7 @@ def publishStatesByConfig(Map args) {
                   assert filename.contains("*") : "Module '${key_}' id '${id_}': Multiple output files specified, but no wildcard '*' in the filename: ${filename}"
                   def outputPerFile = value.withIndex().collect{ val, ix ->
                     def destPath = filename.replace("*", ix.toString())
-                    def destFile = new File(destPath)
+                    def destFile = java.nio.file.Paths.get(destPath)
                     def srcPath = val instanceof File ? val.toPath() : val
                     [value: destFile, srcPath: srcPath, destPath: destPath]
                   }
@@ -1830,7 +1804,7 @@ def publishStatesByConfig(Map args) {
                   }
                   return [[key: plainName_] + transposedOutputs]
                 } else {
-                  def destFile = new File(filename)
+                  def destFile = java.nio.file.Paths.get(filename)
                   def srcPath = value instanceof File ? value.toPath() : value
                   return [[key: plainName_, value: destFile, srcPath: [srcPath], destPath: [filename]]]
                 }
