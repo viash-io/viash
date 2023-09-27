@@ -86,7 +86,7 @@ object NextflowHelper {
     s"'''$executionCode'''"
   }
 
-  def generateDefaultProcessArgs(config: Config, directives: NextflowDirectives, auto: NextflowAuto, debug: Boolean): String = {
+  def generateDefaultWorkflowArgs(config: Config, directives: NextflowDirectives, auto: NextflowAuto, debug: Boolean): String = {
     // override container
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
     val dirJson = directives.asJson.dropEmptyRecursively

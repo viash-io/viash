@@ -260,7 +260,7 @@ case class NextflowPlatform(
       |${innerWorkflowFactory.split("\n").mkString("\n|")}
       |
       |// component settings
-      |thisDefaultProcessArgs = ${NextflowHelper.generateDefaultProcessArgs(config, directivesToJson, auto, debug)}
+      |thisDefaultWorkflowArgs = ${NextflowHelper.generateDefaultWorkflowArgs(config, directivesToJson, auto, debug)}
       |${NextflowHelper.renderDependencies(config).split("\n").mkString("\n|")}
       |// initialise default workflow
       |myWfInstance = workflowFactory([:])

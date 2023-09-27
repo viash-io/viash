@@ -1,7 +1,7 @@
 // depends on: thisConfig, thisScript, session?
-def vdsl3ProcessFactoryMap processArgs) {
+def vdsl3ProcessFactoryMap workflowArgs) {
   // autodetect process key
-  def wfKey = processArgs["key"]
+  def wfKey = workflowArgs["key"]
   def procKeyPrefix = "${wfKey}_process"
   def meta = nextflow.script.ScriptMeta.current()
   def existing = meta.getProcessNames().findAll{it.startsWith(procKeyPrefix)}
@@ -18,7 +18,7 @@ def vdsl3ProcessFactoryMap processArgs) {
   }
 
   // subset directives and convert to list of tuples
-  def drctv = processArgs.directives
+  def drctv = workflowArgs.directives
 
   // TODO: unit test the two commands below
   // convert publish array into tags
@@ -76,7 +76,7 @@ def vdsl3ProcessFactoryMap processArgs) {
     .join()
 
   // TODO: move this functionality somewhere else?
-  if (processArgs.auto.transcript) {
+  if (workflowArgs.auto.transcript) {
     outputPaths = outputPaths + ', path{[".exitcode", ".command*"]}'
   } else {
     outputPaths = outputPaths + ', path{[".exitcode"]}'
@@ -124,7 +124,7 @@ def vdsl3ProcessFactoryMap processArgs) {
   def escapedScript = thisScript.replace('\\', '\\\\').replace('$', '\\$').replace('"""', '\\"\\"\\"')
 
   // publishdir assert
-  def assertStr = (processArgs.auto.publish == true) || processArgs.auto.transcript ? 
+  def assertStr = (workflowArgs.auto.publish == true) || workflowArgs.auto.transcript ? 
     """\nassert task.publishDir.size() > 0: "if auto.publish is true, params.publish_dir needs to be defined.\\n  Example: --publish_dir './output/'" """ :
     ""
 
@@ -187,7 +187,7 @@ def vdsl3ProcessFactoryMap processArgs) {
   |""".stripMargin()
 
   // TODO: print on debug
-  // if (processArgs.debug == true) {
+  // if (workflowArgs.debug == true) {
   //   println("######################\n$procStr\n######################")
   // }
 

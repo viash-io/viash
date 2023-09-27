@@ -1,6 +1,6 @@
-def _debug(processArgs, debugKey) {
-  if (processArgs.debug) {
-    view { "process '${processArgs.key}' $debugKey tuple: $it"  }
+def _debug(workflowArgs, debugKey) {
+  if (workflowArgs.debug) {
+    view { "process '${workflowArgs.key}' $debugKey tuple: $it"  }
   } else {
     map { it }
   }
@@ -8,8 +8,8 @@ def _debug(processArgs, debugKey) {
 
 // depends on: thisConfig, innerWorkflowFactory
 def workflowFactory(Map args) {
-  def processArgs = processProcessArgs(args)
-  def key_ = processArgs["key"]
+  def workflowArgs = processWorkflowArgs(args)
+  def key_ = workflowArgs["key"]
   
   workflow workflowInstance {
     take: input_
@@ -17,21 +17,21 @@ def workflowFactory(Map args) {
     main:
     mid1_ = input_
       | checkUniqueIds([:])
-      | _debug(processArgs, "input")
+      | _debug(workflowArgs, "input")
       | map { tuple ->
         tuple = tuple.clone()
         
-        if (processArgs.map) {
-          tuple = processArgs.map(tuple)
+        if (workflowArgs.map) {
+          tuple = workflowArgs.map(tuple)
         }
-        if (processArgs.mapId) {
-          tuple[0] = processArgs.mapId(tuple[0])
+        if (workflowArgs.mapId) {
+          tuple[0] = workflowArgs.mapId(tuple[0])
         }
-        if (processArgs.mapData) {
-          tuple[1] = processArgs.mapData(tuple[1])
+        if (workflowArgs.mapData) {
+          tuple[1] = workflowArgs.mapData(tuple[1])
         }
-        if (processArgs.mapPassthrough) {
-          tuple = tuple.take(2) + processArgs.mapPassthrough(tuple.drop(2))
+        if (workflowArgs.mapPassthrough) {
+          tuple = tuple.take(2) + workflowArgs.mapPassthrough(tuple.drop(2))
         }
 
         // check tuple
@@ -51,7 +51,7 @@ def workflowFactory(Map args) {
           "  Found: ${tuple[0]}"
         
         // match file to input file
-        if (processArgs.auto.simplifyInput && (tuple[1] instanceof Path || tuple[1] instanceof List)) {
+        if (workflowArgs.auto.simplifyInput && (tuple[1] instanceof Path || tuple[1] instanceof List)) {
           def inputFiles = thisConfig.functionality.allArguments
             .findAll { it.type == "file" && it.direction == "input" }
           
@@ -70,17 +70,17 @@ def workflowFactory(Map args) {
           "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
 
         // rename keys of data field in tuple
-        if (processArgs.renameKeys) {
-          assert processArgs.renameKeys instanceof Map : 
+        if (workflowArgs.renameKeys) {
+          assert workflowArgs.renameKeys instanceof Map : 
               "Error renaming data keys in module '${key_}' id '${tuple[0]}'.\n" +
               "  Example: renameKeys: ['new_key': 'old_key'].\n" +
-              "  Expected class: Map. Found: renameKeys.getClass() is ${processArgs.renameKeys.getClass()}"
+              "  Expected class: Map. Found: renameKeys.getClass() is ${workflowArgs.renameKeys.getClass()}"
           assert tuple[1] instanceof Map : 
               "Error renaming data keys in module '${key_}' id '${tuple[0]}'.\n" +
               "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
 
           // TODO: allow renameKeys to be a function?
-          processArgs.renameKeys.each { newKey, oldKey ->
+          workflowArgs.renameKeys.each { newKey, oldKey ->
             assert newKey instanceof CharSequence : 
               "Error renaming data keys in module '${key_}' id '${tuple[0]}'.\n" +
               "  Example: renameKeys: ['new_key': 'old_key'].\n" +
@@ -94,22 +94,22 @@ def workflowFactory(Map args) {
               "  Key '$oldKey' is missing in the data map. tuple[1].keySet() is '${tuple[1].keySet()}'"
             tuple[1].put(newKey, tuple[1][oldKey])
           }
-          tuple[1].keySet().removeAll(processArgs.renameKeys.collect{ newKey, oldKey -> oldKey })
+          tuple[1].keySet().removeAll(workflowArgs.renameKeys.collect{ newKey, oldKey -> oldKey })
         }
         tuple
       }
 
-    if (processArgs.filter) {
+    if (workflowArgs.filter) {
       mid2_ = mid1_
-        | filter{processArgs.filter(it)}
+        | filter{workflowArgs.filter(it)}
     } else {
       mid2_ = mid1_
     }
 
-    if (processArgs.fromState) {
+    if (workflowArgs.fromState) {
       mid3_ = mid2_
         | map{
-          def new_data = processArgs.fromState(it.take(2))
+          def new_data = workflowArgs.fromState(it.take(2))
           [it[0], new_data]
         }
     } else {
@@ -143,7 +143,7 @@ def workflowFactory(Map args) {
           .collectEntries { [ it.plainName, data_[it.plainName] ] }
         
         // combine params
-        def combinedArgs = defaultArgs + paramArgs + processArgs.args + dataArgs
+        def combinedArgs = defaultArgs + paramArgs + workflowArgs.args + dataArgs
 
         // remove arguments with explicit null values
         combinedArgs
@@ -155,14 +155,14 @@ def workflowFactory(Map args) {
       }
 
     out0_ = mid4_
-      | _debug(processArgs, "processed")
+      | _debug(workflowArgs, "processed")
       // run workflow
-      | innerWorkflowFactory(processArgs)
+      | innerWorkflowFactory(workflowArgs)
       // check output tuple
       | map { id_, output_ ->
         output_ = processOutputs(output_, thisConfig, id_, key_)
 
-        if (processArgs.auto.simplifyOutput && output_.size() == 1) {
+        if (workflowArgs.auto.simplifyOutput && output_.size() == 1) {
           output_ = output_.values()[0]
         }
 
@@ -175,12 +175,12 @@ def workflowFactory(Map args) {
       // input tuple format: [id, output, prev_state, ...]
       // output tuple format: [id, new_state, ...]
       | map{
-        def new_state = processArgs.toState(it)
+        def new_state = workflowArgs.toState(it)
         [it[0], new_state] + it.drop(3)
       }
-      | _debug(processArgs, "output")
+      | _debug(workflowArgs, "output")
 
-    if (processArgs.auto.publish == "state") {
+    if (workflowArgs.auto.publish == "state") {
       // TODO: this join will fail if the keys changed during the innerWorkflowFactory
       mid4_
         | map { tup -> tup.take(2) }

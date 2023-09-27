@@ -1,44 +1,44 @@
-// depends on: thisConfig, thisDefaultProcessArgs
-def processProcessArgs(Map args) {
+// depends on: thisConfig, thisDefaultWorkflowArgs
+def processWorkflowArgs(Map args) {
   // override defaults with args
-  def processArgs = thisDefaultProcessArgs + args
+  def workflowArgs = thisDefaultWorkflowArgs + args
 
   // check whether 'key' exists
-  assert processArgs.containsKey("key") : "Error in module '${thisConfig.functionality.name}': key is a required argument"
+  assert workflowArgs.containsKey("key") : "Error in module '${thisConfig.functionality.name}': key is a required argument"
 
   // if 'key' is a closure, apply it to the original key
-  if (processArgs["key"] instanceof Closure) {
-    processArgs["key"] = processArgs["key"](thisConfig.functionality.name)
+  if (workflowArgs["key"] instanceof Closure) {
+    workflowArgs["key"] = workflowArgs["key"](thisConfig.functionality.name)
   }
-  def key = processArgs["key"]
+  def key = workflowArgs["key"]
   assert key instanceof CharSequence : "Expected process argument 'key' to be a String. Found: class ${key.getClass()}"
   assert key ==~ /^[a-zA-Z_]\w*$/ : "Error in module '$key': Expected process argument 'key' to consist of only letters, digits or underscores. Found: ${key}"
 
   // check for any unexpected keys
   def expectedKeys = ["key", "directives", "auto", "map", "mapId", "mapData", "mapPassthrough", "filter", "fromState", "toState", "args", "renameKeys", "debug"]
-  def unexpectedKeys = processArgs.keySet() - expectedKeys
+  def unexpectedKeys = workflowArgs.keySet() - expectedKeys
   assert unexpectedKeys.isEmpty() : "Error in module '$key': unexpected arguments to the '.run()' function: '${unexpectedKeys.join("', '")}'"
 
   // check whether directives exists and apply defaults
-  assert processArgs.containsKey("directives") : "Error in module '$key': directives is a required argument"
-  assert processArgs["directives"] instanceof Map : "Error in module '$key': Expected process argument 'directives' to be a Map. Found: class ${processArgs['directives'].getClass()}"
-  processArgs["directives"] = processDirectives(thisDefaultProcessArgs.directives + processArgs["directives"])
+  assert workflowArgs.containsKey("directives") : "Error in module '$key': directives is a required argument"
+  assert workflowArgs["directives"] instanceof Map : "Error in module '$key': Expected process argument 'directives' to be a Map. Found: class ${workflowArgs['directives'].getClass()}"
+  workflowArgs["directives"] = processDirectives(thisDefaultWorkflowArgs.directives + workflowArgs["directives"])
 
   // check whether directives exists and apply defaults
-  assert processArgs.containsKey("auto") : "Error in module '$key': auto is a required argument"
-  assert processArgs["auto"] instanceof Map : "Error in module '$key': Expected process argument 'auto' to be a Map. Found: class ${processArgs['auto'].getClass()}"
-  processArgs["auto"] = processAuto(thisDefaultProcessArgs.auto + processArgs["auto"])
+  assert workflowArgs.containsKey("auto") : "Error in module '$key': auto is a required argument"
+  assert workflowArgs["auto"] instanceof Map : "Error in module '$key': Expected process argument 'auto' to be a Map. Found: class ${workflowArgs['auto'].getClass()}"
+  workflowArgs["auto"] = processAuto(thisDefaultWorkflowArgs.auto + workflowArgs["auto"])
 
   // auto define publish, if so desired
-  if (processArgs.auto.publish == true && (processArgs.directives.publishDir != null ? processArgs.directives.publishDir : [:]).isEmpty()) {
+  if (workflowArgs.auto.publish == true && (workflowArgs.directives.publishDir != null ? workflowArgs.directives.publishDir : [:]).isEmpty()) {
     // can't assert at this level thanks to the no_publish profile
     // assert params.containsKey("publishDir") || params.containsKey("publish_dir") : 
-    //   "Error in module '${processArgs['key']}': if auto.publish is true, params.publish_dir needs to be defined.\n" +
+    //   "Error in module '${workflowArgs['key']}': if auto.publish is true, params.publish_dir needs to be defined.\n" +
     //   "  Example: params.publish_dir = \"./output/\""
     def publishDir = getPublishDir()
     
     if (publishDir != null) {
-      processArgs.directives.publishDir = [[ 
+      workflowArgs.directives.publishDir = [[ 
         path: publishDir, 
         saveAs: "{ it.startsWith('.') ? null : it }", // don't publish hidden files, by default
         mode: "copy"
@@ -47,10 +47,10 @@ def processProcessArgs(Map args) {
   }
 
   // auto define transcript, if so desired
-  if (processArgs.auto.transcript == true) {
+  if (workflowArgs.auto.transcript == true) {
     // can't assert at this level thanks to the no_publish profile
     // assert params.containsKey("transcriptsDir") || params.containsKey("transcripts_dir") || params.containsKey("publishDir") || params.containsKey("publish_dir") : 
-    //   "Error in module '${processArgs['key']}': if auto.transcript is true, either params.transcripts_dir or params.publish_dir needs to be defined.\n" +
+    //   "Error in module '${workflowArgs['key']}': if auto.transcript is true, either params.transcripts_dir or params.publish_dir needs to be defined.\n" +
     //   "  Example: params.transcripts_dir = \"./transcripts/\""
     def transcriptsDir = 
       params.containsKey("transcripts_dir") ? params.transcripts_dir : 
@@ -65,25 +65,25 @@ def processProcessArgs(Map args) {
         saveAs: "{ it.startsWith('.') ? it.replaceAll('^.', '') : null }", 
         mode: "copy"
       ]
-      def publishDirs = processArgs.directives.publishDir != null ? processArgs.directives.publishDir : null ? processArgs.directives.publishDir : []
-      processArgs.directives.publishDir = publishDirs + transcriptsPublishDir
+      def publishDirs = workflowArgs.directives.publishDir != null ? workflowArgs.directives.publishDir : null ? workflowArgs.directives.publishDir : []
+      workflowArgs.directives.publishDir = publishDirs + transcriptsPublishDir
     }
   }
 
   // if this is a stubrun, remove certain directives?
   if (workflow.stubRun) {
-    processArgs.directives.keySet().removeAll(["publishDir", "cpus", "memory", "label"])
+    workflowArgs.directives.keySet().removeAll(["publishDir", "cpus", "memory", "label"])
   }
 
   for (nam in ["map", "mapId", "mapData", "mapPassthrough", "filter"]) {
-    if (processArgs.containsKey(nam) && processArgs[nam]) {
-      assert processArgs[nam] instanceof Closure : "Error in module '$key': Expected process argument '$nam' to be null or a Closure. Found: class ${processArgs[nam].getClass()}"
+    if (workflowArgs.containsKey(nam) && workflowArgs[nam]) {
+      assert workflowArgs[nam] instanceof Closure : "Error in module '$key': Expected process argument '$nam' to be null or a Closure. Found: class ${workflowArgs[nam].getClass()}"
     }
   }
 
   // check fromState
-  assert processArgs.containsKey("fromState") : "Error in module '$key': fromState is a required argument"
-  def fromState = processArgs["fromState"]
+  assert workflowArgs.containsKey("fromState") : "Error in module '$key': fromState is a required argument"
+  def fromState = workflowArgs["fromState"]
   assert fromState == null || fromState instanceof Closure || fromState instanceof Map || fromState instanceof List :
     "Error in module '$key': Expected process argument 'fromState' to be null, a Closure, a Map, or a List. Found: class ${fromState.getClass()}"
   if (fromState) {
@@ -119,11 +119,11 @@ def processProcessArgs(Map args) {
       }
     }
 
-    processArgs["fromState"] = fromState
+    workflowArgs["fromState"] = fromState
   }
 
   // check toState
-  def toState = processArgs["toState"]
+  def toState = workflowArgs["toState"]
 
   if (toState == null) {
     toState = { tup -> tup[1] }
@@ -167,8 +167,8 @@ def processProcessArgs(Map args) {
     }
   }
 
-  processArgs["toState"] = toState
+  workflowArgs["toState"] = toState
 
   // return output
-  return processArgs
+  return workflowArgs
 }

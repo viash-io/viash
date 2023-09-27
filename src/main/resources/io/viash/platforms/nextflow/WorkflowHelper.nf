@@ -2262,9 +2262,9 @@ def processDirectives(Map drctv) {
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/processFactory.nf'
 // depends on: thisConfig, thisScript, session?
-def vdsl3ProcessFactoryMap processArgs) {
+def vdsl3ProcessFactoryMap workflowArgs) {
   // autodetect process key
-  def wfKey = processArgs["key"]
+  def wfKey = workflowArgs["key"]
   def procKeyPrefix = "${wfKey}_process"
   def meta = nextflow.script.ScriptMeta.current()
   def existing = meta.getProcessNames().findAll{it.startsWith(procKeyPrefix)}
@@ -2281,7 +2281,7 @@ def vdsl3ProcessFactoryMap processArgs) {
   }
 
   // subset directives and convert to list of tuples
-  def drctv = processArgs.directives
+  def drctv = workflowArgs.directives
 
   // TODO: unit test the two commands below
   // convert publish array into tags
@@ -2339,7 +2339,7 @@ def vdsl3ProcessFactoryMap processArgs) {
     .join()
 
   // TODO: move this functionality somewhere else?
-  if (processArgs.auto.transcript) {
+  if (workflowArgs.auto.transcript) {
     outputPaths = outputPaths + ', path{[".exitcode", ".command*"]}'
   } else {
     outputPaths = outputPaths + ', path{[".exitcode"]}'
@@ -2387,7 +2387,7 @@ def vdsl3ProcessFactoryMap processArgs) {
   def escapedScript = thisScript.replace('\\', '\\\\').replace('$', '\\$').replace('"""', '\\"\\"\\"')
 
   // publishdir assert
-  def assertStr = (processArgs.auto.publish == true) || processArgs.auto.transcript ? 
+  def assertStr = (workflowArgs.auto.publish == true) || workflowArgs.auto.transcript ? 
     """\nassert task.publishDir.size() > 0: "if auto.publish is true, params.publish_dir needs to be defined.\\n  Example: --publish_dir './output/'" """ :
     ""
 
@@ -2450,7 +2450,7 @@ def vdsl3ProcessFactoryMap processArgs) {
   |""".stripMargin()
 
   // TODO: print on debug
-  // if (processArgs.debug == true) {
+  // if (workflowArgs.debug == true) {
   //   println("######################\n$procStr\n######################")
   // }
 
@@ -2472,48 +2472,48 @@ def vdsl3ProcessFactoryMap processArgs) {
   return meta.getProcess(procKey)
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/processProcessArgs.nf'
-// depends on: thisConfig, thisDefaultProcessArgs
-def processProcessArgs(Map args) {
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/processWorkflowArgs.nf'
+// depends on: thisConfig, thisDefaultWorkflowArgs
+def processWorkflowArgs(Map args) {
   // override defaults with args
-  def processArgs = thisDefaultProcessArgs + args
+  def workflowArgs = thisDefaultWorkflowArgs + args
 
   // check whether 'key' exists
-  assert processArgs.containsKey("key") : "Error in module '${thisConfig.functionality.name}': key is a required argument"
+  assert workflowArgs.containsKey("key") : "Error in module '${thisConfig.functionality.name}': key is a required argument"
 
   // if 'key' is a closure, apply it to the original key
-  if (processArgs["key"] instanceof Closure) {
-    processArgs["key"] = processArgs["key"](thisConfig.functionality.name)
+  if (workflowArgs["key"] instanceof Closure) {
+    workflowArgs["key"] = workflowArgs["key"](thisConfig.functionality.name)
   }
-  def key = processArgs["key"]
+  def key = workflowArgs["key"]
   assert key instanceof CharSequence : "Expected process argument 'key' to be a String. Found: class ${key.getClass()}"
   assert key ==~ /^[a-zA-Z_]\w*$/ : "Error in module '$key': Expected process argument 'key' to consist of only letters, digits or underscores. Found: ${key}"
 
   // check for any unexpected keys
   def expectedKeys = ["key", "directives", "auto", "map", "mapId", "mapData", "mapPassthrough", "filter", "fromState", "toState", "args", "renameKeys", "debug"]
-  def unexpectedKeys = processArgs.keySet() - expectedKeys
+  def unexpectedKeys = workflowArgs.keySet() - expectedKeys
   assert unexpectedKeys.isEmpty() : "Error in module '$key': unexpected arguments to the '.run()' function: '${unexpectedKeys.join("', '")}'"
 
   // check whether directives exists and apply defaults
-  assert processArgs.containsKey("directives") : "Error in module '$key': directives is a required argument"
-  assert processArgs["directives"] instanceof Map : "Error in module '$key': Expected process argument 'directives' to be a Map. Found: class ${processArgs['directives'].getClass()}"
-  processArgs["directives"] = processDirectives(thisDefaultProcessArgs.directives + processArgs["directives"])
+  assert workflowArgs.containsKey("directives") : "Error in module '$key': directives is a required argument"
+  assert workflowArgs["directives"] instanceof Map : "Error in module '$key': Expected process argument 'directives' to be a Map. Found: class ${workflowArgs['directives'].getClass()}"
+  workflowArgs["directives"] = processDirectives(thisDefaultWorkflowArgs.directives + workflowArgs["directives"])
 
   // check whether directives exists and apply defaults
-  assert processArgs.containsKey("auto") : "Error in module '$key': auto is a required argument"
-  assert processArgs["auto"] instanceof Map : "Error in module '$key': Expected process argument 'auto' to be a Map. Found: class ${processArgs['auto'].getClass()}"
-  processArgs["auto"] = processAuto(thisDefaultProcessArgs.auto + processArgs["auto"])
+  assert workflowArgs.containsKey("auto") : "Error in module '$key': auto is a required argument"
+  assert workflowArgs["auto"] instanceof Map : "Error in module '$key': Expected process argument 'auto' to be a Map. Found: class ${workflowArgs['auto'].getClass()}"
+  workflowArgs["auto"] = processAuto(thisDefaultWorkflowArgs.auto + workflowArgs["auto"])
 
   // auto define publish, if so desired
-  if (processArgs.auto.publish == true && (processArgs.directives.publishDir != null ? processArgs.directives.publishDir : [:]).isEmpty()) {
+  if (workflowArgs.auto.publish == true && (workflowArgs.directives.publishDir != null ? workflowArgs.directives.publishDir : [:]).isEmpty()) {
     // can't assert at this level thanks to the no_publish profile
     // assert params.containsKey("publishDir") || params.containsKey("publish_dir") : 
-    //   "Error in module '${processArgs['key']}': if auto.publish is true, params.publish_dir needs to be defined.\n" +
+    //   "Error in module '${workflowArgs['key']}': if auto.publish is true, params.publish_dir needs to be defined.\n" +
     //   "  Example: params.publish_dir = \"./output/\""
     def publishDir = getPublishDir()
     
     if (publishDir != null) {
-      processArgs.directives.publishDir = [[ 
+      workflowArgs.directives.publishDir = [[ 
         path: publishDir, 
         saveAs: "{ it.startsWith('.') ? null : it }", // don't publish hidden files, by default
         mode: "copy"
@@ -2522,10 +2522,10 @@ def processProcessArgs(Map args) {
   }
 
   // auto define transcript, if so desired
-  if (processArgs.auto.transcript == true) {
+  if (workflowArgs.auto.transcript == true) {
     // can't assert at this level thanks to the no_publish profile
     // assert params.containsKey("transcriptsDir") || params.containsKey("transcripts_dir") || params.containsKey("publishDir") || params.containsKey("publish_dir") : 
-    //   "Error in module '${processArgs['key']}': if auto.transcript is true, either params.transcripts_dir or params.publish_dir needs to be defined.\n" +
+    //   "Error in module '${workflowArgs['key']}': if auto.transcript is true, either params.transcripts_dir or params.publish_dir needs to be defined.\n" +
     //   "  Example: params.transcripts_dir = \"./transcripts/\""
     def transcriptsDir = 
       params.containsKey("transcripts_dir") ? params.transcripts_dir : 
@@ -2540,25 +2540,25 @@ def processProcessArgs(Map args) {
         saveAs: "{ it.startsWith('.') ? it.replaceAll('^.', '') : null }", 
         mode: "copy"
       ]
-      def publishDirs = processArgs.directives.publishDir != null ? processArgs.directives.publishDir : null ? processArgs.directives.publishDir : []
-      processArgs.directives.publishDir = publishDirs + transcriptsPublishDir
+      def publishDirs = workflowArgs.directives.publishDir != null ? workflowArgs.directives.publishDir : null ? workflowArgs.directives.publishDir : []
+      workflowArgs.directives.publishDir = publishDirs + transcriptsPublishDir
     }
   }
 
   // if this is a stubrun, remove certain directives?
   if (workflow.stubRun) {
-    processArgs.directives.keySet().removeAll(["publishDir", "cpus", "memory", "label"])
+    workflowArgs.directives.keySet().removeAll(["publishDir", "cpus", "memory", "label"])
   }
 
   for (nam in ["map", "mapId", "mapData", "mapPassthrough", "filter"]) {
-    if (processArgs.containsKey(nam) && processArgs[nam]) {
-      assert processArgs[nam] instanceof Closure : "Error in module '$key': Expected process argument '$nam' to be null or a Closure. Found: class ${processArgs[nam].getClass()}"
+    if (workflowArgs.containsKey(nam) && workflowArgs[nam]) {
+      assert workflowArgs[nam] instanceof Closure : "Error in module '$key': Expected process argument '$nam' to be null or a Closure. Found: class ${workflowArgs[nam].getClass()}"
     }
   }
 
   // check fromState
-  assert processArgs.containsKey("fromState") : "Error in module '$key': fromState is a required argument"
-  def fromState = processArgs["fromState"]
+  assert workflowArgs.containsKey("fromState") : "Error in module '$key': fromState is a required argument"
+  def fromState = workflowArgs["fromState"]
   assert fromState == null || fromState instanceof Closure || fromState instanceof Map || fromState instanceof List :
     "Error in module '$key': Expected process argument 'fromState' to be null, a Closure, a Map, or a List. Found: class ${fromState.getClass()}"
   if (fromState) {
@@ -2594,11 +2594,11 @@ def processProcessArgs(Map args) {
       }
     }
 
-    processArgs["fromState"] = fromState
+    workflowArgs["fromState"] = fromState
   }
 
   // check toState
-  def toState = processArgs["toState"]
+  def toState = workflowArgs["toState"]
 
   if (toState == null) {
     toState = { tup -> tup[1] }
@@ -2642,10 +2642,10 @@ def processProcessArgs(Map args) {
     }
   }
 
-  processArgs["toState"] = toState
+  workflowArgs["toState"] = toState
 
   // return output
-  return processArgs
+  return workflowArgs
 }
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/vdsl3WorkflowFactory.nf'
@@ -2755,9 +2755,9 @@ def vdsl3WorkflowFactory(Map args) {
 }
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/workflowFactory.nf'
-def _debug(processArgs, debugKey) {
-  if (processArgs.debug) {
-    view { "process '${processArgs.key}' $debugKey tuple: $it"  }
+def _debug(workflowArgs, debugKey) {
+  if (workflowArgs.debug) {
+    view { "process '${workflowArgs.key}' $debugKey tuple: $it"  }
   } else {
     map { it }
   }
@@ -2765,8 +2765,8 @@ def _debug(processArgs, debugKey) {
 
 // depends on: thisConfig, innerWorkflowFactory
 def workflowFactory(Map args) {
-  def processArgs = processProcessArgs(args)
-  def key_ = processArgs["key"]
+  def workflowArgs = processWorkflowArgs(args)
+  def key_ = workflowArgs["key"]
   
   workflow workflowInstance {
     take: input_
@@ -2774,21 +2774,21 @@ def workflowFactory(Map args) {
     main:
     mid1_ = input_
       | checkUniqueIds([:])
-      | _debug(processArgs, "input")
+      | _debug(workflowArgs, "input")
       | map { tuple ->
         tuple = tuple.clone()
         
-        if (processArgs.map) {
-          tuple = processArgs.map(tuple)
+        if (workflowArgs.map) {
+          tuple = workflowArgs.map(tuple)
         }
-        if (processArgs.mapId) {
-          tuple[0] = processArgs.mapId(tuple[0])
+        if (workflowArgs.mapId) {
+          tuple[0] = workflowArgs.mapId(tuple[0])
         }
-        if (processArgs.mapData) {
-          tuple[1] = processArgs.mapData(tuple[1])
+        if (workflowArgs.mapData) {
+          tuple[1] = workflowArgs.mapData(tuple[1])
         }
-        if (processArgs.mapPassthrough) {
-          tuple = tuple.take(2) + processArgs.mapPassthrough(tuple.drop(2))
+        if (workflowArgs.mapPassthrough) {
+          tuple = tuple.take(2) + workflowArgs.mapPassthrough(tuple.drop(2))
         }
 
         // check tuple
@@ -2808,7 +2808,7 @@ def workflowFactory(Map args) {
           "  Found: ${tuple[0]}"
         
         // match file to input file
-        if (processArgs.auto.simplifyInput && (tuple[1] instanceof Path || tuple[1] instanceof List)) {
+        if (workflowArgs.auto.simplifyInput && (tuple[1] instanceof Path || tuple[1] instanceof List)) {
           def inputFiles = thisConfig.functionality.allArguments
             .findAll { it.type == "file" && it.direction == "input" }
           
@@ -2827,17 +2827,17 @@ def workflowFactory(Map args) {
           "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
 
         // rename keys of data field in tuple
-        if (processArgs.renameKeys) {
-          assert processArgs.renameKeys instanceof Map : 
+        if (workflowArgs.renameKeys) {
+          assert workflowArgs.renameKeys instanceof Map : 
               "Error renaming data keys in module '${key_}' id '${tuple[0]}'.\n" +
               "  Example: renameKeys: ['new_key': 'old_key'].\n" +
-              "  Expected class: Map. Found: renameKeys.getClass() is ${processArgs.renameKeys.getClass()}"
+              "  Expected class: Map. Found: renameKeys.getClass() is ${workflowArgs.renameKeys.getClass()}"
           assert tuple[1] instanceof Map : 
               "Error renaming data keys in module '${key_}' id '${tuple[0]}'.\n" +
               "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
 
           // TODO: allow renameKeys to be a function?
-          processArgs.renameKeys.each { newKey, oldKey ->
+          workflowArgs.renameKeys.each { newKey, oldKey ->
             assert newKey instanceof CharSequence : 
               "Error renaming data keys in module '${key_}' id '${tuple[0]}'.\n" +
               "  Example: renameKeys: ['new_key': 'old_key'].\n" +
@@ -2851,22 +2851,22 @@ def workflowFactory(Map args) {
               "  Key '$oldKey' is missing in the data map. tuple[1].keySet() is '${tuple[1].keySet()}'"
             tuple[1].put(newKey, tuple[1][oldKey])
           }
-          tuple[1].keySet().removeAll(processArgs.renameKeys.collect{ newKey, oldKey -> oldKey })
+          tuple[1].keySet().removeAll(workflowArgs.renameKeys.collect{ newKey, oldKey -> oldKey })
         }
         tuple
       }
 
-    if (processArgs.filter) {
+    if (workflowArgs.filter) {
       mid2_ = mid1_
-        | filter{processArgs.filter(it)}
+        | filter{workflowArgs.filter(it)}
     } else {
       mid2_ = mid1_
     }
 
-    if (processArgs.fromState) {
+    if (workflowArgs.fromState) {
       mid3_ = mid2_
         | map{
-          def new_data = processArgs.fromState(it.take(2))
+          def new_data = workflowArgs.fromState(it.take(2))
           [it[0], new_data]
         }
     } else {
@@ -2900,7 +2900,7 @@ def workflowFactory(Map args) {
           .collectEntries { [ it.plainName, data_[it.plainName] ] }
         
         // combine params
-        def combinedArgs = defaultArgs + paramArgs + processArgs.args + dataArgs
+        def combinedArgs = defaultArgs + paramArgs + workflowArgs.args + dataArgs
 
         // remove arguments with explicit null values
         combinedArgs
@@ -2912,14 +2912,14 @@ def workflowFactory(Map args) {
       }
 
     out0_ = mid4_
-      | _debug(processArgs, "processed")
+      | _debug(workflowArgs, "processed")
       // run workflow
-      | innerWorkflowFactory(processArgs)
+      | innerWorkflowFactory(workflowArgs)
       // check output tuple
       | map { id_, output_ ->
         output_ = processOutputs(output_, thisConfig, id_, key_)
 
-        if (processArgs.auto.simplifyOutput && output_.size() == 1) {
+        if (workflowArgs.auto.simplifyOutput && output_.size() == 1) {
           output_ = output_.values()[0]
         }
 
@@ -2932,12 +2932,12 @@ def workflowFactory(Map args) {
       // input tuple format: [id, output, prev_state, ...]
       // output tuple format: [id, new_state, ...]
       | map{
-        def new_state = processArgs.toState(it)
+        def new_state = workflowArgs.toState(it)
         [it[0], new_state] + it.drop(3)
       }
-      | _debug(processArgs, "output")
+      | _debug(workflowArgs, "output")
 
-    if (processArgs.auto.publish == "state") {
+    if (workflowArgs.auto.publish == "state") {
       // TODO: this join will fail if the keys changed during the innerWorkflowFactory
       mid4_
         | map { tup -> tup.take(2) }
