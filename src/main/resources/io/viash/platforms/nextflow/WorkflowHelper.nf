@@ -2813,7 +2813,7 @@ def processFactory(Map processArgs) {
 
   def inputPaths = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "input" }
-    .collect { ', path(viash_par_' + it.plainName + ', stageAs: "_inputs/par_' + it.plainName + '_?/*")' }
+    .collect { ', path(viash_par_' + it.plainName + ', stageAs: "_viash_par/' + it.plainName + '_?/*")' }
     .join()
 
   def outputPaths = thisConfig.functionality.allArguments
@@ -2887,7 +2887,7 @@ def processFactory(Map processArgs) {
   |
   |process $procKey {$drctvStrs
   |input:
-  |  tuple val(id)$inputPaths, val(args), path(resourcesDir)
+  |  tuple val(id)$inputPaths, val(args), path(resourcesDir, stageAs: ".viash_meta_resources")
   |output:
   |  tuple val("\$id")$outputPaths, optional: true
   |stub:
@@ -2903,10 +2903,11 @@ def processFactory(Map processArgs) {
   |  .join("\\n")
   |\"\"\"
   |# meta exports
-  |export VIASH_META_RESOURCES_DIR="\${resourcesDir.toRealPath().toAbsolutePath()}"
+  |# export VIASH_META_RESOURCES_DIR="\${resourcesDir.toRealPath().toAbsolutePath()}"
+  |export VIASH_META_RESOURCES_DIR="\${resourcesDir}"
   |export VIASH_META_TEMP_DIR="${['docker', 'podman', 'charliecloud'].any{ it == workflow.containerEngine } ? '/tmp' : tmpDir}"
   |export VIASH_META_FUNCTIONALITY_NAME="${thisConfig.functionality.name}"
-  |export VIASH_META_EXECUTABLE="\\\$VIASH_META_RESOURCES_DIR/\\\$VIASH_META_FUNCTIONALITY_NAME"
+  |# export VIASH_META_EXECUTABLE="\\\$VIASH_META_RESOURCES_DIR/\\\$VIASH_META_FUNCTIONALITY_NAME"
   |export VIASH_META_CONFIG="\\\$VIASH_META_RESOURCES_DIR/.config.vsh.yaml"
   |\${task.cpus ? "export VIASH_META_CPUS=\$task.cpus" : "" }
   |\${task.memory?.bytes != null ? "export VIASH_META_MEMORY_B=\$task.memory.bytes" : "" }
