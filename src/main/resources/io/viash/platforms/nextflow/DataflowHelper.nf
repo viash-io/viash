@@ -1,3 +1,13 @@
+// This helper file will be deprecated soon
+dataflowHelperDeprecationWarningPrinted = false
+
+def dataflowHelperDeprecationWarning() {
+  if (!dataflowHelperDeprecationWarningPrinted) {
+    dataflowHelperDeprecationWarningPrinted = true
+    System.err.println("Warning: the functions in the DataflowHelper.nf (setWorkflowArguments, getWorkflowArguments) are set to be deprecated Viash 0.9.0.")
+  }
+}
+
 /* usage:
 | setWorkflowArguments(
   pca: [ "input": "input", "obsm_output": "obsm_pca" ]
@@ -8,6 +18,8 @@
 */
 
 def setWorkflowArguments(Map args) {
+  dataflowHelperDeprecationWarning()
+
   def wfKey = args.key != null ? args.key : "setWorkflowArguments"
   args.keySet().removeAll(["key"])
 
@@ -68,6 +80,8 @@ def setWorkflowArguments(Map args) {
 
 
 def getWorkflowArguments(Map args) {
+  dataflowHelperDeprecationWarning()
+
   def inputKey = args.inputKey != null ? args.inputKey : "input"
   def wfKey = "getWorkflowArguments_" + args.key
   
@@ -108,6 +122,8 @@ def getWorkflowArguments(Map args) {
 
 
 def strictMap(Closure clos) {
+  dataflowHelperDeprecationWarning()
+
   def numArgs = clos.class.methods.find{it.name == "call"}.parameterCount
   
   workflow strictMapWf {
@@ -131,6 +147,8 @@ def strictMap(Closure clos) {
 }
 
 def passthroughMap(Closure clos) {
+  dataflowHelperDeprecationWarning()
+
   def numArgs = clos.class.methods.find{it.name == "call"}.parameterCount
   
   workflow passthroughMapWf {
@@ -152,6 +170,8 @@ def passthroughMap(Closure clos) {
 }
 
 def passthroughFlatMap(Closure clos) {
+  dataflowHelperDeprecationWarning()
+
   def numArgs = clos.class.methods.find{it.name == "call"}.parameterCount
   
   workflow passthroughFlatMapWf {
@@ -177,6 +197,8 @@ def passthroughFlatMap(Closure clos) {
 }
 
 def passthroughFilter(Closure clos) {
+  dataflowHelperDeprecationWarning()
+  
   def numArgs = clos.class.methods.find{it.name == "call"}.parameterCount
   
   workflow passthroughFilterWf {

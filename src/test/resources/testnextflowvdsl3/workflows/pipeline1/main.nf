@@ -27,7 +27,10 @@ workflow base {
   //     * it[1]: a map with a list of files
   //     * it[2]: a file
 
-  | step1
+  | step1.run(
+    auto: [simplifyOutput: true]
+  )
+
   | view{ "DEBUG2: $it" }
   // : Channel[(String, File, File)]
 
@@ -36,7 +39,10 @@ workflow base {
   // : Channel[(String, Map[String, File], File)]
   //     * it[1]: a map with two files (named input1 and input2)
 
-  | step2
+  | step2.run(
+    auto: [simplifyOutput: true]
+  )
+
   | view{ "DEBUG4: $it" }
   // : Channel[(String, Map[String, File], File)]
   //     * it[1]: a map with two files (named input1 and input2)
@@ -51,6 +57,7 @@ workflow base {
     directives: [
       publishDir: "output/foo"
     ],
+    auto: [simplifyOutput: true],
     // test debug
     debug: true
   )
@@ -61,18 +68,22 @@ workflow base {
 workflow test_map_mapdata_mapid_arguments {
   channelValue
   | view{ "DEBUG1: $it" }
-  | step1
+  | step1.run(
+    auto: [simplifyOutput: true]
+  )
   | view{ "DEBUG2: $it" }
   | step2.run(
     // test map
-    map: { [ it[0], [ "input1" : it[1], "input2" : it[2] ] ] }
+    map: { [ it[0], [ "input1" : it[1], "input2" : it[2] ] ] },
+    auto: [simplifyOutput: true]
   )
   | view { "DEBUG3: $it" }
   | step3.run(
     // test id
     mapId: {it + "_bar"},
     // test mapdata
-    mapData: { [ "input": [ it.output1 , it.output2 ] ] }
+    mapData: { [ "input": [ it.output1 , it.output2 ] ] },
+    auto: [simplifyOutput: true]
   )
   /* TESTING */
   | view{ "DEBUG4: $it"}
