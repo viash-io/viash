@@ -1466,8 +1466,8 @@ class CustomConstructor extends org.yaml.snakeyaml.constructor.Constructor {
     }
   }
 
-  CustomConstructor(Path root = null) {
-    super()
+  CustomConstructor(org.yaml.snakeyaml.LoaderOptions options, Path root) {
+    super(options)
     this.root = root
     // Handling !file tag and parse it back to a File type
     this.yamlConstructors.put(new org.yaml.snakeyaml.nodes.Tag("!file"), new ConstructFile())
@@ -1475,7 +1475,8 @@ class CustomConstructor extends org.yaml.snakeyaml.constructor.Constructor {
 }
 
 def readTaggedYaml(Path path) {
-  def constructor = new CustomConstructor(path.getParent())
+  def options = new org.yaml.snakeyaml.LoaderOptions()
+  def constructor = new CustomConstructor(options, path.getParent())
   def yaml = new org.yaml.snakeyaml.Yaml(constructor)
   return yaml.load(path.text)
 }
@@ -1491,6 +1492,11 @@ def readYaml(file_path) {
   def inputFile = file_path !instanceof Path ? file(file_path) : file_path
   def yamlSlurper = new org.yaml.snakeyaml.Yaml()
   yamlSlurper.load(inputFile)
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/toJsonBlob.nf'
+String toJsonBlob(Map data) {
+  return groovy.json.JsonOutput.toJson(data)
 }
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/toTaggedYamlBlob.nf'
@@ -1526,6 +1532,20 @@ String toYamlBlob(Map data) {
   def yaml = new org.yaml.snakeyaml.Yaml(options)
   def cleanData = iterateMap(data, {it.toString()})
   return yaml.dump(data)
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/writeJson.nf'
+void writeJson(data, file) {
+  assert data: "writeJson: data should not be null"
+  assert file: "writeJson: file should not be null"
+  file.write(toJsonBlob(data))
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/writeYaml.nf'
+void writeYaml(data, file) {
+  assert data: "writeYaml: data should not be null"
+  assert file: "writeYaml: file should not be null"
+  file.write(toYamlBlob(data))
 }
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/states/findStates.nf'

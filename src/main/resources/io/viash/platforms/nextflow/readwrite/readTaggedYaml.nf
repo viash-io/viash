@@ -12,8 +12,8 @@ class CustomConstructor extends org.yaml.snakeyaml.constructor.Constructor {
     }
   }
 
-  CustomConstructor(Path root = null) {
-    super()
+  CustomConstructor(org.yaml.snakeyaml.LoaderOptions options, Path root) {
+    super(options)
     this.root = root
     // Handling !file tag and parse it back to a File type
     this.yamlConstructors.put(new org.yaml.snakeyaml.nodes.Tag("!file"), new ConstructFile())
@@ -21,7 +21,8 @@ class CustomConstructor extends org.yaml.snakeyaml.constructor.Constructor {
 }
 
 def readTaggedYaml(Path path) {
-  def constructor = new CustomConstructor(path.getParent())
+  def options = new org.yaml.snakeyaml.LoaderOptions()
+  def constructor = new CustomConstructor(options, path.getParent())
   def yaml = new org.yaml.snakeyaml.Yaml(constructor)
   return yaml.load(path.text)
 }
