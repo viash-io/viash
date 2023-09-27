@@ -506,27 +506,13 @@ private void _checkUniqueIds(List<Tuple2<String, Map<String, Object>>> parameter
 }
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/checkUniqueIds.nf'
-class IDChecker {
-  final def items = [] as Set
-
-  @groovy.transform.WithWriteLock
-  boolean isUnique(String item) {
-    if (items.contains(item)) {
-      return false
-    } else {
-      items << item
-      return true
-    }
-  }
-}
-
 def checkUniqueIds(Map args) {
   def stopOnError = args.stopOnError == null ? args.stopOnError : true
 
   def idChecker = new IDChecker()
 
   return filter { tup ->
-    if (!idChecker.isUnique(tup[0])) {
+    if (!idChecker.observe(tup[0])) {
       if (stopOnError) {
         error "Duplicate id: ${tup[0]}"
       } else {
@@ -571,6 +557,30 @@ def _guessParamListFormat(params) {
   }
 }
 
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/IDChecker.nf'
+class IDChecker {
+  final def items = [] as Set
+
+  @groovy.transform.WithWriteLock
+  boolean observe(String item) {
+    if (items.contains(item)) {
+      return false
+    } else {
+      items << item
+      return true
+    }
+  }
+
+  @groovy.transform.WithReadLock
+  boolean contains(String item) {
+    return items.contains(item)
+  }
+
+  @groovy.transform.WithReadLock
+  Set getItems() {
+    return items.clone()
+  }
+}
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/paramsToChannel.nf'
 def paramsToChannel(params, config) {
   if (!viashChannelDeprecationWarningPrinted) {
@@ -926,6 +936,37 @@ def runComponents(Map args) {
   return runComponentsWf
 }
 
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/safeJoin.nf'
+def safeJoin(targetChannel, sourceChannel, key) {
+  def sourceIDs = new IDChecker()
+
+  def sourceCheck = sourceChannel
+    | map { tup ->
+      sourceIDs.observe(tup[0])
+      tup
+    }
+  def targetCheck = targetChannel
+    | map { tup ->
+      def id = tup[0]
+      // def id = tup[1].containsKey("_meta").containsKey("join_id") ? tup[1]._meta.join_id : tup[0]
+      
+      if (!sourceIDs.contains(id)) {
+        error (
+          "Error in module '${key}' when merging output with original state.\n" +
+          "  Reason: output with id '${id}' could not be joined with source channel.\n" +
+          "    If the IDs in the output channel differ from the input channel,\n" + 
+          "    please set `tup[1]._meta.join_id to the original ID.\n" +
+          "  Original IDs in input channel: ['${sourceIDs.getItems().join("', '")}'].\n" + 
+          "  Unexpected ID in the output channel: '${id}.\n" +
+          "  Example input event: [\"id\", [input: file(...)]],\n" +
+          "  Example output event: [\"newid\", [output: file(...), _meta: [join_id: \"id\"]]]"
+        )
+      }
+
+      tup
+    }
+  targetCheck.join(sourceCheck)
+}
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/_splitParams.nf'
 /**
  * Split parameters for arguments that accept multiple values using their separator
@@ -1819,20 +1860,42 @@ def publishStatesByConfig(Map args) {
 }
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/states/setState.nf'
 def setState(fun) {
-  workflow setStateWf {
-    take: input_ch
-    main:
-      output_ch = input_ch
-        | map { tup ->
-          def id = tup[0]
-          def state = tup[1]
-          def unfilteredState = fun(id, state)
-          def newState = unfilteredState.findAll{key, val -> val != null}
-          [id, newState] + tup.drop(2)
-        }
-    emit: output_ch
+  assert fun instanceof Closure || fun instanceof Map || fun instanceof List :
+    "Error in setState: Expected process argument to be a Closure, a Map, or a List. Found: class ${fun.getClass()}"
+
+  // if fun is a List, convert to map
+  if (fun instanceof List) {
+    // check whether fun is a list[string]
+    assert fun.every{it instanceof CharSequence} : "Error in setState: argument is a List, but not all elements are Strings"
+    fun = fun.collectEntries{[it, it]}
   }
-  return setStateWf
+
+  // if fun is a map, convert to closure
+  if (fun instanceof Map) {
+    // check whether fun is a map[string, string]
+    assert fun.values().every{it instanceof CharSequence} : "Error in setState: argument is a Map, but not all values are Strings"
+    assert fun.keySet().every{it instanceof CharSequence} : "Error in setState: argument is a Map, but not all keys are Strings"
+    def funMap = fun.clone()
+    // turn the map into a closure to be used later on
+    fun = { id_, state_ ->
+      assert state_ instanceof Map : "Error in setState: the state is not a Map"
+      funMap.collectMany{newkey, origkey ->
+        if (state_.containsKey(origkey)) {
+          [[newkey, state_[origkey]]]
+        } else {
+          []
+        }
+      }.collectEntries()
+    }
+  }
+
+  map { tup ->
+    def id = tup[0]
+    def state = tup[1]
+    def unfilteredState = fun(id, state)
+    def newState = unfilteredState.findAll{key, val -> val != null}
+    [id, newState] + tup.drop(2)
+  }
 }
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/processAuto.nf'
@@ -2278,7 +2341,7 @@ def processWorkflowArgs(Map args) {
   assert key ==~ /^[a-zA-Z_]\w*$/ : "Error in module '$key': Expected process argument 'key' to consist of only letters, digits or underscores. Found: ${key}"
 
   // check for any unexpected keys
-  def expectedKeys = ["key", "directives", "auto", "map", "mapId", "mapData", "mapPassthrough", "filter", "fromState", "toState", "args", "renameKeys", "debug", "idMapping"]
+  def expectedKeys = ["key", "directives", "auto", "map", "mapId", "mapData", "mapPassthrough", "filter", "fromState", "toState", "args", "renameKeys", "debug"]
   def unexpectedKeys = workflowArgs.keySet() - expectedKeys
   assert unexpectedKeys.isEmpty() : "Error in module '$key': unexpected arguments to the '.run()' function: '${unexpectedKeys.join("', '")}'"
 
@@ -2923,51 +2986,76 @@ def workflowFactory(Map args) {
         [id_, combinedArgs] + tuple.drop(2)
       }
 
+    // TODO: move some of the _meta.join_id wrangling to the safeJoin() function.
+
     out0_ = mid4_
       | _debug(workflowArgs, "processed")
       // run workflow
       | innerWorkflowFactory(workflowArgs)
       // check output tuple
       | map { id_, output_ ->
+
+        // see if output map contains metadata
+        def meta_ =
+          output_ instanceof Map && output_.containsKey("_meta") ? 
+          output_["_meta"] :
+          [:]
+        if (!meta_.containsKey("join_id")) {
+          meta_ = meta_ + ["join_id": id_]
+        }
+        
+        // remove metadata
+        output_ = output_.findAll{k, v -> k != "_meta"}
+
         output_ = processOutputs(output_, thisConfig, id_, key_)
 
         if (workflowArgs.auto.simplifyOutput && output_.size() == 1) {
           output_ = output_.values()[0]
         }
 
-        [id_, output_]
+        [meta_.join_id, meta_, id_, output_]
       }
+      // | view{"out0_: ${it.take(3)}"}
 
     // TODO: this join will fail if the keys changed during the innerWorkflowFactory
-    // join the output [id, output] with the previous state [id, state, ...]
-    prev_state_ = mid2_
-    if (workflowArgs.idMapping) {
-      prev_state_ = prev_state_
-        | workflowArgs.idMapping
-    }
-    out1_ = out0_.join(prev_state_, failOnDuplicate: true)
-      // input tuple format: [id, output, prev_state, ...]
-      // output tuple format: [id, new_state, ...]
-      | map{
-        def new_state = workflowArgs.toState(it)
-        [it[0], new_state] + it.drop(3)
+    // join the output [join_id, meta, id, output] with the previous state [id, state, ...]
+    out1_ = safeJoin(out0_, mid2_, key_)
+      // input tuple format: [join_id, meta, id, output, prev_state, ...]
+      // output tuple format: [join_id, meta, id, new_state, ...]
+      | map{ tup ->
+        def new_state = workflowArgs.toState(tup.drop(2).take(3))
+        tup.take(3) + [new_state] + tup.drop(5)
       }
-      | _debug(workflowArgs, "output")
 
     if (workflowArgs.auto.publish == "state") {
-      // TODO: this join will fail if the keys changed during the innerWorkflowFactory
-      output_filenames_ = mid4_
-        | map { tup -> tup.take(2) }
-      if (workflowArgs.idMapping) {
-        output_filenames_ = output_filenames_
-          | workflowArgs.idMapping
+      out1pub_ = out1_
+        // input tuple format: [join_id, meta, id, new_state, ...]
+        // output tuple format: [join_id, meta, id, new_state]
+        | map{ tup ->
+          tup.take(4)
+        }
+
+      safeJoin(out1pub_, mid4_, key_)
+        // input tuple format: [join_id, meta, id, new_state, orig_state, ...]
+        // output tuple format: [id, new_state, orig_state]
+        | map { tup ->
+          tup.drop(2).take(3)
       }
-      out1_
-        | join(output_filenames_, failOnDuplicate: true)
         | publishStatesByConfig(key: key_, config: thisConfig)
     }
 
-    emit: out1_
+    // remove join_id and meta
+    out2_ = out1_
+      | map { tup ->
+        // input tuple format: [join_id, meta, id, new_state, ...]
+        // output tuple format: [id, new_state, ...]
+        tup.drop(2)
+      }
+      | _debug(workflowArgs, "output")
+
+    out2_
+
+    emit: out2_
   }
 
   def wf = workflowInstance.cloneWithName(key_)

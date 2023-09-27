@@ -154,51 +154,76 @@ def workflowFactory(Map args) {
         [id_, combinedArgs] + tuple.drop(2)
       }
 
+    // TODO: move some of the _meta.join_id wrangling to the safeJoin() function.
+
     out0_ = mid4_
       | _debug(workflowArgs, "processed")
       // run workflow
       | innerWorkflowFactory(workflowArgs)
       // check output tuple
       | map { id_, output_ ->
+
+        // see if output map contains metadata
+        def meta_ =
+          output_ instanceof Map && output_.containsKey("_meta") ? 
+          output_["_meta"] :
+          [:]
+        if (!meta_.containsKey("join_id")) {
+          meta_ = meta_ + ["join_id": id_]
+        }
+        
+        // remove metadata
+        output_ = output_.findAll{k, v -> k != "_meta"}
+
         output_ = processOutputs(output_, thisConfig, id_, key_)
 
         if (workflowArgs.auto.simplifyOutput && output_.size() == 1) {
           output_ = output_.values()[0]
         }
 
-        [id_, output_]
+        [meta_.join_id, meta_, id_, output_]
       }
+      // | view{"out0_: ${it.take(3)}"}
 
     // TODO: this join will fail if the keys changed during the innerWorkflowFactory
-    // join the output [id, output] with the previous state [id, state, ...]
-    prev_state_ = mid2_
-    if (workflowArgs.idMapping) {
-      prev_state_ = prev_state_
-        | workflowArgs.idMapping
-    }
-    out1_ = out0_.join(prev_state_, failOnDuplicate: true)
-      // input tuple format: [id, output, prev_state, ...]
-      // output tuple format: [id, new_state, ...]
-      | map{
-        def new_state = workflowArgs.toState(it)
-        [it[0], new_state] + it.drop(3)
+    // join the output [join_id, meta, id, output] with the previous state [id, state, ...]
+    out1_ = safeJoin(out0_, mid2_, key_)
+      // input tuple format: [join_id, meta, id, output, prev_state, ...]
+      // output tuple format: [join_id, meta, id, new_state, ...]
+      | map{ tup ->
+        def new_state = workflowArgs.toState(tup.drop(2).take(3))
+        tup.take(3) + [new_state] + tup.drop(5)
       }
-      | _debug(workflowArgs, "output")
 
     if (workflowArgs.auto.publish == "state") {
-      // TODO: this join will fail if the keys changed during the innerWorkflowFactory
-      output_filenames_ = mid4_
-        | map { tup -> tup.take(2) }
-      if (workflowArgs.idMapping) {
-        output_filenames_ = output_filenames_
-          | workflowArgs.idMapping
+      out1pub_ = out1_
+        // input tuple format: [join_id, meta, id, new_state, ...]
+        // output tuple format: [join_id, meta, id, new_state]
+        | map{ tup ->
+          tup.take(4)
+        }
+
+      safeJoin(out1pub_, mid4_, key_)
+        // input tuple format: [join_id, meta, id, new_state, orig_state, ...]
+        // output tuple format: [id, new_state, orig_state]
+        | map { tup ->
+          tup.drop(2).take(3)
       }
-      out1_
-        | join(output_filenames_, failOnDuplicate: true)
         | publishStatesByConfig(key: key_, config: thisConfig)
     }
 
-    emit: out1_
+    // remove join_id and meta
+    out2_ = out1_
+      | map { tup ->
+        // input tuple format: [join_id, meta, id, new_state, ...]
+        // output tuple format: [id, new_state, ...]
+        tup.drop(2)
+      }
+      | _debug(workflowArgs, "output")
+
+    out2_
+
+    emit: out2_
   }
 
   def wf = workflowInstance.cloneWithName(key_)
