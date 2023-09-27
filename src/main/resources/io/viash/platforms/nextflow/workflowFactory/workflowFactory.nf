@@ -171,7 +171,12 @@ def workflowFactory(Map args) {
 
     // TODO: this join will fail if the keys changed during the innerWorkflowFactory
     // join the output [id, output] with the previous state [id, state, ...]
-    out1_ = out0_.join(mid2_, failOnDuplicate: true)
+    prev_state_ = mid2_
+    if (workflowArgs.idMapping) {
+      prev_state_ = prev_state_
+        | workflowArgs.idMapping
+    }
+    out1_ = out0_.join(prev_state_, failOnDuplicate: true)
       // input tuple format: [id, output, prev_state, ...]
       // output tuple format: [id, new_state, ...]
       | map{
@@ -182,9 +187,14 @@ def workflowFactory(Map args) {
 
     if (workflowArgs.auto.publish == "state") {
       // TODO: this join will fail if the keys changed during the innerWorkflowFactory
-      mid4_
+      output_filenames_ = mid4_
         | map { tup -> tup.take(2) }
-        | join(out1_, failOnDuplicate: true)
+      if (workflowArgs.idMapping) {
+        output_filenames_ = output_filenames_
+          | workflowArgs.idMapping
+      }
+      out1_
+        | join(output_filenames_, failOnDuplicate: true)
         | publishStatesByConfig(key: key_, config: thisConfig)
     }
 

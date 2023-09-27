@@ -1734,8 +1734,8 @@ def publishStatesByConfig(Map args) {
       input_ch
         | map { tup ->
           def id_ = tup[0]
-          def origState_ = tup[1] // e.g. [output: '$id.$key.foo.h5ad']
-          def state_ = tup[2] // e.g. [output: new File("myoutput.h5ad"), k: 10]
+          def state_ = tup[1] // e.g. [output: new File("myoutput.h5ad"), k: 10]
+          def origState_ = tup[2] // e.g. [output: '$id.$key.foo.h5ad']
 
           // the processed state is a list of [key, value, srcPath, destPath] tuples, where
           //   - key, value is part of the state to be saved to disk
@@ -2278,7 +2278,7 @@ def processWorkflowArgs(Map args) {
   assert key ==~ /^[a-zA-Z_]\w*$/ : "Error in module '$key': Expected process argument 'key' to consist of only letters, digits or underscores. Found: ${key}"
 
   // check for any unexpected keys
-  def expectedKeys = ["key", "directives", "auto", "map", "mapId", "mapData", "mapPassthrough", "filter", "fromState", "toState", "args", "renameKeys", "debug"]
+  def expectedKeys = ["key", "directives", "auto", "map", "mapId", "mapData", "mapPassthrough", "filter", "fromState", "toState", "args", "renameKeys", "debug", "idMapping"]
   def unexpectedKeys = workflowArgs.keySet() - expectedKeys
   assert unexpectedKeys.isEmpty() : "Error in module '$key': unexpected arguments to the '.run()' function: '${unexpectedKeys.join("', '")}'"
 
@@ -2344,78 +2344,94 @@ def processWorkflowArgs(Map args) {
     }
   }
 
-  // check fromState
-  assert workflowArgs.containsKey("fromState") : "Error in module '$key': fromState is a required argument"
-  def fromState = workflowArgs["fromState"]
-  assert fromState == null || fromState instanceof Closure || fromState instanceof Map || fromState instanceof List :
-    "Error in module '$key': Expected process argument 'fromState' to be null, a Closure, a Map, or a List. Found: class ${fromState.getClass()}"
-  if (fromState) {
-    // if fromState is a List, convert to map
-    if (fromState instanceof List) {
-      // check whether fromstate is a list[string]
-      assert fromState.every{it instanceof CharSequence} : "Error in module '$key': fromState is a List, but not all elements are Strings"
-      fromState = fromState.collectEntries{[it, it]}
+  // TODO: should functions like 'map', 'mapId', 'mapData', 'mapPassthrough' be deprecated as well?
+  for (nam in ["renameKeys"]) {
+    if (workflowArgs.containsKey(nam) && workflowArgs[nam] != null) {
+      log.warn "module '$key': workflow argument '$nam' will be deprecated in Viash 0.9.0. Please use 'fromState' and 'toState' instead."
     }
-
-    // if fromState is a map, convert to closure
-    if (fromState instanceof Map) {
-      // check whether fromstate is a map[string, string]
-      assert fromState.values().every{it instanceof CharSequence} : "Error in module '$key': fromState is a Map, but not all values are Strings"
-      assert fromState.keySet().every{it instanceof CharSequence} : "Error in module '$key': fromState is a Map, but not all keys are Strings"
-      def fromStateMap = fromState.clone()
-      def requiredInputNames = thisConfig.functionality.allArguments.findAll{it.required && it.direction == "Input"}.collect{it.plainName}
-      // turn the map into a closure to be used later on
-      fromState = { it ->
-        def state = it[1]
-        assert state instanceof Map : "Error in module '$key': the state is not a Map"
-        def data = fromStateMap.collectMany{newkey, origkey ->
-          // check whether newkey corresponds to a required argument
-          if (state.containsKey(origkey)) {
-            [[newkey, state[origkey]]]
-          } else if (!requiredInputNames.contains(origkey)) {
-            []
-          } else {
-            throw new Exception("Error in module '$key': fromState key '$origkey' not found in current state")
-          }
-        }.collectEntries()
-        data
-      }
-    }
-
-    workflowArgs["fromState"] = fromState
   }
 
-  // check toState
-  def toState = workflowArgs["toState"]
+  // check fromState
+  workflowArgs["fromState"] = _processFromState(workflowArgs.get("fromState"), key, thisConfig)
 
+  // check toState
+  workflowArgs["toState"] = _processToState(workflowArgs.get("toState"), key, thisConfig)
+
+  // return output
+  return workflowArgs
+}
+
+def _processFromState(fromState, key_, config_) {
+  assert fromState == null || fromState instanceof Closure || fromState instanceof Map || fromState instanceof List :
+    "Error in module '$key_': Expected process argument 'fromState' to be null, a Closure, a Map, or a List. Found: class ${fromState.getClass()}"
+  if (fromState == null) {
+    return null
+  }
+  
+  // if fromState is a List, convert to map
+  if (fromState instanceof List) {
+    // check whether fromstate is a list[string]
+    assert fromState.every{it instanceof CharSequence} : "Error in module '$key_': fromState is a List, but not all elements are Strings"
+    fromState = fromState.collectEntries{[it, it]}
+  }
+
+  // if fromState is a map, convert to closure
+  if (fromState instanceof Map) {
+    // check whether fromstate is a map[string, string]
+    assert fromState.values().every{it instanceof CharSequence} : "Error in module '$key_': fromState is a Map, but not all values are Strings"
+    assert fromState.keySet().every{it instanceof CharSequence} : "Error in module '$key_': fromState is a Map, but not all keys are Strings"
+    def fromStateMap = fromState.clone()
+    def requiredInputNames = thisConfig.functionality.allArguments.findAll{it.required && it.direction == "Input"}.collect{it.plainName}
+    // turn the map into a closure to be used later on
+    fromState = { it ->
+      def state = it[1]
+      assert state instanceof Map : "Error in module '$key_': the state is not a Map"
+      def data = fromStateMap.collectMany{newkey, origkey ->
+        // check whether newkey corresponds to a required argument
+        if (state.containsKey(origkey)) {
+          [[newkey, state[origkey]]]
+        } else if (!requiredInputNames.contains(origkey)) {
+          []
+        } else {
+          throw new Exception("Error in module '$key_': fromState key '$origkey' not found in current state")
+        }
+      }.collectEntries()
+      data
+    }
+  }
+  
+  return fromState
+}
+
+def _processToState(toState, key_, config_) {
   if (toState == null) {
     toState = { tup -> tup[1] }
   }
 
   // toState should be a closure, map[string, string], or list[string]
   assert toState instanceof Closure || toState instanceof Map || toState instanceof List :
-    "Error in module '$key': Expected process argument 'toState' to be a Closure, a Map, or a List. Found: class ${toState.getClass()}"
+    "Error in module '$key_': Expected process argument 'toState' to be a Closure, a Map, or a List. Found: class ${toState.getClass()}"
 
   // if toState is a List, convert to map
   if (toState instanceof List) {
     // check whether toState is a list[string]
-    assert toState.every{it instanceof CharSequence} : "Error in module '$key': toState is a List, but not all elements are Strings"
+    assert toState.every{it instanceof CharSequence} : "Error in module '$key_': toState is a List, but not all elements are Strings"
     toState = toState.collectEntries{[it, it]}
   }
 
   // if toState is a map, convert to closure
   if (toState instanceof Map) {
     // check whether toState is a map[string, string]
-    assert toState.values().every{it instanceof CharSequence} : "Error in module '$key': toState is a Map, but not all values are Strings"
-    assert toState.keySet().every{it instanceof CharSequence} : "Error in module '$key': toState is a Map, but not all keys are Strings"
+    assert toState.values().every{it instanceof CharSequence} : "Error in module '$key_': toState is a Map, but not all values are Strings"
+    assert toState.keySet().every{it instanceof CharSequence} : "Error in module '$key_': toState is a Map, but not all keys are Strings"
     def toStateMap = toState.clone()
-    def requiredOutputNames = thisConfig.functionality.allArguments.findAll{it.required && it.direction == "Output"}.collect{it.plainName}
+    def requiredOutputNames = config_.functionality.allArguments.findAll{it.required && it.direction == "Output"}.collect{it.plainName}
     // turn the map into a closure to be used later on
     toState = { it ->
       def output = it[1]
       def state = it[2]
-      assert output instanceof Map : "Error in module '$key': the output is not a Map"
-      assert state instanceof Map : "Error in module '$key': the state is not a Map"
+      assert output instanceof Map : "Error in module '$key_': the output is not a Map"
+      assert state instanceof Map : "Error in module '$key_': the state is not a Map"
       def extraEntries = toStateMap.collectMany{newkey, origkey ->
         // check whether newkey corresponds to a required argument
         if (output.containsKey(origkey)) {
@@ -2423,22 +2439,19 @@ def processWorkflowArgs(Map args) {
         } else if (!requiredOutputNames.contains(origkey)) {
           []
         } else {
-          throw new Exception("Error in module '$key': toState key '$origkey' not found in current output")
+          throw new Exception("Error in module '$key_': toState key '$origkey' not found in current output")
         }
       }.collectEntries()
       state + extraEntries
     }
   }
 
-  workflowArgs["toState"] = toState
-
-  // return output
-  return workflowArgs
+  return toState
 }
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/vdsl3ProcessFactory.nf'
 // depends on: thisConfig, thisScript, session?
-def vdsl3ProcessFactoryMap workflowArgs) {
+def vdsl3ProcessFactory(Map workflowArgs) {
   // autodetect process key
   def wfKey = workflowArgs["key"]
   def procKeyPrefix = "${wfKey}_process"
@@ -2659,7 +2672,7 @@ def vdsl3WorkflowFactory(Map args) {
     main:
 
     if (processObj == null) {
-      processObj = vdsl3ProcessFactoryargs)
+      processObj = vdsl3ProcessFactory(args)
     }
     
     output_ = input_
@@ -2927,7 +2940,12 @@ def workflowFactory(Map args) {
 
     // TODO: this join will fail if the keys changed during the innerWorkflowFactory
     // join the output [id, output] with the previous state [id, state, ...]
-    out1_ = out0_.join(mid2_, failOnDuplicate: true)
+    prev_state_ = mid2_
+    if (workflowArgs.idMapping) {
+      prev_state_ = prev_state_
+        | workflowArgs.idMapping
+    }
+    out1_ = out0_.join(prev_state_, failOnDuplicate: true)
       // input tuple format: [id, output, prev_state, ...]
       // output tuple format: [id, new_state, ...]
       | map{
@@ -2938,9 +2956,14 @@ def workflowFactory(Map args) {
 
     if (workflowArgs.auto.publish == "state") {
       // TODO: this join will fail if the keys changed during the innerWorkflowFactory
-      mid4_
+      output_filenames_ = mid4_
         | map { tup -> tup.take(2) }
-        | join(out1_, failOnDuplicate: true)
+      if (workflowArgs.idMapping) {
+        output_filenames_ = output_filenames_
+          | workflowArgs.idMapping
+      }
+      out1_
+        | join(output_filenames_, failOnDuplicate: true)
         | publishStatesByConfig(key: key_, config: thisConfig)
     }
 

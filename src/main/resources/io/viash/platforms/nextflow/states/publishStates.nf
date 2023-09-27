@@ -140,8 +140,8 @@ def publishStatesByConfig(Map args) {
       input_ch
         | map { tup ->
           def id_ = tup[0]
-          def origState_ = tup[1] // e.g. [output: '$id.$key.foo.h5ad']
-          def state_ = tup[2] // e.g. [output: new File("myoutput.h5ad"), k: 10]
+          def state_ = tup[1] // e.g. [output: new File("myoutput.h5ad"), k: 10]
+          def origState_ = tup[2] // e.g. [output: '$id.$key.foo.h5ad']
 
           // the processed state is a list of [key, value, srcPath, destPath] tuples, where
           //   - key, value is part of the state to be saved to disk

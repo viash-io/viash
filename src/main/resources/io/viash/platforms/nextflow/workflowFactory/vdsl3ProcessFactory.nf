@@ -1,5 +1,5 @@
 // depends on: thisConfig, thisScript, session?
-def vdsl3ProcessFactoryMap workflowArgs) {
+def vdsl3ProcessFactory(Map workflowArgs) {
   // autodetect process key
   def wfKey = workflowArgs["key"]
   def procKeyPrefix = "${wfKey}_process"

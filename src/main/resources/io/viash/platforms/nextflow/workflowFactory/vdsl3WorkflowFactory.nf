@@ -8,7 +8,7 @@ def vdsl3WorkflowFactory(Map args) {
     main:
 
     if (processObj == null) {
-      processObj = vdsl3ProcessFactoryargs)
+      processObj = vdsl3ProcessFactory(args)
     }
     
     output_ = input_

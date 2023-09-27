@@ -15,7 +15,7 @@ def processWorkflowArgs(Map args) {
   assert key ==~ /^[a-zA-Z_]\w*$/ : "Error in module '$key': Expected process argument 'key' to consist of only letters, digits or underscores. Found: ${key}"
 
   // check for any unexpected keys
-  def expectedKeys = ["key", "directives", "auto", "map", "mapId", "mapData", "mapPassthrough", "filter", "fromState", "toState", "args", "renameKeys", "debug"]
+  def expectedKeys = ["key", "directives", "auto", "map", "mapId", "mapData", "mapPassthrough", "filter", "fromState", "toState", "args", "renameKeys", "debug", "idMapping"]
   def unexpectedKeys = workflowArgs.keySet() - expectedKeys
   assert unexpectedKeys.isEmpty() : "Error in module '$key': unexpected arguments to the '.run()' function: '${unexpectedKeys.join("', '")}'"
 
@@ -105,40 +105,40 @@ def _processFromState(fromState, key_, config_) {
     return null
   }
   
-    // if fromState is a List, convert to map
-    if (fromState instanceof List) {
-      // check whether fromstate is a list[string]
+  // if fromState is a List, convert to map
+  if (fromState instanceof List) {
+    // check whether fromstate is a list[string]
     assert fromState.every{it instanceof CharSequence} : "Error in module '$key_': fromState is a List, but not all elements are Strings"
-      fromState = fromState.collectEntries{[it, it]}
-    }
+    fromState = fromState.collectEntries{[it, it]}
+  }
 
-    // if fromState is a map, convert to closure
-    if (fromState instanceof Map) {
-      // check whether fromstate is a map[string, string]
+  // if fromState is a map, convert to closure
+  if (fromState instanceof Map) {
+    // check whether fromstate is a map[string, string]
     assert fromState.values().every{it instanceof CharSequence} : "Error in module '$key_': fromState is a Map, but not all values are Strings"
     assert fromState.keySet().every{it instanceof CharSequence} : "Error in module '$key_': fromState is a Map, but not all keys are Strings"
-      def fromStateMap = fromState.clone()
-      def requiredInputNames = thisConfig.functionality.allArguments.findAll{it.required && it.direction == "Input"}.collect{it.plainName}
-      // turn the map into a closure to be used later on
-      fromState = { it ->
-        def state = it[1]
+    def fromStateMap = fromState.clone()
+    def requiredInputNames = thisConfig.functionality.allArguments.findAll{it.required && it.direction == "Input"}.collect{it.plainName}
+    // turn the map into a closure to be used later on
+    fromState = { it ->
+      def state = it[1]
       assert state instanceof Map : "Error in module '$key_': the state is not a Map"
-        def data = fromStateMap.collectMany{newkey, origkey ->
-          // check whether newkey corresponds to a required argument
-          if (state.containsKey(origkey)) {
-            [[newkey, state[origkey]]]
-          } else if (!requiredInputNames.contains(origkey)) {
-            []
-          } else {
+      def data = fromStateMap.collectMany{newkey, origkey ->
+        // check whether newkey corresponds to a required argument
+        if (state.containsKey(origkey)) {
+          [[newkey, state[origkey]]]
+        } else if (!requiredInputNames.contains(origkey)) {
+          []
+        } else {
           throw new Exception("Error in module '$key_': fromState key '$origkey' not found in current state")
-          }
-        }.collectEntries()
-        data
-      }
+        }
+      }.collectEntries()
+      data
     }
-
-  return fromState
   }
+  
+  return fromState
+}
 
 def _processToState(toState, key_, config_) {
   if (toState == null) {
