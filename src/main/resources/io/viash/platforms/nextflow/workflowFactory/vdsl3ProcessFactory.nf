@@ -60,7 +60,7 @@ def vdsl3ProcessFactory(Map workflowArgs) {
 
   def inputPaths = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "input" }
-    .collect { ', path(viash_par_' + it.plainName + ')' }
+    .collect { ', path(viash_par_' + it.plainName + ', stageAs: "_viash_par/' + it.plainName + '_?/*")' }
     .join()
 
   def outputPaths = thisConfig.functionality.allArguments
@@ -94,7 +94,7 @@ def vdsl3ProcessFactory(Map workflowArgs) {
   def inputFileExports = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
     .collect { par ->
-      viash_par_contents = !par.required && !par.multiple ? "viash_par_${par.plainName}[0]" : "viash_par_${par.plainName}.join(\"${par.multiple_sep}\")"
+      viash_par_contents = "(viash_par_${par.plainName} instanceof List ? viash_par_${par.plainName}.join(\"${par.multiple_sep}\") : viash_par_${par.plainName})"
       "\n\${viash_par_${par.plainName}.empty ? \"\" : \"export VIASH_PAR_${par.plainName.toUpperCase()}=\\\"\" + ${viash_par_contents} + \"\\\"\"}"
     }
 
@@ -134,7 +134,7 @@ def vdsl3ProcessFactory(Map workflowArgs) {
   |
   |process $procKey {$drctvStrs
   |input:
-  |  tuple val(id)$inputPaths, val(args), path(resourcesDir)
+  |  tuple val(id)$inputPaths, val(args), path(resourcesDir, stageAs: ".viash_meta_resources")
   |output:
   |  tuple val("\$id")$outputPaths, optional: true
   |stub:
@@ -150,10 +150,11 @@ def vdsl3ProcessFactory(Map workflowArgs) {
   |  .join("\\n")
   |\"\"\"
   |# meta exports
-  |export VIASH_META_RESOURCES_DIR="\${resourcesDir.toRealPath().toAbsolutePath()}"
+  |# export VIASH_META_RESOURCES_DIR="\${resourcesDir.toRealPath().toAbsolutePath()}"
+  |export VIASH_META_RESOURCES_DIR="\${resourcesDir}"
   |export VIASH_META_TEMP_DIR="${['docker', 'podman', 'charliecloud'].any{ it == workflow.containerEngine } ? '/tmp' : tmpDir}"
   |export VIASH_META_FUNCTIONALITY_NAME="${thisConfig.functionality.name}"
-  |export VIASH_META_EXECUTABLE="\\\$VIASH_META_RESOURCES_DIR/\\\$VIASH_META_FUNCTIONALITY_NAME"
+  |# export VIASH_META_EXECUTABLE="\\\$VIASH_META_RESOURCES_DIR/\\\$VIASH_META_FUNCTIONALITY_NAME"
   |export VIASH_META_CONFIG="\\\$VIASH_META_RESOURCES_DIR/.config.vsh.yaml"
   |\${task.cpus ? "export VIASH_META_CPUS=\$task.cpus" : "" }
   |\${task.memory?.bytes != null ? "export VIASH_META_MEMORY_B=\$task.memory.bytes" : "" }

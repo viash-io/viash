@@ -34,6 +34,8 @@ TODO add summary
 
 * `NextflowPlatform`: The data passed to the input of a component and produced as output by the component are now validated against the arguments defined in the Viash config (PR #518).
 
+* `NextflowPlatform`: Use `stageAs` to allow duplicate filenames to be used automatigically (PR #xxx).
+
 ## MAJOR CHANGES
 
 * `WorkflowHelper.nf`: The workflow helper was split into different helper files for each of the helper functions (PR #518).
