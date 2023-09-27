@@ -60,7 +60,7 @@ def processFactory(Map processArgs) {
 
   def inputPaths = thisConfig.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "input" }
-    .collect { ', path(viash_par_' + it.plainName + ', stageAs: "_inputs/par_' + it.plainName + '_?/*")' }
+    .collect { ', path(viash_par_' + it.plainName + ', stageAs: "_viash_par/' + it.plainName + '_?/*")' }
     .join()
 
   def outputPaths = thisConfig.functionality.allArguments
@@ -134,7 +134,7 @@ def processFactory(Map processArgs) {
   |
   |process $procKey {$drctvStrs
   |input:
-  |  tuple val(id)$inputPaths, val(args), path(resourcesDir)
+  |  tuple val(id)$inputPaths, val(args), path(resourcesDir, stageAs: ".viash_meta_resources")
   |output:
   |  tuple val("\$id")$outputPaths, optional: true
   |stub:
