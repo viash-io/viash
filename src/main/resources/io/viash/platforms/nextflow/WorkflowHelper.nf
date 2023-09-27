@@ -2262,7 +2262,7 @@ def processDirectives(Map drctv) {
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/processFactory.nf'
 // depends on: thisConfig, thisScript, session?
-def processFactory(Map processArgs) {
+def vdsl3ProcessFactoryMap processArgs) {
   // autodetect process key
   def wfKey = processArgs["key"]
   def procKeyPrefix = "${wfKey}_process"
@@ -2648,10 +2648,10 @@ def processProcessArgs(Map args) {
   return processArgs
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/vdsl3RunWorkflowFactory.nf'
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/vdsl3WorkflowFactory.nf'
 // depends on: thisConfig, params, resourcesDir
 // TODO: do the defaultArgs, paramArgs and args.args need to be merged somewhere else?
-def vdsl3RunWorkflowFactory(Map args) {
+def vdsl3WorkflowFactory(Map args) {
   def key = args["key"]
   def processObj = null
 
@@ -2660,7 +2660,7 @@ def vdsl3RunWorkflowFactory(Map args) {
     main:
 
     if (processObj == null) {
-      processObj = processFactory(args)
+      processObj = vdsl3ProcessFactoryargs)
     }
     
     output_ = input_

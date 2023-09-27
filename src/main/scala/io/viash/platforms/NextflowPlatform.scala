@@ -238,7 +238,7 @@ case class NextflowPlatform(
           |
           |// inner workflow hook
           |def innerWorkflowFactory(args) {
-          |  return vdsl3RunWorkflowFactory(args)
+          |  return vdsl3WorkflowFactory(args)
           |}""".stripMargin
     }
 

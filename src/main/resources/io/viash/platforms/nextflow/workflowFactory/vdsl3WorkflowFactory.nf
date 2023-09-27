@@ -1,6 +1,5 @@
-// depends on: thisConfig, params, resourcesDir
-// TODO: do the defaultArgs, paramArgs and args.args need to be merged somewhere else?
-def vdsl3RunWorkflowFactory(Map args) {
+// depends on: thisConfig, resourcesDir
+def vdsl3WorkflowFactory(Map args) {
   def key = args["key"]
   def processObj = null
 
@@ -9,7 +8,7 @@ def vdsl3RunWorkflowFactory(Map args) {
     main:
 
     if (processObj == null) {
-      processObj = processFactory(args)
+      processObj = vdsl3ProcessFactoryargs)
     }
     
     output_ = input_
