@@ -2,6 +2,33 @@
 // VDSL3 helper functions //
 ////////////////////////////
 
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/arguments/_processArgumentGroup.nf'
+def _processArgumentGroup(argumentGroups, name, arguments) {
+  def argNamesInGroups = argumentGroups.collectMany{it.arguments.findAll{it instanceof String}}.toSet()
+
+  // Check if 'arguments' is in 'argumentGroups'. 
+  def argumentsNotInGroup = arguments.findAll{arg -> !(argNamesInGroups.contains(arg.plainName))}
+
+  // Check whether an argument group of 'name' exists.
+  def existing = argumentGroups.find{gr -> name == gr.name}
+
+  // if there are no arguments missing from the argument group, just return the existing group (if any)
+  if (argumentsNotInGroup.isEmpty()) {
+    return existing == null ? [] : [existing]
+  
+  // if there are missing arguments and there is an existing group, add the missing arguments to it
+  } else if (existing != null) {
+    def newEx = existing.clone()
+    newEx.arguments.addAll(argumentsNotInGroup.findAll{it !instanceof String})
+    return [newEx]
+
+  // else create a new group
+  } else {
+    def newEx = [name: name, arguments: argumentsNotInGroup.findAll{it !instanceof String}]
+    return [newEx]
+  }
+}
+
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/arguments/_processArgument.nf'
 def _processArgument(arg) {
   arg.multiple = arg.multiple != null ? arg.multiple : false
@@ -52,33 +79,6 @@ def _processArgument(arg) {
   }
 
   arg
-}
-
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/arguments/_processArgumentGroup.nf'
-def _processArgumentGroup(argumentGroups, name, arguments) {
-  def argNamesInGroups = argumentGroups.collectMany{it.arguments.findAll{it instanceof String}}.toSet()
-
-  // Check if 'arguments' is in 'argumentGroups'. 
-  def argumentsNotInGroup = arguments.findAll{arg -> !(argNamesInGroups.contains(arg.plainName))}
-
-  // Check whether an argument group of 'name' exists.
-  def existing = argumentGroups.find{gr -> name == gr.name}
-
-  // if there are no arguments missing from the argument group, just return the existing group (if any)
-  if (argumentsNotInGroup.isEmpty()) {
-    return existing == null ? [] : [existing]
-  
-  // if there are missing arguments and there is an existing group, add the missing arguments to it
-  } else if (existing != null) {
-    def newEx = existing.clone()
-    newEx.arguments.addAll(argumentsNotInGroup.findAll{it !instanceof String})
-    return [newEx]
-
-  // else create a new group
-  } else {
-    def newEx = [name: name, arguments: argumentsNotInGroup.findAll{it !instanceof String}]
-    return [newEx]
-  }
 }
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/arguments/processInputsOutputs.nf'
@@ -178,96 +178,6 @@ Map processOutputs(Map outputs, Map config, String id, String key) {
     }
   }
   return outputs
-}
-
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/_checkUniqueIds.nf'
-
-/**
- * Check if the ids are unique across parameter sets
- *
- * @param parameterSets a list of parameter sets.
- */
-private void _checkUniqueIds(List<Tuple2<String, Map<String, Object>>> parameterSets) {
-  def ppIds = parameterSets.collect{it[0]}
-  assert ppIds.size() == ppIds.unique().size() : "All argument sets should have unique ids. Detected ids: $ppIds"
-}
-
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/_getChild.nf'
-
-// helper functions for reading params from file //
-def _getChild(parent, child) {
-  if (child.contains("://") || java.nio.file.Paths.get(child).isAbsolute()) {
-    child
-  } else {
-    def parentAbsolute = java.nio.file.Paths.get(parent).toAbsolutePath().toString()
-    parentAbsolute.replaceAll('/[^/]*$', "/") + child
-  }
-}
-
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/_guessParamListFormat.nf'
-
-def _guessParamListFormat(params) {
-  if (!params.containsKey("param_list") || params.param_list == null) {
-    "none"
-  } else {
-    def param_list = params.param_list
-
-    if (param_list !instanceof String) {
-      "asis"
-    } else if (param_list.endsWith(".csv")) {
-      "csv"
-    } else if (param_list.endsWith(".json") || param_list.endsWith(".jsn")) {
-      "json"
-    } else if (param_list.endsWith(".yaml") || param_list.endsWith(".yml")) {
-      "yaml"
-    } else {
-      "yaml_blob"
-    }
-  }
-}
-
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/_splitParams.nf'
-/**
- * Split parameters for arguments that accept multiple values using their separator
- *
- * @param paramList A Map containing parameters to split.
- * @param config A Map of the Viash configuration. This Map can be generated from the config file
- *               using the readConfig() function.
- *
- * @return A Map of parameters where the parameter values have been split into a list using
- *         their seperator.
- */
-Map<String, Object> _splitParams(Map<String, Object> parValues, Map config){
-  def parsedParamValues = parValues.collectEntries { parName, parValue ->
-    def parameterSettings = config.functionality.allArguments.find({it.plainName == parName})
-
-    if (!parameterSettings) {
-      // if argument is not found, do not alter 
-      return [parName, parValue]
-    }
-    if (parameterSettings.multiple) { // Check if parameter can accept multiple values
-      if (parValue instanceof Collection) {
-          parValue = parValue.collect{it instanceof String ? it.split(parameterSettings.multiple_sep) : it }
-      } else if (parValue instanceof String) {
-          parValue = parValue.split(parameterSettings.multiple_sep)
-      } else if (parValue == null) {
-          parValue = []
-      } else {
-          parValue = [ parValue ]
-      }
-      parValue = parValue.flatten()
-    }
-    // For all parameters check if multiple values are only passed for
-    // arguments that allow it. Quietly simplify lists of length 1.
-    if (!parameterSettings.multiple && parValue instanceof Collection) {
-      assert parValue.size() == 1 : 
-      "Error: argument ${parName} has too many values.\n" +
-      "  Expected amount: 1. Found: ${parValue.size()}"
-      parValue = parValue[0]
-    }
-    [parName, parValue]
-  }
-  return parsedParamValues
 }
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/applyConfig.nf'
@@ -583,135 +493,16 @@ def channelFromParams(Map params, Map config) {
   return Channel.fromList(processedParams)
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/paramsToChannel.nf'
-def paramsToChannel(params, config) {
-  if (!viashChannelDeprecationWarningPrinted) {
-    viashChannelDeprecationWarningPrinted = true
-    System.err.println("Warning: paramsToChannel has deprecated in Viash 0.7.0. " +
-                      "Please use a combination of channelFromParams and preprocessInputs.")
-  }
-  Channel.fromList(paramsToList(params, config))
-}
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/_checkUniqueIds.nf'
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/viashChannel.nf'
-
-def viashChannel(params, config) {
-  if (!viashChannelDeprecationWarningPrinted) {
-    viashChannelDeprecationWarningPrinted = true
-    System.err.println("Warning: viashChannel has deprecated in Viash 0.7.0. " +
-                      "Please use a combination of channelFromParams and preprocessInputs.")
-  }
-  paramsToChannel(params, config)
-    | map{tup -> [tup.id, tup]}
-}
-
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/runComponents.nf'
 /**
- * Run a list of components on a stream of data.
- * 
- * @param components: list of Viash VDSL3 modules to run
- * @param fromState: a closure, a map or a list of keys to extract from the input data.
- *   If a closure, it will be called with the id, the data and the component config.
- * @param toState: a closure, a map or a list of keys to extract from the output data
- *   If a closure, it will be called with the id, the output data, the old state and the component config.
- * @param filter: filter function to apply to the input.
- *   It will be called with the id, the data and the component config.
- * @param id: id to use for the output data
- *   If a closure, it will be called with the id, the data and the component config.
- * @param auto: auto options to pass to the components
+ * Check if the ids are unique across parameter sets
  *
- * @return: a workflow that runs the components
- **/
-def runComponents(Map args) {
-  assert args.components: "runComponents should be passed a list of components to run"
-
-  def components_ = args.components
-  if (components_ !instanceof List) {
-    components_ = [ components_ ]
-  }
-  assert components_.size() > 0: "pass at least one component to runComponents"
-
-  def fromState_ = args.fromState
-  def toState_ = args.toState
-  def filter_ = args.filter
-  def id_ = args.id
-
-  workflow runComponentsWf {
-    take: input_ch
-    main:
-
-    // generate one channel per method
-    out_chs = components_.collect{ comp_ ->
-      def comp_config = comp_.config
-
-      filter_ch = filter_
-        ? input_ch | filter{tup ->
-          filter_(tup[0], tup[1], comp_config)
-        }
-        : input_ch
-      id_ch = id_
-        ? filter_ch | map{tup ->
-          // def new_id = id_(tup[0], tup[1], comp_config)
-          def new_id = tup[0]
-          if (id_ instanceof String) {
-            new_id = id_
-          } else if (id_ instanceof Closure) {
-            new_id = id_(new_id, tup[1], comp_config)
-          }
-          [new_id] + tup.drop(1)
-        }
-        : filter_ch
-      data_ch = id_ch | map{tup ->
-          def new_data = tup[1]
-          if (fromState_ instanceof Map) {
-            new_data = fromState_.collectEntries{ key0, key1 ->
-              [key0, new_data[key1]]
-            }
-          } else if (fromState_ instanceof List) {
-            new_data = fromState_.collectEntries{ key ->
-              [key, new_data[key]]
-            }
-          } else if (fromState_ instanceof Closure) {
-            new_data = fromState_(tup[0], new_data, comp_config)
-          }
-          tup.take(1) + [new_data] + tup.drop(1)
-        }
-      out_ch = data_ch
-        | comp_.run(
-          auto: (args.auto ?: [:]) + [simplifyInput: false, simplifyOutput: false]
-        )
-      post_ch = toState_
-        ? out_ch | map{tup ->
-          def output = tup[1]
-          def old_state = tup[2]
-          if (toState_ instanceofRunCompoMap) {
-            new_state = old_state + toState_.collectEntries{ key0, key1 ->
-              [key0, output[key1]]
-            }
-          } else if (toState_ instanceof List) {
-            new_state = old_state + toState_.collectEntries{ key ->
-              [key, output[key]]
-            }
-          } else if (toState_ instanceof Closure) {
-            new_state = toState_(tup[0], output, old_state, comp_config)
-          }
-          [tup[0], new_state] + tup.drop(3)
-        }
-        : out_ch
-      
-      post_ch
-    }
-
-    // mix all results
-    output_ch =
-      (out_chs.size == 1)
-        ? out_chs[0]
-        : out_chs[0].mix(*out_chs.drop(1))
-
-    emit: output_ch
-  }
-
-  return runComponentsWf
+ * @param parameterSets a list of parameter sets.
+ */
+private void _checkUniqueIds(List<Tuple2<String, Map<String, Object>>> parameterSets) {
+  def ppIds = parameterSets.collect{it[0]}
+  assert ppIds.size() == ppIds.unique().size() : "All argument sets should have unique ids. Detected ids: $ppIds"
 }
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/checkUniqueIds.nf'
@@ -746,6 +537,50 @@ def checkUniqueIds(Map args) {
     return true
   }
 }
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/_getChild.nf'
+
+// helper functions for reading params from file //
+def _getChild(parent, child) {
+  if (child.contains("://") || java.nio.file.Paths.get(child).isAbsolute()) {
+    child
+  } else {
+    def parentAbsolute = java.nio.file.Paths.get(parent).toAbsolutePath().toString()
+    parentAbsolute.replaceAll('/[^/]*$', "/") + child
+  }
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/_guessParamListFormat.nf'
+
+def _guessParamListFormat(params) {
+  if (!params.containsKey("param_list") || params.param_list == null) {
+    "none"
+  } else {
+    def param_list = params.param_list
+
+    if (param_list !instanceof String) {
+      "asis"
+    } else if (param_list.endsWith(".csv")) {
+      "csv"
+    } else if (param_list.endsWith(".json") || param_list.endsWith(".jsn")) {
+      "json"
+    } else if (param_list.endsWith(".yaml") || param_list.endsWith(".yml")) {
+      "yaml"
+    } else {
+      "yaml_blob"
+    }
+  }
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/paramsToChannel.nf'
+def paramsToChannel(params, config) {
+  if (!viashChannelDeprecationWarningPrinted) {
+    viashChannelDeprecationWarningPrinted = true
+    System.err.println("Warning: paramsToChannel has deprecated in Viash 0.7.0. " +
+                      "Please use a combination of channelFromParams and preprocessInputs.")
+  }
+  Channel.fromList(paramsToList(params, config))
+}
+
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/paramsToList.nf'
 viashChannelDeprecationWarningPrinted = false
 
@@ -980,6 +815,171 @@ def preprocessInputs(Map args) {
   }
 
   return preprocessInputsInstance.cloneWithName(wfKey)
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/runComponents.nf'
+/**
+ * Run a list of components on a stream of data.
+ * 
+ * @param components: list of Viash VDSL3 modules to run
+ * @param fromState: a closure, a map or a list of keys to extract from the input data.
+ *   If a closure, it will be called with the id, the data and the component config.
+ * @param toState: a closure, a map or a list of keys to extract from the output data
+ *   If a closure, it will be called with the id, the output data, the old state and the component config.
+ * @param filter: filter function to apply to the input.
+ *   It will be called with the id, the data and the component config.
+ * @param id: id to use for the output data
+ *   If a closure, it will be called with the id, the data and the component config.
+ * @param auto: auto options to pass to the components
+ *
+ * @return: a workflow that runs the components
+ **/
+def runComponents(Map args) {
+  assert args.components: "runComponents should be passed a list of components to run"
+
+  def components_ = args.components
+  if (components_ !instanceof List) {
+    components_ = [ components_ ]
+  }
+  assert components_.size() > 0: "pass at least one component to runComponents"
+
+  def fromState_ = args.fromState
+  def toState_ = args.toState
+  def filter_ = args.filter
+  def id_ = args.id
+
+  workflow runComponentsWf {
+    take: input_ch
+    main:
+
+    // generate one channel per method
+    out_chs = components_.collect{ comp_ ->
+      def comp_config = comp_.config
+
+      filter_ch = filter_
+        ? input_ch | filter{tup ->
+          filter_(tup[0], tup[1], comp_config)
+        }
+        : input_ch
+      id_ch = id_
+        ? filter_ch | map{tup ->
+          // def new_id = id_(tup[0], tup[1], comp_config)
+          def new_id = tup[0]
+          if (id_ instanceof String) {
+            new_id = id_
+          } else if (id_ instanceof Closure) {
+            new_id = id_(new_id, tup[1], comp_config)
+          }
+          [new_id] + tup.drop(1)
+        }
+        : filter_ch
+      data_ch = id_ch | map{tup ->
+          def new_data = tup[1]
+          if (fromState_ instanceof Map) {
+            new_data = fromState_.collectEntries{ key0, key1 ->
+              [key0, new_data[key1]]
+            }
+          } else if (fromState_ instanceof List) {
+            new_data = fromState_.collectEntries{ key ->
+              [key, new_data[key]]
+            }
+          } else if (fromState_ instanceof Closure) {
+            new_data = fromState_(tup[0], new_data, comp_config)
+          }
+          tup.take(1) + [new_data] + tup.drop(1)
+        }
+      out_ch = data_ch
+        | comp_.run(
+          auto: (args.auto ?: [:]) + [simplifyInput: false, simplifyOutput: false]
+        )
+      post_ch = toState_
+        ? out_ch | map{tup ->
+          def output = tup[1]
+          def old_state = tup[2]
+          if (toState_ instanceofRunCompoMap) {
+            new_state = old_state + toState_.collectEntries{ key0, key1 ->
+              [key0, output[key1]]
+            }
+          } else if (toState_ instanceof List) {
+            new_state = old_state + toState_.collectEntries{ key ->
+              [key, output[key]]
+            }
+          } else if (toState_ instanceof Closure) {
+            new_state = toState_(tup[0], output, old_state, comp_config)
+          }
+          [tup[0], new_state] + tup.drop(3)
+        }
+        : out_ch
+      
+      post_ch
+    }
+
+    // mix all results
+    output_ch =
+      (out_chs.size == 1)
+        ? out_chs[0]
+        : out_chs[0].mix(*out_chs.drop(1))
+
+    emit: output_ch
+  }
+
+  return runComponentsWf
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/_splitParams.nf'
+/**
+ * Split parameters for arguments that accept multiple values using their separator
+ *
+ * @param paramList A Map containing parameters to split.
+ * @param config A Map of the Viash configuration. This Map can be generated from the config file
+ *               using the readConfig() function.
+ *
+ * @return A Map of parameters where the parameter values have been split into a list using
+ *         their seperator.
+ */
+Map<String, Object> _splitParams(Map<String, Object> parValues, Map config){
+  def parsedParamValues = parValues.collectEntries { parName, parValue ->
+    def parameterSettings = config.functionality.allArguments.find({it.plainName == parName})
+
+    if (!parameterSettings) {
+      // if argument is not found, do not alter 
+      return [parName, parValue]
+    }
+    if (parameterSettings.multiple) { // Check if parameter can accept multiple values
+      if (parValue instanceof Collection) {
+          parValue = parValue.collect{it instanceof String ? it.split(parameterSettings.multiple_sep) : it }
+      } else if (parValue instanceof String) {
+          parValue = parValue.split(parameterSettings.multiple_sep)
+      } else if (parValue == null) {
+          parValue = []
+      } else {
+          parValue = [ parValue ]
+      }
+      parValue = parValue.flatten()
+    }
+    // For all parameters check if multiple values are only passed for
+    // arguments that allow it. Quietly simplify lists of length 1.
+    if (!parameterSettings.multiple && parValue instanceof Collection) {
+      assert parValue.size() == 1 : 
+      "Error: argument ${parName} has too many values.\n" +
+      "  Expected amount: 1. Found: ${parValue.size()}"
+      parValue = parValue[0]
+    }
+    [parName, parValue]
+  }
+  return parsedParamValues
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/viashChannel.nf'
+
+def viashChannel(params, config) {
+  if (!viashChannelDeprecationWarningPrinted) {
+    viashChannelDeprecationWarningPrinted = true
+    System.err.println("Warning: viashChannel has deprecated in Viash 0.7.0. " +
+                      "Please use a combination of channelFromParams and preprocessInputs.")
+  }
+  paramsToChannel(params, config)
+    | map{tup -> [tup.id, tup]}
 }
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/config/addGlobalParams.nf'
@@ -1397,17 +1397,17 @@ def readCsv(file_path) {
   output
 }
 
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readJsonBlob.nf'
+def readJsonBlob(str) {
+  def jsonSlurper = new groovy.json.JsonSlurper()
+  jsonSlurper.parseText(str)
+}
+
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readJson.nf'
 def readJson(file_path) {
   def inputFile = file_path !instanceof Path ? file(file_path) : file_path
   def jsonSlurper = new groovy.json.JsonSlurper()
   jsonSlurper.parse(inputFile)
-}
-
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readJsonBlob.nf'
-def readJsonBlob(str) {
-  def jsonSlurper = new groovy.json.JsonSlurper()
-  jsonSlurper.parseText(str)
 }
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readTaggedYaml.nf'
@@ -1439,17 +1439,17 @@ def readTaggedYaml(File file) {
   return yaml.load(file.text)
 }
 
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readYamlBlob.nf'
+def readYamlBlob(str) {
+  def yamlSlurper = new org.yaml.snakeyaml.Yaml()
+  yamlSlurper.load(str)
+}
+
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readYaml.nf'
 def readYaml(file_path) {
   def inputFile = file_path !instanceof Path ? file(file_path) : file_path
   def yamlSlurper = new org.yaml.snakeyaml.Yaml()
   yamlSlurper.load(inputFile)
-}
-
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readYamlBlob.nf'
-def readYamlBlob(str) {
-  def yamlSlurper = new org.yaml.snakeyaml.Yaml()
-  yamlSlurper.load(str)
 }
 
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/toTaggedYamlBlob.nf'
@@ -2461,7 +2461,7 @@ def processFactory(Map processArgs) {
   def scriptParser = new nextflow.script.ScriptParser(session)
     .setModule(true)
     .setBinding(binding)
-  scriptParser.scriptPath = nextflow.script.ScriptMeta.current().getScriptPath()
+  scriptParser.scriptPath = meta.getScriptPath()
   def moduleScript = scriptParser.runScript(procStr)
     .getScript()
 
@@ -2648,214 +2648,6 @@ def processProcessArgs(Map args) {
   return processArgs
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/workflowFactory.nf'
-def _debug(processArgs, debugKey) {
-  if (processArgs.debug) {
-    view { "process '${processArgs.key}' $debugKey tuple: $it"  }
-  } else {
-    map { it }
-  }
-}
-
-// depends on: thisConfig, innerWorkflowFactory
-def workflowFactory(Map args) {
-  def processArgs = processProcessArgs(args)
-  def key = processArgs["key"]
-  def meta = nextflow.script.ScriptMeta.current()
-
-  def workflowKey = key
-  
-  workflow workflowInstance {
-    take: input_
-
-    main:
-    mid1_ = input_
-      | checkUniqueIds([:])
-      | _debug(processArgs, "input")
-      | map { tuple ->
-        tuple = tuple.clone()
-        
-        if (processArgs.map) {
-          tuple = processArgs.map(tuple)
-        }
-        if (processArgs.mapId) {
-          tuple[0] = processArgs.mapId(tuple[0])
-        }
-        if (processArgs.mapData) {
-          tuple[1] = processArgs.mapData(tuple[1])
-        }
-        if (processArgs.mapPassthrough) {
-          tuple = tuple.take(2) + processArgs.mapPassthrough(tuple.drop(2))
-        }
-
-        // check tuple
-        assert tuple instanceof List : 
-          "Error in module '${key}': element in channel should be a tuple [id, data, ...otherargs...]\n" +
-          "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
-          "  Expected class: List. Found: tuple.getClass() is ${tuple.getClass()}"
-        assert tuple.size() >= 2 : 
-          "Error in module '${key}': expected length of tuple in input channel to be two or greater.\n" +
-          "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
-          "  Found: tuple.size() == ${tuple.size()}"
-        
-        // check id field
-        assert tuple[0] instanceof CharSequence : 
-          "Error in module '${key}': first element of tuple in channel should be a String\n" +
-          "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
-          "  Found: ${tuple[0]}"
-        
-        // match file to input file
-        if (processArgs.auto.simplifyInput && (tuple[1] instanceof Path || tuple[1] instanceof List)) {
-          def inputFiles = thisConfig.functionality.allArguments
-            .findAll { it.type == "file" && it.direction == "input" }
-          
-          assert inputFiles.size() == 1 : 
-              "Error in module '${key}' id '${tuple[0]}'.\n" +
-              "  Anonymous file inputs are only allowed when the process has exactly one file input.\n" +
-              "  Expected: inputFiles.size() == 1. Found: inputFiles.size() is ${inputFiles.size()}"
-
-          tuple[1] = [[ inputFiles[0].plainName, tuple[1] ]].collectEntries()
-        }
-
-        // check data field
-        assert tuple[1] instanceof Map : 
-          "Error in module '${key}' id '${tuple[0]}': second element of tuple in channel should be a Map\n" +
-          "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
-          "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
-
-        // rename keys of data field in tuple
-        if (processArgs.renameKeys) {
-          assert processArgs.renameKeys instanceof Map : 
-              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
-              "  Example: renameKeys: ['new_key': 'old_key'].\n" +
-              "  Expected class: Map. Found: renameKeys.getClass() is ${processArgs.renameKeys.getClass()}"
-          assert tuple[1] instanceof Map : 
-              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
-              "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
-
-          // TODO: allow renameKeys to be a function?
-          processArgs.renameKeys.each { newKey, oldKey ->
-            assert newKey instanceof CharSequence : 
-              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
-              "  Example: renameKeys: ['new_key': 'old_key'].\n" +
-              "  Expected class of newKey: String. Found: newKey.getClass() is ${newKey.getClass()}"
-            assert oldKey instanceof CharSequence : 
-              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
-              "  Example: renameKeys: ['new_key': 'old_key'].\n" +
-              "  Expected class of oldKey: String. Found: oldKey.getClass() is ${oldKey.getClass()}"
-            assert tuple[1].containsKey(oldKey) : 
-              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
-              "  Key '$oldKey' is missing in the data map. tuple[1].keySet() is '${tuple[1].keySet()}'"
-            tuple[1].put(newKey, tuple[1][oldKey])
-          }
-          tuple[1].keySet().removeAll(processArgs.renameKeys.collect{ newKey, oldKey -> oldKey })
-        }
-        tuple
-      }
-
-    if (processArgs.filter) {
-      mid2_ = mid1_
-        | filter{processArgs.filter(it)}
-    } else {
-      mid2_ = mid1_
-    }
-
-    if (processArgs.fromState) {
-      mid3_ = mid2_
-        | map{
-          def new_data = processArgs.fromState(it.take(2))
-          [it[0], new_data]
-        }
-    } else {
-      mid3_ = mid2_
-    }
-
-    // fill in defaults
-    mid4_ = mid3_
-      | map { tuple ->
-        def id_ = tuple[0]
-        def data_ = tuple[1]
-
-        // TODO: could move fromState to here
-
-        // fetch default params from functionality
-        def defaultArgs = thisConfig.functionality.allArguments
-          .findAll { it.containsKey("default") }
-          .collectEntries { [ it.plainName, it.default ] }
-
-        // fetch overrides in params
-        def paramArgs = thisConfig.functionality.allArguments
-          .findAll { par ->
-            def argKey = key + "__" + par.plainName
-            params.containsKey(argKey) && params[argKey] != "viash_no_value"
-          }
-          .collectEntries { [ it.plainName, params[key + "__" + it.plainName] ] }
-        
-        // fetch overrides in data
-        def dataArgs = thisConfig.functionality.allArguments
-          .findAll { data_.containsKey(it.plainName) }
-          .collectEntries { [ it.plainName, data_[it.plainName] ] }
-        
-        // combine params
-        def combinedArgs = defaultArgs + paramArgs + processArgs.args + dataArgs
-
-        // remove arguments with explicit null values
-        combinedArgs.removeAll{it.value == null}
-
-        combinedArgs = processInputs(combinedArgs, thisConfig, id_, key)
-
-        [id_, combinedArgs] + tuple.drop(2)
-      }
-
-    out0_ = mid4_
-      | _debug(processArgs, "processed")
-      // run workflow
-      | innerWorkflowFactory(processArgs)
-      // check output tuple
-      | map { id_, output_ ->
-        output_ = processOutputs(output_, thisConfig, id_, key)
-
-        if (processArgs.auto.simplifyOutput && output_.size() == 1) {
-          output_ = output_.values()[0]
-        }
-
-        [id_, output_]
-      }
-
-    // TODO: this join will fail if the keys changed during the innerWorkflowFactory
-    // join the output [id, output] with the previous state [id, state, ...]
-    out1_ = out0_.join(mid2_, failOnDuplicate: true)
-      // input tuple format: [id, output, prev_state, ...]
-      // output tuple format: [id, new_state, ...]
-      | map{
-        def new_state = processArgs.toState(it)
-        [it[0], new_state] + it.drop(3)
-      }
-      | _debug(processArgs, "output")
-
-    if (processArgs.auto.publish == "state") {
-      // TODO: this join will fail if the keys changed during the innerWorkflowFactory
-      mid4_
-        | map { tup -> tup.take(2) }
-        | join(out1_, failOnDuplicate: true)
-        | publishStatesByConfig(key: key, config: thisConfig)
-    }
-
-    emit: out1_
-  }
-
-  def wf = workflowInstance.cloneWithName(workflowKey)
-
-  // add factory function
-  wf.metaClass.run = { runArgs ->
-    workflowFactory(runArgs)
-  }
-  // add config to module for later introspection
-  wf.metaClass.config = thisConfig
-
-  return wf
-}
-
 // helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/vdsl3RunWorkflowFactory.nf'
 // depends on: thisConfig, params, resourcesDir
 // TODO: do the defaultArgs, paramArgs and args.args need to be merged somewhere else?
@@ -2960,4 +2752,210 @@ def vdsl3RunWorkflowFactory(Map args) {
   }
 
   return processWf
+}
+
+// helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/workflowFactory.nf'
+def _debug(processArgs, debugKey) {
+  if (processArgs.debug) {
+    view { "process '${processArgs.key}' $debugKey tuple: $it"  }
+  } else {
+    map { it }
+  }
+}
+
+// depends on: thisConfig, innerWorkflowFactory
+def workflowFactory(Map args) {
+  def processArgs = processProcessArgs(args)
+  def key_ = processArgs["key"]
+  
+  workflow workflowInstance {
+    take: input_
+
+    main:
+    mid1_ = input_
+      | checkUniqueIds([:])
+      | _debug(processArgs, "input")
+      | map { tuple ->
+        tuple = tuple.clone()
+        
+        if (processArgs.map) {
+          tuple = processArgs.map(tuple)
+        }
+        if (processArgs.mapId) {
+          tuple[0] = processArgs.mapId(tuple[0])
+        }
+        if (processArgs.mapData) {
+          tuple[1] = processArgs.mapData(tuple[1])
+        }
+        if (processArgs.mapPassthrough) {
+          tuple = tuple.take(2) + processArgs.mapPassthrough(tuple.drop(2))
+        }
+
+        // check tuple
+        assert tuple instanceof List : 
+          "Error in module '${key_}': element in channel should be a tuple [id, data, ...otherargs...]\n" +
+          "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
+          "  Expected class: List. Found: tuple.getClass() is ${tuple.getClass()}"
+        assert tuple.size() >= 2 : 
+          "Error in module '${key_}': expected length of tuple in input channel to be two or greater.\n" +
+          "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
+          "  Found: tuple.size() == ${tuple.size()}"
+        
+        // check id field
+        assert tuple[0] instanceof CharSequence : 
+          "Error in module '${key_}': first element of tuple in channel should be a String\n" +
+          "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
+          "  Found: ${tuple[0]}"
+        
+        // match file to input file
+        if (processArgs.auto.simplifyInput && (tuple[1] instanceof Path || tuple[1] instanceof List)) {
+          def inputFiles = thisConfig.functionality.allArguments
+            .findAll { it.type == "file" && it.direction == "input" }
+          
+          assert inputFiles.size() == 1 : 
+              "Error in module '${key_}' id '${tuple[0]}'.\n" +
+              "  Anonymous file inputs are only allowed when the process has exactly one file input.\n" +
+              "  Expected: inputFiles.size() == 1. Found: inputFiles.size() is ${inputFiles.size()}"
+
+          tuple[1] = [[ inputFiles[0].plainName, tuple[1] ]].collectEntries()
+        }
+
+        // check data field
+        assert tuple[1] instanceof Map : 
+          "Error in module '${key_}' id '${tuple[0]}': second element of tuple in channel should be a Map\n" +
+          "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
+          "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
+
+        // rename keys of data field in tuple
+        if (processArgs.renameKeys) {
+          assert processArgs.renameKeys instanceof Map : 
+              "Error renaming data keys in module '${key_}' id '${tuple[0]}'.\n" +
+              "  Example: renameKeys: ['new_key': 'old_key'].\n" +
+              "  Expected class: Map. Found: renameKeys.getClass() is ${processArgs.renameKeys.getClass()}"
+          assert tuple[1] instanceof Map : 
+              "Error renaming data keys in module '${key_}' id '${tuple[0]}'.\n" +
+              "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
+
+          // TODO: allow renameKeys to be a function?
+          processArgs.renameKeys.each { newKey, oldKey ->
+            assert newKey instanceof CharSequence : 
+              "Error renaming data keys in module '${key_}' id '${tuple[0]}'.\n" +
+              "  Example: renameKeys: ['new_key': 'old_key'].\n" +
+              "  Expected class of newKey: String. Found: newKey.getClass() is ${newKey.getClass()}"
+            assert oldKey instanceof CharSequence : 
+              "Error renaming data keys in module '${key_}' id '${tuple[0]}'.\n" +
+              "  Example: renameKeys: ['new_key': 'old_key'].\n" +
+              "  Expected class of oldKey: String. Found: oldKey.getClass() is ${oldKey.getClass()}"
+            assert tuple[1].containsKey(oldKey) : 
+              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
+              "  Key '$oldKey' is missing in the data map. tuple[1].keySet() is '${tuple[1].keySet()}'"
+            tuple[1].put(newKey, tuple[1][oldKey])
+          }
+          tuple[1].keySet().removeAll(processArgs.renameKeys.collect{ newKey, oldKey -> oldKey })
+        }
+        tuple
+      }
+
+    if (processArgs.filter) {
+      mid2_ = mid1_
+        | filter{processArgs.filter(it)}
+    } else {
+      mid2_ = mid1_
+    }
+
+    if (processArgs.fromState) {
+      mid3_ = mid2_
+        | map{
+          def new_data = processArgs.fromState(it.take(2))
+          [it[0], new_data]
+        }
+    } else {
+      mid3_ = mid2_
+    }
+
+    // fill in defaults
+    mid4_ = mid3_
+      | map { tuple ->
+        def id_ = tuple[0]
+        def data_ = tuple[1]
+
+        // TODO: could move fromState to here
+
+        // fetch default params from functionality
+        def defaultArgs = thisConfig.functionality.allArguments
+          .findAll { it.containsKey("default") }
+          .collectEntries { [ it.plainName, it.default ] }
+
+        // fetch overrides in params
+        def paramArgs = thisConfig.functionality.allArguments
+          .findAll { par ->
+            def argKey = key_ + "__" + par.plainName
+            params.containsKey(argKey)
+          }
+          .collectEntries { [ it.plainName, params[key_ + "__" + it.plainName] ] }
+        
+        // fetch overrides in data
+        def dataArgs = thisConfig.functionality.allArguments
+          .findAll { data_.containsKey(it.plainName) }
+          .collectEntries { [ it.plainName, data_[it.plainName] ] }
+        
+        // combine params
+        def combinedArgs = defaultArgs + paramArgs + processArgs.args + dataArgs
+
+        // remove arguments with explicit null values
+        combinedArgs
+          .removeAll{_, val -> val == null || val == "viash_no_value" || val == "force_null"}
+
+        combinedArgs = processInputs(combinedArgs, thisConfig, id_, key_)
+
+        [id_, combinedArgs] + tuple.drop(2)
+      }
+
+    out0_ = mid4_
+      | _debug(processArgs, "processed")
+      // run workflow
+      | innerWorkflowFactory(processArgs)
+      // check output tuple
+      | map { id_, output_ ->
+        output_ = processOutputs(output_, thisConfig, id_, key_)
+
+        if (processArgs.auto.simplifyOutput && output_.size() == 1) {
+          output_ = output_.values()[0]
+        }
+
+        [id_, output_]
+      }
+
+    // TODO: this join will fail if the keys changed during the innerWorkflowFactory
+    // join the output [id, output] with the previous state [id, state, ...]
+    out1_ = out0_.join(mid2_, failOnDuplicate: true)
+      // input tuple format: [id, output, prev_state, ...]
+      // output tuple format: [id, new_state, ...]
+      | map{
+        def new_state = processArgs.toState(it)
+        [it[0], new_state] + it.drop(3)
+      }
+      | _debug(processArgs, "output")
+
+    if (processArgs.auto.publish == "state") {
+      // TODO: this join will fail if the keys changed during the innerWorkflowFactory
+      mid4_
+        | map { tup -> tup.take(2) }
+        | join(out1_, failOnDuplicate: true)
+        | publishStatesByConfig(key: key_, config: thisConfig)
+    }
+
+    emit: out1_
+  }
+
+  def wf = workflowInstance.cloneWithName(key_)
+
+  // add factory function
+  wf.metaClass.run = { runArgs ->
+    workflowFactory(runArgs)
+  }
+  // add config to module for later introspection
+  wf.metaClass.config = thisConfig
+
+  return wf
 }

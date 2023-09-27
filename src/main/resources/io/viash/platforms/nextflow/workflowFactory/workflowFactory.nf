@@ -9,10 +9,7 @@ def _debug(processArgs, debugKey) {
 // depends on: thisConfig, innerWorkflowFactory
 def workflowFactory(Map args) {
   def processArgs = processProcessArgs(args)
-  def key = processArgs["key"]
-  def meta = nextflow.script.ScriptMeta.current()
-
-  def workflowKey = key
+  def key_ = processArgs["key"]
   
   workflow workflowInstance {
     take: input_
@@ -39,17 +36,17 @@ def workflowFactory(Map args) {
 
         // check tuple
         assert tuple instanceof List : 
-          "Error in module '${key}': element in channel should be a tuple [id, data, ...otherargs...]\n" +
+          "Error in module '${key_}': element in channel should be a tuple [id, data, ...otherargs...]\n" +
           "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
           "  Expected class: List. Found: tuple.getClass() is ${tuple.getClass()}"
         assert tuple.size() >= 2 : 
-          "Error in module '${key}': expected length of tuple in input channel to be two or greater.\n" +
+          "Error in module '${key_}': expected length of tuple in input channel to be two or greater.\n" +
           "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
           "  Found: tuple.size() == ${tuple.size()}"
         
         // check id field
         assert tuple[0] instanceof CharSequence : 
-          "Error in module '${key}': first element of tuple in channel should be a String\n" +
+          "Error in module '${key_}': first element of tuple in channel should be a String\n" +
           "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
           "  Found: ${tuple[0]}"
         
@@ -59,7 +56,7 @@ def workflowFactory(Map args) {
             .findAll { it.type == "file" && it.direction == "input" }
           
           assert inputFiles.size() == 1 : 
-              "Error in module '${key}' id '${tuple[0]}'.\n" +
+              "Error in module '${key_}' id '${tuple[0]}'.\n" +
               "  Anonymous file inputs are only allowed when the process has exactly one file input.\n" +
               "  Expected: inputFiles.size() == 1. Found: inputFiles.size() is ${inputFiles.size()}"
 
@@ -68,28 +65,28 @@ def workflowFactory(Map args) {
 
         // check data field
         assert tuple[1] instanceof Map : 
-          "Error in module '${key}' id '${tuple[0]}': second element of tuple in channel should be a Map\n" +
+          "Error in module '${key_}' id '${tuple[0]}': second element of tuple in channel should be a Map\n" +
           "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
           "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
 
         // rename keys of data field in tuple
         if (processArgs.renameKeys) {
           assert processArgs.renameKeys instanceof Map : 
-              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
+              "Error renaming data keys in module '${key_}' id '${tuple[0]}'.\n" +
               "  Example: renameKeys: ['new_key': 'old_key'].\n" +
               "  Expected class: Map. Found: renameKeys.getClass() is ${processArgs.renameKeys.getClass()}"
           assert tuple[1] instanceof Map : 
-              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
+              "Error renaming data keys in module '${key_}' id '${tuple[0]}'.\n" +
               "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
 
           // TODO: allow renameKeys to be a function?
           processArgs.renameKeys.each { newKey, oldKey ->
             assert newKey instanceof CharSequence : 
-              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
+              "Error renaming data keys in module '${key_}' id '${tuple[0]}'.\n" +
               "  Example: renameKeys: ['new_key': 'old_key'].\n" +
               "  Expected class of newKey: String. Found: newKey.getClass() is ${newKey.getClass()}"
             assert oldKey instanceof CharSequence : 
-              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
+              "Error renaming data keys in module '${key_}' id '${tuple[0]}'.\n" +
               "  Example: renameKeys: ['new_key': 'old_key'].\n" +
               "  Expected class of oldKey: String. Found: oldKey.getClass() is ${oldKey.getClass()}"
             assert tuple[1].containsKey(oldKey) : 
@@ -135,10 +132,10 @@ def workflowFactory(Map args) {
         // fetch overrides in params
         def paramArgs = thisConfig.functionality.allArguments
           .findAll { par ->
-            def argKey = key + "__" + par.plainName
-            params.containsKey(argKey) && params[argKey] != "viash_no_value"
+            def argKey = key_ + "__" + par.plainName
+            params.containsKey(argKey)
           }
-          .collectEntries { [ it.plainName, params[key + "__" + it.plainName] ] }
+          .collectEntries { [ it.plainName, params[key_ + "__" + it.plainName] ] }
         
         // fetch overrides in data
         def dataArgs = thisConfig.functionality.allArguments
@@ -149,9 +146,10 @@ def workflowFactory(Map args) {
         def combinedArgs = defaultArgs + paramArgs + processArgs.args + dataArgs
 
         // remove arguments with explicit null values
-        combinedArgs.removeAll{it.value == null}
+        combinedArgs
+          .removeAll{_, val -> val == null || val == "viash_no_value" || val == "force_null"}
 
-        combinedArgs = processInputs(combinedArgs, thisConfig, id_, key)
+        combinedArgs = processInputs(combinedArgs, thisConfig, id_, key_)
 
         [id_, combinedArgs] + tuple.drop(2)
       }
@@ -162,7 +160,7 @@ def workflowFactory(Map args) {
       | innerWorkflowFactory(processArgs)
       // check output tuple
       | map { id_, output_ ->
-        output_ = processOutputs(output_, thisConfig, id_, key)
+        output_ = processOutputs(output_, thisConfig, id_, key_)
 
         if (processArgs.auto.simplifyOutput && output_.size() == 1) {
           output_ = output_.values()[0]
@@ -187,13 +185,13 @@ def workflowFactory(Map args) {
       mid4_
         | map { tup -> tup.take(2) }
         | join(out1_, failOnDuplicate: true)
-        | publishStatesByConfig(key: key, config: thisConfig)
+        | publishStatesByConfig(key: key_, config: thisConfig)
     }
 
     emit: out1_
   }
 
-  def wf = workflowInstance.cloneWithName(workflowKey)
+  def wf = workflowInstance.cloneWithName(key_)
 
   // add factory function
   wf.metaClass.run = { runArgs ->

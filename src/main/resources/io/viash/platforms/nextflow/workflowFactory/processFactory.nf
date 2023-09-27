@@ -198,7 +198,7 @@ def processFactory(Map processArgs) {
   def scriptParser = new nextflow.script.ScriptParser(session)
     .setModule(true)
     .setBinding(binding)
-  scriptParser.scriptPath = nextflow.script.ScriptMeta.current().getScriptPath()
+  scriptParser.scriptPath = meta.getScriptPath()
   def moduleScript = scriptParser.runScript(procStr)
     .getScript()
 
