@@ -1,0 +1,66 @@
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+    // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
+    val thisPath = Paths.get(ViashNamespace.targetOutputPath("", "invalid_runner_name", config.functionality.namespace, config.functionality.name))
+
+    val depStrs = config.functionality.dependencies.map(NextflowScript.renderInclude(_, thisPath))
+
+    val configJson = config.asJson.dropEmptyRecursively
+    val configJsonStr = configJson
+      .toFormattedString("json")
+      .replace("\\\\", "\\\\\\\\")
+      .replace("\\\"", "\\\\\"")
+      .replace("'''", "\\'\\'\\'")
+      .grouped(65000) // JVM has a maximum string limit of 65535
+      .toList         // see https://stackoverflow.com/a/6856773
+      .mkString("'''", "''' + '''", "'''")
+
+    val str = 
+      s"""nextflow.enable.dsl=2
+        |
+        |config = processConfig(readJsonBlob($configJsonStr))
+        |
+        |// import dependencies
+        |rootDir = getRootDir()
+        |${depStrs.mkString("\n|")}
+        |
+        |workflow {
+        |  helpMessage(config)
+        |
+        |  channelFromParams(params, config)
+        |    | ${config.functionality.name}
+        |    // todo: publish
+        |}
+        |
+        |workflow ${config.functionality.name} {
+        |  take:
+        |  input_ch
+        |
+        |  main:
+        |  output_ch = input_ch
+        |    | preprocessInputs(config: config)
+        |    | ${entrypoint.get}
+        |
+        |  emit:
+        |    output_ch
+        |}
+        |""".stripMargin
+
+    val footer = Seq("// END CUSTOM CODE", NextflowHelper.workflowHelper, NextflowHelper.dataflowHelper).mkString("\n\n", "\n\n", "")
+    ScriptInjectionMods(params = str, footer = footer)
+  }
+
+  override def command(script: String): String = {
+    val entryStr = entrypoint match {
+      case Some(entry) => " -entry " + entry
+      case None => ""
+    }
+    super.command(script) + entryStr
+  }
+
+  override def commandSeq(script: String): Seq[String] = {
+    val entrySeq = entrypoint match {
+      case Some(entry) => Seq("-entry", entry)
+      case None => Seq()
+    }
+    super.commandSeq(script) ++ entrySeq
+  }

@@ -363,11 +363,13 @@ case class NextflowDirectives(
   @description(
     """The `tag` directive allows you to associate each process execution with a custom label, so that it will be easier to identify them in the log file or in the trace execution report.
       |
+      |For ease of use, the default tag is set to `"$id"`, which allows tracking the progression of the channel events through the workflow more easily.
+      |
       |See [`tag`](https://www.nextflow.io/docs/latest/process.html#tag).
       |""".stripMargin)
   @example(""""foo"""", "yaml")
-  @example("""'$id'""", "yaml")
-  tag: Option[String] = None,
+  @default("""'$id'""")
+  tag: Option[String] = Some("$id"),
   
   @description(
     """The `time` directive allows you to define how long a process is allowed to run.

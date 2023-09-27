@@ -1,0 +1,40 @@
+functionality:
+  name: wf
+  argument_groups:
+    - name: Inputs
+      arguments:
+        - name: "--input1"
+          type: file
+          description: Input file
+          required: true
+          must_exist: true
+          multiple: true
+          example: input.txt
+        - name: "--input2"
+          type: file
+          description: Input file
+          required: true
+          must_exist: true
+          example: input.txt
+    - name: Outputs
+      arguments:
+        - name: "--output"
+          description: Write the parameters to a json file.
+          required: true
+          type: file
+          direction: output
+  resources:
+    - type: nextflow_script
+      path: main.nf
+      entrypoint: base
+  dependencies:
+    - name: step1 # local is implicit
+    - name: step2
+      # repository: local # TODO: this should also work
+    - name: step3
+      repository: mylocal
+  repositories:
+    - name: mylocal
+      type: local
+platforms:
+  - type: nextflow

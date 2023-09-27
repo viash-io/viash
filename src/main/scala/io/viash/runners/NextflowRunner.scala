@@ -80,7 +80,7 @@ final case class NextflowRunner(
       "yaml")
   @default(
     """simplifyInput: true
-      |simplifyOutput: true
+      |simplifyOutput: false
       |transcript: false
       |publish: false
       |""".stripMargin)
@@ -116,6 +116,11 @@ final case class NextflowRunner(
       dest = Some("nextflow.config"),
       text = Some(renderNextflowConfig(config.functionality, condir))
     )
+    // TODO: create and write dockerfile when #518 is merged into main
+    // val dockerfile = PlainFile(
+    //   dest = Some("Dockerfile"),
+    //   text = Some(dockerEngine.dockerFile(...))
+    // )
 
     // remove main
     val otherResources = config.functionality.additionalResources

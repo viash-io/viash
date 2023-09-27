@@ -27,8 +27,7 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
       "export", "resource", "runners/nextflow/WorkflowHelper.nf"
     )
 
-    assert(stdout.startsWith("/////////////////////////////////////\n// Viash Workflow helper functions //"))
-    assert(stdout.contains("preprocessInputs"))
+    assert(stdout.contains("def readConfig("))
   }
 
   test("viash export resource to file") {
@@ -38,8 +37,7 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
     )
 
     val lines = helpers.IO.read(tempFile.toUri())
-    assert(lines.startsWith("/////////////////////////////////////\n// Viash Workflow helper functions //"))
-    assert(lines.contains("preprocessInputs"))
+    assert(lines.contains("def readConfig("))
   }
 
   test("viash export resource legacy") {
@@ -49,8 +47,7 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
 
     assert(stderr.contains("WARNING: The 'platforms/' prefix is deprecated. Please use 'runners/' instead."))
 
-    assert(stdout.startsWith("/////////////////////////////////////\n// Viash Workflow helper functions //"))
-    assert(stdout.contains("preprocessInputs"))
+    assert(stdout.contains("def readConfig("))
   }
 
   test("viash export resource to file legacy") {
@@ -62,8 +59,7 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
     assert(stderr.contains("WARNING: The 'platforms/' prefix is deprecated. Please use 'runners/' instead."))
 
     val lines = helpers.IO.read(tempFile.toUri())
-    assert(lines.startsWith("/////////////////////////////////////\n// Viash Workflow helper functions //"))
-    assert(lines.contains("preprocessInputs"))
+    assert(lines.contains("def readConfig("))
   }
   
   test("viash export cli_schema") {
