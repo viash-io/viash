@@ -34,7 +34,13 @@ TODO add summary
 
 * `NextflowPlatform`: The data passed to the input of a component and produced as output by the component are now validated against the arguments defined in the Viash config (PR #518).
 
-* `NextflowPlatform`: Use `stageAs` to allow duplicate filenames to be used automatigically (PR #xxx).
+* `NextflowPlatform`: Use `stageAs` to allow duplicate filenames to be used automatigically (PR #518).
+
+* `NextflowPlatform`: When wrapping Nextflow workflows, throw an error if the IDs of the output channel doesn't match the IDs of the input channel (PR #518).
+  If they don't, the workflow should store the original ID of the input tuple in the in the `_meta.join_id` field inside the state as follows:
+  Example input event: `["id", [input: file(...)]]`,
+  Example output event: `["newid", [output: file(...), _meta: [join_id: "id"]]]`
+
 
 ## MAJOR CHANGES
 
