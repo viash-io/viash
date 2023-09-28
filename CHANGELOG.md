@@ -60,6 +60,8 @@ TODO add summary
 
 * `NextflowPlatform`: Throw error when unexpected keys are passed to the `.run()` method (#512, PR #518).
 
+* `Testbenches`: Add testbenches for the new `dependencies` functionality and other small coverage improvements (PR #524).
+
 ## DOCUMENTATION
 
 * Minor fixes to VDSL3 reference documentation (PR #508).
