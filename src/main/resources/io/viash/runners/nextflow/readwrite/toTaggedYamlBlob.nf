@@ -1,6 +1,6 @@
 // Custom representer to modify how certain objects are represented in YAML
 class CustomRepresenter extends org.yaml.snakeyaml.representer.Representer {
-  class RepresentFile implements org.yaml.snakeyaml.representer.Represent {
+  class RepresentPath implements org.yaml.snakeyaml.representer.Represent {
     public org.yaml.snakeyaml.nodes.Node representData(Object data) {
       Path file = (Path) data;
       String value = file.getFileName();
@@ -10,7 +10,7 @@ class CustomRepresenter extends org.yaml.snakeyaml.representer.Representer {
   }
   CustomRepresenter(org.yaml.snakeyaml.DumperOptions options) {
     super(options)
-    this.representers.put(File, new RepresentFile())
+    this.representers.put(Path, new RepresentPath())
   }
 }
 

@@ -2,7 +2,7 @@
 class CustomConstructor extends org.yaml.snakeyaml.constructor.Constructor {
   Path root
 
-  class ConstructFile extends org.yaml.snakeyaml.constructor.AbstractConstruct {
+  class ConstructPath extends org.yaml.snakeyaml.constructor.AbstractConstruct {
     public Object construct(org.yaml.snakeyaml.nodes.Node node) {
       String filename = (String) constructScalar(node);
       if (root != null) {
@@ -16,7 +16,7 @@ class CustomConstructor extends org.yaml.snakeyaml.constructor.Constructor {
     super(options)
     this.root = root
     // Handling !file tag and parse it back to a File type
-    this.yamlConstructors.put(new org.yaml.snakeyaml.nodes.Tag("!file"), new ConstructFile())
+    this.yamlConstructors.put(new org.yaml.snakeyaml.nodes.Tag("!file"), new ConstructPath())
   }
 }
 
