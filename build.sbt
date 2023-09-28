@@ -71,6 +71,5 @@ generateWorkflowHelper := {
   streams.value.log.info(s"Generated WorkflowHelper.nf at ${wfHelper.toAbsolutePath}")
 }
 
-compile := ((compile in Compile) dependsOn generateWorkflowHelper).value
 assembly := ((assembly) dependsOn generateWorkflowHelper).value
-test := ((test in Test) dependsOn generateWorkflowHelper).value
+Test / testOptions += Tests.Setup(() => generateWorkflowHelper.value)
