@@ -1339,7 +1339,7 @@ def _findBuildYamlFile(path) {
 
 // get the root of the target folder
 def getRootDir() {
-  def dir = _findBuildYamlFile(projectDir.toAbsolutePath())
+  def dir = _findBuildYamlFile(moduleDir.normalize())
   assert dir != null: "Could not find .build.yaml in the folder structure"
   dir.getParent()
 }
