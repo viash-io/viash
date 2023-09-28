@@ -112,7 +112,7 @@ def typeCheck(String stage, Map par, Object value, String id, String key) {
       value = value.toLong()
     }
     expectedClass = value instanceof Long ? null : "Long"
-  } else if (par.type == "boolean") {
+  } else if (par.type == "boolean" | par.type == "boolean_true" | par.type == "boolean_false") {
     expectedClass = value instanceof Boolean ? null : "Boolean"
   } else if (par.type == "file") {
     if (stage == "output" || par.direction == "input") {
