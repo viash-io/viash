@@ -957,11 +957,12 @@ def safeJoin(targetChannel, sourceChannel, key) {
           "    If the IDs in the output channel differ from the input channel,\n" + 
           "    please set `tup[1]._meta.join_id to the original ID.\n" +
           "  Original IDs in input channel: ['${sourceIDs.getItems().join("', '")}'].\n" + 
-          "  Unexpected ID in the output channel: '${id}.\n" +
+          "  Unexpected ID in the output channel: '${id}'.\n" +
           "  Example input event: [\"id\", [input: file(...)]],\n" +
           "  Example output event: [\"newid\", [output: file(...), _meta: [join_id: \"id\"]]]"
         )
       }
+      // TODO: add link to our documentation on how to fix this
 
       tup
     }
