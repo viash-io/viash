@@ -4,6 +4,19 @@ TODO add summary
 
 ## BREAKING CHANGES
 
+* `NextflowPlatform`: Changed the default value of `auto.simplifyOutput` from `true` to `false` (#522, PR #518). With `simplifyOutput` set to `true`, the resulting Map could be simplified into a `File` or a `List[File]` depending on the number of outputs. To replicate the previous behaviour, add the following config mod to `_viash.yaml`:
+
+  ```yaml
+  config_mods: |
+    .platforms[.type == 'nextflow'].auto.simplifyOutput := true
+  ```
+
+* `VDSL3Helper.nf`: Removed from the Viash jar file (PR #518). Its functions have been moved to `WorkflowHelper.nf`.
+
+* `DataflowHelper.nf`: Added deprecation warning to functions from this file (PR #518).
+
+* `preprocessInputs()` in `WorkflowHelper.nf`: Added deprecation warning to `preprocessInputs()` because this function causes a synchronisation event (PR #518).
+
 * `runners` and `engines`: The usage of `platforms` is deprecated and instead these are split into `runners` and `engines` (PR #510). 
   The `platforms` field is still supported but will be removed in a future release.
   In brief, the `native platform` became a `native engine` and `docker platform` became a `docker engine`.
@@ -16,9 +29,46 @@ TODO add summary
   The new functionality allows specifying dependencies and where to retrieve (repositories) them in a component, and subsequentially allows advanced functionality to be offloaded and re-used in scripts and projects. This is alike e.g. `npm`, `pip` and many others. A big difference is that we aim to provide the needed boilerplate code to ease the usage of the dependencies in scripts, workflows and pipelines.
   Note that the dependency is required to be a built Viash component or project and not a random file or code project found externally. This is needed to provide the necessary background information to correctly link dependencies into a component.
 
+* `NextflowScript` & `NextflowPlatform`: Merged code for merging the `main.nf` files for VDSL3 components and wrapped Nextflow workflows (PR #518).
+  By aligning the codebase for these two, wrapped Nextflow workflows are more similar to VDSL3 components. For example, you can override the behaviour of a
+  wrapped Nextflow workflow using the `.run()` method. Status of a workflows `.run()` arguments:
+
+  - Works as intended: `auto.simplifyInput`, `auto.simplifyOutput`, `fromState`, `toState`, `map`, `mapData`, `mapPassthrough`, `filter`, `auto.publish = "state"`
+  - Does not work (yet): `auto.transcript`, `auto.publish = true`, `directives`, `debug`.
+
+  In a next PR, each of the dependencies will have their values overridden by the arguments of the `.run`.
+
+* `NextflowPlatform`: The data passed to the input of a component and produced as output by the component are now validated against the arguments defined in the Viash config (PR #518).
+
+* `NextflowPlatform`: Use `stageAs` to allow duplicate filenames to be used automatigically (PR #518).
+
+* `NextflowPlatform`: When wrapping Nextflow workflows, throw an error if the IDs of the output channel doesn't match the IDs of the input channel (PR #518).
+  If they don't, the workflow should store the original ID of the input tuple in the in the `_meta.join_id` field inside the state as follows:
+  Example input event: `["id", [input: file(...)]]`,
+  Example output event: `["newid", [output: file(...), _meta: [join_id: "id"]]]`
+
+
+## MAJOR CHANGES
+
+* `WorkflowHelper.nf`: The workflow helper was split into different helper files for each of the helper functions (PR #518).
+  For now, these helper files are pasted together to recreate the `WorkflowHelper.nf`.
+  In Viash development environments, don't forget to run `./configure` to start using the updated Makefile.
+
+* `NextflowPlatform`: Set default tag to `"$id"` (#521, PR #518).
+
+## MINOR CHANGES
+
+* `NextflowPlatform`: Throw error when unexpected keys are passed to the `.run()` method (#512, PR #518).
+
 ## DOCUMENTATION
 
 * Minor fixes to VDSL3 reference documentation (PR #508).
+
+## BUG FIXES
+
+* `WorkflowHelper.nf`: Only set default values of output files which are **not already set**, and if the output file argument is **not required** (PR #514).
+
+* `NextflowPlatform`: When using `fromState` and `toState`, do not throw an error when the state or output is missing an optional argument (PR #515).
 
 # Viash 0.7.5 (2023-08-11): Minor breaking changes and new features
 
