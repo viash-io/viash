@@ -1,9 +1,7 @@
 obj = bin/viash
 VERSION = $(shell awk -F'\"' '/version :=/ { print $$2 }' build.sbt)
-WF_HELPER_NF = src/main/resources/io/viash/platforms/nextflow/WorkflowHelper.nf
-NF_FILES := $(shell find src/main/resources/io/viash/platforms/nextflow/*/ -name "*.nf" | sort)
 
-$(obj): $(shell find src/ -name "*.scala") $(WF_HELPER_NF)
+$(obj): $(shell find src/ -name "*.scala")
 	sbt headerCreate \
 	  'set assembly / test := {}' \
 	  'set assembly / assemblyOutputPath := new File("target/viash.jar")' \
@@ -12,14 +10,6 @@ $(obj): $(shell find src/ -name "*.scala") $(WF_HELPER_NF)
 	cat src/stub.sh target/viash.jar > $(obj)
 	chmod +x $(obj)
 	@echo "==================================> $(obj)"
-
-$(WF_HELPER_NF): $(NF_FILES)
-	@echo -e "////////////////////////////\n// VDSL3 helper functions //\n////////////////////////////" > $@
-	@for f in $(NF_FILES); do \
-		echo -e "\n// helper file: '$$f'" >> $@; \
-		cat $$f >> $@; \
-	done
-	@echo "==================================> $@"
 	
 tools: $(obj) $(shell find src/viash)
 	bin/viash ns build -s src/viash -t bin --flatten -c ".functionality.version := '$(VERSION)'"
