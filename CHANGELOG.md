@@ -54,6 +54,8 @@ TODO add summary
 
 * `NextflowPlatform`: Throw error when unexpected keys are passed to the `.run()` method (#512, PR #518).
 
+* `NextflowPlatform`: Use `moduleDir` instead of `projectDir` to determine the resource directory.
+
 ## DOCUMENTATION
 
 * Minor fixes to VDSL3 reference documentation (PR #508).

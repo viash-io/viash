@@ -252,7 +252,7 @@ case class NextflowPlatform(
       |// START COMPONENT-SPECIFIC CODE
       |
       |// retrieve resourcesDir here to make sure the correct path is found
-      |resourcesDir = nextflow.script.ScriptMeta.current().getScriptPath().getParent()
+      |resourcesDir = moduleDir.normalize()
       |
       |// component metadata
       |thisConfig = ${NextflowHelper.generateConfigStr(config)}
