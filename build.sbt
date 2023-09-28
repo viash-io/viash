@@ -55,7 +55,7 @@ generateWorkflowHelper := {
   // skip files in the root directory
   val files = basePath.listFiles().filter(p => p.isDirectory()).map(f => recursiveListFiles(f)).flatten
   
-  Files.delete(wfHelper)
+  Files.deleteIfExists(wfHelper)
   Files.write(wfHelper, 
     """////////////////////////////
       |// VDSL3 helper functions //
