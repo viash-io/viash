@@ -2,7 +2,7 @@
 // VDSL3 helper functions //
 ////////////////////////////
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/arguments/_processArgumentGroup.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/arguments/_processArgumentGroup.nf'
 def _processArgumentGroup(argumentGroups, name, arguments) {
   def argNamesInGroups = argumentGroups.collectMany{it.arguments.findAll{it instanceof String}}.toSet()
 
@@ -29,7 +29,7 @@ def _processArgumentGroup(argumentGroups, name, arguments) {
   }
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/arguments/_processArgument.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/arguments/_processArgument.nf'
 def _processArgument(arg) {
   arg.multiple = arg.multiple != null ? arg.multiple : false
   arg.required = arg.required != null ? arg.required : false
@@ -81,7 +81,7 @@ def _processArgument(arg) {
   arg
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/arguments/processInputsOutputs.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/arguments/processInputsOutputs.nf'
 def typeCheck(String stage, Map par, Object value, String id, String key) {
   // expectedClass will only be != null if value is not of the expected type
   def expectedClass = null
@@ -180,7 +180,7 @@ Map processOutputs(Map outputs, Map config, String id, String key) {
   return outputs
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/applyConfig.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/channel/applyConfig.nf'
 
 /**
  * Apply the argument settings specified in a Viash config to a list of parameter sets.
@@ -207,7 +207,7 @@ List<Tuple> applyConfig(List<Tuple> parameterSets, Map config){
   return processedparameterSets
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/applyConfigToOneParameterSet.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/channel/applyConfigToOneParameterSet.nf'
 /**
  * Cast parameters to the correct type as defined in the Viash config
  *
@@ -294,7 +294,7 @@ Map<String, Object> applyConfigToOneParameterSet(Map<String, Object> paramValues
   return castParamValues
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/channelFromParams.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/channel/channelFromParams.nf'
 /**
  * Resolve the file paths in the parameters relative to given path
  *
@@ -493,7 +493,7 @@ def channelFromParams(Map params, Map config) {
   return Channel.fromList(processedParams)
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/_checkUniqueIds.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/channel/_checkUniqueIds.nf'
 
 /**
  * Check if the ids are unique across parameter sets
@@ -505,7 +505,7 @@ private void _checkUniqueIds(List<Tuple2<String, Map<String, Object>>> parameter
   assert ppIds.size() == ppIds.unique().size() : "All argument sets should have unique ids. Detected ids: $ppIds"
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/checkUniqueIds.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/channel/checkUniqueIds.nf'
 def checkUniqueIds(Map args) {
   def stopOnError = args.stopOnError == null ? args.stopOnError : true
 
@@ -523,7 +523,7 @@ def checkUniqueIds(Map args) {
     return true
   }
 }
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/_getChild.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/channel/_getChild.nf'
 
 // helper functions for reading params from file //
 def _getChild(parent, child) {
@@ -535,7 +535,7 @@ def _getChild(parent, child) {
   }
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/_guessParamListFormat.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/channel/_guessParamListFormat.nf'
 
 def _guessParamListFormat(params) {
   if (!params.containsKey("param_list") || params.param_list == null) {
@@ -557,7 +557,7 @@ def _guessParamListFormat(params) {
   }
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/IDChecker.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/channel/IDChecker.nf'
 class IDChecker {
   final def items = [] as Set
 
@@ -581,7 +581,7 @@ class IDChecker {
     return items.clone()
   }
 }
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/paramsToChannel.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/channel/paramsToChannel.nf'
 def paramsToChannel(params, config) {
   if (!viashChannelDeprecationWarningPrinted) {
     viashChannelDeprecationWarningPrinted = true
@@ -591,7 +591,7 @@ def paramsToChannel(params, config) {
   Channel.fromList(paramsToList(params, config))
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/paramsToList.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/channel/paramsToList.nf'
 viashChannelDeprecationWarningPrinted = false
 
 def paramsToList(params, config) {
@@ -724,7 +724,7 @@ def paramsToList(params, config) {
   processedParams
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/preprocessInputs.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/channel/preprocessInputs.nf'
 // This helper file will be deprecated soon
 preprocessInputsDeprecationWarningPrinted = false
 
@@ -827,7 +827,7 @@ def preprocessInputs(Map args) {
   return preprocessInputsInstance.cloneWithName(wfKey)
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/runComponents.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/channel/runComponents.nf'
 /**
  * Run a list of components on a stream of data.
  * 
@@ -936,7 +936,7 @@ def runComponents(Map args) {
   return runComponentsWf
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/safeJoin.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/channel/safeJoin.nf'
 def safeJoin(targetChannel, sourceChannel, key) {
   def sourceIDs = new IDChecker()
 
@@ -957,17 +957,18 @@ def safeJoin(targetChannel, sourceChannel, key) {
           "    If the IDs in the output channel differ from the input channel,\n" + 
           "    please set `tup[1]._meta.join_id to the original ID.\n" +
           "  Original IDs in input channel: ['${sourceIDs.getItems().join("', '")}'].\n" + 
-          "  Unexpected ID in the output channel: '${id}.\n" +
+          "  Unexpected ID in the output channel: '${id}'.\n" +
           "  Example input event: [\"id\", [input: file(...)]],\n" +
           "  Example output event: [\"newid\", [output: file(...), _meta: [join_id: \"id\"]]]"
         )
       }
+      // TODO: add link to our documentation on how to fix this
 
       tup
     }
   targetCheck.join(sourceCheck)
 }
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/_splitParams.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/channel/_splitParams.nf'
 /**
  * Split parameters for arguments that accept multiple values using their separator
  *
@@ -1011,7 +1012,7 @@ Map<String, Object> _splitParams(Map<String, Object> parValues, Map config){
   return parsedParamValues
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/channel/viashChannel.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/channel/viashChannel.nf'
 
 def viashChannel(params, config) {
   if (!viashChannelDeprecationWarningPrinted) {
@@ -1023,7 +1024,7 @@ def viashChannel(params, config) {
     | map{tup -> [tup.id, tup]}
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/config/addGlobalParams.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/config/addGlobalParams.nf'
 def addGlobalArguments(config) {
   def localConfig = [
     "functionality" : [
@@ -1078,7 +1079,7 @@ def _mergeMap(Map lhs, Map rhs) {
   }
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/config/generateHelp.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/config/generateHelp.nf'
 def _generateArgumentHelp(param) {
   // alternatives are not supported
   // def names = param.alternatives ::: List(param.name)
@@ -1215,7 +1216,7 @@ def helpMessage(config) {
   }
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/config/processConfig.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/config/processConfig.nf'
 def processConfig(config) {
   // TODO: assert .functionality etc.
   if (config.functionality.inputs) {
@@ -1273,14 +1274,14 @@ def processConfig(config) {
   config
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/config/readConfig.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/config/readConfig.nf'
 
 def readConfig(file) {
   def config = readYaml(file != null ? file : "$projectDir/config.vsh.yaml")
   processConfig(config)
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/functions/collectTraces.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/functions/collectTraces.nf'
 class CustomTraceObserver implements nextflow.trace.TraceObserver {
   List traces
 
@@ -1312,14 +1313,14 @@ def collectTraces() {
   traces
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/functions/getPublishDir.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/functions/getPublishDir.nf'
 def getPublishDir() {
   return params.containsKey("publish_dir") ? params.publish_dir : 
     params.containsKey("publishDir") ? params.publishDir : 
     null
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/functions/getRootDir.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/functions/getRootDir.nf'
 
 // Recurse upwards until we find a '.build.yaml' file
 def _findBuildYamlFile(path) {
@@ -1343,7 +1344,7 @@ def getRootDir() {
   dir.getParent()
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/functions/iterateMap.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/functions/iterateMap.nf'
 /**
   * Recursively apply a function over the leaves of an object.
   * @param obj The object to iterate over.
@@ -1364,7 +1365,7 @@ def iterateMap(obj, fun) {
   }
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/functions/niceView.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/functions/niceView.nf'
 /**
   * A view for printing the event of each channel as a YAML blob.
   * This is useful for debugging.
@@ -1380,7 +1381,7 @@ def niceView() {
   return niceViewWf
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readCsv.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/readwrite/readCsv.nf'
 
 def readCsv(file_path) {
   def output = []
@@ -1438,20 +1439,20 @@ def readCsv(file_path) {
   output
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readJsonBlob.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/readwrite/readJsonBlob.nf'
 def readJsonBlob(str) {
   def jsonSlurper = new groovy.json.JsonSlurper()
   jsonSlurper.parseText(str)
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readJson.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/readwrite/readJson.nf'
 def readJson(file_path) {
   def inputFile = file_path !instanceof Path ? file(file_path) : file_path
   def jsonSlurper = new groovy.json.JsonSlurper()
   jsonSlurper.parse(inputFile)
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readTaggedYaml.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/readwrite/readTaggedYaml.nf'
 // Custom constructor to modify how certain objects are parsed from YAML
 class CustomConstructor extends org.yaml.snakeyaml.constructor.Constructor {
   Path root
@@ -1481,38 +1482,51 @@ def readTaggedYaml(Path path) {
   return yaml.load(path.text)
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readYamlBlob.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/readwrite/readYamlBlob.nf'
 def readYamlBlob(str) {
   def yamlSlurper = new org.yaml.snakeyaml.Yaml()
   yamlSlurper.load(str)
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/readYaml.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/readwrite/readYaml.nf'
 def readYaml(file_path) {
   def inputFile = file_path !instanceof Path ? file(file_path) : file_path
   def yamlSlurper = new org.yaml.snakeyaml.Yaml()
   yamlSlurper.load(inputFile)
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/toJsonBlob.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/readwrite/toJsonBlob.nf'
 String toJsonBlob(Map data) {
   return groovy.json.JsonOutput.toJson(data)
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/toTaggedYamlBlob.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/readwrite/toTaggedYamlBlob.nf'
 // Custom representer to modify how certain objects are represented in YAML
 class CustomRepresenter extends org.yaml.snakeyaml.representer.Representer {
-  class RepresentFile implements org.yaml.snakeyaml.representer.Represent {
+  class RepresentPath implements org.yaml.snakeyaml.representer.Represent {
+    public String getFileName(Object obj) {
+      if (obj instanceof Path) {
+        def file = (Path) obj;
+        return file.getFileName();
+      } else if (obj instanceof File) {
+        def file = (File) obj;
+        return file.getName();
+      } else {
+        throw new IllegalArgumentException("Object: " + obj + " is not a Path or File");
+      }
+    }
+
     public org.yaml.snakeyaml.nodes.Node representData(Object data) {
-      Path file = (Path) data;
-      String value = file.getFileName();
+      String filename = getFileName(data);
       def tag = new org.yaml.snakeyaml.nodes.Tag("!file");
-      return representScalar(tag, value);
+      return representScalar(tag, filename);
     }
   }
   CustomRepresenter(org.yaml.snakeyaml.DumperOptions options) {
     super(options)
-    this.representers.put(File, new RepresentFile())
+    this.representers.put(sun.nio.fs.UnixPath, new RepresentPath())
+    this.representers.put(Path, new RepresentPath())
+    this.representers.put(File, new RepresentPath())
   }
 }
 
@@ -1524,7 +1538,7 @@ String toTaggedYamlBlob(Map data) {
   return yaml.dump(data)
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/toYamlBlob.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/readwrite/toYamlBlob.nf'
 String toYamlBlob(Map data) {
   def options = new org.yaml.snakeyaml.DumperOptions()
   options.setDefaultFlowStyle(org.yaml.snakeyaml.DumperOptions.FlowStyle.BLOCK)
@@ -1534,21 +1548,21 @@ String toYamlBlob(Map data) {
   return yaml.dump(data)
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/writeJson.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/readwrite/writeJson.nf'
 void writeJson(data, file) {
   assert data: "writeJson: data should not be null"
   assert file: "writeJson: file should not be null"
   file.write(toJsonBlob(data))
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/readwrite/writeYaml.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/readwrite/writeYaml.nf'
 void writeYaml(data, file) {
   assert data: "writeYaml: data should not be null"
   assert file: "writeYaml: file should not be null"
   file.write(toYamlBlob(data))
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/states/findStates.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/states/findStates.nf'
 def findStates(Map params, Map config) {
   // TODO: do a deep clone of config
   def auto_config = config.clone()
@@ -1654,7 +1668,7 @@ def findStates(Map params, Map config) {
   return findStatesWf
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/states/publishStates.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/states/publishStates.nf'
 def collectFiles(obj) {
   if (obj instanceof java.io.File || obj instanceof Path)  {
     return [obj]
@@ -1854,7 +1868,7 @@ def publishStatesByConfig(Map args) {
   }
   return publishStatesSimpleWf
 }
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/states/setState.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/states/setState.nf'
 def setState(fun) {
   assert fun instanceof Closure || fun instanceof Map || fun instanceof List :
     "Error in setState: Expected process argument to be a Closure, a Map, or a List. Found: class ${fun.getClass()}"
@@ -1894,7 +1908,7 @@ def setState(fun) {
   }
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/processAuto.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/workflowFactory/processAuto.nf'
 // TODO: unit test processAuto
 def processAuto(Map auto) {
   // remove null values
@@ -1920,7 +1934,7 @@ def processAuto(Map auto) {
   return auto.subMap(expectedKeys)
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/processDirectives.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/workflowFactory/processDirectives.nf'
 def assertMapKeys(map, expectedKeys, requiredKeys, mapName) {
   assert map instanceof Map : "Expected argument '$mapName' to be a Map. Found: class ${map.getClass()}"
   map.forEach { key, val -> 
@@ -2319,7 +2333,7 @@ def processDirectives(Map drctv) {
   return drctv
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/processWorkflowArgs.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/workflowFactory/processWorkflowArgs.nf'
 // depends on: thisConfig, thisDefaultWorkflowArgs
 def processWorkflowArgs(Map args) {
   // override defaults with args
@@ -2508,7 +2522,7 @@ def _processToState(toState, key_, config_) {
   return toState
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/vdsl3ProcessFactory.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/workflowFactory/vdsl3ProcessFactory.nf'
 // depends on: thisConfig, thisScript, session?
 def vdsl3ProcessFactory(Map workflowArgs) {
   // autodetect process key
@@ -2721,7 +2735,7 @@ def vdsl3ProcessFactory(Map workflowArgs) {
   return meta.getProcess(procKey)
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/vdsl3WorkflowFactory.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/workflowFactory/vdsl3WorkflowFactory.nf'
 // depends on: thisConfig, resourcesDir
 def vdsl3WorkflowFactory(Map args) {
   def key = args["key"]
@@ -2826,7 +2840,7 @@ def vdsl3WorkflowFactory(Map args) {
   return processWf
 }
 
-// helper file: 'src/main/resources/io/viash/platforms/nextflow/workflowFactory/workflowFactory.nf'
+// helper file: 'src/main/resources/io/viash/runners/nextflow/workflowFactory/workflowFactory.nf'
 def _debug(workflowArgs, debugKey) {
   if (workflowArgs.debug) {
     view { "process '${workflowArgs.key}' $debugKey tuple: $it"  }
