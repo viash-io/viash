@@ -32,10 +32,10 @@ case class NextflowAuto(
   @description(
     """If `true`, an output tuple containing a map with a File (e.g. `["foo", [ output: file("out.h5ad") ] ]`) is automatically transformed to a map (i.e. `["foo", file("out.h5ad")]`).
       |
-      |Default: `true`.
+      |Default: `false`.
       |""".stripMargin)
-  @default("True")
-  simplifyOutput: Boolean = true,
+  @default("False")
+  simplifyOutput: Boolean = false,
 
   @description(
     """If `true`, the module's transcripts from `work/` are automatically published to `params.transcriptDir`.
@@ -49,10 +49,18 @@ case class NextflowAuto(
 
   @description(
     """If `true`, the module's outputs are automatically published to `params.publishDir`.
+      |If equal to `"state"`, also a `.state.yaml` file will be published in the publish dir.
       |Will throw an error if `params.publishDir` is not defined.
       |
       |Default: `false`.
       |""".stripMargin)
   @default("False")
-  publish: Boolean = false,
-)
+  publish: Either[Boolean, String] = Left(false)
+) {
+  // if publish is a string, it must be "state"
+  val checkPublish = publish match {
+    case Left(value) => true
+    case Right(value) => value == "state"
+  }
+  assert(checkPublish, message = "publish must be either a boolean or equal to \"state\"")
+}
