@@ -34,6 +34,7 @@ import io.viash.config.Config._
 import io.viash.ViashNamespace
 import io.viash.functionality.dependencies.Dependency
 import io.viash.functionality.resources.NextflowScript
+import io.viash.exceptions.MissingDependencyException
 
 object DependencyResolver {
 
@@ -99,6 +100,12 @@ object DependencyResolver {
         )
       }
       )(config3)
+
+    // Check if all dependencies were found
+    val missingDependencies = composedDependenciesLens.get(config4).filter(d => d.foundConfigPath.isEmpty || d.configInfo.isEmpty)
+    if (missingDependencies.nonEmpty) {
+      throw new MissingDependencyException(missingDependencies)
+    }
 
     config4
   }
