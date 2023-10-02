@@ -239,11 +239,11 @@ case class NextflowPlatform(
           |// inner workflow hook
           |def innerWorkflowFactory(args) {
           |  return vdsl3WorkflowFactory(args)
-          |}""".stripMargin
+          |}
+          |
+          |""".stripMargin + 
+          NextflowHelper.vdsl3Helper
     }
-
-    // TODO: resourceDir likely doesn't work when using Nextflow Fusion
-    // TODO: rootDir likely doesn't work when using Nextflow Fusion
 
     s"""${NextflowHelper.generateHeader(config)}
       |
@@ -257,11 +257,14 @@ case class NextflowPlatform(
       |// component metadata
       |thisConfig = ${NextflowHelper.generateConfigStr(config)}
       |
+      |// inner workflow
       |${innerWorkflowFactory.split("\n").mkString("\n|")}
       |
       |// component settings
       |thisDefaultWorkflowArgs = ${NextflowHelper.generateDefaultWorkflowArgs(config, directivesToJson, auto, debug)}
+      |
       |${NextflowHelper.renderDependencies(config).split("\n").mkString("\n|")}
+      |
       |// initialise default workflow
       |myWfInstance = workflowFactory([:])
       |
