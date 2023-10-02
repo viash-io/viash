@@ -26,39 +26,25 @@ sealed trait Status {
   val isError: Boolean
   val color: String
 }
-case object ParseError extends Status {
+sealed trait ErrorStatus extends Status {
   val isError = true
   val color = Console.RED
 }
-case object Disabled extends Status {
+sealed trait WarningStatus extends Status {
   val isError = false
   val color = Console.YELLOW
 }
-case object DependencyError extends Status {
-  val isError = true
-  val color = Console.RED
-}
-case object BuildError extends Status {
-  val isError = true
-  val color = Console.RED
-}
-case object SetupError extends Status {
-  val isError = true
-  val color = Console.RED
-}
-case object PushError extends Status {
-  val isError = true
-  val color = Console.RED
-}
-case object TestError extends Status {
-  val isError = true
-  val color = Console.RED
-}
-case object TestMissing extends Status {
-  val isError = false
-  val color = Console.YELLOW
-}
-case object Success extends Status {
+sealed trait SuccessStatus extends Status {
   val isError = false
   val color = Console.GREEN
 }
+
+case object ParseError extends ErrorStatus
+case object Disabled extends WarningStatus
+case object DependencyError extends ErrorStatus
+case object BuildError extends ErrorStatus
+case object SetupError extends ErrorStatus
+case object PushError extends ErrorStatus
+case object TestError extends ErrorStatus
+case object TestMissing extends WarningStatus
+case object Success extends SuccessStatus

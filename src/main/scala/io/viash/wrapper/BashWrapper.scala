@@ -236,10 +236,7 @@ object BashWrapper {
       s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR/$relativePath\""
     }
     val remoteDependenciesStrings = remoteDependencies.map{ d =>
-      if (d.foundConfigPath.isDefined)
-        s"${d.VIASH_DEP}=\"$$VIASH_TARGET_DIR/dependencies/${d.subOutputPath.get}/${Paths.get(d.configInfo.getOrElse("executable", "not_found")).getFileName()}\""
-      else
-        s"# ${d.VIASH_DEP} not found!"
+      s"${d.VIASH_DEP}=\"$$VIASH_TARGET_DIR/dependencies/${d.subOutputPath.get}/${Paths.get(d.configInfo.getOrElse("executable", "not_found")).getFileName()}\""
     }
     val dependenciesStr = (localDependenciesStrings ++ remoteDependenciesStrings).mkString("\n")
 
