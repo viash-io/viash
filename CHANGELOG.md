@@ -4,6 +4,19 @@ TODO add summary
 
 ## BREAKING CHANGES
 
+* `runners` and `engines`: The usage of `platforms` is deprecated and instead these are split into `runners` and `engines` (PR #510). 
+  The `platforms` field is still supported but will be removed in a future release.
+  In brief, the `native platform` became a `native engine` and `docker platform` became a `docker engine`.
+  Additionally, the `native platform` and `docker platform` became a `executable runner`, `nextflow platform` became a `nextflow runner`.
+  The fields of `docker platform` is split between `docker engine` and `docker runner`: `port`, `workdir`, `setup_strategy`, and `run_args` are captured by the `runner` as they define how the component is run. The other fields are captured by the `engine` as they define the environment in which the component is run. One exception is `chown` which is rarely set to false and is now always enabled.
+
+# Viash 0.8.0-RC1 (2023-10-02): Nextflow workflows and dependencies
+
+Nextflow workflows definitions are picked up by Viash and assembled into a functional Nextflow workflow, reducing the amount of boilerplate code needed to be written by the user.
+We added new 'dependencies' functionality to allow for more advanced functionality to be offloaded and re-used in components and workflows.
+
+## BREAKING CHANGES
+
 * `NextflowPlatform`: Changed the default value of `auto.simplifyOutput` from `true` to `false` (#522, PR #518). With `simplifyOutput` set to `true`, the resulting Map could be simplified into a `File` or a `List[File]` depending on the number of outputs. To replicate the previous behaviour, add the following config mod to `_viash.yaml`:
 
   ```yaml
@@ -17,11 +30,7 @@ TODO add summary
 
 * `preprocessInputs()` in `WorkflowHelper.nf`: Added deprecation warning to `preprocessInputs()` because this function causes a synchronisation event (PR #518).
 
-* `runners` and `engines`: The usage of `platforms` is deprecated and instead these are split into `runners` and `engines` (PR #510). 
-  The `platforms` field is still supported but will be removed in a future release.
-  In brief, the `native platform` became a `native engine` and `docker platform` became a `docker engine`.
-  Additionally, the `native platform` and `docker platform` became a `executable runner`, `nextflow platform` became a `nextflow runner`.
-  The fields of `docker platform` is split between `docker engine` and `docker runner`: `port`, `workdir`, `setup_strategy`, and `run_args` are captured by the `runner` as they define how the component is run. The other fields are captured by the `engine` as they define the environment in which the component is run. One exception is `chown` which is rarely set to false and is now always enabled.
+* `author.props`: Removed deprecated `props` field (PR #536). Deprecated since 0.7.4.
 
 ## NEW FUNCTIONALITY
 
@@ -61,6 +70,8 @@ TODO add summary
 * `NextflowPlatform`: Throw error when unexpected keys are passed to the `.run()` method (#512, PR #518).
 
 * `Testbenches`: Add testbenches for the new `dependencies` functionality and other small coverage improvements (PR #524).
+
+* `NextflowPlatform`: Use `moduleDir` instead of `projectDir` to determine the resource directory.
 
 ## DOCUMENTATION
 

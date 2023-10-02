@@ -35,5 +35,5 @@ work
 # MacOS
 .DS_Store
 
-# Composed file from multiple nextflow helper files, created by the build process
+# ignore automatically generated WorkflowHelper.nf
 src/main/resources/io/viash/runners/nextflow/WorkflowHelper.nf
