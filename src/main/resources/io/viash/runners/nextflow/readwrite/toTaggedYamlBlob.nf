@@ -4,7 +4,7 @@ class CustomRepresenter extends org.yaml.snakeyaml.representer.Representer {
     public String getFileName(Object obj) {
       if (obj instanceof Path) {
         def file = (Path) obj;
-        return file.getFileName();
+        return file.getFileName().toString();
       } else if (obj instanceof File) {
         def file = (File) obj;
         return file.getName();

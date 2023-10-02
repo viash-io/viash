@@ -532,7 +532,7 @@ object Main extends Logging {
         }.fold(
           e => e match {
             case de: AbstractDependencyException =>
-              info(e.getMessage)
+              error(s"Config \"${appliedConfig.config.functionality.name}\": ${e.getMessage}")
               appliedConfig.setStatus(DependencyError)
             case _ => throw e
           },
@@ -547,7 +547,7 @@ object Main extends Logging {
     val dependencyRunnerId = DependencyResolver.getDependencyRunnerId(config.config, config.runner.map(_.id))
     val config1 = DependencyResolver.modifyConfig(config.config, dependencyRunnerId, rootDir, namespaceConfigs)
     val config2 = if (output.isDefined) {
-      DependencyResolver.copyDependencies(config1, output.get, dependencyRunnerId.getOrElse("executable"), namespaceConfigs.nonEmpty)
+      DependencyResolver.copyDependencies(config1, output.get, dependencyRunnerId.getOrElse("executable"))
     } else {
       config1
     }

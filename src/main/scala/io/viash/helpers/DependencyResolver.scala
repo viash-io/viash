@@ -34,6 +34,7 @@ import io.viash.config.Config._
 import io.viash.ViashNamespace
 import io.viash.functionality.dependencies.Dependency
 import io.viash.functionality.resources.NextflowScript
+import io.viash.exceptions.MissingDependencyException
 
 object DependencyResolver {
 
@@ -108,18 +109,24 @@ object DependencyResolver {
       }
       )(config3)
 
+    // Check if all dependencies were found
+    val missingDependencies = composedDependenciesLens.get(config4).filter(d => d.foundConfigPath.isEmpty || d.configInfo.isEmpty)
+    if (missingDependencies.nonEmpty) {
+      throw new MissingDependencyException(missingDependencies)
+    }
+
     config4
   }
 
-  def copyDependencies(config: Config, output: String, runnerId: String, buildingNamespace: Boolean = false): Config = {
+  def copyDependencies(config: Config, output: String, runnerId: String): Config = {
     composedDependenciesLens.modify(_.map(dep => {
 
-      if (dep.isLocalDependency && buildingNamespace) {
+      if (dep.isLocalDependency) {
         // Dependency solving will be done by building the component and dependencies of that component will be handled there.
         // However, we have to fill in writtenPath. This will be needed when this built component is used as a dependency and we have to resolve dependencies of dependencies.
         val writtenPath = ViashNamespace.targetOutputPath(output, runnerId, None, dep.name)
         dep.copy(writtenPath = Some(writtenPath))
-      } else if (dep.foundConfigPath.isDefined) {
+      } else {
         // copy the dependency to the output folder
         val dependencyOutputPath = Paths.get(output, "dependencies", dep.subOutputPath.get)
         if (dependencyOutputPath.toFile().exists())
@@ -134,9 +141,6 @@ object DependencyResolver {
         recurseBuiltDependencies(Paths.get(output), Paths.get(dep.workRepository.get.localPath), dependencyOutputPath.toString(), dep)
         // Store location of the copied files
         dep.copy(writtenPath = Some(dependencyOutputPath.toString()))
-      } else {
-        Console.err.println(s"${Console.RED}Could not find dependency artifacts for ${dep.name}. Skipping copying dependency artifacts.${Console.RESET}")
-        dep
       }
 
     }))(config)

@@ -34,3 +34,6 @@ work
 
 # MacOS
 .DS_Store
+
+# ignore automatically generated WorkflowHelper.nf
+src/main/resources/io/viash/runners/nextflow/WorkflowHelper.nf

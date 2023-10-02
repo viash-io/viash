@@ -197,7 +197,7 @@ object NextflowHelper {
         // can we use suboutputpath here?
         //val dependencyPath = Paths.get(dependency.subOutputPath.get)
         val relativePath = parentPath.relativize(dependencyPath)
-        s"\"$$projectDir/$relativePath\""
+        s"\"$$resourcesDir/$relativePath\""
       } else {
         s"\"$$rootDir/dependencies/${dependency.subOutputPath.get}/main.nf\""
       }
