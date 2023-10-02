@@ -24,7 +24,6 @@ import sys.process.{Process, ProcessLogger}
 
 import config.Config
 import helpers.{IO, Exec, SysEnv, DependencyResolver, Logger, Logging}
-import helpers.Scala._
 import helpers.status._
 import project.ViashProject
 import cli.{CLIConf, ViashCommand, DocumentedSubcommand, ViashNs, ViashNsBuild, ViashLogger}

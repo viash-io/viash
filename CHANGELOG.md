@@ -69,6 +69,8 @@ We added new 'dependencies' functionality to allow for more advanced functionali
 
 * `NextflowPlatform`: Throw error when unexpected keys are passed to the `.run()` method (#512, PR #518).
 
+* `Testbenches`: Add testbenches for the new `dependencies` functionality and other small coverage improvements (PR #524).
+
 * `NextflowPlatform`: Use `moduleDir` instead of `projectDir` to determine the resource directory.
 
 ## DOCUMENTATION

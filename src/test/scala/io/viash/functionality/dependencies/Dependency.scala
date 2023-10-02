@@ -3,51 +3,164 @@ package io.viash.functionality.dependencies
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
-import io.viash.config.Config
-import io.viash.helpers.{IO, Exec}
+import io.viash.config.{Config, ConfigMeta}
+import io.viash.functionality.Functionality
+import io.viash.functionality.resources.BashScript
+import io.viash.helpers.{IO, Exec, Logger}
+import io.viash.helpers.circe._
 
-import java.nio.file.{Files, Paths}
-import io.viash.{ConfigDeriver, TestHelper}
+import java.nio.file.{Files, Path, Paths}
+import io.viash.TestHelper
 
 class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
-
-  private val configFile = getClass.getResource("/testbash/config.vsh.yaml").getPath
-
+  Logger.UseColorOverride.value = Some(false)
+  
   private val temporaryFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
-  private val temporaryConfigFolder = IO.makeTemp(s"viash_${this.getClass.getName}_configs_")
-  private val tempFolStr = temporaryFolder.toString
-  private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
 
-  test("Add a local dependency") {
-    val dependencyConfig = configDeriver.derive(List(
-      """.functionality.name := "someDependency"""",
-      """.functionality.namespace := "dependencyTest""""),
-      "dependencyTest")
-    val newConfigFilePath = configDeriver.derive(List(
-      """.functionality.namespace := "dependencyTest"""",
-      """.functionality.dependencies := [{ "name": "dependencyTest/someDependency" }]"""),
-      "confWithDep")
+  // Create a subfolder and place a _viash.yaml file in it
+  def createViashSubFolder(path: Path, name: String): Path = {
+    val subFolder = path.resolve(name)
+    subFolder.toFile().mkdir()
+    Files.write(subFolder.resolve("_viash.yaml"), Array.empty[Byte])
+    subFolder
+  }
 
-    val out = TestHelper.testMainWithStdErr(
-      "ns", "build",
-      "-n", "dependencyTest",
-      "--engine", "native",
-      "--runner", "native",
-      "--src", temporaryConfigFolder.toString(),
-      "--target", temporaryFolder.resolve("target").toString()
+  // Write functionality as a config file
+  def writeTestConfig(path: Path, fun: Functionality): Unit = {
+    val config = Config(functionality = fun)
+    val json = ConfigMeta.configToCleanJson(config)
+    val yaml = json.toFormattedString("yaml")
+    path.getParent().toFile().mkdirs()
+    Files.write(path, yaml.getBytes())
+  }
+
+  // Short wrapper for creating a bash script containing some text and using it as a single resource
+  def textBashScript(text: String): List[BashScript] = 
+    List(BashScript(text = Some(text), dest = Some("./script.sh")))
+
+  test("Use a local dependency") {
+    val testFolder = createViashSubFolder(temporaryFolder, "local_test")
+    
+    // write test files
+    val fun1 = Functionality(
+      name = "dep1",
+      resources = textBashScript("echo Hello from dep1"),
+    )
+    val fun2 = Functionality(
+      name = "dep2",
+      resources = textBashScript("$dep_dep1\necho Hello from dep2"),
+      dependencies = List(Dependency("dep1"))
     )
 
-    val cleanOut = TestHelper.cleanConsoleControls(out._2)
-    // Output is supposed to be have control characters removed but somehow matching for `(?s)\\s*2/\\d+` or `(?s)\\D*2/\\d+` still doesn't work
-    assert(cleanOut.matches("(?s).*2/\\d+ configs built successfully.*"), "check build was successful")
+    writeTestConfig(testFolder.resolve("src/dep1/config.vsh.yaml"), fun1)
+    writeTestConfig(testFolder.resolve("src/dep2/config.vsh.yaml"), fun2)
 
-    val outputPath = temporaryFolder.resolve("target/native/dependencyTest/testbash/testbash")
+    // build
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+        "ns", "build",
+        "-s", testFolder.resolve("src").toString(),
+        "-t", testFolder.resolve("target").toString()
+      )
+
+    assert(stderr.strip == "All 2 configs built successfully", "check build was successful")
+
+    // check file & file content
+    val outputPath = testFolder.resolve("target/executable/dep2/dep2")
+    val executable = outputPath.toFile
+    assert(executable.exists)
+    assert(executable.canExecute)
+
     val outputText = IO.read(outputPath.toUri())
-    assert(outputText.contains("VIASH_DEP_DEPENDENCYTEST_SOMEDEPENDENCY="), "check the dependency is set in the output script")
+    assert(outputText.contains("VIASH_DEP_DEP1="), "check the dependency is set in the output script")
+
+    // check output when running
+    val out = Exec.runCatch(
+      Seq(executable.toString)
+    )
+
+    assert(out.output == "Hello from dep1\nHello from dep2\n")
+    assert(out.exitValue == 0)
+  }
+
+  test("Use a remote dependency") {
+    val testFolder = createViashSubFolder(temporaryFolder, "remote_test")
+    
+    // write test files
+    val fun = Functionality(
+      name = "dep3",
+      resources = textBashScript("$dep_viash_hub_dep\necho \"Hello from dep3\""),
+      dependencies = List(Dependency("viash_hub/dep", repository = Left("vsh://hendrik/dependency_test@main_build")))
+    )
+
+    writeTestConfig(testFolder.resolve("src/dep3/config.vsh.yaml"), fun)
+
+    // build
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+        "ns", "build",
+        "-s", testFolder.resolve("src").toString(),
+        "-t", testFolder.resolve("target").toString()
+      )
+
+    assert(stderr.strip.contains("All 1 configs built successfully"), "check build was successful")
+
+    // check file & file content
+    val outputPath = testFolder.resolve("target/executable/dep3/dep3")
+    val executable = outputPath.toFile
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    val outputText = IO.read(outputPath.toUri())
+    assert(outputText.contains("VIASH_DEP_VIASH_HUB_DEP="), "check the dependency is set in the output script")
+
+    // check output when running
+    val out = Exec.runCatch(
+      Seq(executable.toString)
+    )
+
+    assert(out.output == "This is a component in the viash_hub repository.\nHello from dep3\n")
+    assert(out.exitValue == 0)
+  }
+
+  test("Use a remote dependency with nested dependencies") {
+    val testFolder = createViashSubFolder(temporaryFolder, "nested_remote_test")
+    
+    // write test files
+    val fun = Functionality(
+      name = "dep4",
+      resources = textBashScript("$dep_viash_hub_test_tree\necho \"Hello from dep4\""),
+      dependencies = List(Dependency("viash_hub_test/tree", repository = Left("vsh://hendrik/dependency_test2@main_build")))
+    )
+
+    writeTestConfig(testFolder.resolve("src/dep4/config.vsh.yaml"), fun)
+
+    // build
+    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+        "ns", "build",
+        "-s", testFolder.resolve("src").toString(),
+        "-t", testFolder.resolve("target").toString()
+      )
+
+    assert(stderr.strip.contains("All 1 configs built successfully"), "check build was successful")
+
+    // check file & file content
+    val outputPath = testFolder.resolve("target/executable/dep4/dep4")
+    val executable = outputPath.toFile
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    val outputText = IO.read(outputPath.toUri())
+    assert(outputText.contains("VIASH_DEP_VIASH_HUB_TEST_TREE="), "check the dependency is set in the output script")
+
+    // check output when running
+    val out = Exec.runCatch(
+      Seq(executable.toString)
+    )
+
+    assert(out.output == "This is tree.\nThis is bar 1.\nHello from dep4\n")
+    assert(out.exitValue == 0)
   }
 
   override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
-    IO.deleteRecursively(temporaryConfigFolder)
   }
 }

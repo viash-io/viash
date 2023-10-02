@@ -27,7 +27,7 @@ import io.viash.functionality.dependencies.GithubRepository
 import java.nio.file.Files
 import java.io.IOException
 import java.io.UncheckedIOException
-import io.viash.helpers.IO
+import io.viash.helpers.{IO, Logging}
 import io.circe.yaml.parser
 import io.circe.Json
 import io.viash.config.Config._
@@ -36,7 +36,7 @@ import io.viash.functionality.dependencies.Dependency
 import io.viash.functionality.resources.NextflowScript
 import io.viash.exceptions.MissingDependencyException
 
-object DependencyResolver {
+object DependencyResolver extends Logging {
 
   /**
     * Modify the config so all of the dependencies are available locally 
