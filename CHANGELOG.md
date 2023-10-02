@@ -18,6 +18,8 @@ We added new 'dependencies' functionality to allow for more advanced functionali
 
 * `preprocessInputs()` in `WorkflowHelper.nf`: Added deprecation warning to `preprocessInputs()` because this function causes a synchronisation event (PR #518).
 
+* `author.props`: Removed deprecated `props` field (PR #536). Deprecated since 0.7.4.
+
 ## NEW FUNCTIONALITY
 
 * `dependencies`: Add `dependencies` and `repositories` to `functionality` (PR #509). 
