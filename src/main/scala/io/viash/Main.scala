@@ -73,7 +73,7 @@ object Main extends Logging {
         info(s"viash: ${e.getMessage()}")
         System.exit(1)
       case e: AbstractDependencyException =>
-        Console.err.println(s"viash: ${e.getMessage()}")
+        error(s"viash: ${e.getMessage()}")
         System.exit(1)
       case ee: ExitException =>
         System.exit(ee.code)
@@ -513,7 +513,7 @@ object Main extends Logging {
         }.fold(
           e => e match {
             case de: AbstractDependencyException =>
-              Console.err.println(e.getMessage)
+              error(s"Config \"${config.functionality.name}\": ${e.getMessage}")
               Right(DependencyError)
             case _ => throw e
           },
