@@ -134,7 +134,7 @@ object JsonSchema {
     val thisParameter = getThisParameter(info)
     val description = removeMarkup(thisParameter.description.get)
     val subclass = thisParameter.subclass.map(l => l.head)
-    val properties = info.filter(p => !p.name.startsWith("__")).filter(p => !p.removed.isDefined)
+    val properties = info.filter(p => !p.name.startsWith("__")).filter(p => !p.removed.isDefined && (!config.strict || !p.deprecated.isDefined))
     val propertiesJson = properties.map(p => {
       val pDescription = p.description.map(s => removeMarkup(s))
       val trimmedType = p.`type` match {
@@ -249,7 +249,8 @@ object JsonSchema {
 
   def createSchemas(data: List[List[ParameterSchema]])(implicit config: SchemaConfig) : Seq[(String, Json)] = {
     data.flatMap{
-      case v if getThisParameter(v).removed.isDefined => None
+      case v if getThisParameter(v).`type` == "EnvironmentVariables" => None
+      case v if getThisParameter(v).removed.isDefined || (getThisParameter(v).deprecated.isDefined && config.strict) => None
       case v if getThisParameter(v).subclass.map(_.length).getOrElse(0) > 1 => Some(createSuperClassSchema(v))
       case v => Some(createSchema(v))
     }
