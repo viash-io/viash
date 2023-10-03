@@ -273,16 +273,28 @@ object JsonSchema {
 
   def getJsonSchema(strict: Boolean, minimal: Boolean): Json = {
     implicit val ConfigSchema = SchemaConfig(strict, minimal)
-    val definitions =
-      createSchemas(data) ++
+    
+    val enumDefinitions = if (strict) {
+      Seq(
+        "DockerSetupStrategy" -> createEnum(DockerSetupStrategy.objs.map(obj => obj.id).toSeq, Some("The Docker setup strategy to use when building a container."), Some("TODO add descriptions to different strategies")),
+        "Direction" -> createEnum(Seq("input", "output"), Some("Makes this argument an `input` or an `output`, as in does the file/folder needs to be read or written. `input` by default."), None),
+        "Status" -> createEnum(Seq("enabled", "disabled", "deprecated"), Some("Allows setting a component to active, deprecated or disabled."), None),
+        "DoubleStrings" -> createEnum(Seq("+infinity", "-infinity", "nan"), None, None)
+      )
+    } else {
       Seq(
         "DockerSetupStrategy" -> createEnum(DockerSetupStrategy.map.keys.toSeq, Some("The Docker setup strategy to use when building a container."), Some("TODO add descriptions to different strategies")),
         "Direction" -> createEnum(Seq("input", "output"), Some("Makes this argument an `input` or an `output`, as in does the file/folder needs to be read or written. `input` by default."), None),
         "Status" -> createEnum(Seq("enabled", "disabled", "deprecated"), Some("Allows setting a component to active, deprecated or disabled."), None),
         "DockerResolveVolume" -> createEnum(Seq("manual", "automatic", "auto", "Manual", "Automatic", "Auto"), Some("Enables or disables automatic volume mapping. Enabled when set to `Automatic` or disabled when set to `Manual`. Default: `Automatic`"), Some("TODO make fully case insensitive")),
         "DoubleStrings" -> createEnum(Seq("+.inf", "+inf", "+infinity", "positiveinfinity", "positiveinf", "-.inf", "-inf", "-infinity", "negativeinfinity", "negativeinf", ".nan", "nan"), None, None)
-      ) ++
-      Seq("DoubleWithInf" -> eitherJson(valueType("Double_"), valueType("DoubleStrings")))
+      )
+    }
+
+    val definitions =
+      createSchemas(data) ++
+      enumDefinitions ++
+      Seq("DoubleWithInf" -> eitherJsonMustIncludeAll(valueType("Double_"), valueType("DoubleStrings")))
 
     Json.obj(
       "$schema" -> Json.fromString("https://json-schema.org/draft-07/schema#"),
