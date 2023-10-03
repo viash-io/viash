@@ -180,15 +180,15 @@ object JsonSchema {
           ))
 
         case s"OneOrMore[$s]" =>
-          if (s == "String" && p.name == "port" && subclass == Some("docker")) {
+          if (s == "String" && p.name == "port" && subclass == Some("executable")) {
             // Custom exception
             // This is the port field for a excutable runner.
             // We want to allow a Strings or Ints.
             (p.name, eitherJson(
-              valueType("String", pDescription),
               valueType("Int", pDescription),
-              arrayType("String", pDescription),
-              arrayType("Int", pDescription)
+              valueType("String", pDescription),
+              arrayType("Int", pDescription),
+              arrayType("String", pDescription)
             ))
           } else {
             (p.name, oneOrMoreType(s, pDescription))
