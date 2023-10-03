@@ -72,4 +72,4 @@ generateWorkflowHelper := {
 }
 
 assembly := ((assembly) dependsOn generateWorkflowHelper).value
-Test / testOptions += Tests.Setup(() => generateWorkflowHelper.value)
+Test / testOptions := ((Test / testOptions) dependsOn generateWorkflowHelper).value
