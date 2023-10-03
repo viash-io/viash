@@ -22,6 +22,11 @@ import io.viash.runners.executable.DockerSetupStrategy
 
 object JsonSchema {
 
+  case class SchemaConfig(
+    strict: Boolean = false,
+    minimal: Boolean = false
+  )
+
   lazy val data = CollectedSchemas.data
 
   def typeOrRefJson(`type`: String): (String, Json) = {
@@ -45,28 +50,36 @@ object JsonSchema {
     }
   }
 
-  def valueType(`type`: String, description: Option[String] = None): Json = {
+  def valueType(`type`: String, description: Option[String] = None)(implicit config: SchemaConfig): Json = {
+    val descr = config.minimal match {
+      case true => None
+      case false => description
+    }
     Json.obj(
-      description.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
+      descr.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
       Seq(typeOrRefJson(`type`)): _*
     )
   }
 
-  def arrayType(`type`: String, description: Option[String] = None): Json = {
+  def arrayType(`type`: String, description: Option[String] = None)(implicit config: SchemaConfig): Json = {
     arrayJson(valueType(`type`), description)
   }
 
-  def mapType(`type`: String, description: Option[String] = None): Json = {
+  def mapType(`type`: String, description: Option[String] = None)(implicit config: SchemaConfig): Json = {
     mapJson(valueType(`type`), description)
   }
 
-  def oneOrMoreType(`type`: String, description: Option[String] = None): Json = {
+  def oneOrMoreType(`type`: String, description: Option[String] = None)(implicit config: SchemaConfig): Json = {
     oneOrMoreJson(valueType(`type`, description))
   }
 
-  def arrayJson(json: Json, description: Option[String] = None): Json = {
+  def arrayJson(json: Json, description: Option[String] = None)(implicit config: SchemaConfig): Json = {
+    val descr = config.minimal match {
+      case true => None
+      case false => description
+    }
     Json.obj(
-      description.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
+      descr.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
       Seq(
         "type" -> Json.fromString("array"),
         "items" -> json
@@ -74,9 +87,13 @@ object JsonSchema {
     )
   }
 
-  def mapJson(json: Json, description: Option[String] = None) = {
+  def mapJson(json: Json, description: Option[String] = None)(implicit config: SchemaConfig) = {
+    val descr = config.minimal match {
+      case true => None
+      case false => description
+    }      
     Json.obj(
-      description.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
+      descr.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
       Seq(
         "type" -> Json.fromString("object"),
         "additionalProperties" -> json
@@ -84,21 +101,28 @@ object JsonSchema {
     )
   }
 
-  def oneOrMoreJson(json: Json): Json = {
+  def oneOrMoreJson(json: Json)(implicit config: SchemaConfig): Json = {
     eitherJson(
       json,
       arrayJson(json)
     )
   }
-  def eitherJson(jsons: Json*): Json = {
-    Json.obj("oneOf" -> Json.arr(jsons: _*))
+  def eitherJson(jsons: Json*)(implicit config: SchemaConfig): Json = {
+    if (config.strict) {
+      jsons.last
+    } else {
+      Json.obj("anyOf" -> Json.arr(jsons: _*))
+    }
+  }
+  def eitherJsonMustIncludeAll(jsons: Json*)(implicit config: SchemaConfig): Json = {
+      Json.obj("anyOf" -> Json.arr(jsons: _*))
   }
 
 
   def getThisParameter(data: List[ParameterSchema]): ParameterSchema = 
     data.find(_.name == "__this__").get
 
-  def createSchema(info: List[ParameterSchema]): (String, Json) = {
+  def createSchema(info: List[ParameterSchema])(implicit config: SchemaConfig): (String, Json) = {
 
     def removeMarkup(text: String): String = {
       val markupRegex = raw"@\[(.*?)\]\(.*?\)".r
@@ -174,10 +198,16 @@ object JsonSchema {
           (p.name, mapType(s, pDescription))
 
         case s if p.name == "type" && subclass.isDefined =>
-          ("type", Json.obj(
-            "description" -> Json.fromString(description), // not pDescription! We want to show the description of the main class
-            "const" -> Json.fromString(subclass.get)
-          ))
+          if (config.minimal) {
+            ("type", Json.obj(
+              "const" -> Json.fromString(subclass.get)
+            ))
+          } else {
+            ("type", Json.obj(
+              "description" -> Json.fromString(description), // not pDescription! We want to show the description of the main class
+              "const" -> Json.fromString(subclass.get)
+            ))
+          }
         
         case s =>
           (p.name, valueType(s, pDescription))
@@ -194,26 +224,30 @@ object JsonSchema {
     val requiredJson = required.map(p => Json.fromString(p.name))
 
     val k = thisParameter.`type`
+    val descr = config.minimal match {
+      case true => None
+      case false => Some(description)
+    }
     val v = Json.obj(
-      "description" -> Json.fromString(description),
-      "type" -> Json.fromString("object"),
+      descr.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
+      Seq("type" -> Json.fromString("object"),
       "properties" -> Json.obj(propertiesJson: _*),
       "required" -> Json.arr(requiredJson: _*),
-      "additionalProperties" -> Json.False
+      "additionalProperties" -> Json.False): _*
     )
     k -> v
   }
 
-  def createSuperClassSchema(info: List[ParameterSchema]): (String, Json) = {
+  def createSuperClassSchema(info: List[ParameterSchema])(implicit config: SchemaConfig): (String, Json) = {
     val thisParameter = getThisParameter(info)
     val k = thisParameter.`type`
-    val v = eitherJson(
+    val v = eitherJsonMustIncludeAll(
       thisParameter.subclass.get.map(s => Json.obj("$ref" -> Json.fromString(s"#/definitions/$s"))): _*
     )
     k -> v
   }
 
-  def createSchemas(data: List[List[ParameterSchema]]) : Seq[(String, Json)] = {
+  def createSchemas(data: List[List[ParameterSchema]])(implicit config: SchemaConfig) : Seq[(String, Json)] = {
     data.flatMap{
       case v if getThisParameter(v).removed.isDefined => None
       case v if getThisParameter(v).subclass.map(_.length).getOrElse(0) > 1 => Some(createSuperClassSchema(v))
@@ -221,15 +255,24 @@ object JsonSchema {
     }
   }
 
-  def createEnum(values: Seq[String], description: Option[String], comment: Option[String]): Json = {
+  def createEnum(values: Seq[String], description: Option[String], comment: Option[String])(implicit config: SchemaConfig): Json = {
+    val descr = config.minimal match {
+      case true => None
+      case false => description
+    }
+    val comm = config.minimal match {
+      case true => None
+      case false => comment
+    }
     Json.obj(
       Seq("enum" -> Json.arr(values.map(s => Json.fromString(s)): _*)) ++
-      comment.map(s => Seq("$comment" -> Json.fromString(s))).getOrElse(Nil) ++
-      description.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil): _*
+      comm.map(s => Seq("$comment" -> Json.fromString(s))).getOrElse(Nil) ++
+      descr.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil): _*
     )
   }
 
-  def getJsonSchema: Json = {
+  def getJsonSchema(strict: Boolean, minimal: Boolean): Json = {
+    implicit val ConfigSchema = SchemaConfig(strict, minimal)
     val definitions =
       createSchemas(data) ++
       Seq(

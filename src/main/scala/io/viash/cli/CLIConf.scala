@@ -542,6 +542,16 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
         choices = List("yaml", "json"),
         descr = "Which output format to use."
       )
+      val strict = registerOpt[Boolean](
+        name = "strict",
+        default = Some(false),
+        descr = "Whether or not to use export the strict schema variant."
+      )
+      val minimal = registerOpt[Boolean](
+        name = "minimal",
+        default = Some(false),
+        descr = "Whether or not to output extra schema annotations."
+      )
     }
 
     addSubcommand(resource)
