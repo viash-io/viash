@@ -29,6 +29,8 @@ import io.circe.{Printer => JsonPrinter, Json, JsonObject}
 import shapeless.syntax.singleton
 import io.viash.schemas._
 import io.viash.helpers.Escaper
+import java.nio.file.Paths
+import io.viash.ViashNamespace
 
 /**
  * A Platform class for generating Nextflow (DSL2) modules.
@@ -71,9 +73,9 @@ case class NextflowPlatform(
       || Flag | Description | Default |
       ||---|---------|----|
       || `simplifyInput` | If `true`, an input tuple only containing only a single File (e.g. `["foo", file("in.h5ad")]`) is automatically transformed to a map (i.e. `["foo", [ input: file("in.h5ad") ] ]`). | `true` |
-      || `simplifyOutput` | If `true`, an output tuple containing a map with a File (e.g. `["foo", [ output: file("out.h5ad") ] ]`) is automatically transformed to a map (i.e. `["foo", file("out.h5ad")]`). | `true` |
+      || `simplifyOutput` | If `true`, an output tuple containing a map with a File (e.g. `["foo", [ output: file("out.h5ad") ] ]`) is automatically transformed to a map (i.e. `["foo", file("out.h5ad")]`). | `false` |
       || `transcript` | If `true`, the module's transcripts from `work/` are automatically published to `params.transcriptDir`. If not defined, `params.publishDir + "/_transcripts"` will be used. Will throw an error if neither are defined. | `false` |
-      || `publish` | If `true`, the module's outputs are automatically published to `params.publishDir`.  Will throw an error if `params.publishDir` is not defined. | `false` |
+      || `publish` | If `true`, the module's outputs are automatically published to `params.publishDir`. If equal to `"state"`, also a `.state.yaml` file will be published in the publish dir. Will throw an error if `params.publishDir` is not defined. | `false` |
       |
       |""".stripMargin)
   @example(
@@ -82,7 +84,7 @@ case class NextflowPlatform(
       "yaml")
   @default(
     """simplifyInput: true
-      |simplifyOutput: true
+      |simplifyOutput: false
       |transcript: false
       |publish: false
       |""".stripMargin)
@@ -118,6 +120,11 @@ case class NextflowPlatform(
       dest = Some("nextflow.config"),
       text = Some(renderNextflowConfig(config.functionality, condir))
     )
+    // TODO: create and write dockerfile when #518 is merged into main
+    // val dockerfile = PlainFile(
+    //   dest = Some("Dockerfile"),
+    //   text = Some(dockerEngine.dockerFile(...))
+    // )
 
     // remove main
     val otherResources = config.functionality.additionalResources
@@ -142,6 +149,7 @@ case class NextflowPlatform(
       case Some(_) => 
         throw new RuntimeException(s"NextflowPlatform 'container' variable: Platform $container is not a Docker Platform")
       case None => None
+      case _ => ???
     }
   }
 
@@ -188,160 +196,111 @@ case class NextflowPlatform(
 
   // interpreted from BashWrapper
   def renderMainNf(config: Config, containerDirective: Option[DockerImageInfo]): String = {
-    val functionality = config.functionality
-    
-    /************************* HEADER *************************/
-    val header = Helper.generateScriptHeader(functionality)
-      .map(h => Escaper(h, newline = true))
-      .mkString("// ", "\n// ", "")
 
-    /************************* SCRIPT *************************/
-    val executionCode = functionality.mainScript match {
-      // if mainResource is empty (shouldn't be the case)
-      case None => ""
-
-      // if mainResource is simply an executable
-      case Some(e: Executable) => //" " + e.path.get + " $VIASH_EXECUTABLE_ARGS"
-        throw new NotImplementedError("Running executables through a NextflowPlatform is not yet implemented. Create a support ticket to request this functionality if necessary.")
-
-      // if mainResource is a script
-      case Some(res) =>
-        // todo: also include the bashwrapper checks
-        val argsAndMeta = functionality.getArgumentLikesGroupedByDest(
-          includeMeta = true,
-          filterInputs = true
-        )
-        val code = res.readWithInjection(argsAndMeta).get
-        val escapedCode = Bash.escapeString(code, allowUnescape = true)
-          .replace("\\", "\\\\")
-          .replace("'''", "\\'\\'\\'")
-
-        // IMPORTANT! difference between code below and BashWrapper:
-        // script is stored as `.viash_script.sh`.
-        val scriptPath = "$tempscript"
-
-        s"""set -e
-          |tempscript=".viash_script.sh"
-          |cat > "$scriptPath" << VIASHMAIN
-          |$escapedCode
-          |VIASHMAIN
-          |${res.command(scriptPath)}
-          |""".stripMargin
+    if (config.functionality.mainScript.isEmpty) {
+      throw new RuntimeException("No main script defined")
     }
 
-    /************************* JSONS *************************/
-    // override container
+    val mainScript = config.functionality.mainScript.get
+
+    if (mainScript.isInstanceOf[Executable]) {
+      throw new NotImplementedError(
+        "Running executables through a NextflowPlatform is not (yet) implemented. " +
+          "Create a support ticket to request this functionality if necessary."
+      )
+    }
+
+    /************************* MAIN.NF *************************/
+
     val directivesToJson = directives.copy(
       // if a docker platform is defined but the directives.container isn't, use the image of the dockerplatform as default
       container = directives.container orElse containerDirective.map(cd => Left(cd.toMap)),
       // is memory requirements are defined but directives.memory isn't, use that instead
-      memory = directives.memory orElse functionality.requirements.memoryAsBytes.map(_.toString + " B"),
+      memory = directives.memory orElse config.functionality.requirements.memoryAsBytes.map(_.toString + " B"),
       // is cpu requirements are defined but directives.cpus isn't, use that instead
-      cpus = directives.cpus orElse functionality.requirements.cpus.map(np => Left(np))
+      cpus = directives.cpus orElse config.functionality.requirements.cpus.map(np => Left(np))
     )
-    val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
-    val dirJson = directivesToJson.asJson.dropEmptyRecursively
-    val dirJson2 = if (dirJson.isNull) Json.obj() else dirJson
-    val funJson = config.asJson.dropEmptyRecursively
-    val funJsonStr = jsonPrinter.print(funJson)
-      .replace("\\\\", "\\\\\\\\")
-      .replace("\\\"", "\\\\\"")
-      .replace("'''", "\\'\\'\\'")
-      .grouped(65000) // JVM has a maximum string limit of 65535
-      .toList         // see https://stackoverflow.com/a/6856773
-      .mkString("'''", "''' + '''", "'''")
-    val autoJson = auto.asJson.dropEmptyRecursively
 
-    /************************* MAIN.NF *************************/
-    val tripQuo = """""""""
+    val innerWorkflowFactory = mainScript match {
+      // if mainscript is a nextflow workflow
+      case scr: NextflowScript =>
+        s"""// user-provided workflow
+          |${scr.readWithoutInjection.get.split("\n").mkString("\n|")}
+          |
+          |// inner workflow hook
+          |def innerWorkflowFactory(args) {
+          |  return ${scr.entrypoint}
+          |}""".stripMargin
+      // else if it is a vdsl3 module
+      case _ => 
+        s"""// process script
+          |thisScript = ${NextflowHelper.generateScriptStr(config)}
+          |
+          |// inner workflow hook
+          |def innerWorkflowFactory(args) {
+          |  return vdsl3WorkflowFactory(args)
+          |}
+          |
+          |""".stripMargin + 
+          NextflowHelper.vdsl3Helper
+    }
 
-
-    s"""$header
+    s"""${NextflowHelper.generateHeader(config)}
       |
       |nextflow.enable.dsl=2
       |
-      |// Required imports
-      |import groovy.json.JsonSlurper
+      |// START COMPONENT-SPECIFIC CODE
       |
-      |// initialise slurper
-      |def jsonSlurper = new JsonSlurper()
+      |// retrieve resourcesDir here to make sure the correct path is found
+      |resourcesDir = moduleDir.normalize()
       |
-      |// DEFINE CUSTOM CODE
+      |// component metadata
+      |thisConfig = ${NextflowHelper.generateConfigStr(config)}
       |
-      |// functionality metadata
-      |thisConfig = processConfig(jsonSlurper.parseText($funJsonStr))
+      |// inner workflow
+      |${innerWorkflowFactory.split("\n").mkString("\n|")}
       |
-      |thisScript = '''$executionCode'''
+      |// component settings
+      |thisDefaultWorkflowArgs = ${NextflowHelper.generateDefaultWorkflowArgs(config, directivesToJson, auto, debug)}
       |
-      |thisDefaultProcessArgs = [
-      |  // key to be used to trace the process and determine output names
-      |  key: thisConfig.functionality.name,
-      |  // fixed arguments to be passed to script
-      |  args: [:],
-      |  // default directives
-      |  directives: jsonSlurper.parseText('''${jsonPrinter.print(dirJson2)}'''),
-      |  // auto settings
-      |  auto: jsonSlurper.parseText('''${jsonPrinter.print(autoJson)}'''),
+      |${NextflowHelper.renderDependencies(config).split("\n").mkString("\n|")}
       |
-      |  // Apply a map over the incoming tuple
-      |  // Example: `{ tup -> [ tup[0], [input: tup[1].output] ] + tup.drop(2) }`
-      |  map: null,
+      |// initialise default workflow
+      |myWfInstance = workflowFactory([:])
       |
-      |  // Apply a map over the ID element of a tuple (i.e. the first element)
-      |  // Example: `{ id -> id + "_foo" }`
-      |  mapId: null,
+      |// add workflow to environment
+      |nextflow.script.ScriptMeta.current().addDefinition(myWfInstance)
       |
-      |  // Apply a map over the data element of a tuple (i.e. the second element)
-      |  // Example: `{ data -> [ input: data.output ] }`
-      |  mapData: null,
+      |// anonymous workflow for running this module as a standalone
+      |workflow {
+      |  // add id argument if it's not already in the config
+      |  if (thisConfig.functionality.arguments.every{it.plainName != "id"}) {
+      |    def idArg = [
+      |      'name': '--id',
+      |      'required': false,
+      |      'type': 'string',
+      |      'description': 'A unique id for every entry.',
+      |      'multiple': false
+      |    ]
+      |    thisConfig.functionality.arguments.add(0, idArg)
+      |    thisConfig = processConfig(thisConfig)
+      |  }
+      |  if (!params.containsKey("id")) {
+      |    params.id = "run"
+      |  }
       |
-      |  // Apply a map over the passthrough elements of a tuple (i.e. the tuple excl. the first two elements)
-      |  // Example: `{ pt -> pt.drop(1) }`
-      |  mapPassthrough: null,
+      |  helpMessage(thisConfig)
       |
-      |  // Filter the channel
-      |  // Example: `{ tup -> tup[0] == "foo" }`
-      |  filter: null,
+      |  channelFromParams(params, thisConfig)
+      |    | myWfInstance.run(
+      |      auto: [ publish: "state" ]
+      |    )
+      |}
       |
-      |  // Rename keys in the data field of the tuple (i.e. the second element)
-      |  // Will likely be deprecated in favour of `fromState`.
-      |  // Example: `[ "new_key": "old_key" ]`
-      |  renameKeys: null,
+      |// END COMPONENT-SPECIFIC CODE
       |
-      |  // Fetch data from the state and pass it to the module without altering the current state.
-      |  // 
-      |  // `fromState` should be `null`, `List[String]`, `Map[String, String]` or a function. 
-      |  // 
-      |  // - If it is `null`, the state will be passed to the module as is.
-      |  // - If it is a `List[String]`, the data will be the values of the state at the given keys.
-      |  // - If it is a `Map[String, String]`, the data will be the values of the state at the given keys, with the keys renamed according to the map.
-      |  // - If it is a function, the tuple (`[id, state]`) in the channel will be passed to the function, and the result will be used as the data.
-      |  // 
-      |  // Example: `{ id, state -> [input: state.fastq_file] }`
-      |  // Default: `null`
-      |  fromState: null,
-      |
-      |  // Determine how the state should be updated after the module has been run.
-      |  // 
-      |  // `toState` should be `null`, `List[String]`, `Map[String, String]` or a function.
-      |  // 
-      |  // - If it is `null`, the state will be replaced with the output of the module.
-      |  // - If it is a `List[String]`, the state will be updated with the values of the data at the given keys.
-      |  // - If it is a `Map[String, String]`, the state will be updated with the values of the data at the given keys, with the keys renamed according to the map.
-      |  // - If it is a function, a tuple (`[id, output, state]`) will be passed to the function, and the result will be used as the new state.
-      |  //
-      |  // Example: `{ id, output, state -> state + [counts: state.output] }`
-      |  // Default: `{ id, output, state -> output }`
-      |  toState: null,
-      |
-      |  // Whether or not to print debug messages
-      |  // Default: `$debug`
-      |  debug: $debug
-      |]
-      |
-      |// END CUSTOM CODE""".stripMargin + 
-      "\n\n" + NextflowHelper.workflowHelper + 
-      "\n\n" + NextflowHelper.vdsl3Helper
+      |""".stripMargin +
+      NextflowHelper.workflowHelper
   }
 }
 

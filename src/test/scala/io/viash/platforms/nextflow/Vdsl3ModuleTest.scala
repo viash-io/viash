@@ -12,7 +12,8 @@ import scala.io.Source
 
 import io.viash.helpers.{IO, Logger}
 import io.viash.{DockerTest, NextflowTest, TestHelper}
-import io.viash.NextflowTestHelper
+
+import NextflowTestHelper._
 
 class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
@@ -28,87 +29,9 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
   private val resourcesPath = Paths.get(tempFolStr, "resources").toFile.toString
   private val workflowsPath = Paths.get(tempFolStr, "workflows").toFile.toString
 
-  def outputFileMatchChecker(output: String, headerKeyword: String, fileContentMatcher: String) = {
-    val DebugRegex = s"$headerKeyword: \\[foo, (.*)\\]".r
-
-    val lines = output.split("\n").find(DebugRegex.findFirstIn(_).isDefined)
-
-    assert(lines.isDefined)
-    val DebugRegex(path) = lines.get
-
-    val src = Source.fromFile(path)
-    try {
-      val step3Out = src.getLines().mkString
-      assert(step3Out.matches(fileContentMatcher))
-    } finally {
-      src.close()
-    }
-  }
-
-  def outputTupleProcessor(output: String, headerKeyword: String) = {
-    val stdOutLines = output.split("\n")
-
-    val DebugRegex = s"$headerKeyword: \\[(.*), \\[(.*)\\]\\]".r
-    val debugPrints = stdOutLines.flatMap{ _ match {
-      case DebugRegex(id, argStr) =>
-
-        // turn argStr into Map[String, String]
-        import io.circe.yaml.parser
-        import io.circe.Json
-
-        val input2 = "{" + argStr.replaceAll(":", ": ") + "}"
-
-        val js = parser.parse(input2).toOption.get
-        val js2 = js.mapObject(_.mapValues{v => v match {
-          case a if a.isArray => Json.fromString(a.asArray.get.map(_.asString.get).mkString("[", ", ", "]"))
-          case a if a.isString => Json.fromString(a.asString.get)
-          case _ => Json.fromString(v.toString)
-        }})
-
-        val argMap = js2.as[Map[String, String]].toOption.get
-
-        Some((id, argMap))
-      case _ => None
-    }}
-
-    debugPrints
-  }
-
-  trait CheckArg {
-    val name: String
-    def assert(id: String, args: Map[String, String]): Unit
-  }
-  case class MatchCheck(name: String, s: String) extends CheckArg {
-    import org.scalatest.Assertions.{assert => scassert}
-    def assert(id: String, args: Map[String, String]) = {
-      scassert(args.contains(name), s"$id : args should contain $name")
-      scassert(args(name).matches(s), s"$id : args($name): ${args(name)} should match $s")
-    }
-  }
-  case class EqualsCheck(name: String, s: String) extends CheckArg {
-    import org.scalatest.Assertions.{assert => scassert}
-    def assert(id: String, args: Map[String, String]) = {
-      scassert(args.contains(name), s"$id : args should contain $name")
-      scassert(args(name) == s, s"$id : args($name) should equal $s")
-    }
-  }
-  case class NotAvailCheck(name: String) extends CheckArg {
-    import org.scalatest.Assertions.{assert => scassert}
-    def assert(id: String, args: Map[String, String]) = {
-      scassert(!args.contains(name), s"$id : args should not contain $name")
-    }
-  }
-  def checkDebugArgs(id: String, debugPrints: Array[(String, Map[String,String])], expectedValues: List[CheckArg]): Unit = {
-    val idDebugPrints = debugPrints.find(_._1 == id)
-    assert(idDebugPrints.isDefined)
-    expectedValues.foreach(_.assert(id, idDebugPrints.get._2))
-  }
-
-  // convert testbash
-
   // copy resources to temporary folder so we can build in a clean environment
   for (resource <- List("src", "workflows", "resources"))
-    TestHelper.copyFolder(Paths.get(rootPath, resource).toString, Paths.get(tempFolStr, resource).toString)
+    IO.copyFolder(Paths.get(rootPath, resource).toString, Paths.get(tempFolStr, resource).toString)
 
   test("Build pipeline components", DockerTest, NextflowTest) {
     // build the nextflow containers

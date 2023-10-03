@@ -51,16 +51,16 @@ case class Author(
   @default("Empty")
   roles: OneOrMore[String] = Nil,
 
-  @description("Author properties. Must be a map of strings.")
-  @deprecated("Use `info` instead.", "0.7.4", "0.8.0")
-  @default("Empty")
-  props: Map[String, String] = Map.empty[String, String],
-
   @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
   @since("Viash 0.7.4")
   @default("Empty")
   info: Json = Json.Null
 ) {
+  @description("Author properties. Must be a map of strings.")
+  @removed("Use `info` instead.", "0.7.4", "0.8.0")
+  @default("Empty")
+  private val props: Map[String, String] = Map.empty
+
   override def toString: String = {
     name +
       email.map(" <" + _ + ">").getOrElse("") +

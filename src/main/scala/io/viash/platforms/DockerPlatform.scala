@@ -246,7 +246,8 @@ case class DockerPlatform(
       text = Some(BashWrapper.wrapScript(
         executor = executor,
         functionality = fun2,
-        mods = dm
+        mods = dm,
+        config = config
       ))
     )
 

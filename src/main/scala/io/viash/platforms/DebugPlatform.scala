@@ -44,7 +44,8 @@ case class DebugPlatform(
     val scriptSrc = BashWrapper.wrapScript(
       executor = "bash",
       functionality = functionality,
-      debugPath = Some(path)
+      debugPath = Some(path),
+      config = config
     )
     val bashScript = BashScript(
       dest = Some(functionality.name),

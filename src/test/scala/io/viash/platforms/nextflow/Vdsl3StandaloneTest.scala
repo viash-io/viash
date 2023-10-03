@@ -11,8 +11,9 @@ import scala.io.Source
 
 import io.viash.helpers.{IO, Logger}
 import io.viash.{DockerTest, NextflowTest, TestHelper}
-import io.viash.NextflowTestHelper
 import java.nio.charset.StandardCharsets
+
+import NextflowTestHelper._
 
 class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
@@ -28,12 +29,9 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
   private val resourcesPath = Paths.get(tempFolStr, "resources").toFile.toString
   private val workflowsPath = Paths.get(tempFolStr, "workflows").toFile.toString
 
-
-  // convert testbash
-
   // copy resources to temporary folder so we can build in a clean environment
   for (resource <- List("src", "workflows", "resources"))
-    TestHelper.copyFolder(Paths.get(rootPath, resource).toString, Paths.get(tempFolStr, resource).toString)
+    IO.copyFolder(Paths.get(rootPath, resource).toString, Paths.get(tempFolStr, resource).toString)
 
   test("Build pipeline components", DockerTest, NextflowTest) {
     // build the nextflow containers
@@ -58,7 +56,7 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
     
-    val src = Source.fromFile(tempFolStr+"/moduleOutput1/run.step2.output1.txt")
+    val src = Source.fromFile(tempFolStr + "/moduleOutput1/run.step2.output1.txt")
     try {
       val moduleOut = src.getLines().mkString(",")
       assert(moduleOut.equals("one,two,three"))
@@ -81,7 +79,7 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
     
-    val src = Source.fromFile(tempFolStr+"/moduleOutput2/one two three/four five six/seven eight nine.step2.output1.txt")
+    val src = Source.fromFile(tempFolStr + "/moduleOutput2/one two three/four five six/seven eight nine.step2.output1.txt")
     try {
       val moduleOut = src.getLines().mkString(",")
       assert(moduleOut.equals("one,two,three"))
@@ -103,7 +101,7 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
     
-    val src = Source.fromFile(tempFolStr+"/moduleOutput2/run.step2.output1.txt")
+    val src = Source.fromFile(tempFolStr + "/moduleOutput2/run.step2.output1.txt")
     try {
       val moduleOut = src.getLines().mkString(",")
       assert(moduleOut.equals("one,two,three"))
@@ -130,7 +128,7 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
     
-    val src = Source.fromFile(tempFolStr+"/moduleOutput2/run.step2.output1.txt")
+    val src = Source.fromFile(tempFolStr + "/moduleOutput2/run.step2.output1.txt")
     try {
       val moduleOut = src.getLines().mkString(",")
       assert(moduleOut.equals("one,two,three"))
@@ -156,7 +154,7 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
     
-    val src = Source.fromFile(tempFolStr+"/moduleOutput3/run.step2.output1.txt")
+    val src = Source.fromFile(tempFolStr + "/moduleOutput3/run.step2.output1.txt")
     try {
       val moduleOut = src.getLines().mkString(",")
       assert(moduleOut.equals("one,two,three,1,2,3,4,5"))

@@ -21,7 +21,15 @@ import io.viash.functionality._
 import io.viash.schemas._
 
 import java.net.URI
+import java.nio.file.Path
+import java.nio.file.Paths
+import io.viash.config.Config
 import io.viash.functionality.arguments.Argument
+import io.viash.platforms.nextflow.NextflowHelper
+import io.circe.syntax._
+import io.viash.helpers.circe._
+import io.viash.ViashNamespace
+import io.viash.functionality.dependencies.Dependency
 
 @description("""A Nextflow script. Work in progress; added mainly for annotation at the moment.""".stripMargin)
 @subclass("nextflow_script")
@@ -32,37 +40,21 @@ case class NextflowScript(
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
 
-  @description("The name of the workflow to be executed.")
-  entrypoint: Option[String] = None,
+  @description("The name of the workflow to be wrapped.")
+  entrypoint: String,
 
   @description("Specifies the resource as a Nextflow script.")
   `type`: String = NextflowScript.`type`
 ) extends Script {
-  
+
   val companion = NextflowScript
 
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(argsAndMeta: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
     ScriptInjectionMods()
-  }
-
-  override def command(script: String): String = {
-    val entryStr = entrypoint match {
-      case Some(entry) => " -entry " + entry
-      case None => ""
-    }
-    super.command(script) + entryStr
-  }
-
-  override def commandSeq(script: String): Seq[String] = {
-    val entrySeq = entrypoint match {
-      case Some(entry) => Seq("-entry", entry)
-      case None => Seq()
-    }
-    super.commandSeq(script) ++ entrySeq
   }
 }
 
@@ -71,4 +63,5 @@ object NextflowScript extends ScriptCompanion {
   val extension = "nf"
   val `type` = "nextflow_script"
   val executor = Seq("nextflow", "run", ".", "-main-script")
+
 }
