@@ -82,6 +82,116 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(out.exitValue == 0)
   }
 
+  test("Use a local repository with an absolute path") {
+    val testFolder = createViashSubFolder(temporaryFolder, "local_test_absolute_path")
+    
+    // write test files
+    val fun1 = Functionality(
+      name = "dep1",
+      resources = textBashScript("echo Hello from dep1"),
+    )
+    val fun2 = Functionality(
+      name = "dep2",
+      resources = textBashScript("$dep_dep1\necho Hello from dep2"),
+      dependencies = List(Dependency("dep1", repository = Right(LocalRepository(path = Some("/dependencies")))))
+    )
+
+    writeTestConfig(testFolder.resolve("dependencies/src/dep1/config.vsh.yaml"), fun1)
+    writeTestConfig(testFolder.resolve("src/dep2/config.vsh.yaml"), fun2)
+
+    // build our local repository
+    val build1 = TestHelper.testMainWithStdErr(
+        workingDir = Some(testFolder.resolve("dependencies")),
+        "ns", "build",
+        "-s", testFolder.resolve("dependencies/src").toString(),
+        "-t", testFolder.resolve("dependencies/target").toString()
+      )
+    
+    assert(build1._2.strip == "All 1 configs built successfully", "check dependency build was successful")
+
+    // build
+    val build2 = TestHelper.testMainWithStdErr(
+        workingDir = Some(testFolder),
+        "ns", "build",
+        "-s", testFolder.resolve("src").toString(),
+        "-t", testFolder.resolve("target").toString()
+      )
+
+    assert(build2._2.strip == "All 1 configs built successfully", "check build was successful")
+
+    // check file & file content
+    val outputPath = testFolder.resolve("target/executable/dep2/dep2")
+    val executable = outputPath.toFile
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    val outputText = IO.read(outputPath.toUri())
+    assert(outputText.contains("VIASH_DEP_DEP1="), "check the dependency is set in the output script")
+
+    // check output when running
+    val out = Exec.runCatch(
+      Seq(executable.toString)
+    )
+
+    assert(out.output == "Hello from dep1\nHello from dep2\n")
+    assert(out.exitValue == 0)
+  }
+
+  test("Use a local repository with a relative path") {
+    val testFolder = createViashSubFolder(temporaryFolder, "local_test_absolute_path")
+    
+    // write test files
+    val fun1 = Functionality(
+      name = "dep1",
+      resources = textBashScript("echo Hello from dep1"),
+    )
+    val fun2 = Functionality(
+      name = "dep2",
+      resources = textBashScript("$dep_dep1\necho Hello from dep2"),
+      dependencies = List(Dependency("dep1", repository = Right(LocalRepository(path = Some("../../dependencies")))))
+    )
+
+    writeTestConfig(testFolder.resolve("dependencies/src/dep1/config.vsh.yaml"), fun1)
+    writeTestConfig(testFolder.resolve("src/dep2/config.vsh.yaml"), fun2)
+
+    // build our local repository
+    val build1 = TestHelper.testMainWithStdErr(
+        workingDir = Some(testFolder.resolve("dependencies")),
+        "ns", "build",
+        "-s", testFolder.resolve("dependencies/src").toString(),
+        "-t", testFolder.resolve("dependencies/target").toString()
+      )
+    
+    assert(build1._2.strip == "All 1 configs built successfully", "check dependency build was successful")
+
+    // build
+    val build2 = TestHelper.testMainWithStdErr(
+        workingDir = Some(testFolder),
+        "ns", "build",
+        "-s", testFolder.resolve("src").toString(),
+        "-t", testFolder.resolve("target").toString()
+      )
+
+    assert(build2._2.strip == "All 1 configs built successfully", "check build was successful")
+
+    // check file & file content
+    val outputPath = testFolder.resolve("target/executable/dep2/dep2")
+    val executable = outputPath.toFile
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    val outputText = IO.read(outputPath.toUri())
+    assert(outputText.contains("VIASH_DEP_DEP1="), "check the dependency is set in the output script")
+
+    // check output when running
+    val out = Exec.runCatch(
+      Seq(executable.toString)
+    )
+
+    assert(out.output == "Hello from dep1\nHello from dep2\n")
+    assert(out.exitValue == 0)
+  }
+
   test("Use a remote dependency") {
     val testFolder = createViashSubFolder(temporaryFolder, "remote_test")
     
