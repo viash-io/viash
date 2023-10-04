@@ -40,6 +40,8 @@ def collectInputOutputPaths(obj, prefix) {
 
 def publishStates(Map args) {
   def key_ = args.get("key")
+
+  assert key_ != null : "publishStates: key must be specified"
   
   workflow publishStatesWf {
     take: input_ch
@@ -105,8 +107,11 @@ process publishStatesProc {
 
 // this assumes that the state contains no other values other than those specified in the config
 def publishStatesByConfig(Map args) {
-  def key_ = args.get("key")
   def config = args.get("config")
+  assert config != null : "publishStatesByConfig: config must be specified"
+
+  def key_ = args.get("key", config.functionality.name)
+  assert key_ != null : "publishStatesByConfig: key must be specified"
   
   workflow publishStatesSimpleWf {
     take: input_ch

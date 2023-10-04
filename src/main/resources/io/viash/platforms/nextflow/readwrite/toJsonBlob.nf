@@ -1,3 +1,3 @@
-String toJsonBlob(Map data) {
+String toJsonBlob(data) {
   return groovy.json.JsonOutput.toJson(data)
 }
