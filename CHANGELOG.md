@@ -1,3 +1,7 @@
+# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+
+TODO add summary
+
 # Viash 0.8.0-RC2 (2023-10-04): Some bugfixes
 
 Some bugfixes related to the new dependencies and Nextflow code generation functionality.
