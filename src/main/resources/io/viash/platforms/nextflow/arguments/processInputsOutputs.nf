@@ -28,6 +28,14 @@ def typeCheck(String stage, Map par, Object value, String id, String key) {
       value = value.toLong()
     }
     expectedClass = value instanceof Long ? null : "Long"
+  } else if (par.type == "double") {
+    if (value instanceof java.math.BigDecimal) {
+      value = value.doubleValue()
+    }
+    if (value instanceof Float || value instanceof Integer || value instanceof Long) {
+      value = value.toDouble()
+    }
+    expectedClass = value instanceof Double ? null : "Double"
   } else if (par.type == "boolean" | par.type == "boolean_true" | par.type == "boolean_false") {
     expectedClass = value instanceof Boolean ? null : "Boolean"
   } else if (par.type == "file") {
