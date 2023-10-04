@@ -44,6 +44,7 @@ generateWorkflowHelper := {
   import sbt._
   import java.nio.file._
 
+  val rootDir = (Compile / baseDirectory).value
   val basePath = (Compile / resourceDirectory).value / "io" / "viash" / "platforms" / "nextflow"
   val wfHelper = Paths.get(basePath.toString, "WorkflowHelper.nf")
 
@@ -64,7 +65,8 @@ generateWorkflowHelper := {
     StandardOpenOption.CREATE)
 
   files.sorted.foreach { path =>
-    Files.write(wfHelper, s"\n// helper file: '${path}'\n".getBytes(), StandardOpenOption.APPEND)
+    val relativePath = rootDir.relativize(path)
+    Files.write(wfHelper, s"\n// helper file: '${relativePath.get}'\n".getBytes(), StandardOpenOption.APPEND)
     Files.write(wfHelper, Files.readAllBytes(path.toPath()), StandardOpenOption.APPEND)
   }
 
