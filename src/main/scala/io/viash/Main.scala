@@ -254,8 +254,8 @@ object Main extends Logging {
         )
         0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
-        val configs = readConfigs(cli.namespace.build, project = proj1)
-        val configs2 = namespaceDependencies(configs, proj1.target, proj1.rootDir)
+        val (configs, allConfigs) = readConfigs(cli.namespace.build, project = proj1)
+        val configs2 = namespaceDependencies(configs, allConfigs, proj1.target, proj1.rootDir)
         var buildResults = ViashNamespace.build(
           configs = configs2,
           target = proj1.target.get,
@@ -269,8 +269,8 @@ object Main extends Logging {
           .count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.test) =>
-        val configs = readConfigs(cli.namespace.test, project = proj1)
-        val configs2 = namespaceDependencies(configs, None, proj1.rootDir)
+        val (configs, allConfigs) = readConfigs(cli.namespace.test, project = proj1)
+        val configs2 = namespaceDependencies(configs, allConfigs, None, proj1.rootDir)
         val testResults = ViashNamespace.test(
           configs = configs2,
           parallel = cli.namespace.test.parallel(),
@@ -284,13 +284,13 @@ object Main extends Logging {
         val errors = testResults.flatMap(_.toOption).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.list) =>
-        val configs = readConfigs(
+        val (configs, allConfigs) = readConfigs(
           cli.namespace.list,
           project = proj1,
           addOptMainScript = false, 
           applyPlatform = cli.namespace.list.platform.isDefined
         )
-        val configs2 = namespaceDependencies(configs, None, proj1.rootDir)
+        val configs2 = namespaceDependencies(configs, allConfigs, None, proj1.rootDir)
         ViashNamespace.list(
           configs = configs2,
           format = cli.namespace.list.format(),
@@ -299,7 +299,7 @@ object Main extends Logging {
         val errors = configs.flatMap(_.toOption).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.exec) =>
-        val configs = readConfigs(
+        val (configs, allConfigs) = readConfigs(
           cli.namespace.exec, 
           project = proj1, 
           applyPlatform = cli.namespace.exec.applyPlatform()
@@ -434,7 +434,7 @@ object Main extends Logging {
     project: ViashProject,
     addOptMainScript: Boolean = true,
     applyPlatform: Boolean = true
-  ): List[Either[(Config, Option[Platform]), Status]] = {
+  ): (List[Either[(Config, Option[Platform]), Status]], List[Config]) = {
     val source = project.source.get
     val query = subcommand.query.toOption
     val queryNamespace = subcommand.query_namespace.toOption
@@ -442,7 +442,7 @@ object Main extends Logging {
     val platformStr = subcommand.platform.toOption
     val configMods = project.config_mods
 
-    val configs = Config.readConfigs(
+    val (configs, allConfigs) = Config.readConfigs(
       source = source,
       projectDir = project.rootDir.map(_.toUri()),
       query = query,
@@ -452,7 +452,8 @@ object Main extends Logging {
       addOptMainScript = addOptMainScript
     )
 
-    if (applyPlatform) {
+    val appliedPlatformConfigs = 
+      if (applyPlatform) {
       // create regex for filtering platform ids
       val platformStrVal = platformStr.getOrElse(".*")
 
@@ -490,6 +491,8 @@ object Main extends Logging {
         case Left(conf) => Left((conf, None: Option[Platform]))
       }}
     }
+
+    (appliedPlatformConfigs, allConfigs)
   }
 
   // Handle dependencies operations for a single config
@@ -501,15 +504,14 @@ object Main extends Logging {
   }
 
   // Handle dependency operations for namespaces
-  def namespaceDependencies(configs: List[Either[(Config, Option[Platform]), Status]], target: Option[String], rootDir: Option[Path]): List[Either[(Config, Option[Platform]), Status]] = {
+  def namespaceDependencies(configs: List[Either[(Config, Option[Platform]), Status]], allConfigs: List[Config], target: Option[String], rootDir: Option[Path]): List[Either[(Config, Option[Platform]), Status]] = {
     if (target.isDefined)
       DependencyResolver.createBuildYaml(target.get)
     
     configs.map{
       case Left((config: Config, platform: Option[Platform])) => {
         Try{
-          val validConfigs = configs.flatMap(_.swap.toOption).map(_._1)
-          handleSingleConfigDependency(config, platform, target, rootDir, validConfigs)
+          handleSingleConfigDependency(config, platform, target, rootDir, allConfigs)
         }.fold(
           e => e match {
             case de: AbstractDependencyException =>
