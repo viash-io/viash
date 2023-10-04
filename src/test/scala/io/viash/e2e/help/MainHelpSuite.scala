@@ -11,69 +11,69 @@ class MainHelpSuite extends AnyFunSuite{
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 
   test("viash config view default functionality without help") {
-    val (stdout, _, _) = TestHelper.testMainWithStdErr(
+    val testOutput = TestHelper.testMain(
       "config", "view",
       configFile
     )
 
-    assert(stdout.startsWith("functionality:"))
-    assert(stdout.contains("testbash"))
+    assert(testOutput.stdout.startsWith("functionality:"))
+    assert(testOutput.stdout.contains("testbash"))
   }
 
   test("viash config view default functionality leading help") {
-    val output = TestHelper.testMainException[ExitException](
+    val testOutput = TestHelper.testMainException[ExitException](
       "config", "view",
       "--help"
     )
 
-    assert(output.startsWith("viash config view"))
-    assert(!output.contains("testbash"))
+    assert(testOutput.stdout.startsWith("viash config view"))
+    assert(!testOutput.stdout.contains("testbash"))
   }
 
   test("viash config view default functionality trailing help") {
-    val output = TestHelper.testMainException[ExitException](
+    val testOutput = TestHelper.testMainException[ExitException](
       "config", "view",
       configFile,
       "--help"
     )
 
-    assert(output.startsWith("viash config view"))
-    assert(!output.contains("testbash"))
+    assert(testOutput.stdout.startsWith("viash config view"))
+    assert(!testOutput.stdout.contains("testbash"))
   }
 
   test("viash config view default functionality trailing help after platform argument") {
-    val output = TestHelper.testMainException[ExitException](
+    val testOutput = TestHelper.testMainException[ExitException](
       "config", "view",
       configFile,
-      "--platform", "native",
+      "--runner", "native",
       "--help"
     )
 
-    assert(output.startsWith("viash config view"))
-    assert(!output.contains("testbash"))
+    assert(testOutput.stdout.startsWith("viash config view"))
+    assert(!testOutput.stdout.contains("testbash"))
   }
 
   test("viash config view default functionality trailing help before platform argument") {
-    val output = TestHelper.testMainException[ExitException](
+    val testOutput = TestHelper.testMainException[ExitException](
       "config", "view",
       configFile,
       "--help",
-      "--platform", "native"
+      "--runner", "native"
     )
 
-    assert(output.startsWith("viash config view"))
-    assert(!output.contains("testbash"))
+    assert(testOutput.stdout.startsWith("viash config view"))
+    assert(!testOutput.stdout.contains("testbash"))
   }
 
 
   test("viash config view default functionality with --help as runner argument") {
-    val output = TestHelper.testMainException[RuntimeException](
+    val testOutput = TestHelper.testMainException[RuntimeException](
       "config", "view",
       configFile,
       "--runner", "--help"
     )
 
-    assert(!output.contains("viash config view"))
+    assert(!testOutput.stdout.contains("viash config view"))
   }
 
 }

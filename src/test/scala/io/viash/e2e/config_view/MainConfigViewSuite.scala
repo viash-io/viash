@@ -13,23 +13,23 @@ class MainConfigViewSuite extends AnyFunSuite{
 
 
   test("viash config view local") {
-    val (stdout, _, _) = TestHelper.testMainWithStdErr(
+    val testOutput = TestHelper.testMain(
       "config", "view",
       configFile
     )
 
-    assert(stdout.startsWith("functionality:"))
-    assert(stdout.contains("testbash"))
+    assert(testOutput.stdout.startsWith("functionality:"))
+    assert(testOutput.stdout.contains("testbash"))
   }
 
   test("viash config view remote") {
-    val (stdout, _, _) = TestHelper.testMainWithStdErr(
+    val testOutput = TestHelper.testMain(
       "config", "view",
       "https://raw.githubusercontent.com/viash-io/viash/develop/src/test/resources/testbash/config.vsh.yaml"
     )
 
-    assert(stdout.startsWith("functionality:"))
-    assert(stdout.contains("testbash"))
+    assert(testOutput.stdout.startsWith("functionality:"))
+    assert(testOutput.stdout.contains("testbash"))
   }
 
 }

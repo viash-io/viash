@@ -56,13 +56,13 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     writeTestConfig(testFolder.resolve("src/dep2/config.vsh.yaml"), fun2)
 
     // build
-    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+    val testOutput = TestHelper.testMain(
         "ns", "build",
         "-s", testFolder.resolve("src").toString(),
         "-t", testFolder.resolve("target").toString()
       )
 
-    assert(stderr.strip == "All 2 configs built successfully", "check build was successful")
+    assert(testOutput.stderr.strip == "All 2 configs built successfully", "check build was successful")
 
     // check file & file content
     val outputPath = testFolder.resolve("target/executable/dep2/dep2")
@@ -100,24 +100,24 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     writeTestConfig(testFolder.resolve("src/dep2/config.vsh.yaml"), fun2)
 
     // build our local repository
-    val build1 = TestHelper.testMainWithStdErr(
+    val build1 = TestHelper.testMain(
         workingDir = Some(testFolder.resolve("dependencies")),
         "ns", "build",
         "-s", testFolder.resolve("dependencies/src").toString(),
         "-t", testFolder.resolve("dependencies/target").toString()
       )
     
-    assert(build1._2.strip == "All 1 configs built successfully", "check dependency build was successful")
+    assert(build1.stderr.strip == "All 1 configs built successfully", "check dependency build was successful")
 
     // build
-    val build2 = TestHelper.testMainWithStdErr(
+    val build2 = TestHelper.testMain(
         workingDir = Some(testFolder),
         "ns", "build",
         "-s", testFolder.resolve("src").toString(),
         "-t", testFolder.resolve("target").toString()
       )
 
-    assert(build2._2.strip == "All 1 configs built successfully", "check build was successful")
+    assert(build2.stderr.strip == "All 1 configs built successfully", "check build was successful")
 
     // check file & file content
     val outputPath = testFolder.resolve("target/executable/dep2/dep2")
@@ -155,24 +155,24 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     writeTestConfig(testFolder.resolve("src/dep2/config.vsh.yaml"), fun2)
 
     // build our local repository
-    val build1 = TestHelper.testMainWithStdErr(
+    val build1 = TestHelper.testMain(
         workingDir = Some(testFolder.resolve("dependencies")),
         "ns", "build",
         "-s", testFolder.resolve("dependencies/src").toString(),
         "-t", testFolder.resolve("dependencies/target").toString()
       )
     
-    assert(build1._2.strip == "All 1 configs built successfully", "check dependency build was successful")
+    assert(build1.stderr.strip == "All 1 configs built successfully", "check dependency build was successful")
 
     // build
-    val build2 = TestHelper.testMainWithStdErr(
+    val build2 = TestHelper.testMain(
         workingDir = Some(testFolder),
         "ns", "build",
         "-s", testFolder.resolve("src").toString(),
         "-t", testFolder.resolve("target").toString()
       )
 
-    assert(build2._2.strip == "All 1 configs built successfully", "check build was successful")
+    assert(build2.stderr.strip == "All 1 configs built successfully", "check build was successful")
 
     // check file & file content
     val outputPath = testFolder.resolve("target/executable/dep2/dep2")
@@ -205,13 +205,13 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     writeTestConfig(testFolder.resolve("src/dep3/config.vsh.yaml"), fun)
 
     // build
-    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+    val testOutput = TestHelper.testMain(
         "ns", "build",
         "-s", testFolder.resolve("src").toString(),
         "-t", testFolder.resolve("target").toString()
       )
 
-    assert(stderr.strip.contains("All 1 configs built successfully"), "check build was successful")
+    assert(testOutput.stderr.strip.contains("All 1 configs built successfully"), "check build was successful")
 
     // check file & file content
     val outputPath = testFolder.resolve("target/executable/dep3/dep3")
@@ -244,13 +244,13 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     writeTestConfig(testFolder.resolve("src/dep4/config.vsh.yaml"), fun)
 
     // build
-    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+    val testOutput = TestHelper.testMain(
         "ns", "build",
         "-s", testFolder.resolve("src").toString(),
         "-t", testFolder.resolve("target").toString()
       )
 
-    assert(stderr.strip.contains("All 1 configs built successfully"), "check build was successful")
+    assert(testOutput.stderr.strip.contains("All 1 configs built successfully"), "check build was successful")
 
     // check file & file content
     val outputPath = testFolder.resolve("target/executable/dep4/dep4")

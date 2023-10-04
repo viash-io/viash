@@ -222,11 +222,11 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     val testRegex = "Warning: ..platforms is deprecated: Use 'engines' and 'runners' instead.".r
-    assert(testRegex.findFirstIn(testOutput).isDefined, testOutput)
+    assert(testRegex.findFirstIn(testOutput.stderr).isDefined, testOutput)
   }
 
   test("Test whether defining strings as arguments in argument groups throws a removed error") {
-    val testOutput = TestHelper.testMainException2[Exception](
+    val testOutput = TestHelper.testMainException[Exception](
       "build",
       "-o", tempFolStr,
       configDeprecatedArgumentGroups
@@ -241,7 +241,7 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(out.exitValue == 0)
 
     val testRegex = "Error: specifying strings in the .argument field of argument group 'First group' was removed.".r
-    assert(testRegex.findFirstIn(testOutput.error).isDefined, testOutput.error)
+    assert(testRegex.findFirstIn(testOutput.stderr).isDefined, testOutput.stderr)
   }
 
   test("Test config without a main script") {
@@ -252,7 +252,7 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       "-c", ".functionality.resources := []"
     )
 
-    assert(testOutput.contains("Warning: no resources specified!"))
+    assert(testOutput.stderr.contains("Warning: no resources specified!"))
   }
 
   override def afterAll(): Unit = {
