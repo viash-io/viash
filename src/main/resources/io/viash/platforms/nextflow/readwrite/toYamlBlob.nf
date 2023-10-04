@@ -1,4 +1,4 @@
-String toYamlBlob(Map data) {
+String toYamlBlob(data) {
   def options = new org.yaml.snakeyaml.DumperOptions()
   options.setDefaultFlowStyle(org.yaml.snakeyaml.DumperOptions.FlowStyle.BLOCK)
   options.setPrettyFlow(true)
