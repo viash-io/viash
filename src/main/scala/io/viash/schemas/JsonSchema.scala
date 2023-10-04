@@ -107,17 +107,13 @@ object JsonSchema {
       arrayJson(json)
     )
   }
-  def eitherJson(jsons: Json*)(implicit config: SchemaConfig): Json = {
-    if (config.strict) {
+  def eitherJson(jsons: Json*)(implicit config: SchemaConfig, mustIncludeAll: Boolean = false): Json = {
+    if (config.strict && !mustIncludeAll) {
       jsons.last
     } else {
       Json.obj("anyOf" -> Json.arr(jsons: _*))
     }
   }
-  def eitherJsonMustIncludeAll(jsons: Json*)(implicit config: SchemaConfig): Json = {
-      Json.obj("anyOf" -> Json.arr(jsons: _*))
-  }
-
 
   def getThisParameter(data: List[ParameterSchema]): ParameterSchema = 
     data.find(_.name == "__this__").get
@@ -143,6 +139,8 @@ object JsonSchema {
       }
 
       val mapRegex = "(List)?Map\\[String,(\\w*)\\]".r
+
+      implicit val useAllInEither = thisParameter.`type` == "NextflowDirectives"
 
       trimmedType match {
         case s"List[$s]" => 
@@ -241,7 +239,8 @@ object JsonSchema {
   def createSuperClassSchema(info: List[ParameterSchema])(implicit config: SchemaConfig): (String, Json) = {
     val thisParameter = getThisParameter(info)
     val k = thisParameter.`type`
-    val v = eitherJsonMustIncludeAll(
+    implicit val mustIncludeAll = true
+    val v = eitherJson(
       thisParameter.subclass.get.map(s => Json.obj("$ref" -> Json.fromString(s"#/definitions/$s"))): _*
     )
     k -> v
@@ -273,7 +272,7 @@ object JsonSchema {
   }
 
   def getJsonSchema(strict: Boolean, minimal: Boolean): Json = {
-    implicit val ConfigSchema = SchemaConfig(strict, minimal)
+    implicit val configSchema = SchemaConfig(strict, minimal)
     
     val enumDefinitions = if (strict) {
       Seq(
@@ -295,7 +294,10 @@ object JsonSchema {
     val definitions =
       createSchemas(data) ++
       enumDefinitions ++
-      Seq("DoubleWithInf" -> eitherJsonMustIncludeAll(valueType("Double_"), valueType("DoubleStrings")))
+      {
+        implicit val mustIncludeAll = true
+        Seq("DoubleWithInf" -> eitherJson(valueType("Double_"), valueType("DoubleStrings")))
+      }
 
     Json.obj(
       "$schema" -> Json.fromString("https://json-schema.org/draft-07/schema#"),
