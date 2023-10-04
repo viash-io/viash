@@ -294,7 +294,7 @@ object Config extends Logging {
     queryName: Option[String] = None,
     configMods: List[String] = Nil,
     addOptMainScript: Boolean = true
-  ): List[Either[Config, Status]] = {
+  ): (List[Either[Config, Status]], List[Config]) = {
 
     val sourceDir = Paths.get(source)
 
@@ -305,7 +305,7 @@ object Config extends Logging {
         attrs.isRegularFile
     })
 
-    scriptFiles.map { file =>
+    val allConfigsWithStdOutErr = scriptFiles.map { file =>
       try {
         // read config to get an idea of the name and namespaces
         // warnings will be captured for now, and will be displayed when reading the second time
@@ -322,7 +322,16 @@ object Config extends Logging {
               )
             }
           }
+          Left((config, stdout, stderr))
+      } catch {
+        case _: Exception =>
+          error(s"Reading file '$file' failed")
+          Right(ParseError)
+      }
+    }
 
+    val filteredConfigs: List[Either[Config, Status]] = allConfigsWithStdOutErr.map { 
+      case Left((config, stdout, stderr)) => 
         val funName = config.functionality.name
         val funNs = config.functionality.namespace
 
@@ -351,11 +360,11 @@ object Config extends Logging {
         } else {
           Right(Disabled)
         }
-      } catch {
-        case _: Exception =>
-          error(s"Reading file '$file' failed")
-          Right(ParseError)
-      }
+      case Right(status) => Right(status)
     }
+
+    val allConfigs = allConfigsWithStdOutErr.collect({ case Left((config, _, _)) if config.functionality.isEnabled => config })
+
+    (filteredConfigs, allConfigs)
   }
 }

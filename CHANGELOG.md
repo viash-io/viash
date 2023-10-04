@@ -1,3 +1,9 @@
+# Viash 0.8.0-RC2 (2023-10-04): Some bugfixes
+
+Some bugfixes related to the new dependencies and Nextflow code generation functionality.
+
+This part of the changelog will be removed.
+
 # Viash 0.8.0-RC1 (2023-10-02): Nextflow workflows and dependencies
 
 Nextflow workflows definitions are picked up by Viash and assembled into a functional Nextflow workflow, reducing the amount of boilerplate code needed to be written by the user.

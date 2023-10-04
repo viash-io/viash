@@ -27,7 +27,7 @@ class CustomRepresenter extends org.yaml.snakeyaml.representer.Representer {
   }
 }
 
-String toTaggedYamlBlob(Map data) {
+String toTaggedYamlBlob(data) {
   def options = new org.yaml.snakeyaml.DumperOptions()
   options.setDefaultFlowStyle(org.yaml.snakeyaml.DumperOptions.FlowStyle.BLOCK)
   def representer = new CustomRepresenter(options)
