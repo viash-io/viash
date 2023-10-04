@@ -589,8 +589,8 @@ class MainBuildAuxiliaryDockerRequirementsApkTest extends AbstractMainBuildAuxil
 
     assert(testOutput.exceptionText.get == "Only 0 out of 1 test scripts succeeded!")
 
-    assert(testOutput.stderr.contains("Running tests in temporary directory: "))
-    assert(testOutput.stderr.contains("ERROR! Only 0 out of 1 test scripts succeeded!"))
-    assert(testOutput.stderr.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("ERROR! Only 0 out of 1 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
   }
 }
