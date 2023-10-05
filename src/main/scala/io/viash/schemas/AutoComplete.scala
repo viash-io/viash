@@ -22,7 +22,7 @@ import io.viash.cli._
 object AutoCompleteBash {
   def commandArguments(cmd: RegisteredCommand): String = {
     val (opts, trailOpts) = cmd.opts.partition(_.optType != "trailArgs")
-    val optNames = opts.map(_.name) ++ Seq("help")
+    val optNames = opts.filter(!_.hidden).map(_.name) ++ Seq("help")
     val cmdName = cmd.name
 
     trailOpts match {
@@ -130,7 +130,7 @@ object AutoCompleteZsh {
     }
 
     val (opts, trailOpts) = cmd.opts.partition(_.optType != "trailArgs")
-    val cmdArgs = opts.map(o => 
+    val cmdArgs = opts.filter(!_.hidden).map(o => 
       if (o.short.isEmpty) {
         s""""--${o.name}[${getCleanDescr(o)}]""""
       } else {
