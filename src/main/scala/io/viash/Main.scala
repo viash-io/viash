@@ -526,7 +526,7 @@ object Main extends Logging {
       case ac if ac.status.isDefined => ac
       case appliedConfig => {
         Try{
-          val validConfigs = configs.map(_.config)
+          val validConfigs = configs.filter(ac => ac.status == None || ac.status == Some(DisabledByQuery)).map(_.config)
           handleSingleConfigDependency(appliedConfig, target, rootDir, validConfigs)
         }.fold(
           e => e match {
