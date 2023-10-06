@@ -4,7 +4,7 @@ TODO add summary
 
 ## NEW FUNCTIONALITY
 
-* `NextflowPlatform`: Added new `.run()` argument `runIf` - a function that determines whether the module should be run or not (PR #xxx).
+* `NextflowPlatform`: Added new `.run()` argument `runIf` - a function that determines whether the module should be run or not (PR #553).
   If the `runIf` closure evaluates to `true`, then the module will be run. Otherwise it will be passed through without running.
 
 ## MINOR CHANGES
