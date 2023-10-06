@@ -150,13 +150,17 @@ object DependencyResolver {
     config.map{ c =>
       val path = c.info.get.config
       // fill in the location of the executable where it will be located
-      val executableName = platformId match {
-        case Some("nextflow") => "main.nf"
-        case _ => c.functionality.name
+      // TODO: it would be better if this was already filled in somewhere else
+      val executable = platformId.map{ pid =>
+          val executableName = pid match {
+            case "nextflow" => "main.nf"
+            case _ => c.functionality.name
+          }
+          Paths.get(ViashNamespace.targetOutputPath("", pid, c.functionality.namespace, c.functionality.name), executableName).toString()
       }
-      // If no platform is provided, guestimate the executable name. We already know it's not a Nextflow script, so guess native.
-      val executable = Paths.get(ViashNamespace.targetOutputPath("", platformId.getOrElse("native"), c.functionality.namespace, c.functionality.name), executableName).toString()
-      val info = c.info.get.copy(executable = Some(executable))
+      val info = c.info.get.copy(
+        executable = executable
+      )
       // Convert case class to map, do some extra conversions of Options while we're at it
       val map = (info.productElementNames zip info.productIterator).map{
           case (k, s: String) => (k, s)
@@ -164,7 +168,10 @@ object DependencyResolver {
           case (k, None) => (k, "")
         }.toMap
       // Add the functionality name and namespace to it
-      val map2 = Map(("functionalityName" -> c.functionality.name), ("functionalityNamespace" -> c.functionality.namespace.getOrElse("")))
+      val map2 = Map(
+        ("functionalityName" -> c.functionality.name),
+        ("functionalityNamespace" -> c.functionality.namespace.getOrElse(""))
+      )
       (path, map ++ map2)
     }
   }
