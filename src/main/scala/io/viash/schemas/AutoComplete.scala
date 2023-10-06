@@ -147,6 +147,7 @@ object AutoCompleteZsh {
             |  cmd_args=(
             |    ${cmdArgs.mkString("\n|    ")}
             |    '(-h --help)'{-h,--help}'[Show help message]'
+            |    ': :'
             |  )
             |  _arguments $$cmd_args
             |  ;;
@@ -158,6 +159,7 @@ object AutoCompleteZsh {
             |    cmd_args=(
             |      ${cmdArgs.mkString("\n|      ")}
             |      '(-h --help)'{-h,--help}'[Show help message]'
+            |      ': :'
             |    )
             |    _arguments $$cmd_args
             |  else
@@ -186,7 +188,8 @@ object AutoCompleteZsh {
        |  if [[ CURRENT -eq 3 ]]; then
        |    if [[ $${lastParam} == -* ]]; then
        |      _arguments \\
-       |        '(-h --help)'{-h,--help}'[Show help message]'
+       |        '(-h --help)'{-h,--help}'[Show help message]' \\
+       |        ': :'
        |    else
        |      _describe -t commands "viash subcommands" ${cmdName}_commands
        |    fi
@@ -217,12 +220,6 @@ object AutoCompleteZsh {
 
     s"""#compdef viash
        |
-       |local -a _viash_id_comp
-       |_viash_id_comp=('1: :->id_comp')
-       |
-       |local -a _viash_help
-       |_viash_help=('(-h --help)'{-h,--help}'[Show help message]')
-       |
        |_viash_top_commands() {
        |  local -a top_commands
        |  top_commands=(
@@ -233,6 +230,7 @@ object AutoCompleteZsh {
        |  cmd_args=(
        |    '(-v --version)'{-v,--version}'[Show verson of this program]'
        |    '(-h --help)'{-h,--help}'[Show help message]'
+       |    ': :'
        |  )
        |  _arguments $$cmd_args
        |
