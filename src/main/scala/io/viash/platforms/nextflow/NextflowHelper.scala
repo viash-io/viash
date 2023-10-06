@@ -96,7 +96,7 @@ object NextflowHelper {
 
     s"""[
       |  // key to be used to trace the process and determine output names
-      |  key: thisConfig.functionality.name,
+      |  key: null,
       |  // fixed arguments to be passed to script
       |  args: [:],
       |  // default directives
@@ -197,7 +197,7 @@ object NextflowHelper {
         // can we use suboutputpath here?
         //val dependencyPath = Paths.get(dependency.subOutputPath.get)
         val relativePath = parentPath.relativize(dependencyPath)
-        s"\"$$resourcesDir/$relativePath\""
+        s"\"$${meta.resources_dir}/$relativePath\""
       } else {
         s"\"$$rootDir/dependencies/${dependency.subOutputPath.get}/main.nf\""
       }
@@ -218,7 +218,6 @@ object NextflowHelper {
     }
 
     s"""
-      |// import dependencies
       |rootDir = getRootDir()
       |${depStrs.mkString("\n|")}
       |""".stripMargin

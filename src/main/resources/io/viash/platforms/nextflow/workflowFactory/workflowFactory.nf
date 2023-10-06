@@ -6,9 +6,9 @@ def _debug(workflowArgs, debugKey) {
   }
 }
 
-// depends on: thisConfig, innerWorkflowFactory
-def workflowFactory(Map args) {
-  def workflowArgs = processWorkflowArgs(args)
+// depends on: innerWorkflowFactory
+def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
+  def workflowArgs = processWorkflowArgs(args, defaultWfArgs, meta)
   def key_ = workflowArgs["key"]
   
   workflow workflowInstance {
@@ -52,7 +52,7 @@ def workflowFactory(Map args) {
         
         // match file to input file
         if (workflowArgs.auto.simplifyInput && (tuple[1] instanceof Path || tuple[1] instanceof List)) {
-          def inputFiles = thisConfig.functionality.allArguments
+          def inputFiles = meta.config.functionality.allArguments
             .findAll { it.type == "file" && it.direction == "input" }
           
           assert inputFiles.size() == 1 : 
@@ -125,12 +125,12 @@ def workflowFactory(Map args) {
         // TODO: could move fromState to here
 
         // fetch default params from functionality
-        def defaultArgs = thisConfig.functionality.allArguments
+        def defaultArgs = meta.config.functionality.allArguments
           .findAll { it.containsKey("default") }
           .collectEntries { [ it.plainName, it.default ] }
 
         // fetch overrides in params
-        def paramArgs = thisConfig.functionality.allArguments
+        def paramArgs = meta.config.functionality.allArguments
           .findAll { par ->
             def argKey = key_ + "__" + par.plainName
             params.containsKey(argKey)
@@ -138,7 +138,7 @@ def workflowFactory(Map args) {
           .collectEntries { [ it.plainName, params[key_ + "__" + it.plainName] ] }
         
         // fetch overrides in data
-        def dataArgs = thisConfig.functionality.allArguments
+        def dataArgs = meta.config.functionality.allArguments
           .findAll { data_.containsKey(it.plainName) }
           .collectEntries { [ it.plainName, data_[it.plainName] ] }
         
@@ -149,7 +149,7 @@ def workflowFactory(Map args) {
         combinedArgs
           .removeAll{_, val -> val == null || val == "viash_no_value" || val == "force_null"}
 
-        combinedArgs = processInputs(combinedArgs, thisConfig, id_, key_)
+        combinedArgs = processInputs(combinedArgs, meta.config, id_, key_)
 
         [id_, combinedArgs] + tuple.drop(2)
       }
@@ -175,7 +175,7 @@ def workflowFactory(Map args) {
         // remove metadata
         output_ = output_.findAll{k, v -> k != "_meta"}
 
-        output_ = processOutputs(output_, thisConfig, id_, key_)
+        output_ = processOutputs(output_, meta.config, id_, key_)
 
         if (workflowArgs.auto.simplifyOutput && output_.size() == 1) {
           output_ = output_.values()[0]
@@ -209,7 +209,7 @@ def workflowFactory(Map args) {
         | map { tup ->
           tup.drop(2).take(3)
       }
-        | publishStatesByConfig(key: key_, config: thisConfig)
+        | publishStatesByConfig(key: key_, config: meta.config)
     }
 
     // remove join_id and meta
@@ -230,10 +230,11 @@ def workflowFactory(Map args) {
 
   // add factory function
   wf.metaClass.run = { runArgs ->
-    workflowFactory(runArgs)
+    // TODO: merge workflowArgs with runArgs
+    workflowFactory(runArgs, workflowArgs, meta)
   }
   // add config to module for later introspection
-  wf.metaClass.config = thisConfig
+  wf.metaClass.config = meta.config
 
   return wf
 }

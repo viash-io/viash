@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## MINOR CHANGES
+
+* Rename internal VDSL3 variables to be more consistent with regular Viash component variables.
+
 ## BUG FIXES
 
 * `export cli_autocomplete`: Fix output script format and hide `--loglevel` and `--colorize` (PR #544). Masked arguments are usable but might not be very useful to always display in help messages.
