@@ -194,24 +194,26 @@ workflow test_filter_runif_arguments {
     runIf: { id, data -> data.input.size() == 2 }
   )
   | toSortedList( { a, b -> a[0] <=> b[0] } )
-  | view { tup_list ->
-    assert tup_list.size() == 2 : "output channel should contain 1 event"
+  | view { tups ->
+    assert tups.size() == 2 : "output channel should contain 1 event"
 
-    def tup0 = tup_list[0]
+    def tup0 = tups[0]
+    def tup1 = tups[1]
     assert tup0.size() == 2 : "outputs should contain two elements; [id, output]"
+    assert tup1.size() == 2 : "outputs should contain two elements; [id, output]"
 
     // check id
     assert tup0[0] == "one" : "id should be one"
     assert tup1[0] == "two" : "id should be two"
 
     // check data
-    assert tup[0].containsKey("input") : "data should contain key input"
-    assert tup[0].input.size() == 1 : "data should contain 1 file"
-    assert tup[0].input[0].name == "lines3.txt" : "input should contain lines3.txt"
+    assert tup0[1].containsKey("input") : "data should contain key input"
+    assert tup0[1].input.size() == 1 : "data should contain 1 file"
+    assert tup0[1].input[0].name == "lines3.txt" : "data should contain lines3.txt. Found: ${tup0[1]}"
 
-    assert tup[1].containsKey("output") : "data should contain key output"
-    assert tup[1].output == 1 : "data should contain 1 file"
-    assert tup[1].output.name == "lines3.txt" : "input should contain lines3.txt"
+    assert tup1[1].containsKey("output") : "data should contain key output"
+    assert tup1[1].output instanceof Path : "data should contain 1 file"
+    assert tup1[1].output.name == "two.step1.output.txt" : "data should contain two.step1.output.txt. Found: ${tup1[1]}"
 
     ""
   }
