@@ -390,7 +390,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
         short = Some('a'),
         default = Some(false),
         descr = 
-          """Fills in the {platform} and {output} field by applying each platform to the 
+          """Fills in the {platform} and {output} field by applying each platform to the
             |config separately. Note that this results in the provided command being applied
             |once for every platform that matches the --platform regex.""".stripMargin
       )

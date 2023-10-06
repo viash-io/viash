@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## BUG FIXES
+
+* `export cli_autocomplete`: Fix output script format and hide `--loglevel` and `--colorize` (PR #544). Masked arguments are usable but might not be very useful to always display in help messages.
+
 # Viash 0.8.0-RC2 (2023-10-04): Some bugfixes
 
 Some bugfixes related to the new dependencies and Nextflow code generation functionality.

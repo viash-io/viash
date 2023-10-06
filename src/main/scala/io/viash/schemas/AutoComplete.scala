@@ -127,6 +127,7 @@ object AutoCompleteZsh {
     def getCleanDescr(opt: RegisteredOpt): String = {
       removeMarkup(opt.descr)
         .replaceAll("([\\[\\]\"])", "\\\\$1") // escape square brackets and quotes
+        .replaceAll("\n", " ") // remove newlines
     }
 
     val (opts, trailOpts) = cmd.opts.partition(_.optType != "trailArgs")
@@ -145,8 +146,9 @@ object AutoCompleteZsh {
             |  local -a cmd_args
             |  cmd_args=(
             |    ${cmdArgs.mkString("\n|    ")}
+            |    '(-h --help)'{-h,--help}'[Show help message]'
             |  )
-            |  _arguments $$cmd_args $$_viash_help $$_viash_id_comp
+            |  _arguments $$cmd_args
             |  ;;
             |""".stripMargin
       case _ =>
@@ -155,8 +157,9 @@ object AutoCompleteZsh {
             |    local -a cmd_args
             |    cmd_args=(
             |      ${cmdArgs.mkString("\n|      ")}
+            |      '(-h --help)'{-h,--help}'[Show help message]'
             |    )
-            |    _arguments $$cmd_args $$_viash_help $$_viash_id_comp
+            |    _arguments $$cmd_args
             |  else
             |    _files
             |  fi
@@ -182,7 +185,8 @@ object AutoCompleteZsh {
        |
        |  if [[ CURRENT -eq 3 ]]; then
        |    if [[ $${lastParam} == -* ]]; then
-       |      _arguments $$_viash_help $$_viash_id_comp
+       |      _arguments \\
+       |        '(-h --help)'{-h,--help}'[Show help message]'
        |    else
        |      _describe -t commands "viash subcommands" ${cmdName}_commands
        |    fi
@@ -225,10 +229,12 @@ object AutoCompleteZsh {
        |    ${topCmds.mkString("\n|    ")}
        |  )
        |
-       |  _arguments \\
-       |    '(-v --version)'{-v,--version}'[Show verson of this program]' \\
-       |    $$_viash_help \\
-       |    $$_viash_id_comp
+       |  local -a cmd_args
+       |  cmd_args=(
+       |    '(-v --version)'{-v,--version}'[Show verson of this program]'
+       |    '(-h --help)'{-h,--help}'[Show help message]'
+       |  )
+       |  _arguments $$cmd_args
        |
        |  _describe -t commands "viash subcommands" top_commands
        |}
