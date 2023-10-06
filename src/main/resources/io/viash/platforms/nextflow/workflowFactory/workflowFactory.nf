@@ -149,7 +149,7 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
         combinedArgs
           .removeAll{_, val -> val == null || val == "viash_no_value" || val == "force_null"}
 
-        combinedArgs = processInputs(combinedArgs, meta.config, id_, key_)
+        combinedArgs = _processInputValues(combinedArgs, meta.config, id_, key_)
 
         [id_, combinedArgs] + tuple.drop(2)
       }
@@ -175,7 +175,7 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
         // remove metadata
         output_ = output_.findAll{k, v -> k != "_meta"}
 
-        output_ = processOutputs(output_, meta.config, id_, key_)
+        output_ = _processOutputValues(output_, meta.config, id_, key_)
 
         if (workflowArgs.auto.simplifyOutput && output_.size() == 1) {
           output_ = output_.values()[0]
