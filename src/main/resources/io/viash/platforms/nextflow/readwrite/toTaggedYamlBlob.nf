@@ -35,9 +35,9 @@ class CustomRepresenter extends org.yaml.snakeyaml.representer.Representer {
 }
 
 String toTaggedYamlBlob(data) {
-  return toTaggedYamlBlob(data, null)
+  return toRelativeTaggedYamlBlob(data, null)
 }
-String toTaggedYamlBlob(data, Path relativizer) {
+String toRelativeTaggedYamlBlob(data, Path relativizer) {
   def options = new org.yaml.snakeyaml.DumperOptions()
   options.setDefaultFlowStyle(org.yaml.snakeyaml.DumperOptions.FlowStyle.BLOCK)
   def representer = new CustomRepresenter(options, relativizer)

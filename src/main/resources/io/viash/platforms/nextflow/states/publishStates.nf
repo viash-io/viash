@@ -64,7 +64,7 @@ def publishStates(Map args) {
             // TODO: do the pathnames in state_ match up with the outputFiles_?
 
           // convert state to yaml blob
-          def yamlBlob_ = toTaggedYamlBlob([id: id_] + state_, java.nio.file.Paths.get(yamlFilename))
+          def yamlBlob_ = toRelativeTaggedYamlBlob([id: id_] + state_, java.nio.file.Paths.get(yamlFilename))
 
           [id_, yamlBlob_, yamlFilename, inputFiles_, outputFiles_]
         }
