@@ -192,13 +192,14 @@ def publishStatesByConfig(Map args) {
 
           // adds a leading dot to the id (after any folder names)
           // example: foo -> .foo, foo/bar -> foo/.bar
-          // TODO: allow defining the state.yaml template
-          def idWithDot_ = id_.replaceAll("^(.+/)?([^/]+)", "\$1.\$2")
-          def yamlFile = '$id.$key.state.yaml'
-            .replaceAll('\\$id', idWithDot_)
+          // TODO: allow overriding the state.yaml template
+          // TODO TODO: if auto.publish == "state", add output_state as an argument
+          def yamlTemplate = params.containsKey("output_state") ? params.output_state : '$id.$key.state.yaml'
+          def yamlFilename = yamlTemplate
+            .replaceAll('\\$id', id_)
             .replaceAll('\\$key', key_)
 
-          [id_, yamlBlob_, yamlFile, inputFiles_, outputFiles_]
+          [id_, yamlBlob_, yamlFilename, inputFiles_, outputFiles_]
         }
         | publishStatesProc
     emit: input_ch
