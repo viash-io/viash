@@ -89,7 +89,10 @@ process publishStatesProc {
     .transpose()
     .collectMany{infile, outfile ->
       if (infile.toString() != outfile.toString()) {
-        ["cp -r '${infile.toString()}' '${outfile.toString()}'"]
+        [
+          "[ -d \"\$(dirname '${outfile.toString()}')\" ] || mkdir -p \"\$(dirname '${outfile.toString()}')\"",
+          "cp -r '${infile.toString()}' '${outfile.toString()}'"
+        ]
       } else {
         // no need to copy if infile is the same as outfile
         []
