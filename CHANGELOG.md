@@ -4,7 +4,7 @@ TODO add summary
 
 ## MINOR CHANGES
 
-* `NextflowPlatform`: Rename internal VDSL3 variables to be more consistent with regular Viash component variables and avoid naming clashes.
+* `NextflowPlatform`: Rename internal VDSL3 variables to be more consistent with regular Viash component variables and avoid naming clashes (PR #553).
 
 ## BUG FIXES
 
