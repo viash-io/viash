@@ -96,6 +96,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
       "--keep", "false"
     )
 
+    // retry once if it failed
     val testTextCachingWithRetry = 
       if (regexBuildCache.findFirstIn(testTextCaching).isDefined) {
         testTextCaching
