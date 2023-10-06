@@ -265,13 +265,13 @@ case class NextflowPlatform(
       |${innerWorkflowFactory.split("\n").mkString("\n|")}
       |
       |// defaults
-      |_initialWorkflowArgs = ${NextflowHelper.generateDefaultWorkflowArgs(config, directivesToJson, auto, debug)}
+      |meta["defaults"] = ${NextflowHelper.generateDefaultWorkflowArgs(config, directivesToJson, auto, debug)}
       |
       |// initialise default workflow
-      |_workflowInstance = workflowFactory([key: meta.config.functionality.name], _initialWorkflowArgs, meta)
+      |meta["workflow"] = workflowFactory([key: meta.config.functionality.name], meta.defaults, meta)
       |
       |// add workflow to environment
-      |nextflow.script.ScriptMeta.current().addDefinition(_workflowInstance)
+      |nextflow.script.ScriptMeta.current().addDefinition(meta.workflow)
       |
       |// anonymous workflow for running this module as a standalone
       |workflow {
@@ -294,7 +294,7 @@ case class NextflowPlatform(
       |  helpMessage(meta.config)
       |
       |  channelFromParams(params, meta.config)
-      |    | _workflowInstance.run(
+      |    | meta.workflow.run(
       |      auto: [ publish: "state" ]
       |    )
       |}

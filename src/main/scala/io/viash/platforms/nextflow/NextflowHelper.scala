@@ -207,7 +207,7 @@ object NextflowHelper {
         val relativePath = parentPath.relativize(dependencyPath)
         s"\"$${meta.resources_dir}/$relativePath\""
       } else {
-        s"\"$$rootDir/dependencies/${dependency.subOutputPath.get}/main.nf\""
+        s"\"$${meta.root_dir}/dependencies/${dependency.subOutputPath.get}/main.nf\""
       }
 
     s"include { $depName$aliasStr } from ${source}"
@@ -225,8 +225,7 @@ object NextflowHelper {
       return ""
     }
 
-    s"""
-      |rootDir = getRootDir()
+    s"""meta["root_dir"] = getRootDir()
       |${depStrs.mkString("\n|")}
       |""".stripMargin
   }
