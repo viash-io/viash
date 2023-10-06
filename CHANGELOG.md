@@ -1,6 +1,7 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.8.0-RC3 (2023-10-07): More bugfixes, more Nextflow functionality
 
-TODO add summary
+This release contains more bugfixes related to the Nextflow code generation functionality.
+It also adds a new `runIf` argument to the `NextflowPlatform` which allows for conditional execution of modules.
 
 ## NEW FUNCTIONALITY
 
