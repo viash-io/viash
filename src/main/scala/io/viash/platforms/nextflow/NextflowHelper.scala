@@ -97,10 +97,13 @@ object NextflowHelper {
     s"""[
       |  // key to be used to trace the process and determine output names
       |  key: null,
+      |
       |  // fixed arguments to be passed to script
       |  args: [:],
+      |
       |  // default directives
       |  directives: readJsonBlob('''${jsonPrinter.print(dirJson2)}'''),
+      |
       |  // auto settings
       |  auto: readJsonBlob('''${jsonPrinter.print(autoJson)}'''),
       |
@@ -123,6 +126,11 @@ object NextflowHelper {
       |  // Filter the channel
       |  // Example: `{ tup -> tup[0] == "foo" }`
       |  filter: null,
+      |
+      |  // Choose whether or not to run the component on the tuple if the condition is true.
+      |  // Otherwise, the tuple will be passed through.
+      |  // Example: `{ tup -> tup[0] != "skip_this" }`
+      |  runIf: null,
       |
       |  // Rename keys in the data field of the tuple (i.e. the second element)
       |  // Will likely be deprecated in favour of `fromState`.

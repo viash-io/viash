@@ -14,7 +14,7 @@ def processWorkflowArgs(Map args, Map defaultWfArgs, Map meta) {
   assert key ==~ /^[a-zA-Z_]\w*$/ : "Error in module '$key': Expected process argument 'key' to consist of only letters, digits or underscores. Found: ${key}"
 
   // check for any unexpected keys
-  def expectedKeys = ["key", "directives", "auto", "map", "mapId", "mapData", "mapPassthrough", "filter", "fromState", "toState", "args", "renameKeys", "debug"]
+  def expectedKeys = ["key", "directives", "auto", "map", "mapId", "mapData", "mapPassthrough", "filter", "runIf", "fromState", "toState", "args", "renameKeys", "debug"]
   def unexpectedKeys = workflowArgs.keySet() - expectedKeys
   assert unexpectedKeys.isEmpty() : "Error in module '$key': unexpected arguments to the '.run()' function: '${unexpectedKeys.join("', '")}'"
 
@@ -74,16 +74,16 @@ def processWorkflowArgs(Map args, Map defaultWfArgs, Map meta) {
     workflowArgs.directives.keySet().removeAll(["publishDir", "cpus", "memory", "label"])
   }
 
-  for (nam in ["map", "mapId", "mapData", "mapPassthrough", "filter"]) {
+  for (nam in ["map", "mapId", "mapData", "mapPassthrough", "filter", "runIf"]) {
     if (workflowArgs.containsKey(nam) && workflowArgs[nam]) {
       assert workflowArgs[nam] instanceof Closure : "Error in module '$key': Expected process argument '$nam' to be null or a Closure. Found: class ${workflowArgs[nam].getClass()}"
     }
   }
 
   // TODO: should functions like 'map', 'mapId', 'mapData', 'mapPassthrough' be deprecated as well?
-  for (nam in ["renameKeys"]) {
+  for (nam in ["map", "mapData", "mapPassthrough", "renameKeys"]) {
     if (workflowArgs.containsKey(nam) && workflowArgs[nam] != null) {
-      log.warn "module '$key': workflow argument '$nam' will be deprecated in Viash 0.9.0. Please use 'fromState' and 'toState' instead."
+      log.warn "module '$key': workflow argument '$nam' will be removed in Viash 0.9.0. Please use 'fromState' and 'toState' instead."
     }
   }
 

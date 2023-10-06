@@ -1,0 +1,14 @@
+functionality:
+  name: filter_runif
+  namespace: test_wfs
+  resources:
+    - type: nextflow_script
+      path: main.nf
+      entrypoint: base
+    - path: /resources
+  dependencies:
+    - name: step1
+    - name: step2
+    - name: step3
+platforms:
+  - type: nextflow
