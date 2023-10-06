@@ -40,6 +40,7 @@ def collectInputOutputPaths(obj, prefix) {
 
 def publishStates(Map args) {
   def key_ = args.get("key")
+  def yamlTemplate_ = args.get("output_state", args.get("outputState", '$id.$key.state.yaml'))
 
   assert key_ != null : "publishStates: key must be specified"
   
@@ -56,17 +57,16 @@ def publishStates(Map args) {
           def inputFiles_ = inputOutputFiles_[0]
           def outputFiles_ = inputOutputFiles_[1]
 
-          // convert state to yaml blob
-          def yamlBlob_ = toTaggedYamlBlob([id: id_] + state_)
-
-          // adds a leading dot to the id (after any folder names)
-          // example: foo -> .foo, foo/bar -> foo/.bar
-          def idWithDot_ = id_.replaceAll("^(.+/)?([^/]+)", "\$1.\$2")
-          def yamlFile = '$id.$key.state.yaml'
-            .replaceAll('\\$id', idWithDot_)
+          def yamlFilename = yamlTemplate_
+            .replaceAll('\\$id', id_)
             .replaceAll('\\$key', key_)
 
-          [id_, yamlBlob_, yamlFile, inputFiles_, outputFiles_]
+            // TODO: do the pathnames in state_ match up with the outputFiles_?
+
+          // convert state to yaml blob
+          def yamlBlob_ = toRelativeTaggedYamlBlob([id: id_] + state_, java.nio.file.Paths.get(yamlFilename))
+
+          [id_, yamlBlob_, yamlFilename, inputFiles_, outputFiles_]
         }
         | publishStatesProc
     emit: input_ch
@@ -89,7 +89,10 @@ process publishStatesProc {
     .transpose()
     .collectMany{infile, outfile ->
       if (infile.toString() != outfile.toString()) {
-        ["cp -r '${infile.toString()}' '${outfile.toString()}'"]
+        [
+          "[ -d \"\$(dirname '${outfile.toString()}')\" ] || mkdir -p \"\$(dirname '${outfile.toString()}')\"",
+          "cp -r '${infile.toString()}' '${outfile.toString()}'"
+        ]
       } else {
         // no need to copy if infile is the same as outfile
         []
@@ -121,6 +124,14 @@ def publishStatesByConfig(Map args) {
           def id_ = tup[0]
           def state_ = tup[1] // e.g. [output: new File("myoutput.h5ad"), k: 10]
           def origState_ = tup[2] // e.g. [output: '$id.$key.foo.h5ad']
+
+          // TODO: allow overriding the state.yaml template
+          // TODO TODO: if auto.publish == "state", add output_state as an argument
+          def yamlTemplate = params.containsKey("output_state") ? params.output_state : '$id.$key.state.yaml'
+          def yamlFilename = yamlTemplate
+            .replaceAll('\\$id', id_)
+            .replaceAll('\\$key', key_)
+          def yamlDir = java.nio.file.Paths.get(yamlFilename).getParent()
 
           // the processed state is a list of [key, value, srcPath, destPath] tuples, where
           //   - key, value is part of the state to be saved to disk
@@ -164,19 +175,26 @@ def publishStatesByConfig(Map args) {
                   // the index of the file
                   assert filename.contains("*") : "Module '${key_}' id '${id_}': Multiple output files specified, but no wildcard '*' in the filename: ${filename}"
                   def outputPerFile = value.withIndex().collect{ val, ix ->
-                    def destPath = filename.replace("*", ix.toString())
-                    def destFile = java.nio.file.Paths.get(destPath)
+                    def value_ = java.nio.file.Paths.get(filename.replace("*", ix.toString()))
+                    // if id contains a slash
+                    if (yamlDir != null) {
+                      value_ = yamlDir.relativize(value_)
+                    }
                     def srcPath = val instanceof File ? val.toPath() : val
-                    [value: destFile, srcPath: srcPath, destPath: destPath]
+                    [value: value_, srcPath: srcPath, destPath: destPath]
                   }
                   def transposedOutputs = ["value", "srcPath", "destPath"].collectEntries{ key -> 
                     [key, outputPerFile.collect{dic -> dic[key]}]
                   }
                   return [[key: plainName_] + transposedOutputs]
                 } else {
-                  def destFile = java.nio.file.Paths.get(filename)
+                  def value_ = java.nio.file.Paths.get(filename)
+                  // if id contains a slash
+                  if (yamlDir != null) {
+                    value_ = yamlDir.relativize(value_)
+                  }
                   def srcPath = value instanceof File ? value.toPath() : value
-                  return [[key: plainName_, value: destFile, srcPath: [srcPath], destPath: [filename]]]
+                  return [[key: plainName_, value: value_, srcPath: [srcPath], destPath: [filename]]]
                 }
               }
           
@@ -187,15 +205,7 @@ def publishStatesByConfig(Map args) {
           // convert state to yaml blob
           def yamlBlob_ = toTaggedYamlBlob([id: id_] + updatedState_)
 
-          // adds a leading dot to the id (after any folder names)
-          // example: foo -> .foo, foo/bar -> foo/.bar
-          // TODO: allow defining the state.yaml template
-          def idWithDot_ = id_.replaceAll("^(.+/)?([^/]+)", "\$1.\$2")
-          def yamlFile = '$id.$key.state.yaml'
-            .replaceAll('\\$id', idWithDot_)
-            .replaceAll('\\$key', key_)
-
-          [id_, yamlBlob_, yamlFile, inputFiles_, outputFiles_]
+          [id_, yamlBlob_, yamlFilename, inputFiles_, outputFiles_]
         }
         | publishStatesProc
     emit: input_ch
