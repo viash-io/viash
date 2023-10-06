@@ -175,7 +175,11 @@ def publishStatesByConfig(Map args) {
                   // the index of the file
                   assert filename.contains("*") : "Module '${key_}' id '${id_}': Multiple output files specified, but no wildcard '*' in the filename: ${filename}"
                   def outputPerFile = value.withIndex().collect{ val, ix ->
-                    def value_ = yamlDir.relativize(java.nio.file.Paths.get(filename.replace("*", ix.toString())))
+                    def value_ = java.nio.file.Paths.get(filename.replace("*", ix.toString()))
+                    // if id contains a slash
+                    if (yamlDir != null) {
+                      value_ = yamlDir.relativize(value_)
+                    }
                     def srcPath = val instanceof File ? val.toPath() : val
                     [value: value_, srcPath: srcPath, destPath: destPath]
                   }
@@ -184,7 +188,11 @@ def publishStatesByConfig(Map args) {
                   }
                   return [[key: plainName_] + transposedOutputs]
                 } else {
-                  def value_ = yamlDir.relativize(java.nio.file.Paths.get(filename))
+                  def value_ = java.nio.file.Paths.get(filename)
+                  // if id contains a slash
+                  if (yamlDir != null) {
+                    value_ = yamlDir.relativize(value_)
+                  }
                   def srcPath = value instanceof File ? value.toPath() : value
                   return [[key: plainName_, value: value_, srcPath: [srcPath], destPath: [filename]]]
                 }
