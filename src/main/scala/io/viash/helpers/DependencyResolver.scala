@@ -154,7 +154,8 @@ object DependencyResolver {
         case Some("nextflow") => "main.nf"
         case _ => c.functionality.name
       }
-      val executable = Paths.get(ViashNamespace.targetOutputPath("", platformId.get, c.functionality.namespace, c.functionality.name), executableName).toString()
+      // If no platform is provided, guestimate the executable name. We already know it's not a Nextflow script, so guess native.
+      val executable = Paths.get(ViashNamespace.targetOutputPath("", platformId.getOrElse("native"), c.functionality.namespace, c.functionality.name), executableName).toString()
       val info = c.info.get.copy(executable = Some(executable))
       // Convert case class to map, do some extra conversions of Options while we're at it
       val map = (info.productElementNames zip info.productIterator).map{
