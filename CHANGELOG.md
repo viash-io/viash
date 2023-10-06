@@ -2,6 +2,15 @@
 
 TODO add summary
 
+## NEW FUNCTIONALITY
+
+* `NextflowPlatform`: Added new `.run()` argument `runIf` - a function that determines whether the module should be run or not (PR #xxx).
+  If the `runIf` closure evaluates to `true`, then the module will be run. Otherwise it will be passed through without running.
+
+## MINOR CHANGES
+
+* `NextflowPlatform`: Rename internal VDSL3 variables to be more consistent with regular Viash component variables and avoid naming clashes (PR #553).
+
 ## BUG FIXES
 
 * `export cli_autocomplete`: Fix output script format and hide `--loglevel` and `--colorize` (PR #544). Masked arguments are usable but might not be very useful to always display in help messages.
