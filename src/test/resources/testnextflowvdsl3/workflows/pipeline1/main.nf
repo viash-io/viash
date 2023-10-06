@@ -193,7 +193,7 @@ workflow test_filter_runif_arguments {
     filter: { id, data -> id != "three" },
     runIf: { id, data -> data.input.size() == 2 }
   )
-  | toList()
+  | toSortedList( { a, b -> a[0] <=> b[0] } )
   | view { tup_list ->
     assert tup_list.size() == 2 : "output channel should contain 1 event"
 
