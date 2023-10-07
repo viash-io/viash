@@ -1,5 +1,5 @@
-lines3 = file("${meta.resources_dir}/resources/lines3.txt")
-lines5 = file("${meta.resources_dir}/resources/lines5.txt")
+lines3 = meta.resources_dir.resolve("resources/lines3.txt")
+lines5 = meta.resources_dir.resolve("resources/lines5.txt")
 
 workflow base {
   take: input_ch
