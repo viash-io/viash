@@ -1,3 +1,21 @@
+# Viash 0.8.0-RC3 (2023-10-07): More bugfixes, more Nextflow functionality
+
+This release contains more bugfixes related to the Nextflow code generation functionality.
+It also adds a new `runIf` argument to the `NextflowPlatform` which allows for conditional execution of modules.
+
+## NEW FUNCTIONALITY
+
+* `NextflowPlatform`: Added new `.run()` argument `runIf` - a function that determines whether the module should be run or not (PR #553).
+  If the `runIf` closure evaluates to `true`, then the module will be run. Otherwise it will be passed through without running.
+
+## MINOR CHANGES
+
+* `NextflowPlatform`: Rename internal VDSL3 variables to be more consistent with regular Viash component variables and avoid naming clashes (PR #553).
+
+## BUG FIXES
+
+* `export cli_autocomplete`: Fix output script format and hide `--loglevel` and `--colorize` (PR #544). Masked arguments are usable but might not be very useful to always display in help messages.
+
 # Viash 0.8.0-RC2 (2023-10-04): Some bugfixes
 
 Some bugfixes related to the new dependencies and Nextflow code generation functionality.

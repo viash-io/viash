@@ -11,12 +11,13 @@ include { step2 } from "$targetDir/step2/main.nf"
 // ["input": List[File]] -> File
 include { step3 } from "$targetDir/step3/main.nf"
 
+lines3 = file("${params.rootDir}/resources/lines3.txt")
+lines5 = file("${params.rootDir}/resources/lines5.txt")
+
 def channelValue = Channel.value([ 
   "foo", // id
-  [      // data
-    "input": file("${params.rootDir}/resources/lines*.txt")
-  ],
-  file("${params.rootDir}/resources/lines3.txt") // pass-through
+  ["input": [lines3, lines5]],
+  lines3 // pass-through
 ])
 
 workflow base {
@@ -178,5 +179,42 @@ workflow test_fromstate_tostate_arguments {
 
     // return something to print
     "DEBUG4: $output"
+  }
+}
+
+
+workflow test_filter_runif_arguments {
+  Channel.fromList([
+    ["one", [input: [lines3]]],
+    ["two", [input: [lines3, lines5]]],
+    ["three", [input: [lines5]]]
+  ])
+  | step1.run(
+    filter: { id, data -> id != "three" },
+    runIf: { id, data -> data.input.size() == 2 }
+  )
+  | toSortedList( { a, b -> a[0] <=> b[0] } )
+  | view { tups ->
+    assert tups.size() == 2 : "output channel should contain 1 event"
+
+    def tup0 = tups[0]
+    def tup1 = tups[1]
+    assert tup0.size() == 2 : "outputs should contain two elements; [id, output]"
+    assert tup1.size() == 2 : "outputs should contain two elements; [id, output]"
+
+    // check id
+    assert tup0[0] == "one" : "id should be one"
+    assert tup1[0] == "two" : "id should be two"
+
+    // check data
+    assert tup0[1].containsKey("input") : "data should contain key input"
+    assert tup0[1].input.size() == 1 : "data should contain 1 file"
+    assert tup0[1].input[0].name == "lines3.txt" : "data should contain lines3.txt. Found: ${tup0[1]}"
+
+    assert tup1[1].containsKey("output") : "data should contain key output"
+    assert tup1[1].output instanceof Path : "data should contain 1 file"
+    assert tup1[1].output.name == "two.step1.output.txt" : "data should contain two.step1.output.txt. Found: ${tup1[1]}"
+
+    ""
   }
 }

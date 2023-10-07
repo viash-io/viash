@@ -224,7 +224,7 @@ case class NextflowPlatform(
     val innerWorkflowFactory = mainScript match {
       // if mainscript is a nextflow workflow
       case scr: NextflowScript =>
-        s"""// user-provided workflow
+        s"""// user-provided Nextflow code
           |${scr.readWithoutInjection.get.split("\n").mkString("\n|")}
           |
           |// inner workflow hook
@@ -233,48 +233,50 @@ case class NextflowPlatform(
           |}""".stripMargin
       // else if it is a vdsl3 module
       case _ => 
-        s"""// process script
-          |thisScript = ${NextflowHelper.generateScriptStr(config)}
-          |
-          |// inner workflow hook
+        s"""// inner workflow hook
           |def innerWorkflowFactory(args) {
-          |  return vdsl3WorkflowFactory(args)
+          |  def rawScript = ${NextflowHelper.generateScriptStr(config)}
+          |  
+          |  return vdsl3WorkflowFactory(args, meta, rawScript)
           |}
           |
           |""".stripMargin + 
           NextflowHelper.vdsl3Helper
     }
 
-    s"""${NextflowHelper.generateHeader(config)}
+    NextflowHelper.generateHeader(config) + "\n\n" +
+      NextflowHelper.workflowHelper +
+      s"""
       |
       |nextflow.enable.dsl=2
       |
       |// START COMPONENT-SPECIFIC CODE
       |
-      |// retrieve resourcesDir here to make sure the correct path is found
-      |resourcesDir = moduleDir.normalize()
+      |// create meta object
+      |meta = [
+      |  "resources_dir": moduleDir.normalize(),
+      |  "config": ${NextflowHelper.generateConfigStr(config)}
+      |]
       |
-      |// component metadata
-      |thisConfig = ${NextflowHelper.generateConfigStr(config)}
+      |// resolve dependencies dependencies (if any)
+      |${NextflowHelper.renderDependencies(config).split("\n").mkString("\n|")}
       |
       |// inner workflow
       |${innerWorkflowFactory.split("\n").mkString("\n|")}
       |
-      |// component settings
-      |thisDefaultWorkflowArgs = ${NextflowHelper.generateDefaultWorkflowArgs(config, directivesToJson, auto, debug)}
-      |
-      |${NextflowHelper.renderDependencies(config).split("\n").mkString("\n|")}
+      |// defaults
+      |meta["defaults"] = ${NextflowHelper.generateDefaultWorkflowArgs(config, directivesToJson, auto, debug)}
       |
       |// initialise default workflow
-      |myWfInstance = workflowFactory([:])
+      |meta["workflow"] = workflowFactory([key: meta.config.functionality.name], meta.defaults, meta)
       |
       |// add workflow to environment
-      |nextflow.script.ScriptMeta.current().addDefinition(myWfInstance)
+      |nextflow.script.ScriptMeta.current().addDefinition(meta.workflow)
       |
       |// anonymous workflow for running this module as a standalone
       |workflow {
       |  // add id argument if it's not already in the config
-      |  if (thisConfig.functionality.arguments.every{it.plainName != "id"}) {
+      |  if (meta.config.functionality.arguments.every{it.plainName != "id"}) {
       |    def idArg = [
       |      'name': '--id',
       |      'required': false,
@@ -282,25 +284,23 @@ case class NextflowPlatform(
       |      'description': 'A unique id for every entry.',
       |      'multiple': false
       |    ]
-      |    thisConfig.functionality.arguments.add(0, idArg)
-      |    thisConfig = processConfig(thisConfig)
+      |    meta.config.functionality.arguments.add(0, idArg)
+      |    meta.config = processConfig(meta.config)
       |  }
       |  if (!params.containsKey("id")) {
       |    params.id = "run"
       |  }
       |
-      |  helpMessage(thisConfig)
+      |  helpMessage(meta.config)
       |
-      |  channelFromParams(params, thisConfig)
-      |    | myWfInstance.run(
+      |  channelFromParams(params, meta.config)
+      |    | meta.workflow.run(
       |      auto: [ publish: "state" ]
       |    )
       |}
       |
       |// END COMPONENT-SPECIFIC CODE
-      |
-      |""".stripMargin +
-      NextflowHelper.workflowHelper
+      |""".stripMargin
   }
 }
 

@@ -3,53 +3,50 @@
  * 
  * @param components: list of Viash VDSL3 modules to run
  * @param fromState: a closure, a map or a list of keys to extract from the input data.
- *   If a closure, it will be called with the id, the data and the component config.
+ *   If a closure, it will be called with the id, the data and the component itself.
  * @param toState: a closure, a map or a list of keys to extract from the output data
- *   If a closure, it will be called with the id, the output data, the old state and the component config.
+ *   If a closure, it will be called with the id, the output data, the old state and the component itself.
  * @param filter: filter function to apply to the input.
- *   It will be called with the id, the data and the component config.
+ *   It will be called with the id, the data and the component itself.
  * @param id: id to use for the output data
- *   If a closure, it will be called with the id, the data and the component config.
+ *   If a closure, it will be called with the id, the data and the component itself.
  * @param auto: auto options to pass to the components
  *
  * @return: a workflow that runs the components
  **/
-def runComponents(Map args) {
-  log.warn("runComponents is deprecated, use runEach instead")
-  assert args.components: "runComponents should be passed a list of components to run"
+def runEach(Map args) {
+  assert args.components: "runEach should be passed a list of components to run"
 
   def components_ = args.components
   if (components_ !instanceof List) {
     components_ = [ components_ ]
   }
-  assert components_.size() > 0: "pass at least one component to runComponents"
+  assert components_.size() > 0: "pass at least one component to runEach"
 
   def fromState_ = args.fromState
   def toState_ = args.toState
   def filter_ = args.filter
   def id_ = args.id
 
-  workflow runComponentsWf {
+  workflow runEachWf {
     take: input_ch
     main:
 
     // generate one channel per method
     out_chs = components_.collect{ comp_ ->
-      def comp_config = comp_.config
-
       filter_ch = filter_
         ? input_ch | filter{tup ->
-          filter_(tup[0], tup[1], comp_config)
+          filter_(tup[0], tup[1], comp_)
         }
         : input_ch
       id_ch = id_
         ? filter_ch | map{tup ->
-          // def new_id = id_(tup[0], tup[1], comp_config)
+          // def new_id = id_(tup[0], tup[1], comp_)
           def new_id = tup[0]
           if (id_ instanceof String) {
             new_id = id_
           } else if (id_ instanceof Closure) {
-            new_id = id_(new_id, tup[1], comp_config)
+            new_id = id_(new_id, tup[1], comp_)
           }
           [new_id] + tup.drop(1)
         }
@@ -65,7 +62,7 @@ def runComponents(Map args) {
               [key, new_data[key]]
             }
           } else if (fromState_ instanceof Closure) {
-            new_data = fromState_(tup[0], new_data, comp_config)
+            new_data = fromState_(tup[0], new_data, comp_)
           }
           tup.take(1) + [new_data] + tup.drop(1)
         }
@@ -86,7 +83,7 @@ def runComponents(Map args) {
               [key, output[key]]
             }
           } else if (toState_ instanceof Closure) {
-            new_state = toState_(tup[0], output, old_state, comp_config)
+            new_state = toState_(tup[0], output, old_state, comp_)
           }
           [tup[0], new_state] + tup.drop(3)
         }
@@ -104,5 +101,5 @@ def runComponents(Map args) {
     emit: output_ch
   }
 
-  return runComponentsWf
+  return runEachWf
 }

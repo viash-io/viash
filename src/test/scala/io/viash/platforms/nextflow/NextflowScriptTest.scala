@@ -57,17 +57,6 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-
-    // TODO: add back checks?
-
-    // outputFileMatchChecker(stdOut, "DEBUG6", "^11 .*$")
-
-    // // check whether step3's debug printing was triggered
-    // outputFileMatchChecker(stdOut, "process 'step3[^']*' output tuple", "^11 .*$")
-
-    // // check whether step2's debug printing was not triggered
-    // val lines2 = stdOut.split("\n").find(_.contains("process 'step2' output tuple"))
-    // assert(!lines2.isDefined)
   }
 
   // TODO: use TestHelper.testMainWithStdErr instead of NextflowTestHelper.run; i.e. viash test
@@ -86,6 +75,20 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
   }
 
+  // why is this not working?
+  
+  // test("Test filter/runIf", DockerTest, NextflowTest) {
+  //   val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+  //     mainScript = "target/nextflow/test_wfs/filter_runif/main.nf",
+  //     args = List(
+  //       "--publish_dir", "output"
+  //     ),
+  //     cwd = tempFolFile
+  //   )
+
+  //   assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+  // }
+
 
   test("Check whether --help is same as Viash's --help", NextflowTest) {
     // except that WorkflowHelper.nf will not print alternatives, and
@@ -100,26 +103,6 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut1\nStd error:\n$stdErr1")
-
-    // // explicitly remove defaults set by output files
-    // // these defaults make sense in nextflow but not in viash
-    // val correctedStdOut1 = stdOut1.replaceAll("        default: \\$id\\.\\$key\\.[^\n]*\n", "")
-    // // explicitly remove global arguments
-    // // these arguments make sense in nextflow but not in viash
-    // import java.util.regex.Pattern
-    // val regex = Pattern.compile("\nNextflow input-output arguments:.*", Pattern.DOTALL)
-    // val correctedStdOut2 = regex.matcher(correctedStdOut1).replaceAll("")
-
-    // // run Viash's --help
-    // val (stdOut2, stdErr2, exitCode2) = TestHelper.testMainWithStdErr(
-    //   "run", srcPath + "/wf/config.vsh.yaml",
-    //   "--", "--help"
-    // )
-
-    // assert(exitCode2 == 0)
-
-    // // check if they are the same
-    // assert(correctedStdOut2 == stdOut2)
   }
 
 
