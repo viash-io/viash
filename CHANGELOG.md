@@ -1,3 +1,7 @@
+# Viash 0.8.0dev
+
+...
+
 # Viash 0.8.0-RC3 (2023-10-07): More bugfixes, more Nextflow functionality
 
 This release contains more bugfixes related to the Nextflow code generation functionality.
