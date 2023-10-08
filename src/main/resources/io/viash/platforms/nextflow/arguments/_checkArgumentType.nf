@@ -5,7 +5,7 @@ def _checkArgumentType(String stage, Map par, Object value, String id, String ke
   if (!par.required && value == null) {
     expectedClass = null
   } else if (par.multiple) {
-    if (par.type == "file" && stage == "output" && par.direction == "input" && value instanceof String) {
+    if (par.type == "file" && par.direction == "input" && value instanceof String) {
       value = file(value, hidden: true)
     }
     if (value !instanceof List) {
