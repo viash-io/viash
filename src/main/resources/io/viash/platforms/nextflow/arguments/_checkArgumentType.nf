@@ -1,4 +1,3 @@
-
 def _checkArgumentType(String stage, Map par, Object value, String id, String key) {
   // expectedClass will only be != null if value is not of the expected type
   def expectedClass = null
@@ -6,15 +5,17 @@ def _checkArgumentType(String stage, Map par, Object value, String id, String ke
   if (!par.required && value == null) {
     expectedClass = null
   } else if (par.multiple) {
-    if (value instanceof List) {
-      try {
-        value = value.collect { listVal ->
-          _checkArgumentType(stage, par + [multiple: false], listVal, id, key)
-        }
-      } catch (Exception e) {
-        expectedClass = "List[${par.type}]"
+    if (par.type == "file" && stage == "output" && par.direction == "input" && value instanceof String) {
+      value = file(value, hidden: true)
+    }
+    if (value !instanceof List) {
+      value = [value]
+    }
+    try {
+      value = value.collect { listVal ->
+        _checkArgumentType(stage, par + [multiple: false], listVal, id, key)
       }
-    } else {
+    } catch (Exception e) {
       expectedClass = "List[${par.type}]"
     }
   } else if (par.type == "string") {
@@ -43,6 +44,9 @@ def _checkArgumentType(String stage, Map par, Object value, String id, String ke
     if (stage == "output" || par.direction == "input") {
       if (value instanceof File) {
         value = value.toPath()
+      }
+      if (value instanceof String) {
+        value = file(value, hidden: true)
       }
       expectedClass = value instanceof Path ? null : "Path"
     } else { // stage == "input" && par.direction == "output"
