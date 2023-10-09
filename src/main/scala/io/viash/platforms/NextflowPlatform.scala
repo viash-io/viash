@@ -277,7 +277,8 @@ case class NextflowPlatform(
       |workflow {
       |  // add id argument if it's not already in the config
       |  // TODO: deep copy
-      |  def newConfig = meta.config
+      |  def newConfig = deepClone(meta.config)
+      |  def newParams = deepClone(params)
       |
       |  def argsContainsId = newConfig.functionality.arguments.any{it.plainName == "id"}
       |  if (!argsContainsId) {
@@ -291,13 +292,13 @@ case class NextflowPlatform(
       |    newConfig.functionality.arguments.add(0, idArg)
       |    newConfig = processConfig(newConfig)
       |  }
-      |  if (!params.containsKey("id")) {
-      |    params.id = "run"
+      |  if (!newParams.containsKey("id")) {
+      |    newParams.id = "run"
       |  }
       |
       |  helpMessage(newConfig)
       |
-      |  channelFromParams(params, newConfig)
+      |  channelFromParams(newParams, newConfig)
       |    // make sure id is not in the state if id is not in the args
       |    | map {id, state ->
       |      if (!argsContainsId) {
