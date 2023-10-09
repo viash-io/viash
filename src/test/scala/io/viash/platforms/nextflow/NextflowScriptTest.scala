@@ -76,6 +76,18 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
   }
   
+  test("Test fromState/toState", DockerTest, NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/test_wfs/fromstate_tostate/main.nf",
+      args = List(
+        "--publish_dir", "output"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+  }
+
   test("Test filter/runIf", DockerTest, NextflowTest) {
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "target/nextflow/test_wfs/filter_runif/main.nf",
