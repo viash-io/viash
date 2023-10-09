@@ -5,7 +5,8 @@ functionality:
     - type: nextflow_script
       path: main.nf
       entrypoint: base
-    - path: /resources
+    # TODO: make absolute when the ns build uses the right CWD
+    - path: ../../../resources
   dependencies:
     - name: step1
     - name: step2
