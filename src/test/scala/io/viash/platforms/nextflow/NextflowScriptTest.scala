@@ -75,14 +75,11 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
   }
-
-  // why is this not working?
   
   test("Test filter/runIf", DockerTest, NextflowTest) {
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "target/nextflow/test_wfs/filter_runif/main.nf",
       args = List(
-        "--rootDir", tempFolStr,
         "--publish_dir", "output"
       ),
       cwd = tempFolFile
