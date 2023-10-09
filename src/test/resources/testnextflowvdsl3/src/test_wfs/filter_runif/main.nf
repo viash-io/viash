@@ -45,5 +45,5 @@ workflow base {
       ""
     }
   emit:
-  Channel.empty()
+  input_ch
 }
