@@ -55,12 +55,8 @@ case class NextflowAuto(
       |Default: `false`.
       |""".stripMargin)
   @default("False")
-  publish: Either[Boolean, String] = Left(false)
+  publish: Either[Boolean, String] = Right("false")
 ) {
-  // if publish is a string, it must be "state"
-  val checkPublish = publish match {
-    case Left(value) => true
-    case Right(value) => value == "state"
-  }
-  assert(checkPublish, message = "publish must be either a boolean or equal to \"state\"")
+  assert(publish.isRight, message = "expected publish to be converted to a string")
+  assert(Seq("true", "false", "state").contains(publish.toOption.get), message = "publish must be either a boolean or equal to \"state\"")
 }
