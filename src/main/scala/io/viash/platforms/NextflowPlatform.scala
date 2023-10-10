@@ -280,7 +280,7 @@ case class NextflowPlatform(
       |  def newConfig = deepClone(meta.config)
       |  def newParams = deepClone(params)
       |
-      |  def argsContainsId = newConfig.functionality.arguments.any{it.plainName == "id"}
+      |  def argsContainsId = newConfig.functionality.allArguments.any{it.plainName == "id"}
       |  if (!argsContainsId) {
       |    def idArg = [
       |      'name': '--id',
