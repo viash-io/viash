@@ -11,7 +11,7 @@ Map _processInputValues(Map inputs, Map config, String id, String key) {
       def par = config.functionality.allArguments.find { it.plainName == name && (it.direction == "input" || it.type == "file") }
       assert par != null : "Error in module '${key}' id '${id}': '${name}' is not a valid input argument"
 
-      value = _checkArgumentType("input", par, value, id, key)
+      value = _checkArgumentType("input", par, value, "in module '$key' id '$id'")
 
       [ name, value ]
     }

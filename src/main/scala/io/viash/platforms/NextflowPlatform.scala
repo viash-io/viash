@@ -276,7 +276,12 @@ case class NextflowPlatform(
       |// anonymous workflow for running this module as a standalone
       |workflow {
       |  // add id argument if it's not already in the config
-      |  if (meta.config.functionality.arguments.every{it.plainName != "id"}) {
+      |  // TODO: deep copy
+      |  def newConfig = deepClone(meta.config)
+      |  def newParams = deepClone(params)
+      |
+      |  def argsContainsId = newConfig.functionality.arguments.any{it.plainName == "id"}
+      |  if (!argsContainsId) {
       |    def idArg = [
       |      'name': '--id',
       |      'required': false,
@@ -284,16 +289,24 @@ case class NextflowPlatform(
       |      'description': 'A unique id for every entry.',
       |      'multiple': false
       |    ]
-      |    meta.config.functionality.arguments.add(0, idArg)
-      |    meta.config = processConfig(meta.config)
+      |    newConfig.functionality.arguments.add(0, idArg)
+      |    newConfig = processConfig(newConfig)
       |  }
-      |  if (!params.containsKey("id")) {
-      |    params.id = "run"
+      |  if (!newParams.containsKey("id")) {
+      |    newParams.id = "run"
       |  }
       |
-      |  helpMessage(meta.config)
+      |  helpMessage(newConfig)
       |
-      |  channelFromParams(params, meta.config)
+      |  channelFromParams(newParams, newConfig)
+      |    // make sure id is not in the state if id is not in the args
+      |    | map {id, state ->
+      |      if (!argsContainsId) {
+      |        [id, state.findAll{k, v -> k != "id"}]
+      |      } else {
+      |        [id, state]
+      |      }
+      |    }
       |    | meta.workflow.run(
       |      auto: [ publish: "state" ]
       |    )

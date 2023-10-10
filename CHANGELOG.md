@@ -1,3 +1,19 @@
+# Viash 0.8.0-RC4 (2023-10-10): Refactor Nextflow helper functions
+
+## MAJOR CHANGES
+
+* `NextflowPlatform`: Refactoring of helper functions (PR #557).
+  - Cleaned up `processConfig()`: Removed support for `functionality.inputs` and `functionality.outputs`
+  - Cleaned up `processConfig()`: Removed support for `.functionality.argument_groups[].argument` containing a list of argument ids as opposed to the arguments themselves.
+  - Rewrote `--param_list` parser.
+  - Removed unused function `applyConfig()` and `applyConfigToOneParamSet()`.
+  - Refactored `channelFromParams()` to make use of new helper functions.
+  - Removed deprecated `paramsToChannel()`, `paramsToList()`, `viashChannel()`.
+  - Deprecated `preprocessInputs()` -- use the wrapped Viash Nextflow functionality instead.
+  - Refactored `preprocessInputs()` to make use of new helper functions.
+  - Reprecated run arguments `map`, `mapData`, `mapPassthrough`, `renameKeys`.
+
+
 # Viash 0.8.0-RC3 (2023-10-07): More bugfixes, more Nextflow functionality
 
 This release contains more bugfixes related to the Nextflow code generation functionality.

@@ -1,105 +1,4 @@
 /**
- * Resolve the file paths in the parameters relative to given path
- *
- * @param paramList A Map containing parameters to process.
- *                  This function assumes that files are still of type String.
- * @param config A Map of the Viash configuration. This Map can be generated from the config file
- *               using the readConfig() function.
- * @param relativeTo path of a file to resolve the parameters values to.
- *
- * @return A map of parameters where the location of the input file parameters have been resolved
- *         resolved relatively to the provided path.
- */
-private Map<String, Object> _resolvePathsRelativeTo(Map paramList, Map config, String relativeTo) {
-  paramList.collectEntries { parName, parValue ->
-    argSettings = config.functionality.allArguments.find{it.plainName == parName}
-    if (argSettings && argSettings.type == "file" && argSettings.direction == "input") {
-      if (parValue instanceof Collection) {
-        parValue = parValue.collect({path -> 
-          path !instanceof String ? path : file(_getChild(relativeTo, path))
-        })
-      } else {
-        parValue = parValue !instanceof String ? path : file(_getChild(relativeTo, parValue))
-      }
-    }
-    [parName, parValue]
-  }
-}
-
-/**
- * Parse nextflow parameters based on settings defined in a viash config 
- * and return a nextflow channel.
- *
- * @param params Input parameters from nextflow.
- * @param config A Map of the Viash configuration. This Map can be generated from the config file
- *               using the readConfig() function.
- *
- * @return A list of parameter sets that were parsed from the 'param_list' argument value.
- */
-private List<Tuple2<String, Map>> _parseParamListArguments(Map params, Map config){
-  // first try to guess the format (if not set in params)
-  def paramListFormat = _guessParamListFormat(params)
-
-  // get the correct parser function for the detected params_list format
-  def paramListParsers = [ 
-    "csv": {[it, readCsv(it)]},
-    "json": {[it, readJson(it)]},
-    "yaml": {[it, readYaml(it)]},
-    "yaml_blob": {[null, readYamlBlob(it)]},
-    "asis": {[null, it]},
-    "none": {[null, [[:]]]}
-  ]
-  assert paramListParsers.containsKey(paramListFormat):
-    "Format of provided --param_list not recognised.\n" +
-    "You can use '--param_list_format' to manually specify the format.\n" +
-    "Found: '$paramListFormat'. Expected: one of 'csv', 'json', "+
-    "'yaml', 'yaml_blob', 'asis' or 'none'"
-  def paramListParser = paramListParsers.get(paramListFormat)
-
-  // fetch multi param inputs
-  def paramListOut = paramListParser(params.containsKey("param_list") ? params.param_list : "")
-  // multiFile is null if the value passed to param_list was not a file (e.g a blob)
-  // If the value was indeed a file, multiFile contains the location that file (used later).
-  def paramListFile = paramListOut[0]
-  def paramSets = paramListOut[1] // these are the actual parameters from reading the blob/file
-
-  // data checks
-  assert paramSets instanceof List: "--param_list should contain a list of maps"
-  for (value in paramSets) {
-    assert value instanceof Map: "--param_list should contain a list of maps"
-  }
-
-  // id is argument
-  def idIsArgument = config.functionality.allArguments.find({it.plainName == "id"}) != null
-
-  // Reformat from List<Map> to List<Tuple2<String, Map>> by adding the ID as first element of a Tuple2
-  paramSets = paramSets.collect({ paramValues ->
-    def paramId = paramValues.id
-    if (!idIsArgument) {
-      paramValues = paramValues.findAll{k, v -> k != "id"}
-    }
-    [paramId, paramValues]
-  })
-
-  // Split parameters with 'multiple: true'
-  paramSets = paramSets.collect({ id, paramValues ->
-    def splitParamValues = _splitParams(paramValues, config)
-    [id, splitParamValues]
-  })
-  
-  // The paths of input files inside a param_list file may have been specified relatively to the
-  // location of the param_list file. These paths must be made absolute.
-  if (paramListFile){
-    paramSets = paramSets.collect({ id, paramValues ->
-      def relativeParamValues = _resolvePathsRelativeTo(paramValues, config, paramListFile)
-      [id, relativeParamValues]
-    })
-  }
-
-  return paramSets
-}
-
-/**
  * Parse nextflow parameters based on settings defined in a viash config.
  * Return a list of parameter sets, each parameter set corresponding to 
  * an event in a nextflow channel. The output from this function can be used
@@ -131,42 +30,64 @@ private List<Tuple2<String, Map>> _parseParamListArguments(Map params, Map confi
  */
  
 private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params, Map config){
+  // todo: fetch key from run args
+  def key_ = config.functionality.name
+  
   /* parse regular parameters (not in param_list)  */
   /*************************************************/
   def globalParams = config.functionality.allArguments
     .findAll { params.containsKey(it.plainName) }
     .collectEntries { [ it.plainName, params[it.plainName] ] }
   def globalID = params.get("id", null)
-  def globalParamsValues = applyConfigToOneParameterSet(globalParams, config)
 
   /* process params_list arguments */
   /*********************************/
-  def paramSets = _parseParamListArguments(params, config)
-  def parameterSetsWithConfigApplied = applyConfig(paramSets, config)
+  def paramList = params.containsKey("param_list") && params.param_list != null ?
+    params.param_list : []
+  // if (paramList instanceof String) {
+  //   paramList = [paramList]
+  // }
+  // def paramSets = paramList.collectMany{ _parseParamList(it, config) }
+  // TODO: be able to process param_list when it is a list of strings
+  def paramSets = _parseParamList(paramList, config)
+  if (paramSets.isEmpty()) {
+    paramSets = [[null, [:]]]
+  }
 
   /* combine arguments into channel */
   /**********************************/
-  def processedParams = parameterSetsWithConfigApplied.indexed().collect{ index, paramSet ->
-    def id = paramSet[0]
-    def parValues = paramSet[1]
-    id = [id, globalID].find({it != null}) // first non-null element
+  def processedParams = paramSets.indexed().collect{ index, tup ->
+    // Process ID
+    def id = tup[0] ?: globalID
   
     if (workflow.stubRun) {
       // if stub run, explicitly add an id if missing
-      id = id ? id : "stub" + index
+      id = id ? id : "stub${index}"
     }
     assert id != null: "Each parameter set should have at least an 'id'"
-    // Add regular parameters together with parameters passed with 'param_list'
-    def combinedArgsValues = globalParamsValues + parValues
 
-    // Remove parameters which are null, if the default is also null
-    combinedArgsValues = combinedArgsValues.collectEntries{paramName, paramValue ->
-      parameterSettings = config.functionality.allArguments.find({it.plainName == paramName})
-      if ( paramValue != null || parameterSettings.get("default", null) != null ) {
-        [paramName, paramValue]
+    // Process params
+    def parValues = globalParams + tup[1]
+    // // Remove parameters which are null, if the default is also null
+    // parValues = parValues.collectEntries{paramName, paramValue ->
+    //   parameterSettings = config.functionality.allArguments.find({it.plainName == paramName})
+    //   if ( paramValue != null || parameterSettings.get("default", null) != null ) {
+    //     [paramName, paramValue]
+    //   }
+    // }
+    parValues = parValues.collectEntries { name, value ->
+      def par = config.functionality.allArguments.find { it.plainName == name && (it.direction == "input" || it.type == "file") }
+      assert par != null : "Error in module '${key_}' id '${id}': '${name}' is not a valid input argument"
+
+      if (par == null) {
+        return [:]
       }
+      value = _checkArgumentType("input", par, value, "in module '$key_' id '$id'")
+
+      [ name, value ]
     }
-    [id, combinedArgsValues]
+
+    [id, parValues]
   }
 
   // Check if ids (first element of each list) is unique
