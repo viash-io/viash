@@ -4,7 +4,7 @@ preprocessInputsDeprecationWarningPrinted = false
 def preprocessInputsDeprecationWarning() {
   if (!preprocessInputsDeprecationWarningPrinted) {
     preprocessInputsDeprecationWarningPrinted = true
-    System.err.println("Warning: preprocessInputs() is deprecated since Viash 0.9.0.")
+    System.err.println("Warning: preprocessInputs() is deprecated and will be removed in Viash 0.9.0.")
   }
 }
 
