@@ -27,7 +27,7 @@ object JsonSchema {
     minimal: Boolean = false
   )
 
-  lazy val data = CollectedSchemas.data
+  lazy val data = CollectedSchemas.fullData.map(_.filter(!_.hasInternalFunctionality))
 
   def typeOrRefJson(`type`: String): (String, Json) = {
     `type` match {

@@ -216,7 +216,8 @@ object CollectedSchemas {
   def getParameters[T: TypeTag]() = getSchema(getMembers[T]())
 
   // Main call for documentation output
-  lazy val data: List[List[ParameterSchema]] = schemaClasses.map{ v => getSchema(v)}.map(_.filter(p => !p.hasUndocumented && !p.hasInternalFunctionality))
+  lazy val fullData: List[List[ParameterSchema]] = schemaClasses.map{ v => getSchema(v)}
+  lazy val data: List[List[ParameterSchema]] = fullData.map(_.filter(p => !p.hasUndocumented && !p.hasInternalFunctionality))
 
   def getKeyFromParamList(data: List[ParameterSchema]): String = data.find(p => p.name == "__this__").get.`type`
 
