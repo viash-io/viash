@@ -240,7 +240,7 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   def escapedScript = rawScript.replace('\\', '\\\\').replace('$', '\\$').replace('"""', '\\"\\"\\"')
 
   // publishdir assert
-  def assertStr = (workflowArgs.auto.publish == true) || workflowArgs.auto.transcript ? 
+  def assertStr = (workflowArgs.auto.publish == "true") || workflowArgs.auto.transcript ? 
     """\nassert task.publishDir.size() > 0: "if auto.publish is true, params.publish_dir needs to be defined.\\n  Example: --publish_dir './output/'" """ :
     ""
 

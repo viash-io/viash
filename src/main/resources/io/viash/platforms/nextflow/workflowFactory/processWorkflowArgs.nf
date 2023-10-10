@@ -29,7 +29,7 @@ def processWorkflowArgs(Map args, Map defaultWfArgs, Map meta) {
   workflowArgs["auto"] = processAuto(defaultWfArgs.auto + workflowArgs["auto"])
 
   // auto define publish, if so desired
-  if (workflowArgs.auto.publish == true && (workflowArgs.directives.publishDir != null ? workflowArgs.directives.publishDir : [:]).isEmpty()) {
+  if (workflowArgs.auto.publish == "true" && (workflowArgs.directives.publishDir != null ? workflowArgs.directives.publishDir : [:]).isEmpty()) {
     // can't assert at this level thanks to the no_publish profile
     // assert params.containsKey("publishDir") || params.containsKey("publish_dir") : 
     //   "Error in module '${workflowArgs['key']}': if auto.publish is true, params.publish_dir needs to be defined.\n" +

@@ -18,7 +18,8 @@ def processAuto(Map auto) {
   assert auto.transcript instanceof Boolean, "auto.transcript must be a boolean"
 
   // check auto.publish
-  assert auto.publish instanceof Boolean || auto.publish == "state", "auto.publish must be a boolean or 'state'"
+  assert auto.publish instanceof CharSequence
+  assert auto.publish in ["true", "false", "state"], "auto.publish must be 'true', 'false', or 'state'"
 
   return auto.subMap(expectedKeys)
 }
