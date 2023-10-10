@@ -30,19 +30,11 @@ package object nextflow {
   implicit val encodeNextflowAuto: Encoder.AsObject[NextflowAuto] = deriveConfiguredEncoder
   implicit val decodeNextflowAuto: Decoder[NextflowAuto] = deriveConfiguredDecoderFullChecks[NextflowAuto].prepare(
     _.withFocus(_.mapObject{ conf => 
-      val publish = conf.apply("publish").map {
-        publish => 
-          publish.asBoolean match {
-            case Some(true) => Json.fromString("true")
-            case Some(false) => Json.fromString("false")
-            case None => publish
-          }
-      }
-      publish match {
-        case Some(publish) => conf.add("publish", publish)
-        case None => conf
-      }
-      })
+      conf.map {
+        case ("publish", Json.True) => ("publish", Json.fromString("true"))
+        case ("publish", Json.False) => ("publish", Json.fromString("false"))
+        case (k, v) => (k, v)
+      }})
   )
 
   implicit val encodeNextflowConfig: Encoder.AsObject[NextflowConfig] = deriveConfiguredEncoder
