@@ -83,7 +83,7 @@ def processWorkflowArgs(Map args, Map defaultWfArgs, Map meta) {
   // TODO: should functions like 'map', 'mapId', 'mapData', 'mapPassthrough' be deprecated as well?
   for (nam in ["map", "mapData", "mapPassthrough", "renameKeys"]) {
     if (workflowArgs.containsKey(nam) && workflowArgs[nam] != null) {
-      log.warn "module '$key': workflow argument '$nam' will be removed in Viash 0.9.0. Please use 'fromState' and 'toState' instead."
+      log.warn "module '$key': workflow argument '$nam' is deprecated and will be removed in Viash 0.9.0. Please use 'fromState' and 'toState' instead."
     }
   }
 
