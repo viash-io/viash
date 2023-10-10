@@ -71,9 +71,10 @@ object CollectedSchemas {
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
 
   import io.viash.helpers.circe._
+  import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
 
   private implicit val encodeConfigSchema: Encoder.AsObject[CollectedSchemas] = deriveConfiguredEncoder
-  private implicit val encodeParameterSchema: Encoder.AsObject[ParameterSchema] = deriveConfiguredEncoder
+  private implicit val encodeParameterSchema: Encoder.AsObject[ParameterSchema] = deriveConfiguredEncoderStrict
   private implicit val encodeDeprecatedOrRemoved: Encoder.AsObject[DeprecatedOrRemovedSchema] = deriveConfiguredEncoder
   private implicit val encodeExample: Encoder.AsObject[ExampleSchema] = deriveConfiguredEncoder
 
@@ -207,12 +208,15 @@ object CollectedSchemas {
 
   private val getSchema = (t: (Map[String,List[MemberInfo]], List[Symbol])) => t match {
     case (members, classes) => {
-      annotationsOf(members, classes).flatMap{ case (name, tpe, hierarchy, annotations) => ParameterSchema(name, tpe, hierarchy, annotations) }
+      annotationsOf(members, classes).map{ case (name, tpe, hierarchy, annotations) => ParameterSchema(name, tpe, hierarchy, annotations) }
     }
   }
 
+  // get all parameters for a given type, including parent class annotations
+  def getParameters[T: TypeTag]() = getSchema(getMembers[T]())
+
   // Main call for documentation output
-  lazy val data: List[List[ParameterSchema]] = schemaClasses.map{ v => getSchema(v)}
+  lazy val data: List[List[ParameterSchema]] = schemaClasses.map{ v => getSchema(v)}.map(_.filter(p => !p.hasUndocumented && !p.hasInternalFunctionality))
 
   def getKeyFromParamList(data: List[ParameterSchema]): String = data.find(p => p.name == "__this__").get.`type`
 

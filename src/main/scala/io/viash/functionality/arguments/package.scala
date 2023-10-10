@@ -22,6 +22,7 @@ import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfigur
 import cats.syntax.functor._ // for .widen
 import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
 import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
+import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
 import io.viash.exceptions.ConfigParserSubTypeException
 
 package object arguments {
@@ -62,14 +63,14 @@ package object arguments {
   }
 
   // encoders and decoders for Argument
-  implicit val encodeStringArgument: Encoder.AsObject[StringArgument] = deriveConfiguredEncoder
-  implicit val encodeIntegerArgument: Encoder.AsObject[IntegerArgument] = deriveConfiguredEncoder
-  implicit val encodeLongArgument: Encoder.AsObject[LongArgument] = deriveConfiguredEncoder
-  implicit val encodeDoubleArgument: Encoder.AsObject[DoubleArgument] = deriveConfiguredEncoder
-  implicit val encodeBooleanArgumentR: Encoder.AsObject[BooleanArgument] = deriveConfiguredEncoder
-  implicit val encodeBooleanArgumentT: Encoder.AsObject[BooleanTrueArgument] = deriveConfiguredEncoder
-  implicit val encodeBooleanArgumentF: Encoder.AsObject[BooleanFalseArgument] = deriveConfiguredEncoder
-  implicit val encodeFileArgument: Encoder.AsObject[FileArgument] = deriveConfiguredEncoder
+  implicit val encodeStringArgument: Encoder.AsObject[StringArgument] = deriveConfiguredEncoderStrict[StringArgument]
+  implicit val encodeIntegerArgument: Encoder.AsObject[IntegerArgument] = deriveConfiguredEncoderStrict[IntegerArgument]
+  implicit val encodeLongArgument: Encoder.AsObject[LongArgument] = deriveConfiguredEncoderStrict[LongArgument]
+  implicit val encodeDoubleArgument: Encoder.AsObject[DoubleArgument] = deriveConfiguredEncoderStrict[DoubleArgument]
+  implicit val encodeBooleanArgumentR: Encoder.AsObject[BooleanArgument] = deriveConfiguredEncoderStrict[BooleanArgument]
+  implicit val encodeBooleanArgumentT: Encoder.AsObject[BooleanTrueArgument] = deriveConfiguredEncoderStrict[BooleanTrueArgument]
+  implicit val encodeBooleanArgumentF: Encoder.AsObject[BooleanFalseArgument] = deriveConfiguredEncoderStrict[BooleanFalseArgument]
+  implicit val encodeFileArgument: Encoder.AsObject[FileArgument] = deriveConfiguredEncoderStrict[FileArgument]
 
   implicit def encodeArgument[A <: Argument[_]]: Encoder[A] = Encoder.instance {
     par =>

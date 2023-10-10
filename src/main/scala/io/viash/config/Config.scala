@@ -85,7 +85,7 @@ case class Config(
   @default("Empty")
   engines: List[Engine] = Nil,
 
-  @internalFunctionality
+  @undocumented
   info: Option[Info] = None
 ) {
 

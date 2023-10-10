@@ -34,8 +34,8 @@ object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
   private def memberDeprecationCheck(name: String, history: List[CursorOp], T: Type): Unit = {
     val m = T.member(TermName(name))
     val schema = ParameterSchema(name, "", List.empty, m.annotations)
-    val deprecated = schema.flatMap(_.deprecated)
-    val removed = schema.flatMap(_.removed)
+    val deprecated = schema.deprecated
+    val removed = schema.removed
     if (deprecated.isDefined) {
       val d = deprecated.get
       val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
@@ -52,8 +52,8 @@ object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
     val baseClass = T.baseClasses.head
     val name = baseClass.fullName.split('.').last
     val schema = ParameterSchema("", "", List.empty, baseClass.annotations)
-    val deprecated = schema.flatMap(_.deprecated)
-    val removed = schema.flatMap(_.removed)
+    val deprecated = schema.deprecated
+    val removed = schema.removed
     if (deprecated.isDefined) {
       val d = deprecated.get
       info(s"Warning: $name is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
