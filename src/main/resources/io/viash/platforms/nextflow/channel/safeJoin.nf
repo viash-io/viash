@@ -18,7 +18,7 @@ def safeJoin(targetChannel, sourceChannel, key) {
     }
   def targetCheck = targetChannel
     | map { tup ->
-      def id = tup[1].get("_meta")?.get("join_id") ?: tup[0]
+      def id = tup[0]
       
       if (!sourceIDs.contains(id)) {
         error (
@@ -36,5 +36,9 @@ def safeJoin(targetChannel, sourceChannel, key) {
 
       tup
     }
-  targetCheck.join(sourceCheck)
+  
+  sourceCheck.cross(targetChannel)
+    | map{ left, right ->
+      [left[0]] + right.drop(1) + left.drop(1)
+    }
 }
