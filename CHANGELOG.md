@@ -1,3 +1,7 @@
+# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+
+TODO add summary
+
 # Viash 0.8.0-RC4 (2023-10-10): Refactor Nextflow helper functions
 
 ## MAJOR CHANGES
