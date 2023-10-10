@@ -29,7 +29,10 @@ def addGlobalArguments(config) {
               'example': 'my_params.yaml',
               'multiple': false,
               'hidden': true
-            ],
+            ]
+            // TODO: allow multiple: true in param_list?
+            // TODO: allow to specify a --param_list_regex to filter the param_list?
+            // TODO: allow to specify a --param_list_from_state to remap entries in the param_list?
           ]
         ]
       ]

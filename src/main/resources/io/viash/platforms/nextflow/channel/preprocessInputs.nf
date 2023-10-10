@@ -4,52 +4,8 @@ preprocessInputsDeprecationWarningPrinted = false
 def preprocessInputsDeprecationWarning() {
   if (!preprocessInputsDeprecationWarningPrinted) {
     preprocessInputsDeprecationWarningPrinted = true
-    System.err.println("Warning: preprocessInputs() will be deprecated Viash 0.9.0.")
+    System.err.println("Warning: preprocessInputs() is deprecated since Viash 0.9.0.")
   }
-}
-
-/**
- * Process a list of Vdsl3 formatted parameters and apply a Viash config to them:
- *    - Gather default parameters from the Viash config and make 
- *      sure that they are correctly formatted (see applyConfig method).
- *    - Format the input parameters (also using the applyConfig method).
- *    - Apply the default parameter to the input parameters.
- *    - Do some assertions:
- *        ~ Check if the event IDs in the channel are unique.
- *  
- * @param params A list of parameter sets as Tuples. The first element of the tuples
- *                must be a unique id of the parameter set, and the second element 
- *                must contain the parameters themselves. Optional extra elements 
- *                of the tuples will be passed to the output as is.
- * @param config A Map of the Viash configuration. This Map can be generated from 
- *                the config file using the readConfig() function.           
- *
- * @return A list of processed parameters sets as tuples.
- */
-
-private List<Tuple> _preprocessInputsList(List<Tuple> params, Map config) {
-  // Get different parameter types (used throughout this function)
-  def defaultArgs = config.functionality.allArguments
-    .findAll { it.containsKey("default") }
-    .collectEntries { [ it.plainName, it.default ] }
-
-  // Apply config to default parameters
-  def parsedDefaultValues = applyConfigToOneParameterSet(defaultArgs, config)
-
-  // Apply config to input parameters
-  def parsedInputParamSets = applyConfig(params, config)
-
-  // Merge two parameter sets together
-  def parsedArgs = parsedInputParamSets.collect({ parsedInputParamSet ->
-    def id = parsedInputParamSet[0]
-    def parValues = parsedInputParamSet[1]
-    def passthrough = parsedInputParamSet.drop(2)
-    def parValuesWithDefault = parsedDefaultValues + parValues
-    [id, parValuesWithDefault] + passthrough
-  })
-  _checkUniqueIds(parsedArgs)
-
-  return parsedArgs
 }
 
 /**
@@ -77,25 +33,33 @@ private List<Tuple> _preprocessInputsList(List<Tuple> params, Map config) {
  */
 def preprocessInputs(Map args) {
   preprocessInputsDeprecationWarning()
-  
-  wfKey = args.key != null ? args.key : "preprocessInputs"
+
   config = args.config
-  workflow preprocessInputsInstance {
-    take: 
-    input_ch
+  assert config instanceof Map : 
+    "Error in preprocessInputs: config must be a map. " +
+    "Expected class: Map. Found: config.getClass() is ${config.getClass()}"
+  def key_ = args.key ?: config.functionality.name
 
-    main:
-    assert config instanceof Map : 
-      "Error in preprocessInputs: config must be a map. " +
-      "Expected class: Map. Found: config.getClass() is ${config.getClass()}"
+  // Get different parameter types (used throughout this function)
+  def defaultArgs = config.functionality.allArguments
+    .findAll { it.containsKey("default") }
+    .collectEntries { [ it.plainName, it.default ] }
 
-    output_ch = input_ch
-      | toSortedList
-      | map { paramList -> _preprocessInputsList(paramList, config) }
-      | flatMap
-    emit:
-    output_ch
+  map { tup ->
+    def id = tup[0]
+    def data = tup[1]
+    def passthrough = tup.drop(2)
+
+    def new_data = (defaultArgs + data).collectEntries { name, value ->
+      def par = config.functionality.allArguments.find { it.plainName == name && (it.direction == "input" || it.type == "file") }
+      
+      if (par != null) {
+        value = _checkArgumentType("input", par, value, "in module '$key_' id '$id'")
+      }
+
+      [ name, value ]
+    }
+
+    [ id, new_data ] + passthrough
   }
-
-  return preprocessInputsInstance.cloneWithName(wfKey)
 }

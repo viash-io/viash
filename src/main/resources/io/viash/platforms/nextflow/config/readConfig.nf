@@ -1,5 +1,5 @@
 
 def readConfig(file) {
-  def config = readYaml(file != null ? file : "$projectDir/config.vsh.yaml")
+  def config = readYaml(file ?: moduleDir.resolve("config.vsh.yaml"))
   processConfig(config)
 }
