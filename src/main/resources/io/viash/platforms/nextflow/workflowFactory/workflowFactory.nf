@@ -179,45 +179,45 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
           output_ instanceof Map && output_.containsKey("_meta") ? 
           output_["_meta"] :
           [:]
-        if (!meta_.containsKey("join_id")) {
-          meta_ = meta_ + ["join_id": id_]
-        }
+        def join_id = meta_.join_id ?: id_
         
         // remove metadata
         output_ = output_.findAll{k, v -> k != "_meta"}
 
+        // check value types
         output_ = _processOutputValues(output_, meta.config, id_, key_)
 
+        // simplify output if need be
         if (workflowArgs.auto.simplifyOutput && output_.size() == 1) {
           output_ = output_.values()[0]
         }
 
-        [meta_.join_id, meta_, id_, output_]
+        [join_id, id_, output_]
       }
       // | view{"chInitialOutput: ${it.take(3)}"}
 
-    // join the output [join_id, meta, id, output] with the previous state [id, state, ...]
+    // join the output [prev_id, new_id, output] with the previous state [prev_id, state, ...]
     chNewState = safeJoin(chInitialOutput, chModifiedFiltered, key_)
-      // input tuple format: [join_id, meta, id, output, prev_state, ...]
-      // output tuple format: [join_id, meta, id, new_state, ...]
+      // input tuple format: [join_id, id, output, prev_state, ...]
+      // output tuple format: [join_id, id, new_state, ...]
       | map{ tup ->
-        def new_state = workflowArgs.toState(tup.drop(2).take(3))
+        def new_state = workflowArgs.toState(tup.drop(1).take(3))
         tup.take(3) + [new_state] + tup.drop(5)
       }
 
     if (workflowArgs.auto.publish == "state") {
       chPublish = chNewState
-        // input tuple format: [join_id, meta, id, new_state, ...]
-        // output tuple format: [join_id, meta, id, new_state]
+        // input tuple format: [join_id, id, new_state, ...]
+        // output tuple format: [join_id, id, new_state]
         | map{ tup ->
-          tup.take(4)
+          tup.take(3)
         }
 
       safeJoin(chPublish, chArgsWithDefaults, key_)
-        // input tuple format: [join_id, meta, id, new_state, orig_state, ...]
+        // input tuple format: [join_id, id, new_state, orig_state, ...]
         // output tuple format: [id, new_state, orig_state]
         | map { tup ->
-          tup.drop(2).take(3)
+          tup.drop(1).take(3)
       }
         | publishStatesByConfig(key: key_, config: meta.config)
     }
@@ -225,9 +225,9 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
     // remove join_id and meta
     chReturn = chNewState
       | map { tup ->
-        // input tuple format: [join_id, meta, id, new_state, ...]
+        // input tuple format: [join_id, id, new_state, ...]
         // output tuple format: [id, new_state, ...]
-        tup.drop(2)
+        tup.drop(1)
       }
       | _debug(workflowArgs, "output")
       | concat(chPassthrough)
