@@ -280,32 +280,32 @@ object Config extends Logging {
     // convert Json into Config
     val conf0 = Convert.jsonToClass[Config](json2, uri.toString())
 
-    /* CONFIG 1: store parent path in resource to be able to access them in the future */
-    val parentURI = uri.resolve("")
-    val resources = conf0.functionality.resources.map(_.copyWithAbsolutePath(parentURI, projectDir))
-    val tests = conf0.functionality.test_resources.map(_.copyWithAbsolutePath(parentURI, projectDir))
-
-    // copy resources with updated paths into config and return
-    val conf1 = conf0.copy(
-      functionality = conf0.functionality.copy(
-        resources = resources,
-        test_resources = tests
-      )
-    )
-
-    /* CONFIG 2: apply post-parse config mods */
+    /* CONFIG 1: apply post-parse config mods */
     // apply config mods only if need be
-    val conf2 = 
+    val conf1 = 
       if (confMods.postparseCommands.nonEmpty) {
         // turn config back into json
-        val js = encodeConfig(conf1)
+        val js = encodeConfig(conf0)
         // apply config mods
         val modifiedJs = confMods(js, preparse = false)
         // turn json back into a config
         modifiedJs.as[Config].fold(throw _, identity)
       } else {
-        conf1
+        conf0
       }
+
+    /* CONFIG 1: store parent path in resource to be able to access them in the future */
+    val parentURI = uri.resolve("")
+    val resources = conf1.functionality.resources.map(_.copyWithAbsolutePath(parentURI, projectDir))
+    val tests = conf1.functionality.test_resources.map(_.copyWithAbsolutePath(parentURI, projectDir))
+
+    // copy resources with updated paths into config and return
+    val conf2 = conf1.copy(
+      functionality = conf0.functionality.copy(
+        resources = resources,
+        test_resources = tests
+      )
+    )
 
     /* CONFIG 3: add info */
     // gather git info
