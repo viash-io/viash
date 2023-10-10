@@ -1,5 +1,5 @@
 functionality:
-  name: filter_runif
+  name: fromstate_tostate
   namespace: test_wfs
   resources:
     - type: nextflow_script

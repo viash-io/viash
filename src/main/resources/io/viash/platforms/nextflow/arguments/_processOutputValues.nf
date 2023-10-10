@@ -11,7 +11,7 @@ Map _processOutputValues(Map outputs, Map config, String id, String key) {
       def par = config.functionality.allArguments.find { it.plainName == name && it.direction == "output" }
       assert par != null : "Error in module '${key}' id '${id}': '${name}' is not a valid output argument"
       
-      value = _checkArgumentType("output", par, value, id, key)
+      value = _checkArgumentType("output", par, value, "in module '$key' id '$id'")
       
       [ name, value ]
     }

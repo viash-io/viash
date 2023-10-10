@@ -4,7 +4,7 @@ dataflowHelperDeprecationWarningPrinted = false
 def dataflowHelperDeprecationWarning() {
   if (!dataflowHelperDeprecationWarningPrinted) {
     dataflowHelperDeprecationWarningPrinted = true
-    System.err.println("Warning: the functions in the DataflowHelper.nf (setWorkflowArguments, getWorkflowArguments) are set to be deprecated Viash 0.9.0.")
+    System.err.println("Warning: the functions in the DataflowHelper.nf (setWorkflowArguments, getWorkflowArguments) are deprecated and will be removed in Viash 0.9.0.")
   }
 }
 

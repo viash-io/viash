@@ -36,6 +36,8 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Build pipeline components", DockerTest, NextflowTest) {
     // build the nextflow containers
+    // TODO: use the correct CWD to build the pipeline to be ablke
+    // to detect the correct path to the _viash.yaml file
     val (_, _, _) = TestHelper.testMainWithStdErr(
       "ns", "build",
       "-s", srcPath,
@@ -61,7 +63,6 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
 
   // TODO: use TestHelper.testMainWithStdErr instead of NextflowTestHelper.run; i.e. viash test
   test("Test workflow", DockerTest, NextflowTest) {
-
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "target/nextflow/wf/main.nf",
       entry = Some("test_base"),
@@ -74,20 +75,30 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
   }
-
-  // why is this not working?
   
-  // test("Test filter/runIf", DockerTest, NextflowTest) {
-  //   val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-  //     mainScript = "target/nextflow/test_wfs/filter_runif/main.nf",
-  //     args = List(
-  //       "--publish_dir", "output"
-  //     ),
-  //     cwd = tempFolFile
-  //   )
+  test("Test fromState/toState", DockerTest, NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/test_wfs/fromstate_tostate/main.nf",
+      args = List(
+        "--publish_dir", "output"
+      ),
+      cwd = tempFolFile
+    )
 
-  //   assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-  // }
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+  }
+
+  test("Test filter/runIf", DockerTest, NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/test_wfs/filter_runif/main.nf",
+      args = List(
+        "--publish_dir", "output"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+  }
 
 
   test("Check whether --help is same as Viash's --help", NextflowTest) {

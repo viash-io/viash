@@ -1,10 +1,18 @@
 def findStates(Map params, Map config) {
   // TODO: do a deep clone of config
-  def auto_config = config.clone()
-  auto_config.functionality = auto_config.functionality.clone()
+  def auto_config = deepClone(config)
+  def auto_params = deepClone(params)
+
+  auto_config = auto_config.clone()
   // override arguments
   auto_config.functionality.argument_groups = []
   auto_config.functionality.arguments = [
+    [
+      type: "string",
+      name: "--id",
+      description: "A dummy identifier",
+      required: false
+    ],
     [
       type: "file",
       name: "--input_states",
@@ -39,6 +47,9 @@ def findStates(Map params, Map config) {
       required: false
     ]
   ]
+  if (!(auto_params.containsKey("id"))) {
+    auto_params["id"] = "auto"
+  }
 
   // run auto config through processConfig once more
   auto_config = processConfig(auto_config)
@@ -47,7 +58,7 @@ def findStates(Map params, Map config) {
     helpMessage(auto_config)
 
     output_ch = 
-      channelFromParams(params, auto_config)
+      channelFromParams(auto_params, auto_config)
         | flatMap { autoId, args ->
 
           def globalSettings = args.settings ? readYamlBlob(args.settings) : [:]
@@ -73,7 +84,7 @@ def findStates(Map params, Map config) {
           if (args.rename_keys) {
             def renameMap = args.rename_keys.collectEntries{renameString ->
               def split = renameString.split(":")
-              assert split.size() == 2: "Argument 'rename' should be of the form 'newKey:oldKey,newKey:oldKey'"
+              assert split.size() == 2: "Argument 'rename_keys' should be of the form 'newKey:oldKey,newKey:oldKey'"
               split
             }
 

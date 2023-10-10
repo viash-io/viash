@@ -167,7 +167,6 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       }
 
     // TODO: move some of the _meta.join_id wrangling to the safeJoin() function.
-
     chInitialOutput = chArgsWithDefaults
       | _debug(workflowArgs, "processed")
       // run workflow
@@ -197,7 +196,6 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       }
       // | view{"chInitialOutput: ${it.take(3)}"}
 
-    // TODO: this join will fail if the keys changed during the innerWorkflowFactory
     // join the output [join_id, meta, id, output] with the previous state [id, state, ...]
     chNewState = safeJoin(chInitialOutput, chModifiedFiltered, key_)
       // input tuple format: [join_id, meta, id, output, prev_state, ...]
@@ -241,7 +239,6 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
 
   // add factory function
   wf.metaClass.run = { runArgs ->
-    // TODO: merge workflowArgs with runArgs
     workflowFactory(runArgs, workflowArgs, meta)
   }
   // add config to module for later introspection
