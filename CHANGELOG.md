@@ -1,3 +1,7 @@
+# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+
+TODO add summary
+
 # Viash 0.8.0-RC5 (2023-10-11): Fix run workflow
 
 This part of the changelog will be removed.
