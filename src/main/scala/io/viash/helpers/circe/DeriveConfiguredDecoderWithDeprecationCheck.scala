@@ -28,45 +28,49 @@ import io.viash.schemas.ParameterSchema
 import io.circe.ACursor
 
 import io.viash.helpers.Logging
+import io.viash.schemas.CollectedSchemas
 
 object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
 
-  private def memberDeprecationCheck(name: String, history: List[CursorOp], T: Type): Unit = {
-    val m = T.member(TermName(name))
-    val schema = ParameterSchema(name, "", List.empty, m.annotations)
-    val deprecated = schema.deprecated
-    val removed = schema.removed
-    if (deprecated.isDefined) {
-      val d = deprecated.get
+  private def memberDeprecationCheck(name: String, history: List[CursorOp], parameters: List[ParameterSchema]): Unit = {
+    val schema = parameters.find(p => p.name == name).get
+
+    if (schema.deprecated.isDefined) {
+      val d = schema.deprecated.get
       val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
       info(s"Warning: .$historyString.$name is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
     }
-    if (removed.isDefined) {
-      val r = removed.get
+    if (schema.removed.isDefined) {
+      val r = schema.removed.get
       val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
       info(s"Error: .$historyString.$name was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
     }
+    if (schema.hasInternalFunctionality) {
+      val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
+      error(s"Error: .$historyString.$name is internal functionality.")
+      throw new RuntimeException(s"Internal functionality used: .$historyString.$name")
+    }
   }
 
-  private def selfDeprecationCheck(T: Type): Unit = {
-    val baseClass = T.baseClasses.head
-    val name = baseClass.fullName.split('.').last
-    val schema = ParameterSchema("", "", List.empty, baseClass.annotations)
-    val deprecated = schema.deprecated
-    val removed = schema.removed
-    if (deprecated.isDefined) {
-      val d = deprecated.get
-      info(s"Warning: $name is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+  private def selfDeprecationCheck(parameters: List[ParameterSchema]): Unit = {
+    val schema = parameters.find(p => p.name == "__this__").get
+
+    if (schema.deprecated.isDefined) {
+      val d = schema.deprecated.get
+      info(s"Warning: ${schema.name} is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
     }
-    if (removed.isDefined) {
-      val r = removed.get
-      info(s"Error: $name was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
+    if (schema.removed.isDefined) {
+      val r = schema.removed.get
+      info(s"Error: ${schema.name} was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
     }
   }
 
   // 
   def checkDeprecation[A](cursor: ACursor)(implicit tag: TypeTag[A]) : ACursor = {
-    selfDeprecationCheck(typeOf[A])
+    val parameters = CollectedSchemas.getParameters[A]()
+
+    selfDeprecationCheck(parameters)
+
     // check each defined 'key' value
     for (key <- cursor.keys.getOrElse(Nil)) {
       val isEmpty = 
@@ -77,7 +81,7 @@ object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
           case _ => false
         }
       if (!isEmpty) {
-        memberDeprecationCheck(key, cursor.history, typeOf[A])
+        memberDeprecationCheck(key, cursor.history, parameters)
       }
     }
     cursor // return unchanged json info
