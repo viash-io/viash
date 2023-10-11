@@ -34,24 +34,22 @@ def runEach(Map args) {
 
     // generate one channel per method
     out_chs = components_.collect{ comp_ ->
-      filter_ch = filter_
+      def filter_ch = filter_
         ? input_ch | filter{tup ->
           filter_(tup[0], tup[1], comp_)
         }
         : input_ch
-      id_ch = id_
+      def id_ch = id_
         ? filter_ch | map{tup ->
-          // def new_id = id_(tup[0], tup[1], comp_)
-          def new_id = tup[0]
-          if (id_ instanceof String) {
-            new_id = id_
-          } else if (id_ instanceof Closure) {
-            new_id = id_(new_id, tup[1], comp_)
+          def new_id = id_
+          if (new_id instanceof Closure) {
+            new_id = new_id(tup[0], tup[1], comp_)
           }
+          assert new_id instanceof String : "Error in runEach: id should be a String or a Closure that returns a String. Expected: id instanceof String. Found: ${new_id.getClass()}"
           [new_id] + tup.drop(1)
         }
         : filter_ch
-      data_ch = id_ch | map{tup ->
+      def data_ch = id_ch | map{tup ->
           def new_data = tup[1]
           if (fromState_ instanceof Map) {
             new_data = fromState_.collectEntries{ key0, key1 ->
@@ -66,14 +64,15 @@ def runEach(Map args) {
           }
           tup.take(1) + [new_data] + tup.drop(1)
         }
-      out_ch = data_ch
+      def out_ch = data_ch
         | comp_.run(
           auto: (args.auto ?: [:]) + [simplifyInput: false, simplifyOutput: false]
         )
-      post_ch = toState_
+      def post_ch = toState_
         ? out_ch | map{tup ->
           def output = tup[1]
           def old_state = tup[2]
+          def new_state = null
           if (toState_ instanceof Map) {
             new_state = old_state + toState_.collectEntries{ key0, key1 ->
               [key0, output[key1]]
