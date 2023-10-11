@@ -103,10 +103,10 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
 
     // retry once if it failed
     val testTextCachingWithRetry = 
-      if (regexBuildCache.findFirstIn(testTextCaching).isDefined) {
-        testTextCaching
+      if (regexBuildCache.findFirstIn(testOutputCaching.stdout).isDefined) {
+        testOutputCaching
       } else {
-        checkTempDirAndRemove(testTextCaching, false)
+        checkTempDirAndRemove(testOutputCaching.stdout, false)
         
         TestHelper.testMain(
           "test",
@@ -118,11 +118,11 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
         )
       }
 
-    assert(regexBuildCache.findFirstIn(testTextCachingWithRetry).isDefined, "Expected to find caching.")
+    assert(regexBuildCache.findFirstIn(testTextCachingWithRetry.stdout).isDefined, "Expected to find caching.")
 
-    checkTempDirAndRemove(testText, false)
-    checkTempDirAndRemove(testTextNoCaching, false)
-    checkTempDirAndRemove(testTextCachingWithRetry, false)
+    checkTempDirAndRemove(testOutput.stdout, false)
+    checkTempDirAndRemove(testOutputNoCaching.stdout, false)
+    checkTempDirAndRemove(testTextCachingWithRetry.stdout, false)
   }
 
   test("Verify base config derivation", NativeTest) {
