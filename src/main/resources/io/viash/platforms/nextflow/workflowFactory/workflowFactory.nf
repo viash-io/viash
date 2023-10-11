@@ -202,7 +202,7 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       // output tuple format: [join_id, id, new_state, ...]
       | map{ tup ->
         def new_state = workflowArgs.toState(tup.drop(1).take(3))
-        tup.take(3) + [new_state] + tup.drop(5)
+        tup.take(2) + [new_state] + tup.drop(4)
       }
 
     if (workflowArgs.auto.publish == "state") {

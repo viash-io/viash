@@ -39,6 +39,6 @@ def safeJoin(targetChannel, sourceChannel, key) {
   
   sourceCheck.cross(targetChannel)
     | map{ left, right ->
-      [left[0]] + right.drop(1) + left.drop(1)
+      right + left.drop(1)
     }
 }
