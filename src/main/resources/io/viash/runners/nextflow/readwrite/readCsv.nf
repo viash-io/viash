@@ -1,7 +1,7 @@
 
 def readCsv(file_path) {
   def output = []
-  def inputFile = file_path !instanceof Path ? file(file_path) : file_path
+  def inputFile = file_path !instanceof Path ? file(file_path, hidden: true) : file_path
 
   // todo: allow escaped quotes in string
   // todo: allow single quotes?

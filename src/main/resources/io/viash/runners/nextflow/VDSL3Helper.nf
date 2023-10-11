@@ -11,7 +11,7 @@
   * Internally, this workflow will convert the input channel
   * to a format which the Nextflow module will be able to handle.
   */
-def vdsl3WorkflowFactory(Map args) {
+def vdsl3WorkflowFactory(Map args, Map meta, String rawScript) {
   def key = args["key"]
   def processObj = null
 
@@ -20,7 +20,7 @@ def vdsl3WorkflowFactory(Map args) {
     main:
 
     if (processObj == null) {
-      processObj = _vdsl3ProcessFactory(args)
+      processObj = _vdsl3ProcessFactory(args, meta, rawScript)
     }
     
     output_ = input_
@@ -34,7 +34,7 @@ def vdsl3WorkflowFactory(Map args) {
         }
 
         // process input files separately
-        def inputPaths = thisConfig.functionality.allArguments
+        def inputPaths = meta.config.functionality.allArguments
           .findAll { it.type == "file" && it.direction == "input" }
           .collect { par ->
             def val = data_.containsKey(par.plainName) ? data_[par.plainName] : []
@@ -62,7 +62,7 @@ def vdsl3WorkflowFactory(Map args) {
           } 
 
         // remove input files
-        def argsExclInputFiles = thisConfig.functionality.allArguments
+        def argsExclInputFiles = meta.config.functionality.allArguments
           .findAll { (it.type != "file" || it.direction != "input") && data_.containsKey(it.plainName) }
           .collectEntries { par ->
             def parName = par.plainName
@@ -76,11 +76,11 @@ def vdsl3WorkflowFactory(Map args) {
             [parName, val]
           }
 
-        [ id ] + inputPaths + [ argsExclInputFiles, resourcesDir ]
+        [ id ] + inputPaths + [ argsExclInputFiles, meta.resources_dir ]
       }
       | processObj
       | map { output ->
-        def outputFiles = thisConfig.functionality.allArguments
+        def outputFiles = meta.config.functionality.allArguments
           .findAll { it.type == "file" && it.direction == "output" }
           .indexed()
           .collectEntries{ index, par ->
@@ -114,13 +114,13 @@ def vdsl3WorkflowFactory(Map args) {
   return processWf
 }
 
-// depends on: thisConfig, thisScript, session?
-def _vdsl3ProcessFactory(Map workflowArgs) {
+// depends on: session?
+def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   // autodetect process key
   def wfKey = workflowArgs["key"]
   def procKeyPrefix = "${wfKey}_process"
-  def meta = nextflow.script.ScriptMeta.current()
-  def existing = meta.getProcessNames().findAll{it.startsWith(procKeyPrefix)}
+  def scriptMeta = nextflow.script.ScriptMeta.current()
+  def existing = scriptMeta.getProcessNames().findAll{it.startsWith(procKeyPrefix)}
   def numbers = existing.collect{it.replace(procKeyPrefix, "0").toInteger()}
   def newNumber = (numbers + [-1]).max() + 1
 
@@ -174,12 +174,12 @@ def _vdsl3ProcessFactory(Map workflowArgs) {
     }
   }.join()
 
-  def inputPaths = thisConfig.functionality.allArguments
+  def inputPaths = meta.config.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "input" }
     .collect { ', path(viash_par_' + it.plainName + ', stageAs: "_viash_par/' + it.plainName + '_?/*")' }
     .join()
 
-  def outputPaths = thisConfig.functionality.allArguments
+  def outputPaths = meta.config.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "output" }
     .collect { par ->
       // insert dummy into every output (see nextflow-io/nextflow#2678)
@@ -199,7 +199,7 @@ def _vdsl3ProcessFactory(Map workflowArgs) {
   }
 
   // create dirs for output files (based on BashWrapper.createParentFiles)
-  def createParentStr = thisConfig.functionality.allArguments
+  def createParentStr = meta.config.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "output" && it.create_parent }
     .collect { par -> 
       "\${ args.containsKey(\"${par.plainName}\") ? \"mkdir_parent \\\"\" + (args[\"${par.plainName}\"] instanceof String ? args[\"${par.plainName}\"] : args[\"${par.plainName}\"].join('\" \"')) + \"\\\"\" : \"\" }"
@@ -207,7 +207,7 @@ def _vdsl3ProcessFactory(Map workflowArgs) {
     .join("\n")
 
   // construct inputFileExports
-  def inputFileExports = thisConfig.functionality.allArguments
+  def inputFileExports = meta.config.functionality.allArguments
     .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
     .collect { par ->
       viash_par_contents = "(viash_par_${par.plainName} instanceof List ? viash_par_${par.plainName}.join(\"${par.multiple_sep}\") : viash_par_${par.plainName})"
@@ -229,7 +229,7 @@ def _vdsl3ProcessFactory(Map workflowArgs) {
   ).toAbsolutePath()
 
   // construct stub
-  def stub = thisConfig.functionality.allArguments
+  def stub = meta.config.functionality.allArguments
     .findAll { it.type == "file" && it.direction == "output" }
     .collect { par -> 
       "\${ args.containsKey(\"${par.plainName}\") ? \"touch2 \\\"\" + (args[\"${par.plainName}\"] instanceof String ? args[\"${par.plainName}\"].replace(\"_*\", \"_0\") : args[\"${par.plainName}\"].join('\" \"')) + \"\\\"\" : \"\" }"
@@ -237,7 +237,7 @@ def _vdsl3ProcessFactory(Map workflowArgs) {
     .join("\n")
 
   // escape script
-  def escapedScript = thisScript.replace('\\', '\\\\').replace('$', '\\$').replace('"""', '\\"\\"\\"')
+  def escapedScript = rawScript.replace('\\', '\\\\').replace('$', '\\$').replace('"""', '\\"\\"\\"')
 
   // publishdir assert
   def assertStr = (workflowArgs.auto.publish == true) || workflowArgs.auto.transcript ? 
@@ -269,7 +269,7 @@ def _vdsl3ProcessFactory(Map workflowArgs) {
   |# export VIASH_META_RESOURCES_DIR="\${resourcesDir.toRealPath().toAbsolutePath()}"
   |export VIASH_META_RESOURCES_DIR="\${resourcesDir}"
   |export VIASH_META_TEMP_DIR="${['docker', 'podman', 'charliecloud'].any{ it == workflow.containerEngine } ? '/tmp' : tmpDir}"
-  |export VIASH_META_FUNCTIONALITY_NAME="${thisConfig.functionality.name}"
+  |export VIASH_META_FUNCTIONALITY_NAME="${meta.config.functionality.name}"
   |# export VIASH_META_EXECUTABLE="\\\$VIASH_META_RESOURCES_DIR/\\\$VIASH_META_FUNCTIONALITY_NAME"
   |export VIASH_META_CONFIG="\\\$VIASH_META_RESOURCES_DIR/.config.vsh.yaml"
   |\${task.cpus ? "export VIASH_META_CPUS=\$task.cpus" : "" }
@@ -312,16 +312,17 @@ def _vdsl3ProcessFactory(Map workflowArgs) {
   def ownerParams = new nextflow.script.ScriptBinding.ParamsMap()
   def binding = new nextflow.script.ScriptBinding().setParams(ownerParams)
   def module = new nextflow.script.IncludeDef.Module(name: procKey)
+  def session = nextflow.Nextflow.getSession()
   def scriptParser = new nextflow.script.ScriptParser(session)
     .setModule(true)
     .setBinding(binding)
-  scriptParser.scriptPath = meta.getScriptPath()
+  scriptParser.scriptPath = scriptMeta.getScriptPath()
   def moduleScript = scriptParser.runScript(procStr)
     .getScript()
 
   // register module in meta
-  meta.addModule(moduleScript, module.name, module.alias)
+  scriptMeta.addModule(moduleScript, module.name, module.alias)
 
   // retrieve and return process from meta
-  return meta.getProcess(procKey)
+  return scriptMeta.getProcess(procKey)
 }

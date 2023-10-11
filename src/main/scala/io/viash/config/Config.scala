@@ -106,7 +106,7 @@ case class Config(
     | - @[Nextflow](platform_nextflow)
     |""".stripMargin)
   @default("Empty")
-  @deprecated("Use 'engines' and 'runners' instead.", "0.8.0", "0.9.0")
+  @deprecated("Use 'engines' and 'runners' instead.", "0.9.0", "0.10.0")
   private val platforms: List[Platform] = Nil
   
   /**

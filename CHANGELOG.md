@@ -9,6 +9,60 @@ TODO add summary
   In brief, the `native platform` became a `native engine` and `docker platform` became a `docker engine`.
   Additionally, the `native platform` and `docker platform` became a `executable runner`, `nextflow platform` became a `nextflow runner`.
   The fields of `docker platform` is split between `docker engine` and `docker runner`: `port`, `workdir`, `setup_strategy`, and `run_args` are captured by the `runner` as they define how the component is run. The other fields are captured by the `engine` as they define the environment in which the component is run. One exception is `chown` which is rarely set to false and is now always enabled.
+  
+# Viash 0.8.0-RC5 (2023-10-11): Fix run workflow
+
+This part of the changelog will be removed.
+
+* fix run workflow
+
+* fix 'safe'join helper function
+
+* fix 'safe'join helper once more
+
+* fix wf factory
+
+# Viash 0.8.0-RC4 (2023-10-10): Refactor Nextflow helper functions
+
+This part of the changelog will be removed.
+
+## MAJOR CHANGES
+
+* `NextflowPlatform`: Refactoring of helper functions (PR #557).
+  - Cleaned up `processConfig()`: Removed support for `functionality.inputs` and `functionality.outputs`
+  - Cleaned up `processConfig()`: Removed support for `.functionality.argument_groups[].argument` containing a list of argument ids as opposed to the arguments themselves.
+  - Rewrote `--param_list` parser.
+  - Removed unused function `applyConfig()` and `applyConfigToOneParamSet()`.
+  - Refactored `channelFromParams()` to make use of new helper functions.
+  - Removed deprecated `paramsToChannel()`, `paramsToList()`, `viashChannel()`.
+  - Deprecated `preprocessInputs()` -- use the wrapped Viash Nextflow functionality instead.
+  - Refactored `preprocessInputs()` to make use of new helper functions.
+  - Reprecated run arguments `map`, `mapData`, `mapPassthrough`, `renameKeys`.
+
+
+# Viash 0.8.0-RC3 (2023-10-07): More bugfixes, more Nextflow functionality
+
+This release contains more bugfixes related to the Nextflow code generation functionality.
+It also adds a new `runIf` argument to the `NextflowPlatform` which allows for conditional execution of modules.
+
+## NEW FUNCTIONALITY
+
+* `NextflowPlatform`: Added new `.run()` argument `runIf` - a function that determines whether the module should be run or not (PR #553).
+  If the `runIf` closure evaluates to `true`, then the module will be run. Otherwise it will be passed through without running.
+
+## MINOR CHANGES
+
+* `NextflowPlatform`: Rename internal VDSL3 variables to be more consistent with regular Viash component variables and avoid naming clashes (PR #553).
+
+## BUG FIXES
+
+* `export cli_autocomplete`: Fix output script format and hide `--loglevel` and `--colorize` (PR #544). Masked arguments are usable but might not be very useful to always display in help messages.
+
+# Viash 0.8.0-RC2 (2023-10-04): Some bugfixes
+
+Some bugfixes related to the new dependencies and Nextflow code generation functionality.
+
+This part of the changelog will be removed.
 
 # Viash 0.8.0-RC1 (2023-10-02): Nextflow workflows and dependencies
 

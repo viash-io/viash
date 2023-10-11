@@ -25,7 +25,6 @@ import io.viash.helpers.{Docker, Bash, DockerImageInfo, Helper}
 import io.viash.helpers.circe._
 import io.circe.syntax._
 import io.circe.{Printer => JsonPrinter, Json, JsonObject}
-import shapeless.syntax.singleton
 import io.viash.schemas._
 import io.viash.helpers.Escaper
 import io.viash.runners.{Runner, RunnerResources}
@@ -38,6 +37,8 @@ import io.viash.runners.nextflow._
 @example(
   """runners:
     |  - type: nextflow
+    |    directives:
+    |      label: [lowcpu, midmem]
     |""".stripMargin,
   "yaml")
 @subclass("nextflow")
@@ -69,9 +70,9 @@ final case class NextflowRunner(
       || Flag | Description | Default |
       ||---|---------|----|
       || `simplifyInput` | If `true`, an input tuple only containing only a single File (e.g. `["foo", file("in.h5ad")]`) is automatically transformed to a map (i.e. `["foo", [ input: file("in.h5ad") ] ]`). | `true` |
-      || `simplifyOutput` | If `true`, an output tuple containing a map with a File (e.g. `["foo", [ output: file("out.h5ad") ] ]`) is automatically transformed to a map (i.e. `["foo", file("out.h5ad")]`). | `true` |
+      || `simplifyOutput` | If `true`, an output tuple containing a map with a File (e.g. `["foo", [ output: file("out.h5ad") ] ]`) is automatically transformed to a map (i.e. `["foo", file("out.h5ad")]`). | `false` |
       || `transcript` | If `true`, the module's transcripts from `work/` are automatically published to `params.transcriptDir`. If not defined, `params.publishDir + "/_transcripts"` will be used. Will throw an error if neither are defined. | `false` |
-      || `publish` | If `true`, the module's outputs are automatically published to `params.publishDir`.  Will throw an error if `params.publishDir` is not defined. | `false` |
+      || `publish` | If `true`, the module's outputs are automatically published to `params.publishDir`. If equal to `"state"`, also a `.state.yaml` file will be published in the publish dir. Will throw an error if `params.publishDir` is not defined. | `false` |
       |
       |""".stripMargin)
   @example(
@@ -222,7 +223,7 @@ final case class NextflowRunner(
     val innerWorkflowFactory = mainScript match {
       // if mainscript is a nextflow workflow
       case scr: NextflowScript =>
-        s"""// user-provided workflow
+        s"""// user-provided Nextflow code
           |${scr.readWithoutInjection.get.split("\n").mkString("\n|")}
           |
           |// inner workflow hook
@@ -231,48 +232,55 @@ final case class NextflowRunner(
           |}""".stripMargin
       // else if it is a vdsl3 module
       case _ => 
-        s"""// process script
-          |thisScript = ${NextflowHelper.generateScriptStr(config)}
-          |
-          |// inner workflow hook
+        s"""// inner workflow hook
           |def innerWorkflowFactory(args) {
-          |  return vdsl3WorkflowFactory(args)
+          |  def rawScript = ${NextflowHelper.generateScriptStr(config)}
+          |  
+          |  return vdsl3WorkflowFactory(args, meta, rawScript)
           |}
           |
           |""".stripMargin + 
           NextflowHelper.vdsl3Helper
     }
 
-    s"""${NextflowHelper.generateHeader(config)}
+    NextflowHelper.generateHeader(config) + "\n\n" +
+      NextflowHelper.workflowHelper +
+      s"""
       |
       |nextflow.enable.dsl=2
       |
       |// START COMPONENT-SPECIFIC CODE
       |
-      |// retrieve resourcesDir here to make sure the correct path is found
-      |resourcesDir = moduleDir.normalize()
+      |// create meta object
+      |meta = [
+      |  "resources_dir": moduleDir.normalize(),
+      |  "config": ${NextflowHelper.generateConfigStr(config)}
+      |]
       |
-      |// component metadata
-      |thisConfig = ${NextflowHelper.generateConfigStr(config)}
+      |// resolve dependencies dependencies (if any)
+      |${NextflowHelper.renderDependencies(config).split("\n").mkString("\n|")}
       |
       |// inner workflow
       |${innerWorkflowFactory.split("\n").mkString("\n|")}
       |
-      |// component settings
-      |thisDefaultWorkflowArgs = ${NextflowHelper.generateDefaultWorkflowArgs(config, directivesToJson, auto, debug)}
-      |
-      |${NextflowHelper.renderDependencies(config).split("\n").mkString("\n|")}
+      |// defaults
+      |meta["defaults"] = ${NextflowHelper.generateDefaultWorkflowArgs(config, directivesToJson, auto, debug)}
       |
       |// initialise default workflow
-      |myWfInstance = workflowFactory([:])
+      |meta["workflow"] = workflowFactory([key: meta.config.functionality.name], meta.defaults, meta)
       |
       |// add workflow to environment
-      |nextflow.script.ScriptMeta.current().addDefinition(myWfInstance)
+      |nextflow.script.ScriptMeta.current().addDefinition(meta.workflow)
       |
       |// anonymous workflow for running this module as a standalone
       |workflow {
       |  // add id argument if it's not already in the config
-      |  if (thisConfig.functionality.arguments.every{it.plainName != "id"}) {
+      |  // TODO: deep copy
+      |  def newConfig = deepClone(meta.config)
+      |  def newParams = deepClone(params)
+      |
+      |  def argsContainsId = newConfig.functionality.allArguments.any{it.plainName == "id"}
+      |  if (!argsContainsId) {
       |    def idArg = [
       |      'name': '--id',
       |      'required': false,
@@ -280,24 +288,30 @@ final case class NextflowRunner(
       |      'description': 'A unique id for every entry.',
       |      'multiple': false
       |    ]
-      |    thisConfig.functionality.arguments.add(0, idArg)
-      |    thisConfig = processConfig(thisConfig)
+      |    newConfig.functionality.arguments.add(0, idArg)
+      |    newConfig = processConfig(newConfig)
       |  }
-      |  if (!params.containsKey("id")) {
-      |    params.id = "run"
+      |  if (!newParams.containsKey("id")) {
+      |    newParams.id = "run"
       |  }
       |
-      |  helpMessage(thisConfig)
+      |  helpMessage(newConfig)
       |
-      |  channelFromParams(params, thisConfig)
-      |    | myWfInstance.run(
+      |  channelFromParams(newParams, newConfig)
+      |    // make sure id is not in the state if id is not in the args
+      |    | map {id, state ->
+      |      if (!argsContainsId) {
+      |        [id, state.findAll{k, v -> k != "id"}]
+      |      } else {
+      |        [id, state]
+      |      }
+      |    }
+      |    | meta.workflow.run(
       |      auto: [ publish: "state" ]
       |    )
       |}
       |
       |// END COMPONENT-SPECIFIC CODE
-      |
-      |""".stripMargin +
-      NextflowHelper.workflowHelper
+      |""".stripMargin
   }
 }

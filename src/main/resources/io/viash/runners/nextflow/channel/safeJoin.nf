@@ -1,3 +1,13 @@
+/**
+ * Join sourceChannel to targetChannel
+ * 
+ * This function joins the sourceChannel to the targetChannel. 
+ * However, each id in the targetChannel must be present in the
+ * sourceChannel. If _meta.join_id exists in the targetChannel, that is 
+ * used as an id instead. If the id doesn't match any id in the sourceChannel,
+ * an error is thrown.
+ */
+
 def safeJoin(targetChannel, sourceChannel, key) {
   def sourceIDs = new IDChecker()
 
@@ -9,7 +19,6 @@ def safeJoin(targetChannel, sourceChannel, key) {
   def targetCheck = targetChannel
     | map { tup ->
       def id = tup[0]
-      // def id = tup[1].containsKey("_meta").containsKey("join_id") ? tup[1]._meta.join_id : tup[0]
       
       if (!sourceIDs.contains(id)) {
         error (
@@ -27,5 +36,9 @@ def safeJoin(targetChannel, sourceChannel, key) {
 
       tup
     }
-  targetCheck.join(sourceCheck)
+  
+  sourceCheck.cross(targetChannel)
+    | map{ left, right ->
+      right + left.drop(1)
+    }
 }

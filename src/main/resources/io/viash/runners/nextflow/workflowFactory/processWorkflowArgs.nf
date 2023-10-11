@@ -1,33 +1,32 @@
-// depends on: thisConfig, thisDefaultWorkflowArgs
-def processWorkflowArgs(Map args) {
+def processWorkflowArgs(Map args, Map defaultWfArgs, Map meta) {
   // override defaults with args
-  def workflowArgs = thisDefaultWorkflowArgs + args
+  def workflowArgs = defaultWfArgs + args
 
   // check whether 'key' exists
-  assert workflowArgs.containsKey("key") : "Error in module '${thisConfig.functionality.name}': key is a required argument"
+  assert workflowArgs.containsKey("key") : "Error in module '${meta.config.functionality.name}': key is a required argument"
 
   // if 'key' is a closure, apply it to the original key
   if (workflowArgs["key"] instanceof Closure) {
-    workflowArgs["key"] = workflowArgs["key"](thisConfig.functionality.name)
+    workflowArgs["key"] = workflowArgs["key"](meta.config.functionality.name)
   }
   def key = workflowArgs["key"]
   assert key instanceof CharSequence : "Expected process argument 'key' to be a String. Found: class ${key.getClass()}"
   assert key ==~ /^[a-zA-Z_]\w*$/ : "Error in module '$key': Expected process argument 'key' to consist of only letters, digits or underscores. Found: ${key}"
 
   // check for any unexpected keys
-  def expectedKeys = ["key", "directives", "auto", "map", "mapId", "mapData", "mapPassthrough", "filter", "fromState", "toState", "args", "renameKeys", "debug"]
+  def expectedKeys = ["key", "directives", "auto", "map", "mapId", "mapData", "mapPassthrough", "filter", "runIf", "fromState", "toState", "args", "renameKeys", "debug"]
   def unexpectedKeys = workflowArgs.keySet() - expectedKeys
   assert unexpectedKeys.isEmpty() : "Error in module '$key': unexpected arguments to the '.run()' function: '${unexpectedKeys.join("', '")}'"
 
   // check whether directives exists and apply defaults
   assert workflowArgs.containsKey("directives") : "Error in module '$key': directives is a required argument"
   assert workflowArgs["directives"] instanceof Map : "Error in module '$key': Expected process argument 'directives' to be a Map. Found: class ${workflowArgs['directives'].getClass()}"
-  workflowArgs["directives"] = processDirectives(thisDefaultWorkflowArgs.directives + workflowArgs["directives"])
+  workflowArgs["directives"] = processDirectives(defaultWfArgs.directives + workflowArgs["directives"])
 
   // check whether directives exists and apply defaults
   assert workflowArgs.containsKey("auto") : "Error in module '$key': auto is a required argument"
   assert workflowArgs["auto"] instanceof Map : "Error in module '$key': Expected process argument 'auto' to be a Map. Found: class ${workflowArgs['auto'].getClass()}"
-  workflowArgs["auto"] = processAuto(thisDefaultWorkflowArgs.auto + workflowArgs["auto"])
+  workflowArgs["auto"] = processAuto(defaultWfArgs.auto + workflowArgs["auto"])
 
   // auto define publish, if so desired
   if (workflowArgs.auto.publish == true && (workflowArgs.directives.publishDir != null ? workflowArgs.directives.publishDir : [:]).isEmpty()) {
@@ -75,24 +74,24 @@ def processWorkflowArgs(Map args) {
     workflowArgs.directives.keySet().removeAll(["publishDir", "cpus", "memory", "label"])
   }
 
-  for (nam in ["map", "mapId", "mapData", "mapPassthrough", "filter"]) {
+  for (nam in ["map", "mapId", "mapData", "mapPassthrough", "filter", "runIf"]) {
     if (workflowArgs.containsKey(nam) && workflowArgs[nam]) {
       assert workflowArgs[nam] instanceof Closure : "Error in module '$key': Expected process argument '$nam' to be null or a Closure. Found: class ${workflowArgs[nam].getClass()}"
     }
   }
 
   // TODO: should functions like 'map', 'mapId', 'mapData', 'mapPassthrough' be deprecated as well?
-  for (nam in ["renameKeys"]) {
+  for (nam in ["map", "mapData", "mapPassthrough", "renameKeys"]) {
     if (workflowArgs.containsKey(nam) && workflowArgs[nam] != null) {
-      log.warn "module '$key': workflow argument '$nam' will be deprecated in Viash 0.9.0. Please use 'fromState' and 'toState' instead."
+      log.warn "module '$key': workflow argument '$nam' is deprecated and will be removed in Viash 0.9.0. Please use 'fromState' and 'toState' instead."
     }
   }
 
   // check fromState
-  workflowArgs["fromState"] = _processFromState(workflowArgs.get("fromState"), key, thisConfig)
+  workflowArgs["fromState"] = _processFromState(workflowArgs.get("fromState"), key, meta.config)
 
   // check toState
-  workflowArgs["toState"] = _processToState(workflowArgs.get("toState"), key, thisConfig)
+  workflowArgs["toState"] = _processToState(workflowArgs.get("toState"), key, meta.config)
 
   // return output
   return workflowArgs
@@ -118,7 +117,7 @@ def _processFromState(fromState, key_, config_) {
     assert fromState.values().every{it instanceof CharSequence} : "Error in module '$key_': fromState is a Map, but not all values are Strings"
     assert fromState.keySet().every{it instanceof CharSequence} : "Error in module '$key_': fromState is a Map, but not all keys are Strings"
     def fromStateMap = fromState.clone()
-    def requiredInputNames = thisConfig.functionality.allArguments.findAll{it.required && it.direction == "Input"}.collect{it.plainName}
+    def requiredInputNames = meta.config.functionality.allArguments.findAll{it.required && it.direction == "Input"}.collect{it.plainName}
     // turn the map into a closure to be used later on
     fromState = { it ->
       def state = it[1]

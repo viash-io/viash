@@ -1,6 +1,6 @@
 name := "viash"
 
-version := "0.8.0-RC1"
+version := "0.9.0dev"
 
 scalaVersion := "2.13.10"
 
@@ -44,6 +44,7 @@ generateWorkflowHelper := {
   import sbt._
   import java.nio.file._
 
+  val rootDir = (Compile / baseDirectory).value
   val basePath = (Compile / resourceDirectory).value / "io" / "viash" / "runners" / "nextflow"
   val wfHelper = Paths.get(basePath.toString, "WorkflowHelper.nf")
 
@@ -64,7 +65,8 @@ generateWorkflowHelper := {
     StandardOpenOption.CREATE)
 
   files.sorted.foreach { path =>
-    Files.write(wfHelper, s"\n// helper file: '${path}'\n".getBytes(), StandardOpenOption.APPEND)
+    val relativePath = rootDir.relativize(path)
+    Files.write(wfHelper, s"\n// helper file: '${relativePath.get}'\n".getBytes(), StandardOpenOption.APPEND)
     Files.write(wfHelper, Files.readAllBytes(path.toPath()), StandardOpenOption.APPEND)
   }
 
@@ -72,4 +74,4 @@ generateWorkflowHelper := {
 }
 
 assembly := ((assembly) dependsOn generateWorkflowHelper).value
-Test / testOptions += Tests.Setup(() => generateWorkflowHelper.value)
+Test / testOptions := ((Test / testOptions) dependsOn generateWorkflowHelper).value

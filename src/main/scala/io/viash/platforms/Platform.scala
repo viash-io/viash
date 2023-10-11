@@ -37,6 +37,7 @@ import io.viash.engines.requirements.Requirements
     |      label: [lowcpu, midmem]
     |""".stripMargin,
   "yaml")
+@deprecated("Use 'engines' and 'runners' instead.", "0.9.0", "0.10.0")
 @subclass("NativePlatform")
 @subclass("DockerPlatform")
 @subclass("NextflowPlatform")

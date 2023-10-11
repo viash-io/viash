@@ -158,12 +158,17 @@ object DependencyResolver extends Logging {
     config.map{ c =>
       val path = c.info.get.config
       // fill in the location of the executable where it will be located
-      val executableName = runnerId match {
-        case Some("nextflow") => "main.nf"
-        case _ => c.functionality.name
+      // TODO: it would be better if this was already filled in somewhere else
+      val executable = runnerId.map{ rid =>
+          val executableName = rid match {
+            case "nextflow" => "main.nf"
+            case _ => c.functionality.name
+          }
+          Paths.get(ViashNamespace.targetOutputPath("", rid, c.functionality.namespace, c.functionality.name), executableName).toString()
       }
-      val executable = Paths.get(ViashNamespace.targetOutputPath("", runnerId.get, c.functionality.namespace, c.functionality.name), executableName).toString()
-      val info = c.info.get.copy(executable = Some(executable))
+      val info = c.info.get.copy(
+        executable = executable
+      )
       // Convert case class to map, do some extra conversions of Options while we're at it
       val map = (info.productElementNames zip info.productIterator).map{
           case (k, s: String) => (k, s)
@@ -171,7 +176,10 @@ object DependencyResolver extends Logging {
           case (k, None) => (k, "")
         }.toMap
       // Add the functionality name and namespace to it
-      val map2 = Map(("functionalityName" -> c.functionality.name), ("functionalityNamespace" -> c.functionality.namespace.getOrElse("")))
+      val map2 = Map(
+        ("functionalityName" -> c.functionality.name),
+        ("functionalityNamespace" -> c.functionality.namespace.getOrElse(""))
+      )
       (path, map ++ map2)
     }
   }

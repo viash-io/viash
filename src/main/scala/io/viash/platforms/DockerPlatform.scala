@@ -37,7 +37,7 @@ import io.viash.engines.docker.{DockerResolveVolume, Automatic}
     |        packages: [ curl ]
     |""".stripMargin,
   "yaml")
-@deprecated("Use 'engines' and 'runners' instead.", "0.8.0", "0.9.0")
+@deprecated("Use 'engines' and 'runners' instead.", "0.9.0", "0.10.0")
 @subclass("docker")
 case class DockerPlatform(
   @description("As with all platforms, you can give a platform a different name. By specifying `id: foo`, you can target this platform (only) by specifying `-p foo` in any of the Viash commands.")

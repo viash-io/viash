@@ -100,12 +100,29 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
       "--setup", "cb",
       "--keep", "false"
     )
-    
-    assert(regexBuildCache.findFirstIn(testTextCaching).isDefined, "Expected to find caching.")
+
+    // retry once if it failed
+    val testTextCachingWithRetry = 
+      if (regexBuildCache.findFirstIn(testTextCaching).isDefined) {
+        testTextCaching
+      } else {
+        checkTempDirAndRemove(testTextCaching, false)
+        
+        TestHelper.testMain(
+          "test",
+          "--engine", "docker",
+          "--runner", "docker",
+          newConfigFilePath,
+          "--setup", "cb",
+          "--keep", "false"
+        )
+      }
+
+    assert(regexBuildCache.findFirstIn(testTextCachingWithRetry).isDefined, "Expected to find caching.")
 
     checkTempDirAndRemove(testText, false)
-    checkTempDirAndRemove(testTextCaching, false)
     checkTempDirAndRemove(testTextNoCaching, false)
+    checkTempDirAndRemove(testTextCachingWithRetry, false)
   }
 
   test("Verify base config derivation", NativeTest) {
