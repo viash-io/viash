@@ -410,8 +410,10 @@ object Config extends Logging {
           case (None, _) => true
         }
 
-        // if config passes regex checks, show warning and return it
-        if (queryTest && nameTest && namespaceTest && isEnabled) {
+        if (!isEnabled) {
+          appliedConfig.setStatus(Disabled)
+        } else if (queryTest && nameTest && namespaceTest) {
+          // if config passes regex checks, show warning and return it
           // TODO: stdout and stderr are no longer in the correct order :/
           val stdout_s = stdout.toString()
           val stderr_s = stderr.toString()
@@ -421,7 +423,7 @@ object Config extends Logging {
             info(stderr_s)
           appliedConfig
         } else {
-          appliedConfig.setStatus(Disabled)
+          appliedConfig.setStatus(DisabledByQuery)
         }
       } catch {
         case _: Exception =>

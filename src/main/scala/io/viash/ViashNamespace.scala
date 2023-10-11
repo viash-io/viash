@@ -409,8 +409,8 @@ object ViashNamespace extends Logging {
       (Success, s"configs $successAction successfully"))
 
     if (successes != statuses.length) {
-      val disabledStatusesCount = statuses.count(_ == Disabled)
-      val nonDisabledStatuses = statuses.filter(_ != Disabled)
+      val disabledStatusesCount = statuses.count(s => s == Disabled || s == DisabledByQuery)
+      val nonDisabledStatuses = statuses.filter(s => s != Disabled && s != DisabledByQuery)
       val indentSize = nonDisabledStatuses.length.toString().size
 
       warn(s"Not all configs $successAction successfully")
