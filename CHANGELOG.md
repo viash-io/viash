@@ -1,6 +1,6 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.8.0-RC6 (2023-10-11): fix race condition issue in runEach
 
-TODO add summary
+This part of the changelog will be removed.
 
 # Viash 0.8.0-RC5 (2023-10-11): Fix run workflow
 
