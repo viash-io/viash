@@ -1,8 +1,18 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.8.0-RC5 (2023-10-11): Fix run workflow
 
-TODO add summary
+This part of the changelog will be removed.
+
+* fix run workflow
+
+* fix 'safe'join helper function
+
+* fix 'safe'join helper once more
+
+* fix wf factory
 
 # Viash 0.8.0-RC4 (2023-10-10): Refactor Nextflow helper functions
+
+This part of the changelog will be removed.
 
 ## MAJOR CHANGES
 
