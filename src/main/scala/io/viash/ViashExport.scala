@@ -76,7 +76,13 @@ object ViashExport extends Logging {
   }
 
   def exportResource(input: String, output: Option[Path]): Unit = {
-    val pth = getClass.getResource(s"/io/viash/$input")
+    val input2 = if (input.startsWith("platforms/")) {
+      warn("WARNING: The 'platforms/' prefix is deprecated. Please use 'runners/' instead.")
+      input.replaceFirst("platforms/", "runners/")
+    } else {
+      input
+    }
+    val pth = getClass.getResource(s"/io/viash/$input2")
     val str = IO.read(pth.toURI())
     if (output.isDefined) {
       Files.write(output.get, str.getBytes())

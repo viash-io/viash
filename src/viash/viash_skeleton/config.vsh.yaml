@@ -19,11 +19,18 @@ functionality:
       type: string
       description: Which scripting language to use. Possible values are 'bash', 'r', and 'python'.
       default: 'bash'
-    - name: "--platform"
-      alternatives: ["-p"]
+    - name: "--runner"
+      alternatives: ["-r"]
       type: string
-      description: Which platforms to add. Possible values are 'native', 'docker', 'nextflow'. By default, all three will be added.
-      default: 'docker,native,nextflow'
+      description: Which runners to add. Possible values are 'executable', 'nextflow'. By default, both will be added.
+      default: 'executable,nextflow'
+      multiple: true
+      multiple_sep: ','
+    - name: "--engine"
+      alternatives: ["-e"]
+      type: string
+      description: Which engines to add. Possible values are 'native', 'docker'. By default, both will be added.
+      default: 'docker,native'
       multiple: true
       multiple_sep: ','
     - name: "--src"
@@ -37,7 +44,7 @@ functionality:
   test_resources:
     - type: bash_script
       path: test.sh
-platforms:
+engines:
   - type: native
 #  - type: docker
 #    image: data-intuitive/viash

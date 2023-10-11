@@ -1,1 +1,1 @@
-../../../../../main/resources/io/viash/platforms/nextflow/WorkflowHelper.nf
+../../../../../main/resources/io/viash/runners/nextflow/WorkflowHelper.nf

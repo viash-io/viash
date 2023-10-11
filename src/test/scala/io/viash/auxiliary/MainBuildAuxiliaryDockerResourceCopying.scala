@@ -38,7 +38,7 @@ class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAnd
     // generate viash script
     TestHelper.testMain(
       "build",
-      "-p", "docker",
+      "--engine", "docker",
       "-o", tempFolStr,
       configFile
     )
@@ -79,7 +79,7 @@ class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAnd
     // generate viash script
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "build",
-      "-p", "docker",
+      "--engine", "docker",
       "-o", tempFolStr,
       configResourcesUnsupportedProtocolFile
     )

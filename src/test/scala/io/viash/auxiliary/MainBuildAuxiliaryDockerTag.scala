@@ -22,7 +22,7 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
     // prepare the environment
     TestHelper.testMain(
       "build",
-      "-p", "testtag1",
+      "--engine", "testtag1",
       "-o", tempFolStr,
       configBashTagFile
     )
@@ -55,7 +55,7 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
     // prepare the environment
     TestHelper.testMain(
       "build",
-      "-p", "testtag2",
+      "--engine", "testtag2",
       "-o", tempFolStr,
       configBashTagFile
     )
@@ -88,7 +88,7 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
     // prepare the environment
     TestHelper.testMain(
       "build",
-      "-p", "testtargetimage1",
+      "--engine", "testtargetimage1",
       "-o", tempFolStr,
       configBashTagFile
     )
@@ -113,14 +113,14 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
     } finally {
       contentSource.close()
     }
-    assert(content.exists(_.matches("cat << VIASHEOF \\| eval docker run .* testbash_tag:latest")))
+    assert(content.exists(_.matches("    VIASH_DOCKER_IMAGE_ID='testbash_tag:latest-testtargetimage1'")))
   }
 
   test("Check whether target image name is well formed with target_image, version, and registry", DockerTest) {
     // prepare the environment
     TestHelper.testMain(
       "build",
-      "-p", "testtargetimage2",
+      "--engine", "testtargetimage2",
       "-o", tempFolStr,
       configBashTagFile
     )
@@ -145,14 +145,14 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
     } finally {
       contentSource.close()
     }
-    assert(content.exists(_.matches("cat << VIASHEOF \\| eval docker run .* foo.io/bar:0\\.0\\.1")))
+    assert(content.exists(_.matches("    VIASH_DOCKER_IMAGE_ID='foo.io/bar:0.0.1'")))
   }
 
   test("Check whether target image name is well formed with target_image, target_tag", DockerTest) {
     // prepare the environment
     TestHelper.testMain(
       "build",
-      "-p", "testtargetimage3",
+      "--engine", "testtargetimage3",
       "-o", tempFolStr,
       configBashTagFile
     )
@@ -177,7 +177,7 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
     } finally {
       contentSource.close()
     }
-    assert(content.exists(_.matches("cat << VIASHEOF \\| eval docker run .* bar:0\\.0\\.2")))
+    assert(content.exists(_.matches("    VIASH_DOCKER_IMAGE_ID='bar:0.0.2'")))
   }
 
   override def afterAll(): Unit = {

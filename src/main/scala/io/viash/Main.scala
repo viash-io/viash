@@ -24,15 +24,17 @@ import sys.process.{Process, ProcessLogger}
 
 import config.Config
 import helpers.{IO, Exec, SysEnv, DependencyResolver, Logger, Logging}
-import helpers.Scala._
 import helpers.status._
-import platforms.Platform
 import project.ViashProject
 import cli.{CLIConf, ViashCommand, DocumentedSubcommand, ViashNs, ViashNsBuild, ViashLogger}
 import exceptions._
 import scala.util.Try
 import org.rogach.scallop._
 import io.viash.helpers.LoggerLevel
+import io.viash.runners.Runner
+import io.viash.config.AppliedConfig
+import io.viash.functionality.Functionality
+import io.viash.engines.Engine
 
 object Main extends Logging {
   private val pkg = getClass.getPackage
@@ -73,7 +75,7 @@ object Main extends Logging {
         info(s"viash: ${e.getMessage()}")
         System.exit(1)
       case e: AbstractDependencyException =>
-        error(s"viash: ${e.getMessage()}")
+        info(s"viash: ${e.getMessage()}")
         System.exit(1)
       case ee: ExitException =>
         System.exit(ee.code)
@@ -221,32 +223,29 @@ object Main extends Logging {
     // process commands
     cli.subcommands match {
       case List(cli.run) =>
-        val (config, platform) = readConfig(cli.run, project = proj1)
+        val config = readConfig(cli.run, project = proj1)
         ViashRun(
-          config = config,
-          platform = platform.get, 
+          appliedConfig = config,
           args = runArgs.toIndexedSeq.dropWhile(_ == "--"), 
           keepFiles = cli.run.keep.toOption.map(_.toBoolean),
           cpus = cli.run.cpus.toOption,
           memory = cli.run.memory.toOption
         )
       case List(cli.build) =>
-        val (config, platform) = readConfig(cli.build, project = proj1)
-        val config2 = singleConfigDependencies(config, platform, cli.build.output.toOption, proj1.rootDir)
+        val config = readConfig(cli.build, project = proj1)
+        val config2 = singleConfigDependencies(config, cli.build.output.toOption, proj1.rootDir)
         val buildResult = ViashBuild(
-          config = config2,
-          platform = platform.get,
+          appliedConfig = config2,
           output = cli.build.output(),
           setup = cli.build.setup.toOption,
           push = cli.build.push()
         )
         if (buildResult.isError) 1 else 0
       case List(cli.test) =>
-        val (config, platform) = readConfig(cli.test, project = proj1)
-        val config2 = singleConfigDependencies(config, platform, None, proj1.rootDir)
+        val config = readConfig(cli.test, project = proj1)
+        val config2 = singleConfigDependencies(config, None, proj1.rootDir)
         ViashTest(
           config2,
-          platform = platform.get,
           keepFiles = cli.test.keep.toOption.map(_.toBoolean),
           setupStrategy = cli.test.setup.toOption,
           cpus = cli.test.cpus.toOption,
@@ -254,8 +253,8 @@ object Main extends Logging {
         )
         0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
-        val (configs, allConfigs) = readConfigs(cli.namespace.build, project = proj1)
-        val configs2 = namespaceDependencies(configs, allConfigs, proj1.target, proj1.rootDir)
+        val configs = readConfigs(cli.namespace.build, project = proj1)
+        val configs2 = namespaceDependencies(configs, proj1.target, proj1.rootDir)
         var buildResults = ViashNamespace.build(
           configs = configs2,
           target = proj1.target.get,
@@ -265,14 +264,21 @@ object Main extends Logging {
           flatten = cli.namespace.build.flatten()
         )
         val errors = buildResults
-          .map(r => r.fold(fa => Success, fb => fb))
+          .map(_.status.getOrElse(Success))
           .count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.test) =>
-        val (configs, allConfigs) = readConfigs(cli.namespace.test, project = proj1)
-        val configs2 = namespaceDependencies(configs, allConfigs, None, proj1.rootDir)
+        val configs = readConfigs(cli.namespace.test, project = proj1)
+        // resolve dependencies
+        val configs2 = namespaceDependencies(configs, None, proj1.rootDir)
+        // flatten engines
+        val configs3 = configs2.flatMap{ ac => 
+          ac.engines.map{ engine => 
+            ac.copy(engines = List(engine))
+          }
+        }
         val testResults = ViashNamespace.test(
-          configs = configs2,
+          configs = configs3,
           parallel = cli.namespace.test.parallel(),
           keepFiles = cli.namespace.test.keep.toOption.map(_.toBoolean),
           tsv = cli.namespace.test.tsv.toOption,
@@ -281,28 +287,30 @@ object Main extends Logging {
           memory = cli.namespace.test.memory.toOption,
           setup = cli.namespace.test.setup.toOption,
         )
-        val errors = testResults.flatMap(_.toOption).count(_.isError)
+        val errors = testResults.map(_._1).flatMap(_.status).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.list) =>
-        val (configs, allConfigs) = readConfigs(
+        val configs = readConfigs(
           cli.namespace.list,
           project = proj1,
           addOptMainScript = false, 
-          applyPlatform = cli.namespace.list.platform.isDefined
+          applyRunner = cli.namespace.list.runner.isDefined,
+          applyEngine = cli.namespace.list.engine.isDefined
         )
-        val configs2 = namespaceDependencies(configs, allConfigs, None, proj1.rootDir)
+        val configs2 = namespaceDependencies(configs, None, proj1.rootDir)
         ViashNamespace.list(
           configs = configs2,
           format = cli.namespace.list.format(),
           parseArgumentGroups = cli.namespace.list.parse_argument_groups()
         )
-        val errors = configs.flatMap(_.toOption).count(_.isError)
+        val errors = configs.flatMap(_.status).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.exec) =>
-        val (configs, allConfigs) = readConfigs(
+        val configs = readConfigs(
           cli.namespace.exec, 
           project = proj1, 
-          applyPlatform = cli.namespace.exec.applyPlatform()
+          applyRunner = cli.namespace.exec.applyRunner(),
+          applyEngine = cli.namespace.exec.applyEngine()
         )
         ViashNamespace.exec(
           configs = configs,
@@ -310,16 +318,16 @@ object Main extends Logging {
           dryrun = cli.namespace.exec.dryrun(),
           parallel = cli.namespace.exec.parallel()
         )
-        val errors = configs.flatMap(_.toOption).count(_.isError)
+        val errors = configs.flatMap(_.status).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.config, cli.config.view) =>
-        val (config, _) = readConfig(
+        val config = readConfig(
           cli.config.view,
           project = proj1,
           addOptMainScript = false,
-          applyPlatform = cli.config.view.platform.isDefined
+          applyRunnerAndEngine = cli.config.view.runner.isDefined || cli.config.view.engine.isDefined
         )
-        val config2 = DependencyResolver.modifyConfig(config, None, proj1.rootDir)
+        val config2 = DependencyResolver.modifyConfig(config.config, None, proj1.rootDir)
         ViashConfig.view(
           config2, 
           format = cli.config.view.format(),
@@ -327,13 +335,13 @@ object Main extends Logging {
         )
         0
       case List(cli.config, cli.config.inject) =>
-        val (config, _) = readConfig(
+        val config = readConfig(
           cli.config.inject,
           project = proj1,
           addOptMainScript = false,
-          applyPlatform = false
+          applyRunnerAndEngine = false
         )
-        ViashConfig.inject(config)
+        ViashConfig.inject(config.config)
         0
       case List(cli.export, cli.export.cli_schema) =>
         val output = cli.export.cli_schema.output.toOption.map(Paths.get(_))
@@ -376,41 +384,49 @@ object Main extends Logging {
     }
   }
 
-  def processConfigWithPlatform(
-    config: Config, 
-    platformStr: Option[String],
+
+  def processConfigWithRunnerAndEngine(
+    appliedConfig: AppliedConfig, 
+    runner: Option[Runner],
+    engines: List[Engine],
     targetDir: Option[String]
-  ): (Config, Option[Platform]) = {
-    // add platformStr to the info object
-    val conf1 = config.copy(
-      info = config.info.map{_.copy(
-        platform = platformStr,
-        output = (targetDir, platformStr) match {
-          case (Some(td), Some(pl)) => 
-            Some(ViashNamespace.targetOutputPath(
-              targetDir = td,
-              platformId = pl,
-              namespace = config.functionality.namespace,
-              functionalityName = config.functionality.name
-            ))
-          case _ => None
-        }
-        // TODO: add executable?
-      )}
+  ): AppliedConfig = {
+    // determine output path
+    val outputPath = (targetDir, runner) match {
+      case (Some(td), Some(ex)) => 
+        Some(ViashNamespace.targetOutputPath(
+          targetDir = td,
+          runnerId = ex.id,
+          namespace = appliedConfig.config.functionality.namespace,
+          functionalityName = appliedConfig.config.functionality.name
+        ))
+      case _ => None
+    }
+
+    // add runner and engine ids to the info object
+    val configInfo = appliedConfig.config.info.map{_.copy(
+      runner = runner.map(_.id),
+      engine = Some(engines.map(_.id).mkString("|")),
+      output = outputPath
+    )}
+
+    // update info, and add runner and engine to the config
+    appliedConfig.copy(
+      config = appliedConfig.config.copy(
+        info = configInfo
+      ),
+      runner = runner,
+      engines = engines,
+      status = None
     )
-
-    // find platform, see javadoc of this function for details on how
-    val plat = conf1.findPlatform(platformStr)
-
-    (conf1, Some(plat))
   }
 
   def readConfig(
     subcommand: ViashCommand,
     project: ViashProject,
     addOptMainScript: Boolean = true,
-    applyPlatform: Boolean = true
-  ): (Config, Option[Platform]) = {
+    applyRunnerAndEngine: Boolean = true
+  ): AppliedConfig = {
     
     val config = Config.read(
       configPath = subcommand.config(),
@@ -418,14 +434,21 @@ object Main extends Logging {
       addOptMainScript = addOptMainScript,
       configMods = project.config_mods
     )
-    if (applyPlatform) {
-      processConfigWithPlatform(
-        config = config,
-        platformStr = subcommand.platform.toOption,
+    if (applyRunnerAndEngine) {
+      val runnerStr = subcommand.runner.toOption
+      val engineStr = subcommand.engine.toOption
+      
+      val runner = config.findRunner(runnerStr)
+      val engines = config.findEngines(engineStr)
+
+      processConfigWithRunnerAndEngine(
+        appliedConfig = config,
+        runner = Some(runner), // TODO: fix? should findRunner return an option?
+        engines = engines,
         targetDir = project.target
       )
     } else {
-      (config, None)
+      config
     }
   }
   
@@ -433,16 +456,18 @@ object Main extends Logging {
     subcommand: ViashNs,
     project: ViashProject,
     addOptMainScript: Boolean = true,
-    applyPlatform: Boolean = true
-  ): (List[Either[(Config, Option[Platform]), Status]], List[Config]) = {
+    applyRunner: Boolean = true,
+    applyEngine: Boolean = true
+  ): List[AppliedConfig] = {
     val source = project.source.get
     val query = subcommand.query.toOption
     val queryNamespace = subcommand.query_namespace.toOption
     val queryName = subcommand.query_name.toOption
-    val platformStr = subcommand.platform.toOption
+    val runnerStr = subcommand.runner.toOption
+    val engineStr = subcommand.engine.toOption
     val configMods = project.config_mods
 
-    val (configs, allConfigs) = Config.readConfigs(
+    val configs0 = Config.readConfigs(
       source = source,
       projectDir = project.rootDir.map(_.toUri()),
       query = query,
@@ -451,90 +476,81 @@ object Main extends Logging {
       configMods = configMods,
       addOptMainScript = addOptMainScript
     )
+    
+    // TODO: apply engine and runner should probably be split into two Y_Y
+    val configs1 = 
+      if (applyRunner || applyEngine) {
+        configs0.flatMap {
+          // passthrough statuses
+          case ac if ac.status.isDefined => List(ac)
+          case ac =>
+            try {
+              val runners = ac.config.findRunners(runnerStr)
+              val engines = ac.config.findEngines(engineStr)
 
-    val appliedPlatformConfigs = 
-      if (applyPlatform) {
-      // create regex for filtering platform ids
-      val platformStrVal = platformStr.getOrElse(".*")
-
-      configs.flatMap{config => config match {
-        // passthrough statuses
-        case Right(stat) => List(Right(stat))
-        case Left(conf1) =>
-          val platformStrs = 
-            if (platformStrVal.contains(":") || (new File(platformStrVal)).exists) {
-              // platform is a file
-              List(Some(platformStrVal))
-            } else {
-              // platform is a regex for filtering the ids
-              val platIDs = conf1.platforms.map(_.id)
-
-              if (platIDs.isEmpty) {
-                // config did not contain any platforms, so the native platform should be used
-                List(None)
-              } else {
-                // filter platforms using the regex
-                platIDs.filter(platformStrVal.r.findFirstIn(_).isDefined).map(Some(_))
+              runners.map{ runner =>
+                processConfigWithRunnerAndEngine(
+                  appliedConfig = ac,
+                  runner = Some(runner),
+                  engines = engines,
+                  targetDir = project.target
+                )
               }
+            } catch {
+              case e: Exception =>
+                error(e.getMessage())
+                List(ac.setStatus(MissingRunnerOrEngine))
             }
-          platformStrs.map{ platStr =>
-            Left(processConfigWithPlatform(
-              config = conf1,
-              platformStr = platStr,
-              targetDir = project.target
-            ))
           }
-        }}
-    } else {
-      configs.map{c => c match {
-        case Right(status) => Right(status)
-        case Left(conf) => Left((conf, None: Option[Platform]))
-      }}
-    }
-
-    (appliedPlatformConfigs, allConfigs)
+      } else {
+        configs0
+      }
+    
+      configs1
   }
 
   // Handle dependencies operations for a single config
-  def singleConfigDependencies(config: Config, platform: Option[Platform], output: Option[String], rootDir: Option[Path]): Config = {
+  def singleConfigDependencies(appliedConfig: AppliedConfig, output: Option[String], rootDir: Option[Path]): AppliedConfig = {
     if (output.isDefined)
       DependencyResolver.createBuildYaml(output.get)
 
-    handleSingleConfigDependency(config, platform, output, rootDir)
+    handleSingleConfigDependency(appliedConfig, output, rootDir)
   }
 
   // Handle dependency operations for namespaces
-  def namespaceDependencies(configs: List[Either[(Config, Option[Platform]), Status]], allConfigs: List[Config], target: Option[String], rootDir: Option[Path]): List[Either[(Config, Option[Platform]), Status]] = {
+  def namespaceDependencies(configs: List[AppliedConfig], target: Option[String], rootDir: Option[Path]): List[AppliedConfig] = {
     if (target.isDefined)
       DependencyResolver.createBuildYaml(target.get)
     
     configs.map{
-      case Left((config: Config, platform: Option[Platform])) => {
+      case ac if ac.status.isDefined => ac
+      case appliedConfig => {
         Try{
-          handleSingleConfigDependency(config, platform, target, rootDir, allConfigs)
+          val validConfigs = configs.filter(ac => ac.status == None || ac.status == Some(DisabledByQuery)).map(_.config)
+          handleSingleConfigDependency(appliedConfig, target, rootDir, validConfigs)
         }.fold(
           e => e match {
             case de: AbstractDependencyException =>
-              error(s"Config \"${config.functionality.name}\": ${e.getMessage}")
-              Right(DependencyError)
+              error(s"Config \"${appliedConfig.config.functionality.name}\": ${e.getMessage}")
+              appliedConfig.setStatus(DependencyError)
             case _ => throw e
           },
-          c => Left((c, platform))
+          ac => ac
         )
       }
-      case Right(c) => Right(c)
     }
   }
 
   // Actual handling of the dependency logic, to be used for single and namespace configs
-  def handleSingleConfigDependency(config: Config, platform: Option[Platform], output: Option[String], rootDir: Option[Path], namespaceConfigs: List[Config] = Nil) = {
-    val dependencyPlatformId = DependencyResolver.getDependencyPlatformId(config, platform.map(_.id))
-    val config1 = DependencyResolver.modifyConfig(config, dependencyPlatformId, rootDir, namespaceConfigs)
-    if (output.isDefined) {
-      DependencyResolver.copyDependencies(config1, output.get, dependencyPlatformId.getOrElse("native"))
+  def handleSingleConfigDependency(config: AppliedConfig, output: Option[String], rootDir: Option[Path], namespaceConfigs: List[Config] = Nil) = {
+    val dependencyRunnerId = DependencyResolver.getDependencyRunnerId(config.config, config.runner.map(_.id))
+    val config1 = DependencyResolver.modifyConfig(config.config, dependencyRunnerId, rootDir, namespaceConfigs)
+    val config2 = if (output.isDefined) {
+      DependencyResolver.copyDependencies(config1, output.get, dependencyRunnerId.getOrElse("executable"))
     } else {
       config1
     }
+    config.copy(config = config2)
   }
 
 

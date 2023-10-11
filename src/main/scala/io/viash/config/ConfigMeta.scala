@@ -42,7 +42,7 @@ object ConfigMeta {
   def configToCleanJson(config: Config): Json = {
     val encodedConfig: Json = encodeConfig(config)
     // drop empty & null values recursively except all "info" fields
-    val cleanEncodedConfig = encodedConfig.dropEmptyRecursivelyExcept(Seq("info", ".platforms.entrypoint", ".platforms.cmd"))
+    val cleanEncodedConfig = encodedConfig.dropEmptyRecursivelyExcept(Seq("info", ".engines.entrypoint", ".engines.cmd"))
     // get config.info and *do* clean it
     cleanEncodedConfig.mapObject(_.map{
       case ("info", v) => ("info", v.dropEmptyRecursively)

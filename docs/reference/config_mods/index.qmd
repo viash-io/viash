@@ -30,7 +30,7 @@ Change the registry of a docker container:
 
 ```bash
 viash build -c \
-  '.platforms[.type == "docker"].container_registry := "url-to-registry"'
+  '.engines[.type == "docker"].registry := "url-to-registry"'
 ```
 
 Add an author to the list:
@@ -44,6 +44,6 @@ You can use dynamic config modding to alter the config of multiple components at
 ```bash
 viash ns build \
   -c '.functionality.version := "0.3.0"' \
-  -c '.platforms[.type == "docker"].container_registry := "url-to-registry"' \
+  -c '.engines[.type == "docker"].registry := "url-to-registry"' \
   -c '.functionality.authors += { name: "Mr. T", role: "sponsor" }'
 ```

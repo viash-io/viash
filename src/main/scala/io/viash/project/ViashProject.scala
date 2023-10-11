@@ -32,10 +32,10 @@ import java.net.URI
     §source: src
     §target: target
     §config_mods: |
-    §  .platforms[.type == 'docker'].target_registry := 'ghcr.io'
-    §  .platforms[.type == 'docker'].target_organization := 'viash-io'
-    §  .platforms[.type == 'docker'].namespace_separator := '/'
-    §  .platforms[.type == 'docker'].target_image_source := 'https://github.com/viash-io/viash'
+    §  .engines[.type == 'docker'].target_registry := 'ghcr.io'
+    §  .engines[.type == 'docker'].target_organization := 'viash-io'
+    §  .engines[.type == 'docker'].namespace_separator := '/'
+    §  .engines[.type == 'docker'].target_image_source := 'https://github.com/viash-io/viash'
     §""".stripMargin('§'), "yaml"
 )
 @since("Viash 0.6.4")

@@ -24,7 +24,7 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
 
   test("viash export resource") {
     val stdout = TestHelper.testMain(
-      "export", "resource", "platforms/nextflow/WorkflowHelper.nf"
+      "export", "resource", "runners/nextflow/WorkflowHelper.nf"
     )
 
     assert(stdout.contains("def readConfig("))
@@ -32,9 +32,31 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
 
   test("viash export resource to file") {
     val stdout = TestHelper.testMain(
+      "export", "resource", "runners/nextflow/WorkflowHelper.nf",
+      "--output", tempFile.toString
+    )
+
+    val lines = helpers.IO.read(tempFile.toUri())
+    assert(lines.contains("def readConfig("))
+  }
+
+  test("viash export resource legacy") {
+    val (stdout, stderr, code) = TestHelper.testMainWithStdErr(
+      "export", "resource", "platforms/nextflow/WorkflowHelper.nf"
+    )
+
+    assert(stderr.contains("WARNING: The 'platforms/' prefix is deprecated. Please use 'runners/' instead."))
+
+    assert(stdout.contains("def readConfig("))
+  }
+
+  test("viash export resource to file legacy") {
+    val (stdout, stderr, code) = TestHelper.testMainWithStdErr(
       "export", "resource", "platforms/nextflow/WorkflowHelper.nf",
       "--output", tempFile.toString
     )
+
+    assert(stderr.contains("WARNING: The 'platforms/' prefix is deprecated. Please use 'runners/' instead."))
 
     val lines = helpers.IO.read(tempFile.toUri())
     assert(lines.contains("def readConfig("))

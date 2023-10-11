@@ -25,9 +25,10 @@ import io.circe.syntax.EncoderOps
 import io.viash.config.Config
 import io.viash.helpers.{IO, Logging}
 import io.viash.helpers.circe._
-import io.viash.platforms.DebugPlatform
+import io.viash.runners.DebugRunner
 import io.viash.config.ConfigMeta
 import io.viash.exceptions.ExitException
+import io.viash.runners.Runner
 
 object ViashConfig extends Logging{
 
@@ -92,15 +93,15 @@ object ViashConfig extends Logging{
     val path = Paths.get(uri.getPath())
 
     // debugFun
-    val debugPlatform = DebugPlatform(path = uri.getPath())
-    val debugFun = debugPlatform.modifyFunctionality(config, false)
+    val debugRunner = DebugRunner(path = uri.getPath())
+    val resources = debugRunner.generateRunner(config, testing = false)
 
     // create temporary directory
     val dir = IO.makeTemp("viash_inject_" + config.functionality.name)
 
     // build regular executable
     Files.createDirectories(dir)
-    IO.writeResources(debugFun.resources, dir)
+    IO.writeResources(resources.resources, dir)
 
     // run command, collect output
     val executable = Paths.get(dir.toString, fun.name).toString

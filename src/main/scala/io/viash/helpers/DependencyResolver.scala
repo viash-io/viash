@@ -27,7 +27,7 @@ import io.viash.functionality.dependencies.GithubRepository
 import java.nio.file.Files
 import java.io.IOException
 import java.io.UncheckedIOException
-import io.viash.helpers.IO
+import io.viash.helpers.{IO, Logging}
 import io.circe.yaml.parser
 import io.circe.Json
 import io.viash.config.Config._
@@ -36,10 +36,18 @@ import io.viash.functionality.dependencies.Dependency
 import io.viash.functionality.resources.NextflowScript
 import io.viash.exceptions.MissingDependencyException
 
-object DependencyResolver {
+object DependencyResolver extends Logging {
 
-  // Modify the config so all of the dependencies are available locally
-  def modifyConfig(config: Config, platformId: Option[String], projectRootDir: Option[Path], namespaceConfigs: List[Config] = Nil): Config = {
+  /**
+    * Modify the config so all of the dependencies are available locally 
+    *
+    * @param config Component configuration
+    * @param runnerId Used to create the path where to store retrieved dependencies
+    * @param projectRootDir Location of the Project Config, used for relative referencing
+    * @param namespaceConfigs Needed for local dependencies
+    * @return A config with dependency information added
+    */
+  def modifyConfig(config: Config, runnerId: Option[String], projectRootDir: Option[Path], namespaceConfigs: List[Config] = Nil): Config = {
 
     // Check all fun.repositories have valid names
     val repositories = config.functionality.repositories
@@ -89,9 +97,9 @@ object DependencyResolver {
 
         val config =
           if (dep.isLocalDependency) {
-            findLocalConfig(repo.localPath.toString(), namespaceConfigs, dep.name, platformId)
+            findLocalConfig(repo.localPath.toString(), namespaceConfigs, dep.name, runnerId)
           } else {
-            findRemoteConfig(repo.localPath.toString(), dep.name, platformId)
+            findRemoteConfig(repo.localPath.toString(), dep.name, runnerId)
           }
 
         dep.copy(
@@ -110,13 +118,13 @@ object DependencyResolver {
     config4
   }
 
-  def copyDependencies(config: Config, output: String, platformId: String): Config = {
+  def copyDependencies(config: Config, output: String, runnerId: String): Config = {
     composedDependenciesLens.modify(_.map(dep => {
 
       if (dep.isLocalDependency) {
         // Dependency solving will be done by building the component and dependencies of that component will be handled there.
         // However, we have to fill in writtenPath. This will be needed when this built component is used as a dependency and we have to resolve dependencies of dependencies.
-        val writtenPath = ViashNamespace.targetOutputPath(output, platformId, None, dep.name)
+        val writtenPath = ViashNamespace.targetOutputPath(output, runnerId, None, dep.name)
         dep.copy(writtenPath = Some(writtenPath))
       } else {
         // copy the dependency to the output folder
@@ -139,7 +147,7 @@ object DependencyResolver {
   }
 
   // Find configs from the local repository. These still need to be built so we have to deduce the information we want.
-  def findLocalConfig(targetDir: String, namespaceConfigs: List[Config], name: String, platformId: Option[String]): Option[(String, Map[String, String])] = {
+  def findLocalConfig(targetDir: String, namespaceConfigs: List[Config], name: String, runnerId: Option[String]): Option[(String, Map[String, String])] = {
 
     val config = namespaceConfigs.filter{ c => 
         val fullName = c.functionality.namespace.fold("")(n => n + "/") + c.functionality.name
@@ -151,12 +159,12 @@ object DependencyResolver {
       val path = c.info.get.config
       // fill in the location of the executable where it will be located
       // TODO: it would be better if this was already filled in somewhere else
-      val executable = platformId.map{ pid =>
-          val executableName = pid match {
+      val executable = runnerId.map{ rid =>
+          val executableName = rid match {
             case "nextflow" => "main.nf"
             case _ => c.functionality.name
           }
-          Paths.get(ViashNamespace.targetOutputPath("", pid, c.functionality.namespace, c.functionality.name), executableName).toString()
+          Paths.get(ViashNamespace.targetOutputPath("", rid, c.functionality.namespace, c.functionality.name), executableName).toString()
       }
       val info = c.info.get.copy(
         executable = executable
@@ -177,7 +185,7 @@ object DependencyResolver {
   }
 
   // Read built config artifact in a minimalistic way. This prevents minor schema changes breaking things.
-  def findRemoteConfig(path: String, name: String, platformId: Option[String]): Option[(String, Map[String, String])] = {
+  def findRemoteConfig(path: String, name: String, runnerId: Option[String]): Option[(String, Map[String, String])] = {
     if (!Files.exists(Paths.get(path)))
       return None
 
@@ -201,9 +209,12 @@ object DependencyResolver {
       }
       .filter{
         case(scriptPath, info) =>
-          platformId match {
-            case None => true
-            case Some(p) => info("platform") == p
+          (runnerId, info.get("runner"), info.get("platform")) match { // also try matching on platform as fallback, fetch it already
+            case (None, _, _) => true // if we don't filter for the incoming runnerId, we want all the output runners
+            case (Some(id), Some(runner), _) => runner == id // default behaviour, filter for the incoming runnerId
+            case (Some("executable"), _, Some("native")) => true // legacy code for platform, match executable runner to native platform
+            case (Some(id), _, Some(plat)) => plat == id // legacy code for platform, filter for the incoming runnerId matching platform id
+            case _ => false
           }
       }
       .headOption
@@ -290,14 +301,14 @@ object DependencyResolver {
     }
   }
 
-  // Get the platform to be used for dependencies. If the main script is a Nextflow script, use 'nextflow', otherwise use 'native'.
-  // Exception is when there is no platform set for the config, then we must return 'None' too.
-  def getDependencyPlatformId(config: Config, platform: Option[String]): Option[String] = {
-    (config.functionality.mainScript, platform) match {
+  // Get the runner to be used for dependencies. If the main script is a Nextflow script, use 'nextflow', otherwise use 'native'.
+  // Exception is when there is no runner set for the config, then we must return 'None' too.
+  def getDependencyRunnerId(config: Config, runner: Option[String]): Option[String] = {
+    (config.functionality.mainScript, runner) match {
       case (_, None) => None
       case (None, _) => None
       case (Some(n: NextflowScript), _) => Some("nextflow")
-      case _ => Some("native")
+      case _ => Some("executable")
     }
   }
 }

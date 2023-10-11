@@ -19,12 +19,16 @@ package io.viash.config
 
 import io.viash.schemas.description
 
+// TODO: rename to ConfigInfo?
+
 @description("Meta information fields filled in by Viash during build.")
 case class Info(
   @description("Path to the config used during build.")
   config: String,
-  @description("The platform id used during build.")
-  platform: Option[String] = None,
+  @description("The runner id used during build.")
+  runner: Option[String] = None,
+  @description("The engine id used during build.")
+  engine: Option[String] = None,
   @description("Folder path to the build artifacts.")
   output: Option[String] = None,
   @description("Output folder with main executable path.")

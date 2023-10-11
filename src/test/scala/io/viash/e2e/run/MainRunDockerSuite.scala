@@ -30,7 +30,7 @@ class MainRunDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
       |    - type: bash_script
       |      text: |
       |        cp -r "$par_input" "$par_output"
-      |platforms:
+      |engines:
       |  - type: docker
       |    image: python:3.10-slim
       |""".stripMargin

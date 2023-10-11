@@ -17,13 +17,8 @@
 
 package io.viash.platforms
 
-import io.viash.functionality.Functionality
-import io.viash.config.Config
-import io.viash.helpers.IO
-import io.circe.yaml.parser
-import java.net.URI
-import requirements._
 import io.viash.schemas._
+import io.viash.engines.requirements.Requirements
 
 @description(
   """A list of platforms to generate target artifacts for.
@@ -42,6 +37,7 @@ import io.viash.schemas._
     |      label: [lowcpu, midmem]
     |""".stripMargin,
   "yaml")
+@deprecated("Use 'engines' and 'runners' instead.", "0.9.0", "0.10.0")
 @subclass("NativePlatform")
 @subclass("DockerPlatform")
 @subclass("NextflowPlatform")
@@ -51,21 +47,5 @@ trait Platform {
   
   val id: String
 
-  val hasSetup: Boolean = false
   val requirements: List[Requirements] = Nil
-
-  def modifyFunctionality(config: Config, testing: Boolean): Functionality
-}
-
-object Platform {
-  def parse(uri: URI): Platform = {
-    val str = IO.read(uri)
-    parser.parse(str)
-      .fold(throw _, _.as[Platform])
-      .fold(throw _, identity)
-  }
-
-  def read(path: String): Platform = {
-    parse(IO.uri(path))
-  }
 }

@@ -18,7 +18,7 @@
 package io.viash.schemas
 
 import io.circe.Json
-import io.viash.platforms.docker.DockerSetupStrategy
+import io.viash.runners.executable.DockerSetupStrategy
 
 object JsonSchema {
 
@@ -158,7 +158,7 @@ object JsonSchema {
         case s"OneOrMore[$s]" =>
           if (s == "String" && p.name == "port" && subclass == Some("docker")) {
             // Custom exception
-            // This is the port field for a docker platform.
+            // This is the port field for a excutable runner.
             // We want to allow a Strings or Ints.
             (p.name, eitherJson(
               valueType("String", pDescription),

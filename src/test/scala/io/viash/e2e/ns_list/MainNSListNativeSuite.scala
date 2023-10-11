@@ -66,11 +66,12 @@ class MainNSListNativeSuite extends AnyFunSuite{
 
 
   // convert testbash
-  test("viash ns list filter by platform") {
+  test("viash ns list filter by engine and runner") {
     val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
       "ns", "list",
       "-s", nsPath,
-      "-p", "docker"
+      "--engine", "docker",
+      "--runner", "docker"
     )
 
     assert(exitCode == 1)
@@ -79,11 +80,12 @@ class MainNSListNativeSuite extends AnyFunSuite{
       .fold(throw _, identity)
     assert(configs.length == 0)
   }
-  test("viash ns list filter by platform #2") {
+  test("viash ns list filter by engine #2") {
     val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
       "ns", "list",
       "-s", scalaPath,
-      "-p", "docker"
+      "--engine", "docker",
+      "--runner", "executable"
     )
 
     assert(exitCode == 0)
@@ -93,11 +95,12 @@ class MainNSListNativeSuite extends AnyFunSuite{
       .fold(throw _, identity)
     assert(configs.length == 1)
   }
-  test("viash ns list filter by platform #3") {
+  test("viash ns list filter by engine #3") {
     val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
      "ns", "list",
       "-s", scalaPath,
-      "-p", "not_exists"
+      "--engine", "not_exists",
+      "--runner", "not_exists"
     )
 
     assert(exitCode == 0)

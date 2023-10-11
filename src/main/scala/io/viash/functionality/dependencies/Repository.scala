@@ -17,11 +17,9 @@
 
 package io.viash.functionality.dependencies
 
-import io.viash.helpers.IO
+import io.viash.helpers.{IO, Logging}
 import io.viash.schemas._
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.nio.file.Files
+import java.nio.file.{Path, Paths, Files}
 
 @description("Specifies a repository where dependency components can be found.")
 @subclass("LocalRepository")
@@ -56,7 +54,7 @@ abstract class Repository extends CopyableRepo[Repository] {
   def subOutputPath: String
 }
 
-object Repository {
+object Repository extends Logging {
   private val sugarSyntaxRegex = raw"([a-zA-Z_0-9\+]+)://([\w/\-\.:]+)(@[A-Za-z0-9][\w\./]*)?".r
   private def getGitTag(tag: String): Option[String] = tag match {
     case null => None
@@ -127,7 +125,7 @@ object Repository {
         // Stopgap solution to be able to use built repositories which were not built with dependency aware Viash version.
         // TODO remove this section once it's deemed no longer necessary
         if (Paths.get(r3.localPath, "target").toFile().exists() && !Paths.get(r3.localPath, "target", ".build.yaml").toFile().exists()) {
-          Console.err.println(s"${Console.YELLOW}Creating temporary 'target/.build.yaml' file for ${r3.name} as this file seems to be missing.${Console.RESET}")
+          warn(s"Creating temporary 'target/.build.yaml' file for ${r3.name} as this file seems to be missing.")
           Files.createFile(Paths.get(r3.localPath, "target", ".build.yaml"))
         }
         r3

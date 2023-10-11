@@ -28,6 +28,9 @@ import FunctionalityLenses._
 object ConfigLenses {
   val functionalityLens = GenLens[Config](_.functionality)
 
+  val composedNameLens = functionalityLens ^|-> nameLens
+  val composedVersionLens = functionalityLens ^|-> versionLens
+  val composedRequirementsLens = functionalityLens ^|-> requirementsLens
   val composedDependenciesLens = functionalityLens ^|-> dependenciesLens
   val composedRepositoriesLens = functionalityLens ^|-> repositoriesLens
 }

@@ -23,6 +23,9 @@ import monocle.Lens
 import monocle.macros.GenLens
 
 object FunctionalityLenses {
+  val nameLens = GenLens[Functionality](_.name)
+  val versionLens = GenLens[Functionality](_.version)
+  val requirementsLens = GenLens[Functionality](_.requirements)
   val dependenciesLens = GenLens[Functionality](_.dependencies)
   val repositoriesLens = GenLens[Functionality](_.repositories)
 }

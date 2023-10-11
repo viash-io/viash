@@ -89,16 +89,24 @@ functionality:
   requirements:
     cpus: 2
     memory: 2GB
-platforms:
+runners:
+  - type: executable
+    id: native
+  - type: executable
+    id: docker
+  - type: executable
+    id: throwawayimage
+  - type: nextflow
+engines:
   - type: native
+    id: native
   - type: docker
     image: "bash:3.2"
   - type: docker
+    id: throwawayimage
     image: "bash:3.2"
-    id: "throwawayimage"
-    target_image: "throwawayimage"
+    target_image: "mytestbash"
     setup:
       - type: apk
         packages:
           - fortune
-  - type: nextflow

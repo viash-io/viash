@@ -31,7 +31,7 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
     // generate viash script
     val testText = TestHelper.testMain(
       "test",
-      "-p", "docker",
+      "--engine", "docker",
       "-k", "true",
       configFile
     )
@@ -67,7 +67,7 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
 
     // Check all resources can be found in the folder
     for ((name, md5sum) <- expectedResources) {
-      val resourceFile = Paths.get(tempPath, "build_executable", name).toFile
+      val resourceFile = Paths.get(tempPath, "build_engine_environment", name).toFile
 
       assert(resourceFile.exists, s"Could not find $name")
 
@@ -85,7 +85,7 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
     // generate viash script
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
-      "-p", "docker",
+      "--engine", "docker",
       "-k", "true",
       configResourcesUnsupportedProtocolFile
     )

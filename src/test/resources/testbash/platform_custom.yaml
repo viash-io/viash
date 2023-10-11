@@ -1,4 +1,0 @@
-type: docker
-id: custom
-image: python:3.8
-target_image: custom_target_image_tag

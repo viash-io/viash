@@ -231,19 +231,48 @@ HERE
 fi
 
 ##################################################################################
-###                                  PLATFORMS                                 ###
+###                                  RUNNERS                                   ###
 ##################################################################################
-# write platforms
+# write runners
 cat >> "$out_dir/config.vsh.yaml" << HERE
-platforms:
+runners:
 HERE
 
-# iterate over different specified platforms
+# iterate over different specified runners
 IFS=','
 set -f
-for platform in $par_platform; do
+for runner in $par_runner; do
   unset IFS
-  if [ $platform == "docker" ]; then
+  
+  if [ $runner == "executable" ]; then
+    cat >> "$out_dir/config.vsh.yaml" << HERE
+  - type: executable
+HERE
+  
+  elif [ $runner == "nextflow" ]; then
+    cat >> "$out_dir/config.vsh.yaml" << HERE
+  - type: nextflow
+HERE
+
+  fi
+done
+set +f
+
+
+##################################################################################
+###                                  ENGINES                                   ###
+##################################################################################
+# write engines
+cat >> "$out_dir/config.vsh.yaml" << HERE
+engines:
+HERE
+
+# iterate over different specified engines
+IFS=','
+set -f
+for engine in $par_engine; do
+  unset IFS
+  if [ $engine == "docker" ]; then
   
     # choose different default docker image based on language
     if [ $script_lang == "bash" ]; then
@@ -277,14 +306,9 @@ HERE
 HERE
     fi
   
-  elif [ $platform == "native" ]; then
+  elif [ $engine == "native" ]; then
     cat >> "$out_dir/config.vsh.yaml" << HERE
   - type: native
-HERE
-  
-  elif [ $platform == "nextflow" ]; then
-    cat >> "$out_dir/config.vsh.yaml" << HERE
-  - type: nextflow
 HERE
 
   fi

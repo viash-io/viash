@@ -12,7 +12,7 @@ import io.viash.helpers.{IO, Exec, Logger}
 
 class EscapingNativeTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
-  // which platform to test
+  // which config to test
   private val rootPath = getClass.getResource(s"/test_escaping/").getPath
   private val configFile = getClass.getResource(s"/test_escaping/config.vsh.yaml").getPath
 
@@ -29,7 +29,7 @@ class EscapingNativeTest extends AnyFunSuite with BeforeAndAfterAll {
   test("viash can build the config file without special 'to-escape-characters'") {
     TestHelper.testMain(
       "build",
-      "-p", "native",
+      "--engine", "native",
       "-o", tempFolStr,
       configFile
     )
@@ -71,7 +71,7 @@ class EscapingNativeTest extends AnyFunSuite with BeforeAndAfterAll {
       // build the script
       TestHelper.testMain(
         "build",
-        "-p", "native",
+        "--engine", "native",
         "-o", Paths.get(tempSubFolder.toString, "output").toString,
         configSubFile.toString
       )

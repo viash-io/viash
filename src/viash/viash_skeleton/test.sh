@@ -18,7 +18,7 @@ echo ">>> Checking whether output is generated"
 [[ ! -f my_src/test/testbash/script.sh  ]] && echo "The skeleton script.sh was not written" && exit 1
 [[ ! -f my_src/test/testbash/config.vsh.yaml  ]] && echo "The skeleton config.vsh.yaml was not written" && exit 1
 
-viash test my_src/test/testbash/config.vsh.yaml
+viash test my_src/test/testbash/config.vsh.yaml --engine native
 
 [ $? -ne 0 ] && echo "Bash component finished unsuccessfully" && exit 1
 
@@ -30,7 +30,7 @@ $meta_executable -n testpy -ns test -l py
 
 [[ ! -f src/test/testpy/config.vsh.yaml ]] && echo "Output file could not be found!" && exit 1
 
-viash test src/test/testpy/config.vsh.yaml
+viash test src/test/testpy/config.vsh.yaml --engine native
 
 [ $? -ne 0 ] && echo "Python component finished unsuccessfully" && exit 1
 
@@ -43,7 +43,7 @@ $meta_executable -n testr -ns test -l r
 
 [[ ! -f src/test/testr/config.vsh.yaml ]] && echo "Output file could not be found!" && exit 1
 
-viash test src/test/testr/config.vsh.yaml
+viash test src/test/testr/config.vsh.yaml --engine native
 
 [ $? -ne 0 ] && echo "R component finished unsuccessfully" && exit 1
 

@@ -13,7 +13,7 @@ import scala.io.Source
 
 class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
-  // which platform to test
+  // which config to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
@@ -36,9 +36,10 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
       "commands_default"
     )
     
-    val stdout = TestHelper.testMain(
+    val (stdout, _, _) = TestHelper.testMainWithStdErr(
       "build",
-      "-p", "docker",
+      "--engine", "docker",
+      "--runner", "docker",
       "-o", tempFolStr,
       newConfigFilePath,
       "--setup", "alwaysbuild"
@@ -53,9 +54,10 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
       "commands_extra"
     )
     
-    val stdout = TestHelper.testMain(
+    val (stdout, _, _) = TestHelper.testMainWithStdErr(
       "build",
-      "-p", "docker",
+      "--engine", "docker",
+      "--runner", "docker",
       "-o", tempFolStr,
       newConfigFilePath,
       "--setup", "alwaysbuild"
@@ -72,7 +74,8 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
     
     val stdout = TestHelper.testMain(
       "build",
-      "-p", "docker",
+      "--engine", "docker",
+      "--runner", "docker",
       "-o", tempFolStr,
       newConfigFilePath,
       "--setup", "alwaysbuild"
@@ -87,7 +90,8 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
     
     val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
       "build",
-      "-p", "docker",
+      "--engine", "docker",
+      "--runner", "docker",
       "-o", tempFolStr,
       newConfigFilePath,
       "--setup", "alwaysbuild"
@@ -105,7 +109,8 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
     
     val _ = TestHelper.testMainWithStdErr(
       "build",
-      "-p", "docker",
+      "--engine", "docker",
+      "--runner", "docker",
       "-o", tempFolStr,
       newConfigFilePath,
       "--setup", "alwaysbuild"

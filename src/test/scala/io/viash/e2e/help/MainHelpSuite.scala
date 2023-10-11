@@ -11,7 +11,7 @@ class MainHelpSuite extends AnyFunSuite{
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 
   test("viash config view default functionality without help") {
-    val stdout = TestHelper.testMain(
+    val (stdout, _, _) = TestHelper.testMainWithStdErr(
       "config", "view",
       configFile
     )
@@ -66,11 +66,11 @@ class MainHelpSuite extends AnyFunSuite{
   }
 
 
-  test("viash config view default functionality with --help as platform argument") {
+  test("viash config view default functionality with --help as runner argument") {
     val output = TestHelper.testMainException[RuntimeException](
       "config", "view",
       configFile,
-      "--platform", "--help"
+      "--runner", "--help"
     )
 
     assert(!output.contains("viash config view"))

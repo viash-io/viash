@@ -24,20 +24,27 @@ import io.viash.helpers.Logging
 
 trait ViashCommand {
   _: DocumentedSubcommand =>
-  val platform = registerOpt[String](
-    name = "platform",
-    short = Some('p'),
+  val runner = registerOpt[String](
+    name = "runner",
     default = None,
     descr =
-      "Specifies which platform amongst those specified in the config to use. " +
-      "If this is not provided, the first platform will be used. " +
-      "If no platforms are defined in the config, the native platform will be used. " +
-      "In addition, the path to a platform yaml file can also be specified.",
+      "Specifies which runner amongst those specified in the config to use. " +
+      "If this is not provided, the first runner will be used. " +
+      "If no runners are defined in the config, the executable runner will be used.",
+    required = false
+  )
+  val engine = registerOpt[String](
+    name = "engine",
+    default = None,
+    descr =
+      "A regex to determine which engines amongst those specified in the config to use. " +
+      "If this is not provided, all engines will be used. " +
+      "If no engines are defined in the config, the native engine will be used.",
     required = false
   )
   val config = registerTrailArg[String](
     name = "config",
-    descr = "A viash config file (example: config.vsh.yaml). This argument can also be a script with the config as a header.",
+    descr = "A viash config file (example: `config.vsh.yaml`). This argument can also be a script with the config as a header.",
     default = Some("config.vsh.yaml"),
     required = true
   )
@@ -89,15 +96,22 @@ trait ViashNs {
     descr = "A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
     default = None
   )
-  val platform = registerOpt[String](
-    name = "platform",
-    short = Some('p'),
-    descr =
-      "Acts as a regular expression to filter the platform ids specified in the found config files. " +
-        "If this is not provided, all platforms will be used. " +
-        "If no platforms are defined in a config, the native platform will be used. " +
-        "In addition, the path to a platform yaml file can also be specified.",
+  val runner = registerOpt[String](
+    name = "runner",
     default = None,
+    descr =
+      "Acts as a regular expression to filter the runner ids specified in the found config files. " +
+        "If this is not provided, all runners will be used. " +
+        "If no runners are defined in a config, the executable runner will be used.",
+    required = false
+  )
+  val engine = registerOpt[String](
+    name = "engine",
+    default = None,
+    descr =
+      "Acts as a regular expression to filter the engine ids specified in the found config files. " +
+        "If this is not provided, all engines will be used. " +
+        "If no engines are defined in a config, the native engine will be used.",
     required = false
   )
   val parallel = registerOpt[Boolean](
@@ -224,12 +238,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       name = "setup",
       short = Some('s'),
       default = None,
-      descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Platform only]."
+      descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Engine only]."
     )
     val push = registerOpt[Boolean](
       name = "push",
       default = Some(false),
-      descr = "Whether or not to push the container to a Docker registry [Docker Platform only]."
+      descr = "Whether or not to push the container to a Docker registry [Docker Engine only]."
     )
   }
 
@@ -243,7 +257,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       name = "setup",
       short = Some('s'),
       default = None,
-      descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Platform only]."
+      descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Engine only]."
     )
     
     footer(
@@ -298,18 +312,18 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       val setup = registerOpt[String](
         name = "setup",
         default = None,
-        descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Platform only]."
+        descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Engine only]."
       )
       val push = registerOpt[Boolean](
         name = "push",
         default = Some(false),
-        descr = "Whether or not to push the container to a Docker registry [Docker Platform only]."
+        descr = "Whether or not to push the container to a Docker registry [Docker Engine only]."
       )
       val flatten = registerOpt[Boolean](
         name = "flatten",
         short = Some('f'),
         default = Some(false),
-        descr = "Flatten the target builds, handy for building one platform to a bin directory."
+        descr = "Flatten the target builds, handy for building one runner/engine to a bin directory."
       )
     }
 
@@ -322,7 +336,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       val setup = registerOpt[String](
         name = "setup",
         default = None,
-        descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Platform only]."
+        descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Engine only]."
       )
 
       val tsv = registerOpt[String](
@@ -374,7 +388,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
           | * `{abs-main-script}`: absolute path to the main script (if any)
           | * `{functionality-name}`: name of the component
           | * `{namespace}`: namespace of the component
-          | * `{platform}`: selected platform id (only when --apply_platform is used)
+          | * `{runner}`: selected runner id (only when --apply_runner is used)
+          | * `{engine}`: selected engine id (only when --apply_engine is used)
           | * `{output}`: path to the destination directory when building the component
           | * `{abs-output}`: absolute path to the destination directory when building the component
           |
@@ -384,15 +399,23 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
         """viash ns exec 'echo {path} \\;'
           |viash ns exec 'chmod +x {main-script} +'""".stripMargin
       )
-
-      val applyPlatform = registerOpt[Boolean] (
-        name = "apply_platform",
-        short = Some('a'),
+      val applyRunner = registerOpt[Boolean] (
+        name = "apply_runner",
+        short = Some('r'),
         default = Some(false),
         descr = 
-          """Fills in the {platform} and {output} field by applying each platform to the
+          """Fills in the {runner} and {output} field by applying each runner to the 
             |config separately. Note that this results in the provided command being applied
-            |once for every platform that matches the --platform regex.""".stripMargin
+            |once for every runner that matches the --runner regex.""".stripMargin
+      )
+      val applyEngine = registerOpt[Boolean] (
+        name = "apply_engine",
+        short = Some('e'),
+        default = Some(false),
+        descr = 
+          """Fills in the {engine} and {output} field by applying each engine to the 
+            |config separately. Note that this results in the provided command being applied
+            |once for every engine that matches the --engine regex.""".stripMargin
       )
 
       val dryrun = registerOpt[Boolean] (
@@ -425,7 +448,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       banner(
         "viash export resource",
         """Export an internal resource file""".stripMargin,
-        """viash export resource platforms/nextflow/WorkflowHelper.nf [--output foo.nf]""".stripMargin
+        """viash export resource runners/nextflow/WorkflowHelper.nf [--output foo.nf]""".stripMargin
       )
 
       val path = registerTrailArg[String](

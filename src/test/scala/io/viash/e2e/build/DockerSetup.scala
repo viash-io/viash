@@ -14,32 +14,33 @@ import io.viash.functionality.resources.PlainFile
 
 class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
-  // which platform to test
+  // which config to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
-  private val temporaryConfigFolder = IO.makeTemp("viash_tester_configs")
+  
+  private val temporaryConfigFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
+  private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
 
   // parse functionality from file
   private val functionality = Config.read(configFile).functionality
-  private def configAndResources = PlainFile(path = Some(configFile.toString)) :: functionality.resources
 
   // check whether executable was created
   private val executable = Paths.get(tempFolStr, functionality.name).toFile
-  private val execPathInDocker = Paths.get("/viash_automount", executable.getPath).toFile.toString
 
   test("viash without --setup doesn't create docker during build", DockerTest) {
-    val tag = "throwawayimage"
+    val tag = "mytestbash"
     
     //remove docker if it exists
-    removeDockerImage(tag, "0.1")
-    assert(!checkDockerImageExists(tag, "0.1"))
+    removeDockerImage(tag, "0.1-throwawayimage")
+    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
 
     // build viash wrapper without --setup
     TestHelper.testMain(
       "build",
-      "-p", "throwawayimage",
+      "--engine", "throwawayimage",
+      "--runner", "throwawayimage",
       "-o", tempFolStr,
       configFile
     )
@@ -48,7 +49,7 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     // verify docker still doesn't exist
-    assert(!checkDockerImageExists(tag, "0.1"))
+    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
 
     // run viash wrapper with ---setup
     val out = Exec.runCatch(
@@ -57,20 +58,21 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     assert(out.exitValue == 0)
 
     // verify docker now exists
-    assert(checkDockerImageExists(tag, "0.1"))
+    assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
   }
 
   test("viash with --setup creates docker during build", DockerTest) {
-    val tag = "throwawayimage"
+    val tag = "mytestbash"
 
     // remove docker if it exists
-    removeDockerImage(tag, "0.1")
-    assert(!checkDockerImageExists(tag, "0.1"))
+    removeDockerImage(tag, "0.1-throwawayimage")
+    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
 
     // build viash wrapper with --setup
     TestHelper.testMain(
       "build",
-      "-p", "throwawayimage",
+      "--engine", "throwawayimage",
+      "--runner", "throwawayimage",
       "-o", tempFolStr,
       "--setup", "build",
       configFile
@@ -80,109 +82,99 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     // verify docker exists
-    assert(checkDockerImageExists(tag, "0.1"))
+    assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
   }
 
   test("Get info of a docker image using docker inspect", DockerTest) {
-    // Create temporary folder to copy the files to so we can do a git init in that folder
-    // This is needed to check the remote git repo value
-    val tempMetaFolder = IO.makeTemp("viash_test_meta")
+    val newConfigFilePath = configDeriver.derive(
+      List(
+        ".functionality.name := 'docker_setup_inspect'",
+        ".functionality.version := '0.123'"
+      ),
+      "docker_setup_inspect")
 
     val fakeGitRepo = "git@non.existing.repo:viash/meta-test"
 
-    try {
-      // Copy all needed files to a temporary location
-      IO.writeResources(configAndResources, tempMetaFolder)
+    assert(
+      Exec.runCatchPath(
+        List("git", "init"),
+        cwd = Some(temporaryConfigFolder)
+      ).exitValue == 0
+      , "git init")
 
-      assert(
-        Exec.runCatchPath(
-          List("git", "init"),
-          cwd = Some(tempMetaFolder)
-        ).exitValue == 0
-        , "git init")
+    assert(
+      Exec.runCatchPath(
+        List("git", "config", "user.email", "\"viash_test_build@example.com\""),
+        cwd = Some(temporaryConfigFolder)
+      ).exitValue == 0
+      , "git config")
 
-      assert(
-        Exec.runCatchPath(
-          List("git", "config", "user.email", "\"viash_test_build@example.com\""),
-          cwd = Some(tempMetaFolder)
-        ).exitValue == 0
-        , "git config")
+    assert(
+      Exec.runCatchPath(
+        List("git", "config", "user.name", "\"viash CI\""),
+        cwd = Some(temporaryConfigFolder)
+      ).exitValue == 0
+      , "git config")
 
-      assert(
-        Exec.runCatchPath(
-          List("git", "config", "user.name", "\"viash CI\""),
-          cwd = Some(tempMetaFolder)
-        ).exitValue == 0
-        , "git config")
+    assert(
+      Exec.runCatchPath(
+        List("git", "remote", "add", "origin", fakeGitRepo),
+        cwd = Some(temporaryConfigFolder)
+      ).exitValue == 0
+      , "git remote add")
 
-      assert(
-        Exec.runCatchPath(
-          List("git", "remote", "add", "origin", fakeGitRepo),
-          cwd = Some(tempMetaFolder)
-        ).exitValue == 0
-        , "git remote add")
-
-      assert(
-        Exec.runCatchPath(
-          List("git", "add", "*"),
-          cwd = Some(tempMetaFolder)
-        ).exitValue == 0
-        , "git add *")
+    assert(
+      Exec.runCatchPath(
+        List("git", "add", "*"),
+        cwd = Some(temporaryConfigFolder)
+      ).exitValue == 0
+      , "git add *")
 
 
-      val commitOut = Exec.runCatchPath(
-          List("git", "commit", "-m", "\"initial commit\""),
-          cwd = Some(tempMetaFolder)
-        )
-      assert(
-        commitOut.exitValue == 0
-        , s"git commit: ${commitOut.output}")
-
-      // assert(
-      //   Exec.runCatchPath(
-      //     List("git", "tag", "v1"),
-      //     cwd = Some(tempMetaFolder)
-      //   ).exitValue == 0
-      //   , "git tag")
-
-      val configFile = tempMetaFolder.resolve("config.vsh.yaml")
-
-      // Run the code
-      // prepare the environment
-      val stdout = TestHelper.testMain(
-        "build",
-        "-p", "docker",
-        "-o", tempFolStr,
-        "--setup", "alwaysbuild",
-        configFile.toString
+    val commitOut = Exec.runCatchPath(
+        List("git", "commit", "-m", "\"initial commit\""),
+        cwd = Some(temporaryConfigFolder)
       )
+    assert(
+      commitOut.exitValue == 0
+      , s"git commit: ${commitOut.output}")
 
-      assert(executable.exists)
-      assert(executable.canExecute)
+    // assert(
+    //   Exec.runCatchPath(
+    //     List("git", "tag", "v1"),
+    //     cwd = Some(tempMetaFolder)
+    //   ).exitValue == 0
+    //   , "git tag")
 
-      val inspectOut = Exec.run(
-        Seq("docker", "inspect", s"${functionality.name}:${functionality.version.get}")
-      )
+    // Run the code
+    // prepare the environment
+    // override the functionality name & version so we don't have collisions with other docker images
+    val stdout = TestHelper.testMain(
+      "build",
+      "--engine", "docker",
+      "--runner", "docker",
+      "-o", tempFolStr,
+      "--setup", "alwaysbuild",
+      newConfigFilePath
+    )
 
-      val regexOciAuthors = """"org.opencontainers.image.authors": "Bob ''' \\"\\"\\" \\\\n ` \$ \\\\ Cando"""".r
-      val regexOciCreated = raw""""org.opencontainers.image.created": "((?:(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2}(?:\.\d+)?))(Z|[\+-]\d{2}:\d{2})?)"""".r
-      val regexOciDescription = """"org.opencontainers.image.description": "Companion container for running component testbash"""".r
-      val regexOciRevision = """"org.opencontainers.image.revision": "[0-9a-f]{40}"""".r
-      val regexOciSource = """"org.opencontainers.image.source": "https://non.existing.repo/viash/meta-test"""".r
-      val regexOciVersion = """"org.opencontainers.image.version": "0.1"""".r
+    val inspectOut = Exec.run(
+      Seq("docker", "inspect", s"docker_setup_inspect:0.123")
+    )
 
+    val regexOciAuthors = """"org.opencontainers.image.authors": "Bob ''' \\"\\"\\" \\\\n ` \$ \\\\ Cando"""".r
+    val regexOciCreated = raw""""org.opencontainers.image.created": "((?:(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2}(?:\.\d+)?))(Z|[\+-]\d{2}:\d{2})?)"""".r
+    val regexOciDescription = """"org.opencontainers.image.description": "Companion container for running component docker_setup_inspect"""".r
+    val regexOciRevision = """"org.opencontainers.image.revision": "[0-9a-f]{40}"""".r
+    val regexOciSource = """"org.opencontainers.image.source": "https://non.existing.repo/viash/meta-test"""".r
+    val regexOciVersion = """"org.opencontainers.image.version": "0.123"""".r
 
-      assert(regexOciAuthors.findFirstIn(inspectOut).isDefined, inspectOut)
-      assert(regexOciCreated.findFirstIn(inspectOut).isDefined, inspectOut)
-      assert(regexOciDescription.findFirstIn(inspectOut).isDefined, inspectOut)
-      assert(regexOciRevision.findFirstIn(inspectOut).isDefined, inspectOut)
-      assert(regexOciSource.findFirstIn(inspectOut).isDefined, inspectOut)
-      assert(regexOciVersion.findFirstIn(inspectOut).isDefined, inspectOut)
-
-    }
-    finally {
-      IO.deleteRecursively(tempMetaFolder)
-    }
+    assert(regexOciAuthors.findFirstIn(inspectOut).isDefined, inspectOut)
+    assert(regexOciCreated.findFirstIn(inspectOut).isDefined, inspectOut)
+    assert(regexOciDescription.findFirstIn(inspectOut).isDefined, inspectOut)
+    assert(regexOciRevision.findFirstIn(inspectOut).isDefined, inspectOut)
+    assert(regexOciSource.findFirstIn(inspectOut).isDefined, inspectOut)
+    assert(regexOciVersion.findFirstIn(inspectOut).isDefined, inspectOut)
   }
 
 

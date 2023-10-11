@@ -28,10 +28,11 @@ import io.viash.helpers.NsExecData._
 import io.viash.helpers.NsExecData
 import sys.process._
 import java.io.{ByteArrayOutputStream, File, PrintWriter}
-import io.viash.platforms.Platform
 import scala.collection.parallel.CollectionConverters._
 import io.viash.helpers.LoggerOutput
 import io.viash.helpers.LoggerLevel
+import io.viash.runners.Runner
+import io.viash.config.AppliedConfig
 
 object ViashNamespace extends Logging {
 
@@ -53,7 +54,7 @@ object ViashNamespace extends Logging {
 
   def targetOutputPath(
     targetDir: String,
-    platformId: String,
+    runnerId: String,
     namespace: Option[String],
     functionalityName: String
   ): String = {
@@ -61,52 +62,52 @@ object ViashNamespace extends Logging {
       case Some(ns) => ns + "/"
       case None => ""
     }
-    s"$targetDir/$platformId/$nsStr$functionalityName"
+    s"$targetDir/$runnerId/$nsStr$functionalityName"
   }
 
   def build(
-    configs: List[Either[(Config, Option[Platform]), Status]],
+    configs: List[AppliedConfig],
     target: String,
     setup: Option[String] = None,
     push: Boolean = false,
     parallel: Boolean = false,
     flatten: Boolean = false
-  ): List[Either[(Config, Option[Platform]), Status]] = {
+  ): List[AppliedConfig] = {
     val configs2 = MaybeParList(configs, parallel)
 
     val results = configs2.map { config =>
       config match {
-        case Right(_) => config
-        case Left((conf, None)) => throw new RuntimeException("This should not occur.")
-        case Left((conf, Some(platform))) =>
-          val funName = conf.functionality.name
-          val ns = conf.functionality.namespace
-          val platformId = platform.id
+        case conf if conf.status.isDefined => config
+        case ac if !ac.validForBuild => throw new RuntimeException("This should not occur.")
+        case ac =>
+          val funName = ac.config.functionality.name
+          val ns = ac.config.functionality.namespace
+          val runnerId = ac.runner.get.id
+          // val engineId = ac.platform.get.id
           val out = 
             if (flatten) {
               target
             } else {
-              targetOutputPath(target, platformId, ns, funName)
+              targetOutputPath(target, runnerId, ns, funName)
             }
           val nsStr = ns.map(" (" + _ + ")").getOrElse("")
-          infoOut(s"Exporting $funName$nsStr =$platformId=> $out")
+          infoOut(s"Exporting $funName$nsStr =$runnerId=> $out")
           val status = ViashBuild(
-            config = conf,
-            platform = platform,
+            appliedConfig = ac,
             output = out,
             setup = setup,
             push = push
           )
-          Right(status)
+          ac.setStatus(status)
         }
       }
 
-    printResults(results.map(r => r.fold(fa => Success, fb => fb)).toList, true, false)
+    printResults(results.map(ac => ac.status.getOrElse(Success)).toList, true, false)
     results.toList
   }
 
   def test(
-    configs: List[Either[(Config, Option[Platform]), Status]],
+    configs: List[AppliedConfig],
     parallel: Boolean = false,
     setup: Option[String] = None,
     keepFiles: Option[Boolean] = None,
@@ -114,11 +115,12 @@ object ViashNamespace extends Logging {
     append: Boolean = false,
     cpus: Option[Int],
     memory: Option[String]
-  ): List[Either[(Config, ManyTestOutput), Status]] = {
+  ): List[(AppliedConfig, ManyTestOutput)] = {
     val configs1 = configs.filter{tup => tup match {
       // remove nextflow because unit testing nextflow modules
       // is not yet supported
-      case Left((_, Some(pl))) => pl.`type` != "nextflow"
+      // TODO: Soon they might be!
+      case AppliedConfig(_, Some(ex), _, None) => ex.`type` != "nextflow"
       case _ => true
     }}
     val configs2 = MaybeParList(configs1, parallel)
@@ -146,7 +148,8 @@ object ViashNamespace extends Logging {
           List(
             "namespace",
             "functionality",
-            "platform",
+            "runner",
+            "engine",
             "test_name",
             "exit_code",
             "duration",
@@ -154,10 +157,12 @@ object ViashNamespace extends Logging {
           ).mkString("\t") + sys.props("line.separator"))
         writer.flush()
       }
-      infoOut("%20s %20s %20s %20s %9s %8s %20s".
-        format("namespace",
+      infoOut("%20s %20s %20s %20s %20s %9s %8s %20s".
+        format(
+          "namespace",
           "functionality",
-          "platform",
+          "runner",
+          "engine",
           "test_name",
           "exit_code",
           "duration",
@@ -166,24 +171,24 @@ object ViashNamespace extends Logging {
 
       val results = configs2.map { x =>
         x match {
-          case Right(status) => Right(status)
-          case Left((conf, None)) => throw new RuntimeException("This should not occur")
-          case Left((conf, Some(platform))) =>
+          case ac if ac.status.isDefined => (ac, ManyTestOutput(None, List()))
+          case ac if !ac.validForBuild => throw new RuntimeException("This should not occur.")
+          case ac =>
             // get attributes
-            val namespace = conf.functionality.namespace.getOrElse("")
-            val funName = conf.functionality.name
-            val platName = platform.id
+            val namespace = ac.config.functionality.namespace.getOrElse("")
+            val funName = ac.config.functionality.name
+            val runnerName = ac.runner.get.id
+            val engineName = ac.engines.head.id
 
             // print start message
-            infoOut("%20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, platName, "start", "", "", ""))
+            infoOut("%20s %20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, runnerName, engineName, "start", "", "", ""))
 
             // run tests
             // TODO: it would actually be great if this component could subscribe to testresults messages
 
             val ManyTestOutput(setupRes, testRes) = try {
               ViashTest(
-                config = conf,
-                platform = platform,
+                appliedConfig = ac,
                 setupStrategy = setup,
                 keepFiles = keepFiles,
                 quiet = true,
@@ -220,7 +225,7 @@ object ViashNamespace extends Logging {
               }
 
               // print message
-              log(LoggerOutput.StdOut, LoggerLevel.Info, col, "%20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, platName, test.name, test.exitValue, test.duration, msg))
+              log(LoggerOutput.StdOut, LoggerLevel.Info, col, "%20s %20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, runnerName, engineName, test.name, test.exitValue, test.duration, msg))
 
               if (test.exitValue != 0) {
                 info(test.output)
@@ -229,33 +234,30 @@ object ViashNamespace extends Logging {
 
               // write to tsv
               tsvWriter.foreach{writer =>
-                writer.append(List(namespace, funName, platName, test.name, test.exitValue, test.duration, msg).mkString("\t") + sys.props("line.separator"))
+                writer.append(List(namespace, funName, runnerName, engineName, test.name, test.exitValue, test.duration, msg).mkString("\t") + sys.props("line.separator"))
                 writer.flush()
               }
             }
 
             // return output
-            Left((conf, ManyTestOutput(setupRes, testRes)))
+            (ac, ManyTestOutput(setupRes, testRes))
           }
 
       }.toList
 
-      val testResults = results.flatMap(r => r.fold(fa => 
-        {
-          val setupRes = fa._2.setup
-          val testRes = fa._2.tests
-          val testStatus =
-              if (setupRes.isDefined && setupRes.get.exitValue > 0) {
-                Nil
-              } else if (testRes.isEmpty) {
-                List(TestMissing)
-              } else {
-                testRes.map(to => if (to.exitValue == 0) Success else TestError)
-              }
-          val setupStatus = setupRes.toList.map(to => if (to.exitValue == 0) Success else BuildError)
-          setupStatus ::: testStatus
-        },
-        fb => List(fb)))
+      val testResults = results.flatMap{ case (ac, ManyTestOutput(setup, tests)) =>
+        val acStatus = ac.status.toList
+        val testStatus =
+          if (setup.isDefined && setup.get.exitValue > 0) {
+            List.empty[Status]
+          } else if (tests.isEmpty) {
+            List(TestMissing)
+          } else {
+            tests.map(to => if (to.exitValue == 0) Success else TestError)
+          }
+        val setupStatus: List[Status] = setup.toList.map(to => if (to.exitValue == 0) Success else BuildError)
+        acStatus ::: setupStatus ::: testStatus
+        }
       printResults(testResults, true, true)
 
       results
@@ -276,34 +278,32 @@ object ViashNamespace extends Logging {
   }
 
   def list(
-    configs: List[Either[(Config, Option[Platform]), Status]], 
+    configs: List[AppliedConfig], 
     format: String = "yaml", 
     parseArgumentGroups: Boolean
   ): Unit = {
-    val configs2 = configs.flatMap(_.left.toOption).map(_._1)
-    // val configs2 = configs.flatMap(_.left.toOption).flatMap{
-    //   case (config, Some(platform)) =>
-    //     if (config.platforms.exists(_.id == platform.id)) {
-    //       Some(config)
-    //     } else {
-    //       None
-    //     }
-    //   case (config, None) => Some(config)
-    // }
+    val configs2 = configs.filter(_.status.isEmpty).map(_.config)
+
     ViashConfig.viewMany(configs2, format, parseArgumentGroups)
 
-    printResults(configs.map(_.fold(fa => Success, fb => fb)), false, false)
+    printResults(configs.map(ac => ac.status.getOrElse(Success)), false, false)
   }
 
   def exec(
-    configs: List[Either[(Config, Option[Platform]), Status]],
+    configs: List[AppliedConfig],
     command: String, 
     dryrun: Boolean, 
     parallel: Boolean
   ): Unit = {
-    val configData = configs.flatMap(_.left.toOption).map{
-      case (conf, plat) => 
-        NsExecData(conf.info.get.config, conf, plat)
+    val configData = configs.filter(_.status.isEmpty).flatMap{ ac =>
+      // TODO: Should we iterate over the engines here?
+      val engineOptionList = ac.engines match {
+        case Nil => List(None)
+        case list => list.map(Some(_))
+      }
+      engineOptionList.map(eo => {
+        NsExecData(ac.config.info.get.config, ac.config, ac.runner, eo)
+      })
     }
 
     // check whether is empty
@@ -400,6 +400,7 @@ object ViashNamespace extends Logging {
       (ParseError, "configs encountered parse errors"),
       (Disabled, "configs were disabled"),
       (DependencyError, "dependency resolutions failed"),
+      (MissingRunnerOrEngine, "configs could not apply an runner or engine"),
       (BuildError, "configs built failed"),
       (SetupError, "setups failed"),
       (PushError, "pushes failed"),
@@ -408,8 +409,8 @@ object ViashNamespace extends Logging {
       (Success, s"configs $successAction successfully"))
 
     if (successes != statuses.length) {
-      val disabledStatusesCount = statuses.count(_ == Disabled)
-      val nonDisabledStatuses = statuses.filter(_ != Disabled)
+      val disabledStatusesCount = statuses.count(s => s == Disabled || s == DisabledByQuery)
+      val nonDisabledStatuses = statuses.filter(s => s != Disabled && s != DisabledByQuery)
       val indentSize = nonDisabledStatuses.length.toString().size
 
       warn(s"Not all configs $successAction successfully")

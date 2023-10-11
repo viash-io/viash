@@ -57,5 +57,5 @@ functionality:
     - type: nextflow_script
       path: main.nf
       entrypoint: base
-platforms:
+engines:
   - type: native

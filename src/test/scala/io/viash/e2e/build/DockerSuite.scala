@@ -13,7 +13,7 @@ import scala.io.Source
 
 class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
-  // which platform to test
+  // which config to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
@@ -30,7 +30,8 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
     TestHelper.testMain(
       "build",
       configFile,
-      "-p", "docker",
+      "--engine", "docker",
+      "--runner", "docker",
       "-o", temporaryFolder.toString,
     )
 

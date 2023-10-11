@@ -27,5 +27,5 @@ functionality:
         done < "$par_input"
         exit 0
 
-platforms:
+engines:
   - type: native

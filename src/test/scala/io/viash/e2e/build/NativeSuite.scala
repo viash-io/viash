@@ -13,7 +13,7 @@ import io.viash.helpers.{IO, Exec, Logger}
 
 class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
-  // which platform to test
+  // which configs to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
   private val configDeprecatedArgumentGroups = getClass.getResource(s"/testbash/config_deprecated_argument_groups.vsh.yaml").getPath
 
@@ -33,7 +33,8 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("viash can create an executable") {
     TestHelper.testMain(
       "build",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "native",
       "-o", tempFolStr,
       configFile
     )
@@ -196,8 +197,8 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(out.output.contains("multiple: |foo:bar|"))
   }
 
-  test("when -p is omitted, the system should run as native") {
-    val newConfigFilePath = configDeriver.derive("""del(.platforms)""", "no_platform")
+  test("when --runner is omitted, the system should run as native") {
+    val newConfigFilePath = configDeriver.derive("""del(.runners)""", "no_runner")
     val testText = TestHelper.testMain(
       "build",
       "-o", tempFolStr,
@@ -210,6 +211,18 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     Exec.run(
       Seq(executable.toString, "--help")
     )
+  }
+
+  test("Test whether a config with a platform specified gives a deprecation warning") {
+    val newConfigFilePath = configDeriver.derive(""".platforms := [{ type: "native" }]""", "deprecated_platform")
+    val testOutput = TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      newConfigFilePath
+    )
+
+    val testRegex = "Warning: ..platforms is deprecated: Use 'engines' and 'runners' instead.".r
+    assert(testRegex.findFirstIn(testOutput).isDefined, testOutput)
   }
 
   test("Test whether defining strings as arguments in argument groups throws a removed error") {

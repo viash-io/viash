@@ -30,10 +30,10 @@ import io.viash.exceptions.MissingBuildYamlException
     |""".stripMargin)
 @exampleWithDescription(
   """name: qc/multiqc
-    |  repository: 
-    |    type: github
-    |    uri: openpipelines-bio/modules
-    |    tag: 0.3.0
+    |repository: 
+    |  type: github
+    |  uri: openpipelines-bio/modules
+    |  tag: 0.3.0
     |""".stripMargin,
   "yaml",
   "Definition of dependency with a fully defined repository"
@@ -47,7 +47,7 @@ import io.viash.exceptions.MissingBuildYamlException
 )
 @exampleWithDescription(
   """name: qc/multiqc
-    |  repository: "openpipelines-bio"
+    |repository: "openpipelines-bio"
     |""".stripMargin,
   "yaml",
   "Definition of a dependency with a repository defined as 'openpipelines-bio' under `.functionality.repositories`."
@@ -102,8 +102,8 @@ case class Dependency(
   def getRelativePath(fullPath: Path): Option[String] = {
     if (isLocalDependency) {
       // Local dependency so it will only exist once the component is built.
-      // TODO improve this, for one, the platform id should be dynamic
-      Some(ViashNamespace.targetOutputPath("", "native", None, name))
+      // TODO improve this, for one, the runner id should be dynamic
+      Some(ViashNamespace.targetOutputPath("", "executable", None, name))
     } else {
       // Previous existing dependency. Use the location of the '.build.yaml' to determine the relative location.
       val relativePath = Dependency.getRelativePath(fullPath, Paths.get(workRepository.get.localPath))

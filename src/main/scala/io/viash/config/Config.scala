@@ -19,7 +19,7 @@ package io.viash.config
 
 import io.viash.config_mods.ConfigModParser
 import io.viash.functionality._
-import io.viash.platforms._
+import io.viash.platforms.Platform
 import io.viash.helpers.{Git, GitInfo, IO, Logging}
 import io.viash.helpers.circe._
 import io.viash.helpers.status._
@@ -35,6 +35,8 @@ import java.nio.file.Paths
 import io.viash.schemas._
 import java.io.ByteArrayOutputStream
 import java.nio.file.FileSystemNotFoundException
+import io.viash.runners.{Runner, ExecutableRunner, NextflowRunner}
+import io.viash.engines.{Engine, NativeEngine, DockerEngine}
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -51,7 +53,9 @@ import java.nio.file.FileSystemNotFoundException
     |    - type: bash_script
     |      path: script.sh
     |      text: echo Hello $par_input
-    |platforms:
+    |runners:
+    |  - type: executable
+    |engines:
     |  - type: docker
     |    image: "bash:4.0"
     |""".stripMargin, "yaml")
@@ -63,13 +67,23 @@ case class Config(
   functionality: Functionality,
 
   @description(
-    """A list of platforms to generate target artifacts for.
+    """A list of runners to execute target artifacts.
       |
-      | - @[Native](platform_native)
-      | - @[Docker](platform_docker)
-      | - @[Nextflow](platform_nextflow)
+      | - @[ExecutableRunner](executable_runner)
+      | - @[NextflowRunner](nextflow_runner)
       |""".stripMargin)
-  platforms: List[Platform] = Nil,
+  @since("Viash 0.8.0")
+  @default("Empty")
+  runners: List[Runner] = Nil,
+  @description(
+    """A list of engine environments to execute target artifacts in.
+      |
+      | - @[NativeEngine](native_engine)
+      | - @[DockerEngine](docker_engine)
+      |""".stripMargin)
+  @since("Viash 0.8.0")
+  @default("Empty")
+  engines: List[Engine] = Nil,
 
   @internalFunctionality
   info: Option[Info] = None
@@ -78,42 +92,95 @@ case class Config(
   @description(
     """Config inheritance by including YAML partials. This is useful for defining common APIs in
       |separate files. `__merge__` can be used in any level of the YAML. For example,
-      |not just in the config but also in the functionality or any of the platforms.
+      |not just in the config but also in the functionality or any of the engines.
       |""".stripMargin)
   @example("__merge__: ../api/common_interface.yaml", "yaml")
   @since("Viash 0.6.3")
   private val `__merge__`: Option[File] = None
-  
 
+  @description(
+  """A list of platforms to generate target artifacts for.
+    |
+    | - @[Native](platform_native)
+    | - @[Docker](platform_docker)
+    | - @[Nextflow](platform_nextflow)
+    |""".stripMargin)
+  @default("Empty")
+  @deprecated("Use 'engines' and 'runners' instead.", "0.9.0", "0.10.0")
+  private val platforms: List[Platform] = Nil
+  
   /**
-    * Detect a config's platform
+    * Find the runner
     * 
     * Order of execution:
-    *   - if a platform id is passed, look up the platform in the platforms list
-    *   - else if a platform yaml is passed, read platform from file
-    *   - else if platforms is a non-empty list, use the first platform
-    *   - else use the native platform
+    *   - if an runner id is passed, look up the runner in the runners list
+    *   - else if runners is a non-empty list, use the first runner
+    *   - else use the executable runner
     *
-    * @param platformStr A platform ID referring to one of the config's platforms, or a path to a YAML file
-    * @return A platform
+    * @param runnerStr An runner ID referring to one of the config's runners
+    * @return An runner
     */
-  def findPlatform(platformStr: Option[String]): Platform = {
-    if (platformStr.isDefined) {
-      val pid = platformStr.get
+  def findRunner(query: Option[String]): Runner = {
+    findRunners(query).head
+  }
 
-      val platformNames = this.platforms.map(_.id)
+  /**
+    * Find the runners
+    * 
+    * Order of execution:
+    *   - if an runner id is passed, look up the runner in the runners list
+    *   - else if runners is a non-empty list, use the first runner
+    *   - else use the executable runner
+    *
+    * @param query An runner ID referring to one of the config's runners
+    * @return An runner
+    */
+  def findRunners(query: Option[String]): List[Runner] = {
+    // TODO: match on query, there's no need to do a .* if query is None
+    val regex = query.getOrElse(".*").r
 
-      if (platformNames.contains(pid)) {
-        this.platforms(platformNames.indexOf(pid))
-      } else if (pid.endsWith(".yaml") || pid.endsWith(".yml")) {
-        Platform.parse(IO.uri(platformStr.get))
-      } else {
-        throw new RuntimeException("platform must be a platform id specified in the config or a path to a platform yaml file.")
-      }
-    } else if (this.platforms.nonEmpty) {
-      this.platforms.head
-    } else {
-      NativePlatform()
+    val foundMatches = runners.filter{ e =>
+      regex.findFirstIn(e.id).isDefined
+    }
+    
+    foundMatches match {
+      case li if li.nonEmpty =>
+        li
+      case Nil if query.isDefined =>
+        throw new RuntimeException(s"no runner id matching regex '$regex' could not be found in the config.")
+      case _ =>
+        // TODO: switch to the getRunners.head ?
+        List(ExecutableRunner())
+    }
+  }
+
+  /**
+    * Find the engines
+    * 
+    * Order of execution:
+    *   - if an engine id is passed, look up the engine in the engines list
+    *   - else if engines is a non-empty list, use the first engine
+    *   - else use the executable engine
+    *
+    * @param query An engine ID referring to one of the config's engines
+    * @return An engine
+    */
+  def findEngines(query: Option[String]): List[Engine] = {
+    // TODO: match on query, there's no need to do a .* if query is None
+    val regex = query.getOrElse(".*").r
+
+    val foundMatches = engines.filter{ e =>
+      regex.findFirstIn(e.id).isDefined
+    }
+    
+    foundMatches match {
+      case li if li.nonEmpty =>
+        li
+      case Nil if query.isDefined =>
+        throw new RuntimeException(s"no engine id matching regex '$regex' could not be found in the config.")
+      case _ =>
+        // TODO: switch to the getEngines.head ?
+        List(NativeEngine())
     }
   }
 }
@@ -294,7 +361,7 @@ object Config extends Logging {
     queryName: Option[String] = None,
     configMods: List[String] = Nil,
     addOptMainScript: Boolean = true
-  ): (List[Either[Config, Status]], List[Config]) = {
+  ): List[AppliedConfig] = {
 
     val sourceDir = Paths.get(source)
 
@@ -305,13 +372,13 @@ object Config extends Logging {
         attrs.isRegularFile
     })
 
-    val allConfigsWithStdOutErr = scriptFiles.map { file =>
+    scriptFiles.map { file =>
       try {
         // read config to get an idea of the name and namespaces
         // warnings will be captured for now, and will be displayed when reading the second time
         val stdout = new ByteArrayOutputStream()
         val stderr = new ByteArrayOutputStream()
-        val config = 
+        val appliedConfig: AppliedConfig = 
           Console.withErr(stderr) {
             Console.withOut(stdout) {
               Config.read(
@@ -322,18 +389,10 @@ object Config extends Logging {
               )
             }
           }
-          Left((config, stdout, stderr))
-      } catch {
-        case _: Exception =>
-          error(s"Reading file '$file' failed")
-          Right(ParseError)
-      }
-    }
 
-    val filteredConfigs: List[Either[Config, Status]] = allConfigsWithStdOutErr.map { 
-      case Left((config, stdout, stderr)) => 
-        val funName = config.functionality.name
-        val funNs = config.functionality.namespace
+        val funName = appliedConfig.config.functionality.name
+        val funNs = appliedConfig.config.functionality.namespace
+        val isEnabled = appliedConfig.config.functionality.isEnabled
 
         // does name & namespace match regex?
         val queryTest = (query, funNs) match {
@@ -351,20 +410,26 @@ object Config extends Logging {
           case (None, _) => true
         }
 
-        // if config passes regex checks, show warning and return it
-        if (queryTest && nameTest && namespaceTest && config.functionality.isEnabled) {
+        if (!isEnabled) {
+          appliedConfig.setStatus(Disabled)
+        } else if (queryTest && nameTest && namespaceTest) {
+          // if config passes regex checks, show warning and return it
           // TODO: stdout and stderr are no longer in the correct order :/
-          Console.out.print(stdout.toString)
-          Console.err.print(stderr.toString)
-          Left(config)
+          val stdout_s = stdout.toString()
+          val stderr_s = stderr.toString()
+          if (!stdout_s.isEmpty())
+            infoOut(stdout_s)
+          if (!stderr_s.isEmpty())
+            info(stderr_s)
+          appliedConfig
         } else {
-          Right(Disabled)
+          appliedConfig.setStatus(DisabledByQuery)
         }
-      case Right(status) => Right(status)
+      } catch {
+        case _: Exception =>
+          error(s"Reading file '$file' failed")
+          AppliedConfig(Config(Functionality("failed")), None, Nil, Some(ParseError))
+      }
     }
-
-    val allConfigs = allConfigsWithStdOutErr.collect({ case Left((config, _, _)) if config.functionality.isEnabled => config })
-
-    (filteredConfigs, allConfigs)
   }
 }

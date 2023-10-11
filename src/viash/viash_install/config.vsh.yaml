@@ -23,5 +23,5 @@ functionality:
   test_resources:
     - type: bash_script
       path: test.sh
-platforms:
-- type: native
+engines:
+  - type: native
