@@ -33,7 +33,7 @@ import io.viash.schemas.CollectedSchemas
 object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
 
   private def memberDeprecationCheck(name: String, history: List[CursorOp], parameters: List[ParameterSchema]): Unit = {
-    val schema = parameters.find(p => p.name == name).get
+    val schema = parameters.find(p => p.name == name).getOrElse(ParameterSchema("", "", "", None, None, None, None, None, None, None, None, false, false))
 
     lazy val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
 
@@ -58,12 +58,12 @@ object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
 
     schema.deprecated match {
       case Some(d) =>
-        info(s"Warning: ${schema.name} is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+        info(s"Warning: ${schema.`type`} is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
       case _ =>
     }
     schema.removed match {
       case Some(r) =>
-        info(s"Error: ${schema.name} was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
+        info(s"Error: ${schema.`type`} was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
       case _ =>
     }
   }
