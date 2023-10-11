@@ -35,18 +35,19 @@ object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
   private def memberDeprecationCheck(name: String, history: List[CursorOp], parameters: List[ParameterSchema]): Unit = {
     val schema = parameters.find(p => p.name == name).get
 
-    if (schema.deprecated.isDefined) {
-      val d = schema.deprecated.get
-      val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
-      info(s"Warning: .$historyString.$name is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+    lazy val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
+
+    schema.deprecated match {
+      case Some(d) =>
+        info(s"Warning: .$historyString.$name is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+      case _ =>
     }
-    if (schema.removed.isDefined) {
-      val r = schema.removed.get
-      val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
-      info(s"Error: .$historyString.$name was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
+    schema.removed match {
+      case Some(r) => 
+        info(s"Error: .$historyString.$name was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
+      case _ =>
     }
     if (schema.hasInternalFunctionality) {
-      val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
       error(s"Error: .$historyString.$name is internal functionality.")
       throw new RuntimeException(s"Internal functionality used: .$historyString.$name")
     }
@@ -55,13 +56,15 @@ object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
   private def selfDeprecationCheck(parameters: List[ParameterSchema]): Unit = {
     val schema = parameters.find(p => p.name == "__this__").get
 
-    if (schema.deprecated.isDefined) {
-      val d = schema.deprecated.get
-      info(s"Warning: ${schema.name} is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+    schema.deprecated match {
+      case Some(d) =>
+        info(s"Warning: ${schema.name} is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+      case _ =>
     }
-    if (schema.removed.isDefined) {
-      val r = schema.removed.get
-      info(s"Error: ${schema.name} was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
+    schema.removed match {
+      case Some(r) =>
+        info(s"Error: ${schema.name} was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
+      case _ =>
     }
   }
 
