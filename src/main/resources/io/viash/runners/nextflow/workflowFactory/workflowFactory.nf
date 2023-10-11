@@ -19,7 +19,7 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       | checkUniqueIds([:])
       | _debug(workflowArgs, "input")
       | map { tuple ->
-        tuple = tuple.clone()
+        tuple = deepClone(tuple)
         
         if (workflowArgs.map) {
           tuple = workflowArgs.map(tuple)

@@ -37,12 +37,12 @@ def runComponents(Map args) {
     out_chs = components_.collect{ comp_ ->
       def comp_config = comp_.config
 
-      filter_ch = filter_
+      def filter_ch = filter_
         ? input_ch | filter{tup ->
           filter_(tup[0], tup[1], comp_config)
         }
         : input_ch
-      id_ch = id_
+      def id_ch = id_
         ? filter_ch | map{tup ->
           // def new_id = id_(tup[0], tup[1], comp_config)
           def new_id = tup[0]
@@ -54,7 +54,7 @@ def runComponents(Map args) {
           [new_id] + tup.drop(1)
         }
         : filter_ch
-      data_ch = id_ch | map{tup ->
+      def data_ch = id_ch | map{tup ->
           def new_data = tup[1]
           if (fromState_ instanceof Map) {
             new_data = fromState_.collectEntries{ key0, key1 ->
@@ -69,11 +69,11 @@ def runComponents(Map args) {
           }
           tup.take(1) + [new_data] + tup.drop(1)
         }
-      out_ch = data_ch
+      def out_ch = data_ch
         | comp_.run(
           auto: (args.auto ?: [:]) + [simplifyInput: false, simplifyOutput: false]
         )
-      post_ch = toState_
+      def post_ch = toState_
         ? out_ch | map{tup ->
           def output = tup[1]
           def old_state = tup[2]
