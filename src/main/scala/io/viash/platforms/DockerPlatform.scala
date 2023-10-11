@@ -21,7 +21,7 @@ import io.viash.schemas._
 import io.viash.helpers.data_structures._
 import io.viash.runners.executable.{IfNeedBePullElseCachedBuild, DockerSetupStrategy}
 import io.viash.engines.requirements.Requirements
-import io.viash.platforms.docker.{DockerResolveVolume, Automatic}
+import io.viash.engines.docker.{DockerResolveVolume, Automatic}
 
 
 @description(

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.platforms.docker
+package io.viash.engines.docker
 
 sealed trait DockerResolveVolume
 
