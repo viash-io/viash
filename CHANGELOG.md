@@ -12,7 +12,7 @@ TODO add summary
 
 ## BUG FIXES
 
-* `__merge__`: Handle invalid yaml during merging (PR #xxx). There was not enough error handling during this operation. Switched to the more advanced `Convert.textToJson` helper method.
+* `__merge__`: Handle invalid yaml during merging (PR #570). There was not enough error handling during this operation. Switched to the more advanced `Convert.textToJson` helper method.
   
 # Viash 0.8.0-RC5 (2023-10-11): Fix run workflow
 
