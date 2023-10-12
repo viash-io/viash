@@ -197,8 +197,7 @@ class RichJson(json: Json) {
                 val str = IO.read(newURI)
 
                 // parse as yaml
-                // TODO: add decent error message instead of simply .get
-                val newJson1 = io.circe.yaml.parser.parse(str).toOption.get
+                val newJson1 = Convert.textToJson(str, newURI.toString)
 
                 // recurse through new json as well
                 val newJson2 = newJson1.inherit(newURI, projectDir = projectDir, stripInherits = stripInherits)

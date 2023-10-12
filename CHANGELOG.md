@@ -9,6 +9,10 @@ TODO add summary
   In brief, the `native platform` became a `native engine` and `docker platform` became a `docker engine`.
   Additionally, the `native platform` and `docker platform` became a `executable runner`, `nextflow platform` became a `nextflow runner`.
   The fields of `docker platform` is split between `docker engine` and `docker runner`: `port`, `workdir`, `setup_strategy`, and `run_args` are captured by the `runner` as they define how the component is run. The other fields are captured by the `engine` as they define the environment in which the component is run. One exception is `chown` which is rarely set to false and is now always enabled.
+
+## BUG FIXES
+
+* `__merge__`: Handle invalid yaml during merging (PR #xxx). There was not enough error handling during this operation. Switched to the more advanced `Convert.textToJson` helper method.
   
 # Viash 0.8.0-RC5 (2023-10-11): Fix run workflow
 
