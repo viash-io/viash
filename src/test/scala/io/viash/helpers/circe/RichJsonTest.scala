@@ -6,6 +6,8 @@ import io.circe._
 import io.circe.yaml.parser
 import io.viash.helpers.{IO, Logger}
 import java.nio.file.Files
+import io.viash.exceptions._
+import java.io.FileNotFoundException
 
 class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
@@ -263,6 +265,67 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
     ).getOrElse(Json.Null)
     val jsonOut = json1.stripInherits
     assert(jsonOut == jsonExpected)
+  }
+
+  test("check exception when merging invalid yaml") {
+    val json1 = parser.parse("""
+      |__merge__: not_existing.yaml
+      |a: [1, 2]
+      |""".stripMargin
+    ).getOrElse(Json.Null)
+
+    val caught = intercept[FileNotFoundException] {
+      json1.inherit(temporaryFolder.toUri(), projectDir = None)
+    }
+
+    assert(caught.getMessage().contains("not_existing.yaml"))
+  }
+
+  test("check exception when __merge__ isn't a string") {
+    val json1 = parser.parse("""
+      |__merge__: 5
+      |a: [1, 2]
+      |""".stripMargin
+    ).getOrElse(Json.Null)
+
+    val caught = intercept[ConfigParserMergeException] {
+      json1.inherit(temporaryFolder.toUri(), projectDir = None)
+    }
+
+    assert(caught.innerMessage.contains("invalid merge tag type"))
+    assert(caught.getMessage().contains("5"))
+  }
+
+  test("check exception when __merge__ is an array but contains something else than a string") {
+    val json1 = parser.parse("""
+      |__merge__: [5, foo.yaml]
+      |a: [1, 2]
+      |""".stripMargin
+    ).getOrElse(Json.Null)
+
+    val caught = intercept[ConfigParserMergeException] {
+      json1.inherit(temporaryFolder.toUri(), projectDir = None)
+    }
+
+    assert(caught.innerMessage.contains("invalid merge tag type"))
+    assert(caught.getMessage().contains("5"))
+  }
+
+  test("inherit with invalid yaml") {
+    // write json to file
+    IO.write("one: foo\n/wqwqws", temporaryFolder.resolve("invalid.yaml"))
+
+    val json1 = parser.parse("""
+      |__merge__: invalid.yaml
+      |a: [1, 2]
+      |""".stripMargin
+    ).getOrElse(Json.Null)
+
+    val caught = intercept[ConfigYamlException] {
+      json1.inherit(temporaryFolder.toUri(), projectDir = None)
+    }
+
+    assert(caught.innerMessage.contains("invalid Yaml structure"))
   }
 
   override def afterAll(): Unit = {
