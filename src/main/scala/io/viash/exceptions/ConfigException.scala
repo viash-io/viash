@@ -44,3 +44,8 @@ case class ConfigParserValidationException(tpe: String, json: String) extends Ex
   val shortType = tpe.split("\\.").last
   override def getMessage(): String = s"Invalid data fields for $shortType.\n$json"
 }
+
+case class ConfigParserMergeException(uri: String, innerMessage: String, json: String) extends AbstractConfigException {
+  val e: Throwable = null
+  override def getMessage(): String = json
+}
