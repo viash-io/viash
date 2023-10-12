@@ -32,7 +32,7 @@ object ConfigLenses {
   val composedVersionLens = functionalityLens ^|-> versionLens
   val composedRequirementsLens = functionalityLens ^|-> requirementsLens
   val composedResourcesLens = functionalityLens ^|-> resourcesLens
-  val composedTestResourcesLens = functionalityLens ^|-> testResources
+  val composedTestResourcesLens = functionalityLens ^|-> testResourcesLens
   val composedDependenciesLens = functionalityLens ^|-> dependenciesLens
   val composedRepositoriesLens = functionalityLens ^|-> repositoriesLens
 }
