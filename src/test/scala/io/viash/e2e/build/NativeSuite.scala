@@ -10,6 +10,7 @@ import io.viash.config.Config
 
 import scala.io.Source
 import io.viash.helpers.{IO, Exec, Logger}
+import io.viash.exceptions.ConfigParserException
 
 class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
@@ -247,13 +248,13 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("Test whether setting an internalFunctionality field throws an error") {
     val newConfigFilePath = configDeriver.derive(""".functionality.argument_groups[.name == "First group"].arguments[.name == "input"].dest := "foo"""", "set_internal_functionality")
 
-    val testOutput = TestHelper.testMainException2[RuntimeException](
+    val testOutput = TestHelper.testMainException[ConfigParserException](
       "build",
       "-o", tempFolStr,
       newConfigFilePath
     )
 
-    assert(testOutput.error.contains("Error: .functionality.argument_groups.arguments.dest is internal functionality."))
+    assert(testOutput.stderr.contains("Error: .functionality.argument_groups.arguments.dest is internal functionality."))
   }
 
   test("Test config without a main script") {
