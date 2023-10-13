@@ -34,9 +34,10 @@ package object functionality extends Logging {
   import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
   import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
   import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
+  import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
 
   // encoder and decoder for Functionality
-  implicit val encodeFunctionality: Encoder.AsObject[Functionality] = deriveConfiguredEncoder
+  implicit val encodeFunctionality: Encoder.AsObject[Functionality] = deriveConfiguredEncoderStrict[Functionality]
 
   // add file & direction defaults for inputs & outputs
   implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoderFullChecks

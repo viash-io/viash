@@ -65,8 +65,8 @@ object ViashExport extends Logging {
   }
 
 
-  def exportJsonSchema(output: Option[Path], format: String): Unit = {
-    val data = JsonSchema.getJsonSchema
+  def exportJsonSchema(output: Option[Path], format: String, strict: Boolean, minimal: Boolean): Unit = {
+    val data = JsonSchema.getJsonSchema(strict, minimal)
     val str = data.toFormattedString(format)
     if (output.isDefined) {
       Files.write(output.get, str.getBytes())
