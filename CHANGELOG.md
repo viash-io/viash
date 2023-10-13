@@ -12,7 +12,7 @@ TODO add summary
 
 ## MINOR CHANGES
 
-* `logging`: Preserve log order of StdOut and StdErr messages during reading configs in namespaces (PR #xxx).
+* `logging`: Preserve log order of StdOut and StdErr messages during reading configs in namespaces (PR #571).
   
 # Viash 0.8.0-RC5 (2023-10-11): Fix run workflow
 
