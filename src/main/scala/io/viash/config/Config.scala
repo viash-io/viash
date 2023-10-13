@@ -37,6 +37,7 @@ import java.io.ByteArrayOutputStream
 import java.nio.file.FileSystemNotFoundException
 import io.viash.runners.{Runner, ExecutableRunner, NextflowRunner}
 import io.viash.engines.{Engine, NativeEngine, DockerEngine}
+import io.viash.helpers.ReplayableMultiOutputStream
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -374,13 +375,13 @@ object Config extends Logging {
 
     scriptFiles.map { file =>
       try {
-        // read config to get an idea of the name and namespaces
-        // warnings will be captured for now, and will be displayed when reading the second time
-        val stdout = new ByteArrayOutputStream()
-        val stderr = new ByteArrayOutputStream()
+        val rmos = new ReplayableMultiOutputStream()
+
         val appliedConfig: AppliedConfig = 
-          Console.withErr(stderr) {
-            Console.withOut(stdout) {
+          // Don't output any warnings now. Only output warnings if the config passes the regex checks.
+          // When replaying, output directly to the console. Logger functions were already called, so we don't want to call them again.
+          Console.withErr(rmos.getOutputStream(Console.err.print)) {
+            Console.withOut(rmos.getOutputStream(Console.out.print)) {
               Config.read(
                 file.toString,
                 projectDir = projectDir,
@@ -413,14 +414,8 @@ object Config extends Logging {
         if (!isEnabled) {
           appliedConfig.setStatus(Disabled)
         } else if (queryTest && nameTest && namespaceTest) {
-          // if config passes regex checks, show warning and return it
-          // TODO: stdout and stderr are no longer in the correct order :/
-          val stdout_s = stdout.toString()
-          val stderr_s = stderr.toString()
-          if (!stdout_s.isEmpty())
-            infoOut(stdout_s)
-          if (!stderr_s.isEmpty())
-            info(stderr_s)
+          // if config passes regex checks, show warnings if there are any
+          rmos.replay()
           appliedConfig
         } else {
           appliedConfig.setStatus(DisabledByQuery)

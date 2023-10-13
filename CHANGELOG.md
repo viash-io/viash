@@ -22,6 +22,8 @@ TODO add summary
 
 * `testbenches`: Refactor testbenches helper functions to uniformize them (PR #565).
 
+* `logging`: Preserve log order of StdOut and StdErr messages during reading configs in namespaces (PR #571).
+
 ## BUG FIXES
 
 * `__merge__`: Handle invalid yaml during merging (PR #570). There was not enough error handling during this operation. Switched to the more advanced `Convert.textToJson` helper method.
