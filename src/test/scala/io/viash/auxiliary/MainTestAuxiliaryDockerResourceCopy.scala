@@ -29,7 +29,7 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
     Files.copy(tmpFolderResourceSourceFile, tmpFolderResourceDestinationFile, StandardCopyOption.REPLACE_EXISTING)
 
     // generate viash script
-    val testText = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "test",
       "--engine", "docker",
       "-k", "true",
@@ -37,13 +37,13 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
     )
 
     // basic checks to see if standard test/build was correct
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("WARNING! No tests found!"))
-    assert(!testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("WARNING! No tests found!"))
+    assert(!testOutput.stdout.contains("Cleaning up temporary directory"))
 
     val FolderRegex = ".*Running tests in temporary directory: '([^']*)'.*".r
 
-    val tempPath = testText.replaceAll("\n", "") match {
+    val tempPath = testOutput.stdout.replaceAll("\n", "") match {
       case FolderRegex(path) => path
       case _ => ""
     }
@@ -77,27 +77,27 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
     }
 
     Directory(tmpFolderResourceDestinationFolder).deleteRecursively()
-    checkTempDirAndRemove(testText, true, "viash_test_auxiliary_resources")
+    checkTempDirAndRemove(testOutput.stdout, true, "viash_test_auxiliary_resources")
   }
 
   test("Check resources with unsupported format", DockerTest) {
     val configResourcesUnsupportedProtocolFile = configDeriver.derive(""".functionality.resources := [{type: "bash_script", path: "./check_bash_version.sh"}, {path: "ftp://ftp.ubuntu.com/releases/robots.txt"}]""", "config_resource_unsupported_protocol").toString
     // generate viash script
-    val testOutput = TestHelper.testMainException2[RuntimeException](
+    val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
       "--engine", "docker",
       "-k", "true",
       configResourcesUnsupportedProtocolFile
     )
 
-    assert(testOutput.exceptionText == "Unsupported scheme: ftp")
+    assert(testOutput.exceptionText.get == "Unsupported scheme: ftp")
 
     // basic checks to see if standard test/build was correct
-    assert(testOutput.output.contains("Running tests in temporary directory: "))
-    assert(!testOutput.output.contains("WARNING! No tests found!"))
-    assert(!testOutput.output.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(!testOutput.stdout.contains("WARNING! No tests found!"))
+    assert(!testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testOutput.output, true, "viash_test_auxiliary_resources")
+    checkTempDirAndRemove(testOutput.stdout, true, "viash_test_auxiliary_resources")
   }
 
   /**

@@ -77,14 +77,14 @@ class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAnd
   test("Check resources with unsupported format") {
     val configResourcesUnsupportedProtocolFile = configDeriver.derive(""".functionality.resources := [{type: "bash_script", path: "./check_bash_version.sh"}, {path: "ftp://ftp.ubuntu.com/releases/robots.txt"}]""", "config_resource_unsupported_protocol").toString
     // generate viash script
-    val testOutput = TestHelper.testMainException2[RuntimeException](
+    val testOutput = TestHelper.testMainException[RuntimeException](
       "build",
       "--engine", "docker",
       "-o", tempFolStr,
       configResourcesUnsupportedProtocolFile
     )
 
-    assert(testOutput.exceptionText == "Unsupported scheme: ftp")
+    assert(testOutput.exceptionText.get == "Unsupported scheme: ftp")
   }
 
   override def afterAll(): Unit = {

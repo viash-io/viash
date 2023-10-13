@@ -10,9 +10,23 @@ TODO add summary
   Additionally, the `native platform` and `docker platform` became a `executable runner`, `nextflow platform` became a `nextflow runner`.
   The fields of `docker platform` is split between `docker engine` and `docker runner`: `port`, `workdir`, `setup_strategy`, and `run_args` are captured by the `runner` as they define how the component is run. The other fields are captured by the `engine` as they define the environment in which the component is run. One exception is `chown` which is rarely set to false and is now always enabled.
 
+## NEW FUNCTIONALITY
+
+* `export json_schema`: Add a `--strict` option to output a subset of the schema representing the internal structure of the Viash config (PR #564).
+
+* `config view` and `ns list`: Do not output internal functionality fields (#564). Additionally, add a validation that no internal fields are present when reading a Viash config file.
+
 ## MINOR CHANGES
 
+* `testbenches`: Add testbenches for local dependencies (PR #565).
+
+* `testbenches`: Refactor testbenches helper functions to uniformize them (PR #565).
+
 * `logging`: Preserve log order of StdOut and StdErr messages during reading configs in namespaces (PR #571).
+
+## BUG FIXES
+
+* `__merge__`: Handle invalid yaml during merging (PR #570). There was not enough error handling during this operation. Switched to the more advanced `Convert.textToJson` helper method.
   
 # Viash 0.8.0-RC5 (2023-10-11): Fix run workflow
 

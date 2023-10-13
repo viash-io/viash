@@ -204,7 +204,7 @@ final case class NextflowRunner(
 
     if (mainScript.isInstanceOf[Executable]) {
       throw new NotImplementedError(
-        "Running executables through a NextflowPlatform is not (yet) implemented. " +
+        "Running executables through a NextflowRunner is not (yet) implemented. " +
           "Create a support ticket to request this functionality if necessary."
       )
     }
@@ -212,7 +212,7 @@ final case class NextflowRunner(
     /************************* MAIN.NF *************************/
 
     val directivesToJson = directives.copy(
-      // if a docker platform is defined but the directives.container isn't, use the image of the dockerplatform as default
+      // if a docker engine is defined but the directives.container isn't, use the image of the docker engine as default
       container = directives.container orElse containerDirective.map(cd => Left(cd.toMap)),
       // is memory requirements are defined but directives.memory isn't, use that instead
       memory = directives.memory orElse config.functionality.requirements.memoryAsBytes.map(_.toString + " B"),

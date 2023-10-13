@@ -36,7 +36,7 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
       "commands_default"
     )
     
-    val (stdout, _, _) = TestHelper.testMainWithStdErr(
+    val testOutput = TestHelper.testMain(
       "build",
       "--engine", "docker",
       "--runner", "docker",
@@ -45,7 +45,7 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
       "--setup", "alwaysbuild"
     )
 
-    assert(stdout.matches("\\[notice\\] Building container 'testbash:0\\.1' with Dockerfile\\s*"), stdout)
+    assert(testOutput.stdout.matches("\\[notice\\] Building container 'testbash:0\\.1' with Dockerfile\\s*"), testOutput.stdout)
   }
 
   test("Verify adding extra commands to verify", DockerTest) {
@@ -54,7 +54,7 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
       "commands_extra"
     )
     
-    val (stdout, _, _) = TestHelper.testMainWithStdErr(
+    val testOutput = TestHelper.testMain(
       "build",
       "--engine", "docker",
       "--runner", "docker",
@@ -63,7 +63,7 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
       "--setup", "alwaysbuild"
     )
 
-    assert(stdout.matches("\\[notice\\] Building container 'testbash:0\\.1' with Dockerfile\\s*"), stdout)
+    assert(testOutput.stdout.matches("\\[notice\\] Building container 'testbash:0\\.1' with Dockerfile\\s*"), testOutput.stdout)
   }
 
   test("Verify base adding an extra required command that doesn't exist", DockerTest) {
@@ -72,7 +72,7 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
       "non_existing_command"
     )
     
-    val stdout = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "build",
       "--engine", "docker",
       "--runner", "docker",
@@ -81,14 +81,14 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
       "--setup", "alwaysbuild"
     )
 
-    assert(stdout.contains("[notice] Building container 'testbash:0.1' with Dockerfile"))
-    assert(stdout.contains("[error] Docker container 'testbash:0.1' does not contain command 'non_existing_command'."))
+    assert(testOutput.stdout.contains("[notice] Building container 'testbash:0.1' with Dockerfile"))
+    assert(testOutput.stdout.contains("[error] Docker container 'testbash:0.1' does not contain command 'non_existing_command'."))
   }
 
   test("Check deprecated warning", DockerTest) {
     val newConfigFilePath = configDeriver.derive(""".functionality.status := "deprecated"""", "deprecated")
     
-    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+    val testOutput = TestHelper.testMain(
       "build",
       "--engine", "docker",
       "--runner", "docker",
@@ -97,8 +97,8 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
       "--setup", "alwaysbuild"
     )
 
-    assert(stderr.contains("The status of the component 'testbash' is set to deprecated."))
-    assert(exitCode == 0)
+    assert(testOutput.stderr.contains("The status of the component 'testbash' is set to deprecated."))
+    assert(testOutput.exitCode == Some(0))
   }
 
   test("Check component works when multiple_sep is set to ;", DockerTest) {
@@ -107,7 +107,7 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
       "multiple_sep"
     )
     
-    val _ = TestHelper.testMainWithStdErr(
+    val _ = TestHelper.testMain(
       "build",
       "--engine", "docker",
       "--runner", "docker",

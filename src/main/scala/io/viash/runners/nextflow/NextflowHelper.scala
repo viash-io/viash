@@ -215,7 +215,8 @@ object NextflowHelper {
 
   def renderDependencies(config: Config): String = {
     // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
-    val thisPath = Paths.get(ViashNamespace.targetOutputPath("", "invalid_platform_name", config.functionality.namespace, config.functionality.name))
+    // The name of the runner doesn't really matter here as it is just used to generate the relative location, and we don't have access to it anyway.
+    val thisPath = Paths.get(ViashNamespace.targetOutputPath("", "invalid_runner_name", config.functionality.namespace, config.functionality.name))
 
     val depStrs = config.functionality.dependencies.map{ dep =>
       NextflowHelper.renderInclude(dep, thisPath)

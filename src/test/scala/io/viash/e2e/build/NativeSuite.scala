@@ -10,6 +10,7 @@ import io.viash.config.Config
 
 import scala.io.Source
 import io.viash.helpers.{IO, Exec, Logger}
+import io.viash.exceptions.ConfigParserException
 
 class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
@@ -222,11 +223,11 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     val testRegex = "Warning: ..platforms is deprecated: Use 'engines' and 'runners' instead.".r
-    assert(testRegex.findFirstIn(testOutput).isDefined, testOutput)
+    assert(testRegex.findFirstIn(testOutput.stderr).isDefined, testOutput)
   }
 
   test("Test whether defining strings as arguments in argument groups throws a removed error") {
-    val testOutput = TestHelper.testMainException2[Exception](
+    val testOutput = TestHelper.testMainException[Exception](
       "build",
       "-o", tempFolStr,
       configDeprecatedArgumentGroups
@@ -241,7 +242,19 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(out.exitValue == 0)
 
     val testRegex = "Error: specifying strings in the .argument field of argument group 'First group' was removed.".r
-    assert(testRegex.findFirstIn(testOutput.error).isDefined, testOutput.error)
+    assert(testRegex.findFirstIn(testOutput.stderr).isDefined, testOutput.stderr)
+  }
+
+  test("Test whether setting an internalFunctionality field throws an error") {
+    val newConfigFilePath = configDeriver.derive(""".functionality.argument_groups[.name == "First group"].arguments[.name == "input"].dest := "foo"""", "set_internal_functionality")
+
+    val testOutput = TestHelper.testMainException[ConfigParserException](
+      "build",
+      "-o", tempFolStr,
+      newConfigFilePath
+    )
+
+    assert(testOutput.stderr.contains("Error: .functionality.argument_groups.arguments.dest is internal functionality."))
   }
 
   test("Test config without a main script") {
@@ -252,7 +265,7 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       "-c", ".functionality.resources := []"
     )
 
-    assert(testOutput.contains("Warning: no resources specified!"))
+    assert(testOutput.stderr.contains("Warning: no resources specified!"))
   }
 
   override def afterAll(): Unit = {

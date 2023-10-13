@@ -368,7 +368,9 @@ object Main extends Logging {
         val output = cli.export.json_schema.output.toOption.map(Paths.get(_))
         ViashExport.exportJsonSchema(
           output,
-          format = cli.export.json_schema.format()
+          format = cli.export.json_schema.format(),
+          strict = cli.export.json_schema.strict(),
+          minimal = cli.export.json_schema.minimal()
         )
         0
       case List(cli.export, cli.export.resource) =>

@@ -15,105 +15,105 @@ class RunComputationalRequirements extends AnyFunSuite with BeforeAndAfterAll {
   private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryFolder)
   
   test("Check without computational requirements") {
-    val output = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "run",
       configFile
     )
 
-    assert(output.contains("cpus unset"))
-    assert(output.contains("memory unset"))
+    assert(testOutput.stdout.contains("cpus unset"))
+    assert(testOutput.stdout.contains("memory unset"))
   }
 
   test("Check set cpus in CLI") {
-    val output = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "run",
       "--cpus", "2",
       configFile
     )
 
-    assert(output.contains("cpus: 2"))
-    assert(output.contains("memory unset"))
+    assert(testOutput.stdout.contains("cpus: 2"))
+    assert(testOutput.stdout.contains("memory unset"))
   }
 
   test("Check set memory in CLI") {
-    val output = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "run",
       "--memory", "2mb",
       configFile
     )
 
-    assert(output.contains("cpus unset"))
-    assert(output.contains("memory: 2"))
+    assert(testOutput.stdout.contains("cpus unset"))
+    assert(testOutput.stdout.contains("memory: 2"))
   }
 
   test("Check set cpus in config") {
     val newConfigFilePath = configDeriver.derive(""".functionality.requirements := {cpus: 3}""", "cpus_set")
-    val output = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "run",
       newConfigFilePath
     )
 
-    assert(output.contains("cpus: 3"))
-    assert(output.contains("memory unset"))
+    assert(testOutput.stdout.contains("cpus: 3"))
+    assert(testOutput.stdout.contains("memory unset"))
   }
 
   test("Check set memory in config") {
     val newConfigFilePath = configDeriver.derive(""".functionality.requirements := {memory: "3 mb"}""", "memory_set")
-    val output = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "run",
       newConfigFilePath
     )
 
-    assert(output.contains("cpus unset"))
-    assert(output.contains("memory: 3"))
+    assert(testOutput.stdout.contains("cpus unset"))
+    assert(testOutput.stdout.contains("memory: 3"))
   }
 
   test("Check set cpus and memory in config") {
     val newConfigFilePath = configDeriver.derive(""".functionality.requirements := {cpus: 3, memory: "3 mb"}""", "cpus_memory_set")
-    val output = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "run",
       newConfigFilePath
     )
 
-    assert(output.contains("cpus: 3"))
-    assert(output.contains("memory: 3"))
+    assert(testOutput.stdout.contains("cpus: 3"))
+    assert(testOutput.stdout.contains("memory: 3"))
   }
 
   test("Check set cpus in config and CLI") {
     val newConfigFilePath = configDeriver.derive(""".functionality.requirements := {cpus: 3}""", "cpus_set2")
-    val output = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "run",
       "--cpus", "2",
       newConfigFilePath
     )
 
-    assert(output.contains("cpus: 2"))
-    assert(output.contains("memory unset"))
+    assert(testOutput.stdout.contains("cpus: 2"))
+    assert(testOutput.stdout.contains("memory unset"))
   }
 
   test("Check set memory in config and CLI") {
     val newConfigFilePath = configDeriver.derive(""".functionality.requirements := {memory: "3 mb"}""", "memory_set2")
-    val output = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "run",
       "--memory", "2mb",
       newConfigFilePath
     )
 
-    assert(output.contains("cpus unset"))
-    assert(output.contains("memory: 2"))
+    assert(testOutput.stdout.contains("cpus unset"))
+    assert(testOutput.stdout.contains("memory: 2"))
   }
 
   test("Check set cpus and memory in config and CLI") {
     val newConfigFilePath = configDeriver.derive(""".functionality.requirements := {cpus: 3, memory: "3 mb"}""", "cpus_memory_set2")
-    val output = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "run",
       "--cpus", "2",
       "--memory", "2mb",
       newConfigFilePath
     )
 
-    assert(output.contains("cpus: 2"))
-    assert(output.contains("memory: 2"))
+    assert(testOutput.stdout.contains("cpus: 2"))
+    assert(testOutput.stdout.contains("memory: 2"))
   }
 
   override def afterAll(): Unit = {

@@ -26,6 +26,7 @@ import io.circe.{Json, Printer => JsonPrinter}
 import io.circe.yaml.{Printer => YamlPrinter}
 
 import io.viash.helpers.IO
+import io.viash.exceptions._
 
 class RichJson(json: Json) {
   /**
@@ -150,6 +151,9 @@ class RichJson(json: Json) {
                 List(y.asString.get)
               } else {
                 // TODO: add decent error message instead of simply .get
+                if (y.asArray.get.filter(!_.isString).nonEmpty) {
+                  throw new ConfigParserMergeException(uri.toString, "invalid merge tag type. Must be a String or Array of Strings", y.toString())
+                }
                 y.asArray.get.map(_.asString.get).toList
               }
             
@@ -197,8 +201,7 @@ class RichJson(json: Json) {
                 val str = IO.read(newURI)
 
                 // parse as yaml
-                // TODO: add decent error message instead of simply .get
-                val newJson1 = io.circe.yaml.parser.parse(str).toOption.get
+                val newJson1 = Convert.textToJson(str, newURI.toString)
 
                 // recurse through new json as well
                 val newJson2 = newJson1.inherit(newURI, projectDir = projectDir, stripInherits = stripInherits)
@@ -212,8 +215,8 @@ class RichJson(json: Json) {
             // return combined object
             jsMerged.asObject.get
           
-          case Some(_) =>
-            throw new RuntimeException("Invalid merge tag type. Must be a String or Array.")
+          case Some(j) =>
+            throw new ConfigParserMergeException(uri.toString, "invalid merge tag type. Must be a String or Array of Strings", j.toString())
           case None => obj1
         }
         val obj3 = obj2.mapValues(x => x.inherit(uri, projectDir = projectDir, stripInherits = stripInherits))

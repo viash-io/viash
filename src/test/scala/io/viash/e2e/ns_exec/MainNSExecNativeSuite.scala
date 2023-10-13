@@ -27,16 +27,15 @@ class MainNSExecNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   private val tempFolStr = temporaryFolder.toString
 
   test("Check whether ns exec \\; works") {
-    val (stdoutRaw, stderrRaw, _) =
-      TestHelper.testMainWithStdErr(
+    val testOutput = TestHelper.testMain(
         "ns", "exec",
         "--src", nsPath,
         "--apply_runner",
         "--apply_engine",
         "echo _{functionality-name}_ -{dir}- !{path}! ~{engine}~ ={namespace}=+\\;"
       )
-    val stdout = stdoutRaw.replaceAll(nsPath, "src/")
-    val stderr = stderrRaw.replaceAll(nsPath, "src/")
+    val stdout = testOutput.stdout.replaceAll(nsPath, "src/")
+    val stderr = testOutput.stderr.replaceAll(nsPath, "src/")
 
     for (component <- components) {
       val regexCommand = s"""\\+ echo _${component}_ -src/$component/?- !src/$component/config.vsh.yaml! ~native~ =testns=""".r
@@ -47,13 +46,13 @@ class MainNSExecNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check whether ns exec + works") {
-    val (stdoutRaw, stderrRaw, _) = TestHelper.testMainWithStdErr(
+    val testOutput = TestHelper.testMain(
       "ns", "exec",
       "--src", nsPath,
       "echo {path} +"
     )
-    val stdout = stdoutRaw.replaceAll(nsPath, "src/")
-    val stderr = stderrRaw.replaceAll(nsPath, "src/")
+    val stdout = testOutput.stdout.replaceAll(nsPath, "src/")
+    val stderr = testOutput.stderr.replaceAll(nsPath, "src/")
 
     // can't guarantee order of components
     val regexCommand = s"""\\+ echo src/[^/]*/config.vsh.yaml src/[^/]*/config.vsh.yaml src/[^/]*/config.vsh.yaml src/[^/]*/config.vsh.yaml""".r

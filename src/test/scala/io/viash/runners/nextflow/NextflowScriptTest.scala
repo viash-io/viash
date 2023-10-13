@@ -36,9 +36,7 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Build pipeline components", DockerTest, NextflowTest) {
     // build the nextflow containers
-    // TODO: use the correct CWD to build the pipeline to be ablke
-    // to detect the correct path to the _viash.yaml file
-    val (_, _, _) = TestHelper.testMainWithStdErr(
+    TestHelper.testMain(
       "ns", "build",
       "-s", srcPath,
       "-t", targetPath,

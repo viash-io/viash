@@ -41,6 +41,7 @@ import io.viash.engines.requirements.Requirements
 @subclass("NativePlatform")
 @subclass("DockerPlatform")
 @subclass("NextflowPlatform")
+@deprecated("Use 'engines' and 'runners' instead.", "0.9.0", "0.10.0")
 trait Platform {
   @description("Specifies the type of the platform.")
   val `type`: String

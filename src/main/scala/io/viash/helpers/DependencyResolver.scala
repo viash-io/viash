@@ -28,13 +28,13 @@ import java.nio.file.Files
 import java.io.IOException
 import java.io.UncheckedIOException
 import io.viash.helpers.{IO, Logging}
-import io.circe.yaml.parser
 import io.circe.Json
 import io.viash.config.Config._
 import io.viash.ViashNamespace
 import io.viash.functionality.dependencies.Dependency
 import io.viash.functionality.resources.NextflowScript
 import io.viash.exceptions.MissingDependencyException
+import io.viash.helpers.circe.Convert
 
 object DependencyResolver extends Logging {
 
@@ -227,7 +227,7 @@ object DependencyResolver extends Logging {
       // The yaml file in the target folder should be final
       // We're also assuming that the file will be proper yaml and an actual viash config file
       val yamlText = IO.read(IO.uri(configPath))
-      val json = parser.parse(yamlText).toOption.get
+      val json = Convert.textToJson(yamlText, configPath)
 
       def getFunctionalityName(json: Json): Option[String] = {
         json.hcursor.downField("functionality").downField("name").as[String].toOption
@@ -256,7 +256,7 @@ object DependencyResolver extends Logging {
   def getSparseDependencyInfo(configPath: String): List[String] = {
     try {
       val yamlText = IO.read(IO.uri(configPath))
-      val json = parser.parse(yamlText).toOption.get
+      val json = Convert.textToJson(yamlText, configPath)
 
       val dependencies = json.hcursor.downField("functionality").downField("dependencies").focus.flatMap(_.asArray).get
       dependencies.flatMap(_.hcursor.downField("writtenPath").as[String].toOption).toList

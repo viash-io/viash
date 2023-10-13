@@ -568,29 +568,29 @@ class MainBuildAuxiliaryDockerRequirementsApkTest extends AbstractMainBuildAuxil
   test("test_setup; check the fortune package is added for the test option", DockerTest) { f =>
     val newConfigFilePath = deriveEngineConfig(None, Some("""[{ "type": "apk", "packages": ["fortune"] }]"""), "apk_test_fortune_test")
 
-    val testText = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "test",
       newConfigFilePath
     )
 
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 1 out of 1 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 1 out of 1 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
   }
 
   test("test_setup; check the fortune package is not added for the test option when not specified", DockerTest) { f =>
     val newConfigFilePath = deriveEngineConfig(None, None, "apk_base_test")
 
-    val testOutput = TestHelper.testMainException2[RuntimeException](
+    val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
       "-k", "false",
       newConfigFilePath
     )
 
-    assert(testOutput.exceptionText == "Only 0 out of 1 test scripts succeeded!")
+    assert(testOutput.exceptionText.get == "Only 0 out of 1 test scripts succeeded!")
 
-    assert(testOutput.output.contains("Running tests in temporary directory: "))
-    assert(testOutput.output.contains("ERROR! Only 0 out of 1 test scripts succeeded!"))
-    assert(testOutput.output.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("ERROR! Only 0 out of 1 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
   }
 }
