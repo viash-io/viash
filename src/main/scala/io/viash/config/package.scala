@@ -27,11 +27,12 @@ package object config {
   import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
   import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
   import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
+  import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
 
   implicit val customConfig: Configuration = Configuration.default.withDefaults
 
   // encoders and decoders for Config
-  implicit val encodeConfig: Encoder.AsObject[Config] = deriveConfiguredEncoder
+  implicit val encodeConfig: Encoder.AsObject[Config] = deriveConfiguredEncoderStrict[Config]
   implicit val decodeConfig: Decoder[Config] = deriveConfiguredDecoderWithValidationCheck[Config].prepare{
     checkDeprecation[Config](_)
     // map platforms to runners and engines

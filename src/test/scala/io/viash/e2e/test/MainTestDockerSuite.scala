@@ -22,37 +22,37 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
   private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryFolder)
 
   test("Check standard test output for typical outputs", DockerTest) {
-    val testText = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "test",
       "--engine", "docker",
       "--runner", "docker",
       configFile
     )
 
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testText, false)
+    checkTempDirAndRemove(testOutput.stdout, false)
   }
 
   test("Check standard test output with trailing arguments", DockerTest) {
-    val testText = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "test",
       configFile,
       "--engine", "docker",
       "--runner", "docker"
     )
 
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testText, false)
+    checkTempDirAndRemove(testOutput.stdout, false)
   }
 
   test("Check standard test output with leading and trailing arguments", DockerTest) {
-    val testText = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "test",
       "--engine", "docker",
       "--runner", "docker",
@@ -60,17 +60,17 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
       "-k", "false"
     )
 
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testText, false)
+    checkTempDirAndRemove(testOutput.stdout, false)
   }
 
   test("Check setup strategy", DockerTest) {
     val newConfigFilePath = configDeriver.derive(""".engines[.type == "docker" && !has(.id) ].setup := [{ type: "docker", run: "echo 'Hello world!'" }]""", "cache_config")
     // first run to create cache entries
-    val testText = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "test",
       "--engine", "docker",
       "--runner", "docker",
@@ -79,7 +79,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     )
 
     // Do a second run to check if forcing a docker build using setup works
-    val testTextNoCaching = TestHelper.testMain(
+    val testOutputNoCaching = TestHelper.testMain(
       "test",
       "--engine", "docker",
       "--runner", "docker",
@@ -89,10 +89,10 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     )
 
     val regexBuildCache = raw"\n#\d \[\d/\d\] RUN echo 'Hello world!'\n#\d CACHED\n".r
-    assert(!regexBuildCache.findFirstIn(testTextNoCaching).isDefined, "Expected to not find caching.")
+    assert(!regexBuildCache.findFirstIn(testOutputNoCaching.stdout).isDefined, "Expected to not find caching.")
 
     // Do a third run to check caching
-    val testTextCaching = TestHelper.testMain(
+    val testOutputCaching = TestHelper.testMain(
       "test",
       "--engine", "docker",
       "--runner", "docker",
@@ -103,10 +103,10 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
 
     // retry once if it failed
     val testTextCachingWithRetry = 
-      if (regexBuildCache.findFirstIn(testTextCaching).isDefined) {
-        testTextCaching
+      if (regexBuildCache.findFirstIn(testOutputCaching.stdout).isDefined) {
+        testOutputCaching
       } else {
-        checkTempDirAndRemove(testTextCaching, false)
+        checkTempDirAndRemove(testOutputCaching.stdout, false)
         
         TestHelper.testMain(
           "test",
@@ -118,62 +118,62 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
         )
       }
 
-    assert(regexBuildCache.findFirstIn(testTextCachingWithRetry).isDefined, "Expected to find caching.")
+    assert(regexBuildCache.findFirstIn(testTextCachingWithRetry.stdout).isDefined, "Expected to find caching.")
 
-    checkTempDirAndRemove(testText, false)
-    checkTempDirAndRemove(testTextNoCaching, false)
-    checkTempDirAndRemove(testTextCachingWithRetry, false)
+    checkTempDirAndRemove(testOutput.stdout, false)
+    checkTempDirAndRemove(testOutputNoCaching.stdout, false)
+    checkTempDirAndRemove(testTextCachingWithRetry.stdout, false)
   }
 
   test("Verify base config derivation", NativeTest) {
     val newConfigFilePath = configDeriver.derive(Nil, "default_config")
-    val testText = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "test",
       "--engine", "native",
       "--runner", "native",
       newConfigFilePath
     )
 
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testText, false)
+    checkTempDirAndRemove(testOutput.stdout, false)
   }
 
   test("Check failing build", DockerTest) {
     val newConfigFilePath = configDeriver.derive(""".engines[.type == "docker" && !has(.id) ].setup := [{ type: "apt", packages: ["get_the_machine_that_goes_ping"] }]""", "failed_build")
-    val testOutput = TestHelper.testMainException2[RuntimeException](
+    val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
       "--engine", "docker",
       "--runner", "docker",
       newConfigFilePath
     )
 
-    assert(testOutput.exceptionText == "Setup failed!")
+    assert(testOutput.exceptionText.get == "Setup failed!")
 
-    assert(testOutput.output.contains("Running tests in temporary directory: "))
-    assert(testOutput.output.contains("ERROR! Setup failed!"))
-    assert(!testOutput.output.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("ERROR! Setup failed!"))
+    assert(!testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testOutput.output, true)
+    checkTempDirAndRemove(testOutput.stdout, true)
   }
 
   test("Check config and resource files with spaces in the filename", DockerTest) {
     val newConfigFilePath = Paths.get(tempFolStr, "config with spaces.vsh.yaml")
     Files.copy(Paths.get(configFile), newConfigFilePath)
-    val testText = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "test",
       "--engine", "docker",
       "--runner", "docker",
       newConfigFilePath.toString()
     )
 
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testText, false)
+    checkTempDirAndRemove(testOutput.stdout, false)
   }
 
   /**

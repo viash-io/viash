@@ -30,7 +30,7 @@ import io.viash.schemas._
   "yaml")
 @subclass("native")
 final case class NativeEngine(
-  @description("Name of the engine. As with all engines, you can give a engine a different name. By specifying `id: foo`, you can target this engine (only) by specifying `...` in any of the Viash commands.")
+  @description("Name of the engine. As with all engines, you can give an engine a different name. By specifying `id: foo`, you can target this engine (only) by specifying `...` in any of the Viash commands.")
   @example("id: foo", "yaml")
   @default("native")
   id: String = "native",

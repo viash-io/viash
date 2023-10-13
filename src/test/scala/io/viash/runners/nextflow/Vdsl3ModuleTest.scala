@@ -35,7 +35,7 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Build pipeline components", DockerTest, NextflowTest) {
     // build the nextflow containers
-    val (_, _, _) = TestHelper.testMainWithStdErr(
+    TestHelper.testMain(
       "ns", "build",
       "--runner", "nextflow",
       "-s", srcPath,
@@ -101,15 +101,15 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
     val correctedStdOut2 = regex.matcher(correctedStdOut1).replaceAll("")
 
     // run Viash's --help
-    val (stdOut2, stdErr2, exitCode2) = TestHelper.testMainWithStdErr(
+    val testOutput = TestHelper.testMain(
       "run", workflowsPath + "/pipeline3/config.vsh.yaml",
       "--", "--help"
     )
 
-    assert(exitCode2 == 0)
+    assert(testOutput.exitCode == Some(0))
 
     // check if they are the same
-    assert(correctedStdOut2 == stdOut2)
+    assert(correctedStdOut2 == testOutput.stdout)
   }
 
   override def afterAll(): Unit = {

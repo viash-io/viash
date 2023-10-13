@@ -4,6 +4,7 @@ import io.viash.config.Config
 import org.scalatest.funsuite.AnyFunSuite
 import io.viash.helpers.Logger
 import org.scalatest.ParallelTestExecution
+import io.viash.lenses.ConfigLenses
 
 class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
   Logger.UseColorOverride.value = Some(false)
@@ -82,8 +83,11 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
       // convert back to config
       val conf2 = confJson.as[Config].toOption.get
 
+      // strip parent parameters as those are internal functionality and are not serialized
+      val strippedConf1 = ConfigLenses.composedResourcesLens.modify(_.map(_.copyResource(parent = None)))(conf)
+      val strippedConf2 = ConfigLenses.composedTestResourcesLens.modify(_.map(_.copyResource(parent = None)))(strippedConf1)
       // check if equal
-      assert(conf == conf2)
+      assert(strippedConf2 == conf2)
     }
   }
 }

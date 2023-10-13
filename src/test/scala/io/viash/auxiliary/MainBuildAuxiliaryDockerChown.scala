@@ -116,13 +116,13 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
   test("Test with platform and chown is set to false", DockerTest) {
     val newConfigFile = configDeriver.derive(""".platforms := [{type: "docker", chown: false }]""", "docker_chown_false")
     // functionality not provided in runner, should throw exception
-    val output = TestHelper.testMainException2[ConfigParserException](
+    val output = TestHelper.testMainException[ConfigParserException](
       "build",
       "--engine", "docker_chown",
       "-o", tempFolStr,
       newConfigFile
     )
-    assert(output.error.contains("Error: ..chown was removed: Compability not provided with the Runners functionality."))
+    assert(output.stderr.contains("Error: ..chown was removed: Compability not provided with the Runners functionality."))
   }
 
   override def afterAll(): Unit = {

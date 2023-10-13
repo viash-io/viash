@@ -35,7 +35,7 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Build pipeline components", DockerTest, NextflowTest) {
     // build the nextflow containers
-    val (_, _, _) = TestHelper.testMainWithStdErr(
+    TestHelper.testMain(
       "ns", "build",
       "-s", srcPath,
       "-t", targetPath,
