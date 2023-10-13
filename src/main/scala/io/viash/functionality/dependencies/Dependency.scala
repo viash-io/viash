@@ -32,7 +32,7 @@ import io.viash.exceptions.MissingBuildYamlException
   """name: qc/multiqc
     |repository: 
     |  type: github
-    |  uri: openpipelines-bio/modules
+    |  repo: openpipelines-bio/modules
     |  tag: 0.3.0
     |""".stripMargin,
   "yaml",
@@ -51,6 +51,12 @@ import io.viash.exceptions.MissingBuildYamlException
     |""".stripMargin,
   "yaml",
   "Definition of a dependency with a repository defined as 'openpipelines-bio' under `.functionality.repositories`."
+)
+@exampleWithDescription(
+  """name: qc/multiqc
+    |""".stripMargin,
+  "yaml",
+  "Definition of a local dependency. This dependency is present in the current code base and will be built when `viash ns build` is run."
 )
 case class Dependency(
   @description("The full name of the dependency component. This should include the namespace.")
