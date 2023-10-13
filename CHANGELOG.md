@@ -15,6 +15,12 @@ TODO add summary
 * `export json_schema`: Add a `--strict` option to output a subset of the schema representing the internal structure of the Viash config (PR #564).
 
 * `config view` and `ns list`: Do not output internal functionality fields (#564). Additionally, add a validation that no internal fields are present when reading a Viash config file.
+
+## MINOR CHANGES
+
+* `testbenches`: Add testbenches for local dependencies (PR #565).
+
+* `testbenches`: Refactor testbenches helper functions to uniformize them (PR #565).
   
 # Viash 0.8.0-RC5 (2023-10-11): Fix run workflow
 

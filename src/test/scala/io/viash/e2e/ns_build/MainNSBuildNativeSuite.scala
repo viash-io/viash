@@ -34,7 +34,7 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
   // convert testbash
   test("viash ns can build") {
-    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+    val testOutput = TestHelper.testMain(
     "ns", "build",
       "-s", nsPath,
       "-t", tempFolStr
@@ -42,7 +42,7 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
     assert(nsFolder.exists)
     assert(nsFolder.isDirectory)
-    assert(exitCode == 1)
+    assert(testOutput.exitCode == Some(1))
 
     for ((component, _, _, _) <- components) {
       val executable = componentExecutableFile(component)
@@ -51,7 +51,7 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
     }
 
     val regexBuildError = raw"Reading file \'.*/src/ns_error/config\.vsh\.yaml\' failed".r
-    assert(regexBuildError.findFirstIn(stderr).isDefined, "Expecting to get an error because of an invalid yaml in ns_error")
+    assert(regexBuildError.findFirstIn(testOutput.stderr).isDefined, "Expecting to get an error because of an invalid yaml in ns_error")
   }
 
   test("Check whether the executable can run") {
