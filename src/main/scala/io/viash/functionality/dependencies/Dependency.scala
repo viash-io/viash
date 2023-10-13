@@ -30,24 +30,24 @@ import io.viash.exceptions.MissingBuildYamlException
     |""".stripMargin)
 @exampleWithDescription(
   """name: qc/multiqc
-    |  repository: 
-    |    type: github
-    |    repo: openpipelines-bio/modules
-    |    tag: 0.3.0
+    |repository: 
+    |  type: github
+    |  repo: openpipelines-bio/modules
+    |  tag: 0.3.0
     |""".stripMargin,
   "yaml",
   "Definition of dependency with a fully defined repository"
 )
 @exampleWithDescription(
   """name: qc/multiqc
-    |  repository: "github://openpipelines-bio/modules:0.3.0"
+    |repository: "github://openpipelines-bio/modules:0.3.0"
     |""".stripMargin,
   "yaml",
   "Definition of a dependency with a repository using sugar syntax."
 )
 @exampleWithDescription(
   """name: qc/multiqc
-    |  repository: "openpipelines-bio"
+    |repository: "openpipelines-bio"
     |""".stripMargin,
   "yaml",
   "Definition of a dependency with a repository defined as 'openpipelines-bio' under `.functionality.repositories`."
