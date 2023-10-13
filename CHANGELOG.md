@@ -21,6 +21,10 @@ TODO add summary
 * `testbenches`: Add testbenches for local dependencies (PR #565).
 
 * `testbenches`: Refactor testbenches helper functions to uniformize them (PR #565).
+
+## BUG FIXES
+
+* `__merge__`: Handle invalid yaml during merging (PR #570). There was not enough error handling during this operation. Switched to the more advanced `Convert.textToJson` helper method.
   
 # Viash 0.8.0-RC5 (2023-10-11): Fix run workflow
 
