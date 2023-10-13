@@ -83,7 +83,8 @@ class StringArgumentTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(arg.dest == "meta")
 
     val argParsed = arg.asJson.as[StringArgument].fold(throw _, a => a)
-    assert(argParsed == arg)
+    // override dest parameter as that is internal functionality and is not serialized
+    assert(argParsed == arg.copyArg(dest = "par"))
   }
 
   test("copyArg helper function") {
@@ -104,7 +105,8 @@ class StringArgumentTest extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     val arg2GParsed = arg2generic.asJson.as[Argument[_]].fold(throw _, a => a)
-    assert(arg2GParsed == arg2generic)
+    // override dest parameter as that is internal functionality and is not serialized
+    assert(arg2GParsed == arg2generic.copyArg(dest = "par"))
 
     assert(arg2generic.isInstanceOf[StringArgument])
     val arg2 = arg2generic.asInstanceOf[StringArgument]
@@ -123,6 +125,7 @@ class StringArgumentTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(arg2.dest == "meta")
 
     val arg2Parsed = arg2.asJson.as[StringArgument].fold(throw _, a => a)
-    assert(arg2Parsed == arg2)
+    // override dest parameter as that is internal functionality and is not serialized
+    assert(arg2Parsed == arg2.copyArg(dest = "par"))
   }
 }

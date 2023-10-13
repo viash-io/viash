@@ -28,6 +28,7 @@ package object resources {
 
   import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
   import io.viash.helpers.circe._
+  import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
 
   implicit val encodeURI: Encoder[URI] = Encoder.instance {
     uri => Json.fromString(uri.toString)
@@ -37,15 +38,15 @@ package object resources {
   }
 
   // encoders and decoders for Object
-  implicit val encodeBashScript: Encoder.AsObject[BashScript] = deriveConfiguredEncoder
-  implicit val encodePythonScript: Encoder.AsObject[PythonScript] = deriveConfiguredEncoder
-  implicit val encodeRScript: Encoder.AsObject[RScript] = deriveConfiguredEncoder
-  implicit val encodeJavaScriptScript: Encoder.AsObject[JavaScriptScript] = deriveConfiguredEncoder
-  implicit val encodeNextflowScript: Encoder.AsObject[NextflowScript] = deriveConfiguredEncoder
-  implicit val encodeScalaScript: Encoder.AsObject[ScalaScript] = deriveConfiguredEncoder
-  implicit val encodeCSharpScript: Encoder.AsObject[CSharpScript] = deriveConfiguredEncoder
-  implicit val encodeExecutable: Encoder.AsObject[Executable] = deriveConfiguredEncoder
-  implicit val encodePlainFile: Encoder.AsObject[PlainFile] = deriveConfiguredEncoder
+  implicit val encodeBashScript: Encoder.AsObject[BashScript] = deriveConfiguredEncoderStrict[BashScript]
+  implicit val encodePythonScript: Encoder.AsObject[PythonScript] = deriveConfiguredEncoderStrict[PythonScript]
+  implicit val encodeRScript: Encoder.AsObject[RScript] = deriveConfiguredEncoderStrict[RScript]
+  implicit val encodeJavaScriptScript: Encoder.AsObject[JavaScriptScript] = deriveConfiguredEncoderStrict[JavaScriptScript]
+  implicit val encodeNextflowScript: Encoder.AsObject[NextflowScript] = deriveConfiguredEncoderStrict[NextflowScript]
+  implicit val encodeScalaScript: Encoder.AsObject[ScalaScript] = deriveConfiguredEncoderStrict[ScalaScript]
+  implicit val encodeCSharpScript: Encoder.AsObject[CSharpScript] = deriveConfiguredEncoderStrict[CSharpScript]
+  implicit val encodeExecutable: Encoder.AsObject[Executable] = deriveConfiguredEncoderStrict[Executable]
+  implicit val encodePlainFile: Encoder.AsObject[PlainFile] = deriveConfiguredEncoderStrict[PlainFile]
 
   implicit def encodeResource[A <: Resource]: Encoder[A] = Encoder.instance {
     par =>

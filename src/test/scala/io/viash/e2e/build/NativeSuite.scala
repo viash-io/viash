@@ -244,6 +244,18 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(testRegex.findFirstIn(testOutput.stderr).isDefined, testOutput.stderr)
   }
 
+  test("Test whether setting an internalFunctionality field throws an error") {
+    val newConfigFilePath = configDeriver.derive(""".functionality.argument_groups[.name == "First group"].arguments[.name == "input"].dest := "foo"""", "set_internal_functionality")
+
+    val testOutput = TestHelper.testMainException2[RuntimeException](
+      "build",
+      "-o", tempFolStr,
+      newConfigFilePath
+    )
+
+    assert(testOutput.error.contains("Error: .functionality.argument_groups.arguments.dest is internal functionality."))
+  }
+
   test("Test config without a main script") {
     val testOutput = TestHelper.testMain(
       "build",

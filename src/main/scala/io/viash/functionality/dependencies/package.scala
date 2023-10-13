@@ -25,13 +25,14 @@ import cats.syntax.functor._
 package object dependencies {
 
   import io.viash.helpers.circe._
+  import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
 
   // encoders and decoders for Argument
-  implicit val encodeDependency: Encoder.AsObject[Dependency] = deriveConfiguredEncoder
-  implicit val encodeGitRepository: Encoder.AsObject[GitRepository] = deriveConfiguredEncoder
-  implicit val encodeGithubRepository: Encoder.AsObject[GithubRepository] = deriveConfiguredEncoder
-  implicit val encodeViashhubRepository: Encoder.AsObject[ViashhubRepository] = deriveConfiguredEncoder
-  implicit val encodeLocalRepository: Encoder.AsObject[LocalRepository] = deriveConfiguredEncoder
+  implicit val encodeDependency: Encoder.AsObject[Dependency] = deriveConfiguredEncoderStrict
+  implicit val encodeGitRepository: Encoder.AsObject[GitRepository] = deriveConfiguredEncoderStrict
+  implicit val encodeGithubRepository: Encoder.AsObject[GithubRepository] = deriveConfiguredEncoderStrict
+  implicit val encodeViashhubRepository: Encoder.AsObject[ViashhubRepository] = deriveConfiguredEncoderStrict
+  implicit val encodeLocalRepository: Encoder.AsObject[LocalRepository] = deriveConfiguredEncoderStrict
   implicit def encodeRepository[A <: Repository]: Encoder[A] = Encoder.instance {
     par =>
       val typeJson = Json.obj("type" -> Json.fromString(par.`type`))
