@@ -4,7 +4,6 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.util.Try
-import io.viash.helpers.Logger
 
 class ExecTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)

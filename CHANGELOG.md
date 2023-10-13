@@ -9,6 +9,10 @@ TODO add summary
   In brief, the `native platform` became a `native engine` and `docker platform` became a `docker engine`.
   Additionally, the `native platform` and `docker platform` became a `executable runner`, `nextflow platform` became a `nextflow runner`.
   The fields of `docker platform` is split between `docker engine` and `docker runner`: `port`, `workdir`, `setup_strategy`, and `run_args` are captured by the `runner` as they define how the component is run. The other fields are captured by the `engine` as they define the environment in which the component is run. One exception is `chown` which is rarely set to false and is now always enabled.
+
+## MINOR CHANGES
+
+* `logging`: Preserve log order of StdOut and StdErr messages during reading configs in namespaces (PR #xxx).
   
 # Viash 0.8.0-RC5 (2023-10-11): Fix run workflow
 
