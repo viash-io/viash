@@ -88,7 +88,7 @@ class EscapingNativeTest extends AnyFunSuite with BeforeAndAfterAll {
       val stripAll = (s: String) => s.replaceAll(raw"\s+", " ").trim
 
       // test if descriptions match
-      functionalitySub.arguments.foreach(arg => {
+      functionalitySub.allArguments.foreach(arg => {
         for (opt <- arg.alternatives; value <- opt)
           assert(stdout.contains(value))
         for (description <- arg.description)

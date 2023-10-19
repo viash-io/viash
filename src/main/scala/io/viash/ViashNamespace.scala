@@ -279,12 +279,11 @@ object ViashNamespace extends Logging {
 
   def list(
     configs: List[AppliedConfig], 
-    format: String = "yaml", 
-    parseArgumentGroups: Boolean
+    format: String = "yaml"
   ): Unit = {
     val configs2 = configs.filter(_.status.isEmpty).map(_.config)
 
-    ViashConfig.viewMany(configs2, format, parseArgumentGroups)
+    ViashConfig.viewMany(configs2, format)
 
     printResults(configs.map(ac => ac.status.getOrElse(Success)), false, false)
   }

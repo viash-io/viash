@@ -78,36 +78,6 @@ case class Functionality(
   @since("Viash 0.3.1")
   @default("Empty")
   authors: List[Author] = Nil,
-  
-  @description(
-    """A list of @[arguments](argument) for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. See these reference pages per type for more information:  
-      |
-      | - @[string](arg_string)
-      | - @[file](arg_file)
-      | - @[integer](arg_integer)
-      | - @[double](arg_double)
-      | - @[boolean](arg_boolean)
-      | - @[boolean_true](arg_boolean_true)
-      | - @[boolean_false](arg_boolean_false)
-      |""".stripMargin)
-  @example(
-    """arguments:
-      |  - name: --foo
-      |    type: file
-      |    alternatives: [-f]
-      |    description: Description of foo
-      |    default: "/foo/bar"
-      |    must_exist: true
-      |    direction: output
-      |    required: false
-      |    multiple: true
-      |    multiple_sep: ","
-      |  - name: --bar
-      |    type: string
-      |""".stripMargin,
-      "yaml")
-  @default("Empty")
-  arguments: List[Argument[_]] = Nil,
 
   @description(
     """A grouping of the @[arguments](argument), used to display the help message.
@@ -287,29 +257,39 @@ case class Functionality(
   @internalFunctionality
   set_wd_to_resources_dir: Boolean = false
 ) {
+  // Handled in preparsing
+  @description(
+    """A list of @[arguments](argument) for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. See these reference pages per type for more information:  
+      |
+      | - @[string](arg_string)
+      | - @[file](arg_file)
+      | - @[integer](arg_integer)
+      | - @[double](arg_double)
+      | - @[boolean](arg_boolean)
+      | - @[boolean_true](arg_boolean_true)
+      | - @[boolean_false](arg_boolean_false)
+      |""".stripMargin)
+  @example(
+    """arguments:
+      |  - name: --foo
+      |    type: file
+      |    alternatives: [-f]
+      |    description: Description of foo
+      |    default: "/foo/bar"
+      |    must_exist: true
+      |    direction: output
+      |    required: false
+      |    multiple: true
+      |    multiple_sep: ","
+      |  - name: --bar
+      |    type: string
+      |""".stripMargin,
+      "yaml")
+  @default("Empty")
+  private val arguments: List[Argument[_]] = Nil
 
   // Combine inputs, outputs and arguments into one combined list
-  def allArguments = arguments ::: argument_groups.flatMap(arg => arg.arguments)
-
-  def allArgumentGroups: List[ArgumentGroup] = {
-    if (arguments.isEmpty) {
-      // if there are no arguments, just return the argument groups as is
-      argument_groups
-    } else if (argument_groups.exists(_.name == "Arguments")) {
-      // if there is already an argument group named 'Arguments', extend it with the arguments
-      argument_groups.map{
-        case gr if gr.name == "Arguments" =>
-          gr.copy(arguments = gr.arguments ::: arguments)
-        case gr => gr
-      }
-    } else {
-      // else create a new argument group
-      argument_groups ::: List(ArgumentGroup(
-        name = "Arguments",
-        arguments = arguments
-      ))
-    }
-  }
+  def allArguments = argument_groups.flatMap(arg => arg.arguments)
     
   // check whether there are not multiple positional arguments with multiplicity >1
   // and if there is one, whether its position is last

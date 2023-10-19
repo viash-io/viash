@@ -41,7 +41,7 @@ object Helper {
     val usageStr = functionality.usage.map("\n\nUsage:\n" + _.trim).getOrElse("")
 
     // PART 4: Options
-    val argGroupStrs = functionality.allArgumentGroups.map{argGroup =>
+    val argGroupStrs = functionality.argument_groups.map{argGroup =>
       val name = argGroup.name
       val descriptionStr = argGroup.description.map{
         des => "\n    " + Format.paragraphWrap(des.trim, maxWidth-4).mkString("\n    ") + "\n"

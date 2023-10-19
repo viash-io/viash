@@ -32,36 +32,13 @@ import io.viash.runners.Runner
 
 object ViashConfig extends Logging{
 
-  def view(config: Config, format: String, parseArgumentGroups: Boolean): Unit = {
-    val conf0 = 
-      if (parseArgumentGroups) {
-        config.copy(
-          functionality = config.functionality.copy(
-            arguments = Nil,
-            argument_groups = config.functionality.allArgumentGroups,
-          )
-        )
-      } else {
-        config
-      }
-    val json = ConfigMeta.configToCleanJson(conf0)
+  def view(config: Config, format: String): Unit = {
+    val json = ConfigMeta.configToCleanJson(config)
     infoOut(json.toFormattedString(format))
   }
 
-  def viewMany(configs: List[Config], format: String, parseArgumentGroups: Boolean): Unit = {
-    val confs0 = configs.map{ config => 
-      if (parseArgumentGroups) {
-        config.copy(
-          functionality = config.functionality.copy(
-            arguments = Nil,
-            argument_groups = config.functionality.allArgumentGroups,
-          )
-        )
-      } else {
-        config
-      }
-    }
-    val jsons = confs0.map(c => ConfigMeta.configToCleanJson(c))
+  def viewMany(configs: List[Config], format: String): Unit = {
+    val jsons = configs.map(c => ConfigMeta.configToCleanJson(c))
     infoOut(jsons.asJson.toFormattedString(format))
   }
 
