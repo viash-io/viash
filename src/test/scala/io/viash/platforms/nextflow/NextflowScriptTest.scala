@@ -46,71 +46,71 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
     )
   }
 
-  // test("Run config pipeline", NextflowTest) {
-  //   val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-  //     mainScript = "target/nextflow/wf/main.nf",
-  //     args = List(
-  //       "--id", "foo",
-  //       "--input1", "resources/lines*.txt",
-  //       "--input2", "resources/lines3.txt",
-  //       "--publish_dir", "output"
-  //     ),
-  //     cwd = tempFolFile
-  //   )
+  test("Run config pipeline", NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/wf/main.nf",
+      args = List(
+        "--id", "foo",
+        "--input1", "resources/lines*.txt",
+        "--input2", "resources/lines3.txt",
+        "--publish_dir", "output"
+      ),
+      cwd = tempFolFile
+    )
 
-  //   assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-  // }
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+  }
 
-  // // TODO: use TestHelper.testMainWithStdErr instead of NextflowTestHelper.run; i.e. viash test
-  // test("Test workflow", DockerTest, NextflowTest) {
-  //   val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-  //     mainScript = "target/nextflow/wf/main.nf",
-  //     entry = Some("test_base"),
-  //     args = List(
-  //       "--rootDir", tempFolStr,
-  //       "--publish_dir", "output"
-  //     ),
-  //     cwd = tempFolFile
-  //   )
+  // TODO: use TestHelper.testMainWithStdErr instead of NextflowTestHelper.run; i.e. viash test
+  test("Test workflow", DockerTest, NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/wf/main.nf",
+      entry = Some("test_base"),
+      args = List(
+        "--rootDir", tempFolStr,
+        "--publish_dir", "output"
+      ),
+      cwd = tempFolFile
+    )
 
-  //   assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-  // }
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+  }
   
-  // test("Test fromState/toState", DockerTest, NextflowTest) {
-  //   val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-  //     mainScript = "target/nextflow/test_wfs/fromstate_tostate/main.nf",
-  //     args = List(
-  //       "--publish_dir", "output"
-  //     ),
-  //     cwd = tempFolFile
-  //   )
+  test("Test fromState/toState", DockerTest, NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/test_wfs/fromstate_tostate/main.nf",
+      args = List(
+        "--publish_dir", "output"
+      ),
+      cwd = tempFolFile
+    )
 
-  //   assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-  // }
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+  }
 
-  // test("Test filter/runIf", DockerTest, NextflowTest) {
-  //   val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-  //     mainScript = "target/nextflow/test_wfs/filter_runif/main.nf",
-  //     args = List(
-  //       "--publish_dir", "output"
-  //     ),
-  //     cwd = tempFolFile
-  //   )
+  test("Test filter/runIf", DockerTest, NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/test_wfs/filter_runif/main.nf",
+      args = List(
+        "--publish_dir", "output"
+      ),
+      cwd = tempFolFile
+    )
 
-  //   assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-  // }
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+  }
 
-  // test("Test for concurrency issues", DockerTest, NextflowTest) {
-  //   val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-  //     mainScript = "target/nextflow/test_wfs/concurrency/main.nf",
-  //     args = List(
-  //       "--publish_dir", "output"
-  //     ),
-  //     cwd = tempFolFile
-  //   )
+  test("Test for concurrency issues", DockerTest, NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/test_wfs/concurrency/main.nf",
+      args = List(
+        "--publish_dir", "output"
+      ),
+      cwd = tempFolFile
+    )
 
-  //   assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-  // }
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+  }
 
   test("Test runEach", DockerTest, NextflowTest) {
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
@@ -125,20 +125,20 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
 
-  // test("Check whether --help is same as Viash's --help", NextflowTest) {
-  //   // except that WorkflowHelper.nf will not print alternatives, and
-  //   // will always prefix argument names with -- (so --foo, not -f or foo).
+  test("Check whether --help is same as Viash's --help", NextflowTest) {
+    // except that WorkflowHelper.nf will not print alternatives, and
+    // will always prefix argument names with -- (so --foo, not -f or foo).
 
-  //   // run WorkflowHelper's --help
-  //   val (exitCode, stdOut1, stdErr1) = NextflowTestHelper.run(
-  //     mainScript = "target/nextflow/wf/main.nf",
-  //     args = List("--help"),
-  //     quiet = true,
-  //     cwd = tempFolFile
-  //   )
+    // run WorkflowHelper's --help
+    val (exitCode, stdOut1, stdErr1) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/wf/main.nf",
+      args = List("--help"),
+      quiet = true,
+      cwd = tempFolFile
+    )
 
-  //   assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut1\nStd error:\n$stdErr1")
-  // }
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut1\nStd error:\n$stdErr1")
+  }
 
 
   override def afterAll(): Unit = {
