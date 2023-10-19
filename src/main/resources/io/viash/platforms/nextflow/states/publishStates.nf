@@ -166,7 +166,7 @@ def publishStatesByConfig(Map args) {
                   filenameTemplate = filenameTemplate[0]
                 }
                 // instantiate the template
-                filename = filenameTemplate
+                def filename = filenameTemplate
                   .replaceAll('\\$id', id_)
                   .replaceAll('\\$key', key_)
                 if (par.multiple) {
