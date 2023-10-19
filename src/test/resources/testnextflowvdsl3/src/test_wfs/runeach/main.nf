@@ -40,7 +40,7 @@ workflow base {
     | runEach(
       components: comps,
       filter: { id, state, comp ->
-        id == "num0" || comp.name != "step1a"
+        id != "num0" || comp.name == "step1a"
       },
       id: { id, state, comp ->
         "${id}_${comp.name}".toString()
