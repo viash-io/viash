@@ -88,7 +88,7 @@ workflow base {
 
     | toSortedList{ a, b -> a[0] <=> b[0] }
     | view { list ->
-      assert list.size() == 100 * 25 + 1: "list size should be 100 * 25 + 1. Found: ${list.size()}"
+      assert list.size() == 100 * 26 + 1: "list size should be 100 * 25 + 1. Found: ${list.size()}"
 
       def ids = list.collect{it[0]}
       def expectedIds = (0..100).collectMany{ num ->
