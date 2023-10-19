@@ -24,6 +24,8 @@ TODO add summary
 
 * `logging`: Preserve log order of StdOut and StdErr messages during reading configs in namespaces (PR #571).
 
+* `arguments`: Merge arguments into argument_groups during a json decode prepare step (PR #574). The `--parse_argument_groups` option from `ns list` and `config view` is deprecated as it is now always enabled.
+
 ## BUG FIXES
 
 * `__merge__`: Handle invalid yaml during merging (PR #570). There was not enough error handling during this operation. Switched to the more advanced `Convert.textToJson` helper method.
