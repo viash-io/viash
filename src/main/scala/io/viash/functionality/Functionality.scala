@@ -288,7 +288,7 @@ case class Functionality(
   @default("Empty")
   private val arguments: List[Argument[_]] = Nil
 
-  // Combine inputs, outputs and arguments into one combined list
+  // Combine all arguments into one combined list
   def allArguments = argument_groups.flatMap(arg => arg.arguments)
     
   // check whether there are not multiple positional arguments with multiplicity >1
