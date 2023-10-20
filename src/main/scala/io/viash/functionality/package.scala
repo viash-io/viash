@@ -114,14 +114,9 @@ package object functionality extends Logging {
   
   // encoder and decoder for ArgumentGroup
   implicit val encodeArgumentGroup: Encoder.AsObject[ArgumentGroup] = deriveConfiguredEncoder
-  implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoder[ArgumentGroup]
-    .validate(
-      validator[ArgumentGroup],
-      s"Could not convert json to ArgumentGroup."
-    )
+  implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoderFullChecks[ArgumentGroup]
     .prepare {
-      checkDeprecation[ArgumentGroup](_) // check for deprecations
-      .withFocus(_.mapObject{ ag0 =>
+      _.withFocus(_.mapObject{ ag0 =>
 
         // Check whether arguments contains a string value instead of an object. The support for this was removed in Viash 0.7.0
         ag0.apply("arguments") match {
