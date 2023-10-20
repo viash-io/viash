@@ -1,0 +1,15 @@
+functionality:
+  name: concurrency
+  namespace: test_wfs
+  resources:
+    - type: nextflow_script
+      path: main.nf
+      entrypoint: base
+    # TODO: make absolute when the ns build uses the right CWD
+    - path: ../../../resources
+  dependencies:
+    - name: step1
+    - name: step2
+    - name: step3
+platforms:
+  - type: nextflow
