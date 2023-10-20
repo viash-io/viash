@@ -102,18 +102,7 @@ workflow base {
       }
       def unexpectedIds = ids - expectedIds
       def missingIds = expectedIds - ids
-
-      // println()
-      // println()
-      // println("ids: $ids")
-      // println()
-      // println("expectedIds: $expectedIds")
-      // println()
-      // println("unexpectedIds: $unexpectedIds")
-      // println()
-      // println("missingIds: $missingIds")
-      // println()
-      // println()
+      
       assert unexpectedIds.size() == 0: "unexpected ids: $unexpectedIds"
       assert missingIds.size() == 0: "missing ids: $missingIds"
 
