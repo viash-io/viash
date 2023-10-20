@@ -100,6 +100,30 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
   }
 
+  test("Test for concurrency issues", DockerTest, NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/test_wfs/concurrency/main.nf",
+      args = List(
+        "--publish_dir", "output"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+  }
+
+  test("Test runEach", DockerTest, NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/test_wfs/runeach/main.nf",
+      args = List(
+        "--publish_dir", "output"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+  }
+
 
   test("Check whether --help is same as Viash's --help", NextflowTest) {
     // except that WorkflowHelper.nf will not print alternatives, and
