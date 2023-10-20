@@ -114,7 +114,7 @@ package object functionality extends Logging {
   
   // encoder and decoder for ArgumentGroup
   implicit val encodeArgumentGroup: Encoder.AsObject[ArgumentGroup] = deriveConfiguredEncoder
-  implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoderFullChecks[ArgumentGroup]
+  implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoderFullChecks
 
   // encoder and decoder for Status, make string lowercase before decoding
   implicit val encodeStatus: Encoder[Status] = Encoder.encodeEnumeration(Status)
