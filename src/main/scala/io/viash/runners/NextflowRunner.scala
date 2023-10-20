@@ -179,8 +179,10 @@ final case class NextflowRunner(
     val processLabels = config.labels.map{ case (k, v) => s"withLabel: $k { $v }"}
     val inlineScript = config.script.toList
 
+    val name = f"${functionality.namespace.map(_ + "/").getOrElse("")}${functionality.name}"
+
     s"""manifest {
-    |  name = '${functionality.name}'
+    |  name = '${name}'
     |  mainScript = 'main.nf'
     |  nextflowVersion = '!>=20.12.1-edge'$versStr$descStr$authStr
     |}$profileStr
@@ -195,7 +197,6 @@ final case class NextflowRunner(
 
   // interpreted from BashWrapper
   def renderMainNf(config: Config, containerDirective: Option[DockerImageInfo]): String = {
-
     if (config.functionality.mainScript.isEmpty) {
       throw new RuntimeException("No main script defined")
     }

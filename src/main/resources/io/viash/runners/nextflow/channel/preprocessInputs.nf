@@ -34,7 +34,7 @@ def preprocessInputsDeprecationWarning() {
 def preprocessInputs(Map args) {
   preprocessInputsDeprecationWarning()
 
-  config = args.config
+  def config = args.config
   assert config instanceof Map : 
     "Error in preprocessInputs: config must be a map. " +
     "Expected class: Map. Found: config.getClass() is ${config.getClass()}"

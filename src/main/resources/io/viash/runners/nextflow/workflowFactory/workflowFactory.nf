@@ -99,12 +99,9 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
         tuple
       }
 
-    if (workflowArgs.filter) {
-      chModifiedFiltered = chModified
-        | filter{workflowArgs.filter(it)}
-    } else {
-      chModifiedFiltered = chModified
-    }
+    chModifiedFiltered = workflowArgs.filter ?
+      chModified | filter{workflowArgs.filter(it)} :
+      chModified
 
     if (workflowArgs.runIf) {
       runIfBranch = chModifiedFiltered.branch{ tup ->
@@ -118,15 +115,12 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       chPassthrough = Channel.empty()
     }
 
-    if (workflowArgs.fromState) {
-      chArgs = chRun
-        | map{
-          def new_data = workflowArgs.fromState(it.take(2))
-          [it[0], new_data]
-        }
-    } else {
-      chArgs = chRun
-    }
+    chArgs = workflowArgs.fromState ? 
+      chRun | map{
+        def new_data = workflowArgs.fromState(it.take(2))
+        [it[0], new_data]
+      } :
+      chRun
 
     // fill in defaults
     chArgsWithDefaults = chArgs
