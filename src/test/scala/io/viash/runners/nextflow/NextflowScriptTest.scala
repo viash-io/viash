@@ -123,6 +123,18 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
 
+  test("Test nested workflows", DockerTest, NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/test_wfs/nested/main.nf",
+      args = List(
+        "--publish_dir", "output"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+  } 
+
   test("Check whether --help is same as Viash's --help", NextflowTest) {
     // except that WorkflowHelper.nf will not print alternatives, and
     // will always prefix argument names with -- (so --foo, not -f or foo).
