@@ -1,0 +1,13 @@
+functionality:
+  name: nested
+  namespace: test_wfs
+  resources:
+    - type: nextflow_script
+      path: main.nf
+      entrypoint: base
+    # TODO: make absolute when the ns build uses the right CWD
+    - path: ../../../resources
+  dependencies:
+    - name: sub_workflow
+platforms:
+  - type: nextflow

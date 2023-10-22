@@ -1,0 +1,17 @@
+functionality:
+  name: sub_workflow
+  arguments:
+    - name: "--file"
+      type: file
+      direction: input
+    - name: "--output"
+      type: file
+      direction: output
+  resources:
+    - type: nextflow_script
+      path: main.nf
+      entrypoint: base
+  dependencies:
+    - name: step1
+platforms:
+  - type: nextflow
