@@ -113,6 +113,6 @@ private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params,
  *
  */
 def channelFromParams(Map params, Map config) {
-  processedParams = _paramsToParamSets(params, config)
+  def processedParams = _paramsToParamSets(params, config)
   return Channel.fromList(processedParams)
 }
