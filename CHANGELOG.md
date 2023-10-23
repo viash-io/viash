@@ -95,7 +95,7 @@ We added new 'dependencies' functionality to allow for more advanced functionali
   - Removed deprecated `paramsToChannel()`, `paramsToList()`, `viashChannel()`.
   - Deprecated `preprocessInputs()` -- use the wrapped Viash Nextflow functionality instead.
   - Refactored `preprocessInputs()` to make use of new helper functions.
-  - Reprecated run arguments `map`, `mapData`, `mapPassthrough`, `renameKeys`.
+  - Deprecated run arguments `map`, `mapData`, `mapPassthrough`, `renameKeys`.
 
 ## MINOR CHANGES
 
