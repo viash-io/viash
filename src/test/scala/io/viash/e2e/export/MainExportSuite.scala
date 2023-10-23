@@ -223,4 +223,47 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
     assert(lines.contains(""""$ref" : "#/definitions/Config""""))
   }
 
+  test("viash export json_schema --strict and --minimal variants") {
+    val testOutput = TestHelper.testMain(
+      "export", "json_schema"
+    )
+
+    val testOutputStrict = TestHelper.testMain(
+      "export", "json_schema",
+      "--strict"
+    )
+
+    val testOutputMinimal = TestHelper.testMain(
+      "export", "json_schema",
+      "--minimal"
+    )
+
+    val testOutputStrictMinimal = TestHelper.testMain(
+        "export", "json_schema",
+        "--strict", "--minimal"
+      )
+
+    assert(testOutput.stdout.startsWith("""$schema: "https://json-schema.org/draft-07/schema#""""))
+    assert(testOutput.stdout.contains("""- $ref: "#/definitions/Config""""))
+
+    assert(testOutputStrict.stdout.startsWith("""$schema: "https://json-schema.org/draft-07/schema#""""))
+    assert(testOutputStrict.stdout.contains("""- $ref: "#/definitions/Config""""))
+
+    assert(testOutputMinimal.stdout.startsWith("""$schema: "https://json-schema.org/draft-07/schema#""""))
+    assert(testOutputMinimal.stdout.contains("""- $ref: "#/definitions/Config""""))
+
+    assert(testOutputStrictMinimal.stdout.startsWith("""$schema: "https://json-schema.org/draft-07/schema#""""))
+    assert(testOutputStrictMinimal.stdout.contains("""- $ref: "#/definitions/Config""""))
+
+    // thresholds were chosen empirically
+    // at the time of writing:
+    // testOutput: 125424
+    // testOutputStrict: 98280
+    // testOutputMinimal: 30681
+    // testOutputStrictMinimal: 24191
+    assert (testOutput.stdout.length * 90 / 100 > testOutputStrict.stdout.length, s"strict output should be at least 10% smaller than default output. ${testOutput.stdout.length} vs ${testOutputStrict.stdout.length}")
+    assert (testOutput.stdout.length * 40 / 100 > testOutputMinimal.stdout.length, s"minimal output should be at least 60% smaller than default output. ${testOutput.stdout.length} vs ${testOutputMinimal.stdout.length}")
+    assert (testOutputMinimal.stdout.length * 90 / 100 > testOutputStrictMinimal.stdout.length, s"strict minimal output should be at least 10% smaller than minimal output. ${testOutputMinimal.stdout.length} vs ${testOutputStrictMinimal.stdout.length}")
+  }
+
 }
