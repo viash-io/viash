@@ -1,64 +1,7 @@
-# Viash 0.8.0-RC6 (2023-10-11): fix race condition issue in runEach
-
-This part of the changelog will be removed.
-
-# Viash 0.8.0-RC5 (2023-10-11): Fix run workflow
-
-This part of the changelog will be removed.
-
-* fix run workflow
-
-* fix 'safe'join helper function
-
-* fix 'safe'join helper once more
-
-* fix wf factory
-
-# Viash 0.8.0-RC4 (2023-10-10): Refactor Nextflow helper functions
-
-This part of the changelog will be removed.
-
-## MAJOR CHANGES
-
-* `NextflowPlatform`: Refactoring of helper functions (PR #557).
-  - Cleaned up `processConfig()`: Removed support for `functionality.inputs` and `functionality.outputs`
-  - Cleaned up `processConfig()`: Removed support for `.functionality.argument_groups[].argument` containing a list of argument ids as opposed to the arguments themselves.
-  - Rewrote `--param_list` parser.
-  - Removed unused function `applyConfig()` and `applyConfigToOneParamSet()`.
-  - Refactored `channelFromParams()` to make use of new helper functions.
-  - Removed deprecated `paramsToChannel()`, `paramsToList()`, `viashChannel()`.
-  - Deprecated `preprocessInputs()` -- use the wrapped Viash Nextflow functionality instead.
-  - Refactored `preprocessInputs()` to make use of new helper functions.
-  - Reprecated run arguments `map`, `mapData`, `mapPassthrough`, `renameKeys`.
-
-
-# Viash 0.8.0-RC3 (2023-10-07): More bugfixes, more Nextflow functionality
-
-This release contains more bugfixes related to the Nextflow code generation functionality.
-It also adds a new `runIf` argument to the `NextflowPlatform` which allows for conditional execution of modules.
-
-## NEW FUNCTIONALITY
-
-* `NextflowPlatform`: Added new `.run()` argument `runIf` - a function that determines whether the module should be run or not (PR #553).
-  If the `runIf` closure evaluates to `true`, then the module will be run. Otherwise it will be passed through without running.
-
-## MINOR CHANGES
-
-* `NextflowPlatform`: Rename internal VDSL3 variables to be more consistent with regular Viash component variables and avoid naming clashes (PR #553).
-
-## BUG FIXES
-
-* `export cli_autocomplete`: Fix output script format and hide `--loglevel` and `--colorize` (PR #544). Masked arguments are usable but might not be very useful to always display in help messages.
-
-# Viash 0.8.0-RC2 (2023-10-04): Some bugfixes
-
-Some bugfixes related to the new dependencies and Nextflow code generation functionality.
-
-This part of the changelog will be removed.
-
-# Viash 0.8.0-RC1 (2023-10-02): Nextflow workflows and dependencies
+# Viash 0.8.0 (2023-10-23): Nextflow workflows and dependencies
 
 Nextflow workflows definitions are picked up by Viash and assembled into a functional Nextflow workflow, reducing the amount of boilerplate code needed to be written by the user.
+It also adds a new `runIf` argument to the `NextflowPlatform` which allows for conditional execution of modules.
 We added new 'dependencies' functionality to allow for more advanced functionality to be offloaded and re-used in components and workflows.
 
 ## BREAKING CHANGES
@@ -102,6 +45,8 @@ We added new 'dependencies' functionality to allow for more advanced functionali
   Example input event: `["id", [input: file(...)]]`,
   Example output event: `["newid", [output: file(...), _meta: [join_id: "id"]]]`
 
+* `NextflowPlatform`: Added new `.run()` argument `runIf` - a function that determines whether the module should be run or not (PR #553).
+  If the `runIf` closure evaluates to `true`, then the module will be run. Otherwise it will be passed through without running.
 
 ## MAJOR CHANGES
 
@@ -111,11 +56,24 @@ We added new 'dependencies' functionality to allow for more advanced functionali
 
 * `NextflowPlatform`: Set default tag to `"$id"` (#521, PR #518).
 
+* `NextflowPlatform`: Refactoring of helper functions (PR #557).
+  - Cleaned up `processConfig()`: Removed support for `functionality.inputs` and `functionality.outputs`
+  - Cleaned up `processConfig()`: Removed support for `.functionality.argument_groups[].argument` containing a list of argument ids as opposed to the arguments themselves.
+  - Rewrote `--param_list` parser.
+  - Removed unused function `applyConfig()` and `applyConfigToOneParamSet()`.
+  - Refactored `channelFromParams()` to make use of new helper functions.
+  - Removed deprecated `paramsToChannel()`, `paramsToList()`, `viashChannel()`.
+  - Deprecated `preprocessInputs()` -- use the wrapped Viash Nextflow functionality instead.
+  - Refactored `preprocessInputs()` to make use of new helper functions.
+  - Reprecated run arguments `map`, `mapData`, `mapPassthrough`, `renameKeys`.
+
 ## MINOR CHANGES
 
 * `NextflowPlatform`: Throw error when unexpected keys are passed to the `.run()` method (#512, PR #518).
 
 * `NextflowPlatform`: Use `moduleDir` instead of `projectDir` to determine the resource directory.
+
+* `NextflowPlatform`: Rename internal VDSL3 variables to be more consistent with regular Viash component variables and avoid naming clashes (PR #553).
 
 ## DOCUMENTATION
 
@@ -126,6 +84,8 @@ We added new 'dependencies' functionality to allow for more advanced functionali
 * `WorkflowHelper.nf`: Only set default values of output files which are **not already set**, and if the output file argument is **not required** (PR #514).
 
 * `NextflowPlatform`: When using `fromState` and `toState`, do not throw an error when the state or output is missing an optional argument (PR #515).
+
+* `export cli_autocomplete`: Fix output script format and hide `--loglevel` and `--colorize` (PR #544). Masked arguments are usable but might not be very useful to always display in help messages.
 
 # Viash 0.7.5 (2023-08-11): Minor breaking changes and new features
 
