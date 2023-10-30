@@ -24,12 +24,11 @@ import io.viash.platforms.decodePlatform
 import io.viash.exceptions.ConfigParserValidationException
 
 package object config {
+  import io.viash.helpers.circe._
   import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
   import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
   import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
   import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
-
-  implicit val customConfig: Configuration = Configuration.default.withDefaults
 
   // encoders and decoders for Config
   implicit val encodeConfig: Encoder.AsObject[Config] = deriveConfiguredEncoderStrict[Config]
