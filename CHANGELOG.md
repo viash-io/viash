@@ -28,7 +28,7 @@ TODO add summary
 
 * `__merge__`: Handle invalid yaml during merging (PR #570). There was not enough error handling during this operation. Switched to the more advanced `Convert.textToJson` helper method.
 
-* `config`: Fix the main level of a component config not enforcing strict mode and instead allowing any field to be specified (PR #xxx).
+* `config`: Fix the main level of a component config not enforcing strict mode and instead allowing any field to be specified (PR #585).
   
 # Viash 0.8.0 (2023-10-23): Nextflow workflows and dependencies
 
