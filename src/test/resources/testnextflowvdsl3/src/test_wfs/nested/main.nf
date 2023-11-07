@@ -9,7 +9,7 @@ workflow base {
       file = tempFile()
       file.write("num: $num")
 
-      ["num$num", [ file: file ], ["extra": "foo!"]]
+      ["num$num", [ file: file ], ["num": num]]
     }
     | sub_workflow.run(
       toState: {id, output, state -> 
@@ -21,9 +21,8 @@ workflow base {
         return newState
       }
     )
-    | map {tup -> [tup[0], tup[1]]}
-    | view{ id, state ->
-      def num = state.num
+    | view{ id, state, extra ->
+      def num = extra.num
 
       // check id
       assert id == "num$num": "id should be 'num$num'. Found: '$id'"
