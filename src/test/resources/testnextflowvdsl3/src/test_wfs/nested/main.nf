@@ -9,10 +9,9 @@ workflow base {
       file = tempFile()
       file.write("num: $num")
 
-      ["num$num", [ num: num, file: file ]]
+      ["num$num", [ file: file ], ["extra": "foo!"]]
     }
     | sub_workflow.run(
-      fromState: ["file": "file"],
       toState: {id, output, state -> 
         def newState = [
           "step1_output": output.output, 
@@ -22,6 +21,7 @@ workflow base {
         return newState
       }
     )
+    | map {tup -> [tup[0], tup[1]]}
     | view{ id, state ->
       def num = state.num
 
