@@ -28,13 +28,13 @@ TODO add summary
 
 * `__merge__`: Handle invalid yaml during merging (PR #570). There was not enough error handling during this operation. Switched to the more advanced `Convert.textToJson` helper method.
 
+# Viash 0.8.1 (2023-11-20): Minor bug fix to Nextflow workflows
 
-
-
+This release fixes a bug in the Nextflow platform where calling a workflow with the `.run()` function without specifying the `fromState` argument would result in an error when the input channel contained tuples with more than two elements.
 
 ## BUG FIXES
 
-* `NextflowPlatform`: Fix `Invalid method invocation 'call'` error when using `.run()` without `fromState` defined and the input channel holds tuples with more than two elements (PR #587). This issue also impacts some other helper functionality like `runEach()`. 
+ `NextflowPlatform`: Fix error when using `.run()` without using `fromState` and the input channel holds tuples with more than two elements (PR #587).
 
 # Viash 0.8.0 (2023-10-23): Nextflow workflows and dependencies
 
