@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## BUG FIXES
+
+* `NextflowPlatform`: Fix `Invalid method invocation 'call'` error when using `.run()` without `fromState` defined and the input channel holds tuples with more than two elements (PR #587). This issue also impacts some other helper functionality like `runEach()`. 
+
 # Viash 0.8.0 (2023-10-23): Nextflow workflows and dependencies
 
 Nextflow workflows definitions are picked up by Viash and assembled into a functional Nextflow workflow, reducing the amount of boilerplate code needed to be written by the user.
