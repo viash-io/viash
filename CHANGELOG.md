@@ -1,3 +1,7 @@
+# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+
+TODO add summary
+
 # Viash 0.8.1 (2023-11-20): Minor bug fix to Nextflow workflows
 
 This release fixes a bug in the Nextflow platform where calling a workflow with the `.run()` function without specifying the `fromState` argument would result in an error when the input channel contained tuples with more than two elements.
