@@ -120,7 +120,7 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
         def new_data = workflowArgs.fromState(it.take(2))
         [it[0], new_data]
       } :
-      chRun
+      chRun | map {tup -> tup.take(2)}
 
     // fill in defaults
     chArgsWithDefaults = chArgs
