@@ -1,3 +1,11 @@
+# Viash 0.8.1 (2023-11-20): Minor bug fix to Nextflow workflows
+
+This release fixes a bug in the Nextflow platform where calling a workflow with the `.run()` function without specifying the `fromState` argument would result in an error when the input channel contained tuples with more than two elements.
+
+## BUG FIXES
+
+ `NextflowPlatform`: Fix error when using `.run()` without using `fromState` and the input channel holds tuples with more than two elements (PR #587).
+
 # Viash 0.8.0 (2023-10-23): Nextflow workflows and dependencies
 
 Nextflow workflows definitions are picked up by Viash and assembled into a functional Nextflow workflow, reducing the amount of boilerplate code needed to be written by the user.
