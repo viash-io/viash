@@ -1,10 +1,10 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.8.1 (2023-11-20): Minor bug fix to Nextflow workflows
 
-TODO add summary
+This release fixes a bug in the Nextflow platform where calling a workflow with the `.run()` function without specifying the `fromState` argument would result in an error when the input channel contained tuples with more than two elements.
 
 ## BUG FIXES
 
-* `NextflowPlatform`: Fix `Invalid method invocation 'call'` error when using `.run()` without `fromState` defined and the input channel holds tuples with more than two elements (PR #587). This issue also impacts some other helper functionality like `runEach()`. 
+ `NextflowPlatform`: Fix error when using `.run()` without using `fromState` and the input channel holds tuples with more than two elements (PR #587).
 
 # Viash 0.8.0 (2023-10-23): Nextflow workflows and dependencies
 
