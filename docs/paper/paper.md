@@ -1,0 +1,120 @@
+---
+title: 'Viash: A meta-framework for building reusable workflow modules'
+bibliography: library.bib
+authors:
+- name: Robrecht Cannoodt
+  email: robrecht@data-intuitive.com
+  orcid: 0000-0003-3641-729X
+  corresponding: yes
+  affiliation: 1, 2, 3
+- name: Hendrik Cannoodt
+  affiliation: '1'
+- name: Dries Schaumont
+  affiliation: '1'
+- name: Kai Waldrant
+  affiliation: '1'
+- name: Eric Van de Kerckhove
+  affiliation: '1'
+- name: Andy Boschmans
+  affiliation: '1'
+- name: Dries De Maeyer
+  affiliation: '4'
+- name: Toni Verbeiren
+  email: toni@data-intuitive.com
+  corresponding: yes
+  affiliation: '1'
+affiliations:
+- name: Data Intuitive, Lebbeke, Belgium
+  index: 1
+- name: Data Mining and Modelling for Biomedicine group, VIB Center for Inflammation
+    Research, Ghent, Belgium
+  index: 2
+- name: Department of Applied Mathematics, Computer Science, and Statistics, Ghent
+    University, Ghent, Belgium
+  index: 3
+- name: Discovery Technology and Molecular Pharmacology, Janssen Research & Development,
+    Pharmaceutical Companies of Johnson & Johnson, Beerse, Belgium
+  index: 4
+tags:
+- Bioinformatics
+- Workflows
+- Software development
+- Reproducibility
+- Cloud computing
+- Docker
+- Nextflow
+---
+
+
+
+
+
+# Abstract
+Most bioinformatics pipelines consist of software components that are tightly coupled to the logic of the pipeline itself. This limits reusability of the individual components in the pipeline or introduces maintenance overhead when they need to be reimplemented in multiple pipelines. We introduce Viash, a tool for speeding up development of robust pipelines through "code-first" prototyping, separation of concerns and code generation of modular pipeline components. By decoupling the component functionality from the pipeline logic, component functionality becomes fully pipeline-agnostic, and conversely the resulting pipelines are agnostic towards specific component requirements. This separation of concerns improves reusability of components and facilitates multidisciplinary and pan-organisational collaborations. It has been applied in a variety of projects, from proof-of-concept pipelines to supporting an international data science competition.
+
+Viash is available as an open-source project at [github.com/viash-io/viash](https://github.com/viash-io/viash) and documentation is available at [viash.io](https://viash.io).
+
+
+
+# Statement of Need
+Recent developments in high-throughput RNA sequencing and imaging technologies allow present-day biologists to observe single-cell characteristics in ever more detail [@luecken_currentbestpractices_2019]. As the dataset size and the complexity of bioinformatics workflows increases, so does the need for scalable and reproducible data science. In single cell biology, recent efforts to standardise some of the most common single-cell analyses [@amezquita_orchestratingsinglecell_2020; @nfcoreframeworkcommunity_ewels2020; @huemos_bestpracticessingle_2023] tackle these challenges by using a pipeline frameworks (e.g. Snakemake [@koster_snakemakescalablebioinformaticsworkflow_2012], Nextflow [@ditommaso_nextflowenablesreproducible_2017]), containerisation (e.g. Docker [@merkel_dockerlightweight_2014], Singularity/Apptainer [@kurtzer_singularityscientificcontainers_2017], Podman [@heon_podmantoolmanaging_2018]) and horizontal scaling in cloud computing (e.g. Kubernetes, HPC).
+
+Since research projects are increasingly more complex and interdisciplinary, researchers from different fields and backgrounds are required to join forces. This implies that not all project contributors can be experts in computer science. The chosen framework for such projects therefore needs to have a low barrier to entry in order for contributors to be able to participate. One common pitfall which greatly increases the barrier to entry is tightly coupling a pipeline and the components it consists of. Major drawbacks include lower transparency of the overall workflow, limited reusability of pipeline components, increased complexity, debugging time increase and a greater amount of time spent refactoring and maintaining boilerplate code. Non-expert developers in particular will experience more arduous debugging sessions as they need to treat the pipeline as a black box.
+
+In this work we introduce Viash, a tool for speeding up pipeline prototyping through code generation, component modularity and separation of concerns. With Viash, a user can create a pipeline module by writing a small script or using a pre-existing code block, adding a small amount of metadata, and using Viash to generate the boilerplate code needed to turn it into a modular Nextflow component. This separates the component functionality from the pipeline workflow, thereby allowing a component developer to focus on implementing the required functionality using the domain-specific toolkit at hand while being completely agnostic to the chosen pipeline framework. Similarly, a pipeline developer can design a pipeline by chaining together Viash modules while being completely agnostic to the scripting language used in the component.
+
+
+
+# Core features and functionality
+Viash is an open-source embodiment of a ‘code-first’ concept for pipeline development. Many bioinformatics research projects (and other software development projects) start with prototyping functionality in small scripts or notebooks in order to then migrate the functionality to software packages or pipeline frameworks. By adding some metadata to a code block or script (\autoref{fig-overview}A), Viash can turn a (small) code block into a highly malleable object. By encapsulating core functionality in modular building blocks, a Viash component can be used in a myriad of ways (\autoref{fig-overview}B-C): export it as a standalone command-line tool; create a highly intuitive and modular Nextflow component; ensure reproducibility by building, pulling, or pushing Docker containers; or running one or more unit tests to verify that the component works as expected. Integration with CI tools such as GitHub Actions, Jenkins or Travis CI allows for automation of unit testing, rolling releases and versioned releases.
+
+The definition of a Viash component -- a config and a code block -- can be implemented quite concisely (\autoref{fig-cheatsheet}left). Viash currently supports different scripting languages, including Bash, JavaScript, Python and R. Through the use of several subcommands (\autoref{fig-cheatsheet}right), Viash can build the component into a standalone script using one of three backend platforms -- native, Docker, or Nextflow. Additional commands allow processing one or more Viash components simultaneously, e.g. for executing a unit test suite or (re-)building component-specific Docker images.
+
+One major benefit of using code regeneration is that best practices in pipeline development can automatically be applied, whereas otherwise this would be left up to the developer to develop and maintain. For instance, all standalone executables, Nextflow modules and Docker images are automatically versioned. When parsing command-line arguments, checking for the availability of required parameters, the existence of required input files, or the type-checking of command-line arguments is also automated.  Another example is helper functions for installing software through tools such as apt, apk, yum, pip or R devtools, as these sometimes require additional pre-install commands to update package registries or post-install commands to clean up the installation cache to reduce image size of the resulting image. Here, Viash could be the technical basis for a community of people committed to sharing components that everybody can benefit from.
+
+
+# State of the field
+Nextflow, Snakemake, CWL, and WDL represent leading workflow management systems that the bioinformatics community increasingly relies upon.
+
+Nextflow stands out for its expertise in crafting data-driven computational pipelines, leveraging software containers to ensure both scalability and reproducibility, making it exceptionally suitable for demanding computational landscapes.
+
+Snakemake combines the intuitiveness of Python scripting with the reliability of a make-like execution methodology, providing both ease and efficiency.
+
+CWL (Common Workflow Language) champions a standardised approach to defining tasks and workflows. Its commitment to uniformity translates to seamless reproducibility and adaptability across a myriad of computational settings.
+
+WDL (Workflow Description Language) offers an elegant means of detailing data processing workflows through its user-friendly and interpretable syntax.
+
+Though each framework boasts unique advantages, mastering their intricate language specifications can be daunting. Insufficient proficiency might jeopardise the integrity and reproducibility of the resulting scientific findings.
+
+Viash offers a solution to this challenge. It empowers users to develop components in their preferred programming language and, through the efforts of this project, will seamlessly bridge the gap to cutting-edge Nextflow, Snakemake, and WDL modules.
+
+
+
+
+# Applications in bioinformatics
+Ultimately, Viash aims to support pan-organisational and interdisciplinary research projects by simplifying collaborative development and maintenance of (complex) pipelines. While Viash is generally applicable to any field where scalable and reproducible data processing pipelines are needed, one field where it is particularly useful is in single-cell bioinformatics since it supports most of the commonly used technologies in this field, namely Bash, Python, R, Docker, and Nextflow.
+
+The OpenProblems-NeurIPS2021 organised by OpenProblems demonstrates the practical value of Viash [@luecken_sandboxpredictionintegration_2021]. As part of the preparation for the competition, a pilot benchmark was implemented to evaluate and compare the performance of a few baseline methods (\autoref{fig-usecase}A). By pre-defining the input-output interfaces of several types of components (e.g. dataset loaders, baseline methods, control methods, metrics), developers from different organisations across the globe could easily contribute Viash components to the pipeline (\autoref{fig-usecase}B). Since Viash automatically generates Docker containers and Nextflow pipelines from the meta-data provided by component developers, developers could contribute components whilst making use of their programming environment of choice without needing to have any expert knowledge of Nextflow or Amazon EC2 (\autoref{fig-usecase}C). Thanks to the modularity of Viash components, the same components used in running a pilot benchmark are also used by the evaluation worker of the competition website itself. As such, the pilot benchmark also serves as an integration test of the evaluation worker.
+
+
+# Discussion
+Viash is under active development. Active areas of development include expanded compatibility between Viash and other technologies (i.e. additional scripting languages, containerisation frameworks and pipeline frameworks), and ease-of-use functionality for developing and managing  large catalogues of Viash components (e.g. simplified continuous integration, allowing project-wide settings, automating versioned releases).
+
+We appreciate and encourage contributions to or extensions of Viash. All source code is available under a GPL-3 licence on Github at [github.com/viash-io/viash](https://github.com/viash-io/viash). Extensive user documentation is available at [viash.io](https://viash.io). Requests for support or expanded functionality can be addressed to the corresponding authors.
+
+
+![Viash allows easy prototyping of reusable pipeline components. **A:** Viash requires two main inputs, a script (or code block) and a Viash config file. A Viash config file is a YAML file with metadata describing the functionality provided by the component (e.g. a name and description of the component and its parameters), and platform-specific metadata (e.g. the base Docker container to use, which software packages are required by the component). Optionally, the quality of the component can be improved by defining one or more unit tests with which the component functionality can be tested. **B:** Viash allows transforming a given config to a variety of different outputs. **C:** Viash supports robust pipeline development by allowing users to build their component as a standalone executable (with auto-generated CLI), build a Docker image to run the script inside, or turn the component into a standalone Nextflow module or workflow. If unit tests were defined, Viash can also run all of the unit tests and provide users with a report.\label{fig-overview}](figures/figure_2.pdf)
+
+
+![Cheat sheet for developing modular pipeline components with Viash, including a sample Viash component (**left**) and common commands used throughout the various stages of a development cycle (**right**).\label{fig-cheatsheet}](figures/figure_3.pdf)
+ 
+
+
+![A recent NeurIPS competition for multimodal data integration [@luecken_sandboxpredictionintegration_2021] demonstrates the practical value of Viash by using Bash, R, Python, Docker, Nextflow, Viash, and Amazon EC2 as core technologies to run a pilot benchmark. **A:** The pilot benchmark pipeline consists of several types of components, each of which had strict predefined input-output interfaces. **B:** Comparing which organisations contributed one or more Viash components to the pipeline demonstrates that Viash allows multiple organisations to participate in developing a pipeline collaboratively. Note: this visualisation pertains to one aspect of organising the NeurIPS competition, and does not at all reflect the overall efforts made by any party. **C:** Developers are encouraged to implement components in their preferred scripting language. Thanks to the modularity provided by Viash, sewing together multiple components into a Nextflow pipeline can be left up to a few developers, without requiring all collaborators to have expert knowledge regarding infrastructure-specific technologies.\label{fig-usecase}](figures/figure_4.pdf)
+
+
+# References
+
+
+
+
