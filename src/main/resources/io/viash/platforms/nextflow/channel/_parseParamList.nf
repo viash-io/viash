@@ -87,24 +87,14 @@ def _parseParamList(param_list, Map config) {
   // The paths of input files inside a param_list file may have been specified relatively to the
   // location of the param_list file. These paths must be made absolute.
   if (paramListPath) {
-
-    // functionality to resolve a single path (as String) relative to the param_list file
-    // but only if the file does not specify a remote path 
-    def resolveIfNotRemote = { path, parentPath -> 
-      if (path instanceof String && FileHelper.getUrlProtocol(path) == null) {
-        return parentPath.resolveSibling(path) 
-      }
-      return path
-    }
-
     paramSets = paramSets.collect({ id, data ->
       def new_data = data.collectEntries{ parName, parValue ->
         def par = config.functionality.allArguments.find{it.plainName == parName}
         if (par && par.type == "file" && par.direction == "input") {
           if (parValue instanceof Collection) {
-            parValue = parValue.collect{path -> resolveIfNotRemote(path, paramListPath)}
+            parValue = parValue.collect{path -> _resolveSiblingIfNotAbsolute(path, paramListPath)}
           } else {
-            parValue = resolveIfNotRemote(parValue, paramListPath) 
+            parValue = _resolveSiblingIfNotAbsolute(parValue, paramListPath) 
           }
         }
         [parName, parValue]
