@@ -1,3 +1,5 @@
+import nextflow.file.FileHelper
+
 /**
   * Figure out the param list format based on the file extension
   *
@@ -81,20 +83,28 @@ def _parseParamList(param_list, Map config) {
     data = _splitParams(data, config)
     [id, data]
   })
-  
+    
   // The paths of input files inside a param_list file may have been specified relatively to the
   // location of the param_list file. These paths must be made absolute.
   if (paramListPath) {
+
+    // functionality to resolve a single path (as String) relative to the param_list file
+    // but only if the file does not specify a remote path 
+    def resolveIfNotRemote = { path, parentPath -> 
+      if (path instanceof String && FileHelper.getUrlProtocol(path) == null) {
+        return parentPath.resolveSibling(path) 
+      }
+      return path
+    }
+
     paramSets = paramSets.collect({ id, data ->
       def new_data = data.collectEntries{ parName, parValue ->
         def par = config.functionality.allArguments.find{it.plainName == parName}
         if (par && par.type == "file" && par.direction == "input") {
           if (parValue instanceof Collection) {
-            parValue = parValue.collect{path ->
-              path instanceof String ? paramListPath.resolveSibling(path) : path
-            }
+            parValue = parValue.collect{path -> resolveIfNotRemote(path, paramListPath)}
           } else {
-            parValue = parValue instanceof String ? paramListPath.resolveSibling(parValue) : parValue
+            parValue = resolveIfNotRemote(parValue, paramListPath) 
           }
         }
         [parName, parValue]

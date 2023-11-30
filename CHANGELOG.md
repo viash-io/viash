@@ -1,6 +1,8 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.8.2 (yyyy-MM-dd): TODO Add title
 
-TODO add summary
+## BUG FIXES
+
+`NextflowPlatform`: Do not resolve remote paths relative to the --param_list file (PR #592).
 
 # Viash 0.8.1 (2023-11-20): Minor bug fix to Nextflow workflows
 
