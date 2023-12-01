@@ -5,9 +5,10 @@ TODO add summary
 ## MINOR CHANGES
 
 * `NextflowTestHelper`: Do not hardcode a version of Nextflow in the testbench, 
-  but use the version of Nextflow that is installed on the system.
+  but use the version of Nextflow that is installed on the system (PR #593).
 
-* GitHub Actions: Test different versions of Nextflow (22.04.5, latest, and latest-edge).
+* GitHub Actions: Test different versions of Nextflow (22.04.5, latest, and latest-edge) (PR #593).
+  Testing the latest Edge version of Nextflow will allow us to catch notice changes in Nextflow earlier.
 
 # Viash 0.8.1 (2023-11-20): Minor bug fix to Nextflow workflows
 
