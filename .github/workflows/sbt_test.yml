@@ -80,6 +80,7 @@ jobs:
         fi
 
     - name: Run simple groovy functions test
+      if: ${{ runner.os == 'Linux' && matrix.java.run_nextflow }}
       run: |
         readarray -d '' nextflowscripts < <(find src/test/platforms/nextflow/functions -name "*.nf" -print0)
         for script in "${nextflowscripts[@]}"
