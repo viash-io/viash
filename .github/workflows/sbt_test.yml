@@ -14,9 +14,9 @@ jobs:
           - { name: 'ubuntu_latest', os: ubuntu-latest }
           - { name: 'macos_latest', os: macos-latest }
         java:
-          - { ver: '11', run_nextflow: true, run_coverage: false }
-          - { ver: '17', run_nextflow: true, run_coverage: true }
-          - { ver: '20', run_nextflow: false, run_coverage: false }
+          - { ver: '11', run_nextflow: true, run_coverage: false, nxf_ver: "22.04.5" }
+          - { ver: '17', run_nextflow: true, run_coverage: true, nxf_ver: latest }
+          - { ver: '20', run_nextflow: true, run_coverage: false, nxf_ver: latest-edge }
 
     steps:
     - uses: actions/checkout@v4
@@ -26,12 +26,9 @@ jobs:
 
     - name: Set up Nextflow
       if: ${{ runner.os == 'Linux' && matrix.java.run_nextflow }}
-      run: |
-        mkdir -p "$HOME/.local/bin"
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
-        curl -s https://get.nextflow.io 2> /dev/null | bash > /dev/null
-        mv nextflow "$HOME/.local/bin"
-        nextflow -version
+      uses: nf-core/setup-nextflow@v1
+      with:
+        version: ${{ matrix.java.nxf_ver }}
 
     - name: Set up R
       uses: r-lib/actions/setup-r@v2

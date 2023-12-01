@@ -2,6 +2,13 @@
 
 TODO add summary
 
+## MINOR CHANGES
+
+* `NextflowTestHelper`: Do not hardcode a version of Nextflow in the testbench, 
+  but use the version of Nextflow that is installed on the system.
+
+* GitHub Actions: Test different versions of Nextflow (22.04.5, latest, and latest-edge).
+
 # Viash 0.8.1 (2023-11-20): Minor bug fix to Nextflow workflows
 
 This release fixes a bug in the Nextflow platform where calling a workflow with the `.run()` function without specifying the `fromState` argument would result in an error when the input channel contained tuples with more than two elements.
