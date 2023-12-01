@@ -79,6 +79,14 @@ jobs:
           sbt test
         fi
 
+    - name: Run simple groovy functions test
+      run: |
+        readarray -d '' nextflowscripts < <(find src/test/platforms/nextflow/functions -name "*.nf" -print0)
+        for script in "${nextflowscripts[@]}"
+        do
+          nextflow run . -main-script "$script"
+        done
+
     - name: Upload coverage on success
       run: bash <(curl -s https://codecov.io/bash)
 
