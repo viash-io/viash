@@ -1,5 +1,3 @@
-import nextflow.file.FileHelper
-
 /**
   * Figure out the param list format based on the file extension
   *
@@ -83,7 +81,7 @@ def _parseParamList(param_list, Map config) {
     data = _splitParams(data, config)
     [id, data]
   })
-    
+  
   // The paths of input files inside a param_list file may have been specified relatively to the
   // location of the param_list file. These paths must be made absolute.
   if (paramListPath) {
