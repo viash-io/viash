@@ -6,14 +6,13 @@
   *
   * @return The path that may have been resovled, as a Path.
   */
-
 def _resolveSiblingIfNotAbsolute(str, parentPath) {
   if (str !instanceof String) {
     return str
   }
-  strAsPath = file(str, hidden: true, relative: true)
-  if (!strAsPath.isAbsolute()) {
-    return parentPath.resolveSibling(str) 
+  if (_stringIsAbsolutePath(str)) {
+    return parentPath.resolveSibling(str)
+  } else {
+    return file(str, hidden: true)
   }
-  return strAsPath
 }
