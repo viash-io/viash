@@ -16,7 +16,7 @@ jobs:
         java:
           - { ver: '11', run_nextflow: true, run_coverage: false, nxf_ver: "22.04.5" }
           - { ver: '17', run_nextflow: true, run_coverage: true, nxf_ver: latest }
-          - { ver: '21', run_nextflow: true, run_coverage: false, nxf_ver: latest-edge }
+          - { ver: '20', run_nextflow: true, run_coverage: false, nxf_ver: latest-edge }
 
     steps:
     - uses: actions/checkout@v4
