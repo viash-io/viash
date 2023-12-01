@@ -12,5 +12,5 @@ def _stringIsAbsolutePath(path) {
   _resolve_URL_PROTOCOL = ~/^([a-zA-Z][a-zA-Z0-9]*:)?\\/.+/
 
   assert path instanceof String
-  return (path =~ _resolve_URL_PROTOCOL).size() > 0
+  return _resolve_URL_PROTOCOL.matcher(path).matches()
 }

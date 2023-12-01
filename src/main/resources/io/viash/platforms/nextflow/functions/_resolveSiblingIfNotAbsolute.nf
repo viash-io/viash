@@ -10,7 +10,7 @@ def _resolveSiblingIfNotAbsolute(str, parentPath) {
   if (str !instanceof String) {
     return str
   }
-  if (_stringIsAbsolutePath(str)) {
+  if (!_stringIsAbsolutePath(str)) {
     return parentPath.resolveSibling(str)
   } else {
     return file(str, hidden: true)
