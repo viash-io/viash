@@ -92,7 +92,10 @@ def _parseParamList(param_list, Map config) {
         def par = config.functionality.allArguments.find{it.plainName == parName}
         if (par && par.type == "file" && par.direction == "input") {
           if (parValue instanceof Collection) {
-            parValue = parValue.collect{path -> _resolveSiblingIfNotAbsolute(path, paramListPath)}
+            parValue = parValue.collectMany{path -> 
+              def x = _resolveSiblingIfNotAbsolute(path, paramListPath)
+              x instanceof Collection ? x : [x]
+            }
           } else {
             parValue = _resolveSiblingIfNotAbsolute(parValue, paramListPath) 
           }
