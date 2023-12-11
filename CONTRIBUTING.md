@@ -38,6 +38,9 @@ The following dependencies are required for passing some of the tests.
 
 * Create a new branch for your changes. It's best to keep your changes separate from the `develop` branch.
 
+```bash
+git branch -b your-branch-name
+
 ## Making changes
 
 * Code Standards: Ensure your code adheres to the [Scala style guide](https://docs.scala-lang.org/style/).
