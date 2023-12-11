@@ -24,6 +24,8 @@ TODO add summary
 
 * `logging`: Preserve log order of StdOut and StdErr messages during reading configs in namespaces (PR #571).
 
+* `Java 21 support`: Update Scala to 2.13.12 and update dependencies (PR #602).
+
 ## BUG FIXES
 
 * `__merge__`: Handle invalid yaml during merging (PR #570). There was not enough error handling during this operation. Switched to the more advanced `Convert.textToJson` helper method.
