@@ -77,10 +77,10 @@ The following dependencies are required for passing some of the tests.
   git add file1 file2 file3
   ```
 
-* Commit your changes: Once you're happy with your changes, commit them to your branch.
+* Commit your changes: Once you're happy with your changes, commit them to your branch. A commit message should consist of a short summary of the changes, followed by an empty line and a more detailed description. For trivial changes, the more detailed description can be omitted.
 
   ```sh
-  git commit -m "Add a brief description of your changes"
+  git commit
   ```
 
 * Push to your fork: Push your changes to your fork on GitHub.
