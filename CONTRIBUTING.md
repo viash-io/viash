@@ -1,7 +1,6 @@
 # Contributing
 
-We welcome any contributions to this project, be it changes in documentation, bug fixes, new functionality, or even new packages if they fit the scope of our project.  By participating in this project, you
-agree to abide by our [code of conduct](CONDUCT.md).
+Welcome to the Viash project, and thank you for considering contributing! We are open to a variety of contributions, including documentation updates, bug fixes, new features, and more. By participating in this project, you agree to abide by our [Code of Conduct](CONDUCT.md).
 
 ## Getting Started
 
@@ -61,7 +60,12 @@ The following dependencies are required for passing some of the tests.
 
 ## Submitting your changes
 
-* Update the Changelog: Add a new entry to the [CHANGELOG.md](CHANGELOG.md) file that describes your changes. Follow the existing format for entries.
+* Update the Changelog: Add a new entry to the [CHANGELOG.md](CHANGELOG.md) file that describes your changes. This entry should follow the following format:
+
+  ```markdown
+  * `AffectedComponent`: A short description of the proposed changes (#issue, PR #pr, by @contributor).
+    Additional information to motivate the proposed changes, if need be.
+  ```
 
 * Commit Your Changes: Once you're happy with your changes, commit them to your branch.
 

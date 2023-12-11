@@ -10,7 +10,14 @@ TODO add summary
 * GitHub Actions: Test different versions of Nextflow (22.04.5, latest, and latest-edge) (PR #593).
   Testing the latest Edge version of Nextflow will allow us to catch notice changes in Nextflow earlier.
 
-* Add contributing guidelines (#598, PR #600).
+* Updates to the documentation and templates in the Git repo (#598, PR #600):
+
+  - Add contributing guidelines.
+
+  - Add issue templates.
+
+  - Reworked the pull request template.
+
 
 # Viash 0.8.1 (2023-11-20): Minor bug fix to Nextflow workflows
 
