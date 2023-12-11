@@ -16,7 +16,7 @@ jobs:
         java:
           - { ver: '11', run_nextflow: true, run_coverage: false }
           - { ver: '17', run_nextflow: true, run_coverage: true }
-          - { ver: '21', run_nextflow: true, run_coverage: false }
+          - { ver: '21', run_nextflow: false, run_coverage: false }
 
     steps:
     - uses: actions/checkout@v4
