@@ -2,7 +2,7 @@
 
 Welcome to the Viash project, and thank you for considering contributing! We are open to a variety of contributions, including documentation updates, bug fixes, new features, and more. By participating in this project, you agree to abide by our [Code of Conduct](CONDUCT.md).
 
-## Getting Started
+## Getting started
 
 * If you don't have one already, create a [GitHub account](https://github.com/signup/join).
 
@@ -38,16 +38,17 @@ The following dependencies are required for passing some of the tests.
 
 * Create a new branch for your changes. It's best to keep your changes separate from the `develop` branch.
 
-```bash
-git branch -b your-branch-name
+  ```bash
+  git branch -b your-branch-name
+  ```
 
 ## Making changes
 
-* Code Standards: Ensure your code adheres to the [Scala style guide](https://docs.scala-lang.org/style/).
+* Code standards: Ensure your code adheres to the [Scala style guide](https://docs.scala-lang.org/style/).
 
-* Write Tests: If you add new features or fix bugs, write tests that cover your changes. Our project uses sbt for testing.
+* Write tests: If you add new features or fix bugs, write tests that cover your changes. Our project uses sbt for testing.
 
-* Run Tests Locally: Before submitting your changes, make sure all tests pass locally. Our GitHub Actions CI pipeline performs tests on different environments, but it's good practice to check everything beforehand.
+* Run tests locally: Before submitting your changes, make sure all tests pass locally. Our GitHub Actions CI pipeline performs tests on different environments, but it's good practice to check everything beforehand.
 
   ```bash
   sbt test
@@ -63,7 +64,7 @@ git branch -b your-branch-name
 
 ## Submitting your changes
 
-* Update the Changelog: Add a new entry to the [CHANGELOG.md](CHANGELOG.md) file that describes your changes. This entry should follow the following format:
+* Update the changelog: Add a new entry to the [CHANGELOG.md](CHANGELOG.md) file that describes your changes. This entry should follow the following format:
 
   ```markdown
   * `AffectedComponent`: A short description of the proposed changes (#issue, PR #pr, by @contributor).
@@ -76,20 +77,21 @@ git branch -b your-branch-name
   git add file1 file2 file3
   ```
 
+* Commit your changes: Once you're happy with your changes, commit them to your branch.
 
   ```sh
   git commit -m "Add a brief description of your changes"
   ```
 
-* Push to Your Fork: Push your changes to your fork on GitHub.
+* Push to your fork: Push your changes to your fork on GitHub.
 
   ```sh
   git push origin your-branch-name
   ```
 
-* Create a Pull Request: Go to the viash-io/viash repository on GitHub and create a new pull request. Describe your changes and submit it for review.
+* Create a pull pequest: Go to the viash-io/viash repository on GitHub and create a new pull request. Describe your changes and submit it for review.
 
-## Review Process
+## Review process
 
 Our team will review your pull request. We might ask for changes or clarifications. Keep an eye on your pull request for feedback.
 
