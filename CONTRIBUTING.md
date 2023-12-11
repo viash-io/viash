@@ -70,7 +70,12 @@ git branch -b your-branch-name
     Additional information to motivate the proposed changes, if need be.
   ```
 
-* Commit Your Changes: Once you're happy with your changes, commit them to your branch.
+* Stage any changed or added files.
+
+  ```sh
+  git add file1 file2 file3
+  ```
+
 
   ```sh
   git commit -m "Add a brief description of your changes"
