@@ -18,6 +18,9 @@ TODO add summary
 
   - Reworked the pull request template.
 
+## BUG FIXES
+
+* `config`: Fix the main level of a component config not enforcing strict mode and instead allowing any field to be specified (PR #585).
 
 # Viash 0.8.1 (2023-11-20): Minor bug fix to Nextflow workflows
 
