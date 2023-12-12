@@ -88,9 +88,7 @@ object Repository {
   // We just fetched a code base and we have to assume it will not change within this session.
   private val cachedRepos = scala.collection.mutable.ListBuffer[Repository]()
   private def getCachedRepository(repo: Repository): Option[Repository] = {
-    // We can't compare names because they don't hold actual information and can change between configs but still point to the same code base.
-    // val anonymizedRepo = repo.copyRepo(name = "")
-    // Compare anonymized repos. Don't compare localPath as that is the information we're looking for.
+    // Don't compare localPath as that is the information we're looking for.
     val foundRepo = cachedRepos.find(p => p.copyRepo(localPath = "").equals(repo))
     // Map Some(foundRepo) to original repo but with localPath filled in, returns None if no cache found.
     foundRepo.map(r => repo.copyRepo(localPath = r.localPath))
