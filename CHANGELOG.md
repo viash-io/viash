@@ -14,6 +14,18 @@ TODO add summary
 * GitHub Actions: Test different versions of Nextflow (22.04.5, latest, and latest-edge) (PR #593).
   Testing the latest Edge version of Nextflow will allow us to catch notice changes in Nextflow earlier.
 
+* Updates to the documentation and templates in the Git repo (#598, PR #600):
+
+  - Add contributing guidelines.
+
+  - Add issue templates.
+
+  - Reworked the pull request template.
+
+## BUG FIXES
+
+* `config`: Fix the main level of a component config not enforcing strict mode and instead allowing any field to be specified (PR #585).
+
 # Viash 0.8.1 (2023-11-20): Minor bug fix to Nextflow workflows
 
 This release fixes a bug in the Nextflow platform where calling a workflow with the `.run()` function without specifying the `fromState` argument would result in an error when the input channel contained tuples with more than two elements.
