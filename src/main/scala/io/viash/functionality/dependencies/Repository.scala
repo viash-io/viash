@@ -63,19 +63,16 @@ object Repository {
     str match {
       case sugarSyntaxRegex("git+https", uri, tag) =>
         Some(GitRepository(
-          "TODO generate name",
           uri = "https://" + uri,
           tag = getGitTag(tag)
         ))
       case sugarSyntaxRegex("github", repo, tag) =>
         Some(GithubRepository(
-          "TODO generate name",
           repo = repo,
           tag = getGitTag(tag)
         ))
       case sugarSyntaxRegex("vsh", repo, tag) =>
         Some(ViashhubRepository(
-          "TODO generate name",
           repo = repo,
           tag = getGitTag(tag)
         ))
@@ -128,7 +125,7 @@ object Repository {
         }
         r3
       }
-      case r: LocalRepository if r.path.isDefined => {
+      case r: LocalRepositoryTrait if r.path.isDefined => {
         val localPath = r.path.get match {
           case s if s.startsWith("/") => 
             // resolve path relative to the project root
