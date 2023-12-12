@@ -6,28 +6,28 @@ def testCases = [
         "relative/path": ["/absolute/another/relative/path", "UnixPath"],
         "/absolute/path": ["/absolute/path", "UnixPath"],
         "s3://bucket/path": ["/bucket/path", "S3Path"],
-        "../foo/bar": ["/absolute/another/../foo/bar", "UnixPath"],
+        "../foo/bar": ["/absolute/foo/bar", "UnixPath"],
         "file:///absolute/path": ["/absolute/path", "UnixPath"]
     ],
     "/absolute/../param_list.yaml": [
-        "relative/path": ["/absolute/../relative/path", "UnixPath"],
+        "relative/path": ["/relative/path", "UnixPath"],
         "/absolute/path": ["/absolute/path", "UnixPath"],
         "s3://bucket/path": ["/bucket/path", "S3Path"],
-        "../foo/bar": ["/absolute/../../foo/bar", "UnixPath"],
+        "../foo/bar": ["/foo/bar", "UnixPath"],
         "file:///absolute/path": ["/absolute/path", "UnixPath"]
     ],
     "relative/param_list.yaml": [
         "relative/path": ["relative/relative/path", "UnixPath"],
         "/absolute/path": ["/absolute/path", "UnixPath"],
         "s3://bucket/path": ["/bucket/path", "S3Path"],
-        "../foo/bar": ["relative/../foo/bar", "UnixPath"],
+        "../foo/bar": ["foo/bar", "UnixPath"],
         "file:///absolute/path": ["/absolute/path", "UnixPath"]
     ],
-    "s3://s3bucket/param_list.yaml": [
-        "relative/path": ["/s3bucket/relative/path", "S3Path"],
+    "s3://s3bucket/dir/param_list.yaml": [
+        "relative/path": ["/s3bucket/dir/relative/path", "S3Path"],
         "/absolute/path": ["/absolute/path", "UnixPath"],
         "s3://bucket/path": ["/bucket/path", "S3Path"],
-        "../foo/bar": ["/s3bucket/../foo/bar", "S3Path"],
+        "../foo/bar": ["/s3bucket/foo/bar", "S3Path"],
         "file:///absolute/path": ["/absolute/path", "UnixPath"]
     ],
     "https://remote_url/extra_dir/param_list.yaml": [
@@ -41,14 +41,14 @@ def testCases = [
         "relative/path": ["/relative/path", "UnixPath"],
         "/absolute/path": ["/absolute/path", "UnixPath"],
         "s3://bucket/path": ["/bucket/path", "S3Path"],
-        "../foo/bar": ["/../foo/bar", "UnixPath"],
+        "../foo/bar": ["/foo/bar", "UnixPath"],
         "file:///absolute/path": ["/absolute/path", "UnixPath"]
     ],
     "/absolute/param_list.yaml": [
         "relative/path": ["/absolute/relative/path", "UnixPath"],
         "/absolute/path": ["/absolute/path", "UnixPath"],
         "s3://bucket/path": ["/bucket/path", "S3Path"],
-        "../foo/bar": ["/absolute/../foo/bar", "UnixPath"],
+        "../foo/bar": ["/foo/bar", "UnixPath"],
         "file:///absolute/path": ["/absolute/path", "UnixPath"]
     ]
 
@@ -61,9 +61,10 @@ testCases.each { parentPath, providerTestCases ->
         def expectedClass = expected[1]
         def parentPathObject = file(parentPath, relative: true, hidden: true)
         def resolvedPath = _resolveSiblingIfNotAbsolute(path, parentPathObject)
-        println("_resolveSiblingIfNotAbsolute(\"${parentPath}\", \"${path}\"): ${resolvedPath}, .getClass(): ${resolvedPath.getClass()}")
-        assert resolvedPath.toString() == expectedLocation
-        assert resolvedPath.getClass().getSimpleName() == expectedClass
+        def normalizedPath = resolvedPath.normalize()
+        println("_resolveSiblingIfNotAbsolute(\"${parentPath}\", \"${path}\"): ${normalizedPath}, .getClass(): ${normalizedPath.getClass()}")
+        assert normalizedPath.toString() == expectedLocation
+        assert normalizedPath.getClass().getSimpleName() == expectedClass
     }
     println("")
 }

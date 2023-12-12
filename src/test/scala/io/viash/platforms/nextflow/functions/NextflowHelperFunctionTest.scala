@@ -17,10 +17,12 @@ class NextflowHelperFunctionTest extends AnyFunSuite with BeforeAndAfterAll {
   // temporary folder to work in
   private val temporaryFolder = IO.makeTemp("nextflow_helper_function_test")
 
+  // some paths
+  private val testDir = temporaryFolder.resolve("test_resources")
+  private val workflowHelper = temporaryFolder.resolve("WorkflowHelper.nf")
+
   // path to namespace components
   private val nextflowDir = Paths.get(getClass.getResource("/platforms/nextflow/").getPath)
-  private val testDir = nextflowDir.resolve("test")
-  private val workflowHelper = temporaryFolder.resolve("WorkflowHelper.nf")
 
   // copy resources to temporary folder so we can test in a clean environment
   IO.copyFolder(nextflowDir, testDir)
@@ -33,10 +35,10 @@ class NextflowHelperFunctionTest extends AnyFunSuite with BeforeAndAfterAll {
     .asScala
     .filter(Files.isRegularFile(_))
     .filter(_.getFileName.toString.matches("^test.*\\.nf$"))
-
+  
   // run all tests
   for (testFile <- testFiles) {
-    test(s"Test ${testFile.getFileName.toString}", NextflowTest) {
+    test(s"Testing ${testFile}", NextflowTest) {
       val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
         mainScript = testFile.toString,
         args = List(
