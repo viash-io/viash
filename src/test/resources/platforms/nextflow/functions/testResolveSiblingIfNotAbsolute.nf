@@ -1,5 +1,5 @@
 
-include { _resolveSiblingIfNotAbsolute } from params.rootDir + "/src/main/resources/io/viash/platforms/nextflow/WorkflowHelper.nf"
+include { _resolveSiblingIfNotAbsolute } from params.workflowHelper
 
 def testCases = [
     "/absolute/another/param_list.yaml": [
