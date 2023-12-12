@@ -184,11 +184,16 @@ object NextflowHelper {
     * 
     *   - For local dependencies (i.e. the dependency's source code is defined in the same project as the current repository):
     *     ```
-    *     include { my_dep as my_alias } from "$projectDir/../../../target/nextflow/my_namespace/my_dep/main.nf"
+    *     include { my_dep } from "$projectDir/../../../target/nextflow/my_namespace/my_dep/main.nf"
     *     ```
     *   - For remote dependencies (i.e. the dependency is fetched from a different project -- either a local folder or a remote repository):
     *     ```
-    *     include { my_dep as my_alias } from "$rootDir/dependencies/my_namespace/my_dep/main.nf"
+    *     include { my_dep } from "$rootDir/dependencies/my_namespace/my_dep/main.nf"
+    *     ```
+    *   - When an alias is defined:
+    *     ```
+    *     include { my_dep as my_alias } from "..."
+    *     my_alias = my_alias.run(key: "my_alias")
     *     ```
     */
   def renderInclude(dependency: Dependency, parentPath: Path): String = {
@@ -198,6 +203,7 @@ object NextflowHelper {
 
     val depName = dependency.configInfo("functionalityName")
     val aliasStr = dependency.alias.map(" as " + _).getOrElse("")
+    val runIfAliasStr = dependency.alias.map(a => "\n" + a + " = " + a + ".run(key: \"" + a + "\")").getOrElse("")
 
     val source =
       if (dependency.isLocalDependency) {
@@ -210,7 +216,7 @@ object NextflowHelper {
         s"\"$${meta.root_dir}/dependencies/${dependency.subOutputPath.get}/main.nf\""
       }
 
-    s"include { $depName$aliasStr } from ${source}"
+    s"include { $depName$aliasStr } from ${source}${runIfAliasStr}"
   }
 
   def renderDependencies(config: Config): String = {

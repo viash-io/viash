@@ -22,6 +22,8 @@ TODO add summary
 
 * `config`: Fix the main level of a component config not enforcing strict mode and instead allowing any field to be specified (PR #585).
 
+* `Dependency`: When an alias is defined, pass the alias as a key to the `.run()` function.
+
 # Viash 0.8.1 (2023-11-20): Minor bug fix to Nextflow workflows
 
 This release fixes a bug in the Nextflow platform where calling a workflow with the `.run()` function without specifying the `fromState` argument would result in an error when the input channel contained tuples with more than two elements.
