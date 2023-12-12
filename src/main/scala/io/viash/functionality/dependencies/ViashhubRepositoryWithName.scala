@@ -64,14 +64,4 @@ case class ViashhubRepositoryWithName(
     copy("", `type`, this.repo, tag, path, localPath)
   }
 
-  def copyRepoWithName(
-    name: String,
-    `type`: String,
-    tag: Option[String],
-    path: Option[String],
-    localPath: String
-  ): ViashhubRepositoryWithName = {
-    copy(name, `type`, this.repo, tag, path, localPath)
-  }
-
 }

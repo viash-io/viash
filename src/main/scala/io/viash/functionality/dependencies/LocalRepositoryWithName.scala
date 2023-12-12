@@ -52,14 +52,4 @@ case class LocalRepositoryWithName (
     copy("", `type`, tag, path, localPath)
   }
 
-  def copyRepoWithName(
-    name: String,
-    `type`: String,
-    tag: Option[String],
-    path: Option[String],
-    localPath: String
-  ): LocalRepositoryWithName = {
-    copy(name, `type`, tag, path, localPath)
-  }
-
 }

@@ -24,16 +24,8 @@ import io.viash.schemas._
 @subclass("GitRepositoryWithName")
 @subclass("GithubRepositoryWithName")
 @subclass("ViashhubRepositoryWithName")
-abstract class RepositoryWithName extends Repository with CopyableRepoWithName[RepositoryWithName] {
+abstract class RepositoryWithName extends Repository {
   @description("The identifier used to refer to this repository from dependencies.")
   val name: String
-
-  def copyRepoWithName(
-    name: String,
-    `type`: String,
-    tag: Option[String],
-    path: Option[String],
-    localPath: String
-  ): RepositoryWithName
 
 }

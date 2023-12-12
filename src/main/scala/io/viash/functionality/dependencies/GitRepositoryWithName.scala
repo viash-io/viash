@@ -65,14 +65,4 @@ case class GitRepositoryWithName(
     copy("", `type`, uri, tag, path, localPath)
   }
 
-  def copyRepoWithName(
-    name: String,
-   `type`: String,
-    tag: Option[String],
-    path: Option[String],
-    localPath: String
-  ): GitRepositoryWithName = {
-    copy(name, `type`, uri, tag, path, localPath)
-  }
-
 }

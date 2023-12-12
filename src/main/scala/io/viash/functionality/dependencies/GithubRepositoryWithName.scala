@@ -63,14 +63,4 @@ case class GithubRepositoryWithName(
     copy("", `type`, this.repo, tag, path, localPath)
   }
 
-  def copyRepoWithName(
-    name: String,
-   `type`: String,
-    tag: Option[String],
-    path: Option[String],
-    localPath: String
-  ): GithubRepositoryWithName = {
-    copy(name, `type`, this.repo, tag, path, localPath)
-  }
-
 }
