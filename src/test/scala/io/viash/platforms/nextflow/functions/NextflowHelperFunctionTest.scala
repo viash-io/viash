@@ -16,24 +16,19 @@ class NextflowHelperFunctionTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
   // temporary folder to work in
   private val temporaryFolder = IO.makeTemp("nextflow_helper_function_test")
-  private val tempFolStr = temporaryFolder.toString
-  private val tempFolFile = temporaryFolder.toFile
 
   // path to namespace components
-  private val nextflowDir = getClass.getResource("/platforms/nextflow/").getPath
-  private val functionDir = temporaryFolder.resolve("functions")
+  private val nextflowDir = Paths.get(getClass.getResource("/platforms/nextflow/").getPath)
+  private val testDir = nextflowDir.resolve("test")
   private val workflowHelper = temporaryFolder.resolve("WorkflowHelper.nf")
 
   // copy resources to temporary folder so we can test in a clean environment
-  IO.copyFolder(
-    nextflowDir.toString,
-    tempFolStr
-  )
+  IO.copyFolder(nextflowDir, testDir)
   IO.write(NextflowHelper.workflowHelper.toString, workflowHelper)
   
   // recursively search for files starting with 'test' and ending with '.nf' in 'functionDir: Path'
   // and return a list of paths to those files
-  private val testFiles = Files.walk(functionDir)
+  private val testFiles = Files.walk(testDir)
     .iterator
     .asScala
     .filter(Files.isRegularFile(_))
@@ -47,7 +42,7 @@ class NextflowHelperFunctionTest extends AnyFunSuite with BeforeAndAfterAll {
         args = List(
           "--workflowHelper", workflowHelper.toString
         ),
-        cwd = tempFolFile
+        cwd = temporaryFolder.toFile()
       )
 
       assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
