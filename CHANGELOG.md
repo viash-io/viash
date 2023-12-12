@@ -32,7 +32,31 @@ TODO add summary
 
 * `__merge__`: Handle invalid yaml during merging (PR #570). There was not enough error handling during this operation. Switched to the more advanced `Convert.textToJson` helper method.
 
+
+
+# Viash 0.8.2 (yyyy-MM-dd): TODO Add title
+
+## MINOR CHANGES
+
+* `NextflowTestHelper`: Do not hardcode a version of Nextflow in the testbench, 
+  but use the version of Nextflow that is installed on the system (PR #593).
+
+* GitHub Actions: Test different versions of Nextflow (22.04.5, latest, and latest-edge) (PR #593).
+  Testing the latest Edge version of Nextflow will allow us to catch notice changes in Nextflow earlier.
+
+* Updates to the documentation and templates in the Git repo (#598, PR #600):
+
+  - Add contributing guidelines.
+
+  - Add issue templates.
+
+  - Reworked the pull request template.
+
+## BUG FIXES
+
 * `config`: Fix the main level of a component config not enforcing strict mode and instead allowing any field to be specified (PR #585).
+
+
 
 # Viash 0.8.1 (2023-11-20): Minor bug fix to Nextflow workflows
 

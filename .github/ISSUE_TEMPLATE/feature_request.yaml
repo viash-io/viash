@@ -1,0 +1,70 @@
+name: Feature Request
+description: Suggest an idea for this project
+title: "[FEATURE] "
+labels: [enhancement]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thank you for your feature request
+        Please fill out this form to help us understand your idea.
+
+  - type: input
+    id: feature-summary
+    attributes:
+      label: Feature summary
+      description: A brief summary of the feature.
+      placeholder: e.g., Add a dark mode option.
+    validations:
+      required: true
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature description
+      description: A detailed description of the feature.
+      placeholder: Describe the feature you'd like to see, how it works, and what it would accomplish.
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Why is this feature beneficial?
+      description: Explain why this feature would be useful to the project and its users.
+      placeholder: e.g., A dark mode would reduce eye strain for users working in low-light conditions.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives-considered
+    attributes:
+      label: Alternatives considered
+      description: Describe any alternative solutions or features you've considered.
+      placeholder: e.g., Instead of a full dark mode, a feature to adjust screen brightness could be implemented.
+
+
+  - type: input
+    id: possible-solution
+    attributes:
+      label: Possible solution
+      description: Feel free to suggest a possible implementation for the feature.
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      description: |
+        Please confirm the following before submitting.
+      options:
+        - label: I have searched the existing issues to make sure this is not a duplicate request.
+          required: true
+        - label: I have provided clear and concise information about the feature.
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ### Thank you for contributing to our project!
+        Your feature request will be reviewed, and we'll get back to you as soon as possible.

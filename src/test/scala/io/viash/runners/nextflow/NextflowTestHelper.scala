@@ -150,9 +150,9 @@ object NextflowTestHelper {
         args
     
     // fix nextflow version to certain release
-    val extraEnv_ = extraEnv :+ ("NXF_VER" -> "22.04.5")
+    // val extraEnv_ = extraEnv :+ ("NXF_VER" -> "22.04.5")
 
-    val exitCode = Process(command, cwd, extraEnv_ : _*).!(
+    val exitCode = Process(command, cwd, extraEnv : _*).!(
       ProcessLogger(str => stdOut ++= s"$str\n", str => stdErr ++= s"$str\n")
     )
 

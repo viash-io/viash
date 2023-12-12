@@ -1,0 +1,106 @@
+name: Bug Report
+description: Create a report to help us improve
+title: "[BUG] "
+labels: [bug]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thank you for taking the time to report a bug
+        Please fill out this form as completely as possible.
+
+  - type: input
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of what the bug is.
+      placeholder: e.g., I get the following error when building a component with Viash.
+    validations:
+      required: true
+
+  - type: input
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        Contents of `config.vsh.yaml`:
+
+        ```yaml
+        ...
+        ```
+        
+        Contents of `script.py`:
+          
+        ```python
+        ...
+        ```
+
+        Steps to reproduce:
+
+        ```bash
+        ...
+        ``
+    validations:
+      required: true
+
+  - type: input
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+      placeholder: e.g., The application should save my data and remain stable.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please add any relevant logs or error messages.
+      placeholder: |
+        ```
+        Your log output here.
+        ```
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The version of the software where the bug was encountered.
+      placeholder: |
+        - OS: [e.g., Ubuntu 20.04]
+        - Java Version: [e.g., 11]
+        - Viash Version: [e.g. 0.8.1]
+        - Python Version: [if applicable, e.g. 3.10]
+        - R Version: [if applicable, e.g. 4.0]
+        - Docker Version: [if applicable]
+        - Nextflow Version: [if applicable]
+    validations:
+      required: true
+
+  - type: input
+    id: possible-solution
+    attributes:
+      label: Possible solution
+      description: Feel free to suggest a possible solution for the bug.
+
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      description: |
+        Please make sure you have checked the following.
+      options:
+        - label: I have searched the existing issues to make sure this is not a duplicate.
+          required: true
+        - label: I have provided clear and concise information about the bug.
+          required: true
+
+  - type: input
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here.
