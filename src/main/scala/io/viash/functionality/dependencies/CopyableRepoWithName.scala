@@ -17,9 +17,10 @@
 
 package io.viash.functionality.dependencies
 
-trait CopyableRepo[A <: CopyableRepo[A]] {
+trait CopyableRepoWithName[A <: CopyableRepoWithName[A]] {
   self: A =>
-  def copyRepo(
+  def copyRepoWithName(
+    name: String,
    `type`: String,
     tag: Option[String],
     path: Option[String],

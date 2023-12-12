@@ -27,28 +27,39 @@ import java.nio.file.Paths
     |""".stripMargin
 )
 @exampleWithDescription(
-  """type: local
+  """name: my_local_code
+    |type: local
     |path: /additional_code/src
     |""".stripMargin,
   "yaml",
   "Refer to a local code repository under `additional_code/src` referenced to the Viash Project Config file."
 )
-@subclass("local")
-case class LocalRepository(
-  @description("Defines the repository as a locally present and available repository.")
+@subclass("localwithname")
+case class LocalRepositoryWithName (
+  name: String,
   `type`: String = "local",
   tag: Option[String] = None,
   path: Option[String] = None,
   localPath: String = ""
-) extends LocalRepositoryTrait {
+) extends RepositoryWithName with LocalRepositoryTrait {
 
   def copyRepo(
     `type`: String,
     tag: Option[String],
     path: Option[String],
     localPath: String
-  ): LocalRepository = {
-    copy(`type`, tag, path, localPath)
+  ): LocalRepositoryWithName = {
+    copy("", `type`, tag, path, localPath)
+  }
+
+  def copyRepoWithName(
+    name: String,
+    `type`: String,
+    tag: Option[String],
+    path: Option[String],
+    localPath: String
+  ): LocalRepositoryWithName = {
+    copy(name, `type`, tag, path, localPath)
   }
 
 }

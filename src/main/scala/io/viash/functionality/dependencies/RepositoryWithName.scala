@@ -17,13 +17,23 @@
 
 package io.viash.functionality.dependencies
 
-trait CopyableRepo[A <: CopyableRepo[A]] {
-  self: A =>
-  def copyRepo(
-   `type`: String,
+import io.viash.schemas._
+
+@description("Specifies a repository where dependency components can be found.")
+@subclass("LocalRepositoryWithName")
+@subclass("GitRepositoryWithName")
+@subclass("GithubRepositoryWithName")
+@subclass("ViashhubRepositoryWithName")
+abstract class RepositoryWithName extends Repository with CopyableRepoWithName[RepositoryWithName] {
+  @description("The identifier used to refer to this repository from dependencies.")
+  val name: String
+
+  def copyRepoWithName(
+    name: String,
+    `type`: String,
     tag: Option[String],
     path: Option[String],
     localPath: String
-  ): A
-}
+  ): RepositoryWithName
 
+}

@@ -23,12 +23,11 @@ import java.io.File
 import java.nio.file.Paths
 import io.viash.exceptions.CheckoutException
 
-abstract class AbstractGitRepository extends Repository {
+trait AbstractGitRepository extends Repository {
   val uri: String
   val storePath: String
 
   def copyRepo(
-    name: String,
    `type`: String,
     tag: Option[String],
     path: Option[String],

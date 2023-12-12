@@ -25,22 +25,26 @@ import java.nio.file.Paths
 
 @description("A Git repository where remote dependency components can be found.")
 @example(
-  """type: git
+  """name: openpipeline
+    |type: git
     |uri: git+https://github.com/openpipelines-bio/openpipeline.git
     |tag: 0.8.0
     |""".stripMargin,
   "yaml"
 )
 @example(
-  """type: git
+  """name: viash-testns
+    |type: git
     |uri: git+https://gitlab.com/viash-io/viash.git
     |tag: 0.7.1
     |path: src/test/resources/testns
     |""".stripMargin,
   "yaml"
   )
-@subclass("git")
-case class GitRepository(
+@subclass("gitwithname")
+case class GitRepositoryWithName(
+  name: String,
+
   @description("Defines the repository as a Git repository.")
   `type`: String = "git",
 
@@ -50,15 +54,25 @@ case class GitRepository(
   tag: Option[String],
   path: Option[String] = None,
   localPath: String = ""
-) extends GitRepositoryTrait {
+) extends RepositoryWithName with GitRepositoryTrait {
   
   def copyRepo(
    `type`: String,
     tag: Option[String],
     path: Option[String],
     localPath: String
-  ): GitRepository = {
-    copy(`type`, uri, tag, path, localPath)
+  ): GitRepositoryWithName = {
+    copy("", `type`, uri, tag, path, localPath)
+  }
+
+  def copyRepoWithName(
+    name: String,
+   `type`: String,
+    tag: Option[String],
+    path: Option[String],
+    localPath: String
+  ): GitRepositoryWithName = {
+    copy(name, `type`, uri, tag, path, localPath)
   }
 
 }
