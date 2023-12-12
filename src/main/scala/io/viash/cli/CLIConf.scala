@@ -284,7 +284,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       val parse_argument_groups = registerOpt[Boolean](
         name = "parse_argument_groups",
         default = Some(false),
-        descr = "Whether or not to postprocess each component's @[argument groups](argument_groups)."
+        descr = "DEPRECATED. This is now always enabled. Whether or not to postprocess each component's @[argument groups](argument_groups)."
       )
     }
     val inject = new DocumentedSubcommand("inject") with ViashCommand with ViashLogger {
@@ -368,7 +368,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       val parse_argument_groups = registerOpt[Boolean](
         name = "parse_argument_groups",
         default = Some(false),
-        descr = "Whether or not to postprocess each component's @[argument groups](argument_groups)."
+        descr = "DEPRECATED. This is now always enabled. Whether or not to postprocess each component's @[argument groups](argument_groups)."
       )
     }
 

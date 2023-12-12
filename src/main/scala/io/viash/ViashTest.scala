@@ -25,7 +25,7 @@ import java.time.temporal.ChronoUnit
 import scala.util.Random
 
 import config.Config
-import functionality.Functionality
+import functionality.{Functionality, ArgumentGroup}
 import functionality.arguments.{FileArgument, Output}
 import functionality.resources.{BashScript, Script}
 import helpers.{IO, Logging, LoggerOutput, LoggerLevel}
@@ -251,8 +251,7 @@ object ViashTest extends Logging {
             namespace = fun.namespace,
             version = fun.version,
             // set dirArg as argument so that Docker can chown it after execution
-            arguments = List(dirArg),
-            argument_groups = Nil,
+            argument_groups = List(ArgumentGroup("default", None, List(dirArg))),
             resources = List(test),
             set_wd_to_resources_dir = true
           ))(appliedConfig)

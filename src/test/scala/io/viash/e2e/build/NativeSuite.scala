@@ -226,25 +226,6 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(testRegex.findFirstIn(testOutput.stderr).isDefined, testOutput)
   }
 
-  test("Test whether defining strings as arguments in argument groups throws a removed error") {
-    val testOutput = TestHelper.testMainException[Exception](
-      "build",
-      "-o", tempFolStr,
-      configDeprecatedArgumentGroups
-    )
-
-    assert(executable.exists)
-    assert(executable.canExecute)
-
-    val out = Exec.runCatch(
-      Seq(executable.toString, "--help")
-    )
-    assert(out.exitValue == 0)
-
-    val testRegex = "Error: specifying strings in the .argument field of argument group 'First group' was removed.".r
-    assert(testRegex.findFirstIn(testOutput.stderr).isDefined, testOutput.stderr)
-  }
-
   test("Test whether setting an internalFunctionality field throws an error") {
     val newConfigFilePath = configDeriver.derive(""".functionality.argument_groups[.name == "First group"].arguments[.name == "input"].dest := "foo"""", "set_internal_functionality")
 

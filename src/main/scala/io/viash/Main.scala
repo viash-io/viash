@@ -290,6 +290,9 @@ object Main extends Logging {
         val errors = testResults.map(_._1).flatMap(_.status).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.list) =>
+        if (cli.namespace.list.parse_argument_groups()) {
+          info("Warning: --parse-argument-groups is deprecated and effectively always enabled.")
+        }
         val configs = readConfigs(
           cli.namespace.list,
           project = proj1,
@@ -300,8 +303,7 @@ object Main extends Logging {
         val configs2 = namespaceDependencies(configs, None, proj1.rootDir)
         ViashNamespace.list(
           configs = configs2,
-          format = cli.namespace.list.format(),
-          parseArgumentGroups = cli.namespace.list.parse_argument_groups()
+          format = cli.namespace.list.format()
         )
         val errors = configs.flatMap(_.status).count(_.isError)
         if (errors > 0) 1 else 0
@@ -321,6 +323,9 @@ object Main extends Logging {
         val errors = configs.flatMap(_.status).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.config, cli.config.view) =>
+        if (cli.config.view.parse_argument_groups()) {
+          info("Warning: --parse-argument-groups is deprecated and effectively always enabled.")
+        }
         val config = readConfig(
           cli.config.view,
           project = proj1,
@@ -330,8 +335,7 @@ object Main extends Logging {
         val config2 = DependencyResolver.modifyConfig(config.config, None, proj1.rootDir)
         ViashConfig.view(
           config2, 
-          format = cli.config.view.format(),
-          parseArgumentGroups = cli.config.view.parse_argument_groups()
+          format = cli.config.view.format()
         )
         0
       case List(cli.config, cli.config.inject) =>
