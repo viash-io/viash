@@ -13,7 +13,7 @@ def testCases = [
         "relative/path": ["(/absolute/..)?/relative/path", "UnixPath"],
         "/absolute/path": ["/absolute/path", "UnixPath"],
         "s3://bucket/path": ["/bucket/path", "S3Path"],
-        "../foo/bar": ["(/absolute/../..)?/foo/bar", "UnixPath"],
+        "../foo/bar": ["((/absolute/..)?/..)?/foo/bar", "UnixPath"],
         "file:///absolute/path": ["/absolute/path", "UnixPath"]
     ],
     "relative/param_list.yaml": [
