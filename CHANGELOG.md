@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## BUG FIXES
+
+`NextflowPlatform`: Do not resolve remote paths relative to the --param_list file (PR #592).
+
 ## MINOR CHANGES
 
 * `NextflowTestHelper`: Do not hardcode a version of Nextflow in the testbench, 
