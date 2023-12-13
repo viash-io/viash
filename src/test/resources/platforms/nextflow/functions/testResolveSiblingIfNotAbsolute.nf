@@ -27,7 +27,7 @@ def testCases = [
         "relative/path": ["($pwd/)?relative/relative/path", "UnixPath"],
         "/absolute/path": ["/absolute/path", "UnixPath"],
         "s3://bucket/path": ["/bucket/path", "S3Path"],
-        "../foo/bar": ["(relative/../)?foo/bar", "UnixPath"],
+        "../foo/bar": ["($pwd/)?(relative/../)?foo/bar", "UnixPath"],
         "file:///absolute/path": ["/absolute/path", "UnixPath"]
     ],
     "s3://s3bucket/param_list.yaml": [
