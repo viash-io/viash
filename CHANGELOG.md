@@ -22,6 +22,8 @@ TODO add summary
 
 * `config`: Fix the main level of a component config not enforcing strict mode and instead allowing any field to be specified (PR #585).
 
+* `dependencies`: Allow the user to define a local dependency with specifying `repository: local` as sugar syntax (PR #609). A local repository is the default value so it's not required to be filled in, but allowing it with a sensible sugar syntax makes sense.
+
 # Viash 0.8.1 (2023-11-20): Minor bug fix to Nextflow workflows
 
 This release fixes a bug in the Nextflow platform where calling a workflow with the `.run()` function without specifying the `fromState` argument would result in an error when the input channel contained tuples with more than two elements.
