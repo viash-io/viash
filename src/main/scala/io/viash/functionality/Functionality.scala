@@ -278,7 +278,7 @@ case class Functionality(
       |""".stripMargin,
       "yaml")
   @default("Empty")
-  repositories: List[Repository] = Nil,
+  repositories: List[RepositoryWithName] = Nil,
   // The variables below are for internal use and shouldn't be publicly documented
 
   // setting this to true will change the working directory

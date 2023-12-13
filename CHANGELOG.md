@@ -22,6 +22,8 @@ TODO add summary
 
 * `config`: Fix the main level of a component config not enforcing strict mode and instead allowing any field to be specified (PR #585).
 
+* `Repositories`: Fix a structural issue where a repository defined directly in a `dependency` would require the `name` field to be set (PR #607). Repository variants are created with and without the `name` field. Repositories under `.functionality.dependencies[]` use repositories without the `name` field, while repositories under `.functionality.repositories[]` use repositories with the `name` field.
+
 # Viash 0.8.1 (2023-11-20): Minor bug fix to Nextflow workflows
 
 This release fixes a bug in the Nextflow platform where calling a workflow with the `.run()` function without specifying the `fromState` argument would result in an error when the input channel contained tuples with more than two elements.

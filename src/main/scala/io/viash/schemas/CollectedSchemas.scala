@@ -167,6 +167,11 @@ object CollectedSchemas {
     getMembers[GitRepository](),
     getMembers[GithubRepository](),
     getMembers[ViashhubRepository](),
+    getMembers[RepositoryWithName](),
+    getMembers[LocalRepositoryWithName](),
+    getMembers[GitRepositoryWithName](),
+    getMembers[GithubRepositoryWithName](),
+    getMembers[ViashhubRepositoryWithName](),
   )
 
   private def trimTypeName(s: String) = {
