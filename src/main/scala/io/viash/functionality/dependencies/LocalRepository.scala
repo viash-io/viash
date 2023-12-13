@@ -27,8 +27,7 @@ import java.nio.file.Paths
     |""".stripMargin
 )
 @exampleWithDescription(
-  """name: my_local_code
-    |type: local
+  """type: local
     |path: /additional_code/src
     |""".stripMargin,
   "yaml",
@@ -36,24 +35,20 @@ import java.nio.file.Paths
 )
 @subclass("local")
 case class LocalRepository(
-  name: String = "",
-
   @description("Defines the repository as a locally present and available repository.")
   `type`: String = "local",
   tag: Option[String] = None,
   path: Option[String] = None,
   localPath: String = ""
-) extends Repository {
+) extends LocalRepositoryTrait {
 
   def copyRepo(
-    name: String,
     `type`: String,
     tag: Option[String],
     path: Option[String],
     localPath: String
   ): LocalRepository = {
-    copy(name, `type`, tag, path, localPath)
+    copy(`type`, tag, path, localPath)
   }
 
-  def subOutputPath: String = Paths.get(`type`, tag.getOrElse("")).toString()
 }
