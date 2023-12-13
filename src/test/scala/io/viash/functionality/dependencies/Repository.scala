@@ -36,6 +36,12 @@ class RepositoryTest extends AnyFunSuite {
     assert(repo.get.isInstanceOf[LocalRepository])
   }
 
+  test("Repository.unapply: handles local dependency syntax") {
+    val repo = Repository.unapply("local")
+    assert(repo.isDefined)
+    assert(repo.get.isInstanceOf[LocalRepository])
+  }
+
   test("Repository.unapply: returns None for unrecognized syntax") {
     val repo = Repository.unapply("unknown://foo.bar")
     assert(repo.isEmpty)
