@@ -1,6 +1,13 @@
 
 include { _resolveSiblingIfNotAbsolute } from params.workflowHelper
 
+// wherever optional groups are used, this is due to java 11 behaving a little
+// bit differently than java 17 and 21. However, both behaviours should 
+// produce paths that are equally valid.
+
+// for compatibility with java 11
+def pwd = java.nio.file.Paths.get(".").toAbsolutePath().normalize()
+
 def testCases = [
     "/absolute/another/param_list.yaml": [
         "relative/path": ["/absolute/another/relative/path", "UnixPath"],
@@ -17,7 +24,7 @@ def testCases = [
         "file:///absolute/path": ["/absolute/path", "UnixPath"]
     ],
     "relative/param_list.yaml": [
-        "relative/path": ["relative/relative/path", "UnixPath"],
+        "relative/path": ["($pwd/)?relative/relative/path", "UnixPath"],
         "/absolute/path": ["/absolute/path", "UnixPath"],
         "s3://bucket/path": ["/bucket/path", "S3Path"],
         "../foo/bar": ["(relative/../)?foo/bar", "UnixPath"],
