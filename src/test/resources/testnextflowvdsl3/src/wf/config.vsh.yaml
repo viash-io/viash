@@ -30,7 +30,7 @@ functionality:
   dependencies:
     - name: step1 # local is implicit
     - name: step2
-      # repository: local # TODO: this should also work
+      repository: local
     - name: step3
       repository: mylocal
   repositories:
