@@ -83,6 +83,12 @@ object Repository {
           repo = repo,
           tag = getGitTag(tag)
         ))
+      case sugarSyntaxRegex("local", path, tag) =>
+        Some(LocalRepository(
+          "TODO generate name",
+          path = Some(path),
+          tag = getGitTag(tag)
+        ))
       case "local" =>
         Some(LocalRepository("TODO generate name"))
       case _ => None
