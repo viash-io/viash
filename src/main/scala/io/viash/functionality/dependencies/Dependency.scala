@@ -121,7 +121,7 @@ case class Dependency(
 
   // Is this a dependency that will be built when `viash ns build` is run?
   def isLocalDependency: Boolean = workRepository.map{
-    case r: LocalRepository => (r.path == None || r.path == Some(".")) && r.tag == None
+    case r: LocalRepositoryTrait => (r.path == None || r.path == Some(".")) && r.tag == None
     case _ => false
   }.getOrElse(false)
 }

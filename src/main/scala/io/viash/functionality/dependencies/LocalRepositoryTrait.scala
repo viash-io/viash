@@ -16,14 +16,10 @@
  */
 
 package io.viash.functionality.dependencies
+import io.viash.schemas._
+import java.nio.file.Paths
 
-trait CopyableRepo[A <: CopyableRepo[A]] {
-  self: A =>
-  def copyRepo(
-   `type`: String,
-    tag: Option[String],
-    path: Option[String],
-    localPath: String
-  ): A
+trait LocalRepositoryTrait extends Repository {
+
+  def subOutputPath: String = Paths.get(`type`, tag.getOrElse("")).toString();
 }
-

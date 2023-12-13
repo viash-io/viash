@@ -22,7 +22,10 @@ TODO add summary
 
 * `config`: Fix the main level of a component config not enforcing strict mode and instead allowing any field to be specified (PR #585).
 
+
 * `dependencies`: Allow the user to define a local dependency with specifying `repository: local` as sugar syntax (PR #609). A local repository is the default value so it's not required to be filled in, but allowing it with a sensible sugar syntax makes sense.
+
+* `Repositories`: Fix a structural issue where a repository defined directly in a `dependency` would require the `name` field to be set (PR #607). Repository variants are created with and without the `name` field. Repositories under `.functionality.dependencies[]` use repositories without the `name` field, while repositories under `.functionality.repositories[]` use repositories with the `name` field.
 
 # Viash 0.8.1 (2023-11-20): Minor bug fix to Nextflow workflows
 
