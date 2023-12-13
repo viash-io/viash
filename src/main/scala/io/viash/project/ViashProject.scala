@@ -25,6 +25,7 @@ import io.viash.helpers.IO
 import io.viash.helpers.circe._
 import io.circe.Json
 import java.net.URI
+import io.viash.functionality.dependencies.Repository
 
 @description("A Viash project configuration file. It's name should be `_viash.yaml`.")
 @example(
@@ -41,6 +42,43 @@ import java.net.URI
 @since("Viash 0.6.4")
 @nameOverride("Project")
 case class ViashProject(
+  @description("The name of the project.")
+  @example("name: my_project", "yaml")
+  @since("Viash 0.9.0")
+  name: Option[String] = None,
+
+  @description("The version of the project.")
+  @example("version: 0.1.0", "yaml")
+  @since("Viash 0.9.0")
+  version: Option[String] = None,
+
+  @description("A description of the project.")
+  @example("description: My project", "yaml")
+  @since("Viash 0.9.0")
+  description: Option[String] = None,
+
+  @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
+  @example(
+    """info:
+      |  twitter: wizzkid
+      |  classes: [ one, two, three ]""".stripMargin, "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  info: Json = Json.Null,
+
+  @description("Common repository definitions for component dependencies.")
+  @example(
+    """repositories:
+      |  - name: openpipelines-bio
+      |    type: github
+      |    uri: openpipelines-bio/modules
+      |    tag: 0.3.0
+      |""".stripMargin,
+      "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  repositories: List[Repository] = Nil,
+
   @description("Which version of Viash to use.")
   @example("viash_versions: 0.6.4", "yaml")
   viash_version: Option[String] = None,
