@@ -1,12 +1,6 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.8.2 (2023-12-14): Minor changes and bug fixes
 
-TODO add summary
-
-## BUG FIXES
-
-`NextflowPlatform`: Do not resolve remote paths relative to the --param_list file (PR #592).
-
-`NextflowPlatform`: Allow finding `.build.yaml` file when worktree contains a directory that is a symlink (PR #611). 
+This release fixes a few bugs regarding dependencies and how the Nextflow platform handles Paths.
 
 ## MINOR CHANGES
 
@@ -28,10 +22,13 @@ TODO add summary
 
 * `config`: Fix the main level of a component config not enforcing strict mode and instead allowing any field to be specified (PR #585).
 
-
 * `dependencies`: Allow the user to define a local dependency with specifying `repository: local` as sugar syntax (PR #609). A local repository is the default value so it's not required to be filled in, but allowing it with a sensible sugar syntax makes sense.
 
 * `Repositories`: Fix a structural issue where a repository defined directly in a `dependency` would require the `name` field to be set (PR #607). Repository variants are created with and without the `name` field. Repositories under `.functionality.dependencies[]` use repositories without the `name` field, while repositories under `.functionality.repositories[]` use repositories with the `name` field.
+
+* `NextflowPlatform`: Do not resolve remote paths relative to the --param_list file (PR #592).
+
+* `NextflowPlatform`: Allow finding `.build.yaml` file when worktree contains a directory that is a symlink (PR #611). 
 
 # Viash 0.8.1 (2023-11-20): Minor bug fix to Nextflow workflows
 
