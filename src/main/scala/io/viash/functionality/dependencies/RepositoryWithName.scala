@@ -15,20 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash
+package io.viash.functionality.dependencies
 
-import io.circe.{Decoder, Encoder, Json}
-import io.circe.generic.extras.Configuration
-import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
+import io.viash.schemas._
 
-package object config {
-  import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
+@description("Specifies a repository where dependency components can be found.")
+@subclass("LocalRepositoryWithName")
+@subclass("GitRepositoryWithName")
+@subclass("GithubRepositoryWithName")
+@subclass("ViashhubRepositoryWithName")
+abstract class RepositoryWithName extends Repository {
+  @description("The identifier used to refer to this repository from dependencies.")
+  val name: String
 
-  // encoders and decoders for Config
-  implicit val encodeConfig: Encoder.AsObject[Config] = deriveConfiguredEncoder
-  implicit val decodeConfig: Decoder[Config] = deriveConfiguredDecoderFullChecks
-
-  implicit val encodeInfo: Encoder[Info] = deriveConfiguredEncoder
-  implicit val decodeInfo: Decoder[Info] = deriveConfiguredDecoderFullChecks
 }

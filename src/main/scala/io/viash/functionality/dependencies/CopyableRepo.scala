@@ -20,7 +20,6 @@ package io.viash.functionality.dependencies
 trait CopyableRepo[A <: CopyableRepo[A]] {
   self: A =>
   def copyRepo(
-    name: String,
    `type`: String,
     tag: Option[String],
     path: Option[String],

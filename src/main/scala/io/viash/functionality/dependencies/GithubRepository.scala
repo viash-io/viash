@@ -32,8 +32,7 @@ import java.nio.file.Paths
   "yaml"
 )
 @example(
-  """name: viash-testns
-    |type: github
+  """type: github
     |repo: viash-io/viash
     |tag: 0.7.1
     |path: src/test/resources/testns
@@ -42,46 +41,22 @@ import java.nio.file.Paths
   )
 @subclass("github")
 case class GithubRepository(
-  name: String,
-
   @description("Defines the repository as a GitHub repository.")
   `type`: String = "github",
 
-  @description("The name of the GitHub repository.")
-  @example("repo: viash-io/viash", "yaml")
   repo: String,
   tag: Option[String],
   path: Option[String] = None,
   localPath: String = ""
-) extends AbstractGitRepository {
+) extends GithubRepositoryTrait {
   
   def copyRepo(
-    name: String,
    `type`: String,
     tag: Option[String],
     path: Option[String],
     localPath: String
   ): GithubRepository = {
-    copy(name, `type`, this.repo, tag, path, localPath)
+    copy(`type`, this.repo, tag, path, localPath)
   }
 
-  override def getCheckoutUri(): String = {
-    if (checkGitAuthentication(uri_nouser)) { 
-      // First try https with bad user & password to disable asking credentials
-      // If successful, do checkout without the dummy credentials, don't want to store them in the repo remote address
-      uri
-    } else if (checkGitAuthentication(uri_ssh)) {
-      // Checkout with ssh key
-      uri_ssh
-    } else {
-      uri
-    }
-  }
-
-  lazy val uri = s"https://github.com/$repo.git"
-  lazy val uri_ssh = s"git@github.com:$repo.git"
-  val fakeCredentials = "nouser:nopass@" // obfuscate the credentials a bit so we don't trigger GitGuardian
-  lazy val uri_nouser = s"https://${fakeCredentials}github.com/$repo.git"
-
-  val storePath = repo // no need to add 'github.com' to the store path as 'type' (github) will be added
 }

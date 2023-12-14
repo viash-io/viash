@@ -121,7 +121,7 @@ case class Dependency(
 
   // Is this a dependency that will be built when `viash ns build` is run?
   def isLocalDependency: Boolean = workRepository.map{
-    case r: LocalRepository => (r.path == None || r.path == Some(".")) && r.tag == None
+    case r: LocalRepositoryTrait => (r.path == None || r.path == Some(".")) && r.tag == None
     case _ => false
   }.getOrElse(false)
 }
@@ -167,7 +167,8 @@ object Dependency {
   }
 
   // Traverse the folder upwards until a `.build.yaml` is found but do not traverse beyond `repoPath`.
-  def findBuildYamlFile(path: Path, repoPath: Path): Option[Path] = {
+  def findBuildYamlFile(pathPossiblySymlink: Path, repoPath: Path): Option[Path] = {
+    val path = pathPossiblySymlink.toRealPath()
     val child = path.resolve(".build.yaml")
     if (Files.isDirectory(path) && Files.exists(child)) {
       Some(child)

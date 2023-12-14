@@ -15,20 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash
+package io.viash.functionality.dependencies
+import io.viash.schemas._
+import java.nio.file.Paths
 
-import io.circe.{Decoder, Encoder, Json}
-import io.circe.generic.extras.Configuration
-import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
+trait LocalRepositoryTrait extends Repository {
 
-package object config {
-  import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
-
-  // encoders and decoders for Config
-  implicit val encodeConfig: Encoder.AsObject[Config] = deriveConfiguredEncoder
-  implicit val decodeConfig: Decoder[Config] = deriveConfiguredDecoderFullChecks
-
-  implicit val encodeInfo: Encoder[Info] = deriveConfiguredEncoder
-  implicit val decodeInfo: Decoder[Info] = deriveConfiguredDecoderFullChecks
+  def subOutputPath: String = Paths.get(`type`, tag.getOrElse("")).toString();
 }

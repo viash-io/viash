@@ -18,47 +18,38 @@
 package io.viash.functionality.dependencies
 
 import io.viash.schemas._
-import io.viash.helpers.IO
-import io.viash.helpers.Exec
-import java.io.File
 import java.nio.file.Paths
 
-@description("A Git repository where remote dependency components can be found.")
-@example(
-  """type: git
-    |uri: git+https://github.com/openpipelines-bio/openpipeline.git
-    |tag: 0.8.0
-    |""".stripMargin,
-  "yaml"
+@description(
+  """Defines a locally present and available repository.
+    |This can be used to define components from the same code base as the current component.
+    |Alternatively, this can be used to refer to a code repository present on the local hard-drive instead of fetchable remotely, for example during development.
+    |""".stripMargin
 )
-@example(
-  """type: git
-    |uri: git+https://gitlab.com/viash-io/viash.git
-    |tag: 0.7.1
-    |path: src/test/resources/testns
+@exampleWithDescription(
+  """name: my_local_code
+    |type: local
+    |path: /additional_code/src
     |""".stripMargin,
-  "yaml"
-  )
-@subclass("git")
-case class GitRepository(
-  @description("Defines the repository as a Git repository.")
-  `type`: String = "git",
-
-  @description("The URI of the Git repository.")
-  @example("uri: \"git+https://github.com/openpipelines-bio/openpipeline.git\"", "yaml")
-  uri: String,
-  tag: Option[String],
+  "yaml",
+  "Refer to a local code repository under `additional_code/src` referenced to the Viash Project Config file."
+)
+@subclass("localwithname")
+case class LocalRepositoryWithName (
+  name: String,
+  `type`: String = "local",
+  tag: Option[String] = None,
   path: Option[String] = None,
   localPath: String = ""
-) extends GitRepositoryTrait {
-  
+) extends RepositoryWithName with LocalRepositoryTrait {
+
   def copyRepo(
-   `type`: String,
+    `type`: String,
     tag: Option[String],
     path: Option[String],
     localPath: String
-  ): GitRepository = {
-    copy(`type`, uri, tag, path, localPath)
+  ): LocalRepositoryWithName = {
+    copy("", `type`, tag, path, localPath)
   }
 
 }
