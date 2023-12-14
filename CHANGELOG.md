@@ -1,3 +1,7 @@
+# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+
+TODO add summary
+
 # Viash 0.8.2 (2023-12-14): Minor changes and bug fixes
 
 This release fixes a few bugs regarding dependencies and how the Nextflow platform handles Paths.
