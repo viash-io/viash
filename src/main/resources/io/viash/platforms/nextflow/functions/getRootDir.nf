@@ -5,7 +5,7 @@ def _findBuildYamlFile(path) {
   if (java.nio.file.Files.isDirectory(path) && java.nio.file.Files.exists(child)) {
     return child
   } else {
-    def parent = path.getParent()
+    def parent = path.getParent().toRealPath()
     if (parent == null) {
       return null
     } else {
