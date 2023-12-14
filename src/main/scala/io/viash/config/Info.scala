@@ -42,9 +42,4 @@ case class Info(
   git_remote: Option[String] = None,
   @description("Git tag.")
   git_tag: Option[String] = None,
-
-  @description("The project config content used during build.")
-  project_config: Option[ViashProject] = None,
-  @description("The config mods passed in the CLI during build.")
-  config_mods: List[String] = Nil,
 )

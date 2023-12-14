@@ -38,6 +38,7 @@ import java.nio.file.FileSystemNotFoundException
 import io.viash.runners.{Runner, ExecutableRunner, NextflowRunner}
 import io.viash.engines.{Engine, NativeEngine, DockerEngine}
 import io.viash.helpers.ReplayableMultiOutputStream
+import io.viash.project.ViashProject
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -87,7 +88,12 @@ case class Config(
   engines: List[Engine] = Nil,
 
   @undocumented
-  info: Option[Info] = None
+  info: Option[Info] = None,
+
+  @description("The project config content used during build.")
+  @since("Viash 0.9.0")
+  @undocumented
+  project_config: Option[ViashProject] = None
 ) {
 
   @description(
@@ -236,25 +242,25 @@ object Config extends Logging {
   // reads and modifies the config based on the current setup
   def read(
     configPath: String,
-    projectDir: Option[URI] = None,
     addOptMainScript: Boolean = true,
-    configMods: List[String] = Nil
+    viashProject: Option[ViashProject] = None,
   ): Config = {
     val uri = IO.uri(configPath)
     readFromUri(
       uri = uri,
-      projectDir = projectDir,
       addOptMainScript = addOptMainScript,
-      configMods = configMods
+      viashProject = viashProject
     )
   }
 
   def readFromUri(
     uri: URI,
-    projectDir: Option[URI] = None,
     addOptMainScript: Boolean = true,
-    configMods: List[String] = Nil
+    viashProject: Option[ViashProject] = None,
   ): Config = {
+    val projectDir = viashProject.flatMap(_.rootDir).map(_.toUri())
+    val configMods: List[String] = viashProject.map(_.config_mods.toList).getOrElse(Nil)
+
     // read cli config mods
     val confMods = ConfigMods.parseConfigMods(configMods)
 
@@ -333,35 +339,39 @@ object Config extends Logging {
     }
 
     // print warnings if need be
-    if (conf2.functionality.status == Status.Deprecated)
-      warn(s"Warning: The status of the component '${conf2.functionality.name}' is set to deprecated.")
+    if (conf3.functionality.status == Status.Deprecated)
+      warn(s"Warning: The status of the component '${conf3.functionality.name}' is set to deprecated.")
     
-    if (conf2.functionality.resources.isEmpty && optScript.isEmpty)
+    if (conf3.functionality.resources.isEmpty && optScript.isEmpty)
       warn(s"Warning: no resources specified!")
 
+    /* CONFIG 4: add Viash Project Config */
+    val conf4 = conf3.copy(
+      project_config = viashProject
+    )
+
     if (!addOptMainScript) {
-      return conf3
+      return conf4
     }
     
-    /* CONFIG 4: add main script if config is stored inside script */
+    /* CONFIG 5: add main script if config is stored inside script */
     // add info and additional resources
-    val conf4 = conf3.copy(
+    val conf5 = conf4.copy(
       functionality = conf3.functionality.copy(
         resources = optScript.toList ::: conf3.functionality.resources
       )
     )
 
-    conf4
+    conf5
   }
 
   def readConfigs(
     source: String,
-    projectDir: Option[URI] = None,
     query: Option[String] = None,
     queryNamespace: Option[String] = None,
     queryName: Option[String] = None,
-    configMods: List[String] = Nil,
-    addOptMainScript: Boolean = true
+    addOptMainScript: Boolean = true,
+    viashProject: Option[ViashProject] = None,
   ): List[AppliedConfig] = {
 
     val sourceDir = Paths.get(source)
@@ -382,11 +392,10 @@ object Config extends Logging {
           // When replaying, output directly to the console. Logger functions were already called, so we don't want to call them again.
           Console.withErr(rmos.getOutputStream(Console.err.print)) {
             Console.withOut(rmos.getOutputStream(Console.out.print)) {
-              Config.read(
+              read(
                 file.toString,
-                projectDir = projectDir,
                 addOptMainScript = addOptMainScript,
-                configMods = configMods
+                viashProject = viashProject
               )
             }
           }

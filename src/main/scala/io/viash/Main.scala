@@ -436,9 +436,8 @@ object Main extends Logging {
     
     val config = Config.read(
       configPath = subcommand.config(),
-      projectDir = project.rootDir.map(_.toUri()),
       addOptMainScript = addOptMainScript,
-      configMods = project.config_mods
+      viashProject = Some(project)
     )
     if (applyRunnerAndEngine) {
       val runnerStr = subcommand.runner.toOption
@@ -475,12 +474,11 @@ object Main extends Logging {
 
     val configs0 = Config.readConfigs(
       source = source,
-      projectDir = project.rootDir.map(_.toUri()),
       query = query,
       queryNamespace = queryNamespace,
       queryName = queryName,
-      configMods = configMods,
-      addOptMainScript = addOptMainScript
+      addOptMainScript = addOptMainScript,
+      viashProject = Some(project)
     )
     
     // TODO: apply engine and runner should probably be split into two Y_Y

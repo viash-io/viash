@@ -138,7 +138,7 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Use a local repository with a relative path") {
-    val testFolder = createViashSubFolder(temporaryFolder, "local_test_absolute_path")
+    val testFolder = createViashSubFolder(temporaryFolder, "local_test_relative_path")
     
     // write test files
     val fun1 = Functionality(
