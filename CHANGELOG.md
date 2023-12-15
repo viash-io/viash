@@ -2,6 +2,11 @@
 
 TODO add summary
 
+## BUG FIXES
+
+* `NextflowPlatform`: properly resolve paths when a nextflow workflow has another nextflow
+  workflow as dependency and the worktree contains a directory that is a symlink.
+
 # Viash 0.8.2 (2023-12-14): Minor changes and bug fixes
 
 This release fixes a few bugs regarding dependencies and how the Nextflow platform handles Paths.
