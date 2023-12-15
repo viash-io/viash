@@ -255,7 +255,7 @@ case class NextflowPlatform(
       |
       |// create meta object
       |meta = [
-      |  "resources_dir": moduleDir.toRealPath().normalize(),
+      |  "resources_dir": moduleDir.normalize(),
       |  "config": ${NextflowHelper.generateConfigStr(config)}
       |]
       |
