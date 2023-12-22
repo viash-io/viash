@@ -192,8 +192,8 @@ object NextflowHelper {
     *     ```
     *   - When an alias is defined:
     *     ```
-    *     include { my_dep as my_alias } from "..."
-    *     my_alias = my_alias.run(key: "my_alias")
+    *     include { my_dep as my_alias_viashalias } from "..."
+    *     my_alias = my_alias_viashalias.run(key: "my_alias")
     *     ```
     */
   def renderInclude(dependency: Dependency, parentPath: Path): String = {
@@ -202,8 +202,8 @@ object NextflowHelper {
     }
 
     val depName = dependency.configInfo("functionalityName")
-    val aliasStr = dependency.alias.map(" as " + _).getOrElse("")
-    val runIfAliasStr = dependency.alias.map(a => "\n" + a + " = " + a + ".run(key: \"" + a + "\")").getOrElse("")
+    val aliasStr = dependency.alias.map(" as " + _ + "_viashalias").getOrElse("")
+    val runIfAliasStr = dependency.alias.map(a => "\n" + a + " = " + a + "_viashalias.run(key: \"" + a + "\")").getOrElse("")
 
     val source =
       if (dependency.isLocalDependency) {
