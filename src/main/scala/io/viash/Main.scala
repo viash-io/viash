@@ -181,8 +181,8 @@ object Main extends Logging {
     val cli = new CLIConf(viashArgs.toIndexedSeq) 
 
     // Set Logger paramters
-    cli.subcommands.last match {
-      case x: ViashLogger => 
+    cli.subcommands.lastOption match {
+      case Some(x: ViashLogger) => 
         if (x.colorize.isDefined) {
           val colorize = x.colorize() match {
             case "auto" => None
@@ -198,17 +198,17 @@ object Main extends Logging {
     }
     
     // see if there are project overrides passed to the viash command
-    val projSrc = cli.subcommands.last match {
-      case x: ViashNs => x.src.toOption
+    val projSrc = cli.subcommands.lastOption match {
+      case Some(x: ViashNs) => x.src.toOption
       case _ => None
     }
-    val projTarg = cli.subcommands.last match {
-      case x: ViashNsBuild => x.target.toOption
+    val projTarg = cli.subcommands.lastOption match {
+      case Some(x: ViashNsBuild) => x.target.toOption
       case _ => None
     }
-    val projCm = cli.subcommands.last match {
-      case x: ViashNs => x.config_mods()
-      case x: ViashCommand => x.config_mods()
+    val projCm = cli.subcommands.lastOption match {
+      case Some(x: ViashNs) => x.config_mods()
+      case Some(x: ViashCommand) => x.config_mods()
       case _ => Nil
     }
 
@@ -371,7 +371,7 @@ object Main extends Logging {
         )
         0
       case _ =>
-        info("No subcommand was specified. See `viash --help` for more information.")
+        error("Error: No subcommand was specified. See `viash --help` for more information.")
         1
     }
   }
