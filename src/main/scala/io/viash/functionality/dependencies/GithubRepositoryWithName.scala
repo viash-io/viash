@@ -23,42 +23,44 @@ import io.viash.helpers.Exec
 import java.io.File
 import java.nio.file.Paths
 
-@description("A Git repository where remote dependency components can be found.")
+@description("A GitHub repository where remote dependency components can be found.")
 @example(
-  """type: git
-    |uri: git+https://github.com/openpipelines-bio/openpipeline.git
+  """name: openpipeline
+    |type: github
+    |repo: openpipelines-bio/openpipeline
     |tag: 0.8.0
     |""".stripMargin,
   "yaml"
 )
 @example(
-  """type: git
-    |uri: git+https://gitlab.com/viash-io/viash.git
+  """name: viash-testns
+    |type: github
+    |repo: viash-io/viash
     |tag: 0.7.1
     |path: src/test/resources/testns
     |""".stripMargin,
   "yaml"
   )
-@subclass("git")
-case class GitRepository(
-  @description("Defines the repository as a Git repository.")
-  `type`: String = "git",
+@subclass("githubwithname")
+case class GithubRepositoryWithName(
+  name: String,
 
-  @description("The URI of the Git repository.")
-  @example("uri: \"git+https://github.com/openpipelines-bio/openpipeline.git\"", "yaml")
-  uri: String,
+  @description("Defines the repository as a GitHub repository.")
+  `type`: String = "github",
+
+  repo: String,
   tag: Option[String],
   path: Option[String] = None,
   localPath: String = ""
-) extends GitRepositoryTrait {
+) extends RepositoryWithName with GithubRepositoryTrait {
   
   def copyRepo(
    `type`: String,
     tag: Option[String],
     path: Option[String],
     localPath: String
-  ): GitRepository = {
-    copy(`type`, uri, tag, path, localPath)
+  ): GithubRepositoryWithName = {
+    copy("", `type`, this.repo, tag, path, localPath)
   }
 
 }

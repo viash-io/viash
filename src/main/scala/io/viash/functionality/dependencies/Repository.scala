@@ -29,9 +29,6 @@ import java.nio.file.Files
 @subclass("GithubRepository")
 @subclass("ViashhubRepository")
 abstract class Repository extends CopyableRepo[Repository] {
-  @description("The identifier used to refer to this repository from dependencies.")
-  val name: String
-
   @description("Defines the repository type. This determines how the repository will be fetched and handled.")
   val `type`: String
 
@@ -46,7 +43,6 @@ abstract class Repository extends CopyableRepo[Repository] {
   val localPath: String
 
   def copyRepo(
-    name: String = this.name,
     `type`: String = this.`type`,
     tag: Option[String] = this.tag,
     path: Option[String] = this.path,
@@ -67,24 +63,26 @@ object Repository {
     str match {
       case sugarSyntaxRegex("git+https", uri, tag) =>
         Some(GitRepository(
-          "TODO generate name",
           uri = "https://" + uri,
           tag = getGitTag(tag)
         ))
       case sugarSyntaxRegex("github", repo, tag) =>
         Some(GithubRepository(
-          "TODO generate name",
           repo = repo,
           tag = getGitTag(tag)
         ))
       case sugarSyntaxRegex("vsh", repo, tag) =>
         Some(ViashhubRepository(
-          "TODO generate name",
           repo = repo,
           tag = getGitTag(tag)
         ))
-      case sugarSyntaxRegex("local", repo, tag) =>
-        Some(LocalRepository("TODO generate name"))
+      case sugarSyntaxRegex("local", path, tag) =>
+        Some(LocalRepository(
+          path = Some(path),
+          tag = getGitTag(tag)
+        ))
+      case "local" =>
+        Some(LocalRepository())
       case _ => None
     }
   }
@@ -95,10 +93,8 @@ object Repository {
   // We just fetched a code base and we have to assume it will not change within this session.
   private val cachedRepos = scala.collection.mutable.ListBuffer[Repository]()
   private def getCachedRepository(repo: Repository): Option[Repository] = {
-    // We can't compare names because they don't hold actual information and can change between configs but still point to the same code base.
-    val anonymizedRepo = repo.copyRepo(name = "")
-    // Compare anonymized repos. Don't compare localPath as that is the information we're looking for.
-    val foundRepo = cachedRepos.find(p => p.copyRepo(localPath = "").equals(anonymizedRepo))
+    // Don't compare localPath as that is the information we're looking for.
+    val foundRepo = cachedRepos.find(p => p.copyRepo(localPath = "").equals(repo))
     // Map Some(foundRepo) to original repo but with localPath filled in, returns None if no cache found.
     foundRepo.map(r => repo.copyRepo(localPath = r.localPath))
   }
@@ -108,7 +104,7 @@ object Repository {
       case r: LocalRepository if r.path.isDefined && !r.path.get.startsWith("/") =>
         // don't do anything, this repo is not reliably cacheable
       case _ =>
-        cachedRepos.append(repo.copyRepo(name = ""))
+        cachedRepos.append(repo)
     }
   }
 
@@ -127,12 +123,12 @@ object Repository {
         // Stopgap solution to be able to use built repositories which were not built with dependency aware Viash version.
         // TODO remove this section once it's deemed no longer necessary
         if (Paths.get(r3.localPath, "target").toFile().exists() && !Paths.get(r3.localPath, "target", ".build.yaml").toFile().exists()) {
-          Console.err.println(s"${Console.YELLOW}Creating temporary 'target/.build.yaml' file for ${r3.name} as this file seems to be missing.${Console.RESET}")
+          Console.err.println(s"${Console.YELLOW}Creating temporary 'target/.build.yaml' file for ${r3.`type`} as this file seems to be missing.${Console.RESET}")
           Files.createFile(Paths.get(r3.localPath, "target", ".build.yaml"))
         }
         r3
       }
-      case r: LocalRepository if r.path.isDefined => {
+      case r: LocalRepositoryTrait if r.path.isDefined => {
         val localPath = r.path.get match {
           case s if s.startsWith("/") => 
             // resolve path relative to the project root

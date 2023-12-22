@@ -61,6 +61,41 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
   }
 
+  test("Run config pipeline with symlink", NextflowTest) {
+    val newWorkflowPath = Paths.get(tempFolStr, "workflowsAsSymlink")
+    Files.createDirectories(newWorkflowPath)
+    val symlinkFolder = Paths.get(newWorkflowPath.toString(), "workflow")
+    Files.createSymbolicLink(symlinkFolder, Paths.get(tempFolStr, "target/nextflow/wf/"))
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "workflowsAsSymlink/workflow/main.nf",
+      args = List(
+        "--id", "foo",
+        "--input1", "resources/lines*.txt",
+        "--input2", "resources/lines3.txt",
+        "--publish_dir", "output"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+  }
+
+  test("Run config pipeline with subworkflow dependency and symlinks", NextflowTest) {
+    val newWorkflowPath = Paths.get(tempFolStr, "nestedWorkflowsAsSymlink")
+    Files.createDirectories(newWorkflowPath)
+    val symlinkFolder = Paths.get(newWorkflowPath.toString(), "workflow")
+    Files.createSymbolicLink(symlinkFolder, Paths.get(tempFolStr, "target/nextflow/test_wfs/"))
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "nestedWorkflowsAsSymlink/workflow/nested/main.nf",
+      args = List(
+        "--publish_dir", "output"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+  }
+
   // TODO: use TestHelper.testMainWithStdErr instead of NextflowTestHelper.run; i.e. viash test
   test("Test workflow", DockerTest, NextflowTest) {
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
