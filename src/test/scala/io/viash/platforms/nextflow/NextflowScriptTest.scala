@@ -145,6 +145,8 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    assert(stdOut.contains("step1_alias_process"))
+    assert(!stdOut.contains("Key for module 'step1' is duplicated"))
   }
 
   test("Test for concurrency issues", DockerTest, NextflowTest) {
