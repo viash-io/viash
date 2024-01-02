@@ -9,6 +9,8 @@ TODO add summary
 
 * `Main`: Fixes a bug added by #294 which causes Viash to print a stacktrace instead of a helpful error message when `viash` is run without any arguments (#617, PR #618).
   Thanks @mberacochea for pointing out this oversight!
+  
+* `Dependency`: When an alias is defined, pass the alias as a key to the `.run()` function (#601, PR #606).
 
 # Viash 0.8.2 (2023-12-14): Minor changes and bug fixes
 
