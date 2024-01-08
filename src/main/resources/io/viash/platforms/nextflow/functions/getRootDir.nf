@@ -17,7 +17,7 @@ def _findBuildYamlFile(pathPossiblySymlink) {
 
 // get the root of the target folder
 def getRootDir() {
-  def dir = _findBuildYamlFile(moduleDir.normalize())
+  def dir = _findBuildYamlFile(meta.resources_dir)
   assert dir != null: "Could not find .build.yaml in the folder structure"
   dir.getParent()
 }

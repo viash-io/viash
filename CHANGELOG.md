@@ -1,3 +1,17 @@
+# Viash 0.8.3 (2024-01-08): Bug fixes
+
+Fix some edge cases and improve usability.
+
+## BUG FIXES
+
+* `NextflowPlatform`: properly resolve paths when a nextflow workflow has another nextflow
+  workflow as dependency and the worktree contains a directory that is a symlink (PR #614).
+
+* `Main`: Fixes a bug added by #294 which causes Viash to print a stacktrace instead of a helpful error message when `viash` is run without any arguments (#617, PR #618).
+  Thanks @mberacochea for pointing out this oversight!
+  
+* `Dependency`: When an alias is defined, pass the alias as a key to the `.run()` function (#601, PR #606).
+
 # Viash 0.8.2 (2023-12-14): Minor changes and bug fixes
 
 This release fixes a few bugs regarding dependencies and how the Nextflow platform handles Paths.
