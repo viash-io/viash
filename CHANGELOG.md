@@ -1,6 +1,6 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.8.3 (2024-01-08): Bug fixes
 
-TODO add summary
+Fix some edge cases and improve usability.
 
 ## BUG FIXES
 
