@@ -63,7 +63,7 @@ Viash is available as an open-source project at [github.com/viash-io/viash](http
 
 
 # Statement of Need
-Recent developments in high-throughput RNA sequencing and imaging technologies allow present-day biologists to observe single-cell characteristics in ever more detail [@luecken_currentbestpractices_2019]. As the dataset size and the complexity of bioinformatics workflows increases, so does the need for scalable and reproducible data science. In single cell biology, recent efforts to standardise some of the most common single-cell analyses [@amezquita_orchestratingsinglecell_2020; @nfcoreframeworkcommunity_ewels2020; @huemos_bestpracticessingle_2023] tackle these challenges by using a workflow framework (e.g. Snakemake [@koster_snakemakescalablebioinformaticsworkflow_2012], Nextflow [@ditommaso_nextflowenablesreproducible_2017]), containerisation (e.g. Docker [@merkel_dockerlightweight_2014], Singularity/Apptainer [@kurtzer_singularityscientificcontainers_2017], Podman [@heon_podmantoolmanaging_2018]) and horizontal scaling in cloud computing (e.g. Kubernetes, HPC).
+Recent developments in high-throughput RNA sequencing and imaging technologies allow present-day biologists to observe single-cell characteristics in ever more detail [@luecken_currentbestpractices_2019]. As the dataset size and the complexity of bioinformatics workflows increases, so does the need for scalable and reproducible data science. In single cell biology, recent efforts to standardise some of the most common single-cell analyses [@amezquita_orchestratingsinglecell_2020; @nfcoreframeworkcommunity_ewels2020; @huemos_bestpracticessingle_2023] tackle these challenges by using a workflow framework (e.g. Snakemake, Nextflow), containerisation (e.g. Docker, Podman) and horizontal scaling in cloud computing (e.g. Kubernetes, HPC).
 
 Since research projects are increasingly more complex and interdisciplinary, researchers from different fields and backgrounds are required to join forces. This implies that not all project contributors can be experts in computer science. The chosen framework for such projects therefore needs to have a low barrier to entry in order for contributors to be able to participate. One common pitfall which greatly increases the barrier to entry is tightly coupling a workflow and the components it consists of. Major drawbacks include lower transparency of the overall workflow, limited reusability of workflow components, increased complexity, debugging time increase and a greater amount of time spent refactoring and maintaining boilerplate code. Non-expert developers in particular will experience more arduous debugging sessions as they need to treat the workflow as a black box.
 
@@ -92,20 +92,14 @@ One major benefit of using code regeneration is that best practices in workflow 
 
 
 # State of the field
-Nextflow, Snakemake, CWL, and WDL represent leading workflow management systems that the bioinformatics community increasingly relies upon.
 
-Nextflow stands out for its expertise in crafting data-driven computational pipelines, leveraging software containers to ensure both scalability and reproducibility, making it exceptionally suitable for demanding computational landscapes.
+The realm of bioinformatics workflow management is evolving rapidly, with numerous frameworks and portability solutions emerging to address the escalating complexity and scale of data processing [@wratten_reproduciblescalablesharable_2021]. Viash positions itself uniquely in this landscape as a meta-framework, focusing on the creation of portable workflow modules.
 
-Snakemake combines the intuitiveness of Python scripting with the reliability of a make-like execution methodology, providing both ease and efficiency.
+Workflow frameworks can be broadly categorised into three broad categories: Graphical, Programmatic, and Specification-based types. Graphical workflow frameworks such as Galaxy [@goecks_galaxycomprehensiveapproach_2010] and KNIME [@fillburn_knimereproduciblecrossdomain_2017] are user-friendly for non-coders, while programmatic workflow frameworks such as Nextflow [@ditommaso_nextflowenablesreproducible_2017], Snakemake [@koster_snakemakescalablebioinformaticsworkflow_2012], and WDL ([https://openwdl.org](https://openwdl.org)) offer a DSL or programming library for developers. Specification-based workflow frameworks such as CWL [@crusoe_methodsincludestandardizing_2022] lie somewhere in between. These allow to describe and execute workflows with specification files (e.g. a YAML), and these specification files can be constructed using Graphical or Programmatic interfaces.
 
-CWL (Common Workflow Language) champions a standardised approach to defining tasks and workflows. Its commitment to uniformity translates to seamless reproducibility and adaptability across a myriad of computational settings.
+Portability solutions are critical for ensuring reproducibility. These can be divided into package managers like Conda for automated installation of versioned software, and containerization tools like Docker ([https://www.docker.com](https://www.docker.com)) and Podman [@heon_podmantoolmanaging_2018], which package and distribute software dependencies in a self-contained and platform-independent manner.
 
-WDL (Workflow Description Language) offers an elegant means of detailing data processing workflows through its user-friendly and interpretable syntax.
-
-Though each framework boasts unique advantages, mastering their intricate language specifications can be daunting. Insufficient proficiency might jeopardise the integrity and reproducibility of the resulting scientific findings.
-
-Viash offers a solution to this challenge. It empowers users to develop components in their preferred programming language and, through the efforts of this project, will seamlessly bridge the gap to cutting-edge Nextflow, Snakemake, and WDL modules.
-
+Viash's role in this landscape is to bridge these diverse tools, enabling more efficient and collaborative development in bioinformatics workflows.
 
 
 
