@@ -8,19 +8,25 @@ authors:
   corresponding: yes
   affiliation: 1, 2, 3
 - name: Hendrik Cannoodt
+  orcid: 0000-0002-0032-6719
   affiliation: '1'
 - name: Dries Schaumont
+  orcid: 0000-0002-4389-0440
   affiliation: '1'
 - name: Kai Waldrant
+  orcid: 0009-0003-8555-1361
   affiliation: '1'
 - name: Eric Van de Kerckhove
   affiliation: '1'
 - name: Andy Boschmans
+  orcid: 0009-0008-8793-4661
   affiliation: '1'
 - name: Dries De Maeyer
+  orcid: 0000-0002-1314-3348
   affiliation: '4'
 - name: Toni Verbeiren
   email: toni@data-intuitive.com
+  orcid: 0000-0002-7007-6866
   corresponding: yes
   affiliation: '1'
 affiliations:
