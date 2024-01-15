@@ -15,18 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash
+package io.viash.project
 
-import io.circe.{Decoder, Encoder, Json}
-import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
+import io.viash.schemas._
 
-package object project {
-  import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
-
-  implicit val encodeViashProjectLinks: Encoder.AsObject[ViashProjectLinks] = deriveConfiguredEncoder
-  implicit val decodeViashProjectLinks: Decoder[ViashProjectLinks] = deriveConfiguredDecoderFullChecks
-
-  implicit val encodeViashProject: Encoder.AsObject[ViashProject] = deriveConfiguredEncoder
-  implicit val decodeViashProject: Decoder[ViashProject] = deriveConfiguredDecoderFullChecks
-}
+@description("Links to external resources related to the project.")
+@since("Viash 0.9.0")
+case class ViashProjectLinks(
+  @description("Source repository url (can be used to define the target_image_source in Docker images).")
+  source: Option[String] = None,
+  @description("Docker registry url (can be used to define the target registry in Docker images).")
+  docker_registry: Option[String] = None,
+  @description("Documentation website.")
+  homepage: Option[String] = None,
+  @description("Issue tracker.")
+  issue_tracker: Option[String] = None,
+)

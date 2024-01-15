@@ -26,6 +26,7 @@ import io.viash.helpers.circe._
 import io.circe.Json
 import java.net.URI
 import io.viash.functionality.dependencies.Repository
+import io.viash.functionality.Author
 
 @description("A Viash project configuration file. It's name should be `_viash.yaml`.")
 @example(
@@ -102,7 +103,56 @@ case class ViashProject(
 
   @description("Directory in which the _viash.yaml resides.")
   @internalFunctionality
-  rootDir: Option[Path] = None
+  rootDir: Option[Path] = None,
+
+  @description("The authors of the project.")
+  @example(
+    """authors:
+      |  - name: Jane Doe
+      |    role: [author, maintainer]
+      |    email: jane@doe.com
+      |    info:
+      |      github: janedoe
+      |      twitter: janedoe
+      |      orcid: XXAABBCCXX
+      |      groups: [ one, two, three ]
+      |  - name: Tim Farbe
+      |    roles: [author]
+      |    email: tim@far.be
+      |""".stripMargin, "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  authors: List[Author] = Nil,
+
+  @description("The keywords of the project.")
+  @example("keywords: [ bioinformatics, genomics ]", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  keywords: List[String] = Nil,
+
+  @description("The license of the project.")
+  @example("license: MIT", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  license: Option[String] = None,
+
+  @description("The organization of the project.")
+  @example("organization: viash-io", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  organization: Option[String] = None,
+
+  @description("External links of the project.")
+  @example(
+    """links:
+      |  source: "https://github.com/viash-io/viash"
+      |  docker_registry: "https://ghcr.io"
+      |  homepage: "https://viash.io"
+      |  issue_tracker: "https://github.com/viash-io/viash/issues"
+      |""".stripMargin, "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  links: ViashProjectLinks = ViashProjectLinks(),
 )
 
 object ViashProject {
