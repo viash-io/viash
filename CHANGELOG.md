@@ -32,6 +32,14 @@ TODO add summary
 
 * `__merge__`: Handle invalid yaml during merging (PR #570). There was not enough error handling during this operation. Switched to the more advanced `Convert.textToJson` helper method.
 
+# Viash 0.8.4 (yyyy-MM-dd): TODO Add title
+
+TODO add summary
+
+## BUG FIXES
+
+* `dependencies`: Fix dependencies with paths using symlinks (PR #621). The resolution for the `.build.vsh` was changed to use the `toRealPath` previously, so dependency resolution must take account possible resolved symlinks too.
+
 # Viash 0.8.3 (2024-01-08): Bug fixes
 
 Fix some edge cases and improve usability.
