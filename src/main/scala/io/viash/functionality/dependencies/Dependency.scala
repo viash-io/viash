@@ -163,7 +163,7 @@ object Dependency {
   // From a built dependency's writtenPath, strip the target folder. Uses `.build.yaml` as reference.
   def getRelativePath(sourcePath: Path, repoPath: Path): Option[Path] = {
     val pathRoot = findBuildYamlFile(sourcePath, repoPath).map(_.getParent)
-    pathRoot.map(pr => pr.relativize(sourcePath))
+    pathRoot.map(pr => pr.relativize(sourcePath.toRealPath()))
   }
 
   // Traverse the folder upwards until a `.build.yaml` is found but do not traverse beyond `repoPath`.
