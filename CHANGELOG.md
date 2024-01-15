@@ -1,6 +1,6 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.8.4 (2024-01-15): Bug fix
 
-TODO add summary
+Fix building components with dependencies that have symlinks in their paths.
 
 ## BUG FIXES
 
