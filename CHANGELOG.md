@@ -1,3 +1,11 @@
+# Viash 0.8.4 (2024-01-15): Bug fix
+
+Fix building components with dependencies that have symlinks in their paths.
+
+## BUG FIXES
+
+* `dependencies`: Fix dependencies with paths using symlinks (PR #621). The resolution for the `.build.vsh` was changed to use the `toRealPath` previously, so dependency resolution must take account possible resolved symlinks too.
+
 # Viash 0.8.3 (2024-01-08): Bug fixes
 
 Fix some edge cases and improve usability.
