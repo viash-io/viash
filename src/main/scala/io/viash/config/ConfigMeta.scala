@@ -40,7 +40,21 @@ object ConfigMeta {
   val metaFilename: String = ".config.vsh.yaml"
 
   def configToCleanJson(config: Config): Json = {
-    val encodedConfig: Json = encodeConfig(config)
+    // relativize paths in the info field
+    val anonymizedConfig = config.projectDir match {
+      case Some(dir) =>
+        val path = Paths.get(dir)
+        config.copy(
+          info = config.info.map(info => info.copy(
+            config = path.relativize(Paths.get(info.config)).toString(),
+            output = info.output.map(o => path.relativize(Paths.get(o)).toString()),
+            executable = info.executable.map(e => path.relativize(Paths.get(e)).toString())
+          ))
+        )
+      case None => config
+    }
+
+    val encodedConfig: Json = encodeConfig(anonymizedConfig)
     // drop empty & null values recursively except all "info" fields
     val cleanEncodedConfig = encodedConfig.dropEmptyRecursivelyExcept(Seq("info", ".engines.entrypoint", ".engines.cmd"))
     // get config.info and *do* clean it

@@ -87,7 +87,10 @@ case class Config(
   engines: List[Engine] = Nil,
 
   @undocumented
-  info: Option[Info] = None
+  info: Option[Info] = None,
+
+  @internalFunctionality
+  projectDir: Option[String] = None,
 ) {
 
   @description(
@@ -305,7 +308,8 @@ object Config extends Logging {
       functionality = conf0.functionality.copy(
         resources = resources,
         test_resources = tests
-      )
+      ),
+      projectDir = projectDir.map(_.toString.replaceAll("^file:/+", "/"))
     )
 
     /* CONFIG 3: add info */
