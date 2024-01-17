@@ -39,6 +39,7 @@ import io.viash.runners.{Runner, ExecutableRunner, NextflowRunner}
 import io.viash.engines.{Engine, NativeEngine, DockerEngine}
 import io.viash.helpers.ReplayableMultiOutputStream
 import io.viash.project.ViashProject
+import io.viash.lenses.ConfigLenses._
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -93,7 +94,25 @@ case class Config(
   @description("The project config content used during build.")
   @since("Viash 0.9.0")
   @undocumented
-  project_config: Option[ViashProject] = None
+  project_config: Option[ViashProject] = None,
+
+  @description("The keywords of the components.")
+  @example("keywords: [ bioinformatics, genomics ]", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  keywords: List[String] = Nil,
+
+  @description("The license of the project.")
+  @example("license: MIT", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  license: Option[String] = None,
+
+  @description("The organization of the project.")
+  @example("organization: viash-io", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  organization: Option[String] = None,
 ) {
 
   @description(
@@ -283,9 +302,49 @@ object Config extends Logging {
     // apply preparse config mods if need be
     val json2 = confMods(json1, preparse = true)
 
-    /* CONFIG 0: converted from json */
+    /* CONFIG Base: converted from json */
     // convert Json into Config
-    val conf0 = Convert.jsonToClass[Config](json2, uri.toString())
+    val confBase = Convert.jsonToClass[Config](json2, uri.toString())
+
+    /* CONFIG 0: apply values from project config */
+    // apply values from project config if need be
+    val conf0 = {
+      val vpVersion = viashProject.flatMap(_.version)
+      val vpRepositories = viashProject.map(_.repositories)
+      val vpLicense = viashProject.flatMap(_.license)
+      val vpOrganization = viashProject.flatMap(_.organization)
+      val confVersion = confBase.functionality.version
+
+      val c0v0 = 
+        if (vpVersion.isDefined && confVersion.isEmpty) {
+          composedVersionLens.set(vpVersion)(confBase)
+        } else {
+          confBase
+        }
+
+      val c0v1 = 
+        if (vpRepositories.isDefined) {
+          composedRepositoriesLens.modify(vpRepositories.get ::: _)(c0v0)
+        } else {
+          c0v0
+        }
+      
+      val c0v2 =
+        if (vpLicense.isDefined) {
+          licenseLens.set(vpLicense)(c0v1)
+        } else {
+          c0v1
+        }
+
+      val c0v3 =
+        if (vpOrganization.isDefined) {
+          organizationLens.set(vpOrganization)(c0v2)
+        } else {
+          c0v2
+        }
+
+      c0v3
+    }
 
     /* CONFIG 1: apply post-parse config mods */
     // apply config mods only if need be
@@ -301,18 +360,14 @@ object Config extends Logging {
         conf0
       }
 
-    /* CONFIG 1: store parent path in resource to be able to access them in the future */
+    /* CONFIG 2: store parent path in resource to be able to access them in the future */
+    // copy resources with updated paths into config and return
     val parentURI = uri.resolve("")
     val resources = conf1.functionality.resources.map(_.copyWithAbsolutePath(parentURI, projectDir))
     val tests = conf1.functionality.test_resources.map(_.copyWithAbsolutePath(parentURI, projectDir))
 
-    // copy resources with updated paths into config and return
-    val conf2 = conf1.copy(
-      functionality = conf0.functionality.copy(
-        resources = resources,
-        test_resources = tests
-      )
-    )
+    val conf2a = composedResourcesLens.set(resources)(conf1)
+    val conf2 = composedTestResourcesLens.set(tests)(conf2a)
 
     /* CONFIG 3: add info */
     // gather git info
@@ -356,11 +411,7 @@ object Config extends Logging {
     
     /* CONFIG 5: add main script if config is stored inside script */
     // add info and additional resources
-    val conf5 = conf4.copy(
-      functionality = conf3.functionality.copy(
-        resources = optScript.toList ::: conf3.functionality.resources
-      )
-    )
+    val conf5 = composedResourcesLens.modify(optScript.toList ::: _)(conf4)
 
     conf5
   }

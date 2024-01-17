@@ -25,7 +25,7 @@ import io.viash.helpers.IO
 import io.viash.helpers.circe._
 import io.circe.Json
 import java.net.URI
-import io.viash.functionality.dependencies.Repository
+import io.viash.functionality.dependencies.RepositoryWithName
 import io.viash.functionality.Author
 
 @description("A Viash project configuration file. It's name should be `_viash.yaml`.")
@@ -78,7 +78,7 @@ case class ViashProject(
       "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
-  repositories: List[Repository] = Nil,
+  repositories: List[RepositoryWithName] = Nil,
 
   @description("Which version of Viash to use.")
   @example("viash_versions: 0.6.4", "yaml")
