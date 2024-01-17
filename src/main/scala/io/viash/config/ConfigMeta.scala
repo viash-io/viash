@@ -26,6 +26,7 @@ import io.viash.helpers.circe._
 import io.circe.Json
 import io.circe.JsonObject
 import io.viash.functionality.resources.NextflowScript
+import io.viash.helpers.IO
 
 object ConfigMeta {
   // create a yaml printer for writing the viash.yaml file
@@ -46,9 +47,9 @@ object ConfigMeta {
         val path = Paths.get(dir)
         config.copy(
           info = config.info.map(info => info.copy(
-            config = path.relativize(Paths.get(info.config)).toString(),
-            output = info.output.map(o => path.relativize(Paths.get(o)).toString()),
-            executable = info.executable.map(e => path.relativize(Paths.get(e)).toString())
+            config = IO.anonymizePath(dir, info.config),
+            output = info.output.map(o => IO.anonymizePath(dir, o)),
+            executable = info.executable.map(e => IO.anonymizePath(dir, e))
           ))
         )
       case None => config

@@ -329,4 +329,25 @@ object IO extends Logging {
     val newPath = resolvePathWrtURI(path, uri)
     uri.resolve(newPath)
   }
+
+  /**
+    * Relativize a path w.r.t. a base path
+    * 
+    * If the path is not relative to the base path, the path is returned unchanged
+    *
+    * @param basePath The base path of the project
+    * @param path The path to relativize
+    * @return A relativized path or the original path if it was not relative to the base path
+    */
+  def anonymizePath(basePath: String, path: String): String = {
+    val rootPath = Paths.get(basePath)
+    val pathPath = Paths.get(path)
+    val relative = rootPath.relativize(pathPath).toString()
+    
+    if (relative.startsWith("..")) {
+      path
+    } else {
+      relative
+    }
+  }
 }
