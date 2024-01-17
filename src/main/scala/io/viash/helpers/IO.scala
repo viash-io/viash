@@ -345,7 +345,7 @@ object IO extends Logging {
     val relative = rootPath.relativize(pathPath).toString()
     
     if (relative.startsWith("..")) {
-      path
+      Paths.get("[anonymized]", pathPath.toFile().getName()).toString()
     } else {
       relative
     }

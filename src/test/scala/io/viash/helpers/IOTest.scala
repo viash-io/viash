@@ -106,14 +106,14 @@ class IOTest extends AnyFunSuite with BeforeAndAfter {
     val basePath = "/foo/bar"
     val path = "/foo/baz/test.txt"
     val result = IO.anonymizePath(basePath, path)
-    assert(result == path)
+    assert(result == "[anonymized]/test.txt")
   }
 
   test("anynimizePath with a completely different base path") {
     val basePath = "/foo/bar"
     val path = "/tmp/foo/bar/baz/test.txt"
     val result = IO.anonymizePath(basePath, path)
-    assert(result == path)
+    assert(result == "[anonymized]/test.txt")
   }
 
   test("anonymizePath with a common path and a trailing slash") {
