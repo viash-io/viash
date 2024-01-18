@@ -5,7 +5,7 @@
    viewBox="0 0 191.00014 161.99999"
    version="1.1"
    id="svg8"
-   inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
+   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25)"
    sodipodi:docname="figure_2.svg"
    inkscape:export-filename="figure_2.png"
    inkscape:export-xdpi="299.935"
@@ -1686,9 +1686,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.8742328"
-     inkscape:cx="491.66784"
-     inkscape:cy="362.01479"
+     inkscape:zoom="2.2830052"
+     inkscape:cx="285.8075"
+     inkscape:cy="297.63401"
      inkscape:document-units="cm"
      inkscape:current-layer="layer1"
      inkscape:document-rotation="0"
@@ -1719,7 +1719,8 @@
        empspacing="5"
        originx="-439.9999"
        originy="-36.776454"
-       visible="true" />
+       visible="true"
+       enabled="false" />
   </sodipodi:namedview>
   <metadata
      id="metadata5">
@@ -2112,7 +2113,7 @@
          x="451.99982"
          y="101.86765"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;text-anchor:start;fill:#232323;fill-opacity:1;stroke-width:0.529159"
-         id="tspan21161-8">    - Install system requirements</tspan><tspan
+         id="tspan21161-8">    - Specify software dependencies</tspan><tspan
          sodipodi:role="line"
          x="451.99982"
          y="106.27731"
@@ -2149,7 +2150,7 @@
          x="559.81494"
          y="141.71555"
          style="stroke-width:0.264583"
-         id="tspan1934-0">module/workflow</tspan></text>
+         id="tspan1934-0">workflow</tspan></text>
     <path
        style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
        d="m 589.99992,130.00001 -5,15 h 35 l 5,-15 z"
@@ -2235,18 +2236,13 @@
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:center;text-anchor:middle;stroke-width:0.264583"
        x="559.99994"
-       y="169.00008"
+       y="171.58754"
        id="text7011"><tspan
          sodipodi:role="line"
-         id="tspan7009"
          x="559.99994"
-         y="169.00008"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:center;text-anchor:middle;stroke-width:0.264583">Nextflow</tspan><tspan
-         sodipodi:role="line"
-         x="559.99994"
-         y="174.29173"
+         y="171.58754"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:center;text-anchor:middle;stroke-width:0.264583"
-         id="tspan1">module / workflow</tspan></text>
+         id="tspan1">Nextflow workflow</tspan></text>
     <rect
        style="fill:#ffffff;fill-opacity:1;stroke:#676767;stroke-width:0.4;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:stroke markers fill"
        id="rect7083"
@@ -2374,22 +2370,17 @@
          x="511.99982"
          y="80.000015"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;text-anchor:start;fill:#232323;fill-opacity:1;stroke-width:0.529159"
-         id="tspan3363"> • Supports many scripting languages,</tspan><tspan
+         id="tspan6670"> • Supports many scripting languages,</tspan><tspan
          sodipodi:role="line"
          x="511.99982"
          y="84.409676"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;text-anchor:start;fill:#232323;fill-opacity:1;stroke-width:0.529159"
-         id="tspan6670">    including: </tspan><tspan
+         id="tspan6674">    E.g. Bash, Python, R, and JavaScript</tspan><tspan
          sodipodi:role="line"
          x="511.99982"
          y="88.819344"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;text-anchor:start;fill:#232323;fill-opacity:1;stroke-width:0.529159"
-         id="tspan6676">    Bash, Python, R, </tspan><tspan
-         sodipodi:role="line"
-         x="511.99982"
-         y="93.229004"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;text-anchor:start;fill:#232323;fill-opacity:1;stroke-width:0.529159"
-         id="tspan6674">    JavaScript, Scala, C#</tspan></text>
+         id="tspan2"> • Argument parser is auto-generated</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52773px;line-height:1.25;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;text-anchor:start;fill:#232323;fill-opacity:1;stroke-width:0.529159"
@@ -2672,44 +2663,54 @@
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52773px;line-height:1.25;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;text-anchor:start;fill:#232323;fill-opacity:1;stroke-width:0.529159"
        x="512.99982"
-       y="181.33107"
+       y="179.45145"
        id="text3317-6-2"><tspan
          sodipodi:role="line"
          x="512.99982"
-         y="181.33107"
+         y="179.45145"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;text-anchor:start;fill:#232323;fill-opacity:1;stroke-width:0.529159"
-         id="tspan6741">Dockerfile is</tspan><tspan
+         id="tspan10">Software</tspan><tspan
          sodipodi:role="line"
          x="512.99982"
-         y="185.74074"
+         y="183.86111"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;text-anchor:start;fill:#232323;fill-opacity:1;stroke-width:0.529159"
-         id="tspan6745">autogenerated</tspan><tspan
+         id="tspan11">dependencies</tspan><tspan
          sodipodi:role="line"
          x="512.99982"
-         y="190.15039"
+         y="188.27077"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;text-anchor:start;fill:#232323;fill-opacity:1;stroke-width:0.529159"
-         id="tspan6747">by Viash</tspan></text>
+         id="tspan8">are translated</tspan><tspan
+         sodipodi:role="line"
+         x="512.99982"
+         y="192.68044"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;text-anchor:start;fill:#232323;fill-opacity:1;stroke-width:0.529159"
+         id="tspan9">into a Dockerfile</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52773px;line-height:1.25;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;text-anchor:start;fill:#232323;fill-opacity:1;stroke-width:0.529159"
        x="557.99982"
-       y="181.32349"
+       y="179.11865"
        id="text3317-6-2-5"><tspan
          sodipodi:role="line"
          x="557.99982"
-         y="181.32349"
+         y="179.11865"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;text-anchor:start;fill:#232323;fill-opacity:1;stroke-width:0.529159"
-         id="tspan6792">Modular script</tspan><tspan
+         id="tspan6839">Can be used as</tspan><tspan
          sodipodi:role="line"
          x="557.99982"
-         y="185.73315"
+         y="183.52832"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;text-anchor:start;fill:#232323;fill-opacity:1;stroke-width:0.529159"
-         id="tspan6847">is generated</tspan><tspan
+         id="tspan4">a standalone </tspan><tspan
          sodipodi:role="line"
          x="557.99982"
-         y="190.14281"
+         y="187.93797"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;text-anchor:start;fill:#232323;fill-opacity:1;stroke-width:0.529159"
-         id="tspan6839">by Viash</tspan></text>
+         id="tspan5">workflow or as</tspan><tspan
+         sodipodi:role="line"
+         x="557.99982"
+         y="192.34764"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;text-anchor:start;fill:#232323;fill-opacity:1;stroke-width:0.529159"
+         id="tspan6">a dependency</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;text-anchor:start;stroke-width:0.264583"
@@ -2823,5 +2824,17 @@
   </g>
   <style
      type="text/css"
-     id="style1573">&#10;	.Drop_x0020_Shadow{fill:none;}&#10;	.Round_x0020_Corners_x0020_2_x0020_pt{fill:#FFFFFF;stroke:#1B1B1F;stroke-miterlimit:10;}&#10;	.Live_x0020_Reflect_x0020_X{fill:none;}&#10;	.Bevel_x0020_Soft{fill:url(#SVGID_1_);}&#10;	.Dusk{fill:#FFFFFF;}&#10;	.Foliage_GS{fill:#FFDC00;}&#10;	.Pompadour_GS{fill-rule:evenodd;clip-rule:evenodd;fill:#58AEE2;}&#10;	.st0{fill:none;}&#10;	.st1{fill:#FFFFFF;}&#10;	.st2{fill:#283037;}&#10;	.st3{fill:#4DA825;}&#10;</style>
+     id="style1573">
+	.Drop_x0020_Shadow{fill:none;}
+	.Round_x0020_Corners_x0020_2_x0020_pt{fill:#FFFFFF;stroke:#1B1B1F;stroke-miterlimit:10;}
+	.Live_x0020_Reflect_x0020_X{fill:none;}
+	.Bevel_x0020_Soft{fill:url(#SVGID_1_);}
+	.Dusk{fill:#FFFFFF;}
+	.Foliage_GS{fill:#FFDC00;}
+	.Pompadour_GS{fill-rule:evenodd;clip-rule:evenodd;fill:#58AEE2;}
+	.st0{fill:none;}
+	.st1{fill:#FFFFFF;}
+	.st2{fill:#283037;}
+	.st3{fill:#4DA825;}
+</style>
 </svg>
