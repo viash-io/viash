@@ -61,10 +61,6 @@ case class ViashProject(
   @example("config_mods: \".functionality.name := 'foo'\"", "yaml")
   @default("Empty")
   config_mods: OneOrMore[String] = Nil,
-
-  @description("Directory in which the _viash.yaml resides.")
-  @internalFunctionality
-  rootDir: Option[Path] = None
 )
 
 object ViashProject {
@@ -142,8 +138,7 @@ object ViashProject {
     // copy resources with updated paths into config and return
     val proj1 = proj0.copy(
       source = source,
-      target = target,
-      rootDir = Some(path.getParent())
+      target = target
     )
 
     proj1
@@ -154,13 +149,13 @@ object ViashProject {
     * and convert to a ViashProject object
     *
     * @param path The directory in which to look for a file called `_viash.yaml`
-    * @return The project config, if found
+    * @return The project config and project root dir, if found
     */
-  def findViashProject(path: Path): ViashProject = {
+  def findViashProject(path: Path): (ViashProject, Option[Path]) = {
     findProjectFile(path) match {
       case Some(projectPath) =>
-        read(projectPath)
-      case None => ViashProject()
+        (read(projectPath), Some(projectPath.getParent()))
+      case None => (ViashProject(), None)
     }
   }
 }

@@ -47,7 +47,7 @@ object DependencyResolver extends Logging {
     * @param namespaceConfigs Needed for local dependencies
     * @return A config with dependency information added
     */
-  def modifyConfig(config: Config, runnerId: Option[String], projectRootDir: Option[Path], namespaceConfigs: List[Config] = Nil): Config = {
+  def modifyConfig(config: Config, runnerId: Option[String], namespaceConfigs: List[Config] = Nil): Config = {
 
     // Check all fun.repositories have valid names
     val repositories = config.functionality.repositories
@@ -85,6 +85,7 @@ object DependencyResolver extends Logging {
       .map{d =>
         val repo = d.repository.toOption.get
         val configDir = Paths.get(config2.info.get.config).getParent()
+        val projectRootDir = config2.projectDir.map(Paths.get(_))
         val localRepoPath = Repository.cache(repo, configDir, projectRootDir)
         d.copy(repository = Right(localRepoPath))
       }
