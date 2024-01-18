@@ -41,9 +41,11 @@ class ProjectTest extends AnyFunSuite {
 
   test("combined function works in subdir") {
     val proj = ViashProject.read(testNsProjPath)
+    val projPath = Some(testNsProjPath.getParent())
     
-    val proj2 = ViashProject.findViashProject(rootPath.resolve("testns/src/ns_add"))
+    val (proj2, projPath2) = ViashProject.findViashProject(rootPath.resolve("testns/src/ns_add"))
 
     assert(proj2 == proj)
+    assert(projPath2 == projPath)
   }
 }

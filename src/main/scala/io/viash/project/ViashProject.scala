@@ -152,10 +152,8 @@ object ViashProject {
     * @return The project config and project root dir, if found
     */
   def findViashProject(path: Path): (ViashProject, Option[Path]) = {
-    findProjectFile(path) match {
-      case Some(projectPath) =>
-        (read(projectPath), Some(projectPath.getParent()))
-      case None => (ViashProject(), None)
-    }
+    val foundPath = findProjectFile(path)
+    val projectFile = foundPath.map(read(_)).getOrElse(ViashProject())
+    (projectFile, foundPath.map(_.getParent()))
   }
 }
