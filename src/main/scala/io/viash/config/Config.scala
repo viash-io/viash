@@ -310,39 +310,16 @@ object Config extends Logging {
     // apply values from project config if need be
     val conf0 = {
       val vpVersion = viashProject.flatMap(_.version)
-      val vpRepositories = viashProject.map(_.repositories)
+      val vpRepositories = viashProject.map(_.repositories).getOrElse(Nil)
       val vpLicense = viashProject.flatMap(_.license)
       val vpOrganization = viashProject.flatMap(_.organization)
 
-      val c0v0 = 
-        if (vpVersion.isDefined && confBase.functionality.version.isEmpty) {
-          composedVersionLens.set(vpVersion)(confBase)
-        } else {
-          confBase
-        }
-
-      val c0v1 = 
-        if (vpRepositories.isDefined) {
-          composedRepositoriesLens.modify(vpRepositories.get ::: _)(c0v0)
-        } else {
-          c0v0
-        }
-      
-      val c0v2 =
-        if (vpLicense.isDefined && c0v1.license.isEmpty) {
-          licenseLens.set(vpLicense)(c0v1)
-        } else {
-          c0v1
-        }
-
-      val c0v3 =
-        if (vpOrganization.isDefined && c0v2.organization.isEmpty) {
-          organizationLens.set(vpOrganization)(c0v2)
-        } else {
-          c0v2
-        }
-
-      c0v3
+      val lenses =
+        composedVersionLens.modify(_ orElse vpVersion) andThen 
+        composedRepositoriesLens.modify(vpRepositories ::: _) andThen
+        licenseLens.modify(_ orElse vpLicense) andThen
+        organizationLens.modify(_ orElse vpOrganization)
+      lenses(confBase)
     }
 
     /* CONFIG 1: apply post-parse config mods */
