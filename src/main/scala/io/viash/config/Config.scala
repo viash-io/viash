@@ -331,7 +331,7 @@ object Config extends Logging {
         // apply config mods
         val modifiedJs = confMods(js, preparse = false)
         // turn json back into a config
-        modifiedJs.as[Config].fold(throw _, identity)
+        Convert.jsonToClass[Config](modifiedJs, uri.toString())
       } else {
         conf0
       }
