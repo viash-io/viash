@@ -313,10 +313,9 @@ object Config extends Logging {
       val vpRepositories = viashProject.map(_.repositories)
       val vpLicense = viashProject.flatMap(_.license)
       val vpOrganization = viashProject.flatMap(_.organization)
-      val confVersion = confBase.functionality.version
 
       val c0v0 = 
-        if (vpVersion.isDefined && confVersion.isEmpty) {
+        if (vpVersion.isDefined && confBase.functionality.version.isEmpty) {
           composedVersionLens.set(vpVersion)(confBase)
         } else {
           confBase
@@ -330,14 +329,14 @@ object Config extends Logging {
         }
       
       val c0v2 =
-        if (vpLicense.isDefined) {
+        if (vpLicense.isDefined && c0v1.license.isEmpty) {
           licenseLens.set(vpLicense)(c0v1)
         } else {
           c0v1
         }
 
       val c0v3 =
-        if (vpOrganization.isDefined) {
+        if (vpOrganization.isDefined && c0v2.organization.isEmpty) {
           organizationLens.set(vpOrganization)(c0v2)
         } else {
           c0v2
