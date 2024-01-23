@@ -9,6 +9,16 @@ case class ViashProjectReferences(
   @description("One or multiple DOI reference(s) of the project.")
   @example("doi: 10.1000/xx.123456.789", "yaml")
   doi: OneOrMore[String] = Nil,
+
   @description("One or multiple BibTeX reference(s) of the project.")
+  @example(
+    """bibtex: |
+      |  @article{foo,
+      |    title={Foo},
+      |    author={Bar},
+      |    journal={Baz},
+      |    year={2024}
+      |  }
+      |""".stripMargin, "yaml")
   bibtex: OneOrMore[String] = Nil,
 )

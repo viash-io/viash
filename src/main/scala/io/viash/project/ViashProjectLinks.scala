@@ -23,13 +23,22 @@ import io.viash.schemas._
 @since("Viash 0.9.0")
 case class ViashProjectLinks(
   @description("Source repository url.")
+  @example("""repository: "https://github.com/viash-io/viash"""", "yaml")
   repository: Option[String] = None,
+
   @description("Docker registry url.")
+  @example("""docker_registry: "https://ghcr.io"""", "yaml")
   docker_registry: Option[String] = None,
+
   @description("Homepage website url.")
+  @example("""homepage: "https://viash.io"""", "yaml")
   homepage: Option[String] = None,
+
   @description("Documentation website url.")
+  @example("""documentation: "https://viash.io/reference/"""", "yaml")
   documentation: Option[String] = None,
+  
   @description("Issue tracker url.")
+  @example("""issue_tracker: "https://github.com/viash-io/viash/issues"""", "yaml")
   issue_tracker: Option[String] = None,
 )

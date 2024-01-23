@@ -143,6 +143,17 @@ case class ViashProject(
   organization: Option[String] = None,
 
   @description("References to external resources related to the project.")
+  @example(
+    """reference:
+      |  doi: 10.1000/xx.123456.789
+      |  bibtex: |
+      |    @article{foo,
+      |      title={Foo},
+      |      author={Bar},
+      |      journal={Baz},
+      |      year={2024}
+      |    }
+      |""".stripMargin, "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   reference: ViashProjectReferences = ViashProjectReferences(),
@@ -150,9 +161,10 @@ case class ViashProject(
   @description("External links of the project.")
   @example(
     """links:
-      |  source: "https://github.com/viash-io/viash"
+      |  repository: "https://github.com/viash-io/viash"
       |  docker_registry: "https://ghcr.io"
       |  homepage: "https://viash.io"
+      |  documentation: "https://viash.io/reference/"
       |  issue_tracker: "https://github.com/viash-io/viash/issues"
       |""".stripMargin, "yaml")
   @default("Empty")
