@@ -27,6 +27,9 @@ package object project {
   implicit val encodeViashProjectLinks: Encoder.AsObject[ViashProjectLinks] = deriveConfiguredEncoder
   implicit val decodeViashProjectLinks: Decoder[ViashProjectLinks] = deriveConfiguredDecoderFullChecks
 
+  implicit val encodeViashProjectReferences: Encoder.AsObject[ViashProjectReferences] = deriveConfiguredEncoder
+  implicit val decodeViashProjectReferences: Decoder[ViashProjectReferences] = deriveConfiguredDecoderFullChecks
+
   implicit val encodeViashProject: Encoder.AsObject[ViashProject] = deriveConfiguredEncoder
   implicit val decodeViashProject: Decoder[ViashProject] = deriveConfiguredDecoderFullChecks
 }

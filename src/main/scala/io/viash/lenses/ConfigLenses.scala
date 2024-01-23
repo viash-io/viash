@@ -30,6 +30,8 @@ object ConfigLenses {
   val keywordsLens = GenLens[Config](_.keywords)
   val licenseLens = GenLens[Config](_.license)
   val organizationLens = GenLens[Config](_.organization)
+  val enginesLens = GenLens[Config](_.engines)
+  val runnersLens = GenLens[Config](_.runners)
 
   val composedNameLens = functionalityLens ^|-> nameLens
   val composedVersionLens = functionalityLens ^|-> versionLens

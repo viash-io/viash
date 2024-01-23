@@ -142,6 +142,11 @@ case class ViashProject(
   @since("Viash 0.9.0")
   organization: Option[String] = None,
 
+  @description("References to external resources related to the project.")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  reference: ViashProjectReferences = ViashProjectReferences(),
+
   @description("External links of the project.")
   @example(
     """links:

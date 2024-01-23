@@ -22,12 +22,14 @@ import io.viash.schemas._
 @description("Links to external resources related to the project.")
 @since("Viash 0.9.0")
 case class ViashProjectLinks(
-  @description("Source repository url (can be used to define the target_image_source in Docker images).")
-  source: Option[String] = None,
-  @description("Docker registry url (can be used to define the target registry in Docker images).")
+  @description("Source repository url.")
+  repository: Option[String] = None,
+  @description("Docker registry url.")
   docker_registry: Option[String] = None,
-  @description("Documentation website.")
+  @description("Homepage website url.")
   homepage: Option[String] = None,
-  @description("Issue tracker.")
+  @description("Documentation website url.")
+  documentation: Option[String] = None,
+  @description("Issue tracker url.")
   issue_tracker: Option[String] = None,
 )

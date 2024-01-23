@@ -313,12 +313,27 @@ object Config extends Logging {
       val vpRepositories = viashProject.map(_.repositories).getOrElse(Nil)
       val vpLicense = viashProject.flatMap(_.license)
       val vpOrganization = viashProject.flatMap(_.organization)
+      val vpRepository = viashProject.flatMap(_.links.repository)
+      val vpDockerRegistry = viashProject.flatMap(_.links.docker_registry)
+
+      val mappedEngines = confBase.engines.map {
+        _ match {
+          case e: DockerEngine =>
+            e.copy(
+              target_image_source = e.target_image_source.orElse(vpRepository),
+              target_registry = e.target_registry.orElse(vpDockerRegistry)
+            )
+          case e => e
+        }
+      }
 
       val lenses =
         composedVersionLens.modify(_ orElse vpVersion) andThen 
         composedRepositoriesLens.modify(vpRepositories ::: _) andThen
         licenseLens.modify(_ orElse vpLicense) andThen
-        organizationLens.modify(_ orElse vpOrganization)
+        organizationLens.modify(_ orElse vpOrganization) andThen
+        enginesLens.set(mappedEngines)
+        
       lenses(confBase)
     }
 
