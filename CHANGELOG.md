@@ -18,6 +18,8 @@ TODO add summary
 
 * `config view` and `ns list`: Do not output internal functionality fields (#564). Additionally, add a validation that no internal fields are present when reading a Viash config file.
 
+* `project config`: Add fields in the project config to specify default values for component config fields (PR #612). This allows for a more DRY approach to defining the same values for multiple components.
+
 ## MINOR CHANGES
 
 * `testbenches`: Add testbenches for local dependencies (PR #565).
