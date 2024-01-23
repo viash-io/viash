@@ -21,7 +21,7 @@ import io.viash.schemas._
 
 @description("Links to external resources related to the project.")
 @since("Viash 0.9.0")
-case class ViashProjectLinks(
+case class ProjectConfigLinks(
   @description("Source repository url.")
   @example("""repository: "https://github.com/viash-io/viash"""", "yaml")
   repository: Option[String] = None,

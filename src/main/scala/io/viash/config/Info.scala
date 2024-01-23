@@ -18,7 +18,7 @@
 package io.viash.config
 
 import io.viash.schemas.description
-import io.viash.project.ViashProject
+import io.viash.project.ProjectConfig
 
 // TODO: rename to ConfigInfo?
 

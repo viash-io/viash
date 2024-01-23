@@ -38,7 +38,7 @@ import java.nio.file.FileSystemNotFoundException
 import io.viash.runners.{Runner, ExecutableRunner, NextflowRunner}
 import io.viash.engines.{Engine, NativeEngine, DockerEngine}
 import io.viash.helpers.ReplayableMultiOutputStream
-import io.viash.project.ViashProject
+import io.viash.project.ProjectConfig
 import io.viash.lenses.ConfigLenses._
 
 @description(
@@ -94,7 +94,7 @@ case class Config(
   @description("The project config content used during build.")
   @since("Viash 0.9.0")
   @undocumented
-  project_config: Option[ViashProject] = None,
+  project_config: Option[ProjectConfig] = None,
 
   @description("The keywords of the components.")
   @example("keywords: [ bioinformatics, genomics ]", "yaml")
@@ -262,7 +262,7 @@ object Config extends Logging {
   def read(
     configPath: String,
     addOptMainScript: Boolean = true,
-    viashProject: Option[ViashProject] = None,
+    viashProject: Option[ProjectConfig] = None,
   ): Config = {
     val uri = IO.uri(configPath)
     readFromUri(
@@ -275,7 +275,7 @@ object Config extends Logging {
   def readFromUri(
     uri: URI,
     addOptMainScript: Boolean = true,
-    viashProject: Option[ViashProject] = None,
+    viashProject: Option[ProjectConfig] = None,
   ): Config = {
     val projectDir = viashProject.flatMap(_.rootDir).map(_.toUri())
     val configMods: List[String] = viashProject.map(_.config_mods.toList).getOrElse(Nil)
@@ -413,7 +413,7 @@ object Config extends Logging {
     queryNamespace: Option[String] = None,
     queryName: Option[String] = None,
     addOptMainScript: Boolean = true,
-    viashProject: Option[ViashProject] = None,
+    viashProject: Option[ProjectConfig] = None,
   ): List[AppliedConfig] = {
 
     val sourceDir = Paths.get(source)

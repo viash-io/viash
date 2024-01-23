@@ -24,12 +24,12 @@ package object project {
   import io.viash.helpers.circe._
   import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
 
-  implicit val encodeViashProjectLinks: Encoder.AsObject[ViashProjectLinks] = deriveConfiguredEncoder
-  implicit val decodeViashProjectLinks: Decoder[ViashProjectLinks] = deriveConfiguredDecoderFullChecks
+  implicit val encodeProjectConfigLinks: Encoder.AsObject[ProjectConfigLinks] = deriveConfiguredEncoder
+  implicit val decodeProjectConfigLinks: Decoder[ProjectConfigLinks] = deriveConfiguredDecoderFullChecks
 
-  implicit val encodeViashProjectReferences: Encoder.AsObject[ViashProjectReferences] = deriveConfiguredEncoder
-  implicit val decodeViashProjectReferences: Decoder[ViashProjectReferences] = deriveConfiguredDecoderFullChecks
+  implicit val encodeProjectConfigReferences: Encoder.AsObject[ProjectConfigReferences] = deriveConfiguredEncoder
+  implicit val decodeProjectConfigReferences: Decoder[ProjectConfigReferences] = deriveConfiguredDecoderFullChecks
 
-  implicit val encodeViashProject: Encoder.AsObject[ViashProject] = deriveConfiguredEncoder
-  implicit val decodeViashProject: Decoder[ViashProject] = deriveConfiguredDecoderFullChecks
+  implicit val encodeProjectConfig: Encoder.AsObject[ProjectConfig] = deriveConfiguredEncoder
+  implicit val decodeProjectConfig: Decoder[ProjectConfig] = deriveConfiguredDecoderFullChecks
 }

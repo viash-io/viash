@@ -42,7 +42,7 @@ import io.viash.functionality.Author
 )
 @since("Viash 0.6.4")
 @nameOverride("Project")
-case class ViashProject(
+case class ProjectConfig(
   @description("The name of the project.")
   @example("name: my_project", "yaml")
   @since("Viash 0.9.0")
@@ -156,7 +156,7 @@ case class ViashProject(
       |""".stripMargin, "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
-  reference: ViashProjectReferences = ViashProjectReferences(),
+  reference: ProjectConfigReferences = ProjectConfigReferences(),
 
   @description("External links of the project.")
   @example(
@@ -169,10 +169,10 @@ case class ViashProject(
       |""".stripMargin, "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
-  links: ViashProjectLinks = ViashProjectLinks(),
+  links: ProjectConfigLinks = ProjectConfigLinks(),
 )
 
-object ViashProject {
+object ProjectConfig {
 
   /**
     * Look for a Viash project file in a directory or its parents
@@ -223,12 +223,12 @@ object ViashProject {
     */
   def read(
     path: Path
-  ): ViashProject = {
+  ): ProjectConfig = {
     val json = readJson(path)
 
     /* PROJECT 0: converted from json */
     // convert Json into ViashProject
-    val proj0 = Convert.jsonToClass[ViashProject](json, path.toString())
+    val proj0 = Convert.jsonToClass[ProjectConfig](json, path.toString())
 
     /* PROJECT 1: make resources absolute */
     // make paths absolute
@@ -261,11 +261,11 @@ object ViashProject {
     * @param path The directory in which to look for a file called `_viash.yaml`
     * @return The project config, if found
     */
-  def findViashProject(path: Path): ViashProject = {
+  def findViashProject(path: Path): ProjectConfig = {
     findProjectFile(path) match {
       case Some(projectPath) =>
         read(projectPath)
-      case None => ViashProject()
+      case None => ProjectConfig()
     }
   }
 }

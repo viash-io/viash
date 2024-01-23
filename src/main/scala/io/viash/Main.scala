@@ -25,7 +25,7 @@ import sys.process.{Process, ProcessLogger}
 import config.Config
 import helpers.{IO, Exec, SysEnv, DependencyResolver, Logger, Logging}
 import helpers.status._
-import project.ViashProject
+import project.ProjectConfig
 import cli.{CLIConf, ViashCommand, DocumentedSubcommand, ViashNs, ViashNsBuild, ViashLogger}
 import exceptions._
 import scala.util.Try
@@ -168,7 +168,7 @@ object Main extends Logging {
     */
   def mainCLI(args: Array[String], workingDir: Option[Path] = None): Int = {
     // try to find project settings
-    val proj0 = workingDir.map(ViashProject.findViashProject(_)).getOrElse(ViashProject())
+    val proj0 = workingDir.map(ProjectConfig.findViashProject(_)).getOrElse(ProjectConfig())
 
     // strip arguments meant for viash run
     val (viashArgs, runArgs) = {
@@ -429,7 +429,7 @@ object Main extends Logging {
 
   def readConfig(
     subcommand: ViashCommand,
-    project: ViashProject,
+    project: ProjectConfig,
     addOptMainScript: Boolean = true,
     applyRunnerAndEngine: Boolean = true
   ): AppliedConfig = {
@@ -459,7 +459,7 @@ object Main extends Logging {
   
   def readConfigs(
     subcommand: ViashNs,
-    project: ViashProject,
+    project: ProjectConfig,
     addOptMainScript: Boolean = true,
     applyRunner: Boolean = true,
     applyEngine: Boolean = true
@@ -576,8 +576,8 @@ object Main extends Logging {
       // else look for project file in working dir
       // and try to read as json
       workingDir
-        .flatMap(ViashProject.findProjectFile)
-        .map(ViashProject.readJson)
+        .flatMap(ProjectConfig.findProjectFile)
+        .map(ProjectConfig.readJson)
         .flatMap(js => {
           js.asObject.flatMap(_.apply("viash_version")).flatMap(_.asString)
         })
