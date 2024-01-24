@@ -1,18 +1,15 @@
 # Viash: A meta-framework for building reusable workflow modules
 
 
-<figure>
-<a href="https://viash.io"><img
-src="https://viash.io/logo/viash_large.svg" alt="Viash" /></a>
-<figcaption>Viash</figcaption>
-</figure>
+[<img src="https://viash.io/logo/viash_large.svg" width="300" />](https://viash.io)
 
-[![https://img.shields.io/github/license/viash-io/viash?style=flat-square](License.png)](https://github.com/viash-io/viash/blob/master/LICENSE.md)
 [![GitHub
 Release](https://img.shields.io/github/v/release/viash-io/viash?style=flat-square.png)](https://github.com/viash-io/viash/releases)
+[![Documentation](https://img.shields.io/badge/docs-viash.io-blue?style=flat-square)](https://viash.io)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.06089/status.svg)](https://doi.org/10.21105/joss.06089)
 [![Scala
 CI](https://github.com/viash-io/viash/actions/workflows/sbt_test.yml/badge.svg)](https://github.com/viash-io/viash/actions/workflows/sbt_test.yml)
-[![DOI](https://joss.theoj.org/papers/10.21105/joss.06089/status.svg)](https://doi.org/10.21105/joss.06089)
+[![License](https://img.shields.io/github/license/viash-io/viash?style=flat-square.png)](https://github.com/viash-io/viash/blob/master/LICENSE.md)
 
 Viash helps you turn a script (Bash/R/Python/Scala/JavaScript) into a
 reusable component. By providing some meta-data regarding its
