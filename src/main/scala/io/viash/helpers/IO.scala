@@ -341,13 +341,17 @@ object IO extends Logging {
     */
   def anonymizePath(basePath: Option[Path], path: String): String = {    
     val pathPath = Paths.get(path)
-    val relative = basePath.map(_.relativize(pathPath).toString())
 
-    relative match {
-      case Some(rel) if rel.startsWith("..") => Paths.get("[anonymized]", pathPath.toFile().getName()).toString()
-      case Some(rel) => rel
-      case None if pathPath.isAbsolute => Paths.get("[anonymized]", pathPath.toFile().getName()).toString()
-      case None => path
+    if (pathPath.isAbsolute()) {
+      val relative = basePath.map(_.relativize(pathPath).toString())
+
+      relative match {
+        case Some(rel) if rel.startsWith("..") => Paths.get("[anonymized]", pathPath.toFile().getName()).toString()
+        case Some(rel) => rel
+        case None => Paths.get("[anonymized]", pathPath.toFile().getName()).toString()
+      }
+    } else {
+      path
     }
   }
 }

@@ -58,11 +58,11 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
       val viashVersion = io.viash.Main.version
 
       val regexViashVersion = s"""viash_version: "${viashVersion}"""".r
-      val regexConfig = s"""config: "${configFile}"""".r
+      val regexConfig = """config: "\[anonymized\]/config.vsh.yaml"""".r
       val regexEngine = """engine: "docker"""".r
       val regexRunner = """runner: "docker"""".r
-      val regexExecutable = s"""executable: "$binDir/testbash"""".r
-      val regexOutput = s"""output: "$binDir"""".r
+      val regexExecutable = """executable: "\[anonymized\]/testbash"""".r
+      val regexOutput = """output: "\[anonymized\]/bin"""".r
       val regexNoRemoteGitRepo = "git_remote:".r
 
       assert(regexViashVersion.findFirstIn(metaStr).isDefined, stdout)
@@ -130,11 +130,11 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
       val viashVersion = io.viash.Main.version
 
       val regexViashVersion = s"""viash_version: "$viashVersion"""".r
-      val regexConfig = s"""config: "$configMetaFile"""".r
+      val regexConfig = """config: "\[anonymized\]/config.vsh.yaml"""".r
       val regexEngine = """engine: "docker"""".r
       val regexRunner = """runner: "docker"""".r
-      val regexExecutable = s"""executable: "$binDir/testbash"""".r
-      val regexOutput = s"""output: "$binDir"""".r
+      val regexExecutable = """executable: "\[anonymized\]/testbash"""".r
+      val regexOutput = """output: "\[anonymized\]/bin"""".r
       val regexRemoteGitRepo = s"""git_remote: "$fakeGitRepo"""".r
 
       assert(regexViashVersion.findFirstIn(metaStr).isDefined, stdout)
@@ -193,11 +193,11 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
       val viashVersion = io.viash.Main.version
 
       val regexViashVersion = s"""viash_version: "$viashVersion"""".r
-      val regexConfig = s"""config: "$configMetaFile"""".r
+      val regexConfig = """config: "\[anonymized\]/config.vsh.yaml"""".r
       val regexEngine = """engine: "docker"""".r
       val regexRunner = """runner: "docker"""".r
-      val regexExecutable = s"""executable: "$binDir/testbash"""".r
-      val regexOutput = s"""output: "$binDir"""".r
+      val regexExecutable = """executable: "\[anonymized\]/testbash"""".r
+      val regexOutput = """output: "\[anonymized\]/bin"""".r
       val regexRemoteGitRepo = """git_remote:"""".r
 
       assert(regexViashVersion.findFirstIn(metaStr).isDefined, stdout)

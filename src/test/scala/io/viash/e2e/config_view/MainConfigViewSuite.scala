@@ -33,7 +33,7 @@ class MainConfigViewSuite extends AnyFunSuite{
     assert(testOutput.stdout.contains("testbash"))
   }
 
-  test("viash config view without anonymized paths") {
+  test("viash config view wit anonymized paths") {
     // Output is not anonymized when no project config is found, and that can't be found unless we pass the workingDir
     val testOutput = TestHelper.testMain(
       // workingDir = Some(Paths.get(workingDirAnonymizing)),
@@ -41,10 +41,10 @@ class MainConfigViewSuite extends AnyFunSuite{
       configFileAnonymizing
     )
 
-    assert(testOutput.stdout.contains(s"""config: "${workingDirAnonymizing}src/ns_add/config.vsh.yaml""""))
+    assert(testOutput.stdout.contains(s"""config: "[anonymized]/config.vsh.yaml""""))
   }
 
-  test("viash config view with anonymized paths") {
+  test("viash config view with relative anonymous paths") {
     val testOutput = TestHelper.testMain(
       workingDir = Some(Paths.get(workingDirAnonymizing)),
       "config", "view",
