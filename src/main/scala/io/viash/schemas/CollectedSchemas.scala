@@ -32,7 +32,7 @@ import monocle.function.Cons
 import io.viash.config.Config
 import io.viash.config.Info
 import io.viash.functionality.resources._
-import io.viash.project.ViashProject
+import io.viash.project.ProjectConfig
 import io.viash.helpers._
 import scala.collection.immutable.ListMap
 import io.viash.functionality.dependencies._
@@ -117,7 +117,7 @@ object CollectedSchemas {
 
   lazy val schemaClasses = List(
     getMembers[Config](),
-    getMembers[ViashProject](),
+    getMembers[ProjectConfig](),
     getMembers[Info](),
     getMembers[SysEnvTrait](),
 

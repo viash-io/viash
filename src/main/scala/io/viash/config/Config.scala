@@ -38,6 +38,8 @@ import java.nio.file.FileSystemNotFoundException
 import io.viash.runners.{Runner, ExecutableRunner, NextflowRunner}
 import io.viash.engines.{Engine, NativeEngine, DockerEngine}
 import io.viash.helpers.ReplayableMultiOutputStream
+import io.viash.project.ProjectConfig
+import io.viash.lenses.ConfigLenses._
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -87,7 +89,12 @@ case class Config(
   engines: List[Engine] = Nil,
 
   @undocumented
-  info: Option[Info] = None
+  info: Option[Info] = None,
+
+  @description("The project config content used during build.")
+  @since("Viash 0.9.0")
+  @undocumented
+  project_config: Option[ProjectConfig] = None,
 ) {
 
   @description(
@@ -236,25 +243,25 @@ object Config extends Logging {
   // reads and modifies the config based on the current setup
   def read(
     configPath: String,
-    projectDir: Option[URI] = None,
     addOptMainScript: Boolean = true,
-    configMods: List[String] = Nil
+    viashProject: Option[ProjectConfig] = None,
   ): Config = {
     val uri = IO.uri(configPath)
     readFromUri(
       uri = uri,
-      projectDir = projectDir,
       addOptMainScript = addOptMainScript,
-      configMods = configMods
+      viashProject = viashProject
     )
   }
 
   def readFromUri(
     uri: URI,
-    projectDir: Option[URI] = None,
     addOptMainScript: Boolean = true,
-    configMods: List[String] = Nil
+    viashProject: Option[ProjectConfig] = None,
   ): Config = {
+    val projectDir = viashProject.flatMap(_.rootDir).map(_.toUri())
+    val configMods: List[String] = viashProject.map(_.config_mods.toList).getOrElse(Nil)
+
     // read cli config mods
     val confMods = ConfigMods.parseConfigMods(configMods)
 
@@ -277,9 +284,40 @@ object Config extends Logging {
     // apply preparse config mods if need be
     val json2 = confMods(json1, preparse = true)
 
-    /* CONFIG 0: converted from json */
+    /* CONFIG Base: converted from json */
     // convert Json into Config
-    val conf0 = Convert.jsonToClass[Config](json2, uri.toString())
+    val confBase = Convert.jsonToClass[Config](json2, uri.toString())
+
+    /* CONFIG 0: apply values from project config */
+    // apply values from project config if need be
+    val conf0 = {
+      val vpVersion = viashProject.flatMap(_.version)
+      val vpRepositories = viashProject.map(_.repositories).getOrElse(Nil)
+      val vpLicense = viashProject.flatMap(_.license)
+      val vpOrganization = viashProject.flatMap(_.organization)
+      val vpRepository = viashProject.flatMap(_.links.repository)
+      val vpDockerRegistry = viashProject.flatMap(_.links.docker_registry)
+
+      val mappedEngines = confBase.engines.map {
+        _ match {
+          case e: DockerEngine =>
+            e.copy(
+              target_image_source = e.target_image_source.orElse(vpRepository),
+              target_registry = e.target_registry.orElse(vpDockerRegistry)
+            )
+          case e => e
+        }
+      }
+
+      val lenses =
+        composedVersionLens.modify(_ orElse vpVersion) andThen
+        composedLicenseLens.modify(_ orElse vpLicense) andThen
+        composedOrganizationLens.modify(_ orElse vpOrganization) andThen
+        composedRepositoriesLens.modify(vpRepositories ::: _) andThen
+        enginesLens.set(mappedEngines)
+        
+      lenses(confBase)
+    }
 
     /* CONFIG 1: apply post-parse config mods */
     // apply config mods only if need be
@@ -290,23 +328,19 @@ object Config extends Logging {
         // apply config mods
         val modifiedJs = confMods(js, preparse = false)
         // turn json back into a config
-        modifiedJs.as[Config].fold(throw _, identity)
+        Convert.jsonToClass[Config](modifiedJs, uri.toString())
       } else {
         conf0
       }
 
-    /* CONFIG 1: store parent path in resource to be able to access them in the future */
+    /* CONFIG 2: store parent path in resource to be able to access them in the future */
+    // copy resources with updated paths into config and return
     val parentURI = uri.resolve("")
     val resources = conf1.functionality.resources.map(_.copyWithAbsolutePath(parentURI, projectDir))
     val tests = conf1.functionality.test_resources.map(_.copyWithAbsolutePath(parentURI, projectDir))
 
-    // copy resources with updated paths into config and return
-    val conf2 = conf1.copy(
-      functionality = conf0.functionality.copy(
-        resources = resources,
-        test_resources = tests
-      )
-    )
+    val conf2a = composedResourcesLens.set(resources)(conf1)
+    val conf2 = composedTestResourcesLens.set(tests)(conf2a)
 
     /* CONFIG 3: add info */
     // gather git info
@@ -333,35 +367,35 @@ object Config extends Logging {
     }
 
     // print warnings if need be
-    if (conf2.functionality.status == Status.Deprecated)
-      warn(s"Warning: The status of the component '${conf2.functionality.name}' is set to deprecated.")
+    if (conf3.functionality.status == Status.Deprecated)
+      warn(s"Warning: The status of the component '${conf3.functionality.name}' is set to deprecated.")
     
-    if (conf2.functionality.resources.isEmpty && optScript.isEmpty)
+    if (conf3.functionality.resources.isEmpty && optScript.isEmpty)
       warn(s"Warning: no resources specified!")
 
-    if (!addOptMainScript) {
-      return conf3
-    }
-    
-    /* CONFIG 4: add main script if config is stored inside script */
-    // add info and additional resources
+    /* CONFIG 4: add Viash Project Config */
     val conf4 = conf3.copy(
-      functionality = conf3.functionality.copy(
-        resources = optScript.toList ::: conf3.functionality.resources
-      )
+      project_config = viashProject
     )
 
-    conf4
+    if (!addOptMainScript) {
+      return conf4
+    }
+    
+    /* CONFIG 5: add main script if config is stored inside script */
+    // add info and additional resources
+    val conf5 = composedResourcesLens.modify(optScript.toList ::: _)(conf4)
+
+    conf5
   }
 
   def readConfigs(
     source: String,
-    projectDir: Option[URI] = None,
     query: Option[String] = None,
     queryNamespace: Option[String] = None,
     queryName: Option[String] = None,
-    configMods: List[String] = Nil,
-    addOptMainScript: Boolean = true
+    addOptMainScript: Boolean = true,
+    viashProject: Option[ProjectConfig] = None,
   ): List[AppliedConfig] = {
 
     val sourceDir = Paths.get(source)
@@ -382,11 +416,10 @@ object Config extends Logging {
           // When replaying, output directly to the console. Logger functions were already called, so we don't want to call them again.
           Console.withErr(rmos.getOutputStream(Console.err.print)) {
             Console.withOut(rmos.getOutputStream(Console.out.print)) {
-              Config.read(
+              read(
                 file.toString,
-                projectDir = projectDir,
                 addOptMainScript = addOptMainScript,
-                configMods = configMods
+                viashProject = viashProject
               )
             }
           }

@@ -18,10 +18,11 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
   private val temporaryFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
 
   // Create a subfolder and place a _viash.yaml file in it
-  def createViashSubFolder(path: Path, name: String): Path = {
+  def createViashSubFolder(path: Path, name: String, text: Option[String] = None): Path = {
     val subFolder = path.resolve(name)
     subFolder.toFile().mkdir()
-    Files.write(subFolder.resolve("_viash.yaml"), Array.empty[Byte])
+    val content = text.getOrElse("")
+    Files.write(subFolder.resolve("_viash.yaml"), content.getBytes())
     subFolder
   }
 
@@ -138,7 +139,7 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Use a local repository with a relative path") {
-    val testFolder = createViashSubFolder(temporaryFolder, "local_test_absolute_path")
+    val testFolder = createViashSubFolder(temporaryFolder, "local_test_relative_path")
     
     // write test files
     val fun1 = Functionality(
@@ -206,6 +207,93 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
 
     // build
     val testOutput = TestHelper.testMain(
+        "ns", "build",
+        "-s", testFolder.resolve("src").toString(),
+        "-t", testFolder.resolve("target").toString()
+      )
+
+    assert(testOutput.stderr.strip.contains("All 1 configs built successfully"), "check build was successful")
+
+    // check file & file content
+    val outputPath = testFolder.resolve("target/executable/dep3/dep3")
+    val executable = outputPath.toFile
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    val outputText = IO.read(outputPath.toUri())
+    assert(outputText.contains("VIASH_DEP_VIASH_HUB_DEP="), "check the dependency is set in the output script")
+
+    // check output when running
+    val out = Exec.runCatch(
+      Seq(executable.toString)
+    )
+
+    assert(out.output == "This is a component in the viash_hub repository.\nHello from dep3\n")
+    assert(out.exitValue == 0)
+  }
+
+  test("Use a remote dependency, defined in .functionality.repositories") {
+    val testFolder = createViashSubFolder(temporaryFolder, "remote_test_repositories")
+    
+    // write test files
+    val fun = Functionality(
+      name = "dep3",
+      resources = textBashScript("$dep_viash_hub_dep\necho \"Hello from dep3\""),
+      repositories = List(ViashhubRepositoryWithName("viash_hub", "vsh", "hendrik/dependency_test", Some("main_build"))),
+      dependencies = List(Dependency("viash_hub/dep", repository = Left("viash_hub")))
+    )
+
+    writeTestConfig(testFolder.resolve("src/dep3/config.vsh.yaml"), fun)
+
+    // build
+    val testOutput = TestHelper.testMain(
+        "ns", "build",
+        "-s", testFolder.resolve("src").toString(),
+        "-t", testFolder.resolve("target").toString()
+      )
+
+    assert(testOutput.stderr.strip.contains("All 1 configs built successfully"), "check build was successful")
+
+    // check file & file content
+    val outputPath = testFolder.resolve("target/executable/dep3/dep3")
+    val executable = outputPath.toFile
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    val outputText = IO.read(outputPath.toUri())
+    assert(outputText.contains("VIASH_DEP_VIASH_HUB_DEP="), "check the dependency is set in the output script")
+
+    // check output when running
+    val out = Exec.runCatch(
+      Seq(executable.toString)
+    )
+
+    assert(out.output == "This is a component in the viash_hub repository.\nHello from dep3\n")
+    assert(out.exitValue == 0)
+  }
+
+  test("Use a remote dependency defined in the project config") {
+    val projectConfig =
+      """repositories:
+        |  - name: viash_hub
+        |    type: vsh
+        |    repo: hendrik/dependency_test
+        |    tag: main_build
+        |""".stripMargin
+    val testFolder = createViashSubFolder(temporaryFolder, "remote_test_project_config", Some(projectConfig))
+    
+    // write test files
+    val fun = Functionality(
+      name = "dep3",
+      resources = textBashScript("$dep_viash_hub_dep\necho \"Hello from dep3\""),
+      dependencies = List(Dependency("viash_hub/dep", repository = Left("viash_hub")))
+    )
+
+    writeTestConfig(testFolder.resolve("src/dep3/config.vsh.yaml"), fun)
+
+    // build
+    val testOutput = TestHelper.testMain(
+        workingDir = Some(testFolder),
         "ns", "build",
         "-s", testFolder.resolve("src").toString(),
         "-t", testFolder.resolve("target").toString()

@@ -41,7 +41,7 @@ final case class AppliedConfig(
 }
 
 object AppliedConfig {
-  implicit def fromConfig(config: Config) = {
+  implicit def fromConfig(config: Config): AppliedConfig = {
     AppliedConfig(config, None, Nil, None)
   }
 }
