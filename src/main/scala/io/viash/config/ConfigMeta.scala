@@ -42,18 +42,18 @@ object ConfigMeta {
 
   def configToCleanJson(config: Config): Json = {
     // relativize paths in the info field
-    val anonymizedConfig = config.projectDir match {
-      case Some(dir) =>
-        val path = Paths.get(dir)
-        config.copy(
-          info = config.info.map(info => info.copy(
-            config = IO.anonymizePath(dir, info.config),
-            output = info.output.map(o => IO.anonymizePath(dir, o)),
-            executable = info.executable.map(e => IO.anonymizePath(dir, e))
-          ))
-        )
-      case None => config
-    }
+    val rootDir = config.project_config.flatMap(_.rootDir)
+    val anonymizedConfig = config.copy(
+      info = config.info.map(info => info.copy(
+        config = IO.anonymizePath(rootDir, info.config),
+        output = info.output.map(IO.anonymizePath(rootDir, _)),
+        executable = info.executable.map(IO.anonymizePath(rootDir, _))
+      )),
+      project_config = config.project_config.map(pc => pc.copy(
+        source = pc.source.map(IO.anonymizePath(rootDir, _)),
+        target = pc.target.map(IO.anonymizePath(rootDir, _))
+      ))
+    )
 
     val encodedConfig: Json = encodeConfig(anonymizedConfig)
     // drop empty & null values recursively except all "info" fields

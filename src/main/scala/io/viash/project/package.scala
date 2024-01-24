@@ -17,13 +17,19 @@
 
 package io.viash
 
-import io.circe.{Decoder, Encoder, Json}
-import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
+import io.circe.{Decoder, Encoder}
 
 package object project {
   import io.viash.helpers.circe._
   import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
+  import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
 
-  implicit val encodeViashProject: Encoder.AsObject[ViashProject] = deriveConfiguredEncoder
-  implicit val decodeViashProject: Decoder[ViashProject] = deriveConfiguredDecoderFullChecks
+  implicit val encodeProjectConfigLinks: Encoder.AsObject[ProjectConfigLinks] = deriveConfiguredEncoderStrict
+  implicit val decodeProjectConfigLinks: Decoder[ProjectConfigLinks] = deriveConfiguredDecoderFullChecks
+
+  implicit val encodeProjectConfigReferences: Encoder.AsObject[ProjectConfigReferences] = deriveConfiguredEncoderStrict
+  implicit val decodeProjectConfigReferences: Decoder[ProjectConfigReferences] = deriveConfiguredDecoderFullChecks
+
+  implicit val encodeProjectConfig: Encoder.AsObject[ProjectConfig] = deriveConfiguredEncoderStrict
+  implicit val decodeProjectConfig: Decoder[ProjectConfig] = deriveConfiguredDecoderFullChecks
 }

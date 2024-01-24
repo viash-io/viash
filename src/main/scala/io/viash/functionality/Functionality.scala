@@ -249,6 +249,24 @@ case class Functionality(
       "yaml")
   @default("Empty")
   repositories: List[RepositoryWithName] = Nil,
+
+  @description("The keywords of the components.")
+  @example("keywords: [ bioinformatics, genomics ]", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  keywords: List[String] = Nil,
+
+  @description("The license of the project.")
+  @example("license: MIT", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  license: Option[String] = None,
+
+  @description("The organization of the project.")
+  @example("organization: viash-io", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  organization: Option[String] = None,
   // The variables below are for internal use and shouldn't be publicly documented
 
   // setting this to true will change the working directory

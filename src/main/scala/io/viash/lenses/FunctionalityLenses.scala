@@ -30,4 +30,7 @@ object FunctionalityLenses {
   val testResourcesLens = GenLens[Functionality](_.test_resources)
   val dependenciesLens = GenLens[Functionality](_.dependencies)
   val repositoriesLens = GenLens[Functionality](_.repositories)
+  val keywordsLens = GenLens[Functionality](_.keywords)
+  val licenseLens = GenLens[Functionality](_.license)
+  val organizationLens = GenLens[Functionality](_.organization)
 }

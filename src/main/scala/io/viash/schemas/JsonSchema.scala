@@ -111,7 +111,7 @@ object JsonSchema {
     if (config.strict && !mustIncludeAll) {
       jsons.last
     } else {
-      Json.obj("anyOf" -> Json.arr(jsons: _*))
+      Json.obj("oneOf" -> Json.arr(jsons: _*))
     }
   }
 

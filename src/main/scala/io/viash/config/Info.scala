@@ -18,6 +18,7 @@
 package io.viash.config
 
 import io.viash.schemas.description
+import io.viash.project.ProjectConfig
 
 // TODO: rename to ConfigInfo?
 
@@ -40,5 +41,5 @@ case class Info(
   @description("Git remote name.")
   git_remote: Option[String] = None,
   @description("Git tag.")
-  git_tag: Option[String] = None
+  git_tag: Option[String] = None,
 )

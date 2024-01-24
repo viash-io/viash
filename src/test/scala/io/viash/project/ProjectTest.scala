@@ -15,18 +15,18 @@ class ProjectTest extends AnyFunSuite {
   private val testNsProjPath = rootPath.resolve("testns/_viash.yaml")
 
   test("no proj file is found in testbash") {
-    val projPath = ViashProject.findProjectFile(testBashPath)
+    val projPath = ProjectConfig.findProjectFile(testBashPath)
     assert(projPath.isEmpty)
   }
 
   test("proj file is found in testns") {
-    val projPath = ViashProject.findProjectFile(testNsPath)
+    val projPath = ProjectConfig.findProjectFile(testNsPath)
     assert(projPath.isDefined)
     assert(projPath.get == testNsProjPath)
   }
 
   test("reading proj file works") {
-    val proj = ViashProject.read(testNsProjPath)
+    val proj = ProjectConfig.read(testNsProjPath)
     
     assert(proj.source.isDefined)
     assert(proj.source.get == rootPath.resolve("testns/src").toString)
@@ -40,10 +40,11 @@ class ProjectTest extends AnyFunSuite {
   }
 
   test("combined function works in subdir") {
-    val proj = ViashProject.read(testNsProjPath)
+    val proj = ProjectConfig.read(testNsProjPath)
     
-    val proj2 = ViashProject.findViashProject(rootPath.resolve("testns/src/ns_add"))
+    val proj2 = ProjectConfig.findViashProject(rootPath.resolve("testns/src/ns_add"))
 
     assert(proj2 == proj)
+    assert(proj2.rootDir == Some(rootPath.resolve("testns")))
   }
 }
