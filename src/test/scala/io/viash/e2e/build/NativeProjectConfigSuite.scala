@@ -28,8 +28,8 @@ class NativeProjectConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   // Use config mod functionality so that we can more easily differentiate between e.g. '.license' and '.project_config.license'
   val versionMod = ConfigModParser.parse(ConfigModParser.path, """.functionality.version""").get
-  val licenseMod = ConfigModParser.parse(ConfigModParser.path, """.license""").get
-  val organizationMod = ConfigModParser.parse(ConfigModParser.path, """.organization""").get
+  val licenseMod = ConfigModParser.parse(ConfigModParser.path, """.functionality.license""").get
+  val organizationMod = ConfigModParser.parse(ConfigModParser.path, """.functionality.organization""").get
   val docker_registryMod = ConfigModParser.parse(ConfigModParser.path, """.engines[.type == "docker"].target_registry""").get
   val docker_repositoryMod = ConfigModParser.parse(ConfigModParser.path, """.engines[.type == "docker"].target_image_source""").get
 
@@ -86,8 +86,8 @@ class NativeProjectConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
       configDeriver.derive(
         List(
           """.functionality.version := "foo"""",
-          """.license := "bar"""",
-          """.organization := "baz"""",
+          """.functionality.license := "bar"""",
+          """.functionality.organization := "baz"""",
           """.engines[.type == "docker"].target_registry := "qux"""",
           """.engines[.type == "docker"].target_image_source := "quux"""",
         ),

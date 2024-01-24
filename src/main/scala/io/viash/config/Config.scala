@@ -95,24 +95,6 @@ case class Config(
   @since("Viash 0.9.0")
   @undocumented
   project_config: Option[ProjectConfig] = None,
-
-  @description("The keywords of the components.")
-  @example("keywords: [ bioinformatics, genomics ]", "yaml")
-  @default("Empty")
-  @since("Viash 0.9.0")
-  keywords: List[String] = Nil,
-
-  @description("The license of the project.")
-  @example("license: MIT", "yaml")
-  @default("Empty")
-  @since("Viash 0.9.0")
-  license: Option[String] = None,
-
-  @description("The organization of the project.")
-  @example("organization: viash-io", "yaml")
-  @default("Empty")
-  @since("Viash 0.9.0")
-  organization: Option[String] = None,
 ) {
 
   @description(
@@ -328,10 +310,10 @@ object Config extends Logging {
       }
 
       val lenses =
-        composedVersionLens.modify(_ orElse vpVersion) andThen 
+        composedVersionLens.modify(_ orElse vpVersion) andThen
+        composedLicenseLens.modify(_ orElse vpLicense) andThen
+        composedOrganizationLens.modify(_ orElse vpOrganization) andThen
         composedRepositoriesLens.modify(vpRepositories ::: _) andThen
-        licenseLens.modify(_ orElse vpLicense) andThen
-        organizationLens.modify(_ orElse vpOrganization) andThen
         enginesLens.set(mappedEngines)
         
       lenses(confBase)
