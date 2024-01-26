@@ -30,6 +30,8 @@ TODO add summary
 
 * `Java 21 support`: Update Scala to 2.13.12 and update dependencies (PR #602).
 
+* `project config`: Output the project config under the default name `ProjectConfig` instead of `Project` during schema export (PR #631). This is now important as the project config is now part of the component config. Previously this was overridden as the class name was `ViashProject` which was less descriptive.
+
 ## BUG FIXES
 
 * `__merge__`: Handle invalid yaml during merging (PR #570). There was not enough error handling during this operation. Switched to the more advanced `Convert.textToJson` helper method.
