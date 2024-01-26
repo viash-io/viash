@@ -44,7 +44,6 @@ import io.viash.functionality.Author
     |""".stripMargin, "yaml"
 )
 @since("Viash 0.6.4")
-@nameOverride("Project")
 case class ProjectConfig(
   @description("The name of the project.")
   @example("name: my_project", "yaml")
