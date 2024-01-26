@@ -1,35 +1,30 @@
+# Viash: A meta-framework for building reusable workflow modules
 
-<p align="center">
-<a href="https://viash.io/">
-<img alt="viash" src="https://viash.io/logo/viash_large.svg" width="300">
-</a>
-</p>
-<p align="center">
-<a href="https://github.com/viash-io/viash/blob/master/LICENSE.md">
-<img src="https://img.shields.io/github/license/viash-io/viash?style=flat-square" alt="GitHub">
-</a> <a href="https://github.com/viash-io/viash/releases">
-<img src="https://img.shields.io/github/v/release/viash-io/viash?include_prereleases&style=flat-square"alt="GitHub release (latest SemVer including pre-releases)">
-</a>
-<a href="https://github.com/viash-io/viash/actions?query=workflow%3A%22Scala+CI%22">
-<img src="https://img.shields.io/github/actions/workflow/status/viash-io/viash/sbt_test.yml?branch=main&style=flat-square" alt="CI Status">
-</a>
-</p>
 
-viash helps you turn a script (Bash/R/Python/Scala/JavaScript) into a
-reusable component. By providing some meta-data regarding its
+[<img src="https://viash.io/logo/viash_large.svg" width="300" />](https://viash.io)
+
+[![GitHub
+Release](https://img.shields.io/github/v/release/viash-io/viash?style=flat-square.png)](https://github.com/viash-io/viash/releases)
+[![Documentation](https://img.shields.io/badge/docs-viash.io-blue?style=flat-square)](https://viash.io)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.06089/status.svg)](https://doi.org/10.21105/joss.06089)
+[![Scala
+CI](https://github.com/viash-io/viash/actions/workflows/sbt_test.yml/badge.svg)](https://github.com/viash-io/viash/actions/workflows/sbt_test.yml)
+[![License](https://img.shields.io/github/license/viash-io/viash?style=flat-square.png)](https://github.com/viash-io/viash/blob/master/LICENSE.md)
+
+Viash helps you turn a script (Bash/R/Python/Scala/JavaScript) into a reusable component. 
+By providing some meta-data regarding its
 functionality, a runner and an engine on which you want to run the software,
-viash can help you:
+Viash can help you:
 
--   wrap your script in an executable with a CLI and –help
-    functionality,
--   seamlessly execute your component natively on the host platform or
-    in a Docker container
--   combine multiple components in a Nextflow pipeline, and
--   unit-test your component to ensure that it works at all times.
+- Wrap your script in an executable with a CLI and –help functionality,
+- Seamlessly execute your component natively on the host platform or in
+  a Docker container
+- Combine multiple components in a Nextflow pipeline, and
+- Unit-test your component to ensure that it works at all times.
 
 ## Documentation
 
-The viash documentation is available online at
+The Viash documentation is available online at
 [`viash.io`](https://viash.io).
 
 ## License

@@ -1,0 +1,80 @@
+cff-version: "1.2.0"
+authors:
+- email: robrecht@data-intuitive.com
+  family-names: Cannoodt
+  given-names: Robrecht
+  orcid: "https://orcid.org/0000-0003-3641-729X"
+- family-names: Cannoodt
+  given-names: Hendrik
+  orcid: "https://orcid.org/0000-0002-0032-6719"
+- family-names: Schaumont
+  given-names: Dries
+  orcid: "https://orcid.org/0000-0002-4389-0440"
+- family-names: Waldrant
+  given-names: Kai
+  orcid: "https://orcid.org/0009-0003-8555-1361"
+- family-names: Van de Kerckhove
+  given-names: Eric
+- family-names: Boschmans
+  given-names: Andy
+  orcid: "https://orcid.org/0009-0008-8793-4661"
+- family-names: De Maeyer
+  given-names: Dries
+  orcid: "https://orcid.org/0000-0002-1314-3348"
+- email: toni@data-intuitive.com
+  family-names: Verbeiren
+  given-names: Toni
+  orcid: "https://orcid.org/0000-0002-7007-6866"
+contact:
+- email: robrecht@data-intuitive.com
+  family-names: Cannoodt
+  given-names: Robrecht
+  orcid: "https://orcid.org/0000-0003-3641-729X"
+- email: toni@data-intuitive.com
+  family-names: Verbeiren
+  given-names: Toni
+  orcid: "https://orcid.org/0000-0002-7007-6866"
+doi: 10.5281/zenodo.10563479
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - email: robrecht@data-intuitive.com
+    family-names: Cannoodt
+    given-names: Robrecht
+    orcid: "https://orcid.org/0000-0003-3641-729X"
+  - family-names: Cannoodt
+    given-names: Hendrik
+    orcid: "https://orcid.org/0000-0002-0032-6719"
+  - family-names: Schaumont
+    given-names: Dries
+    orcid: "https://orcid.org/0000-0002-4389-0440"
+  - family-names: Waldrant
+    given-names: Kai
+    orcid: "https://orcid.org/0009-0003-8555-1361"
+  - family-names: Van de Kerckhove
+    given-names: Eric 
+  - family-names: Boschmans
+    given-names: Andy
+    orcid: "https://orcid.org/0009-0008-8793-4661"
+  - family-names: De Maeyer
+    given-names: Dries
+    orcid: "https://orcid.org/0000-0002-1314-3348"
+  - email: toni@data-intuitive.com
+    family-names: Verbeiren
+    given-names: Toni
+    orcid: "https://orcid.org/0000-0002-7007-6866"
+  date-published: 2024-01-24
+  doi: 10.21105/joss.06089
+  issn: 2475-9066
+  issue: 93
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 6089
+  title: "Viash: A meta-framework for building reusable workflow
+    modules"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.06089"
+  volume: 9
+title: "Viash: A meta-framework for building reusable workflow modules"
