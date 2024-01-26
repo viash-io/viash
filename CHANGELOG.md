@@ -1,6 +1,7 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.9.0RC1 (2024-01-26): Restructure platforms into runners and engines
 
-TODO add summary
+This release restructures the `platforms` field into `runners` and `engines`.
+Additionally changes are made to sanitize the built config output and include additional relevant meta data.
 
 ## BREAKING CHANGES
 
