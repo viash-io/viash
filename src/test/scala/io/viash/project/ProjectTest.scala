@@ -45,5 +45,6 @@ class ProjectTest extends AnyFunSuite {
     val proj2 = ProjectConfig.findViashProject(rootPath.resolve("testns/src/ns_add"))
 
     assert(proj2 == proj)
+    assert(proj2.rootDir == Some(rootPath.resolve("testns")))
   }
 }

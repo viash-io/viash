@@ -26,6 +26,7 @@ import io.viash.helpers.circe._
 import io.circe.Json
 import io.circe.JsonObject
 import io.viash.functionality.resources.NextflowScript
+import io.viash.helpers.IO
 
 object ConfigMeta {
   // create a yaml printer for writing the viash.yaml file
@@ -40,7 +41,21 @@ object ConfigMeta {
   val metaFilename: String = ".config.vsh.yaml"
 
   def configToCleanJson(config: Config): Json = {
-    val encodedConfig: Json = encodeConfig(config)
+    // relativize paths in the info field
+    val rootDir = config.project_config.flatMap(_.rootDir)
+    val anonymizedConfig = config.copy(
+      info = config.info.map(info => info.copy(
+        config = IO.anonymizePath(rootDir, info.config),
+        output = info.output.map(IO.anonymizePath(rootDir, _)),
+        executable = info.executable.map(IO.anonymizePath(rootDir, _))
+      )),
+      project_config = config.project_config.map(pc => pc.copy(
+        source = pc.source.map(IO.anonymizePath(rootDir, _)),
+        target = pc.target.map(IO.anonymizePath(rootDir, _))
+      ))
+    )
+
+    val encodedConfig: Json = encodeConfig(anonymizedConfig)
     // drop empty & null values recursively except all "info" fields
     val cleanEncodedConfig = encodedConfig.dropEmptyRecursivelyExcept(Seq("info", ".engines.entrypoint", ".engines.cmd"))
     // get config.info and *do* clean it

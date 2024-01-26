@@ -30,15 +30,18 @@ import io.viash.functionality.Author
 
 @description("A Viash project configuration file. It's name should be `_viash.yaml`.")
 @example(
-  """viash_version: 0.6.4
-    §source: src
-    §target: target
-    §config_mods: |
-    §  .engines[.type == 'docker'].target_registry := 'ghcr.io'
-    §  .engines[.type == 'docker'].target_organization := 'viash-io'
-    §  .engines[.type == 'docker'].namespace_separator := '/'
-    §  .engines[.type == 'docker'].target_image_source := 'https://github.com/viash-io/viash'
-    §""".stripMargin('§'), "yaml"
+  """viash_version: 0.9.0
+    |source: src
+    |target: target
+    |version: 1.0
+    |organization: viash-io
+    |links:
+    |  repository: 'https://github.com/viash-io/viash'
+    |  docker_registry: 'ghcr.io'
+    |config_mods: |
+    |  .runners[.type == 'nextflow'].directives.tag := '$id'
+    |  .runners[.type == 'nextflow'].config.script := 'includeConfig("configs/custom.config")'
+    |""".stripMargin, "yaml"
 )
 @since("Viash 0.6.4")
 @nameOverride("Project")

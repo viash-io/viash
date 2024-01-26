@@ -6,6 +6,7 @@ import java.nio.file.{Files, Path}
 import java.net.URI
 import io.viash.helpers.{IO, Logger}
 import scala.util.Try
+import java.nio.file.Paths
 
 class IOTest extends AnyFunSuite with BeforeAndAfter {
   Logger.UseColorOverride.value = Some(false)
@@ -93,5 +94,40 @@ class IOTest extends AnyFunSuite with BeforeAndAfter {
   test("resolveProjectPath failure because project uri is none") {
     val result = Try(IO.resolveProjectPath("/test/test.txt", None))
     assert(result.isFailure)
+  }
+
+  test("anonymizePath with a common path") {
+    val basePath = Some(Paths.get("/foo/bar"))
+    val path = "/foo/bar/baz/test.txt"
+    val result = IO.anonymizePath(basePath, path)
+    assert(result == "baz/test.txt")
+  }
+
+  test("anonymizePath with a different base path") {
+    val basePath = Some(Paths.get("/foo/bar"))
+    val path = "/foo/baz/test.txt"
+    val result = IO.anonymizePath(basePath, path)
+    assert(result == "[anonymized]/test.txt")
+  }
+
+  test("anynimizePath with a completely different base path") {
+    val basePath = Some(Paths.get("/foo/bar"))
+    val path = "/tmp/foo/bar/baz/test.txt"
+    val result = IO.anonymizePath(basePath, path)
+    assert(result == "[anonymized]/test.txt")
+  }
+
+  test("anonymizePath with a common path with a trailing slash") {
+    val basePath = Some(Paths.get("/foo/bar/"))
+    val path = "/foo/bar/baz/test.txt"
+    val result = IO.anonymizePath(basePath, path)
+    assert(result == "baz/test.txt")
+  }
+
+  test("anonymizePath without a base path") {
+    val basePath = None
+    val path = "/foo/bar/baz/test.txt"
+    val result = IO.anonymizePath(basePath, path)
+    assert(result == "[anonymized]/test.txt")
   }
 }
