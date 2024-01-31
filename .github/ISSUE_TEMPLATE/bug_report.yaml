@@ -10,7 +10,7 @@ body:
         ## Thank you for taking the time to report a bug
         Please fill out this form as completely as possible.
 
-  - type: input
+  - type: textarea
     id: what-happened
     attributes:
       label: What happened?
@@ -19,7 +19,7 @@ body:
     validations:
       required: true
 
-  - type: input
+  - type: textarea
     id: reproduce
     attributes:
       label: Steps to reproduce
@@ -45,7 +45,7 @@ body:
     validations:
       required: true
 
-  - type: input
+  - type: textarea
     id: expected-behavior
     attributes:
       label: Expected behavior
@@ -64,7 +64,7 @@ body:
         Your log output here.
         ```
 
-  - type: input
+  - type: textarea
     id: version
     attributes:
       label: Version
@@ -80,7 +80,7 @@ body:
     validations:
       required: true
 
-  - type: input
+  - type: textarea
     id: possible-solution
     attributes:
       label: Possible solution
@@ -99,7 +99,7 @@ body:
         - label: I have provided clear and concise information about the bug.
           required: true
 
-  - type: input
+  - type: textarea
     id: additional-context
     attributes:
       label: Additional context
