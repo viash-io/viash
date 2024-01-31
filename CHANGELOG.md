@@ -1,6 +1,8 @@
 # Viash 0.x.x (yyyy-MM-dd): TODO Add title
 
-TODO add summary
+## BUG FIXES
+
+* `schema`: Don't require undocumented fields to set default values and add the `links` and `reference` fields to functionality as they were not meant only to be in the project config (PR #636).
 
 # Viash 0.9.0-RC1 (2024-01-26): Restructure platforms into runners and engines
 
