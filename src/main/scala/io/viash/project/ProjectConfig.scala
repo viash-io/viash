@@ -26,7 +26,7 @@ import io.viash.helpers.circe._
 import io.circe.Json
 import java.net.URI
 import io.viash.functionality.dependencies.RepositoryWithName
-import io.viash.functionality.Author
+import io.viash.functionality.{Author, Links, References}
 
 @description("A Viash project configuration file. It's name should be `_viash.yaml`.")
 @example(
@@ -158,7 +158,7 @@ case class ProjectConfig(
       |""".stripMargin, "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
-  reference: ProjectConfigReferences = ProjectConfigReferences(),
+  reference: References = References(),
 
   @description("External links of the project.")
   @example(
@@ -171,7 +171,7 @@ case class ProjectConfig(
       |""".stripMargin, "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
-  links: ProjectConfigLinks = ProjectConfigLinks(),
+  links: Links = Links(),
 )
 
 object ProjectConfig {

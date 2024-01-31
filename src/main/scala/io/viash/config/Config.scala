@@ -314,6 +314,7 @@ object Config extends Logging {
         composedLicenseLens.modify(_ orElse vpLicense) andThen
         composedOrganizationLens.modify(_ orElse vpOrganization) andThen
         composedRepositoriesLens.modify(vpRepositories ::: _) andThen
+        // TODO copy links en reference
         enginesLens.set(mappedEngines)
         
       lenses(confBase)

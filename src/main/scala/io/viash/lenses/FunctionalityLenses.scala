@@ -33,4 +33,6 @@ object FunctionalityLenses {
   val keywordsLens = GenLens[Functionality](_.keywords)
   val licenseLens = GenLens[Functionality](_.license)
   val organizationLens = GenLens[Functionality](_.organization)
+  val linksLens = GenLens[Functionality](_.links)
+  val referenceLens = GenLens[Functionality](_.reference)
 }

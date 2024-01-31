@@ -15,12 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.project
+package io.viash.functionality
 
 import io.viash.schemas._
 import io.viash.helpers.data_structures.OneOrMore
 
-@description("References to external resources related to the project.")
+@description("References to external resources related to the component.")
 @example(
   """doi: 10.1000/xx.123456.789
     |bibtex: |
@@ -32,12 +32,12 @@ import io.viash.helpers.data_structures.OneOrMore
     |  }
     |""".stripMargin, "yaml")
 @since("Viash 0.9.0")
-case class ProjectConfigReferences(
-  @description("One or multiple DOI reference(s) of the project.")
+case class References(
+  @description("One or multiple DOI reference(s) of the component.")
   @example("doi: 10.1000/xx.123456.789", "yaml")
   doi: OneOrMore[String] = Nil,
 
-  @description("One or multiple BibTeX reference(s) of the project.")
+  @description("One or multiple BibTeX reference(s) of the component.")
   @example(
     """bibtex: |
       |  @article{foo,
