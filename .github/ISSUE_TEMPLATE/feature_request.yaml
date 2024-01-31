@@ -10,7 +10,7 @@ body:
         ## Thank you for your feature request
         Please fill out this form to help us understand your idea.
 
-  - type: input
+  - type: textarea
     id: feature-summary
     attributes:
       label: Feature summary
@@ -45,7 +45,7 @@ body:
       placeholder: e.g., Instead of a full dark mode, a feature to adjust screen brightness could be implemented.
 
 
-  - type: input
+  - type: textarea
     id: possible-solution
     attributes:
       label: Possible solution
