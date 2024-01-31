@@ -175,16 +175,15 @@ final case class DockerEngine(
     // define image source
     //   if no target_image_source is defined, translate
     //   git@github.com:viash-io/viash.git -> https://github.com/viash-io/viash.git
-    val imageSource = (target_image_source, info) match {
-      case (Some(targetImageSource), _) => Some(targetImageSource)
-      case (None, Some(configInfo)) =>
-        configInfo.git_remote.map(url =>
-          url.replaceAll(":([^/])", "/$1")
+    val imageSource = target_image_source
+      .orElse(functionality.links.repository)
+      .orElse(info.flatMap(
+        _.git_remote.map(
+          _.replaceAll(":([^/])", "/$1")
             .replace("ssh//", "")
             .replace("git@", "https://")
         )
-      case _ => None
-    }
+      ))
     val opencontainersImageSource = imageSource.map(src => s"""org.opencontainers.image.source="${Escaper(src, quote = true)}"""").toList
     
     val labelReq = DockerRequirements(label = 
@@ -218,11 +217,15 @@ final case class DockerEngine(
         |""".stripMargin           
   }
 
+  def getTargetRegistryWithFallback(functionality: Functionality): Option[String] = {
+    target_registry.orElse(functionality.links.docker_registry)
+  }
+
   def getTargetIdentifier(functionality: Functionality): String = {
     val targetImageInfo = Docker.getImageInfo(
       functionality = Some(functionality),
       engineId = Some(id),
-      registry = target_registry,
+      registry = getTargetRegistryWithFallback(functionality),
       organization = target_organization,
       name = target_image,
       tag = target_tag.map(_.toString),

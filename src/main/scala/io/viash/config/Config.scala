@@ -298,24 +298,13 @@ object Config extends Logging {
       val vpRepository = viashProject.flatMap(_.links.repository)
       val vpDockerRegistry = viashProject.flatMap(_.links.docker_registry)
 
-      val mappedEngines = confBase.engines.map {
-        _ match {
-          case e: DockerEngine =>
-            e.copy(
-              target_image_source = e.target_image_source.orElse(vpRepository),
-              target_registry = e.target_registry.orElse(vpDockerRegistry)
-            )
-          case e => e
-        }
-      }
-
       val lenses =
         composedVersionLens.modify(_ orElse vpVersion) andThen
         composedLicenseLens.modify(_ orElse vpLicense) andThen
         composedOrganizationLens.modify(_ orElse vpOrganization) andThen
         composedRepositoriesLens.modify(vpRepositories ::: _) andThen
-        // TODO copy links en reference
-        enginesLens.set(mappedEngines)
+        composedLinksRepositoryLens.modify(_ orElse vpRepository) andThen
+        composedLinksDockerRegistryLens.modify(_ orElse vpDockerRegistry)
         
       lenses(confBase)
     }
