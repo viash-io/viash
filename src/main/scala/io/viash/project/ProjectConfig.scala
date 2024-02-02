@@ -146,7 +146,7 @@ case class ProjectConfig(
 
   @description("References to external resources related to the project.")
   @example(
-    """reference:
+    """references:
       |  doi: 10.1000/xx.123456.789
       |  bibtex: |
       |    @article{foo,
@@ -158,7 +158,7 @@ case class ProjectConfig(
       |""".stripMargin, "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
-  reference: References = References(),
+  references: References = References(),
 
   @description("External links of the project.")
   @example(
