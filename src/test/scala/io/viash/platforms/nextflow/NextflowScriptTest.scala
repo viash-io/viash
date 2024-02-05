@@ -202,6 +202,19 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut1\nStd error:\n$stdErr1")
   }
 
+  test("Run multiple output test", NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/multiple_output/main.nf",
+      args = List(
+        "--id", "foo",
+        "--input", "resources/lines*.txt",
+        "--publish_dir", "output"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+  }
 
   override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)

@@ -181,7 +181,7 @@ def publishStatesByConfig(Map args) {
                       value_ = yamlDir.relativize(value_)
                     }
                     def srcPath = val instanceof File ? val.toPath() : val
-                    [value: value_, srcPath: srcPath, destPath: destPath]
+                    [value: value_, srcPath: srcPath, destPath: value_]
                   }
                   def transposedOutputs = ["value", "srcPath", "destPath"].collectEntries{ key -> 
                     [key, outputPerFile.collect{dic -> dic[key]}]
