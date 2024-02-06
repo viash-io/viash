@@ -155,6 +155,10 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
         combinedArgs
           .removeAll{_, val -> val == null || val == "viash_no_value" || val == "force_null"}
 
+        if (id_ instanceof GString) {
+          id_ = id_.toString()
+        }
+
         combinedArgs = _processInputValues(combinedArgs, meta.config, id_, key_)
 
         [id_, combinedArgs] + tuple.drop(2)
