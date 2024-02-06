@@ -4,7 +4,7 @@ TODO add summary
 
 ## BUG FIXES
 
-* `nextflow runner`: Fix an issue with current nextflow-latest (24.01.0-edge) where our supporting library passes a GString instead of a String and results in a type mismatch (PR #XXX).
+* `nextflow runner`: Fix an issue with current nextflow-latest (24.01.0-edge) where our supporting library passes a GString instead of a String and results in a type mismatch (PR #640).
 
 # Viash 0.8.4 (2024-01-15): Bug fix
 
