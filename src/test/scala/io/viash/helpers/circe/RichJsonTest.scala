@@ -146,7 +146,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
       |""".stripMargin
     ).getOrElse(Json.Null)
 
-    val jsonOut1 = json1.inherit(temporaryFolder.toUri(), projectDir = None)
+    val jsonOut1 = json1.inherit(temporaryFolder.toUri(), packageDir = None)
     assert(jsonOut1 == jsonExpected1)
   }
 
@@ -164,7 +164,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
       |""".stripMargin
     ).getOrElse(Json.Null)
 
-    val jsonOut1 = json1.inherit(temporaryFolder.toUri(), projectDir = None)
+    val jsonOut1 = json1.inherit(temporaryFolder.toUri(), packageDir = None)
     assert(jsonOut1 == jsonExpected1)
   }
 
@@ -182,7 +182,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
       |""".stripMargin
     ).getOrElse(Json.Null)
 
-    val jsonOut1 = json1.inherit(temporaryFolder.toUri(), projectDir = None)
+    val jsonOut1 = json1.inherit(temporaryFolder.toUri(), packageDir = None)
     assert(jsonOut1 == jsonExpected1)
   }
 
@@ -203,7 +203,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
     ).getOrElse(Json.Null)
 
     // check whether filling default works
-    val jsonOut = json1.inherit(temporaryFolder.toUri(), projectDir = None, stripInherits = false)
+    val jsonOut = json1.inherit(temporaryFolder.toUri(), packageDir = None, stripInherits = false)
     assert(jsonOut == jsonExpected)
   }
 
@@ -222,7 +222,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
     ).getOrElse(Json.Null)
 
     // check whether filling default works
-    val jsonOut = json1.inherit(temporaryFolder.toUri(), projectDir = None)
+    val jsonOut = json1.inherit(temporaryFolder.toUri(), packageDir = None)
     assert(jsonOut == jsonExpected)
   }
 
@@ -243,7 +243,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
     ).getOrElse(Json.Null)
 
     // check whether filling default works
-    val jsonOut = json1.inherit(temporaryFolder.toUri(), projectDir = None)
+    val jsonOut = json1.inherit(temporaryFolder.toUri(), packageDir = None)
     assert(jsonOut == jsonExpected)
   }
 
@@ -275,7 +275,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
     ).getOrElse(Json.Null)
 
     val caught = intercept[FileNotFoundException] {
-      json1.inherit(temporaryFolder.toUri(), projectDir = None)
+      json1.inherit(temporaryFolder.toUri(), packageDir = None)
     }
 
     assert(caught.getMessage().contains("not_existing.yaml"))
@@ -289,7 +289,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
     ).getOrElse(Json.Null)
 
     val caught = intercept[ConfigParserMergeException] {
-      json1.inherit(temporaryFolder.toUri(), projectDir = None)
+      json1.inherit(temporaryFolder.toUri(), packageDir = None)
     }
 
     assert(caught.innerMessage.contains("invalid merge tag type"))
@@ -304,7 +304,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
     ).getOrElse(Json.Null)
 
     val caught = intercept[ConfigParserMergeException] {
-      json1.inherit(temporaryFolder.toUri(), projectDir = None)
+      json1.inherit(temporaryFolder.toUri(), packageDir = None)
     }
 
     assert(caught.innerMessage.contains("invalid merge tag type"))
@@ -322,7 +322,7 @@ class RichJsonTest extends AnyFunSuite with BeforeAndAfterAll {
     ).getOrElse(Json.Null)
 
     val caught = intercept[ConfigYamlException] {
-      json1.inherit(temporaryFolder.toUri(), projectDir = None)
+      json1.inherit(temporaryFolder.toUri(), packageDir = None)
     }
 
     assert(caught.innerMessage.contains("invalid Yaml structure"))

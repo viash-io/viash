@@ -16,7 +16,7 @@ import io.circe.Json
 import io.circe.yaml.parser.parse
 import io.viash.config_mods.ConfigModParser
 
-class NativeProjectConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
+class NativePackageConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
   // which configs to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
@@ -26,7 +26,7 @@ class NativeProjectConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   val baseConfigFilePath = configDeriver.derive(""".functionality.version := null""", "base_config")
 
-  // Use config mod functionality so that we can more easily differentiate between e.g. '.license' and '.project_config.license'
+  // Use config mod functionality so that we can more easily differentiate between e.g. '.license' and '.package_config.license'
   val versionMod = ConfigModParser.parse(ConfigModParser.path, """.functionality.version""").get
   val licenseMod = ConfigModParser.parse(ConfigModParser.path, """.functionality.license""").get
   val organizationMod = ConfigModParser.parse(ConfigModParser.path, """.functionality.organization""").get
@@ -54,7 +54,7 @@ class NativeProjectConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Add a _viash.yaml without component fields filled in") {
-    val projectConfig = 
+    val packageConfig = 
       """version: test_version
         |license: test_license
         |organization: test_organization
@@ -62,7 +62,7 @@ class NativeProjectConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
         |  repository: test_repository
         |  docker_registry: test_registry
         |""".stripMargin
-    IO.write(projectConfig, temporaryConfigFolder.resolve("_viash.yaml"))
+    IO.write(packageConfig, temporaryConfigFolder.resolve("_viash.yaml"))
 
     val testOutput = TestHelper.testMain(
       workingDir = Some(temporaryConfigFolder),
@@ -93,7 +93,7 @@ class NativeProjectConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
         "config_with_fields_set"
       )
 
-    val projectConfig = 
+    val packageConfig = 
       """version: test_version
         |license: test_license
         |organization: test_organization
@@ -101,7 +101,7 @@ class NativeProjectConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
         |  repository: test_repository
         |  docker_registry: test_registry
         |""".stripMargin
-    IO.write(projectConfig, temporaryConfigFolder.resolve("_viash.yaml"))
+    IO.write(packageConfig, temporaryConfigFolder.resolve("_viash.yaml"))
 
     val testOutput = TestHelper.testMain(
       workingDir = Some(temporaryConfigFolder),

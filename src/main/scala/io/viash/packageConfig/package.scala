@@ -19,11 +19,11 @@ package io.viash
 
 import io.circe.{Decoder, Encoder}
 
-package object project {
+package object packageConfig {
   import io.viash.helpers.circe._
   import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
   import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
 
-  implicit val encodeProjectConfig: Encoder.AsObject[ProjectConfig] = deriveConfiguredEncoderStrict
-  implicit val decodeProjectConfig: Decoder[ProjectConfig] = deriveConfiguredDecoderFullChecks
+  implicit val encodePackageConfig: Encoder.AsObject[PackageConfig] = deriveConfiguredEncoderStrict
+  implicit val decodePackageConfig: Decoder[PackageConfig] = deriveConfiguredDecoderFullChecks
 }

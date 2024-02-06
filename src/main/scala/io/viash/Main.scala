@@ -25,7 +25,7 @@ import sys.process.{Process, ProcessLogger}
 import config.Config
 import helpers.{IO, Exec, SysEnv, DependencyResolver, Logger, Logging}
 import helpers.status._
-import project.ProjectConfig
+import packageConfig.PackageConfig
 import cli.{CLIConf, ViashCommand, DocumentedSubcommand, ViashNs, ViashNsBuild, ViashLogger}
 import exceptions._
 import scala.util.Try
@@ -167,8 +167,8 @@ object Main extends Logging {
     * @return An exit code
     */
   def mainCLI(args: Array[String], workingDir: Option[Path] = None): Int = {
-    // try to find project settings
-    val proj0 = workingDir.map(ProjectConfig.findViashProject(_)).getOrElse(ProjectConfig())
+    // try to find package settings
+    val pack0 = workingDir.map(PackageConfig.findViashPackage(_)).getOrElse(PackageConfig())
 
     // strip arguments meant for viash run
     val (viashArgs, runArgs) = {
@@ -199,31 +199,31 @@ object Main extends Logging {
       case _ => 
     }
     
-    // see if there are project overrides passed to the viash command
-    val projSrc = cli.subcommands.lastOption match {
+    // see if there are package overrides passed to the viash command
+    val packSrc = cli.subcommands.lastOption match {
       case Some(x: ViashNs) => x.src.toOption
       case _ => None
     }
-    val projTarg = cli.subcommands.lastOption match {
+    val packTarg = cli.subcommands.lastOption match {
       case Some(x: ViashNsBuild) => x.target.toOption
       case _ => None
     }
-    val projCm = cli.subcommands.lastOption match {
+    val packCm = cli.subcommands.lastOption match {
       case Some(x: ViashNs) => x.config_mods()
       case Some(x: ViashCommand) => x.config_mods()
       case _ => Nil
     }
 
-    val proj1 = proj0.copy(
-      source = projSrc orElse proj0.source orElse Some("src"),
-      target = projTarg orElse proj0.target orElse Some("target"),
-      config_mods = proj0.config_mods ::: projCm
+    val pack1 = pack0.copy(
+      source = packSrc orElse pack0.source orElse Some("src"),
+      target = packTarg orElse pack0.target orElse Some("target"),
+      config_mods = pack0.config_mods ::: packCm
     )
 
     // process commands
     cli.subcommands match {
       case List(cli.run) =>
-        val config = readConfig(cli.run, project = proj1)
+        val config = readConfig(cli.run, packageConfig = pack1)
         ViashRun(
           appliedConfig = config,
           args = runArgs.toIndexedSeq.dropWhile(_ == "--"), 
@@ -232,8 +232,8 @@ object Main extends Logging {
           memory = cli.run.memory.toOption
         )
       case List(cli.build) =>
-        val config = readConfig(cli.build, project = proj1)
-        val config2 = singleConfigDependencies(config, cli.build.output.toOption, proj1.rootDir)
+        val config = readConfig(cli.build, packageConfig = pack1)
+        val config2 = singleConfigDependencies(config, cli.build.output.toOption, pack1.rootDir)
         val buildResult = ViashBuild(
           appliedConfig = config2,
           output = cli.build.output(),
@@ -242,8 +242,8 @@ object Main extends Logging {
         )
         if (buildResult.isError) 1 else 0
       case List(cli.test) =>
-        val config = readConfig(cli.test, project = proj1)
-        val config2 = singleConfigDependencies(config, None, proj1.rootDir)
+        val config = readConfig(cli.test, packageConfig = pack1)
+        val config2 = singleConfigDependencies(config, None, pack1.rootDir)
         ViashTest(
           config2,
           keepFiles = cli.test.keep.toOption.map(_.toBoolean),
@@ -253,11 +253,11 @@ object Main extends Logging {
         )
         0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
-        val configs = readConfigs(cli.namespace.build, project = proj1)
-        val configs2 = namespaceDependencies(configs, proj1.target, proj1.rootDir)
+        val configs = readConfigs(cli.namespace.build, packageConfig = pack1)
+        val configs2 = namespaceDependencies(configs, pack1.target, pack1.rootDir)
         var buildResults = ViashNamespace.build(
           configs = configs2,
-          target = proj1.target.get,
+          target = pack1.target.get,
           setup = cli.namespace.build.setup.toOption,
           push = cli.namespace.build.push(),
           parallel = cli.namespace.build.parallel(),
@@ -268,9 +268,9 @@ object Main extends Logging {
           .count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.test) =>
-        val configs = readConfigs(cli.namespace.test, project = proj1)
+        val configs = readConfigs(cli.namespace.test, packageConfig = pack1)
         // resolve dependencies
-        val configs2 = namespaceDependencies(configs, None, proj1.rootDir)
+        val configs2 = namespaceDependencies(configs, None, pack1.rootDir)
         // flatten engines
         val configs3 = configs2.flatMap{ ac => 
           ac.engines.map{ engine => 
@@ -295,12 +295,12 @@ object Main extends Logging {
         }
         val configs = readConfigs(
           cli.namespace.list,
-          project = proj1,
+          packageConfig = pack1,
           addOptMainScript = false, 
           applyRunner = cli.namespace.list.runner.isDefined,
           applyEngine = cli.namespace.list.engine.isDefined
         )
-        val configs2 = namespaceDependencies(configs, None, proj1.rootDir)
+        val configs2 = namespaceDependencies(configs, None, pack1.rootDir)
         ViashNamespace.list(
           configs = configs2,
           format = cli.namespace.list.format()
@@ -310,7 +310,7 @@ object Main extends Logging {
       case List(cli.namespace, cli.namespace.exec) =>
         val configs = readConfigs(
           cli.namespace.exec, 
-          project = proj1, 
+          packageConfig = pack1, 
           applyRunner = cli.namespace.exec.applyRunner(),
           applyEngine = cli.namespace.exec.applyEngine()
         )
@@ -328,11 +328,11 @@ object Main extends Logging {
         }
         val config = readConfig(
           cli.config.view,
-          project = proj1,
+          packageConfig = pack1,
           addOptMainScript = false,
           applyRunnerAndEngine = cli.config.view.runner.isDefined || cli.config.view.engine.isDefined
         )
-        val config2 = DependencyResolver.modifyConfig(config.config, None, proj1.rootDir)
+        val config2 = DependencyResolver.modifyConfig(config.config, None, pack1.rootDir)
         ViashConfig.view(
           config2, 
           format = cli.config.view.format()
@@ -341,7 +341,7 @@ object Main extends Logging {
       case List(cli.config, cli.config.inject) =>
         val config = readConfig(
           cli.config.inject,
-          project = proj1,
+          packageConfig = pack1,
           addOptMainScript = false,
           applyRunnerAndEngine = false
         )
@@ -429,7 +429,7 @@ object Main extends Logging {
 
   def readConfig(
     subcommand: ViashCommand,
-    project: ProjectConfig,
+    packageConfig: PackageConfig,
     addOptMainScript: Boolean = true,
     applyRunnerAndEngine: Boolean = true
   ): AppliedConfig = {
@@ -437,7 +437,7 @@ object Main extends Logging {
     val config = Config.read(
       configPath = subcommand.config(),
       addOptMainScript = addOptMainScript,
-      viashProject = Some(project)
+      viashPackage = Some(packageConfig)
     )
     if (applyRunnerAndEngine) {
       val runnerStr = subcommand.runner.toOption
@@ -450,7 +450,7 @@ object Main extends Logging {
         appliedConfig = config,
         runner = Some(runner), // TODO: fix? should findRunner return an option?
         engines = engines,
-        targetDir = project.target
+        targetDir = packageConfig.target
       )
     } else {
       config
@@ -459,18 +459,18 @@ object Main extends Logging {
   
   def readConfigs(
     subcommand: ViashNs,
-    project: ProjectConfig,
+    packageConfig: PackageConfig,
     addOptMainScript: Boolean = true,
     applyRunner: Boolean = true,
     applyEngine: Boolean = true
   ): List[AppliedConfig] = {
-    val source = project.source.get
+    val source = packageConfig.source.get
     val query = subcommand.query.toOption
     val queryNamespace = subcommand.query_namespace.toOption
     val queryName = subcommand.query_name.toOption
     val runnerStr = subcommand.runner.toOption
     val engineStr = subcommand.engine.toOption
-    val configMods = project.config_mods
+    val configMods = packageConfig.config_mods
 
     val configs0 = Config.readConfigs(
       source = source,
@@ -478,7 +478,7 @@ object Main extends Logging {
       queryNamespace = queryNamespace,
       queryName = queryName,
       addOptMainScript = addOptMainScript,
-      viashProject = Some(project)
+      viashPackage = Some(packageConfig)
     )
     
     // TODO: apply engine and runner should probably be split into two Y_Y
@@ -497,7 +497,7 @@ object Main extends Logging {
                   appliedConfig = ac,
                   runner = Some(runner),
                   engines = engines,
-                  targetDir = project.target
+                  targetDir = packageConfig.target
                 )
               }
             } catch {
@@ -562,7 +562,7 @@ object Main extends Logging {
     * Detect the desired Viash version
     * 
     * If an environment variable `VIASH_VERSION` is
-    * defined, return its value. Else if a project file
+    * defined, return its value. Else if a package file
     * is found in the working directory, check whether
     * it contains a `viash_version` field. Otherwise
     * return None. 
@@ -573,11 +573,11 @@ object Main extends Logging {
   def detectVersion(workingDir: Option[Path]): Option[String] = {
     // if VIASH_VERSION is defined, use that
     SysEnv.viashVersion orElse {
-      // else look for project file in working dir
+      // else look for package file in working dir
       // and try to read as json
       workingDir
-        .flatMap(ProjectConfig.findProjectFile)
-        .map(ProjectConfig.readJson)
+        .flatMap(PackageConfig.findPackageFile)
+        .map(PackageConfig.readJson)
         .flatMap(js => {
           js.asObject.flatMap(_.apply("viash_version")).flatMap(_.asString)
         })

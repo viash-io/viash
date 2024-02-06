@@ -43,11 +43,11 @@ object DependencyResolver extends Logging {
     *
     * @param config Component configuration
     * @param runnerId Used to create the path where to store retrieved dependencies
-    * @param projectRootDir Location of the Project Config, used for relative referencing
+    * @param packageRootDir Location of the Package Config, used for relative referencing
     * @param namespaceConfigs Needed for local dependencies
     * @return A config with dependency information added
     */
-  def modifyConfig(config: Config, runnerId: Option[String], projectRootDir: Option[Path], namespaceConfigs: List[Config] = Nil): Config = {
+  def modifyConfig(config: Config, runnerId: Option[String], packageRootDir: Option[Path], namespaceConfigs: List[Config] = Nil): Config = {
 
     // Check all fun.repositories have valid names
     val repositories = config.functionality.repositories
@@ -85,7 +85,7 @@ object DependencyResolver extends Logging {
       .map{d =>
         val repo = d.repository.toOption.get
         val configDir = Paths.get(config2.info.get.config).getParent()
-        val localRepoPath = Repository.cache(repo, configDir, projectRootDir)
+        val localRepoPath = Repository.cache(repo, configDir, packageRootDir)
         d.copy(repository = Right(localRepoPath))
       }
       )(config2)
@@ -223,7 +223,7 @@ object DependencyResolver extends Logging {
   // Read a config file from a built target. Get meta info, functionality name & namespace
   def getSparseConfigInfo(configPath: String): Map[String, String] = {
     try {
-      // No support for project configs, config mods, ...
+      // No support for package configs, config mods, ...
       // The yaml file in the target folder should be final
       // We're also assuming that the file will be proper yaml and an actual viash config file
       val yamlText = IO.read(IO.uri(configPath))

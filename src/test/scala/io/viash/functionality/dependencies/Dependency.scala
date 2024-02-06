@@ -272,15 +272,15 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(out.exitValue == 0)
   }
 
-  test("Use a remote dependency defined in the project config") {
-    val projectConfig =
+  test("Use a remote dependency defined in the package config") {
+    val packageConfig =
       """repositories:
         |  - name: viash_hub
         |    type: vsh
         |    repo: hendrik/dependency_test
         |    tag: main_build
         |""".stripMargin
-    val testFolder = createViashSubFolder(temporaryFolder, "remote_test_project_config", Some(projectConfig))
+    val testFolder = createViashSubFolder(temporaryFolder, "remote_test_package_config", Some(packageConfig))
     
     // write test files
     val fun = Functionality(

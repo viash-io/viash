@@ -3,7 +3,7 @@ title: Dynamic Config Modding
 order: 50
 ---
 
-Viash can modify a [viash config](/reference/config/index.html) at runtime using a custom Domain Specific Language (DSL). This allows making dynamic changes to your components or projects.  
+Viash can modify a [viash config](/reference/config/index.html) at runtime using a custom Domain Specific Language (DSL). This allows making dynamic changes to your components or packages.  
 All Viash subcommands have support for the DSL through the `-c|--config_mod` parameter. The format for these is as follows:
 
 ```bash

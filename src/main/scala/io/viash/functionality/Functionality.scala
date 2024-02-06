@@ -256,13 +256,13 @@ case class Functionality(
   @since("Viash 0.9.0")
   keywords: List[String] = Nil,
 
-  @description("The license of the project.")
+  @description("The license of the package.")
   @example("license: MIT", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   license: Option[String] = None,
 
-  @description("The organization of the project.")
+  @description("The organization of the package.")
   @example("organization: viash-io", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")

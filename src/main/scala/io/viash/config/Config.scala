@@ -38,7 +38,7 @@ import java.nio.file.FileSystemNotFoundException
 import io.viash.runners.{Runner, ExecutableRunner, NextflowRunner}
 import io.viash.engines.{Engine, NativeEngine, DockerEngine}
 import io.viash.helpers.ReplayableMultiOutputStream
-import io.viash.project.ProjectConfig
+import io.viash.packageConfig.PackageConfig
 import io.viash.lenses.ConfigLenses._
 
 @description(
@@ -91,10 +91,10 @@ case class Config(
   @undocumented
   info: Option[Info] = None,
 
-  @description("The project config content used during build.")
+  @description("The package config content used during build.")
   @since("Viash 0.9.0")
   @undocumented
-  project_config: Option[ProjectConfig] = None,
+  package_config: Option[PackageConfig] = None,
 ) {
 
   @description(
@@ -244,23 +244,23 @@ object Config extends Logging {
   def read(
     configPath: String,
     addOptMainScript: Boolean = true,
-    viashProject: Option[ProjectConfig] = None,
+    viashPackage: Option[PackageConfig] = None,
   ): Config = {
     val uri = IO.uri(configPath)
     readFromUri(
       uri = uri,
       addOptMainScript = addOptMainScript,
-      viashProject = viashProject
+      viashPackage = viashPackage
     )
   }
 
   def readFromUri(
     uri: URI,
     addOptMainScript: Boolean = true,
-    viashProject: Option[ProjectConfig] = None,
+    viashPackage: Option[PackageConfig] = None,
   ): Config = {
-    val projectDir = viashProject.flatMap(_.rootDir).map(_.toUri())
-    val configMods: List[String] = viashProject.map(_.config_mods.toList).getOrElse(Nil)
+    val packageDir = viashPackage.flatMap(_.rootDir).map(_.toUri())
+    val configMods: List[String] = viashPackage.map(_.config_mods.toList).getOrElse(Nil)
 
     // read cli config mods
     val confMods = ConfigMods.parseConfigMods(configMods)
@@ -278,7 +278,7 @@ object Config extends Logging {
 
     /* JSON 1: after inheritance */
     // apply inheritance if need be
-    val json1 = json0.inherit(uri, projectDir)
+    val json1 = json0.inherit(uri, packageDir)
 
     /* JSON 2: after preparse config mods  */
     // apply preparse config mods if need be
@@ -288,15 +288,15 @@ object Config extends Logging {
     // convert Json into Config
     val confBase = Convert.jsonToClass[Config](json2, uri.toString())
 
-    /* CONFIG 0: apply values from project config */
-    // apply values from project config if need be
+    /* CONFIG 0: apply values from package config */
+    // apply values from package config if need be
     val conf0 = {
-      val vpVersion = viashProject.flatMap(_.version)
-      val vpRepositories = viashProject.map(_.repositories).getOrElse(Nil)
-      val vpLicense = viashProject.flatMap(_.license)
-      val vpOrganization = viashProject.flatMap(_.organization)
-      val vpRepository = viashProject.flatMap(_.links.repository)
-      val vpDockerRegistry = viashProject.flatMap(_.links.docker_registry)
+      val vpVersion = viashPackage.flatMap(_.version)
+      val vpRepositories = viashPackage.map(_.repositories).getOrElse(Nil)
+      val vpLicense = viashPackage.flatMap(_.license)
+      val vpOrganization = viashPackage.flatMap(_.organization)
+      val vpRepository = viashPackage.flatMap(_.links.repository)
+      val vpDockerRegistry = viashPackage.flatMap(_.links.docker_registry)
 
       val lenses =
         composedVersionLens.modify(_ orElse vpVersion) andThen
@@ -326,15 +326,15 @@ object Config extends Logging {
     /* CONFIG 2: store parent path in resource to be able to access them in the future */
     // copy resources with updated paths into config and return
     val parentURI = uri.resolve("")
-    val resources = conf1.functionality.resources.map(_.copyWithAbsolutePath(parentURI, projectDir))
-    val tests = conf1.functionality.test_resources.map(_.copyWithAbsolutePath(parentURI, projectDir))
+    val resources = conf1.functionality.resources.map(_.copyWithAbsolutePath(parentURI, packageDir))
+    val tests = conf1.functionality.test_resources.map(_.copyWithAbsolutePath(parentURI, packageDir))
 
     val conf2a = composedResourcesLens.set(resources)(conf1)
     val conf2 = composedTestResourcesLens.set(tests)(conf2a)
 
     /* CONFIG 3: add info */
     // gather git info
-    // todo: resolve git in project?
+    // todo: resolve git in package?
     val conf3 = uri.getScheme() match {
       case "file" =>
         val path = Paths.get(uri).toFile().getParentFile
@@ -363,9 +363,9 @@ object Config extends Logging {
     if (conf3.functionality.resources.isEmpty && optScript.isEmpty)
       warn(s"Warning: no resources specified!")
 
-    /* CONFIG 4: add Viash Project Config */
+    /* CONFIG 4: add Viash Package Config */
     val conf4 = conf3.copy(
-      project_config = viashProject
+      package_config = viashPackage
     )
 
     if (!addOptMainScript) {
@@ -385,7 +385,7 @@ object Config extends Logging {
     queryNamespace: Option[String] = None,
     queryName: Option[String] = None,
     addOptMainScript: Boolean = true,
-    viashProject: Option[ProjectConfig] = None,
+    viashPackage: Option[PackageConfig] = None,
   ): List[AppliedConfig] = {
 
     val sourceDir = Paths.get(source)
@@ -409,7 +409,7 @@ object Config extends Logging {
               read(
                 file.toString,
                 addOptMainScript = addOptMainScript,
-                viashProject = viashProject
+                viashPackage = viashPackage
               )
             }
           }

@@ -31,7 +31,7 @@ import java.nio.file.Paths
     |path: /additional_code/src
     |""".stripMargin,
   "yaml",
-  "Refer to a local code repository under `additional_code/src` referenced to the Viash Project Config file."
+  "Refer to a local code repository under `additional_code/src` referenced to the Viash Package Config file."
 )
 @subclass("local")
 case class LocalRepository(

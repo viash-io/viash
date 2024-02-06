@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.project
+package io.viash.packageConfig
 
 import java.nio.file.{Files, Path, Paths}
 
@@ -28,7 +28,7 @@ import java.net.URI
 import io.viash.functionality.dependencies.RepositoryWithName
 import io.viash.functionality.{Author, Links, References}
 
-@description("A Viash project configuration file. It's name should be `_viash.yaml`.")
+@description("A Viash package configuration file. It's name should be `_viash.yaml`.")
 @example(
   """viash_version: 0.9.0
     |source: src
@@ -44,19 +44,19 @@ import io.viash.functionality.{Author, Links, References}
     |""".stripMargin, "yaml"
 )
 @since("Viash 0.6.4")
-case class ProjectConfig(
-  @description("The name of the project.")
-  @example("name: my_project", "yaml")
+case class PackageConfig(
+  @description("The name of the package.")
+  @example("name: my_package", "yaml")
   @since("Viash 0.9.0")
   name: Option[String] = None,
 
-  @description("The version of the project.")
+  @description("The version of the package.")
   @example("version: 0.1.0", "yaml")
   @since("Viash 0.9.0")
   version: Option[String] = None,
 
-  @description("A description of the project.")
-  @example("description: My project", "yaml")
+  @description("A description of the package.")
+  @example("description: My package", "yaml")
   @since("Viash 0.9.0")
   description: Option[String] = None,
 
@@ -107,7 +107,7 @@ case class ProjectConfig(
   @internalFunctionality
   rootDir: Option[Path] = None,
 
-  @description("The authors of the project.")
+  @description("The authors of the package.")
   @example(
     """authors:
       |  - name: Jane Doe
@@ -126,25 +126,25 @@ case class ProjectConfig(
   @since("Viash 0.9.0")
   authors: List[Author] = Nil,
 
-  @description("The keywords of the project.")
+  @description("The keywords of the package.")
   @example("keywords: [ bioinformatics, genomics ]", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   keywords: List[String] = Nil,
 
-  @description("The license of the project.")
+  @description("The license of the package.")
   @example("license: MIT", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   license: Option[String] = None,
 
-  @description("The organization of the project.")
+  @description("The organization of the package.")
   @example("organization: viash-io", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   organization: Option[String] = None,
 
-  @description("References to external resources related to the project.")
+  @description("References to external resources related to the package.")
   @example(
     """references:
       |  doi: 10.1000/xx.123456.789
@@ -160,7 +160,7 @@ case class ProjectConfig(
   @since("Viash 0.9.0")
   references: References = References(),
 
-  @description("External links of the project.")
+  @description("External links of the package.")
   @example(
     """links:
       |  repository: "https://github.com/viash-io/viash"
@@ -174,15 +174,15 @@ case class ProjectConfig(
   links: Links = Links(),
 )
 
-object ProjectConfig {
+object PackageConfig {
 
   /**
-    * Look for a Viash project file in a directory or its parents
+    * Look for a Viash package file in a directory or its parents
     *
     * @param path The directory in which to look for a file called `_viash.yaml`
-    * @return The path to the Viash project file, if found.
+    * @return The path to the Viash package file, if found.
     */
-  def findProjectFile(path: Path): Option[Path] = {
+  def findPackageFile(path: Path): Option[Path] = {
     val child = path.resolve("_viash.yaml")
     if (Files.isDirectory(path) && Files.exists(child)) {
       Some(child)
@@ -191,7 +191,7 @@ object ProjectConfig {
       if (parent == null) {
         None
       } else {
-        findProjectFile(path.getParent())
+        findPackageFile(path.getParent())
       }
     }
   }
@@ -212,27 +212,27 @@ object ProjectConfig {
 
     /* JSON 1: after inheritance */
     // apply inheritance if need be
-    val json1 = json0.inherit(uri, projectDir = Some(uri))
+    val json1 = json0.inherit(uri, packageDir = Some(uri))
 
     json1
   }
 
   /**
-    * Read the text from a Path and convert to a ViashProject
+    * Read the text from a Path and convert to a ViashPackage
     *
     * @param path The path to read out
-    * @return A parsed project config
+    * @return A parsed package config
     */
   def read(
     path: Path
-  ): ProjectConfig = {
+  ): PackageConfig = {
     val json = readJson(path)
 
-    /* PROJECT 0: converted from json */
-    // convert Json into ViashProject
-    val proj0 = Convert.jsonToClass[ProjectConfig](json, path.toString())
+    /* PACKAGE 0: converted from json */
+    // convert Json into ViashPackage
+    val pack0 = Convert.jsonToClass[PackageConfig](json, path.toString())
 
-    /* PROJECT 1: make resources absolute */
+    /* PACKAGE 1: make resources absolute */
     // make paths absolute
     // todo: move to separate helper function
     def rela(parent: Path, path: String): String = {
@@ -243,11 +243,11 @@ object ProjectConfig {
         parent.resolve(path).toString
       }
     }
-    val source = proj0.source.map(rela(path.getParent(), _))
-    val target = proj0.target.map(rela(path.getParent(), _))
+    val source = pack0.source.map(rela(path.getParent(), _))
+    val target = pack0.target.map(rela(path.getParent(), _))
 
     // copy resources with updated paths into config and return
-    val proj1 = proj0.copy(
+    val proj1 = pack0.copy(
       source = source,
       target = target,
       rootDir = Some(path.getParent())
@@ -257,17 +257,17 @@ object ProjectConfig {
   }
 
   /**
-    * Look for a Viash project file in a directory or its parents
-    * and convert to a ViashProject object
+    * Look for a Viash package file in a directory or its parents
+    * and convert to a ViashPackage object
     *
     * @param path The directory in which to look for a file called `_viash.yaml`
-    * @return The project config, if found
+    * @return The package config, if found
     */
-  def findViashProject(path: Path): ProjectConfig = {
-    findProjectFile(path) match {
-      case Some(projectPath) =>
-        read(projectPath)
-      case None => ProjectConfig()
+  def findViashPackage(path: Path): PackageConfig = {
+    findPackageFile(path) match {
+      case Some(packagePath) =>
+        read(packagePath)
+      case None => PackageConfig()
     }
   }
 }

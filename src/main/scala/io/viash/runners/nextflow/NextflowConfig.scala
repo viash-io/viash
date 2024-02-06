@@ -31,7 +31,7 @@ case class NextflowConfig(
       |The default cpu labels are defined as "cpu1", "cpu2", "cpu5", "cpu10", ... upto "cpu1000" and follows a semi logarithmic scale (1, 2, 5 per decade).
       |
       |Conceptually it is possible for a Viash Config to overwrite the full labels parameter, however likely it is more efficient to add additional labels
-      |in the Viash Project with a config mod.
+      |in the Viash Package with a config mod.
       |""".stripMargin)
   @exampleWithDescription(
     """labels:
@@ -55,15 +55,15 @@ case class NextflowConfig(
       |  .runners[.type == "nextflow"].config.labels.lowmem := "memory = 4.GB"
       |  .runners[.type == "nextflow"].config.labels.lowcpu := "cpus = 4"
       |""".stripMargin,
-    "viash_project_file",
-    "Add 'lowmem' and 'lowcpu' to the default labels by using the Viash Project file"
+    "viash_package_file",
+    "Add 'lowmem' and 'lowcpu' to the default labels by using the Viash Package file"
   )
   @exampleWithDescription(
     """config_mods: |
       |  .runners[.type == "nextflow"].config.labels := { lowmem: "memory = 4.GB", lowcpu: "cpus = 4", midmem: "memory = 25.GB", midcpu: "cpus = 10", highmem: "memory = 50.GB", highcpu: "cpus = 20", vhighmem: "memory = 100.GB", vhighcpu: "cpus = 40" }
       |""".stripMargin,
-    "viash_project_file",
-    "Replace the default labels with a different set of labels by using the Viash Project file"
+    "viash_package_file",
+    "Replace the default labels with a different set of labels by using the Viash Package file"
   )
   @default("A series of default labels to specify memory and cpu constraints")
   labels: ListMap[String, String] = ListMap(
