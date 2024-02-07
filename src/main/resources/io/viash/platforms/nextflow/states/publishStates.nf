@@ -134,8 +134,12 @@ def publishStatesByConfig(Map args) {
           def yamlDir = java.nio.file.Paths.get(yamlFilename).getParent()
 
           // the processed state is a list of [key, value, srcPath, destPath] tuples, where
-          //   - key, value is part of the state to be saved to disk
-          //   - srcPath and destPath are lists of files to be copied from src to dest
+          //   - key is a String
+          //   - value is any object that can be serialized to a Yaml (so a String/Integer/Long/Double/Boolean, a List, a Map, or a Path)
+          //   - srcPath is a List[Path]
+          //   - destPath is a List[String]
+          //   - (key, value) are the tuples that will be saved to the state.yaml file
+          //   - (srcPath, destPath) are the files that will be copied from src to dest (relative to the state.yaml)
           def processedState =
             config.functionality.allArguments
               .findAll { it.direction == "output" }
@@ -175,13 +179,14 @@ def publishStatesByConfig(Map args) {
                   // the index of the file
                   assert filename.contains("*") : "Module '${key_}' id '${id_}': Multiple output files specified, but no wildcard '*' in the filename: ${filename}"
                   def outputPerFile = value.withIndex().collect{ val, ix ->
-                    def value_ = java.nio.file.Paths.get(filename.replace("*", ix.toString()))
+                    def filename_ix = filename.replace("*", ix.toString())
+                    def value_ = java.nio.file.Paths.get(filename_ix)
                     // if id contains a slash
                     if (yamlDir != null) {
                       value_ = yamlDir.relativize(value_)
                     }
                     def srcPath = val instanceof File ? val.toPath() : val
-                    [value: value_, srcPath: srcPath, destPath: value_]
+                    [value: value_, srcPath: srcPath, destPath: filename_ix]
                   }
                   def transposedOutputs = ["value", "srcPath", "destPath"].collectEntries{ key -> 
                     [key, outputPerFile.collect{dic -> dic[key]}]
