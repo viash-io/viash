@@ -37,6 +37,7 @@ import io.viash.runners.Runner
 import io.viash.config.AppliedConfig
 import io.viash.lenses.AppliedConfigLenses._
 import io.viash.runners.ExecutableRunner
+import io.viash.engines.NativeEngine
 
 object ViashTest extends Logging {
   case class TestOutput(name: String, exitValue: Int, output: String, logFile: String, duration: Long)
@@ -219,7 +220,14 @@ object ViashTest extends Logging {
     }
 
     // generate executable runner
-    val exe = ExecutableRunner().generateRunner(appliedConfig.config, true).resources.head
+    val exeConfig = appliedConfig.config.copy(
+      engines = if (engine.hasSetup) {
+        List(NativeEngine())
+      } else {
+        appliedConfig.config.engines
+      }
+    )
+    val exe = ExecutableRunner().generateRunner(exeConfig, true).resources.head
 
     // fetch tests
     val tests = fun.test_resources
