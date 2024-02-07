@@ -27,9 +27,6 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
         if (workflowArgs.mapId) {
           tuple[0] = workflowArgs.mapId(tuple[0])
         }
-        if (tuple[0] instanceof GString) {
-          tuple[0] = tuple[0].toString()
-        }
         if (workflowArgs.mapData) {
           tuple[1] = workflowArgs.mapData(tuple[1])
         }
@@ -48,6 +45,9 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
           "  Found: tuple.size() == ${tuple.size()}"
         
         // check id field
+        if (tuple[0] instanceof GString) {
+          tuple[0] = tuple[0].toString()
+        }
         assert tuple[0] instanceof CharSequence : 
           "Error in module '${key_}': first element of tuple in channel should be a String\n" +
           "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
