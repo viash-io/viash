@@ -207,8 +207,8 @@ object PackageConfig {
     val uri = path.toUri()
 
     // read yaml as string
-    val projStr = IO.read(uri)
-    val json0 = Convert.textToJson(projStr, path.toString())
+    val packStr = IO.read(uri)
+    val json0 = Convert.textToJson(packStr, path.toString())
 
     /* JSON 1: after inheritance */
     // apply inheritance if need be
@@ -247,13 +247,13 @@ object PackageConfig {
     val target = pack0.target.map(rela(path.getParent(), _))
 
     // copy resources with updated paths into config and return
-    val proj1 = pack0.copy(
+    val pack1 = pack0.copy(
       source = source,
       target = target,
       rootDir = Some(path.getParent())
     )
 
-    proj1
+    pack1
   }
 
   /**
