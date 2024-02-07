@@ -27,6 +27,9 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
         if (workflowArgs.mapId) {
           tuple[0] = workflowArgs.mapId(tuple[0])
         }
+        if (tuple[0] instanceof GString) {
+          tuple[0] = tuple[0].toString()
+        }
         if (workflowArgs.mapData) {
           tuple[1] = workflowArgs.mapData(tuple[1])
         }
@@ -154,10 +157,6 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
         // remove arguments with explicit null values
         combinedArgs
           .removeAll{_, val -> val == null || val == "viash_no_value" || val == "force_null"}
-
-        if (id_ instanceof GString) {
-          id_ = id_.toString()
-        }
 
         combinedArgs = _processInputValues(combinedArgs, meta.config, id_, key_)
 
