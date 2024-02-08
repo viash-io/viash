@@ -27,8 +27,12 @@ import FunctionalityLenses._
 
 object AppliedConfigLenses {
   val configLens = GenLens[AppliedConfig](_.config)
+  val appliedEnginesLens = GenLens[AppliedConfig](_.engines)
+  val appliedRunnerLens = GenLens[AppliedConfig](_.runner)
   
   val functionalityLens = configLens ^|-> ConfigLenses.functionalityLens
+  val enginesLens = configLens ^|-> ConfigLenses.enginesLens
+  val runnersLens = configLens ^|-> ConfigLenses.runnersLens
 
   val functionalityNameLens = configLens ^|-> ConfigLenses.composedNameLens
   val functionalityVersionLens = configLens ^|-> ConfigLenses.composedVersionLens

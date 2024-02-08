@@ -83,9 +83,21 @@ object ViashTest extends Logging {
       DependencyResolver.copyDependencies(conf, dir.toString(), config2.runner.get.id)
     }(config2)
 
+    // Pass the first engine to the config, or add a native engine if none are present
+    val config4 = appliedEnginesLens.modify{
+        case Nil => List(NativeEngine())
+        case head :: _ => List(head)
+      }(config3)
+    
+    // Also make sure there is at least one engine in the config, otherwise add a native engine
+    val config5 = enginesLens.modify{
+      case Nil => List(NativeEngine())
+      case list => list
+    }(config4)
+
     // run tests
     val ManyTestOutput(setupRes, results) = ViashTest.runTests(
-      appliedConfig = config3,
+      appliedConfig = config5,
       dir = dir,
       verbose = !quiet,
       setupStrategy = setupStrategy.getOrElse("cachedbuild"),
