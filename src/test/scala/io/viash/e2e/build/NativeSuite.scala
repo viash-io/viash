@@ -35,7 +35,7 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     TestHelper.testMain(
       "build",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       "-o", tempFolStr,
       configFile
     )

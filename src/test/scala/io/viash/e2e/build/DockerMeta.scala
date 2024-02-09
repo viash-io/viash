@@ -42,7 +42,7 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
       val stdout = TestHelper.testMain(
         "build",
         "--engine", "docker",
-        "--runner", "docker",
+        "--runner", "executable",
         "-o", binDir.toString,
         configFile.toString
       )
@@ -60,7 +60,7 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
       val regexViashVersion = s"""viash_version: "${viashVersion}"""".r
       val regexConfig = """config: "\[anonymized\]/config.vsh.yaml"""".r
       val regexEngine = """engine: "docker"""".r
-      val regexRunner = """runner: "docker"""".r
+      val regexRunner = """runner: "executable"""".r
       val regexExecutable = """executable: "\[anonymized\]/testbash"""".r
       val regexOutput = """output: "\[anonymized\]/bin"""".r
       val regexNoRemoteGitRepo = "git_remote:".r
@@ -114,7 +114,7 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
       val stdout = TestHelper.testMain(
         "build",
         "--engine", "docker",
-        "--runner", "docker",
+        "--runner", "executable",
         "-o", binDir.toString,
         configMetaFile.toString
       )
@@ -132,7 +132,7 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
       val regexViashVersion = s"""viash_version: "$viashVersion"""".r
       val regexConfig = """config: "\[anonymized\]/config.vsh.yaml"""".r
       val regexEngine = """engine: "docker"""".r
-      val regexRunner = """runner: "docker"""".r
+      val regexRunner = """runner: "executable"""".r
       val regexExecutable = """executable: "\[anonymized\]/testbash"""".r
       val regexOutput = """output: "\[anonymized\]/bin"""".r
       val regexRemoteGitRepo = s"""git_remote: "$fakeGitRepo"""".r
@@ -177,7 +177,7 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
       val stdout = TestHelper.testMain(
         "build",
         "--engine", "docker",
-        "--runner", "docker",
+        "--runner", "executable",
         "-o", binDir.toString,
         configMetaFile.toString
       )
@@ -195,7 +195,7 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
       val regexViashVersion = s"""viash_version: "$viashVersion"""".r
       val regexConfig = """config: "\[anonymized\]/config.vsh.yaml"""".r
       val regexEngine = """engine: "docker"""".r
-      val regexRunner = """runner: "docker"""".r
+      val regexRunner = """runner: "executable"""".r
       val regexExecutable = """executable: "\[anonymized\]/testbash"""".r
       val regexOutput = """output: "\[anonymized\]/bin"""".r
       val regexRemoteGitRepo = """git_remote:"""".r
