@@ -23,7 +23,22 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.Files
 
-@description("Specifies a repository where dependency components can be found.")
+@description(
+  """Specifies a repository where dependency components can be found.
+    |
+    | - @[local](repo_local)
+    | - @[git](repo_git)
+    | - @[github](repo_github)
+    | - @[vsh](repo_vsh)
+    |""".stripMargin)
+@example(
+  """repositories:
+    |  - name: openpipelines-bio
+    |    type: github
+    |    uri: openpipelines-bio/modules
+    |    tag: 0.3.0
+    |""".stripMargin,
+    "yaml")
 @subclass("LocalRepository")
 @subclass("GitRepository")
 @subclass("GithubRepository")

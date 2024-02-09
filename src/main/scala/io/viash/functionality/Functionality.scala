@@ -267,7 +267,7 @@ case class Functionality(
   dependencies: List[Dependency] = Nil,
 
   @description(
-    """(Pre-)defines repositories that can be used as repository in dependencies.
+    """(Pre-)defines @[repositories](repository) that can be used as repository in dependencies.
       |Allows reusing repository definitions in case it is used in multiple dependencies.""".stripMargin)
   @example(
     """repositories:
