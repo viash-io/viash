@@ -456,7 +456,12 @@ object BashWrapper {
       } else {
         "\n# check whether required files exist\n" +
           files.map { param =>
-            if (param.multiple) {
+            if (!param.multiple) {
+              s"""if [ ! -z "$$${param.VIASH_PAR}" ] && [ ! -e "$$${param.VIASH_PAR}" ]; then
+                |  ViashError "$direction file '$$${param.VIASH_PAR}' does not exist."
+                |  exit 1
+                |fi""".stripMargin
+            } else if (direction == Input) {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
                  |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
                  |  set -f
@@ -469,11 +474,11 @@ object BashWrapper {
                  |  done
                  |  set +f
                  |fi""".stripMargin
-            } else {
-              s"""if [ ! -z "$$${param.VIASH_PAR}" ] && [ ! -e "$$${param.VIASH_PAR}" ]; then
-                |  ViashError "$direction file '$$${param.VIASH_PAR}' does not exist."
-                |  exit 1
-                |fi""".stripMargin
+            } else { // multiple: true, direction: output expects arguments in the form of "output_*.txt"
+              s"""if [ ! -z "$$${param.VIASH_PAR}" ] && ! compgen -G "$$${param.VIASH_PAR}" > /dev/null; then
+                 |  ViashError "$direction file '$$${param.VIASH_PAR}' does not exist."
+                 |  exit 1
+                 |fi""".stripMargin
             }
           }.mkString("\n")
       }
