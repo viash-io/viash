@@ -189,7 +189,8 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
         "output_0" -> "output_0.txt", 
         "output_1" -> "output_1.txt"
       ).map{ case (id, suffix) =>
-        (id, Paths.get("multipleOutput/foo.multiple_output." + suffix))
+        val path = temporaryFolder.resolve("multipleOutput/foo.multiple_output." + suffix)
+        (id, path)
       }
 
     // check if files exist
