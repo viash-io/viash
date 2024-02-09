@@ -8,6 +8,7 @@ import java.io.UncheckedIOException
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
 import scala.io.Source
+import scala.util.Using
 
 import io.viash.helpers.{IO, Logger}
 import io.viash.{DockerTest, NextflowTest, TestHelper}
@@ -182,18 +183,30 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
 
-    val state = Source.fromFile(tempFolStr + "/multipleOutput/foo.multiple_output.state.yaml")
-    try {
-      val stateOut = state.getLines().mkString("\n")
+    val expectedFiles =
+      Map(
+        "state" -> "state.yaml",
+        "output_0" -> "output_0.txt", 
+        "output_1" -> "output_1.txt"
+      ).map{ case (id, suffix) =>
+        (id, Paths.get("multipleOutput/foo.multiple_output." + suffix))
+      }
+
+    // check if files exist
+    for ((id, path) <- expectedFiles) {
+      assert(Files.exists(path), s"File '$id' at path '$path' does not exist")
+    }
+
+    // check state content
+    Using(Source.fromFile(expectedFiles("state").toFile())) { reader =>
+      val stateTxt = reader.getLines().mkString("\n")
       val expectedState = """\
-      |id: foo
-      |output:
-      |- !file 'foo.multiple_output.output_0.txt'
-      |- !file 'foo.multiple_output.output_1.txt'
-      |""".stripMargin
-      assert(stateOut == expectedState)
-    } finally {
-      state.close()
+        |id: foo
+        |output:
+        |- !file 'foo.multiple_output.output_0.txt'
+        |- !file 'foo.multiple_output.output_1.txt'
+        |""".stripMargin
+      assert(stateTxt == expectedState)
     }
   }
 
