@@ -53,20 +53,20 @@ def publishStates(Map args) {
           def state_ = tup[1]
 
           // the input files and the target output filenames
-          def inputOutputFiles_ = collectInputOutputPaths(state_, id_ + "." + key_).transpose()
-          def inputFiles_ = inputOutputFiles_[0]
-          def outputFiles_ = inputOutputFiles_[1]
+          def inputoutputFilenames_ = collectInputOutputPaths(state_, id_ + "." + key_).transpose()
+          def inputFiles_ = inputoutputFilenames_[0]
+          def outputFilenames_ = inputoutputFilenames_[1]
 
           def yamlFilename = yamlTemplate_
             .replaceAll('\\$id', id_)
             .replaceAll('\\$key', key_)
 
-            // TODO: do the pathnames in state_ match up with the outputFiles_?
+            // TODO: do the pathnames in state_ match up with the outputFilenames_?
 
           // convert state to yaml blob
           def yamlBlob_ = toRelativeTaggedYamlBlob([id: id_] + state_, java.nio.file.Paths.get(yamlFilename))
 
-          [id_, yamlBlob_, yamlFilename, inputFiles_, outputFiles_]
+          [id_, yamlBlob_, yamlFilename, inputFiles_, outputFilenames_]
         }
         | publishStatesProc
     emit: input_ch
@@ -99,12 +99,12 @@ process publishStatesProc {
       }
     }
   """
-  mkdir -p "\$(dirname '${yamlFile}')"
-  echo "Storing state as yaml"
-  echo '${yamlBlob}' > '${yamlFile}'
-  echo "Copying output files to destination folder"
-  ${copyCommands.join("\n  ")}
-  """
+mkdir -p "\$(dirname '${yamlFile}')"
+echo "Storing state as yaml"
+echo '${yamlBlob}' > '${yamlFile}'
+echo "Copying output files to destination folder"
+${copyCommands.join("\n  ")}
+"""
 }
 
 
@@ -133,13 +133,13 @@ def publishStatesByConfig(Map args) {
             .replaceAll('\\$key', key_)
           def yamlDir = java.nio.file.Paths.get(yamlFilename).getParent()
 
-          // the processed state is a list of [key, value, srcPath, destPath] tuples, where
+          // the processed state is a list of [key, value, inputPath, outputFilename] tuples, where
           //   - key is a String
           //   - value is any object that can be serialized to a Yaml (so a String/Integer/Long/Double/Boolean, a List, a Map, or a Path)
-          //   - srcPath is a List[Path]
-          //   - destPath is a List[String]
+          //   - inputPath is a List[Path]
+          //   - outputFilename is a List[String]
           //   - (key, value) are the tuples that will be saved to the state.yaml file
-          //   - (srcPath, destPath) are the files that will be copied from src to dest (relative to the state.yaml)
+          //   - (inputPath, outputFilename) are the files that will be copied from src to dest (relative to the state.yaml)
           def processedState =
             config.functionality.allArguments
               .findAll { it.direction == "output" }
@@ -156,7 +156,7 @@ def publishStatesByConfig(Map args) {
                 // in the state as-is, but is not something that needs 
                 // to be copied from the source path to the dest path
                 if (par.type != "file") {
-                  return [[key: plainName_, value: value, srcPath: [], destPath: []]]
+                  return [[key: plainName_, value: value, inputPath: [], outputFilename: []]]
                 }
                 // if the orig state does not contain this filename,
                 // it's an optional argument for which the user specified
@@ -185,10 +185,10 @@ def publishStatesByConfig(Map args) {
                     if (yamlDir != null) {
                       value_ = yamlDir.relativize(value_)
                     }
-                    def srcPath = val instanceof File ? val.toPath() : val
-                    [value: value_, srcPath: srcPath, destPath: filename_ix]
+                    def inputPath = val instanceof File ? val.toPath() : val
+                    [value: value_, inputPath: inputPath, outputFilename: filename_ix]
                   }
-                  def transposedOutputs = ["value", "srcPath", "destPath"].collectEntries{ key -> 
+                  def transposedOutputs = ["value", "inputPath", "outputFilename"].collectEntries{ key -> 
                     [key, outputPerFile.collect{dic -> dic[key]}]
                   }
                   return [[key: plainName_] + transposedOutputs]
@@ -198,19 +198,19 @@ def publishStatesByConfig(Map args) {
                   if (yamlDir != null) {
                     value_ = yamlDir.relativize(value_)
                   }
-                  def srcPath = value instanceof File ? value.toPath() : value
-                  return [[key: plainName_, value: value_, srcPath: [srcPath], destPath: [filename]]]
+                  def inputPath = value instanceof File ? value.toPath() : value
+                  return [[key: plainName_, value: value_, inputPath: [inputPath], outputFilename: [filename]]]
                 }
               }
           
           def updatedState_ = processedState.collectEntries{[it.key, it.value]}
-          def inputFiles_ = processedState.collectMany{it.srcPath}
-          def outputFiles_ = processedState.collectMany{it.destPath}
+          def inputPaths = processedState.collectMany{it.inputPath}
+          def outputFilenames = processedState.collectMany{it.outputFilename}
           
           // convert state to yaml blob
           def yamlBlob_ = toTaggedYamlBlob([id: id_] + updatedState_)
 
-          [id_, yamlBlob_, yamlFilename, inputFiles_, outputFiles_]
+          [id_, yamlBlob_, yamlFilename, inputPaths, outputFilenames]
         }
         | publishStatesProc
     emit: input_ch
