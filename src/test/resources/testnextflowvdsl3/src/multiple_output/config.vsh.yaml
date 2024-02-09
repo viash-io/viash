@@ -6,12 +6,14 @@ functionality:
       multiple: true
       required: true
       example: input.txt
+      multiple_sep: ";"
     - name: "--output"
       type: file
       required: true
       direction: output
       multiple: true
-      example: output1.txt:output1.txt
+      multiple_sep: ";"
+      example: output_*.txt
   resources:
     - type: bash_script
       path: script.sh
