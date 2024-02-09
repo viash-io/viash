@@ -15,6 +15,11 @@ import java.nio.charset.StandardCharsets
 
 import NextflowTestHelper._
 
+/**
+  * Test suite for VDSL3 components as standalone Nextflow workflows.
+  * Since these tests run workflows from the CLI, we need to check the
+  * generated output inside the test suite.
+  */
 class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
   // temporary folder to work in
@@ -160,6 +165,35 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
       assert(moduleOut.equals("one,two,three,1,2,3,4,5"))
     } finally {
       src.close()
+    }
+  }
+
+
+  test("Run multiple output test", NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/multiple_output/main.nf",
+      args = List(
+        "--id", "foo",
+        "--input", "resources/lines*.txt",
+        "--publish_dir", "multipleOutput"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+
+    val state = Source.fromFile(tempFolStr + "/multipleOutput/foo.multiple_output.state.yaml")
+    try {
+      val stateOut = state.getLines().mkString("\n")
+      val expectedState = """\
+      |id: foo
+      |output:
+      |- !file 'foo.multiple_output.output_0.txt'
+      |- !file 'foo.multiple_output.output_1.txt'
+      |""".stripMargin
+      assert(stateOut == expectedState)
+    } finally {
+      state.close()
     }
   }
 
