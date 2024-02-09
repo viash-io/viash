@@ -6,6 +6,10 @@ TODO add summary
 
 * `nextflow runner`: Fix an issue with current nextflow-latest (24.01.0-edge) where our supporting library passes a GString instead of a String and results in a type mismatch (PR #640).
 
+## DOCUMENTATION
+
+* `repositories`: Improve the repository documentation with links and a overview table with links (PR #643).
+
 # Viash 0.8.4 (2024-01-15): Bug fix
 
 Fix building components with dependencies that have symlinks in their paths.
