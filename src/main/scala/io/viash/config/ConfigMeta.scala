@@ -42,14 +42,14 @@ object ConfigMeta {
 
   def configToCleanJson(config: Config): Json = {
     // relativize paths in the info field
-    val rootDir = config.project_config.flatMap(_.rootDir)
+    val rootDir = config.package_config.flatMap(_.rootDir)
     val anonymizedConfig = config.copy(
       info = config.info.map(info => info.copy(
         config = IO.anonymizePath(rootDir, info.config),
         output = info.output.map(IO.anonymizePath(rootDir, _)),
         executable = info.executable.map(IO.anonymizePath(rootDir, _))
       )),
-      project_config = config.project_config.map(pc => pc.copy(
+      package_config = config.package_config.map(pc => pc.copy(
         source = pc.source.map(IO.anonymizePath(rootDir, _)),
         target = pc.target.map(IO.anonymizePath(rootDir, _))
       ))

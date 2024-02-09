@@ -34,7 +34,7 @@ class MainConfigViewSuite extends AnyFunSuite{
   }
 
   test("viash config view wit anonymized paths") {
-    // Output is not anonymized when no project config is found, and that can't be found unless we pass the workingDir
+    // Output is not anonymized when no package config is found, and that can't be found unless we pass the workingDir
     val testOutput = TestHelper.testMain(
       // workingDir = Some(Paths.get(workingDirAnonymizing)),
       "config", "view",

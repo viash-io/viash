@@ -40,4 +40,6 @@ object ConfigLenses {
   val composedKeywordsLens = functionalityLens ^|-> keywordsLens
   val composedLicenseLens = functionalityLens ^|-> licenseLens
   val composedOrganizationLens = functionalityLens ^|-> organizationLens
+  val composedLinksRepositoryLens = functionalityLens ^|-> FunctionalityLenses.composedLinksRepositoryLens
+  val composedLinksDockerRegistryLens = functionalityLens ^|-> FunctionalityLenses.composedLinksDockerRegistryLens
 }

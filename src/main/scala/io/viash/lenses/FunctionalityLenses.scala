@@ -22,6 +22,8 @@ import io.viash.functionality.Functionality
 import monocle.Lens
 import monocle.macros.GenLens
 
+import LinksLenses._
+
 object FunctionalityLenses {
   val nameLens = GenLens[Functionality](_.name)
   val versionLens = GenLens[Functionality](_.version)
@@ -33,4 +35,8 @@ object FunctionalityLenses {
   val keywordsLens = GenLens[Functionality](_.keywords)
   val licenseLens = GenLens[Functionality](_.license)
   val organizationLens = GenLens[Functionality](_.organization)
+  val linksLens = GenLens[Functionality](_.links)
+
+  val composedLinksRepositoryLens = linksLens ^|-> repositoryLens
+  val composedLinksDockerRegistryLens = linksLens ^|-> dockerRegistryLens
 }

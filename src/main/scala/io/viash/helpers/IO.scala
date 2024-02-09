@@ -315,17 +315,17 @@ object IO extends Logging {
   }
 
   /**
-    * Resolve a project-relative path w.r.t. the project uri
+    * Resolve a package-relative path w.r.t. the package uri
     * 
     * @param path A string containing an absolute path
-    * @param projectURI The project URI to resolve to
+    * @param packageURI The package URI to resolve to
     * @return A modified path as a URI.
     */
-  def resolveProjectPath(path: String, projectURI: Option[URI]): URI = {
-    if (projectURI.isEmpty) {
-      throw new RuntimeException(s"One of the resources is relative to the project root ($path), but no project config file (_viash.yaml) could be found.")
+  def resolvePackagePath(path: String, packageURI: Option[URI]): URI = {
+    if (packageURI.isEmpty) {
+      throw new RuntimeException(s"One of the resources is relative to the package root ($path), but no package config file (_viash.yaml) could be found.")
     }
-    val uri = projectURI.get
+    val uri = packageURI.get
     val newPath = resolvePathWrtURI(path, uri)
     uri.resolve(newPath)
   }
@@ -335,7 +335,7 @@ object IO extends Logging {
     * 
     * If the path is not relative to the base path, the path is returned unchanged
     *
-    * @param basePath The base path of the project
+    * @param basePath The base path of the package
     * @param path The path to relativize
     * @return A relativized path or the original path if it was not relative to the base path
     */

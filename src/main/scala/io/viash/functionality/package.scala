@@ -122,4 +122,10 @@ package object functionality extends Logging {
     _.withFocus(_.mapString(_.toLowerCase()))
   }
 
+  implicit val encodeLinks: Encoder.AsObject[Links] = deriveConfiguredEncoderStrict
+  implicit val decodeLinks: Decoder[Links] = deriveConfiguredDecoderFullChecks
+
+  implicit val encodeReferences: Encoder.AsObject[References] = deriveConfiguredEncoderStrict
+  implicit val decodeReferences: Decoder[References] = deriveConfiguredDecoderFullChecks
+
 }

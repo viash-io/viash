@@ -256,17 +256,46 @@ case class Functionality(
   @since("Viash 0.9.0")
   keywords: List[String] = Nil,
 
-  @description("The license of the project.")
+  @description("The license of the package.")
   @example("license: MIT", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   license: Option[String] = None,
 
-  @description("The organization of the project.")
+  @description("The organization of the package.")
   @example("organization: viash-io", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   organization: Option[String] = None,
+
+  @description("References to external resources related to the component.")
+  @example(
+    """references:
+      |  doi: 10.1000/xx.123456.789
+      |  bibtex: |
+      |    @article{foo,
+      |      title={Foo},
+      |      author={Bar},
+      |      journal={Baz},
+      |      year={2024}
+      |    }
+      |""".stripMargin, "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  references: References = References(),
+
+  @description("External links of the component.")
+  @example(
+    """links:
+      |  repository: "https://github.com/viash-io/viash"
+      |  docker_registry: "https://ghcr.io"
+      |  homepage: "https://viash.io"
+      |  documentation: "https://viash.io/reference/"
+      |  issue_tracker: "https://github.com/viash-io/viash/issues"
+      |""".stripMargin, "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  links: Links = Links(),
   // The variables below are for internal use and shouldn't be publicly documented
 
   // setting this to true will change the working directory

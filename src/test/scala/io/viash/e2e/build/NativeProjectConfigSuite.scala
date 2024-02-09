@@ -16,7 +16,7 @@ import io.circe.Json
 import io.circe.yaml.parser.parse
 import io.viash.config_mods.ConfigModParser
 
-class NativeProjectConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
+class NativePackageConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
   // which configs to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
@@ -26,12 +26,12 @@ class NativeProjectConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   val baseConfigFilePath = configDeriver.derive(""".functionality.version := null""", "base_config")
 
-  // Use config mod functionality so that we can more easily differentiate between e.g. '.license' and '.project_config.license'
+  // Use config mod functionality so that we can more easily differentiate between e.g. '.license' and '.package_config.license'
   val versionMod = ConfigModParser.parse(ConfigModParser.path, """.functionality.version""").get
   val licenseMod = ConfigModParser.parse(ConfigModParser.path, """.functionality.license""").get
   val organizationMod = ConfigModParser.parse(ConfigModParser.path, """.functionality.organization""").get
-  val docker_registryMod = ConfigModParser.parse(ConfigModParser.path, """.engines[.type == "docker"].target_registry""").get
-  val docker_repositoryMod = ConfigModParser.parse(ConfigModParser.path, """.engines[.type == "docker"].target_image_source""").get
+  val linksRepositoryMod = ConfigModParser.parse(ConfigModParser.path, """.functionality.links.repository""").get
+  val linksRegistryMod = ConfigModParser.parse(ConfigModParser.path, """.functionality.links.docker_registry""").get
 
   // TODO .repositories functionality is not tested here
 
@@ -49,12 +49,12 @@ class NativeProjectConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(versionMod.get(baseJson) == Json.Null)
     assert(licenseMod.get(baseJson) == Json.Null)
     assert(organizationMod.get(baseJson) == Json.Null)
-    assert(docker_registryMod.get(baseJson) == Json.arr(Json.Null, Json.Null))
-    assert(docker_repositoryMod.get(baseJson) == Json.arr(Json.Null, Json.Null))
+    assert(linksRegistryMod.get(baseJson) == Json.Null)
+    assert(linksRepositoryMod.get(baseJson) == Json.Null)
   }
 
   test("Add a _viash.yaml without component fields filled in") {
-    val projectConfig = 
+    val packageConfig = 
       """version: test_version
         |license: test_license
         |organization: test_organization
@@ -62,7 +62,7 @@ class NativeProjectConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
         |  repository: test_repository
         |  docker_registry: test_registry
         |""".stripMargin
-    IO.write(projectConfig, temporaryConfigFolder.resolve("_viash.yaml"))
+    IO.write(packageConfig, temporaryConfigFolder.resolve("_viash.yaml"))
 
     val testOutput = TestHelper.testMain(
       workingDir = Some(temporaryConfigFolder),
@@ -77,8 +77,8 @@ class NativeProjectConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(versionMod.get(baseJson) == Json.fromString("test_version"))
     assert(licenseMod.get(baseJson) == Json.fromString("test_license"))
     assert(organizationMod.get(baseJson) == Json.fromString("test_organization"))
-    assert(docker_registryMod.get(baseJson) == Json.arr(Json.fromString("test_registry"), Json.fromString("test_registry")))
-    assert(docker_repositoryMod.get(baseJson) == Json.arr(Json.fromString("test_repository"), Json.fromString("test_repository")))
+    assert(linksRegistryMod.get(baseJson) == Json.fromString("test_registry"))
+    assert(linksRepositoryMod.get(baseJson) == Json.fromString("test_repository"))
   }
 
   test("Add a _viash.yaml with component fields filled in") {
@@ -88,13 +88,12 @@ class NativeProjectConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
           """.functionality.version := "foo"""",
           """.functionality.license := "bar"""",
           """.functionality.organization := "baz"""",
-          """.engines[.type == "docker"].target_registry := "qux"""",
-          """.engines[.type == "docker"].target_image_source := "quux"""",
+          """.functionality.links := { repository: "qux", docker_registry: "quux" }""",
         ),
         "config_with_fields_set"
       )
 
-    val projectConfig = 
+    val packageConfig = 
       """version: test_version
         |license: test_license
         |organization: test_organization
@@ -102,7 +101,7 @@ class NativeProjectConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
         |  repository: test_repository
         |  docker_registry: test_registry
         |""".stripMargin
-    IO.write(projectConfig, temporaryConfigFolder.resolve("_viash.yaml"))
+    IO.write(packageConfig, temporaryConfigFolder.resolve("_viash.yaml"))
 
     val testOutput = TestHelper.testMain(
       workingDir = Some(temporaryConfigFolder),
@@ -117,8 +116,8 @@ class NativeProjectConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(versionMod.get(baseJson) == Json.fromString("foo"))
     assert(licenseMod.get(baseJson) == Json.fromString("bar"))
     assert(organizationMod.get(baseJson) == Json.fromString("baz"))
-    assert(docker_registryMod.get(baseJson) == Json.arr(Json.fromString("qux"), Json.fromString("qux")))
-    assert(docker_repositoryMod.get(baseJson) == Json.arr(Json.fromString("quux"), Json.fromString("quux")))
+    assert(linksRepositoryMod.get(baseJson) == Json.fromString("qux"))
+    assert(linksRegistryMod.get(baseJson) == Json.fromString("quux"))
   }
 
   override def afterAll(): Unit = {

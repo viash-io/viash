@@ -144,7 +144,7 @@ trait Resource {
     }
   }
 
-  def copyWithAbsolutePath(parent: URI, projectDir: Option[URI]): Resource = {
+  def copyWithAbsolutePath(parent: URI, packageDir: Option[URI]): Resource = {
     // don't modify if the resource represents a command that should be available in the PATH
     if (this.isInstanceOf[Executable]) {
       return this
@@ -154,16 +154,16 @@ trait Resource {
       return this
     }
 
-    // if the path starts with a /, resolve it w.r.t. to the project dir
+    // if the path starts with a /, resolve it w.r.t. to the package dir
     val pathStr = path.get
     if (pathStr.startsWith("/")) {
-      if (projectDir.isEmpty) {
-        throw new RuntimeException(s"One of the resources is relative to the project root ($path), but no project config file (_viash.yaml) could be found.")
+      if (packageDir.isEmpty) {
+        throw new RuntimeException(s"One of the resources is relative to the package root ($path), but no package config file (_viash.yaml) could be found.")
       }
-      val pathStr1 = IO.resolvePathWrtURI(pathStr, projectDir.get)
+      val pathStr1 = IO.resolvePathWrtURI(pathStr, packageDir.get)
       return this.copyResource(
         path = Some(pathStr1),
-        parent = projectDir
+        parent = packageDir
       )
     }
     

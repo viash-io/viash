@@ -139,7 +139,7 @@ final case class NextflowRunner(
         Some(Docker.getImageInfo(
           functionality = Some(config.functionality),
           engineId = Some(p.id),
-          registry = p.target_registry,
+          registry = p.getTargetRegistryWithFallback(config.functionality),
           organization = p.target_organization,
           name = p.target_image,
           tag = p.target_tag.map(_.toString),

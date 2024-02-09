@@ -106,7 +106,7 @@ object Repository extends Logging {
     }
   }
 
-  def cache(repo: Repository, configDir: Path, projectRootDir: Option[Path]): Repository = {
+  def cache(repo: Repository, configDir: Path, packageRootDir: Option[Path]): Repository = {
 
     // Check if we can get a locally cached version of the repo
     val existingRepo = getCachedRepository(repo)
@@ -129,8 +129,8 @@ object Repository extends Logging {
       case r: LocalRepositoryTrait if r.path.isDefined => {
         val localPath = r.path.get match {
           case s if s.startsWith("/") => 
-            // resolve path relative to the project root
-            IO.resolveProjectPath(s, projectRootDir.map(p => p.toUri())).getPath()
+            // resolve path relative to the package root
+            IO.resolvePackagePath(s, packageRootDir.map(p => p.toUri())).getPath()
           case s =>
             // resolve path relative to the config file
             configDir.resolve(s).toString()

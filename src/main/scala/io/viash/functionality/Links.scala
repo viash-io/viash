@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.project
+package io.viash.functionality
 
 import io.viash.schemas._
 
-@description("Links to external resources related to the project.")
+@description("Links to external resources related to the component.")
 @example(
   """repository: "https://github.com/viash-io/viash"
     |docker_registry: "https://ghcr.io"
@@ -28,7 +28,7 @@ import io.viash.schemas._
     |issue_tracker: "https://github.com/viash-io/viash/issues"
     |""".stripMargin, "yaml")
 @since("Viash 0.9.0")
-case class ProjectConfigLinks(
+case class Links(
   @description("Source repository url.")
   @example("""repository: "https://github.com/viash-io/viash"""", "yaml")
   repository: Option[String] = None,

@@ -182,11 +182,11 @@ object NextflowHelper {
     * @param parentPath The path of the current output folder
     * @return The include statement for the dependency. Expected format:
     * 
-    *   - For local dependencies (i.e. the dependency's source code is defined in the same project as the current repository):
+    *   - For local dependencies (i.e. the dependency's source code is defined in the same package as the current repository):
     *     ```
     *     include { my_dep } from "$projectDir/../../../target/nextflow/my_namespace/my_dep/main.nf"
     *     ```
-    *   - For remote dependencies (i.e. the dependency is fetched from a different project -- either a local folder or a remote repository):
+    *   - For remote dependencies (i.e. the dependency is fetched from a different package -- either a local folder or a remote repository):
     *     ```
     *     include { my_dep } from "$rootDir/dependencies/my_namespace/my_dep/main.nf"
     *     ```
