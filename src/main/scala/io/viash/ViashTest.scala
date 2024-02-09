@@ -74,21 +74,20 @@ object ViashTest extends Logging {
     val dir = IO.makeTemp("viash_test_" + functionalityNameLens.get(appliedConfig), parentTempPath)
     if (!quiet) infoOut(s"Running tests in temporary directory: '$dir'")
 
-    // set version to temporary value
-    val config2 = functionalityVersionLens.modify(version => tempVersion orElse version)(appliedConfig)
-
-    // Make dependencies available for the tests
     DependencyResolver.createBuildYaml(dir.toString())
-    val config3 = configLens.modify{ conf =>
-      DependencyResolver.copyDependencies(conf, dir.toString(), config2.runner.get.id)
-    }(config2)
 
+    // set version to temporary value
+    // Make dependencies available for the tests
     // Pass the first engine to the config. If no engines were specified in the config, a native engine was added.
-    val config4 = appliedEnginesLens.modify(_.take(1))(config3)
+    val modifyLenses = 
+      functionalityVersionLens.modify(version => tempVersion orElse version) andThen
+      configLens.modify{ conf => DependencyResolver.copyDependencies(conf, dir.toString(), appliedConfig.runner.get.id) } andThen
+      appliedEnginesLens.modify(_.take(1))
+    val modifiedAppliedConfig = modifyLenses(appliedConfig)
 
     // run tests
     val ManyTestOutput(setupRes, results) = ViashTest.runTests(
-      appliedConfig = config4,
+      appliedConfig = modifiedAppliedConfig,
       dir = dir,
       verbose = !quiet,
       setupStrategy = setupStrategy.getOrElse("cachedbuild"),
