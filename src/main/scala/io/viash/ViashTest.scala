@@ -83,21 +83,12 @@ object ViashTest extends Logging {
       DependencyResolver.copyDependencies(conf, dir.toString(), config2.runner.get.id)
     }(config2)
 
-    // Pass the first engine to the config, or add a native engine if none are present
-    val config4 = appliedEnginesLens.modify{
-        case Nil => List(NativeEngine())
-        case head :: _ => List(head)
-      }(config3)
-    
-    // Also make sure there is at least one engine in the config, otherwise add a native engine
-    val config5 = enginesLens.modify{
-      case Nil => List(NativeEngine())
-      case list => list
-    }(config4)
+    // Pass the first engine to the config. If no engines were specified in the config, a native engine was added.
+    val config4 = appliedEnginesLens.modify(_.take(1))(config3)
 
     // run tests
     val ManyTestOutput(setupRes, results) = ViashTest.runTests(
-      appliedConfig = config5,
+      appliedConfig = config4,
       dir = dir,
       verbose = !quiet,
       setupStrategy = setupStrategy.getOrElse("cachedbuild"),
@@ -155,7 +146,7 @@ object ViashTest extends Logging {
   ): ManyTestOutput = {
     val fun = appliedConfig.config.functionality
 
-    assert(appliedConfig.engines.length == 1, "Expected exactly one engine to be applied to the config.")
+    assert(appliedConfig.engines.length == 1, s"Expected exactly one engine to be applied to the config. Got ${appliedConfig.engines}.")
     val engine = appliedConfig.engines.head
 
     // check to see if we need to set up an engine environment
