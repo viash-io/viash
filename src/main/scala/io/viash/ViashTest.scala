@@ -233,11 +233,7 @@ object ViashTest extends Logging {
 
     // generate executable runner
     val exeConfig = appliedConfig.config.copy(
-      engines = if (engine.hasSetup) {
-        List(NativeEngine())
-      } else {
-        appliedConfig.config.engines
-      }
+      engines = List(NativeEngine())
     )
     val exe = ExecutableRunner().generateRunner(exeConfig, true).resources.head
 
