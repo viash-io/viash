@@ -28,7 +28,7 @@ case class MissingBuildYamlException(sourcePath: Path, dependency: Dependency) e
 }
 
 case class CheckoutException(repo: Repository) extends AbstractDependencyException {
-  override def getMessage(): String = s"Could not checkout remote repository ${repo.name} of type ${repo.`type`}"
+  override def getMessage(): String = s"Could not checkout remote repository of type ${repo.`type`}"
 }
 
 case class MissingDependencyException(dependencies: List[Dependency]) extends AbstractDependencyException {

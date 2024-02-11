@@ -15,20 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash
+package io.viash.functionality.dependencies
 
-import io.circe.{Decoder, Encoder, Json}
-import io.circe.generic.extras.Configuration
-import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
+import io.viash.schemas._
 
-package object config {
-  import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
+trait GitRepositoryTrait extends AbstractGitRepository {
 
-  // encoders and decoders for Config
-  implicit val encodeConfig: Encoder.AsObject[Config] = deriveConfiguredEncoder
-  implicit val decodeConfig: Decoder[Config] = deriveConfiguredDecoderFullChecks
+  def getCheckoutUri(): String = uri
 
-  implicit val encodeInfo: Encoder[Info] = deriveConfiguredEncoder
-  implicit val decodeInfo: Decoder[Info] = deriveConfiguredDecoderFullChecks
+  // Strip the protocol and user credentials
+  val storePath = uri.replaceFirst("^.+://", "").replaceFirst(".+@", "")
+  
 }
