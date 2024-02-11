@@ -137,12 +137,12 @@ case class FileArgument(
     """- name: --my_files
       |  type: file
       |  multiple: true
-      |  multiple_sep: ","
+      |  multiple_sep: ";"
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_files=firstFile.csv,anotherFile.csv,yetAnother.csv", "bash", "Here's an example of how to use this:")
   @default(":")
-  multiple_sep: String = ":",
+  multiple_sep: String = ";",
 
   dest: String = "par",
   `type`: String = "file"

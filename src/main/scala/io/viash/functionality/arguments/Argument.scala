@@ -44,7 +44,7 @@ import java.nio.file.Paths
     |    direction: output
     |    required: false
     |    multiple: true
-    |    multiple_sep: ","
+    |    multiple_sep: ";"
     |  - name: --bar
     |    type: string
     |""".stripMargin,

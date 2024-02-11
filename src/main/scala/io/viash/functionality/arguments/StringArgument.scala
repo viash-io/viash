@@ -118,12 +118,12 @@ case class StringArgument(
     """- name: --my_string
       |  type: string
       |  multiple: true
-      |  multiple_sep: ","
+      |  multiple_sep: ";"
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_string=Marc,Susan,Paul", "bash", "Here's an example of how to use this:")
   @default(":")
-  multiple_sep: String = ":",
+  multiple_sep: String = ";",
 
   dest: String = "par",
   `type`: String = "string"

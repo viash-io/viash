@@ -2,7 +2,7 @@ def _processArgument(arg) {
   arg.multiple = arg.multiple != null ? arg.multiple : false
   arg.required = arg.required != null ? arg.required : false
   arg.direction = arg.direction != null ? arg.direction : "input"
-  arg.multiple_sep = arg.multiple_sep != null ? arg.multiple_sep : ":"
+  arg.multiple_sep = arg.multiple_sep != null ? arg.multiple_sep : ";"
   arg.plainName = arg.name.replaceAll("^-*", "")
 
   if (arg.type == "file") {

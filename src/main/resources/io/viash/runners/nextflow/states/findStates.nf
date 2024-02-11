@@ -37,7 +37,7 @@ def findStates(Map params, Map config) {
       description: "Rename keys in the detected input files. This is useful if the input files do not match the set of input arguments of the workflow.",
       required: false,
       multiple: true,
-      multiple_sep: ","
+      multiple_sep: ";"
     ],
     [
       type: "string",
