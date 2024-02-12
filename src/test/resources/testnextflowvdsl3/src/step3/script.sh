@@ -8,7 +8,7 @@ trap clean_up EXIT
 
 
 if [ ! -z "$par_input" ]; then
-  IFS=":"
+  IFS=";"
   for var in $par_input; do
     unset IFS
     cat "$var" >> "$tmpfile"

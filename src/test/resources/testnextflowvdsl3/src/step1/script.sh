@@ -3,7 +3,7 @@
 [ -f "$par_output" ] && rm "$par_output"
 
 if [ ! -z "$par_input" ]; then
-  IFS=":"
+  IFS=";"
   for var in $par_input; do
     unset IFS
     cat "$var" >> "$par_output"

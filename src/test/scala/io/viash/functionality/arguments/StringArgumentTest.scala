@@ -40,7 +40,7 @@ class StringArgumentTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(arg.choices == Nil)
     assert(arg.direction == Input)
     assert(!arg.multiple)
-    assert(arg.multiple_sep == ":")
+    assert(arg.multiple_sep == ";")
     assert(arg.dest == "par")
 
     val argParsed = arg.asJson.as[StringArgument].fold(throw _, a => a)
