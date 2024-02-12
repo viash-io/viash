@@ -291,7 +291,7 @@ object Main extends Logging {
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.list) =>
         if (cli.namespace.list.parse_argument_groups()) {
-          info("Warning: --parse-argument-groups is deprecated and effectively always enabled.")
+          info("Warning: --parse_argument_groups is deprecated and effectively always enabled.")
         }
         val configs = readConfigs(
           cli.namespace.list,
@@ -324,7 +324,7 @@ object Main extends Logging {
         if (errors > 0) 1 else 0
       case List(cli.config, cli.config.view) =>
         if (cli.config.view.parse_argument_groups()) {
-          info("Warning: --parse-argument-groups is deprecated and effectively always enabled.")
+          info("Warning: --parse_argument_groups is deprecated and effectively always enabled.")
         }
         val config = readConfig(
           cli.config.view,
