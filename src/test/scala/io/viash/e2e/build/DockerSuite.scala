@@ -93,7 +93,7 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
         "---memory", "1gb"
       )
     )
-    assert(cmdOut.exitValue == 0, "exit should be 0. stdout:\n" + cmdOut.output)
+    assert(cmdOut.exitValue == 0, "exit should be 0. stdout;\n" + cmdOut.output)
 
     assert(output.exists())
     assert(log.exists())
@@ -110,8 +110,8 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
       assert(outputLines.contains(s"""log: |/viash_automount${log.getPath}|"""))
       assert(outputLines.contains("""optional: |foo|"""))
       assert(outputLines.contains("""optional_with_default: |bar|"""))
-      assert(outputLines.contains("""multiple: |foo:bar|"""))
-      assert(outputLines.contains("""multiple_pos: |a:b:c:d:e:f|"""))
+      assert(outputLines.contains("""multiple: |foo;bar|"""))
+      assert(outputLines.contains("""multiple_pos: |a;b;c;d;e;f|"""))
       val regex = s"""meta_resources_dir: \\|.*${temporaryFolder}/\\|""".r
       assert(regex.findFirstIn(outputLines).isDefined)
     } finally {

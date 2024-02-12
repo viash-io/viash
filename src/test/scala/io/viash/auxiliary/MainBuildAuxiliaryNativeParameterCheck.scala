@@ -41,18 +41,18 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
     val passCombined = for(
       c <- 1 until 3;
       v <- passSingles.combinations(c)
-    ) yield v.mkString(":")
+    ) yield v.mkString(";")
     val failCombined = for(
       c <- 1 until 3;
       v <- failSingles.combinations(c)
-    ) yield v.mkString(":")
+    ) yield v.mkString(";")
     val failMixCombined = for(
       a <- 1 until 3;
       b <- 1 until 3;
       p <- passSingles.take(4).combinations(a); // limit amount of tests with .take, this becomes big *fast*
       f <- failSingles.take(4).combinations(b); // limit amount of tests with .take, this becomes big *fast*
       order <- Seq(true, false)
-    ) yield if (order) (p++f).mkString(":") else (f++p).mkString(":")
+    ) yield if (order) (p++f).mkString(";") else (f++p).mkString(";")
     (passSingles, failSingles, passCombined, failCombined++failMixCombined)
   }
 

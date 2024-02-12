@@ -11,7 +11,7 @@ nextflow \
   --real_number 10.5 \
   --whole_number 10 \
   --str foo \
-  --multiple a:b:c:d \
+  --multiple "a;b;c;d" \
   --publishDir "output" \
   -resume \
   -entry base

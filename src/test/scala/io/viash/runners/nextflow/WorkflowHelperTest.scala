@@ -78,7 +78,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
         "--whole_number", "3",
         "--str", "foo",
         "--optional_with_default", "foo",
-        "--multiple", "a:b:c",
+        "--multiple", "a;b;c",
         "--publish_dir", "output"
       ),
       cwd = tempFolFile
@@ -86,7 +86,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(
       exitCode == 0,
-      s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr"
+      s"\nexit code was $exitCode\nStd output;\n$stdOut\nStd error;\n$stdErr"
     )
 
     val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
@@ -114,7 +114,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(
       exitCode == 0,
-      s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr"
+      s"\nexit code was $exitCode\nStd output;\n$stdOut\nStd error;\n$stdErr"
     )
     
     val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
@@ -148,7 +148,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(
       exitCode == 0,
-      s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr"
+      s"\nexit code was $exitCode\nStd output;\n$stdOut\nStd error;\n$stdErr"
     )
     
     val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
@@ -183,7 +183,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(
       exitCode == 0,
-      s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr"
+      s"\nexit code was $exitCode\nStd output;\n$stdOut\nStd error;\n$stdErr"
     )
     val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
     checkDebugArgs("foo", debugPrints, expectedFoo)
@@ -216,7 +216,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(
       exitCode == 0,
-      s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr"
+      s"\nexit code was $exitCode\nStd output;\n$stdOut\nStd error;\n$stdErr"
     )
     
     val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
@@ -250,7 +250,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(
       exitCode == 0,
-      s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr"
+      s"\nexit code was $exitCode\nStd output;\n$stdOut\nStd error;\n$stdErr"
     )
     
     val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
@@ -287,7 +287,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(
       exitCode == 0,
-      s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr"
+      s"\nexit code was $exitCode\nStd output;\n$stdOut\nStd error;\n$stdErr"
     )
     
     val debugPrints = outputTupleProcessor(stdOut, "DEBUG")
