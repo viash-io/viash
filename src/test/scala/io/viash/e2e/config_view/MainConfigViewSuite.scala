@@ -19,7 +19,7 @@ class MainConfigViewSuite extends AnyFunSuite{
       configFile
     )
 
-    assert(testOutput.stdout.startsWith("functionality:"))
+    assert(testOutput.stdout.startsWith("name:"))
     assert(testOutput.stdout.contains("testbash"))
   }
 

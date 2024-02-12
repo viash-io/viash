@@ -21,13 +21,13 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
 
-  // parse functionality from file
-  private val functionality = Config.read(configFile).functionality
-  private val loopFunctionality = Config.read(loopConfigFile).functionality
+  // parse config from file
+  private val config = Config.read(configFile)
+  private val loopConfig = Config.read(loopConfigFile)
 
   // check whether executable was created
-  private val executable = Paths.get(tempFolStr, functionality.name).toFile
-  private val loopExecutable = Paths.get(tempFolStr, loopFunctionality.name).toFile
+  private val executable = Paths.get(tempFolStr, config.name).toFile
+  private val loopExecutable = Paths.get(tempFolStr, loopConfig.name).toFile
 
   def generatePassAndFail(passSigns: Seq[String], passValues: Seq[String], failSigns: Seq[String], failValues: Seq[String]) = {
     assert(passSigns.length > 0)
@@ -126,7 +126,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
 
     val stripAll = (s : String) => s.replaceAll(raw"\s+", " ").trim
 
-    functionality.allArguments.foreach(arg => {
+    config.allArguments.foreach(arg => {
       for (opt <- arg.alternatives; value <- opt)
         assert(stdout.contains(value))
       for (description <- arg.description) {

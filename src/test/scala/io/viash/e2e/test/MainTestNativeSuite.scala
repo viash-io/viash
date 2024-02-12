@@ -88,7 +88,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check test output when no tests are specified in the functionality file") {
-    val newConfigFilePath = configDeriver.derive("del(.functionality.test_resources)", "no_tests")
+    val newConfigFilePath = configDeriver.derive("del(.test_resources)", "no_tests")
     val testOutput = TestHelper.testMain(
       "test",
       "--engine", "native",
@@ -104,7 +104,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check test output when a test fails") {
-    val newConfigFilePath = configDeriver.derive(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""", "failed_test")
+    val newConfigFilePath = configDeriver.derive(""".test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""", "failed_test")
     val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
       "--engine", "native",
@@ -120,7 +120,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check test output when test doesn't exist") {
-    val newConfigFilePath = configDeriver.derive(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/nonexistent_test.sh"""", "nonexisting_test")
+    val newConfigFilePath = configDeriver.derive(""".test_resources[.path == "tests/check_outputs.sh"].path := "tests/nonexistent_test.sh"""", "nonexisting_test")
     val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
       "--engine", "native",
@@ -155,7 +155,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check config file without 'functionality' specified") {
-    val newConfigFilePath = configDeriver.derive("""del(.functionality)""", "missing_functionality")
+    val newConfigFilePath = configDeriver.derive("""del()""", "missing_functionality")
     val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
       "--engine", "native",
@@ -331,7 +331,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check test output when a test fails and --keep true is specified") {
-    val newConfigFilePath = configDeriver.derive(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""", "failed_test_keep_true")
+    val newConfigFilePath = configDeriver.derive(""".test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""", "failed_test_keep_true")
     val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
       "--engine", "native",
@@ -351,7 +351,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Check test output when a test fails and --keep false is specified") {
     val newConfigFilePath = configDeriver.derive(
-      """.functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""",
+      """.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""",
       "failed_test_keep_false"
     )
     val testOutput = TestHelper.testMainException[RuntimeException](
@@ -372,7 +372,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check deprecation warning") {
-    val newConfigFilePath = configDeriver.derive(""".functionality.status := "deprecated"""", "deprecated")
+    val newConfigFilePath = configDeriver.derive(""".status := "deprecated"""", "deprecated")
     val testOutput = TestHelper.testMain(
       "test",
       "--engine", "native",
@@ -415,7 +415,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check standard test output with missing test resource") {
-    val newConfigFilePath = configDeriver.derive(""".functionality.test_resources += { type: 'file', path: 'foobar.txt' }""", "deprecated")
+    val newConfigFilePath = configDeriver.derive(""".test_resources += { type: 'file', path: 'foobar.txt' }""", "deprecated")
 
     val testOutput = TestHelper.testMainException[MissingResourceFileException](
       "test",

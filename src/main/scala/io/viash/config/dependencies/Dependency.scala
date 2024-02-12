@@ -50,7 +50,7 @@ import io.viash.exceptions.MissingBuildYamlException
     |repository: "openpipelines-bio"
     |""".stripMargin,
   "yaml",
-  "Definition of a dependency with a repository defined as 'openpipelines-bio' under `.functionality.repositories`."
+  "Definition of a dependency with a repository defined as 'openpipelines-bio' under `.repositories`."
 )
 @exampleWithDescription(
   """name: qc/multiqc

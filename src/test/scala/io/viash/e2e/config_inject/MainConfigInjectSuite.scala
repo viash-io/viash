@@ -40,9 +40,9 @@ class MainConfigInjectSuite extends AnyFunSuite with BeforeAndAfterAll {
       val configFile = destPath.resolve(s"$name/$file")
       assert(configFile.toFile().exists, "Check dest config exists")
 
-      val functionality = Config.read(configFile.toString()).functionality
+      val config = Config.read(configFile.toString())
 
-      val scriptFile = destPath.resolve(s"$name/" + functionality.mainScript.get.path.get) // assume all of these things exist
+      val scriptFile = destPath.resolve(s"$name/" + config.mainScript.get.path.get) // assume all of these things exist
       assert(scriptFile.toFile().exists, "Check dest script exists")
 
       // inject script

@@ -23,11 +23,11 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
   private val temporaryConfigFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
   private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
 
-  // parse functionality from file
-  private val functionality = Config.read(configFile).functionality
+  // parse config from file
+  private val config = Config.read(configFile)
 
   // check whether executable was created
-  private val executable = Paths.get(tempFolStr, functionality.name).toFile
+  private val executable = Paths.get(tempFolStr, config.name).toFile
 
   test("viash without --setup doesn't create docker during build", DockerTest) {
     val tag = "mytestbash"
@@ -88,8 +88,8 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
   test("Get info of a docker image using docker inspect", DockerTest) {
     val newConfigFilePath = configDeriver.derive(
       List(
-        ".functionality.name := 'docker_setup_inspect'",
-        ".functionality.version := '0.123'"
+        ".name := 'docker_setup_inspect'",
+        ".version := '0.123'"
       ),
       "docker_setup_inspect")
 

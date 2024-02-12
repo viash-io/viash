@@ -1,4 +1,4 @@
-package io.viash.functionality.arguments
+package io.viash.config.arguments
 
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite

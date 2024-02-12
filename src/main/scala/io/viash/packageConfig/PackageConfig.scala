@@ -99,7 +99,7 @@ case class PackageConfig(
   // todo: make this a ConfigMods object
   // todo: link to config mods docs
   @description("Which config mods to apply.")
-  @example("config_mods: \".functionality.name := 'foo'\"", "yaml")
+  @example("config_mods: \".name := 'foo'\"", "yaml")
   @default("Empty")
   config_mods: OneOrMore[String] = Nil,
 

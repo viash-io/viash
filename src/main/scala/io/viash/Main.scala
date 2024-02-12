@@ -403,7 +403,7 @@ object Main extends Logging {
           targetDir = td,
           runnerId = ex.id,
           namespace = appliedConfig.config.namespace,
-          functionalityName = appliedConfig.config.name
+          componentName = appliedConfig.config.name
         ))
       case _ => None
     }

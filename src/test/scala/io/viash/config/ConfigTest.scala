@@ -1,4 +1,4 @@
-package io.viash.functionality
+package io.viash.config
 
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
@@ -11,7 +11,7 @@ import io.viash.helpers.circe._
 import io.viash.helpers.data_structures._
 import io.viash.helpers.Logger
 
-class FunctionalityTest extends AnyFunSuite with BeforeAndAfterAll {
+class ConfigTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
   val infoJson = Yaml("""
     |foo:
@@ -22,29 +22,29 @@ class FunctionalityTest extends AnyFunSuite with BeforeAndAfterAll {
     |""".stripMargin)
 
   test("Simple getters and helper functions") {
-    val fun = Functionality(name = "foo")
+    val conf = Config(name = "foo")
 
-    assert(fun.name == "foo")
-    assert(fun.description == None)
-    assert(fun.info == Json.Null)
+    assert(conf.name == "foo")
+    assert(conf.description == None)
+    assert(conf.info == Json.Null)
 
-    val funParsed = fun.asJson.as[Config].fold(throw _, a => a)
-    assert(funParsed == fun)
+    val confParsed = conf.asJson.as[Config].fold(throw _, a => a)
+    assert(confParsed == conf)
   }
 
   test("Simple getters and helper functions on object with many non-default values") {
-    val fun = Functionality(
+    val conf = Config(
       name = "one_two_three_four",
       description = Some("foo"),
       info = infoJson
     )
 
-    assert(fun.name == "one_two_three_four")
-    assert(fun.description == Some("foo"))
-    assert(fun.info == infoJson)
+    assert(conf.name == "one_two_three_four")
+    assert(conf.description == Some("foo"))
+    assert(conf.info == infoJson)
     
-    val funParsed = fun.asJson.as[Config].fold(throw _, a => a)
-    assert(funParsed == fun)
+    val confParsed = conf.asJson.as[Config].fold(throw _, a => a)
+    assert(confParsed == conf)
   }
 
   // TODO: expand functionality tests

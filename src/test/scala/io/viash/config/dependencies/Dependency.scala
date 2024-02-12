@@ -1,10 +1,9 @@
-package io.viash.functionality.dependencies
+package io.viash.config.dependencies
 
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
 import io.viash.config.{Config, ConfigMeta}
-import io.viash.functionality.Config
 import io.viash.config.resources.BashScript
 import io.viash.helpers.{IO, Exec, Logger}
 import io.viash.helpers.circe._
@@ -27,9 +26,8 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     subFolder
   }
 
-  // Write functionality as a config file
-  def writeTestConfig(path: Path, fun: Config): Unit = {
-    val config = Config(functionality = fun)
+  // Write config to a file
+  def writeTestConfig(path: Path, config: Config): Unit = {
     val json = ConfigMeta.configToCleanJson(config)
     val yaml = json.toFormattedString("yaml")
     path.getParent().toFile().mkdirs()
@@ -44,18 +42,18 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     val testFolder = createViashSubFolder(temporaryFolder, "local_test")
     
     // write test files
-    val fun1 = Functionality(
+    val conf1 = Config(
       name = "dep1",
       resources = textBashScript("echo Hello from dep1"),
     )
-    val fun2 = Functionality(
+    val conf2 = Config(
       name = "dep2",
       resources = textBashScript("$dep_dep1\necho Hello from dep2"),
       dependencies = List(Dependency("dep1"))
     )
 
-    writeTestConfig(testFolder.resolve("src/dep1/config.vsh.yaml"), fun1)
-    writeTestConfig(testFolder.resolve("src/dep2/config.vsh.yaml"), fun2)
+    writeTestConfig(testFolder.resolve("src/dep1/config.vsh.yaml"), conf1)
+    writeTestConfig(testFolder.resolve("src/dep2/config.vsh.yaml"), conf2)
 
     // build
     val testOutput = TestHelper.testMain(
@@ -88,18 +86,18 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     val testFolder = createViashSubFolder(temporaryFolder, "local_test_absolute_path")
     
     // write test files
-    val fun1 = Functionality(
+    val conf1 = Config(
       name = "dep1",
       resources = textBashScript("echo Hello from dep1"),
     )
-    val fun2 = Functionality(
+    val conf2 = Config(
       name = "dep2",
       resources = textBashScript("$dep_dep1\necho Hello from dep2"),
       dependencies = List(Dependency("dep1", repository = Right(LocalRepository(path = Some("/dependencies")))))
     )
 
-    writeTestConfig(testFolder.resolve("dependencies/src/dep1/config.vsh.yaml"), fun1)
-    writeTestConfig(testFolder.resolve("src/dep2/config.vsh.yaml"), fun2)
+    writeTestConfig(testFolder.resolve("dependencies/src/dep1/config.vsh.yaml"), conf1)
+    writeTestConfig(testFolder.resolve("src/dep2/config.vsh.yaml"), conf2)
 
     // build our local repository
     val build1 = TestHelper.testMain(
@@ -143,18 +141,18 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     val testFolder = createViashSubFolder(temporaryFolder, "local_test_relative_path")
     
     // write test files
-    val fun1 = Functionality(
+    val conf1 = Config(
       name = "dep1",
       resources = textBashScript("echo Hello from dep1"),
     )
-    val fun2 = Functionality(
+    val conf2 = Config(
       name = "dep2",
       resources = textBashScript("$dep_dep1\necho Hello from dep2"),
       dependencies = List(Dependency("dep1", repository = Right(LocalRepository(path = Some("../../dependencies")))))
     )
 
-    writeTestConfig(testFolder.resolve("dependencies/src/dep1/config.vsh.yaml"), fun1)
-    writeTestConfig(testFolder.resolve("src/dep2/config.vsh.yaml"), fun2)
+    writeTestConfig(testFolder.resolve("dependencies/src/dep1/config.vsh.yaml"), conf1)
+    writeTestConfig(testFolder.resolve("src/dep2/config.vsh.yaml"), conf2)
 
     // build our local repository
     val build1 = TestHelper.testMain(
@@ -198,13 +196,13 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     val testFolder = createViashSubFolder(temporaryFolder, "remote_test")
     
     // write test files
-    val fun = Functionality(
+    val conf = Config(
       name = "dep3",
       resources = textBashScript("$dep_viash_hub_dep\necho \"Hello from dep3\""),
       dependencies = List(Dependency("viash_hub/dep", repository = Left("vsh://hendrik/dependency_test@main_build")))
     )
 
-    writeTestConfig(testFolder.resolve("src/dep3/config.vsh.yaml"), fun)
+    writeTestConfig(testFolder.resolve("src/dep3/config.vsh.yaml"), conf)
 
     // build
     val testOutput = TestHelper.testMain(
@@ -233,18 +231,18 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(out.exitValue == 0)
   }
 
-  test("Use a remote dependency, defined in .functionality.repositories") {
+  test("Use a remote dependency, defined in .repositories") {
     val testFolder = createViashSubFolder(temporaryFolder, "remote_test_repositories")
     
     // write test files
-    val fun = Functionality(
+    val conf = Config(
       name = "dep3",
       resources = textBashScript("$dep_viash_hub_dep\necho \"Hello from dep3\""),
       repositories = List(ViashhubRepositoryWithName("viash_hub", "vsh", "hendrik/dependency_test", Some("main_build"))),
       dependencies = List(Dependency("viash_hub/dep", repository = Left("viash_hub")))
     )
 
-    writeTestConfig(testFolder.resolve("src/dep3/config.vsh.yaml"), fun)
+    writeTestConfig(testFolder.resolve("src/dep3/config.vsh.yaml"), conf)
 
     // build
     val testOutput = TestHelper.testMain(
@@ -284,13 +282,13 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     val testFolder = createViashSubFolder(temporaryFolder, "remote_test_package_config", Some(packageConfig))
     
     // write test files
-    val fun = Functionality(
+    val config = Config(
       name = "dep3",
       resources = textBashScript("$dep_viash_hub_dep\necho \"Hello from dep3\""),
       dependencies = List(Dependency("viash_hub/dep", repository = Left("viash_hub")))
     )
 
-    writeTestConfig(testFolder.resolve("src/dep3/config.vsh.yaml"), fun)
+    writeTestConfig(testFolder.resolve("src/dep3/config.vsh.yaml"), config)
 
     // build
     val testOutput = TestHelper.testMain(
@@ -324,13 +322,13 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     val testFolder = createViashSubFolder(temporaryFolder, "nested_remote_test")
     
     // write test files
-    val fun = Functionality(
+    val conf = Config(
       name = "dep4",
       resources = textBashScript("$dep_viash_hub_test_tree\necho \"Hello from dep4\""),
       dependencies = List(Dependency("viash_hub_test/tree", repository = Left("vsh://hendrik/dependency_test2@main_build")))
     )
 
-    writeTestConfig(testFolder.resolve("src/dep4/config.vsh.yaml"), fun)
+    writeTestConfig(testFolder.resolve("src/dep4/config.vsh.yaml"), conf)
 
     // build
     val testOutput = TestHelper.testMain(

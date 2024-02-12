@@ -65,7 +65,7 @@ def _parseParamList(param_list, Map config) {
   }
 
   // id is argument
-  def idIsArgument = config.functionality.allArguments.any{it.plainName == "id"}
+  def idIsArgument = config.allArguments.any{it.plainName == "id"}
 
   // Reformat from List<Map> to List<Tuple2<String, Map>> by adding the ID as first element of a Tuple2
   paramSets = paramSets.collect({ data ->
@@ -87,7 +87,7 @@ def _parseParamList(param_list, Map config) {
   if (paramListPath) {
     paramSets = paramSets.collect({ id, data ->
       def new_data = data.collectEntries{ parName, parValue ->
-        def par = config.functionality.allArguments.find{it.plainName == parName}
+        def par = config.allArguments.find{it.plainName == parName}
         if (par && par.type == "file" && par.direction == "input") {
           if (parValue instanceof Collection) {
             parValue = parValue.collectMany{path -> 

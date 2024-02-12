@@ -17,7 +17,6 @@
 
 package io.viash.wrapper
 
-import io.viash.functionality._
 import io.viash.helpers.{Bash, Format, Helper}
 import io.viash.helpers.Escaper
 import io.viash.config.ConfigMeta
@@ -691,10 +690,10 @@ object BashWrapper {
   }
 
 
-  private def generateComputationalRequirements(functionality: Config) = {
+  private def generateComputationalRequirements(config: Config) = {
     val compArgs = List(
-      ("---cpus", "VIASH_META_CPUS", functionality.requirements.cpus.map(_.toString)),
-      ("---memory", "VIASH_META_MEMORY", functionality.requirements.memoryAsBytes.map(_.toString + "b"))
+      ("---cpus", "VIASH_META_CPUS", config.requirements.cpus.map(_.toString)),
+      ("---memory", "VIASH_META_MEMORY", config.requirements.memoryAsBytes.map(_.toString + "b"))
     )
 
     // gather parse code for params

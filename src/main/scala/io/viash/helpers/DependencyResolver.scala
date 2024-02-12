@@ -227,13 +227,13 @@ object DependencyResolver extends Logging {
       val json = Convert.textToJson(yamlText, configPath)
 
       def getFunctionalityName(json: Json): Option[String] = {
-        json.hcursor.downField("functionality").downField("name").as[String].toOption
+        json.hcursor.downField("name").as[String].toOption
       }
       def getFunctionalityNamespace(json: Json): Option[String] = {
-        json.hcursor.downField("functionality").downField("namespace").as[String].toOption
+        json.hcursor.downField("namespace").as[String].toOption
       }
       def getInfo(json: Json): Option[Map[String, String]] = {
-        json.hcursor.downField("info").as[Map[String, String]].toOption
+        json.hcursor.downField("build_info").as[Map[String, String]].toOption
       }
 
       val functionalityName = getFunctionalityName(json)
@@ -255,7 +255,7 @@ object DependencyResolver extends Logging {
       val yamlText = IO.read(IO.uri(configPath))
       val json = Convert.textToJson(yamlText, configPath)
 
-      val dependencies = json.hcursor.downField("functionality").downField("dependencies").focus.flatMap(_.asArray).get
+      val dependencies = json.hcursor.downField("dependencies").focus.flatMap(_.asArray).get
       dependencies.flatMap(_.hcursor.downField("writtenPath").as[String].toOption).toList
     } catch {
       case _: Throwable => Nil

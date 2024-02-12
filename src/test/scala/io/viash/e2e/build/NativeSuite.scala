@@ -24,11 +24,11 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   private val temporaryConfigFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
   private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
 
-  // parse functionality from file
-  private val functionality = Config.read(configFile).functionality
+  // parse config from file
+  private val config = Config.read(configFile)
 
   // check whether executable was created
-  private val executable = Paths.get(tempFolStr, functionality.name).toFile
+  private val executable = Paths.get(tempFolStr, config.name).toFile
 
   // convert testbash
   test("viash can create an executable") {
@@ -58,7 +58,7 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val stripAll = (s : String) => s.replaceAll(raw"\s+", " ").trim
 
-    functionality.allArguments.foreach(arg => {
+    config.allArguments.foreach(arg => {
       for (opt <- arg.alternatives; value <- opt)
         assert(stdout.contains(value))
       for (description <- arg.description) {
@@ -227,7 +227,7 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Test whether setting an internalFunctionality field throws an error") {
-    val newConfigFilePath = configDeriver.derive(""".functionality.argument_groups[.name == "First group"].arguments[.name == "input"].dest := "foo"""", "set_internal_functionality")
+    val newConfigFilePath = configDeriver.derive(""".argument_groups[.name == "First group"].arguments[.name == "input"].dest := "foo"""", "set_internal_functionality")
 
     val testOutput = TestHelper.testMainException[ConfigParserException](
       "build",
@@ -235,7 +235,7 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       newConfigFilePath
     )
 
-    assert(testOutput.stderr.contains("Error: .functionality.argument_groups.arguments.dest is internal functionality."))
+    assert(testOutput.stderr.contains("Error: .argument_groups.arguments.dest is internal functionality."))
   }
 
   test("Test config without a main script") {
@@ -243,7 +243,7 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       "build",
       "-o", tempFolStr,
       configFile,
-      "-c", ".functionality.resources := []"
+      "-c", ".resources := []"
     )
 
     assert(testOutput.stderr.contains("Warning: no resources specified!"))

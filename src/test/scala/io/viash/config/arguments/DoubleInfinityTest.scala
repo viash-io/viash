@@ -1,14 +1,13 @@
-package io.viash.functionality.arguments
+package io.viash.config.arguments
 
 import org.scalatest.funsuite.AnyFunSuite
 import io.circe._
 
 import io.viash.helpers.Logger
-import io.viash.functionality.arguments.DoubleArgument
-import io.viash.functionality._
+import io.viash.config.arguments.DoubleArgument
 import io.viash.helpers.Yaml
 import io.viash.helpers.circe.Convert
-import io.viash.functionality.arguments.encodeArgument
+import io.viash.config.arguments.encodeArgument
 import io.circe.yaml.Printer
 
 class DoubleInfinityTest extends AnyFunSuite {

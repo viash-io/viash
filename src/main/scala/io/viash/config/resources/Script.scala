@@ -17,8 +17,6 @@
 
 package io.viash.config.resources
 
-// import io.viash.functionality.Functionality
-
 import java.net.URI
 import io.viash.config.arguments.Argument
 import io.viash.config.Config

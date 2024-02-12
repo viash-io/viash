@@ -1,4 +1,4 @@
-package io.viash.functionality.resources
+package io.viash.config.resources
 
 import org.scalatest.funsuite.AnyFunSuite
 import io.viash.helpers.Logger

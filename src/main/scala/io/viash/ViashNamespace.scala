@@ -56,13 +56,13 @@ object ViashNamespace extends Logging {
     targetDir: String,
     runnerId: String,
     namespace: Option[String],
-    functionalityName: String
+    componentName: String
   ): String = {
     val nsStr = namespace match {
       case Some(ns) => ns + "/"
       case None => ""
     }
-    s"$targetDir/$runnerId/$nsStr$functionalityName"
+    s"$targetDir/$runnerId/$nsStr$componentName"
   }
 
   def build(

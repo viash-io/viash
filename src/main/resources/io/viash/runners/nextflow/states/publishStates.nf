@@ -113,7 +113,7 @@ def publishStatesByConfig(Map args) {
   def config = args.get("config")
   assert config != null : "publishStatesByConfig: config must be specified"
 
-  def key_ = args.get("key", config.functionality.name)
+  def key_ = args.get("key", config.name)
   assert key_ != null : "publishStatesByConfig: key must be specified"
   
   workflow publishStatesSimpleWf {
@@ -137,7 +137,7 @@ def publishStatesByConfig(Map args) {
           //   - key, value is part of the state to be saved to disk
           //   - srcPath and destPath are lists of files to be copied from src to dest
           def processedState =
-            config.functionality.allArguments
+            config.allArguments
               .findAll { it.direction == "output" }
               .collectMany { par ->
                 def plainName_ = par.plainName

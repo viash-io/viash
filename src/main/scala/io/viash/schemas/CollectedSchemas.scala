@@ -126,7 +126,7 @@ object CollectedSchemas {
     getMembers[BuildInfo](),
     getMembers[SysEnvTrait](),
 
-    getMembers[Config](),
+    getMembers[Functionality](),
     getMembers[Author](),
     getMembers[ComputationalRequirements](),
     getMembers[ArgumentGroup](),

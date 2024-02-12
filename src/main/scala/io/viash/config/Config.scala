@@ -18,7 +18,6 @@
 package io.viash.config
 
 import io.viash.config_mods.ConfigModParser
-// import io.viash.functionality._
 import arguments._
 import resources._
 import dependencies._
@@ -52,16 +51,15 @@ import scala.collection.immutable.ListMap
     |We commonly name this file `config.vsh.yaml` in our examples, but you can name it however you choose.  
     |""".stripMargin)
 @example(
-  """functionality:
-    |  name: hello_world
-    |  arguments:
-    |    - type: string
-    |      name: --input
-    |      default: "world"
-    |  resources:
-    |    - type: bash_script
-    |      path: script.sh
-    |      text: echo Hello $par_input
+  """name: hello_world
+    |arguments:
+    |  - type: string
+    |    name: --input
+    |    default: "world"
+    |resources:
+    |  - type: bash_script
+    |    path: script.sh
+    |    text: echo Hello $par_input
     |runners:
     |  - type: executable
     |engines:
@@ -484,8 +482,8 @@ case class Config(
     )
   }
 
-  // check functionality name
-  require(name.matches("^[A-Za-z][A-Za-z0-9_]*$"), message = "functionality name must begin with a letter and consist only of alphanumeric characters or underscores.")
+  // check component name
+  require(name.matches("^[A-Za-z][A-Za-z0-9_]*$"), message = "component name must begin with a letter and consist only of alphanumeric characters or underscores.")
 
   // check arguments
   {
@@ -561,18 +559,18 @@ object Config extends Logging {
 
     // detect whether a script (with joined header) was passed or a joined yaml
     // using the extension
-    if ((extension == "yml" || extension == "yaml") && configStr.contains("functionality:")) {
+    if ((extension == "yml" || extension == "yaml") && configStr.contains("name:")) {
       (configStr, None)
     } else if (Script.extensions.contains(extension)) {
       // detect scripting language from extension
       val scriptObj = Script.fromExt(extension)
 
-      // check whether viash header contains a functionality
+      // check whether viash header contains a name
       val commentStr = scriptObj.commentStr + "'"
       val headerComm = commentStr + " "
       assert(
-        configStr.contains(s"$commentStr functionality:"),
-        message = s"""viash script should contain a functionality header: "$commentStr functionality: <...>""""
+        configStr.contains(s"$commentStr name:"),
+        message = s"""viash script should contain a name header: "$commentStr name: <...>""""
       )
 
       // split header and body

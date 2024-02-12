@@ -1,21 +1,20 @@
-functionality:
-  name: testexecutable
-  description: |
-    List buckets and objects with mc.
-  arguments:
-    - name: "target"
-      type: file
-      description: An extra parameter
-      required: true
-      multiple: true
-  resources:
-    - type: executable
-      path: ls
-    - path: ../resource1.txt
-  test_resources:
-    - type: bash_script
-      path: test.sh
-    - path: ../resource2.txt
+name: testexecutable
+description: |
+  List buckets and objects with mc.
+arguments:
+  - name: "target"
+    type: file
+    description: An extra parameter
+    required: true
+    multiple: true
+resources:
+  - type: executable
+    path: ls
+  - path: ../resource1.txt
+test_resources:
+  - type: bash_script
+    path: test.sh
+  - path: ../resource2.txt
 __merge__: [../common-runners.yaml]
 engines:
   - type: native

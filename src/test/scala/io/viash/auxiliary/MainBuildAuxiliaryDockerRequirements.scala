@@ -17,8 +17,8 @@ abstract class AbstractMainBuildAuxiliaryDockerRequirements extends FixtureAnyFu
   private val temporaryConfigFolder = IO.makeTemp("viash_tester_configs")
 
   private val configRequirementsFile = getClass.getResource(s"/testbash/auxiliary_requirements/config_requirements.vsh.yaml").getPath
-  private val functionalityRequirements = Config.read(configRequirementsFile).functionality
-  protected val executableRequirementsFile = Paths.get(tempFolStr, functionalityRequirements.name).toFile
+  private val configRequirements = Config.read(configRequirementsFile)
+  protected val executableRequirementsFile = Paths.get(tempFolStr, configRequirements.name).toFile
 
   protected val configDeriver = ConfigDeriver(Paths.get(configRequirementsFile), temporaryConfigFolder)
 

@@ -31,11 +31,11 @@
  
 private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params, Map config){
   // todo: fetch key from run args
-  def key_ = config.functionality.name
+  def key_ = config.name
   
   /* parse regular parameters (not in param_list)  */
   /*************************************************/
-  def globalParams = config.functionality.allArguments
+  def globalParams = config.allArguments
     .findAll { params.containsKey(it.plainName) }
     .collectEntries { [ it.plainName, params[it.plainName] ] }
   def globalID = params.get("id", null)
@@ -76,7 +76,7 @@ private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params,
     //   }
     // }
     parValues = parValues.collectEntries { name, value ->
-      def par = config.functionality.allArguments.find { it.plainName == name && (it.direction == "input" || it.type == "file") }
+      def par = config.allArguments.find { it.plainName == name && (it.direction == "input" || it.type == "file") }
       assert par != null : "Error in module '${key_}' id '${id}': '${name}' is not a valid input argument"
 
       if (par == null) {

@@ -268,7 +268,7 @@ final case class NextflowRunner(
       |meta["defaults"] = ${NextflowHelper.generateDefaultWorkflowArgs(config, directivesToJson, auto, debug)}
       |
       |// initialise default workflow
-      |meta["workflow"] = workflowFactory([key: meta.config.functionality.name], meta.defaults, meta)
+      |meta["workflow"] = workflowFactory([key: meta.config.name], meta.defaults, meta)
       |
       |// add workflow to environment
       |nextflow.script.ScriptMeta.current().addDefinition(meta.workflow)
@@ -280,7 +280,7 @@ final case class NextflowRunner(
       |  def newConfig = deepClone(meta.config)
       |  def newParams = deepClone(params)
       |
-      |  def argsContainsId = newConfig.functionality.allArguments.any{it.plainName == "id"}
+      |  def argsContainsId = newConfig.allArguments.any{it.plainName == "id"}
       |  if (!argsContainsId) {
       |    def idArg = [
       |      'name': '--id',
@@ -289,7 +289,7 @@ final case class NextflowRunner(
       |      'description': 'A unique id for every entry.',
       |      'multiple': false
       |    ]
-      |    newConfig.functionality.arguments.add(0, idArg)
+      |    newConfig.arguments.add(0, idArg)
       |    newConfig = processConfig(newConfig)
       |  }
       |  if (!newParams.containsKey("id")) {

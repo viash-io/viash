@@ -18,11 +18,11 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
 
-  // parse functionality from file
-  private val functionality = Config.read(configFile).functionality
+  // parse config from file
+  private val config = Config.read(configFile)
 
   // check whether executable was created
-  private val executable = temporaryFolder.resolve(functionality.name).toFile
+  private val executable = temporaryFolder.resolve(config.name).toFile
   private val execPathInDocker = Paths.get("/viash_automount", executable.getPath).toString
 
   // convert testbash
@@ -60,7 +60,7 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val stripAll = (s : String) => s.replaceAll(raw"\s+", " ").trim
 
-    functionality.allArguments.foreach(arg => {
+    config.allArguments.foreach(arg => {
       for (opt <- arg.alternatives; value <- opt)
         assert(stdout.contains(value))
       for (description <- arg.description) {

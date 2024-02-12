@@ -1,4 +1,4 @@
-package io.viash.functionality.dependencies
+package io.viash.config.dependencies
 
 import org.scalatest.funsuite.AnyFunSuite
 import io.viash.config.dependencies.{GithubRepository, GitRepository, LocalRepository, ViashhubRepository}

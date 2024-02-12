@@ -19,11 +19,11 @@ class EscapingNativeTest extends AnyFunSuite with BeforeAndAfterAll {
   private val temporaryFolder = IO.makeTemp("viash_escaping_test")
   private val tempFolStr = temporaryFolder.toString
 
-  // parse functionality from file
-  private val functionality = Config.read(configFile, addOptMainScript = false).functionality
+  // parse config from file
+  private val config = Config.read(configFile, addOptMainScript = false)
 
   // check whether executable was created
-  private val executable = Paths.get(tempFolStr, functionality.name).toFile
+  private val executable = Paths.get(tempFolStr, config.name).toFile
 
   // convert testbash
   test("viash can build the config file without special 'to-escape-characters'") {
@@ -65,8 +65,8 @@ class EscapingNativeTest extends AnyFunSuite with BeforeAndAfterAll {
 
     test(s"Check whether $chars gets escaped properly") {
 
-      val functionalitySub = Config.read(configSubFile.toString, addOptMainScript = false).functionality
-      val executableSub = Paths.get(tempSubFolder.toString, "output", functionalitySub.name).toFile
+      val configSub = Config.read(configSubFile.toString, addOptMainScript = false)
+      val executableSub = Paths.get(tempSubFolder.toString, "output", configSub.name).toFile
 
       // build the script
       TestHelper.testMain(
@@ -88,7 +88,7 @@ class EscapingNativeTest extends AnyFunSuite with BeforeAndAfterAll {
       val stripAll = (s: String) => s.replaceAll(raw"\s+", " ").trim
 
       // test if descriptions match
-      functionalitySub.allArguments.foreach(arg => {
+      configSub.allArguments.foreach(arg => {
         for (opt <- arg.alternatives; value <- opt)
           assert(stdout.contains(value))
         for (description <- arg.description)
