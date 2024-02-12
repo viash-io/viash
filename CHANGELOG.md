@@ -3,7 +3,9 @@
 ## BREAKING CHANGES
 
 * `arguments`: Change default `multiple_sep` from `:` to `;` to avoid conflicts with paths like `s3://foo/bar` (PR #645).
-  As reference, a config mod to change the `multiple_sep` back to the previous default could be `-c '.functionality.argument_groups[true].arguments[.multiple == true].multiple_sep := ","'`.
+  The previous behaviour of using `multiple_sep: ":"` can be achieved by adding a config mod to the `_viash.yaml`:
+    config_mods: |
+      .functionality.argument_groups[true].arguments[.multiple == true].multiple_sep := ":"
 
 ## MINOR CHANGES
 
