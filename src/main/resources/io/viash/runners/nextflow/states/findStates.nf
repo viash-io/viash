@@ -37,7 +37,7 @@ def findStates(Map params, Map config) {
       description: "Rename keys in the detected input files. This is useful if the input files do not match the set of input arguments of the workflow.",
       required: false,
       multiple: true,
-      multiple_sep: ","
+      multiple_sep: ";"
     ],
     [
       type: "string",
@@ -83,7 +83,7 @@ def findStates(Map params, Map config) {
           // construct renameMap
           if (args.rename_keys) {
             def renameMap = args.rename_keys.collectEntries{renameString ->
-              def split = renameString.split(":")
+              def split = renameString.split(";")
               assert split.size() == 2: "Argument 'rename_keys' should be of the form 'newKey:oldKey,newKey:oldKey'"
               split
             }

@@ -1,5 +1,12 @@
 # Viash 0.x.x (yyyy-MM-dd): TODO Add title
 
+## BREAKING CHANGES
+
+* `arguments`: Change default `multiple_sep` from `:` to `;` to avoid conflicts with paths like `s3://foo/bar` (PR #645).
+  The previous behaviour of using `multiple_sep: ":"` can be achieved by adding a config mod to the `_viash.yaml`:
+    config_mods: |
+      .functionality.argument_groups[true].arguments[.multiple == true].multiple_sep := ":"
+
 ## MINOR CHANGES
 
 * `package config`: Renamed `project config` to `package config` (PR #636). Now that we start using the config more, we came to the conclusion that "package" was better suited that "project".
@@ -2366,7 +2373,7 @@ If, for some reason, you need to manually specify a mount, you can do this with 
 
 For all parameter types (except for `boolean_true` and `boolean_false`), you can specify `multiple: true` in order to turn this argument into an array-based argument. What this does is allow you to pass multiple values for this argument, e.g. `--input file1 --input file2 --input file3:file4:file5`.
 
-The default separator is `:` but this can be overridden by changing the separator by setting it to `multiple_sep: ","` (for example).
+The default separator is `:` but this can be overridden by changing the separator by setting it to `multiple_sep: ";"` (for example).
 
 ### New format
 

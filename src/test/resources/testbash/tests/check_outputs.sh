@@ -29,7 +29,7 @@ grep -q 'output: |.*/output.txt|' output.txt
 grep -q 'log: |.*/log.txt|' output.txt
 grep -q 'optional: |foo|' output.txt
 grep -q 'optional_with_default: |bar|' output.txt
-grep -q 'multiple: |one:two|' output.txt
-grep -q 'multiple_pos: |a:b:c:d:e:f|' output.txt
+grep -q 'multiple: |one;two|' output.txt
+grep -q 'multiple_pos: |a;b;c;d;e;f|' output.txt
 
 echo ">>> Test finished successfully"

@@ -110,8 +110,8 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
       assert(outputLines.contains(s"""log: |/viash_automount${log.getPath}|"""))
       assert(outputLines.contains("""optional: |foo|"""))
       assert(outputLines.contains("""optional_with_default: |bar|"""))
-      assert(outputLines.contains("""multiple: |foo:bar|"""))
-      assert(outputLines.contains("""multiple_pos: |a:b:c:d:e:f|"""))
+      assert(outputLines.contains("""multiple: |foo;bar|"""))
+      assert(outputLines.contains("""multiple_pos: |a;b;c;d;e;f|"""))
       val regex = s"""meta_resources_dir: \\|.*${temporaryFolder}/\\|""".r
       assert(regex.findFirstIn(outputLines).isDefined)
     } finally {

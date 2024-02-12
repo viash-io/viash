@@ -20,6 +20,6 @@ grep -q 'real_number: |10.5|' output.txt
 grep -q 'whole_number: |10|' output.txt
 grep -q 'long_number: |112589990684262400|' output.txt
 grep -q 's: |a string with spaces|' output.txt
-grep -q 'multiple: |abc.txt:def.txt|' output.txt
-grep -q 'multiple_pos: |a.sh:b.sh:c.sh:d.sh:e.sh:f.sh|' output.txt
+grep -q 'multiple: |abc.txt;def.txt|' output.txt
+grep -q 'multiple_pos: |a.sh;b.sh;c.sh;d.sh;e.sh;f.sh|' output.txt
 echo ">>> Test finished successfully"

@@ -135,12 +135,12 @@ case class IntegerArgument(
     """- name: --my_integer
       |  type: integer
       |  multiple: true
-      |  multiple_sep: ","
+      |  multiple_sep: ";"
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_integer=10:80:152", "bash", "Here's an example of how to use this:")
-  @default(":")
-  multiple_sep: String = ":",
+  @default(";")
+  multiple_sep: String = ";",
 
   dest: String = "par",
   `type`: String = "integer"

@@ -56,7 +56,7 @@ for (const key in par) {
 	if (Array.isArray(par[key]) && par[key].length == 0)
 		outFun(`${key}: |empty array|`)
 	else if (Array.isArray(par[key]))
-		outFun(`${key}: |${par[key].join(':')}|`)
+		outFun(`${key}: |${par[key].join(';')}|`)
 	else if (par[key] == undefined)
 		outFun(`${key}: ||`)
 	else

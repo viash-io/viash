@@ -111,12 +111,12 @@ case class BooleanArgument(
     """- name: --my_boolean
       |  type: boolean
       |  multiple: true
-      |  multiple_sep: ","
+      |  multiple_sep: ";"
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_boolean=true,true,false", "bash", "Here's an example of how to use this:")
-  @default(":")
-  multiple_sep: String = ":",
+  @default(";")
+  multiple_sep: String = ";",
 
   @undocumented
   dest: String = "par",
@@ -194,7 +194,7 @@ case class BooleanTrueArgument(
   @internalFunctionality
   val multiple: Boolean = false
   @internalFunctionality
-  val multiple_sep: String = ":"
+  val multiple_sep: String = ";"
   @internalFunctionality
   val example: OneOrMore[Boolean] = Nil
 
@@ -268,7 +268,7 @@ case class BooleanFalseArgument(
   @internalFunctionality
   val multiple: Boolean = false
   @internalFunctionality
-  val multiple_sep: String = ":"
+  val multiple_sep: String = ";"
   @internalFunctionality
   val example: OneOrMore[Boolean] = Nil
 

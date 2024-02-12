@@ -136,12 +136,12 @@ case class LongArgument(
     """- name: --my_long
       |  type: long
       |  multiple: true
-      |  multiple_sep: ","
+      |  multiple_sep: ";"
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_long=10:80:152", "bash", "Here's an example of how to use this:")
-  @default(":")
-  multiple_sep: String = ":",
+  @default(";")
+  multiple_sep: String = ";",
 
   dest: String = "par",
   `type`: String = "long"

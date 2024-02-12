@@ -78,7 +78,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
         "--whole_number", "3",
         "--str", "foo",
         "--optional_with_default", "foo",
-        "--multiple", "a:b:c",
+        "--multiple", "a;b;c",
         "--publish_dir", "output"
       ),
       cwd = tempFolFile
