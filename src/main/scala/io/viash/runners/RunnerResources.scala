@@ -17,7 +17,7 @@
 
 package io.viash.runners
 
-import io.viash.functionality.resources.{Resource, Script}
+import io.viash.config.resources.{Resource, Script}
 
 final case class RunnerResources(
   mainScript: Option[Script],

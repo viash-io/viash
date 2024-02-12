@@ -20,9 +20,8 @@ package io.viash.engines
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import io.viash.config.{Info => ConfigInfo}
-import io.viash.functionality.Functionality
-import io.viash.functionality.Author
+import io.viash.config.{BuildInfo => ConfigInfo}
+import io.viash.config.{Config, Author}
 
 import io.viash.engines.requirements.Requirements
 import io.viash.engines.requirements.DockerRequirements
@@ -32,6 +31,7 @@ import io.viash.helpers.Docker
 import io.viash.wrapper.BashWrapper
 
 import io.viash.schemas._
+import io.viash.config.BuildInfo
 
 @description(
   """Run a Viash component on a Docker backend engine.
@@ -143,21 +143,21 @@ final case class DockerEngine(
    * @return The Dockerfile as a string
    */
   def dockerFile(
-    functionality: Functionality,
+    config: Config,
     info: Option[ConfigInfo],
     testing: Boolean
   ): String = {
     /* Construct labels from metadata */
     
     // derive authors
-    val authors = functionality.authors match {
+    val authors = config.authors match {
       case Nil => None
       case aut: List[Author] => Some(aut.map(_.name).mkString(", "))
     }
     val opencontainers_image_authors = authors.map(aut => s"""org.opencontainers.image.authors="${Escaper(aut, quote = true)}"""").toList
 
     // define description
-    val imageDescription = s""""Companion container for running component ${functionality.namespace.map(_ + " ").getOrElse("")}${functionality.name}""""
+    val imageDescription = s""""Companion container for running component ${config.namespace.map(_ + " ").getOrElse("")}${config.name}""""
     val opencontainersImageDescription = List(s"org.opencontainers.image.description=$imageDescription")
 
     // define created
@@ -165,7 +165,7 @@ final case class DockerEngine(
     val opencontainersImageCreated = List(s"""org.opencontainers.image.created="$imageCreated"""")
 
     // define version
-    val imageVersion = functionality.version.map(v => v.toString())
+    val imageVersion = config.version.map(v => v.toString())
     val opencontainersImageVersion = imageVersion.map(v => s"""org.opencontainers.image.version="$v"""").toList
 
     // define image version
@@ -176,7 +176,7 @@ final case class DockerEngine(
     //   if no target_image_source is defined, translate
     //   git@github.com:viash-io/viash.git -> https://github.com/viash-io/viash.git
     val imageSource = target_image_source
-      .orElse(functionality.links.repository)
+      .orElse(config.links.repository)
       .orElse(info.flatMap(
         _.git_remote.map(
           _.replaceAll(":([^/])", "/$1")
@@ -217,15 +217,15 @@ final case class DockerEngine(
         |""".stripMargin           
   }
 
-  def getTargetRegistryWithFallback(functionality: Functionality): Option[String] = {
-    target_registry.orElse(functionality.links.docker_registry)
+  def getTargetRegistryWithFallback(config: Config): Option[String] = {
+    target_registry.orElse(config.links.docker_registry)
   }
 
-  def getTargetIdentifier(functionality: Functionality): String = {
+  def getTargetIdentifier(config: Config): String = {
     val targetImageInfo = Docker.getImageInfo(
-      functionality = Some(functionality),
+      config = Some(config),
       engineId = Some(id),
-      registry = getTargetRegistryWithFallback(functionality),
+      registry = getTargetRegistryWithFallback(config),
       organization = target_organization,
       name = target_image,
       tag = target_tag.map(_.toString),

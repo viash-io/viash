@@ -4,13 +4,14 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
 import io.viash.config.{Config, ConfigMeta}
-import io.viash.functionality.Functionality
-import io.viash.functionality.resources.BashScript
+import io.viash.functionality.Config
+import io.viash.config.resources.BashScript
 import io.viash.helpers.{IO, Exec, Logger}
 import io.viash.helpers.circe._
 
 import java.nio.file.{Files, Path, Paths}
 import io.viash.TestHelper
+import io.viash.config.dependencies.{LocalRepository, ViashhubRepositoryWithName, Dependency}
 
 class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
@@ -27,7 +28,7 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   // Write functionality as a config file
-  def writeTestConfig(path: Path, fun: Functionality): Unit = {
+  def writeTestConfig(path: Path, fun: Config): Unit = {
     val config = Config(functionality = fun)
     val json = ConfigMeta.configToCleanJson(config)
     val yaml = json.toFormattedString("yaml")

@@ -4,7 +4,7 @@ import org.scalatest.funsuite.AnyFunSuite
 
 import io.viash.helpers.Logger
 import io.viash.helpers.circe.Convert
-import io.viash.functionality.Functionality
+import io.viash.functionality.Config
 
 class MergingTest extends AnyFunSuite {
   Logger.UseColorOverride.value = Some(false)
@@ -16,7 +16,7 @@ class MergingTest extends AnyFunSuite {
         |""".stripMargin
 
     val json = Convert.textToJson(yaml, "")
-    val fun = Convert.jsonToClass[Functionality](json, "")
+    val fun = Convert.jsonToClass[Config](json, "")
 
     assert(fun.name == "foo")
     assert(fun.argument_groups.isEmpty)
@@ -33,7 +33,7 @@ class MergingTest extends AnyFunSuite {
         |""".stripMargin
 
     val json = Convert.textToJson(yaml, "")
-    val fun = Convert.jsonToClass[Functionality](json, "")
+    val fun = Convert.jsonToClass[Config](json, "")
 
     assert(fun.name == "foo")
     
@@ -58,7 +58,7 @@ class MergingTest extends AnyFunSuite {
         |""".stripMargin
 
     val json = Convert.textToJson(yaml, "")
-    val fun = Convert.jsonToClass[Functionality](json, "")
+    val fun = Convert.jsonToClass[Config](json, "")
 
     assert(fun.name == "foo")
     
@@ -86,7 +86,7 @@ class MergingTest extends AnyFunSuite {
         |""".stripMargin
 
     val json = Convert.textToJson(yaml, "")
-    val fun = Convert.jsonToClass[Functionality](json, "")
+    val fun = Convert.jsonToClass[Config](json, "")
 
     assert(fun.name == "foo")
     
@@ -118,7 +118,7 @@ class MergingTest extends AnyFunSuite {
         |""".stripMargin
 
     val json = Convert.textToJson(yaml, "")
-    val fun = Convert.jsonToClass[Functionality](json, "")
+    val fun = Convert.jsonToClass[Config](json, "")
 
     assert(fun.name == "foo")
     
@@ -150,7 +150,7 @@ class MergingTest extends AnyFunSuite {
         |""".stripMargin
 
     val json = Convert.textToJson(yaml, "")
-    val fun = Convert.jsonToClass[Functionality](json, "")
+    val fun = Convert.jsonToClass[Config](json, "")
 
     assert(fun.name == "foo")
     
@@ -179,7 +179,7 @@ class MergingTest extends AnyFunSuite {
         |""".stripMargin
 
     val json = Convert.textToJson(yaml, "")
-    val fun = Convert.jsonToClass[Functionality](json, "")
+    val fun = Convert.jsonToClass[Config](json, "")
 
     assert(fun.name == "foo")
     

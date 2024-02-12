@@ -18,12 +18,10 @@
 package io.viash.helpers
 
 import java.nio.file.{ Path, Paths }
-import io.viash.functionality.dependencies.Repository
 import io.viash.config.Config
 import io.viash.lenses.ConfigLenses._
-import io.viash.lenses.FunctionalityLenses._
 import io.viash.lenses.RepositoryLens._
-import io.viash.functionality.dependencies.GithubRepository
+import io.viash.config.dependencies.{Dependency, Repository, GithubRepository}
 import java.nio.file.Files
 import java.io.IOException
 import java.io.UncheckedIOException
@@ -31,8 +29,7 @@ import io.viash.helpers.{IO, Logging}
 import io.circe.Json
 import io.viash.config.Config._
 import io.viash.ViashNamespace
-import io.viash.functionality.dependencies.Dependency
-import io.viash.functionality.resources.NextflowScript
+import io.viash.config.resources.NextflowScript
 import io.viash.exceptions.MissingDependencyException
 import io.viash.helpers.circe.Convert
 
@@ -50,13 +47,13 @@ object DependencyResolver extends Logging {
   def modifyConfig(config: Config, runnerId: Option[String], packageRootDir: Option[Path], namespaceConfigs: List[Config] = Nil): Config = {
 
     // Check all fun.repositories have valid names
-    val repositories = config.functionality.repositories
+    val repositories = config.repositories
     require(repositories.isEmpty || repositories.groupBy(r => r.name).map{ case(k, l) => l.length }.max == 1, "Repository names should be unique")
     require(repositories.filter(r => r.name.isEmpty()).length == 0, "Repository names can't be empty")
 
 
     // Convert all fun.dependency.repository with sugar syntax to full repositories
-    val config1 = composedDependenciesLens.modify(_.map(d =>
+    val config1 = dependenciesLens.modify(_.map(d =>
       d.repository match {
         case Left(Repository(repo)) => d.copy(repository = Right(repo))
         case _ => d
@@ -64,34 +61,34 @@ object DependencyResolver extends Logging {
     ))(config)
 
     // Check all remaining fun.dependency.repository names (Left) refering to fun.repositories can be matched
-    val dependencyRepoNames = composedDependenciesLens.get(config1).flatMap(_.repository.left.toOption)
-    val definedRepoNames = composedRepositoriesLens.get(config1).map(_.name)
+    val dependencyRepoNames = dependenciesLens.get(config1).flatMap(_.repository.left.toOption)
+    val definedRepoNames = repositoriesLens.get(config1).map(_.name)
     dependencyRepoNames.foreach(name =>
       require(definedRepoNames.contains(name), s"Named dependency repositories should exist in the list of repositories. '$name' not found.")
     )
 
     // Match repositories defined in dependencies by name to the list of repositories, fill in repository in dependency
-    val config2 = composedDependenciesLens.modify(_
+    val config2 = dependenciesLens.modify(_
       .map(d => 
         d.repository match {
-          case Left(name) => d.copy(repository = Right(composedRepositoriesLens.get(config1).find(r => r.name == name).get))
+          case Left(name) => d.copy(repository = Right(repositoriesLens.get(config1).find(r => r.name == name).get))
           case _ => d
         }
       )
       )(config1)
 
     // get caches and store in repository classes
-    val config3 = composedDependenciesLens.modify(_
+    val config3 = dependenciesLens.modify(_
       .map{d =>
         val repo = d.repository.toOption.get
-        val configDir = Paths.get(config2.info.get.config).getParent()
+        val configDir = Paths.get(config2.build_info.get.config).getParent()
         val localRepoPath = Repository.cache(repo, configDir, packageRootDir)
         d.copy(repository = Right(localRepoPath))
       }
       )(config2)
 
     // find the referenced config in the locally cached repository
-    val config4 = composedDependenciesLens.modify(_
+    val config4 = dependenciesLens.modify(_
       .map{dep =>
         val repo = dep.workRepository.get
 
@@ -110,7 +107,7 @@ object DependencyResolver extends Logging {
       )(config3)
 
     // Check if all dependencies were found
-    val missingDependencies = composedDependenciesLens.get(config4).filter(d => d.foundConfigPath.isEmpty || d.configInfo.isEmpty)
+    val missingDependencies = dependenciesLens.get(config4).filter(d => d.foundConfigPath.isEmpty || d.configInfo.isEmpty)
     if (missingDependencies.nonEmpty) {
       throw new MissingDependencyException(missingDependencies)
     }
@@ -119,7 +116,7 @@ object DependencyResolver extends Logging {
   }
 
   def copyDependencies(config: Config, output: String, runnerId: String): Config = {
-    composedDependenciesLens.modify(_.map(dep => {
+    dependenciesLens.modify(_.map(dep => {
 
       if (dep.isLocalDependency) {
         // Dependency solving will be done by building the component and dependencies of that component will be handled there.
@@ -150,23 +147,23 @@ object DependencyResolver extends Logging {
   def findLocalConfig(targetDir: String, namespaceConfigs: List[Config], name: String, runnerId: Option[String]): Option[(String, Map[String, String])] = {
 
     val config = namespaceConfigs.filter{ c => 
-        val fullName = c.functionality.namespace.fold("")(n => n + "/") + c.functionality.name
+        val fullName = c.namespace.fold("")(n => n + "/") + c.name
         fullName == name
       }
       .headOption
 
     config.map{ c =>
-      val path = c.info.get.config
+      val path = c.build_info.get.config
       // fill in the location of the executable where it will be located
       // TODO: it would be better if this was already filled in somewhere else
       val executable = runnerId.map{ rid =>
           val executableName = rid match {
             case "nextflow" => "main.nf"
-            case _ => c.functionality.name
+            case _ => c.name
           }
-          Paths.get(ViashNamespace.targetOutputPath("", rid, c.functionality.namespace, c.functionality.name), executableName).toString()
+          Paths.get(ViashNamespace.targetOutputPath("", rid, c.namespace, c.name), executableName).toString()
       }
-      val info = c.info.get.copy(
+      val info = c.build_info.get.copy(
         executable = executable
       )
       // Convert case class to map, do some extra conversions of Options while we're at it
@@ -177,8 +174,8 @@ object DependencyResolver extends Logging {
         }.toMap
       // Add the functionality name and namespace to it
       val map2 = Map(
-        ("functionalityName" -> c.functionality.name),
-        ("functionalityNamespace" -> c.functionality.namespace.getOrElse(""))
+        ("functionalityName" -> c.name),
+        ("functionalityNamespace" -> c.namespace.getOrElse(""))
       )
       (path, map ++ map2)
     }
@@ -304,7 +301,7 @@ object DependencyResolver extends Logging {
   // Get the runner to be used for dependencies. If the main script is a Nextflow script, use 'nextflow', otherwise use 'native'.
   // Exception is when there is no runner set for the config, then we must return 'None' too.
   def getDependencyRunnerId(config: Config, runner: Option[String]): Option[String] = {
-    (config.functionality.mainScript, runner) match {
+    (config.mainScript, runner) match {
       case (_, None) => None
       case (None, _) => None
       case (Some(n: NextflowScript), _) => Some("nextflow")

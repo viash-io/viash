@@ -26,18 +26,23 @@ import io.viash.functionality._
 import io.viash.runners._
 import io.viash.engines._
 import io.viash.platforms._
-import io.viash.functionality.arguments._
 import io.circe.Json
 import monocle.function.Cons
 import io.viash.config.Config
-import io.viash.config.Info
-import io.viash.functionality.resources._
+import io.viash.config.BuildInfo
 import io.viash.packageConfig.PackageConfig
 import io.viash.helpers._
 import scala.collection.immutable.ListMap
-import io.viash.functionality.dependencies._
 import io.viash.runners.nextflow.{NextflowConfig, NextflowAuto, NextflowDirectives}
 import io.viash.engines.requirements._
+import io.viash.config.arguments.{Argument, StringArgument, BooleanArgument, BooleanTrueArgument, IntegerArgument, LongArgument, BooleanFalseArgument, DoubleArgument, FileArgument}
+import io.viash.config.dependencies.{GithubRepository, GithubRepositoryWithName, LocalRepository, RepositoryWithName, ViashhubRepository, Dependency, LocalRepositoryWithName, GitRepositoryWithName, GitRepository, Repository, ViashhubRepositoryWithName}
+import io.viash.config.resources.{JavaScriptScript, CSharpScript, Resource, Executable, ScalaScript, NextflowScript, PlainFile, BashScript, PythonScript, RScript}
+import io.viash.config.ArgumentGroup
+import io.viash.config.Author
+import io.viash.config.ComputationalRequirements
+import io.viash.config.Links
+import io.viash.config.References
 
 final case class CollectedSchemas (
   config: Map[String, List[ParameterSchema]],
@@ -118,10 +123,10 @@ object CollectedSchemas {
   lazy val schemaClasses = List(
     getMembers[Config](),
     getMembers[PackageConfig](),
-    getMembers[Info](),
+    getMembers[BuildInfo](),
     getMembers[SysEnvTrait](),
 
-    getMembers[Functionality](),
+    getMembers[Config](),
     getMembers[Author](),
     getMembers[ComputationalRequirements](),
     getMembers[ArgumentGroup](),

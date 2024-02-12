@@ -18,8 +18,8 @@
 package io.viash.lenses
 
 import monocle.PLens
-import io.viash.functionality.dependencies.Repository
-import io.viash.functionality.dependencies.RepositoryWithName
+import io.viash.config.dependencies.Repository
+import io.viash.config.dependencies.RepositoryWithName
 
 object RepositoryLens {
   // val nameLens = PLens[RepositoryWithName, RepositoryWithName, String, String](r => r.name)(s => r => r.copyRepo(name = s))

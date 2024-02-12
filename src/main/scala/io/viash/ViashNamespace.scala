@@ -80,8 +80,8 @@ object ViashNamespace extends Logging {
         case conf if conf.status.isDefined => config
         case ac if !ac.validForBuild => throw new RuntimeException("This should not occur.")
         case ac =>
-          val funName = ac.config.functionality.name
-          val ns = ac.config.functionality.namespace
+          val funName = ac.config.name
+          val ns = ac.config.namespace
           val runnerId = ac.runner.get.id
           // val engineId = ac.platform.get.id
           val out = 
@@ -175,8 +175,8 @@ object ViashNamespace extends Logging {
           case ac if !ac.validForBuild => throw new RuntimeException("This should not occur.")
           case ac =>
             // get attributes
-            val namespace = ac.config.functionality.namespace.getOrElse("")
-            val funName = ac.config.functionality.name
+            val namespace = ac.config.namespace.getOrElse("")
+            val funName = ac.config.name
             val runnerName = ac.runner.get.id
             val engineName = ac.engines.head.id
 
@@ -301,7 +301,7 @@ object ViashNamespace extends Logging {
         case list => list.map(Some(_))
       }
       engineOptionList.map(eo => {
-        NsExecData(ac.config.info.get.config, ac.config, ac.runner, eo)
+        NsExecData(ac.config.build_info.get.config, ac.config, ac.runner, eo)
       })
     }
 

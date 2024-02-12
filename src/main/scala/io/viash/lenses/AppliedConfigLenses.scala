@@ -18,25 +18,23 @@
 package io.viash.lenses
 
 import io.viash.config.{AppliedConfig, Config}
-import io.viash.functionality.Functionality
 import monocle.Lens
 import monocle.macros.GenLens
 
 import ConfigLenses._
-import FunctionalityLenses._
 
 object AppliedConfigLenses {
   val configLens = GenLens[AppliedConfig](_.config)
   val appliedEnginesLens = GenLens[AppliedConfig](_.engines)
   val appliedRunnerLens = GenLens[AppliedConfig](_.runner)
   
-  val functionalityLens = configLens ^|-> ConfigLenses.functionalityLens
   val enginesLens = configLens ^|-> ConfigLenses.enginesLens
   val runnersLens = configLens ^|-> ConfigLenses.runnersLens
 
-  val functionalityNameLens = configLens ^|-> ConfigLenses.composedNameLens
-  val functionalityVersionLens = configLens ^|-> ConfigLenses.composedVersionLens
-  val functionalityRequirementsLens = configLens ^|-> ConfigLenses.composedRequirementsLens
-  val functionalityDependenciesLens = configLens ^|-> ConfigLenses.composedDependenciesLens
-  val functionalityRepositoriesLens = configLens ^|-> ConfigLenses.composedRepositoriesLens
+  val configNameLens = configLens ^|-> ConfigLenses.nameLens
+  val configVersionLens = configLens ^|-> ConfigLenses.versionLens
+  val configRequirementsLens = configLens ^|-> ConfigLenses.requirementsLens
+  val configDependenciesLens = configLens ^|-> ConfigLenses.dependenciesLens
+  val configRepositoriesLens = configLens ^|-> ConfigLenses.repositoriesLens
+  val configResourcesLens = configLens ^|-> ConfigLenses.resourcesLens
 }

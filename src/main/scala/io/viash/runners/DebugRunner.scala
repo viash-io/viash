@@ -18,7 +18,7 @@
 package io.viash.runners
 
 import io.viash.config.Config
-import io.viash.functionality.resources.BashScript
+import io.viash.config.resources.BashScript
 import io.viash.wrapper.BashWrapper
 import io.viash.runners.{Runner, RunnerResources}
 
@@ -29,8 +29,7 @@ case class DebugRunner(
   path: String
 ) extends Runner {
   def generateRunner(config: Config, testing: Boolean): RunnerResources = {
-    val functionality = config.functionality
-    if (functionality.mainScript.isEmpty) {
+    if (config.mainScript.isEmpty) {
       throw new RuntimeException("Can't generate a debug runner when there is no script.")
     }
     // create new bash script
@@ -38,12 +37,11 @@ case class DebugRunner(
     // TODO: enforce this behaviour using a `disableChecks = true` argument?
     val scriptSrc = BashWrapper.wrapScript(
       executor = "bash",
-      functionality = functionality,
+      config = config,
       debugPath = Some(path),
-      config = config
     )
     val bashScript = BashScript(
-      dest = Some(functionality.name),
+      dest = Some(config.name),
       text = Some(scriptSrc)
     )
     RunnerResources(

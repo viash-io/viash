@@ -2,6 +2,7 @@ package io.viash.functionality.resources
 
 import org.scalatest.funsuite.AnyFunSuite
 import io.viash.helpers.Logger
+import io.viash.config.resources.{JavaScriptScript, CSharpScript, Executable, ScalaScript, NextflowScript, BashScript, PythonScript, RScript}
 
 class CommandsTest extends AnyFunSuite {
   Logger.UseColorOverride.value = Some(false)

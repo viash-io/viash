@@ -17,7 +17,7 @@
 
 package io.viash.lenses
 
-import io.viash.functionality.Links
+import io.viash.config.Links
 
 import monocle.Lens
 import monocle.macros.GenLens

@@ -43,24 +43,22 @@ object ViashConfig extends Logging{
   }
 
   def inject(config: Config): Unit = {
-    val fun = config.functionality
-
     // check if config has a main script
-    if (fun.mainScript.isEmpty) {
+    if (config.mainScript.isEmpty) {
       infoOut("Could not find a main script in the Viash config.")
       throw new ExitException(1)
     }
     // check if we can read code
-    if (fun.mainScript.get.read.isEmpty) {
+    if (config.mainScript.get.read.isEmpty) {
       infoOut("Could not read main script in the Viash config.")
       throw new ExitException(1)
     }
     // check if main script has a path
-    if (fun.mainScript.get.uri.isEmpty) {
+    if (config.mainScript.get.uri.isEmpty) {
       infoOut("Main script should have a path.")
       throw new ExitException(1)
     }
-    val uri = fun.mainScript.get.uri.get
+    val uri = config.mainScript.get.uri.get
 
     // check if main script is a local file
     if (uri.getScheme != "file") {
@@ -74,14 +72,14 @@ object ViashConfig extends Logging{
     val resources = debugRunner.generateRunner(config, testing = false)
 
     // create temporary directory
-    val dir = IO.makeTemp("viash_inject_" + config.functionality.name)
+    val dir = IO.makeTemp("viash_inject_" + config.name)
 
     // build regular executable
     Files.createDirectories(dir)
     IO.writeResources(resources.resources, dir)
 
     // run command, collect output
-    val executable = Paths.get(dir.toString, fun.name).toString
+    val executable = Paths.get(dir.toString, config.name).toString
     val exitValue = Process(Seq(executable), cwd = dir.toFile).!
 
     // TODO: remove tempdir

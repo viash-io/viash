@@ -27,7 +27,7 @@ import io.viash.helpers.Escaper
 import io.viash.helpers.Bash
 import io.viash.helpers.DockerImageInfo
 import io.circe.{Printer => JsonPrinter, Json, JsonObject}
-import io.viash.functionality.dependencies.Dependency
+import io.viash.config.dependencies.Dependency
 import java.nio.file.Path
 import java.nio.file.Paths
 import io.viash.ViashNamespace
@@ -58,10 +58,10 @@ object NextflowHelper {
   }
 
   def generateScriptStr(config: Config): String = {
-    val res = config.functionality.mainScript.get
+    val res = config.mainScript.get
 
     // todo: also include the bashwrapper checks
-    val argsAndMeta = config.functionality.getArgumentLikesGroupedByDest(
+    val argsAndMeta = config.getArgumentLikesGroupedByDest(
       includeMeta = true,
       filterInputs = true
     )
@@ -170,7 +170,7 @@ object NextflowHelper {
   }
 
   def generateHeader(config: Config): String = {
-    Helper.generateScriptHeader(config.functionality)
+    Helper.generateScriptHeader(config)
       .map(h => Escaper(h, newline = true))
       .mkString("// ", "\n// ", "")
   }
@@ -222,9 +222,9 @@ object NextflowHelper {
   def renderDependencies(config: Config): String = {
     // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
     // The name of the runner doesn't really matter here as it is just used to generate the relative location, and we don't have access to it anyway.
-    val thisPath = Paths.get(ViashNamespace.targetOutputPath("", "invalid_runner_name", config.functionality.namespace, config.functionality.name))
+    val thisPath = Paths.get(ViashNamespace.targetOutputPath("", "invalid_runner_name", config.namespace, config.name))
 
-    val depStrs = config.functionality.dependencies.map{ dep =>
+    val depStrs = config.dependencies.map{ dep =>
       NextflowHelper.renderInclude(dep, thisPath)
     }
 

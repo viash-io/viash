@@ -18,9 +18,8 @@
 package io.viash.runners
 
 import io.viash.config.Config
-import io.viash.functionality._
-import io.viash.functionality.resources._
-import io.viash.functionality.arguments._
+import io.viash.config._
+import io.viash.config.arguments._
 import io.viash.helpers.{Docker, Bash, DockerImageInfo, Helper}
 import io.viash.helpers.circe._
 import io.circe.syntax._
@@ -30,6 +29,7 @@ import io.viash.helpers.Escaper
 import io.viash.runners.{Runner, RunnerResources}
 import io.viash.engines.DockerEngine
 import io.viash.runners.nextflow._
+import io.viash.config.resources.{Executable, NextflowScript, PlainFile}
 
 @description(
   """Run a Viash component on a Nextflow backend engine.
@@ -115,7 +115,7 @@ final case class NextflowRunner(
     )
     val nextflowConfigFile = PlainFile(
       dest = Some("nextflow.config"),
-      text = Some(renderNextflowConfig(config.functionality, condir))
+      text = Some(renderNextflowConfig(config, condir))
     )
     // TODO: create and write dockerfile when #518 is merged into main
     // val dockerfile = PlainFile(
@@ -124,7 +124,7 @@ final case class NextflowRunner(
     // )
 
     // remove main
-    val otherResources = config.functionality.additionalResources
+    val otherResources = config.additionalResources
 
     RunnerResources(
       None,
@@ -137,9 +137,9 @@ final case class NextflowRunner(
     plat match {
       case Some(p: DockerEngine) => 
         Some(Docker.getImageInfo(
-          functionality = Some(config.functionality),
+          config = Some(config),
           engineId = Some(p.id),
-          registry = p.getTargetRegistryWithFallback(config.functionality),
+          registry = p.getTargetRegistryWithFallback(config),
           organization = p.target_organization,
           name = p.target_image,
           tag = p.target_tag.map(_.toString),
@@ -152,34 +152,34 @@ final case class NextflowRunner(
     }
   }
 
-  def renderNextflowConfig(functionality: Functionality, containerDirective: Option[DockerImageInfo]): String = {
-    val versStr = functionality.version.map(ver => s"\n  version = '$ver'").getOrElse("")
+  def renderNextflowConfig(config: Config, containerDirective: Option[DockerImageInfo]): String = {
+    val versStr = config.version.map(ver => s"\n  version = '$ver'").getOrElse("")
 
-    val descStr = functionality.description.map{des => 
+    val descStr = config.description.map{des => 
       val escDes = escapeSingleQuotedString(des)
       s"\n  description = '$escDes'"
     }.getOrElse("")
 
     val authStr = 
-      if (functionality.authors.isEmpty) {
+      if (config.authors.isEmpty) {
         "" 
       } else {
-        val escAut = escapeSingleQuotedString(functionality.authors.map(_.name).mkString(", "))
+        val escAut = escapeSingleQuotedString(config.authors.map(_.name).mkString(", "))
         s"\n  author = '$escAut'"
       }
 
     // TODO: define profiles
     val profileStr = 
-      if (containerDirective.isDefined || functionality.mainScript.map(_.`type`) == Some(NextflowScript.`type`)) {
+      if (containerDirective.isDefined || config.mainScript.map(_.`type`) == Some(NextflowScript.`type`)) {
         "\n\n" + NextflowHelper.profilesHelper
       } else {
         ""
       }
 
-    val processLabels = config.labels.map{ case (k, v) => s"withLabel: $k { $v }"}
-    val inlineScript = config.script.toList
+    val processLabels = this.config.labels.map{ case (k, v) => s"withLabel: $k { $v }"}
+    val inlineScript = this.config.script.toList
 
-    val name = f"${functionality.namespace.map(_ + "/").getOrElse("")}${functionality.name}"
+    val name = f"${config.namespace.map(_ + "/").getOrElse("")}${config.name}"
 
     s"""manifest {
     |  name = '${name}'
@@ -197,11 +197,11 @@ final case class NextflowRunner(
 
   // interpreted from BashWrapper
   def renderMainNf(config: Config, containerDirective: Option[DockerImageInfo]): String = {
-    if (config.functionality.mainScript.isEmpty) {
+    if (config.mainScript.isEmpty) {
       throw new RuntimeException("No main script defined")
     }
 
-    val mainScript = config.functionality.mainScript.get
+    val mainScript = config.mainScript.get
 
     if (mainScript.isInstanceOf[Executable]) {
       throw new NotImplementedError(
@@ -216,9 +216,9 @@ final case class NextflowRunner(
       // if a docker engine is defined but the directives.container isn't, use the image of the docker engine as default
       container = directives.container orElse containerDirective.map(cd => Left(cd.toMap)),
       // is memory requirements are defined but directives.memory isn't, use that instead
-      memory = directives.memory orElse config.functionality.requirements.memoryAsBytes.map(_.toString + " B"),
+      memory = directives.memory orElse config.requirements.memoryAsBytes.map(_.toString + " B"),
       // is cpu requirements are defined but directives.cpus isn't, use that instead
-      cpus = directives.cpus orElse config.functionality.requirements.cpus.map(np => Left(np))
+      cpus = directives.cpus orElse config.requirements.cpus.map(np => Left(np))
     )
 
     val innerWorkflowFactory = mainScript match {

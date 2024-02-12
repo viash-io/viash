@@ -18,7 +18,6 @@
 package io.viash.runners
 
 import io.viash.schemas._
-import io.viash.functionality.Functionality
 import io.viash.config.Config
 
 @description(

@@ -28,7 +28,7 @@ class FunctionalityTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(fun.description == None)
     assert(fun.info == Json.Null)
 
-    val funParsed = fun.asJson.as[Functionality].fold(throw _, a => a)
+    val funParsed = fun.asJson.as[Config].fold(throw _, a => a)
     assert(funParsed == fun)
   }
 
@@ -43,7 +43,7 @@ class FunctionalityTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(fun.description == Some("foo"))
     assert(fun.info == infoJson)
     
-    val funParsed = fun.asJson.as[Functionality].fold(throw _, a => a)
+    val funParsed = fun.asJson.as[Config].fold(throw _, a => a)
     assert(funParsed == fun)
   }
 

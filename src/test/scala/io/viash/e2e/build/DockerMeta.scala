@@ -11,7 +11,7 @@ import io.viash.config.Config
 
 import scala.io.Source
 import cats.instances.function
-import io.viash.functionality.resources.PlainFile
+import io.viash.config.resources.PlainFile
 
 class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)

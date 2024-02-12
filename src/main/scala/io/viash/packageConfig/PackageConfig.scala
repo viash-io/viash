@@ -25,8 +25,8 @@ import io.viash.helpers.IO
 import io.viash.helpers.circe._
 import io.circe.Json
 import java.net.URI
-import io.viash.functionality.dependencies.RepositoryWithName
-import io.viash.functionality.{Author, Links, References}
+import io.viash.config.dependencies.RepositoryWithName
+import io.viash.config.{Author, Links, References}
 
 @description("A Viash package configuration file. It's name should be `_viash.yaml`.")
 @example(

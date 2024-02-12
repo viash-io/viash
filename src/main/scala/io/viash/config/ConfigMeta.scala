@@ -21,11 +21,11 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import io.circe.yaml.Printer
 
-import io.viash.functionality.resources.PlainFile
+import io.viash.config.resources.PlainFile
 import io.viash.helpers.circe._
 import io.circe.Json
 import io.circe.JsonObject
-import io.viash.functionality.resources.NextflowScript
+import io.viash.config.resources.NextflowScript
 import io.viash.helpers.IO
 
 object ConfigMeta {
@@ -44,7 +44,7 @@ object ConfigMeta {
     // relativize paths in the info field
     val rootDir = config.package_config.flatMap(_.rootDir)
     val anonymizedConfig = config.copy(
-      info = config.info.map(info => info.copy(
+      build_info = config.build_info.map(info => info.copy(
         config = IO.anonymizePath(rootDir, info.config),
         output = info.output.map(IO.anonymizePath(rootDir, _)),
         executable = info.executable.map(IO.anonymizePath(rootDir, _))
@@ -67,33 +67,31 @@ object ConfigMeta {
 
   def toMetaFile(config: Config, buildDir: Option[Path]): PlainFile = {
     // get resources
-    val placeholderMap = config.functionality.resources.filter(_.text.isDefined).map{ res =>
+    val placeholderMap = config.resources.filter(_.text.isDefined).map{ res =>
       (res, "VIASH_PLACEHOLDER~" + res.filename + "~")
     }.toMap
 
-    val executableName = config.functionality.mainScript match {
+    val executableName = config.mainScript match {
       case Some(n: NextflowScript) => "main.nf"
-      case _ => config.functionality.name
+      case _ => config.name
     }
 
     // change the config object before writing to yaml:
     // * substitute 'text' fields in resources with placeholders
     // * add more info variables
     val toWriteConfig = config.copy(
-      functionality = config.functionality.copy(
-        resources = config.functionality.resources.map{ res =>
-          if (res.text.isDefined) {
-            val textVal = Some(placeholderMap(res))
-            res.copyResource(text = textVal, parent = None)
-          } else {
-            res.copyResource(parent = None)
-          }
-        },
-        test_resources = config.functionality.test_resources.map { res =>
+      resources = config.resources.map{ res =>
+        if (res.text.isDefined) {
+          val textVal = Some(placeholderMap(res))
+          res.copyResource(text = textVal, parent = None)
+        } else {
           res.copyResource(parent = None)
         }
-      ),
-      info = config.info.map(_.copy(
+      },
+      test_resources = config.test_resources.map { res =>
+        res.copyResource(parent = None)
+      },
+      build_info = config.build_info.map(_.copy(
         output = buildDir.map(_.toString),
         executable = buildDir.map(d => Paths.get(d.toString, executableName).toString)
       ))

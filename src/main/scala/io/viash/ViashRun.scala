@@ -20,7 +20,7 @@ package io.viash
 import java.nio.file.Paths
 
 import io.viash.config._
-import io.viash.functionality.arguments.{FileArgument, Output}
+import io.viash.config.arguments.{FileArgument, Output}
 import io.viash.helpers.{IO, Logging}
 import io.viash.helpers.data_structures._
 
@@ -36,7 +36,7 @@ object ViashRun extends Logging {
     memory: Option[String]
   ): Int = {
     val resources = appliedConfig.generateRunner(false)
-    val dir = IO.makeTemp("viash_" + appliedConfig.config.functionality.name)
+    val dir = IO.makeTemp("viash_" + appliedConfig.config.name)
 
     // execute command, print everything to console
     var code = -1
@@ -49,7 +49,7 @@ object ViashRun extends Logging {
 
       // determine command
       val cmd =
-        Array(Paths.get(dir.toString, appliedConfig.config.functionality.name).toString) ++ 
+        Array(Paths.get(dir.toString, appliedConfig.config.name).toString) ++ 
         args ++ 
         Array(cpus.map("---cpus=" + _), memory.map("---memory="+_)).flatMap(a => a)
 

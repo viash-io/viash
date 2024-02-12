@@ -64,7 +64,7 @@ object NsExecData {
   def apply(configPath: String, config: Config, runner: Option[Runner], engine: Option[Engine]): NsExecData = {
     val configPath_ = Paths.get(configPath)
     val dirPath = configPath_.getParent()
-    val mainScript = config.functionality.mainScript.flatMap(s => s.path).map(dirPath.resolve(_))
+    val mainScript = config.mainScript.flatMap(s => s.path).map(dirPath.resolve(_))
     apply(
       configFullPath = configPath,
       absoluteConfigFullPath = configPath_.toAbsolutePath.toString,
@@ -72,12 +72,12 @@ object NsExecData {
       absoluteDir = dirPath.toAbsolutePath.toString,
       mainScript = mainScript.map(_.toString).getOrElse(""),
       absoluteMainScript = mainScript.map(_.toAbsolutePath.toString).getOrElse(""),
-      functionalityName = config.functionality.name,
-      namespace = config.functionality.namespace,
+      functionalityName = config.name,
+      namespace = config.namespace,
       runnerId = runner.map(_.id),
       engineId = engine.map(_.id),
-      output = config.info.flatMap(_.output),
-      absoluteOutput = config.info.flatMap(info => info.output.map(Paths.get(_).toAbsolutePath.toString))
+      output = config.build_info.flatMap(_.output),
+      absoluteOutput = config.build_info.flatMap(info => info.output.map(Paths.get(_).toAbsolutePath.toString))
     )
   }
 

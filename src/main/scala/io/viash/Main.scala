@@ -33,7 +33,6 @@ import org.rogach.scallop._
 import io.viash.helpers.LoggerLevel
 import io.viash.runners.Runner
 import io.viash.config.AppliedConfig
-import io.viash.functionality.Functionality
 import io.viash.engines.Engine
 
 object Main extends Logging {
@@ -403,14 +402,14 @@ object Main extends Logging {
         Some(ViashNamespace.targetOutputPath(
           targetDir = td,
           runnerId = ex.id,
-          namespace = appliedConfig.config.functionality.namespace,
-          functionalityName = appliedConfig.config.functionality.name
+          namespace = appliedConfig.config.namespace,
+          functionalityName = appliedConfig.config.name
         ))
       case _ => None
     }
 
     // add runner and engine ids to the info object
-    val configInfo = appliedConfig.config.info.map{_.copy(
+    val configInfo = appliedConfig.config.build_info.map{_.copy(
       runner = runner.map(_.id),
       engine = Some(engines.map(_.id).mkString("|")),
       output = outputPath
@@ -419,7 +418,7 @@ object Main extends Logging {
     // update info, and add runner and engine to the config
     appliedConfig.copy(
       config = appliedConfig.config.copy(
-        info = configInfo
+        build_info = configInfo
       ),
       runner = runner,
       engines = engines,
@@ -535,7 +534,7 @@ object Main extends Logging {
         }.fold(
           e => e match {
             case de: AbstractDependencyException =>
-              error(s"Config \"${appliedConfig.config.functionality.name}\": ${e.getMessage}")
+              error(s"Config \"${appliedConfig.config.name}\": ${e.getMessage}")
               appliedConfig.setStatus(DependencyError)
             case _ => throw e
           },

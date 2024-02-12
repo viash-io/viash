@@ -20,15 +20,15 @@ package io.viash.runners
 
 
 import io.viash.config.Config
-import io.viash.config.{Info => ConfigInfo}
+import io.viash.config.{BuildInfo => ConfigInfo}
 
-import io.viash.functionality.Functionality
+import io.viash.config.Config
 
 // todo: remove
-import io.viash.functionality.resources.Executable
-import io.viash.functionality.arguments.FileArgument
-import io.viash.functionality.arguments.Output
-import io.viash.functionality.resources.BashScript
+import io.viash.config.resources.Executable
+import io.viash.config.arguments.FileArgument
+import io.viash.config.arguments.Output
+import io.viash.config.resources.BashScript
 
 import io.viash.engines._
 
@@ -44,6 +44,7 @@ import io.viash.engines.DockerEngine
 import io.viash.engines.NativeEngine
 import io.viash.runners.executable._
 import io.viash.engines.requirements.DockerRequirements
+import io.viash.config.BuildInfo
 
 @description(
   """Run code as an executable.
@@ -125,10 +126,9 @@ final case class ExecutableRunner(
 
     // create new bash script
     val mainScript = Some(BashScript(
-      dest = Some(config.functionality.name),
+      dest = Some(config.name),
       text = Some(BashWrapper.wrapScript(
         executor = "eval $VIASH_CMD",
-        functionality = config.functionality,
         mods = mods,
         config = config
       ))
@@ -137,7 +137,7 @@ final case class ExecutableRunner(
     // return output
     RunnerResources(
       mainScript = mainScript,
-      additionalResources = config.functionality.additionalResources
+      additionalResources = config.additionalResources
     )
   }
 
@@ -204,7 +204,7 @@ final case class ExecutableRunner(
     }
 
     // eval already present, so an executable runs with `eval x` while scripts run with `eval bash x`
-    val cmd = config.functionality.mainScript match {
+    val cmd = config.mainScript match {
       case Some(_: Executable) => ""
       case _ => "bash"
     }
@@ -239,19 +239,19 @@ final case class ExecutableRunner(
     }
     
     // generate docker container setup code
-    val dmSetup = dockerGenerateSetup(config.functionality, config.info, testing, engines)
+    val dmSetup = dockerGenerateSetup(config, config.build_info, testing, engines)
 
     // generate automount code
-    val dmVol = dockerDetectMounts(config.functionality)
+    val dmVol = dockerDetectMounts(config)
 
     // add ---chown flag
-    val dmChown = dockerAddChown(config.functionality)
+    val dmChown = dockerAddChown(config)
 
     // process cpus and memory_b
     val dmReqs = dockerAddComputationalRequirements()
 
     // generate docker command
-    val dmCmd = dockerGenerateCommand(config.functionality)
+    val dmCmd = dockerGenerateCommand(config)
 
     // compile bashwrappermods for Docker
     dmSetup ++ dmVol ++ dmChown ++ dmReqs ++ dmCmd
@@ -264,21 +264,21 @@ final case class ExecutableRunner(
   }
 
   private def dockerGenerateSetup(
-    functionality: Functionality,
+    config: Config,
     info: Option[ConfigInfo],
     testing: Boolean,
     engines: List[DockerEngine]
   ): BashWrapperMods = {
     
     // get list of all the commands that should be available in the container
-    val commandsToCheck = functionality.requirements.commands ::: List("bash")
+    val commandsToCheck = config.requirements.commands ::: List("bash")
     val commandsToCheckStr = commandsToCheck.mkString("'", "' '", "'")
 
     val dockerFiles = engines.map { engine =>
       s"""
         |  if [[ "$$engine_id" == "${engine.id}" ]]; then
         |    cat << 'VIASHDOCKER'
-        |${engine.dockerFile(functionality, info, testing)}
+        |${engine.dockerFile(config, info, testing)}
         |VIASHDOCKER
         |  fi""".stripMargin
     }
@@ -342,7 +342,7 @@ final case class ExecutableRunner(
 
     val setDockerImageId = engines.map { engine => 
       s"""[[ "$$VIASH_ENGINE_ID" == '${engine.id}' ]]; then
-        |    VIASH_DOCKER_IMAGE_ID='${engine.getTargetIdentifier(functionality)}'""".stripMargin  
+        |    VIASH_DOCKER_IMAGE_ID='${engine.getTargetIdentifier(config)}'""".stripMargin  
     }.mkString("if ", "\n  elif ", "\n  fi")
 
     val postParse =
@@ -388,8 +388,8 @@ final case class ExecutableRunner(
 
   
 
-  private def dockerDetectMounts(functionality: Functionality): BashWrapperMods = {
-    val args = functionality.getArgumentLikes(includeMeta = true)
+  private def dockerDetectMounts(config: Config): BashWrapperMods = {
+    val args = config.getArgumentLikes(includeMeta = true)
     
     val detectMounts = args.flatMap {
       case arg: FileArgument if arg.multiple =>
@@ -489,7 +489,7 @@ final case class ExecutableRunner(
 
 
 
-  private def dockerAddChown(functionality: Functionality): BashWrapperMods = {
+  private def dockerAddChown(config: Config): BashWrapperMods = {
     // TODO: how are mounts added to this section?
     val preRun =
       s"""
@@ -533,10 +533,10 @@ final case class ExecutableRunner(
   }
 
 
-  private def dockerGenerateCommand(functionality: Functionality): BashWrapperMods = {
+  private def dockerGenerateCommand(config: Config): BashWrapperMods = {
 
     // collect runtime docker arguments
-    val entrypointStr = functionality.mainScript match {
+    val entrypointStr = config.mainScript match {
       case Some(_: Executable) => " --entrypoint=''"
       case _ => " --entrypoint=bash"
     }
