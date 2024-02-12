@@ -154,8 +154,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testOutput.stdout, false)
   }
 
-  test("Check config file without 'functionality' specified") {
-    val newConfigFilePath = configDeriver.derive("""del()""", "missing_functionality")
+  test("Check config file without 'name' specified") {
+    val newConfigFilePath = configDeriver.derive("""del()""", "missing_name")
     val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
       "--engine", "native",

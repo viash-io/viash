@@ -17,7 +17,7 @@
 
 package io.viash
 
-import io.circe.{Decoder, Encoder, Json, HCursor}
+import io.circe.{Decoder, Encoder, Json, HCursor, JsonObject}
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import io.viash.platforms.decodePlatform
@@ -158,7 +158,70 @@ package object config {
         conf3
       }
     }
-  }.validate(
+  }
+  .prepare {
+    // merge arguments and argument_groups into argument_groups
+    _.withFocus{ json =>
+      json.asObject match {
+        case None => json
+        case Some(jo) => 
+          val arguments = jo.apply("arguments")
+          val argument_groups = jo.apply("argument_groups")
+
+          val newJsonObject = (arguments, argument_groups) match {
+            case (None, _) => jo
+            case (Some(args), None) => 
+              jo.add("argument_groups", Json.fromValues(List(
+                Json.fromJsonObject(
+                  JsonObject(
+                    "name" -> Json.fromString("Arguments"),
+                    "arguments" -> args
+                  )
+                )
+              )))
+            case (Some(args), Some(arg_groups)) =>
+              // determine if we should prepend or append arguments to argument_groups
+              val prepend = jo.keys.find(s => s == "argument_groups" || s == "arguments") == Some("arguments")
+              def combinerSeq(a: Vector[Json], b: Seq[Json]) = if (prepend) b ++: a else a :++ b
+              def combiner(a: Vector[Json], b: Json) = if (prepend) b +: a else a :+ b
+
+              // get the argument group named 'Arguments' from arg_groups
+              val argumentsGroup = arg_groups.asArray.flatMap(_.find(_.asObject.exists(_.apply("name").exists(_ == Json.fromString("Arguments")))))
+              argumentsGroup match {
+                case None =>
+                  // no argument_group with name 'Argument' exists, so just add arguments as a new argument group
+                  jo.add("argument_groups", Json.fromValues(
+                    combiner(
+                      arg_groups.asArray.get,
+                      Json.fromJsonObject(
+                        JsonObject(
+                          "name" -> Json.fromString("Arguments"),
+                          "arguments" -> args
+                        )
+                      )
+                    )
+                  ))
+                case Some(ag) =>
+                  // argument_group with name 'Argument' exists, so add arguments to this argument group
+                  val newAg = ag.asObject.get.add("arguments",
+                    Json.fromValues(
+                      combinerSeq(
+                        ag.asObject.get.apply("arguments").get.asArray.get,
+                        args.asArray.get
+                      )
+                    )
+                  )
+                  jo.add("argument_groups", Json.fromValues(arg_groups.asArray.get.map{
+                    case ag if ag == argumentsGroup.get => Json.fromJsonObject(newAg)
+                    case ag => ag
+                  }))
+              }
+          }
+          Json.fromJsonObject(newJsonObject.remove("arguments"))
+      }
+    
+  }}
+  .validate(
     // Validate platforms only. Will get stripped in the next prepare step.
     (pred: HCursor) => {
       val platforms = pred.downField("platforms")

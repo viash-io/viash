@@ -1,4 +1,4 @@
-#' __merge__: [., ../common.yaml, ./common-runners.yaml]
+#' __merge__: [., ../common.yaml, ../common-runners.yaml]
 #' name: test_languages_r
 #' engines:
 #' - type: native
