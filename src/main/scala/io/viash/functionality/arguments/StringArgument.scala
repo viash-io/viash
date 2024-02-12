@@ -122,7 +122,7 @@ case class StringArgument(
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_string=Marc,Susan,Paul", "bash", "Here's an example of how to use this:")
-  @default(":")
+  @default(";")
   multiple_sep: String = ";",
 
   dest: String = "par",

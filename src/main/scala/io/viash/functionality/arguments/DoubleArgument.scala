@@ -129,7 +129,7 @@ case class DoubleArgument(
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_double=5.8,22.6,200.4", "bash", "Here's an example of how to use this:")
-  @default(":")
+  @default(";")
   multiple_sep: String = ";",
 
   dest: String = "par",

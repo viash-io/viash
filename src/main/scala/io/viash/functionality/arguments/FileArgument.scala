@@ -141,7 +141,7 @@ case class FileArgument(
       |""".stripMargin,
       "yaml")
   @exampleWithDescription("my_component --my_files=firstFile.csv,anotherFile.csv,yetAnother.csv", "bash", "Here's an example of how to use this:")
-  @default(":")
+  @default(";")
   multiple_sep: String = ";",
 
   dest: String = "par",
