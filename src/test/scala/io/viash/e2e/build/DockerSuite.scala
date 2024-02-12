@@ -93,7 +93,7 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
         "---memory", "1gb"
       )
     )
-    assert(cmdOut.exitValue == 0, "exit should be 0. stdout;\n" + cmdOut.output)
+    assert(cmdOut.exitValue == 0, "exit should be 0. stdout:\n" + cmdOut.output)
 
     assert(output.exists())
     assert(log.exists())

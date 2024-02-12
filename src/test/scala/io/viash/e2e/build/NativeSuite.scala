@@ -215,7 +215,7 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Test whether a config with a platform specified gives a deprecation warning") {
-    val newConfigFilePath = configDeriver.derive(""".platforms ;= [{ type: "native" }]""", "deprecated_platform")
+    val newConfigFilePath = configDeriver.derive(""".platforms := [{ type: "native" }]""", "deprecated_platform")
     val testOutput = TestHelper.testMain(
       "build",
       "-o", tempFolStr,
@@ -227,7 +227,7 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Test whether setting an internalFunctionality field throws an error") {
-    val newConfigFilePath = configDeriver.derive(""".functionality.argument_groups[.name == "First group"].arguments[.name == "input"].dest ;= "foo"""", "set_internal_functionality")
+    val newConfigFilePath = configDeriver.derive(""".functionality.argument_groups[.name == "First group"].arguments[.name == "input"].dest := "foo"""", "set_internal_functionality")
 
     val testOutput = TestHelper.testMainException[ConfigParserException](
       "build",
@@ -243,7 +243,7 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       "build",
       "-o", tempFolStr,
       configFile,
-      "-c", ".functionality.resources ;= []"
+      "-c", ".functionality.resources := []"
     )
 
     assert(testOutput.stderr.contains("Warning: no resources specified!"))
