@@ -31,7 +31,7 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
       "build",
       configFile,
       "--engine", "docker",
-      "--runner", "docker",
+      "--runner", "executable",
       "-o", temporaryFolder.toString,
     )
 

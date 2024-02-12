@@ -28,7 +28,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMain(
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       configFile
     )
 
@@ -44,7 +44,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       "test",
       configFile,
       "--engine", "native",
-      "--runner", "native"
+      "--runner", "executable"
     )
 
     assert(testOutput.stdout.contains("Running tests in temporary directory: "))
@@ -58,7 +58,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMain(
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       configFile,
       "-k", "false"
     )
@@ -76,7 +76,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMain(
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
@@ -92,7 +92,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMain(
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
@@ -108,7 +108,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
@@ -124,7 +124,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
@@ -143,7 +143,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMain(
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       newConfigFilePath.toString()
     )
 
@@ -159,7 +159,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
@@ -172,7 +172,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException[ConfigParserException](
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
@@ -189,7 +189,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException[ConfigParserException](
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
@@ -206,7 +206,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException[ConfigParserException](
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
@@ -223,7 +223,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException[ConfigParserException](
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
@@ -241,7 +241,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException[ConfigParserException](
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
@@ -259,7 +259,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException[ConfigParserException](
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
@@ -278,7 +278,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       newConfigFilePath.toString()
     )
 
@@ -290,7 +290,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException[org.yaml.snakeyaml.parser.ParserException](
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       configInvalidYamlFile
     )
 
@@ -302,7 +302,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMain(
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       "-k", "true",
       configFile
     )
@@ -318,7 +318,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMain(
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       "--keep", "false",
       configFile
     )
@@ -335,7 +335,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       "-k", "true",
       newConfigFilePath
     )
@@ -357,7 +357,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       "-k", "false",
       newConfigFilePath
     )
@@ -376,7 +376,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMain(
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
@@ -394,7 +394,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
       "--engine", "non_existing_engine",
-      "--runner", "native",
+      "--runner", "executable",
       configFile
     )
 
@@ -420,11 +420,61 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException[MissingResourceFileException](
       "test",
       "--engine", "native",
-      "--runner", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
     assert(testOutput.exceptionText.get.matches("Missing resource .*foobar\\.txt as specified in .*"))
+  }
+
+  test("Check config without specifying an engine", NativeTest) {
+    val testOutput = TestHelper.testMain(
+      "test",
+      "--runner", "executable",
+      configFile
+    )
+
+    assert(!testOutput.stdout.contains("docker"))
+
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
+
+    checkTempDirAndRemove(testOutput.stdout, false)
+  }
+
+  test("Check config without any engines", NativeTest) {
+    val newConfigFilePath = configDeriver.derive("""del(.engines)""", "no_engines")
+    val testOutput = TestHelper.testMain(
+      "test",
+      "--runner", "executable",
+      newConfigFilePath
+    )
+
+    assert(!testOutput.stdout.contains("docker"))
+
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
+
+    checkTempDirAndRemove(testOutput.stdout, false)
+  }
+
+  test("Check config without any engines or runners", NativeTest) {
+    val newConfigFilePath = configDeriver.derive(List("""del(.engines)""", """del(.runners)"""), "no_engines_or_runners")
+    val testOutput = TestHelper.testMain(
+      "test",
+      // "engine", "native",
+      newConfigFilePath
+    )
+
+    assert(!testOutput.stdout.contains("docker"))
+
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
+
+    checkTempDirAndRemove(testOutput.stdout, false)
   }
 
   /**

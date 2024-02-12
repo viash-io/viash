@@ -45,7 +45,7 @@ class MainHelpSuite extends AnyFunSuite{
     val testOutput = TestHelper.testMainException[ExitException](
       "config", "view",
       configFile,
-      "--runner", "native",
+      "--runner", "executable",
       "--help"
     )
 
@@ -58,7 +58,7 @@ class MainHelpSuite extends AnyFunSuite{
       "config", "view",
       configFile,
       "--help",
-      "--runner", "native"
+      "--runner", "executable"
     )
 
     assert(testOutput.stdout.startsWith("viash config view"))

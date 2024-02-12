@@ -37,6 +37,7 @@ import io.viash.runners.Runner
 import io.viash.config.AppliedConfig
 import io.viash.lenses.AppliedConfigLenses._
 import io.viash.runners.ExecutableRunner
+import io.viash.engines.NativeEngine
 
 object ViashTest extends Logging {
   case class TestOutput(name: String, exitValue: Int, output: String, logFile: String, duration: Long)
@@ -73,18 +74,20 @@ object ViashTest extends Logging {
     val dir = IO.makeTemp("viash_test_" + functionalityNameLens.get(appliedConfig), parentTempPath)
     if (!quiet) infoOut(s"Running tests in temporary directory: '$dir'")
 
-    // set version to temporary value
-    val config2 = functionalityVersionLens.modify(version => tempVersion orElse version)(appliedConfig)
-
-    // Make dependencies available for the tests
     DependencyResolver.createBuildYaml(dir.toString())
-    val config3 = configLens.modify{ conf =>
-      DependencyResolver.copyDependencies(conf, dir.toString(), config2.runner.get.id)
-    }(config2)
+
+    // set version to temporary value
+    // Make dependencies available for the tests
+    // Pass the first engine to the config. If no engines were specified in the config, a native engine was added.
+    val modifyLenses = 
+      functionalityVersionLens.modify(version => tempVersion orElse version) andThen
+      configLens.modify{ conf => DependencyResolver.copyDependencies(conf, dir.toString(), appliedConfig.runner.get.id) } andThen
+      appliedEnginesLens.modify(_.take(1))
+    val modifiedAppliedConfig = modifyLenses(appliedConfig)
 
     // run tests
     val ManyTestOutput(setupRes, results) = ViashTest.runTests(
-      appliedConfig = config3,
+      appliedConfig = modifiedAppliedConfig,
       dir = dir,
       verbose = !quiet,
       setupStrategy = setupStrategy.getOrElse("cachedbuild"),
@@ -142,7 +145,7 @@ object ViashTest extends Logging {
   ): ManyTestOutput = {
     val fun = appliedConfig.config.functionality
 
-    assert(appliedConfig.engines.length == 1, "Expected exactly one engine to be applied to the config.")
+    assert(appliedConfig.engines.length == 1, s"Expected exactly one engine to be applied to the config. Got ${appliedConfig.engines}.")
     val engine = appliedConfig.engines.head
 
     // check to see if we need to set up an engine environment
@@ -219,7 +222,10 @@ object ViashTest extends Logging {
     }
 
     // generate executable runner
-    val exe = ExecutableRunner().generateRunner(appliedConfig.config, true).resources.head
+    val exeConfig = appliedConfig.config.copy(
+      engines = List(NativeEngine())
+    )
+    val exe = ExecutableRunner().generateRunner(exeConfig, true).resources.head
 
     // fetch tests
     val tests = fun.test_resources

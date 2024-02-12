@@ -91,11 +91,6 @@ functionality:
     memory: 2GB
 runners:
   - type: executable
-    id: native
-  - type: executable
-    id: docker
-  - type: executable
-    id: throwawayimage
   - type: nextflow
 engines:
   - type: native
