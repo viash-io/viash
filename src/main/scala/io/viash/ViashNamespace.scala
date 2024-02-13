@@ -147,7 +147,7 @@ object ViashNamespace extends Logging {
         writer.write(
           List(
             "namespace",
-            "functionality",
+            "name",
             "runner",
             "engine",
             "test_name",
@@ -160,7 +160,7 @@ object ViashNamespace extends Logging {
       infoOut("%20s %20s %20s %20s %20s %9s %8s %20s".
         format(
           "namespace",
-          "functionality",
+          "name",
           "runner",
           "engine",
           "test_name",

@@ -21,6 +21,7 @@ import io.viash.config_mods.ConfigModParser
 import arguments._
 import resources._
 import dependencies._
+import io.viash.functionality.Functionality
 import io.viash.platforms.Platform
 import io.viash.helpers.{Git, GitInfo, IO, Logging}
 import io.viash.helpers.circe._
@@ -67,11 +68,6 @@ import scala.collection.immutable.ListMap
     |    image: "bash:4.0"
     |""".stripMargin, "yaml")
 case class Config(
-  // @description(
-  //   """The @[functionality](functionality) describes the behaviour of the script in terms of arguments and resources.
-  //     |By specifying a few restrictions (e.g. mandatory arguments) and adding some descriptions, Viash will automatically generate a stylish command-line interface for you.
-  //     |""".stripMargin)
-  // functionality: Functionality,
   @description("Name of the component and the filename of the executable when built with `viash build`.")
   @example("name: this_is_my_component", "yaml")
   name: String,
@@ -171,7 +167,7 @@ case class Config(
   argument_groups: List[ArgumentGroup] = Nil,
 
   @description(
-    """@[Resources](resources) are files that support the component. The first resource should be @[a script](scripting_languages) that will be executed when the functionality is run. Additional resources will be copied to the same directory.
+    """@[Resources](resources) are files that support the component. The first resource should be @[a script](scripting_languages) that will be executed when the component is run. Additional resources will be copied to the same directory.
       |
       |Common properties:
       |
@@ -370,11 +366,18 @@ case class Config(
   @undocumented
   package_config: Option[PackageConfig] = None,
 ) {
+  @description(
+    """The @[functionality](functionality) describes the behaviour of the script in terms of arguments and resources.
+      |By specifying a few restrictions (e.g. mandatory arguments) and adding some descriptions, Viash will automatically generate a stylish command-line interface for you.
+      |""".stripMargin)
+  @deprecated("Functionality level is removed, all functionality fields are now located on the top level of the config file.", "0.9.0", "0.10.0")
+  @default("")
+  private val functionality: Functionality = Functionality("foo")
 
   @description(
     """Config inheritance by including YAML partials. This is useful for defining common APIs in
       |separate files. `__merge__` can be used in any level of the YAML. For example,
-      |not just in the config but also in the functionality or any of the engines.
+      |not just in the config but also in the argument_groups or any of the engines.
       |""".stripMargin)
   @example("__merge__: ../api/common_interface.yaml", "yaml")
   @since("Viash 0.6.3")

@@ -136,7 +136,7 @@ final case class DockerEngine(
   /**
    * Generate a Dockerfile for the container
    * 
-   * @param functionality The functionality
+   * @param config The config
    * @param info The config info (available)
    * @param testing Whether or not this container is used as part of a `viash test`, in which the `test_setup` also needs to be included
    * 

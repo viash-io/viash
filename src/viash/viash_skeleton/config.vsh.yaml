@@ -1,49 +1,48 @@
-functionality:
-  name: viash_skeleton
-  namespace: viash
-  description: |
-    Create a skeleton src component
-  arguments:
-    - name: "--name"
-      alternatives: ["-n"]
-      type: string
-      description: Name of the component
-      required: true
-    - name: "--namespace"
-      alternatives: ["-ns"]
-      type: string
-      description: Namespace of the component
-      required: false
-    - name: "--language"
-      alternatives: ["-l"]
-      type: string
-      description: Which scripting language to use. Possible values are 'bash', 'r', and 'python'.
-      default: 'bash'
-    - name: "--runner"
-      alternatives: ["-r"]
-      type: string
-      description: Which runners to add. Possible values are 'executable', 'nextflow'. By default, both will be added.
-      default: 'executable,nextflow'
-      multiple: true
-      multiple_sep: ','
-    - name: "--engine"
-      alternatives: ["-e"]
-      type: string
-      description: Which engines to add. Possible values are 'native', 'docker'. By default, both will be added.
-      default: 'docker,native'
-      multiple: true
-      multiple_sep: ','
-    - name: "--src"
-      type: file
-      direction: output
-      description: Target directory if different from src/
-      default: src/
-  resources:
-    - type: bash_script
-      path: script.sh
-  test_resources:
-    - type: bash_script
-      path: test.sh
+name: viash_skeleton
+namespace: viash
+description: |
+  Create a skeleton src component
+arguments:
+  - name: "--name"
+    alternatives: ["-n"]
+    type: string
+    description: Name of the component
+    required: true
+  - name: "--namespace"
+    alternatives: ["-ns"]
+    type: string
+    description: Namespace of the component
+    required: false
+  - name: "--language"
+    alternatives: ["-l"]
+    type: string
+    description: Which scripting language to use. Possible values are 'bash', 'r', and 'python'.
+    default: 'bash'
+  - name: "--runner"
+    alternatives: ["-r"]
+    type: string
+    description: Which runners to add. Possible values are 'executable', 'nextflow'. By default, both will be added.
+    default: 'executable,nextflow'
+    multiple: true
+    multiple_sep: ','
+  - name: "--engine"
+    alternatives: ["-e"]
+    type: string
+    description: Which engines to add. Possible values are 'native', 'docker'. By default, both will be added.
+    default: 'docker,native'
+    multiple: true
+    multiple_sep: ','
+  - name: "--src"
+    type: file
+    direction: output
+    description: Target directory if different from src/
+    default: src/
+resources:
+  - type: bash_script
+    path: script.sh
+test_resources:
+  - type: bash_script
+    path: test.sh
 engines:
   - type: native
 #  - type: docker

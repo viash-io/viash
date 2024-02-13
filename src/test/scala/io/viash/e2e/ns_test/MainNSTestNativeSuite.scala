@@ -54,7 +54,7 @@ class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     // Test inclusion of a header
-    val regexHeader = raw"^\s*namespace\s*functionality\s*runner\s*engine\s*test_name\s*exit_code\s*duration\s*result".r
+    val regexHeader = raw"^\s*namespace\s*name\s*runner\s*engine\s*test_name\s*exit_code\s*duration\s*result".r
     assert(regexHeader.findFirstIn(testOutput.stdout).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n${testOutput.stdout}")
 
     for (
@@ -79,7 +79,7 @@ class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     // Test inclusion of a header
-    val regexHeader = raw"^\s*namespace\s*functionality\s*runner\s*engine\s*test_name\s*exit_code\s*duration\s*result".r
+    val regexHeader = raw"^\s*namespace\s*name\s*runner\s*engine\s*test_name\s*exit_code\s*duration\s*result".r
     assert(regexHeader.findFirstIn(testOutput.stdout).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n${testOutput.stdout}")
 
     val regexWdir = raw"The working directory for the namespace tests is [\w/]+[\r\n]{1,2}".r
@@ -111,7 +111,7 @@ class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       val logLines = logSrc.mkString
 
       // Test inclusion of a header
-      val regexHeader = raw"^namespace\tfunctionality\trunner\tengine\ttest_name\texit_code\tduration\tresult".r
+      val regexHeader = raw"^namespace\tname\trunner\tengine\ttest_name\texit_code\tduration\tresult".r
       assert(regexHeader.findFirstIn(logLines).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$logLines")
 
       for (
@@ -145,7 +145,7 @@ class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       val logLines = logSrc.mkString
 
       // Test inclusion of a header, header should not be present
-      val regexHeader = raw"namespace\tfunctionality\trunner\tengine\ttest_name\texit_code\tduration\tresult".r
+      val regexHeader = raw"namespace\tname\trunner\tengine\ttest_name\texit_code\tduration\tresult".r
       assert(!regexHeader.findFirstIn(logLines).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$logLines")
       val regexHeader2 = "^Test header".r
       assert(regexHeader2.findFirstIn(logLines).isDefined, s"\rRegex: ${regexHeader2.toString}; text: \r$logLines")
@@ -178,7 +178,7 @@ class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       val logLines = logSrc.mkString
 
       // Test inclusion of a header, header *should* be added if the file didn't exist yet
-      val regexHeader = raw"namespace\tfunctionality\trunner\tengine\ttest_name\texit_code\tduration\tresult".r
+      val regexHeader = raw"namespace\tname\trunner\tengine\ttest_name\texit_code\tduration\tresult".r
       assert(regexHeader.findFirstIn(logLines).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$logLines")
 
       for (

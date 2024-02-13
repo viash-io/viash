@@ -26,8 +26,8 @@ import io.viash.helpers.Bash
 import io.viash.config.Config
 
 @description("""An executable Bash script.
-               |When defined in functionality.resources, only the first entry will be executed when running the built component or when running `viash run`.
-               |When defined in functionality.test_resources, all entries will be executed during `viash test`.""".stripMargin)
+               |When defined in resources, only the first entry will be executed when running the built component or when running `viash run`.
+               |When defined in test_resources, all entries will be executed during `viash test`.""".stripMargin)
 @subclass("bash_script")
 case class BashScript(
   path: Option[String] = None,

@@ -327,8 +327,8 @@ object BashWrapper {
   }
 
 
-  private def generateHelp(functionality: Config) = {
-    val help = Helper.generateHelp(functionality)
+  private def generateHelp(config: Config) = {
+    val help = Helper.generateHelp(config)
     val helpStr = help
       .map(h => Bash.escapeString(h, quote = true))
       .mkString("  echo \"", "\"\n  echo \"", "\"")
