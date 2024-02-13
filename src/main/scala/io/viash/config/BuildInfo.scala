@@ -20,8 +20,6 @@ package io.viash.config
 import io.viash.schemas.description
 import io.viash.packageConfig.PackageConfig
 
-// TODO: rename to ConfigInfo?
-
 @description("Meta information fields filled in by Viash during build.")
 case class BuildInfo(
   @description("Path to the config used during build.")

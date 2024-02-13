@@ -23,7 +23,7 @@ viash COMMAND \
 Change the version of a component:
 
 ```bash
-viash build -c '.functionality.version := "0.3.0"'
+viash build -c '.version := "0.3.0"'
 ```
 
 Change the registry of a docker container:
@@ -36,14 +36,14 @@ viash build -c \
 Add an author to the list:
 
 ```bash
-viash build -c '.functionality.authors += { name: "Mr. T", role: "sponsor" }'
+viash build -c '.authors += { name: "Mr. T", role: "sponsor" }'
 ```
 
 You can use dynamic config modding to alter the config of multiple components at once:
 
 ```bash
 viash ns build \
-  -c '.functionality.version := "0.3.0"' \
+  -c '.version := "0.3.0"' \
   -c '.engines[.type == "docker"].registry := "url-to-registry"' \
-  -c '.functionality.authors += { name: "Mr. T", role: "sponsor" }'
+  -c '.authors += { name: "Mr. T", role: "sponsor" }'
 ```
