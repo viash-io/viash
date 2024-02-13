@@ -225,15 +225,25 @@ object DependencyResolver extends Logging {
       // We're also assuming that the file will be proper yaml and an actual viash config file
       val yamlText = IO.read(IO.uri(configPath))
       val json = Convert.textToJson(yamlText, configPath)
+      val legacyMode = json.hcursor.downField("functionality").succeeded
 
       def getFunctionalityName(json: Json): Option[String] = {
-        json.hcursor.downField("name").as[String].toOption
+        if (legacyMode)
+          json.hcursor.downField("functionality").downField("name").as[String].toOption
+        else
+          json.hcursor.downField("name").as[String].toOption
       }
       def getFunctionalityNamespace(json: Json): Option[String] = {
-        json.hcursor.downField("namespace").as[String].toOption
+        if (legacyMode)
+          json.hcursor.downField("functionality").downField("namespace").as[String].toOption
+        else
+          json.hcursor.downField("namespace").as[String].toOption
       }
       def getInfo(json: Json): Option[Map[String, String]] = {
-        json.hcursor.downField("build_info").as[Map[String, String]].toOption
+        if (legacyMode)
+          json.hcursor.downField("info").as[Map[String, String]].toOption
+        else
+          json.hcursor.downField("build_info").as[Map[String, String]].toOption
       }
 
       val functionalityName = getFunctionalityName(json)
@@ -254,8 +264,13 @@ object DependencyResolver extends Logging {
     try {
       val yamlText = IO.read(IO.uri(configPath))
       val json = Convert.textToJson(yamlText, configPath)
+      val legacyMode = json.hcursor.downField("functionality").succeeded
 
-      val dependencies = json.hcursor.downField("dependencies").focus.flatMap(_.asArray).get
+      val dependencies =
+        if (legacyMode) 
+          json.hcursor.downField("functionality").downField("dependencies").focus.flatMap(_.asArray).get
+        else
+          json.hcursor.downField("dependencies").focus.flatMap(_.asArray).get
       dependencies.flatMap(_.hcursor.downField("writtenPath").as[String].toOption).toList
     } catch {
       case _: Throwable => Nil

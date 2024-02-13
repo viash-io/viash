@@ -218,8 +218,25 @@ package object config {
               }
           }
           Json.fromJsonObject(newJsonObject.remove("arguments"))
+      }    
+  }}
+  .prepare {
+    // Move functionality to config level, if functionality exists also move .info to .build_info
+    _.withFocus{
+      _.mapObject{ conf =>
+        conf.contains("functionality") match {
+          case true => 
+            val functionality = conf.apply("functionality").get.asObject.get
+            val buildInfo = conf.apply("info")
+            val conf1 = buildInfo.map{ bi => 
+                conf.remove("info").add("build_info", bi)
+              }.getOrElse(conf)
+            val conf2 = conf1.remove("functionality")
+            val conf3 = conf2.deepMerge(functionality)
+            conf3
+          case false => conf
+        }
       }
-    
   }}
   .validate(
     // Validate platforms only. Will get stripped in the next prepare step.

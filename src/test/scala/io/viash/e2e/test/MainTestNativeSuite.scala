@@ -155,7 +155,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check config file without 'name' specified") {
-    val newConfigFilePath = configDeriver.derive("""del()""", "missing_name")
+    // remove 'name' and any fields that contain 'name'
+    val newConfigFilePath = configDeriver.derive("""del(.name); del(.argument_groups); del(.authors)""", "missing_name")
     val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
       "--engine", "native",
@@ -294,7 +295,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       configInvalidYamlFile
     )
 
-    assert(testOutput.exceptionText.get.contains("while parsing a flow mapping"))
+    assert(testOutput.exceptionText.get.contains("while parsing a block collection"), testOutput.exceptionText)
     assert(testOutput.stdout.isEmpty)
   }
 
