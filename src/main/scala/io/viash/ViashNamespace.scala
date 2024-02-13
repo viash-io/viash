@@ -106,6 +106,19 @@ object ViashNamespace extends Logging {
     results.toList
   }
 
+  val columnHeaders = List(
+    "namespace",
+    "name",
+    "runner",
+    "engine",
+    "test_name",
+    "exit_code",
+    "duration",
+    "result"
+  )
+
+  val columnFormatString = "%20s %20s %20s %20s %20s %9s %8s %20s"
+
   def test(
     configs: List[AppliedConfig],
     parallel: Boolean = false,
@@ -145,29 +158,10 @@ object ViashNamespace extends Logging {
       // only print header if file does not exist
       for (writer <- tsvWriter if !tsvExists) {
         writer.write(
-          List(
-            "namespace",
-            "name",
-            "runner",
-            "engine",
-            "test_name",
-            "exit_code",
-            "duration",
-            "result"
-          ).mkString("\t") + sys.props("line.separator"))
+          columnHeaders.mkString("\t") + sys.props("line.separator"))
         writer.flush()
       }
-      infoOut("%20s %20s %20s %20s %20s %9s %8s %20s".
-        format(
-          "namespace",
-          "name",
-          "runner",
-          "engine",
-          "test_name",
-          "exit_code",
-          "duration",
-          "result"
-        ))
+      infoOut(columnFormatString.format(columnHeaders:_*))
 
       val results = configs2.map { x =>
         x match {
@@ -181,7 +175,7 @@ object ViashNamespace extends Logging {
             val engineName = ac.engines.head.id
 
             // print start message
-            infoOut("%20s %20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, runnerName, engineName, "start", "", "", ""))
+            infoOut(columnFormatString.format(namespace, funName, runnerName, engineName, "start", "", "", ""))
 
             // run tests
             // TODO: it would actually be great if this component could subscribe to testresults messages
@@ -225,7 +219,7 @@ object ViashNamespace extends Logging {
               }
 
               // print message
-              log(LoggerOutput.StdOut, LoggerLevel.Info, col, "%20s %20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, runnerName, engineName, test.name, test.exitValue, test.duration, msg))
+              log(LoggerOutput.StdOut, LoggerLevel.Info, col, columnFormatString.format(namespace, funName, runnerName, engineName, test.name, test.exitValue, test.duration, msg))
 
               if (test.exitValue != 0) {
                 info(test.output)
