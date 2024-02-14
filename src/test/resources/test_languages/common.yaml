@@ -65,7 +65,8 @@ argument_groups:
         type: string
         multiple: true
 resources:
-  - path: ../resource1.txt        
+  - path: ../resource1.txt
+  - path: "pekkie_is_a_dog" 
 test_resources:
   - type: bash_script
     path: ../test.sh
