@@ -33,7 +33,7 @@ import scala.collection.immutable.ListMap
   """The functionality-part of the config file describes the behaviour of the script in terms of arguments and resources.
     |By specifying a few restrictions (e.g. mandatory arguments) and adding some descriptions, Viash will automatically generate a stylish command-line interface for you.
     |""".stripMargin)
-@deprecated("Functionality level is removed, all functionality fields are now located on the top level of the config file.", "0.9.0", "0.10.0")
+@deprecated("Functionality level is deprecated, all functionality fields are now located on the top level of the config file.", "0.9.0", "0.10.0")
 case class Functionality(
   @description("Name of the component and the filename of the executable when built with `viash build`.")
   @example("name: this_is_my_component", "yaml")
@@ -298,8 +298,10 @@ case class Functionality(
   @default("Empty")
   @since("Viash 0.9.0")
   links: Links = Links(),
-) {
-  // Handled in preparsing
+
+  // Allow arguments to be listed here, as Functionality it is non-functional and the arguments are merged in argument_groups in pre-parsing.
+  // Previously listed as a private val in the Functionality class.
+  // Listing it here greatly simplifies the validation of Functionality and has no downsides.
   @description(
     """A list of @[arguments](argument) for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. See these reference pages per type for more information:  
       |
@@ -328,7 +330,6 @@ case class Functionality(
       |""".stripMargin,
       "yaml")
   @default("Empty")
-  private val arguments: List[Argument[_]] = Nil
-
-}
+  arguments: List[Argument[_]] = Nil,
+)
 

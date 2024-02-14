@@ -370,7 +370,7 @@ case class Config(
     """The @[functionality](functionality) describes the behaviour of the script in terms of arguments and resources.
       |By specifying a few restrictions (e.g. mandatory arguments) and adding some descriptions, Viash will automatically generate a stylish command-line interface for you.
       |""".stripMargin)
-  @deprecated("Functionality level is removed, all functionality fields are now located on the top level of the config file.", "0.9.0", "0.10.0")
+  @deprecated("Functionality level is deprecated, all functionality fields are now located on the top level of the config file.", "0.9.0", "0.10.0")
   @default("")
   private val functionality: Functionality = Functionality("foo")
 

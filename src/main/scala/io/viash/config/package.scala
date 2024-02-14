@@ -21,6 +21,7 @@ import io.circe.{Decoder, Encoder, Json, HCursor, JsonObject}
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import io.viash.platforms.decodePlatform
+import io.viash.functionality.decodeFunctionality
 import io.viash.exceptions.ConfigParserValidationException
 
 import config.ArgumentGroup
@@ -239,7 +240,7 @@ package object config {
       }
   }}
   .validate(
-    // Validate platforms only. Will get stripped in the next prepare step.
+    // Validate platforms and functionality only. Will get stripped in the next prepare steps.
     (pred: HCursor) => {
       val platforms = pred.downField("platforms")
       if (platforms.succeeded) {
@@ -250,6 +251,16 @@ package object config {
             false
           }, _ => true)
         }
+      }
+      val functionality = pred.downField("functionality")
+      if (functionality.succeeded) {
+        val json = functionality.focus.get
+        val validate = decodeFunctionality(json.hcursor)
+        
+        validate.fold(_ => {
+          throw new ConfigParserValidationException("Functionality", json.toString())
+          false
+        }, _ => true)
       }
       true
     },

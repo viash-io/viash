@@ -17,6 +17,7 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   // which configs to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
   private val configDeprecatedArgumentGroups = getClass.getResource(s"/testbash/config_deprecated_argument_groups.vsh.yaml").getPath
+  private val configFunctionalityFile = getClass.getResource(s"/testbash/config_with_functionality.vsh.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
@@ -223,6 +224,17 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     val testRegex = "Warning: ..platforms is deprecated: Use 'engines' and 'runners' instead.".r
+    assert(testRegex.findFirstIn(testOutput.stderr).isDefined, testOutput)
+  }
+
+  test("Test Viash still supports the deprecated functionality structure and gives a deprecated warning") {
+    val testOutput = TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      configFunctionalityFile
+    )
+
+    val testRegex = "Warning: Functionality is deprecated: Functionality level is deprecated, all functionality fields are now located on the top level of the config file.".r
     assert(testRegex.findFirstIn(testOutput.stderr).isDefined, testOutput)
   }
 
