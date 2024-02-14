@@ -31,6 +31,7 @@ grep -q 'optional: |foo|' output.txt
 grep -q 'optional_with_default: |bar|' output.txt
 grep -q 'multiple: |one;two|' output.txt
 grep -q 'multiple_pos: |a;b;c;d;e;f|' output.txt
+grep -q 'meta_name: |test_languages_.*|' output.txt
 grep -q 'meta_functionality_name: |test_languages_.*|' output.txt
 grep -q 'meta_resources_dir: |..*|' output.txt
 grep -q 'meta_cpus: |2|' output.txt
@@ -73,6 +74,7 @@ grep -q 'optional_with_default: |The default value.|' output2.txt
 grep -q 'multiple: ||' output2.txt
 grep -q 'multiple_pos: ||' output2.txt
 
+grep -q 'meta_name: |test_languages_.*|' output2.txt
 grep -q 'meta_functionality_name: |test_languages_.*|' output2.txt
 grep -q 'meta_resources_dir: |..*|' output2.txt
 grep -q 'meta_cpus: |666|' output2.txt
@@ -87,7 +89,7 @@ grep -q 'head of input: |this file is only for testing|' output2.txt
 grep -q 'head of resource1: |if you can read this,|' output2.txt
 
 
-if [[ $meta_functionality_name == "bash" || $meta_functionality_name == "js" ]]; then
+if [[ $meta_name == "bash" || $meta_name == "js" ]]; then
 # This currently only works fully on bash and javascript
 
   echo ">>> Try to unset defaults"

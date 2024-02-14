@@ -13,6 +13,10 @@
 
 * `package config`: Renamed `project config` to `package config` (PR #636). Now that we start using the config more, we came to the conclusion that "package" was better suited that "project".
 
+* `ns exec`: Added an extra field `{name}` to replace `{functionality-name}` (PR #649). No immediate removal of the old field is planned, but it is deprecated.
+
+* `BashWrapper`: Added meta-data field `meta_name` as a replacement for `meta_functionality_name` (PR #649). No immediate removal of the old field is planned, but it is deprecated.
+
 ## BUG FIXES
 
 * `schema`: Don't require undocumented fields to set default values and add the `links` and `reference` fields to functionality as they were not meant only to be in the project config (PR #636).

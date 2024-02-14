@@ -208,7 +208,7 @@ function ViashDockerCheckCommands {
 # $1                               : image identifier with format `[registry/]image[:tag]`
 # $...                             : additional arguments to pass to docker build
 # $VIASH_META_TEMP_DIR             : temporary directory to store dockerfile & optional resources in
-# $VIASH_META_FUNCTIONALITY_NAME   : name of the component
+# $VIASH_META_NAME   : name of the component
 # $VIASH_META_RESOURCES_DIR        : directory containing the resources
 # $VIASH_VERBOSITY                 : verbosity level
 # exit code $?                     : whether or not the image was built successfully
@@ -217,7 +217,7 @@ function ViashDockerBuild {
   shift 1
 
   # create temporary directory to store dockerfile & optional resources in
-  local tmpdir=$(mktemp -d "$VIASH_META_TEMP_DIR/dockerbuild-$VIASH_META_FUNCTIONALITY_NAME-XXXXXX")
+  local tmpdir=$(mktemp -d "$VIASH_META_TEMP_DIR/dockerbuild-$VIASH_META_NAME-XXXXXX")
   local dockerfile="$tmpdir/Dockerfile"
   function clean_up {
     rm -rf "$tmpdir"

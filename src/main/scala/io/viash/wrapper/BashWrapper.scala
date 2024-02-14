@@ -29,6 +29,7 @@ import io.viash.config.resources.Executable
 object BashWrapper {
   val metaArgs: List[Argument[_]] = {
     List(
+      StringArgument("name", required = true, dest = "meta"),
       StringArgument("functionality_name", required = true, dest = "meta"),
       // filearguments set to 'must_exist = false, create_parent = false' because of config inject
       FileArgument("resources_dir", required = true, dest = "meta", must_exist = false, create_parent = false),
@@ -270,8 +271,9 @@ object BashWrapper {
        |VIASH_TARGET_DIR=`ViashFindTargetDir $$VIASH_META_RESOURCES_DIR`
        |
        |# define meta fields
+       |VIASH_META_NAME="${config.name}"
        |VIASH_META_FUNCTIONALITY_NAME="${config.name}"
-       |VIASH_META_EXECUTABLE="$$VIASH_META_RESOURCES_DIR/$$VIASH_META_FUNCTIONALITY_NAME"
+       |VIASH_META_EXECUTABLE="$$VIASH_META_RESOURCES_DIR/$$VIASH_META_NAME"
        |VIASH_META_CONFIG="$$VIASH_META_RESOURCES_DIR/${ConfigMeta.metaFilename}"
        |VIASH_META_TEMP_DIR="$$VIASH_TEMP"
        |
