@@ -35,9 +35,9 @@ import io.viash.helpers._
 import scala.collection.immutable.ListMap
 import io.viash.runners.nextflow.{NextflowConfig, NextflowAuto, NextflowDirectives}
 import io.viash.engines.requirements._
-import io.viash.config.arguments.{Argument, StringArgument, BooleanArgument, BooleanTrueArgument, IntegerArgument, LongArgument, BooleanFalseArgument, DoubleArgument, FileArgument}
-import io.viash.config.dependencies.{GithubRepository, GithubRepositoryWithName, LocalRepository, RepositoryWithName, ViashhubRepository, Dependency, LocalRepositoryWithName, GitRepositoryWithName, GitRepository, Repository, ViashhubRepositoryWithName}
-import io.viash.config.resources.{JavaScriptScript, CSharpScript, Resource, Executable, ScalaScript, NextflowScript, PlainFile, BashScript, PythonScript, RScript}
+import io.viash.config.arguments._
+import io.viash.config.dependencies._
+import io.viash.config.resources._
 import io.viash.config.ArgumentGroup
 import io.viash.config.Author
 import io.viash.config.ComputationalRequirements

@@ -20,7 +20,6 @@ package io.viash.engines
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import io.viash.config.{BuildInfo => ConfigInfo}
 import io.viash.config.{Config, Author}
 
 import io.viash.engines.requirements.Requirements

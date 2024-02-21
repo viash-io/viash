@@ -23,7 +23,7 @@ import io.viash.config.ConfigMeta
 import io.viash.config.Config
 import java.nio.file.Paths
 import io.viash.ViashNamespace
-import io.viash.config.arguments.{Argument, StringArgument, Input, Output, IntegerArgument, BooleanArgumentBase, LongArgument, Direction, DoubleArgument, FileArgument}
+import io.viash.config.arguments._
 import io.viash.config.resources.Executable
 
 object BashWrapper {
