@@ -21,7 +21,22 @@ import io.viash.helpers.{IO, Logging}
 import io.viash.schemas._
 import java.nio.file.{Path, Paths, Files}
 
-@description("Specifies a repository where dependency components can be found.")
+@description(
+  """Specifies a repository where dependency components can be found.
+    |
+    | - @[local](repo_local)
+    | - @[git](repo_git)
+    | - @[github](repo_github)
+    | - @[vsh](repo_vsh)
+    |""".stripMargin)
+@example(
+  """repositories:
+    |  - name: openpipelines-bio
+    |    type: github
+    |    uri: openpipelines-bio/modules
+    |    tag: 0.3.0
+    |""".stripMargin,
+    "yaml")
 @subclass("LocalRepository")
 @subclass("GitRepository")
 @subclass("GithubRepository")
