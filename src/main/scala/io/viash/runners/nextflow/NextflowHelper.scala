@@ -201,7 +201,7 @@ object NextflowHelper {
       return s"// dependency '${dependency.name}' not found!"
     }
 
-    val depName = dependency.configInfo("functionalityName")
+    val depName = dependency.configInfo("name")
     val aliasStr = dependency.alias.map(" as " + _ + "_viashalias").getOrElse("")
     val runIfAliasStr = dependency.alias.map(a => "\n" + a + " = " + a + "_viashalias.run(key: \"" + a + "\")").getOrElse("")
 

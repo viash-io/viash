@@ -20,17 +20,12 @@ package io.viash.engines
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import io.viash.config.{Config, Author}
-
-import io.viash.engines.requirements.Requirements
-import io.viash.engines.requirements.DockerRequirements
-
-import io.viash.helpers.Escaper
-import io.viash.helpers.Docker
+import io.viash.config.{Config, BuildInfo, Author}
+import io.viash.engines.requirements.{Requirements, DockerRequirements}
+import io.viash.helpers.{Escaper, Docker}
 import io.viash.wrapper.BashWrapper
 
 import io.viash.schemas._
-import io.viash.config.BuildInfo
 
 @description(
   """Run a Viash component on a Docker backend engine.
@@ -143,7 +138,7 @@ final case class DockerEngine(
    */
   def dockerFile(
     config: Config,
-    info: Option[ConfigInfo],
+    info: Option[BuildInfo],
     testing: Boolean
   ): String = {
     /* Construct labels from metadata */

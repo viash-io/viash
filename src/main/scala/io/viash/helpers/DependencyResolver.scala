@@ -174,8 +174,8 @@ object DependencyResolver extends Logging {
         }.toMap
       // Add the functionality name and namespace to it
       val map2 = Map(
-        ("functionalityName" -> c.name),
-        ("functionalityNamespace" -> c.namespace.getOrElse(""))
+        ("name" -> c.name),
+        ("namespace" -> c.namespace.getOrElse(""))
       )
       (path, map ++ map2)
     }
@@ -199,7 +199,7 @@ object DependencyResolver extends Logging {
     scriptInfo
       .filter{
         case(scriptPath, info) => 
-          (info("functionalityNamespace"), info("functionalityName")) match {
+          (info("namespace"), info("name")) match {
             case (ns, n) if !ns.isEmpty() => s"$ns/$n" == name
             case (_, n) => n == name
           }
@@ -227,13 +227,13 @@ object DependencyResolver extends Logging {
       val json = Convert.textToJson(yamlText, configPath)
       val legacyMode = json.hcursor.downField("functionality").succeeded
 
-      def getFunctionalityName(json: Json): Option[String] = {
+      def getName(json: Json): Option[String] = {
         if (legacyMode)
           json.hcursor.downField("functionality").downField("name").as[String].toOption
         else
           json.hcursor.downField("name").as[String].toOption
       }
-      def getFunctionalityNamespace(json: Json): Option[String] = {
+      def getNamespace(json: Json): Option[String] = {
         if (legacyMode)
           json.hcursor.downField("functionality").downField("namespace").as[String].toOption
         else
@@ -246,11 +246,9 @@ object DependencyResolver extends Logging {
           json.hcursor.downField("build_info").as[Map[String, String]].toOption
       }
 
-      val functionalityName = getFunctionalityName(json)
-      val functonalityNamespace = getFunctionalityNamespace(json)
       val info = getInfo(json).getOrElse(Map.empty) +
-        ("functionalityName" -> functionalityName.getOrElse("")) +
-        ("functionalityNamespace" -> functonalityNamespace.getOrElse(""))
+        ("name" -> getName(json).getOrElse("")) +
+        ("namespace" -> getNamespace(json).getOrElse(""))
 
       info
     }
