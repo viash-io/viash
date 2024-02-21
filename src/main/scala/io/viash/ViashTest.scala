@@ -162,7 +162,7 @@ object ViashTest extends Logging {
         val buildDir = dir.resolve("build_engine_environment")
         Files.createDirectories(buildDir)
         try {
-          IO.writeResources(resources.resources, buildDir)
+          IO.writeResources(resources.resources ::: conf.test_resources.filter(!_.isInstanceOf[Script]), buildDir)
         } catch {
           case e: MissingResourceFileException =>
             // add config file name to the exception and throw again
