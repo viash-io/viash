@@ -386,7 +386,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
           | * `{abs-dir}`: absolute path to the directory of the config file
           | * `{main-script}`: path to the main script (if any)
           | * `{abs-main-script}`: absolute path to the main script (if any)
-          | * `{functionality-name}`: name of the component
+          | * `{name}`: name of the component
+          | * `{functionality-name}`: name of the component (deprecated)
           | * `{namespace}`: namespace of the component
           | * `{runner}`: selected runner id (only when --apply_runner is used)
           | * `{engine}`: selected engine id (only when --apply_engine is used)

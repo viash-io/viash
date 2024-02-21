@@ -17,7 +17,7 @@
 
 package io.viash.helpers
 
-import io.viash.functionality.Functionality
+import io.viash.config.Config
 
 case class DockerImageInfo(
   name: String, 
@@ -46,7 +46,7 @@ object Docker {
   private val TagRegex = "^(.*):(.*)$".r
 
   def getImageInfo(
-    functionality: Option[Functionality] = None,
+    config: Option[Config] = None,
     name: Option[String] = None,
     registry: Option[String] = None,
     organization: Option[String] = None,
@@ -66,9 +66,9 @@ object Docker {
     } orElse {
       name
     } orElse {
-      functionality.flatMap(fun => fun.namespace.map(_ + namespaceSeparator + fun.name))
+      config.flatMap(conf => conf.namespace.map(_ + namespaceSeparator + conf.name))
     } orElse {
-      functionality.map(fun => fun.name)
+      config.map(_.name)
     }
 
     val tagSuffix = engineId match {
@@ -81,7 +81,7 @@ object Docker {
     } orElse {
       tag
     } orElse {
-      functionality.flatMap(fun => fun.version.map(_.toString + tagSuffix))
+      config.flatMap(conf => conf.version.map(_.toString + tagSuffix))
     } orElse {
       Some("latest" + tagSuffix)
     }

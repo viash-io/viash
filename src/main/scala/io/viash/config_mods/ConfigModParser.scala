@@ -26,25 +26,25 @@ import io.circe.syntax._
 /* DSL examples
 
 # setting a value
-.functionality.version := "0.3.0"
+.version := "0.3.0"
 
 # setting a value after subsetting a list
 .platforms[.type == "docker"].container_registry := "itx-aiv"
 
 # add something to a list
-.functionality.authors += { name: "Mr. T", role: "sponsor" }
+.authors += { name: "Mr. T", role: "sponsor" }
 
 # prepend something to a list
-.functionality.authors +0= { name: "Mr. T", role: "sponsor" }
+.authors +0= { name: "Mr. T", role: "sponsor" }
 
 # apply config mod before parsing the json
 <preparse> .platforms[.type == "nextflow"].variant := "vdsl3"
 
 # delete a value
-del(.functionality.version)
+del(.version)
 
 # check an identifier is specified
-<preparse> .functionality.authors[!has(roles)].email := "unknown"
+<preparse> .authors[!has(roles)].email := "unknown"
 
 */
 

@@ -1,10 +1,8 @@
-functionality:
-  __merge__: [., ../common.yaml]
-  name: test_languages_js
-  resources:
-    - type: javascript_script
-      path: ./code.js
-__merge__: [../common-runners.yaml]
+__merge__: [., ../common.yaml, ../common-runners.yaml]
+name: test_languages_js
+resources:
+  - type: javascript_script
+    path: ./code.js
 engines:
   - type: native
   - type: docker

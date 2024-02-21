@@ -1,25 +1,24 @@
-functionality:
-  name: auxiliary_resources
-  description: |
-    Test various ways of specifying resources and check they ended up being in the right place.
-  resources:
-    - type: bash_script
-      path: ./check_bash_version.sh
-    - type: bash_script
-      path: ./code.sh
-    - path: resource1.txt
-    - path: ./resource2.txt
-    - path: https://raw.githubusercontent.com/scala/scala/fff4ec3539ac58f56fdc8f1382c365f32a9fd25a/NOTICE
-    - path: resource_folder
-    - path: resource1.txt
-      dest: target_folder/relocated_file_1.txt
-    - path: resource_folder/resource_L1_1.txt
-      dest: target_folder/relocated_file_2.txt
-    - path: ../../test_languages/executable/config.vsh.yaml
-      dest: target_folder/relocated_file_3.txt
-    - path: file:/tmp/viash_tmp_resources/resource3.txt
-    - path: file:/tmp/viash_tmp_resources/resource3.txt
-      dest: target_folder/relocated_file_4.txt
+name: auxiliary_resources
+description: |
+  Test various ways of specifying resources and check they ended up being in the right place.
+resources:
+  - type: bash_script
+    path: ./check_bash_version.sh
+  - type: bash_script
+    path: ./code.sh
+  - path: resource1.txt
+  - path: ./resource2.txt
+  - path: https://raw.githubusercontent.com/scala/scala/fff4ec3539ac58f56fdc8f1382c365f32a9fd25a/NOTICE
+  - path: resource_folder
+  - path: resource1.txt
+    dest: target_folder/relocated_file_1.txt
+  - path: resource_folder/resource_L1_1.txt
+    dest: target_folder/relocated_file_2.txt
+  - path: ../../test_languages/executable/config.vsh.yaml
+    dest: target_folder/relocated_file_3.txt
+  - path: file:/tmp/viash_tmp_resources/resource3.txt
+  - path: file:/tmp/viash_tmp_resources/resource3.txt
+    dest: target_folder/relocated_file_4.txt
 
 #{path: /foo/abc} -> $meta_resources_dir/abc
 #{path: foo/abc} -> $meta_resources_dir/abc
@@ -30,10 +29,10 @@ functionality:
 #{path: foo/abc, target: bar/def} -> $meta_resources_dir/bar/def
 
 
-  arguments:
-    - name: "--optional"
-      type: string
-      description: An optional string.
+arguments:
+  - name: "--optional"
+    type: string
+    description: An optional string.
 engines:
   - type: native
   - type: docker

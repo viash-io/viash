@@ -17,7 +17,7 @@
 
 package io.viash.wrapper
 
-import io.viash.functionality.arguments.Argument
+import io.viash.config.arguments.Argument
 
 case class BashWrapperMods(
   preParse: String = "",

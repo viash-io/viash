@@ -18,11 +18,11 @@ class MainBuildAuxiliaryNativeUnknownParameter extends AnyFunSuite with BeforeAn
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
 
-  // parse functionality from file
-  private val functionality = Config.read(configFile).functionality
+  // parse config from file
+  private val config = Config.read(configFile)
 
   // built script that we'll be running
-  private val executable = Paths.get(tempFolStr, functionality.name).toFile
+  private val executable = Paths.get(tempFolStr, config.name).toFile
 
   private val unknownArgumentWarning = """\[warning\] .* looks like a parameter but is not a defined parameter and will instead be treated as a positional argument\. Use --help to get more information on the parameters\.""".r
 
@@ -54,7 +54,7 @@ class MainBuildAuxiliaryNativeUnknownParameter extends AnyFunSuite with BeforeAn
 
     val stripAll = (s : String) => s.replaceAll(raw"\s+", " ").trim
 
-    functionality.allArguments.foreach(arg => {
+    config.allArguments.foreach(arg => {
       for (opt <- arg.alternatives; value <- opt)
         assert(stdout.contains(value))
       for (description <- arg.description) {

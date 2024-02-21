@@ -5,8 +5,8 @@ def findStates(Map params, Map config) {
 
   auto_config = auto_config.clone()
   // override arguments
-  auto_config.functionality.argument_groups = []
-  auto_config.functionality.arguments = [
+  auto_config.argument_groups = []
+  auto_config.arguments = [
     [
       type: "string",
       name: "--id",

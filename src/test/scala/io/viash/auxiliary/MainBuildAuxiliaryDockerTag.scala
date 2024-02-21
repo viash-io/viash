@@ -15,8 +15,8 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
   private val tempFolStr = temporaryFolder.toString
 
   private val configBashTagFile = getClass.getResource(s"/testbash/auxiliary_tag/config_bash_tag.vsh.yaml").getPath
-  private val functionalityBashTag = Config.read(configBashTagFile).functionality
-  private val executableBashTagFile = Paths.get(tempFolStr, functionalityBashTag.name).toFile
+  private val configBashTag = Config.read(configBashTagFile)
+  private val executableBashTagFile = Paths.get(tempFolStr, configBashTag.name).toFile
 
   test("Get tagged version of a docker image for bash 5.0", DockerTest) {
     // prepare the environment

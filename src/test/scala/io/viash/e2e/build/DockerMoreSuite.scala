@@ -22,11 +22,11 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
 
-  // parse functionality from file
-  private val functionality = Config.read(configFile).functionality
+  // parse config from file
+  private val config = Config.read(configFile)
 
   // check whether executable was created
-  private val executable = Paths.get(tempFolStr, functionality.name).toFile
+  private val executable = Paths.get(tempFolStr, config.name).toFile
   private val execPathInDocker = Paths.get("/viash_automount", executable.getPath).toFile.toString
 
 
@@ -50,7 +50,7 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Verify adding extra commands to verify", DockerTest) {
     val newConfigFilePath = configDeriver.derive(
-      """.functionality.requirements := { commands: ["which", "bash", "ps", "grep"] }""",
+      """.requirements := { commands: ["which", "bash", "ps", "grep"] }""",
       "commands_extra"
     )
     
@@ -68,7 +68,7 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Verify base adding an extra required command that doesn't exist", DockerTest) {
     val newConfigFilePath = configDeriver.derive(
-      """.functionality.requirements := { commands: ["which", "bash", "ps", "grep", "non_existing_command"] }""",
+      """.requirements := { commands: ["which", "bash", "ps", "grep", "non_existing_command"] }""",
       "non_existing_command"
     )
     
@@ -86,7 +86,7 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check deprecated warning", DockerTest) {
-    val newConfigFilePath = configDeriver.derive(""".functionality.status := "deprecated"""", "deprecated")
+    val newConfigFilePath = configDeriver.derive(""".status := "deprecated"""", "deprecated")
     
     val testOutput = TestHelper.testMain(
       "build",
@@ -103,7 +103,7 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Check component works when multiple_sep is set to ;", DockerTest) {
     val newConfigFilePath = configDeriver.derive(
-      """.functionality.argument_groups[true].arguments[.name == "--real_number"] := { "type": "double", "name": "--real_number", "multiple": true, "multiple_sep": ";", "min": 10, "max": 1000, "default": [10, 20, 30]}""",
+      """.argument_groups[true].arguments[.name == "--real_number"] := { "type": "double", "name": "--real_number", "multiple": true, "multiple_sep": ";", "min": 10, "max": 1000, "default": [10, 20, 30]}""",
       "multiple_sep"
     )
     

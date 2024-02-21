@@ -7,9 +7,15 @@
     config_mods: |
       .functionality.argument_groups[true].arguments[.multiple == true].multiple_sep := ":"
 
+* `functionality`: Remove the `functionality` layer from the config and move all fields to the top layer (PR #649).
+
 ## MINOR CHANGES
 
 * `package config`: Renamed `project config` to `package config` (PR #636). Now that we start using the config more, we came to the conclusion that "package" was better suited that "project".
+
+* `ns exec`: Added an extra field `{name}` to replace `{functionality-name}` (PR #649). No immediate removal of the old field is planned, but it is deprecated.
+
+* `BashWrapper`: Added meta-data field `meta_name` as a replacement for `meta_functionality_name` (PR #649). No immediate removal of the old field is planned, but it is deprecated.
 
 ## BUG FIXES
 

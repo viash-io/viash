@@ -134,7 +134,7 @@ object JsonSchema {
       info
       .filter(p => !p.name.startsWith("__")) // remove __this__
       .filter(p => !p.removed.isDefined && (!config.strict || !p.deprecated.isDefined)) // always remove 'removed' arguments and if need be create a strict schema by removing deprecated
-      .filter(p => !config.strict || !(p.name == "arguments" && thisParameter.`type` == "Functionality")) // exception: remove 'arguments' in 'Functionality' for strict schema
+      .filter(p => !config.strict || !(p.name == "arguments" && (thisParameter.`type` == "Functionality" || thisParameter.`type` == "Config"))) // exception: remove 'arguments' in 'Functionality' for strict schema
     val propertiesJson = properties.map(p => {
       val pDescription = p.description.map(s => removeMarkup(s))
       val trimmedType = p.`type` match {

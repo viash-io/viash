@@ -60,6 +60,7 @@ output "head of resource1: |$RESOURCE|"
 output "multiple: |$par_multiple|"
 output "multiple_pos: |$par_multiple_pos|"
 
+output "meta_name: |$meta_name|"
 output "meta_functionality_name: |$meta_functionality_name|"
 output "meta_resources_dir: |$meta_resources_dir|"
 output "meta_cpus: |$meta_cpus|"

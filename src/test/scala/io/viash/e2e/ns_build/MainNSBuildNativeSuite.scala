@@ -65,7 +65,7 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
   for ((component, _, _, _) <- components) {
   test(s"Check whether particular keywords can be found in the usage with component $component") {
       val configFile = getClass.getResource(s"/testns/src/$component/config.vsh.yaml").getPath
-      val functionality = Config.read(configFile).functionality
+      val config = Config.read(configFile)
 
       val stdout =
         Exec.run(
@@ -74,7 +74,7 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
       val stripAll = (s: String) => s.replaceAll(raw"\s+", " ").trim
 
-      functionality.allArguments.foreach(arg => {
+      config.allArguments.foreach(arg => {
         for (opt <- arg.alternatives; value <- opt)
           assert(stdout.contains(value))
         for (description <- arg.description) {

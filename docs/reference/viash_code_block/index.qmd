@@ -105,7 +105,9 @@ Meta-variables offer information on the runtime environment which you can use fr
 
 * `executable` (string): The executable being used at runtime; that is, the wrapped script. This variable is used in unit tests.
 
-* `functionality_name` (string): The name of the component, useful for logging.
+* `name` (string): The name of the component, useful for logging.
+
+* `functionality_name` (string): The name of the component, useful for logging. (Deprecated)
 
 * `memory_*` (long): The maximum amount of memory a component is allowed to allocate. The following denominations are provided: `memory_b`, `memory_kb`, `memory_mb`, `memory_gb`, `memory_tb`, `memory_pb`. By default, this value will be undefined.
 
@@ -238,9 +240,13 @@ grep -q 'expected output' output.txt
 echo Done
 ```
 
-### `functionality_name` (string)
+### `name` (string)
 
 The name of the component, useful for logging.
+
+### `functionality_name` (string)
+
+The name of the component, useful for logging. (Deprecated)
 
 ### `memory_*` (long)
 

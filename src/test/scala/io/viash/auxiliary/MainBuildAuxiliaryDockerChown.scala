@@ -22,20 +22,20 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
   private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
 
   val singleOutputmods = List(
-    """.functionality.resources[.type == "bash_script"].path := "docker_options/code.sh"""",
+    """.resources[.type == "bash_script"].path := "docker_options/code.sh"""",
   )
 
   val twoOutputsmods = List(
-    """.functionality.argument_groups[.name == "Arguments"].arguments += {name: "--output2", type: "file", direction: "output"}""",
-    """.functionality.resources[.type == "bash_script"].path := "docker_options/code_two_output.sh"""",
+    """.argument_groups[.name == "Arguments"].arguments += {name: "--output2", type: "file", direction: "output"}""",
+    """.resources[.type == "bash_script"].path := "docker_options/code_two_output.sh"""",
   )
 
   val multipleOutputsMods = List(
-    """del(.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--multiple"])""",
-    """del(.functionality.argument_groups[.name == "Arguments"].arguments[.name == "multiple_pos"])""",
-    """.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--output"].multiple := true""",
-    """.functionality.argument_groups[.name == "Arguments"].arguments += {name: "output_pos", type: "file", direction: "output", multiple: true}""",
-    """.functionality.resources[.type == "bash_script"].path := "docker_options/code_multiple_output.sh"""",
+    """del(.argument_groups[.name == "Arguments"].arguments[.name == "--multiple"])""",
+    """del(.argument_groups[.name == "Arguments"].arguments[.name == "multiple_pos"])""",
+    """.argument_groups[.name == "Arguments"].arguments[.name == "--output"].multiple := true""",
+    """.argument_groups[.name == "Arguments"].arguments += {name: "output_pos", type: "file", direction: "output", multiple: true}""",
+    """.resources[.type == "bash_script"].path := "docker_options/code_multiple_output.sh"""",
   )
 
   def dockerChownGetOwner(mods: List[String], amount: Int, dockerId: String): List[String] = {
@@ -44,9 +44,9 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
 
     val engineMod = s""".engines := [{"type": "docker", "image": "bash:3.2", "id": "$dockerId"}]"""
     val modsWithEngine = mods :+ engineMod
-    val localConfig = configDeriver.derive(modsWithEngine, dockerId)
-    val localFunctionality = Config.read(localConfig).functionality
-    val localExecutable = Paths.get(tempFolStr, localFunctionality.name).toFile
+    val localConfigFile = configDeriver.derive(modsWithEngine, dockerId)
+    val localConfig = Config.read(localConfigFile)
+    val localExecutable = Paths.get(tempFolStr, localConfig.name).toFile
 
     // prepare the environment
     TestHelper.testMain(
@@ -54,7 +54,7 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
       "--engine", dockerId,
       "-o", tempFolStr,
       "--setup", "build",
-      localConfig
+      localConfigFile
     )
 
     assert(localExecutable.exists)

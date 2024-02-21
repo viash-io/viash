@@ -26,18 +26,23 @@ import io.viash.functionality._
 import io.viash.runners._
 import io.viash.engines._
 import io.viash.platforms._
-import io.viash.functionality.arguments._
 import io.circe.Json
 import monocle.function.Cons
 import io.viash.config.Config
-import io.viash.config.Info
-import io.viash.functionality.resources._
+import io.viash.config.BuildInfo
 import io.viash.packageConfig.PackageConfig
 import io.viash.helpers._
 import scala.collection.immutable.ListMap
-import io.viash.functionality.dependencies._
 import io.viash.runners.nextflow.{NextflowConfig, NextflowAuto, NextflowDirectives}
 import io.viash.engines.requirements._
+import io.viash.config.arguments._
+import io.viash.config.dependencies._
+import io.viash.config.resources._
+import io.viash.config.ArgumentGroup
+import io.viash.config.Author
+import io.viash.config.ComputationalRequirements
+import io.viash.config.Links
+import io.viash.config.References
 
 final case class CollectedSchemas (
   config: Map[String, List[ParameterSchema]],
@@ -118,7 +123,7 @@ object CollectedSchemas {
   lazy val schemaClasses = List(
     getMembers[Config](),
     getMembers[PackageConfig](),
-    getMembers[Info](),
+    getMembers[BuildInfo](),
     getMembers[SysEnvTrait](),
 
     getMembers[Functionality](),

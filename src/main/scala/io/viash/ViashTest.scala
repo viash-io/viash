@@ -25,9 +25,9 @@ import java.time.temporal.ChronoUnit
 import scala.util.Random
 
 import config.Config
-import functionality.{Functionality, ArgumentGroup}
-import functionality.arguments.{FileArgument, Output}
-import functionality.resources.{BashScript, Script}
+import config.{Config, ArgumentGroup}
+import config.arguments.{FileArgument, Output}
+import config.resources.{BashScript, Script}
 import helpers.{IO, Logging, LoggerOutput, LoggerLevel}
 import io.viash.helpers.data_structures._
 import io.viash.exceptions.MissingResourceFileException
@@ -36,6 +36,7 @@ import io.viash.helpers.DependencyResolver
 import io.viash.runners.Runner
 import io.viash.config.AppliedConfig
 import io.viash.lenses.AppliedConfigLenses._
+import io.viash.lenses.ConfigLenses.resourcesLens
 import io.viash.runners.ExecutableRunner
 import io.viash.engines.NativeEngine
 
@@ -71,7 +72,7 @@ object ViashTest extends Logging {
     memory: Option[String]
   ): ManyTestOutput = {
     // create temporary directory
-    val dir = IO.makeTemp("viash_test_" + functionalityNameLens.get(appliedConfig), parentTempPath)
+    val dir = IO.makeTemp("viash_test_" + configNameLens.get(appliedConfig), parentTempPath)
     if (!quiet) infoOut(s"Running tests in temporary directory: '$dir'")
 
     DependencyResolver.createBuildYaml(dir.toString())
@@ -80,7 +81,7 @@ object ViashTest extends Logging {
     // Make dependencies available for the tests
     // Pass the first engine to the config. If no engines were specified in the config, a native engine was added.
     val modifyLenses = 
-      functionalityVersionLens.modify(version => tempVersion orElse version) andThen
+      configVersionLens.modify(version => tempVersion orElse version) andThen
       configLens.modify{ conf => DependencyResolver.copyDependencies(conf, dir.toString(), appliedConfig.runner.get.id) } andThen
       appliedEnginesLens.modify(_.take(1))
     val modifiedAppliedConfig = modifyLenses(appliedConfig)
@@ -143,7 +144,7 @@ object ViashTest extends Logging {
     cpus: Option[Int], 
     memory: Option[String]
   ): ManyTestOutput = {
-    val fun = appliedConfig.config.functionality
+    val conf = appliedConfig.config
 
     assert(appliedConfig.engines.length == 1, s"Expected exactly one engine to be applied to the config. Got ${appliedConfig.engines}.")
     val engine = appliedConfig.engines.head
@@ -161,12 +162,12 @@ object ViashTest extends Logging {
         val buildDir = dir.resolve("build_engine_environment")
         Files.createDirectories(buildDir)
         try {
-          IO.writeResources(resources.resources ::: fun.test_resources.filter(!_.isInstanceOf[Script]), buildDir)
+          IO.writeResources(resources.resources ::: conf.test_resources.filter(!_.isInstanceOf[Script]), buildDir)
         } catch {
           case e: MissingResourceFileException =>
             // add config file name to the exception and throw again
-            if (appliedConfig.config.info.isDefined && e.config == "") {
-              throw MissingResourceFileException(e.resource, Some(appliedConfig.config.info.get.config), cause = e.cause)
+            if (appliedConfig.config.build_info.isDefined && e.config == "") {
+              throw MissingResourceFileException(e.resource, Some(appliedConfig.config.build_info.get.config), cause = e.cause)
             }
             throw e
         }
@@ -190,7 +191,7 @@ object ViashTest extends Logging {
         // run command, collect output
       
         try {
-          val executable = Paths.get(buildDir.toString, fun.name).toString
+          val executable = Paths.get(buildDir.toString, conf.name).toString
           val cmd = Seq(executable, "---verbosity", verbosityLevel.toString, "---setup", setupStrategy, "---engine", engine.id)
           logger("+" + cmd.mkString(" "))
           val startTime = LocalDateTime.now
@@ -228,7 +229,7 @@ object ViashTest extends Logging {
     val exe = ExecutableRunner().generateRunner(exeConfig, true).resources.head
 
     // fetch tests
-    val tests = fun.test_resources
+    val tests = conf.test_resources
 
     val testResults = tests.filter(_.isInstanceOf[Script]).map {
       case test: Script if test.read.isEmpty =>
@@ -249,13 +250,13 @@ object ViashTest extends Logging {
           create_parent = false
         )
 
-        val testFunConfig = functionalityLens.modify(
-          fun => Functionality(
+        val testFunConfig = configLens.modify(
+          conf => Config(
             // set same name, namespace and version
             // to be able to reuse same docker container
-            name = fun.name,
-            namespace = fun.namespace,
-            version = fun.version,
+            name = conf.name,
+            namespace = conf.namespace,
+            version = conf.version,
             // set dirArg as argument so that Docker can chown it after execution
             argument_groups = List(ArgumentGroup("default", None, List(dirArg))),
             resources = List(test),
@@ -271,24 +272,23 @@ object ViashTest extends Logging {
         val configYaml = ConfigMeta.toMetaFile(appliedConfig.config, Some(dir))
 
         // assemble full resources list for test
-        val funFinal = fun.copy(resources = 
-          // the test, wrapped in a bash script
+        val confFinal = resourcesLens.set(
           testBash ::
-            // the executable, wrapped with an executable runner,
-            // to be run inside of the runner of the test
-            exe :: 
-            // the config file information
-            configYaml ::
-            // other resources generated by wrapping the test script
-            resourcesOnlyTest.additionalResources :::
-            // other resources provided in fun.resources
-            fun.additionalResources :::
-            // other resources provided in fun.tests
-            tests.filter(!_.isInstanceOf[Script])
-        )
+          // the executable, wrapped with an executable runner,
+          // to be run inside of the runner of the test
+          exe :: 
+          // the config file information
+          configYaml ::
+          // other resources generated by wrapping the test script
+          resourcesOnlyTest.additionalResources :::
+          // other resources provided in fun.resources
+          conf.additionalResources :::
+          // other resources provided in fun.tests
+          tests.filter(!_.isInstanceOf[Script])
+        )(conf)
 
         // write resources to dir
-        IO.writeResources(funFinal.resources, newDir)
+        IO.writeResources(confFinal.resources, newDir)
 
         // run command, collect output
         val stream = new ByteArrayOutputStream

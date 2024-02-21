@@ -16,8 +16,8 @@ class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAnd
 
 
   private val configFile = getClass.getResource("/testbash/auxiliary_resource/config_resource_test.vsh.yaml").getPath
-  private val functionality = Config.read(configFile).functionality
-  private val executable = Paths.get(tempFolStr, functionality.name).toFile
+  private val config = Config.read(configFile)
+  private val executable = Paths.get(tempFolStr, config.name).toFile
 
   private val temporaryConfigFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
   private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
@@ -75,7 +75,7 @@ class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAnd
   }
 
   test("Check resources with unsupported format") {
-    val configResourcesUnsupportedProtocolFile = configDeriver.derive(""".functionality.resources := [{type: "bash_script", path: "./check_bash_version.sh"}, {path: "ftp://ftp.ubuntu.com/releases/robots.txt"}]""", "config_resource_unsupported_protocol").toString
+    val configResourcesUnsupportedProtocolFile = configDeriver.derive(""".resources := [{type: "bash_script", path: "./check_bash_version.sh"}, {path: "ftp://ftp.ubuntu.com/releases/robots.txt"}]""", "config_resource_unsupported_protocol").toString
     // generate viash script
     val testOutput = TestHelper.testMainException[RuntimeException](
       "build",

@@ -3,11 +3,11 @@ def processWorkflowArgs(Map args, Map defaultWfArgs, Map meta) {
   def workflowArgs = defaultWfArgs + args
 
   // check whether 'key' exists
-  assert workflowArgs.containsKey("key") : "Error in module '${meta.config.functionality.name}': key is a required argument"
+  assert workflowArgs.containsKey("key") : "Error in module '${meta.config.name}': key is a required argument"
 
   // if 'key' is a closure, apply it to the original key
   if (workflowArgs["key"] instanceof Closure) {
-    workflowArgs["key"] = workflowArgs["key"](meta.config.functionality.name)
+    workflowArgs["key"] = workflowArgs["key"](meta.config.name)
   }
   def key = workflowArgs["key"]
   assert key instanceof CharSequence : "Expected process argument 'key' to be a String. Found: class ${key.getClass()}"
@@ -117,7 +117,7 @@ def _processFromState(fromState, key_, config_) {
     assert fromState.values().every{it instanceof CharSequence} : "Error in module '$key_': fromState is a Map, but not all values are Strings"
     assert fromState.keySet().every{it instanceof CharSequence} : "Error in module '$key_': fromState is a Map, but not all keys are Strings"
     def fromStateMap = fromState.clone()
-    def requiredInputNames = meta.config.functionality.allArguments.findAll{it.required && it.direction == "Input"}.collect{it.plainName}
+    def requiredInputNames = meta.config.allArguments.findAll{it.required && it.direction == "Input"}.collect{it.plainName}
     // turn the map into a closure to be used later on
     fromState = { it ->
       def state = it[1]
@@ -161,7 +161,7 @@ def _processToState(toState, key_, config_) {
     assert toState.values().every{it instanceof CharSequence} : "Error in module '$key_': toState is a Map, but not all values are Strings"
     assert toState.keySet().every{it instanceof CharSequence} : "Error in module '$key_': toState is a Map, but not all keys are Strings"
     def toStateMap = toState.clone()
-    def requiredOutputNames = config_.functionality.allArguments.findAll{it.required && it.direction == "Output"}.collect{it.plainName}
+    def requiredOutputNames = config_.allArguments.findAll{it.required && it.direction == "Output"}.collect{it.plainName}
     // turn the map into a closure to be used later on
     toState = { it ->
       def output = it[1]

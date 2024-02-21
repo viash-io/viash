@@ -19,7 +19,7 @@ class MainConfigViewSuite extends AnyFunSuite{
       configFile
     )
 
-    assert(testOutput.stdout.startsWith("functionality:"))
+    assert(testOutput.stdout.startsWith("name:"))
     assert(testOutput.stdout.contains("testbash"))
   }
 
@@ -29,7 +29,7 @@ class MainConfigViewSuite extends AnyFunSuite{
       "https://raw.githubusercontent.com/viash-io/viash/develop_0_8/src/test/resources/testbash/config.vsh.yaml"
     )
 
-    assert(testOutput.stdout.startsWith("functionality:"))
+    assert(testOutput.stdout.startsWith("name:"))
     assert(testOutput.stdout.contains("testbash"))
   }
 

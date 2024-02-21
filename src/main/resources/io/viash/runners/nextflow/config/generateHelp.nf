@@ -60,7 +60,7 @@ def _generateArgumentHelp(param) {
 
 // Based on Helper.generateHelp() in Helper.scala
 def _generateHelp(config) {
-  def fun = config.functionality
+  def fun = config
 
   // PART 1: NAME AND VERSION
   def nameStr = fun.name + 

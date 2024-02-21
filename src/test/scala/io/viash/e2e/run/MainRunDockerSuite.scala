@@ -16,20 +16,19 @@ class MainRunDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
   private val temporaryFolder2 = temporaryFolder.resolve("folder with spaces")
 
   private val configText = 
-    """functionality:
-      |  name: testing
-      |  arguments:
-      |    - type: file
-      |      name: --input
-      |      required: true
-      |    - type: file
-      |      direction: output
-      |      name: --output
-      |      required: true
-      |  resources:
-      |    - type: bash_script
-      |      text: |
-      |        cp -r "$par_input" "$par_output"
+    """name: testing
+      |arguments:
+      |  - type: file
+      |    name: --input
+      |    required: true
+      |  - type: file
+      |    direction: output
+      |    name: --output
+      |    required: true
+      |resources:
+      |  - type: bash_script
+      |    text: |
+      |      cp -r "$par_input" "$par_output"
       |engines:
       |  - type: docker
       |    image: python:3.10-slim

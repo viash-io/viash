@@ -25,8 +25,8 @@ import io.viash.helpers.IO
 import io.viash.helpers.circe._
 import io.circe.Json
 import java.net.URI
-import io.viash.functionality.dependencies.RepositoryWithName
-import io.viash.functionality.{Author, Links, References}
+import io.viash.config.dependencies.RepositoryWithName
+import io.viash.config.{Author, Links, References}
 
 @description("A Viash package configuration file. It's name should be `_viash.yaml`.")
 @example(
@@ -99,7 +99,7 @@ case class PackageConfig(
   // todo: make this a ConfigMods object
   // todo: link to config mods docs
   @description("Which config mods to apply.")
-  @example("config_mods: \".functionality.name := 'foo'\"", "yaml")
+  @example("config_mods: \".name := 'foo'\"", "yaml")
   @default("Empty")
   config_mods: OneOrMore[String] = Nil,
 

@@ -34,7 +34,7 @@ def vdsl3WorkflowFactory(Map args, Map meta, String rawScript) {
         }
 
         // process input files separately
-        def inputPaths = meta.config.functionality.allArguments
+        def inputPaths = meta.config.allArguments
           .findAll { it.type == "file" && it.direction == "input" }
           .collect { par ->
             def val = data_.containsKey(par.plainName) ? data_[par.plainName] : []
@@ -62,7 +62,7 @@ def vdsl3WorkflowFactory(Map args, Map meta, String rawScript) {
           } 
 
         // remove input files
-        def argsExclInputFiles = meta.config.functionality.allArguments
+        def argsExclInputFiles = meta.config.allArguments
           .findAll { (it.type != "file" || it.direction != "input") && data_.containsKey(it.plainName) }
           .collectEntries { par ->
             def parName = par.plainName
@@ -80,7 +80,7 @@ def vdsl3WorkflowFactory(Map args, Map meta, String rawScript) {
       }
       | processObj
       | map { output ->
-        def outputFiles = meta.config.functionality.allArguments
+        def outputFiles = meta.config.allArguments
           .findAll { it.type == "file" && it.direction == "output" }
           .indexed()
           .collectEntries{ index, par ->
@@ -174,12 +174,12 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
     }
   }.join()
 
-  def inputPaths = meta.config.functionality.allArguments
+  def inputPaths = meta.config.allArguments
     .findAll { it.type == "file" && it.direction == "input" }
     .collect { ', path(viash_par_' + it.plainName + ', stageAs: "_viash_par/' + it.plainName + '_?/*")' }
     .join()
 
-  def outputPaths = meta.config.functionality.allArguments
+  def outputPaths = meta.config.allArguments
     .findAll { it.type == "file" && it.direction == "output" }
     .collect { par ->
       // insert dummy into every output (see nextflow-io/nextflow#2678)
@@ -199,7 +199,7 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   }
 
   // create dirs for output files (based on BashWrapper.createParentFiles)
-  def createParentStr = meta.config.functionality.allArguments
+  def createParentStr = meta.config.allArguments
     .findAll { it.type == "file" && it.direction == "output" && it.create_parent }
     .collect { par -> 
       "\${ args.containsKey(\"${par.plainName}\") ? \"mkdir_parent \\\"\" + (args[\"${par.plainName}\"] instanceof String ? args[\"${par.plainName}\"] : args[\"${par.plainName}\"].join('\" \"')) + \"\\\"\" : \"\" }"
@@ -207,7 +207,7 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
     .join("\n")
 
   // construct inputFileExports
-  def inputFileExports = meta.config.functionality.allArguments
+  def inputFileExports = meta.config.allArguments
     .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
     .collect { par ->
       viash_par_contents = "(viash_par_${par.plainName} instanceof List ? viash_par_${par.plainName}.join(\"${par.multiple_sep}\") : viash_par_${par.plainName})"
@@ -229,7 +229,7 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   ).toAbsolutePath()
 
   // construct stub
-  def stub = meta.config.functionality.allArguments
+  def stub = meta.config.allArguments
     .findAll { it.type == "file" && it.direction == "output" }
     .collect { par -> 
       "\${ args.containsKey(\"${par.plainName}\") ? \"touch2 \\\"\" + (args[\"${par.plainName}\"] instanceof String ? args[\"${par.plainName}\"].replace(\"_*\", \"_0\") : args[\"${par.plainName}\"].join('\" \"')) + \"\\\"\" : \"\" }"
@@ -269,8 +269,8 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   |# export VIASH_META_RESOURCES_DIR="\${resourcesDir.toRealPath().toAbsolutePath()}"
   |export VIASH_META_RESOURCES_DIR="\${resourcesDir}"
   |export VIASH_META_TEMP_DIR="${['docker', 'podman', 'charliecloud'].any{ it == workflow.containerEngine } ? '/tmp' : tmpDir}"
-  |export VIASH_META_FUNCTIONALITY_NAME="${meta.config.functionality.name}"
-  |# export VIASH_META_EXECUTABLE="\\\$VIASH_META_RESOURCES_DIR/\\\$VIASH_META_FUNCTIONALITY_NAME"
+  |export VIASH_META_NAME="${meta.config.name}"
+  |# export VIASH_META_EXECUTABLE="\\\$VIASH_META_RESOURCES_DIR/\\\$VIASH_META_NAME"
   |export VIASH_META_CONFIG="\\\$VIASH_META_RESOURCES_DIR/.config.vsh.yaml"
   |\${task.cpus ? "export VIASH_META_CPUS=\$task.cpus" : "" }
   |\${task.memory?.bytes != null ? "export VIASH_META_MEMORY_B=\$task.memory.bytes" : "" }

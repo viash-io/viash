@@ -10,7 +10,7 @@
  */
 Map<String, Object> _splitParams(Map<String, Object> parValues, Map config){
   def parsedParamValues = parValues.collectEntries { parName, parValue ->
-    def parameterSettings = config.functionality.allArguments.find({it.plainName == parName})
+    def parameterSettings = config.allArguments.find({it.plainName == parName})
 
     if (!parameterSettings) {
       // if argument is not found, do not alter 

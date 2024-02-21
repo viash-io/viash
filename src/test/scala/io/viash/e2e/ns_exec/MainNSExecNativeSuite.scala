@@ -26,13 +26,32 @@ class MainNSExecNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   private val temporaryFolder = IO.makeTemp("viash_ns_exec")
   private val tempFolStr = temporaryFolder.toString
 
-  test("Check whether ns exec \\; works") {
+  test("Check whether ns exec \\; works - old") {
     val testOutput = TestHelper.testMain(
         "ns", "exec",
         "--src", nsPath,
         "--apply_runner",
         "--apply_engine",
         "echo _{functionality-name}_ -{dir}- !{path}! ~{engine}~ ={namespace}=+\\;"
+      )
+    val stdout = testOutput.stdout.replaceAll(nsPath, "src/")
+    val stderr = testOutput.stderr.replaceAll(nsPath, "src/")
+
+    for (component <- components) {
+      val regexCommand = s"""\\+ echo _${component}_ -src/$component/?- !src/$component/config.vsh.yaml! ~native~ =testns=""".r
+      assert(regexCommand.findFirstIn(stderr).isDefined, s"\nRegex: $regexCommand; text: \n$stderr")
+      val outputCommand = s"""_${component}_ -src/$component/?- !src/$component/config.vsh.yaml! ~native~ =testns=""".r
+      assert(outputCommand.findFirstIn(stdout).isDefined, s"\nRegex: $outputCommand; text: \n$stdout")
+    }
+  }
+
+  test("Check whether ns exec \\; works - new") {
+    val testOutput = TestHelper.testMain(
+        "ns", "exec",
+        "--src", nsPath,
+        "--apply_runner",
+        "--apply_engine",
+        "echo _{name}_ -{dir}- !{path}! ~{engine}~ ={namespace}=+\\;"
       )
     val stdout = testOutput.stdout.replaceAll(nsPath, "src/")
     val stderr = testOutput.stderr.replaceAll(nsPath, "src/")

@@ -55,7 +55,7 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
         
         // match file to input file
         if (workflowArgs.auto.simplifyInput && (tuple[1] instanceof Path || tuple[1] instanceof List)) {
-          def inputFiles = meta.config.functionality.allArguments
+          def inputFiles = meta.config.allArguments
             .findAll { it.type == "file" && it.direction == "input" }
           
           assert inputFiles.size() == 1 : 
@@ -134,12 +134,12 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
         // TODO: could move fromState to here
 
         // fetch default params from functionality
-        def defaultArgs = meta.config.functionality.allArguments
+        def defaultArgs = meta.config.allArguments
           .findAll { it.containsKey("default") }
           .collectEntries { [ it.plainName, it.default ] }
 
         // fetch overrides in params
-        def paramArgs = meta.config.functionality.allArguments
+        def paramArgs = meta.config.allArguments
           .findAll { par ->
             def argKey = key_ + "__" + par.plainName
             params.containsKey(argKey)
@@ -147,7 +147,7 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
           .collectEntries { [ it.plainName, params[key_ + "__" + it.plainName] ] }
         
         // fetch overrides in data
-        def dataArgs = meta.config.functionality.allArguments
+        def dataArgs = meta.config.allArguments
           .findAll { data_.containsKey(it.plainName) }
           .collectEntries { [ it.plainName, data_[it.plainName] ] }
         

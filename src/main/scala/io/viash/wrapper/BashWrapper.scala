@@ -17,19 +17,19 @@
 
 package io.viash.wrapper
 
-import io.viash.functionality._
-import io.viash.functionality.resources._
-import io.viash.functionality.arguments._
 import io.viash.helpers.{Bash, Format, Helper}
 import io.viash.helpers.Escaper
 import io.viash.config.ConfigMeta
 import io.viash.config.Config
 import java.nio.file.Paths
 import io.viash.ViashNamespace
+import io.viash.config.arguments._
+import io.viash.config.resources.Executable
 
 object BashWrapper {
   val metaArgs: List[Argument[_]] = {
     List(
+      StringArgument("name", required = true, dest = "meta"),
       StringArgument("functionality_name", required = true, dest = "meta"),
       // filearguments set to 'must_exist = false, create_parent = false' because of config inject
       FileArgument("resources_dir", required = true, dest = "meta", must_exist = false, create_parent = false),
@@ -116,19 +116,18 @@ object BashWrapper {
 
   def wrapScript(
     executor: String,
-    functionality: Functionality,
+    config: Config,
     mods: BashWrapperMods = BashWrapperMods(),
     debugPath: Option[String] = None,
-    config: Config
   ): String = {
     // Add pipes after each newline. Prevents pipes being stripped when a string starts with a pipe (with optional leading spaces).
     def escapePipes(s: String) = s.replaceAll("\n", "\n|")
 
-    val mainResource = functionality.mainScript
+    val mainResource = config.mainScript
 
     // check whether the wd needs to be set to the resources dir
     val cdToResources =
-      if (functionality.set_wd_to_resources_dir) {
+      if (config.set_wd_to_resources_dir) {
         s"""
           |cd "$$VIASH_META_RESOURCES_DIR"""".stripMargin
       } else {
@@ -137,13 +136,13 @@ object BashWrapper {
     
     val argsMetaAndDeps = 
       if (debugPath.isDefined) {
-        functionality.getArgumentLikesGroupedByDest(
+        config.getArgumentLikesGroupedByDest(
           includeMeta = true,
           includeDependencies = true,
           filterInputs = true
         ).view.mapValues(_.map(_.disableChecks)).toMap
       } else {
-        functionality.getArgumentLikesGroupedByDest(
+        config.getArgumentLikesGroupedByDest(
           includeMeta = true,
           includeDependencies = true,
           filterInputs = true
@@ -180,7 +179,7 @@ object BashWrapper {
         // whether it needs to be a specific path
         val scriptSetup =
           s"""
-            |tempscript=\\$$(mktemp "$$VIASH_META_TEMP_DIR/viash-run-${functionality.name}-XXXXXX").${res.companion.extension}
+            |tempscript=\\$$(mktemp "$$VIASH_META_TEMP_DIR/viash-run-${config.name}-XXXXXX").${res.companion.extension}
             |function clean_up {
             |  rm "\\$$tempscript"
             |}
@@ -210,8 +209,8 @@ object BashWrapper {
     }
 
     // generate script modifiers
-    val helpMods = generateHelp(functionality)
-    val computationalRequirementMods = generateComputationalRequirements(functionality)
+    val helpMods = generateHelp(config)
+    val computationalRequirementMods = generateComputationalRequirements(config)
     val parMods = generateParsers(args)
     val execMods = mainResource match {
       case Some(_: Executable) => generateExecutableArgs(args)
@@ -222,16 +221,16 @@ object BashWrapper {
     val allMods = helpMods ++ parMods ++ mods ++ execMods ++ computationalRequirementMods
 
     // generate header
-    val header = Helper.generateScriptHeader(functionality)
+    val header = Helper.generateScriptHeader(config)
       .map(h => Escaper(h, newline = true))
       .mkString("# ", "\n# ", "")
 
-    val (localDependencies, remoteDependencies) = config.functionality.dependencies
+    val (localDependencies, remoteDependencies) = config.dependencies
       .partition(d => d.isLocalDependency)
     val localDependenciesStrings = localDependencies.map{ d =>
       // relativize the path of the main component to the local dependency
       // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
-      val thisPath = ViashNamespace.targetOutputPath("", "invalid_runner_name", config.functionality.namespace, config.functionality.name)
+      val thisPath = ViashNamespace.targetOutputPath("", "invalid_runner_name", config.namespace, config.name)
       val relativePath = Paths.get(thisPath).relativize(Paths.get(d.configInfo.getOrElse("executable", "")))
       s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR/$relativePath\""
     }
@@ -272,8 +271,9 @@ object BashWrapper {
        |VIASH_TARGET_DIR=`ViashFindTargetDir $$VIASH_META_RESOURCES_DIR`
        |
        |# define meta fields
-       |VIASH_META_FUNCTIONALITY_NAME="${functionality.name}"
-       |VIASH_META_EXECUTABLE="$$VIASH_META_RESOURCES_DIR/$$VIASH_META_FUNCTIONALITY_NAME"
+       |VIASH_META_NAME="${config.name}"
+       |VIASH_META_FUNCTIONALITY_NAME="${config.name}"
+       |VIASH_META_EXECUTABLE="$$VIASH_META_RESOURCES_DIR/$$VIASH_META_NAME"
        |VIASH_META_CONFIG="$$VIASH_META_RESOURCES_DIR/${ConfigMeta.metaFilename}"
        |VIASH_META_TEMP_DIR="$$VIASH_TEMP"
        |
@@ -300,7 +300,7 @@ object BashWrapper {
        |            shift 1
        |            ;;
        |        --version)
-       |            echo "${Helper.nameAndVersion(functionality)}"
+       |            echo "${Helper.nameAndVersion(config)}"
        |            exit
        |            ;;
        |${allMods.parsers}
@@ -329,8 +329,8 @@ object BashWrapper {
   }
 
 
-  private def generateHelp(functionality: Functionality) = {
-    val help = Helper.generateHelp(functionality)
+  private def generateHelp(config: Config) = {
+    val help = Helper.generateHelp(config)
     val helpStr = help
       .map(h => Bash.escapeString(h, quote = true))
       .mkString("  echo \"", "\"\n  echo \"", "\"")
@@ -692,10 +692,10 @@ object BashWrapper {
   }
 
 
-  private def generateComputationalRequirements(functionality: Functionality) = {
+  private def generateComputationalRequirements(config: Config) = {
     val compArgs = List(
-      ("---cpus", "VIASH_META_CPUS", functionality.requirements.cpus.map(_.toString)),
-      ("---memory", "VIASH_META_MEMORY", functionality.requirements.memoryAsBytes.map(_.toString + "b"))
+      ("---cpus", "VIASH_META_CPUS", config.requirements.cpus.map(_.toString)),
+      ("---memory", "VIASH_META_MEMORY", config.requirements.memoryAsBytes.map(_.toString + "b"))
     )
 
     // gather parse code for params

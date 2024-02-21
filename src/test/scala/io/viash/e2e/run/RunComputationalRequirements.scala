@@ -47,7 +47,7 @@ class RunComputationalRequirements extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check set cpus in config") {
-    val newConfigFilePath = configDeriver.derive(""".functionality.requirements := {cpus: 3}""", "cpus_set")
+    val newConfigFilePath = configDeriver.derive(""".requirements := {cpus: 3}""", "cpus_set")
     val testOutput = TestHelper.testMain(
       "run",
       newConfigFilePath
@@ -58,7 +58,7 @@ class RunComputationalRequirements extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check set memory in config") {
-    val newConfigFilePath = configDeriver.derive(""".functionality.requirements := {memory: "3 mb"}""", "memory_set")
+    val newConfigFilePath = configDeriver.derive(""".requirements := {memory: "3 mb"}""", "memory_set")
     val testOutput = TestHelper.testMain(
       "run",
       newConfigFilePath
@@ -69,7 +69,7 @@ class RunComputationalRequirements extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check set cpus and memory in config") {
-    val newConfigFilePath = configDeriver.derive(""".functionality.requirements := {cpus: 3, memory: "3 mb"}""", "cpus_memory_set")
+    val newConfigFilePath = configDeriver.derive(""".requirements := {cpus: 3, memory: "3 mb"}""", "cpus_memory_set")
     val testOutput = TestHelper.testMain(
       "run",
       newConfigFilePath
@@ -80,7 +80,7 @@ class RunComputationalRequirements extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check set cpus in config and CLI") {
-    val newConfigFilePath = configDeriver.derive(""".functionality.requirements := {cpus: 3}""", "cpus_set2")
+    val newConfigFilePath = configDeriver.derive(""".requirements := {cpus: 3}""", "cpus_set2")
     val testOutput = TestHelper.testMain(
       "run",
       "--cpus", "2",
@@ -92,7 +92,7 @@ class RunComputationalRequirements extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check set memory in config and CLI") {
-    val newConfigFilePath = configDeriver.derive(""".functionality.requirements := {memory: "3 mb"}""", "memory_set2")
+    val newConfigFilePath = configDeriver.derive(""".requirements := {memory: "3 mb"}""", "memory_set2")
     val testOutput = TestHelper.testMain(
       "run",
       "--memory", "2mb",
@@ -104,7 +104,7 @@ class RunComputationalRequirements extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Check set cpus and memory in config and CLI") {
-    val newConfigFilePath = configDeriver.derive(""".functionality.requirements := {cpus: 3, memory: "3 mb"}""", "cpus_memory_set2")
+    val newConfigFilePath = configDeriver.derive(""".requirements := {cpus: 3, memory: "3 mb"}""", "cpus_memory_set2")
     val testOutput = TestHelper.testMain(
       "run",
       "--cpus", "2",

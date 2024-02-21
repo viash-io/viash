@@ -24,14 +24,14 @@ class NativePackageConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
   private val temporaryConfigFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
   private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
 
-  val baseConfigFilePath = configDeriver.derive(""".functionality.version := null""", "base_config")
+  val baseConfigFilePath = configDeriver.derive(""".version := null""", "base_config")
 
   // Use config mod functionality so that we can more easily differentiate between e.g. '.license' and '.package_config.license'
-  val versionMod = ConfigModParser.parse(ConfigModParser.path, """.functionality.version""").get
-  val licenseMod = ConfigModParser.parse(ConfigModParser.path, """.functionality.license""").get
-  val organizationMod = ConfigModParser.parse(ConfigModParser.path, """.functionality.organization""").get
-  val linksRepositoryMod = ConfigModParser.parse(ConfigModParser.path, """.functionality.links.repository""").get
-  val linksRegistryMod = ConfigModParser.parse(ConfigModParser.path, """.functionality.links.docker_registry""").get
+  val versionMod = ConfigModParser.parse(ConfigModParser.path, """.version""").get
+  val licenseMod = ConfigModParser.parse(ConfigModParser.path, """.license""").get
+  val organizationMod = ConfigModParser.parse(ConfigModParser.path, """.organization""").get
+  val linksRepositoryMod = ConfigModParser.parse(ConfigModParser.path, """.links.repository""").get
+  val linksRegistryMod = ConfigModParser.parse(ConfigModParser.path, """.links.docker_registry""").get
 
   // TODO .repositories functionality is not tested here
 
@@ -85,10 +85,10 @@ class NativePackageConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
     val newConfigFilePath = 
       configDeriver.derive(
         List(
-          """.functionality.version := "foo"""",
-          """.functionality.license := "bar"""",
-          """.functionality.organization := "baz"""",
-          """.functionality.links := { repository: "qux", docker_registry: "quux" }""",
+          """.version := "foo"""",
+          """.license := "bar"""",
+          """.organization := "baz"""",
+          """.links := { repository: "qux", docker_registry: "quux" }""",
         ),
         "config_with_fields_set"
       )

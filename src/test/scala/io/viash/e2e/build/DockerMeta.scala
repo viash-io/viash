@@ -11,16 +11,16 @@ import io.viash.config.Config
 
 import scala.io.Source
 import cats.instances.function
-import io.viash.functionality.resources.PlainFile
+import io.viash.config.resources.PlainFile
 
 class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
   // which config to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 
-  // parse functionality from file
-  private val functionality = Config.read(configFile).functionality
-  private def configAndResources = PlainFile(path = Some(configFile.toString)) :: functionality.resources
+  // parse config from file
+  private val config = Config.read(configFile)
+  private def configAndResources = PlainFile(path = Some(configFile.toString)) :: config.resources
 
   test("Get meta data of a docker", DockerTest) {
     // Create temporary folder to copy the files to so we can do a git init in that folder
@@ -34,7 +34,7 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
 
       val binDir = tempMetaFolder.resolve("bin")
       val configFile = tempMetaFolder.resolve("config.vsh.yaml")
-      val exec = binDir.resolve(functionality.name)
+      val exec = binDir.resolve(config.name)
       val meta = binDir.resolve(".config.vsh.yaml")
 
       // Run the code
@@ -106,7 +106,7 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
 
       val configMetaFile = tempMetaFolder.resolve("config.vsh.yaml")
       val binDir = tempMetaFolder.resolve("bin")
-      val exec = binDir.resolve(functionality.name)
+      val exec = binDir.resolve(config.name)
       val meta = binDir.resolve(".config.vsh.yaml")
 
       // Run the code
@@ -169,7 +169,7 @@ class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
 
       val configMetaFile = tempMetaFolder.resolve("config.vsh.yaml")
       val binDir = tempMetaFolder.resolve("bin")
-      val exec = binDir.resolve(functionality.name)
+      val exec = binDir.resolve(config.name)
       val meta = binDir.resolve(".config.vsh.yaml")
 
       // Run the code

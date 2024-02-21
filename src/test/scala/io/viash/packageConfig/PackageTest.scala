@@ -35,7 +35,7 @@ class PackageTest extends AnyFunSuite {
     assert(pack.target.get == rootPath.resolve("testns/target").toString)
 
     // Todo: change config mods into a configmods class
-    val expectedCm = List(""".functionality.info := {"foo": "bar"}""")
+    val expectedCm = List(""".info := {"foo": "bar"}""")
     assert(pack.config_mods.toList == expectedCm)
   }
 

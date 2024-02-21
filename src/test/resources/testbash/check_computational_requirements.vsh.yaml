@@ -1,34 +1,34 @@
-functionality:
-  name: auxiliary_computational_requirements
-  version: 0.1
-  description: |
-    Check setting of computational requirements
-  resources:
-    - type: bash_script
-      text: |
-        if [ -n "$meta_cpus" ]; then
-          echo "cpus: $meta_cpus"
-        else
-          echo "cpus unset"
-        fi
 
-        if [ -n "$meta_memory_mb" ]; then
-          echo "memory: $meta_memory_mb"
-        else
-          echo "memory unset"
-        fi
-  test_resources:
-    - type: bash_script
-      path: "test_script.sh"
-      text: |
-        if [ -n "$VIASH_META_CPUS" ] && [ -n "$VIASH_META_MEMORY" ]; then
-          VIASH_META_CPUS=$VIASH_META_CPUS VIASH_META_MEMORY=$VIASH_META_MEMORY "$meta_executable"
-        elif [ -z "$VIASH_META_CPUS" ] && [ -n "$VIASH_META_MEMORY" ]; then
-          VIASH_META_MEMORY=$VIASH_META_MEMORY "$meta_executable"
-        elif [ -n "$VIASH_META_CPUS" ] && [ -z "$VIASH_META_MEMORY" ]; then
-          VIASH_META_CPUS=$VIASH_META_CPUS "$meta_executable"
-        else
-          "$meta_executable"
-        fi
+name: auxiliary_computational_requirements
+version: 0.1
+description: |
+  Check setting of computational requirements
+resources:
+  - type: bash_script
+    text: |
+      if [ -n "$meta_cpus" ]; then
+        echo "cpus: $meta_cpus"
+      else
+        echo "cpus unset"
+      fi
+
+      if [ -n "$meta_memory_mb" ]; then
+        echo "memory: $meta_memory_mb"
+      else
+        echo "memory unset"
+      fi
+test_resources:
+  - type: bash_script
+    path: "test_script.sh"
+    text: |
+      if [ -n "$VIASH_META_CPUS" ] && [ -n "$VIASH_META_MEMORY" ]; then
+        VIASH_META_CPUS=$VIASH_META_CPUS VIASH_META_MEMORY=$VIASH_META_MEMORY "$meta_executable"
+      elif [ -z "$VIASH_META_CPUS" ] && [ -n "$VIASH_META_MEMORY" ]; then
+        VIASH_META_MEMORY=$VIASH_META_MEMORY "$meta_executable"
+      elif [ -n "$VIASH_META_CPUS" ] && [ -z "$VIASH_META_MEMORY" ]; then
+        VIASH_META_CPUS=$VIASH_META_CPUS "$meta_executable"
+      else
+        "$meta_executable"
+      fi
 engines:
   - type: native

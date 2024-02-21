@@ -26,7 +26,7 @@ import scala.io.{Codec, Source}
 import java.net.URL
 import sys.process._
 import java.nio.charset.StandardCharsets
-import io.viash.functionality.resources.Resource
+import io.viash.config.resources.Resource
 
 import java.nio.file.attribute.PosixFilePermission
 import java.util.Comparator

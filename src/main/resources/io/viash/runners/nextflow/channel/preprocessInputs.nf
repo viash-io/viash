@@ -38,10 +38,10 @@ def preprocessInputs(Map args) {
   assert config instanceof Map : 
     "Error in preprocessInputs: config must be a map. " +
     "Expected class: Map. Found: config.getClass() is ${config.getClass()}"
-  def key_ = args.key ?: config.functionality.name
+  def key_ = args.key ?: config.name
 
   // Get different parameter types (used throughout this function)
-  def defaultArgs = config.functionality.allArguments
+  def defaultArgs = config.allArguments
     .findAll { it.containsKey("default") }
     .collectEntries { [ it.plainName, it.default ] }
 
@@ -51,7 +51,7 @@ def preprocessInputs(Map args) {
     def passthrough = tup.drop(2)
 
     def new_data = (defaultArgs + data).collectEntries { name, value ->
-      def par = config.functionality.allArguments.find { it.plainName == name && (it.direction == "input" || it.type == "file") }
+      def par = config.allArguments.find { it.plainName == name && (it.direction == "input" || it.type == "file") }
       
       if (par != null) {
         value = _checkArgumentType("input", par, value, "in module '$key_' id '$id'")

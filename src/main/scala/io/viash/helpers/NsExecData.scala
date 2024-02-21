@@ -31,6 +31,7 @@ final case class NsExecData(
   mainScript: String,
   absoluteMainScript: String,
   functionalityName: String,
+  name: String,
   namespace: Option[String],
   runnerId: Option[String],
   engineId: Option[String],
@@ -50,6 +51,7 @@ final case class NsExecData(
       case "main-script" => Some(this.mainScript)
       case "abs-main-script" => Some(this.absoluteMainScript)
       case "functionality-name" => Some(this.functionalityName)
+      case "name" => Some(this.functionalityName)
       case "namespace" => this.namespace
       case "runner" => this.runnerId
       case "engine" => this.engineId
@@ -64,7 +66,7 @@ object NsExecData {
   def apply(configPath: String, config: Config, runner: Option[Runner], engine: Option[Engine]): NsExecData = {
     val configPath_ = Paths.get(configPath)
     val dirPath = configPath_.getParent()
-    val mainScript = config.functionality.mainScript.flatMap(s => s.path).map(dirPath.resolve(_))
+    val mainScript = config.mainScript.flatMap(s => s.path).map(dirPath.resolve(_))
     apply(
       configFullPath = configPath,
       absoluteConfigFullPath = configPath_.toAbsolutePath.toString,
@@ -72,12 +74,13 @@ object NsExecData {
       absoluteDir = dirPath.toAbsolutePath.toString,
       mainScript = mainScript.map(_.toString).getOrElse(""),
       absoluteMainScript = mainScript.map(_.toAbsolutePath.toString).getOrElse(""),
-      functionalityName = config.functionality.name,
-      namespace = config.functionality.namespace,
+      functionalityName = config.name,
+      name = config.name,
+      namespace = config.namespace,
       runnerId = runner.map(_.id),
       engineId = engine.map(_.id),
-      output = config.info.flatMap(_.output),
-      absoluteOutput = config.info.flatMap(info => info.output.map(Paths.get(_).toAbsolutePath.toString))
+      output = config.build_info.flatMap(_.output),
+      absoluteOutput = config.build_info.flatMap(info => info.output.map(Paths.get(_).toAbsolutePath.toString))
     )
   }
 
@@ -90,6 +93,7 @@ object NsExecData {
       mainScript = data.map(_.mainScript).mkString(" "),
       absoluteMainScript = data.map(_.absoluteMainScript).mkString(" "),
       functionalityName = data.map(_.functionalityName).mkString(" "),
+      name = data.map(_.name).mkString(" "),
       namespace = Some(data.flatMap(_.namespace).mkString(" ")),
       runnerId = Some(data.flatMap(_.runnerId).mkString(" ")),
       engineId = Some(data.flatMap(_.engineId).mkString(" ")),
