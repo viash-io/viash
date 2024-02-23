@@ -2,7 +2,7 @@
 
 ## Set the version in `build.sbt`
 
-e.g. from `version := "0.7.2 dev"` to `version := "0.7.2"`
+e.g. from `version := "0.7.2-dev"` to `version := "0.7.2"`
 
 ## Finalize the changelog changes
 
@@ -54,7 +54,7 @@ Short summary if you already have an operational envirionment:
 # Post merge
 
 Under the `develop` branch,
-- Update the version in `build.sbt` to the next version with a `dev` suffix.
+- Update the version in `build.sbt` to the next version with a `-dev` suffix.
 - Add a placeholder entry in `CHANGELOG.md` for a future release.
 
 Template:
