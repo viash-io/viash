@@ -8,6 +8,8 @@ TODO add summary
 
 * `NextflowPlatform`: Fix publishing state for output arguments with `multiple: true` (#638, PR #639). 
 
+* `Executable`: Check whether a multiple output file argument contains a wildcard (PR #639).
+
 # Viash 0.8.4 (2024-01-15): Bug fix
 
 Fix building components with dependencies that have symlinks in their paths.
