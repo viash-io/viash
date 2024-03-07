@@ -361,7 +361,12 @@ object BashWrapper {
 
         (part1 :: moreParts).mkString("\n")
       case param =>
-        val multisep = if (param.multiple) Some(param.multiple_sep) else None
+        val multisep =
+          if (param.multiple && param.direction == Input) {
+            Some(param.multiple_sep)
+          } else {
+            None
+          }
 
         // params of the form --param ...
         val part1 = param.flags match {
@@ -389,7 +394,7 @@ object BashWrapper {
       } else {
         "\n# storing leftover values in positionals\n" +
         positionals.map { param =>
-          if (param.multiple) {
+          if (param.multiple && param.direction == Input) {
             s"""while [[ $$# -gt 0 ]]; do
               |  ${store("positionalArg", param.VIASH_PAR, "\"$1\"", Some(param.multiple_sep)).mkString("\n  ")}
               |  shift 1
@@ -497,7 +502,7 @@ object BashWrapper {
       } else {
         "\n# create parent directories of output files, if so desired\n" +
           createParentFiles.map { param =>
-            if (param.multiple) {
+            if (param.multiple && param.direction == Input) {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
                  |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
                  |  set -f
@@ -520,7 +525,8 @@ object BashWrapper {
     // construct type checks
     def typeMinMaxCheck[T](param: Argument[T], regex: String, min: Option[T] = None, max: Option[T] = None) = {
       val typeWithArticle = param match {
-        case i: IntegerArgument => "an " + param.`type`
+        case _: FileArgument if param.multiple && param.direction == Output => "a path containing a wildcard, e.g. 'output_*.txt'"
+        case _: IntegerArgument => "an " + param.`type`
         case _ => "a " + param.`type`
       }
 
@@ -588,7 +594,7 @@ object BashWrapper {
       }
 
       param match {
-        case param if param.multiple =>
+        case param if param.multiple && param.direction == Input =>
           val checkStart = 
             s"""if [ -n "$$${param.VIASH_PAR}" ]; then
                |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
@@ -629,17 +635,18 @@ object BashWrapper {
                 Some(typeMinMaxCheck(dO, "^[-+]?(\\.[0-9]+|[0-9]+(\\.[0-9]*)?)([eE][-+]?[0-9]+)?$", dO.min, dO.max))
               case bo: BooleanArgumentBase =>
                 Some(typeMinMaxCheck(bo, "^(true|True|TRUE|false|False|FALSE|yes|Yes|YES|no|No|NO)$"))
+              case fo: FileArgument if fo.multiple && fo.direction == Output =>
+                Some(typeMinMaxCheck(fo, "\\*"))
               case _ => None
             }           
           }.mkString("\n")
       }
 
-
     def checkChoices[T](param: Argument[T], allowedChoices: List[T]) = {
       val allowedChoicesString = allowedChoices.mkString(param.multiple_sep.toString)
 
       param match {
-        case _ if param.multiple =>
+        case _ if param.multiple && param.direction == Input =>
           s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
              |  ${param.VIASH_PAR}_CHOICES=("$allowedChoicesString")
              |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
@@ -782,7 +789,7 @@ object BashWrapper {
       case param =>
         val flag = if (param.flags == "") "" else " " + param.name
 
-        if (param.multiple) {
+        if (param.multiple && param.direction == Input) {
           s"""
              |if [ ! -z "$$${param.VIASH_PAR}" ]; then
              |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
