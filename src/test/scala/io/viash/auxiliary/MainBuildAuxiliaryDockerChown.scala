@@ -30,10 +30,7 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
   )
 
   val multipleOutputsMods = List(
-    """del(.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--multiple"])""",
-    """del(.functionality.argument_groups[.name == "Arguments"].arguments[.name == "multiple_pos"])""",
-    """del(.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--output"])""",
-    """.functionality.argument_groups[.name == "Arguments"].arguments += {name: "output_pos", type: "file", direction: "output", multiple: true}""",
+    """.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--output"].required := false""",
     """.functionality.resources[.type == "bash_script"].path := "docker_options/code_multiple_output.sh"""",
   )
 
@@ -66,7 +63,7 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
     val outputParams = amount match {
       case 1 => Seq("--output", pattern.replace("*", "1"))
       case 2 => Seq("--output", pattern.replace("*", "1"), "--output2", pattern.replace("*", "2"))
-      case 3 => Seq("--output", pattern)
+      case 3 => Seq("--multiple_output", pattern)
     }
 
     Exec.run(
