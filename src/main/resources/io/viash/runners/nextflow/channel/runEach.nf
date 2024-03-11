@@ -29,8 +29,7 @@ def runEach(Map args) {
   def runIf_ = args.runIf
   def id_ = args.id
 
-  runIf_ = runIf_ ? runIf_ : {id, state, component -> null}
-  assert runIf_ instanceof Closure: "Must pass a Closure to runIf for runEach."
+  assert !runIf_ || runIf_ instanceof Closure: "runEach: must pass a Closure to runIf."
 
   workflow runEachWf {
     take: input_ch
@@ -55,14 +54,14 @@ def runEach(Map args) {
         : filter_ch
       if (runIf_) {
         runIfBranch = id_ch.branch{ tup ->
-          run: runIf_(tup[0], tup[1], component)
+          run: runIf_(tup[0], tup[1], comp_)
           passthrough: true
         }
-        def chRun = runIfBranch.run
-        def chPassthrough = runIfBranch.passthrough
+        chRun = runIfBranch.run
+        chPassthrough = runIfBranch.passthrough
       } else {
-        def chRun = id_ch
-        def chPassthrough = Channel.empty()
+        chRun = id_ch
+        chPassthrough = Channel.empty()
       }
       def data_ch = chRun | map{tup ->
           def new_data = tup[1]
