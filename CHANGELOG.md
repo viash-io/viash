@@ -18,6 +18,10 @@ The default `multiple_sep` has been changed from `:` to `;` to avoid conflicts w
 
 * `functionality`: Remove the `functionality` layer from the config and move all fields to the top layer (PR #649).
 
+## NEW FUNCTIONALITY
+
+* `NextflowPlatform`: Added `runIf` functionality to `runEach`.
+
 ## MINOR CHANGES
 
 * `package config`: Renamed `project config` to `package config` (PR #636). Now that we start using the config more, we came to the conclusion that "package" was better suited that "project".
