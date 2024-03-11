@@ -53,7 +53,6 @@ def runEach(Map args) {
           [new_id] + tup.drop(1)
         }
         : filter_ch
-  
       if (runIf_) {
         runIfBranch = id_ch.branch{ tup ->
           run: runIf_(tup[0], tup[1], component)
@@ -65,7 +64,6 @@ def runEach(Map args) {
         def chRun = id_ch
         def chPassthrough = Channel.empty()
       }
-
       def data_ch = chRun | map{tup ->
           def new_data = tup[1]
           if (fromState_ instanceof Map) {
@@ -81,7 +79,6 @@ def runEach(Map args) {
           }
           tup.take(1) + [new_data] + tup.drop(1)
         }
-      
       def out_ch = data_ch
         | comp_.run(
           auto: (args.auto ?: [:]) + [simplifyInput: false, simplifyOutput: false]
@@ -109,7 +106,7 @@ def runEach(Map args) {
       def return_ch = post_ch
         | concat(chPassthrough)
       
-      post_ch
+      return_ch
     }
 
     // mix all results
