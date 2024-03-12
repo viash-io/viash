@@ -463,9 +463,9 @@ object BashWrapper {
           files.map { param =>
             if (!param.multiple) {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ] && [ ! -e "$$${param.VIASH_PAR}" ]; then
-                |  ViashError "$direction file '$$${param.VIASH_PAR}' does not exist."
-                |  exit 1
-                |fi""".stripMargin
+                 |  ViashError "$direction file '$$${param.VIASH_PAR}' does not exist."
+                 |  exit 1
+                 |fi""".stripMargin
             } else if (direction == Input) {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
                  |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
