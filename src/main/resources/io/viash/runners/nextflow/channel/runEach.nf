@@ -57,11 +57,11 @@ def runEach(Map args) {
           run: runIf_(tup[0], tup[1], comp_)
           passthrough: true
         }
-        chRun = runIfBranch.run
-        chPassthrough = runIfBranch.passthrough
+        def chRun = runIfBranch.run
+        def chPassthrough = runIfBranch.passthrough
       } else {
-        chRun = id_ch
-        chPassthrough = Channel.empty()
+        def chRun = id_ch
+        def chPassthrough = Channel.empty()
       }
       def data_ch = chRun | map{tup ->
           def new_data = tup[1]
