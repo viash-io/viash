@@ -14,7 +14,8 @@ echo ">>> Checking whether output is correct"
   --output ./output.txt --log ./log.txt \
   --multiple one --multiple=two \
   e f \
-  --long_number 112589990684262400
+  --long_number 112589990684262400 \
+  --multiple_output './output_*.txt'
 
 [[ ! -f output.txt ]] && echo "Output file could not be found!" && exit 1
 grep -q 'input: |NOTICE|' output.txt
@@ -31,5 +32,6 @@ grep -q 'optional: |foo|' output.txt
 grep -q 'optional_with_default: |bar|' output.txt
 grep -q 'multiple: |one:two|' output.txt
 grep -q 'multiple_pos: |a:b:c:d:e:f|' output.txt
+grep -q 'multiple_output: |.*/output_\*.txt|' output.txt
 
 echo ">>> Test finished successfully"

@@ -476,7 +476,7 @@ case class DockerPlatform(
     val preRun =
       if (resolve_volume == Automatic) {
         val detectMounts = args.flatMap {
-          case arg: FileArgument if arg.multiple =>
+          case arg: FileArgument if arg.multiple && arg.direction == Input =>
             // resolve arguments with multiplicity different from singular args
             val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
             val chownIfOutput = if (arg.direction == Output) "\n    VIASH_CHOWN_VARS+=( \"$var\" )" else ""
@@ -611,7 +611,7 @@ case class DockerPlatform(
            |function ViashPerformChown {
            |  if (( $${#VIASH_CHOWN_VARS[@]} )); then
            |    set +e
-           |    eval docker run --entrypoint=chown $dockerArgs$volExtraParams $fullImageID "$$(id -u):$$(id -g)" --silent --recursive $${VIASH_CHOWN_VARS[@]}
+           |    eval docker run --entrypoint=bash $dockerArgs$volExtraParams $fullImageID -c "'chown $$(id -u):$$(id -g) --silent --recursive $${VIASH_CHOWN_VARS[@]}'"
            |    set -e
            |  fi
            |}

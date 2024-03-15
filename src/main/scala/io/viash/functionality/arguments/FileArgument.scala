@@ -121,7 +121,21 @@ case class FileArgument(
   @default("Input")
   direction: Direction = Input,
 
-  @description("Treat the argument value as an array. Arrays can be passed using the delimiter `--foo=1:2:3` or by providing the same argument multiple times `--foo 1 --foo 2`. You can use a custom delimiter by using the [`multiple_sep`](#multiple_sep) property. `false` by default.")
+  @description(
+    """Allow for multiple values (`false` by default).
+      |
+      |For input arguments, this will be treated as a list of values. For example, values
+      |can be passed using the delimiter `--foo=1:2:3` or by providing the same argument 
+      |multiple times `--foo 1 --foo 2`. You can use a custom delimiter by using the 
+      |[`multiple_sep`](#multiple_sep) property.
+      |
+      |For output file arguments, the passed value needs to contain a wildcard. For example,
+      |`--foo 'foo_*.txt'` will be treated as a list of files that match the pattern. Note that in Bash,
+      | the wildcard will need to be in quotes (`"foo_*.txt"` or `'foo_*.txt'`) or else Bash will
+      | automatically attempt to expand the expression.
+      |
+      |Other output arguments (e.g. integer, double, ...) are not supported yet.
+      |""".stripMargin)
   @example(
     """- name: --my_files
       |  type: file
