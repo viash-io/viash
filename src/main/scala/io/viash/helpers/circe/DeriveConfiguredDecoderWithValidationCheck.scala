@@ -39,7 +39,12 @@ object DeriveConfiguredDecoderWithValidationCheck {
     val v = d(pred)
 
     v.fold(_ => {
-      throw new ConfigParserValidationException(typeOf[A].baseClasses.head.fullName, pred.value.toString())
+      val o = pred.value.asObject
+      val usedFields = o.map(_.keys.toSeq)
+      val validFields = typeOf[A].members.filter(m => !m.isMethod).map(_.name.toString.strip()).toSeq
+      val invalidFields = usedFields.map(_.diff(validFields))
+
+      throw new ConfigParserValidationException(typeOf[A].baseClasses.head.fullName, pred.value.toString(), invalidFields )
       false
     }, _ => true)
   }
