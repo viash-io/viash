@@ -130,7 +130,9 @@ case class FileArgument(
       |[`multiple_sep`](#multiple_sep) property.
       |
       |For output file arguments, the passed value needs to contain a wildcard. For example,
-      |'--foo=foo_*.txt' will be treated as a list of files that match the pattern.
+      |`--foo 'foo_*.txt'` will be treated as a list of files that match the pattern. Note that in Bash,
+      | the wildcard will need to be in quotes (`"foo_*.txt"` or `'foo_*.txt'`) or else Bash will
+      | automatically attempt to expand the expression.
       |
       |Other output arguments (e.g. integer, double, ...) are not supported yet.
       |""".stripMargin)
