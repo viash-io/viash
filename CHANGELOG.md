@@ -1,6 +1,8 @@
 # Viash 0.x.x (yyyy-MM-dd): TODO Add title
 
-TODO add summary
+## DOCUMENTATION
+
+* `docker setup strategy`: Fix inconsistencies in the documentation (PR #657).
 
 # Viash 0.8.5 (2024-02-21): Bug fixes and documentation improvements
 

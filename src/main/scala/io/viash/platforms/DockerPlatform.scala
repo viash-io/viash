@@ -122,11 +122,11 @@ case class DockerPlatform(
       +| `ifneedbebuild` |  Build the image if it does not exist locally.
       +| `ifneedbecachedbuild` | Build the image with caching enabled if it does not exist locally, with caching enabled.
       +| `alwayspull` / `pull` / `p` |  Try to pull the container from [Docker Hub](https://hub.docker.com) or the @[specified docker registry](docker_registry).
-      +| `alwayspullelsebuild` / `pullelsebuild` |  Try to pull the image from a registry and build it if it doesn't exist.
-      +| `alwayspullelsecachedbuild` / `pullelsecachedbuild` |  Try to pull the image from a registry and build it with caching if it doesn't exist.
+      +| `alwayspullelsebuild` / `pullelsebuild` |  Try to pull the image from a registry and build it if it does not exist.
+      +| `alwayspullelsecachedbuild` / `pullelsecachedbuild` |  Try to pull the image from a registry and build it with caching if it does not exist.
       +| `ifneedbepull` |  If the image does not exist locally, pull the image.
-      +| `ifneedbepullelsebuild` |  If the image does not exist locally, pull the image. If the image does exist, build it.
-      +| `ifneedbepullelsecachedbuild` | If the image does not exist locally, pull the image. If the image does exist, build it with caching enabled.
+      +| `ifneedbepullelsebuild` |  Do nothing if the image exists locally. Else, try to pull the image from a registry. Otherwise build the image from scratch.
+      +| `ifneedbepullelsecachedbuild` | Do nothing if the image exists locally. Else, try to pull the image from a registry. Otherwise build the image with caching enabled.
       +| `push` | Push the container to [Docker Hub](https://hub.docker.com)  or the @[specified docker registry](docker_registry).
       +| `pushifnotpresent` | Push the container to [Docker Hub](https://hub.docker.com) or the @[specified docker registry](docker_registry) if the @[tag](docker_tag) does not exist yet.
       +| `donothing` / `meh` | Do not build or pull anything.
