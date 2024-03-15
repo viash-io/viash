@@ -38,13 +38,27 @@ object DeriveConfiguredDecoderWithValidationCheck {
     val d = deriveConfiguredDecoder[A]
     val v = d(pred)
 
-    v.fold(_ => {
-      val o = pred.value.asObject
-      val usedFields = o.map(_.keys.toSeq)
+    v.fold(error => {
+      val usedFields = pred.value.asObject.map(_.keys.toSeq)
       val validFields = typeOf[A].members.filter(m => !m.isMethod).map(_.name.toString.strip()).toSeq
       val invalidFields = usedFields.map(_.diff(validFields))
 
-      throw new ConfigParserValidationException(typeOf[A].baseClasses.head.fullName, pred.value.toString(), invalidFields )
+      val fieldsHint = invalidFields match {
+        case Some(a) if a.length > 1 => Some(s"Unexpected fields: ${a.mkString(", ")}")
+        case Some(a) if a.length == 1 => Some(s"Unexpected field: ${a.head}")
+        case _ => None
+      }
+
+      val historyString = error.history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
+
+      val hint = (fieldsHint, historyString, error.message) match {
+        case (Some(a), h, _) if h != "" => Some(s".$h -> $a")
+        case (Some(a), _, _) => Some(a)
+        case (None, h, m) if h != "" => Some(s".$h -> $m")
+        case _ => None
+      }
+
+      throw new ConfigParserValidationException(typeOf[A].baseClasses.head.fullName, pred.value.toString(), hint)
       false
     }, _ => true)
   }

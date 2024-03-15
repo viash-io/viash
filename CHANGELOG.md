@@ -26,6 +26,8 @@ The default `multiple_sep` has been changed from `:` to `;` to avoid conflicts w
 
 * `BashWrapper`: Added meta-data field `meta_name` as a replacement for `meta_functionality_name` (PR #649). No immediate removal of the old field is planned, but it is deprecated.
 
+* `error message`: Improve the error message when using an invalid field in the config (#PR #662). The error message now includes the field names that are not valid if that happens to be the case or otherwise a more general error message.
+
 ## BUG FIXES
 
 * `schema`: Don't require undocumented fields to set default values and add the `links` and `reference` fields to functionality as they were not meant only to be in the project config (PR #636).
