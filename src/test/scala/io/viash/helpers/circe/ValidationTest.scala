@@ -140,6 +140,7 @@ class ValidationTest extends AnyFunSuite {
     assert(stdout.isEmpty())
     assert(stderr.isEmpty())
     assert(exception.toString().contains("Invalid data fields for TestClassValidation."))
+    assert(exception.toString().contains("Unexpected field: foo"))
   }
 
 }

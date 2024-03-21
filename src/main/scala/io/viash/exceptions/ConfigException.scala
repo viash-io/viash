@@ -40,9 +40,10 @@ case class ConfigParserSubTypeException(tpe: String, validTypes: List[String], j
   override def getMessage(): String = s"Type '$tpe' is not recognised. Valid types are $validTypesStr.\n$json"
 }
 
-case class ConfigParserValidationException(tpe: String, json: String) extends Exception {
+case class ConfigParserValidationException(tpe: String, json: String, hint: Option[String] = None) extends Exception {
   val shortType = tpe.split("\\.").last
-  override def getMessage(): String = s"Invalid data fields for $shortType.\n$json"
+  val hintString = hint.map(_ + "\n").getOrElse("")
+  override def getMessage(): String = s"Invalid data fields for $shortType.\n$hintString$json"
 }
 
 case class ConfigParserMergeException(uri: String, innerMessage: String, json: String) extends AbstractConfigException {
