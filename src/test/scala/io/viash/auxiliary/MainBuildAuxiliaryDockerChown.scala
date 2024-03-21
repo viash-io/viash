@@ -31,10 +31,7 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
   )
 
   val multipleOutputsMods = List(
-    """del(.argument_groups[.name == "Arguments"].arguments[.name == "--multiple"])""",
-    """del(.argument_groups[.name == "Arguments"].arguments[.name == "multiple_pos"])""",
-    """.argument_groups[.name == "Arguments"].arguments[.name == "--output"].multiple := true""",
-    """.argument_groups[.name == "Arguments"].arguments += {name: "output_pos", type: "file", direction: "output", multiple: true}""",
+    """.argument_groups[.name == "Arguments"].arguments[.name == "--output"].required := false""",
     """.resources[.type == "bash_script"].path := "docker_options/code_multiple_output.sh"""",
   )
 
@@ -61,14 +58,12 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
     assert(localExecutable.canExecute)
 
     // run the script
-    val output = Paths.get(tempFolStr, "output_" + dockerId + ".txt").toFile
-    val output2 = Paths.get(tempFolStr, "output_" + dockerId +"_2.txt").toFile
-    val output3 = Paths.get(tempFolStr, "output_" + dockerId +"_3.txt").toFile
+    val pattern = f"$tempFolStr/output_${dockerId}_*.txt"
 
     val outputParams = amount match {
-      case 1 => Seq("--output", output.getPath)
-      case 2 => Seq("--output", output.getPath, "--output2", output2.getPath)
-      case 3 => Seq("--output", output.getPath, output2.getPath, output3.getPath)
+      case 1 => Seq("--output", pattern.replace("*", "1"))
+      case 2 => Seq("--output", pattern.replace("*", "1"), "--output2", pattern.replace("*", "2"))
+      case 3 => Seq("--multiple_output", pattern)
     }
 
     Exec.run(
@@ -81,9 +76,12 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
       ) ++ outputParams
     )
 
-    val outputList = List(output, output2, output3).take(amount)
-    outputList.foreach(output => assert(output.exists()))
-    outputList.map(file => Files.getOwner(file.toPath).toString)
+    // find files based on the pattern
+    import scala.jdk.CollectionConverters._
+    val foundFiles = Files.list(temporaryFolder).iterator().asScala.toList
+    val outputFiles = foundFiles.filter(_.toString.matches(pattern.replace("*", ".*")))
+    assert(outputFiles.length == amount, s"Expected $amount files, got ${outputFiles.length}.\nDirectory contents: ${foundFiles.mkString(", ")}")
+    outputFiles.map(file => Files.getOwner(file).toString)
   }
 
   test("Test behaviour with one output file", DockerTest) {

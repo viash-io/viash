@@ -17,34 +17,25 @@
 
 package io.viash.runners
 
-
-
 import io.viash.config.Config
-import io.viash.config.{BuildInfo => ConfigInfo}
-
-import io.viash.config.Config
+import io.viash.config.BuildInfo
 
 // todo: remove
 import io.viash.config.resources.Executable
-import io.viash.config.arguments.FileArgument
-import io.viash.config.arguments.Output
 import io.viash.config.resources.BashScript
+import io.viash.config.arguments.{FileArgument, Input, Output}
 
 import io.viash.engines._
+import io.viash.engines.requirements.DockerRequirements
+import io.viash.runners.executable._
 
 import io.viash.wrapper.BashWrapper
 import io.viash.wrapper.BashWrapperMods
 
 import io.viash.helpers.Bash
-
 import io.viash.helpers.data_structures._
 
 import io.viash.schemas._
-import io.viash.engines.DockerEngine
-import io.viash.engines.NativeEngine
-import io.viash.runners.executable._
-import io.viash.engines.requirements.DockerRequirements
-import io.viash.config.BuildInfo
 
 @description(
   """Run code as an executable.
@@ -265,7 +256,7 @@ final case class ExecutableRunner(
 
   private def dockerGenerateSetup(
     config: Config,
-    info: Option[ConfigInfo],
+    info: Option[BuildInfo],
     testing: Boolean,
     engines: List[DockerEngine]
   ): BashWrapperMods = {
@@ -447,7 +438,7 @@ final case class ExecutableRunner(
     
   
     val stripAutomounts = args.flatMap {
-      case arg: FileArgument if arg.multiple =>
+      case arg: FileArgument if arg.multiple && arg.direction == Input =>
         // resolve arguments with multiplicity different from singular args
         val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
         Some(
@@ -498,7 +489,7 @@ final case class ExecutableRunner(
         |  function ViashPerformChown {
         |    if (( $${#VIASH_CHOWN_VARS[@]} )); then
         |      set +e
-        |      VIASH_CMD="docker run --entrypoint=chown --rm $${VIASH_UNIQUE_MOUNTS[@]} $$VIASH_DOCKER_IMAGE_ID $$(id -u):$$(id -g) --silent --recursive $${VIASH_CHOWN_VARS[@]}"
+        |      VIASH_CMD="docker run --entrypoint=bash --rm $${VIASH_UNIQUE_MOUNTS[@]} $$VIASH_DOCKER_IMAGE_ID -c 'chown $$(id -u):$$(id -g) --silent --recursive $${VIASH_CHOWN_VARS[@]}'"
         |      ViashDebug "+ $$VIASH_CMD"
         |      eval $$VIASH_CMD
         |      set -e

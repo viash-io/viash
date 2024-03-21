@@ -14,6 +14,14 @@ import java.io.UncheckedIOException
 
 import NextflowTestHelper._
 
+/**
+  * This test suite contains tests related to the NextflowScript class.
+  * 
+  * All workflows tested in this suite should be self-contained in that
+  * they execute tests and do assertions within the same workflow. If
+  * the test fails, the workflow should print a helpful error message and
+  * exit with a non-zero exit code.
+  */
 class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
   // temporary folder to work in
@@ -143,8 +151,15 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    assert(stdOut.contains("base:step1_alias:proc"))
-    assert(stdOut.contains("base:step1:proc"))
+    // Note: Nextflow 23.04 changed the way processes are printed in the log
+    // original:
+    //   [info]   [30/b6eaaf] process > alias:base:step1:processWf:... [100%] 1 of 1 ✔
+    //   [info]   [bf/166913] process > alias:base:step1_alias:proc... [100%] 1 of 1 ✔
+    // since nextflow 23.04:
+    //   [info]   [31/1c0834] ali…cessWf:step1_process (one) | 1 of 1 ✔
+    //   [info]   [f1/e92549] ali…:step1_alias_process (one) | 1 of 1 ✔
+    assert(stdOut.contains(":step1_alias:proc") || stdOut.contains(":step1_alias_process"))
+    assert(stdOut.contains(":step1:proc") || stdOut.contains(":step1_process"))
     assert(!stdOut.contains("Key for module 'step1' is duplicated"))
   }
 
@@ -199,7 +214,6 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut1\nStd error:\n$stdErr1")
   }
-
 
   override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
