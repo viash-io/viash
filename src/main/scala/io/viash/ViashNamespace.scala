@@ -127,7 +127,8 @@ object ViashNamespace extends Logging {
     tsv: Option[String] = None,
     append: Boolean = false,
     cpus: Option[Int],
-    memory: Option[String]
+    memory: Option[String],
+    dryRun: Option[Boolean] = None
   ): List[(AppliedConfig, ManyTestOutput)] = {
     val configs1 = configs.filter{tup => tup match {
       // remove nextflow because unit testing nextflow modules
@@ -188,7 +189,8 @@ object ViashNamespace extends Logging {
                 quiet = true,
                 parentTempPath = Some(parentTempPath),
                 cpus = cpus,
-                memory = memory
+                memory = memory,
+                dryRun = dryRun
               )
             } catch {
               case e: MissingResourceFileException => 

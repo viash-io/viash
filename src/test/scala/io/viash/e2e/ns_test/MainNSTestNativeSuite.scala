@@ -96,6 +96,39 @@ class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val regexBuildError = raw"Reading file \'.*/src/ns_error/config\.vsh\.yaml\' failed".r
     assert(regexBuildError.findFirstIn(testOutput.stderr).isDefined, "Expecting to get an error because of an invalid yaml in ns_error")
   }
+  
+  test("Check namespace test output with working dir message using --dry_run") {
+    val testOutput = TestHelper.testMain(
+      "ns", "test",
+      "--src", nsPath,
+      "--keep", "true",
+      "--dry_run"
+    )
+
+    // Test inclusion of a header
+    val regexHeader = s"^\\s*${ViashNamespace.columnHeaders.mkString("\\s*")}".r
+    assert(regexHeader.findFirstIn(testOutput.stdout).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n${testOutput.stdout}")
+
+    val regexWdir = raw"The working directory for the namespace tests is [\w/]+[\r\n]{1,2}".r
+    assert(regexWdir.findFirstIn(testOutput.stderr).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n${testOutput.stderr}")
+
+    for (
+      (component, steps) <- components;
+      (step, resultPattern) <- steps
+    ) {
+      // In this mode, a test script can never return an ERROR
+      val updtResultPattern = if (resultPattern == raw"\s*1\s*\d+\s*ERROR") {
+        raw"\s*0\s*\d+\s*SUCCESS"
+      } else {
+        resultPattern
+      }
+      val regex = s"""testns\\s*$component\\s*executable\\s*native\\s*$step$updtResultPattern""".r
+      assert(regex.findFirstIn(testOutput.stdout).isDefined, s"\nRegex: '${regex.toString}'; text: \n${testOutput.stdout}")
+    }
+
+    val regexBuildError = raw"Reading file \'.*/src/ns_error/config\.vsh\.yaml\' failed".r
+    assert(regexBuildError.findFirstIn(testOutput.stderr).isDefined, "Expecting to get an error because of an invalid yaml in ns_error")
+  }
 
   test("Check namespace test output with tsv option") {
     val log = Paths.get(tempFolStr, "log.tsv").toFile
