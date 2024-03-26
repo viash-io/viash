@@ -328,7 +328,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
     }
 
     val generateTest = new DocumentedSubcommand("generate_test") with ViashNs with WithTemporary with ViashRunner with ViashLogger {
-      // hidden = true
+      hidden = true
       banner(
         "viash ns generate_test",
         "Generate test scripts for a namespace containing many viash config files.",
