@@ -262,7 +262,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
     val dryRun = registerOpt[Boolean](
       name= "dry_run",
       default = Some(false),
-      descr = "Only generate the test script, do not run the test."
+      descr = "Only generate the test script, do not run the test.",
+      hidden = true
     )
 
     footer(
@@ -358,7 +359,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       val dryRun = registerOpt[Boolean](
         name= "dry_run",
         default = Some(false),
-        descr = "Only generate the test scripts, do not run them."
+        descr = "Only generate the test scripts, do not run them.",
+        hidden = true
       )
     }
 
