@@ -315,6 +315,22 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testOutput.stdout, true)
   }
 
+  test("Check output in case --just_generate is specified") {
+    val testOutput = TestHelper.testMain(
+      "test",
+      "--engine", "native",
+      "--runner", "executable",
+      "--just_generate",
+      configFile
+    )
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("Running dummy test script"))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
+
+    checkTempDirAndRemove(testOutput.stdout, false)
+  }
+
   test("Check output in case --keep false is specified") {
     val testOutput = TestHelper.testMain(
       "test",
