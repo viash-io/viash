@@ -97,12 +97,12 @@ class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(regexBuildError.findFirstIn(testOutput.stderr).isDefined, "Expecting to get an error because of an invalid yaml in ns_error")
   }
   
-  test("Check namespace test output with working dir message using --just_generate") {
+  test("Check namespace test output with working dir message using --dry_run") {
     val testOutput = TestHelper.testMain(
       "ns", "test",
       "--src", nsPath,
       "--keep", "true",
-      "--just_generate"
+      "--dry_run"
     )
 
     // Test inclusion of a header

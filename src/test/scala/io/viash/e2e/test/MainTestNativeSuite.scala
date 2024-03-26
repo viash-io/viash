@@ -315,12 +315,12 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testOutput.stdout, true)
   }
 
-  test("Check output in case --just_generate is specified") {
+  test("Check output in case --dry_run is specified") {
     val testOutput = TestHelper.testMain(
       "test",
       "--engine", "native",
       "--runner", "executable",
-      "--just_generate",
+      "--dry_run",
       configFile
     )
     assert(testOutput.stdout.contains("Running tests in temporary directory: "))

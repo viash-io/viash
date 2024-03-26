@@ -259,10 +259,10 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       default = None,
       descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Engine only]."
     )
-    val justGenerate = registerOpt[Boolean](
-      name= "just_generate",
+    val dryRun = registerOpt[Boolean](
+      name= "dry_run",
       default = Some(false),
-      descr = "Only generate the test script, do not run it."
+      descr = "Only generate the test script, do not run the test."
     )
 
     footer(
@@ -355,8 +355,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
         default = Some(false),
         descr = "Append to tsv instead of overwrite"
       )
-      val justGenerate = registerOpt[Boolean](
-        name= "just_generate",
+      val dryRun = registerOpt[Boolean](
+        name= "dry_run",
         default = Some(false),
         descr = "Only generate the test scripts, do not run them."
       )
