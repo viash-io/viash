@@ -69,7 +69,8 @@ object ViashTest extends Logging {
     verbosityLevel: Int = 6,
     parentTempPath: Option[Path] = None, 
     cpus: Option[Int], 
-    memory: Option[String]
+    memory: Option[String],
+    just_generate: Boolean = false
   ): ManyTestOutput = {
     // create temporary directory
     val dir = IO.makeTemp("viash_test_" + configNameLens.get(appliedConfig), parentTempPath)
@@ -94,7 +95,8 @@ object ViashTest extends Logging {
       setupStrategy = setupStrategy.getOrElse("cachedbuild"),
       verbosityLevel = verbosityLevel,
       cpus = cpus,
-      memory = memory
+      memory = memory,
+      just_generate = just_generate
     )
     val count = results.count(_.exitValue == 0)
     val anyErrors = setupRes.exists(_.exitValue > 0) || count < results.length
@@ -142,7 +144,8 @@ object ViashTest extends Logging {
     setupStrategy: String, 
     verbosityLevel: Int, 
     cpus: Option[Int], 
-    memory: Option[String]
+    memory: Option[String],
+    just_generate: Boolean
   ): ManyTestOutput = {
     val conf = appliedConfig.config
 
@@ -193,7 +196,6 @@ object ViashTest extends Logging {
         try {
           val executable = Paths.get(buildDir.toString, conf.name).toString
           val cmd = Seq(executable, "---verbosity", verbosityLevel.toString, "---setup", setupStrategy, "---engine", engine.id)
-          logger("+" + cmd.mkString(" "))
           val startTime = LocalDateTime.now
 
           // create tempdir in test
@@ -313,7 +315,10 @@ object ViashTest extends Logging {
           val subTmp = Paths.get(newDir.toString, "tmp")
           Files.createDirectories(subTmp)
 
-          val cmd = Seq(executable) ++ Seq(cpus.map("---cpus=" + _), memory.map("---memory="+_)).flatMap(a => a)
+          val cmd = if (just_generate)
+            Seq("echo", "Running dummy test script")
+          else
+            Seq(executable) ++ Seq(cpus.map("---cpus=" + _), memory.map("---memory="+_)).flatMap(a => a)
           logger(s"+${cmd.mkString(" ")}")
           val exitValue = Process(
             cmd,
@@ -336,4 +341,5 @@ object ViashTest extends Logging {
 
     ManyTestOutput(buildResult, testResults)
   }
+
 }

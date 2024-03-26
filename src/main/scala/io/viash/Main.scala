@@ -248,7 +248,8 @@ object Main extends Logging {
           keepFiles = cli.test.keep.toOption.map(_.toBoolean),
           setupStrategy = cli.test.setup.toOption,
           cpus = cli.test.cpus.toOption,
-          memory = cli.test.memory.toOption
+          memory = cli.test.memory.toOption,
+          just_generate = false
         )
         0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
@@ -284,7 +285,30 @@ object Main extends Logging {
           append = cli.namespace.test.append(),
           cpus = cli.namespace.test.cpus.toOption,
           memory = cli.namespace.test.memory.toOption,
+          setup = cli.namespace.test.setup.toOption
+        )
+        val errors = testResults.map(_._1).flatMap(_.status).count(_.isError)
+        if (errors > 0) 1 else 0
+      case List(cli.namespace, cli.namespace.generateTest) =>
+        val configs = readConfigs(cli.namespace.test, packageConfig = pack1)
+        // resolve dependencies
+        val configs2 = namespaceDependencies(configs, None, pack1.rootDir)
+        // flatten engines
+        val configs3 = configs2.flatMap{ ac => 
+          ac.engines.map{ engine => 
+            ac.copy(engines = List(engine))
+          }
+        }
+        val testResults = ViashNamespace.test(
+          configs = configs3,
+          parallel = cli.namespace.test.parallel(),
+          keepFiles = cli.namespace.test.keep.toOption.map(_.toBoolean),
+          tsv = cli.namespace.test.tsv.toOption,
+          append = cli.namespace.test.append(),
+          cpus = cli.namespace.test.cpus.toOption,
+          memory = cli.namespace.test.memory.toOption,
           setup = cli.namespace.test.setup.toOption,
+          just_generate = true
         )
         val errors = testResults.map(_._1).flatMap(_.status).count(_.isError)
         if (errors > 0) 1 else 0

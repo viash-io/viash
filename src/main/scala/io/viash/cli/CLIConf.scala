@@ -327,6 +327,32 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       )
     }
 
+    val generateTest = new DocumentedSubcommand("generate_test") with ViashNs with WithTemporary with ViashRunner with ViashLogger {
+      // hidden = true
+      banner(
+        "viash ns generate_test",
+        "Generate test scripts for a namespace containing many viash config files.",
+        "viash ns generate_test [-n nmspc] [-s src] [-p docker] [--parallel]")
+
+      val setup = registerOpt[String](
+        name = "setup",
+        default = None,
+        descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Engine only]."
+      )
+
+      val tsv = registerOpt[String](
+        name = "tsv",
+        short = Some('t'),
+        descr = "Path to write a summary of the test results to."
+      )
+      val append = registerOpt[Boolean](
+        name = "append",
+        short = Some('a'),
+        default = Some(false),
+        descr = "Append to tsv instead of overwrite"
+      )
+    }
+
     val test = new DocumentedSubcommand("test") with ViashNs with WithTemporary with ViashRunner with ViashLogger {
       banner(
         "viash ns test",
@@ -435,6 +461,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
 
     addSubcommand(build)
     addSubcommand(test)
+    addSubcommand(generateTest)
     addSubcommand(list)
     addSubcommand(exec)
     requireSubcommand()
