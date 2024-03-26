@@ -102,7 +102,6 @@ class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       "ns", "test",
       "--src", nsPath,
       "--keep", "true",
-      "--runner", "native",
       "--just_generate"
     )
 
