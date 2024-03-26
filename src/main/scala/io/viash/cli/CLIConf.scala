@@ -440,7 +440,6 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
 
     addSubcommand(build)
     addSubcommand(test)
-    // addSubcommand(generateTest)
     addSubcommand(list)
     addSubcommand(exec)
     requireSubcommand()
