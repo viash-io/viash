@@ -70,7 +70,7 @@ object ViashTest extends Logging {
     parentTempPath: Option[Path] = None, 
     cpus: Option[Int], 
     memory: Option[String],
-    just_generate: Boolean = false
+    just_generate: Option[Boolean] = None
   ): ManyTestOutput = {
     // create temporary directory
     val dir = IO.makeTemp("viash_test_" + configNameLens.get(appliedConfig), parentTempPath)
@@ -145,7 +145,7 @@ object ViashTest extends Logging {
     verbosityLevel: Int, 
     cpus: Option[Int], 
     memory: Option[String],
-    just_generate: Boolean
+    just_generate: Option[Boolean]
   ): ManyTestOutput = {
     val conf = appliedConfig.config
 
@@ -315,7 +315,7 @@ object ViashTest extends Logging {
           val subTmp = Paths.get(newDir.toString, "tmp")
           Files.createDirectories(subTmp)
 
-          val cmd = if (just_generate)
+          val cmd = if (just_generate.getOrElse(false))
             Seq("echo", "Running dummy test script")
           else
             Seq(executable) ++ Seq(cpus.map("---cpus=" + _), memory.map("---memory="+_)).flatMap(a => a)

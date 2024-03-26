@@ -128,7 +128,7 @@ object ViashNamespace extends Logging {
     append: Boolean = false,
     cpus: Option[Int],
     memory: Option[String],
-    just_generate: Boolean = false
+    just_generate: Option[Boolean] = None
   ): List[(AppliedConfig, ManyTestOutput)] = {
     val configs1 = configs.filter{tup => tup match {
       // remove nextflow because unit testing nextflow modules
