@@ -228,6 +228,21 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testText, true)
   }
 
+  test("Check output in case --dry_run is specified") {
+    val testText = TestHelper.testMain(
+      "test",
+      "-p", "native",
+      "--dry_run",
+      configFile
+    )
+    assert(testText.contains("Running tests in temporary directory: "))
+    assert(testText.contains("Running dummy test script"))
+    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testText.contains("Cleaning up temporary directory"))
+
+    checkTempDirAndRemove(testText, false)
+  }
+
   test("Check output in case --keep false is specified") {
     val testText = TestHelper.testMain(
       "test",
