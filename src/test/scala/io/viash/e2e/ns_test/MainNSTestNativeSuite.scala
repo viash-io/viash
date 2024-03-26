@@ -116,7 +116,13 @@ class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       (component, steps) <- components;
       (step, resultPattern) <- steps
     ) {
-      val regex = s"""testns\\s*$component\\s*executable\\s*native\\s*$step$resultPattern""".r
+      // In this mode, a test script can never return an ERROR
+      val updtResultPattern = if (resultPattern == raw"\s*1\s*\d+\s*ERROR") {
+        raw"\s*0\s*\d+\s*SUCCESS"
+      } else {
+        resultPattern
+      }
+      val regex = s"""testns\\s*$component\\s*executable\\s*native\\s*$step$updtResultPattern""".r
       assert(regex.findFirstIn(testOutput.stdout).isDefined, s"\nRegex: '${regex.toString}'; text: \n${testOutput.stdout}")
     }
 
