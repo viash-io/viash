@@ -252,14 +252,19 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       "viash test",
       "Test the component using the tests defined in the viash config file.",
       "viash test config.vsh.yaml [-p docker] [-k true/false] [--setup cachedbuild]")
-    
+
     val setup = registerOpt[String](
       name = "setup",
       short = Some('s'),
       default = None,
       descr = "Which @[setup strategy](docker_setup_strategy) for creating the container to use [Docker Engine only]."
     )
-    
+    val justGenerate = registerOpt[Boolean](
+      name= "just_generate",
+      default = Some(false),
+      descr = "Only generate the test script, do not run it."
+    )
+
     footer(
       s"""
          |The temporary directory can be altered by setting the VIASH_TEMP directory. Example:

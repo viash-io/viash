@@ -243,13 +243,16 @@ object Main extends Logging {
       case List(cli.test) =>
         val config = readConfig(cli.test, packageConfig = pack1)
         val config2 = singleConfigDependencies(config, None, pack1.rootDir)
+        if (cli.test.justGenerate.getOrElse(false) && !cli.test.keep.toOption.map(_.toBoolean).getOrElse(false)) {
+          info("Warning: --just_generate is set, but --keep is not set. This will result in the generated files being deleted after the test.")
+        }
         ViashTest(
           config2,
           keepFiles = cli.test.keep.toOption.map(_.toBoolean),
           setupStrategy = cli.test.setup.toOption,
           cpus = cli.test.cpus.toOption,
           memory = cli.test.memory.toOption,
-          just_generate = None
+          just_generate = cli.test.justGenerate.toOption
         )
         0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
@@ -276,6 +279,9 @@ object Main extends Logging {
           ac.engines.map{ engine => 
             ac.copy(engines = List(engine))
           }
+        }
+        if (cli.namespace.test.justGenerate.getOrElse(false) && !cli.namespace.test.keep.toOption.map(_.toBoolean).getOrElse(false)) {
+          info("Warning: --just_generate is set, but --keep is not set. This will result in the generated files being deleted after the test.")
         }
         val testResults = ViashNamespace.test(
           configs = configs3,
