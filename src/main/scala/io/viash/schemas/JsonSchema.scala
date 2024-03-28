@@ -223,7 +223,9 @@ object JsonSchema {
         p.default.isDefined ||
         p.hasUndocumented ||
         (p.name == "type" && thisParameter.`type` == "PlainFile" && !config.strict) // Custom exception, file resources are "kind of" default
-      ))
+      ) ||
+      // Strict schema is what will be outputted by Viash, so fields with a default value other than 'None' will always have a value -> add it in the strict schema as required.
+      (!p.`type`.startsWith("Option[") && p.default != Some("Empty") && config.strict && !p.hasUndocumented))
     val requiredJson = required.map(p => Json.fromString(p.name))
 
     val k = thisParameter.`type`
