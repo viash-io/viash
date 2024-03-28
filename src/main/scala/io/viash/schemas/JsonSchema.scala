@@ -144,7 +144,7 @@ object JsonSchema {
 
       val mapRegex = "(List)?Map\\[String,(\\w*)\\]".r
 
-      implicit val useAllInEither = thisParameter.`type` == "NextflowDirectives"
+      implicit val useAllInEither = thisParameter.`type` == "NextflowDirectives" || thisParameter.`type` == "NextflowAuto"
 
       trimmedType match {
         case s"List[$s]" => 
