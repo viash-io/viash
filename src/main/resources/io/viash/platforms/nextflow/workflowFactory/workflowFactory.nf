@@ -106,6 +106,8 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       chModified | filter{workflowArgs.filter(it)} :
       chModified
 
+    def chRun = null
+    def chPassthrough = null
     if (workflowArgs.runIf) {
       runIfBranch = chModifiedFiltered.branch{ tup ->
         run: workflowArgs.runIf(tup[0], tup[1])
