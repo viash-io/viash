@@ -35,6 +35,7 @@ import io.viash.helpers.data_structures.OneOrMore
 case class References(
   @description("One or multiple DOI reference(s) of the component.")
   @example("doi: 10.1000/xx.123456.789", "yaml")
+  @default("Empty")
   doi: OneOrMore[String] = Nil,
 
   @description("One or multiple BibTeX reference(s) of the component.")
@@ -47,5 +48,6 @@ case class References(
       |    year={2024}
       |  }
       |""".stripMargin, "yaml")
+  @default("Empty")
   bibtex: OneOrMore[String] = Nil,
 )

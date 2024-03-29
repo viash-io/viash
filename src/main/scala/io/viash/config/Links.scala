@@ -31,21 +31,26 @@ import io.viash.schemas._
 case class Links(
   @description("Source repository url.")
   @example("""repository: "https://github.com/viash-io/viash"""", "yaml")
+  @default("Empty")
   repository: Option[String] = None,
 
   @description("Docker registry url.")
   @example("""docker_registry: "https://ghcr.io"""", "yaml")
+  @default("Empty")
   docker_registry: Option[String] = None,
 
   @description("Homepage website url.")
   @example("""homepage: "https://viash.io"""", "yaml")
+  @default("Empty")
   homepage: Option[String] = None,
 
   @description("Documentation website url.")
   @example("""documentation: "https://viash.io/reference/"""", "yaml")
+  @default("Empty")
   documentation: Option[String] = None,
   
   @description("Issue tracker url.")
   @example("""issue_tracker: "https://github.com/viash-io/viash/issues"""", "yaml")
+  @default("Empty")
   issue_tracker: Option[String] = None,
 )
