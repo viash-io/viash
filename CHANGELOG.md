@@ -4,6 +4,12 @@
 
 * `docker setup strategy`: Fix inconsistencies in the documentation (PR #657).
 
+## BUG FIXES
+
+* `NextflowPlatform`: Fix publishing state for output arguments with `multiple: true` (#638, PR #639). 
+
+* `Executable`: Check whether a multiple output file argument contains a wildcard (PR #639).
+
 # Viash 0.8.5 (2024-02-21): Bug fixes and documentation improvements
 
 Fix a bug when building a test docker container which requires a test resource. Additional improvements for the website documentation and support for the latest version of Nextflow are added.
@@ -11,10 +17,6 @@ Fix a bug when building a test docker container which requires a test resource. 
 ## BUG FIXES
 
 * `NextflowPlatform`: Fix an issue with current nextflow-latest (24.01.0-edge) where our supporting library passes a GString instead of a String and results in a type mismatch (PR #640).
-
-* `NextflowPlatform`: Fix publishing state for output arguments with `multiple: true` (#638, PR #639). 
-
-* `Executable`: Check whether a multiple output file argument contains a wildcard (PR #639).
 
 * `test resources`: Make non-script test resources available during building of a docker container for `viash test` (PR #652).
 
