@@ -32,6 +32,8 @@ The default `multiple_sep` has been changed from `:` to `;` to avoid conflicts w
 
 * `schema`: Don't require undocumented fields to set default values and add the `links` and `reference` fields to functionality as they were not meant only to be in the project config (PR #636).
 
+* `resource path`: Don't finalize the `path` field of a resource until it's written as part of building a component (PR #668).
+
 # Viash 0.9.0-RC1 (2024-01-26): Restructure platforms into runners and engines
 
 This release restructures the `platforms` field into `runners` and `engines`.
