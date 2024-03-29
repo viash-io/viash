@@ -103,15 +103,16 @@ trait Resource {
     if (path.isEmpty || path.get.contains(":")) {
       return path
     }
+    
     val pathStr = path.get
     if (pathStr.startsWith("/")) {
       if (parent.isEmpty) {
         throw new RuntimeException(s"One of the resources is relative to the package root ($path), but no package config file (_viash.yaml) could be found.")
       }
-      val pathStr1 = IO.resolvePathWrtURI(pathStr, parent.get)
-      return path
+      Some(IO.resolvePathWrtURI(pathStr, parent.get))
+    } else {
+      path
     }
-    path
   }
 
   private val basenameRegex = ".*/".r
@@ -178,9 +179,7 @@ trait Resource {
       if (packageDir.isEmpty) {
         throw new RuntimeException(s"One of the resources is relative to the package root ($path), but no package config file (_viash.yaml) could be found.")
       }
-      // val pathStr1 = IO.resolvePathWrtURI(pathStr, packageDir.get)
       return copyResource(
-        // path = Some(pathStr1),
         parent = packageDir
       )
     }
