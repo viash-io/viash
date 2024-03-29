@@ -10,7 +10,7 @@
 
 * `Executable`: Check whether a multiple output file argument contains a wildcard (PR #639).
 
-* `NextflowPlatform`: Fix a possible cause of concurrency issues (PR #xxx).
+* `NextflowPlatform`: Fix a possible cause of concurrency issues (PR #669).
 
 # Viash 0.8.5 (2024-02-21): Bug fixes and documentation improvements
 
