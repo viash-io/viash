@@ -83,7 +83,7 @@ trait Resource {
 
   // val uri: Option[URI] = path.map(IO.uri)
   def uri: Option[URI] = {
-    path match {
+    resolvedPath match {
       case Some(pat) => {
         val patEsc = pat.replaceAll(" ", "%20")
         val newPath = parent match {
@@ -94,6 +94,24 @@ trait Resource {
       }
       case None => None
     }
+  }
+
+  def resolvedPath: Option[String] = {
+    if (this.isInstanceOf[Executable]) {
+      return path
+    }
+    if (path.isEmpty || path.get.contains(":")) {
+      return path
+    }
+    val pathStr = path.get
+    if (pathStr.startsWith("/")) {
+      if (parent.isEmpty) {
+        throw new RuntimeException(s"One of the resources is relative to the package root ($path), but no package config file (_viash.yaml) could be found.")
+      }
+      val pathStr1 = IO.resolvePathWrtURI(pathStr, parent.get)
+      return path
+    }
+    path
   }
 
   private val basenameRegex = ".*/".r
@@ -109,7 +127,7 @@ trait Resource {
     if (dest.isDefined) {
       dest.get
     } else {
-      getFolderNameRegex.replaceFirstIn(Paths.get(path.get).normalize.toString, "$1")
+      getFolderNameRegex.replaceFirstIn(Paths.get(resolvedPath.get).normalize.toString, "$1")
     }
   }
   /**
@@ -160,9 +178,9 @@ trait Resource {
       if (packageDir.isEmpty) {
         throw new RuntimeException(s"One of the resources is relative to the package root ($path), but no package config file (_viash.yaml) could be found.")
       }
-      val pathStr1 = IO.resolvePathWrtURI(pathStr, packageDir.get)
-      return this.copyResource(
-        path = Some(pathStr1),
+      // val pathStr1 = IO.resolvePathWrtURI(pathStr, packageDir.get)
+      return copyResource(
+        // path = Some(pathStr1),
         parent = packageDir
       )
     }
@@ -170,12 +188,12 @@ trait Resource {
     // if the path is relative (which it probably should be),
     // set the directory of the config as the parent of this file.
     if (!Paths.get(pathStr).isAbsolute) {
-      return this.copyResource(
+      return copyResource(
         parent = Some(parent)
       )
     }
 
-    return this
+    this
   }
 
   // TODO: This can probably be solved much nicer.

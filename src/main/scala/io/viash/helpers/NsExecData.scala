@@ -66,7 +66,7 @@ object NsExecData {
   def apply(configPath: String, config: Config, runner: Option[Runner], engine: Option[Engine]): NsExecData = {
     val configPath_ = Paths.get(configPath)
     val dirPath = configPath_.getParent()
-    val mainScript = config.mainScript.flatMap(s => s.path).map(dirPath.resolve(_))
+    val mainScript = config.mainScript.flatMap(s => s.resolvedPath).map(dirPath.resolve(_))
     apply(
       configFullPath = configPath,
       absoluteConfigFullPath = configPath_.toAbsolutePath.toString,
