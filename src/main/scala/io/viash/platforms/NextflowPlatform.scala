@@ -277,7 +277,6 @@ case class NextflowPlatform(
       |// anonymous workflow for running this module as a standalone
       |workflow {
       |  // add id argument if it's not already in the config
-      |  // TODO: deep copy
       |  def newConfig = deepClone(meta.config)
       |  def newParams = deepClone(params)
       |
