@@ -15,7 +15,7 @@ workflow base {
   
     | map { num ->
       // create temporary file
-      file = tempFile()
+      def file = tempFile()
       file.write("num: $num")
 
       ["num$num", [ num: num, file: file ]]
@@ -25,7 +25,6 @@ workflow base {
       fromState: ["input": "file"],
       toState: ["step1_output": "output"]
     )
-
 
     | step1.run(
       key: "step1bis",
