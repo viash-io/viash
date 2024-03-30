@@ -52,16 +52,16 @@ def setWorkflowArguments(Map args) {
         // determine splitargs
         def splitArgs = args.
           collectEntries{procKey, dataKeys -> 
-          // dataKeys is a map but could also be a list
-          newSplitData = dataKeys
-            .collectEntries{ val ->
-              newKey = val instanceof String ? val : val.key
-              origKey = val instanceof String ? val : val.value
-              [ newKey, data[origKey] ]
-            }
-            .findAll{it.value}
-          [procKey, newSplitData]
-        }
+            // dataKeys is a map but could also be a list
+            def newSplitData = dataKeys
+              .collectEntries{ val ->
+                newKey = val instanceof String ? val : val.key
+                origKey = val instanceof String ? val : val.value
+                [ newKey, data[origKey] ]
+              }
+              .findAll{it.value}
+            [procKey, newSplitData]
+          }
 
         // return output
         [ id, newData, splitArgs] + passthrough
