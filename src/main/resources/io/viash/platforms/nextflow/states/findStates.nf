@@ -1,5 +1,4 @@
 def findStates(Map params, Map config) {
-  // TODO: do a deep clone of config
   def auto_config = deepClone(config)
   def auto_params = deepClone(params)
 
