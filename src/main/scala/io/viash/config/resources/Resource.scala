@@ -96,14 +96,23 @@ trait Resource {
     }
   }
 
+  /**
+    * Resolve the path of the resource w.r.t. to the package dir.
+    * Only resolve if the path is relative to the package dir.
+    *
+    * @return the resolved path
+    */
   def resolvedPath: Option[String] = {
+    // don't modify if the resource represents a command that should be available in the PATH
     if (this.isInstanceOf[Executable]) {
       return path
     }
+    // don't modify if the resource doesn't have a PATH or contains a URI
     if (path.isEmpty || path.get.contains(":")) {
       return path
     }
     
+    // if the path starts with a /, resolve it w.r.t. to the package dir
     val pathStr = path.get
     if (pathStr.startsWith("/")) {
       if (parent.isEmpty) {
