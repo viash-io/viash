@@ -34,11 +34,15 @@ class ValidationTest extends AnyFunSuite {
   case class TestClassValidation(
     bar: String
   )
+  case class TestClassNestedDeprecation(
+    bar: TestClassWithFieldDeprecation
+  )
   implicit val decodeDeprecation: Decoder[TestClassDeprecation] = DeriveConfiguredDecoderWithDeprecationCheck.deriveConfiguredDecoderWithDeprecationCheck
   implicit val decodeRemoval: Decoder[TestClassRemoval] = DeriveConfiguredDecoderWithDeprecationCheck.deriveConfiguredDecoderWithDeprecationCheck
   implicit val decodeFieldDeprecation: Decoder[TestClassWithFieldDeprecation] = DeriveConfiguredDecoderWithDeprecationCheck.deriveConfiguredDecoderWithDeprecationCheck
   implicit val decodeFieldRemoval: Decoder[TestClassWithFieldRemoval] = DeriveConfiguredDecoderWithDeprecationCheck.deriveConfiguredDecoderWithDeprecationCheck
   implicit val decodeValidation: Decoder[TestClassValidation] = DeriveConfiguredDecoderWithValidationCheck.deriveConfiguredDecoderWithValidationCheck
+  implicit val decodeNestedDeprecation: Decoder[TestClassNestedDeprecation] = DeriveConfiguredDecoderWithDeprecationCheck.deriveConfiguredDecoderWithDeprecationCheck
 
   test("parsing of a deprecated class") {
     val json = parser.parse("foo: bar").getOrElse(Json.Null)
@@ -96,7 +100,7 @@ class ValidationTest extends AnyFunSuite {
     val stderr = errStream.toString
 
     assert(stdout.isEmpty())
-    assert(stderr.contains("Warning: ..foo is deprecated: testing deprecation of foo. Deprecated since 0.1.2, planned removal 987.654.321."))
+    assert(stderr.contains("Warning: .foo is deprecated: testing deprecation of foo. Deprecated since 0.1.2, planned removal 987.654.321."))
 
     assert(parsed == TestClassWithFieldDeprecation(foo = "bar"))
   }
@@ -116,7 +120,7 @@ class ValidationTest extends AnyFunSuite {
     val stderr = errStream.toString
 
     assert(stdout.isEmpty())
-    assert(stderr.contains("Error: ..foo was removed: testing removal of foo. Initially deprecated 0.0.1, removed 0.1.2."))
+    assert(stderr.contains("Error: .foo was removed: testing removal of foo. Initially deprecated 0.0.1, removed 0.1.2."))
 
     assert(parsed == TestClassWithFieldRemoval(foo = "bar"))
   }
@@ -141,6 +145,26 @@ class ValidationTest extends AnyFunSuite {
     assert(stderr.isEmpty())
     assert(exception.toString().contains("Invalid data fields for TestClassValidation."))
     assert(exception.toString().contains("Unexpected field: foo"))
+  }
+
+  test("parsing of a nested structure with a deprecated class") {
+    val json = parser.parse("bar: { foo: bar }").getOrElse(Json.Null)
+
+    val outStream = new ByteArrayOutputStream()
+    val errStream = new ByteArrayOutputStream()
+    val parsed = Console.withOut(outStream) {
+      Console.withErr(errStream) {
+        json.as[TestClassNestedDeprecation].toOption.get
+      }
+    }
+
+    val stdout = outStream.toString
+    val stderr = errStream.toString
+
+    assert(stdout.isEmpty())
+    assert(stderr.contains("Warning: .bar.foo is deprecated: testing deprecation of foo. Deprecated since 0.1.2, planned removal 987.654.321."))
+
+    assert(parsed == TestClassNestedDeprecation(TestClassWithFieldDeprecation(foo = "bar")))
   }
 
 }
