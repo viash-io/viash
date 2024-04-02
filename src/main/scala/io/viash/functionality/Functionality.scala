@@ -372,8 +372,10 @@ case class Functionality(
     }
   def mainCode: Option[String] = mainScript.flatMap(_.read)
   // provide function to use resources.tail but that allows resources to be an empty list
+  // If mainScript ends up being None because the first resource isn't a script, return the whole list
   def additionalResources = resources match {
-    case _ :: tail => tail
+    case head :: tail if head.isInstanceOf[Script] => tail
+    case list if list.nonEmpty => list
     case _ => List.empty[Resource]
   }
 
