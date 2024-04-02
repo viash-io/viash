@@ -375,8 +375,7 @@ case class Functionality(
   // If mainScript ends up being None because the first resource isn't a script, return the whole list
   def additionalResources = resources match {
     case head :: tail if head.isInstanceOf[Script] => tail
-    case list if list.nonEmpty => list
-    case _ => List.empty[Resource]
+    case list => list
   }
 
   def isEnabled: Boolean = status != Status.Disabled
