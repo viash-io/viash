@@ -2,7 +2,15 @@
 
 TODO add summary
 
-# Viash 0.9.0 (2024-02-23): Restructure the config and change some default values
+## MINOR CHANGES
+
+* `error message`: Improve the error message when using an invalid field in the config (#PR #662). The error message now includes the field names that are not valid if that happens to be the case or otherwise a more general error message.
+
+## BUG FIXES
+
+* `export json_schema`: Fix minor inconsistencies and make the strict schema stricter by adapting to what Viash will effectively return (PR #666).
+
+# Viash 0.9.0-RC2 (2024-02-23): Restructure the config and change some default values
 
 The `.functionality` layer has been removed from the config and all fields have been moved to the top layer.
 The default `multiple_sep` has been changed from `:` to `;` to avoid conflicts with paths like `s3://foo/bar`.
@@ -26,13 +34,9 @@ The default `multiple_sep` has been changed from `:` to `;` to avoid conflicts w
 
 * `BashWrapper`: Added meta-data field `meta_name` as a replacement for `meta_functionality_name` (PR #649). No immediate removal of the old field is planned, but it is deprecated.
 
-* `error message`: Improve the error message when using an invalid field in the config (#PR #662). The error message now includes the field names that are not valid if that happens to be the case or otherwise a more general error message.
-
 ## BUG FIXES
 
 * `schema`: Don't require undocumented fields to set default values and add the `links` and `reference` fields to functionality as they were not meant only to be in the project config (PR #636).
-
-* `export json_schema`: Fix minor inconsistencies and make the strict schema stricter by adapting to what Viash will effectively return (PR #666).
 
 # Viash 0.9.0-RC1 (2024-01-26): Restructure platforms into runners and engines
 
