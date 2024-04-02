@@ -30,10 +30,11 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
 
     // generate viash script
     val testOutput = TestHelper.testMain(
+      workingDir = Some(temporaryConfigFolder),
       "test",
       "--engine", "docker",
       "-k", "true",
-      configFile
+      configFile, 
     )
 
     // basic checks to see if standard test/build was correct
@@ -62,6 +63,7 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
       ("target_folder/relocated_file_2.txt", "51954bf10062451e683121e58d858417"),
       ("target_folder/relocated_file_3.txt", ".*"), // turn off checksum match, as it changes regularly.
       ("resource3.txt", "aa2037b3d308bcb6a78a3d4fbf04b297"),
+      ("resource4.txt", "21cd10137f841da59921aa35de998942"),
       ("target_folder/relocated_file_4.txt", "aa2037b3d308bcb6a78a3d4fbf04b297")
     )
 

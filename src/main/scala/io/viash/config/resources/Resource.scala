@@ -83,7 +83,7 @@ trait Resource {
 
   // val uri: Option[URI] = path.map(IO.uri)
   def uri: Option[URI] = {
-    path match {
+    resolvedPath match {
       case Some(pat) => {
         val patEsc = pat.replaceAll(" ", "%20")
         val newPath = parent match {
@@ -93,6 +93,34 @@ trait Resource {
         Some(IO.uri(newPath))
       }
       case None => None
+    }
+  }
+
+  /**
+    * Resolve the path of the resource w.r.t. to the package dir.
+    * Only resolve if the path is relative to the package dir.
+    *
+    * @return the resolved path
+    */
+  def resolvedPath: Option[String] = {
+    // don't modify if the resource represents a command that should be available in the PATH
+    if (this.isInstanceOf[Executable]) {
+      return path
+    }
+    // don't modify if the resource doesn't have a PATH or contains a URI
+    if (path.isEmpty || path.get.contains(":")) {
+      return path
+    }
+    
+    // if the path starts with a /, resolve it w.r.t. to the package dir
+    val pathStr = path.get
+    if (pathStr.startsWith("/")) {
+      if (parent.isEmpty) {
+        throw new RuntimeException(s"One of the resources is relative to the package root ($path), but no package config file (_viash.yaml) could be found.")
+      }
+      Some(IO.resolvePathWrtURI(pathStr, parent.get))
+    } else {
+      path
     }
   }
 
@@ -109,7 +137,7 @@ trait Resource {
     if (dest.isDefined) {
       dest.get
     } else {
-      getFolderNameRegex.replaceFirstIn(Paths.get(path.get).normalize.toString, "$1")
+      getFolderNameRegex.replaceFirstIn(Paths.get(resolvedPath.get).normalize.toString, "$1")
     }
   }
   /**
@@ -160,9 +188,7 @@ trait Resource {
       if (packageDir.isEmpty) {
         throw new RuntimeException(s"One of the resources is relative to the package root ($path), but no package config file (_viash.yaml) could be found.")
       }
-      val pathStr1 = IO.resolvePathWrtURI(pathStr, packageDir.get)
-      return this.copyResource(
-        path = Some(pathStr1),
+      return copyResource(
         parent = packageDir
       )
     }
@@ -170,12 +196,12 @@ trait Resource {
     // if the path is relative (which it probably should be),
     // set the directory of the config as the parent of this file.
     if (!Paths.get(pathStr).isAbsolute) {
-      return this.copyResource(
+      return copyResource(
         parent = Some(parent)
       )
     }
 
-    return this
+    this
   }
 
   // TODO: This can probably be solved much nicer.

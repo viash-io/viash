@@ -12,6 +12,9 @@ TODO add summary
 
 * `deprecation & removal warning`: Improve the displayed warning where a deprecated or removed field could display a double '.' when it field was located at the root level (PR #671).
 
+* `resource path`: Don't finalize the `path` field of a resource until it's written as part of building a component (PR #668).
+
+
 # Viash 0.9.0-RC2 (2024-02-23): Restructure the config and change some default values
 
 The `.functionality` layer has been removed from the config and all fields have been moved to the top layer.
