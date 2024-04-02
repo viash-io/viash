@@ -10,7 +10,7 @@
 
 * `Executable`: Check whether a multiple output file argument contains a wildcard (PR #639).
 
-* `Resources`: Fix an issue where if the first resource is not a script, the resource is silently dropped (PR #xxx).
+* `Resources`: Fix an issue where if the first resource is not a script, the resource is silently dropped (PR #670).
 
 # Viash 0.8.5 (2024-02-21): Bug fixes and documentation improvements
 
