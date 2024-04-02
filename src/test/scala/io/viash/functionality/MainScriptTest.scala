@@ -94,4 +94,15 @@ class MainScriptTest extends AnyFunSuite {
     assert(mainScript.isEmpty)
     assert(additionalResources.length == 3)
   }
+
+  test("No resources") {
+    val resources = List.empty
+    val fun = Functionality("fun", resources = resources)
+
+    val mainScript = fun.mainScript
+    val additionalResources = fun.additionalResources
+
+    assert(mainScript.isEmpty)
+    assert(additionalResources.isEmpty)
+  }
 }
