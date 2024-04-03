@@ -6,6 +6,8 @@ TODO add summary
 
 * `error message`: Improve the error message when using an invalid field in the config (#PR #662). The error message now includes the field names that are not valid if that happens to be the case or otherwise a more general error message.
 
+* `config mods`: Improve the displayed error message when a config mod could not be applied because of an invalid path (PR #672).
+
 ## BUG FIXES
 
 * `export json_schema`: Fix minor inconsistencies and make the strict schema stricter by adapting to what Viash will effectively return (PR #666).
