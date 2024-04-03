@@ -78,7 +78,7 @@ object ConfigModParser extends RegexParsers {
       ConfigModParser.parseAll(p, s) match {
         case Success(result, next) => result
         case _: NoSuccess => 
-          throw new IllegalArgumentException("Cound not parse config mod: " + s)
+          throw new IllegalArgumentException("Could not parse config mod: " + s)
       }
     }
   }
