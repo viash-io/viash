@@ -59,7 +59,7 @@ object Main extends Logging {
       val exitCode = mainCLIOrVersioned(args)
       System.exit(exitCode)
     } catch {
-      case e @ ( _: FileNotFoundException | _: MissingResourceFileException ) =>
+      case e @ ( _: FileNotFoundException | _: MissingResourceFileException | _: ConfigModException ) =>
         info(s"viash: ${e.getMessage()}")
         System.exit(1)
       case e: NoSuchFileException =>
