@@ -6,6 +6,7 @@ import io.circe.syntax._
 
 import io.circe.yaml.parser.parse
 import io.viash.helpers.Logger
+import io.viash.exceptions.ConfigModException
 
 class AssignTest extends AnyFunSuite {
   Logger.UseColorOverride.value = Some(false)
@@ -332,5 +333,28 @@ class AssignTest extends AnyFunSuite {
     val cmd1 = ConfigModParser.block.parse(""".foo[true].a := 5""")
     val res1 = cmd1.apply(baseJson, false)
     assert(res1 == expected1)
+  }
+
+  val nestedJson: Json = parse(
+    """foo:
+      |  bar: baz
+      |""".stripMargin).toOption.get
+
+  test("test assign field in a nested structure") {
+    val expected1: Json = parse(
+      """foo:
+        |  bar: 5
+        |""".stripMargin).toOption.get
+    val cmd1 = ConfigModParser.block.parse(""".foo.bar := 5""")
+    val res1 = cmd1.apply(nestedJson, false)
+    assert(res1 == expected1)
+  }
+
+    test("test assign field in a nested structure but applying an invalid path") {
+    val cmd1 = ConfigModParser.block.parse(""".qux.quux := 5""")
+    val intercepted = intercept[ConfigModException] {
+      cmd1.apply(nestedJson, false)
+    }
+    assert(intercepted.getMessage() == "Failed to apply config mod. Could not apply value to path: .qux.quux")
   }
 }
