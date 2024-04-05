@@ -15,7 +15,11 @@ function ViashDockerAutodetectMount {
     base_name=`basename "$abs_path"`
   fi
   mount_target="/viash_automount$mount_source"
-  echo "$mount_target/$base_name"
+  if [ -z "$base_name" ]; then
+    echo "$mount_target"
+  else
+    echo "$mount_target/$base_name"
+  fi
 }
 function ViashDockerAutodetectMountArg {
   abs_path=$(ViashAbsolutePath "$1")
