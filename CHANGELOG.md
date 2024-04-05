@@ -1,6 +1,6 @@
 # Viash 0.x.x (yyyy-MM-dd): TODO Add title
 
-
+TODO add summary
 
 ## MINOR CHANGES
 
@@ -16,6 +16,7 @@
 
 * `resource path`: Don't finalize the `path` field of a resource until it's written as part of building a component (PR #668).
 
+* `requirements`: Improve the error message when a Python or R requirement uses a single quote in the `.script` field (PR #675).
 
 # Viash 0.9.0-RC2 (2024-02-23): Restructure the config and change some default values
 
