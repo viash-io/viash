@@ -92,6 +92,10 @@ Additionally changes are made to sanitize the built config output and include ad
 
 * `docker setup strategy`: Fix inconsistencies in the documentation (PR #657).
 
+## NEW FUNCTIONALITY
+
+* `viash test` and `viash ns test`: Add a hidden `--dry_run` option to build the tests without executing them (PR #676).
+
 ## BUG FIXES
 
 * `NextflowPlatform`: Fix publishing state for output arguments with `multiple: true` (#638, PR #639). 
