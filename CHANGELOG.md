@@ -16,7 +16,7 @@
 
 * `resource path`: Don't finalize the `path` field of a resource until it's written as part of building a component (PR #668).
 
-* `viash test`: Fix Docker id between built and test components not being consistent when using a custom Docker registry (PR #679).
+* `viash test`: Fix Docker id between build and test components not being consistent when using a custom Docker registry (PR #679).
 
 # Viash 0.9.0-RC2 (2024-02-23): Restructure the config and change some default values
 
