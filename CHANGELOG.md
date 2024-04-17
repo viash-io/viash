@@ -18,6 +18,8 @@ TODO add summary
 
 * `requirements`: Improve the error message when a Python or R requirement uses a single quote in the `.script` field (PR #675).
 
+* `viash test`: Fix Docker id between build and test components not being consistent when using a custom Docker registry (PR #679).
+
 # Viash 0.9.0-RC2 (2024-02-23): Restructure the config and change some default values
 
 The `.functionality` layer has been removed from the config and all fields have been moved to the top layer.

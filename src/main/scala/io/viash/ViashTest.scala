@@ -263,7 +263,10 @@ object ViashTest extends Logging {
             // set dirArg as argument so that Docker can chown it after execution
             argument_groups = List(ArgumentGroup("default", None, List(dirArg))),
             resources = List(test),
-            set_wd_to_resources_dir = true
+            set_wd_to_resources_dir = true,
+            // Make sure we'll be using the same docker registry set in 'links' so we can have the same docker image id.
+            // Copy the whole case class instead of selective copy.
+            links = conf.links,
           ))(appliedConfig)
 
         // generate bash script for test

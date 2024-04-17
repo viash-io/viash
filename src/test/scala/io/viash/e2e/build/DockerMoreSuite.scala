@@ -4,7 +4,7 @@ import io.viash._
 
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
-import java.nio.file.{Files, Paths, StandardCopyOption}
+import java.nio.file.{Files, Paths, StandardCopyOption, Path}
 import io.viash.helpers.{IO, Exec, Logger}
 
 import io.viash.config.Config
@@ -133,6 +133,65 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(stdout.contains("""real_number: |123.456;123;789|"""))
   }
 
+  test("Check docker image id", DockerTest) {
+    val newConfigFilePath = configDeriver.derive(Nil, "build_docker_id")
+    val testText = TestHelper.testMain(
+      "build",
+      "--engine", "docker",
+      "--runner", "executable",
+      "-o", tempFolStr,
+      newConfigFilePath,
+      "--setup", "alwaysbuild"
+    )
+
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    // read built files and get docker image ids
+    def getDockerId(builtScriptPath: Path): Option[String] = {
+      val dockerImageIdRegex = ".*\\sVIASH_DOCKER_IMAGE_ID='(.[^']*)'.*".r
+      val content = IO.read(builtScriptPath.toUri())
+
+      content.replaceAll("\n", "") match {
+        case dockerImageIdRegex(id) => Some(id)
+        case _ => None
+      }
+    }
+
+    val dockerId = getDockerId(executable.toPath())
+
+    assert(dockerId == Some("testbash:0.1"))
+  }
+
+  test("Check docker image id with custom docker_registry", DockerTest) {
+    val newConfigFilePath = configDeriver.derive(""".links := {docker_registry: "foo.bar"}""", "build_docker_id_custom_registry")
+    val testText = TestHelper.testMain(
+      "build",
+      "--engine", "docker",
+      "--runner", "executable",
+      "-o", tempFolStr,
+      newConfigFilePath,
+      "--setup", "alwaysbuild"
+    )
+
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    // read built files and get docker image ids
+    def getDockerId(builtScriptPath: Path): Option[String] = {
+      val dockerImageIdRegex = ".*\\sVIASH_DOCKER_IMAGE_ID='(.[^']*)'.*".r
+      val content = IO.read(builtScriptPath.toUri())
+
+      content.replaceAll("\n", "") match {
+        case dockerImageIdRegex(id) => Some(id)
+        case _ => None
+      }
+    }
+
+    val dockerId = getDockerId(executable.toPath())
+
+    assert(dockerId == Some("foo.bar/testbash:0.1"))
+  }
 
   override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
