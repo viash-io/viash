@@ -84,7 +84,7 @@ def vdsl3WorkflowFactory(Map args, Map meta, String rawScript) {
           .findAll { it.type == "file" && it.direction == "output" }
           .indexed()
           .collectEntries{ index, par ->
-            out = output[index + 1]
+            def out = output[index + 1]
             // strip dummy '.exitcode' file from output (see nextflow-io/nextflow#2678)
             if (!out instanceof List || out.size() <= 1) {
               if (par.multiple) {
@@ -210,7 +210,7 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   def inputFileExports = meta.config.functionality.allArguments
     .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
     .collect { par ->
-      viash_par_contents = "(viash_par_${par.plainName} instanceof List ? viash_par_${par.plainName}.join(\"${par.multiple_sep}\") : viash_par_${par.plainName})"
+      def viash_par_contents = "(viash_par_${par.plainName} instanceof List ? viash_par_${par.plainName}.join(\"${par.multiple_sep}\") : viash_par_${par.plainName})"
       "\n\${viash_par_${par.plainName}.empty ? \"\" : \"export VIASH_PAR_${par.plainName.toUpperCase()}=\\\"\" + ${viash_par_contents} + \"\\\"\"}"
     }
 

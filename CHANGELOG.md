@@ -14,6 +14,8 @@
 
 * `Executable`: Check whether a multiple output file argument contains a wildcard (PR #639).
 
+* `NextflowPlatform`: Fix a possible cause of concurrency issues (PR #669).
+
 * `Resources`: Fix an issue where if the first resource is not a script, the resource is silently dropped (PR #670).
 
 * `Docker automount`: Prevent adding a trailing slash to an automounted folder (PR #673).
