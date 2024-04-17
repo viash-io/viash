@@ -89,7 +89,8 @@ case class RRequirements(
   bioc_force_install: Boolean = false,
   
   `type`: String = "r"
-) extends Requirements {assert(script.forall(!_.contains("'")))
+) extends Requirements {
+  assert(script.forall(!_.contains("'")), "R requirement '.script' field contains a single quote ('). This is not allowed.")
 
   def installCommands: List[String] = {
     val installRemotes =
