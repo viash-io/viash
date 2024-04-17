@@ -266,7 +266,6 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   |  .join("\\n")
   |\"\"\"
   |# meta exports
-  |# export VIASH_META_RESOURCES_DIR="\${resourcesDir.toRealPath().toAbsolutePath()}"
   |export VIASH_META_RESOURCES_DIR="\${resourcesDir}"
   |export VIASH_META_TEMP_DIR="${['docker', 'podman', 'charliecloud'].any{ it == workflow.containerEngine } ? '/tmp' : tmpDir}"
   |export VIASH_META_FUNCTIONALITY_NAME="${meta.config.functionality.name}"
