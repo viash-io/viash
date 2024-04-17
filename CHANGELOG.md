@@ -1,6 +1,6 @@
 # Viash 0.x.x (yyyy-MM-dd): TODO Add title
 
-
+TODO add summary
 
 ## MINOR CHANGES
 
@@ -15,6 +15,8 @@
 * `deprecation & removal warning`: Improve the displayed warning where a deprecated or removed field could display a double '.' when it field was located at the root level (PR #671).
 
 * `resource path`: Don't finalize the `path` field of a resource until it's written as part of building a component (PR #668).
+
+* `requirements`: Improve the error message when a Python or R requirement uses a single quote in the `.script` field (PR #675).
 
 * `viash test`: Fix Docker id between build and test components not being consistent when using a custom Docker registry (PR #679).
 
@@ -57,7 +59,7 @@ Additionally changes are made to sanitize the built config output and include ad
   The `platforms` field is still supported but will be removed in a future release.
   In brief, the `native platform` became a `native engine` and `docker platform` became a `docker engine`.
   Additionally, the `native platform` and `docker platform` became a `executable runner`, `nextflow platform` became a `nextflow runner`.
-  The fields of `docker platform` is split between `docker engine` and `docker runner`: `port`, `workdir`, `setup_strategy`, and `run_args` are captured by the `runner` as they define how the component is run. The other fields are captured by the `engine` as they define the environment in which the component is run. One exception is `chown` which is rarely set to false and is now always enabled.
+  The fields of `docker platform` is split between `docker engine` and `docker runner`: `port`, `workdir`, `setup_strategy`, and `run_args` (set to `docker_run_args`) are captured by the `runner` as they define how the component is run. The other fields are captured by the `engine` as they define the environment in which the component is run. One exception is `chown` which is rarely set to false and is now always enabled.
 
 * `arguments`: Merge arguments into argument_groups during a json decode prepare step (PR #574). The `--parse_argument_groups` option from `ns list` and `config view` is deprecated as it is now always enabled.
 

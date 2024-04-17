@@ -9,6 +9,7 @@ import org.scalatest.funsuite.FixtureAnyFunSuite
 import java.nio.file.{Files, Paths}
 import scala.io.Source
 import io.viash.ConfigDeriver
+import io.viash.exceptions.ConfigParserException
 
 abstract class AbstractMainBuildAuxiliaryDockerRequirements extends FixtureAnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
@@ -458,6 +459,19 @@ class MainBuildAuxiliaryDockerRequirementsR extends AbstractMainBuildAuxiliaryDo
 
     assert(output.output.contains("/usr/local/lib/R/site-library/glue/R/glue doesn't exist."))
   }
+
+  test("setup; check for a descriptive message when .script contains a single quote", DockerTest) { f =>
+    val newConfigFilePath = deriveEngineConfig(Some("""[{ "type": "r", "script": "print('hello world')" }]"""), None, "r_script_single_quote")
+
+    val testOutput = TestHelper.testMainException[ConfigParserException](
+      "build",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(testOutput.exceptionText == Some("assertion failed: R requirement '.script' field contains a single quote ('). This is not allowed."))
+  }
 }
 
 class MainBuildAuxiliaryDockerRequirementsRBioc extends AbstractMainBuildAuxiliaryDockerRequirements{
@@ -537,6 +551,23 @@ class MainBuildAuxiliaryDockerRequirementsRBioc extends AbstractMainBuildAuxilia
   }
 }
 
+class MainBuildAuxiliaryDockerRequirementsPython extends AbstractMainBuildAuxiliaryDockerRequirements{
+  // For now we're not testing installing packages for Python as it doesn't provide executables that can be checked directly.
+  // However, we're testing the script field.
+
+  test("setup; check for a descriptive message when .script contains a single quote", DockerTest) { f =>
+    val newConfigFilePath = deriveEngineConfig(Some("""[{ "type": "python", "script": "print('hello world')" }]"""), None, "python_script_single_quote")
+
+    val testOutput = TestHelper.testMainException[ConfigParserException](
+      "build",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(testOutput.exceptionText == Some("assertion failed: Python requirement '.script' field contains a single quote ('). This is not allowed."))
+  }
+}
 
 class MainBuildAuxiliaryDockerRequirementsApkTest extends AbstractMainBuildAuxiliaryDockerRequirements {
   override val dockerTag = "viash_requirements_testbench_apktest"
