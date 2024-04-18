@@ -266,7 +266,6 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   |  .join("\\n")
   |\"\"\"
   |# meta exports
-  |# export VIASH_META_RESOURCES_DIR="\${resourcesDir.toRealPath().toAbsolutePath()}"
   |export VIASH_META_RESOURCES_DIR="\${resourcesDir}"
   |export VIASH_META_TEMP_DIR="${['docker', 'podman', 'charliecloud'].any{ it == workflow.containerEngine } ? '/tmp' : tmpDir}"
   |export VIASH_META_FUNCTIONALITY_NAME="${meta.config.functionality.name}"
@@ -308,19 +307,22 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   //   println("######################\n$procStr\n######################")
   // }
 
-  // create runtime process
-  def ownerParams = new nextflow.script.ScriptBinding.ParamsMap()
-  def binding = new nextflow.script.ScriptBinding().setParams(ownerParams)
-  def module = new nextflow.script.IncludeDef.Module(name: procKey)
+  // write process to temp file
+  def tempFile = java.nio.file.Files.createTempFile("viash-process-${procKey}-", ".nf")
+  addShutdownHook { java.nio.file.Files.deleteIfExists(tempFile) }
+  tempFile.text = procStr
+
+  // create process from temp file
+  def binding = new nextflow.script.ScriptBinding([:])
   def session = nextflow.Nextflow.getSession()
-  def scriptParser = new nextflow.script.ScriptParser(session)
+  def parser = new nextflow.script.ScriptParser(session)
     .setModule(true)
     .setBinding(binding)
-  scriptParser.scriptPath = scriptMeta.getScriptPath()
-  def moduleScript = scriptParser.runScript(procStr)
+  def moduleScript = parser.runScript(tempFile)
     .getScript()
 
   // register module in meta
+  def module = new nextflow.script.IncludeDef.Module(name: procKey)
   scriptMeta.addModule(moduleScript, module.name, module.alias)
 
   // retrieve and return process from meta
