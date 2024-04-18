@@ -9,7 +9,7 @@
   * @return Whether the path is absolute, as a boolean.
   */
 def _stringIsAbsolutePath(path) {
-  _resolve_URL_PROTOCOL = ~/^([a-zA-Z][a-zA-Z0-9]*:)?\\/.+/
+  def _resolve_URL_PROTOCOL = ~/^([a-zA-Z][a-zA-Z0-9]*:)?\\/.+/
 
   assert path instanceof String
   return _resolve_URL_PROTOCOL.matcher(path).matches()

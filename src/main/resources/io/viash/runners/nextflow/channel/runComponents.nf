@@ -77,6 +77,7 @@ def runComponents(Map args) {
         ? out_ch | map{tup ->
           def output = tup[1]
           def old_state = tup[2]
+          def new_state = null
           if (toState_ instanceof Map) {
             new_state = old_state + toState_.collectEntries{ key0, key1 ->
               [key0, output[key1]]

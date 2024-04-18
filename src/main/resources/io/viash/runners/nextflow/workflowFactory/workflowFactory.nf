@@ -15,7 +15,7 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
     take: input_
 
     main:
-    chModified = input_
+    def chModified = input_
       | checkUniqueIds([:])
       | _debug(workflowArgs, "input")
       | map { tuple ->
@@ -102,12 +102,14 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
         tuple
       }
 
-    chModifiedFiltered = workflowArgs.filter ?
+    def chModifiedFiltered = workflowArgs.filter ?
       chModified | filter{workflowArgs.filter(it)} :
       chModified
 
+    def chRun = null
+    def chPassthrough = null
     if (workflowArgs.runIf) {
-      runIfBranch = chModifiedFiltered.branch{ tup ->
+      def runIfBranch = chModifiedFiltered.branch{ tup ->
         run: workflowArgs.runIf(tup[0], tup[1])
         passthrough: true
       }
@@ -118,7 +120,7 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       chPassthrough = Channel.empty()
     }
 
-    chArgs = workflowArgs.fromState ? 
+    def chArgs = workflowArgs.fromState ? 
       chRun | map{
         def new_data = workflowArgs.fromState(it.take(2))
         [it[0], new_data]
@@ -126,7 +128,7 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       chRun | map {tup -> tup.take(2)}
 
     // fill in defaults
-    chArgsWithDefaults = chArgs
+    def chArgsWithDefaults = chArgs
       | map { tuple ->
         def id_ = tuple[0]
         def data_ = tuple[1]
@@ -164,7 +166,7 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       }
 
     // TODO: move some of the _meta.join_id wrangling to the safeJoin() function.
-    chInitialOutput = chArgsWithDefaults
+    def chInitialOutput = chArgsWithDefaults
       | _debug(workflowArgs, "processed")
       // run workflow
       | innerWorkflowFactory(workflowArgs)
@@ -194,7 +196,7 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       // | view{"chInitialOutput: ${it.take(3)}"}
 
     // join the output [prev_id, new_id, output] with the previous state [prev_id, state, ...]
-    chNewState = safeJoin(chInitialOutput, chModifiedFiltered, key_)
+    def chNewState = safeJoin(chInitialOutput, chModifiedFiltered, key_)
       // input tuple format: [join_id, id, output, prev_state, ...]
       // output tuple format: [join_id, id, new_state, ...]
       | map{ tup ->
@@ -203,7 +205,7 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       }
 
     if (workflowArgs.auto.publish == "state") {
-      chPublish = chNewState
+      def chPublish = chNewState
         // input tuple format: [join_id, id, new_state, ...]
         // output tuple format: [join_id, id, new_state]
         | map{ tup ->

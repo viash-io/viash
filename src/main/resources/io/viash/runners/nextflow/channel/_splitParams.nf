@@ -18,13 +18,13 @@ Map<String, Object> _splitParams(Map<String, Object> parValues, Map config){
     }
     if (parameterSettings.multiple) { // Check if parameter can accept multiple values
       if (parValue instanceof Collection) {
-          parValue = parValue.collect{it instanceof String ? it.split(parameterSettings.multiple_sep) : it }
+        parValue = parValue.collect{it instanceof String ? it.split(parameterSettings.multiple_sep) : it }
       } else if (parValue instanceof String) {
-          parValue = parValue.split(parameterSettings.multiple_sep)
+        parValue = parValue.split(parameterSettings.multiple_sep)
       } else if (parValue == null) {
-          parValue = []
+        parValue = []
       } else {
-          parValue = [ parValue ]
+        parValue = [ parValue ]
       }
       parValue = parValue.flatten()
     }
