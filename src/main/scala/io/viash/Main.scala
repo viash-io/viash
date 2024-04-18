@@ -254,7 +254,8 @@ object Main extends Logging {
           setupStrategy = cli.test.setup.toOption,
           cpus = cli.test.cpus.toOption,
           memory = cli.test.memory.toOption,
-          dryRun = cli.test.dryRun.toOption
+          dryRun = cli.test.dryRun.toOption,
+          deterministicBuildFolder = cli.test.deterministicBuildFolder.toOption
         )
         0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
@@ -287,7 +288,8 @@ object Main extends Logging {
           cpus = cli.namespace.test.cpus.toOption,
           memory = cli.namespace.test.memory.toOption,
           setup = cli.namespace.test.setup.toOption,
-          dryRun = cli.namespace.test.dryRun.toOption
+          dryRun = cli.namespace.test.dryRun.toOption,
+          deterministicBuildFolder = cli.namespace.test.deterministicBuildFolder.toOption,
         )
         val errors = testResults.flatMap(_.toOption).count(_.isError)
         if (errors > 0) 1 else 0

@@ -8,6 +8,8 @@
 
 * `viash test` and `viash ns test`: Add a hidden `--dry_run` option to build the tests without executing them (PR #676).
 
+* `viash test` and `viash ns test`: Add a hidden `--deterministic_build_folder` argument to use a fixed folder path (PR #683).
+
 ## BUG FIXES
 
 * `NextflowPlatform`: Fix publishing state for output arguments with `multiple: true` (#638, PR #639). 
