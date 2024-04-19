@@ -179,6 +179,7 @@ object ViashNamespace extends Logging {
             val namespace = conf.functionality.namespace.getOrElse("")
             val funName = conf.functionality.name
             val platName = platform.id
+            val directoryName = if(namespace.isEmpty) funName else namespace.replace('/', '_') + "_" + funName
 
             // print start message
             infoOut("%20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, platName, "start", "", "", ""))
@@ -196,7 +197,8 @@ object ViashNamespace extends Logging {
                 parentTempPath = Some(parentTempPath),
                 cpus = cpus,
                 memory = memory,
-                dryRun = dryRun
+                dryRun = dryRun,
+                deterministicBuildFolder = Some(directoryName)
               )
             } catch {
               case e: MissingResourceFileException => 
