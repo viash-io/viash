@@ -61,9 +61,20 @@ object IO extends Logging {
   def makeTemp(name: String, parentTempPath: Option[Path] = None, addRandomized: Boolean = true): Path = {
     val workTempDir = parentTempPath.getOrElse(this.tempDir)
     if (!Files.exists(workTempDir)) Files.createDirectories(workTempDir)
-    val temp = 
-      if (addRandomized) Files.createTempDirectory(workTempDir, name)
-      else workTempDir.resolve(name)
+    val temp = addRandomized match {
+      case true => Files.createTempDirectory(workTempDir, name)
+      case false => {
+        val temp = workTempDir.resolve(name)
+        val tempFile = temp.toFile()
+        if (tempFile.exists() && !tempFile.isDirectory()) {
+          throw new RuntimeException(s"Temporary directory $temp already exists as a file.")
+        }
+        if (tempFile.exists() && tempFile.isDirectory() && tempFile.list().length > 0 ){
+          throw new RuntimeException(s"Temporary directory $temp already exists and is not empty.")
+        }
+        temp
+      }
+    }
     Files.createDirectories(temp)
     temp
   }
