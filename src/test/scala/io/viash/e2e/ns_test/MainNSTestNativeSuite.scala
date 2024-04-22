@@ -227,6 +227,37 @@ class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
+  test("Check namespace test output with deterministic build folder") {
+    // create a new unique temporary folder
+    val temporaryFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
+    val tempFolStr = temporaryFolder.getFileName().toString()
+
+    val (stdout, stderr, _) = TestHelper.testMainWithStdErr(
+      "ns", "test",
+      "--src", nsPath,
+      "--deterministic_build_folder", tempFolStr
+    )
+
+    assert(stderr.contains(s"The working directory for the namespace tests is ${temporaryFolder}"))
+
+    // Test inclusion of a header
+    val regexHeader = raw"^\s*namespace\s*functionality\s*platform\s*test_name\s*exit_code\s*duration\s*result".r
+    assert(regexHeader.findFirstIn(stdout).isDefined, s"\nRegex: ${regexHeader.toString}; text: \n$stdout")
+
+    for (
+      (component, steps) <- components;
+      (step, resultPattern) <- steps
+    ) {
+      val regex = s"""testns\\s*$component\\s*native\\s*$step$resultPattern""".r
+      assert(regex.findFirstIn(stdout).isDefined, s"\nRegex: '${regex.toString}'; text: \n$stdout")
+    }
+
+    val regexBuildError = raw"Reading file \'.*/src/ns_error/config\.vsh\.yaml\' failed".r
+    assert(regexBuildError.findFirstIn(stderr).isDefined, "Expecting to get an error because of an invalid yaml in ns_error")
+
+    assert(stderr.contains("The status of the component 'ns_power' is set to deprecated."))
+  }
+
   override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
