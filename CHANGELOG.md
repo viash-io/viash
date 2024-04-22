@@ -8,7 +8,7 @@
 
 * `viash test` and `viash ns test`: Add a hidden `--dry_run` option to build the tests without executing them (PR #676).
 
-* `viash test` and `viash ns test`: Add a hidden `--deterministic_build_folder` argument to use a fixed folder path (PR #683).
+* `viash test` and `viash ns test`: Add a hidden `--deterministic_working directory` argument to use a fixed directory path (PR #683).
 
 ## BUG FIXES
 
