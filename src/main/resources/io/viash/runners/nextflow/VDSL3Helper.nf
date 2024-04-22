@@ -274,11 +274,16 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   |\${task.cpus ? "export VIASH_META_CPUS=\$task.cpus" : "" }
   |\${task.memory?.bytes != null ? "export VIASH_META_MEMORY_B=\$task.memory.bytes" : "" }
   |if [ ! -z \\\${VIASH_META_MEMORY_B+x} ]; then
-  |  export VIASH_META_MEMORY_KB=\\\$(( (\\\$VIASH_META_MEMORY_B+1023) / 1024 ))
-  |  export VIASH_META_MEMORY_MB=\\\$(( (\\\$VIASH_META_MEMORY_KB+1023) / 1024 ))
-  |  export VIASH_META_MEMORY_GB=\\\$(( (\\\$VIASH_META_MEMORY_MB+1023) / 1024 ))
-  |  export VIASH_META_MEMORY_TB=\\\$(( (\\\$VIASH_META_MEMORY_GB+1023) / 1024 ))
-  |  export VIASH_META_MEMORY_PB=\\\$(( (\\\$VIASH_META_MEMORY_TB+1023) / 1024 ))
+  |  export VIASH_META_MEMORY_KB=\\\$(( (\\\$VIASH_META_MEMORY_B+999) / 1000 ))
+  |  export VIASH_META_MEMORY_MB=\\\$(( (\\\$VIASH_META_MEMORY_KB+999) / 1000 ))
+  |  export VIASH_META_MEMORY_GB=\\\$(( (\\\$VIASH_META_MEMORY_MB+999) / 1000 ))
+  |  export VIASH_META_MEMORY_TB=\\\$(( (\\\$VIASH_META_MEMORY_GB+999) / 1000 ))
+  |  export VIASH_META_MEMORY_PB=\\\$(( (\\\$VIASH_META_MEMORY_TB+999) / 1000 ))
+  |  export VIASH_META_MEMORY_KIB=\\\$(( (\\\$VIASH_META_MEMORY_B+1023) / 1024 ))
+  |  export VIASH_META_MEMORY_MIB=\\\$(( (\\\$VIASH_META_MEMORY_KIB+1023) / 1024 ))
+  |  export VIASH_META_MEMORY_GIB=\\\$(( (\\\$VIASH_META_MEMORY_MIB+1023) / 1024 ))
+  |  export VIASH_META_MEMORY_TIB=\\\$(( (\\\$VIASH_META_MEMORY_GIB+1023) / 1024 ))
+  |  export VIASH_META_MEMORY_PIB=\\\$(( (\\\$VIASH_META_MEMORY_TIB+1023) / 1024 ))
   |fi
   |
   |# meta synonyms
