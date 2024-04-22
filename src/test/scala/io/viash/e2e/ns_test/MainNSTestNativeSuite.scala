@@ -227,7 +227,7 @@ class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
-  test("Check namespace test output with deterministic build folder") {
+  test("Check namespace test output with deterministic working directory") {
     // create a new unique temporary folder
     val temporaryFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
     val tempFolStr = temporaryFolder.getFileName().toString()
@@ -235,7 +235,7 @@ class MainNSTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val (stdout, stderr, _) = TestHelper.testMainWithStdErr(
       "ns", "test",
       "--src", nsPath,
-      "--deterministic_build_folder", tempFolStr
+      "--deterministic_working_directory", tempFolStr
     )
 
     assert(stderr.contains(s"The working directory for the namespace tests is ${temporaryFolder}"))

@@ -69,13 +69,13 @@ object ViashTest extends Logging {
     cpus: Option[Int], 
     memory: Option[String],
     dryRun: Option[Boolean] = None,
-    deterministicBuildFolder: Option[String] = None,
+    deterministicWorkingDirectory: Option[String] = None,
   ): ManyTestOutput = {
     // create temporary directory
     val dir = IO.makeTemp(
-      name = deterministicBuildFolder.getOrElse(s"viash_test_${config.functionality.name}_"),
+      name = deterministicWorkingDirectory.getOrElse(s"viash_test_${config.functionality.name}_"),
       parentTempPath = parentTempPath,
-      addRandomized = deterministicBuildFolder.isEmpty
+      addRandomized = deterministicWorkingDirectory.isEmpty
     )
     if (!quiet) infoOut(s"Running tests in temporary directory: '$dir'")
 

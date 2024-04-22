@@ -251,10 +251,10 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       descr = "Only generate the test script, do not run the test.",
       hidden = true
     )
-    val deterministicBuildFolder = registerOpt[String](
-      name = "deterministic_build_folder",
+    val deterministicWorkingDirectory = registerOpt[String](
+      name = "deterministic_working_directory",
       default = None,
-      descr = "Name of the output build folder in the temporary folder. If not set, the build folder name will be a partially randomized name.",
+      descr = "Name of the working directory in the temporary directory. If not set, the working directory name will be a partially randomized name.",
       hidden = true
     )
 
@@ -354,10 +354,10 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
         descr = "Only generate the test scripts, do not run them.",
         hidden = true
       )
-      val deterministicBuildFolder = registerOpt[String](
-        name = "deterministic_build_folder",
+      val deterministicWorkingDirectory = registerOpt[String](
+        name = "deterministic_working_directory",
         default = None,
-        descr = "Name of the output build folder in the temporary folder. If not set, the build folder name will be a partially randomized name.",
+        descr = "Name of the working directory in the temporary directory. If not set, the working directory name will be a partially randomized name.",
         hidden = true
       )
     }

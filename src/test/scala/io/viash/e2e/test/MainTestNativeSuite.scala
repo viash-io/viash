@@ -334,7 +334,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testText = TestHelper.testMain(
       "test",
       "-p", "native",
-      "--deterministic_build_folder", tempFolStr,
+      "--deterministic_working_directory", tempFolStr,
       configFile
     )
 
@@ -354,7 +354,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testText = TestHelper.testMain(
       "test",
       "-p", "native",
-      "--deterministic_build_folder", tempFolStr,
+      "--deterministic_working_directory", tempFolStr,
       configFile
     )
 
@@ -374,7 +374,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val testOutput = TestHelper.testMainException2[RuntimeException](
       "test",
       "-p", "native",
-      "--deterministic_build_folder", tempFolStr,
+      "--deterministic_working_directory", tempFolStr,
       configFile
     )
 
