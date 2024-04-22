@@ -265,6 +265,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       descr = "Only generate the test script, do not run the test.",
       hidden = true
     )
+    val deterministicWorkingDirectory = registerOpt[String](
+      name = "deterministic_working_directory",
+      default = None,
+      descr = "Name of the working directory in the temporary directory. If not set, the working directory name will be a partially randomized name.",
+      hidden = true
+    )
 
     footer(
       s"""
@@ -360,6 +366,12 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
         name= "dry_run",
         default = Some(false),
         descr = "Only generate the test scripts, do not run them.",
+        hidden = true
+      )
+      val deterministicWorkingDirectory = registerOpt[String](
+        name = "deterministic_working_directory",
+        default = None,
+        descr = "Name of the working directory in the temporary directory. If not set, the working directory name will be a partially randomized name.",
         hidden = true
       )
     }

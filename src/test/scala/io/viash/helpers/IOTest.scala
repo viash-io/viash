@@ -23,9 +23,60 @@ class IOTest extends AnyFunSuite with BeforeAndAfter {
   test("makeTemp and deleteRecursively") {
     val temp = IO.makeTemp("foo")
     assert(Files.exists(temp) && Files.isDirectory(temp))
+    assert(temp.toString.matches(".*foo[\\w]+"), "Temporary directory name should be randomized, strategy can differ between platforms.")
 
     IO.deleteRecursively(temp)
     assert(!Files.exists(temp))
+  }
+
+  test("makeTemp with addRandomized disabled, folder exists") {
+    val tempDir = IO.makeTemp("foo")
+    val tempDirStr = tempDir.getFileName().toString()
+    val newTemp = IO.makeTemp(tempDirStr, addRandomized = false)
+    assert(Files.exists(newTemp) && Files.isDirectory(newTemp))
+
+    assert(newTemp == tempDir)
+    IO.deleteRecursively(newTemp)
+  }
+
+  test("makeTemp with addRandomized disabled, folder doesn't exist") {
+    val tempDir = IO.makeTemp("foo")
+    val tempDirStr = tempDir.getFileName().toString()
+    IO.deleteRecursively(tempDir)
+    val newTemp = IO.makeTemp(tempDirStr, addRandomized = false)
+    assert(Files.exists(newTemp) && Files.isDirectory(newTemp))
+
+    assert(newTemp == tempDir)
+    IO.deleteRecursively(newTemp)
+  }
+
+  test("makeTemp with addRandomized disabled, folder exists but not empty") {
+    val tempDir = IO.makeTemp("foo")
+    val tempDirStr = tempDir.getFileName().toString()
+    IO.write("foo", tempDir.resolve("foo.txt"))
+
+    val caught = intercept[RuntimeException] {
+      IO.makeTemp(tempDirStr, addRandomized = false)
+    }
+
+    assert(caught.getMessage().contains(s"Temporary directory $tempDir already exists and is not empty."))
+
+    IO.deleteRecursively(tempDir)
+  }
+
+  test("makeTemp with addRandomized disabled, folder exists as a file") {
+    val tempDir = IO.makeTemp("foo")
+    val tempDirStr = tempDir.getFileName().toString()
+    IO.deleteRecursively(tempDir)
+    IO.write("foo", tempDir)
+
+    val caught = intercept[RuntimeException] {
+      IO.makeTemp(tempDirStr, addRandomized = false)
+    }
+
+    assert(caught.getMessage().contains(s"Temporary directory $tempDir already exists as a file."))
+
+    IO.deleteRecursively(tempDir)
   }
 
   test("uri with path") {

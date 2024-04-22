@@ -128,7 +128,8 @@ object ViashNamespace extends Logging {
     append: Boolean = false,
     cpus: Option[Int],
     memory: Option[String],
-    dryRun: Option[Boolean] = None
+    dryRun: Option[Boolean] = None,
+    deterministicWorkingDirectory: Option[String] = None
   ): List[(AppliedConfig, ManyTestOutput)] = {
     val configs1 = configs.filter{tup => tup match {
       // remove nextflow because unit testing nextflow modules
@@ -150,7 +151,11 @@ object ViashNamespace extends Logging {
     val tsvExists = tsvPath.exists(Files.exists(_))
     val tsvWriter = tsvPath.map(Files.newBufferedWriter(_, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND))
 
-    val parentTempPath = IO.makeTemp("viash_ns_test")
+    val parentTempPath = IO.makeTemp(
+      name = deterministicWorkingDirectory.getOrElse("viash_ns_test"),
+      parentTempPath = None,
+      addRandomized = deterministicWorkingDirectory.isEmpty
+    )
     if (keepFiles.getOrElse(true)) {
       info(s"The working directory for the namespace tests is ${parentTempPath.toString()}")
     }
@@ -174,6 +179,7 @@ object ViashNamespace extends Logging {
             val funName = ac.config.name
             val runnerName = ac.runner.get.id
             val engineName = ac.engines.head.id
+            val directoryName = if(namespace.isEmpty) funName else namespace.replace('/', '_') + "_" + funName
 
             // print start message
             infoOut(columnFormatString.format(namespace, funName, runnerName, engineName, "start", "", "", ""))
@@ -190,7 +196,8 @@ object ViashNamespace extends Logging {
                 parentTempPath = Some(parentTempPath),
                 cpus = cpus,
                 memory = memory,
-                dryRun = dryRun
+                dryRun = dryRun,
+                deterministicWorkingDirectory = Some(directoryName)
               )
             } catch {
               case e: MissingResourceFileException => 
