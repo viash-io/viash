@@ -25,7 +25,7 @@ case class ComputationalRequirements(
   @description("The maximum number of (logical) cpus a component is allowed to use.")
   @example("cpus: 10", "yaml")
   cpus: Option[Int] = None,
-  @description("The maximum amount of memory a component is allowed to allocate. Unit must be one of B, KB, MB, GB, TB or PB.")
+  @description("The maximum amount of memory a component is allowed to allocate. Unit must be one of B, KB, MB, GB, TB or PB for SI units (1000-base), or KiB, MiB, GiB, TiB or PiB for binary IEC units (1024-base).")
   @example("memory: 10GB", "yaml")
   memory: Option[String] = None,
   @description("A list of commands which should be present on the system for the script to function.")
@@ -35,7 +35,7 @@ case class ComputationalRequirements(
 ) {
 
   def memoryAsBytes: Option[BigInt] = {
-    val Regex = "^([0-9]+) *([kmgtp]b?|b)$".r
+    val Regex = "^([0-9]+) *([kmgtp]i?b?|b)$".r
     val lookup = Map(
       "b" -> 0,
       "kb" -> 1,
@@ -47,8 +47,8 @@ case class ComputationalRequirements(
     memory.map(_.toLowerCase()) match {
       case Some(Regex(amnt, unit)) => 
         val amntBigInt = BigInt(amnt)
-        val multiplier = BigInt(1024)
-        val exp = lookup(unit)
+        val multiplier = if (unit.contains("i")) BigInt(1024) else BigInt(1000)
+        val exp = lookup(unit.replace("i", ""))
         Some(amntBigInt * multiplier.pow(exp))
       case Some(m) =>
         throw new RuntimeException(s"Invalid value \"$m\" as memory computational requirement.")
