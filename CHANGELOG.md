@@ -20,6 +20,9 @@ TODO add summary
 
 * `viash test`: Fix Docker id between build and test components not being consistent when using a custom Docker registry (PR #679).
 
+* `MainNSBuildNativeSuite`: Capture the error message when reading the configs so we can capture the expected warning message (PR #688).
+  While almost all tests were already cleanly capturing their expected warning/error messages, this one was still remaining, resulting in warnings being shown in the output.
+
 # Viash 0.9.0-RC2 (2024-02-23): Restructure the config and change some default values
 
 The `.functionality` layer has been removed from the config and all fields have been moved to the top layer.
