@@ -37,19 +37,22 @@ case class ComputationalRequirements(
   def memoryAsBytes: Option[BigInt] = {
     val Regex = "^([0-9]+) *([kmgtp]i?b?|b)$".r
     val lookup = Map(
-      "b" -> 0,
-      "kb" -> 1,
-      "mb" -> 2,
-      "gb" -> 3,
-      "tb" -> 4,
-      "pb" -> 5
+      "b" -> (0, 1000),
+      "kb" -> (1, 1000),
+      "mb" -> (2, 1000),
+      "gb" -> (3, 1000),
+      "tb" -> (4, 1000),
+      "pb" -> (5, 1000),
+      "kib" -> (1, 1024),
+      "mib" -> (2, 1024),
+      "gib" -> (3, 1024),
+      "tib" -> (4, 1024),
+      "pib" -> (5, 1024)
     )
     memory.map(_.toLowerCase()) match {
       case Some(Regex(amnt, unit)) => 
-        val amntBigInt = BigInt(amnt)
-        val multiplier = if (unit.contains("i")) BigInt(1024) else BigInt(1000)
-        val exp = lookup(unit.replace("i", ""))
-        Some(amntBigInt * multiplier.pow(exp))
+        val (exp, multiplier) = lookup(unit)
+        Some(BigInt(amnt) * BigInt(multiplier).pow(exp))
       case Some(m) =>
         throw new RuntimeException(s"Invalid value \"$m\" as memory computational requirement.")
       case None => None
