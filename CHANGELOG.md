@@ -4,7 +4,7 @@ TODO add summary
 
 ## BREAKING CHANGES
 
-* `computational requirements`: Use 1000-base units instead of 1024-base units for memory (PR #xxx). Additionally, the memory units `kib`, `mib`, `gib`, `tib`, and `pib` are added to support 1024-base definitions.
+* `computational requirements`: Use 1000-base units instead of 1024-base units for memory (PR #686). Additionally, the memory units `kib`, `mib`, `gib`, `tib`, and `pib` are added to support 1024-base definitions.
 
 ## MINOR CHANGES
 
