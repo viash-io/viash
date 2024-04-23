@@ -51,6 +51,9 @@ object ViashNamespace extends Logging {
         list.foreach(f)
   }
 
+  def targetOutputPath(targetDir: String, platformId: String, config: Config): String =
+    targetOutputPath(targetDir, platformId, config.functionality.namespace, config.functionality.name)
+
   def targetOutputPath(
     targetDir: String,
     platformId: String,
@@ -86,7 +89,7 @@ object ViashNamespace extends Logging {
             if (flatten) {
               target
             } else {
-              targetOutputPath(target, platformId, ns, funName)
+              targetOutputPath(target, platformId, conf)
             }
           val nsStr = ns.map(" (" + _ + ")").getOrElse("")
           infoOut(s"Exporting $funName$nsStr =$platformId=> $out")

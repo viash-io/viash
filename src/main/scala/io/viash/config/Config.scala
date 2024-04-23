@@ -368,7 +368,7 @@ object Config extends Logging {
     // Verify that all configs except the disabled ones are unique
     // Even configs disabled by the query should be unique as they might be picked up as a dependency
     // Only allowed exception are configs where the status is set to disabled
-    val uniqueConfigs = allConfigs.groupBy(config => config.functionality.namespace.map(_ + "/").getOrElse("") + config.functionality.name)
+    val uniqueConfigs = allConfigs.groupBy(c => Namespace.targetOutputPath("", "", c))
     val duplicateConfigs = uniqueConfigs.filter(_._2.size > 1)
     if (duplicateConfigs.nonEmpty) {
       val duplicateNames = duplicateConfigs.keys.mkString(", ")
