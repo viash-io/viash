@@ -400,8 +400,7 @@ object Main extends Logging {
             Some(ViashNamespace.targetOutputPath(
               targetDir = td,
               platformId = pl,
-              namespace = config.functionality.namespace,
-              functionalityName = config.functionality.name
+              config = config
             ))
           case _ => None
         }
