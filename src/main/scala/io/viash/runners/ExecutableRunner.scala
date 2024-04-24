@@ -509,8 +509,8 @@ final case class ExecutableRunner(
       s"""
         |if [[ "$$VIASH_ENGINE_TYPE" == "docker" ]]; then
         |  # helper function for filling in extra docker args
-        |  if [ ! -z "$$VIASH_META_MEMORY_MB" ]; then
-        |    VIASH_DOCKER_RUN_ARGS+=("--memory=$${VIASH_META_MEMORY_MB}m")
+        |  if [ ! -z "$$VIASH_META_MEMORY_B" ]; then
+        |    VIASH_DOCKER_RUN_ARGS+=("--memory=$${VIASH_META_MEMORY_B}")
         |  fi
         |  if [ ! -z "$$VIASH_META_CPUS" ]; then
         |    VIASH_DOCKER_RUN_ARGS+=("--cpus=$${VIASH_META_CPUS}")

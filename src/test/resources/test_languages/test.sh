@@ -35,12 +35,17 @@ grep -q 'meta_name: |test_languages_.*|' output.txt
 grep -q 'meta_functionality_name: |test_languages_.*|' output.txt
 grep -q 'meta_resources_dir: |..*|' output.txt
 grep -q 'meta_cpus: |2|' output.txt
-grep -q 'meta_memory_b: |2147483648|' output.txt
-grep -q 'meta_memory_kb: |2097152|' output.txt
-grep -q 'meta_memory_mb: |2048|' output.txt
+grep -q 'meta_memory_b: |2000000000|' output.txt
+grep -q 'meta_memory_kb: |2000000|' output.txt
+grep -q 'meta_memory_mb: |2000|' output.txt
 grep -q 'meta_memory_gb: |2|' output.txt
 grep -q 'meta_memory_tb: |1|' output.txt
 grep -q 'meta_memory_pb: |1|' output.txt
+grep -q 'meta_memory_kib: |1953125|' output.txt
+grep -q 'meta_memory_mib: |1908|' output.txt
+grep -q 'meta_memory_gib: |2|' output.txt
+grep -q 'meta_memory_tib: |1|' output.txt
+grep -q 'meta_memory_pib: |1|' output.txt
 
 grep -q 'head of input: |if you can read this,|' output.txt
 grep -q 'head of resource1: |if you can read this,|' output.txt
@@ -78,16 +83,43 @@ grep -q 'meta_name: |test_languages_.*|' output2.txt
 grep -q 'meta_functionality_name: |test_languages_.*|' output2.txt
 grep -q 'meta_resources_dir: |..*|' output2.txt
 grep -q 'meta_cpus: |666|' output2.txt
-grep -q 'meta_memory_b: |112589990684262400|' output2.txt
-grep -q 'meta_memory_kb: |109951162777600|' output2.txt
-grep -q 'meta_memory_mb: |107374182400|' output2.txt
-grep -q 'meta_memory_gb: |104857600|' output2.txt
-grep -q 'meta_memory_tb: |102400|' output2.txt
+grep -q 'meta_memory_b: |100000000000000000|' output2.txt
+grep -q 'meta_memory_kb: |100000000000000|' output2.txt
+grep -q 'meta_memory_mb: |100000000000|' output2.txt
+grep -q 'meta_memory_gb: |100000000|' output2.txt
+grep -q 'meta_memory_tb: |100000|' output2.txt
 grep -q 'meta_memory_pb: |100|' output2.txt
+grep -q 'meta_memory_kib: |97656250000000|' output2.txt
+grep -q 'meta_memory_mib: |95367431641|' output2.txt
+grep -q 'meta_memory_gib: |93132258|' output2.txt
+grep -q 'meta_memory_tib: |90950|' output2.txt
+grep -q 'meta_memory_pib: |89|' output2.txt
 
 grep -q 'head of input: |this file is only for testing|' output2.txt
 grep -q 'head of resource1: |if you can read this,|' output2.txt
 
+
+echo ">>> Checking whether output is correct with minimal parameters, but with 1024-base memory"
+"$meta_executable" \
+  "resource2.txt" \
+  --real_number 123.456 \
+  --whole_number=789 \
+  -s "a \\ b \$ c \` d \" e ' f \n g # h @ i { j } k \"\"\" l ''' m todo_add_back_DOLLAR_VIASH_TEMP n : o ; p" \
+  ---cpus 666 \
+  ---memory 100PiB \
+  > output2.txt
+
+grep -q 'meta_memory_b: |112589990684262400|' output2.txt
+grep -q 'meta_memory_kb: |112589990684263|' output2.txt
+grep -q 'meta_memory_mb: |112589990685|' output2.txt
+grep -q 'meta_memory_gb: |112589991|' output2.txt
+grep -q 'meta_memory_tb: |112590|' output2.txt
+grep -q 'meta_memory_pb: |113|' output2.txt
+grep -q 'meta_memory_kib: |109951162777600|' output2.txt
+grep -q 'meta_memory_mib: |107374182400|' output2.txt
+grep -q 'meta_memory_gib: |104857600|' output2.txt
+grep -q 'meta_memory_tib: |102400|' output2.txt
+grep -q 'meta_memory_pib: |100|' output2.txt
 
 if [[ $meta_name == "bash" || $meta_name == "js" ]]; then
 # This currently only works fully on bash and javascript

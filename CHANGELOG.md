@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## BREAKING CHANGES
+
+* `computational requirements`: Use 1000-base units instead of 1024-base units for memory (PR #686). Additionally, the memory units `kib`, `mib`, `gib`, `tib`, and `pib` are added to support 1024-base definitions.
+
 ## MINOR CHANGES
 
 * `error message`: Improve the error message when using an invalid field in the config (#PR #662). The error message now includes the field names that are not valid if that happens to be the case or otherwise a more general error message.

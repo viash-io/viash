@@ -232,7 +232,7 @@ case class Config(
     """@[Computational requirements](computational_requirements) related to running the component. 
       |`cpus` specifies the maximum number of (logical) cpus a component is allowed to use., whereas
       |`memory` specifies the maximum amount of memory a component is allowed to allicate. Memory units must be
-      |in B, KB, MB, GB, TB or PB.""".stripMargin)
+      |in B, KB, MB, GB, TB or PB for SI units (1000-base), or KiB, MiB, GiB, TiB or PiB for binary IEC units (1024-base).""".stripMargin)
   @example(
     """requirements:
       |  cpus: 5

@@ -42,7 +42,12 @@ object BashWrapper {
       LongArgument("memory_mb", required = false, dest = "meta"),
       LongArgument("memory_gb", required = false, dest = "meta"),
       LongArgument("memory_tb", required = false, dest = "meta"),
-      LongArgument("memory_pb", required = false, dest = "meta")
+      LongArgument("memory_pb", required = false, dest = "meta"),
+      LongArgument("memory_kib", required = false, dest = "meta"),
+      LongArgument("memory_mib", required = false, dest = "meta"),
+      LongArgument("memory_gib", required = false, dest = "meta"),
+      LongArgument("memory_tib", required = false, dest = "meta"),
+      LongArgument("memory_pib", required = false, dest = "meta")
     )
   }
 
@@ -735,18 +740,23 @@ object BashWrapper {
       """# helper function for parsing memory strings
       |function ViashMemoryAsBytes {
       |  local memory=`echo "$1" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]'`
-      |  local memory_regex='^([0-9]+)([kmgtp]b?|b)$'
+      |  local memory_regex='^([0-9]+)([kmgtp]i?b?|b)$'
       |  if [[ $memory =~ $memory_regex ]]; then
       |    local number=${memory/[^0-9]*/}
       |    local symbol=${memory/*[0-9]/}
       |    
       |    case $symbol in
       |      b)      memory_b=$number ;;
-      |      kb|k)   memory_b=$(( $number * 1024 )) ;;
-      |      mb|m)   memory_b=$(( $number * 1024 * 1024 )) ;;
-      |      gb|g)   memory_b=$(( $number * 1024 * 1024 * 1024 )) ;;
-      |      tb|t)   memory_b=$(( $number * 1024 * 1024 * 1024 * 1024 )) ;;
-      |      pb|p)   memory_b=$(( $number * 1024 * 1024 * 1024 * 1024 * 1024 )) ;;
+      |      kb|k)   memory_b=$(( $number * 1000 )) ;;
+      |      mb|m)   memory_b=$(( $number * 1000 * 1000 )) ;;
+      |      gb|g)   memory_b=$(( $number * 1000 * 1000 * 1000 )) ;;
+      |      tb|t)   memory_b=$(( $number * 1000 * 1000 * 1000 * 1000 )) ;;
+      |      pb|p)   memory_b=$(( $number * 1000 * 1000 * 1000 * 1000 * 1000 )) ;;
+      |      kib|ki)   memory_b=$(( $number * 1024 )) ;;
+      |      mib|mi)   memory_b=$(( $number * 1024 * 1024 )) ;;
+      |      gib|gi)   memory_b=$(( $number * 1024 * 1024 * 1024 )) ;;
+      |      tib|ti)   memory_b=$(( $number * 1024 * 1024 * 1024 * 1024 )) ;;
+      |      pib|pi)   memory_b=$(( $number * 1024 * 1024 * 1024 * 1024 * 1024 )) ;;
       |    esac
       |    echo "$memory_b"
       |  fi
@@ -756,11 +766,16 @@ object BashWrapper {
       |  VIASH_META_MEMORY_B=`ViashMemoryAsBytes $VIASH_META_MEMORY`
       |  # do not define other variables if memory_b is an empty string
       |  if [ ! -z "$VIASH_META_MEMORY_B" ]; then
-      |    VIASH_META_MEMORY_KB=$(( ($VIASH_META_MEMORY_B+1023) / 1024 ))
-      |    VIASH_META_MEMORY_MB=$(( ($VIASH_META_MEMORY_KB+1023) / 1024 ))
-      |    VIASH_META_MEMORY_GB=$(( ($VIASH_META_MEMORY_MB+1023) / 1024 ))
-      |    VIASH_META_MEMORY_TB=$(( ($VIASH_META_MEMORY_GB+1023) / 1024 ))
-      |    VIASH_META_MEMORY_PB=$(( ($VIASH_META_MEMORY_TB+1023) / 1024 ))
+      |    VIASH_META_MEMORY_KB=$(( ($VIASH_META_MEMORY_B+999) / 1000 ))
+      |    VIASH_META_MEMORY_MB=$(( ($VIASH_META_MEMORY_KB+999) / 1000 ))
+      |    VIASH_META_MEMORY_GB=$(( ($VIASH_META_MEMORY_MB+999) / 1000 ))
+      |    VIASH_META_MEMORY_TB=$(( ($VIASH_META_MEMORY_GB+999) / 1000 ))
+      |    VIASH_META_MEMORY_PB=$(( ($VIASH_META_MEMORY_TB+999) / 1000 ))
+      |    VIASH_META_MEMORY_KIB=$(( ($VIASH_META_MEMORY_B+1023) / 1024 ))
+      |    VIASH_META_MEMORY_MIB=$(( ($VIASH_META_MEMORY_KIB+1023) / 1024 ))
+      |    VIASH_META_MEMORY_GIB=$(( ($VIASH_META_MEMORY_MIB+1023) / 1024 ))
+      |    VIASH_META_MEMORY_TIB=$(( ($VIASH_META_MEMORY_GIB+1023) / 1024 ))
+      |    VIASH_META_MEMORY_PIB=$(( ($VIASH_META_MEMORY_TIB+1023) / 1024 ))
       |  else
       |    # unset memory if string is empty
       |    unset $VIASH_META_MEMORY_B
