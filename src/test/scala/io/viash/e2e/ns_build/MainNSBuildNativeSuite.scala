@@ -10,6 +10,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import java.io.File
 import java.nio.file.Paths
 import scala.io.Source
+import java.io.ByteArrayOutputStream
 
 class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
   Logger.UseColorOverride.value = Some(false)
@@ -65,7 +66,12 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
   for ((component, _, _, _) <- components) {
   test(s"Check whether particular keywords can be found in the usage with component $component") {
       val configFile = getClass.getResource(s"/testns/src/$component/config.vsh.yaml").getPath
-      val config = Config.read(configFile)
+      val errStream = new ByteArrayOutputStream()
+      val config = Console.withErr(errStream) {
+        Config.read(configFile)
+      }
+      val errString = errStream.toString
+      assert(errString.isEmpty() || errString.matches("Warning: The status of the component 'ns_power' is set to deprecated.\\s*"))
 
       val stdout =
         Exec.run(
