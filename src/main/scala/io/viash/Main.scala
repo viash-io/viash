@@ -412,8 +412,7 @@ object Main extends Logging {
         Some(ViashNamespace.targetOutputPath(
           targetDir = td,
           runnerId = ex.id,
-          namespace = appliedConfig.config.namespace,
-          name = appliedConfig.config.name
+          config = appliedConfig.config
         ))
       case _ => None
     }

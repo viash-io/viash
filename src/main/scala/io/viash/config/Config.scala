@@ -27,6 +27,7 @@ import io.viash.helpers.{Git, GitInfo, IO, Logging}
 import io.viash.helpers.circe._
 import io.viash.helpers.{status => BuildStatus};
 import io.viash.helpers.Yaml
+import io.viash.ViashNamespace.targetOutputPath
 
 import java.net.URI
 
@@ -747,7 +748,7 @@ object Config extends Logging {
         attrs.isRegularFile
     })
 
-    scriptFiles.map { file =>
+    val allConfigs = scriptFiles.map { file =>
       try {
         val rmos = new ReplayableMultiOutputStream()
 
@@ -799,6 +800,19 @@ object Config extends Logging {
           AppliedConfig(Config("failed"), None, Nil, Some(BuildStatus.ParseError))
       }
     }
+
+    // Verify that all configs except the disabled ones are unique
+    // Even configs disabled by the query should be unique as they might be picked up as a dependency
+    // Only allowed exception are configs where the status is set to disabled
+    val allEnabledConfigs = allConfigs.collect{ case ac if ac.config.isEnabled => ac.config }
+    val uniqueConfigs = allEnabledConfigs.groupBy(c => targetOutputPath("", "", c))
+    val duplicateConfigs = uniqueConfigs.filter(_._2.size > 1)
+    if (duplicateConfigs.nonEmpty) {
+      val duplicateNames = duplicateConfigs.keys.map(_.dropWhile(_ == '/')).toSeq.sorted.mkString(", ")
+      throw new RuntimeException(s"Duplicate component name${ if (duplicateConfigs.size == 1) "" else "s" } found: $duplicateNames")
+    }
+
+    allConfigs
   }
 
 val reservedParameters = List("-h", "--help", "--version", "---v", "---verbose", "---verbosity")

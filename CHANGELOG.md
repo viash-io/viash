@@ -110,6 +110,8 @@ Additionally changes are made to sanitize the built config output and include ad
 
 * `viash test` and `viash ns test`: Add a hidden `--deterministic_working directory` argument to use a fixed directory path (PR #683).
 
+* `component names`: Verify that component namespace and name combinations are unique (PR #685).
+
 ## BUG FIXES
 
 * `NextflowPlatform`: Fix publishing state for output arguments with `multiple: true` (#638, PR #639). 

@@ -161,7 +161,7 @@ object DependencyResolver extends Logging {
             case "nextflow" => "main.nf"
             case _ => c.name
           }
-          Paths.get(ViashNamespace.targetOutputPath("", rid, c.namespace, c.name), executableName).toString()
+          Paths.get(ViashNamespace.targetOutputPath("", rid, c), executableName).toString()
       }
       val info = c.build_info.get.copy(
         executable = executable

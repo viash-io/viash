@@ -235,7 +235,7 @@ object BashWrapper {
     val localDependenciesStrings = localDependencies.map{ d =>
       // relativize the path of the main component to the local dependency
       // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
-      val thisPath = ViashNamespace.targetOutputPath("", "invalid_runner_name", config.namespace, config.name)
+      val thisPath = ViashNamespace.targetOutputPath("", "invalid_runner_name", config)
       val relativePath = Paths.get(thisPath).relativize(Paths.get(d.configInfo.getOrElse("executable", "")))
       s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR/$relativePath\""
     }
