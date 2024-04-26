@@ -1,4 +1,8 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.8.6 (2024-04-26): Bug fixes and improvements for CI
+
+Fix some issues in some edge cases.
+Add options for testing in a CI environment. Given that these options are not meant for general use, they are hidden from the help message.
+Some improvements are made to run in Nextflow Fusion.
 
 ## DOCUMENTATION
 
