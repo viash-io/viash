@@ -244,13 +244,18 @@ object Main extends Logging {
       case List(cli.test) =>
         val (config, platform) = readConfig(cli.test, project = proj1)
         val config2 = singleConfigDependencies(config, platform, None, proj1.rootDir)
+        if (cli.test.dryRun.getOrElse(false) && !cli.test.keep.toOption.map(_.toBoolean).getOrElse(false)) {
+          info("Warning: --dry_run is set, but --keep is not set. This will result in the generated files being deleted after the test.")
+        }
         ViashTest(
           config2,
           platform = platform.get,
           keepFiles = cli.test.keep.toOption.map(_.toBoolean),
           setupStrategy = cli.test.setup.toOption,
           cpus = cli.test.cpus.toOption,
-          memory = cli.test.memory.toOption
+          memory = cli.test.memory.toOption,
+          dryRun = cli.test.dryRun.toOption,
+          deterministicWorkingDirectory = cli.test.deterministicWorkingDirectory.toOption
         )
         0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
@@ -271,6 +276,9 @@ object Main extends Logging {
       case List(cli.namespace, cli.namespace.test) =>
         val (configs, allConfigs) = readConfigs(cli.namespace.test, project = proj1)
         val configs2 = namespaceDependencies(configs, allConfigs, None, proj1.rootDir)
+        if (cli.namespace.test.dryRun.getOrElse(false) && !cli.namespace.test.keep.toOption.map(_.toBoolean).getOrElse(false)) {
+          info("Warning: --dry_run is set, but --keep is not set. This will result in the generated files being deleted after the test.")
+        }
         val testResults = ViashNamespace.test(
           configs = configs2,
           parallel = cli.namespace.test.parallel(),
@@ -280,6 +288,8 @@ object Main extends Logging {
           cpus = cli.namespace.test.cpus.toOption,
           memory = cli.namespace.test.memory.toOption,
           setup = cli.namespace.test.setup.toOption,
+          dryRun = cli.namespace.test.dryRun.toOption,
+          deterministicWorkingDirectory = cli.namespace.test.deterministicWorkingDirectory.toOption,
         )
         val errors = testResults.flatMap(_.toOption).count(_.isError)
         if (errors > 0) 1 else 0
@@ -390,8 +400,7 @@ object Main extends Logging {
             Some(ViashNamespace.targetOutputPath(
               targetDir = td,
               platformId = pl,
-              namespace = config.functionality.namespace,
-              functionalityName = config.functionality.name
+              config = config
             ))
           case _ => None
         }

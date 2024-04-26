@@ -1,10 +1,44 @@
+# Viash 0.8.6 (2024-04-26): Bug fixes and improvements for CI
+
+Fix some issues in some edge cases.
+Add options for testing in a CI environment. Given that these options are not meant for general use, they are hidden from the help message.
+Some improvements are made to run in Nextflow Fusion.
+
+## DOCUMENTATION
+
+* `docker setup strategy`: Fix inconsistencies in the documentation (PR #657).
+
+* `repositories`: Fix `uri` -> `repo` in the repositories documentation (PR #682).
+
+## NEW FUNCTIONALITY
+
+* `viash test` and `viash ns test`: Add a hidden `--dry_run` option to build the tests without executing them (PR #676).
+
+* `viash test` and `viash ns test`: Add a hidden `--deterministic_working directory` argument to use a fixed directory path (PR #683).
+
+* `component names`: Verify that component namespace and name combinations are unique (PR #685).
+
+## BUG FIXES
+
+* `NextflowPlatform`: Fix publishing state for output arguments with `multiple: true` (#638, PR #639). 
+
+* `Executable`: Check whether a multiple output file argument contains a wildcard (PR #639).
+
+* `NextflowPlatform`: Fix a possible cause of concurrency issues (PR #669).
+
+* `Resources`: Fix an issue where if the first resource is not a script, the resource is silently dropped (PR #670).
+
+* `Docker automount`: Prevent adding a trailing slash to an automounted folder (PR #673).
+
+* `NextflowPlatform`: Change the at-runtime generated nextflow process from an in-memory to an on-disk temporary file, which should cause less issues with Nextflow Fusion (PR #681).
+
 # Viash 0.8.5 (2024-02-21): Bug fixes and documentation improvements
 
 Fix a bug when building a test docker container which requires a test resource. Additional improvements for the website documentation and support for the latest version of Nextflow are added.
 
 ## BUG FIXES
 
-* `nextflow runner`: Fix an issue with current nextflow-latest (24.01.0-edge) where our supporting library passes a GString instead of a String and results in a type mismatch (PR #640).
+* `NextflowPlatform`: Fix an issue with current nextflow-latest (24.01.0-edge) where our supporting library passes a GString instead of a String and results in a type mismatch (PR #640).
 
 * `test resources`: Make non-script test resources available during building of a docker container for `viash test` (PR #652).
 

@@ -245,6 +245,7 @@ case class NextflowPlatform(
           NextflowHelper.vdsl3Helper
     }
 
+    // TODO: might need to change resources_dir to just moduleDir
     NextflowHelper.generateHeader(config) + "\n\n" +
       NextflowHelper.workflowHelper +
       s"""
@@ -255,7 +256,7 @@ case class NextflowPlatform(
       |
       |// create meta object
       |meta = [
-      |  "resources_dir": moduleDir.toRealPath().normalize(),
+      |  "resources_dir": moduleDir,
       |  "config": ${NextflowHelper.generateConfigStr(config)}
       |]
       |
@@ -277,7 +278,6 @@ case class NextflowPlatform(
       |// anonymous workflow for running this module as a standalone
       |workflow {
       |  // add id argument if it's not already in the config
-      |  // TODO: deep copy
       |  def newConfig = deepClone(meta.config)
       |  def newParams = deepClone(params)
       |

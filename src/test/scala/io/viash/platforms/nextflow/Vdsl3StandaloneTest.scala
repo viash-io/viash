@@ -8,6 +8,7 @@ import java.io.UncheckedIOException
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
 import scala.io.Source
+import scala.util.Using
 
 import io.viash.helpers.{IO, Logger}
 import io.viash.{DockerTest, NextflowTest, TestHelper}
@@ -15,6 +16,11 @@ import java.nio.charset.StandardCharsets
 
 import NextflowTestHelper._
 
+/**
+  * Test suite for VDSL3 components as standalone Nextflow workflows.
+  * Since these tests run workflows from the CLI, we need to check the
+  * generated output inside the test suite.
+  */
 class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
   // temporary folder to work in
@@ -160,6 +166,48 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
       assert(moduleOut.equals("one,two,three,1,2,3,4,5"))
     } finally {
       src.close()
+    }
+  }
+
+
+  test("Run multiple output test", NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/multiple_output/main.nf",
+      args = List(
+        "--id", "foo",
+        "--input", "resources/lines*.txt",
+        "--publish_dir", "multipleOutput"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+
+    val expectedFiles =
+      Map(
+        "state" -> "state.yaml",
+        "output_0" -> "output_0.txt", 
+        "output_1" -> "output_1.txt"
+      ).map{ case (id, suffix) =>
+        val path = temporaryFolder.resolve("multipleOutput/foo.multiple_output." + suffix)
+        (id, path)
+      }
+
+    // check if files exist
+    for ((id, path) <- expectedFiles) {
+      assert(Files.exists(path), s"File '$id' at path '$path' does not exist")
+    }
+
+    // check state content
+    Using(Source.fromFile(expectedFiles("state").toFile())) { reader =>
+      val stateTxt = reader.getLines().mkString("\n")
+      val expectedState = """\
+        |id: foo
+        |output:
+        |- !file 'foo.multiple_output.output_0.txt'
+        |- !file 'foo.multiple_output.output_1.txt'
+        |""".stripMargin
+      assert(stateTxt == expectedState)
     }
   }
 

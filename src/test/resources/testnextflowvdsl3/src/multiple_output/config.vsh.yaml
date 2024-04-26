@@ -1,0 +1,24 @@
+functionality:
+  name: multiple_output
+  arguments:
+    - name: "--input"
+      type: file
+      multiple: true
+      required: true
+      example: input.txt
+      multiple_sep: ";"
+    - name: "--output"
+      type: file
+      required: true
+      direction: output
+      multiple: true
+      multiple_sep: ";"
+      example: output_*.txt
+  resources:
+    - type: bash_script
+      path: script.sh
+platforms:
+  - type: native
+  - type: docker
+    image: nextflow/bash:latest
+  - type: nextflow

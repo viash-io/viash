@@ -72,6 +72,10 @@ functionality:
         - name: "multiple_pos"
           type: string
           multiple: true
+        - name: "--multiple_output"
+          type: file
+          multiple: true
+          direction: output
   resources:
     - type: bash_script
       path: ./code.sh

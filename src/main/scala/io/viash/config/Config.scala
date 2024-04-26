@@ -24,6 +24,7 @@ import io.viash.helpers.{Git, GitInfo, IO, Logging}
 import io.viash.helpers.circe._
 import io.viash.helpers.status._
 import io.viash.helpers.Yaml
+import io.viash.ViashNamespace.targetOutputPath
 
 import java.net.URI
 import io.viash.functionality.resources._
@@ -364,6 +365,16 @@ object Config extends Logging {
     }
 
     val allConfigs = allConfigsWithStdOutErr.collect({ case Left((config, _, _)) if config.functionality.isEnabled => config })
+
+    // Verify that all configs except the disabled ones are unique
+    // Even configs disabled by the query should be unique as they might be picked up as a dependency
+    // Only allowed exception are configs where the status is set to disabled
+    val uniqueConfigs = allConfigs.groupBy(c => targetOutputPath("", "", c))
+    val duplicateConfigs = uniqueConfigs.filter(_._2.size > 1)
+    if (duplicateConfigs.nonEmpty) {
+      val duplicateNames = duplicateConfigs.keys.map(_.dropWhile(_ == '/')).toSeq.sorted.mkString(", ")
+      throw new RuntimeException(s"Duplicate component name${ if (duplicateConfigs.size == 1) "" else "s" } found: $duplicateNames")
+    }
 
     (filteredConfigs, allConfigs)
   }

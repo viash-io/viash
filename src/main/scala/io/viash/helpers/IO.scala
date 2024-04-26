@@ -55,12 +55,26 @@ object IO extends Logging {
    *
    * @param name the name of the temporary directory
    * @param parentTempPath the optional parent directory for the temporary directory
+   * @param addRandomized enable randomization of the temporary directory name
    * @return the temporary directory path
    */
-  def makeTemp(name: String, parentTempPath: Option[Path] = None): Path = {
+  def makeTemp(name: String, parentTempPath: Option[Path] = None, addRandomized: Boolean = true): Path = {
     val workTempDir = parentTempPath.getOrElse(this.tempDir)
     if (!Files.exists(workTempDir)) Files.createDirectories(workTempDir)
-    val temp = Files.createTempDirectory(workTempDir, name)
+    val temp = addRandomized match {
+      case true => Files.createTempDirectory(workTempDir, name)
+      case false => {
+        val temp = workTempDir.resolve(name)
+        val tempFile = temp.toFile()
+        if (tempFile.exists() && !tempFile.isDirectory()) {
+          throw new RuntimeException(s"Temporary directory $temp already exists as a file.")
+        }
+        if (tempFile.exists() && tempFile.isDirectory() && tempFile.list().length > 0 ){
+          throw new RuntimeException(s"Temporary directory $temp already exists and is not empty.")
+        }
+        temp
+      }
+    }
     Files.createDirectories(temp)
     temp
   }

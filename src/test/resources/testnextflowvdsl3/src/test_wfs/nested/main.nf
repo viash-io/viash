@@ -6,7 +6,7 @@ workflow base {
   ch = Channel.fromList(0..1000)
     | map { num ->
       // create temporary file
-      file = tempFile()
+      def file = tempFile()
       file.write("num: $num")
 
       ["num$num", [ file: file ], ["num": num]]

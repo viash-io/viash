@@ -156,7 +156,7 @@ object DependencyResolver {
             case "nextflow" => "main.nf"
             case _ => c.functionality.name
           }
-          Paths.get(ViashNamespace.targetOutputPath("", pid, c.functionality.namespace, c.functionality.name), executableName).toString()
+          Paths.get(ViashNamespace.targetOutputPath("", pid, c), executableName).toString()
       }
       val info = c.info.get.copy(
         executable = executable

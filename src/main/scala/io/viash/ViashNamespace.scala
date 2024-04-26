@@ -51,6 +51,9 @@ object ViashNamespace extends Logging {
         list.foreach(f)
   }
 
+  def targetOutputPath(targetDir: String, platformId: String, config: Config): String =
+    targetOutputPath(targetDir, platformId, config.functionality.namespace, config.functionality.name)
+
   def targetOutputPath(
     targetDir: String,
     platformId: String,
@@ -86,7 +89,7 @@ object ViashNamespace extends Logging {
             if (flatten) {
               target
             } else {
-              targetOutputPath(target, platformId, ns, funName)
+              targetOutputPath(target, platformId, conf)
             }
           val nsStr = ns.map(" (" + _ + ")").getOrElse("")
           infoOut(s"Exporting $funName$nsStr =$platformId=> $out")
@@ -113,7 +116,9 @@ object ViashNamespace extends Logging {
     tsv: Option[String] = None,
     append: Boolean = false,
     cpus: Option[Int],
-    memory: Option[String]
+    memory: Option[String],
+    dryRun: Option[Boolean] = None,
+    deterministicWorkingDirectory: Option[String] = None
   ): List[Either[(Config, ManyTestOutput), Status]] = {
     val configs1 = configs.filter{tup => tup match {
       // remove nextflow because unit testing nextflow modules
@@ -134,7 +139,11 @@ object ViashNamespace extends Logging {
     val tsvExists = tsvPath.exists(Files.exists(_))
     val tsvWriter = tsvPath.map(Files.newBufferedWriter(_, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND))
 
-    val parentTempPath = IO.makeTemp("viash_ns_test")
+    val parentTempPath = IO.makeTemp(
+      name = deterministicWorkingDirectory.getOrElse("viash_ns_test"),
+      parentTempPath = None,
+      addRandomized = deterministicWorkingDirectory.isEmpty
+    )
     if (keepFiles.getOrElse(true)) {
       info(s"The working directory for the namespace tests is ${parentTempPath.toString()}")
     }
@@ -173,6 +182,7 @@ object ViashNamespace extends Logging {
             val namespace = conf.functionality.namespace.getOrElse("")
             val funName = conf.functionality.name
             val platName = platform.id
+            val directoryName = if(namespace.isEmpty) funName else namespace.replace('/', '_') + "_" + funName
 
             // print start message
             infoOut("%20s %20s %20s %20s %9s %8s %20s".format(namespace, funName, platName, "start", "", "", ""))
@@ -189,7 +199,9 @@ object ViashNamespace extends Logging {
                 quiet = true,
                 parentTempPath = Some(parentTempPath),
                 cpus = cpus,
-                memory = memory
+                memory = memory,
+                dryRun = dryRun,
+                deterministicWorkingDirectory = Some(directoryName)
               )
             } catch {
               case e: MissingResourceFileException => 
