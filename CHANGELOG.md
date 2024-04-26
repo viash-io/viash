@@ -1,6 +1,6 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.9.0-RC3 (2024-04-26): Various bug fixes and minor improvements
 
-TODO add summary
+Mainly fixes for code changes from previous release candidates. Some additional minor fixes and QoL improvements are included.
 
 ## BREAKING CHANGES
 
