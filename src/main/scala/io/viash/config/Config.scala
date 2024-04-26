@@ -414,29 +414,28 @@ case class Config(
     * Find the runners
     * 
     * Order of execution:
-    *   - if an runner id is passed, look up the runner in the runners list
-    *   - else if runners is a non-empty list, use the first runner
-    *   - else use the executable runner
+    *   - if the runners list is empty, use the executable runner for the rest of the logic
+    *   - if an runner id is passed, return the matching runners in the runners list
+    *   - else throw an error
     *
     * @param query An runner ID referring to one of the config's runners
-    * @return An runner
+    * @return A list of runners
     */
   def findRunners(query: Option[String]): List[Runner] = {
-    // TODO: match on query, there's no need to do a .* if query is None
-    val regex = query.getOrElse(".*").r
-
-    val foundMatches = runners.filter{ e =>
-      regex.findFirstIn(e.id).isDefined
+    val list = runners match {
+      case Nil => List(ExecutableRunner())
+      case li => li
     }
-    
-    foundMatches match {
-      case li if li.nonEmpty =>
-        li
-      case Nil if query.isDefined =>
-        throw new RuntimeException(s"no runner id matching regex '$regex' could not be found in the config.")
-      case _ =>
-        // TODO: switch to the getRunners.head ?
-        List(ExecutableRunner())
+
+    query match {
+      case None =>
+        list
+      case Some(regex) =>
+        val foundMatches = list.filter{ e => regex.r.findFirstIn(e.id).isDefined }
+        foundMatches match {
+          case li if li.nonEmpty => li
+          case _ => throw new RuntimeException(s"no runner id matching regex '$regex' could not be found in the config.")
+        }
     }
   }
 
@@ -444,29 +443,28 @@ case class Config(
     * Find the engines
     * 
     * Order of execution:
-    *   - if an engine id is passed, look up the engine in the engines list
-    *   - else if engines is a non-empty list, use the first engine
-    *   - else use the executable engine
+    *   - if the engines list is empty, use the native engine for the rest of the logic
+    *   - if an engine id is passed, return the matching engines in the engines list
+    *   - else throw an error
     *
     * @param query An engine ID referring to one of the config's engines
-    * @return An engine
+    * @return A list of engines
     */
   def findEngines(query: Option[String]): List[Engine] = {
-    // TODO: match on query, there's no need to do a .* if query is None
-    val regex = query.getOrElse(".*").r
-
-    val foundMatches = engines.filter{ e =>
-      regex.findFirstIn(e.id).isDefined
+    val list = engines match {
+      case Nil => List(NativeEngine())
+      case li => li
     }
-    
-    foundMatches match {
-      case li if li.nonEmpty =>
-        li
-      case Nil if query.isDefined =>
-        throw new RuntimeException(s"no engine id matching regex '$regex' could not be found in the config.")
-      case _ =>
-        // TODO: switch to the getEngines.head ?
-        List(NativeEngine())
+
+    query match {
+      case None =>
+        list
+      case Some(regex) =>
+        val foundMatches = list.filter{ e => regex.r.findFirstIn(e.id).isDefined }
+        foundMatches match {
+          case li if li.nonEmpty => li
+          case _ => throw new RuntimeException(s"no engine id matching regex '$regex' could not be found in the config.")
+        }
     }
   }
 
