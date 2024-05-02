@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## BUG FIXES
+
+* `viash build`: Fix error handling of non-generic errors in the build process or while pushing docker containers (PR #xxx).
+
 # Viash 0.8.6 (2024-04-26): Bug fixes and improvements for CI
 
 Fix some issues in some edge cases.
