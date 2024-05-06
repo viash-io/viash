@@ -131,7 +131,7 @@ object Repository extends Logging {
     // No cache found so fetch it
     val newRepo = repo match {
       case r: AbstractGitRepository => {
-        val r2 = r.checkoutSparse()
+        val r2 = r.getSparseRepoInTemp()
         val r3 = r2.checkout()
         // Stopgap solution to be able to use built repositories which were not built with dependency aware Viash version.
         // TODO remove this section once it's deemed no longer necessary

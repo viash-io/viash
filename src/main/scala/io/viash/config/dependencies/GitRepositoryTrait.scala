@@ -22,6 +22,7 @@ import io.viash.schemas._
 trait GitRepositoryTrait extends AbstractGitRepository {
 
   def getCheckoutUri(): String = uri
+  def getCacheIdentifier(): Option[String] = None
 
   // Strip the protocol and user credentials
   val storePath = uri.replaceFirst("^.+://", "").replaceFirst(".+@", "")

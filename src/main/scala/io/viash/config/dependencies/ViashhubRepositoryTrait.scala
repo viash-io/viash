@@ -25,7 +25,7 @@ trait ViashhubRepositoryTrait extends AbstractGitRepository {
   @example("repo: openpipelines-bio/openpipeline", "yaml")
   val repo: String
 
-  override def getCheckoutUri(): String = {
+  def getCheckoutUri(): String = {
     if (checkGitAuthentication(uri_nouser)) { 
       // First try https with bad user & password to disable asking credentials
       // If successful, do checkout without the dummy credentials, don't want to store them in the repo remote address
@@ -37,6 +37,9 @@ trait ViashhubRepositoryTrait extends AbstractGitRepository {
       uri
     }
   }
+
+  def getCacheIdentifier(): Option[String] =
+    Some(s"github-${repo.replace("/", "-")}${tag.map(_.prepended('-')).getOrElse("")}")
 
   lazy val uri = s"https://viash-hub.com/$repo.git"
   lazy val uri_ssh = s"git@viash-hub.com:$repo.git"

@@ -21,6 +21,8 @@ import io.viash.helpers.{IO, Exec, Logging}
 import java.io.File
 import java.nio.file.Paths
 import io.viash.exceptions.CheckoutException
+import io.viash.helpers.SysEnv
+import java.nio.file.Path
 
 trait AbstractGitRepository extends Repository with Logging {
   val uri: String
@@ -74,7 +76,59 @@ trait AbstractGitRepository extends Repository with Logging {
     res.exitValue == 0
   }
 
+  protected def getLocalHash(): String = {
+    val cwd = Some(Paths.get(localPath).toFile())
+    val loggers = Seq[String => Unit] { (str: String) => {info(str)} }
+    val res = Exec.runCatch(
+      List("git", "rev-list", "-n", "1", "HEAD"),
+      cwd = cwd,
+      loggers = loggers,
+    )
+    res.exitValue match {
+      case 0 => res.output.trim()
+      case _ => "Local hash not found"
+    }
+  }
+
+  protected def getRemoteHash(uri: String): String = {
+    val res = Exec.runCatch(
+      List("git", "ls-remote", uri, tag.getOrElse("HEAD")),
+    )
+    res.exitValue match {
+      case 0 => res.output.split("\t").head
+      case _ => "Remote hash not found"
+    }
+  }
+
   def getCheckoutUri(): String
+  def getCacheIdentifier(): Option[String]
+  def fullCachePath: Option[Path] = {
+    val cacheIdentifier = getCacheIdentifier()
+    cacheIdentifier.map(cacheIdentifier => Paths.get(SysEnv.viashHome).resolve("cache").resolve(cacheIdentifier))
+  }
+
+  def findInCache(): Option[AbstractGitRepository] = {
+    val cachePath = fullCachePath
+    val res = cachePath match {
+      case Some(path) =>
+        val pathFile = path.toFile()
+        pathFile.exists() && pathFile.isDirectory() match {
+          case true => Some(copyRepo(localPath = path.toString))
+          case false => None
+        }
+      case None => None
+    }
+    info(s"findInCache: $res")
+    res
+  }
+
+  def checkCacheStillValid(): Boolean = {
+    val uri = getCheckoutUri()
+    val remoteHash = getRemoteHash(uri)
+    val localHash = getLocalHash()
+    info(s"remoteHash: $remoteHash localHash: $localHash")
+    remoteHash == localHash
+  }
 
   // Clone of single branch with depth 1 but without checking out files
   def checkoutSparse(): AbstractGitRepository = {
@@ -90,6 +144,32 @@ trait AbstractGitRepository extends Repository with Logging {
       throw new CheckoutException(this)
 
     copyRepo(localPath = temporaryFolder.toString)
+  }
+
+  // Get cached repo if it exists and is still valid, otherwise checkout a new one
+  // If a new one is checked out, copy it to the cache
+  // If a cached repo is used, copy it to a new temporary folder
+  def getSparseRepoInTemp(): AbstractGitRepository = {
+    findInCache() match {
+      case Some(repo) if repo.checkCacheStillValid() => 
+        info(s"Using cached repo in ${repo.localPath}")
+        val newTemp = IO.makeTemp("viash_hub_repo")
+        IO.copyFolder(repo.localPath, newTemp.toString)
+        repo.copyRepo(localPath = newTemp.toString)
+      case _ =>
+        val repo = checkoutSparse()
+        info(s"Copying repo to cache ${repo.fullCachePath}")
+        repo.fullCachePath match {
+          case Some(cachePath) =>
+            val cachePathFile = cachePath.toFile()
+            if (cachePathFile.exists())
+              IO.deleteRecursively(cachePath)
+            cachePathFile.mkdirs()
+            IO.copyFolder(repo.localPath, cachePath.toString)
+          case None => 
+        }
+        repo
+    }
   }
 
   // Checkout of files from already cloned repository. Limit file checkout to the path that was specified
