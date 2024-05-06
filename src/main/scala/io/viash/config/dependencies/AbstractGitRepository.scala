@@ -78,7 +78,7 @@ trait AbstractGitRepository extends Repository with Logging {
 
   protected def getLocalHash(): String = {
     val cwd = Some(Paths.get(localPath).toFile())
-    val loggers = Seq[String => Unit] { (str: String) => {info(str)} }
+    val loggers = Seq[String => Unit] { str => debug(s"getLocalHash: $str") }
     val res = Exec.runCatch(
       List("git", "rev-list", "-n", "1", "HEAD"),
       cwd = cwd,
@@ -91,8 +91,10 @@ trait AbstractGitRepository extends Repository with Logging {
   }
 
   protected def getRemoteHash(uri: String): String = {
+    val loggers = Seq[String => Unit] { str => debug(s"getLocalHash: $str") }
     val res = Exec.runCatch(
       List("git", "ls-remote", uri, tag.getOrElse("HEAD")),
+      loggers = loggers,
     )
     res.exitValue match {
       case 0 => res.output.split("\t").head
@@ -109,19 +111,15 @@ trait AbstractGitRepository extends Repository with Logging {
 
   def findInCache(): Option[AbstractGitRepository] = {
     val cachePath = fullCachePath
-    val res = cachePath match {
-      case Some(path) =>
-        val pathFile = path.toFile()
-        pathFile.exists() && pathFile.isDirectory() match {
-          case true => Some(copyRepo(localPath = path.toString))
-          case false => None
-        }
-      case None => None
+    cachePath match {
+      case Some(path) if path.toFile.isDirectory() =>
+        info(s"Found in cache: $path")
+        Some(copyRepo(localPath = path.toString))
+      case _ => None
     }
-    info(s"findInCache: $res")
-    res
   }
 
+  // compare the remote hash with the local hash
   def checkCacheStillValid(): Boolean = {
     val uri = getCheckoutUri()
     val remoteHash = getRemoteHash(uri)
@@ -150,9 +148,10 @@ trait AbstractGitRepository extends Repository with Logging {
   // If a new one is checked out, copy it to the cache
   // If a cached repo is used, copy it to a new temporary folder
   def getSparseRepoInTemp(): AbstractGitRepository = {
+    info(s"Fetching repo for $uri")
     findInCache() match {
       case Some(repo) if repo.checkCacheStillValid() => 
-        info(s"Using cached repo in ${repo.localPath}")
+        info(s"Using cached repo from ${repo.localPath}")
         val newTemp = IO.makeTemp("viash_hub_repo")
         IO.copyFolder(repo.localPath, newTemp.toString)
         repo.copyRepo(localPath = newTemp.toString)

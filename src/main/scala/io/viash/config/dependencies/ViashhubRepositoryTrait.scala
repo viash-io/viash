@@ -39,7 +39,7 @@ trait ViashhubRepositoryTrait extends AbstractGitRepository {
   }
 
   def getCacheIdentifier(): Option[String] =
-    Some(s"github-${repo.replace("/", "-")}${tag.map(_.prepended('-')).getOrElse("")}")
+    Some(s"viashhub-${repo.replace("/", "-")}${tag.map(_.prepended('-')).getOrElse("")}")
 
   lazy val uri = s"https://viash-hub.com/$repo.git"
   lazy val uri_ssh = s"git@viash-hub.com:$repo.git"
