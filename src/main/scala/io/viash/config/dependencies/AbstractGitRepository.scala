@@ -28,6 +28,9 @@ trait AbstractGitRepository extends Repository with Logging {
   val uri: String
   val storePath: String
 
+  @inline
+  protected def getLoggers(fn: String) = Seq[String => Unit] { str: String => debug(s"$fn: $str") }
+
   def copyRepo(
    `type`: String,
     tag: Option[String],
@@ -38,7 +41,8 @@ trait AbstractGitRepository extends Repository with Logging {
   def hasBranch(name: String, cwd: Option[File]): Boolean = {
     val out = Exec.runCatch(
       List("git", "show-ref", "--verify", "--quiet", s"refs/heads/$name"),
-      cwd = cwd
+      cwd = cwd,
+      loggers = getLoggers("hasBranch"),
     )
     out.exitValue == 0
   }
@@ -46,7 +50,8 @@ trait AbstractGitRepository extends Repository with Logging {
   def hasTag(name: String, cwd: Option[File]): Boolean = {
     val out = Exec.runCatch(
       List("git", "show-ref", "--verify", "--quiet", s"refs/tags/$name"),
-      cwd = cwd
+      cwd = cwd,
+      loggers = getLoggers("hasTag"),
     )
     out.exitValue == 0
   }
@@ -61,28 +66,27 @@ trait AbstractGitRepository extends Repository with Logging {
       case Some(value) => List("--single-branch", "--branch", value)
     }
 
-    val loggers = Seq[String => Unit] { (str: String) => {info(str)} }
     Exec.runCatch(
       List("git", "clone", uri, "--no-checkout", "--depth", "1") ++ singleBranch :+ ".",
       cwd = cwd,
-      loggers = loggers,
+      loggers = getLoggers("doGitClone"),
     )
   }
 
   protected def checkGitAuthentication(uri: String): Boolean = {
     val res = Exec.runCatch(
       List("git", "ls-remote", uri),
+      loggers = getLoggers("checkGitAuthentication"),
     )
     res.exitValue == 0
   }
 
   protected def getLocalHash(): String = {
     val cwd = Some(Paths.get(localPath).toFile())
-    val loggers = Seq[String => Unit] { str => debug(s"getLocalHash: $str") }
     val res = Exec.runCatch(
       List("git", "rev-list", "-n", "1", "HEAD"),
       cwd = cwd,
-      loggers = loggers,
+      loggers = getLoggers("getLocalHash"),
     )
     res.exitValue match {
       case 0 => res.output.trim()
@@ -91,10 +95,9 @@ trait AbstractGitRepository extends Repository with Logging {
   }
 
   protected def getRemoteHash(uri: String): String = {
-    val loggers = Seq[String => Unit] { str => debug(s"getLocalHash: $str") }
     val res = Exec.runCatch(
       List("git", "ls-remote", uri, tag.getOrElse("HEAD")),
-      loggers = loggers,
+      loggers = getLoggers("getRemoteHash"),
     )
     res.exitValue match {
       case 0 => res.output.split("\t").head
@@ -183,10 +186,12 @@ trait AbstractGitRepository extends Repository with Logging {
 
     val out = Exec.runCatch(
       List("git", "checkout", checkoutName, "--", pathStr),
-      cwd = cwd
+      cwd = cwd,
+      loggers = getLoggers("checkout"),
     )
 
-    info(s"checkout out: ${out.command} ${out.exitValue} ${out.output}")
+    if (out.exitValue != 0)
+      info(s"checkout out: ${out.command} ${out.exitValue} ${out.output}")
 
     if (path.isDefined)
       copyRepo(localPath = Paths.get(localPath, path.get).toString)
