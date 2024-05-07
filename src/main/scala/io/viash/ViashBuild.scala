@@ -61,14 +61,15 @@ object ViashBuild extends Logging {
     val pushResult =
       if (push && exec_path.isDefined && platform.hasSetup) {
         val cmd = Array(exec_path.get, "---setup push")
-        val _ = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
+        val res = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
+        res
       }
       else 0
     
     (setupResult, pushResult) match {
       case (0, 0) => Success
-      case (1, _) => SetupError
-      case (0, 1) => PushError
+      case (x, _) if x > 0 => SetupError
+      case _ => PushError
     }
   }
 }
