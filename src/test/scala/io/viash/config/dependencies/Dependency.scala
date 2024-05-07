@@ -325,7 +325,7 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     val conf = Config(
       name = "dep4",
       resources = textBashScript("$dep_viash_hub_test_tree\necho \"Hello from dep4\""),
-      dependencies = List(Dependency("viash_hub_test/tree", repository = Left("vsh://hendrik/dependency_test2@main_build")))
+      dependencies = List(Dependency("viash_hub_test/tree", repository = Left("vsh://hendrik/dependency_test2@main_build_fix_dependencies")))
     )
 
     writeTestConfig(testFolder.resolve("src/dep4/config.vsh.yaml"), conf)

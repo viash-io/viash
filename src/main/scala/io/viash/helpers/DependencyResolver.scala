@@ -242,8 +242,12 @@ object DependencyResolver extends Logging {
       def getInfo(json: Json): Option[Map[String, String]] = {
         if (legacyMode)
           json.hcursor.downField("info").as[Map[String, String]].toOption
-        else
-          json.hcursor.downField("build_info").as[Map[String, String]].toOption
+        else {
+          // if 'dependencies' exists, delete it as it can't be converted to a string
+          // it's not very nice but the calling code doesn't need it anyway
+          val json2 = json.hcursor.downField("build_info").downField("dependencies").delete.top.getOrElse(json)
+          json2.hcursor.downField("build_info").as[Map[String, String]].toOption
+        }
       }
 
       val info = getInfo(json).getOrElse(Map.empty) +
@@ -265,11 +269,15 @@ object DependencyResolver extends Logging {
       val legacyMode = json.hcursor.downField("functionality").succeeded
 
       val dependencies =
-        if (legacyMode) 
-          json.hcursor.downField("functionality").downField("dependencies").focus.flatMap(_.asArray).get
-        else
-          json.hcursor.downField("dependencies").focus.flatMap(_.asArray).get
-      dependencies.flatMap(_.hcursor.downField("writtenPath").as[String].toOption).toList
+        if (legacyMode) {
+          val jsonVec = json.hcursor.downField("functionality").downField("dependencies").focus.flatMap(_.asArray).get
+          jsonVec.flatMap(_.hcursor.downField("writtenPath").as[String].toOption).toList
+        }
+        else {
+          val jsonVec = json.hcursor.downField("build_info").downField("dependencies").focus.flatMap(_.asArray).get
+          jsonVec.flatMap(_.hcursor.as[String].toOption).toList
+        }
+      dependencies
     } catch {
       case _: Throwable => Nil
     }
