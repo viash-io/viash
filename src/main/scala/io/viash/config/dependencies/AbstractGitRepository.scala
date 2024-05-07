@@ -159,10 +159,11 @@ trait AbstractGitRepository extends Repository with Logging {
         IO.copyFolder(repo.localPath, newTemp.toString)
         repo.copyRepo(localPath = newTemp.toString)
       case _ =>
+        info(s"Cache either not present or outdated; checkout repository")
         val repo = checkoutSparse()
-        info(s"Copying repo to cache ${repo.fullCachePath}")
         repo.fullCachePath match {
           case Some(cachePath) =>
+            info(s"Copying repo to cache ${repo.fullCachePath}")
             val cachePathFile = cachePath.toFile()
             if (cachePathFile.exists())
               IO.deleteRecursively(cachePath)
