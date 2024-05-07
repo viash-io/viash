@@ -43,11 +43,11 @@ object ConfigMeta {
   def configToCleanJson(config: Config): Json = {
     // relativize paths in the info field
     val rootDir = config.package_config.flatMap(_.rootDir)
-    val dependencies = 
-      if (config.dependencies.isEmpty)
-        None
-      else
-        Some(config.dependencies.map(_.writtenPath).flatMap(_.map(IO.anonymizePath(rootDir, _))))
+
+    // get a list of all dependency paths in an anonymized way, None if there are no dependencies
+    val dependencyPaths = config.dependencies.map(_.writtenPath).flatMap(_.map(IO.anonymizePath(rootDir, _)))
+    val dependencies = Some(dependencyPaths).filter(_.nonEmpty)
+
     val anonymizedConfig = config.copy(
       build_info = config.build_info.map(info => info.copy(
         config = IO.anonymizePath(rootDir, info.config),
