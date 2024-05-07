@@ -124,11 +124,16 @@ trait AbstractGitRepository extends Repository with Logging {
 
   // compare the remote hash with the local hash
   def checkCacheStillValid(): Boolean = {
+    if (AbstractGitRepository.isValidatedCache(localPath))
+      return true
     val uri = getCheckoutUri()
     val remoteHash = getRemoteHash(uri)
     val localHash = getLocalHash()
     info(s"remoteHash: $remoteHash localHash: $localHash")
-    remoteHash == localHash
+    val res = remoteHash == localHash
+    if (res)
+      AbstractGitRepository.markValidatedCache(localPath)
+    res
   }
 
   // Clone of single branch with depth 1 but without checking out files
@@ -169,6 +174,7 @@ trait AbstractGitRepository extends Repository with Logging {
               IO.deleteRecursively(cachePath)
             cachePathFile.mkdirs()
             IO.copyFolder(repo.localPath, cachePath.toString)
+            AbstractGitRepository.markValidatedCache(cachePath.toString)
           case None => 
         }
         repo
@@ -199,5 +205,19 @@ trait AbstractGitRepository extends Repository with Logging {
     else
       // no changes to be made
       this
+  }
+}
+
+object AbstractGitRepository extends Logging {
+  private val validatedCaches = scala.collection.mutable.ListBuffer[String]()
+  private def markValidatedCache(cacheIdentifier: String): Unit = {
+    info("Marking cache as validated: " + cacheIdentifier)
+    if (!validatedCaches.contains(cacheIdentifier))
+      validatedCaches += cacheIdentifier
+  }
+  private def isValidatedCache(cacheIdentifier: String): Boolean = {
+    val res = validatedCaches.contains(cacheIdentifier)
+    info(s"Cache is validated: $cacheIdentifier $res")
+    res
   }
 }
