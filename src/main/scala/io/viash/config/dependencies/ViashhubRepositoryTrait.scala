@@ -18,6 +18,7 @@
 package io.viash.config.dependencies
 
 import io.viash.schemas._
+import io.viash.helpers.Git
 
 trait ViashhubRepositoryTrait extends AbstractGitRepository {
 
@@ -26,11 +27,11 @@ trait ViashhubRepositoryTrait extends AbstractGitRepository {
   val repo: String
 
   def getCheckoutUri(): String = {
-    if (checkGitAuthentication(uri_nouser)) { 
+    if (Git.checkGitAuthentication(uri_nouser)) { 
       // First try https with bad user & password to disable asking credentials
       // If successful, do checkout without the dummy credentials, don't want to store them in the repo remote address
       uri
-    } else if (checkGitAuthentication(uri_ssh)) {
+    } else if (Git.checkGitAuthentication(uri_ssh)) {
       // Checkout with ssh key
       uri_ssh
     } else {

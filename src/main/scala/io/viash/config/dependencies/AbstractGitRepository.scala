@@ -17,7 +17,7 @@
 
 package io.viash.config.dependencies
 
-import io.viash.helpers.{IO, Exec, Logging}
+import io.viash.helpers.{IO, Exec, Logging, Git}
 import java.io.File
 import java.nio.file.Paths
 import io.viash.exceptions.CheckoutException
@@ -36,74 +36,10 @@ trait AbstractGitRepository extends Repository with Logging {
     tag: Option[String],
     path: Option[String],
     localPath: String
-  ): AbstractGitRepository
-
-  def hasBranch(name: String, cwd: Option[File]): Boolean = {
-    val out = Exec.runCatch(
-      List("git", "show-ref", "--verify", "--quiet", s"refs/heads/$name"),
-      cwd = cwd,
-      loggers = getLoggers("hasBranch"),
-    )
-    out.exitValue == 0
-  }
-
-  def hasTag(name: String, cwd: Option[File]): Boolean = {
-    val out = Exec.runCatch(
-      List("git", "show-ref", "--verify", "--quiet", s"refs/tags/$name"),
-      cwd = cwd,
-      loggers = getLoggers("hasTag"),
-    )
-    out.exitValue == 0
-  }
-  
+  ): AbstractGitRepository 
   
   // Get the repository part of where dependencies should be located in the target/dependencies folder
   def subOutputPath: String = Paths.get(`type`, storePath, tag.getOrElse("")).toString()
-
-  protected def doGitClone(uri: String, cwd: Option[File]): Exec.ExecOutput = {
-    val singleBranch = tag match {
-      case None => List("--single-branch")
-      case Some(value) => List("--single-branch", "--branch", value)
-    }
-
-    Exec.runCatch(
-      List("git", "clone", uri, "--no-checkout", "--depth", "1") ++ singleBranch :+ ".",
-      cwd = cwd,
-      loggers = getLoggers("doGitClone"),
-    )
-  }
-
-  protected def checkGitAuthentication(uri: String): Boolean = {
-    val res = Exec.runCatch(
-      List("git", "ls-remote", uri),
-      loggers = getLoggers("checkGitAuthentication"),
-    )
-    res.exitValue == 0
-  }
-
-  protected def getLocalHash(): String = {
-    val cwd = Some(Paths.get(localPath).toFile())
-    val res = Exec.runCatch(
-      List("git", "rev-list", "-n", "1", "HEAD"),
-      cwd = cwd,
-      loggers = getLoggers("getLocalHash"),
-    )
-    res.exitValue match {
-      case 0 => res.output.trim()
-      case _ => "Local hash not found"
-    }
-  }
-
-  protected def getRemoteHash(uri: String): String = {
-    val res = Exec.runCatch(
-      List("git", "ls-remote", uri, tag.getOrElse("HEAD")),
-      loggers = getLoggers("getRemoteHash"),
-    )
-    res.exitValue match {
-      case 0 => res.output.split("\t").head
-      case _ => "Remote hash not found"
-    }
-  }
 
   def getCheckoutUri(): String
   def getCacheIdentifier(): Option[String]
@@ -127,10 +63,10 @@ trait AbstractGitRepository extends Repository with Logging {
     if (AbstractGitRepository.isValidatedCache(localPath))
       return true
     val uri = getCheckoutUri()
-    val remoteHash = getRemoteHash(uri)
-    val localHash = getLocalHash()
+    val remoteHash = Git.getRemoteHash(uri, tag)
+    val localHash = Git.getLocalHash(Paths.get(localPath).toFile())
     info(s"remoteHash: $remoteHash localHash: $localHash")
-    val res = remoteHash == localHash
+    val res = remoteHash == localHash && remoteHash.isDefined
     if (res)
       AbstractGitRepository.markValidatedCache(localPath)
     res
@@ -139,13 +75,11 @@ trait AbstractGitRepository extends Repository with Logging {
   // Clone of single branch with depth 1 but without checking out files
   def checkoutSparse(): AbstractGitRepository = {
     val temporaryFolder = IO.makeTemp("viash_hub_repo")
-    val cwd = Some(temporaryFolder.toFile)
-
     val uri = getCheckoutUri()
 
     info(s"temporaryFolder: $temporaryFolder uri: $uri")
 
-    val out = doGitClone(uri, cwd)
+    val out = Git.cloneSparseAndShallow(uri, tag, temporaryFolder.toFile)
     if (out.exitValue != 0)
       throw new CheckoutException(this)
 
@@ -183,19 +117,14 @@ trait AbstractGitRepository extends Repository with Logging {
 
   // Checkout of files from already cloned repository. Limit file checkout to the path that was specified
   def checkout(): AbstractGitRepository = {
-    val pathStr = path.getOrElse(".")
-    val cwd = Some(Paths.get(localPath).toFile)
+    val localPathFile = Paths.get(localPath).toFile
     val checkoutName = tag match {
-      case Some(name) if hasBranch(name, cwd) => s"origin/$name"
-      case Some(name) if hasTag(name, cwd) => s"tags/$name"
+      case Some(name) if Git.hasBranch(name, localPathFile) => s"origin/$name"
+      case Some(name) if Git.hasTag(name, localPathFile) => s"tags/$name"
       case _ => "origin/HEAD"
     }
 
-    val out = Exec.runCatch(
-      List("git", "checkout", checkoutName, "--", pathStr),
-      cwd = cwd,
-      loggers = getLoggers("checkout"),
-    )
+    val out = Git.checkout(checkoutName, path, localPathFile)
 
     if (out.exitValue != 0)
       info(s"checkout out: ${out.command} ${out.exitValue} ${out.output}")

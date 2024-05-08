@@ -26,7 +26,10 @@ case class GitInfo(
   tag: Option[String]
 )
 
-object Git {
+object Git extends Logging {
+  @inline
+  protected def getLoggers(fn: String) = Seq[String => Unit] { str: String => debug(s"$fn: $str") }
+
   def isGitRepo(path: File): Boolean = {
     val out = Exec.runCatch(
       List("git", "rev-parse", "--is-inside-work-tree"),
@@ -87,4 +90,69 @@ object Git {
       GitInfo(None, None, None, None)
     }
   }
+
+  def hasBranch(name: String, path: File): Boolean = {
+    val out = Exec.runCatch(
+      List("git", "show-ref", "--verify", "--quiet", s"refs/heads/$name"),
+      cwd = Some(path),
+      loggers = getLoggers("hasBranch"),
+    )
+    out.exitValue == 0
+  }
+
+  def hasTag(name: String, path: File): Boolean = {
+    val out = Exec.runCatch(
+      List("git", "show-ref", "--verify", "--quiet", s"refs/tags/$name"),
+      cwd = Some(path),
+      loggers = getLoggers("hasTag"),
+    )
+    out.exitValue == 0
+  }
+
+  def getRemoteHash(uri: String, tag: Option[String]): Option[String] = {
+    val res = Exec.runOpt(
+      List("git", "ls-remote", uri, tag.getOrElse("HEAD")),
+      loggers = getLoggers("getRemoteHash"),
+    )
+    res.map(_.split("\t").head)
+  }
+
+  def getLocalHash(path: File): Option[String] = {
+    val res = Exec.runOpt(
+      List("git", "rev-list", "-n", "1", "HEAD"),
+      cwd = Some(path),
+      loggers = getLoggers("getLocalHash"),
+    )
+    res.map(_.trim)
+  }
+
+  def checkGitAuthentication(uri: String): Boolean = {
+    val res = Exec.runCatch(
+      List("git", "ls-remote", uri, "HEAD"),
+      loggers = getLoggers("checkGitAuthentication"),
+    )
+    res.exitValue == 0
+  }
+
+  def cloneSparseAndShallow(uri: String, tag: Option[String], path: File): Exec.ExecOutput = {
+    val singleBranch = tag match {
+      case None => List("--single-branch")
+      case Some(value) => List("--single-branch", "--branch", value)
+    }
+
+    Exec.runCatch(
+      List("git", "clone", uri, "--no-checkout", "--depth", "1") ++ singleBranch :+ ".",
+      cwd = Some(path),
+      loggers = getLoggers("checkoutSparse"),
+    )
+  }
+
+  def checkout(checkoutName: String, subPath: Option[String], path: File): Exec.ExecOutput = {
+    Exec.runCatch(
+      List("git", "checkout", checkoutName, "--", subPath.getOrElse(".")),
+      cwd = Some(path),
+      loggers = getLoggers("checkout"),
+    )
+  }
+
 }
