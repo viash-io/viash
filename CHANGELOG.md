@@ -2,6 +2,12 @@
 
 TODO add summary
 
+## NEW FUNCTIONALITY
+
+* `dependencies`: GitHub and ViashHub repositories now get properly cached (PR #699).
+  The cache is stored in the `~/.viash/cache` directory using sparse-checkout to only fetch the necessary files.
+  During a build, the cache is checked for the repository and if it is found and still up-to-date, the repository is not cloned again and instead the cache is copied to a temporary folder where the files are checked out from the sparse-checkout.
+
 # Viash 0.9.0-RC3 (2024-04-26): Various bug fixes and minor improvements
 
 Mainly fixes for code changes from previous release candidates. Some additional minor fixes and QoL improvements are included.
