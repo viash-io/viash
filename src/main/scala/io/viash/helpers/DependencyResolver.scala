@@ -82,7 +82,7 @@ object DependencyResolver extends Logging {
       .map{d =>
         val repo = d.repository.toOption.get
         val configDir = Paths.get(config2.build_info.get.config).getParent()
-        val localRepoPath = Repository.cache(repo, configDir, packageRootDir)
+        val localRepoPath = Repository.get(repo, configDir, packageRootDir)
         d.copy(repository = Right(localRepoPath))
       }
       )(config2)
