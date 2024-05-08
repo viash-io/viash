@@ -52,7 +52,7 @@ trait AbstractGitRepository extends Repository with Logging {
     val cachePath = fullCachePath
     cachePath match {
       case Some(path) if path.toFile.isDirectory() =>
-        info(s"Found in cache: $path")
+        debug(s"Found in cache: $path")
         Some(copyRepo(localPath = path.toString))
       case _ => None
     }
@@ -65,7 +65,7 @@ trait AbstractGitRepository extends Repository with Logging {
     val uri = getCheckoutUri()
     val remoteHash = Git.getRemoteHash(uri, tag)
     val localHash = Git.getCommit(Paths.get(localPath).toFile())
-    info(s"remoteHash: $remoteHash localHash: $localHash")
+    debug(s"remoteHash: $remoteHash localHash: $localHash")
     val res = remoteHash == localHash && remoteHash.isDefined
     if (res)
       AbstractGitRepository.markValidatedCache(localPath)
@@ -77,7 +77,7 @@ trait AbstractGitRepository extends Repository with Logging {
     val temporaryFolder = IO.makeTemp("viash_hub_repo")
     val uri = getCheckoutUri()
 
-    info(s"temporaryFolder: $temporaryFolder uri: $uri")
+    debug(s"temporaryFolder: $temporaryFolder uri: $uri")
 
     val out = Git.cloneSparseAndShallow(uri, tag, temporaryFolder.toFile)
     if (out.exitValue != 0)
@@ -93,16 +93,16 @@ trait AbstractGitRepository extends Repository with Logging {
     info(s"Fetching repo for $uri")
     findInCache() match {
       case Some(repo) if repo.checkCacheStillValid() => 
-        info(s"Using cached repo from ${repo.localPath}")
+        debug(s"Using cached repo from ${repo.localPath}")
         val newTemp = IO.makeTemp("viash_hub_repo")
         IO.copyFolder(repo.localPath, newTemp.toString)
         repo.copyRepo(localPath = newTemp.toString)
       case _ =>
-        info(s"Cache either not present or outdated; checkout repository")
+        debug(s"Cache either not present or outdated; checkout repository")
         val repo = checkoutSparse()
         repo.fullCachePath match {
           case Some(cachePath) =>
-            info(s"Copying repo to cache ${repo.fullCachePath}")
+            debug(s"Copying repo to cache ${repo.fullCachePath}")
             val cachePathFile = cachePath.toFile()
             if (cachePathFile.exists())
               IO.deleteRecursively(cachePath)
@@ -127,7 +127,7 @@ trait AbstractGitRepository extends Repository with Logging {
     val out = Git.checkout(checkoutName, path, localPathFile)
 
     if (out.exitValue != 0)
-      info(s"checkout out: ${out.command} ${out.exitValue} ${out.output}")
+      warn(s"checkout out: ${out.command} ${out.exitValue} ${out.output}")
 
     if (path.isDefined)
       copyRepo(localPath = Paths.get(localPath, path.get).toString)
@@ -140,13 +140,13 @@ trait AbstractGitRepository extends Repository with Logging {
 object AbstractGitRepository extends Logging {
   private val validatedCaches = scala.collection.mutable.ListBuffer[String]()
   private def markValidatedCache(cacheIdentifier: String): Unit = {
-    info("Marking cache as validated: " + cacheIdentifier)
+    debug("Marking cache as validated: " + cacheIdentifier)
     if (!validatedCaches.contains(cacheIdentifier))
       validatedCaches += cacheIdentifier
   }
   private def isValidatedCache(cacheIdentifier: String): Boolean = {
     val res = validatedCaches.contains(cacheIdentifier)
-    info(s"Cache is validated: $cacheIdentifier $res")
+    debug(s"Cache is validated: $cacheIdentifier $res")
     res
   }
 }
