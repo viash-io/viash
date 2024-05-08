@@ -28,12 +28,13 @@ case class GitInfo(
 
 object Git extends Logging {
   @inline
-  protected def getLoggers(fn: String) = Seq[String => Unit] { str: String => debug(s"$fn: $str") }
+  protected def getLoggers(fn: String) = Seq[String => Unit] { str: String => trace(s"$fn: $str") }
 
   def isGitRepo(path: File): Boolean = {
     val out = Exec.runCatch(
       List("git", "rev-parse", "--is-inside-work-tree"),
-      cwd = Some(path)
+      cwd = Some(path),
+      loggers = getLoggers("isGitRepo"),
     )
     out.exitValue == 0
   }
@@ -41,7 +42,8 @@ object Git extends Logging {
   def getLocalRepo(path: File): Option[String] = {
     Exec.runOpt(
       List("git", "rev-parse", "--show-toplevel"),
-      cwd = Some(path)
+      cwd = Some(path),
+      loggers = getLoggers("getLocalRepo"),
     ).map(_.trim)
   }
 
@@ -51,7 +53,8 @@ object Git extends Logging {
   def getRemoteRepo(path: File): Option[String] = {
     Exec.runOpt(
       List("git", "remote", "--verbose"),
-      cwd = Some(path)
+      cwd = Some(path),
+      loggers = getLoggers("getRemoteRepo"),
     ).flatMap{ line => 
       line
         .split("\n")
@@ -67,14 +70,16 @@ object Git extends Logging {
   def getCommit(path: File): Option[String] = {
     Exec.runOpt(
       List("git", "rev-parse", "HEAD"),
-      cwd = Some(path)
+      cwd = Some(path),
+      loggers = getLoggers("getCommit")
     ).map(_.trim)
   }
 
   def getTag(path: File): Option[String] = {
     Exec.runOpt(
       List("git", "describe", "--tags"),
-      cwd = Some(path)
+      cwd = Some(path),
+      loggers = getLoggers("getTag"),
     ).map(_.trim)
   }
 
@@ -110,20 +115,10 @@ object Git extends Logging {
   }
 
   def getRemoteHash(uri: String, tag: Option[String]): Option[String] = {
-    val res = Exec.runOpt(
+    Exec.runOpt(
       List("git", "ls-remote", uri, tag.getOrElse("HEAD")),
       loggers = getLoggers("getRemoteHash"),
-    )
-    res.map(_.split("\t").head)
-  }
-
-  def getLocalHash(path: File): Option[String] = {
-    val res = Exec.runOpt(
-      List("git", "rev-list", "-n", "1", "HEAD"),
-      cwd = Some(path),
-      loggers = getLoggers("getLocalHash"),
-    )
-    res.map(_.trim)
+    ).map(_.split("\t").head)
   }
 
   def checkGitAuthentication(uri: String): Boolean = {
@@ -139,7 +134,6 @@ object Git extends Logging {
       case None => List("--single-branch")
       case Some(value) => List("--single-branch", "--branch", value)
     }
-
     Exec.runCatch(
       List("git", "clone", uri, "--no-checkout", "--depth", "1") ++ singleBranch :+ ".",
       cwd = Some(path),

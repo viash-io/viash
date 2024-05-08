@@ -237,32 +237,6 @@ class GitTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(hash == Some("36b314963b7e45628d5fcc0ed1f60a7564c5bd69"))
   }
 
-  test("getLocalHash") {
-    val tempDir = makeTemp("viash_test_meta_10_").toFile
-
-    val gitInitOut = Exec.runCatch(List("git", "init"), cwd = Some(tempDir))
-    assert(gitInitOut.exitValue == 0, s"git init: ${gitInitOut.output}")
-
-    val tempFile = tempDir.toPath.resolve("file.txt")
-    Files.write(tempFile, "Foo".getBytes())
-
-    val gitAddOut = Exec.runCatch(List("git", "add", "file.txt"), cwd = Some(tempDir))
-    assert(gitAddOut.exitValue == 0, s"git add: ${gitAddOut.output}")
-
-    val gitConfigName = Exec.runCatch(List("git", "config", "user.name", "Viash CI"), cwd = Some(tempDir))
-    assert(gitConfigName.exitValue == 0, s"git config name: ${gitConfigName.output}")
-    
-    val gitConfigEmail = Exec.runCatch(List("git", "config", "user.email", "viash_test_build@viash.io"), cwd = Some(tempDir))
-    assert(gitConfigEmail.exitValue == 0, s"git config email: ${gitConfigEmail.output}")
-
-    val gitCommitOut = Exec.runCatch(List("git", "commit", "-m", "initial commit"), cwd = Some(tempDir))
-    assert(gitCommitOut.exitValue == 0, s"git commit: ${gitCommitOut.output}")
-
-    val hash = Git.getLocalHash(tempDir)
-    assert(hash.isDefined)
-    assert(hash.get.matches("[0-9a-f]{40}"), "Hash is 40 characters long and contains only hex characters")
-  }
-
   test("checkGitAuthentication") {
     val res1 = Git.checkGitAuthentication("https://github.com/viash-io/viash.git")
     val fakeCredentials = "nouser:nopass@" // obfuscate the credentials a bit so we don't trigger GitGuardian
@@ -274,7 +248,7 @@ class GitTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("cloneSparseAndShallow && checkout") {
-    val tempDir = makeTemp("viash_test_meta_11_").toFile
+    val tempDir = makeTemp("viash_test_meta_10_").toFile
     val out = Git.cloneSparseAndShallow("https://github.com/viash-io/viash.git", None, tempDir)
     assert(out.exitValue == 0, s"checkoutSparse: ${out.output}")
 

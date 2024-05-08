@@ -64,7 +64,7 @@ trait AbstractGitRepository extends Repository with Logging {
       return true
     val uri = getCheckoutUri()
     val remoteHash = Git.getRemoteHash(uri, tag)
-    val localHash = Git.getLocalHash(Paths.get(localPath).toFile())
+    val localHash = Git.getCommit(Paths.get(localPath).toFile())
     info(s"remoteHash: $remoteHash localHash: $localHash")
     val res = remoteHash == localHash && remoteHash.isDefined
     if (res)
