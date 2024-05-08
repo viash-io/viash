@@ -240,14 +240,12 @@ object DependencyResolver extends Logging {
           json.hcursor.downField("namespace").as[String].toOption
       }
       def getInfo(json: Json): Option[Map[String, String]] = {
-        if (legacyMode)
-          json.hcursor.downField("info").as[Map[String, String]].toOption
-        else {
-          // if 'dependencies' exists, delete it as it can't be converted to a string
-          // it's not very nice but the calling code doesn't need it anyway
-          val json2 = json.hcursor.downField("build_info").downField("dependencies").delete.top.getOrElse(json)
-          json2.hcursor.downField("build_info").as[Map[String, String]].toOption
-        }
+        val info = 
+          if (legacyMode)
+            json.hcursor.downField("info")
+          else
+            json.hcursor.downField("build_info")
+        info.keys.map(_.map(k => (k, info.downField(k).as[String].toOption.getOrElse("Not a string"))).toMap)
       }
 
       val info = getInfo(json).getOrElse(Map.empty) +
