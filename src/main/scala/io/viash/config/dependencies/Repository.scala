@@ -64,3 +64,69 @@ abstract class Repository extends CopyableRepo[Repository] {
 
   def subOutputPath: String
 }
+
+object Repository extends Logging {
+  private val sugarSyntaxRegex = raw"([a-zA-Z_0-9\+]+)://([\w/\-\.:]+)(@[A-Za-z0-9][\w\./]*)?".r
+  private def getGitTag(tag: String): Option[String] = tag match {
+    case null => None
+    case s => Some(s.stripPrefix("@"))
+  }
+
+  def unapply(str: String): Option[Repository] = {
+    str match {
+      case sugarSyntaxRegex("git+https", uri, tag) =>
+        Some(GitRepository(
+          uri = "https://" + uri,
+          tag = getGitTag(tag)
+        ))
+      case sugarSyntaxRegex("github", repo, tag) =>
+        Some(GithubRepository(
+          repo = repo,
+          tag = getGitTag(tag)
+        ))
+      case sugarSyntaxRegex("vsh", repo, tag) =>
+        Some(ViashhubRepository(
+          repo = repo,
+          tag = getGitTag(tag)
+        ))
+      case sugarSyntaxRegex("local", path, tag) =>
+        Some(LocalRepository(
+          path = Some(path),
+          tag = getGitTag(tag)
+        ))
+      case "local" =>
+        Some(LocalRepository())
+      case _ => None
+    }
+  }
+
+  def get(repo: Repository, configDir: Path, packageRootDir: Option[Path]): Repository = {
+
+    repo match {
+      case r: AbstractGitRepository => {
+        val r2 = r.getSparseRepoInTemp()
+        val r3 = r2.checkout()
+        // Stopgap solution to be able to use built repositories which were not built with dependency aware Viash version.
+        // TODO remove this section once it's deemed no longer necessary
+        if (Paths.get(r3.localPath, "target").toFile().exists() && !Paths.get(r3.localPath, "target", ".build.yaml").toFile().exists()) {
+          warn(s"Creating temporary 'target/.build.yaml' file for ${r3.`type`} as this file seems to be missing.")
+          Files.createFile(Paths.get(r3.localPath, "target", ".build.yaml"))
+        }
+        r3.asInstanceOf[Repository]
+      }
+      case r: LocalRepositoryTrait if r.path.isDefined => {
+        val localPath = r.path.get match {
+          case s if s.startsWith("/") => 
+            // resolve path relative to the package root
+            IO.resolvePackagePath(s, packageRootDir.map(p => p.toUri())).getPath()
+          case s =>
+            // resolve path relative to the config file
+            configDir.resolve(s).toString()
+        }
+        r.copyRepo(localPath = localPath)
+      }
+      case r => r
+    }
+
+  }
+}

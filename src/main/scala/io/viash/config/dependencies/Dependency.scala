@@ -74,7 +74,7 @@ case class Dependency(
       |Omitting the value sets the dependency as a local dependency, ie. the dependency is available in the same namespace as the component.
       |""".stripMargin)
   @default("Empty")
-  repository: Either[String, RepositoryWithoutName] = Right(LocalRepository()),
+  repository: Either[String, Repository] = Right(LocalRepository()),
 
   // internal stuff
   @internalFunctionality
@@ -92,6 +92,11 @@ case class Dependency(
   if (alias.isDefined) {
     // check functionality name
     require(alias.get.matches("^[A-Za-z][A-Za-z0-9_]*$"), message = f"alias '${alias.get}' must begin with a letter and consist only of alphanumeric characters or underscores.")
+  }
+
+  if (repository.isRight) {
+    val r = repository.toOption.get
+    assert(!r.isInstanceOf[RepositoryWithName], "Repository should not be a RepositoryWithName")
   }
 
   // Shorthand for getting the actual repository from 'repository'.

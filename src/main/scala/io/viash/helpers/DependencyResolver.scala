@@ -21,7 +21,7 @@ import java.nio.file.{ Path, Paths }
 import io.viash.config.Config
 import io.viash.lenses.ConfigLenses._
 import io.viash.lenses.RepositoryLens._
-import io.viash.config.dependencies.{Dependency, Repository, RepositoryWithoutName, GithubRepository}
+import io.viash.config.dependencies.{Dependency, Repository, GithubRepository}
 import java.nio.file.Files
 import java.io.IOException
 import java.io.UncheckedIOException
@@ -55,7 +55,7 @@ object DependencyResolver extends Logging {
     // Convert all fun.dependency.repository with sugar syntax to full repositories
     val config1 = dependenciesLens.modify(_.map(d =>
       d.repository match {
-        case Left(RepositoryWithoutName(repo)) => d.copy(repository = Right(repo))
+        case Left(Repository(repo)) => d.copy(repository = Right(repo))
         case _ => d
       }
     ))(config)
@@ -82,7 +82,7 @@ object DependencyResolver extends Logging {
       .map{d =>
         val repo = d.repository.toOption.get
         val configDir = Paths.get(config2.build_info.get.config).getParent()
-        val localRepoPath = RepositoryWithoutName.get(repo, configDir, packageRootDir)
+        val localRepoPath = Repository.get(repo, configDir, packageRootDir)
         d.copy(repository = Right(localRepoPath))
       }
       )(config2)
