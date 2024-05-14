@@ -112,7 +112,7 @@ object Repository extends Logging {
           warn(s"Creating temporary 'target/.build.yaml' file for ${r3.`type`} as this file seems to be missing.")
           Files.createFile(Paths.get(r3.localPath, "target", ".build.yaml"))
         }
-        r3.asInstanceOf[Repository]
+        r3
       }
       case r: LocalRepositoryTrait if r.path.isDefined => {
         val localPath = r.path.get match {
