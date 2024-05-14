@@ -74,7 +74,7 @@ case class Dependency(
       |Omitting the value sets the dependency as a local dependency, ie. the dependency is available in the same namespace as the component.
       |""".stripMargin)
   @default("Empty")
-  repository: Either[String, Repository] = Right(LocalRepository()),
+  repository: Either[String, RepositoryWithoutName] = Right(LocalRepository()),
 
   // internal stuff
   @internalFunctionality

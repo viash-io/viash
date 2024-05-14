@@ -48,7 +48,7 @@ case class GithubRepository(
   tag: Option[String],
   path: Option[String] = None,
   localPath: String = ""
-) extends GithubRepositoryTrait {
+) extends RepositoryWithoutName with GithubRepositoryTrait {
   
   def copyRepo(
    `type`: String,

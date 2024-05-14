@@ -7,7 +7,7 @@ import io.viash.helpers.SysEnv
 
 class RepositoryTest extends AnyFunSuite {
   test("Repository.unapply: handles git+https syntax") {
-    val repo = Repository.unapply("git+https://github.com/viash-io/viash@v1.0.0")
+    val repo = RepositoryWithoutName.unapply("git+https://github.com/viash-io/viash@v1.0.0")
     assert(repo.isDefined)
     assert(repo.get.isInstanceOf[GitRepository])
     val gitRepo = repo.get.asInstanceOf[GitRepository]
@@ -16,7 +16,7 @@ class RepositoryTest extends AnyFunSuite {
   }
 
   test("Repository.unapply: handles github syntax") {
-    val repo = Repository.unapply("github://viash-io/viash@v2.0.0")
+    val repo = RepositoryWithoutName.unapply("github://viash-io/viash@v2.0.0")
     assert(repo.isDefined)
     assert(repo.get.isInstanceOf[GithubRepository])
     val githubRepo = repo.get.asInstanceOf[GithubRepository]
@@ -25,7 +25,7 @@ class RepositoryTest extends AnyFunSuite {
   }
 
   test("Repository.unapply: handles viashhub syntax") {
-    val repo = Repository.unapply("vsh://viash-io/viash@v2.0.0")
+    val repo = RepositoryWithoutName.unapply("vsh://viash-io/viash@v2.0.0")
     assert(repo.isDefined)
     assert(repo.get.isInstanceOf[ViashhubRepository])
     val viashhubRepo = repo.get.asInstanceOf[ViashhubRepository]
@@ -34,24 +34,24 @@ class RepositoryTest extends AnyFunSuite {
   }
 
   test("Repository.unapply: handles local syntax") {
-    val repo = Repository.unapply("local://path/to/repo")
+    val repo = RepositoryWithoutName.unapply("local://path/to/repo")
     assert(repo.isDefined)
     assert(repo.get.isInstanceOf[LocalRepository])
   }
 
   test("Repository.unapply: handles local dependency syntax") {
-    val repo = Repository.unapply("local")
+    val repo = RepositoryWithoutName.unapply("local")
     assert(repo.isDefined)
     assert(repo.get.isInstanceOf[LocalRepository])
   }
 
   test("Repository.unapply: returns None for unrecognized syntax") {
-    val repo = Repository.unapply("unknown://foo.bar")
+    val repo = RepositoryWithoutName.unapply("unknown://foo.bar")
     assert(repo.isEmpty)
   }
 
   test("Repository caching") {
-    val repo = Repository.unapply("vsh://hendrik/dependency_test2")
+    val repo = RepositoryWithoutName.unapply("vsh://hendrik/dependency_test2")
 
     repo match {
       case Some(r: AbstractGitRepository) => {

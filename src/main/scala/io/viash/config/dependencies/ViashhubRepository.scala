@@ -50,7 +50,7 @@ case class ViashhubRepository(
   tag: Option[String],
   path: Option[String] = None,
   localPath: String = ""
-) extends ViashhubRepositoryTrait {
+) extends RepositoryWithoutName with ViashhubRepositoryTrait {
   
   def copyRepo(
     // name: String,

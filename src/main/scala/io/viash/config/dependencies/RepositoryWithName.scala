@@ -28,4 +28,5 @@ abstract class RepositoryWithName extends Repository {
   @description("The identifier used to refer to this repository from dependencies.")
   val name: String
 
+  def withoutName: RepositoryWithoutName
 }

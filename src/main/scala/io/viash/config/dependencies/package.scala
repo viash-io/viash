@@ -73,9 +73,9 @@ package object dependencies {
   implicit val decodeGithubRepository: Decoder[GithubRepository] = deriveConfiguredDecoderFullChecks
   implicit val decodeViashhubRepository: Decoder[ViashhubRepository] = deriveConfiguredDecoderFullChecks
   implicit val decodeLocalRepository: Decoder[LocalRepository] = deriveConfiguredDecoderFullChecks
-  implicit def decodeRepository: Decoder[Repository] = Decoder.instance {
+  implicit def decodeRepository: Decoder[RepositoryWithoutName] = Decoder.instance {
     cursor =>
-      val decoder: Decoder[Repository] =
+      val decoder: Decoder[RepositoryWithoutName] =
         cursor.downField("type").as[String] match {
           case Right("git") => decodeGitRepository.widen
           case Right("github") => decodeGithubRepository.widen

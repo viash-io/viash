@@ -40,7 +40,7 @@ case class LocalRepository(
   tag: Option[String] = None,
   path: Option[String] = None,
   localPath: String = ""
-) extends LocalRepositoryTrait {
+) extends RepositoryWithoutName with LocalRepositoryTrait {
 
   def copyRepo(
     `type`: String,
