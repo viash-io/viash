@@ -8,6 +8,11 @@ TODO add summary
   The cache is stored in the `~/.viash/cache` directory using sparse-checkout to only fetch the necessary files.
   During a build, the cache is checked for the repository and if it is found and still up-to-date, the repository is not cloned again and instead the cache is copied to a temporary folder where the files are checked out from the sparse-checkout.
 
+## BUG FIXES
+
+`dependencies`: Fix resolving of dependencies of dependencies (PR #701). The stricter build config was now lacking the necessary information to resolve dependencies of dependencies.
+  We added it back as `.build_info.dependencies` in a more structured, anonymized way.
+
 # Viash 0.9.0-RC3 (2024-04-26): Various bug fixes and minor improvements
 
 Mainly fixes for code changes from previous release candidates. Some additional minor fixes and QoL improvements are included.

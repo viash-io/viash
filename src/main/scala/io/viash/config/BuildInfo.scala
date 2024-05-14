@@ -40,4 +40,6 @@ case class BuildInfo(
   git_remote: Option[String] = None,
   @description("Git tag.")
   git_tag: Option[String] = None,
+  @description("List of dependencies used during build.")
+  dependencies: Option[List[String]] = None,
 )

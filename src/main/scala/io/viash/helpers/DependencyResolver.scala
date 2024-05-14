@@ -240,10 +240,12 @@ object DependencyResolver extends Logging {
           json.hcursor.downField("namespace").as[String].toOption
       }
       def getInfo(json: Json): Option[Map[String, String]] = {
-        if (legacyMode)
-          json.hcursor.downField("info").as[Map[String, String]].toOption
-        else
-          json.hcursor.downField("build_info").as[Map[String, String]].toOption
+        val info = 
+          if (legacyMode)
+            json.hcursor.downField("info")
+          else
+            json.hcursor.downField("build_info")
+        info.keys.map(_.map(k => (k, info.downField(k).as[String].toOption.getOrElse("Not a string"))).toMap)
       }
 
       val info = getInfo(json).getOrElse(Map.empty) +
@@ -265,11 +267,15 @@ object DependencyResolver extends Logging {
       val legacyMode = json.hcursor.downField("functionality").succeeded
 
       val dependencies =
-        if (legacyMode) 
-          json.hcursor.downField("functionality").downField("dependencies").focus.flatMap(_.asArray).get
-        else
-          json.hcursor.downField("dependencies").focus.flatMap(_.asArray).get
-      dependencies.flatMap(_.hcursor.downField("writtenPath").as[String].toOption).toList
+        if (legacyMode) {
+          val jsonVec = json.hcursor.downField("functionality").downField("dependencies").focus.flatMap(_.asArray).get
+          jsonVec.flatMap(_.hcursor.downField("writtenPath").as[String].toOption).toList
+        }
+        else {
+          val jsonVec = json.hcursor.downField("build_info").downField("dependencies").focus.flatMap(_.asArray).get
+          jsonVec.flatMap(_.hcursor.as[String].toOption).toList
+        }
+      dependencies
     } catch {
       case _: Throwable => Nil
     }
