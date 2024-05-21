@@ -42,7 +42,12 @@ object BashWrapper {
       LongArgument("memory_mb", required = false, dest = "meta"),
       LongArgument("memory_gb", required = false, dest = "meta"),
       LongArgument("memory_tb", required = false, dest = "meta"),
-      LongArgument("memory_pb", required = false, dest = "meta")
+      LongArgument("memory_pb", required = false, dest = "meta"),
+      LongArgument("memory_kib", required = false, dest = "meta"),
+      LongArgument("memory_mib", required = false, dest = "meta"),
+      LongArgument("memory_gib", required = false, dest = "meta"),
+      LongArgument("memory_tib", required = false, dest = "meta"),
+      LongArgument("memory_pib", required = false, dest = "meta")
     )
   }
 
@@ -230,7 +235,7 @@ object BashWrapper {
     val localDependenciesStrings = localDependencies.map{ d =>
       // relativize the path of the main component to the local dependency
       // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
-      val thisPath = ViashNamespace.targetOutputPath("", "invalid_runner_name", config.namespace, config.name)
+      val thisPath = ViashNamespace.targetOutputPath("", "invalid_runner_name", config)
       val relativePath = Paths.get(thisPath).relativize(Paths.get(d.configInfo.getOrElse("executable", "")))
       s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR/$relativePath\""
     }
@@ -360,7 +365,12 @@ object BashWrapper {
 
         (part1 :: moreParts).mkString("\n")
       case param =>
-        val multisep = if (param.multiple) Some(param.multiple_sep) else None
+        val multisep =
+          if (param.multiple && param.direction == Input) {
+            Some(param.multiple_sep)
+          } else {
+            None
+          }
 
         // params of the form --param ...
         val part1 = param.flags match {
@@ -388,7 +398,7 @@ object BashWrapper {
       } else {
         "\n# storing leftover values in positionals\n" +
         positionals.map { param =>
-          if (param.multiple) {
+          if (param.multiple && param.direction == Input) {
             s"""while [[ $$# -gt 0 ]]; do
               |  ${store("positionalArg", param.VIASH_PAR, "\"$1\"", Some(param.multiple_sep)).mkString("\n  ")}
               |  shift 1
@@ -455,7 +465,12 @@ object BashWrapper {
       } else {
         "\n# check whether required files exist\n" +
           files.map { param =>
-            if (param.multiple) {
+            if (!param.multiple) {
+              s"""if [ ! -z "$$${param.VIASH_PAR}" ] && [ ! -e "$$${param.VIASH_PAR}" ]; then
+                 |  ViashError "$direction file '$$${param.VIASH_PAR}' does not exist."
+                 |  exit 1
+                 |fi""".stripMargin
+            } else if (direction == Input) {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
                  |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
                  |  set -f
@@ -468,11 +483,11 @@ object BashWrapper {
                  |  done
                  |  set +f
                  |fi""".stripMargin
-            } else {
-              s"""if [ ! -z "$$${param.VIASH_PAR}" ] && [ ! -e "$$${param.VIASH_PAR}" ]; then
-                |  ViashError "$direction file '$$${param.VIASH_PAR}' does not exist."
-                |  exit 1
-                |fi""".stripMargin
+            } else { // multiple: true, direction: output expects arguments in the form of "output_*.txt"
+              s"""if [ ! -z "$$${param.VIASH_PAR}" ] && ! compgen -G "$$${param.VIASH_PAR}" > /dev/null; then
+                 |  ViashError "$direction file '$$${param.VIASH_PAR}' does not exist."
+                 |  exit 1
+                 |fi""".stripMargin
             }
           }.mkString("\n")
       }
@@ -491,7 +506,7 @@ object BashWrapper {
       } else {
         "\n# create parent directories of output files, if so desired\n" +
           createParentFiles.map { param =>
-            if (param.multiple) {
+            if (param.multiple && param.direction == Input) {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
                  |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
                  |  set -f
@@ -514,7 +529,8 @@ object BashWrapper {
     // construct type checks
     def typeMinMaxCheck[T](param: Argument[T], regex: String, min: Option[T] = None, max: Option[T] = None) = {
       val typeWithArticle = param match {
-        case i: IntegerArgument => "an " + param.`type`
+        case _: FileArgument if param.multiple && param.direction == Output => "a path containing a wildcard, e.g. 'output_*.txt'"
+        case _: IntegerArgument => "an " + param.`type`
         case _ => "a " + param.`type`
       }
 
@@ -582,7 +598,7 @@ object BashWrapper {
       }
 
       param match {
-        case param if param.multiple =>
+        case param if param.multiple && param.direction == Input =>
           val checkStart = 
             s"""if [ -n "$$${param.VIASH_PAR}" ]; then
                |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
@@ -623,17 +639,18 @@ object BashWrapper {
                 Some(typeMinMaxCheck(dO, "^[-+]?(\\.[0-9]+|[0-9]+(\\.[0-9]*)?)([eE][-+]?[0-9]+)?$", dO.min, dO.max))
               case bo: BooleanArgumentBase =>
                 Some(typeMinMaxCheck(bo, "^(true|True|TRUE|false|False|FALSE|yes|Yes|YES|no|No|NO)$"))
+              case fo: FileArgument if fo.multiple && fo.direction == Output =>
+                Some(typeMinMaxCheck(fo, "\\*"))
               case _ => None
             }           
           }.mkString("\n")
       }
 
-
     def checkChoices[T](param: Argument[T], allowedChoices: List[T]) = {
       val allowedChoicesString = allowedChoices.mkString(param.multiple_sep.toString)
 
       param match {
-        case _ if param.multiple =>
+        case _ if param.multiple && param.direction == Input =>
           s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
              |  ${param.VIASH_PAR}_CHOICES=("$allowedChoicesString")
              |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
@@ -723,18 +740,23 @@ object BashWrapper {
       """# helper function for parsing memory strings
       |function ViashMemoryAsBytes {
       |  local memory=`echo "$1" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]'`
-      |  local memory_regex='^([0-9]+)([kmgtp]b?|b)$'
+      |  local memory_regex='^([0-9]+)([kmgtp]i?b?|b)$'
       |  if [[ $memory =~ $memory_regex ]]; then
       |    local number=${memory/[^0-9]*/}
       |    local symbol=${memory/*[0-9]/}
       |    
       |    case $symbol in
       |      b)      memory_b=$number ;;
-      |      kb|k)   memory_b=$(( $number * 1024 )) ;;
-      |      mb|m)   memory_b=$(( $number * 1024 * 1024 )) ;;
-      |      gb|g)   memory_b=$(( $number * 1024 * 1024 * 1024 )) ;;
-      |      tb|t)   memory_b=$(( $number * 1024 * 1024 * 1024 * 1024 )) ;;
-      |      pb|p)   memory_b=$(( $number * 1024 * 1024 * 1024 * 1024 * 1024 )) ;;
+      |      kb|k)   memory_b=$(( $number * 1000 )) ;;
+      |      mb|m)   memory_b=$(( $number * 1000 * 1000 )) ;;
+      |      gb|g)   memory_b=$(( $number * 1000 * 1000 * 1000 )) ;;
+      |      tb|t)   memory_b=$(( $number * 1000 * 1000 * 1000 * 1000 )) ;;
+      |      pb|p)   memory_b=$(( $number * 1000 * 1000 * 1000 * 1000 * 1000 )) ;;
+      |      kib|ki)   memory_b=$(( $number * 1024 )) ;;
+      |      mib|mi)   memory_b=$(( $number * 1024 * 1024 )) ;;
+      |      gib|gi)   memory_b=$(( $number * 1024 * 1024 * 1024 )) ;;
+      |      tib|ti)   memory_b=$(( $number * 1024 * 1024 * 1024 * 1024 )) ;;
+      |      pib|pi)   memory_b=$(( $number * 1024 * 1024 * 1024 * 1024 * 1024 )) ;;
       |    esac
       |    echo "$memory_b"
       |  fi
@@ -744,11 +766,16 @@ object BashWrapper {
       |  VIASH_META_MEMORY_B=`ViashMemoryAsBytes $VIASH_META_MEMORY`
       |  # do not define other variables if memory_b is an empty string
       |  if [ ! -z "$VIASH_META_MEMORY_B" ]; then
-      |    VIASH_META_MEMORY_KB=$(( ($VIASH_META_MEMORY_B+1023) / 1024 ))
-      |    VIASH_META_MEMORY_MB=$(( ($VIASH_META_MEMORY_KB+1023) / 1024 ))
-      |    VIASH_META_MEMORY_GB=$(( ($VIASH_META_MEMORY_MB+1023) / 1024 ))
-      |    VIASH_META_MEMORY_TB=$(( ($VIASH_META_MEMORY_GB+1023) / 1024 ))
-      |    VIASH_META_MEMORY_PB=$(( ($VIASH_META_MEMORY_TB+1023) / 1024 ))
+      |    VIASH_META_MEMORY_KB=$(( ($VIASH_META_MEMORY_B+999) / 1000 ))
+      |    VIASH_META_MEMORY_MB=$(( ($VIASH_META_MEMORY_KB+999) / 1000 ))
+      |    VIASH_META_MEMORY_GB=$(( ($VIASH_META_MEMORY_MB+999) / 1000 ))
+      |    VIASH_META_MEMORY_TB=$(( ($VIASH_META_MEMORY_GB+999) / 1000 ))
+      |    VIASH_META_MEMORY_PB=$(( ($VIASH_META_MEMORY_TB+999) / 1000 ))
+      |    VIASH_META_MEMORY_KIB=$(( ($VIASH_META_MEMORY_B+1023) / 1024 ))
+      |    VIASH_META_MEMORY_MIB=$(( ($VIASH_META_MEMORY_KIB+1023) / 1024 ))
+      |    VIASH_META_MEMORY_GIB=$(( ($VIASH_META_MEMORY_MIB+1023) / 1024 ))
+      |    VIASH_META_MEMORY_TIB=$(( ($VIASH_META_MEMORY_GIB+1023) / 1024 ))
+      |    VIASH_META_MEMORY_PIB=$(( ($VIASH_META_MEMORY_TIB+1023) / 1024 ))
       |  else
       |    # unset memory if string is empty
       |    unset $VIASH_META_MEMORY_B
@@ -776,7 +803,7 @@ object BashWrapper {
       case param =>
         val flag = if (param.flags == "") "" else " " + param.name
 
-        if (param.multiple) {
+        if (param.multiple && param.direction == Input) {
           s"""
              |if [ ! -z "$$${param.VIASH_PAR}" ]; then
              |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'

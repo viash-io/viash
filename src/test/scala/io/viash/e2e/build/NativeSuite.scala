@@ -223,7 +223,7 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       newConfigFilePath
     )
 
-    val testRegex = "Warning: ..platforms is deprecated: Use 'engines' and 'runners' instead.".r
+    val testRegex = "Warning: .platforms is deprecated: Use 'engines' and 'runners' instead.".r
     assert(testRegex.findFirstIn(testOutput.stderr).isDefined, testOutput)
   }
 

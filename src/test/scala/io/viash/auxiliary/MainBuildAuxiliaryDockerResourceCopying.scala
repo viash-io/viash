@@ -8,6 +8,7 @@ import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import io.viash.ConfigDeriver
+import io.viash.packageConfig.PackageConfig
 
 class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
@@ -16,7 +17,8 @@ class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAnd
 
 
   private val configFile = getClass.getResource("/testbash/auxiliary_resource/config_resource_test.vsh.yaml").getPath
-  private val config = Config.read(configFile)
+  private val dummyPackage = Some(PackageConfig(rootDir = Some(Paths.get(configFile).getParent())))
+  private val config = Config.read(configFile, viashPackage = dummyPackage)
   private val executable = Paths.get(tempFolStr, config.name).toFile
 
   private val temporaryConfigFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
@@ -37,6 +39,7 @@ class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAnd
 
     // generate viash script
     TestHelper.testMain(
+      workingDir = Some(temporaryConfigFolder),
       "build",
       "--engine", "docker",
       "-o", tempFolStr,
@@ -60,6 +63,7 @@ class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAnd
       ("target_folder/relocated_file_2.txt", "51954bf10062451e683121e58d858417"),
       ("target_folder/relocated_file_3.txt", ".*"), // turn off checksum match
       ("resource3.txt", "aa2037b3d308bcb6a78a3d4fbf04b297"),
+      ("resource4.txt", "21cd10137f841da59921aa35de998942"),
       ("target_folder/relocated_file_4.txt", "aa2037b3d308bcb6a78a3d4fbf04b297")
     )
 
@@ -71,6 +75,23 @@ class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAnd
 
       val hash = TestHelper.computeHash(resourceFile.getPath)
       assert(md5sum.r.findFirstMatchIn(hash).isDefined, s"Calculated md5sum doesn't match the given md5sum for $resourceFile")
+    }
+
+    // Check the resources listed in the built .config.vsh.yaml file
+    // Checked values are relativized paths to the output folder
+    val builtConfigUri = temporaryFolder.resolve(".config.vsh.yaml")
+    val builtConfig = Config.read(builtConfigUri.toString)
+    val resourcePaths = builtConfig.resources.map(
+      resource => {
+        assert(resource.path.isDefined, s"Resource path is not defined for $resource")
+        resource.path.get
+      }
+    )
+
+    for ((name, _) <- expectedResources) {
+      // skip tests for resources in 'resource_folder' as it's copied as folder and thus the files won't be listed in the built config
+      if (!name.contains("resource_folder/"))
+        assert(resourcePaths.contains(name), s"Could not find $name in the built config")
     }
   }
 

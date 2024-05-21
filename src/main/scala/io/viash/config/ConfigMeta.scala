@@ -78,6 +78,7 @@ object ConfigMeta {
 
     // change the config object before writing to yaml:
     // * substitute 'text' fields in resources with placeholders
+    // * set 'path' fields to the resourcePath
     // * add more info variables
     val toWriteConfig = config.copy(
       resources = config.resources.map{ res =>
@@ -85,11 +86,15 @@ object ConfigMeta {
           val textVal = Some(placeholderMap(res))
           res.copyResource(text = textVal, parent = None)
         } else {
-          res.copyResource(parent = None)
+          res.copyResource(parent = None, path = Some(res.resourcePath))
         }
       },
       test_resources = config.test_resources.map { res =>
-        res.copyResource(parent = None)
+        if (res.text.isDefined) {
+          res.copyResource(parent = None)
+        } else {
+          res.copyResource(parent = None, path = Some(res.resourcePath))
+        }
       },
       build_info = config.build_info.map(_.copy(
         output = buildDir.map(_.toString),

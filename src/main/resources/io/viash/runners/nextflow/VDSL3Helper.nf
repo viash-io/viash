@@ -84,7 +84,7 @@ def vdsl3WorkflowFactory(Map args, Map meta, String rawScript) {
           .findAll { it.type == "file" && it.direction == "output" }
           .indexed()
           .collectEntries{ index, par ->
-            out = output[index + 1]
+            def out = output[index + 1]
             // strip dummy '.exitcode' file from output (see nextflow-io/nextflow#2678)
             if (!out instanceof List || out.size() <= 1) {
               if (par.multiple) {
@@ -210,7 +210,7 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   def inputFileExports = meta.config.allArguments
     .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
     .collect { par ->
-      viash_par_contents = "(viash_par_${par.plainName} instanceof List ? viash_par_${par.plainName}.join(\"${par.multiple_sep}\") : viash_par_${par.plainName})"
+      def viash_par_contents = "(viash_par_${par.plainName} instanceof List ? viash_par_${par.plainName}.join(\"${par.multiple_sep}\") : viash_par_${par.plainName})"
       "\n\${viash_par_${par.plainName}.empty ? \"\" : \"export VIASH_PAR_${par.plainName.toUpperCase()}=\\\"\" + ${viash_par_contents} + \"\\\"\"}"
     }
 
@@ -266,7 +266,6 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   |  .join("\\n")
   |\"\"\"
   |# meta exports
-  |# export VIASH_META_RESOURCES_DIR="\${resourcesDir.toRealPath().toAbsolutePath()}"
   |export VIASH_META_RESOURCES_DIR="\${resourcesDir}"
   |export VIASH_META_TEMP_DIR="${['docker', 'podman', 'charliecloud'].any{ it == workflow.containerEngine } ? '/tmp' : tmpDir}"
   |export VIASH_META_NAME="${meta.config.name}"
@@ -275,11 +274,16 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   |\${task.cpus ? "export VIASH_META_CPUS=\$task.cpus" : "" }
   |\${task.memory?.bytes != null ? "export VIASH_META_MEMORY_B=\$task.memory.bytes" : "" }
   |if [ ! -z \\\${VIASH_META_MEMORY_B+x} ]; then
-  |  export VIASH_META_MEMORY_KB=\\\$(( (\\\$VIASH_META_MEMORY_B+1023) / 1024 ))
-  |  export VIASH_META_MEMORY_MB=\\\$(( (\\\$VIASH_META_MEMORY_KB+1023) / 1024 ))
-  |  export VIASH_META_MEMORY_GB=\\\$(( (\\\$VIASH_META_MEMORY_MB+1023) / 1024 ))
-  |  export VIASH_META_MEMORY_TB=\\\$(( (\\\$VIASH_META_MEMORY_GB+1023) / 1024 ))
-  |  export VIASH_META_MEMORY_PB=\\\$(( (\\\$VIASH_META_MEMORY_TB+1023) / 1024 ))
+  |  export VIASH_META_MEMORY_KB=\\\$(( (\\\$VIASH_META_MEMORY_B+999) / 1000 ))
+  |  export VIASH_META_MEMORY_MB=\\\$(( (\\\$VIASH_META_MEMORY_KB+999) / 1000 ))
+  |  export VIASH_META_MEMORY_GB=\\\$(( (\\\$VIASH_META_MEMORY_MB+999) / 1000 ))
+  |  export VIASH_META_MEMORY_TB=\\\$(( (\\\$VIASH_META_MEMORY_GB+999) / 1000 ))
+  |  export VIASH_META_MEMORY_PB=\\\$(( (\\\$VIASH_META_MEMORY_TB+999) / 1000 ))
+  |  export VIASH_META_MEMORY_KIB=\\\$(( (\\\$VIASH_META_MEMORY_B+1023) / 1024 ))
+  |  export VIASH_META_MEMORY_MIB=\\\$(( (\\\$VIASH_META_MEMORY_KIB+1023) / 1024 ))
+  |  export VIASH_META_MEMORY_GIB=\\\$(( (\\\$VIASH_META_MEMORY_MIB+1023) / 1024 ))
+  |  export VIASH_META_MEMORY_TIB=\\\$(( (\\\$VIASH_META_MEMORY_GIB+1023) / 1024 ))
+  |  export VIASH_META_MEMORY_PIB=\\\$(( (\\\$VIASH_META_MEMORY_TIB+1023) / 1024 ))
   |fi
   |
   |# meta synonyms
@@ -308,19 +312,22 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   //   println("######################\n$procStr\n######################")
   // }
 
-  // create runtime process
-  def ownerParams = new nextflow.script.ScriptBinding.ParamsMap()
-  def binding = new nextflow.script.ScriptBinding().setParams(ownerParams)
-  def module = new nextflow.script.IncludeDef.Module(name: procKey)
+  // write process to temp file
+  def tempFile = java.nio.file.Files.createTempFile("viash-process-${procKey}-", ".nf")
+  addShutdownHook { java.nio.file.Files.deleteIfExists(tempFile) }
+  tempFile.text = procStr
+
+  // create process from temp file
+  def binding = new nextflow.script.ScriptBinding([:])
   def session = nextflow.Nextflow.getSession()
-  def scriptParser = new nextflow.script.ScriptParser(session)
+  def parser = new nextflow.script.ScriptParser(session)
     .setModule(true)
     .setBinding(binding)
-  scriptParser.scriptPath = scriptMeta.getScriptPath()
-  def moduleScript = scriptParser.runScript(procStr)
+  def moduleScript = parser.runScript(tempFile)
     .getScript()
 
   // register module in meta
+  def module = new nextflow.script.IncludeDef.Module(name: procKey)
   scriptMeta.addModule(moduleScript, module.name, module.alias)
 
   // retrieve and return process from meta

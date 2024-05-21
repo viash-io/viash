@@ -69,10 +69,16 @@ object ViashTest extends Logging {
     verbosityLevel: Int = 6,
     parentTempPath: Option[Path] = None, 
     cpus: Option[Int], 
-    memory: Option[String]
+    memory: Option[String],
+    dryRun: Option[Boolean] = None,
+    deterministicWorkingDirectory: Option[String] = None,
   ): ManyTestOutput = {
     // create temporary directory
-    val dir = IO.makeTemp("viash_test_" + configNameLens.get(appliedConfig), parentTempPath)
+    val dir = IO.makeTemp(
+      name = deterministicWorkingDirectory.getOrElse(s"viash_test_${configNameLens.get(appliedConfig)}_"),
+      parentTempPath = parentTempPath,
+      addRandomized = deterministicWorkingDirectory.isEmpty
+    )
     if (!quiet) infoOut(s"Running tests in temporary directory: '$dir'")
 
     DependencyResolver.createBuildYaml(dir.toString())
@@ -94,7 +100,8 @@ object ViashTest extends Logging {
       setupStrategy = setupStrategy.getOrElse("cachedbuild"),
       verbosityLevel = verbosityLevel,
       cpus = cpus,
-      memory = memory
+      memory = memory,
+      dryRun = dryRun
     )
     val count = results.count(_.exitValue == 0)
     val anyErrors = setupRes.exists(_.exitValue > 0) || count < results.length
@@ -142,7 +149,8 @@ object ViashTest extends Logging {
     setupStrategy: String, 
     verbosityLevel: Int, 
     cpus: Option[Int], 
-    memory: Option[String]
+    memory: Option[String],
+    dryRun: Option[Boolean]
   ): ManyTestOutput = {
     val conf = appliedConfig.config
 
@@ -260,7 +268,10 @@ object ViashTest extends Logging {
             // set dirArg as argument so that Docker can chown it after execution
             argument_groups = List(ArgumentGroup("default", None, List(dirArg))),
             resources = List(test),
-            set_wd_to_resources_dir = true
+            set_wd_to_resources_dir = true,
+            // Make sure we'll be using the same docker registry set in 'links' so we can have the same docker image id.
+            // Copy the whole case class instead of selective copy.
+            links = conf.links,
           ))(appliedConfig)
 
         // generate bash script for test
@@ -313,7 +324,10 @@ object ViashTest extends Logging {
           val subTmp = Paths.get(newDir.toString, "tmp")
           Files.createDirectories(subTmp)
 
-          val cmd = Seq(executable) ++ Seq(cpus.map("---cpus=" + _), memory.map("---memory="+_)).flatMap(a => a)
+          val cmd = if (dryRun.getOrElse(false))
+            Seq("echo", "Running dummy test script")
+          else
+            Seq(executable) ++ Seq(cpus.map("---cpus=" + _), memory.map("---memory="+_)).flatMap(a => a)
           logger(s"+${cmd.mkString(" ")}")
           val exitValue = Process(
             cmd,
@@ -336,4 +350,5 @@ object ViashTest extends Logging {
 
     ManyTestOutput(buildResult, testResults)
   }
+
 }

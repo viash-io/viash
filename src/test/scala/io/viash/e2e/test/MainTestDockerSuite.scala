@@ -11,6 +11,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import scala.reflect.io.Directory
 import sys.process._
 import org.scalatest.ParallelTestExecution
+import java.nio.file.Path
 
 class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with ParallelTestExecution{
   Logger.UseColorOverride.value = Some(false)
@@ -224,6 +225,104 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     assert(testText.stdout.contains("Cleaning up temporary directory"))
 
     checkTempDirAndRemove(testText.stdout, false)
+  }
+
+  test("Check docker image id", DockerTest) {
+    val newConfigFilePath = configDeriver.derive(Nil, "test_docker_id")
+    val testText = TestHelper.testMain(
+      "test",
+      "--engine", "docker",
+      "--keep", "true",
+      newConfigFilePath
+    )
+
+    assert(testText.stdout.contains("Running tests in temporary directory: "))
+    assert(testText.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(!testText.stdout.contains("Cleaning up temporary directory"))
+
+    // Getting the temp folder path, copied from 'checkTempDirAndRemove'. It works \o/
+    val FolderRegex = ".*Running tests in temporary directory: '([^']*)'.*".r
+
+    val tempPath = testText.stdout.replaceAll("\n", "") match {
+      case FolderRegex(path) => path
+      case _ => ""
+    }
+
+    assert(tempPath.contains(s"${IO.tempDir}/viash_test_testbash"))
+
+    // check the expected files exist
+    val buildEngineEnvironmentPath = Paths.get(tempPath, "build_engine_environment/testbash")
+    val testScriptPath = Paths.get(tempPath, "test_check_outputs/test_executable")
+    assert(buildEngineEnvironmentPath.toFile.exists)
+    assert(testScriptPath.toFile.exists)
+
+    // read built files and get docker image ids
+    def getDockerId(builtScriptPath: Path): Option[String] = {
+      val dockerImageIdRegex = ".*\\sVIASH_DOCKER_IMAGE_ID='(.[^']*)'.*".r
+      val content = IO.read(builtScriptPath.toUri())
+
+      content.replaceAll("\n", "") match {
+        case dockerImageIdRegex(id) => Some(id)
+        case _ => None
+      }
+    }
+
+    val buildId = getDockerId(buildEngineEnvironmentPath)
+    val testId = getDockerId(testScriptPath)
+
+    assert(buildId == Some("testbash:test"))
+    assert(testId == Some("testbash:test"))
+
+    checkTempDirAndRemove(testText.stdout, true)
+  }
+
+  test("Check docker image id with custom docker_registry", DockerTest) {
+    val newConfigFilePath = configDeriver.derive(""".links := {docker_registry: "foo.bar"}""", "test_docker_id_custom_registry")
+    val testText = TestHelper.testMain(
+      "test",
+      "--engine", "docker",
+      "--keep", "true",
+      newConfigFilePath
+    )
+
+    assert(testText.stdout.contains("Running tests in temporary directory: "))
+    assert(testText.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(!testText.stdout.contains("Cleaning up temporary directory"))
+
+    // Getting the temp folder path, copied from 'checkTempDirAndRemove'. It works \o/
+    val FolderRegex = ".*Running tests in temporary directory: '([^']*)'.*".r
+
+    val tempPath = testText.stdout.replaceAll("\n", "") match {
+      case FolderRegex(path) => path
+      case _ => ""
+    }
+
+    assert(tempPath.contains(s"${IO.tempDir}/viash_test_testbash"))
+
+    // check the expected files exist
+    val buildEngineEnvironmentPath = Paths.get(tempPath, "build_engine_environment/testbash")
+    val testScriptPath = Paths.get(tempPath, "test_check_outputs/test_executable")
+    assert(buildEngineEnvironmentPath.toFile.exists)
+    assert(testScriptPath.toFile.exists)
+
+    // read built files and get docker image ids
+    def getDockerId(builtScriptPath: Path): Option[String] = {
+      val dockerImageIdRegex = ".*\\sVIASH_DOCKER_IMAGE_ID='(.[^']*)'.*".r
+      val content = IO.read(builtScriptPath.toUri())
+
+      content.replaceAll("\n", "") match {
+        case dockerImageIdRegex(id) => Some(id)
+        case _ => None
+      }
+    }
+
+    val buildId = getDockerId(buildEngineEnvironmentPath)
+    val testId = getDockerId(testScriptPath)
+
+    assert(buildId == Some("foo.bar/testbash:test"))
+    assert(testId == Some("foo.bar/testbash:test"))
+
+    checkTempDirAndRemove(testText.stdout, true)
   }
 
   /**

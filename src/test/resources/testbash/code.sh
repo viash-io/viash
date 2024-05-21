@@ -9,6 +9,7 @@ par_truth="true"
 par_falsehood="false"
 par_reality=""
 par_output="output.txt"
+par_multiple_output="output*.txt"
 par_log="log.txt"
 par_optional="help"
 par_optional_with_default="me"
@@ -55,5 +56,17 @@ output "optional: |$par_optional|"
 output "optional_with_default: |$par_optional_with_default|"
 output "multiple: |$par_multiple|"
 output "multiple_pos: |$par_multiple_pos|"
-
+output "multiple_output: |$par_multiple_output|"
 output "meta_resources_dir: |$meta_resources_dir|"
+
+multiple_output_i=0
+if [ ! -z "$par_multiple_output" ]; then
+  multiple_output_file=$(echo $par_multiple_output | sed "s/\*/$multiple_output_i/")
+  cp "$par_input" "$multiple_output_file"
+  multiple_output_i=$((multiple_output_i+1))
+
+  multiple_output_file=$(echo $par_multiple_output | sed "s/\*/$multiple_output_i/")
+  cp "$par_input" "$multiple_output_file"
+  multiple_output_i=$((multiple_output_i+1))
+fi
+

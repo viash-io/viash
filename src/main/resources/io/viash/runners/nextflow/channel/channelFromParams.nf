@@ -60,9 +60,9 @@ private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params,
     // Process ID
     def id = tup[0] ?: globalID
   
-    if (workflow.stubRun) {
+    if (workflow.stubRun && !id) {
       // if stub run, explicitly add an id if missing
-      id = id ? id : "stub${index}"
+      id = "stub${index}"
     }
     assert id != null: "Each parameter set should have at least an 'id'"
 

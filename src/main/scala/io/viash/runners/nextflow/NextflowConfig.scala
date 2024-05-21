@@ -67,14 +67,20 @@ case class NextflowConfig(
   )
   @default("A series of default labels to specify memory and cpu constraints")
   labels: ListMap[String, String] = ListMap(
-    NextflowConfig.binaryIterator
+    NextflowConfig.logarithmicIterator
       .dropWhile(_ < 1 * NextflowConfig.GB)
-      .takeWhile(_ <= 512 * NextflowConfig.TB)
+      .takeWhile(_ <= 500 * NextflowConfig.TB)
       .map{i =>
-      val kSize = NextflowConfig.humanReadableByteSize(i, "%1.0f", s => s.stripLeading().toLowerCase()) // "1gb"
-      val vSize = NextflowConfig.humanReadableByteSize(i, "%1.0f.", s => s.stripLeading()) // "1.GB"
-      (s"mem$kSize", s"memory = $vSize")
-     } ++
+        val kSize = NextflowConfig.humanReadableByteSize(i, "%1.0f", 1000, s => s.stripLeading().toLowerCase()) // "1gb"
+        (s"mem$kSize", s"memory = $i.B")
+      } ++
+    NextflowConfig.binaryIterator
+      .dropWhile(_ < 1 * NextflowConfig.GiB)
+      .takeWhile(_ <= 512 * NextflowConfig.TiB)
+      .map{i =>
+        val kSize = NextflowConfig.humanReadableByteSize(i, "%1.0f", 1024, s => s.stripLeading().toLowerCase()) // "1gib"
+        (s"mem$kSize", s"memory = $i.B")
+      } ++
     NextflowConfig.logarithmicIterator
       .takeWhile(_ <= 1000)
       .map(i => (s"cpu$i", s"cpus = $i")) : _*
@@ -99,17 +105,23 @@ case class NextflowConfig(
 
 object NextflowConfig {
 
-  val KB = 1024L
-  val MB = 1024L*1024
-  val GB = 1024L*1024*1024
-  val TB = 1024L*1024*1024*1024
-  val PB = 1024L*1024*1024*1024*1024
-  val EB = 1024L*1024*1024*1024*1024*1024
+  val KB  = 1000L
+  val MB  = 1000L*1000
+  val GB  = 1000L*1000*1000
+  val TB  = 1000L*1000*1000*1000
+  val PB  = 1000L*1000*1000*1000*1000
+  val EB  = 1000L*1000*1000*1000*1000*1000
+  val KiB = 1024L
+  val MiB = 1024L*1024
+  val GiB = 1024L*1024*1024
+  val TiB = 1024L*1024*1024*1024
+  val PiB = 1024L*1024*1024*1024*1024
+  val EiB = 1024L*1024*1024*1024*1024*1024
 
   // Returns 1, 2, 5, 10, 20, 50, 100 ...
-  def logarithmicIterator: Seq[Int] = 
-    for (i <- Seq.range(0, 9); j <- Seq(1, 2, 5) )
-      yield j * Math.pow(10, i).toInt
+  def logarithmicIterator: Seq[Long] = 
+    for (i <- Seq.range(0, 19); j <- Seq(1, 2, 5) )
+      yield j * Math.pow(10, i).toLong
 
   // Returns 1, 2, 4, 8, 16, 32, ...
   def binaryIterator: Seq[Long] =
@@ -120,12 +132,16 @@ object NextflowConfig {
     * @see https://stackoverflow.com/questions/35609587/human-readable-size-units-file-sizes-for-scala-code-like-duration
     * Long is limited to 8 ExaByte - 1 byte
     */
-  def humanReadableByteSize(fileSize: Long, format: String = "%1.2f", unitTranslator: String => String = s => s): String = {
-    if(fileSize <= 0) return "0 B"
-    val units: Array[String] = Array("B", "KB", "MB", "GB", "TB", "PB", "EB")
-    val digitGroup: Int = (Math.log10(fileSize.toDouble)/Math.log10(1024)).toInt
+  def humanReadableByteSize(fileSize: Long, format: String = "%1.2f", base: Int, unitTranslator: String => String = s => s): String = {
+    assert(base == 1000 || base == 1024)
 
-    val value = String.format(format, fileSize/Math.pow(1024, digitGroup))
+    if(fileSize <= 0) return "0 B"
+    val unitsSI: Array[String] = Array("B", "KB", "MB", "GB", "TB", "PB", "EB")
+    val unitsIEC: Array[String] = Array("B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB")
+    val units = if(base == 1000) unitsSI else unitsIEC
+    val digitGroup: Int = (Math.log10(fileSize.toDouble)/Math.log10(base)).toInt
+
+    val value = String.format(format, fileSize/Math.pow(base, digitGroup))
     val unit = unitTranslator(s" ${units(digitGroup)}")
 
     s"$value$unit"

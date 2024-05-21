@@ -10,6 +10,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import java.io.File
 import java.nio.file.Paths
 import scala.io.Source
+import java.io.ByteArrayOutputStream
 
 class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
   Logger.UseColorOverride.value = Some(false)
@@ -65,7 +66,12 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
   for ((component, _, _, _) <- components) {
   test(s"Check whether particular keywords can be found in the usage with component $component") {
       val configFile = getClass.getResource(s"/testns/src/$component/config.vsh.yaml").getPath
-      val config = Config.read(configFile)
+      val errStream = new ByteArrayOutputStream()
+      val config = Console.withErr(errStream) {
+        Config.read(configFile)
+      }
+      val errString = errStream.toString
+      assert(errString.isEmpty() || errString.matches("Warning: The status of the component 'ns_power' is set to deprecated.\\s*"))
 
       val stdout =
         Exec.run(
@@ -107,6 +113,96 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
         outputSrc.close()
       }
     }
+  }
+
+  test("Check uniqueness of component names, same name, different namespace") {
+    val compStr =
+      """functionality:
+        |  name: comp
+        |  namespace: %s
+        |""".stripMargin
+    val tempSrcDir = IO.makeTemp("viash_ns_build_check_uniqueness_src")
+    IO.write(compStr.format("ns1"), tempSrcDir.resolve("config1.vsh.yaml"))
+    IO.write(compStr.format("ns2"), tempSrcDir.resolve("config2.vsh.yaml"))
+
+    val tempTargetDir = IO.makeTemp("viash_ns_build_check_uniqueness_target")
+
+    val testOutput = TestHelper.testMain(
+      "ns", "build",
+        "-s", tempSrcDir.toString(),
+        "-t", tempTargetDir.toString()
+      )
+
+    assert(testOutput.exitCode == Some(0))
+    assert(testOutput.stderr.contains("All 2 configs built successfully"))
+  }
+
+  test("Check uniqueness of component names, different name, same namespace") {
+    val compStr =
+      """functionality:
+        |  name: %s
+        |  namespace: ns
+        |""".stripMargin
+    val tempSrcDir = IO.makeTemp("viash_ns_build_check_uniqueness_src")
+    IO.write(compStr.format("comp1"), tempSrcDir.resolve("config1.vsh.yaml"))
+    IO.write(compStr.format("comp2"), tempSrcDir.resolve("config2.vsh.yaml"))
+
+    val tempTargetDir = IO.makeTemp("viash_ns_build_check_uniqueness_target")
+
+    val testOutput = TestHelper.testMain(
+      "ns", "build",
+        "-s", tempSrcDir.toString(),
+        "-t", tempTargetDir.toString()
+      )
+
+    assert(testOutput.exitCode == Some(0))
+    assert(testOutput.stderr.contains("All 2 configs built successfully"))
+  }
+
+  test("Check uniqueness of component names, same name, same namespace") {
+    val compStr =
+      """functionality:
+        |  name: %s
+        |  namespace: ns
+        |""".stripMargin
+    val tempSrcDir = IO.makeTemp("viash_ns_build_check_uniqueness_src")
+    IO.write(compStr.format("comp"), tempSrcDir.resolve("config1.vsh.yaml"))
+    IO.write(compStr.format("comp"), tempSrcDir.resolve("config2.vsh.yaml"))
+
+    val tempTargetDir = IO.makeTemp("viash_ns_build_check_uniqueness_target")
+
+    val testOutput = TestHelper.testMainException[RuntimeException](
+      "ns", "build",
+        "-s", tempSrcDir.toString(),
+        "-t", tempTargetDir.toString()
+      )
+
+    assert(!testOutput.stderr.contains("All 2 configs built successfully"))
+    assert(testOutput.exceptionText.contains("Duplicate component name found: ns/comp"))
+  }
+
+  test("Check uniqueness of component names, same name, same namespace - multiple duplicates") {
+    val compStr =
+      """functionality:
+        |  name: %s
+        |  namespace: ns
+        |""".stripMargin
+    val tempSrcDir = IO.makeTemp("viash_ns_build_check_uniqueness_src")
+    IO.write(compStr.format("comp1"), tempSrcDir.resolve("config1.vsh.yaml"))
+    IO.write(compStr.format("comp1"), tempSrcDir.resolve("config2.vsh.yaml"))
+    IO.write(compStr.format("comp2"), tempSrcDir.resolve("config3.vsh.yaml"))
+    IO.write(compStr.format("comp2"), tempSrcDir.resolve("config4.vsh.yaml"))
+
+    val tempTargetDir = IO.makeTemp("viash_ns_build_check_uniqueness_target")
+
+    val testOutput = TestHelper.testMainException[RuntimeException](
+      "ns", "build",
+        "-s", tempSrcDir.toString(),
+        "-t", tempTargetDir.toString()
+      )
+
+    assert(!testOutput.stderr.contains("All 2 configs built successfully"))
+    assert(testOutput.exceptionText.contains("Duplicate component names found: ns/comp1, ns/comp2"))
   }
 
   override def afterAll(): Unit = {

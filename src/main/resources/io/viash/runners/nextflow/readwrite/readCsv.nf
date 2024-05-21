@@ -38,7 +38,7 @@ def readCsv(file_path) {
         if (field == "") {
           return null
         }
-        m = removeQuote.matcher(field)
+        def m = removeQuote.matcher(field)
         if (m.find()) {
           return m.replaceFirst('$1')
         } else {

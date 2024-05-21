@@ -59,7 +59,7 @@ object Main extends Logging {
       val exitCode = mainCLIOrVersioned(args)
       System.exit(exitCode)
     } catch {
-      case e @ ( _: FileNotFoundException | _: MissingResourceFileException ) =>
+      case e @ ( _: FileNotFoundException | _: MissingResourceFileException | _: ConfigModException ) =>
         info(s"viash: ${e.getMessage()}")
         System.exit(1)
       case e: NoSuchFileException =>
@@ -243,12 +243,17 @@ object Main extends Logging {
       case List(cli.test) =>
         val config = readConfig(cli.test, packageConfig = pack1)
         val config2 = singleConfigDependencies(config, None, pack1.rootDir)
+        if (cli.test.dryRun.getOrElse(false) && !cli.test.keep.toOption.map(_.toBoolean).getOrElse(false)) {
+          info("Warning: --dry_run is set, but --keep is not set. This will result in the generated files being deleted after the test.")
+        }
         ViashTest(
           config2,
           keepFiles = cli.test.keep.toOption.map(_.toBoolean),
           setupStrategy = cli.test.setup.toOption,
           cpus = cli.test.cpus.toOption,
-          memory = cli.test.memory.toOption
+          memory = cli.test.memory.toOption,
+          dryRun = cli.test.dryRun.toOption,
+          deterministicWorkingDirectory = cli.test.deterministicWorkingDirectory.toOption
         )
         0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
@@ -276,6 +281,9 @@ object Main extends Logging {
             ac.copy(engines = List(engine))
           }
         }
+        if (cli.namespace.test.dryRun.getOrElse(false) && !cli.namespace.test.keep.toOption.map(_.toBoolean).getOrElse(false)) {
+          info("Warning: --dry_run is set, but --keep is not set. This will result in the generated files being deleted after the test.")
+        }
         val testResults = ViashNamespace.test(
           configs = configs3,
           parallel = cli.namespace.test.parallel(),
@@ -285,6 +293,8 @@ object Main extends Logging {
           cpus = cli.namespace.test.cpus.toOption,
           memory = cli.namespace.test.memory.toOption,
           setup = cli.namespace.test.setup.toOption,
+          dryRun = cli.namespace.test.dryRun.toOption,
+          deterministicWorkingDirectory = cli.namespace.test.deterministicWorkingDirectory.toOption,
         )
         val errors = testResults.map(_._1).flatMap(_.status).count(_.isError)
         if (errors > 0) 1 else 0
@@ -402,8 +412,7 @@ object Main extends Logging {
         Some(ViashNamespace.targetOutputPath(
           targetDir = td,
           runnerId = ex.id,
-          namespace = appliedConfig.config.namespace,
-          name = appliedConfig.config.name
+          config = appliedConfig.config
         ))
       case _ => None
     }

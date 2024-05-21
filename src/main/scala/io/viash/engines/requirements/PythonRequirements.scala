@@ -97,7 +97,7 @@ case class PythonRequirements(
   upgrade: Boolean = true,
   `type`: String = "python"
 ) extends Requirements {
-  assert(script.forall(!_.contains("'")))
+  assert(script.forall(!_.contains("'")), "Python requirement '.script' field contains a single quote ('). This is not allowed.")
 
   private val userFlag = if (user) " --user" else ""
   private val upgradeFlag = if (upgrade) " --upgrade" else ""

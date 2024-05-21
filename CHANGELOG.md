@@ -2,7 +2,38 @@
 
 TODO add summary
 
-# Viash 0.9.0 (2024-02-23): Restructure the config and change some default values
+# Viash 0.9.0-RC3 (2024-04-26): Various bug fixes and minor improvements
+
+Mainly fixes for code changes from previous release candidates. Some additional minor fixes and QoL improvements are included.
+
+## BREAKING CHANGES
+
+* `computational requirements`: Use 1000-base units instead of 1024-base units for memory (PR #686). Additionally, the memory units `kib`, `mib`, `gib`, `tib`, and `pib` are added to support 1024-base definitions.
+
+## MINOR CHANGES
+
+* `error message`: Improve the error message when using an invalid field in the config (#PR #662). The error message now includes the field names that are not valid if that happens to be the case or otherwise a more general error message.
+
+* `config mods`: Improve the displayed error message when a config mod could not be applied because of an invalid path (PR #672).
+
+## BUG FIXES
+
+* `export json_schema`: Fix minor inconsistencies and make the strict schema stricter by adapting to what Viash will effectively return (PR #666).
+
+* `deprecation & removal warning`: Improve the displayed warning where a deprecated or removed field could display a double '.' when it field was located at the root level (PR #671).
+
+* `resource path`: Don't finalize the `path` field of a resource until it's written as part of building a component (PR #668).
+
+* `requirements`: Improve the error message when a Python or R requirement uses a single quote in the `.script` field (PR #675).
+
+* `viash test`: Fix Docker id between build and test components not being consistent when using a custom Docker registry (PR #679).
+
+* `MainNSBuildNativeSuite`: Capture the error message when reading the configs so we can capture the expected warning message (PR #688).
+  While almost all tests were already cleanly capturing their expected warning/error messages, this one was still remaining, resulting in warnings being shown in the output.
+
+* `runners & engines`: When applying a filter on empty runners or engines, the fallback default `native engine` and `executable runner` respectively are set before applying the filter (PR #691).
+
+# Viash 0.9.0-RC2 (2024-02-23): Restructure the config and change some default values
 
 The `.functionality` layer has been removed from the config and all fields have been moved to the top layer.
 The default `multiple_sep` has been changed from `:` to `;` to avoid conflicts with paths like `s3://foo/bar`.
@@ -45,7 +76,7 @@ Additionally changes are made to sanitize the built config output and include ad
   The `platforms` field is still supported but will be removed in a future release.
   In brief, the `native platform` became a `native engine` and `docker platform` became a `docker engine`.
   Additionally, the `native platform` and `docker platform` became a `executable runner`, `nextflow platform` became a `nextflow runner`.
-  The fields of `docker platform` is split between `docker engine` and `docker runner`: `port`, `workdir`, `setup_strategy`, and `run_args` are captured by the `runner` as they define how the component is run. The other fields are captured by the `engine` as they define the environment in which the component is run. One exception is `chown` which is rarely set to false and is now always enabled.
+  The fields of `docker platform` is split between `docker engine` and `docker runner`: `port`, `workdir`, `setup_strategy`, and `run_args` (set to `docker_run_args`) are captured by the `runner` as they define how the component is run. The other fields are captured by the `engine` as they define the environment in which the component is run. One exception is `chown` which is rarely set to false and is now always enabled.
 
 * `arguments`: Merge arguments into argument_groups during a json decode prepare step (PR #574). The `--parse_argument_groups` option from `ns list` and `config view` is deprecated as it is now always enabled.
 
@@ -77,13 +108,41 @@ Additionally changes are made to sanitize the built config output and include ad
 
 # Viash 0.8.6 (yyyy-MM-dd): TODO Add title
 
+## DOCUMENTATION
+
+* `docker setup strategy`: Fix inconsistencies in the documentation (PR #657).
+
+* `repositories`: Fix `uri` -> `repo` in the repositories documentation (PR #682).
+
+## NEW FUNCTIONALITY
+
+* `viash test` and `viash ns test`: Add a hidden `--dry_run` option to build the tests without executing them (PR #676).
+
+* `viash test` and `viash ns test`: Add a hidden `--deterministic_working directory` argument to use a fixed directory path (PR #683).
+
+* `component names`: Verify that component namespace and name combinations are unique (PR #685).
+
+## BUG FIXES
+
+* `NextflowPlatform`: Fix publishing state for output arguments with `multiple: true` (#638, PR #639). 
+
+* `Executable`: Check whether a multiple output file argument contains a wildcard (PR #639).
+
+* `NextflowPlatform`: Fix a possible cause of concurrency issues (PR #669).
+
+* `Resources`: Fix an issue where if the first resource is not a script, the resource is silently dropped (PR #670).
+
+* `Docker automount`: Prevent adding a trailing slash to an automounted folder (PR #673).
+
+* `NextflowPlatform`: Change the at-runtime generated nextflow process from an in-memory to an on-disk temporary file, which should cause less issues with Nextflow Fusion (PR #681).
+
 # Viash 0.8.5 (2024-02-21): Bug fixes and documentation improvements
 
 Fix a bug when building a test docker container which requires a test resource. Additional improvements for the website documentation and support for the latest version of Nextflow are added.
 
 ## BUG FIXES
 
-* `nextflow runner`: Fix an issue with current nextflow-latest (24.01.0-edge) where our supporting library passes a GString instead of a String and results in a type mismatch (PR #640).
+* `NextflowPlatform`: Fix an issue with current nextflow-latest (24.01.0-edge) where our supporting library passes a GString instead of a String and results in a type mismatch (PR #640).
 
 * `test resources`: Make non-script test resources available during building of a docker container for `viash test` (PR #652).
 

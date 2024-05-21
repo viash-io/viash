@@ -37,19 +37,26 @@ object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
 
     lazy val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
 
+    lazy val fullHistoryName = 
+      if (historyString.isEmpty) {
+        s".$name"
+      } else {
+        s".$historyString.$name"
+      }
+
     schema.deprecated match {
       case Some(d) =>
-        info(s"Warning: .$historyString.$name is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+        info(s"Warning: $fullHistoryName is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
       case _ =>
     }
     schema.removed match {
       case Some(r) => 
-        info(s"Error: .$historyString.$name was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
+        info(s"Error: $fullHistoryName was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
       case _ =>
     }
     if (schema.hasInternalFunctionality) {
-      error(s"Error: .$historyString.$name is internal functionality.")
-      throw new RuntimeException(s"Internal functionality used: .$historyString.$name")
+      error(s"Error: $fullHistoryName is internal functionality.")
+      throw new RuntimeException(s"Internal functionality used: $fullHistoryName")
     }
   }
 

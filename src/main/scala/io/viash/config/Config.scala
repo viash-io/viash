@@ -27,6 +27,7 @@ import io.viash.helpers.{Git, GitInfo, IO, Logging}
 import io.viash.helpers.circe._
 import io.viash.helpers.{status => BuildStatus};
 import io.viash.helpers.Yaml
+import io.viash.ViashNamespace.targetOutputPath
 
 import java.net.URI
 
@@ -232,7 +233,7 @@ case class Config(
     """@[Computational requirements](computational_requirements) related to running the component. 
       |`cpus` specifies the maximum number of (logical) cpus a component is allowed to use., whereas
       |`memory` specifies the maximum amount of memory a component is allowed to allicate. Memory units must be
-      |in B, KB, MB, GB, TB or PB.""".stripMargin)
+      |in B, KB, MB, GB, TB or PB for SI units (1000-base), or KiB, MiB, GiB, TiB or PiB for binary IEC units (1024-base).""".stripMargin)
   @example(
     """requirements:
       |  cpus: 5
@@ -413,29 +414,28 @@ case class Config(
     * Find the runners
     * 
     * Order of execution:
-    *   - if an runner id is passed, look up the runner in the runners list
-    *   - else if runners is a non-empty list, use the first runner
-    *   - else use the executable runner
+    *   - if the runners list is empty, use the executable runner for the rest of the logic
+    *   - if an runner id is passed, return the matching runners in the runners list
+    *   - else throw an error
     *
     * @param query An runner ID referring to one of the config's runners
-    * @return An runner
+    * @return A list of runners
     */
   def findRunners(query: Option[String]): List[Runner] = {
-    // TODO: match on query, there's no need to do a .* if query is None
-    val regex = query.getOrElse(".*").r
-
-    val foundMatches = runners.filter{ e =>
-      regex.findFirstIn(e.id).isDefined
+    val list = runners match {
+      case Nil => List(ExecutableRunner())
+      case li => li
     }
-    
-    foundMatches match {
-      case li if li.nonEmpty =>
-        li
-      case Nil if query.isDefined =>
-        throw new RuntimeException(s"no runner id matching regex '$regex' could not be found in the config.")
-      case _ =>
-        // TODO: switch to the getRunners.head ?
-        List(ExecutableRunner())
+
+    query match {
+      case None =>
+        list
+      case Some(regex) =>
+        val foundMatches = list.filter{ e => regex.r.findFirstIn(e.id).isDefined }
+        foundMatches match {
+          case li if li.nonEmpty => li
+          case _ => throw new RuntimeException(s"no runner id matching regex '$regex' could not be found in the config.")
+        }
     }
   }
 
@@ -443,29 +443,28 @@ case class Config(
     * Find the engines
     * 
     * Order of execution:
-    *   - if an engine id is passed, look up the engine in the engines list
-    *   - else if engines is a non-empty list, use the first engine
-    *   - else use the executable engine
+    *   - if the engines list is empty, use the native engine for the rest of the logic
+    *   - if an engine id is passed, return the matching engines in the engines list
+    *   - else throw an error
     *
     * @param query An engine ID referring to one of the config's engines
-    * @return An engine
+    * @return A list of engines
     */
   def findEngines(query: Option[String]): List[Engine] = {
-    // TODO: match on query, there's no need to do a .* if query is None
-    val regex = query.getOrElse(".*").r
-
-    val foundMatches = engines.filter{ e =>
-      regex.findFirstIn(e.id).isDefined
+    val list = engines match {
+      case Nil => List(NativeEngine())
+      case li => li
     }
-    
-    foundMatches match {
-      case li if li.nonEmpty =>
-        li
-      case Nil if query.isDefined =>
-        throw new RuntimeException(s"no engine id matching regex '$regex' could not be found in the config.")
-      case _ =>
-        // TODO: switch to the getEngines.head ?
-        List(NativeEngine())
+
+    query match {
+      case None =>
+        list
+      case Some(regex) =>
+        val foundMatches = list.filter{ e => regex.r.findFirstIn(e.id).isDefined }
+        foundMatches match {
+          case li if li.nonEmpty => li
+          case _ => throw new RuntimeException(s"no engine id matching regex '$regex' could not be found in the config.")
+        }
     }
   }
 
@@ -534,9 +533,10 @@ case class Config(
     }
   def mainCode: Option[String] = mainScript.flatMap(_.read)
   // provide function to use resources.tail but that allows resources to be an empty list
+  // If mainScript ends up being None because the first resource isn't a script, return the whole list
   def additionalResources = resources match {
-    case _ :: tail => tail
-    case _ => List.empty[Resource]
+    case head :: tail if head.isInstanceOf[Script] => tail
+    case list => list
   }
 
   def isEnabled: Boolean = status != Status.Disabled
@@ -746,7 +746,7 @@ object Config extends Logging {
         attrs.isRegularFile
     })
 
-    scriptFiles.map { file =>
+    val allConfigs = scriptFiles.map { file =>
       try {
         val rmos = new ReplayableMultiOutputStream()
 
@@ -798,6 +798,19 @@ object Config extends Logging {
           AppliedConfig(Config("failed"), None, Nil, Some(BuildStatus.ParseError))
       }
     }
+
+    // Verify that all configs except the disabled ones are unique
+    // Even configs disabled by the query should be unique as they might be picked up as a dependency
+    // Only allowed exception are configs where the status is set to disabled
+    val allEnabledConfigs = allConfigs.collect{ case ac if ac.config.isEnabled => ac.config }
+    val uniqueConfigs = allEnabledConfigs.groupBy(c => targetOutputPath("", "", c))
+    val duplicateConfigs = uniqueConfigs.filter(_._2.size > 1)
+    if (duplicateConfigs.nonEmpty) {
+      val duplicateNames = duplicateConfigs.keys.map(_.dropWhile(_ == '/')).toSeq.sorted.mkString(", ")
+      throw new RuntimeException(s"Duplicate component name${ if (duplicateConfigs.size == 1) "" else "s" } found: $duplicateNames")
+    }
+
+    allConfigs
   }
 
 val reservedParameters = List("-h", "--help", "--version", "---v", "---verbose", "---verbosity")

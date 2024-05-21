@@ -114,7 +114,7 @@ def _checkArgumentType(String stage, Map par, Object value, String errorIdentifi
     }
     expectedClass = value instanceof Double ? null : "Double"
   } else if (par.type == "boolean" | par.type == "boolean_true" | par.type == "boolean_false") {
-    // cast to boolean if need ben
+    // cast to boolean if need be
     if (value instanceof String) {
       def valueLower = value.toLowerCase()
       if (valueLower == "true") {

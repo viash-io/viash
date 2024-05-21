@@ -16,11 +16,12 @@ import io.viash.config.resources.PlainFile
 class DockerMeta extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
   // which config to test
-  private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
+  private val configFile = getClass.getResource("/testbash/config.vsh.yaml").getPath
+  private val parent = getClass.getResource("/").toURI()
 
   // parse config from file
   private val config = Config.read(configFile)
-  private def configAndResources = PlainFile(path = Some(configFile.toString)) :: config.resources
+  private def configAndResources = PlainFile(path = Some("testbash/config.vsh.yaml"), parent = Some(parent)) :: config.resources
 
   test("Get meta data of a docker", DockerTest) {
     // Create temporary folder to copy the files to so we can do a git init in that folder
