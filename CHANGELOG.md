@@ -8,7 +8,7 @@ TODO add summary
   The cache is stored in the `~/.viash/repositories` directory using sparse-checkout to only fetch the necessary files.
   During a build, the cache is checked for the repository and if it is found and still up-to-date, the repository is not cloned again and instead the cache is copied to a temporary folder where the files are checked out from the sparse-checkout.
 
-* `resources_test`: Add a `resources_test` field to the `_viash.yaml` to specify resources that are needed during testing (PR #xxx).
+* `resources_test`: Add a `resources_test` field to the `_viash.yaml` to specify resources that are needed during testing (PR #709).
   Currently it is up to the user or CI to make sure these resources are available in the `resources_test` directory during testing.
 
 ## BUG FIXES
