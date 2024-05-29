@@ -172,6 +172,16 @@ case class PackageConfig(
   @default("Empty")
   @since("Viash 0.9.0")
   links: Links = Links(),
+
+  @description("The resources that are required for testing.")
+  @example(
+    """resources_test:
+      |  - "https://raw.githubusercontent.com/viash-io/viash/main/CHANGELOG.md"
+      |  - "https://www.scala-lang.org/feed/blog.xml"
+      |""".stripMargin, "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  resources_test: OneOrMore[String] = Nil,
 )
 
 object PackageConfig {
