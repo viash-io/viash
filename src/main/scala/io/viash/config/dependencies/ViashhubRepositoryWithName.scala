@@ -64,4 +64,6 @@ case class ViashhubRepositoryWithName(
     copy("", `type`, this.repo, tag, path, localPath)
   }
 
+  def withoutName = ViashhubRepository(`type`, repo, tag, path, localPath)
+
 }

@@ -37,6 +37,24 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
   // Short wrapper for creating a bash script containing some text and using it as a single resource
   def textBashScript(text: String): List[BashScript] = 
     List(BashScript(text = Some(text), dest = Some("./script.sh")))
+  
+  test("Create a remote dependency with repository defined as sugar syntax") {
+    val dep = Dependency("dep1", repository = Left("vsh://hendrik/dependency_test@main_build"))
+    assert(dep.name == "dep1")
+    assert(dep.repository.isLeft)
+  }
+
+  test("Create a remote dependency with repository defined as a full definition") {
+    val dep = Dependency("dep1", repository = Right(LocalRepository()))
+    assert(dep.name == "dep1")
+    assert(dep.repository.isRight)
+  }
+
+  test("Create a remote dependency with repository defined as a full definition with name") {
+    assertThrows[AssertionError] {
+      Dependency("dep1", repository = Right(LocalRepositoryWithName(name = "my_repo")))
+    }
+  }
 
   test("Use a local dependency") {
     val testFolder = createViashSubFolder(temporaryFolder, "local_test")

@@ -65,4 +65,6 @@ case class GitRepositoryWithName(
     copy("", `type`, uri, tag, path, localPath)
   }
 
+  def withoutName = GitRepository(`type`, uri, tag, path, localPath)
+
 }

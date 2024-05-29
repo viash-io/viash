@@ -94,6 +94,11 @@ case class Dependency(
     require(alias.get.matches("^[A-Za-z][A-Za-z0-9_]*$"), message = f"alias '${alias.get}' must begin with a letter and consist only of alphanumeric characters or underscores.")
   }
 
+  if (repository.isRight) {
+    val r = repository.toOption.get
+    assert(!r.isInstanceOf[RepositoryWithName], "Repository should not be a RepositoryWithName")
+  }
+
   // Shorthand for getting the actual repository from 'repository'.
   // The lefthand string notation is converted to the righthand object during dependency resolution.
   // So after that step we must always use the righthand object. This makes that much easier.

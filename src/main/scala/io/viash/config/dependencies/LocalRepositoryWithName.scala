@@ -52,4 +52,6 @@ case class LocalRepositoryWithName (
     copy("", `type`, tag, path, localPath)
   }
 
+  def withoutName = LocalRepository(`type`, tag, path, localPath)
+
 }
