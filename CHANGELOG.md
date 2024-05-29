@@ -1,3 +1,7 @@
+# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+
+TODO add summary
+
 # Viash 0.9.0-RC4 (2024-05-29): Improvements for CI
 
 These are mainly improvements for issues highlighted by running Viash in a CI environment.
@@ -121,7 +125,11 @@ Additionally changes are made to sanitize the built config output and include ad
 
 * `config`: Anonymize paths in the config when outputting the config (PR #625).
 
-# Viash 0.8.6 (yyyy-MM-dd): TODO Add title
+# Viash 0.8.6 (2024-04-26): Bug fixes and improvements for CI
+
+Fix some issues in some edge cases.
+Add options for testing in a CI environment. Given that these options are not meant for general use, they are hidden from the help message.
+Some improvements are made to run in Nextflow Fusion.
 
 ## DOCUMENTATION
 
