@@ -1,6 +1,7 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.9.0-RC4 (2024-05-29): Improvements for CI
 
-TODO add summary
+These are mainly improvements for issues highlighted by running Viash in a CI environment.
+Additionally, implemented a proper way of caching dependency repositories. The cache is stored under `~/.viash/repositories`.
 
 ## NEW FUNCTIONALITY
 
