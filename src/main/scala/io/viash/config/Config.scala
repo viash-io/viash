@@ -44,6 +44,7 @@ import io.viash.engines.{Engine, NativeEngine, DockerEngine}
 import io.viash.helpers.ReplayableMultiOutputStream
 import io.viash.packageConfig.PackageConfig
 import io.viash.lenses.ConfigLenses._
+import io.viash.lenses.EngineLenses
 import Status._
 import io.viash.wrapper.BashWrapper
 import scala.collection.immutable.ListMap
@@ -640,12 +641,14 @@ object Config extends Logging {
     /* CONFIG 0: apply values from package config */
     // apply values from package config if need be
     val conf0 = {
+      val vpName = viashPackage.flatMap(_.name)
       val vpVersion = viashPackage.flatMap(_.version)
       val vpRepositories = viashPackage.map(_.repositories).getOrElse(Nil)
       val vpLicense = viashPackage.flatMap(_.license)
       val vpOrganization = viashPackage.flatMap(_.organization)
       val vpRepository = viashPackage.flatMap(_.links.repository)
       val vpDockerRegistry = viashPackage.flatMap(_.links.docker_registry)
+      val config_organization = confBase.organization
 
       val lenses =
         versionLens.modify(_ orElse vpVersion) andThen
@@ -653,7 +656,19 @@ object Config extends Logging {
         organizationLens.modify(_ orElse vpOrganization) andThen
         repositoriesLens.modify(vpRepositories ::: _) andThen
         linksRepositoryLens.modify(_ orElse vpRepository) andThen
-        linksDockerRegistryLens.modify(_ orElse vpDockerRegistry)
+        linksDockerRegistryLens.modify(_ orElse vpDockerRegistry) andThen
+        enginesLens.modify(
+          _.map{ e =>
+            e match {
+              case de: DockerEngine => {
+                val engineLenses =
+                  EngineLenses.packageLens.modify(_ orElse vpName) andThen
+                  EngineLenses.organizationLens.modify(_ orElse config_organization orElse vpOrganization)
+                engineLenses(de)
+              }
+              case _ => e
+            }
+        })
         
       lenses(confBase)
     }

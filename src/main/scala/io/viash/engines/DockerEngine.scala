@@ -54,6 +54,9 @@ final case class DockerEngine(
   @description("Name of a container's [organization](https://docs.docker.com/docker-hub/orgs/).")
   organization: Option[String],
 
+  @description("Name of the container's package.")
+  `package`: Option[String],
+
   @description("The URL to the a [custom Docker registry](https://docs.docker.com/registry/)")
   @example("registry: https://my-docker-registry.org", "yaml")
   registry: Option[String] = None,
@@ -69,6 +72,10 @@ final case class DockerEngine(
   @description("The organization set in the resulting image. Advanced usage only.")
   @example("target_organization: viash-io", "yaml")
   target_organization: Option[String] = None,
+
+  @description("The package name set in the resulting image. Advanced usage only.")
+  @example("target_package: tools", "yaml")
+  target_package: Option[String] = None,
 
   @description("The URL where the resulting image will be pushed to. Advanced usage only.")
   @example("target_registry: https://my-docker-registry.org", "yaml")
@@ -194,6 +201,7 @@ final case class DockerEngine(
       name = Some(image),
       registry = registry,
       organization = organization,
+      `package` = `package`,
       tag = tag.map(_.toString),
       namespaceSeparator = namespace_separator
     )
@@ -215,12 +223,17 @@ final case class DockerEngine(
     target_registry.orElse(config.links.docker_registry)
   }
 
+  def getTargetPackageNameWithFallback(config: Config): Option[String] = {
+    target_package.orElse(config.package_config.flatMap(_.name)).filter(_.nonEmpty)
+  }
+
   def getTargetIdentifier(config: Config): String = {
     val targetImageInfo = Docker.getImageInfo(
       config = Some(config),
       engineId = Some(id),
       registry = getTargetRegistryWithFallback(config),
       organization = target_organization,
+      `package` = getTargetPackageNameWithFallback(config),
       name = target_image,
       tag = target_tag.map(_.toString),
       namespaceSeparator = namespace_separator

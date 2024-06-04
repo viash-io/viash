@@ -141,6 +141,7 @@ final case class NextflowRunner(
           engineId = Some(p.id),
           registry = p.getTargetRegistryWithFallback(config),
           organization = p.target_organization,
+          `package` = p.getTargetPackageNameWithFallback(config),
           name = p.target_image,
           tag = p.target_tag.map(_.toString),
           namespaceSeparator = p.namespace_separator

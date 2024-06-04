@@ -23,16 +23,18 @@ case class DockerImageInfo(
   name: String, 
   tag: String = "latest", 
   registry: Option[String] = None,
-  organization: Option[String] = None
+  organization: Option[String] = None,
+  `package`: Option[String] = None
 ) {
   override def toString: String = {
     registry.map(_ + "/").getOrElse("") +
     organization.map(_ + "/").getOrElse("") +
+    `package`.map(_ + "/").getOrElse("") +
       name + ":" + tag
   }
 
   def toMap: Map[String, String] = {
-    val image = organization.map(_ + "/").getOrElse("") + name
+    val image = organization.map(_ + "/").getOrElse("") + `package`.map(_ + "/").getOrElse("") + name
     
     registry.map(r => Map("registry" -> r)).getOrElse(Map()) ++
     Map(
@@ -50,6 +52,7 @@ object Docker {
     name: Option[String] = None,
     registry: Option[String] = None,
     organization: Option[String] = None,
+    `package`: Option[String] = None,
     tag: Option[String] = None,
     engineId: Option[String] = None,
     namespaceSeparator: String
@@ -90,7 +93,8 @@ object Docker {
       name = actualName.get,
       tag = actualTag.get,
       registry = registry,
-      organization = organization
+      organization = organization,
+      `package` = `package`
     )
   }
 
