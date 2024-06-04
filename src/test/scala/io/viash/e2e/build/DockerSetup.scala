@@ -177,6 +177,85 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     assert(regexOciVersion.findFirstIn(inspectOut).isDefined, inspectOut)
   }
 
+  test("Get info of a docker image with organization set", DockerTest) {
+    val newConfigFilePath = configDeriver.derive(".engines[.id == 'throwawayimage'].target_organization := 'myorg'", "mytestbash-org")
+    val tag = "myorg/mytestbash"
+
+    // remove docker if it exists
+    removeDockerImage(tag, "0.1-throwawayimage")
+    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
+
+    // build viash wrapper with --setup
+    TestHelper.testMain(
+      "build",
+      "--engine", "throwawayimage",
+      "--runner", "executable",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    // verify docker exists
+    assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
+  }
+
+  test("Get info of a docker image with package set", DockerTest) {
+    val newConfigFilePath = configDeriver.derive(".engines[.id == 'throwawayimage'].target_package := 'pack'", "mytestbash-pack")
+    val tag = "pack/mytestbash"
+
+    // remove docker if it exists
+    removeDockerImage(tag, "0.1-throwawayimage")
+    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
+
+    // build viash wrapper with --setup
+    TestHelper.testMain(
+      "build",
+      "--engine", "throwawayimage",
+      "--runner", "executable",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    // verify docker exists
+    assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
+  }
+
+  test("Get info of a docker image with organization and package set", DockerTest) {
+    val newConfigFilePath = configDeriver.derive(
+      List(
+        ".engines[.id == 'throwawayimage'].target_organization := 'myorg'",
+        ".engines[.id == 'throwawayimage'].target_package := 'pack'"
+      ),
+      "mytestbash-pack")
+    val tag = "myorg/pack/mytestbash"
+
+    // remove docker if it exists
+    removeDockerImage(tag, "0.1-throwawayimage")
+    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
+
+    // build viash wrapper with --setup
+    TestHelper.testMain(
+      "build",
+      "--engine", "throwawayimage",
+      "--runner", "executable",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    // verify docker exists
+    assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
+  }
 
   def checkDockerImageExists(name: String): Boolean = checkDockerImageExists(name, "latest")
 
