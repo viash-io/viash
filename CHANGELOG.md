@@ -4,7 +4,7 @@ TODO add summary
 
 ## MINOR CHANGES
 
-* `resources_test`: This field is removed again from the `_viash.yaml` as it was decided to impliment this temporary functionality using the `info` field (PR #xxx).
+* `resources_test`: This field is removed again from the `_viash.yaml` as it was decided to impliment this temporary functionality using the `info` field (PR #711).
 
 # Viash 0.9.0-RC4 (2024-05-29): Improvements for CI
 
