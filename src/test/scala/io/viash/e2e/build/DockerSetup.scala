@@ -177,7 +177,7 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     assert(regexOciVersion.findFirstIn(inspectOut).isDefined, inspectOut)
   }
 
-  test("Get info of a docker image with organization set", DockerTest) {
+  test("Get info of a docker image with target_organization set", DockerTest) {
     val newConfigFilePath = configDeriver.derive(".engines[.id == 'throwawayimage'].target_organization := 'myorg'", "mytestbash-org")
     val tag = "myorg/mytestbash"
 
@@ -202,7 +202,32 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
   }
 
-  test("Get info of a docker image with package set", DockerTest) {
+  test("Get info of a docker image with component organization set", DockerTest) {
+    val newConfigFilePath = configDeriver.derive(".organization := 'myorg2'", "mytestbash-org2")
+    val tag = "myorg2/mytestbash"
+
+    // remove docker if it exists
+    removeDockerImage(tag, "0.1-throwawayimage")
+    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
+
+    // build viash wrapper with --setup
+    TestHelper.testMain(
+      "build",
+      "--engine", "throwawayimage",
+      "--runner", "executable",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    // verify docker exists
+    assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
+  }
+
+  test("Get info of a docker image with target_package set", DockerTest) {
     val newConfigFilePath = configDeriver.derive(".engines[.id == 'throwawayimage'].target_package := 'pack'", "mytestbash-pack")
     val tag = "pack/mytestbash"
 
@@ -227,7 +252,7 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
   }
 
-  test("Get info of a docker image with organization and package set", DockerTest) {
+  test("Get info of a docker image with target_organization and target_package set", DockerTest) {
     val newConfigFilePath = configDeriver.derive(
       List(
         ".engines[.id == 'throwawayimage'].target_organization := 'myorg'",
@@ -242,6 +267,38 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
 
     // build viash wrapper with --setup
     TestHelper.testMain(
+      "build",
+      "--engine", "throwawayimage",
+      "--runner", "executable",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(executable.exists)
+    assert(executable.canExecute)
+
+    // verify docker exists
+    assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
+  }
+
+  test("Get info of a docker image with organization and package name set in the package config", DockerTest) {
+    val newConfigFilePath = configDeriver.derive(Nil, "mytestbash-package-config")
+    val tag = "myorg_pc/pack_pc/mytestbash"
+
+    val package_config =
+      """name: pack_pc
+        |organization: myorg_pc
+        |""".stripMargin
+    Files.write(temporaryConfigFolder.resolve("_viash.yaml"), package_config.getBytes)
+
+    // remove docker if it exists
+    removeDockerImage(tag, "0.1-throwawayimage")
+    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
+
+    // build viash wrapper with --setup
+    TestHelper.testMain(
+      workingDir = Some(temporaryConfigFolder),
       "build",
       "--engine", "throwawayimage",
       "--runner", "executable",
@@ -276,7 +333,7 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     )
   }
 
-    def removeDockerImage(name: String, tag: String): Unit = {
+  def removeDockerImage(name: String, tag: String): Unit = {
     Exec.runCatch(
       Seq("docker", "rmi", s"$name:$tag", "-f")
     )
