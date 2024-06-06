@@ -333,7 +333,7 @@ final case class ExecutableRunner(
 
     val setDockerImageId = engines.map { engine => 
       s"""[[ "$$VIASH_ENGINE_ID" == '${engine.id}' ]]; then
-        |    VIASH_DOCKER_IMAGE_ID='${engine.getTargetIdentifier(config)}'""".stripMargin  
+        |    VIASH_DOCKER_IMAGE_ID='${engine.getTargetIdentifier(config).toString()}'""".stripMargin  
     }.mkString("if ", "\n  elif ", "\n  fi")
 
     val postParse =

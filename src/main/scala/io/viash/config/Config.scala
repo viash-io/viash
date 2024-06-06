@@ -44,7 +44,6 @@ import io.viash.engines.{Engine, NativeEngine, DockerEngine}
 import io.viash.helpers.ReplayableMultiOutputStream
 import io.viash.packageConfig.PackageConfig
 import io.viash.lenses.ConfigLenses._
-import io.viash.lenses.EngineLenses
 import Status._
 import io.viash.wrapper.BashWrapper
 import scala.collection.immutable.ListMap
@@ -656,19 +655,7 @@ object Config extends Logging {
         organizationLens.modify(_ orElse vpOrganization) andThen
         repositoriesLens.modify(vpRepositories ::: _) andThen
         linksRepositoryLens.modify(_ orElse vpRepository) andThen
-        linksDockerRegistryLens.modify(_ orElse vpDockerRegistry) andThen
-        enginesLens.modify(
-          _.map{ e =>
-            e match {
-              case de: DockerEngine => {
-                val engineLenses =
-                  EngineLenses.packageLens.modify(_ orElse vpName) andThen
-                  EngineLenses.organizationLens.modify(_ orElse config_organization orElse vpOrganization)
-                engineLenses(de)
-              }
-              case _ => e
-            }
-        })
+        linksDockerRegistryLens.modify(_ orElse vpDockerRegistry)
         
       lenses(confBase)
     }

@@ -133,19 +133,10 @@ final case class NextflowRunner(
   }
 
   def containerDirective(config: Config): Option[DockerImageInfo] = {
-    val plat = config.engines.find(p => p.id == container)
-    plat match {
-      case Some(p: DockerEngine) => 
-        Some(Docker.getImageInfo(
-          config = Some(config),
-          engineId = Some(p.id),
-          registry = p.getTargetRegistryWithFallback(config),
-          organization = p.target_organization,
-          `package` = p.getTargetPackageNameWithFallback(config),
-          name = p.target_image,
-          tag = p.target_tag.map(_.toString),
-          namespaceSeparator = p.namespace_separator
-        ))
+    val engine = config.engines.find(p => p.id == container)
+    engine match {
+      case Some(de: DockerEngine) => 
+        Some(de.getTargetIdentifier(config))
       case Some(_) => 
         throw new RuntimeException(s"NextflowRunner 'container' variable: Engine $container is not a Docker Engine")
       case None => None
