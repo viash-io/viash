@@ -222,14 +222,9 @@ final case class DockerEngine(
 
   def getTargetIdentifier(config: Config): DockerImageInfo = {
 
-    def targetRegistryWithFallback: Option[String] =
-      target_registry.orElse(config.links.docker_registry)
-
-    def targetOrganizationWithFallback: Option[String] =
-      target_organization.orElse(config.organization).orElse(config.package_config.flatMap(_.organization)).filter(_.nonEmpty)
-
-    def targetPackageNameWithFallback: Option[String] = 
-      target_package.orElse(config.package_config.flatMap(_.name)).filter(_.nonEmpty)
+    val targetRegistryWithFallback = target_registry.orElse(config.links.docker_registry)
+    val targetOrganizationWithFallback = target_organization.orElse(config.organization).filter(_.nonEmpty)
+    val targetPackageNameWithFallback = target_package.orElse(config.package_config.flatMap(_.name)).filter(_.nonEmpty)
 
     Docker.getImageInfo(
       config = Some(config),

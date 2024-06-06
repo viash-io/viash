@@ -640,14 +640,12 @@ object Config extends Logging {
     /* CONFIG 0: apply values from package config */
     // apply values from package config if need be
     val conf0 = {
-      val vpName = viashPackage.flatMap(_.name)
       val vpVersion = viashPackage.flatMap(_.version)
       val vpRepositories = viashPackage.map(_.repositories).getOrElse(Nil)
       val vpLicense = viashPackage.flatMap(_.license)
       val vpOrganization = viashPackage.flatMap(_.organization)
       val vpRepository = viashPackage.flatMap(_.links.repository)
       val vpDockerRegistry = viashPackage.flatMap(_.links.docker_registry)
-      val config_organization = confBase.organization
 
       val lenses =
         versionLens.modify(_ orElse vpVersion) andThen
