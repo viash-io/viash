@@ -298,12 +298,6 @@ case class Config(
   @since("Viash 0.9.0")
   license: Option[String] = None,
 
-  @description("The organization of the package.")
-  @example("organization: viash-io", "yaml")
-  @default("Empty")
-  @since("Viash 0.9.0")
-  organization: Option[String] = None,
-
   @description("References to external resources related to the component.")
   @example(
     """references:
@@ -643,14 +637,12 @@ object Config extends Logging {
       val vpVersion = viashPackage.flatMap(_.version)
       val vpRepositories = viashPackage.map(_.repositories).getOrElse(Nil)
       val vpLicense = viashPackage.flatMap(_.license)
-      val vpOrganization = viashPackage.flatMap(_.organization)
       val vpRepository = viashPackage.flatMap(_.links.repository)
       val vpDockerRegistry = viashPackage.flatMap(_.links.docker_registry)
 
       val lenses =
         versionLens.modify(_ orElse vpVersion) andThen
         licenseLens.modify(_ orElse vpLicense) andThen
-        organizationLens.modify(_ orElse vpOrganization) andThen
         repositoriesLens.modify(vpRepositories ::: _) andThen
         linksRepositoryLens.modify(_ orElse vpRepository) andThen
         linksDockerRegistryLens.modify(_ orElse vpDockerRegistry)

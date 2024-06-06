@@ -202,31 +202,6 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
   }
 
-  test("Get info of a docker image with component organization set", DockerTest) {
-    val newConfigFilePath = configDeriver.derive(".organization := 'myorg2'", "mytestbash-org2")
-    val tag = "myorg2/mytestbash"
-
-    // remove docker if it exists
-    removeDockerImage(tag, "0.1-throwawayimage")
-    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
-
-    // build viash wrapper with --setup
-    TestHelper.testMain(
-      "build",
-      "--engine", "throwawayimage",
-      "--runner", "executable",
-      "-o", tempFolStr,
-      "--setup", "build",
-      newConfigFilePath
-    )
-
-    assert(executable.exists)
-    assert(executable.canExecute)
-
-    // verify docker exists
-    assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
-  }
-
   test("Get info of a docker image with target_package set", DockerTest) {
     val newConfigFilePath = configDeriver.derive(".engines[.id == 'throwawayimage'].target_package := 'pack'", "mytestbash-pack")
     val tag = "pack/mytestbash"

@@ -10,6 +10,8 @@ TODO add summary
 
 * `docker_engine`: Add `target_package` field to the `docker_engine` (PR #712). This field, together with the `target_organization` is used to specify the full built container image name. The fields use proper fallback for the values set in the component config and package config.
 
+* `organization`: Remove the `organization` field from the component config (PR #712). The value is now directly used by the `docker_engine` as a fallback from the `target_organization` field.
+
 # Viash 0.9.0-RC4 (2024-05-29): Improvements for CI
 
 These are mainly improvements for issues highlighted by running Viash in a CI environment.
