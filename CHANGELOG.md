@@ -6,6 +6,10 @@ TODO add summary
 
 * `resources_test`: This field is removed again from the `_viash.yaml` as it was decided to impliment this temporary functionality using the `info` field (PR #711).
 
+* `docker_engine`: Deprecate `registry`, `organization` and `tag fields` in the `docker_engine` (PR #712). Currently these are hardly ever used and instead the `image` field is used to specify the full image name.
+
+* `docker_engine`: Add `target_package` field to the `docker_engine` (PR #712). This field, together with the `target_organization` is used to specify the full built container image name. The fields use proper fallback for the values set in the component config and package config.
+
 # Viash 0.9.0-RC4 (2024-05-29): Improvements for CI
 
 These are mainly improvements for issues highlighted by running Viash in a CI environment.
