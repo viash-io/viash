@@ -6,6 +6,9 @@ TODO add summary
 
 * `resources_test`: This field is removed again from the `_viash.yaml` as it was decided to impliment this temporary functionality using the `info` field (PR #711).
 
+* `vsh organization`: ViashHub repositories now use `vsh` as the default organization (PR #718).
+  Instead of having to specify `repo: vsh/repo_name`, you can now just specify `repo: repo_name`, which is now also the prefered way.
+
 # Viash 0.9.0-RC4 (2024-05-29): Improvements for CI
 
 These are mainly improvements for issues highlighted by running Viash in a CI environment.
