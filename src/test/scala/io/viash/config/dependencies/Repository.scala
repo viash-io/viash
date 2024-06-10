@@ -22,6 +22,7 @@ class RepositoryTest extends AnyFunSuite {
     val githubRepo = repo.get.asInstanceOf[GithubRepository]
     assert(githubRepo.repo == "viash-io/viash")
     assert(githubRepo.tag == Some("v2.0.0"))
+    assert(githubRepo.uri == "https://github.com/viash-io/viash.git")
   }
 
   test("Repository.unapply: handles viashhub syntax") {
@@ -31,6 +32,27 @@ class RepositoryTest extends AnyFunSuite {
     val viashhubRepo = repo.get.asInstanceOf[ViashhubRepository]
     assert(viashhubRepo.repo == "viash-io/viash")
     assert(viashhubRepo.tag == Some("v2.0.0"))
+    assert(viashhubRepo.uri == "https://viash-hub.com/viash-io/viash.git")
+  }
+
+  test("Repository.unapply: handles viashhub syntax with implicit vsh organization") {
+    val repo = Repository.unapply("vsh://viash@v2.0.0")
+    assert(repo.isDefined)
+    assert(repo.get.isInstanceOf[ViashhubRepository])
+    val viashhubRepo = repo.get.asInstanceOf[ViashhubRepository]
+    assert(viashhubRepo.repo == "viash")
+    assert(viashhubRepo.tag == Some("v2.0.0"))
+    assert(viashhubRepo.uri == "https://viash-hub.com/vsh/viash.git")
+  }
+
+  test("Repository.unapply: handles viashhub syntax with explicit vsh organization") {
+    val repo = Repository.unapply("vsh://vsh/viash@v2.0.0")
+    assert(repo.isDefined)
+    assert(repo.get.isInstanceOf[ViashhubRepository])
+    val viashhubRepo = repo.get.asInstanceOf[ViashhubRepository]
+    assert(viashhubRepo.repo == "vsh/viash")
+    assert(viashhubRepo.tag == Some("v2.0.0"))
+    assert(viashhubRepo.uri == "https://viash-hub.com/vsh/viash.git")
   }
 
   test("Repository.unapply: handles local syntax") {
