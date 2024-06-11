@@ -198,13 +198,12 @@ final case class DockerEngine(
     )
 
     /* Fetch from image name */
+    // TODO: once registry, organization and tag are removed, `fromImageInfo.toString()` is always equal to `image` so it can be removed.
     val fromImageInfo = Docker.getImageInfo(
       name = Some(image),
       registry = registry,
       organization = organization,
-      `package` = None,
-      tag = tag.map(_.toString),
-      namespaceSeparator = namespace_separator
+      tag = tag
     )
 
     /* Construct Dockerfile */
@@ -222,10 +221,11 @@ final case class DockerEngine(
 
   def getTargetIdentifier(config: Config): DockerImageInfo = {
 
-    val targetRegistryWithFallback = target_registry.orElse(config.links.docker_registry)
+    val targetRegistryWithFallback = target_registry.orElse(config.links.docker_registry).filter(_.nonEmpty)
     val targetOrganizationWithFallback = target_organization.orElse(config.package_config.flatMap(_.organization)).filter(_.nonEmpty)
     val targetPackageNameWithFallback = target_package.orElse(config.package_config.flatMap(_.name)).filter(_.nonEmpty)
 
+    // TODO: Once registry, organization and tag are removed, and `fromImageInfo` doesn't use this function anymore, make `config` and `namespaceSeparator` required.
     Docker.getImageInfo(
       config = Some(config),
       engineId = Some(id),
@@ -233,8 +233,8 @@ final case class DockerEngine(
       organization = targetOrganizationWithFallback,
       `package` = targetPackageNameWithFallback,
       name = target_image,
-      tag = target_tag.map(_.toString),
-      namespaceSeparator = namespace_separator
+      tag = target_tag,
+      namespaceSeparator = Some(namespace_separator)
     )
   }
 }

@@ -55,8 +55,10 @@ object Docker {
     `package`: Option[String] = None,
     tag: Option[String] = None,
     engineId: Option[String] = None,
-    namespaceSeparator: String
+    namespaceSeparator: Option[String] = None,
   ): DockerImageInfo = {
+
+    assert(config.isDefined == namespaceSeparator.isDefined, "Both config and namespaceSeparator should be defined or not defined")
 
     // If the image name contains a tag, use it
     val (derivedName, derivedTag) = name match {
