@@ -10,6 +10,12 @@ TODO add summary
 
 * `build_info`: Correctly set the `.build_info.executable` to `main.nf` when building a component with a Nextflow runner (PR #720).
 
+* `vsh organization`: ViashHub repositories now use `vsh` as the default organization (PR #718).
+  Instead of having to specify `repo: vsh/repo_name`, you can now just specify `repo: repo_name`, which is now also the prefered way.
+
+* `testbenches`: Add a testbench to verify dependencies in dependencies from scratch (PR #721).
+  The components are built from scratch and the dependencies are resolved from the local repositories.
+
 # Viash 0.9.0-RC4 (2024-05-29): Improvements for CI
 
 These are mainly improvements for issues highlighted by running Viash in a CI environment.

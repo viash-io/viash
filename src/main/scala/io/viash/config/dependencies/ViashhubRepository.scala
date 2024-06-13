@@ -25,14 +25,21 @@ import java.nio.file.Paths
 
 @description("A Viash-Hub repository where remote dependency components can be found.")
 @example(
-  """type: viashhub
+  """type: vsh
+    |repo: biobox
+    |tag: 0.1.0
+    |""".stripMargin,
+  "yaml"
+)
+@example(
+  """type: vsh
     |repo: openpipelines-bio/openpipeline
     |tag: 0.8.0
     |""".stripMargin,
   "yaml"
 )
 @example(
-  """type: viashhub
+  """type: vsh
     |repo: openpipelines-bio/openpipeline
     |tag: 0.7.1
     |path: src/test/resources/testns
