@@ -99,10 +99,7 @@ object ParameterSchema {
       val regexNested7 = regexify("tpe[a,b[c]]")
 
       def map(a: String, b: String): String = s"Map of $a to $b"
-      def either(a: String, b: String): String = 
-        s"""Either
-          |  - $a
-          |  - $b""".stripMargin
+      def either(a: String, b: String): String = s"""Either $a or $b"""
       
       s match {
         case regex0(tpe) => s"$tpe"

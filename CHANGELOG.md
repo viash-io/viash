@@ -139,6 +139,12 @@ Additionally changes are made to sanitize the built config output and include ad
 
 * `config`: Anonymize paths in the config when outputting the config (PR #625).
 
+# Viash 0.8.7 (yyyy-MM-dd): TODO Add title
+
+## BUG FIXES
+
+* `viash build`: Fix error handling of non-generic errors in the build process or while pushing docker containers (PR #696).
+
 # Viash 0.8.6 (2024-04-26): Bug fixes and improvements for CI
 
 Fix some issues in some edge cases.
