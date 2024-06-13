@@ -26,6 +26,7 @@ import io.viash.helpers.{Escaper, Docker}
 import io.viash.wrapper.BashWrapper
 
 import io.viash.schemas._
+import io.viash.helpers.DockerImageInfo
 
 @description(
   """Run a Viash component on a Docker backend engine.
@@ -51,17 +52,20 @@ final case class DockerEngine(
   @example("image: \"bash:4.0\"", "yaml")
   image: String,
 
-  @description("Name of a container's [organization](https://docs.docker.com/docker-hub/orgs/).")
+  @description("Name of a start container's [organization](https://docs.docker.com/docker-hub/orgs/).")
+  @deprecated("Use the full container name in `image` instead.", "0.9.0", "0.10.0")
   organization: Option[String],
 
-  @description("The URL to the a [custom Docker registry](https://docs.docker.com/registry/)")
+  @description("The URL to the a [custom Docker registry](https://docs.docker.com/registry/) where the start container is located.")
   @example("registry: https://my-docker-registry.org", "yaml")
+  @deprecated("Use the full container name in `image` instead.", "0.9.0", "0.10.0")
   registry: Option[String] = None,
 
   @description("Specify a Docker image based on its tag.")
   @example("tag: 4.0", "yaml")
+  @deprecated("Use the full container name in `image` instead.", "0.9.0", "0.10.0")
   tag: Option[String] = None,
-  
+
   @description("If anything is specified in the setup section, running the `---setup` will result in an image with the name of `<target_image>:<version>`. If nothing is specified in the `setup` section, simply `image` will be used. Advanced usage only.")
   @example("target_image: myfoo", "yaml")
   target_image: Option[String] = None,
@@ -69,6 +73,10 @@ final case class DockerEngine(
   @description("The organization set in the resulting image. Advanced usage only.")
   @example("target_organization: viash-io", "yaml")
   target_organization: Option[String] = None,
+
+  @description("The package name set in the resulting image. Advanced usage only.")
+  @example("target_package: tools", "yaml")
+  target_package: Option[String] = None,
 
   @description("The URL where the resulting image will be pushed to. Advanced usage only.")
   @example("target_registry: https://my-docker-registry.org", "yaml")
@@ -129,11 +137,11 @@ final case class DockerEngine(
 
   /**
    * Generate a Dockerfile for the container
-   * 
+   *
    * @param config The config
    * @param info The config info (available)
    * @param testing Whether or not this container is used as part of a `viash test`, in which the `test_setup` also needs to be included
-   * 
+   *
    * @return The Dockerfile as a string
    */
   def dockerFile(
@@ -142,7 +150,7 @@ final case class DockerEngine(
     testing: Boolean
   ): String = {
     /* Construct labels from metadata */
-    
+
     // derive authors
     val authors = config.authors match {
       case Nil => None
@@ -179,8 +187,8 @@ final case class DockerEngine(
         )
       ))
     val opencontainersImageSource = imageSource.map(src => s"""org.opencontainers.image.source="${Escaper(src, quote = true)}"""").toList
-    
-    val labelReq = DockerRequirements(label = 
+
+    val labelReq = DockerRequirements(label =
       opencontainers_image_authors :::
         opencontainersImageDescription :::
         opencontainersImageCreated :::
@@ -190,12 +198,12 @@ final case class DockerEngine(
     )
 
     /* Fetch from image name */
+    // TODO: once registry, organization and tag are removed, `fromImageInfo.toString()` is always equal to `image` so it can be removed.
     val fromImageInfo = Docker.getImageInfo(
       name = Some(image),
       registry = registry,
       organization = organization,
-      tag = tag.map(_.toString),
-      namespaceSeparator = namespace_separator
+      tag = tag
     )
 
     /* Construct Dockerfile */
@@ -206,26 +214,27 @@ final case class DockerEngine(
     val entrypointStr = Docker.listifyOneOrMore(entrypoint).map(s => s"\nENTRYPOINT $s").getOrElse("")
     val cmdStr = Docker.listifyOneOrMore(cmd).map(s => s"\nCMD $s").getOrElse("")
 
-    s"""FROM $fromImageInfo$entrypointStr$cmdStr 
+    s"""FROM $fromImageInfo$entrypointStr$cmdStr
         |${runCommands.mkString("\n")}
-        |""".stripMargin           
+        |""".stripMargin
   }
 
-  def getTargetRegistryWithFallback(config: Config): Option[String] = {
-    target_registry.orElse(config.links.docker_registry)
-  }
+  def getTargetIdentifier(config: Config): DockerImageInfo = {
 
-  def getTargetIdentifier(config: Config): String = {
-    val targetImageInfo = Docker.getImageInfo(
+    val targetRegistryWithFallback = target_registry.orElse(config.links.docker_registry).filter(_.nonEmpty)
+    val targetOrganizationWithFallback = target_organization.orElse(config.package_config.flatMap(_.organization)).filter(_.nonEmpty)
+    val targetPackageNameWithFallback = target_package.orElse(config.package_config.flatMap(_.name)).filter(_.nonEmpty)
+
+    // TODO: Once registry, organization and tag are removed, and `fromImageInfo` doesn't use this function anymore, make `config` and `namespaceSeparator` required.
+    Docker.getImageInfo(
       config = Some(config),
       engineId = Some(id),
-      registry = getTargetRegistryWithFallback(config),
-      organization = target_organization,
+      registry = targetRegistryWithFallback,
+      organization = targetOrganizationWithFallback,
+      `package` = targetPackageNameWithFallback,
       name = target_image,
-      tag = target_tag.map(_.toString),
-      namespaceSeparator = namespace_separator
+      tag = target_tag,
+      namespaceSeparator = Some(namespace_separator)
     )
-
-    targetImageInfo.toString
   }
 }

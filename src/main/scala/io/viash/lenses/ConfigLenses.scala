@@ -37,7 +37,6 @@ object ConfigLenses {
   val repositoriesLens = GenLens[Config](_.repositories)
   val keywordsLens = GenLens[Config](_.keywords)
   val licenseLens = GenLens[Config](_.license)
-  val organizationLens = GenLens[Config](_.organization)
   val linksLens = GenLens[Config](_.links)
 
   val linksRepositoryLens = linksLens ^|-> repositoryLens

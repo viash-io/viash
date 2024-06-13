@@ -29,7 +29,6 @@ class NativePackageConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
   // Use config mod functionality so that we can more easily differentiate between e.g. '.license' and '.package_config.license'
   val versionMod = ConfigModParser.parse(ConfigModParser.path, """.version""").get
   val licenseMod = ConfigModParser.parse(ConfigModParser.path, """.license""").get
-  val organizationMod = ConfigModParser.parse(ConfigModParser.path, """.organization""").get
   val linksRepositoryMod = ConfigModParser.parse(ConfigModParser.path, """.links.repository""").get
   val linksRegistryMod = ConfigModParser.parse(ConfigModParser.path, """.links.docker_registry""").get
 
@@ -48,7 +47,6 @@ class NativePackageConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(versionMod.get(baseJson) == Json.Null)
     assert(licenseMod.get(baseJson) == Json.Null)
-    assert(organizationMod.get(baseJson) == Json.Null)
     assert(linksRegistryMod.get(baseJson) == Json.Null)
     assert(linksRepositoryMod.get(baseJson) == Json.Null)
   }
@@ -57,7 +55,6 @@ class NativePackageConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
     val packageConfig = 
       """version: test_version
         |license: test_license
-        |organization: test_organization
         |links:
         |  repository: test_repository
         |  docker_registry: test_registry
@@ -76,7 +73,6 @@ class NativePackageConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(versionMod.get(baseJson) == Json.fromString("test_version"))
     assert(licenseMod.get(baseJson) == Json.fromString("test_license"))
-    assert(organizationMod.get(baseJson) == Json.fromString("test_organization"))
     assert(linksRegistryMod.get(baseJson) == Json.fromString("test_registry"))
     assert(linksRepositoryMod.get(baseJson) == Json.fromString("test_repository"))
   }
@@ -87,8 +83,7 @@ class NativePackageConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
         List(
           """.version := "foo"""",
           """.license := "bar"""",
-          """.organization := "baz"""",
-          """.links := { repository: "qux", docker_registry: "quux" }""",
+          """.links := { repository: "baz", docker_registry: "qux" }""",
         ),
         "config_with_fields_set"
       )
@@ -96,7 +91,6 @@ class NativePackageConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
     val packageConfig = 
       """version: test_version
         |license: test_license
-        |organization: test_organization
         |links:
         |  repository: test_repository
         |  docker_registry: test_registry
@@ -115,9 +109,8 @@ class NativePackageConfigSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(versionMod.get(baseJson) == Json.fromString("foo"))
     assert(licenseMod.get(baseJson) == Json.fromString("bar"))
-    assert(organizationMod.get(baseJson) == Json.fromString("baz"))
-    assert(linksRepositoryMod.get(baseJson) == Json.fromString("qux"))
-    assert(linksRegistryMod.get(baseJson) == Json.fromString("quux"))
+    assert(linksRepositoryMod.get(baseJson) == Json.fromString("baz"))
+    assert(linksRegistryMod.get(baseJson) == Json.fromString("qux"))
   }
 
   override def afterAll(): Unit = {
