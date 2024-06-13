@@ -280,7 +280,7 @@ object ViashTest extends Logging {
           dest = Some("test_executable"),
           text = resourcesOnlyTest.resources.head.text
         )
-        val configYaml = ConfigMeta.toMetaFile(appliedConfig.config, Some(dir))
+        val configYaml = ConfigMeta.toMetaFile(appliedConfig, Some(dir))
 
         // assemble full resources list for test
         val confFinal = resourcesLens.set(
