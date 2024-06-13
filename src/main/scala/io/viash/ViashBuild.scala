@@ -42,7 +42,7 @@ object ViashBuild extends Logging {
     val exec_path = resources.mainScript.map(scr => Paths.get(output, scr.resourcePath).toString)
 
     // convert config to a yaml wrapped inside a PlainFile
-    val configYaml = ConfigMeta.toMetaFile(appliedConfig.config, Some(dir))
+    val configYaml = ConfigMeta.toMetaFile(appliedConfig, Some(dir))
 
     // write resources to output directory
     IO.writeResources(configYaml :: resources.resources, dir)

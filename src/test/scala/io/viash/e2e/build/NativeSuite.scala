@@ -11,6 +11,7 @@ import io.viash.config.Config
 import scala.io.Source
 import io.viash.helpers.{IO, Exec, Logger}
 import io.viash.exceptions.ConfigParserException
+import java.nio.file.Files
 
 class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
@@ -259,6 +260,68 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     assert(testOutput.stderr.contains("Warning: no resources specified!"))
+  }
+
+  test("Check data in build_info for executable runners") {
+    val newConfigFilePath = configDeriver.derive(Nil, "build_info_native")
+    Files.write(temporaryConfigFolder.resolve("_viash.yaml"), Array.emptyByteArray)
+
+    val outputFolder = temporaryConfigFolder.resolve("output_build_info_native")
+    
+    val testOutput = TestHelper.testMain(
+      workingDir = Some(temporaryConfigFolder),
+      "build",
+      "-o", outputFolder.toString,
+      "--runner", "executable",
+      newConfigFilePath
+    )
+
+    val executable = outputFolder.resolve("testbash").toFile
+    val buildConfig = outputFolder.resolve(".config.vsh.yaml").toFile
+
+    assert(executable.exists())
+    assert(buildConfig.exists())
+
+    val buildConfigFile = Source.fromFile(buildConfig)
+    try {
+      val buildOutput = buildConfigFile.mkString
+      assert(buildOutput.contains("runner: \"executable\""))
+      assert(buildOutput.contains("engine: \"native|docker|throwawayimage\""))
+      assert(buildOutput.contains("executable: \"output_build_info_native/testbash\""))
+    } finally {
+      buildConfigFile.close()
+    }
+  }
+
+  test("Check data in build_info for nextflow runners") {
+    val newConfigFilePath = configDeriver.derive(Nil, "build_info_nextflow")
+    Files.write(temporaryConfigFolder.resolve("_viash.yaml"), Array.emptyByteArray)
+
+    val outputFolder = temporaryConfigFolder.resolve("output_build_info_nextflow")
+    
+    val testOutput = TestHelper.testMain(
+      workingDir = Some(temporaryConfigFolder),
+      "build",
+      "-o", outputFolder.toString,
+      "--runner", "nextflow",
+      newConfigFilePath
+    )
+
+    val executable = outputFolder.resolve("main.nf").toFile
+    val buildConfig = outputFolder.resolve(".config.vsh.yaml").toFile
+
+    assert(executable.exists())
+    assert(buildConfig.exists())
+
+    val buildConfigFile = Source.fromFile(buildConfig)
+    try {
+      val buildOutput = buildConfigFile.mkString
+      assert(buildOutput.contains("runner: \"nextflow\""))
+      assert(buildOutput.contains("engine: \"native|docker|throwawayimage\""))
+      assert(buildOutput.contains("executable: \"output_build_info_nextflow/main.nf\""))
+    } finally {
+      buildConfigFile.close()
+    }
   }
 
   override def afterAll(): Unit = {

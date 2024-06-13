@@ -42,7 +42,7 @@ object ViashRun extends Logging {
     var code = -1
     try {
       // convert config to a yaml wrapped inside a PlainFile
-      val configYaml = ConfigMeta.toMetaFile(appliedConfig.config, Some(dir))
+      val configYaml = ConfigMeta.toMetaFile(appliedConfig, Some(dir))
 
       // write executable and resources to temporary directory
       IO.writeResources(configYaml :: resources.resources, dir)
