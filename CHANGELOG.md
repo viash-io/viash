@@ -6,7 +6,7 @@ TODO add summary
 
 * `resources_test`: This field is removed again from the `_viash.yaml` as it was decided to impliment this temporary functionality using the `info` field (PR #711).
 
-* `testbenches`: Add a testbench to verify dependencies in dependencies from scratch (PR #xxx).
+* `testbenches`: Add a testbench to verify dependencies in dependencies from scratch (PR #721).
   The components are built from scratch and the dependencies are resolved from the local repositories.
 
 # Viash 0.9.0-RC4 (2024-05-29): Improvements for CI
