@@ -1,13 +1,13 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.9.0-RC5 (2024-06-13): Improvements for CI
 
-TODO add summary
+Dependencies now use `vsh` as the default organization level. This means that the organization level is now optional in the `repo` field of the dependencies.
+Improved how the docker image name is generated to be more predictable.
 
 ## MINOR CHANGES
 
 * `resources_test`: This field is removed again from the `_viash.yaml` as it was decided to impliment this temporary functionality using the `info` field (PR #711).
 
 * `docker_engine`: Deprecate `registry`, `organization` and `tag` fields in the `docker_engine` (PR #712). Currently these are hardly ever used and instead the `image` field is used to specify the full image name.
-* ```
 
 * `docker_engine`: Add `target_package` field to the `docker_engine` (PR #712). This field, together with the `target_organization` is used to specify the full built container image name. The fields use proper fallback for the values set in the component config and package config.
 
