@@ -4,7 +4,7 @@ TODO add summary
 
 ## BUG FIXES
 
-* `docker_engine`: Fix a bug in how the namespace separator is handled (PR #xxx).
+* `docker_engine`: Fix a bug in how the namespace separator is handled (PR #722).
 
 # Viash 0.9.0-RC5 (2024-06-13): Improvements for CI
 
