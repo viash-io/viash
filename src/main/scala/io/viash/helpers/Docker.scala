@@ -71,7 +71,7 @@ object Docker {
     } orElse {
       name
     } orElse {
-      config.flatMap(conf => conf.namespace.map(_ + namespaceSeparator + conf.name))
+      config.flatMap(conf => conf.namespace.map(_ + namespaceSeparator.get + conf.name))
     } orElse {
       config.map(_.name)
     }
