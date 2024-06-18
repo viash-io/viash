@@ -1,3 +1,7 @@
+# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+
+TODO add summary
+
 # Viash 0.9.0-RC6 (2024-06-17): Hotfix for docker image name generation
 
 Fix an issue where docker image names were not generated correctly.
