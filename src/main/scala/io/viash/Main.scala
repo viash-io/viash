@@ -205,14 +205,14 @@ object Main extends Logging {
           if (x.runner.isDefined || x.engine.isDefined) {
             throw new IllegalArgumentException("Error: --platform cannot be used together with --runner or --engine.")
           }
-          warn("Warning: --platform is deprecated and will be removed in a future version. Use --runner or --engine instead.")
+          warn("Warning: --platform is deprecated in Viash 0.9.0, will be removed in Viash 0.10.0. Use --runner or --engine instead.")
         }
       case Some(x: ViashNs) =>
         if (x.platform.isDefined) {
           if (x.runner.isDefined || x.engine.isDefined) {
             throw new IllegalArgumentException("Error: --platform cannot be used together with --runner or --engine.")
           }
-          warn("Warning: --platform is deprecated and will be removed in a future version. Use --runner or --engine instead.")
+          warn("Warning: --platform is deprecated in Viash 0.9.0, will be removed in Viash 0.10.0. Use --runner or --engine instead.")
         }
       case _ => 
     }
@@ -223,7 +223,7 @@ object Main extends Logging {
           if (cli.namespace.exec.applyRunner() || cli.namespace.exec.applyEngine()) {
             throw new IllegalArgumentException("Error: --platform cannot be used together with --runner or --engine.")
           }
-          warn("Warning: --apply_platform is deprecated and will be removed in a future version. Use --apply_runner or --apply_engine instead.")
+          warn("Warning: --apply_platform is deprecated in Viash 0.9.0, will be removed in Viash 0.10.0n. Use --apply_runner or --apply_engine instead.")
         }
       case _ =>
     }
