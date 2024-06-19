@@ -2,6 +2,12 @@
 
 TODO add summary
 
+## BUG FIXES
+
+* `platforms`: Re-introduce the `--platform` and `--apply_platform` arguments to improve backwards compatibility (PR #725).
+  When the argument is used, a deprecation warning message is printed on stderr.
+  Cannot be used together with `--engine` or `--runner` and/or `--apply_engine` or `--apply_runner`.
+
 # Viash 0.9.0-RC6 (2024-06-17): Hotfix for docker image name generation
 
 Fix an issue where docker image names were not generated correctly.
