@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## NEW FUNCTIONALITY
+
+* `NextflowPlatform`: Added `runIf` functionality to `runEach` (PR #660).
+
 ## BUG FIXES
 
 * `platforms`: Re-introduce the `--platform` and `--apply_platform` arguments to improve backwards compatibility (PR #725).
@@ -110,10 +114,6 @@ The default `multiple_sep` has been changed from `:` to `;` to avoid conflicts w
   ```
 
 * `functionality`: Remove the `functionality` layer from the config and move all fields to the top layer (PR #649).
-
-## NEW FUNCTIONALITY
-
-* `NextflowPlatform`: Added `runIf` functionality to `runEach`.
 
 ## MINOR CHANGES
 
