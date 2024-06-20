@@ -197,7 +197,7 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       // | view{"chInitialOutput: ${it.take(3)}"}
 
     // join the output [prev_id, new_id, output] with the previous state [prev_id, state, ...]
-    def chNewState = safeJoin(chInitialOutput, chModifiedFiltered, key_)
+    def chNewState = safeJoin(chInitialOutput, chRunFiltered, key_)
       // input tuple format: [join_id, id, output, prev_state, ...]
       // output tuple format: [join_id, id, new_state, ...]
       | map{ tup ->
