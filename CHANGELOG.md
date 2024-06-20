@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## BREAKING CHANGES
+
+* `NextflowPlatform`: Swap the order of execution of `runIf` and `filter` when calling `.run()`. This means that `runIf` is now executed before `filter` (PR #660).
+
 ## NEW FUNCTIONALITY
 
 * `NextflowPlatform`: Added `runIf` functionality to `runEach` (PR #660).
