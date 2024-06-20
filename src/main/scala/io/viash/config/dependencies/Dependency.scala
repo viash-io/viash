@@ -60,7 +60,7 @@ import io.viash.exceptions.MissingBuildYamlException
 )
 case class Dependency(
   @description("The full name of the dependency component. This should include the namespace.")
-  @example("name: \"my_namespace\"component", "yaml")
+  @example("""name: "my_namespace/component"""", "yaml")
   name: String,
 
   @description("An alternative name for the dependency component. This can include a namespace if so needed.")
@@ -92,6 +92,11 @@ case class Dependency(
   if (alias.isDefined) {
     // check functionality name
     require(alias.get.matches("^[A-Za-z][A-Za-z0-9_]*$"), message = f"alias '${alias.get}' must begin with a letter and consist only of alphanumeric characters or underscores.")
+  }
+
+  if (repository.isRight) {
+    val r = repository.toOption.get
+    assert(!r.isInstanceOf[RepositoryWithName], "Repository should not be a RepositoryWithName")
   }
 
   // Shorthand for getting the actual repository from 'repository'.

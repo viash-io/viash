@@ -2,16 +2,67 @@
 
 TODO add summary
 
+## BUG FIXES
+
+* `platforms`: Re-introduce the `--platform` and `--apply_platform` arguments to improve backwards compatibility (PR #725).
+  When the argument is used, a deprecation warning message is printed on stderr.
+  Cannot be used together with `--engine` or `--runner` and/or `--apply_engine` or `--apply_runner`.
+
+# Viash 0.9.0-RC6 (2024-06-17): Hotfix for docker image name generation
+
+Fix an issue where docker image names were not generated correctly.
+
+## BUG FIXES
+
+* `docker_engine`: Fix a bug in how the namespace separator is handled (PR #722).
+
+# Viash 0.9.0-RC5 (2024-06-13): Improvements for CI
+
+Dependencies now use `vsh` as the default organization level. This means that the organization level is now optional in the `repo` field of the dependencies.
+Improved how the docker image name is generated to be more predictable.
+
+## MINOR CHANGES
+
+* `resources_test`: This field is removed again from the `_viash.yaml` as it was decided to impliment this temporary functionality using the `info` field (PR #711).
+
+* `docker_engine`: Deprecate `registry`, `organization` and `tag` fields in the `docker_engine` (PR #712). Currently these are hardly ever used and instead the `image` field is used to specify the full image name.
+
+* `docker_engine`: Add `target_package` field to the `docker_engine` (PR #712). This field, together with the `target_organization` is used to specify the full built container image name. The fields use proper fallback for the values set in the component config and package config.
+
+* `organization`: Remove the `organization` field from the component config (PR #712). The value is now directly used by the `docker_engine` as a fallback from the `target_organization` field.
+
+## BUG FIXES
+
+* `build_info`: Correctly set the `.build_info.executable` to `main.nf` when building a component with a Nextflow runner (PR #720).
+
+* `vsh organization`: ViashHub repositories now use `vsh` as the default organization (PR #718).
+  Instead of having to specify `repo: vsh/repo_name`, you can now just specify `repo: repo_name`, which is now also the prefered way.
+
+* `testbenches`: Add a testbench to verify dependencies in dependencies from scratch (PR #721).
+  The components are built from scratch and the dependencies are resolved from the local repositories.
+
+# Viash 0.9.0-RC4 (2024-05-29): Improvements for CI
+
+These are mainly improvements for issues highlighted by running Viash in a CI environment.
+Additionally, implemented a proper way of caching dependency repositories. The cache is stored under `~/.viash/repositories`.
+
 ## NEW FUNCTIONALITY
 
 * `dependencies`: GitHub and ViashHub repositories now get properly cached (PR #699).
-  The cache is stored in the `~/.viash/cache` directory using sparse-checkout to only fetch the necessary files.
+  The cache is stored in the `~/.viash/repositories` directory using sparse-checkout to only fetch the necessary files.
   During a build, the cache is checked for the repository and if it is found and still up-to-date, the repository is not cloned again and instead the cache is copied to a temporary folder where the files are checked out from the sparse-checkout.
+
+* `resources_test`: Add a `resources_test` field to the `_viash.yaml` to specify resources that are needed during testing (PR #709).
+  Currently it is up to the user or CI to make sure these resources are available in the `resources_test` directory during testing.
 
 ## BUG FIXES
 
 `dependencies`: Fix resolving of dependencies of dependencies (PR #701). The stricter build config was now lacking the necessary information to resolve dependencies of dependencies.
   We added it back as `.build_info.dependencies` in a more structured, anonymized way.
+
+`dependencies`: Fix the `name` field of repositories possibly being outputted in the build config (PR #703).
+
+`symlinks`: Allow following of symlinks when finding configs (PR #704). This improves symlink functionality for `viash ns ...` and dependency resolving.
 
 # Viash 0.9.0-RC3 (2024-04-26): Various bug fixes and minor improvements
 
@@ -117,7 +168,17 @@ Additionally changes are made to sanitize the built config output and include ad
 
 * `config`: Anonymize paths in the config when outputting the config (PR #625).
 
-# Viash 0.8.6 (yyyy-MM-dd): TODO Add title
+# Viash 0.8.7 (yyyy-MM-dd): TODO Add title
+
+## BUG FIXES
+
+* `viash build`: Fix error handling of non-generic errors in the build process or while pushing docker containers (PR #696).
+
+# Viash 0.8.6 (2024-04-26): Bug fixes and improvements for CI
+
+Fix some issues in some edge cases.
+Add options for testing in a CI environment. Given that these options are not meant for general use, they are hidden from the help message.
+Some improvements are made to run in Nextflow Fusion.
 
 ## DOCUMENTATION
 

@@ -63,4 +63,6 @@ case class GithubRepositoryWithName(
     copy("", `type`, this.repo, tag, path, localPath)
   }
 
+  def withoutName = GithubRepository(`type`, repo, tag, path, localPath)
+
 }

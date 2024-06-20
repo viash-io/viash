@@ -27,6 +27,7 @@ import io.circe.Json
 import io.circe.JsonObject
 import io.viash.config.resources.NextflowScript
 import io.viash.helpers.IO
+import io.viash.runners.NextflowRunner
 
 object ConfigMeta {
   // create a yaml printer for writing the viash.yaml file
@@ -71,14 +72,16 @@ object ConfigMeta {
     })
   }
 
-  def toMetaFile(config: Config, buildDir: Option[Path]): PlainFile = {
+  def toMetaFile(appliedConfig: AppliedConfig, buildDir: Option[Path]): PlainFile = {
+    val config = appliedConfig.config
+
     // get resources
     val placeholderMap = config.resources.filter(_.text.isDefined).map{ res =>
       (res, "VIASH_PLACEHOLDER~" + res.filename + "~")
     }.toMap
 
-    val executableName = config.mainScript match {
-      case Some(n: NextflowScript) => "main.nf"
+    val executableName = appliedConfig.runner match {
+      case Some(_: NextflowRunner) => "main.nf"
       case _ => config.name
     }
 

@@ -24,6 +24,18 @@ import io.viash.helpers.Logging
 
 trait ViashCommand {
   _: DocumentedSubcommand =>
+  val platform = registerOpt[String](
+    name = "platform",
+    short = Some('p'),
+    default = None,
+    descr =
+      "Deprecated. Use --runner and --engine instead. " +
+      "Specifies which platform amongst those specified in the config to use. " +
+      "If this is not provided, the first platform will be used. " +
+      "If no platforms are defined in the config, the native platform will be used. " +
+      "In addition, the path to a platform yaml file can also be specified.",
+    required = false
+  )
   val runner = registerOpt[String](
     name = "runner",
     default = None,
@@ -95,6 +107,18 @@ trait ViashNs {
     short = Some('s'),
     descr = "A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
     default = None
+  )
+  val platform = registerOpt[String](
+    name = "platform",
+    short = Some('p'),
+    descr =
+      "Deprecated. Use --runner and --engine instead. " +
+      "Acts as a regular expression to filter the platform ids specified in the found config files. " +
+        "If this is not provided, all platforms will be used. " +
+        "If no platforms are defined in a config, the native platform will be used. " +
+        "In addition, the path to a platform yaml file can also be specified.",
+    default = None,
+    required = false
   )
   val runner = registerOpt[String](
     name = "runner",
@@ -423,6 +447,16 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
           |command for all Viash components.""".stripMargin,
         """viash ns exec 'echo {path} \\;'
           |viash ns exec 'chmod +x {main-script} +'""".stripMargin
+      )
+      val applyPlatform = registerOpt[Boolean] (
+        name = "apply_platform",
+        short = Some('a'),
+        default = Some(false),
+        descr = 
+          """Deprecated. Use --apply_runner and --apply_engine instead.
+            |Fills in the {platform} and {output} field by applying each platform to the
+            |config separately. Note that this results in the provided command being applied
+            |once for every platform that matches the --platform regex.""".stripMargin
       )
       val applyRunner = registerOpt[Boolean] (
         name = "apply_runner",

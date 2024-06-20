@@ -71,7 +71,7 @@ object DependencyResolver extends Logging {
     val config2 = dependenciesLens.modify(_
       .map(d => 
         d.repository match {
-          case Left(name) => d.copy(repository = Right(repositoriesLens.get(config1).find(r => r.name == name).get))
+          case Left(name) => d.copy(repository = Right(repositoriesLens.get(config1).find(r => r.name == name).get.withoutName))
           case _ => d
         }
       )

@@ -18,7 +18,7 @@
 package io.viash.helpers
 
 import java.io.{BufferedOutputStream, FileOutputStream, File, IOException}
-import java.nio.file.{FileVisitResult, Files, Path, Paths, SimpleFileVisitor}
+import java.nio.file.{FileVisitResult, Files, Path, Paths, SimpleFileVisitor, FileVisitOption}
 import java.nio.file.attribute.BasicFileAttributes
 import scala.reflect.io.Directory
 import java.net.URI
@@ -312,7 +312,7 @@ object IO extends Logging {
    * @return a list of paths that match the filter
    */
   def find(sourceDir: Path, filter: (Path, BasicFileAttributes) => Boolean): List[Path] = {
-    val it = Files.find(sourceDir, Integer.MAX_VALUE, (p, b) => filter(p, b)).iterator()
+    val it = Files.find(sourceDir, Integer.MAX_VALUE, (p, b) => filter(p, b), FileVisitOption.FOLLOW_LINKS).iterator()
     it.asScala.toList
   }
 
