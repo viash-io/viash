@@ -37,3 +37,4 @@ work
 
 # ignore automatically generated WorkflowHelper.nf
 src/main/resources/io/viash/runners/nextflow/WorkflowHelper.nf
+src/main/resources/io/viash/platforms/nextflow/WorkflowHelper.nf
