@@ -20,16 +20,17 @@ package io.viash.config
 import io.viash.schemas._
 import io.viash.helpers.data_structures.OneOrMore
 
-@description("References to external resources related to the component.")
+@description("A list of scholarly sources or publications relevant to the tools or analysis defined in the component. This is important for attribution, scientific reproducibility and transparency.")
 @example(
-  """doi: 10.1000/xx.123456.789
-    |bibtex: |
-    |  @article{foo,
-    |    title={Foo},
-    |    author={Bar},
-    |    journal={Baz},
-    |    year={2024}
-    |  }
+  """references:
+    |  doi: 10.1000/xx.123456.789
+    |  bibtex: |
+    |    @article{foo,
+    |      title={Foo},
+    |      author={Bar},
+    |      journal={Baz},
+    |      year={2024}
+    |    }
     |""".stripMargin, "yaml")
 @since("Viash 0.9.0")
 case class References(

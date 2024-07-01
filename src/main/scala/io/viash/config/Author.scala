@@ -25,14 +25,15 @@ import io.viash.schemas._
 @description("Author metadata.")
 @since("Viash 0.3.2")
 @example(
-  """name: Jane Doe
-    |role: [author, maintainer]
-    |email: jane@doe.com
-    |info:
-    |  github: janedoe
-    |  twitter: janedoe
-    |  orcid: XXAABBCCXX
-    |  groups: [ one, two, three ]
+  """authors:
+    |- name: Jane Doe
+    |  role: [author, maintainer]
+    |  email: jane@doe.com
+    |  info:
+    |    github: janedoe
+    |    twitter: janedoe
+    |    orcid: XXAABBCCXX
+    |    groups: [ one, two, three ]
     |""".stripMargin, "yaml")
 case class Author(
   @description("Full name of the author, usually in the name of FirstName MiddleName LastName.")

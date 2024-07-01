@@ -21,11 +21,12 @@ import io.viash.schemas._
 
 @description("Links to external resources related to the component.")
 @example(
-  """repository: "https://github.com/viash-io/viash"
-    |docker_registry: "https://ghcr.io"
-    |homepage: "https://viash.io"
-    |documentation: "https://viash.io/reference/"
-    |issue_tracker: "https://github.com/viash-io/viash/issues"
+  """links:
+    |  repository: "https://github.com/viash-io/viash"
+    |  docker_registry: "https://ghcr.io"
+    |  homepage: "https://viash.io"
+    |  documentation: "https://viash.io/reference/"
+    |  issue_tracker: "https://github.com/viash-io/viash/issues"
     |""".stripMargin, "yaml")
 @since("Viash 0.9.0")
 case class Links(

@@ -92,7 +92,7 @@ pwalk(langs, function(id, label, config_path, script_path, ...) {
 The `par` object (or `par_` environment variables in Bash) will contain argument values passed at runtime. For example, passing `--input foo.txt` will result in a `par["input"]` being equal to `"foo.txt"`.
 
 :::{.callout-tip}
-Try adding more [arguments]({{< var reference.arguments >}}) with different file types to see what effect this has on the resulting placeholder.
+Try adding more [arguments]({{< var reference.arguments >}}) with different types to see what effect this has on the resulting placeholder.
 :::
 
 ## Meta variables in `meta`

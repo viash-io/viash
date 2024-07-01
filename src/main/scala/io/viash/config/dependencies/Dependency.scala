@@ -29,31 +29,35 @@ import io.viash.exceptions.MissingBuildYamlException
     |The dependency components are collected and copied to the output folder during the Viash build step.
     |""".stripMargin)
 @exampleWithDescription(
-  """name: qc/multiqc
-    |repository: 
-    |  type: github
-    |  repo: openpipelines-bio/modules
-    |  tag: 0.3.0
+  """dependencies:
+    |  - name: qc/multiqc
+    |    repository: 
+    |      type: github
+    |      repo: openpipelines-bio/modules
+    |      tag: 0.3.0
     |""".stripMargin,
   "yaml",
   "Definition of dependency with a fully defined repository"
 )
 @exampleWithDescription(
-  """name: qc/multiqc
-    |repository: "github://openpipelines-bio/modules:0.3.0"
+  """dependencies:
+    |  - name: qc/multiqc
+    |    repository: "github://openpipelines-bio/modules:0.3.0"
     |""".stripMargin,
   "yaml",
   "Definition of a dependency with a repository using sugar syntax."
 )
 @exampleWithDescription(
-  """name: qc/multiqc
-    |repository: "openpipelines-bio"
+  """dependencies:
+    |  - name: qc/multiqc
+    |    repository: "openpipelines-bio"
     |""".stripMargin,
   "yaml",
   "Definition of a dependency with a repository defined as 'openpipelines-bio' under `.repositories`."
 )
 @exampleWithDescription(
-  """name: qc/multiqc
+  """dependencies:
+    |  - name: qc/multiqc
     |""".stripMargin,
   "yaml",
   "Definition of a local dependency. This dependency is present in the current code base and will be built when `viash ns build` is run."
