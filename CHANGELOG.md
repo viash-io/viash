@@ -8,8 +8,6 @@ TODO add summary
   When the argument is used, a deprecation warning message is printed on stderr.
   Cannot be used together with `--engine` or `--runner` and/or `--apply_engine` or `--apply_runner`.
 
-* `nextflow` runner: set docker.fixOwnership to `true` when using the `docker` profile (PR #727).
-
 # Viash 0.9.0-RC6 (2024-06-17): Hotfix for docker image name generation
 
 Fix an issue where docker image names were not generated correctly.
