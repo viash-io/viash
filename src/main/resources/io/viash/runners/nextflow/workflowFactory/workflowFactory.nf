@@ -166,11 +166,15 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       }
 
     // TODO: move some of the _meta.join_id wrangling to the safeJoin() function.
-    def chInitialOutput = chArgsWithDefaults
+    def chInitialOutputMulti = chArgsWithDefaults
       | _debug(workflowArgs, "processed")
       // run workflow
       | innerWorkflowFactory(workflowArgs)
-      // check output tuple
+    def chInitialOutputListPossibleNested = [chInitialOutputMulti]
+    def chInitialOutputList = chInitialOutputMulti instanceof List ? chInitialOutputMulti : chInitialOutputListPossibleNested
+    assert chInitialOutputMulti.size() > 0: "${key_}: should have emitted at least one output channel"
+    def chInitialOutput = chInitialOutputList > 1 ? chInitialOutputList[0].mix(*chInitialOutputList.tail()) : chInitialOutputList 
+    def chInitialOutputProcessed = chInitialOutput
       | map { id_, output_ ->
 
         // see if output map contains metadata
@@ -184,7 +188,7 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
         output_ = output_.findAll{k, v -> k != "_meta"}
 
         // check value types
-        output_ = _processOutputValues(output_, meta.config, id_, key_)
+        output_ = _checkValidOutputArgument(output_, meta.config, id_, key_)
 
         // simplify output if need be
         if (workflowArgs.auto.simplifyOutput && output_.size() == 1) {
@@ -196,7 +200,7 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       // | view{"chInitialOutput: ${it.take(3)}"}
 
     // join the output [prev_id, new_id, output] with the previous state [prev_id, state, ...]
-    def chNewState = safeJoin(chInitialOutput, chModifiedFiltered, key_)
+    def chNewState = safeJoin(chInitialOutputProcessed, chModifiedFiltered, key_)
       // input tuple format: [join_id, id, output, prev_state, ...]
       // output tuple format: [join_id, id, new_state, ...]
       | map{ tup ->
@@ -204,25 +208,38 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
         tup.take(2) + [new_state] + tup.drop(4)
       }
 
+    def chJoined = chNewState
+      | groupTuple(by: 1, sort: 'hash', size: chInitialOutputMulti.size(), remainder: true)
+      | map {join_ids, id, states ->
+        def newJoinId = join_ids.unique{a, b -> a <=> b}
+        assert newJoinId.size() == 1: "Multiple join IDs were emitted for '$id'."
+        newJoinId = newJoinId[0]
+        def newState = states.inject([:]){ old_state, state_to_add ->
+          def overlap = old_state.keySet().intersect(state_to_add.keySet())
+          assert overlap.isEmpty() : "ID $id: multiple entries for for argument(s) $overlap were emitted."
+          def return_state = old_state + state_to_add
+          return return_state 
+        }
+        return [newJoinId, id, newState]
+      }
+    
     if (workflowArgs.auto.publish == "state") {
-      def chPublish = chNewState
+      def chPublishStates = chJoined
         // input tuple format: [join_id, id, new_state, ...]
         // output tuple format: [join_id, id, new_state]
         | map{ tup ->
           tup.take(3)
         }
 
-      safeJoin(chPublish, chArgsWithDefaults, key_)
+      safeJoin(chPublishStates, chArgsWithDefaults, key_)
         // input tuple format: [join_id, id, new_state, orig_state, ...]
         // output tuple format: [id, new_state, orig_state]
         | map { tup ->
           tup.drop(1).take(3)
-      }
+        }
         | publishStatesByConfig(key: key_, config: meta.config)
     }
-
-    // remove join_id and meta
-    chReturn = chNewState
+    def chReturn = chPublishStates
       | map { tup ->
         // input tuple format: [join_id, id, new_state, ...]
         // output tuple format: [id, new_state, ...]
