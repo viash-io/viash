@@ -98,7 +98,7 @@ def publishFilesByConfig(Map args) {
                 // in the state as-is, but is not something that needs 
                 // to be copied from the source path to the dest path
                 if (par.type != "file") {
-                  return [[key: plainName_, value: value, inputPath: [], outputFilename: []]]
+                  return [[inputPath: [], outputFilename: []]]
                 }
                 // if the orig state does not contain this filename,
                 // it's an optional argument for which the user specified

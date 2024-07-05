@@ -52,10 +52,14 @@ def publishStates(Map args) {
           def id_ = tup[0]
           def state_ = tup[1]
 
+          // the input files and the target output filenames
+          def inputoutputFilenames_ = collectInputOutputPaths(state_, id_ + "." + key_).transpose()
+
           def yamlFilename = yamlTemplate_
             .replaceAll('\\$id', id_)
             .replaceAll('\\$key', key_)
 
+            // TODO: do the pathnames in state_ match up with the outputFilenames_?
 
           // convert state to yaml blob
           def yamlBlob_ = toRelativeTaggedYamlBlob([id: id_] + state_, java.nio.file.Paths.get(yamlFilename))
@@ -67,7 +71,6 @@ def publishStates(Map args) {
   }
   return publishStatesWf
 }
-
 process publishStatesProc {
   // todo: check publishpath?
   publishDir path: "${getPublishDir()}/", mode: "copy"
@@ -110,7 +113,7 @@ def publishStatesByConfig(Map args) {
             .replaceAll('\\$key', key_)
           def yamlDir = java.nio.file.Paths.get(yamlFilename).getParent()
 
-          // the processed state is a list of [key, value, inputPath, outputFilename] tuples, where
+          // the processed state is a list of [key, value] tuples, where
           //   - key is a String
           //   - value is any object that can be serialized to a Yaml (so a String/Integer/Long/Double/Boolean, a List, a Map, or a Path)
           //   - (key, value) are the tuples that will be saved to the state.yaml file
@@ -138,7 +141,39 @@ def publishStatesByConfig(Map args) {
                 if (!origState_.containsKey(plainName_)) {
                   return []
                 }
-                return [[key: plainName_, value: value]]
+                def filenameTemplate = origState_[plainName_]
+                // if the pararameter is multiple: true, fetch the template
+                if (par.multiple && filenameTemplate instanceof List) {
+                  filenameTemplate = filenameTemplate[0]
+                }
+                // instantiate the template
+                def filename = filenameTemplate
+                  .replaceAll('\\$id', id_)
+                  .replaceAll('\\$key', key_)
+                if (par.multiple) {
+                  // if the parameter is multiple: true, the filename
+                  // should contain a wildcard '*' that is replaced with
+                  // the index of the file
+                  assert filename.contains("*") : "Module '${key_}' id '${id_}': Multiple output files specified, but no wildcard '*' in the filename: ${filename}"
+                  def outputPerFile = value.withIndex().collect{ val, ix ->
+                    def filename_ix = filename.replace("*", ix.toString())
+                    def value_ = java.nio.file.Paths.get(filename_ix)
+                    // if id contains a slash
+                    if (yamlDir != null) {
+                      value_ = yamlDir.relativize(value_)
+                    }
+                    return value_
+                  }
+                  return [["key": plainName_, "value": outputPerFile]]
+                } else {
+                  def value_ = java.nio.file.Paths.get(filename)
+                  // if id contains a slash
+                  if (yamlDir != null) {
+                    value_ = yamlDir.relativize(value_)
+                  }
+                  def inputPath = value instanceof File ? value.toPath() : value
+                  return [["key": plainName_, value: value_]]
+                }
               }
               
           

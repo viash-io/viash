@@ -1,6 +1,6 @@
 Map _checkValidOutputArgument(Map outputs, Map config, String id, String key) {
     outputs = outputs.collectEntries { name, value ->
-      def par = config.allArguments.find { outputs.get(it.plainName) != null && it.plainName == name && it.direction == "output" }
+      def par = config.allArguments.find { it.plainName == name && it.direction == "output" }
       assert par != null : "Error in module '${key}' id '${id}': '${name}' is not a valid output argument"
       
       value = _checkArgumentType("output", par, value, "in module '$key' id '$id'")
