@@ -22,6 +22,7 @@ import java.nio.file.Paths
 import io.viash.schemas.since
 import io.viash.runners.Runner
 import io.viash.engines.Engine
+import io.viash.config_mods.ConfigModParser.root
 
 final case class NsExecData(
   configFullPath: String,
@@ -64,23 +65,38 @@ final case class NsExecData(
 
 object NsExecData {
   def apply(configPath: String, config: Config, runner: Option[Runner], engine: Option[Engine]): NsExecData = {
-    val configPath_ = Paths.get(configPath)
-    val dirPath = configPath_.getParent()
-    val mainScript = config.mainScript.flatMap(s => s.resolvedPath).map(dirPath.resolve(_))
+    val parentPath = config.package_config.flatMap(_.rootDir)
+    val configPathRel = parentPath match {
+      case Some(rootDir) => rootDir.relativize(Paths.get(configPath))
+      case None => Paths.get(configPath)
+    }
+    val configPathAbs = Paths.get(configPath)
+    val dirPathRel = configPathRel.getParent()
+    val dirPathAbs = configPathAbs.getParent().toAbsolutePath()
+    val mainScript = config.mainScript.flatMap(_.resolvedPath)
+    val mainScriptRel = mainScript.map(dirPathRel.resolve(_))
+    val mainScriptAbs = mainScript.map(dirPathAbs.resolve(_).toAbsolutePath())
+    val outputDir = config.build_info.flatMap(_.output).map(Paths.get(_))
+    val outputRel = (outputDir, parentPath) match {
+      case (Some(outputDir), Some(rootDir)) => Some(rootDir.relativize(outputDir))
+      case (Some(outputDir), None) => Some(outputDir)
+      case _ => None
+    }
+    val outputAbs = outputDir.map(_.toAbsolutePath)
     apply(
-      configFullPath = configPath,
-      absoluteConfigFullPath = configPath_.toAbsolutePath.toString,
-      dir = dirPath.toString,
-      absoluteDir = dirPath.toAbsolutePath.toString,
-      mainScript = mainScript.map(_.toString).getOrElse(""),
-      absoluteMainScript = mainScript.map(_.toAbsolutePath.toString).getOrElse(""),
+      configFullPath = configPathRel.toString(),
+      absoluteConfigFullPath = configPathAbs.toAbsolutePath.toString,
+      dir = dirPathRel.toString,
+      absoluteDir = dirPathAbs.toString,
+      mainScript = mainScriptRel.map(_.toString).getOrElse(""),
+      absoluteMainScript = mainScriptAbs.map(_.toString).getOrElse(""),
       functionalityName = config.name,
       name = config.name,
       namespace = config.namespace,
       runnerId = runner.map(_.id),
       engineId = engine.map(_.id),
-      output = config.build_info.flatMap(_.output),
-      absoluteOutput = config.build_info.flatMap(info => info.output.map(Paths.get(_).toAbsolutePath.toString))
+      output = outputRel.map(_.toString()),
+      absoluteOutput = outputAbs.map(_.toString())
     )
   }
 
