@@ -139,9 +139,8 @@ class MainNSExecNativeSuite extends AnyFunSuite {
     }
   }
 
-  test("Output fields when the working directory is not the namespace directory, so the package config is not found") {
-    // TODO requested relative fields are not relativized at all, except for the output field.
-    // HOWEVER, the output field is not relativized to workingDir, as it only sets the path to search for the package config and any path relativizing is done from where the executable is run.
+  test("Output fields when the working directory is not the namespace directory, so the package config is not found, absolute src path") {
+    // TODO the output field is not relativized to workingDir, as it only sets the path to search for the package config and any path relativizing is done from where the executable is run.
     // Typically, this is the same as the workingDir, but not with sbt test.
     val rootResourceDir = Paths.get(getClass.getResource("/").getPath())
     val testOutput = TestHelper.testMain(
@@ -157,9 +156,9 @@ class MainNSExecNativeSuite extends AnyFunSuite {
 
     for (component <- components) {
       val (stderrRegex, stdoutRegex) = createRegexes(
-        s"""$nsPathRegex/src/$component/$configYaml $nsPathRegex/src/$component/$configYaml
-           |$nsPathRegex/src/$component $nsPathRegex/src/$component
-           |$nsPathRegex/src/$component/code\\.py $nsPathRegex/src/$component/code\\.py
+        s"""src/$component/$configYaml $nsPathRegex/src/$component/$configYaml
+           |src/$component $nsPathRegex/src/$component
+           |src/$component/code\\.py $nsPathRegex/src/$component/code\\.py
            |target/executable/testns/$component .*/target/executable/testns/$component
            |$component testns
            |""".stripMargin.replace("\n", " ").strip()
@@ -169,7 +168,61 @@ class MainNSExecNativeSuite extends AnyFunSuite {
     }
   }
 
-  test("Output fields when the working directory is in a subdirector of the namespace directory, so the package config is found, but not in the working directory") {
+  test("Output fields when the working directory is not the namespace directory, so the package config is not found, relative path") {
+    // TODO the output field is not relativized to workingDir, as it only sets the path to search for the package config and any path relativizing is done from where the executable is run.
+    // Typically, this is the same as the workingDir, but not with sbt test.
+    val rootResourceDir = Paths.get(getClass.getResource("/").getPath())
+    val testOutput = TestHelper.testMain(
+      workingDir = Some(rootResourceDir),
+      "ns", "exec",
+      "--src", "src/test/resources/testns",
+      "-e",
+      "echo {path} {abs-path} {dir} {abs-dir} {main-script} {abs-main-script} {output} {abs-output} {name} {namespace}"
+    )
+
+    val stdout = testOutput.stdout.replaceAll(nsPath, "[nsPath]")
+    val stderr = testOutput.stderr.replaceAll(nsPath, "[nsPath]")
+
+    for (component <- components) {
+      val (stderrRegex, stdoutRegex) = createRegexes(
+        s"""src/$component/$configYaml $nsPathRegex/src/$component/$configYaml
+           |src/$component $nsPathRegex/src/$component
+           |src/$component/code\\.py $nsPathRegex/src/$component/code\\.py
+           |target/executable/testns/$component .*/target/executable/testns/$component
+           |$component testns
+           |""".stripMargin.replace("\n", " ").strip()
+      )
+      assert(stderrRegex.findFirstIn(stderr).isDefined, s"\nRegex: $stderrRegex; text: \n$stderr")
+      assert(stdoutRegex.findFirstIn(stdout).isDefined, s"\nRegex: $stdoutRegex; text: \n$stdout")
+    }
+  }
+
+  test("Output fields when the working directory is in a subdirector of the namespace directory, so the package config is found, but not in the working directory, no src path") {
+    val testOutput = TestHelper.testMain(
+      workingDir = Some(workingDir.resolve("src/ns_add")),
+      "ns", "exec",
+      "-e",
+      "echo {path} {abs-path} {dir} {abs-dir} {main-script} {abs-main-script} {output} {abs-output} {name} {namespace}"
+    )
+
+    val stdout = testOutput.stdout.replaceAll(nsPath, "[nsPath]")
+    val stderr = testOutput.stderr.replaceAll(nsPath, "[nsPath]")
+
+    for (component <- components) {
+      val (stderrRegex, stdoutRegex) = createRegexes(
+        s"""src/$component/$configYaml $nsPathRegex/src/$component/$configYaml
+           |src/$component $nsPathRegex/src/$component
+           |src/$component/code\\.py $nsPathRegex/src/$component/code\\.py
+           |target/executable/testns/$component $nsPathRegex/target/executable/testns/$component
+           |$component testns
+           |""".stripMargin.replace("\n", " ").strip()
+      )
+      assert(stderrRegex.findFirstIn(stderr).isDefined, s"\nRegex: $stderrRegex; text: \n$stderr")
+      assert(stdoutRegex.findFirstIn(stdout).isDefined, s"\nRegex: $stdoutRegex; text: \n$stdout")
+    }
+  }
+
+  test("Output fields when the working directory is in a subdirector of the namespace directory, so the package config is found, but not in the working directory, absolute src path") {
     val testOutput = TestHelper.testMain(
       workingDir = Some(workingDir.resolve("src/ns_add")),
       "ns", "exec",

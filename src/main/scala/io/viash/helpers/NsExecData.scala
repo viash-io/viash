@@ -65,7 +65,9 @@ final case class NsExecData(
 
 object NsExecData {
   def apply(configPath: String, config: Config, runner: Option[Runner], engine: Option[Engine]): NsExecData = {
-    val parentPath = config.package_config.flatMap(_.rootDir)
+    val sourcePath = config.package_config.flatMap(_.source.map(Paths.get(_))).filter(_.isAbsolute())
+    val packagePath = config.package_config.flatMap(_.rootDir)
+    val parentPath = packagePath orElse sourcePath
     val configPathRel = parentPath match {
       case Some(rootDir) => rootDir.relativize(Paths.get(configPath))
       case None => Paths.get(configPath)
@@ -76,10 +78,11 @@ object NsExecData {
     val mainScript = config.mainScript.flatMap(_.resolvedPath)
     val mainScriptRel = mainScript.map(dirPathRel.resolve(_))
     val mainScriptAbs = mainScript.map(dirPathAbs.resolve(_).toAbsolutePath())
+
     val outputDir = config.build_info.flatMap(_.output).map(Paths.get(_))
-    val outputRel = (outputDir, parentPath) match {
-      case (Some(outputDir), Some(rootDir)) => Some(rootDir.relativize(outputDir))
-      case (Some(outputDir), None) => Some(outputDir)
+    val outputRel = (outputDir, packagePath) match {
+      case (Some(outputDir), Some(rootDir)) if outputDir.isAbsolute() => Some(rootDir.relativize(outputDir))
+      case (Some(outputDir), _) => Some(outputDir)
       case _ => None
     }
     val outputAbs = outputDir.map(_.toAbsolutePath)
