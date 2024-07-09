@@ -18,7 +18,7 @@
 package io.viash.helpers
 
 import io.viash.config.Config
-import java.nio.file.Paths
+import java.nio.file.{Path, Paths}
 import io.viash.schemas.since
 import io.viash.runners.Runner
 import io.viash.engines.Engine
@@ -64,10 +64,10 @@ final case class NsExecData(
 }
 
 object NsExecData {
-  def apply(configPath: String, config: Config, runner: Option[Runner], engine: Option[Engine]): NsExecData = {
-    val sourcePath = config.package_config.flatMap(_.source.map(Paths.get(_))).filter(_.isAbsolute())
+  def apply(configPath: String, config: Config, runner: Option[Runner], engine: Option[Engine], workingDir: Option[Path]): NsExecData = {
     val packagePath = config.package_config.flatMap(_.rootDir)
-    val parentPath = packagePath orElse sourcePath
+    val sourcePath = config.package_config.flatMap(_.source.map(Paths.get(_)))
+    val parentPath = packagePath orElse sourcePath.filter(_.isAbsolute()) orElse sourcePath.flatMap(sp => workingDir.map(_.resolve(sp)))
     val configPathRel = parentPath match {
       case Some(rootDir) => rootDir.relativize(Paths.get(configPath))
       case None => Paths.get(configPath)

@@ -140,8 +140,8 @@ class MainNSExecNativeSuite extends AnyFunSuite {
   }
 
   test("Output fields when the working directory is not the namespace directory, so the package config is not found, absolute src path") {
-    // TODO the output field is not relativized to workingDir, as it only sets the path to search for the package config and any path relativizing is done from where the executable is run.
-    // Typically, this is the same as the workingDir, but not with sbt test.
+    // TODO the abs-output field is not combined with workingDir, as it only sets the path to search for the package config and any path relativizing is done from where the executable is run.
+    // Typically, this is the same as the workingDir, but not with sbt test. So normal execution should be fine, we just can't test it.
     val rootResourceDir = Paths.get(getClass.getResource("/").getPath())
     val testOutput = TestHelper.testMain(
       workingDir = Some(rootResourceDir),
@@ -169,8 +169,8 @@ class MainNSExecNativeSuite extends AnyFunSuite {
   }
 
   test("Output fields when the working directory is not the namespace directory, so the package config is not found, relative path") {
-    // TODO the output field is not relativized to workingDir, as it only sets the path to search for the package config and any path relativizing is done from where the executable is run.
-    // Typically, this is the same as the workingDir, but not with sbt test.
+    // TODO the abs-output field is not combined with workingDir, as it only sets the path to search for the package config and any path relativizing is done from where the executable is run.
+    // Typically, this is the same as the workingDir, but not with sbt test. So normal execution should be fine, we just can't test it.
     val rootResourceDir = Paths.get(getClass.getResource("/").getPath())
     val testOutput = TestHelper.testMain(
       workingDir = Some(rootResourceDir),
