@@ -177,24 +177,26 @@ class MainNSExecNativeSuite extends AnyFunSuite {
   test("Output fields when the working directory is not the namespace directory, so the package config is not found, relative path") {
     // TODO the abs-output field is not combined with workingDir, as it only sets the path to search for the package config and any path relativizing is done from where the executable is run.
     // Typically, this is the same as the workingDir, but not with sbt test. So normal execution should be fine, we just can't test it.
-    val rootResourceDir = Paths.get(getClass.getResource("/").getPath())
+    // With the relative paths, the source paths are relative in the literal sense (../.. to root and then go back up) but not very elegant.
+    val rootResourceDir = workingDir.getParent()
     val testOutput = TestHelper.testMain(
       workingDir = Some(rootResourceDir),
       "ns", "exec",
-      "--src", "src/test/resources/testns",
+      "--src", "src/test/resources/testns/src",
       "-e",
       "echo {path} {abs-path} {dir} {abs-dir} {main-script} {abs-main-script} {output} {abs-output} {name} {namespace}"
     )
 
-    val stdout = testOutput.stdout.replaceAll(nsPath, "[nsPath]")
-    val stderr = testOutput.stderr.replaceAll(nsPath, "[nsPath]")
+    val stdout = testOutput.stdout//.replaceAll(nsPath, "[nsPath]")
+    val stderr = testOutput.stderr//.replaceAll(nsPath, "[nsPath]")
 
+    // just check relative paths start with '../', and absolute paths start with '/'
     for (component <- components) {
       val (stderrRegex, stdoutRegex) = createRegexes(
-        s"""src/$component/$configYaml $nsPathRegex/src/$component/$configYaml
-           |src/$component $nsPathRegex/src/$component
-           |src/$component/code\\.py $nsPathRegex/src/$component/code\\.py
-           |target/executable/testns/$component .*/target/executable/testns/$component
+        s"""\\.\\./.*/src/$component/$configYaml /.*/testns/src/$component/$configYaml
+           |\\.\\./.*/src/$component /.*/testns/src/$component
+           |\\.\\./.*/src/$component/code\\.py /.*/testns/src/$component/code\\.py
+           |target/executable/testns/$component /.*/target/executable/testns/$component
            |$component testns
            |""".stripMargin.replace("\n", " ").strip()
       )
