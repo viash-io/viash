@@ -95,7 +95,13 @@ class MainNSExecNativeSuite extends AnyFunSuite {
     val stderr = testOutput.stderr.replaceAll(nsPath, "[nsPath]")
 
     for (component <- components) {
-      val (stderrRegex, stdoutRegex) = createRegexes(s"src/$component/$configYaml src/$component/$configYaml $nsPathRegex/src/$component/$configYaml src/$component $nsPathRegex/src/$component src/$component/code\\.py $nsPathRegex/src/$component/code\\.py $component $component testns")
+      val (stderrRegex, stdoutRegex) = createRegexes(
+        s"""src/$component/$configYaml src/$component/$configYaml $nsPathRegex/src/$component/$configYaml
+           |src/$component $nsPathRegex/src/$component
+           |src/$component/code\\.py $nsPathRegex/src/$component/code\\.py
+           |$component $component testns
+           |""".stripMargin.replace("\n", " ").strip()
+      )
       assert(stderrRegex.findFirstIn(stderr).isDefined, s"\nRegex: $stderrRegex; text: \n$stderr")
       assert(stdoutRegex.findFirstIn(stdout).isDefined, s"\nRegex: $stdoutRegex; text: \n$stdout")
     }
