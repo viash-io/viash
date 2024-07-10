@@ -83,7 +83,7 @@ def findStates(Map params, Map config) {
           if (args.rename_keys) {
             def renameMap = args.rename_keys.collectEntries{renameString ->
               def split = renameString.split(":")
-assert split.size() == 2: "Argument 'rename_keys' should be of the form 'newKey:oldKey', or 'newKey:oldKey;newKey:oldKey' in case of multiple values"
+              assert split.size() == 2: "Argument 'rename_keys' should be of the form 'newKey:oldKey', or 'newKey:oldKey;newKey:oldKey' in case of multiple values"
               split
             }
 
