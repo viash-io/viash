@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## MINOR CHANGES
+
+* `ExecutableRunner`: Make Docker runtime arguments configurable via the `---docker_run_args` argument (PR #740).
+
 ## BUG FIXES
 
 * `platforms`: Re-introduce the `--platform` and `--apply_platform` arguments to improve backwards compatibility (PR #725).
