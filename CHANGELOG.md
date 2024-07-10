@@ -4,7 +4,7 @@ TODO add summary
 
 ## NEW FUNCTIONALITY
 
-* `config schema`: Add `label` & `summary` fields for Config, PackageConfig, argument groups, and all argument types (PR #xxx).
+* `config schema`: Add `label` & `summary` fields for Config, PackageConfig, argument groups, and all argument types (PR #743).
 
 ## BUG FIXES
 
