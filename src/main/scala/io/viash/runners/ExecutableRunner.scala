@@ -320,6 +320,14 @@ final case class ExecutableRunner(
         |            VIASH_MODE='dockerfile'
         |            shift 1
         |            ;;
+        |        ---docker_run_args)
+        |            VIASH_DOCKER_RUN_ARGS+=("$$2")
+        |            shift 2
+        |            ;;
+        |        ---docker_run_args=*)
+        |            VIASH_DOCKER_RUN_ARGS+=("$$(ViashRemoveFlags "$$1")")
+        |            shift 1
+        |            ;;
         |        ---debug)
         |            VIASH_MODE='debug'
         |            shift 1
@@ -346,7 +354,7 @@ final case class ExecutableRunner(
         |  
         |  # enter docker container
         |  elif [[ "$$VIASH_MODE" == "debug" ]]; then
-        |    VIASH_CMD="docker run --entrypoint=bash $${VIASH_DOCKER_RUN_ARGS_ARRAY[@]} -v '$$(pwd)':/pwd --workdir /pwd -t $$VIASH_DOCKER_IMAGE_ID"
+        |    VIASH_CMD="docker run --entrypoint=bash $${VIASH_DOCKER_RUN_ARGS[@]} -v '$$(pwd)':/pwd --workdir /pwd -t $$VIASH_DOCKER_IMAGE_ID"
         |    ViashNotice "+ $$VIASH_CMD"
         |    eval $$VIASH_CMD
         |    exit 
@@ -504,10 +512,10 @@ final case class ExecutableRunner(
         |if [[ "$$VIASH_ENGINE_TYPE" == "docker" ]]; then
         |  # helper function for filling in extra docker args
         |  if [ ! -z "$$VIASH_META_MEMORY_B" ]; then
-        |    VIASH_DOCKER_RUN_ARGS_ARRAY+=("--memory=$${VIASH_META_MEMORY_B}")
+        |    VIASH_DOCKER_RUN_ARGS+=("--memory=$${VIASH_META_MEMORY_B}")
         |  fi
         |  if [ ! -z "$$VIASH_META_CPUS" ]; then
-        |    VIASH_DOCKER_RUN_ARGS_ARRAY+=("--cpus=$${VIASH_META_CPUS}")
+        |    VIASH_DOCKER_RUN_ARGS+=("--cpus=$${VIASH_META_CPUS}")
         |  fi
         |fi""".stripMargin
 
@@ -536,13 +544,13 @@ final case class ExecutableRunner(
     val preParse = 
       s"""
         |# initialise docker variables
-        |VIASH_DOCKER_RUN_ARGS_ARRAY=($dockerArgs $$VIASH_DOCKER_RUN_ARGS)
+        |VIASH_DOCKER_RUN_ARGS=($dockerArgs)
         """.stripMargin
 
     val preRun =
       s"""
         |if [[ "$$VIASH_ENGINE_TYPE" == "docker" ]]; then
-        |  VIASH_CMD="docker run$entrypointStr$workdirStr $${VIASH_DOCKER_RUN_ARGS_ARRAY[@]} $${VIASH_UNIQUE_MOUNTS[@]} $$VIASH_DOCKER_IMAGE_ID"
+        |  VIASH_CMD="docker run$entrypointStr$workdirStr $${VIASH_DOCKER_RUN_ARGS[@]} $${VIASH_UNIQUE_MOUNTS[@]} $$VIASH_DOCKER_IMAGE_ID"
         |fi""".stripMargin
       
     BashWrapperMods(
