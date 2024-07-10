@@ -354,7 +354,7 @@ final case class ExecutableRunner(
         |    ViashDockerfile "$$VIASH_ENGINE_ID"
         |    exit 0
         |
-        |  if [ "$$VIASH_MODE" == "docker_image_id" ]; then
+        |  elif [ "$$VIASH_MODE" == "docker_image_id" ]; then
         |    echo "$$VIASH_DOCKER_IMAGE_ID"
         |    exit 0
         |  
