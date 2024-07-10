@@ -12,6 +12,8 @@ TODO add summary
   When the argument is used, a deprecation warning message is printed on stderr.
   Cannot be used together with `--engine` or `--runner` and/or `--apply_engine` or `--apply_runner`.
 
+* `nextflow_runner`: Fix refactoring error in the `findStates()` helper function (PR #733).
+
 * `viash ns exec`: Fix "relative fields" outputting absolute paths (PR# 737). Additionally, improve path resolution when using the `--src` argument.
 
 # Viash 0.9.0-RC6 (2024-06-17): Hotfix for docker image name generation
