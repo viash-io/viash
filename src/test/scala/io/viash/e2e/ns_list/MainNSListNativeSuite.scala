@@ -308,4 +308,22 @@ class MainNSListNativeSuite extends AnyFunSuite{
     assert(testOutput.stdout.trim() == "[]")
   }
 
+  test("viash ns list query config path") {
+    val testOutput = TestHelper.testMain(
+      "ns", "list",
+      "-s", nsPath,
+      s"$nsPath/src/ns_add/config.vsh.yaml"
+    )
+
+    println("testOutput.stdout: " + testOutput.stdout)
+    println("testOutput.stderr: " + testOutput.stderr)
+
+    assert(testOutput.exitCode == Some(1))
+    val configs = parser.parse(testOutput.stdout)
+      .fold(throw _, _.as[Array[Config]])
+      .fold(throw _, identity)
+    assert(configs.length == 1)
+    assert(testOutput.stdout.contains("name: \"ns_add\""))
+  }
+
 }
