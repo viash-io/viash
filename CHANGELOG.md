@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## NEW FUNCTIONALITY
+
+* `config schema`: Add `label` & `summary` fields for Config, PackageConfig, argument groups, and all argument types (PR #743).
+
 ## MINOR CHANGES
 
 * `ExecutableRunner`: Add parameter `docker_automount_prefix` to allow for a custom prefix for automounted folders (PR #739).
@@ -11,6 +15,10 @@ TODO add summary
 * `platforms`: Re-introduce the `--platform` and `--apply_platform` arguments to improve backwards compatibility (PR #725).
   When the argument is used, a deprecation warning message is printed on stderr.
   Cannot be used together with `--engine` or `--runner` and/or `--apply_engine` or `--apply_runner`.
+
+* `nextflow_runner`: Fix refactoring error in the `findStates()` helper function (PR #733).
+
+* `viash ns exec`: Fix "relative fields" outputting absolute paths (PR# 737). Additionally, improve path resolution when using the `--src` argument.
 
 # Viash 0.9.0-RC6 (2024-06-17): Hotfix for docker image name generation
 

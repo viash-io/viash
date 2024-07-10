@@ -23,6 +23,8 @@ import io.viash.config.Config
 @description(
   """A list of runners to generate target artifacts for.
     |
+    |A runner is what will be used to call using input parameters, execute the component, and afterwards use the output results.
+    |
     | * @[Executable](executable_runner)
     | * @[Nextflow](nextflow_runner)
     |""".stripMargin)
