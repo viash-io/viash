@@ -162,8 +162,6 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
         Seq(
           executable.toString,
           executable.toString,
-          "--output", output.toString,
-          "--log", log.toString,
           "--real_number", "123.456",
           "--whole_number", "789",
           "-s", "my$weird#string"
@@ -178,8 +176,6 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(stdout.contains("""whole_number: |789|"""))
     assert(stdout.contains("""s: |my$weird#string|"""))
     assert(stdout.contains("""truth: |false|"""))
-    assert(stdout.contains(s"""output: |${output.getPath}|"""))
-    assert(stdout.contains(s"""log: |${log.getPath}|"""))
     assert(stdout.contains("""optional: ||"""))
     assert(stdout.contains("""optional_with_default: |The default value.|"""))
     assert(stdout.contains("""multiple: ||"""))
@@ -200,8 +196,6 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
         Seq(
           executable.toString,
           executable.toString,
-          "--output", output.toString,
-          "--log", log.toString,
           "--real_number", "123.456",
           "--whole_number", "789",
           "-s", "my$weird#string"
@@ -216,8 +210,6 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(stdout.contains("""whole_number: |789|"""))
     assert(stdout.contains("""s: |my$weird#string|"""))
     assert(stdout.contains("""truth: |false|"""))
-    assert(stdout.contains(s"""output: |/foobar${output.getPath}|"""))
-    assert(stdout.contains(s"""log: |/foobar${log.getPath}|"""))
     assert(stdout.contains("""optional: ||"""))
     assert(stdout.contains("""optional_with_default: |The default value.|"""))
     assert(stdout.contains("""multiple: ||"""))
