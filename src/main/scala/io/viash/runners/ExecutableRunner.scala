@@ -104,6 +104,7 @@ final case class ExecutableRunner(
   @description("The default prefix to use for automounting directories in Docker. This is used to mount directories from the host into the Docker container.")
   @example("docker_automount_prefix: /viash_automount", "yaml")
   @default("/viash_automount")
+  @since("since 0.9.0")
   docker_automount_prefix: String = "/viash_automount",
 
   `type`: String = "executable"
