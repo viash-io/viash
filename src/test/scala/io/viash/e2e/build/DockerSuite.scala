@@ -157,40 +157,56 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
     val output = temporaryFolder.resolve("output.txt").toFile
     val log = temporaryFolder.resolve("log.txt").toFile
 
-    val stdout =
-      Exec.run(
+    val cmdOut = Exec.runCatch(
         Seq(
           executable.toString,
           executable.toString,
           "--real_number", "123.456",
           "--whole_number", "789",
-          "-s", "my$weird#string"
+          "-s", "my$weird#string",
+          "--output", output.getPath,
+          "--log", log.getPath,
         ),
         extraEnv = Seq(
           ("VIASH_DOCKER_AUTOMOUNT_PREFIX", "")
         )
       )
 
-    assert(stdout.contains(s"""input: |$executable|"""))
-    assert(stdout.contains("""real_number: |123.456|"""))
-    assert(stdout.contains("""whole_number: |789|"""))
-    assert(stdout.contains("""s: |my$weird#string|"""))
-    assert(stdout.contains("""truth: |false|"""))
-    assert(stdout.contains("""optional: ||"""))
-    assert(stdout.contains("""optional_with_default: |The default value.|"""))
-    assert(stdout.contains("""multiple: ||"""))
-    assert(stdout.contains("""multiple_pos: ||"""))
-    val regex = s"""meta_resources_dir: \\|.*$temporaryFolder\\|""".r
-    assert(regex.findFirstIn(stdout).isDefined)
-    assert(!stdout.contains("/viash_automount"))
+    assert(cmdOut.exitValue == 0, "exit should be 0. stdout:\n" + cmdOut.output)
 
-    assert(stdout.contains("INFO: Parsed input arguments"))
+    assert(output.exists())
+    assert(log.exists())
+
+    val outputSrc = Source.fromFile(output)
+    try {
+      val outputLines = outputSrc.mkString
+      assert(outputLines.contains(s"""input: |${executable.getPath}|"""))
+      assert(outputLines.contains("""real_number: |123.456|"""))
+      assert(outputLines.contains("""whole_number: |789|"""))
+      assert(outputLines.contains("""s: |my$weird#string|"""))
+      assert(outputLines.contains("""truth: |false|"""))
+      assert(outputLines.contains(s"""output: |/viash_automount${output.getPath}|"""))
+      assert(outputLines.contains(s"""log: |/viash_automount${log.getPath}|"""))
+      assert(outputLines.contains("""optional: ||"""))
+      assert(outputLines.contains("""optional_with_default: |The default value.|"""))
+      assert(outputLines.contains("""multiple: ||"""))
+      assert(outputLines.contains("""multiple_pos: ||"""))
+      val regex = s"""meta_resources_dir: \\|.*${temporaryFolder}\\|""".r
+      assert(regex.findFirstIn(outputLines).isDefined)
+    } finally {
+      outputSrc.close()
+    }
+
+    val logSrc = Source.fromFile(log)
+    try {
+      val logLines = logSrc.mkString
+      assert(logLines.contains("INFO: Parsed input arguments"))
+    } finally {
+      logSrc.close()
+    }
   }
 
   test("Custom docker automount prefix", DockerTest) {
-    val output = temporaryFolder.resolve("output.txt").toFile
-    val log = temporaryFolder.resolve("log.txt").toFile
-
     val stdout =
       Exec.run(
         Seq(
