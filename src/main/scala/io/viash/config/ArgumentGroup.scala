@@ -46,7 +46,24 @@ case class ArgumentGroup(
   @description("The name of the argument group.")
   name: String,
 
-  @description("Description of foo`, a description of the argument group. Multiline descriptions are supported.")
+  @description("A clean version of the argument group's name. This is only used for documentation.")
+  @example("label: \"My argument group\"", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  label: Option[String] = None,
+
+  @description("A one-sentence summary of the argument group. This is only used for documentation.")
+  @example("summary: \"Arguments related to functionality XYZ\"", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  summary: Option[String] = None,
+
+  @description("A description of the argument group. This is only used for documentation. Multiline descriptions are supported.")
+  @example(
+    """description: |
+      |  A (multiline) description of the purpose of the arguments
+      |  in this argument group.""".stripMargin, "yaml")
+  @default("Empty")
   description: Option[String] = None,
 
   @description(
