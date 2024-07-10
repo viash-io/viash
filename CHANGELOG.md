@@ -4,7 +4,7 @@ TODO add summary
 
 ## MINOR CHANGES
 
-* `ExecutableRunner`: Add parameter `docker_automount_prefix` to allow for a custom prefix for automounted folders (PR #xxx).
+* `ExecutableRunner`: Add parameter `docker_automount_prefix` to allow for a custom prefix for automounted folders (PR #739).
 
 ## BUG FIXES
 
