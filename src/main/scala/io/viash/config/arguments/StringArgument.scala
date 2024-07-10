@@ -46,6 +46,18 @@ case class StringArgument(
   @default("Empty")
   alternatives: OneOrMore[String] = Nil,
 
+  @description("A clean notation of the argument's name. This is used when generating documentation.")
+  @example("label: an argument", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  label: Option[String] = None,
+
+  @description("A short summary of the argument. This is used when generating documentation.")
+  @example("summary: Use this argument to do X", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  summary: Option[String] = None,
+
   @description("A description of the argument. This will be displayed with `--help`.")
   @default("Empty")
   description: Option[String] = None,
@@ -132,6 +144,8 @@ case class StringArgument(
     `type`: String, 
     name: String, 
     alternatives: OneOrMore[String],
+    label: Option[String],
+    summary: Option[String],
     description: Option[String],
     info: Json,
     example: OneOrMore[String],
@@ -142,6 +156,6 @@ case class StringArgument(
     multiple_sep: String,
     dest: String
   ): Argument[String] = {
-    copy(name, alternatives, description, info, example, default, required, this.choices, direction, multiple, multiple_sep, dest, `type`)
+    copy(name, alternatives, label, summary, description, info, example, default, required, this.choices, direction, multiple, multiple_sep, dest, `type`)
   }
 }

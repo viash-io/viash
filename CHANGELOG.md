@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## NEW FUNCTIONALITY
+
+* `config schema`: Add `label` & `summary` fields for Config, PackageConfig, argument groups, and all argument types (PR #xxx).
+
 ## BUG FIXES
 
 * `platforms`: Re-introduce the `--platform` and `--apply_platform` arguments to improve backwards compatibility (PR #725).

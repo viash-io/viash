@@ -55,8 +55,20 @@ case class PackageConfig(
   @since("Viash 0.9.0")
   version: Option[String] = None,
 
+  @description("A clean notation of the package. This is used when generating documentation.")
+  @example("label: my package", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  label: Option[String] = None,
+
+  @description("A short summary of the package. This is used when generating documentation.")
+  @example("summary: My package is used for function X", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  summary: Option[String] = None,
+
   @description("A description of the package.")
-  @example("description: My package", "yaml")
+  @example("description: My package is used for function X", "yaml")
   @since("Viash 0.9.0")
   description: Option[String] = None,
 

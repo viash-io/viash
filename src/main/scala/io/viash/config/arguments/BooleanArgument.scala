@@ -49,6 +49,18 @@ case class BooleanArgument(
   @description("List of alternative format variations for this argument.")
   @default("Empty")
   alternatives: OneOrMore[String] = Nil,
+  
+  @description("A clean notation of the argument's name. This is used when generating documentation.")
+  @example("label: an argument", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  label: Option[String] = None,
+
+  @description("A short summary of the argument. This is used when generating documentation.")
+  @example("summary: Use this argument to do X", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  summary: Option[String] = None,
 
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
@@ -129,6 +141,8 @@ case class BooleanArgument(
     `type`: String, 
     name: String, 
     alternatives: OneOrMore[String],
+    label: Option[String],
+    summary: Option[String],
     description: Option[String],
     info: Json,
     example: OneOrMore[Boolean],
@@ -139,7 +153,7 @@ case class BooleanArgument(
     multiple_sep: String,
     dest: String
   ): Argument[Boolean] = {
-    copy(name, alternatives, description, info, example, default, required, direction, multiple, multiple_sep, dest, `type`)
+    copy(name, alternatives, label, summary, description, info, example, default, required, direction, multiple, multiple_sep, dest, `type`)
   }
 }
 
@@ -166,6 +180,18 @@ case class BooleanTrueArgument(
   @description("List of alternative format variations for this argument.")
   @default("Empty")
   alternatives: OneOrMore[String] = Nil,
+
+  @description("A clean notation of the argument's name. This is used when generating documentation.")
+  @example("label: an argument", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  label: Option[String] = None,
+
+  @description("A short summary of the argument. This is used when generating documentation.")
+  @example("summary: Use this argument to do X", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  summary: Option[String] = None,
 
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
@@ -202,6 +228,8 @@ case class BooleanTrueArgument(
     `type`: String, 
     name: String, 
     alternatives: OneOrMore[String],
+    label: Option[String],
+    summary: Option[String],
     description: Option[String],
     info: Json,
     default: OneOrMore[Boolean],
@@ -212,7 +240,7 @@ case class BooleanTrueArgument(
     multiple_sep: String,
     dest: String
   ): Argument[Boolean] = {
-    copy(name, alternatives, description, info, direction, dest, `type`)
+    copy(name, alternatives, label, summary, description, info, direction, dest, `type`)
   }
 }
 
@@ -239,6 +267,18 @@ case class BooleanFalseArgument(
   @description("List of alternative format variations for this argument.")
   @default("Empty")
   alternatives: OneOrMore[String] = Nil,
+
+  @description("A clean notation of the argument's name. This is used when generating documentation.")
+  @example("label: an argument", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  label: Option[String] = None,
+
+  @description("A short summary of the argument. This is used when generating documentation.")
+  @example("summary: Use this argument to do X", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  summary: Option[String] = None,
 
   @description("A description of the argument. This will be displayed with `--help`.")
   description: Option[String] = None,
@@ -276,6 +316,8 @@ case class BooleanFalseArgument(
     `type`: String, 
     name: String, 
     alternatives: OneOrMore[String],
+    label: Option[String],
+    summary: Option[String],
     description: Option[String],
     info: Json,
     default: OneOrMore[Boolean],
@@ -286,6 +328,6 @@ case class BooleanFalseArgument(
     multiple_sep: String,
     dest: String
   ): Argument[Boolean] = {
-    copy(name, alternatives, description, info, direction, dest, `type`)
+    copy(name, alternatives, label, summary, description, info, direction, dest, `type`)
   }
 }

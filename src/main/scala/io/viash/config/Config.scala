@@ -189,6 +189,18 @@ case class Config(
   @default("Empty")
   resources: List[Resource] = Nil,
 
+  @description("A clean notation of the component's name. This is used when generating documentation.")
+  @example("label: this is my component", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  label: Option[String] = None,
+
+  @description("A short summary of the component. This is used when generating documentation.")
+  @example("summary: This component performs function X", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  summary: Option[String] = None,
+
   @description("A description of the component. This will be displayed with `--help`.")
   @example(
     """description: |
