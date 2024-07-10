@@ -295,12 +295,7 @@ final case class ExecutableRunner(
     }
     
     val preParse =
-      s"""# configure default docker automount prefix if it is unset
-        |if [ -z "$${VIASH_DOCKER_AUTOMOUNT_PREFIX+x}" ]; then
-        |  VIASH_DOCKER_AUTOMOUNT_PREFIX="${docker_automount_prefix}"
-        |fi
-        |
-        |${Bash.ViashDockerFuns}
+      s"""${Bash.ViashDockerFuns}
         |
         |# ViashDockerFile: print the dockerfile to stdout
         |# $$1    : engine identifier
@@ -433,7 +428,12 @@ final case class ExecutableRunner(
          |${Bash.ViashAbsolutePath}
          |${Bash.ViashDockerAutodetectMount}
          |# initialise variables
-         |VIASH_DIRECTORY_MOUNTS=()""".stripMargin
+         |VIASH_DIRECTORY_MOUNTS=()
+         |
+         |# configure default docker automount prefix if it is unset
+         |if [ -z "$${VIASH_DOCKER_AUTOMOUNT_PREFIX+x}" ]; then
+         |  VIASH_DOCKER_AUTOMOUNT_PREFIX="${docker_automount_prefix}"
+         |fi""".stripMargin
     
     val preRun =
       f"""
