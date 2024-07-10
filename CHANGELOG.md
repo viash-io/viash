@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## NEW FUNCTIONALITY
+
+* `viash ns query`: Add a query filter that allows selecting a single component by its path in a namespace environment (PR #xxx).
+
 ## BUG FIXES
 
 * `platforms`: Re-introduce the `--platform` and `--apply_platform` arguments to improve backwards compatibility (PR #725).

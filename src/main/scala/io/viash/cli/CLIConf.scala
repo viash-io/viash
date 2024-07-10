@@ -102,6 +102,11 @@ trait ViashNs {
     descr = "Filter which components get selected by component name. Can be a regex. Example: \"^component1\".",
     default = None
   )
+  val query_config = registerTrailArg[String](
+    name = "config",
+    descr = "Filter which component get selected by specifying the config path.",
+    required = false
+  )
   val src = registerOpt[String](
     name = "src",
     short = Some('s'),
