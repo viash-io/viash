@@ -266,7 +266,7 @@ object ViashTest extends Logging {
             namespace = conf.namespace,
             version = conf.version,
             // set dirArg as argument so that Docker can chown it after execution
-            argument_groups = List(ArgumentGroup("default", None, List(dirArg))),
+            argument_groups = List(ArgumentGroup("default", arguments = List(dirArg))),
             resources = List(test),
             set_wd_to_resources_dir = true,
             // Make sure we'll be using the same docker registry set in 'links' so we can have the same docker image id.
