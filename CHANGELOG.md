@@ -4,7 +4,7 @@ TODO add summary
 
 ## NEW FUNCTIONALITY
 
-* `viash ns query`: Add a query filter that allows selecting a single component by its path in a namespace environment (PR #xxx).
+* `viash ns query`: Add a query filter that allows selecting a single component by its path in a namespace environment (PR #744).
 
 ## BUG FIXES
 
