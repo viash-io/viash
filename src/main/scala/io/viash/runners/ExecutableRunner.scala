@@ -545,7 +545,7 @@ final case class ExecutableRunner(
       s"""
         |# initialise docker variables
         |VIASH_DOCKER_RUN_ARGS=($dockerArgs)
-        """.stripMargin
+        |""".stripMargin
 
     val preRun =
       s"""
