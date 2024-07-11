@@ -4,6 +4,8 @@ TODO add summary
 
 ## NEW FUNCTIONALITY
 
+* `ExecutableRunner`: Add a `---docker_image_id` flag to view the Docker image ID of a built executable (PR #741).
+
 * `viash ns query`: Add a query filter that allows selecting a single component by its path in a namespace environment (PR #744).
 
 * `config schema`: Add `label` & `summary` fields for Config, PackageConfig, argument groups, and all argument types (PR #743).
