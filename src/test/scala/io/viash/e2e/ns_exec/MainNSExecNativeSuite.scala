@@ -45,7 +45,7 @@ class MainNSExecNativeSuite extends AnyFunSuite {
     val stderr = testOutput.stderr.replaceAll(nsPath, "[nsPath]")
 
     for (component <- components) {
-      val (stderrRegex, stdoutRegex) = createRegexes(s"_${component}_ -$nsPathRegex/src/$component/?- !$nsPathRegex/src/$component/$configYaml! ~native~ =testns=")
+      val (stderrRegex, stdoutRegex) = createRegexes(s"_${component}_ -src/$component/?- !src/$component/$configYaml! ~native~ =testns=")
       assert(stderrRegex.findFirstIn(stderr).isDefined, s"\nRegex: $stderrRegex; text: \n$stderr")
       assert(stdoutRegex.findFirstIn(stdout).isDefined, s"\nRegex: $stdoutRegex; text: \n$stdout")
     }
@@ -63,7 +63,7 @@ class MainNSExecNativeSuite extends AnyFunSuite {
     val stderr = testOutput.stderr.replaceAll(nsPath, "[nsPath]")
 
     for (component <- components) {
-      val (stderrRegex, stdoutRegex) = createRegexes(s"_${component}_ -$nsPathRegex/src/$component/?- !$nsPathRegex/src/$component/$configYaml! ~native~ =testns=")
+      val (stderrRegex, stdoutRegex) = createRegexes(s"_${component}_ -src/$component/?- !src/$component/$configYaml! ~native~ =testns=")
       assert(stderrRegex.findFirstIn(stderr).isDefined, s"\nRegex: $stderrRegex; text: \n$stderr")
       assert(stdoutRegex.findFirstIn(stdout).isDefined, s"\nRegex: $stdoutRegex; text: \n$stdout")
     }
@@ -77,10 +77,9 @@ class MainNSExecNativeSuite extends AnyFunSuite {
     )
     val stdout = testOutput.stdout.replaceAll(nsPath, "[nsPath]")
     val stderr = testOutput.stderr.replaceAll(nsPath, "[nsPath]")
-    println(s"stdout: $stdout")
 
     // can't guarantee order of components
-    val (stderrRegex, stdoutRegex) = createRegexes(s"($nsPathRegex/src/[^/]*/$configYaml ?){${components.length}}")
+    val (stderrRegex, stdoutRegex) = createRegexes(s"(src/[^/]*/$configYaml ?){${components.length}}")
     assert(stderrRegex.findFirstIn(stderr).isDefined, s"\nRegex: $stderrRegex; text: \n$stderr")
     assert(stdoutRegex.findFirstIn(stdout).isDefined, s"\nRegex: $stdoutRegex; text: \n$stdout")
   }
@@ -95,9 +94,14 @@ class MainNSExecNativeSuite extends AnyFunSuite {
     val stdout = testOutput.stdout.replaceAll(nsPath, "[nsPath]")
     val stderr = testOutput.stderr.replaceAll(nsPath, "[nsPath]")
 
-    // TODO non `abs` fields are returning absolute paths?
     for (component <- components) {
-      val (stderrRegex, stdoutRegex) = createRegexes(s"$nsPathRegex/src/$component/$configYaml $nsPathRegex/src/$component/$configYaml $nsPathRegex/src/$component/$configYaml $nsPathRegex/src/$component $nsPathRegex/src/$component $nsPathRegex/src/$component/code\\.py $nsPathRegex/src/$component/code\\.py $component $component testns")
+      val (stderrRegex, stdoutRegex) = createRegexes(
+        s"""src/$component/$configYaml src/$component/$configYaml $nsPathRegex/src/$component/$configYaml
+           |src/$component $nsPathRegex/src/$component
+           |src/$component/code\\.py $nsPathRegex/src/$component/code\\.py
+           |$component $component testns
+           |""".stripMargin.replace("\n", " ").strip()
+      )
       assert(stderrRegex.findFirstIn(stderr).isDefined, s"\nRegex: $stderrRegex; text: \n$stderr")
       assert(stdoutRegex.findFirstIn(stdout).isDefined, s"\nRegex: $stdoutRegex; text: \n$stdout")
     }
@@ -134,9 +138,119 @@ class MainNSExecNativeSuite extends AnyFunSuite {
     val stdout = testOutput.stdout.replaceAll(nsPath, "[nsPath]")
     val stderr = testOutput.stderr.replaceAll(nsPath, "[nsPath]")
 
-    // TODO non `abs` fields are returning absolute paths?
     for (component <- components) {
-      val (stderrRegex, stdoutRegex) = createRegexes(s"$nsPathRegex/target/executable/testns/$component $nsPathRegex/target/executable/testns/$component $component testns")
+      val (stderrRegex, stdoutRegex) = createRegexes(s"target/executable/testns/$component $nsPathRegex/target/executable/testns/$component $component testns")
+      assert(stderrRegex.findFirstIn(stderr).isDefined, s"\nRegex: $stderrRegex; text: \n$stderr")
+      assert(stdoutRegex.findFirstIn(stdout).isDefined, s"\nRegex: $stdoutRegex; text: \n$stdout")
+    }
+  }
+
+  test("Output fields when the working directory is not the namespace directory, so the package config is not found, absolute src path") {
+    // TODO the abs-output field is not combined with workingDir, as it only sets the path to search for the package config and any path relativizing is done from where the executable is run.
+    // Typically, this is the same as the workingDir, but not with sbt test. So normal execution should be fine, we just can't test it.
+    val rootResourceDir = Paths.get(getClass.getResource("/").getPath())
+    val testOutput = TestHelper.testMain(
+      workingDir = Some(rootResourceDir),
+      "ns", "exec",
+      "--src", nsPath,
+      "-e",
+      "echo {path} {abs-path} {dir} {abs-dir} {main-script} {abs-main-script} {output} {abs-output} {name} {namespace}"
+    )
+
+    val stdout = testOutput.stdout.replaceAll(nsPath, "[nsPath]")
+    val stderr = testOutput.stderr.replaceAll(nsPath, "[nsPath]")
+
+    for (component <- components) {
+      val (stderrRegex, stdoutRegex) = createRegexes(
+        s"""src/$component/$configYaml $nsPathRegex/src/$component/$configYaml
+           |src/$component $nsPathRegex/src/$component
+           |src/$component/code\\.py $nsPathRegex/src/$component/code\\.py
+           |target/executable/testns/$component .*/target/executable/testns/$component
+           |$component testns
+           |""".stripMargin.replace("\n", " ").strip()
+      )
+      assert(stderrRegex.findFirstIn(stderr).isDefined, s"\nRegex: $stderrRegex; text: \n$stderr")
+      assert(stdoutRegex.findFirstIn(stdout).isDefined, s"\nRegex: $stdoutRegex; text: \n$stdout")
+    }
+  }
+
+  test("Output fields when the working directory is not the namespace directory, so the package config is not found, relative path") {
+    // TODO the abs-output field is not combined with workingDir, as it only sets the path to search for the package config and any path relativizing is done from where the executable is run.
+    // Typically, this is the same as the workingDir, but not with sbt test. So normal execution should be fine, we just can't test it.
+    // With the relative paths, the source paths are relative in the literal sense (../.. to root and then go back up) but not very elegant.
+    val rootResourceDir = workingDir.getParent()
+    val testOutput = TestHelper.testMain(
+      workingDir = Some(rootResourceDir),
+      "ns", "exec",
+      "--src", "src/test/resources/testns/src",
+      "-e",
+      "echo {path} {abs-path} {dir} {abs-dir} {main-script} {abs-main-script} {output} {abs-output} {name} {namespace}"
+    )
+
+    val stdout = testOutput.stdout//.replaceAll(nsPath, "[nsPath]")
+    val stderr = testOutput.stderr//.replaceAll(nsPath, "[nsPath]")
+
+    // just check relative paths start with '../', and absolute paths start with '/'
+    for (component <- components) {
+      val (stderrRegex, stdoutRegex) = createRegexes(
+        s"""\\.\\./.*/src/$component/$configYaml /.*/testns/src/$component/$configYaml
+           |\\.\\./.*/src/$component /.*/testns/src/$component
+           |\\.\\./.*/src/$component/code\\.py /.*/testns/src/$component/code\\.py
+           |target/executable/testns/$component /.*/target/executable/testns/$component
+           |$component testns
+           |""".stripMargin.replace("\n", " ").strip()
+      )
+      assert(stderrRegex.findFirstIn(stderr).isDefined, s"\nRegex: $stderrRegex; text: \n$stderr")
+      assert(stdoutRegex.findFirstIn(stdout).isDefined, s"\nRegex: $stdoutRegex; text: \n$stdout")
+    }
+  }
+
+  test("Output fields when the working directory is in a subdirector of the namespace directory, so the package config is found, but not in the working directory, no src path") {
+    val testOutput = TestHelper.testMain(
+      workingDir = Some(workingDir.resolve("src/ns_add")),
+      "ns", "exec",
+      "-e",
+      "echo {path} {abs-path} {dir} {abs-dir} {main-script} {abs-main-script} {output} {abs-output} {name} {namespace}"
+    )
+
+    val stdout = testOutput.stdout.replaceAll(nsPath, "[nsPath]")
+    val stderr = testOutput.stderr.replaceAll(nsPath, "[nsPath]")
+
+    for (component <- components) {
+      val (stderrRegex, stdoutRegex) = createRegexes(
+        s"""src/$component/$configYaml $nsPathRegex/src/$component/$configYaml
+           |src/$component $nsPathRegex/src/$component
+           |src/$component/code\\.py $nsPathRegex/src/$component/code\\.py
+           |target/executable/testns/$component $nsPathRegex/target/executable/testns/$component
+           |$component testns
+           |""".stripMargin.replace("\n", " ").strip()
+      )
+      assert(stderrRegex.findFirstIn(stderr).isDefined, s"\nRegex: $stderrRegex; text: \n$stderr")
+      assert(stdoutRegex.findFirstIn(stdout).isDefined, s"\nRegex: $stdoutRegex; text: \n$stdout")
+    }
+  }
+
+  test("Output fields when the working directory is in a subdirector of the namespace directory, so the package config is found, but not in the working directory, absolute src path") {
+    val testOutput = TestHelper.testMain(
+      workingDir = Some(workingDir.resolve("src/ns_add")),
+      "ns", "exec",
+      "--src", nsPath,
+      "-e",
+      "echo {path} {abs-path} {dir} {abs-dir} {main-script} {abs-main-script} {output} {abs-output} {name} {namespace}"
+    )
+
+    val stdout = testOutput.stdout.replaceAll(nsPath, "[nsPath]")
+    val stderr = testOutput.stderr.replaceAll(nsPath, "[nsPath]")
+
+    for (component <- components) {
+      val (stderrRegex, stdoutRegex) = createRegexes(
+        s"""src/$component/$configYaml $nsPathRegex/src/$component/$configYaml
+           |src/$component $nsPathRegex/src/$component
+           |src/$component/code\\.py $nsPathRegex/src/$component/code\\.py
+           |target/executable/testns/$component $nsPathRegex/target/executable/testns/$component
+           |$component testns
+           |""".stripMargin.replace("\n", " ").strip()
+      )
       assert(stderrRegex.findFirstIn(stderr).isDefined, s"\nRegex: $stderrRegex; text: \n$stderr")
       assert(stdoutRegex.findFirstIn(stdout).isDefined, s"\nRegex: $stdoutRegex; text: \n$stdout")
     }
