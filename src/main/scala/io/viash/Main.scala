@@ -357,7 +357,8 @@ object Main extends Logging {
           configs = configs,
           command = cli.namespace.exec.cmd(),
           dryrun = cli.namespace.exec.dryrun(),
-          parallel = cli.namespace.exec.parallel()
+          parallel = cli.namespace.exec.parallel(),
+          workingDir = workingDir,
         )
         val errors = configs.flatMap(_.status).count(_.isError)
         if (errors > 0) 1 else 0
@@ -506,6 +507,7 @@ object Main extends Logging {
     val query = subcommand.query.toOption
     val queryNamespace = subcommand.query_namespace.toOption
     val queryName = subcommand.query_name.toOption
+    val queryConfig = subcommand.query_config.toOption
     val runnerStr = subcommand.runner.toOption orElse subcommand.platform.toOption
     val engineStr = subcommand.engine.toOption orElse subcommand.platform.toOption
     val configMods = packageConfig.config_mods
@@ -515,6 +517,7 @@ object Main extends Logging {
       query = query,
       queryNamespace = queryNamespace,
       queryName = queryName,
+      queryConfig = queryConfig,
       addOptMainScript = addOptMainScript,
       viashPackage = Some(packageConfig)
     )

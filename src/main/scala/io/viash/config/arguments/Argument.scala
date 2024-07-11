@@ -62,6 +62,8 @@ abstract class Argument[Type] {
   val `type`: String
   val name: String
   val alternatives: OneOrMore[String]
+  val label: Option[String]
+  val summary: Option[String]
   val description: Option[String]
   val info: Json
   val example: OneOrMore[Type]
@@ -87,6 +89,8 @@ abstract class Argument[Type] {
     `type`: String = this.`type`,
     name: String = this.name,
     alternatives: OneOrMore[String] = this.alternatives,
+    label: Option[String] = this.label,
+    summary: Option[String] = this.summary,
     description: Option[String] = this.description,
     info: Json = this.info,
     example: OneOrMore[Type] = this.example,

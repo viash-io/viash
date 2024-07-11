@@ -328,6 +328,10 @@ final case class ExecutableRunner(
         |            VIASH_DOCKER_RUN_ARGS+=("$$(ViashRemoveFlags "$$1")")
         |            shift 1
         |            ;;
+        |        ---docker_image_id)
+        |            VIASH_MODE='docker_image_id'
+        |            shift 1
+        |            ;;
         |        ---debug)
         |            VIASH_MODE='debug'
         |            shift 1
@@ -350,6 +354,10 @@ final case class ExecutableRunner(
         |  # print dockerfile
         |  if [ "$$VIASH_MODE" == "dockerfile" ]; then
         |    ViashDockerfile "$$VIASH_ENGINE_ID"
+        |    exit 0
+        |
+        |  elif [ "$$VIASH_MODE" == "docker_image_id" ]; then
+        |    echo "$$VIASH_DOCKER_IMAGE_ID"
         |    exit 0
         |  
         |  # enter docker container
