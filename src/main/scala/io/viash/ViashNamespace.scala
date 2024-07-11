@@ -298,7 +298,8 @@ object ViashNamespace extends Logging {
     configs: List[AppliedConfig],
     command: String, 
     dryrun: Boolean, 
-    parallel: Boolean
+    parallel: Boolean,
+    workingDir: Option[Path],
   ): Unit = {
     val configData = configs.filter(_.status.isEmpty).flatMap{ ac =>
       // TODO: Should we iterate over the engines here?
@@ -307,7 +308,7 @@ object ViashNamespace extends Logging {
         case list => list.map(Some(_))
       }
       engineOptionList.map(eo => {
-        NsExecData(ac.config.build_info.get.config, ac.config, ac.runner, eo)
+        NsExecData(ac.config.build_info.get.config, ac.config, ac.runner, eo, workingDir)
       })
     }
 

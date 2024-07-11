@@ -357,7 +357,8 @@ object Main extends Logging {
           configs = configs,
           command = cli.namespace.exec.cmd(),
           dryrun = cli.namespace.exec.dryrun(),
-          parallel = cli.namespace.exec.parallel()
+          parallel = cli.namespace.exec.parallel(),
+          workingDir = workingDir,
         )
         val errors = configs.flatMap(_.status).count(_.isError)
         if (errors > 0) 1 else 0

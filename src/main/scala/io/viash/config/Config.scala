@@ -189,7 +189,20 @@ case class Config(
   @default("Empty")
   resources: List[Resource] = Nil,
 
-  @description("A description of the component. This will be displayed with `--help`.")
+  @description("A clean version of the component's name. This is only used for documentation.")
+  @example("label: \"My component\"", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  label: Option[String] = None,
+
+  @description("A one-sentence summary of the component. This is only used for documentation.")
+  @example("summary: \"A component for performing XYZ\"", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  summary: Option[String] = None,
+
+  @description("A description of the component. This is only used for documentation. Multiline descriptions are supported.")
+  @default("Empty")
   @example(
     """description: |
       +  This component performs function Y and Z.

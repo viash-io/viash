@@ -49,8 +49,25 @@ case class BooleanArgument(
   @description("List of alternative format variations for this argument.")
   @default("Empty")
   alternatives: OneOrMore[String] = Nil,
+  
+  @description("A clean version of the argument's name. This is only used for documentation.")
+  @example("label: \"My argument\"", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  label: Option[String] = None,
 
-  @description("A description of the argument. This will be displayed with `--help`.")
+  @description("A one-sentence summary of the argument. This is only used for documentation.")
+  @example("summary: \"This argument sets XYZ.\"", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  summary: Option[String] = None,
+
+  @description("A description of the argument. This is only used for documentation. Multiline descriptions are supported.")
+  @example(
+    """description: |
+      |  A (multiline) description of the purpose of
+      |  this argument.""".stripMargin, "yaml")
+  @default("Empty")
   description: Option[String] = None,
 
   @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
@@ -129,6 +146,8 @@ case class BooleanArgument(
     `type`: String, 
     name: String, 
     alternatives: OneOrMore[String],
+    label: Option[String],
+    summary: Option[String],
     description: Option[String],
     info: Json,
     example: OneOrMore[Boolean],
@@ -139,7 +158,7 @@ case class BooleanArgument(
     multiple_sep: String,
     dest: String
   ): Argument[Boolean] = {
-    copy(name, alternatives, description, info, example, default, required, direction, multiple, multiple_sep, dest, `type`)
+    copy(name, alternatives, label, summary, description, info, example, default, required, direction, multiple, multiple_sep, dest, `type`)
   }
 }
 
@@ -167,7 +186,24 @@ case class BooleanTrueArgument(
   @default("Empty")
   alternatives: OneOrMore[String] = Nil,
 
-  @description("A description of the argument. This will be displayed with `--help`.")
+  @description("A clean version of the argument's name. This is only used for documentation.")
+  @example("label: \"My argument\"", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  label: Option[String] = None,
+
+  @description("A one-sentence summary of the argument. This is only used for documentation.")
+  @example("summary: \"This argument sets XYZ.\"", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  summary: Option[String] = None,
+
+  @description("A description of the argument. This is only used for documentation. Multiline descriptions are supported.")
+  @example(
+    """description: |
+      |  A (multiline) description of the purpose of
+      |  this argument.""".stripMargin, "yaml")
+  @default("Empty")
   description: Option[String] = None,
 
   @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
@@ -202,6 +238,8 @@ case class BooleanTrueArgument(
     `type`: String, 
     name: String, 
     alternatives: OneOrMore[String],
+    label: Option[String],
+    summary: Option[String],
     description: Option[String],
     info: Json,
     default: OneOrMore[Boolean],
@@ -212,7 +250,7 @@ case class BooleanTrueArgument(
     multiple_sep: String,
     dest: String
   ): Argument[Boolean] = {
-    copy(name, alternatives, description, info, direction, dest, `type`)
+    copy(name, alternatives, label, summary, description, info, direction, dest, `type`)
   }
 }
 
@@ -240,7 +278,24 @@ case class BooleanFalseArgument(
   @default("Empty")
   alternatives: OneOrMore[String] = Nil,
 
-  @description("A description of the argument. This will be displayed with `--help`.")
+  @description("A clean version of the argument's name. This is only used for documentation.")
+  @example("label: \"My argument\"", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  label: Option[String] = None,
+
+  @description("A one-sentence summary of the argument. This is only used for documentation.")
+  @example("summary: \"This argument sets XYZ.\"", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  summary: Option[String] = None,
+
+  @description("A description of the argument. This is only used for documentation. Multiline descriptions are supported.")
+  @example(
+    """description: |
+      |  A (multiline) description of the purpose of
+      |  this argument.""".stripMargin, "yaml")
+  @default("Empty")
   description: Option[String] = None,
 
   @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
@@ -276,6 +331,8 @@ case class BooleanFalseArgument(
     `type`: String, 
     name: String, 
     alternatives: OneOrMore[String],
+    label: Option[String],
+    summary: Option[String],
     description: Option[String],
     info: Json,
     default: OneOrMore[Boolean],
@@ -286,6 +343,6 @@ case class BooleanFalseArgument(
     multiple_sep: String,
     dest: String
   ): Argument[Boolean] = {
-    copy(name, alternatives, description, info, direction, dest, `type`)
+    copy(name, alternatives, label, summary, description, info, direction, dest, `type`)
   }
 }
