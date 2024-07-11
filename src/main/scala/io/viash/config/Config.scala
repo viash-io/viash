@@ -738,11 +738,15 @@ object Config extends Logging {
     query: Option[String] = None,
     queryNamespace: Option[String] = None,
     queryName: Option[String] = None,
+    queryConfig: Option[String] = None,
     addOptMainScript: Boolean = true,
     viashPackage: Option[PackageConfig] = None,
   ): List[AppliedConfig] = {
 
     val sourceDir = Paths.get(source)
+
+    // This is the value that the config's build_info.config field would be set to if the config were to be read
+    val readQueryConfig = queryConfig.map(IO.uri(_).toString.replaceAll("^file:/+", "/"))
 
     // find [^\.]*.vsh.* files and parse as config
     val scriptFiles = IO.find(sourceDir, (path, attrs) => {
@@ -787,10 +791,14 @@ object Config extends Logging {
           case (Some(_), None) => false
           case (None, _) => true
         }
+        val configTest = readQueryConfig match {
+          case Some(conf) => Some(conf) == appliedConfig.config.build_info.map(_.config)
+          case None => true
+        }
 
         if (!isEnabled) {
           appliedConfig.setStatus(BuildStatus.Disabled)
-        } else if (queryTest && nameTest && namespaceTest) {
+        } else if (queryTest && nameTest && namespaceTest && configTest) {
           // if config passes regex checks, show warnings if there are any
           rmos.replay()
           appliedConfig
