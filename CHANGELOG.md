@@ -10,6 +10,10 @@ TODO add summary
 
 * `config schema`: Add `label` & `summary` fields for Config, PackageConfig, argument groups, and all argument types (PR #743).
 
+## MINOR CHANGES
+
+* `ExecutableRunner`: Make Docker runtime arguments configurable via the `---docker_run_args` argument (PR #740).
+
 ## BUG FIXES
 
 * `platforms`: Re-introduce the `--platform` and `--apply_platform` arguments to improve backwards compatibility (PR #725).

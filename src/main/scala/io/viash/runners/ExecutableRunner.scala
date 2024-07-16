@@ -248,12 +248,6 @@ final case class ExecutableRunner(
     dmSetup ++ dmVol ++ dmChown ++ dmReqs ++ dmCmd
   }
 
-  private def dockerArgs: String = {
-    "-i --rm" +
-      port.map(" -p " + _).mkString +
-      docker_run_args.map(" " + _).mkString
-  }
-
   private def dockerGenerateSetup(
     config: Config,
     info: Option[BuildInfo],
@@ -324,6 +318,14 @@ final case class ExecutableRunner(
         |            ;;
         |        ---dockerfile)
         |            VIASH_MODE='dockerfile'
+        |            shift 1
+        |            ;;
+        |        ---docker_run_args)
+        |            VIASH_DOCKER_RUN_ARGS+=("$$2")
+        |            shift 2
+        |            ;;
+        |        ---docker_run_args=*)
+        |            VIASH_DOCKER_RUN_ARGS+=("$$(ViashRemoveFlags "$$1")")
         |            shift 1
         |            ;;
         |        ---docker_image_id)
@@ -542,6 +544,11 @@ final case class ExecutableRunner(
 
     val workdirStr = workdir.map(" --workdir '" + _ + "'").getOrElse("")
 
+    val dockerArgs =
+      "-i --rm" +
+        port.map(" -p " + _).mkString +
+        docker_run_args.map(" " + _).mkString
+    
     val preParse = 
       s"""
         |# initialise docker variables
