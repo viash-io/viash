@@ -13,7 +13,7 @@ function ViashDockerInstallationCheck {
   fi
 
   ViashDebug "Checking whether the Docker daemon is running"
-  save=$-; set +e
+  local save=$-; set +e
   docker_version=$(docker version --format '{{.Client.APIVersion}}' 2> /dev/null)
   out=$?
   [[ $save =~ e ]] && set -e
@@ -67,7 +67,7 @@ function ViashDockerPull {
   if [ $VIASH_VERBOSITY -ge $VIASH_LOGCODE_INFO ]; then
     docker pull $1 && return 0 || return 1
   else
-    save=$-; set +e
+    local save=$-; set +e
     docker pull $1 2> /dev/null > /dev/null
     out=$?
     [[ $save =~ e ]] && set -e
@@ -89,7 +89,7 @@ function ViashDockerPull {
 #   echo $?                                     # returns '1'
 function ViashDockerPush {
   ViashNotice "Pushing image to '$1'"
-  save=$-; set +e
+  local save=$-; set +e
   if [ $VIASH_VERBOSITY -ge $VIASH_LOGCODE_INFO ]; then
     docker push $1
     out=$?
@@ -113,7 +113,7 @@ function ViashDockerPush {
 # examples:
 #   ViashDockerPullElseBuild mynewcomponent
 function ViashDockerPullElseBuild {
-  save=$-; set +e
+  local save=$-; set +e
   ViashDockerPull $1
   out=$?
   [[ $save =~ e ]] && set -e
