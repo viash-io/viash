@@ -20,6 +20,12 @@ package io.viash.config
 import io.viash.schemas._
 
 @description("Computational requirements related to running the component.")
+@example(
+  """requirements:
+    |  cpus: 5
+    |  memory: 10GB
+    |""".stripMargin,
+    "yaml")
 @since("Viash 0.6.0")
 case class ComputationalRequirements(
   @description("The maximum number of (logical) cpus a component is allowed to use.")
