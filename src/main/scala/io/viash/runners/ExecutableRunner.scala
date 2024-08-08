@@ -101,12 +101,6 @@ final case class ExecutableRunner(
   @default("Empty")
   docker_run_args: OneOrMore[String] = Nil,
 
-  @description("The default prefix to use for automounting directories in Docker. This is used to mount directories from the host into the Docker container.")
-  @example("docker_automount_prefix: /viash_automount", "yaml")
-  @default("/viash_automount")
-  @since("Viash 0.9.0")
-  docker_automount_prefix: String = "/viash_automount",
-
   `type`: String = "executable"
 ) extends Runner {
 
@@ -433,7 +427,7 @@ final case class ExecutableRunner(
          |
          |# configure default docker automount prefix if it is unset
          |if [ -z "$${VIASH_DOCKER_AUTOMOUNT_PREFIX+x}" ]; then
-         |  VIASH_DOCKER_AUTOMOUNT_PREFIX="${docker_automount_prefix}"
+         |  VIASH_DOCKER_AUTOMOUNT_PREFIX="/viash_automount"
          |fi""".stripMargin
     
     val preRun =
