@@ -18,10 +18,14 @@
 package io.viash
 
 import io.circe.{Decoder, Encoder, Json, HCursor, JsonObject}
-import io.circe.generic.extras.Configuration
-import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
-import io.viash.platforms.decodePlatform
-import io.viash.functionality.decodeFunctionality
+// import io.circe.generic.extras.Configuration
+// import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
+// import io.circe.generic.semiauto.deriveEncoder as deriveConfiguredEncoder
+// import io.circe.generic.semiauto.deriveEncoder as deriveConfiguredEncoderStrict
+// import io.circe.generic.semiauto.deriveDecoder as deriveConfiguredDecoderFullChecks
+// import io.circe.generic.semiauto.deriveDecoder as deriveConfiguredDecoderWithValidationCheck
+// import io.viash.platforms.decodePlatform
+// import io.viash.functionality.decodeFunctionality
 import io.viash.exceptions.ConfigParserValidationException
 
 import config.ArgumentGroup
@@ -34,14 +38,15 @@ import config.arguments._
 
 package object config {
   import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
-  import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
+  // import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
+  // import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
+  // import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
+  // import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
 
   // encoders and decoders for Config
-  implicit val encodeConfig: Encoder.AsObject[Config] = deriveConfiguredEncoderStrict[Config]
-  implicit val decodeConfig: Decoder[Config] = deriveConfiguredDecoderWithValidationCheck[Config].prepare{
+  // implicit val encodeConfig: Encoder.AsObject[Config] = deriveConfiguredEncoderStrict[Config]
+  // implicit val decodeConfig: Decoder[Config] = deriveConfiguredDecoderWithValidationCheck[Config]
+  /*.prepare{
     checkDeprecation[Config](_)
     // map platforms to runners and engines
     .withFocus{
@@ -266,31 +271,32 @@ package object config {
     },
     "Could not convert json to Config."
   )
+  }*/
 
-  implicit val encodeBuildInfo: Encoder[BuildInfo] = deriveConfiguredEncoder
-  implicit val decodeBuildInfo: Decoder[BuildInfo] = deriveConfiguredDecoderFullChecks
+  // implicit val encodeBuildInfo: Encoder[BuildInfo] = deriveConfiguredEncoder
+  // implicit val decodeBuildInfo: Decoder[BuildInfo] = deriveConfiguredDecoderFullChecks
 
     // encoder and decoder for Author
-  implicit val encodeAuthor: Encoder.AsObject[Author] = deriveConfiguredEncoder
-  implicit val decodeAuthor: Decoder[Author] = deriveConfiguredDecoderFullChecks
+  // implicit val encodeAuthor: Encoder.AsObject[Author] = deriveConfiguredEncoder
+  // implicit val decodeAuthor: Decoder[Author] = deriveConfiguredDecoderFullChecks
 
   // encoder and decoder for Requirements
-  implicit val encodeComputationalRequirements: Encoder.AsObject[ComputationalRequirements] = deriveConfiguredEncoder
-  implicit val decodeComputationalRequirements: Decoder[ComputationalRequirements] = deriveConfiguredDecoderFullChecks
+  // implicit val encodeComputationalRequirements: Encoder.AsObject[ComputationalRequirements] = deriveConfiguredEncoder
+  // implicit val decodeComputationalRequirements: Decoder[ComputationalRequirements] = deriveConfiguredDecoderFullChecks
   
   // encoder and decoder for ArgumentGroup
-  implicit val encodeArgumentGroup: Encoder.AsObject[ArgumentGroup] = deriveConfiguredEncoder
-  implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoderFullChecks
+  // implicit val encodeArgumentGroup: Encoder.AsObject[ArgumentGroup] = deriveConfiguredEncoder
+  // implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoderFullChecks
 
   // encoder and decoder for Status, make string lowercase before decoding
-  implicit val encodeStatus: Encoder[Status] = Encoder.encodeEnumeration(Status)
-  implicit val decodeStatus: Decoder[Status] = Decoder.decodeEnumeration(Status).prepare {
-    _.withFocus(_.mapString(_.toLowerCase()))
-  }
+  // implicit val encodeStatus: Encoder[Status] = Encoder.encodeEnumeration(Status)
+  // implicit val decodeStatus: Decoder[Status] = Decoder.decodeEnumeration(Status).prepare {
+  //   _.withFocus(_.mapString(_.toLowerCase()))
+  // }
 
-  implicit val encodeLinks: Encoder.AsObject[Links] = deriveConfiguredEncoderStrict
-  implicit val decodeLinks: Decoder[Links] = deriveConfiguredDecoderFullChecks
+  // implicit val encodeLinks: Encoder.AsObject[Links] = deriveConfiguredEncoderStrict
+  // implicit val decodeLinks: Decoder[Links] = deriveConfiguredDecoderFullChecks
 
-  implicit val encodeReferences: Encoder.AsObject[References] = deriveConfiguredEncoderStrict
-  implicit val decodeReferences: Decoder[References] = deriveConfiguredDecoderFullChecks
+  // implicit val encodeReferences: Encoder.AsObject[References] = deriveConfiguredEncoderStrict
+  // implicit val decodeReferences: Decoder[References] = deriveConfiguredDecoderFullChecks
 }

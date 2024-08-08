@@ -18,68 +18,69 @@
 package io.viash.engines
 
 import io.circe.{Decoder, Encoder, Json}
-import io.circe.generic.extras.Configuration
-import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
+// import io.circe.generic.extras.Configuration
+// import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import cats.syntax.functor._ // for .widen
 
 package object requirements {
   import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
+  // import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
 
-  implicit val encodeRRequirements: Encoder.AsObject[RRequirements] = deriveConfiguredEncoder
-  implicit val decodeRRequirements: Decoder[RRequirements] = deriveConfiguredDecoderFullChecks
+  // implicit val encodeRRequirements: Encoder.AsObject[RRequirements] = deriveConfiguredEncoder
+  // implicit val decodeRRequirements: Decoder[RRequirements] = deriveConfiguredDecoderFullChecks
 
-  implicit val encodePythonRequirements: Encoder.AsObject[PythonRequirements] = deriveConfiguredEncoder
-  implicit val decodePythonRequirements: Decoder[PythonRequirements] = deriveConfiguredDecoderFullChecks
+  // implicit val encodePythonRequirements: Encoder.AsObject[PythonRequirements] = deriveConfiguredEncoder
+  // implicit val decodePythonRequirements: Decoder[PythonRequirements] = deriveConfiguredDecoderFullChecks
 
-  implicit val encodeRubyRequirements: Encoder.AsObject[RubyRequirements] = deriveConfiguredEncoder
-  implicit val decodeRubyRequirements: Decoder[RubyRequirements] = deriveConfiguredDecoderFullChecks
+  // implicit val encodeRubyRequirements: Encoder.AsObject[RubyRequirements] = deriveConfiguredEncoder
+  // implicit val decodeRubyRequirements: Decoder[RubyRequirements] = deriveConfiguredDecoderFullChecks
 
-  implicit val encodeJavaScriptRequirements: Encoder.AsObject[JavaScriptRequirements] = deriveConfiguredEncoder
-  implicit val decodeJavaScriptRequirements: Decoder[JavaScriptRequirements] = deriveConfiguredDecoderFullChecks
+  // implicit val encodeJavaScriptRequirements: Encoder.AsObject[JavaScriptRequirements] = deriveConfiguredEncoder
+  // implicit val decodeJavaScriptRequirements: Decoder[JavaScriptRequirements] = deriveConfiguredDecoderFullChecks
 
-  implicit val encodeAptRequirements: Encoder.AsObject[AptRequirements] = deriveConfiguredEncoder
-  implicit val decodeAptRequirements: Decoder[AptRequirements] = deriveConfiguredDecoderFullChecks
+  // implicit val encodeAptRequirements: Encoder.AsObject[AptRequirements] = deriveConfiguredEncoder
+  // implicit val decodeAptRequirements: Decoder[AptRequirements] = deriveConfiguredDecoderFullChecks
 
-  implicit val encodeYumRequirements: Encoder.AsObject[YumRequirements] = deriveConfiguredEncoder
-  implicit val decodeYumRequirements: Decoder[YumRequirements] = deriveConfiguredDecoderFullChecks
+  // implicit val encodeYumRequirements: Encoder.AsObject[YumRequirements] = deriveConfiguredEncoder
+  // implicit val decodeYumRequirements: Decoder[YumRequirements] = deriveConfiguredDecoderFullChecks
 
-  implicit val encodeApkRequirements: Encoder.AsObject[ApkRequirements] = deriveConfiguredEncoder
-  implicit val decodeApkRequirements: Decoder[ApkRequirements] = deriveConfiguredDecoderFullChecks
+  // implicit val encodeApkRequirements: Encoder.AsObject[ApkRequirements] = deriveConfiguredEncoder
+  // implicit val decodeApkRequirements: Decoder[ApkRequirements] = deriveConfiguredDecoderFullChecks
 
-  implicit val encodeDockerRequirements: Encoder.AsObject[DockerRequirements] = deriveConfiguredEncoder
-  implicit val decodeDockerRequirements: Decoder[DockerRequirements] = deriveConfiguredDecoderFullChecks
+  // implicit val encodeDockerRequirements: Encoder.AsObject[DockerRequirements] = deriveConfiguredEncoder
+  // implicit val decodeDockerRequirements: Decoder[DockerRequirements] = deriveConfiguredDecoderFullChecks
 
   implicit def encodeRequirements[A <: Requirements]: Encoder[A] = Encoder.instance {
     reqs =>
       val typeJson = Json.obj("type" -> Json.fromString(reqs.`type`))
-      val objJson = reqs match {
-        case s: ApkRequirements => encodeApkRequirements(s)
-        case s: AptRequirements => encodeAptRequirements(s)
-        case s: YumRequirements => encodeYumRequirements(s)
-        case s: DockerRequirements => encodeDockerRequirements(s)
-        case s: PythonRequirements => encodePythonRequirements(s)
-        case s: RRequirements => encodeRRequirements(s)
-        case s: JavaScriptRequirements => encodeJavaScriptRequirements(s)
-        case s: RubyRequirements => encodeRubyRequirements(s)
-      }
-      objJson deepMerge typeJson
+      // val objJson = reqs match {
+      //   case s: ApkRequirements => encodeApkRequirements(s)
+      //   case s: AptRequirements => encodeAptRequirements(s)
+      //   case s: YumRequirements => encodeYumRequirements(s)
+      //   case s: DockerRequirements => encodeDockerRequirements(s)
+      //   case s: PythonRequirements => encodePythonRequirements(s)
+      //   case s: RRequirements => encodeRRequirements(s)
+      //   case s: JavaScriptRequirements => encodeJavaScriptRequirements(s)
+      //   case s: RubyRequirements => encodeRubyRequirements(s)
+      // }
+      // objJson deepMerge typeJson
+      typeJson
   }
 
   implicit def decodeRequirements: Decoder[Requirements] = Decoder.instance {
     cursor =>
       val decoder: Decoder[Requirements] =
         cursor.downField("type").as[String] match {
-          case Right("apk") => decodeApkRequirements.widen
-          case Right("apt") => decodeAptRequirements.widen
-          case Right("yum") => decodeYumRequirements.widen
-          case Right("docker") => decodeDockerRequirements.widen
-          case Right("python") => decodePythonRequirements.widen
-          case Right("r") => decodeRRequirements.widen
-          case Right("javascript") => decodeJavaScriptRequirements.widen
-          case Right("ruby") => decodeRubyRequirements.widen
-          case Right(typ) =>
-            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[ApkRequirements](typ, List("apk", "apt", "yum", "docker", "python", "r", "javascript", "ruby")).widen
+          // case Right("apk") => decodeApkRequirements.widen
+          // case Right("apt") => decodeAptRequirements.widen
+          // case Right("yum") => decodeYumRequirements.widen
+          // case Right("docker") => decodeDockerRequirements.widen
+          // case Right("python") => decodePythonRequirements.widen
+          // case Right("r") => decodeRRequirements.widen
+          // case Right("javascript") => decodeJavaScriptRequirements.widen
+          // case Right("ruby") => decodeRubyRequirements.widen
+          // case Right(typ) =>
+          //   DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[ApkRequirements](typ, List("apk", "apt", "yum", "docker", "python", "r", "javascript", "ruby")).widen
           case Left(exception) => throw exception
         }
 

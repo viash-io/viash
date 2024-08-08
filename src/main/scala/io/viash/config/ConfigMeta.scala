@@ -62,7 +62,7 @@ object ConfigMeta {
       ))
     )
 
-    val encodedConfig: Json = encodeConfig(anonymizedConfig)
+    val encodedConfig: Json = Json.Null//encodeConfig(anonymizedConfig)
     // drop empty & null values recursively except all "info" fields
     val cleanEncodedConfig = encodedConfig.dropEmptyRecursivelyExcept(Seq("info", ".engines.entrypoint", ".engines.cmd"))
     // get config.info and *do* clean it

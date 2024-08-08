@@ -23,7 +23,7 @@ import io.viash.exceptions.ExitException
 import io.viash.helpers.Logging
 
 trait ViashCommand {
-  _: DocumentedSubcommand =>
+  this: DocumentedSubcommand =>
   val platform = registerOpt[String](
     name = "platform",
     short = Some('p'),
@@ -69,7 +69,7 @@ trait ViashCommand {
   )
 }
 trait ViashRunner {
-  _: DocumentedSubcommand =>
+  this: DocumentedSubcommand =>
   val cpus = registerOpt[Int](
     name = "cpus",
     default = None,
@@ -84,7 +84,7 @@ trait ViashRunner {
   )
 }
 trait ViashNs {
-  _: DocumentedSubcommand =>
+  this: DocumentedSubcommand =>
   val query = registerOpt[String](
     name = "query",
     short = Some('q'),
@@ -158,7 +158,7 @@ trait ViashNs {
 }
 
 trait ViashNsBuild {
-  _: DocumentedSubcommand =>
+  this: DocumentedSubcommand =>
   val target = registerOpt[String](
     name = "target",
     short = Some('t'),
@@ -167,7 +167,7 @@ trait ViashNsBuild {
   )
 }
 trait WithTemporary {
-  _: DocumentedSubcommand =>
+  this: DocumentedSubcommand =>
   val keep = registerOpt[String](
     name = "keep",
     short = Some('k'),
@@ -179,7 +179,7 @@ trait WithTemporary {
 }
 
 trait ViashLogger {
-  _: DocumentedSubcommand =>
+  this: DocumentedSubcommand =>
   val colorize = registerChoice(
     name = "colorize",
     short = None,
@@ -250,7 +250,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
          |  viash run config.vsh.yaml""".stripMargin)
   }
 
-  val build = new DocumentedSubcommand("build") with ViashCommand with ViashLogger {
+  object build extends DocumentedSubcommand("build") with ViashCommand with ViashLogger {
     banner(
       "viash build",
       "Build an executable from the provided viash config file.",
@@ -276,7 +276,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
     )
   }
 
-  val test = new DocumentedSubcommand("test") with ViashCommand with WithTemporary with ViashRunner with ViashLogger {
+  object test extends DocumentedSubcommand("test") with ViashCommand with WithTemporary with ViashRunner with ViashLogger {
     banner(
       "viash test",
       "Test the component using the tests defined in the viash config file.",
@@ -308,8 +308,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
          |  viash run meta.vsh.yaml""".stripMargin)
   }
 
-  val config = new DocumentedSubcommand("config") {
-    val view = new DocumentedSubcommand("view") with ViashCommand with ViashLogger {
+  object config extends DocumentedSubcommand("config") {
+    object view extends DocumentedSubcommand("view") with ViashCommand with ViashLogger {
       banner(
         "viash config view",
         "View the config file after parsing.",
@@ -328,7 +328,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
         descr = "DEPRECATED. This is now always enabled. Whether or not to postprocess each component's @[argument groups](argument_groups)."
       )
     }
-    val inject = new DocumentedSubcommand("inject") with ViashCommand with ViashLogger {
+    object inject extends DocumentedSubcommand("inject") with ViashCommand with ViashLogger {
       banner(
         "viash config inject",
         "Inject a Viash header into the main script of a Viash component.",
@@ -342,9 +342,9 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
     shortSubcommandsHelp(true)
   }
 
-  val namespace = new DocumentedSubcommand("ns") {
+  object namespace extends DocumentedSubcommand("ns") {
 
-    val build = new DocumentedSubcommand("build") with ViashNs with ViashNsBuild with ViashLogger {
+    object build extends DocumentedSubcommand("build") with ViashNs with ViashNsBuild with ViashLogger {
       banner(
         "viash ns build",
         "Build a namespace from many viash config files.",
@@ -368,7 +368,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       )
     }
 
-    val test = new DocumentedSubcommand("test") with ViashNs with WithTemporary with ViashRunner with ViashLogger {
+    object test extends DocumentedSubcommand("test") with ViashNs with WithTemporary with ViashRunner with ViashLogger {
       banner(
         "viash ns test",
         "Test a namespace containing many viash config files.",
@@ -405,7 +405,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       )
     }
 
-    val list = new DocumentedSubcommand("list") with ViashNs with ViashLogger {
+    object list extends DocumentedSubcommand("list") with ViashNs with ViashLogger {
       banner(
         "viash ns list",
         "List a namespace containing many viash config files.",
@@ -425,7 +425,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       )
     }
 
-    val exec = new DocumentedSubcommand("exec") with ViashNs with ViashLogger {
+    object exec extends DocumentedSubcommand("exec") with ViashNs with ViashLogger {
       banner(
         "viash ns exec",
         """Execute a command for all found Viash components.
@@ -505,10 +505,10 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
     shortSubcommandsHelp(true)
   }
 
-  val `export` = new DocumentedSubcommand("export") {
+  object `export` extends DocumentedSubcommand("export") {
     hidden = true
 
-    val resource = new DocumentedSubcommand("resource") with ViashLogger {
+    object resource extends DocumentedSubcommand("resource") with ViashLogger {
       banner(
         "viash export resource",
         """Export an internal resource file""".stripMargin,
@@ -528,7 +528,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       )
     }
 
-    val cli_schema = new DocumentedSubcommand("cli_schema") with ViashLogger {
+    object cli_schema extends DocumentedSubcommand("cli_schema") with ViashLogger {
       banner(
         "viash export cli_schema",
         """Export the schema of the Viash CLI as a JSON""".stripMargin,
@@ -548,7 +548,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       )
     }
 
-    val cli_autocomplete = new DocumentedSubcommand("cli_autocomplete") with ViashLogger {
+    object cli_autocomplete extends DocumentedSubcommand("cli_autocomplete") with ViashLogger {
       banner(
         "viash export bash_autocomplete",
         """Export the autocomplete script as to be used in Bash or Zsh""".stripMargin,
@@ -568,7 +568,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       )
     }
 
-    val config_schema = new DocumentedSubcommand("config_schema") with ViashLogger {
+    object config_schema extends DocumentedSubcommand("config_schema") with ViashLogger {
       banner(
         "viash export config_schema",
         """Export the schema of a Viash config as a JSON""".stripMargin,
@@ -588,7 +588,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       )
     }
 
-    val json_schema = new DocumentedSubcommand("json_schema") with ViashLogger {
+    object json_schema extends DocumentedSubcommand("json_schema") with ViashLogger {
       banner(
         "viash export json_schema",
         """Export the json schema to validate a Viash config""".stripMargin,
@@ -633,7 +633,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
   addSubcommand(test)
   addSubcommand(namespace)
   addSubcommand(config)
-  addSubcommand(export)
+  addSubcommand(`export`)
 
   shortSubcommandsHelp(true)
 

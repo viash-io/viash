@@ -18,24 +18,24 @@
 package io.viash.runners
 
 import io.circe.{Decoder, Encoder, Json}
-import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
+// import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 
 package object executable {
   import io.viash.helpers.circe._
 
   // encoder and decoder for setup strategy
-  implicit val encodeSetupStrategy: Encoder[DockerSetupStrategy] = Encoder.instance {
-    dss => Json.fromString(dss.id.toLowerCase)
-  }
-  implicit val decodeSetupStrategy: Decoder[DockerSetupStrategy] = Decoder.instance {
-    cursor =>
-      cursor.value.as[String].map { s =>
-        val id = s.toLowerCase.replaceAll("_", "")
-        DockerSetupStrategy.map.applyOrElse(id,
-          (key: String) => throw new Exception(s"Docker Setup Strategy '$key' not found.")
-        )
-      }
-  }
+  // implicit val encodeSetupStrategy: Encoder[DockerSetupStrategy] = Encoder.instance {
+  //   dss => Json.fromString(dss.id.toLowerCase)
+  // }
+  // implicit val decodeSetupStrategy: Decoder[DockerSetupStrategy] = Decoder.instance {
+  //   cursor =>
+  //     cursor.value.as[String].map { s =>
+  //       val id = s.toLowerCase.replaceAll("_", "")
+  //       DockerSetupStrategy.map.applyOrElse(id,
+  //         (key: String) => throw new Exception(s"Docker Setup Strategy '$key' not found.")
+  //       )
+  //     }
+  // }
 
 }
 

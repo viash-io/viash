@@ -18,14 +18,14 @@
 package io.viash.helpers
 
 import io.circe._
-import io.circe.generic.extras.Configuration
+// import io.circe.generic.extras.Configuration
 import java.net.URI
 import data_structures.OneOrMore
 import java.nio.file.Paths
 
 package object circe {
-  implicit val customConfig: Configuration =
-    Configuration.default.withDefaults.withStrictDecoding
+  // implicit val customConfig: Configuration =
+  //   Configuration.default.withDefaults.withStrictDecoding
 
   // encoder and decoder for Either
   implicit def encodeEither[A,B](implicit ea: Encoder[A], eb: Encoder[B]): Encoder[Either[A,B]] = {
@@ -38,7 +38,7 @@ package object circe {
 
   // encoder and decoder for OneOrMore
   implicit def encodeOneOrMore[A](implicit enc: Encoder[List[A]]): Encoder[OneOrMore[A]] = { 
-    oom: OneOrMore[A] => if (oom == null) enc(Nil) else enc(oom.toList)
+    (oom: OneOrMore[A]) => if (oom == null) enc(Nil) else enc(oom.toList)
   }
 
   implicit def decodeOneOrMore[A](implicit da: Decoder[A], dl: Decoder[List[A]]): Decoder[OneOrMore[A]] = {

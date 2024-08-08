@@ -2,31 +2,36 @@ name := "viash"
 
 version := "0.9.0-dev"
 
-scalaVersion := "2.13.12"
+scalaVersion := "3.3.3"
 
 libraryDependencies ++= Seq(
   "org.scalactic" %% "scalactic" % "3.2.15" % "test",
   "org.scalatest" %% "scalatest" % "3.2.15" % "test",
   "org.rogach" %% "scallop" % "5.0.0",
-  "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+  // "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.1",
   "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4",
-  "com.github.julien-truffaut" %% "monocle-core"  % "2.1.0",
-  "com.github.julien-truffaut" %% "monocle-macro" % "2.1.0"
+  "dev.optics" %% "monocle-core"  % "3.1.0",
+  "dev.optics" %% "monocle-macro" % "3.1.0"
 )
 
-val circeVersion = "0.14.1"
+val circeVersion = "0.14.9"
 
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-core",
   "io.circe" %% "circe-generic",
   "io.circe" %% "circe-parser",
-  "io.circe" %% "circe-generic-extras",
-  "io.circe" %% "circe-optics",
-  "io.circe" %% "circe-yaml"
+  // "io.circe" %% "circe-generic-extras",
+  // "io.circe" %% "circe-optics",
+  // "io.circe" %% "circe-yaml"
 ).map(_ % circeVersion)
 
-scalacOptions ++= Seq("-unchecked", "-deprecation")
+libraryDependencies ++= Seq(
+  "io.circe" %% "circe-optics" % "0.15.0",
+  "io.circe" %% "circe-yaml" % "0.16.0",
+)
+
+scalacOptions ++= Seq("-unchecked", "-deprecation", "-explain")
 
 organization := "Data Intuitive"
 startYear := Some(2020)

@@ -20,6 +20,7 @@ package io.viash.runners.nextflow
 import scala.collection.immutable.ListMap
 import io.viash.schemas._
 import io.viash.helpers.data_structures.OneOrMore
+import io.viash.helpers.data_structures.listToOneOrMore
 
 @description("Allows tweaking how the Nextflow Config file is generated.")
 @since("Viash 0.7.4")

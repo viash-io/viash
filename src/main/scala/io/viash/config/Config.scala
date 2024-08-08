@@ -47,6 +47,7 @@ import io.viash.lenses.ConfigLenses._
 import Status._
 import io.viash.wrapper.BashWrapper
 import scala.collection.immutable.ListMap
+import io.viash.helpers.data_structures.oneOrMoreToList
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -642,7 +643,7 @@ object Config extends Logging {
 
     /* CONFIG Base: converted from json */
     // convert Json into Config
-    val confBase = Convert.jsonToClass[Config](json2, uri.toString())
+    val confBase = Config("")//Convert.jsonToClass[Config](json2, uri.toString())
 
     /* CONFIG 0: apply values from package config */
     // apply values from package config if need be
@@ -668,11 +669,11 @@ object Config extends Logging {
     val conf1 = 
       if (confMods.postparseCommands.nonEmpty) {
         // turn config back into json
-        val js = encodeConfig(conf0)
+        val js = Json.Null//encodeConfig(conf0)
         // apply config mods
         val modifiedJs = confMods(js, preparse = false)
         // turn json back into a config
-        Convert.jsonToClass[Config](modifiedJs, uri.toString())
+        Config("")//Convert.jsonToClass[Config](modifiedJs, uri.toString())
       } else {
         conf0
       }
@@ -683,8 +684,8 @@ object Config extends Logging {
     val resources = conf1.resources.map(_.copyWithAbsolutePath(parentURI, packageDir))
     val tests = conf1.test_resources.map(_.copyWithAbsolutePath(parentURI, packageDir))
 
-    val conf2a = resourcesLens.set(resources)(conf1)
-    val conf2 = testResourcesLens.set(tests)(conf2a)
+    val conf2a = resourcesLens.replace(resources)(conf1)
+    val conf2 = testResourcesLens.replace(tests)(conf2a)
 
     /* CONFIG 3: add info */
     // gather git info
@@ -826,5 +827,5 @@ object Config extends Logging {
     allConfigs
   }
 
-val reservedParameters = List("-h", "--help", "--version", "---v", "---verbose", "---verbosity")
+  val reservedParameters = List("-h", "--help", "--version", "---v", "---verbose", "---verbosity")
 }

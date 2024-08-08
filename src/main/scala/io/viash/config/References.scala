@@ -18,7 +18,7 @@
 package io.viash.config
 
 import io.viash.schemas._
-import io.viash.helpers.data_structures.OneOrMore
+import io.viash.helpers.data_structures.{OneOrMore, listToOneOrMore}
 
 @description("A list of scholarly sources or publications relevant to the tools or analysis defined in the component. This is important for attribution, scientific reproducibility and transparency.")
 @example(

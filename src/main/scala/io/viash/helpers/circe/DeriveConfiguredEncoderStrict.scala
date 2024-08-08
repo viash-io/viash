@@ -19,24 +19,24 @@ package io.viash.helpers.circe
 
 import io.circe.{Encoder, Json, HCursor}
 // import io.circe.generic.extras.Configuration
-import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
-import io.circe.generic.extras.encoding.ConfiguredAsObjectEncoder
+// import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
+// import io.circe.generic.extras.encoding.ConfiguredAsObjectEncoder
 
-import scala.reflect.runtime.universe._
-import shapeless.Lazy
+// import scala.reflect.runtime.universe._
+// import shapeless.Lazy
 import io.viash.schemas.ParameterSchema
 import io.viash.schemas.CollectedSchemas
 
 object DeriveConfiguredEncoderStrict {
 
-  final def deriveConfiguredEncoderStrict[T](implicit encode: Lazy[ConfiguredAsObjectEncoder[T]], tag: TypeTag[T]) = deriveConfiguredEncoder[T]
-    .mapJsonObject{ jsonObject =>
-      val parameters = CollectedSchemas.getParameters[T]()
-      jsonObject.filterKeys( k => 
-        parameters
-          .find(_.name == k) // find the correct parameter
-          .map(!_.hasInternalFunctionality) // check if it has the 'internalFunctionality' annotation
-          .getOrElse(true) // fallback, shouldn't really happen
-      )
-    }
+  // final def deriveConfiguredEncoderStrict[T](implicit encode: Lazy[ConfiguredAsObjectEncoder[T]], tag: TypeTag[T]) = deriveConfiguredEncoder[T]
+  //   .mapJsonObject{ jsonObject =>
+  //     val parameters = CollectedSchemas.getParameters[T]()
+  //     jsonObject.filterKeys( k => 
+  //       parameters
+  //         .find(_.name == k) // find the correct parameter
+  //         .map(!_.hasInternalFunctionality) // check if it has the 'internalFunctionality' annotation
+  //         .getOrElse(true) // fallback, shouldn't really happen
+  //     )
+  //   }
 }

@@ -18,24 +18,24 @@
 package io.viash.engines
 
 import io.circe.{Decoder, Encoder, Json}
-import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
+// import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 
 package object docker {
   import io.viash.helpers.circe._
 
   // encoder and decoder for resolvevolume
-  implicit val encodeResolveVolume: Encoder[DockerResolveVolume] = Encoder.instance {
-    v => Json.fromString(v.toString)
-  }
-  implicit val decodeResolveVolume: Decoder[DockerResolveVolume] = Decoder.instance {
-    cursor =>
-      cursor.value.as[String].map(s =>
-        s.toLowerCase() match {
-          case "manual" => Manual
-          case "auto" | "automatic" => Automatic
-        }
-      )
-  }
+  // implicit val encodeResolveVolume: Encoder[DockerResolveVolume] = Encoder.instance {
+  //   v => Json.fromString(v.toString)
+  // }
+  // implicit val decodeResolveVolume: Decoder[DockerResolveVolume] = Decoder.instance {
+  //   cursor =>
+  //     cursor.value.as[String].map(s =>
+  //       s.toLowerCase() match {
+  //         case "manual" => Manual
+  //         case "auto" | "automatic" => Automatic
+  //       }
+  //     )
+  // }
 
 }
 

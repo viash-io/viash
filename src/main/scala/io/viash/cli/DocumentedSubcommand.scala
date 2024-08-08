@@ -21,7 +21,7 @@ import org.rogach.scallop.Subcommand
 import org.rogach.scallop.ScallopOptionGroup
 import org.rogach.scallop.ValueConverter
 import org.rogach.scallop.ScallopOption
-import scala.reflect.runtime.universe._
+// import scala.reflect.runtime.universe._
 
 /**
   * Wrapper class for Subcommand to expose protected members
@@ -86,9 +86,9 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
     argName: String = "arg",
     hidden: Boolean = false,
     group: ScallopOptionGroup = null
-  )(implicit conv:ValueConverter[A], tag: TypeTag[A]): ScallopOption[A] = {
+  )(implicit conv:ValueConverter[A]/*, tag: TypeTag[A]*/): ScallopOption[A] = {
 
-    val `type` = tag.tpe
+    // val `type` = tag.tpe
     val cleanName = name match {
       case null => ""
       case _ => name
@@ -103,7 +103,7 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       argName = Some(argName), 
       hidden = hidden, 
       choices = None, 
-      `type` = `type`.toString(), 
+      `type` = "TODO REWORK REFLECTION",//`type`.toString(), 
       optType = "opt"
     )
     registeredOpts = registeredOpts :+ registeredOpt
@@ -151,9 +151,9 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
     default: => Option[A] = None,
     hidden: Boolean = false,
     group: ScallopOptionGroup = null
-  )(implicit conv:ValueConverter[A], tag: TypeTag[A]) = {
+  )(implicit conv:ValueConverter[A]/*, tag: TypeTag[A]*/) = {
 
-    val `type` = tag.tpe
+    // val `type` = tag.tpe
     val cleanName = name match {
       case null => ""
       case _ => name
@@ -168,7 +168,7 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       argName = None, 
       hidden = hidden, 
       choices = None, 
-      `type` = `type`.toString, 
+      `type` = "TODO REWORK REFLECTION",//`type`.toString, 
       optType = "trailArgs"
     )
     registeredOpts = registeredOpts :+ registeredOpt

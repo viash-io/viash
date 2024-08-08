@@ -44,7 +44,7 @@ object NextflowHelper {
   lazy val dataflowHelper: String = readSource("DataflowHelper.nf")
 
   def generateConfigStr(config: Config): String = {
-    val configJson = config.asJson.dropEmptyRecursively
+    val configJson = Json.Null//config.asJson.dropEmptyRecursively
     val configJsonStr = configJson
       .toFormattedString("json")
       .replace("\\\\", "\\\\\\\\")
@@ -89,10 +89,10 @@ object NextflowHelper {
   def generateDefaultWorkflowArgs(config: Config, directives: NextflowDirectives, auto: NextflowAuto, debug: Boolean): String = {
     // override container
     val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
-    val dirJson = directives.asJson.dropEmptyRecursively
+    val dirJson = Json.Null//directives.asJson.dropEmptyRecursively
     val dirJson2 = if (dirJson.isNull) Json.obj() else dirJson
 
-    val autoJson = auto.asJson.dropEmptyRecursively
+    val autoJson = Json.Null//auto.asJson.dropEmptyRecursively
 
     s"""[
       |  // key to be used to trace the process and determine output names

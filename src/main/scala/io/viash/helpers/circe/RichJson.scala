@@ -21,7 +21,7 @@ import java.net.URI
 
 import io.circe.Json
 import io.circe.JsonObject
-import io.circe.generic.extras.Configuration
+// import io.circe.generic.extras.Configuration
 import io.circe.{Json, Printer => JsonPrinter}
 import io.circe.yaml.{Printer => YamlPrinter}
 

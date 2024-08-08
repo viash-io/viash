@@ -24,6 +24,7 @@ import io.viash.config.{Config, BuildInfo, Author}
 import io.viash.engines.requirements.{Requirements, DockerRequirements}
 import io.viash.helpers.{Escaper, Docker}
 import io.viash.wrapper.BashWrapper
+import io.viash.helpers.data_structures.listToOneOrMore
 
 import io.viash.schemas._
 import io.viash.helpers.DockerImageInfo
