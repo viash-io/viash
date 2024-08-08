@@ -826,5 +826,5 @@ object Config extends Logging {
     allConfigs
   }
 
-val reservedParameters = List("-h", "--help", "--version", "---v", "---verbose", "---verbosity")
+  val reservedParameters = List("-h", "--help", "--version", "---v", "---verbose", "---verbosity")
 }
