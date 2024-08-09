@@ -7,7 +7,9 @@
 #   ViashDockerAutodetectMount /path/to/bar      # returns '/viash_automount/path/to/bar'
 #   ViashDockerAutodetectMountArg /path/to/bar   # returns '--volume="/path/to:/viash_automount/path/to"'
 function ViashDockerAutodetectMount {
-  abs_path=$(ViashAbsolutePath "$1")
+  local abs_path=$(ViashAbsolutePath "$1")
+  local mount_source
+  local base_name
   if [ -d "$abs_path" ]; then
     mount_source="$abs_path"
     base_name=""
@@ -15,7 +17,7 @@ function ViashDockerAutodetectMount {
     mount_source=`dirname "$abs_path"`
     base_name=`basename "$abs_path"`
   fi
-  mount_target="$VIASH_DOCKER_AUTOMOUNT_PREFIX$mount_source"
+  local mount_target="$VIASH_DOCKER_AUTOMOUNT_PREFIX$mount_source"
   if [ -z "$base_name" ]; then
     echo "$mount_target"
   else
@@ -23,7 +25,9 @@ function ViashDockerAutodetectMount {
   fi
 }
 function ViashDockerAutodetectMountArg {
-  abs_path=$(ViashAbsolutePath "$1")
+  local abs_path=$(ViashAbsolutePath "$1")
+  local mount_source
+  local base_name
   if [ -d "$abs_path" ]; then
     mount_source="$abs_path"
     base_name=""
@@ -31,11 +35,11 @@ function ViashDockerAutodetectMountArg {
     mount_source=`dirname "$abs_path"`
     base_name=`basename "$abs_path"`
   fi
-  mount_target="$VIASH_DOCKER_AUTOMOUNT_PREFIX$mount_source"
+  local mount_target="$VIASH_DOCKER_AUTOMOUNT_PREFIX$mount_source"
   ViashDebug "ViashDockerAutodetectMountArg $1 -> $mount_source -> $mount_target"
   echo "--volume=\"$mount_source:$mount_target\""
 }
 function ViashDockerStripAutomount {
-  abs_path=$(ViashAbsolutePath "$1")
+  local abs_path=$(ViashAbsolutePath "$1")
   echo "${abs_path#$VIASH_DOCKER_AUTOMOUNT_PREFIX}"
 }

@@ -28,6 +28,8 @@ TODO add summary
 
 * `viash ns exec`: Fix "relative fields" outputting absolute paths (PR# 737). Additionally, improve path resolution when using the `--src` argument.
 
+* `bashwrapper`: Fix an issue where running `viash test` which builds the test docker container would ignore test failures but subsequential runs would work correctly (PR #754).
+
 # Viash 0.9.0-RC6 (2024-06-17): Hotfix for docker image name generation
 
 Fix an issue where docker image names were not generated correctly.
