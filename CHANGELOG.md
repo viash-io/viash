@@ -28,7 +28,7 @@ TODO add summary
 
 * `viash ns exec`: Fix "relative fields" outputting absolute paths (PR# 737). Additionally, improve path resolution when using the `--src` argument.
 
-* `viash ns`: Fix viash tripping over its toes when it encounters multiple failed configs (PR #xxx). A dummy config was used as a placeholder, but it always used the name `failed`, so duplicate config names were generated, which we check for nowadays.
+* `viash ns`: Fix viash tripping over its toes when it encounters multiple failed configs (PR #761). A dummy config was used as a placeholder, but it always used the name `failed`, so duplicate config names were generated, which we check for nowadays.
 
 # Viash 0.9.0-RC6 (2024-06-17): Hotfix for docker image name generation
 
