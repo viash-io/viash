@@ -33,8 +33,8 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     val tag = "mytestbash"
     
     //remove docker if it exists
-    removeDockerImage(tag, "0.1-throwawayimage")
-    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
+    TestHelper.removeDockerImage(tag, "0.1-throwawayimage")
+    assert(!TestHelper.checkDockerImageExists(tag, "0.1-throwawayimage"))
 
     // build viash wrapper without --setup
     TestHelper.testMain(
@@ -49,7 +49,7 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     // verify docker still doesn't exist
-    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
+    assert(!TestHelper.checkDockerImageExists(tag, "0.1-throwawayimage"))
 
     // run viash wrapper with ---setup
     val out = Exec.runCatch(
@@ -58,15 +58,15 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     assert(out.exitValue == 0)
 
     // verify docker now exists
-    assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
+    assert(TestHelper.checkDockerImageExists(tag, "0.1-throwawayimage"))
   }
 
   test("viash with --setup creates docker during build", DockerTest) {
     val tag = "mytestbash"
 
     // remove docker if it exists
-    removeDockerImage(tag, "0.1-throwawayimage")
-    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
+    TestHelper.removeDockerImage(tag, "0.1-throwawayimage")
+    assert(!TestHelper.checkDockerImageExists(tag, "0.1-throwawayimage"))
 
     // build viash wrapper with --setup
     TestHelper.testMain(
@@ -82,7 +82,7 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     // verify docker exists
-    assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
+    assert(TestHelper.checkDockerImageExists(tag, "0.1-throwawayimage"))
   }
 
   test("Get info of a docker image using docker inspect", DockerTest) {
@@ -182,8 +182,8 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     val tag = "myorg/mytestbash"
 
     // remove docker if it exists
-    removeDockerImage(tag, "0.1-throwawayimage")
-    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
+    TestHelper.removeDockerImage(tag, "0.1-throwawayimage")
+    assert(!TestHelper.checkDockerImageExists(tag, "0.1-throwawayimage"))
 
     // build viash wrapper with --setup
     TestHelper.testMain(
@@ -199,7 +199,7 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     // verify docker exists
-    assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
+    assert(TestHelper.checkDockerImageExists(tag, "0.1-throwawayimage"))
   }
 
   test("Get info of a docker image with target_package set", DockerTest) {
@@ -207,8 +207,8 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     val tag = "pack/mytestbash"
 
     // remove docker if it exists
-    removeDockerImage(tag, "0.1-throwawayimage")
-    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
+    TestHelper.removeDockerImage(tag, "0.1-throwawayimage")
+    assert(!TestHelper.checkDockerImageExists(tag, "0.1-throwawayimage"))
 
     // build viash wrapper with --setup
     TestHelper.testMain(
@@ -224,7 +224,7 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     // verify docker exists
-    assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
+    assert(TestHelper.checkDockerImageExists(tag, "0.1-throwawayimage"))
   }
 
   test("Get info of a docker image with target_organization and target_package set", DockerTest) {
@@ -237,8 +237,8 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     val tag = "myorg/pack/mytestbash"
 
     // remove docker if it exists
-    removeDockerImage(tag, "0.1-throwawayimage")
-    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
+    TestHelper.removeDockerImage(tag, "0.1-throwawayimage")
+    assert(!TestHelper.checkDockerImageExists(tag, "0.1-throwawayimage"))
 
     // build viash wrapper with --setup
     TestHelper.testMain(
@@ -254,7 +254,7 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     // verify docker exists
-    assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
+    assert(TestHelper.checkDockerImageExists(tag, "0.1-throwawayimage"))
   }
 
   test("Get info of a docker image with organization and package name set in the package config", DockerTest) {
@@ -268,8 +268,8 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     Files.write(temporaryConfigFolder.resolve("_viash.yaml"), package_config.getBytes)
 
     // remove docker if it exists
-    removeDockerImage(tag, "0.1-throwawayimage")
-    assert(!checkDockerImageExists(tag, "0.1-throwawayimage"))
+    TestHelper.removeDockerImage(tag, "0.1-throwawayimage")
+    assert(!TestHelper.checkDockerImageExists(tag, "0.1-throwawayimage"))
 
     // build viash wrapper with --setup
     TestHelper.testMain(
@@ -286,32 +286,7 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     // verify docker exists
-    assert(checkDockerImageExists(tag, "0.1-throwawayimage"))
-  }
-
-  def checkDockerImageExists(name: String): Boolean = checkDockerImageExists(name, "latest")
-
-  def checkDockerImageExists(name: String, tag: String): Boolean = {
-    val out = Exec.runCatch(
-      Seq("docker", "images", name)
-    )
-
-    // print(out)
-    val regex = s"$name\\s*$tag".r
-
-    regex.findFirstIn(out.output).isDefined
-  }
-
-  def removeDockerImage(name: String): Unit = {
-    Exec.runCatch(
-      Seq("docker", "rmi", name, "-f")
-    )
-  }
-
-  def removeDockerImage(name: String, tag: String): Unit = {
-    Exec.runCatch(
-      Seq("docker", "rmi", s"$name:$tag", "-f")
-    )
+    assert(TestHelper.checkDockerImageExists(tag, "0.1-throwawayimage"))
   }
 
   override def afterAll(): Unit = {

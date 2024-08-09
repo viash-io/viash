@@ -4,7 +4,7 @@ import io.viash._
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 
-import io.viash.helpers.{IO, Exec}
+import io.viash.helpers.IO
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -90,8 +90,8 @@ class MainRunDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
     // This then results in the exit code not being returned correctly.
     val image_name = s"throwaway-image-${this.getClass.getName}".toLowerCase()
 
-    removeDockerImage(image_name)
-    assert(!checkDockerImageExists(image_name))
+    TestHelper.removeDockerImage(image_name)
+    assert(!TestHelper.checkDockerImageExists(image_name))
 
     val config = 
       s"""name: myscript
@@ -116,20 +116,6 @@ class MainRunDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(testOutput.exitCode == Some(1))
     assert(testOutput.stdout.contains("foo\n"))
-  }
-
-  def checkDockerImageExists(name: String): Boolean = {
-    val out = Exec.runCatch(
-      Seq("docker", "images", name)
-    )
-    val regex = s"$name\\s*latest".r
-    regex.findFirstIn(out.output).isDefined
-  }
-
-  def removeDockerImage(name: String): Unit = {
-    Exec.runCatch(
-      Seq("docker", "rmi", name, "-f")
-    )
   }
 
   override def afterAll(): Unit = {
