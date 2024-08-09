@@ -507,6 +507,7 @@ object Main extends Logging {
     val query = subcommand.query.toOption
     val queryNamespace = subcommand.query_namespace.toOption
     val queryName = subcommand.query_name.toOption
+    val queryConfig = subcommand.query_config.toOption
     val runnerStr = subcommand.runner.toOption orElse subcommand.platform.toOption
     val engineStr = subcommand.engine.toOption orElse subcommand.platform.toOption
     val configMods = packageConfig.config_mods
@@ -516,6 +517,7 @@ object Main extends Logging {
       query = query,
       queryNamespace = queryNamespace,
       queryName = queryName,
+      queryConfig = queryConfig,
       addOptMainScript = addOptMainScript,
       viashPackage = Some(packageConfig)
     )

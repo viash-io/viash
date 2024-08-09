@@ -383,6 +383,20 @@ case class Config(
   private val functionality: Functionality = Functionality("foo")
 
   @description(
+    """A list of @[arguments](argument) for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. See these reference pages per type for more information:  
+      |
+      | - @[string](arg_string)
+      | - @[file](arg_file)
+      | - @[integer](arg_integer)
+      | - @[double](arg_double)
+      | - @[boolean](arg_boolean)
+      | - @[boolean_true](arg_boolean_true)
+      | - @[boolean_false](arg_boolean_false)
+      |""".stripMargin)
+  @default("Empty")
+  private val arguments: List[Argument[_]] = Nil
+
+  @description(
     """Config inheritance by including YAML partials. This is useful for defining common APIs in
       |separate files. `__merge__` can be used in any level of the YAML. For example,
       |not just in the config but also in the argument_groups or any of the engines.
@@ -738,11 +752,15 @@ object Config extends Logging {
     query: Option[String] = None,
     queryNamespace: Option[String] = None,
     queryName: Option[String] = None,
+    queryConfig: Option[String] = None,
     addOptMainScript: Boolean = true,
     viashPackage: Option[PackageConfig] = None,
   ): List[AppliedConfig] = {
 
     val sourceDir = Paths.get(source)
+
+    // This is the value that the config's build_info.config field would be set to if the config were to be read
+    val readQueryConfig = queryConfig.map(IO.uri(_).toString.replaceAll("^file:/+", "/"))
 
     // find [^\.]*.vsh.* files and parse as config
     val scriptFiles = IO.find(sourceDir, (path, attrs) => {
@@ -787,10 +805,14 @@ object Config extends Logging {
           case (Some(_), None) => false
           case (None, _) => true
         }
+        val configTest = readQueryConfig match {
+          case Some(conf) => Some(conf) == appliedConfig.config.build_info.map(_.config)
+          case None => true
+        }
 
         if (!isEnabled) {
           appliedConfig.setStatus(BuildStatus.Disabled)
-        } else if (queryTest && nameTest && namespaceTest) {
+        } else if (queryTest && nameTest && namespaceTest && configTest) {
           // if config passes regex checks, show warnings if there are any
           rmos.replay()
           appliedConfig

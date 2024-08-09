@@ -4,11 +4,19 @@ TODO add summary
 
 ## NEW FUNCTIONALITY
 
+* `ExecutableRunner`: Add a `---docker_image_id` flag to view the Docker image ID of a built executable (PR #741).
+
+* `viash ns query`: Add a query filter that allows selecting a single component by its path in a namespace environment (PR #744).
+
 * `config schema`: Add `label` & `summary` fields for Config, PackageConfig, argument groups, and all argument types (PR #743).
 
 ## MINOR CHANGES
 
 * `ExecutableRunner`: Add parameter `docker_automount_prefix` to allow for a custom prefix for automounted folders (PR #739).
+
+* `ExecutableRunner`: Make Docker runtime arguments configurable via the `---docker_run_args` argument (PR #740).
+
+* `export json_schema`: Add `arguments` field to the `Config` schema (PR #755). Only for the non-strict version, the strict version of the viash config has these values merged into `argument_groups`.
 
 ## BUG FIXES
 
