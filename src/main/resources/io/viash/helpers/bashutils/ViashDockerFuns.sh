@@ -14,7 +14,7 @@ function ViashDockerInstallationCheck {
 
   ViashDebug "Checking whether the Docker daemon is running"
   local save=$-; set +e
-  docker_version=$(docker version --format '{{.Client.APIVersion}}' 2> /dev/null)
+  local docker_version=$(docker version --format '{{.Client.APIVersion}}' 2> /dev/null)
   local out=$?
   [[ $save =~ e ]] && set -e
   if [ $out -ne 0 ]; then
