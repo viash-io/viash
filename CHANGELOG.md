@@ -30,6 +30,8 @@ TODO add summary
 
 * `viash ns`: Fix viash tripping over its toes when it encounters multiple failed configs (PR #761). A dummy config was used as a placeholder, but it always used the name `failed`, so duplicate config names were generated, which we check for nowadays.
 
+* `bashwrapper`: Fix an issue where running `viash test` which builds the test docker container would ignore test failures but subsequential runs would work correctly (PR #754).
+
 # Viash 0.9.0-RC6 (2024-06-17): Hotfix for docker image name generation
 
 Fix an issue where docker image names were not generated correctly.

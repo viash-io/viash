@@ -3,9 +3,9 @@
 # $1      : The location from where to start the upward search
 # returns : The absolute path of the '.build.yaml' file
 function ViashFindTargetDir {
-  SOURCE="$1"
-  while [[ "$SOURCE" != "" && ! -e "$SOURCE/.build.yaml" ]]; do
-    SOURCE=${SOURCE%/*}
+  local source="$1"
+  while [[ "$source" != "" && ! -e "$source/.build.yaml" ]]; do
+    source=${source%/*}
   done
-  echo $SOURCE
+  echo $source
 }
