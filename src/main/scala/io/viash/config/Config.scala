@@ -47,7 +47,6 @@ import io.viash.lenses.ConfigLenses._
 import Status._
 import io.viash.wrapper.BashWrapper
 import scala.collection.immutable.ListMap
-import java.util.concurrent.atomic.AtomicInteger
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -770,8 +769,7 @@ object Config extends Logging {
         attrs.isRegularFile
     })
 
-    val failedCount = new AtomicInteger() // used to give unique names to failed configs
-    val allConfigs = scriptFiles.map { file =>
+    val allConfigs = scriptFiles.zipWithIndex.map { case (file, index) =>
       try {
         val rmos = new ReplayableMultiOutputStream()
 
@@ -824,7 +822,7 @@ object Config extends Logging {
       } catch {
         case _: Exception =>
           error(s"Reading file '$file' failed")
-          AppliedConfig(Config(s"failed_${failedCount.getAndIncrement()}"), None, Nil, Some(BuildStatus.ParseError))
+          AppliedConfig(Config(s"failed_$index"), None, Nil, Some(BuildStatus.ParseError))
       }
     }
 
