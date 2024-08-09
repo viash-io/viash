@@ -75,48 +75,48 @@ case class ScalaScript(
           // val env_name = par.VIASH_PAR
           val env_name = Bash.getEscapedArgument(par.VIASH_PAR, quo, """\"""", """\"\"\"+\"\\\"\"+\"\"\"""")
 
-        val parse = { par match {
-          case a: BooleanArgumentBase if a.multiple =>
-            s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toLowerCase.toBoolean).toList"""
-          case a: IntegerArgument if a.multiple =>
-            s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toInt).toList"""
-          case a: LongArgument if a.multiple =>
-            s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toLong).toList"""
-          case a: DoubleArgument if a.multiple =>
-            s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toDouble).toList"""
-          case a: FileArgument if a.multiple =>
-            s"""$env_name.split($quo${a.multiple_sep}$quo).toList"""
-          case a: StringArgument if a.multiple =>
-            s"""$env_name.split($quo${a.multiple_sep}$quo).toList"""
-          case a: BooleanArgumentBase if !a.required && a.flagValue.isEmpty => s"""Some($env_name.toLowerCase.toBoolean)"""
-          case a: IntegerArgument if !a.required => s"""Some($env_name.toInt)"""
-          case a: LongArgument if !a.required => s"""Some($env_name.toLong)"""
-          case a: DoubleArgument if !a.required => s"""Some($env_name.toDouble)"""
-          case a: FileArgument if !a.required => s"""Some($env_name)"""
-          case a: StringArgument if !a.required => s"""Some($env_name)"""
-          case _: BooleanArgumentBase => s"""$env_name.toLowerCase.toBoolean"""
-          case _: IntegerArgument => s"""$env_name.toInt"""
-          case _: LongArgument => s"""$env_name.toLong"""
-          case _: DoubleArgument => s"""$env_name.toDouble"""
-          case _: FileArgument => s"""$env_name"""
-          case _: StringArgument => s"""$env_name"""
-        }}
-        
-        // Todo: set as None if multiple is undefined
-        val notFound = par match {
-          case a: Argument[_] if a.multiple => Some("Nil")
-          case a: BooleanArgumentBase if a.flagValue.isDefined => None
-          case a: Argument[_] if !a.required => Some("None")
-          case _: Argument[_] => None
-        }
+          val parse = { par match {
+            case a: BooleanArgumentBase if a.multiple =>
+              s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toLowerCase.toBoolean).toList"""
+            case a: IntegerArgument if a.multiple =>
+              s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toInt).toList"""
+            case a: LongArgument if a.multiple =>
+              s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toLong).toList"""
+            case a: DoubleArgument if a.multiple =>
+              s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toDouble).toList"""
+            case a: FileArgument if a.multiple =>
+              s"""$env_name.split($quo${a.multiple_sep}$quo).toList"""
+            case a: StringArgument if a.multiple =>
+              s"""$env_name.split($quo${a.multiple_sep}$quo).toList"""
+            case a: BooleanArgumentBase if !a.required && a.flagValue.isEmpty => s"""Some($env_name.toLowerCase.toBoolean)"""
+            case a: IntegerArgument if !a.required => s"""Some($env_name.toInt)"""
+            case a: LongArgument if !a.required => s"""Some($env_name.toLong)"""
+            case a: DoubleArgument if !a.required => s"""Some($env_name.toDouble)"""
+            case a: FileArgument if !a.required => s"""Some($env_name)"""
+            case a: StringArgument if !a.required => s"""Some($env_name)"""
+            case _: BooleanArgumentBase => s"""$env_name.toLowerCase.toBoolean"""
+            case _: IntegerArgument => s"""$env_name.toInt"""
+            case _: LongArgument => s"""$env_name.toLong"""
+            case _: DoubleArgument => s"""$env_name.toDouble"""
+            case _: FileArgument => s"""$env_name"""
+            case _: StringArgument => s"""$env_name"""
+          }}
+          
+          // Todo: set as None if multiple is undefined
+          val notFound = par match {
+            case a: Argument[_] if a.multiple => Some("Nil")
+            case a: BooleanArgumentBase if a.flagValue.isDefined => None
+            case a: Argument[_] if !a.required => Some("None")
+            case _: Argument[_] => None
+          }
 
-        notFound match {
-          case Some(nf) =>
-            s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo "$nf"; fi )"""
-          case None => 
-            parse.replaceAll(quo, "\"\"\"") // undo quote escape as string is not part of echo
+          notFound match {
+            case Some(nf) =>
+              s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo "$nf"; fi )"""
+            case None => 
+              parse.replaceAll(quo, "\"\"\"") // undo quote escape as string is not part of echo
+          }
         }
-      }
 
       s"""case class Viash${dest.capitalize}(
         |  ${parClassTypes.mkString(",\n  ")}
