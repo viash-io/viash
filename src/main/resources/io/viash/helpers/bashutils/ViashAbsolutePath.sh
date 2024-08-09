@@ -7,6 +7,9 @@
 #   ViashAbsolutePath /foo/bar/..     # returns /foo
 function ViashAbsolutePath {
   local thePath
+  local parr
+  local parr
+  local len
   if [[ ! "$1" =~ ^/ ]]; then
     thePath="$PWD/$1"
   else

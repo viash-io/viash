@@ -3,11 +3,11 @@
 # $1      : Should always be set to ${BASH_SOURCE[0]}
 # returns : The absolute path of the bash file
 function ViashSourceDir {
-  SOURCE="$1"
-  while [ -h "$SOURCE" ]; do
-    DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
-    SOURCE="$(readlink "$SOURCE")"
-    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+  local source="$1"
+  while [ -h "$source" ]; do
+    local dir="$( cd -P "$( dirname "$source" )" >/dev/null 2>&1 && pwd )"
+    source="$(readlink "$source")"
+    [[ $source != /* ]] && source="$dir/$source"
   done
-  cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd
+  cd -P "$( dirname "$source" )" >/dev/null 2>&1 && pwd
 }

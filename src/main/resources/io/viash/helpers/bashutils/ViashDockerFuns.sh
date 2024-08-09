@@ -15,7 +15,7 @@ function ViashDockerInstallationCheck {
   ViashDebug "Checking whether the Docker daemon is running"
   local save=$-; set +e
   docker_version=$(docker version --format '{{.Client.APIVersion}}' 2> /dev/null)
-  out=$?
+  local out=$?
   [[ $save =~ e ]] && set -e
   if [ $out -ne 0 ]; then
     ViashCritical "Docker daemon does not seem to be running. Try one of the following:"
@@ -69,7 +69,7 @@ function ViashDockerPull {
   else
     local save=$-; set +e
     docker pull $1 2> /dev/null > /dev/null
-    out=$?
+    local out=$?
     [[ $save =~ e ]] && set -e
     if [ $out -ne 0 ]; then
       ViashWarning "Could not pull from '$1'. Docker image doesn't exist or is not accessible."
@@ -90,6 +90,7 @@ function ViashDockerPull {
 function ViashDockerPush {
   ViashNotice "Pushing image to '$1'"
   local save=$-; set +e
+  local out
   if [ $VIASH_VERBOSITY -ge $VIASH_LOGCODE_INFO ]; then
     docker push $1
     out=$?
@@ -115,7 +116,7 @@ function ViashDockerPush {
 function ViashDockerPullElseBuild {
   local save=$-; set +e
   ViashDockerPull $1
-  out=$?
+  local out=$?
   [[ $save =~ e ]] && set -e
   if [ $out -ne 0 ]; then
     ViashDockerBuild $@
