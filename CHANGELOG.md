@@ -12,6 +12,8 @@ TODO add summary
 
 ## MINOR CHANGES
 
+* `ExecutableRunner`: Add parameter `docker_automount_prefix` to allow for a custom prefix for automounted folders (PR #739).
+
 * `ExecutableRunner`: Make Docker runtime arguments configurable via the `---docker_run_args` argument (PR #740).
 
 * `export json_schema`: Add `arguments` field to the `Config` schema (PR #755). Only for the non-strict version, the strict version of the viash config has these values merged into `argument_groups`.
