@@ -23,7 +23,6 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   // check whether executable was created
   private val executable = temporaryFolder.resolve(config.name).toFile
-  private val execPathInDocker = Paths.get("/viash_automount", executable.getPath).toString
 
   // convert testbash
   test("viash can create an executable") {
@@ -101,7 +100,7 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
     val outputSrc = Source.fromFile(output)
     try {
       val outputLines = outputSrc.mkString
-      assert(outputLines.contains(s"""input: |$execPathInDocker|"""))
+      assert(outputLines.contains(s"""input: |/viash_automount${executable.getPath}|"""))
       assert(outputLines.contains("""real_number: |10.5|"""))
       assert(outputLines.contains("""whole_number: |10|"""))
       assert(outputLines.contains("""s: |a string with a few spaces|"""))
@@ -125,7 +124,6 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
     } finally {
       logSrc.close()
     }
-
   }
 
   test("Alternative params", DockerTest) {
@@ -140,7 +138,7 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
         )
       )
 
-    assert(stdout.contains(s"""input: |$execPathInDocker|"""))
+    assert(stdout.contains(s"""input: |/viash_automount${executable.getPath}|"""))
     assert(stdout.contains("""real_number: |123.456|"""))
     assert(stdout.contains("""whole_number: |789|"""))
     assert(stdout.contains("""s: |my$weird#string|"""))
@@ -151,6 +149,90 @@ class DockerSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(stdout.contains("""multiple_pos: ||"""))
     val regex = s"""meta_resources_dir: \\|/viash_automount.*$temporaryFolder\\|""".r
     assert(regex.findFirstIn(stdout).isDefined)
+
+    assert(stdout.contains("INFO: Parsed input arguments"))
+  }
+
+  test("Empty docker automount prefix", DockerTest) {
+    val output = temporaryFolder.resolve("output.txt").toFile
+    val log = temporaryFolder.resolve("log.txt").toFile
+
+    val cmdOut = Exec.runCatch(
+        Seq(
+          executable.toString,
+          executable.toString,
+          "--real_number", "123.456",
+          "--whole_number", "789",
+          "-s", "my$weird#string",
+          "--output", output.getPath,
+          "--log", log.getPath,
+        ),
+        extraEnv = Seq(
+          ("VIASH_DOCKER_AUTOMOUNT_PREFIX", "")
+        )
+      )
+
+    assert(cmdOut.exitValue == 0, "exit should be 0. stdout:\n" + cmdOut.output)
+
+    assert(output.exists())
+    assert(log.exists())
+
+    val outputSrc = Source.fromFile(output)
+    try {
+      val outputLines = outputSrc.mkString
+      assert(outputLines.contains(s"""input: |${executable.getPath}|"""))
+      assert(outputLines.contains("""real_number: |123.456|"""))
+      assert(outputLines.contains("""whole_number: |789|"""))
+      assert(outputLines.contains("""s: |my$weird#string|"""))
+      assert(outputLines.contains("""truth: |false|"""))
+      assert(outputLines.contains(s"""output: |/viash_automount${output.getPath}|"""))
+      assert(outputLines.contains(s"""log: |/viash_automount${log.getPath}|"""))
+      assert(outputLines.contains("""optional: ||"""))
+      assert(outputLines.contains("""optional_with_default: |The default value.|"""))
+      assert(outputLines.contains("""multiple: ||"""))
+      assert(outputLines.contains("""multiple_pos: ||"""))
+      val regex = s"""meta_resources_dir: \\|.*${temporaryFolder}\\|""".r
+      assert(regex.findFirstIn(outputLines).isDefined)
+    } finally {
+      outputSrc.close()
+    }
+
+    val logSrc = Source.fromFile(log)
+    try {
+      val logLines = logSrc.mkString
+      assert(logLines.contains("INFO: Parsed input arguments"))
+    } finally {
+      logSrc.close()
+    }
+  }
+
+  test("Custom docker automount prefix", DockerTest) {
+    val stdout =
+      Exec.run(
+        Seq(
+          executable.toString,
+          executable.toString,
+          "--real_number", "123.456",
+          "--whole_number", "789",
+          "-s", "my$weird#string"
+        ),
+        extraEnv = Seq(
+          ("VIASH_DOCKER_AUTOMOUNT_PREFIX", "/foobar")
+        )
+      )
+
+    assert(stdout.contains(s"""input: |/foobar$executable|"""))
+    assert(stdout.contains("""real_number: |123.456|"""))
+    assert(stdout.contains("""whole_number: |789|"""))
+    assert(stdout.contains("""s: |my$weird#string|"""))
+    assert(stdout.contains("""truth: |false|"""))
+    assert(stdout.contains("""optional: ||"""))
+    assert(stdout.contains("""optional_with_default: |The default value.|"""))
+    assert(stdout.contains("""multiple: ||"""))
+    assert(stdout.contains("""multiple_pos: ||"""))
+    val regex = s"""meta_resources_dir: \\|/foobar.*$temporaryFolder\\|""".r
+    assert(regex.findFirstIn(stdout).isDefined)
+    assert(!stdout.contains("/viash_automount"))
 
     assert(stdout.contains("INFO: Parsed input arguments"))
   }

@@ -433,7 +433,12 @@ final case class ExecutableRunner(
          |${Bash.ViashAbsolutePath}
          |${Bash.ViashDockerAutodetectMount}
          |# initialise variables
-         |VIASH_DIRECTORY_MOUNTS=()""".stripMargin
+         |VIASH_DIRECTORY_MOUNTS=()
+         |
+         |# configure default docker automount prefix if it is unset
+         |if [ -z "$${VIASH_DOCKER_AUTOMOUNT_PREFIX+x}" ]; then
+         |  VIASH_DOCKER_AUTOMOUNT_PREFIX="/viash_automount"
+         |fi""".stripMargin
     
     val preRun =
       f"""
