@@ -103,10 +103,11 @@ class ConfigTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Can find and read multiple sources with default testns components") {
-    IO.copyFolder(nsPath, tempFolStr)
+    val tempFolder = temporaryFolder.resolve("test1")
+    Files.createDirectory(tempFolder)
+    IO.copyFolder(nsPath, tempFolder.toString())
 
-    val configs = Config.readConfigs(tempFolStr)
-    println(s"configs: $configs")
+    val configs = Config.readConfigs(tempFolder.toString())
 
     assert(configs.length == 7)
     assert(configs.filter(_.status == None).length == 5)
@@ -115,13 +116,14 @@ class ConfigTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Can find and read multiple sources with multiple failing components") {
-    IO.copyFolder(nsPath, tempFolStr)
+    val tempFolder = temporaryFolder.resolve("test2")
+    Files.createDirectory(tempFolder)
+    IO.copyFolder(nsPath, tempFolder.toString())
 
-    Files.createDirectories(temporaryFolder.resolve("src/ns_error2"))
-    IO.write("this is an invalid config", temporaryFolder.resolve("src/ns_error2/invalid_config.vsh.yaml"))
+    Files.createDirectories(tempFolder.resolve("src/ns_error2"))
+    IO.write("this is an invalid config", tempFolder.resolve("src/ns_error2/invalid_config.vsh.yaml"))
 
-    val configs = Config.readConfigs(tempFolStr)
-    println(s"configs: $configs")
+    val configs = Config.readConfigs(tempFolder.toString())
 
     assert(configs.length == 8)
     assert(configs.filter(_.status == None).length == 5)
