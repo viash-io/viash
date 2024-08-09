@@ -8,7 +8,7 @@
 function ViashAbsolutePath {
   local thePath
   local parr
-  local parr
+  local outp
   local len
   if [[ ! "$1" =~ ^/ ]]; then
     thePath="$PWD/$1"

@@ -17,7 +17,7 @@ function ViashDockerAutodetectMount {
     mount_source=`dirname "$abs_path"`
     base_name=`basename "$abs_path"`
   fi
-  local  mount_target="$VIASH_DOCKER_AUTOMOUNT_PREFIX$mount_source"
+  local mount_target="$VIASH_DOCKER_AUTOMOUNT_PREFIX$mount_source"
   if [ -z "$base_name" ]; then
     echo "$mount_target"
   else
