@@ -85,6 +85,53 @@ class MainRunDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(outputFileText == "bar")
   }
 
+  test("Exit code after docker build should be picked up", DockerTest) {
+    // When local variables aren't used correctly, the `set -e` can be lost, especially when the docker image is built because there are several nested functions.
+    // This then results in the exit code not being returned correctly.
+    val image_name = s"throwaway-image-${this.getClass.getName}".toLowerCase()
+
+    removeDockerImage(image_name)
+    assert(!checkDockerImageExists(image_name))
+
+    val config = 
+      s"""name: myscript
+         |resources:
+         |  - type: bash_script
+         |    text: |
+         |      echo foo
+         |      exit 1
+         |engines:
+         |  - type: docker
+         |    image: 'bash:3.2'
+         |    target_image: '$image_name'
+         |""".stripMargin
+
+    val configFile = temporaryFolder.resolve("config.vsh.yaml")
+    Files.write(configFile, config.getBytes())
+
+    val testOutput = TestHelper.testMain(
+      "run",
+      configFile.toString()
+    )
+
+    assert(testOutput.exitCode == Some(1))
+    assert(testOutput.stdout.contains("foo\n"))
+  }
+
+  def checkDockerImageExists(name: String): Boolean = {
+    val out = Exec.runCatch(
+      Seq("docker", "images", name)
+    )
+    val regex = s"$name\\s*latest".r
+    regex.findFirstIn(out.output).isDefined
+  }
+
+  def removeDockerImage(name: String): Unit = {
+    Exec.runCatch(
+      Seq("docker", "rmi", name, "-f")
+    )
+  }
+
   override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
