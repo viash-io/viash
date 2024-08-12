@@ -484,10 +484,8 @@ object BashWrapper {
                  |fi""".stripMargin
             } else if (direction == Input) {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
-                 |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
                  |  set -f
-                 |  for file in $$${param.VIASH_PAR}; do
-                 |    unset IFS
+                 |  for file in $${${param.VIASH_PAR}[@]}; do
                  |    if [ ! -e "$$file" ]; then
                  |      ViashError "$direction file '$$file' does not exist."
                  |      exit 1
@@ -520,10 +518,8 @@ object BashWrapper {
           createParentFiles.map { param =>
             if (param.multiple && param.direction == Input) {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
-                 |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
                  |  set -f
-                 |  for file in $$${param.VIASH_PAR}; do
-                 |    unset IFS
+                 |  for file in $${${param.VIASH_PAR}[@]}; do
                  |    if [ ! -d "$$(dirname "$$file")" ]; then
                  |      mkdir -p "$$(dirname "$$file")"
                  |    fi
@@ -613,14 +609,12 @@ object BashWrapper {
         case param if param.multiple && param.direction == Input =>
           val checkStart = 
             s"""if [ -n "$$${param.VIASH_PAR}" ]; then
-               |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
                |  set -f
-               |  for val in $$${param.VIASH_PAR}; do
+               |  for val in $${${param.VIASH_PAR}[@]}; do
                |"""
           val checkEnd =
             s"""  done
                |  set +f
-               |  unset IFS
                |fi
                |""".stripMargin
           // TODO add extra spaces for typeCheck, minCheck, maxCheck
@@ -659,37 +653,47 @@ object BashWrapper {
       }
 
     def checkChoices[T](param: Argument[T], allowedChoices: List[T]) = {
-      val allowedChoicesString = allowedChoices.mkString(param.multiple_sep.toString)
+      val allowedChoicesString = allowedChoices.map("\"" + Bash.escapeString(_, quote = true) + "\"").mkString(" ")
 
       param match {
         case _ if param.multiple && param.direction == Input =>
           s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
-             |  ${param.VIASH_PAR}_CHOICES=("$allowedChoicesString")
-             |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
-             |  set -f
-             |  for val in $$${param.VIASH_PAR}; do
-             |    if ! [[ "${param.multiple_sep}$${${param.VIASH_PAR}_CHOICES[*]}${param.multiple_sep}" =~ "${param.multiple_sep}$${val}${param.multiple_sep}" ]]; then
-             |      ViashError '${param.name}' specified value of \\'$${val}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
-             |      exit 1
-             |    fi
-             |  done
-             |  set +f
-             |  unset IFS
-             |fi
-             |""".stripMargin
+            |  ${param.VIASH_PAR}_CHOICES=($allowedChoicesString)
+            |  set -f
+            |  for val in $${${param.VIASH_PAR}}[@]}; do
+            |    found=0
+            |    for choice in $${${param.VIASH_PAR}_CHOICES[@]}; do
+            |      if [ "$$val" == "$$choice" ]; then
+            |        found=1
+            |        break
+            |      fi
+            |    done
+            |    if [ $$found -eq 0 ]; then
+            |      ViashError '${param.name}' specified value of \\'$${val}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
+            |      exit 1
+            |    fi
+            |  done
+            |  set +f
+            |fi
+            |""".stripMargin
         case _ =>
           s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
-             |  ${param.VIASH_PAR}_CHOICES=("$allowedChoicesString")
-             |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
-             |  set -f
-             |  if ! [[ "${param.multiple_sep}$${${param.VIASH_PAR}_CHOICES[*]}${param.multiple_sep}" =~ "${param.multiple_sep}$$${param.VIASH_PAR}${param.multiple_sep}" ]]; then
-             |    ViashError '${param.name}' specified value of \\'$$${param.VIASH_PAR}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
-             |    exit 1
-             |  fi
-             |  set +f
-             |  unset IFS
-             |fi
-             |""".stripMargin
+            |  ${param.VIASH_PAR}_CHOICES=($allowedChoicesString)
+            |  found=0
+            |  for choice in $${${param.VIASH_PAR}_CHOICES[@]}; do
+            |    if [ "$$${param.VIASH_PAR}" == "$$choice" ]; then
+            |      found=1
+            |      break
+            |    fi
+            |  done
+            |  set -f
+            |  if [ $$found -eq 0 ]; then
+            |    ViashError '${param.name}' specified value of \\'$$${param.VIASH_PAR}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
+            |    exit 1
+            |  fi
+            |  set +f
+            |fi
+            |""".stripMargin
       }
     }
     val choicesCheckList = 
@@ -818,10 +822,8 @@ object BashWrapper {
         if (param.multiple && param.direction == Input) {
           s"""
              |if [ ! -z "$$${param.VIASH_PAR}" ]; then
-             |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
              |  set -f
-             |  for val in $$${param.VIASH_PAR}; do
-             |    unset IFS
+             |  for val in $${${param.VIASH_PAR}[@]}; do
              |    VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$val'"
              |  done
              |  set +f
