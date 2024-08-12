@@ -27,8 +27,6 @@ class DockerMoreSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   // check whether executable was created
   private val executable = Paths.get(tempFolStr, config.name).toFile
-  private val execPathInDocker = Paths.get("/viash_automount", executable.getPath).toFile.toString
-
 
   test("Prepare base config derivation and verify", DockerTest) {
     val newConfigFilePath = configDeriver.derive(

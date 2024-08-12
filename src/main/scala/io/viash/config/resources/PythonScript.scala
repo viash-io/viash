@@ -47,39 +47,39 @@ case class PythonScript(
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
     val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
       val parSet = params.map { par =>
-      // val env_name = par.VIASH_PAR
-      val env_name = Bash.getEscapedArgument(par.VIASH_PAR, "r'", "'", """\'""", """\'\"\'\"r\'""")
+        // val env_name = par.VIASH_PAR
+        val env_name = Bash.getEscapedArgument(par.VIASH_PAR, "r'", "'", """\'""", """\'\"\'\"r\'""")
 
-      val parse = par match {
-        case a: BooleanArgumentBase if a.multiple =>
-          s"""list(map(lambda x: (x.lower() == 'true'), $env_name.split('${a.multiple_sep}')))"""
-        case a: IntegerArgument if a.multiple =>
-          s"""list(map(int, $env_name.split('${a.multiple_sep}')))"""
-        case a: LongArgument if a.multiple =>
-          s"""list(map(int, $env_name.split('${a.multiple_sep}')))"""
-        case a: DoubleArgument if a.multiple =>
-          s"""list(map(float, $env_name.split('${a.multiple_sep}')))"""
-        case a: FileArgument if a.multiple =>
-          s"""$env_name.split('${a.multiple_sep}')"""
-        case a: StringArgument if a.multiple =>
-          s"""$env_name.split('${a.multiple_sep}')"""
-        case _: BooleanArgumentBase => s"""$env_name.lower() == 'true'"""
-        case _: IntegerArgument => s"""int($env_name)"""
-        case _: LongArgument => s"""int($env_name)"""
-        case _: DoubleArgument => s"""float($env_name)"""
-        case _: FileArgument => s"""$env_name"""
-        case _: StringArgument => s"""$env_name"""
+        val parse = par match {
+          case a: BooleanArgumentBase if a.multiple =>
+            s"""list(map(lambda x: (x.lower() == 'true'), $env_name.split('${a.multiple_sep}')))"""
+          case a: IntegerArgument if a.multiple =>
+            s"""list(map(int, $env_name.split('${a.multiple_sep}')))"""
+          case a: LongArgument if a.multiple =>
+            s"""list(map(int, $env_name.split('${a.multiple_sep}')))"""
+          case a: DoubleArgument if a.multiple =>
+            s"""list(map(float, $env_name.split('${a.multiple_sep}')))"""
+          case a: FileArgument if a.multiple =>
+            s"""$env_name.split('${a.multiple_sep}')"""
+          case a: StringArgument if a.multiple =>
+            s"""$env_name.split('${a.multiple_sep}')"""
+          case _: BooleanArgumentBase => s"""$env_name.lower() == 'true'"""
+          case _: IntegerArgument => s"""int($env_name)"""
+          case _: LongArgument => s"""int($env_name)"""
+          case _: DoubleArgument => s"""float($env_name)"""
+          case _: FileArgument => s"""$env_name"""
+          case _: StringArgument => s"""$env_name"""
+        }
+
+        val notFound = "None"
+
+        s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo $notFound; fi )"""
       }
 
-      val notFound = "None"
-
-      s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo $notFound; fi )"""
-    }
-
-    s"""$dest = {
-      |  ${parSet.mkString(",\n  ")}
-      |}
-      |""".stripMargin
+      s"""$dest = {
+        |  ${parSet.mkString(",\n  ")}
+        |}
+        |""".stripMargin
     }
 
     ScriptInjectionMods(params = paramsCode.mkString)

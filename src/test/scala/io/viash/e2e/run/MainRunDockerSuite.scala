@@ -4,7 +4,7 @@ import io.viash._
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 
-import io.viash.helpers.{IO, Exec}
+import io.viash.helpers.IO
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -83,6 +83,39 @@ class MainRunDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
     val outputFileText = Files.readString(outputFile)
 
     assert(outputFileText == "bar")
+  }
+
+  test("Exit code after docker build should be picked up", DockerTest) {
+    // When local variables aren't used correctly, the `set -e` can be lost, especially when the docker image is built because there are several nested functions.
+    // This then results in the exit code not being returned correctly.
+    val image_name = s"throwaway-image-${this.getClass.getName}".toLowerCase()
+
+    TestHelper.removeDockerImage(image_name)
+    assert(!TestHelper.checkDockerImageExists(image_name))
+
+    val config = 
+      s"""name: myscript
+         |resources:
+         |  - type: bash_script
+         |    text: |
+         |      echo foo
+         |      exit 1
+         |engines:
+         |  - type: docker
+         |    image: 'bash:3.2'
+         |    target_image: '$image_name'
+         |""".stripMargin
+
+    val configFile = temporaryFolder.resolve("config.vsh.yaml")
+    Files.write(configFile, config.getBytes())
+
+    val testOutput = TestHelper.testMain(
+      "run",
+      configFile.toString()
+    )
+
+    assert(testOutput.exitCode == Some(1))
+    assert(testOutput.stdout.contains("foo\n"))
   }
 
   override def afterAll(): Unit = {

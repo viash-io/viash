@@ -18,7 +18,11 @@ TODO add summary
 
 ## MINOR CHANGES
 
+* `ExecutableRunner`: Add parameter `docker_automount_prefix` to allow for a custom prefix for automounted folders (PR #739).
+
 * `ExecutableRunner`: Make Docker runtime arguments configurable via the `---docker_run_args` argument (PR #740).
+
+* `export json_schema`: Add `arguments` field to the `Config` schema (PR #755). Only for the non-strict version, the strict version of the viash config has these values merged into `argument_groups`.
 
 ## BUG FIXES
 
@@ -29,6 +33,8 @@ TODO add summary
 * `nextflow_runner`: Fix refactoring error in the `findStates()` helper function (PR #733).
 
 * `viash ns exec`: Fix "relative fields" outputting absolute paths (PR# 737). Additionally, improve path resolution when using the `--src` argument.
+
+* `bashwrapper`: Fix an issue where running `viash test` which builds the test docker container would ignore test failures but subsequential runs would work correctly (PR #754).
 
 # Viash 0.9.0-RC6 (2024-06-17): Hotfix for docker image name generation
 

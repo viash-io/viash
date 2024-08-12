@@ -254,10 +254,10 @@ object ConfigModParser extends RegexParsers {
   def brackets: Parser[Condition] = "(" ~> condition <~ ")"
   def condition: Parser[Condition] = or
   def or: Parser[Condition] = rep1sep(and, "||") ^^ {
-    case comps => comps.reduceLeft(Or)
+    case comps => comps.reduceLeft(Or.apply)
   }
   def and: Parser[Condition] = rep1sep(comparison, "&&") ^^ {
-    case comps => comps.reduceLeft(And)
+    case comps => comps.reduceLeft(And.apply)
   }
   def comparison: Parser[Condition] = brackets | equals | notEquals | not | has | trueCond | falseCond
   def trueCond: Parser[Condition] = "true" ^^^ True
