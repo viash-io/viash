@@ -653,7 +653,7 @@ object BashWrapper {
       }
 
     def checkChoices[T](param: Argument[T], allowedChoices: List[T]) = {
-      val allowedChoicesString = allowedChoices.map("\"" + Bash.escapeString(_, quote = true) + "\"").mkString(" ")
+      val allowedChoicesString = allowedChoices.map(choice => "\"" + Bash.escapeString(choice.toString, quote = true) + "\"").mkString(" ")
 
       param match {
         case _ if param.multiple && param.direction == Input =>
