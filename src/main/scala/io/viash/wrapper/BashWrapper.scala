@@ -55,11 +55,12 @@ object BashWrapper {
     // note: 'value' is split using multiple_sep into 'values' for backwards compatibility.
     // todo: strip quotes and escape as suggested by https://github.com/viash-io/viash/issues/705#issuecomment-2208448576
     if (multiple_sep.isDefined) {
-      // note: 'values' is a global variable here!
-      s"""if [ "$$$env" == "UNDEFINED" ]; then
+      // note: 'value' and 'values' are global values!!
+      s"""value=$value
+        |if [ $$value == UNDEFINED ]; then
         |  unset $env
         |else
-        |  readarray -d $$';' -t values <<< $value
+        |  readarray -d $$';' -t values <<< $$value
         |  if [ -z "$$$env" ]; then
         |    $env=( "$${values[@]}" )
         |  else
@@ -67,11 +68,12 @@ object BashWrapper {
         |  fi
         |fi""".stripMargin.split("\n")
     } else {
-      s"""if [ "$$$env" == "UNDEFINED" ]; then
+      s"""value=$value
+        |if [ $$value == UNDEFINED ]; then
         |  unset $env
         |else
         |  [ -n "$$$env" ] && ViashError Bad arguments for option \\'$name\\': \\'$$$env\\' \\& \\'$$2\\' - you should provide exactly one argument for this option. && exit 1
-        |  $env=$value
+        |  $env=$$value
         |fi""".stripMargin.split("\n")
     }
   }
