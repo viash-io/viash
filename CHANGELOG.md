@@ -19,7 +19,6 @@ TODO add summary
 ## MINOR CHANGES
 
 * `ExecutableRunner`: Make Docker runtime arguments configurable via the `---docker_run_args` argument (PR #740).
->>>>>>> origin/develop
 
 ## BUG FIXES
 
