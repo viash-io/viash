@@ -52,41 +52,48 @@ object BashWrapper {
   }
 
   def store(name: String, env: String, value: String, multiple_sep: Option[String]): Array[String] = {
+    // note: 'value' is split using multiple_sep into 'values' for backwards compatibility.
+    // todo: strip quotes and escape as suggested by https://github.com/viash-io/viash/issues/705#issuecomment-2208448576
     if (multiple_sep.isDefined) {
-      s"""if [ -z "$$$env" ]; then
-         |  $env=$value
-         |else
-         |  $env="$$$env${multiple_sep.get}"$value
-         |fi""".stripMargin.split("\n")
+      // note: 'values' is a global variable here!
+      s"""if [ "$value" == "UNDEFINED" ]; then
+        |  unset $value
+        |else
+        |  readarray -d $$';' -t values <<< $value
+        |  if [ -z "$$$env" ]; then
+        |    $env=( "$${values[@]}" )
+        |  else
+        |    $env+=( "$${values[@]}" )
+        |  fi
+        |fi""".stripMargin.split("\n")
     } else {
-      Array(
-        s"""[ -n "$$$env" ] && ViashError Bad arguments for option \\'$name\\': \\'$$$env\\' \\& \\'$$2\\' - you should provide exactly one argument for this option. && exit 1""",
-        env + "=" + value
-      )
+      s"""if [ "$value" == "UNDEFINED" ]; then
+        |  unset $value
+        |else
+        |  [ -n "$$$env" ] && ViashError Bad arguments for option \\'$name\\': \\'$$$env\\' \\& \\'$$2\\' - you should provide exactly one argument for this option. && exit 1
+        |  $env=$value
+        |fi""".stripMargin.split("\n")
     }
   }
 
   def argStore(
     name: String,
     plainName: String,
-    store: String,
+    value: String,
     argsConsumed: Int,
     multiple_sep: Option[String] = None
   ): String = {
-    argsConsumed match {
-      case num if num > 1 =>
-        s"""        $name)
-           |            ${this.store(name, plainName, store, multiple_sep).mkString("\n            ")}
-           |            [ $$# -lt $argsConsumed ] && ViashError Not enough arguments passed to $name. Use "--help" to get more information on the parameters. && exit 1
-           |            shift $argsConsumed
-           |            ;;""".stripMargin
-      case _ =>
-        s"""        $name)
-           |            ${this.store(name, plainName, store, multiple_sep).mkString("\n            ")}
-           |            shift $argsConsumed
-           |            ;;""".stripMargin
-    }
-    
+    val argmatchError =
+      if (argsConsumed > 1) {
+        s"""\n            [ $$# -lt $argsConsumed ] && ViashError Not enough arguments passed to $name. Use "--help" to get more information on the parameters. && exit 1"""
+      } else {
+        ""
+      }
+
+    s"""        $name)$argmatchError
+        |            ${this.store(name, plainName, value, multiple_sep).mkString("\n            ")}
+        |            shift $argsConsumed
+        |            ;;""".stripMargin
   }
 
   def argStoreSed(name: String, plainName: String, multiple_sep: Option[String] = None): String = {
