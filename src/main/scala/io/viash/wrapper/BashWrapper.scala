@@ -56,7 +56,9 @@ object BashWrapper {
     // todo: strip quotes and escape as suggested by https://github.com/viash-io/viash/issues/705#issuecomment-2208448576
     if (multiple_sep.isDefined) {
       // note: 'value' and 'values' are global values!!
-      s"""value=$value
+      // -> could rename them to `${env}_value` and `${env}_values` to avoid conflicts
+      s"""unset value values
+        |value=$value
         |if [ $$value == UNDEFINED ]; then
         |  unset $env
         |else
@@ -68,7 +70,8 @@ object BashWrapper {
         |  fi
         |fi""".stripMargin.split("\n")
     } else {
-      s"""value=$value
+      s"""unset value
+        |value=$value
         |if [ $$value == UNDEFINED ]; then
         |  unset $env
         |else
