@@ -233,28 +233,15 @@ object BashWrapper {
       case Some(_: Executable) => generateExecutableArgs(args)
       case _ => BashWrapperMods()
     }
+    val depMods = generateDependencies(config)
 
     // combine
-    val allMods = helpMods ++ parMods ++ mods ++ execMods ++ computationalRequirementMods
+    val allMods = helpMods ++ parMods ++ mods ++ execMods ++ computationalRequirementMods ++ depMods
 
     // generate header
     val header = Helper.generateScriptHeader(config)
       .map(h => Escaper(h, newline = true))
       .mkString("# ", "\n# ", "")
-
-    val (localDependencies, remoteDependencies) = config.dependencies
-      .partition(d => d.isLocalDependency)
-    val localDependenciesStrings = localDependencies.map{ d =>
-      // relativize the path of the main component to the local dependency
-      // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
-      val thisPath = ViashNamespace.targetOutputPath("", "invalid_runner_name", config)
-      val relativePath = Paths.get(thisPath).relativize(Paths.get(d.configInfo.getOrElse("executable", "")))
-      s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR/$relativePath\""
-    }
-    val remoteDependenciesStrings = remoteDependencies.map{ d =>
-      s"${d.VIASH_DEP}=\"$$VIASH_TARGET_DIR/dependencies/${d.subOutputPath.get}/${Paths.get(d.configInfo.getOrElse("executable", "not_found")).getFileName()}\""
-    }
-    val dependenciesStr = (localDependenciesStrings ++ remoteDependenciesStrings).mkString("\n")
 
     /* GENERATE BASH SCRIPT */
     s"""#!/usr/bin/env bash
@@ -333,9 +320,6 @@ object BashWrapper {
        |# parse positional parameters
        |eval set -- $$VIASH_POSITIONAL_ARGS
        |${spaceCode(allMods.postParse)}${spaceCode(allMods.preRun)}
-       |
-       |# set dependency paths
-       |$dependenciesStr
        |
        |ViashDebug "Running command: ${executor.replaceAll("^eval (.*)", "\\$(echo $1)")}"
        |$heredocStart$executor${escapePipes(executionCode)}$heredocEnd
@@ -838,6 +822,33 @@ object BashWrapper {
 
     BashWrapperMods(
       preRun = "\nVIASH_EXECUTABLE_ARGS=''" + inserts.mkString
+    )
+  }
+
+  def generateDependencies(
+    config: Config
+  ): BashWrapperMods = {
+    if (config.dependencies.isEmpty) {
+      return BashWrapperMods()
+    }
+
+    val (localDependencies, remoteDependencies) = config.dependencies
+      .partition(d => d.isLocalDependency)
+
+    val localDependenciesStrings = localDependencies.map{ d =>
+      // relativize the path of the main component to the local dependency
+      // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
+      val thisPath = ViashNamespace.targetOutputPath("", "invalid_runner_name", config)
+      val relativePath = Paths.get(thisPath).relativize(Paths.get(d.configInfo.getOrElse("executable", "")))
+      s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR/$relativePath\""
+    }
+    val remoteDependenciesStrings = remoteDependencies.map{ d =>
+      s"${d.VIASH_DEP}=\"$$VIASH_TARGET_DIR/dependencies/${d.subOutputPath.get}/${Paths.get(d.configInfo.getOrElse("executable", "not_found")).getFileName()}\""
+    }
+    val dependenciesStr = (localDependenciesStrings ++ remoteDependenciesStrings).mkString("\n")
+
+    BashWrapperMods(
+      preRun = "\n# set dependency paths\n" + dependenciesStr
     )
   }
 
