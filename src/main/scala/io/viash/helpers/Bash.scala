@@ -37,35 +37,6 @@ object Bash {
   lazy val ViashDockerFuns: String = readUtils("ViashDockerFuns")
   lazy val ViashLogging: String = readUtils("ViashLogging")
 
-  def save(saveVariable: String, args: Seq[String]): String = {
-    saveVariable + "=\"$" + saveVariable + " " + args.mkString(" ") + "\""
-  }
-
-  // generate strings in the form of:
-  // SAVEVARIABLE="$SAVEVARIABLE $(Quote arg1) $(Quote arg2)"
-  def quoteSave(saveVariable: String, args: Seq[String]): String = {
-    saveVariable + "=\"$" + saveVariable +
-      args.map(" $(ViashQuote \"" + _ + "\")").mkString +
-      "\""
-  }
-
-  def argStore(name: String, plainName: String, store: String, argsConsumed: Int, storeUnparsed: Option[String]): String = {
-    val passStr =
-      if (storeUnparsed.isDefined) {
-        "\n            " + quoteSave(storeUnparsed.get, (1 to argsConsumed).map("$" + _))
-      } else {
-        ""
-      }
-    s"""         $name)
-       |            $plainName=$store$passStr
-       |            shift $argsConsumed
-       |            ;;""".stripMargin
-  }
-
-  def argStoreSed(name: String, plainName: String, storeUnparsed: Option[String]): String = {
-    argStore(name + "=*", plainName, "$(ViashRemoveFlags \"$1\")", 1, storeUnparsed)
-  }
-
   /** 
    * Access the parameters contents in a bash script,
    * taking into account that some characters need to be escaped.
