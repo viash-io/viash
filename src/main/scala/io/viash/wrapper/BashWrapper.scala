@@ -51,33 +51,34 @@ object BashWrapper {
     )
   }
 
+  // TODO: if argument is required, do not check for undefined
+  // TODO: if value is quoted, don't split by separator
+  // TODO: if the separator is escaped, don't split
   def store(name: String, env: String, value: String, multiple_sep: Option[String]): Array[String] = {
     // note: 'value' is split using multiple_sep into 'values' for backwards compatibility.
     // todo: strip quotes and escape as suggested by https://github.com/viash-io/viash/issues/705#issuecomment-2208448576
     if (multiple_sep.isDefined) {
       // note: 'value' and 'values' are global values!!
       // -> could rename them to `${env}_value` and `${env}_values` to avoid conflicts
-      s"""unset value values
-        |value=$value
-        |if [ "$$value" == UNDEFINED ]; then
-        |  unset $env
-        |else
-        |  readarray -d ';' -t values < <(printf '%s' "$$value")
-        |  if [ -z "$$$env" ]; then
-        |    $env=( "$${values[@]}" )
-        |  else
-        |    $env+=( "$${values[@]}" )
-        |  fi
-        |fi""".stripMargin.split("\n")
+      s"""value=$value
+         |if [ "$$value" == UNDEFINED ]; then
+         |  unset $env
+         |else
+         |  readarray -d '${multiple_sep.get}' -t values < <(printf '%s' "$$value")
+         |  if [ -z "$$$env" ]; then
+         |    $env=( "$${values[@]}" )
+         |  else
+         |    $env+=( "$${values[@]}" )
+         |  fi
+         |fi""".stripMargin.split("\n")
     } else {
-      s"""unset value
-        |value=$value
-        |if [ "$$value" == UNDEFINED ]; then
-        |  unset $env
-        |else
-        |  [ -n "$$$env" ] && ViashError Bad arguments for option \\'$name\\': \\'$$$env\\' \\& \\'$$2\\' - you should provide exactly one argument for this option. && exit 1
-        |  $env=$$value
-        |fi""".stripMargin.split("\n")
+      s"""value=$value
+         |if [ "$$value" == UNDEFINED ]; then
+         |  unset $env
+         |else
+         |  [ -n "$$$env" ] && ViashError Bad arguments for option \\'$name\\': \\'$$$env\\' \\& \\'$$2\\' - you should provide exactly one argument for this option. && exit 1
+         |  $env=$$value
+         |fi""".stripMargin.split("\n")
     }
   }
 
