@@ -54,7 +54,7 @@ object BashWrapper {
   // TODO: if argument is required, do not check for undefined
   // TODO: if value is quoted, don't split by separator
   // TODO: if the separator is escaped, don't split
-  def store(name: String, env: String, value: String, multiple_sep: Option[String]): Array[String] = {
+  private def store(name: String, env: String, value: String, multiple_sep: Option[String]): Array[String] = {
     // note: 'value' is split using multiple_sep into 'values' for backwards compatibility.
     // todo: strip quotes and escape as suggested by https://github.com/viash-io/viash/issues/705#issuecomment-2208448576
     if (multiple_sep.isDefined) {
@@ -82,7 +82,7 @@ object BashWrapper {
     }
   }
 
-  def argStore(
+  private def argStore(
     name: String,
     plainName: String,
     value: String,
@@ -102,11 +102,11 @@ object BashWrapper {
         |            ;;""".stripMargin
   }
 
-  def argStoreSed(name: String, plainName: String, multiple_sep: Option[String] = None): String = {
+  private def argStoreSed(name: String, plainName: String, multiple_sep: Option[String] = None): String = {
     argStore(name + "=*", plainName, "$(ViashRemoveFlags \"$1\")", 1, multiple_sep)
   }
 
-  def spaceCode(str: String): String = {
+  private def spaceCode(str: String): String = {
     if (str != "") {
       "\n" + str + "\n"
     } else {
@@ -826,7 +826,7 @@ object BashWrapper {
     )
   }
 
-  def generateDependencies(
+  private def generateDependencies(
     config: Config
   ): BashWrapperMods = {
     if (config.dependencies.isEmpty) {
