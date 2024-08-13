@@ -59,10 +59,10 @@ object BashWrapper {
       // -> could rename them to `${env}_value` and `${env}_values` to avoid conflicts
       s"""unset value values
         |value=$value
-        |if [ $$value == UNDEFINED ]; then
+        |if [ "$$value" == UNDEFINED ]; then
         |  unset $env
         |else
-        |  readarray -d $$';' -t values <<< $$value
+        |  readarray -d ';' -t values < <(printf '%s' "$$value")
         |  if [ -z "$$$env" ]; then
         |    $env=( "$${values[@]}" )
         |  else
@@ -72,7 +72,7 @@ object BashWrapper {
     } else {
       s"""unset value
         |value=$value
-        |if [ $$value == UNDEFINED ]; then
+        |if [ "$$value" == UNDEFINED ]; then
         |  unset $env
         |else
         |  [ -n "$$$env" ] && ViashError Bad arguments for option \\'$name\\': \\'$$$env\\' \\& \\'$$2\\' - you should provide exactly one argument for this option. && exit 1
