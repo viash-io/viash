@@ -202,7 +202,7 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   def createParentStr = meta.config.allArguments
     .findAll { it.type == "file" && it.direction == "output" && it.create_parent }
     .collect { par -> 
-      "\${ args.containsKey(\"${par.plainName}\") ? \"mkdir_parent \\\"\" + (args[\"${par.plainName}\"] instanceof String ? args[\"${par.plainName}\"] : args[\"${par.plainName}\"].join('\" \"')).replace(\"\\\$\", \"\\\\\\\$\") + \"\\\"\" : \"\" }"
+      "\${ args.containsKey(\"${par.plainName}\") ? \"mkdir_parent '\" + (args[\"${par.plainName}\"] instanceof String ? args[\"${par.plainName}\"] : args[\"${par.plainName}\"].join('\" \"')).replace(\"'\", \"'\\\"'\\\"'\") + \"'\" : \"\" }"
     }
     .join("\n")
 
@@ -211,7 +211,7 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
     .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
     .collect { par ->
       def viash_par_contents = "(viash_par_${par.plainName} instanceof List ? viash_par_${par.plainName}.join(\"${par.multiple_sep}\") : viash_par_${par.plainName})"
-      "\n\${viash_par_${par.plainName}.empty ? \"\" : \"export VIASH_PAR_${par.plainName.toUpperCase()}=\\\"\" + ${viash_par_contents} + \"\\\"\"}"
+      "\n\${viash_par_${par.plainName}.empty ? \"\" : \"export VIASH_PAR_${par.plainName.toUpperCase()}='\" + ${viash_par_contents}.toString().replaceAll(\"'\", \"'\\\"'\\\"'\") + \"'\"}"
     }
 
   // NOTE: if using docker, use /tmp instead of tmpDir!
@@ -259,10 +259,10 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   |$stub
   |\"\"\"
   |script:$assertStr
-  |def escapeText = { s -> s.toString().replaceAll('([`"\$])', '\\\\\\\\\$1') }
+  |def escapeText = { s -> s.toString().replaceAll("'", "'\\\"'\\\"'") }
   |def parInject = args
   |  .findAll{key, value -> value != null}
-  |  .collect{key, value -> "export VIASH_PAR_\${key.toUpperCase()}=\\\"\${escapeText(value)}\\\""}
+  |  .collect{key, value -> "export VIASH_PAR_\${key.toUpperCase()}='\${escapeText(value)}'"}
   |  .join("\\n")
   |\"\"\"
   |# meta exports
