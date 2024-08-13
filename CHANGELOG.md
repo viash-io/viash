@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## BREAKING CHANGES
+
+* `NextflowPlatform`: Swap the order of execution of `runIf` and `filter` when calling `.run()`. This means that `runIf` is now executed before `filter` (PR #660).
+
 ## NEW FUNCTIONALITY
 
 * `ExecutableRunner`: Add a `---docker_image_id` flag to view the Docker image ID of a built executable (PR #741).
@@ -9,6 +13,8 @@ TODO add summary
 * `viash ns query`: Add a query filter that allows selecting a single component by its path in a namespace environment (PR #744).
 
 * `config schema`: Add `label` & `summary` fields for Config, PackageConfig, argument groups, and all argument types (PR #743).
+
+* `NextflowPlatform`: Added `runIf` functionality to `runEach` (PR #660).
 
 ## MINOR CHANGES
 
