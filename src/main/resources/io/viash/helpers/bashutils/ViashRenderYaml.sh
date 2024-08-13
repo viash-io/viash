@@ -1,6 +1,6 @@
 
 
-function ViashRenderQuotedValue {
+function ViashRenderYamlQuotedValue {
   local key="$1"
   local value="$2"
   if [ "$value" == "UNDEFINED_ITEM" ]; then
@@ -11,7 +11,7 @@ function ViashRenderQuotedValue {
   echo "$value" | sed 's#"#\\"#g' | sed 's#\\#\\\\#g' | sed ':a;N;$!ba;s/\n/\\n/g' | sed 's#^#"#g' | sed 's#$#"#g'
 }
 
-function ViashRenderBooleanValue {
+function ViashRenderYamlBooleanValue {
   local key="$1"
   local value="$2"
   if [ "$value" == "UNDEFINED_ITEM" ]; then
@@ -29,7 +29,7 @@ function ViashRenderBooleanValue {
 }
 
 # can be infinite too
-function ViashRenderUnquotedValue {
+function ViashRenderYamlUnquotedValue {
   local key="$1"
   local value="$2"
   if [ "$value" == "UNDEFINED_ITEM" ]; then
@@ -66,11 +66,11 @@ function ViashRenderYamlKeyValue {
       out+=", "
     fi
     if [[ "$type" == "string" || "$type" == "file" ]]; then
-      out+="$(ViashRenderQuotedValue "$key" "$value")"
+      out+="$(ViashRenderYamlQuotedValue "$key" "$value")"
     elif [[ "$type" == "boolean" || "$type" == "boolean_true" || "$type" == "boolean_false" ]]; then
-      out+="$(ViashRenderBooleanValue "$key" "$value")"
+      out+="$(ViashRenderYamlBooleanValue "$key" "$value")"
     else
-      out+="$(ViashRenderUnquotedValue "$key" "$value")"
+      out+="$(ViashRenderYamlUnquotedValue "$key" "$value")"
     fi
   done
 
