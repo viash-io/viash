@@ -12,9 +12,17 @@ import io.viash.helpers.data_structures._
 import io.viash.helpers.Logger
 import io.viash.engines.NativeEngine
 import io.viash.runners.ExecutableRunner
+import io.viash.helpers.IO
+import io.viash.helpers.status
 
 class ConfigTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
+
+  private val temporaryFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
+  private val tempFolStr = temporaryFolder.toString
+
+  private val nsPath = getClass.getResource("/testns/").getPath
+  
   val infoJson = Yaml("""
     |foo:
     |  bar:
@@ -94,5 +102,38 @@ class ConfigTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(conf.findRunners(Some("executable")) == List(ExecutableRunner("executable")))
   }
 
+  test("Can find and read multiple sources with default testns components") {
+    val tempFolder = temporaryFolder.resolve("test1")
+    Files.createDirectory(tempFolder)
+    IO.copyFolder(nsPath, tempFolder.toString())
+
+    val configs = Config.readConfigs(tempFolder.toString())
+
+    assert(configs.length == 7)
+    assert(configs.filter(_.status == None).length == 5)
+    assert(configs.filter(_.status == Some(status.Disabled)).length == 1, "Expect 1 disabled component")
+    assert(configs.filter(_.status == Some(status.ParseError)).length == 1, "Expect 1 failed component")
+  }
+
+  test("Can find and read multiple sources with multiple failing components") {
+    val tempFolder = temporaryFolder.resolve("test2")
+    Files.createDirectory(tempFolder)
+    IO.copyFolder(nsPath, tempFolder.toString())
+
+    Files.createDirectories(tempFolder.resolve("src/ns_error2"))
+    IO.write("this is an invalid config", tempFolder.resolve("src/ns_error2/invalid_config.vsh.yaml"))
+
+    val configs = Config.readConfigs(tempFolder.toString())
+
+    assert(configs.length == 8)
+    assert(configs.filter(_.status == None).length == 5)
+    assert(configs.filter(_.status == Some(status.Disabled)).length == 1, "Expect 1 disabled component")
+    assert(configs.filter(_.status == Some(status.ParseError)).length == 2, "Expect 2 failed component")
+  }
+
   // TODO: expand functionality tests
+
+  override def afterAll(): Unit = {
+    IO.deleteRecursively(temporaryFolder)
+  }
 }
