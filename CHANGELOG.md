@@ -1,6 +1,6 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.9.0-RC7 (2024-08-13): General bugfixes and improvements
 
-TODO add summary
+These are bug fixes and other improvements that solve some edge case issues and improve the overall user experience and usability of Viash.
 
 ## BREAKING CHANGES
 
