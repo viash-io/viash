@@ -71,7 +71,11 @@ def vdsl3WorkflowFactory(Map args, Map meta, String rawScript) {
               val = val.join(par.multiple_sep)
             }
             if (par.direction == "output" && par.type == "file") {
-              val = val.replaceAll('\\$id', id).replaceAll('\\$key', key)
+              val = val
+                .replaceAll('\\$id', id)
+                .replaceAll('\\$\\{id\\}', id)
+                .replaceAll('\\$key', key)
+                .replaceAll('\\$\\{key\\}', key)
             }
             [parName, val]
           }
