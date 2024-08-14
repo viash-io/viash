@@ -4,7 +4,7 @@ TODO add summary
 
 ## MINOR CHANGES
 
-* `scala`: Update Scala to 2.13.14 (PR #xxx).
+* `scala`: Update Scala to 2.13.14 (PR #764).
 
 # Viash 0.9.0-RC7 (2024-08-13): General bugfixes and improvements
 
