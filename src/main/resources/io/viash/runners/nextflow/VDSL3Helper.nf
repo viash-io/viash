@@ -206,7 +206,8 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   def createParentStr = meta.config.allArguments
     .findAll { it.type == "file" && it.direction == "output" && it.create_parent }
     .collect { par -> 
-      "\${ args.containsKey(\"${par.plainName}\") ? \"mkdir_parent '\" + (args[\"${par.plainName}\"] instanceof String ? args[\"${par.plainName}\"] : args[\"${par.plainName}\"].join('\" \"')).replace(\"'\", \"'\\\"'\\\"'\") + \"'\" : \"\" }"
+      def contents = "args[\"${par.plainName}\"] instanceof List ? args[\"${par.plainName}\"].join('\" \"') : args[\"${par.plainName}\"]"
+      "\${ args.containsKey(\"${par.plainName}\") ? \"mkdir_parent '\" + escapeText(${contents}) + \"'\" : \"\" }"
     }
     .join("\n")
 
@@ -214,8 +215,8 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   def inputFileExports = meta.config.allArguments
     .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
     .collect { par ->
-      def viash_par_contents = "(viash_par_${par.plainName} instanceof List ? viash_par_${par.plainName}.join(\"${par.multiple_sep}\") : viash_par_${par.plainName})"
-      "\n\${viash_par_${par.plainName}.empty ? \"\" : \"export VIASH_PAR_${par.plainName.toUpperCase()}='\" + ${viash_par_contents}.toString().replaceAll(\"'\", \"'\\\"'\\\"'\") + \"'\"}"
+      def contents = "viash_par_${par.plainName} instanceof List ? viash_par_${par.plainName}.join(\"${par.multiple_sep}\") : viash_par_${par.plainName}"
+      "\n\${viash_par_${par.plainName}.empty ? \"\" : \"export VIASH_PAR_${par.plainName.toUpperCase()}='\" + escapeText(${contents}) + \"'\"}"
     }
 
   // NOTE: if using docker, use /tmp instead of tmpDir!
@@ -252,6 +253,7 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   def procStr = 
   """nextflow.enable.dsl=2
   |
+  |def escapeText = { s -> s.toString().replaceAll("'", "'\\\"'\\\"'") }
   |process $procKey {$drctvStrs
   |input:
   |  tuple val(id)$inputPaths, val(args), path(resourcesDir, stageAs: ".viash_meta_resources")
@@ -263,7 +265,6 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   |$stub
   |\"\"\"
   |script:$assertStr
-  |def escapeText = { s -> s.toString().replaceAll("'", "'\\\"'\\\"'") }
   |def parInject = args
   |  .findAll{key, value -> value != null}
   |  .collect{key, value -> "export VIASH_PAR_\${key.toUpperCase()}='\${escapeText(value)}'"}
