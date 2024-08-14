@@ -29,7 +29,7 @@ trait AbstractGitRepository extends Repository with Logging {
   val storePath: String
 
   @inline
-  protected def getLoggers(fn: String) = Seq[String => Unit] { str: String => debug(s"$fn: $str") }
+  protected def getLoggers(fn: String) = Seq[String => Unit] { (str: String) => debug(s"$fn: $str") }
 
   def copyRepo(
    `type`: String,

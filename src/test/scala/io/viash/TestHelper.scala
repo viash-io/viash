@@ -8,6 +8,8 @@ import org.scalatest.Tag
 import java.nio.file.{Files, Path, Paths}
 import scala.reflect.ClassTag
 
+import io.viash.helpers.Exec
+
 object TestHelper {
 
   case class TestMainOutput(
@@ -89,4 +91,28 @@ object TestHelper {
     md5.digest.map("%02x".format(_)).mkString
   }
 
+  def checkDockerImageExists(name: String): Boolean = checkDockerImageExists(name, "latest")
+
+  def checkDockerImageExists(name: String, tag: String): Boolean = {
+    val out = Exec.runCatch(
+      Seq("docker", "images", name)
+    )
+
+    // print(out)
+    val regex = s"$name\\s*$tag".r
+
+    regex.findFirstIn(out.output).isDefined
+  }
+
+  def removeDockerImage(name: String): Unit = {
+    Exec.runCatch(
+      Seq("docker", "rmi", name, "-f")
+    )
+  }
+
+  def removeDockerImage(name: String, tag: String): Unit = {
+    Exec.runCatch(
+      Seq("docker", "rmi", s"$name:$tag", "-f")
+    )
+  }
 }

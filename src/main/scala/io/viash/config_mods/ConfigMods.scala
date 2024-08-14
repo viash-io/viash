@@ -17,14 +17,9 @@
 
 package io.viash.config_mods
 
-// will need to be updated in a next version of scala
-// import scala.jdk.CollectionConverters._
-import scala.collection.JavaConverters._
-
 import java.nio.file.{Files, Path => JPath}
 import java.util.stream.Collectors
 import io.circe.{ACursor, HCursor, FailedCursor, Json}
-
 
 // define command
 case class ConfigMods(

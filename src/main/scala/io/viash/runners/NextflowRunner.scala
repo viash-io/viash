@@ -140,7 +140,7 @@ final case class NextflowRunner(
       case Some(_) => 
         throw new RuntimeException(s"NextflowRunner 'container' variable: Engine $container is not a Docker Engine")
       case None => None
-      case _ => ???
+      case null => ???
     }
   }
 

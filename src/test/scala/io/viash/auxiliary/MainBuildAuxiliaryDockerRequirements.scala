@@ -31,31 +31,17 @@ abstract class AbstractMainBuildAuxiliaryDockerRequirements extends FixtureAnyFu
   // Fixture will remove the docker image before starting and remove it again after finishing
   def withFixture(test: OneArgTest) = {
     // remove docker if it exists
-    removeDockerImage(dockerTag)
-    assert(!checkDockerImageExists(dockerTag))
+    TestHelper.removeDockerImage(dockerTag)
+    assert(!TestHelper.checkDockerImageExists(dockerTag))
 
     val theFixture = FixtureParam()
 
     val outcome = withFixture(test.toNoArgTest(theFixture)) // "loan" the fixture to the test
 
     // Tests finished, remove docker image
-    removeDockerImage(dockerTag)
+    TestHelper.removeDockerImage(dockerTag)
 
     outcome
-  }
-
-  def checkDockerImageExists(name: String): Boolean = {
-    val out = Exec.runCatch(
-      Seq("docker", "images", name)
-    )
-    val regex = s"$name\\s*latest".r
-    regex.findFirstIn(out.output).isDefined
-  }
-
-  def removeDockerImage(name: String): Unit = {
-    Exec.runCatch(
-      Seq("docker", "rmi", name, "-f")
-    )
   }
 
   def deriveEngineConfig(setup: Option[String], test_setup: Option[String], name: String): String = {
@@ -90,7 +76,7 @@ class MainBuildAuxiliaryDockerRequirementsApk extends AbstractMainBuildAuxiliary
       newConfigFilePath
     )
 
-    assert(checkDockerImageExists(dockerTag))
+    assert(TestHelper.checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -114,7 +100,7 @@ class MainBuildAuxiliaryDockerRequirementsApk extends AbstractMainBuildAuxiliary
       newConfigFilePath
     )
 
-    assert(checkDockerImageExists(dockerTag))
+    assert(TestHelper.checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -138,7 +124,7 @@ class MainBuildAuxiliaryDockerRequirementsApk extends AbstractMainBuildAuxiliary
       newConfigFilePath
     )
 
-    assert(checkDockerImageExists(dockerTag))
+    assert(TestHelper.checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -167,7 +153,7 @@ class MainBuildAuxiliaryDockerRequirementsApt extends AbstractMainBuildAuxiliary
       newConfigFilePath
     )
 
-    assert(checkDockerImageExists(dockerTag))
+    assert(TestHelper.checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -191,7 +177,7 @@ class MainBuildAuxiliaryDockerRequirementsApt extends AbstractMainBuildAuxiliary
       newConfigFilePath
     )
 
-    assert(checkDockerImageExists(dockerTag))
+    assert(TestHelper.checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -215,7 +201,7 @@ class MainBuildAuxiliaryDockerRequirementsApt extends AbstractMainBuildAuxiliary
       newConfigFilePath
     )
 
-    assert(checkDockerImageExists(dockerTag))
+    assert(TestHelper.checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -244,7 +230,7 @@ class MainBuildAuxiliaryDockerRequirementsYum extends AbstractMainBuildAuxiliary
       newConfigFilePath
     )
 
-    assert(checkDockerImageExists(dockerTag))
+    assert(TestHelper.checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -268,7 +254,7 @@ class MainBuildAuxiliaryDockerRequirementsYum extends AbstractMainBuildAuxiliary
       newConfigFilePath
     )
 
-    assert(checkDockerImageExists(dockerTag))
+    assert(TestHelper.checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -292,7 +278,7 @@ class MainBuildAuxiliaryDockerRequirementsYum extends AbstractMainBuildAuxiliary
       newConfigFilePath
     )
 
-    assert(checkDockerImageExists(dockerTag))
+    assert(TestHelper.checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -321,7 +307,7 @@ class MainBuildAuxiliaryDockerRequirementsRuby extends AbstractMainBuildAuxiliar
       newConfigFilePath
     )
 
-    assert(checkDockerImageExists(dockerTag))
+    assert(TestHelper.checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -345,7 +331,7 @@ class MainBuildAuxiliaryDockerRequirementsRuby extends AbstractMainBuildAuxiliar
       newConfigFilePath
     )
 
-    assert(checkDockerImageExists(dockerTag))
+    assert(TestHelper.checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -369,7 +355,7 @@ class MainBuildAuxiliaryDockerRequirementsRuby extends AbstractMainBuildAuxiliar
       newConfigFilePath
     )
 
-    assert(checkDockerImageExists(dockerTag))
+    assert(TestHelper.checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -398,7 +384,7 @@ class MainBuildAuxiliaryDockerRequirementsR extends AbstractMainBuildAuxiliaryDo
       newConfigFilePath
     )
 
-    assert(checkDockerImageExists(dockerTag))
+    assert(TestHelper.checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -422,7 +408,7 @@ class MainBuildAuxiliaryDockerRequirementsR extends AbstractMainBuildAuxiliaryDo
       newConfigFilePath
     )
 
-    assert(checkDockerImageExists(dockerTag))
+    assert(TestHelper.checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -446,7 +432,7 @@ class MainBuildAuxiliaryDockerRequirementsR extends AbstractMainBuildAuxiliaryDo
       newConfigFilePath
     )
 
-    assert(checkDockerImageExists(dockerTag))
+    assert(TestHelper.checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -488,7 +474,7 @@ class MainBuildAuxiliaryDockerRequirementsRBioc extends AbstractMainBuildAuxilia
       newConfigFilePath
     )
 
-    assert(checkDockerImageExists(dockerTag))
+    assert(TestHelper.checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -512,7 +498,7 @@ class MainBuildAuxiliaryDockerRequirementsRBioc extends AbstractMainBuildAuxilia
       newConfigFilePath
     )
 
-    assert(checkDockerImageExists(dockerTag))
+    assert(TestHelper.checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
@@ -536,7 +522,7 @@ class MainBuildAuxiliaryDockerRequirementsRBioc extends AbstractMainBuildAuxilia
       newConfigFilePath
     )
 
-    assert(checkDockerImageExists(dockerTag))
+    assert(TestHelper.checkDockerImageExists(dockerTag))
     assert(executableRequirementsFile.exists)
     assert(executableRequirementsFile.canExecute)
 
