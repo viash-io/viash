@@ -30,12 +30,11 @@ object Bash {
   lazy val ViashRemoveFlags: String = readUtils("ViashRemoveFlags")
   lazy val ViashAbsolutePath: String = readUtils("ViashAbsolutePath")
   lazy val ViashDockerAutodetectMount: String = readUtils("ViashDockerAutodetectMount")
-  // backwards compatibility, for now
-  lazy val ViashAutodetectMount: String = ViashDockerAutodetectMount.replace("ViashDocker", "Viash")
   lazy val ViashSourceDir: String = readUtils("ViashSourceDir")
   lazy val ViashFindTargetDir: String = readUtils("ViashFindTargetDir")
   lazy val ViashDockerFuns: String = readUtils("ViashDockerFuns")
   lazy val ViashLogging: String = readUtils("ViashLogging")
+  lazy val ViashParseArgumentValue: String = readUtils("ViashParseArgumentValue")
 
   /** 
    * Access the parameters contents in a bash script,

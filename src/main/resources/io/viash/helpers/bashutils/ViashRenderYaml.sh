@@ -1,23 +1,18 @@
-
-
 function ViashRenderYamlQuotedValue {
   local key="$1"
   local value="$2"
-  if [ "$value" == "UNDEFINED_ITEM" ]; then
-    echo "null"
-    return
-  fi
   # escape quotes, backslashes and newlines, and then surround by quotes
-  echo "$value" | sed 's#"#\\"#g' | sed 's#\\#\\\\#g' | sed ':a;N;$!ba;s/\n/\\n/g' | sed 's#^#"#g' | sed 's#$#"#g'
+  echo "$value" | \
+    sed 's#\\#\\\\#g' | \
+    sed 's#"#\\"#g' | \
+    sed ':a;N;$!ba;s/\n/\\n/g' | \
+    sed 's#^#"#g;s#$#"#g'
 }
 
 function ViashRenderYamlBooleanValue {
   local key="$1"
   local value="$2"
-  if [ "$value" == "UNDEFINED_ITEM" ]; then
-    echo "null"
-    return
-  fi
+  # convert to lowercase
   value=$(echo "$value" | tr '[:upper:]' '[:lower:]')
   if [[ "$value" == "true" || "$value" == "yes" ]]; then
     echo "true"
@@ -32,10 +27,6 @@ function ViashRenderYamlBooleanValue {
 function ViashRenderYamlUnquotedValue {
   local key="$1"
   local value="$2"
-  if [ "$value" == "UNDEFINED_ITEM" ]; then
-    echo "null"
-    return
-  fi
   echo "$value"
 }
 
@@ -44,12 +35,12 @@ function ViashRenderYamlKeyValue {
   local type="$2"
   local multiple="$3"
   shift 3
-  
-  local out="$key: "
+
+  local out="  ${key}: "
 
   if [ "$1" == "UNDEFINED" ]; then
     out+="null"
-    echo $out
+    echo "$out"
     return
   fi
 
@@ -65,7 +56,9 @@ function ViashRenderYamlKeyValue {
     else
       out+=", "
     fi
-    if [[ "$type" == "string" || "$type" == "file" ]]; then
+    if [ "$value" == "UNDEFINED_ITEM" ]; then
+      out+="null"
+    elif [[ "$type" == "string" || "$type" == "file" ]]; then
       out+="$(ViashRenderYamlQuotedValue "$key" "$value")"
     elif [[ "$type" == "boolean" || "$type" == "boolean_true" || "$type" == "boolean_false" ]]; then
       out+="$(ViashRenderYamlBooleanValue "$key" "$value")"
