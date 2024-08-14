@@ -287,13 +287,15 @@ object BashWrapper {
        |  VIASH_TEMP=$${VIASH_TEMP:-/tmp}
        |fi
        |
-       |# define helper functions
+       |# bash helper functions start -----------------------------------
        |${Bash.ViashQuote}
        |${Bash.ViashRemoveFlags}
        |${Bash.ViashSourceDir}
        |${Bash.ViashFindTargetDir}
        |${Bash.ViashLogging}
        |${Bash.ViashParseArgumentValue}
+       |${Bash.ViashRenderYaml}
+       |# bash helper functions end -------------------------------------
        |
        |# find source folder of this component
        |VIASH_META_RESOURCES_DIR=`ViashSourceDir $${BASH_SOURCE[0]}`
@@ -464,15 +466,15 @@ object BashWrapper {
           val storeStr =
             s"""ViashParseArgumentValue "${param.name}" "${param.VIASH_PAR}" "${param.multiple}" "$$1""""
 
-          val (begin, end) =
+          val (begin, mid, end) =
             if (param.multiple && param.direction == Input) {
-              ("while", "done")
+              ("while", "do", "done")
             } else {
-              ("if", "fi")
+              ("if", "then", "fi")
             }
 
           s"""# processing positional values for '${param.name}'
-             |${begin} [[ $$# -gt 0 ]]; do
+             |${begin} [[ $$# -gt 0 ]]; ${mid}
              |  ${storeStr}
              |  shift 1
              |${end}""".stripMargin
@@ -926,7 +928,7 @@ object BashWrapper {
   private def generateWorkDir(argsMetaAndDeps: Map[String, List[Argument[_]]]): BashWrapperMods = {
     def renderStrs = argsMetaAndDeps.map{case (key, args) =>
       def renderYamlStrs = args.map(arg => {
-        s"""ViashRenderYamlKeyValue '${arg.name}' '${arg.`type`}' "${arg.multiple}" "$${${arg.VIASH_PAR}:-UNDEFINED}" >> "$$VIASH_WORK_PARAMS""""
+        s"""ViashRenderYamlKeyValue '${arg.plainName}' '${arg.`type`}' "${arg.multiple}" "$${${arg.VIASH_PAR}:-UNDEFINED}" >> "$$VIASH_WORK_PARAMS""""
       })
       s"""echo '${key}:' >> "$$VIASH_WORK_PARAMS"
          |${renderYamlStrs.mkString("\n")}""".stripMargin

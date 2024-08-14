@@ -1,7 +1,7 @@
 function ViashParseArgumentValue {
-  local env_name="$1"
-  local multiple="$2"
-  local flag="$3"
+  local flag="$1"
+  local env_name="$2"
+  local multiple="$3"
   local value="$4"
 
   if [ $# -lt 4 ]; then
