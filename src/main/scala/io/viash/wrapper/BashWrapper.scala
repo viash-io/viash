@@ -928,13 +928,14 @@ object BashWrapper {
   private def generateWorkDir(argsMetaAndDeps: Map[String, List[Argument[_]]]): BashWrapperMods = {
     val renderStrs = argsMetaAndDeps.map{case (key, args) =>
       val renderYamlStrs = args.map(arg => {
+        val multiple = arg.multiple && arg.direction == Input
         val value =
-          if (arg.multiple) {
+          if (multiple) {
             s"$${${arg.VIASH_PAR}[@]}"
           } else {
             s"$${${arg.VIASH_PAR}:-UNDEFINED}"
           }
-        s"""ViashRenderYamlKeyValue '${arg.plainName}' '${arg.`type`}' "${arg.multiple}" "${value}" >> "$$VIASH_WORK_PARAMS""""
+        s"""ViashRenderYamlKeyValue '${arg.plainName}' '${arg.`type`}' "${multiple}" "${value}" >> "$$VIASH_WORK_PARAMS""""
       })
       s"""echo '${key}:' >> "$$VIASH_WORK_PARAMS"
          |${renderYamlStrs.mkString("\n")}""".stripMargin
