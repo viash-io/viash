@@ -769,7 +769,7 @@ object Config extends Logging {
         attrs.isRegularFile
     })
 
-    val allConfigs = scriptFiles.map { file =>
+    val allConfigs = scriptFiles.zipWithIndex.map { case (file, index) =>
       try {
         val rmos = new ReplayableMultiOutputStream()
 
@@ -822,7 +822,7 @@ object Config extends Logging {
       } catch {
         case _: Exception =>
           error(s"Reading file '$file' failed")
-          AppliedConfig(Config("failed"), None, Nil, Some(BuildStatus.ParseError))
+          AppliedConfig(Config(s"failed_$index"), None, Nil, Some(BuildStatus.ParseError))
       }
     }
 

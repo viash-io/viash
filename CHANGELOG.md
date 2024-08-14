@@ -2,6 +2,14 @@
 
 TODO add summary
 
+# Viash 0.9.0-RC7 (2024-08-13): General bugfixes and improvements
+
+These are bug fixes and other improvements that solve some edge case issues and improve the overall user experience and usability of Viash.
+
+## BREAKING CHANGES
+
+* `NextflowPlatform`: Swap the order of execution of `runIf` and `filter` when calling `.run()`. This means that `runIf` is now executed before `filter` (PR #660).
+
 ## NEW FUNCTIONALITY
 
 * `ExecutableRunner`: Add a `---docker_image_id` flag to view the Docker image ID of a built executable (PR #741).
@@ -9,6 +17,8 @@ TODO add summary
 * `viash ns query`: Add a query filter that allows selecting a single component by its path in a namespace environment (PR #744).
 
 * `config schema`: Add `label` & `summary` fields for Config, PackageConfig, argument groups, and all argument types (PR #743).
+
+* `NextflowPlatform`: Added `runIf` functionality to `runEach` (PR #660).
 
 ## MINOR CHANGES
 
@@ -27,6 +37,8 @@ TODO add summary
 * `nextflow_runner`: Fix refactoring error in the `findStates()` helper function (PR #733).
 
 * `viash ns exec`: Fix "relative fields" outputting absolute paths (PR# 737). Additionally, improve path resolution when using the `--src` argument.
+
+* `viash ns`: Fix viash tripping over its toes when it encounters multiple failed configs (PR #761). A dummy config was used as a placeholder, but it always used the name `failed`, so duplicate config names were generated, which we check for nowadays.
 
 * `bashwrapper`: Fix an issue where running `viash test` which builds the test docker container would ignore test failures but subsequential runs would work correctly (PR #754).
 
