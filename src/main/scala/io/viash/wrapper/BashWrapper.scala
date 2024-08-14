@@ -926,15 +926,21 @@ object BashWrapper {
   }
   
   private def generateWorkDir(argsMetaAndDeps: Map[String, List[Argument[_]]]): BashWrapperMods = {
-    def renderStrs = argsMetaAndDeps.map{case (key, args) =>
-      def renderYamlStrs = args.map(arg => {
-        s"""ViashRenderYamlKeyValue '${arg.plainName}' '${arg.`type`}' "${arg.multiple}" "$${${arg.VIASH_PAR}:-UNDEFINED}" >> "$$VIASH_WORK_PARAMS""""
+    val renderStrs = argsMetaAndDeps.map{case (key, args) =>
+      val renderYamlStrs = args.map(arg => {
+        val value =
+          if (arg.multiple) {
+            s"$${${arg.VIASH_PAR}[@]}"
+          } else {
+            s"$${${arg.VIASH_PAR}:-UNDEFINED}"
+          }
+        s"""ViashRenderYamlKeyValue '${arg.plainName}' '${arg.`type`}' "${arg.multiple}" "${value}" >> "$$VIASH_WORK_PARAMS""""
       })
       s"""echo '${key}:' >> "$$VIASH_WORK_PARAMS"
          |${renderYamlStrs.mkString("\n")}""".stripMargin
     }
 
-    def preRun = 
+    val preRun = 
       s"""VIASH_WORK_DIR=$$(mktemp -d "$$VIASH_META_TEMP_DIR/viash-run-testbash-XXXXXX")
          |function clean_up {
          |  rm -rf "$$VIASH_WORK_DIR"
