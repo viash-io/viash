@@ -6,13 +6,19 @@ TODO add summary
 
 * `scala`: Update Scala to 2.13.14 (PR #764).
 
+* `NextflowEngine`: Also parse `${id}` and `${key}` aside from `$id` and `$key` as identifier placeholders for filenames (PR #756).
+
+## BUG FIXES
+
+* `NextflowEngine`: Fix escaping of odd filename containing special characters (PR #756). Filenames containing a `$` character caused Bash to try to interpret it as a variable.
+
 # Viash 0.9.0-RC7 (2024-08-13): General bugfixes and improvements
 
 These are bug fixes and other improvements that solve some edge case issues and improve the overall user experience and usability of Viash.
 
 ## BREAKING CHANGES
 
-* `NextflowPlatform`: Swap the order of execution of `runIf` and `filter` when calling `.run()`. This means that `runIf` is now executed before `filter` (PR #660).
+* `NextflowEngine`: Swap the order of execution of `runIf` and `filter` when calling `.run()`. This means that `runIf` is now executed before `filter` (PR #660).
 
 ## NEW FUNCTIONALITY
 
@@ -22,7 +28,7 @@ These are bug fixes and other improvements that solve some edge case issues and 
 
 * `config schema`: Add `label` & `summary` fields for Config, PackageConfig, argument groups, and all argument types (PR #743).
 
-* `NextflowPlatform`: Added `runIf` functionality to `runEach` (PR #660).
+* `NextflowEngine`: Added `runIf` functionality to `runEach` (PR #660).
 
 ## MINOR CHANGES
 
