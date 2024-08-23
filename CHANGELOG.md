@@ -12,6 +12,8 @@ TODO add summary
 
 * `NextflowEngine`: Fix escaping of odd filename containing special characters (PR #756). Filenames containing a `$` character caused Bash to try to interpret it as a variable.
 
+* `viash test`: Fix an issue where the tests would not copy package config settings to determine teh docker image name (PR #767).
+
 # Viash 0.9.0-RC7 (2024-08-13): General bugfixes and improvements
 
 These are bug fixes and other improvements that solve some edge case issues and improve the overall user experience and usability of Viash.
