@@ -308,7 +308,7 @@ object JsonSchema {
       }
 
     Json.obj(
-      "$schema" -> Json.fromString("https://json-schema.org/draft-07/schema#"),
+      "$schema" -> Json.fromString("http://json-schema.org/draft-07/schema#"),
       "definitions" -> Json.obj(
         definitions: _*
       ),
