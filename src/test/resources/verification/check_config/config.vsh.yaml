@@ -1,0 +1,22 @@
+name: check_config
+arguments:
+  - name: --data
+    alternatives: -d
+    type: file
+    direction: input
+    required: true
+  - name: --schema
+    alternatives: -s
+    type: file
+    direction: input
+    required: true
+resources:
+  - type: bash_script
+    text: ajv validate -s $par_schema $par_data
+engines:
+  - type: docker
+    image: node:20
+    setup:
+      - type: javascript
+        # npm: ajv-cli
+        npm: "@jirutka/ajv-cli@6.0.0-beta.5"

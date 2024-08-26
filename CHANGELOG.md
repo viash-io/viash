@@ -12,6 +12,10 @@ TODO add summary
 
 * `NextflowEngine`: Fix escaping of odd filename containing special characters (PR #756). Filenames containing a `$` character caused Bash to try to interpret it as a variable.
 
+* `json schema`: Fix repositories types with name incorrectly adding `withname` as type (PR #768).
+
+* `json schema`: Change the '$schema' field to 'http://' instead of 'https://' (PR #768). (Some?) Json validators use this value as a token and not as a URL.
+
 * `viash test`: Fix an issue where the tests would not copy package config settings to determine teh docker image name (PR #767).
 
 # Viash 0.9.0-RC7 (2024-08-13): General bugfixes and improvements
