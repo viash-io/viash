@@ -272,6 +272,8 @@ object ViashTest extends Logging {
             // Make sure we'll be using the same docker registry set in 'links' so we can have the same docker image id.
             // Copy the whole case class instead of selective copy.
             links = conf.links,
+            // copy configuration for package name, organization
+            package_config = conf.package_config,
           ))(appliedConfig)
 
         // generate bash script for test
