@@ -28,7 +28,7 @@ class MainExportValidation extends AnyFunSuite with BeforeAndAfterAll {
     assert(Files.exists(schemaFile))
   }
 
-  test("validate testbash with viash export json_schema") {
+  test("validate testbash with viash export json_schema", DockerTest) {
     val newConfigFilePath = configDeriver.derive(
       ".version := \"0.1\"",
       "testbash_version_string"
@@ -45,7 +45,7 @@ class MainExportValidation extends AnyFunSuite with BeforeAndAfterAll {
     assert(testOutput2.stdout.contains("testbash_version_string.vsh.yaml valid"))
   }
 
-  test("validate testbash with viash export json_schema, invalid config - version should be a string") {
+  test("validate testbash with viash export json_schema, invalid config - version should be a string", DockerTest) {
     val testOutput2 = TestHelper.testMain(
       "run", validation.toString(),
       "--",
