@@ -384,6 +384,20 @@ case class Config(
   private val functionality: Functionality = Functionality("foo")
 
   @description(
+    """A list of @[arguments](argument) for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. See these reference pages per type for more information:  
+      |
+      | - @[string](arg_string)
+      | - @[file](arg_file)
+      | - @[integer](arg_integer)
+      | - @[double](arg_double)
+      | - @[boolean](arg_boolean)
+      | - @[boolean_true](arg_boolean_true)
+      | - @[boolean_false](arg_boolean_false)
+      |""".stripMargin)
+  @default("Empty")
+  private val arguments: List[Argument[_]] = Nil
+
+  @description(
     """Config inheritance by including YAML partials. This is useful for defining common APIs in
       |separate files. `__merge__` can be used in any level of the YAML. For example,
       |not just in the config but also in the argument_groups or any of the engines.
@@ -756,7 +770,7 @@ object Config extends Logging {
         attrs.isRegularFile
     })
 
-    val allConfigs = scriptFiles.map { file =>
+    val allConfigs = scriptFiles.zipWithIndex.map { case (file, index) =>
       try {
         val rmos = new ReplayableMultiOutputStream()
 
@@ -809,7 +823,7 @@ object Config extends Logging {
       } catch {
         case _: Exception =>
           error(s"Reading file '$file' failed")
-          AppliedConfig(Config("failed"), None, Nil, Some(BuildStatus.ParseError))
+          AppliedConfig(Config(s"failed_$index"), None, Nil, Some(BuildStatus.ParseError))
       }
     }
 

@@ -200,17 +200,18 @@ object JsonSchema {
     //     case mapRegex(_, s) => 
     //       (p.name, mapType(s, pDescription))
 
-    //     case s if p.name == "type" && subclass.isDefined =>
-    //       if (config.minimal) {
-    //         ("type", Json.obj(
-    //           "const" -> Json.fromString(subclass.get)
-    //         ))
-    //       } else {
-    //         ("type", Json.obj(
-    //           "description" -> Json.fromString(description), // not pDescription! We want to show the description of the main class
-    //           "const" -> Json.fromString(subclass.get)
-    //         ))
-    //       }
+    //    case s if p.name == "type" && subclass.isDefined =>
+    //      var subclassString = subclass.get.stripSuffix("withname")
+    //      if (config.minimal) {
+    //        ("type", Json.obj(
+    //          "const" -> Json.fromString(subclassString)
+    //        ))
+    //      } else {
+    //        ("type", Json.obj(
+    //          "description" -> Json.fromString(description), // not pDescription! We want to show the description of the main class
+    //          "const" -> Json.fromString(subclassString)
+    //        ))
+    //      }
         
     //     case s =>
     //       (p.name, valueType(s, pDescription))
@@ -308,7 +309,7 @@ object JsonSchema {
       }
 
     Json.obj(
-      "$schema" -> Json.fromString("https://json-schema.org/draft-07/schema#"),
+      "$schema" -> Json.fromString("http://json-schema.org/draft-07/schema#"),
       "definitions" -> Json.obj(
         definitions: _*
       ),

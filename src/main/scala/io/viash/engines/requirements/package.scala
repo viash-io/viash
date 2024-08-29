@@ -18,7 +18,6 @@
 package io.viash.engines
 
 import io.circe.{Decoder, Encoder, Json}
-// import io.circe.generic.extras.Configuration
 // import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import cats.syntax.functor._ // for .widen
 

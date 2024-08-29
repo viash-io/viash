@@ -2,6 +2,30 @@
 
 TODO add summary
 
+## MINOR CHANGES
+
+* `scala`: Update Scala to 2.13.14 (PR #764).
+
+* `NextflowEngine`: Also parse `${id}` and `${key}` aside from `$id` and `$key` as identifier placeholders for filenames (PR #756).
+
+## BUG FIXES
+
+* `NextflowEngine`: Fix escaping of odd filename containing special characters (PR #756). Filenames containing a `$` character caused Bash to try to interpret it as a variable.
+
+* `json schema`: Fix repositories types with name incorrectly adding `withname` as type (PR #768).
+
+* `json schema`: Change the '$schema' field to 'http://' instead of 'https://' (PR #768). (Some?) Json validators use this value as a token and not as a URL.
+
+* `viash test`: Fix an issue where the tests would not copy package config settings to determine teh docker image name (PR #767).
+
+# Viash 0.9.0-RC7 (2024-08-13): General bugfixes and improvements
+
+These are bug fixes and other improvements that solve some edge case issues and improve the overall user experience and usability of Viash.
+
+## BREAKING CHANGES
+
+* `NextflowEngine`: Swap the order of execution of `runIf` and `filter` when calling `.run()`. This means that `runIf` is now executed before `filter` (PR #660).
+
 ## NEW FUNCTIONALITY
 
 * `ExecutableRunner`: Add a `---docker_image_id` flag to view the Docker image ID of a built executable (PR #741).
@@ -10,9 +34,15 @@ TODO add summary
 
 * `config schema`: Add `label` & `summary` fields for Config, PackageConfig, argument groups, and all argument types (PR #743).
 
+* `NextflowEngine`: Added `runIf` functionality to `runEach` (PR #660).
+
 ## MINOR CHANGES
 
+* `ExecutableRunner`: Add parameter `docker_automount_prefix` to allow for a custom prefix for automounted folders (PR #739).
+
 * `ExecutableRunner`: Make Docker runtime arguments configurable via the `---docker_run_args` argument (PR #740).
+
+* `export json_schema`: Add `arguments` field to the `Config` schema (PR #755). Only for the non-strict version, the strict version of the viash config has these values merged into `argument_groups`.
 
 ## BUG FIXES
 
@@ -23,6 +53,10 @@ TODO add summary
 * `nextflow_runner`: Fix refactoring error in the `findStates()` helper function (PR #733).
 
 * `viash ns exec`: Fix "relative fields" outputting absolute paths (PR# 737). Additionally, improve path resolution when using the `--src` argument.
+
+* `viash ns`: Fix viash tripping over its toes when it encounters multiple failed configs (PR #761). A dummy config was used as a placeholder, but it always used the name `failed`, so duplicate config names were generated, which we check for nowadays.
+
+* `bashwrapper`: Fix an issue where running `viash test` which builds the test docker container would ignore test failures but subsequential runs would work correctly (PR #754).
 
 # Viash 0.9.0-RC6 (2024-06-17): Hotfix for docker image name generation
 

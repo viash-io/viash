@@ -19,8 +19,6 @@ package io.viash.runners
 
 import io.circe.{Decoder, Encoder, Json}
 // import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
-import io.circe.generic.semiauto.deriveEncoder as deriveConfiguredEncoder
-import io.circe.generic.semiauto.deriveDecoder as deriveConfiguredDecoderFullChecks
 
 package object nextflow {
   import io.viash.helpers.circe._
