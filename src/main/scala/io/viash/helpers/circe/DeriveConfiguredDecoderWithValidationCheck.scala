@@ -17,13 +17,10 @@
 
 package io.viash.helpers.circe
 
-// import io.circe.generic.extras.semiauto.deriveConfiguredDecoder
 import io.circe.{ Decoder, CursorOp }
-// import io.circe.generic.extras.decoding.ConfiguredDecoder
 
-// import scala.reflect.runtime.universe._
-// import shapeless.Lazy
-
+import io.circe.derivation.{Configuration, ConfiguredDecoder}
+import scala.deriving.Mirror
 import io.viash.schemas.ParameterSchema
 import io.circe.ACursor
 import io.viash.exceptions.ConfigParserSubTypeException
@@ -80,6 +77,7 @@ object DeriveConfiguredDecoderWithValidationCheck {
   //     },
   //     s"Type '$tpe 'is not recognised. Valid types are ${validTypes.mkString("'", "', '", ",")}."
   //   )
+  inline def deriveConfiguredDecoderWithValidationCheck[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = ConfiguredDecoder.derived[A]
   def invalidSubTypeDecoder[A](tpe: String, validTypes: List[String]): Decoder[A] = Decoder.instance { cursor =>
     throw new ConfigParserSubTypeException(tpe, validTypes, cursor.value.toString())
   }

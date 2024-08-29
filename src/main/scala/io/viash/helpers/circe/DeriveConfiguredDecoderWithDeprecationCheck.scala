@@ -17,12 +17,10 @@
 
 package io.viash.helpers.circe
 
-// import io.circe.generic.extras.semiauto.deriveConfiguredDecoder
 import io.circe.{ Decoder, CursorOp }
-// import io.circe.generic.extras.decoding.ConfiguredDecoder
 
-// import scala.reflect.runtime.universe._
-// import shapeless.Lazy
+import io.circe.derivation.{Configuration, ConfiguredDecoder}
+import scala.deriving.Mirror
 
 import io.viash.schemas.ParameterSchema
 import io.circe.ACursor
@@ -100,4 +98,5 @@ object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
   // // Use prepare to get raw json data to inspect used fields in the json but we're not performing any changes here
   // def deriveConfiguredDecoderWithDeprecationCheck[A](implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Decoder[A] = deriveConfiguredDecoder[A]
   //   .prepare( checkDeprecation[A] )
+  inline def deriveConfiguredDecoderWithDeprecationCheck[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = ConfiguredDecoder.derived[A]
 }

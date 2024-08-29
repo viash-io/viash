@@ -6,7 +6,6 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
-// import scala.reflect.io.Directory
 import java.io.ByteArrayOutputStream
 import io.viash.exceptions.ExitException
 

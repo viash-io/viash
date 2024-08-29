@@ -12,6 +12,7 @@ import scala.io.Source
 import io.viash.helpers.{IO, Exec, Logger}
 import io.viash.exceptions.ConfigParserException
 import java.nio.file.Files
+import io.viash.helpers.data_structures._
 
 class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
