@@ -8,7 +8,7 @@ import io.viash.helpers.IO
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
-import scala.reflect.io.Directory
+// import scala.reflect.io.Directory
 import sys.process._
 
 class MainRunDockerSuite extends AnyFunSuite with BeforeAndAfterAll {

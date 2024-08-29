@@ -5,6 +5,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import io.viash.helpers.Logger
 import io.viash.helpers.circe.Convert
 import io.viash.config.Config
+import io.viash.config.decodeConfig
 
 class MergingTest extends AnyFunSuite {
   Logger.UseColorOverride.value = Some(false)

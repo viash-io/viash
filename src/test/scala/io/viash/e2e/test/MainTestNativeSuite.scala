@@ -8,7 +8,7 @@ import io.viash.helpers.{IO, Exec, Logger}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
-import scala.reflect.io.Directory
+// import scala.reflect.io.Directory
 import sys.process._
 import io.viash.exceptions.ConfigParserException
 import io.viash.exceptions.MissingResourceFileException

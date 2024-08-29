@@ -17,9 +17,9 @@
 
 package io.viash.helpers.circe
 
-import io.circe.derivation.{Configuration, ConfiguredEncoder}
+import io.circe.derivation.{Configuration, ConfiguredDecoder}
 import scala.deriving.Mirror
 
-object DeriveConfiguredEncoder {
-  inline def deriveConfiguredEncoder[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = ConfiguredEncoder.derived[A]
+object DeriveConfiguredDecoder {
+  inline def deriveConfiguredDecoder[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = ConfiguredDecoder.derived[A]
 }
