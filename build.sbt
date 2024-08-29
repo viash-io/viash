@@ -32,6 +32,7 @@ libraryDependencies ++= Seq(
 )
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-explain")
+scalacOptions ++= Seq("-Xmax-inlines", "50")
 
 organization := "Data Intuitive"
 startYear := Some(2020)
