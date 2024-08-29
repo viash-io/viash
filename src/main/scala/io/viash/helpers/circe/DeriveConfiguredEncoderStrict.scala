@@ -17,10 +17,11 @@
 
 package io.viash.helpers.circe
 
-import io.circe.{Encoder, Json, HCursor}
-// import io.circe.generic.extras.Configuration
-// import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
-// import io.circe.generic.extras.encoding.ConfiguredAsObjectEncoder
+import io.circe.Encoder
+import io.circe.derivation.{Configuration, ConfiguredEncoder}
+import scala.deriving.Mirror
+
+// import io.circe.{Encoder, Json, HCursor}
 
 // import scala.reflect.runtime.universe._
 // import shapeless.Lazy
@@ -39,4 +40,6 @@ object DeriveConfiguredEncoderStrict {
   //         .getOrElse(true) // fallback, shouldn't really happen
   //     )
   //   }
+
+  inline def deriveConfiguredEncoderStrict[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = ConfiguredEncoder.derived[A]
 }

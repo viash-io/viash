@@ -18,23 +18,24 @@
 package io.viash.helpers
 
 import io.circe._
-// import io.circe.generic.extras.Configuration
+import io.circe.derivation.Configuration
 import java.net.URI
 import data_structures.OneOrMore
 import java.nio.file.Paths
 
 package object circe {
-  // implicit val customConfig: Configuration =
-  //   Configuration.default.withDefaults.withStrictDecoding
+  implicit val customConfig: Configuration =
+    Configuration.default.withDefaults.withStrictDecoding
 
-  // encoder and decoder for Either
-  implicit def encodeEither[A,B](implicit ea: Encoder[A], eb: Encoder[B]): Encoder[Either[A,B]] = {
-    _.fold(ea(_), eb(_))
-  }
 
-  implicit def decodeEither[A,B](implicit a: Decoder[A], b: Decoder[B]): Decoder[Either[A,B]] = {
-    a either b
-  }
+  // // encoder and decoder for Either
+  // implicit def encodeEither[A,B](implicit ea: Encoder[A], eb: Encoder[B]): Encoder[Either[A,B]] = {
+  //   _.fold(ea(_), eb(_))
+  // }
+
+  // implicit def decodeEither[A,B](implicit a: Decoder[A], b: Decoder[B]): Decoder[Either[A,B]] = {
+  //   a either b
+  // }
 
   // encoder and decoder for OneOrMore
   implicit def encodeOneOrMore[A](implicit enc: Encoder[List[A]]): Encoder[OneOrMore[A]] = { 

@@ -70,8 +70,8 @@ object DeriveConfiguredDecoderWithValidationCheck {
   //     s"Could not convert json to ${typeOf[A].baseClasses.head.fullName}."
   //   )
 
-  // // Dummy decoder to generate exceptions when an invalid type is specified
-  // // We need a valid class type to be specified
+  // Dummy decoder to generate exceptions when an invalid type is specified
+  // We need a valid class type to be specified
   // def invalidSubTypeDecoder[A](tpe: String, validTypes: List[String])(implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Decoder[A] = deriveConfiguredDecoder[A]
   //   .validate(
   //     pred => {
@@ -80,5 +80,8 @@ object DeriveConfiguredDecoderWithValidationCheck {
   //     },
   //     s"Type '$tpe 'is not recognised. Valid types are ${validTypes.mkString("'", "', '", ",")}."
   //   )
+  def invalidSubTypeDecoder[A](tpe: String, validTypes: List[String]): Decoder[A] = Decoder.instance { cursor =>
+    throw new ConfigParserSubTypeException(tpe, validTypes, cursor.value.toString())
+  }
 
 }

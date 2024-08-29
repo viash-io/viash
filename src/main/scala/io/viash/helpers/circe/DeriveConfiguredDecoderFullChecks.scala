@@ -20,9 +20,9 @@ package io.viash.helpers.circe
 // import shapeless.Lazy
 // import scala.reflect.runtime.universe._
 
-// import io.circe.Decoder
-// import io.circe.generic.extras.decoding.ConfiguredDecoder
-// import io.circe.generic.extras.semiauto.deriveConfiguredDecoder
+import io.circe.Decoder
+import io.circe.derivation.Configuration
+import scala.deriving.Mirror
 
 object DeriveConfiguredDecoderFullChecks {
   // import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
@@ -34,4 +34,6 @@ object DeriveConfiguredDecoderFullChecks {
   //     s"Could not convert json to ${typeOf[A].baseClasses.head.fullName}."
   //   )
   //   .prepare( DeriveConfiguredDecoderWithDeprecationCheck.checkDeprecation[A] )
+
+  inline def deriveConfiguredDecoderFullChecks[A](using inline A: Mirror.Of[A], inline configuration: Configuration): Decoder[A] = Decoder.derivedConfigured[A]
 }

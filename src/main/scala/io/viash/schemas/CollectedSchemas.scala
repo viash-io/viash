@@ -22,7 +22,6 @@ import io.circe.{Encoder, Printer => JsonPrinter}
 import io.circe.syntax.EncoderOps
 // import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
 import io.circe.generic.semiauto.{deriveEncoder as deriveConfiguredEncoder}
-import io.circe.generic.semiauto.{deriveEncoder as deriveConfiguredEncoderStrict}
 
 import io.viash.functionality._
 import io.viash.runners._

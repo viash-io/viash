@@ -246,7 +246,7 @@ object PackageConfig {
 
     /* PACKAGE 0: converted from json */
     // convert Json into ViashPackage
-    val pack0 = PackageConfig()//Convert.jsonToClass[PackageConfig](json, path.toString())
+    val pack0 = Convert.jsonToClass[PackageConfig](json, path.toString())
 
     /* PACKAGE 1: make resources absolute */
     // make paths absolute
