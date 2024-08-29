@@ -683,7 +683,7 @@ object Config extends Logging {
     val conf1 = 
       if (confMods.postparseCommands.nonEmpty) {
         // turn config back into json
-        val js = Json.Null//encodeConfig(conf0)
+        val js = encodeConfig(conf0)
         // apply config mods
         val modifiedJs = confMods(js, preparse = false)
         // turn json back into a config
