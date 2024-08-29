@@ -21,38 +21,44 @@ import io.circe.{Decoder, Encoder, Json}
 // import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import cats.syntax.functor._ // for .widen
+import io.viash.helpers.circe.DeriveConfiguredEncoder.deriveConfiguredEncoder
 
 package object runners {
   import io.viash.helpers.circe._
   import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
 
-  // implicit val encodeExecutableRunner: Encoder.AsObject[ExecutableRunner] = deriveEncoder
-  // implicit val decodeExecutableRunner: Decoder[ExecutableRunner] = deriveConfiguredDecoderFullChecks
+  import io.viash.runners.executable.{decodeSetupStrategy, encodeSetupStrategy}
+  import io.viash.runners.nextflow.{decodeNextflowDirectives, encodeNextflowDirectives}
+  import io.viash.runners.nextflow.{decodeNextflowAuto, encodeNextflowAuto}
+  import io.viash.runners.nextflow.{decodeNextflowConfig, encodeNextflowConfig}
 
-  // implicit val encodeNextflowRunner: Encoder.AsObject[NextflowRunner] = deriveEncoder
-  // implicit val decodeNextflowRunner: Decoder[NextflowRunner] = deriveConfiguredDecoderFullChecks
+  implicit val encodeExecutableRunner: Encoder.AsObject[ExecutableRunner] = Encoder.derived
+  implicit val decodeExecutableRunner: Decoder[ExecutableRunner] = deriveConfiguredDecoderFullChecks
 
-  // implicit def encodeRunner[A <: Runner]: Encoder[A] = Encoder.instance {
-  //   runner =>
-  //     val typeJson = Json.obj("type" -> Json.fromString(runner.`type`))
-  //     val objJson = runner match {
-  //       case s: ExecutableRunner => encodeExecutableRunner(s)
-  //       case s: NextflowRunner => encodeNextflowRunner(s)
-  //     }
-  //     objJson deepMerge typeJson
-  // }
+  implicit val encodeNextflowRunner: Encoder.AsObject[NextflowRunner] = Encoder.derived
+  implicit val decodeNextflowRunner: Decoder[NextflowRunner] = deriveConfiguredDecoderFullChecks
 
-  // implicit def decodeRunner: Decoder[Runner] = Decoder.instance {
-  //   cursor =>
-  //     val decoder: Decoder[Runner] =
-  //       cursor.downField("type").as[String] match {
-  //         case Right("executable") => decodeExecutableRunner.widen
-  //         case Right("nextflow") => decodeNextflowRunner.widen
-  //         case Right(typ) => 
-  //           DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[ExecutableRunner](typ, List("executable", "nextflow")).widen
-  //         case Left(exception) => throw exception
-  //       }
+  implicit def encodeRunner[A <: Runner]: Encoder[A] = Encoder.instance {
+    runner =>
+      val typeJson = Json.obj("type" -> Json.fromString(runner.`type`))
+      val objJson = runner match {
+        case s: ExecutableRunner => encodeExecutableRunner(s)
+        case s: NextflowRunner => encodeNextflowRunner(s)
+      }
+      objJson deepMerge typeJson
+  }
 
-  //     decoder(cursor)
-  // }
+  implicit def decodeRunner: Decoder[Runner] = Decoder.instance {
+    cursor =>
+      val decoder: Decoder[Runner] =
+        cursor.downField("type").as[String] match {
+          case Right("executable") => decodeExecutableRunner.widen
+          case Right("nextflow") => decodeNextflowRunner.widen
+          case Right(typ) => 
+            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[ExecutableRunner](typ, List("executable", "nextflow")).widen
+          case Left(exception) => throw exception
+        }
+
+      decoder(cursor)
+  }
 }

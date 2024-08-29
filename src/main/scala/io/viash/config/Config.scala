@@ -657,7 +657,7 @@ object Config extends Logging {
 
     /* CONFIG Base: converted from json */
     // convert Json into Config
-    val confBase = Config("")//Convert.jsonToClass[Config](json2, uri.toString())
+    val confBase = Convert.jsonToClass[Config](json2, uri.toString())
 
     /* CONFIG 0: apply values from package config */
     // apply values from package config if need be

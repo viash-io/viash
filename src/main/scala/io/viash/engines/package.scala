@@ -25,34 +25,37 @@ import cats.syntax.functor._
 package object engines {
   import io.viash.helpers.circe._
   import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
+  import io.viash.helpers.circe.DeriveConfiguredEncoder._
 
-  // implicit val encodeDockerEngine: Encoder.AsObject[DockerEngine] = deriveConfiguredEncoder
-  // implicit val decodeDockerEngine: Decoder[DockerEngine] = deriveConfiguredDecoderFullChecks
+  import io.viash.engines.requirements.{decodeRequirements, encodeRequirements}
 
-  // implicit val encodeNativeEngine: Encoder.AsObject[NativeEngine] = deriveConfiguredEncoder
-  // implicit val decodeNativeEngine: Decoder[NativeEngine] = deriveConfiguredDecoderFullChecks
+  implicit val encodeDockerEngine: Encoder.AsObject[DockerEngine] = deriveConfiguredEncoder
+  implicit val decodeDockerEngine: Decoder[DockerEngine] = deriveConfiguredDecoderFullChecks
 
-  // implicit def encodeEngine[A <: Engine]: Encoder[A] = Encoder.instance {
-  //   engine =>
-  //     val typeJson = Json.obj("type" -> Json.fromString(engine.`type`))
-  //     val objJson = engine match {
-  //       case s: DockerEngine => encodeDockerEngine(s)
-  //       case s: NativeEngine => encodeNativeEngine(s)
-  //     }
-  //     objJson deepMerge typeJson
-  // }
+  implicit val encodeNativeEngine: Encoder.AsObject[NativeEngine] = deriveConfiguredEncoder
+  implicit val decodeNativeEngine: Decoder[NativeEngine] = deriveConfiguredDecoderFullChecks
 
-  // implicit def decodeEngine: Decoder[Engine] = Decoder.instance {
-  //   cursor =>
-  //     val decoder: Decoder[Engine] =
-  //       cursor.downField("type").as[String] match {
-  //         case Right("docker") => decodeDockerEngine.widen
-  //         case Right("native") => decodeNativeEngine.widen
-  //         case Right(typ) => 
-  //           DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[NativeEngine](typ, List("docker", "native")).widen
-  //         case Left(exception) => throw exception
-  //       }
+  implicit def encodeEngine[A <: Engine]: Encoder[A] = Encoder.instance {
+    engine =>
+      val typeJson = Json.obj("type" -> Json.fromString(engine.`type`))
+      val objJson = engine match {
+        case s: DockerEngine => encodeDockerEngine(s)
+        case s: NativeEngine => encodeNativeEngine(s)
+      }
+      objJson deepMerge typeJson
+  }
 
-  //     decoder(cursor)
-  // }
+  implicit def decodeEngine: Decoder[Engine] = Decoder.instance {
+    cursor =>
+      val decoder: Decoder[Engine] =
+        cursor.downField("type").as[String] match {
+          case Right("docker") => decodeDockerEngine.widen
+          case Right("native") => decodeNativeEngine.widen
+          case Right(typ) => 
+            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[NativeEngine](typ, List("docker", "native")).widen
+          case Left(exception) => throw exception
+        }
+
+      decoder(cursor)
+  }
 }

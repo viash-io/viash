@@ -25,40 +25,48 @@ import cats.syntax.functor._ // for .widen
 package object platforms {
   import io.viash.helpers.circe._
   import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
+  import io.viash.helpers.circe.DeriveConfiguredEncoder._
 
-  // implicit val encodeDockerPlatform: Encoder.AsObject[DockerPlatform] = deriveConfiguredEncoder
-  // implicit val decodeDockerPlatform: Decoder[DockerPlatform] = deriveConfiguredDecoderFullChecks
+  import io.viash.runners.nextflow.{decodeNextflowDirectives, encodeNextflowDirectives}
+  import io.viash.engines.docker.{decodeResolveVolume, encodeResolveVolume}
+  import io.viash.runners.executable.{decodeSetupStrategy, encodeSetupStrategy}
+  import io.viash.engines.requirements.{decodeRequirements, encodeRequirements}
+  import io.viash.runners.nextflow.{decodeNextflowAuto, encodeNextflowAuto}
+  import io.viash.runners.nextflow.{decodeNextflowConfig, encodeNextflowConfig}
 
-  // implicit val encodeNextflowPlatform: Encoder.AsObject[NextflowPlatform] = deriveConfiguredEncoder
-  // implicit val decodeNextflowPlatform: Decoder[NextflowPlatform] = deriveConfiguredDecoderFullChecks
+  implicit val encodeDockerPlatform: Encoder.AsObject[DockerPlatform] = deriveConfiguredEncoder
+  implicit val decodeDockerPlatform: Decoder[DockerPlatform] = deriveConfiguredDecoderFullChecks
 
-  // implicit val encodeNativePlatform: Encoder.AsObject[NativePlatform] = deriveConfiguredEncoder
-  // implicit val decodeNativePlatform: Decoder[NativePlatform] = deriveConfiguredDecoderFullChecks
+  implicit val encodeNextflowPlatform: Encoder.AsObject[NextflowPlatform] = deriveConfiguredEncoder
+  implicit val decodeNextflowPlatform: Decoder[NextflowPlatform] = deriveConfiguredDecoderFullChecks
 
-  // implicit def encodePlatform[A <: Platform]: Encoder[A] = Encoder.instance {
-  //   platform =>
-  //     val typeJson = Json.obj("type" -> Json.fromString(platform.`type`))
-  //     val objJson = platform match {
-  //       case s: DockerPlatform => encodeDockerPlatform(s)
-  //       case s: NextflowPlatform => encodeNextflowPlatform(s)
-  //       case s: NativePlatform => encodeNativePlatform(s)
-  //     }
-  //     objJson deepMerge typeJson
-  // }
+  implicit val encodeNativePlatform: Encoder.AsObject[NativePlatform] = deriveConfiguredEncoder
+  implicit val decodeNativePlatform: Decoder[NativePlatform] = deriveConfiguredDecoderFullChecks
 
-  // implicit def decodePlatform: Decoder[Platform] = Decoder.instance {
-  //   cursor =>
-  //     val decoder: Decoder[Platform] =
-  //       cursor.downField("type").as[String] match {
-  //         case Right("docker") => decodeDockerPlatform.widen
-  //         case Right("native") => decodeNativePlatform.widen
-  //         case Right("nextflow") => decodeNextflowPlatform.widen
-  //         case Right(typ) => 
-  //           //throw new RuntimeException("Type " + typ + " is not recognised.")
-  //           DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[NativePlatform](typ, List("docker", "native", "nextflow")).widen
-  //         case Left(exception) => throw exception
-  //       }
+  implicit def encodePlatform[A <: Platform]: Encoder[A] = Encoder.instance {
+    platform =>
+      val typeJson = Json.obj("type" -> Json.fromString(platform.`type`))
+      val objJson = platform match {
+        case s: DockerPlatform => encodeDockerPlatform(s)
+        case s: NextflowPlatform => encodeNextflowPlatform(s)
+        case s: NativePlatform => encodeNativePlatform(s)
+      }
+      objJson deepMerge typeJson
+  }
 
-  //     decoder(cursor)
-  // }
+  implicit def decodePlatform: Decoder[Platform] = Decoder.instance {
+    cursor =>
+      val decoder: Decoder[Platform] =
+        cursor.downField("type").as[String] match {
+          case Right("docker") => decodeDockerPlatform.widen
+          case Right("native") => decodeNativePlatform.widen
+          case Right("nextflow") => decodeNextflowPlatform.widen
+          case Right(typ) => 
+            //throw new RuntimeException("Type " + typ + " is not recognised.")
+            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[NativePlatform](typ, List("docker", "native", "nextflow")).widen
+          case Left(exception) => throw exception
+        }
+
+      decoder(cursor)
+  }
 }

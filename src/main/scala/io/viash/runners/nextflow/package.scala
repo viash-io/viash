@@ -18,18 +18,32 @@
 package io.viash.runners
 
 import io.circe.{Decoder, Encoder, Json}
+import io.circe.derivation.ConfiguredDecoder
 // import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 
 package object nextflow {
   import io.viash.helpers.circe._
-  // import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
+  import io.viash.helpers.circe.DeriveConfiguredEncoder._
+  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
 
-  // implicit val encodeNextflowDirectives: Encoder.AsObject[NextflowDirectives] = deriveConfiguredEncoder
-  // implicit val decodeNextflowDirectives: Decoder[NextflowDirectives] = deriveConfiguredDecoderFullChecks
+  // implicit val encodeEitherBooleanString: Encoder[Either[Boolean, String]] = Encoder.derived
+  // implicit val decodeEitherBooleanString: Decoder[Either[Boolean, String]] = Decoder.derived
+  // implicit val encodeEitherMapStringStringString: Encoder[Either[Map[String, String], String]] = Encoder.derived
+  // implicit val decodeEitherMapStringStringString: Decoder[Either[Map[String, String], String]] = Decoder.derived
+  // implicit val encodeEitherIntString: Encoder[Either[Int, String]] = Encoder.derived
+  // implicit val decodeEitherIntString: Decoder[Either[Int, String]] = Decoder.derived
+  // implicit val encodeEitherStringInt: Encoder[Either[String, Int]] = Encoder.derived
+  // implicit val decodeEitherStringInt: Decoder[Either[String, Int]] = Decoder.derived
+  // implicit val encodeEitherStringMapStringString: Encoder[Either[String, Map[String, String]]] = Encoder.derived
+  // implicit val decodeEitherStringMapStringString: Decoder[Either[String, Map[String, String]]] = Decoder.derived
 
-  // implicit val encodeNextflowAuto: Encoder.AsObject[NextflowAuto] = deriveConfiguredEncoder
-  // implicit val decodeNextflowAuto: Decoder[NextflowAuto] = deriveConfiguredDecoderFullChecks
 
-  // implicit val encodeNextflowConfig: Encoder.AsObject[NextflowConfig] = deriveConfiguredEncoder
-  // implicit val decodeNextflowConfig: Decoder[NextflowConfig] = deriveConfiguredDecoderFullChecks
+  implicit val encodeNextflowDirectives: Encoder.AsObject[NextflowDirectives] = deriveConfiguredEncoder
+  implicit val decodeNextflowDirectives: Decoder[NextflowDirectives] = deriveConfiguredDecoderFullChecks
+
+  implicit val encodeNextflowAuto: Encoder.AsObject[NextflowAuto] = deriveConfiguredEncoder
+  implicit val decodeNextflowAuto: Decoder[NextflowAuto] = deriveConfiguredDecoderFullChecks
+
+  implicit val encodeNextflowConfig: Encoder.AsObject[NextflowConfig] = deriveConfiguredEncoder
+  implicit val decodeNextflowConfig: Decoder[NextflowConfig] = deriveConfiguredDecoderFullChecks
 }
