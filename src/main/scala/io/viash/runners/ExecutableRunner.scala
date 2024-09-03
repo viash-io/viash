@@ -395,20 +395,14 @@ final case class ExecutableRunner(
     val detectMounts = args.flatMap {
       case arg: FileArgument if arg.multiple =>
         // resolve arguments with multiplicity different from singular args
-        val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
         val chownIfOutput = if (arg.direction == Output) "\n    VIASH_CHOWN_VARS+=( \"$var\" )" else ""
         Some(
           s"""
             |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-            |  $viash_temp=()
-            |  IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}'
-            |  for var in $$${arg.VIASH_PAR}; do
-            |    unset IFS
-            |    VIASH_DIRECTORY_MOUNTS+=( "$$(ViashDockerAutodetectMountArg "$$var")" )
-            |    var=$$(ViashDockerAutodetectMount "$$var")
-            |    $viash_temp+=( "$$var" )$chownIfOutput
+            |  for i in "$${!${arg.VIASH_PAR}[@]}"; do
+            |    VIASH_DIRECTORY_MOUNTS+=( "$$(ViashDockerAutodetectMountArg $${${arg.VIASH_PAR}[$$i]})" )
+            |    ${arg.VIASH_PAR}[$$i]=$$(ViashDockerAutodetectMount $${${arg.VIASH_PAR}[$$i]})
             |  done
-            |  ${arg.VIASH_PAR}=$$(IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}' ; echo "$${$viash_temp[*]}")
             |fi""".stripMargin
         )
       case arg: FileArgument =>
@@ -455,17 +449,12 @@ final case class ExecutableRunner(
     val stripAutomounts = args.flatMap {
       case arg: FileArgument if arg.multiple && arg.direction == Input =>
         // resolve arguments with multiplicity different from singular args
-        val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
         Some(
           s"""
             |  if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-            |    unset $viash_temp
-            |    IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}'
-            |    for var in $$${arg.VIASH_PAR}; do
-            |      unset IFS
-            |      ${BashWrapper.store("ViashDockerStripAutomount", viash_temp, "\"$(ViashDockerStripAutomount \"$var\")\"", Some(arg.multiple_sep)).mkString("\n    ")}
+            |    for i in "$${!${arg.VIASH_PAR}[@]}"; do
+            |      ${arg.VIASH_PAR}[i]=$$(ViashDockerStripAutomount "$${${arg.VIASH_PAR}[i]}")
             |    done
-            |    ${arg.VIASH_PAR}="$$$viash_temp"
             |  fi""".stripMargin
         )
       case arg: FileArgument =>
