@@ -150,12 +150,6 @@ Implemented a proper way of caching dependency repositories. The cache is stored
 
 * `viash test`: Fix an issue where the tests would not copy package config settings to determine the docker image name (PR #767).
 
-# Viash 0.8.7 (yyyy-MM-dd): TODO Add title
-
-## BUG FIXES
-
-* `viash build`: Fix error handling of non-generic errors in the build process or while pushing docker containers (PR #696).
-
 # Viash 0.8.6 (2024-04-26): Bug fixes and improvements for CI
 
 Fix some issues in some edge cases.
