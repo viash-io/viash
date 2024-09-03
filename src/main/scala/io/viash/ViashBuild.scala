@@ -22,53 +22,68 @@ import scala.sys.process.{Process, ProcessLogger}
 import io.viash.helpers.status._
 
 import config._
-import platforms.Platform
 import helpers.{IO, Logging}
+import io.viash.runners.Runner
 
 object ViashBuild extends Logging {
   def apply(
-    config: Config,
-    platform: Platform,
+    appliedConfig: AppliedConfig,
     output: String,
     setup: Option[String] = None,
     push: Boolean = false
   ): Status = {
-    val fun = platform.modifyFunctionality(config, testing = false)
+    val resources = appliedConfig.generateRunner(false)
 
     // create dir
     val dir = Paths.get(output)
     Files.createDirectories(dir)
 
     // get the path of where the executable will be written to
-    val exec_path = fun.mainScript.map(scr => Paths.get(output, scr.resourcePath).toString)
+    val exec_path = resources.mainScript.map(scr => Paths.get(output, scr.resourcePath).toString)
 
     // convert config to a yaml wrapped inside a PlainFile
-    val configYaml = ConfigMeta.toMetaFile(config, Some(dir))
+    val configYaml = ConfigMeta.toMetaFile(appliedConfig, Some(dir))
 
     // write resources to output directory
-    IO.writeResources(configYaml :: fun.resources, dir)
+    IO.writeResources(configYaml :: resources.resources, dir)
 
-    // if '--setup <strat>' was passed, run './executable ---setup <strat>'
-    val setupResult =
-      if (setup.isDefined && exec_path.isDefined && platform.hasSetup) {
-        val cmd = Array(exec_path.get, "---setup", setup.get)
-        val res = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
-        res
-      }
-      else 0
-
-    // if '--push' was passed, run './executable ---setup push'
-    val pushResult =
-      if (push && exec_path.isDefined && platform.hasSetup) {
-        val cmd = Array(exec_path.get, "---setup push")
-        val _ = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
-      }
-      else 0
-    
-    (setupResult, pushResult) match {
-      case (0, 0) => Success
-      case (1, _) => SetupError
-      case (0, 1) => PushError
+    // todo: should setup be deprecated?
+    // todo: should push be deprecated?
+    if (setup.isEmpty || exec_path.isEmpty) {
+      return Success
     }
+
+    // if '--setup <strat>' was passed, run './executable ---setup <strat> ---engine <engine>'
+    if (setup.isDefined && exec_path.isDefined) {
+      val exitCodes = appliedConfig.engines.map{ engine => 
+        if (engine.hasSetup) {
+          val cmd = Array(exec_path.get, "---setup", setup.get, "---engine", engine.id)
+          val res = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
+          res
+        } else {
+          0
+        }
+      }
+      if (exitCodes.exists(_ != 0)) {
+        return SetupError
+      }
+    }
+
+    if (push && exec_path.isDefined) {
+      val exitCodes = appliedConfig.engines.map{ engine => 
+        if (engine.hasSetup) {
+          val cmd = Array(exec_path.get, "---setup", "push", "---engine", engine.id)
+          val res = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
+          res
+        } else {
+          0
+        }
+      }
+      if (exitCodes.exists(_ != 0)) {
+        return PushError
+      }
+    }
+
+    return Success
   }
 }

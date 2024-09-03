@@ -92,7 +92,7 @@ pwalk(langs, function(id, label, config_path, script_path, ...) {
 The `par` object (or `par_` environment variables in Bash) will contain argument values passed at runtime. For example, passing `--input foo.txt` will result in a `par["input"]` being equal to `"foo.txt"`.
 
 :::{.callout-tip}
-Try adding more [arguments]({{< var reference.arguments >}}) with different file types to see what effect this has on the resulting placeholder.
+Try adding more [arguments]({{< var reference.arguments >}}) with different types to see what effect this has on the resulting placeholder.
 :::
 
 ## Meta variables in `meta`
@@ -105,9 +105,11 @@ Meta-variables offer information on the runtime environment which you can use fr
 
 * `executable` (string): The executable being used at runtime; that is, the wrapped script. This variable is used in unit tests.
 
-* `functionality_name` (string): The name of the component, useful for logging.
+* `name` (string): The name of the component, useful for logging.
 
-* `memory_*` (long): The maximum amount of memory a component is allowed to allocate. The following denominations are provided: `memory_b`, `memory_kb`, `memory_mb`, `memory_gb`, `memory_tb`, `memory_pb`. By default, this value will be undefined.
+* `functionality_name` (string): The name of the component, useful for logging. (Deprecated)
+
+* `memory_*` (long): The maximum amount of memory a component is allowed to allocate. The following denominations are provided: `memory_b`, `memory_kb`, `memory_mb`, `memory_gb`, `memory_tb`, `memory_pb` for SI units (1000-base). `memory_kib`, `memory_mib`, `memory_gib`, `memory_tib`, `memory_pib` for IEC units (1024-base).. By default, this value will be undefined.
 
 * `resources_dir` (string): Path to where the resources are stored.
 
@@ -238,9 +240,13 @@ grep -q 'expected output' output.txt
 echo Done
 ```
 
-### `functionality_name` (string)
+### `name` (string)
 
 The name of the component, useful for logging.
+
+### `functionality_name` (string)
+
+The name of the component, useful for logging. (Deprecated)
 
 ### `memory_*` (long)
 

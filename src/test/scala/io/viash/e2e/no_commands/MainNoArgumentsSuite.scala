@@ -11,9 +11,10 @@ class MainNoArgumentsSuite extends AnyFunSuite{
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
 
   test("viash without arguments produces helpful error message") {
-    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr()
+    val testOutput = TestHelper.testMain()
 
-    assert(exitCode > 0)
-    assert(stderr.contains("Error: No subcommand was specified. See `viash --help` for more information."))
+    assert(testOutput.exitCode.isDefined)
+    assert(testOutput.exitCode.get > 0)
+    assert(testOutput.stderr.contains("Error: No subcommand was specified. See `viash --help` for more information."))
   }
 }

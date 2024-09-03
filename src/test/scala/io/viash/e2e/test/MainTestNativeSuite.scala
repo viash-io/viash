@@ -10,6 +10,8 @@ import org.scalatest.funsuite.AnyFunSuite
 
 import scala.reflect.io.Directory
 import sys.process._
+import io.viash.exceptions.ConfigParserException
+import io.viash.exceptions.MissingResourceFileException
 
 class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
@@ -23,307 +25,473 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   private val configInvalidYamlFile = getClass.getResource("/testbash/invalid_configs/config_invalid_yaml.vsh.yaml").getPath
 
   test("Check standard test output for typical outputs") {
-    val testText = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "executable",
       configFile
     )
 
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testText, false)
+    checkTempDirAndRemove(testOutput.stdout, false)
   }
 
   test("Check standard test output with trailing arguments") {
-    val testText = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "test",
       configFile,
-      "-p", "native"
+      "--engine", "native",
+      "--runner", "executable"
     )
 
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testText, false)
+    checkTempDirAndRemove(testOutput.stdout, false)
   }
 
   test("Check standard test output with leading and trailing arguments") {
-    val testText = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "executable",
       configFile,
       "-k", "false"
     )
 
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testText, false)
+    checkTempDirAndRemove(testOutput.stdout, false)
   }
 
   test("Verify base config derivation") {
     val newConfigFilePath = configDeriver.derive(Nil, "default_config")
 
-    val testText = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testText, false)
+    checkTempDirAndRemove(testOutput.stdout, false)
   }
 
   test("Check test output when no tests are specified in the functionality file") {
-    val newConfigFilePath = configDeriver.derive("del(.functionality.test_resources)", "no_tests")
-    val testText = TestHelper.testMain(
+    val newConfigFilePath = configDeriver.derive("del(.test_resources)", "no_tests")
+    val testOutput = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("WARNING! No tests found!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("WARNING! No tests found!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testText, false)
+    checkTempDirAndRemove(testOutput.stdout, false)
   }
 
   test("Check test output when a test fails") {
-    val newConfigFilePath = configDeriver.derive(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""", "failed_test")
-    val testText = TestHelper.testMainException[RuntimeException](
+    val newConfigFilePath = configDeriver.derive(""".test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""", "failed_test")
+    val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("ERROR! Only 1 out of 2 test scripts succeeded!"))
-    assert(!testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("ERROR! Only 1 out of 2 test scripts succeeded!"))
+    assert(!testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testText, true)
+    checkTempDirAndRemove(testOutput.stdout, true)
   }
 
   test("Check test output when test doesn't exist") {
-    val newConfigFilePath = configDeriver.derive(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/nonexistent_test.sh"""", "nonexisting_test")
-    val testOutput = TestHelper.testMainException2[RuntimeException](
+    val newConfigFilePath = configDeriver.derive(""".test_resources[.path == "tests/check_outputs.sh"].path := "tests/nonexistent_test.sh"""", "nonexisting_test")
+    val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
-    assert(testOutput.exceptionText == "Only 1 out of 2 test scripts succeeded!")
+    assert(testOutput.exceptionText.get == "Only 1 out of 2 test scripts succeeded!")
 
-    assert(testOutput.output.contains("Running tests in temporary directory: "))
-    assert(testOutput.output.contains("ERROR! Only 1 out of 2 test scripts succeeded!"))
-    assert(!testOutput.output.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("ERROR! Only 1 out of 2 test scripts succeeded!"))
+    assert(!testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testOutput.output, true)
+    checkTempDirAndRemove(testOutput.stdout, true)
   }
 
   test("Check config and resource files with spaces in the filename") {
     val newConfigFilePath = Paths.get(tempFolStr, "config with spaces.vsh.yaml")
     Files.copy(Paths.get(configFile), newConfigFilePath)
-    val testText = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "executable",
       newConfigFilePath.toString()
     )
 
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testText, false)
+    checkTempDirAndRemove(testOutput.stdout, false)
   }
 
-  test("Check config file without 'functionality' specified") {
-    val newConfigFilePath = configDeriver.derive("""del(.functionality)""", "missing_functionality")
-    val testOutput = TestHelper.testMainException2[RuntimeException](
+  test("Check config file without 'name' specified") {
+    // remove 'name' and any fields that contain 'name'
+    val newConfigFilePath = configDeriver.derive("""del(.name); del(.argument_groups); del(.authors)""", "missing_name")
+    val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
-    assert(testOutput.exceptionText.contains("must be a yaml file containing a viash config."))
-    assert(testOutput.output.isEmpty)
+    assert(testOutput.exceptionText.get.contains("must be a yaml file containing a viash config."))
+    assert(testOutput.stdout.isEmpty)
   }
 
-  test("Check invalid platform type") {
-    val newConfigFilePath = configDeriver.derive(""".platforms += { type: "foo" }""", "invalid_platform_type")
-    val testOutput = TestHelper.testMainException2[RuntimeException](
+  test("Check invalid runner type") {
+    val newConfigFilePath = configDeriver.derive(""".runners += { type: "foo" }""", "invalid_runner_type")
+    val testOutput = TestHelper.testMainException[ConfigParserException](
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
-    assert(testOutput.exceptionText.contains("Type 'foo' is not recognised. Valid types are 'docker', 'native', and 'nextflow'."))
-    assert(testOutput.exceptionText.contains(
+    assert(testOutput.exceptionText.get.contains("Type 'foo' is not recognised. Valid types are 'executable', and 'nextflow'."))
+    assert(testOutput.exceptionText.get.contains(
       """{
         |  "type" : "foo"
         |}""".stripMargin))
-    assert(testOutput.output.isEmpty)
+    assert(testOutput.stdout.isEmpty)
   }
 
-  test("Check invalid field in platform") {
-    val newConfigFilePath = configDeriver.derive(""".platforms += { type: "native", foo: "bar" }""", "invalid_platform_field")
-    val testOutput = TestHelper.testMainException2[RuntimeException](
+  test("Check invalid engine type") {
+    val newConfigFilePath = configDeriver.derive(""".engines += { type: "foo" }""", "invalid_engine_type")
+    val testOutput = TestHelper.testMainException[ConfigParserException](
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
-    assert(testOutput.exceptionText.contains("Invalid data fields for NativePlatform."))
-    assert(testOutput.exceptionText.contains(
+    assert(testOutput.exceptionText.get.contains("Type 'foo' is not recognised. Valid types are 'docker', and 'native'."))
+    assert(testOutput.exceptionText.get.contains(
+      """{
+        |  "type" : "foo"
+        |}""".stripMargin))
+    assert(testOutput.stdout.isEmpty)
+  }
+
+  test("Check invalid platform type") {
+    val newConfigFilePath = configDeriver.derive(""".platforms := [{ type: "foo" }]""", "invalid_platform_type")
+    val testOutput = TestHelper.testMainException[ConfigParserException](
+      "test",
+      "--engine", "native",
+      "--runner", "executable",
+      newConfigFilePath
+    )
+
+    assert(testOutput.exceptionText.get.contains("Type 'foo' is not recognised. Valid types are 'docker', 'native', and 'nextflow'."))
+    assert(testOutput.exceptionText.get.contains(
+      """{
+        |  "type" : "foo"
+        |}""".stripMargin))
+    assert(testOutput.stdout.isEmpty)
+  }
+
+  test("Check invalid field in runner") {
+    val newConfigFilePath = configDeriver.derive(""".runners += { type: "executable", foo: "bar" }""", "invalid_runner_field")
+    val testOutput = TestHelper.testMainException[ConfigParserException](
+      "test",
+      "--engine", "native",
+      "--runner", "executable",
+      newConfigFilePath
+    )
+
+    assert(testOutput.exceptionText.get.contains("Invalid data fields for ExecutableRunner."))
+    assert(testOutput.exceptionText.get.contains(
+      """{
+        |  "type" : "executable",
+        |  "foo" : "bar"
+        |}""".stripMargin))
+    assert(testOutput.stdout.isEmpty)
+  }
+
+  test("Check invalid field in engine") {
+    val newConfigFilePath = configDeriver.derive(""".engines += { type: "native", foo: "bar" }""", "invalid_engine_field")
+    val testOutput = TestHelper.testMainException[ConfigParserException](
+      "test",
+      "--engine", "native",
+      "--runner", "executable",
+      newConfigFilePath
+    )
+
+    assert(testOutput.exceptionText.get.contains("Invalid data fields for NativeEngine."))
+    assert(testOutput.exceptionText.get.contains(
       """{
         |  "type" : "native",
         |  "foo" : "bar"
         |}""".stripMargin))
-    assert(testOutput.output.isEmpty)
+    assert(testOutput.stdout.isEmpty)
+  }
+
+  test("Check invalid field in platform") {
+    val newConfigFilePath = configDeriver.derive(""".platforms := [{ type: "native", foo: "bar" }]""", "invalid_platform_field")
+    val testOutput = TestHelper.testMainException[ConfigParserException](
+      "test",
+      "--engine", "native",
+      "--runner", "executable",
+      newConfigFilePath
+    )
+
+    assert(testOutput.exceptionText.get.contains("Invalid data fields for NativePlatform."))
+    assert(testOutput.exceptionText.get.contains(
+      """{
+        |  "type" : "native",
+        |  "foo" : "bar"
+        |}""".stripMargin))
+    assert(testOutput.stdout.isEmpty)
   }
 
   test("Check valid viash config yaml but with wrong file extension") {
     val newConfigFilePath = Paths.get(tempFolStr, "config.txt")
     Files.copy(Paths.get(configFile), newConfigFilePath)
-    val testOutput = TestHelper.testMainException2[RuntimeException](
+    val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "executable",
       newConfigFilePath.toString()
     )
 
-    assert(testOutput.exceptionText.contains("must be a yaml file containing a viash config."))
-    assert(testOutput.output.isEmpty)
+    assert(testOutput.exceptionText.get.contains("must be a yaml file containing a viash config."))
+    assert(testOutput.stdout.isEmpty)
   }
 
   test("Check invalid viash config yaml") {
-    val testOutput = TestHelper.testMainException2[io.circe.ParsingFailure](
+    val testOutput = TestHelper.testMainException[org.yaml.snakeyaml.parser.ParserException](
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "executable",
       configInvalidYamlFile
     )
 
-    assert(testOutput.exceptionText.contains("while parsing a flow mapping"))
-    assert(testOutput.output.isEmpty)
+    assert(testOutput.exceptionText.get.contains("while parsing a block collection"), testOutput.exceptionText)
+    assert(testOutput.stdout.isEmpty)
   }
 
   test("Check output in case --keep true is specified") {
-    val testText = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "executable",
       "-k", "true",
       configFile
     )
 
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(!testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(!testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testText, true)
+    checkTempDirAndRemove(testOutput.stdout, true)
   }
 
   test("Check output in case --dry_run is specified") {
-    val testText = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "executable",
       "--dry_run",
       configFile
     )
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("Running dummy test script"))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("Running dummy test script"))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testText, false)
+    checkTempDirAndRemove(testOutput.stdout, false)
   }
 
   test("Check output in case --keep false is specified") {
-    val testText = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "executable",
       "--keep", "false",
       configFile
     )
 
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testText, false)
+    checkTempDirAndRemove(testOutput.stdout, false)
   }
 
   test("Check test output when a test fails and --keep true is specified") {
-    val newConfigFilePath = configDeriver.derive(""".functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""", "failed_test_keep_true")
-    val testOutput = TestHelper.testMainException2[RuntimeException](
+    val newConfigFilePath = configDeriver.derive(""".test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""", "failed_test_keep_true")
+    val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "executable",
       "-k", "true",
       newConfigFilePath
     )
 
-    assert(testOutput.exceptionText == "Only 1 out of 2 test scripts succeeded!")
+    assert(testOutput.exceptionText.get == "Only 1 out of 2 test scripts succeeded!")
 
-    assert(testOutput.output.contains("Running tests in temporary directory: "))
-    assert(testOutput.output.contains("ERROR! Only 1 out of 2 test scripts succeeded!"))
-    assert(!testOutput.output.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("ERROR! Only 1 out of 2 test scripts succeeded!"))
+    assert(!testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testOutput.output, true)
+    checkTempDirAndRemove(testOutput.stdout, true)
   }
 
   test("Check test output when a test fails and --keep false is specified") {
     val newConfigFilePath = configDeriver.derive(
-      """.functionality.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""",
+      """.test_resources[.path == "tests/check_outputs.sh"].path := "tests/fail_failed_test.sh"""",
       "failed_test_keep_false"
     )
-    val testOutput = TestHelper.testMainException2[RuntimeException](
+    val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "executable",
       "-k", "false",
       newConfigFilePath
     )
 
-    assert(testOutput.exceptionText == "Only 1 out of 2 test scripts succeeded!")
+    assert(testOutput.exceptionText.get == "Only 1 out of 2 test scripts succeeded!")
 
-    assert(testOutput.output.contains("Running tests in temporary directory: "))
-    assert(testOutput.output.contains("ERROR! Only 1 out of 2 test scripts succeeded!"))
-    assert(testOutput.output.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("ERROR! Only 1 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testOutput.output, false)
+    checkTempDirAndRemove(testOutput.stdout, false)
   }
 
   test("Check deprecation warning") {
-    val newConfigFilePath = configDeriver.derive(""".functionality.status := "deprecated"""", "deprecated")
-    val (testText, stderr, exitCode) = TestHelper.testMainWithStdErr(
+    val newConfigFilePath = configDeriver.derive(""".status := "deprecated"""", "deprecated")
+    val testOutput = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
+      "--runner", "executable",
       newConfigFilePath
     )
 
-    assert(exitCode == 0)
-    assert(testText.contains("Running tests in temporary directory: "))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.exitCode == Some(0))
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    assert(stderr.contains("The status of the component 'testbash' is set to deprecated."))
+    assert(testOutput.stderr.contains("The status of the component 'testbash' is set to deprecated."))
     
-    checkTempDirAndRemove(testText, false)
+    checkTempDirAndRemove(testOutput.stdout, false)
   }
 
-  test("Check standard test output with bad platform name") {
-    val testOutput = TestHelper.testMainException2[RuntimeException](
+  test("Check standard test output with bad engine name") {
+    val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
-      "-p", "non_existing_platform",
+      "--engine", "non_existing_engine",
+      "--runner", "executable",
       configFile
     )
 
-    assert(testOutput.exceptionText == "platform must be a platform id specified in the config or a path to a platform yaml file.")
-    assert(testOutput.output.isEmpty)
+    assert(testOutput.exceptionText.get == "no engine id matching regex 'non_existing_engine' could not be found in the config.")
+    assert(testOutput.stdout.isEmpty)
+  }
+
+  test("Check standard test output with bad runner name") {
+    val testOutput = TestHelper.testMainException[RuntimeException](
+      "test",
+      "--engine", "native",
+      "--runner", "non_existing_runner",
+      configFile
+    )
+
+    assert(testOutput.exceptionText.get == "no runner id matching regex 'non_existing_runner' could not be found in the config.")
+    assert(testOutput.stdout.isEmpty)
+  }
+
+  test("Check standard test output with missing test resource") {
+    val newConfigFilePath = configDeriver.derive(""".test_resources += { type: 'file', path: 'foobar.txt' }""", "deprecated")
+
+    val testOutput = TestHelper.testMainException[MissingResourceFileException](
+      "test",
+      "--engine", "native",
+      "--runner", "executable",
+      newConfigFilePath
+    )
+
+    assert(testOutput.exceptionText.get.matches("Missing resource .*foobar\\.txt as specified in .*"))
+  }
+
+  test("Check config without specifying an engine", NativeTest) {
+    val testOutput = TestHelper.testMain(
+      "test",
+      "--runner", "executable",
+      configFile
+    )
+
+    assert(!testOutput.stdout.contains("docker"))
+
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
+
+    checkTempDirAndRemove(testOutput.stdout, false)
+  }
+
+  test("Check config without any engines", NativeTest) {
+    val newConfigFilePath = configDeriver.derive("""del(.engines)""", "no_engines")
+    val testOutput = TestHelper.testMain(
+      "test",
+      "--runner", "executable",
+      newConfigFilePath
+    )
+
+    assert(!testOutput.stdout.contains("docker"))
+
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
+
+    checkTempDirAndRemove(testOutput.stdout, false)
+  }
+
+  test("Check config without any engines or runners", NativeTest) {
+    val newConfigFilePath = configDeriver.derive(List("""del(.engines)""", """del(.runners)"""), "no_engines_or_runners")
+    val testOutput = TestHelper.testMain(
+      "test",
+      // "engine", "native",
+      newConfigFilePath
+    )
+
+    assert(!testOutput.stdout.contains("docker"))
+
+    assert(testOutput.stdout.contains("Running tests in temporary directory: "))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
+
+    checkTempDirAndRemove(testOutput.stdout, false)
   }
 
   test("Check standard test output with deterministic build folder that exists but is empty") {
@@ -331,18 +499,18 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     val temporaryFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
     val tempFolStr = temporaryFolder.getFileName().toString()
 
-    val testText = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
       "--deterministic_working_directory", tempFolStr,
       configFile
     )
 
-    assert(testText.contains(s"Running tests in temporary directory: '${temporaryFolder}'"))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains(s"Running tests in temporary directory: '${temporaryFolder}'"))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testText, false, tempFolStr)
+    checkTempDirAndRemove(testOutput.stdout, false, tempFolStr)
   }
 
   test("Check standard test output with deterministic build folder that doesn't exist yet") {
@@ -351,18 +519,18 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     temporaryFolder.toFile().delete()
     val tempFolStr = temporaryFolder.getFileName().toString()
 
-    val testText = TestHelper.testMain(
+    val testOutput = TestHelper.testMain(
       "test",
-      "-p", "native",
+      "--engine", "native",
       "--deterministic_working_directory", tempFolStr,
       configFile
     )
 
-    assert(testText.contains(s"Running tests in temporary directory: '${temporaryFolder}'"))
-    assert(testText.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
-    assert(testText.contains("Cleaning up temporary directory"))
+    assert(testOutput.stdout.contains(s"Running tests in temporary directory: '${temporaryFolder}'"))
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    assert(testOutput.stdout.contains("Cleaning up temporary directory"))
 
-    checkTempDirAndRemove(testText, false, tempFolStr)
+    checkTempDirAndRemove(testOutput.stdout, false, tempFolStr)
   }
 
   test("Check standard test output with deterministic build folder that isn't empty") {
@@ -371,17 +539,17 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     IO.write("foo", temporaryFolder.resolve("foo.txt"))
     val tempFolStr = temporaryFolder.getFileName().toString()
 
-    val testOutput = TestHelper.testMainException2[RuntimeException](
+    val testOutput = TestHelper.testMainException[RuntimeException](
       "test",
-      "-p", "native",
+      "--engine", "native",
       "--deterministic_working_directory", tempFolStr,
       configFile
     )
 
-    assert(testOutput.exceptionText.contains(s"${temporaryFolder} already exists and is not empty."))
+    assert(testOutput.exceptionText.get.contains(s"${temporaryFolder} already exists and is not empty."))
 
-    assert(testOutput.output.isEmpty())
-    assert(testOutput.error.isEmpty())
+    assert(testOutput.stdout.isEmpty())
+    assert(testOutput.stderr.isEmpty())
   }
 
   /**

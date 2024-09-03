@@ -14,20 +14,20 @@ import scala.annotation.meta.param
 
 class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
-  // which platform to test
+  // which configs to test
   private val configFile = getClass.getResource("/testbash/auxiliary_requirements/parameter_check.vsh.yaml").getPath
   private val loopConfigFile = getClass.getResource("/testbash/auxiliary_requirements/parameter_check_loop.vsh.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
 
-  // parse functionality from file
-  private val functionality = Config.read(configFile).functionality
-  private val loopFunctionality = Config.read(loopConfigFile).functionality
+  // parse config from file
+  private val config = Config.read(configFile)
+  private val loopConfig = Config.read(loopConfigFile)
 
   // check whether executable was created
-  private val executable = Paths.get(tempFolStr, functionality.name).toFile
-  private val loopExecutable = Paths.get(tempFolStr, loopFunctionality.name).toFile
+  private val executable = Paths.get(tempFolStr, config.name).toFile
+  private val loopExecutable = Paths.get(tempFolStr, loopConfig.name).toFile
 
   def generatePassAndFail(passSigns: Seq[String], passValues: Seq[String], failSigns: Seq[String], failValues: Seq[String]) = {
     assert(passSigns.length > 0)
@@ -41,18 +41,18 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
     val passCombined = for(
       c <- 1 until 3;
       v <- passSingles.combinations(c)
-    ) yield v.mkString(":")
+    ) yield v.mkString(";")
     val failCombined = for(
       c <- 1 until 3;
       v <- failSingles.combinations(c)
-    ) yield v.mkString(":")
+    ) yield v.mkString(";")
     val failMixCombined = for(
       a <- 1 until 3;
       b <- 1 until 3;
       p <- passSingles.take(4).combinations(a); // limit amount of tests with .take, this becomes big *fast*
       f <- failSingles.take(4).combinations(b); // limit amount of tests with .take, this becomes big *fast*
       order <- Seq(true, false)
-    ) yield if (order) (p++f).mkString(":") else (f++p).mkString(":")
+    ) yield if (order) (p++f).mkString(";") else (f++p).mkString(";")
     (passSingles, failSingles, passCombined, failCombined++failMixCombined)
   }
 
@@ -76,7 +76,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
     val combinedResults = valuesAndExpectedResults.zipAll(results, ("no value", -1), -1).map{ case (((a, b), c)) => (a, b, c) }
 
     combinedResults.foreach{ case (input, expected, result) => 
-      assert(expected.toString == result, s" Test failed for --real_number: $input\n$result")
+      assert(expected.toString == result, s" Test failed for --$parameterName: $input\n$result")
     }
 
   }
@@ -85,7 +85,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
   test("viash can create the executable") {
     TestHelper.testMain(
       "build",
-      "-p", "native",
+      "--engine", "native",
       "-o", tempFolStr,
       configFile
     )
@@ -103,7 +103,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
   test("viash can create the loop executable") {
     TestHelper.testMain(
       "build",
-      "-p", "native",
+      "--engine", "native",
       "-o", tempFolStr,
       loopConfigFile
     )
@@ -126,7 +126,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
 
     val stripAll = (s : String) => s.replaceAll(raw"\s+", " ").trim
 
-    functionality.allArguments.foreach(arg => {
+    config.allArguments.foreach(arg => {
       for (opt <- arg.alternatives; value <- opt)
         assert(stdout.contains(value))
       for (description <- arg.description) {
@@ -163,6 +163,21 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
 
     testSingleParameter("whole_number", singleTests, "integer_single")
     testSingleParameter("whole_number_multiple", multiTests, "integer_multi")
+  }
+
+  test("Check whether long values are checked correctly") {
+    // Decision was made to allow quite permissive syntax checking
+    val checksPass = Seq("0", "1", "456")
+    val checksFail = Seq("1.5", ".7", "1.5e5", "2.6e+6", "3.8e-7", "1+", "1-", "1+2", "1-2", "foo", "123foo", "123.foo", "12e0.5")
+    val signs = Seq("", "+", "-")
+
+    val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass, signs, checksFail)
+
+    val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+    val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
+
+    testSingleParameter("long_number", singleTests, "long_single")
+    testSingleParameter("long_number_multiple", multiTests, "long_multi")
   }
 
   test("Check whether boolean values are checked correctly") {
@@ -212,6 +227,19 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
 
     testSingleParameter("whole_number_choice", singleTests, "whole_number_choice_single")
     testSingleParameter("whole_number_choice_multiple", multiTests, "whole_number_choice_multi")
+  }
+
+  test("Check whether long values with allowed values are checked correctly") {
+    val checksPass = Seq("0", "1", "3000000000", "-9876543210")
+    val checksFail = Seq("2", "-1", "foo")
+
+    val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(Seq(""), checksPass, Seq(""), checksFail)
+
+    val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+    val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
+
+    testSingleParameter("long_number_choice", singleTests, "long_number_choice_single")
+    testSingleParameter("long_number_choice_multiple", multiTests, "long_number_choice_multi")
   }
 
   test("Check whether integer values with min and/or max specified are checked correctly") {
@@ -343,6 +371,48 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
 
       testSingleParameter("real_number_min_max", singleTests, "real_number_min_max_single_awk")
       testSingleParameter("real_number_min_max_multiple", multiTests, "real_number_min_max_multi_awk")
+    }
+
+  }
+
+  test("Check whether long values with min and/or max specified are checked correctly") {
+    // min -3000000000
+    // max 5000000000
+    // traditionally bad arguments should already be checked elsewhere, so do less of them here
+    val checkMin = Seq("-10000000000", "-3000000001")
+    val checkMax = Seq("5000000001", "10000000000")
+    val checksPass = Seq("-3000000000", "-2147483648", "2147483647", "5000000000")
+    val checksFail = Seq("1.5", ".7", "1.5e5", "foo")
+    val signs = Seq("")
+
+    {
+      val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass ++ checkMax, signs, checksFail ++ checkMin)
+
+      val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+      val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
+
+      testSingleParameter("long_number_min", singleTests, "long_number_min_single")
+      testSingleParameter("long_number_min_multiple", multiTests, "long_number_min_multi")
+    }
+
+    {
+      val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass ++ checkMin, signs, checksFail ++ checkMax)
+
+      val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+      val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
+
+      testSingleParameter("long_number_max", singleTests, "long_number_max_single")
+      testSingleParameter("long_number_max_multiple", multiTests, "long_number_max_multi")
+    }
+
+    {
+      val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass, signs, checksFail ++ checkMin ++ checkMax)
+
+      val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+      val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
+
+      testSingleParameter("long_number_min_max", singleTests, "long_number_min_max_single")
+      testSingleParameter("long_number_min_max_multiple", multiTests, "long_number_min_max_multi")
     }
 
   }

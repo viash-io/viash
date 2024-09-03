@@ -1,21 +1,21 @@
-functionality:
-  name: step1
-  arguments:
-    - name: "--input"
-      type: file
-      multiple: true
-      required: true
-      example: input.txt
-    - name: "--output"
-      type: file
-      required: true
-      direction: output
-      example: output.txt
-  resources:
-    - type: bash_script
-      path: script.sh
-platforms:
+name: step1
+arguments:
+  - name: "--input"
+    type: file
+    multiple: true
+    required: true
+    example: input.txt
+  - name: "--output"
+    type: file
+    required: true
+    direction: output
+    example: output.txt
+resources:
+  - type: bash_script
+    path: script.sh
+engines:
   - type: native
   - type: docker
     image: nextflow/bash:latest
+runners:
   - type: nextflow

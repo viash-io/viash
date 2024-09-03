@@ -38,7 +38,7 @@ package object circe {
 
   // encoder and decoder for OneOrMore
   implicit def encodeOneOrMore[A](implicit enc: Encoder[List[A]]): Encoder[OneOrMore[A]] = { 
-    oom: OneOrMore[A] => if (oom == null) enc(Nil) else enc(oom.toList)
+    (oom: OneOrMore[A]) => if (oom == null) enc(Nil) else enc(oom.toList)
   }
 
   implicit def decodeOneOrMore[A](implicit da: Decoder[A], dl: Decoder[List[A]]): Decoder[OneOrMore[A]] = {
@@ -72,8 +72,8 @@ package object circe {
       Decoder.decodeBoolean.map(_.toString)
   
   // auto convert a json to a RichJson
-  implicit def enrichJson(json: Json) = new RichJson(json)
-  implicit def enrichJsonObject(jo: JsonObject) = new RichJsonObject(jo)
+  implicit def enrichJson(json: Json): RichJson = new RichJson(json)
+  implicit def enrichJsonObject(jo: JsonObject): RichJsonObject = new RichJsonObject(jo)
 
   // auto convert a JMap to Json
   def JMap(fields: (String, Json)*): Json = {

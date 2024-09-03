@@ -18,37 +18,42 @@
 package io.viash.helpers
 
 import java.nio.file.{ Path, Paths }
-import io.viash.functionality.dependencies.Repository
 import io.viash.config.Config
 import io.viash.lenses.ConfigLenses._
-import io.viash.lenses.FunctionalityLenses._
 import io.viash.lenses.RepositoryLens._
-import io.viash.functionality.dependencies.GithubRepository
+import io.viash.config.dependencies.{Dependency, Repository, GithubRepository}
 import java.nio.file.Files
 import java.io.IOException
 import java.io.UncheckedIOException
-import io.viash.helpers.IO
-import io.circe.yaml.parser
+import io.viash.helpers.{IO, Logging}
 import io.circe.Json
 import io.viash.config.Config._
 import io.viash.ViashNamespace
-import io.viash.functionality.dependencies.Dependency
-import io.viash.functionality.resources.NextflowScript
+import io.viash.config.resources.NextflowScript
 import io.viash.exceptions.MissingDependencyException
+import io.viash.helpers.circe.Convert
 
-object DependencyResolver {
+object DependencyResolver extends Logging {
 
-  // Modify the config so all of the dependencies are available locally
-  def modifyConfig(config: Config, platformId: Option[String], projectRootDir: Option[Path], namespaceConfigs: List[Config] = Nil): Config = {
+  /**
+    * Modify the config so all of the dependencies are available locally 
+    *
+    * @param config Component configuration
+    * @param runnerId Used to create the path where to store retrieved dependencies
+    * @param packageRootDir Location of the Package Config, used for relative referencing
+    * @param namespaceConfigs Needed for local dependencies
+    * @return A config with dependency information added
+    */
+  def modifyConfig(config: Config, runnerId: Option[String], packageRootDir: Option[Path], namespaceConfigs: List[Config] = Nil): Config = {
 
     // Check all fun.repositories have valid names
-    val repositories = config.functionality.repositories
+    val repositories = config.repositories
     require(repositories.isEmpty || repositories.groupBy(r => r.name).map{ case(k, l) => l.length }.max == 1, "Repository names should be unique")
     require(repositories.filter(r => r.name.isEmpty()).length == 0, "Repository names can't be empty")
 
 
     // Convert all fun.dependency.repository with sugar syntax to full repositories
-    val config1 = composedDependenciesLens.modify(_.map(d =>
+    val config1 = dependenciesLens.modify(_.map(d =>
       d.repository match {
         case Left(Repository(repo)) => d.copy(repository = Right(repo))
         case _ => d
@@ -56,42 +61,42 @@ object DependencyResolver {
     ))(config)
 
     // Check all remaining fun.dependency.repository names (Left) refering to fun.repositories can be matched
-    val dependencyRepoNames = composedDependenciesLens.get(config1).flatMap(_.repository.left.toOption)
-    val definedRepoNames = composedRepositoriesLens.get(config1).map(_.name)
+    val dependencyRepoNames = dependenciesLens.get(config1).flatMap(_.repository.left.toOption)
+    val definedRepoNames = repositoriesLens.get(config1).map(_.name)
     dependencyRepoNames.foreach(name =>
       require(definedRepoNames.contains(name), s"Named dependency repositories should exist in the list of repositories. '$name' not found.")
     )
 
     // Match repositories defined in dependencies by name to the list of repositories, fill in repository in dependency
-    val config2 = composedDependenciesLens.modify(_
+    val config2 = dependenciesLens.modify(_
       .map(d => 
         d.repository match {
-          case Left(name) => d.copy(repository = Right(composedRepositoriesLens.get(config1).find(r => r.name == name).get))
+          case Left(name) => d.copy(repository = Right(repositoriesLens.get(config1).find(r => r.name == name).get.withoutName))
           case _ => d
         }
       )
       )(config1)
 
     // get caches and store in repository classes
-    val config3 = composedDependenciesLens.modify(_
+    val config3 = dependenciesLens.modify(_
       .map{d =>
         val repo = d.repository.toOption.get
-        val configDir = Paths.get(config2.info.get.config).getParent()
-        val localRepoPath = Repository.cache(repo, configDir, projectRootDir)
+        val configDir = Paths.get(config2.build_info.get.config).getParent()
+        val localRepoPath = Repository.get(repo, configDir, packageRootDir)
         d.copy(repository = Right(localRepoPath))
       }
       )(config2)
 
     // find the referenced config in the locally cached repository
-    val config4 = composedDependenciesLens.modify(_
+    val config4 = dependenciesLens.modify(_
       .map{dep =>
         val repo = dep.workRepository.get
 
         val config =
           if (dep.isLocalDependency) {
-            findLocalConfig(repo.localPath.toString(), namespaceConfigs, dep.name, platformId)
+            findLocalConfig(repo.localPath.toString(), namespaceConfigs, dep.name, runnerId)
           } else {
-            findRemoteConfig(repo.localPath.toString(), dep.name, platformId)
+            findRemoteConfig(repo.localPath.toString(), dep.name, runnerId)
           }
 
         dep.copy(
@@ -102,7 +107,7 @@ object DependencyResolver {
       )(config3)
 
     // Check if all dependencies were found
-    val missingDependencies = composedDependenciesLens.get(config4).filter(d => d.foundConfigPath.isEmpty || d.configInfo.isEmpty)
+    val missingDependencies = dependenciesLens.get(config4).filter(d => d.foundConfigPath.isEmpty || d.configInfo.isEmpty)
     if (missingDependencies.nonEmpty) {
       throw new MissingDependencyException(missingDependencies)
     }
@@ -110,13 +115,13 @@ object DependencyResolver {
     config4
   }
 
-  def copyDependencies(config: Config, output: String, platformId: String): Config = {
-    composedDependenciesLens.modify(_.map(dep => {
+  def copyDependencies(config: Config, output: String, runnerId: String): Config = {
+    dependenciesLens.modify(_.map(dep => {
 
       if (dep.isLocalDependency) {
         // Dependency solving will be done by building the component and dependencies of that component will be handled there.
         // However, we have to fill in writtenPath. This will be needed when this built component is used as a dependency and we have to resolve dependencies of dependencies.
-        val writtenPath = ViashNamespace.targetOutputPath(output, platformId, None, dep.name)
+        val writtenPath = ViashNamespace.targetOutputPath(output, runnerId, None, dep.name)
         dep.copy(writtenPath = Some(writtenPath))
       } else {
         // copy the dependency to the output folder
@@ -139,26 +144,26 @@ object DependencyResolver {
   }
 
   // Find configs from the local repository. These still need to be built so we have to deduce the information we want.
-  def findLocalConfig(targetDir: String, namespaceConfigs: List[Config], name: String, platformId: Option[String]): Option[(String, Map[String, String])] = {
+  def findLocalConfig(targetDir: String, namespaceConfigs: List[Config], name: String, runnerId: Option[String]): Option[(String, Map[String, String])] = {
 
     val config = namespaceConfigs.filter{ c => 
-        val fullName = c.functionality.namespace.fold("")(n => n + "/") + c.functionality.name
+        val fullName = c.namespace.fold("")(n => n + "/") + c.name
         fullName == name
       }
       .headOption
 
     config.map{ c =>
-      val path = c.info.get.config
+      val path = c.build_info.get.config
       // fill in the location of the executable where it will be located
       // TODO: it would be better if this was already filled in somewhere else
-      val executable = platformId.map{ pid =>
-          val executableName = pid match {
+      val executable = runnerId.map{ rid =>
+          val executableName = rid match {
             case "nextflow" => "main.nf"
-            case _ => c.functionality.name
+            case _ => c.name
           }
-          Paths.get(ViashNamespace.targetOutputPath("", pid, c), executableName).toString()
+          Paths.get(ViashNamespace.targetOutputPath("", rid, c), executableName).toString()
       }
-      val info = c.info.get.copy(
+      val info = c.build_info.get.copy(
         executable = executable
       )
       // Convert case class to map, do some extra conversions of Options while we're at it
@@ -169,15 +174,15 @@ object DependencyResolver {
         }.toMap
       // Add the functionality name and namespace to it
       val map2 = Map(
-        ("functionalityName" -> c.functionality.name),
-        ("functionalityNamespace" -> c.functionality.namespace.getOrElse(""))
+        ("name" -> c.name),
+        ("namespace" -> c.namespace.getOrElse(""))
       )
       (path, map ++ map2)
     }
   }
 
   // Read built config artifact in a minimalistic way. This prevents minor schema changes breaking things.
-  def findRemoteConfig(path: String, name: String, platformId: Option[String]): Option[(String, Map[String, String])] = {
+  def findRemoteConfig(path: String, name: String, runnerId: Option[String]): Option[(String, Map[String, String])] = {
     if (!Files.exists(Paths.get(path)))
       return None
 
@@ -194,16 +199,19 @@ object DependencyResolver {
     scriptInfo
       .filter{
         case(scriptPath, info) => 
-          (info("functionalityNamespace"), info("functionalityName")) match {
+          (info("namespace"), info("name")) match {
             case (ns, n) if !ns.isEmpty() => s"$ns/$n" == name
             case (_, n) => n == name
           }
       }
       .filter{
         case(scriptPath, info) =>
-          platformId match {
-            case None => true
-            case Some(p) => info("platform") == p
+          (runnerId, info.get("runner"), info.get("platform")) match { // also try matching on platform as fallback, fetch it already
+            case (None, _, _) => true // if we don't filter for the incoming runnerId, we want all the output runners
+            case (Some(id), Some(runner), _) => runner == id // default behaviour, filter for the incoming runnerId
+            case (Some("executable"), _, Some("native")) => true // legacy code for platform, match executable runner to native platform
+            case (Some(id), _, Some(plat)) => plat == id // legacy code for platform, filter for the incoming runnerId matching platform id
+            case _ => false
           }
       }
       .headOption
@@ -212,27 +220,37 @@ object DependencyResolver {
   // Read a config file from a built target. Get meta info, functionality name & namespace
   def getSparseConfigInfo(configPath: String): Map[String, String] = {
     try {
-      // No support for project configs, config mods, ...
+      // No support for package configs, config mods, ...
       // The yaml file in the target folder should be final
       // We're also assuming that the file will be proper yaml and an actual viash config file
       val yamlText = IO.read(IO.uri(configPath))
-      val json = parser.parse(yamlText).toOption.get
+      val json = Convert.textToJson(yamlText, configPath)
+      val legacyMode = json.hcursor.downField("functionality").succeeded
 
-      def getFunctionalityName(json: Json): Option[String] = {
-        json.hcursor.downField("functionality").downField("name").as[String].toOption
+      def getName(json: Json): Option[String] = {
+        if (legacyMode)
+          json.hcursor.downField("functionality").downField("name").as[String].toOption
+        else
+          json.hcursor.downField("name").as[String].toOption
       }
-      def getFunctionalityNamespace(json: Json): Option[String] = {
-        json.hcursor.downField("functionality").downField("namespace").as[String].toOption
+      def getNamespace(json: Json): Option[String] = {
+        if (legacyMode)
+          json.hcursor.downField("functionality").downField("namespace").as[String].toOption
+        else
+          json.hcursor.downField("namespace").as[String].toOption
       }
       def getInfo(json: Json): Option[Map[String, String]] = {
-        json.hcursor.downField("info").as[Map[String, String]].toOption
+        val info = 
+          if (legacyMode)
+            json.hcursor.downField("info")
+          else
+            json.hcursor.downField("build_info")
+        info.keys.map(_.map(k => (k, info.downField(k).as[String].toOption.getOrElse("Not a string"))).toMap)
       }
 
-      val functionalityName = getFunctionalityName(json)
-      val functonalityNamespace = getFunctionalityNamespace(json)
       val info = getInfo(json).getOrElse(Map.empty) +
-        ("functionalityName" -> functionalityName.getOrElse("")) +
-        ("functionalityNamespace" -> functonalityNamespace.getOrElse(""))
+        ("name" -> getName(json).getOrElse("")) +
+        ("namespace" -> getNamespace(json).getOrElse(""))
 
       info
     }
@@ -245,10 +263,19 @@ object DependencyResolver {
   def getSparseDependencyInfo(configPath: String): List[String] = {
     try {
       val yamlText = IO.read(IO.uri(configPath))
-      val json = parser.parse(yamlText).toOption.get
+      val json = Convert.textToJson(yamlText, configPath)
+      val legacyMode = json.hcursor.downField("functionality").succeeded
 
-      val dependencies = json.hcursor.downField("functionality").downField("dependencies").focus.flatMap(_.asArray).get
-      dependencies.flatMap(_.hcursor.downField("writtenPath").as[String].toOption).toList
+      val dependencies =
+        if (legacyMode) {
+          val jsonVec = json.hcursor.downField("functionality").downField("dependencies").focus.flatMap(_.asArray).get
+          jsonVec.flatMap(_.hcursor.downField("writtenPath").as[String].toOption).toList
+        }
+        else {
+          val jsonVec = json.hcursor.downField("build_info").downField("dependencies").focus.flatMap(_.asArray).get
+          jsonVec.flatMap(_.hcursor.as[String].toOption).toList
+        }
+      dependencies
     } catch {
       case _: Throwable => Nil
     }
@@ -290,14 +317,14 @@ object DependencyResolver {
     }
   }
 
-  // Get the platform to be used for dependencies. If the main script is a Nextflow script, use 'nextflow', otherwise use 'native'.
-  // Exception is when there is no platform set for the config, then we must return 'None' too.
-  def getDependencyPlatformId(config: Config, platform: Option[String]): Option[String] = {
-    (config.functionality.mainScript, platform) match {
+  // Get the runner to be used for dependencies. If the main script is a Nextflow script, use 'nextflow', otherwise use 'native'.
+  // Exception is when there is no runner set for the config, then we must return 'None' too.
+  def getDependencyRunnerId(config: Config, runner: Option[String]): Option[String] = {
+    (config.mainScript, runner) match {
       case (_, None) => None
       case (None, _) => None
       case (Some(n: NextflowScript), _) => Some("nextflow")
-      case _ => Some("native")
+      case _ => Some("executable")
     }
   }
 }

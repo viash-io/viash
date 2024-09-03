@@ -17,22 +17,24 @@
 
 package io.viash.helpers
 
-import io.viash.functionality.Functionality
+import io.viash.config.Config
 
 case class DockerImageInfo(
   name: String, 
   tag: String = "latest", 
   registry: Option[String] = None,
-  organization: Option[String] = None
+  organization: Option[String] = None,
+  `package`: Option[String] = None
 ) {
   override def toString: String = {
     registry.map(_ + "/").getOrElse("") +
     organization.map(_ + "/").getOrElse("") +
+    `package`.map(_ + "/").getOrElse("") +
       name + ":" + tag
   }
 
   def toMap: Map[String, String] = {
-    val image = organization.map(_ + "/").getOrElse("") + name
+    val image = organization.map(_ + "/").getOrElse("") + `package`.map(_ + "/").getOrElse("") + name
     
     registry.map(r => Map("registry" -> r)).getOrElse(Map()) ++
     Map(
@@ -46,13 +48,17 @@ object Docker {
   private val TagRegex = "^(.*):(.*)$".r
 
   def getImageInfo(
-    functionality: Option[Functionality] = None,
+    config: Option[Config] = None,
     name: Option[String] = None,
     registry: Option[String] = None,
     organization: Option[String] = None,
+    `package`: Option[String] = None,
     tag: Option[String] = None,
-    namespaceSeparator: String
+    engineId: Option[String] = None,
+    namespaceSeparator: Option[String] = None,
   ): DockerImageInfo = {
+
+    assert(config.isDefined == namespaceSeparator.isDefined, "Both config and namespaceSeparator should be defined or not defined")
 
     // If the image name contains a tag, use it
     val (derivedName, derivedTag) = name match {
@@ -65,9 +71,14 @@ object Docker {
     } orElse {
       name
     } orElse {
-      functionality.flatMap(fun => fun.namespace.map(_ + namespaceSeparator + fun.name))
+      config.flatMap(conf => conf.namespace.map(_ + namespaceSeparator.get + conf.name))
     } orElse {
-      functionality.map(fun => fun.name)
+      config.map(_.name)
+    }
+
+    val tagSuffix = engineId match {
+      case Some(id) if id != "docker" => s"-$id"
+      case _ => ""
     }
 
     val actualTag = {
@@ -75,16 +86,26 @@ object Docker {
     } orElse {
       tag
     } orElse {
-      functionality.flatMap(fun => fun.version.map(_.toString))
+      config.flatMap(conf => conf.version.map(_.toString + tagSuffix))
     } orElse {
-      Some("latest")
+      Some("latest" + tagSuffix)
     }
 
     DockerImageInfo(
       name = actualName.get,
       tag = actualTag.get,
       registry = registry,
-      organization = organization
+      organization = organization,
+      `package` = `package`
     )
+  }
+
+  def listifyOneOrMore(values: Option[Either[String, List[String]]]): Option[String] = {
+    values match {
+      case None => None
+      case Some(Left(s)) => Some(s)
+      case Some(Right(list)) if list.isEmpty => Some("[]")
+      case Some(Right(list)) => Some(list.mkString("[\"", "\",\"", "\"]"))
+    }
   }
 }

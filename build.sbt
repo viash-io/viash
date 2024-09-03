@@ -1,8 +1,8 @@
 name := "viash"
 
-version := "0.8.6"
+version := "0.9.0"
 
-scalaVersion := "2.13.10"
+scalaVersion := "2.13.14"
 
 libraryDependencies ++= Seq(
   "org.scalactic" %% "scalactic" % "3.2.15" % "test",
@@ -45,7 +45,7 @@ generateWorkflowHelper := {
   import java.nio.file._
 
   val rootDir = (Compile / baseDirectory).value
-  val basePath = (Compile / resourceDirectory).value / "io" / "viash" / "platforms" / "nextflow"
+  val basePath = (Compile / resourceDirectory).value / "io" / "viash" / "runners" / "nextflow"
   val wfHelper = Paths.get(basePath.toString, "WorkflowHelper.nf")
 
   // brute force recursive file listing instead of using a glob that skips files in the root directory

@@ -48,7 +48,7 @@ try:
                     value2 = map(lambda v: str(v).lower(), value)
                 else:
                     value2 = map(lambda v: str(v), value)
-                echo(f"{key}: |{':'.join(value2)}|")
+                echo(f"{key}: |{';'.join(value2)}|")
         elif value is None:
             echo(f"{key}: ||")
         elif isinstance(value, bool):

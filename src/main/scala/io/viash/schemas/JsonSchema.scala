@@ -18,11 +18,16 @@
 package io.viash.schemas
 
 import io.circe.Json
-import io.viash.platforms.docker.DockerSetupStrategy
+import io.viash.runners.executable.DockerSetupStrategy
 
 object JsonSchema {
 
-  lazy val data = CollectedSchemas.data
+  case class SchemaConfig(
+    strict: Boolean = false,
+    minimal: Boolean = false
+  )
+
+  lazy val data = CollectedSchemas.fullData.map(_.filter(!_.hasInternalFunctionality))
 
   def typeOrRefJson(`type`: String): (String, Json) = {
     `type` match {
@@ -45,28 +50,36 @@ object JsonSchema {
     }
   }
 
-  def valueType(`type`: String, description: Option[String] = None): Json = {
+  def valueType(`type`: String, description: Option[String] = None)(implicit config: SchemaConfig): Json = {
+    val descr = config.minimal match {
+      case true => None
+      case false => description
+    }
     Json.obj(
-      description.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
+      descr.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
       Seq(typeOrRefJson(`type`)): _*
     )
   }
 
-  def arrayType(`type`: String, description: Option[String] = None): Json = {
+  def arrayType(`type`: String, description: Option[String] = None)(implicit config: SchemaConfig): Json = {
     arrayJson(valueType(`type`), description)
   }
 
-  def mapType(`type`: String, description: Option[String] = None): Json = {
+  def mapType(`type`: String, description: Option[String] = None)(implicit config: SchemaConfig): Json = {
     mapJson(valueType(`type`), description)
   }
 
-  def oneOrMoreType(`type`: String, description: Option[String] = None): Json = {
+  def oneOrMoreType(`type`: String, description: Option[String] = None)(implicit config: SchemaConfig): Json = {
     oneOrMoreJson(valueType(`type`, description))
   }
 
-  def arrayJson(json: Json, description: Option[String] = None): Json = {
+  def arrayJson(json: Json, description: Option[String] = None)(implicit config: SchemaConfig): Json = {
+    val descr = config.minimal match {
+      case true => None
+      case false => description
+    }
     Json.obj(
-      description.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
+      descr.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
       Seq(
         "type" -> Json.fromString("array"),
         "items" -> json
@@ -74,9 +87,13 @@ object JsonSchema {
     )
   }
 
-  def mapJson(json: Json, description: Option[String] = None) = {
+  def mapJson(json: Json, description: Option[String] = None)(implicit config: SchemaConfig) = {
+    val descr = config.minimal match {
+      case true => None
+      case false => description
+    }      
     Json.obj(
-      description.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
+      descr.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
       Seq(
         "type" -> Json.fromString("object"),
         "additionalProperties" -> json
@@ -84,21 +101,24 @@ object JsonSchema {
     )
   }
 
-  def oneOrMoreJson(json: Json): Json = {
+  def oneOrMoreJson(json: Json)(implicit config: SchemaConfig): Json = {
     eitherJson(
       json,
       arrayJson(json)
     )
   }
-  def eitherJson(jsons: Json*): Json = {
-    Json.obj("oneOf" -> Json.arr(jsons: _*))
+  def eitherJson(jsons: Json*)(implicit config: SchemaConfig, mustIncludeAll: Boolean = false): Json = {
+    if (config.strict && !mustIncludeAll) {
+      jsons.last
+    } else {
+      Json.obj("oneOf" -> Json.arr(jsons: _*))
+    }
   }
-
 
   def getThisParameter(data: List[ParameterSchema]): ParameterSchema = 
     data.find(_.name == "__this__").get
 
-  def createSchema(info: List[ParameterSchema]): (String, Json) = {
+  def createSchema(info: List[ParameterSchema])(implicit config: SchemaConfig): (String, Json) = {
 
     def removeMarkup(text: String): String = {
       val markupRegex = raw"@\[(.*?)\]\(.*?\)".r
@@ -110,7 +130,11 @@ object JsonSchema {
     val thisParameter = getThisParameter(info)
     val description = removeMarkup(thisParameter.description.get)
     val subclass = thisParameter.subclass.map(l => l.head)
-    val properties = info.filter(p => !p.name.startsWith("__")).filter(p => !p.removed.isDefined)
+    val properties = 
+      info
+      .filter(p => !p.name.startsWith("__")) // remove __this__
+      .filter(p => !p.removed.isDefined && (!config.strict || !p.deprecated.isDefined)) // always remove 'removed' arguments and if need be create a strict schema by removing deprecated
+      .filter(p => !config.strict || !(p.name == "arguments" && (thisParameter.`type` == "Functionality" || thisParameter.`type` == "Config"))) // exception: remove 'arguments' in 'Functionality' for strict schema
     val propertiesJson = properties.map(p => {
       val pDescription = p.description.map(s => removeMarkup(s))
       val trimmedType = p.`type` match {
@@ -119,6 +143,8 @@ object JsonSchema {
       }
 
       val mapRegex = "(List)?Map\\[String,(\\w*)\\]".r
+
+      implicit val useAllInEither = thisParameter.`type` == "NextflowDirectives" || thisParameter.`type` == "NextflowAuto"
 
       trimmedType match {
         case s"List[$s]" => 
@@ -156,15 +182,15 @@ object JsonSchema {
           ))
 
         case s"OneOrMore[$s]" =>
-          if (s == "String" && p.name == "port" && subclass == Some("docker")) {
+          if (s == "String" && p.name == "port" && subclass == Some("executable")) {
             // Custom exception
-            // This is the port field for a docker platform.
+            // This is the port field for a excutable runner.
             // We want to allow a Strings or Ints.
             (p.name, eitherJson(
-              valueType("String", pDescription),
               valueType("Int", pDescription),
-              arrayType("String", pDescription),
-              arrayType("Int", pDescription)
+              valueType("String", pDescription),
+              arrayType("Int", pDescription),
+              arrayType("String", pDescription)
             ))
           } else {
             (p.name, oneOrMoreType(s, pDescription))
@@ -174,10 +200,17 @@ object JsonSchema {
           (p.name, mapType(s, pDescription))
 
         case s if p.name == "type" && subclass.isDefined =>
-          ("type", Json.obj(
-            "description" -> Json.fromString(description), // not pDescription! We want to show the description of the main class
-            "const" -> Json.fromString(subclass.get)
-          ))
+          var subclassString = subclass.get.stripSuffix("withname")
+          if (config.minimal) {
+            ("type", Json.obj(
+              "const" -> Json.fromString(subclassString)
+            ))
+          } else {
+            ("type", Json.obj(
+              "description" -> Json.fromString(description), // not pDescription! We want to show the description of the main class
+              "const" -> Json.fromString(subclassString)
+            ))
+          }
         
         case s =>
           (p.name, valueType(s, pDescription))
@@ -189,60 +222,93 @@ object JsonSchema {
       !(
         p.`type`.startsWith("Option[") ||
         p.default.isDefined ||
-        (p.name == "type" && thisParameter.`type` == "PlainFile") // Custom exception, file resources are "kind of" default
-      ))
+        p.hasUndocumented ||
+        (p.name == "type" && thisParameter.`type` == "PlainFile" && !config.strict) // Custom exception, file resources are "kind of" default
+      ) ||
+      // Strict schema is what will be outputted by Viash, so fields with a default value other than 'None' will always have a value -> add it in the strict schema as required.
+      (!p.`type`.startsWith("Option[") && p.default != Some("Empty") && config.strict && !p.hasUndocumented))
     val requiredJson = required.map(p => Json.fromString(p.name))
 
     val k = thisParameter.`type`
+    val descr = config.minimal match {
+      case true => None
+      case false => Some(description)
+    }
     val v = Json.obj(
-      "description" -> Json.fromString(description),
-      "type" -> Json.fromString("object"),
+      descr.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
+      Seq("type" -> Json.fromString("object"),
       "properties" -> Json.obj(propertiesJson: _*),
       "required" -> Json.arr(requiredJson: _*),
-      "additionalProperties" -> Json.False
+      "additionalProperties" -> Json.False): _*
     )
     k -> v
   }
 
-  def createSuperClassSchema(info: List[ParameterSchema]): (String, Json) = {
+  def createSuperClassSchema(info: List[ParameterSchema])(implicit config: SchemaConfig): (String, Json) = {
     val thisParameter = getThisParameter(info)
     val k = thisParameter.`type`
+    implicit val mustIncludeAll = true
     val v = eitherJson(
       thisParameter.subclass.get.map(s => Json.obj("$ref" -> Json.fromString(s"#/definitions/$s"))): _*
     )
     k -> v
   }
 
-  def createSchemas(data: List[List[ParameterSchema]]) : Seq[(String, Json)] = {
+  def createSchemas(data: List[List[ParameterSchema]])(implicit config: SchemaConfig) : Seq[(String, Json)] = {
     data.flatMap{
-      case v if getThisParameter(v).removed.isDefined => None
+      case v if getThisParameter(v).`type` == "EnvironmentVariables" => None
+      case v if getThisParameter(v).removed.isDefined || (getThisParameter(v).deprecated.isDefined && config.strict) => None
       case v if getThisParameter(v).subclass.map(_.length).getOrElse(0) > 1 => Some(createSuperClassSchema(v))
       case v => Some(createSchema(v))
     }
   }
 
-  def createEnum(values: Seq[String], description: Option[String], comment: Option[String]): Json = {
+  def createEnum(values: Seq[String], description: Option[String], comment: Option[String])(implicit config: SchemaConfig): Json = {
+    val descr = config.minimal match {
+      case true => None
+      case false => description
+    }
+    val comm = config.minimal match {
+      case true => None
+      case false => comment
+    }
     Json.obj(
       Seq("enum" -> Json.arr(values.map(s => Json.fromString(s)): _*)) ++
-      comment.map(s => Seq("$comment" -> Json.fromString(s))).getOrElse(Nil) ++
-      description.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil): _*
+      comm.map(s => Seq("$comment" -> Json.fromString(s))).getOrElse(Nil) ++
+      descr.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil): _*
     )
   }
 
-  def getJsonSchema: Json = {
-    val definitions =
-      createSchemas(data) ++
+  def getJsonSchema(strict: Boolean, minimal: Boolean): Json = {
+    implicit val configSchema = SchemaConfig(strict, minimal)
+    
+    val enumDefinitions = if (strict) {
+      Seq(
+        "DockerSetupStrategy" -> createEnum(DockerSetupStrategy.objs.map(obj => obj.id).toSeq, Some("The Docker setup strategy to use when building a container."), Some("TODO add descriptions to different strategies")),
+        "Direction" -> createEnum(Seq("input", "output"), Some("Makes this argument an `input` or an `output`, as in does the file/folder needs to be read or written. `input` by default."), None),
+        "Status" -> createEnum(Seq("enabled", "disabled", "deprecated"), Some("Allows setting a component to active, deprecated or disabled."), None),
+        "DoubleStrings" -> createEnum(Seq("+infinity", "-infinity", "nan"), None, None)
+      )
+    } else {
       Seq(
         "DockerSetupStrategy" -> createEnum(DockerSetupStrategy.map.keys.toSeq, Some("The Docker setup strategy to use when building a container."), Some("TODO add descriptions to different strategies")),
         "Direction" -> createEnum(Seq("input", "output"), Some("Makes this argument an `input` or an `output`, as in does the file/folder needs to be read or written. `input` by default."), None),
         "Status" -> createEnum(Seq("enabled", "disabled", "deprecated"), Some("Allows setting a component to active, deprecated or disabled."), None),
         "DockerResolveVolume" -> createEnum(Seq("manual", "automatic", "auto", "Manual", "Automatic", "Auto"), Some("Enables or disables automatic volume mapping. Enabled when set to `Automatic` or disabled when set to `Manual`. Default: `Automatic`"), Some("TODO make fully case insensitive")),
         "DoubleStrings" -> createEnum(Seq("+.inf", "+inf", "+infinity", "positiveinfinity", "positiveinf", "-.inf", "-inf", "-infinity", "negativeinfinity", "negativeinf", ".nan", "nan"), None, None)
-      ) ++
-      Seq("DoubleWithInf" -> eitherJson(valueType("Double_"), valueType("DoubleStrings")))
+      )
+    }
+
+    val definitions =
+      createSchemas(data) ++
+      enumDefinitions ++
+      {
+        implicit val mustIncludeAll = true
+        Seq("DoubleWithInf" -> eitherJson(valueType("Double_"), valueType("DoubleStrings")))
+      }
 
     Json.obj(
-      "$schema" -> Json.fromString("https://json-schema.org/draft-07/schema#"),
+      "$schema" -> Json.fromString("http://json-schema.org/draft-07/schema#"),
       "definitions" -> Json.obj(
         definitions: _*
       ),

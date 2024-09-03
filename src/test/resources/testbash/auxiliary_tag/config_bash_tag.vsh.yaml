@@ -1,15 +1,14 @@
-functionality:
-  name: testbash_tag
-  description: |
-    Prints out version of bash.
-  resources:
-    - type: bash_script
-      path: ./check_bash_version.sh
-  arguments:
-    - name: "--optional"
-      type: string
-      description: An optional string.
-platforms:
+name: testbash_tag
+description: |
+  Prints out version of bash.
+resources:
+  - type: bash_script
+    path: ./check_bash_version.sh
+arguments:
+  - name: "--optional"
+    type: string
+    description: An optional string.
+engines:
   - id: "testtag1"
     type: docker
     image: "bash:5.0"

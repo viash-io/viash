@@ -1,7 +1,6 @@
-#' functionality:
-#'   __merge__: [., ../common.yaml]
-#'   name: test_languages_r
-#' platforms:
+#' __merge__: [., ../common.yaml, ../common-runners.yaml]
+#' name: test_languages_r
+#' engines:
 #' - type: native
 #' - type: docker
 #'   image: rocker/tidyverse:3.6
@@ -9,7 +8,6 @@
 #'     - type: r
 #'       cran: optparse
 #'       github: tidyverse/glue@main
-#' - type: nextflow
 
 ## VIASH START
 par <- list(
@@ -41,9 +39,9 @@ str <- sapply(names(par), function(n) {
   if(typeof(par[[n]]) == "character" && length(par[[n]]) == 0) {
     paste0(n, ": |empty array|\n")
   } else if (is.logical(par[[n]])) {
-    paste0(n, ": |", tolower(paste(par[[n]], collapse = ":")), "|\n")
+    paste0(n, ": |", tolower(paste(par[[n]], collapse = ";")), "|\n")
   } else {
-    paste0(n, ": |", paste(par[[n]], collapse = ":"), "|\n")
+    paste0(n, ": |", paste(par[[n]], collapse = ";"), "|\n")
   }
 })
 write_fun(par$output, str)
@@ -57,6 +55,6 @@ str = paste0("head of resource1: |", readLines(con, n = 1), "|\n")
 write_fun(par$output, str)
 
 str <- sapply(names(meta), function(n) {
-  paste0("meta_", n, ": |", paste(meta[[n]], collapse = ":"), "|\n")
+  paste0("meta_", n, ": |", paste(meta[[n]], collapse = ";"), "|\n")
 })
 write_fun(par$output, str)

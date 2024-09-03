@@ -18,9 +18,11 @@
 package io.viash.helpers
 
 import io.viash.config.Config
-import java.nio.file.Paths
-import io.viash.platforms.Platform
+import java.nio.file.{Path, Paths}
 import io.viash.schemas.since
+import io.viash.runners.Runner
+import io.viash.engines.Engine
+import io.viash.config_mods.ConfigModParser.root
 
 final case class NsExecData(
   configFullPath: String,
@@ -30,8 +32,10 @@ final case class NsExecData(
   mainScript: String,
   absoluteMainScript: String,
   functionalityName: String,
+  name: String,
   namespace: Option[String],
-  platformId: Option[String],
+  runnerId: Option[String],
+  engineId: Option[String],
 
   @since("Viash 0.7.4")
   output: Option[String],
@@ -48,8 +52,10 @@ final case class NsExecData(
       case "main-script" => Some(this.mainScript)
       case "abs-main-script" => Some(this.absoluteMainScript)
       case "functionality-name" => Some(this.functionalityName)
+      case "name" => Some(this.functionalityName)
       case "namespace" => this.namespace
-      case "platform" => this.platformId
+      case "runner" => this.runnerId
+      case "engine" => this.engineId
       case "output" => this.output
       case "abs-output" => this.absoluteOutput
       case _ => None
@@ -58,22 +64,42 @@ final case class NsExecData(
 }
 
 object NsExecData {
-  def apply(configPath: String, config: Config, platform: Option[Platform]): NsExecData = {
-    val configPath_ = Paths.get(configPath)
-    val dirPath = configPath_.getParent()
-    val mainScript = config.functionality.mainScript.flatMap(s => s.path).map(dirPath.resolve(_))
+  def apply(configPath: String, config: Config, runner: Option[Runner], engine: Option[Engine], workingDir: Option[Path]): NsExecData = {
+    val packagePath = config.package_config.flatMap(_.rootDir)
+    val sourcePath = config.package_config.flatMap(_.source.map(Paths.get(_)))
+    val parentPath = packagePath orElse sourcePath.filter(_.isAbsolute()) orElse sourcePath.flatMap(sp => workingDir.map(_.resolve(sp)))
+    val configPathRel = parentPath match {
+      case Some(rootDir) => rootDir.relativize(Paths.get(configPath))
+      case None => Paths.get(configPath)
+    }
+    val configPathAbs = Paths.get(configPath)
+    val dirPathRel = configPathRel.getParent()
+    val dirPathAbs = configPathAbs.getParent().toAbsolutePath()
+    val mainScript = config.mainScript.flatMap(_.resolvedPath)
+    val mainScriptRel = mainScript.map(dirPathRel.resolve(_))
+    val mainScriptAbs = mainScript.map(dirPathAbs.resolve(_).toAbsolutePath())
+
+    val outputDir = config.build_info.flatMap(_.output).map(Paths.get(_))
+    val outputRel = (outputDir, packagePath) match {
+      case (Some(outputDir), Some(rootDir)) if outputDir.isAbsolute() => Some(rootDir.relativize(outputDir))
+      case (Some(outputDir), _) => Some(outputDir)
+      case _ => None
+    }
+    val outputAbs = outputDir.map(_.toAbsolutePath)
     apply(
-      configFullPath = configPath,
-      absoluteConfigFullPath = configPath_.toAbsolutePath.toString,
-      dir = dirPath.toString,
-      absoluteDir = dirPath.toAbsolutePath.toString,
-      mainScript = mainScript.map(_.toString).getOrElse(""),
-      absoluteMainScript = mainScript.map(_.toAbsolutePath.toString).getOrElse(""),
-      functionalityName = config.functionality.name,
-      namespace = config.functionality.namespace,
-      platformId = platform.map(_.id),
-      output = config.info.flatMap(_.output),
-      absoluteOutput = config.info.flatMap(info => info.output.map(Paths.get(_).toAbsolutePath.toString))
+      configFullPath = configPathRel.toString(),
+      absoluteConfigFullPath = configPathAbs.toAbsolutePath.toString,
+      dir = dirPathRel.toString,
+      absoluteDir = dirPathAbs.toString,
+      mainScript = mainScriptRel.map(_.toString).getOrElse(""),
+      absoluteMainScript = mainScriptAbs.map(_.toString).getOrElse(""),
+      functionalityName = config.name,
+      name = config.name,
+      namespace = config.namespace,
+      runnerId = runner.map(_.id),
+      engineId = engine.map(_.id),
+      output = outputRel.map(_.toString()),
+      absoluteOutput = outputAbs.map(_.toString())
     )
   }
 
@@ -86,8 +112,10 @@ object NsExecData {
       mainScript = data.map(_.mainScript).mkString(" "),
       absoluteMainScript = data.map(_.absoluteMainScript).mkString(" "),
       functionalityName = data.map(_.functionalityName).mkString(" "),
+      name = data.map(_.name).mkString(" "),
       namespace = Some(data.flatMap(_.namespace).mkString(" ")),
-      platformId = Some(data.flatMap(_.platformId).mkString(" ")),
+      runnerId = Some(data.flatMap(_.runnerId).mkString(" ")),
+      engineId = Some(data.flatMap(_.engineId).mkString(" ")),
       output = Some(data.flatMap(_.output).mkString(" ")),
       absoluteOutput = Some(data.flatMap(_.absoluteOutput).mkString(" "))
     )

@@ -21,11 +21,11 @@ import java.net.URI
 
 import io.circe.Json
 import io.circe.JsonObject
-import io.circe.generic.extras.Configuration
 import io.circe.{Json, Printer => JsonPrinter}
 import io.circe.yaml.{Printer => YamlPrinter}
 
 import io.viash.helpers.IO
+import io.viash.exceptions._
 
 class RichJson(json: Json) {
   /**
@@ -131,7 +131,7 @@ class RichJson(json: Json) {
    * If an object has a field named "__merge__", that file will be read
    * and be deep-merged with the object itself.
    */
-  def inherit(uri: URI, projectDir: Option[URI], stripInherits: Boolean = true): Json = {
+  def inherit(uri: URI, packageDir: Option[URI], stripInherits: Boolean = true): Json = {
     json match {
       case x if x.isObject =>
         val obj1 = x.asObject.get
@@ -150,6 +150,9 @@ class RichJson(json: Json) {
                 List(y.asString.get)
               } else {
                 // TODO: add decent error message instead of simply .get
+                if (y.asArray.get.filter(!_.isString).nonEmpty) {
+                  throw new ConfigParserMergeException(uri.toString, "invalid merge tag type. Must be a String or Array of Strings", y.toString())
+                }
                 y.asArray.get.map(_.asString.get).toList
               }
             
@@ -166,7 +169,7 @@ class RichJson(json: Json) {
               if (str == ".") {
                 None
               } else if (str.startsWith("/")) {
-                Some(IO.resolveProjectPath(str, projectDir))
+                Some(IO.resolvePackagePath(str, packageDir))
               } else {
                 Some(uri.resolve(str))
               }
@@ -197,11 +200,10 @@ class RichJson(json: Json) {
                 val str = IO.read(newURI)
 
                 // parse as yaml
-                // TODO: add decent error message instead of simply .get
-                val newJson1 = io.circe.yaml.parser.parse(str).toOption.get
+                val newJson1 = Convert.textToJson(str, newURI.toString)
 
                 // recurse through new json as well
-                val newJson2 = newJson1.inherit(newURI, projectDir = projectDir, stripInherits = stripInherits)
+                val newJson2 = newJson1.inherit(newURI, packageDir = packageDir, stripInherits = stripInherits)
 
                 newJson2
             }
@@ -212,15 +214,15 @@ class RichJson(json: Json) {
             // return combined object
             jsMerged.asObject.get
           
-          case Some(_) =>
-            throw new RuntimeException("Invalid merge tag type. Must be a String or Array.")
+          case Some(j) =>
+            throw new ConfigParserMergeException(uri.toString, "invalid merge tag type. Must be a String or Array of Strings", j.toString())
           case None => obj1
         }
-        val obj3 = obj2.mapValues(x => x.inherit(uri, projectDir = projectDir, stripInherits = stripInherits))
+        val obj3 = obj2.mapValues(x => x.inherit(uri, packageDir = packageDir, stripInherits = stripInherits))
         Json.fromJsonObject(obj3)
       case x if x.isArray => 
         val arr1 = x.asArray.get
-        val arr2 = arr1.map(y => y.inherit(uri, projectDir = projectDir, stripInherits = stripInherits))
+        val arr2 = arr1.map(y => y.inherit(uri, packageDir = packageDir, stripInherits = stripInherits))
         Json.fromValues(arr2)
       case _ => json
     }

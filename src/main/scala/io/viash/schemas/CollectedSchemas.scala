@@ -23,23 +23,32 @@ import io.circe.syntax.EncoderOps
 import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
 
 import io.viash.functionality._
+import io.viash.runners._
+import io.viash.engines._
 import io.viash.platforms._
-import io.viash.platforms.requirements._
-import io.viash.functionality.arguments._
 import io.circe.Json
 import monocle.function.Cons
 import io.viash.config.Config
-import io.viash.config.Info
-import io.viash.functionality.resources._
-import io.viash.project.ViashProject
-import io.viash.platforms.nextflow._
+import io.viash.config.BuildInfo
+import io.viash.packageConfig.PackageConfig
 import io.viash.helpers._
 import scala.collection.immutable.ListMap
-import io.viash.functionality.dependencies._
+import io.viash.runners.nextflow.{NextflowConfig, NextflowAuto, NextflowDirectives}
+import io.viash.engines.requirements._
+import io.viash.config.arguments._
+import io.viash.config.dependencies._
+import io.viash.config.resources._
+import io.viash.config.ArgumentGroup
+import io.viash.config.Author
+import io.viash.config.ComputationalRequirements
+import io.viash.config.Links
+import io.viash.config.References
 
 final case class CollectedSchemas (
   config: Map[String, List[ParameterSchema]],
   functionality: Map[String, List[ParameterSchema]],
+  runners: Map[String, List[ParameterSchema]],
+  engines: Map[String, List[ParameterSchema]],
   platforms: Map[String, List[ParameterSchema]],
   requirements: Map[String, List[ParameterSchema]],
   arguments: Map[String, List[ParameterSchema]],
@@ -67,9 +76,10 @@ object CollectedSchemas {
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
 
   import io.viash.helpers.circe._
+  import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
 
   private implicit val encodeConfigSchema: Encoder.AsObject[CollectedSchemas] = deriveConfiguredEncoder
-  private implicit val encodeParameterSchema: Encoder.AsObject[ParameterSchema] = deriveConfiguredEncoder
+  private implicit val encodeParameterSchema: Encoder.AsObject[ParameterSchema] = deriveConfiguredEncoderStrict
   private implicit val encodeDeprecatedOrRemoved: Encoder.AsObject[DeprecatedOrRemovedSchema] = deriveConfiguredEncoder
   private implicit val encodeExample: Encoder.AsObject[ExampleSchema] = deriveConfiguredEncoder
 
@@ -112,14 +122,24 @@ object CollectedSchemas {
 
   lazy val schemaClasses = List(
     getMembers[Config](),
-    getMembers[ViashProject](),
-    getMembers[Info](),
+    getMembers[PackageConfig](),
+    getMembers[BuildInfo](),
     getMembers[SysEnvTrait](),
 
     getMembers[Functionality](),
     getMembers[Author](),
     getMembers[ComputationalRequirements](),
     getMembers[ArgumentGroup](),
+    getMembers[Links](),
+    getMembers[References](),
+
+    getMembers[Runner](),
+    getMembers[ExecutableRunner](),
+    getMembers[NextflowRunner](),
+
+    getMembers[Engine](),
+    getMembers[NativeEngine](),
+    getMembers[DockerEngine](),
 
     getMembers[Platform](),
     getMembers[NativePlatform](),
@@ -200,12 +220,16 @@ object CollectedSchemas {
 
   private val getSchema = (t: (Map[String,List[MemberInfo]], List[Symbol])) => t match {
     case (members, classes) => {
-      annotationsOf(members, classes).flatMap{ case (name, tpe, hierarchy, annotations) => ParameterSchema(name, tpe, hierarchy, annotations) }
+      annotationsOf(members, classes).map{ case (name, tpe, hierarchy, annotations) => ParameterSchema(name, tpe, hierarchy, annotations) }
     }
   }
 
+  // get all parameters for a given type, including parent class annotations
+  def getParameters[T: TypeTag]() = getSchema(getMembers[T]())
+
   // Main call for documentation output
-  lazy val data: List[List[ParameterSchema]] = schemaClasses.map{ v => getSchema(v)}
+  lazy val fullData: List[List[ParameterSchema]] = schemaClasses.map{ v => getSchema(v)}
+  lazy val data: List[List[ParameterSchema]] = fullData.map(_.filter(p => !p.hasUndocumented && !p.hasInternalFunctionality))
 
   def getKeyFromParamList(data: List[ParameterSchema]): String = data.find(p => p.name == "__this__").get.`type`
 

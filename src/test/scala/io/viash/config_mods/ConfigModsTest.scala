@@ -12,7 +12,7 @@ class ConfigModsTest extends AnyFunSuite {
     val expected = ConfigMods(
       postparseCommands = List(
         Append(
-          Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
+          Path(List(Attribute("engines"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
           JsonValue(Json.fromFields(List("type" -> "docker".asJson, "image" -> Json.fromString("foo"))))
         ),
         Delete(
@@ -21,15 +21,15 @@ class ConfigModsTest extends AnyFunSuite {
       ),
       preparseCommands = List(
         Prepend(
-          Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
+          Path(List(Attribute("engines"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
           JsonValue("foo".asJson)
         )
       )
     )
 
     val command = 
-      """.platforms[.type == "native"].setup += { type: "docker", image: "foo" };
-        |<preparse> .platforms[.type == "native"].setup +0= "foo";
+      """.engines[.type == "native"].setup += { type: "docker", image: "foo" };
+        |<preparse> .engines[.type == "native"].setup +0= "foo";
         |del(.x)""".stripMargin
     val result = ConfigModParser.block.parse(command)
     assert(result == expected)
@@ -42,7 +42,7 @@ class ConfigModsTest extends AnyFunSuite {
     val expected = ConfigMods(
       postparseCommands = List(
         Append(
-          Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
+          Path(List(Attribute("engines"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
           JsonValue(Json.fromFields(List("type" -> "docker".asJson, "image" -> Json.fromString("foo"))))
         ),
         Delete(
@@ -51,20 +51,20 @@ class ConfigModsTest extends AnyFunSuite {
       ),
       preparseCommands = List(
         Prepend(
-          Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
+          Path(List(Attribute("engines"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
           JsonValue("foo".asJson)
         )
       )
     )
     val command = """
-      |.platforms[
+      |.engines[
       |  .type == "native"
       |].setup += { 
       |  type: "docker",
       |  image: "foo"
       |}
       |
-      |<preparse> .platforms[.type == "native"].setup +0= "foo"; del(.x)
+      |<preparse> .engines[.type == "native"].setup +0= "foo"; del(.x)
       |""".stripMargin
     val result = ConfigModParser.block.parse(command)
     assert(result == expected)

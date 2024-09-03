@@ -18,6 +18,7 @@
 package io.viash.schemas
 
 import scala.reflect.runtime.universe._
+import io.viash.schemas.internalFunctionality
 
 final case class ParameterSchema(
   name: String,
@@ -31,6 +32,10 @@ final case class ParameterSchema(
   removed: Option[DeprecatedOrRemovedSchema],
   default: Option[String],
   subclass: Option[List[String]],
+  @internalFunctionality
+  hasUndocumented: Boolean,
+  @internalFunctionality
+  hasInternalFunctionality: Boolean,
 )
 
 object ParameterSchema {
@@ -75,7 +80,7 @@ object ParameterSchema {
     (name, values)
   }
 
-  def apply(name: String, `type`: String, hierarchy: List[String], annotations: List[Annotation]): Option[ParameterSchema] = {
+  def apply(name: String, `type`: String, hierarchy: List[String], annotations: List[Annotation]): ParameterSchema = {
 
     def beautifyTypeName(s: String): String = {
 
@@ -94,10 +99,7 @@ object ParameterSchema {
       val regexNested7 = regexify("tpe[a,b[c]]")
 
       def map(a: String, b: String): String = s"Map of $a to $b"
-      def either(a: String, b: String): String = 
-        s"""Either
-          |  - $a
-          |  - $b""".stripMargin
+      def either(a: String, b: String): String = s"""Either $a or $b"""
       
       s match {
         case regex0(tpe) => s"$tpe"
@@ -122,7 +124,7 @@ object ParameterSchema {
       case _ => None
     }
 
-    // name is e.g. "io.viash.functionality.Functionality.name", only keep "name"
+    // name is e.g. "io.viash.config.Config.name", only keep "name"
     // name can also be "__this__"
     // Use the name defined from the class, *unless* the 'nameOverride' annotation is set. Then use the override, unless the name is '__this__'.
     val nameOverride = annStrings.collectFirst({case (name, value) if name.endsWith("nameOverride") => value.head})
@@ -158,11 +160,8 @@ object ParameterSchema {
     
     val undocumented = annStrings.exists{ case (name, value) => name.endsWith("undocumented")}
     val internalFunctionality = annStrings.exists{ case (name, value) => name.endsWith("internalFunctionality")}
-    internalFunctionality || undocumented match {
-      case true => None
-      case _ => Some(ParameterSchema(name_, typeName, beautifyTypeName(typeName), hierarchyOption, description, examples, since, deprecated, removed, default, subclass))
-    }
-    
+
+    ParameterSchema(name_, typeName, beautifyTypeName(typeName), hierarchyOption, description, examples, since, deprecated, removed, default, subclass, undocumented, internalFunctionality)
   }
 }
 

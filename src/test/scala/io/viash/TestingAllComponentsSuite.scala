@@ -4,6 +4,7 @@ import io.viash.config.Config
 import org.scalatest.funsuite.AnyFunSuite
 import io.viash.helpers.Logger
 import org.scalatest.ParallelTestExecution
+import io.viash.lenses.ConfigLenses
 
 class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
   Logger.UseColorOverride.value = Some(false)
@@ -31,42 +32,42 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
 
     // only run testbash natively because other requirements might not be available
     if (name == "bash") {
-      test(s"Testing $name platform native", NativeTest) {
-        TestHelper.testMain("test", "-p", "native", config)
+      test(s"Testing $name engine native", NativeTest) {
+        TestHelper.testMain("test", "--engine", "native", "--runner", "executable", config)
       }
 
       for (multiType <- multiples) {
-        test(s"Testing $name platform native, multiple $multiType", NativeTest) {
+        test(s"Testing $name engine native, multiple $multiType", NativeTest) {
           TestHelper.testMain(
-            "test", "-p", "native", config,
-            "-c", s"""<preparse>.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].type := "$multiType"""",
-            "-c", s""".functionality.test_resources[.type == "bash_script"].path := "../multi-$multiType.sh""""
+            "test", "--engine", "native", "--runner", "executable", config,
+            "-c", s"""<preparse>.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].type := "$multiType"""",
+            "-c", s""".test_resources[.type == "bash_script"].path := "../multi-$multiType.sh""""
           )
         }
       }
     }
 
-    test(s"Testing $name platform docker", DockerTest) {
-      TestHelper.testMain("test", "-p", "docker", config)
+    test(s"Testing $name engine docker", DockerTest) {
+      TestHelper.testMain("test", "--engine", "docker", "--runner", "executable", config)
     }
 
     if (name != "executable") {
       for (multiple <- multiples) {
-        test(s"Testing $name platform docker, multiple $multiple", DockerTest) {
+        test(s"Testing $name engine docker, multiple $multiple", DockerTest) {
           TestHelper.testMain(
-            "test", "-p", "docker", config,
-            "-c", s"""<preparse>.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].type := "$multiple"""",
-            "-c", s""".functionality.test_resources[.type == "bash_script"].path := "../multi-$multiple.sh""""
+            "test", "--engine", "docker", "--runner", "executable", config,
+            "-c", s"""<preparse>.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].type := "$multiple"""",
+            "-c", s""".test_resources[.type == "bash_script"].path := "../multi-$multiple.sh""""
           )
         }
       }
 
-      test(s"Testing $name platform docker, multiple file", DockerTest) {
+      test(s"Testing $name engine docker, multiple file", DockerTest) {
         TestHelper.testMain(
-          "test", "-p", "docker", config,
-          "-c", s"""<preparse>.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].type := "file"""",
-          "-c", s"""<preparse>.functionality.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].must_exist := false""",
-          "-c", s""".functionality.test_resources[.type == "bash_script"].path := "../multi-file.sh""""
+          "test", "--engine", "docker", "--runner", "executable", config,
+          "-c", s"""<preparse>.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].type := "file"""",
+          "-c", s"""<preparse>.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].must_exist := false""",
+          "-c", s""".test_resources[.type == "bash_script"].path := "../multi-file.sh""""
         )
       }
     }
@@ -82,8 +83,11 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
       // convert back to config
       val conf2 = confJson.as[Config].toOption.get
 
+      // strip parent parameters as those are internal functionality and are not serialized
+      val strippedConf1 = ConfigLenses.resourcesLens.modify(_.map(_.copyResource(parent = None)))(conf)
+      val strippedConf2 = ConfigLenses.testResourcesLens.modify(_.map(_.copyResource(parent = None)))(strippedConf1)
       // check if equal
-      assert(conf == conf2)
+      assert(strippedConf2 == conf2)
     }
   }
 }

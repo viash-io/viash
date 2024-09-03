@@ -64,7 +64,7 @@ class SchemaTest extends AnyFunSuite with BeforeAndAfterAll with PrivateMethodTe
     val data = CollectedSchemas.getAllDeprecations
     
     // Manually get the version number from build.sbt as this information is not present during tests
-    val currentVersion = Process(Seq("awk", "-F\"", "/version :=/ { print $2 }", "build.sbt")).!!.trim()
+    val currentVersion = Process(Seq("awk", "-F\"", "/version :=/ { print $2 }", "build.sbt")).!!.trim().stripSuffix("dev")
 
     for ((name, depAnn) <- data) {
       val res = compareVersions(depAnn.removal, currentVersion)

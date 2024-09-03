@@ -23,40 +23,39 @@ mkdir -p "$out_dir"
 
 # write header
 cat > "$out_dir/config.vsh.yaml" << HERE
-functionality:
-  name: "$par_name"
+name: "$par_name"
 HERE
 
 # write namespace, if need be
 if [ ! -z "$par_namespace" ]; then
 cat >> "$out_dir/config.vsh.yaml" << HERE
-  namespace: "$par_namespace"
+namespace: "$par_namespace"
 HERE
 fi
 
 # write more metadata and initial arguments
 cat >> "$out_dir/config.vsh.yaml" << HERE
-  version: 0.0.1
-  description: |
-    Replace this with a (multiline) description of your component.
-  arguments:
-    - name: "--input"
-      alternatives: [ "-i" ]
-      type: file
-      required: true
-      description: Describe the input file.
-      example: input.txt
-    - name: "--output"
-      alternatives: [ "-o" ]
-      type: file
-      direction: output
-      required: true
-      description: Describe the output file.
-      example: output.txt
-    - name: "--option"
-      type: string
-      description: Describe an optional parameter.
-      default: "default-"
+version: 0.0.1
+description: |
+  Replace this with a (multiline) description of your component.
+arguments:
+  - name: "--input"
+    alternatives: [ "-i" ]
+    type: file
+    required: true
+    description: Describe the input file.
+    example: input.txt
+  - name: "--output"
+    alternatives: [ "-o" ]
+    type: file
+    direction: output
+    required: true
+    description: Describe the output file.
+    example: output.txt
+  - name: "--option"
+    type: string
+    description: Describe an optional parameter.
+    default: "default-"
 HERE
 
 ##################################################################################
@@ -64,12 +63,12 @@ HERE
 ##################################################################################
 if [ $script_lang == "bash" ]; then
 cat >> "$out_dir/config.vsh.yaml" << HERE
-  resources:
-    - type: bash_script
-      path: script.sh
-  test_resources:
-    - type: bash_script
-      path: test.sh
+resources:
+  - type: bash_script
+    path: script.sh
+test_resources:
+  - type: bash_script
+    path: test.sh
 HERE
 
 cat >> "$out_dir/script.sh" << 'HERE'
@@ -128,12 +127,12 @@ MAJORHERE
 ##################################################################################
 elif [ $script_lang == "r" ]; then
 cat >> "$out_dir/config.vsh.yaml" << HERE
-  resources:
-    - type: r_script
-      path: script.R
-  test_resources:
-    - type: r_script
-      path: test.R
+resources:
+  - type: r_script
+    path: script.R
+test_resources:
+  - type: r_script
+    path: test.R
 HERE
 cat >> "$out_dir/script.R" << 'HERE'
 cat("This is a skeleton component\n")
@@ -179,12 +178,12 @@ HERE
 ##################################################################################
 elif [ $script_lang == "python" ]; then
 cat >> "$out_dir/config.vsh.yaml" << HERE
-  resources:
-    - type: python_script
-      path: script.py
-  test_resources:
-    - type: python_script
-      path: test.py
+resources:
+  - type: python_script
+    path: script.py
+test_resources:
+  - type: python_script
+    path: test.py
 HERE
 
 cat >> "$out_dir/script.py" << 'HERE'
@@ -231,19 +230,48 @@ HERE
 fi
 
 ##################################################################################
-###                                  PLATFORMS                                 ###
+###                                  RUNNERS                                   ###
 ##################################################################################
-# write platforms
+# write runners
 cat >> "$out_dir/config.vsh.yaml" << HERE
-platforms:
+runners:
 HERE
 
-# iterate over different specified platforms
+# iterate over different specified runners
 IFS=','
 set -f
-for platform in $par_platform; do
+for runner in $par_runner; do
   unset IFS
-  if [ $platform == "docker" ]; then
+  
+  if [ $runner == "executable" ]; then
+    cat >> "$out_dir/config.vsh.yaml" << HERE
+  - type: executable
+HERE
+  
+  elif [ $runner == "nextflow" ]; then
+    cat >> "$out_dir/config.vsh.yaml" << HERE
+  - type: nextflow
+HERE
+
+  fi
+done
+set +f
+
+
+##################################################################################
+###                                  ENGINES                                   ###
+##################################################################################
+# write engines
+cat >> "$out_dir/config.vsh.yaml" << HERE
+engines:
+HERE
+
+# iterate over different specified engines
+IFS=','
+set -f
+for engine in $par_engine; do
+  unset IFS
+  if [ $engine == "docker" ]; then
   
     # choose different default docker image based on language
     if [ $script_lang == "bash" ]; then
@@ -277,23 +305,11 @@ HERE
 HERE
     fi
   
-  elif [ $platform == "native" ]; then
+  elif [ $engine == "native" ]; then
     cat >> "$out_dir/config.vsh.yaml" << HERE
   - type: native
-HERE
-  
-  elif [ $platform == "nextflow" ]; then
-    cat >> "$out_dir/config.vsh.yaml" << HERE
-  - type: nextflow
 HERE
 
   fi
 done
 set +f
-
-
-
-  
-
-
-

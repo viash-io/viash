@@ -26,25 +26,25 @@ import io.circe.syntax._
 /* DSL examples
 
 # setting a value
-.functionality.version := "0.3.0"
+.version := "0.3.0"
 
 # setting a value after subsetting a list
 .platforms[.type == "docker"].container_registry := "itx-aiv"
 
 # add something to a list
-.functionality.authors += { name: "Mr. T", role: "sponsor" }
+.authors += { name: "Mr. T", role: "sponsor" }
 
 # prepend something to a list
-.functionality.authors +0= { name: "Mr. T", role: "sponsor" }
+.authors +0= { name: "Mr. T", role: "sponsor" }
 
 # apply config mod before parsing the json
 <preparse> .platforms[.type == "nextflow"].variant := "vdsl3"
 
 # delete a value
-del(.functionality.version)
+del(.version)
 
 # check an identifier is specified
-<preparse> .functionality.authors[!has(roles)].email := "unknown"
+<preparse> .authors[!has(roles)].email := "unknown"
 
 */
 
@@ -78,7 +78,7 @@ object ConfigModParser extends RegexParsers {
       ConfigModParser.parseAll(p, s) match {
         case Success(result, next) => result
         case _: NoSuccess => 
-          throw new IllegalArgumentException("Cound not parse config mod: " + s)
+          throw new IllegalArgumentException("Could not parse config mod: " + s)
       }
     }
   }
@@ -254,10 +254,10 @@ object ConfigModParser extends RegexParsers {
   def brackets: Parser[Condition] = "(" ~> condition <~ ")"
   def condition: Parser[Condition] = or
   def or: Parser[Condition] = rep1sep(and, "||") ^^ {
-    case comps => comps.reduceLeft(Or)
+    case comps => comps.reduceLeft(Or.apply)
   }
   def and: Parser[Condition] = rep1sep(comparison, "&&") ^^ {
-    case comps => comps.reduceLeft(And)
+    case comps => comps.reduceLeft(And.apply)
   }
   def comparison: Parser[Condition] = brackets | equals | notEquals | not | has | trueCond | falseCond
   def trueCond: Parser[Condition] = "true" ^^^ True

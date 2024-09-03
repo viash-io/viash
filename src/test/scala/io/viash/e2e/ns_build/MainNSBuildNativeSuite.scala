@@ -10,6 +10,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import java.io.File
 import java.nio.file.Paths
 import scala.io.Source
+import java.io.ByteArrayOutputStream
 
 class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
   Logger.UseColorOverride.value = Some(false)
@@ -18,7 +19,7 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
   private val temporaryFolder = IO.makeTemp("viash_ns_build")
   private val tempFolStr = temporaryFolder.toString
-  private val nsFolder = Paths.get(tempFolStr, "native/testns/").toFile
+  private val nsFolder = Paths.get(tempFolStr, "executable/testns/").toFile
 
   def componentExecutableFile(componentName: String): File = {
     Paths.get(nsFolder.toString, s"$componentName/$componentName").toFile
@@ -34,7 +35,7 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
   // convert testbash
   test("viash ns can build") {
-    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+    val testOutput = TestHelper.testMain(
     "ns", "build",
       "-s", nsPath,
       "-t", tempFolStr
@@ -42,7 +43,7 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
     assert(nsFolder.exists)
     assert(nsFolder.isDirectory)
-    assert(exitCode == 1)
+    assert(testOutput.exitCode == Some(1))
 
     for ((component, _, _, _) <- components) {
       val executable = componentExecutableFile(component)
@@ -51,7 +52,7 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
     }
 
     val regexBuildError = raw"Reading file \'.*/src/ns_error/config\.vsh\.yaml\' failed".r
-    assert(regexBuildError.findFirstIn(stderr).isDefined, "Expecting to get an error because of an invalid yaml in ns_error")
+    assert(regexBuildError.findFirstIn(testOutput.stderr).isDefined, "Expecting to get an error because of an invalid yaml in ns_error")
   }
 
   test("Check whether the executable can run") {
@@ -65,7 +66,12 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
   for ((component, _, _, _) <- components) {
   test(s"Check whether particular keywords can be found in the usage with component $component") {
       val configFile = getClass.getResource(s"/testns/src/$component/config.vsh.yaml").getPath
-      val functionality = Config.read(configFile).functionality
+      val errStream = new ByteArrayOutputStream()
+      val config = Console.withErr(errStream) {
+        Config.read(configFile)
+      }
+      val errString = errStream.toString
+      assert(errString.isEmpty() || errString.matches("Warning: The status of the component 'ns_power' is set to deprecated.\\s*"))
 
       val stdout =
         Exec.run(
@@ -74,7 +80,7 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
       val stripAll = (s: String) => s.replaceAll(raw"\s+", " ").trim
 
-      functionality.allArguments.foreach(arg => {
+      config.allArguments.foreach(arg => {
         for (opt <- arg.alternatives; value <- opt)
           assert(stdout.contains(value))
         for (description <- arg.description) {
@@ -121,14 +127,14 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
     val tempTargetDir = IO.makeTemp("viash_ns_build_check_uniqueness_target")
 
-    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+    val testOutput = TestHelper.testMain(
       "ns", "build",
         "-s", tempSrcDir.toString(),
         "-t", tempTargetDir.toString()
       )
 
-    assert(exitCode == 0)
-    assert(stderr.contains("All 2 configs built successfully"))
+    assert(testOutput.exitCode == Some(0))
+    assert(testOutput.stderr.contains("All 2 configs built successfully"))
   }
 
   test("Check uniqueness of component names, different name, same namespace") {
@@ -143,14 +149,14 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
     val tempTargetDir = IO.makeTemp("viash_ns_build_check_uniqueness_target")
 
-    val (stdout, stderr, exitCode) = TestHelper.testMainWithStdErr(
+    val testOutput = TestHelper.testMain(
       "ns", "build",
         "-s", tempSrcDir.toString(),
         "-t", tempTargetDir.toString()
       )
 
-    assert(exitCode == 0)
-    assert(stderr.contains("All 2 configs built successfully"))
+    assert(testOutput.exitCode == Some(0))
+    assert(testOutput.stderr.contains("All 2 configs built successfully"))
   }
 
   test("Check uniqueness of component names, same name, same namespace") {
@@ -165,13 +171,13 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
     val tempTargetDir = IO.makeTemp("viash_ns_build_check_uniqueness_target")
 
-    val testOutput = TestHelper.testMainException2[RuntimeException](
+    val testOutput = TestHelper.testMainException[RuntimeException](
       "ns", "build",
         "-s", tempSrcDir.toString(),
         "-t", tempTargetDir.toString()
       )
 
-    assert(!testOutput.error.contains("All 2 configs built successfully"))
+    assert(!testOutput.stderr.contains("All 2 configs built successfully"))
     assert(testOutput.exceptionText.contains("Duplicate component name found: ns/comp"))
   }
 
@@ -189,13 +195,13 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
     val tempTargetDir = IO.makeTemp("viash_ns_build_check_uniqueness_target")
 
-    val testOutput = TestHelper.testMainException2[RuntimeException](
+    val testOutput = TestHelper.testMainException[RuntimeException](
       "ns", "build",
         "-s", tempSrcDir.toString(),
         "-t", tempTargetDir.toString()
       )
 
-    assert(!testOutput.error.contains("All 2 configs built successfully"))
+    assert(!testOutput.stderr.contains("All 2 configs built successfully"))
     assert(testOutput.exceptionText.contains("Duplicate component names found: ns/comp1, ns/comp2"))
   }
 

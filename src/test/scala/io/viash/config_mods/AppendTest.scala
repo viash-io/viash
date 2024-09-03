@@ -13,11 +13,11 @@ class AppendTest extends AnyFunSuite {
   test("parse append command") {
     val expected = ConfigMods(List(
       Append(
-        Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("id"))),
+        Path(List(Attribute("engines"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("id"))),
         JsonValue("test".asJson)
       )
     ))
-    val command = """.platforms[.type == "native"].id += "test""""
+    val command = """.engines[.type == "native"].id += "test""""
     val result = ConfigModParser.block.parse(command)
     assert(result == expected)
   }
@@ -25,11 +25,11 @@ class AppendTest extends AnyFunSuite {
   test("parse add command with complex json") {
     val expected = ConfigMods(List(
       Append(
-        Path(List(Attribute("platforms"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
+        Path(List(Attribute("engines"), Filter(Equals(Path(List(Attribute("type"))), JsonValue("native".asJson))), Attribute("setup"))),
         JsonValue(Json.fromFields(List(("type", "docker".asJson))))
       )
     ))
-    val command = """.platforms[.type == "native"].setup += { type: "docker" }"""
+    val command = """.engines[.type == "native"].setup += { type: "docker" }"""
     val result = ConfigModParser.block.parse(command)
     assert(result == expected)
   }
@@ -93,6 +93,28 @@ class AppendTest extends AnyFunSuite {
         |list_of_stuff: [1, 2, 3, 4, 5, 6]
         |""".stripMargin).toOption.get
     val cmd2 = ConfigModParser.block.parse(""".list_of_stuff +0= [ 1, 2, 3 ]""")
+    val res2 = cmd2.apply(baseJson, false)
+    assert(res2 == expected2)
+  }
+
+  test("test append element") {
+    val expected2: Json = parse(
+      """foo: bar
+        |baz: 123
+        |list_of_stuff: [4, 5, 6, 1]
+        |""".stripMargin).toOption.get
+    val cmd2 = ConfigModParser.block.parse(""".list_of_stuff += 1""")
+    val res2 = cmd2.apply(baseJson, false)
+    assert(res2 == expected2)
+  }
+
+  test("test prepend element") {
+    val expected2: Json = parse(
+      """foo: bar
+        |baz: 123
+        |list_of_stuff: [1, 4, 5, 6]
+        |""".stripMargin).toOption.get
+    val cmd2 = ConfigModParser.block.parse(""".list_of_stuff +0= 1""")
     val res2 = cmd2.apply(baseJson, false)
     assert(res2 == expected2)
   }

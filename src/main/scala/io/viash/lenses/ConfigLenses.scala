@@ -18,16 +18,27 @@
 package io.viash.lenses
 
 import io.viash.config.Config
-import io.viash.functionality.Functionality
 import monocle.Lens
 import monocle.macros.GenLens
 
-import FunctionalityLenses._
-
+import LinksLenses._
+import RepositoryLens._
 
 object ConfigLenses {
-  val functionalityLens = GenLens[Config](_.functionality)
+  val enginesLens = GenLens[Config](_.engines)
+  val runnersLens = GenLens[Config](_.runners)
 
-  val composedDependenciesLens = functionalityLens ^|-> dependenciesLens
-  val composedRepositoriesLens = functionalityLens ^|-> repositoriesLens
+  val nameLens = GenLens[Config](_.name)
+  val versionLens = GenLens[Config](_.version)
+  val requirementsLens = GenLens[Config](_.requirements)
+  val resourcesLens = GenLens[Config](_.resources)
+  val testResourcesLens = GenLens[Config](_.test_resources)
+  val dependenciesLens = GenLens[Config](_.dependencies)
+  val repositoriesLens = GenLens[Config](_.repositories)
+  val keywordsLens = GenLens[Config](_.keywords)
+  val licenseLens = GenLens[Config](_.license)
+  val linksLens = GenLens[Config](_.links)
+
+  val linksRepositoryLens = linksLens ^|-> repositoryLens
+  val linksDockerRegistryLens = linksLens ^|-> LinksLenses.dockerRegistryLens
 }

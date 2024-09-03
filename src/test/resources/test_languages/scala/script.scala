@@ -33,7 +33,7 @@ try {
     value match {
       case Some(some) => outputFun(s"$name: |$some|")
       case None => outputFun(s"$name: ||")
-      case list: List[_] => outputFun(s"""$name: |${list.mkString(":")}|""")
+      case list: List[_] => outputFun(s"""$name: |${list.mkString(";")}|""")
       case _ => outputFun(s"$name: |$value|")
     }
   }
@@ -42,7 +42,7 @@ try {
     value match {
       case Some(some) => outputFun(s"meta_$name: |$some|")
       case None => outputFun(s"meta_$name: ||")
-      case list: List[_] => outputFun(s"""meta_$name: |${list.mkString(":")}|""")
+      case list: List[_] => outputFun(s"""meta_$name: |${list.mkString(";")}|""")
       case _ => outputFun(s"meta_$name: |$value|")
     }
   }

@@ -11,9 +11,9 @@ Release](https://img.shields.io/github/v/release/viash-io/viash?style=flat-squar
 CI](https://github.com/viash-io/viash/actions/workflows/sbt_test.yml/badge.svg)](https://github.com/viash-io/viash/actions/workflows/sbt_test.yml)
 [![License](https://img.shields.io/github/license/viash-io/viash?style=flat-square.png)](https://github.com/viash-io/viash/blob/master/LICENSE.md)
 
-Viash helps you turn a script (Bash/R/Python/Scala/JavaScript) into a
-reusable component. By providing some meta-data regarding its
-functionality and the platform on which you want to run the software,
+Viash helps you turn a script (Bash/R/Python/Scala/JavaScript) into a reusable component. 
+By providing some meta-data regarding its
+functionality, a runner and an engine on which you want to run the software,
 Viash can help you:
 
 - Wrap your script in an executable with a CLI and –help functionality,

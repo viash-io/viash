@@ -18,105 +18,549 @@
 package io.viash.config
 
 import io.viash.config_mods.ConfigModParser
-import io.viash.functionality._
-import io.viash.platforms._
+import arguments._
+import resources._
+import dependencies._
+import io.viash.functionality.Functionality
+import io.viash.platforms.Platform
 import io.viash.helpers.{Git, GitInfo, IO, Logging}
 import io.viash.helpers.circe._
-import io.viash.helpers.status._
+import io.viash.helpers.{status => BuildStatus};
 import io.viash.helpers.Yaml
 import io.viash.ViashNamespace.targetOutputPath
 
 import java.net.URI
-import io.viash.functionality.resources._
 
 import java.io.File
 import io.viash.config_mods.ConfigMods
 import java.nio.file.Paths
+import io.circe.Json
 
 import io.viash.schemas._
 import java.io.ByteArrayOutputStream
 import java.nio.file.FileSystemNotFoundException
+import io.viash.runners.{Runner, ExecutableRunner, NextflowRunner}
+import io.viash.engines.{Engine, NativeEngine, DockerEngine}
+import io.viash.helpers.ReplayableMultiOutputStream
+import io.viash.packageConfig.PackageConfig
+import io.viash.lenses.ConfigLenses._
+import Status._
+import io.viash.wrapper.BashWrapper
+import scala.collection.immutable.ListMap
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
     |We commonly name this file `config.vsh.yaml` in our examples, but you can name it however you choose.  
     |""".stripMargin)
 @example(
-  """functionality:
-    |  name: hello_world
-    |  arguments:
-    |    - type: string
-    |      name: --input
-    |      default: "world"
-    |  resources:
-    |    - type: bash_script
-    |      path: script.sh
-    |      text: echo Hello $par_input
-    |platforms:
+  """name: hello_world
+    |arguments:
+    |  - type: string
+    |    name: --input
+    |    default: "world"
+    |resources:
+    |  - type: bash_script
+    |    path: script.sh
+    |    text: echo Hello $par_input
+    |runners:
+    |  - type: executable
+    |engines:
     |  - type: docker
     |    image: "bash:4.0"
     |""".stripMargin, "yaml")
 case class Config(
+  @description("Name of the component and the filename of the executable when built with `viash build`.")
+  @example("name: this_is_my_component", "yaml")
+  name: String,
+
+  @description("Namespace this component is a part of. See the @[Namespaces guide](namespace) for more information on namespaces.")
+  @example("namespace: fancy_components", "yaml")
+  namespace: Option[String] = None,
+
+  @description("Version of the component. This field will be used to version the executable and the Docker container.")
+  @example("version: 0.8", "yaml")
+  version: Option[String] = None,
+
+  @description(
+    """A list of @[authors](author). An author must at least have a name, but can also have a list of roles, an e-mail address, and a map of custom properties.
+      +
+      +Suggested values for roles are:
+      + 
+      +| Role | Abbrev. | Description |
+      +|------|---------|-------------|
+      +| maintainer | mnt | for the maintainer of the code. Ideally, exactly one maintainer is specified. |
+      +| author | aut | for persons who have made substantial contributions to the software. |
+      +| contributor | ctb| for persons who have made smaller contributions (such as code patches).
+      +| datacontributor | dtc | for persons or organisations that contributed data sets for the software
+      +| copyrightholder | cph | for all copyright holders. This is a legal concept so should use the legal name of an institution or corporate body.
+      +| funder | fnd | for persons or organizations that furnished financial support for the development of the software
+      +
+      +The [full list of roles](https://www.loc.gov/marc/relators/relaterm.html) is extremely comprehensive.
+      +""".stripMargin('+'))
+  @example(
+    """authors:
+      |  - name: Jane Doe
+      |    role: [author, maintainer]
+      |    email: jane@doe.com
+      |    info:
+      |      github: janedoe
+      |      twitter: janedoe
+      |      orcid: XXAABBCCXX
+      |      groups: [ one, two, three ]
+      |  - name: Tim Farbe
+      |    roles: [author]
+      |    email: tim@far.be
+      |""".stripMargin, "yaml")
+  @since("Viash 0.3.1")
+  @default("Empty")
+  authors: List[Author] = Nil,
+
+  @description(
+    """A grouping of the @[arguments](argument), used to display the help message.
+      |
+      | - `name: foo`, the name of the argument group. 
+      | - `description: Description of foo`, a description of the argument group. Multiline descriptions are supported.
+      | - `arguments: [arg1, arg2, ...]`, list of the arguments.
+      |
+      |""".stripMargin)
+  @example(
+    """argument_groups:
+      |  - name: "Input"
+      |    arguments:
+      |      - name: "--id"
+      |        type: string
+      |        required: true
+      |      - name: "--input"
+      |        type: file
+      |        required: true
+      |  - name: "Output"
+      |    arguments:
+      |      - name: "--output"
+      |        type: file
+      |        direction: output
+      |        required: true
+      |      - name: "--output_optional"
+      |        type: file
+      |        direction: output
+      |""".stripMargin,
+      "yaml")
+  @exampleWithDescription(
+    """component_name
+      |
+      |  Input:
+      |      --id
+      |          type: string
+      |
+      |      --input
+      |          type: file
+      |
+      |  Output:
+      |      --output
+      |          type: file
+      |
+      |      --optional_output
+      |          type: file
+      |""".stripMargin,
+      "bash",
+      "This results in the following output when calling the component with the `--help` argument:")
+  @since("Viash 0.5.14")
+  @default("Empty")
+  argument_groups: List[ArgumentGroup] = Nil,
+
+  @description(
+    """@[Resources](resources) are files that support the component. The first resource should be @[a script](scripting_languages) that will be executed when the component is run. Additional resources will be copied to the same directory.
+      |
+      |Common properties:
+      |
+      | * type: `file` / `r_script` / `python_script` / `bash_script` / `javascript_script` / `scala_script` / `csharp_script`, specifies the type of the resource. The first resource cannot be of type `file`. When the type is not specified, the default type is simply `file`.
+      | * dest: filename, the resulting name of the resource.  From within a script, the file can be accessed at `meta["resources_dir"] + "/" + dest`. If unspecified, `dest` will be set to the basename of the `path` parameter.
+      | * path: `path/to/file`, the path of the input file. Can be a relative or an absolute path, or a URI. Mutually exclusive with `text`.
+      | * text: ...multiline text..., the content of the resulting file specified as a string. Mutually exclusive with `path`.
+      | * is_executable: `true` / `false`, whether the resulting resource file should be made executable.
+      |""".stripMargin)
+  @example(
+    """resources:
+      |  - type: r_script
+      |    path: script.R
+      |  - type: file
+      |    path: resource1.txt
+      |""".stripMargin,
+      "yaml")
+  @default("Empty")
+  resources: List[Resource] = Nil,
+
+  @description("A clean version of the component's name. This is only used for documentation.")
+  @example("label: \"My component\"", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  label: Option[String] = None,
+
+  @description("A one-sentence summary of the component. This is only used for documentation.")
+  @example("summary: \"A component for performing XYZ\"", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  summary: Option[String] = None,
+
+  @description("A description of the component. This is only used for documentation. Multiline descriptions are supported.")
+  @default("Empty")
+  @example(
+    """description: |
+      +  This component performs function Y and Z.
+      +  It is possible to make this a multiline string.
+      +""".stripMargin('+'),
+      "yaml")
+  description: Option[String] = None,
+
+  @description("A description on how to use the component. This will be displayed with `--help` under the 'Usage:' section.")
+  @example("usage: Place the executable in a directory containing TSV files and run it", "yaml")
+  usage: Option[String] = None,
+
+  @description("""One or more @[scripts](scripting_languages) to be used to test the component behaviour when `viash test` is invoked. Additional files of type `file` will be made available only during testing. Each test script should expect no command-line inputs, be platform-independent, and return an exit code >0 when unexpected behaviour occurs during testing. See @[Unit Testing](unit_testing) for more info.""")
+  @example(
+    """test_resources:
+      |  - type: bash_script
+      |    path: tests/test1.sh
+      |  - type: r_script
+      |    path: tests/test2.R
+      |  - path: resource1.txt
+      |""".stripMargin,
+      "yaml")
+  @default("Empty")
+  test_resources: List[Resource] = Nil,
+
+  @description("Structured information. Can be any shape: a string, vector, map or even nested map.")
+  @example(
+    """info:
+      |  twitter: wizzkid
+      |  classes: [ one, two, three ]""".stripMargin, "yaml")
+  @since("Viash 0.4.0")
+  @default("Empty")
+  info: Json = Json.Null,
+
+  @description("Allows setting a component to active, deprecated or disabled.")
+  @since("Viash 0.6.0")
+  @default("Enabled")
+  status: Status = Status.Enabled,
+  
+  @description(
+    """@[Computational requirements](computational_requirements) related to running the component. 
+      |`cpus` specifies the maximum number of (logical) cpus a component is allowed to use., whereas
+      |`memory` specifies the maximum amount of memory a component is allowed to allicate. Memory units must be
+      |in B, KB, MB, GB, TB or PB for SI units (1000-base), or KiB, MiB, GiB, TiB or PiB for binary IEC units (1024-base).""".stripMargin)
+  @example(
+    """requirements:
+      |  cpus: 5
+      |  memory: 10GB
+      |""".stripMargin,
+      "yaml")
+  @since("Viash 0.6.0")
+  @default("Empty")
+  requirements: ComputationalRequirements = ComputationalRequirements(),
+
+  @description("Allows listing Viash components required by this Viash component")
+  @exampleWithDescription(
+    """dependencies:
+      |  - name: qc/multiqc
+      |    repository: 
+      |      type: github
+      |      uri: openpipelines-bio/modules
+      |      tag: 0.3.0
+      |""".stripMargin,
+    "yaml",
+    "Full specification of a repository")
+  @exampleWithDescription(
+    """dependencies:
+      |  - name: qc/multiqc
+      |    repository: "github://openpipelines-bio/modules:0.3.0"
+      |""".stripMargin,
+    "yaml",
+    "Full specification of a repository using sugar syntax")
+  @exampleWithDescription(
+    """dependencies:
+      |  - name: qc/multiqc
+      |    repository: "openpipelines-bio"
+      |""".stripMargin,
+    "yaml",
+    "Reference to a repository fully specified under 'repositories'")
+  @default("Empty")
+  dependencies: List[Dependency] = Nil,
+
+  @description(
+    """(Pre-)defines repositories that can be used as repository in dependencies.
+      |Allows reusing repository definitions in case it is used in multiple dependencies.""".stripMargin)
+  @example(
+    """repositories:
+      |  - name: openpipelines-bio
+      |    type: github
+      |    uri: openpipelines-bio/modules
+      |    tag: 0.3.0
+      |""".stripMargin,
+      "yaml")
+  @default("Empty")
+  repositories: List[RepositoryWithName] = Nil,
+
+  @description("The keywords of the components.")
+  @example("keywords: [ bioinformatics, genomics ]", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  keywords: List[String] = Nil,
+
+  @description("The license of the package.")
+  @example("license: MIT", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  license: Option[String] = None,
+
+  @description("References to external resources related to the component.")
+  @example(
+    """references:
+      |  doi: 10.1000/xx.123456.789
+      |  bibtex: |
+      |    @article{foo,
+      |      title={Foo},
+      |      author={Bar},
+      |      journal={Baz},
+      |      year={2024}
+      |    }
+      |""".stripMargin, "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  references: References = References(),
+
+  @description("External links of the component.")
+  @example(
+    """links:
+      |  repository: "https://github.com/viash-io/viash"
+      |  docker_registry: "https://ghcr.io"
+      |  homepage: "https://viash.io"
+      |  documentation: "https://viash.io/reference/"
+      |  issue_tracker: "https://github.com/viash-io/viash/issues"
+      |""".stripMargin, "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  links: Links = Links(),
+  // The variables below are for internal use and shouldn't be publicly documented
+
+  // setting this to true will change the working directory
+  // to the resources directory when running the script
+  // this is used when running `viash test`.
+  @internalFunctionality
+  set_wd_to_resources_dir: Boolean = false,
+
+  @description(
+    """A list of runners to execute target artifacts.
+      |
+      | - @[ExecutableRunner](executable_runner)
+      | - @[NextflowRunner](nextflow_runner)
+      |""".stripMargin)
+  @since("Viash 0.8.0")
+  @default("Empty")
+  runners: List[Runner] = Nil,
+  @description(
+    """A list of engine environments to execute target artifacts in.
+      |
+      | - @[NativeEngine](native_engine)
+      | - @[DockerEngine](docker_engine)
+      |""".stripMargin)
+  @since("Viash 0.8.0")
+  @default("Empty")
+  engines: List[Engine] = Nil,
+
+  @undocumented
+  build_info: Option[BuildInfo] = None,
+
+  @description("The package config content used during build.")
+  @since("Viash 0.9.0")
+  @undocumented
+  package_config: Option[PackageConfig] = None,
+) {
   @description(
     """The @[functionality](functionality) describes the behaviour of the script in terms of arguments and resources.
       |By specifying a few restrictions (e.g. mandatory arguments) and adding some descriptions, Viash will automatically generate a stylish command-line interface for you.
       |""".stripMargin)
-  functionality: Functionality,
+  @deprecated("Functionality level is deprecated, all functionality fields are now located on the top level of the config file.", "0.9.0", "0.10.0")
+  @default("")
+  private val functionality: Functionality = Functionality("foo")
 
   @description(
-    """A list of platforms to generate target artifacts for.
+    """A list of @[arguments](argument) for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. See these reference pages per type for more information:  
       |
-      | - @[Native](platform_native)
-      | - @[Docker](platform_docker)
-      | - @[Nextflow](platform_nextflow)
+      | - @[string](arg_string)
+      | - @[file](arg_file)
+      | - @[integer](arg_integer)
+      | - @[double](arg_double)
+      | - @[boolean](arg_boolean)
+      | - @[boolean_true](arg_boolean_true)
+      | - @[boolean_false](arg_boolean_false)
       |""".stripMargin)
-  platforms: List[Platform] = Nil,
-
-  @internalFunctionality
-  info: Option[Info] = None
-) {
+  @default("Empty")
+  private val arguments: List[Argument[_]] = Nil
 
   @description(
     """Config inheritance by including YAML partials. This is useful for defining common APIs in
       |separate files. `__merge__` can be used in any level of the YAML. For example,
-      |not just in the config but also in the functionality or any of the platforms.
+      |not just in the config but also in the argument_groups or any of the engines.
       |""".stripMargin)
   @example("__merge__: ../api/common_interface.yaml", "yaml")
   @since("Viash 0.6.3")
   private val `__merge__`: Option[File] = None
-  
 
+  @description(
+  """A list of platforms to generate target artifacts for.
+    |
+    | - @[Native](platform_native)
+    | - @[Docker](platform_docker)
+    | - @[Nextflow](platform_nextflow)
+    |""".stripMargin)
+  @default("Empty")
+  @deprecated("Use 'engines' and 'runners' instead.", "0.9.0", "0.10.0")
+  private val platforms: List[Platform] = Nil
+  
   /**
-    * Detect a config's platform
+    * Find the runner
     * 
     * Order of execution:
-    *   - if a platform id is passed, look up the platform in the platforms list
-    *   - else if a platform yaml is passed, read platform from file
-    *   - else if platforms is a non-empty list, use the first platform
-    *   - else use the native platform
+    *   - if an runner id is passed, look up the runner in the runners list
+    *   - else if runners is a non-empty list, use the first runner
+    *   - else use the executable runner
     *
-    * @param platformStr A platform ID referring to one of the config's platforms, or a path to a YAML file
-    * @return A platform
+    * @param runnerStr An runner ID referring to one of the config's runners
+    * @return An runner
     */
-  def findPlatform(platformStr: Option[String]): Platform = {
-    if (platformStr.isDefined) {
-      val pid = platformStr.get
+  def findRunner(query: Option[String]): Runner = {
+    findRunners(query).head
+  }
 
-      val platformNames = this.platforms.map(_.id)
+  /**
+    * Find the runners
+    * 
+    * Order of execution:
+    *   - if the runners list is empty, use the executable runner for the rest of the logic
+    *   - if an runner id is passed, return the matching runners in the runners list
+    *   - else throw an error
+    *
+    * @param query An runner ID referring to one of the config's runners
+    * @return A list of runners
+    */
+  def findRunners(query: Option[String]): List[Runner] = {
+    val list = runners match {
+      case Nil => List(ExecutableRunner())
+      case li => li
+    }
 
-      if (platformNames.contains(pid)) {
-        this.platforms(platformNames.indexOf(pid))
-      } else if (pid.endsWith(".yaml") || pid.endsWith(".yml")) {
-        Platform.parse(IO.uri(platformStr.get))
-      } else {
-        throw new RuntimeException("platform must be a platform id specified in the config or a path to a platform yaml file.")
-      }
-    } else if (this.platforms.nonEmpty) {
-      this.platforms.head
-    } else {
-      NativePlatform()
+    query match {
+      case None =>
+        list
+      case Some(regex) =>
+        val foundMatches = list.filter{ e => regex.r.findFirstIn(e.id).isDefined }
+        foundMatches match {
+          case li if li.nonEmpty => li
+          case _ => throw new RuntimeException(s"no runner id matching regex '$regex' could not be found in the config.")
+        }
     }
   }
+
+  /**
+    * Find the engines
+    * 
+    * Order of execution:
+    *   - if the engines list is empty, use the native engine for the rest of the logic
+    *   - if an engine id is passed, return the matching engines in the engines list
+    *   - else throw an error
+    *
+    * @param query An engine ID referring to one of the config's engines
+    * @return A list of engines
+    */
+  def findEngines(query: Option[String]): List[Engine] = {
+    val list = engines match {
+      case Nil => List(NativeEngine())
+      case li => li
+    }
+
+    query match {
+      case None =>
+        list
+      case Some(regex) =>
+        val foundMatches = list.filter{ e => regex.r.findFirstIn(e.id).isDefined }
+        foundMatches match {
+          case li if li.nonEmpty => li
+          case _ => throw new RuntimeException(s"no engine id matching regex '$regex' could not be found in the config.")
+        }
+    }
+  }
+
+
+  // Combine all arguments into one combined list
+  def allArguments = argument_groups.flatMap(arg => arg.arguments)
+    
+  // check whether there are not multiple positional arguments with multiplicity >1
+  // and if there is one, whether its position is last
+  {
+    val positionals = allArguments.filter(a => a.flags == "")
+    val multiix = positionals.indexWhere(_.multiple)
+
+    require(
+      multiix == -1 || multiix == positionals.length - 1,
+      message = s"positional argument ${positionals(multiix).name} should be last since it has multiplicity >1"
+    )
+  }
+
+  // check component name
+  require(name.matches("^[A-Za-z][A-Za-z0-9_]*$"), message = "component name must begin with a letter and consist only of alphanumeric characters or underscores.")
+
+  // check arguments
+  {
+    val allNames = allArguments.map(a => a.name) ::: allArguments.flatMap(a => a.alternatives)
+    val allNamesCounted = allNames.groupBy(identity).map(a => (a._1, a._2.length))
+
+    allArguments.foreach { arg =>
+      require(arg.name.matches("^(-?|--|\\$)[A-Za-z][A-Za-z0-9_]*$"), message = s"argument $arg.name: name must begin with a letter and consist only of alphanumeric characters or underscores.")
+      (arg.name :: arg.alternatives).foreach { argName =>
+        require(!Config.reservedParameters.contains(argName), message = s"argument $argName: name is reserved by viash")
+        require(!argName.matches("^\\$VIASH_"), message = s"argument $argName: environment variables beginning with 'VIASH_' are reserved for viash.")
+        require(allNamesCounted(argName) == 1, message = s"argument $argName: name or alternative name is not unique.")
+      }
+    }
+  }
+
+  def getArgumentLikes(includeMeta: Boolean = false, includeDependencies: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): List[Argument[_]] = {
+    // start with arguments
+    val args0 = allArguments
+
+    // add meta if need be
+    val args1 = args0 ++ { if (includeMeta) BashWrapper.metaArgs else Nil }
+
+    // add dependencies if need be
+    val args2 = args1 ++ { if (includeDependencies) dependencies.map( d => StringArgument(d.scriptName, required = false, dest = "dep") ) else Nil }
+    
+    // filter input files if need be
+    val args3 = if (filterInputs) args2.filter{d => d.direction == Input || d.isInstanceOf[FileArgument]} else args2
+    
+    // filter output files if need be
+    val args4 = if (filterOutputs) args3.filter{d => d.direction == Output || d.isInstanceOf[FileArgument]} else args3
+
+    args4
+  }
+  def getArgumentLikesGroupedByDest(includeMeta: Boolean = false, includeDependencies: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): ListMap[String, List[Argument[_]]] = {
+    val x = getArgumentLikes(includeMeta, includeDependencies, filterInputs, filterOutputs).groupBy(_.dest)
+    val y = Seq("par", "meta", "dep").map(k => (k, x.getOrElse(k, Nil)))
+    ListMap(y: _*)
+  }
+
+  def mainScript: Option[Script] =
+    resources.headOption.flatMap {
+      case s: Script => Some(s)
+      case _ => None
+    }
+  def mainCode: Option[String] = mainScript.flatMap(_.read)
+  // provide function to use resources.tail but that allows resources to be an empty list
+  // If mainScript ends up being None because the first resource isn't a script, return the whole list
+  def additionalResources = resources match {
+    case head :: tail if head.isInstanceOf[Script] => tail
+    case list => list
+  }
+
+  def isEnabled: Boolean = status != Status.Disabled
 }
 
 object Config extends Logging {
@@ -139,18 +583,18 @@ object Config extends Logging {
 
     // detect whether a script (with joined header) was passed or a joined yaml
     // using the extension
-    if ((extension == "yml" || extension == "yaml") && configStr.contains("functionality:")) {
+    if ((extension == "yml" || extension == "yaml") && configStr.contains("name:")) {
       (configStr, None)
     } else if (Script.extensions.contains(extension)) {
       // detect scripting language from extension
       val scriptObj = Script.fromExt(extension)
 
-      // check whether viash header contains a functionality
+      // check whether viash header contains a name
       val commentStr = scriptObj.commentStr + "'"
       val headerComm = commentStr + " "
       assert(
-        configStr.contains(s"$commentStr functionality:"),
-        message = s"""viash script should contain a functionality header: "$commentStr functionality: <...>""""
+        configStr.contains(s"$commentStr name:"),
+        message = s"""viash script should contain a name header: "$commentStr name: <...>""""
       )
 
       // split header and body
@@ -169,25 +613,25 @@ object Config extends Logging {
   // reads and modifies the config based on the current setup
   def read(
     configPath: String,
-    projectDir: Option[URI] = None,
     addOptMainScript: Boolean = true,
-    configMods: List[String] = Nil
+    viashPackage: Option[PackageConfig] = None,
   ): Config = {
     val uri = IO.uri(configPath)
     readFromUri(
       uri = uri,
-      projectDir = projectDir,
       addOptMainScript = addOptMainScript,
-      configMods = configMods
+      viashPackage = viashPackage
     )
   }
 
   def readFromUri(
     uri: URI,
-    projectDir: Option[URI] = None,
     addOptMainScript: Boolean = true,
-    configMods: List[String] = Nil
+    viashPackage: Option[PackageConfig] = None,
   ): Config = {
+    val packageDir = viashPackage.flatMap(_.rootDir).map(_.toUri())
+    val configMods: List[String] = viashPackage.map(_.config_mods.toList).getOrElse(Nil)
+
     // read cli config mods
     val confMods = ConfigMods.parseConfigMods(configMods)
 
@@ -204,46 +648,61 @@ object Config extends Logging {
 
     /* JSON 1: after inheritance */
     // apply inheritance if need be
-    val json1 = json0.inherit(uri, projectDir)
+    val json1 = json0.inherit(uri, packageDir)
 
     /* JSON 2: after preparse config mods  */
     // apply preparse config mods if need be
     val json2 = confMods(json1, preparse = true)
 
-    /* CONFIG 0: converted from json */
+    /* CONFIG Base: converted from json */
     // convert Json into Config
-    val conf0 = Convert.jsonToClass[Config](json2, uri.toString())
+    val confBase = Convert.jsonToClass[Config](json2, uri.toString())
 
-    /* CONFIG 1: store parent path in resource to be able to access them in the future */
-    val parentURI = uri.resolve("")
-    val resources = conf0.functionality.resources.map(_.copyWithAbsolutePath(parentURI, projectDir))
-    val tests = conf0.functionality.test_resources.map(_.copyWithAbsolutePath(parentURI, projectDir))
+    /* CONFIG 0: apply values from package config */
+    // apply values from package config if need be
+    val conf0 = {
+      val vpVersion = viashPackage.flatMap(_.version)
+      val vpRepositories = viashPackage.map(_.repositories).getOrElse(Nil)
+      val vpLicense = viashPackage.flatMap(_.license)
+      val vpRepository = viashPackage.flatMap(_.links.repository)
+      val vpDockerRegistry = viashPackage.flatMap(_.links.docker_registry)
 
-    // copy resources with updated paths into config and return
-    val conf1 = conf0.copy(
-      functionality = conf0.functionality.copy(
-        resources = resources,
-        test_resources = tests
-      )
-    )
+      val lenses =
+        versionLens.modify(_ orElse vpVersion) andThen
+        licenseLens.modify(_ orElse vpLicense) andThen
+        repositoriesLens.modify(vpRepositories ::: _) andThen
+        linksRepositoryLens.modify(_ orElse vpRepository) andThen
+        linksDockerRegistryLens.modify(_ orElse vpDockerRegistry)
+        
+      lenses(confBase)
+    }
 
-    /* CONFIG 2: apply post-parse config mods */
+    /* CONFIG 1: apply post-parse config mods */
     // apply config mods only if need be
-    val conf2 = 
+    val conf1 = 
       if (confMods.postparseCommands.nonEmpty) {
         // turn config back into json
-        val js = encodeConfig(conf1)
+        val js = encodeConfig(conf0)
         // apply config mods
         val modifiedJs = confMods(js, preparse = false)
         // turn json back into a config
-        modifiedJs.as[Config].fold(throw _, identity)
+        Convert.jsonToClass[Config](modifiedJs, uri.toString())
       } else {
-        conf1
+        conf0
       }
+
+    /* CONFIG 2: store parent path in resource to be able to access them in the future */
+    // copy resources with updated paths into config and return
+    val parentURI = uri.resolve("")
+    val resources = conf1.resources.map(_.copyWithAbsolutePath(parentURI, packageDir))
+    val tests = conf1.test_resources.map(_.copyWithAbsolutePath(parentURI, packageDir))
+
+    val conf2a = resourcesLens.set(resources)(conf1)
+    val conf2 = testResourcesLens.set(tests)(conf2a)
 
     /* CONFIG 3: add info */
     // gather git info
-    // todo: resolve git in project?
+    // todo: resolve git in package?
     val conf3 = uri.getScheme() match {
       case "file" =>
         val path = Paths.get(uri).toFile().getParentFile
@@ -251,7 +710,7 @@ object Config extends Logging {
 
         // create info object
         val info = 
-          Info(
+          BuildInfo(
             viash_version = Some(io.viash.Main.version),
             config = uri.toString.replaceAll("^file:/+", "/"),
             git_commit = gc,
@@ -260,44 +719,48 @@ object Config extends Logging {
           )
         // add info and additional resources
         conf2.copy(
-          info = Some(info),
+          build_info = Some(info),
         )
       case _ => conf2
     }
 
     // print warnings if need be
-    if (conf2.functionality.status == Status.Deprecated)
-      warn(s"Warning: The status of the component '${conf2.functionality.name}' is set to deprecated.")
+    if (conf3.status == Status.Deprecated)
+      warn(s"Warning: The status of the component '${conf3.name}' is set to deprecated.")
     
-    if (conf2.functionality.resources.isEmpty && optScript.isEmpty)
+    if (conf3.resources.isEmpty && optScript.isEmpty)
       warn(s"Warning: no resources specified!")
 
-    if (!addOptMainScript) {
-      return conf3
-    }
-    
-    /* CONFIG 4: add main script if config is stored inside script */
-    // add info and additional resources
+    /* CONFIG 4: add Viash Package Config */
     val conf4 = conf3.copy(
-      functionality = conf3.functionality.copy(
-        resources = optScript.toList ::: conf3.functionality.resources
-      )
+      package_config = viashPackage
     )
 
-    conf4
+    if (!addOptMainScript) {
+      return conf4
+    }
+    
+    /* CONFIG 5: add main script if config is stored inside script */
+    // add info and additional resources
+    val conf5 = resourcesLens.modify(optScript.toList ::: _)(conf4)
+
+    conf5
   }
 
   def readConfigs(
     source: String,
-    projectDir: Option[URI] = None,
     query: Option[String] = None,
     queryNamespace: Option[String] = None,
     queryName: Option[String] = None,
-    configMods: List[String] = Nil,
-    addOptMainScript: Boolean = true
-  ): (List[Either[Config, Status]], List[Config]) = {
+    queryConfig: Option[String] = None,
+    addOptMainScript: Boolean = true,
+    viashPackage: Option[PackageConfig] = None,
+  ): List[AppliedConfig] = {
 
     val sourceDir = Paths.get(source)
+
+    // This is the value that the config's build_info.config field would be set to if the config were to be read
+    val readQueryConfig = queryConfig.map(IO.uri(_).toString.replaceAll("^file:/+", "/"))
 
     // find [^\.]*.vsh.* files and parse as config
     val scriptFiles = IO.find(sourceDir, (path, attrs) => {
@@ -306,35 +769,26 @@ object Config extends Logging {
         attrs.isRegularFile
     })
 
-    val allConfigsWithStdOutErr = scriptFiles.map { file =>
+    val allConfigs = scriptFiles.zipWithIndex.map { case (file, index) =>
       try {
-        // read config to get an idea of the name and namespaces
-        // warnings will be captured for now, and will be displayed when reading the second time
-        val stdout = new ByteArrayOutputStream()
-        val stderr = new ByteArrayOutputStream()
-        val config = 
-          Console.withErr(stderr) {
-            Console.withOut(stdout) {
-              Config.read(
+        val rmos = new ReplayableMultiOutputStream()
+
+        val appliedConfig: AppliedConfig = 
+          // Don't output any warnings now. Only output warnings if the config passes the regex checks.
+          // When replaying, output directly to the console. Logger functions were already called, so we don't want to call them again.
+          Console.withErr(rmos.getOutputStream(Console.err.print)) {
+            Console.withOut(rmos.getOutputStream(Console.out.print)) {
+              read(
                 file.toString,
-                projectDir = projectDir,
                 addOptMainScript = addOptMainScript,
-                configMods = configMods
+                viashPackage = viashPackage
               )
             }
           }
-          Left((config, stdout, stderr))
-      } catch {
-        case _: Exception =>
-          error(s"Reading file '$file' failed")
-          Right(ParseError)
-      }
-    }
 
-    val filteredConfigs: List[Either[Config, Status]] = allConfigsWithStdOutErr.map { 
-      case Left((config, stdout, stderr)) => 
-        val funName = config.functionality.name
-        val funNs = config.functionality.namespace
+        val funName = appliedConfig.config.name
+        val funNs = appliedConfig.config.namespace
+        val isEnabled = appliedConfig.config.isEnabled
 
         // does name & namespace match regex?
         val queryTest = (query, funNs) match {
@@ -351,31 +805,40 @@ object Config extends Logging {
           case (Some(_), None) => false
           case (None, _) => true
         }
-
-        // if config passes regex checks, show warning and return it
-        if (queryTest && nameTest && namespaceTest && config.functionality.isEnabled) {
-          // TODO: stdout and stderr are no longer in the correct order :/
-          Console.out.print(stdout.toString)
-          Console.err.print(stderr.toString)
-          Left(config)
-        } else {
-          Right(Disabled)
+        val configTest = readQueryConfig match {
+          case Some(conf) => Some(conf) == appliedConfig.config.build_info.map(_.config)
+          case None => true
         }
-      case Right(status) => Right(status)
-    }
 
-    val allConfigs = allConfigsWithStdOutErr.collect({ case Left((config, _, _)) if config.functionality.isEnabled => config })
+        if (!isEnabled) {
+          appliedConfig.setStatus(BuildStatus.Disabled)
+        } else if (queryTest && nameTest && namespaceTest && configTest) {
+          // if config passes regex checks, show warnings if there are any
+          rmos.replay()
+          appliedConfig
+        } else {
+          appliedConfig.setStatus(BuildStatus.DisabledByQuery)
+        }
+      } catch {
+        case _: Exception =>
+          error(s"Reading file '$file' failed")
+          AppliedConfig(Config(s"failed_$index"), None, Nil, Some(BuildStatus.ParseError))
+      }
+    }
 
     // Verify that all configs except the disabled ones are unique
     // Even configs disabled by the query should be unique as they might be picked up as a dependency
     // Only allowed exception are configs where the status is set to disabled
-    val uniqueConfigs = allConfigs.groupBy(c => targetOutputPath("", "", c))
+    val allEnabledConfigs = allConfigs.collect{ case ac if ac.config.isEnabled => ac.config }
+    val uniqueConfigs = allEnabledConfigs.groupBy(c => targetOutputPath("", "", c))
     val duplicateConfigs = uniqueConfigs.filter(_._2.size > 1)
     if (duplicateConfigs.nonEmpty) {
       val duplicateNames = duplicateConfigs.keys.map(_.dropWhile(_ == '/')).toSeq.sorted.mkString(", ")
       throw new RuntimeException(s"Duplicate component name${ if (duplicateConfigs.size == 1) "" else "s" } found: $duplicateNames")
     }
 
-    (filteredConfigs, allConfigs)
+    allConfigs
   }
+
+  val reservedParameters = List("-h", "--help", "--version", "---v", "---verbose", "---verbosity")
 }

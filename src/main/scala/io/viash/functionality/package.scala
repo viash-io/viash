@@ -22,71 +22,27 @@ import io.circe.{Decoder, Encoder, Json}
 import io.circe.ACursor
 
 import io.viash.helpers.Logging
+import io.circe.JsonObject
+import io.viash.config.arguments.decodeDataArgument
+
+import config.ArgumentGroup
+import config.Author
+import config.ComputationalRequirements
+import config.Links
+import config.References
+import config.Status._
+import config.arguments._
 
 package object functionality extends Logging {
   // import implicits
-
-  import functionality.arguments._
-  import functionality.resources._
-  import functionality.Status._
-  import functionality.dependencies._
   import io.viash.helpers.circe._
   import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
   import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
   import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
+  import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
 
   // encoder and decoder for Functionality
-  implicit val encodeFunctionality: Encoder.AsObject[Functionality] = deriveConfiguredEncoder
-
-  // add file & direction defaults for inputs & outputs
+  // implicit val encodeFunctionality: Encoder.AsObject[Functionality] = deriveConfiguredEncoderStrict[Functionality]
   implicit val decodeFunctionality: Decoder[Functionality] = deriveConfiguredDecoderFullChecks
-
-  // encoder and decoder for Author
-  implicit val encodeAuthor: Encoder.AsObject[Author] = deriveConfiguredEncoder
-  implicit val decodeAuthor: Decoder[Author] = deriveConfiguredDecoderFullChecks
-
-  // encoder and decoder for Requirements
-  implicit val encodeComputationalRequirements: Encoder.AsObject[ComputationalRequirements] = deriveConfiguredEncoder
-  implicit val decodeComputationalRequirements: Decoder[ComputationalRequirements] = deriveConfiguredDecoderFullChecks
-  
-  // encoder and decoder for ArgumentGroup
-  implicit val encodeArgumentGroup: Encoder.AsObject[ArgumentGroup] = deriveConfiguredEncoder
-  implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoder[ArgumentGroup]
-    .validate(
-      validator[ArgumentGroup],
-      s"Could not convert json to ArgumentGroup."
-    )
-    .prepare {
-      checkDeprecation[ArgumentGroup](_) // check for deprecations
-      .withFocus(_.mapObject{ ag0 =>
-
-        // Check whether arguments contains a string value instead of an object. The support for this was removed in Viash 0.7.0
-        ag0.apply("arguments") match {
-          case Some(args) =>
-            args.mapArray(argVector => {
-              for (arg <- argVector) {
-                if (arg.isString) {
-                  info(
-                    s"""Error: specifying strings in the .argument field of argument group '${ag0.apply("name").get.asString.get}' was removed.
-                      |The .arguments field of an argument group should only contain arguments.
-                      |To solve this issue, copy the argument ${arg} directly into the argument group.""".stripMargin)
-                }
-              }
-              argVector
-            })
-          case _ => None
-        }
-
-        ag0
-      }
-      )
-    }
-
-
-  // encoder and decoder for Status, make string lowercase before decoding
-  implicit val encodeStatus: Encoder[Status] = Encoder.encodeEnumeration(Status)
-  implicit val decodeStatus: Decoder[Status] = Decoder.decodeEnumeration(Status).prepare {
-    _.withFocus(_.mapString(_.toLowerCase()))
-  }
 
 }

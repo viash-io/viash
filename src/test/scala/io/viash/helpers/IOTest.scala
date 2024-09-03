@@ -6,6 +6,7 @@ import java.nio.file.{Files, Path}
 import java.net.URI
 import io.viash.helpers.{IO, Logger}
 import scala.util.Try
+import java.nio.file.Paths
 
 class IOTest extends AnyFunSuite with BeforeAndAfter {
   Logger.UseColorOverride.value = Some(false)
@@ -123,26 +124,61 @@ class IOTest extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("resolvePathWrtURI") {
-    val projectUri = tempDir.toUri()
-    val result = IO.resolvePathWrtURI("/test/test.txt", projectUri)
+    val packageUri = tempDir.toUri()
+    val result = IO.resolvePathWrtURI("/test/test.txt", packageUri)
     assert(result == "test/test.txt")
   }
 
-  test("resolveProjectPath success") {
-    val projectUri = tempDir.toUri()
+  test("resolvePackagePath success") {
+    val packageUri = tempDir.toUri()
     val expectedResult = tempDir.resolve("test/test.txt")
-    val result = Try(IO.resolveProjectPath("/test/test.txt", Some(projectUri)))
+    val result = Try(IO.resolvePackagePath("/test/test.txt", Some(packageUri)))
     assert(result.isSuccess && result.get == expectedResult.toUri())
   }
 
-  test("resolveProjectPath failure because prefix incorrect") {
-    val projectUri = tempDir.toUri()
-    val result = Try(IO.resolveProjectPath("test/test.txt", Some(projectUri)))
+  test("resolvePackagePath failure because prefix incorrect") {
+    val packageUri = tempDir.toUri()
+    val result = Try(IO.resolvePackagePath("test/test.txt", Some(packageUri)))
     assert(result.isFailure)
   }
 
-  test("resolveProjectPath failure because project uri is none") {
-    val result = Try(IO.resolveProjectPath("/test/test.txt", None))
+  test("resolvePackagePath failure because package uri is none") {
+    val result = Try(IO.resolvePackagePath("/test/test.txt", None))
     assert(result.isFailure)
+  }
+
+  test("anonymizePath with a common path") {
+    val basePath = Some(Paths.get("/foo/bar"))
+    val path = "/foo/bar/baz/test.txt"
+    val result = IO.anonymizePath(basePath, path)
+    assert(result == "baz/test.txt")
+  }
+
+  test("anonymizePath with a different base path") {
+    val basePath = Some(Paths.get("/foo/bar"))
+    val path = "/foo/baz/test.txt"
+    val result = IO.anonymizePath(basePath, path)
+    assert(result == "[anonymized]/test.txt")
+  }
+
+  test("anynimizePath with a completely different base path") {
+    val basePath = Some(Paths.get("/foo/bar"))
+    val path = "/tmp/foo/bar/baz/test.txt"
+    val result = IO.anonymizePath(basePath, path)
+    assert(result == "[anonymized]/test.txt")
+  }
+
+  test("anonymizePath with a common path with a trailing slash") {
+    val basePath = Some(Paths.get("/foo/bar/"))
+    val path = "/foo/bar/baz/test.txt"
+    val result = IO.anonymizePath(basePath, path)
+    assert(result == "baz/test.txt")
+  }
+
+  test("anonymizePath without a base path") {
+    val basePath = None
+    val path = "/foo/bar/baz/test.txt"
+    val result = IO.anonymizePath(basePath, path)
+    assert(result == "[anonymized]/test.txt")
   }
 }

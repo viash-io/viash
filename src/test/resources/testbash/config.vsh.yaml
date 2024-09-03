@@ -1,108 +1,111 @@
-functionality:
-  name: testbash
-  version: 0.1
-  description: |
-    Prints out the parameter values.
-    Checking what happens with multiline descriptions.
-  authors:
-    - name: Bob ''' """ \n ` $ \ Cando
-      roles: [maintainer, author]
-      email: bob@cando.com
-      info: {github: bobcando, orcid: XXXAAABBB}
-  argument_groups:
-    - name: First group
-      arguments:
-        - name: "input"
-          type: file
-          description: |
-            An input file with positional arguments.
-            More checks for multiline descriptions.
-            Testing some characters that should be escaped: ''' """ \n ` $ \
-          direction: input
-          required: true
-          must_exist: true
-          example: input.txt
-        - name: "--real_number"
-          type: double
-          description: A real number with positional arguments.
-          required: true
-        - name: "--whole_number"
-          type: integer
-          description: A whole number with a standard flag.
-          required: true
-        - name: "--long_number"
-          type: long
-          description: A long
-        - name: "-s"
-          type: string
-          description: A sentence or word with a short flag.
-          required: true
-    - name: Second group
-      description: Foo
-      arguments:
-        - name: "--truth"
-          type: boolean_true
-          description: A switch flag.
-        - name: "--falsehood"
-          type: boolean_false
-          description: A switch flag which is false when specified.
-        - name: "--reality"
-          type: boolean
-          description: A switch flag without predetermined state.
-    - name: Arguments
-      arguments:
-        - name: "--output"
-          alternatives: [ "-o" ]
-          type: file
-          description: Write the parameters to a json file.
-          direction: output
-        - name: "--log"
-          type: file
-          description: An optional log file.
-          direction: output
-        - name: "--optional"
-          type: string
-          description: An optional string.
-        - name: "--optional_with_default"
-          type: string
-          default: "The default value."
-        - name: "--multiple"
-          type: string
-          multiple: true
-        - name: "multiple_pos"
-          type: string
-          multiple: true
-        - name: "--multiple_output"
-          type: file
-          multiple: true
-          direction: output
-  resources:
-    - type: bash_script
-      path: ./code.sh
-    - path: resource1.txt
-    - path: https://raw.githubusercontent.com/scala/scala/fff4ec3539ac58f56fdc8f1382c365f32a9fd25a/NOTICE
-  test_resources:
-    - type: bash_script
-      path: tests/check_outputs.sh
-    - type: bash_script
-      path: tests/fail.sh
-    - path: resource2.txt
-  info:
-    foo: bar
-    custom_tag: custom_value
-  requirements:
-    cpus: 2
-    memory: 2GB
-platforms:
+
+name: testbash
+version: 0.1
+description: |
+  Prints out the parameter values.
+  Checking what happens with multiline descriptions.
+authors:
+  - name: Bob ''' """ \n ` $ \ Cando
+    roles: [maintainer, author]
+    email: bob@cando.com
+    info: {github: bobcando, orcid: XXXAAABBB}
+argument_groups:
+  - name: First group
+    arguments:
+      - name: "input"
+        type: file
+        description: |
+          An input file with positional arguments.
+          More checks for multiline descriptions.
+          Testing some characters that should be escaped: ''' """ \n ` $ \
+        direction: input
+        required: true
+        must_exist: true
+        example: input.txt
+      - name: "--real_number"
+        type: double
+        description: A real number with positional arguments.
+        required: true
+      - name: "--whole_number"
+        type: integer
+        description: A whole number with a standard flag.
+        required: true
+      - name: "--long_number"
+        type: long
+        description: A long
+      - name: "-s"
+        type: string
+        description: A sentence or word with a short flag.
+        required: true
+  - name: Second group
+    description: Foo
+    arguments:
+      - name: "--truth"
+        type: boolean_true
+        description: A switch flag.
+      - name: "--falsehood"
+        type: boolean_false
+        description: A switch flag which is false when specified.
+      - name: "--reality"
+        type: boolean
+        description: A switch flag without predetermined state.
+  - name: Arguments
+    arguments:
+      - name: "--output"
+        alternatives: [ "-o" ]
+        type: file
+        description: Write the parameters to a json file.
+        direction: output
+      - name: "--log"
+        type: file
+        description: An optional log file.
+        direction: output
+      - name: "--optional"
+        type: string
+        description: An optional string.
+      - name: "--optional_with_default"
+        type: string
+        default: "The default value."
+      - name: "--multiple"
+        type: string
+        multiple: true
+      - name: "multiple_pos"
+        type: string
+        multiple: true
+      - name: "--multiple_output"
+        type: file
+        multiple: true
+        direction: output
+resources:
+  - type: bash_script
+    path: ./code.sh
+  - path: resource1.txt
+  - path: https://raw.githubusercontent.com/scala/scala/fff4ec3539ac58f56fdc8f1382c365f32a9fd25a/NOTICE
+test_resources:
+  - type: bash_script
+    path: tests/check_outputs.sh
+  - type: bash_script
+    path: tests/fail.sh
+  - path: resource2.txt
+info:
+  foo: bar
+  custom_tag: custom_value
+requirements:
+  cpus: 2
+  memory: 2GB
+runners:
+  - type: executable
+  - type: nextflow
+engines:
   - type: native
+    id: native
   - type: docker
     image: "bash:3.2"
   - type: docker
+    id: throwawayimage
     image: "bash:3.2"
-    id: "throwawayimage"
-    target_image: "throwawayimage"
+    target_image: "mytestbash"
     setup:
       - type: apk
         packages:
           - fortune
-  - type: nextflow

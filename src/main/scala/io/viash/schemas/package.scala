@@ -41,9 +41,11 @@ package object schemas {
   @getter @setter @beanGetter @beanSetter @field
   class default(default: String) extends scala.annotation.StaticAnnotation
 
+  // Do not generate documentation for this field and don't output it during serialization
   @getter @setter @beanGetter @beanSetter @field
   class internalFunctionality() extends scala.annotation.StaticAnnotation
 
+  // Do not generate documentation for this field but do output it during serialization
   @getter @setter @beanGetter @beanSetter @field
   class undocumented() extends scala.annotation.StaticAnnotation
 

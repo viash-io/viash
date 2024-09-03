@@ -41,7 +41,9 @@ sealed trait SuccessStatus extends Status {
 
 case object ParseError extends ErrorStatus
 case object Disabled extends WarningStatus
+case object DisabledByQuery extends WarningStatus
 case object DependencyError extends ErrorStatus
+case object MissingRunnerOrEngine extends WarningStatus
 case object BuildError extends ErrorStatus
 case object SetupError extends ErrorStatus
 case object PushError extends ErrorStatus

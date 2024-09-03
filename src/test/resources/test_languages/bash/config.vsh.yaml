@@ -1,10 +1,9 @@
-functionality:
-  __merge__: [., ../common.yaml]
-  name: test_languages_bash
-  resources:
-    - type: bash_script
-      path: ./code.sh
-platforms:
+__merge__: [., ../common.yaml, ../common-runners.yaml]
+name: test_languages_bash
+resources:
+  - type: bash_script
+    path: ./code.sh
+engines:
   - type: native
   - type: docker
     image: "bash:3.2"
@@ -16,4 +15,3 @@ platforms:
       - type: apk
         packages:
           - fortune
-  - type: nextflow

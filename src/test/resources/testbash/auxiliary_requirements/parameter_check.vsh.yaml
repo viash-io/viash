@@ -1,125 +1,170 @@
-functionality:
-  name: parameter_check
-  version: 0.1
-  description: |
-    Prints out the parameter values.
-    Checking what happens with multiline descriptions.
-  arguments:
-    - name: "--real_number"
-      type: double
-      description: A real number.
-    - name: "--real_number_multiple"
-      type: double
-      multiple: true
-    - name: "--whole_number"
-      type: integer
-      description: A whole number.
-    - name: "--whole_number_multiple"
-      type: integer
-      multiple: true
-    - name: "--reality"
-      type: boolean
-      description: A switch flag without predetermined state.
-    - name: "--reality_multiple"
-      type: boolean
-      multiple: true
-    - name: "--string"
-      type: string
-      description: A sentence or word with specificly allowed options
-      choices:
-        - "one"
-        - "2"
-        - "two words"
-        - "three separate words"
-        - "Two full blown sentences with punctuation. The weather is nice today!"
-        - "Capital"
-        - "ALL CAPITALS"
-        - a
-        - B
-    - name: "--multiple"
-      type: string
-      multiple: true
-      choices:
-        - "one"
-        - "2"
-        - "two words"
-        - "three separate words"
-        - "Two full blown sentences with punctuation. The weather is nice today!"
-        - "Capital"
-        - "ALL CAPITALS"
-        - a
-        - B
-    - name: "--whole_number_choice"
-      type: integer
-      description: A real number but with only a few allowed values.
-      choices:
-        - 0
-        - 1
-        - 3
-        - -10
-    - name: "--whole_number_choice_multiple"
-      type: integer
-      description: A real number but with only a few allowed values.
-      multiple: true
-      choices:
-        - 0
-        - 1
-        - 3
-        - -10
+name: parameter_check
+version: 0.1
+description: |
+  Prints out the parameter values.
+  Checking what happens with multiline descriptions.
+arguments:
+  - name: "--real_number"
+    type: double
+    description: A real number.
+  - name: "--real_number_multiple"
+    type: double
+    multiple: true
+  - name: "--whole_number"
+    type: integer
+    description: A whole number.
+  - name: "--whole_number_multiple"
+    type: integer
+    multiple: true
+  - name: "--long_number"
+    type: long
+    description: A long number.
+  - name: "--long_number_multiple"
+    type: long
+    multiple: true
+  - name: "--reality"
+    type: boolean
+    description: A switch flag without predetermined state.
+  - name: "--reality_multiple"
+    type: boolean
+    multiple: true
+  - name: "--string"
+    type: string
+    description: A sentence or word with specificly allowed options
+    choices:
+      - "one"
+      - "2"
+      - "two words"
+      - "three separate words"
+      - "Two full blown sentences with punctuation. The weather is nice today!"
+      - "Capital"
+      - "ALL CAPITALS"
+      - a
+      - B
+  - name: "--multiple"
+    type: string
+    multiple: true
+    choices:
+      - "one"
+      - "2"
+      - "two words"
+      - "three separate words"
+      - "Two full blown sentences with punctuation. The weather is nice today!"
+      - "Capital"
+      - "ALL CAPITALS"
+      - a
+      - B
+  - name: "--whole_number_choice"
+    type: integer
+    description: A real number but with only a few allowed values.
+    choices:
+      - 0
+      - 1
+      - 3
+      - -10
+  - name: "--whole_number_choice_multiple"
+    type: integer
+    description: A real number but with only a few allowed values.
+    multiple: true
+    choices:
+      - 0
+      - 1
+      - 3
+      - -10
+  - name: "--long_number_choice"
+    type: long
+    description: A long number but with only a few allowed values.
+    choices:
+      - 0
+      - 1
+      - 3000000000
+      - -9876543210
+  - name: "--long_number_choice_multiple"
+    type: long
+    description: A long number but with only a few allowed values.
+    multiple: true
+    choices:
+      - 0
+      - 1
+      - 3000000000
+      - -9876543210
 
-    - name: "--whole_number_min"
-      type: integer
-      min: -3
-    - name: "--whole_number_max"
-      type: integer
-      max: 5
-    - name: "--whole_number_min_max"
-      type: integer
-      min: -3
-      max: 5
-    - name: "--real_number_min"
-      type: double
-      min: -3.2
-    - name: "--real_number_max"
-      type: double
-      max: 5.7
-    - name: "--real_number_min_max"
-      type: double
-      min: -3.2
-      max: 5.7
+  - name: "--whole_number_min"
+    type: integer
+    min: -3
+  - name: "--whole_number_max"
+    type: integer
+    max: 5
+  - name: "--whole_number_min_max"
+    type: integer
+    min: -3
+    max: 5
+  - name: "--real_number_min"
+    type: double
+    min: -3.2
+  - name: "--real_number_max"
+    type: double
+    max: 5.7
+  - name: "--real_number_min_max"
+    type: double
+    min: -3.2
+    max: 5.7
+  - name: "--long_number_min"
+    type: long
+    min: -3000000000
+  - name: "--long_number_max"
+    type: long
+    max: 5000000000
+  - name: "--long_number_min_max"
+    type: long
+    min: -3000000000
+    max: 5000000000
 
-    - name: "--whole_number_min_multiple"
-      type: integer
-      min: -3
-      multiple: true
-    - name: "--whole_number_max_multiple"
-      type: integer
-      max: 5
-      multiple: true
-    - name: "--whole_number_min_max_multiple"
-      type: integer
-      min: -3
-      max: 5
-      multiple: true
-    - name: "--real_number_min_multiple"
-      type: double
-      min: -3.2
-      multiple: true
-    - name: "--real_number_max_multiple"
-      type: double
-      max: 5.7
-      multiple: true
-    - name: "--real_number_min_max_multiple"
-      type: double
-      min: -3.2
-      max: 5.7
-      multiple: true
+  - name: "--whole_number_min_multiple"
+    type: integer
+    min: -3
+    multiple: true
+  - name: "--whole_number_max_multiple"
+    type: integer
+    max: 5
+    multiple: true
+  - name: "--whole_number_min_max_multiple"
+    type: integer
+    min: -3
+    max: 5
+    multiple: true
+  - name: "--real_number_min_multiple"
+    type: double
+    min: -3.2
+    multiple: true
+  - name: "--real_number_max_multiple"
+    type: double
+    max: 5.7
+    multiple: true
+  - name: "--real_number_min_max_multiple"
+    type: double
+    min: -3.2
+    max: 5.7
+    multiple: true
+  - name: "--long_number_min_multiple"
+    type: long
+    min: -3000000000
+    multiple: true
+  - name: "--long_number_max_multiple"
+    type: long
+    max: 5000000000
+    multiple: true
+  - name: "--long_number_min_max_multiple"
+    type: long
+    min: -3000000000
+    max: 5000000000
+    multiple: true
 
-  resources:
-    - type: bash_script
-      path: ./parameter_check.sh
-  info:
-    foo: bar
-    custom_tag: custom_value
-platforms:
+resources:
+  - type: bash_script
+    path: ./parameter_check.sh
+info:
+  foo: bar
+  custom_tag: custom_value
+engines:
   - type: native

@@ -20,10 +20,11 @@ package io.viash.functionality
 
 import io.circe.Json
 import io.circe.generic.extras._
-import arguments._
-import resources._
-import Status._
-import dependencies._
+import io.viash.config.arguments._
+import io.viash.config.resources._
+import io.viash.config.Status._
+import io.viash.config.dependencies._
+import io.viash.config.{Author, ArgumentGroup, ComputationalRequirements, Status, References, Links}
 import io.viash.schemas._
 import io.viash.wrapper.BashWrapper
 import scala.collection.immutable.ListMap
@@ -32,6 +33,7 @@ import scala.collection.immutable.ListMap
   """The functionality-part of the config file describes the behaviour of the script in terms of arguments and resources.
     |By specifying a few restrictions (e.g. mandatory arguments) and adding some descriptions, Viash will automatically generate a stylish command-line interface for you.
     |""".stripMargin)
+@deprecated("Functionality level is deprecated, all functionality fields are now located on the top level of the config file.", "0.9.0", "0.10.0")
 case class Functionality(
   @description("Name of the component and the filename of the executable when built with `viash build`.")
   @example("name: this_is_my_component", "yaml")
@@ -78,36 +80,6 @@ case class Functionality(
   @since("Viash 0.3.1")
   @default("Empty")
   authors: List[Author] = Nil,
-  
-  @description(
-    """A list of @[arguments](argument) for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. See these reference pages per type for more information:  
-      |
-      | - @[string](arg_string)
-      | - @[file](arg_file)
-      | - @[integer](arg_integer)
-      | - @[double](arg_double)
-      | - @[boolean](arg_boolean)
-      | - @[boolean_true](arg_boolean_true)
-      | - @[boolean_false](arg_boolean_false)
-      |""".stripMargin)
-  @example(
-    """arguments:
-      |  - name: --foo
-      |    type: file
-      |    alternatives: [-f]
-      |    description: Description of foo
-      |    default: "/foo/bar"
-      |    must_exist: true
-      |    direction: output
-      |    required: false
-      |    multiple: true
-      |    multiple_sep: ","
-      |  - name: --bar
-      |    type: string
-      |""".stripMargin,
-      "yaml")
-  @default("Empty")
-  arguments: List[Argument[_]] = Nil,
 
   @description(
     """A grouping of the @[arguments](argument), used to display the help message.
@@ -227,7 +199,7 @@ case class Functionality(
     """@[Computational requirements](computational_requirements) related to running the component. 
       |`cpus` specifies the maximum number of (logical) cpus a component is allowed to use., whereas
       |`memory` specifies the maximum amount of memory a component is allowed to allicate. Memory units must be
-      |in B, KB, MB, GB, TB or PB.""".stripMargin)
+      |in B, KB, MB, GB, TB or PB for SI units (1000-base), or KiB, MiB, GiB, TiB or PiB for binary IEC units (1024-base).""".stripMargin)
   @example(
     """requirements:
       |  cpus: 5
@@ -279,108 +251,85 @@ case class Functionality(
       "yaml")
   @default("Empty")
   repositories: List[RepositoryWithName] = Nil,
-  // The variables below are for internal use and shouldn't be publicly documented
 
-  // setting this to true will change the working directory
-  // to the resources directory when running the script
-  // this is used when running `viash test`.
-  @internalFunctionality
-  set_wd_to_resources_dir: Boolean = false
-) {
+  @description("The keywords of the components.")
+  @example("keywords: [ bioinformatics, genomics ]", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  keywords: List[String] = Nil,
 
-  // Combine inputs, outputs and arguments into one combined list
-  def allArguments = arguments ::: argument_groups.flatMap(arg => arg.arguments)
+  @description("The license of the package.")
+  @example("license: MIT", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  license: Option[String] = None,
 
-  def allArgumentGroups: List[ArgumentGroup] = {
-    if (arguments.isEmpty) {
-      // if there are no arguments, just return the argument groups as is
-      argument_groups
-    } else if (argument_groups.exists(_.name == "Arguments")) {
-      // if there is already an argument group named 'Arguments', extend it with the arguments
-      argument_groups.map{
-        case gr if gr.name == "Arguments" =>
-          gr.copy(arguments = gr.arguments ::: arguments)
-        case gr => gr
-      }
-    } else {
-      // else create a new argument group
-      argument_groups ::: List(ArgumentGroup(
-        name = "Arguments",
-        arguments = arguments
-      ))
-    }
-  }
-    
-  // check whether there are not multiple positional arguments with multiplicity >1
-  // and if there is one, whether its position is last
-  {
-    val positionals = allArguments.filter(a => a.flags == "")
-    val multiix = positionals.indexWhere(_.multiple)
+  @description("The organization of the package.")
+  @example("organization: viash-io", "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  organization: Option[String] = None,
 
-    require(
-      multiix == -1 || multiix == positionals.length - 1,
-      message = s"positional argument ${positionals(multiix).name} should be last since it has multiplicity >1"
-    )
-  }
+  @description("References to external resources related to the component.")
+  @example(
+    """references:
+      |  doi: 10.1000/xx.123456.789
+      |  bibtex: |
+      |    @article{foo,
+      |      title={Foo},
+      |      author={Bar},
+      |      journal={Baz},
+      |      year={2024}
+      |    }
+      |""".stripMargin, "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  references: References = References(),
 
-  // check functionality name
-  require(name.matches("^[A-Za-z][A-Za-z0-9_]*$"), message = "functionality name must begin with a letter and consist only of alphanumeric characters or underscores.")
+  @description("External links of the component.")
+  @example(
+    """links:
+      |  repository: "https://github.com/viash-io/viash"
+      |  docker_registry: "https://ghcr.io"
+      |  homepage: "https://viash.io"
+      |  documentation: "https://viash.io/reference/"
+      |  issue_tracker: "https://github.com/viash-io/viash/issues"
+      |""".stripMargin, "yaml")
+  @default("Empty")
+  @since("Viash 0.9.0")
+  links: Links = Links(),
 
-  // check arguments
-  {
-    val allNames = allArguments.map(a => a.name) ::: allArguments.flatMap(a => a.alternatives)
-    val allNamesCounted = allNames.groupBy(identity).map(a => (a._1, a._2.length))
+  // Allow arguments to be listed here, as Functionality it is non-functional and the arguments are merged in argument_groups in pre-parsing.
+  // Previously listed as a private val in the Functionality class.
+  // Listing it here greatly simplifies the validation of Functionality and has no downsides.
+  @description(
+    """A list of @[arguments](argument) for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. See these reference pages per type for more information:  
+      |
+      | - @[string](arg_string)
+      | - @[file](arg_file)
+      | - @[integer](arg_integer)
+      | - @[double](arg_double)
+      | - @[boolean](arg_boolean)
+      | - @[boolean_true](arg_boolean_true)
+      | - @[boolean_false](arg_boolean_false)
+      |""".stripMargin)
+  @example(
+    """arguments:
+      |  - name: --foo
+      |    type: file
+      |    alternatives: [-f]
+      |    description: Description of foo
+      |    default: "/foo/bar"
+      |    must_exist: true
+      |    direction: output
+      |    required: false
+      |    multiple: true
+      |    multiple_sep: ";"
+      |  - name: --bar
+      |    type: string
+      |""".stripMargin,
+      "yaml")
+  @default("Empty")
+  arguments: List[Argument[_]] = Nil,
+)
 
-    allArguments.foreach { arg =>
-      require(arg.name.matches("^(-?|--|\\$)[A-Za-z][A-Za-z0-9_]*$"), message = s"argument $arg.name: name must begin with a letter and consist only of alphanumeric characters or underscores.")
-      (arg.name :: arg.alternatives).foreach { argName =>
-        require(!Functionality.reservedParameters.contains(argName), message = s"argument $argName: name is reserved by viash")
-        require(!argName.matches("^\\$VIASH_"), message = s"argument $argName: environment variables beginning with 'VIASH_' are reserved for viash.")
-        require(allNamesCounted(argName) == 1, message = s"argument $argName: name or alternative name is not unique.")
-      }
-    }
-  }
-
-  def getArgumentLikes(includeMeta: Boolean = false, includeDependencies: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): List[Argument[_]] = {
-    // start with arguments
-    val args0 = allArguments
-
-    // add meta if need be
-    val args1 = args0 ++ { if (includeMeta) BashWrapper.metaArgs else Nil }
-
-    // add dependencies if need be
-    val args2 = args1 ++ { if (includeDependencies) dependencies.map( d => StringArgument(d.scriptName, required = false, dest = "dep") ) else Nil }
-    
-    // filter input files if need be
-    val args3 = if (filterInputs) args2.filter{d => d.direction == Input || d.isInstanceOf[FileArgument]} else args2
-    
-    // filter output files if need be
-    val args4 = if (filterOutputs) args3.filter{d => d.direction == Output || d.isInstanceOf[FileArgument]} else args3
-
-    args4
-  }
-  def getArgumentLikesGroupedByDest(includeMeta: Boolean = false, includeDependencies: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): ListMap[String, List[Argument[_]]] = {
-    val x = getArgumentLikes(includeMeta, includeDependencies, filterInputs, filterOutputs).groupBy(_.dest)
-    val y = Seq("par", "meta", "dep").map(k => (k, x.getOrElse(k, Nil)))
-    ListMap(y: _*)
-  }
-
-  def mainScript: Option[Script] =
-    resources.headOption.flatMap {
-      case s: Script => Some(s)
-      case _ => None
-    }
-  def mainCode: Option[String] = mainScript.flatMap(_.read)
-  // provide function to use resources.tail but that allows resources to be an empty list
-  // If mainScript ends up being None because the first resource isn't a script, return the whole list
-  def additionalResources = resources match {
-    case head :: tail if head.isInstanceOf[Script] => tail
-    case list => list
-  }
-
-  def isEnabled: Boolean = status != Status.Disabled
-}
-
-object Functionality {
-  val reservedParameters = List("-h", "--help", "--version", "---v", "---verbose", "---verbosity")
-}

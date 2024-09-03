@@ -17,7 +17,7 @@
 
 package io.viash.wrapper
 
-import io.viash.functionality.arguments.Argument
+import io.viash.config.arguments.Argument
 
 case class BashWrapperMods(
   preParse: String = "",
@@ -26,7 +26,6 @@ case class BashWrapperMods(
   preRun: String = "",
   postRun: String = "",
   last: String = "",
-  inputs: List[Argument[_]] = Nil,
   extraParams: String = ""
 ) {
   def `++`(other: BashWrapperMods): BashWrapperMods = {
@@ -37,7 +36,6 @@ case class BashWrapperMods(
       preRun = BashWrapper.joinSections(List(preRun, other.preRun)),
       postRun = BashWrapper.joinSections(List(postRun, other.postRun)),
       last = BashWrapper.joinSections(List(last, other.last)),
-      inputs = inputs ::: other.inputs,
       extraParams = extraParams + other.extraParams
     )
   }

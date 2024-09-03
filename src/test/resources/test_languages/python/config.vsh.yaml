@@ -1,10 +1,9 @@
-functionality:
-  __merge__: [., ../common.yaml]
-  name: test_languages_python
-  resources:
-    - type: python_script
-      path: code.py
-platforms:
+__merge__: [., ../common.yaml, ../common-runners.yaml]
+name: test_languages_python
+resources:
+  - type: python_script
+    path: code.py
+engines:
   - type: native
   - type: docker
     image: python
@@ -15,4 +14,3 @@ platforms:
       - type: python
         packages:
           - "argparse<1.4"
-  - type: nextflow

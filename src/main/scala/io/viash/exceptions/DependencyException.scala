@@ -18,8 +18,8 @@
 package io.viash.exceptions
 
 import java.nio.file.Path
-import io.viash.functionality.dependencies.Dependency
-import io.viash.functionality.dependencies.Repository
+import io.viash.config.dependencies.Dependency
+import io.viash.config.dependencies.Repository
 
 abstract class AbstractDependencyException extends Exception
 

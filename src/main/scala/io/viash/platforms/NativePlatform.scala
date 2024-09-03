@@ -17,11 +17,6 @@
 
 package io.viash.platforms
 
-import io.viash.config.Config
-import io.viash.functionality.Functionality
-import io.viash.functionality.resources._
-import io.viash.platforms.requirements._
-import io.viash.wrapper.BashWrapper
 import io.viash.schemas._
 
 @description(
@@ -33,6 +28,7 @@ import io.viash.schemas._
     |  - type: native
     |""".stripMargin,
   "yaml")
+@deprecated("Use 'engines' and 'runners' instead.", "0.9.0", "0.10.0")
 @subclass("native")
 case class NativePlatform(
   @description("As with all platforms, you can give a platform a different name. By specifying `id: foo`, you can target this platform (only) by specifying `-p foo` in any of the Viash commands.")
@@ -40,27 +36,4 @@ case class NativePlatform(
   @default("native")
   id: String = "native",
   `type`: String = "native"
-) extends Platform {
-  def modifyFunctionality(config: Config, testing: Boolean): Functionality = {
-    val functionality = config.functionality
-    val executor = functionality.mainScript match {
-      case None => "eval"
-      case Some(_: Executable) => "eval"
-      case Some(_) => "bash"
-    }
-
-    // create new bash script
-    val bashScript = BashScript(
-      dest = Some(functionality.name),
-      text = Some(BashWrapper.wrapScript(
-        executor = executor,
-        functionality = functionality,
-        config = config
-      ))
-    )
-
-    functionality.copy(
-      resources = bashScript :: functionality.additionalResources
-    )
-  }
-}
+) extends Platform

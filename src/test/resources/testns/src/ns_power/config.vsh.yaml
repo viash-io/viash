@@ -1,25 +1,24 @@
-functionality:
-  name: ns_power
-  namespace: testns
-  version: 0.1
-  description: |
-    Create a sample component that does basic powers
-  status: deprecated
-  arguments:
-    - name: "--input1"
-      type: integer
-      description: Value of the first number
-      required: true
-    - name: "--input2"
-      type: integer
-      description: Value of the second number
-      required: true
-    - name: "--output"
-      type: file
-      description: Write the output to a text file.
-      direction: output
-  resources:
-    - type: python_script
-      path: code.py
-platforms:
+name: ns_power
+namespace: testns
+version: 0.1
+description: |
+  Create a sample component that does basic powers
+status: deprecated
+arguments:
+  - name: "--input1"
+    type: integer
+    description: Value of the first number
+    required: true
+  - name: "--input2"
+    type: integer
+    description: Value of the second number
+    required: true
+  - name: "--output"
+    type: file
+    description: Write the output to a text file.
+    direction: output
+resources:
+  - type: python_script
+    path: code.py
+engines:
   - type: native

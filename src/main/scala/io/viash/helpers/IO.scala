@@ -18,15 +18,14 @@
 package io.viash.helpers
 
 import java.io.{BufferedOutputStream, FileOutputStream, File, IOException}
-import java.nio.file.{FileVisitResult, Files, Path, Paths, SimpleFileVisitor}
+import java.nio.file.{FileVisitResult, Files, Path, Paths, SimpleFileVisitor, FileVisitOption}
 import java.nio.file.attribute.BasicFileAttributes
-import scala.reflect.io.Directory
 import java.net.URI
 import scala.io.{Codec, Source}
 import java.net.URL
 import sys.process._
 import java.nio.charset.StandardCharsets
-import io.viash.functionality.resources.Resource
+import io.viash.config.resources.Resource
 
 import java.nio.file.attribute.PosixFilePermission
 import java.util.Comparator
@@ -312,7 +311,7 @@ object IO extends Logging {
    * @return a list of paths that match the filter
    */
   def find(sourceDir: Path, filter: (Path, BasicFileAttributes) => Boolean): List[Path] = {
-    val it = Files.find(sourceDir, Integer.MAX_VALUE, (p, b) => filter(p, b)).iterator()
+    val it = Files.find(sourceDir, Integer.MAX_VALUE, (p, b) => filter(p, b), FileVisitOption.FOLLOW_LINKS).iterator()
     it.asScala.toList
   }
 
@@ -329,18 +328,43 @@ object IO extends Logging {
   }
 
   /**
-    * Resolve a project-relative path w.r.t. the project uri
+    * Resolve a package-relative path w.r.t. the package uri
     * 
     * @param path A string containing an absolute path
-    * @param projectURI The project URI to resolve to
+    * @param packageURI The package URI to resolve to
     * @return A modified path as a URI.
     */
-  def resolveProjectPath(path: String, projectURI: Option[URI]): URI = {
-    if (projectURI.isEmpty) {
-      throw new RuntimeException(s"One of the resources is relative to the project root ($path), but no project config file (_viash.yaml) could be found.")
+  def resolvePackagePath(path: String, packageURI: Option[URI]): URI = {
+    if (packageURI.isEmpty) {
+      throw new RuntimeException(s"One of the resources is relative to the package root ($path), but no package config file (_viash.yaml) could be found.")
     }
-    val uri = projectURI.get
+    val uri = packageURI.get
     val newPath = resolvePathWrtURI(path, uri)
     uri.resolve(newPath)
+  }
+
+  /**
+    * Relativize a path w.r.t. a base path
+    * 
+    * If the path is not relative to the base path, the path is returned unchanged
+    *
+    * @param basePath The base path of the package
+    * @param path The path to relativize
+    * @return A relativized path or the original path if it was not relative to the base path
+    */
+  def anonymizePath(basePath: Option[Path], path: String): String = {    
+    val pathPath = Paths.get(path)
+
+    if (pathPath.isAbsolute()) {
+      val relative = basePath.map(_.relativize(pathPath).toString())
+
+      relative match {
+        case Some(rel) if rel.startsWith("..") => Paths.get("[anonymized]", pathPath.toFile().getName()).toString()
+        case Some(rel) => rel
+        case None => Paths.get("[anonymized]", pathPath.toFile().getName()).toString()
+      }
+    } else {
+      path
+    }
   }
 }

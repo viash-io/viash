@@ -8,6 +8,7 @@ import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import io.viash.ConfigDeriver
+import io.viash.packageConfig.PackageConfig
 
 class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
@@ -16,8 +17,9 @@ class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAnd
 
 
   private val configFile = getClass.getResource("/testbash/auxiliary_resource/config_resource_test.vsh.yaml").getPath
-  private val functionality = Config.read(configFile).functionality
-  private val executable = Paths.get(tempFolStr, functionality.name).toFile
+  private val dummyPackage = Some(PackageConfig(rootDir = Some(Paths.get(configFile).getParent())))
+  private val config = Config.read(configFile, viashPackage = dummyPackage)
+  private val executable = Paths.get(tempFolStr, config.name).toFile
 
   private val temporaryConfigFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
   private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
@@ -37,8 +39,9 @@ class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAnd
 
     // generate viash script
     TestHelper.testMain(
+      workingDir = Some(temporaryConfigFolder),
       "build",
-      "-p", "docker",
+      "--engine", "docker",
       "-o", tempFolStr,
       configFile
     )
@@ -60,6 +63,7 @@ class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAnd
       ("target_folder/relocated_file_2.txt", "51954bf10062451e683121e58d858417"),
       ("target_folder/relocated_file_3.txt", ".*"), // turn off checksum match
       ("resource3.txt", "aa2037b3d308bcb6a78a3d4fbf04b297"),
+      ("resource4.txt", "21cd10137f841da59921aa35de998942"),
       ("target_folder/relocated_file_4.txt", "aa2037b3d308bcb6a78a3d4fbf04b297")
     )
 
@@ -72,19 +76,36 @@ class MainBuildAuxiliaryDockerResourceCopying extends AnyFunSuite with BeforeAnd
       val hash = TestHelper.computeHash(resourceFile.getPath)
       assert(md5sum.r.findFirstMatchIn(hash).isDefined, s"Calculated md5sum doesn't match the given md5sum for $resourceFile")
     }
+
+    // Check the resources listed in the built .config.vsh.yaml file
+    // Checked values are relativized paths to the output folder
+    val builtConfigUri = temporaryFolder.resolve(".config.vsh.yaml")
+    val builtConfig = Config.read(builtConfigUri.toString)
+    val resourcePaths = builtConfig.resources.map(
+      resource => {
+        assert(resource.path.isDefined, s"Resource path is not defined for $resource")
+        resource.path.get
+      }
+    )
+
+    for ((name, _) <- expectedResources) {
+      // skip tests for resources in 'resource_folder' as it's copied as folder and thus the files won't be listed in the built config
+      if (!name.contains("resource_folder/"))
+        assert(resourcePaths.contains(name), s"Could not find $name in the built config")
+    }
   }
 
   test("Check resources with unsupported format") {
-    val configResourcesUnsupportedProtocolFile = configDeriver.derive(""".functionality.resources := [{type: "bash_script", path: "./check_bash_version.sh"}, {path: "ftp://ftp.ubuntu.com/releases/robots.txt"}]""", "config_resource_unsupported_protocol").toString
+    val configResourcesUnsupportedProtocolFile = configDeriver.derive(""".resources := [{type: "bash_script", path: "./check_bash_version.sh"}, {path: "ftp://ftp.ubuntu.com/releases/robots.txt"}]""", "config_resource_unsupported_protocol").toString
     // generate viash script
-    val testOutput = TestHelper.testMainException2[RuntimeException](
+    val testOutput = TestHelper.testMainException[RuntimeException](
       "build",
-      "-p", "docker",
+      "--engine", "docker",
       "-o", tempFolStr,
       configResourcesUnsupportedProtocolFile
     )
 
-    assert(testOutput.exceptionText == "Unsupported scheme: ftp")
+    assert(testOutput.exceptionText.get == "Unsupported scheme: ftp")
   }
 
   override def afterAll(): Unit = {

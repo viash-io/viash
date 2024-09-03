@@ -17,31 +17,31 @@
 
 package io.viash.helpers
 
-import io.viash.functionality.Functionality
-import io.viash.functionality.arguments._
+import io.viash.config.Config
 import io.viash.Main
-import io.viash.functionality.ArgumentGroup
+import io.viash.config.ArgumentGroup
+import io.viash.config.arguments.{Argument, StringArgument, Output, IntegerArgument, LongArgument, DoubleArgument, FileArgument}
 
 object Helper {
   private val maxWidth: Int = 80
 
-  def nameAndVersion(functionality: Functionality): String = {
-    functionality.name + functionality.version.map(" " + _).getOrElse("")
+  def nameAndVersion(config: Config): String = {
+    config.name + config.version.map(" " + _).getOrElse("")
   }
 
   // NOTE! changes to this function should also be ported to WorkflowHelper.nf::generateHelp
-  def generateHelp(functionality: Functionality): List[String] = {
+  def generateHelp(config: Config): List[String] = {
     // PART 1: NAME AND VERSION
-    def nameStr = nameAndVersion(functionality)
+    def nameStr = nameAndVersion(config)
 
     // PART 2: DESCRIPTION
-    val descrStr = functionality.description.map(des => "\n\n" + Format.paragraphWrap(des.trim, maxWidth).mkString("\n")).getOrElse("")
+    val descrStr = config.description.map(des => "\n\n" + Format.paragraphWrap(des.trim, maxWidth).mkString("\n")).getOrElse("")
 
     // PART 3: Usage
-    val usageStr = functionality.usage.map("\n\nUsage:\n" + _.trim).getOrElse("")
+    val usageStr = config.usage.map("\n\nUsage:\n" + _.trim).getOrElse("")
 
     // PART 4: Options
-    val argGroupStrs = functionality.allArgumentGroups.map{argGroup =>
+    val argGroupStrs = config.argument_groups.map{argGroup =>
       val name = argGroup.name
       val descriptionStr = argGroup.description.map{
         des => "\n    " + Format.paragraphWrap(des.trim, maxWidth-4).mkString("\n    ") + "\n"
@@ -148,15 +148,15 @@ object Helper {
       descStr
   }
 
-  def generateScriptHeader(functionality: Functionality): List[String] = {
+  def generateScriptHeader(config: Config): List[String] = {
         // generate header
-    val nav = Helper.nameAndVersion(functionality)
+    val nav = Helper.nameAndVersion(config)
 
     val authorHeader =
-      if (functionality.authors.isEmpty) {
+      if (config.authors.isEmpty) {
         ""
       } else {
-        functionality.authors.map(_.toString).mkString("\n\nComponent authors:\n * ", "\n * ", "")
+        config.authors.map(_.toString).mkString("\n\nComponent authors:\n * ", "\n * ", "")
       }
 
     val out =

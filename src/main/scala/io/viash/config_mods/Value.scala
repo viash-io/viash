@@ -18,6 +18,7 @@
 package io.viash.config_mods
 
 import io.circe.{ACursor, Json}
+import io.viash.exceptions.ConfigModException
 
 // define values
 
@@ -36,7 +37,13 @@ case class JsonValue(value: Json) extends Value {
 // define paths
 case class Path(path: List[PathExp]) extends Value {
   def applyCommand(json: Json, cmd: ACursor => ACursor, rewriteHistory: Boolean): Json = {
-    applyCommand(json.hcursor, cmd, rewriteHistory).top.get
+    val resultCursor = applyCommand(json.hcursor, cmd, rewriteHistory)
+    // Prevent calling .top.get directly on None values as it throws exceptions that are very uninformative
+    // Could also use resultCursor.failed?
+    if (resultCursor.top.isEmpty) {
+      throw new ConfigModException(resultCursor)
+    }
+    resultCursor.top.get
   }
   def applyCommand(cursor: ACursor, cmd: ACursor => ACursor, rewriteHistory: Boolean): ACursor = {
     path match {

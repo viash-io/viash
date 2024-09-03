@@ -28,45 +28,59 @@ import io.viash.schemas.ParameterSchema
 import io.circe.ACursor
 
 import io.viash.helpers.Logging
+import io.viash.schemas.CollectedSchemas
 
 object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
 
-  private def memberDeprecationCheck(name: String, history: List[CursorOp], T: Type): Unit = {
-    val m = T.member(TermName(name))
-    val schema = ParameterSchema(name, "", List.empty, m.annotations)
-    val deprecated = schema.flatMap(_.deprecated)
-    val removed = schema.flatMap(_.removed)
-    if (deprecated.isDefined) {
-      val d = deprecated.get
-      val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
-      info(s"Warning: .$historyString.$name is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+  private def memberDeprecationCheck(name: String, history: List[CursorOp], parameters: List[ParameterSchema]): Unit = {
+    val schema = parameters.find(p => p.name == name).getOrElse(ParameterSchema("", "", "", None, None, None, None, None, None, None, None, false, false))
+
+    lazy val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
+
+    lazy val fullHistoryName = 
+      if (historyString.isEmpty) {
+        s".$name"
+      } else {
+        s".$historyString.$name"
+      }
+
+    schema.deprecated match {
+      case Some(d) =>
+        info(s"Warning: $fullHistoryName is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+      case _ =>
     }
-    if (removed.isDefined) {
-      val r = removed.get
-      val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
-      info(s"Error: .$historyString.$name was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
+    schema.removed match {
+      case Some(r) => 
+        info(s"Error: $fullHistoryName was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
+      case _ =>
+    }
+    if (schema.hasInternalFunctionality) {
+      error(s"Error: $fullHistoryName is internal functionality.")
+      throw new RuntimeException(s"Internal functionality used: $fullHistoryName")
     }
   }
 
-  private def selfDeprecationCheck(T: Type): Unit = {
-    val baseClass = T.baseClasses.head
-    val name = baseClass.fullName.split('.').last
-    val schema = ParameterSchema("", "", List.empty, baseClass.annotations)
-    val deprecated = schema.flatMap(_.deprecated)
-    val removed = schema.flatMap(_.removed)
-    if (deprecated.isDefined) {
-      val d = deprecated.get
-      info(s"Warning: $name is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+  private def selfDeprecationCheck(parameters: List[ParameterSchema]): Unit = {
+    val schema = parameters.find(p => p.name == "__this__").get
+
+    schema.deprecated match {
+      case Some(d) =>
+        info(s"Warning: ${schema.`type`} is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+      case _ =>
     }
-    if (removed.isDefined) {
-      val r = removed.get
-      info(s"Error: $name was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
+    schema.removed match {
+      case Some(r) =>
+        info(s"Error: ${schema.`type`} was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
+      case _ =>
     }
   }
 
   // 
   def checkDeprecation[A](cursor: ACursor)(implicit tag: TypeTag[A]) : ACursor = {
-    selfDeprecationCheck(typeOf[A])
+    val parameters = CollectedSchemas.getParameters[A]()
+
+    selfDeprecationCheck(parameters)
+
     // check each defined 'key' value
     for (key <- cursor.keys.getOrElse(Nil)) {
       val isEmpty = 
@@ -77,7 +91,7 @@ object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
           case _ => false
         }
       if (!isEmpty) {
-        memberDeprecationCheck(key, cursor.history, typeOf[A])
+        memberDeprecationCheck(key, cursor.history, parameters)
       }
     }
     cursor // return unchanged json info
