@@ -109,7 +109,7 @@ final case class DockerEngine(
       | - @[yum](yum_req)
       |
       |The order in which these dependencies are specified determines the order in which they will be installed.
-      |""".stripMargin)
+      |"""/*.stripMargin*/)
   @default("Empty")
   setup: List[Requirements] = Nil,
 

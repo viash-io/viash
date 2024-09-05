@@ -76,7 +76,7 @@ case class Dependency(
       |This must either be a full definition of the repository or the name of a repository referenced as it is defined under repositories.
       |Additionally, the full definition can be specified as a single string where all parameters such as repository type, url, branch or tag are specified.
       |Omitting the value sets the dependency as a local dependency, ie. the dependency is available in the same namespace as the component.
-      |""".stripMargin)
+      |"""/*.stripMargin*/)
   @default("Empty")
   repository: Either[String, Repository] = Right(LocalRepository()),
 

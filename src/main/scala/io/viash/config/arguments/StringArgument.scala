@@ -39,7 +39,7 @@ case class StringArgument(
       |  - `--foo` is a long option, which can be passed with `executable_name --foo=value` or `executable_name --foo value`
       |  - `-f` is a short option, which can be passed with `executable_name -f value`
       |  - `foo` is an argument, which can be passed with `executable_name value`  
-      |""".stripMargin)
+      |"""/*.stripMargin*/)
   name: String,
 
   @description("List of alternative format variations for this argument.")
@@ -62,7 +62,7 @@ case class StringArgument(
   @example(
     """description: |
       |  A (multiline) description of the purpose of
-      |  this argument.""".stripMargin, "yaml")
+      |  this argument."""/*.stripMargin*/, "yaml")
   @default("Empty")
   description: Option[String] = None,
 
@@ -70,7 +70,7 @@ case class StringArgument(
   @example(
     """info:
       |  category: cat1
-      |  labels: [one, two, three]""".stripMargin, "yaml")
+      |  labels: [one, two, three]"""/*.stripMargin*/, "yaml")
   @since("Viash 0.6.3")
   @default("Empty")
   info: Json = Json.Null,
@@ -80,7 +80,7 @@ case class StringArgument(
     """- name: --my_string
       |  type: string
       |  example: "Hello World"
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @default("Empty")
   example: OneOrMore[String] = Nil,
@@ -90,7 +90,7 @@ case class StringArgument(
     """- name: --my_string
       |  type: string
       |  default: "The answer is 42"
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @default("Empty")
   default: OneOrMore[String] = Nil,
@@ -100,7 +100,7 @@ case class StringArgument(
     """- name: --my_string
       |  type: string
       |  required: true
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @default("Empty")
   required: Boolean = false,
@@ -110,7 +110,7 @@ case class StringArgument(
     """- name: --language
       |  type: string
       |  choices: ["python", "r", "javascript"]
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @default("Empty")
   choices: List[String] = Nil,
@@ -123,7 +123,7 @@ case class StringArgument(
     """- name: --my_string
       |  type: string
       |  multiple: true
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @exampleWithDescription("my_component --my_string=Marc:Susan:Paul", "bash", "Here's an example of how to use this:")
   @default("False")
@@ -135,7 +135,7 @@ case class StringArgument(
       |  type: string
       |  multiple: true
       |  multiple_sep: ";"
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @exampleWithDescription("my_component --my_string=Marc,Susan,Paul", "bash", "Here's an example of how to use this:")
   @default(";")

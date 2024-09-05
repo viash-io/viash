@@ -43,7 +43,7 @@ case class BooleanArgument(
       |  - `--trim` is a long option, which can be passed with `executable_name --trim`
       |  - `-t` is a short option, which can be passed with `executable_name -t`
       |  - `trim` is an argument, which can be passed with `executable_name trim`  
-      |""".stripMargin)
+      |"""/*.stripMargin*/)
   name: String,
 
   @description("List of alternative format variations for this argument.")
@@ -66,7 +66,7 @@ case class BooleanArgument(
   @example(
     """description: |
       |  A (multiline) description of the purpose of
-      |  this argument.""".stripMargin, "yaml")
+      |  this argument."""/*.stripMargin*/, "yaml")
   @default("Empty")
   description: Option[String] = None,
 
@@ -74,7 +74,7 @@ case class BooleanArgument(
   @example(
     """info:
       |  category: cat1
-      |  labels: [one, two, three]""".stripMargin, "yaml")
+      |  labels: [one, two, three]"""/*.stripMargin*/, "yaml")
   @since("Viash 0.6.3")
   @default("Empty")
   info: Json = Json.Null,
@@ -84,7 +84,7 @@ case class BooleanArgument(
     """- name: --my_boolean
       |  type: boolean
       |  example: true
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @default("Empty")
   example: OneOrMore[Boolean] = Nil,
@@ -94,7 +94,7 @@ case class BooleanArgument(
     """- name: --my_boolean
       |  type: boolean
       |  default: true
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @default("Empty")
   default: OneOrMore[Boolean] = Nil,
@@ -104,7 +104,7 @@ case class BooleanArgument(
     """- name: --my_boolean
       |  type: boolean
       |  required: true
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @default("False")
   required: Boolean = false,
@@ -117,7 +117,7 @@ case class BooleanArgument(
     """- name: --my_boolean
       |  type: boolean
       |  multiple: true
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @exampleWithDescription("my_component --my_boolean=true:true:false", "bash", "Here's an example of how to use this:")
   @default("False")
@@ -129,7 +129,7 @@ case class BooleanArgument(
       |  type: boolean
       |  multiple: true
       |  multiple_sep: ";"
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @exampleWithDescription("my_component --my_boolean=true,true,false", "bash", "Here's an example of how to use this:")
   @default(";")
@@ -179,7 +179,7 @@ case class BooleanTrueArgument(
       |  - `--silent` is a long option, which can be passed with `executable_name --silent`
       |  - `-s` is a short option, which can be passed with `executable_name -s`
       |  - `silent` is an argument, which can be passed with `executable_name silent`  
-      |""".stripMargin)
+      |"""/*.stripMargin*/)
   name: String,
 
   @description("List of alternative format variations for this argument.")
@@ -202,7 +202,7 @@ case class BooleanTrueArgument(
   @example(
     """description: |
       |  A (multiline) description of the purpose of
-      |  this argument.""".stripMargin, "yaml")
+      |  this argument."""/*.stripMargin*/, "yaml")
   @default("Empty")
   description: Option[String] = None,
 
@@ -210,7 +210,7 @@ case class BooleanTrueArgument(
   @example(
     """info:
       |  category: cat1
-      |  labels: [one, two, three]""".stripMargin, "yaml")
+      |  labels: [one, two, three]"""/*.stripMargin*/, "yaml")
   @since("Viash 0.6.3")
   @default("Empty")
   info: Json = Json.Null,
@@ -271,7 +271,7 @@ case class BooleanFalseArgument(
       |  - `--no-log` is a long option, which can be passed with `executable_name --no-log`
       |  - `-n` is a short option, which can be passed with `executable_name -n`
       |  - `no-log` is an argument, which can be passed with `executable_name no-log`  
-      |""".stripMargin)
+      |"""/*.stripMargin*/)
   name: String,
 
   @description("List of alternative format variations for this argument.")
@@ -294,7 +294,7 @@ case class BooleanFalseArgument(
   @example(
     """description: |
       |  A (multiline) description of the purpose of
-      |  this argument.""".stripMargin, "yaml")
+      |  this argument."""/*.stripMargin*/, "yaml")
   @default("Empty")
   description: Option[String] = None,
 
@@ -302,7 +302,7 @@ case class BooleanFalseArgument(
   @example(
     """info:
       |  category: cat1
-      |  labels: [one, two, three]""".stripMargin, "yaml")
+      |  labels: [one, two, three]"""/*.stripMargin*/, "yaml")
   @since("Viash 0.6.3")
   @default("Empty")
   info: Json = Json.Null,

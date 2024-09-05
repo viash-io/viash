@@ -48,7 +48,7 @@ case class References(
       |    journal={Baz},
       |    year={2024}
       |  }
-      |""".stripMargin, "yaml")
+      |"""/*.stripMargin*/, "yaml")
   @default("Empty")
   bibtex: OneOrMore[String] = Nil,
 )
