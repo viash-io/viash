@@ -18,7 +18,6 @@
 package io.viash.runners
 
 import io.circe.{Decoder, Encoder, Json}
-import io.circe.derivation.ConfiguredDecoder
 
 package object nextflow {
   import io.viash.helpers.circe._

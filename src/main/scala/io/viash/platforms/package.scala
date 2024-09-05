@@ -23,32 +23,32 @@ import cats.syntax.functor._ // for .widen
 package object platforms {
   import io.viash.helpers.circe._
 
-  import io.viash.runners.nextflow.{decodeNextflowDirectives, encodeNextflowDirectives}
-  import io.viash.engines.docker.{decodeResolveVolume, encodeResolveVolume}
-  import io.viash.runners.executable.{decodeSetupStrategy, encodeSetupStrategy}
-  import io.viash.engines.requirements.{decodeRequirements, encodeRequirements}
-  import io.viash.runners.nextflow.{decodeNextflowAuto, encodeNextflowAuto}
-  import io.viash.runners.nextflow.{decodeNextflowConfig, encodeNextflowConfig}
+  import io.viash.runners.nextflow.decodeNextflowDirectives
+  import io.viash.engines.docker.decodeResolveVolume
+  import io.viash.runners.executable.decodeSetupStrategy
+  import io.viash.engines.requirements.decodeRequirements
+  import io.viash.runners.nextflow.decodeNextflowAuto
+  import io.viash.runners.nextflow.decodeNextflowConfig
 
-  implicit val encodeDockerPlatform: Encoder.AsObject[DockerPlatform] = deriveConfiguredEncoder
+  // implicit val encodeDockerPlatform: Encoder.AsObject[DockerPlatform] = deriveConfiguredEncoder
   implicit val decodeDockerPlatform: Decoder[DockerPlatform] = deriveConfiguredDecoderFullChecks
 
-  implicit val encodeNextflowPlatform: Encoder.AsObject[NextflowPlatform] = deriveConfiguredEncoder
+  // implicit val encodeNextflowPlatform: Encoder.AsObject[NextflowPlatform] = deriveConfiguredEncoder
   implicit val decodeNextflowPlatform: Decoder[NextflowPlatform] = deriveConfiguredDecoderFullChecks
 
-  implicit val encodeNativePlatform: Encoder.AsObject[NativePlatform] = deriveConfiguredEncoder
+  // implicit val encodeNativePlatform: Encoder.AsObject[NativePlatform] = deriveConfiguredEncoder
   implicit val decodeNativePlatform: Decoder[NativePlatform] = deriveConfiguredDecoderFullChecks
 
-  implicit def encodePlatform[A <: Platform]: Encoder[A] = Encoder.instance {
-    platform =>
-      val typeJson = Json.obj("type" -> Json.fromString(platform.`type`))
-      val objJson = platform match {
-        case s: DockerPlatform => encodeDockerPlatform(s)
-        case s: NextflowPlatform => encodeNextflowPlatform(s)
-        case s: NativePlatform => encodeNativePlatform(s)
-      }
-      objJson deepMerge typeJson
-  }
+  // implicit def encodePlatform[A <: Platform]: Encoder[A] = Encoder.instance {
+  //   platform =>
+  //     val typeJson = Json.obj("type" -> Json.fromString(platform.`type`))
+  //     val objJson = platform match {
+  //       case s: DockerPlatform => encodeDockerPlatform(s)
+  //       case s: NextflowPlatform => encodeNextflowPlatform(s)
+  //       case s: NativePlatform => encodeNativePlatform(s)
+  //     }
+  //     objJson deepMerge typeJson
+  // }
 
   implicit def decodePlatform: Decoder[Platform] = Decoder.instance {
     cursor =>

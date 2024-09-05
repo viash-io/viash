@@ -83,7 +83,6 @@ package object arguments {
         case s: FileArgument => encodeFileArgument(s)
       }
       objJson deepMerge typeJson
-      typeJson
   }
 
   implicit val decodeStringArgument: Decoder[StringArgument] = deriveConfiguredDecoderFullChecks
