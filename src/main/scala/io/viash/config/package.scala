@@ -44,8 +44,7 @@ package object config {
 
   // encoders and decoders for Config
   implicit val encodeConfig: Encoder.AsObject[Config] = deriveConfiguredEncoderStrict[Config]
-  implicit val decodeConfig: Decoder[Config] = deriveConfiguredDecoderWithValidationCheck[Config]
-  .prepare{
+  implicit val decodeConfig: Decoder[Config] = deriveConfiguredDecoderWithValidationCheck[Config].prepare{
     checkDeprecation[Config](_)
     // map platforms to runners and engines
     .withFocus{
@@ -288,11 +287,9 @@ package object config {
 
   // encoder and decoder for Status, make string lowercase before decoding
   implicit val encodeStatus: Encoder[Status] = deriveConfiguredEncoder
-  implicit val decodeStatus: Decoder[Status] = deriveConfiguredDecoderFullChecks
-  // implicit val encodeStatus: Encoder[Status] = Encoder.encodeEnumeration(Status)
-  // implicit val decodeStatus: Decoder[Status] = Decoder.decodeEnumeration(Status).prepare {
-  //   _.withFocus(_.mapString(_.toLowerCase()))
-  // }
+  implicit val decodeStatus: Decoder[Status] = deriveConfiguredDecoderFullChecks[Status].prepare {
+    _.withFocus(_.mapString(_.toLowerCase()))
+  }
 
   implicit val encodeLinks: Encoder.AsObject[Links] = deriveConfiguredEncoderStrict
   implicit val decodeLinks: Decoder[Links] = deriveConfiguredDecoderFullChecks

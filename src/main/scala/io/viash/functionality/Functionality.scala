@@ -19,7 +19,6 @@ package io.viash.functionality
 
 
 import io.circe.Json
-// import io.circe.generic.extras._
 import io.viash.config.arguments._
 import io.viash.config.resources._
 import io.viash.config.Status._

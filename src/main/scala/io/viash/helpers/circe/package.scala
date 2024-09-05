@@ -34,7 +34,7 @@ package object circe {
   inline def deriveConfiguredEncoder[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = ConfiguredEncoder.derived[A]
   inline def deriveConfiguredEncoderStrict[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = DeriveConfiguredEncoderStrict.deriveConfiguredEncoderStrict
 
-  // // encoder and decoder for Either
+  // encoder and decoder for Either
   implicit def encodeEither[A,B](implicit ea: Encoder[A], eb: Encoder[B]): Encoder[Either[A,B]] = {
     _.fold(ea(_), eb(_))
   }

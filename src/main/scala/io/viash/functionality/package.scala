@@ -17,7 +17,6 @@
 
 package io.viash
 
-// import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.ACursor
 
