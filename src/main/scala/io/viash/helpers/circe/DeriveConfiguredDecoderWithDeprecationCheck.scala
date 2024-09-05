@@ -95,6 +95,10 @@ object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
   //   cursor // return unchanged json info
   // }
 
+  def checkDeprecation[A](cursor: ACursor): ACursor = {
+    cursor
+  }
+
   // // Use prepare to get raw json data to inspect used fields in the json but we're not performing any changes here
   // def deriveConfiguredDecoderWithDeprecationCheck[A](implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Decoder[A] = deriveConfiguredDecoder[A]
   //   .prepare( checkDeprecation[A] )

@@ -23,8 +23,6 @@ import cats.syntax.functor._ // for .widen
 
 package object requirements {
   import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
-  import io.viash.helpers.circe.DeriveConfiguredEncoder._
 
   implicit val encodeRRequirements: Encoder.AsObject[RRequirements] = deriveConfiguredEncoder
   implicit val decodeRRequirements: Decoder[RRequirements] = deriveConfiguredDecoderFullChecks

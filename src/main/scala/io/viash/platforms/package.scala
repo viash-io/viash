@@ -18,14 +18,10 @@
 package io.viash
 
 import io.circe.{Decoder, Encoder, Json}
-// import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
-import io.circe.generic.semiauto.deriveDecoder as deriveConfiguredDecoder
 import cats.syntax.functor._ // for .widen
 
 package object platforms {
   import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
-  import io.viash.helpers.circe.DeriveConfiguredEncoder._
 
   import io.viash.runners.nextflow.{decodeNextflowDirectives, encodeNextflowDirectives}
   import io.viash.engines.docker.{decodeResolveVolume, encodeResolveVolume}

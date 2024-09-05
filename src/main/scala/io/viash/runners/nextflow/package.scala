@@ -22,8 +22,6 @@ import io.circe.derivation.ConfiguredDecoder
 
 package object nextflow {
   import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredEncoder._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
 
   implicit val encodeNextflowDirectives: Encoder.AsObject[NextflowDirectives] = deriveConfiguredEncoder
   implicit val decodeNextflowDirectives: Decoder[NextflowDirectives] = deriveConfiguredDecoderFullChecks

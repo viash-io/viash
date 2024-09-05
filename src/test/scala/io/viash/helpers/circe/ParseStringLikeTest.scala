@@ -4,8 +4,6 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 import io.circe._
 import io.circe.yaml.parser
-import io.viash.helpers.circe.DeriveConfiguredDecoder._
-import io.viash.helpers.circe.DeriveConfiguredEncoder._
 import io.viash.helpers.Logger
 
 class ParseStringLikeTest extends AnyFunSuite with BeforeAndAfterAll {

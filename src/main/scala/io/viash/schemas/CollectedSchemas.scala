@@ -20,8 +20,6 @@ package io.viash.schemas
 // import scala.reflect.runtime.universe._
 import io.circe.{Encoder, Printer => JsonPrinter}
 import io.circe.syntax.EncoderOps
-// import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
-import io.circe.generic.semiauto.{deriveEncoder as deriveConfiguredEncoder}
 
 import io.viash.functionality._
 import io.viash.runners._
@@ -77,7 +75,6 @@ object CollectedSchemas {
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
 
   import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
 
   private implicit val encodeConfigSchema: Encoder.AsObject[CollectedSchemas] = deriveConfiguredEncoder
   private implicit val encodeParameterSchema: Encoder.AsObject[ParameterSchema] = deriveConfiguredEncoderStrict

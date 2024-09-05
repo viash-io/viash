@@ -18,14 +18,11 @@
 package io.viash
 
 import io.circe.{Decoder, Encoder, Json}
-// import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import cats.syntax.functor._
 // for .widen
 
 package object engines {
   import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
-  import io.viash.helpers.circe.DeriveConfiguredEncoder._
 
   import io.viash.engines.requirements.{decodeRequirements, encodeRequirements}
 

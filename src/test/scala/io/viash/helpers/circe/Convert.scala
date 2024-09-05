@@ -5,14 +5,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import io.circe._
 import io.viash.exceptions.{ConfigYamlException, ConfigParserException}
 
-// import shapeless.Lazy
-// import scala.reflect.runtime.universe._
-
 import io.circe.Decoder
-// import io.circe.generic.extras.decoding.ConfiguredDecoder
-// import io.circe.generic.extras.semiauto.deriveConfiguredDecoder
-import io.viash.helpers.circe.DeriveConfiguredDecoder._
-import io.viash.helpers.circe.DeriveConfiguredEncoder._
 import io.viash.helpers.Logger
 
 class ConvertTest extends AnyFunSuite with BeforeAndAfterAll {

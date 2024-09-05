@@ -21,8 +21,7 @@ import io.circe.{Decoder, Encoder}
 
 package object packageConfig {
   import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
-  import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
+
   import io.viash.config.{decodeAuthor, encodeAuthor}
   import io.viash.config.{decodeLinks, encodeLinks}
   import io.viash.config.{decodeReferences, encodeReferences}

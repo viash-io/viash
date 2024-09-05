@@ -18,14 +18,12 @@
 package io.viash.config
 
 import io.circe.{Decoder, Encoder, Json}
-import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
 import cats.syntax.functor._
 import dependencies.GithubRepository
 
 package object dependencies {
 
   import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
 
   // encoders and decoders for Argument
   implicit val encodeEitherStringRepository: Encoder[Either[String, Repository]] = deriveConfiguredEncoderStrict
