@@ -100,7 +100,6 @@ object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
   }
 
   // // Use prepare to get raw json data to inspect used fields in the json but we're not performing any changes here
-  // def deriveConfiguredDecoderWithDeprecationCheck[A](implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Decoder[A] = deriveConfiguredDecoder[A]
+  inline def deriveConfiguredDecoderWithDeprecationCheck[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = deriveConfiguredDecoder[A]
   //   .prepare( checkDeprecation[A] )
-  inline def deriveConfiguredDecoderWithDeprecationCheck[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = ConfiguredDecoder.derived[A]
 }

@@ -61,7 +61,7 @@ object DeriveConfiguredDecoderWithValidationCheck {
   // }
 
   // Attempts to convert the json to the desired class. Throw an exception if the conversion fails.
-  // def deriveConfiguredDecoderWithValidationCheck[A](implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Decoder[A] = deriveConfiguredDecoder[A]
+  inline def deriveConfiguredDecoderWithValidationCheck[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = deriveConfiguredDecoder[A]
   //   .validate(
   //     validator[A],
   //     s"Could not convert json to ${typeOf[A].baseClasses.head.fullName}."
@@ -77,7 +77,6 @@ object DeriveConfiguredDecoderWithValidationCheck {
   //     },
   //     s"Type '$tpe 'is not recognised. Valid types are ${validTypes.mkString("'", "', '", ",")}."
   //   )
-  inline def deriveConfiguredDecoderWithValidationCheck[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = ConfiguredDecoder.derived[A]
   def invalidSubTypeDecoder[A](tpe: String, validTypes: List[String]): Decoder[A] = Decoder.instance { cursor =>
     throw new ConfigParserSubTypeException(tpe, validTypes, cursor.value.toString())
   }

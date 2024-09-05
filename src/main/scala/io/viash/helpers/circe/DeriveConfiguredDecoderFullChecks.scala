@@ -28,12 +28,10 @@ object DeriveConfiguredDecoderFullChecks {
   // import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
   // import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
 
-  // def deriveConfiguredDecoderFullChecks[A](implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Decoder[A] = deriveConfiguredDecoder[A]
+  inline def deriveConfiguredDecoderFullChecks[A](using inline A: Mirror.Of[A], inline configuration: Configuration): Decoder[A] = deriveConfiguredDecoder[A]
   //   .validate(
   //     validator[A],
   //     s"Could not convert json to ${typeOf[A].baseClasses.head.fullName}."
   //   )
   //   .prepare( DeriveConfiguredDecoderWithDeprecationCheck.checkDeprecation[A] )
-
-  inline def deriveConfiguredDecoderFullChecks[A](using inline A: Mirror.Of[A], inline configuration: Configuration): Decoder[A] = Decoder.derivedConfigured[A]
 }

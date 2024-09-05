@@ -30,7 +30,7 @@ import io.viash.schemas.CollectedSchemas
 
 object DeriveConfiguredEncoderStrict {
 
-  // final def deriveConfiguredEncoderStrict[T](implicit encode: Lazy[ConfiguredAsObjectEncoder[T]], tag: TypeTag[T]) = deriveConfiguredEncoder[T]
+  inline def deriveConfiguredEncoderStrict[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = deriveConfiguredEncoder[A]
   //   .mapJsonObject{ jsonObject =>
   //     val parameters = CollectedSchemas.getParameters[T]()
   //     jsonObject.filterKeys( k => 
@@ -40,6 +40,4 @@ object DeriveConfiguredEncoderStrict {
   //         .getOrElse(true) // fallback, shouldn't really happen
   //     )
   //   }
-
-  inline def deriveConfiguredEncoderStrict[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = ConfiguredEncoder.derived[A]
 }
