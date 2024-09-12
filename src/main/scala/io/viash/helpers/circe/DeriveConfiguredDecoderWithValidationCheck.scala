@@ -31,9 +31,15 @@ object DeriveConfiguredDecoderWithValidationCheck {
 
   // Validate the json can correctly converted to the required type by actually converting it.
   // Throw an exception when the conversion fails.
-  inline def validator[A](pred: HCursor)(using inline A: Mirror.Of[A]): Boolean = {
+  inline def validator[A](pred: HCursor)(using inline A: Mirror.Of[A], inline configuration: Configuration): Boolean = {     
     val d = deriveConfiguredDecoder[A]
-    val v = d(pred)
+    // val v = d(pred)
+    // TODO not entirely sure why this is needed instead of just doing `val v = d(pred)`
+    // goes wrong when decoding empty PackageConfig
+    val v = pred match {
+      case pred if pred.value.isNull => Right(null.asInstanceOf[A])
+      case _ => d(pred)
+    }
 
     v.fold(error => {
       val usedFields = pred.value.asObject.map(_.keys.toSeq)
