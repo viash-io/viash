@@ -26,6 +26,7 @@ import io.circe.ACursor
 import io.viash.exceptions.ConfigParserSubTypeException
 import io.viash.exceptions.ConfigParserValidationException
 import io.circe.HCursor
+import io.viash.helpers.{niceNameOf, fieldsOf}
 
 object DeriveConfiguredDecoderWithValidationCheck {
 
@@ -43,7 +44,7 @@ object DeriveConfiguredDecoderWithValidationCheck {
 
     v.fold(error => {
       val usedFields = pred.value.asObject.map(_.keys.toSeq)
-      val validFields = Seq.empty //typeOf[A].members.filter(m => !m.isMethod).map(_.name.toString.strip()).toSeq
+      val validFields = fieldsOf[A]
       val invalidFields = usedFields.map(_.diff(validFields))
 
       val fieldsHint = invalidFields match {
@@ -61,7 +62,7 @@ object DeriveConfiguredDecoderWithValidationCheck {
         case _ => None
       }
 
-      throw new ConfigParserValidationException(A.getClass().getName().stripSuffix("$") /* typeOf[A].baseClasses.head.fullName */, pred.value.toString(), hint)
+      throw new ConfigParserValidationException(niceNameOf[A], pred.value.toString(), hint)
       false
     }, _ => true)
   }
@@ -70,7 +71,7 @@ object DeriveConfiguredDecoderWithValidationCheck {
   inline def deriveConfiguredDecoderWithValidationCheck[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = deriveConfiguredDecoder[A]
     .validate(
       validator[A],
-      s"Could not convert json to ${A.getClass().getName().stripSuffix("$") /* typeOf[A].baseClasses.head.fullName */}."
+      s"Could not convert json to ${niceNameOf[A]}."
     )
 
   // Dummy decoder to generate exceptions when an invalid type is specified

@@ -15,21 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.viash.helpers.circe
+package io.viash.helpers
 
-import io.circe.Decoder
-import io.circe.derivation.Configuration
-import scala.deriving.Mirror
-import io.viash.helpers.niceNameOf
+import scala.quoted.*
 
-object DeriveConfiguredDecoderFullChecks {
-  import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck.checkDeprecation
-  import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck.validator
+inline def fieldsOf[T]: List[String] = ${ fieldsOfImpl[T] }
+inline def niceNameOf[T]: String = ${ niceNameImpl[T] }
 
-  inline def deriveConfiguredDecoderFullChecks[A](using inline A: Mirror.Of[A], inline configuration: Configuration): Decoder[A] = deriveConfiguredDecoder[A]
-    .validate(
-      validator[A],
-      s"Could not convert json to ${niceNameOf[A]}."
-    )
-    .prepare( checkDeprecation[A] )
-}
+def fieldsOfImpl[T: Type](using Quotes): Expr[List[String]] =
+  import quotes.reflect.*
+  val cls = TypeRepr.of[T].classSymbol.get
+  val fieldSymbols = cls.caseFields.map(_.name)
+  Expr(fieldSymbols)
+
+def niceNameImpl[T: Type](using Quotes): Expr[String] =
+  import quotes.reflect.*
+  val name = TypeRepr.of[T].typeSymbol.name
+  Expr(name)
