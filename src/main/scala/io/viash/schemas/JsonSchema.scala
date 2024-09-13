@@ -119,130 +119,129 @@ object JsonSchema {
     data.find(_.name == "__this__").get
 
   def createSchema(info: List[ParameterSchema])(implicit config: SchemaConfig): (String, Json) = {
-    ("", Json.Null)
 
-    // def removeMarkup(text: String): String = {
-    //   val markupRegex = raw"@\[(.*?)\]\(.*?\)".r
-    //   val backtickRegex = "`(\"[^`\"]*?\")`".r
-    //   val textWithoutMarkup = markupRegex.replaceAllIn(text, "$1")
-    //   backtickRegex.replaceAllIn(textWithoutMarkup, "$1")
-    // }
+    def removeMarkup(text: String): String = {
+      val markupRegex = raw"@\[(.*?)\]\(.*?\)".r
+      val backtickRegex = "`(\"[^`\"]*?\")`".r
+      val textWithoutMarkup = markupRegex.replaceAllIn(text, "$1")
+      backtickRegex.replaceAllIn(textWithoutMarkup, "$1")
+    }
 
-    // val thisParameter = getThisParameter(info)
-    // val description = removeMarkup(thisParameter.description.get)
-    // val subclass = thisParameter.subclass.map(l => l.head)
-    // val properties = 
-    //   info
-    //   .filter(p => !p.name.startsWith("__")) // remove __this__
-    //   .filter(p => !p.removed.isDefined && (!config.strict || !p.deprecated.isDefined)) // always remove 'removed' arguments and if need be create a strict schema by removing deprecated
-    //   .filter(p => !config.strict || !(p.name == "arguments" && (thisParameter.`type` == "Functionality" || thisParameter.`type` == "Config"))) // exception: remove 'arguments' in 'Functionality' for strict schema
-    // val propertiesJson = properties.map(p => {
-    //   val pDescription = p.description.map(s => removeMarkup(s))
-    //   val trimmedType = p.`type` match {
-    //     case s if s.startsWith("Option[") => s.stripPrefix("Option[").stripSuffix("]")
-    //     case s => s
-    //   }
+    val thisParameter = getThisParameter(info)
+    val description = removeMarkup(thisParameter.description.get)
+    val subclass = thisParameter.subclass.map(l => l.head)
+    val properties = 
+      info
+      .filter(p => !p.name.startsWith("__")) // remove __this__
+      .filter(p => !p.removed.isDefined && (!config.strict || !p.deprecated.isDefined)) // always remove 'removed' arguments and if need be create a strict schema by removing deprecated
+      .filter(p => !config.strict || !(p.name == "arguments" && (thisParameter.`type` == "Functionality" || thisParameter.`type` == "Config"))) // exception: remove 'arguments' in 'Functionality' for strict schema
+    val propertiesJson = properties.map(p => {
+      val pDescription = p.description.map(s => removeMarkup(s))
+      val trimmedType = p.`type` match {
+        case s if s.startsWith("Option[") => s.stripPrefix("Option[").stripSuffix("]")
+        case s => s
+      }
 
-    //   val mapRegex = "(List)?Map\\[String,(\\w*)\\]".r
+      val mapRegex = "(List)?Map\\[String,(\\w*)\\]".r
 
-    //   implicit val useAllInEither = thisParameter.`type` == "NextflowDirectives" || thisParameter.`type` == "NextflowAuto"
+      implicit val useAllInEither = thisParameter.`type` == "NextflowDirectives" || thisParameter.`type` == "NextflowAuto"
 
-    //   trimmedType match {
-    //     case s"List[$s]" => 
-    //       (p.name, arrayType(s, pDescription))
+      trimmedType match {
+        case s"List[$s]" => 
+          (p.name, arrayType(s, pDescription))
 
-    //     case "Either[String,List[String]]" =>
-    //       (p.name, eitherJson(
-    //         valueType("String", pDescription),
-    //         arrayType("String", pDescription)
-    //       ))
+        case "Either[String,List[String]]" =>
+          (p.name, eitherJson(
+            valueType("String", pDescription),
+            arrayType("String", pDescription)
+          ))
 
-    //     case "Either[Map[String,String],String]" =>
-    //       (p.name, eitherJson(
-    //         mapType("String", pDescription),
-    //         valueType("String", pDescription)
-    //       ))
+        case "Either[Map[String,String],String]" =>
+          (p.name, eitherJson(
+            mapType("String", pDescription),
+            valueType("String", pDescription)
+          ))
 
-    //     case s"Either[$s,$t]" =>
-    //       (p.name, eitherJson(
-    //         valueType(s, pDescription),
-    //         valueType(t, pDescription)
-    //       ))
+        case s"Either[$s,$t]" =>
+          (p.name, eitherJson(
+            valueType(s, pDescription),
+            valueType(t, pDescription)
+          ))
 
-    //     case "OneOrMore[Map[String,String]]" =>
-    //       (p.name, oneOrMoreJson(
-    //         mapType("String", pDescription)
-    //       ))
+        case "OneOrMore[Map[String,String]]" =>
+          (p.name, oneOrMoreJson(
+            mapType("String", pDescription)
+          ))
 
-    //     case "OneOrMore[Either[String,Map[String,String]]]" =>
-    //       (p.name, oneOrMoreJson(
-    //         eitherJson(
-    //           valueType("String", pDescription),
-    //           mapType("String", pDescription)
-    //         )
-    //       ))
+        case "OneOrMore[Either[String,Map[String,String]]]" =>
+          (p.name, oneOrMoreJson(
+            eitherJson(
+              valueType("String", pDescription),
+              mapType("String", pDescription)
+            )
+          ))
 
-    //     case s"OneOrMore[$s]" =>
-    //       if (s == "String" && p.name == "port" && subclass == Some("executable")) {
-    //         // Custom exception
-    //         // This is the port field for a excutable runner.
-    //         // We want to allow a Strings or Ints.
-    //         (p.name, eitherJson(
-    //           valueType("Int", pDescription),
-    //           valueType("String", pDescription),
-    //           arrayType("Int", pDescription),
-    //           arrayType("String", pDescription)
-    //         ))
-    //       } else {
-    //         (p.name, oneOrMoreType(s, pDescription))
-    //       }
+        case s"OneOrMore[$s]" =>
+          if (s == "String" && p.name == "port" && subclass == Some("executable")) {
+            // Custom exception
+            // This is the port field for a excutable runner.
+            // We want to allow a Strings or Ints.
+            (p.name, eitherJson(
+              valueType("Int", pDescription),
+              valueType("String", pDescription),
+              arrayType("Int", pDescription),
+              arrayType("String", pDescription)
+            ))
+          } else {
+            (p.name, oneOrMoreType(s, pDescription))
+          }
 
-    //     case mapRegex(_, s) => 
-    //       (p.name, mapType(s, pDescription))
+        case mapRegex(_, s) => 
+          (p.name, mapType(s, pDescription))
 
-    //    case s if p.name == "type" && subclass.isDefined =>
-    //      var subclassString = subclass.get.stripSuffix("withname")
-    //      if (config.minimal) {
-    //        ("type", Json.obj(
-    //          "const" -> Json.fromString(subclassString)
-    //        ))
-    //      } else {
-    //        ("type", Json.obj(
-    //          "description" -> Json.fromString(description), // not pDescription! We want to show the description of the main class
-    //          "const" -> Json.fromString(subclassString)
-    //        ))
-    //      }
+       case s if p.name == "type" && subclass.isDefined =>
+         var subclassString = subclass.get.stripSuffix("withname")
+         if (config.minimal) {
+           ("type", Json.obj(
+             "const" -> Json.fromString(subclassString)
+           ))
+         } else {
+           ("type", Json.obj(
+             "description" -> Json.fromString(description), // not pDescription! We want to show the description of the main class
+             "const" -> Json.fromString(subclassString)
+           ))
+         }
         
-    //     case s =>
-    //       (p.name, valueType(s, pDescription))
-    //   }
+        case s =>
+          (p.name, valueType(s, pDescription))
+      }
 
-    // })
+    })
 
-    // val required = properties.filter(p => 
-    //   !(
-    //     p.`type`.startsWith("Option[") ||
-    //     p.default.isDefined ||
-    //     p.hasUndocumented ||
-    //     (p.name == "type" && thisParameter.`type` == "PlainFile" && !config.strict) // Custom exception, file resources are "kind of" default
-    //   ) ||
-    //   // Strict schema is what will be outputted by Viash, so fields with a default value other than 'None' will always have a value -> add it in the strict schema as required.
-    //   (!p.`type`.startsWith("Option[") && p.default != Some("Empty") && config.strict && !p.hasUndocumented))
-    // val requiredJson = required.map(p => Json.fromString(p.name))
+    val required = properties.filter(p => 
+      !(
+        p.`type`.startsWith("Option[") ||
+        p.default.isDefined ||
+        p.hasUndocumented ||
+        (p.name == "type" && thisParameter.`type` == "PlainFile" && !config.strict) // Custom exception, file resources are "kind of" default
+      ) ||
+      // Strict schema is what will be outputted by Viash, so fields with a default value other than 'None' will always have a value -> add it in the strict schema as required.
+      (!p.`type`.startsWith("Option[") && p.default != Some("Empty") && config.strict && !p.hasUndocumented))
+    val requiredJson = required.map(p => Json.fromString(p.name))
 
-    // val k = thisParameter.`type`
-    // val descr = config.minimal match {
-    //   case true => None
-    //   case false => Some(description)
-    // }
-    // val v = Json.obj(
-    //   descr.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
-    //   Seq("type" -> Json.fromString("object"),
-    //   "properties" -> Json.obj(propertiesJson: _*),
-    //   "required" -> Json.arr(requiredJson: _*),
-    //   "additionalProperties" -> Json.False): _*
-    // )
-    // k -> v
+    val k = thisParameter.`type`
+    val descr = config.minimal match {
+      case true => None
+      case false => Some(description)
+    }
+    val v = Json.obj(
+      descr.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
+      Seq("type" -> Json.fromString("object"),
+      "properties" -> Json.obj(propertiesJson: _*),
+      "required" -> Json.arr(requiredJson: _*),
+      "additionalProperties" -> Json.False): _*
+    )
+    k -> v
   }
 
   def createSuperClassSchema(info: List[ParameterSchema])(implicit config: SchemaConfig): (String, Json) = {

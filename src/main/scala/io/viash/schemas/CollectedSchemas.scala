@@ -234,31 +234,30 @@ object CollectedSchemas {
 
   def getJson: Json = data.asJson
 
-  // private def getNonAnnotated(members: Map[String,List[MemberInfo]], classes: List[Symbol]): List[String] = {
-  //   val issueMembers = members
-  //     .toList
-  //     .filter{ case(k, v) => v.map(m => m.inConstructor).contains(true) } // Only check values that are in a constructor. Annotation may occur on private vals but that is not a requirement.
-  //     .map{ case (k, v) => (k, v.map(_.symbol.annotations.length).sum) } // (name, # annotations)
-  //     .filter(_._2 == 0)
-  //     .map(_._1)
+  private def getNonAnnotated(members: Map[String,List[MemberInfo]], classes: List[Symbol]): List[String] = {
+    // val issueMembers = members
+    //   .toList
+    //   .filter{ case(k, v) => v.map(m => m.inConstructor).contains(true) } // Only check values that are in a constructor. Annotation may occur on private vals but that is not a requirement.
+    //   .map{ case (k, v) => (k, v.map(_.symbol.annotations.length).sum) } // (name, # annotations)
+    //   .filter(_._2 == 0)
+    //   .map(_._1)
 
-  //   val ownClassArr = if (classes.head.annotations.length == 0) Seq("__this__") else Nil
-  //   issueMembers ++ ownClassArr
-  // }
+    // val ownClassArr = if (classes.head.annotations.length == 0) Seq("__this__") else Nil
+    // issueMembers ++ ownClassArr
+    Nil
+  }
 
   def getMemberName(members: Map[String,List[MemberInfo]], classes: List[Symbol]): String = classes.head.shortName
 
   // Main call for checking whether all arguments are annotated
   // Add extra non-annotated value so we can always somewhat check the code is functional
-  // def getAllNonAnnotated: Map[String, String] = (schemaClasses :+ getMembers[CollectedSchemas]()).flatMap {
-  //   v => getNonAnnotated(v._1, v._2).map((getMemberName(v._1, v._2), _))
-  // }.toMap
-  def getAllNonAnnotated: Map[String, String] = Map.empty
+  def getAllNonAnnotated: Map[String, String] = (schemaClasses :+ getMembers[CollectedSchemas]()).flatMap {
+    v => getNonAnnotated(v._1, v._2).map((getMemberName(v._1, v._2), _))
+  }.toMap
 
   def getAllDeprecations: Map[String, DeprecatedOrRemovedSchema] = {
-    // val arr = data.flatMap(v => v.map(p => (s"config ${getKeyFromParamList(v)} ${p.name}", p.deprecated))).toMap    
-    // arr.filter(t => t._2.isDefined).map(t => (t._1, t._2.get))
-    Map.empty
+    val arr = data.flatMap(v => v.map(p => (s"config ${getKeyFromParamList(v)} ${p.name}", p.deprecated))).toMap    
+    arr.filter(t => t._2.isDefined).map(t => (t._1, t._2.get))
   }
 
 }
