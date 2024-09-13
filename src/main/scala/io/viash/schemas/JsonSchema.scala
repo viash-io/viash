@@ -199,18 +199,18 @@ object JsonSchema {
         case mapRegex(_, s) => 
           (p.name, mapType(s, pDescription))
 
-       case s if p.name == "type" && subclass.isDefined =>
-         var subclassString = subclass.get.stripSuffix("withname")
-         if (config.minimal) {
-           ("type", Json.obj(
-             "const" -> Json.fromString(subclassString)
-           ))
-         } else {
-           ("type", Json.obj(
-             "description" -> Json.fromString(description), // not pDescription! We want to show the description of the main class
-             "const" -> Json.fromString(subclassString)
-           ))
-         }
+        case s if p.name == "type" && subclass.isDefined =>
+          var subclassString = subclass.get.stripSuffix("withname")
+          if (config.minimal) {
+            ("type", Json.obj(
+              "const" -> Json.fromString(subclassString)
+            ))
+          } else {
+            ("type", Json.obj(
+              "description" -> Json.fromString(description), // not pDescription! We want to show the description of the main class
+              "const" -> Json.fromString(subclassString)
+            ))
+          }
         
         case s =>
           (p.name, valueType(s, pDescription))
