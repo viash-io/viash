@@ -4,7 +4,7 @@ TODO add summary
 
 ## BUG FIXES
 
-* `RRequirements`: Treat warnings as errors when installing R dependencies in Docker engines (PR #xxx).
+* `RRequirements`: Treat warnings as errors when installing R dependencies in Docker engines (closes #770, PR #771).
 
 # Viash 0.9.0 (2024-09-03): Restructure platforms into runners and engines
 
