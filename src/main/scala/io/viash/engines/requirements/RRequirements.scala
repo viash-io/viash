@@ -106,7 +106,7 @@ case class RRequirements(
 
     val installRemotes =
       if ((packages ::: cran ::: git ::: github ::: gitlab ::: bitbucket ::: svn ::: url).nonEmpty) {
-        List(rcode("""if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")"""))
+        List(runRCode("""if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")"""))
       } else {
         Nil
       }
@@ -123,17 +123,17 @@ case class RRequirements(
 
     val installBiocManager =
       if (bioc.nonEmpty) {
-        List(rcode("""if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")"""))
+        List(runRCode("""if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")"""))
       } else {
         Nil
       }
     val installBioc =
       if (bioc.nonEmpty) {
         if (bioc_force_install) {
-          List(rcode(s"""BiocManager::install(c("${bioc.mkString("\", \"")}"))"""))
+          List(runRCode(s"""BiocManager::install(c("${bioc.mkString("\", \"")}"))"""))
         } else {
           bioc.map { biocPackage =>
-            rcode(s"""if (!requireNamespace("$biocPackage", quietly = TRUE)) BiocManager::install("$biocPackage")""")
+            runRCode(s"""if (!requireNamespace("$biocPackage", quietly = TRUE)) BiocManager::install("$biocPackage")""")
           }
         }
       } else {
@@ -143,13 +143,13 @@ case class RRequirements(
     val installers = remotePairs.flatMap {
       case (_, Nil) => None
       case (str, list) =>
-        Some(rcode(s"""remotes::install_$str(c("${list.mkString("\", \"")}"))"""))
+        Some(runRCode(s"""remotes::install_$str(c("${list.mkString("\", \"")}"))"""))
     }
 
     val installScript =
       if (script.nonEmpty) {
         script.map { line =>
-          rcode(line)
+          runRCode(line)
         }
       } else {
         Nil
