@@ -219,7 +219,7 @@ object CollectedSchemas {
       .replaceAll("""(\w*)\[[\w\.]*?(\w*),[\w\.]*?(\w*)\]""", "$1[$2,$3]")
   }
 
-  // private def annotationsOf(members: (Map[String,List[MemberInfo]]), classes: List[Symbol]) = {
+  // private def annotationsOf(members: (Map[String,List[MemberInfo]]), classes: List[Symbol]): List[(String, String, List[String], List[Annotation])] = {
   //   val annMembers = members
   //     .map{ case (memberName, memberInfo) => { 
   //       val h = memberInfo.head
@@ -233,14 +233,14 @@ object CollectedSchemas {
   //     .map({case (name, tpe, annotations, d, e, hierarchy) => (name, trimTypeName(tpe), hierarchy, annotations)})  // TODO this ignores where the annotation was defined, ie. top level class or super class
   // }
 
-  // private val getSchema = (t: (Map[String,List[MemberInfo]], List[Symbol])) => t match {
+  // private val getSchema: ((Map[String,List[MemberInfo]], List[Symbol])) => List[ParameterSchema] = (t: (Map[String,List[MemberInfo]], List[Symbol])) => t match {
   //   case (members, classes) => {
   //     annotationsOf(members, classes).map{ case (name, tpe, hierarchy, annotations) => ParameterSchema(name, tpe, hierarchy, annotations) }
   //   }
   // }
 
   // get all parameters for a given type, including parent class annotations
-  // def getParameters[T: TypeTag]() = getSchema(getMembers[T]())
+  // def getParameters[T: TypeTag](): List[ParameterSchema] = getSchema(getMembers[T]())
 
   // Main call for documentation output
   lazy val fullData: List[List[ParameterSchema]] = Nil//schemaClasses.map{ v => getSchema(v)}

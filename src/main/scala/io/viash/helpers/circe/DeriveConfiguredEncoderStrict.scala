@@ -20,20 +20,13 @@ package io.viash.helpers.circe
 import io.circe.Encoder
 import io.circe.derivation.{Configuration, ConfiguredEncoder}
 import scala.deriving.Mirror
+import io.viash.helpers.fieldsInternalFunctionality
 
 object DeriveConfiguredEncoderStrict {
 
   inline def deriveConfiguredEncoderStrict[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = deriveConfiguredEncoder[A]
     .mapJsonObject{ jsonObject =>
-  //     val parameters = CollectedSchemas.getParameters[T]()
-      jsonObject.filterKeys( k => 
-        // TODO
-        val hasInternalFunctionality = false
-        !hasInternalFunctionality
-  //       parameters
-  //         .find(_.name == k) // find the correct parameter
-  //         .map(!_.hasInternalFunctionality) // check if it has the 'internalFunctionality' annotation
-  //         .getOrElse(true) // fallback, shouldn't really happen
-      )
+      val fieldMap = fieldsInternalFunctionality[A]
+      jsonObject.filterKeys(k => !fieldMap.contains(k))
     }
 }

@@ -18,17 +18,30 @@
 package io.viash.helpers
 
 import scala.quoted.*
+import io.viash.schemas.internalFunctionality
 
 inline def fieldsOf[T]: List[String] = ${ fieldsOfImpl[T] }
 inline def niceNameOf[T]: String = ${ niceNameImpl[T] }
+inline def fieldsInternalFunctionality[T]: List[String] = ${ fieldsInternalFunctionalityImpl[T] }
 
 def fieldsOfImpl[T: Type](using Quotes): Expr[List[String]] =
   import quotes.reflect.*
-  val cls = TypeRepr.of[T].classSymbol.get
-  val fieldSymbols = cls.caseFields.map(_.name)
+  val tpe = TypeRepr.of[T].typeSymbol
+  val fieldSymbols = tpe.caseFields.map(_.name)
   Expr(fieldSymbols)
 
 def niceNameImpl[T: Type](using Quotes): Expr[String] =
   import quotes.reflect.*
   val name = TypeRepr.of[T].typeSymbol.name
-  Expr(name) 
+  Expr(name)
+
+// TODO this doesn't get annotations from parent classes
+def fieldsInternalFunctionalityImpl[T: Type](using Quotes): Expr[List[String]] =
+  import quotes.reflect.*
+  val annot = TypeRepr.of[internalFunctionality].typeSymbol
+  val fieldSymbols = TypeRepr
+    .of[T]
+    .baseClasses
+    .flatMap(_.declaredFields)
+    .collect{case f if f.hasAnnotation(annot) => f.name }
+  Expr(fieldSymbols)
