@@ -21,23 +21,19 @@ import io.circe.Encoder
 import io.circe.derivation.{Configuration, ConfiguredEncoder}
 import scala.deriving.Mirror
 
-// import io.circe.{Encoder, Json, HCursor}
-
-// import scala.reflect.runtime.universe._
-// import shapeless.Lazy
-import io.viash.schemas.ParameterSchema
-import io.viash.schemas.CollectedSchemas
-
 object DeriveConfiguredEncoderStrict {
 
   inline def deriveConfiguredEncoderStrict[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = deriveConfiguredEncoder[A]
-  //   .mapJsonObject{ jsonObject =>
+    .mapJsonObject{ jsonObject =>
   //     val parameters = CollectedSchemas.getParameters[T]()
-  //     jsonObject.filterKeys( k => 
+      jsonObject.filterKeys( k => 
+        // TODO
+        val hasInternalFunctionality = false
+        !hasInternalFunctionality
   //       parameters
   //         .find(_.name == k) // find the correct parameter
   //         .map(!_.hasInternalFunctionality) // check if it has the 'internalFunctionality' annotation
   //         .getOrElse(true) // fallback, shouldn't really happen
-  //     )
-  //   }
+      )
+    }
 }

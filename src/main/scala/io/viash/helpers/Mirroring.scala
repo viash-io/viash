@@ -31,4 +31,4 @@ def fieldsOfImpl[T: Type](using Quotes): Expr[List[String]] =
 def niceNameImpl[T: Type](using Quotes): Expr[String] =
   import quotes.reflect.*
   val name = TypeRepr.of[T].typeSymbol.name
-  Expr(name)
+  Expr(name) 

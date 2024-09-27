@@ -17,86 +17,83 @@
 
 package io.viash.helpers.circe
 
-import io.circe.{ Decoder, CursorOp }
-
+import io.circe.{ ACursor, Decoder, CursorOp }
 import io.circe.derivation.{Configuration, ConfiguredDecoder}
 import scala.deriving.Mirror
 
-import io.viash.schemas.ParameterSchema
-import io.circe.ACursor
-
 import io.viash.helpers.Logging
-import io.viash.schemas.CollectedSchemas
 
 object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
 
-  // private def memberDeprecationCheck(name: String, history: List[CursorOp], parameters: List[ParameterSchema]): Unit = {
-  //   val schema = parameters.find(p => p.name == name).getOrElse(ParameterSchema("", "", "", None, None, None, None, None, None, None, None, false, false))
+  private def memberDeprecationCheck[A](name: String, history: List[CursorOp])(using A: Mirror.Of[A]): Unit = {
+    lazy val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
 
-  //   lazy val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
+    lazy val fullHistoryName = 
+      if (historyString.isEmpty) {
+        s".$name"
+      } else {
+        s".$historyString.$name"
+      }
 
-  //   lazy val fullHistoryName = 
-  //     if (historyString.isEmpty) {
-  //       s".$name"
-  //     } else {
-  //       s".$historyString.$name"
-  //     }
+    // TODO
+    val deprecated = Option.empty[io.viash.schemas.DeprecatedOrRemovedSchema]
+    val removed = Option.empty[io.viash.schemas.DeprecatedOrRemovedSchema]
+    val hasInternalFunctionality = false
 
-  //   schema.deprecated match {
-  //     case Some(d) =>
-  //       info(s"Warning: $fullHistoryName is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
-  //     case _ =>
-  //   }
-  //   schema.removed match {
-  //     case Some(r) => 
-  //       info(s"Error: $fullHistoryName was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
-  //     case _ =>
-  //   }
-  //   if (schema.hasInternalFunctionality) {
-  //     error(s"Error: $fullHistoryName is internal functionality.")
-  //     throw new RuntimeException(s"Internal functionality used: $fullHistoryName")
-  //   }
-  // }
+    deprecated match {
+      case Some(d) =>
+        info(s"Warning: $fullHistoryName is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+      case _ =>
+    }
+    removed match {
+      case Some(r) => 
+        info(s"Error: $fullHistoryName was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
+      case _ =>
+    }
+    if (hasInternalFunctionality) {
+      error(s"Error: $fullHistoryName is internal functionality.")
+      throw new RuntimeException(s"Internal functionality used: $fullHistoryName")
+    }
+  }
 
-  // private def selfDeprecationCheck(parameters: List[ParameterSchema]): Unit = {
-  //   val schema = parameters.find(p => p.name == "__this__").get
+  private def selfDeprecationCheck[A]()(using A: Mirror.Of[A]): Unit = {
 
-  //   schema.deprecated match {
-  //     case Some(d) =>
-  //       info(s"Warning: ${schema.`type`} is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
-  //     case _ =>
-  //   }
-  //   schema.removed match {
-  //     case Some(r) =>
-  //       info(s"Error: ${schema.`type`} was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
-  //     case _ =>
-  //   }
-  // }
+    // TODO
+    val name = ""
+    val deprecated = Option.empty[io.viash.schemas.DeprecatedOrRemovedSchema]
+    val removed = Option.empty[io.viash.schemas.DeprecatedOrRemovedSchema]
 
-  // // 
-  // def checkDeprecation[A](cursor: ACursor)(implicit tag: TypeTag[A]) : ACursor = {
-  //   val parameters = CollectedSchemas.getParameters[A]()
+    deprecated match {
+      case Some(d) =>
+        info(s"Warning: $name is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+      case _ =>
+    }
+    removed match {
+      case Some(r) =>
+        info(s"Error: $name was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
+      case _ =>
+    }
 
-  //   selfDeprecationCheck(parameters)
+  }
 
-  //   // check each defined 'key' value
-  //   for (key <- cursor.keys.getOrElse(Nil)) {
-  //     val isEmpty = 
-  //       cursor.downField(key).focus.get match {
-  //         case value if value.isNull => true
-  //         case value if value.isArray => value.asArray.get.isEmpty
-  //         case value if value.isObject => value.asObject.get.isEmpty
-  //         case _ => false
-  //       }
-  //     if (!isEmpty) {
-  //       memberDeprecationCheck(key, cursor.history, parameters)
-  //     }
-  //   }
-  //   cursor // return unchanged json info
-  // }
+  def checkDeprecation[A](cursor: ACursor)(using A: Mirror.Of[A]) : ACursor = {
 
-  def checkDeprecation[A](cursor: ACursor): ACursor = {
-    cursor
+    selfDeprecationCheck()
+
+    // check each defined 'key' value
+    for (key <- cursor.keys.getOrElse(Nil)) {
+      val isEmpty = 
+        cursor.downField(key).focus.get match {
+          case value if value.isNull => true
+          case value if value.isArray => value.asArray.get.isEmpty
+          case value if value.isObject => value.asObject.get.isEmpty
+          case _ => false
+        }
+      if (!isEmpty) {
+        memberDeprecationCheck(key, cursor.history)
+      }
+    }
+    cursor // return unchanged json info
   }
 
   // // Use prepare to get raw json data to inspect used fields in the json but we're not performing any changes here

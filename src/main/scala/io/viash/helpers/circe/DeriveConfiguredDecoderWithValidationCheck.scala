@@ -17,15 +17,12 @@
 
 package io.viash.helpers.circe
 
-import io.circe.{ Decoder, CursorOp }
-
+import io.circe.{ Decoder, CursorOp, HCursor }
 import io.circe.derivation.{Configuration, ConfiguredDecoder}
 import scala.deriving.Mirror
-import io.viash.schemas.ParameterSchema
-import io.circe.ACursor
+
 import io.viash.exceptions.ConfigParserSubTypeException
 import io.viash.exceptions.ConfigParserValidationException
-import io.circe.HCursor
 import io.viash.helpers.{niceNameOf, fieldsOf}
 
 object DeriveConfiguredDecoderWithValidationCheck {

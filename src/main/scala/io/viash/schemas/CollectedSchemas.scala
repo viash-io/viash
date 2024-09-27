@@ -42,6 +42,8 @@ import io.viash.config.Author
 import io.viash.config.ComputationalRequirements
 import io.viash.config.Links
 import io.viash.config.References
+import scala.deriving.Mirror
+import scala.compiletime.{ codeOf, constValue, erasedValue, error, summonFrom, summonInline }
 
 final case class CollectedSchemas (
   config: Map[String, List[ParameterSchema]],
@@ -81,15 +83,20 @@ object CollectedSchemas {
   private implicit val encodeDeprecatedOrRemoved: Encoder.AsObject[DeprecatedOrRemovedSchema] = deriveConfiguredEncoder
   private implicit val encodeExample: Encoder.AsObject[ExampleSchema] = deriveConfiguredEncoder
 
-  private def getMembers[T/*: TypeTag*/](): (Map[String,List[MemberInfo]], List[Symbol]) = {
-    (Map.empty, Nil)
+  private inline final def summonLabels[T <: Tuple]: List[String] =    
+    inline erasedValue[T] match
+      case _: EmptyTuple => Nil
+      case _: (t *: ts)  => constValue[t].asInstanceOf[String] :: summonLabels[ts]
 
-    // val name = typeOf[T].typeSymbol.shortName
+  private def getMembers[T /*TypeTag*/]/*(using mirror: Mirror.Of[T])*/(): (Map[String,List[MemberInfo]], List[Symbol]) = {
 
-    // // Get all members and filter for constructors, first one should be the best (most complete) one
-    // // Traits don't have constructors
-    // // Get all parameters and store their short name
+    // val name: String = constValue[mirror.MirroredLabel]
+
+    // Get all members and filter for constructors, first one should be the best (most complete) one
+    // Traits don't have constructors
+    // Get all parameters and store their short name
     // val constructorMembers = typeOf[T].members.filter(_.isConstructor).headOption.map(_.asMethod.paramLists.head.map(_.shortName)).getOrElse(List.empty[String])
+    // val constructorMembers = summonLabels[mirror.MirroredElemLabels]
 
     // val baseClasses = typeOf[T].baseClasses
     //   .filter(_.fullName.startsWith("io.viash"))
@@ -117,6 +124,15 @@ object CollectedSchemas {
     //   .groupBy(k => k.shortName)
     
     // (allMembers, baseClasses)
+
+    // println(s"name: $name")
+    // println(s"constructorMembers: $constructorMembers")
+    // println(s"baseClasses: $baseClasses")
+    // println(s"documentFully: $documentFully")
+    // println(s"memberNames: $memberNames")
+    // println(s"allMembers: $allMembers")
+
+    (Map.empty, Nil)
   }
 
   lazy val schemaClasses = List(
