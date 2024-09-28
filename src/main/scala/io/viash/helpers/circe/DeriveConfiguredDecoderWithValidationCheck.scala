@@ -23,7 +23,7 @@ import scala.deriving.Mirror
 
 import io.viash.exceptions.ConfigParserSubTypeException
 import io.viash.exceptions.ConfigParserValidationException
-import io.viash.helpers.{niceNameOf, fieldsOf}
+import io.viash.helpers.{typeOf, fieldsOf}
 
 object DeriveConfiguredDecoderWithValidationCheck {
 
@@ -59,7 +59,7 @@ object DeriveConfiguredDecoderWithValidationCheck {
         case _ => None
       }
 
-      throw new ConfigParserValidationException(niceNameOf[A], pred.value.toString(), hint)
+      throw new ConfigParserValidationException(typeOf[A], pred.value.toString(), hint)
       false
     }, _ => true)
   }
@@ -68,7 +68,7 @@ object DeriveConfiguredDecoderWithValidationCheck {
   inline def deriveConfiguredDecoderWithValidationCheck[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = deriveConfiguredDecoder[A]
     .validate(
       validator[A],
-      s"Could not convert json to ${niceNameOf[A]}."
+      s"Could not convert json to ${typeOf[A]}."
     )
 
   // Dummy decoder to generate exceptions when an invalid type is specified

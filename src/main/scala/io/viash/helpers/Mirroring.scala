@@ -20,7 +20,7 @@ package io.viash.helpers
 import scala.quoted.*
 import io.viash.schemas.{deprecated, internalFunctionality, removed}
 
-inline def niceNameOf[T]: String = ${ niceNameOfImpl[T] }
+inline def typeOf[T]: String = ${ typeOfImpl[T] }
 inline def deprecatedOf[T]: Vector[(String, String, String)] = ${ deprecatedOfImpl[T] }
 inline def removedOf[T]: Vector[(String, String, String)] = ${ removedOfImpl[T] }
 
@@ -29,10 +29,20 @@ inline def internalFunctionalityFieldsOf[T]: List[String] = ${ internalFunctiona
 inline def deprecatedFieldsOf[T]: Vector[(String, String, String, String)] = ${ deprecatedFieldsOfImpl[T] }
 inline def removedFieldsOf[T]: Vector[(String, String, String, String)] = ${ removedFieldsOfImpl[T] }
 
-def niceNameOfImpl[T: Type](using Quotes): Expr[String] =
+def typeOfImpl[T: Type](using Quotes): Expr[String] =
   import quotes.reflect.*
-  val name = TypeRepr.of[T].typeSymbol.name
-  Expr(name)
+  val typeRepr = TypeRepr.of[T]
+
+  // Use pattern matching to extract a simplified name
+  def simpleName(tpe: TypeRepr): String = tpe match {
+    case AppliedType(tycon, args) =>
+      // If it's a type constructor with arguments, show it in a readable form
+      s"${simpleName(tycon)}[${args.map(simpleName).mkString(", ")}]"
+    case _ =>
+      // Strip the full package name to get the simple type name
+      tpe.typeSymbol.name
+  }
+  Expr(simpleName(typeRepr))
 
 def deprecatedOfImpl[T](using Type[T], Quotes): Expr[Vector[(String, String, String)]] =
   import quotes.reflect.*

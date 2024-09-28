@@ -20,7 +20,7 @@ package io.viash.helpers.circe
 import io.circe.Decoder
 import io.circe.derivation.Configuration
 import scala.deriving.Mirror
-import io.viash.helpers.niceNameOf
+import io.viash.helpers.typeOf
 
 object DeriveConfiguredDecoderFullChecks {
   import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck.checkDeprecation
@@ -29,7 +29,7 @@ object DeriveConfiguredDecoderFullChecks {
   inline def deriveConfiguredDecoderFullChecks[A](using inline A: Mirror.Of[A], inline configuration: Configuration): Decoder[A] = deriveConfiguredDecoder[A]
     .validate(
       validator[A],
-      s"Could not convert json to ${niceNameOf[A]}."
+      s"Could not convert json to ${typeOf[A]}."
     )
     .prepare( checkDeprecation[A] )
 }

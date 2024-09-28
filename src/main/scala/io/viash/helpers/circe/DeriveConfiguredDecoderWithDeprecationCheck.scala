@@ -59,7 +59,7 @@ object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
   }
 
   private inline def selfDeprecationCheck[A]()(using inline A: Mirror.Of[A]): Unit = {
-    val name = niceNameOf[A]
+    val name = typeOf[A]
     val deprecated = deprecatedOf[A].headOption
     val removed = removedOf[A].headOption
 
