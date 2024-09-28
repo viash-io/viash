@@ -79,9 +79,9 @@ object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
 
     selfDeprecationCheck()
 
-    val fd = fieldsDeprecated[A].map(t => t._1 -> (t._2, t._3, t._4)).toMap
-    val fr = fieldsRemoved[A].map(t => t._1 -> (t._2, t._3, t._4)).toMap
-    val fif = fieldsInternalFunctionality[A]
+    val df = deprecatedFieldsOf[A].map(t => t._1 -> (t._2, t._3, t._4)).toMap
+    val rf = removedFieldsOf[A].map(t => t._1 -> (t._2, t._3, t._4)).toMap
+    val iff = internalFunctionalityFieldsOf[A]
 
     // check each defined 'key' value
     for (key <- cursor.keys.getOrElse(Nil)) {
@@ -93,7 +93,7 @@ object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
           case _ => false
         }
       if (!isEmpty) {
-        memberDeprecationCheck(key, cursor.history, fd.get(key), fr.get(key), fif.contains(key))
+        memberDeprecationCheck(key, cursor.history, df.get(key), rf.get(key), iff.contains(key))
       }
     }
     cursor // return unchanged json info

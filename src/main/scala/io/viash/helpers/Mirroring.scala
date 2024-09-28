@@ -20,16 +20,16 @@ package io.viash.helpers
 import scala.quoted.*
 import io.viash.schemas.{deprecated, internalFunctionality, removed}
 
-inline def niceNameOf[T]: String = ${ niceNameImpl[T] }
+inline def niceNameOf[T]: String = ${ niceNameOfImpl[T] }
 inline def deprecatedOf[T]: Vector[(String, String, String)] = ${ deprecatedOfImpl[T] }
 inline def removedOf[T]: Vector[(String, String, String)] = ${ removedOfImpl[T] }
 
 inline def fieldsOf[T]: List[String] = ${ fieldsOfImpl[T] }
-inline def fieldsInternalFunctionality[T]: List[String] = ${ fieldsInternalFunctionalityImpl[T] }
-inline def fieldsDeprecated[T]: Vector[(String, String, String, String)] = ${ fieldsDeprecatedImpl[T] }
-inline def fieldsRemoved[T]: Vector[(String, String, String, String)] = ${ fieldsRemovedImpl[T] }
+inline def internalFunctionalityFieldsOf[T]: List[String] = ${ internalFunctionalityFieldsOfImpl[T] }
+inline def deprecatedFieldsOf[T]: Vector[(String, String, String, String)] = ${ deprecatedFieldsOfImpl[T] }
+inline def removedFieldsOf[T]: Vector[(String, String, String, String)] = ${ removedFieldsOfImpl[T] }
 
-def niceNameImpl[T: Type](using Quotes): Expr[String] =
+def niceNameOfImpl[T: Type](using Quotes): Expr[String] =
   import quotes.reflect.*
   val name = TypeRepr.of[T].typeSymbol.name
   Expr(name)
@@ -76,7 +76,7 @@ def fieldsOfImpl[T: Type](using Quotes): Expr[List[String]] =
   val fieldSymbols = tpe.caseFields.map(_.name)
   Expr(fieldSymbols)
 
-def fieldsInternalFunctionalityImpl[T: Type](using Quotes): Expr[List[String]] =
+def internalFunctionalityFieldsOfImpl[T: Type](using Quotes): Expr[List[String]] =
   import quotes.reflect.*
   val annot = TypeRepr.of[internalFunctionality].typeSymbol
   val fieldSymbols = TypeRepr
@@ -86,7 +86,7 @@ def fieldsInternalFunctionalityImpl[T: Type](using Quotes): Expr[List[String]] =
     .collect{case f if f.hasAnnotation(annot) => f.name }
   Expr(fieldSymbols)
 
-def fieldsDeprecatedImpl[T: Type](using Quotes): Expr[Vector[(String, String, String, String)]] =
+def deprecatedFieldsOfImpl[T: Type](using Quotes): Expr[Vector[(String, String, String, String)]] =
   import quotes.reflect.*
   val annot = TypeRepr.of[deprecated].typeSymbol
   val tuples = TypeRepr
@@ -101,7 +101,7 @@ def fieldsDeprecatedImpl[T: Type](using Quotes): Expr[Vector[(String, String, St
   val seq: Expr[Seq[(String, String, String, String)]] = Expr.ofSeq(tuples)
   '{ $seq.toVector }
 
-def fieldsRemovedImpl[T: Type](using Quotes): Expr[Vector[(String, String, String, String)]] =
+def removedFieldsOfImpl[T: Type](using Quotes): Expr[Vector[(String, String, String, String)]] =
   import quotes.reflect.*
   val annot = TypeRepr.of[removed].typeSymbol
   val tuples = TypeRepr
