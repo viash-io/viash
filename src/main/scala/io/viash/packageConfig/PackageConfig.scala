@@ -246,7 +246,12 @@ object PackageConfig {
 
     /* PACKAGE 0: converted from json */
     // convert Json into ViashPackage
-    val pack0 = Convert.jsonToClass[PackageConfig](json, path.toString())
+    // val pack0 = Convert.jsonToClass[PackageConfig](json2, path.toString())
+    // TODO fix empty json getting parsed as 'false' and then failing to create a PackageConfig from that
+    val pack0 = json match {
+      case json if json == Json.False => PackageConfig()
+      case json => Convert.jsonToClass[PackageConfig](json, path.toString())
+    }
 
     /* PACKAGE 1: make resources absolute */
     // make paths absolute
