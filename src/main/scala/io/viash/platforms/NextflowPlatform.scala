@@ -45,13 +45,13 @@ case class NextflowPlatform(
   // nxf params
   @description(
     """@[Directives](nextflow_directives) are optional settings that affect the execution of the process. These mostly match up with the Nextflow counterparts.  
-      |""".stripMargin)
+      |"""/*.stripMargin*/)
   @example(
     """directives:
       |  container: rocker/r-ver:4.1
       |  label: highcpu
       |  cpus: 4
-      |  memory: 16 GB""".stripMargin,
+      |  memory: 16 GB"""/*.stripMargin*/,
       "yaml")
   @default("Empty")
   directives: NextflowDirectives = NextflowDirectives(),
@@ -66,17 +66,17 @@ case class NextflowPlatform(
       || `transcript` | If `true`, the module's transcripts from `work/` are automatically published to `params.transcriptDir`. If not defined, `params.publishDir + "/_transcripts"` will be used. Will throw an error if neither are defined. | `false` |
       || `publish` | If `true`, the module's outputs are automatically published to `params.publishDir`. If equal to `"state"`, also a `.state.yaml` file will be published in the publish dir. Will throw an error if `params.publishDir` is not defined. | `false` |
       |
-      |""".stripMargin)
+      |"""/*.stripMargin*/)
   @example(
     """auto:
-      |  publish: true""".stripMargin,
+      |  publish: true"""/*.stripMargin*/,
       "yaml")
   @default(
     """simplifyInput: true
       |simplifyOutput: false
       |transcript: false
       |publish: false
-      |""".stripMargin)
+      |"""/*.stripMargin*/)
   auto: NextflowAuto = NextflowAuto(),
 
   @description("Allows tweaking how the @[Nextflow Config](nextflow_config) file is generated.")

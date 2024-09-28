@@ -11,6 +11,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import java.io.File
 import java.nio.file.Paths
 import scala.io.Source
+import io.viash.config.decodeConfig
 
 class MainNSListNativeSuite extends AnyFunSuite{
   Logger.UseColorOverride.value = Some(false)

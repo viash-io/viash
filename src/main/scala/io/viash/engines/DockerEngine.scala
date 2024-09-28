@@ -24,6 +24,7 @@ import io.viash.config.{Config, BuildInfo, Author}
 import io.viash.engines.requirements.{Requirements, DockerRequirements}
 import io.viash.helpers.{Escaper, Docker}
 import io.viash.wrapper.BashWrapper
+import io.viash.helpers.data_structures.listToOneOrMore
 
 import io.viash.schemas._
 import io.viash.helpers.DockerImageInfo
@@ -108,7 +109,7 @@ final case class DockerEngine(
       | - @[yum](yum_req)
       |
       |The order in which these dependencies are specified determines the order in which they will be installed.
-      |""".stripMargin)
+      |"""/*.stripMargin*/)
   @default("Empty")
   setup: List[Requirements] = Nil,
 

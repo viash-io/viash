@@ -6,7 +6,6 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
-import scala.reflect.io.Directory
 import io.viash.ConfigDeriver
 
 class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfterAll {
@@ -78,7 +77,7 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
       assert(md5sum.r.findFirstMatchIn(hash).isDefined, s"Calculated md5sum doesn't match the given md5sum for $name")
     }
 
-    Directory(tmpFolderResourceDestinationFolder).deleteRecursively()
+    IO.deleteRecursively(tmpFolderResourceDestinationFolder.toPath)
     checkTempDirAndRemove(testOutput.stdout, true, "viash_test_auxiliary_resources")
   }
 
@@ -109,30 +108,30 @@ class MainTestAuxiliaryDockerResourceCopy extends AnyFunSuite with BeforeAndAfte
    * @param expectDirectoryExists expect the directory to be present or not
    * @return
    */
-  def checkTempDirAndRemove(testText: String, expectDirectoryExists: Boolean, folderName: String = "viash_test_testbash"): Unit = {
+  def checkTempDirAndRemove(testText: String, expectDirectoryExists: Boolean, testDirName: String = "viash_test_testbash"): Unit = {
     // Get temporary directory
     val FolderRegex = ".*Running tests in temporary directory: '([^']*)'.*".r
 
-    val tempPath = testText.replaceAll("\n", "") match {
+    val tempPathStr = testText.replaceAll("\n", "") match {
       case FolderRegex(path) => path
       case _ => ""
     }
 
-    assert(tempPath.contains(s"${IO.tempDir}/$folderName"))
+    assert(tempPathStr.contains(s"${IO.tempDir}/$testDirName"))
 
-    val tempFolder = new Directory(Paths.get(tempPath).toFile)
+    val tempPath = Paths.get(tempPathStr)
 
     if (expectDirectoryExists) {
       // Check temporary directory is still present
-      assert(tempFolder.exists)
-      assert(tempFolder.isDirectory)
+      assert(Files.exists(tempPath))
+      assert(Files.isDirectory(tempPath))
 
       // Remove the temporary directory
-      tempFolder.deleteRecursively()
+      IO.deleteRecursively(tempPath)
     }
 
     // folder should always have been removed at this stage
-    assert(!tempFolder.exists)
+    assert(!Files.exists(tempPath))
   }
 
   override def afterAll(): Unit = {

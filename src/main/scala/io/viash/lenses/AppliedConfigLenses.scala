@@ -28,13 +28,13 @@ object AppliedConfigLenses {
   val appliedEnginesLens = GenLens[AppliedConfig](_.engines)
   val appliedRunnerLens = GenLens[AppliedConfig](_.runner)
   
-  val enginesLens = configLens ^|-> ConfigLenses.enginesLens
-  val runnersLens = configLens ^|-> ConfigLenses.runnersLens
+  val enginesLens = configLens andThen ConfigLenses.enginesLens
+  val runnersLens = configLens andThen ConfigLenses.runnersLens
 
-  val configNameLens = configLens ^|-> ConfigLenses.nameLens
-  val configVersionLens = configLens ^|-> ConfigLenses.versionLens
-  val configRequirementsLens = configLens ^|-> ConfigLenses.requirementsLens
-  val configDependenciesLens = configLens ^|-> ConfigLenses.dependenciesLens
-  val configRepositoriesLens = configLens ^|-> ConfigLenses.repositoriesLens
-  val configResourcesLens = configLens ^|-> ConfigLenses.resourcesLens
+  val configNameLens = configLens andThen ConfigLenses.nameLens
+  val configVersionLens = configLens andThen ConfigLenses.versionLens
+  val configRequirementsLens = configLens andThen ConfigLenses.requirementsLens
+  val configDependenciesLens = configLens andThen ConfigLenses.dependenciesLens
+  val configRepositoriesLens = configLens andThen ConfigLenses.repositoriesLens
+  val configResourcesLens = configLens andThen ConfigLenses.resourcesLens
 }

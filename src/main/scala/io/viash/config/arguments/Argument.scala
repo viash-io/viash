@@ -77,7 +77,7 @@ abstract class Argument[Type] {
   val dest: String
 
   private val pattern = "^(-*)(.*)$".r
-  val pattern(flags, plainName) = name
+  val pattern(flags, plainName) = name : @unchecked
 
   /** Common parameter name for this argument */
   val par: String = dest + "_" + plainName

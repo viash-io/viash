@@ -17,30 +17,31 @@
 
 package io.viash.helpers.circe
 
-import io.circe.generic.extras.semiauto.deriveConfiguredDecoder
-import io.circe.{ Decoder, CursorOp }
-import io.circe.generic.extras.decoding.ConfiguredDecoder
+import io.circe.{ Decoder, CursorOp, HCursor }
+import io.circe.derivation.{Configuration, ConfiguredDecoder}
+import scala.deriving.Mirror
 
-import scala.reflect.runtime.universe._
-import shapeless.Lazy
-
-import io.viash.schemas.ParameterSchema
-import io.circe.ACursor
 import io.viash.exceptions.ConfigParserSubTypeException
 import io.viash.exceptions.ConfigParserValidationException
-import io.circe.HCursor
+import io.viash.helpers.{typeOf, fieldsOf}
 
 object DeriveConfiguredDecoderWithValidationCheck {
 
   // Validate the json can correctly converted to the required type by actually converting it.
   // Throw an exception when the conversion fails.
-  def validator[A](pred: HCursor)(implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Boolean = {
+  inline def validator[A](pred: HCursor)(using inline A: Mirror.Of[A], inline configuration: Configuration): Boolean = {     
     val d = deriveConfiguredDecoder[A]
-    val v = d(pred)
+    // val v = d(pred)
+    // TODO not entirely sure why this is needed instead of just doing `val v = d(pred)`
+    // goes wrong when decoding empty PackageConfig
+    val v = pred match {
+      case pred if pred.value.isNull => Right(null.asInstanceOf[A])
+      case _ => d(pred)
+    }
 
     v.fold(error => {
       val usedFields = pred.value.asObject.map(_.keys.toSeq)
-      val validFields = typeOf[A].members.filter(m => !m.isMethod).map(_.name.toString.strip()).toSeq
+      val validFields = fieldsOf[A]
       val invalidFields = usedFields.map(_.diff(validFields))
 
       val fieldsHint = invalidFields match {
@@ -58,21 +59,21 @@ object DeriveConfiguredDecoderWithValidationCheck {
         case _ => None
       }
 
-      throw new ConfigParserValidationException(typeOf[A].baseClasses.head.fullName, pred.value.toString(), hint)
+      throw new ConfigParserValidationException(typeOf[A], pred.value.toString(), hint)
       false
     }, _ => true)
   }
 
   // Attempts to convert the json to the desired class. Throw an exception if the conversion fails.
-  def deriveConfiguredDecoderWithValidationCheck[A](implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Decoder[A] = deriveConfiguredDecoder[A]
+  inline def deriveConfiguredDecoderWithValidationCheck[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = deriveConfiguredDecoder[A]
     .validate(
       validator[A],
-      s"Could not convert json to ${typeOf[A].baseClasses.head.fullName}."
+      s"Could not convert json to ${typeOf[A]}."
     )
 
   // Dummy decoder to generate exceptions when an invalid type is specified
   // We need a valid class type to be specified
-  def invalidSubTypeDecoder[A](tpe: String, validTypes: List[String])(implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Decoder[A] = deriveConfiguredDecoder[A]
+  inline def invalidSubTypeDecoder[A](tpe: String, validTypes: List[String])(using inline A: Mirror.Of[A], inline configuration: Configuration): Decoder[A] = deriveConfiguredDecoder[A]
     .validate(
       pred => {
         throw new ConfigParserSubTypeException(tpe, validTypes, pred.value.toString())

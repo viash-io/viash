@@ -18,14 +18,21 @@
 package io.viash.helpers
 
 import io.circe._
-import io.circe.generic.extras.Configuration
+import io.circe.derivation.{Configuration, ConfiguredDecoder, ConfiguredEncoder}
 import java.net.URI
 import data_structures.OneOrMore
 import java.nio.file.Paths
+import scala.deriving.Mirror
+
 
 package object circe {
   implicit val customConfig: Configuration =
     Configuration.default.withDefaults.withStrictDecoding
+
+  inline def deriveConfiguredDecoder[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = ConfiguredDecoder.derived[A]
+  inline def deriveConfiguredDecoderFullChecks[A](using inline A: Mirror.Of[A], inline configuration: Configuration): Decoder[A] = DeriveConfiguredDecoderFullChecks.deriveConfiguredDecoderFullChecks
+  inline def deriveConfiguredEncoder[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = ConfiguredEncoder.derived[A]
+  inline def deriveConfiguredEncoderStrict[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = DeriveConfiguredEncoderStrict.deriveConfiguredEncoderStrict
 
   // encoder and decoder for Either
   implicit def encodeEither[A,B](implicit ea: Encoder[A], eb: Encoder[B]): Encoder[Either[A,B]] = {

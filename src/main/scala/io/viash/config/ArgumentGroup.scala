@@ -62,7 +62,7 @@ case class ArgumentGroup(
   @example(
     """description: |
       |  A (multiline) description of the purpose of the arguments
-      |  in this argument group.""".stripMargin, "yaml")
+      |  in this argument group."""/*.stripMargin*/, "yaml")
   @default("Empty")
   description: Option[String] = None,
 
@@ -76,7 +76,7 @@ case class ArgumentGroup(
       | - @[boolean](arg_boolean)
       | - @[boolean_true](arg_boolean_true)
       | - @[boolean_false](arg_boolean_false)
-      |""".stripMargin)
+      |"""/*.stripMargin*/)
   @example(
     """arguments:
       |  - name: --foo
@@ -91,7 +91,7 @@ case class ArgumentGroup(
       |    multiple_sep: ";"
       |  - name: --bar
       |    type: string
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @default("Empty")
   arguments: List[Argument[_]] = Nil

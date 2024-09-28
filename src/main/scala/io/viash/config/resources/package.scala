@@ -18,24 +18,20 @@
 package io.viash.config
 
 import io.circe.{Decoder, Encoder, Json}
-import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
-import cats.syntax.functor._
+import cats.syntax.functor._ // for .widen
 
-import java.net.URI // for .widen
 import io.circe.ACursor
 
 package object resources {
 
-  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
   import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
 
-  implicit val encodeURI: Encoder[URI] = Encoder.instance {
-    uri => Json.fromString(uri.toString)
-  }
-  implicit val decodeURI: Decoder[URI] = Decoder.instance {
-    cursor => cursor.value.as[String].map(new URI(_))
-  }
+  // implicit val encodeURI: Encoder[URI] = Encoder.instance {
+  //   uri => Json.fromString(uri.toString)
+  // }
+  // implicit val decodeURI: Decoder[URI] = Decoder.instance {
+  //   cursor => cursor.value.as[String].map(new URI(_))
+  // }
 
   // encoders and decoders for Object
   implicit val encodeBashScript: Encoder.AsObject[BashScript] = deriveConfiguredEncoderStrict[BashScript]

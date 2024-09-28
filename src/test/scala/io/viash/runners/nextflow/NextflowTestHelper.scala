@@ -22,7 +22,7 @@ object NextflowTestHelper {
     val lines = output.split("\n").find(DebugRegex.findFirstIn(_).isDefined)
 
     assert(lines.isDefined)
-    val DebugRegex(path) = lines.get
+    val DebugRegex(path) = lines.get : @unchecked
 
     val src = Source.fromFile(path)
     try {

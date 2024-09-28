@@ -87,8 +87,8 @@ case class PythonRequirements(
 
   @description("Specifies a code block to run as part of the build.")
   @example("""script: |
-    #  print("Running custom code")
-    #  x = 1 + 1 == 2""".stripMargin('#'), "yaml")
+    |  print("Running custom code")
+    |  x = 1 + 1 == 2"""/*.stripMargin*/, "yaml")
   @default("Empty")
   script: OneOrMore[String] = Nil,
 

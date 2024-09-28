@@ -9,6 +9,7 @@ import java.io.{IOException, UncheckedIOException}
 import java.nio.file.{Files, Path, Paths}
 import scala.io.Source
 import io.viash.helpers.{IO, Exec, Logger}
+import io.viash.helpers.data_structures._
 
 class EscapingNativeTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)

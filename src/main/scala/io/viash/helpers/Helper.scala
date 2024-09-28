@@ -21,6 +21,7 @@ import io.viash.config.Config
 import io.viash.Main
 import io.viash.config.ArgumentGroup
 import io.viash.config.arguments.{Argument, StringArgument, Output, IntegerArgument, LongArgument, DoubleArgument, FileArgument}
+import io.viash.helpers.data_structures.oneOrMoreToList
 
 object Helper {
   private val maxWidth: Int = 80

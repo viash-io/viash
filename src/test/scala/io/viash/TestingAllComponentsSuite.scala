@@ -5,6 +5,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import io.viash.helpers.Logger
 import org.scalatest.ParallelTestExecution
 import io.viash.lenses.ConfigLenses
+import io.viash.config.{decodeConfig, encodeConfig}
 
 class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
   Logger.UseColorOverride.value = Some(false)

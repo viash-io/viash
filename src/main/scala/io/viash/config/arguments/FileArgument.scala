@@ -40,7 +40,7 @@ case class FileArgument(
       |  - `--foo` is a long option, which can be passed with `executable_name --foo=value` or `executable_name --foo value`
       |  - `-f` is a short option, which can be passed with `executable_name -f value`
       |  - `foo` is an argument, which can be passed with `executable_name value`  
-      |""".stripMargin)
+      |"""/*.stripMargin*/)
   name: String,
 
   @description("List of alternative format variations for this argument.")
@@ -63,7 +63,7 @@ case class FileArgument(
   @example(
     """description: |
       |  A (multiline) description of the purpose of
-      |  this argument.""".stripMargin, "yaml")
+      |  this argument."""/*.stripMargin*/, "yaml")
   @default("Empty")
   description: Option[String] = None,
 
@@ -71,7 +71,7 @@ case class FileArgument(
   @example(
     """info:
       |  category: cat1
-      |  labels: [one, two, three]""".stripMargin, "yaml")
+      |  labels: [one, two, three]"""/*.stripMargin*/, "yaml")
   @since("Viash 0.6.3")
   @default("Empty")
   info: Json = Json.Null,
@@ -81,7 +81,7 @@ case class FileArgument(
     """- name: --my_file
       |  type: file
       |  example: data.csv
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @default("Empty")
   example: OneOrMore[Path] = Nil,
@@ -91,7 +91,7 @@ case class FileArgument(
     """- name: --my_file
       |  type: file
       |  default: data.csv
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @default("Empty")
   default: OneOrMore[Path] = Nil,
@@ -102,7 +102,7 @@ case class FileArgument(
     """- name: --my_file
       |  type: file
       |  must_exist: true
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @default("True")
   must_exist: Boolean = true,
@@ -113,7 +113,7 @@ case class FileArgument(
       |  type: file
       |  direction: output
       |  create_parent: true
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @default("True")
   create_parent: Boolean = true,
@@ -123,7 +123,7 @@ case class FileArgument(
     """- name: --my_file
       |  type: file
       |  required: true
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @default("False")
   required: Boolean = false,
@@ -133,7 +133,7 @@ case class FileArgument(
     """- name: --my_output_file
       |  type: file
       |  direction: output
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @default("Input")
   direction: Direction = Input,
@@ -152,12 +152,12 @@ case class FileArgument(
       | automatically attempt to expand the expression.
       |
       |Other output arguments (e.g. integer, double, ...) are not supported yet.
-      |""".stripMargin)
+      |"""/*.stripMargin*/)
   @example(
     """- name: --my_files
       |  type: file
       |  multiple: true
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @exampleWithDescription("my_component --my_files=firstFile.csv:anotherFile.csv:yetAnother.csv", "bash", "Here's an example of how to use this:")
   @default("False")
@@ -169,7 +169,7 @@ case class FileArgument(
       |  type: file
       |  multiple: true
       |  multiple_sep: ";"
-      |""".stripMargin,
+      |"""/*.stripMargin*/,
       "yaml")
   @exampleWithDescription("my_component --my_files=firstFile.csv,anotherFile.csv,yetAnother.csv", "bash", "Here's an example of how to use this:")
   @default(";")

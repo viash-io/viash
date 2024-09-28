@@ -9,6 +9,7 @@ import io.viash.config.Config
 import scala.io.Source
 import io.viash.helpers.{IO, Exec, Logger}
 import io.viash.TestHelper
+import io.viash.helpers.data_structures._
 
 class MainBuildAuxiliaryNativeUnknownParameter extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)

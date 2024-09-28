@@ -19,6 +19,7 @@ package io.viash
 
 import java.nio.file.{Files, Paths}
 import scala.sys.process.{Process, ProcessLogger}
+import io.viash.helpers.status
 import io.viash.helpers.status._
 
 import config._
@@ -31,7 +32,7 @@ object ViashBuild extends Logging {
     output: String,
     setup: Option[String] = None,
     push: Boolean = false
-  ): Status = {
+  ): status.Status = {
     val resources = appliedConfig.generateRunner(false)
 
     // create dir

@@ -1,4 +1,4 @@
-package io.viash.e2e.export
+package io.viash.e2e.`export`
 
 import io.viash._
 import io.viash.helpers.{Logger, IO}

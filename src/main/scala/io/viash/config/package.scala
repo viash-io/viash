@@ -18,10 +18,6 @@
 package io.viash
 
 import io.circe.{Decoder, Encoder, Json, HCursor, JsonObject}
-import io.circe.generic.extras.Configuration
-import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
-import io.viash.platforms.decodePlatform
-import io.viash.functionality.decodeFunctionality
 import io.viash.exceptions.ConfigParserValidationException
 
 import config.ArgumentGroup
@@ -31,13 +27,22 @@ import config.Links
 import config.References
 import config.Status._
 import config.arguments._
+import io.circe.DecodingFailure
+import io.circe.DecodingFailure.Reason.CustomReason
 
 package object config {
   import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
-  import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
+  import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck.checkDeprecation
+  import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck.deriveConfiguredDecoderWithValidationCheck
+
+  import io.viash.config.resources.{decodeResource, encodeResource}
+  import io.viash.config.dependencies.{decodeDependency, encodeDependency}
+  import io.viash.config.dependencies.{decodeRepositoryWithName, encodeRepositoryWithName}
+  import io.viash.runners.{decodeRunner, encodeRunner}
+  import io.viash.engines.{decodeEngine, encodeEngine}
+  import io.viash.packageConfig.{decodePackageConfig, encodePackageConfig}
+  import io.viash.platforms.decodePlatform
+  import io.viash.functionality.decodeFunctionality
 
   // encoders and decoders for Config
   implicit val encodeConfig: Encoder.AsObject[Config] = deriveConfiguredEncoderStrict[Config]
@@ -270,7 +275,7 @@ package object config {
   implicit val encodeBuildInfo: Encoder[BuildInfo] = deriveConfiguredEncoder
   implicit val decodeBuildInfo: Decoder[BuildInfo] = deriveConfiguredDecoderFullChecks
 
-    // encoder and decoder for Author
+  // encoder and decoder for Author
   implicit val encodeAuthor: Encoder.AsObject[Author] = deriveConfiguredEncoder
   implicit val decodeAuthor: Decoder[Author] = deriveConfiguredDecoderFullChecks
 
@@ -283,10 +288,21 @@ package object config {
   implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoderFullChecks
 
   // encoder and decoder for Status, make string lowercase before decoding
-  implicit val encodeStatus: Encoder[Status] = Encoder.encodeEnumeration(Status)
-  implicit val decodeStatus: Decoder[Status] = Decoder.decodeEnumeration(Status).prepare {
-    _.withFocus(_.mapString(_.toLowerCase()))
+  implicit val encodeStatus: Encoder[Status] = Encoder.instance{
+    case Enabled    => Json.fromString("enabled")
+    case Disabled   => Json.fromString("disabled")
+    case Deprecated => Json.fromString("deprecated")
   }
+  implicit val decodeStatus: Decoder[Status] = Decoder.instance(cursor =>
+    for {
+      str          <- cursor.as[String]
+      status <- str.toLowerCase() match
+        case "enabled"    => Right(Enabled)
+        case "disabled"   => Right(Disabled)
+        case "deprecated" => Right(Deprecated)
+        case other        => Left(DecodingFailure(CustomReason(s"$other is not a valid Status"), cursor))
+    } yield status
+  )
 
   implicit val encodeLinks: Encoder.AsObject[Links] = deriveConfiguredEncoderStrict
   implicit val decodeLinks: Decoder[Links] = deriveConfiguredDecoderFullChecks
