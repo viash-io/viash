@@ -18,11 +18,57 @@
 package io.viash.helpers
 
 import scala.quoted.*
-import io.viash.schemas.internalFunctionality
+import io.viash.schemas.{deprecated, internalFunctionality, removed}
+
+inline def niceNameOf[T]: String = ${ niceNameImpl[T] }
+inline def deprecatedOf[T]: Vector[(String, String, String)] = ${ deprecatedOfImpl[T] }
+inline def removedOf[T]: Vector[(String, String, String)] = ${ removedOfImpl[T] }
 
 inline def fieldsOf[T]: List[String] = ${ fieldsOfImpl[T] }
-inline def niceNameOf[T]: String = ${ niceNameImpl[T] }
 inline def fieldsInternalFunctionality[T]: List[String] = ${ fieldsInternalFunctionalityImpl[T] }
+inline def fieldsDeprecated[T]: Vector[(String, String, String, String)] = ${ fieldsDeprecatedImpl[T] }
+inline def fieldsRemoved[T]: Vector[(String, String, String, String)] = ${ fieldsRemovedImpl[T] }
+
+def niceNameImpl[T: Type](using Quotes): Expr[String] =
+  import quotes.reflect.*
+  val name = TypeRepr.of[T].typeSymbol.name
+  Expr(name)
+
+def deprecatedOfImpl[T](using Type[T], Quotes): Expr[Vector[(String, String, String)]] =
+  import quotes.reflect.*
+  val annot = TypeRepr.of[deprecated].typeSymbol
+  val tuple = TypeRepr
+    .of[T]
+    .typeSymbol
+    .getAnnotation(annot)
+    .map:
+      case annot =>
+        val annotExpr = annot.asExprOf[deprecated]
+        '{ ($annotExpr.message, $annotExpr.since, $annotExpr.plannedRemoval) }
+  val list = tuple match {
+    case Some(t) => Seq(t)
+    case None => Nil
+  }
+  val seq: Expr[Seq[(String, String, String)]] = Expr.ofSeq(list)
+  '{ $seq.toVector }
+
+def removedOfImpl[T](using Type[T], Quotes): Expr[Vector[(String, String, String)]] =
+  import quotes.reflect.*
+  val annot = TypeRepr.of[removed].typeSymbol
+  val tuple = TypeRepr
+    .of[T]
+    .typeSymbol
+    .getAnnotation(annot)
+    .map:
+      case annot =>
+        val annotExpr = annot.asExprOf[removed]
+        '{ ($annotExpr.message, $annotExpr.deprecatedSince, $annotExpr.since) }
+  val list = tuple match {
+    case Some(t) => Seq(t)
+    case None => Nil
+  }
+  val seq: Expr[Seq[(String, String, String)]] = Expr.ofSeq(list)
+  '{ $seq.toVector }
 
 def fieldsOfImpl[T: Type](using Quotes): Expr[List[String]] =
   import quotes.reflect.*
@@ -30,12 +76,6 @@ def fieldsOfImpl[T: Type](using Quotes): Expr[List[String]] =
   val fieldSymbols = tpe.caseFields.map(_.name)
   Expr(fieldSymbols)
 
-def niceNameImpl[T: Type](using Quotes): Expr[String] =
-  import quotes.reflect.*
-  val name = TypeRepr.of[T].typeSymbol.name
-  Expr(name)
-
-// TODO this doesn't get annotations from parent classes
 def fieldsInternalFunctionalityImpl[T: Type](using Quotes): Expr[List[String]] =
   import quotes.reflect.*
   val annot = TypeRepr.of[internalFunctionality].typeSymbol
@@ -45,3 +85,33 @@ def fieldsInternalFunctionalityImpl[T: Type](using Quotes): Expr[List[String]] =
     .flatMap(_.declaredFields)
     .collect{case f if f.hasAnnotation(annot) => f.name }
   Expr(fieldSymbols)
+
+def fieldsDeprecatedImpl[T: Type](using Quotes): Expr[Vector[(String, String, String, String)]] =
+  import quotes.reflect.*
+  val annot = TypeRepr.of[deprecated].typeSymbol
+  val tuples = TypeRepr
+    .of[T]
+    .baseClasses
+    .flatMap(_.declaredFields)
+    .collect:
+      case f if f.hasAnnotation(annot) =>
+        val fieldNameExpr = Expr(f.name.asInstanceOf[String])
+        val annotExpr = f.getAnnotation(annot).get.asExprOf[deprecated]
+        '{ ($fieldNameExpr, $annotExpr.message, $annotExpr.since, $annotExpr.plannedRemoval) }
+  val seq: Expr[Seq[(String, String, String, String)]] = Expr.ofSeq(tuples)
+  '{ $seq.toVector }
+
+def fieldsRemovedImpl[T: Type](using Quotes): Expr[Vector[(String, String, String, String)]] =
+  import quotes.reflect.*
+  val annot = TypeRepr.of[removed].typeSymbol
+  val tuples = TypeRepr
+    .of[T]
+    .baseClasses
+    .flatMap(_.declaredFields)
+    .collect:
+      case f if f.hasAnnotation(annot) =>
+        val fieldNameExpr = Expr(f.name.asInstanceOf[String])
+        val annotExpr = f.getAnnotation(annot).get.asExprOf[removed]
+        '{ ($fieldNameExpr, $annotExpr.message, $annotExpr.deprecatedSince, $annotExpr.since) }
+  val seq: Expr[Seq[(String, String, String, String)]] = Expr.ofSeq(tuples)
+  '{ $seq.toVector }
