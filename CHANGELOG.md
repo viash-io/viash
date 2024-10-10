@@ -4,7 +4,7 @@ TODO add summary
 
 ## MINOR CHANGES
 
-* `viash-hub`: Change the url for viash-hub Git access to packages.viash-hub.com (PR #xxx).
+* `viash-hub`: Change the url for viash-hub Git access to packages.viash-hub.com (PR #774).
 
 # Viash 0.9.0 (2024-09-03): Restructure platforms into runners and engines
 
