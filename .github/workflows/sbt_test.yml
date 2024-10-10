@@ -42,18 +42,14 @@ jobs:
           processx
           testthat
 
-    - name: Set up java & sbt
+    - name: Set up java
       uses: actions/setup-java@v4
       with:
         distribution: temurin
         java-version: ${{ matrix.java.ver }}
 
-    - name: Set up sbt specifically on macOS on arm64 if needed
-      if: ${{ runner.os == 'macOS' && runner.arch == 'ARM64'}}
-      run: |
-        if ! command -v sbt &> /dev/null; then
-          brew install sbt
-        fi
+    - name: Set up sbt
+      uses: sbt/setup-sbt@v1
 
     - name: Set up Scala
       run: |
