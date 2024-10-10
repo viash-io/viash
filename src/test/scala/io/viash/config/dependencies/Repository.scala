@@ -32,7 +32,7 @@ class RepositoryTest extends AnyFunSuite {
     val viashhubRepo = repo.get.asInstanceOf[ViashhubRepository]
     assert(viashhubRepo.repo == "viash-io/viash")
     assert(viashhubRepo.tag == Some("v2.0.0"))
-    assert(viashhubRepo.uri == "https://viash-hub.com/viash-io/viash.git")
+    assert(viashhubRepo.uri == "https://packages.viash-hub.com/viash-io/viash.git")
   }
 
   test("Repository.unapply: handles viashhub syntax with implicit vsh organization") {
@@ -42,7 +42,7 @@ class RepositoryTest extends AnyFunSuite {
     val viashhubRepo = repo.get.asInstanceOf[ViashhubRepository]
     assert(viashhubRepo.repo == "viash")
     assert(viashhubRepo.tag == Some("v2.0.0"))
-    assert(viashhubRepo.uri == "https://viash-hub.com/vsh/viash.git")
+    assert(viashhubRepo.uri == "https://packages.viash-hub.com/vsh/viash.git")
   }
 
   test("Repository.unapply: handles viashhub syntax with explicit vsh organization") {
@@ -52,7 +52,7 @@ class RepositoryTest extends AnyFunSuite {
     val viashhubRepo = repo.get.asInstanceOf[ViashhubRepository]
     assert(viashhubRepo.repo == "vsh/viash")
     assert(viashhubRepo.tag == Some("v2.0.0"))
-    assert(viashhubRepo.uri == "https://viash-hub.com/vsh/viash.git")
+    assert(viashhubRepo.uri == "https://packages.viash-hub.com/vsh/viash.git")
   }
 
   test("Repository.unapply: handles local syntax") {
