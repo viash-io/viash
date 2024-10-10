@@ -49,10 +49,14 @@ jobs:
         java-version: ${{ matrix.java.ver }}
 
     - name: Set up sbt specifically on macOS on arm64 if needed
-      if: ${{ runner.os == 'macOS' && runner.arch == 'ARM64'}}
       run: |
         if ! command -v sbt &> /dev/null; then
-          brew install sbt
+          if [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
+            brew install sbt
+          else
+              sudo apt-get update
+              sudo apt-get install -y sbt
+          fi
         fi
 
     - name: Set up Scala
