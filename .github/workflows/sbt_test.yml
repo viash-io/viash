@@ -42,13 +42,13 @@ jobs:
           processx
           testthat
 
-    - name: Set up java & sbt
+    - name: Set up java (& sbt)
       uses: actions/setup-java@v4
       with:
         distribution: temurin
         java-version: ${{ matrix.java.ver }}
 
-    - name: Set up sbt specifically on macOS on arm64 if needed
+    - name: Set up sbt when it isn't provided by temurin
       run: |
         if ! command -v sbt &> /dev/null; then
           if [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
