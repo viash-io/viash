@@ -42,7 +42,7 @@ case class Executable(
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = ScriptInjectionMods()
 
-  override def read: Option[String] = None
+  override def readSome: Option[String] = None
 
   override def write(path: Path, overwrite: Boolean): Unit = {}
 

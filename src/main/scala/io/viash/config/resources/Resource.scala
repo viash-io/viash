@@ -147,12 +147,12 @@ trait Resource {
     basenameRegex.replaceFirstIn(resourcePath, "")
   }
 
-  def read: Option[String] = {
-    if (text.isDefined) {
-      text
-    } else {
-      IO.readSome(uri.get)
-    }
+  def readSome: Option[String] = {
+    text.orElse(IO.readSome(uri.get))
+  }
+
+  def read: String = {
+    text.getOrElse(IO.read(uri.get))
   }
 
   def write(path: Path, overwrite: Boolean): Unit = {
