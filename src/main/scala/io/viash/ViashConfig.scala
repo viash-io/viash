@@ -49,7 +49,7 @@ object ViashConfig extends Logging{
       throw new ExitException(1)
     }
     // check if we can read code
-    if (config.mainScript.get.read.isEmpty) {
+    if (config.mainScript.get.readSome.isEmpty) {
       infoOut("Could not read main script in the Viash config.")
       throw new ExitException(1)
     }

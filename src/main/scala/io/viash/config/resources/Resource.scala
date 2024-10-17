@@ -24,6 +24,7 @@ import io.viash.exceptions.MissingResourceFileException
 import java.nio.file.{Path, Paths}
 import java.nio.file.NoSuchFileException
 import io.viash.schemas._
+import java.io.FileNotFoundException
 
 @description(
   """Resources are files that support the component. The first resource should be @[a script](scripting_languages) that will be executed when the component is run. Additional resources will be copied to the same directory.
@@ -147,11 +148,17 @@ trait Resource {
     basenameRegex.replaceFirstIn(resourcePath, "")
   }
 
-  def read: Option[String] = {
-    if (text.isDefined) {
-      text
-    } else {
-      IO.readSome(uri.get)
+  def readSome: Option[String] = {
+    text.orElse(IO.readSome(uri.get))
+  }
+
+  def read: String = {
+    try {
+      text.getOrElse(IO.read(uri.get))
+    } catch {
+      case e: FileNotFoundException => 
+        val configString = parent.map(_.toString)
+        throw MissingResourceFileException.apply(uri.get.toString(), configString, e)
     }
   }
 
@@ -164,10 +171,7 @@ trait Resource {
       }
     } catch {
       case e: NoSuchFileException => 
-        val configString = parent match {
-          case Some(uri) => Some(uri.toString)
-          case _ => None
-        }
+        val configString = parent.map(_.toString)
         throw MissingResourceFileException.apply(path.toString(), configString, e)
     }
   }
