@@ -6,6 +6,8 @@ TODO add summary
 
 * `viash-hub`: Change the url for viash-hub Git access to packages.viash-hub.com (PR #774).
 
+* `RRequirements`: Allow single quotes to be used again in the `.script` field (PR #771).
+
 ## BUG FIXES
 
 * `config build`: Fix a bug where a missing main script would cause a stack trace instead of a proper error message (PR #776).

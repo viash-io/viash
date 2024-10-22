@@ -95,13 +95,11 @@ case class RRequirements(
   
   `type`: String = "r"
 ) extends Requirements {
-  assert(script.forall(!_.contains("'")), "R requirement '.script' field contains a single quote ('). This is not allowed.")
-
   def installCommands: List[String] = {
     val prefix = if (warnings_as_errors) "options(warn = 2); " else ""
 
     def runRCode(code: String): String = {
-      s"""Rscript -e '${prefix}${code}'"""
+      s"""Rscript -e '${prefix}${code.replaceAll("'", "'\"'\"'")}'"""
     }
 
     val installRemotes =
