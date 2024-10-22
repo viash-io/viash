@@ -6,10 +6,14 @@ TODO add summary
 
 * `viash-hub`: Change the url for viash-hub Git access to packages.viash-hub.com (PR #774).
 
+* `RRequirements`: Allow single quotes to be used again in the `.script` field (PR #771).
+
 ## BUG FIXES
 
 * `config build`: Fix a bug where a missing main script would cause a stack trace instead of a proper error message (PR #776).
   The error message showed the path of the missing resource but it was easy to miss given the stack trace, besides it shouldn't have been a stack trace anyway.
+  
+* `RRequirements`: Treat warnings as errors when installing R dependencies in Docker engines (PR #771).
 
 # Viash 0.9.0 (2024-09-03): Restructure platforms into runners and engines
 
