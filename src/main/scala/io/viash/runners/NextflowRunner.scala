@@ -217,7 +217,7 @@ final case class NextflowRunner(
       // if mainscript is a nextflow workflow
       case scr: NextflowScript =>
         s"""// user-provided Nextflow code
-          |${scr.readWithoutInjection.get.split("\n").mkString("\n|")}
+          |${scr.readWithoutInjection.split("\n").mkString("\n|")}
           |
           |// inner workflow hook
           |def innerWorkflowFactory(args) {
