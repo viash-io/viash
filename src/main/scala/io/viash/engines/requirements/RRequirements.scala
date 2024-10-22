@@ -101,7 +101,7 @@ case class RRequirements(
     val prefix = if (warnings_as_errors) "options(warn = 2); " else ""
 
     def runRCode(code: String): String = {
-      s"""Rscript -e "${prefix}${code.replaceAll("\"", "\\\"")}""""
+      s"""Rscript -e '${prefix}${code}'"""
     }
 
     val installRemotes =
@@ -143,7 +143,7 @@ case class RRequirements(
     val installers = remotePairs.flatMap {
       case (_, Nil) => None
       case (str, list) =>
-        Some(runRCode(s"""remotes::install_$str(c("${list.mkString("\", \"")}"))"""))
+        Some(runRCode(s"""remotes::install_$str(c("${list.mkString("\", \"")}"), repos = "https://cran.rstudio.com")"""))
     }
 
     val installScript =
