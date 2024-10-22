@@ -458,6 +458,21 @@ class MainBuildAuxiliaryDockerRequirementsR extends AbstractMainBuildAuxiliaryDo
 
     assert(testOutput.exceptionText == Some("assertion failed: R requirement '.script' field contains a single quote ('). This is not allowed."))
   }
+
+  test("setup; check installing a missing package returns an error", DockerTest) { f =>
+    val newConfigFilePath = deriveEngineConfig(Some("""[{ "type": "r", "packages": ["non-existing-package"] }]"""), None, "r_non_existing_package")
+
+    val testOutput = TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(testOutput.exitCode == Some(1))
+    assert(testOutput.stdout.contains("Error: Failed to install 'non-existing-package' from CRAN"))
+    assert(testOutput.stdout.contains("ERROR: failed to solve"))
+  }
 }
 
 class MainBuildAuxiliaryDockerRequirementsRBioc extends AbstractMainBuildAuxiliaryDockerRequirements{
