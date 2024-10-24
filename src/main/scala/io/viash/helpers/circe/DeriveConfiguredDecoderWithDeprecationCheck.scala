@@ -26,13 +26,13 @@ import io.viash.helpers.*
 
 object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
 
-  private inline def memberDeprecationCheck[A](
+  private def memberDeprecationCheck(
     name: String,
     history: List[CursorOp],
     deprecated: Option[(String, String, String)],
     removed: Option[(String, String, String)],
     hasInternalFunctionality: Boolean
-  )(using inline A: Mirror.Of[A]): Unit = {
+  ): Unit = {
     lazy val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
 
     lazy val fullHistoryName = 

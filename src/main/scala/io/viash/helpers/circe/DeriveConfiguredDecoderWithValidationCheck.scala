@@ -17,7 +17,7 @@
 
 package io.viash.helpers.circe
 
-import io.circe.{ Decoder, CursorOp, HCursor }
+import io.circe.{ Decoder, CursorOp, HCursor, DecodingFailure }
 import io.circe.derivation.{Configuration, ConfiguredDecoder}
 import scala.deriving.Mirror
 
@@ -26,6 +26,28 @@ import io.viash.exceptions.ConfigParserValidationException
 import io.viash.helpers.{typeOf, fieldsOf}
 
 object DeriveConfiguredDecoderWithValidationCheck {
+
+  private def validator_static_error(pred: HCursor, validFields: List[String], typeOf: String)(error: DecodingFailure): Boolean = {
+    val usedFields = pred.value.asObject.map(_.keys.toSeq)
+    val invalidFields = usedFields.map(_.diff(validFields))
+
+    val fieldsHint = invalidFields match {
+      case Some(a) if a.length > 1 => Some(s"Unexpected fields: ${a.mkString(", ")}")
+      case Some(a) if a.length == 1 => Some(s"Unexpected field: ${a.head}")
+      case _ => None
+    }
+
+    val historyString = error.history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
+
+    val hint = (fieldsHint, historyString, error.message) match {
+      case (Some(a), h, _) if h != "" => Some(s".$h -> $a")
+      case (Some(a), _, _) => Some(a)
+      case (None, h, m) if h != "" => Some(s".$h -> $m")
+      case _ => None
+    }
+
+    throw new ConfigParserValidationException(typeOf, pred.value.toString(), hint)
+  }
 
   // Validate the json can correctly converted to the required type by actually converting it.
   // Throw an exception when the conversion fails.
@@ -39,29 +61,9 @@ object DeriveConfiguredDecoderWithValidationCheck {
       case _ => d(pred)
     }
 
-    v.fold(error => {
-      val usedFields = pred.value.asObject.map(_.keys.toSeq)
-      val validFields = fieldsOf[A]
-      val invalidFields = usedFields.map(_.diff(validFields))
-
-      val fieldsHint = invalidFields match {
-        case Some(a) if a.length > 1 => Some(s"Unexpected fields: ${a.mkString(", ")}")
-        case Some(a) if a.length == 1 => Some(s"Unexpected field: ${a.head}")
-        case _ => None
-      }
-
-      val historyString = error.history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
-
-      val hint = (fieldsHint, historyString, error.message) match {
-        case (Some(a), h, _) if h != "" => Some(s".$h -> $a")
-        case (Some(a), _, _) => Some(a)
-        case (None, h, m) if h != "" => Some(s".$h -> $m")
-        case _ => None
-      }
-
-      throw new ConfigParserValidationException(typeOf[A], pred.value.toString(), hint)
-      false
-    }, _ => true)
+    v.fold(
+      validator_static_error(pred, fieldsOf[A], typeOf[A]),
+      _ => true)
   }
 
   // Attempts to convert the json to the desired class. Throw an exception if the conversion fails.
