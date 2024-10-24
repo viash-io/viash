@@ -272,7 +272,7 @@ package object config {
     "Could not convert json to Config."
   )
 
-  implicit val encodeBuildInfo: Encoder[BuildInfo] = deriveConfiguredEncoder
+  implicit val encodeBuildInfo: Encoder.AsObject[BuildInfo] = deriveConfiguredEncoder
   implicit val decodeBuildInfo: Decoder[BuildInfo] = deriveConfiguredDecoderFullChecks
 
   // encoder and decoder for Author

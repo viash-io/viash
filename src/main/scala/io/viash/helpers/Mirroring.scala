@@ -28,6 +28,7 @@ inline def fieldsOf[T]: List[String] = ${ fieldsOfImpl[T] }
 inline def internalFunctionalityFieldsOf[T]: List[String] = ${ internalFunctionalityFieldsOfImpl[T] }
 inline def deprecatedFieldsOf[T]: Vector[(String, String, String, String)] = ${ deprecatedFieldsOfImpl[T] }
 inline def removedFieldsOf[T]: Vector[(String, String, String, String)] = ${ removedFieldsOfImpl[T] }
+inline def membersOf[T]: List[String] = ${ membersOfImpl[T] }
 
 def typeOfImpl[T: Type](using Quotes): Expr[String] =
   import quotes.reflect.*
@@ -125,3 +126,10 @@ def removedFieldsOfImpl[T: Type](using Quotes): Expr[Vector[(String, String, Str
         '{ ($fieldNameExpr, $annotExpr.message, $annotExpr.deprecatedSince, $annotExpr.since) }
   val seq: Expr[Seq[(String, String, String, String)]] = Expr.ofSeq(tuples)
   '{ $seq.toVector }
+
+def membersOfImpl[T: Type](using Quotes): Expr[List[String]] = {
+  import quotes.reflect.*
+  val tpe = TypeRepr.of[T].typeSymbol
+  val memberSymbols = tpe.fieldMembers.map(_.name)
+  Expr(memberSymbols)
+}

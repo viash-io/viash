@@ -44,6 +44,7 @@ import io.viash.config.Links
 import io.viash.config.References
 import scala.deriving.Mirror
 import scala.compiletime.{ codeOf, constValue, erasedValue, error, summonFrom, summonInline }
+import scala.annotation.Annotation
 
 final case class CollectedSchemas (
   config: Map[String, List[ParameterSchema]],
@@ -88,15 +89,17 @@ object CollectedSchemas {
       case _: EmptyTuple => Nil
       case _: (t *: ts)  => constValue[t].asInstanceOf[String] :: summonLabels[ts]
 
-  private def getMembers[T /*TypeTag*/]/*(using mirror: Mirror.Of[T])*/(): (Map[String,List[MemberInfo]], List[Symbol]) = {
+  private inline def getMembers[T /*TypeTag*/]/*(using mirror: Mirror.Of[T])*/(): (Map[String,List[MemberInfo]], List[Symbol]) = {
 
     // val name: String = constValue[mirror.MirroredLabel]
+    val name: String = typeOf[T]
 
     // Get all members and filter for constructors, first one should be the best (most complete) one
     // Traits don't have constructors
     // Get all parameters and store their short name
     // val constructorMembers = typeOf[T].members.filter(_.isConstructor).headOption.map(_.asMethod.paramLists.head.map(_.shortName)).getOrElse(List.empty[String])
     // val constructorMembers = summonLabels[mirror.MirroredElemLabels]
+    val constructorMembers = fieldsOf[T]
 
     // val baseClasses = typeOf[T].baseClasses
     //   .filter(_.fullName.startsWith("io.viash"))
@@ -111,6 +114,7 @@ object CollectedSchemas {
     //   .filter(!_.isMethod || documentFully)
     //   .map(_.shortName)
     //   .toSeq
+    val memberNames = membersOf[T]
 
     // val allMembers = baseClasses
     //   .zipWithIndex
@@ -219,7 +223,7 @@ object CollectedSchemas {
       .replaceAll("""(\w*)\[[\w\.]*?(\w*),[\w\.]*?(\w*)\]""", "$1[$2,$3]")
   }
 
-  // private def annotationsOf(members: (Map[String,List[MemberInfo]]), classes: List[Symbol]): List[(String, String, List[String], List[Annotation])] = {
+  private def annotationsOf(members: (Map[String,List[MemberInfo]]), classes: List[Symbol]): List[(String, String, List[String], List[Annotation])] = {
   //   val annMembers = members
   //     .map{ case (memberName, memberInfo) => { 
   //       val h = memberInfo.head
@@ -231,19 +235,20 @@ object CollectedSchemas {
   //   val allAnnotations = annThis :: annMembers.toList
   //   allAnnotations
   //     .map({case (name, tpe, annotations, d, e, hierarchy) => (name, trimTypeName(tpe), hierarchy, annotations)})  // TODO this ignores where the annotation was defined, ie. top level class or super class
-  // }
+    Nil
+  }
 
-  // private val getSchema: ((Map[String,List[MemberInfo]], List[Symbol])) => List[ParameterSchema] = (t: (Map[String,List[MemberInfo]], List[Symbol])) => t match {
-  //   case (members, classes) => {
-  //     annotationsOf(members, classes).map{ case (name, tpe, hierarchy, annotations) => ParameterSchema(name, tpe, hierarchy, annotations) }
-  //   }
-  // }
+  private val getSchema: ((Map[String,List[MemberInfo]], List[Symbol])) => List[ParameterSchema] = (t: (Map[String,List[MemberInfo]], List[Symbol])) => t match {
+    case (members, classes) => {
+      annotationsOf(members, classes).map{ case (name, tpe, hierarchy, annotations) => ParameterSchema(name, tpe, hierarchy, annotations) }
+    }
+  }
 
   // get all parameters for a given type, including parent class annotations
   // def getParameters[T: TypeTag](): List[ParameterSchema] = getSchema(getMembers[T]())
 
   // Main call for documentation output
-  lazy val fullData: List[List[ParameterSchema]] = Nil//schemaClasses.map{ v => getSchema(v)}
+  lazy val fullData: List[List[ParameterSchema]] = schemaClasses.map{ v => getSchema(v)}
   lazy val data: List[List[ParameterSchema]] = fullData.map(_.filter(p => !p.hasUndocumented && !p.hasInternalFunctionality))
 
   def getKeyFromParamList(data: List[ParameterSchema]): String = data.find(p => p.name == "__this__").get.`type`
