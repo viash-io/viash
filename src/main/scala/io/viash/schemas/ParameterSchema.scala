@@ -130,8 +130,7 @@ object ParameterSchema {
     // name is e.g. "io.viash.config.Config.name", only keep "name"
     // name can also be "__this__"
     // Use the name defined from the class, *unless* the 'nameOverride' annotation is set. Then use the override, unless the name is '__this__'.
-    // val nameOverride = annStrings.collectFirst({case (name, value) if name.endsWith("nameOverride") => value.head})
-    val nameOverride = Option.empty // TODO
+    val nameOverride = annStrings.collectFirst({case (name, value) if name.endsWith("nameOverride") => value.head})
     val nameFromClass = name.split('.').last
     val name_ = (nameOverride, nameFromClass) match {
       case (Some(_), "__this__") => "__this__"

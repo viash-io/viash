@@ -18,7 +18,7 @@
 package io.viash.helpers
 
 import scala.quoted.*
-import io.viash.schemas.{deprecated, internalFunctionality, removed}
+import io.viash.schemas.*
 
 inline def typeOf[T]: String = ${ typeOfImpl[T] }
 inline def deprecatedOf[T]: Vector[(String, String, String)] = ${ deprecatedOfImpl[T] }
@@ -28,6 +28,7 @@ inline def fieldsOf[T]: List[String] = ${ fieldsOfImpl[T] }
 inline def internalFunctionalityFieldsOf[T]: List[String] = ${ internalFunctionalityFieldsOfImpl[T] }
 inline def deprecatedFieldsOf[T]: Vector[(String, String, String, String)] = ${ deprecatedFieldsOfImpl[T] }
 inline def removedFieldsOf[T]: Vector[(String, String, String, String)] = ${ removedFieldsOfImpl[T] }
+inline def annotationsOf[T]: List[(String, List[String])] = ${ annotationsOfImpl[T] }
 inline def membersOf[T]: List[String] = ${ membersOfImpl[T] }
 
 def typeOfImpl[T: Type](using Quotes): Expr[String] =
@@ -126,6 +127,63 @@ def removedFieldsOfImpl[T: Type](using Quotes): Expr[Vector[(String, String, Str
         '{ ($fieldNameExpr, $annotExpr.message, $annotExpr.deprecatedSince, $annotExpr.since) }
   val seq: Expr[Seq[(String, String, String, String)]] = Expr.ofSeq(tuples)
   '{ $seq.toVector }
+
+
+
+def annotationsOfImpl[T: Type](using Quotes): Expr[List[(String, List[String])]] =
+  import quotes.reflect.*
+  val tpe = TypeRepr.of[T].typeSymbol
+
+
+  def unfinishedStringStripMargin(s: String, marginChar: Char = '|'): String = {
+    s.replaceAll("\\\\n", "\n").stripMargin(marginChar)
+  }
+
+  def mapTreeList(l: List[Tree], marginChar: Char = '|'): String = {
+    l.map(i => i match {
+      // case Literal(Constant(value: String)) =>
+      //   unfinishedStringStripMargin(value, marginChar)
+      case Literal(value) =>
+        unfinishedStringStripMargin(value.show(using Printer.ConstantCode), marginChar)
+      case _ =>
+        "unmatched in mapTreeList: " + i.toString()
+    }).mkString
+  }
+
+  // Traverse tree information and extract values or lists of values
+  def annotationToStrings(ann: Term): List[String] = {
+    // val name = ann.tree.tpe.toString()
+    val values = ann match {
+      case Apply(c, args: List[Tree]) =>
+        args.collect({
+          case i: Tree =>
+            i match {
+              // Here 'Apply' contains lists
+              // While 'Select' has a single element
+              // case Literal(Constant(value: String)) =>
+              //   value
+              case Literal(value) =>
+                value.show(using Printer.ConstantCode)
+              // case Select(Select(a, b), stripMargin) =>
+              //   unfinishedStringStripMargin(b)
+              case Select(Apply(a, a2), b) if b.toString == "stripMargin" =>
+                mapTreeList(a2)
+              case Apply(Select(Apply(a, a2), b), stripMargin) if b.toString == "stripMargin" =>
+                val stripper = stripMargin.head.toString.charAt(1)
+                mapTreeList(a2, stripper)
+              case _ =>
+                "unmatched in annotationToStrings: " + i.toString()
+            }
+        })
+    }
+    values
+  }
+
+  val annots = tpe.annotations
+    .filter(_.tpe.typeSymbol.fullName.startsWith("io.viash"))
+    .map(ann => (ann.tpe.typeSymbol.name, annotationToStrings(ann)))
+
+  Expr(annots)
 
 def membersOfImpl[T: Type](using Quotes): Expr[List[String]] = {
   import quotes.reflect.*
