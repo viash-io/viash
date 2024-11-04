@@ -27,7 +27,7 @@ import scala.util.Random
 import config.Config
 import config.{Config, ArgumentGroup}
 import config.arguments.{FileArgument, Output}
-import config.resources.{BashScript, Script}
+import config.resources.{BashScript, NextflowScript, Script}
 import helpers.{IO, Logging, LoggerOutput, LoggerLevel}
 import io.viash.helpers.data_structures._
 import io.viash.exceptions.MissingResourceFileException
@@ -37,7 +37,7 @@ import io.viash.runners.Runner
 import io.viash.config.AppliedConfig
 import io.viash.lenses.AppliedConfigLenses._
 import io.viash.lenses.ConfigLenses.resourcesLens
-import io.viash.runners.ExecutableRunner
+import io.viash.runners.{ExecutableRunner, NextflowRunner}
 import io.viash.engines.NativeEngine
 
 object ViashTest extends Logging {
@@ -161,6 +161,7 @@ object ViashTest extends Logging {
     val buildResult =
       if (engine.hasSetup) {
         // use an executable to set up the engine environments
+        // TODO: might need to do this for all dependencies :cry:
         val ac1 = appliedConfig.copy(
           runner = Some(ExecutableRunner())
         )
@@ -230,12 +231,6 @@ object ViashTest extends Logging {
       return ManyTestOutput(buildResult, Nil)
     }
 
-    // generate executable runner
-    val exeConfig = appliedConfig.config.copy(
-      engines = List(NativeEngine())
-    )
-    val exe = ExecutableRunner().generateRunner(exeConfig, true).resources.head
-
     // fetch tests
     val tests = conf.test_resources
 
@@ -245,6 +240,16 @@ object ViashTest extends Logging {
 
       case test: Script =>
         val startTime = LocalDateTime.now
+
+        // generate executable runner
+        val exeConfig = appliedConfig.config.copy(
+          engines = List(NativeEngine())
+        )
+        val exeRunner = test match {
+          case _: NextflowScript => NextflowRunner()
+          case _ => ExecutableRunner()
+        }
+        val exe = exeRunner.generateRunner(exeConfig, true).resources.head
 
         // make a new directory
         val dirName = "test_" + test.filename.replaceAll("\\.[^\\.]*$", "")
@@ -274,7 +279,9 @@ object ViashTest extends Logging {
             links = conf.links,
             // copy configuration for package name, organization
             package_config = conf.package_config,
-          ))(appliedConfig)
+          ))(appliedConfig.copy(
+          runner = Some(ExecutableRunner())
+        ))
 
         // generate bash script for test
         val resourcesOnlyTest = testFunConfig.generateRunner(true)

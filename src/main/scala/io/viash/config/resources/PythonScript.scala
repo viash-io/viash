@@ -21,7 +21,7 @@ import io.viash.config.arguments._
 import io.viash.wrapper.BashWrapper
 
 import java.net.URI
-import _root_.io.viash.helpers.Bash
+import io.viash.helpers.Bash
 import io.viash.schemas._
 import io.viash.config.Config
 

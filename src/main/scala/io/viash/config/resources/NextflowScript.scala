@@ -29,6 +29,8 @@ import io.circe.syntax._
 import io.viash.helpers.circe._
 import io.viash.ViashNamespace
 import io.viash.config.dependencies.Dependency
+import io.viash.config.arguments._
+import io.viash.helpers.Bash
 
 @description("""A Nextflow script. Work in progress; added mainly for annotation at the moment.""".stripMargin)
 @subclass("nextflow_script")
@@ -52,8 +54,57 @@ case class NextflowScript(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
-    ScriptInjectionMods()
+def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+    val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
+      val parSet = params.map { par =>
+        // val env_name = par.VIASH_PAR
+        val env_name = Bash.getEscapedArgument(par.VIASH_PAR, "'''", "'''", "'", """''' + ''''''' + '''""")
+
+        val parse = par match {
+          case a: BooleanArgumentBase if a.multiple =>
+            s"""$env_name.split('${a.multiple_sep}').collect { it.toLowerCase() == 'true' }"""
+          case a: IntegerArgument if a.multiple =>
+            s"""$env_name.split('${a.multiple_sep}').collect { Integer.parseInt(it) }"""
+          case a: LongArgument if a.multiple =>
+            s"""$env_name.split('${a.multiple_sep}').collect { Long.parseLong(it) }"""
+          case a: DoubleArgument if a.multiple =>
+            s"""$env_name.split('${a.multiple_sep}').collect { Double.parseDouble(it) }"""
+          case a: FileArgument if a.multiple =>
+            s"""$env_name.split('${a.multiple_sep}')"""
+          case a: StringArgument if a.multiple =>
+            s"""$env_name.split('${a.multiple_sep}')"""
+          case _: BooleanArgumentBase => s"""$env_name.toLowerCase() == 'true'"""
+          case _: IntegerArgument => s"""Integer.parseInt($env_name)"""
+          case _: LongArgument => s"""Long.parseLong($env_name)"""
+          case _: DoubleArgument => s"""Double.parseDouble($env_name)"""
+          case _: FileArgument => s"""$env_name"""
+          case _: StringArgument => s"""$env_name"""
+        }
+
+        val notFound = "null"
+
+        s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo $notFound; fi )"""
+      }
+
+      s"""def $dest = [
+        |  ${parSet.mkString(",\n  ")}
+        |]
+        |""".stripMargin
+    }
+
+    val footer = s"""
+      |workflow {
+      |  Channel.fromList([
+      |    ['run', par]
+      |  ])
+      |    | ${entrypoint}
+      |}
+      |""".stripMargin
+
+    ScriptInjectionMods(
+      params = paramsCode.mkString,
+      footer = footer
+    )
   }
 }
 
