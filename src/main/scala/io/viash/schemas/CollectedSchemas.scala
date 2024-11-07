@@ -84,62 +84,19 @@ object CollectedSchemas {
   private implicit val encodeDeprecatedOrRemoved: Encoder.AsObject[DeprecatedOrRemovedSchema] = deriveConfiguredEncoder
   private implicit val encodeExample: Encoder.AsObject[ExampleSchema] = deriveConfiguredEncoder
 
-  private inline final def summonLabels[T <: Tuple]: List[String] =    
-    inline erasedValue[T] match
-      case _: EmptyTuple => Nil
-      case _: (t *: ts)  => constValue[t].asInstanceOf[String] :: summonLabels[ts]
+  private def getMembers[T](): List[ParameterSchema] = {
+    val tpe = typeOf[T]
+    val history = historyOf[T]
+    val annotations = annotationsOf[T]
+    val thisMembers = ParameterSchema("__this__", tpe, history, annotations)
 
-  private inline def getMembers[T /*TypeTag*/]/*(using mirror: Mirror.Of[T])*/(): (Map[String,List[MemberInfo]], List[Symbol]) = {
-
-    // val name: String = constValue[mirror.MirroredLabel]
-    val name: String = typeOf[T]
-
-    // Get all members and filter for constructors, first one should be the best (most complete) one
-    // Traits don't have constructors
-    // Get all parameters and store their short name
-    // val constructorMembers = typeOf[T].members.filter(_.isConstructor).headOption.map(_.asMethod.paramLists.head.map(_.shortName)).getOrElse(List.empty[String])
-    // val constructorMembers = summonLabels[mirror.MirroredElemLabels]
-    val constructorMembers = fieldsOf[T]
-
-    // val baseClasses = typeOf[T].baseClasses
-    //   .filter(_.fullName.startsWith("io.viash"))
-
-    // // If we're only getting a abstract class/trait, not a final implementation, use these definitions (otherwise we're left with nothing).
-    // val documentFully = 
-    //   baseClasses.length == 1 && 
-    //   baseClasses.head.isAbstract &&
-    //   baseClasses.head.annotations.exists(a => a.tree.tpe =:= typeOf[documentFully])
-
-    // val memberNames = typeOf[T].members
-    //   .filter(!_.isMethod || documentFully)
-    //   .map(_.shortName)
-    //   .toSeq
-    val memberNames = membersOf[T]
-
-    // val allMembers = baseClasses
-    //   .zipWithIndex
-    //   .flatMap{ case (baseClass, index) =>
-    //     baseClass.info.members
-    //       .filter(_.fullName.startsWith("io.viash"))
-    //       .filter(m => memberNames.contains(m.shortName))
-    //       .filter(m => !m.info.getClass.toString.endsWith("NullaryMethodType") || index != 0 || documentFully) // Only regular members if base class, otherwise all members
-    //       .map(y => MemberInfo(y, (constructorMembers.contains(y.shortName)), baseClass.fullName, index))
-    //     }
-    //   .groupBy(k => k.shortName)
-    
-    // (allMembers, baseClasses)
-
-    // println(s"name: $name")
-    // println(s"constructorMembers: $constructorMembers")
-    // println(s"baseClasses: $baseClasses")
-    // println(s"documentFully: $documentFully")
-    // println(s"memberNames: $memberNames")
-    // println(s"allMembers: $allMembers")
-
-    (Map.empty, Nil)
+    val memberAnnotations = memberAnnotationsOf[T].map({ case (memberName, memberAnns) => 
+      ParameterSchema(memberName, tpe, Nil, memberAnns)
+    })
+    thisMembers +: memberAnnotations
   }
 
-  lazy val schemaClasses = List(
+  lazy val fullData = List(
     getMembers[Config](),
     getMembers[PackageConfig](),
     getMembers[BuildInfo](),
@@ -223,32 +180,7 @@ object CollectedSchemas {
       .replaceAll("""(\w*)\[[\w\.]*?(\w*),[\w\.]*?(\w*)\]""", "$1[$2,$3]")
   }
 
-  private def annotationsOf(members: (Map[String,List[MemberInfo]]), classes: List[Symbol]): List[(String, String, List[String], List[Annotation])] = {
-  //   val annMembers = members
-  //     .map{ case (memberName, memberInfo) => { 
-  //       val h = memberInfo.head
-  //       val annotations = memberInfo.flatMap(_.symbol.annotations)
-  //       (h.fullName, h.symbol.info.toString, annotations, h.className, h.inheritanceIndex, Nil)
-  //     } }
-  //     .filter(_._3.length > 0)
-  //   val annThis = ("__this__", classes.head.name.toString(), classes.head.annotations, "", 0, classes.map(_.fullName))
-  //   val allAnnotations = annThis :: annMembers.toList
-  //   allAnnotations
-  //     .map({case (name, tpe, annotations, d, e, hierarchy) => (name, trimTypeName(tpe), hierarchy, annotations)})  // TODO this ignores where the annotation was defined, ie. top level class or super class
-    Nil
-  }
-
-  private val getSchema: ((Map[String,List[MemberInfo]], List[Symbol])) => List[ParameterSchema] = (t: (Map[String,List[MemberInfo]], List[Symbol])) => t match {
-    case (members, classes) => {
-      annotationsOf(members, classes).map{ case (name, tpe, hierarchy, annotations) => ParameterSchema(name, tpe, hierarchy, annotations) }
-    }
-  }
-
-  // get all parameters for a given type, including parent class annotations
-  // def getParameters[T: TypeTag](): List[ParameterSchema] = getSchema(getMembers[T]())
-
   // Main call for documentation output
-  lazy val fullData: List[List[ParameterSchema]] = schemaClasses.map{ v => getSchema(v)}
   lazy val data: List[List[ParameterSchema]] = fullData.map(_.filter(p => !p.hasUndocumented && !p.hasInternalFunctionality))
 
   def getKeyFromParamList(data: List[ParameterSchema]): String = data.find(p => p.name == "__this__").get.`type`
@@ -272,8 +204,9 @@ object CollectedSchemas {
 
   // Main call for checking whether all arguments are annotated
   // Add extra non-annotated value so we can always somewhat check the code is functional
-  def getAllNonAnnotated: Map[String, String] = (schemaClasses :+ getMembers[CollectedSchemas]()).flatMap {
-    v => getNonAnnotated(v._1, v._2).map((getMemberName(v._1, v._2), _))
+  def getAllNonAnnotated: Map[String, String] = (fullData :+ getMembers[CollectedSchemas]()).flatMap {
+    // v => getNonAnnotated(v._1, v._2).map((getMemberName(v._1, v._2), _))
+    _ => Nil
   }.toMap
 
   def getAllDeprecations: Map[String, DeprecatedOrRemovedSchema] = {
