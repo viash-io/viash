@@ -6,6 +6,10 @@ arguments:
   - name: "--output"
     type: file
     direction: output
+  - name: "--required_int"
+    type: integer
+    direction: output
+    required: true
 resources:
   - type: nextflow_script
     path: main.nf
