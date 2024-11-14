@@ -1,7 +1,7 @@
 class IDChecker {
-  final def items = [] as Set
+  final def items = Collections.synchronizedSet(new HashSet())
 
-  @groovy.transform.WithWriteLock
+  @groovy.transform.Synchronized
   boolean observe(String item) {
     if (items.contains(item)) {
       return false
@@ -11,12 +11,12 @@ class IDChecker {
     }
   }
 
-  @groovy.transform.WithReadLock
+  @groovy.transform.Synchronized
   boolean contains(String item) {
     return items.contains(item)
   }
 
-  @groovy.transform.WithReadLock
+  @groovy.transform.Synchronized 
   Set getItems() {
     return items.clone()
   }
