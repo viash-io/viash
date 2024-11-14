@@ -29,7 +29,7 @@ inline def internalFunctionalityFieldsOf[T]: List[String] = ${ internalFunctiona
 inline def deprecatedFieldsOf[T]: Vector[(String, String, String, String)] = ${ deprecatedFieldsOfImpl[T] }
 inline def removedFieldsOf[T]: Vector[(String, String, String, String)] = ${ removedFieldsOfImpl[T] }
 inline def annotationsOf[T]: List[(String, List[String])] = ${ annotationsOfImpl[T] }
-inline def membersOf[T]: List[String] = ${ membersOfImpl[T] }
+// inline def membersOf[T]: List[String] = ${ membersOfImpl[T] }
 inline def memberTypeAnnotationsOf[T]: List[(String, String, List[(String, List[String])])] = ${ memberTypeAnnotationsOfImpl[T] }
 inline def historyOf[T]: List[String] = ${ historyOfImpl[T] }
 
@@ -181,23 +181,22 @@ def annotationsOfImpl[T: Type](using Quotes): Expr[List[(String, List[String])]]
     values
   }
 
+  // TODO get annotations from base classes and flatten
   val annots = tpe.annotations
     .filter(_.tpe.typeSymbol.fullName.startsWith("io.viash"))
     .map(ann => (ann.tpe.typeSymbol.name, annotationToStrings(ann)))
 
   Expr(annots)
 
-def membersOfImpl[T: Type](using Quotes): Expr[List[String]] = {
-  import quotes.reflect.*
-  val tpe = TypeRepr.of[T].typeSymbol
-  val memberSymbols = tpe.fieldMembers.map(_.name)
-  Expr(memberSymbols)
-}
+// def membersOfImpl[T: Type](using Quotes): Expr[List[String]] = {
+//   import quotes.reflect.*
+//   val tpe = TypeRepr.of[T].typeSymbol
+//   val memberSymbols = tpe.caseFields.map(_.name)
+//   Expr(memberSymbols)
+// }
 
 def memberTypeAnnotationsOfImpl[T: Type](using Quotes): Expr[List[(String, String, List[(String, List[String])])]] = {
   import quotes.reflect.*
-  val tpe = TypeRepr.of[T].typeSymbol
-  val memberSymbols = tpe.fieldMembers
 
   def unfinishedStringStripMargin(s: String, marginChar: Char = '|'): String = {
     s.replaceAll("\\\\n", "\n").stripMargin(marginChar)
@@ -243,18 +242,30 @@ def memberTypeAnnotationsOfImpl[T: Type](using Quotes): Expr[List[(String, Strin
     values
   }
 
-  val annots = 
-    memberSymbols
-      .map{ case m => 
-        val name = m.name
-        val mTpe = "foo"
-        val annotations = m.annotations
-          .filter(_.tpe.typeSymbol.fullName.startsWith("io.viash"))
-          .map(ann => (ann.tpe.typeSymbol.name, annotationToStrings(ann)))
-        (name, mTpe, annotations)
-      }
+  val tpe = TypeRepr.of[T].typeSymbol
+  val baseClasses = TypeRepr.of[T].baseClasses.filter(_.fullName.startsWith("io.viash"))
 
-  Expr(annots)
+  // base classes don't have case fields, so we need to get the member fields from the base classes and filter them
+  val caseFieldNames = tpe.caseFields.map(_.name)
+
+  val annots =
+    baseClasses
+      .map{ case bc => 
+        bc.fieldMembers
+          .filter(m => caseFieldNames.contains(m.name))
+          .map(m => 
+            val name = m.name
+            val mTpe = "foo"
+            val annotations = m.annotations
+              .filter(_.tpe.typeSymbol.fullName.startsWith("io.viash"))
+              .map(ann => (ann.tpe.typeSymbol.name, annotationToStrings(ann)))
+            (name, mTpe, annotations)
+          )
+      }
+  // flatten the list of lists by name
+  val annotsFlattened = annots.flatten.groupBy(_._1).map{ case (k, v) => (k, v.head._2, v.flatMap(_._3)) }.toList
+
+  Expr(annotsFlattened)
 }
 
 def historyOfImpl[T: Type](using Quotes): Expr[List[String]] = {

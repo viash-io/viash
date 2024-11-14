@@ -40,7 +40,7 @@ class SchemaTest extends AnyFunSuite with BeforeAndAfterAll with PrivateMethodTe
      case _ => ()
     }
     
-    assert(nonAnnotated.size == 9) // CollectedSchemas has 9 members, all of them unannotated
+    assert(nonAnnotated.size == 10) // CollectedSchemas has 9 members, all of them unannotated + 1 __this__ member
   }
 
   test("Check formatting of deprecation annotations") {
