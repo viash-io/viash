@@ -60,21 +60,6 @@ final case class CollectedSchemas (
 
 
 object CollectedSchemas {
-
-  implicit class RichSymbol(s: Symbol) {
-    def shortName = ""//s.fullName.split('.').last
-  }
-
-  case class MemberInfo (
-    symbol: Symbol,
-    inConstructor: Boolean,
-    className: String,
-    inheritanceIndex: Int
-  ) {
-    def fullName = symbol.name//fullName
-    def shortName = symbol.shortName
-  }
-
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
 
   import io.viash.helpers.circe._
@@ -84,91 +69,97 @@ object CollectedSchemas {
   private implicit val encodeDeprecatedOrRemoved: Encoder.AsObject[DeprecatedOrRemovedSchema] = deriveConfiguredEncoder
   private implicit val encodeExample: Encoder.AsObject[ExampleSchema] = deriveConfiguredEncoder
 
-  private def getMembers[T](): List[ParameterSchema] = {
+  private inline def getMembers[T](): List[ParameterSchema] = {
     val tpe = typeOf[T]
     val history = historyOf[T]
     val annotations = annotationsOf[T]
     val thisMembers = ParameterSchema("__this__", tpe, history, annotations)
 
-    val memberAnnotations = memberAnnotationsOf[T].map({ case (memberName, memberAnns) => 
-      ParameterSchema(memberName, tpe, Nil, memberAnns)
+    val memberAnnotations = memberTypeAnnotationsOf[T].map({ case (memberName, memberType, memberAnns) => 
+      ParameterSchema(memberName, memberType, Nil, memberAnns)
     })
     thisMembers +: memberAnnotations
   }
 
-  lazy val fullData = List(
-    getMembers[Config](),
-    getMembers[PackageConfig](),
-    getMembers[BuildInfo](),
-    getMembers[SysEnvTrait](),
+  // split the data in two parts to avoid the compiler complaining about the size
+  object memberData_part1 {
+    val part = List(
+      getMembers[Config](),
+      getMembers[PackageConfig](),
+      getMembers[BuildInfo](),
+      getMembers[SysEnvTrait](),
 
-    getMembers[Functionality](),
-    getMembers[Author](),
-    getMembers[ComputationalRequirements](),
-    getMembers[ArgumentGroup](),
-    getMembers[Links](),
-    getMembers[References](),
+      getMembers[Functionality](),
+      getMembers[Author](),
+      getMembers[ComputationalRequirements](),
+      getMembers[ArgumentGroup](),
+      getMembers[Links](),
+      getMembers[References](),
 
-    getMembers[Runner](),
-    getMembers[ExecutableRunner](),
-    getMembers[NextflowRunner](),
+      getMembers[Runner](),
+      getMembers[ExecutableRunner](),
+      getMembers[NextflowRunner](),
 
-    getMembers[Engine](),
-    getMembers[NativeEngine](),
-    getMembers[DockerEngine](),
+      getMembers[Engine](),
+      getMembers[NativeEngine](),
+      getMembers[DockerEngine](),
 
-    getMembers[Platform](),
-    getMembers[NativePlatform](),
-    getMembers[DockerPlatform](),
-    getMembers[NextflowPlatform](),
+      getMembers[Platform](),
+      getMembers[NativePlatform](),
+      getMembers[DockerPlatform](),
+      getMembers[NextflowPlatform](),
 
-    getMembers[Requirements](),
-    getMembers[ApkRequirements](),
-    getMembers[AptRequirements](),
-    getMembers[DockerRequirements](),
-    getMembers[JavaScriptRequirements](),
-    getMembers[PythonRequirements](),
-    getMembers[RRequirements](),
-    getMembers[RubyRequirements](),
-    getMembers[YumRequirements](),
+      getMembers[Requirements](),
+      getMembers[ApkRequirements](),
+      getMembers[AptRequirements](),
+      getMembers[DockerRequirements](),
+      getMembers[JavaScriptRequirements](),
+      getMembers[PythonRequirements](),
+      getMembers[RRequirements](),
+      getMembers[RubyRequirements](),
+      getMembers[YumRequirements](),
 
-    getMembers[Argument[_]](),
-    getMembers[BooleanArgument](),
-    getMembers[BooleanTrueArgument](),
-    getMembers[BooleanFalseArgument](),
-    getMembers[DoubleArgument](),
-    getMembers[FileArgument](),
-    getMembers[IntegerArgument](),
-    getMembers[LongArgument](),
-    getMembers[StringArgument](),
+      getMembers[Argument[_]](),
+      getMembers[BooleanArgument](),
+      getMembers[BooleanTrueArgument](),
+      getMembers[BooleanFalseArgument](),
+      getMembers[DoubleArgument](),
+      getMembers[FileArgument](),
+      getMembers[IntegerArgument](),
+      getMembers[LongArgument](),
+      getMembers[StringArgument](),
+    )
+  }
+  object memberData_part2 { 
+    val part = List(
+      getMembers[Resource](),
+      getMembers[BashScript](),
+      getMembers[CSharpScript](),
+      getMembers[Executable](),
+      getMembers[JavaScriptScript](),
+      getMembers[NextflowScript](),
+      getMembers[PlainFile](),
+      getMembers[PythonScript](),
+      getMembers[RScript](),
+      getMembers[ScalaScript](),
 
-    getMembers[Resource](),
-    getMembers[BashScript](),
-    getMembers[CSharpScript](),
-    getMembers[Executable](),
-    getMembers[JavaScriptScript](),
-    getMembers[NextflowScript](),
-    getMembers[PlainFile](),
-    getMembers[PythonScript](),
-    getMembers[RScript](),
-    getMembers[ScalaScript](),
+      getMembers[NextflowDirectives](),
+      getMembers[NextflowAuto](),
+      getMembers[NextflowConfig](),
 
-    getMembers[NextflowDirectives](),
-    getMembers[NextflowAuto](),
-    getMembers[NextflowConfig](),
-
-    getMembers[Dependency](),
-    getMembers[Repository](),
-    getMembers[LocalRepository](),
-    getMembers[GitRepository](),
-    getMembers[GithubRepository](),
-    getMembers[ViashhubRepository](),
-    getMembers[RepositoryWithName](),
-    getMembers[LocalRepositoryWithName](),
-    getMembers[GitRepositoryWithName](),
-    getMembers[GithubRepositoryWithName](),
-    getMembers[ViashhubRepositoryWithName](),
-  )
+      getMembers[Dependency](),
+      getMembers[Repository](),
+      getMembers[LocalRepository](),
+      getMembers[GitRepository](),
+      getMembers[GithubRepository](),
+      getMembers[ViashhubRepository](),
+      getMembers[RepositoryWithName](),
+      getMembers[LocalRepositoryWithName](),
+      getMembers[GitRepositoryWithName](),
+      getMembers[GithubRepositoryWithName](),
+      getMembers[ViashhubRepositoryWithName](),
+    )
+  }
 
   private def trimTypeName(s: String) = {
     // first: io.viash.helpers.data_structures.OneOrMore[String] -> OneOrMore[String]
@@ -180,6 +171,8 @@ object CollectedSchemas {
       .replaceAll("""(\w*)\[[\w\.]*?(\w*),[\w\.]*?(\w*)\]""", "$1[$2,$3]")
   }
 
+  val fullData = memberData_part1.part ++ memberData_part2.part
+
   // Main call for documentation output
   lazy val data: List[List[ParameterSchema]] = fullData.map(_.filter(p => !p.hasUndocumented && !p.hasInternalFunctionality))
 
@@ -187,27 +180,15 @@ object CollectedSchemas {
 
   def getJson: Json = data.asJson
 
-  private def getNonAnnotated(members: Map[String,List[MemberInfo]], classes: List[Symbol]): List[String] = {
-    // val issueMembers = members
-    //   .toList
-    //   .filter{ case(k, v) => v.map(m => m.inConstructor).contains(true) } // Only check values that are in a constructor. Annotation may occur on private vals but that is not a requirement.
-    //   .map{ case (k, v) => (k, v.map(_.symbol.annotations.length).sum) } // (name, # annotations)
-    //   .filter(_._2 == 0)
-    //   .map(_._1)
-
-    // val ownClassArr = if (classes.head.annotations.length == 0) Seq("__this__") else Nil
-    // issueMembers ++ ownClassArr
-    Nil
-  }
-
-  def getMemberName(members: Map[String,List[MemberInfo]], classes: List[Symbol]): String = classes.head.shortName
-
-  // Main call for checking whether all arguments are annotated
+  // Main call for checking whether all arguments are annotated with a description
   // Add extra non-annotated value so we can always somewhat check the code is functional
-  def getAllNonAnnotated: Map[String, String] = (fullData :+ getMembers[CollectedSchemas]()).flatMap {
-    // v => getNonAnnotated(v._1, v._2).map((getMemberName(v._1, v._2), _))
-    _ => Nil
-  }.toMap
+  def getAllNonAnnotated: List[(String, String)] = (data :+ getMembers[CollectedSchemas]()).flatMap {
+    members => {
+      val notAnnonated = members.filter(p => p.description == None)
+      val thisType = members.find(p => p.name == "__this__").get.`type`
+      notAnnonated.map(p => (thisType, p.name))
+    }
+  }
 
   def getAllDeprecations: Map[String, DeprecatedOrRemovedSchema] = {
     val arr = data.flatMap(v => v.map(p => (s"config ${getKeyFromParamList(v)} ${p.name}", p.deprecated))).toMap    

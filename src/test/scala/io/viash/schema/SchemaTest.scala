@@ -33,14 +33,14 @@ class SchemaTest extends AnyFunSuite with BeforeAndAfterAll with PrivateMethodTe
   test("All schema class val members should be annotated") {
     val nonAnnotated = CollectedSchemas.getAllNonAnnotated
 
-    assert(nonAnnotated.contains("CollectedSchemas"))
-    assert(nonAnnotated("CollectedSchemas") == "__this__")
+    assert(nonAnnotated.contains(("CollectedSchemas", "__this__")))
 
-    nonAnnotated.removed("CollectedSchemas").foreach {
-     case (key, member) => Console.err.println(s"$key - $member")
+    nonAnnotated.foreach {
+     case (key, member) if key != "CollectedSchemas" => Console.err.println(s"$key - $member")
+     case _ => ()
     }
     
-    assert(nonAnnotated.size == 1)
+    assert(nonAnnotated.size == 9) // CollectedSchemas has 9 members, all of them unannotated
   }
 
   test("Check formatting of deprecation annotations") {

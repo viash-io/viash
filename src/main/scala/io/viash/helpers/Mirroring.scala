@@ -30,7 +30,7 @@ inline def deprecatedFieldsOf[T]: Vector[(String, String, String, String)] = ${ 
 inline def removedFieldsOf[T]: Vector[(String, String, String, String)] = ${ removedFieldsOfImpl[T] }
 inline def annotationsOf[T]: List[(String, List[String])] = ${ annotationsOfImpl[T] }
 inline def membersOf[T]: List[String] = ${ membersOfImpl[T] }
-inline def memberAnnotationsOf[T]: List[(String, List[(String, List[String])])] = ${ memberAnnotationsOfImpl[T] }
+inline def memberTypeAnnotationsOf[T]: List[(String, String, List[(String, List[String])])] = ${ memberTypeAnnotationsOfImpl[T] }
 inline def historyOf[T]: List[String] = ${ historyOfImpl[T] }
 
 def typeOfImpl[T: Type](using Quotes): Expr[String] =
@@ -146,7 +146,7 @@ def annotationsOfImpl[T: Type](using Quotes): Expr[List[(String, List[String])]]
       // case Literal(Constant(value: String)) =>
       //   unfinishedStringStripMargin(value, marginChar)
       case Literal(value) =>
-        unfinishedStringStripMargin(value.show(using Printer.ConstantCode), marginChar)
+        unfinishedStringStripMargin(value.show(using Printer.ConstantCode).stripPrefix("\"").stripSuffix("\""), marginChar)
       case _ =>
         "unmatched in mapTreeList: " + i.toString()
     }).mkString
@@ -165,7 +165,7 @@ def annotationsOfImpl[T: Type](using Quotes): Expr[List[(String, List[String])]]
               // case Literal(Constant(value: String)) =>
               //   value
               case Literal(value) =>
-                value.show(using Printer.ConstantCode)
+                value.show(using Printer.ConstantCode).stripPrefix("\"").stripSuffix("\"")
               // case Select(Select(a, b), stripMargin) =>
               //   unfinishedStringStripMargin(b)
               case Select(Apply(a, a2), b) if b.toString == "stripMargin" =>
@@ -194,7 +194,7 @@ def membersOfImpl[T: Type](using Quotes): Expr[List[String]] = {
   Expr(memberSymbols)
 }
 
-def memberAnnotationsOfImpl[T: Type](using Quotes): Expr[List[(String, List[(String, List[String])])]] = {
+def memberTypeAnnotationsOfImpl[T: Type](using Quotes): Expr[List[(String, String, List[(String, List[String])])]] = {
   import quotes.reflect.*
   val tpe = TypeRepr.of[T].typeSymbol
   val memberSymbols = tpe.fieldMembers
@@ -208,7 +208,7 @@ def memberAnnotationsOfImpl[T: Type](using Quotes): Expr[List[(String, List[(Str
       // case Literal(Constant(value: String)) =>
       //   unfinishedStringStripMargin(value, marginChar)
       case Literal(value) =>
-        unfinishedStringStripMargin(value.show(using Printer.ConstantCode), marginChar)
+        unfinishedStringStripMargin(value.show(using Printer.ConstantCode).stripPrefix("\"").stripSuffix("\""), marginChar)
       case _ =>
         "unmatched in mapTreeList: " + i.toString()
     }).mkString
@@ -227,7 +227,7 @@ def memberAnnotationsOfImpl[T: Type](using Quotes): Expr[List[(String, List[(Str
               // case Literal(Constant(value: String)) =>
               //   value
               case Literal(value) =>
-                value.show(using Printer.ConstantCode)
+                value.show(using Printer.ConstantCode).stripPrefix("\"").stripSuffix("\"")
               // case Select(Select(a, b), stripMargin) =>
               //   unfinishedStringStripMargin(b)
               case Select(Apply(a, a2), b) if b.toString == "stripMargin" =>
@@ -247,11 +247,11 @@ def memberAnnotationsOfImpl[T: Type](using Quotes): Expr[List[(String, List[(Str
     memberSymbols
       .map{ case m => 
         val name = m.name
-        val n: Symbol = m
+        val mTpe = "foo"
         val annotations = m.annotations
           .filter(_.tpe.typeSymbol.fullName.startsWith("io.viash"))
           .map(ann => (ann.tpe.typeSymbol.name, annotationToStrings(ann)))
-        (name, annotations)
+        (name, mTpe, annotations)
       }
 
   Expr(annots)
