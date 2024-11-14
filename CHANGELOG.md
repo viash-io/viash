@@ -16,7 +16,7 @@ TODO add summary
 * `RRequirements`: Treat warnings as errors when installing R dependencies in Docker engines (PR #771).
 
 * `Nextflow` runner: fix false-positive error when output argument arguments `required: true` 
-are incorrectly flagged as missing input arguments (PR #)
+are incorrectly flagged as missing input arguments (PR #778)
 
 # Viash 0.9.0 (2024-09-03): Restructure platforms into runners and engines
 
