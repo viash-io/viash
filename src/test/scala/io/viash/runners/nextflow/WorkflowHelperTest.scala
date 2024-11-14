@@ -130,6 +130,32 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
     )
   }
 
+  test("Run config pipeline with yamlblob and invalid parameter", NextflowTest) {
+    val fooArgs =
+      "{id: foo, input: resources/lines3.txt, whole_number: 3, optional_with_default: foo, multiple: [a, b, c], doesnotexist: lorem}"
+    val barArgs =
+      "{id: bar, input: resources/lines5.txt, real_number: 0.5, optional: bar, reality: true}"
+
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "workflows/pipeline3/main.nf",
+      entry = Some("base"),
+      args = List(
+        "--param_list", s"[$fooArgs, $barArgs]",
+        "--real_number", "10.5",
+        "--whole_number", "10",
+        "--str", "foo",
+        "--publish_dir", "output",
+      ),
+      cwd = tempFolFile
+    )
+    assert(stdOut.contains("Found invalid parameter(s) for"))
+    assert(
+      exitCode == 1,
+      s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr"
+    )
+    
+  }
+
   test("Run config pipeline with yaml file", NextflowTest) {
     val param_list_file =
       Paths.get(resourcesPath, "pipeline3.yaml").toFile.toString

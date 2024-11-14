@@ -67,6 +67,22 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
   }
 
+  test("Test nonexistant parameter fails", NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/wf/main.nf",
+      args = List(
+        "--id", "foo",
+        "--input1", "resources/lines*.txt",
+        "--input2", "resources/lines3.txt",
+        "--publish_dir", "output",
+        "--nonexistant", "bar",
+      ),
+      cwd = tempFolFile
+    )
+    assert(stdOut.contains("Found invalid parameter(s) for"))
+    assert(exitCode == 1, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+  }
+
   test("Run config pipeline with symlink", NextflowTest) {
     val newWorkflowPath = Paths.get(tempFolStr, "workflowsAsSymlink")
     Files.createDirectories(newWorkflowPath)
