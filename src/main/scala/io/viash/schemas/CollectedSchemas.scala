@@ -17,7 +17,6 @@
 
 package io.viash.schemas
 
-// import scala.reflect.runtime.universe._
 import io.circe.{Encoder, Printer => JsonPrinter}
 import io.circe.syntax.EncoderOps
 
@@ -26,12 +25,10 @@ import io.viash.runners._
 import io.viash.engines._
 import io.viash.platforms._
 import io.circe.Json
-import monocle.function.Cons
 import io.viash.config.Config
 import io.viash.config.BuildInfo
 import io.viash.packageConfig.PackageConfig
 import io.viash.helpers._
-import scala.collection.immutable.ListMap
 import io.viash.runners.nextflow.{NextflowConfig, NextflowAuto, NextflowDirectives}
 import io.viash.engines.requirements._
 import io.viash.config.arguments._
@@ -42,29 +39,14 @@ import io.viash.config.Author
 import io.viash.config.ComputationalRequirements
 import io.viash.config.Links
 import io.viash.config.References
-import scala.deriving.Mirror
 import scala.compiletime.{ codeOf, constValue, erasedValue, error, summonFrom, summonInline }
 import scala.annotation.Annotation
-
-final case class CollectedSchemas (
-  config: Map[String, List[ParameterSchema]],
-  functionality: Map[String, List[ParameterSchema]],
-  runners: Map[String, List[ParameterSchema]],
-  engines: Map[String, List[ParameterSchema]],
-  platforms: Map[String, List[ParameterSchema]],
-  requirements: Map[String, List[ParameterSchema]],
-  arguments: Map[String, List[ParameterSchema]],
-  resources: Map[String, List[ParameterSchema]],
-  nextflowParameters: Map[String, List[ParameterSchema]],
-)
-
 
 object CollectedSchemas {
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
 
   import io.viash.helpers.circe._
 
-  private implicit val encodeConfigSchema: Encoder.AsObject[CollectedSchemas] = deriveConfiguredEncoder
   private implicit val encodeParameterSchema: Encoder.AsObject[ParameterSchema] = deriveConfiguredEncoderStrict
   private implicit val encodeDeprecatedOrRemoved: Encoder.AsObject[DeprecatedOrRemovedSchema] = deriveConfiguredEncoder
   private implicit val encodeExample: Encoder.AsObject[ExampleSchema] = deriveConfiguredEncoder
@@ -182,7 +164,7 @@ object CollectedSchemas {
 
   // Main call for checking whether all arguments are annotated with a description
   // Add extra non-annotated value so we can always somewhat check the code is functional
-  def getAllNonAnnotated: List[(String, String)] = (data :+ getMembers[CollectedSchemas]()).flatMap {
+  def getAllNonAnnotated: List[(String, String)] = (data :+ getMembers[DeprecatedOrRemovedSchema]()).flatMap {
     members => {
       val notAnnonated = members.filter(p => p.description == None)
       val thisType = members.find(p => p.name == "__this__").get.`type`
