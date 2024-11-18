@@ -181,7 +181,8 @@ def annotationsOfImpl[T: Type](using Quotes): Expr[List[(String, List[String])]]
     values
   }
 
-  // TODO get annotations from base classes and flatten
+  // We're not adding annotations of base classes here.
+  // The base classes should be documented as well and the annotations will clash with the annotations of the specific class.
   val annots = tpe.annotations
     .filter(_.tpe.typeSymbol.fullName.startsWith("io.viash"))
     .map(ann => (ann.tpe.typeSymbol.name, annotationToStrings(ann)))
@@ -246,13 +247,16 @@ def memberTypeAnnotationsOfImpl[T: Type](using Quotes): Expr[List[(String, Strin
   val baseClasses = TypeRepr.of[T].baseClasses.filter(_.fullName.startsWith("io.viash"))
 
   // base classes don't have case fields, so we need to get the member fields from the base classes and filter them
+  // only get the fields that are either case fields or have annotations
   val caseFieldNames = tpe.caseFields.map(_.name)
+  val annotatedFields = tpe.fieldMembers.filter(_.annotations.nonEmpty).map(_.name)
+  val toDocumentFields = (caseFieldNames ++ annotatedFields).distinct
 
   val annots =
     baseClasses
       .map{ case bc => 
         bc.fieldMembers
-          .filter(m => caseFieldNames.contains(m.name))
+          .filter(m => toDocumentFields.contains(m.name))
           .map(m => 
             val name = m.name
             val mTpe = "foo"
