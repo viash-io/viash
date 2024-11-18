@@ -10,7 +10,8 @@ def _debug(workflowArgs, debugKey) {
 def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
   def workflowArgs = processWorkflowArgs(args, defaultWfArgs, meta)
   def key_ = workflowArgs["key"]
-  
+  def multipleArgs = meta.config.allArguments.findAll{ it.multiple }.collect{it.plainName}
+
   workflow workflowInstance {
     take: input_
 
@@ -195,7 +196,7 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       // | view{"chInitialOutput: ${it.take(3)}"}
 
     // join the output [prev_id, new_id, output] with the previous state [prev_id, state, ...]
-    def chPublishWithPreviousState = safeJoin(chInitialOutputProcessed, chModifiedFiltered, key_)
+    def chPublishWithPreviousState = safeJoin(chInitialOutputProcessed, chRunFiltered, key_)
       // input tuple format: [join_id, id, output, prev_state, ...]
       // output tuple format: [join_id, id, new_state, ...]
       | map{ tup ->
@@ -222,13 +223,26 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       | groupTuple(by: 1, sort: 'hash', size: chInitialOutputList.size(), remainder: true)
       | map {join_ids, id, states ->
         def newJoinId = join_ids.unique{a, b -> a <=> b}
-        assert newJoinId.size() == 1: "Multiple join IDs were emitted for '$id'."
+        assert newJoinId.size() == 1: "Multiple events were emitted for '$id'."
         def newJoinIdUnique = newJoinId[0]
         def newState = states.inject([:]){ old_state, state_to_add ->
-          def overlap = old_state.keySet().intersect(state_to_add.keySet())
-          assert overlap.isEmpty() : "ID $id: multiple entries for for argument(s) $overlap were emitted."
-          def return_state = old_state + state_to_add
-          return return_state 
+          def stateToAddNoMultiple = state_to_add.findAll{k, v -> !multipleArgs.contains(k)}
+          // First add non multiple arguments
+
+          def overlap = old_state.keySet().intersect(stateToAddNoMultiple.keySet())
+          assert overlap.isEmpty() : "ID $id: multiple entries for " + 
+            " argument(s) $overlap were emitted."
+          def return_state = old_state + stateToAddNoMultiple
+
+          // Add `multiple: true` arguments
+          def stateToAddMultiple = state_to_add.findAll{k, v -> multipleArgs.contains(k)}
+          stateToAddMultiple.each {k, v ->
+            def currentKey = return_state.getOrDefault(k, [])
+            def currentKeyList = currentKey instanceof List ? currentKey : [currentKey]
+            currentKeyList.add(v)
+            return_state[k] = currentKeyList
+          }
+          return return_state
         }
 
         // simplify output if need be
