@@ -20,7 +20,6 @@ package io.viash.helpers
 import java.io.{BufferedOutputStream, FileOutputStream, File, IOException}
 import java.nio.file.{FileVisitResult, Files, Path, Paths, SimpleFileVisitor, FileVisitOption}
 import java.nio.file.attribute.BasicFileAttributes
-import scala.reflect.io.Directory
 import java.net.URI
 import scala.io.{Codec, Source}
 import java.net.URL

@@ -28,7 +28,7 @@ case class GitInfo(
 
 object Git extends Logging {
   @inline
-  protected def getLoggers(fn: String) = Seq[String => Unit] { str: String => trace(s"$fn: $str") }
+  protected def getLoggers(fn: String) = Seq[String => Unit] { (str: String) => trace(s"$fn: $str") }
 
   def isGitRepo(path: File): Boolean = {
     val out = Exec.runCatch(

@@ -38,7 +38,7 @@ package object circe {
 
   // encoder and decoder for OneOrMore
   implicit def encodeOneOrMore[A](implicit enc: Encoder[List[A]]): Encoder[OneOrMore[A]] = { 
-    oom: OneOrMore[A] => if (oom == null) enc(Nil) else enc(oom.toList)
+    (oom: OneOrMore[A]) => if (oom == null) enc(Nil) else enc(oom.toList)
   }
 
   implicit def decodeOneOrMore[A](implicit da: Decoder[A], dl: Decoder[List[A]]): Decoder[OneOrMore[A]] = {

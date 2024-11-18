@@ -87,15 +87,24 @@ case class RRequirements(
   @example("bioc_force_install: false", "yaml")
   @default("False")
   bioc_force_install: Boolean = false,
+
+  @description("Specifies whether to treat warnings as errors. Default: true.")
+  @example("warnings_as_errors: true", "yaml")
+  @default("True")
+  warnings_as_errors: Boolean = true,
   
   `type`: String = "r"
 ) extends Requirements {
-  assert(script.forall(!_.contains("'")), "R requirement '.script' field contains a single quote ('). This is not allowed.")
-
   def installCommands: List[String] = {
+    val prefix = if (warnings_as_errors) "options(warn = 2); " else ""
+
+    def runRCode(code: String): String = {
+      s"""Rscript -e '${prefix}${code.replaceAll("'", "'\"'\"'")}'"""
+    }
+
     val installRemotes =
       if ((packages ::: cran ::: git ::: github ::: gitlab ::: bitbucket ::: svn ::: url).nonEmpty) {
-        List("""Rscript -e 'if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")'""")
+        List(runRCode("""if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")"""))
       } else {
         Nil
       }
@@ -112,17 +121,17 @@ case class RRequirements(
 
     val installBiocManager =
       if (bioc.nonEmpty) {
-        List("""Rscript -e 'if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")'""")
+        List(runRCode("""if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")"""))
       } else {
         Nil
       }
     val installBioc =
       if (bioc.nonEmpty) {
         if (bioc_force_install) {
-          List(s"""Rscript -e 'BiocManager::install(c("${bioc.mkString("\", \"")}"))'""")
+          List(runRCode(s"""BiocManager::install(c("${bioc.mkString("\", \"")}"))"""))
         } else {
           bioc.map { biocPackage =>
-            s"""Rscript -e 'if (!requireNamespace("$biocPackage", quietly = TRUE)) BiocManager::install("$biocPackage")'"""
+            runRCode(s"""if (!requireNamespace("$biocPackage", quietly = TRUE)) BiocManager::install("$biocPackage")""")
           }
         }
       } else {
@@ -132,13 +141,13 @@ case class RRequirements(
     val installers = remotePairs.flatMap {
       case (_, Nil) => None
       case (str, list) =>
-        Some(s"""Rscript -e 'remotes::install_$str(c("${list.mkString("\", \"")}"), repos = "https://cran.rstudio.com")'""")
+        Some(runRCode(s"""remotes::install_$str(c("${list.mkString("\", \"")}"), repos = "https://cran.rstudio.com")"""))
     }
 
     val installScript =
       if (script.nonEmpty) {
         script.map { line =>
-          s"""Rscript -e '$line'"""
+          runRCode(line)
         }
       } else {
         Nil

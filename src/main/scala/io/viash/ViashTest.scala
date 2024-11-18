@@ -240,7 +240,7 @@ object ViashTest extends Logging {
     val tests = conf.test_resources
 
     val testResults = tests.filter(_.isInstanceOf[Script]).map {
-      case test: Script if test.read.isEmpty =>
+      case test: Script if test.readSome.isEmpty =>
         TestOutput(test.filename, 1, "Test script does not exist.", "", 0L)
 
       case test: Script =>
@@ -266,12 +266,14 @@ object ViashTest extends Logging {
             namespace = conf.namespace,
             version = conf.version,
             // set dirArg as argument so that Docker can chown it after execution
-            argument_groups = List(ArgumentGroup("default", None, List(dirArg))),
+            argument_groups = List(ArgumentGroup("default", arguments = List(dirArg))),
             resources = List(test),
             set_wd_to_resources_dir = true,
             // Make sure we'll be using the same docker registry set in 'links' so we can have the same docker image id.
             // Copy the whole case class instead of selective copy.
             links = conf.links,
+            // copy configuration for package name, organization
+            package_config = conf.package_config,
           ))(appliedConfig)
 
         // generate bash script for test

@@ -22,6 +22,8 @@ import io.viash.schemas._
 @description(
   """A list of engines to generate target artifacts for.
     |
+    |An engine is the underlying environment that will be used to run the component.
+    |
     | * @[Docker](docker_engine)
     | * @[Native](native_engine)
     |""".stripMargin)

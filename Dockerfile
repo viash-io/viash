@@ -1,8 +1,8 @@
-FROM openjdk:8
+FROM eclipse-temurin:17
 
 # Install packages
 RUN apt-get update && \
-    apt-get install -y make git gzip
+    apt-get install -y make git gzip gnupg
 
 # Install sbt
 RUN echo "deb https://repo.scala-sbt.org/scalasbt/debian /" | tee -a /etc/apt/sources.list.d/sbt.list && \
@@ -11,7 +11,7 @@ RUN echo "deb https://repo.scala-sbt.org/scalasbt/debian /" | tee -a /etc/apt/so
     apt-get install -y sbt
 
 # Install yq
-RUN curl -sSL https://github.com/mikefarah/yq/releases/download/v4.6.1/yq_linux_386 > /usr/bin/yq && \
+RUN curl -sSL https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_386 > /usr/bin/yq && \
     chmod +x /usr/bin/yq
 
 # Run SBT once so that all libraries are downloaded

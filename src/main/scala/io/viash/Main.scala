@@ -357,7 +357,8 @@ object Main extends Logging {
           configs = configs,
           command = cli.namespace.exec.cmd(),
           dryrun = cli.namespace.exec.dryrun(),
-          parallel = cli.namespace.exec.parallel()
+          parallel = cli.namespace.exec.parallel(),
+          workingDir = workingDir,
         )
         val errors = configs.flatMap(_.status).count(_.isError)
         if (errors > 0) 1 else 0
@@ -386,40 +387,40 @@ object Main extends Logging {
         )
         ViashConfig.inject(config.config)
         0
-      case List(cli.export, cli.export.cli_schema) =>
-        val output = cli.export.cli_schema.output.toOption.map(Paths.get(_))
+      case List(cli.`export`, cli.`export`.cli_schema) =>
+        val output = cli.`export`.cli_schema.output.toOption.map(Paths.get(_))
         ViashExport.exportCLISchema(
           output,
-          format = cli.export.cli_schema.format()
+          format = cli.`export`.cli_schema.format()
         )
         0
-      case List(cli.export, cli.export.cli_autocomplete) =>
-        val output = cli.export.cli_autocomplete.output.toOption.map(Paths.get(_))
+      case List(cli.`export`, cli.`export`.cli_autocomplete) =>
+        val output = cli.`export`.cli_autocomplete.output.toOption.map(Paths.get(_))
         ViashExport.exportAutocomplete(
           output,
-          format = cli.export.cli_autocomplete.format()
+          format = cli.`export`.cli_autocomplete.format()
         )
         0
-      case List(cli.export, cli.export.config_schema) =>
-        val output = cli.export.config_schema.output.toOption.map(Paths.get(_))
+      case List(cli.`export`, cli.`export`.config_schema) =>
+        val output = cli.`export`.config_schema.output.toOption.map(Paths.get(_))
         ViashExport.exportConfigSchema(
           output,
-          format = cli.export.config_schema.format()
+          format = cli.`export`.config_schema.format()
         )
         0
-      case List(cli.export, cli.export.json_schema) =>
-        val output = cli.export.json_schema.output.toOption.map(Paths.get(_))
+      case List(cli.`export`, cli.`export`.json_schema) =>
+        val output = cli.`export`.json_schema.output.toOption.map(Paths.get(_))
         ViashExport.exportJsonSchema(
           output,
-          format = cli.export.json_schema.format(),
-          strict = cli.export.json_schema.strict(),
-          minimal = cli.export.json_schema.minimal()
+          format = cli.`export`.json_schema.format(),
+          strict = cli.`export`.json_schema.strict(),
+          minimal = cli.`export`.json_schema.minimal()
         )
         0
-      case List(cli.export, cli.export.resource) =>
-        val output = cli.export.resource.output.toOption.map(Paths.get(_))
+      case List(cli.`export`, cli.`export`.resource) =>
+        val output = cli.`export`.resource.output.toOption.map(Paths.get(_))
         ViashExport.exportResource(
-          cli.export.resource.path.toOption.get,
+          cli.`export`.resource.path.toOption.get,
           output
         )
         0
@@ -506,6 +507,7 @@ object Main extends Logging {
     val query = subcommand.query.toOption
     val queryNamespace = subcommand.query_namespace.toOption
     val queryName = subcommand.query_name.toOption
+    val queryConfig = subcommand.query_config.toOption
     val runnerStr = subcommand.runner.toOption orElse subcommand.platform.toOption
     val engineStr = subcommand.engine.toOption orElse subcommand.platform.toOption
     val configMods = packageConfig.config_mods
@@ -515,6 +517,7 @@ object Main extends Logging {
       query = query,
       queryNamespace = queryNamespace,
       queryName = queryName,
+      queryConfig = queryConfig,
       addOptMainScript = addOptMainScript,
       viashPackage = Some(packageConfig)
     )

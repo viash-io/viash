@@ -57,7 +57,9 @@ def publishStates(Map args) {
 
           def yamlFilename = yamlTemplate_
             .replaceAll('\\$id', id_)
+            .replaceAll('\\$\\{id\\}', id_)
             .replaceAll('\\$key', key_)
+            .replaceAll('\\$\\{key\\}', key_)
 
             // TODO: do the pathnames in state_ match up with the outputFilenames_?
 
@@ -110,7 +112,9 @@ def publishStatesByConfig(Map args) {
           def yamlTemplate = params.containsKey("output_state") ? params.output_state : '$id.$key.state.yaml'
           def yamlFilename = yamlTemplate
             .replaceAll('\\$id', id_)
+            .replaceAll('\\$\\{id\\}', id_)
             .replaceAll('\\$key', key_)
+            .replaceAll('\\$\\{key\\}', key_)
           def yamlDir = java.nio.file.Paths.get(yamlFilename).getParent()
 
           // the processed state is a list of [key, value] tuples, where
@@ -149,7 +153,9 @@ def publishStatesByConfig(Map args) {
                 // instantiate the template
                 def filename = filenameTemplate
                   .replaceAll('\\$id', id_)
+                  .replaceAll('\\$\\{id\\}', id_)
                   .replaceAll('\\$key', key_)
+                  .replaceAll('\\$\\{key\\}', key_)
                 if (par.multiple) {
                   // if the parameter is multiple: true, the filename
                   // should contain a wildcard '*' that is replaced with

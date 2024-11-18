@@ -1,7 +1,7 @@
 Map _processInputValues(Map inputs, Map config, String id, String key) {
   if (!workflow.stubRun) {
     config.allArguments.each { arg ->
-      if (arg.required) {
+      if (arg.required && arg.direction == "input") {
         assert inputs.containsKey(arg.plainName) && inputs.get(arg.plainName) != null : 
           "Error in module '${key}' id '${id}': required input argument '${arg.plainName}' is missing"
       }

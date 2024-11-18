@@ -248,12 +248,6 @@ final case class ExecutableRunner(
     dmSetup ++ dmVol ++ dmChown ++ dmReqs ++ dmCmd
   }
 
-  private def dockerArgs: String = {
-    "-i --rm" +
-      port.map(" -p " + _).mkString +
-      docker_run_args.map(" " + _).mkString
-  }
-
   private def dockerGenerateSetup(
     config: Config,
     info: Option[BuildInfo],
@@ -326,6 +320,18 @@ final case class ExecutableRunner(
         |            VIASH_MODE='dockerfile'
         |            shift 1
         |            ;;
+        |        ---docker_run_args)
+        |            VIASH_DOCKER_RUN_ARGS+=("$$2")
+        |            shift 2
+        |            ;;
+        |        ---docker_run_args=*)
+        |            VIASH_DOCKER_RUN_ARGS+=("$$(ViashRemoveFlags "$$1")")
+        |            shift 1
+        |            ;;
+        |        ---docker_image_id)
+        |            VIASH_MODE='docker_image_id'
+        |            shift 1
+        |            ;;
         |        ---debug)
         |            VIASH_MODE='debug'
         |            shift 1
@@ -348,6 +354,10 @@ final case class ExecutableRunner(
         |  # print dockerfile
         |  if [ "$$VIASH_MODE" == "dockerfile" ]; then
         |    ViashDockerfile "$$VIASH_ENGINE_ID"
+        |    exit 0
+        |
+        |  elif [ "$$VIASH_MODE" == "docker_image_id" ]; then
+        |    echo "$$VIASH_DOCKER_IMAGE_ID"
         |    exit 0
         |  
         |  # enter docker container
@@ -423,7 +433,12 @@ final case class ExecutableRunner(
          |${Bash.ViashAbsolutePath}
          |${Bash.ViashDockerAutodetectMount}
          |# initialise variables
-         |VIASH_DIRECTORY_MOUNTS=()""".stripMargin
+         |VIASH_DIRECTORY_MOUNTS=()
+         |
+         |# configure default docker automount prefix if it is unset
+         |if [ -z "$${VIASH_DOCKER_AUTOMOUNT_PREFIX+x}" ]; then
+         |  VIASH_DOCKER_AUTOMOUNT_PREFIX="/viash_automount"
+         |fi""".stripMargin
     
     val preRun =
       f"""
@@ -534,6 +549,11 @@ final case class ExecutableRunner(
 
     val workdirStr = workdir.map(" --workdir '" + _ + "'").getOrElse("")
 
+    val dockerArgs =
+      "-i --rm" +
+        port.map(" -p " + _).mkString +
+        docker_run_args.map(" " + _).mkString
+    
     val preParse = 
       s"""
         |# initialise docker variables
