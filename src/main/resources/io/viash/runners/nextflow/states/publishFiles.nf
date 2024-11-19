@@ -114,7 +114,9 @@ def publishFilesByConfig(Map args) {
                 // instantiate the template
                 def filename = filenameTemplate
                   .replaceAll('\\$id', id_)
+                  .replaceAll('\\$\\{id\\}', id_)
                   .replaceAll('\\$key', key_)
+                  .replaceAll('\\$\\{key\\}', key_)
                 if (par.multiple) {
                   // if the parameter is multiple: true, the filename
                   // should contain a wildcard '*' that is replaced with
