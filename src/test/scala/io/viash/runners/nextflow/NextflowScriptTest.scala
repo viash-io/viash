@@ -98,10 +98,6 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
       ),
       cwd = tempFolFile
     )
-    val source = scala.io.Source.fromFile(Paths.get(tempFolStr, ".nextflow.log").toFile())
-    val lines = try source.mkString finally source.close()
-    println(lines)
-
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
   }
@@ -129,10 +125,7 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
       ),
       cwd = tempFolFile
     )
-    val source = scala.io.Source.fromFile(Paths.get(tempFolStr, ".nextflow.log").toFile())
-    val lines = try source.mkString finally source.close()
-    println(lines)
-
+    
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
   }
 
@@ -223,6 +216,9 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   override def afterAll(): Unit = {
+    val source = scala.io.Source.fromFile(Paths.get(tempFolStr, ".nextflow.log").toFile())
+    val lines = try source.mkString finally source.close()
+    println(lines)
     IO.deleteRecursively(temporaryFolder)
   }
 }
