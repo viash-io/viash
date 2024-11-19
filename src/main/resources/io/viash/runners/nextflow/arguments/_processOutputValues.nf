@@ -8,16 +8,3 @@ Map _checkValidOutputArgument(Map outputs, Map config, String id, String key) {
       [ name, value ]
     }
 }
-
-// Map _processOutputValues(Map outputs, Map config, String id, String key) {
-//   if (!workflow.stubRun) {
-//     config.allArguments.each { arg ->
-//       if (arg.direction == "output" && arg.required) {
-//         assert outputs.containsKey(arg.plainName) && outputs.get(arg.plainName) != null : 
-//           "Error in module '${key}' id '${id}': required output argument '${arg.plainName}' is missing"
-//       }
-//     }
-//     _checkValidOutputArgument(outputs, config, id, ekey) 
-//   }
-//   return outputs
-// }
