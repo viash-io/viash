@@ -100,7 +100,10 @@ object CollectedSchemas {
       getMembers[RRequirements](),
       getMembers[RubyRequirements](),
       getMembers[YumRequirements](),
-
+    )
+  }
+  object memberData_part2 { 
+    val part = List(
       getMembers[Argument[_]](),
       getMembers[BooleanArgument](),
       getMembers[BooleanTrueArgument](),
@@ -110,10 +113,7 @@ object CollectedSchemas {
       getMembers[IntegerArgument](),
       getMembers[LongArgument](),
       getMembers[StringArgument](),
-    )
-  }
-  object memberData_part2 { 
-    val part = List(
+
       getMembers[Resource](),
       getMembers[BashScript](),
       getMembers[CSharpScript](),
