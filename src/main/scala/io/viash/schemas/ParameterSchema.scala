@@ -114,7 +114,7 @@ object ParameterSchema {
     val defaultFromType = Option.when(typeName.startsWith("Option["))("Empty")
     val default = defaultFromAnnotation orElse defaultFromType
     val subclass = annotations.collect{ case (name, value) if name.endsWith("subclass") => value.head } match {
-      case l if l.nonEmpty => Some(l)
+      case l if l.nonEmpty => Some(l.sorted())
       case _ => None
     }
     

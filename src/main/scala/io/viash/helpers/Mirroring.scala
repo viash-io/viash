@@ -39,9 +39,9 @@ def typeOfImpl[T: Type](using Quotes): Expr[String] =
 
   // Use pattern matching to extract a simplified name
   def simpleName(tpe: TypeRepr): String = tpe match {
-    case AppliedType(tycon, args) =>
+    case AppliedType(tycon, args) if !(args.length == 1 && args.head.typeSymbol.name == "Any") =>
       // If it's a type constructor with arguments, show it in a readable form
-      s"${simpleName(tycon)}[${args.map(simpleName).mkString(", ")}]"
+      s"${simpleName(tycon)}[${args.map(simpleName).mkString(",")}]"
     case _ =>
       // Strip the full package name to get the simple type name
       tpe.typeSymbol.name
@@ -165,7 +165,8 @@ def annotationsOfImpl[T: Type](using Quotes): Expr[List[(String, List[String])]]
               // case Literal(Constant(value: String)) =>
               //   value
               case Literal(value) =>
-                value.show(using Printer.ConstantCode).stripPrefix("\"").stripSuffix("\"")
+                value.value.toString().stripMargin
+                // value.show(using Printer.ConstantCode).stripPrefix("\"").stripSuffix("\"")
               // case Select(Select(a, b), stripMargin) =>
               //   unfinishedStringStripMargin(b)
               case Select(Apply(a, a2), b) if b.toString == "stripMargin" =>
@@ -227,7 +228,8 @@ def memberTypeAnnotationsOfImpl[T: Type](using Quotes): Expr[List[(String, Strin
               // case Literal(Constant(value: String)) =>
               //   value
               case Literal(value) =>
-                value.show(using Printer.ConstantCode).stripPrefix("\"").stripSuffix("\"")
+                value.value.toString().stripMargin
+                // value.show(using Printer.ConstantCode).stripPrefix("\"").stripSuffix("\"")
               // case Select(Select(a, b), stripMargin) =>
               //   unfinishedStringStripMargin(b)
               case Select(Apply(a, a2), b) if b.toString == "stripMargin" =>
@@ -245,9 +247,9 @@ def memberTypeAnnotationsOfImpl[T: Type](using Quotes): Expr[List[(String, Strin
 
   // Use pattern matching to extract a simplified name
   def simpleName(tpe: TypeRepr): String = tpe match {
-    case AppliedType(tycon, args) =>
+    case AppliedType(tycon, args) if !(args.length == 1 && args.head.typeSymbol.name == "Any") =>
       // If it's a type constructor with arguments, show it in a readable form
-      s"${simpleName(tycon)}[${args.map(simpleName).mkString(", ")}]"
+      s"${simpleName(tycon)}[${args.map(simpleName).mkString(",")}]"
     case _ =>
       // Strip the full package name to get the simple type name
       tpe.typeSymbol.name
@@ -270,7 +272,7 @@ def memberTypeAnnotationsOfImpl[T: Type](using Quotes): Expr[List[(String, Strin
           .filter(m => toDocumentFields.contains(m.name))
           .map(m => 
             val name = m.name
-            val mTpe = simpleName(m.termRef.widen).replace(" ", "")
+            val mTpe = simpleName(m.termRef.widen)
             val annotations = m.annotations
               .filter(_.tpe.typeSymbol.fullName.startsWith("io.viash"))
               .map(ann => (ann.tpe.typeSymbol.name, annotationToStrings(ann)))
