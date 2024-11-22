@@ -90,7 +90,10 @@ object CollectedSchemas {
       getMembers[NativePlatform](),
       getMembers[DockerPlatform](),
       getMembers[NextflowPlatform](),
-
+    )
+  }
+  object memberData_part2 { 
+    val part = List(
       getMembers[Requirements](),
       getMembers[ApkRequirements](),
       getMembers[AptRequirements](),
@@ -100,10 +103,7 @@ object CollectedSchemas {
       getMembers[RRequirements](),
       getMembers[RubyRequirements](),
       getMembers[YumRequirements](),
-    )
-  }
-  object memberData_part2 { 
-    val part = List(
+
       getMembers[Argument[_]](),
       getMembers[BooleanArgument](),
       getMembers[BooleanTrueArgument](),
@@ -113,7 +113,10 @@ object CollectedSchemas {
       getMembers[IntegerArgument](),
       getMembers[LongArgument](),
       getMembers[StringArgument](),
-
+    )
+  }
+  object memberData_part3 { 
+    val part = List(
       getMembers[Resource](),
       getMembers[BashScript](),
       getMembers[CSharpScript](),
@@ -153,7 +156,7 @@ object CollectedSchemas {
       .replaceAll("""(\w*)\[[\w\.]*?(\w*),[\w\.]*?(\w*)\]""", "$1[$2,$3]")
   }
 
-  val fullData = memberData_part1.part ++ memberData_part2.part
+  val fullData = memberData_part1.part ++ memberData_part2.part ++ memberData_part3.part
 
   // Main call for documentation output
   lazy val data: List[List[ParameterSchema]] = fullData.map(_.filter(p => !p.hasUndocumented && !p.hasInternalFunctionality))
