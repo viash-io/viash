@@ -136,51 +136,9 @@ def annotationsOfImpl[T: Type](using Quotes): Expr[List[(String, List[String])]]
   import quotes.reflect.*
   val tpe = TypeRepr.of[T].typeSymbol
 
-
-  def unfinishedStringStripMargin(s: String, marginChar: Char = '|'): String = {
-    s.replaceAll("\\\\n", "\n").stripMargin(marginChar)
-  }
-
-  def mapTreeList(l: List[Tree], marginChar: Char = '|'): String = {
-    l.map(i => i match {
-      // case Literal(Constant(value: String)) =>
-      //   unfinishedStringStripMargin(value, marginChar)
-      case Literal(value) =>
-        unfinishedStringStripMargin(value.show(using Printer.ConstantCode).stripPrefix("\"").stripSuffix("\""), marginChar)
-      case _ =>
-        "unmatched in mapTreeList: " + i.toString()
-    }).mkString
-  }
-
   // Traverse tree information and extract values or lists of values
-  def annotationToStrings(ann: Term): List[String] = {
-    // val name = ann.tree.tpe.toString()
-    val values = ann match {
-      case Apply(c, args: List[Tree]) =>
-        args.collect({
-          case i: Tree =>
-            i match {
-              // Here 'Apply' contains lists
-              // While 'Select' has a single element
-              // case Literal(Constant(value: String)) =>
-              //   value
-              case Literal(value) =>
-                value.value.toString().stripMargin
-                // value.show(using Printer.ConstantCode).stripPrefix("\"").stripSuffix("\"")
-              // case Select(Select(a, b), stripMargin) =>
-              //   unfinishedStringStripMargin(b)
-              case Select(Apply(a, a2), b) if b.toString == "stripMargin" =>
-                mapTreeList(a2)
-              case Apply(Select(Apply(a, a2), b), stripMargin) if b.toString == "stripMargin" =>
-                val stripper = stripMargin.head.toString.charAt(1)
-                mapTreeList(a2, stripper)
-              case _ =>
-                "unmatched in annotationToStrings: " + i.toString()
-            }
-        })
-    }
-    values
-  }
+  def annotationToStrings(ann: Term): List[String] =
+    ann match {case Apply(_, args) => args.collect{ case Literal(constant) => constant.value.toString.stripMargin }}
 
   // We're not adding annotations of base classes here.
   // The base classes should be documented as well and the annotations will clash with the annotations of the specific class.
@@ -200,50 +158,9 @@ def annotationsOfImpl[T: Type](using Quotes): Expr[List[(String, List[String])]]
 def memberTypeAnnotationsOfImpl[T: Type](using Quotes): Expr[List[(String, String, List[(String, List[String])])]] = {
   import quotes.reflect.*
 
-  def unfinishedStringStripMargin(s: String, marginChar: Char = '|'): String = {
-    s.replaceAll("\\\\n", "\n").stripMargin(marginChar)
-  }
-
-  def mapTreeList(l: List[Tree], marginChar: Char = '|'): String = {
-    l.map(i => i match {
-      // case Literal(Constant(value: String)) =>
-      //   unfinishedStringStripMargin(value, marginChar)
-      case Literal(value) =>
-        unfinishedStringStripMargin(value.show(using Printer.ConstantCode).stripPrefix("\"").stripSuffix("\""), marginChar)
-      case _ =>
-        "unmatched in mapTreeList: " + i.toString()
-    }).mkString
-  }
-
   // Traverse tree information and extract values or lists of values
-  def annotationToStrings(ann: Term): List[String] = {
-    // val name = ann.tree.tpe.toString()
-    val values = ann match {
-      case Apply(c, args: List[Tree]) =>
-        args.collect({
-          case i: Tree =>
-            i match {
-              // Here 'Apply' contains lists
-              // While 'Select' has a single element
-              // case Literal(Constant(value: String)) =>
-              //   value
-              case Literal(value) =>
-                value.value.toString().stripMargin
-                // value.show(using Printer.ConstantCode).stripPrefix("\"").stripSuffix("\"")
-              // case Select(Select(a, b), stripMargin) =>
-              //   unfinishedStringStripMargin(b)
-              case Select(Apply(a, a2), b) if b.toString == "stripMargin" =>
-                mapTreeList(a2)
-              case Apply(Select(Apply(a, a2), b), stripMargin) if b.toString == "stripMargin" =>
-                val stripper = stripMargin.head.toString.charAt(1)
-                mapTreeList(a2, stripper)
-              case _ =>
-                "unmatched in annotationToStrings: " + i.toString()
-            }
-        })
-    }
-    values
-  }
+  def annotationToStrings(ann: Term): List[String] =
+    ann match {case Apply(_, args) => args.collect{ case Literal(constant) => constant.value.toString.stripMargin }}
 
   // Use pattern matching to extract a simplified name
   def simpleName(tpe: TypeRepr): String = tpe match {
