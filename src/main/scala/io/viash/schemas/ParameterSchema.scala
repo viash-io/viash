@@ -17,7 +17,6 @@
 
 package io.viash.schemas
 
-// import scala.reflect.runtime.universe._
 import io.viash.schemas.internalFunctionality
 import scala.annotation.Annotation
 

@@ -26,7 +26,6 @@ package object dependencies {
   import io.viash.helpers.circe._
 
   // encoders and decoders for Argument
-  // implicit val encodeEitherStringRepository: Encoder[Either[String, Repository]] = deriveConfiguredEncoderStrict
   implicit val encodeDependency: Encoder.AsObject[Dependency] = deriveConfiguredEncoderStrict
   implicit val encodeGitRepository: Encoder.AsObject[GitRepository] = deriveConfiguredEncoderStrict
   implicit val encodeGithubRepository: Encoder.AsObject[GithubRepository] = deriveConfiguredEncoderStrict
@@ -65,7 +64,6 @@ package object dependencies {
       objJson deepMerge typeJson
   }
 
-  // implicit val decodeEitherStringRepository: Decoder[Either[String, Repository]] = deriveConfiguredDecoderFullChecks
   implicit val decodeDependency: Decoder[Dependency] = deriveConfiguredDecoderFullChecks
   implicit val decodeGitRepository: Decoder[GitRepository] = deriveConfiguredDecoderFullChecks
   implicit val decodeGithubRepository: Decoder[GithubRepository] = deriveConfiguredDecoderFullChecks

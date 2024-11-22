@@ -23,7 +23,6 @@ import cats.syntax.functor._
 
 package object engines {
   import io.viash.helpers.circe._
-
   import io.viash.engines.requirements.{decodeRequirements, encodeRequirements}
 
   implicit val encodeDockerEngine: Encoder.AsObject[DockerEngine] = deriveConfiguredEncoder

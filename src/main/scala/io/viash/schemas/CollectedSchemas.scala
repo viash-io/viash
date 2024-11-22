@@ -39,8 +39,6 @@ import io.viash.config.Author
 import io.viash.config.ComputationalRequirements
 import io.viash.config.Links
 import io.viash.config.References
-import scala.compiletime.{ codeOf, constValue, erasedValue, error, summonFrom, summonInline }
-import scala.annotation.Annotation
 
 object CollectedSchemas {
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
