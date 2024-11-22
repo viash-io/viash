@@ -243,13 +243,24 @@ def memberTypeAnnotationsOfImpl[T: Type](using Quotes): Expr[List[(String, Strin
     values
   }
 
-  val tpe = TypeRepr.of[T].typeSymbol
-  val baseClasses = TypeRepr.of[T].baseClasses.filter(_.fullName.startsWith("io.viash"))
+  // Use pattern matching to extract a simplified name
+  def simpleName(tpe: TypeRepr): String = tpe match {
+    case AppliedType(tycon, args) =>
+      // If it's a type constructor with arguments, show it in a readable form
+      s"${simpleName(tycon)}[${args.map(simpleName).mkString(", ")}]"
+    case _ =>
+      // Strip the full package name to get the simple type name
+      tpe.typeSymbol.name
+  }
+
+  val tpe = TypeRepr.of[T]
+  val typeSymbol = tpe.typeSymbol
+  val baseClasses = tpe.baseClasses.filter(_.fullName.startsWith("io.viash"))
 
   // base classes don't have case fields, so we need to get the member fields from the base classes and filter them
   // only get the fields that are either case fields or have annotations
-  val caseFieldNames = tpe.caseFields.map(_.name)
-  val annotatedFields = tpe.fieldMembers.filter(_.annotations.nonEmpty).map(_.name)
+  val caseFieldNames = typeSymbol.caseFields.map(_.name)
+  val annotatedFields = typeSymbol.fieldMembers.filter(_.annotations.nonEmpty).map(_.name)
   val toDocumentFields = (caseFieldNames ++ annotatedFields).distinct
 
   val annots =
@@ -259,7 +270,7 @@ def memberTypeAnnotationsOfImpl[T: Type](using Quotes): Expr[List[(String, Strin
           .filter(m => toDocumentFields.contains(m.name))
           .map(m => 
             val name = m.name
-            val mTpe = "foo"
+            val mTpe = simpleName(m.termRef.widen).replace(" ", "")
             val annotations = m.annotations
               .filter(_.tpe.typeSymbol.fullName.startsWith("io.viash"))
               .map(ann => (ann.tpe.typeSymbol.name, annotationToStrings(ann)))
