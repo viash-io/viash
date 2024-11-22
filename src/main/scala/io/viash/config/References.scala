@@ -31,7 +31,7 @@ import io.viash.helpers.data_structures.{OneOrMore, listToOneOrMore}
     |      journal={Baz},
     |      year={2024}
     |    }
-    |""".stripMargin, "yaml")
+    |""", "yaml")
 @since("Viash 0.9.0")
 case class References(
   @description("One or multiple DOI reference(s) of the component.")
@@ -48,7 +48,7 @@ case class References(
       |    journal={Baz},
       |    year={2024}
       |  }
-      |"""/*.stripMargin*/, "yaml")
+      |""", "yaml")
   @default("Empty")
   bibtex: OneOrMore[String] = Nil,
 )

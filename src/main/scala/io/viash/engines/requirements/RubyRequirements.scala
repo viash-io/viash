@@ -25,7 +25,7 @@ import io.viash.schemas._
   """setup:
     |  - type: ruby
     |    packages: [ rspec ]
-    |""".stripMargin,
+    |""",
     "yaml")
 @subclass("ruby")
 case class RubyRequirements(

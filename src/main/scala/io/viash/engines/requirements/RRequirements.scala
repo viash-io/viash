@@ -27,7 +27,7 @@ import io.viash.schemas._
     |    cran: anndata
     |    bioc: [ AnnotationDbi, SingleCellExperiment ]
     |    github: rcannood/SCORPIUS
-    |""".stripMargin,
+    |""",
     "yaml")
 @subclass("r")
 case class RRequirements(
@@ -79,7 +79,7 @@ case class RRequirements(
   @description("Specifies a code block to run as part of the build.")
   @example("""script: |
     |  cat("Running custom code\n")
-    |  install.packages("anndata")"""/*.stripMargin*/, "yaml")
+    |  install.packages("anndata")""", "yaml")
   @default("Empty")
   script: OneOrMore[String] = Nil,
   

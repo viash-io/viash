@@ -26,7 +26,7 @@ import io.viash.engines.requirements.Requirements
     | * @[Native](platform_native)
     | * @[Docker](platform_docker)
     | * @[Nextflow](platform_nextflow)
-    |""".stripMargin)
+    |""")
 @example(
   """platforms:
     |  - type: docker
@@ -35,7 +35,7 @@ import io.viash.engines.requirements.Requirements
     |  - type: nextflow
     |    directives:
     |      label: [lowcpu, midmem]
-    |""".stripMargin,
+    |""",
   "yaml")
 @deprecated("Use 'engines' and 'runners' instead.", "0.9.0", "0.10.0")
 @subclass("NativePlatform")

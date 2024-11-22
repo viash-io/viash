@@ -31,7 +31,7 @@ import scala.collection.immutable.ListMap
 @description(
   """The functionality-part of the config file describes the behaviour of the script in terms of arguments and resources.
     |By specifying a few restrictions (e.g. mandatory arguments) and adding some descriptions, Viash will automatically generate a stylish command-line interface for you.
-    |""".stripMargin)
+    |""")
 @deprecated("Functionality level is deprecated, all functionality fields are now located on the top level of the config file.", "0.9.0", "0.10.0")
 case class Functionality(
   @description("Name of the component and the filename of the executable when built with `viash build`.")
@@ -48,20 +48,20 @@ case class Functionality(
 
   @description(
     """A list of @[authors](author). An author must at least have a name, but can also have a list of roles, an e-mail address, and a map of custom properties.
-      +
-      +Suggested values for roles are:
-      + 
-      +| Role | Abbrev. | Description |
-      +|------|---------|-------------|
-      +| maintainer | mnt | for the maintainer of the code. Ideally, exactly one maintainer is specified. |
-      +| author | aut | for persons who have made substantial contributions to the software. |
-      +| contributor | ctb| for persons who have made smaller contributions (such as code patches).
-      +| datacontributor | dtc | for persons or organisations that contributed data sets for the software
-      +| copyrightholder | cph | for all copyright holders. This is a legal concept so should use the legal name of an institution or corporate body.
-      +| funder | fnd | for persons or organizations that furnished financial support for the development of the software
-      +
-      +The [full list of roles](https://www.loc.gov/marc/relators/relaterm.html) is extremely comprehensive.
-      +""".stripMargin('+'))
+      |
+      |Suggested values for roles are:
+      | 
+      || Role | Abbrev. | Description |
+      ||------|---------|-------------|
+      || maintainer | mnt | for the maintainer of the code. Ideally, exactly one maintainer is specified. |
+      || author | aut | for persons who have made substantial contributions to the software. |
+      || contributor | ctb| for persons who have made smaller contributions (such as code patches).
+      || datacontributor | dtc | for persons or organisations that contributed data sets for the software
+      || copyrightholder | cph | for all copyright holders. This is a legal concept so should use the legal name of an institution or corporate body.
+      || funder | fnd | for persons or organizations that furnished financial support for the development of the software
+      |
+      |The [full list of roles](https://www.loc.gov/marc/relators/relaterm.html) is extremely comprehensive.
+      |""")
   @example(
     """authors:
       |  - name: Jane Doe
@@ -75,7 +75,7 @@ case class Functionality(
       |  - name: Tim Farbe
       |    roles: [author]
       |    email: tim@far.be
-      |""".stripMargin, "yaml")
+      |""", "yaml")
   @since("Viash 0.3.1")
   @default("Empty")
   authors: List[Author] = Nil,
@@ -87,7 +87,7 @@ case class Functionality(
       | - `description: Description of foo`, a description of the argument group. Multiline descriptions are supported.
       | - `arguments: [arg1, arg2, ...]`, list of the arguments.
       |
-      |""".stripMargin)
+      |""")
   @example(
     """argument_groups:
       |  - name: "Input"
@@ -107,7 +107,7 @@ case class Functionality(
       |      - name: "--output_optional"
       |        type: file
       |        direction: output
-      |""".stripMargin,
+      |""",
       "yaml")
   @exampleWithDescription(
     """component_name
@@ -125,7 +125,7 @@ case class Functionality(
       |
       |      --optional_output
       |          type: file
-      |""".stripMargin,
+      |""",
       "bash",
       "This results in the following output when calling the component with the `--help` argument:")
   @since("Viash 0.5.14")
@@ -142,14 +142,14 @@ case class Functionality(
       | * path: `path/to/file`, the path of the input file. Can be a relative or an absolute path, or a URI. Mutually exclusive with `text`.
       | * text: ...multiline text..., the content of the resulting file specified as a string. Mutually exclusive with `path`.
       | * is_executable: `true` / `false`, whether the resulting resource file should be made executable.
-      |""".stripMargin)
+      |""")
   @example(
     """resources:
       |  - type: r_script
       |    path: script.R
       |  - type: file
       |    path: resource1.txt
-      |""".stripMargin,
+      |""",
       "yaml")
   @default("Empty")
   resources: List[Resource] = Nil,
@@ -157,9 +157,9 @@ case class Functionality(
   @description("A description of the component. This will be displayed with `--help`.")
   @example(
     """description: |
-      +  This component performs function Y and Z.
-      +  It is possible to make this a multiline string.
-      +""".stripMargin('+'),
+      |  This component performs function Y and Z.
+      |  It is possible to make this a multiline string.
+      |""",
       "yaml")
   description: Option[String] = None,
 
@@ -175,7 +175,7 @@ case class Functionality(
       |  - type: r_script
       |    path: tests/test2.R
       |  - path: resource1.txt
-      |""".stripMargin,
+      |""",
       "yaml")
   @default("Empty")
   test_resources: List[Resource] = Nil,
@@ -184,7 +184,7 @@ case class Functionality(
   @example(
     """info:
       |  twitter: wizzkid
-      |  classes: [ one, two, three ]""".stripMargin, "yaml")
+      |  classes: [ one, two, three ]""", "yaml")
   @since("Viash 0.4.0")
   @default("Empty")
   info: Json = Json.Null,
@@ -198,12 +198,12 @@ case class Functionality(
     """@[Computational requirements](computational_requirements) related to running the component. 
       |`cpus` specifies the maximum number of (logical) cpus a component is allowed to use., whereas
       |`memory` specifies the maximum amount of memory a component is allowed to allicate. Memory units must be
-      |in B, KB, MB, GB, TB or PB for SI units (1000-base), or KiB, MiB, GiB, TiB or PiB for binary IEC units (1024-base).""".stripMargin)
+      |in B, KB, MB, GB, TB or PB for SI units (1000-base), or KiB, MiB, GiB, TiB or PiB for binary IEC units (1024-base).""")
   @example(
     """requirements:
       |  cpus: 5
       |  memory: 10GB
-      |""".stripMargin,
+      |""",
       "yaml")
   @since("Viash 0.6.0")
   @default("Empty")
@@ -217,21 +217,21 @@ case class Functionality(
       |      type: github
       |      uri: openpipelines-bio/modules
       |      tag: 0.3.0
-      |""".stripMargin,
+      |""",
     "yaml",
     "Full specification of a repository")
   @exampleWithDescription(
     """dependencies:
       |  - name: qc/multiqc
       |    repository: "github://openpipelines-bio/modules:0.3.0"
-      |""".stripMargin,
+      |""",
     "yaml",
     "Full specification of a repository using sugar syntax")
   @exampleWithDescription(
     """dependencies:
       |  - name: qc/multiqc
       |    repository: "openpipelines-bio"
-      |""".stripMargin,
+      |""",
     "yaml",
     "Reference to a repository fully specified under 'repositories'")
   @default("Empty")
@@ -239,14 +239,14 @@ case class Functionality(
 
   @description(
     """(Pre-)defines @[repositories](repository) that can be used as repository in dependencies.
-      |Allows reusing repository definitions in case it is used in multiple dependencies.""".stripMargin)
+      |Allows reusing repository definitions in case it is used in multiple dependencies.""")
   @example(
     """repositories:
       |  - name: openpipelines-bio
       |    type: github
       |    uri: openpipelines-bio/modules
       |    tag: 0.3.0
-      |""".stripMargin,
+      |""",
       "yaml")
   @default("Empty")
   repositories: List[RepositoryWithName] = Nil,
@@ -280,7 +280,7 @@ case class Functionality(
       |      journal={Baz},
       |      year={2024}
       |    }
-      |""".stripMargin, "yaml")
+      |""", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   references: References = References(),
@@ -293,7 +293,7 @@ case class Functionality(
       |  homepage: "https://viash.io"
       |  documentation: "https://viash.io/reference/"
       |  issue_tracker: "https://github.com/viash-io/viash/issues"
-      |""".stripMargin, "yaml")
+      |""", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   links: Links = Links(),
@@ -311,7 +311,7 @@ case class Functionality(
       | - @[boolean](arg_boolean)
       | - @[boolean_true](arg_boolean_true)
       | - @[boolean_false](arg_boolean_false)
-      |""".stripMargin)
+      |""")
   @example(
     """arguments:
       |  - name: --foo
@@ -326,7 +326,7 @@ case class Functionality(
       |    multiple_sep: ";"
       |  - name: --bar
       |    type: string
-      |""".stripMargin,
+      |""",
       "yaml")
   @default("Empty")
   arguments: List[Argument[_]] = Nil,

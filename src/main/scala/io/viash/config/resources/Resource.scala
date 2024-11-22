@@ -35,14 +35,14 @@ import io.viash.schemas._
     | * path: `path/to/file`, the path of the input file. Can be a relative or an absolute path, or a URI. Mutually exclusive with `text`.
     | * text: ...multiline text..., the content of the resulting file specified as a string. Mutually exclusive with `path`.
     | * is_executable: `true` / `false`, whether the resulting resource file should be made executable.
-    |""".stripMargin)
+    |""")
 @example(
   """resources:
     |  - type: r_script
     |    path: script.R
     |  - type: file
     |    path: resource1.txt
-    |""".stripMargin,
+    |""",
     "yaml")
 @subclass("BashScript")
 @subclass("CSharpScript")

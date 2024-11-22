@@ -27,7 +27,7 @@ import io.viash.schemas._
     |    pip: numpy
     |    github: [ jkbr/httpie, foo/bar ]
     |    url: "https://github.com/some_org/some_pkg/zipball/master"
-    |""".stripMargin,
+    |""",
     "yaml")
 @subclass("python")
 case class PythonRequirements(
@@ -88,7 +88,7 @@ case class PythonRequirements(
   @description("Specifies a code block to run as part of the build.")
   @example("""script: |
     |  print("Running custom code")
-    |  x = 1 + 1 == 2"""/*.stripMargin*/, "yaml")
+    |  x = 1 + 1 == 2""", "yaml")
   @default("Empty")
   script: OneOrMore[String] = Nil,
 

@@ -28,7 +28,7 @@ import io.viash.schemas._
     |    git: "https://some.git.repository/org/repo"
     |    github: "owner/repository"
     |    url: "https://github.com/org/repo/archive/HEAD.zip"
-    |""".stripMargin,
+    |""",
     "yaml")
 @subclass("javascript")
 case class JavaScriptRequirements(

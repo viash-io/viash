@@ -32,7 +32,7 @@ import io.viash.helpers.DockerImageInfo
 @description(
   """Run a Viash component on a Docker backend engine.
     |By specifying which dependencies your component needs, users will be able to build a docker container from scratch using the setup flag, or pull it from a docker repository.
-    |""".stripMargin)
+    |""")
 @example(
   """engines:
     |  - type: docker
@@ -40,7 +40,7 @@ import io.viash.helpers.DockerImageInfo
     |    setup:
     |      - type: apt
     |        packages: [ curl ]
-    |""".stripMargin,
+    |""",
   "yaml")
 @subclass("docker")
 final case class DockerEngine(
@@ -109,7 +109,7 @@ final case class DockerEngine(
       | - @[yum](yum_req)
       |
       |The order in which these dependencies are specified determines the order in which they will be installed.
-      |"""/*.stripMargin*/)
+      |""")
   @default("Empty")
   setup: List[Requirements] = Nil,
 

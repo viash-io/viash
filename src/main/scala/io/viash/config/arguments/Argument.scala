@@ -32,7 +32,7 @@ import java.nio.file.Paths
     | - @[boolean](arg_boolean)
     | - @[boolean_true](arg_boolean_true)
     | - @[boolean_false](arg_boolean_false)
-    |""".stripMargin)
+    |""")
 @example(
   """arguments:
     |  - name: --foo
@@ -47,7 +47,7 @@ import java.nio.file.Paths
     |    multiple_sep: ";"
     |  - name: --bar
     |    type: string
-    |""".stripMargin,
+    |""",
     "yaml")
 @subclass("BooleanArgument")
 @subclass("BooleanTrueArgument")

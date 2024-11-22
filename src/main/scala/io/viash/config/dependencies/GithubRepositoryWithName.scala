@@ -29,7 +29,7 @@ import java.nio.file.Paths
     |type: github
     |repo: openpipelines-bio/openpipeline
     |tag: 0.8.0
-    |""".stripMargin,
+    |""",
   "yaml"
 )
 @example(
@@ -38,7 +38,7 @@ import java.nio.file.Paths
     |repo: viash-io/viash
     |tag: 0.7.1
     |path: src/test/resources/testns
-    |""".stripMargin,
+    |""",
   "yaml"
   )
 @subclass("githubwithname")

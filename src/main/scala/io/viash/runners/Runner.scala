@@ -27,12 +27,12 @@ import io.viash.config.Config
     |
     | * @[Executable](executable_runner)
     | * @[Nextflow](nextflow_runner)
-    |""".stripMargin)
+    |""")
 @example(
   """runners:
     |  - type: executable
     |  - type: nextflow
-    |""".stripMargin,
+    |""",
   "yaml")
 @subclass("ExecutableRunner")
 @subclass("NextflowRunner")

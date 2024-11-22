@@ -29,7 +29,7 @@ import io.viash.schemas._
     |    default: 16
     |    description: Amount of CPU cores to use
     |    alternatives: ["-c"]
-    |""".stripMargin,
+    |""",
     "yaml")
 @subclass("integer")
 case class IntegerArgument(
@@ -39,7 +39,7 @@ case class IntegerArgument(
       |  - `--foo` is a long option, which can be passed with `executable_name --foo=value` or `executable_name --foo value`
       |  - `-f` is a short option, which can be passed with `executable_name -f value`
       |  - `foo` is an argument, which can be passed with `executable_name value`  
-      |"""/*.stripMargin*/)
+      |""")
   name: String,
 
   @description("List of alternative format variations for this argument.")
@@ -62,7 +62,7 @@ case class IntegerArgument(
   @example(
     """description: |
       |  A (multiline) description of the purpose of
-      |  this argument."""/*.stripMargin*/, "yaml")
+      |  this argument.""", "yaml")
   @default("Empty")
   description: Option[String] = None,
 
@@ -70,7 +70,7 @@ case class IntegerArgument(
   @example(
     """info:
       |  category: cat1
-      |  labels: [one, two, three]"""/*.stripMargin*/, "yaml")
+      |  labels: [one, two, three]""", "yaml")
   @since("Viash 0.6.3")
   @default("Empty")
   info: Json = Json.Null,
@@ -80,7 +80,7 @@ case class IntegerArgument(
     """- name: --my_integer
       |  type: integer
       |  example: 100
-      |"""/*.stripMargin*/,
+      |""",
       "yaml")
   @default("Empty")
   example: OneOrMore[Int] = Nil,
@@ -90,7 +90,7 @@ case class IntegerArgument(
     """- name: --my_integer
       |  type: integer
       |  default: 100
-      |"""/*.stripMargin*/,
+      |""",
       "yaml")
   @default("Empty")
   default: OneOrMore[Int] = Nil,
@@ -100,7 +100,7 @@ case class IntegerArgument(
     """- name: --my_integer
       |  type: integer
       |  required: true
-      |"""/*.stripMargin*/,
+      |""",
       "yaml")
   @default("False")
   required: Boolean = false,
@@ -110,7 +110,7 @@ case class IntegerArgument(
     """- name: --values
       |  type: integer
       |  choices: [1024, 2048, 4096]
-      |"""/*.stripMargin*/,
+      |""",
       "yaml")
   @default("Empty")
   choices: List[Int] = Nil,
@@ -120,7 +120,7 @@ case class IntegerArgument(
     """- name: --my_integer
       |  type: integer
       |  min: 50
-      |"""/*.stripMargin*/,
+      |""",
       "yaml")
   min: Option[Int] = None,
 
@@ -129,7 +129,7 @@ case class IntegerArgument(
     """- name: --my_integer
       |  type: integer
       |  max: 150
-      |"""/*.stripMargin*/,
+      |""",
       "yaml")  
   max: Option[Int] = None,
 
@@ -141,7 +141,7 @@ case class IntegerArgument(
     """- name: --my_integer
       |  type: integer
       |  multiple: true
-      |"""/*.stripMargin*/,
+      |""",
       "yaml")
   @exampleWithDescription("my_component --my_integer=10:80:152", "bash", "Here's an example of how to use this:")
   @default("False")
@@ -153,7 +153,7 @@ case class IntegerArgument(
       |  type: integer
       |  multiple: true
       |  multiple_sep: ";"
-      |"""/*.stripMargin*/,
+      |""",
       "yaml")
   @exampleWithDescription("my_component --my_integer=10:80:152", "bash", "Here's an example of how to use this:")
   @default(";")

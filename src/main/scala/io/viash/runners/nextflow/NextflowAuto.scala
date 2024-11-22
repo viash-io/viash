@@ -25,7 +25,7 @@ case class NextflowAuto(
     """If `true`, an input tuple only containing only a single File (e.g. `["foo", file("in.h5ad")]`) is automatically transformed to a map (i.e. `["foo", [ input: file("in.h5ad") ] ]`).
       |
       |Default: `true`.
-      |"""/*.stripMargin*/)
+      |""")
   @default("True")
   simplifyInput: Boolean = true,
 
@@ -33,7 +33,7 @@ case class NextflowAuto(
     """If `true`, an output tuple containing a map with a File (e.g. `["foo", [ output: file("out.h5ad") ] ]`) is automatically transformed to a map (i.e. `["foo", file("out.h5ad")]`).
       |
       |Default: `false`.
-      |"""/*.stripMargin*/)
+      |""")
   @default("False")
   simplifyOutput: Boolean = false,
 
@@ -43,7 +43,7 @@ case class NextflowAuto(
       |Will throw an error if neither are defined.
       |
       |Default: `false`.
-      |"""/*.stripMargin*/)
+      |""")
   @default("False")
   transcript: Boolean = false,
 
@@ -53,7 +53,7 @@ case class NextflowAuto(
       |Will throw an error if `params.publishDir` is not defined.
       |
       |Default: `false`.
-      |"""/*.stripMargin*/)
+      |""")
   @default("False")
   publish: Either[Boolean, String] = Left(false)
 ) {

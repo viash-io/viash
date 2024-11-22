@@ -42,7 +42,7 @@ import io.viash.config.{Author, Links, References}
     |config_mods: |
     |  .runners[.type == 'nextflow'].directives.tag := '$id'
     |  .runners[.type == 'nextflow'].config.script := 'includeConfig("configs/custom.config")'
-    |""".stripMargin, "yaml"
+    |""", "yaml"
 )
 @since("Viash 0.6.4")
 case class PackageConfig(
@@ -72,7 +72,7 @@ case class PackageConfig(
   @example(
     """description: |
       |  A (multiline) description of the purpose of this package
-      |  and the components it contains.""".stripMargin, "yaml")
+      |  and the components it contains.""", "yaml")
   @since("Viash 0.9.0")
   description: Option[String] = None,
 
@@ -80,7 +80,7 @@ case class PackageConfig(
   @example(
     """info:
       |  twitter: wizzkid
-      |  classes: [ one, two, three ]""".stripMargin, "yaml")
+      |  classes: [ one, two, three ]""", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   info: Json = Json.Null,
@@ -92,7 +92,7 @@ case class PackageConfig(
       |    type: github
       |    uri: openpipelines-bio/modules
       |    tag: 0.3.0
-      |""".stripMargin,
+      |""",
       "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
@@ -137,7 +137,7 @@ case class PackageConfig(
       |  - name: Tim Farbe
       |    roles: [author]
       |    email: tim@far.be
-      |""".stripMargin, "yaml")
+      |""", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   authors: List[Author] = Nil,
@@ -171,7 +171,7 @@ case class PackageConfig(
       |      journal={Baz},
       |      year={2024}
       |    }
-      |""".stripMargin, "yaml")
+      |""", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   references: References = References(),
@@ -184,7 +184,7 @@ case class PackageConfig(
       |  homepage: "https://viash.io"
       |  documentation: "https://viash.io/reference/"
       |  issue_tracker: "https://github.com/viash-io/viash/issues"
-      |""".stripMargin, "yaml")
+      |""", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   links: Links = Links(),
