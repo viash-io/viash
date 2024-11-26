@@ -174,9 +174,30 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       | innerWorkflowFactory(workflowArgs)
     def chInitialOutputList = chInitialOutputMulti instanceof List ? chInitialOutputMulti : [chInitialOutputMulti]
     assert chInitialOutputList.size() > 0: "should have emitted at least one output channel"
-    def chInitialOutput = chInitialOutputList.size() > 1 ? chInitialOutputList[0].mix(*chInitialOutputList.tail()) : chInitialOutputMulti 
+    // Add a channel ID to the events, which designates the channel the event was emitted from as a running number
+    // This number is used to sort the events later when the events are gathered from across the channels.
+    def chInitialOutputListWithIndexedEvents = chInitialOutputList.withIndex().collect{channel, channelIndex ->
+      def newChannel = channel
+        | map {tuple ->
+          assert tuple instanceof List : 
+          "Error in module '${key_}': element in output channel should be a tuple [id, data, ...otherargs...]\n" +
+          "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
+          "  Expected class: List. Found: tuple.getClass() is ${tuple.getClass()}"
+        
+          def newEvent = [channelIndex] + tuple
+          return newEvent
+        }
+      return newChannel
+    }
+    // Put the events into 1 channel, cover case where there is only one channel is emitted
+    def chInitialOutput = chInitialOutputList.size() > 1 ? \
+      chInitialOutputListWithIndexedEvents[0].mix(*chInitialOutputListWithIndexedEvents.tail()) : \
+      chInitialOutputListWithIndexedEvents[0]
     def chInitialOutputProcessed = chInitialOutput
-      | map { id_, output_ ->
+      | map { tuple  ->
+        def channelId = tuple[0]
+        def id_ = tuple[1]
+        def output_ = tuple[2]
 
         // see if output map contains metadata
         def meta_ =
@@ -191,38 +212,59 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
         // check value types
         output_ = _checkValidOutputArgument(output_, meta.config, id_, key_)
 
-        [join_id, id_, output_]
+        [join_id, channelId, id_, output_]
       }
       // | view{"chInitialOutput: ${it.take(3)}"}
 
-    // join the output [prev_id, new_id, output] with the previous state [prev_id, state, ...]
+    // join the output [prev_id, channel_id, new_id, output] with the previous state [prev_id, state, ...]
     def chPublishWithPreviousState = safeJoin(chInitialOutputProcessed, chRunFiltered, key_)
-      // input tuple format: [join_id, id, output, prev_state, ...]
-      // output tuple format: [join_id, id, new_state, ...]
+      // input tuple format: [join_id, channel_id, id, output, prev_state, ...]
+      // output tuple format: [join_id, channel_id, id, new_state, ...]
       | map{ tup ->
-        def new_state = workflowArgs.toState(tup.drop(1).take(3))
-        tup.take(2) + [new_state] + tup.drop(4)
+        def new_state = workflowArgs.toState(tup.drop(2).take(3))
+        tup.take(3) + [new_state] + tup.drop(5)
       }
     if (workflowArgs.auto.publish == "state") {
       def chPublishFiles = chPublishWithPreviousState
-        // input tuple format: [join_id, id, new_state, ...]
-        // output tuple format: [join_id, id, new_state]
+        // input tuple format: [join_id, channel_id, id, new_state, ...]
+        // output tuple format: [join_id, channel_id, id, new_state]
         | map{ tup ->
-          tup.take(3)
+          tup.take(4)
         }
 
       safeJoin(chPublishFiles, chArgsWithDefaults, key_)
-        // input tuple format: [join_id, id, new_state, orig_state, ...]
+        // input tuple format: [join_id, channel_id, id, new_state, orig_state, ...]
         // output tuple format: [id, new_state, orig_state]
         | map { tup ->
-          tup.drop(1).take(3)
+          tup.drop(2).take(3)
         }
         | publishFilesByConfig(key: key_, config: meta.config)
     }
+    // Join the state from the events that were emitted from different channels
     def chJoined = chInitialOutputProcessed
-      | groupTuple(by: 1, sort: 'hash', size: chInitialOutputList.size(), remainder: true)
-      | map {join_ids, id, states ->
-        def newJoinId = join_ids.unique{a, b -> a <=> b}
+      | map {tuple ->
+        def join_id = tuple[0]
+        def channel_id = tuple[1]
+        def id = tuple[2]
+        def other = tuple.drop(3)
+        // Below, groupTuple is used to join the events. To make sure resuming a workflow
+        // keeps working, the output state must be deterministic. This means the state needs to be
+        // sorted with groupTuple's has a 'sort' argument. This argument can be set to 'hash',
+        // but hashing the state when it is large can be problematic in terms of performance.
+        // Therefore, a custom comparator function is provided. We add the channel ID to the 
+        // states so that we can use the channel ID to sort the items. 
+        def stateWithChannelID = [[channel_id] * other.size(), other].transpose()
+        // A comparator that is provided to groupTuple's 'sort' argument is applied
+        // to all elements of the event tuple (that is not the 'id'). The comparator
+        // closure that is used below expects the input to be List. So the join_id and
+        // channel_id must also be wrapped in a list. 
+        [[join_id], [channel_id], id] + stateWithChannelID
+      }
+      | groupTuple(by: 2, sort: {a, b -> a[0] <=> b[0]}, size: chInitialOutputList.size(), remainder: true)
+      | map {join_ids, _, id, statesWithChannelID ->
+        // Remove the channel IDs from the states
+        def states = statesWithChannelID.collect{it[1]}
+        def newJoinId = join_ids.flatten().unique{a, b -> a <=> b}
         assert newJoinId.size() == 1: "Multiple events were emitted for '$id'."
         def newJoinIdUnique = newJoinId[0]
         def newState = states.inject([:]){ old_state, state_to_add ->
