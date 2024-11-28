@@ -14,7 +14,7 @@ libraryDependencies ++= Seq(
   "dev.optics" %% "monocle-macro" % "3.1.0"
 )
 
-val circeVersion = "0.14.10"
+val circeVersion = "0.14.7"
 
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-core",
@@ -27,7 +27,7 @@ libraryDependencies ++= Seq(
 
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-optics" % "0.15.0",
-  "io.circe" %% "circe-yaml" % "0.16.0",
+  "io.circe" %% "circe-yaml" % "0.15.2",
 )
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-explain")
