@@ -287,6 +287,8 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
           return return_state
         }
 
+        _checkAllRequiredOuputsPresent(newState, meta.config, id, key_)
+
         // simplify output if need be
         if (workflowArgs.auto.simplifyOutput && newState.size() == 1) {
           newState = newState.values()[0]
