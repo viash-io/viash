@@ -59,7 +59,7 @@ process publishFilesProc {
 // this assumes that the state contains no other values other than those specified in the config
 def publishFilesByConfig(Map args) {
   def config = args.get("config")
-  assert config != null : "publishFilessByConfig: config must be specified"
+  assert config != null : "publishFilesByConfig: config must be specified"
 
   def key_ = args.get("key", config.name)
   assert key_ != null : "publishFilesByConfig: key must be specified"
