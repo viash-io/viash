@@ -26,6 +26,7 @@ import io.viash.helpers.*
 
 object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
 
+  // This method doesn't use any mirroring, so it can be called from multiple inlined validators without needing inlining.
   private def memberDeprecationCheck(
     name: String,
     history: List[CursorOp],

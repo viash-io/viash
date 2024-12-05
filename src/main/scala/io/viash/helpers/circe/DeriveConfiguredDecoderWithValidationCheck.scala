@@ -27,7 +27,8 @@ import io.viash.helpers.{typeOf, fieldsOf}
 
 object DeriveConfiguredDecoderWithValidationCheck {
 
-  private def validator_static_error(pred: HCursor, validFields: List[String], typeOf: String)(error: DecodingFailure): Boolean = {
+  // This method doesn't use any mirroring, so it can be called from multiple inlined validators without needing inlining.
+  private def validatorError(pred: HCursor, validFields: List[String], typeOf: String)(error: DecodingFailure): Boolean = {
     val usedFields = pred.value.asObject.map(_.keys.toSeq)
     val invalidFields = usedFields.map(_.diff(validFields))
 
@@ -62,7 +63,7 @@ object DeriveConfiguredDecoderWithValidationCheck {
     }
 
     v.fold(
-      validator_static_error(pred, fieldsOf[A], typeOf[A]),
+      validatorError(pred, fieldsOf[A], typeOf[A]),
       _ => true)
   }
 

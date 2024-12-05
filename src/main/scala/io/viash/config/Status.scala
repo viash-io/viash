@@ -19,8 +19,3 @@ package io.viash.config
 
 enum Status:
   case Enabled, Disabled, Deprecated
-  // type Status = Value
-  // val Enabled = Value("enabled")
-  // val Disabled = Value("disabled")
-  // val Deprecated = Value("deprecated")
-
