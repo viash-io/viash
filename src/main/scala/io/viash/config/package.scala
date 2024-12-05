@@ -29,6 +29,7 @@ import config.Status._
 import config.arguments._
 import io.circe.DecodingFailure
 import io.circe.DecodingFailure.Reason.CustomReason
+import io.circe.derivation.{ConfiguredEnumEncoder, ConfiguredEnumDecoder}
 
 package object config {
   import io.viash.helpers.circe._
@@ -288,21 +289,10 @@ package object config {
   implicit val decodeArgumentGroup: Decoder[ArgumentGroup] = deriveConfiguredDecoderFullChecks
 
   // encoder and decoder for Status, make string lowercase before decoding
-  implicit val encodeStatus: Encoder[Status] = Encoder.instance{
-    case Enabled    => Json.fromString("enabled")
-    case Disabled   => Json.fromString("disabled")
-    case Deprecated => Json.fromString("deprecated")
+  implicit val encodeStatus: Encoder[Status] = ConfiguredEnumEncoder.derive(_.toLowerCase())
+  implicit val decodeStatus: Decoder[Status] = ConfiguredEnumDecoder.derive[Status](_.toLowerCase()).prepare {
+    _.withFocus(_.mapString(_.toLowerCase()))
   }
-  implicit val decodeStatus: Decoder[Status] = Decoder.instance(cursor =>
-    for {
-      str          <- cursor.as[String]
-      status <- str.toLowerCase() match
-        case "enabled"    => Right(Enabled)
-        case "disabled"   => Right(Disabled)
-        case "deprecated" => Right(Deprecated)
-        case other        => Left(DecodingFailure(CustomReason(s"$other is not a valid Status"), cursor))
-    } yield status
-  )
 
   implicit val encodeLinks: Encoder.AsObject[Links] = deriveConfiguredEncoderStrict
   implicit val decodeLinks: Decoder[Links] = deriveConfiguredDecoderFullChecks
