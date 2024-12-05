@@ -100,7 +100,7 @@ object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
     cursor // return unchanged json info
   }
 
-// Use prepare to get raw json data to inspect used fields in the json but we're not performing any changes here
+  // Use prepare to get raw json data to inspect used fields in the json but we're not performing any changes here
   inline def deriveConfiguredDecoderWithDeprecationCheck[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = deriveConfiguredDecoder[A]
     .prepare( checkDeprecation[A] )
 }
