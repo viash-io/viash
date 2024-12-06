@@ -85,7 +85,9 @@ process publishStatesProc {
   """
   mkdir -p "\$(dirname '${yamlFile}')"
   echo "Storing state as yaml"
-  echo '${yamlBlob}' > '${yamlFile}'
+  cat > '${yamlFile}' << HERE
+${yamlBlob}
+HERE
   """
 }
 
