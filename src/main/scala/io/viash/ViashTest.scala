@@ -240,7 +240,7 @@ object ViashTest extends Logging {
     val tests = conf.test_resources
 
     val testResults = tests.filter(_.isInstanceOf[Script]).map {
-      case test: Script if test.read.isEmpty =>
+      case test: Script if test.readSome.isEmpty =>
         TestOutput(test.filename, 1, "Test script does not exist.", "", 0L)
 
       case test: Script =>

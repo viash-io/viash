@@ -446,17 +446,38 @@ class MainBuildAuxiliaryDockerRequirementsR extends AbstractMainBuildAuxiliaryDo
     assert(output.output.contains("/usr/local/lib/R/site-library/glue/R/glue doesn't exist."))
   }
 
-  test("setup; check for a descriptive message when .script contains a single quote", DockerTest) { f =>
+  test("setup; check .script contains a single quote", DockerTest) { f =>
     val newConfigFilePath = deriveEngineConfig(Some("""[{ "type": "r", "script": "print('hello world')" }]"""), None, "r_script_single_quote")
 
-    val testOutput = TestHelper.testMainException[ConfigParserException](
+    val testOutput = TestHelper.testMain(
       "build",
       "-o", tempFolStr,
       "--setup", "build",
       newConfigFilePath
     )
 
-    assert(testOutput.exceptionText == Some("assertion failed: R requirement '.script' field contains a single quote ('). This is not allowed."))
+    println(s"testOutput: ${testOutput}")
+
+    assert(TestHelper.checkDockerImageExists(dockerTag))
+    assert(executableRequirementsFile.exists)
+    assert(executableRequirementsFile.canExecute)
+
+    assert(testOutput.exitCode == Some(0))
+  }
+
+  test("setup; check installing a missing package returns an error", DockerTest) { f =>
+    val newConfigFilePath = deriveEngineConfig(Some("""[{ "type": "r", "packages": ["non-existing-package"] }]"""), None, "r_non_existing_package")
+
+    val testOutput = TestHelper.testMain(
+      "build",
+      "-o", tempFolStr,
+      "--setup", "build",
+      newConfigFilePath
+    )
+
+    assert(testOutput.exitCode == Some(1))
+    assert(testOutput.stdout.contains("Error: Failed to install 'non-existing-package' from CRAN"))
+    assert(testOutput.stdout.contains("ERROR: failed to solve"))
   }
 }
 

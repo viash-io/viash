@@ -10,6 +10,10 @@ workflow base {
         return newState
       }
     )
+    | map {id, state ->
+      def newState = state + ["required_int": 1]
+      [id, newState]
+    }
     
   emit:
   output_ch

@@ -553,7 +553,7 @@ case class Config(
       case s: Script => Some(s)
       case _ => None
     }
-  def mainCode: Option[String] = mainScript.flatMap(_.read)
+  def mainCode: Option[String] = mainScript.flatMap(_.readSome)
   // provide function to use resources.tail but that allows resources to be an empty list
   // If mainScript ends up being None because the first resource isn't a script, return the whole list
   def additionalResources = resources match {
