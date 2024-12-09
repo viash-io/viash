@@ -67,7 +67,7 @@ object CollectedSchemas {
       getMembers[Config](),
       getMembers[PackageConfig](),
       getMembers[BuildInfo](),
-      getMembers[SysEnvTrait](),
+      getMembers[SysEnvCC](),
 
       getMembers[Functionality](),
       getMembers[Author](),
@@ -142,16 +142,6 @@ object CollectedSchemas {
       getMembers[GithubRepositoryWithName](),
       getMembers[ViashhubRepositoryWithName](),
     )
-  }
-
-  private def trimTypeName(s: String) = {
-    // first: io.viash.helpers.data_structures.OneOrMore[String] -> OneOrMore[String]
-    // second: List[io.viash.platforms.requirements.Requirements] -> List[Requirements]
-    // third: Either[String,io.viash.functionality.dependencies.Repository] -> Either[String,Repository]
-    s
-      .replaceAll("""^(\w*\.)*""", "")
-      .replaceAll("""(\w*)\[[\w\.]*?(\w*)(\[_\])?\]""", "$1[$2]")
-      .replaceAll("""(\w*)\[[\w\.]*?(\w*),[\w\.]*?(\w*)\]""", "$1[$2,$3]")
   }
 
   val fullData = memberData_part1.part ++ memberData_part2.part ++ memberData_part3.part

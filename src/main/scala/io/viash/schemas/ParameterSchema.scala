@@ -100,8 +100,8 @@ object ParameterSchema {
     }
     
     val description = annotations.collectFirst({case (name, value) if name.endsWith("description") => value.head})
-    val example = annotations.collect({case (name, value) if name.endsWith("example") => value}).map(ExampleSchema(_))
-    val exampleWithDescription = annotations.collect({case (name, value) if name.endsWith("exampleWithDescription") => value}).map(ExampleSchema(_))
+    val example = annotations.collect({case (name, value) if name.endsWith("example") => value}).map(ExampleSchema(_)).reverse
+    val exampleWithDescription = annotations.collect({case (name, value) if name.endsWith("exampleWithDescription") => value}).map(ExampleSchema(_)).reverse
     val examples = example ::: exampleWithDescription match {
       case l if l.length > 0 => Some(l)
       case _ => None
