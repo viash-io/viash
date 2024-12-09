@@ -11,6 +11,7 @@ import java.io.File
 import java.nio.file.Paths
 import scala.io.Source
 import java.io.ByteArrayOutputStream
+import io.viash.helpers.data_structures._
 
 class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
   Logger.UseColorOverride.value = Some(false)

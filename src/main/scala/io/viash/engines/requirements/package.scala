@@ -18,12 +18,10 @@
 package io.viash.engines
 
 import io.circe.{Decoder, Encoder, Json}
-import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import cats.syntax.functor._ // for .widen
 
 package object requirements {
   import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
 
   implicit val encodeRRequirements: Encoder.AsObject[RRequirements] = deriveConfiguredEncoder
   implicit val decodeRRequirements: Decoder[RRequirements] = deriveConfiguredDecoderFullChecks

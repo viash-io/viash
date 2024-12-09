@@ -17,21 +17,19 @@
 
 package io.viash.helpers.circe
 
-import shapeless.Lazy
-import scala.reflect.runtime.universe._
-
 import io.circe.Decoder
-import io.circe.generic.extras.decoding.ConfiguredDecoder
-import io.circe.generic.extras.semiauto.deriveConfiguredDecoder
+import io.circe.derivation.Configuration
+import scala.deriving.Mirror
+import io.viash.helpers.typeOf
 
 object DeriveConfiguredDecoderFullChecks {
-  import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
+  import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck.checkDeprecation
+  import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck.validator
 
-  def deriveConfiguredDecoderFullChecks[A](implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Decoder[A] = deriveConfiguredDecoder[A]
+  inline def deriveConfiguredDecoderFullChecks[A](using inline A: Mirror.Of[A], inline configuration: Configuration): Decoder[A] = deriveConfiguredDecoder[A]
     .validate(
       validator[A],
-      s"Could not convert json to ${typeOf[A].baseClasses.head.fullName}."
+      s"Could not convert json to ${typeOf[A]}."
     )
-    .prepare( DeriveConfiguredDecoderWithDeprecationCheck.checkDeprecation[A] )
+    .prepare( checkDeprecation[A] )
 }

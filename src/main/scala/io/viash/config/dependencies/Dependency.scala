@@ -27,7 +27,7 @@ import io.viash.exceptions.MissingBuildYamlException
 @description(
   """Specifies a Viash component (script or executable) that should be made available for the code defined in the component.
     |The dependency components are collected and copied to the output folder during the Viash build step.
-    |""".stripMargin)
+    |""")
 @exampleWithDescription(
   """dependencies:
     |  - name: qc/multiqc
@@ -35,7 +35,7 @@ import io.viash.exceptions.MissingBuildYamlException
     |      type: github
     |      repo: openpipelines-bio/modules
     |      tag: 0.3.0
-    |""".stripMargin,
+    |""",
   "yaml",
   "Definition of dependency with a fully defined repository"
 )
@@ -43,7 +43,7 @@ import io.viash.exceptions.MissingBuildYamlException
   """dependencies:
     |  - name: qc/multiqc
     |    repository: "github://openpipelines-bio/modules:0.3.0"
-    |""".stripMargin,
+    |""",
   "yaml",
   "Definition of a dependency with a repository using sugar syntax."
 )
@@ -51,14 +51,14 @@ import io.viash.exceptions.MissingBuildYamlException
   """dependencies:
     |  - name: qc/multiqc
     |    repository: "openpipelines-bio"
-    |""".stripMargin,
+    |""",
   "yaml",
   "Definition of a dependency with a repository defined as 'openpipelines-bio' under `.repositories`."
 )
 @exampleWithDescription(
   """dependencies:
     |  - name: qc/multiqc
-    |""".stripMargin,
+    |""",
   "yaml",
   "Definition of a local dependency. This dependency is present in the current code base and will be built when `viash ns build` is run."
 )
@@ -76,7 +76,7 @@ case class Dependency(
       |This must either be a full definition of the repository or the name of a repository referenced as it is defined under repositories.
       |Additionally, the full definition can be specified as a single string where all parameters such as repository type, url, branch or tag are specified.
       |Omitting the value sets the dependency as a local dependency, ie. the dependency is available in the same namespace as the component.
-      |""".stripMargin)
+      |""")
   @default("Empty")
   repository: Either[String, Repository] = Right(LocalRepository()),
 

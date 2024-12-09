@@ -45,12 +45,12 @@ import io.viash.schemas._
     |This runner is also used for the @[native](native_engine) engine.
     |
     |This runner is also used for the @[docker](docker_engine) engine.
-    |""".stripMargin)
+    |""")
 @example(
   """runners:
     |  - type: executable
     |    port: 8080
-    |""".stripMargin,
+    |""",
   "yaml")
 @subclass("executable")
 final case class ExecutableRunner(
@@ -64,7 +64,7 @@ final case class ExecutableRunner(
     """port:
       |  - 80
       |  - 8080
-      |""".stripMargin,
+      |""",
       "yaml")
   @default("Empty")
   port: OneOrMore[String] = Nil,
@@ -75,24 +75,24 @@ final case class ExecutableRunner(
 
   @description(
     """The Docker setup strategy to use when building a docker engine enrivonment.
-      +
-      +| Strategy | Description |
-      +|-----|----------|
-      +| `alwaysbuild` / `build` / `b` | Always build the image from the dockerfile. This is the default setup strategy.
-      +| `alwayscachedbuild` / `cachedbuild` / `cb` | Always build the image from the dockerfile, with caching enabled.
-      +| `ifneedbebuild` |  Build the image if it does not exist locally.
-      +| `ifneedbecachedbuild` | Build the image with caching enabled if it does not exist locally, with caching enabled.
-      +| `alwayspull` / `pull` / `p` |  Try to pull the container from [Docker Hub](https://hub.docker.com) or the @[specified docker registry](docker_registry).
-      +| `alwayspullelsebuild` / `pullelsebuild` |  Try to pull the image from a registry and build it if it doesn't exist.
-      +| `alwayspullelsecachedbuild` / `pullelsecachedbuild` |  Try to pull the image from a registry and build it with caching if it doesn't exist.
-      +| `ifneedbepull` |  If the image does not exist locally, pull the image.
-      +| `ifneedbepullelsebuild` |  If the image does not exist locally, pull the image. If the image does exist, build it.
-      +| `ifneedbepullelsecachedbuild` | If the image does not exist locally, pull the image. If the image does exist, build it with caching enabled.
-      +| `push` | Push the container to [Docker Hub](https://hub.docker.com)  or the @[specified docker registry](docker_registry).
-      +| `pushifnotpresent` | Push the container to [Docker Hub](https://hub.docker.com) or the @[specified docker registry](docker_registry) if the @[tag](docker_tag) does not exist yet.
-      +| `donothing` / `meh` | Do not build or pull anything.
-      +
-      +""".stripMargin('+'))
+      |
+      || Strategy | Description |
+      ||-----|----------|
+      || `alwaysbuild` / `build` / `b` | Always build the image from the dockerfile. This is the default setup strategy.
+      || `alwayscachedbuild` / `cachedbuild` / `cb` | Always build the image from the dockerfile, with caching enabled.
+      || `ifneedbebuild` |  Build the image if it does not exist locally.
+      || `ifneedbecachedbuild` | Build the image with caching enabled if it does not exist locally, with caching enabled.
+      || `alwayspull` / `pull` / `p` |  Try to pull the container from [Docker Hub](https://hub.docker.com) or the @[specified docker registry](docker_registry).
+      || `alwayspullelsebuild` / `pullelsebuild` |  Try to pull the image from a registry and build it if it doesn't exist.
+      || `alwayspullelsecachedbuild` / `pullelsecachedbuild` |  Try to pull the image from a registry and build it with caching if it doesn't exist.
+      || `ifneedbepull` |  If the image does not exist locally, pull the image.
+      || `ifneedbepullelsebuild` |  If the image does not exist locally, pull the image. If the image does exist, build it.
+      || `ifneedbepullelsecachedbuild` | If the image does not exist locally, pull the image. If the image does exist, build it with caching enabled.
+      || `push` | Push the container to [Docker Hub](https://hub.docker.com)  or the @[specified docker registry](docker_registry).
+      || `pushifnotpresent` | Push the container to [Docker Hub](https://hub.docker.com) or the @[specified docker registry](docker_registry) if the @[tag](docker_tag) does not exist yet.
+      || `donothing` / `meh` | Do not build or pull anything.
+      |
+      |""")
   @example("setup_strategy: alwaysbuild", "yaml")
   @default("ifneedbepullelsecachedbuild")
   docker_setup_strategy: DockerSetupStrategy = IfNeedBePullElseCachedBuild,

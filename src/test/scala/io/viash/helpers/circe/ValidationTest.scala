@@ -5,7 +5,6 @@ import org.scalatest.funsuite.AnyFunSuite
 import io.circe._
 import io.circe.yaml.parser
 import io.viash.helpers.circe._
-import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import io.viash.helpers.data_structures._
 import io.viash.helpers.Logger
 import java.io.ByteArrayOutputStream

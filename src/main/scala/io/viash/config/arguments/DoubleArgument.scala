@@ -29,7 +29,7 @@ import io.viash.schemas._
     |    default: 1.5
     |    description: Litres of fluid to process
     |    alternatives: ["-l"]
-    |""".stripMargin,
+    |""",
     "yaml")
 @subclass("double")
 case class DoubleArgument(
@@ -39,7 +39,7 @@ case class DoubleArgument(
       |  - `--foo` is a long option, which can be passed with `executable_name --foo=value` or `executable_name --foo value`
       |  - `-f` is a short option, which can be passed with `executable_name -f value`
       |  - `foo` is an argument, which can be passed with `executable_name value`  
-      |""".stripMargin)
+      |""")
   name: String,
 
   @description("List of alternative format variations for this argument.")
@@ -62,7 +62,7 @@ case class DoubleArgument(
   @example(
     """description: |
       |  A (multiline) description of the purpose of
-      |  this argument.""".stripMargin, "yaml")
+      |  this argument.""", "yaml")
   @default("Empty")
   description: Option[String] = None,
 
@@ -70,7 +70,7 @@ case class DoubleArgument(
   @example(
     """info:
       |  category: cat1
-      |  labels: [one, two, three]""".stripMargin, "yaml")
+      |  labels: [one, two, three]""", "yaml")
   @since("Viash 0.6.3")
   @default("Empty")
   info: Json = Json.Null,
@@ -80,7 +80,7 @@ case class DoubleArgument(
     """- name: --my_double
       |  type: double
       |  example: 5.8
-      |""".stripMargin,
+      |""",
       "yaml")
   @default("Empty")
   example: OneOrMore[Double] = Nil,
@@ -90,7 +90,7 @@ case class DoubleArgument(
     """- name: --my_double
       |  type: double
       |  default: 5.8
-      |""".stripMargin,
+      |""",
       "yaml")
   @default("Empty")
   default: OneOrMore[Double] = Nil,
@@ -100,7 +100,7 @@ case class DoubleArgument(
     """- name: --my_double
       |  type: double
       |  required: true
-      |""".stripMargin,
+      |""",
       "yaml")
   @default("False")
   required: Boolean = false,
@@ -110,7 +110,7 @@ case class DoubleArgument(
     """- name: --my_double
       |  type: double
       |  min: 25.5
-      |""".stripMargin,
+      |""",
       "yaml")
   min: Option[Double] = None,
 
@@ -119,8 +119,8 @@ case class DoubleArgument(
     """- name: --my_double
       |  type: double
       |  max: 80.4
-      |""".stripMargin,
-      "yaml")  
+      |""",
+      "yaml")
   max: Option[Double] = None,
 
   @undocumented
@@ -131,7 +131,7 @@ case class DoubleArgument(
     """- name: --my_double
       |  type: double
       |  multiple: true
-      |""".stripMargin,
+      |""",
       "yaml")
   @exampleWithDescription("my_component --my_double=5.8:22.6:200.4", "bash", "Here's an example of how to use this:")
   @default("False")
@@ -143,7 +143,7 @@ case class DoubleArgument(
       |  type: double
       |  multiple: true
       |  multiple_sep: ";"
-      |""".stripMargin,
+      |""",
       "yaml")
   @exampleWithDescription("my_component --my_double=5.8,22.6,200.4", "bash", "Here's an example of how to use this:")
   @default(";")

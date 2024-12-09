@@ -39,6 +39,6 @@ object ConfigLenses {
   val licenseLens = GenLens[Config](_.license)
   val linksLens = GenLens[Config](_.links)
 
-  val linksRepositoryLens = linksLens ^|-> repositoryLens
-  val linksDockerRegistryLens = linksLens ^|-> LinksLenses.dockerRegistryLens
+  val linksRepositoryLens = linksLens andThen repositoryLens
+  val linksDockerRegistryLens = linksLens andThen LinksLenses.dockerRegistryLens
 }

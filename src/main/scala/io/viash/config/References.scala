@@ -18,7 +18,7 @@
 package io.viash.config
 
 import io.viash.schemas._
-import io.viash.helpers.data_structures.OneOrMore
+import io.viash.helpers.data_structures.{OneOrMore, listToOneOrMore}
 
 @description("A list of scholarly sources or publications relevant to the tools or analysis defined in the component. This is important for attribution, scientific reproducibility and transparency.")
 @example(
@@ -31,7 +31,7 @@ import io.viash.helpers.data_structures.OneOrMore
     |      journal={Baz},
     |      year={2024}
     |    }
-    |""".stripMargin, "yaml")
+    |""", "yaml")
 @since("Viash 0.9.0")
 case class References(
   @description("One or multiple DOI reference(s) of the component.")
@@ -48,7 +48,7 @@ case class References(
       |    journal={Baz},
       |    year={2024}
       |  }
-      |""".stripMargin, "yaml")
+      |""", "yaml")
   @default("Empty")
   bibtex: OneOrMore[String] = Nil,
 )

@@ -18,7 +18,6 @@
 package io.viash
 
 import io.circe.Encoder
-import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
 import org.rogach.scallop.CliOption
 
 package object cli {

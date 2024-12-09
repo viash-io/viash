@@ -12,6 +12,11 @@ TODO add summary
 
 * `RRequirements`: Allow single quotes to be used again in the `.script` field (PR #771).
 
+* `scala`: Update Scala to Scala 3 (PR #759).
+  For most of the code, this was a minor update, so no breaking changes are expected.
+  The biggest change is how the exporting of the schema is done, but this has no impact on the user.
+  However, switching to Scala 3 allows for additional features and improvements in the future.
+
 ## BUG FIXES
 
 * `config build`: Fix a bug where a missing main script would cause a stack trace instead of a proper error message (PR #776).
