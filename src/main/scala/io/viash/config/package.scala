@@ -294,6 +294,16 @@ package object config {
     _.withFocus(_.mapString(_.toLowerCase()))
   }
 
+  // encoder and decoder for ScopeEnum, make string lowercase before decoding
+  implicit val encodeScopeEnum: Encoder[ScopeEnum] = ConfiguredEnumEncoder.derive(_.toLowerCase())
+  implicit val decodeScopeEnum: Decoder[ScopeEnum] = ConfiguredEnumDecoder.derive[ScopeEnum](_.toLowerCase()).prepare {
+    _.withFocus(_.mapString(_.toLowerCase()))
+  }
+
+  // encoder and decoder for Scope
+  implicit val encodeScope: Encoder.AsObject[Scope] = deriveConfiguredEncoder
+  implicit val decodeScope: Decoder[Scope] = deriveConfiguredDecoderFullChecks
+
   implicit val encodeLinks: Encoder.AsObject[Links] = deriveConfiguredEncoderStrict
   implicit val decodeLinks: Decoder[Links] = deriveConfiguredDecoderFullChecks
 

@@ -242,6 +242,15 @@ case class Config(
   @since("Viash 0.6.0")
   @default("Enabled")
   status: Status = Status.Enabled,
+
+  @description(
+    """Defines the scope of the component.
+      |`test`: only available during testing; components aren't published.
+      |`private`: only meant for internal use within a workflow or other component.
+      |`public`: core component or workflow meant for general use.""")
+  @since("Viash 0.9.1")
+  @default("public")
+  scope: Either[ScopeEnum, Scope] = Left(ScopeEnum.Public),
   
   @description(
     """@[Computational requirements](computational_requirements) related to running the component. 
@@ -736,16 +745,21 @@ object Config extends Logging {
     val conf4 = conf3.copy(
       package_config = viashPackage
     )
-
-    if (!addOptMainScript) {
-      return conf4
-    }
-    
+   
     /* CONFIG 5: add main script if config is stored inside script */
     // add info and additional resources
-    val conf5 = resourcesLens.modify(optScript.toList ::: _)(conf4)
+    val conf5 = addOptMainScript match {
+      case true => resourcesLens.modify(optScript.toList ::: _)(conf4)
+      case false => conf4
+    }
+    
+    /* CONFIG 6: Finalize Scope */
+    val conf6 = scopeLens.modify {
+      case Left(scope) => Right(Scope(scope))
+      case right => right
+    }(conf5)
 
-    conf5
+    conf6
   }
 
   def readConfigs(
