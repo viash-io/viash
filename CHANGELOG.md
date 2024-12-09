@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## NEW FEATURES
+
+* `Nextflow` runner: allow emitting multiple output channels (PR #736).
+
 ## MINOR CHANGES
 
 * `viash-hub`: Change the url for viash-hub Git access to packages.viash-hub.com (PR #774).
